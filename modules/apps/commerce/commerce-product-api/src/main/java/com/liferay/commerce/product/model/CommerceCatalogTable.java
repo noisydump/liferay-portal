@@ -33,6 +33,13 @@ public class CommerceCatalogTable extends BaseTable<CommerceCatalogTable> {
 	public static final CommerceCatalogTable INSTANCE =
 		new CommerceCatalogTable();
 
+	public final Column<CommerceCatalogTable, Long> mvccVersion = createColumn(
+		"mvccVersion", Long.class, Types.BIGINT, Column.FLAG_NULLITY);
+	public final Column<CommerceCatalogTable, Long> ctCollectionId =
+		createColumn(
+			"ctCollectionId", Long.class, Types.BIGINT, Column.FLAG_PRIMARY);
+	public final Column<CommerceCatalogTable, String> uuid = createColumn(
+		"uuid_", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
 	public final Column<CommerceCatalogTable, String> externalReferenceCode =
 		createColumn(
 			"externalReferenceCode", String.class, Types.VARCHAR,

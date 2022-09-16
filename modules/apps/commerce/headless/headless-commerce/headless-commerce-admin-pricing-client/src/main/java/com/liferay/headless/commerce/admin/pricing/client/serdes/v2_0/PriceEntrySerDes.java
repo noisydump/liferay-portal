@@ -61,7 +61,7 @@ public class PriceEntrySerDes {
 		sb.append("{");
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+			"yyyy-MM-dd'T'HH:mm:ssXX");
 
 		if (priceEntry.getActions() != null) {
 			if (sb.length() > 1) {
@@ -372,7 +372,7 @@ public class PriceEntrySerDes {
 		Map<String, String> map = new TreeMap<>();
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+			"yyyy-MM-dd'T'HH:mm:ssXX");
 
 		if (priceEntry.getActions() == null) {
 			map.put("actions", null);
@@ -630,25 +630,25 @@ public class PriceEntrySerDes {
 			else if (Objects.equals(jsonParserFieldName, "discountLevel1")) {
 				if (jsonParserFieldValue != null) {
 					priceEntry.setDiscountLevel1(
-						(BigDecimal)jsonParserFieldValue);
+						new BigDecimal((String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "discountLevel2")) {
 				if (jsonParserFieldValue != null) {
 					priceEntry.setDiscountLevel2(
-						(BigDecimal)jsonParserFieldValue);
+						new BigDecimal((String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "discountLevel3")) {
 				if (jsonParserFieldValue != null) {
 					priceEntry.setDiscountLevel3(
-						(BigDecimal)jsonParserFieldValue);
+						new BigDecimal((String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "discountLevel4")) {
 				if (jsonParserFieldValue != null) {
 					priceEntry.setDiscountLevel4(
-						(BigDecimal)jsonParserFieldValue);
+						new BigDecimal((String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(
@@ -759,9 +759,6 @@ public class PriceEntrySerDes {
 						));
 				}
 			}
-			else if (jsonParserFieldName.equals("status")) {
-				throw new IllegalArgumentException();
-			}
 		}
 
 	}
@@ -790,7 +787,7 @@ public class PriceEntrySerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -826,7 +823,7 @@ public class PriceEntrySerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

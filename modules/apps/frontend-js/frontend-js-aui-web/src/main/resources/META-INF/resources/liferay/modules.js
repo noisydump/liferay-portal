@@ -16,26 +16,26 @@
  * @deprecated As of Athanasius (7.3.x), with no direct replacement
  */
 (function () {
-	var LiferayAUI = Liferay.AUI;
+	const LiferayAUI = Liferay.AUI;
 
-	var COMBINE = LiferayAUI.getCombine();
+	const COMBINE = LiferayAUI.getCombine();
 
-	var CORE_MODULES = YUI.Env.core;
+	const CORE_MODULES = YUI.Env.core;
 
-	var INPUT_EL = document.createElement('input');
+	const INPUT_EL = document.createElement('input');
 
-	var PATH_EDITOR_CKEDITOR = LiferayAUI.getEditorCKEditorPath();
+	const PATH_EDITOR_CKEDITOR = LiferayAUI.getEditorCKEditorPath();
 
-	var PATH_JAVASCRIPT = '/o/frontend-js-aui-web';
+	const PATH_JAVASCRIPT = '/o/frontend-js-aui-web';
 
-	var SUPPORTS_INPUT_SELECTION =
+	const SUPPORTS_INPUT_SELECTION =
 		typeof INPUT_EL.selectionStart === 'number' &&
 		typeof INPUT_EL.selectionEnd === 'number';
 
-	var testHistory = function (A) {
-		var WIN = A.config.win;
+	const testHistory = function (A) {
+		const WIN = A.config.win;
 
-		var HISTORY = WIN.history;
+		const HISTORY = WIN.history;
 
 		return (
 			HISTORY &&
@@ -46,7 +46,11 @@
 	};
 
 	window.YUI_config = {
-		base: Liferay.ThemeDisplay.getCDNBaseURL() + PATH_JAVASCRIPT + '/aui/',
+		base:
+			Liferay.ThemeDisplay.getCDNBaseURL() +
+			Liferay.ThemeDisplay.getPathContext() +
+			PATH_JAVASCRIPT +
+			'/aui/',
 		combine: COMBINE,
 		comboBase: LiferayAUI.getComboPath(),
 		filter: process.env.NODE_ENV === 'development' ? 'raw' : 'min',
@@ -65,6 +69,7 @@
 			liferay: {
 				base:
 					Liferay.ThemeDisplay.getCDNBaseURL() +
+					Liferay.ThemeDisplay.getPathContext() +
 					PATH_JAVASCRIPT +
 					'/liferay/',
 				combine: COMBINE,
@@ -617,7 +622,7 @@
 				root: PATH_JAVASCRIPT + '/liferay/',
 			},
 		},
-		insertBefore: 'liferayPortalCSS',
+		insertBefore: 'liferayAUICSS',
 		lang: themeDisplay.getBCP47LanguageId(),
 		root: PATH_JAVASCRIPT + '/aui/',
 		useBrowserConsole: false,

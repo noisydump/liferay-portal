@@ -15,7 +15,7 @@
 package com.liferay.portal.security.ldap.internal.model.listener;
 
 import com.liferay.portal.kernel.exception.ModelListenerException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.MembershipRequest;
 import com.liferay.portal.kernel.model.MembershipRequestConstants;
@@ -57,7 +57,7 @@ public class UserModelListener extends BaseLDAPExportModelListener<User> {
 				Long userId = (Long)classPK;
 				Long groupId = (Long)associationClassPK;
 
-				updateMembershipRequestStatus(
+				_updateMembershipRequestStatus(
 					userId.longValue(), groupId.longValue());
 			}
 		}
@@ -80,7 +80,9 @@ public class UserModelListener extends BaseLDAPExportModelListener<User> {
 	}
 
 	@Override
-	public void onAfterUpdate(User user) throws ModelListenerException {
+	public void onAfterUpdate(User originalUser, User user)
+		throws ModelListenerException {
+
 		try {
 			exportToLDAP(user);
 		}
@@ -93,16 +95,16 @@ public class UserModelListener extends BaseLDAPExportModelListener<User> {
 	}
 
 	@Override
-	public void onBeforeUpdate(User user) {
+	public void onBeforeUpdate(User originalUser, User user) {
 		UserImportTransactionThreadLocal.setOriginalEmailAddress(
 			user.getOriginalEmailAddress());
 	}
 
-	protected void exportToLDAP(final User user) throws Exception {
+	protected void exportToLDAP(User user) throws Exception {
 		exportToLDAP(user, _userExporter, _ldapSettings);
 	}
 
-	protected void updateMembershipRequestStatus(long userId, long groupId)
+	private void _updateMembershipRequestStatus(long userId, long groupId)
 		throws Exception {
 
 		long principalUserId = GetterUtil.getLong(
@@ -117,12 +119,15 @@ public class UserModelListener extends BaseLDAPExportModelListener<User> {
 		for (MembershipRequest membershipRequest : membershipRequests) {
 			_membershipRequestLocalService.updateStatus(
 				principalUserId, membershipRequest.getMembershipRequestId(),
-				LanguageUtil.get(
+				_language.get(
 					user.getLocale(), "your-membership-has-been-approved"),
 				MembershipRequestConstants.STATUS_APPROVED, false,
 				new ServiceContext());
 		}
 	}
+
+	@Reference
+	private Language _language;
 
 	@Reference(
 		policy = ReferencePolicy.DYNAMIC,

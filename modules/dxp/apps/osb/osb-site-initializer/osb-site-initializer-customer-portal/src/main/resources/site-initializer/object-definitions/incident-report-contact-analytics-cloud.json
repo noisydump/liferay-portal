@@ -1,0 +1,34 @@
+{
+	"label": {
+		"en-US": "Incident Report Contact Analytics Cloud"
+	},
+	"name": "IncidentReportContactAnalyticsCloud",
+	"objectFields": [
+		{
+			"DBType": "String",
+			"indexed": true,
+			"indexedAsKeyword": false,
+			"label": {
+				"en-US": "Email Address"
+			},
+			"name": "emailAddress",
+			"required": true
+		},
+		{
+			"DBType": "Long",
+			"indexed": true,
+			"indexedAsKeyword": false,
+			"label": {
+				"en-US": "Analytics Cloud Workspace"
+			},
+			"name": "analyticsCloudWorkspaceId",
+			"required": true
+		}
+	],
+	"panelCategoryKey": "site_administration.content",
+	"pluralLabel": {
+		"en_US": "Incident Report Contacts Analytics Cloud"
+	},
+	"scope": "site",
+	"system": false
+}

@@ -15,6 +15,9 @@
 package com.liferay.oauth2.provider.rest.internal.endpoint.access.token;
 
 import com.liferay.oauth2.provider.rest.internal.endpoint.constants.OAuth2ProviderRESTEndpointConstants;
+import com.liferay.oauth2.provider.rest.internal.endpoint.liferay.LiferayOAuthDataProvider;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.InetAddressUtil;
 import com.liferay.portal.remote.cors.annotation.CORS;
 
@@ -35,6 +38,7 @@ import javax.ws.rs.core.Response;
 
 import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.apache.cxf.rs.security.oauth2.common.Client;
+import org.apache.cxf.rs.security.oauth2.common.ClientAccessToken;
 import org.apache.cxf.rs.security.oauth2.services.AccessTokenService;
 
 /**
@@ -49,7 +53,30 @@ public class LiferayAccessTokenService extends AccessTokenService {
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response handleTokenRequest(MultivaluedMap<String, String> params) {
-		return super.handleTokenRequest(params);
+		Response response = super.handleTokenRequest(params);
+
+		if (Response.Status.OK.getStatusCode() == response.getStatus()) {
+			ClientAccessToken clientAccessToken = response.readEntity(
+				ClientAccessToken.class);
+
+			Map<String, String> parameters = clientAccessToken.getParameters();
+
+			if (parameters.containsKey(
+					OAuth2ProviderRESTEndpointConstants.
+						PROPERTY_KEY_REMEMBER_DEVICE)) {
+
+				LiferayOAuthDataProvider liferayOAuthDataProvider =
+					(LiferayOAuthDataProvider)getDataProvider();
+
+				liferayOAuthDataProvider.updateRememberDeviceContent(
+					clientAccessToken.getRefreshToken(),
+					parameters.get(
+						OAuth2ProviderRESTEndpointConstants.
+							PROPERTY_KEY_REMEMBER_DEVICE));
+			}
+		}
+
+		return response;
 	}
 
 	@Override
@@ -88,6 +115,9 @@ public class LiferayAccessTokenService extends AccessTokenService {
 			remoteHost = inetAddress.getCanonicalHostName();
 		}
 		catch (UnknownHostException unknownHostException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(unknownHostException);
+			}
 		}
 
 		properties.put(
@@ -103,5 +133,8 @@ public class LiferayAccessTokenService extends AccessTokenService {
 	@Override
 	protected void injectContextIntoOAuthProviders() {
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		LiferayAccessTokenService.class);
 
 }

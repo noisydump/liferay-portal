@@ -16,6 +16,7 @@ package com.liferay.dynamic.data.mapping.service.base;
 
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecordVersion;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordVersionService;
+import com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordVersionServiceUtil;
 import com.liferay.dynamic.data.mapping.service.persistence.DDMFormInstanceRecordVersionPersistence;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
@@ -23,12 +24,17 @@ import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.service.BaseServiceImpl;
 import com.liferay.portal.kernel.util.PortalUtil;
 
+import java.lang.reflect.Field;
+
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -50,8 +56,13 @@ public abstract class DDMFormInstanceRecordVersionServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>DDMFormInstanceRecordVersionService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordVersionServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>DDMFormInstanceRecordVersionService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>DDMFormInstanceRecordVersionServiceUtil</code>.
 	 */
+	@Deactivate
+	protected void deactivate() {
+		_setServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -64,6 +75,8 @@ public abstract class DDMFormInstanceRecordVersionServiceBaseImpl
 	public void setAopProxy(Object aopProxy) {
 		ddmFormInstanceRecordVersionService =
 			(DDMFormInstanceRecordVersionService)aopProxy;
+
+		_setServiceUtilService(ddmFormInstanceRecordVersionService);
 	}
 
 	/**
@@ -109,6 +122,24 @@ public abstract class DDMFormInstanceRecordVersionServiceBaseImpl
 		}
 	}
 
+	private void _setServiceUtilService(
+		DDMFormInstanceRecordVersionService
+			ddmFormInstanceRecordVersionService) {
+
+		try {
+			Field field =
+				DDMFormInstanceRecordVersionServiceUtil.class.getDeclaredField(
+					"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, ddmFormInstanceRecordVersionService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@Reference
 	protected com.liferay.dynamic.data.mapping.service.
 		DDMFormInstanceRecordVersionLocalService
@@ -124,5 +155,8 @@ public abstract class DDMFormInstanceRecordVersionServiceBaseImpl
 	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		DDMFormInstanceRecordVersionServiceBaseImpl.class);
 
 }

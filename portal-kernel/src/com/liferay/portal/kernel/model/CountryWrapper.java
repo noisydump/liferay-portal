@@ -204,6 +204,11 @@ public class CountryWrapper
 		}
 	}
 
+	@Override
+	public Country cloneWithOriginalValues() {
+		return wrap(model.cloneWithOriginalValues());
+	}
+
 	/**
 	 * Returns the a2 of this country.
 	 *
@@ -422,6 +427,11 @@ public class CountryWrapper
 	@Override
 	public String getTitle() {
 		return model.getTitle();
+	}
+
+	@Override
+	public String getTitle(java.util.Locale locale) {
+		return model.getTitle(locale);
 	}
 
 	@Override

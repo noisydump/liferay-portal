@@ -30,24 +30,23 @@ import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.site.navigation.model.SiteNavigationMenuItem;
 import com.liferay.site.navigation.model.SiteNavigationMenuItemModel;
-import com.liferay.site.navigation.model.SiteNavigationMenuItemSoap;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -75,11 +74,11 @@ public class SiteNavigationMenuItemModelImpl
 	public static final String TABLE_NAME = "SiteNavigationMenuItem";
 
 	public static final Object[][] TABLE_COLUMNS = {
-		{"mvccVersion", Types.BIGINT}, {"uuid_", Types.VARCHAR},
-		{"siteNavigationMenuItemId", Types.BIGINT}, {"groupId", Types.BIGINT},
-		{"companyId", Types.BIGINT}, {"userId", Types.BIGINT},
-		{"userName", Types.VARCHAR}, {"createDate", Types.TIMESTAMP},
-		{"modifiedDate", Types.TIMESTAMP},
+		{"mvccVersion", Types.BIGINT}, {"ctCollectionId", Types.BIGINT},
+		{"uuid_", Types.VARCHAR}, {"siteNavigationMenuItemId", Types.BIGINT},
+		{"groupId", Types.BIGINT}, {"companyId", Types.BIGINT},
+		{"userId", Types.BIGINT}, {"userName", Types.VARCHAR},
+		{"createDate", Types.TIMESTAMP}, {"modifiedDate", Types.TIMESTAMP},
 		{"siteNavigationMenuId", Types.BIGINT},
 		{"parentSiteNavigationMenuItemId", Types.BIGINT},
 		{"name", Types.VARCHAR}, {"type_", Types.VARCHAR},
@@ -92,6 +91,7 @@ public class SiteNavigationMenuItemModelImpl
 
 	static {
 		TABLE_COLUMNS_MAP.put("mvccVersion", Types.BIGINT);
+		TABLE_COLUMNS_MAP.put("ctCollectionId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("uuid_", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("siteNavigationMenuItemId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("groupId", Types.BIGINT);
@@ -110,7 +110,7 @@ public class SiteNavigationMenuItemModelImpl
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table SiteNavigationMenuItem (mvccVersion LONG default 0 not null,uuid_ VARCHAR(75) null,siteNavigationMenuItemId LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,siteNavigationMenuId LONG,parentSiteNavigationMenuItemId LONG,name VARCHAR(255) null,type_ VARCHAR(75) null,typeSettings TEXT null,order_ INTEGER,lastPublishDate DATE null)";
+		"create table SiteNavigationMenuItem (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,uuid_ VARCHAR(75) null,siteNavigationMenuItemId LONG not null,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,siteNavigationMenuId LONG,parentSiteNavigationMenuItemId LONG,name VARCHAR(255) null,type_ VARCHAR(75) null,typeSettings TEXT null,order_ INTEGER,lastPublishDate DATE null,primary key (siteNavigationMenuItemId, ctCollectionId))";
 
 	public static final String TABLE_SQL_DROP =
 		"drop table SiteNavigationMenuItem";
@@ -128,44 +128,44 @@ public class SiteNavigationMenuItemModelImpl
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long COMPANYID_COLUMN_BITMASK = 1L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long GROUPID_COLUMN_BITMASK = 2L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long NAME_COLUMN_BITMASK = 4L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long PARENTSITENAVIGATIONMENUITEMID_COLUMN_BITMASK = 8L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long SITENAVIGATIONMENUID_COLUMN_BITMASK = 16L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long UUID_COLUMN_BITMASK = 32L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *		#getColumnBitmask(String)
+	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long SITENAVIGATIONMENUITEMID_COLUMN_BITMASK = 64L;
@@ -182,70 +182,6 @@ public class SiteNavigationMenuItemModelImpl
 	 */
 	@Deprecated
 	public static void setFinderCacheEnabled(boolean finderCacheEnabled) {
-	}
-
-	/**
-	 * Converts the soap model instance into a normal model instance.
-	 *
-	 * @param soapModel the soap model instance to convert
-	 * @return the normal model instance
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static SiteNavigationMenuItem toModel(
-		SiteNavigationMenuItemSoap soapModel) {
-
-		if (soapModel == null) {
-			return null;
-		}
-
-		SiteNavigationMenuItem model = new SiteNavigationMenuItemImpl();
-
-		model.setMvccVersion(soapModel.getMvccVersion());
-		model.setUuid(soapModel.getUuid());
-		model.setSiteNavigationMenuItemId(
-			soapModel.getSiteNavigationMenuItemId());
-		model.setGroupId(soapModel.getGroupId());
-		model.setCompanyId(soapModel.getCompanyId());
-		model.setUserId(soapModel.getUserId());
-		model.setUserName(soapModel.getUserName());
-		model.setCreateDate(soapModel.getCreateDate());
-		model.setModifiedDate(soapModel.getModifiedDate());
-		model.setSiteNavigationMenuId(soapModel.getSiteNavigationMenuId());
-		model.setParentSiteNavigationMenuItemId(
-			soapModel.getParentSiteNavigationMenuItemId());
-		model.setName(soapModel.getName());
-		model.setType(soapModel.getType());
-		model.setTypeSettings(soapModel.getTypeSettings());
-		model.setOrder(soapModel.getOrder());
-		model.setLastPublishDate(soapModel.getLastPublishDate());
-
-		return model;
-	}
-
-	/**
-	 * Converts the soap model instances into normal model instances.
-	 *
-	 * @param soapModels the soap model instances to convert
-	 * @return the normal model instances
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static List<SiteNavigationMenuItem> toModels(
-		SiteNavigationMenuItemSoap[] soapModels) {
-
-		if (soapModels == null) {
-			return null;
-		}
-
-		List<SiteNavigationMenuItem> models =
-			new ArrayList<SiteNavigationMenuItem>(soapModels.length);
-
-		for (SiteNavigationMenuItemSoap soapModel : soapModels) {
-			models.add(toModel(soapModel));
-		}
-
-		return models;
 	}
 
 	public SiteNavigationMenuItemModelImpl() {
@@ -334,34 +270,6 @@ public class SiteNavigationMenuItemModelImpl
 		return _attributeSetterBiConsumers;
 	}
 
-	private static Function<InvocationHandler, SiteNavigationMenuItem>
-		_getProxyProviderFunction() {
-
-		Class<?> proxyClass = ProxyUtil.getProxyClass(
-			SiteNavigationMenuItem.class.getClassLoader(),
-			SiteNavigationMenuItem.class, ModelWrapper.class);
-
-		try {
-			Constructor<SiteNavigationMenuItem> constructor =
-				(Constructor<SiteNavigationMenuItem>)proxyClass.getConstructor(
-					InvocationHandler.class);
-
-			return invocationHandler -> {
-				try {
-					return constructor.newInstance(invocationHandler);
-				}
-				catch (ReflectiveOperationException
-							reflectiveOperationException) {
-
-					throw new InternalError(reflectiveOperationException);
-				}
-			};
-		}
-		catch (NoSuchMethodException noSuchMethodException) {
-			throw new InternalError(noSuchMethodException);
-		}
-	}
-
 	private static final Map<String, Function<SiteNavigationMenuItem, Object>>
 		_attributeGetterFunctions;
 	private static final Map<String, BiConsumer<SiteNavigationMenuItem, Object>>
@@ -383,6 +291,12 @@ public class SiteNavigationMenuItemModelImpl
 			"mvccVersion",
 			(BiConsumer<SiteNavigationMenuItem, Long>)
 				SiteNavigationMenuItem::setMvccVersion);
+		attributeGetterFunctions.put(
+			"ctCollectionId", SiteNavigationMenuItem::getCtCollectionId);
+		attributeSetterBiConsumers.put(
+			"ctCollectionId",
+			(BiConsumer<SiteNavigationMenuItem, Long>)
+				SiteNavigationMenuItem::setCtCollectionId);
 		attributeGetterFunctions.put("uuid", SiteNavigationMenuItem::getUuid);
 		attributeSetterBiConsumers.put(
 			"uuid",
@@ -492,6 +406,21 @@ public class SiteNavigationMenuItemModelImpl
 		}
 
 		_mvccVersion = mvccVersion;
+	}
+
+	@JSON
+	@Override
+	public long getCtCollectionId() {
+		return _ctCollectionId;
+	}
+
+	@Override
+	public void setCtCollectionId(long ctCollectionId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_ctCollectionId = ctCollectionId;
 	}
 
 	@JSON
@@ -846,7 +775,9 @@ public class SiteNavigationMenuItemModelImpl
 		for (Map.Entry<String, Object> entry :
 				_columnOriginalValues.entrySet()) {
 
-			if (entry.getValue() != getColumnValue(entry.getKey())) {
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
 				_columnBitmask |= _columnBitmasks.get(entry.getKey());
 			}
 		}
@@ -889,6 +820,7 @@ public class SiteNavigationMenuItemModelImpl
 			new SiteNavigationMenuItemImpl();
 
 		siteNavigationMenuItemImpl.setMvccVersion(getMvccVersion());
+		siteNavigationMenuItemImpl.setCtCollectionId(getCtCollectionId());
 		siteNavigationMenuItemImpl.setUuid(getUuid());
 		siteNavigationMenuItemImpl.setSiteNavigationMenuItemId(
 			getSiteNavigationMenuItemId());
@@ -909,6 +841,50 @@ public class SiteNavigationMenuItemModelImpl
 		siteNavigationMenuItemImpl.setLastPublishDate(getLastPublishDate());
 
 		siteNavigationMenuItemImpl.resetOriginalValues();
+
+		return siteNavigationMenuItemImpl;
+	}
+
+	@Override
+	public SiteNavigationMenuItem cloneWithOriginalValues() {
+		SiteNavigationMenuItemImpl siteNavigationMenuItemImpl =
+			new SiteNavigationMenuItemImpl();
+
+		siteNavigationMenuItemImpl.setMvccVersion(
+			this.<Long>getColumnOriginalValue("mvccVersion"));
+		siteNavigationMenuItemImpl.setCtCollectionId(
+			this.<Long>getColumnOriginalValue("ctCollectionId"));
+		siteNavigationMenuItemImpl.setUuid(
+			this.<String>getColumnOriginalValue("uuid_"));
+		siteNavigationMenuItemImpl.setSiteNavigationMenuItemId(
+			this.<Long>getColumnOriginalValue("siteNavigationMenuItemId"));
+		siteNavigationMenuItemImpl.setGroupId(
+			this.<Long>getColumnOriginalValue("groupId"));
+		siteNavigationMenuItemImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		siteNavigationMenuItemImpl.setUserId(
+			this.<Long>getColumnOriginalValue("userId"));
+		siteNavigationMenuItemImpl.setUserName(
+			this.<String>getColumnOriginalValue("userName"));
+		siteNavigationMenuItemImpl.setCreateDate(
+			this.<Date>getColumnOriginalValue("createDate"));
+		siteNavigationMenuItemImpl.setModifiedDate(
+			this.<Date>getColumnOriginalValue("modifiedDate"));
+		siteNavigationMenuItemImpl.setSiteNavigationMenuId(
+			this.<Long>getColumnOriginalValue("siteNavigationMenuId"));
+		siteNavigationMenuItemImpl.setParentSiteNavigationMenuItemId(
+			this.<Long>getColumnOriginalValue(
+				"parentSiteNavigationMenuItemId"));
+		siteNavigationMenuItemImpl.setName(
+			this.<String>getColumnOriginalValue("name"));
+		siteNavigationMenuItemImpl.setType(
+			this.<String>getColumnOriginalValue("type_"));
+		siteNavigationMenuItemImpl.setTypeSettings(
+			this.<String>getColumnOriginalValue("typeSettings"));
+		siteNavigationMenuItemImpl.setOrder(
+			this.<Integer>getColumnOriginalValue("order_"));
+		siteNavigationMenuItemImpl.setLastPublishDate(
+			this.<Date>getColumnOriginalValue("lastPublishDate"));
 
 		return siteNavigationMenuItemImpl;
 	}
@@ -989,6 +965,8 @@ public class SiteNavigationMenuItemModelImpl
 			new SiteNavigationMenuItemCacheModel();
 
 		siteNavigationMenuItemCacheModel.mvccVersion = getMvccVersion();
+
+		siteNavigationMenuItemCacheModel.ctCollectionId = getCtCollectionId();
 
 		siteNavigationMenuItemCacheModel.uuid = getUuid();
 
@@ -1085,7 +1063,7 @@ public class SiteNavigationMenuItemModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			(4 * attributeGetterFunctions.size()) + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -1096,10 +1074,27 @@ public class SiteNavigationMenuItemModelImpl
 			Function<SiteNavigationMenuItem, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(
-				attributeGetterFunction.apply((SiteNavigationMenuItem)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply(
+				(SiteNavigationMenuItem)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -1147,11 +1142,14 @@ public class SiteNavigationMenuItemModelImpl
 	private static class EscapedModelProxyProviderFunctionHolder {
 
 		private static final Function<InvocationHandler, SiteNavigationMenuItem>
-			_escapedModelProxyProviderFunction = _getProxyProviderFunction();
+			_escapedModelProxyProviderFunction =
+				ProxyUtil.getProxyProviderFunction(
+					SiteNavigationMenuItem.class, ModelWrapper.class);
 
 	}
 
 	private long _mvccVersion;
+	private long _ctCollectionId;
 	private String _uuid;
 	private long _siteNavigationMenuItemId;
 	private long _groupId;
@@ -1199,6 +1197,7 @@ public class SiteNavigationMenuItemModelImpl
 		_columnOriginalValues = new HashMap<String, Object>();
 
 		_columnOriginalValues.put("mvccVersion", _mvccVersion);
+		_columnOriginalValues.put("ctCollectionId", _ctCollectionId);
 		_columnOriginalValues.put("uuid_", _uuid);
 		_columnOriginalValues.put(
 			"siteNavigationMenuItemId", _siteNavigationMenuItemId);
@@ -1244,35 +1243,37 @@ public class SiteNavigationMenuItemModelImpl
 
 		columnBitmasks.put("mvccVersion", 1L);
 
-		columnBitmasks.put("uuid_", 2L);
+		columnBitmasks.put("ctCollectionId", 2L);
 
-		columnBitmasks.put("siteNavigationMenuItemId", 4L);
+		columnBitmasks.put("uuid_", 4L);
 
-		columnBitmasks.put("groupId", 8L);
+		columnBitmasks.put("siteNavigationMenuItemId", 8L);
 
-		columnBitmasks.put("companyId", 16L);
+		columnBitmasks.put("groupId", 16L);
 
-		columnBitmasks.put("userId", 32L);
+		columnBitmasks.put("companyId", 32L);
 
-		columnBitmasks.put("userName", 64L);
+		columnBitmasks.put("userId", 64L);
 
-		columnBitmasks.put("createDate", 128L);
+		columnBitmasks.put("userName", 128L);
 
-		columnBitmasks.put("modifiedDate", 256L);
+		columnBitmasks.put("createDate", 256L);
 
-		columnBitmasks.put("siteNavigationMenuId", 512L);
+		columnBitmasks.put("modifiedDate", 512L);
 
-		columnBitmasks.put("parentSiteNavigationMenuItemId", 1024L);
+		columnBitmasks.put("siteNavigationMenuId", 1024L);
 
-		columnBitmasks.put("name", 2048L);
+		columnBitmasks.put("parentSiteNavigationMenuItemId", 2048L);
 
-		columnBitmasks.put("type_", 4096L);
+		columnBitmasks.put("name", 4096L);
 
-		columnBitmasks.put("typeSettings", 8192L);
+		columnBitmasks.put("type_", 8192L);
 
-		columnBitmasks.put("order_", 16384L);
+		columnBitmasks.put("typeSettings", 16384L);
 
-		columnBitmasks.put("lastPublishDate", 32768L);
+		columnBitmasks.put("order_", 32768L);
+
+		columnBitmasks.put("lastPublishDate", 65536L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}

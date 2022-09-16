@@ -24,6 +24,7 @@
 
 .actions-cell-editor-hidden,
 .assignments-cell-editor-hidden,
+.base-cell-editor-hidden,
 .forms-cell-editor-hidden,
 .notifications-cell-editor-hidden,
 .script-cell-editor-hidden,
@@ -254,6 +255,11 @@
 	> * {
 		width: 100%;
 	}
+
+	.button-holder,
+	.sheet {
+		margin-top: 20px;
+	}
 }
 
 .portal-popup,
@@ -315,6 +321,16 @@
 .lfr-template-editor-wrapper {
 	margin-top: 20px;
 	width: 100% !important;
+}
+
+.modal-footer .btn-toolbar .btn-secondary {
+	margin-right: 10px;
+}
+
+.modal-open .modal {
+	min-height: 325px;
+	min-width: 500px;
+	overflow-y: hidden !important;
 }
 
 .portal-popup .basecelleditor {
@@ -389,6 +405,7 @@
 .lfr-sidebar-list-group-workflow {
 	&.sidebar-list-group {
 		margin-top: 0;
+		padding-top: 0;
 	}
 
 	.list-group-item {

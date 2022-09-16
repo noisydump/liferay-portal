@@ -23,15 +23,19 @@ import com.liferay.commerce.product.service.CPDefinitionService;
 import com.liferay.commerce.product.service.CommerceCatalogService;
 import com.liferay.commerce.product.service.CommerceChannelRelService;
 import com.liferay.commerce.product.servlet.taglib.ui.constants.CPDefinitionScreenNavigationConstants;
+import com.liferay.commerce.product.type.CPType;
+import com.liferay.commerce.product.type.CPTypeServicesTracker;
+import com.liferay.commerce.product.url.CPFriendlyURL;
 import com.liferay.frontend.taglib.servlet.taglib.ScreenNavigationCategory;
 import com.liferay.frontend.taglib.servlet.taglib.ScreenNavigationEntry;
 import com.liferay.frontend.taglib.servlet.taglib.util.JSPRenderer;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
@@ -75,7 +79,7 @@ public class CPDefinitionVisibilityScreenNavigationCategory
 
 	@Override
 	public String getLabel(Locale locale) {
-		return LanguageUtil.get(
+		return _language.get(
 			locale,
 			CPDefinitionScreenNavigationConstants.CATEGORY_KEY_VISIBILITY);
 	}
@@ -95,13 +99,20 @@ public class CPDefinitionVisibilityScreenNavigationCategory
 		PermissionChecker permissionChecker =
 			PermissionThreadLocal.getPermissionChecker();
 
+		CPType cpType = _cpTypeServicesTracker.getCPType(
+			cpDefinition.getProductTypeName());
+
 		try {
-			return _commerceCatalogModelResourcePermission.contains(
-				permissionChecker, cpDefinition.getCommerceCatalog(),
-				ActionKeys.VIEW);
+			if (_commerceCatalogModelResourcePermission.contains(
+					permissionChecker, cpDefinition.getCommerceCatalog(),
+					ActionKeys.VIEW) &&
+				cpType.isVisibilityEnabled()) {
+
+				return true;
+			}
 		}
 		catch (PortalException portalException) {
-			_log.error(portalException, portalException);
+			_log.error(portalException);
 		}
 
 		return false;
@@ -117,15 +128,15 @@ public class CPDefinitionVisibilityScreenNavigationCategory
 			new CPDefinitionsDisplayContext(
 				_actionHelper, httpServletRequest,
 				_commerceAccountGroupRelService, _commerceCatalogService,
-				_commerceChannelRelService, _cpDefinitionService,
-				_itemSelector);
+				_commerceChannelRelService, _configurationProvider,
+				_cpDefinitionService, _cpFriendlyURL, _itemSelector);
 
 		httpServletRequest.setAttribute(
 			WebKeys.PORTLET_DISPLAY_CONTEXT, cpDefinitionsDisplayContext);
 
 		_jspRenderer.renderJSP(
 			_setServletContext, httpServletRequest, httpServletResponse,
-			"/edit_definition_visibility.jsp");
+			"/edit_cp_definition_visibility.jsp");
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -150,13 +161,25 @@ public class CPDefinitionVisibilityScreenNavigationCategory
 	private CommerceChannelRelService _commerceChannelRelService;
 
 	@Reference
+	private ConfigurationProvider _configurationProvider;
+
+	@Reference
 	private CPDefinitionService _cpDefinitionService;
+
+	@Reference
+	private CPFriendlyURL _cpFriendlyURL;
+
+	@Reference
+	private CPTypeServicesTracker _cpTypeServicesTracker;
 
 	@Reference
 	private ItemSelector _itemSelector;
 
 	@Reference
 	private JSPRenderer _jspRenderer;
+
+	@Reference
+	private Language _language;
 
 	@Reference(
 		target = "(osgi.web.symbolicname=com.liferay.commerce.product.definitions.web)"

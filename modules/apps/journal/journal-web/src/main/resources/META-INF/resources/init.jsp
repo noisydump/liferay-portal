@@ -23,6 +23,7 @@ taglib uri="http://liferay.com/tld/aui" prefix="aui" %><%@
 taglib uri="http://liferay.com/tld/clay" prefix="clay" %><%@
 taglib uri="http://liferay.com/tld/data-engine" prefix="liferay-data-engine" %><%@
 taglib uri="http://liferay.com/tld/expando" prefix="liferay-expando" %><%@
+taglib uri="http://liferay.com/tld/friendly-url" prefix="liferay-friendly-url" %><%@
 taglib uri="http://liferay.com/tld/frontend" prefix="liferay-frontend" %><%@
 taglib uri="http://liferay.com/tld/layout" prefix="liferay-layout" %><%@
 taglib uri="http://liferay.com/tld/portlet" prefix="liferay-portlet" %><%@
@@ -34,7 +35,8 @@ taglib uri="http://liferay.com/tld/trash" prefix="liferay-trash" %><%@
 taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %><%@
 taglib uri="http://liferay.com/tld/util" prefix="liferay-util" %>
 
-<%@ page import="com.liferay.asset.display.page.portlet.AssetDisplayPageFriendlyURLProvider" %><%@
+<%@ page import="com.liferay.asset.auto.tagger.configuration.AssetAutoTaggerConfiguration" %><%@
+page import="com.liferay.asset.display.page.portlet.AssetDisplayPageFriendlyURLProvider" %><%@
 page import="com.liferay.asset.kernel.model.AssetEntry" %><%@
 page import="com.liferay.asset.kernel.model.AssetRendererFactory" %><%@
 page import="com.liferay.asset.kernel.model.AssetVocabularyConstants" %><%@
@@ -42,7 +44,6 @@ page import="com.liferay.asset.kernel.service.AssetEntryLocalServiceUtil" %><%@
 page import="com.liferay.document.library.kernel.exception.DuplicateFileEntryException" %><%@
 page import="com.liferay.document.library.kernel.exception.FileSizeException" %><%@
 page import="com.liferay.document.library.kernel.exception.NoSuchFileEntryException" %><%@
-page import="com.liferay.document.library.kernel.util.DLValidatorUtil" %><%@
 page import="com.liferay.dynamic.data.mapping.exception.NoSuchStructureException" %><%@
 page import="com.liferay.dynamic.data.mapping.exception.NoSuchTemplateException" %><%@
 page import="com.liferay.dynamic.data.mapping.exception.RequiredStructureException" %><%@
@@ -128,13 +129,15 @@ page import="com.liferay.journal.web.internal.display.context.JournalManagementT
 page import="com.liferay.journal.web.internal.display.context.JournalMoveEntriesDisplayContext" %><%@
 page import="com.liferay.journal.web.internal.display.context.JournalPreviewArticleContentTemplateDisplayContext" %><%@
 page import="com.liferay.journal.web.internal.display.context.JournalSelectArticleTranslationsManagementToolbarDisplayContext" %><%@
-page import="com.liferay.journal.web.internal.display.context.JournalSelectDDMStructureDisplayContext" %><%@
-page import="com.liferay.journal.web.internal.display.context.JournalSelectDDMStructureManagementToolbarDisplayContext" %><%@
-page import="com.liferay.journal.web.internal.display.context.JournalSelectDDMTemplateDisplayContext" %><%@
-page import="com.liferay.journal.web.internal.display.context.JournalSelectDDMTemplateManagementToolbarDisplayContext" %><%@
 page import="com.liferay.journal.web.internal.display.context.JournalViewMoreMenuItemsDisplayContext" %><%@
 page import="com.liferay.journal.web.internal.display.context.JournalViewMoreMenuItemsManagementToolbarDisplayContext" %><%@
-page import="com.liferay.journal.web.internal.display.context.util.JournalWebRequestHelper" %><%@
+page import="com.liferay.journal.web.internal.display.context.helper.JournalWebRequestHelper" %><%@
+page import="com.liferay.journal.web.internal.frontend.taglib.clay.servlet.taglib.JournalArticleCommentsVerticalCard" %><%@
+page import="com.liferay.journal.web.internal.frontend.taglib.clay.servlet.taglib.JournalArticleHistoryVerticalCard" %><%@
+page import="com.liferay.journal.web.internal.frontend.taglib.clay.servlet.taglib.JournalArticleVersionVerticalCard" %><%@
+page import="com.liferay.journal.web.internal.frontend.taglib.clay.servlet.taglib.JournalArticleVerticalCard" %><%@
+page import="com.liferay.journal.web.internal.frontend.taglib.clay.servlet.taglib.JournalDDMTemplateVerticalCard" %><%@
+page import="com.liferay.journal.web.internal.frontend.taglib.clay.servlet.taglib.JournalFolderHorizontalCard" %><%@
 page import="com.liferay.journal.web.internal.portlet.JournalPortlet" %><%@
 page import="com.liferay.journal.web.internal.portlet.action.ActionUtil" %><%@
 page import="com.liferay.journal.web.internal.security.permission.resource.DDMStructurePermission" %><%@
@@ -143,20 +146,14 @@ page import="com.liferay.journal.web.internal.security.permission.resource.Journ
 page import="com.liferay.journal.web.internal.security.permission.resource.JournalFeedPermission" %><%@
 page import="com.liferay.journal.web.internal.security.permission.resource.JournalFolderPermission" %><%@
 page import="com.liferay.journal.web.internal.security.permission.resource.JournalPermission" %><%@
-page import="com.liferay.journal.web.internal.servlet.taglib.clay.JournalArticleCommentsVerticalCard" %><%@
-page import="com.liferay.journal.web.internal.servlet.taglib.clay.JournalArticleHistoryVerticalCard" %><%@
-page import="com.liferay.journal.web.internal.servlet.taglib.clay.JournalArticleVersionVerticalCard" %><%@
-page import="com.liferay.journal.web.internal.servlet.taglib.clay.JournalArticleVerticalCard" %><%@
-page import="com.liferay.journal.web.internal.servlet.taglib.clay.JournalDDMTemplateVerticalCard" %><%@
-page import="com.liferay.journal.web.internal.servlet.taglib.clay.JournalFolderHorizontalCard" %><%@
-page import="com.liferay.journal.web.internal.servlet.taglib.clay.JournalSelectDDMTemplateVerticalCard" %><%@
+page import="com.liferay.journal.web.internal.servlet.taglib.util.DDMStructureActionDropdownItemsProvider" %><%@
 page import="com.liferay.journal.web.internal.util.JournalHelperUtil" %><%@
 page import="com.liferay.journal.web.internal.util.JournalPortletUtil" %><%@
 page import="com.liferay.journal.web.internal.util.JournalUtil" %><%@
+page import="com.liferay.petra.portlet.url.builder.PortletURLBuilder" %><%@
 page import="com.liferay.petra.string.StringPool" %><%@
 page import="com.liferay.portal.kernel.bean.BeanParamUtil" %><%@
 page import="com.liferay.portal.kernel.dao.orm.QueryUtil" %><%@
-page import="com.liferay.portal.kernel.dao.search.SearchContainer" %><%@
 page import="com.liferay.portal.kernel.exception.LocaleException" %><%@
 page import="com.liferay.portal.kernel.exception.NoSuchImageException" %><%@
 page import="com.liferay.portal.kernel.exception.NoSuchLayoutException" %><%@
@@ -170,19 +167,23 @@ page import="com.liferay.portal.kernel.portlet.PortletURLFactoryUtil" %><%@
 page import="com.liferay.portal.kernel.security.permission.ActionKeys" %><%@
 page import="com.liferay.portal.kernel.service.*" %><%@
 page import="com.liferay.portal.kernel.servlet.BrowserSnifferUtil" %><%@
+page import="com.liferay.portal.kernel.servlet.MultiSessionMessages" %><%@
+page import="com.liferay.portal.kernel.theme.ThemeDisplay" %><%@
+page import="com.liferay.portal.kernel.upload.FileItem" %><%@
 page import="com.liferay.portal.kernel.upload.LiferayFileItemException" %><%@
 page import="com.liferay.portal.kernel.util.ArrayUtil" %><%@
 page import="com.liferay.portal.kernel.util.Constants" %><%@
 page import="com.liferay.portal.kernel.util.FastDateFormatFactoryUtil" %><%@
 page import="com.liferay.portal.kernel.util.GetterUtil" %><%@
 page import="com.liferay.portal.kernel.util.HashMapBuilder" %><%@
+page import="com.liferay.portal.kernel.util.HtmlParserUtil" %><%@
 page import="com.liferay.portal.kernel.util.HtmlUtil" %><%@
-page import="com.liferay.portal.kernel.util.HttpUtil" %><%@
 page import="com.liferay.portal.kernel.util.ListUtil" %><%@
 page import="com.liferay.portal.kernel.util.LocaleUtil" %><%@
 page import="com.liferay.portal.kernel.util.MapUtil" %><%@
 page import="com.liferay.portal.kernel.util.ParamUtil" %><%@
 page import="com.liferay.portal.kernel.util.PortalUtil" %><%@
+page import="com.liferay.portal.kernel.util.SetUtil" %><%@
 page import="com.liferay.portal.kernel.util.StringUtil" %><%@
 page import="com.liferay.portal.kernel.util.TextFormatter" %><%@
 page import="com.liferay.portal.kernel.util.UnicodeFormatter" %><%@
@@ -195,15 +196,14 @@ page import="com.liferay.portal.kernel.workflow.WorkflowDefinitionManagerUtil" %
 page import="com.liferay.portal.kernel.workflow.WorkflowEngineManagerUtil" %><%@
 page import="com.liferay.portal.kernel.workflow.WorkflowHandlerRegistryUtil" %><%@
 page import="com.liferay.portal.model.impl.*" %><%@
-page import="com.liferay.portal.upload.LiferayFileItem" %><%@
 page import="com.liferay.rss.util.RSSUtil" %><%@
 page import="com.liferay.taglib.search.ResultRow" %><%@
-page import="com.liferay.taglib.util.CustomAttributesUtil" %><%@
-page import="com.liferay.translation.exception.XLIFFFileException" %>
+page import="com.liferay.taglib.util.CustomAttributesUtil" %>
 
 <%@ page import="java.text.Format" %>
 
 <%@ page import="java.util.ArrayList" %><%@
+page import="java.util.Arrays" %><%@
 page import="java.util.Collections" %><%@
 page import="java.util.Date" %><%@
 page import="java.util.List" %><%@

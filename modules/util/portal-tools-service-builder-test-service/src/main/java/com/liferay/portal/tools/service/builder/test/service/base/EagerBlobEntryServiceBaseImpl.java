@@ -20,13 +20,18 @@ import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.service.BaseServiceImpl;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.spring.extender.service.ServiceReference;
 import com.liferay.portal.tools.service.builder.test.model.EagerBlobEntry;
 import com.liferay.portal.tools.service.builder.test.service.EagerBlobEntryService;
+import com.liferay.portal.tools.service.builder.test.service.EagerBlobEntryServiceUtil;
 import com.liferay.portal.tools.service.builder.test.service.persistence.EagerBlobEntryPersistence;
+
+import java.lang.reflect.Field;
 
 import javax.sql.DataSource;
 
@@ -48,7 +53,7 @@ public abstract class EagerBlobEntryServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>EagerBlobEntryService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.tools.service.builder.test.service.EagerBlobEntryServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>EagerBlobEntryService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>EagerBlobEntryServiceUtil</code>.
 	 */
 
 	/**
@@ -138,9 +143,11 @@ public abstract class EagerBlobEntryServiceBaseImpl
 	}
 
 	public void afterPropertiesSet() {
+		_setServiceUtilService(eagerBlobEntryService);
 	}
 
 	public void destroy() {
+		_setServiceUtilService(null);
 	}
 
 	/**
@@ -185,6 +192,22 @@ public abstract class EagerBlobEntryServiceBaseImpl
 		}
 	}
 
+	private void _setServiceUtilService(
+		EagerBlobEntryService eagerBlobEntryService) {
+
+		try {
+			Field field = EagerBlobEntryServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, eagerBlobEntryService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@BeanReference(
 		type = com.liferay.portal.tools.service.builder.test.service.EagerBlobEntryLocalService.class
 	)
@@ -202,5 +225,8 @@ public abstract class EagerBlobEntryServiceBaseImpl
 	)
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		EagerBlobEntryServiceBaseImpl.class);
 
 }

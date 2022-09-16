@@ -26,12 +26,13 @@ import com.liferay.commerce.pricing.model.CommercePriceModifier;
 import com.liferay.commerce.pricing.service.CommercePriceModifierService;
 import com.liferay.commerce.pricing.type.CommercePriceModifierType;
 import com.liferay.commerce.pricing.type.CommercePriceModifierTypeRegistry;
-import com.liferay.commerce.pricing.web.internal.servlet.taglib.ui.constants.CommercePriceListScreenNavigationConstants;
-import com.liferay.commerce.product.display.context.util.CPRequestHelper;
+import com.liferay.commerce.pricing.web.internal.constants.CommercePriceListScreenNavigationConstants;
+import com.liferay.commerce.product.display.context.helper.CPRequestHelper;
 import com.liferay.commerce.product.model.CommerceCatalog;
 import com.liferay.commerce.product.service.CommerceCatalogService;
-import com.liferay.frontend.taglib.clay.data.set.servlet.taglib.util.ClayDataSetActionDropdownItem;
+import com.liferay.frontend.data.set.model.FDSActionDropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
@@ -53,10 +54,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.portlet.ActionRequest;
-import javax.portlet.ActionURL;
 import javax.portlet.PortletURL;
-import javax.portlet.RenderResponse;
-import javax.portlet.RenderURL;
 import javax.portlet.WindowStateException;
 
 import javax.servlet.http.HttpServletRequest;
@@ -87,27 +85,25 @@ public class CommercePriceListDisplayContext
 	}
 
 	public String getAddCommercePriceListRenderURL() throws Exception {
-		PortletURL portletURL = liferayPortletResponse.createRenderURL();
-
-		portletURL.setParameter(
-			"mvcRenderCommandName",
-			"/commerce_price_list/add_commerce_price_list");
-		portletURL.setWindowState(LiferayWindowState.POP_UP);
-
-		return portletURL.toString();
+		return PortletURLBuilder.createRenderURL(
+			liferayPortletResponse
+		).setMVCRenderCommandName(
+			"/commerce_price_list/add_commerce_price_list"
+		).setWindowState(
+			LiferayWindowState.POP_UP
+		).buildString();
 	}
 
 	public String getAddCommercePriceModifierRenderURL() throws Exception {
-		PortletURL portletURL = liferayPortletResponse.createRenderURL();
-
-		portletURL.setParameter(
-			"mvcRenderCommandName",
-			"/commerce_price_list/add_commerce_price_modifier");
-		portletURL.setParameter(
-			"commercePriceListId", String.valueOf(getCommercePriceListId()));
-		portletURL.setWindowState(LiferayWindowState.POP_UP);
-
-		return portletURL.toString();
+		return PortletURLBuilder.createRenderURL(
+			liferayPortletResponse
+		).setMVCRenderCommandName(
+			"/commerce_price_list/add_commerce_price_modifier"
+		).setParameter(
+			"commercePriceListId", getCommercePriceListId()
+		).setWindowState(
+			LiferayWindowState.POP_UP
+		).buildString();
 	}
 
 	public List<CommerceCatalog> getCommerceCatalogs() throws PortalException {
@@ -115,7 +111,7 @@ public class CommercePriceListDisplayContext
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		return commerceCatalogService.searchCommerceCatalogs(
+		return commerceCatalogService.search(
 			themeDisplay.getCompanyId(), null, QueryUtil.ALL_POS,
 			QueryUtil.ALL_POS, null);
 	}
@@ -172,27 +168,18 @@ public class CommercePriceListDisplayContext
 
 		List<HeaderActionModel> headerActionModels = new ArrayList<>();
 
-		CPRequestHelper cpRequestHelper = new CPRequestHelper(
-			httpServletRequest);
-
-		RenderResponse renderResponse = cpRequestHelper.getRenderResponse();
-
-		RenderURL cancelURL = renderResponse.createRenderURL();
-
 		HeaderActionModel cancelHeaderActionModel = new HeaderActionModel(
-			null, cancelURL.toString(), null, "cancel");
+			null,
+			PortletURLBuilder.createRenderURL(
+				liferayPortletResponse
+			).buildString(),
+			null, "cancel");
 
 		headerActionModels.add(cancelHeaderActionModel);
 
-		CommercePriceList commercePriceList = getCommercePriceList();
-
-		ActionURL actionURL = renderResponse.createActionURL();
-
-		actionURL.setParameter(
-			ActionRequest.ACTION_NAME,
-			"/commerce_price_list/edit_commerce_price_list");
-
 		String saveButtonLabel = "save";
+
+		CommercePriceList commercePriceList = getCommercePriceList();
 
 		if ((commercePriceList == null) || commercePriceList.isDraft() ||
 			commercePriceList.isApproved() || commercePriceList.isExpired() ||
@@ -203,11 +190,19 @@ public class CommercePriceListDisplayContext
 
 		HeaderActionModel saveAsDraftHeaderActionModel = new HeaderActionModel(
 			null, liferayPortletResponse.getNamespace() + "fm",
-			actionURL.toString(), null, saveButtonLabel);
+			PortletURLBuilder.createActionURL(
+				liferayPortletResponse
+			).setActionName(
+				"/commerce_price_list/edit_commerce_price_list"
+			).buildString(),
+			null, saveButtonLabel);
 
 		headerActionModels.add(saveAsDraftHeaderActionModel);
 
 		String publishButtonLabel = "publish";
+
+		CPRequestHelper cpRequestHelper = new CPRequestHelper(
+			httpServletRequest);
 
 		if (WorkflowDefinitionLinkLocalServiceUtil.hasWorkflowDefinitionLink(
 				cpRequestHelper.getCompanyId(),
@@ -225,7 +220,11 @@ public class CommercePriceListDisplayContext
 
 		HeaderActionModel publishHeaderActionModel = new HeaderActionModel(
 			additionalClasses, liferayPortletResponse.getNamespace() + "fm",
-			actionURL.toString(),
+			PortletURLBuilder.createActionURL(
+				liferayPortletResponse
+			).setActionName(
+				"/commerce_price_list/edit_commerce_price_list"
+			).buildString(),
 			liferayPortletResponse.getNamespace() + "publishButton",
 			publishButtonLabel);
 
@@ -261,37 +260,6 @@ public class CommercePriceListDisplayContext
 		return commercePriceList.getParentCommercePriceListId();
 	}
 
-	public List<ClayDataSetActionDropdownItem>
-			getPriceListClayDataSetActionDropdownItems()
-		throws PortalException {
-
-		RenderResponse renderResponse =
-			commercePricingRequestHelper.getRenderResponse();
-
-		RenderURL portletURL = renderResponse.createRenderURL();
-
-		portletURL.setParameter(
-			"mvcRenderCommandName",
-			"/commerce_price_list/edit_commerce_price_list");
-		portletURL.setParameter(
-			"redirect", commercePricingRequestHelper.getCurrentURL());
-		portletURL.setParameter("commercePriceListId", "{id}");
-		portletURL.setParameter(
-			"screenNavigationCategoryKey",
-			CommercePriceListScreenNavigationConstants.CATEGORY_KEY_DETAILS);
-
-		List<ClayDataSetActionDropdownItem> clayDataSetActionDropdownItems =
-			getClayDataSetActionDropdownItems(portletURL.toString(), false);
-
-		clayDataSetActionDropdownItems.add(
-			new ClayDataSetActionDropdownItem(
-				_getManagePriceListPermissionsURL(), null, "permissions",
-				LanguageUtil.get(httpServletRequest, "permissions"), "get",
-				"permissions", "modal-permissions"));
-
-		return clayDataSetActionDropdownItems;
-	}
-
 	public CreationMenu getPriceListCreationMenu() throws Exception {
 		CreationMenu creationMenu = new CreationMenu();
 
@@ -311,24 +279,44 @@ public class CommercePriceListDisplayContext
 		return creationMenu;
 	}
 
+	public List<FDSActionDropdownItem> getPriceListFDSActionDropdownItems()
+		throws PortalException {
+
+		List<FDSActionDropdownItem> fdsActionDropdownItems =
+			getFDSActionDropdownItems(
+				PortletURLBuilder.createRenderURL(
+					commercePricingRequestHelper.getRenderResponse()
+				).setMVCRenderCommandName(
+					"/commerce_price_list/edit_commerce_price_list"
+				).setRedirect(
+					commercePricingRequestHelper.getCurrentURL()
+				).setParameter(
+					"commercePriceListId", "{id}"
+				).setParameter(
+					"screenNavigationCategoryKey",
+					CommercePriceListScreenNavigationConstants.
+						CATEGORY_KEY_DETAILS
+				).buildString(),
+				false);
+
+		fdsActionDropdownItems.add(
+			new FDSActionDropdownItem(
+				_getManagePriceListPermissionsURL(), null, "permissions",
+				LanguageUtil.get(httpServletRequest, "permissions"), "get",
+				"permissions", "modal-permissions"));
+
+		return fdsActionDropdownItems;
+	}
+
 	public String getPriceListsApiUrl(String portletName) {
-		StringBundler filterSB = new StringBundler(4);
+		String encodedFilter = URLCodec.encodeURL(
+			StringBundler.concat(
+				"type eq '", getCommercePriceListType(portletName),
+				StringPool.APOSTROPHE),
+			true);
 
-		filterSB.append("type eq ");
-		filterSB.append(StringPool.APOSTROPHE);
-		filterSB.append(getCommercePriceListType(portletName));
-		filterSB.append(StringPool.APOSTROPHE);
-
-		String encodedFilter = URLCodec.encodeURL(filterSB.toString(), true);
-
-		StringBundler apiUrlSB = new StringBundler(4);
-
-		apiUrlSB.append(PortalUtil.getPortalURL(httpServletRequest));
-		apiUrlSB.append("/o/headless-commerce-admin-pricing/v2.0/price-lists");
-		apiUrlSB.append("?filter=");
-		apiUrlSB.append(encodedFilter);
-
-		return apiUrlSB.toString();
+		return "/o/headless-commerce-admin-pricing/v2.0/price-lists?filter=" +
+			encodedFilter;
 	}
 
 	public String getPriceModifierCategoriesApiUrl() throws PortalException {
@@ -337,11 +325,11 @@ public class CommercePriceListDisplayContext
 				"/price-modifier-categories?nestedFields=category";
 	}
 
-	public List<ClayDataSetActionDropdownItem>
-		getPriceModifierCategoryClayDataSetActionDropdownItems() {
+	public List<FDSActionDropdownItem>
+		getPriceModifierCategoryFDSActionDropdownItems() {
 
 		return ListUtil.fromArray(
-			new ClayDataSetActionDropdownItem(
+			new FDSActionDropdownItem(
 				null, "trash", "remove",
 				LanguageUtil.get(httpServletRequest, "remove"), "delete",
 				"delete", "headless"));
@@ -353,21 +341,11 @@ public class CommercePriceListDisplayContext
 				"/price-modifier-products?nestedFields=product";
 	}
 
-	public List<ClayDataSetActionDropdownItem>
-		getPriceModifierCPDefinitionClayDataSetActionDropdownItems() {
+	public List<FDSActionDropdownItem>
+		getPriceModifierCPDefinitionFDSActionDropdownItems() {
 
 		return ListUtil.fromArray(
-			new ClayDataSetActionDropdownItem(
-				null, "trash", "remove",
-				LanguageUtil.get(httpServletRequest, "remove"), "delete",
-				"delete", "headless"));
-	}
-
-	public List<ClayDataSetActionDropdownItem>
-		getPriceModifierPricingClassClayDataSetActionDropdownItems() {
-
-		return ListUtil.fromArray(
-			new ClayDataSetActionDropdownItem(
+			new FDSActionDropdownItem(
 				null, "trash", "remove",
 				LanguageUtil.get(httpServletRequest, "remove"), "delete",
 				"delete", "headless"));
@@ -379,6 +357,16 @@ public class CommercePriceListDisplayContext
 		return "/o/headless-commerce-admin-pricing/v2.0/price-modifiers/" +
 			getCommercePriceModifierId() +
 				"/price-modifier-product-groups?nestedFields=productGroup";
+	}
+
+	public List<FDSActionDropdownItem>
+		getPriceModifierPricingClassFDSActionDropdownItems() {
+
+		return ListUtil.fromArray(
+			new FDSActionDropdownItem(
+				null, "trash", "remove",
+				LanguageUtil.get(httpServletRequest, "remove"), "delete",
+				"delete", "headless"));
 	}
 
 	public CreationMenu getPriceModifiersCreationMenu() throws Exception {
@@ -420,19 +408,23 @@ public class CommercePriceListDisplayContext
 	}
 
 	private String _getManagePriceListPermissionsURL() throws PortalException {
-		PortletURL portletURL = PortalUtil.getControlPanelPortletURL(
-			httpServletRequest,
-			"com_liferay_portlet_configuration_web_portlet_" +
-				"PortletConfigurationPortlet",
-			ActionRequest.RENDER_PHASE);
-
-		portletURL.setParameter("mvcPath", "/edit_permissions.jsp");
-		portletURL.setParameter(
-			"redirect", commercePricingRequestHelper.getCurrentURL());
-		portletURL.setParameter(
-			"modelResource", CommercePriceList.class.getName());
-		portletURL.setParameter("modelResourceDescription", "{name}");
-		portletURL.setParameter("resourcePrimKey", "{id}");
+		PortletURL portletURL = PortletURLBuilder.create(
+			PortalUtil.getControlPanelPortletURL(
+				httpServletRequest,
+				"com_liferay_portlet_configuration_web_portlet_" +
+					"PortletConfigurationPortlet",
+				ActionRequest.RENDER_PHASE)
+		).setMVCPath(
+			"/edit_permissions.jsp"
+		).setRedirect(
+			commercePricingRequestHelper.getCurrentURL()
+		).setParameter(
+			"modelResource", CommercePriceList.class.getName()
+		).setParameter(
+			"modelResourceDescription", "{name}"
+		).setParameter(
+			"resourcePrimKey", "{id}"
+		).buildPortletURL();
 
 		try {
 			portletURL.setWindowState(LiferayWindowState.POP_UP);

@@ -91,13 +91,10 @@ public abstract class BaseCTDisplayRenderer<T extends BaseModel<T>>
 
 	@Override
 	public String getTypeName(Locale locale) {
-		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
-			locale, getClass());
-
 		Class<T> modelClass = getModelClass();
 
 		return LanguageUtil.get(
-			resourceBundle, "model.resource." + modelClass.getName(),
+			getResourceBundle(locale), "model.resource." + modelClass.getName(),
 			modelClass.getName());
 	}
 
@@ -133,12 +130,10 @@ public abstract class BaseCTDisplayRenderer<T extends BaseModel<T>>
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
-			themeDisplay.getLocale(), getClass());
-
 		buildDisplay(
 			new DisplayBuilderImpl<>(
-				displayContext, resourceBundle, themeDisplay));
+				displayContext, getResourceBundle(displayContext.getLocale()),
+				themeDisplay));
 
 		writer.write("</table></div>");
 	}
@@ -160,6 +155,10 @@ public abstract class BaseCTDisplayRenderer<T extends BaseModel<T>>
 				CamelCaseUtil.fromCamelCase(entry.getKey()),
 				function.apply(model));
 		}
+	}
+
+	protected ResourceBundle getResourceBundle(Locale locale) {
+		return ResourceBundleUtil.getBundle(locale, getClass());
 	}
 
 	protected interface DisplayBuilder<T> {
@@ -280,7 +279,7 @@ public abstract class BaseCTDisplayRenderer<T extends BaseModel<T>>
 			}
 			catch (Exception exception) {
 				if (_log.isWarnEnabled()) {
-					_log.warn(exception, exception);
+					_log.warn(exception);
 				}
 			}
 

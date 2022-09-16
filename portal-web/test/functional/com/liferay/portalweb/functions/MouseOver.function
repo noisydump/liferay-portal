@@ -2,6 +2,16 @@
 @summary = "Mouse over '${locator1}'"
 definition {
 
+	function javaScriptMouseOver {
+		WaitForSPARefresh();
+
+		selenium.javaScriptMouseOver();
+
+		selenium.assertJavaScriptErrors();
+
+		selenium.assertLiferayErrors();
+	}
+
 	function mouseOver {
 		WaitForSPARefresh();
 
@@ -34,6 +44,20 @@ definition {
 		selenium.mouseOver();
 
 		selenium.waitForVisible();
+
+		selenium.assertJavaScriptErrors();
+
+		selenium.assertLiferayErrors();
+	}
+
+	function waitForMenuToggleJSMouseOver {
+		WaitForSPARefresh();
+
+		selenium.waitForElementPresent();
+
+		selenium.waitForElementPresent("//script[contains(@src,'/o/frontend-js-aui-web/liferay/menu_toggle.js')]");
+
+		selenium.mouseOver();
 
 		selenium.assertJavaScriptErrors();
 

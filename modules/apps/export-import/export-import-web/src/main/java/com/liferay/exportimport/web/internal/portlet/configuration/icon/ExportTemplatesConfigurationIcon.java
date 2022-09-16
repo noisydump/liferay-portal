@@ -15,7 +15,8 @@
 package com.liferay.exportimport.web.internal.portlet.configuration.icon;
 
 import com.liferay.exportimport.constants.ExportImportPortletKeys;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.configuration.icon.BasePortletConfigurationIcon;
 import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfigurationIcon;
@@ -28,7 +29,6 @@ import java.util.ResourceBundle;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
-import javax.portlet.PortletURL;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -49,27 +49,28 @@ public class ExportTemplatesConfigurationIcon
 		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
 			"content.Language", getLocale(portletRequest), getClass());
 
-		return LanguageUtil.get(resourceBundle, "export-templates");
+		return _language.get(resourceBundle, "export-templates");
 	}
 
 	@Override
 	public String getURL(
 		PortletRequest portletRequest, PortletResponse portletResponse) {
 
-		PortletURL portletURL = _portal.getControlPanelPortletURL(
-			portletRequest, ExportImportPortletKeys.EXPORT,
-			PortletRequest.RENDER_PHASE);
+		return PortletURLBuilder.create(
+			_portal.getControlPanelPortletURL(
+				portletRequest, ExportImportPortletKeys.EXPORT,
+				PortletRequest.RENDER_PHASE)
+		).setMVCPath(
+			"/export/export_templates/view_export_configurations.jsp"
+		).setRedirect(
+			() -> {
+				ThemeDisplay themeDisplay =
+					(ThemeDisplay)portletRequest.getAttribute(
+						WebKeys.THEME_DISPLAY);
 
-		portletURL.setParameter(
-			"mvcPath",
-			"/export/export_templates/view_export_configurations.jsp");
-
-		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
-		portletURL.setParameter("redirect", themeDisplay.getURLCurrent());
-
-		return portletURL.toString();
+				return themeDisplay.getURLCurrent();
+			}
+		).buildString();
 	}
 
 	@Override
@@ -100,6 +101,9 @@ public class ExportTemplatesConfigurationIcon
 	public boolean isUseDialog() {
 		return false;
 	}
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private Portal _portal;

@@ -24,6 +24,11 @@
 	}
 }
 
+.question-tags-ellipsis {
+	max-width: 250px;
+	text-overflow: ellipsis;
+}
+
 .questions-title {
 	&:after {
 		background-color: $light-l1;
@@ -249,8 +254,18 @@
 	}
 }
 
-.cke_dialog_tabs {
-	left: 5px;
+.cke_dialog {
+	@include media-breakpoint-up(md) {
+		width: 59%;
+
+		.cke_dialog_contents {
+			width: 100%;
+		}
+	}
+
+	.cke_dialog_tabs {
+		left: 5px;
+	}
 }
 
 .question-seen {

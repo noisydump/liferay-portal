@@ -22,6 +22,8 @@ import com.helger.css.reader.errorhandler.DoNothingCSSParseErrorHandler;
 import com.helger.css.writer.CSSWriter;
 import com.helger.css.writer.CSSWriterSettings;
 
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
+
 import java.io.File;
 
 import java.net.URL;
@@ -31,7 +33,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -39,9 +42,10 @@ import org.junit.Test;
  */
 public class CSSRTLConverterTest {
 
-	@Before
-	public void setUp() throws Exception {
-	}
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Test
 	public void testAsterisk() throws Exception {
@@ -406,8 +410,8 @@ public class CSSRTLConverterTest {
 			}
 
 			Assert.assertEquals(
-				formatCss(read(getRtlCustomFileName(filePath))),
-				formatCss(cssRTLConverter.process(read(filePath))));
+				_formatCss(_read(_getRtlCustomFileName(filePath))),
+				_formatCss(cssRTLConverter.process(_read(filePath))));
 		}
 	}
 
@@ -442,7 +446,7 @@ public class CSSRTLConverterTest {
 			cssRTLConverter.process("p{text-align:left}"));
 	}
 
-	protected String formatCss(String css) {
+	private String _formatCss(String css) {
 		CascadingStyleSheet cascadingStyleSheet = CSSReader.readFromString(
 			css, CCharset.CHARSET_UTF_8_OBJ, ECSSVersion.CSS30,
 			new DoNothingCSSParseErrorHandler());
@@ -458,13 +462,13 @@ public class CSSRTLConverterTest {
 		return cssWriter.getCSSAsString(cascadingStyleSheet);
 	}
 
-	protected String getRtlCustomFileName(String fileName) {
+	private String _getRtlCustomFileName(String fileName) {
 		int pos = fileName.lastIndexOf(".");
 
 		return fileName.substring(0, pos) + "_rtl" + fileName.substring(pos);
 	}
 
-	protected String read(String fileName) throws Exception {
+	private String _read(String fileName) throws Exception {
 		Path filePath = Paths.get(fileName);
 
 		return new String(Files.readAllBytes(filePath));

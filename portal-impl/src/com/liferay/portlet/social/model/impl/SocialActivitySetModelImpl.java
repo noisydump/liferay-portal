@@ -28,21 +28,24 @@ import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.social.kernel.model.SocialActivitySet;
 import com.liferay.social.kernel.model.SocialActivitySetModel;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -132,38 +135,38 @@ public class SocialActivitySetModelImpl
 	public static final boolean COLUMN_BITMASK_ENABLED = true;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long CLASSNAMEID_COLUMN_BITMASK = 1L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long CLASSPK_COLUMN_BITMASK = 2L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long GROUPID_COLUMN_BITMASK = 4L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long TYPE_COLUMN_BITMASK = 8L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long USERID_COLUMN_BITMASK = 16L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *		#getColumnBitmask(String)
+	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long MODIFIEDDATE_COLUMN_BITMASK = 32L;
@@ -255,34 +258,6 @@ public class SocialActivitySetModelImpl
 		getAttributeSetterBiConsumers() {
 
 		return _attributeSetterBiConsumers;
-	}
-
-	private static Function<InvocationHandler, SocialActivitySet>
-		_getProxyProviderFunction() {
-
-		Class<?> proxyClass = ProxyUtil.getProxyClass(
-			SocialActivitySet.class.getClassLoader(), SocialActivitySet.class,
-			ModelWrapper.class);
-
-		try {
-			Constructor<SocialActivitySet> constructor =
-				(Constructor<SocialActivitySet>)proxyClass.getConstructor(
-					InvocationHandler.class);
-
-			return invocationHandler -> {
-				try {
-					return constructor.newInstance(invocationHandler);
-				}
-				catch (ReflectiveOperationException
-							reflectiveOperationException) {
-
-					throw new InternalError(reflectiveOperationException);
-				}
-			};
-		}
-		catch (NoSuchMethodException noSuchMethodException) {
-			throw new InternalError(noSuchMethodException);
-		}
 	}
 
 	private static final Map<String, Function<SocialActivitySet, Object>>
@@ -660,7 +635,9 @@ public class SocialActivitySetModelImpl
 		for (Map.Entry<String, Object> entry :
 				_columnOriginalValues.entrySet()) {
 
-			if (entry.getValue() != getColumnValue(entry.getKey())) {
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
 				_columnBitmask |= _columnBitmasks.get(entry.getKey());
 			}
 		}
@@ -716,6 +693,41 @@ public class SocialActivitySetModelImpl
 		socialActivitySetImpl.setActivityCount(getActivityCount());
 
 		socialActivitySetImpl.resetOriginalValues();
+
+		return socialActivitySetImpl;
+	}
+
+	@Override
+	public SocialActivitySet cloneWithOriginalValues() {
+		SocialActivitySetImpl socialActivitySetImpl =
+			new SocialActivitySetImpl();
+
+		socialActivitySetImpl.setMvccVersion(
+			this.<Long>getColumnOriginalValue("mvccVersion"));
+		socialActivitySetImpl.setCtCollectionId(
+			this.<Long>getColumnOriginalValue("ctCollectionId"));
+		socialActivitySetImpl.setActivitySetId(
+			this.<Long>getColumnOriginalValue("activitySetId"));
+		socialActivitySetImpl.setGroupId(
+			this.<Long>getColumnOriginalValue("groupId"));
+		socialActivitySetImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		socialActivitySetImpl.setUserId(
+			this.<Long>getColumnOriginalValue("userId"));
+		socialActivitySetImpl.setCreateDate(
+			this.<Long>getColumnOriginalValue("createDate"));
+		socialActivitySetImpl.setModifiedDate(
+			this.<Long>getColumnOriginalValue("modifiedDate"));
+		socialActivitySetImpl.setClassNameId(
+			this.<Long>getColumnOriginalValue("classNameId"));
+		socialActivitySetImpl.setClassPK(
+			this.<Long>getColumnOriginalValue("classPK"));
+		socialActivitySetImpl.setType(
+			this.<Integer>getColumnOriginalValue("type_"));
+		socialActivitySetImpl.setExtraData(
+			this.<String>getColumnOriginalValue("extraData"));
+		socialActivitySetImpl.setActivityCount(
+			this.<Integer>getColumnOriginalValue("activityCount"));
 
 		return socialActivitySetImpl;
 	}
@@ -841,7 +853,7 @@ public class SocialActivitySetModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			(4 * attributeGetterFunctions.size()) + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -852,9 +864,27 @@ public class SocialActivitySetModelImpl
 			Function<SocialActivitySet, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((SocialActivitySet)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply(
+				(SocialActivitySet)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -901,7 +931,9 @@ public class SocialActivitySetModelImpl
 	private static class EscapedModelProxyProviderFunctionHolder {
 
 		private static final Function<InvocationHandler, SocialActivitySet>
-			_escapedModelProxyProviderFunction = _getProxyProviderFunction();
+			_escapedModelProxyProviderFunction =
+				ProxyUtil.getProxyProviderFunction(
+					SocialActivitySet.class, ModelWrapper.class);
 
 	}
 

@@ -1,16 +1,43 @@
 definition {
 
 	macro addCP {
-		DMNavigator.gotoAddDocumentTypeCP(dmDocumentTypeName = "External Video Shortcut");
+		if (!(isSet(skipNavigation))) {
+			if (isSet(localizedDocumentTypeName)) {
+				DMNavigator.gotoAddDocumentTypeCP(dmDocumentTypeName = "${localizedDocumentTypeName}");
+			}
+			else {
+				DMNavigator.gotoAddDocumentTypeCP(dmDocumentTypeName = "External Video Shortcut");
+			}
+		}
 
-		Type(
-			key_text = "Video URL",
-			locator1 = "TextInput#ANY",
-			value1 = "${videoURL}");
+		if (isSet(localizedVideoURL)) {
+			Type(
+				key_text = "${localizedVideoURL}",
+				locator1 = "TextInput#ANY",
+				value1 = "${videoURL}");
 
-		Pause(locator1 = "5000");
+			AssertTextEquals(
+				key_text = "${localizedVideoURL}",
+				locator1 = "TextInput#ANY",
+				value1 = "${videoURL}");
+		}
+		else {
+			Type(
+				key_text = "Video URL",
+				locator1 = "TextInput#ANY",
+				value1 = "${videoURL}");
+
+			AssertTextEquals(
+				key_text = "Video URL",
+				locator1 = "TextInput#ANY",
+				value1 = "${videoURL}");
+		}
 
 		if (isSet(videoShortcutPreview)) {
+			WaitForElementPresent(
+				key_videoShortcutPreview = "${videoShortcutPreview}",
+				locator1 = "DocumentsAndMediaDocument#VIDEO_SHORTCUT_PREVIEW");
+
 			AssertVisible(
 				key_videoShortcutPreview = "${videoShortcutPreview}",
 				locator1 = "DocumentsAndMediaDocument#VIDEO_SHORTCUT_PREVIEW");
@@ -53,18 +80,30 @@ definition {
 			}
 		}
 
-		PortletEntry.publish();
+		if (isSet(localizedPublish)) {
+			Button.click(button = "${localizedPublish}");
+
+			Alert.viewSuccessMessage();
+		}
+		else {
+			PortletEntry.publish();
+		}
 	}
 
 	macro addPG {
-		DMNavigator.gotoAddDocumentTypePG(dmDocumentTypeName = "External Video Shortcut");
+		DMNavigator.gotoAddDocumentTypePG(
+			contentPage = "${contentPage}",
+			dmDocumentTypeName = "External Video Shortcut");
 
 		Type(
 			key_text = "Video URL",
 			locator1 = "TextInput#ANY",
 			value1 = "${videoURL}");
 
-		Pause(locator1 = "5000");
+		AssertTextEquals(
+			key_text = "Video URL",
+			locator1 = "TextInput#ANY",
+			value1 = "${videoURL}");
 
 		if (isSet(videoShortcutPreview)) {
 			AssertVisible(
@@ -118,7 +157,10 @@ definition {
 			locator1 = "TextInput#ANY",
 			value1 = "${videoURLEdit}");
 
-		Pause(locator1 = "5000");
+		AssertTextEquals(
+			key_text = "Video URL",
+			locator1 = "TextInput#ANY",
+			value1 = "${videoURLEdit}");
 
 		if (isSet(videoShortcutPreview)) {
 			AssertVisible(
@@ -143,7 +185,10 @@ definition {
 			locator1 = "TextInput#ANY",
 			value1 = "${invalidURL}");
 
-		Pause(locator1 = "5000");
+		AssertTextEquals(
+			key_text = "Video URL",
+			locator1 = "TextInput#ANY",
+			value1 = "${invalidURL}");
 
 		if (isSet(youtube)) {
 			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#EXTERNAL_VIDEO_IFRAME");
@@ -154,7 +199,6 @@ definition {
 				locator1 = "Message#ERROR_INVALID_YOUTUBE_VIDEO",
 				value1 = "An error occurred. Please try again later.");
 		}
-
 		else if (isSet(facebook)) {
 			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#EXTERNAL_VIDEO_IFRAME");
 
@@ -162,7 +206,6 @@ definition {
 				locator1 = "Message#ERROR_INVALID_FACEBOOK_VIDEO",
 				value1 = "Video Unavailable");
 		}
-
 		else if (isSet(vimeo)) {
 			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#EXTERNAL_VIDEO_IFRAME");
 
@@ -170,7 +213,6 @@ definition {
 				locator1 = "Message#ERROR_INVALID_VIMEO_VIDEO",
 				value1 = "The embed code for this video is not valid.");
 		}
-
 		else {
 			AssertTextEquals(
 				locator1 = "Message#INFO_EXTERNAL_VIDEO_PREVIEW",
@@ -213,9 +255,9 @@ definition {
 	}
 
 	macro viewPlayedVideo {
-		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#EXTERNAL_VIDEO_IFRAME");
+		WaitForElementPresent(locator1 = "IFrame#EXTERNAL_VIDEO_IFRAME");
 
-		Pause(locator1 = "5000");
+		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#EXTERNAL_VIDEO_IFRAME");
 
 		if (IsElementPresent(locator1 = "Button#TWITCH_PLAY")) {
 			Click(locator1 = "Button#TWITCH_PLAY");

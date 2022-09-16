@@ -14,6 +14,7 @@
 
 package com.liferay.commerce.payment.internal.servlet;
 
+import com.liferay.commerce.checkout.helper.CommerceCheckoutStepHttpHelper;
 import com.liferay.commerce.constants.CommerceOrderPaymentConstants;
 import com.liferay.commerce.constants.CommercePaymentConstants;
 import com.liferay.commerce.model.CommerceOrder;
@@ -21,18 +22,20 @@ import com.liferay.commerce.payment.engine.CommercePaymentEngine;
 import com.liferay.commerce.payment.engine.CommerceSubscriptionEngine;
 import com.liferay.commerce.payment.result.CommercePaymentResult;
 import com.liferay.commerce.payment.util.CommercePaymentHttpHelper;
+import com.liferay.commerce.payment.util.CommercePaymentUtils;
 import com.liferay.commerce.service.CommerceOrderService;
+import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.servlet.PortalSessionThreadLocal;
+import com.liferay.portal.kernel.util.CamelCaseUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.IOException;
-
-import java.math.BigDecimal;
 
 import java.net.URL;
 
@@ -77,9 +80,6 @@ public class CommercePaymentServlet extends HttpServlet {
 					httpServletRequest.getSession());
 			}
 
-			CommerceOrder commerceOrder =
-				_commercePaymentHttpHelper.getCommerceOrder(httpServletRequest);
-
 			URL portalURL = new URL(_portal.getPortalURL(httpServletRequest));
 
 			_nextUrl = ParamUtil.getString(httpServletRequest, "nextStep");
@@ -90,9 +90,14 @@ public class CommercePaymentServlet extends HttpServlet {
 				throw new ServletException();
 			}
 
+			CommerceOrder commerceOrder =
+				_commercePaymentHttpHelper.getCommerceOrder(httpServletRequest);
+
 			_commerceOrderId = commerceOrder.getCommerceOrderId();
 
-			if (BigDecimal.ZERO.compareTo(commerceOrder.getTotal()) == 0) {
+			if (_commerceCheckoutStepHttpHelper.isCommercePaymentComplete(
+					httpServletRequest, commerceOrder)) {
+
 				_commercePaymentEngine.completePayment(
 					_commerceOrderId, null, httpServletRequest);
 
@@ -104,13 +109,9 @@ public class CommercePaymentServlet extends HttpServlet {
 			CommercePaymentResult commercePaymentResult = _startPayment(
 				httpServletRequest);
 
-			if (!commercePaymentResult.isSuccess()) {
-				httpServletResponse.sendRedirect(_nextUrl);
+			if (commercePaymentResult.isSuccess() &&
+				commercePaymentResult.isOnlineRedirect()) {
 
-				return;
-			}
-
-			if (commercePaymentResult.isOnlineRedirect()) {
 				URL redirectURL = new URL(
 					commercePaymentResult.getRedirectUrl());
 
@@ -156,9 +157,36 @@ public class CommercePaymentServlet extends HttpServlet {
 
 				httpServletResponse.sendRedirect(_nextUrl);
 			}
+
+			if (commercePaymentResult.isSuccess() &&
+				(CommercePaymentConstants.
+					COMMERCE_PAYMENT_METHOD_TYPE_ONLINE_STANDARD ==
+						commercePaymentMethodType)) {
+
+				if (commerceOrder.isSubscriptionOrder()) {
+					_commerceSubscriptionEngine.completeRecurringPayment(
+						_commerceOrderId,
+						commercePaymentResult.getAuthTransactionId(),
+						httpServletRequest);
+				}
+				else {
+					_commercePaymentEngine.completePayment(
+						_commerceOrderId,
+						commercePaymentResult.getAuthTransactionId(),
+						httpServletRequest);
+				}
+
+				httpServletResponse.sendRedirect(_nextUrl);
+			}
+
+			if (!commercePaymentResult.isSuccess() &&
+				!httpServletResponse.isCommitted()) {
+
+				httpServletResponse.sendRedirect(_nextUrl);
+			}
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 
 			// Payment Failed
 
@@ -171,7 +199,7 @@ public class CommercePaymentServlet extends HttpServlet {
 				httpServletResponse.sendRedirect(_nextUrl);
 			}
 			catch (PortalException portalException) {
-				_log.error(portalException, portalException);
+				_log.error(portalException);
 			}
 		}
 	}
@@ -185,7 +213,10 @@ public class CommercePaymentServlet extends HttpServlet {
 			String name = param.split(StringPool.EQUAL)[0];
 			String value = param.split(StringPool.EQUAL)[1];
 
-			map.put(name, value);
+			map.put(
+				StringUtil.toUpperCase(
+					CamelCaseUtil.fromCamelCase(name, CharPool.UNDERLINE)),
+				value);
 		}
 
 		return map;
@@ -198,7 +229,9 @@ public class CommercePaymentServlet extends HttpServlet {
 		CommerceOrder commerceOrder = _commerceOrderService.getCommerceOrder(
 			_commerceOrderId);
 
-		if (commerceOrder.isSubscriptionOrder()) {
+		if (commerceOrder.isSubscriptionOrder() &&
+			!_commercePaymentUtils.isDeliveryOnlySubscription(commerceOrder)) {
+
 			return _commerceSubscriptionEngine.processRecurringPayment(
 				_commerceOrderId, _nextUrl, httpServletRequest);
 		}
@@ -210,6 +243,9 @@ public class CommercePaymentServlet extends HttpServlet {
 	private static final Log _log = LogFactoryUtil.getLog(
 		CommercePaymentServlet.class);
 
+	@Reference
+	private CommerceCheckoutStepHttpHelper _commerceCheckoutStepHttpHelper;
+
 	private long _commerceOrderId;
 
 	@Reference
@@ -220,6 +256,9 @@ public class CommercePaymentServlet extends HttpServlet {
 
 	@Reference
 	private CommercePaymentHttpHelper _commercePaymentHttpHelper;
+
+	@Reference
+	private CommercePaymentUtils _commercePaymentUtils;
 
 	@Reference
 	private CommerceSubscriptionEngine _commerceSubscriptionEngine;

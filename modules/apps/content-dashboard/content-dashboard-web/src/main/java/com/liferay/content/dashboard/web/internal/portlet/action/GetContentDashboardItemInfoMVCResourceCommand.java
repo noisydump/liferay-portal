@@ -16,14 +16,17 @@ package com.liferay.content.dashboard.web.internal.portlet.action;
 
 import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetTag;
+import com.liferay.asset.kernel.model.AssetVocabulary;
+import com.liferay.asset.kernel.model.AssetVocabularyConstants;
+import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
 import com.liferay.content.dashboard.item.action.ContentDashboardItemAction;
 import com.liferay.content.dashboard.web.internal.constants.ContentDashboardPortletKeys;
 import com.liferay.content.dashboard.web.internal.item.ContentDashboardItem;
 import com.liferay.content.dashboard.web.internal.item.ContentDashboardItemFactory;
 import com.liferay.content.dashboard.web.internal.item.ContentDashboardItemFactoryTracker;
-import com.liferay.content.dashboard.web.internal.item.type.ContentDashboardItemType;
+import com.liferay.content.dashboard.web.internal.util.ContentDashboardGroupUtil;
 import com.liferay.info.item.InfoItemReference;
-import com.liferay.info.type.WebImage;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -35,15 +38,19 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCResourceCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.HtmlUtil;
-import com.liferay.portal.kernel.util.Http;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
+import com.liferay.portal.kernel.util.WebKeys;
+
+import java.net.URL;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -52,14 +59,14 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.ResourceBundle;
-import java.util.Set;
-import java.util.stream.Stream;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceResponse;
@@ -91,113 +98,205 @@ public class GetContentDashboardItemInfoMVCResourceCommand
 		HttpServletRequest httpServletRequest = _portal.getHttpServletRequest(
 			resourceRequest);
 		Locale locale = _portal.getLocale(resourceRequest);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		try {
 			String className = ParamUtil.getString(
 				resourceRequest, "className");
+
+			ContentDashboardItemFactory<?> contentDashboardItemFactory =
+				_contentDashboardItemFactoryTracker.
+					getContentDashboardItemFactory(className);
+
+			if (contentDashboardItemFactory == null) {
+				JSONPortletResponseUtil.writeJSON(
+					resourceRequest, resourceResponse,
+					JSONFactoryUtil.createJSONArray());
+
+				return;
+			}
+
 			long classPK = GetterUtil.getLong(
 				ParamUtil.getLong(resourceRequest, "classPK"));
 
-			Optional<ContentDashboardItemFactory<?>>
-				contentDashboardItemFactoryOptional =
-					_contentDashboardItemFactoryTracker.
-						getContentDashboardItemFactoryOptional(className);
+			ContentDashboardItem<?> contentDashboardItem =
+				contentDashboardItemFactory.create(classPK);
 
-			JSONObject jsonObject = contentDashboardItemFactoryOptional.flatMap(
-				contentDashboardItemFactory -> {
-					try {
-						return Optional.of(
-							contentDashboardItemFactory.create(classPK));
-					}
-					catch (PortalException portalException) {
-						_log.error(portalException, portalException);
-
-						return Optional.empty();
-					}
-				}
-			).map(
-				contentDashboardItem -> JSONUtil.put(
-					"categories",
-					_getAssetCategoriesJSONArray(contentDashboardItem, locale)
+			JSONPortletResponseUtil.writeJSON(
+				resourceRequest, resourceResponse,
+				JSONUtil.put(
+					"allVersions",
+					_getAllVersionsJSONArray(contentDashboardItem, themeDisplay)
 				).put(
 					"className", _getClassName(contentDashboardItem)
 				).put(
 					"classPK", _getClassPK(contentDashboardItem)
 				).put(
+					"clipboard", _getClipboardJSONObject(contentDashboardItem)
+				).put(
 					"createDate",
 					_toString(contentDashboardItem.getCreateDate())
 				).put(
-					"data", _getDataJSONObject(contentDashboardItem, locale)
+					"description", contentDashboardItem.getDescription(locale)
+				).put(
+					"downloadURL",
+					_getDownloadURL(contentDashboardItem, httpServletRequest)
+				).put(
+					"fetchSharingButtonURL",
+					_getFetchSharingButtonURL(
+						contentDashboardItem, httpServletRequest)
+				).put(
+					"fetchSharingCollaboratorsURL",
+					_getFetchSharingCollaboratorsURL(
+						contentDashboardItem, httpServletRequest)
 				).put(
 					"languageTag", locale.toLanguageTag()
+				).put(
+					"latestVersions",
+					_getLatestVersionsJSONArray(contentDashboardItem, locale)
 				).put(
 					"modifiedDate",
 					_toString(contentDashboardItem.getModifiedDate())
 				).put(
-					"subType", _getSubtype(contentDashboardItem, locale)
+					"preview",
+					Optional.ofNullable(
+						contentDashboardItem.getPreview()
+					).map(
+						ContentDashboardItem.Preview::toJSONObject
+					).orElse(
+						null
+					)
+				).put(
+					"specificFields",
+					_getSpecificFieldsJSONObject(contentDashboardItem, locale)
+				).put(
+					"subscribe",
+					_getSubscribeJSONObject(
+						contentDashboardItem, httpServletRequest)
+				).put(
+					"subType",
+					Optional.ofNullable(
+						contentDashboardItem.getContentDashboardItemSubtype()
+					).map(
+						contentDashboardItemSubtype ->
+							contentDashboardItemSubtype.getLabel(locale)
+					).orElse(
+						StringPool.BLANK
+					)
 				).put(
 					"tags", _getAssetTagsJSONArray(contentDashboardItem)
 				).put(
 					"title", contentDashboardItem.getTitle(locale)
 				).put(
-					"user", _getUserJSONObject(contentDashboardItem, locale)
+					"type", contentDashboardItem.getTypeLabel(locale)
 				).put(
-					"versions",
-					_getVersionsJSONArray(contentDashboardItem, locale)
+					"user",
+					_getUserJSONObject(contentDashboardItem, themeDisplay)
 				).put(
 					"viewURLs",
 					_getViewURLsJSONArray(
 						contentDashboardItem, httpServletRequest)
-				)
-			).orElseGet(
-				JSONFactoryUtil::createJSONObject
-			);
-
-			JSONPortletResponseUtil.writeJSON(
-				resourceRequest, resourceResponse, jsonObject);
+				).put(
+					"vocabularies",
+					_getAssetVocabulariesJSONObject(
+						contentDashboardItem, locale)
+				));
 		}
 		catch (Exception exception) {
 			if (_log.isInfoEnabled()) {
-				_log.info(exception, exception);
+				_log.info(exception);
 			}
-
-			ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
-				locale, getClass());
 
 			JSONPortletResponseUtil.writeJSON(
 				resourceRequest, resourceResponse,
 				JSONUtil.put(
 					"error",
 					ResourceBundleUtil.getString(
-						resourceBundle, "an-unexpected-error-occurred")));
+						ResourceBundleUtil.getBundle(locale, getClass()),
+						"an-unexpected-error-occurred")));
 		}
 	}
 
-	private JSONArray _getAssetCategoriesJSONArray(
-		ContentDashboardItem contentDashboardItem, Locale locale) {
+	private JSONArray _getAllVersionsJSONArray(
+		ContentDashboardItem contentDashboardItem, ThemeDisplay themeDisplay) {
 
-		List<AssetCategory> assetCategories =
-			contentDashboardItem.getAssetCategories();
+		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
 
-		Stream<AssetCategory> stream = assetCategories.stream();
+		List<ContentDashboardItem.Version> allVersions =
+			contentDashboardItem.getAllVersions(themeDisplay);
 
-		return JSONUtil.putAll(
-			stream.map(
-				assetCategory -> assetCategory.getTitle(locale)
-			).toArray());
+		for (ContentDashboardItem.Version version : allVersions) {
+			jsonArray.put(version.toJSONObject());
+		}
+
+		return jsonArray;
 	}
 
 	private JSONArray _getAssetTagsJSONArray(
 		ContentDashboardItem contentDashboardItem) {
 
+		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
+
 		List<AssetTag> assetTags = contentDashboardItem.getAssetTags();
 
-		Stream<AssetTag> stream = assetTags.stream();
+		for (AssetTag assetTag : assetTags) {
+			jsonArray.put(assetTag.getName());
+		}
 
-		return JSONUtil.putAll(
-			stream.map(
-				AssetTag::getName
-			).toArray());
+		return jsonArray;
+	}
+
+	private JSONObject _getAssetVocabulariesJSONObject(
+		ContentDashboardItem contentDashboardItem, Locale locale) {
+
+		Map<Long, Map<String, Object>> assetVocabularyMaps = new HashMap<>();
+
+		List<AssetCategory> assetCategories =
+			contentDashboardItem.getAssetCategories();
+
+		for (AssetCategory assetCategory : assetCategories) {
+			assetVocabularyMaps.computeIfAbsent(
+				assetCategory.getVocabularyId(),
+				vocabularyId -> _getAssetVocabularyMap(
+					_assetVocabularyLocalService.fetchAssetVocabulary(
+						vocabularyId),
+					locale));
+
+			Map<String, Object> assetVocabularyMap = assetVocabularyMaps.get(
+				assetCategory.getVocabularyId());
+
+			List<String> assetCategoryTitles =
+				(List<String>)assetVocabularyMap.get("categories");
+
+			assetCategoryTitles.add(assetCategory.getTitle(locale));
+		}
+
+		return JSONFactoryUtil.createJSONObject(assetVocabularyMaps);
+	}
+
+	private Map<String, Object> _getAssetVocabularyMap(
+		AssetVocabulary assetVocabulary, Locale locale) {
+
+		return HashMapBuilder.<String, Object>put(
+			"categories", ListUtil.fromArray()
+		).put(
+			"groupName",
+			Optional.ofNullable(
+				_groupLocalService.fetchGroup(assetVocabulary.getGroupId())
+			).map(
+				group -> ContentDashboardGroupUtil.getGroupName(group, locale)
+			).orElse(
+				StringPool.BLANK
+			)
+		).put(
+			"isPublic",
+			assetVocabulary.getVisibilityType() ==
+				AssetVocabularyConstants.VISIBILITY_TYPE_PUBLIC
+		).put(
+			"vocabularyName", assetVocabulary.getTitle(locale)
+		).build();
 	}
 
 	private String _getClassName(ContentDashboardItem<?> contentDashboardItem) {
@@ -214,79 +313,227 @@ public class GetContentDashboardItemInfoMVCResourceCommand
 		return infoItemReference.getClassPK();
 	}
 
-	private JSONObject _getDataJSONObject(
+	private JSONObject _getClipboardJSONObject(
+		ContentDashboardItem contentDashboardItem) {
+
+		return Optional.ofNullable(
+			contentDashboardItem.getClipboard()
+		).map(
+			ContentDashboardItem.Clipboard::toJSONObject
+		).orElse(
+			null
+		);
+	}
+
+	private String _getDownloadURL(
+		ContentDashboardItem contentDashboardItem,
+		HttpServletRequest httpServletRequest) {
+
+		List<ContentDashboardItemAction> contentDashboardItemActions =
+			contentDashboardItem.getContentDashboardItemActions(
+				httpServletRequest, ContentDashboardItemAction.Type.DOWNLOAD);
+
+		if (ListUtil.isNotEmpty(contentDashboardItemActions)) {
+			ContentDashboardItemAction contentDashboardItemAction =
+				contentDashboardItemActions.get(0);
+
+			return contentDashboardItemAction.getURL();
+		}
+
+		return null;
+	}
+
+	private String _getFetchSharingButtonURL(
+		ContentDashboardItem contentDashboardItem,
+		HttpServletRequest httpServletRequest) {
+
+		List<ContentDashboardItemAction> contentDashboardItemActions =
+			contentDashboardItem.getContentDashboardItemActions(
+				httpServletRequest,
+				ContentDashboardItemAction.Type.SHARING_BUTTON);
+
+		if (ListUtil.isNotEmpty(contentDashboardItemActions)) {
+			ContentDashboardItemAction contentDashboardItemAction =
+				contentDashboardItemActions.get(0);
+
+			return contentDashboardItemAction.getURL();
+		}
+
+		return null;
+	}
+
+	private String _getFetchSharingCollaboratorsURL(
+		ContentDashboardItem contentDashboardItem,
+		HttpServletRequest httpServletRequest) {
+
+		List<ContentDashboardItemAction> contentDashboardItemActions =
+			contentDashboardItem.getContentDashboardItemActions(
+				httpServletRequest,
+				ContentDashboardItemAction.Type.SHARING_COLLABORATORS);
+
+		if (ListUtil.isNotEmpty(contentDashboardItemActions)) {
+			ContentDashboardItemAction contentDashboardItemAction =
+				contentDashboardItemActions.get(0);
+
+			return contentDashboardItemAction.getURL();
+		}
+
+		return null;
+	}
+
+	private JSONArray _getLatestVersionsJSONArray(
 		ContentDashboardItem contentDashboardItem, Locale locale) {
 
-		Map<String, Object> data = contentDashboardItem.getData(locale);
+		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
 
-		Set<Map.Entry<String, Object>> entries = data.entrySet();
+		List<ContentDashboardItem.Version> latestVersions =
+			contentDashboardItem.getLatestVersions(locale);
 
-		Stream<Map.Entry<String, Object>> stream = entries.stream();
+		for (ContentDashboardItem.Version version : latestVersions) {
+			jsonArray.put(version.toJSONObject());
+		}
+
+		return jsonArray;
+	}
+
+	private JSONObject _getSpecificFieldsJSONObject(
+		ContentDashboardItem contentDashboardItem, Locale locale) {
 
 		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
 
-		stream.forEach(
-			entry -> jsonObject.put(
-				entry.getKey(),
+		Map<String, Object> specificInformation =
+			contentDashboardItem.getSpecificInformation(locale);
+
+		SortedSet<String> keys = new TreeSet<>(specificInformation.keySet());
+
+		for (String key : keys) {
+			jsonObject.put(
+				key,
 				JSONUtil.put(
-					"title", _language.get(locale, entry.getKey())
+					"title", _language.get(locale, key)
 				).put(
-					"value", _toString(entry.getValue())
-				)));
+					"type",
+					_getSpecificInformationType(specificInformation.get(key))
+				).put(
+					"value", _toString(specificInformation.get(key))
+				));
+		}
 
 		return jsonObject;
 	}
 
-	private String _getSubtype(
-		ContentDashboardItem contentDashboardItem, Locale locale) {
+	private String _getSpecificInformationType(Object object) {
+		if (object instanceof Date) {
+			return "Date";
+		}
+		else if (object instanceof URL) {
+			return "URL";
+		}
 
-		ContentDashboardItemType contentDashboardItemType =
-			contentDashboardItem.getContentDashboardItemType();
+		return "String";
+	}
 
-		return contentDashboardItemType.getLabel(locale);
+	private JSONObject _getSubscribeContentDashboardItemActionJSONObject(
+		ContentDashboardItem contentDashboardItem,
+		HttpServletRequest httpServletRequest) {
+
+		List<ContentDashboardItemAction> contentDashboardItemActions =
+			contentDashboardItem.getContentDashboardItemActions(
+				httpServletRequest, ContentDashboardItemAction.Type.SUBSCRIBE);
+
+		if (ListUtil.isNotEmpty(contentDashboardItemActions)) {
+			ContentDashboardItemAction contentDashboardItemAction =
+				contentDashboardItemActions.get(0);
+
+			return JSONUtil.put(
+				"icon", contentDashboardItemAction.getIcon()
+			).put(
+				"label",
+				contentDashboardItemAction.getLabel(
+					_portal.getLocale(httpServletRequest))
+			).put(
+				"url", contentDashboardItemAction.getURL()
+			);
+		}
+
+		return null;
+	}
+
+	private JSONObject _getSubscribeJSONObject(
+		ContentDashboardItem contentDashboardItem,
+		HttpServletRequest httpServletRequest) {
+
+		return Optional.ofNullable(
+			_getSubscribeContentDashboardItemActionJSONObject(
+				contentDashboardItem, httpServletRequest)
+		).orElseGet(
+			() -> _getUnSubscribeContentDashboardItemActionJSONObject(
+				contentDashboardItem, httpServletRequest)
+		);
+	}
+
+	private JSONObject _getUnSubscribeContentDashboardItemActionJSONObject(
+		ContentDashboardItem contentDashboardItem,
+		HttpServletRequest httpServletRequest) {
+
+		List<ContentDashboardItemAction> contentDashboardItemActions =
+			contentDashboardItem.getContentDashboardItemActions(
+				httpServletRequest,
+				ContentDashboardItemAction.Type.UNSUBSCRIBE);
+
+		if (ListUtil.isNotEmpty(contentDashboardItemActions)) {
+			ContentDashboardItemAction contentDashboardItemAction =
+				contentDashboardItemActions.get(0);
+
+			return JSONUtil.put(
+				"icon", contentDashboardItemAction.getIcon()
+			).put(
+				"label",
+				contentDashboardItemAction.getLabel(
+					_portal.getLocale(httpServletRequest))
+			).put(
+				"url", contentDashboardItemAction.getURL()
+			);
+		}
+
+		return null;
 	}
 
 	private JSONObject _getUserJSONObject(
-		ContentDashboardItem contentDashboardItem, Locale locale) {
-
-		String authorProfileImage = null;
-
-		WebImage webImage = (WebImage)contentDashboardItem.getDisplayFieldValue(
-			"authorProfileImage", locale);
-
-		long portraitId = GetterUtil.getLong(
-			_http.getParameter(HtmlUtil.escape(webImage.getUrl()), "img_id"));
-
-		if (portraitId > 0) {
-			authorProfileImage = webImage.getUrl();
-		}
+		ContentDashboardItem contentDashboardItem, ThemeDisplay themeDisplay) {
 
 		return JSONUtil.put(
-			"name", webImage.getAlt()
+			"name", contentDashboardItem.getUserName()
 		).put(
-			"url", authorProfileImage
+			"url",
+			Optional.ofNullable(
+				_userLocalService.fetchUser(contentDashboardItem.getUserId())
+			).filter(
+				user -> user.getPortraitId() > 0
+			).map(
+				user -> {
+					try {
+						return user.getPortraitURL(themeDisplay);
+					}
+					catch (PortalException portalException) {
+						_log.error(portalException);
+
+						return null;
+					}
+				}
+			).orElse(
+				null
+			)
 		).put(
 			"userId", contentDashboardItem.getUserId()
 		);
 	}
 
-	private JSONArray _getVersionsJSONArray(
-		ContentDashboardItem contentDashboardItem, Locale locale) {
-
-		List<ContentDashboardItem.Version> versions =
-			contentDashboardItem.getVersions(locale);
-
-		Stream<ContentDashboardItem.Version> stream = versions.stream();
-
-		return JSONUtil.putAll(
-			stream.map(
-				ContentDashboardItem.Version::toJSONObject
-			).toArray());
-	}
-
 	private JSONArray _getViewURLsJSONArray(
 		ContentDashboardItem contentDashboardItem,
 		HttpServletRequest httpServletRequest) {
+
+		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
 
 		List<ContentDashboardItemAction> contentDashboardItemActions =
 			contentDashboardItem.getContentDashboardItemActions(
@@ -294,27 +541,27 @@ public class GetContentDashboardItemInfoMVCResourceCommand
 
 		List<Locale> locales = contentDashboardItem.getAvailableLocales();
 
-		Stream<Locale> stream = locales.stream();
-
 		if (ListUtil.isEmpty(contentDashboardItemActions)) {
-			return JSONUtil.putAll(
-				stream.map(
-					locale -> JSONUtil.put(
+			for (Locale locale : locales) {
+				jsonArray.put(
+					JSONUtil.put(
 						"default",
 						Objects.equals(
 							locale, contentDashboardItem.getDefaultLocale())
 					).put(
 						"languageId", LocaleUtil.toBCP47LanguageId(locale)
-					)
-				).toArray());
+					));
+			}
+
+			return jsonArray;
 		}
 
 		ContentDashboardItemAction contentDashboardItemAction =
 			contentDashboardItemActions.get(0);
 
-		return JSONUtil.putAll(
-			stream.map(
-				locale -> JSONUtil.put(
+		for (Locale locale : locales) {
+			jsonArray.put(
+				JSONUtil.put(
 					"default",
 					Objects.equals(
 						locale, contentDashboardItem.getDefaultLocale())
@@ -322,8 +569,10 @@ public class GetContentDashboardItemInfoMVCResourceCommand
 					"languageId", LocaleUtil.toBCP47LanguageId(locale)
 				).put(
 					"viewURL", contentDashboardItemAction.getURL(locale)
-				)
-			).toArray());
+				));
+		}
+
+		return jsonArray;
 	}
 
 	private String _toString(Date date) {
@@ -352,11 +601,14 @@ public class GetContentDashboardItemInfoMVCResourceCommand
 		GetContentDashboardItemInfoMVCResourceCommand.class);
 
 	@Reference
+	private AssetVocabularyLocalService _assetVocabularyLocalService;
+
+	@Reference
 	private ContentDashboardItemFactoryTracker
 		_contentDashboardItemFactoryTracker;
 
 	@Reference
-	private Http _http;
+	private GroupLocalService _groupLocalService;
 
 	@Reference
 	private Language _language;

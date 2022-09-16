@@ -16,7 +16,9 @@ package com.liferay.commerce.product.service;
 
 import com.liferay.commerce.product.model.CProduct;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
+import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery;
@@ -31,6 +33,8 @@ import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalService;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.change.tracking.CTService;
+import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
@@ -53,13 +57,14 @@ import org.osgi.annotation.versioning.ProviderType;
  * @see CProductLocalServiceUtil
  * @generated
  */
+@CTAware
 @ProviderType
 @Transactional(
 	isolation = Isolation.PORTAL,
 	rollbackFor = {PortalException.class, SystemException.class}
 )
 public interface CProductLocalService
-	extends BaseLocalService, PersistedModelLocalService {
+	extends BaseLocalService, CTService<CProduct>, PersistedModelLocalService {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -81,7 +86,7 @@ public interface CProductLocalService
 	public CProduct addCProduct(CProduct cProduct);
 
 	public CProduct addCProduct(
-			long groupId, long userId, String externalReferenceCode,
+			String externalReferenceCode, long groupId, long userId,
 			ServiceContext serviceContext)
 		throws PortalException;
 
@@ -138,6 +143,9 @@ public interface CProductLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public <T> T dslQuery(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
@@ -216,6 +224,14 @@ public interface CProductLocalService
 	 * @return the matching c product, or <code>null</code> if a matching c product could not be found
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public CProduct fetchCProductByExternalReferenceCode(
+		long companyId, String externalReferenceCode);
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #fetchCProductByExternalReferenceCode(long, String)}
+	 */
+	@Deprecated
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public CProduct fetchCProductByReferenceCode(
 		long companyId, String externalReferenceCode);
 
@@ -244,6 +260,19 @@ public interface CProductLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public CProduct getCProductByCPInstanceUuid(String cpInstanceUuid)
+		throws PortalException;
+
+	/**
+	 * Returns the c product with the matching external reference code and company.
+	 *
+	 * @param companyId the primary key of the company
+	 * @param externalReferenceCode the c product's external reference code
+	 * @return the matching c product
+	 * @throws PortalException if a matching c product could not be found
+	 */
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public CProduct getCProductByExternalReferenceCode(
+			long companyId, String externalReferenceCode)
 		throws PortalException;
 
 	/**
@@ -344,11 +373,25 @@ public interface CProductLocalService
 	public CProduct updateCProduct(CProduct cProduct);
 
 	public CProduct updateCProductExternalReferenceCode(
-			long cProductId, String externalReferenceCode)
+			String externalReferenceCode, long cProductId)
 		throws PortalException;
 
 	public CProduct updatePublishedCPDefinitionId(
 			long cProductId, long publishedCPDefinitionId)
 		throws PortalException;
+
+	@Override
+	@Transactional(enabled = false)
+	public CTPersistence<CProduct> getCTPersistence();
+
+	@Override
+	@Transactional(enabled = false)
+	public Class<CProduct> getModelClass();
+
+	@Override
+	@Transactional(rollbackFor = Throwable.class)
+	public <R, E extends Throwable> R updateWithUnsafeFunction(
+			UnsafeFunction<CTPersistence<CProduct>, R, E> updateUnsafeFunction)
+		throws E;
 
 }

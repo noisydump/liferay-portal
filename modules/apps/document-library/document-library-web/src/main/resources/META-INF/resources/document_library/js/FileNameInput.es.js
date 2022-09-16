@@ -23,7 +23,7 @@ const RequiredMark = () => (
 		<span className="inline-item-after reference-mark text-warning">
 			<ClayIcon symbol="asterisk" />
 		</span>
-		<span className="hide-accessible">
+		<span className="hide-accessible sr-only">
 			{Liferay.Language.get('required')}
 		</span>
 	</>
@@ -33,15 +33,16 @@ const Feedback = ({message, warning}) => (
 	<ClayForm.FeedbackGroup>
 		<ClayForm.FeedbackItem>
 			{warning && <ClayIcon className="mr-1" symbol="warning-full" />}
+
 			{message}
 		</ClayForm.FeedbackItem>
 	</ClayForm.FeedbackGroup>
 );
 
-const FileNameInput = ({initialValue, portletNamespace, required, visible}) => {
+const FileNameInput = ({initialValue, portletNamespace, required}) => {
 	const inputId = portletNamespace + 'fileName';
 	const [inputValue, setInputValue] = useState(initialValue);
-	const valueChanged = initialValue != inputValue;
+	const valueChanged = initialValue !== inputValue;
 
 	const showWarning = required ? valueChanged && inputValue : valueChanged;
 	const showError = required && !inputValue;
@@ -65,7 +66,7 @@ const FileNameInput = ({initialValue, portletNamespace, required, visible}) => {
 				name={inputId}
 				onChange={({target: {value}}) => setInputValue(value)}
 				required={required}
-				type={visible ? 'text' : 'hidden'}
+				type="text"
 				value={inputValue}
 			/>
 
@@ -74,6 +75,7 @@ const FileNameInput = ({initialValue, portletNamespace, required, visible}) => {
 					message={Liferay.Language.get('this-field-is-required')}
 				/>
 			)}
+
 			{showWarning && (
 				<Feedback
 					message={Liferay.Language.get(
@@ -90,7 +92,6 @@ FileNameInput.propTypes = {
 	initialValue: PropTypes.string,
 	portletNamespace: PropTypes.string,
 	required: PropTypes.bool,
-	visible: PropTypes.bool,
 };
 
 export default FileNameInput;

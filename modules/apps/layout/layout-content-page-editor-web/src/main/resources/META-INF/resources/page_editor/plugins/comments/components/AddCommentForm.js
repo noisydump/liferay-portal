@@ -16,9 +16,9 @@ import {openToast} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useState} from 'react';
 
-import {useDispatch} from '../../../app/store/index';
+import {useDispatch} from '../../../app/contexts/StoreContext';
 import addFragmentComment from '../../../app/thunks/addFragmentComment';
-import {useId} from '../../../app/utils/useId';
+import {useId} from '../../../core/hooks/useId';
 import CommentForm from './CommentForm';
 
 export default function AddCommentForm({fragmentEntryLinkId}) {
@@ -70,7 +70,7 @@ export default function AddCommentForm({fragmentEntryLinkId}) {
 	};
 
 	return (
-		<div className="px-3">
+		<div className="page-editor__fragment-comment__form pt-2 px-3">
 			<CommentForm
 				id={pageEditorCommentEditorId}
 				loading={addingComment}

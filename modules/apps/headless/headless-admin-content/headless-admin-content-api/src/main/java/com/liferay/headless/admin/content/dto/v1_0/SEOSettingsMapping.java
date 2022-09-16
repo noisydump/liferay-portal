@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
@@ -44,7 +45,10 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @generated
  */
 @Generated("")
-@GraphQLName("SEOSettingsMapping")
+@GraphQLName(
+	description = "Specific settings related to SEO",
+	value = "SEOSettingsMapping"
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "SEOSettingsMapping")
 public class SEOSettingsMapping implements Serializable {
@@ -53,25 +57,31 @@ public class SEOSettingsMapping implements Serializable {
 		return ObjectMapperUtil.readValue(SEOSettingsMapping.class, json);
 	}
 
+	public static SEOSettingsMapping unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(SEOSettingsMapping.class, json);
+	}
+
 	@Schema(
 		description = "Field of the content type that will be used as the description"
 	)
-	public String getDescriptionMappingField() {
-		return descriptionMappingField;
+	public String getDescriptionMappingFieldKey() {
+		return descriptionMappingFieldKey;
 	}
 
-	public void setDescriptionMappingField(String descriptionMappingField) {
-		this.descriptionMappingField = descriptionMappingField;
+	public void setDescriptionMappingFieldKey(
+		String descriptionMappingFieldKey) {
+
+		this.descriptionMappingFieldKey = descriptionMappingFieldKey;
 	}
 
 	@JsonIgnore
-	public void setDescriptionMappingField(
+	public void setDescriptionMappingFieldKey(
 		UnsafeSupplier<String, Exception>
-			descriptionMappingFieldUnsafeSupplier) {
+			descriptionMappingFieldKeyUnsafeSupplier) {
 
 		try {
-			descriptionMappingField =
-				descriptionMappingFieldUnsafeSupplier.get();
+			descriptionMappingFieldKey =
+				descriptionMappingFieldKeyUnsafeSupplier.get();
 		}
 		catch (RuntimeException re) {
 			throw re;
@@ -85,25 +95,27 @@ public class SEOSettingsMapping implements Serializable {
 		description = "Field of the content type that will be used as the description"
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected String descriptionMappingField;
+	protected String descriptionMappingFieldKey;
 
 	@Schema(
 		description = "Field of the content type that will be used as the HTML title"
 	)
-	public String getHtmlTitleMappingField() {
-		return htmlTitleMappingField;
+	public String getHtmlTitleMappingFieldKey() {
+		return htmlTitleMappingFieldKey;
 	}
 
-	public void setHtmlTitleMappingField(String htmlTitleMappingField) {
-		this.htmlTitleMappingField = htmlTitleMappingField;
+	public void setHtmlTitleMappingFieldKey(String htmlTitleMappingFieldKey) {
+		this.htmlTitleMappingFieldKey = htmlTitleMappingFieldKey;
 	}
 
 	@JsonIgnore
-	public void setHtmlTitleMappingField(
-		UnsafeSupplier<String, Exception> htmlTitleMappingFieldUnsafeSupplier) {
+	public void setHtmlTitleMappingFieldKey(
+		UnsafeSupplier<String, Exception>
+			htmlTitleMappingFieldKeyUnsafeSupplier) {
 
 		try {
-			htmlTitleMappingField = htmlTitleMappingFieldUnsafeSupplier.get();
+			htmlTitleMappingFieldKey =
+				htmlTitleMappingFieldKeyUnsafeSupplier.get();
 		}
 		catch (RuntimeException re) {
 			throw re;
@@ -117,7 +129,7 @@ public class SEOSettingsMapping implements Serializable {
 		description = "Field of the content type that will be used as the HTML title"
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected String htmlTitleMappingField;
+	protected String htmlTitleMappingFieldKey;
 
 	@Schema(
 		description = "Robots of the page that renders the Display Page Template"
@@ -212,30 +224,30 @@ public class SEOSettingsMapping implements Serializable {
 
 		sb.append("{");
 
-		if (descriptionMappingField != null) {
+		if (descriptionMappingFieldKey != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"descriptionMappingField\": ");
+			sb.append("\"descriptionMappingFieldKey\": ");
 
 			sb.append("\"");
 
-			sb.append(_escape(descriptionMappingField));
+			sb.append(_escape(descriptionMappingFieldKey));
 
 			sb.append("\"");
 		}
 
-		if (htmlTitleMappingField != null) {
+		if (htmlTitleMappingFieldKey != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"htmlTitleMappingField\": ");
+			sb.append("\"htmlTitleMappingFieldKey\": ");
 
 			sb.append("\"");
 
-			sb.append(_escape(htmlTitleMappingField));
+			sb.append(_escape(htmlTitleMappingFieldKey));
 
 			sb.append("\"");
 		}
@@ -270,15 +282,16 @@ public class SEOSettingsMapping implements Serializable {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.admin.content.dto.v1_0.SEOSettingsMapping",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
 	}
 
 	private static boolean _isArray(Object value) {
@@ -304,8 +317,8 @@ public class SEOSettingsMapping implements Serializable {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -336,7 +349,7 @@ public class SEOSettingsMapping implements Serializable {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -344,7 +357,7 @@ public class SEOSettingsMapping implements Serializable {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -352,5 +365,10 @@ public class SEOSettingsMapping implements Serializable {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

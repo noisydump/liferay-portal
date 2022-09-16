@@ -29,14 +29,11 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.portlet.PortletURL;
 
 /**
  * @author Ambrín Chaudhary
@@ -50,22 +47,11 @@ public abstract class BaseTinyMCEEditorConfigContributor
 		ThemeDisplay themeDisplay,
 		RequestBackedPortletURLFactory requestBackedPortletURLFactory) {
 
-		StringBundler sb = new StringBundler(3);
-
-		sb.append(
-			HtmlUtil.escape(
-				PortalUtil.getStaticResourceURL(
-					themeDisplay.getRequest(),
-					themeDisplay.getPathThemeCss() + "/clay.css")));
-		sb.append(StringPool.COMMA);
-		sb.append(
-			HtmlUtil.escape(
-				PortalUtil.getStaticResourceURL(
-					themeDisplay.getRequest(),
-					themeDisplay.getPathThemeCss() + "/main.css")));
-
 		jsonObject.put(
-			"content_css", sb.toString()
+			"content_css",
+			StringBundler.concat(
+				HtmlUtil.escape(themeDisplay.getClayCSSURL()), StringPool.COMMA,
+				HtmlUtil.escape(themeDisplay.getMainCSSURL()))
 		).put(
 			"convert_urls", Boolean.FALSE
 		).put(
@@ -91,12 +77,12 @@ public abstract class BaseTinyMCEEditorConfigContributor
 
 		itemSelectorCriteria.add(itemSelectorCriterion);
 
-		PortletURL itemSelectorURL = itemSelector.getItemSelectorURL(
-			requestBackedPortletURLFactory, itemSelectedEventName,
-			itemSelectorCriteria.toArray(new ItemSelectorCriterion[0]));
-
 		jsonObject.put(
-			"filebrowserImageBrowseUrl", itemSelectorURL.toString()
+			"filebrowserImageBrowseUrl",
+			String.valueOf(
+				itemSelector.getItemSelectorURL(
+					requestBackedPortletURLFactory, itemSelectedEventName,
+					itemSelectorCriteria.toArray(new ItemSelectorCriterion[0])))
 		).put(
 			"invalid_elements", "script"
 		);
@@ -105,7 +91,7 @@ public abstract class BaseTinyMCEEditorConfigContributor
 			TinyMCEEditorConstants.ATTRIBUTE_NAMESPACE + ":contentsLanguageId");
 
 		jsonObject.put(
-			"language", getTinyMCELanguage(contentsLanguageId)
+			"language", _getTinyMCELanguage(contentsLanguageId)
 		).put(
 			"menubar", Boolean.FALSE
 		).put(
@@ -137,7 +123,15 @@ public abstract class BaseTinyMCEEditorConfigContributor
 
 	protected abstract ItemSelector getItemSelector();
 
-	protected String getTinyMCELanguage(String contentsLanguageId) {
+	protected boolean isShowSource(
+		Map<String, Object> inputEditorTaglibAttributes) {
+
+		return GetterUtil.getBoolean(
+			inputEditorTaglibAttributes.get(
+				TinyMCEEditorConstants.ATTRIBUTE_NAMESPACE + ":showSource"));
+	}
+
+	private String _getTinyMCELanguage(String contentsLanguageId) {
 		Locale contentsLocale = LocaleUtil.fromLanguageId(contentsLanguageId);
 
 		contentsLanguageId = LocaleUtil.toLanguageId(contentsLocale);
@@ -149,14 +143,6 @@ public abstract class BaseTinyMCEEditorConfigContributor
 		}
 
 		return tinyMCELanguage;
-	}
-
-	protected boolean isShowSource(
-		Map<String, Object> inputEditorTaglibAttributes) {
-
-		return GetterUtil.getBoolean(
-			inputEditorTaglibAttributes.get(
-				TinyMCEEditorConstants.ATTRIBUTE_NAMESPACE + ":showSource"));
 	}
 
 	private static final String _EXTENDED_VALID_ELEMENTS = StringBundler.concat(

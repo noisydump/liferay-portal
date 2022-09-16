@@ -1,0 +1,15 @@
+@import 'atlas-variables';
+
+html#{$cadmin-selector} {
+	.cadmin {
+		.page-editor__status-bar {
+			font-size: 0.875rem;
+			font-weight: 600;
+
+			& + .lexicon-icon {
+				font-size: 0.875rem;
+				margin-top: 2px;
+			}
+		}
+	}
+}

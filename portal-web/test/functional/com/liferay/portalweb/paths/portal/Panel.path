@@ -2,12 +2,19 @@
 <head>
 <title>Panel</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">Panel</td></tr>
 </thead>
+
 <tbody>
+<tr>
+	<td>PANEL_NAV_ITEM_LINK</td>
+	<td>//div[contains(@class,'panel-group')]//li[contains(@class,'nav-item')]//a[contains(@class,'nav-link')][normalize-space(text())='${key_itemName}']</td>
+	<td></td>
+</tr>
 <tr>
 	<td>PANEL_TITLE</td>
 	<td>//div[contains(@class,'panel-page-category')]//span[contains(.,'${key_componentName}')]</td>
@@ -25,32 +32,22 @@
 </tr>
 <tr>
 	<td>PANEL</td>
-	<td>//div[@class='panel-heading']//a[normalize-space(text())='${key_panel}']</td>
+	<td>//*[contains(@class,'panel')]//*[normalize-space()='${key_panel}'][contains(@class,'collapse')][not(contains(@data-qa-id,'app'))]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PANEL_BY_INDEX</td>
+	<td>xpath=(//*[contains(@class,'panel')]//*[contains(@class,'collapse')][@aria-expanded][not(contains(@data-qa-id,'app'))])[${index}]//*[normalize-space()='${key_panel}']</td>
 	<td></td>
 </tr>
 <tr>
 	<td>PANEL_COLLAPSED</td>
-	<td>//div[@class='panel-heading']//a[normalize-space(text())='${key_panel}'][@aria-expanded='false' or contains(@class,'collapsed')]</td>
+	<td>//*[contains(@class,'panel')]//*[normalize-space()='${key_panel}'][@aria-expanded='false'][contains(@class,'collapse')][not(contains(@data-qa-id,'app'))]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>PANEL_EXPANDED</td>
-	<td>//div[@class='panel-heading']//a[normalize-space(text())='${key_panel}'][@aria-expanded='true' and not(contains(@class,'collapsed'))]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>UNSTYLED_PANEL</td>
-	<td>//div[contains(@class,'panel-group')]//span[normalize-space(text())='${key_panel}']</td>
-	<td></td>
-</tr>
-<tr>
-	<td>UNSTYLED_PANEL_COLLAPSED</td>
-	<td>//div[contains(@class,'panel-group')]//a[@aria-expanded='false']//span[normalize-space(text())='${key_panel}']</td>
-	<td></td>
-</tr>
-<tr>
-	<td>UNSTYLED_PANEL_EXPANDED</td>
-	<td>//div[contains(@class,'panel-group')]//a[@aria-expanded='true']//span[normalize-space(text())='${key_panel}']</td>
+	<td>//*[contains(@class,'panel')]//*[normalize-space()='${key_panel}'][@aria-expanded='true'][contains(@class,'collapse')][not(contains(@data-qa-id,'app'))]</td>
 	<td></td>
 </tr>
 <tr>
@@ -58,10 +55,12 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--MENU-->
+
 <tr>
 	<td>MENU_ITEM</td>
-	<td>//div[contains(@class,'toggler-content-expanded')]//a[contains(.,'${key_portletName}')]</td>
+	<td>//div[contains(@class,'panel-collapse')]//a[contains(.,'${key_portletName}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -69,7 +68,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--ENTRY-->
+
 <tr>
 	<td>ENTRY_ATTACHMENTS</td>
 	<td>//div[contains(@id,'attachmentsHeader')]//a</td>
@@ -77,7 +78,7 @@
 </tr>
 <tr>
 	<td>ENTRY_REPORT_PARAMETERS</td>
-	<td>//div[contains(@id,'report-parametersHeader')]//a</td>
+	<td>//fieldset[contains(@id,'report-parameters')]//span/span[1]</td>
 	<td></td>
 </tr>
 </tbody>

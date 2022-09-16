@@ -147,9 +147,6 @@ public class ParentTaxonomyCategorySerDes {
 						(String)jsonParserFieldValue);
 				}
 			}
-			else if (jsonParserFieldName.equals("status")) {
-				throw new IllegalArgumentException();
-			}
 		}
 
 	}
@@ -178,7 +175,7 @@ public class ParentTaxonomyCategorySerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -214,7 +211,7 @@ public class ParentTaxonomyCategorySerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

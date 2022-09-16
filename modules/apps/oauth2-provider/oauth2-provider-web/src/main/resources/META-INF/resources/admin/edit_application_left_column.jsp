@@ -23,7 +23,7 @@ OAuth2Application oAuth2Application = oAuth2AdminPortletDisplayContext.getOAuth2
 <aui:model-context bean="<%= oAuth2Application %>" model="<%= OAuth2Application.class %>" />
 
 <aui:fieldset>
-	<aui:input helpMessage="application-name-help" label="application-name" name="name" required="<%= true %>" />
+	<aui:input helpMessage="application-name-help" label="name" name="name" required="<%= true %>" />
 
 	<aui:input helpMessage="home-page-url-help" name="homePageURL" />
 
@@ -36,6 +36,15 @@ OAuth2Application oAuth2Application = oAuth2AdminPortletDisplayContext.getOAuth2
 	<c:if test="<%= oAuth2Application != null %>">
 		<aui:input helpMessage="privacy-policy-url-help" name="privacyPolicyURL" />
 	</c:if>
+
+	<aui:select helpMessage="client-authentication-method-help" label="Client Authentication Method" name="clientAuthenticationMethod" required="<%= true %>">
+		<aui:option label="Client Secret Post" value="client_secret_post" />
+		<aui:option label="None" value="none" />
+		<aui:option label="Client Secret JWT" value="client_secret_jwt" />
+		<aui:option label="Private Key JWT" value="private_key_jwt" />
+	</aui:select>
+
+	<aui:input helpMessage="json-web-key-set-help" label="JSON Web Key Set" name="jwks" style="min-height: 100px;" type="textarea" />
 
 	<aui:select helpMessage="client-profile-help" name="clientProfile">
 
@@ -115,6 +124,9 @@ OAuth2Application oAuth2Application = oAuth2AdminPortletDisplayContext.getOAuth2
 
 						<div class="allowedGrantType <%= cssClassesStr %>">
 							<c:choose>
+								<c:when test="<%= grantType.equals(GrantType.AUTHORIZATION_CODE) || grantType.equals(GrantType.AUTHORIZATION_CODE_PKCE) %>">
+									<aui:input checked="<%= checked %>" data="<%= data %>" label="<%= grantType.name() %>" name="<%= name %>" onchange='<%= liferayPortletResponse.getNamespace() + "updateAdminOptionsApplicationSection();" %>' type="checkbox" />
+								</c:when>
 								<c:when test="<%= grantType.equals(GrantType.CLIENT_CREDENTIALS) %>">
 									<aui:input checked="<%= checked %>" data="<%= data %>" helpMessage="the-client-will-impersonate-the-selected-client-credential-user-but-will-be-restricted-to-the-selected-scopes" label="<%= grantType.name() %>" name="<%= clientCredentialsCheckboxName %>" onchange='<%= liferayPortletResponse.getNamespace() + "updateClientCredentialsSection();" %>' type="checkbox" />
 								</c:when>
@@ -124,26 +136,21 @@ OAuth2Application oAuth2Application = oAuth2AdminPortletDisplayContext.getOAuth2
 							</c:choose>
 						</div>
 
-						<%
-						if (grantType.isRequiresRedirectURI()) {
-						%>
-
+						<c:if test="<%= grantType.isRequiresRedirectURI() %>">
 							<script>
 								var allowedAuthorizationTypeCheckbox = document.getElementById(
 									'<portlet:namespace /><%= name %>'
 								);
 
 								if (allowedAuthorizationTypeCheckbox) {
-									allowedAuthorizationTypeCheckbox.addEventListener('click', function (
-										event
-									) {
+									allowedAuthorizationTypeCheckbox.addEventListener('click', (event) => {
 										<portlet:namespace />requiredRedirectURIs();
 									});
 								}
 							</script>
+						</c:if>
 
 					<%
-						}
 					}
 					%>
 
@@ -185,7 +192,7 @@ OAuth2Application oAuth2Application = oAuth2AdminPortletDisplayContext.getOAuth2
 					);
 
 					if (useSignedInUserButton) {
-						useSignedInUserButton.addEventListener('click', function (event) {
+						useSignedInUserButton.addEventListener('click', (event) => {
 							A.one('#<portlet:namespace />clientCredentialUserId').val(
 								'<%= user.getUserId() %>'
 							);
@@ -200,7 +207,7 @@ OAuth2Application oAuth2Application = oAuth2AdminPortletDisplayContext.getOAuth2
 					);
 
 					if (selectUserButton) {
-						selectUserButton.addEventListener('click', function (event) {
+						selectUserButton.addEventListener('click', (event) => {
 							Liferay.Util.openSelectionModal({
 								onSelect: function (event) {
 									A.one('#<portlet:namespace />clientCredentialUserId').val(
@@ -226,6 +233,32 @@ OAuth2Application oAuth2Application = oAuth2AdminPortletDisplayContext.getOAuth2
 				</aui:script>
 			</clay:col>
 		</c:if>
+
+		<c:if test="<%= oAuth2AdminPortletDisplayContext.hasAddTrustedApplicationPermission() %>">
+			<clay:col
+				id='<%= liferayPortletResponse.getNamespace() + "trustedApplicationSection" %>'
+				lg="6"
+			>
+				<h3 class="sheet-subtitle"><liferay-ui:message key="trusted-application" /></h3>
+
+				<aui:field-wrapper>
+					<aui:input checked="<%= (oAuth2Application == null) ? false : oAuth2Application.isTrustedApplication() %>" helpMessage="trusted-application-help" id="trustedApplication" label="trusted-application" name="trustedApplication" onchange='<%= liferayPortletResponse.getNamespace() + "updateAdminOptionsApplicationSection();" %>' type="checkbox" />
+				</aui:field-wrapper>
+			</clay:col>
+		</c:if>
+
+		<c:if test="<%= oAuth2AdminPortletDisplayContext.hasRememberDevicePermission() %>">
+			<clay:col
+				id='<%= liferayPortletResponse.getNamespace() + "rememberDeviceSection" %>'
+				lg="6"
+			>
+				<h3 class="sheet-subtitle"><liferay-ui:message key="remember-device" /></h3>
+
+				<aui:field-wrapper>
+					<aui:input checked="<%= (oAuth2Application == null) ? false : oAuth2Application.isRememberDevice() %>" helpMessage="remember-device-admin-help" id="rememberDevice" label="remember-device" name="rememberDevice" type="checkbox" />
+				</aui:field-wrapper>
+			</clay:col>
+		</c:if>
 	</clay:row>
 
 	<c:if test="<%= oAuth2Application != null %>">
@@ -240,9 +273,7 @@ OAuth2Application oAuth2Application = oAuth2AdminPortletDisplayContext.getOAuth2
 				oAuth2ApplicationFeaturesList = oAuth2Application.getFeaturesList();
 			}
 
-			String[] oAuth2Features = oAuth2AdminPortletDisplayContext.getOAuth2Features(portletPreferences);
-
-			for (String oAuth2Feature : oAuth2Features) {
+			for (String oAuth2Feature : oAuth2AdminPortletDisplayContext.getOAuth2Features(portletPreferences)) {
 				boolean checked = false;
 
 				if ((oAuth2Application != null) && oAuth2ApplicationFeaturesList.contains(oAuth2Feature)) {
@@ -255,7 +286,7 @@ OAuth2Application oAuth2Application = oAuth2AdminPortletDisplayContext.getOAuth2
 			%>
 
 				<div class="supportedFeature">
-					<aui:input checked="<%= checked %>" label="<%= HtmlUtil.escape(oAuth2Feature) %>" name="<%= name %>" type="checkbox" />
+					<aui:input checked="<%= checked %>" label='<%= oAuth2Feature.equals("token.introspection") ? "token-introspection" : HtmlUtil.escape(oAuth2Feature) %>' name="<%= name %>" type="checkbox" />
 				</div>
 
 			<%

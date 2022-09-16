@@ -25,7 +25,7 @@ import com.liferay.portal.search.engine.adapter.index.IndicesExistsIndexResponse
 import com.liferay.portal.search.engine.adapter.search.SearchSearchRequest;
 import com.liferay.portal.search.engine.adapter.search.SearchSearchResponse;
 import com.liferay.portal.search.query.Queries;
-import com.liferay.portal.search.tuning.synonyms.web.internal.index.name.SynonymSetIndexName;
+import com.liferay.portal.search.tuning.synonyms.index.name.SynonymSetIndexName;
 
 import java.util.List;
 import java.util.Optional;
@@ -76,13 +76,6 @@ public class SynonymSetIndexReaderImpl implements SynonymSetIndexReader {
 
 		return _documentToSynonymSetTranslator.translateAll(
 			searchSearchResponse.getSearchHits());
-	}
-
-	@Reference(unbind = "-")
-	protected void setSearchEngineAdapter(
-		SearchEngineAdapter searchEngineAdapter) {
-
-		_searchEngineAdapter = searchEngineAdapter;
 	}
 
 	protected SynonymSet translate(Document document, String id) {

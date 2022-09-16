@@ -3,6 +3,15 @@
 	.ddm-translation-manager {
 		margin-top: 1.25rem;
 
+		.lfr-translationmanager {
+			width: 70%;
+			z-index: 0;
+
+			@media (max-width: 992px) {
+				width: 50%;
+			}
+		}
+
 		.modal-sm {
 			max-width: 300px;
 			position: relative;
@@ -15,8 +24,17 @@
 	margin-right: 5px;
 }
 
-.exception-container > div:first-child {
-	margin-top: 24px;
+.ddm-form-web__exception-container {
+	transition: padding ease $transition-time;
+
+	.alert-dismissible:first-child {
+		margin-top: 24px;
+	}
+
+	&--sidebar-open {
+		padding-left: 0;
+		padding-right: 338px;
+	}
 }
 
 .invalid-form-instance {
@@ -81,30 +99,6 @@
 		h5,
 		.h5 {
 			margin: 0;
-		}
-
-		.ae-placeholder:empty:before {
-			content: attr(data-placeholder);
-		}
-
-		.alloy-editor-container .alloy-editor.alloy-editor-placeholder,
-		.alloy-editor-container
-			.alloy-editor.alloy-editor-placeholder:empty:not(:focus) {
-			border-width: 0;
-			padding-left: 0;
-
-			.form-feedback-item {
-				top: -15px;
-			}
-
-			p {
-				margin: 0;
-			}
-		}
-
-		.alloy-editor-container
-			.alloy-editor.alloy-editor-placeholder:empty:not(:focus) {
-			color: $form-header-placeholder-color;
 		}
 	}
 

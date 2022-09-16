@@ -15,9 +15,10 @@
 package com.liferay.talend.runtime.reader;
 
 import com.liferay.talend.avro.JsonObjectIndexedRecordConverter;
-import com.liferay.talend.common.util.URIUtil;
+import com.liferay.talend.common.headless.HeadlessUtil;
 import com.liferay.talend.properties.input.LiferayInputProperties;
 import com.liferay.talend.runtime.LiferaySource;
+import com.liferay.talend.runtime.client.exception.ResponseContentClientException;
 
 import java.io.IOException;
 
@@ -88,7 +89,16 @@ public class LiferayReader implements Reader<IndexedRecord> {
 
 		_currentPage++;
 
-		_readEndpointJsonObject();
+		try {
+			_readEndpointJsonObject();
+		}
+		catch (ResponseContentClientException responseContentClientException) {
+			if (responseContentClientException.getHttpStatus() == 404) {
+				return false;
+			}
+
+			throw responseContentClientException;
+		}
 
 		if (_itemsJsonArray.size() <= 0) {
 			_hasMore = false;
@@ -198,7 +208,7 @@ public class LiferayReader implements Reader<IndexedRecord> {
 	}
 
 	private void _readEndpointJsonObject() throws IOException {
-		URI resourceURI = URIUtil.updateWithQueryParameters(
+		URI resourceURI = HeadlessUtil.updateWithQueryParameters(
 			_liferayInputProperties.getEndpointUrl(),
 			_getPageQueryParameters());
 

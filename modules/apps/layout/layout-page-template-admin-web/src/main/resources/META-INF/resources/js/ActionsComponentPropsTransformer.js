@@ -14,6 +14,8 @@
 
 import {openSelectionModal} from 'frontend-js-web';
 
+import openDeletePageTemplateModal from './modal/openDeletePageTemplateModal';
+
 const ACTIONS = {
 	deleteCollections({
 		deleteLayoutPageTemplateCollectionURL,
@@ -31,24 +33,26 @@ const ACTIONS = {
 			multiple: true,
 			onSelect: (selectedItems) => {
 				if (selectedItems) {
-					if (
-						confirm(
-							Liferay.Language.get(
-								'are-you-sure-you-want-to-delete-the-selected-entries'
-							)
-						)
-					) {
-						selectedItems.forEach((item) => {
-							layoutPageTemplateCollectionsForm.appendChild(
-								item.cloneNode(true)
-							);
-						});
+					openDeletePageTemplateModal({
+						onDelete: () => {
+							const input = document.createElement('input');
 
-						submitForm(
-							layoutPageTemplateCollectionsForm,
-							deleteLayoutPageTemplateCollectionURL
-						);
-					}
+							input.name = `${portletNamespace}rowIds`;
+							input.value = selectedItems.map(
+								(item) => item.value
+							);
+
+							layoutPageTemplateCollectionsForm.appendChild(
+								input
+							);
+
+							submitForm(
+								layoutPageTemplateCollectionsForm,
+								deleteLayoutPageTemplateCollectionURL
+							);
+						},
+						title: Liferay.Language.get('page-template-sets'),
+					});
 				}
 			},
 			selectEventName: `${portletNamespace}selectCollections`,

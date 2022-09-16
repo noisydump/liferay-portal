@@ -26,6 +26,7 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.ItemSelectorReturnType;
 import com.liferay.item.selector.criteria.UUIDItemSelectorReturnType;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -93,15 +94,12 @@ public class CPDefinitionLinkDisplayContext
 		CreationMenu creationMenu = new CreationMenu();
 
 		for (String type : getCPDefinitionLinkTypes()) {
-			StringBundler sb = new StringBundler(3);
-
-			sb.append(liferayPortletResponse.getNamespace());
-			sb.append("addCommerceProductDefinitionLink");
-			sb.append(type);
-
 			creationMenu.addDropdownItem(
 				dropdownItem -> {
-					dropdownItem.setHref(sb.toString());
+					dropdownItem.setHref(
+						StringBundler.concat(
+							liferayPortletResponse.getNamespace(),
+							"addCommerceProductDefinitionLink", type));
 					dropdownItem.setLabel(
 						LanguageUtil.format(
 							httpServletRequest, "add-x-product", type, true));
@@ -135,10 +133,10 @@ public class CPDefinitionLinkDisplayContext
 				"cpDefinitionId", String.valueOf(cpDefinitionId));
 
 			String checkedCPDefinitionIds = StringUtil.merge(
-				getCheckedCPDefinitionIds(cpDefinitionId, type));
+				_getCheckedCPDefinitionIds(cpDefinitionId, type));
 
 			String disabledCPDefinitionIds = StringUtil.merge(
-				getDisabledCPDefinitionIds(cpDefinitionId, type));
+				_getDisabledCPDefinitionIds(cpDefinitionId, type));
 
 			itemSelectorURL.setParameter(
 				"checkedCPDefinitionIds", checkedCPDefinitionIds);
@@ -151,16 +149,15 @@ public class CPDefinitionLinkDisplayContext
 
 	@Override
 	public PortletURL getPortletURL() throws PortalException {
-		PortletURL portletURL = super.getPortletURL();
-
-		portletURL.setParameter(
-			"cpDefinitionId", String.valueOf(getCPDefinitionId()));
-		portletURL.setParameter(
-			"mvcRenderCommandName", "/cp_definitions/edit_cp_definition");
-		portletURL.setParameter(
-			"screenNavigationCategoryKey", getScreenNavigationCategoryKey());
-
-		return portletURL;
+		return PortletURLBuilder.create(
+			super.getPortletURL()
+		).setMVCRenderCommandName(
+			"/cp_definitions/edit_cp_definition"
+		).setParameter(
+			"cpDefinitionId", getCPDefinitionId()
+		).setParameter(
+			"screenNavigationCategoryKey", getScreenNavigationCategoryKey()
+		).buildPortletURL();
 	}
 
 	@Override
@@ -179,12 +176,12 @@ public class CPDefinitionLinkDisplayContext
 			getCPDefinitionLinkId(), null);
 	}
 
-	protected long[] getCheckedCPDefinitionIds(long cpDefinitionId, String type)
+	private long[] _getCheckedCPDefinitionIds(long cpDefinitionId, String type)
 		throws PortalException {
 
 		List<Long> cpDefinitionIdsList = new ArrayList<>();
 
-		List<CPDefinitionLink> cpDefinitionLinks = getCPDefinitionLinks(
+		List<CPDefinitionLink> cpDefinitionLinks = _getCPDefinitionLinks(
 			cpDefinitionId, type);
 
 		for (CPDefinitionLink cpDefinitionLink : cpDefinitionLinks) {
@@ -200,7 +197,7 @@ public class CPDefinitionLinkDisplayContext
 		return new long[0];
 	}
 
-	protected List<CPDefinitionLink> getCPDefinitionLinks(
+	private List<CPDefinitionLink> _getCPDefinitionLinks(
 			long cpDefinitionId, String type)
 		throws PortalException {
 
@@ -208,13 +205,12 @@ public class CPDefinitionLinkDisplayContext
 			cpDefinitionId, type);
 	}
 
-	protected long[] getDisabledCPDefinitionIds(
-			long cpDefinitionId, String type)
+	private long[] _getDisabledCPDefinitionIds(long cpDefinitionId, String type)
 		throws PortalException {
 
 		List<Long> cpDefinitionIdsList = new ArrayList<>();
 
-		List<CPDefinitionLink> cpDefinitionLinks = getCPDefinitionLinks(
+		List<CPDefinitionLink> cpDefinitionLinks = _getCPDefinitionLinks(
 			cpDefinitionId, type);
 
 		for (CPDefinitionLink cpDefinitionLink : cpDefinitionLinks) {

@@ -23,14 +23,13 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.kernel.workflow.WorkflowDefinition;
 import com.liferay.portal.kernel.workflow.WorkflowDefinitionManagerUtil;
 import com.liferay.portal.workflow.configuration.WorkflowDefinitionConfiguration;
 import com.liferay.portal.workflow.constants.WorkflowWebKeys;
 import com.liferay.portal.workflow.portlet.tab.BaseWorkflowPortletTab;
 import com.liferay.portal.workflow.portlet.tab.WorkflowPortletTab;
 import com.liferay.portal.workflow.web.internal.display.context.WorkflowDefinitionDisplayContext;
-import com.liferay.portal.workflow.web.internal.request.prepocessor.WorkflowPreprocessorHelper;
+import com.liferay.portal.workflow.web.internal.request.preprocessor.helper.WorkflowPreprocessorHelper;
 
 import java.util.Map;
 import java.util.Objects;
@@ -69,6 +68,11 @@ public class WorkflowDefinitionPortletTab extends BaseWorkflowPortletTab {
 	}
 
 	@Override
+	public ServletContext getServletContext() {
+		return _servletContext;
+	}
+
+	@Override
 	public void prepareRender(
 			RenderRequest renderRequest, RenderResponse renderResponse)
 		throws PortletException {
@@ -80,9 +84,7 @@ public class WorkflowDefinitionPortletTab extends BaseWorkflowPortletTab {
 			WorkflowDefinitionDisplayContext displayContext =
 				new WorkflowDefinitionDisplayContext(
 					renderRequest,
-					ResourceBundleLoaderUtil.
-						getResourceBundleLoaderByBundleSymbolicName(
-							"com.liferay.portal.workflow.web"),
+					ResourceBundleLoaderUtil.getPortalResourceBundleLoader(),
 					userLocalService);
 
 			displayContext.setCompanyAdministratorCanPublish(
@@ -97,7 +99,7 @@ public class WorkflowDefinitionPortletTab extends BaseWorkflowPortletTab {
 				Objects.equals(
 					path, "/definition/view_workflow_definition.jsp")) {
 
-				setWorkflowDefinitionRenderRequestAttribute(renderRequest);
+				_setWorkflowDefinitionRenderRequestAttribute(renderRequest);
 			}
 		}
 		catch (Exception exception) {
@@ -129,16 +131,13 @@ public class WorkflowDefinitionPortletTab extends BaseWorkflowPortletTab {
 		return "/definition/view.jsp";
 	}
 
-	@Override
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.portal.workflow.web)",
-		unbind = "-"
-	)
-	protected void setServletContext(ServletContext servletContext) {
-		super.setServletContext(servletContext);
-	}
+	@Reference
+	protected UserLocalService userLocalService;
 
-	protected void setWorkflowDefinitionRenderRequestAttribute(
+	@Reference
+	protected WorkflowPreprocessorHelper workflowPreprocessorHelper;
+
+	private void _setWorkflowDefinitionRenderRequestAttribute(
 			RenderRequest renderRequest)
 		throws PortalException {
 
@@ -153,20 +152,17 @@ public class WorkflowDefinitionPortletTab extends BaseWorkflowPortletTab {
 
 		int version = ParamUtil.getInteger(renderRequest, "version");
 
-		WorkflowDefinition workflowDefinition =
-			WorkflowDefinitionManagerUtil.getWorkflowDefinition(
-				themeDisplay.getCompanyId(), name, version);
-
 		renderRequest.setAttribute(
-			WebKeys.WORKFLOW_DEFINITION, workflowDefinition);
+			WebKeys.WORKFLOW_DEFINITION,
+			WorkflowDefinitionManagerUtil.getWorkflowDefinition(
+				themeDisplay.getCompanyId(), name, version));
 	}
 
-	@Reference
-	protected UserLocalService userLocalService;
+	private volatile boolean _companyAdministratorCanPublish;
 
-	@Reference
-	protected WorkflowPreprocessorHelper workflowPreprocessorHelper;
-
-	private boolean _companyAdministratorCanPublish;
+	@Reference(
+		target = "(osgi.web.symbolicname=com.liferay.portal.workflow.web)"
+	)
+	private ServletContext _servletContext;
 
 }

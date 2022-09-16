@@ -16,6 +16,7 @@ package com.liferay.oauth.service.base;
 
 import com.liferay.oauth.model.OAuthApplication;
 import com.liferay.oauth.service.OAuthApplicationService;
+import com.liferay.oauth.service.OAuthApplicationServiceUtil;
 import com.liferay.oauth.service.persistence.OAuthApplicationPersistence;
 import com.liferay.oauth.service.persistence.OAuthUserPersistence;
 import com.liferay.portal.aop.AopService;
@@ -24,12 +25,17 @@ import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.service.BaseServiceImpl;
 import com.liferay.portal.kernel.util.PortalUtil;
 
+import java.lang.reflect.Field;
+
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -50,8 +56,13 @@ public abstract class OAuthApplicationServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>OAuthApplicationService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.oauth.service.OAuthApplicationServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>OAuthApplicationService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>OAuthApplicationServiceUtil</code>.
 	 */
+	@Deactivate
+	protected void deactivate() {
+		_setServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -62,6 +73,8 @@ public abstract class OAuthApplicationServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		oAuthApplicationService = (OAuthApplicationService)aopProxy;
+
+		_setServiceUtilService(oAuthApplicationService);
 	}
 
 	/**
@@ -106,6 +119,22 @@ public abstract class OAuthApplicationServiceBaseImpl
 		}
 	}
 
+	private void _setServiceUtilService(
+		OAuthApplicationService oAuthApplicationService) {
+
+		try {
+			Field field = OAuthApplicationServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, oAuthApplicationService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@Reference
 	protected com.liferay.oauth.service.OAuthApplicationLocalService
 		oAuthApplicationLocalService;
@@ -131,13 +160,6 @@ public abstract class OAuthApplicationServiceBaseImpl
 		classNameService;
 
 	@Reference
-	protected com.liferay.portal.kernel.service.ImageLocalService
-		imageLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.ImageService imageService;
-
-	@Reference
 	protected com.liferay.portal.kernel.service.ResourceLocalService
 		resourceLocalService;
 
@@ -147,5 +169,8 @@ public abstract class OAuthApplicationServiceBaseImpl
 
 	@Reference
 	protected com.liferay.portal.kernel.service.UserService userService;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		OAuthApplicationServiceBaseImpl.class);
 
 }

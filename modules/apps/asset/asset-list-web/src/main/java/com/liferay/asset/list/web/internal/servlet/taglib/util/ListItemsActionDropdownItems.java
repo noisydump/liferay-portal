@@ -29,11 +29,12 @@ import com.liferay.info.item.InfoItemFieldValues;
 import com.liferay.info.item.InfoItemReference;
 import com.liferay.info.item.InfoItemServiceTracker;
 import com.liferay.info.item.provider.InfoItemFieldValuesProvider;
+import com.liferay.info.search.InfoSearchClassMapperTracker;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.HttpUtil;
+import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -54,6 +55,7 @@ public class ListItemsActionDropdownItems {
 		DLAppService dlAppService,
 		InfoEditURLProviderTracker infoEditURLProviderTracker,
 		InfoItemServiceTracker infoItemServiceTracker,
+		InfoSearchClassMapperTracker infoSearchClassMapperTracker,
 		HttpServletRequest httpServletRequest) {
 
 		_assetDisplayPageFriendlyURLProvider =
@@ -61,6 +63,7 @@ public class ListItemsActionDropdownItems {
 		_dlAppService = dlAppService;
 		_infoEditURLProviderTracker = infoEditURLProviderTracker;
 		_infoItemServiceTracker = infoItemServiceTracker;
+		_infoSearchClassMapperTracker = infoSearchClassMapperTracker;
 
 		_httpServletRequest = httpServletRequest;
 
@@ -105,15 +108,12 @@ public class ListItemsActionDropdownItems {
 			className = assetEntry.getClassName();
 		}
 
-		if (Objects.equals(className, DLFileEntryConstants.getClassName())) {
-			className = FileEntry.class.getName();
-		}
-
 		String viewDisplayPageURL =
 			_assetDisplayPageFriendlyURLProvider.getFriendlyURL(
-				className, classPK, _themeDisplay);
+				_infoSearchClassMapperTracker.getClassName(className), classPK,
+				_themeDisplay);
 
-		return HttpUtil.setParameter(
+		return HttpComponentsUtil.setParameter(
 			viewDisplayPageURL, "p_l_back_url", _getRedirect());
 	}
 
@@ -182,7 +182,7 @@ public class ListItemsActionDropdownItems {
 		String editContentURL = infoEditURLProvider.getURL(
 			object, _httpServletRequest);
 
-		return HttpUtil.setParameter(
+		return HttpComponentsUtil.setParameter(
 			editContentURL, "redirect", _getRedirect());
 	}
 
@@ -218,6 +218,7 @@ public class ListItemsActionDropdownItems {
 	private final HttpServletRequest _httpServletRequest;
 	private final InfoEditURLProviderTracker _infoEditURLProviderTracker;
 	private final InfoItemServiceTracker _infoItemServiceTracker;
+	private final InfoSearchClassMapperTracker _infoSearchClassMapperTracker;
 	private String _redirect;
 	private final ThemeDisplay _themeDisplay;
 

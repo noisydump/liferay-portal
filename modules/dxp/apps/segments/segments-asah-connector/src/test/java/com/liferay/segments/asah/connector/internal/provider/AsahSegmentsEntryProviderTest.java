@@ -23,6 +23,7 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.segments.asah.connector.internal.cache.AsahSegmentsEntryCache;
 import com.liferay.segments.asah.connector.internal.context.contributor.SegmentsAsahRequestContextContributor;
 import com.liferay.segments.context.Context;
@@ -36,18 +37,21 @@ import java.util.stream.LongStream;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
 
 /**
  * @author David Arques
  */
-@RunWith(MockitoJUnitRunner.class)
 public class AsahSegmentsEntryProviderTest {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Before
 	public void setUp() throws PortalException {
@@ -113,7 +117,9 @@ public class AsahSegmentsEntryProviderTest {
 	}
 
 	@Test
-	public void testGetSegmentsEntryIdsWithCachedUserSegments() {
+	public void testGetSegmentsEntryIdsWithCachedUserSegments()
+		throws PortalException {
+
 		String userId = RandomTestUtil.randomString();
 
 		long[] segmentsEntryIds = {
@@ -147,7 +153,9 @@ public class AsahSegmentsEntryProviderTest {
 	}
 
 	@Test
-	public void testGetSegmentsEntryIdsWithContextAndEmptyAcClientUserId() {
+	public void testGetSegmentsEntryIdsWithContextAndEmptyAcClientUserId()
+		throws PortalException {
+
 		Context context = new Context();
 
 		context.put(
@@ -163,18 +171,20 @@ public class AsahSegmentsEntryProviderTest {
 	}
 
 	@Test
-	public void testGetSegmentsEntryIdsWithEmptyContext() {
-		Context context = new Context();
+	public void testGetSegmentsEntryIdsWithEmptyContext()
+		throws PortalException {
 
 		Assert.assertArrayEquals(
 			new long[0],
 			_asahSegmentsEntryProvider.getSegmentsEntryIds(
 				RandomTestUtil.randomLong(), RandomTestUtil.randomString(),
-				RandomTestUtil.randomLong(), context));
+				RandomTestUtil.randomLong(), new Context()));
 	}
 
 	@Test
-	public void testGetSegmentsEntryIdsWithNullContext() {
+	public void testGetSegmentsEntryIdsWithNullContext()
+		throws PortalException {
+
 		Assert.assertArrayEquals(
 			new long[0],
 			_asahSegmentsEntryProvider.getSegmentsEntryIds(
@@ -183,7 +193,9 @@ public class AsahSegmentsEntryProviderTest {
 	}
 
 	@Test
-	public void testGetSegmentsEntryIdsWithUncachedUserSegments() {
+	public void testGetSegmentsEntryIdsWithUncachedUserSegments()
+		throws PortalException {
+
 		long groupId = RandomTestUtil.randomLong();
 
 		Mockito.when(
@@ -233,19 +245,14 @@ public class AsahSegmentsEntryProviderTest {
 		return segmentsEntryRel;
 	}
 
-	@Mock
-	private AsahSegmentsEntryCache _asahSegmentsEntryCache;
-
+	private final AsahSegmentsEntryCache _asahSegmentsEntryCache = Mockito.mock(
+		AsahSegmentsEntryCache.class);
 	private final AsahSegmentsEntryProvider _asahSegmentsEntryProvider =
 		new AsahSegmentsEntryProvider();
-
-	@Mock
-	private GroupLocalService _groupLocalService;
-
-	@Mock
-	private MessageBus _messageBus;
-
-	@Mock
-	private SegmentsEntryRelLocalService _segmentsEntryRelLocalService;
+	private final GroupLocalService _groupLocalService = Mockito.mock(
+		GroupLocalService.class);
+	private final MessageBus _messageBus = Mockito.mock(MessageBus.class);
+	private final SegmentsEntryRelLocalService _segmentsEntryRelLocalService =
+		Mockito.mock(SegmentsEntryRelLocalService.class);
 
 }

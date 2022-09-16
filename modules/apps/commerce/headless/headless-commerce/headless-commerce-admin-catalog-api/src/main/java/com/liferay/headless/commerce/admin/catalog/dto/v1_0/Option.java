@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
@@ -57,6 +58,10 @@ public class Option implements Serializable {
 
 	public static Option toDTO(String json) {
 		return ObjectMapperUtil.readValue(Option.class, json);
+	}
+
+	public static Option unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(Option.class, json);
 	}
 
 	@Schema
@@ -117,7 +122,9 @@ public class Option implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Long catalogId;
 
-	@Schema
+	@Schema(
+		example = "{hu_HU=Description HU, hr_HR=Description HR, en_US=Description}"
+	)
 	@Valid
 	public Map<String, String> getDescription() {
 		return description;
@@ -147,7 +154,7 @@ public class Option implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Map<String, String> description;
 
-	@Schema
+	@Schema(example = "AB-34098-789-N")
 	public String getExternalReferenceCode() {
 		return externalReferenceCode;
 	}
@@ -175,7 +182,7 @@ public class Option implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String externalReferenceCode;
 
-	@Schema
+	@Schema(example = "true")
 	public Boolean getFacetable() {
 		return facetable;
 	}
@@ -203,7 +210,7 @@ public class Option implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Boolean facetable;
 
-	@Schema
+	@Schema(example = "select")
 	@Valid
 	public FieldType getFieldType() {
 		return fieldType;
@@ -243,7 +250,7 @@ public class Option implements Serializable {
 	protected FieldType fieldType;
 
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "30130")
 	public Long getId() {
 		return id;
 	}
@@ -269,7 +276,7 @@ public class Option implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Long id;
 
-	@Schema
+	@Schema(example = "color")
 	public String getKey() {
 		return key;
 	}
@@ -296,7 +303,7 @@ public class Option implements Serializable {
 	@NotEmpty
 	protected String key;
 
-	@Schema
+	@Schema(example = "{en_US=Color, hr_HR=Color HR, hu_HU=Color HU}")
 	@Valid
 	public Map<String, String> getName() {
 		return name;
@@ -355,7 +362,7 @@ public class Option implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected OptionValue[] optionValues;
 
-	@Schema
+	@Schema(example = "1.2")
 	public Double getPriority() {
 		return priority;
 	}
@@ -383,7 +390,7 @@ public class Option implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Double priority;
 
-	@Schema
+	@Schema(example = "true")
 	public Boolean getRequired() {
 		return required;
 	}
@@ -411,7 +418,7 @@ public class Option implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Boolean required;
 
-	@Schema
+	@Schema(example = "true")
 	public Boolean getSkuContributor() {
 		return skuContributor;
 	}
@@ -624,6 +631,7 @@ public class Option implements Serializable {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.commerce.admin.catalog.dto.v1_0.Option",
 		name = "x-class-name"
 	)
@@ -638,13 +646,17 @@ public class Option implements Serializable {
 
 		@JsonCreator
 		public static FieldType create(String value) {
+			if ((value == null) || value.equals("")) {
+				return null;
+			}
+
 			for (FieldType fieldType : values()) {
 				if (Objects.equals(fieldType.getValue(), value)) {
 					return fieldType;
 				}
 			}
 
-			return null;
+			throw new IllegalArgumentException("Invalid enum value: " + value);
 		}
 
 		@JsonValue
@@ -666,9 +678,9 @@ public class Option implements Serializable {
 	}
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
 	}
 
 	private static boolean _isArray(Object value) {
@@ -694,8 +706,8 @@ public class Option implements Serializable {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -726,7 +738,7 @@ public class Option implements Serializable {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -734,7 +746,7 @@ public class Option implements Serializable {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -742,5 +754,10 @@ public class Option implements Serializable {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

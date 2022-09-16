@@ -44,7 +44,7 @@ import com.liferay.portal.kernel.service.permission.PortletPermission;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
-import com.liferay.portal.kernel.upgrade.BaseUpgradePortletId;
+import com.liferay.portal.kernel.upgrade.BasePortletIdUpgradeProcess;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -70,7 +70,7 @@ import org.junit.runner.RunWith;
  * @author Raymond Augé
  */
 @RunWith(Arquillian.class)
-public class BaseUpgradePortletIdTest extends BaseUpgradePortletId {
+public class BaseUpgradePortletIdTest extends BasePortletIdUpgradeProcess {
 
 	@ClassRule
 	@Rule
@@ -115,8 +115,8 @@ public class BaseUpgradePortletIdTest extends BaseUpgradePortletId {
 
 	@After
 	public void tearDown() throws Exception {
-		try (Connection con = DataAccess.getConnection()) {
-			connection = con;
+		try (Connection connection = DataAccess.getConnection()) {
+			this.connection = connection;
 
 			String[][] renamePortletIdsArray = getRenamePortletIdsArray();
 
@@ -131,7 +131,7 @@ public class BaseUpgradePortletIdTest extends BaseUpgradePortletId {
 			}
 		}
 		finally {
-			connection = null;
+			this.connection = null;
 		}
 
 		for (String portletId : _PORTLET_IDS) {
@@ -169,7 +169,7 @@ public class BaseUpgradePortletIdTest extends BaseUpgradePortletId {
 	protected Layout addLayout() throws Exception {
 		Group group = GroupTestUtil.addGroup();
 
-		return LayoutTestUtil.addLayout(group, false);
+		return LayoutTestUtil.addTypePortletLayout(group, false);
 	}
 
 	protected void addPortletPreferences(Layout layout, String portletId)
@@ -302,18 +302,15 @@ public class BaseUpgradePortletIdTest extends BaseUpgradePortletId {
 					layout.getPlid(), " via primKey ", oldPortletPrimaryKey),
 				resourcePermission);
 
-			resourcePermission =
-				_resourcePermissionLocalService.fetchResourcePermission(
-					TestPropsValues.getCompanyId(), newRootPortletId,
-					ResourceConstants.SCOPE_INDIVIDUAL, newPortletPrimaryKey,
-					role.getRoleId());
-
 			Assert.assertNotNull(
 				StringBundler.concat(
 					newPortletId, " does not have a resource permission on ",
 					"page ", layout.getPlid(), " via primKey ",
 					newPortletPrimaryKey),
-				resourcePermission);
+				_resourcePermissionLocalService.fetchResourcePermission(
+					TestPropsValues.getCompanyId(), newRootPortletId,
+					ResourceConstants.SCOPE_INDIVIDUAL, newPortletPrimaryKey,
+					role.getRoleId()));
 
 			boolean hasViewPermission =
 				_resourcePermissionLocalService.hasResourcePermission(

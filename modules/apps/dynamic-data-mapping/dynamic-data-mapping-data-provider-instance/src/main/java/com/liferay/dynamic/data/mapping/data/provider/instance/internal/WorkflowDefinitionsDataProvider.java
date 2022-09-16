@@ -18,9 +18,8 @@ import com.liferay.dynamic.data.mapping.data.provider.DDMDataProvider;
 import com.liferay.dynamic.data.mapping.data.provider.DDMDataProviderException;
 import com.liferay.dynamic.data.mapping.data.provider.DDMDataProviderRequest;
 import com.liferay.dynamic.data.mapping.data.provider.DDMDataProviderResponse;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.util.KeyValuePair;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.workflow.WorkflowDefinition;
@@ -58,7 +57,7 @@ public class WorkflowDefinitionsDataProvider implements DDMDataProvider {
 
 		keyValuePairs.add(
 			new KeyValuePair(
-				"no-workflow", LanguageUtil.get(locale, "no-workflow")));
+				"no-workflow", _language.get(locale, "no-workflow")));
 
 		DDMDataProviderResponse.Builder builder =
 			DDMDataProviderResponse.Builder.newBuilder();
@@ -78,9 +77,7 @@ public class WorkflowDefinitionsDataProvider implements DDMDataProvider {
 			String languageId = LocaleUtil.toLanguageId(locale);
 
 			for (WorkflowDefinition workflowDefinition : workflowDefinitions) {
-				String value =
-					workflowDefinition.getName() + StringPool.AT +
-						workflowDefinition.getVersion();
+				String value = workflowDefinition.getName();
 
 				keyValuePairs.add(
 					new KeyValuePair(
@@ -108,5 +105,8 @@ public class WorkflowDefinitionsDataProvider implements DDMDataProvider {
 		target = "(proxy.bean=false)"
 	)
 	protected volatile WorkflowDefinitionManager workflowDefinitionManager;
+
+	@Reference
+	private Language _language;
 
 }

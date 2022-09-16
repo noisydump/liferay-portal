@@ -22,10 +22,10 @@ DLViewFileEntryTypesDisplayContext dlViewFileEntryTypesDisplayContext = new DLVi
 
 <liferay-util:include page="/document_library/navigation.jsp" servletContext="<%= application %>" />
 
-<clay:management-toolbar-v2
+<clay:management-toolbar
 	clearResultsURL="<%= dlViewFileEntryTypesDisplayContext.getClearResultsURL() %>"
 	creationMenu="<%= dlViewFileEntryTypesDisplayContext.getCreationMenu() %>"
-	disabled="<%= dlViewFileEntryTypesDisplayContext.getTotalItems() == 0 %>"
+	disabled="<%= dlViewFileEntryTypesDisplayContext.isSearchDisabled() %>"
 	itemsTotal="<%= dlViewFileEntryTypesDisplayContext.getTotalItems() %>"
 	searchActionURL="<%= dlViewFileEntryTypesDisplayContext.getSearchActionURL() %>"
 	searchFormName="fm"
@@ -50,11 +50,15 @@ DLViewFileEntryTypesDisplayContext dlViewFileEntryTypesDisplayContext = new DLVi
 		>
 
 			<%
-			PortletURL rowURL = liferayPortletResponse.createRenderURL();
-
-			rowURL.setParameter("mvcRenderCommandName", "/document_library/edit_file_entry_type");
-			rowURL.setParameter("redirect", currentURL);
-			rowURL.setParameter("fileEntryTypeId", String.valueOf(fileEntryType.getFileEntryTypeId()));
+			PortletURL rowURL = PortletURLBuilder.createRenderURL(
+				liferayPortletResponse
+			).setMVCRenderCommandName(
+				"/document_library/edit_file_entry_type"
+			).setRedirect(
+				currentURL
+			).setParameter(
+				"fileEntryTypeId", fileEntryType.getFileEntryTypeId()
+			).buildPortletURL();
 			%>
 
 			<liferay-ui:search-container-column-text

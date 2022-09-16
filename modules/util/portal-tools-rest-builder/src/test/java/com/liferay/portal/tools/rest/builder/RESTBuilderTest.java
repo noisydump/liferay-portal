@@ -14,15 +14,20 @@
 
 package com.liferay.portal.tools.rest.builder;
 
-import com.liferay.portal.kernel.util.StringBundler;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.File;
 
 import java.net.URL;
 
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
+import java.util.List;
+import java.util.stream.Stream;
 
 import org.apache.commons.io.FileUtils;
 
@@ -40,7 +45,7 @@ public class RESTBuilderTest {
 
 		RESTBuilder restBuilder = new RESTBuilder(
 			new File(dependenciesPath, "copyright.txt"),
-			new File(dependenciesPath), null);
+			new File(dependenciesPath), null, null);
 
 		restBuilder.build();
 
@@ -52,8 +57,19 @@ public class RESTBuilderTest {
 
 		Assert.assertTrue(applicationFile.exists());
 
+		_assertBooleanParameterName(filesPath);
+
 		_assertResourceFilesExist(filesPath, "Document");
 		_assertResourceFilesExist(filesPath, "Folder");
+		_assertResourceFilesExist(filesPath, "Test");
+
+		_assertDTOFile(filesPath, "UnreferencedSchemaComponent");
+
+		_assertPropertiesWithHyphens(
+			filesPath, "Test", "property-with-hyphens");
+		_assertPropertiesWithXML(filesPath, "Test", "xmlProperty");
+
+		_assertForcePredictableOperationId(filesPath);
 
 		File sampleApiDir = new File(filesPath + "/sample-api");
 
@@ -66,6 +82,92 @@ public class RESTBuilderTest {
 		FileUtils.deleteDirectory(sampleImplDir);
 
 		Assert.assertFalse(sampleImplDir.exists());
+	}
+
+	private void _assertBooleanParameterName(String filesPath)
+		throws Exception {
+
+		File file = new File(
+			filesPath.concat(
+				"/sample-impl/src/main/java/com/example/sample/internal" +
+					"/resource/v1_0_0/BaseTestBooleanResourceImpl.java"));
+
+		String text = new String(
+			Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8);
+
+		Assert.assertTrue(text.contains("Boolean booleanValue"));
+	}
+
+	private void _assertDTOFile(String filesPath, String resourceName) {
+		File file = new File(
+			_getResourcePath(
+				filesPath,
+				"/sample-api/src/main/java/com/example/sample/dto/v1_0_0/",
+				resourceName, ".java"));
+
+		Assert.assertTrue(file.exists());
+	}
+
+	private void _assertForcePredictableOperationId(String filesPath)
+		throws Exception {
+
+		File file = new File(
+			filesPath.concat(
+				"/sample-impl/src/main/java/com/example/sample/internal" +
+					"/graphql/query/v1_0_0/Query.java"));
+
+		String text = new String(
+			Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8);
+
+		Assert.assertFalse(text.contains("ForcePredictableOperationIdTest"));
+	}
+
+	private void _assertPropertiesWithHyphens(
+			String filesPath, String resourceName, String propertyName)
+		throws Exception {
+
+		File file = new File(
+			_getResourcePath(
+				filesPath,
+				"/sample-api/src/main/java/com/example/sample/dto/v1_0_0/",
+				resourceName, ".java"));
+
+		List<String> lines = Files.readAllLines(file.toPath());
+
+		Stream<String> stream = lines.stream();
+
+		Assert.assertTrue(
+			stream.anyMatch(
+				line -> line.contains(
+					"access = JsonProperty.Access.READ_WRITE, value = \"" +
+						propertyName + "\"")));
+
+		stream = lines.stream();
+
+		Assert.assertTrue(
+			stream.anyMatch(
+				line -> line.contains(
+					"sb.append(\"\\\"" + propertyName + "\\\": \");")));
+	}
+
+	private void _assertPropertiesWithXML(
+			String filesPath, String resourceName, String xmlPropertyName)
+		throws Exception {
+
+		File file = new File(
+			_getResourcePath(
+				filesPath,
+				"/sample-api/src/main/java/com/example/sample/dto/v1_0_0/",
+				resourceName, ".java"));
+
+		List<String> lines = Files.readAllLines(file.toPath());
+
+		Stream<String> stream = lines.stream();
+
+		Assert.assertTrue(
+			stream.anyMatch(
+				line -> line.contains(
+					"@XmlElement(name = \"" + xmlPropertyName + "\")")));
 	}
 
 	private void _assertResourceFilesExist(
@@ -97,14 +199,6 @@ public class RESTBuilderTest {
 
 		Assert.assertTrue(propertiesFile.exists());
 
-		File dtoFolderFile = new File(
-			_getResourcePath(
-				filesPath,
-				"/sample-api/src/main/java/com/example/sample/dto/v1_0_0/",
-				resourceName, ".java"));
-
-		Assert.assertTrue(dtoFolderFile.exists());
-
 		File resourceFolderFile = new File(
 			_getResourcePath(
 				filesPath,
@@ -112,6 +206,8 @@ public class RESTBuilderTest {
 				resourceName, "Resource.java"));
 
 		Assert.assertTrue(resourceFolderFile.exists());
+
+		_assertDTOFile(filesPath, resourceName);
 	}
 
 	private String _getDependenciesPath() {

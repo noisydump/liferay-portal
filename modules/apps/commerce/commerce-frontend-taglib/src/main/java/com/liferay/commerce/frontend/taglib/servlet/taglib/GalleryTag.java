@@ -15,16 +15,15 @@
 package com.liferay.commerce.frontend.taglib.servlet.taglib;
 
 import com.liferay.commerce.frontend.taglib.internal.servlet.ServletContextUtil;
-import com.liferay.commerce.product.catalog.CPMedia;
-import com.liferay.commerce.product.content.util.CPContentHelper;
-import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.commerce.product.model.CPDefinition;
+import com.liferay.commerce.product.service.CPDefinitionLocalServiceUtil;
+import com.liferay.info.item.renderer.InfoItemRenderer;
+import com.liferay.info.item.renderer.InfoItemRendererTracker;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.taglib.servlet.PipingServletResponseFactory;
 import com.liferay.taglib.util.IncludeTag;
-
-import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspException;
@@ -32,65 +31,74 @@ import javax.servlet.jsp.PageContext;
 
 /**
  * @author Fabio Mastrorilli
+ * @author Alessio Antonio Rendina
  */
 public class GalleryTag extends IncludeTag {
 
 	@Override
 	public int doStartTag() throws JspException {
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
 		try {
-			_images = _cpContentHelper.getImages(_cpDefinitionId, themeDisplay);
+			InfoItemRenderer<CPDefinition> infoItemRenderer =
+				(InfoItemRenderer<CPDefinition>)
+					_infoItemRendererTracker.getInfoItemRenderer(
+						"cpDefinition-image-gallery");
+
+			infoItemRenderer.render(
+				CPDefinitionLocalServiceUtil.getCPDefinition(_cpDefinitionId),
+				(HttpServletRequest)pageContext.getRequest(),
+				PipingServletResponseFactory.createPipingServletResponse(
+					pageContext));
 		}
-		catch (PortalException portalException) {
-			_log.error(portalException, portalException);
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
+			return SKIP_BODY;
 		}
 
-		return super.doStartTag();
+		return SKIP_BODY;
 	}
 
 	public long getCPDefinitionId() {
 		return _cpDefinitionId;
 	}
 
+	public String getNamespace() {
+		return _namespace;
+	}
+
 	public void setCPDefinitionId(long cpDefinitionId) {
 		_cpDefinitionId = cpDefinitionId;
+	}
+
+	public void setNamespace(String namespace) {
+		_namespace = namespace;
 	}
 
 	@Override
 	public void setPageContext(PageContext pageContext) {
 		super.setPageContext(pageContext);
 
-		_cpContentHelper = ServletContextUtil.getCPContentHelper();
-		servletContext = ServletContextUtil.getServletContext();
+		setServletContext(ServletContextUtil.getServletContext());
+
+		_infoItemRendererTracker =
+			ServletContextUtil.getInfoItemRendererTracker();
 	}
 
 	@Override
 	protected void cleanUp() {
 		super.cleanUp();
 
-		_cpContentHelper = null;
 		_cpDefinitionId = 0;
-		_images = null;
+		_infoItemRendererTracker = null;
+		_namespace = StringPool.BLANK;
 	}
-
-	@Override
-	protected String getPage() {
-		return _PAGE;
-	}
-
-	@Override
-	protected void setAttributes(HttpServletRequest httpServletRequest) {
-		request.setAttribute("liferay-commerce:gallery:images", _images);
-	}
-
-	private static final String _PAGE = "/gallery/page.jsp";
 
 	private static final Log _log = LogFactoryUtil.getLog(GalleryTag.class);
 
-	private CPContentHelper _cpContentHelper;
 	private long _cpDefinitionId;
-	private List<CPMedia> _images;
+	private InfoItemRendererTracker _infoItemRendererTracker;
+	private String _namespace = StringPool.BLANK;
 
 }

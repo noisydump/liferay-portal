@@ -24,8 +24,26 @@ import com.liferay.fragment.service.FragmentCollectionLocalServiceUtil;
 import com.liferay.fragment.service.FragmentCollectionServiceUtil;
 import com.liferay.fragment.service.FragmentEntryLocalServiceUtil;
 import com.liferay.fragment.web.internal.constants.FragmentWebKeys;
+import com.liferay.fragment.web.internal.info.field.type.CaptchaInfoFieldType;
+import com.liferay.info.field.type.BooleanInfoFieldType;
+import com.liferay.info.field.type.DateInfoFieldType;
+import com.liferay.info.field.type.FileInfoFieldType;
+import com.liferay.info.field.type.InfoFieldType;
+import com.liferay.info.field.type.NumberInfoFieldType;
+import com.liferay.info.field.type.RelationshipInfoFieldType;
+import com.liferay.info.field.type.SelectInfoFieldType;
+import com.liferay.info.field.type.TextInfoFieldType;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.frontend.icons.FrontendIconsUtil;
+import com.liferay.portal.kernel.json.JSONArray;
+import com.liferay.portal.kernel.json.JSONException;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
@@ -37,10 +55,12 @@ import com.liferay.portal.kernel.template.TemplateManager;
 import com.liferay.portal.kernel.template.TemplateManagerUtil;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -52,9 +72,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.portlet.ActionRequest;
 import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
 import javax.portlet.RenderResponse;
 
 import javax.servlet.http.HttpServletRequest;
@@ -212,17 +230,18 @@ public class EditFragmentEntryDisplayContext {
 			return redirect;
 		}
 
-		PortletURL portletURL = _renderResponse.createRenderURL();
+		return PortletURLBuilder.createRenderURL(
+			_renderResponse
+		).setParameter(
+			"fragmentCollectionId",
+			() -> {
+				if (getFragmentCollectionId() > 0) {
+					return getFragmentCollectionId();
+				}
 
-		portletURL.setParameter("mvcRenderCommandName", "/fragment/view");
-
-		if (getFragmentCollectionId() > 0) {
-			portletURL.setParameter(
-				"fragmentCollectionId",
-				String.valueOf(getFragmentCollectionId()));
-		}
-
-		return portletURL.toString();
+				return null;
+			}
+		).buildString();
 	}
 
 	private String _getConfigurationContent() {
@@ -262,27 +281,45 @@ public class EditFragmentEntryDisplayContext {
 		return _cssContent;
 	}
 
-	private String _getFragmentEntryRenderURL(String mvcRenderCommandName)
-		throws Exception {
-
-		PortletURL portletURL = PortletURLFactoryUtil.create(
-			_httpServletRequest, FragmentPortletKeys.FRAGMENT,
-			PortletRequest.RENDER_PHASE);
-
-		portletURL.setParameter("mvcRenderCommandName", mvcRenderCommandName);
+	private JSONArray _getFieldTypesJSONArray() {
+		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
 
 		FragmentEntry fragmentEntry = getFragmentEntry();
 
-		portletURL.setParameter(
-			"fragmentEntryId",
-			String.valueOf(fragmentEntry.getFragmentEntryId()));
-		portletURL.setParameter(
-			"fragmentEntryKey",
-			String.valueOf(fragmentEntry.getFragmentEntryKey()));
+		if ((fragmentEntry == null) || !fragmentEntry.isTypeInput()) {
+			return jsonArray;
+		}
 
-		portletURL.setWindowState(LiferayWindowState.POP_UP);
+		for (InfoFieldType infoFieldType : _INFO_FIELD_TYPES) {
+			jsonArray.put(
+				JSONUtil.put(
+					"key", infoFieldType.getName()
+				).put(
+					"label", infoFieldType.getLabel(_themeDisplay.getLocale())
+				));
+		}
 
-		return portletURL.toString();
+		return jsonArray;
+	}
+
+	private String _getFragmentEntryRenderURL(String mvcRenderCommandName)
+		throws Exception {
+
+		FragmentEntry fragmentEntry = getFragmentEntry();
+
+		return PortletURLBuilder.create(
+			PortletURLFactoryUtil.create(
+				_httpServletRequest, FragmentPortletKeys.FRAGMENT,
+				PortletRequest.RENDER_PHASE)
+		).setMVCRenderCommandName(
+			mvcRenderCommandName
+		).setParameter(
+			"fragmentEntryId", fragmentEntry.getFragmentEntryId()
+		).setParameter(
+			"fragmentEntryKey", fragmentEntry.getFragmentEntryKey()
+		).setWindowState(
+			LiferayWindowState.POP_UP
+		).buildString();
 	}
 
 	private String _getHtmlContent() {
@@ -297,6 +334,47 @@ public class EditFragmentEntryDisplayContext {
 		}
 
 		return _htmlContent;
+	}
+
+	private JSONArray _getInitialFieldTypesJSONArray() {
+		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
+
+		FragmentEntry fragmentEntry = getFragmentEntry();
+
+		if ((fragmentEntry == null) || !fragmentEntry.isTypeInput()) {
+			return jsonArray;
+		}
+
+		JSONArray fieldTypesJSONArray = JSONFactoryUtil.createJSONArray();
+
+		try {
+			JSONObject typeOptionsJSONObject = JSONFactoryUtil.createJSONObject(
+				fragmentEntry.getTypeOptions());
+
+			fieldTypesJSONArray = typeOptionsJSONObject.getJSONArray(
+				"fieldTypes");
+		}
+		catch (JSONException jsonException) {
+			_log.error(jsonException);
+		}
+
+		if ((fieldTypesJSONArray == null) ||
+			(fieldTypesJSONArray.length() <= 0)) {
+
+			return jsonArray;
+		}
+
+		for (InfoFieldType infoFieldType : _INFO_FIELD_TYPES) {
+			if (!JSONUtil.hasValue(
+					fieldTypesJSONArray, infoFieldType.getName())) {
+
+				continue;
+			}
+
+			jsonArray.put(infoFieldType.getName());
+		}
+
+		return jsonArray;
 	}
 
 	private String _getJsContent() {
@@ -341,6 +419,9 @@ public class EditFragmentEntryDisplayContext {
 		List<String> freeMarkerVariables = new ArrayList<>(template.keySet());
 
 		freeMarkerVariables.add("configuration");
+		freeMarkerVariables.add("fragmentElementId");
+		freeMarkerVariables.add("fragmentEntryLinkNamespace");
+		freeMarkerVariables.add("layoutMode");
 
 		FragmentCollection fragmentCollection =
 			FragmentCollectionServiceUtil.fetchFragmentCollection(
@@ -367,8 +448,12 @@ public class EditFragmentEntryDisplayContext {
 		).put(
 			"cacheable", _fragmentEntry.isCacheable()
 		).put(
+			"cacheableEnabled", _isCacheableEnabled()
+		).put(
 			"dataAttributes",
 			_fragmentEntryProcessorRegistry.getDataAttributesJSONArray()
+		).put(
+			"fieldTypes", _getFieldTypesJSONArray()
 		).put(
 			"fragmentCollectionId", getFragmentCollectionId()
 		).put(
@@ -379,43 +464,34 @@ public class EditFragmentEntryDisplayContext {
 			"freeMarkerVariables", freeMarkerVariables
 		).put(
 			"htmlEditorCustomEntities",
-			() -> {
-				List<Map<String, Object>> htmlEditorCustomEntities =
-					new ArrayList<>();
-
-				htmlEditorCustomEntities.add(
-					HashMapBuilder.<String, Object>put(
-						"content", freeMarkerTaglibs
-					).put(
-						"end", "]"
-					).put(
-						"start", "[@"
-					).build());
-
-				htmlEditorCustomEntities.add(
-					HashMapBuilder.<String, Object>put(
-						"content", freeMarkerVariables
-					).put(
-						"end", "}"
-					).put(
-						"start", "${"
-					).build());
-
-				htmlEditorCustomEntities.add(
-					HashMapBuilder.<String, Object>put(
-						"content", resources
-					).put(
-						"end", "]"
-					).put(
-						"start", "[resources:"
-					).build());
-
-				return htmlEditorCustomEntities;
-			}
+			ListUtil.fromArray(
+				HashMapBuilder.<String, Object>put(
+					"content", freeMarkerTaglibs
+				).put(
+					"end", "]"
+				).put(
+					"start", "[@"
+				).build(),
+				HashMapBuilder.<String, Object>put(
+					"content", freeMarkerVariables
+				).put(
+					"end", "}"
+				).put(
+					"start", "${"
+				).build(),
+				HashMapBuilder.<String, Object>put(
+					"content", resources
+				).put(
+					"end", "]"
+				).put(
+					"start", "[resources:"
+				).build())
 		).put(
 			"initialConfiguration", _getConfigurationContent()
 		).put(
 			"initialCSS", _getCssContent()
+		).put(
+			"initialFieldTypes", _getInitialFieldTypesJSONArray()
 		).put(
 			"initialHTML", _getHtmlContent()
 		).put(
@@ -439,7 +515,9 @@ public class EditFragmentEntryDisplayContext {
 		).put(
 			"resources", resources
 		).put(
-			"spritemap", _themeDisplay.getPathThemeImages() + "/clay/icons.svg"
+			"showFieldTypes", _showFieldTypes()
+		).put(
+			"spritemap", FrontendIconsUtil.getSpritemap(_themeDisplay)
 		).put(
 			"status",
 			() -> {
@@ -453,16 +531,11 @@ public class EditFragmentEntryDisplayContext {
 				"current", _themeDisplay.getURLCurrent()
 			).put(
 				"edit",
-				() -> {
-					PortletURL editActionURL =
-						_renderResponse.createActionURL();
-
-					editActionURL.setParameter(
-						ActionRequest.ACTION_NAME,
-						"/fragment/edit_fragment_entry");
-
-					return editActionURL.toString();
-				}
+				() -> PortletURLBuilder.createActionURL(
+					_renderResponse
+				).setActionName(
+					"/fragment/edit_fragment_entry"
+				).buildString()
 			).put(
 				"preview",
 				_getFragmentEntryRenderURL("/fragment/preview_fragment_entry")
@@ -478,16 +551,25 @@ public class EditFragmentEntryDisplayContext {
 	}
 
 	private String _getPublishFragmentEntryActionURL() {
-		PortletURL publishFragmentEntryURL = PortletURLFactoryUtil.create(
-			_httpServletRequest, FragmentPortletKeys.FRAGMENT,
-			PortletRequest.ACTION_PHASE);
+		return PortletURLBuilder.create(
+			PortletURLFactoryUtil.create(
+				_httpServletRequest, FragmentPortletKeys.FRAGMENT,
+				PortletRequest.ACTION_PHASE)
+		).setActionName(
+			"/fragment/publish_fragment_entry"
+		).setParameter(
+			"fragmentEntryId", getFragmentEntryId()
+		).buildString();
+	}
 
-		publishFragmentEntryURL.setParameter(
-			ActionRequest.ACTION_NAME, "/fragment/publish_fragment_entry");
-		publishFragmentEntryURL.setParameter(
-			"fragmentEntryId", String.valueOf(getFragmentEntryId()));
+	private boolean _isCacheableEnabled() {
+		FragmentEntry fragmentEntry = getFragmentEntry();
 
-		return publishFragmentEntryURL.toString();
+		if (!fragmentEntry.isTypeInput()) {
+			return true;
+		}
+
+		return false;
 	}
 
 	private boolean _isReadOnlyFragmentEntry() {
@@ -535,18 +617,39 @@ public class EditFragmentEntryDisplayContext {
 			return;
 		}
 
-		StringBundler sb = new StringBundler(4);
-
-		sb.append(getFragmentEntryTitle());
-		sb.append(" (");
-		sb.append(
-			LanguageUtil.get(
-				_httpServletRequest,
-				WorkflowConstants.getStatusLabel(fragmentEntry.getStatus())));
-		sb.append(")");
-
-		_renderResponse.setTitle(sb.toString());
+		_renderResponse.setTitle(
+			StringBundler.concat(
+				getFragmentEntryTitle(), " (",
+				LanguageUtil.get(
+					_httpServletRequest,
+					WorkflowConstants.getStatusLabel(
+						fragmentEntry.getStatus())),
+				")"));
 	}
+
+	private boolean _showFieldTypes() {
+		if (!GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-149720"))) {
+			return false;
+		}
+
+		FragmentEntry fragmentEntry = getFragmentEntry();
+
+		if ((fragmentEntry == null) || !fragmentEntry.isTypeInput()) {
+			return false;
+		}
+
+		return true;
+	}
+
+	private static final InfoFieldType[] _INFO_FIELD_TYPES = {
+		BooleanInfoFieldType.INSTANCE, CaptchaInfoFieldType.INSTANCE,
+		DateInfoFieldType.INSTANCE, FileInfoFieldType.INSTANCE,
+		NumberInfoFieldType.INSTANCE, RelationshipInfoFieldType.INSTANCE,
+		SelectInfoFieldType.INSTANCE, TextInfoFieldType.INSTANCE
+	};
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		EditFragmentEntryDisplayContext.class);
 
 	private String _configurationContent;
 	private String _cssContent;

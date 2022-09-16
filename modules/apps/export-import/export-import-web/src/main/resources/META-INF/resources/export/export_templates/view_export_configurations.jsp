@@ -19,11 +19,12 @@
 <%
 portletDisplay.setShowBackIcon(true);
 
-PortletURL exportProcessesURL = PortalUtil.getControlPanelPortletURL(request, ExportImportPortletKeys.EXPORT, PortletRequest.RENDER_PHASE);
-
-exportProcessesURL.setParameter("mvcPath", "/export/view_export_layouts.jsp");
-
-portletDisplay.setURLBack(exportProcessesURL.toString());
+portletDisplay.setURLBack(
+	PortletURLBuilder.create(
+		PortalUtil.getControlPanelPortletURL(request, ExportImportPortletKeys.EXPORT, PortletRequest.RENDER_PHASE)
+	).setMVCPath(
+		"/export/view_export_layouts.jsp"
+	).buildString());
 
 renderResponse.setTitle(LanguageUtil.get(request, "export-templates"));
 %>
@@ -59,8 +60,8 @@ if (liveGroup == null) {
 ExportTemplatesToolbarDisplayContext exportTemplatesToolbarDisplayContext = new ExportTemplatesToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, liveGroupId, company, portletURL);
 %>
 
-<clay:management-toolbar-v2
-	displayContext="<%= exportTemplatesToolbarDisplayContext %>"
+<clay:management-toolbar
+	managementToolbarDisplayContext="<%= exportTemplatesToolbarDisplayContext %>"
 	searchFormName="searchFm"
 	selectable="<%= false %>"
 	showCreationMenu="<%= true %>"

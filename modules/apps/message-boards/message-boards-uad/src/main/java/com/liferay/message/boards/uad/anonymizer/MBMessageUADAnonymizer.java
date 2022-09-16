@@ -15,15 +15,15 @@
 package com.liferay.message.boards.uad.anonymizer;
 
 import com.liferay.message.boards.exception.RequiredMessageException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.user.associated.data.anonymizer.UADAnonymizer;
 
 import java.util.Locale;
 import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Brian Wing Shun Chan
@@ -35,12 +35,14 @@ public class MBMessageUADAnonymizer extends BaseMBMessageUADAnonymizer {
 	public Map<Class<?>, String> getExceptionMessageMap(Locale locale) {
 		return HashMapBuilder.<Class<?>, String>put(
 			RequiredMessageException.class,
-			LanguageUtil.get(
-				ResourceBundleUtil.getBundle(
-					locale, BaseMBMessageUADAnonymizer.class),
+			_language.get(
+				locale,
 				"root-messages-with-multiple-replies-cannot-be-deleted.-" +
 					"delete-the-thread-instead")
 		).build();
 	}
+
+	@Reference
+	private Language _language;
 
 }

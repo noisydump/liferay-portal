@@ -15,11 +15,12 @@
 package com.liferay.dynamic.data.mapping.model;
 
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.json.JSONFactoryImpl;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -27,10 +28,10 @@ import org.junit.Test;
  */
 public class DDMFormFieldTest {
 
-	@Before
-	public void setUp() throws Exception {
-		setUpJSONFactoryUtil();
-	}
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Test
 	public void testGetDataSourceTypeInvalid() {
@@ -57,12 +58,6 @@ public class DDMFormFieldTest {
 		Assert.assertEquals(
 			ddmFormField1.getDataSourceType(),
 			ddmFormField2.getDataSourceType());
-	}
-
-	protected void setUpJSONFactoryUtil() {
-		JSONFactoryUtil jsonFactoryUtil = new JSONFactoryUtil();
-
-		jsonFactoryUtil.setJSONFactory(new JSONFactoryImpl());
 	}
 
 }

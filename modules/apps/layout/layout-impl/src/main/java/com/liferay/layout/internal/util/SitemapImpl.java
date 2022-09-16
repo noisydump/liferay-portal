@@ -21,7 +21,7 @@ import com.liferay.layout.admin.kernel.util.SitemapURLProviderRegistryUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
@@ -201,73 +201,6 @@ public class SitemapImpl implements Sitemap {
 		return _getSitemap(layoutUuid, groupId, privateLayout, themeDisplay);
 	}
 
-	protected void visitLayoutSet(
-			Element element, LayoutSet layoutSet, ThemeDisplay themeDisplay)
-		throws PortalException {
-
-		if (layoutSet.isPrivateLayout()) {
-			return;
-		}
-
-		String portalURL = themeDisplay.getPortalURL();
-
-		Map<String, LayoutTypeController> layoutTypeControllers =
-			LayoutTypeControllerTracker.getLayoutTypeControllers();
-
-		for (Map.Entry<String, LayoutTypeController> entry :
-				layoutTypeControllers.entrySet()) {
-
-			LayoutTypeController layoutTypeController = entry.getValue();
-
-			if (!layoutTypeController.isSitemapable()) {
-				continue;
-			}
-
-			List<Layout> layouts = _layoutLocalService.getAllLayouts(
-				layoutSet.getGroupId(), layoutSet.isPrivateLayout(),
-				entry.getKey());
-
-			for (Layout layout : layouts) {
-				if (layout.isSystem() && !layout.isTypeAssetDisplay()) {
-					continue;
-				}
-
-				UnicodeProperties typeSettingsUnicodeProperties =
-					layout.getTypeSettingsProperties();
-
-				boolean sitemapInclude = GetterUtil.getBoolean(
-					typeSettingsUnicodeProperties.getProperty(
-						LayoutTypePortletConstants.SITEMAP_INCLUDE),
-					true);
-
-				if (!sitemapInclude) {
-					continue;
-				}
-
-				Element sitemapElement = element.addElement("sitemap");
-
-				Element locationElement = sitemapElement.addElement("loc");
-
-				StringBundler sb = new StringBundler(10);
-
-				sb.append(portalURL);
-				sb.append(_portal.getPathContext());
-				sb.append("/sitemap.xml?p_l_id=");
-				sb.append(layout.getPlid());
-				sb.append("&layoutUuid=");
-				sb.append(layout.getUuid());
-				sb.append("&groupId=");
-				sb.append(layoutSet.getGroupId());
-				sb.append("&privateLayout=");
-				sb.append(layout.isPrivateLayout());
-
-				locationElement.addText(sb.toString());
-
-				_removeOldestElement(element, sitemapElement);
-			}
-		}
-	}
-
 	private String _getIndexSitemap(
 			long groupId, boolean privateLayout, ThemeDisplay themeDisplay)
 		throws PortalException {
@@ -283,10 +216,10 @@ public class SitemapImpl implements Sitemap {
 
 		_initEntriesAndSize(rootElement);
 
-		LayoutSet layoutSet = _layoutSetLocalService.getLayoutSet(
-			groupId, privateLayout);
-
-		visitLayoutSet(rootElement, layoutSet, themeDisplay);
+		_visitLayoutSet(
+			rootElement,
+			_layoutSetLocalService.getLayoutSet(groupId, privateLayout),
+			themeDisplay);
 
 		_removeEntriesAndSize(rootElement);
 
@@ -351,7 +284,7 @@ public class SitemapImpl implements Sitemap {
 		String name = element.getName();
 
 		if (name.equals("url")) {
-			Set<Locale> availableLocales = LanguageUtil.getAvailableLocales();
+			Set<Locale> availableLocales = _language.getAvailableLocales();
 
 			int availableLocalesSize = availableLocales.size();
 
@@ -434,6 +367,66 @@ public class SitemapImpl implements Sitemap {
 		rootElement.addAttribute("size", String.valueOf(size));
 	}
 
+	private void _visitLayoutSet(
+			Element element, LayoutSet layoutSet, ThemeDisplay themeDisplay)
+		throws PortalException {
+
+		if (layoutSet.isPrivateLayout()) {
+			return;
+		}
+
+		String portalURL = themeDisplay.getPortalURL();
+
+		Map<String, LayoutTypeController> layoutTypeControllers =
+			LayoutTypeControllerTracker.getLayoutTypeControllers();
+
+		for (Map.Entry<String, LayoutTypeController> entry :
+				layoutTypeControllers.entrySet()) {
+
+			LayoutTypeController layoutTypeController = entry.getValue();
+
+			if (!layoutTypeController.isSitemapable()) {
+				continue;
+			}
+
+			List<Layout> layouts = _layoutLocalService.getAllLayouts(
+				layoutSet.getGroupId(), layoutSet.isPrivateLayout(),
+				entry.getKey());
+
+			for (Layout layout : layouts) {
+				if (layout.isSystem() && !layout.isTypeAssetDisplay()) {
+					continue;
+				}
+
+				UnicodeProperties typeSettingsUnicodeProperties =
+					layout.getTypeSettingsProperties();
+
+				boolean sitemapInclude = GetterUtil.getBoolean(
+					typeSettingsUnicodeProperties.getProperty(
+						LayoutTypePortletConstants.SITEMAP_INCLUDE),
+					true);
+
+				if (!sitemapInclude) {
+					continue;
+				}
+
+				Element sitemapElement = element.addElement("sitemap");
+
+				Element locationElement = sitemapElement.addElement("loc");
+
+				locationElement.addText(
+					StringBundler.concat(
+						portalURL, _portal.getPathContext(),
+						"/sitemap.xml?p_l_id=", layout.getPlid(),
+						"&layoutUuid=", layout.getUuid(), "&groupId=",
+						layoutSet.getGroupId(), "&privateLayout=",
+						layout.isPrivateLayout()));
+
+				_removeOldestElement(element, sitemapElement);
+			}
+		}
+	}
+
 	private static final byte[] _ATTRIBUTE_XHTML =
 		" xmlns:xhtml=\"http://www.w3.org/1999/xhtml\"".getBytes();
 
@@ -444,6 +437,9 @@ public class SitemapImpl implements Sitemap {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		SitemapImpl.class.getName());
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private LayoutLocalService _layoutLocalService;

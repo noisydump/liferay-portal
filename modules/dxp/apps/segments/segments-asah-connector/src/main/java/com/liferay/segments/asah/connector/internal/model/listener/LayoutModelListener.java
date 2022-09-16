@@ -50,18 +50,20 @@ import org.osgi.service.component.annotations.Reference;
 public class LayoutModelListener extends BaseModelListener<Layout> {
 
 	@Override
-	public void onBeforeUpdate(Layout layout) throws ModelListenerException {
+	public void onBeforeUpdate(Layout originalLayout, Layout layout)
+		throws ModelListenerException {
+
 		if (_isSkipEvent(layout)) {
 			return;
 		}
 
 		try {
-			long classNameId = _classNameLocalService.getClassNameId(
-				Layout.class.getName());
-
 			List<SegmentsExperiment> segmentsExperiments =
 				_segmentsExperimentLocalService.getSegmentsExperiments(
-					layout.getGroupId(), classNameId, layout.getPlid());
+					layout.getGroupId(),
+					_classNameLocalService.getClassNameId(
+						Layout.class.getName()),
+					layout.getPlid());
 
 			for (SegmentsExperiment segmentsExperiment : segmentsExperiments) {
 				_asahSegmentsExperimentProcessor.

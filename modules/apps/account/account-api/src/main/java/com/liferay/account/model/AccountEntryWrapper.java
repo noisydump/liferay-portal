@@ -14,6 +14,7 @@
 
 package com.liferay.account.model;
 
+import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
@@ -43,6 +44,7 @@ public class AccountEntryWrapper
 		Map<String, Object> attributes = new HashMap<String, Object>();
 
 		attributes.put("mvccVersion", getMvccVersion());
+		attributes.put("uuid", getUuid());
 		attributes.put("externalReferenceCode", getExternalReferenceCode());
 		attributes.put("accountEntryId", getAccountEntryId());
 		attributes.put("companyId", getCompanyId());
@@ -51,6 +53,8 @@ public class AccountEntryWrapper
 		attributes.put("createDate", getCreateDate());
 		attributes.put("modifiedDate", getModifiedDate());
 		attributes.put("defaultBillingAddressId", getDefaultBillingAddressId());
+		attributes.put(
+			"defaultCPaymentMethodKey", getDefaultCPaymentMethodKey());
 		attributes.put(
 			"defaultShippingAddressId", getDefaultShippingAddressId());
 		attributes.put("parentAccountEntryId", getParentAccountEntryId());
@@ -73,6 +77,12 @@ public class AccountEntryWrapper
 
 		if (mvccVersion != null) {
 			setMvccVersion(mvccVersion);
+		}
+
+		String uuid = (String)attributes.get("uuid");
+
+		if (uuid != null) {
+			setUuid(uuid);
 		}
 
 		String externalReferenceCode = (String)attributes.get(
@@ -123,6 +133,13 @@ public class AccountEntryWrapper
 
 		if (defaultBillingAddressId != null) {
 			setDefaultBillingAddressId(defaultBillingAddressId);
+		}
+
+		String defaultCPaymentMethodKey = (String)attributes.get(
+			"defaultCPaymentMethodKey");
+
+		if (defaultCPaymentMethodKey != null) {
+			setDefaultCPaymentMethodKey(defaultCPaymentMethodKey);
 		}
 
 		Long defaultShippingAddressId = (Long)attributes.get(
@@ -195,6 +212,11 @@ public class AccountEntryWrapper
 	}
 
 	@Override
+	public AccountEntry cloneWithOriginalValues() {
+		return wrap(model.cloneWithOriginalValues());
+	}
+
+	@Override
 	public com.liferay.portal.kernel.model.Group getAccountEntryGroup() {
 		return model.getAccountEntryGroup();
 	}
@@ -247,6 +269,16 @@ public class AccountEntryWrapper
 	@Override
 	public long getDefaultBillingAddressId() {
 		return model.getDefaultBillingAddressId();
+	}
+
+	/**
+	 * Returns the default c payment method key of this account entry.
+	 *
+	 * @return the default c payment method key of this account entry
+	 */
+	@Override
+	public String getDefaultCPaymentMethodKey() {
+		return model.getDefaultCPaymentMethodKey();
 	}
 
 	@Override
@@ -439,6 +471,16 @@ public class AccountEntryWrapper
 		return model.getUserUuid();
 	}
 
+	/**
+	 * Returns the uuid of this account entry.
+	 *
+	 * @return the uuid of this account entry
+	 */
+	@Override
+	public String getUuid() {
+		return model.getUuid();
+	}
+
 	@Override
 	public void persist() {
 		model.persist();
@@ -482,6 +524,16 @@ public class AccountEntryWrapper
 	@Override
 	public void setDefaultBillingAddressId(long defaultBillingAddressId) {
 		model.setDefaultBillingAddressId(defaultBillingAddressId);
+	}
+
+	/**
+	 * Sets the default c payment method key of this account entry.
+	 *
+	 * @param defaultCPaymentMethodKey the default c payment method key of this account entry
+	 */
+	@Override
+	public void setDefaultCPaymentMethodKey(String defaultCPaymentMethodKey) {
+		model.setDefaultCPaymentMethodKey(defaultCPaymentMethodKey);
 	}
 
 	/**
@@ -662,6 +714,21 @@ public class AccountEntryWrapper
 	@Override
 	public void setUserUuid(String userUuid) {
 		model.setUserUuid(userUuid);
+	}
+
+	/**
+	 * Sets the uuid of this account entry.
+	 *
+	 * @param uuid the uuid of this account entry
+	 */
+	@Override
+	public void setUuid(String uuid) {
+		model.setUuid(uuid);
+	}
+
+	@Override
+	public StagedModelType getStagedModelType() {
+		return model.getStagedModelType();
 	}
 
 	@Override

@@ -14,11 +14,10 @@ import ClayDropDown from '@clayui/drop-down';
 import {ClaySelect} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import ClayList from '@clayui/list';
-import {ClayTooltipProvider} from '@clayui/tooltip';
 import PropTypes from 'prop-types';
 import React, {useContext, useMemo, useState} from 'react';
 
-import {StoreContext} from '../context/StoreContext';
+import {StoreStateContext} from '../context/StoreContext';
 import {numberFormat} from '../utils/numberFormat';
 import Hint from './Hint';
 
@@ -28,19 +27,19 @@ const KEYWORD_VALUE_TYPE = [
 	{label: Liferay.Language.get('position'), name: 'position'},
 ];
 
-export default function Keywords({currentPage, languageTag}) {
+export default function Keywords({currentPage}) {
 	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
 	const [keywordValueType, setKeywordValueType] = useState(
 		KEYWORD_VALUE_TYPE[0]
 	);
 
-	const [{publishedToday}] = useContext(StoreContext);
+	const {languageTag, publishedToday} = useContext(StoreStateContext);
 
 	const countries = useMemo(() => {
 		const dataKeys = new Set();
 
-		return currentPage.data.countryKeywords.reduce(
+		return currentPage.data.countrySearchKeywords.reduce(
 			(acc, {countryCode, countryName}) => {
 				if (dataKeys.has(countryCode)) {
 					return acc;
@@ -52,7 +51,7 @@ export default function Keywords({currentPage, languageTag}) {
 			},
 			[]
 		);
-	}, [currentPage.data.countryKeywords]);
+	}, [currentPage.data.countrySearchKeywords]);
 
 	const [currentCountry, setCurrentCountry] = useState(
 		countries[0].countryCode
@@ -61,12 +60,12 @@ export default function Keywords({currentPage, languageTag}) {
 	const keywords = useMemo(() => {
 		const countryKeywords =
 			currentCountry &&
-			currentPage.data.countryKeywords.find((country) => {
+			currentPage.data.countrySearchKeywords.find((country) => {
 				return country.countryCode === currentCountry;
 			});
 
 		return countryKeywords?.keywords ?? [];
-	}, [currentPage.data.countryKeywords, currentCountry]);
+	}, [currentPage.data.countrySearchKeywords, currentCountry]);
 
 	const handleCountrySelection = (event) => {
 		const country = event.target.value;
@@ -96,6 +95,7 @@ export default function Keywords({currentPage, languageTag}) {
 				<label htmlFor="countrySelect">
 					{Liferay.Language.get('select-country')}
 				</label>
+
 				<ClaySelect
 					aria-label={Liferay.Language.get('select-country')}
 					className="bg-white"
@@ -119,6 +119,7 @@ export default function Keywords({currentPage, languageTag}) {
 						<ClayList.ItemTitle className="text-truncate-inline">
 							<span className="text-truncate">
 								{Liferay.Language.get('best-keyword')}
+
 								<span className="text-secondary">
 									<Hint
 										message={Liferay.Language.get(
@@ -132,6 +133,7 @@ export default function Keywords({currentPage, languageTag}) {
 							</span>
 						</ClayList.ItemTitle>
 					</ClayList.ItemField>
+
 					<ClayList.ItemField>
 						<ClayDropDown
 							active={isDropdownOpen}
@@ -146,6 +148,7 @@ export default function Keywords({currentPage, languageTag}) {
 										<span className="pr-2">
 											{keywordValueType.label}
 										</span>
+
 										<ClayIcon symbol="caret-bottom" />
 									</span>
 								</ClayButton>
@@ -173,6 +176,7 @@ export default function Keywords({currentPage, languageTag}) {
 						</ClayDropDown>
 					</ClayList.ItemField>
 				</ClayList.Item>
+
 				{!publishedToday &&
 					keywords.map(
 						({keyword, position, searchVolume, traffic}) => {
@@ -180,19 +184,18 @@ export default function Keywords({currentPage, languageTag}) {
 								<ClayList.Item flex key={keyword}>
 									<ClayList.ItemField expand>
 										<ClayList.ItemText>
-											<ClayTooltipProvider>
-												<span
-													className="text-truncate-inline"
-													data-tooltip-align="top"
-													title={keyword}
-												>
-													<span className="text-secondary text-truncate">
-														{keyword}
-													</span>
+											<span
+												className="text-truncate-inline"
+												data-tooltip-align="top"
+												title={keyword}
+											>
+												<span className="text-secondary text-truncate">
+													{keyword}
 												</span>
-											</ClayTooltipProvider>
+											</span>
 										</ClayList.ItemText>
 									</ClayList.ItemField>
+
 									<ClayList.ItemField expand>
 										<span className="align-self-end font-weight-semi-bold text-dark">
 											{numberFormat(
@@ -211,7 +214,8 @@ export default function Keywords({currentPage, languageTag}) {
 							);
 						}
 					)}
-				{(publishedToday || keywords.length === 0) && (
+
+				{(publishedToday || !keywords.length) && (
 					<ClayList.Item flex>
 						<ClayList.ItemField expand>
 							<ClayList.ItemText>
@@ -229,7 +233,6 @@ export default function Keywords({currentPage, languageTag}) {
 	);
 }
 
-Keywords.proptypes = {
+Keywords.propTypes = {
 	currentPage: PropTypes.object.isRequired,
-	languageTag: PropTypes.string.isRequired,
 };

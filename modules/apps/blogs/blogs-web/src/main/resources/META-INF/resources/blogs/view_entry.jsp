@@ -22,11 +22,17 @@
 String redirect = ParamUtil.getString(request, "redirect");
 
 if (Validator.isNull(redirect)) {
-	PortletURL portletURL = renderResponse.createRenderURL();
+	String mvcRenderCommandName = "/blogs/view";
 
-	portletURL.setParameter("mvcRenderCommandName", "/blogs/view");
+	if (Objects.equals(portletName, BlogsPortletKeys.BLOGS_AGGREGATOR)) {
+		mvcRenderCommandName = "/blogs_aggregator/view";
+	}
 
-	redirect = portletURL.toString();
+	redirect = PortletURLBuilder.createRenderURL(
+		renderResponse
+	).setMVCRenderCommandName(
+		mvcRenderCommandName
+	).buildString();
 }
 
 BlogsEntry entry = (BlogsEntry)request.getAttribute(WebKeys.BLOGS_ENTRY);
@@ -51,6 +57,8 @@ if (ratingsStats != null) {
 if (request.getAttribute(WebKeys.LAYOUT_ASSET_ENTRY) == null) {
 	request.setAttribute(WebKeys.LAYOUT_ASSET_ENTRY, assetEntry);
 }
+
+LinkedAssetEntryIdsUtil.addLinkedAssetEntryId(request, assetEntry.getEntryId());
 
 request.setAttribute("view_entry_content.jsp-entry", entry);
 
@@ -102,9 +110,7 @@ BlogsPortletInstanceConfiguration blogsPortletInstanceConfiguration = BlogsPortl
 						<strong><liferay-ui:message key="more-blog-entries" /></strong>
 					</h2>
 
-					<clay:row
-						cssClass="widget-mode-card"
-					>
+					<div class="card-page widget-mode-card">
 
 						<%
 						request.setAttribute("view_entry_related.jsp-blogs_entry", previousEntry);
@@ -117,7 +123,7 @@ BlogsPortletInstanceConfiguration blogsPortletInstanceConfiguration = BlogsPortl
 						%>
 
 						<liferay-util:include page="/blogs/view_entry_related.jsp" servletContext="<%= application %>" />
-					</clay:row>
+					</div>
 				</clay:col>
 			</clay:row>
 		</c:if>
@@ -125,7 +131,7 @@ BlogsPortletInstanceConfiguration blogsPortletInstanceConfiguration = BlogsPortl
 
 	<clay:row>
 		<clay:col
-			cssClass="col-md-offset-2"
+			cssClass="offset-md-2"
 			md="8"
 		>
 			<c:if test="<%= blogsPortletInstanceConfiguration.enableComments() %>">

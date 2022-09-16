@@ -20,7 +20,7 @@ import com.liferay.portal.kernel.messaging.DestinationFactory;
 import com.liferay.portal.kernel.messaging.DestinationNames;
 import com.liferay.portal.kernel.messaging.MessageBus;
 import com.liferay.portal.kernel.messaging.proxy.ProxyMessageListener;
-import com.liferay.portal.kernel.util.HashMapDictionary;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 
 import java.util.Dictionary;
 
@@ -54,9 +54,10 @@ public class SchedulerProxyMessagingConfigurator {
 
 		destination.register(_proxyMessageListener);
 
-		Dictionary<String, Object> properties = new HashMapDictionary<>();
-
-		properties.put("destination.name", destination.getName());
+		Dictionary<String, Object> properties =
+			HashMapDictionaryBuilder.<String, Object>put(
+				"destination.name", destination.getName()
+			).build();
 
 		_destinationServiceRegistration = bundleContext.registerService(
 			Destination.class, destination, properties);
@@ -79,32 +80,21 @@ public class SchedulerProxyMessagingConfigurator {
 		destination.destroy();
 	}
 
-	@Reference(unbind = "-")
-	protected void setDestinationFactory(
-		DestinationFactory destinationFactory) {
+	private BundleContext _bundleContext;
 
-		_destinationFactory = destinationFactory;
-	}
+	@Reference
+	private DestinationFactory _destinationFactory;
 
-	@Reference(unbind = "-")
-	protected void setMessageBus(MessageBus messageBus) {
-	}
+	private ServiceRegistration<Object> _destinationReadyServiceRegistration;
+	private ServiceRegistration<Destination> _destinationServiceRegistration;
+
+	@Reference
+	private MessageBus _messageBus;
 
 	@Reference(
 		service = ProxyMessageListener.class,
-		target = "(destination.name=" + DestinationNames.SCHEDULER_ENGINE + ")",
-		unbind = "-"
+		target = "(destination.name=" + DestinationNames.SCHEDULER_ENGINE + ")"
 	)
-	protected void setProxyMessageListener(
-		ProxyMessageListener proxyMessageListener) {
-
-		_proxyMessageListener = proxyMessageListener;
-	}
-
-	private BundleContext _bundleContext;
-	private DestinationFactory _destinationFactory;
-	private ServiceRegistration<Object> _destinationReadyServiceRegistration;
-	private ServiceRegistration<Destination> _destinationServiceRegistration;
 	private ProxyMessageListener _proxyMessageListener;
 
 }

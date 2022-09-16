@@ -14,6 +14,7 @@
 
 package com.liferay.account.model;
 
+import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
@@ -43,6 +44,7 @@ public class AccountGroupWrapper
 		Map<String, Object> attributes = new HashMap<String, Object>();
 
 		attributes.put("mvccVersion", getMvccVersion());
+		attributes.put("uuid", getUuid());
 		attributes.put("externalReferenceCode", getExternalReferenceCode());
 		attributes.put("accountGroupId", getAccountGroupId());
 		attributes.put("companyId", getCompanyId());
@@ -53,6 +55,7 @@ public class AccountGroupWrapper
 		attributes.put("defaultAccountGroup", isDefaultAccountGroup());
 		attributes.put("description", getDescription());
 		attributes.put("name", getName());
+		attributes.put("type", getType());
 
 		return attributes;
 	}
@@ -63,6 +66,12 @@ public class AccountGroupWrapper
 
 		if (mvccVersion != null) {
 			setMvccVersion(mvccVersion);
+		}
+
+		String uuid = (String)attributes.get("uuid");
+
+		if (uuid != null) {
+			setUuid(uuid);
 		}
 
 		String externalReferenceCode = (String)attributes.get(
@@ -126,6 +135,17 @@ public class AccountGroupWrapper
 		if (name != null) {
 			setName(name);
 		}
+
+		String type = (String)attributes.get("type");
+
+		if (type != null) {
+			setType(type);
+		}
+	}
+
+	@Override
+	public AccountGroup cloneWithOriginalValues() {
+		return wrap(model.cloneWithOriginalValues());
 	}
 
 	/**
@@ -229,6 +249,16 @@ public class AccountGroupWrapper
 	}
 
 	/**
+	 * Returns the type of this account group.
+	 *
+	 * @return the type of this account group
+	 */
+	@Override
+	public String getType() {
+		return model.getType();
+	}
+
+	/**
 	 * Returns the user ID of this account group.
 	 *
 	 * @return the user ID of this account group
@@ -256,6 +286,16 @@ public class AccountGroupWrapper
 	@Override
 	public String getUserUuid() {
 		return model.getUserUuid();
+	}
+
+	/**
+	 * Returns the uuid of this account group.
+	 *
+	 * @return the uuid of this account group
+	 */
+	@Override
+	public String getUuid() {
+		return model.getUuid();
 	}
 
 	/**
@@ -374,6 +414,16 @@ public class AccountGroupWrapper
 	}
 
 	/**
+	 * Sets the type of this account group.
+	 *
+	 * @param type the type of this account group
+	 */
+	@Override
+	public void setType(String type) {
+		model.setType(type);
+	}
+
+	/**
 	 * Sets the user ID of this account group.
 	 *
 	 * @param userId the user ID of this account group
@@ -401,6 +451,21 @@ public class AccountGroupWrapper
 	@Override
 	public void setUserUuid(String userUuid) {
 		model.setUserUuid(userUuid);
+	}
+
+	/**
+	 * Sets the uuid of this account group.
+	 *
+	 * @param uuid the uuid of this account group
+	 */
+	@Override
+	public void setUuid(String uuid) {
+		model.setUuid(uuid);
+	}
+
+	@Override
+	public StagedModelType getStagedModelType() {
+		return model.getStagedModelType();
 	}
 
 	@Override

@@ -12,7 +12,7 @@
  * details.
  */
 
-import {useIsMounted} from 'frontend-js-react-web';
+import {useIsMounted} from '@liferay/frontend-js-react-web';
 import PropTypes from 'prop-types';
 import {useCallback, useState} from 'react';
 
@@ -85,7 +85,8 @@ const RatingsStars = ({
 	);
 
 	const handleVote = (index) => {
-		let value, label;
+		let value;
+		let label;
 		const starScore = starScores[index];
 
 		if (starScore) {

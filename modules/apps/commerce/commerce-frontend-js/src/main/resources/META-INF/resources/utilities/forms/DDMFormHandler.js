@@ -17,21 +17,28 @@ import {CP_INSTANCE_CHANGED} from '../eventsDefinitions';
 import {getDefaultFieldsShape, updateFields} from './formsHelper';
 
 class DDMFormHandler {
-	constructor({DDMFormInstance, actionURL, portletId}) {
+	constructor({DDMFormInstance, actionURL, namespace, portletId}) {
 		this.actionURL = actionURL;
 		this.DDMFormInstance = DDMFormInstance;
+		this.namespace = namespace;
 		this.portletId = portletId;
-		this.fields = getDefaultFieldsShape(DDMFormInstance);
+		this.fields = getDefaultFieldsShape(
+			DDMFormInstance.reactComponentRef.current.toJSON()
+		);
 
 		this._attachFormListener();
 		this.checkCPInstance();
 	}
 
 	_attachFormListener() {
-		this.DDMFormInstance.on('fieldEdited', (field) => {
-			this.fields = updateFields(this.fields, field);
-			this.checkCPInstance();
-		});
+		this.DDMFormInstance.unstable_onEvent(
+			({payload: field, type: eventName}) => {
+				if (eventName === 'field_change') {
+					this.fields = updateFields(this.fields, field);
+					this.checkCPInstance();
+				}
+			}
+		);
 	}
 
 	checkCPInstance() {
@@ -45,25 +52,52 @@ class DDMFormHandler {
 			headers: new Headers({'x-csrf-token': Liferay.authToken}),
 		}).then((cpInstance) => {
 			if (cpInstance.cpInstanceExist) {
-				cpInstance.options = ddmFormValues;
+				cpInstance.disabled = this.checkCPInstanceOptions();
+				cpInstance.skuOptions = ddmFormValues;
 				cpInstance.skuId = parseInt(cpInstance.cpInstanceId, 10);
 
 				const dispatchedPayload = {
 					cpInstance,
 					formFields: this.fields,
+					namespace: this.namespace,
 				};
 
-				Liferay.fire(CP_INSTANCE_CHANGED, dispatchedPayload);
+				Liferay.fire(
+					`${this.namespace}${CP_INSTANCE_CHANGED}`,
+					dispatchedPayload
+				);
 			}
 		});
 	}
-}
 
-Liferay.component(
-	'DDMFormHandler',
-	(() => ({
-		attach: (configuration) => new DDMFormHandler(configuration),
-	}))()
-);
+	checkCPInstanceOptions() {
+		let disabled = false;
+
+		for (const ddmFormValue of this.fields) {
+			if (ddmFormValue.required) {
+				if (!ddmFormValue.value.length) {
+					disabled = true;
+				}
+				else {
+					for (const value of ddmFormValue.value) {
+						if (value === null || value === '') {
+							disabled = true;
+							break;
+						}
+						else {
+							disabled = false;
+						}
+					}
+				}
+			}
+
+			if (disabled) {
+				break;
+			}
+		}
+
+		return disabled;
+	}
+}
 
 export default DDMFormHandler;

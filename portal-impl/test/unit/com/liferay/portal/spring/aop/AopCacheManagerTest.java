@@ -16,18 +16,15 @@ package com.liferay.portal.spring.aop;
 
 import com.liferay.portal.kernel.aop.AopMethodInvocation;
 import com.liferay.portal.kernel.aop.ChainableMethodAdvice;
+import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
-import com.liferay.registry.BasicRegistryImpl;
-import com.liferay.registry.Registry;
-import com.liferay.registry.RegistryUtil;
-import com.liferay.registry.ServiceRegistration;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -38,20 +35,27 @@ import java.util.concurrent.Future;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
+
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
 /**
  * @author Preston Crary
  */
 public class AopCacheManagerTest {
 
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
 	@Before
 	public void setUp() {
-		RegistryUtil.setRegistry(new BasicRegistryImpl());
-
-		TestInterfaceImpl testInterfaceImpl = new TestInterfaceImpl();
-
-		_aopInvocationHandler = AopCacheManager.create(testInterfaceImpl, null);
+		_aopInvocationHandler = AopCacheManager.create(
+			new TestInterfaceImpl(), null);
 
 		_testInterfaceProxy = (TestInterface)ProxyUtil.newProxyInstance(
 			AopCacheManagerTest.class.getClassLoader(),
@@ -86,12 +90,13 @@ public class AopCacheManagerTest {
 
 			callables.add(
 				() -> {
-					Registry registry = RegistryUtil.getRegistry();
+					BundleContext bundleContext =
+						SystemBundleUtil.getBundleContext();
 
 					ServiceRegistration<?> serviceRegistration =
-						registry.registerService(
+						bundleContext.registerService(
 							ChainableMethodAdvice.class,
-							testChainableMethodAdvice, new HashMap<>());
+							testChainableMethodAdvice, null);
 
 					List<Object> advices = new ArrayList<>();
 

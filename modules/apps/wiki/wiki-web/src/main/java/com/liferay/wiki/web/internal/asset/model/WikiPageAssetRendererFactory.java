@@ -19,9 +19,12 @@ import com.liferay.asset.kernel.model.AssetRenderer;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.model.BaseAssetRendererFactory;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.LiferayPortletURL;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.util.HtmlParser;
 import com.liferay.trash.TrashHelper;
 import com.liferay.wiki.constants.WikiPortletKeys;
 import com.liferay.wiki.engine.WikiEngineRenderer;
@@ -76,6 +79,10 @@ public class WikiPageAssetRendererFactory
 					page = _wikiPageLocalService.getPage(classPK, Boolean.TRUE);
 				}
 				catch (NoSuchPageException noSuchPageException) {
+					if (_log.isDebugEnabled()) {
+						_log.debug(noSuchPageException);
+					}
+
 					page = _wikiPageLocalService.getPage(
 						classPK, (Boolean)null);
 				}
@@ -90,7 +97,7 @@ public class WikiPageAssetRendererFactory
 		}
 
 		WikiPageAssetRenderer wikiPageAssetRenderer = new WikiPageAssetRenderer(
-			page, _wikiEngineRenderer, _trashHelper);
+			_htmlParser, _trashHelper, _wikiEngineRenderer, page);
 
 		wikiPageAssetRenderer.setAssetDisplayPageFriendlyURLProvider(
 			_assetDisplayPageFriendlyURLProvider);
@@ -128,6 +135,9 @@ public class WikiPageAssetRendererFactory
 			liferayPortletURL.setWindowState(windowState);
 		}
 		catch (WindowStateException windowStateException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(windowStateException);
+			}
 		}
 
 		return liferayPortletURL;
@@ -142,9 +152,15 @@ public class WikiPageAssetRendererFactory
 			permissionChecker, classPK, actionId);
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		WikiPageAssetRendererFactory.class);
+
 	@Reference
 	private AssetDisplayPageFriendlyURLProvider
 		_assetDisplayPageFriendlyURLProvider;
+
+	@Reference
+	private HtmlParser _htmlParser;
 
 	@Reference(target = "(osgi.web.symbolicname=com.liferay.wiki.web)")
 	private ServletContext _servletContext;

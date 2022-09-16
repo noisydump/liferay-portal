@@ -19,7 +19,11 @@ import com.liferay.message.boards.model.MBMessage;
 import com.liferay.message.boards.model.MBThread;
 import com.liferay.message.boards.settings.MBGroupServiceSettings;
 import com.liferay.message.boards.web.internal.portlet.action.ActionUtil;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.message.boards.web.internal.util.MBRequestUtil;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.configuration.icon.BasePortletConfigurationIcon;
 import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfigurationIcon;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
@@ -30,7 +34,6 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.subscription.service.SubscriptionLocalService;
 
-import javax.portlet.ActionRequest;
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
 import javax.portlet.PortletURL;
@@ -64,22 +67,25 @@ public class ThreadSubscriptionPortletConfigurationIcon
 			}
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
-		return LanguageUtil.get(
-			getResourceBundle(getLocale(portletRequest)), key);
+		return _language.get(getResourceBundle(getLocale(portletRequest)), key);
 	}
 
 	@Override
 	public String getURL(
 		PortletRequest portletRequest, PortletResponse portletResponse) {
 
-		PortletURL portletURL = _portal.getControlPanelPortletURL(
-			portletRequest, MBPortletKeys.MESSAGE_BOARDS_ADMIN,
-			PortletRequest.ACTION_PHASE);
-
-		portletURL.setParameter(
-			ActionRequest.ACTION_NAME, "/message_boards/edit_message");
+		PortletURL portletURL = PortletURLBuilder.create(
+			_portal.getControlPanelPortletURL(
+				portletRequest, MBPortletKeys.MESSAGE_BOARDS_ADMIN,
+				PortletRequest.ACTION_PHASE)
+		).setActionName(
+			"/message_boards/edit_message"
+		).buildPortletURL();
 
 		MBMessage message = null;
 
@@ -87,6 +93,10 @@ public class ThreadSubscriptionPortletConfigurationIcon
 			message = ActionUtil.getMessage(portletRequest);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			return null;
 		}
 
@@ -117,7 +127,8 @@ public class ThreadSubscriptionPortletConfigurationIcon
 
 		try {
 			MBGroupServiceSettings mbGroupServiceSettings =
-				MBGroupServiceSettings.getInstance(
+				MBRequestUtil.getMBGroupServiceSettings(
+					_portal.getHttpServletRequest(portletRequest),
 					themeDisplay.getScopeGroupId());
 
 			if (!mbGroupServiceSettings.isEmailMessageAddedEnabled() &&
@@ -131,16 +142,12 @@ public class ThreadSubscriptionPortletConfigurationIcon
 				ActionUtil.getMessage(portletRequest), ActionKeys.SUBSCRIBE);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return false;
-	}
-
-	@Reference(unbind = "-")
-	protected void setSubscriptionLocalService(
-		SubscriptionLocalService subscriptionLocalService) {
-
-		_subscriptionLocalService = subscriptionLocalService;
 	}
 
 	private boolean _isSubscribed(
@@ -154,6 +161,12 @@ public class ThreadSubscriptionPortletConfigurationIcon
 			MBThread.class.getName(), threadId);
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		ThreadSubscriptionPortletConfigurationIcon.class);
+
+	@Reference
+	private Language _language;
+
 	@Reference(
 		target = "(model.class.name=com.liferay.message.boards.model.MBMessage)"
 	)
@@ -162,6 +175,7 @@ public class ThreadSubscriptionPortletConfigurationIcon
 	@Reference
 	private Portal _portal;
 
+	@Reference
 	private SubscriptionLocalService _subscriptionLocalService;
 
 }

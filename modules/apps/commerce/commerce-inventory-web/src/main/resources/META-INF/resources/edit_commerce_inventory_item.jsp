@@ -37,7 +37,7 @@ else {
 	externalReferenceCode=""
 	externalReferenceCodeEditUrl=""
 	model="<%= CommerceInventoryWarehouseItem.class %>"
-	thumbnailUrl='<%= PortalUtil.getPortalURL(request) + "/o/commerce-inventory-web/images/inventory-default-icon.svg" %>'
+	thumbnailUrl='<%= PortalUtil.getPortalURL(request) + PortalUtil.getPathContext() + "/o/commerce-inventory-web/images/inventory-default-icon.svg" %>'
 	title="<%= commerceInventoryDisplayContext.getSku() %>"
 	transitionPortletURL="<%= commerceInventoryDisplayContext.getTransitionInventoryPortletURL() %>"
 	wrapperCssClasses="side-panel-top-anchor"
@@ -45,7 +45,7 @@ else {
 
 <div id="<portlet:namespace />editInventoryItemContainer">
 	<liferay-frontend:screen-navigation
-		fullContainerCssClass="col-12 pt-4"
+		containerWrapperCssClass="container mt-4"
 		key="<%= CommerceInventoryScreenNavigationConstants.SCREEN_NAVIGATION_KEY_COMMERCE_INVENTORY %>"
 		portletURL="<%= currentURLObj %>"
 	/>

@@ -173,9 +173,6 @@ public class ColumnViewportConfigSerDes {
 						TabletSerDes.toDTO((String)jsonParserFieldValue));
 				}
 			}
-			else if (jsonParserFieldName.equals("status")) {
-				throw new IllegalArgumentException();
-			}
 		}
 
 	}
@@ -204,7 +201,7 @@ public class ColumnViewportConfigSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -240,7 +237,7 @@ public class ColumnViewportConfigSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

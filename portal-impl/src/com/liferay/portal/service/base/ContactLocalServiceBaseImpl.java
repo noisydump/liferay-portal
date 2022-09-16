@@ -28,6 +28,8 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Contact;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
@@ -35,20 +37,17 @@ import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
 import com.liferay.portal.kernel.service.ContactLocalService;
+import com.liferay.portal.kernel.service.ContactLocalServiceUtil;
 import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistry;
-import com.liferay.portal.kernel.service.persistence.AddressPersistence;
 import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.ContactPersistence;
-import com.liferay.portal.kernel.service.persistence.EmailAddressPersistence;
-import com.liferay.portal.kernel.service.persistence.PhonePersistence;
-import com.liferay.portal.kernel.service.persistence.UserFinder;
-import com.liferay.portal.kernel.service.persistence.UserPersistence;
-import com.liferay.portal.kernel.service.persistence.WebsitePersistence;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
+
+import java.lang.reflect.Field;
 
 import java.util.List;
 
@@ -72,7 +71,7 @@ public abstract class ContactLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>ContactLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.kernel.service.ContactLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>ContactLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>ContactLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -141,6 +140,13 @@ public abstract class ContactLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return contactPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -305,6 +311,11 @@ public abstract class ContactLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement ContactLocalServiceImpl#deleteContact(Contact) to avoid orphaned data");
+		}
+
 		return contactLocalService.deleteContact((Contact)persistedModel);
 	}
 
@@ -426,237 +437,18 @@ public abstract class ContactLocalServiceBaseImpl
 		this.counterLocalService = counterLocalService;
 	}
 
-	/**
-	 * Returns the address local service.
-	 *
-	 * @return the address local service
-	 */
-	public com.liferay.portal.kernel.service.AddressLocalService
-		getAddressLocalService() {
-
-		return addressLocalService;
-	}
-
-	/**
-	 * Sets the address local service.
-	 *
-	 * @param addressLocalService the address local service
-	 */
-	public void setAddressLocalService(
-		com.liferay.portal.kernel.service.AddressLocalService
-			addressLocalService) {
-
-		this.addressLocalService = addressLocalService;
-	}
-
-	/**
-	 * Returns the address persistence.
-	 *
-	 * @return the address persistence
-	 */
-	public AddressPersistence getAddressPersistence() {
-		return addressPersistence;
-	}
-
-	/**
-	 * Sets the address persistence.
-	 *
-	 * @param addressPersistence the address persistence
-	 */
-	public void setAddressPersistence(AddressPersistence addressPersistence) {
-		this.addressPersistence = addressPersistence;
-	}
-
-	/**
-	 * Returns the email address local service.
-	 *
-	 * @return the email address local service
-	 */
-	public com.liferay.portal.kernel.service.EmailAddressLocalService
-		getEmailAddressLocalService() {
-
-		return emailAddressLocalService;
-	}
-
-	/**
-	 * Sets the email address local service.
-	 *
-	 * @param emailAddressLocalService the email address local service
-	 */
-	public void setEmailAddressLocalService(
-		com.liferay.portal.kernel.service.EmailAddressLocalService
-			emailAddressLocalService) {
-
-		this.emailAddressLocalService = emailAddressLocalService;
-	}
-
-	/**
-	 * Returns the email address persistence.
-	 *
-	 * @return the email address persistence
-	 */
-	public EmailAddressPersistence getEmailAddressPersistence() {
-		return emailAddressPersistence;
-	}
-
-	/**
-	 * Sets the email address persistence.
-	 *
-	 * @param emailAddressPersistence the email address persistence
-	 */
-	public void setEmailAddressPersistence(
-		EmailAddressPersistence emailAddressPersistence) {
-
-		this.emailAddressPersistence = emailAddressPersistence;
-	}
-
-	/**
-	 * Returns the phone local service.
-	 *
-	 * @return the phone local service
-	 */
-	public com.liferay.portal.kernel.service.PhoneLocalService
-		getPhoneLocalService() {
-
-		return phoneLocalService;
-	}
-
-	/**
-	 * Sets the phone local service.
-	 *
-	 * @param phoneLocalService the phone local service
-	 */
-	public void setPhoneLocalService(
-		com.liferay.portal.kernel.service.PhoneLocalService phoneLocalService) {
-
-		this.phoneLocalService = phoneLocalService;
-	}
-
-	/**
-	 * Returns the phone persistence.
-	 *
-	 * @return the phone persistence
-	 */
-	public PhonePersistence getPhonePersistence() {
-		return phonePersistence;
-	}
-
-	/**
-	 * Sets the phone persistence.
-	 *
-	 * @param phonePersistence the phone persistence
-	 */
-	public void setPhonePersistence(PhonePersistence phonePersistence) {
-		this.phonePersistence = phonePersistence;
-	}
-
-	/**
-	 * Returns the user local service.
-	 *
-	 * @return the user local service
-	 */
-	public com.liferay.portal.kernel.service.UserLocalService
-		getUserLocalService() {
-
-		return userLocalService;
-	}
-
-	/**
-	 * Sets the user local service.
-	 *
-	 * @param userLocalService the user local service
-	 */
-	public void setUserLocalService(
-		com.liferay.portal.kernel.service.UserLocalService userLocalService) {
-
-		this.userLocalService = userLocalService;
-	}
-
-	/**
-	 * Returns the user persistence.
-	 *
-	 * @return the user persistence
-	 */
-	public UserPersistence getUserPersistence() {
-		return userPersistence;
-	}
-
-	/**
-	 * Sets the user persistence.
-	 *
-	 * @param userPersistence the user persistence
-	 */
-	public void setUserPersistence(UserPersistence userPersistence) {
-		this.userPersistence = userPersistence;
-	}
-
-	/**
-	 * Returns the user finder.
-	 *
-	 * @return the user finder
-	 */
-	public UserFinder getUserFinder() {
-		return userFinder;
-	}
-
-	/**
-	 * Sets the user finder.
-	 *
-	 * @param userFinder the user finder
-	 */
-	public void setUserFinder(UserFinder userFinder) {
-		this.userFinder = userFinder;
-	}
-
-	/**
-	 * Returns the website local service.
-	 *
-	 * @return the website local service
-	 */
-	public com.liferay.portal.kernel.service.WebsiteLocalService
-		getWebsiteLocalService() {
-
-		return websiteLocalService;
-	}
-
-	/**
-	 * Sets the website local service.
-	 *
-	 * @param websiteLocalService the website local service
-	 */
-	public void setWebsiteLocalService(
-		com.liferay.portal.kernel.service.WebsiteLocalService
-			websiteLocalService) {
-
-		this.websiteLocalService = websiteLocalService;
-	}
-
-	/**
-	 * Returns the website persistence.
-	 *
-	 * @return the website persistence
-	 */
-	public WebsitePersistence getWebsitePersistence() {
-		return websitePersistence;
-	}
-
-	/**
-	 * Sets the website persistence.
-	 *
-	 * @param websitePersistence the website persistence
-	 */
-	public void setWebsitePersistence(WebsitePersistence websitePersistence) {
-		this.websitePersistence = websitePersistence;
-	}
-
 	public void afterPropertiesSet() {
 		persistedModelLocalServiceRegistry.register(
 			"com.liferay.portal.kernel.model.Contact", contactLocalService);
+
+		_setLocalServiceUtilService(contactLocalService);
 	}
 
 	public void destroy() {
 		persistedModelLocalServiceRegistry.unregister(
 			"com.liferay.portal.kernel.model.Contact");
+
+		_setLocalServiceUtilService(null);
 	}
 
 	/**
@@ -701,6 +493,22 @@ public abstract class ContactLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		ContactLocalService contactLocalService) {
+
+		try {
+			Field field = ContactLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, contactLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@BeanReference(type = ContactLocalService.class)
 	protected ContactLocalService contactLocalService;
 
@@ -713,53 +521,8 @@ public abstract class ContactLocalServiceBaseImpl
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@BeanReference(
-		type = com.liferay.portal.kernel.service.AddressLocalService.class
-	)
-	protected com.liferay.portal.kernel.service.AddressLocalService
-		addressLocalService;
-
-	@BeanReference(type = AddressPersistence.class)
-	protected AddressPersistence addressPersistence;
-
-	@BeanReference(
-		type = com.liferay.portal.kernel.service.EmailAddressLocalService.class
-	)
-	protected com.liferay.portal.kernel.service.EmailAddressLocalService
-		emailAddressLocalService;
-
-	@BeanReference(type = EmailAddressPersistence.class)
-	protected EmailAddressPersistence emailAddressPersistence;
-
-	@BeanReference(
-		type = com.liferay.portal.kernel.service.PhoneLocalService.class
-	)
-	protected com.liferay.portal.kernel.service.PhoneLocalService
-		phoneLocalService;
-
-	@BeanReference(type = PhonePersistence.class)
-	protected PhonePersistence phonePersistence;
-
-	@BeanReference(
-		type = com.liferay.portal.kernel.service.UserLocalService.class
-	)
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
-
-	@BeanReference(type = UserPersistence.class)
-	protected UserPersistence userPersistence;
-
-	@BeanReference(type = UserFinder.class)
-	protected UserFinder userFinder;
-
-	@BeanReference(
-		type = com.liferay.portal.kernel.service.WebsiteLocalService.class
-	)
-	protected com.liferay.portal.kernel.service.WebsiteLocalService
-		websiteLocalService;
-
-	@BeanReference(type = WebsitePersistence.class)
-	protected WebsitePersistence websitePersistence;
+	private static final Log _log = LogFactoryUtil.getLog(
+		ContactLocalServiceBaseImpl.class);
 
 	@BeanReference(type = PersistedModelLocalServiceRegistry.class)
 	protected PersistedModelLocalServiceRegistry

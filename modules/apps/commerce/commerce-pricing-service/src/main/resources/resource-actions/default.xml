@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!DOCTYPE resource-action-mapping PUBLIC "-//Liferay//DTD Resource Action Mapping 7.0.0//EN" "http://www.liferay.com/dtd/liferay-resource-action-mapping_7_0_0.dtd">
+<!DOCTYPE resource-action-mapping PUBLIC "-//Liferay//DTD Resource Action Mapping 7.4.0//EN" "http://www.liferay.com/dtd/liferay-resource-action-mapping_7_4_0.dtd">
 
 <resource-action-mapping>
 	<model-resource>
@@ -24,6 +24,7 @@
 		<model-name>com.liferay.commerce.pricing.model.CommercePricingClass</model-name>
 		<portlet-ref>
 			<portlet-name>com_liferay_commerce_pricing_web_internal_portlet_CommercePricingClassesPortlet</portlet-name>
+			<portlet-name>com_liferay_commerce_product_definitions_web_internal_portlet_CPDefinitionsPortlet</portlet-name>
 		</portlet-ref>
 		<weight>2</weight>
 		<permissions>

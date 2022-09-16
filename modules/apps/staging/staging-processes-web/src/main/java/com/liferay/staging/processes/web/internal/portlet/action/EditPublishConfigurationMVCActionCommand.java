@@ -41,10 +41,10 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.SessionTreeJSClicks;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.staging.constants.StagingProcessesPortletKeys;
-import com.liferay.taglib.ui.util.SessionTreeJSClicks;
 import com.liferay.trash.service.TrashEntryService;
 
 import java.net.ConnectException;
@@ -74,7 +74,81 @@ import org.osgi.service.component.annotations.Reference;
 public class EditPublishConfigurationMVCActionCommand
 	extends BaseMVCActionCommand {
 
-	protected void deleteExportImportConfiguration(
+	@Override
+	protected void doProcessAction(
+			ActionRequest actionRequest, ActionResponse actionResponse)
+		throws Exception {
+
+		hideDefaultSuccessMessage(actionRequest);
+
+		String cmd = ParamUtil.getString(actionRequest, Constants.CMD);
+
+		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
+		try {
+			if (cmd.equals(Constants.ADD) || cmd.equals(Constants.UPDATE)) {
+				setLayoutIdMap(actionRequest);
+
+				_updatePublishConfiguration(actionRequest);
+			}
+			else if (cmd.equals(Constants.DELETE)) {
+				_deleteExportImportConfiguration(actionRequest, false);
+			}
+			else if (cmd.equals(Constants.MOVE_TO_TRASH)) {
+				_deleteExportImportConfiguration(actionRequest, true);
+			}
+			else if (cmd.equals(Constants.RELAUNCH)) {
+				_relaunchPublishLayoutConfiguration(
+					themeDisplay.getUserId(), actionRequest);
+			}
+			else if (cmd.equals(Constants.RESTORE)) {
+				_restoreTrashEntries(actionRequest);
+			}
+
+			String redirect = ParamUtil.getString(actionRequest, "redirect");
+
+			sendRedirect(actionRequest, actionResponse, redirect);
+		}
+		catch (Exception exception) {
+			if (exception instanceof ConnectException ||
+				exception instanceof RemoteExportException) {
+
+				_log.error(
+					"Unable to connect to remote live: " +
+						exception.getMessage());
+
+				if (_log.isDebugEnabled()) {
+					_log.debug(exception);
+				}
+			}
+			else {
+				_log.error(exception);
+			}
+
+			SessionErrors.add(actionRequest, exception.getClass(), exception);
+		}
+	}
+
+	protected void setLayoutIdMap(ActionRequest actionRequest) {
+		HttpServletRequest httpServletRequest = _portal.getHttpServletRequest(
+			actionRequest);
+
+		long groupId = ParamUtil.getLong(actionRequest, "groupId");
+		boolean privateLayout = ParamUtil.getBoolean(
+			actionRequest, "privateLayout");
+
+		String treeId = ParamUtil.getString(actionRequest, "treeId");
+
+		actionRequest.setAttribute(
+			"layoutIdMap",
+			_exportImportHelper.getSelectedLayoutsJSON(
+				groupId, privateLayout,
+				SessionTreeJSClicks.getOpenNodes(
+					httpServletRequest, treeId + "SelectedNode")));
+	}
+
+	private void _deleteExportImportConfiguration(
 			ActionRequest actionRequest, boolean moveToTrash)
 		throws PortalException {
 
@@ -124,63 +198,7 @@ public class EditPublishConfigurationMVCActionCommand
 		}
 	}
 
-	@Override
-	protected void doProcessAction(
-			ActionRequest actionRequest, ActionResponse actionResponse)
-		throws Exception {
-
-		hideDefaultSuccessMessage(actionRequest);
-
-		String cmd = ParamUtil.getString(actionRequest, Constants.CMD);
-
-		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
-		try {
-			if (cmd.equals(Constants.ADD) || cmd.equals(Constants.UPDATE)) {
-				setLayoutIdMap(actionRequest);
-
-				updatePublishConfiguration(actionRequest);
-			}
-			else if (cmd.equals(Constants.DELETE)) {
-				deleteExportImportConfiguration(actionRequest, false);
-			}
-			else if (cmd.equals(Constants.MOVE_TO_TRASH)) {
-				deleteExportImportConfiguration(actionRequest, true);
-			}
-			else if (cmd.equals(Constants.RELAUNCH)) {
-				relaunchPublishLayoutConfiguration(
-					themeDisplay.getUserId(), actionRequest);
-			}
-			else if (cmd.equals(Constants.RESTORE)) {
-				restoreTrashEntries(actionRequest);
-			}
-
-			String redirect = ParamUtil.getString(actionRequest, "redirect");
-
-			sendRedirect(actionRequest, actionResponse, redirect);
-		}
-		catch (Exception exception) {
-			if (exception instanceof ConnectException ||
-				exception instanceof RemoteExportException) {
-
-				_log.error(
-					"Unable to connect to remote live: " +
-						exception.getMessage());
-
-				if (_log.isDebugEnabled()) {
-					_log.debug(exception, exception);
-				}
-			}
-			else {
-				_log.error(exception, exception);
-			}
-
-			SessionErrors.add(actionRequest, exception.getClass(), exception);
-		}
-	}
-
-	protected void relaunchPublishLayoutConfiguration(
+	private void _relaunchPublishLayoutConfiguration(
 			long userId, ActionRequest actionRequest)
 		throws PortalException {
 
@@ -213,7 +231,7 @@ public class EditPublishConfigurationMVCActionCommand
 		}
 	}
 
-	protected void restoreTrashEntries(ActionRequest actionRequest)
+	private void _restoreTrashEntries(ActionRequest actionRequest)
 		throws Exception {
 
 		long[] restoreTrashEntryIds = StringUtil.split(
@@ -224,59 +242,7 @@ public class EditPublishConfigurationMVCActionCommand
 		}
 	}
 
-	@Reference
-	protected void setExportImportConfigurationLocalService(
-		ExportImportConfigurationLocalService
-			exportImportConfigurationLocalService) {
-
-		_exportImportConfigurationLocalService =
-			exportImportConfigurationLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setExportImportConfigurationService(
-		ExportImportConfigurationService exportImportConfigurationService) {
-
-		_exportImportConfigurationService = exportImportConfigurationService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setGroupLocalService(GroupLocalService groupLocalService) {
-		_groupLocalService = groupLocalService;
-	}
-
-	protected void setLayoutIdMap(ActionRequest actionRequest) {
-		HttpServletRequest httpServletRequest = _portal.getHttpServletRequest(
-			actionRequest);
-
-		long groupId = ParamUtil.getLong(actionRequest, "groupId");
-		boolean privateLayout = ParamUtil.getBoolean(
-			actionRequest, "privateLayout");
-
-		String treeId = ParamUtil.getString(actionRequest, "treeId");
-
-		String openNodes = SessionTreeJSClicks.getOpenNodes(
-			httpServletRequest, treeId + "SelectedNode");
-
-		String selectedLayoutsJSON = _exportImportHelper.getSelectedLayoutsJSON(
-			groupId, privateLayout, openNodes);
-
-		actionRequest.setAttribute("layoutIdMap", selectedLayoutsJSON);
-	}
-
-	@Reference(unbind = "-")
-	protected void setTrashEntryService(TrashEntryService trashEntryService) {
-		_trashEntryService = trashEntryService;
-	}
-
-	protected void unsetExportImportConfigurationLocalService(
-		ExportImportConfigurationLocalService
-			exportImportConfigurationLocalService) {
-
-		_exportImportConfigurationLocalService = null;
-	}
-
-	protected ExportImportConfiguration updatePublishConfiguration(
+	private ExportImportConfiguration _updatePublishConfiguration(
 			ActionRequest actionRequest)
 		throws Exception {
 
@@ -314,13 +280,17 @@ public class EditPublishConfigurationMVCActionCommand
 	@Reference
 	private BackgroundTaskManager _backgroundTaskManager;
 
+	@Reference
 	private ExportImportConfigurationLocalService
 		_exportImportConfigurationLocalService;
+
+	@Reference
 	private ExportImportConfigurationService _exportImportConfigurationService;
 
 	@Reference
 	private ExportImportHelper _exportImportHelper;
 
+	@Reference
 	private GroupLocalService _groupLocalService;
 
 	@Reference
@@ -329,6 +299,7 @@ public class EditPublishConfigurationMVCActionCommand
 	@Reference
 	private Staging _staging;
 
+	@Reference
 	private TrashEntryService _trashEntryService;
 
 }

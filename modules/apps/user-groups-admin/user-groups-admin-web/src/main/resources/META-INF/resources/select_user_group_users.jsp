@@ -30,21 +30,6 @@ else {
 
 String eventName = ParamUtil.getString(request, "eventName", liferayPortletResponse.getNamespace() + "selectUsers");
 
-List<NavigationItem> navigationItems = new ArrayList<>();
-
-NavigationItem entriesNavigationItem = new NavigationItem();
-
-entriesNavigationItem.setActive(true);
-entriesNavigationItem.setLabel(LanguageUtil.get(request, "users"));
-
-navigationItems.add(entriesNavigationItem);
-%>
-
-<clay:navigation-bar
-	navigationItems="<%= navigationItems %>"
-/>
-
-<%
 EditUserGroupAssignmentsManagementToolbarDisplayContext editUserGroupAssignmentsManagementToolbarDisplayContext = new EditUserGroupAssignmentsManagementToolbarDisplayContext(request, renderRequest, renderResponse, displayStyle, "/select_user_group_users.jsp");
 
 LinkedHashMap<String, Object> userParams = new LinkedHashMap<String, Object>();
@@ -56,7 +41,7 @@ if (filterManageableOrganizations) {
 SearchContainer<User> searchContainer = editUserGroupAssignmentsManagementToolbarDisplayContext.getSearchContainer(userParams);
 %>
 
-<clay:management-toolbar-v2
+<clay:management-toolbar
 	clearResultsURL="<%= editUserGroupAssignmentsManagementToolbarDisplayContext.getClearResultsURL() %>"
 	filterDropdownItems="<%= editUserGroupAssignmentsManagementToolbarDisplayContext.getFilterDropdownItems() %>"
 	itemsTotal="<%= searchContainer.getTotal() %>"
@@ -103,7 +88,7 @@ SearchContainer<User> searchContainer = editUserGroupAssignmentsManagementToolba
 		'<portlet:namespace />selectUsers'
 	);
 
-	searchContainer.on('rowToggled', function (event) {
+	searchContainer.on('rowToggled', (event) => {
 		var selectedItems = event.elements.allSelectedElements;
 
 		var data = [];

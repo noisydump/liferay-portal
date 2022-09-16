@@ -35,6 +35,7 @@ import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.net.URI;
 
@@ -48,18 +49,21 @@ import java.util.stream.Stream;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
 
 /**
  * @author Alejandro Tardín
  */
-@RunWith(MockitoJUnitRunner.class)
 public class MediaQueryProviderImplTest {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Before
 	public void setUp() throws PortalException {
@@ -646,7 +650,7 @@ public class MediaQueryProviderImplTest {
 		).thenAnswer(
 			invocation -> {
 				Function<AMImageQueryBuilder, AMQuery<?, ?>>
-					amImageQueryBuilderFunction = invocation.getArgumentAt(
+					amImageQueryBuilderFunction = invocation.getArgument(
 						0, Function.class);
 
 				AMImageQueryBuilderImpl amImageQueryBuilderImpl =
@@ -802,21 +806,14 @@ public class MediaQueryProviderImplTest {
 
 	private static final long _COMPANY_ID = 1L;
 
-	@Mock
-	private AMImageConfigurationHelper _amImageConfigurationHelper;
-
-	@Mock
-	private AMImageFinder _amImageFinder;
-
-	@Mock
-	private AMImageURLFactory _amImageURLFactory;
-
-	@Mock
-	private FileEntry _fileEntry;
-
-	@Mock
-	private FileVersion _fileVersion;
-
+	private final AMImageConfigurationHelper _amImageConfigurationHelper =
+		Mockito.mock(AMImageConfigurationHelper.class);
+	private final AMImageFinder _amImageFinder = Mockito.mock(
+		AMImageFinder.class);
+	private final AMImageURLFactory _amImageURLFactory = Mockito.mock(
+		AMImageURLFactory.class);
+	private final FileEntry _fileEntry = Mockito.mock(FileEntry.class);
+	private final FileVersion _fileVersion = Mockito.mock(FileVersion.class);
 	private final MediaQueryProviderImpl _mediaQueryProviderImpl =
 		new MediaQueryProviderImpl();
 

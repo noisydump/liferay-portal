@@ -19,8 +19,11 @@ import com.liferay.document.library.video.external.shortcut.provider.DLVideoExte
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.Http;
+import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.net.HttpURLConnection;
@@ -55,11 +58,6 @@ public class YouTubeDLVideoExternalShortcutProvider
 		return new DLVideoExternalShortcut() {
 
 			@Override
-			public String getDescription() {
-				return null;
-			}
-
-			@Override
 			public String getThumbnailURL() {
 				return jsonObject.getString("thumbnail_url");
 			}
@@ -79,10 +77,11 @@ public class YouTubeDLVideoExternalShortcutProvider
 				String iframeSrc =
 					"https://www.youtube.com/embed/" + youTubeVideoId +
 						"?rel=0";
-				String start = _http.getParameter(url, "t", false);
+				String start = HttpComponentsUtil.getParameter(url, "t", false);
 
 				if (Validator.isNotNull(start)) {
-					iframeSrc = _http.addParameter(iframeSrc, "start", start);
+					iframeSrc = HttpComponentsUtil.addParameter(
+						iframeSrc, "start", start);
 				}
 
 				return StringBundler.concat(
@@ -106,7 +105,7 @@ public class YouTubeDLVideoExternalShortcutProvider
 
 			Http.Response response = options.getResponse();
 
-			final JSONObject jsonObject;
+			JSONObject jsonObject;
 
 			if (response.getResponseCode() != HttpURLConnection.HTTP_OK) {
 				jsonObject = JSONFactoryUtil.createJSONObject();
@@ -118,6 +117,10 @@ public class YouTubeDLVideoExternalShortcutProvider
 			return jsonObject;
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			return JSONFactoryUtil.createJSONObject();
 		}
 	}
@@ -133,6 +136,9 @@ public class YouTubeDLVideoExternalShortcutProvider
 
 		return null;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		YouTubeDLVideoExternalShortcutProvider.class);
 
 	private static final List<Pattern> _urlPatterns = Arrays.asList(
 		Pattern.compile(

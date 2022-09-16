@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
@@ -53,8 +54,13 @@ public class ProductGroupProduct implements Serializable {
 		return ObjectMapperUtil.readValue(ProductGroupProduct.class, json);
 	}
 
+	public static ProductGroupProduct unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(
+			ProductGroupProduct.class, json);
+	}
+
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "30130")
 	public Long getId() {
 		return id;
 	}
@@ -80,7 +86,7 @@ public class ProductGroupProduct implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Long id;
 
-	@Schema
+	@Schema(example = "PAB-34098-789-N")
 	public String getProductExternalReferenceCode() {
 		return productExternalReferenceCode;
 	}
@@ -112,7 +118,7 @@ public class ProductGroupProduct implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String productExternalReferenceCode;
 
-	@Schema
+	@Schema(example = "DAB-34098-789-N")
 	public String getProductGroupExternalReferenceCode() {
 		return productGroupExternalReferenceCode;
 	}
@@ -146,7 +152,7 @@ public class ProductGroupProduct implements Serializable {
 	protected String productGroupExternalReferenceCode;
 
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "30324")
 	public Long getProductGroupId() {
 		return productGroupId;
 	}
@@ -175,7 +181,7 @@ public class ProductGroupProduct implements Serializable {
 	protected Long productGroupId;
 
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "30130")
 	public Long getProductId() {
 		return productId;
 	}
@@ -231,7 +237,7 @@ public class ProductGroupProduct implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected String productName;
 
-	@Schema
+	@Schema(example = "BL500IC")
 	public String getSku() {
 		return sku;
 	}
@@ -376,15 +382,16 @@ public class ProductGroupProduct implements Serializable {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductGroupProduct",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
 	}
 
 	private static boolean _isArray(Object value) {
@@ -410,8 +417,8 @@ public class ProductGroupProduct implements Serializable {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -442,7 +449,7 @@ public class ProductGroupProduct implements Serializable {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -450,7 +457,7 @@ public class ProductGroupProduct implements Serializable {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -458,5 +465,10 @@ public class ProductGroupProduct implements Serializable {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

@@ -16,7 +16,10 @@ package com.liferay.marketplace.app.manager.web.internal.util;
 
 import com.liferay.marketplace.constants.MarketplaceStorePortletKeys;
 import com.liferay.marketplace.model.App;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -24,7 +27,6 @@ import com.liferay.portal.kernel.util.WebKeys;
 
 import javax.portlet.MimeResponse;
 import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -52,13 +54,13 @@ public class MarketplaceAppDisplay extends BaseAppDisplay {
 
 	@Override
 	public String getDisplayURL(MimeResponse mimeResponse) {
-		PortletURL portletURL = mimeResponse.createRenderURL();
-
-		portletURL.setParameter("mvcPath", "/view_modules.jsp");
-
-		portletURL.setParameter("app", String.valueOf(_app.getAppId()));
-
-		return portletURL.toString();
+		return PortletURLBuilder.createRenderURL(
+			mimeResponse
+		).setMVCPath(
+			"/view_modules.jsp"
+		).setParameter(
+			"app", _app.getAppId()
+		).buildString();
 	}
 
 	@Override
@@ -73,18 +75,21 @@ public class MarketplaceAppDisplay extends BaseAppDisplay {
 				(ThemeDisplay)httpServletRequest.getAttribute(
 					WebKeys.THEME_DISPLAY);
 
-			PortletURL portletURL = PortletURLFactoryUtil.create(
-				httpServletRequest,
-				MarketplaceStorePortletKeys.MARKETPLACE_STORE,
-				themeDisplay.getPlid(), PortletRequest.RENDER_PHASE);
-
-			portletURL.setParameter(
-				"appEntryId", String.valueOf(_app.getRemoteAppId()));
-			portletURL.setWindowState(LiferayWindowState.MAXIMIZED);
-
-			return portletURL.toString();
+			return PortletURLBuilder.create(
+				PortletURLFactoryUtil.create(
+					httpServletRequest,
+					MarketplaceStorePortletKeys.MARKETPLACE_STORE,
+					themeDisplay.getPlid(), PortletRequest.RENDER_PHASE)
+			).setParameter(
+				"appEntryId", _app.getRemoteAppId()
+			).setWindowState(
+				LiferayWindowState.MAXIMIZED
+			).buildString();
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return StringPool.BLANK;
@@ -104,6 +109,9 @@ public class MarketplaceAppDisplay extends BaseAppDisplay {
 	public boolean isRequired() {
 		return _app.isRequired();
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		MarketplaceAppDisplay.class);
 
 	private final App _app;
 

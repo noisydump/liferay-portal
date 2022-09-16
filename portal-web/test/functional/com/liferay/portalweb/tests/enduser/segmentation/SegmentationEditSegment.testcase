@@ -1,6 +1,7 @@
 @component-name = "portal-segmentation"
 definition {
 
+	property custom.properties = "jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Segmentation";
@@ -10,23 +11,16 @@ definition {
 
 		User.firstLoginPG();
 
-		Navigator.openURL();
+		JSONGroup.addGroup(groupName = "Test Site Name");
 
-		ProductMenu.gotoPortlet(
-			category = "People",
-			portlet = "Segments");
-
-		LexiconEntry.gotoAdd();
-
-		Segmentation.addProperties(propertyOption = "Email Address");
-
-		Segmentation.fillTitle(titleField = "EditSegment Test");
-
-		Segmentation.changeCriterionInputEmailAddress(criterionInputOption = "Contains");
-
-		Segmentation.fillProperty(PropertyField = "liferay");
-
-		Button.clickSave();
+		task ("Add segment in Test Site Name") {
+			JSONSegmentsentry.addSegment(
+				fieldName = "Email Address",
+				groupName = "Test Site Name",
+				operator = "contains",
+				segmentName = "EditSegment Test",
+				text = "liferay");
+		}
 	}
 
 	tearDown {
@@ -38,186 +32,259 @@ definition {
 			PortalInstances.tearDownCP();
 		}
 		else {
-			ProductMenu.gotoPortlet(
-				category = "People",
-				portlet = "Segments",
-				site = "Guest");
-
-			if (IsElementPresent(locator1 = "Segmentation#SEGMENT_LIST")) {
-				Segmentation.tearDown();
-			}
+			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
 		}
 	}
 
-	@description = "Validate if the user can edit a segment with Properties Country and Region"
+	@description = "LPS-94874 Bug: Can't edit segment if the segment has a select input"
 	@priority = "5"
-	test EditSegmentUserByOrganizationCountryAndRegion {
-		while (IsElementPresent(locator1 = "Segmentation#SEGMENT_LIST")) {
-			Segmentation.editSegment();
+	@uitest
+	test CanEditSegmentIfHaveASelectInput {
+		property portal.acceptance = "true";
+
+		task ("Go to segments portlet") {
+			Segmentation.openSegmentsAdmin(siteURLKey = "test-site-name");
 		}
 
-		Segmentation.fillTitle(titleField = "EditSegmentUserByCountryAndRegion Test");
+		task ("Edit the segment with a select input") {
+			Segmentation.editSegment(entry = "EditSegment Test");
 
-		Segmentation.deleteProperties();
+			AssertChecked.assertCheckedNotVisible(
+				checkboxName = "",
+				locator1 = "Checkbox#ANY_CHECKBOX_CHECKED");
 
-		Segmentation.selectOrganization();
+			Segmentation.deleteProperties();
 
-		Segmentation.addProperties(propertyOption = "Country");
+			Segmentation.addProperties(propertyOption = "Regular Role");
 
-		Segmentation.addProperties(propertyOption = "Region");
+			Segmentation.fillProperty(selectCheckbox = "Administrator");
 
-		Button.clickSave();
-	}
+			Segmentation.fillTitle(titleField = "EditSegmentIfHaveASelectInput Test");
 
-	@description = "Validate if the user can edit a segment with Organization Tag"
-	@priority = "5"
-	test EditSegmentUserByOrganizationTag {
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+			Segmentation.viewMembers(memberName = "Test Test");
 
-		User.addCP(
-			userEmailAddress = "OrganizationTag@liferay.com",
-			userFirstName = "OrganizationTag",
-			userLastName = "OrganizationTag",
-			userScreenName = "OrganizationTag",
-			userTag = "organizationtagtest");
-
-		Navigator.openURL();
-
-		ProductMenu.gotoPortlet(
-			category = "People",
-			portlet = "Segments",
-			site = "Guest");
-
-		while (IsElementPresent(locator1 = "Segmentation#SEGMENT_LIST")) {
-			Segmentation.editSegment();
+			Button.clickSave();
 		}
 
-		Segmentation.fillTitle(titleField = "EditSegmentUserByOrganizationTag Test");
+		task ("Assert segment edited") {
+			Segmentation.editSegment(entry = "EditSegmentIfHaveASelectInput Test");
 
-		Segmentation.deleteProperties();
+			Segmentation.viewSegment(
+				criterion = "select-input",
+				value = "Administrator");
 
-		Segmentation.selectOrganization();
+			Segmentation.fillProperty(selectCheckbox = "Power User");
 
-		Segmentation.addProperties(propertyOption = "Tag");
+			Button.clickSave();
 
-		Segmentation.selectTag(tagOption = "organizationtagtest");
+			Segmentation.editSegment(entry = "EditSegmentIfHaveASelectInput Test");
 
-		Button.clickSave();
+			AssertChecked.assertCheckedNotVisible(
+				checkboxName = "",
+				locator1 = "Checkbox#ANY_CHECKBOX_CHECKED");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
-
-		User.deactivateCP(userFirstName = "OrganizationTag");
-
-		User.deleteCP();
-	}
-
-	@description = "Validate if the user can edit a segment with Properties Session Hostname"
-	@priority = "5"
-	test EditSegmentUserBySessionHostname {
-		while (IsElementPresent(locator1 = "Segmentation#SEGMENT_LIST")) {
-			Segmentation.editSegment();
+			AssertValue(
+				key_criterion = "select-input",
+				locator1 = "Segmentation#CRITERION_INPUT_FORM_CONTROL",
+				value1 = "Power User");
 		}
 
-		Segmentation.fillTitle(titleField = "EditSegmentUserBySessionHostname Test");
+		task ("Assert the segment cannot be edited with the toggle off") {
+			Uncheck.uncheckNotVisible(
+				checkboxName = "",
+				locator1 = "Checkbox#ANY_CHECKBOX_CHECKED");
 
-		Segmentation.deleteProperties();
+			AssertNotChecked.assertNotCheckedNotVisible(
+				checkboxName = "",
+				locator1 = "Checkbox#ANY_CHECKBOX_CHECKED");
 
-		Segmentation.selectSession();
-
-		Segmentation.addProperties(propertyOption = "Hostname");
-
-		Segmentation.fillProperty(PropertyField = "Liferay");
-
-		Button.clickSave();
+			AssertElementNotPresent(locator1 = "Button#SELECT");
+		}
 	}
 
-	@description = "Validate if the user can edit a segment with Properties Session URL"
+	@description = "LPS-102740 Validate if the user can edit a segment with Properties Country"
 	@priority = "5"
+	@uitest
+	test EditSegmentUserByOrganizationCountry {
+		property portal.acceptance = "true";
+
+		task ("Go to segments portlet") {
+			Segmentation.openSegmentsAdmin(siteURLKey = "test-site-name");
+		}
+
+		task ("Edit the segment") {
+			Segmentation.editSegment(entry = "EditSegment Test");
+
+			Segmentation.fillTitle(titleField = "EditSegmentUserByCountry Test");
+
+			Segmentation.deleteProperties();
+
+			Segmentation.gotoSidebar(fieldType = "Organization");
+
+			Segmentation.addProperties(propertyOption = "Country");
+
+			Segmentation.changeCriterionInput(criterionInputOption = "Equals");
+
+			Segmentation.fillProperty(optionsValue = "China");
+
+			Button.clickSave();
+		}
+
+		task ("Assert segment edited") {
+			Segmentation.editSegment(entry = "EditSegmentUserByCountry Test");
+
+			AssertValue(
+				key_criterion = "options",
+				locator1 = "Segmentation#CRITERION_INPUT_FORM_CONTROL",
+				value1 = "china");
+		}
+	}
+
+	@description = "LPS-102740 Validate if the user can edit a segment with Properties Region"
+	@priority = "5"
+	@uitest
+	test EditSegmentUserByOrganizationRegion {
+		property portal.acceptance = "true";
+
+		task ("Go to segments portlet") {
+			Segmentation.openSegmentsAdmin(siteURLKey = "test-site-name");
+		}
+
+		task ("Edit the segment") {
+			Segmentation.editSegment(entry = "EditSegment Test");
+
+			Segmentation.deleteProperties();
+
+			Segmentation.gotoSidebar(fieldType = "Organization");
+
+			Segmentation.addProperties(propertyOption = "Region");
+
+			Segmentation.fillProperty(optionsValue = "Spain - Madrid");
+
+			Segmentation.fillTitle(titleField = "EditSegmentUserByRegion Test");
+
+			Button.clickSave();
+
+			Alert.viewSuccessMessage();
+		}
+
+		task ("Assert segment edited") {
+			Segmentation.editSegment(entry = "EditSegmentUserByRegion Test");
+
+			AssertValue(
+				key_criterion = "options",
+				locator1 = "Segmentation#CRITERION_INPUT_FORM_CONTROL",
+				value1 = "madrid");
+		}
+	}
+
+	@description = "LPS-102743 Validate if the user can edit a segment with Properties Session URL"
+	@priority = "5"
+	@uitest
 	test EditSegmentUserBySessionURL {
-		property portal.acceptance = "quarantine";
-		property portal.upstream = "quarantine";
+		property portal.acceptance = "true";
 
-		while (IsElementPresent(locator1 = "Segmentation#SEGMENT_LIST")) {
-			Segmentation.editSegment();
+		task ("Go to segments portlet") {
+			Segmentation.openSegmentsAdmin(siteURLKey = "test-site-name");
 		}
 
-		Segmentation.fillTitle(titleField = "EditSegmentUserBySessionURL Test");
+		task ("Edit the segment") {
+			Segmentation.editSegment(entry = "EditSegment Test");
 
-		Segmentation.deleteProperties();
+			Segmentation.fillTitle(titleField = "EditSegmentUserBySessionURL Test");
 
-		Segmentation.selectSession();
+			Segmentation.deleteProperties();
 
-		Segmentation.addProperties(propertyOption = "URL");
+			Segmentation.gotoSidebar(fieldType = "Session");
 
-		Segmentation.fillProperty(PropertyField = "www.liferay.com");
+			Segmentation.addProperties(propertyOption = "URL");
 
-		Button.clickSave();
+			Segmentation.fillProperty(propertyField = "http://localhost:8080");
+
+			Button.clickSave();
+		}
+
+		task ("Assert segment edited") {
+			Segmentation.editSegment(entry = "EditSegmentUserBySessionURL Test");
+
+			AssertValue(
+				locator1 = "Segmentation#PROPERTY_FIELD",
+				value1 = "http://localhost:8080");
+		}
 	}
 
 	@description = "Validate if the user can edit a segment with User Tag"
 	@priority = "5"
+	@uitest
 	test EditSegmentUserByUserTag {
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		property portal.acceptance = "true";
 
-		User.addCP(
-			userEmailAddress = "Tag@liferay.com",
-			userFirstName = "UserTag",
-			userLastName = "UserTag",
-			userScreenName = "UserTag",
-			userTag = "tagtest");
-
-		Navigator.openURL();
-
-		ProductMenu.gotoPortlet(
-			category = "People",
-			portlet = "Segments",
-			site = "Guest");
-
-		while (IsElementPresent(locator1 = "Segmentation#SEGMENT_LIST")) {
-			Segmentation.editSegment();
+		task ("Add user with tag") {
+			JSONUser.addUser(
+				assetTagNames = "tagname",
+				userEmailAddress = "userea@liferay.com",
+				userFirstName = "userfn",
+				userLastName = "userln",
+				userScreenName = "usersn");
 		}
 
-		Segmentation.fillTitle(titleField = "EditSegmentUserByUserTag Test");
+		task ("Go to segments portlet") {
+			Segmentation.openSegmentsAdmin(siteURLKey = "test-site-name");
+		}
 
-		Segmentation.deleteProperties();
+		task ("Edit the segment") {
+			Segmentation.editSegment(entry = "EditSegment Test");
 
-		Segmentation.addProperties(propertyOption = "Tag");
+			Segmentation.deleteProperties();
 
-		Segmentation.selectTag(tagOption = "tagtest");
+			Segmentation.addProperties(propertyOption = "Tag");
 
-		Button.clickSave();
+			Segmentation.fillProperty(selectLink = "tagname");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+			Segmentation.fillTitle(titleField = "EditSegmentUserByUserTag Test");
 
-		User.deactivateCP(userFirstName = "UserTag");
+			Button.clickSave();
 
-		User.deleteCP();
+			Alert.viewSuccessMessage();
+		}
+
+		task ("Assert segment edited") {
+			Segmentation.editSegment(entry = "EditSegmentUserByUserTag Test");
+
+			AssertValue(
+				key_criterion = "select-input",
+				locator1 = "Segmentation#CRITERION_INPUT_FORM_CONTROL",
+				value1 = "tagname");
+		}
 	}
 
 	@description = "Validate if the user can edit a segment with Properties User and Email Segment with Contains to Equals Option"
 	@priority = "5"
+	@uitest
 	test EditSegmentUserEmailAddressContainsToEquals {
-		while (IsElementPresent(locator1 = "Segmentation#SEGMENT_LIST")) {
-			Segmentation.editSegment();
+		property portal.acceptance = "true";
+
+		task ("Go to segments portlet") {
+			Segmentation.openSegmentsAdmin(siteURLKey = "test-site-name");
 		}
 
-		Segmentation.fillTitle(titleField = "EditSegmentUserEmailAddressContainsToEquals Test");
+		task ("Edit the segment") {
+			Segmentation.editSegment(entry = "EditSegment Test");
 
-		Segmentation.changeCriterionInputEmailAddress(criterionInputOption = "Equals");
+			Segmentation.fillTitle(titleField = "EditSegmentUserEmailAddressContainsToEquals Test");
 
-		Button.clickSave();
+			Segmentation.changeCriterionInput(criterionInputOption = "Equals");
+
+			Button.clickSave();
+		}
+
+		task ("Assert segment edited") {
+			Segmentation.editSegment(entry = "EditSegmentUserEmailAddressContainsToEquals Test");
+
+			AssertValue(
+				locator1 = "Segmentation#CRITERION_INPUT",
+				value1 = "eq");
+		}
 	}
 
 }

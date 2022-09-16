@@ -14,12 +14,21 @@
 
 package com.liferay.commerce.checkout.web.internal.display.context;
 
+import com.liferay.account.model.AccountEntry;
+import com.liferay.account.service.AccountEntryLocalService;
+import com.liferay.account.service.AccountRoleLocalService;
 import com.liferay.commerce.account.model.CommerceAccount;
 import com.liferay.commerce.constants.CommerceCheckoutWebKeys;
 import com.liferay.commerce.model.CommerceAddress;
 import com.liferay.commerce.model.CommerceOrder;
+import com.liferay.commerce.product.constants.CommerceChannelAccountEntryRelConstants;
+import com.liferay.commerce.product.model.CommerceChannelAccountEntryRel;
+import com.liferay.commerce.product.service.CommerceChannelAccountEntryRelLocalService;
+import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.service.CommerceAddressService;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
+import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 
 import java.util.List;
 
@@ -28,15 +37,29 @@ import javax.servlet.http.HttpServletRequest;
 /**
  * @author Andrea Di Giorgi
  * @author Alec Sloan
+ * @author Alessio Antonio Rendina
  */
 public class ShippingAddressCheckoutStepDisplayContext
 	extends BaseAddressCheckoutStepDisplayContext {
 
 	public ShippingAddressCheckoutStepDisplayContext(
+		AccountEntryLocalService accountEntryLocalService,
+		ModelResourcePermission<AccountEntry>
+			accountEntryModelResourcePermission,
+		AccountRoleLocalService accountRoleLocalService,
 		CommerceAddressService commerceAddressService,
-		HttpServletRequest httpServletRequest) {
+		CommerceChannelAccountEntryRelLocalService
+			commerceChannelAccountEntryRelLocalService,
+		CommerceChannelLocalService commerceChannelLocalService,
+		HttpServletRequest httpServletRequest,
+		PortletResourcePermission portletResourcePermission) {
 
-		super(commerceAddressService, httpServletRequest);
+		super(
+			accountEntryLocalService, accountEntryModelResourcePermission,
+			accountRoleLocalService, commerceAddressService,
+			commerceChannelAccountEntryRelLocalService,
+			commerceChannelLocalService, httpServletRequest,
+			portletResourcePermission);
 	}
 
 	@Override
@@ -44,7 +67,7 @@ public class ShippingAddressCheckoutStepDisplayContext
 		CommerceOrder commerceOrder = getCommerceOrder();
 
 		return commerceAddressService.getShippingCommerceAddresses(
-			commerceOrder.getCompanyId(), CommerceAccount.class.getName(),
+			commerceOrder.getCompanyId(), AccountEntry.class.getName(),
 			commerceOrder.getCommerceAccountId());
 	}
 
@@ -55,23 +78,47 @@ public class ShippingAddressCheckoutStepDisplayContext
 
 	@Override
 	public String getCommerceCountrySelectionMethodName() {
-		return "get-shipping-commerce-countries";
+		return "get-shipping-countries";
 	}
 
 	@Override
-	public long getDefaultCommerceAddressId() throws PortalException {
+	public long getDefaultCommerceAddressId(long commerceChannelId)
+		throws PortalException {
+
 		CommerceOrder commerceOrder = getCommerceOrder();
 
 		long shippingAddressId = commerceOrder.getShippingAddressId();
 
-		if (shippingAddressId == 0) {
-			CommerceAccount commerceAccount =
-				commerceOrder.getCommerceAccount();
+		if (shippingAddressId > 0) {
+			return shippingAddressId;
+		}
 
-			if (commerceAccount != null) {
-				shippingAddressId =
-					commerceAccount.getDefaultShippingAddressId();
-			}
+		CommerceAccount commerceAccount = commerceOrder.getCommerceAccount();
+
+		AccountEntry accountEntry = accountEntryLocalService.fetchAccountEntry(
+			commerceAccount.getCommerceAccountId());
+
+		if (accountEntry == null) {
+			return shippingAddressId;
+		}
+
+		CommerceChannelAccountEntryRel commerceChannelAccountEntryRel =
+			commerceChannelAccountEntryRelLocalService.
+				fetchCommerceChannelAccountEntryRel(
+					accountEntry.getAccountEntryId(), commerceChannelId,
+					CommerceChannelAccountEntryRelConstants.
+						TYPE_SHIPPING_ADDRESS);
+
+		if (commerceChannelAccountEntryRel == null) {
+			return shippingAddressId;
+		}
+
+		CommerceAddress commerceAddress =
+			commerceAddressService.fetchCommerceAddress(
+				commerceChannelAccountEntryRel.getClassPK());
+
+		if (commerceAddress != null) {
+			shippingAddressId = commerceAddress.getCommerceAddressId();
 		}
 
 		return shippingAddressId;

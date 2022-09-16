@@ -17,27 +17,36 @@ package com.liferay.oauth2.provider.rest.internal.spi.bearer.token.provider;
 import com.liferay.oauth2.provider.rest.spi.bearer.token.provider.BearerTokenProvider;
 import com.liferay.portal.kernel.security.SecureRandomUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.PropsUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
+import com.liferay.portal.util.PropsImpl;
 
 import java.util.Map;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
 /**
  * @author Tomas Polesovsky
  */
-@PrepareForTest(SecureRandomUtil.class)
-@RunWith(PowerMockRunner.class)
-public class DefaultBearerTokenProviderTest extends PowerMockito {
+public class DefaultBearerTokenProviderTest {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Before
 	public void setUp() throws Exception {
+		PropsUtil.setProps(new PropsImpl());
+
 		Map<String, Object> properties = HashMapBuilder.<String, Object>put(
 			"access.token.expires.in", _ACCESS_TOKEN_EXPIRES_IN
 		).put(
@@ -52,13 +61,16 @@ public class DefaultBearerTokenProviderTest extends PowerMockito {
 
 		_defaultBearerTokenProvider.activate(properties);
 
-		mockStatic(SecureRandomUtil.class);
-
-		when(
+		Mockito.when(
 			SecureRandomUtil.nextLong()
 		).thenReturn(
 			_TOKEN_KEY_LONG
 		);
+	}
+
+	@After
+	public void tearDown() {
+		_secureRandomUtilMockedStatic.close();
 	}
 
 	@Test
@@ -90,18 +102,18 @@ public class DefaultBearerTokenProviderTest extends PowerMockito {
 
 		Assert.assertTrue(
 			_defaultBearerTokenProvider.isValid(
-				generateAccessToken(_ACCESS_TOKEN_EXPIRES_IN, issuedAtNow)));
+				_generateAccessToken(_ACCESS_TOKEN_EXPIRES_IN, issuedAtNow)));
 		Assert.assertFalse(
 			_defaultBearerTokenProvider.isValid(
-				generateAccessToken(-1, issuedAtNow)));
+				_generateAccessToken(-1, issuedAtNow)));
 		Assert.assertFalse(
 			_defaultBearerTokenProvider.isValid(
-				generateAccessToken(
+				_generateAccessToken(
 					_ACCESS_TOKEN_EXPIRES_IN,
 					issuedAtNow - (_ACCESS_TOKEN_EXPIRES_IN + 1))));
 		Assert.assertFalse(
 			_defaultBearerTokenProvider.isValid(
-				generateAccessToken(
+				_generateAccessToken(
 					_ACCESS_TOKEN_EXPIRES_IN,
 					issuedAtNow + _ACCESS_TOKEN_EXPIRES_IN)));
 	}
@@ -112,25 +124,26 @@ public class DefaultBearerTokenProviderTest extends PowerMockito {
 
 		Assert.assertTrue(
 			_defaultBearerTokenProvider.isValid(
-				generateRefreshToken(_REFRESH_TOKEN_EXPIRES_IN, issuedAtNow)));
+				_generateRefreshToken(_REFRESH_TOKEN_EXPIRES_IN, issuedAtNow)));
 		Assert.assertFalse(
 			_defaultBearerTokenProvider.isValid(
-				generateRefreshToken(-1, issuedAtNow)));
+				_generateRefreshToken(-1, issuedAtNow)));
 		Assert.assertFalse(
 			_defaultBearerTokenProvider.isValid(
-				generateRefreshToken(
+				_generateRefreshToken(
 					_REFRESH_TOKEN_EXPIRES_IN,
 					issuedAtNow - (_REFRESH_TOKEN_EXPIRES_IN + 1))));
 		Assert.assertFalse(
 			_defaultBearerTokenProvider.isValid(
-				generateRefreshToken(
+				_generateRefreshToken(
 					_REFRESH_TOKEN_EXPIRES_IN,
 					issuedAtNow + _REFRESH_TOKEN_EXPIRES_IN)));
 	}
 
 	@Test
 	public void testOnBeforeCreateAccessToken() {
-		BearerTokenProvider.AccessToken accessToken = generateAccessToken(0, 0);
+		BearerTokenProvider.AccessToken accessToken = _generateAccessToken(
+			0, 0);
 
 		_defaultBearerTokenProvider.onBeforeCreate(accessToken);
 
@@ -142,7 +155,7 @@ public class DefaultBearerTokenProviderTest extends PowerMockito {
 
 	@Test
 	public void testOnBeforeCreateRefreshToken() {
-		BearerTokenProvider.RefreshToken refreshToken = generateRefreshToken(
+		BearerTokenProvider.RefreshToken refreshToken = _generateRefreshToken(
 			0, 0);
 
 		_defaultBearerTokenProvider.onBeforeCreate(refreshToken);
@@ -153,7 +166,7 @@ public class DefaultBearerTokenProviderTest extends PowerMockito {
 			_TOKEN_KEY_STRING_32_BYTES_HEX, refreshToken.getTokenKey());
 	}
 
-	protected BearerTokenProvider.AccessToken generateAccessToken(
+	private BearerTokenProvider.AccessToken _generateAccessToken(
 		long expiresIn, long issuedAt) {
 
 		return new BearerTokenProvider.AccessToken(
@@ -161,7 +174,7 @@ public class DefaultBearerTokenProviderTest extends PowerMockito {
 			null, null, null, null, null, null, 0, null);
 	}
 
-	protected BearerTokenProvider.RefreshToken generateRefreshToken(
+	private BearerTokenProvider.RefreshToken _generateRefreshToken(
 		long expiresIn, long issuedAt) {
 
 		return new BearerTokenProvider.RefreshToken(
@@ -183,5 +196,7 @@ public class DefaultBearerTokenProviderTest extends PowerMockito {
 		"decadefeededbabedecadefeededbabedecadefeededbabedecadefeededbabe";
 
 	private DefaultBearerTokenProvider _defaultBearerTokenProvider;
+	private final MockedStatic<SecureRandomUtil> _secureRandomUtilMockedStatic =
+		Mockito.mockStatic(SecureRandomUtil.class);
 
 }

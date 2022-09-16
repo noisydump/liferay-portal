@@ -27,11 +27,13 @@ taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %>
 
 <%@ page import="com.liferay.asset.browser.web.internal.display.context.AssetBrowserDisplayContext" %><%@
 page import="com.liferay.asset.browser.web.internal.display.context.AssetBrowserManagementToolbarDisplayContext" %><%@
-page import="com.liferay.asset.browser.web.internal.servlet.taglib.clay.AssetEntryVerticalCard" %><%@
+page import="com.liferay.asset.browser.web.internal.frontend.taglib.clay.servlet.taglib.AssetEntryVerticalCard" %><%@
 page import="com.liferay.asset.kernel.model.AssetRenderer" %><%@
 page import="com.liferay.asset.kernel.model.AssetRendererFactory" %><%@
 page import="com.liferay.portal.kernel.json.JSONFactoryUtil" %><%@
 page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
+page import="com.liferay.portal.kernel.log.Log" %><%@
+page import="com.liferay.portal.kernel.log.LogFactoryUtil" %><%@
 page import="com.liferay.portal.kernel.model.Group" %><%@
 page import="com.liferay.portal.kernel.service.GroupLocalServiceUtil" %><%@
 page import="com.liferay.portal.kernel.util.HashMapBuilder" %><%@

@@ -26,18 +26,21 @@ import com.liferay.portal.kernel.model.impl.BaseModelImpl;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -119,32 +122,32 @@ public class VirtualHostModelImpl
 	public static final boolean COLUMN_BITMASK_ENABLED = true;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long COMPANYID_COLUMN_BITMASK = 1L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long DEFAULTVIRTUALHOST_COLUMN_BITMASK = 2L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long HOSTNAME_COLUMN_BITMASK = 4L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long LAYOUTSETID_COLUMN_BITMASK = 8L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *		#getColumnBitmask(String)
+	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long VIRTUALHOSTID_COLUMN_BITMASK = 16L;
@@ -236,34 +239,6 @@ public class VirtualHostModelImpl
 		getAttributeSetterBiConsumers() {
 
 		return _attributeSetterBiConsumers;
-	}
-
-	private static Function<InvocationHandler, VirtualHost>
-		_getProxyProviderFunction() {
-
-		Class<?> proxyClass = ProxyUtil.getProxyClass(
-			VirtualHost.class.getClassLoader(), VirtualHost.class,
-			ModelWrapper.class);
-
-		try {
-			Constructor<VirtualHost> constructor =
-				(Constructor<VirtualHost>)proxyClass.getConstructor(
-					InvocationHandler.class);
-
-			return invocationHandler -> {
-				try {
-					return constructor.newInstance(invocationHandler);
-				}
-				catch (ReflectiveOperationException
-							reflectiveOperationException) {
-
-					throw new InternalError(reflectiveOperationException);
-				}
-			};
-		}
-		catch (NoSuchMethodException noSuchMethodException) {
-			throw new InternalError(noSuchMethodException);
-		}
 	}
 
 	private static final Map<String, Function<VirtualHost, Object>>
@@ -502,7 +477,9 @@ public class VirtualHostModelImpl
 		for (Map.Entry<String, Object> entry :
 				_columnOriginalValues.entrySet()) {
 
-			if (entry.getValue() != getColumnValue(entry.getKey())) {
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
 				_columnBitmask |= _columnBitmasks.get(entry.getKey());
 			}
 		}
@@ -552,6 +529,30 @@ public class VirtualHostModelImpl
 		virtualHostImpl.setLanguageId(getLanguageId());
 
 		virtualHostImpl.resetOriginalValues();
+
+		return virtualHostImpl;
+	}
+
+	@Override
+	public VirtualHost cloneWithOriginalValues() {
+		VirtualHostImpl virtualHostImpl = new VirtualHostImpl();
+
+		virtualHostImpl.setMvccVersion(
+			this.<Long>getColumnOriginalValue("mvccVersion"));
+		virtualHostImpl.setCtCollectionId(
+			this.<Long>getColumnOriginalValue("ctCollectionId"));
+		virtualHostImpl.setVirtualHostId(
+			this.<Long>getColumnOriginalValue("virtualHostId"));
+		virtualHostImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		virtualHostImpl.setLayoutSetId(
+			this.<Long>getColumnOriginalValue("layoutSetId"));
+		virtualHostImpl.setHostname(
+			this.<String>getColumnOriginalValue("hostname"));
+		virtualHostImpl.setDefaultVirtualHost(
+			this.<Boolean>getColumnOriginalValue("defaultVirtualHost"));
+		virtualHostImpl.setLanguageId(
+			this.<String>getColumnOriginalValue("languageId"));
 
 		return virtualHostImpl;
 	}
@@ -673,7 +674,7 @@ public class VirtualHostModelImpl
 			getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			(4 * attributeGetterFunctions.size()) + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -684,9 +685,26 @@ public class VirtualHostModelImpl
 			Function<VirtualHost, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((VirtualHost)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply((VirtualHost)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -733,7 +751,9 @@ public class VirtualHostModelImpl
 	private static class EscapedModelProxyProviderFunctionHolder {
 
 		private static final Function<InvocationHandler, VirtualHost>
-			_escapedModelProxyProviderFunction = _getProxyProviderFunction();
+			_escapedModelProxyProviderFunction =
+				ProxyUtil.getProxyProviderFunction(
+					VirtualHost.class, ModelWrapper.class);
 
 	}
 

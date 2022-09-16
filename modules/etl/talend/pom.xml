@@ -5,13 +5,6 @@
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
-				<groupId>org.glassfish.jersey</groupId>
-				<artifactId>jersey-bom</artifactId>
-				<version>2.22.2</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-			<dependency>
 				<groupId>org.talend.components</groupId>
 				<artifactId>components-bom</artifactId>
 				<version>0.25.3</version>
@@ -24,12 +17,11 @@
 		<dependency>
 			<groupId>org.glassfish.jersey.core</groupId>
 			<artifactId>jersey-common</artifactId>
-			<version>2.22.2</version>
 		</dependency>
 	</dependencies>
 	<groupId>com.liferay</groupId>
 	<artifactId>com.liferay.talend</artifactId>
-	<version>0.5.0-SNAPSHOT</version>
+	<version>0.7.0-SNAPSHOT</version>
 	<name>Liferay Talend</name>
 	<packaging>pom</packaging>
 	<repositories>
@@ -73,6 +65,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<daikon.version>0.27.0</daikon.version>
+		<glassfish-jersey.version>2.26</glassfish-jersey.version>
 		<log4j.rootLogger>DEBUG, stdout</log4j.rootLogger>
 		<java.version>1.8</java.version>
 		<maven.compiler.source>1.8</maven.compiler.source>
@@ -118,7 +111,7 @@
 				<plugin>
 					<groupId>com.liferay</groupId>
 					<artifactId>com.liferay.source.formatter</artifactId>
-					<version>1.0.1085</version>
+					<version>1.0.1253</version>
 				</plugin>
 			</plugins>
 		</pluginManagement>

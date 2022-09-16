@@ -46,6 +46,11 @@ public class CustomizationSettingsControlMenuJSPDynamicInclude
 	public static final String CUSTOMIZATION_SETTINGS_LAYOUT_UPDATE_PERMISSION =
 		"CUSTOMIZATION_SETTINGS_LAYOUT_UPDATE_PERMISSION";
 
+	@Override
+	public ServletContext getServletContext() {
+		return _servletContext;
+	}
+
 	public boolean hasUpdateLayoutPermission(ThemeDisplay themeDisplay)
 		throws PortalException {
 
@@ -80,7 +85,7 @@ public class CustomizationSettingsControlMenuJSPDynamicInclude
 		}
 		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(portalException, portalException);
+				_log.debug(portalException);
 			}
 		}
 
@@ -119,7 +124,7 @@ public class CustomizationSettingsControlMenuJSPDynamicInclude
 		return _log;
 	}
 
-	protected boolean isCustomizableLayout(ThemeDisplay themeDisplay)
+	private boolean _isCustomizableLayout(ThemeDisplay themeDisplay)
 		throws PortalException {
 
 		Layout layout = themeDisplay.getLayout();
@@ -145,11 +150,8 @@ public class CustomizationSettingsControlMenuJSPDynamicInclude
 			return true;
 		}
 
-		if (!layoutTypePortlet.isCustomizable()) {
-			return false;
-		}
-
-		if (!LayoutPermissionUtil.containsWithoutViewableGroup(
+		if (!layoutTypePortlet.isCustomizable() ||
+			!LayoutPermissionUtil.containsWithoutViewableGroup(
 				themeDisplay.getPermissionChecker(), layout, false,
 				ActionKeys.CUSTOMIZE)) {
 
@@ -157,15 +159,6 @@ public class CustomizationSettingsControlMenuJSPDynamicInclude
 		}
 
 		return true;
-	}
-
-	@Override
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.layout.admin.web)",
-		unbind = "-"
-	)
-	protected void setServletContext(ServletContext servletContext) {
-		super.setServletContext(servletContext);
 	}
 
 	private boolean _isShow(HttpServletRequest httpServletRequest)
@@ -177,15 +170,9 @@ public class CustomizationSettingsControlMenuJSPDynamicInclude
 
 		Layout layout = themeDisplay.getLayout();
 
-		if (layout.isTypeControlPanel()) {
-			return false;
-		}
+		if (layout.isTypeControlPanel() || layout.isTypeContent() ||
+			!_isCustomizableLayout(themeDisplay)) {
 
-		if (layout.isTypeContent()) {
-			return false;
-		}
-
-		if (!isCustomizableLayout(themeDisplay)) {
 			return false;
 		}
 
@@ -197,5 +184,8 @@ public class CustomizationSettingsControlMenuJSPDynamicInclude
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		CustomizationSettingsControlMenuJSPDynamicInclude.class);
+
+	@Reference(target = "(osgi.web.symbolicname=com.liferay.layout.admin.web)")
+	private ServletContext _servletContext;
 
 }

@@ -16,12 +16,14 @@ package com.liferay.portal.kernel.workflow;
 
 import com.liferay.asset.kernel.model.AssetRenderer;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.WorkflowDefinitionLink;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.util.GetterUtil;
 
 import java.io.Serializable;
 
@@ -50,7 +52,21 @@ public interface WorkflowHandler<T> {
 
 	public String getClassName();
 
+	public default long getDiscussionClassPK(
+		Map<String, Serializable> workflowContext) {
+
+		return GetterUtil.getLong(
+			workflowContext.get(WorkflowConstants.CONTEXT_ENTRY_CLASS_PK));
+	}
+
 	public String getIconCssClass();
+
+	public default String getNotificationLink(
+			long workflowTaskId, ServiceContext serviceContext)
+		throws PortalException {
+
+		return StringPool.BLANK;
+	}
 
 	public String getSummary(
 		long classPK, PortletRequest portletRequest,
@@ -63,10 +79,6 @@ public interface WorkflowHandler<T> {
 	public PortletURL getURLEdit(
 		long classPK, LiferayPortletRequest liferayPortletRequest,
 		LiferayPortletResponse liferayPortletResponse);
-
-	public String getURLEditWorkflowTask(
-			long workflowTaskId, ServiceContext serviceContext)
-		throws PortalException;
 
 	public PortletURL getURLViewDiffs(
 		long classPK, LiferayPortletRequest liferayPortletRequest,
@@ -87,6 +99,10 @@ public interface WorkflowHandler<T> {
 
 	public boolean isAssetTypeSearchable();
 
+	public default boolean isCommentable() {
+		return true;
+	}
+
 	public boolean isScopeable();
 
 	public boolean isVisible();
@@ -102,5 +118,12 @@ public interface WorkflowHandler<T> {
 
 	public T updateStatus(int status, Map<String, Serializable> workflowContext)
 		throws PortalException;
+
+	public default T updateStatus(
+			T model, int status, Map<String, Serializable> workflowContext)
+		throws PortalException {
+
+		return updateStatus(status, workflowContext);
+	}
 
 }

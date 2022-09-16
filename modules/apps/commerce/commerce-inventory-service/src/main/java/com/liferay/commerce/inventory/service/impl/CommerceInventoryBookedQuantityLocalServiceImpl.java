@@ -18,21 +18,31 @@ import com.liferay.commerce.inventory.constants.CommerceInventoryConstants;
 import com.liferay.commerce.inventory.exception.MVCCException;
 import com.liferay.commerce.inventory.exception.NoSuchInventoryBookedQuantityException;
 import com.liferay.commerce.inventory.model.CommerceInventoryBookedQuantity;
+import com.liferay.commerce.inventory.service.CommerceInventoryAuditLocalService;
 import com.liferay.commerce.inventory.service.base.CommerceInventoryBookedQuantityLocalServiceBaseImpl;
 import com.liferay.commerce.inventory.type.CommerceInventoryAuditType;
 import com.liferay.commerce.inventory.type.CommerceInventoryAuditTypeRegistry;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.spring.extender.service.ServiceReference;
+import com.liferay.portal.kernel.service.UserLocalService;
 
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
 /**
  * @author Luca Pellizzon
  * @author Alessio Antonio Rendina
  */
+@Component(
+	enabled = false,
+	property = "model.class.name=com.liferay.commerce.inventory.model.CommerceInventoryBookedQuantity",
+	service = AopService.class
+)
 public class CommerceInventoryBookedQuantityLocalServiceImpl
 	extends CommerceInventoryBookedQuantityLocalServiceBaseImpl {
 
@@ -42,7 +52,7 @@ public class CommerceInventoryBookedQuantityLocalServiceImpl
 			Map<String, String> context)
 		throws PortalException {
 
-		User user = userLocalService.getUser(userId);
+		User user = _userLocalService.getUser(userId);
 
 		long commerceInventoryBookedQuantityId =
 			counterLocalService.increment();
@@ -62,7 +72,7 @@ public class CommerceInventoryBookedQuantityLocalServiceImpl
 			_commerceInventoryAuditTypeRegistry.getCommerceInventoryAuditType(
 				CommerceInventoryConstants.AUDIT_TYPE_BOOKED_QUANTITY);
 
-		commerceInventoryAuditLocalService.addCommerceInventoryAudit(
+		_commerceInventoryAuditLocalService.addCommerceInventoryAudit(
 			userId, sku, commerceInventoryAuditType.getType(),
 			commerceInventoryAuditType.getLog(context), quantity);
 
@@ -145,7 +155,7 @@ public class CommerceInventoryBookedQuantityLocalServiceImpl
 				commerceBookedQuantityId);
 
 		if (commerceBookedQuantity == null) {
-			User user = userLocalService.getUser(userId);
+			User user = _userLocalService.getUser(userId);
 
 			commerceBookedQuantity =
 				commerceInventoryBookedQuantityPersistence.create(
@@ -157,6 +167,13 @@ public class CommerceInventoryBookedQuantityLocalServiceImpl
 			commerceBookedQuantity.setSku(sku);
 			commerceBookedQuantity.setExpirationDate(expirationDate);
 		}
+		else {
+			quantity = commerceBookedQuantity.getQuantity() + quantity;
+
+			if (quantity < 0) {
+				quantity = 0;
+			}
+		}
 
 		commerceBookedQuantity.setQuantity(quantity);
 
@@ -164,12 +181,36 @@ public class CommerceInventoryBookedQuantityLocalServiceImpl
 			_commerceInventoryAuditTypeRegistry.getCommerceInventoryAuditType(
 				CommerceInventoryConstants.AUDIT_TYPE_RESTORE_QUANTITY);
 
-		commerceInventoryAuditLocalService.addCommerceInventoryAudit(
+		_commerceInventoryAuditLocalService.addCommerceInventoryAudit(
 			userId, sku, commerceInventoryAuditType.getType(),
 			commerceInventoryAuditType.getLog(context), quantity);
 
 		return commerceInventoryBookedQuantityPersistence.update(
 			commerceBookedQuantity);
+	}
+
+	@Override
+	public CommerceInventoryBookedQuantity
+			restockCommerceInventoryBookedQuantity(
+				long userId, long commerceInventoryBookedQuantityId,
+				Map<String, String> context)
+		throws PortalException {
+
+		CommerceInventoryBookedQuantity commerceInventoryBookedQuantity =
+			commerceInventoryBookedQuantityPersistence.remove(
+				commerceInventoryBookedQuantityId);
+
+		CommerceInventoryAuditType commerceInventoryAuditType =
+			_commerceInventoryAuditTypeRegistry.getCommerceInventoryAuditType(
+				CommerceInventoryConstants.AUDIT_TYPE_RESTOCK_QUANTITY);
+
+		_commerceInventoryAuditLocalService.addCommerceInventoryAudit(
+			userId, commerceInventoryBookedQuantity.getSku(),
+			commerceInventoryAuditType.getType(),
+			commerceInventoryAuditType.getLog(context),
+			commerceInventoryBookedQuantity.getQuantity());
+
+		return commerceInventoryBookedQuantity;
 	}
 
 	@Override
@@ -194,7 +235,7 @@ public class CommerceInventoryBookedQuantityLocalServiceImpl
 			_commerceInventoryAuditTypeRegistry.getCommerceInventoryAuditType(
 				CommerceInventoryConstants.AUDIT_TYPE_UPDATE_BOOKED_QUANTITY);
 
-		commerceInventoryAuditLocalService.addCommerceInventoryAudit(
+		_commerceInventoryAuditLocalService.addCommerceInventoryAudit(
 			userId, commerceInventoryBookedQuantity.getSku(),
 			commerceInventoryAuditType.getType(),
 			commerceInventoryAuditType.getLog(context), quantity);
@@ -204,8 +245,15 @@ public class CommerceInventoryBookedQuantityLocalServiceImpl
 				commerceInventoryBookedQuantity);
 	}
 
-	@ServiceReference(type = CommerceInventoryAuditTypeRegistry.class)
+	@Reference
+	private CommerceInventoryAuditLocalService
+		_commerceInventoryAuditLocalService;
+
+	@Reference
 	private CommerceInventoryAuditTypeRegistry
 		_commerceInventoryAuditTypeRegistry;
+
+	@Reference
+	private UserLocalService _userLocalService;
 
 }

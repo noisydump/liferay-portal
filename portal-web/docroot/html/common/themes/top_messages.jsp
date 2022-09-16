@@ -19,12 +19,13 @@
 <%
 String jspPath = (String)PortalMessages.get(request, PortalMessages.KEY_JSP_PATH);
 String message = (String)PortalMessages.get(request, PortalMessages.KEY_MESSAGE);
-
-if (Validator.isNotNull(jspPath) || Validator.isNotNull(message)) {
-	String cssClass = GetterUtil.getString(PortalMessages.get(request, PortalMessages.KEY_CSS_CLASS), "alert-info");
-	String portletId = (String)PortalMessages.get(request, PortalMessages.KEY_PORTLET_ID);
-	int timeout = GetterUtil.getInteger(PortalMessages.get(request, PortalMessages.KEY_TIMEOUT), 10000);
 %>
+
+<c:if test="<%= Validator.isNotNull(jspPath) || Validator.isNotNull(message) %>">
+
+	<%
+	String portletId = (String)PortalMessages.get(request, PortalMessages.KEY_PORTLET_ID);
+	%>
 
 	<liferay-util:buffer
 		var="alertMessage"
@@ -46,13 +47,10 @@ if (Validator.isNotNull(jspPath) || Validator.isNotNull(message)) {
 				portletId: <%= portletId %>
 			},
 			toastProps: {
-				autoClose: <%= timeout %>,
-				className: '<%= cssClass %>',
+				autoClose: <%= GetterUtil.getInteger(PortalMessages.get(request, PortalMessages.KEY_TIMEOUT), 10000) %>,
+				className: '<%= GetterUtil.getString(PortalMessages.get(request, PortalMessages.KEY_CSS_CLASS), "alert-info") %>',
 				style: {top: 0},
 			}
 		});
 	</aui:script>
-
-<%
-}
-%>
+</c:if>

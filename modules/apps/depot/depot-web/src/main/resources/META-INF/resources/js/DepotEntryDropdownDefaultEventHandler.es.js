@@ -12,15 +12,24 @@
  * details.
  */
 
-import {DefaultEventHandler} from 'frontend-js-web';
-
-import confirmDepotEntryDeletion from './confirmDepotEntryDeletion.es';
+import {
+	DefaultEventHandler,
+	openConfirmModal,
+	openWindow,
+} from 'frontend-js-web';
 
 class DepotEntryDropdownDefaultEventHandler extends DefaultEventHandler {
 	deleteDepotEntry(itemData) {
-		if (confirmDepotEntryDeletion()) {
-			submitForm(document.hrefFm, itemData.deleteDepotEntryURL);
-		}
+		openConfirmModal({
+			message: Liferay.Language.get(
+				'removing-an-asset-library-can-affect-sites-that-use-the-contents-stored-in-it.-are-you-sure-you-want-to-continue-removing-this-asset-library'
+			),
+			onConfirm: (isConfirmed) => {
+				if (isConfirmed) {
+					submitForm(document.hrefFm, itemData.deleteDepotEntryURL);
+				}
+			},
+		});
 	}
 
 	permissionsDepotEntry(itemData) {
@@ -31,7 +40,7 @@ class DepotEntryDropdownDefaultEventHandler extends DefaultEventHandler {
 	}
 
 	_openWindow(label, url) {
-		Liferay.Util.openWindow({
+		openWindow({
 			dialog: {
 				destroyOnHide: true,
 				modal: true,

@@ -25,48 +25,64 @@ WikiPage wikiPage = (WikiPage)request.getAttribute(WikiWebKeys.WIKI_PAGE);
 
 String title = wikiPage.getTitle();
 
-PortletURL viewPageURL = renderResponse.createRenderURL();
+PortletURL viewPageURL = PortletURLBuilder.createRenderURL(
+	renderResponse
+).setMVCRenderCommandName(
+	"/wiki/view"
+).setParameter(
+	"nodeName", node.getName()
+).setParameter(
+	"title", wikiPage.getTitle()
+).buildPortletURL();
 
-viewPageURL.setParameter("mvcRenderCommandName", "/wiki/view");
-viewPageURL.setParameter("nodeName", node.getName());
-viewPageURL.setParameter("title", wikiPage.getTitle());
+PortletURL editPageURL = PortletURLBuilder.createRenderURL(
+	renderResponse
+).setMVCRenderCommandName(
+	"/wiki/edit_page"
+).setRedirect(
+	viewPageURL
+).setParameter(
+	"nodeId", node.getNodeId()
+).setParameter(
+	"title", title
+).buildPortletURL();
 
-PortletURL editPageURL = renderResponse.createRenderURL();
-
-editPageURL.setParameter("mvcRenderCommandName", "/wiki/edit_page");
-editPageURL.setParameter("redirect", viewPageURL.toString());
-editPageURL.setParameter("nodeId", String.valueOf(node.getNodeId()));
-editPageURL.setParameter("title", title);
-
-PortletURL viewPageDetailsURL = renderResponse.createRenderURL();
-
-viewPageDetailsURL.setParameter("mvcRenderCommandName", "/wiki/view_page_details");
-viewPageDetailsURL.setParameter("redirect", viewPageURL.toString());
-viewPageDetailsURL.setParameter("nodeId", String.valueOf(node.getNodeId()));
-viewPageDetailsURL.setParameter("title", wikiPage.getTitle());
-
-PortletURL viewPageHistoryURL = PortletURLUtil.clone(viewPageDetailsURL, renderResponse);
-
-viewPageHistoryURL.setParameter("mvcRenderCommandName", "/wiki/view_page_activities");
-
-PortletURL viewPageIncomingLinksURL = PortletURLUtil.clone(viewPageDetailsURL, renderResponse);
-
-viewPageIncomingLinksURL.setParameter("mvcRenderCommandName", "/wiki/view_page_incoming_links");
-
-PortletURL viewPageOutgoingLinksURL = PortletURLUtil.clone(viewPageDetailsURL, renderResponse);
-
-viewPageOutgoingLinksURL.setParameter("mvcRenderCommandName", "/wiki/view_page_outgoing_links");
-
-PortletURL viewPageAttachmentsURL = PortletURLUtil.clone(viewPageDetailsURL, renderResponse);
-
-viewPageAttachmentsURL.setParameter("mvcRenderCommandName", "/wiki/view_page_attachments");
-
-PortletURL viewPageActivitiesURL = PortletURLUtil.clone(viewPageDetailsURL, renderResponse);
-
-viewPageActivitiesURL.setParameter("mvcRenderCommandName", "/wiki/view_page_activities");
+PortletURL viewPageDetailsURL = PortletURLBuilder.createRenderURL(
+	renderResponse
+).setMVCRenderCommandName(
+	"/wiki/view_page_details"
+).setRedirect(
+	viewPageURL
+).setParameter(
+	"nodeId", node.getNodeId()
+).setParameter(
+	"title", wikiPage.getTitle()
+).buildPortletURL();
 
 String[] tabs1Names = {"details", "history", "incoming-links", "outgoing-links", "attachments"};
-String[] tabs1URLs = {viewPageDetailsURL.toString(), viewPageHistoryURL.toString(), viewPageIncomingLinksURL.toString(), viewPageOutgoingLinksURL.toString(), viewPageAttachmentsURL.toString()};
+String[] tabs1URLs = {
+	viewPageDetailsURL.toString(),
+	PortletURLBuilder.create(
+		PortletURLUtil.clone(viewPageDetailsURL, renderResponse)
+	).setMVCRenderCommandName(
+		"/wiki/view_page_activities"
+	).buildString(),
+	PortletURLBuilder.create(
+		PortletURLUtil.clone(viewPageDetailsURL, renderResponse)
+	).setMVCRenderCommandName(
+		"/wiki/view_page_incoming_links"
+	).buildString(),
+	PortletURLBuilder.create(
+		PortletURLUtil.clone(viewPageDetailsURL, renderResponse)
+	).setMVCRenderCommandName(
+		"/wiki/view_page_outgoing_links"
+	).buildString(),
+	PortletURLBuilder.create(
+		PortletURLUtil.clone(viewPageDetailsURL, renderResponse)
+	).setMVCRenderCommandName(
+		"/wiki/view_page_attachments"
+	).buildString()
+};
 
 if (WikiPagePermission.contains(permissionChecker, wikiPage, ActionKeys.UPDATE)) {
 	tabs1Names = ArrayUtil.append(new String[] {"content"}, tabs1Names);

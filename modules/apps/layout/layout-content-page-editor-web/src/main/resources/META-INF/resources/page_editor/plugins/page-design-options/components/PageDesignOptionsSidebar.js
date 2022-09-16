@@ -16,18 +16,18 @@ import ClayAlert from '@clayui/alert';
 import ClayCard from '@clayui/card';
 import ClayIcon from '@clayui/icon';
 import ClayLink from '@clayui/link';
+import ClaySticker from '@clayui/sticker';
 import ClayTabs from '@clayui/tabs';
 import classNames from 'classnames';
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
 
 import {LAYOUT_TYPES} from '../../../app/config/constants/layoutTypes';
 import {config} from '../../../app/config/index';
+import {useDispatch, useSelector} from '../../../app/contexts/StoreContext';
 import LayoutService from '../../../app/services/LayoutService';
-import {useDispatch, useSelector} from '../../../app/store/index';
 import changeMasterLayout from '../../../app/thunks/changeMasterLayout';
-import {useId} from '../../../app/utils/useId';
-import SidebarPanelContent from '../../../common/components/SidebarPanelContent';
 import SidebarPanelHeader from '../../../common/components/SidebarPanelHeader';
+import {useId} from '../../../core/hooks/useId';
 import {useSetStyleBook, useStyleBook} from '../hooks/useStyleBook';
 
 const OPTIONS_TYPES = {
@@ -93,11 +93,9 @@ export default function PageDesignOptionsSidebar() {
 	);
 
 	useEffect(() => {
-		const wrapper = document.getElementById('wrapper');
-
-		if (selectedStyleBook && wrapper) {
+		if (selectedStyleBook && document.documentElement) {
 			Object.values(selectedStyleBook.tokenValues).forEach((token) => {
-				wrapper.style.setProperty(
+				document.documentElement.style.setProperty(
 					`--${token.cssVariable}`,
 					token.value
 				);
@@ -131,53 +129,52 @@ export default function PageDesignOptionsSidebar() {
 
 	return (
 		<>
-			<SidebarPanelHeader className="justify-content-between">
-				{Liferay.Language.get('page-design-options')}
+			<SidebarPanelHeader>
+				<span className="align-items-center d-flex justify-content-between">
+					{Liferay.Language.get('page-design-options')}
 
-				<ClayLink
-					className="font-weight-normal"
-					href={config.lookAndFeelURL}
-				>
-					{Liferay.Language.get('more')}
-				</ClayLink>
+					<ClayLink
+						displayType="secondary"
+						href={config.lookAndFeelURL}
+						monospaced
+						title={Liferay.Language.get('more')}
+					>
+						<ClayIcon symbol="cog" />
+					</ClayLink>
+				</span>
 			</SidebarPanelHeader>
 
-			<SidebarPanelContent>
-				<ClayTabs
-					className="page-editor__sidebar__page-design-options__tabs"
-					modern
-				>
-					{tabs.map((tab, index) => (
-						<ClayTabs.Item
-							active={activeTabId === index}
-							innerProps={{
-								'aria-controls': getTabPanelId(index),
-								id: getTabId(index),
-							}}
-							key={index}
-							onClick={() => setActiveTabId(index)}
-						>
-							{tab.label}
-						</ClayTabs.Item>
-					))}
-				</ClayTabs>
+			<ClayTabs className="flex-shrink-0 page-editor__sidebar__page-design-options__tabs px-3">
+				{tabs.map((tab, index) => (
+					<ClayTabs.Item
+						active={activeTabId === index}
+						innerProps={{
+							'aria-controls': getTabPanelId(index),
+							'id': getTabId(index),
+						}}
+						key={index}
+						onClick={() => setActiveTabId(index)}
+					>
+						{tab.label}
+					</ClayTabs.Item>
+				))}
+			</ClayTabs>
 
-				<ClayTabs.Content activeIndex={activeTabId} fade>
-					{tabs.map(({icon, options, type}, index) => (
-						<ClayTabs.TabPane
-							aria-labelledby={getTabId(index)}
-							id={getTabPanelId(index)}
-							key={index}
-						>
-							<OptionList
-								icon={icon}
-								options={options}
-								type={type}
-							/>
-						</ClayTabs.TabPane>
-					))}
-				</ClayTabs.Content>
-			</SidebarPanelContent>
+			<ClayTabs.Content
+				activeIndex={activeTabId}
+				className="overflow-auto px-3"
+				fade
+			>
+				{tabs.map(({icon, options, type}, index) => (
+					<ClayTabs.TabPane
+						aria-labelledby={getTabId(index)}
+						id={getTabPanelId(index)}
+						key={index}
+					>
+						<OptionList icon={icon} options={options} type={type} />
+					</ClayTabs.TabPane>
+				))}
+			</ClayTabs.Content>
 		</>
 	);
 }
@@ -186,15 +183,19 @@ const OptionList = ({options = [], icon, type}) => {
 	if (type === OPTIONS_TYPES.styleBook && !config.styleBookEnabled) {
 		return (
 			<ClayAlert className="mt-3" displayType="info">
-				{Liferay.Language.get(
-					'this-page-is-using-a-different-theme-than-the-one-set-for-public-pages'
-				)}
+				{config.isPrivateLayoutsEnabled
+					? Liferay.Language.get(
+							'this-page-is-using-a-different-theme-than-the-one-set-for-public-pages'
+					  )
+					: Liferay.Language.get(
+							'this-page-is-using-a-different-theme-than-the-one-set-for-pages'
+					  )}
 			</ClayAlert>
 		);
 	}
 
 	return (
-		<ul className="list-unstyled mt-3">
+		<ul className="list-unstyled mt-4">
 			{options.map(
 				(
 					{imagePreviewURL, isActive, name, onClick, subtitle},
@@ -229,7 +230,17 @@ const OptionList = ({options = [], icon, type}) => {
 										<ClayIcon symbol={icon} />
 									</div>
 								)}
+
+								{isActive && (
+									<ClaySticker
+										displayType="primary"
+										position="bottom-left"
+									>
+										<ClayIcon symbol="check-circle" />
+									</ClaySticker>
+								)}
 							</ClayCard.AspectRatio>
+
 							<ClayCard.Body>
 								<ClayCard.Row>
 									<div className="autofit-col autofit-col-expand">
@@ -237,6 +248,7 @@ const OptionList = ({options = [], icon, type}) => {
 											<ClayCard.Description displayType="title">
 												{name}
 											</ClayCard.Description>
+
 											{subtitle && (
 												<ClayCard.Description displayType="subtitle">
 													{subtitle}
@@ -254,6 +266,22 @@ const OptionList = ({options = [], icon, type}) => {
 	);
 };
 
+function getDefaultStyleBookLabel(defaultStyleBook, masterLayoutPlid) {
+	const inheritingFromMaster =
+		masterLayoutPlid !== '0' && config.layoutType !== LAYOUT_TYPES.master;
+	const usingThemeStylebook = !defaultStyleBook.name;
+
+	if (usingThemeStylebook) {
+		return Liferay.Language.get('styles-from-theme');
+	}
+
+	if (inheritingFromMaster) {
+		return Liferay.Language.get('styles-from-master');
+	}
+
+	return Liferay.Language.get('styles-by-default');
+}
+
 function getTabs(
 	masterLayoutPlid,
 	selectedStyleBook,
@@ -264,14 +292,9 @@ function getTabs(
 	const styleBooks = [
 		{
 			imagePreviewURL: defaultStyleBook.imagePreviewURL,
-			name:
-				config.layoutType === LAYOUT_TYPES.master
-					? Liferay.Language.get('default-style-book')
-					: Liferay.Language.get('inherited-from-master'),
+			name: getDefaultStyleBookLabel(defaultStyleBook, masterLayoutPlid),
 			styleBookEntryId: '0',
-			subtitle:
-				defaultStyleBook.name ||
-				Liferay.Language.get('provided-by-theme'),
+			subtitle: defaultStyleBook.name,
 		},
 		...config.styleBooks,
 	];

@@ -66,7 +66,7 @@
 							<liferay-ui:message key="<%= workflowTaskDisplayContext.getAssetType(workflowTask) %>" />
 						</span>
 						<span class="task-name" id="<%= String.valueOf(workflowTask.getWorkflowTaskId()) %>">
-							<liferay-ui:message key="<%= workflowTaskDisplayContext.getTaskName(workflowTask) %>" />
+							<liferay-ui:message key="<%= workflowTask.getLabel(workflowTaskDisplayContext.getTaskContentLocale()) %>" />
 						</span>
 
 						<c:if test="<%= workflowTaskDisplayContext.getDueDate(workflowTask) != null %>">
@@ -101,8 +101,14 @@
 					cssClass="asset-title"
 					href="<%= rowURL %>"
 					name="asset-title"
-					value="<%= HtmlUtil.escape(workflowTaskDisplayContext.getAssetTitle(workflowTask)) %>"
-				/>
+					truncate="<%= true %>"
+				>
+					<span class="lfr-portal-tooltip text-truncate-inline" title="<%= HtmlUtil.escape(workflowTaskDisplayContext.getAssetTitle(workflowTask)) %>">
+						<span class="text-truncate">
+							<%= HtmlUtil.escape(workflowTaskDisplayContext.getAssetTitle(workflowTask)) %>
+						</span>
+					</span>
+				</liferay-ui:search-container-column-text>
 
 				<liferay-ui:search-container-column-text
 					href="<%= rowURL %>"
@@ -115,7 +121,7 @@
 					name="task"
 				>
 					<span class="task-name" id="<%= workflowTask.getWorkflowTaskId() %>">
-						<liferay-ui:message key="<%= workflowTaskDisplayContext.getTaskName(workflowTask) %>" />
+						<liferay-ui:message key="<%= workflowTask.getLabel(workflowTaskDisplayContext.getTaskContentLocale()) %>" />
 					</span>
 				</liferay-ui:search-container-column-text>
 

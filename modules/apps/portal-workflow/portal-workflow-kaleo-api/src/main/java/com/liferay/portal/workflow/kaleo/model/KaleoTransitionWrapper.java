@@ -20,6 +20,8 @@ import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 /**
  * <p>
@@ -43,6 +45,7 @@ public class KaleoTransitionWrapper
 		Map<String, Object> attributes = new HashMap<String, Object>();
 
 		attributes.put("mvccVersion", getMvccVersion());
+		attributes.put("ctCollectionId", getCtCollectionId());
 		attributes.put("kaleoTransitionId", getKaleoTransitionId());
 		attributes.put("groupId", getGroupId());
 		attributes.put("companyId", getCompanyId());
@@ -55,6 +58,7 @@ public class KaleoTransitionWrapper
 			"kaleoDefinitionVersionId", getKaleoDefinitionVersionId());
 		attributes.put("kaleoNodeId", getKaleoNodeId());
 		attributes.put("name", getName());
+		attributes.put("label", getLabel());
 		attributes.put("description", getDescription());
 		attributes.put("sourceKaleoNodeId", getSourceKaleoNodeId());
 		attributes.put("sourceKaleoNodeName", getSourceKaleoNodeName());
@@ -71,6 +75,12 @@ public class KaleoTransitionWrapper
 
 		if (mvccVersion != null) {
 			setMvccVersion(mvccVersion);
+		}
+
+		Long ctCollectionId = (Long)attributes.get("ctCollectionId");
+
+		if (ctCollectionId != null) {
+			setCtCollectionId(ctCollectionId);
 		}
 
 		Long kaleoTransitionId = (Long)attributes.get("kaleoTransitionId");
@@ -140,6 +150,12 @@ public class KaleoTransitionWrapper
 			setName(name);
 		}
 
+		String label = (String)attributes.get("label");
+
+		if (label != null) {
+			setLabel(label);
+		}
+
 		String description = (String)attributes.get("description");
 
 		if (description != null) {
@@ -180,6 +196,16 @@ public class KaleoTransitionWrapper
 		}
 	}
 
+	@Override
+	public KaleoTransition cloneWithOriginalValues() {
+		return wrap(model.cloneWithOriginalValues());
+	}
+
+	@Override
+	public String[] getAvailableLanguageIds() {
+		return model.getAvailableLanguageIds();
+	}
+
 	/**
 	 * Returns the company ID of this kaleo transition.
 	 *
@@ -198,6 +224,21 @@ public class KaleoTransitionWrapper
 	@Override
 	public Date getCreateDate() {
 		return model.getCreateDate();
+	}
+
+	/**
+	 * Returns the ct collection ID of this kaleo transition.
+	 *
+	 * @return the ct collection ID of this kaleo transition
+	 */
+	@Override
+	public long getCtCollectionId() {
+		return model.getCtCollectionId();
+	}
+
+	@Override
+	public String getDefaultLanguageId() {
+		return model.getDefaultLanguageId();
 	}
 
 	/**
@@ -268,6 +309,82 @@ public class KaleoTransitionWrapper
 	@Override
 	public long getKaleoTransitionId() {
 		return model.getKaleoTransitionId();
+	}
+
+	/**
+	 * Returns the label of this kaleo transition.
+	 *
+	 * @return the label of this kaleo transition
+	 */
+	@Override
+	public String getLabel() {
+		return model.getLabel();
+	}
+
+	/**
+	 * Returns the localized label of this kaleo transition in the language. Uses the default language if no localization exists for the requested language.
+	 *
+	 * @param locale the locale of the language
+	 * @return the localized label of this kaleo transition
+	 */
+	@Override
+	public String getLabel(java.util.Locale locale) {
+		return model.getLabel(locale);
+	}
+
+	/**
+	 * Returns the localized label of this kaleo transition in the language, optionally using the default language if no localization exists for the requested language.
+	 *
+	 * @param locale the local of the language
+	 * @param useDefault whether to use the default language if no localization exists for the requested language
+	 * @return the localized label of this kaleo transition. If <code>useDefault</code> is <code>false</code> and no localization exists for the requested language, an empty string will be returned.
+	 */
+	@Override
+	public String getLabel(java.util.Locale locale, boolean useDefault) {
+		return model.getLabel(locale, useDefault);
+	}
+
+	/**
+	 * Returns the localized label of this kaleo transition in the language. Uses the default language if no localization exists for the requested language.
+	 *
+	 * @param languageId the ID of the language
+	 * @return the localized label of this kaleo transition
+	 */
+	@Override
+	public String getLabel(String languageId) {
+		return model.getLabel(languageId);
+	}
+
+	/**
+	 * Returns the localized label of this kaleo transition in the language, optionally using the default language if no localization exists for the requested language.
+	 *
+	 * @param languageId the ID of the language
+	 * @param useDefault whether to use the default language if no localization exists for the requested language
+	 * @return the localized label of this kaleo transition
+	 */
+	@Override
+	public String getLabel(String languageId, boolean useDefault) {
+		return model.getLabel(languageId, useDefault);
+	}
+
+	@Override
+	public String getLabelCurrentLanguageId() {
+		return model.getLabelCurrentLanguageId();
+	}
+
+	@Override
+	public String getLabelCurrentValue() {
+		return model.getLabelCurrentValue();
+	}
+
+	/**
+	 * Returns a map of the locales and localized labels of this kaleo transition.
+	 *
+	 * @return the locales and localized labels of this kaleo transition
+	 */
+	@Override
+	public Map<java.util.Locale, String> getLabelMap() {
+		return model.getLabelMap();
 	}
 
 	/**
@@ -409,6 +526,21 @@ public class KaleoTransitionWrapper
 		model.persist();
 	}
 
+	@Override
+	public void prepareLocalizedFieldsForImport()
+		throws com.liferay.portal.kernel.exception.LocaleException {
+
+		model.prepareLocalizedFieldsForImport();
+	}
+
+	@Override
+	public void prepareLocalizedFieldsForImport(
+			java.util.Locale defaultImportLocale)
+		throws com.liferay.portal.kernel.exception.LocaleException {
+
+		model.prepareLocalizedFieldsForImport(defaultImportLocale);
+	}
+
 	/**
 	 * Sets the company ID of this kaleo transition.
 	 *
@@ -427,6 +559,16 @@ public class KaleoTransitionWrapper
 	@Override
 	public void setCreateDate(Date createDate) {
 		model.setCreateDate(createDate);
+	}
+
+	/**
+	 * Sets the ct collection ID of this kaleo transition.
+	 *
+	 * @param ctCollectionId the ct collection ID of this kaleo transition
+	 */
+	@Override
+	public void setCtCollectionId(long ctCollectionId) {
+		model.setCtCollectionId(ctCollectionId);
 	}
 
 	/**
@@ -497,6 +639,70 @@ public class KaleoTransitionWrapper
 	@Override
 	public void setKaleoTransitionId(long kaleoTransitionId) {
 		model.setKaleoTransitionId(kaleoTransitionId);
+	}
+
+	/**
+	 * Sets the label of this kaleo transition.
+	 *
+	 * @param label the label of this kaleo transition
+	 */
+	@Override
+	public void setLabel(String label) {
+		model.setLabel(label);
+	}
+
+	/**
+	 * Sets the localized label of this kaleo transition in the language.
+	 *
+	 * @param label the localized label of this kaleo transition
+	 * @param locale the locale of the language
+	 */
+	@Override
+	public void setLabel(String label, java.util.Locale locale) {
+		model.setLabel(label, locale);
+	}
+
+	/**
+	 * Sets the localized label of this kaleo transition in the language, and sets the default locale.
+	 *
+	 * @param label the localized label of this kaleo transition
+	 * @param locale the locale of the language
+	 * @param defaultLocale the default locale
+	 */
+	@Override
+	public void setLabel(
+		String label, java.util.Locale locale, java.util.Locale defaultLocale) {
+
+		model.setLabel(label, locale, defaultLocale);
+	}
+
+	@Override
+	public void setLabelCurrentLanguageId(String languageId) {
+		model.setLabelCurrentLanguageId(languageId);
+	}
+
+	/**
+	 * Sets the localized labels of this kaleo transition from the map of locales and localized labels.
+	 *
+	 * @param labelMap the locales and localized labels of this kaleo transition
+	 */
+	@Override
+	public void setLabelMap(Map<java.util.Locale, String> labelMap) {
+		model.setLabelMap(labelMap);
+	}
+
+	/**
+	 * Sets the localized labels of this kaleo transition from the map of locales and localized labels, and sets the default locale.
+	 *
+	 * @param labelMap the locales and localized labels of this kaleo transition
+	 * @param defaultLocale the default locale
+	 */
+	@Override
+	public void setLabelMap(
+		Map<java.util.Locale, String> labelMap,
+		java.util.Locale defaultLocale) {
+
+		model.setLabelMap(labelMap, defaultLocale);
 	}
 
 	/**
@@ -607,6 +813,20 @@ public class KaleoTransitionWrapper
 	@Override
 	public void setUserUuid(String userUuid) {
 		model.setUserUuid(userUuid);
+	}
+
+	@Override
+	public Map<String, Function<KaleoTransition, Object>>
+		getAttributeGetterFunctions() {
+
+		return model.getAttributeGetterFunctions();
+	}
+
+	@Override
+	public Map<String, BiConsumer<KaleoTransition, Object>>
+		getAttributeSetterBiConsumers() {
+
+		return model.getAttributeSetterBiConsumers();
 	}
 
 	@Override

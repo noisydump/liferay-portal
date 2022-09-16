@@ -14,8 +14,8 @@
 
 package com.liferay.portal.typeconverter;
 
-import jodd.typeconverter.ConvertBean;
 import jodd.typeconverter.TypeConverter;
+import jodd.typeconverter.impl.BigDecimalConverter;
 
 import jodd.util.CsvUtil;
 
@@ -23,10 +23,6 @@ import jodd.util.CsvUtil;
  * @author Raymond Augé
  */
 public class NumberArrayConverter implements TypeConverter<Number[]> {
-
-	public NumberArrayConverter(ConvertBean convertBean) {
-		this.convertBean = convertBean;
-	}
 
 	@Override
 	public Number[] convert(Object value) {
@@ -43,7 +39,7 @@ public class NumberArrayConverter implements TypeConverter<Number[]> {
 				return convertArray(values);
 			}
 
-			return new Number[] {convertBean.toBigDecimal(value)};
+			return new Number[] {_bigDecimalConverter.convert(value)};
 		}
 
 		Class<?> componentType = type.getComponentType();
@@ -135,12 +131,13 @@ public class NumberArrayConverter implements TypeConverter<Number[]> {
 		Number[] results = new Number[values.length];
 
 		for (int i = 0; i < values.length; i++) {
-			results[i] = convertBean.toBigDecimal(values[i]);
+			results[i] = _bigDecimalConverter.convert(values[i]);
 		}
 
 		return results;
 	}
 
-	protected ConvertBean convertBean;
+	private final BigDecimalConverter _bigDecimalConverter =
+		new BigDecimalConverter();
 
 }

@@ -34,6 +34,70 @@ public class PageRowDefinition implements Cloneable, Serializable {
 		return PageRowDefinitionSerDes.toDTO(json);
 	}
 
+	public String[] getCssClasses() {
+		return cssClasses;
+	}
+
+	public void setCssClasses(String[] cssClasses) {
+		this.cssClasses = cssClasses;
+	}
+
+	public void setCssClasses(
+		UnsafeSupplier<String[], Exception> cssClassesUnsafeSupplier) {
+
+		try {
+			cssClasses = cssClassesUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String[] cssClasses;
+
+	public String getCustomCSS() {
+		return customCSS;
+	}
+
+	public void setCustomCSS(String customCSS) {
+		this.customCSS = customCSS;
+	}
+
+	public void setCustomCSS(
+		UnsafeSupplier<String, Exception> customCSSUnsafeSupplier) {
+
+		try {
+			customCSS = customCSSUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String customCSS;
+
+	public CustomCSSViewport[] getCustomCSSViewports() {
+		return customCSSViewports;
+	}
+
+	public void setCustomCSSViewports(CustomCSSViewport[] customCSSViewports) {
+		this.customCSSViewports = customCSSViewports;
+	}
+
+	public void setCustomCSSViewports(
+		UnsafeSupplier<CustomCSSViewport[], Exception>
+			customCSSViewportsUnsafeSupplier) {
+
+		try {
+			customCSSViewports = customCSSViewportsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected CustomCSSViewport[] customCSSViewports;
+
 	public FragmentStyle getFragmentStyle() {
 		return fragmentStyle;
 	}
@@ -98,6 +162,27 @@ public class PageRowDefinition implements Cloneable, Serializable {
 
 	protected Boolean gutters;
 
+	public Boolean getIndexed() {
+		return indexed;
+	}
+
+	public void setIndexed(Boolean indexed) {
+		this.indexed = indexed;
+	}
+
+	public void setIndexed(
+		UnsafeSupplier<Boolean, Exception> indexedUnsafeSupplier) {
+
+		try {
+			indexed = indexedUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Boolean indexed;
+
 	public Integer getModulesPerRow() {
 		return modulesPerRow;
 	}
@@ -118,6 +203,25 @@ public class PageRowDefinition implements Cloneable, Serializable {
 	}
 
 	protected Integer modulesPerRow;
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public void setName(UnsafeSupplier<String, Exception> nameUnsafeSupplier) {
+		try {
+			name = nameUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String name;
 
 	public Integer getNumberOfColumns() {
 		return numberOfColumns;

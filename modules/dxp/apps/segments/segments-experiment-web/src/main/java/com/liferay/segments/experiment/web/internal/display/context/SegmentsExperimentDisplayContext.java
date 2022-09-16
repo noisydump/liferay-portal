@@ -15,36 +15,34 @@
 package com.liferay.segments.experiment.web.internal.display.context;
 
 import com.liferay.layout.content.page.editor.constants.ContentPageEditorPortletKeys;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Layout;
-import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.Constants;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.HttpUtil;
+import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.segments.constants.SegmentsExperienceConstants;
 import com.liferay.segments.constants.SegmentsExperimentConstants;
 import com.liferay.segments.constants.SegmentsPortletKeys;
-import com.liferay.segments.constants.SegmentsWebKeys;
 import com.liferay.segments.experiment.web.internal.configuration.SegmentsExperimentConfiguration;
 import com.liferay.segments.experiment.web.internal.util.SegmentsExperimentUtil;
 import com.liferay.segments.experiment.web.internal.util.comparator.SegmentsExperimentModifiedDateComparator;
+import com.liferay.segments.manager.SegmentsExperienceManager;
 import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.segments.model.SegmentsExperiment;
 import com.liferay.segments.model.SegmentsExperimentRel;
@@ -58,11 +56,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
-import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.PortletURL;
+import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 
 import javax.servlet.http.HttpServletRequest;
@@ -76,18 +72,21 @@ public class SegmentsExperimentDisplayContext {
 	public SegmentsExperimentDisplayContext(
 		HttpServletRequest httpServletRequest,
 		LayoutLocalService layoutLocalService, Portal portal,
-		RenderResponse renderResponse,
+		RenderRequest renderRequest, RenderResponse renderResponse,
 		SegmentsExperienceService segmentsExperienceService,
 		SegmentsExperimentConfiguration segmentsExperimentConfiguration,
+		SegmentsExperienceManager segmentsExperienceManager,
 		SegmentsExperimentRelService segmentsExperimentRelService,
 		SegmentsExperimentService segmentsExperimentService) {
 
 		_httpServletRequest = httpServletRequest;
 		_layoutLocalService = layoutLocalService;
 		_portal = portal;
+		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
 		_segmentsExperienceService = segmentsExperienceService;
 		_segmentsExperimentConfiguration = segmentsExperimentConfiguration;
+		_segmentsExperienceManager = segmentsExperienceManager;
 		_segmentsExperimentRelService = segmentsExperimentRelService;
 		_segmentsExperimentService = segmentsExperimentService;
 
@@ -101,9 +100,9 @@ public class SegmentsExperimentDisplayContext {
 		}
 
 		_data = HashMapBuilder.<String, Object>put(
-			"context", getContext()
+			"context", _getContext()
 		).put(
-			"props", getProps()
+			"props", _getProps()
 		).build();
 
 		return _data;
@@ -113,47 +112,9 @@ public class SegmentsExperimentDisplayContext {
 		return PrefsPropsUtil.getString(companyId, "liferayAnalyticsURL");
 	}
 
-	protected Map<String, Object> getContext() throws PortalException {
-		return HashMapBuilder.<String, Object>put(
-			"assetsPath", _getAssetsPath()
-		).put(
-			"contentPageEditorNamespace",
-			_getContentPageEditorPortletNamespace()
-		).put(
-			"endpoints", _getEndpoints()
-		).put(
-			"namespace", _getSegmentsExperimentPortletNamespace()
-		).put(
-			"page", _getPage()
-		).build();
-	}
-
-	protected Map<String, Object> getProps() throws PortalException {
-		Locale locale = _themeDisplay.getLocale();
-
-		return HashMapBuilder.<String, Object>put(
-			"historySegmentsExperiments",
-			_getHistorySegmentsExperimentsJSONArray(locale)
-		).put(
-			"initialSegmentsVariants",
-			_getSegmentsExperimentRelsJSONArray(locale)
-		).put(
-			"segmentsExperiences", _getSegmentsExperiencesJSONArray(locale)
-		).put(
-			"segmentsExperiment", _getSegmentsExperimentJSONObject(locale)
-		).put(
-			"segmentsExperimentGoals",
-			_getSegmentsExperimentGoalsJSONArray(locale)
-		).put(
-			"selectedSegmentsExperienceId", _getSelectedSegmentsExperienceId()
-		).put(
-			"winnerSegmentsVariantId", _getWinnerSegmentsExperienceId()
-		).build();
-	}
-
 	private Optional<SegmentsExperiment> _getActiveSegmentsExperimentOptional(
 			long segmentsExperienceId)
-		throws PortalException {
+		throws Exception {
 
 		Layout layout = _themeDisplay.getLayout();
 
@@ -164,8 +125,21 @@ public class SegmentsExperimentDisplayContext {
 				SegmentsExperimentConstants.Status.getExclusiveStatusValues()));
 	}
 
-	private String _getAssetsPath() {
-		return PortalUtil.getPathContext(_httpServletRequest) + "/assets";
+	private JSONObject _getAnalyticsDataJSONObject(
+		long companyId, long groupId) {
+
+		return JSONUtil.put(
+			"cloudTrialURL", SegmentsExperimentUtil.ANALYTICS_CLOUD_TRIAL_URL
+		).put(
+			"isConnected",
+			SegmentsExperimentUtil.isAnalyticsConnected(companyId)
+		).put(
+			"isSynced",
+			() -> SegmentsExperimentUtil.isAnalyticsSynced(companyId, groupId)
+		).put(
+			"url",
+			() -> PrefsPropsUtil.getString(companyId, "liferayAnalyticsURL")
+		);
 	}
 
 	private String _getCalculateSegmentsExperimentEstimatedDurationURL() {
@@ -174,21 +148,34 @@ public class SegmentsExperimentDisplayContext {
 	}
 
 	private String _getContentPageEditorActionURL(String action) {
-		LiferayPortletResponse liferayPortletResponse =
-			_portal.getLiferayPortletResponse(_renderResponse);
-
-		PortletURL actionURL = liferayPortletResponse.createActionURL(
-			ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET);
-
-		actionURL.setParameter(ActionRequest.ACTION_NAME, action);
-
-		return HttpUtil.addParameter(
-			actionURL.toString(), "p_l_mode", Constants.EDIT);
+		return HttpComponentsUtil.addParameter(
+			PortletURLBuilder.createActionURL(
+				_portal.getLiferayPortletResponse(_renderResponse),
+				ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET
+			).setActionName(
+				action
+			).buildString(),
+			"p_l_mode", Constants.EDIT);
 	}
 
 	private String _getContentPageEditorPortletNamespace() {
 		return _portal.getPortletNamespace(
 			ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET);
+	}
+
+	private Map<String, Object> _getContext() throws Exception {
+		return HashMapBuilder.<String, Object>put(
+			"contentPageEditorNamespace",
+			_getContentPageEditorPortletNamespace()
+		).put(
+			"endpoints", _getEndpoints()
+		).put(
+			"imagesPath", _getImagesPath()
+		).put(
+			"namespace", _getSegmentsExperimentPortletNamespace()
+		).put(
+			"page", _getPage()
+		).build();
 	}
 
 	private String _getCreateSegmentsExperimentURL() {
@@ -221,7 +208,7 @@ public class SegmentsExperimentDisplayContext {
 			"/segments_experiment/edit_segments_experiment");
 	}
 
-	private String _getEditSegmentsVariantLayoutURL() throws PortalException {
+	private String _getEditSegmentsVariantLayoutURL() throws Exception {
 		Layout draftLayout = _layoutLocalService.fetchDraftLayout(
 			_themeDisplay.getPlid());
 
@@ -232,14 +219,24 @@ public class SegmentsExperimentDisplayContext {
 		String layoutFullURL = PortalUtil.getLayoutFullURL(
 			draftLayout, _themeDisplay);
 
-		layoutFullURL = HttpUtil.setParameter(
+		String layoutURL = _portal.getLayoutURL(_themeDisplay);
+
+		long segmentsExperienceId = _getSegmentsExperienceId();
+
+		if (segmentsExperienceId != -1) {
+			layoutURL = HttpComponentsUtil.setParameter(
+				layoutURL, "segmentsExperienceId", segmentsExperienceId);
+		}
+
+		layoutFullURL = HttpComponentsUtil.setParameter(
+			layoutFullURL, "p_l_back_url", layoutURL);
+
+		layoutFullURL = HttpComponentsUtil.setParameter(
+			layoutFullURL, "p_l_mode", Constants.EDIT);
+		layoutFullURL = HttpComponentsUtil.setParameter(
 			layoutFullURL, "redirect", layoutFullURL);
 
-		layoutFullURL = HttpUtil.setParameter(
-			layoutFullURL, "p_l_mode", Constants.EDIT);
-
-		return HttpUtil.setParameter(
-			layoutFullURL, "p_l_back_url", _themeDisplay.getURLCurrent());
+		return layoutFullURL;
 	}
 
 	private String _getEditSegmentsVariantURL() {
@@ -247,7 +244,7 @@ public class SegmentsExperimentDisplayContext {
 			"/segments_experiment/edit_segments_experiment_rel");
 	}
 
-	private Map<String, Object> _getEndpoints() throws PortalException {
+	private Map<String, Object> _getEndpoints() throws Exception {
 		return HashMapBuilder.<String, Object>put(
 			"calculateSegmentsExperimentEstimatedDurationURL",
 			_getCalculateSegmentsExperimentEstimatedDurationURL()
@@ -274,7 +271,7 @@ public class SegmentsExperimentDisplayContext {
 	}
 
 	private JSONArray _getHistorySegmentsExperimentsJSONArray(Locale locale)
-		throws PortalException {
+		throws Exception {
 
 		Layout layout = _themeDisplay.getLayout();
 
@@ -302,6 +299,10 @@ public class SegmentsExperimentDisplayContext {
 		return segmentsExperimentsJSONArray;
 	}
 
+	private String _getImagesPath() {
+		return PortalUtil.getPathContext(_httpServletRequest) + "/images";
+	}
+
 	private Map<String, Object> _getPage() {
 		return HashMapBuilder.<String, Object>put(
 			"classNameId", PortalUtil.getClassNameId(Layout.class.getName())
@@ -317,12 +318,60 @@ public class SegmentsExperimentDisplayContext {
 		).build();
 	}
 
+	private Map<String, Object> _getProps() throws Exception {
+		Locale locale = _themeDisplay.getLocale();
+
+		return HashMapBuilder.<String, Object>put(
+			"analyticsData",
+			_getAnalyticsDataJSONObject(
+				_themeDisplay.getCompanyId(), _themeDisplay.getScopeGroupId())
+		).put(
+			"hideSegmentsExperimentPanelURL",
+			PortletURLBuilder.createActionURL(
+				_renderResponse
+			).setActionName(
+				"/segments_experiment/hide_segments_experiment_panel"
+			).setRedirect(
+				() -> {
+					String redirect = ParamUtil.getString(
+						_renderRequest, "redirect");
+
+					if (Validator.isNotNull(redirect)) {
+						return redirect;
+					}
+
+					return _themeDisplay.getLayoutFriendlyURL(
+						_themeDisplay.getLayout());
+				}
+			).buildString()
+		).put(
+			"historySegmentsExperiments",
+			_getHistorySegmentsExperimentsJSONArray(locale)
+		).put(
+			"initialSegmentsVariants",
+			_getSegmentsExperimentRelsJSONArray(locale)
+		).put(
+			"pathToAssets", _portal.getPathContext(_renderRequest)
+		).put(
+			"segmentsExperiences", _getSegmentsExperiencesJSONArray(locale)
+		).put(
+			"segmentsExperiment", _getSegmentsExperimentJSONObject(locale)
+		).put(
+			"segmentsExperimentGoals",
+			_getSegmentsExperimentGoalsJSONArray(locale)
+		).put(
+			"selectedSegmentsExperienceId", _getSelectedSegmentsExperienceId()
+		).put(
+			"winnerSegmentsVariantId", _getWinnerSegmentsExperienceId()
+		).build();
+	}
+
 	private String _getRunSegmentsExperimenttURL() {
 		return _getSegmentsExperimentActionURL(
 			"/segments_experiment/run_segments_experiment");
 	}
 
-	private long _getSegmentsExperienceId() throws PortalException {
+	private long _getSegmentsExperienceId() throws Exception {
 		SegmentsExperiment segmentsExperiment = _getSegmentsExperiment();
 
 		if (segmentsExperiment != null) {
@@ -333,7 +382,7 @@ public class SegmentsExperimentDisplayContext {
 	}
 
 	private JSONArray _getSegmentsExperiencesJSONArray(Locale locale)
-		throws PortalException {
+		throws Exception {
 
 		List<SegmentsExperience> segmentsExperiences =
 			_segmentsExperienceService.getSegmentsExperiences(
@@ -363,29 +412,10 @@ public class SegmentsExperimentDisplayContext {
 				));
 		}
 
-		segmentsExperiencesJSONArray.put(
-			JSONUtil.put(
-				"name",
-				SegmentsExperienceConstants.getDefaultSegmentsExperienceName(
-					locale)
-			).put(
-				"segmentsExperienceId",
-				String.valueOf(SegmentsExperienceConstants.ID_DEFAULT)
-			).put(
-				"segmentsExperiment",
-				SegmentsExperimentUtil.toSegmentsExperimentJSONObject(
-					locale,
-					_getActiveSegmentsExperimentOptional(
-						SegmentsExperienceConstants.ID_DEFAULT
-					).orElse(
-						null
-					))
-			));
-
 		return segmentsExperiencesJSONArray;
 	}
 
-	private SegmentsExperiment _getSegmentsExperiment() throws PortalException {
+	private SegmentsExperiment _getSegmentsExperiment() throws Exception {
 		if (_segmentsExperiment != null) {
 			return _segmentsExperiment;
 		}
@@ -400,12 +430,13 @@ public class SegmentsExperimentDisplayContext {
 	}
 
 	private String _getSegmentsExperimentActionURL(String action) {
-		PortletURL actionURL = _renderResponse.createActionURL();
-
-		actionURL.setParameter(ActionRequest.ACTION_NAME, action);
-
-		return HttpUtil.addParameter(
-			actionURL.toString(), "p_l_mode", Constants.VIEW);
+		return HttpComponentsUtil.addParameter(
+			PortletURLBuilder.createActionURL(
+				_renderResponse
+			).setActionName(
+				action
+			).buildString(),
+			"p_l_mode", Constants.VIEW);
 	}
 
 	private JSONArray _getSegmentsExperimentGoalsJSONArray(Locale locale) {
@@ -435,7 +466,7 @@ public class SegmentsExperimentDisplayContext {
 	}
 
 	private JSONObject _getSegmentsExperimentJSONObject(Locale locale)
-		throws PortalException {
+		throws Exception {
 
 		return SegmentsExperimentUtil.toSegmentsExperimentJSONObject(
 			locale, _getSegmentsExperiment());
@@ -447,7 +478,7 @@ public class SegmentsExperimentDisplayContext {
 	}
 
 	private JSONArray _getSegmentsExperimentRelsJSONArray(Locale locale)
-		throws PortalException {
+		throws Exception {
 
 		SegmentsExperiment segmentsExperiment = _getSegmentsExperiment();
 
@@ -478,15 +509,20 @@ public class SegmentsExperimentDisplayContext {
 			return _segmentsExperienceId;
 		}
 
-		LongStream longStream = Arrays.stream(
-			GetterUtil.getLongValues(
-				_httpServletRequest.getAttribute(
-					SegmentsWebKeys.SEGMENTS_EXPERIENCE_IDS)));
+		HttpServletRequest originalHttpServletRequest =
+			_portal.getOriginalServletRequest(_httpServletRequest);
 
-		_segmentsExperienceId = longStream.findFirst(
-		).orElse(
-			SegmentsExperienceConstants.ID_DEFAULT
-		);
+		long selectedSegmentsExperienceId = ParamUtil.getLong(
+			originalHttpServletRequest, "segmentsExperienceId", -1);
+
+		if (selectedSegmentsExperienceId != -1) {
+			_segmentsExperienceId = selectedSegmentsExperienceId;
+		}
+		else {
+			_segmentsExperienceId =
+				_segmentsExperienceManager.getSegmentsExperienceId(
+					_httpServletRequest);
+		}
 
 		return _segmentsExperienceId;
 	}
@@ -510,8 +546,10 @@ public class SegmentsExperimentDisplayContext {
 	private final HttpServletRequest _httpServletRequest;
 	private final LayoutLocalService _layoutLocalService;
 	private final Portal _portal;
+	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
 	private Long _segmentsExperienceId;
+	private final SegmentsExperienceManager _segmentsExperienceManager;
 	private final SegmentsExperienceService _segmentsExperienceService;
 	private SegmentsExperiment _segmentsExperiment;
 	private final SegmentsExperimentConfiguration

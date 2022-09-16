@@ -14,16 +14,17 @@
 
 package com.liferay.portal.util;
 
-import com.liferay.petra.content.ContentUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.BeanReference;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.PortalPreferencesLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portlet.PortalPreferencesWrapper;
-import com.liferay.portlet.PortalPreferencesWrapperCacheUtil;
+
+import java.io.IOException;
 
 import java.util.Enumeration;
 import java.util.Properties;
@@ -79,8 +80,15 @@ public class PrefsPropsUtil {
 			return value;
 		}
 
-		return ContentUtil.get(
-			PrefsPropsUtil.class.getClassLoader(), PropsUtil.get(name));
+		try {
+			return StringUtil.read(
+				PrefsPropsUtil.class.getClassLoader(), PropsUtil.get(name));
+		}
+		catch (IOException ioException) {
+			_log.error("Unable to read the content for " + PropsUtil.get(name));
+
+			return null;
+		}
 	}
 
 	public static String getContent(String name) {
@@ -177,19 +185,6 @@ public class PrefsPropsUtil {
 	}
 
 	public static PortletPreferences getPreferences(boolean readOnly) {
-		PortalPreferencesWrapper portalPreferencesWrapper =
-			PortalPreferencesWrapperCacheUtil.get(
-				PortletKeys.PREFS_OWNER_ID_DEFAULT,
-				PortletKeys.PREFS_OWNER_TYPE_COMPANY);
-
-		if (portalPreferencesWrapper != null) {
-			if (!readOnly) {
-				portalPreferencesWrapper = portalPreferencesWrapper.clone();
-			}
-
-			return portalPreferencesWrapper;
-		}
-
 		return _portalPreferencesLocalService.getPreferences(
 			PortletKeys.PREFS_OWNER_ID_DEFAULT,
 			PortletKeys.PREFS_OWNER_TYPE_COMPANY);
@@ -202,22 +197,8 @@ public class PrefsPropsUtil {
 	public static PortletPreferences getPreferences(
 		long companyId, boolean readOnly) {
 
-		long ownerId = companyId;
-		int ownerType = PortletKeys.PREFS_OWNER_TYPE_COMPANY;
-
-		PortalPreferencesWrapper portalPreferencesWrapper =
-			PortalPreferencesWrapperCacheUtil.get(ownerId, ownerType);
-
-		if (portalPreferencesWrapper != null) {
-			if (!readOnly) {
-				portalPreferencesWrapper = portalPreferencesWrapper.clone();
-			}
-
-			return portalPreferencesWrapper;
-		}
-
 		return _portalPreferencesLocalService.getPreferences(
-			ownerId, ownerType);
+			companyId, PortletKeys.PREFS_OWNER_TYPE_COMPANY);
 	}
 
 	public static Properties getProperties(
@@ -394,9 +375,7 @@ public class PrefsPropsUtil {
 
 		String value = PropsUtil.get(name);
 
-		value = preferences.getValue(name, value);
-
-		return StringUtil.split(value, delimiter);
+		return StringUtil.split(preferences.getValue(name, value), delimiter);
 	}
 
 	public static String[] getStringArray(
@@ -434,6 +413,8 @@ public class PrefsPropsUtil {
 
 		return null;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(PrefsPropsUtil.class);
 
 	@BeanReference(type = PortalPreferencesLocalService.class)
 	private static PortalPreferencesLocalService _portalPreferencesLocalService;

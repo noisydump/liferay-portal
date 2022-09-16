@@ -3,236 +3,248 @@
 		"label": "margin",
 		"styles": [
 			{
+				"cssProperty": "margin-top",
+				"cssTemplate": "margin-top: {value} !important;",
 				"dataType": "string",
-				"defaultValue": "",
-				"dependencies": [
-				],
+				"defaultValue": "0",
 				"displaySize": "small",
 				"label": "margin-top",
 				"name": "marginTop",
 				"responsive": true,
 				"responsiveTemplate": "mt{viewport}{value}",
 				"type": "select",
-				"validValues": [
-					{
-						"label": "0",
-						"value": "0"
-					},
-					{
-						"label": "1",
-						"value": "1"
-					},
-					{
-						"label": "2",
-						"value": "2"
-					},
-					{
-						"label": "3",
-						"value": "3"
-					},
-					{
-						"label": "4",
-						"value": "4"
-					},
-					{
-						"label": "5",
-						"value": "5"
-					},
-					{
-						"label": "6",
-						"value": "6"
-					},
-					{
-						"label": "7",
-						"value": "7"
-					},
-					{
-						"label": "8",
-						"value": "8"
-					},
-					{
-						"label": "9",
-						"value": "9"
-					},
-					{
-						"label": "10",
-						"value": "10"
-					}
-				]
+				"typeOptions": {
+					"showLengthField": true,
+					"validValues": [
+						{
+							"label": "0",
+							"value": "0"
+						},
+						{
+							"label": "1",
+							"value": "1"
+						},
+						{
+							"label": "2",
+							"value": "2"
+						},
+						{
+							"label": "3",
+							"value": "3"
+						},
+						{
+							"label": "4",
+							"value": "4"
+						},
+						{
+							"label": "5",
+							"value": "5"
+						},
+						{
+							"label": "6",
+							"value": "6"
+						},
+						{
+							"label": "7",
+							"value": "7"
+						},
+						{
+							"label": "8",
+							"value": "8"
+						},
+						{
+							"label": "9",
+							"value": "9"
+						},
+						{
+							"label": "10",
+							"value": "10"
+						}
+					]
+				}
 			},
 			{
+				"cssProperty": "margin-bottom",
+				"cssTemplate": "margin-bottom: {value} !important;",
 				"dataType": "string",
-				"defaultValue": "",
-				"dependencies": [
-				],
+				"defaultValue": "0",
 				"displaySize": "small",
 				"label": "margin-bottom",
 				"name": "marginBottom",
 				"responsive": true,
 				"responsiveTemplate": "mb{viewport}{value}",
 				"type": "select",
-				"validValues": [
-					{
-						"label": "0",
-						"value": "0"
-					},
-					{
-						"label": "1",
-						"value": "1"
-					},
-					{
-						"label": "2",
-						"value": "2"
-					},
-					{
-						"label": "3",
-						"value": "3"
-					},
-					{
-						"label": "4",
-						"value": "4"
-					},
-					{
-						"label": "5",
-						"value": "5"
-					},
-					{
-						"label": "6",
-						"value": "6"
-					},
-					{
-						"label": "7",
-						"value": "7"
-					},
-					{
-						"label": "8",
-						"value": "8"
-					},
-					{
-						"label": "9",
-						"value": "9"
-					},
-					{
-						"label": "10",
-						"value": "10"
-					}
-				]
+				"typeOptions": {
+					"showLengthField": true,
+					"validValues": [
+						{
+							"label": "0",
+							"value": "0"
+						},
+						{
+							"label": "1",
+							"value": "1"
+						},
+						{
+							"label": "2",
+							"value": "2"
+						},
+						{
+							"label": "3",
+							"value": "3"
+						},
+						{
+							"label": "4",
+							"value": "4"
+						},
+						{
+							"label": "5",
+							"value": "5"
+						},
+						{
+							"label": "6",
+							"value": "6"
+						},
+						{
+							"label": "7",
+							"value": "7"
+						},
+						{
+							"label": "8",
+							"value": "8"
+						},
+						{
+							"label": "9",
+							"value": "9"
+						},
+						{
+							"label": "10",
+							"value": "10"
+						}
+					]
+				}
 			},
 			{
+				"cssProperty": "margin-left",
+				"cssTemplate": "margin-left: {value} !important;",
 				"dataType": "string",
-				"defaultValue": "",
-				"dependencies": [
-				],
+				"defaultValue": "0",
 				"displaySize": "small",
 				"label": "margin-left",
 				"name": "marginLeft",
 				"responsive": true,
 				"responsiveTemplate": "ml{viewport}{value}",
 				"type": "select",
-				"validValues": [
-					{
-						"label": "0",
-						"value": "0"
-					},
-					{
-						"label": "1",
-						"value": "1"
-					},
-					{
-						"label": "2",
-						"value": "2"
-					},
-					{
-						"label": "3",
-						"value": "3"
-					},
-					{
-						"label": "4",
-						"value": "4"
-					},
-					{
-						"label": "5",
-						"value": "5"
-					},
-					{
-						"label": "6",
-						"value": "6"
-					},
-					{
-						"label": "7",
-						"value": "7"
-					},
-					{
-						"label": "8",
-						"value": "8"
-					},
-					{
-						"label": "9",
-						"value": "9"
-					},
-					{
-						"label": "10",
-						"value": "10"
-					}
-				]
+				"typeOptions": {
+					"showLengthField": true,
+					"validValues": [
+						{
+							"label": "0",
+							"value": "0"
+						},
+						{
+							"label": "1",
+							"value": "1"
+						},
+						{
+							"label": "2",
+							"value": "2"
+						},
+						{
+							"label": "3",
+							"value": "3"
+						},
+						{
+							"label": "4",
+							"value": "4"
+						},
+						{
+							"label": "5",
+							"value": "5"
+						},
+						{
+							"label": "6",
+							"value": "6"
+						},
+						{
+							"label": "7",
+							"value": "7"
+						},
+						{
+							"label": "8",
+							"value": "8"
+						},
+						{
+							"label": "9",
+							"value": "9"
+						},
+						{
+							"label": "10",
+							"value": "10"
+						}
+					]
+				}
 			},
 			{
+				"cssProperty": "margin-right",
+				"cssTemplate": "margin-right: {value} !important;",
 				"dataType": "string",
-				"defaultValue": "",
-				"dependencies": [
-				],
+				"defaultValue": "0",
 				"displaySize": "small",
 				"label": "margin-right",
 				"name": "marginRight",
 				"responsive": true,
 				"responsiveTemplate": "mr{viewport}{value}",
 				"type": "select",
-				"validValues": [
-					{
-						"label": "0",
-						"value": "0"
-					},
-					{
-						"label": "1",
-						"value": "1"
-					},
-					{
-						"label": "2",
-						"value": "2"
-					},
-					{
-						"label": "3",
-						"value": "3"
-					},
-					{
-						"label": "4",
-						"value": "4"
-					},
-					{
-						"label": "5",
-						"value": "5"
-					},
-					{
-						"label": "6",
-						"value": "6"
-					},
-					{
-						"label": "7",
-						"value": "7"
-					},
-					{
-						"label": "8",
-						"value": "8"
-					},
-					{
-						"label": "9",
-						"value": "9"
-					},
-					{
-						"label": "10",
-						"value": "10"
-					}
-				]
+				"typeOptions": {
+					"showLengthField": true,
+					"validValues": [
+						{
+							"label": "0",
+							"value": "0"
+						},
+						{
+							"label": "1",
+							"value": "1"
+						},
+						{
+							"label": "2",
+							"value": "2"
+						},
+						{
+							"label": "3",
+							"value": "3"
+						},
+						{
+							"label": "4",
+							"value": "4"
+						},
+						{
+							"label": "5",
+							"value": "5"
+						},
+						{
+							"label": "6",
+							"value": "6"
+						},
+						{
+							"label": "7",
+							"value": "7"
+						},
+						{
+							"label": "8",
+							"value": "8"
+						},
+						{
+							"label": "9",
+							"value": "9"
+						},
+						{
+							"label": "10",
+							"value": "10"
+						}
+					]
+				}
 			}
 		]
 	},
@@ -240,339 +252,363 @@
 		"label": "padding",
 		"styles": [
 			{
+				"cssProperty": "padding-top",
+				"cssTemplate": "padding-top: {value} !important;",
 				"dataType": "string",
-				"defaultValue": "",
-				"dependencies": [
-				],
+				"defaultValue": "0",
 				"displaySize": "small",
 				"label": "padding-top",
 				"name": "paddingTop",
 				"responsive": true,
 				"responsiveTemplate": "pt{viewport}{value}",
 				"type": "select",
-				"validValues": [
-					{
-						"label": "0",
-						"value": "0"
-					},
-					{
-						"label": "1",
-						"value": "1"
-					},
-					{
-						"label": "2",
-						"value": "2"
-					},
-					{
-						"label": "3",
-						"value": "3"
-					},
-					{
-						"label": "4",
-						"value": "4"
-					},
-					{
-						"label": "5",
-						"value": "5"
-					},
-					{
-						"label": "6",
-						"value": "6"
-					},
-					{
-						"label": "7",
-						"value": "7"
-					},
-					{
-						"label": "8",
-						"value": "8"
-					},
-					{
-						"label": "9",
-						"value": "9"
-					},
-					{
-						"label": "10",
-						"value": "10"
-					}
-				]
+				"typeOptions": {
+					"showLengthField": true,
+					"validValues": [
+						{
+							"label": "0",
+							"value": "0"
+						},
+						{
+							"label": "1",
+							"value": "1"
+						},
+						{
+							"label": "2",
+							"value": "2"
+						},
+						{
+							"label": "3",
+							"value": "3"
+						},
+						{
+							"label": "4",
+							"value": "4"
+						},
+						{
+							"label": "5",
+							"value": "5"
+						},
+						{
+							"label": "6",
+							"value": "6"
+						},
+						{
+							"label": "7",
+							"value": "7"
+						},
+						{
+							"label": "8",
+							"value": "8"
+						},
+						{
+							"label": "9",
+							"value": "9"
+						},
+						{
+							"label": "10",
+							"value": "10"
+						}
+					]
+				}
 			},
 			{
+				"cssProperty": "padding-bottom",
+				"cssTemplate": "padding-bottom: {value} !important;",
 				"dataType": "string",
-				"defaultValue": "",
-				"dependencies": [
-				],
+				"defaultValue": "0",
 				"displaySize": "small",
 				"label": "padding-bottom",
 				"name": "paddingBottom",
 				"responsive": true,
 				"responsiveTemplate": "pb{viewport}{value}",
 				"type": "select",
-				"validValues": [
-					{
-						"label": "0",
-						"value": "0"
-					},
-					{
-						"label": "1",
-						"value": "1"
-					},
-					{
-						"label": "2",
-						"value": "2"
-					},
-					{
-						"label": "3",
-						"value": "3"
-					},
-					{
-						"label": "4",
-						"value": "4"
-					},
-					{
-						"label": "5",
-						"value": "5"
-					},
-					{
-						"label": "6",
-						"value": "6"
-					},
-					{
-						"label": "7",
-						"value": "7"
-					},
-					{
-						"label": "8",
-						"value": "8"
-					},
-					{
-						"label": "9",
-						"value": "9"
-					},
-					{
-						"label": "10",
-						"value": "10"
-					}
-				]
+				"typeOptions": {
+					"showLengthField": true,
+					"validValues": [
+						{
+							"label": "0",
+							"value": "0"
+						},
+						{
+							"label": "1",
+							"value": "1"
+						},
+						{
+							"label": "2",
+							"value": "2"
+						},
+						{
+							"label": "3",
+							"value": "3"
+						},
+						{
+							"label": "4",
+							"value": "4"
+						},
+						{
+							"label": "5",
+							"value": "5"
+						},
+						{
+							"label": "6",
+							"value": "6"
+						},
+						{
+							"label": "7",
+							"value": "7"
+						},
+						{
+							"label": "8",
+							"value": "8"
+						},
+						{
+							"label": "9",
+							"value": "9"
+						},
+						{
+							"label": "10",
+							"value": "10"
+						}
+					]
+				}
 			},
 			{
+				"cssProperty": "padding-left",
+				"cssTemplate": "padding-left: {value} !important;",
 				"dataType": "string",
-				"defaultValue": "",
-				"dependencies": [
-				],
+				"defaultValue": "0",
 				"displaySize": "small",
 				"label": "padding-left",
 				"name": "paddingLeft",
 				"responsive": true,
 				"responsiveTemplate": "pl{viewport}{value}",
 				"type": "select",
-				"validValues": [
-					{
-						"label": "0",
-						"value": "0"
-					},
-					{
-						"label": "1",
-						"value": "1"
-					},
-					{
-						"label": "2",
-						"value": "2"
-					},
-					{
-						"label": "3",
-						"value": "3"
-					},
-					{
-						"label": "4",
-						"value": "4"
-					},
-					{
-						"label": "5",
-						"value": "5"
-					},
-					{
-						"label": "6",
-						"value": "6"
-					},
-					{
-						"label": "7",
-						"value": "7"
-					},
-					{
-						"label": "8",
-						"value": "8"
-					},
-					{
-						"label": "9",
-						"value": "9"
-					},
-					{
-						"label": "10",
-						"value": "10"
-					}
-				]
+				"typeOptions": {
+					"showLengthField": true,
+					"validValues": [
+						{
+							"label": "0",
+							"value": "0"
+						},
+						{
+							"label": "1",
+							"value": "1"
+						},
+						{
+							"label": "2",
+							"value": "2"
+						},
+						{
+							"label": "3",
+							"value": "3"
+						},
+						{
+							"label": "4",
+							"value": "4"
+						},
+						{
+							"label": "5",
+							"value": "5"
+						},
+						{
+							"label": "6",
+							"value": "6"
+						},
+						{
+							"label": "7",
+							"value": "7"
+						},
+						{
+							"label": "8",
+							"value": "8"
+						},
+						{
+							"label": "9",
+							"value": "9"
+						},
+						{
+							"label": "10",
+							"value": "10"
+						}
+					]
+				}
 			},
 			{
+				"cssProperty": "padding-right",
+				"cssTemplate": "padding-right: {value} !important;",
 				"dataType": "string",
-				"defaultValue": "",
-				"dependencies": [
-				],
+				"defaultValue": "0",
 				"displaySize": "small",
 				"label": "padding-right",
 				"name": "paddingRight",
 				"responsive": true,
 				"responsiveTemplate": "pr{viewport}{value}",
 				"type": "select",
-				"validValues": [
-					{
-						"label": "0",
-						"value": "0"
-					},
-					{
-						"label": "1",
-						"value": "1"
-					},
-					{
-						"label": "2",
-						"value": "2"
-					},
-					{
-						"label": "3",
-						"value": "3"
-					},
-					{
-						"label": "4",
-						"value": "4"
-					},
-					{
-						"label": "5",
-						"value": "5"
-					},
-					{
-						"label": "6",
-						"value": "6"
-					},
-					{
-						"label": "7",
-						"value": "7"
-					},
-					{
-						"label": "8",
-						"value": "8"
-					},
-					{
-						"label": "9",
-						"value": "9"
-					},
-					{
-						"label": "10",
-						"value": "10"
-					}
-				]
+				"typeOptions": {
+					"showLengthField": true,
+					"validValues": [
+						{
+							"label": "0",
+							"value": "0"
+						},
+						{
+							"label": "1",
+							"value": "1"
+						},
+						{
+							"label": "2",
+							"value": "2"
+						},
+						{
+							"label": "3",
+							"value": "3"
+						},
+						{
+							"label": "4",
+							"value": "4"
+						},
+						{
+							"label": "5",
+							"value": "5"
+						},
+						{
+							"label": "6",
+							"value": "6"
+						},
+						{
+							"label": "7",
+							"value": "7"
+						},
+						{
+							"label": "8",
+							"value": "8"
+						},
+						{
+							"label": "9",
+							"value": "9"
+						},
+						{
+							"label": "10",
+							"value": "10"
+						}
+					]
+				}
 			}
 		]
 	},
 	{
-		"label": "size",
+		"configurationRole": "general",
+		"label": "frame",
 		"styles": [
 			{
+				"cssTemplate": "width: {value} !important;",
 				"dataType": "string",
 				"defaultValue": "",
-				"dependencies": [
-				],
 				"displaySize": "small",
 				"label": "width",
 				"name": "width",
 				"responsive": false,
-				"type": "text"
+				"type": "length"
 			},
 			{
+				"cssTemplate": "height: {value} !important;",
 				"dataType": "string",
 				"defaultValue": "",
-				"dependencies": [
-				],
 				"displaySize": "small",
 				"label": "height",
 				"name": "height",
 				"responsive": false,
-				"type": "text"
+				"type": "length"
 			},
 			{
+				"cssTemplate": "min-width: {value} !important;",
 				"dataType": "string",
 				"defaultValue": "",
-				"dependencies": [
-				],
 				"displaySize": "small",
 				"label": "min-width",
 				"name": "minWidth",
 				"responsive": false,
-				"type": "text"
+				"type": "length"
 			},
 			{
+				"cssTemplate": "max-width: {value} !important;",
 				"dataType": "string",
 				"defaultValue": "",
-				"dependencies": [
-				],
 				"displaySize": "small",
 				"label": "max-width",
 				"name": "maxWidth",
 				"responsive": false,
-				"type": "text"
+				"type": "length"
 			},
 			{
+				"cssTemplate": "min-height: {value} !important;",
 				"dataType": "string",
 				"defaultValue": "",
-				"dependencies": [
-				],
 				"displaySize": "small",
 				"label": "min-height",
 				"name": "minHeight",
 				"responsive": false,
-				"type": "text"
+				"type": "length"
 			},
 			{
+				"cssTemplate": "max-height: {value} !important;",
 				"dataType": "string",
 				"defaultValue": "",
-				"dependencies": [
-				],
 				"displaySize": "small",
 				"label": "max-height",
 				"name": "maxHeight",
 				"responsive": false,
-				"type": "text"
+				"type": "length"
 			},
 			{
+				"cssTemplate": "overflow: {value} !important;",
 				"dataType": "string",
 				"defaultValue": "",
-				"dependencies": [
-				],
 				"label": "overflow",
 				"name": "overflow",
 				"responsive": false,
 				"type": "select",
-				"validValues": [
-					{
-						"label": "default",
-						"value": ""
-					},
-					{
-						"label": "visible",
-						"value": "visible"
-					},
-					{
-						"label": "hidden",
-						"value": "hidden"
-					},
-					{
-						"label": "scroll",
-						"value": "scroll"
-					},
-					{
-						"label": "auto",
-						"value": "auto"
+				"typeOptions": {
+					"validValues": [
+						{
+							"label": "default",
+							"value": ""
+						},
+						{
+							"label": "visible",
+							"value": "visible"
+						},
+						{
+							"label": "hidden",
+							"value": "hidden"
+						},
+						{
+							"label": "scroll",
+							"value": "scroll"
+						},
+						{
+							"label": "auto",
+							"value": "auto"
+						}
+					]
+				}
+			},
+			{
+				"cssTemplate": "display: {value} !important;",
+				"dataType": "string",
+				"defaultValue": "block",
+				"label": "hide-fragment",
+				"name": "display",
+				"responsive": true,
+				"responsiveTemplate": "d{viewport}{value}",
+				"type": "hideFragment",
+				"typeOptions": {
+					"customValues": {
+						"checked": "none",
+						"unchecked": "block"
 					}
-				]
+				}
 			}
 		]
 	},
@@ -580,148 +616,160 @@
 		"label": "text",
 		"styles": [
 			{
+				"cssProperty": "font-family",
+				"cssTemplate": "font-family: {value} !important;",
 				"dataType": "string",
 				"defaultValue": "",
-				"dependencies": [
-				],
+				"icon": "font-family",
 				"label": "font-family",
 				"name": "fontFamily",
 				"responsive": false,
 				"type": "select",
-				"validValues": [
-					{
-						"label": "default",
-						"value": ""
-					},
-					{
-						"frontendTokenName": "fontFamilySansSerif",
-						"label": "font-family-sans-serif",
-						"value": "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'"
-					},
-					{
-						"frontendTokenName": "fontFamilyMonospace",
-						"label": "font-family-monospace",
-						"value": "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace"
-					},
-					{
-						"frontendTokenName": "fontFamilyBase",
-						"label": "font-family-base",
-						"value": "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'"
-					}
-				]
+				"typeOptions": {
+					"validValues": [
+						{
+							"label": "inherited",
+							"value": ""
+						},
+						{
+							"frontendTokenName": "fontFamilySansSerif",
+							"label": "font-family-sans-serif",
+							"value": "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'"
+						},
+						{
+							"frontendTokenName": "fontFamilyMonospace",
+							"label": "font-family-monospace",
+							"value": "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace"
+						},
+						{
+							"frontendTokenName": "fontFamilyBase",
+							"label": "font-family-base",
+							"value": "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'"
+						}
+					]
+				}
 			},
 			{
+				"cssProperty": "font-weight",
+				"cssTemplate": "font-weight: {value} !important;",
 				"dataType": "string",
 				"defaultValue": "",
-				"dependencies": [
-				],
+				"icon": "bold",
 				"label": "font-weight",
 				"name": "fontWeight",
 				"responsive": false,
 				"type": "select",
-				"validValues": [
-					{
-						"label": "default",
-						"value": ""
-					},
-					{
-						"frontendTokenName": "fontWeightNormal",
-						"label": "font-weight-normal",
-						"value": "400"
-					},
-					{
-						"frontendTokenName": "fontWeightBold",
-						"label": "font-weight-bold",
-						"value": "700"
-					},
-					{
-						"frontendTokenName": "fontWeightBolder",
-						"label": "font-weight-bolder",
-						"value": "900"
-					},
-					{
-						"frontendTokenName": "fontWeightLight",
-						"label": "font-weight-light",
-						"value": "300"
-					},
-					{
-						"frontendTokenName": "fontWeightLighter",
-						"label": "font-weight-lighter",
-						"value": "lighter"
-					}
-				]
+				"typeOptions": {
+					"validValues": [
+						{
+							"label": "inherited",
+							"value": ""
+						},
+						{
+							"frontendTokenName": "fontWeightNormal",
+							"label": "font-weight-normal",
+							"value": "400"
+						},
+						{
+							"frontendTokenName": "fontWeightBold",
+							"label": "font-weight-bold",
+							"value": "700"
+						},
+						{
+							"frontendTokenName": "fontWeightBolder",
+							"label": "font-weight-bolder",
+							"value": "900"
+						},
+						{
+							"frontendTokenName": "fontWeightLight",
+							"label": "font-weight-light",
+							"value": "300"
+						},
+						{
+							"frontendTokenName": "fontWeightLighter",
+							"label": "font-weight-lighter",
+							"value": "lighter"
+						}
+					]
+				}
 			},
 			{
+				"cssProperty": "font-size",
+				"cssTemplate": "font-size: {value} !important;",
 				"dataType": "string",
 				"defaultValue": "",
-				"dependencies": [
-				],
+				"icon": "font-size",
 				"label": "font-size",
 				"name": "fontSize",
 				"responsive": false,
 				"type": "select",
-				"validValues": [
-					{
-						"label": "default",
-						"value": ""
-					},
-					{
-						"frontendTokenName": "fontSizeSm",
-						"label": "font-size-small",
-						"value": "0.875rem"
-					},
-					{
-						"frontendTokenName": "fontSizeBase",
-						"label": "font-size-base",
-						"value": "0.875rem"
-					},
-					{
-						"frontendTokenName": "fontSizeLg",
-						"label": "font-size-large",
-						"value": "1.125rem"
-					}
-				]
+				"typeOptions": {
+					"showLengthField": true,
+					"validValues": [
+						{
+							"label": "inherited",
+							"value": ""
+						},
+						{
+							"frontendTokenName": "fontSizeSm",
+							"label": "font-size-small",
+							"value": "0.875rem"
+						},
+						{
+							"frontendTokenName": "fontSizeBase",
+							"label": "font-size-base",
+							"value": "0.875rem"
+						},
+						{
+							"frontendTokenName": "fontSizeLg",
+							"label": "font-size-large",
+							"value": "1.125rem"
+						}
+					]
+				}
 			},
 			{
+				"cssProperty": "color",
+				"cssTemplate": "color: {value} !important;",
 				"dataType": "string",
-				"dependencies": [
-				],
 				"label": "text-color",
 				"name": "textColor",
 				"responsive": false,
 				"type": "colorPicker"
 			},
 			{
+				"cssTemplate": "text-align: {value} !important;",
 				"dataType": "string",
-				"defaultValue": "",
-				"dependencies": [
-				],
+				"defaultValue": "left",
 				"label": "text-align",
 				"name": "textAlign",
-				"responsive": false,
-				"type": "select",
-				"validValues": [
-					{
-						"label": "default",
-						"value": ""
-					},
-					{
-						"label": "left",
-						"value": "left"
-					},
-					{
-						"label": "center",
-						"value": "center"
-					},
-					{
-						"label": "right",
-						"value": "right"
-					},
-					{
-						"label": "justify",
-						"value": "justify"
-					}
-				]
+				"responsive": true,
+				"responsiveTemplate": "text{viewport}{value}",
+				"type": "buttonGroup",
+				"typeOptions": {
+					"validValues": [
+						{
+							"icon": "align-left",
+							"label": "align-left",
+							"value": "left"
+						},
+						{
+							"icon": "align-center",
+							"label": "align-center",
+							"value": "center"
+						},
+						{
+							"icon": "align-right",
+							"label": "align-right",
+							"value": "right"
+						},
+						{
+							"icon": "align-justify",
+							"label": "justify",
+							"value": "justify"
+						}
+					]
+				}
 			}
 		]
 	},
@@ -729,20 +777,19 @@
 		"label": "background",
 		"styles": [
 			{
+				"cssProperty": "background-color",
+				"cssTemplate": "background-color: {value} !important;",
 				"dataType": "string",
-				"dependencies": [
-				],
 				"label": "background-color",
 				"name": "backgroundColor",
 				"responsive": false,
 				"type": "colorPicker"
 			},
 			{
+				"cssTemplate": "background-position: 50% 50%; background-repeat:no-repeat; background-size: cover; background-image: {value} !important;",
 				"dataType": "object",
 				"defaultValue": {
 				},
-				"dependencies": [
-				],
 				"label": "background-image",
 				"name": "backgroundImage",
 				"responsive": false,
@@ -754,14 +801,14 @@
 		"label": "borders",
 		"styles": [
 			{
+				"cssTemplate": "border-style: solid; border-width: {value}px !important;",
 				"dataType": "number",
 				"defaultValue": 0,
-				"dependencies": [
-				],
+				"icon": "border-width",
 				"label": "border-width",
 				"name": "borderWidth",
 				"responsive": false,
-				"type": "text",
+				"type": "length",
 				"typeOptions": {
 					"validation": {
 						"type": "number"
@@ -769,45 +816,49 @@
 				}
 			},
 			{
+				"cssProperty": "border-radius",
+				"cssTemplate": "border-radius: {value} !important;",
 				"dataType": "string",
 				"defaultValue": "",
-				"dependencies": [
-				],
+				"icon": "corner-radius",
 				"label": "border-radius",
 				"name": "borderRadius",
 				"responsive": false,
 				"type": "select",
-				"validValues": [
-					{
-						"label": "default",
-						"value": ""
-					},
-					{
-						"frontendTokenName": "borderRadiusSm",
-						"label": "border-radius-small",
-						"value": "0.1875rem"
-					},
-					{
-						"frontendTokenName": "borderRadiusLg",
-						"label": "border-radius-large",
-						"value": "0.375rem"
-					},
-					{
-						"frontendTokenName": "borderRadiusCircle",
-						"label": "border-radius-circle",
-						"value": "50%"
-					},
-					{
-						"frontendTokenName": "roundedPill",
-						"label": "rounded-pill",
-						"value": "50rem"
-					}
-				]
+				"typeOptions": {
+					"showLengthField": true,
+					"validValues": [
+						{
+							"label": "default",
+							"value": ""
+						},
+						{
+							"frontendTokenName": "borderRadiusSm",
+							"label": "border-radius-small",
+							"value": "0.1875rem"
+						},
+						{
+							"frontendTokenName": "borderRadiusLg",
+							"label": "border-radius-large",
+							"value": "0.375rem"
+						},
+						{
+							"frontendTokenName": "borderRadiusCircle",
+							"label": "border-radius-circle",
+							"value": "50%"
+						},
+						{
+							"frontendTokenName": "roundedPill",
+							"label": "rounded-pill",
+							"value": "50rem"
+						}
+					]
+				}
 			},
 			{
+				"cssProperty": "border-color",
+				"cssTemplate": "border-color: {value} !important;",
 				"dataType": "string",
-				"dependencies": [
-				],
 				"label": "border-color",
 				"name": "borderColor",
 				"responsive": false,
@@ -819,10 +870,10 @@
 		"label": "effects",
 		"styles": [
 			{
+				"cssTemplate": "opacity: {value} !important;",
 				"dataType": "number",
-				"defaultValue": 100,
-				"dependencies": [
-				],
+				"defaultValue": "",
+				"icon": "opacity",
 				"label": "opacity",
 				"name": "opacity",
 				"responsive": false,
@@ -834,35 +885,38 @@
 				}
 			},
 			{
+				"cssProperty": "box-shadow",
+				"cssTemplate": "box-shadow: {value} !important;",
 				"dataType": "object",
 				"defaultValue": "",
-				"dependencies": [
-				],
+				"icon": "shadow",
 				"label": "shadow",
 				"name": "shadow",
 				"responsive": false,
 				"type": "select",
-				"validValues": [
-					{
-						"label": "default",
-						"value": ""
-					},
-					{
-						"frontendTokenName": "boxShadowSm",
-						"label": "box-shadow-small",
-						"value": "0 .125rem .25rem rgba(0, 0, 0, .075)"
-					},
-					{
-						"frontendTokenName": "boxShadow",
-						"label": "box-shadow-regular",
-						"value": "0 .5rem 1rem rgba(0, 0, 0, .15)"
-					},
-					{
-						"frontendTokenName": "boxShadowLg",
-						"label": "box-shadow-large",
-						"value": "0 1rem 3rem rgba(0, 0, 0, .175)"
-					}
-				]
+				"typeOptions": {
+					"validValues": [
+						{
+							"label": "default",
+							"value": ""
+						},
+						{
+							"frontendTokenName": "boxShadowSm",
+							"label": "box-shadow-small",
+							"value": "0 .125rem .25rem rgba(0, 0, 0, .075)"
+						},
+						{
+							"frontendTokenName": "boxShadow",
+							"label": "box-shadow-regular",
+							"value": "0 .5rem 1rem rgba(0, 0, 0, .15)"
+						},
+						{
+							"frontendTokenName": "boxShadowLg",
+							"label": "box-shadow-large",
+							"value": "0 1rem 3rem rgba(0, 0, 0, .175)"
+						}
+					]
+				}
 			}
 		]
 	}

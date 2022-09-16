@@ -117,7 +117,7 @@ DDMFormInstance selFormInstance = DDMFormInstanceServiceUtil.fetchFormInstance(f
 								/>
 							</liferay-ui:search-container-row>
 
-							<div class="separator"></div>
+							<hr class="separator" />
 
 							<liferay-ui:search-iterator
 								searchResultCssClass="show-quick-actions-on-hover table table-autofit"
@@ -145,7 +145,7 @@ DDMFormInstance selFormInstance = DDMFormInstanceServiceUtil.fetchFormInstance(f
 	Liferay.provide(
 		window,
 		'<portlet:namespace />selectFormInstance',
-		function (formInstanceId, formInstanceName) {
+		(formInstanceId, formInstanceName) => {
 			var A = AUI();
 
 			document.<portlet:namespace />fm.<portlet:namespace />formInstanceId.value = formInstanceId;

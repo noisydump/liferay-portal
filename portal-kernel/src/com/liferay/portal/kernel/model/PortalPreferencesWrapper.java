@@ -42,9 +42,9 @@ public class PortalPreferencesWrapper
 
 		attributes.put("mvccVersion", getMvccVersion());
 		attributes.put("portalPreferencesId", getPortalPreferencesId());
+		attributes.put("companyId", getCompanyId());
 		attributes.put("ownerId", getOwnerId());
 		attributes.put("ownerType", getOwnerType());
-		attributes.put("preferences", getPreferences());
 
 		return attributes;
 	}
@@ -63,6 +63,12 @@ public class PortalPreferencesWrapper
 			setPortalPreferencesId(portalPreferencesId);
 		}
 
+		Long companyId = (Long)attributes.get("companyId");
+
+		if (companyId != null) {
+			setCompanyId(companyId);
+		}
+
 		Long ownerId = (Long)attributes.get("ownerId");
 
 		if (ownerId != null) {
@@ -74,12 +80,21 @@ public class PortalPreferencesWrapper
 		if (ownerType != null) {
 			setOwnerType(ownerType);
 		}
+	}
 
-		String preferences = (String)attributes.get("preferences");
+	@Override
+	public PortalPreferences cloneWithOriginalValues() {
+		return wrap(model.cloneWithOriginalValues());
+	}
 
-		if (preferences != null) {
-			setPreferences(preferences);
-		}
+	/**
+	 * Returns the company ID of this portal preferences.
+	 *
+	 * @return the company ID of this portal preferences
+	 */
+	@Override
+	public long getCompanyId() {
+		return model.getCompanyId();
 	}
 
 	/**
@@ -123,16 +138,6 @@ public class PortalPreferencesWrapper
 	}
 
 	/**
-	 * Returns the preferences of this portal preferences.
-	 *
-	 * @return the preferences of this portal preferences
-	 */
-	@Override
-	public String getPreferences() {
-		return model.getPreferences();
-	}
-
-	/**
 	 * Returns the primary key of this portal preferences.
 	 *
 	 * @return the primary key of this portal preferences
@@ -145,6 +150,16 @@ public class PortalPreferencesWrapper
 	@Override
 	public void persist() {
 		model.persist();
+	}
+
+	/**
+	 * Sets the company ID of this portal preferences.
+	 *
+	 * @param companyId the company ID of this portal preferences
+	 */
+	@Override
+	public void setCompanyId(long companyId) {
+		model.setCompanyId(companyId);
 	}
 
 	/**
@@ -185,16 +200,6 @@ public class PortalPreferencesWrapper
 	@Override
 	public void setPortalPreferencesId(long portalPreferencesId) {
 		model.setPortalPreferencesId(portalPreferencesId);
-	}
-
-	/**
-	 * Sets the preferences of this portal preferences.
-	 *
-	 * @param preferences the preferences of this portal preferences
-	 */
-	@Override
-	public void setPreferences(String preferences) {
-		model.setPreferences(preferences);
 	}
 
 	/**

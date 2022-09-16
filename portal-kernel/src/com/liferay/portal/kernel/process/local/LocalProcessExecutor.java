@@ -21,6 +21,8 @@ import com.liferay.portal.kernel.concurrent.DefaultNoticeableFuture;
 import com.liferay.portal.kernel.concurrent.NoticeableFuture;
 import com.liferay.portal.kernel.io.unsync.UnsyncBufferedInputStream;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayOutputStream;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.process.ProcessCallable;
 import com.liferay.portal.kernel.process.ProcessChannel;
 import com.liferay.portal.kernel.process.ProcessConfig;
@@ -82,7 +84,7 @@ public class LocalProcessExecutor implements ProcessExecutor {
 				currentEnvironment.putAll(environment);
 			}
 
-			final Process process = processBuilder.start();
+			Process process = processBuilder.start();
 
 			ObjectOutputStream bootstrapObjectOutputStream =
 				new ObjectOutputStream(process.getOutputStream());
@@ -158,6 +160,9 @@ public class LocalProcessExecutor implements ProcessExecutor {
 		return defaultNoticeableFuture;
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		LocalProcessExecutor.class);
+
 	private class SubprocessReactor<T extends Serializable>
 		implements Callable<T> {
 
@@ -214,6 +219,9 @@ public class LocalProcessExecutor implements ProcessExecutor {
 						break;
 					}
 					catch (StreamCorruptedException streamCorruptedException) {
+						if (_log.isDebugEnabled()) {
+							_log.debug(streamCorruptedException);
+						}
 
 						// Collecting bad header as log information
 

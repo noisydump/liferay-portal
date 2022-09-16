@@ -31,19 +31,26 @@ public class AccountConstants {
 
 	public static final String ACCOUNT_ENTRY_TYPE_PERSON = "person";
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *             #ACCOUNT_ENTRY_TYPE_PERSON}
-	 */
-	@Deprecated
-	public static final String ACCOUNT_ENTRY_TYPE_PERSONAL = "person";
-
 	public static final String[] ACCOUNT_ENTRY_TYPES = {
 		ACCOUNT_ENTRY_TYPE_BUSINESS, ACCOUNT_ENTRY_TYPE_GUEST,
 		ACCOUNT_ENTRY_TYPE_PERSON
 	};
 
+	public static final String[] ACCOUNT_ENTRY_TYPES_DEFAULT_ALLOWED_TYPES = {
+		ACCOUNT_ENTRY_TYPE_BUSINESS, ACCOUNT_ENTRY_TYPE_PERSON
+	};
+
 	public static final String ACCOUNT_GROUP_NAME_GUEST = "Guest";
+
+	public static final String ACCOUNT_GROUP_TYPE_DYNAMIC = "dynamic";
+
+	public static final String ACCOUNT_GROUP_TYPE_GUEST = "guest";
+
+	public static final String ACCOUNT_GROUP_TYPE_STATIC = "static";
+
+	public static final String[] ACCOUNT_GROUP_TYPES = {
+		ACCOUNT_GROUP_TYPE_STATIC, ACCOUNT_GROUP_TYPE_DYNAMIC
+	};
 
 	public static final long PARENT_ACCOUNT_ENTRY_ID_DEFAULT = 0;
 

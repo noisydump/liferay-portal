@@ -18,7 +18,6 @@ import com.liferay.adaptive.media.image.item.selector.AMImageFileEntryItemSelect
 import com.liferay.document.library.util.DLURLHelper;
 import com.liferay.item.selector.ItemSelectorReturnTypeResolver;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepository;
 import com.liferay.portal.kernel.repository.model.FileEntry;
@@ -54,24 +53,23 @@ public class FileEntryAMImageFileEntryItemSelectorReturnTypeResolver
 	public String getValue(FileEntry fileEntry, ThemeDisplay themeDisplay)
 		throws Exception {
 
-		JSONObject fileEntryJSONObject = JSONUtil.put(
-			"fileEntryId", String.valueOf(fileEntry.getFileEntryId()));
-
 		String previewURL = null;
 
 		if (fileEntry.getGroupId() == fileEntry.getRepositoryId()) {
-			previewURL = _dlURLHelper.getImagePreviewURL(
+			previewURL = _dlURLHelper.getPreviewURL(
 				fileEntry, fileEntry.getFileVersion(), themeDisplay,
 				StringPool.BLANK, false, false);
 		}
 		else {
 			previewURL = _portletFileRepository.getPortletFileEntryURL(
-				themeDisplay, fileEntry, "&imagePreview=1", false);
+				themeDisplay, fileEntry, StringPool.BLANK, false);
 		}
 
-		fileEntryJSONObject.put("url", previewURL);
-
-		return fileEntryJSONObject.toString();
+		return JSONUtil.put(
+			"fileEntryId", String.valueOf(fileEntry.getFileEntryId())
+		).put(
+			"url", previewURL
+		).toString();
 	}
 
 	@Reference

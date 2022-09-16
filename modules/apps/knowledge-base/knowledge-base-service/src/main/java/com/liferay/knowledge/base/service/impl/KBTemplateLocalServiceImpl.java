@@ -21,6 +21,7 @@ import com.liferay.knowledge.base.exception.NoSuchTemplateException;
 import com.liferay.knowledge.base.internal.util.KBCommentUtil;
 import com.liferay.knowledge.base.model.KBTemplate;
 import com.liferay.knowledge.base.service.base.KBTemplateLocalServiceBaseImpl;
+import com.liferay.knowledge.base.service.persistence.KBCommentPersistence;
 import com.liferay.knowledge.base.util.KnowledgeBaseUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
@@ -36,14 +37,20 @@ import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
+import com.liferay.portal.kernel.service.ResourceLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.social.kernel.service.SocialActivityLocalService;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -51,6 +58,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Peter Shin
@@ -70,9 +78,9 @@ public class KBTemplateLocalServiceImpl extends KBTemplateLocalServiceBaseImpl {
 
 		// KB template
 
-		User user = userLocalService.getUser(userId);
+		User user = _userLocalService.getUser(userId);
 		long groupId = serviceContext.getScopeGroupId();
-		Date now = new Date();
+		Date date = new Date();
 
 		validate(title, content);
 
@@ -85,8 +93,8 @@ public class KBTemplateLocalServiceImpl extends KBTemplateLocalServiceBaseImpl {
 		kbTemplate.setCompanyId(user.getCompanyId());
 		kbTemplate.setUserId(user.getUserId());
 		kbTemplate.setUserName(user.getFullName());
-		kbTemplate.setCreateDate(serviceContext.getCreateDate(now));
-		kbTemplate.setModifiedDate(serviceContext.getModifiedDate(now));
+		kbTemplate.setCreateDate(serviceContext.getCreateDate(date));
+		kbTemplate.setModifiedDate(serviceContext.getModifiedDate(date));
 		kbTemplate.setTitle(title);
 		kbTemplate.setContent(content);
 
@@ -94,14 +102,14 @@ public class KBTemplateLocalServiceImpl extends KBTemplateLocalServiceBaseImpl {
 
 		// Resources
 
-		resourceLocalService.addModelResources(kbTemplate, serviceContext);
+		_resourceLocalService.addModelResources(kbTemplate, serviceContext);
 
 		// Social
 
 		JSONObject extraDataJSONObject = JSONUtil.put(
 			"title", kbTemplate.getTitle());
 
-		socialActivityLocalService.addActivity(
+		_socialActivityLocalService.addActivity(
 			userId, groupId, KBTemplate.class.getName(), kbTemplateId,
 			AdminActivityKeys.ADD_KB_TEMPLATE, extraDataJSONObject.toString(),
 			0);
@@ -133,19 +141,19 @@ public class KBTemplateLocalServiceImpl extends KBTemplateLocalServiceBaseImpl {
 
 		// Resources
 
-		resourceLocalService.deleteResource(
+		_resourceLocalService.deleteResource(
 			kbTemplate.getCompanyId(), KBTemplate.class.getName(),
 			ResourceConstants.SCOPE_INDIVIDUAL, kbTemplate.getKbTemplateId());
 
 		// KB Comments
 
 		KBCommentUtil.deleteKBComments(
-			KBTemplate.class.getName(), classNameLocalService,
-			kbTemplate.getKbTemplateId(), kbCommentPersistence);
+			KBTemplate.class.getName(), _classNameLocalService,
+			kbTemplate.getKbTemplateId(), _kbCommentPersistence);
 
 		// Social
 
-		socialActivityLocalService.deleteActivities(
+		_socialActivityLocalService.deleteActivities(
 			KBTemplate.class.getName(), kbTemplate.getKbTemplateId());
 
 		return kbTemplate;
@@ -171,6 +179,10 @@ public class KBTemplateLocalServiceImpl extends KBTemplateLocalServiceBaseImpl {
 					kbTemplateId);
 			}
 			catch (NoSuchTemplateException noSuchTemplateException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(noSuchTemplateException);
+				}
+
 				continue;
 			}
 
@@ -228,7 +240,7 @@ public class KBTemplateLocalServiceImpl extends KBTemplateLocalServiceBaseImpl {
 		JSONObject extraDataJSONObject = JSONUtil.put(
 			"title", kbTemplate.getTitle());
 
-		socialActivityLocalService.addActivity(
+		_socialActivityLocalService.addActivity(
 			kbTemplate.getUserId(), kbTemplate.getGroupId(),
 			KBTemplate.class.getName(), kbTemplateId,
 			AdminActivityKeys.UPDATE_KB_TEMPLATE,
@@ -243,7 +255,7 @@ public class KBTemplateLocalServiceImpl extends KBTemplateLocalServiceBaseImpl {
 			String[] guestPermissions)
 		throws PortalException {
 
-		resourceLocalService.updateResources(
+		_resourceLocalService.updateResources(
 			kbTemplate.getCompanyId(), kbTemplate.getGroupId(),
 			KBTemplate.class.getName(), kbTemplate.getKbTemplateId(),
 			groupPermissions, guestPermissions);
@@ -330,5 +342,23 @@ public class KBTemplateLocalServiceImpl extends KBTemplateLocalServiceBaseImpl {
 			throw new KBTemplateContentException();
 		}
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		KBTemplateLocalServiceImpl.class);
+
+	@Reference
+	private ClassNameLocalService _classNameLocalService;
+
+	@Reference
+	private KBCommentPersistence _kbCommentPersistence;
+
+	@Reference
+	private ResourceLocalService _resourceLocalService;
+
+	@Reference
+	private SocialActivityLocalService _socialActivityLocalService;
+
+	@Reference
+	private UserLocalService _userLocalService;
 
 }

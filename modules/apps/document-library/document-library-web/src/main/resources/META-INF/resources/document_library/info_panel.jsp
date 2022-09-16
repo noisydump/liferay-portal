@@ -54,7 +54,7 @@ List<Folder> folders = dlInfoPanelDisplayContext.getFolders();
 						</li>
 
 						<%
-						FolderActionDisplayContext folderActionDisplayContext = new FolderActionDisplayContext(dlTrashHelper, request, liferayPortletResponse);
+						FolderActionDisplayContext folderActionDisplayContext = new FolderActionDisplayContext(dlTrashHelper, request);
 						%>
 
 						<c:if test="<%= folderActionDisplayContext.isShowActions() %>">
@@ -84,7 +84,7 @@ List<Folder> folders = dlInfoPanelDisplayContext.getFolders();
 
 						<c:if test="<%= folder != null %>">
 							<dt class="sidebar-dt">
-								<liferay-ui:message key="created" />
+								<liferay-ui:message key="created-by" />
 							</dt>
 							<dd class="sidebar-dd">
 								<%= HtmlUtil.escape(folder.getUserName()) %>
@@ -134,9 +134,16 @@ List<Folder> folders = dlInfoPanelDisplayContext.getFolders();
 
 				<div class="autofit-col">
 					<ul class="autofit-padded-no-gutters autofit-row">
-						<li class="autofit-col">
-							<liferay-util:include page="/document_library/file_entry_action.jsp" servletContext="<%= application %>" />
-						</li>
+
+						<%
+						DLPortletInstanceSettingsHelper dlPortletInstanceSettingsHelper = new DLPortletInstanceSettingsHelper(dlRequestHelper);
+						%>
+
+						<c:if test="<%= dlPortletInstanceSettingsHelper.isShowActions() %>">
+							<li class="autofit-col">
+								<liferay-util:include page="/document_library/file_entry_action.jsp" servletContext="<%= application %>" />
+							</li>
+						</c:if>
 					</ul>
 				</div>
 			</div>

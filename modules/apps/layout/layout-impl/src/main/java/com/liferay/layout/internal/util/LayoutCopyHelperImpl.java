@@ -16,6 +16,8 @@ package com.liferay.layout.internal.util;
 
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.asset.kernel.service.AssetTagLocalService;
+import com.liferay.client.extension.model.ClientExtensionEntryRel;
+import com.liferay.client.extension.service.ClientExtensionEntryRelLocalService;
 import com.liferay.counter.kernel.service.CounterLocalService;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.processor.PortletRegistry;
@@ -27,6 +29,7 @@ import com.liferay.layout.seo.model.LayoutSEOEntry;
 import com.liferay.layout.seo.service.LayoutSEOEntryLocalService;
 import com.liferay.layout.service.LayoutClassedModelUsageLocalService;
 import com.liferay.layout.util.LayoutCopyHelper;
+import com.liferay.layout.util.structure.DeletedLayoutStructureItem;
 import com.liferay.layout.util.structure.FragmentStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.layout.util.structure.LayoutStructureItem;
@@ -40,10 +43,12 @@ import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.model.PortletPreferences;
+import com.liferay.portal.kernel.model.PortletPreferencesIds;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.portlet.PortletIdCodec;
+import com.liferay.portal.kernel.portlet.PortletPreferencesFactory;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
 import com.liferay.portal.kernel.service.ImageLocalService;
@@ -59,10 +64,11 @@ import com.liferay.portal.kernel.service.permission.PortletPermissionUtil;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.TransactionConfig;
 import com.liferay.portal.kernel.transaction.TransactionInvokerUtil;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.CopyLayoutThreadLocal;
+import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.PortletKeys;
-import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portlet.exportimport.staging.StagingAdvicesThreadLocal;
 import com.liferay.segments.constants.SegmentsExperienceConstants;
@@ -70,13 +76,16 @@ import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 import com.liferay.sites.kernel.util.Sites;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -93,19 +102,50 @@ public class LayoutCopyHelperImpl implements LayoutCopyHelper {
 	public Layout copyLayout(Layout sourceLayout, Layout targetLayout)
 		throws Exception {
 
+		List<Long> segmentsExperiencesIds = ListUtil.toList(
+			_segmentsExperienceLocalService.getSegmentsExperiences(
+				sourceLayout.getGroupId(), _portal.getClassNameId(Layout.class),
+				sourceLayout.getPlid()),
+			SegmentsExperience.SEGMENTS_EXPERIENCE_ID_ACCESSOR);
+
+		return copyLayout(
+			ArrayUtil.toLongArray(segmentsExperiencesIds), sourceLayout,
+			targetLayout);
+	}
+
+	@Override
+	public Layout copyLayout(
+			long segmentsExperienceId, Layout sourceLayout, Layout targetLayout)
+		throws Exception {
+
+		long defaultSegmentsExperienceId =
+			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
+				targetLayout.getPlid());
+
+		Consumer<Layout> consumer = processedTargetLayout -> {
+			try {
+				_copyLayoutPageTemplateStructureFromSegmentsExperience(
+					sourceLayout, segmentsExperienceId, processedTargetLayout,
+					defaultSegmentsExperienceId);
+			}
+			catch (Exception exception) {
+				if (_log.isWarnEnabled()) {
+					_log.warn(exception);
+				}
+			}
+		};
+
 		Callable<Layout> callable = new CopyLayoutCallable(
-			sourceLayout, targetLayout);
+			consumer, sourceLayout, new long[] {segmentsExperienceId},
+			targetLayout, new long[] {defaultSegmentsExperienceId});
 
 		boolean copyLayout = CopyLayoutThreadLocal.isCopyLayout();
-		boolean stagingAdvicesThreadLocalEnabled =
-			StagingAdvicesThreadLocal.isEnabled();
 
 		ServiceContext currentServiceContext =
 			ServiceContextThreadLocal.getServiceContext();
 
 		try {
 			CopyLayoutThreadLocal.setCopyLayout(true);
-			StagingAdvicesThreadLocal.setEnabled(false);
 
 			return TransactionInvokerUtil.invoke(_transactionConfig, callable);
 		}
@@ -114,8 +154,49 @@ public class LayoutCopyHelperImpl implements LayoutCopyHelper {
 		}
 		finally {
 			CopyLayoutThreadLocal.setCopyLayout(copyLayout);
-			StagingAdvicesThreadLocal.setEnabled(
-				stagingAdvicesThreadLocalEnabled);
+
+			ServiceContextThreadLocal.pushServiceContext(currentServiceContext);
+		}
+	}
+
+	@Override
+	public Layout copyLayout(
+			long[] segmentsExperiencesIds, Layout sourceLayout,
+			Layout targetLayout)
+		throws Exception {
+
+		Consumer<Layout> consumer = processedTargetLayout -> {
+			try {
+				_copyLayoutPageTemplateStructure(
+					segmentsExperiencesIds, sourceLayout,
+					processedTargetLayout);
+			}
+			catch (Exception exception) {
+				if (_log.isWarnEnabled()) {
+					_log.warn(exception);
+				}
+			}
+		};
+
+		Callable<Layout> callable = new CopyLayoutCallable(
+			consumer, sourceLayout, segmentsExperiencesIds, targetLayout,
+			segmentsExperiencesIds);
+
+		boolean copyLayout = CopyLayoutThreadLocal.isCopyLayout();
+
+		ServiceContext currentServiceContext =
+			ServiceContextThreadLocal.getServiceContext();
+
+		try {
+			CopyLayoutThreadLocal.setCopyLayout(true);
+
+			return TransactionInvokerUtil.invoke(_transactionConfig, callable);
+		}
+		catch (Throwable throwable) {
+			throw new Exception(throwable);
+		}
+		finally {
+			CopyLayoutThreadLocal.setCopyLayout(copyLayout);
 
 			ServiceContextThreadLocal.pushServiceContext(currentServiceContext);
 		}
@@ -125,7 +206,7 @@ public class LayoutCopyHelperImpl implements LayoutCopyHelper {
 			Layout sourceLayout, Layout targetLayout)
 		throws Exception {
 
-		if (_isDraft(sourceLayout)) {
+		if (sourceLayout.isDraftLayout() || targetLayout.isDraftLayout()) {
 			return;
 		}
 
@@ -135,18 +216,71 @@ public class LayoutCopyHelperImpl implements LayoutCopyHelper {
 		String[] assetTagNames = _assetTagLocalService.getTagNames(
 			Layout.class.getName(), sourceLayout.getPlid());
 
-		Layout layout = targetLayout;
-
-		if (_isDraft(targetLayout)) {
-			layout = _layoutLocalService.getLayout(targetLayout.getClassPK());
-		}
-
 		_layoutLocalService.updateAsset(
-			layout.getUserId(), layout, assetCategoryIds, assetTagNames);
+			targetLayout.getUserId(), targetLayout, assetCategoryIds,
+			assetTagNames);
+	}
+
+	private void _copyLayoutClassedModelUsages(
+		Layout sourceLayout, Layout targetLayout) {
+
+		List<LayoutClassedModelUsage> sourceLayoutLayoutClassedModelUsages =
+			_layoutClassedModelUsageLocalService.
+				getLayoutClassedModelUsagesByPlid(sourceLayout.getPlid());
+
+		_deleteLayoutClassedModelUsages(
+			sourceLayoutLayoutClassedModelUsages, targetLayout);
+
+		List<LayoutClassedModelUsage> targetLayoutLayoutClassedModelUsages =
+			_layoutClassedModelUsageLocalService.
+				getLayoutClassedModelUsagesByPlid(targetLayout.getPlid());
+
+		for (LayoutClassedModelUsage sourceLayoutLayoutClassedModelUsage :
+				sourceLayoutLayoutClassedModelUsages) {
+
+			if (_hasLayoutClassedModelUsage(
+					targetLayoutLayoutClassedModelUsages,
+					sourceLayoutLayoutClassedModelUsage)) {
+
+				continue;
+			}
+
+			String containerKey =
+				sourceLayoutLayoutClassedModelUsage.getContainerKey();
+
+			long containerType =
+				sourceLayoutLayoutClassedModelUsage.getContainerType();
+
+			if (containerType == _portal.getClassNameId(
+					FragmentEntryLink.class.getName())) {
+
+				long fragmentEntryLinkId = GetterUtil.getLong(
+					sourceLayoutLayoutClassedModelUsage.getContainerKey());
+
+				FragmentEntryLink fragmentEntryLink =
+					_fragmentEntryLinkLocalService.getFragmentEntryLink(
+						sourceLayout.getGroupId(), fragmentEntryLinkId,
+						targetLayout.getPlid());
+
+				if (fragmentEntryLink != null) {
+					containerKey = String.valueOf(
+						fragmentEntryLink.getFragmentEntryLinkId());
+				}
+			}
+
+			_layoutClassedModelUsageLocalService.addLayoutClassedModelUsage(
+				sourceLayoutLayoutClassedModelUsage.getGroupId(),
+				sourceLayoutLayoutClassedModelUsage.getClassNameId(),
+				sourceLayoutLayoutClassedModelUsage.getClassPK(), containerKey,
+				sourceLayoutLayoutClassedModelUsage.getContainerType(),
+				targetLayout.getPlid(),
+				ServiceContextThreadLocal.getServiceContext());
+		}
 	}
 
 	private void _copyLayoutPageTemplateStructure(
-			Layout sourceLayout, Layout targetLayout)
+			long[] segmentsExperiencesIds, Layout sourceLayout,
+			Layout targetLayout)
 		throws Exception {
 
 		LayoutPageTemplateStructure layoutPageTemplateStructure =
@@ -176,26 +310,23 @@ public class LayoutCopyHelperImpl implements LayoutCopyHelper {
 						sourceLayout.getGroupId(), sourceLayout.getPlid());
 		}
 
-		ServiceContext serviceContext = Optional.ofNullable(
-			ServiceContextThreadLocal.getServiceContext()
-		).orElse(
-			new ServiceContext()
-		);
-
 		List<FragmentEntryLink> fragmentEntryLinks =
-			_fragmentEntryLinkLocalService.getFragmentEntryLinksByPlid(
-				sourceLayout.getGroupId(), sourceLayout.getPlid());
+			_fragmentEntryLinkLocalService.
+				getFragmentEntryLinksBySegmentsExperienceId(
+					sourceLayout.getGroupId(), segmentsExperiencesIds,
+					sourceLayout.getPlid());
 
 		Stream<FragmentEntryLink> stream = fragmentEntryLinks.stream();
 
-		Map<Long, FragmentEntryLink> fragmentEntryLinkMap = stream.collect(
+		Map<Long, FragmentEntryLink> fragmentEntryLinksMap = stream.collect(
 			Collectors.toMap(
 				FragmentEntryLink::getFragmentEntryLinkId,
 				fragmentEntryLink -> fragmentEntryLink));
 
 		_fragmentEntryLinkLocalService.
 			deleteLayoutPageTemplateEntryFragmentEntryLinks(
-				targetLayout.getGroupId(), targetLayout.getPlid());
+				targetLayout.getGroupId(), segmentsExperiencesIds,
+				targetLayout.getPlid());
 
 		LayoutPageTemplateStructure targetLayoutPageTemplateStructure =
 			_layoutPageTemplateStructureLocalService.
@@ -206,63 +337,81 @@ public class LayoutCopyHelperImpl implements LayoutCopyHelper {
 			_layoutPageTemplateStructureLocalService.
 				addLayoutPageTemplateStructure(
 					targetLayout.getUserId(), targetLayout.getGroupId(),
-					targetLayout.getPlid(), null, serviceContext);
+					targetLayout.getPlid(),
+					_segmentsExperienceLocalService.
+						fetchDefaultSegmentsExperienceId(
+							targetLayout.getPlid()),
+					null, ServiceContextThreadLocal.getServiceContext());
 		}
 
-		Map<Long, Long> segmentsExperienceIds = _getSegmentsExperienceIds(
-			sourceLayout, targetLayout, serviceContext);
+		Map<Long, Long> segmentsExperienceIdsMap = _getSegmentsExperienceIds(
+			segmentsExperiencesIds, sourceLayout, targetLayout);
 
-		for (Map.Entry<Long, Long> entry : segmentsExperienceIds.entrySet()) {
-			_copyLayoutPageTemplateStructureExperience(
-				layoutPageTemplateStructure, entry.getKey(), targetLayout,
-				fragmentEntryLinkMap, entry.getValue(), serviceContext);
-		}
+		for (Map.Entry<Long, Long> entry :
+				segmentsExperienceIdsMap.entrySet()) {
 
-		List<LayoutClassedModelUsage> sourceLayoutLayoutClassedModelUsages =
-			_layoutClassedModelUsageLocalService.
-				getLayoutClassedModelUsagesByPlid(sourceLayout.getPlid());
+			String data = layoutPageTemplateStructure.getData(entry.getKey());
 
-		_deleteLayoutClassedModelUsages(
-			sourceLayoutLayoutClassedModelUsages, targetLayout);
+			if (Validator.isNull(data)) {
+				_segmentsExperienceLocalService.deleteSegmentsExperience(
+					entry.getKey());
 
-		List<LayoutClassedModelUsage> targetLayoutLayoutClassedModelUsages =
-			_layoutClassedModelUsageLocalService.
-				getLayoutClassedModelUsagesByPlid(targetLayout.getPlid());
-
-		for (LayoutClassedModelUsage sourceLayoutLayoutClassedModelUsage :
-				sourceLayoutLayoutClassedModelUsages) {
-
-			if (!_hasLayoutClassedModelUsage(
-					targetLayoutLayoutClassedModelUsages,
-					sourceLayoutLayoutClassedModelUsage)) {
-
-				_layoutClassedModelUsageLocalService.addLayoutClassedModelUsage(
-					sourceLayoutLayoutClassedModelUsage.getGroupId(),
-					sourceLayoutLayoutClassedModelUsage.getClassNameId(),
-					sourceLayoutLayoutClassedModelUsage.getClassPK(),
-					sourceLayoutLayoutClassedModelUsage.getContainerKey(),
-					sourceLayoutLayoutClassedModelUsage.getContainerType(),
-					targetLayout.getPlid(), serviceContext);
+				continue;
 			}
+
+			JSONObject dataJSONObject = _processDataJSONObject(
+				LayoutStructure.of(data), targetLayout, fragmentEntryLinksMap,
+				entry.getValue());
+
+			_layoutPageTemplateStructureLocalService.
+				updateLayoutPageTemplateStructureData(
+					targetLayout.getGroupId(), targetLayout.getPlid(),
+					entry.getValue(), dataJSONObject.toString());
 		}
 	}
 
-	private void _copyLayoutPageTemplateStructureExperience(
-			LayoutPageTemplateStructure layoutPageTemplateStructure,
-			long segmentsExperienceId, Layout targetLayout,
-			Map<Long, FragmentEntryLink> fragmentEntryLinkMap,
-			long targetSegmentsExperienceId, ServiceContext serviceContext)
+	private void _copyLayoutPageTemplateStructureFromSegmentsExperience(
+			Layout sourceLayout, long sourceSegmentsExperienceId,
+			Layout targetLayout, long targetSegmentsExperienceId)
 		throws Exception {
 
-		String data = layoutPageTemplateStructure.getData(segmentsExperienceId);
+		LayoutPageTemplateStructure layoutPageTemplateStructure =
+			_layoutPageTemplateStructureLocalService.
+				fetchLayoutPageTemplateStructure(
+					sourceLayout.getGroupId(), sourceLayout.getPlid());
+
+		String data = layoutPageTemplateStructure.getData(
+			sourceSegmentsExperienceId);
 
 		if (Validator.isNull(data)) {
 			return;
 		}
 
+		List<FragmentEntryLink> fragmentEntryLinks =
+			_fragmentEntryLinkLocalService.
+				getFragmentEntryLinksBySegmentsExperienceId(
+					sourceLayout.getGroupId(), sourceSegmentsExperienceId,
+					sourceLayout.getPlid());
+
+		Stream<FragmentEntryLink> stream = fragmentEntryLinks.stream();
+
+		Map<Long, FragmentEntryLink> fragmentEntryLinksMap = stream.collect(
+			Collectors.toMap(
+				FragmentEntryLink::getFragmentEntryLinkId,
+				fragmentEntryLink -> fragmentEntryLink));
+
+		LayoutStructure layoutStructure = LayoutStructure.of(data);
+
+		for (DeletedLayoutStructureItem deletedLayoutStructureItem :
+				layoutStructure.getDeletedLayoutStructureItems()) {
+
+			layoutStructure.deleteLayoutStructureItem(
+				deletedLayoutStructureItem.getItemId());
+		}
+
 		JSONObject dataJSONObject = _processDataJSONObject(
-			data, targetLayout, fragmentEntryLinkMap,
-			targetSegmentsExperienceId, serviceContext);
+			layoutStructure, targetLayout, fragmentEntryLinksMap,
+			targetSegmentsExperienceId);
 
 		_layoutPageTemplateStructureLocalService.
 			updateLayoutPageTemplateStructureData(
@@ -270,158 +419,179 @@ public class LayoutCopyHelperImpl implements LayoutCopyHelper {
 				targetSegmentsExperienceId, dataJSONObject.toString());
 	}
 
-	private void _copyPortletPermissions(
-			Layout sourceLayout, Layout targetLayout)
+	private void _copyLayoutSEOEntry(Layout sourceLayout, Layout targetLayout)
 		throws Exception {
 
-		if (Objects.equals(
-				sourceLayout.getType(), LayoutConstants.TYPE_PORTLET)) {
+		if (sourceLayout.isDraftLayout() || targetLayout.isDraftLayout()) {
+			return;
+		}
 
-			_sites.copyPortletPermissions(targetLayout, sourceLayout);
+		LayoutSEOEntry layoutSEOEntry =
+			_layoutSEOEntryLocalService.fetchLayoutSEOEntry(
+				sourceLayout.getGroupId(), sourceLayout.isPrivateLayout(),
+				sourceLayout.getLayoutId());
+
+		if (layoutSEOEntry == null) {
+			LayoutSEOEntry targetLayoutSEOEntry =
+				_layoutSEOEntryLocalService.fetchLayoutSEOEntry(
+					targetLayout.getGroupId(), targetLayout.isPrivateLayout(),
+					targetLayout.getLayoutId());
+
+			if (targetLayoutSEOEntry != null) {
+				_layoutSEOEntryLocalService.deleteLayoutSEOEntry(
+					targetLayout.getGroupId(), targetLayout.isPrivateLayout(),
+					targetLayout.getLayoutId());
+			}
 
 			return;
 		}
 
-		if (!(sourceLayout.isTypeAssetDisplay() ||
-			  sourceLayout.isTypeContent())) {
+		ServiceContext serviceContext =
+			ServiceContextThreadLocal.getServiceContext();
 
-			return;
-		}
+		serviceContext.setAttribute(
+			"layout.instanceable.allowed", Boolean.TRUE);
 
-		_deletePortletPermissions(targetLayout);
+		_layoutSEOEntryLocalService.copyLayoutSEOEntry(
+			targetLayout.getUserId(), targetLayout.getGroupId(),
+			targetLayout.isPrivateLayout(), targetLayout.getLayoutId(),
+			layoutSEOEntry.isCanonicalURLEnabled(),
+			layoutSEOEntry.getCanonicalURLMap(),
+			layoutSEOEntry.getDDMStorageId(),
+			layoutSEOEntry.isOpenGraphDescriptionEnabled(),
+			layoutSEOEntry.getOpenGraphDescriptionMap(),
+			layoutSEOEntry.getOpenGraphImageAltMap(),
+			layoutSEOEntry.getOpenGraphImageFileEntryId(),
+			layoutSEOEntry.isOpenGraphTitleEnabled(),
+			layoutSEOEntry.getOpenGraphTitleMap(), serviceContext);
+	}
 
-		List<FragmentEntryLink> fragmentEntryLinks =
-			_fragmentEntryLinkLocalService.getFragmentEntryLinksByPlid(
-				sourceLayout.getGroupId(), sourceLayout.getPlid());
+	private void _copyPortletPermissions(
+			List<String> portletIds, Layout sourceLayout, Layout targetLayout)
+		throws Exception {
 
-		for (FragmentEntryLink fragmentEntryLink : fragmentEntryLinks) {
-			List<String> portletIds =
-				_portletRegistry.getFragmentEntryLinkPortletIds(
-					fragmentEntryLink);
+		for (String portletId : portletIds) {
+			String resourceName = PortletIdCodec.decodePortletName(portletId);
+			String sourceResourcePrimKey = PortletPermissionUtil.getPrimaryKey(
+				sourceLayout.getPlid(), portletId);
+			List<String> actionIds =
+				ResourceActionsUtil.getPortletResourceActions(resourceName);
 
-			for (String portletId : portletIds) {
-				Group targetGroup = targetLayout.getGroup();
-				String resourceName = PortletIdCodec.decodePortletName(
-					portletId);
-				String sourceResourcePrimKey =
-					PortletPermissionUtil.getPrimaryKey(
-						sourceLayout.getPlid(), portletId);
-				String targetResourcePrimKey =
-					PortletPermissionUtil.getPrimaryKey(
-						targetLayout.getPlid(), portletId);
-				List<String> actionIds =
-					ResourceActionsUtil.getPortletResourceActions(resourceName);
-
-				List<Role> roles = _roleLocalService.getGroupRelatedRoles(
-					targetLayout.getGroupId());
-
-				for (Role role : roles) {
-					String roleName = role.getName();
-
-					if (roleName.equals(RoleConstants.ADMINISTRATOR) ||
-						(!targetGroup.isLayoutSetPrototype() &&
-						 targetLayout.isPrivateLayout() &&
-						 roleName.equals(RoleConstants.GUEST))) {
-
-						continue;
-					}
-
-					List<String> actions =
-						_resourcePermissionLocalService.
-							getAvailableResourcePermissionActionIds(
-								targetLayout.getCompanyId(), resourceName,
-								ResourceConstants.SCOPE_INDIVIDUAL,
-								sourceResourcePrimKey, role.getRoleId(),
-								actionIds);
-
-					_resourcePermissionLocalService.setResourcePermissions(
+			Map<Long, Set<String>> sourceRoleIdsToActionIds =
+				_resourcePermissionLocalService.
+					getAvailableResourcePermissionActionIds(
 						targetLayout.getCompanyId(), resourceName,
 						ResourceConstants.SCOPE_INDIVIDUAL,
-						targetResourcePrimKey, role.getRoleId(),
-						actions.toArray(new String[0]));
+						sourceResourcePrimKey, actionIds);
+
+			if (sourceRoleIdsToActionIds.isEmpty()) {
+				continue;
+			}
+
+			Group targetGroup = targetLayout.getGroup();
+
+			Set<Long> roleIds = new HashSet<>();
+
+			for (Role role :
+					_roleLocalService.getGroupRelatedRoles(
+						targetLayout.getGroupId())) {
+
+				String roleName = role.getName();
+
+				if (roleName.equals(RoleConstants.ADMINISTRATOR) ||
+					(!targetGroup.isLayoutSetPrototype() &&
+					 targetLayout.isPrivateLayout() &&
+					 roleName.equals(RoleConstants.GUEST))) {
+
+					continue;
+				}
+
+				roleIds.add(role.getRoleId());
+			}
+
+			Map<Long, String[]> targetRoleIdsToActionIds = new HashMap<>();
+
+			for (Map.Entry<Long, Set<String>> entry :
+					sourceRoleIdsToActionIds.entrySet()) {
+
+				Long roleId = entry.getKey();
+
+				if (roleIds.contains(roleId)) {
+					Set<String> sourceActionIds = entry.getValue();
+
+					targetRoleIdsToActionIds.put(
+						roleId, sourceActionIds.toArray(new String[0]));
 				}
 			}
+
+			String targetResourcePrimKey = PortletPermissionUtil.getPrimaryKey(
+				targetLayout.getPlid(), portletId);
+
+			_resourcePermissionLocalService.setResourcePermissions(
+				targetLayout.getCompanyId(), resourceName,
+				ResourceConstants.SCOPE_INDIVIDUAL, targetResourcePrimKey,
+				targetRoleIdsToActionIds);
 		}
 	}
 
 	private void _copyPortletPreferences(
-			Layout sourceLayout, Layout targetLayout)
-		throws Exception {
+		List<String> portletIds, Layout sourceLayout, Layout targetLayout) {
 
-		List<PortletPreferences> portletPreferencesList =
-			_portletPreferencesLocalService.getPortletPreferences(
-				PortletKeys.PREFS_OWNER_ID_DEFAULT,
-				PortletKeys.PREFS_OWNER_TYPE_LAYOUT, sourceLayout.getPlid());
+		boolean stagingAdvicesThreadLocalEnabled =
+			StagingAdvicesThreadLocal.isEnabled();
 
-		List<PortletPreferences> targetPortletPreferencesList =
-			_portletPreferencesLocalService.getPortletPreferences(
-				PortletKeys.PREFS_OWNER_ID_DEFAULT,
-				PortletKeys.PREFS_OWNER_TYPE_LAYOUT, targetLayout.getPlid());
+		try {
+			StagingAdvicesThreadLocal.setEnabled(false);
 
-		Stream<PortletPreferences> targetPortletPreferencesStream =
-			targetPortletPreferencesList.stream();
-
-		List<String> targetPortletIds = targetPortletPreferencesStream.map(
-			PortletPreferences::getPortletId
-		).collect(
-			Collectors.toList()
-		);
-
-		for (PortletPreferences portletPreferences : portletPreferencesList) {
-			Portlet portlet = _portletLocalService.getPortletById(
-				portletPreferences.getPortletId());
-
-			if ((portlet == null) || portlet.isUndeployedPortlet()) {
-				continue;
-			}
-
-			targetPortletIds.remove(portletPreferences.getPortletId());
-
-			javax.portlet.PortletPreferences jxPortletPreferences =
-				_portletPreferenceValueLocalService.getPreferences(
-					portletPreferences);
-
-			PortletPreferences targetPortletPreferences =
-				_portletPreferencesLocalService.fetchPortletPreferences(
-					PortletKeys.PREFS_OWNER_ID_DEFAULT,
-					PortletKeys.PREFS_OWNER_TYPE_LAYOUT, targetLayout.getPlid(),
-					portletPreferences.getPortletId());
-
-			if (targetPortletPreferences != null) {
-				_portletPreferencesLocalService.updatePreferences(
-					targetPortletPreferences.getOwnerId(),
-					targetPortletPreferences.getOwnerType(),
-					targetPortletPreferences.getPlid(),
-					targetPortletPreferences.getPortletId(),
-					jxPortletPreferences);
-			}
-			else {
-				_portletPreferencesLocalService.addPortletPreferences(
-					targetLayout.getCompanyId(),
-					PortletKeys.PREFS_OWNER_ID_DEFAULT,
-					PortletKeys.PREFS_OWNER_TYPE_LAYOUT, targetLayout.getPlid(),
-					portletPreferences.getPortletId(),
-					_portletLocalService.getPortletById(
-						portletPreferences.getPortletId()),
-					PortletPreferencesFactoryUtil.toXML(jxPortletPreferences));
-			}
-		}
-
-		for (String portletId : targetPortletIds) {
-			try {
-				_portletPreferencesLocalService.deletePortletPreferences(
-					PortletKeys.PREFS_OWNER_ID_DEFAULT,
-					PortletKeys.PREFS_OWNER_TYPE_LAYOUT, targetLayout.getPlid(),
+			for (String portletId : portletIds) {
+				Portlet portlet = _portletLocalService.getPortletById(
 					portletId);
-			}
-			catch (Exception exception) {
-				if (_log.isDebugEnabled()) {
-					_log.debug(
-						"Unable to delete portlet preferences for portlet " +
-							portletId,
-						exception);
+
+				if ((portlet == null) || portlet.isUndeployedPortlet()) {
+					continue;
+				}
+
+				PortletPreferencesIds portletPreferencesIds =
+					_portletPreferencesFactory.getPortletPreferencesIds(
+						sourceLayout.getCompanyId(), sourceLayout.getGroupId(),
+						0, sourceLayout.getPlid(), portletId);
+
+				javax.portlet.PortletPreferences jxPortletPreferences =
+					_portletPreferencesLocalService.fetchPreferences(
+						portletPreferencesIds);
+
+				if (jxPortletPreferences == null) {
+					continue;
+				}
+
+				PortletPreferences targetPortletPreferences =
+					_portletPreferencesLocalService.fetchPortletPreferences(
+						portletPreferencesIds.getOwnerId(),
+						portletPreferencesIds.getOwnerType(),
+						targetLayout.getPlid(), portletId);
+
+				if (targetPortletPreferences != null) {
+					_portletPreferencesLocalService.updatePreferences(
+						targetPortletPreferences.getOwnerId(),
+						targetPortletPreferences.getOwnerType(),
+						targetPortletPreferences.getPlid(),
+						targetPortletPreferences.getPortletId(),
+						jxPortletPreferences);
+				}
+				else {
+					_portletPreferencesLocalService.addPortletPreferences(
+						targetLayout.getCompanyId(),
+						portletPreferencesIds.getOwnerId(),
+						portletPreferencesIds.getOwnerType(),
+						targetLayout.getPlid(), portletId, portlet,
+						PortletPreferencesFactoryUtil.toXML(
+							jxPortletPreferences));
 				}
 			}
+		}
+		finally {
+			StagingAdvicesThreadLocal.setEnabled(
+				stagingAdvicesThreadLocalEnabled);
 		}
 	}
 
@@ -447,68 +617,94 @@ public class LayoutCopyHelperImpl implements LayoutCopyHelper {
 		}
 	}
 
-	private void _deletePortletPermissions(Layout layout) throws Exception {
-		List<FragmentEntryLink> fragmentEntryLinks =
-			_fragmentEntryLinkLocalService.getFragmentEntryLinksByPlid(
-				layout.getGroupId(), layout.getPlid());
+	private void _deletePortletPermissions(
+			Layout layout, long[] segmentsExperiencesIds)
+		throws Exception {
 
-		for (FragmentEntryLink fragmentEntryLink : fragmentEntryLinks) {
-			List<String> portletIds =
-				_portletRegistry.getFragmentEntryLinkPortletIds(
-					fragmentEntryLink);
+		List<String> portletIds = _getLayoutPortletIds(
+			layout, segmentsExperiencesIds);
 
-			for (String portletId : portletIds) {
-				String resourceName = PortletIdCodec.decodePortletName(
-					portletId);
+		for (String portletId : portletIds) {
+			String resourceName = PortletIdCodec.decodePortletName(portletId);
 
-				String resourcePrimKey = PortletPermissionUtil.getPrimaryKey(
-					layout.getPlid(), portletId);
+			String resourcePrimKey = PortletPermissionUtil.getPrimaryKey(
+				layout.getPlid(), portletId);
 
-				_resourcePermissionLocalService.deleteResourcePermissions(
-					layout.getCompanyId(), resourceName,
-					ResourceConstants.SCOPE_INDIVIDUAL, resourcePrimKey);
-			}
+			_resourcePermissionLocalService.deleteResourcePermissions(
+				layout.getCompanyId(), resourceName,
+				ResourceConstants.SCOPE_INDIVIDUAL, resourcePrimKey);
 		}
 	}
 
+	private List<String> _getLayoutPortletIds(
+		Layout layout, long[] segmentsExperiencesIds) {
+
+		List<String> layoutPortletIds = new ArrayList<>();
+
+		List<FragmentEntryLink> fragmentEntryLinks =
+			_fragmentEntryLinkLocalService.
+				getFragmentEntryLinksBySegmentsExperienceId(
+					layout.getGroupId(), segmentsExperiencesIds,
+					layout.getPlid());
+
+		for (FragmentEntryLink fragmentEntryLink : fragmentEntryLinks) {
+			layoutPortletIds.addAll(
+				_portletRegistry.getFragmentEntryLinkPortletIds(
+					fragmentEntryLink));
+		}
+
+		return layoutPortletIds;
+	}
+
 	private Map<Long, Long> _getSegmentsExperienceIds(
-		Layout sourceLayout, Layout targetLayout,
-		ServiceContext serviceContext) {
+		long[] segmentsExperiencesIds, Layout sourceLayout,
+		Layout targetLayout) {
 
-		Map<Long, Long> segmentsExperienceIds = new HashMap<>();
+		Map<Long, Long> segmentsExperienceIdsMap = new HashMap<>();
 
-		List<SegmentsExperience> segmentsExperiences =
-			_segmentsExperienceLocalService.getSegmentsExperiences(
-				sourceLayout.getGroupId(), _portal.getClassNameId(Layout.class),
-				sourceLayout.getPlid());
+		if (sourceLayout.isDraftLayout() || targetLayout.isDraftLayout()) {
+			for (long segmentsExperienceId : segmentsExperiencesIds) {
+				SegmentsExperience segmentsExperience =
+					_segmentsExperienceLocalService.fetchSegmentsExperience(
+						segmentsExperienceId);
 
-		for (SegmentsExperience segmentsExperience : segmentsExperiences) {
-			if (_isDraft(sourceLayout) &&
-				(sourceLayout.getClassPK() == targetLayout.getPlid())) {
+				if (Objects.equals(
+						segmentsExperience.getSegmentsExperienceKey(),
+						SegmentsExperienceConstants.KEY_DEFAULT)) {
 
-				segmentsExperienceIds.put(
-					segmentsExperience.getSegmentsExperienceId(),
-					segmentsExperience.getSegmentsExperienceId());
+					segmentsExperienceIdsMap.put(
+						segmentsExperience.getSegmentsExperienceId(),
+						_segmentsExperienceLocalService.
+							fetchDefaultSegmentsExperienceId(
+								targetLayout.getPlid()));
 
-				continue;
+					continue;
+				}
+
+				segmentsExperienceIdsMap.put(
+					segmentsExperienceId, segmentsExperienceId);
 			}
 
-			long plid = targetLayout.getPlid();
+			return segmentsExperienceIdsMap;
+		}
 
-			if (_isDraft(targetLayout)) {
-				plid = targetLayout.getClassPK();
-			}
+		ServiceContext serviceContext =
+			ServiceContextThreadLocal.getServiceContext();
 
-			SegmentsExperience existingSegmentsExperience =
+		for (long segmentsExperienceId : segmentsExperiencesIds) {
+			SegmentsExperience segmentsExperience =
 				_segmentsExperienceLocalService.fetchSegmentsExperience(
-					segmentsExperience.getGroupId(),
-					_portal.getClassNameId(Layout.class), plid,
-					segmentsExperience.getPriority());
+					segmentsExperienceId);
 
-			if (existingSegmentsExperience != null) {
-				segmentsExperienceIds.put(
+			if (Objects.equals(
+					segmentsExperience.getSegmentsExperienceKey(),
+					SegmentsExperienceConstants.KEY_DEFAULT)) {
+
+				segmentsExperienceIdsMap.put(
 					segmentsExperience.getSegmentsExperienceId(),
-					existingSegmentsExperience.getSegmentsExperienceId());
+					_segmentsExperienceLocalService.
+						fetchDefaultSegmentsExperienceId(
+							targetLayout.getPlid()));
 
 				continue;
 			}
@@ -529,21 +725,17 @@ public class LayoutCopyHelperImpl implements LayoutCopyHelper {
 				String.valueOf(_counterLocalService.increment()));
 			newSegmentsExperience.setClassNameId(
 				_portal.getClassNameId(Layout.class));
-			newSegmentsExperience.setClassPK(plid);
+			newSegmentsExperience.setClassPK(targetLayout.getPlid());
 
 			_segmentsExperienceLocalService.addSegmentsExperience(
 				newSegmentsExperience);
 
-			segmentsExperienceIds.put(
+			segmentsExperienceIdsMap.put(
 				segmentsExperience.getSegmentsExperienceId(),
 				newSegmentsExperience.getSegmentsExperienceId());
 		}
 
-		segmentsExperienceIds.put(
-			SegmentsExperienceConstants.ID_DEFAULT,
-			SegmentsExperienceConstants.ID_DEFAULT);
-
-		return segmentsExperienceIds;
+		return segmentsExperienceIdsMap;
 	}
 
 	private boolean _hasLayoutClassedModelUsage(
@@ -570,27 +762,14 @@ public class LayoutCopyHelperImpl implements LayoutCopyHelper {
 		return false;
 	}
 
-	private boolean _isDraft(Layout layout) {
-		if (layout.getClassPK() <= 0) {
-			return false;
-		}
-
-		if (layout.getClassNameId() != _portal.getClassNameId(
-				Layout.class.getName())) {
-
-			return false;
-		}
-
-		return true;
-	}
-
 	private JSONObject _processDataJSONObject(
-			String data, Layout targetLayout,
-			Map<Long, FragmentEntryLink> fragmentEntryLinkMap,
-			long targetSegmentsExperienceId, ServiceContext serviceContext)
+			LayoutStructure layoutStructure, Layout targetLayout,
+			Map<Long, FragmentEntryLink> fragmentEntryLinksMap,
+			long targetSegmentsExperienceId)
 		throws Exception {
 
-		LayoutStructure layoutStructure = LayoutStructure.of(data);
+		ServiceContext serviceContext =
+			ServiceContextThreadLocal.getServiceContext();
 
 		for (LayoutStructureItem layoutStructureItem :
 				layoutStructure.getLayoutStructureItems()) {
@@ -605,7 +784,7 @@ public class LayoutCopyHelperImpl implements LayoutCopyHelper {
 				fragmentStyledLayoutStructureItem =
 					(FragmentStyledLayoutStructureItem)layoutStructureItem;
 
-			FragmentEntryLink fragmentEntryLink = fragmentEntryLinkMap.get(
+			FragmentEntryLink fragmentEntryLink = fragmentEntryLinksMap.get(
 				fragmentStyledLayoutStructureItem.getFragmentEntryLinkId());
 
 			if (fragmentEntryLink == null) {
@@ -624,6 +803,8 @@ public class LayoutCopyHelperImpl implements LayoutCopyHelper {
 				serviceContext.getCreateDate(new Date()));
 			newFragmentEntryLink.setModifiedDate(
 				serviceContext.getModifiedDate(new Date()));
+			newFragmentEntryLink.setOriginalFragmentEntryLinkId(
+				fragmentEntryLink.getFragmentEntryLinkId());
 			newFragmentEntryLink.setSegmentsExperienceId(
 				targetSegmentsExperienceId);
 			newFragmentEntryLink.setClassNameId(
@@ -665,6 +846,10 @@ public class LayoutCopyHelperImpl implements LayoutCopyHelper {
 	private AssetTagLocalService _assetTagLocalService;
 
 	@Reference
+	private ClientExtensionEntryRelLocalService
+		_clientExtensionEntryRelLocalService;
+
+	@Reference
 	private CommentManager _commentManager;
 
 	@Reference
@@ -697,6 +882,9 @@ public class LayoutCopyHelperImpl implements LayoutCopyHelper {
 	private PortletLocalService _portletLocalService;
 
 	@Reference
+	private PortletPreferencesFactory _portletPreferencesFactory;
+
+	@Reference
 	private PortletPreferencesLocalService _portletPreferencesLocalService;
 
 	@Reference
@@ -726,55 +914,45 @@ public class LayoutCopyHelperImpl implements LayoutCopyHelper {
 				ServiceContextThreadLocal.getServiceContext();
 
 			if (serviceContext == null) {
-				serviceContext = new ServiceContext();
-
-				ServiceContextThreadLocal.pushServiceContext(serviceContext);
+				ServiceContextThreadLocal.pushServiceContext(
+					new ServiceContext());
 			}
 
+			if (Objects.equals(
+					_sourceLayout.getType(), LayoutConstants.TYPE_PORTLET)) {
+
+				_sites.copyPortletPermissions(_targetLayout, _sourceLayout);
+			}
+			else {
+				_deletePortletPermissions(
+					_targetLayout, _targetSegmentsExperiencesIds);
+
+				// LPS-108378 Copy structure before permissions and preferences
+
+				_consumer.accept(_targetLayout);
+
+				List<String> portletIds = _getLayoutPortletIds(
+					_sourceLayout, _sourceSegmentsExperiencesIds);
+
+				_copyPortletPermissions(
+					portletIds, _sourceLayout, _targetLayout);
+
+				_copyPortletPreferences(
+					portletIds, _sourceLayout, _targetLayout);
+			}
+
+			// Copy classedModelUsages after copying the structure
+
+			_copyLayoutClassedModelUsages(_sourceLayout, _targetLayout);
+
 			_sites.copyExpandoBridgeAttributes(_sourceLayout, _targetLayout);
-			_sites.copyLookAndFeel(_targetLayout, _sourceLayout);
 			_sites.copyPortletSetups(_sourceLayout, _targetLayout);
 
 			_copyAssetCategoryIdsAndAssetTagNames(_sourceLayout, _targetLayout);
 
-			// LPS-108378 Copy structure before permissions and preferences
+			_copyLayoutSEOEntry(_sourceLayout, _targetLayout);
 
-			_copyLayoutPageTemplateStructure(_sourceLayout, _targetLayout);
-
-			_copyPortletPermissions(_sourceLayout, _targetLayout);
-
-			_copyPortletPreferences(_sourceLayout, _targetLayout);
-
-			_layoutLocalService.updateMasterLayoutPlid(
-				_targetLayout.getGroupId(), _targetLayout.isPrivateLayout(),
-				_targetLayout.getLayoutId(),
-				_sourceLayout.getMasterLayoutPlid());
-
-			_layoutLocalService.updateStyleBookEntryId(
-				_targetLayout.getGroupId(), _targetLayout.isPrivateLayout(),
-				_targetLayout.getLayoutId(),
-				_sourceLayout.getStyleBookEntryId());
-
-			UnicodeProperties unicodeProperties = new UnicodeProperties();
-
-			unicodeProperties.load(_sourceLayout.getTypeSettings());
-
-			if ((_sourceLayout.getClassNameId() == _portal.getClassNameId(
-					Layout.class)) &&
-				(_targetLayout.getPlid() == _sourceLayout.getClassPK())) {
-
-				unicodeProperties.put("published", Boolean.TRUE.toString());
-
-				_layoutLocalService.updateLayout(
-					_sourceLayout.getGroupId(), _sourceLayout.isPrivateLayout(),
-					_sourceLayout.getLayoutId(), unicodeProperties.toString());
-			}
-
-			_layoutLocalService.updateLayout(
-				_targetLayout.getGroupId(), _targetLayout.isPrivateLayout(),
-				_targetLayout.getLayoutId(), unicodeProperties.toString());
-
-			_targetLayout.setType(_sourceLayout.getType());
+			_copyLayoutClientExtensions(_sourceLayout, _targetLayout);
 
 			Image image = _imageLocalService.getImage(
 				_sourceLayout.getIconImageId());
@@ -785,54 +963,59 @@ public class LayoutCopyHelperImpl implements LayoutCopyHelper {
 				imageBytes = image.getTextObj();
 			}
 
-			serviceContext.setAttribute(
-				"layout.instanceable.allowed", Boolean.TRUE);
-
-			LayoutSEOEntry layoutSEOEntry =
-				_layoutSEOEntryLocalService.fetchLayoutSEOEntry(
-					_sourceLayout.getGroupId(), _sourceLayout.isPrivateLayout(),
-					_sourceLayout.getLayoutId());
-
-			if (layoutSEOEntry == null) {
-				LayoutSEOEntry targetLayoutSEOEntry =
-					_layoutSEOEntryLocalService.fetchLayoutSEOEntry(
-						_targetLayout.getGroupId(),
-						_targetLayout.isPrivateLayout(),
-						_targetLayout.getLayoutId());
-
-				if (targetLayoutSEOEntry != null) {
-					_layoutSEOEntryLocalService.deleteLayoutSEOEntry(
-						_targetLayout.getGroupId(),
-						_targetLayout.isPrivateLayout(),
-						_targetLayout.getLayoutId());
-				}
-			}
-			else {
-				_layoutSEOEntryLocalService.updateLayoutSEOEntry(
-					_targetLayout.getUserId(), _targetLayout.getGroupId(),
-					_targetLayout.isPrivateLayout(),
-					_targetLayout.getLayoutId(),
-					layoutSEOEntry.isCanonicalURLEnabled(),
-					layoutSEOEntry.getCanonicalURLMap(),
-					layoutSEOEntry.isOpenGraphDescriptionEnabled(),
-					layoutSEOEntry.getOpenGraphDescriptionMap(),
-					layoutSEOEntry.getOpenGraphImageAltMap(),
-					layoutSEOEntry.getOpenGraphImageFileEntryId(),
-					layoutSEOEntry.isOpenGraphTitleEnabled(),
-					layoutSEOEntry.getOpenGraphTitleMap(), serviceContext);
-			}
-
-			return _layoutLocalService.updateIconImage(
-				_targetLayout.getPlid(), imageBytes);
+			return _layoutLocalService.updateLayout(
+				_targetLayout.getGroupId(), _targetLayout.isPrivateLayout(),
+				_targetLayout.getLayoutId(), _sourceLayout.getTypeSettings(),
+				imageBytes, _sourceLayout.getThemeId(),
+				_sourceLayout.getColorSchemeId(),
+				_sourceLayout.getStyleBookEntryId(), _sourceLayout.getCss(),
+				_sourceLayout.getFaviconFileEntryId(),
+				_sourceLayout.getMasterLayoutPlid());
 		}
 
-		private CopyLayoutCallable(Layout sourceLayout, Layout targetLayout) {
+		private CopyLayoutCallable(
+			Consumer<Layout> consumer, Layout sourceLayout,
+			long[] sourceSegmentsExperiencesIds, Layout targetLayout,
+			long[] targetSegmentsExperiencesIds) {
+
+			_consumer = consumer;
 			_sourceLayout = sourceLayout;
+			_sourceSegmentsExperiencesIds = sourceSegmentsExperiencesIds;
 			_targetLayout = targetLayout;
+			_targetSegmentsExperiencesIds = targetSegmentsExperiencesIds;
 		}
 
+		private void _copyLayoutClientExtensions(
+				Layout sourceLayout, Layout targetLayout)
+			throws Exception {
+
+			long classNameId = _portal.getClassNameId(Layout.class);
+
+			_clientExtensionEntryRelLocalService.deleteClientExtensionEntryRels(
+				classNameId, targetLayout.getPlid());
+
+			List<ClientExtensionEntryRel> clientExtensionEntryRels =
+				_clientExtensionEntryRelLocalService.
+					getClientExtensionEntryRels(
+						classNameId, sourceLayout.getPlid());
+
+			for (ClientExtensionEntryRel clientExtensionEntryRel :
+					clientExtensionEntryRels) {
+
+				_clientExtensionEntryRelLocalService.addClientExtensionEntryRel(
+					targetLayout.getUserId(), classNameId,
+					targetLayout.getPlid(),
+					clientExtensionEntryRel.getCETExternalReferenceCode(),
+					clientExtensionEntryRel.getType(),
+					clientExtensionEntryRel.getTypeSettings());
+			}
+		}
+
+		private final Consumer<Layout> _consumer;
 		private final Layout _sourceLayout;
+		private final long[] _sourceSegmentsExperiencesIds;
 		private final Layout _targetLayout;
+		private final long[] _targetSegmentsExperiencesIds;
 
 	}
 

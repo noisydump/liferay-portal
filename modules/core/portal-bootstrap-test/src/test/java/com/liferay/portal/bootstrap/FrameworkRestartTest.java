@@ -14,13 +14,14 @@
 
 package com.liferay.portal.bootstrap;
 
+import com.liferay.petra.concurrent.NoticeableFuture;
+import com.liferay.petra.process.local.LocalProcessExecutor;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayOutputStream;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.NewEnv;
-import com.liferay.portal.kernel.test.rule.NewEnvTestRule;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.ServiceLoader;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,8 +39,10 @@ import java.security.CodeSource;
 import java.security.ProtectionDomain;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.ServiceLoader;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
@@ -47,6 +50,7 @@ import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -63,8 +67,14 @@ import org.osgi.framework.wiring.FrameworkWiring;
  */
 public class FrameworkRestartTest {
 
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
 	public static void doTestFrameworkRestart() throws Exception {
-		URL url = FrameworkRestartTest.class.getResource("security.policy");
+		URL url = FrameworkRestartTest.class.getResource(
+			"dependencies/security.policy");
 
 		System.setProperty("java.security.policy", url.getFile());
 
@@ -76,11 +86,15 @@ public class FrameworkRestartTest {
 			Constants.FRAMEWORK_STORAGE, frameworkStoragePath.toString()
 		).build();
 
-		List<FrameworkFactory> frameworkFactories = ServiceLoader.load(
-			FrameworkRestartTest.class.getClassLoader(),
-			FrameworkFactory.class);
+		ServiceLoader<FrameworkFactory> serviceLoader = ServiceLoader.load(
+			FrameworkFactory.class,
+			FrameworkRestartTest.class.getClassLoader());
 
-		FrameworkFactory frameworkFactory = frameworkFactories.get(0);
+		Iterator<FrameworkFactory> iterator = serviceLoader.iterator();
+
+		Assert.assertTrue(iterator.hasNext());
+
+		FrameworkFactory frameworkFactory = iterator.next();
 
 		Framework framework = frameworkFactory.newFramework(properties);
 
@@ -182,18 +196,28 @@ public class FrameworkRestartTest {
 		ClassLoader classLoader = new URLClassLoader(
 			_getURLS(
 				Assert.class, FrameworkFactory.class,
-				FrameworkRestartTest.class, UnsyncByteArrayOutputStream.class),
+				FrameworkRestartTest.class, LiferayUnitTestRule.class,
+				LocalProcessExecutor.class, NoticeableFuture.class,
+				UnsyncByteArrayOutputStream.class),
 			null);
 
 		Class<?> clazz = classLoader.loadClass(
 			FrameworkRestartTest.class.getName());
 
-		ReflectionTestUtil.invoke(
-			clazz, "doTestFrameworkRestart", new Class<?>[0]);
-	}
+		Thread currentThread = Thread.currentThread();
 
-	@Rule
-	public final NewEnvTestRule newEnvTestRule = NewEnvTestRule.INSTANCE;
+		ClassLoader contextClassLoader = currentThread.getContextClassLoader();
+
+		currentThread.setContextClassLoader(classLoader);
+
+		try {
+			ReflectionTestUtil.invoke(
+				clazz, "doTestFrameworkRestart", new Class<?>[0]);
+		}
+		finally {
+			currentThread.setContextClassLoader(contextClassLoader);
+		}
+	}
 
 	private static InputStream _createJAR(
 			String symbolicName, String version, String exportPackage,

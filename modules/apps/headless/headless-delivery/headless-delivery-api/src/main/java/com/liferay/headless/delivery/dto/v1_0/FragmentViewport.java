@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
@@ -46,9 +47,14 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @generated
  */
 @Generated("")
-@GraphQLName("FragmentViewport")
+@GraphQLName(
+	description = "Represents a fragment viewport.", value = "FragmentViewport"
+)
 @JsonFilter("Liferay.Vulcan")
-@Schema(requiredProperties = {"fragmentViewportStyle", "id"})
+@Schema(
+	description = "Represents a fragment viewport.",
+	requiredProperties = {"fragmentViewportStyle", "id"}
+)
 @XmlRootElement(name = "FragmentViewport")
 public class FragmentViewport implements Serializable {
 
@@ -56,7 +62,11 @@ public class FragmentViewport implements Serializable {
 		return ObjectMapperUtil.readValue(FragmentViewport.class, json);
 	}
 
-	@Schema
+	public static FragmentViewport unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(FragmentViewport.class, json);
+	}
+
+	@Schema(description = "The fragment's viewport style.")
 	@Valid
 	public FragmentViewportStyle getFragmentViewportStyle() {
 		return fragmentViewportStyle;
@@ -84,12 +94,12 @@ public class FragmentViewport implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The fragment's viewport style.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	@NotNull
 	protected FragmentViewportStyle fragmentViewportStyle;
 
-	@Schema
+	@Schema(description = "The fragment viewport's ID.")
 	public String getId() {
 		return id;
 	}
@@ -111,7 +121,7 @@ public class FragmentViewport implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The fragment viewport's ID.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	@NotEmpty
 	protected String id;
@@ -173,15 +183,16 @@ public class FragmentViewport implements Serializable {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.FragmentViewport",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
 	}
 
 	private static boolean _isArray(Object value) {
@@ -207,8 +218,8 @@ public class FragmentViewport implements Serializable {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -239,7 +250,7 @@ public class FragmentViewport implements Serializable {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -247,7 +258,7 @@ public class FragmentViewport implements Serializable {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -255,5 +266,10 @@ public class FragmentViewport implements Serializable {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

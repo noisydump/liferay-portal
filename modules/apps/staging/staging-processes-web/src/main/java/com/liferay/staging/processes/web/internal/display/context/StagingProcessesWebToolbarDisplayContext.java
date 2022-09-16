@@ -22,12 +22,15 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItemList;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.PortalPreferences;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
+import com.liferay.portal.kernel.portlet.SearchOrderByUtil;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -35,6 +38,7 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.staging.constants.StagingProcessesPortletKeys;
 
 import java.util.List;
+import java.util.Objects;
 
 import javax.portlet.PortletURL;
 
@@ -68,8 +72,7 @@ public class StagingProcessesWebToolbarDisplayContext {
 
 		return DropdownItemListBuilder.add(
 			dropdownItem -> {
-				dropdownItem.setHref(
-					"javascript:" + _portletNamespace + "deleteEntries();");
+				dropdownItem.putData("action", "deleteEntries");
 				dropdownItem.setLabel(
 					LanguageUtil.get(_httpServletRequest, "delete"));
 			}
@@ -101,13 +104,10 @@ public class StagingProcessesWebToolbarDisplayContext {
 							TYPE_PUBLISH_LAYOUT_LOCAL;
 				}
 
-				List<ExportImportConfiguration> exportImportConfigurations =
-					ExportImportConfigurationLocalServiceUtil.
-						getExportImportConfigurations(
-							stagingGroupId, configurationType);
-
 				for (ExportImportConfiguration exportImportConfiguration :
-						exportImportConfigurations) {
+						ExportImportConfigurationLocalServiceUtil.
+							getExportImportConfigurations(
+								stagingGroupId, configurationType)) {
 
 					addRestDropdownItem(
 						dropdownItem -> {
@@ -197,14 +197,34 @@ public class StagingProcessesWebToolbarDisplayContext {
 		).build();
 	}
 
+	public String getOrderByCol() {
+		if (Validator.isNotNull(_orderByCol)) {
+			return _orderByCol;
+		}
+
+		_orderByCol = SearchOrderByUtil.getOrderByCol(
+			_httpServletRequest, StagingProcessesPortletKeys.STAGING_PROCESSES,
+			StringPool.BLANK);
+
+		return _orderByCol;
+	}
+
 	public String getSortingOrder() {
-		return ParamUtil.getString(_httpServletRequest, "orderByType", "asc");
+		if (Validator.isNotNull(_orderByType)) {
+			return _orderByType;
+		}
+
+		_orderByType = SearchOrderByUtil.getOrderByType(
+			_httpServletRequest, StagingProcessesPortletKeys.STAGING_PROCESSES,
+			"asc");
+
+		return _orderByType;
 	}
 
 	public String getSortingURL() {
 		PortletURL sortingURL = _getStagingRenderURL();
 
-		if (getSortingOrder().equals("asc")) {
+		if (Objects.equals(getSortingOrder(), "asc")) {
 			sortingURL.setParameter("orderByType", "desc");
 		}
 		else {
@@ -248,11 +268,11 @@ public class StagingProcessesWebToolbarDisplayContext {
 	}
 
 	private PortletURL _getNavigationURL(String navigation) {
-		PortletURL url = _getStagingRenderURL();
-
-		url.setParameter("navigation", navigation);
-
-		return url;
+		return PortletURLBuilder.create(
+			_getStagingRenderURL()
+		).setNavigation(
+			navigation
+		).buildPortletURL();
 	}
 
 	private List<DropdownItem> _getOrderByDropDownItems() {
@@ -278,42 +298,39 @@ public class StagingProcessesWebToolbarDisplayContext {
 	}
 
 	private PortletURL _getOrderByURL(String orderByColumnName) {
-		PortletURL url = _getStagingRenderURL();
-
-		url.setParameter("orderByCol", orderByColumnName);
-
-		return url;
+		return PortletURLBuilder.create(
+			_getStagingRenderURL()
+		).setParameter(
+			"orderByCol", orderByColumnName
+		).buildPortletURL();
 	}
 
 	private PortletURL _getStagingRenderURL() {
-		PortletURL renderURL = _liferayPortletResponse.createRenderURL();
-
-		renderURL.setParameter(
-			"navigation",
-			ParamUtil.getString(_httpServletRequest, "navigation", "all"));
-		renderURL.setParameter(
-			"groupId",
-			String.valueOf(ParamUtil.getLong(_httpServletRequest, "groupId")));
-		renderURL.setParameter(
+		return PortletURLBuilder.createRenderURL(
+			_liferayPortletResponse
+		).setNavigation(
+			ParamUtil.getString(_httpServletRequest, "navigation", "all")
+		).setParameter(
+			"displayStyle", getDisplayStyle()
+		).setParameter(
+			"groupId", ParamUtil.getLong(_httpServletRequest, "groupId")
+		).setParameter(
+			"orderByCol", getOrderByCol()
+		).setParameter(
+			"orderByType", getSortingOrder()
+		).setParameter(
 			"privateLayout",
-			String.valueOf(
-				ParamUtil.getBoolean(_httpServletRequest, "privateLayout")));
-		renderURL.setParameter("displayStyle", getDisplayStyle());
-		renderURL.setParameter(
-			"orderByCol",
-			ParamUtil.getString(_httpServletRequest, "orderByCol"));
-		renderURL.setParameter(
-			"orderByType",
-			ParamUtil.getString(_httpServletRequest, "orderByType", "asc"));
-		renderURL.setParameter(
+			ParamUtil.getBoolean(_httpServletRequest, "privateLayout")
+		).setParameter(
 			"searchContainerId",
-			ParamUtil.getString(_httpServletRequest, "searchContainerId"));
-
-		return renderURL;
+			ParamUtil.getString(_httpServletRequest, "searchContainerId")
+		).buildPortletURL();
 	}
 
 	private final HttpServletRequest _httpServletRequest;
 	private final LiferayPortletResponse _liferayPortletResponse;
+	private String _orderByCol;
+	private String _orderByType;
 	private final PageContext _pageContext;
 	private final String _portletNamespace;
 

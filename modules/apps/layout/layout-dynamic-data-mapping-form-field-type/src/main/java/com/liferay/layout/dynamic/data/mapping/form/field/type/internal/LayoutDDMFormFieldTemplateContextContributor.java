@@ -23,13 +23,22 @@ import com.liferay.item.selector.criteria.UUIDItemSelectorReturnType;
 import com.liferay.layout.dynamic.data.mapping.form.field.type.constants.LayoutDDMFormFieldTypeConstants;
 import com.liferay.layout.item.selector.criterion.LayoutItemSelectorCriterion;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.json.JSONException;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
+import com.liferay.portal.kernel.service.LayoutLocalService;
+import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.Validator;
 
+import java.util.Locale;
 import java.util.Map;
-
-import javax.portlet.PortletURL;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -55,35 +64,45 @@ public class LayoutDDMFormFieldTemplateContextContributor
 		DDMFormField ddmFormField,
 		DDMFormFieldRenderingContext ddmFormFieldRenderingContext) {
 
-		LocalizedValue localizedValue =
-			(LocalizedValue)ddmFormField.getProperty("predefinedValue");
-
-		String predefinedValue = StringPool.BLANK;
-
-		if (localizedValue != null) {
-			predefinedValue = GetterUtil.getString(
-				localizedValue.getString(
-					ddmFormFieldRenderingContext.getLocale()));
-		}
-
 		return HashMapBuilder.<String, Object>put(
 			"itemSelectorURL",
-			getItemSelectorURL(
+			_getItemSelectorURL(
 				ddmFormFieldRenderingContext,
 				ddmFormFieldRenderingContext.getHttpServletRequest())
 		).put(
 			"portletNamespace",
 			ddmFormFieldRenderingContext.getPortletNamespace()
 		).put(
-			"predefinedValue", predefinedValue
+			"predefinedValue",
+			() -> {
+				LocalizedValue localizedValue =
+					(LocalizedValue)ddmFormField.getProperty("predefinedValue");
+
+				String predefinedValue = StringPool.BLANK;
+
+				if (localizedValue != null) {
+					predefinedValue = GetterUtil.getString(
+						localizedValue.getString(
+							ddmFormFieldRenderingContext.getLocale()));
+				}
+
+				return _getValue(
+					GetterUtil.getLong(
+						ddmFormFieldRenderingContext.getProperty("groupId")),
+					ddmFormFieldRenderingContext.getLocale(), predefinedValue);
+			}
 		).put(
 			"value",
-			GetterUtil.getString(
-				ddmFormFieldRenderingContext.getProperty("value"))
+			_getValue(
+				GetterUtil.getLong(
+					ddmFormFieldRenderingContext.getProperty("groupId")),
+				ddmFormFieldRenderingContext.getLocale(),
+				GetterUtil.getString(
+					ddmFormFieldRenderingContext.getProperty("value")))
 		).build();
 	}
 
-	protected String getItemSelectorURL(
+	private String _getItemSelectorURL(
 		DDMFormFieldRenderingContext ddmFormFieldRenderingContext,
 		HttpServletRequest httpServletRequest) {
 
@@ -94,21 +113,85 @@ public class LayoutDDMFormFieldTemplateContextContributor
 		LayoutItemSelectorCriterion layoutItemSelectorCriterion =
 			new LayoutItemSelectorCriterion();
 
+		layoutItemSelectorCriterion.setShowHiddenPages(true);
 		layoutItemSelectorCriterion.setShowPrivatePages(true);
 		layoutItemSelectorCriterion.setShowPublicPages(true);
 
 		layoutItemSelectorCriterion.setDesiredItemSelectorReturnTypes(
 			new UUIDItemSelectorReturnType());
 
-		PortletURL itemSelectorURL = _itemSelector.getItemSelectorURL(
-			RequestBackedPortletURLFactoryUtil.create(httpServletRequest),
-			ddmFormFieldRenderingContext.getPortletNamespace() + "selectLayout",
-			layoutItemSelectorCriterion);
-
-		return itemSelectorURL.toString();
+		return String.valueOf(
+			_itemSelector.getItemSelectorURL(
+				RequestBackedPortletURLFactoryUtil.create(httpServletRequest),
+				ddmFormFieldRenderingContext.getPortletNamespace() +
+					"selectLayout",
+				layoutItemSelectorCriterion));
 	}
+
+	private String _getValue(
+		long defaultGroupId, Locale defaultLocale, String value) {
+
+		if (Validator.isNull(value)) {
+			return StringPool.BLANK;
+		}
+
+		try {
+			JSONObject jsonObject = JSONFactoryUtil.createJSONObject(value);
+
+			ServiceContext serviceContext =
+				ServiceContextThreadLocal.getServiceContext();
+
+			long groupId = GetterUtil.getLong(
+				defaultGroupId, serviceContext.getScopeGroupId());
+
+			if (jsonObject.has("groupId")) {
+				groupId = jsonObject.getLong("groupId");
+			}
+
+			boolean privateLayout = jsonObject.getBoolean("privateLayout");
+			long layoutId = jsonObject.getLong("layoutId");
+
+			Layout layout = _layoutLocalService.fetchLayout(
+				groupId, privateLayout, layoutId);
+
+			if (layout == null) {
+				return StringPool.BLANK;
+			}
+
+			if (!jsonObject.has("groupId")) {
+				jsonObject.put("groupId", layout.getGroupId());
+			}
+
+			if (!jsonObject.has("id")) {
+				jsonObject.put("id", layout.getUuid());
+			}
+
+			if (!jsonObject.has("name")) {
+				jsonObject.put("name", layout.getName(defaultLocale));
+			}
+
+			if (!jsonObject.has("value")) {
+				jsonObject.put("value", layout.getFriendlyURL(defaultLocale));
+			}
+
+			return jsonObject.toString();
+		}
+		catch (JSONException jsonException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(jsonException);
+			}
+
+			return StringPool.BLANK;
+		}
+	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		LayoutDDMFormFieldTemplateContextContributor.class);
 
 	@Reference
 	private ItemSelector _itemSelector;
+
+	@Reference
+	private LayoutLocalService _layoutLocalService;
 
 }

@@ -150,7 +150,17 @@ public class AssetListEntryUsagePersistenceTest {
 
 		newAssetListEntryUsage.setClassPK(RandomTestUtil.nextLong());
 
+		newAssetListEntryUsage.setContainerKey(RandomTestUtil.randomString());
+
+		newAssetListEntryUsage.setContainerType(RandomTestUtil.nextLong());
+
+		newAssetListEntryUsage.setKey(RandomTestUtil.randomString());
+
+		newAssetListEntryUsage.setPlid(RandomTestUtil.nextLong());
+
 		newAssetListEntryUsage.setPortletId(RandomTestUtil.randomString());
+
+		newAssetListEntryUsage.setType(RandomTestUtil.nextInt());
 
 		newAssetListEntryUsage.setLastPublishDate(RandomTestUtil.nextDate());
 
@@ -201,8 +211,23 @@ public class AssetListEntryUsagePersistenceTest {
 			existingAssetListEntryUsage.getClassPK(),
 			newAssetListEntryUsage.getClassPK());
 		Assert.assertEquals(
+			existingAssetListEntryUsage.getContainerKey(),
+			newAssetListEntryUsage.getContainerKey());
+		Assert.assertEquals(
+			existingAssetListEntryUsage.getContainerType(),
+			newAssetListEntryUsage.getContainerType());
+		Assert.assertEquals(
+			existingAssetListEntryUsage.getKey(),
+			newAssetListEntryUsage.getKey());
+		Assert.assertEquals(
+			existingAssetListEntryUsage.getPlid(),
+			newAssetListEntryUsage.getPlid());
+		Assert.assertEquals(
 			existingAssetListEntryUsage.getPortletId(),
 			newAssetListEntryUsage.getPortletId());
+		Assert.assertEquals(
+			existingAssetListEntryUsage.getType(),
+			newAssetListEntryUsage.getType());
 		Assert.assertEquals(
 			Time.getShortTimestamp(
 				existingAssetListEntryUsage.getLastPublishDate()),
@@ -245,6 +270,13 @@ public class AssetListEntryUsagePersistenceTest {
 	}
 
 	@Test
+	public void testCountByPlid() throws Exception {
+		_persistence.countByPlid(RandomTestUtil.nextLong());
+
+		_persistence.countByPlid(0L);
+	}
+
+	@Test
 	public void testCountByA_C() throws Exception {
 		_persistence.countByA_C(
 			RandomTestUtil.nextLong(), RandomTestUtil.nextLong());
@@ -253,13 +285,46 @@ public class AssetListEntryUsagePersistenceTest {
 	}
 
 	@Test
-	public void testCountByC_C_P() throws Exception {
-		_persistence.countByC_C_P(
+	public void testCountByG_C_K() throws Exception {
+		_persistence.countByG_C_K(
 			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(), "");
 
-		_persistence.countByC_C_P(0L, 0L, "null");
+		_persistence.countByG_C_K(0L, 0L, "null");
 
-		_persistence.countByC_C_P(0L, 0L, (String)null);
+		_persistence.countByG_C_K(0L, 0L, (String)null);
+	}
+
+	@Test
+	public void testCountByCK_CT_P() throws Exception {
+		_persistence.countByCK_CT_P(
+			"", RandomTestUtil.nextLong(), RandomTestUtil.nextLong());
+
+		_persistence.countByCK_CT_P("null", 0L, 0L);
+
+		_persistence.countByCK_CT_P((String)null, 0L, 0L);
+	}
+
+	@Test
+	public void testCountByG_C_K_T() throws Exception {
+		_persistence.countByG_C_K_T(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(), "",
+			RandomTestUtil.nextInt());
+
+		_persistence.countByG_C_K_T(0L, 0L, "null", 0);
+
+		_persistence.countByG_C_K_T(0L, 0L, (String)null, 0);
+	}
+
+	@Test
+	public void testCountByG_C_CK_CT_K_P() throws Exception {
+		_persistence.countByG_C_CK_CT_K_P(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(), "",
+			RandomTestUtil.nextLong(), "", RandomTestUtil.nextLong());
+
+		_persistence.countByG_C_CK_CT_K_P(0L, 0L, "null", 0L, "null", 0L);
+
+		_persistence.countByG_C_CK_CT_K_P(
+			0L, 0L, (String)null, 0L, (String)null, 0L);
 	}
 
 	@Test
@@ -293,7 +358,9 @@ public class AssetListEntryUsagePersistenceTest {
 			"uuid", true, "assetListEntryUsageId", true, "groupId", true,
 			"companyId", true, "userId", true, "userName", true, "createDate",
 			true, "modifiedDate", true, "assetListEntryId", true, "classNameId",
-			true, "classPK", true, "portletId", true, "lastPublishDate", true);
+			true, "classPK", true, "containerKey", true, "containerType", true,
+			"key", true, "plid", true, "portletId", true, "type", true,
+			"lastPublishDate", true);
 	}
 
 	@Test
@@ -588,20 +655,35 @@ public class AssetListEntryUsagePersistenceTest {
 				new Class<?>[] {String.class}, "groupId"));
 
 		Assert.assertEquals(
+			Long.valueOf(assetListEntryUsage.getGroupId()),
+			ReflectionTestUtil.<Long>invoke(
+				assetListEntryUsage, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "groupId"));
+		Assert.assertEquals(
 			Long.valueOf(assetListEntryUsage.getClassNameId()),
 			ReflectionTestUtil.<Long>invoke(
 				assetListEntryUsage, "getColumnOriginalValue",
 				new Class<?>[] {String.class}, "classNameId"));
 		Assert.assertEquals(
-			Long.valueOf(assetListEntryUsage.getClassPK()),
-			ReflectionTestUtil.<Long>invoke(
-				assetListEntryUsage, "getColumnOriginalValue",
-				new Class<?>[] {String.class}, "classPK"));
-		Assert.assertEquals(
-			assetListEntryUsage.getPortletId(),
+			assetListEntryUsage.getContainerKey(),
 			ReflectionTestUtil.invoke(
 				assetListEntryUsage, "getColumnOriginalValue",
-				new Class<?>[] {String.class}, "portletId"));
+				new Class<?>[] {String.class}, "containerKey"));
+		Assert.assertEquals(
+			Long.valueOf(assetListEntryUsage.getContainerType()),
+			ReflectionTestUtil.<Long>invoke(
+				assetListEntryUsage, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "containerType"));
+		Assert.assertEquals(
+			assetListEntryUsage.getKey(),
+			ReflectionTestUtil.invoke(
+				assetListEntryUsage, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "key_"));
+		Assert.assertEquals(
+			Long.valueOf(assetListEntryUsage.getPlid()),
+			ReflectionTestUtil.<Long>invoke(
+				assetListEntryUsage, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "plid"));
 	}
 
 	protected AssetListEntryUsage addAssetListEntryUsage() throws Exception {
@@ -633,7 +715,17 @@ public class AssetListEntryUsagePersistenceTest {
 
 		assetListEntryUsage.setClassPK(RandomTestUtil.nextLong());
 
+		assetListEntryUsage.setContainerKey(RandomTestUtil.randomString());
+
+		assetListEntryUsage.setContainerType(RandomTestUtil.nextLong());
+
+		assetListEntryUsage.setKey(RandomTestUtil.randomString());
+
+		assetListEntryUsage.setPlid(RandomTestUtil.nextLong());
+
 		assetListEntryUsage.setPortletId(RandomTestUtil.randomString());
+
+		assetListEntryUsage.setType(RandomTestUtil.nextInt());
 
 		assetListEntryUsage.setLastPublishDate(RandomTestUtil.nextDate());
 

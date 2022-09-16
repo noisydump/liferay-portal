@@ -17,11 +17,10 @@
 <%@ include file="/html/taglib/init.jsp" %>
 
 <%
-String alertMessage = (String)request.getAttribute("liferay-ui:error:alertMessage");
 String alertIcon = (String)request.getAttribute("liferay-ui:error:alertIcon");
+String alertMessage = (String)request.getAttribute("liferay-ui:error:alertMessage");
 String alertStyle = (String)request.getAttribute("liferay-ui:error:alertStyle");
 String alertTitle = (String)request.getAttribute("liferay-ui:error:alertTitle");
-String rowBreak = (String)request.getAttribute("liferay-ui:error:rowBreak");
 %>
 
 <c:choose>
@@ -35,14 +34,14 @@ String rowBreak = (String)request.getAttribute("liferay-ui:error:rowBreak");
 
 			<span class="alert-indicator">
 				<svg aria-hidden="true" class="lexicon-icon lexicon-icon-<%= alertIcon %>">
-					<use xlink:href="<%= themeDisplay.getPathThemeImages() %>/clay/icons.svg#<%= alertIcon %>"></use>
+					<use xlink:href="<%= FrontendIconsUtil.getSpritemap(themeDisplay) %>#<%= alertIcon %>"></use>
 				</svg>
 			</span>
 
 			<strong class="lead"><%= alertTitle %></strong><%= alertMessage %>
 		</div>
 
-		<%= rowBreak %>
+		<%= (String)request.getAttribute("liferay-ui:error:rowBreak") %>
 	</c:when>
 	<c:otherwise>
 		<aui:script>

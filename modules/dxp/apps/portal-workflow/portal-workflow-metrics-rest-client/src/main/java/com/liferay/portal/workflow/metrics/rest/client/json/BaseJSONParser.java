@@ -289,10 +289,26 @@ public abstract class BaseJSONParser<T> {
 
 	private void _init(String json) {
 		_captureStartStack = new Stack<>();
-		_dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+		_dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXX");
 		_index = 0;
 		_json = json.trim();
 		_lastChar = 0;
+	}
+
+	private boolean _isCharEscaped(String string, int index) {
+		int backslashCount = 0;
+
+		while (((index - 1 - backslashCount) >= 0) &&
+			   (string.charAt(index - 1 - backslashCount) == '\\')) {
+
+			backslashCount++;
+		}
+
+		if ((backslashCount % 2) == 0) {
+			return false;
+		}
+
+		return true;
 	}
 
 	private boolean _isEmpty() {
@@ -343,6 +359,14 @@ public abstract class BaseJSONParser<T> {
 		return false;
 	}
 
+	private boolean _isLastCharPositive() {
+		if (_lastChar == '+') {
+			return true;
+		}
+
+		return false;
+	}
+
 	private boolean _isLastCharScientificNotation() {
 		if (_lastChar == 'E') {
 			return true;
@@ -377,7 +401,7 @@ public abstract class BaseJSONParser<T> {
 		else if (_lastChar == '"') {
 			return _readValueAsString();
 		}
-		else if (parseMaps && _lastChar == '{') {
+		else if (parseMaps && (_lastChar == '{')) {
 			try {
 				Class<? extends BaseJSONParser> clazz = getClass();
 
@@ -502,7 +526,7 @@ public abstract class BaseJSONParser<T> {
 
 		_setCaptureStart();
 
-		while ((_lastChar != '"') || (_json.charAt(_index - 2) == '\\')) {
+		while ((_lastChar != '"') || _isCharEscaped(_json, _index - 1)) {
 			_readNextChar();
 		}
 
@@ -568,7 +592,8 @@ public abstract class BaseJSONParser<T> {
 			_readNextChar();
 		}
 		while (_isLastCharDigit() || _isLastCharDecimalSeparator() ||
-			   _isLastCharNegative() || _isLastCharScientificNotation());
+			   _isLastCharNegative() || _isLastCharPositive() ||
+			   _isLastCharScientificNotation());
 
 		return _getCapturedSubstring();
 	}
@@ -586,8 +611,25 @@ public abstract class BaseJSONParser<T> {
 	}
 
 	private String _unescape(String string) {
-		for (String[] strings : JSON_ESCAPE_STRINGS) {
-			string = string.replace(strings[1], strings[0]);
+		for (int i = JSON_ESCAPE_STRINGS.length - 1; i >= 0; i--) {
+			String[] escapeStrings = JSON_ESCAPE_STRINGS[i];
+
+			int index = string.indexOf(escapeStrings[1]);
+
+			while (index != -1) {
+				if (!_isCharEscaped(string, index)) {
+					string =
+						string.substring(0, index) + escapeStrings[0] +
+							string.substring(index + escapeStrings[1].length());
+
+					index = string.indexOf(
+						escapeStrings[1], index + escapeStrings[0].length());
+				}
+				else {
+					index = string.indexOf(
+						escapeStrings[1], index + escapeStrings[1].length());
+				}
+			}
 		}
 
 		return string;

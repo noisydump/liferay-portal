@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
+ * Copyright (c) 2000-2021 Liferay, Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the Free
@@ -24,8 +24,8 @@ import org.mule.runtime.extension.api.error.MuleErrors;
  */
 public enum LiferayError implements ErrorTypeDefinition<LiferayError> {
 
-	BAD_REQUEST(MuleErrors.CONNECTIVITY, 400),
-	CONNECTION_TIMEOUT(MuleErrors.CONNECTIVITY), EXECUTION,
+	BAD_REQUEST(MuleErrors.CONNECTIVITY, 400), BATCH_EXPORT_FAILED,
+	BATCH_IMPORT_FAILED, CONNECTION_TIMEOUT(MuleErrors.CONNECTIVITY), EXECUTION,
 	INVALID_OAS_DOCUMENT(EXECUTION),
 	NOT_ACCEPTABLE(MuleErrors.CONNECTIVITY, 406),
 	NOT_ALLOWED(MuleErrors.CONNECTIVITY, 405),

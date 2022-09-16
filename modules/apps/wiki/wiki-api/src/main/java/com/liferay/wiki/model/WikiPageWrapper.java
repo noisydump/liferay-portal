@@ -53,6 +53,7 @@ public class WikiPageWrapper
 		attributes.put("userName", getUserName());
 		attributes.put("createDate", getCreateDate());
 		attributes.put("modifiedDate", getModifiedDate());
+		attributes.put("externalReferenceCode", getExternalReferenceCode());
 		attributes.put("nodeId", getNodeId());
 		attributes.put("title", getTitle());
 		attributes.put("version", getVersion());
@@ -132,6 +133,13 @@ public class WikiPageWrapper
 
 		if (modifiedDate != null) {
 			setModifiedDate(modifiedDate);
+		}
+
+		String externalReferenceCode = (String)attributes.get(
+			"externalReferenceCode");
+
+		if (externalReferenceCode != null) {
+			setExternalReferenceCode(externalReferenceCode);
 		}
 
 		Long nodeId = (Long)attributes.get("nodeId");
@@ -234,6 +242,11 @@ public class WikiPageWrapper
 	}
 
 	@Override
+	public WikiPage cloneWithOriginalValues() {
+		return wrap(model.cloneWithOriginalValues());
+	}
+
+	@Override
 	public WikiPage fetchParentPage() {
 		return model.fetchParentPage();
 	}
@@ -296,6 +309,16 @@ public class WikiPageWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return model.getAttachmentsFileEntriesCount(mimeTypes);
+	}
+
+	@Override
+	public com.liferay.portal.kernel.repository.model.FileEntry
+			getAttachmentsFileEntryByExternalReferenceCode(
+				long groupId, String externalReferenceCode)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return model.getAttachmentsFileEntryByExternalReferenceCode(
+			groupId, externalReferenceCode);
 	}
 
 	@Override
@@ -379,6 +402,16 @@ public class WikiPageWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return model.getDeletedAttachmentsFileEntriesCount();
+	}
+
+	/**
+	 * Returns the external reference code of this wiki page.
+	 *
+	 * @return the external reference code of this wiki page
+	 */
+	@Override
+	public String getExternalReferenceCode() {
+		return model.getExternalReferenceCode();
 	}
 
 	/**
@@ -643,18 +676,6 @@ public class WikiPageWrapper
 	}
 
 	/**
-	 * Returns the trash handler for this wiki page.
-	 *
-	 * @return the trash handler for this wiki page
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public com.liferay.portal.kernel.trash.TrashHandler getTrashHandler() {
-		return model.getTrashHandler();
-	}
-
-	/**
 	 * Returns the user ID of this wiki page.
 	 *
 	 * @return the user ID of this wiki page
@@ -902,6 +923,16 @@ public class WikiPageWrapper
 	@Override
 	public void setCreateDate(Date createDate) {
 		model.setCreateDate(createDate);
+	}
+
+	/**
+	 * Sets the external reference code of this wiki page.
+	 *
+	 * @param externalReferenceCode the external reference code of this wiki page
+	 */
+	@Override
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		model.setExternalReferenceCode(externalReferenceCode);
 	}
 
 	/**

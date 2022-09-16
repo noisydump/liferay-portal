@@ -20,23 +20,20 @@ import com.liferay.oauth2.provider.internal.test.TestHeadHandlingApplication;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
-import com.liferay.portal.kernel.util.HashMapDictionary;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.test.log.CaptureAppender;
-import com.liferay.portal.test.log.Log4JLoggerTestUtil;
+import com.liferay.portal.test.log.LogCapture;
+import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Dictionary;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
-import org.apache.log4j.Level;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
@@ -74,9 +71,8 @@ public class HttpMethodApplicationClientTest extends BaseClientTestCase {
 		builder = authorize(
 			webTarget.request(), getToken("oauthTestApplicationBefore"));
 
-		try (CaptureAppender captureAppender =
-				Log4JLoggerTestUtil.configureLog4JLogger(
-					"portal_web.docroot.errors.code_jsp", Level.WARN)) {
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				"portal_web.docroot.errors.code_jsp", LoggerTestUtil.WARN)) {
 
 			response = builder.get();
 
@@ -153,13 +149,12 @@ public class HttpMethodApplicationClientTest extends BaseClientTestCase {
 			registerJaxRsApplication(
 				new TestHeadHandlingApplication(), "methods-with-head", null);
 
-			Dictionary<String, Object> properties = new HashMapDictionary<>();
-
-			properties.put("ignore.missing.scopes", "");
-
 			registerJaxRsApplication(
 				new TestApplication(),
-				"methods-with-ignore-missing-scopes-empty", properties);
+				"methods-with-ignore-missing-scopes-empty",
+				HashMapDictionaryBuilder.<String, Object>put(
+					"ignore.missing.scopes", ""
+				).build());
 
 			createOAuth2Application(
 				defaultCompanyId, user, "oauthTestApplicationAfter",

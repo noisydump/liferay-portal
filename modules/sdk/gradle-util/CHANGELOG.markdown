@@ -1,5 +1,27 @@
 # Liferay Gradle Utilities Change Log
 
+## 1.0.46 - 2021-12-29
+
+### Commits
+- [LRCI-2670] Fix npe (0be52938df)
+
+## 1.0.45 - 2021-12-02
+
+### Commits
+- [LPS-143280] use arm arch (81c79fa7db)
+- [LPS-130505] Revert "LPS-130505 SF, no need to call methods" (a8fc61bb0e)
+- [LPS-130505] SF, no need to call methods (877d6175a9)
+- [LPS-105380] Inline (e47639f436)
+
+## 1.0.44 - 2020-11-02
+
+### Commits
+- [LPS-111291] Import statements (d414bad0fa)
+- [LPS-111291] Gradle 5.6.4 compatibility (08135c863d)
+- [LPS-111291] Update plugins Gradle version (003c3832b0)
+- [LPS-108380] SF, use String.valueOf (7ca7e14c1f)
+- [LPS-105380] SF, inline (2c4ba62dc9)
+
 ## 1.0.43 - 2020-06-08
 
 ### Commits
@@ -333,9 +355,14 @@ up-to-date check (59fd9e696c)
 [LPS-100515]: https://issues.liferay.com/browse/LPS-100515
 [LPS-105380]: https://issues.liferay.com/browse/LPS-105380
 [LPS-106149]: https://issues.liferay.com/browse/LPS-106149
+[LPS-108380]: https://issues.liferay.com/browse/LPS-108380
 [LPS-109812]: https://issues.liferay.com/browse/LPS-109812
 [LPS-110283]: https://issues.liferay.com/browse/LPS-110283
 [LPS-110422]: https://issues.liferay.com/browse/LPS-110422
+[LPS-111291]: https://issues.liferay.com/browse/LPS-111291
 [LPS-111896]: https://issues.liferay.com/browse/LPS-111896
 [LPS-113624]: https://issues.liferay.com/browse/LPS-113624
 [LPS-115020]: https://issues.liferay.com/browse/LPS-115020
+[LPS-130505]: https://issues.liferay.com/browse/LPS-130505
+[LPS-143280]: https://issues.liferay.com/browse/LPS-143280
+[LRCI-2670]: https://issues.liferay.com/browse/LRCI-2670

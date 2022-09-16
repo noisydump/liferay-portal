@@ -135,8 +135,8 @@ public class WSDLBuilderPlugin implements Plugin<Project> {
 				project, CONFIGURATION_NAME, "javax.activation", "activation",
 				"1.1");
 			GradleUtil.addDependency(
-				project, CONFIGURATION_NAME, "com.sun.mail", "javax.mail",
-				"1.6.2");
+				project, CONFIGURATION_NAME, "com.sun.mail", "jakarta.mail",
+				"1.6.6");
 			GradleUtil.addDependency(
 				project, CONFIGURATION_NAME, "org.apache.axis", "axis-jaxrpc",
 				"1.4");
@@ -190,13 +190,11 @@ public class WSDLBuilderPlugin implements Plugin<Project> {
 		BuildWSDLTask buildWSDLTask, FileCollection classpath, File inputFile,
 		File tmpDir, Task generateTask) {
 
-		Project project = buildWSDLTask.getProject();
-
-		String taskName = GradleUtil.getTaskName(
-			buildWSDLTask.getName() + "Compile", inputFile);
-
 		JavaCompile javaCompile = GradleUtil.addTask(
-			project, taskName, JavaCompile.class);
+			buildWSDLTask.getProject(),
+			GradleUtil.getTaskName(
+				buildWSDLTask.getName() + "Compile", inputFile),
+			JavaCompile.class);
 
 		javaCompile.setClasspath(classpath);
 
@@ -213,13 +211,11 @@ public class WSDLBuilderPlugin implements Plugin<Project> {
 		BuildWSDLTask buildWSDLTask, FileCollection classpath, File inputFile,
 		final File destinationDir, boolean deleteDestinationDir) {
 
-		Project project = buildWSDLTask.getProject();
-
-		String taskName = GradleUtil.getTaskName(
-			buildWSDLTask.getName() + "Generate", inputFile);
-
 		JavaExec javaExec = GradleUtil.addTask(
-			project, taskName, JavaExec.class);
+			buildWSDLTask.getProject(),
+			GradleUtil.getTaskName(
+				buildWSDLTask.getName() + "Generate", inputFile),
+			JavaExec.class);
 
 		GenerateOptions generateOptions = buildWSDLTask.getGenerateOptions();
 
@@ -274,10 +270,9 @@ public class WSDLBuilderPlugin implements Plugin<Project> {
 
 		Project project = buildWSDLTask.getProject();
 
-		String taskName = GradleUtil.getTaskName(
-			buildWSDLTask.getName(), inputFile);
-
-		Jar jar = GradleUtil.addTask(project, taskName, Jar.class);
+		Jar jar = GradleUtil.addTask(
+			project, GradleUtil.getTaskName(buildWSDLTask.getName(), inputFile),
+			Jar.class);
 
 		jar.from(compileTask.getOutputs());
 

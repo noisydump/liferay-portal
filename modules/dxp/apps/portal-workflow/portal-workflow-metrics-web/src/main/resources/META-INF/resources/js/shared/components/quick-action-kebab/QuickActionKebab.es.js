@@ -16,15 +16,14 @@ import React from 'react';
 
 const IconItem = ({icon, onClick}) => {
 	return (
-		<>
-			<button
-				className="component-action quick-action-item"
-				onClick={onClick}
-				role="button"
-			>
-				<ClayIcon symbol={icon} />
-			</button>
-		</>
+		<ClayButton
+			className="component-action quick-action-item"
+			displayType="unstyled"
+			onClick={onClick}
+			role="button"
+		>
+			<ClayIcon symbol={icon} />
+		</ClayButton>
 	);
 };
 
@@ -34,7 +33,7 @@ const QuickActionKebab = ({
 	iconItems = [],
 	items = [],
 }) => {
-	if (items.length > 0) {
+	if (items.length) {
 		dropDownItems = items;
 		iconItems = items.filter(({icon}) => icon);
 	}
@@ -45,7 +44,7 @@ const QuickActionKebab = ({
 
 	return (
 		<>
-			{!disabled && iconItems.length > 0 && (
+			{!disabled && !!iconItems.length && (
 				<div className="quick-action-menu">
 					{iconItems.map(({icon, onClick}, index) => (
 						<IconItem icon={icon} key={index} onClick={onClick} />
@@ -53,7 +52,7 @@ const QuickActionKebab = ({
 				</div>
 			)}
 
-			{dropDownItems.length > 0 && (
+			{!!dropDownItems.length && (
 				<KebabDropDown disabled={disabled} items={dropDownItems} />
 			)}
 		</>

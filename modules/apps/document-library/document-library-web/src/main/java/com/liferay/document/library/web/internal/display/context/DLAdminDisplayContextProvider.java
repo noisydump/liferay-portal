@@ -14,9 +14,16 @@
 
 package com.liferay.document.library.web.internal.display.context;
 
+import com.liferay.asset.auto.tagger.configuration.AssetAutoTaggerConfiguration;
+import com.liferay.asset.auto.tagger.configuration.AssetAutoTaggerConfigurationFactory;
 import com.liferay.document.library.kernel.versioning.VersioningStrategy;
-import com.liferay.document.library.web.internal.display.context.util.DLRequestHelper;
+import com.liferay.document.library.web.internal.display.context.helper.DLRequestHelper;
 import com.liferay.document.library.web.internal.helper.DLTrashHelper;
+import com.liferay.item.selector.ItemSelector;
+import com.liferay.petra.reflect.ReflectionUtil;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.trash.TrashHelper;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -36,12 +43,17 @@ public class DLAdminDisplayContextProvider {
 		HttpServletRequest httpServletRequest,
 		HttpServletResponse httpServletResponse) {
 
+		httpServletRequest.setAttribute(
+			ItemSelector.class.getName(), _itemSelector);
+
 		DLRequestHelper dlRequestHelper = new DLRequestHelper(
 			httpServletRequest);
 
 		return new DLAdminDisplayContext(
+			_getAssetAutoTaggerConfiguration(dlRequestHelper),
 			httpServletRequest, dlRequestHelper.getLiferayPortletRequest(),
-			dlRequestHelper.getLiferayPortletResponse(), _versioningStrategy);
+			dlRequestHelper.getLiferayPortletResponse(), _trashHelper,
+			_versioningStrategy);
 	}
 
 	public DLAdminManagementToolbarDisplayContext
@@ -54,13 +66,40 @@ public class DLAdminDisplayContextProvider {
 			httpServletRequest);
 
 		return new DLAdminManagementToolbarDisplayContext(
-			httpServletRequest, dlRequestHelper.getLiferayPortletRequest(),
-			dlRequestHelper.getLiferayPortletResponse(), dlAdminDisplayContext,
-			_dlTrashHelper);
+			dlAdminDisplayContext, _dlTrashHelper, httpServletRequest,
+			dlRequestHelper.getLiferayPortletRequest(),
+			dlRequestHelper.getLiferayPortletResponse());
+	}
+
+	private AssetAutoTaggerConfiguration _getAssetAutoTaggerConfiguration(
+		DLRequestHelper dlRequestHelper) {
+
+		try {
+			return _assetAutoTaggerConfigurationFactory.
+				getGroupAssetAutoTaggerConfiguration(
+					_groupLocalService.getGroup(
+						dlRequestHelper.getSiteGroupId()));
+		}
+		catch (PortalException portalException) {
+			return ReflectionUtil.throwException(portalException);
+		}
 	}
 
 	@Reference
+	private AssetAutoTaggerConfigurationFactory
+		_assetAutoTaggerConfigurationFactory;
+
+	@Reference
 	private DLTrashHelper _dlTrashHelper;
+
+	@Reference
+	private GroupLocalService _groupLocalService;
+
+	@Reference
+	private ItemSelector _itemSelector;
+
+	@Reference
+	private TrashHelper _trashHelper;
 
 	@Reference(
 		policy = ReferencePolicy.DYNAMIC,

@@ -15,6 +15,7 @@
 package com.liferay.headless.delivery.internal.dto.v1_0.util;
 
 import com.liferay.headless.delivery.dto.v1_0.Comment;
+import com.liferay.headless.delivery.dto.v1_0.util.CreatorUtil;
 import com.liferay.portal.kernel.comment.CommentManager;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -41,6 +42,7 @@ public class CommentUtil {
 					portal, Optional.empty(), comment.getUser());
 				dateCreated = comment.getCreateDate();
 				dateModified = comment.getModifiedDate();
+				externalReferenceCode = comment.getExternalReferenceCode();
 				id = comment.getCommentId();
 				numberOfComments = commentManager.getChildCommentsCount(
 					comment.getCommentId(), WorkflowConstants.STATUS_APPROVED);

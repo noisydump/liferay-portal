@@ -20,13 +20,18 @@ import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.service.BaseServiceImpl;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.spring.extender.service.ServiceReference;
 import com.liferay.portal.tools.service.builder.test.model.LazyBlobEntry;
 import com.liferay.portal.tools.service.builder.test.service.LazyBlobEntryService;
+import com.liferay.portal.tools.service.builder.test.service.LazyBlobEntryServiceUtil;
 import com.liferay.portal.tools.service.builder.test.service.persistence.LazyBlobEntryPersistence;
+
+import java.lang.reflect.Field;
 
 import javax.sql.DataSource;
 
@@ -48,7 +53,7 @@ public abstract class LazyBlobEntryServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>LazyBlobEntryService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.tools.service.builder.test.service.LazyBlobEntryServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>LazyBlobEntryService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>LazyBlobEntryServiceUtil</code>.
 	 */
 
 	/**
@@ -138,9 +143,11 @@ public abstract class LazyBlobEntryServiceBaseImpl
 	}
 
 	public void afterPropertiesSet() {
+		_setServiceUtilService(lazyBlobEntryService);
 	}
 
 	public void destroy() {
+		_setServiceUtilService(null);
 	}
 
 	/**
@@ -185,6 +192,22 @@ public abstract class LazyBlobEntryServiceBaseImpl
 		}
 	}
 
+	private void _setServiceUtilService(
+		LazyBlobEntryService lazyBlobEntryService) {
+
+		try {
+			Field field = LazyBlobEntryServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, lazyBlobEntryService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@BeanReference(
 		type = com.liferay.portal.tools.service.builder.test.service.LazyBlobEntryLocalService.class
 	)
@@ -202,5 +225,8 @@ public abstract class LazyBlobEntryServiceBaseImpl
 	)
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		LazyBlobEntryServiceBaseImpl.class);
 
 }

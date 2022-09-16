@@ -13,7 +13,7 @@
  */
 
 import ClayForm, {ClayInput} from '@clayui/form';
-import ClayMultiSelect from '@clayui/multi-select';
+import ClayMultiSelect, {itemLabelFilter} from '@clayui/multi-select';
 import React, {useState} from 'react';
 
 export default function Multiselect({
@@ -37,7 +37,7 @@ export default function Multiselect({
 	sourceItems,
 	...otherProps
 }) {
-	const [inputValue, setInputValue] = useState(_inputValue);
+	const [inputValue, setInputValue] = useState(_inputValue ?? '');
 
 	const [selectedItems, setSelectedItems] = useState(_selectedItems);
 
@@ -55,13 +55,17 @@ export default function Multiselect({
 						disabledClearAll={disabledClearAll}
 						id={id}
 						inputName={inputName}
-						inputValue={inputValue}
 						isValid={isValid}
 						items={selectedItems}
 						locator={multiselectLocator}
 						onChange={setInputValue}
 						onItemsChange={setSelectedItems}
-						sourceItems={sourceItems}
+						sourceItems={itemLabelFilter(
+							sourceItems,
+							inputValue,
+							multiselectLocator?.label ?? 'label'
+						)}
+						value={inputValue}
 						{...otherProps}
 					/>
 

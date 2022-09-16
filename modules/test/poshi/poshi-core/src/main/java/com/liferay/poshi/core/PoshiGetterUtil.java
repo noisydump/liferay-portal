@@ -229,7 +229,9 @@ public class PoshiGetterUtil {
 		if (element instanceof PoshiElement) {
 			PoshiElement poshiElement = (PoshiElement)element;
 
-			return poshiElement.getPoshiScriptLineNumber();
+			if (!poshiElement.isPoshiProse()) {
+				return poshiElement.getPoshiScriptLineNumber();
+			}
 		}
 
 		String lineNumber = element.attributeValue("line-number");
@@ -275,10 +277,8 @@ public class PoshiGetterUtil {
 				parameter = PoshiVariablesUtil.replaceCommandVars(arg);
 			}
 
-			if (className.endsWith("MathUtil") &&
-				(parameter instanceof String)) {
-
-				parameter = GetterUtil.getInteger((String)parameter);
+			if (className.endsWith("MathUtil")) {
+				parameter = GetterUtil.getLong(parameter);
 			}
 			else if (className.endsWith("StringUtil")) {
 				parameter = String.valueOf(parameter);
@@ -395,9 +395,15 @@ public class PoshiGetterUtil {
 			PoshiProseDefinition poshiProseDefinition =
 				new PoshiProseDefinition(url);
 
-			return _preparePoshiXMLElement(
-				url, Dom4JUtil.format(poshiProseDefinition.toElement()),
-				addLineNumbers);
+			PoshiElement poshiElement =
+				(PoshiElement)PoshiNodeFactory.newPoshiNode(
+					_preparePoshiXMLElement(
+						url, Dom4JUtil.format(poshiProseDefinition.toElement()),
+						addLineNumbers));
+
+			poshiElement.setFilePathURL(url);
+
+			return poshiElement;
 		}
 
 		throw new Exception("Unable to parse Poshi file: " + filePath);

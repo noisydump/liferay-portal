@@ -16,8 +16,11 @@ package com.liferay.portal.dao.sql.transformer;
 
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.db.DBType;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -26,21 +29,20 @@ import org.junit.Test;
 public class SybaseSQLTransformerLogicTest
 	extends BaseSQLTransformerLogicTestCase {
 
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
 	public SybaseSQLTransformerLogicTest() {
 		super(new TestSybaseDB(1, 0));
 	}
 
 	@Override
 	public String getDropTableIfExistsTextTransformedSQL() {
-		StringBundler sb = new StringBundler(5);
-
-		sb.append("IF EXISTS(select 1 from sysobjects where name = 'Foo' and ");
-		sb.append("type = 'U')\n");
-		sb.append("BEGIN\n");
-		sb.append("DROP TABLE Foo\n");
-		sb.append("END");
-
-		return sb.toString();
+		return StringBundler.concat(
+			"IF EXISTS(select 1 from sysobjects where name = 'Foo' and type = ",
+			"'U')\n", "BEGIN\n", "DROP TABLE Foo\n", "END");
 	}
 
 	@Test

@@ -27,7 +27,7 @@
 	Liferay.provide(
 		window,
 		'<portlet:namespace />exportKaleoProcess',
-		function (url) {
+		(url) => {
 			var A = AUI();
 
 			var form = A.Node.create('<form method="post" />');
@@ -46,6 +46,7 @@
 					cssClass: 'kaleo-process-export-dialog',
 					height: 286,
 					render: '#p_p_id<portlet:namespace />',
+					resizable: false,
 					toolbars: {
 						footer: [
 							{

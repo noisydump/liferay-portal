@@ -16,18 +16,24 @@ package com.liferay.portal.search.elasticsearch7.internal.search.engine.adapter.
 
 import com.liferay.portal.search.elasticsearch7.internal.connection.ElasticsearchFixture;
 import com.liferay.portal.search.engine.adapter.index.GetFieldMappingIndexRequest;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import org.elasticsearch.action.admin.indices.mapping.get.GetFieldMappingsRequest;
 
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 /**
  * @author Dylan Rebelak
  */
 public class GetFieldMappingIndexRequestExecutorTest {
+
+	@ClassRule
+	public static LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Before
 	public void setUp() throws Exception {

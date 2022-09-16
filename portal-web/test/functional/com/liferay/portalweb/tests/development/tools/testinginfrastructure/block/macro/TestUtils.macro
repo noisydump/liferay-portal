@@ -9,7 +9,7 @@ definition {
 			echo("PASSED");
 		}
 		else {
-			TestUtils.fail(message = "FAILED: expected &apos;${expected}&apos;, actual was &apos;${actual}&apos;");
+			TestUtils.fail(message = "FAILED: expected '${expected}', actual was '${actual}'");
 		}
 	}
 
@@ -22,7 +22,48 @@ definition {
 			echo("PASSED");
 		}
 		else {
-			TestUtils.fail(message = "FAILED: &apos;${expected}&apos; equals &apos;${actual}&apos;");
+			TestUtils.fail(message = "FAILED: '${expected}' equals '${actual}'");
+		}
+	}
+
+	macro assertPartialAttributeValue {
+		var attributeValue = selenium.getAttribute("${element}@${attribute}");
+
+		if (contains("${attributeValue}", "${value}")) {
+			echo("PASSED");
+		}
+		else {
+			TestUtils.fail(message = "FAILED: Expected text '${value}' does not match actual text '${attributeValue}'");
+		}
+	}
+
+	macro assertPartialEquals {
+		echo("${expected}");
+
+		echo("${actual}");
+
+		if (contains("${actual}", "${expected}")) {
+			echo("PASSED");
+		}
+		else {
+			TestUtils.fail(message = "FAILED: Expected text '${expected}' does not match actual text '${actual}'");
+		}
+	}
+
+	macro assertTruncatedText {
+		WaitForSPARefresh();
+
+		var javascript = '''
+var element = document.evaluate("${element}", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+
+return (element.offsetWidth < element.scrollWidth).toString();
+
+		''';
+
+		var isTruncated = selenium.getEval("${javascript}");
+
+		if ("${isTruncated}" != "true") {
+			TestUtils.fail(message = "FAILED: The text is not truncated");
 		}
 	}
 
@@ -33,7 +74,52 @@ definition {
 
 		echo("${message}");
 
+		takeScreenshot();
+
 		fail("${message}");
+	}
+
+	macro getElementTextContent {
+		WaitForSPARefresh();
+
+		var javascript = '''
+var element = document.evaluate("${element}", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+
+return element.textContent;
+		''';
+
+		var textContent = selenium.getEval("${javascript}");
+
+		return "${textContent}";
+	}
+
+	macro getScreenHeight {
+		WaitForSPARefresh();
+
+		var screenHeight = selenium.getEval("return	screen.height.toString();");
+
+		return "${screenHeight}";
+	}
+
+	macro getScreenWidth {
+		WaitForSPARefresh();
+
+		var screenWidth = selenium.getEval("return screen.width.toString();");
+
+		return "${screenWidth}";
+	}
+
+	macro hardRefresh {
+		var mac = OSDetector.isApple();
+
+		if ("${mac}" == "true") {
+			RobotType.robotTypeShortcut(locator1 = "Shift + Command + r");
+		}
+		else {
+			RobotType.robotTypeShortcut(locator1 = "Ctrl + Shift + r");
+		}
+
+		WaitForPageLoad();
 	}
 
 	macro isGreaterThan {
@@ -47,8 +133,30 @@ definition {
 			echo("PASSED");
 		}
 		else {
-			TestUtils.fail(message = "FAILED: actual &apos;${actual}&apos; is less than or equals to expected &apos;${expected}&apos;");
+			TestUtils.fail(message = "FAILED: actual '${actual}' is less than or equals to expected '${expected}'");
 		}
+	}
+
+	macro isLessThan {
+		echo("${expected}");
+
+		echo("${actual}");
+
+		var result = MathUtil.isLessThan("${actual}", "${expected}");
+
+		if ("${result}" == "true") {
+			echo("PASSED");
+		}
+		else {
+			TestUtils.fail(message = "FAILED: actual '${actual}' is greater than or equals to expected '${expected}'");
+		}
+	}
+
+	macro maximizeWindow {
+		var screenWidth = TestUtils.getScreenWidth();
+		var screenHeight = TestUtils.getScreenHeight();
+
+		SetWindowSize(value1 = "${screenWidth},${screenHeight}");
 	}
 
 	macro pass {
@@ -66,7 +174,7 @@ definition {
 			category = "Site Builder",
 			portlet = "Pages");
 
-		SitePages.addPublicPage(pageName = "Test Page Name");
+		PagesAdmin.addPage(pageName = "Test Page Name");
 	}
 
 }

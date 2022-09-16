@@ -15,7 +15,6 @@
 package com.liferay.ant.bnd.social;
 
 import aQute.bnd.osgi.Analyzer;
-import aQute.bnd.osgi.Descriptors;
 import aQute.bnd.osgi.Jar;
 import aQute.bnd.osgi.Packages;
 import aQute.bnd.osgi.Resource;
@@ -28,6 +27,7 @@ import java.util.Map;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -67,10 +67,7 @@ public class SocialAnalyzerPlugin implements AnalyzerPlugin {
 				continue;
 			}
 
-			Descriptors.PackageRef packageRef = analyzer.getPackageRef(
-				getPackageName(className));
-
-			packages.put(packageRef);
+			packages.put(analyzer.getPackageRef(getPackageName(className)));
 		}
 
 		return false;
@@ -133,8 +130,7 @@ public class SocialAnalyzerPlugin implements AnalyzerPlugin {
 		}
 	}
 
-	private static final DocumentBuilderFactory _documentBuilderFactory =
-		DocumentBuilderFactory.newInstance();
+	private static final DocumentBuilderFactory _documentBuilderFactory;
 	private static final Map<String, String> _publicIds =
 		new HashMap<String, String>() {
 			{
@@ -150,7 +146,30 @@ public class SocialAnalyzerPlugin implements AnalyzerPlugin {
 				put(
 					"-//Liferay//DTD Social 7.1.0//EN",
 					"com/liferay/portal/definitions/liferay-social_7_1_0.dtd");
+				put(
+					"-//Liferay//DTD Social 7.2.0//EN",
+					"com/liferay/portal/definitions/liferay-social_7_2_0.dtd");
+				put(
+					"-//Liferay//DTD Social 7.3.0//EN",
+					"com/liferay/portal/definitions/liferay-social_7_3_0.dtd");
+				put(
+					"-//Liferay//DTD Social 7.4.0//EN",
+					"com/liferay/portal/definitions/liferay-social_7_4_0.dtd");
 			}
 		};
+
+	static {
+		_documentBuilderFactory = DocumentBuilderFactory.newInstance();
+
+		try {
+			_documentBuilderFactory.setFeature(
+				"http://apache.org/xml/features/nonvalidating" +
+					"/load-external-dtd",
+				false);
+		}
+		catch (ParserConfigurationException parserConfigurationException) {
+			throw new ExceptionInInitializerError(parserConfigurationException);
+		}
+	}
 
 }

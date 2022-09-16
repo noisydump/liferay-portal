@@ -20,8 +20,10 @@ import com.liferay.commerce.inventory.model.CommerceInventoryAuditTable;
 import com.liferay.commerce.inventory.model.impl.CommerceInventoryAuditImpl;
 import com.liferay.commerce.inventory.model.impl.CommerceInventoryAuditModelImpl;
 import com.liferay.commerce.inventory.service.persistence.CommerceInventoryAuditPersistence;
+import com.liferay.commerce.inventory.service.persistence.CommerceInventoryAuditUtil;
+import com.liferay.commerce.inventory.service.persistence.impl.constants.CommercePersistenceConstants;
 import com.liferay.petra.string.StringBundler;
-import com.liferay.portal.kernel.dao.orm.ArgumentsResolver;
+import com.liferay.portal.kernel.configuration.Configuration;
 import com.liferay.portal.kernel.dao.orm.EntityCache;
 import com.liferay.portal.kernel.dao.orm.FinderCache;
 import com.liferay.portal.kernel.dao.orm.FinderPath;
@@ -29,21 +31,24 @@ import com.liferay.portal.kernel.dao.orm.Query;
 import com.liferay.portal.kernel.dao.orm.QueryPos;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.Session;
+import com.liferay.portal.kernel.dao.orm.SessionFactory;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
-import com.liferay.portal.kernel.util.HashMapDictionary;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
 import java.sql.Timestamp;
@@ -54,12 +59,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.framework.ServiceRegistration;
+import javax.sql.DataSource;
+
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * The persistence implementation for the commerce inventory audit service.
@@ -71,6 +77,9 @@ import org.osgi.framework.ServiceRegistration;
  * @author Luca Pellizzon
  * @generated
  */
+@Component(
+	service = {CommerceInventoryAuditPersistence.class, BasePersistence.class}
+)
 public class CommerceInventoryAuditPersistenceImpl
 	extends BasePersistenceImpl<CommerceInventoryAudit>
 	implements CommerceInventoryAuditPersistence {
@@ -1237,6 +1246,8 @@ public class CommerceInventoryAuditPersistenceImpl
 			commerceInventoryAudit.getPrimaryKey(), commerceInventoryAudit);
 	}
 
+	private int _valueObjectFinderCacheListThreshold;
+
 	/**
 	 * Caches the commerce inventory audits in the entity cache if it is enabled.
 	 *
@@ -1245,6 +1256,14 @@ public class CommerceInventoryAuditPersistenceImpl
 	@Override
 	public void cacheResult(
 		List<CommerceInventoryAudit> commerceInventoryAudits) {
+
+		if ((_valueObjectFinderCacheListThreshold == 0) ||
+			((_valueObjectFinderCacheListThreshold > 0) &&
+			 (commerceInventoryAudits.size() >
+				 _valueObjectFinderCacheListThreshold))) {
+
+			return;
+		}
 
 		for (CommerceInventoryAudit commerceInventoryAudit :
 				commerceInventoryAudits) {
@@ -1446,25 +1465,25 @@ public class CommerceInventoryAuditPersistenceImpl
 		ServiceContext serviceContext =
 			ServiceContextThreadLocal.getServiceContext();
 
-		Date now = new Date();
+		Date date = new Date();
 
 		if (isNew && (commerceInventoryAudit.getCreateDate() == null)) {
 			if (serviceContext == null) {
-				commerceInventoryAudit.setCreateDate(now);
+				commerceInventoryAudit.setCreateDate(date);
 			}
 			else {
 				commerceInventoryAudit.setCreateDate(
-					serviceContext.getCreateDate(now));
+					serviceContext.getCreateDate(date));
 			}
 		}
 
 		if (!commerceInventoryAuditModelImpl.hasSetModifiedDate()) {
 			if (serviceContext == null) {
-				commerceInventoryAudit.setModifiedDate(now);
+				commerceInventoryAudit.setModifiedDate(date);
 			}
 			else {
 				commerceInventoryAudit.setModifiedDate(
-					serviceContext.getModifiedDate(now));
+					serviceContext.getModifiedDate(date));
 			}
 		}
 
@@ -1765,16 +1784,10 @@ public class CommerceInventoryAuditPersistenceImpl
 	/**
 	 * Initializes the commerce inventory audit persistence.
 	 */
-	public void afterPropertiesSet() {
-		Bundle bundle = FrameworkUtil.getBundle(
-			CommerceInventoryAuditPersistenceImpl.class);
-
-		_bundleContext = bundle.getBundleContext();
-
-		_argumentsResolverServiceRegistration = _bundleContext.registerService(
-			ArgumentsResolver.class,
-			new CommerceInventoryAuditModelArgumentsResolver(),
-			new HashMapDictionary<>());
+	@Activate
+	public void activate() {
+		_valueObjectFinderCacheListThreshold = GetterUtil.getInteger(
+			PropsUtil.get(PropsKeys.VALUE_OBJECT_FINDER_CACHE_LIST_THRESHOLD));
 
 		_finderPathWithPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
@@ -1819,20 +1832,63 @@ public class CommerceInventoryAuditPersistenceImpl
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_S",
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"companyId", "sku"}, false);
+
+		_setCommerceInventoryAuditUtilPersistence(this);
 	}
 
-	public void destroy() {
+	@Deactivate
+	public void deactivate() {
+		_setCommerceInventoryAuditUtilPersistence(null);
+
 		entityCache.removeCache(CommerceInventoryAuditImpl.class.getName());
-
-		_argumentsResolverServiceRegistration.unregister();
 	}
 
-	private BundleContext _bundleContext;
+	private void _setCommerceInventoryAuditUtilPersistence(
+		CommerceInventoryAuditPersistence commerceInventoryAuditPersistence) {
 
-	@ServiceReference(type = EntityCache.class)
+		try {
+			Field field = CommerceInventoryAuditUtil.class.getDeclaredField(
+				"_persistence");
+
+			field.setAccessible(true);
+
+			field.set(null, commerceInventoryAuditPersistence);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
+	@Override
+	@Reference(
+		target = CommercePersistenceConstants.SERVICE_CONFIGURATION_FILTER,
+		unbind = "-"
+	)
+	public void setConfiguration(Configuration configuration) {
+	}
+
+	@Override
+	@Reference(
+		target = CommercePersistenceConstants.ORIGIN_BUNDLE_SYMBOLIC_NAME_FILTER,
+		unbind = "-"
+	)
+	public void setDataSource(DataSource dataSource) {
+		super.setDataSource(dataSource);
+	}
+
+	@Override
+	@Reference(
+		target = CommercePersistenceConstants.ORIGIN_BUNDLE_SYMBOLIC_NAME_FILTER,
+		unbind = "-"
+	)
+	public void setSessionFactory(SessionFactory sessionFactory) {
+		super.setSessionFactory(sessionFactory);
+	}
+
+	@Reference
 	protected EntityCache entityCache;
 
-	@ServiceReference(type = FinderCache.class)
+	@Reference
 	protected FinderCache finderCache;
 
 	private static Long _getTime(Date date) {
@@ -1875,99 +1931,8 @@ public class CommerceInventoryAuditPersistenceImpl
 		return finderCache;
 	}
 
-	private ServiceRegistration<ArgumentsResolver>
-		_argumentsResolverServiceRegistration;
-
-	private static class CommerceInventoryAuditModelArgumentsResolver
-		implements ArgumentsResolver {
-
-		@Override
-		public Object[] getArguments(
-			FinderPath finderPath, BaseModel<?> baseModel, boolean checkColumn,
-			boolean original) {
-
-			String[] columnNames = finderPath.getColumnNames();
-
-			if ((columnNames == null) || (columnNames.length == 0)) {
-				if (baseModel.isNew()) {
-					return FINDER_ARGS_EMPTY;
-				}
-
-				return null;
-			}
-
-			CommerceInventoryAuditModelImpl commerceInventoryAuditModelImpl =
-				(CommerceInventoryAuditModelImpl)baseModel;
-
-			long columnBitmask =
-				commerceInventoryAuditModelImpl.getColumnBitmask();
-
-			if (!checkColumn || (columnBitmask == 0)) {
-				return _getValue(
-					commerceInventoryAuditModelImpl, columnNames, original);
-			}
-
-			Long finderPathColumnBitmask = _finderPathColumnBitmasksCache.get(
-				finderPath);
-
-			if (finderPathColumnBitmask == null) {
-				finderPathColumnBitmask = 0L;
-
-				for (String columnName : columnNames) {
-					finderPathColumnBitmask |=
-						commerceInventoryAuditModelImpl.getColumnBitmask(
-							columnName);
-				}
-
-				_finderPathColumnBitmasksCache.put(
-					finderPath, finderPathColumnBitmask);
-			}
-
-			if ((columnBitmask & finderPathColumnBitmask) != 0) {
-				return _getValue(
-					commerceInventoryAuditModelImpl, columnNames, original);
-			}
-
-			return null;
-		}
-
-		@Override
-		public String getClassName() {
-			return CommerceInventoryAuditImpl.class.getName();
-		}
-
-		@Override
-		public String getTableName() {
-			return CommerceInventoryAuditTable.INSTANCE.getTableName();
-		}
-
-		private Object[] _getValue(
-			CommerceInventoryAuditModelImpl commerceInventoryAuditModelImpl,
-			String[] columnNames, boolean original) {
-
-			Object[] arguments = new Object[columnNames.length];
-
-			for (int i = 0; i < arguments.length; i++) {
-				String columnName = columnNames[i];
-
-				if (original) {
-					arguments[i] =
-						commerceInventoryAuditModelImpl.getColumnOriginalValue(
-							columnName);
-				}
-				else {
-					arguments[i] =
-						commerceInventoryAuditModelImpl.getColumnValue(
-							columnName);
-				}
-			}
-
-			return arguments;
-		}
-
-		private static Map<FinderPath, Long> _finderPathColumnBitmasksCache =
-			new ConcurrentHashMap<>();
-
-	}
+	@Reference
+	private CommerceInventoryAuditModelArgumentsResolver
+		_commerceInventoryAuditModelArgumentsResolver;
 
 }

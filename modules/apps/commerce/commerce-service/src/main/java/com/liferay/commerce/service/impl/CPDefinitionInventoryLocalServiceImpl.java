@@ -22,6 +22,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 import com.liferay.portal.spring.extender.service.ServiceReference;
@@ -43,7 +44,7 @@ public class CPDefinitionInventoryLocalServiceImpl
 			int multipleOrderQuantity)
 		throws PortalException {
 
-		User user = userLocalService.getUser(userId);
+		User user = _userLocalService.getUser(userId);
 
 		long cpDefinitionInventoryId = counterLocalService.increment();
 
@@ -59,14 +60,11 @@ public class CPDefinitionInventoryLocalServiceImpl
 		}
 
 		cpDefinitionInventory.setGroupId(cpDefinition.getGroupId());
-
 		cpDefinitionInventory.setCompanyId(user.getCompanyId());
 		cpDefinitionInventory.setUserId(user.getUserId());
 		cpDefinitionInventory.setUserName(user.getFullName());
-
 		cpDefinitionInventory.setCPDefinitionId(
 			cpDefinition.getCPDefinitionId());
-
 		cpDefinitionInventory.setCPDefinitionInventoryEngine(
 			cpDefinitionInventoryEngine);
 		cpDefinitionInventory.setLowStockActivity(lowStockActivity);
@@ -97,7 +95,6 @@ public class CPDefinitionInventoryLocalServiceImpl
 			newCPDefinitionInventory.setUuid(PortalUUIDUtil.generate());
 			newCPDefinitionInventory.setCPDefinitionInventoryId(
 				counterLocalService.increment());
-
 			newCPDefinitionInventory.setCPDefinitionId(newCPDefinitionId);
 
 			cpDefinitionInventoryLocalService.addCPDefinitionInventory(
@@ -207,5 +204,8 @@ public class CPDefinitionInventoryLocalServiceImpl
 
 	@ServiceReference(type = CPDefinitionLocalService.class)
 	private CPDefinitionLocalService _cpDefinitionLocalService;
+
+	@ServiceReference(type = UserLocalService.class)
+	private UserLocalService _userLocalService;
 
 }

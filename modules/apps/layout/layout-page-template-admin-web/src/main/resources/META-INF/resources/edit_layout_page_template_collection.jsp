@@ -26,7 +26,7 @@ LayoutPageTemplateCollection layoutPageTemplateCollection = LayoutPageTemplateCo
 portletDisplay.setShowBackIcon(true);
 portletDisplay.setURLBack(redirect);
 
-renderResponse.setTitle((layoutPageTemplateCollection != null) ? layoutPageTemplateCollection.getName() : LanguageUtil.get(request, "add-collection"));
+renderResponse.setTitle((layoutPageTemplateCollection != null) ? layoutPageTemplateCollection.getName() : LanguageUtil.get(request, "add-page-template-set"));
 %>
 
 <portlet:actionURL name="/layout_page_template_admin/edit_layout_page_template_collection" var="editLayoutPageTemplateCollectionURL">
@@ -36,7 +36,6 @@ renderResponse.setTitle((layoutPageTemplateCollection != null) ? layoutPageTempl
 
 <liferay-frontend:edit-form
 	action="<%= editLayoutPageTemplateCollectionURL %>"
-	cssClass="container-form-lg"
 	name="fm"
 >
 	<aui:input name="redirect" type="hidden" value="<%= redirect %>" />

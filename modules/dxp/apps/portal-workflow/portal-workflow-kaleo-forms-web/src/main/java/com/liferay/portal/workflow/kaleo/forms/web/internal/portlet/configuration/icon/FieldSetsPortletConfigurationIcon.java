@@ -15,7 +15,8 @@
 package com.liferay.portal.workflow.kaleo.forms.web.internal.portlet.configuration.icon;
 
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.PortletProvider;
@@ -26,16 +27,12 @@ import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfiguration
 import com.liferay.portal.kernel.service.PortletLocalService;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.webdav.WebDAVUtil;
 import com.liferay.portal.workflow.kaleo.forms.constants.KaleoFormsPortletKeys;
 
-import java.util.ResourceBundle;
-
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
-import javax.portlet.PortletURL;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -53,12 +50,9 @@ public class FieldSetsPortletConfigurationIcon
 
 	@Override
 	public String getMessage(PortletRequest portletRequest) {
-		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
-			getLocale(portletRequest), FieldSetsPortletConfigurationIcon.class);
-
-		return LanguageUtil.format(
+		return _language.format(
 			getLocale(portletRequest), "manage-x",
-			LanguageUtil.get(resourceBundle, "field-sets"));
+			_language.get(getLocale(portletRequest), "field-sets"));
 	}
 
 	@Override
@@ -68,29 +62,36 @@ public class FieldSetsPortletConfigurationIcon
 		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
+		return PortletURLBuilder.create(
+			PortletURLFactoryUtil.create(
+				portletRequest,
+				PortletProviderUtil.getPortletId(
+					DDMStructure.class.getName(), PortletProvider.Action.VIEW),
+				themeDisplay.getPlid(), PortletRequest.RENDER_PHASE)
+		).setMVCPath(
+			"/view.jsp"
+		).setBackURL(
+			themeDisplay.getURLCurrent()
+		).setParameter(
+			"groupId", themeDisplay.getScopeGroupId()
+		).setParameter(
+			"refererPortletName", KaleoFormsPortletKeys.KALEO_FORMS_ADMIN
+		).setParameter(
+			"refererWebDAVToken",
+			() -> {
+				PortletDisplay portletDisplay =
+					themeDisplay.getPortletDisplay();
 
-		Portlet portlet = _portletLocalService.getPortletById(
-			portletDisplay.getId());
+				Portlet portlet = _portletLocalService.getPortletById(
+					portletDisplay.getId());
 
-		PortletURL portletURL = PortletURLFactoryUtil.create(
-			portletRequest,
-			PortletProviderUtil.getPortletId(
-				DDMStructure.class.getName(), PortletProvider.Action.VIEW),
-			themeDisplay.getPlid(), PortletRequest.RENDER_PHASE);
-
-		portletURL.setParameter("mvcPath", "/view.jsp");
-		portletURL.setParameter("backURL", themeDisplay.getURLCurrent());
-		portletURL.setParameter(
-			"groupId", String.valueOf(themeDisplay.getScopeGroupId()));
-		portletURL.setParameter(
-			"refererPortletName", KaleoFormsPortletKeys.KALEO_FORMS_ADMIN);
-		portletURL.setParameter(
-			"refererWebDAVToken", WebDAVUtil.getStorageToken(portlet));
-		portletURL.setParameter("showAncestorScopes", Boolean.TRUE.toString());
-		portletURL.setParameter("showManageTemplates", Boolean.TRUE.toString());
-
-		return portletURL.toString();
+				return WebDAVUtil.getStorageToken(portlet);
+			}
+		).setParameter(
+			"showAncestorScopes", true
+		).setParameter(
+			"showManageTemplates", true
+		).buildString();
 	}
 
 	@Override
@@ -117,13 +118,10 @@ public class FieldSetsPortletConfigurationIcon
 		return false;
 	}
 
-	@Reference(unbind = "-")
-	protected void setPortletLocalService(
-		PortletLocalService portletLocalService) {
+	@Reference
+	private Language _language;
 
-		_portletLocalService = portletLocalService;
-	}
-
+	@Reference
 	private PortletLocalService _portletLocalService;
 
 }

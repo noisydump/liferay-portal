@@ -27,7 +27,10 @@ import java.util.logging.Logger;
 
 /**
  * @author Shuyang Zhou
+ * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+ *             com.liferay.portal.test.log.LoggerTestUtil.JDKLogCapture}
  */
+@Deprecated
 public class CaptureHandler extends Handler implements Closeable {
 
 	public CaptureHandler(Logger logger, Level level) {
@@ -96,15 +99,8 @@ public class CaptureHandler extends Handler implements Closeable {
 
 		@Override
 		public String toString() {
-			StringBundler sb = new StringBundler(5);
-
-			sb.append("{level=");
-			sb.append(getLevel());
-			sb.append(", message=");
-			sb.append(getMessage());
-			sb.append("}");
-
-			return sb.toString();
+			return StringBundler.concat(
+				"{level=", getLevel(), ", message=", getMessage(), "}");
 		}
 
 		private PrintableLogRecord(LogRecord logRecord) {

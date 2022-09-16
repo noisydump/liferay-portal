@@ -124,9 +124,7 @@ public class FileUtil {
 	public static String getFileName(String filePath) {
 		Path path = Paths.get(filePath);
 
-		Path fileName = path.getFileName();
-
-		return fileName.toString();
+		return String.valueOf(path.getFileName());
 	}
 
 	public static List<URL> getIncludedResourceURLs(
@@ -198,6 +196,24 @@ public class FileUtil {
 		return uri.toURL();
 	}
 
+	public static List<String> listFiles(String filePath) {
+		List<String> fileNames = new ArrayList<>();
+
+		File baseDir = new File(filePath);
+
+		if (baseDir.isDirectory()) {
+			File[] files = baseDir.listFiles();
+
+			for (File file : files) {
+				if (file.isDirectory() || file.isFile()) {
+					fileNames.add(file.getName());
+				}
+			}
+		}
+
+		return fileNames;
+	}
+
 	public static String read(File file) throws IOException {
 		return read(getURL(file));
 	}
@@ -228,12 +244,21 @@ public class FileUtil {
 		return sb.toString();
 	}
 
+	public static void replaceStringInFile(
+			String filePath, String oldSub, String newSub)
+		throws IOException {
+
+		String fileContent = read(filePath);
+
+		write(filePath, StringUtil.replace(fileContent, oldSub, newSub));
+	}
+
 	public static void write(File file, byte[] bytes) throws IOException {
 		FileUtils.writeByteArrayToFile(file, bytes);
 	}
 
 	public static void write(File file, String string) throws IOException {
-		FileUtils.writeStringToFile(file, string);
+		FileUtils.writeStringToFile(file, string, "UTF-8");
 	}
 
 	public static void write(String fileName, byte[] bytes) throws IOException {

@@ -17,6 +17,8 @@ package com.liferay.segments.experiment.web.internal.notifications;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.UserNotificationEvent;
 import com.liferay.portal.kernel.notifications.BaseUserNotificationHandler;
@@ -26,7 +28,7 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserNotificationEventLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HtmlUtil;
-import com.liferay.portal.kernel.util.Http;
+import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -154,19 +156,21 @@ public class SegmentsExperimentUserNotificationHandler
 				WebKeys.THEME_DISPLAY);
 
 		try {
-			String layoutURL = _portal.getLayoutURL(
-				layout, themeDisplay, false);
-
-			return _http.addParameter(
-				layoutURL, "segmentsExperimentKey", segmentsExperimentKey);
+			return HttpComponentsUtil.addParameter(
+				_portal.getLayoutURL(layout, themeDisplay, false),
+				"segmentsExperimentKey", segmentsExperimentKey);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			return StringPool.BLANK;
 		}
 	}
 
-	@Reference
-	private Http _http;
+	private static final Log _log = LogFactoryUtil.getLog(
+		SegmentsExperimentUserNotificationHandler.class);
 
 	@Reference
 	private LayoutLocalService _layoutLocalService;

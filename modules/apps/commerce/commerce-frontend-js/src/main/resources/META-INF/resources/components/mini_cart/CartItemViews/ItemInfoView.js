@@ -17,20 +17,20 @@ import React from 'react';
 
 function ItemInfoViewOptions({options}) {
 	return (
-		<div className={'item-info-extra mt-3'}>
-			<h6 className={'options'}>{options}</h6>
+		<div className="item-info-extra mt-3">
+			<h6 className="options">{options}</h6>
 		</div>
 	);
 }
 
 function ItemInfoViewBundle({childItems}) {
 	return (
-		<div className={'child-items'}>
+		<div className="child-items">
 			{childItems.map((item, index) => {
 				const {name, quantity} = item;
 
 				return (
-					<div className={'child-item'} key={index}>
+					<div className="child-item" key={index}>
 						<span>
 							{quantity} &times; {name}
 						</span>
@@ -43,16 +43,17 @@ function ItemInfoViewBundle({childItems}) {
 
 function ItemInfoViewBase({name, sku}) {
 	return (
-		<div className={'item-info-base'}>
-			<h5 className={'item-name'}>{name}</h5>
-			<p className={'item-sku'}>{sku}</p>
+		<div className="item-info-base">
+			<h5 className="item-name">{name}</h5>
+
+			<p className="item-sku">{sku}</p>
 		</div>
 	);
 }
 
 function ItemInfoView({childItems = [], name, options = '', sku}) {
-	const isBundle = childItems.length > 0,
-		hasOptions = !!options;
+	const isBundle = !!childItems.length;
+	const hasOptions = !!options;
 
 	return (
 		<>

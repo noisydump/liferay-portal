@@ -186,6 +186,11 @@ public class MBCategoryWrapper
 	}
 
 	@Override
+	public MBCategory cloneWithOriginalValues() {
+		return wrap(model.cloneWithOriginalValues());
+	}
+
+	@Override
 	public java.util.List<Long> getAncestorCategoryIds()
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -446,18 +451,6 @@ public class MBCategoryWrapper
 	@Override
 	public long getTrashEntryClassPK() {
 		return model.getTrashEntryClassPK();
-	}
-
-	/**
-	 * Returns the trash handler for this message boards category.
-	 *
-	 * @return the trash handler for this message boards category
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public com.liferay.portal.kernel.trash.TrashHandler getTrashHandler() {
-		return model.getTrashHandler();
 	}
 
 	/**

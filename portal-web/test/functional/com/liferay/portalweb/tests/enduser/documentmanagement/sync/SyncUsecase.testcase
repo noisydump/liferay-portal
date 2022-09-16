@@ -1,7 +1,7 @@
 @component-name = "portal-document-management"
 definition {
 
-	property custom.properties = "default.layout.template.id=1_column";
+	property custom.properties = "default.layout.template.id=1_column${line.separator}dl.actions.visible=true";
 	property osgi.app.includes = "oauth,oauth-api,oauth-service,oauth-web,sync-encryptor,sync-oauth,sync-security,sync-service,sync-web";
 	property portal.release = "false";
 	property portal.upstream = "true";
@@ -28,21 +28,18 @@ definition {
 			portlet = "Pages",
 			site = "${siteName}");
 
-		SitePages.addPublicPage(
+		PagesAdmin.addPage(
 			pageName = "Sync Page",
 			sitePageType = "Widget Page");
 
-		SitePages.configurePage(
+		PagesAdmin.configurePage(
 			columnName = "1 Column",
 			pageName = "Sync Page",
-			privacy = "Public Pages",
 			sitePageType = "Widget Page");
 
 		Navigator.gotoPage(pageName = "Sync Page");
 
 		Portlet.addPG(portletName = "Documents and Media");
-
-		DMDocument.enableActionsMenuOnPortlet();
 
 		Navigator.gotoPage(pageName = "Sync Page");
 
@@ -62,11 +59,12 @@ definition {
 
 			DMDocumentType.tearDownCP();
 
-			Page.tearDownCP();
+			PagesAdmin.tearDownCP();
 		}
 	}
 
 	@priority = "5"
+	@refactorneeded
 	test AddDocument {
 		property portal.acceptance = "false";
 		property testray.component.names = "Training";

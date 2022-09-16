@@ -19,10 +19,10 @@ import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.model.AssetRenderer;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
-import com.liferay.dynamic.data.mapping.kernel.DDMTemplateManager;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.DDMTemplate;
 import com.liferay.dynamic.data.mapping.service.DDMTemplateLinkLocalService;
+import com.liferay.dynamic.data.mapping.service.DDMTemplateLocalService;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.journal.constants.JournalContentPortletKeys;
 import com.liferay.journal.constants.JournalWebKeys;
@@ -92,18 +92,18 @@ public class JournalContentConfigurationAction
 				JavaConstants.JAVAX_PORTLET_RESPONSE);
 
 		httpServletRequest.setAttribute(
-			JournalWebKeys.ITEM_SELECTOR, _itemSelector);
+			ItemSelector.class.getName(), _itemSelector);
 		httpServletRequest.setAttribute(
 			JournalWebKeys.JOURNAL_CONTENT, _journalContent);
 
 		try {
 			JournalContentDisplayContext.create(
 				portletRequest, portletResponse, _CLASS_NAME_ID,
-				_ddmTemplateModelResourcePermission);
+				_ddmTemplateModelResourcePermission, _itemSelector);
 		}
 		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(portalException, portalException);
+				_log.debug(portalException);
 			}
 		}
 
@@ -116,7 +116,7 @@ public class JournalContentConfigurationAction
 			ActionResponse actionResponse)
 		throws Exception {
 
-		setPreference(actionRequest, "articleId", getArticleId(actionRequest));
+		setPreference(actionRequest, "articleId", _getArticleId(actionRequest));
 
 		String[] contentMetadataAssetAddonEntryKeys =
 			ParamUtil.getParameterValues(
@@ -128,7 +128,7 @@ public class JournalContentConfigurationAction
 
 		setPreference(
 			actionRequest, "groupId",
-			String.valueOf(getArticleGroupId(actionRequest)));
+			String.valueOf(_getArticleGroupId(actionRequest)));
 
 		String[] userToolAssetAddonEntryKeys = ParamUtil.getParameterValues(
 			actionRequest, "userToolAssetAddonEntryKeys");
@@ -151,7 +151,36 @@ public class JournalContentConfigurationAction
 		super.setServletContext(servletContext);
 	}
 
-	protected long getArticleGroupId(PortletRequest portletRequest) {
+	private void _addDDMTemplateLinks(ActionRequest actionRequest)
+		throws Exception {
+
+		JournalArticle journalArticle =
+			_journalArticleLocalService.fetchArticle(
+				_getArticleGroupId(actionRequest),
+				_getArticleId(actionRequest));
+
+		if (journalArticle == null) {
+			return;
+		}
+
+		String compositeClassName = ResourceActionsUtil.getCompositeModelName(
+			JournalArticle.class.getName(), DDMTemplate.class.getName());
+
+		_ddmTemplateLinkLocalService.deleteTemplateLink(
+			_portal.getClassNameId(compositeClassName), journalArticle.getId());
+
+		long ddmTemplateId = _getDDMTemplateId(actionRequest);
+
+		if (ddmTemplateId == 0) {
+			return;
+		}
+
+		_ddmTemplateLinkLocalService.addTemplateLink(
+			_portal.getClassNameId(compositeClassName), journalArticle.getId(),
+			ddmTemplateId);
+	}
+
+	private long _getArticleGroupId(PortletRequest portletRequest) {
 		long assetEntryId = GetterUtil.getLong(
 			getParameter(portletRequest, "assetEntryId"));
 
@@ -165,8 +194,8 @@ public class JournalContentConfigurationAction
 		return assetEntry.getGroupId();
 	}
 
-	protected String getArticleId(PortletRequest portletRequest)
-		throws PortalException {
+	private String _getArticleId(PortletRequest portletRequest)
+		throws Exception {
 
 		long assetEntryId = GetterUtil.getLong(
 			getParameter(portletRequest, "assetEntryId"));
@@ -191,8 +220,8 @@ public class JournalContentConfigurationAction
 		return StringUtil.toUpperCase(article.getArticleId());
 	}
 
-	protected long getDDMTemplateId(PortletRequest portletRequest)
-		throws PortalException {
+	private long _getDDMTemplateId(PortletRequest portletRequest)
+		throws Exception {
 
 		String ddmTemplateKey = getParameter(portletRequest, "ddmTemplateKey");
 
@@ -200,44 +229,15 @@ public class JournalContentConfigurationAction
 			return 0;
 		}
 
-		com.liferay.dynamic.data.mapping.kernel.DDMTemplate ddmTemplate =
-			_ddmTemplateManager.fetchTemplate(
-				getArticleGroupId(portletRequest), _CLASS_NAME_ID,
-				ddmTemplateKey);
+		DDMTemplate ddmTemplate = _ddmTemplateLocalService.fetchTemplate(
+			_getArticleGroupId(portletRequest), _CLASS_NAME_ID, ddmTemplateKey,
+			true);
 
 		if (ddmTemplate == null) {
 			return 0;
 		}
 
 		return ddmTemplate.getTemplateId();
-	}
-
-	private void _addDDMTemplateLinks(ActionRequest actionRequest)
-		throws Exception {
-
-		JournalArticle journalArticle =
-			_journalArticleLocalService.fetchArticle(
-				getArticleGroupId(actionRequest), getArticleId(actionRequest));
-
-		if (journalArticle == null) {
-			return;
-		}
-
-		String compositeClassName = ResourceActionsUtil.getCompositeModelName(
-			JournalArticle.class.getName(), DDMTemplate.class.getName());
-
-		_ddmTemplateLinkLocalService.deleteTemplateLink(
-			_portal.getClassNameId(compositeClassName), journalArticle.getId());
-
-		long ddmTemplateId = getDDMTemplateId(actionRequest);
-
-		if (ddmTemplateId == 0) {
-			return;
-		}
-
-		_ddmTemplateLinkLocalService.addTemplateLink(
-			_portal.getClassNameId(compositeClassName), journalArticle.getId(),
-			ddmTemplateId);
 	}
 
 	private static final long _CLASS_NAME_ID = PortalUtil.getClassNameId(
@@ -253,7 +253,7 @@ public class JournalContentConfigurationAction
 	private DDMTemplateLinkLocalService _ddmTemplateLinkLocalService;
 
 	@Reference
-	private DDMTemplateManager _ddmTemplateManager;
+	private DDMTemplateLocalService _ddmTemplateLocalService;
 
 	@Reference(
 		target = "(model.class.name=com.liferay.dynamic.data.mapping.model.DDMTemplate)"

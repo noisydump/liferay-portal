@@ -17,13 +17,14 @@ package com.liferay.calendar.util;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.kernel.util.TimeZoneUtil;
-import com.liferay.portal.util.CalendarFactoryImpl;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.Calendar;
 import java.util.TimeZone;
 
 import org.junit.Assert;
-import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -31,12 +32,10 @@ import org.junit.Test;
  */
 public class JCalendarUtilTest {
 
-	@BeforeClass
-	public static void setUpClass() {
-		CalendarFactoryUtil calendarFactoryUtil = new CalendarFactoryUtil();
-
-		calendarFactoryUtil.setCalendarFactory(new CalendarFactoryImpl());
-	}
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Test
 	public void testGetDSTShiftAtLosAngelesDuringDST() {

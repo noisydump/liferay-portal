@@ -14,6 +14,7 @@
 
 package com.liferay.commerce.product.item.selector.web.internal;
 
+import com.liferay.commerce.product.constants.CPField;
 import com.liferay.commerce.product.item.selector.criterion.CPDefinitionItemSelectorCriterion;
 import com.liferay.commerce.product.item.selector.web.internal.display.context.CPDefinitionItemSelectorViewDisplayContext;
 import com.liferay.commerce.product.service.CPDefinitionService;
@@ -21,7 +22,7 @@ import com.liferay.commerce.product.type.CPTypeServicesTracker;
 import com.liferay.item.selector.ItemSelectorReturnType;
 import com.liferay.item.selector.ItemSelectorView;
 import com.liferay.item.selector.criteria.UUIDItemSelectorReturnType;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -69,7 +70,7 @@ public class CPDefinitionItemSelectorView
 
 	@Override
 	public String getTitle(Locale locale) {
-		return LanguageUtil.get(locale, "products");
+		return _language.get(locale, "products");
 	}
 
 	@Override
@@ -82,11 +83,18 @@ public class CPDefinitionItemSelectorView
 		HttpServletRequest httpServletRequest =
 			(HttpServletRequest)servletRequest;
 
-		long cpDefinitionId = ParamUtil.getLong(
-			httpServletRequest, "cpDefinitionId");
+		long commerceChannelGroupId = ParamUtil.getLong(
+			httpServletRequest, CPField.COMMERCE_CHANNEL_GROUP_ID);
 
 		httpServletRequest.setAttribute(
-			"cpDefinitionId", String.valueOf(cpDefinitionId));
+			CPField.COMMERCE_CHANNEL_GROUP_ID,
+			String.valueOf(commerceChannelGroupId));
+
+		long cpDefinitionId = ParamUtil.getLong(
+			httpServletRequest, CPField.CP_DEFINITION_ID);
+
+		httpServletRequest.setAttribute(
+			CPField.CP_DEFINITION_ID, String.valueOf(cpDefinitionId));
 
 		CPDefinitionItemSelectorViewDisplayContext
 			cpDefinitionItemSelectorViewDisplayContext =
@@ -116,6 +124,9 @@ public class CPDefinitionItemSelectorView
 
 	@Reference
 	private CPTypeServicesTracker _cpTypeServicesTracker;
+
+	@Reference
+	private Language _language;
 
 	@Reference(
 		target = "(osgi.web.symbolicname=com.liferay.commerce.product.item.selector.web)"

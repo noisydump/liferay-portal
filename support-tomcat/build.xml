@@ -3,7 +3,7 @@
 <project basedir="." default="compile" name="support-tomcat" xmlns:antelope="antlib:ise.antelope.tasks">
 	<import file="../build-common-java.xml" />
 
-	<property name="deploy.dir" value="${app.server.lib.support.dir}" />
+	<property name="deploy.dir" value="${app.server.lib.portal.dir}" />
 	<property name="jar.file" value="${ant.project.name}" />
 	<property name="javac.classpathref" value="web.classpath" />
 	<property name="manifest.bundle.name" value="Liferay Support Tomcat" />
@@ -12,7 +12,7 @@
 	<path id="web-lib.classpath">
 		<fileset
 			dir="${project.dir}/lib/development"
-			includes="catalina.jar,jasper.jar,tomcat-api.jar,tomcat-coyote.jar,tomcat-util.jar"
+			includes="catalina.jar,jasper.jar,tomcat-api.jar,tomcat-coyote.jar,tomcat-util-scan.jar,tomcat-util.jar"
 		/>
 		<fileset
 			dir="${project.dir}/lib/portal"

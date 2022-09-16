@@ -41,18 +41,20 @@ if (folder != null) {
 			showParentGroups="<%= false %>"
 		/>
 
-		<%
-		PortletURL portletURL = renderResponse.createRenderURL();
-
-		portletURL.setParameter("mvcRenderCommandName", "/bookmarks/select_folder");
-		portletURL.setParameter("folderId", String.valueOf(folderId));
-		portletURL.setParameter("eventName", eventName);
-		%>
-
 		<br />
 
 		<liferay-ui:search-container
-			iteratorURL="<%= portletURL %>"
+			iteratorURL='<%=
+				PortletURLBuilder.createRenderURL(
+					renderResponse
+				).setMVCRenderCommandName(
+					"/bookmarks/select_folder"
+				).setParameter(
+					"eventName", eventName
+				).setParameter(
+					"folderId", folderId
+				).buildPortletURL()
+			%>'
 			total="<%= BookmarksFolderServiceUtil.getFoldersCount(scopeGroupId, folderId) %>"
 		>
 			<liferay-ui:search-container-results
@@ -139,14 +141,9 @@ if (folder != null) {
 				/>
 			</aui:button-row>
 
-			<liferay-ui:search-iterator />
+			<liferay-ui:search-iterator
+				markupView="lexicon"
+			/>
 		</liferay-ui:search-container>
 	</aui:form>
 </clay:container-fluid>
-
-<aui:script>
-	Liferay.Util.selectEntityHandler(
-		'#<portlet:namespace />selectFolderFm',
-		'<%= HtmlUtil.escapeJS(eventName) %>'
-	);
-</aui:script>

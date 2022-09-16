@@ -40,11 +40,12 @@ public class RankingToDocumentTranslatorImpl
 		).setStrings(
 			RankingFields.ALIASES, ArrayUtil.toStringArray(ranking.getAliases())
 		).setStrings(
-			RankingFields.BLOCKS, ArrayUtil.toStringArray(ranking.getBlockIds())
+			RankingFields.BLOCKS,
+			ArrayUtil.toStringArray(ranking.getHiddenDocumentIds())
 		).setBoolean(
 			RankingFields.INACTIVE, ranking.isInactive()
 		).setString(
-			RankingFields.INDEX, ranking.getIndex()
+			RankingFields.INDEX, ranking.getIndexName()
 		).setString(
 			RankingFields.NAME, ranking.getName()
 		).setValues(
@@ -55,15 +56,8 @@ public class RankingToDocumentTranslatorImpl
 			RankingFields.QUERY_STRINGS,
 			ArrayUtil.toStringArray(ranking.getQueryStrings())
 		).setString(
-			RankingFields.UID, ranking.getId()
+			RankingFields.UID, ranking.getRankingDocumentId()
 		).build();
-	}
-
-	@Reference(unbind = "-")
-	protected void setDocumentBuilderFactory(
-		DocumentBuilderFactory documentBuilderFactory) {
-
-		_documentBuilderFactory = documentBuilderFactory;
 	}
 
 	private Collection<Object> _toMaps(List<Ranking.Pin> pins) {
@@ -73,13 +67,14 @@ public class RankingToDocumentTranslatorImpl
 			pin -> LinkedHashMapBuilder.put(
 				RankingFields.POSITION, String.valueOf(pin.getPosition())
 			).put(
-				RankingFields.UID, pin.getId()
+				RankingFields.UID, pin.getDocumentId()
 			).build()
 		).collect(
 			Collectors.toList()
 		);
 	}
 
+	@Reference
 	private DocumentBuilderFactory _documentBuilderFactory;
 
 }

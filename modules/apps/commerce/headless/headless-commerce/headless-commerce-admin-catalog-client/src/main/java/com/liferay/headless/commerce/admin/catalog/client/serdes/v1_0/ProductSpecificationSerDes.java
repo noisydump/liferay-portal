@@ -65,6 +65,16 @@ public class ProductSpecificationSerDes {
 			sb.append(productSpecification.getId());
 		}
 
+		if (productSpecification.getLabel() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"label\": ");
+
+			sb.append(_toJSON(productSpecification.getLabel()));
+		}
+
 		if (productSpecification.getOptionCategoryId() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -157,6 +167,13 @@ public class ProductSpecificationSerDes {
 			map.put("id", String.valueOf(productSpecification.getId()));
 		}
 
+		if (productSpecification.getLabel() == null) {
+			map.put("label", null);
+		}
+		else {
+			map.put("label", String.valueOf(productSpecification.getLabel()));
+		}
+
 		if (productSpecification.getOptionCategoryId() == null) {
 			map.put("optionCategoryId", null);
 		}
@@ -235,6 +252,13 @@ public class ProductSpecificationSerDes {
 						Long.valueOf((String)jsonParserFieldValue));
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "label")) {
+				if (jsonParserFieldValue != null) {
+					productSpecification.setLabel(
+						(Map)ProductSpecificationSerDes.toMap(
+							(String)jsonParserFieldValue));
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "optionCategoryId")) {
 				if (jsonParserFieldValue != null) {
 					productSpecification.setOptionCategoryId(
@@ -272,9 +296,6 @@ public class ProductSpecificationSerDes {
 							(String)jsonParserFieldValue));
 				}
 			}
-			else if (jsonParserFieldName.equals("status")) {
-				throw new IllegalArgumentException();
-			}
 		}
 
 	}
@@ -303,7 +324,7 @@ public class ProductSpecificationSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -339,7 +360,7 @@ public class ProductSpecificationSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

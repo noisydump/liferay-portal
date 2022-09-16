@@ -18,8 +18,8 @@ import com.liferay.asset.auto.tagger.AssetAutoTagProvider;
 import com.liferay.document.library.asset.auto.tagger.tensorflow.internal.configuration.TensorFlowImageAssetAutoTagProviderCompanyConfiguration;
 import com.liferay.document.library.asset.auto.tagger.tensorflow.internal.configuration.TensorFlowImageAssetAutoTagProviderProcessConfiguration;
 import com.liferay.document.library.asset.auto.tagger.tensorflow.internal.petra.process.GetLabelProbabilitiesProcessCallable;
-import com.liferay.document.library.asset.auto.tagger.tensorflow.internal.util.InceptionModelUtil;
-import com.liferay.document.library.asset.auto.tagger.tensorflow.internal.util.TensorflowProcessHolder;
+import com.liferay.document.library.asset.auto.tagger.tensorflow.internal.util.TensorFlowDownloadUtil;
+import com.liferay.document.library.asset.auto.tagger.tensorflow.internal.util.TensorFlowProcessHolder;
 import com.liferay.petra.process.ProcessExecutor;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -30,8 +30,6 @@ import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.FileUtil;
-
-import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -74,10 +72,11 @@ public class TensorFlowImageAssetAutoTagProvider
 
 			if (tensorFlowImageAssetAutoTagProviderCompanyConfiguration.
 					enabled() &&
-				!_isTemporary(fileEntry) && InceptionModelUtil.isDownloaded()) {
+				!_isTemporary(fileEntry) &&
+				TensorFlowDownloadUtil.isDownloaded()) {
 
 				if (_labels == null) {
-					_labels = InceptionModelUtil.getLabels();
+					_labels = TensorFlowDownloadUtil.getLabels();
 				}
 
 				FileVersion fileVersion = fileEntry.getFileVersion();
@@ -93,7 +92,7 @@ public class TensorFlowImageAssetAutoTagProvider
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(exception, exception);
+				_log.warn(exception);
 			}
 		}
 
@@ -103,17 +102,17 @@ public class TensorFlowImageAssetAutoTagProvider
 	@Activate
 	protected void activate(
 			BundleContext bundleContext, Map<String, Object> properties)
-		throws IOException {
+		throws Exception {
 
 		modified(properties);
 
-		_tensorflowProcessHolder = new TensorflowProcessHolder(
+		_tensorFlowProcessHolder = new TensorFlowProcessHolder(
 			_processExecutor, bundleContext.getBundle());
 	}
 
 	@Deactivate
 	protected void deactivate() {
-		_tensorflowProcessHolder.destroy();
+		_tensorFlowProcessHolder.destroy();
 	}
 
 	@Modified
@@ -159,7 +158,7 @@ public class TensorFlowImageAssetAutoTagProvider
 			_tensorFlowImageAssetAutoTagProviderProcessConfiguration.
 				maximumNumberOfRelaunchesTimeout();
 
-		float[] labelProbabilities = _tensorflowProcessHolder.execute(
+		float[] labelProbabilities = _tensorFlowProcessHolder.execute(
 			new GetLabelProbabilitiesProcessCallable(imageBytes, mimeType),
 			maximumNumberOfRelaunches, maximumNumberOfRelaunchesTimeout * 1000);
 
@@ -191,6 +190,6 @@ public class TensorFlowImageAssetAutoTagProvider
 
 	private volatile TensorFlowImageAssetAutoTagProviderProcessConfiguration
 		_tensorFlowImageAssetAutoTagProviderProcessConfiguration;
-	private TensorflowProcessHolder _tensorflowProcessHolder;
+	private TensorFlowProcessHolder _tensorFlowProcessHolder;
 
 }

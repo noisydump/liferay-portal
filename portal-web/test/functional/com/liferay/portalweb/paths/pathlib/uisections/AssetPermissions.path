@@ -2,11 +2,13 @@
 <head>
 <title>AssetPermissions</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">AssetPermissions</td></tr>
 </thead>
+
 <tbody>
 <tr>
 	<td>VIEWABLE_AS_SELECT</td>
@@ -15,12 +17,12 @@
 </tr>
 <tr>
 	<td>MORE_OPTIONS_LINK</td>
-	<td>link=More Options »</td>
+	<td>//a[contains(@class,'btn')][normalize-space(text())='More Options']</td>
 	<td></td>
 </tr>
 <tr>
 	<td>HIDE_OPTIONS_LINK</td>
-	<td>link=« Hide Options</td>
+	<td>//input[contains(@id,'inputPermissionsShowOptions') and @value='false']</td>
 	<td></td>
 </tr>
 <tr>

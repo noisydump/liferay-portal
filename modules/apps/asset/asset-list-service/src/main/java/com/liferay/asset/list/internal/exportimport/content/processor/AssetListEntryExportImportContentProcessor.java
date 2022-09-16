@@ -39,6 +39,7 @@ import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
+import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.site.model.adapter.StagedGroup;
@@ -73,9 +74,9 @@ public class AssetListEntryExportImportContentProcessor
 			boolean escapeContent)
 		throws Exception {
 
-		UnicodeProperties unicodeProperties = new UnicodeProperties();
-
-		unicodeProperties.load(content);
+		UnicodeProperties unicodeProperties = UnicodePropertiesBuilder.load(
+			content
+		).build();
 
 		long[] groupIds = GetterUtil.getLongValues(
 			StringUtil.split(unicodeProperties.getProperty("groupIds", null)));
@@ -165,6 +166,14 @@ public class AssetListEntryExportImportContentProcessor
 					queryValues.split(","));
 
 				for (long categoryId : categoryIds) {
+					AssetCategory assetCategory =
+						_assetCategoryLocalService.fetchAssetCategory(
+							categoryId);
+
+					if (assetCategory == null) {
+						continue;
+					}
+
 					StagedModelDataHandlerUtil.exportReferenceStagedModel(
 						portletDataContext, stagedModel,
 						_assetCategoryLocalService.getCategory(categoryId),
@@ -182,9 +191,9 @@ public class AssetListEntryExportImportContentProcessor
 			String content)
 		throws Exception {
 
-		UnicodeProperties unicodeProperties = new UnicodeProperties();
-
-		unicodeProperties.load(content);
+		UnicodeProperties unicodeProperties = UnicodePropertiesBuilder.load(
+			content
+		).build();
 
 		Element rootElement = portletDataContext.getImportDataRootElement();
 

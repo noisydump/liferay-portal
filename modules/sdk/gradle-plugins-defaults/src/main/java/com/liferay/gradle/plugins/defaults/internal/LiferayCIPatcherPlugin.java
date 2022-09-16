@@ -14,8 +14,8 @@
 
 package com.liferay.gradle.plugins.defaults.internal;
 
-import com.liferay.gradle.plugins.node.tasks.NpmInstallTask;
-import com.liferay.gradle.plugins.node.tasks.PackageRunBuildTask;
+import com.liferay.gradle.plugins.node.task.NpmInstallTask;
+import com.liferay.gradle.plugins.node.task.PackageRunBuildTask;
 
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
@@ -33,7 +33,7 @@ public class LiferayCIPatcherPlugin implements Plugin<Project> {
 	public static final Plugin<Project> INSTANCE = new LiferayCIPatcherPlugin();
 
 	@Override
-	public void apply(final Project project) {
+	public void apply(Project project) {
 		_configureTasksPackageRunBuild(project);
 		_configureTasksNpmInstall(project);
 	}

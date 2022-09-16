@@ -14,14 +14,17 @@
 
 package com.liferay.user.groups.admin.web.internal.portlet.configuration.icon;
 
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.UserGroup;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.configuration.icon.BasePortletConfigurationIcon;
 import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfigurationIcon;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
-import com.liferay.portal.kernel.service.permission.UserGroupPermissionUtil;
+import com.liferay.portal.kernel.service.permission.UserGroupPermission;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -51,7 +54,7 @@ public class AssignMembersPortletConfigurationIcon
 
 	@Override
 	public String getMessage(PortletRequest portletRequest) {
-		return LanguageUtil.get(
+		return _language.get(
 			getResourceBundle(getLocale(portletRequest)), "assign-members");
 	}
 
@@ -60,14 +63,16 @@ public class AssignMembersPortletConfigurationIcon
 		PortletRequest portletRequest, PortletResponse portletResponse) {
 
 		try {
-			PortletURL portletURL = PortletURLFactoryUtil.create(
-				portletRequest, UserGroupsAdminPortletKeys.USER_GROUPS_ADMIN,
-				PortletRequest.RENDER_PHASE);
-
-			portletURL.setParameter(
-				"mvcPath", "/edit_user_group_assignments.jsp");
-			portletURL.setParameter(
-				"redirect", _portal.getCurrentURL(portletRequest));
+			PortletURL portletURL = PortletURLBuilder.create(
+				PortletURLFactoryUtil.create(
+					portletRequest,
+					UserGroupsAdminPortletKeys.USER_GROUPS_ADMIN,
+					PortletRequest.RENDER_PHASE)
+			).setMVCPath(
+				"/edit_user_group_assignments.jsp"
+			).setRedirect(
+				_portal.getCurrentURL(portletRequest)
+			).buildPortletURL();
 
 			UserGroup userGroup = ActionUtil.getUserGroup(portletRequest);
 
@@ -77,6 +82,9 @@ public class AssignMembersPortletConfigurationIcon
 			return portletURL.toString();
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return StringPool.BLANK;
@@ -96,17 +104,29 @@ public class AssignMembersPortletConfigurationIcon
 
 			UserGroup userGroup = ActionUtil.getUserGroup(portletRequest);
 
-			return UserGroupPermissionUtil.contains(
+			return _userGroupPermission.contains(
 				themeDisplay.getPermissionChecker(), userGroup.getUserGroupId(),
 				ActionKeys.ASSIGN_MEMBERS);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return false;
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		AssignMembersPortletConfigurationIcon.class);
+
+	@Reference
+	private Language _language;
+
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private UserGroupPermission _userGroupPermission;
 
 }

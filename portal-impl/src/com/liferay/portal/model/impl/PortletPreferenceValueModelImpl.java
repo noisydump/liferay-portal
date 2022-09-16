@@ -26,18 +26,21 @@ import com.liferay.portal.kernel.model.impl.BaseModelImpl;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -124,25 +127,25 @@ public class PortletPreferenceValueModelImpl
 	public static final boolean COLUMN_BITMASK_ENABLED = true;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long INDEX_COLUMN_BITMASK = 1L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long NAME_COLUMN_BITMASK = 2L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long PORTLETPREFERENCESID_COLUMN_BITMASK = 4L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long SMALLVALUE_COLUMN_BITMASK = 8L;
@@ -235,34 +238,6 @@ public class PortletPreferenceValueModelImpl
 		getAttributeSetterBiConsumers() {
 
 		return _attributeSetterBiConsumers;
-	}
-
-	private static Function<InvocationHandler, PortletPreferenceValue>
-		_getProxyProviderFunction() {
-
-		Class<?> proxyClass = ProxyUtil.getProxyClass(
-			PortletPreferenceValue.class.getClassLoader(),
-			PortletPreferenceValue.class, ModelWrapper.class);
-
-		try {
-			Constructor<PortletPreferenceValue> constructor =
-				(Constructor<PortletPreferenceValue>)proxyClass.getConstructor(
-					InvocationHandler.class);
-
-			return invocationHandler -> {
-				try {
-					return constructor.newInstance(invocationHandler);
-				}
-				catch (ReflectiveOperationException
-							reflectiveOperationException) {
-
-					throw new InternalError(reflectiveOperationException);
-				}
-			};
-		}
-		catch (NoSuchMethodException noSuchMethodException) {
-			throw new InternalError(noSuchMethodException);
-		}
 	}
 
 	private static final Map<String, Function<PortletPreferenceValue, Object>>
@@ -559,7 +534,9 @@ public class PortletPreferenceValueModelImpl
 		for (Map.Entry<String, Object> entry :
 				_columnOriginalValues.entrySet()) {
 
-			if (entry.getValue() != getColumnValue(entry.getKey())) {
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
 				_columnBitmask |= _columnBitmasks.get(entry.getKey());
 			}
 		}
@@ -615,6 +592,35 @@ public class PortletPreferenceValueModelImpl
 		portletPreferenceValueImpl.setSmallValue(getSmallValue());
 
 		portletPreferenceValueImpl.resetOriginalValues();
+
+		return portletPreferenceValueImpl;
+	}
+
+	@Override
+	public PortletPreferenceValue cloneWithOriginalValues() {
+		PortletPreferenceValueImpl portletPreferenceValueImpl =
+			new PortletPreferenceValueImpl();
+
+		portletPreferenceValueImpl.setMvccVersion(
+			this.<Long>getColumnOriginalValue("mvccVersion"));
+		portletPreferenceValueImpl.setCtCollectionId(
+			this.<Long>getColumnOriginalValue("ctCollectionId"));
+		portletPreferenceValueImpl.setPortletPreferenceValueId(
+			this.<Long>getColumnOriginalValue("portletPreferenceValueId"));
+		portletPreferenceValueImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		portletPreferenceValueImpl.setPortletPreferencesId(
+			this.<Long>getColumnOriginalValue("portletPreferencesId"));
+		portletPreferenceValueImpl.setIndex(
+			this.<Integer>getColumnOriginalValue("index_"));
+		portletPreferenceValueImpl.setLargeValue(
+			this.<String>getColumnOriginalValue("largeValue"));
+		portletPreferenceValueImpl.setName(
+			this.<String>getColumnOriginalValue("name"));
+		portletPreferenceValueImpl.setReadOnly(
+			this.<Boolean>getColumnOriginalValue("readOnly"));
+		portletPreferenceValueImpl.setSmallValue(
+			this.<String>getColumnOriginalValue("smallValue"));
 
 		return portletPreferenceValueImpl;
 	}
@@ -747,7 +753,7 @@ public class PortletPreferenceValueModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			(4 * attributeGetterFunctions.size()) + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -758,10 +764,27 @@ public class PortletPreferenceValueModelImpl
 			Function<PortletPreferenceValue, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(
-				attributeGetterFunction.apply((PortletPreferenceValue)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply(
+				(PortletPreferenceValue)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -809,7 +832,9 @@ public class PortletPreferenceValueModelImpl
 	private static class EscapedModelProxyProviderFunctionHolder {
 
 		private static final Function<InvocationHandler, PortletPreferenceValue>
-			_escapedModelProxyProviderFunction = _getProxyProviderFunction();
+			_escapedModelProxyProviderFunction =
+				ProxyUtil.getProxyProviderFunction(
+					PortletPreferenceValue.class, ModelWrapper.class);
 
 	}
 

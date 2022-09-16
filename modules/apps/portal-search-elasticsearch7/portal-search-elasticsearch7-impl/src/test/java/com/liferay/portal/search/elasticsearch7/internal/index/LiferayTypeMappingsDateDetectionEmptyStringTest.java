@@ -18,11 +18,13 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.search.elasticsearch7.internal.connection.IndexName;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.Date;
 import java.util.Map;
 
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
@@ -32,6 +34,10 @@ import org.junit.rules.TestName;
  * @author André de Oliveira
  */
 public class LiferayTypeMappingsDateDetectionEmptyStringTest {
+
+	@ClassRule
+	public static LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Before
 	public void setUp() throws Exception {
@@ -45,15 +51,15 @@ public class LiferayTypeMappingsDateDetectionEmptyStringTest {
 
 	@Test
 	public void testEmptyStringInSecondDocument() throws Exception {
-		final String field1 = randomField();
-		final String field2 = randomField();
-		final String field3 = randomField();
-		final String field4 = randomField();
-		final String field5 = randomField();
-		final String field6 = randomField();
-		final String field7 = randomField();
-		final String field8 = randomField();
-		final String field9 = randomField();
+		String field1 = _randomField();
+		String field2 = _randomField();
+		String field3 = _randomField();
+		String field4 = _randomField();
+		String field5 = _randomField();
+		String field6 = _randomField();
+		String field7 = _randomField();
+		String field8 = _randomField();
+		String field9 = _randomField();
 
 		index(
 			HashMapBuilder.<String, Object>put(
@@ -132,16 +138,16 @@ public class LiferayTypeMappingsDateDetectionEmptyStringTest {
 	@Rule
 	public TestName testName = new TestName();
 
-	protected static String randomField() {
-		return "randomField__" + RandomTestUtil.randomString();
-	}
-
 	protected void assertType(String field, String type) throws Exception {
 		_liferayIndexFixture.assertType(field, type);
 	}
 
 	protected void index(Map<String, Object> map) {
 		_liferayIndexFixture.index(map);
+	}
+
+	private String _randomField() {
+		return "randomField__" + RandomTestUtil.randomString();
 	}
 
 	private LiferayIndexFixture _liferayIndexFixture;

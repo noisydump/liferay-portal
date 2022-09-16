@@ -1,17 +1,13 @@
-<#assign blogsEntryModels = dataFactory.newBlogsEntryModels(groupId) />
-
-<#list blogsEntryModels as blogsEntryModel>
+<#list dataFactory.newBlogsEntryModels(groupId) as blogsEntryModel>
 	${dataFactory.toInsertSQL(blogsEntryModel)}
 
-	<#assign friendlyURLEntryModel = dataFactory.newFriendlyURLEntryModel(blogsEntryModel) />
+	<#assign friendlyURLEntryModel = dataFactory.newFriendlyURLEntryModel(blogsEntryModel.groupId, dataFactory.blogsEntryClassNameId, blogsEntryModel.entryId) />
 
 	${dataFactory.toInsertSQL(friendlyURLEntryModel)}
 
-	${dataFactory.toInsertSQL(dataFactory.newFriendlyURLEntryLocalizationModel(friendlyURLEntryModel, blogsEntryModel))}
+	${dataFactory.toInsertSQL(dataFactory.newFriendlyURLEntryLocalizationModel(friendlyURLEntryModel, blogsEntryModel.urlTitle))}
 
 	${dataFactory.toInsertSQL(dataFactory.newFriendlyURLEntryMapping(friendlyURLEntryModel))}
-
-	${dataFactory.toInsertSQL(dataFactory.newMBDiscussionAssetEntryModel(blogsEntryModel))}
 
 	<@insertAssetEntry
 		_categoryAndTag=true
@@ -33,5 +29,5 @@
 
 	${dataFactory.toInsertSQL(dataFactory.newSocialActivityModel(blogsEntryModel))}
 
-	${csvFileWriter.write("blog", blogsEntryModel.entryId + "," + blogsEntryModel.urlTitle + "," + mbRootMessageId + "\n")}
+	${csvFileWriter.write("blog", virtualHostModel.hostname + "," + blogsEntryModel.entryId + "," + blogsEntryModel.urlTitle + "," + mbRootMessageId + "\n")}
 </#list>

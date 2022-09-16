@@ -16,7 +16,7 @@ package com.liferay.portal.upgrade.test;
 
 import com.liferay.portal.kernel.dao.db.DBInspector;
 import com.liferay.portal.kernel.dao.jdbc.DataAccess;
-import com.liferay.portal.kernel.upgrade.BaseUpgradeDBColumnSize;
+import com.liferay.portal.kernel.upgrade.BaseDBColumnSizeUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 
 import java.sql.Connection;
@@ -37,20 +37,20 @@ public abstract class BaseUpgradeDBColumnSizeTestCase {
 	@Before
 	public void setUp() throws Exception {
 		try (Connection connection = DataAccess.getConnection();
-			PreparedStatement ps = connection.prepareStatement(
+			PreparedStatement preparedStatement = connection.prepareStatement(
 				getCreateTestTableSQL())) {
 
-			ps.executeUpdate();
+			preparedStatement.executeUpdate();
 		}
 	}
 
 	@After
 	public void tearDown() throws Exception {
 		try (Connection connection = DataAccess.getConnection();
-			PreparedStatement ps = connection.prepareStatement(
+			PreparedStatement preparedStatement = connection.prepareStatement(
 				"drop table TestTable")) {
 
-			ps.executeUpdate();
+			preparedStatement.executeUpdate();
 		}
 	}
 
@@ -71,7 +71,7 @@ public abstract class BaseUpgradeDBColumnSizeTestCase {
 
 	protected abstract String getTypeName();
 
-	protected abstract BaseUpgradeDBColumnSize getUpgradeProcess();
+	protected abstract BaseDBColumnSizeUpgradeProcess getUpgradeProcess();
 
 	private void _assertSize(int size) throws Exception {
 		try (Connection connection = DataAccess.getConnection()) {
@@ -85,21 +85,22 @@ public abstract class BaseUpgradeDBColumnSizeTestCase {
 			String tableName = dbInspector.normalizeName("TestTable");
 			String columnName = dbInspector.normalizeName("testValue");
 
-			try (ResultSet columnRS = databaseMetaData.getColumns(
+			try (ResultSet columnResultSet = databaseMetaData.getColumns(
 					catalog, schema, tableName, columnName)) {
 
-				Assert.assertTrue(columnRS.next());
+				Assert.assertTrue(columnResultSet.next());
 
 				Assert.assertEquals(
-					columnName, columnRS.getString("COLUMN_NAME"));
+					columnName, columnResultSet.getString("COLUMN_NAME"));
 
 				Assert.assertEquals(
 					dbInspector.normalizeName(getTypeName()),
-					columnRS.getString("TYPE_NAME"));
+					columnResultSet.getString("TYPE_NAME"));
 
-				Assert.assertEquals(size, columnRS.getInt("COLUMN_SIZE"));
+				Assert.assertEquals(
+					size, columnResultSet.getInt("COLUMN_SIZE"));
 
-				Assert.assertFalse(columnRS.next());
+				Assert.assertFalse(columnResultSet.next());
 			}
 		}
 	}

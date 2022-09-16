@@ -73,11 +73,11 @@ public class PriceModifierProductResourceImpl
 
 		CommercePriceModifier commercePriceModifier =
 			_commercePriceModifierService.fetchByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commercePriceModifier == null) {
 			throw new NoSuchPriceModifierException(
-				"Unable to find Price Modifier with externalReferenceCode: " +
+				"Unable to find price modifier with external reference code " +
 					externalReferenceCode);
 		}
 
@@ -136,11 +136,11 @@ public class PriceModifierProductResourceImpl
 
 		CommercePriceModifier commercePriceModifier =
 			_commercePriceModifierService.fetchByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commercePriceModifier == null) {
 			throw new NoSuchPriceModifierException(
-				"Unable to find Price Modifier with externalReferenceCode: " +
+				"Unable to find price modifier with external reference code " +
 					externalReferenceCode);
 		}
 

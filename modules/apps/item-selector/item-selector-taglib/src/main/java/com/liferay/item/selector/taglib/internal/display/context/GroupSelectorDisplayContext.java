@@ -20,6 +20,7 @@ import com.liferay.item.selector.provider.GroupItemSelectorProvider;
 import com.liferay.item.selector.taglib.internal.servlet.item.selector.ItemSelectorUtil;
 import com.liferay.item.selector.taglib.internal.util.EntryURLUtil;
 import com.liferay.item.selector.taglib.internal.util.GroupItemSelectorTrackerUtil;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.model.Group;
@@ -74,15 +75,19 @@ public class GroupSelectorDisplayContext {
 	}
 
 	public PortletURL getGroupItemSelectorURL(String groupType) {
-		PortletURL portletURL = _getItemSelectorURL();
-
-		portletURL.setParameter("groupType", groupType);
-		portletURL.setParameter(
+		return PortletURLBuilder.create(
+			_getItemSelectorURL()
+		).setParameter(
+			"groupType", groupType
+		).setParameter(
+			"scopeGroupType",
+			ParamUtil.getString(_liferayPortletRequest, "scopeGroupType")
+		).setParameter(
 			"selectedTab",
-			ParamUtil.getString(_liferayPortletRequest, "selectedTab"));
-		portletURL.setParameter("showGroupSelector", Boolean.TRUE.toString());
-
-		return portletURL;
+			ParamUtil.getString(_liferayPortletRequest, "selectedTab")
+		).setParameter(
+			"showGroupSelector", true
+		).buildPortletURL();
 	}
 
 	public Set<String> getGroupTypes() {
@@ -94,17 +99,12 @@ public class GroupSelectorDisplayContext {
 			_liferayPortletRequest, _getIteratorURL());
 
 		searchContainer.setEmptyResultsMessage(_getEmptyResultsMessage());
-
-		List<Group> groups = (List<Group>)_liferayPortletRequest.getAttribute(
-			"liferay-item-selector:group-selector:groups");
-
-		searchContainer.setResults(groups);
-
-		int groupsCount = GetterUtil.getInteger(
-			_liferayPortletRequest.getAttribute(
-				"liferay-item-selector:group-selector:groupsCount"));
-
-		searchContainer.setTotal(groupsCount);
+		searchContainer.setResultsAndTotal(
+			() -> (List<Group>)_liferayPortletRequest.getAttribute(
+				"liferay-item-selector:group-selector:groups"),
+			GetterUtil.getInteger(
+				_liferayPortletRequest.getAttribute(
+					"liferay-item-selector:group-selector:groupsCount")));
 
 		return searchContainer;
 	}
@@ -166,29 +166,28 @@ public class GroupSelectorDisplayContext {
 	private PortletURL _getItemSelectorURL() {
 		ItemSelector itemSelector = _getItemSelector();
 
-		String itemSelectedEventName = ParamUtil.getString(
-			_liferayPortletRequest, "itemSelectedEventName");
-
 		List<ItemSelectorCriterion> itemSelectorCriteria =
 			itemSelector.getItemSelectorCriteria(
 				_liferayPortletRequest.getParameterMap());
 
 		return itemSelector.getItemSelectorURL(
 			RequestBackedPortletURLFactoryUtil.create(_liferayPortletRequest),
-			itemSelectedEventName,
+			ParamUtil.getString(
+				_liferayPortletRequest, "itemSelectedEventName"),
 			itemSelectorCriteria.toArray(new ItemSelectorCriterion[0]));
 	}
 
 	private PortletURL _getIteratorURL() {
-		PortletURL portletURL = _getItemSelectorURL();
-
-		portletURL.setParameter("groupType", _getGroupType());
-		portletURL.setParameter(
+		return PortletURLBuilder.create(
+			_getItemSelectorURL()
+		).setParameter(
+			"groupType", _getGroupType()
+		).setParameter(
 			"selectedTab",
-			ParamUtil.getString(_liferayPortletRequest, "selectedTab"));
-		portletURL.setParameter("showGroupSelector", Boolean.TRUE.toString());
-
-		return portletURL;
+			ParamUtil.getString(_liferayPortletRequest, "selectedTab")
+		).setParameter(
+			"showGroupSelector", true
+		).buildPortletURL();
 	}
 
 	private String _groupType;

@@ -12,9 +12,9 @@
  * details.
  */
 
-import {useMutation} from '@apollo/client';
 import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
+import {useMutation} from 'graphql-hooks';
 import React, {useEffect, useState} from 'react';
 
 import {
@@ -23,13 +23,13 @@ import {
 } from '../utils/client.es';
 import {normalize, normalizeRating} from '../utils/utils.es';
 
-export default ({
+export default function Rating({
 	aggregateRating,
 	disabled = false,
 	entityId,
 	myRating,
 	type,
-}) => {
+}) {
 	const [userRating, setUserRating] = useState(0);
 	const [rating, setRating] = useState(0);
 
@@ -76,9 +76,7 @@ export default ({
 	return (
 		<div className="align-items-center d-inline-flex flex-md-column justify-content-center text-secondary">
 			<ClayButton
-				className={
-					'text-reset' + (userRating === 1 ? ' text-primary' : '')
-				}
+				className={userRating === 1 ? ' text-primary' : 'text-reset'}
 				disabled={disabled || !Liferay.ThemeDisplay.isSignedIn()}
 				displayType="unstyled"
 				monospaced
@@ -90,9 +88,7 @@ export default ({
 			<span className="c-px-2">{rating || 0}</span>
 
 			<ClayButton
-				className={
-					'text-reset' + (userRating === -1 ? ' text-primary' : '')
-				}
+				className={userRating === -1 ? ' text-primary' : 'text-reset'}
 				disabled={disabled || !Liferay.ThemeDisplay.isSignedIn()}
 				displayType="unstyled"
 				monospaced
@@ -102,4 +98,4 @@ export default ({
 			</ClayButton>
 		</div>
 	);
-};
+}

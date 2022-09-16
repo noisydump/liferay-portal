@@ -10,16 +10,16 @@
  */
 
 import ClayIcon from '@clayui/icon';
-import React, {useContext, useMemo} from 'react';
+import ClayPanel from '@clayui/panel';
+import React, {useContext} from 'react';
 
-import Panel from '../../../shared/components/Panel.es';
 import ContentView from '../../../shared/components/content-view/ContentView.es';
 import ReloadButton from '../../../shared/components/list/ReloadButton.es';
 import ChildLink from '../../../shared/components/router/ChildLink.es';
 import {AppContext} from '../../AppContext.es';
-import {Table} from './WorkloadByAssigneeCardTable.es';
+import Table from './WorkloadByAssigneeCardTable.es';
 
-const Body = ({currentTab, items, processId, processStepKey, totalCount}) => {
+function Body({currentTab, items, processId, processStepKey, totalCount}) {
 	const getEmptyMessage = (tab) => {
 		switch (tab) {
 			case 'onTime':
@@ -37,30 +37,27 @@ const Body = ({currentTab, items, processId, processStepKey, totalCount}) => {
 		}
 	};
 
-	const statesProps = useMemo(
-		() => ({
-			emptyProps: {
-				className: 'py-6',
-				hideAnimation: true,
-				message: getEmptyMessage(currentTab),
-				messageClassName: 'small',
-			},
-			errorProps: {
-				actionButton: <ReloadButton />,
-				className: 'py-6',
-				hideAnimation: true,
-				message: Liferay.Language.get(
-					'there-was-a-problem-retrieving-data-please-try-reloading-the-page'
-				),
-				messageClassName: 'small',
-			},
-			loadingProps: {className: 'py-6'},
-		}),
-		[currentTab]
-	);
+	const statesProps = {
+		emptyProps: {
+			className: 'py-6',
+			hideAnimation: true,
+			message: getEmptyMessage(currentTab),
+			messageClassName: 'small',
+		},
+		errorProps: {
+			actionButton: <ReloadButton />,
+			className: 'py-6',
+			hideAnimation: true,
+			message: Liferay.Language.get(
+				'there-was-a-problem-retrieving-data-please-try-reloading-the-page'
+			),
+			messageClassName: 'small',
+		},
+		loadingProps: {className: 'py-6'},
+	};
 
 	return (
-		<Panel.Body>
+		<ClayPanel.Body>
 			<ContentView {...statesProps}>
 				{totalCount > 0 && (
 					<>
@@ -79,11 +76,11 @@ const Body = ({currentTab, items, processId, processStepKey, totalCount}) => {
 					</>
 				)}
 			</ContentView>
-		</Panel.Body>
+		</ClayPanel.Body>
 	);
-};
+}
 
-const Footer = ({processId, processStepKey, totalCount}) => {
+function Footer({processId, processStepKey, totalCount}) {
 	const {defaultDelta} = useContext(AppContext);
 
 	const filters = {};
@@ -112,9 +109,9 @@ const Footer = ({processId, processStepKey, totalCount}) => {
 			</ChildLink>
 		</div>
 	);
-};
+}
 
 Body.Footer = Footer;
 Body.Table = Table;
 
-export {Body};
+export default Body;

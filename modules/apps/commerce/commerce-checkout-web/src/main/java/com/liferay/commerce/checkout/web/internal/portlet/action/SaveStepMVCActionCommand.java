@@ -17,7 +17,7 @@ package com.liferay.commerce.checkout.web.internal.portlet.action;
 import com.liferay.commerce.constants.CommercePortletKeys;
 import com.liferay.commerce.util.CommerceCheckoutStep;
 import com.liferay.commerce.util.CommerceCheckoutStepServicesTracker;
-import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.servlet.SessionErrors;
@@ -29,7 +29,6 @@ import com.liferay.portal.kernel.util.WebKeys;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
-import javax.portlet.PortletURL;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -60,7 +59,7 @@ public class SaveStepMVCActionCommand extends BaseMVCActionCommand {
 		}
 
 		if (!SessionErrors.isEmpty(actionRequest)) {
-			return getPortletURL(
+			return _getPortletURL(
 				actionRequest, actionResponse, checkoutStepName);
 		}
 
@@ -73,7 +72,7 @@ public class SaveStepMVCActionCommand extends BaseMVCActionCommand {
 			return ParamUtil.getString(actionRequest, "redirect");
 		}
 
-		return getPortletURL(
+		return _getPortletURL(
 			actionRequest, actionResponse, commerceCheckoutStep.getName());
 	}
 
@@ -99,23 +98,18 @@ public class SaveStepMVCActionCommand extends BaseMVCActionCommand {
 		sendRedirect(actionRequest, actionResponse, redirect);
 	}
 
-	protected String getPortletURL(
+	private String _getPortletURL(
 		ActionRequest actionRequest, ActionResponse actionResponse,
 		String checkoutStepName) {
 
-		LiferayPortletResponse liferayPortletResponse =
-			_portal.getLiferayPortletResponse(actionResponse);
-
-		PortletURL portletURL = liferayPortletResponse.createRenderURL();
-
-		String commerceOrderUuid = ParamUtil.getString(
-			actionRequest, "commerceOrderUuid");
-
-		portletURL.setParameter("commerceOrderUuid", commerceOrderUuid);
-
-		portletURL.setParameter("checkoutStepName", checkoutStepName);
-
-		return portletURL.toString();
+		return PortletURLBuilder.createRenderURL(
+			_portal.getLiferayPortletResponse(actionResponse)
+		).setParameter(
+			"checkoutStepName", checkoutStepName
+		).setParameter(
+			"commerceOrderUuid",
+			ParamUtil.getString(actionRequest, "commerceOrderUuid")
+		).buildString();
 	}
 
 	@Reference

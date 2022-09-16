@@ -28,7 +28,7 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
@@ -105,7 +105,7 @@ public class AvailabilityEstimateCPContentContributor
 
 			jsonObject.put(
 				CPContentContributorConstants.AVAILABILITY_ESTIMATE_NAME,
-				getAvailabilityEstimateLabel(
+				_getAvailabilityEstimateLabel(
 					themeDisplay.getLocale(),
 					cpDefinitionInventoryEngine.getAvailabilityEstimate(
 						cpInstance, themeDisplay.getLocale())));
@@ -114,14 +114,14 @@ public class AvailabilityEstimateCPContentContributor
 		return jsonObject;
 	}
 
-	protected String getAvailabilityEstimateLabel(
+	private String _getAvailabilityEstimateLabel(
 		Locale locale, String availabilityEstimate) {
 
 		if (Validator.isNull(availabilityEstimate)) {
 			return StringPool.BLANK;
 		}
 
-		return LanguageUtil.format(
+		return _language.format(
 			locale, "product-will-be-available-in-x", availabilityEstimate);
 	}
 
@@ -141,6 +141,9 @@ public class AvailabilityEstimateCPContentContributor
 
 	@Reference
 	private JSONFactory _jsonFactory;
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private Portal _portal;

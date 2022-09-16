@@ -16,9 +16,9 @@ package com.liferay.oauth2.provider.service.base;
 
 import com.liferay.oauth2.provider.model.OAuth2Authorization;
 import com.liferay.oauth2.provider.service.OAuth2AuthorizationService;
+import com.liferay.oauth2.provider.service.OAuth2AuthorizationServiceUtil;
 import com.liferay.oauth2.provider.service.persistence.OAuth2AuthorizationFinder;
 import com.liferay.oauth2.provider.service.persistence.OAuth2AuthorizationPersistence;
-import com.liferay.oauth2.provider.service.persistence.OAuth2ScopeGrantFinder;
 import com.liferay.oauth2.provider.service.persistence.OAuth2ScopeGrantPersistence;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
@@ -26,12 +26,17 @@ import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.service.BaseServiceImpl;
 import com.liferay.portal.kernel.util.PortalUtil;
 
+import java.lang.reflect.Field;
+
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -52,8 +57,13 @@ public abstract class OAuth2AuthorizationServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>OAuth2AuthorizationService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.oauth2.provider.service.OAuth2AuthorizationServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>OAuth2AuthorizationService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>OAuth2AuthorizationServiceUtil</code>.
 	 */
+	@Deactivate
+	protected void deactivate() {
+		_setServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -64,6 +74,8 @@ public abstract class OAuth2AuthorizationServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		oAuth2AuthorizationService = (OAuth2AuthorizationService)aopProxy;
+
+		_setServiceUtilService(oAuth2AuthorizationService);
 	}
 
 	/**
@@ -109,6 +121,22 @@ public abstract class OAuth2AuthorizationServiceBaseImpl
 		}
 	}
 
+	private void _setServiceUtilService(
+		OAuth2AuthorizationService oAuth2AuthorizationService) {
+
+		try {
+			Field field = OAuth2AuthorizationServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, oAuth2AuthorizationService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@Reference
 	protected
 		com.liferay.oauth2.provider.service.OAuth2AuthorizationLocalService
@@ -129,7 +157,7 @@ public abstract class OAuth2AuthorizationServiceBaseImpl
 	@Reference
 	protected OAuth2ScopeGrantPersistence oAuth2ScopeGrantPersistence;
 
-	@Reference
-	protected OAuth2ScopeGrantFinder oAuth2ScopeGrantFinder;
+	private static final Log _log = LogFactoryUtil.getLog(
+		OAuth2AuthorizationServiceBaseImpl.class);
 
 }

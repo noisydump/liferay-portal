@@ -16,8 +16,8 @@ package com.liferay.portal.search.tuning.synonyms.web.internal.index.creation.co
 
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.search.spi.model.index.contributor.IndexContributor;
+import com.liferay.portal.search.tuning.synonyms.index.name.SynonymSetIndexName;
 import com.liferay.portal.search.tuning.synonyms.web.internal.index.SynonymSetIndexReader;
-import com.liferay.portal.search.tuning.synonyms.web.internal.index.name.SynonymSetIndexName;
 import com.liferay.portal.search.tuning.synonyms.web.internal.synchronizer.IndexToFilterSynchronizer;
 
 import org.osgi.service.component.annotations.Component;
@@ -41,7 +41,7 @@ public class SynonymSetIndexCreationIndexContributor
 		}
 
 		_indexToFilterSynchronizer.copyToFilter(
-			synonymSetIndexName, companyIndexName);
+			synonymSetIndexName, companyIndexName, false);
 	}
 
 	protected static final String SYNONYMS_INDEX_NAME_SUFFIX =

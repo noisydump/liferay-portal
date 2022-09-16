@@ -15,7 +15,9 @@
 package com.liferay.trash.web.internal.servlet.taglib.util;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemBuilder;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
@@ -30,9 +32,6 @@ import com.liferay.trash.model.TrashEntry;
 import com.liferay.trash.web.internal.display.context.TrashDisplayContext;
 
 import java.util.List;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.PortletURL;
 
 /**
  * @author Pavel Savinov
@@ -55,167 +54,184 @@ public class TrashContainerActionDropdownItemsProvider {
 		_trashRenderer = trashDisplayContext.getTrashRenderer();
 	}
 
-	public List<DropdownItem> getActionDropdownItems() throws Exception {
-		return new DropdownItemList() {
-			{
-				if (_trashEntry != null) {
-					if (_trashHandler.isRestorable(_trashEntry.getClassPK()) &&
-						!_trashHandler.isInTrashContainer(
-							_trashEntry.getClassPK())) {
-
-						add(_getRestoreActionDropdownItem());
-					}
-					else if (!_trashHandler.isRestorable(
+	public List<DropdownItem> getActionDropdownItems() {
+		return DropdownItemListBuilder.addGroup(
+			dropdownGroupItem -> {
+				dropdownGroupItem.setDropdownItems(
+					DropdownItemListBuilder.add(
+						() ->
+							(_trashEntry != null) &&
+							_trashHandler.isRestorable(
 								_trashEntry.getClassPK()) &&
-							 _trashHandler.isMovable(
-								 _trashEntry.getClassPK())) {
-
-						add(_getMoveTrashEntryActionDropdownItem());
-					}
-
-					if (_trashHandler.isDeletable(
-							_trashRenderer.getClassPK())) {
-
-						add(_getDeleteTrashEntryActionDropdownItem());
-					}
-				}
-				else {
-					if (_trashHandler.isMovable(_trashRenderer.getClassPK())) {
-						add(_getMoveActionDropdownItem());
-					}
-					else if (_trashHandler.isDeletable(
-								_trashRenderer.getClassPK())) {
-
-						add(_getDeleteActionDropdownItem());
-					}
-				}
+							!_trashHandler.isInTrashContainer(
+								_trashEntry.getClassPK()),
+						_getRestoreActionDropdownItem()
+					).add(
+						() ->
+							(_trashEntry != null) &&
+							!_trashHandler.isRestorable(
+								_trashEntry.getClassPK()) &&
+							_trashHandler.isMovable(_trashEntry.getClassPK()),
+						_getMoveTrashEntryActionDropdownItem()
+					).add(
+						() ->
+							(_trashEntry == null) &&
+							_trashHandler.isMovable(
+								_trashRenderer.getClassPK()),
+						_getMoveActionDropdownItem()
+					).build());
+				dropdownGroupItem.setSeparator(true);
 			}
-		};
+		).addGroup(
+			dropdownGroupItem -> {
+				dropdownGroupItem.setDropdownItems(
+					DropdownItemListBuilder.add(
+						() ->
+							(_trashEntry != null) &&
+							_trashHandler.isDeletable(
+								_trashRenderer.getClassPK()),
+						_getDeleteTrashEntryActionDropdownItem()
+					).add(
+						() ->
+							(_trashEntry == null) &&
+							_trashHandler.isDeletable(
+								_trashRenderer.getClassPK()),
+						_getDeleteActionDropdownItem()
+					).build());
+				dropdownGroupItem.setSeparator(true);
+			}
+		).build();
 	}
 
 	private DropdownItem _getDeleteActionDropdownItem() throws Exception {
-		PortletURL deleteEntryURL = _liferayPortletResponse.createActionURL();
-
-		deleteEntryURL.setParameter(ActionRequest.ACTION_NAME, "deleteEntries");
-		deleteEntryURL.setParameter(
-			"redirect", _trashDisplayContext.getViewContentRedirectURL());
-		deleteEntryURL.setParameter("className", _trashRenderer.getClassName());
-		deleteEntryURL.setParameter(
-			"classPK", String.valueOf(_trashRenderer.getClassPK()));
-
-		return new DropdownItem() {
-			{
-				putData("action", "deleteEntry");
-				putData("deleteEntryURL", deleteEntryURL.toString());
-				setLabel(LanguageUtil.get(_themeDisplay.getLocale(), "delete"));
-			}
-		};
+		return DropdownItemBuilder.putData(
+			"action", "deleteEntry"
+		).putData(
+			"deleteEntryURL",
+			PortletURLBuilder.createActionURL(
+				_liferayPortletResponse
+			).setActionName(
+				"deleteEntries"
+			).setRedirect(
+				_trashDisplayContext.getViewContentRedirectURL()
+			).setParameter(
+				"className", _trashRenderer.getClassName()
+			).setParameter(
+				"classPK", _trashRenderer.getClassPK()
+			).buildString()
+		).setIcon(
+			"trash"
+		).setLabel(
+			LanguageUtil.get(_themeDisplay.getLocale(), "delete")
+		).build();
 	}
 
 	private DropdownItem _getDeleteTrashEntryActionDropdownItem()
 		throws Exception {
 
-		PortletURL deleteEntryURL = _liferayPortletResponse.createActionURL();
-
-		deleteEntryURL.setParameter(ActionRequest.ACTION_NAME, "deleteEntries");
-		deleteEntryURL.setParameter(
-			"redirect", _trashDisplayContext.getViewContentRedirectURL());
-		deleteEntryURL.setParameter(
-			"trashEntryId", String.valueOf(_trashEntry.getEntryId()));
-
-		return new DropdownItem() {
-			{
-				putData("action", "deleteEntry");
-				putData("deleteEntryURL", deleteEntryURL.toString());
-				setLabel(LanguageUtil.get(_themeDisplay.getLocale(), "delete"));
-			}
-		};
+		return DropdownItemBuilder.putData(
+			"action", "deleteEntry"
+		).putData(
+			"deleteEntryURL",
+			PortletURLBuilder.createActionURL(
+				_liferayPortletResponse
+			).setActionName(
+				"deleteEntries"
+			).setRedirect(
+				_trashDisplayContext.getViewContentRedirectURL()
+			).setParameter(
+				"trashEntryId", _trashEntry.getEntryId()
+			).buildString()
+		).setIcon(
+			"trash"
+		).setLabel(
+			LanguageUtil.get(_themeDisplay.getLocale(), "delete")
+		).build();
 	}
 
 	private DropdownItem _getMoveActionDropdownItem() throws Exception {
-		PortletURL moveEntryURL = _liferayPortletResponse.createRenderURL();
-
-		moveEntryURL.setParameter("mvcPath", "/view_container_model.jsp");
-
-		long trashRendererClassNameId = PortalUtil.getClassNameId(
-			_trashRenderer.getClassName());
-
-		moveEntryURL.setParameter(
-			"classNameId", String.valueOf(trashRendererClassNameId));
-
-		moveEntryURL.setParameter(
-			"classPK", String.valueOf(_trashRenderer.getClassPK()));
-
-		String containerModelClassName =
-			_trashHandler.getContainerModelClassName(
-				_trashDisplayContext.getClassPK());
-
-		moveEntryURL.setParameter(
-			"containerModelClassNameId",
-			String.valueOf(PortalUtil.getClassNameId(containerModelClassName)));
-
-		moveEntryURL.setWindowState(LiferayWindowState.POP_UP);
-
-		return new DropdownItem() {
-			{
-				putData("action", "moveEntry");
-				putData("moveEntryURL", moveEntryURL.toString());
-				setLabel(
-					LanguageUtil.get(_themeDisplay.getLocale(), "restore"));
-			}
-		};
+		return DropdownItemBuilder.putData(
+			"action", "moveEntry"
+		).putData(
+			"moveEntryURL",
+			PortletURLBuilder.createRenderURL(
+				_liferayPortletResponse
+			).setMVCPath(
+				"/view_container_model.jsp"
+			).setParameter(
+				"classNameId",
+				PortalUtil.getClassNameId(_trashRenderer.getClassName())
+			).setParameter(
+				"classPK", _trashRenderer.getClassPK()
+			).setParameter(
+				"containerModelClassNameId",
+				() -> PortalUtil.getClassNameId(
+					_trashHandler.getContainerModelClassName(
+						_trashDisplayContext.getClassPK()))
+			).setWindowState(
+				LiferayWindowState.POP_UP
+			).buildString()
+		).setIcon(
+			"restore"
+		).setLabel(
+			LanguageUtil.get(_themeDisplay.getLocale(), "restore")
+		).build();
 	}
 
 	private DropdownItem _getMoveTrashEntryActionDropdownItem()
 		throws Exception {
 
-		PortletURL moveEntryURL = _liferayPortletResponse.createRenderURL();
+		return DropdownItemBuilder.putData(
+			"action", "moveEntry"
+		).putData(
+			"moveEntryURL",
+			PortletURLBuilder.createRenderURL(
+				_liferayPortletResponse
+			).setMVCPath(
+				"/view_container_model.jsp"
+			).setParameter(
+				"classNameId", _trashEntry.getClassNameId()
+			).setParameter(
+				"classPK", _trashEntry.getClassPK()
+			).setParameter(
+				"containerModelClassNameId",
+				() -> {
+					String trashHandlerEntryContainerModelClassName =
+						_trashHandler.getContainerModelClassName(
+							_trashEntry.getClassPK());
 
-		moveEntryURL.setParameter("mvcPath", "/view_container_model.jsp");
-		moveEntryURL.setParameter(
-			"classNameId", String.valueOf(_trashEntry.getClassNameId()));
-		moveEntryURL.setParameter(
-			"classPK", String.valueOf(_trashEntry.getClassPK()));
-
-		String trashHandlerEntryContainerModelClassName =
-			_trashHandler.getContainerModelClassName(_trashEntry.getClassPK());
-
-		moveEntryURL.setParameter(
-			"containerModelClassNameId",
-			String.valueOf(
-				PortalUtil.getClassNameId(
-					trashHandlerEntryContainerModelClassName)));
-
-		moveEntryURL.setWindowState(LiferayWindowState.POP_UP);
-
-		return new DropdownItem() {
-			{
-				putData("action", "moveEntry");
-				putData("moveEntryURL", moveEntryURL.toString());
-				setLabel(
-					LanguageUtil.get(_themeDisplay.getLocale(), "restore"));
-			}
-		};
+					return PortalUtil.getClassNameId(
+						trashHandlerEntryContainerModelClassName);
+				}
+			).setWindowState(
+				LiferayWindowState.POP_UP
+			).buildString()
+		).setIcon(
+			"restore"
+		).setLabel(
+			LanguageUtil.get(_themeDisplay.getLocale(), "restore")
+		).build();
 	}
 
 	private DropdownItem _getRestoreActionDropdownItem() throws Exception {
-		PortletURL restoreEntryURL = _liferayPortletResponse.createActionURL();
-
-		restoreEntryURL.setParameter(
-			ActionRequest.ACTION_NAME, "restoreEntries");
-		restoreEntryURL.setParameter(
-			"redirect", _trashDisplayContext.getViewContentRedirectURL());
-		restoreEntryURL.setParameter(
-			"trashEntryId", String.valueOf(_trashEntry.getEntryId()));
-
-		return new DropdownItem() {
-			{
-				putData("action", "restoreEntry");
-				putData("restoreEntryURL", restoreEntryURL.toString());
-				setLabel(
-					LanguageUtil.get(_themeDisplay.getLocale(), "restore"));
-			}
-		};
+		return DropdownItemBuilder.putData(
+			"action", "restoreEntry"
+		).putData(
+			"restoreEntryURL",
+			PortletURLBuilder.createActionURL(
+				_liferayPortletResponse
+			).setActionName(
+				"restoreEntries"
+			).setRedirect(
+				_trashDisplayContext.getViewContentRedirectURL()
+			).setParameter(
+				"trashEntryId", _trashEntry.getEntryId()
+			).buildString()
+		).setIcon(
+			"restore"
+		).setLabel(
+			LanguageUtil.get(_themeDisplay.getLocale(), "restore")
+		).build();
 	}
 
 	private final LiferayPortletResponse _liferayPortletResponse;

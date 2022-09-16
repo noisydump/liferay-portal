@@ -25,15 +25,17 @@ Map<String, Object> contextObjects = HashMapBuilder.<String, Object>put(
 
 SearchContainer<CommerceOrderItem> commerceOrderItemSearchContainer = commerceCartContentDisplayContext.getSearchContainer();
 
-PortletURL portletURL = commerceCartContentDisplayContext.getPortletURL();
-
-portletURL.setParameter("searchContainerId", "commerceOrderItems");
+PortletURL portletURL = PortletURLBuilder.create(
+	commerceCartContentDisplayContext.getPortletURL()
+).setParameter(
+	"searchContainerId", "commerceOrderItems"
+).buildPortletURL();
 
 request.setAttribute("view.jsp-portletURL", portletURL);
 
 List<CommerceOrderValidatorResult> commerceOrderValidatorResults = new ArrayList<>();
 
-Map<Long, List<CommerceOrderValidatorResult>> commerceOrderValidatorResultMap = commerceCartContentDisplayContext.getCommerceOrderValidatorResults();
+Map<Long, List<CommerceOrderValidatorResult>> commerceOrderValidatorResultsMap = commerceCartContentDisplayContext.getCommerceOrderValidatorResults();
 %>
 
 <liferay-ui:error exception="<%= CommerceOrderValidatorException.class %>">
@@ -48,7 +50,7 @@ Map<Long, List<CommerceOrderValidatorResult>> commerceOrderValidatorResultMap = 
 	for (CommerceOrderValidatorResult commerceOrderValidatorResult : commerceOrderValidatorResults) {
 	%>
 
-		<liferay-ui:message key="<%= commerceOrderValidatorResult.getLocalizedMessage() %>" />
+		<liferay-ui:message key="<%= HtmlUtil.escape(commerceOrderValidatorResult.getLocalizedMessage()) %>" />
 
 	<%
 	}
@@ -81,8 +83,6 @@ Map<Long, List<CommerceOrderValidatorResult>> commerceOrderValidatorResultMap = 
 
 					long cpDefinitionId = 0;
 
-					String thumbnailSrc = StringPool.BLANK;
-
 					StringJoiner stringJoiner = new StringJoiner(StringPool.COMMA);
 
 					if (cpInstance != null) {
@@ -90,20 +90,24 @@ Map<Long, List<CommerceOrderValidatorResult>> commerceOrderValidatorResultMap = 
 
 						cpDefinitionId = cpDefinition.getCPDefinitionId();
 
-						thumbnailSrc = commerceCartContentDisplayContext.getCommerceOrderItemThumbnailSrc(commerceOrderItem);
-
-						List<KeyValuePair> keyValuePairs = commerceCartContentDisplayContext.getKeyValuePairs(commerceOrderItem.getCPDefinitionId(), commerceOrderItem.getJson(), locale);
-
-						for (KeyValuePair keyValuePair : keyValuePairs) {
+						for (KeyValuePair keyValuePair : commerceCartContentDisplayContext.getKeyValuePairs(commerceOrderItem.getCPDefinitionId(), commerceOrderItem.getJson(), locale)) {
 							stringJoiner.add(keyValuePair.getValue());
 						}
 					}
 					%>
 
-					<liferay-ui:search-container-column-image
+					<liferay-ui:search-container-column-text
 						name="product"
-						src="<%= thumbnailSrc %>"
-					/>
+					>
+						<span class="sticker sticker-xl">
+							<span class="sticker-overlay">
+								<liferay-adaptive-media:img
+									class="sticker-img"
+									fileVersion="<%= commerceCartContentDisplayContext.getCPInstanceImageFileVersion(commerceOrderItem) %>"
+								/>
+							</span>
+						</span>
+					</liferay-ui:search-container-column-text>
 
 					<liferay-ui:search-container-column-text
 						name="description"
@@ -116,16 +120,16 @@ Map<Long, List<CommerceOrderValidatorResult>> commerceOrderValidatorResultMap = 
 							<%= HtmlUtil.escape(stringJoiner.toString()) %>
 						</h6>
 
-						<c:if test="<%= !commerceOrderValidatorResultMap.isEmpty() %>">
+						<c:if test="<%= !commerceOrderValidatorResultsMap.isEmpty() %>">
 
 							<%
-							commerceOrderValidatorResults = commerceOrderValidatorResultMap.get(commerceOrderItem.getCommerceOrderItemId());
+							commerceOrderValidatorResults = commerceOrderValidatorResultsMap.get(commerceOrderItem.getCommerceOrderItemId());
 
 							for (CommerceOrderValidatorResult commerceOrderValidatorResult : commerceOrderValidatorResults) {
 							%>
 
 								<div class="alert-danger commerce-alert-danger">
-									<liferay-ui:message key="<%= commerceOrderValidatorResult.getLocalizedMessage() %>" />
+									<liferay-ui:message key="<%= HtmlUtil.escape(commerceOrderValidatorResult.getLocalizedMessage()) %>" />
 								</div>
 
 							<%
@@ -216,9 +220,7 @@ Map<Long, List<CommerceOrderValidatorResult>> commerceOrderValidatorResultMap = 
 		</div>
 	</div>
 
-	<aui:script>
-		Liferay.after('current-order-updated', function (event) {
-			Liferay.Portlet.refresh('#p_p_id<portlet:namespace />');
-		});
-	</aui:script>
+	<liferay-frontend:component
+		module="js/cart_total/view"
+	/>
 </liferay-ddm:template-renderer>

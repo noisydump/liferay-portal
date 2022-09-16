@@ -41,9 +41,11 @@ public class RankingIndexWriterImpl implements RankingIndexWriter {
 	}
 
 	@Override
-	public void remove(RankingIndexName rankingIndexName, String id) {
+	public void remove(
+		RankingIndexName rankingIndexName, String rankingDocumentId) {
+
 		DeleteDocumentRequest deleteDocumentRequest = new DeleteDocumentRequest(
-			rankingIndexName.getIndexName(), id);
+			rankingIndexName.getIndexName(), rankingDocumentId);
 
 		deleteDocumentRequest.setRefresh(true);
 
@@ -53,7 +55,7 @@ public class RankingIndexWriterImpl implements RankingIndexWriter {
 	@Override
 	public void update(RankingIndexName rankingIndexName, Ranking ranking) {
 		IndexDocumentRequest indexDocumentRequest = new IndexDocumentRequest(
-			rankingIndexName.getIndexName(), ranking.getId(),
+			rankingIndexName.getIndexName(), ranking.getRankingDocumentId(),
 			_rankingToDocumentTranslator.translate(ranking));
 
 		indexDocumentRequest.setRefresh(true);
@@ -61,21 +63,10 @@ public class RankingIndexWriterImpl implements RankingIndexWriter {
 		_searchEngineAdapter.execute(indexDocumentRequest);
 	}
 
-	@Reference(unbind = "-")
-	protected void setRankingToDocumentTranslator(
-		RankingToDocumentTranslator rankingToDocumentTranslator) {
-
-		_rankingToDocumentTranslator = rankingToDocumentTranslator;
-	}
-
-	@Reference(unbind = "-")
-	protected void setSearchEngineAdapter(
-		SearchEngineAdapter searchEngineAdapter) {
-
-		_searchEngineAdapter = searchEngineAdapter;
-	}
-
+	@Reference
 	private RankingToDocumentTranslator _rankingToDocumentTranslator;
+
+	@Reference
 	private SearchEngineAdapter _searchEngineAdapter;
 
 }

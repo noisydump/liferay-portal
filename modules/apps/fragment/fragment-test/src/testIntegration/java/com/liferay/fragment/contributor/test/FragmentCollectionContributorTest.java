@@ -26,9 +26,6 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.registry.Registry;
-import com.liferay.registry.RegistryUtil;
-import com.liferay.registry.ServiceRegistration;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -44,6 +41,11 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceRegistration;
+
 /**
  * @author Jürgen Kappler
  */
@@ -57,11 +59,14 @@ public class FragmentCollectionContributorTest {
 
 	@Before
 	public void setUp() {
-		Registry registry = RegistryUtil.getRegistry();
+		Bundle bundle = FrameworkUtil.getBundle(
+			FragmentCollectionContributorTest.class);
 
-		_serviceRegistration = registry.registerService(
+		BundleContext bundleContext = bundle.getBundleContext();
+
+		_serviceRegistration = bundleContext.registerService(
 			FragmentCollectionContributor.class,
-			new TestFragmentCollectionContributor());
+			new TestFragmentCollectionContributor(), null);
 	}
 
 	@After
@@ -78,6 +83,9 @@ public class FragmentCollectionContributorTest {
 			fragmentEntries.get(
 				TestFragmentCollectionContributor.
 					TEST_COMPONENT_FRAGMENT_ENTRY));
+		Assert.assertNotNull(
+			fragmentEntries.get(
+				TestFragmentCollectionContributor.TEST_INPUT_FRAGMENT_ENTRY));
 		Assert.assertNotNull(
 			fragmentEntries.get(
 				TestFragmentCollectionContributor.TEST_SECTION_FRAGMENT_ENTRY));
@@ -115,6 +123,9 @@ public class FragmentCollectionContributorTest {
 		public static final String TEST_FRAGMENT_COLLECTION_KEY =
 			"test-fragment-collection-contributor";
 
+		public static final String TEST_INPUT_FRAGMENT_ENTRY =
+			"test-input-fragment-entry";
+
 		public static final String TEST_SECTION_FRAGMENT_ENTRY =
 			"test-section-fragment-entry";
 
@@ -138,6 +149,10 @@ public class FragmentCollectionContributorTest {
 			if (type == FragmentConstants.TYPE_COMPONENT) {
 				fragmentEntries.add(
 					_getFragmentEntry(TEST_COMPONENT_FRAGMENT_ENTRY, type));
+			}
+			else if (type == FragmentConstants.TYPE_INPUT) {
+				fragmentEntries.add(
+					_getFragmentEntry(TEST_INPUT_FRAGMENT_ENTRY, type));
 			}
 			else if (type == FragmentConstants.TYPE_SECTION) {
 				fragmentEntries.add(

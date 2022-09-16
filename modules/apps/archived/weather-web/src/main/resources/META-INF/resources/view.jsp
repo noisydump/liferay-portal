@@ -24,10 +24,9 @@
 				<%
 				for (String zip : zips) {
 					Weather weather = WeatherUtil.getWeather(zip, apiKey);
-
-					if (weather != null) {
 				%>
 
+					<c:if test="<%= weather != null %>">
 						<tr>
 							<td>
 								<a href="http://www.openweathermap.org/city/<%= HtmlUtil.escapeURL(weather.getCityId()) %>" style="font-size: xx-small; font-weight: bold;" target="_blank"><%= HtmlUtil.escape(weather.getZip()) %></a>
@@ -47,9 +46,9 @@
 								<img alt="" src="<%= weather.getIconURL() %>" />
 							</td>
 						</tr>
+					</c:if>
 
 				<%
-					}
 				}
 				%>
 
@@ -66,7 +65,13 @@
 
 		<br />
 
-		<liferay-ui:message key="powered-by" /> <a href="http://www.openweathermap.org" target="_blank">Open Weather Map</a>
+		<liferay-util:buffer
+			var="messageArgument"
+		>
+			<a class="text-white" href="http://www.openweathermap.org" target="_blank">Open Weather Map</a>
+		</liferay-util:buffer>
+
+		<liferay-ui:message arguments="<%= messageArgument %>" key="powered-by-x" />
 
 		<c:if test="<%= windowState.equals(WindowState.MAXIMIZED) %>">
 			<aui:script>

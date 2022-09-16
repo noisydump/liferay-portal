@@ -77,7 +77,7 @@ public class DLFileEntryTypeCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(31);
+		StringBundler sb = new StringBundler(33);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
@@ -107,6 +107,8 @@ public class DLFileEntryTypeCacheModel
 		sb.append(name);
 		sb.append(", description=");
 		sb.append(description);
+		sb.append(", scope=");
+		sb.append(scope);
 		sb.append(", lastPublishDate=");
 		sb.append(lastPublishDate);
 		sb.append("}");
@@ -177,6 +179,8 @@ public class DLFileEntryTypeCacheModel
 			dlFileEntryTypeImpl.setDescription(description);
 		}
 
+		dlFileEntryTypeImpl.setScope(scope);
+
 		if (lastPublishDate == Long.MIN_VALUE) {
 			dlFileEntryTypeImpl.setLastPublishDate(null);
 		}
@@ -211,6 +215,8 @@ public class DLFileEntryTypeCacheModel
 		fileEntryTypeKey = objectInput.readUTF();
 		name = objectInput.readUTF();
 		description = objectInput.readUTF();
+
+		scope = objectInput.readInt();
 		lastPublishDate = objectInput.readLong();
 	}
 
@@ -268,6 +274,7 @@ public class DLFileEntryTypeCacheModel
 			objectOutput.writeUTF(description);
 		}
 
+		objectOutput.writeInt(scope);
 		objectOutput.writeLong(lastPublishDate);
 	}
 
@@ -285,6 +292,7 @@ public class DLFileEntryTypeCacheModel
 	public String fileEntryTypeKey;
 	public String name;
 	public String description;
+	public int scope;
 	public long lastPublishDate;
 
 }

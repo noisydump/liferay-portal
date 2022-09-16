@@ -19,8 +19,11 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
@@ -71,6 +74,10 @@ public class OrganizationsManagementToolbarDisplayContext
 			}
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			return null;
 		}
 
@@ -87,11 +94,11 @@ public class OrganizationsManagementToolbarDisplayContext
 
 	@Override
 	public String getClearResultsURL() {
-		PortletURL clearResultsURL = getPortletURL();
-
-		clearResultsURL.setParameter("keywords", StringPool.BLANK);
-
-		return clearResultsURL.toString();
+		return PortletURLBuilder.create(
+			getPortletURL()
+		).setKeywords(
+			StringPool.BLANK
+		).buildString();
 	}
 
 	@Override
@@ -102,13 +109,6 @@ public class OrganizationsManagementToolbarDisplayContext
 	@Override
 	public CreationMenu getCreationMenu() {
 		try {
-			PortletURL selectOrganizationsURL =
-				liferayPortletResponse.createRenderURL();
-
-			selectOrganizationsURL.setParameter(
-				"mvcPath", "/select_organizations.jsp");
-			selectOrganizationsURL.setWindowState(LiferayWindowState.POP_UP);
-
 			return CreationMenuBuilder.addDropdownItem(
 				dropdownItem -> {
 					dropdownItem.putData("action", "selectOrganizations");
@@ -125,20 +125,25 @@ public class OrganizationsManagementToolbarDisplayContext
 
 					dropdownItem.putData(
 						"selectOrganizationsURL",
-						selectOrganizationsURL.toString());
+						PortletURLBuilder.createRenderURL(
+							liferayPortletResponse
+						).setMVCPath(
+							"/select_organizations.jsp"
+						).setWindowState(
+							LiferayWindowState.POP_UP
+						).buildString());
 					dropdownItem.setLabel(
 						LanguageUtil.get(httpServletRequest, "add"));
 				}
 			).build();
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			return null;
 		}
-	}
-
-	@Override
-	public String getDefaultEventHandler() {
-		return "organizationsManagementToolbarDefaultEventHandler";
 	}
 
 	@Override
@@ -174,6 +179,9 @@ public class OrganizationsManagementToolbarDisplayContext
 			}
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return false;
@@ -182,6 +190,11 @@ public class OrganizationsManagementToolbarDisplayContext
 	@Override
 	public Boolean isShowInfoButton() {
 		return true;
+	}
+
+	@Override
+	protected String getDisplayStyle() {
+		return _organizationsDisplayContext.getDisplayStyle();
 	}
 
 	@Override
@@ -198,6 +211,9 @@ public class OrganizationsManagementToolbarDisplayContext
 	protected String[] getOrderByKeys() {
 		return new String[] {"name", "type"};
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		OrganizationsManagementToolbarDisplayContext.class);
 
 	private final OrganizationsDisplayContext _organizationsDisplayContext;
 

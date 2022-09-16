@@ -1,60 +1,34 @@
-<#assign
-	journalArticlePageCounts = dataFactory.getSequence(dataFactory.maxJournalArticlePageCount)
-
-	resourcePermissionModels = dataFactory.newResourcePermissionModels("com.liferay.journal", groupId)
-/>
-
-<#list resourcePermissionModels as resourcePermissionModel>
+<#list dataFactory.newResourcePermissionModels("com.liferay.journal", groupId) as resourcePermissionModel>
 	${dataFactory.toInsertSQL(resourcePermissionModel)}
 </#list>
 
-<#list journalArticlePageCounts as journalArticlePageCount>
+<#list dataFactory.getSequence(dataFactory.maxJournalArticlePageCount) as journalArticlePageCount>
 	<#assign
 		portletIdPrefix = "com_liferay_journal_content_web_portlet_JournalContentPortlet_INSTANCE_TEST_" + journalArticlePageCount + "_"
 
 		layoutModel = dataFactory.newLayoutModel(groupId, groupId + "_journal_article_" + journalArticlePageCount, "", dataFactory.getJournalArticleLayoutColumn(portletIdPrefix))
 	/>
 
-	${csvFileWriter.write("layout", layoutModel.friendlyURL + "\n")}
+	${csvFileWriter.write("layout", virtualHostModel.hostname + "," + layoutModel.friendlyURL + "\n")}
 
 	<@insertLayout _layoutModel=layoutModel />
 
-	<#assign portletPreferencesModels = dataFactory.newJournalPortletPreferencesModels(layoutModel.plid) />
-
-	<#list portletPreferencesModels as portletPreferencesModel>
-		${dataFactory.toInsertSQL(portletPreferencesModel)}
-	</#list>
-
-	<#assign journalArticleCounts = dataFactory.getSequence(dataFactory.maxJournalArticleCount) />
-
-	<#list journalArticleCounts as journalArticleCount>
+	<#list dataFactory.getSequence(dataFactory.maxJournalArticleCount) as journalArticleCount>
 		<#assign journalArticleResourceModel = dataFactory.newJournalArticleResourceModel(groupId) />
 
 		${dataFactory.toInsertSQL(journalArticleResourceModel)}
 
-		<#assign versionCounts = dataFactory.getSequence(dataFactory.maxJournalArticleVersionCount) />
+		<#list dataFactory.getSequence(dataFactory.maxJournalArticleVersionCount) as versionCount>
+			<#assign
+				journalArticleModel = dataFactory.newJournalArticleModel(journalArticleResourceModel, journalArticleCount, versionCount)
+			/>
 
-		<#list versionCounts as versionCount>
-			<#assign journalArticleModel = dataFactory.newJournalArticleModel(journalArticleResourceModel, journalArticleCount, versionCount) />
-
-			${dataFactory.toInsertSQL(journalArticleModel)}
-
-			<#assign journalArticleLocalizationModel = dataFactory.newJournalArticleLocalizationModel(journalArticleModel, journalArticleCount, versionCount) />
-
-			${dataFactory.toInsertSQL(journalArticleLocalizationModel)}
-
-			${dataFactory.toInsertSQL(dataFactory.newDDMTemplateLinkModel(journalArticleModel, defaultJournalDDMTemplateModel.templateId))}
-
-			${dataFactory.toInsertSQL(dataFactory.newDDMStorageLinkModel(journalArticleModel, defaultJournalDDMStructureModel.structureId))}
-
-			${dataFactory.toInsertSQL(dataFactory.newSocialActivityModel(journalArticleModel))}
-
-			<#if versionCount = dataFactory.maxJournalArticleVersionCount>
-				<@insertAssetEntry
-					_categoryAndTag=true
-					_entry=dataFactory.newObjectValuePair(journalArticleModel, journalArticleLocalizationModel)
-				/>
-			</#if>
+			<@insertJournalArticle
+				_insertAssetEntry=(versionCount==dataFactory.maxJournalArticleVersionCount)
+				_journalArticleModel=journalArticleModel
+				_journalDDMStructureModel=defaultJournalDDMStructureModel
+				_journalDDMTemplateModel=defaultJournalDDMTemplateModel
+			/>
 		</#list>
 
 		<@insertMBDiscussion
@@ -66,13 +40,13 @@
 			_mbThreadId=dataFactory.getCounterNext()
 		/>
 
+		${dataFactory.toInsertSQL(dataFactory.newLayoutClassedModelUsageModel(groupId, layoutModel.plid, portletIdPrefix + journalArticleCount, journalArticleResourceModel))}
+
 		<#assign journalArticleResourcePortletPreferencesModel = dataFactory.newPortletPreferencesModel(layoutModel.plid, portletIdPrefix + journalArticleCount) />
 
 		${dataFactory.toInsertSQL(journalArticleResourcePortletPreferencesModel)}
 
-		<#assign journalArticleResourcePortletPreferenceValueModels = dataFactory.newJournalArticleResourcePortletPreferenceValueModels(journalArticleResourcePortletPreferencesModel, journalArticleResourceModel) />
-
-		<#list journalArticleResourcePortletPreferenceValueModels as journalArticleResourcePortletPreferenceValueModel>
+		<#list dataFactory.newJournalArticleResourcePortletPreferenceValueModels(journalArticleResourcePortletPreferencesModel, journalArticleResourceModel) as journalArticleResourcePortletPreferenceValueModel>
 			${dataFactory.toInsertSQL(journalArticleResourcePortletPreferenceValueModel)}
 		</#list>
 

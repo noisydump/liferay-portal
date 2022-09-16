@@ -15,7 +15,6 @@
 package com.liferay.commerce.model;
 
 import com.liferay.portal.kernel.annotation.ImplementationClassName;
-import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.util.Accessor;
 
 import org.osgi.annotation.versioning.ProviderType;
@@ -29,7 +28,7 @@ import org.osgi.annotation.versioning.ProviderType;
  */
 @ImplementationClassName("com.liferay.commerce.model.impl.CommerceAddressImpl")
 @ProviderType
-public interface CommerceAddress extends CommerceAddressModel, PersistedModel {
+public interface CommerceAddress extends CommerceAddressModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -56,12 +55,14 @@ public interface CommerceAddress extends CommerceAddressModel, PersistedModel {
 
 		};
 
-	public CommerceCountry fetchCommerceCountry();
+	public com.liferay.portal.kernel.model.Country fetchCountry();
 
-	public CommerceCountry getCommerceCountry()
+	public com.liferay.portal.kernel.model.Country getCountry()
 		throws com.liferay.portal.kernel.exception.PortalException;
 
-	public CommerceRegion getCommerceRegion()
+	public com.liferay.expando.kernel.model.ExpandoBridge getExpandoBridge();
+
+	public com.liferay.portal.kernel.model.Region getRegion()
 		throws com.liferay.portal.kernel.exception.PortalException;
 
 	public boolean isGeolocated();

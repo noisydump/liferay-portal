@@ -18,16 +18,19 @@
 
 <%
 AssetCategory category = (AssetCategory)request.getAttribute("assetCategory");
+String assetCategoryURLSeparator = (String)request.getAttribute("assetCategoryURLSeparator");
 String titleMapAsXML = (String)request.getAttribute("titleMapAsXML");
 long vocabularyId = ParamUtil.getLong(request, "vocabularyId");
 
-String friendlyURLBase = themeDisplay.getPortalURL() + CPConstants.SEPARATOR_ASSET_CATEGORY_URL;
-
-PortletURL categoryRedirectURL = renderResponse.createRenderURL();
+String friendlyURLBase = themeDisplay.getPortalURL() + assetCategoryURLSeparator;
 
 long parentCategoryId = BeanParamUtil.getLong(category, request, "parentCategoryId");
 
-categoryRedirectURL.setParameter("mvcPath", "/view_categories.jsp");
+PortletURL categoryRedirectURL = PortletURLBuilder.createRenderURL(
+	renderResponse
+).setMVCPath(
+	"/view_asset_categories.jsp"
+).buildPortletURL();
 
 if (parentCategoryId > 0) {
 	categoryRedirectURL.setParameter("categoryId", String.valueOf(parentCategoryId));
@@ -46,28 +49,31 @@ renderResponse.setTitle(category.getTitle(locale));
 <portlet:actionURL name="/commerce_product_asset_categories/edit_asset_category_friendly_url" var="editCategoryURL">
 </portlet:actionURL>
 
-<aui:form action="<%= editCategoryURL %>" name="fm">
+<liferay-frontend:edit-form
+	action="<%= editCategoryURL %>"
+	name="fm"
+>
 	<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
 	<aui:input name="categoryId" type="hidden" value="<%= category.getCategoryId() %>" />
 
-	<aui:fieldset-group markupView="lexicon">
-		<aui:fieldset>
-			<div class="form-group">
+	<liferay-frontend:edit-form-body>
+		<liferay-frontend:fieldset-group>
+			<liferay-frontend:fieldset>
 				<label for="<portlet:namespace />urlTitleMapAsXML"><liferay-ui:message key="friendly-url" /><liferay-ui:icon-help message='<%= LanguageUtil.format(request, "for-example-x", "<em>news</em>", false) %>' /></label>
 
 				<liferay-ui:input-localized
 					defaultLanguageId="<%= LocaleUtil.toLanguageId(themeDisplay.getSiteDefaultLocale()) %>"
 					inputAddon="<%= StringUtil.shorten(friendlyURLBase.toString(), 40) %>"
 					name="urlTitleMapAsXML"
-					xml="<%= HttpUtil.decodeURL(titleMapAsXML) %>"
+					xml="<%= HttpComponentsUtil.decodeURL(titleMapAsXML) %>"
 				/>
-			</div>
-		</aui:fieldset>
-	</aui:fieldset-group>
+			</liferay-frontend:fieldset>
+		</liferay-frontend:fieldset-group>
+	</liferay-frontend:edit-form-body>
 
-	<aui:button-row>
-		<aui:button cssClass="btn-lg" type="submit" />
+	<liferay-frontend:edit-form-footer>
+		<aui:button type="submit" />
 
-		<aui:button cssClass="btn-lg" href="<%= categoryRedirectURL.toString() %>" type="cancel" />
-	</aui:button-row>
-</aui:form>
+		<aui:button href="<%= categoryRedirectURL.toString() %>" type="cancel" />
+	</liferay-frontend:edit-form-footer>
+</liferay-frontend:edit-form>

@@ -16,6 +16,19 @@ create table CacheDisabledEntry (
 	name VARCHAR(75) null
 );
 
+create table CacheFieldEntry (
+	cacheFieldEntryId LONG not null primary key,
+	groupId LONG,
+	name VARCHAR(75) null
+);
+
+create table CacheMissEntry (
+	mvccVersion LONG default 0 not null,
+	ctCollectionId LONG default 0 not null,
+	cacheMissEntryId LONG not null,
+	primary key (cacheMissEntryId, ctCollectionId)
+);
+
 create table DSLQueryEntry (
 	dslQueryEntryId LONG not null primary key,
 	name VARCHAR(75) null
@@ -28,13 +41,24 @@ create table DSLQueryStatusEntry (
 	statusDate DATE null
 );
 
+create table DataLimitEntry (
+	dataLimitEntryId LONG not null primary key,
+	companyId LONG,
+	userId LONG,
+	userName VARCHAR(75) null,
+	createDate DATE null,
+	modifiedDate DATE null
+);
+
 create table ERCCompanyEntry (
+	uuid_ VARCHAR(75) null,
 	externalReferenceCode VARCHAR(75) null,
 	ercCompanyEntryId LONG not null primary key,
 	companyId LONG
 );
 
 create table ERCGroupEntry (
+	uuid_ VARCHAR(75) null,
 	externalReferenceCode VARCHAR(75) null,
 	ercGroupEntryId LONG not null primary key,
 	groupId LONG,
@@ -203,6 +227,17 @@ create table NestedSetsTreeEntry (
 	parentNestedSetsTreeEntryId LONG,
 	leftNestedSetsTreeEntryId LONG,
 	rightNestedSetsTreeEntryId LONG
+);
+
+create table NullConvertibleEntry (
+	nullConvertibleEntryId LONG not null primary key,
+	name VARCHAR(75) null
+);
+
+create table RenameFinderColumnEntry (
+	renameFinderColumnEntryId LONG not null primary key,
+	groupId LONG,
+	columnToRename VARCHAR(75) null
 );
 
 create table UADPartialEntry (

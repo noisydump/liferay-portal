@@ -19,6 +19,8 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.searcher.SearchRequest;
@@ -136,7 +138,6 @@ public class UserSearchRequestBuilder {
 		}
 
 		searchContext.setAndSearch(andSearch);
-
 		searchContext.setAttributes(
 			HashMapBuilder.<String, Serializable>put(
 				Field.STATUS, _status
@@ -144,8 +145,6 @@ public class UserSearchRequestBuilder {
 				"city", _keywords
 			).put(
 				"country", _keywords
-			).put(
-				"emailAddress", _keywords
 			).put(
 				"firstName", _keywords
 			).put(
@@ -167,8 +166,14 @@ public class UserSearchRequestBuilder {
 			).putAll(
 				_attributes
 			).build());
-
 		searchContext.setCompanyId(CompanyThreadLocal.getCompanyId());
+
+		PermissionChecker permissionChecker =
+			PermissionThreadLocal.getPermissionChecker();
+
+		if (permissionChecker != null) {
+			searchContext.setUserId(permissionChecker.getUserId());
+		}
 	}
 
 	private Map<String, Serializable> _attributes = new HashMap<>();

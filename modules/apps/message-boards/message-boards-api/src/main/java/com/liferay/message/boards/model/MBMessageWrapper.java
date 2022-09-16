@@ -48,6 +48,7 @@ public class MBMessageWrapper
 		attributes.put("mvccVersion", getMvccVersion());
 		attributes.put("ctCollectionId", getCtCollectionId());
 		attributes.put("uuid", getUuid());
+		attributes.put("externalReferenceCode", getExternalReferenceCode());
 		attributes.put("messageId", getMessageId());
 		attributes.put("groupId", getGroupId());
 		attributes.put("companyId", getCompanyId());
@@ -97,6 +98,13 @@ public class MBMessageWrapper
 
 		if (uuid != null) {
 			setUuid(uuid);
+		}
+
+		String externalReferenceCode = (String)attributes.get(
+			"externalReferenceCode");
+
+		if (externalReferenceCode != null) {
+			setExternalReferenceCode(externalReferenceCode);
 		}
 
 		Long messageId = (Long)attributes.get("messageId");
@@ -277,6 +285,11 @@ public class MBMessageWrapper
 		return model.buildTreePath();
 	}
 
+	@Override
+	public MBMessage cloneWithOriginalValues() {
+		return wrap(model.cloneWithOriginalValues());
+	}
+
 	/**
 	 * Returns the allow pingbacks of this message-boards message.
 	 *
@@ -455,6 +468,16 @@ public class MBMessageWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return model.getDeletedAttachmentsFileEntriesCount();
+	}
+
+	/**
+	 * Returns the external reference code of this message-boards message.
+	 *
+	 * @return the external reference code of this message-boards message
+	 */
+	@Override
+	public String getExternalReferenceCode() {
+		return model.getExternalReferenceCode();
 	}
 
 	/**
@@ -661,18 +684,6 @@ public class MBMessageWrapper
 	@Override
 	public long getTrashEntryClassPK() {
 		return model.getTrashEntryClassPK();
-	}
-
-	/**
-	 * Returns the trash handler for this message-boards message.
-	 *
-	 * @return the trash handler for this message-boards message
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public com.liferay.portal.kernel.trash.TrashHandler getTrashHandler() {
-		return model.getTrashHandler();
 	}
 
 	/**
@@ -1013,6 +1024,16 @@ public class MBMessageWrapper
 	@Override
 	public void setCtCollectionId(long ctCollectionId) {
 		model.setCtCollectionId(ctCollectionId);
+	}
+
+	/**
+	 * Sets the external reference code of this message-boards message.
+	 *
+	 * @param externalReferenceCode the external reference code of this message-boards message
+	 */
+	@Override
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		model.setExternalReferenceCode(externalReferenceCode);
 	}
 
 	/**

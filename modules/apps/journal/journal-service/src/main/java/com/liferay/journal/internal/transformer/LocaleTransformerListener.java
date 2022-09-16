@@ -67,9 +67,9 @@ public class LocaleTransformerListener extends BaseTransformerListener {
 			_log.debug("onXml");
 		}
 
-		filterByLocalizability(document, tokens);
+		_filterByLocalizability(document, tokens);
 
-		filterByLanguage(document, languageId);
+		_filterByLanguage(document, languageId);
 
 		return document;
 	}
@@ -95,7 +95,7 @@ public class LocaleTransformerListener extends BaseTransformerListener {
 		}
 	}
 
-	protected void filterByLanguage(Document document, String languageId) {
+	private void _filterByLanguage(Document document, String languageId) {
 		Element rootElement = document.getRootElement();
 
 		String defaultLanguageId = LocaleUtil.toLanguageId(
@@ -109,16 +109,17 @@ public class LocaleTransformerListener extends BaseTransformerListener {
 				"available-locales", articleDefaultLanguageId));
 
 		if (!ArrayUtil.contains(availableLanguageIds, languageId, true)) {
-			filterByLanguage(
+			_filterByLanguage(
 				rootElement, articleDefaultLanguageId,
 				articleDefaultLanguageId);
 		}
 		else {
-			filterByLanguage(rootElement, languageId, articleDefaultLanguageId);
+			_filterByLanguage(
+				rootElement, languageId, articleDefaultLanguageId);
 		}
 	}
 
-	protected void filterByLanguage(
+	private void _filterByLanguage(
 		Element root, String languageId, String defaultLanguageId) {
 
 		Element defaultLanguageElement = null;
@@ -137,7 +138,7 @@ public class LocaleTransformerListener extends BaseTransformerListener {
 					hasLanguageIdElement = true;
 				}
 
-				filterByLanguage(element, languageId, defaultLanguageId);
+				_filterByLanguage(element, languageId, defaultLanguageId);
 			}
 			else {
 				if (StringUtil.equalsIgnoreCase(
@@ -153,12 +154,12 @@ public class LocaleTransformerListener extends BaseTransformerListener {
 		if (!hasLanguageIdElement && (defaultLanguageElement != null)) {
 			root.add(defaultLanguageElement);
 
-			filterByLanguage(
+			_filterByLanguage(
 				defaultLanguageElement, languageId, defaultLanguageId);
 		}
 	}
 
-	protected void filterByLocalizability(
+	private void _filterByLocalizability(
 		Document document, Map<String, String> tokens) {
 
 		try {
@@ -186,7 +187,7 @@ public class LocaleTransformerListener extends BaseTransformerListener {
 			String articleDefaultLanguageId = rootElement.attributeValue(
 				"default-locale", defaultLanguageId);
 
-			filterByLocalizability(
+			_filterByLocalizability(
 				rootElement, articleDefaultLanguageId, ddmStructure);
 		}
 		catch (NullPointerException nullPointerException) {
@@ -198,7 +199,7 @@ public class LocaleTransformerListener extends BaseTransformerListener {
 		}
 	}
 
-	protected void filterByLocalizability(
+	private void _filterByLocalizability(
 			Element root, String defaultLanguageId, DDMStructure ddmStructure)
 		throws PortalException {
 
@@ -213,20 +214,14 @@ public class LocaleTransformerListener extends BaseTransformerListener {
 				filter(element, ddmStructure, name, defaultLanguageId);
 			}
 
-			filterByLocalizability(element, defaultLanguageId, ddmStructure);
+			_filterByLocalizability(element, defaultLanguageId, ddmStructure);
 		}
-	}
-
-	@Reference(unbind = "-")
-	protected void setDDMStructureLocalService(
-		DDMStructureLocalService ddmStructureLocalService) {
-
-		_ddmStructureLocalService = ddmStructureLocalService;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		LocaleTransformerListener.class);
 
+	@Reference
 	private DDMStructureLocalService _ddmStructureLocalService;
 
 }

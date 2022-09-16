@@ -22,8 +22,9 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.search.web.internal.facet.display.builder.UserSearchFacetDisplayBuilder;
+import com.liferay.portal.search.web.internal.facet.display.context.builder.UserSearchFacetDisplayContextBuilder;
 import com.liferay.portal.search.web.internal.user.facet.configuration.UserFacetPortletInstanceConfiguration;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.Collections;
 import java.util.List;
@@ -32,22 +33,24 @@ import javax.portlet.RenderRequest;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
-import org.mockito.Matchers;
-import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 
 /**
  * @author Lino Alves
  */
 public class UserSearchFacetDisplayContextTest {
 
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
 	@Before
 	public void setUp() {
-		MockitoAnnotations.initMocks(this);
-
 		Mockito.doReturn(
 			_facetCollector
 		).when(
@@ -190,16 +193,17 @@ public class UserSearchFacetDisplayContextTest {
 			String paramValue)
 		throws Exception {
 
-		UserSearchFacetDisplayBuilder userSearchFacetDisplayBuilder =
-			new UserSearchFacetDisplayBuilder(getRenderRequest());
+		UserSearchFacetDisplayContextBuilder
+			userSearchFacetDisplayContextBuilder =
+				new UserSearchFacetDisplayContextBuilder(getRenderRequest());
 
-		userSearchFacetDisplayBuilder.setFacet(_facet);
-		userSearchFacetDisplayBuilder.setParamValue(paramValue);
-		userSearchFacetDisplayBuilder.setFrequenciesVisible(true);
-		userSearchFacetDisplayBuilder.setFrequencyThreshold(0);
-		userSearchFacetDisplayBuilder.setMaxTerms(0);
+		userSearchFacetDisplayContextBuilder.setFacet(_facet);
+		userSearchFacetDisplayContextBuilder.setParamValue(paramValue);
+		userSearchFacetDisplayContextBuilder.setFrequenciesVisible(true);
+		userSearchFacetDisplayContextBuilder.setFrequencyThreshold(0);
+		userSearchFacetDisplayContextBuilder.setMaxTerms(0);
 
-		return userSearchFacetDisplayBuilder.build();
+		return userSearchFacetDisplayContextBuilder.build();
 	}
 
 	protected TermCollector createTermCollector(String userName, int count) {
@@ -228,7 +232,7 @@ public class UserSearchFacetDisplayContextTest {
 		).when(
 			portletDisplay
 		).getPortletInstanceConfiguration(
-			Matchers.any()
+			Mockito.any()
 		);
 
 		return portletDisplay;
@@ -268,10 +272,8 @@ public class UserSearchFacetDisplayContextTest {
 		).getTermCollectors();
 	}
 
-	@Mock
-	private Facet _facet;
-
-	@Mock
-	private FacetCollector _facetCollector;
+	private final Facet _facet = Mockito.mock(Facet.class);
+	private final FacetCollector _facetCollector = Mockito.mock(
+		FacetCollector.class);
 
 }

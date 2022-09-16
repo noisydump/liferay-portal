@@ -16,6 +16,7 @@ package com.liferay.dynamic.data.mapping.service.base;
 
 import com.liferay.dynamic.data.mapping.model.DDMDataProviderInstanceLink;
 import com.liferay.dynamic.data.mapping.service.DDMDataProviderInstanceLinkLocalService;
+import com.liferay.dynamic.data.mapping.service.DDMDataProviderInstanceLinkLocalServiceUtil;
 import com.liferay.dynamic.data.mapping.service.persistence.DDMDataProviderInstanceLinkPersistence;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
@@ -32,6 +33,8 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -47,10 +50,13 @@ import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -72,7 +78,7 @@ public abstract class DDMDataProviderInstanceLinkLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>DDMDataProviderInstanceLinkLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.dynamic.data.mapping.service.DDMDataProviderInstanceLinkLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>DDMDataProviderInstanceLinkLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>DDMDataProviderInstanceLinkLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -154,6 +160,13 @@ public abstract class DDMDataProviderInstanceLinkLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return ddmDataProviderInstanceLinkPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -334,6 +347,11 @@ public abstract class DDMDataProviderInstanceLinkLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement DDMDataProviderInstanceLinkLocalServiceImpl#deleteDDMDataProviderInstanceLink(DDMDataProviderInstanceLink) to avoid orphaned data");
+		}
+
 		return ddmDataProviderInstanceLinkLocalService.
 			deleteDDMDataProviderInstanceLink(
 				(DDMDataProviderInstanceLink)persistedModel);
@@ -402,6 +420,11 @@ public abstract class DDMDataProviderInstanceLinkLocalServiceBaseImpl
 			ddmDataProviderInstanceLink);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -415,6 +438,8 @@ public abstract class DDMDataProviderInstanceLinkLocalServiceBaseImpl
 	public void setAopProxy(Object aopProxy) {
 		ddmDataProviderInstanceLinkLocalService =
 			(DDMDataProviderInstanceLinkLocalService)aopProxy;
+
+		_setLocalServiceUtilService(ddmDataProviderInstanceLinkLocalService);
 	}
 
 	/**
@@ -476,6 +501,24 @@ public abstract class DDMDataProviderInstanceLinkLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		DDMDataProviderInstanceLinkLocalService
+			ddmDataProviderInstanceLinkLocalService) {
+
+		try {
+			Field field =
+				DDMDataProviderInstanceLinkLocalServiceUtil.class.
+					getDeclaredField("_service");
+
+			field.setAccessible(true);
+
+			field.set(null, ddmDataProviderInstanceLinkLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected DDMDataProviderInstanceLinkLocalService
 		ddmDataProviderInstanceLinkLocalService;
 
@@ -486,5 +529,8 @@ public abstract class DDMDataProviderInstanceLinkLocalServiceBaseImpl
 	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		DDMDataProviderInstanceLinkLocalServiceBaseImpl.class);
 
 }

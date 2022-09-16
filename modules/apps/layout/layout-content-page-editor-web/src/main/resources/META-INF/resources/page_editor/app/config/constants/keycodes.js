@@ -14,12 +14,20 @@
 
 export const ARROW_DOWN_KEYCODE = 40;
 
+export const ARROW_LEFT_KEYCODE = 37;
+
+export const ARROW_RIGHT_KEYCODE = 39;
+
 export const ARROW_UP_KEYCODE = 38;
 
 export const BACKSPACE_KEYCODE = 8;
 
 export const D_KEYCODE = 68;
 
+export const PERIOID_KEYCODE = 190;
+
 export const S_KEYCODE = 83;
+
+export const TAB_KEYCODE = 9;
 
 export const Z_KEYCODE = 90;

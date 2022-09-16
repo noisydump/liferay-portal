@@ -15,7 +15,7 @@
 package com.liferay.marketplace.app.manager.web.internal.portlet.configuration.icon;
 
 import com.liferay.marketplace.app.manager.web.internal.constants.MarketplaceAppManagerPortletKeys;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.configuration.icon.BaseJSPPortletConfigurationIcon;
 import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfigurationIcon;
@@ -47,7 +47,7 @@ public class UploadConfigurationIcon extends BaseJSPPortletConfigurationIcon {
 
 	@Override
 	public String getMessage(PortletRequest portletRequest) {
-		return LanguageUtil.get(
+		return _language.get(
 			getResourceBundle(getLocale(portletRequest)), "upload");
 	}
 
@@ -55,7 +55,7 @@ public class UploadConfigurationIcon extends BaseJSPPortletConfigurationIcon {
 	public String getURL(
 		PortletRequest portletRequest, PortletResponse portletResponse) {
 
-		return "javascript:;";
+		return "javascript:void(0);";
 	}
 
 	@Override
@@ -83,12 +83,16 @@ public class UploadConfigurationIcon extends BaseJSPPortletConfigurationIcon {
 	}
 
 	@Override
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.marketplace.app.manager.web)",
-		unbind = "-"
-	)
-	public void setServletContext(ServletContext servletContext) {
-		super.setServletContext(servletContext);
+	protected ServletContext getServletContext() {
+		return _servletContext;
 	}
+
+	@Reference
+	private Language _language;
+
+	@Reference(
+		target = "(osgi.web.symbolicname=com.liferay.marketplace.app.manager.web)"
+	)
+	private ServletContext _servletContext;
 
 }

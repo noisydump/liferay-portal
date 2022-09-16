@@ -23,9 +23,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModelListener;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.ModelListener;
-import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -49,18 +47,15 @@ public class AssetCategoryModelListener
 		throws ModelListenerException {
 
 		try {
-			Group companyGroup = _groupLocalService.getCompanyGroup(
-				assetCategory.getCompanyId());
-
 			_friendlyURLEntryLocalService.addFriendlyURLEntry(
-				companyGroup.getGroupId(),
+				assetCategory.getGroupId(),
 				_portal.getClassNameId(AssetCategory.class),
 				assetCategory.getCategoryId(),
 				_getUniqueUrlTitles(assetCategory), new ServiceContext());
 		}
 		catch (PortalException portalException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(portalException, portalException);
+				_log.warn(portalException);
 			}
 		}
 	}
@@ -71,19 +66,16 @@ public class AssetCategoryModelListener
 			_cpAttachmentFileEntryLocalService.deleteCPAttachmentFileEntries(
 				AssetCategory.class.getName(), assetCategory.getCategoryId());
 
-			_cpDisplayLayoutLocalService.deleteCPDisplayLayout(
+			_cpDisplayLayoutLocalService.deleteCPDisplayLayouts(
 				AssetCategory.class, assetCategory.getCategoryId());
 
-			Group companyGroup = _groupLocalService.getCompanyGroup(
-				assetCategory.getCompanyId());
-
 			_friendlyURLEntryLocalService.deleteFriendlyURLEntry(
-				companyGroup.getGroupId(), AssetCategory.class,
+				assetCategory.getGroupId(), AssetCategory.class,
 				assetCategory.getCategoryId());
 		}
 		catch (PortalException portalException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(portalException, portalException);
+				_log.warn(portalException);
 			}
 		}
 	}
@@ -96,11 +88,8 @@ public class AssetCategoryModelListener
 		Map<Locale, String> titleMap = assetCategory.getTitleMap();
 
 		for (Map.Entry<Locale, String> titleEntry : titleMap.entrySet()) {
-			Group companyGroup = _groupLocalService.getCompanyGroup(
-				assetCategory.getCompanyId());
-
 			String urlTitle = _friendlyURLEntryLocalService.getUniqueUrlTitle(
-				companyGroup.getGroupId(),
+				assetCategory.getGroupId(),
 				_portal.getClassNameId(AssetCategory.class),
 				assetCategory.getCategoryId(), titleEntry.getValue());
 
@@ -123,9 +112,6 @@ public class AssetCategoryModelListener
 
 	@Reference
 	private FriendlyURLEntryLocalService _friendlyURLEntryLocalService;
-
-	@Reference
-	private GroupLocalService _groupLocalService;
 
 	@Reference
 	private Portal _portal;

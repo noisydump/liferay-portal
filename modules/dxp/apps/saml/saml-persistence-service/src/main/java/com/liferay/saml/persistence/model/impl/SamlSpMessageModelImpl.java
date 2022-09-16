@@ -23,14 +23,15 @@ import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.impl.BaseModelImpl;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.saml.persistence.model.SamlSpMessage;
 import com.liferay.saml.persistence.model.SamlSpMessageModel;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
 import java.util.Collections;
@@ -38,6 +39,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -99,26 +101,26 @@ public class SamlSpMessageModelImpl
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long EXPIRATIONDATE_COLUMN_BITMASK = 1L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long SAMLIDPENTITYID_COLUMN_BITMASK = 2L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long SAMLIDPRESPONSEKEY_COLUMN_BITMASK = 4L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *		#getColumnBitmask(String)
+	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long SAMLSPMESSAGEID_COLUMN_BITMASK = 8L;
@@ -220,34 +222,6 @@ public class SamlSpMessageModelImpl
 		getAttributeSetterBiConsumers() {
 
 		return _attributeSetterBiConsumers;
-	}
-
-	private static Function<InvocationHandler, SamlSpMessage>
-		_getProxyProviderFunction() {
-
-		Class<?> proxyClass = ProxyUtil.getProxyClass(
-			SamlSpMessage.class.getClassLoader(), SamlSpMessage.class,
-			ModelWrapper.class);
-
-		try {
-			Constructor<SamlSpMessage> constructor =
-				(Constructor<SamlSpMessage>)proxyClass.getConstructor(
-					InvocationHandler.class);
-
-			return invocationHandler -> {
-				try {
-					return constructor.newInstance(invocationHandler);
-				}
-				catch (ReflectiveOperationException
-							reflectiveOperationException) {
-
-					throw new InternalError(reflectiveOperationException);
-				}
-			};
-		}
-		catch (NoSuchMethodException noSuchMethodException) {
-			throw new InternalError(noSuchMethodException);
-		}
 	}
 
 	private static final Map<String, Function<SamlSpMessage, Object>>
@@ -434,7 +408,9 @@ public class SamlSpMessageModelImpl
 		for (Map.Entry<String, Object> entry :
 				_columnOriginalValues.entrySet()) {
 
-			if (entry.getValue() != getColumnValue(entry.getKey())) {
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
 				_columnBitmask |= _columnBitmasks.get(entry.getKey());
 			}
 		}
@@ -482,6 +458,26 @@ public class SamlSpMessageModelImpl
 		samlSpMessageImpl.setExpirationDate(getExpirationDate());
 
 		samlSpMessageImpl.resetOriginalValues();
+
+		return samlSpMessageImpl;
+	}
+
+	@Override
+	public SamlSpMessage cloneWithOriginalValues() {
+		SamlSpMessageImpl samlSpMessageImpl = new SamlSpMessageImpl();
+
+		samlSpMessageImpl.setSamlSpMessageId(
+			this.<Long>getColumnOriginalValue("samlSpMessageId"));
+		samlSpMessageImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		samlSpMessageImpl.setCreateDate(
+			this.<Date>getColumnOriginalValue("createDate"));
+		samlSpMessageImpl.setSamlIdpEntityId(
+			this.<String>getColumnOriginalValue("samlIdpEntityId"));
+		samlSpMessageImpl.setSamlIdpResponseKey(
+			this.<String>getColumnOriginalValue("samlIdpResponseKey"));
+		samlSpMessageImpl.setExpirationDate(
+			this.<Date>getColumnOriginalValue("expirationDate"));
 
 		return samlSpMessageImpl;
 	}
@@ -607,7 +603,7 @@ public class SamlSpMessageModelImpl
 			getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			(4 * attributeGetterFunctions.size()) + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -618,9 +614,26 @@ public class SamlSpMessageModelImpl
 			Function<SamlSpMessage, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((SamlSpMessage)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply((SamlSpMessage)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -667,7 +680,9 @@ public class SamlSpMessageModelImpl
 	private static class EscapedModelProxyProviderFunctionHolder {
 
 		private static final Function<InvocationHandler, SamlSpMessage>
-			_escapedModelProxyProviderFunction = _getProxyProviderFunction();
+			_escapedModelProxyProviderFunction =
+				ProxyUtil.getProxyProviderFunction(
+					SamlSpMessage.class, ModelWrapper.class);
 
 	}
 

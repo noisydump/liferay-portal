@@ -20,16 +20,22 @@ import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.service.BaseServiceImpl;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.sharing.model.SharingEntry;
 import com.liferay.sharing.service.SharingEntryService;
+import com.liferay.sharing.service.SharingEntryServiceUtil;
 import com.liferay.sharing.service.persistence.SharingEntryFinder;
 import com.liferay.sharing.service.persistence.SharingEntryPersistence;
 
+import java.lang.reflect.Field;
+
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -50,8 +56,13 @@ public abstract class SharingEntryServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>SharingEntryService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.sharing.service.SharingEntryServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>SharingEntryService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>SharingEntryServiceUtil</code>.
 	 */
+	@Deactivate
+	protected void deactivate() {
+		_setServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -62,6 +73,8 @@ public abstract class SharingEntryServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		sharingEntryService = (SharingEntryService)aopProxy;
+
+		_setServiceUtilService(sharingEntryService);
 	}
 
 	/**
@@ -106,6 +119,22 @@ public abstract class SharingEntryServiceBaseImpl
 		}
 	}
 
+	private void _setServiceUtilService(
+		SharingEntryService sharingEntryService) {
+
+		try {
+			Field field = SharingEntryServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, sharingEntryService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@Reference
 	protected com.liferay.sharing.service.SharingEntryLocalService
 		sharingEntryLocalService;
@@ -121,5 +150,8 @@ public abstract class SharingEntryServiceBaseImpl
 	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		SharingEntryServiceBaseImpl.class);
 
 }

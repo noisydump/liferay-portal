@@ -18,11 +18,15 @@ import com.liferay.commerce.pricing.exception.CommercePricingClassTitleException
 import com.liferay.commerce.pricing.exception.NoSuchPricingClassException;
 import com.liferay.commerce.pricing.model.CommercePricingClass;
 import com.liferay.commerce.pricing.model.CommercePricingClassCPDefinitionRel;
+import com.liferay.commerce.pricing.service.CommercePricingClassCPDefinitionRelLocalService;
 import com.liferay.commerce.pricing.service.base.CommercePricingClassLocalServiceBaseImpl;
+import com.liferay.expando.kernel.service.ExpandoRowLocalService;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.ResourceConstants;
+import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.search.Document;
@@ -31,12 +35,15 @@ import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.search.Indexer;
-import com.liferay.portal.kernel.search.IndexerRegistryUtil;
+import com.liferay.portal.kernel.search.IndexerRegistry;
 import com.liferay.portal.kernel.search.QueryConfig;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.search.Sort;
+import com.liferay.portal.kernel.service.ResourceLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -55,10 +62,17 @@ import java.util.Map;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
 /**
  * @author Riccardo Alberti
- * @see CommercePricingClassLocalServiceBaseImpl
  */
+@Component(
+	enabled = false,
+	property = "model.class.name=com.liferay.commerce.pricing.model.CommercePricingClass",
+	service = AopService.class
+)
 public class CommercePricingClassLocalServiceImpl
 	extends CommercePricingClassLocalServiceBaseImpl {
 
@@ -70,18 +84,18 @@ public class CommercePricingClassLocalServiceImpl
 		throws PortalException {
 
 		return addCommercePricingClass(
-			userId, titleMap, descriptionMap, null, serviceContext);
+			null, userId, titleMap, descriptionMap, serviceContext);
 	}
 
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public CommercePricingClass addCommercePricingClass(
-			long userId, Map<Locale, String> titleMap,
-			Map<Locale, String> descriptionMap, String externalReferenceCode,
+			String externalReferenceCode, long userId,
+			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
 			ServiceContext serviceContext)
 		throws PortalException {
 
-		User user = userLocalService.getUser(userId);
+		User user = _userLocalService.getUser(userId);
 
 		validate(titleMap);
 
@@ -90,18 +104,18 @@ public class CommercePricingClassLocalServiceImpl
 		CommercePricingClass commercePricingClass =
 			commercePricingClassPersistence.create(commercePricingClassId);
 
+		commercePricingClass.setExternalReferenceCode(externalReferenceCode);
 		commercePricingClass.setCompanyId(serviceContext.getCompanyId());
 		commercePricingClass.setUserId(user.getUserId());
 		commercePricingClass.setUserName(user.getFullName());
 		commercePricingClass.setTitleMap(titleMap);
 		commercePricingClass.setDescriptionMap(descriptionMap);
-		commercePricingClass.setExternalReferenceCode(externalReferenceCode);
 		commercePricingClass.setExpandoBridgeAttributes(serviceContext);
 
-		Date now = new Date();
+		Date date = new Date();
 
 		Calendar calendar = CalendarFactoryUtil.getCalendar(
-			now.getTime(), user.getTimeZone());
+			date.getTime(), user.getTimeZone());
 
 		commercePricingClass.setLastPublishDate(calendar.getTime());
 
@@ -110,14 +124,57 @@ public class CommercePricingClassLocalServiceImpl
 
 		// Resources
 
-		resourceLocalService.addModelResources(
+		_resourceLocalService.addModelResources(
 			commercePricingClass, serviceContext);
 
 		return commercePricingClass;
 	}
 
+	@Override
+	public CommercePricingClass addOrUpdateCommercePricingClass(
+			String externalReferenceCode, long commercePricingClassId,
+			long userId, Map<Locale, String> titleMap,
+			Map<Locale, String> descriptionMap, ServiceContext serviceContext)
+		throws PortalException {
+
+		if (commercePricingClassId > 0) {
+			try {
+				return commercePricingClassLocalService.
+					updateCommercePricingClass(
+						commercePricingClassId, userId, titleMap,
+						descriptionMap, serviceContext);
+			}
+			catch (NoSuchPricingClassException noSuchPricingClassException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(
+						"Unable to find pricing class with ID: " +
+							commercePricingClassId,
+						noSuchPricingClassException);
+				}
+			}
+		}
+
+		if (!Validator.isBlank(externalReferenceCode)) {
+			CommercePricingClass commercePricingClass =
+				commercePricingClassPersistence.fetchByC_ERC(
+					serviceContext.getCompanyId(), externalReferenceCode);
+
+			if (commercePricingClass != null) {
+				return commercePricingClassLocalService.
+					updateCommercePricingClass(
+						commercePricingClassId, userId, titleMap,
+						descriptionMap, serviceContext);
+			}
+		}
+
+		return commercePricingClassLocalService.addCommercePricingClass(
+			externalReferenceCode, userId, titleMap, descriptionMap,
+			serviceContext);
+	}
+
 	@Indexable(type = IndexableType.DELETE)
 	@Override
+	@SystemEvent(type = SystemEventConstants.TYPE_DELETE)
 	public CommercePricingClass deleteCommercePricingClass(
 			CommercePricingClass commercePricingClass)
 		throws PortalException {
@@ -125,19 +182,19 @@ public class CommercePricingClassLocalServiceImpl
 		long commercePricingClassId =
 			commercePricingClass.getCommercePricingClassId();
 
-		commercePricingClassCPDefinitionRelLocalService.
+		_commercePricingClassCPDefinitionRelLocalService.
 			deleteCommercePricingClassCPDefinitionRels(commercePricingClassId);
 
 		commercePricingClassPersistence.remove(commercePricingClass);
 
 		// Resources
 
-		resourceLocalService.deleteResource(
+		_resourceLocalService.deleteResource(
 			commercePricingClass, ResourceConstants.SCOPE_INDIVIDUAL);
 
 		// Expando
 
-		expandoRowLocalService.deleteRows(commercePricingClassId);
+		_expandoRowLocalService.deleteRows(commercePricingClassId);
 
 		return commercePricingClass;
 	}
@@ -172,7 +229,7 @@ public class CommercePricingClassLocalServiceImpl
 
 	@Override
 	public CommercePricingClass fetchByExternalReferenceCode(
-		long companyId, String externalReferenceCode) {
+		String externalReferenceCode, long companyId) {
 
 		if (Validator.isBlank(externalReferenceCode)) {
 			return null;
@@ -186,7 +243,7 @@ public class CommercePricingClassLocalServiceImpl
 	public long[] getCommercePricingClassByCPDefinition(long cpDefinitionId) {
 		List<CommercePricingClassCPDefinitionRel>
 			commercePricingClassCPDefinitionRels =
-				commercePricingClassCPDefinitionRelLocalService.
+				_commercePricingClassCPDefinitionRelLocalService.
 					getCommercePricingClassByCPDefinitionId(cpDefinitionId);
 
 		Stream<CommercePricingClassCPDefinitionRel> stream =
@@ -229,6 +286,14 @@ public class CommercePricingClassLocalServiceImpl
 	}
 
 	@Override
+	public List<CommercePricingClass> searchByCPDefinitionId(
+		long cpDefinitionId, String title, int start, int end) {
+
+		return commercePricingClassFinder.findByCPDefinitionId(
+			cpDefinitionId, title, start, end);
+	}
+
+	@Override
 	public BaseModelSearchResult<CommercePricingClass>
 			searchCommercePricingClasses(
 				long companyId, String keywords, int start, int end, Sort sort)
@@ -240,15 +305,6 @@ public class CommercePricingClassLocalServiceImpl
 		return searchCommercePricingClasses(searchContext);
 	}
 
-	@Override
-	public List<CommercePricingClass>
-		searchCommercePricingClassesByCPDefinitionId(
-			long cpDefinitionId, String title, int start, int end) {
-
-		return commercePricingClassFinder.findByCPDefinitionId(
-			cpDefinitionId, title, start, end);
-	}
-
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public CommercePricingClass updateCommercePricingClass(
@@ -257,7 +313,7 @@ public class CommercePricingClassLocalServiceImpl
 			ServiceContext serviceContext)
 		throws PortalException {
 
-		User user = userLocalService.getUser(serviceContext.getUserId());
+		User user = _userLocalService.getUser(serviceContext.getUserId());
 
 		CommercePricingClass commercePricingClass =
 			commercePricingClassPersistence.findByPrimaryKey(
@@ -271,10 +327,10 @@ public class CommercePricingClassLocalServiceImpl
 		commercePricingClass.setTitleMap(titleMap);
 		commercePricingClass.setDescriptionMap(descriptionMap);
 
-		Date now = new Date();
+		Date date = new Date();
 
 		Calendar calendar = CalendarFactoryUtil.getCalendar(
-			now.getTime(), user.getTimeZone());
+			date.getTime(), user.getTimeZone());
 
 		commercePricingClass.setLastPublishDate(calendar.getTime());
 
@@ -286,7 +342,7 @@ public class CommercePricingClassLocalServiceImpl
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public CommercePricingClass updateCommercePricingClassExternalReferenceCode(
-			long commercePricingClassId, String externalReferenceCode)
+			String externalReferenceCode, long commercePricingClassId)
 		throws PortalException {
 
 		CommercePricingClass commercePricingClass =
@@ -299,54 +355,12 @@ public class CommercePricingClassLocalServiceImpl
 			commercePricingClass);
 	}
 
-	@Override
-	public CommercePricingClass upsertCommercePricingClass(
-			long commercePricingClassId, long userId,
-			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
-			String externalReferenceCode, ServiceContext serviceContext)
-		throws PortalException {
-
-		if (commercePricingClassId > 0) {
-			try {
-				return commercePricingClassLocalService.
-					updateCommercePricingClass(
-						commercePricingClassId, userId, titleMap,
-						descriptionMap, serviceContext);
-			}
-			catch (NoSuchPricingClassException noSuchPricingClassException) {
-				if (_log.isDebugEnabled()) {
-					_log.debug(
-						"Unable to find pricing class with ID: " +
-							commercePricingClassId,
-						noSuchPricingClassException);
-				}
-			}
-		}
-
-		if (!Validator.isBlank(externalReferenceCode)) {
-			CommercePricingClass commercePricingClass =
-				commercePricingClassPersistence.fetchByC_ERC(
-					serviceContext.getCompanyId(), externalReferenceCode);
-
-			if (commercePricingClass != null) {
-				return commercePricingClassLocalService.
-					updateCommercePricingClass(
-						commercePricingClassId, userId, titleMap,
-						descriptionMap, serviceContext);
-			}
-		}
-
-		return commercePricingClassLocalService.addCommercePricingClass(
-			userId, titleMap, descriptionMap, externalReferenceCode,
-			serviceContext);
-	}
-
 	protected SearchContext buildSearchContext(
 		long companyId, String keywords, int start, int end, Sort sort) {
 
 		SearchContext searchContext = new SearchContext();
 
-		Map<String, Serializable> attributes =
+		searchContext.setAttributes(
 			HashMapBuilder.<String, Serializable>put(
 				Field.CONTENT, keywords
 			).put(
@@ -358,10 +372,7 @@ public class CommercePricingClassLocalServiceImpl
 				LinkedHashMapBuilder.<String, Object>put(
 					"keywords", keywords
 				).build()
-			).build();
-
-		searchContext.setAttributes(attributes);
-
+			).build());
 		searchContext.setCompanyId(companyId);
 		searchContext.setEnd(end);
 
@@ -402,7 +413,7 @@ public class CommercePricingClassLocalServiceImpl
 				commercePricingClasses = null;
 
 				Indexer<CommercePricingClass> indexer =
-					IndexerRegistryUtil.getIndexer(CommercePricingClass.class);
+					_indexerRegistry.getIndexer(CommercePricingClass.class);
 
 				long companyId = GetterUtil.getLong(
 					document.get(Field.COMPANY_ID));
@@ -422,7 +433,7 @@ public class CommercePricingClassLocalServiceImpl
 		throws PortalException {
 
 		Indexer<CommercePricingClass> indexer =
-			IndexerRegistryUtil.nullSafeGetIndexer(CommercePricingClass.class);
+			_indexerRegistry.nullSafeGetIndexer(CommercePricingClass.class);
 
 		for (int i = 0; i < 10; i++) {
 			Hits hits = indexer.search(searchContext, _SELECTED_FIELD_NAMES);
@@ -455,5 +466,21 @@ public class CommercePricingClassLocalServiceImpl
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		CommercePricingClassLocalServiceImpl.class);
+
+	@Reference
+	private CommercePricingClassCPDefinitionRelLocalService
+		_commercePricingClassCPDefinitionRelLocalService;
+
+	@Reference
+	private ExpandoRowLocalService _expandoRowLocalService;
+
+	@Reference
+	private IndexerRegistry _indexerRegistry;
+
+	@Reference
+	private ResourceLocalService _resourceLocalService;
+
+	@Reference
+	private UserLocalService _userLocalService;
 
 }

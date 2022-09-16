@@ -19,6 +19,7 @@ import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.model.AssetRenderer;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.service.AssetEntryLocalServiceUtil;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.petra.xml.XMLUtil;
@@ -31,7 +32,7 @@ import com.liferay.portal.kernel.search.OpenSearchUtil;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.GroupServiceUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.HttpUtil;
+import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Tuple;
@@ -151,14 +152,18 @@ public class SearchUtil {
 		String currentURL) {
 
 		try {
-			PortletURL viewContentURL = renderResponse.createRenderURL();
-
-			viewContentURL.setParameter("mvcPath", "/view_content.jsp");
-			viewContentURL.setPortletMode(PortletMode.VIEW);
-			viewContentURL.setWindowState(WindowState.MAXIMIZED);
+			PortletURL viewContentURL = PortletURLBuilder.createRenderURL(
+				renderResponse
+			).setMVCPath(
+				"/view_content.jsp"
+			).setPortletMode(
+				PortletMode.VIEW
+			).setWindowState(
+				WindowState.MAXIMIZED
+			).buildPortletURL();
 
 			if (Validator.isNull(className) || (classPK <= 0)) {
-				return HttpUtil.setParameter(
+				return HttpComponentsUtil.setParameter(
 					viewContentURL.toString(), "p_l_back_url", currentURL);
 			}
 
@@ -170,7 +175,7 @@ public class SearchUtil {
 					getAssetRendererFactoryByClassName(className);
 
 			if (assetRendererFactory == null) {
-				return HttpUtil.setParameter(
+				return HttpComponentsUtil.setParameter(
 					viewContentURL.toString(), "p_l_back_url", currentURL);
 			}
 
@@ -179,7 +184,7 @@ public class SearchUtil {
 			viewContentURL.setParameter("type", assetRendererFactory.getType());
 
 			if (!viewInContext) {
-				return HttpUtil.setParameter(
+				return HttpComponentsUtil.setParameter(
 					viewContentURL.toString(), "p_l_back_url", currentURL);
 			}
 
@@ -195,7 +200,8 @@ public class SearchUtil {
 				viewURL = viewContentURL.toString();
 			}
 
-			return HttpUtil.setParameter(viewURL, "p_l_back_url", currentURL);
+			return HttpComponentsUtil.setParameter(
+				viewURL, "p_l_back_url", currentURL);
 		}
 		catch (Exception exception) {
 			_log.error(

@@ -38,12 +38,15 @@ X509Certificate x509Certificate = (X509Certificate)request.getAttribute(SamlWebK
 		navigationItems='<%=
 			new JSPNavigationItemList(pageContext) {
 				{
-					PortletURL portletURL = renderResponse.createRenderURL();
-
-					portletURL.setParameter("mvcRenderCommandName", "/admin/update_certificate");
-					portletURL.setParameter("certificateUsage", certificateUsage.name());
-
-					portletURL.setParameter(Constants.CMD, "replace");
+					PortletURL portletURL = PortletURLBuilder.createRenderURL(
+						renderResponse
+					).setMVCRenderCommandName(
+						"/admin/update_certificate"
+					).setCMD(
+						"replace"
+					).setParameter(
+						"certificateUsage", certificateUsage.name()
+					).buildPortletURL();
 
 					add(
 						navigationItem -> {
@@ -72,7 +75,7 @@ X509Certificate x509Certificate = (X509Certificate)request.getAttribute(SamlWebK
 	<portlet:param name="certificateUsage" value="<%= certificateUsage.name() %>" />
 </liferay-portlet:actionURL>
 
-<aui:form action="<%= updateCertificateURL.toString() %>" cssClass="" method="post" name="fm1">
+<aui:form action="<%= updateCertificateURL %>" cssClass="" method="post" name="fm1">
 	<c:choose>
 		<c:when test='<%= cmd.equals("import") && (x509Certificate == null) %>'>
 			<liferay-util:include page="/admin/import_certificate.jsp" servletContext="<%= application %>" />

@@ -59,10 +59,13 @@ public class JournalArticleSearchFixture {
 			journalArticleBlueprint.getDescriptionMap();
 		String contentString = journalArticleBlueprint.getContentString();
 
-		ServiceContext serviceContext = getServiceContext(groupId, userId);
+		ServiceContext serviceContext = getServiceContext(
+			journalArticleBlueprint);
 
 		serviceContext.setAssetCategoryIds(
 			journalArticleBlueprint.getAssetCategoryIds());
+		serviceContext.setExpandoBridgeAttributes(
+			journalArticleBlueprint.getExpandoBridgeAttributes());
 
 		if (journalArticleBlueprint.isWorkflowEnabled()) {
 			serviceContext.setWorkflowAction(
@@ -113,7 +116,7 @@ public class JournalArticleSearchFixture {
 
 		try {
 			return _journalArticleLocalService.addArticle(
-				userId, groupId, folderId, titleMap, descriptionMap,
+				null, userId, groupId, folderId, titleMap, descriptionMap,
 				contentString, ddmStructureKey, ddmTemplateKey, serviceContext);
 		}
 		catch (PortalException portalException) {
@@ -121,6 +124,27 @@ public class JournalArticleSearchFixture {
 		}
 	}
 
+	protected ServiceContext getServiceContext(
+		JournalArticleBlueprint journalArticleBlueprint) {
+
+		if (journalArticleBlueprint.getServiceContext() != null) {
+			return journalArticleBlueprint.getServiceContext();
+		}
+
+		try {
+			return ServiceContextTestUtil.getServiceContext(
+				journalArticleBlueprint.getGroupId(),
+				journalArticleBlueprint.getUserId());
+		}
+		catch (PortalException portalException) {
+			throw new RuntimeException(portalException);
+		}
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x)
+	 */
+	@Deprecated
 	protected ServiceContext getServiceContext(long groupId, long userId) {
 		try {
 			return ServiceContextTestUtil.getServiceContext(groupId, userId);

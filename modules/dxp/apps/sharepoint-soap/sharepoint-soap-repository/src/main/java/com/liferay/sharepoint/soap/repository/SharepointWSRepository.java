@@ -36,6 +36,8 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.repository.RepositoryException;
 import com.liferay.portal.kernel.search.Query;
@@ -759,11 +761,9 @@ public class SharepointWSRepository
 
 			sharepointConnection.moveSharepointObject(path, newPath);
 
-			sharepointObject = sharepointConnection.getSharepointObject(
-				newPath);
-
 			return _toExtRepositoryObject(
-				extRepositoryObjectType, sharepointObject);
+				extRepositoryObjectType,
+				sharepointConnection.getSharepointObject(newPath));
 		}
 		catch (SharepointException | SharepointRuntimeException exception) {
 			throw new SystemException(exception);
@@ -907,6 +907,9 @@ public class SharepointWSRepository
 			throw new DuplicateFileEntryException(name);
 		}
 		catch (SharepointException sharepointException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(sharepointException);
+			}
 
 			// The Sharepoint object does not exist
 
@@ -1017,6 +1020,9 @@ public class SharepointWSRepository
 	private static final String[][] _SUPPORTED_PARAMETERS = {
 		{_LIBRARY_NAME, _LIBRARY_PATH, _SERVER_VERSION, _SITE_URL}
 	};
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		SharepointWSRepository.class);
 
 	private static final Map
 		<ExtRepositoryObjectType<?>, SharepointConnection.ObjectTypeFilter>

@@ -14,11 +14,11 @@
 
 import ClayButton from '@clayui/button';
 import ClayDropDown, {Align} from '@clayui/drop-down';
-import React, {useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 
 import togglePermission from '../actions/togglePermission';
+import {useDispatch, useSelector} from '../contexts/StoreContext';
 import selectCanSwitchEditMode from '../selectors/selectCanSwitchEditMode';
-import {useDispatch, useSelector} from '../store/index';
 
 const EDIT_MODES = {
 	contentEditing: Liferay.Language.get('content-editing'),
@@ -34,10 +34,34 @@ export default function EditModeSelector() {
 		canSwitchEditMode ? EDIT_MODES.pageDesign : EDIT_MODES.contentEditing
 	);
 
+	const permissions = useSelector((state) => state.permissions);
+
+	const higherUpdatePermissionRef = useRef();
+
+	useEffect(() => {
+		if (permissions.UPDATE) {
+			higherUpdatePermissionRef.current = 'UPDATE';
+		}
+		else if (permissions.UPDATE_LAYOUT_BASIC) {
+			higherUpdatePermissionRef.current = 'UPDATE_LAYOUT_BASIC';
+		}
+		else {
+			higherUpdatePermissionRef.current = 'UPDATE_LAYOUT_LIMITED';
+		}
+
+		/* eslint-disable-next-line react-hooks/exhaustive-deps */
+	}, []);
+
 	return (
 		<ClayDropDown
 			active={active}
 			alignmentPosition={Align.BottomLeft}
+			menuElementAttrs={{
+				className: 'page-editor__edit-mode-dropdown-menu',
+				containerProps: {
+					className: 'cadmin',
+				},
+			}}
 			onActiveChange={setActive}
 			trigger={
 				<ClayButton
@@ -57,17 +81,28 @@ export default function EditModeSelector() {
 						setActive(false);
 						setEditMode(EDIT_MODES.pageDesign);
 
-						dispatch(togglePermission('UPDATE', true));
+						dispatch(
+							togglePermission(
+								higherUpdatePermissionRef.current,
+								true
+							)
+						);
 					}}
 				>
 					{EDIT_MODES.pageDesign}
 				</ClayDropDown.Item>
+
 				<ClayDropDown.Item
 					onClick={() => {
 						setActive(false);
 						setEditMode(EDIT_MODES.contentEditing);
 
-						dispatch(togglePermission('UPDATE', false));
+						dispatch(
+							togglePermission(
+								higherUpdatePermissionRef.current,
+								false
+							)
+						);
 					}}
 				>
 					{EDIT_MODES.contentEditing}

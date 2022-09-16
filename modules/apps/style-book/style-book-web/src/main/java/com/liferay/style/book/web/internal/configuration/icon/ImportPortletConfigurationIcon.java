@@ -14,11 +14,9 @@
 
 package com.liferay.style.book.web.internal.configuration.icon;
 
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringBundler;
-import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.configuration.icon.BasePortletConfigurationIcon;
 import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfigurationIcon;
@@ -32,8 +30,6 @@ import com.liferay.style.book.constants.StyleBookPortletKeys;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
-import javax.portlet.PortletURL;
-import javax.portlet.WindowStateException;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -43,15 +39,23 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	property = "javax.portlet.name=" + StyleBookPortletKeys.STYLE_BOOK,
+	property = {
+		"javax.portlet.name=" + StyleBookPortletKeys.STYLE_BOOK, "path=-",
+		"path=/style_books", "path=/style_books/style_books"
+	},
 	service = PortletConfigurationIcon.class
 )
 public class ImportPortletConfigurationIcon
 	extends BasePortletConfigurationIcon {
 
 	@Override
+	public String getIconCssClass() {
+		return "download";
+	}
+
+	@Override
 	public String getMessage(PortletRequest portletRequest) {
-		return LanguageUtil.get(
+		return _language.get(
 			getResourceBundle(getLocale(portletRequest)), "import");
 	}
 
@@ -59,40 +63,27 @@ public class ImportPortletConfigurationIcon
 	public String getOnClick(
 		PortletRequest portletRequest, PortletResponse portletResponse) {
 
-		try {
-			PortletURL portletURL = _portal.getControlPanelPortletURL(
-				portletRequest, StyleBookPortletKeys.STYLE_BOOK,
-				PortletRequest.RENDER_PHASE);
-
-			portletURL.setParameter(
-				"mvcRenderCommandName", "/style_book/view_import");
-			portletURL.setWindowState(LiferayWindowState.POP_UP);
-
-			StringBundler sb = new StringBundler(6);
-
-			sb.append("Liferay.Util.openModal({onClose: function(event){");
-			sb.append("window.location.reload();}, title: '");
-			sb.append(getMessage(portletRequest));
-			sb.append("', url: '");
-			sb.append(portletURL.toString());
-			sb.append("'});");
-
-			return sb.toString();
-		}
-		catch (WindowStateException windowStateException) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(windowStateException, windowStateException);
-			}
-		}
-
-		return StringPool.BLANK;
+		return StringBundler.concat(
+			"Liferay.Util.openModal({onClose: function(event){",
+			"window.location.reload();}, title: '", getMessage(portletRequest),
+			"', url: '",
+			PortletURLBuilder.create(
+				_portal.getControlPanelPortletURL(
+					portletRequest, StyleBookPortletKeys.STYLE_BOOK,
+					PortletRequest.RENDER_PHASE)
+			).setMVCRenderCommandName(
+				"/style_book/view_import"
+			).setWindowState(
+				LiferayWindowState.POP_UP
+			).buildString(),
+			"'});");
 	}
 
 	@Override
 	public String getURL(
 		PortletRequest portletRequest, PortletResponse portletResponse) {
 
-		return "javascript:;";
+		return "javascript:void(0);";
 	}
 
 	@Override
@@ -116,8 +107,8 @@ public class ImportPortletConfigurationIcon
 		return false;
 	}
 
-	private static final Log _log = LogFactoryUtil.getLog(
-		ImportPortletConfigurationIcon.class);
+	@Reference
+	private Language _language;
 
 	@Reference
 	private Portal _portal;

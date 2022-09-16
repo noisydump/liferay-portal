@@ -18,10 +18,9 @@
 
 <%
 LayoutBranch layoutBranch = (LayoutBranch)request.getAttribute(StagingProcessesWebKeys.LAYOUT_BRANCH);
-LayoutRevision layoutRevision = (LayoutRevision)request.getAttribute(WebKeys.LAYOUT_REVISION);
-%>
 
-<%
+LayoutRevision layoutRevision = (LayoutRevision)request.getAttribute(WebKeys.LAYOUT_REVISION);
+
 List<LayoutRevision> layoutRevisions = LayoutRevisionLocalServiceUtil.getChildLayoutRevisions(layoutRevision.getLayoutSetBranchId(), LayoutRevisionConstants.DEFAULT_PARENT_LAYOUT_REVISION_ID, plid, QueryUtil.ALL_POS, QueryUtil.ALL_POS, new LayoutRevisionCreateDateComparator(true));
 %>
 
@@ -36,10 +35,10 @@ List<LayoutRevision> layoutRevisions = LayoutRevisionLocalServiceUtil.getChildLa
 </div>
 
 <div class="dropdown">
-	<a class="dropdown-toggle layout-branch-selector staging-variation-selector" data-toggle="liferay-dropdown" href="#1">
-		<liferay-ui:message key="<%= HtmlUtil.escape(layoutBranchDisplayContext.getLayoutBranchDisplayName(layoutBranch)) %>" localizeKey="<%= false %>" />
-
-		<aui:icon image="caret-double-l" markupView="lexicon" />
+	<a class="dropdown-toggle form-control form-control-select form-control-sm layout-branch-selector staging-variation-selector" data-toggle="liferay-dropdown" href="#1">
+		<span class="c-inner" tabindex="-1">
+			<liferay-ui:message key="<%= HtmlUtil.escape(layoutBranchDisplayContext.getLayoutBranchDisplayName(layoutBranch)) %>" localizeKey="<%= false %>" />
+		</span>
 	</a>
 
 	<ul class="dropdown-menu">
@@ -59,7 +58,7 @@ List<LayoutRevision> layoutRevisions = LayoutRevisionLocalServiceUtil.getChildLa
 			</portlet:actionURL>
 
 			<li>
-				<a class="<%= selected ? "disabled" : StringPool.BLANK %> dropdown-item" href="<%= selected ? "javascript:;" : curLayoutBranchURL %>">
+				<a class="<%= selected ? "disabled" : StringPool.BLANK %> dropdown-item" href="<%= selected ? "javascript:void(0);" : curLayoutBranchURL %>">
 					<liferay-ui:message key="<%= HtmlUtil.escape(layoutBranchDisplayContext.getLayoutBranchDisplayName(curLayoutBranch)) %>" localizeKey="<%= false %>" />
 				</a>
 			</li>

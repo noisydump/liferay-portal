@@ -18,6 +18,7 @@ import com.liferay.journal.content.search.web.internal.configuration.JournalCont
 import com.liferay.journal.content.search.web.internal.constants.JournalContentSearchWebKeys;
 import com.liferay.journal.content.search.web.internal.util.ContentHits;
 import com.liferay.journal.model.JournalArticle;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -120,10 +121,13 @@ public class JournalContentSearchDisplayContext {
 
 		Layout layout = themeDisplay.getLayout();
 
-		PortletURL renderURL = _liferayPortletResponse.createRenderURL();
-
-		renderURL.setParameter("mvcPath", "/search.jsp");
-		renderURL.setParameter("keywords", getKeywords());
+		PortletURL renderURL = PortletURLBuilder.createRenderURL(
+			_liferayPortletResponse
+		).setMVCPath(
+			"/search.jsp"
+		).setKeywords(
+			getKeywords()
+		).buildPortletURL();
 
 		String originalKeywords = ParamUtil.getString(
 			_httpServletRequest, "keywords", getKeywords());
@@ -142,15 +146,14 @@ public class JournalContentSearchDisplayContext {
 
 		ContentHits contentHits = new ContentHits();
 
-		contentHits.setShowListed(
-			_journalContentSearchPortletInstanceConfiguration.showListed());
-
 		contentHits.recordHits(
 			hits, layout.getGroupId(), layout.isPrivateLayout(),
 			_searchContainer.getStart(), _searchContainer.getEnd());
+		contentHits.setShowListed(
+			_journalContentSearchPortletInstanceConfiguration.showListed());
 
-		_searchContainer.setTotal(hits.getLength());
-		_searchContainer.setResults(ListUtil.fromArray(hits.getDocs()));
+		_searchContainer.setResultsAndTotal(
+			() -> ListUtil.fromArray(hits.getDocs()), hits.getLength());
 
 		return _searchContainer;
 	}

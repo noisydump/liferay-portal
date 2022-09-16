@@ -24,14 +24,14 @@ import com.liferay.portal.kernel.cache.transactional.TransactionalPortalCacheUti
 import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
 import com.liferay.portal.kernel.test.util.PropsTestUtil;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.TransactionAttribute;
 import com.liferay.portal.kernel.transaction.TransactionLifecycleListener;
 import com.liferay.portal.kernel.transaction.TransactionStatus;
-import com.liferay.registry.BasicRegistryImpl;
-import com.liferay.registry.RegistryUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.Collections;
 import java.util.List;
@@ -41,8 +41,8 @@ import java.util.concurrent.FutureTask;
 
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -51,32 +51,32 @@ import org.junit.Test;
 public class TransactionalPortalCacheTest {
 
 	@ClassRule
-	public static final CodeCoverageAssertor codeCoverageAssertor =
-		new CodeCoverageAssertor() {
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new CodeCoverageAssertor() {
 
-			@Override
-			public void appendAssertClasses(List<Class<?>> assertClasses) {
-				assertClasses.add(TransactionalPortalCache.class);
+				@Override
+				public void appendAssertClasses(List<Class<?>> assertClasses) {
+					assertClasses.add(TransactionalPortalCache.class);
 
-				Class<TransactionalPortalCacheUtil> clazz =
-					TransactionalPortalCacheUtil.class;
+					Class<TransactionalPortalCacheUtil> clazz =
+						TransactionalPortalCacheUtil.class;
 
-				assertClasses.add(clazz);
+					assertClasses.add(clazz);
 
-				Collections.addAll(assertClasses, clazz.getDeclaredClasses());
+					Collections.addAll(
+						assertClasses, clazz.getDeclaredClasses());
 
-				TransactionLifecycleListener transactionLifecycleListener =
-					TransactionalPortalCacheUtil.TRANSACTION_LIFECYCLE_LISTENER;
+					TransactionLifecycleListener transactionLifecycleListener =
+						TransactionalPortalCacheUtil.
+							TRANSACTION_LIFECYCLE_LISTENER;
 
-				assertClasses.add(transactionLifecycleListener.getClass());
-			}
+					assertClasses.add(transactionLifecycleListener.getClass());
+				}
 
-		};
-
-	@BeforeClass
-	public static void setUpClass() {
-		RegistryUtil.setRegistry(new BasicRegistryImpl());
-	}
+			},
+			LiferayUnitTestRule.INSTANCE);
 
 	@Before
 	public void setUp() {
@@ -662,15 +662,10 @@ public class TransactionalPortalCacheTest {
 
 		StackTraceElement stackTraceElement = stackTraceElements[2];
 
-		StringBundler sb = new StringBundler(5);
-
-		sb.append(stackTraceElement.getClassName());
-		sb.append(StringPool.UNDERLINE);
-		sb.append(stackTraceElement.getMethodName());
-		sb.append("_LineNumber_");
-		sb.append(stackTraceElement.getLineNumber());
-
-		String threadNamePrefix = sb.toString();
+		String threadNamePrefix = StringBundler.concat(
+			stackTraceElement.getClassName(), StringPool.UNDERLINE,
+			stackTraceElement.getMethodName(), "_LineNumber_",
+			stackTraceElement.getLineNumber());
 
 		TestCallable testCallable1 = new TestCallable(
 			transactionalPortalCache, key1, value1, readOnly1, skipReplicator);

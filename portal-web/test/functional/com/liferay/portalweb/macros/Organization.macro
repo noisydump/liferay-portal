@@ -159,7 +159,7 @@ definition {
 		if ("${orgType}" == "Location") {
 			MenuItem.click(menuItem = "Location");
 		}
-		else if (IsElementPresent(locator1 = "MenuItem#ANY_MENU_ITEM", key_menuItem = "Organization")) {
+		else if (IsElementPresent(key_menuItem = "Organization", locator1 = "MenuItem#ANY_MENU_ITEM")) {
 			MenuItem.click(menuItem = "Organization");
 		}
 
@@ -279,12 +279,87 @@ definition {
 		PortletEntry.save();
 	}
 
+	macro addUser {
+		LexiconEntry.gotoEntryMenuItem(
+			menuItem = "Add User",
+			rowEntry = "${organizationName}");
+
+		Type(
+			locator1 = "UsersAndOrganizationsEditUser#DETAILS_SCREEN_NAME_FIELD",
+			value1 = "${userScreenName}");
+
+		Type(
+			locator1 = "UsersAndOrganizationsEditUser#DETAILS_EMAIL_ADDRESS_FIELD",
+			value1 = "${userEmailAddress}");
+
+		Type(
+			locator1 = "UsersAndOrganizationsEditUser#DETAILS_FIRST_NAME_FIELD",
+			value1 = "${userFirstName}");
+
+		if (isSet(userBirthday)) {
+			Type(
+				locator1 = "UsersAndOrganizationsEditUser#DETAILS_BIRTHDAY_FIELD",
+				value1 = "${userBirthday}");
+		}
+
+		if (isSet(userMiddleName)) {
+			Type(
+				locator1 = "UsersAndOrganizationsEditUser#DETAILS_MIDDLE_NAME_FIELD",
+				value1 = "${userMiddleName}");
+		}
+
+		if (isSet(userJobTitle)) {
+			Type(
+				locator1 = "UsersAndOrganizationsEditUser#DETAILS_JOB_TITLE_FIELD",
+				value1 = "${userJobTitle}");
+		}
+
+		if (isSet(userGender)) {
+			Select(
+				locator1 = "UsersAndOrganizationsEditUser#DETAILS_GENDER_SELECT",
+				value1 = "${userGender}");
+		}
+
+		Type(
+			locator1 = "UsersAndOrganizationsEditUser#DETAILS_LAST_NAME_FIELD",
+			value1 = "${userLastName}");
+
+		if (isSet(userTag)) {
+			Type(
+				locator1 = "UsersAndOrganizationsEditUser#DETAILS_TAG_FIELD_INPUT",
+				value1 = "${userTag}");
+
+			KeyPress(
+				locator1 = "UsersAndOrganizationsEditUser#DETAILS_TAG_FIELD_INPUT",
+				value1 = "\ENTER");
+		}
+
+		if (isSet(userComment)) {
+			Type(
+				locator1 = "TextArea#COMMENTS",
+				value1 = "${userComment}");
+		}
+
+		var browserType = PropsUtil.get("browser.type");
+
+		if ("${browserType}" == "safari") {
+			Button.clickSave();
+		}
+		else {
+			AssertClick(
+				locator1 = "Button#SUBMIT",
+				value1 = "Save");
+		}
+
+		WaitForLiferayEvent.initializeLiferayEventLog();
+	}
+
 	macro addWithLocalizedCountryCP {
 		Navigator.gotoNavItem(navItem = "${navItem}");
 
 		LexiconEntry.gotoAdd();
 
-		if (IsElementPresent(locator1 = "MenuItem#ANY_MENU_ITEM", key_menuItem = "${localizedOption}")) {
+		if (IsElementPresent(key_menuItem = "${localizedOption}", locator1 = "MenuItem#ANY_MENU_ITEM")) {
 			MenuItem.click(menuItem = "${localizedOption}");
 		}
 
@@ -314,14 +389,7 @@ definition {
 
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
-		AssertTextEquals(
-			key_roleTitle = "${roleTitle}",
-			locator1 = "UsersAndOrganizationsAssignOrganizationalRoles#ROLE_TITLE",
-			value1 = "${roleTitle}");
-
-		Click(
-			key_roleTitle = "${roleTitle}",
-			locator1 = "UsersAndOrganizationsAssignOrganizationalRoles#ROLE_TITLE");
+		LexiconTable.clickTableEntryTitle(tableEntry = "${roleTitle}");
 
 		Navigator.gotoNavItem(navItem = "Available");
 
@@ -344,15 +412,9 @@ definition {
 
 		Navigator.gotoNavItem(navItem = "Current");
 
-		AssertTextEquals(
-			key_userScreenName = "${userScreenName}",
-			locator1 = "UsersAndOrganizationsAssignUsers#USER_TABLE_USER_NAME",
-			value1 = "${userFirstName} ${userLastName}");
+		LexiconEntry.viewEntryName(rowEntry = "${userFirstName} ${userLastName}");
 
-		AssertTextEquals(
-			key_userScreenName = "${userScreenName}",
-			locator1 = "UserGroupsAssignUsers#USER_TABLE_SCREEN_NAME",
-			value1 = "${userScreenName}");
+		LexiconEntry.viewEntryName(rowEntry = "${userScreenName}");
 
 		IFrame.selectTopFrame();
 
@@ -446,6 +508,35 @@ definition {
 		AssertElementNotPresent(locator1 = "UsersAndOrganizations#ORGANIZATION_TABLE_NAME");
 	}
 
+	macro editCategorizationCP {
+
+		//AssertElementPresent(locator1 = "UsersAndOrganizationsEditUser#CATEGORIZATION_LABEL");
+
+		AssertElementPresent(
+			key_vocabularyName = "${vocabularyName}",
+			locator1 = "UsersAndOrganizationsEditUser#VOCABULARY_LABEL");
+
+		AssertElementPresent.assertVisible(
+			key_vocabularyName = "${vocabularyName}",
+			locator1 = "UsersAndOrganizationsEditUser#DETAILS_CATEGORY_SELECT",
+			value1 = "Select");
+
+		WaitForLiferayEvent.initializeLiferayEventLog();
+
+		AssertClick(
+			key_vocabularyName = "${vocabularyName}",
+			locator1 = "UsersAndOrganizationsEditUser#DETAILS_CATEGORY_SELECT",
+			value1 = "Select");
+
+		AssertTextEquals(
+			locator1 = "Modal#HEADER",
+			value1 = "Select ${vocabularyName}");
+
+		AssetCategorization.selectCategories(categoryNameList = "${categoryName}");
+
+		PortletEntry.save();
+	}
+
 	macro editOrganizationCP {
 		UsersAndOrganizationsNavigator.gotoOrganizations();
 
@@ -536,6 +627,12 @@ definition {
 		LexiconEntry.openEntryMenu(rowEntry = "${memberName}");
 	}
 
+	macro openOrganizationsAdmin {
+		Navigator.openWithAppendToBaseURL(
+			baseURL = "${baseURL}",
+			urlAppend = "group/control_panel/manage?p_p_id=com_liferay_users_admin_web_portlet_UsersAdminPortlet&p_p_lifecycle=0&p_p_state=maximized&p_p_mode=view&_com_liferay_users_admin_web_portlet_UsersAdminPortlet_toolbarItem=view-all-organizations&_com_liferay_users_admin_web_portlet_UsersAdminPortlet_usersListView=flat-organizations");
+	}
+
 	macro removeMemberCP {
 		Organization.gotoMemberActionsCmd(
 			memberName = "${userFullName}",
@@ -560,38 +657,6 @@ definition {
 			value1 = "${orgName}");
 	}
 
-	macro selectParentOrganizationCP {
-		var key_orgName = "${orgName}";
-
-		LexiconEntry.openEntryMenu(rowEntry = "${orgName}");
-
-		MenuItem.click(menuItem = "Edit");
-
-		AssertClick(
-			locator1 = "UsersAndOrganizationsEditOrganization#PARENT_ORGANIZATION_SELECT_BUTTON",
-			value1 = "Select");
-
-		SelectFrame(locator1 = "UsersAndOrganizationsSelectOrganization#SELECT_ORGANIZATION_IFRAME");
-
-		AssertTextEquals(
-			locator1 = "ContentRow#ORGANIZATION_TABLE_NAME",
-			value1 = "${orgName}");
-
-		var key_orgName = "${parentOrgName}";
-
-		AssertClick(
-			locator1 = "UsersAndOrganizationsSelectOrganization#ORGANIZATION_TABLE_CHOOSE_BUTTON",
-			value1 = "Choose");
-
-		SelectFrame(value1 = "relative=top");
-
-		AssertTextEquals(
-			locator1 = "UsersAndOrganizationsEditOrganization#PARENT_ORGANIZATION_TABLE_NAME",
-			value1 = "${parentOrgName}");
-
-		PortletEntry.save();
-	}
-
 	macro tearDownCP {
 		ApplicationsMenu.gotoPortlet(
 			category = "Users",
@@ -602,52 +667,50 @@ definition {
 			locator1 = "NavBar#ORGANIZATIONS",
 			value1 = "Organizations");
 
-		if (isSet(orgName)) {
-			Search.searchCP(searchTerm = "${orgName}");
+		if (IsElementNotPresent(locator1 = "Message#EMPTY_INFO")) {
+			if (isSet(orgName)) {
+				Search.searchCP(searchTerm = "${orgName}");
 
-			PortletEntry.selectAll();
+				PortletEntry.selectAll();
 
-			ClickNoError(locator1 = "Icon#DELETE");
-
-			AssertConfirm(value1 = "Are you sure you want to delete this? It will be deleted immediately.");
-
-			Alert.viewSuccessMessage();
-		}
-		else {
-			while (IsElementPresent(locator1 = "UsersAndOrganizations#ORGANIZATION_TABLE_NAME_GENERIC")) {
-				Click(
-					locator1 = "UsersAndOrganizations#ORGANIZATION_TABLE_NAME_GENERIC",
-					value1 = "${orgName}");
-
-				AssertClick(
-					locator1 = "UsersAndOrganizationsOrganization#MENU_ASSIGN_USERS",
-					value1 = "Assign Users");
-
-				AssertClick(
-					locator1 = "UsersAndOrganizationsAssignUsers#CURRENT_TAB",
-					value1 = "Current");
-
-				if ((IsElementPresent(locator1 = "Checkbox#SELECT_ALL")) && (IsVisible(locator1 = "Checkbox#SELECT_ALL"))) {
-					Uncheck(locator1 = "Checkbox#SELECT_ALL");
-
-					AssertClick(
-						locator1 = "Button#UPDATE_ASSOCIATIONS",
-						value1 = "Update Associations");
-
-					AssertTextEquals(
-						locator1 = "Message#INFO",
-						value1 = "No users were found.");
-				}
-
-				AssertClick.assertPartialTextClickAt(
-					locator1 = "UsersAndOrganizationsAssignUsers#BACK",
-					value1 = "Back");
-
-				AssertClickNoError(
-					locator1 = "UsersAndOrganizationsOrganization#MENU_DELETE",
-					value1 = "Delete");
+				ClickNoError(locator1 = "Icon#DELETE");
 
 				AssertConfirm(value1 = "Are you sure you want to delete this? It will be deleted immediately.");
+
+				Alert.viewSuccessMessage();
+			}
+			else {
+				while (IsElementPresent(locator1 = "UsersAndOrganizations#ORGANIZATION_TABLE_NAME_GENERIC")) {
+					Click(
+						locator1 = "UsersAndOrganizations#ORGANIZATION_TABLE_NAME_GENERIC",
+						value1 = "${orgName}");
+
+					AssertClick(
+						locator1 = "UsersAndOrganizationsOrganization#MENU_ASSIGN_USERS",
+						value1 = "Assign Users");
+
+					Navigator.gotoNavTab(navTab = "Current");
+
+					if ((IsElementPresent(locator1 = "Checkbox#SELECT_ALL")) && (IsVisible(locator1 = "Checkbox#SELECT_ALL"))) {
+						Uncheck(locator1 = "Checkbox#SELECT_ALL");
+
+						AssertClick(
+							locator1 = "Button#UPDATE_ASSOCIATIONS",
+							value1 = "Update Associations");
+
+						AssertTextEquals(
+							locator1 = "Message#INFO",
+							value1 = "No users were found.");
+					}
+
+					Navigator.gotoBack();
+
+					AssertClickNoError(
+						locator1 = "UsersAndOrganizationsOrganization#MENU_DELETE",
+						value1 = "Delete");
+
+					AssertConfirm(value1 = "Are you sure you want to delete this? It will be deleted immediately.");
+				}
 			}
 		}
 	}
@@ -741,7 +804,9 @@ definition {
 				locator1 = "UsersAndOrganizationsEditOrganization#PARENT_ORGANIZATION_SELECT_BUTTON",
 				value1 = "Change");
 
-			SelectFrame(locator1 = "UsersAndOrganizationsSelectOrganization#SELECT_ORGANIZATION_IFRAME");
+			SelectFrame(
+				key_title = "Select Parent Organization",
+				locator1 = "IFrame#MODAL_ANY");
 
 			AssertTextEquals(
 				locator1 = "ContentRow#ORGANIZATION_TABLE_NAME",
@@ -756,7 +821,9 @@ definition {
 				locator1 = "UsersAndOrganizationsEditOrganization#PARENT_ORGANIZATION_SELECT_BUTTON",
 				value1 = "Select");
 
-			SelectFrame(locator1 = "UsersAndOrganizationsSelectOrganization#SELECT_ORGANIZATION_IFRAME");
+			SelectFrame(
+				key_title = "Select Parent Organization",
+				locator1 = "IFrame#MODAL_ANY");
 
 			AssertTextEquals(
 				locator1 = "ContentRow#ORGANIZATION_TABLE_NAME",
@@ -807,7 +874,9 @@ definition {
 			locator1 = "UsersAndOrganizationsOrganization#SUBORGANIZATION_TABLE_TYPE",
 			value1 = "${suborgType}");
 
-		AssertElementPresent(locator1 = "UsersAndOrganizationsOrganization#SUBORGANIZATION_TABLE_ACTIONS");
+		AssertVisible(
+			key_tableEntry = "${suborgName}",
+			locator1 = "LexiconTable#TABLE_ENTRY_ELLIPSIS");
 	}
 
 }

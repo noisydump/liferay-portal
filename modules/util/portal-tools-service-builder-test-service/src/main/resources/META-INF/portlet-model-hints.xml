@@ -10,6 +10,24 @@
 		<field name="cacheDisabledEntryId" type="long" />
 		<field name="name" type="String" />
 	</model>
+	<model name="com.liferay.portal.tools.service.builder.test.model.CacheFieldEntry">
+		<field name="cacheFieldEntryId" type="long" />
+		<field name="groupId" type="long" />
+		<field name="name" type="String" />
+	</model>
+	<model name="com.liferay.portal.tools.service.builder.test.model.CacheMissEntry">
+		<field name="mvccVersion" type="long" />
+		<field name="ctCollectionId" type="long" />
+		<field name="cacheMissEntryId" type="long" />
+	</model>
+	<model name="com.liferay.portal.tools.service.builder.test.model.DataLimitEntry">
+		<field name="dataLimitEntryId" type="long" />
+		<field name="companyId" type="long" />
+		<field name="userId" type="long" />
+		<field name="userName" type="String" />
+		<field name="createDate" type="Date" />
+		<field name="modifiedDate" type="Date" />
+	</model>
 	<model name="com.liferay.portal.tools.service.builder.test.model.DSLQueryEntry">
 		<field name="dslQueryEntryId" type="long" />
 		<field name="name" type="String" />
@@ -27,11 +45,13 @@
 		<field name="blob" type="Blob" />
 	</model>
 	<model name="com.liferay.portal.tools.service.builder.test.model.ERCCompanyEntry">
+		<field name="uuid" type="String" />
 		<field name="externalReferenceCode" type="String" />
 		<field name="ercCompanyEntryId" type="long" />
 		<field name="companyId" type="long" />
 	</model>
 	<model name="com.liferay.portal.tools.service.builder.test.model.ERCGroupEntry">
+		<field name="uuid" type="String" />
 		<field name="externalReferenceCode" type="String" />
 		<field name="ercGroupEntryId" type="long" />
 		<field name="groupId" type="long" />
@@ -174,6 +194,15 @@
 		<field name="parentNestedSetsTreeEntryId" type="long" />
 		<field name="leftNestedSetsTreeEntryId" type="long" />
 		<field name="rightNestedSetsTreeEntryId" type="long" />
+	</model>
+	<model name="com.liferay.portal.tools.service.builder.test.model.NullConvertibleEntry">
+		<field name="nullConvertibleEntryId" type="long" />
+		<field name="name" type="String" />
+	</model>
+	<model name="com.liferay.portal.tools.service.builder.test.model.RenameFinderColumnEntry">
+		<field name="renameFinderColumnEntryId" type="long" />
+		<field name="groupId" type="long" />
+		<field name="columnToRename" type="String" />
 	</model>
 	<model name="com.liferay.portal.tools.service.builder.test.model.UADPartialEntry">
 		<field name="uadPartialEntryId" type="long" />

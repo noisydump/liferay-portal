@@ -77,10 +77,12 @@ public class KaleoInstanceCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(37);
+		StringBundler sb = new StringBundler(41);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
+		sb.append(", ctCollectionId=");
+		sb.append(ctCollectionId);
 		sb.append(", kaleoInstanceId=");
 		sb.append(kaleoInstanceId);
 		sb.append(", groupId=");
@@ -105,6 +107,8 @@ public class KaleoInstanceCacheModel
 		sb.append(kaleoDefinitionVersion);
 		sb.append(", rootKaleoInstanceTokenId=");
 		sb.append(rootKaleoInstanceTokenId);
+		sb.append(", active=");
+		sb.append(active);
 		sb.append(", className=");
 		sb.append(className);
 		sb.append(", classPK=");
@@ -125,6 +129,7 @@ public class KaleoInstanceCacheModel
 		KaleoInstanceImpl kaleoInstanceImpl = new KaleoInstanceImpl();
 
 		kaleoInstanceImpl.setMvccVersion(mvccVersion);
+		kaleoInstanceImpl.setCtCollectionId(ctCollectionId);
 		kaleoInstanceImpl.setKaleoInstanceId(kaleoInstanceId);
 		kaleoInstanceImpl.setGroupId(groupId);
 		kaleoInstanceImpl.setCompanyId(companyId);
@@ -163,6 +168,7 @@ public class KaleoInstanceCacheModel
 
 		kaleoInstanceImpl.setKaleoDefinitionVersion(kaleoDefinitionVersion);
 		kaleoInstanceImpl.setRootKaleoInstanceTokenId(rootKaleoInstanceTokenId);
+		kaleoInstanceImpl.setActive(active);
 
 		if (className == null) {
 			kaleoInstanceImpl.setClassName("");
@@ -199,6 +205,8 @@ public class KaleoInstanceCacheModel
 
 		mvccVersion = objectInput.readLong();
 
+		ctCollectionId = objectInput.readLong();
+
 		kaleoInstanceId = objectInput.readLong();
 
 		groupId = objectInput.readLong();
@@ -218,6 +226,8 @@ public class KaleoInstanceCacheModel
 		kaleoDefinitionVersion = objectInput.readInt();
 
 		rootKaleoInstanceTokenId = objectInput.readLong();
+
+		active = objectInput.readBoolean();
 		className = objectInput.readUTF();
 
 		classPK = objectInput.readLong();
@@ -230,6 +240,8 @@ public class KaleoInstanceCacheModel
 	@Override
 	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(mvccVersion);
+
+		objectOutput.writeLong(ctCollectionId);
 
 		objectOutput.writeLong(kaleoInstanceId);
 
@@ -264,6 +276,8 @@ public class KaleoInstanceCacheModel
 
 		objectOutput.writeLong(rootKaleoInstanceTokenId);
 
+		objectOutput.writeBoolean(active);
+
 		if (className == null) {
 			objectOutput.writeUTF("");
 		}
@@ -285,6 +299,7 @@ public class KaleoInstanceCacheModel
 	}
 
 	public long mvccVersion;
+	public long ctCollectionId;
 	public long kaleoInstanceId;
 	public long groupId;
 	public long companyId;
@@ -297,6 +312,7 @@ public class KaleoInstanceCacheModel
 	public String kaleoDefinitionName;
 	public int kaleoDefinitionVersion;
 	public long rootKaleoInstanceTokenId;
+	public boolean active;
 	public String className;
 	public long classPK;
 	public boolean completed;

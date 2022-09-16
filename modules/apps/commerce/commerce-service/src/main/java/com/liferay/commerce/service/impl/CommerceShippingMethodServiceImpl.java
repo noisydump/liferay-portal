@@ -18,7 +18,9 @@ import com.liferay.commerce.model.CommerceAddressRestriction;
 import com.liferay.commerce.model.CommerceShippingMethod;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
+import com.liferay.commerce.service.CommerceAddressRestrictionLocalService;
 import com.liferay.commerce.service.base.CommerceShippingMethodServiceBaseImpl;
+import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
@@ -42,14 +44,13 @@ public class CommerceShippingMethodServiceImpl
 
 	@Override
 	public CommerceAddressRestriction addCommerceAddressRestriction(
-			long userId, long groupId, long commerceShippingMethodId,
-			long commerceCountryId)
+			long groupId, long commerceShippingMethodId, long countryId)
 		throws PortalException {
 
 		_checkCommerceChannel(groupId);
 
 		return commerceShippingMethodLocalService.addCommerceAddressRestriction(
-			userId, groupId, commerceShippingMethodId, commerceCountryId);
+			getUserId(), groupId, commerceShippingMethodId, countryId);
 	}
 
 	/**
@@ -58,27 +59,28 @@ public class CommerceShippingMethodServiceImpl
 	@Deprecated
 	@Override
 	public CommerceAddressRestriction addCommerceAddressRestriction(
-			long commerceShippingMethodId, long commerceCountryId,
+			long commerceShippingMethodId, long countryId,
 			ServiceContext serviceContext)
 		throws PortalException {
 
 		return commerceShippingMethodService.addCommerceAddressRestriction(
-			serviceContext.getUserId(), serviceContext.getScopeGroupId(),
-			commerceShippingMethodId, commerceCountryId);
+			serviceContext.getScopeGroupId(), commerceShippingMethodId,
+			countryId);
 	}
 
 	@Override
 	public CommerceShippingMethod addCommerceShippingMethod(
-			long userId, long groupId, Map<Locale, String> nameMap,
-			Map<Locale, String> descriptionMap, File imageFile,
-			String engineKey, double priority, boolean active)
+			long groupId, Map<Locale, String> nameMap,
+			Map<Locale, String> descriptionMap, boolean active,
+			String engineKey, File imageFile, double priority,
+			String trackingURL)
 		throws PortalException {
 
 		_checkCommerceChannel(groupId);
 
 		return commerceShippingMethodLocalService.addCommerceShippingMethod(
-			userId, groupId, nameMap, descriptionMap, imageFile, engineKey,
-			priority, active);
+			getUserId(), groupId, nameMap, descriptionMap, active, engineKey,
+			imageFile, priority, trackingURL);
 	}
 
 	@Override
@@ -104,7 +106,7 @@ public class CommerceShippingMethodServiceImpl
 		throws PortalException {
 
 		CommerceAddressRestriction commerceAddressRestriction =
-			commerceAddressRestrictionLocalService.
+			_commerceAddressRestrictionLocalService.
 				getCommerceAddressRestriction(commerceAddressRestrictionId);
 
 		_checkCommerceChannel(commerceAddressRestriction.getGroupId());
@@ -123,7 +125,7 @@ public class CommerceShippingMethodServiceImpl
 
 		_checkCommerceChannel(commerceShippingMethod.getGroupId());
 
-		commerceAddressRestrictionLocalService.
+		_commerceAddressRestrictionLocalService.
 			deleteCommerceAddressRestrictions(
 				CommerceShippingMethod.class.getName(),
 				commerceShippingMethodId);
@@ -206,45 +208,48 @@ public class CommerceShippingMethodServiceImpl
 	}
 
 	@Override
-	public List<CommerceShippingMethod> getCommerceShippingMethods(long groupId)
+	public List<CommerceShippingMethod> getCommerceShippingMethods(
+			long groupId, boolean active, int start, int end,
+			OrderByComparator<CommerceShippingMethod> orderByComparator)
 		throws PortalException {
 
 		_checkCommerceChannel(groupId);
 
 		return commerceShippingMethodLocalService.getCommerceShippingMethods(
-			groupId);
+			groupId, active, start, end, orderByComparator);
 	}
 
 	@Override
 	public List<CommerceShippingMethod> getCommerceShippingMethods(
-			long groupId, boolean active)
+			long groupId, int start, int end,
+			OrderByComparator<CommerceShippingMethod> orderByComparator)
 		throws PortalException {
 
 		_checkCommerceChannel(groupId);
 
 		return commerceShippingMethodLocalService.getCommerceShippingMethods(
-			groupId, active);
+			groupId, start, end, orderByComparator);
 	}
 
 	@Override
 	public List<CommerceShippingMethod> getCommerceShippingMethods(
-			long groupId, long commerceCountryId, boolean active)
+			long groupId, long countryId, boolean active)
 		throws PortalException {
 
 		_checkCommerceChannel(groupId);
 
 		return commerceShippingMethodLocalService.getCommerceShippingMethods(
-			groupId, commerceCountryId, active);
+			groupId, countryId, active);
 	}
 
 	@Override
-	public int getCommerceShippingMethodsCount(long groupId, boolean active)
+	public int getCommerceShippingMethodsCount(long groupId)
 		throws PortalException {
 
 		_checkCommerceChannel(groupId);
 
 		return commerceShippingMethodLocalService.
-			getCommerceShippingMethodsCount(groupId, active);
+			getCommerceShippingMethodsCount(groupId);
 	}
 
 	@Override
@@ -267,8 +272,8 @@ public class CommerceShippingMethodServiceImpl
 	@Override
 	public CommerceShippingMethod updateCommerceShippingMethod(
 			long commerceShippingMethodId, Map<Locale, String> nameMap,
-			Map<Locale, String> descriptionMap, File imageFile, double priority,
-			boolean active)
+			Map<Locale, String> descriptionMap, boolean active, File imageFile,
+			double priority, String trackingURL)
 		throws PortalException {
 
 		CommerceShippingMethod commerceShippingMethod =
@@ -279,7 +284,7 @@ public class CommerceShippingMethodServiceImpl
 
 		return commerceShippingMethodLocalService.updateCommerceShippingMethod(
 			commerceShippingMethod.getCommerceShippingMethodId(), nameMap,
-			descriptionMap, imageFile, priority, active);
+			descriptionMap, active, imageFile, priority, trackingURL);
 	}
 
 	private void _checkCommerceChannel(long groupId) throws PortalException {
@@ -296,6 +301,10 @@ public class CommerceShippingMethodServiceImpl
 				CommerceShippingMethodServiceImpl.class,
 				"_commerceChannelModelResourcePermission",
 				CommerceChannel.class);
+
+	@BeanReference(type = CommerceAddressRestrictionLocalService.class)
+	private CommerceAddressRestrictionLocalService
+		_commerceAddressRestrictionLocalService;
 
 	@ServiceReference(type = CommerceChannelLocalService.class)
 	private CommerceChannelLocalService _commerceChannelLocalService;

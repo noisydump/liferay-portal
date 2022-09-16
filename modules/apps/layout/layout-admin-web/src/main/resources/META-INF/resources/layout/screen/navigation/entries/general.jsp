@@ -62,7 +62,7 @@ if (Validator.isNotNull(backURL)) {
 	portletDisplay.setURLBack(backURL);
 }
 
-renderResponse.setTitle(selLayout.getName(locale));
+renderResponse.setTitle(layoutsAdminDisplayContext.getConfigurationTitle(selLayout, locale));
 %>
 
 <c:choose>
@@ -81,7 +81,7 @@ renderResponse.setTitle(selLayout.getName(locale));
 					);
 
 					if (enableLayoutButton) {
-						enableLayoutButton.addEventListener('click', function (event) {
+						enableLayoutButton.addEventListener('click', (event) => {
 							<portlet:actionURL name="/layout_admin/enable_layout" var="enableLayoutURL">
 								<portlet:param name="redirect" value="<%= currentURL %>" />
 								<portlet:param name="incompleteLayoutRevisionId" value="<%= String.valueOf(layoutRevision.getLayoutRevisionId()) %>" />
@@ -96,7 +96,7 @@ renderResponse.setTitle(selLayout.getName(locale));
 					);
 
 					if (deleteLayoutButton) {
-						deleteLayoutButton.addEventListener('click', function (event) {
+						deleteLayoutButton.addEventListener('click', (event) => {
 							<portlet:actionURL name="/layout_admin/delete_layout" var="deleteLayoutURL">
 								<portlet:param name="redirect" value="<%= currentURL %>" />
 								<portlet:param name="selPlid" value="<%= String.valueOf(layoutsAdminDisplayContext.getSelPlid()) %>" />
@@ -115,7 +115,7 @@ renderResponse.setTitle(selLayout.getName(locale));
 			<portlet:param name="mvcRenderCommandName" value="/layout_admin/edit_layout" />
 		</portlet:actionURL>
 
-		<aui:form action='<%= HttpUtil.addParameter(editLayoutURL, "refererPlid", plid) %>' enctype="multipart/form-data" method="post" name="editLayoutFm" onSubmit="event.preventDefault();">
+		<aui:form action='<%= HttpComponentsUtil.addParameter(editLayoutURL, "refererPlid", plid) %>' enctype="multipart/form-data" method="post" name="editLayoutFm" onSubmit="event.preventDefault();">
 			<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
 			<aui:input name="backURL" type="hidden" value="<%= backURL %>" />
 			<aui:input name="portletResource" type="hidden" value="<%= portletResource %>" />
@@ -131,10 +131,10 @@ renderResponse.setTitle(selLayout.getName(locale));
 			<c:if test="<%= layoutsAdminDisplayContext.isLayoutPageTemplateEntry() || ((selLayout.isTypeAssetDisplay() || selLayout.isTypeContent()) && layoutsAdminDisplayContext.isDraft()) %>">
 
 				<%
-				for (String languageId : group.getAvailableLanguageIds()) {
+				for (Locale availableLocale : LanguageUtil.getAvailableLocales(group.getGroupId())) {
 				%>
 
-					<aui:input name='<%= "name_" + languageId %>' type="hidden" value="<%= selLayout.getName(LocaleUtil.fromLanguageId(languageId)) %>" />
+					<aui:input name='<%= "name_" + LocaleUtil.toLanguageId(availableLocale) %>' type="hidden" value="<%= selLayout.getName(availableLocale) %>" />
 
 				<%
 				}
@@ -148,7 +148,7 @@ renderResponse.setTitle(selLayout.getName(locale));
 				</clay:sheet-header>
 
 				<clay:sheet-section>
-					<liferay-ui:success key="layoutAdded" message="the-page-was-created-succesfully" />
+					<liferay-ui:success key="layoutAdded" message="the-page-was-created-successfully" />
 
 					<liferay-ui:error exception="<%= LayoutTypeException.class %>">
 
@@ -231,6 +231,7 @@ renderResponse.setTitle(selLayout.getName(locale));
 					</c:if>
 
 					<liferay-frontend:form-navigator
+						fieldSetCssClass="panel-group panel-group-flush"
 						formModelBean="<%= selLayout %>"
 						id="<%= FormNavigatorConstants.FORM_NAVIGATOR_ID_LAYOUT %>"
 						showButtons="<%= false %>"
@@ -254,21 +255,24 @@ renderResponse.setTitle(selLayout.getName(locale));
 <aui:script>
 	var form = document.getElementById('<portlet:namespace />editLayoutFm');
 
-	form.addEventListener('submit', function (event) {
+	form.addEventListener('submit', (event) => {
 		var applyLayoutPrototype = document.getElementById(
 			'<portlet:namespace />applyLayoutPrototype'
 		);
 
-		if (
-			!applyLayoutPrototype ||
-			applyLayoutPrototype.value === 'false' ||
-			(applyLayoutPrototype &&
-				applyLayoutPrototype.value === 'true' &&
-				confirm(
-					'<%= UnicodeLanguageUtil.get(request, "reactivating-inherited-changes-may-update-the-page-with-the-possible-changes-that-could-have-been-made-in-the-original-template") %>'
-				))
-		) {
+		if (!applyLayoutPrototype || applyLayoutPrototype.value === 'false') {
 			submitForm(form);
+		}
+		else if (applyLayoutPrototype && applyLayoutPrototype.value === 'true') {
+			Liferay.Util.openConfirmModal({
+				message:
+					'<%= UnicodeLanguageUtil.get(request, "reactivating-inherited-changes-may-update-the-page-with-the-possible-changes-that-could-have-been-made-in-the-original-template") %>',
+				onConfirm: (isConfirm) => {
+					if (isConfirm) {
+						submitForm(form);
+					}
+				},
+			});
 		}
 	});
 </aui:script>

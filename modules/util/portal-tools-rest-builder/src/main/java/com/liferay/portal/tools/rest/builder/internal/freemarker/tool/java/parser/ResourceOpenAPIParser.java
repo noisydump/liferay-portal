@@ -14,12 +14,12 @@
 
 package com.liferay.portal.tools.rest.builder.internal.freemarker.tool.java.parser;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.util.CamelCaseUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TextFormatter;
 import com.liferay.portal.kernel.util.TreeMapBuilder;
@@ -103,7 +103,8 @@ public class ResourceOpenAPIParser {
 									javaDataTypeMap, operation,
 									requestBodyMediaTypes);
 							String methodName = _getMethodName(
-								operation, path, returnType, schemaName);
+								operation, path, returnType, schemaName,
+								configYAML.isForcePredictableOperationId());
 
 							JavaMethodSignature javaMethodSignature =
 								new JavaMethodSignature(
@@ -116,7 +117,13 @@ public class ResourceOpenAPIParser {
 
 							javaMethodSignatures.add(javaMethodSignature);
 
-							if (configYAML.isGenerateBatch()) {
+							List<String> disabledBatchSchemaNames =
+								configYAML.getDisabledBatchSchemaNames();
+
+							if (configYAML.isGenerateBatch() &&
+								!disabledBatchSchemaNames.contains(
+									schemaName)) {
+
 								_addBatchJavaMethodSignature(
 									javaMethodSignature, javaMethodSignatures);
 							}
@@ -136,7 +143,8 @@ public class ResourceOpenAPIParser {
 		Set<String> methodAnnotations = new TreeSet<>();
 
 		if ((operation.getDescription() != null) || operation.isDeprecated()) {
-			StringBuilder sb = new StringBuilder("@Operation(");
+			StringBundler sb = new StringBundler(
+				"@io.swagger.v3.oas.annotations.Operation(");
 
 			if (operation.isDeprecated()) {
 				methodAnnotations.add("@Deprecated");
@@ -159,48 +167,42 @@ public class ResourceOpenAPIParser {
 		}
 
 		if (operation.getTags() != null) {
-			StringBuilder sb = new StringBuilder("");
+			StringBundler sb = new StringBundler("");
 
 			for (String tag : operation.getTags()) {
-				sb.append("@Tag(name=\"");
+				sb.append("@io.swagger.v3.oas.annotations.tags.Tag(name=\"");
 				sb.append(tag);
 				sb.append("\"),");
 			}
 
-			methodAnnotations.add("@Tags(value={" + sb.toString() + "})");
+			methodAnnotations.add(
+				"@io.swagger.v3.oas.annotations.tags.Tags(value={" +
+					sb.toString() + "})");
 		}
 
-		List<JavaMethodParameter> javaMethodParameters =
-			javaMethodSignature.getJavaMethodParameters();
+		StringBundler sb = new StringBundler("");
 
-		StringBuilder sb = new StringBuilder("");
+		for (Parameter parameter : operation.getParameters()) {
+			if (StringUtil.equals(parameter.getIn(), "header")) {
+				continue;
+			}
 
-		for (JavaMethodParameter javaMethodParameter : javaMethodParameters) {
-			String parameterName = javaMethodParameter.getParameterName();
-
-			if (parameterName.equals("pagination")) {
-				sb.append(_addParameter(_findParameter(operation, "page")));
-				sb.append(_addParameter(_findParameter(operation, "pageSize")));
-			}
-			else if (parameterName.equals("sorts")) {
-				sb.append(_addParameter(_findParameter(operation, "sort")));
-			}
-			else {
-				sb.append(
-					_addParameter(_findParameter(operation, parameterName)));
-			}
+			sb.append(
+				_addParameter(_findParameter(operation, parameter.getName())));
 		}
 
 		if (sb.length() > 0) {
-			methodAnnotations.add("@Parameters(value={" + sb + "})");
+			methodAnnotations.add(
+				"@io.swagger.v3.oas.annotations.Parameters(value={" + sb +
+					"})");
 		}
 
-		methodAnnotations.add("@Path(\"" + path + "\")");
+		methodAnnotations.add("@javax.ws.rs.Path(\"" + path + "\")");
 
 		String annotationString = StringUtil.toUpperCase(
 			OpenAPIParserUtil.getHTTPMethod(operation));
 
-		methodAnnotations.add("@" + annotationString);
+		methodAnnotations.add("@javax.ws.rs." + annotationString);
 
 		String methodAnnotation = _getMethodAnnotationConsumes(
 			javaMethodSignature.getRequestBodyMediaTypes());
@@ -232,11 +234,9 @@ public class ResourceOpenAPIParser {
 					javaMethodParameter, openAPIYAML, operation);
 			}
 
-			String parameter = OpenAPIParserUtil.getParameter(
-				javaMethodParameter, parameterAnnotation);
-
-			sb.append(parameter);
-
+			sb.append(
+				OpenAPIParserUtil.getParameter(
+					javaMethodParameter, parameterAnnotation));
 			sb.append(',');
 		}
 
@@ -245,6 +245,114 @@ public class ResourceOpenAPIParser {
 		}
 
 		return sb.toString();
+	}
+
+	public static Set<String> getVulcanBatchImplementationCreateStrategies(
+		List<JavaMethodSignature> javaMethodSignatures,
+		Map<String, String> properties) {
+
+		Set<String> createStrategies = new HashSet<>();
+
+		Set<String> propertyNames = properties.keySet();
+
+		for (JavaMethodSignature javaMethodSignature : javaMethodSignatures) {
+			String methodName = javaMethodSignature.getMethodName();
+			String parentSchemaName = javaMethodSignature.getParentSchemaName();
+			String schemaName = javaMethodSignature.getSchemaName();
+
+			if (parentSchemaName == null) {
+				parentSchemaName = "";
+			}
+
+			if (methodName.equals("post" + parentSchemaName + schemaName)) {
+				createStrategies.add("INSERT");
+			}
+			else if ((methodName.equals("putByExternalReferenceCode") ||
+					  methodName.equals(
+						  StringBundler.concat(
+							  "put", parentSchemaName, schemaName,
+							  "ByExternalReferenceCode"))) &&
+					 propertyNames.contains("externalReferenceCode")) {
+
+				createStrategies.add("UPSERT");
+			}
+		}
+
+		return createStrategies;
+	}
+
+	public static Set<String> getVulcanBatchImplementationUpdateStrategies(
+		List<JavaMethodSignature> javaMethodSignatures) {
+
+		Set<String> updateStrategies = new HashSet<>();
+
+		for (JavaMethodSignature javaMethodSignature : javaMethodSignatures) {
+			String methodName = javaMethodSignature.getMethodName();
+			String schemaName = javaMethodSignature.getSchemaName();
+
+			if (methodName.equals("patch" + schemaName)) {
+				updateStrategies.add("PARTIAL_UPDATE");
+			}
+			else if (methodName.equals("put" + schemaName)) {
+				updateStrategies.add("UPDATE");
+			}
+		}
+
+		return updateStrategies;
+	}
+
+	public static boolean hasReadVulcanBatchImplementation(
+		List<JavaMethodSignature> javaMethodSignatures) {
+
+		for (JavaMethodSignature javaMethodSignature : javaMethodSignatures) {
+			String methodName = javaMethodSignature.getMethodName();
+			String parentSchemaName = javaMethodSignature.getParentSchemaName();
+			String schemaName = javaMethodSignature.getSchemaName();
+
+			if (parentSchemaName == null) {
+				parentSchemaName = "";
+			}
+
+			if (methodName.equals(
+					StringBundler.concat(
+						"get", parentSchemaName, schemaName, "sPage"))) {
+
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	public static boolean hasResourceBatchJavaMethodSignatures(
+		List<JavaMethodSignature> javaMethodSignatures) {
+
+		for (JavaMethodSignature javaMethodSignature : javaMethodSignatures) {
+			String methodName = javaMethodSignature.getMethodName();
+
+			if (methodName.endsWith("Batch")) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	public static boolean hasResourceGetPageJavaMethodSignature(
+		String javaDataType, List<JavaMethodSignature> javaMethodSignatures) {
+
+		String pageJavaDataType = StringBundler.concat(
+			Page.class.getName(), "<", javaDataType, ">");
+
+		for (JavaMethodSignature javaMethodSignature : javaMethodSignatures) {
+			if (StringUtil.equals(
+					pageJavaDataType, javaMethodSignature.getReturnType())) {
+
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	private static void _addBatchJavaMethodSignature(
@@ -268,18 +376,11 @@ public class ResourceOpenAPIParser {
 					"post", parentSchemaName, "Id", schemaName)) ||
 			methodName.equals("put" + schemaName)) {
 
-			String batchPath = null;
+			String batchPath = StringUtil.removeSubstring(
+				javaMethodSignature.getPath(),
+				"/{" + StringUtil.lowerCaseFirstLetter(schemaName) + "Id}");
 
-			String path = javaMethodSignature.getPath();
-
-			if (path.contains(StringUtil.lowerCaseFirstLetter(schemaName))) {
-				batchPath = StringUtil.removeSubstring(
-					path,
-					"/{" + StringUtil.lowerCaseFirstLetter(schemaName) + "Id}");
-			}
-			else {
-				batchPath = StringUtil.removeSubstring(path, "/{id}");
-			}
+			batchPath = StringUtil.removeSubstring(batchPath, "/{id}");
 
 			Operation batchOperation = _getBatchOperation(
 				javaMethodSignature, methodName, schemaName);
@@ -332,13 +433,14 @@ public class ResourceOpenAPIParser {
 			return "";
 		}
 
-		StringBuilder sb = new StringBuilder();
+		StringBundler sb = new StringBundler(4);
 
 		sb.append(
-			String.format(
-				"@Parameter(in = ParameterIn.%s, name = \"%s\"",
-				StringUtil.toUpperCase(parameter.getIn()),
-				parameter.getName()));
+			StringBundler.concat(
+				"@io.swagger.v3.oas.annotations.Parameter(in = ",
+				"io.swagger.v3.oas.annotations.enums.ParameterIn.",
+				StringUtil.toUpperCase(parameter.getIn()), ", name = \"",
+				parameter.getName(), "\""));
 
 		if (parameter.isDeprecated()) {
 			sb.append(
@@ -387,6 +489,10 @@ public class ResourceOpenAPIParser {
 
 		if (batchOperation.getOperationId() != null) {
 			batchOperation.setOperationId(operation.getOperationId() + "Batch");
+		}
+
+		if (operation.isDeprecated()) {
+			batchOperation.setDeprecated(true);
 		}
 
 		batchOperation.setParameters(
@@ -492,7 +598,10 @@ public class ResourceOpenAPIParser {
 
 			if (StringUtil.equals(parameterName, "Accept-Language") ||
 				StringUtil.equals(parameterName, "aggregationTerms") ||
+				StringUtil.equals(parameterName, "fields") ||
 				StringUtil.equals(parameterName, "filter") ||
+				StringUtil.equals(parameterName, "nestedFields") ||
+				StringUtil.equals(parameterName, "restrictFields") ||
 				StringUtil.equals(parameterName, "sort")) {
 
 				continue;
@@ -515,7 +624,7 @@ public class ResourceOpenAPIParser {
 
 		String operationId = operation.getOperationId();
 
-		if ((operationId != null) && operationId.endsWith("Permission") &&
+		if ((operationId != null) && operationId.endsWith("PermissionsPage") &&
 			operationId.startsWith("put") && requestBodyMediaTypes.isEmpty()) {
 
 			javaMethodParameters.add(
@@ -621,10 +730,10 @@ public class ResourceOpenAPIParser {
 		}
 
 		if (requestBodyMediaTypes.size() > 1) {
-			return "@Consumes({" + sb.toString() + "})";
+			return "@javax.ws.rs.Consumes({" + sb.toString() + "})";
 		}
 
-		return "@Consumes(" + sb.toString() + ")";
+		return "@javax.ws.rs.Consumes(" + sb.toString() + ")";
 	}
 
 	private static String _getMethodAnnotationProduces(Operation operation) {
@@ -637,6 +746,10 @@ public class ResourceOpenAPIParser {
 		Set<String> mediaTypes = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
 
 		for (Response response : responses.values()) {
+			if (response == null) {
+				continue;
+			}
+
 			Map<String, Content> contents = response.getContent();
 
 			if ((contents == null) || contents.isEmpty()) {
@@ -661,19 +774,24 @@ public class ResourceOpenAPIParser {
 		sb.setLength(sb.length() - 2);
 
 		if (mediaTypes.size() > 1) {
-			return "@Produces({" + sb.toString() + "})";
+			return "@javax.ws.rs.Produces({" + sb.toString() + "})";
 		}
 
-		return "@Produces(" + sb.toString() + ")";
+		return "@javax.ws.rs.Produces(" + sb.toString() + ")";
 	}
 
 	private static String _getMethodName(
-		Operation operation, String path, String returnType,
-		String schemaName) {
+		Operation operation, String path, String returnType, String schemaName,
+		boolean forcePredictableOperationId) {
 
-		if (operation.getOperationId() != null) {
+		if (!forcePredictableOperationId &&
+			(operation.getOperationId() != null)) {
+
 			return operation.getOperationId();
 		}
+
+		boolean collection = StringUtil.startsWith(
+			returnType, Page.class.getName() + "<");
 
 		List<String> methodNameSegments = new ArrayList<>();
 
@@ -686,7 +804,16 @@ public class ResourceOpenAPIParser {
 			String pathSegment = pathSegments[i];
 
 			if (pathSegment.isEmpty()) {
-				continue;
+				if (pathSegments.length != 1) {
+					continue;
+				}
+
+				if (collection) {
+					pathSegment = pluralSchemaName;
+				}
+				else {
+					pathSegment = schemaName;
+				}
 			}
 
 			String pathName = CamelCaseUtil.toCamelCase(
@@ -702,9 +829,7 @@ public class ResourceOpenAPIParser {
 				pathName = StringUtil.upperCaseFirstLetter(pathName);
 			}
 
-			if ((i == (pathSegments.length - 1)) &&
-				StringUtil.startsWith(returnType, Page.class.getName() + "<")) {
-
+			if ((i == (pathSegments.length - 1)) && collection) {
 				String previousMethodNameSegment = methodNameSegments.get(
 					methodNameSegments.size() - 1);
 
@@ -746,7 +871,23 @@ public class ResourceOpenAPIParser {
 			else if ((i != (pathSegments.length - 1)) ||
 					 !Objects.equals(returnType, String.class.getName())) {
 
-				methodNameSegments.add(OpenAPIUtil.formatSingular(pathName));
+				String segment = OpenAPIUtil.formatSingular(pathName);
+
+				String s = StringUtil.toLowerCase(segment);
+
+				if (s.endsWith(StringUtil.toLowerCase(schemaName))) {
+					char c = segment.charAt(
+						segment.length() - schemaName.length());
+
+					if (Character.isUpperCase(c)) {
+						String substring = segment.substring(
+							0, segment.length() - schemaName.length());
+
+						segment = substring + schemaName;
+					}
+				}
+
+				methodNameSegments.add(segment);
 			}
 			else {
 				methodNameSegments.add(pathName);
@@ -757,14 +898,9 @@ public class ResourceOpenAPIParser {
 	}
 
 	private static String _getPageClassName(String returnType) {
-		StringBuilder sb = new StringBuilder();
-
-		sb.append(Page.class.getName());
-		sb.append("<");
-		sb.append(OpenAPIParserUtil.getElementClassName(returnType));
-		sb.append(">");
-
-		return sb.toString();
+		return StringBundler.concat(
+			Page.class.getName(), "<",
+			OpenAPIParserUtil.getElementClassName(returnType), ">");
 	}
 
 	private static String _getParameterAnnotation(
@@ -784,26 +920,26 @@ public class ResourceOpenAPIParser {
 		if (Objects.equals(parameterType, Aggregation.class.getName()) &&
 			parameterNames.contains("aggregationTerms")) {
 
-			return "@Context";
+			return "@javax.ws.rs.core.Context";
 		}
 
 		if (Objects.equals(parameterType, Filter.class.getName()) &&
 			parameterNames.contains("filter")) {
 
-			return "@Context";
+			return "@javax.ws.rs.core.Context";
 		}
 
 		if (Objects.equals(parameterType, Pagination.class.getName()) &&
 			parameterNames.contains("page") &&
 			parameterNames.contains("pageSize")) {
 
-			return "@Context";
+			return "@javax.ws.rs.core.Context";
 		}
 
 		if (Objects.equals(parameterType, Sort[].class.getName()) &&
 			parameterNames.contains("sort")) {
 
-			return "@Context";
+			return "@javax.ws.rs.core.Context";
 		}
 
 		for (Parameter parameter : operation.getParameters()) {
@@ -816,13 +952,13 @@ public class ResourceOpenAPIParser {
 				continue;
 			}
 
-			StringBuilder sb = new StringBuilder();
+			StringBundler sb = new StringBundler(11);
 
 			String defaultValue = _getDefaultValue(
 				openAPIYAML, parameter.getSchema());
 
 			if (defaultValue != null) {
-				sb.append("@DefaultValue(\"");
+				sb.append("@javax.ws.rs.DefaultValue(\"");
 				sb.append(defaultValue);
 				sb.append("\")");
 			}
@@ -832,11 +968,11 @@ public class ResourceOpenAPIParser {
 			}
 
 			if (parameter.isRequired()) {
-				sb.append("@NotNull");
+				sb.append("@javax.validation.constraints.NotNull");
 			}
 
-			sb.append("@Parameter(hidden=true)");
-			sb.append("@");
+			sb.append("@io.swagger.v3.oas.annotations.Parameter(hidden=true)");
+			sb.append("@javax.ws.rs.");
 			sb.append(StringUtil.upperCaseFirstLetter(parameter.getIn()));
 			sb.append("Param(\"");
 			sb.append(parameter.getName());
@@ -851,7 +987,22 @@ public class ResourceOpenAPIParser {
 	private static String _getParentSchema(
 		String path, Map<String, PathItem> pathItems, String schemaName) {
 
-		String basePath = path.substring(0, path.lastIndexOf("/"));
+		String basePath = path;
+
+		if (basePath.endsWith(
+				"/by-external-reference-code/{externalReferenceCode}")) {
+
+			basePath = StringUtil.removeLast(
+				path, "/by-external-reference-code/{externalReferenceCode}");
+		}
+
+		int lastIndexOfSlash = basePath.lastIndexOf("/");
+
+		if (lastIndexOfSlash < 1) {
+			return null;
+		}
+
+		basePath = basePath.substring(0, lastIndexOfSlash);
 
 		if (basePath.equals("/asset-libraries/{assetLibraryId}")) {
 			return "AssetLibrary";
@@ -944,7 +1095,9 @@ public class ResourceOpenAPIParser {
 				return void.class.getName();
 			}
 
-			if ((operation instanceof Get) && path.endsWith("permissions")) {
+			if ((operation instanceof Get || operation instanceof Put) &&
+				path.endsWith("/permissions")) {
+
 				return _getPageClassName(
 					"[L" + Permission.class.getName() + ";");
 			}
@@ -972,17 +1125,16 @@ public class ResourceOpenAPIParser {
 				String schemaReference = schema.getReference();
 
 				if ((schemaReference == null) ||
-					!schemaReference.startsWith("#/components/schemas/")) {
+					!schemaReference.contains("#")) {
 
 					continue;
 				}
 
-				return javaDataTypeMap.get(
-					OpenAPIParserUtil.getReferenceName(schemaReference));
+				return returnType;
 			}
 		}
 
-		if (Get.class.isInstance(operation)) {
+		if (operation instanceof Get) {
 			return returnType;
 		}
 

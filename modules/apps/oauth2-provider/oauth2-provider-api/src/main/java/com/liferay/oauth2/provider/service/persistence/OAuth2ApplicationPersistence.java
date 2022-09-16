@@ -42,12 +42,444 @@ public interface OAuth2ApplicationPersistence
 	 */
 
 	/**
+	 * Returns all the o auth2 applications where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @return the matching o auth2 applications
+	 */
+	public java.util.List<OAuth2Application> findByUuid(String uuid);
+
+	/**
+	 * Returns a range of all the o auth2 applications where uuid = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuth2ApplicationModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param start the lower bound of the range of o auth2 applications
+	 * @param end the upper bound of the range of o auth2 applications (not inclusive)
+	 * @return the range of matching o auth2 applications
+	 */
+	public java.util.List<OAuth2Application> findByUuid(
+		String uuid, int start, int end);
+
+	/**
+	 * Returns an ordered range of all the o auth2 applications where uuid = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuth2ApplicationModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param start the lower bound of the range of o auth2 applications
+	 * @param end the upper bound of the range of o auth2 applications (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching o auth2 applications
+	 */
+	public java.util.List<OAuth2Application> findByUuid(
+		String uuid, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator<OAuth2Application>
+			orderByComparator);
+
+	/**
+	 * Returns an ordered range of all the o auth2 applications where uuid = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuth2ApplicationModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param start the lower bound of the range of o auth2 applications
+	 * @param end the upper bound of the range of o auth2 applications (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching o auth2 applications
+	 */
+	public java.util.List<OAuth2Application> findByUuid(
+		String uuid, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator<OAuth2Application>
+			orderByComparator,
+		boolean useFinderCache);
+
+	/**
+	 * Returns the first o auth2 application in the ordered set where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching o auth2 application
+	 * @throws NoSuchOAuth2ApplicationException if a matching o auth2 application could not be found
+	 */
+	public OAuth2Application findByUuid_First(
+			String uuid,
+			com.liferay.portal.kernel.util.OrderByComparator<OAuth2Application>
+				orderByComparator)
+		throws NoSuchOAuth2ApplicationException;
+
+	/**
+	 * Returns the first o auth2 application in the ordered set where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching o auth2 application, or <code>null</code> if a matching o auth2 application could not be found
+	 */
+	public OAuth2Application fetchByUuid_First(
+		String uuid,
+		com.liferay.portal.kernel.util.OrderByComparator<OAuth2Application>
+			orderByComparator);
+
+	/**
+	 * Returns the last o auth2 application in the ordered set where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching o auth2 application
+	 * @throws NoSuchOAuth2ApplicationException if a matching o auth2 application could not be found
+	 */
+	public OAuth2Application findByUuid_Last(
+			String uuid,
+			com.liferay.portal.kernel.util.OrderByComparator<OAuth2Application>
+				orderByComparator)
+		throws NoSuchOAuth2ApplicationException;
+
+	/**
+	 * Returns the last o auth2 application in the ordered set where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching o auth2 application, or <code>null</code> if a matching o auth2 application could not be found
+	 */
+	public OAuth2Application fetchByUuid_Last(
+		String uuid,
+		com.liferay.portal.kernel.util.OrderByComparator<OAuth2Application>
+			orderByComparator);
+
+	/**
+	 * Returns the o auth2 applications before and after the current o auth2 application in the ordered set where uuid = &#63;.
+	 *
+	 * @param oAuth2ApplicationId the primary key of the current o auth2 application
+	 * @param uuid the uuid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next o auth2 application
+	 * @throws NoSuchOAuth2ApplicationException if a o auth2 application with the primary key could not be found
+	 */
+	public OAuth2Application[] findByUuid_PrevAndNext(
+			long oAuth2ApplicationId, String uuid,
+			com.liferay.portal.kernel.util.OrderByComparator<OAuth2Application>
+				orderByComparator)
+		throws NoSuchOAuth2ApplicationException;
+
+	/**
+	 * Returns all the o auth2 applications that the user has permission to view where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @return the matching o auth2 applications that the user has permission to view
+	 */
+	public java.util.List<OAuth2Application> filterFindByUuid(String uuid);
+
+	/**
+	 * Returns a range of all the o auth2 applications that the user has permission to view where uuid = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuth2ApplicationModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param start the lower bound of the range of o auth2 applications
+	 * @param end the upper bound of the range of o auth2 applications (not inclusive)
+	 * @return the range of matching o auth2 applications that the user has permission to view
+	 */
+	public java.util.List<OAuth2Application> filterFindByUuid(
+		String uuid, int start, int end);
+
+	/**
+	 * Returns an ordered range of all the o auth2 applications that the user has permissions to view where uuid = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuth2ApplicationModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param start the lower bound of the range of o auth2 applications
+	 * @param end the upper bound of the range of o auth2 applications (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching o auth2 applications that the user has permission to view
+	 */
+	public java.util.List<OAuth2Application> filterFindByUuid(
+		String uuid, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator<OAuth2Application>
+			orderByComparator);
+
+	/**
+	 * Returns the o auth2 applications before and after the current o auth2 application in the ordered set of o auth2 applications that the user has permission to view where uuid = &#63;.
+	 *
+	 * @param oAuth2ApplicationId the primary key of the current o auth2 application
+	 * @param uuid the uuid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next o auth2 application
+	 * @throws NoSuchOAuth2ApplicationException if a o auth2 application with the primary key could not be found
+	 */
+	public OAuth2Application[] filterFindByUuid_PrevAndNext(
+			long oAuth2ApplicationId, String uuid,
+			com.liferay.portal.kernel.util.OrderByComparator<OAuth2Application>
+				orderByComparator)
+		throws NoSuchOAuth2ApplicationException;
+
+	/**
+	 * Removes all the o auth2 applications where uuid = &#63; from the database.
+	 *
+	 * @param uuid the uuid
+	 */
+	public void removeByUuid(String uuid);
+
+	/**
+	 * Returns the number of o auth2 applications where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @return the number of matching o auth2 applications
+	 */
+	public int countByUuid(String uuid);
+
+	/**
+	 * Returns the number of o auth2 applications that the user has permission to view where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @return the number of matching o auth2 applications that the user has permission to view
+	 */
+	public int filterCountByUuid(String uuid);
+
+	/**
+	 * Returns all the o auth2 applications where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @return the matching o auth2 applications
+	 */
+	public java.util.List<OAuth2Application> findByUuid_C(
+		String uuid, long companyId);
+
+	/**
+	 * Returns a range of all the o auth2 applications where uuid = &#63; and companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuth2ApplicationModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of o auth2 applications
+	 * @param end the upper bound of the range of o auth2 applications (not inclusive)
+	 * @return the range of matching o auth2 applications
+	 */
+	public java.util.List<OAuth2Application> findByUuid_C(
+		String uuid, long companyId, int start, int end);
+
+	/**
+	 * Returns an ordered range of all the o auth2 applications where uuid = &#63; and companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuth2ApplicationModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of o auth2 applications
+	 * @param end the upper bound of the range of o auth2 applications (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching o auth2 applications
+	 */
+	public java.util.List<OAuth2Application> findByUuid_C(
+		String uuid, long companyId, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator<OAuth2Application>
+			orderByComparator);
+
+	/**
+	 * Returns an ordered range of all the o auth2 applications where uuid = &#63; and companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuth2ApplicationModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of o auth2 applications
+	 * @param end the upper bound of the range of o auth2 applications (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching o auth2 applications
+	 */
+	public java.util.List<OAuth2Application> findByUuid_C(
+		String uuid, long companyId, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator<OAuth2Application>
+			orderByComparator,
+		boolean useFinderCache);
+
+	/**
+	 * Returns the first o auth2 application in the ordered set where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching o auth2 application
+	 * @throws NoSuchOAuth2ApplicationException if a matching o auth2 application could not be found
+	 */
+	public OAuth2Application findByUuid_C_First(
+			String uuid, long companyId,
+			com.liferay.portal.kernel.util.OrderByComparator<OAuth2Application>
+				orderByComparator)
+		throws NoSuchOAuth2ApplicationException;
+
+	/**
+	 * Returns the first o auth2 application in the ordered set where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching o auth2 application, or <code>null</code> if a matching o auth2 application could not be found
+	 */
+	public OAuth2Application fetchByUuid_C_First(
+		String uuid, long companyId,
+		com.liferay.portal.kernel.util.OrderByComparator<OAuth2Application>
+			orderByComparator);
+
+	/**
+	 * Returns the last o auth2 application in the ordered set where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching o auth2 application
+	 * @throws NoSuchOAuth2ApplicationException if a matching o auth2 application could not be found
+	 */
+	public OAuth2Application findByUuid_C_Last(
+			String uuid, long companyId,
+			com.liferay.portal.kernel.util.OrderByComparator<OAuth2Application>
+				orderByComparator)
+		throws NoSuchOAuth2ApplicationException;
+
+	/**
+	 * Returns the last o auth2 application in the ordered set where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching o auth2 application, or <code>null</code> if a matching o auth2 application could not be found
+	 */
+	public OAuth2Application fetchByUuid_C_Last(
+		String uuid, long companyId,
+		com.liferay.portal.kernel.util.OrderByComparator<OAuth2Application>
+			orderByComparator);
+
+	/**
+	 * Returns the o auth2 applications before and after the current o auth2 application in the ordered set where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param oAuth2ApplicationId the primary key of the current o auth2 application
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next o auth2 application
+	 * @throws NoSuchOAuth2ApplicationException if a o auth2 application with the primary key could not be found
+	 */
+	public OAuth2Application[] findByUuid_C_PrevAndNext(
+			long oAuth2ApplicationId, String uuid, long companyId,
+			com.liferay.portal.kernel.util.OrderByComparator<OAuth2Application>
+				orderByComparator)
+		throws NoSuchOAuth2ApplicationException;
+
+	/**
+	 * Returns all the o auth2 applications that the user has permission to view where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @return the matching o auth2 applications that the user has permission to view
+	 */
+	public java.util.List<OAuth2Application> filterFindByUuid_C(
+		String uuid, long companyId);
+
+	/**
+	 * Returns a range of all the o auth2 applications that the user has permission to view where uuid = &#63; and companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuth2ApplicationModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of o auth2 applications
+	 * @param end the upper bound of the range of o auth2 applications (not inclusive)
+	 * @return the range of matching o auth2 applications that the user has permission to view
+	 */
+	public java.util.List<OAuth2Application> filterFindByUuid_C(
+		String uuid, long companyId, int start, int end);
+
+	/**
+	 * Returns an ordered range of all the o auth2 applications that the user has permissions to view where uuid = &#63; and companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuth2ApplicationModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of o auth2 applications
+	 * @param end the upper bound of the range of o auth2 applications (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching o auth2 applications that the user has permission to view
+	 */
+	public java.util.List<OAuth2Application> filterFindByUuid_C(
+		String uuid, long companyId, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator<OAuth2Application>
+			orderByComparator);
+
+	/**
+	 * Returns the o auth2 applications before and after the current o auth2 application in the ordered set of o auth2 applications that the user has permission to view where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param oAuth2ApplicationId the primary key of the current o auth2 application
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next o auth2 application
+	 * @throws NoSuchOAuth2ApplicationException if a o auth2 application with the primary key could not be found
+	 */
+	public OAuth2Application[] filterFindByUuid_C_PrevAndNext(
+			long oAuth2ApplicationId, String uuid, long companyId,
+			com.liferay.portal.kernel.util.OrderByComparator<OAuth2Application>
+				orderByComparator)
+		throws NoSuchOAuth2ApplicationException;
+
+	/**
+	 * Removes all the o auth2 applications where uuid = &#63; and companyId = &#63; from the database.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 */
+	public void removeByUuid_C(String uuid, long companyId);
+
+	/**
+	 * Returns the number of o auth2 applications where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @return the number of matching o auth2 applications
+	 */
+	public int countByUuid_C(String uuid, long companyId);
+
+	/**
+	 * Returns the number of o auth2 applications that the user has permission to view where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @return the number of matching o auth2 applications that the user has permission to view
+	 */
+	public int filterCountByUuid_C(String uuid, long companyId);
+
+	/**
 	 * Returns all the o auth2 applications where companyId = &#63;.
 	 *
 	 * @param companyId the company ID
 	 * @return the matching o auth2 applications
 	 */
-	public java.util.List<OAuth2Application> findByC(long companyId);
+	public java.util.List<OAuth2Application> findByCompanyId(long companyId);
 
 	/**
 	 * Returns a range of all the o auth2 applications where companyId = &#63;.
@@ -61,7 +493,7 @@ public interface OAuth2ApplicationPersistence
 	 * @param end the upper bound of the range of o auth2 applications (not inclusive)
 	 * @return the range of matching o auth2 applications
 	 */
-	public java.util.List<OAuth2Application> findByC(
+	public java.util.List<OAuth2Application> findByCompanyId(
 		long companyId, int start, int end);
 
 	/**
@@ -77,7 +509,7 @@ public interface OAuth2ApplicationPersistence
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
 	 * @return the ordered range of matching o auth2 applications
 	 */
-	public java.util.List<OAuth2Application> findByC(
+	public java.util.List<OAuth2Application> findByCompanyId(
 		long companyId, int start, int end,
 		com.liferay.portal.kernel.util.OrderByComparator<OAuth2Application>
 			orderByComparator);
@@ -96,7 +528,7 @@ public interface OAuth2ApplicationPersistence
 	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching o auth2 applications
 	 */
-	public java.util.List<OAuth2Application> findByC(
+	public java.util.List<OAuth2Application> findByCompanyId(
 		long companyId, int start, int end,
 		com.liferay.portal.kernel.util.OrderByComparator<OAuth2Application>
 			orderByComparator,
@@ -110,7 +542,7 @@ public interface OAuth2ApplicationPersistence
 	 * @return the first matching o auth2 application
 	 * @throws NoSuchOAuth2ApplicationException if a matching o auth2 application could not be found
 	 */
-	public OAuth2Application findByC_First(
+	public OAuth2Application findByCompanyId_First(
 			long companyId,
 			com.liferay.portal.kernel.util.OrderByComparator<OAuth2Application>
 				orderByComparator)
@@ -123,7 +555,7 @@ public interface OAuth2ApplicationPersistence
 	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
 	 * @return the first matching o auth2 application, or <code>null</code> if a matching o auth2 application could not be found
 	 */
-	public OAuth2Application fetchByC_First(
+	public OAuth2Application fetchByCompanyId_First(
 		long companyId,
 		com.liferay.portal.kernel.util.OrderByComparator<OAuth2Application>
 			orderByComparator);
@@ -136,7 +568,7 @@ public interface OAuth2ApplicationPersistence
 	 * @return the last matching o auth2 application
 	 * @throws NoSuchOAuth2ApplicationException if a matching o auth2 application could not be found
 	 */
-	public OAuth2Application findByC_Last(
+	public OAuth2Application findByCompanyId_Last(
 			long companyId,
 			com.liferay.portal.kernel.util.OrderByComparator<OAuth2Application>
 				orderByComparator)
@@ -149,7 +581,7 @@ public interface OAuth2ApplicationPersistence
 	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
 	 * @return the last matching o auth2 application, or <code>null</code> if a matching o auth2 application could not be found
 	 */
-	public OAuth2Application fetchByC_Last(
+	public OAuth2Application fetchByCompanyId_Last(
 		long companyId,
 		com.liferay.portal.kernel.util.OrderByComparator<OAuth2Application>
 			orderByComparator);
@@ -163,7 +595,7 @@ public interface OAuth2ApplicationPersistence
 	 * @return the previous, current, and next o auth2 application
 	 * @throws NoSuchOAuth2ApplicationException if a o auth2 application with the primary key could not be found
 	 */
-	public OAuth2Application[] findByC_PrevAndNext(
+	public OAuth2Application[] findByCompanyId_PrevAndNext(
 			long oAuth2ApplicationId, long companyId,
 			com.liferay.portal.kernel.util.OrderByComparator<OAuth2Application>
 				orderByComparator)
@@ -175,7 +607,8 @@ public interface OAuth2ApplicationPersistence
 	 * @param companyId the company ID
 	 * @return the matching o auth2 applications that the user has permission to view
 	 */
-	public java.util.List<OAuth2Application> filterFindByC(long companyId);
+	public java.util.List<OAuth2Application> filterFindByCompanyId(
+		long companyId);
 
 	/**
 	 * Returns a range of all the o auth2 applications that the user has permission to view where companyId = &#63;.
@@ -189,7 +622,7 @@ public interface OAuth2ApplicationPersistence
 	 * @param end the upper bound of the range of o auth2 applications (not inclusive)
 	 * @return the range of matching o auth2 applications that the user has permission to view
 	 */
-	public java.util.List<OAuth2Application> filterFindByC(
+	public java.util.List<OAuth2Application> filterFindByCompanyId(
 		long companyId, int start, int end);
 
 	/**
@@ -205,7 +638,7 @@ public interface OAuth2ApplicationPersistence
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
 	 * @return the ordered range of matching o auth2 applications that the user has permission to view
 	 */
-	public java.util.List<OAuth2Application> filterFindByC(
+	public java.util.List<OAuth2Application> filterFindByCompanyId(
 		long companyId, int start, int end,
 		com.liferay.portal.kernel.util.OrderByComparator<OAuth2Application>
 			orderByComparator);
@@ -219,7 +652,7 @@ public interface OAuth2ApplicationPersistence
 	 * @return the previous, current, and next o auth2 application
 	 * @throws NoSuchOAuth2ApplicationException if a o auth2 application with the primary key could not be found
 	 */
-	public OAuth2Application[] filterFindByC_PrevAndNext(
+	public OAuth2Application[] filterFindByCompanyId_PrevAndNext(
 			long oAuth2ApplicationId, long companyId,
 			com.liferay.portal.kernel.util.OrderByComparator<OAuth2Application>
 				orderByComparator)
@@ -230,7 +663,7 @@ public interface OAuth2ApplicationPersistence
 	 *
 	 * @param companyId the company ID
 	 */
-	public void removeByC(long companyId);
+	public void removeByCompanyId(long companyId);
 
 	/**
 	 * Returns the number of o auth2 applications where companyId = &#63;.
@@ -238,7 +671,7 @@ public interface OAuth2ApplicationPersistence
 	 * @param companyId the company ID
 	 * @return the number of matching o auth2 applications
 	 */
-	public int countByC(long companyId);
+	public int countByCompanyId(long companyId);
 
 	/**
 	 * Returns the number of o auth2 applications that the user has permission to view where companyId = &#63;.
@@ -246,7 +679,7 @@ public interface OAuth2ApplicationPersistence
 	 * @param companyId the company ID
 	 * @return the number of matching o auth2 applications that the user has permission to view
 	 */
-	public int filterCountByC(long companyId);
+	public int filterCountByCompanyId(long companyId);
 
 	/**
 	 * Returns the o auth2 application where companyId = &#63; and clientId = &#63; or throws a <code>NoSuchOAuth2ApplicationException</code> if it could not be found.
@@ -297,6 +730,284 @@ public interface OAuth2ApplicationPersistence
 	 * @return the number of matching o auth2 applications
 	 */
 	public int countByC_C(long companyId, String clientId);
+
+	/**
+	 * Returns all the o auth2 applications where companyId = &#63; and clientProfile = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param clientProfile the client profile
+	 * @return the matching o auth2 applications
+	 */
+	public java.util.List<OAuth2Application> findByC_CP(
+		long companyId, int clientProfile);
+
+	/**
+	 * Returns a range of all the o auth2 applications where companyId = &#63; and clientProfile = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuth2ApplicationModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param clientProfile the client profile
+	 * @param start the lower bound of the range of o auth2 applications
+	 * @param end the upper bound of the range of o auth2 applications (not inclusive)
+	 * @return the range of matching o auth2 applications
+	 */
+	public java.util.List<OAuth2Application> findByC_CP(
+		long companyId, int clientProfile, int start, int end);
+
+	/**
+	 * Returns an ordered range of all the o auth2 applications where companyId = &#63; and clientProfile = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuth2ApplicationModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param clientProfile the client profile
+	 * @param start the lower bound of the range of o auth2 applications
+	 * @param end the upper bound of the range of o auth2 applications (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching o auth2 applications
+	 */
+	public java.util.List<OAuth2Application> findByC_CP(
+		long companyId, int clientProfile, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator<OAuth2Application>
+			orderByComparator);
+
+	/**
+	 * Returns an ordered range of all the o auth2 applications where companyId = &#63; and clientProfile = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuth2ApplicationModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param clientProfile the client profile
+	 * @param start the lower bound of the range of o auth2 applications
+	 * @param end the upper bound of the range of o auth2 applications (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching o auth2 applications
+	 */
+	public java.util.List<OAuth2Application> findByC_CP(
+		long companyId, int clientProfile, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator<OAuth2Application>
+			orderByComparator,
+		boolean useFinderCache);
+
+	/**
+	 * Returns the first o auth2 application in the ordered set where companyId = &#63; and clientProfile = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param clientProfile the client profile
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching o auth2 application
+	 * @throws NoSuchOAuth2ApplicationException if a matching o auth2 application could not be found
+	 */
+	public OAuth2Application findByC_CP_First(
+			long companyId, int clientProfile,
+			com.liferay.portal.kernel.util.OrderByComparator<OAuth2Application>
+				orderByComparator)
+		throws NoSuchOAuth2ApplicationException;
+
+	/**
+	 * Returns the first o auth2 application in the ordered set where companyId = &#63; and clientProfile = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param clientProfile the client profile
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching o auth2 application, or <code>null</code> if a matching o auth2 application could not be found
+	 */
+	public OAuth2Application fetchByC_CP_First(
+		long companyId, int clientProfile,
+		com.liferay.portal.kernel.util.OrderByComparator<OAuth2Application>
+			orderByComparator);
+
+	/**
+	 * Returns the last o auth2 application in the ordered set where companyId = &#63; and clientProfile = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param clientProfile the client profile
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching o auth2 application
+	 * @throws NoSuchOAuth2ApplicationException if a matching o auth2 application could not be found
+	 */
+	public OAuth2Application findByC_CP_Last(
+			long companyId, int clientProfile,
+			com.liferay.portal.kernel.util.OrderByComparator<OAuth2Application>
+				orderByComparator)
+		throws NoSuchOAuth2ApplicationException;
+
+	/**
+	 * Returns the last o auth2 application in the ordered set where companyId = &#63; and clientProfile = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param clientProfile the client profile
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching o auth2 application, or <code>null</code> if a matching o auth2 application could not be found
+	 */
+	public OAuth2Application fetchByC_CP_Last(
+		long companyId, int clientProfile,
+		com.liferay.portal.kernel.util.OrderByComparator<OAuth2Application>
+			orderByComparator);
+
+	/**
+	 * Returns the o auth2 applications before and after the current o auth2 application in the ordered set where companyId = &#63; and clientProfile = &#63;.
+	 *
+	 * @param oAuth2ApplicationId the primary key of the current o auth2 application
+	 * @param companyId the company ID
+	 * @param clientProfile the client profile
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next o auth2 application
+	 * @throws NoSuchOAuth2ApplicationException if a o auth2 application with the primary key could not be found
+	 */
+	public OAuth2Application[] findByC_CP_PrevAndNext(
+			long oAuth2ApplicationId, long companyId, int clientProfile,
+			com.liferay.portal.kernel.util.OrderByComparator<OAuth2Application>
+				orderByComparator)
+		throws NoSuchOAuth2ApplicationException;
+
+	/**
+	 * Returns all the o auth2 applications that the user has permission to view where companyId = &#63; and clientProfile = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param clientProfile the client profile
+	 * @return the matching o auth2 applications that the user has permission to view
+	 */
+	public java.util.List<OAuth2Application> filterFindByC_CP(
+		long companyId, int clientProfile);
+
+	/**
+	 * Returns a range of all the o auth2 applications that the user has permission to view where companyId = &#63; and clientProfile = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuth2ApplicationModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param clientProfile the client profile
+	 * @param start the lower bound of the range of o auth2 applications
+	 * @param end the upper bound of the range of o auth2 applications (not inclusive)
+	 * @return the range of matching o auth2 applications that the user has permission to view
+	 */
+	public java.util.List<OAuth2Application> filterFindByC_CP(
+		long companyId, int clientProfile, int start, int end);
+
+	/**
+	 * Returns an ordered range of all the o auth2 applications that the user has permissions to view where companyId = &#63; and clientProfile = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OAuth2ApplicationModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param clientProfile the client profile
+	 * @param start the lower bound of the range of o auth2 applications
+	 * @param end the upper bound of the range of o auth2 applications (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching o auth2 applications that the user has permission to view
+	 */
+	public java.util.List<OAuth2Application> filterFindByC_CP(
+		long companyId, int clientProfile, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator<OAuth2Application>
+			orderByComparator);
+
+	/**
+	 * Returns the o auth2 applications before and after the current o auth2 application in the ordered set of o auth2 applications that the user has permission to view where companyId = &#63; and clientProfile = &#63;.
+	 *
+	 * @param oAuth2ApplicationId the primary key of the current o auth2 application
+	 * @param companyId the company ID
+	 * @param clientProfile the client profile
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next o auth2 application
+	 * @throws NoSuchOAuth2ApplicationException if a o auth2 application with the primary key could not be found
+	 */
+	public OAuth2Application[] filterFindByC_CP_PrevAndNext(
+			long oAuth2ApplicationId, long companyId, int clientProfile,
+			com.liferay.portal.kernel.util.OrderByComparator<OAuth2Application>
+				orderByComparator)
+		throws NoSuchOAuth2ApplicationException;
+
+	/**
+	 * Removes all the o auth2 applications where companyId = &#63; and clientProfile = &#63; from the database.
+	 *
+	 * @param companyId the company ID
+	 * @param clientProfile the client profile
+	 */
+	public void removeByC_CP(long companyId, int clientProfile);
+
+	/**
+	 * Returns the number of o auth2 applications where companyId = &#63; and clientProfile = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param clientProfile the client profile
+	 * @return the number of matching o auth2 applications
+	 */
+	public int countByC_CP(long companyId, int clientProfile);
+
+	/**
+	 * Returns the number of o auth2 applications that the user has permission to view where companyId = &#63; and clientProfile = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param clientProfile the client profile
+	 * @return the number of matching o auth2 applications that the user has permission to view
+	 */
+	public int filterCountByC_CP(long companyId, int clientProfile);
+
+	/**
+	 * Returns the o auth2 application where companyId = &#63; and externalReferenceCode = &#63; or throws a <code>NoSuchOAuth2ApplicationException</code> if it could not be found.
+	 *
+	 * @param companyId the company ID
+	 * @param externalReferenceCode the external reference code
+	 * @return the matching o auth2 application
+	 * @throws NoSuchOAuth2ApplicationException if a matching o auth2 application could not be found
+	 */
+	public OAuth2Application findByC_ERC(
+			long companyId, String externalReferenceCode)
+		throws NoSuchOAuth2ApplicationException;
+
+	/**
+	 * Returns the o auth2 application where companyId = &#63; and externalReferenceCode = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param companyId the company ID
+	 * @param externalReferenceCode the external reference code
+	 * @return the matching o auth2 application, or <code>null</code> if a matching o auth2 application could not be found
+	 */
+	public OAuth2Application fetchByC_ERC(
+		long companyId, String externalReferenceCode);
+
+	/**
+	 * Returns the o auth2 application where companyId = &#63; and externalReferenceCode = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	 *
+	 * @param companyId the company ID
+	 * @param externalReferenceCode the external reference code
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the matching o auth2 application, or <code>null</code> if a matching o auth2 application could not be found
+	 */
+	public OAuth2Application fetchByC_ERC(
+		long companyId, String externalReferenceCode, boolean useFinderCache);
+
+	/**
+	 * Removes the o auth2 application where companyId = &#63; and externalReferenceCode = &#63; from the database.
+	 *
+	 * @param companyId the company ID
+	 * @param externalReferenceCode the external reference code
+	 * @return the o auth2 application that was removed
+	 */
+	public OAuth2Application removeByC_ERC(
+			long companyId, String externalReferenceCode)
+		throws NoSuchOAuth2ApplicationException;
+
+	/**
+	 * Returns the number of o auth2 applications where companyId = &#63; and externalReferenceCode = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param externalReferenceCode the external reference code
+	 * @return the number of matching o auth2 applications
+	 */
+	public int countByC_ERC(long companyId, String externalReferenceCode);
 
 	/**
 	 * Caches the o auth2 application in the entity cache if it is enabled.

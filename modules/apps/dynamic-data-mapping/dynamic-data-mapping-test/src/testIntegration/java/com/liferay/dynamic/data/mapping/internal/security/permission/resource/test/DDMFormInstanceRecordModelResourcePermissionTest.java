@@ -15,7 +15,6 @@
 package com.liferay.dynamic.data.mapping.internal.security.permission.resource.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
-import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstance;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecord;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
@@ -23,7 +22,7 @@ import com.liferay.dynamic.data.mapping.service.DDMFormInstanceLocalServiceUtil;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordLocalServiceUtil;
 import com.liferay.dynamic.data.mapping.service.test.BaseDDMServiceTestCase;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
-import com.liferay.dynamic.data.mapping.test.util.DDMFormTestUtil;
+import com.liferay.dynamic.data.mapping.test.util.DDMFormInstanceTestUtil;
 import com.liferay.dynamic.data.mapping.test.util.DDMFormValuesTestUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
@@ -74,8 +73,8 @@ public class DDMFormInstanceRecordModelResourcePermissionTest
 
 		_siteUser = UserTestUtil.addUser(group.getGroupId());
 
-		setUpPermissionThreadLocal();
-		setUpPrincipalThreadLocal();
+		_setUpPermissionThreadLocal();
+		_setUpPrincipalThreadLocal();
 	}
 
 	@After
@@ -89,7 +88,7 @@ public class DDMFormInstanceRecordModelResourcePermissionTest
 	public void testUpdateApprovedFormInstanceRecordByOwnerShouldBeFalse()
 		throws Exception {
 
-		DDMFormInstance formInstance = createFormInstance();
+		DDMFormInstance formInstance = _createFormInstance();
 
 		DDMStructure structure = formInstance.getStructure();
 
@@ -116,7 +115,7 @@ public class DDMFormInstanceRecordModelResourcePermissionTest
 	public void testUpdateDraftFormInstanceRecordByOwnerShouldBeTrue()
 		throws Exception {
 
-		DDMFormInstance formInstance = createFormInstance();
+		DDMFormInstance formInstance = _createFormInstance();
 
 		DDMStructure structure = formInstance.getStructure();
 
@@ -143,25 +142,19 @@ public class DDMFormInstanceRecordModelResourcePermissionTest
 				formInstanceRecord, ActionKeys.UPDATE));
 	}
 
-	protected DDMFormInstance createFormInstance() throws Exception {
+	private DDMFormInstance _createFormInstance() throws Exception {
 		DDMStructure structure = addStructure(_classNameId, "Test Structure");
-
-		DDMForm settingsDDMForm = DDMFormTestUtil.createDDMForm();
-
-		DDMFormValues settingsDDMFormValues =
-			DDMFormValuesTestUtil.createDDMFormValues(settingsDDMForm);
-
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(
-				group, TestPropsValues.getUserId());
 
 		return DDMFormInstanceLocalServiceUtil.addFormInstance(
 			structure.getUserId(), structure.getGroupId(),
 			structure.getStructureId(), structure.getNameMap(),
-			structure.getNameMap(), settingsDDMFormValues, serviceContext);
+			structure.getNameMap(),
+			DDMFormInstanceTestUtil.createSettingsDDMFormValues(),
+			ServiceContextTestUtil.getServiceContext(
+				group, TestPropsValues.getUserId()));
 	}
 
-	protected void setUpPermissionThreadLocal() throws Exception {
+	private void _setUpPermissionThreadLocal() throws Exception {
 		_originalPermissionChecker =
 			PermissionThreadLocal.getPermissionChecker();
 
@@ -169,7 +162,7 @@ public class DDMFormInstanceRecordModelResourcePermissionTest
 			PermissionCheckerFactoryUtil.create(_siteUser));
 	}
 
-	protected void setUpPrincipalThreadLocal() throws Exception {
+	private void _setUpPrincipalThreadLocal() throws Exception {
 		_originalName = PrincipalThreadLocal.getName();
 
 		PrincipalThreadLocal.setName(_siteUser.getUserId());

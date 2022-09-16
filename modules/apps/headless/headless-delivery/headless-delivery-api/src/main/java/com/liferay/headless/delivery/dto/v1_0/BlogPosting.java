@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
@@ -51,11 +52,14 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @generated
  */
 @Generated("")
-@GraphQLName("BlogPosting")
+@GraphQLName(
+	description = "Represents a blog post. See [BlogPosting](https://www.schema.org/BlogPosting) for more information.",
+	value = "BlogPosting"
+)
 @JsonFilter("Liferay.Vulcan")
 @Schema(
-	requiredProperties = {"articleBody", "headline"},
-	description = "Represents a blog post. See [BlogPosting](https://www.schema.org/BlogPosting) for more information."
+	description = "Represents a blog post. See [BlogPosting](https://www.schema.org/BlogPosting) for more information.",
+	requiredProperties = {"articleBody", "headline"}
 )
 @XmlRootElement(name = "BlogPosting")
 public class BlogPosting implements Serializable {
@@ -64,7 +68,13 @@ public class BlogPosting implements Serializable {
 		return ObjectMapperUtil.readValue(BlogPosting.class, json);
 	}
 
-	@Schema
+	public static BlogPosting unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(BlogPosting.class, json);
+	}
+
+	@Schema(
+		description = "Block of actions allowed by the user making the request."
+	)
 	@Valid
 	public Map<String, Map<String, String>> getActions() {
 		return actions;
@@ -90,7 +100,9 @@ public class BlogPosting implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "Block of actions allowed by the user making the request."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Map<String, Map<String, String>> actions;
 
@@ -210,7 +222,9 @@ public class BlogPosting implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Creator creator;
 
-	@Schema
+	@Schema(
+		description = "A list of the custom fields associated with the blog post."
+	)
 	@Valid
 	public CustomField[] getCustomFields() {
 		return customFields;
@@ -235,7 +249,9 @@ public class BlogPosting implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "A list of the custom fields associated with the blog post."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected CustomField[] customFields;
 
@@ -384,6 +400,34 @@ public class BlogPosting implements Serializable {
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected String encodingFormat;
+
+	@Schema(description = "The blog post's external reference code.")
+	public String getExternalReferenceCode() {
+		return externalReferenceCode;
+	}
+
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		this.externalReferenceCode = externalReferenceCode;
+	}
+
+	@JsonIgnore
+	public void setExternalReferenceCode(
+		UnsafeSupplier<String, Exception> externalReferenceCodeUnsafeSupplier) {
+
+		try {
+			externalReferenceCode = externalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(description = "The blog post's external reference code.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String externalReferenceCode;
 
 	@Schema(description = "The blog post's relative URL.")
 	public String getFriendlyUrlPath() {
@@ -553,7 +597,7 @@ public class BlogPosting implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Integer numberOfComments;
 
-	@Schema
+	@Schema(description = "A list of related contents to this blog post.")
 	@Valid
 	public RelatedContent[] getRelatedContents() {
 		return relatedContents;
@@ -579,9 +623,43 @@ public class BlogPosting implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "A list of related contents to this blog post.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected RelatedContent[] relatedContents;
+
+	@Schema(
+		description = "A list of rendered blogs posts, which results from using a display page to process the blogs post and return HTML."
+	)
+	@Valid
+	public RenderedContent[] getRenderedContents() {
+		return renderedContents;
+	}
+
+	public void setRenderedContents(RenderedContent[] renderedContents) {
+		this.renderedContents = renderedContents;
+	}
+
+	@JsonIgnore
+	public void setRenderedContents(
+		UnsafeSupplier<RenderedContent[], Exception>
+			renderedContentsUnsafeSupplier) {
+
+		try {
+			renderedContents = renderedContentsUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(
+		description = "A list of rendered blogs posts, which results from using a display page to process the blogs post and return HTML."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected RenderedContent[] renderedContents;
 
 	@Schema(
 		description = "The ID of the site to which this blog post is scoped."
@@ -650,7 +728,7 @@ public class BlogPosting implements Serializable {
 	protected TaxonomyCategoryBrief[] taxonomyCategoryBriefs;
 
 	@Schema(
-		description = "A write-only field that adds a `TaxonomyCategory` to this resource."
+		description = "A write-only field that adds `TaxonomyCategory` instances to the blog post."
 	)
 	public Long[] getTaxonomyCategoryIds() {
 		return taxonomyCategoryIds;
@@ -676,7 +754,7 @@ public class BlogPosting implements Serializable {
 	}
 
 	@GraphQLField(
-		description = "A write-only field that adds a `TaxonomyCategory` to this resource."
+		description = "A write-only field that adds `TaxonomyCategory` instances to the blog post."
 	)
 	@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
 	protected Long[] taxonomyCategoryIds;
@@ -901,6 +979,20 @@ public class BlogPosting implements Serializable {
 			sb.append("\"");
 		}
 
+		if (externalReferenceCode != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"externalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(externalReferenceCode));
+
+			sb.append("\"");
+		}
+
 		if (friendlyUrlPath != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -1003,6 +1095,26 @@ public class BlogPosting implements Serializable {
 			sb.append("]");
 		}
 
+		if (renderedContents != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"renderedContents\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < renderedContents.length; i++) {
+				sb.append(String.valueOf(renderedContents[i]));
+
+				if ((i + 1) < renderedContents.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
 		if (siteId != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -1073,6 +1185,7 @@ public class BlogPosting implements Serializable {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.BlogPosting",
 		name = "x-class-name"
 	)
@@ -1085,13 +1198,17 @@ public class BlogPosting implements Serializable {
 
 		@JsonCreator
 		public static ViewableBy create(String value) {
+			if ((value == null) || value.equals("")) {
+				return null;
+			}
+
 			for (ViewableBy viewableBy : values()) {
 				if (Objects.equals(viewableBy.getValue(), value)) {
 					return viewableBy;
 				}
 			}
 
-			return null;
+			throw new IllegalArgumentException("Invalid enum value: " + value);
 		}
 
 		@JsonValue
@@ -1113,9 +1230,9 @@ public class BlogPosting implements Serializable {
 	}
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
 	}
 
 	private static boolean _isArray(Object value) {
@@ -1141,8 +1258,8 @@ public class BlogPosting implements Serializable {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -1173,7 +1290,7 @@ public class BlogPosting implements Serializable {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -1181,7 +1298,7 @@ public class BlogPosting implements Serializable {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -1189,5 +1306,10 @@ public class BlogPosting implements Serializable {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

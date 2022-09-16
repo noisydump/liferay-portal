@@ -34,7 +34,18 @@ import org.apache.commons.lang3.tuple.Pair;
  */
 public class TestResultsConsistencyReportControllerBuildRunner
 	<S extends BaseBuildData>
-		extends BaseBuildRunner<S, Workspace> {
+		extends BaseBuildRunner<S> {
+
+	@Override
+	public Workspace getWorkspace() {
+		if (_workspace != null) {
+			return _workspace;
+		}
+
+		_workspace = WorkspaceFactory.newWorkspace();
+
+		return _workspace;
+	}
 
 	@Override
 	public void run() {
@@ -64,19 +75,12 @@ public class TestResultsConsistencyReportControllerBuildRunner
 	}
 
 	protected String getJobURL() {
-		String mostAvailableMasterURL =
+		return JenkinsResultsParserUtil.combine(
 			JenkinsResultsParserUtil.getMostAvailableMasterURL(
 				JenkinsResultsParserUtil.combine(
 					"http://" + getInvocationCohortName() + ".liferay.com"),
-				1);
-
-		return JenkinsResultsParserUtil.combine(
-			mostAvailableMasterURL, "/job/test-results-consistency-report");
-	}
-
-	@Override
-	protected void initWorkspace() {
-		setWorkspace(WorkspaceFactory.newSimpleWorkspace());
+				1),
+			"/job/test-results-consistency-report");
 	}
 
 	protected void invokeTestSuiteBuilds() {
@@ -364,5 +368,6 @@ public class TestResultsConsistencyReportControllerBuildRunner
 		Pattern.compile("(?<testSuite>[^\\(]*)\\((?<branchName>[^\\)]*)\\)");
 
 	private List<Pair<String, String>> _selectedTestSuiteBranchNamePairs;
+	private Workspace _workspace;
 
 }

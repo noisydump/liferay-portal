@@ -14,8 +14,6 @@
 
 package com.liferay.headless.delivery.internal.dto.v1_0.mapper;
 
-import com.liferay.headless.delivery.dto.v1_0.ClassPKReference;
-import com.liferay.headless.delivery.dto.v1_0.ContextReference;
 import com.liferay.headless.delivery.dto.v1_0.FragmentImage;
 import com.liferay.headless.delivery.dto.v1_0.FragmentInlineValue;
 import com.liferay.headless.delivery.dto.v1_0.FragmentMappedValue;
@@ -23,6 +21,7 @@ import com.liferay.headless.delivery.dto.v1_0.FragmentStyle;
 import com.liferay.headless.delivery.dto.v1_0.FragmentViewport;
 import com.liferay.headless.delivery.dto.v1_0.FragmentViewportStyle;
 import com.liferay.headless.delivery.dto.v1_0.Mapping;
+import com.liferay.headless.delivery.internal.dto.v1_0.mapper.util.FragmentMappedValueUtil;
 import com.liferay.info.field.InfoFieldValue;
 import com.liferay.info.item.ClassPKInfoItemIdentifier;
 import com.liferay.info.item.InfoItemServiceTracker;
@@ -41,6 +40,7 @@ import com.liferay.portal.kernel.util.Validator;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 
 import org.osgi.service.component.annotations.Reference;
@@ -84,81 +84,6 @@ public abstract class BaseStyledLayoutStructureItemMapper
 		}
 
 		return fragmentViewports.toArray(new FragmentViewport[0]);
-	}
-
-	protected Function<Object, String> getImageURLTransformerFunction() {
-		return object -> {
-			if (object instanceof JSONObject) {
-				JSONObject jsonObject = (JSONObject)object;
-
-				return jsonObject.getString("url");
-			}
-
-			if (object instanceof String) {
-				return (String)object;
-			}
-
-			return StringPool.BLANK;
-		};
-	}
-
-	protected boolean isSaveFragmentMappedValue(
-		JSONObject jsonObject, boolean saveMapping) {
-
-		if (saveMapping && jsonObject.has("classNameId") &&
-			jsonObject.has("classPK") && jsonObject.has("fieldId")) {
-
-			return true;
-		}
-
-		if (saveMapping && jsonObject.has("collectionFieldId")) {
-			return true;
-		}
-
-		if (saveMapping && jsonObject.has("mappedField")) {
-			return true;
-		}
-
-		return false;
-	}
-
-	protected FragmentImage toBackgroundFragmentImage(
-		JSONObject jsonObject, boolean saveMappingConfiguration) {
-
-		if (jsonObject == null) {
-			return null;
-		}
-
-		String urlValue = jsonObject.getString("url");
-
-		return new FragmentImage() {
-			{
-				title = toTitleFragmentInlineValue(jsonObject, urlValue);
-
-				setUrl(
-					() -> {
-						if (isSaveFragmentMappedValue(
-								jsonObject, saveMappingConfiguration)) {
-
-							return toFragmentMappedValue(
-								toDefaultMappingValue(
-									jsonObject,
-									getImageURLTransformerFunction()),
-								jsonObject);
-						}
-
-						if (Validator.isNull(urlValue)) {
-							return null;
-						}
-
-						return new FragmentInlineValue() {
-							{
-								value = urlValue;
-							}
-						};
-					});
-			}
-		};
 	}
 
 	protected FragmentInlineValue toDefaultMappingValue(
@@ -212,7 +137,7 @@ public abstract class BaseStyledLayoutStructureItemMapper
 			}
 
 			InfoFieldValue<Object> infoFieldValue =
-				infoItemFieldValuesProvider.getInfoItemFieldValue(
+				infoItemFieldValuesProvider.getInfoFieldValue(
 					infoItem, jsonObject.getString("fieldId"));
 
 			if (infoFieldValue == null) {
@@ -254,33 +179,10 @@ public abstract class BaseStyledLayoutStructureItemMapper
 				mapping = new Mapping() {
 					{
 						defaultFragmentInlineValue = fragmentInlineValue;
-						itemReference = toItemReference(jsonObject);
-
-						setFieldKey(
-							() -> {
-								String collectionFieldId = jsonObject.getString(
-									"collectionFieldId");
-
-								if (Validator.isNotNull(collectionFieldId)) {
-									return collectionFieldId;
-								}
-
-								String fieldId = jsonObject.getString(
-									"fieldId");
-
-								if (Validator.isNotNull(fieldId)) {
-									return fieldId;
-								}
-
-								String mappedField = jsonObject.getString(
-									"mappedField");
-
-								if (Validator.isNotNull(mappedField)) {
-									return mappedField;
-								}
-
-								return null;
-							});
+						fieldKey = FragmentMappedValueUtil.getFieldKey(
+							jsonObject);
+						itemReference = FragmentMappedValueUtil.toItemReference(
+							jsonObject);
 					}
 				};
 			}
@@ -335,133 +237,27 @@ public abstract class BaseStyledLayoutStructureItemMapper
 						JSONObject backgroundImageJSONObject =
 							(JSONObject)backgroundImage;
 
-						return toBackgroundFragmentImage(
+						return _toBackgroundFragmentImage(
 							backgroundImageJSONObject,
 							saveMappingConfiguration);
 					});
-			}
-		};
-	}
 
-	protected String toItemClassName(JSONObject jsonObject) {
-		String classNameIdString = jsonObject.getString("classNameId");
+				setHidden(
+					() -> {
+						if (Objects.equals(
+								jsonObject.getString("display"), "block")) {
 
-		if (Validator.isNull(classNameIdString)) {
-			return null;
-		}
+							return false;
+						}
 
-		long classNameId = 0;
+						if (Objects.equals(
+								jsonObject.getString("display"), "none")) {
 
-		try {
-			classNameId = Long.parseLong(classNameIdString);
-		}
-		catch (NumberFormatException numberFormatException) {
-			if (_log.isWarnEnabled()) {
-				_log.warn(
-					String.format(
-						"Item class name could not be set since class name " +
-							"ID %s could not be parsed to a long",
-						classNameIdString),
-					numberFormatException);
-			}
+							return true;
+						}
 
-			return null;
-		}
-
-		String className = null;
-
-		try {
-			className = portal.getClassName(classNameId);
-		}
-		catch (Exception exception) {
-			if (_log.isWarnEnabled()) {
-				_log.warn(
-					"Item class name could not be set since no class name " +
-						"could be obtained for class name ID " + classNameId,
-					exception);
-			}
-
-			return null;
-		}
-
-		return className;
-	}
-
-	protected Long toitemClassPK(JSONObject jsonObject) {
-		String classPKString = jsonObject.getString("classPK");
-
-		if (Validator.isNull(classPKString)) {
-			return null;
-		}
-
-		Long classPK = null;
-
-		try {
-			classPK = Long.parseLong(classPKString);
-		}
-		catch (NumberFormatException numberFormatException) {
-			if (_log.isWarnEnabled()) {
-				_log.warn(
-					String.format(
-						"Item class PK could not be set since class PK %s " +
-							"could not be parsed to a long",
-						classPKString),
-					numberFormatException);
-			}
-
-			return null;
-		}
-
-		return classPK;
-	}
-
-	protected Object toItemReference(JSONObject jsonObject) {
-		String collectionFieldId = jsonObject.getString("collectionFieldId");
-		String fieldId = jsonObject.getString("fieldId");
-		String mappedField = jsonObject.getString("mappedField");
-
-		if (Validator.isNull(collectionFieldId) && Validator.isNull(fieldId) &&
-			Validator.isNull(mappedField)) {
-
-			return null;
-		}
-
-		if (Validator.isNotNull(collectionFieldId)) {
-			return new ContextReference() {
-				{
-					contextSource = ContextSource.COLLECTION_ITEM;
-				}
-			};
-		}
-
-		if (Validator.isNotNull(mappedField)) {
-			return new ContextReference() {
-				{
-					contextSource = ContextSource.DISPLAY_PAGE_ITEM;
-				}
-			};
-		}
-
-		return new ClassPKReference() {
-			{
-				className = toItemClassName(jsonObject);
-				classPK = toitemClassPK(jsonObject);
-			}
-		};
-	}
-
-	protected FragmentInlineValue toTitleFragmentInlineValue(
-		JSONObject jsonObject, String urlValue) {
-
-		String title = jsonObject.getString("title");
-
-		if (Validator.isNull(title) || title.equals(urlValue)) {
-			return null;
-		}
-
-		return new FragmentInlineValue() {
-			{
-				value = title;
+						return null;
+					});
 			}
 		};
 	}
@@ -471,6 +267,61 @@ public abstract class BaseStyledLayoutStructureItemMapper
 
 	@Reference
 	protected Portal portal;
+
+	private Function<Object, String> _getImageURLTransformerFunction() {
+		return object -> {
+			if (object instanceof JSONObject) {
+				JSONObject jsonObject = (JSONObject)object;
+
+				return jsonObject.getString("url");
+			}
+
+			if (object instanceof String) {
+				return (String)object;
+			}
+
+			return StringPool.BLANK;
+		};
+	}
+
+	private FragmentImage _toBackgroundFragmentImage(
+		JSONObject jsonObject, boolean saveMappingConfiguration) {
+
+		if (jsonObject == null) {
+			return null;
+		}
+
+		String urlValue = jsonObject.getString("url");
+
+		return new FragmentImage() {
+			{
+				title = _toTitleFragmentInlineValue(jsonObject, urlValue);
+
+				setUrl(
+					() -> {
+						if (FragmentMappedValueUtil.isSaveFragmentMappedValue(
+								jsonObject, saveMappingConfiguration)) {
+
+							return toFragmentMappedValue(
+								toDefaultMappingValue(
+									jsonObject,
+									_getImageURLTransformerFunction()),
+								jsonObject);
+						}
+
+						if (Validator.isNull(urlValue)) {
+							return null;
+						}
+
+						return new FragmentInlineValue() {
+							{
+								value = urlValue;
+							}
+						};
+					});
+			}
+		};
+	}
 
 	private FragmentViewport _toFragmentViewportStyle(
 		JSONObject jsonObject, ViewportSize viewportSize) {
@@ -496,6 +347,21 @@ public abstract class BaseStyledLayoutStructureItemMapper
 				setFragmentViewportStyle(
 					() -> new FragmentViewportStyle() {
 						{
+							backgroundColor = styleJSONObject.getString(
+								"backgroundColor", null);
+							borderColor = styleJSONObject.getString(
+								"borderColor", null);
+							borderRadius = styleJSONObject.getString(
+								"borderRadius", null);
+							borderWidth = styleJSONObject.getString(
+								"borderWidth", null);
+							fontFamily = styleJSONObject.getString(
+								"fontFamily", null);
+							fontSize = styleJSONObject.getString(
+								"fontSize", null);
+							fontWeight = styleJSONObject.getString(
+								"fontWeight", null);
+							height = styleJSONObject.getString("height", null);
 							marginBottom = styleJSONObject.getString(
 								"marginBottom", null);
 							marginLeft = styleJSONObject.getString(
@@ -504,6 +370,18 @@ public abstract class BaseStyledLayoutStructureItemMapper
 								"marginRight", null);
 							marginTop = styleJSONObject.getString(
 								"marginTop", null);
+							maxHeight = styleJSONObject.getString(
+								"maxHeight", null);
+							maxWidth = styleJSONObject.getString(
+								"maxWidth", null);
+							minHeight = styleJSONObject.getString(
+								"minHeight", null);
+							minWidth = styleJSONObject.getString(
+								"minWidth", null);
+							opacity = styleJSONObject.getString(
+								"opacity", null);
+							overflow = styleJSONObject.getString(
+								"overflow", null);
 							paddingBottom = styleJSONObject.getString(
 								"paddingBottom", null);
 							paddingLeft = styleJSONObject.getString(
@@ -512,8 +390,51 @@ public abstract class BaseStyledLayoutStructureItemMapper
 								"paddingRight", null);
 							paddingTop = styleJSONObject.getString(
 								"paddingTop", null);
+							shadow = styleJSONObject.getString("shadow", null);
+							textAlign = styleJSONObject.getString(
+								"textAlign", null);
+							textColor = styleJSONObject.getString(
+								"textColor", null);
+							width = styleJSONObject.getString("width", null);
+
+							setHidden(
+								() -> {
+									if (Objects.equals(
+											styleJSONObject.getString(
+												"display"),
+											"block")) {
+
+										return false;
+									}
+
+									if (Objects.equals(
+											styleJSONObject.getString(
+												"display"),
+											"none")) {
+
+										return true;
+									}
+
+									return null;
+								});
 						}
 					});
+			}
+		};
+	}
+
+	private FragmentInlineValue _toTitleFragmentInlineValue(
+		JSONObject jsonObject, String urlValue) {
+
+		String title = jsonObject.getString("title");
+
+		if (Validator.isNull(title) || title.equals(urlValue)) {
+			return null;
+		}
+
+		return new FragmentInlineValue() {
+			{
+				value = title;
 			}
 		};
 	}

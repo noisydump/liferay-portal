@@ -14,6 +14,9 @@
 
 package com.liferay.portal.template.freemarker.internal;
 
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+
 import java.io.IOException;
 
 import java.net.URL;
@@ -42,6 +45,10 @@ public class FreeMarkerBundleClassloader extends URLClassLoader {
 		Collections.addAll(_bundles, bundles);
 	}
 
+	public void addBundle(Bundle bundle) {
+		_bundles.add(bundle);
+	}
+
 	@Override
 	public URL findResource(String name) {
 		for (Bundle bundle : _bundles) {
@@ -66,6 +73,9 @@ public class FreeMarkerBundleClassloader extends URLClassLoader {
 				}
 			}
 			catch (IOException ioException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(ioException);
+				}
 			}
 		}
 
@@ -82,6 +92,10 @@ public class FreeMarkerBundleClassloader extends URLClassLoader {
 		return findResources(name);
 	}
 
+	public void removeBundle(Bundle bundle) {
+		_bundles.remove(bundle);
+	}
+
 	@Override
 	protected Class<?> findClass(String name) throws ClassNotFoundException {
 		for (Bundle bundle : _bundles) {
@@ -89,6 +103,9 @@ public class FreeMarkerBundleClassloader extends URLClassLoader {
 				return bundle.loadClass(name);
 			}
 			catch (ClassNotFoundException classNotFoundException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(classNotFoundException);
+				}
 			}
 		}
 
@@ -107,6 +124,9 @@ public class FreeMarkerBundleClassloader extends URLClassLoader {
 
 		return clazz;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		FreeMarkerBundleClassloader.class);
 
 	private final Set<Bundle> _bundles = ConcurrentHashMap.newKeySet();
 

@@ -14,6 +14,11 @@
 
 package com.liferay.dynamic.data.mapping.internal.util;
 
+import com.jayway.jsonpath.DocumentContext;
+import com.jayway.jsonpath.JsonPath;
+
+import com.liferay.data.engine.model.DEDataDefinitionFieldLink;
+import com.liferay.data.engine.service.DEDataDefinitionFieldLinkLocalService;
 import com.liferay.dynamic.data.mapping.io.DDMFormDeserializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormLayoutDeserializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormLayoutSerializer;
@@ -23,10 +28,14 @@ import com.liferay.dynamic.data.mapping.io.DDMFormSerializer;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMFormFieldOptions;
+import com.liferay.dynamic.data.mapping.model.DDMFormFieldValidation;
+import com.liferay.dynamic.data.mapping.model.DDMFormFieldValidationExpression;
 import com.liferay.dynamic.data.mapping.model.DDMFormLayout;
 import com.liferay.dynamic.data.mapping.model.DDMFormLayoutColumn;
 import com.liferay.dynamic.data.mapping.model.DDMFormLayoutPage;
 import com.liferay.dynamic.data.mapping.model.DDMFormLayoutRow;
+import com.liferay.dynamic.data.mapping.model.DDMStructure;
+import com.liferay.dynamic.data.mapping.model.DDMStructureLayout;
 import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.dynamic.data.mapping.util.DDMDataDefinitionConverter;
 import com.liferay.dynamic.data.mapping.util.DDMFormDeserializeUtil;
@@ -36,15 +45,18 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -92,6 +104,25 @@ public class DDMDataDefinitionConverterImpl
 	}
 
 	@Override
+	public String convertDDMFormDataDefinition(
+			String dataDefinition, long groupId, long parentStructureId,
+			long parentStructureLayoutId, long structureId)
+		throws Exception {
+
+		DDMForm ddmForm = DDMFormDeserializeUtil.deserialize(
+			_ddmFormDeserializer, dataDefinition);
+
+		ddmForm = convertDDMFormDataDefinition(
+			ddmForm, parentStructureId, parentStructureLayoutId);
+
+		_addDataDefinitionFieldLinks(
+			_portal.getClassNameId(DDMStructure.class), structureId,
+			ddmForm.getDDMFormFields(), groupId);
+
+		return DDMFormSerializeUtil.serialize(ddmForm, _ddmFormSerializer);
+	}
+
+	@Override
 	public DDMFormLayout convertDDMFormLayoutDataDefinition(
 		DDMForm ddmForm, DDMFormLayout ddmFormLayout) {
 
@@ -115,14 +146,14 @@ public class DDMDataDefinitionConverterImpl
 
 			ddmFormLayoutPage.setDDMFormLayoutRows(ddmFormLayoutRows);
 
-			LocalizedValue localizedValue = _updateLocalizedValue(
+			LocalizedValue localizedValue = _upgradeLocalizedValue(
 				ddmFormLayout.getAvailableLocales(),
 				ddmFormLayout.getDefaultLocale(), "page",
 				ddmFormLayoutPage.getTitle());
 
 			ddmFormLayoutPage.setTitle(localizedValue);
 
-			localizedValue = _updateLocalizedValue(
+			localizedValue = _upgradeLocalizedValue(
 				ddmFormLayout.getAvailableLocales(),
 				ddmFormLayout.getDefaultLocale(), "description",
 				ddmFormLayoutPage.getDescription());
@@ -135,7 +166,8 @@ public class DDMDataDefinitionConverterImpl
 
 	@Override
 	public String convertDDMFormLayoutDataDefinition(
-			String structureLayoutDataDefinition,
+			long groupId, long structureId,
+			String structureLayoutDataDefinition, long structureLayoutId,
 			String structureVersionDataDefinition)
 		throws Exception {
 
@@ -155,7 +187,68 @@ public class DDMDataDefinitionConverterImpl
 						ddmFormLayout
 					).build());
 
-		return ddmFormLayoutSerializerSerializeResponse.getContent();
+		String content = ddmFormLayoutSerializerSerializeResponse.getContent();
+
+		_addDataDefinitionFieldLinks(
+			structureId, structureLayoutId, ddmForm, _getFieldNames(content),
+			groupId);
+
+		return content;
+	}
+
+	private void _addDataDefinitionFieldLinks(
+			long dataDefinitionId, long dataLayoutId, DDMForm ddmForm,
+			List<String> fieldNames, long groupId)
+		throws Exception {
+
+		Map<String, DDMFormField> ddmFormFieldsMap =
+			ddmForm.getDDMFormFieldsMap(true);
+
+		for (String fieldName : fieldNames) {
+			long classNameId = _portal.getClassNameId(DDMStructureLayout.class);
+
+			DEDataDefinitionFieldLink deDataDefinitionFieldLink =
+				_deDataDefinitionFieldLinkLocalService.
+					fetchDEDataDefinitionFieldLinks(
+						classNameId, dataLayoutId, dataDefinitionId, fieldName);
+
+			if (deDataDefinitionFieldLink == null) {
+				_deDataDefinitionFieldLinkLocalService.
+					addDEDataDefinitionFieldLink(
+						groupId, classNameId, dataLayoutId, dataDefinitionId,
+						fieldName);
+			}
+
+			DDMFormField ddmFormField = ddmFormFieldsMap.get(fieldName);
+
+			if (ddmFormField != null) {
+				_addDataDefinitionFieldLinks(
+					classNameId, dataLayoutId,
+					Collections.singletonList(ddmFormField), groupId);
+			}
+		}
+	}
+
+	private void _addDataDefinitionFieldLinks(
+			long classNameId, long dataDefinitionId,
+			List<DDMFormField> ddmFormFields, long groupId)
+		throws Exception {
+
+		for (DDMFormField ddmFormField : ddmFormFields) {
+			long fieldSetDDMStructureId = GetterUtil.getLong(
+				ddmFormField.getProperty("ddmStructureId"));
+
+			if (fieldSetDDMStructureId != 0) {
+				_deDataDefinitionFieldLinkLocalService.
+					addDEDataDefinitionFieldLink(
+						groupId, classNameId, dataDefinitionId,
+						fieldSetDDMStructureId, ddmFormField.getName());
+
+				_addDataDefinitionFieldLinks(
+					classNameId, dataDefinitionId,
+					ddmFormField.getNestedDDMFormFields(), groupId);
+			}
+		}
 	}
 
 	private DDMFormField _createFieldSetDDMFormField(
@@ -164,13 +257,14 @@ public class DDMDataDefinitionConverterImpl
 
 		return _createFieldSetDDMFormField(
 			StringPool.BLANK, StringPool.BLANK, defaultLocale, name,
-			nestedDDMFormFields, repeatable);
+			nestedDDMFormFields, repeatable, false);
 	}
 
 	private DDMFormField _createFieldSetDDMFormField(
 		String ddmStructureId, String ddmStructureLayoutId,
 		Locale defaultLocale, String name,
-		List<DDMFormField> nestedDDMFormFields, boolean repeatable) {
+		List<DDMFormField> nestedDDMFormFields, boolean repeatable,
+		boolean upgradedStructure) {
 
 		return new DDMFormField(name, "fieldset") {
 			{
@@ -182,31 +276,16 @@ public class DDMDataDefinitionConverterImpl
 					});
 				setLocalizable(false);
 				setNestedDDMFormFields(nestedDDMFormFields);
+				setProperty("collapsible", false);
 				setProperty("ddmStructureId", ddmStructureId);
 				setProperty("ddmStructureLayoutId", ddmStructureLayoutId);
-				setProperty("upgradedStructure", false);
+				setProperty("upgradedStructure", upgradedStructure);
 				setReadOnly(false);
 				setRepeatable(repeatable);
 				setRequired(false);
 				setShowLabel(false);
 			}
 		};
-	}
-
-	private DDMFormFieldOptions _getDDMFormFieldOptions(
-		DDMFormField ddmFormField) {
-
-		DDMFormFieldOptions ddmFormFieldOptions = new DDMFormFieldOptions();
-
-		LocalizedValue localizedValue = ddmFormField.getLabel();
-
-		for (Locale locale : localizedValue.getAvailableLocales()) {
-			ddmFormFieldOptions.addOptionLabel(
-				ddmFormField.getName(), locale,
-				localizedValue.getString(locale));
-		}
-
-		return ddmFormFieldOptions;
 	}
 
 	private String _getDDMFormFieldsRows(DDMFormField fieldSetDDMFormField) {
@@ -226,7 +305,7 @@ public class DDMDataDefinitionConverterImpl
 						))));
 		}
 
-		return jsonArray.toJSONString();
+		return jsonArray.toString();
 	}
 
 	private LocalizedValue _getEmptyLocalizedValue(Locale defaultLocale) {
@@ -237,26 +316,11 @@ public class DDMDataDefinitionConverterImpl
 		return localizedValue;
 	}
 
-	private LocalizedValue _getLocalizedPredefinedValue(
-		DDMFormField ddmFormField) {
+	private List<String> _getFieldNames(String content) {
+		DocumentContext documentContext = JsonPath.parse(content);
 
-		LocalizedValue newPredefinedValue = new LocalizedValue();
-
-		LocalizedValue oldPredefinedValue = ddmFormField.getPredefinedValue();
-
-		for (Locale locale : oldPredefinedValue.getAvailableLocales()) {
-			if (GetterUtil.getBoolean(oldPredefinedValue.getString(locale))) {
-				newPredefinedValue.addString(locale, ddmFormField.getName());
-			}
-			else {
-				newPredefinedValue.addString(locale, StringPool.BLANK);
-			}
-		}
-
-		newPredefinedValue.setDefaultLocale(
-			oldPredefinedValue.getDefaultLocale());
-
-		return newPredefinedValue;
+		return documentContext.read(
+			"$[\"pages\"][*][\"rows\"][*][\"columns\"][*][\"fieldNames\"][*]");
 	}
 
 	private boolean _hasNestedFields(DDMForm ddmForm) {
@@ -267,40 +331,6 @@ public class DDMDataDefinitionConverterImpl
 		}
 
 		return false;
-	}
-
-	private LocalizedValue _updateLocalizedValue(
-		Set<Locale> availableLocales, Locale defaultLocale, String key,
-		LocalizedValue localizedValue) {
-
-		if (localizedValue == null) {
-			localizedValue = new LocalizedValue();
-
-			localizedValue.addString(
-				defaultLocale, LanguageUtil.get(defaultLocale, key));
-
-			for (Locale locale : availableLocales) {
-				localizedValue.addString(locale, LanguageUtil.get(locale, key));
-			}
-
-			return localizedValue;
-		}
-
-		if (Validator.isNull(localizedValue.getString(defaultLocale))) {
-			localizedValue.addString(
-				defaultLocale, LanguageUtil.get(defaultLocale, key));
-		}
-
-		return localizedValue;
-	}
-
-	private void _upgradeBooleanField(DDMFormField ddmFormField) {
-		ddmFormField.setDataType("string");
-		ddmFormField.setDDMFormFieldOptions(
-			_getDDMFormFieldOptions(ddmFormField));
-		ddmFormField.setPredefinedValue(
-			_getLocalizedPredefinedValue(ddmFormField));
-		ddmFormField.setType("checkbox_multiple");
 	}
 
 	private void _upgradeColorField(DDMFormField ddmFormField) {
@@ -315,6 +345,21 @@ public class DDMDataDefinitionConverterImpl
 		ddmFormField.setFieldNamespace(StringPool.BLANK);
 		ddmFormField.setType("date");
 		ddmFormField.setVisibilityExpression(StringPool.BLANK);
+	}
+
+	private void _upgradeDDMFormFieldOptionsReferences(
+		DDMFormFieldOptions ddmFormFieldOptions) {
+
+		if (ddmFormFieldOptions == null) {
+			return;
+		}
+
+		Set<String> ddmFormFieldOptionsValues =
+			ddmFormFieldOptions.getOptionsValues();
+
+		ddmFormFieldOptionsValues.forEach(
+			ddmFormFieldOptionsValue -> ddmFormFieldOptions.addOptionReference(
+				ddmFormFieldOptionsValue, ddmFormFieldOptionsValue));
 	}
 
 	private void _upgradeDecimalField(DDMFormField ddmFormField) {
@@ -334,10 +379,40 @@ public class DDMDataDefinitionConverterImpl
 	private void _upgradeField(
 		DDMFormField ddmFormField, Locale defaultLocale) {
 
-		if (Objects.equals(ddmFormField.getType(), "checkbox")) {
-			_upgradeBooleanField(ddmFormField);
+		if (ddmFormField.hasProperty("validation")) {
+			Object object = ddmFormField.getProperty("validation");
+
+			if (!(object instanceof DDMFormFieldValidation)) {
+				ddmFormField.removeProperty("validation");
+			}
+			else {
+				DDMFormFieldValidation ddmFormFieldValidation =
+					(DDMFormFieldValidation)object;
+
+				DDMFormFieldValidationExpression
+					ddmFormFieldValidationExpression =
+						ddmFormFieldValidation.
+							getDDMFormFieldValidationExpression();
+
+				if ((ddmFormFieldValidationExpression == null) ||
+					Validator.isNull(
+						ddmFormFieldValidationExpression.getValue())) {
+
+					ddmFormField.removeProperty("validation");
+				}
+			}
 		}
-		else if (Objects.equals(ddmFormField.getType(), "ddm-color")) {
+
+		if (!StringUtil.equals(ddmFormField.getType(), "fieldset")) {
+			_upgradeDDMFormFieldOptionsReferences(
+				ddmFormField.getDDMFormFieldOptions());
+			_upgradeDDMFormFieldOptionsReferences(
+				(DDMFormFieldOptions)ddmFormField.getProperty("columns"));
+			_upgradeDDMFormFieldOptionsReferences(
+				(DDMFormFieldOptions)ddmFormField.getProperty("rows"));
+		}
+
+		if (Objects.equals(ddmFormField.getType(), "ddm-color")) {
 			_upgradeColorField(ddmFormField);
 		}
 		else if (Objects.equals(ddmFormField.getType(), "ddm-date")) {
@@ -446,6 +521,31 @@ public class DDMDataDefinitionConverterImpl
 		ddmFormField.setType("link_to_layout");
 	}
 
+	private LocalizedValue _upgradeLocalizedValue(
+		Set<Locale> availableLocales, Locale defaultLocale, String key,
+		LocalizedValue localizedValue) {
+
+		if (localizedValue == null) {
+			localizedValue = new LocalizedValue();
+
+			localizedValue.addString(
+				defaultLocale, _language.get(defaultLocale, key));
+
+			for (Locale locale : availableLocales) {
+				localizedValue.addString(locale, _language.get(locale, key));
+			}
+
+			return localizedValue;
+		}
+
+		if (Validator.isNull(localizedValue.getString(defaultLocale))) {
+			localizedValue.addString(
+				defaultLocale, _language.get(defaultLocale, key));
+		}
+
+		return localizedValue;
+	}
+
 	private DDMForm _upgradeNestedFields(DDMForm ddmForm) {
 		if (!_hasNestedFields(ddmForm)) {
 			return ddmForm;
@@ -529,12 +629,18 @@ public class DDMDataDefinitionConverterImpl
 			return;
 		}
 
-		ddmForm.addDDMFormField(
+		List<DDMFormField> ddmFormFields = ddmForm.getDDMFormFields();
+
+		ddmFormFields.add(
+			0,
 			_createFieldSetDDMFormField(
 				String.valueOf(parentStructureId),
 				String.valueOf(parentStructureLayoutId),
-				ddmForm.getDefaultLocale(), "parentStructureFieldSet",
-				Collections.emptyList(), false));
+				ddmForm.getDefaultLocale(),
+				"parentStructureFieldSet" + parentStructureId,
+				Collections.emptyList(), false, true));
+
+		ddmForm.setDDMFormFields(ddmFormFields);
 	}
 
 	private void _upgradeSelectField(DDMFormField ddmFormField) {
@@ -595,12 +701,11 @@ public class DDMDataDefinitionConverterImpl
 			"placeholder", _getEmptyLocalizedValue(defaultLocale));
 		ddmFormField.setProperty(
 			"tooltip", _getEmptyLocalizedValue(defaultLocale));
-
 		ddmFormField.setType("text");
 		ddmFormField.setVisibilityExpression(StringPool.BLANK);
 	}
 
-	@Reference
+	@Reference(target = "(ddm.form.deserializer.type=json)")
 	private DDMFormDeserializer _ddmFormDeserializer;
 
 	@Reference
@@ -611,5 +716,15 @@ public class DDMDataDefinitionConverterImpl
 
 	@Reference
 	private DDMFormSerializer _ddmFormSerializer;
+
+	@Reference
+	private DEDataDefinitionFieldLinkLocalService
+		_deDataDefinitionFieldLinkLocalService;
+
+	@Reference
+	private Language _language;
+
+	@Reference
+	private Portal _portal;
 
 }

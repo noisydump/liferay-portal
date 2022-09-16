@@ -27,10 +27,12 @@ import com.liferay.portal.kernel.util.GetterUtil;
  */
 public class ProductOptionValueUtil {
 
-	public static CPDefinitionOptionValueRel upsertCPDefinitionOptionValueRel(
-			CPDefinitionOptionValueRelService cpDefinitionOptionValueRelService,
-			ProductOptionValue productOptionValue, long cpDefinitionOptionRelId,
-			ServiceContext serviceContext)
+	public static CPDefinitionOptionValueRel
+			addOrUpdateCPDefinitionOptionValueRel(
+				CPDefinitionOptionValueRelService
+					cpDefinitionOptionValueRelService,
+				ProductOptionValue productOptionValue,
+				long cpDefinitionOptionRelId, ServiceContext serviceContext)
 		throws PortalException {
 
 		CPDefinitionOptionValueRel cpDefinitionOptionValueRel =
@@ -55,7 +57,8 @@ public class ProductOptionValueUtil {
 						GetterUtil.get(
 							productOptionValue.getPriority(),
 							cpDefinitionOptionValueRel.getPriority()),
-						productOptionValue.getKey(), serviceContext);
+						productOptionValue.getKey(), 0, 0, false, null,
+						serviceContext);
 		}
 
 		return cpDefinitionOptionValueRel;

@@ -15,7 +15,7 @@
 package com.liferay.portal.workflow.kaleo.forms.web.internal.portlet.configuration.icon;
 
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
@@ -57,7 +57,7 @@ public class ExportKaleoProcessPortletConfigurationIcon
 
 	@Override
 	public String getMessage(PortletRequest portletRequest) {
-		return LanguageUtil.get(
+		return _language.get(
 			getResourceBundle(getLocale(portletRequest)), "export");
 	}
 
@@ -65,7 +65,7 @@ public class ExportKaleoProcessPortletConfigurationIcon
 	public String getURL(
 		PortletRequest portletRequest, PortletResponse portletResponse) {
 
-		return "javascript:;";
+		return "javascript:void(0);";
 	}
 
 	@Override
@@ -101,7 +101,7 @@ public class ExportKaleoProcessPortletConfigurationIcon
 			// LPS-52675
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(portalException, portalException);
+				_log.debug(portalException);
 			}
 
 			return false;
@@ -114,15 +114,19 @@ public class ExportKaleoProcessPortletConfigurationIcon
 	}
 
 	@Override
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.portal.workflow.kaleo.forms.web)",
-		unbind = "-"
-	)
-	public void setServletContext(ServletContext servletContext) {
-		super.setServletContext(servletContext);
+	protected ServletContext getServletContext() {
+		return _servletContext;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		ExportKaleoProcessPortletConfigurationIcon.class);
+
+	@Reference
+	private Language _language;
+
+	@Reference(
+		target = "(osgi.web.symbolicname=com.liferay.portal.workflow.kaleo.forms.web)"
+	)
+	private ServletContext _servletContext;
 
 }

@@ -127,6 +127,8 @@ public class KaleoInstancePersistenceTest {
 
 		newKaleoInstance.setMvccVersion(RandomTestUtil.nextLong());
 
+		newKaleoInstance.setCtCollectionId(RandomTestUtil.nextLong());
+
 		newKaleoInstance.setGroupId(RandomTestUtil.nextLong());
 
 		newKaleoInstance.setCompanyId(RandomTestUtil.nextLong());
@@ -149,6 +151,8 @@ public class KaleoInstancePersistenceTest {
 
 		newKaleoInstance.setRootKaleoInstanceTokenId(RandomTestUtil.nextLong());
 
+		newKaleoInstance.setActive(RandomTestUtil.randomBoolean());
+
 		newKaleoInstance.setClassName(RandomTestUtil.randomString());
 
 		newKaleoInstance.setClassPK(RandomTestUtil.nextLong());
@@ -167,6 +171,9 @@ public class KaleoInstancePersistenceTest {
 		Assert.assertEquals(
 			existingKaleoInstance.getMvccVersion(),
 			newKaleoInstance.getMvccVersion());
+		Assert.assertEquals(
+			existingKaleoInstance.getCtCollectionId(),
+			newKaleoInstance.getCtCollectionId());
 		Assert.assertEquals(
 			existingKaleoInstance.getKaleoInstanceId(),
 			newKaleoInstance.getKaleoInstanceId());
@@ -201,6 +208,8 @@ public class KaleoInstancePersistenceTest {
 		Assert.assertEquals(
 			existingKaleoInstance.getRootKaleoInstanceTokenId(),
 			newKaleoInstance.getRootKaleoInstanceTokenId());
+		Assert.assertEquals(
+			existingKaleoInstance.isActive(), newKaleoInstance.isActive());
 		Assert.assertEquals(
 			existingKaleoInstance.getClassName(),
 			newKaleoInstance.getClassName());
@@ -311,13 +320,14 @@ public class KaleoInstancePersistenceTest {
 
 	protected OrderByComparator<KaleoInstance> getOrderByComparator() {
 		return OrderByComparatorFactoryUtil.create(
-			"KaleoInstance", "mvccVersion", true, "kaleoInstanceId", true,
-			"groupId", true, "companyId", true, "userId", true, "userName",
-			true, "createDate", true, "modifiedDate", true, "kaleoDefinitionId",
-			true, "kaleoDefinitionVersionId", true, "kaleoDefinitionName", true,
+			"KaleoInstance", "mvccVersion", true, "ctCollectionId", true,
+			"kaleoInstanceId", true, "groupId", true, "companyId", true,
+			"userId", true, "userName", true, "createDate", true,
+			"modifiedDate", true, "kaleoDefinitionId", true,
+			"kaleoDefinitionVersionId", true, "kaleoDefinitionName", true,
 			"kaleoDefinitionVersion", true, "rootKaleoInstanceTokenId", true,
-			"className", true, "classPK", true, "completed", true,
-			"completionDate", true);
+			"active", true, "className", true, "classPK", true, "completed",
+			true, "completionDate", true);
 	}
 
 	@Test
@@ -608,6 +618,8 @@ public class KaleoInstancePersistenceTest {
 
 		kaleoInstance.setMvccVersion(RandomTestUtil.nextLong());
 
+		kaleoInstance.setCtCollectionId(RandomTestUtil.nextLong());
+
 		kaleoInstance.setGroupId(RandomTestUtil.nextLong());
 
 		kaleoInstance.setCompanyId(RandomTestUtil.nextLong());
@@ -629,6 +641,8 @@ public class KaleoInstancePersistenceTest {
 		kaleoInstance.setKaleoDefinitionVersion(RandomTestUtil.nextInt());
 
 		kaleoInstance.setRootKaleoInstanceTokenId(RandomTestUtil.nextLong());
+
+		kaleoInstance.setActive(RandomTestUtil.randomBoolean());
 
 		kaleoInstance.setClassName(RandomTestUtil.randomString());
 

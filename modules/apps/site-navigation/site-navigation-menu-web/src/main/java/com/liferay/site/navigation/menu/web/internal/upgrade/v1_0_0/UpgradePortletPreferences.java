@@ -17,48 +17,28 @@ package com.liferay.site.navigation.menu.web.internal.upgrade.v1_0_0;
 import com.liferay.portal.kernel.configuration.Filter;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.portletdisplaytemplate.PortletDisplayTemplateManager;
-import com.liferay.portal.kernel.upgrade.BaseUpgradePortletPreferences;
+import com.liferay.portal.kernel.upgrade.BasePortletPreferencesUpgradeProcess;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.util.PropsUtil;
 import com.liferay.site.navigation.menu.web.internal.constants.SiteNavigationMenuPortletKeys;
 
+import java.util.Arrays;
+import java.util.List;
+
 import javax.portlet.PortletPreferences;
-import javax.portlet.ReadOnlyException;
 
 /**
  * @author Eduardo García
  */
-public class UpgradePortletPreferences extends BaseUpgradePortletPreferences {
+public class UpgradePortletPreferences
+	extends BasePortletPreferencesUpgradeProcess {
 
 	@Override
 	protected String[] getPortletIds() {
 		return new String[] {
 			SiteNavigationMenuPortletKeys.SITE_NAVIGATION_MENU + "%"
 		};
-	}
-
-	protected void upgradeDisplayStyle(PortletPreferences portletPreferences)
-		throws ReadOnlyException {
-
-		String displayStyle = GetterUtil.getString(
-			portletPreferences.getValue("displayStyle", null));
-
-		if (Validator.isNull(displayStyle) ||
-			displayStyle.startsWith(
-				PortletDisplayTemplateManager.DISPLAY_STYLE_PREFIX)) {
-
-			return;
-		}
-
-		portletPreferences.setValue(
-			"displayStyle",
-			PortletDisplayTemplateManager.DISPLAY_STYLE_PREFIX +
-				"list-menu-ftl");
-
-		_persistSupportedProperties(portletPreferences, displayStyle);
-
-		_removeUnsupportedPreferences(portletPreferences);
 	}
 
 	@Override
@@ -71,14 +51,14 @@ public class UpgradePortletPreferences extends BaseUpgradePortletPreferences {
 			PortletPreferencesFactoryUtil.fromXML(
 				companyId, ownerId, ownerType, plid, portletId, xml);
 
-		upgradeDisplayStyle(portletPreferences);
+		_upgradeDisplayStyle(portletPreferences);
 
 		return PortletPreferencesFactoryUtil.toXML(portletPreferences);
 	}
 
 	private void _persistSupportedProperties(
 			PortletPreferences portletPreferences, String displayStyle)
-		throws ReadOnlyException {
+		throws Exception {
 
 		String includedLayouts = "auto";
 		String rootLayoutLevel = "1";
@@ -127,11 +107,40 @@ public class UpgradePortletPreferences extends BaseUpgradePortletPreferences {
 
 	private void _removeUnsupportedPreferences(
 			PortletPreferences portletPreferences)
-		throws ReadOnlyException {
+		throws Exception {
 
 		portletPreferences.reset("bulletStyle");
 		portletPreferences.reset("headerType");
 		portletPreferences.reset("nestedChildren");
+	}
+
+	private void _upgradeDisplayStyle(PortletPreferences portletPreferences)
+		throws Exception {
+
+		String displayStyle = GetterUtil.getString(
+			portletPreferences.getValue("displayStyle", null));
+
+		List<String> displayStyleOutOfTheBox = Arrays.asList(
+			"[custom]", "relative-with-breadcrumb", "from-level-2-with-title",
+			"from-level-1-with-title", "from-level-1",
+			"from-level-1-to-all-sublevels", "from-level-0");
+
+		if (Validator.isNull(displayStyle) ||
+			displayStyle.startsWith(
+				PortletDisplayTemplateManager.DISPLAY_STYLE_PREFIX) ||
+			!displayStyleOutOfTheBox.contains(displayStyle)) {
+
+			return;
+		}
+
+		portletPreferences.setValue(
+			"displayStyle",
+			PortletDisplayTemplateManager.DISPLAY_STYLE_PREFIX +
+				"list-menu-ftl");
+
+		_persistSupportedProperties(portletPreferences, displayStyle);
+
+		_removeUnsupportedPreferences(portletPreferences);
 	}
 
 }

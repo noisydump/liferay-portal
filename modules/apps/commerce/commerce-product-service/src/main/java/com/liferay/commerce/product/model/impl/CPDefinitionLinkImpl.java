@@ -24,38 +24,10 @@ import com.liferay.commerce.product.service.CProductLocalServiceUtil;
  */
 public class CPDefinitionLinkImpl extends CPDefinitionLinkBaseImpl {
 
-	public CPDefinitionLinkImpl() {
-	}
-
 	@Override
 	public CPDefinition getCPDefinition() {
 		return CPDefinitionLocalServiceUtil.fetchCPDefinition(
 			getCPDefinitionId());
-	}
-
-	/**
-	 * @deprecated As of Mueller (7.2.x)
-	 */
-	@Deprecated
-	@Override
-	public CPDefinition getCPDefinition1() {
-		return getCPDefinition();
-	}
-
-	/**
-	 * @deprecated As of Mueller (7.2.x)
-	 */
-	@Deprecated
-	@Override
-	public CPDefinition getCPDefinition2() {
-		CProduct cProduct = getCProduct();
-
-		if (cProduct == null) {
-			return null;
-		}
-
-		return CPDefinitionLocalServiceUtil.fetchCPDefinition(
-			cProduct.getPublishedCPDefinitionId());
 	}
 
 	@Override

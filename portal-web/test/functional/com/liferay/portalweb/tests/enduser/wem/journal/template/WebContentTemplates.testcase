@@ -93,11 +93,7 @@ definition {
 
 			NavItem.gotoTemplates();
 
-			var browserType = PropsUtil.get("browser.type");
-
-			if ("${browserType}" == "chrome") {
-				MetalComponent.waitForManagementBar();
-			}
+			WaitForPageLoad();
 
 			AssertElementNotPresent(locator1 = "Button#PLUS");
 		}
@@ -116,66 +112,36 @@ definition {
 		}
 	}
 
-	@description = "This is a use case for LPS-101248. Cannot delete a web content template used in Content Display fragment."
-	@priority = "2"
-	test CannotDeleteTemplateUsedInContentDisplay {
-		task ("Add a web content based on Basic Web Content") {
-			JSONWebcontent.addWebContent(
-				content = "Web Content Content",
-				groupName = "Test Site Name",
-				title = "Web Content Title");
-		}
+	@description = "This is a test for LPS-134063. The template can be copied."
+	@priority = "5"
+	test CopyTemplate {
+		property portal.acceptance = "true";
 
-		task ("Add a web content template for Basic Web Content") {
+		task ("Add a template for Basic Web Content") {
 			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
 
 			NavItem.gotoTemplates();
-
-			var templateScript = '''<a>${content.getData()}</a>''';
 
 			WebContentTemplates.addCP(
 				structureName = "Basic Web Content",
-				templateName = "WC Template Name",
-				templateScript = "${templateScript}");
+				templateFieldNames = "Content",
+				templateName = "WC Template Name");
 		}
 
-		task ("Add a content page on Blank") {
-			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name",
-				layoutName = "Test Page Name",
-				type = "content");
+		task ("Make a copy of new template") {
+			WebContentTemplates.copyCP(
+				templateCopyName = "WC Template Name (Copy)",
+				templateName = "WC Template Name");
 		}
 
-		task ("Add a Content Display to page") {
-			ContentPagesNavigator.openEditContentPage(
-				pageName = "Test Page Name",
-				siteName = "Test Site Name");
+		task ("View the copy of template shown in Templates admin") {
+			NavItem.viewActive(navItem = "Templates");
 
-			PageEditor.addFragment(
-				collectionName = "Content Display",
-				fragmentName = "Content Display");
+			WebContentTemplates.viewCardsEntryCP(templateName = "WC Template Name (Copy)");
 		}
 
-		task ("Select the web content and custom template in Content Display") {
-			PageEditor.editContentDisplay(
-				customWebcontenttemplate = "WC Template Name",
-				fragmentName = "Content Display",
-				webcontent = "true",
-				webContentTitle = "Web Content Title");
-
-			AssertVisible(
-				key_content = "//a[contains(.,'Web Content Content')]",
-				locator1 = "WCD#WEB_CONTENT_CONTENT_ANY");
-		}
-
-		task ("Assert cannot delete web content template") {
-			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
-
-			NavItem.gotoTemplates();
-
-			WebContentTemplates.deleteCP(
-				templateName = "WC Template Name",
-				webContentHasReference = "true");
+		task ("View the original template shown in Templates admin") {
+			WebContentTemplates.viewCardsEntryCP(templateName = "WC Template Name");
 		}
 	}
 
@@ -303,15 +269,11 @@ definition {
 
 			LexiconEntry.gotoAdd();
 
-			Pause(locator1 = "3000");
+			WaitForVisible(locator1 = "Sidebar#PANEL_OPEN");
 		}
 
 		task ("Disable Template Creation") {
 			Open.openInTheNewTab(locator1 = "http://localhost:8080");
-
-			var siteName = TestCase.getSiteName(siteName = "${siteName}");
-
-			SelectWindow(locator1 = "title=Home - ${siteName}");
 
 			ApplicationsMenu.gotoPortlet(
 				category = "Configuration",
@@ -334,6 +296,8 @@ definition {
 		}
 
 		task ("View template creation failure") {
+			var siteName = TestCase.getSiteName(siteName = "${siteName}");
+
 			Close.closeAndSelectWindow(locator1 = "title=New Template - Test Site Name - ${siteName}");
 
 			WebContentTemplates.inputTemplateAddScreenFields(

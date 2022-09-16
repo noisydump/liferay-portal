@@ -14,30 +14,32 @@
 
 package com.liferay.dispatch.web.internal.display.context;
 
-import com.liferay.dispatch.executor.DispatchTaskExecutor;
+import com.liferay.dispatch.constants.DispatchPortletKeys;
 import com.liferay.dispatch.executor.DispatchTaskExecutorRegistry;
+import com.liferay.dispatch.metadata.DispatchTriggerMetadata;
+import com.liferay.dispatch.metadata.DispatchTriggerMetadataProvider;
 import com.liferay.dispatch.model.DispatchTrigger;
 import com.liferay.dispatch.service.DispatchTriggerLocalService;
-import com.liferay.dispatch.web.internal.display.context.util.DispatchRequestHelper;
-import com.liferay.petra.string.StringPool;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItemList;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.dao.search.RowChecker;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
-import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
+import com.liferay.portal.kernel.portlet.SearchOrderByUtil;
+import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.Validator;
 
-import java.text.Format;
-
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.ResourceBundle;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
@@ -46,86 +48,134 @@ import javax.portlet.RenderRequest;
  * @author guywandji
  * @author Alessio Antonio Rendina
  */
-public class DispatchTriggerDisplayContext {
+public class DispatchTriggerDisplayContext extends BaseDisplayContext {
 
 	public DispatchTriggerDisplayContext(
 		DispatchTaskExecutorRegistry dispatchTaskExecutorRegistry,
 		DispatchTriggerLocalService dispatchTriggerLocalService,
+		DispatchTriggerMetadataProvider dispatchTriggerMetadataProvider,
 		RenderRequest renderRequest) {
+
+		super(renderRequest);
 
 		_dispatchTaskExecutorRegistry = dispatchTaskExecutorRegistry;
 		_dispatchTriggerLocalService = dispatchTriggerLocalService;
+		_dispatchTriggerMetadataProvider = dispatchTriggerMetadataProvider;
+	}
 
-		_dispatchRequestHelper = new DispatchRequestHelper(renderRequest);
+	public List<DropdownItem> getActionDropdownItems() {
+		return DropdownItemListBuilder.add(
+			dropdownItem -> {
+				dropdownItem.putData("action", "deleteEntries");
+				dropdownItem.setIcon("trash");
+				dropdownItem.setLabel(
+					LanguageUtil.get(
+						dispatchRequestHelper.getLocale(), "delete"));
+				dropdownItem.setQuickAction(true);
+			}
+		).build();
+	}
 
-		_dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(
-			_dispatchRequestHelper.getLocale());
+	public CreationMenu getCreationMenu() {
+		CreationMenu creationMenu = new CreationMenu();
+
+		for (String dispatchTaskExecutorType : getDispatchTaskExecutorTypes()) {
+			creationMenu.addDropdownItem(
+				dropdownItem -> {
+					dropdownItem.setHref(
+						PortletURLBuilder.createRenderURL(
+							dispatchRequestHelper.getLiferayPortletResponse()
+						).setMVCRenderCommandName(
+							"/dispatch/edit_dispatch_trigger"
+						).setCMD(
+							Constants.ADD
+						).setRedirect(
+							dispatchRequestHelper.getCurrentURL()
+						).setParameter(
+							"dispatchTaskExecutorType", dispatchTaskExecutorType
+						).buildRenderURL());
+					dropdownItem.setLabel(
+						getDispatchTaskExecutorName(
+							dispatchTaskExecutorType,
+							dispatchRequestHelper.getLocale()));
+				});
+		}
+
+		return creationMenu;
 	}
 
 	public String getDispatchTaskExecutorName(
 		String dispatchTaskExecutorType, Locale locale) {
 
-		DispatchTaskExecutor dispatchTaskExecutor =
-			_dispatchTaskExecutorRegistry.getDispatchTaskExecutor(
-				dispatchTaskExecutorType);
-
-		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
-			locale, dispatchTaskExecutor.getClass());
-
-		String name = _dispatchTaskExecutorRegistry.getDispatchTaskExecutorName(
-			dispatchTaskExecutorType);
-
-		return LanguageUtil.get(resourceBundle, name);
+		return LanguageUtil.get(
+			locale,
+			_dispatchTaskExecutorRegistry.fetchDispatchTaskExecutorName(
+				dispatchTaskExecutorType));
 	}
 
 	public Set<String> getDispatchTaskExecutorTypes() {
-		return _dispatchTaskExecutorRegistry.getDispatchTaskExecutorTypes();
+		Set<String> dispatchTaskExecutorTypes =
+			_dispatchTaskExecutorRegistry.getDispatchTaskExecutorTypes();
+
+		Stream<String> stream = dispatchTaskExecutorTypes.parallelStream();
+
+		return stream.filter(
+			type -> !_dispatchTaskExecutorRegistry.isHiddenInUI(type)
+		).collect(
+			Collectors.toSet()
+		);
 	}
 
 	public DispatchTrigger getDispatchTrigger() {
-		return _dispatchRequestHelper.getDispatchTrigger();
+		return dispatchRequestHelper.getDispatchTrigger();
 	}
 
-	public String getNextFireDateString(long dispatchTriggerId)
-		throws PortalException {
+	public DispatchTriggerMetadata getDispatchTriggerMetadata(
+		long dispatchTriggerId) {
 
-		Date nextRunDate = _dispatchTriggerLocalService.getNextFireDate(
+		return _dispatchTriggerMetadataProvider.getDispatchTriggerMetadata(
 			dispatchTriggerId);
-
-		if (nextRunDate != null) {
-			return _dateFormatDateTime.format(nextRunDate);
-		}
-
-		return StringPool.BLANK;
 	}
 
 	public String getOrderByCol() {
-		return ParamUtil.getString(
-			_dispatchRequestHelper.getRequest(),
-			SearchContainer.DEFAULT_ORDER_BY_COL_PARAM, "modified-date");
+		if (Validator.isNotNull(_orderByCol)) {
+			return _orderByCol;
+		}
+
+		_orderByCol = SearchOrderByUtil.getOrderByCol(
+			dispatchRequestHelper.getRequest(), DispatchPortletKeys.DISPATCH,
+			"trigger-order-by-col", "modified-date");
+
+		return _orderByCol;
 	}
 
 	public String getOrderByType() {
-		return ParamUtil.getString(
-			_dispatchRequestHelper.getRequest(),
-			SearchContainer.DEFAULT_ORDER_BY_TYPE_PARAM, "desc");
+		if (Validator.isNotNull(_orderByType)) {
+			return _orderByType;
+		}
+
+		_orderByType = SearchOrderByUtil.getOrderByType(
+			dispatchRequestHelper.getRequest(), DispatchPortletKeys.DISPATCH,
+			"trigger-order-by-type", "desc");
+
+		return _orderByType;
 	}
 
-	public PortletURL getPortletURL() throws PortalException {
+	public PortletURL getPortletURL() {
 		LiferayPortletResponse liferayPortletResponse =
-			_dispatchRequestHelper.getLiferayPortletResponse();
+			dispatchRequestHelper.getLiferayPortletResponse();
 
 		PortletURL portletURL = liferayPortletResponse.createRenderURL();
 
 		String delta = ParamUtil.getString(
-			_dispatchRequestHelper.getRequest(), "delta");
+			dispatchRequestHelper.getRequest(), "delta");
 
 		if (Validator.isNotNull(delta)) {
 			portletURL.setParameter("delta", delta);
 		}
 
 		String deltaEntry = ParamUtil.getString(
-			_dispatchRequestHelper.getRequest(), "deltaEntry");
+			dispatchRequestHelper.getRequest(), "deltaEntry");
 
 		if (Validator.isNotNull(deltaEntry)) {
 			portletURL.setParameter("deltaEntry", deltaEntry);
@@ -137,49 +187,58 @@ public class DispatchTriggerDisplayContext {
 	public RowChecker getRowChecker() {
 		if (_rowChecker == null) {
 			_rowChecker = new EmptyOnClickRowChecker(
-				_dispatchRequestHelper.getLiferayPortletResponse());
+				dispatchRequestHelper.getLiferayPortletResponse());
 		}
 
 		return _rowChecker;
 	}
 
-	public SearchContainer<DispatchTrigger> getSearchContainer()
-		throws PortalException {
-
+	public SearchContainer<DispatchTrigger> getSearchContainer() {
 		if (_searchContainer != null) {
 			return _searchContainer;
 		}
 
 		_searchContainer = new SearchContainer<>(
-			_dispatchRequestHelper.getLiferayPortletRequest(), getPortletURL(),
+			dispatchRequestHelper.getLiferayPortletRequest(), getPortletURL(),
 			null, null);
 
 		_searchContainer.setEmptyResultsMessage("no-items-were-found");
-
 		_searchContainer.setOrderByCol(getOrderByCol());
 		_searchContainer.setOrderByComparator(null);
 		_searchContainer.setOrderByType(getOrderByType());
+		_searchContainer.setResultsAndTotal(
+			() -> _dispatchTriggerLocalService.getDispatchTriggers(
+				dispatchRequestHelper.getCompanyId(),
+				_searchContainer.getStart(), _searchContainer.getEnd()),
+			_dispatchTriggerLocalService.getDispatchTriggersCount(
+				dispatchRequestHelper.getCompanyId()));
 		_searchContainer.setRowChecker(getRowChecker());
-
-		int total = _dispatchTriggerLocalService.getDispatchTriggersCount(
-			_dispatchRequestHelper.getCompanyId());
-
-		_searchContainer.setTotal(total);
-
-		List<DispatchTrigger> results =
-			_dispatchTriggerLocalService.getDispatchTriggers(
-				_dispatchRequestHelper.getCompanyId(),
-				_searchContainer.getStart(), _searchContainer.getEnd());
-
-		_searchContainer.setResults(results);
 
 		return _searchContainer;
 	}
 
-	private final Format _dateFormatDateTime;
-	private final DispatchRequestHelper _dispatchRequestHelper;
+	public ViewTypeItemList getViewTypeItems() {
+		return new ViewTypeItemList(getPortletURL(), "list") {
+			{
+				addTableViewTypeItem();
+			}
+		};
+	}
+
+	public boolean isClusterModeSingle(String type) {
+		if (_dispatchTaskExecutorRegistry.isClusterModeSingle(type)) {
+			return true;
+		}
+
+		return false;
+	}
+
 	private final DispatchTaskExecutorRegistry _dispatchTaskExecutorRegistry;
 	private final DispatchTriggerLocalService _dispatchTriggerLocalService;
+	private final DispatchTriggerMetadataProvider
+		_dispatchTriggerMetadataProvider;
+	private String _orderByCol;
+	private String _orderByType;
 	private RowChecker _rowChecker;
 	private SearchContainer<DispatchTrigger> _searchContainer;
 

@@ -20,16 +20,17 @@ import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PluginSetting;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.service.BaseServiceImpl;
 import com.liferay.portal.kernel.service.PluginSettingService;
+import com.liferay.portal.kernel.service.PluginSettingServiceUtil;
 import com.liferay.portal.kernel.service.persistence.PluginSettingPersistence;
-import com.liferay.portal.kernel.service.persistence.RoleFinder;
-import com.liferay.portal.kernel.service.persistence.RolePersistence;
-import com.liferay.portal.kernel.service.persistence.UserFinder;
-import com.liferay.portal.kernel.service.persistence.UserPersistence;
 import com.liferay.portal.kernel.util.PortalUtil;
+
+import java.lang.reflect.Field;
 
 import javax.sql.DataSource;
 
@@ -51,7 +52,7 @@ public abstract class PluginSettingServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>PluginSettingService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.kernel.service.PluginSettingServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>PluginSettingService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>PluginSettingServiceUtil</code>.
 	 */
 
 	/**
@@ -140,231 +141,12 @@ public abstract class PluginSettingServiceBaseImpl
 		this.counterLocalService = counterLocalService;
 	}
 
-	/**
-	 * Returns the layout template local service.
-	 *
-	 * @return the layout template local service
-	 */
-	public com.liferay.portal.kernel.service.LayoutTemplateLocalService
-		getLayoutTemplateLocalService() {
-
-		return layoutTemplateLocalService;
-	}
-
-	/**
-	 * Sets the layout template local service.
-	 *
-	 * @param layoutTemplateLocalService the layout template local service
-	 */
-	public void setLayoutTemplateLocalService(
-		com.liferay.portal.kernel.service.LayoutTemplateLocalService
-			layoutTemplateLocalService) {
-
-		this.layoutTemplateLocalService = layoutTemplateLocalService;
-	}
-
-	/**
-	 * Returns the role local service.
-	 *
-	 * @return the role local service
-	 */
-	public com.liferay.portal.kernel.service.RoleLocalService
-		getRoleLocalService() {
-
-		return roleLocalService;
-	}
-
-	/**
-	 * Sets the role local service.
-	 *
-	 * @param roleLocalService the role local service
-	 */
-	public void setRoleLocalService(
-		com.liferay.portal.kernel.service.RoleLocalService roleLocalService) {
-
-		this.roleLocalService = roleLocalService;
-	}
-
-	/**
-	 * Returns the role remote service.
-	 *
-	 * @return the role remote service
-	 */
-	public com.liferay.portal.kernel.service.RoleService getRoleService() {
-		return roleService;
-	}
-
-	/**
-	 * Sets the role remote service.
-	 *
-	 * @param roleService the role remote service
-	 */
-	public void setRoleService(
-		com.liferay.portal.kernel.service.RoleService roleService) {
-
-		this.roleService = roleService;
-	}
-
-	/**
-	 * Returns the role persistence.
-	 *
-	 * @return the role persistence
-	 */
-	public RolePersistence getRolePersistence() {
-		return rolePersistence;
-	}
-
-	/**
-	 * Sets the role persistence.
-	 *
-	 * @param rolePersistence the role persistence
-	 */
-	public void setRolePersistence(RolePersistence rolePersistence) {
-		this.rolePersistence = rolePersistence;
-	}
-
-	/**
-	 * Returns the role finder.
-	 *
-	 * @return the role finder
-	 */
-	public RoleFinder getRoleFinder() {
-		return roleFinder;
-	}
-
-	/**
-	 * Sets the role finder.
-	 *
-	 * @param roleFinder the role finder
-	 */
-	public void setRoleFinder(RoleFinder roleFinder) {
-		this.roleFinder = roleFinder;
-	}
-
-	/**
-	 * Returns the theme local service.
-	 *
-	 * @return the theme local service
-	 */
-	public com.liferay.portal.kernel.service.ThemeLocalService
-		getThemeLocalService() {
-
-		return themeLocalService;
-	}
-
-	/**
-	 * Sets the theme local service.
-	 *
-	 * @param themeLocalService the theme local service
-	 */
-	public void setThemeLocalService(
-		com.liferay.portal.kernel.service.ThemeLocalService themeLocalService) {
-
-		this.themeLocalService = themeLocalService;
-	}
-
-	/**
-	 * Returns the theme remote service.
-	 *
-	 * @return the theme remote service
-	 */
-	public com.liferay.portal.kernel.service.ThemeService getThemeService() {
-		return themeService;
-	}
-
-	/**
-	 * Sets the theme remote service.
-	 *
-	 * @param themeService the theme remote service
-	 */
-	public void setThemeService(
-		com.liferay.portal.kernel.service.ThemeService themeService) {
-
-		this.themeService = themeService;
-	}
-
-	/**
-	 * Returns the user local service.
-	 *
-	 * @return the user local service
-	 */
-	public com.liferay.portal.kernel.service.UserLocalService
-		getUserLocalService() {
-
-		return userLocalService;
-	}
-
-	/**
-	 * Sets the user local service.
-	 *
-	 * @param userLocalService the user local service
-	 */
-	public void setUserLocalService(
-		com.liferay.portal.kernel.service.UserLocalService userLocalService) {
-
-		this.userLocalService = userLocalService;
-	}
-
-	/**
-	 * Returns the user remote service.
-	 *
-	 * @return the user remote service
-	 */
-	public com.liferay.portal.kernel.service.UserService getUserService() {
-		return userService;
-	}
-
-	/**
-	 * Sets the user remote service.
-	 *
-	 * @param userService the user remote service
-	 */
-	public void setUserService(
-		com.liferay.portal.kernel.service.UserService userService) {
-
-		this.userService = userService;
-	}
-
-	/**
-	 * Returns the user persistence.
-	 *
-	 * @return the user persistence
-	 */
-	public UserPersistence getUserPersistence() {
-		return userPersistence;
-	}
-
-	/**
-	 * Sets the user persistence.
-	 *
-	 * @param userPersistence the user persistence
-	 */
-	public void setUserPersistence(UserPersistence userPersistence) {
-		this.userPersistence = userPersistence;
-	}
-
-	/**
-	 * Returns the user finder.
-	 *
-	 * @return the user finder
-	 */
-	public UserFinder getUserFinder() {
-		return userFinder;
-	}
-
-	/**
-	 * Sets the user finder.
-	 *
-	 * @param userFinder the user finder
-	 */
-	public void setUserFinder(UserFinder userFinder) {
-		this.userFinder = userFinder;
-	}
-
 	public void afterPropertiesSet() {
+		_setServiceUtilService(pluginSettingService);
 	}
 
 	public void destroy() {
+		_setServiceUtilService(null);
 	}
 
 	/**
@@ -409,6 +191,22 @@ public abstract class PluginSettingServiceBaseImpl
 		}
 	}
 
+	private void _setServiceUtilService(
+		PluginSettingService pluginSettingService) {
+
+		try {
+			Field field = PluginSettingServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, pluginSettingService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@BeanReference(
 		type = com.liferay.portal.kernel.service.PluginSettingLocalService.class
 	)
@@ -427,49 +225,7 @@ public abstract class PluginSettingServiceBaseImpl
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@BeanReference(
-		type = com.liferay.portal.kernel.service.LayoutTemplateLocalService.class
-	)
-	protected com.liferay.portal.kernel.service.LayoutTemplateLocalService
-		layoutTemplateLocalService;
-
-	@BeanReference(
-		type = com.liferay.portal.kernel.service.RoleLocalService.class
-	)
-	protected com.liferay.portal.kernel.service.RoleLocalService
-		roleLocalService;
-
-	@BeanReference(type = com.liferay.portal.kernel.service.RoleService.class)
-	protected com.liferay.portal.kernel.service.RoleService roleService;
-
-	@BeanReference(type = RolePersistence.class)
-	protected RolePersistence rolePersistence;
-
-	@BeanReference(type = RoleFinder.class)
-	protected RoleFinder roleFinder;
-
-	@BeanReference(
-		type = com.liferay.portal.kernel.service.ThemeLocalService.class
-	)
-	protected com.liferay.portal.kernel.service.ThemeLocalService
-		themeLocalService;
-
-	@BeanReference(type = com.liferay.portal.kernel.service.ThemeService.class)
-	protected com.liferay.portal.kernel.service.ThemeService themeService;
-
-	@BeanReference(
-		type = com.liferay.portal.kernel.service.UserLocalService.class
-	)
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
-
-	@BeanReference(type = com.liferay.portal.kernel.service.UserService.class)
-	protected com.liferay.portal.kernel.service.UserService userService;
-
-	@BeanReference(type = UserPersistence.class)
-	protected UserPersistence userPersistence;
-
-	@BeanReference(type = UserFinder.class)
-	protected UserFinder userFinder;
+	private static final Log _log = LogFactoryUtil.getLog(
+		PluginSettingServiceBaseImpl.class);
 
 }

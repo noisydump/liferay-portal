@@ -59,7 +59,7 @@ public class WarehouseItemSerDes {
 		sb.append("{");
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+			"yyyy-MM-dd'T'HH:mm:ssXX");
 
 		if (warehouseItem.getExternalReferenceCode() != null) {
 			if (sb.length() > 1) {
@@ -180,7 +180,7 @@ public class WarehouseItemSerDes {
 		Map<String, String> map = new TreeMap<>();
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+			"yyyy-MM-dd'T'HH:mm:ssXX");
 
 		if (warehouseItem.getExternalReferenceCode() == null) {
 			map.put("externalReferenceCode", null);
@@ -320,9 +320,6 @@ public class WarehouseItemSerDes {
 						Long.valueOf((String)jsonParserFieldValue));
 				}
 			}
-			else if (jsonParserFieldName.equals("status")) {
-				throw new IllegalArgumentException();
-			}
 		}
 
 	}
@@ -351,7 +348,7 @@ public class WarehouseItemSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -387,7 +384,7 @@ public class WarehouseItemSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

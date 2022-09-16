@@ -27,6 +27,10 @@ public class VersionedEntryLocalServiceWrapper
 	implements ServiceWrapper<VersionedEntryLocalService>,
 			   VersionedEntryLocalService {
 
+	public VersionedEntryLocalServiceWrapper() {
+		this(null);
+	}
+
 	public VersionedEntryLocalServiceWrapper(
 		VersionedEntryLocalService versionedEntryLocalService) {
 
@@ -171,6 +175,13 @@ public class VersionedEntryLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _versionedEntryLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _versionedEntryLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -480,7 +491,7 @@ public class VersionedEntryLocalServiceWrapper
 	 * <strong>Important:</strong> Inspect VersionedEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
 	 * </p>
 	 *
-	 * @param versionedEntry the versioned entry
+	 * @param draftVersionedEntry the versioned entry
 	 * @return the versioned entry that was updated
 	 */
 	@Override

@@ -30,10 +30,13 @@
 WikiNode node = (WikiNode)request.getAttribute(WikiWebKeys.WIKI_NODE);
 WikiPage wikiPage = (WikiPage)request.getAttribute(WikiWebKeys.WIKI_PAGE);
 
-PortletURL portletURL = renderResponse.createActionURL();
-
-portletURL.setParameter("nodeId", String.valueOf(node.getNodeId()));
-portletURL.setParameter("title", wikiPage.getTitle());
+PortletURL portletURL = PortletURLBuilder.createActionURL(
+	renderResponse
+).setParameter(
+	"nodeId", node.getNodeId()
+).setParameter(
+	"title", wikiPage.getTitle()
+).buildPortletURL();
 
 PortalUtil.addPortletBreadcrumbEntry(request, wikiPage.getTitle(), portletURL.toString());
 
@@ -41,18 +44,23 @@ portletURL.setParameter(ActionRequest.ACTION_NAME, "/wiki/view_page_history");
 portletURL.setParameter("redirect", currentURL);
 
 PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(request, "history"), portletURL.toString());
-
-PortletURL iteratorURL = renderResponse.createRenderURL();
-
-iteratorURL.setParameter("mvcRenderCommandName", "/wiki/view_page_activities");
-iteratorURL.setParameter("redirect", currentURL);
-iteratorURL.setParameter("nodeId", String.valueOf(node.getNodeId()));
-iteratorURL.setParameter("title", wikiPage.getTitle());
 %>
 
 <div class="page-activities">
 	<liferay-ui:search-container
-		iteratorURL="<%= iteratorURL %>"
+		iteratorURL='<%=
+			PortletURLBuilder.createRenderURL(
+				renderResponse
+			).setMVCRenderCommandName(
+				"/wiki/view_page_activities"
+			).setRedirect(
+				currentURL
+			).setParameter(
+				"nodeId", node.getNodeId()
+			).setParameter(
+				"title", wikiPage.getTitle()
+			).buildPortletURL()
+		%>'
 		total="<%= SocialActivityLocalServiceUtil.getActivitiesCount(0, WikiPage.class.getName(), wikiPage.getResourcePrimKey()) %>"
 	>
 		<liferay-ui:search-container-results
@@ -144,6 +152,8 @@ iteratorURL.setParameter("title", wikiPage.getTitle());
 			</c:choose>
 		</liferay-ui:search-container-row>
 
-		<liferay-ui:search-iterator />
+		<liferay-ui:search-iterator
+			markupView="lexicon"
+		/>
 	</liferay-ui:search-container>
 </div>

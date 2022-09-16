@@ -1,14 +1,14 @@
 <?xml version="1.0"?>
-<!DOCTYPE routes PUBLIC "-//Liferay//DTD Friendly URL Routes 7.0.0//EN" "http://www.liferay.com/dtd/liferay-friendly-url-routes_7_0_0.dtd">
+<!DOCTYPE routes PUBLIC "-//Liferay//DTD Friendly URL Routes 7.4.0//EN" "http://www.liferay.com/dtd/liferay-friendly-url-routes_7_4_0.dtd">
 
 <routes>
 	<route>
-		<pattern>/{userIdAndInstanceId}/{type}/{urlTitle:(?!id/)[^/]+}/{groupId:\d+}</pattern>
+		<pattern>/{userIdAndInstanceId}/{type}/{%urlTitle:(?!id/)[^/]+}/{groupId:\d+}</pattern>
 		<implicit-parameter name="mvcPath">/view_content.jsp</implicit-parameter>
 		<implicit-parameter name="p_p_state">normal</implicit-parameter>
 	</route>
 	<route>
-		<pattern>/{userIdAndInstanceId}/{type}/{urlTitle:(?!id$)[^/]+}</pattern>
+		<pattern>/{userIdAndInstanceId}/{type}/{%urlTitle:(?!id$)[^/]+}</pattern>
 		<implicit-parameter name="mvcPath">/view_content.jsp</implicit-parameter>
 		<implicit-parameter name="p_p_state">normal</implicit-parameter>
 	</route>
@@ -18,11 +18,11 @@
 		<implicit-parameter name="p_p_state">normal</implicit-parameter>
 	</route>
 	<route>
-		<pattern>/{userIdAndInstanceId}/{type}/{urlTitle:(?!id/)[^/]+}/{groupId:\d+}/{p_p_state}</pattern>
+		<pattern>/{userIdAndInstanceId}/{type}/{%urlTitle:(?!id/)[^/]+}/{groupId:\d+}/{p_p_state}</pattern>
 		<implicit-parameter name="mvcPath">/view_content.jsp</implicit-parameter>
 	</route>
 	<route>
-		<pattern>/{userIdAndInstanceId}/{type}/{urlTitle:(?!id/)[^/]+}/{p_p_state}</pattern>
+		<pattern>/{userIdAndInstanceId}/{type}/{%urlTitle:(?!id/)[^/]+}/{p_p_state}</pattern>
 		<implicit-parameter name="mvcPath">/view_content.jsp</implicit-parameter>
 	</route>
 	<route>

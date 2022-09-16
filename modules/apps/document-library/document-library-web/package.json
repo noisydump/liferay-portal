@@ -1,21 +1,10 @@
 {
 	"dependencies": {
-		"@clayui/alert": "3.5.1",
-		"@clayui/button": "3.6.0",
-		"@clayui/css": "3.24.0",
-		"@clayui/form": "3.14.3",
-		"@clayui/icon": "3.1.0",
-		"@clayui/loading-indicator": "3.2.0",
-		"@clayui/modal": "3.8.4",
-		"asset-taglib": "*",
 		"clipboard": "2.0.4",
-		"frontend-js-react-web": "*",
-		"frontend-js-web": "*",
-		"prop-types": "15.7.2",
-		"react": "16.12.0",
-		"react-dom": "16.12.0"
+		"uuid": "^3.3.2"
 	},
-	"name": "document-library-web",
+	"main": "document_library/js/index.js",
+	"name": "@liferay/document-library-web",
 	"private": true,
 	"scripts": {
 		"build": "liferay-npm-scripts build",
@@ -23,5 +12,5 @@
 		"format": "liferay-npm-scripts fix",
 		"test": "liferay-npm-scripts test"
 	},
-	"version": "6.0.0"
+	"version": "6.0.105"
 }

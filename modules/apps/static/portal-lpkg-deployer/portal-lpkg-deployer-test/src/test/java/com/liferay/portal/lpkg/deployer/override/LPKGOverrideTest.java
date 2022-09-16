@@ -21,6 +21,7 @@ import com.liferay.portal.kernel.util.ReleaseInfo;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.SystemProperties;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.io.File;
 import java.io.IOException;
@@ -49,6 +50,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 import org.osgi.framework.Version;
@@ -58,9 +61,14 @@ import org.osgi.framework.Version;
  */
 public class LPKGOverrideTest {
 
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
 	@Test
 	public void testOverrideLPKG() throws IOException {
-		String liferayHome = System.getProperty("liferay.home");
+		String liferayHome = SystemProperties.get("liferay.home");
 
 		Assert.assertFalse(
 			"Missing system property \"liferay.home\"",
@@ -199,7 +207,7 @@ public class LPKGOverrideTest {
 			Path manifestPath = fileSystem.getPath("META-INF/MANIFEST.MF");
 
 			try (InputStream inputStream = Files.newInputStream(manifestPath);
-				UnsyncByteArrayOutputStream outputStream =
+				UnsyncByteArrayOutputStream unsyncByteArrayOutputStream =
 					new UnsyncByteArrayOutputStream()) {
 
 				Manifest manifest = new Manifest(inputStream);
@@ -224,10 +232,10 @@ public class LPKGOverrideTest {
 						versionString);
 				}
 
-				manifest.write(outputStream);
+				manifest.write(unsyncByteArrayOutputStream);
 
 				Files.write(
-					manifestPath, outputStream.toByteArray(),
+					manifestPath, unsyncByteArrayOutputStream.toByteArray(),
 					StandardOpenOption.TRUNCATE_EXISTING,
 					StandardOpenOption.WRITE);
 			}

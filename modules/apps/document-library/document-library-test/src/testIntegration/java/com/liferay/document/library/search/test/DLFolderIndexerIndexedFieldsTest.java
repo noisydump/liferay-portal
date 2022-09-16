@@ -15,13 +15,14 @@
 package com.liferay.document.library.search.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.asset.kernel.model.AssetEntry;
+import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.document.library.kernel.model.DLFolder;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.test.util.search.DLFolderSearchFixture;
 import com.liferay.petra.string.CharPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
@@ -31,7 +32,9 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.search.searcher.SearchResponse;
 import com.liferay.portal.search.test.util.FieldValuesAssert;
+import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
@@ -101,16 +104,15 @@ public class DLFolderIndexerIndexedFieldsTest extends BaseDLIndexerTestCase {
 			parentFolder.getFolderId(), folderName,
 			RandomTestUtil.randomString(), serviceContext);
 
-		Document document = dlSearchFixture.searchOnlyOne(
-			folderName, LocaleUtil.US);
-
-		indexedFieldsFixture.postProcessDocument(document);
+		SearchResponse searchResponse =
+			dlSearchFixture.searchOnlyOneSearchResponse(
+				folderName, LocaleUtil.US);
 
 		Map<String, String> map = new HashMap<>();
 
 		populateExpectedFieldValues(childFolder, map);
 
-		FieldValuesAssert.assertFieldValues(map, document, folderName);
+		FieldValuesAssert.assertFieldValues(map, searchResponse);
 	}
 
 	protected ServiceContext getServiceContext() {
@@ -138,6 +140,8 @@ public class DLFolderIndexerIndexedFieldsTest extends BaseDLIndexerTestCase {
 			DLFolder dlFolder, Map<String, String> map)
 		throws Exception {
 
+		map.put(
+			Field.ASSET_ENTRY_ID, String.valueOf(_getAssetEntryId(dlFolder)));
 		map.put(Field.COMPANY_ID, String.valueOf(dlFolder.getCompanyId()));
 		map.put(Field.DESCRIPTION, dlFolder.getDescription());
 		map.put(Field.ENTRY_CLASS_NAME, dlFolder.getModelClassName());
@@ -154,7 +158,9 @@ public class DLFolderIndexerIndexedFieldsTest extends BaseDLIndexerTestCase {
 			StringUtil.lowerCase(dlFolder.getName()));
 		map.put(Field.USER_ID, String.valueOf(dlFolder.getUserId()));
 		map.put(Field.USER_NAME, StringUtil.lowerCase(dlFolder.getUserName()));
-
+		map.put(
+			"assetEntryId_sortable",
+			String.valueOf(_getAssetEntryId(dlFolder)));
 		map.put("visible", "true");
 
 		populateDates(dlFolder, map);
@@ -207,6 +213,20 @@ public class DLFolderIndexerIndexedFieldsTest extends BaseDLIndexerTestCase {
 
 	protected DLFolderSearchFixture dlFolderSearchFixture;
 
+	private long _getAssetEntryId(DLFolder dlFolder) {
+		AssetEntry assetEntry = _assetEntryLocalService.fetchEntry(
+			DLFolder.class.getName(), dlFolder.getFolderId());
+
+		if (assetEntry == null) {
+			return 0;
+		}
+
+		return assetEntry.getEntryId();
+	}
+
 	private static final int _FOLDER_NAME_MAX_LENGTH = 100;
+
+	@Inject
+	private AssetEntryLocalService _assetEntryLocalService;
 
 }

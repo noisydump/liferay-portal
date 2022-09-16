@@ -16,6 +16,7 @@ package com.liferay.change.tracking.service.base;
 
 import com.liferay.change.tracking.model.CTSchemaVersion;
 import com.liferay.change.tracking.service.CTSchemaVersionLocalService;
+import com.liferay.change.tracking.service.CTSchemaVersionLocalServiceUtil;
 import com.liferay.change.tracking.service.persistence.CTSchemaVersionPersistence;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.aop.AopService;
@@ -31,6 +32,8 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -44,10 +47,13 @@ import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -69,7 +75,7 @@ public abstract class CTSchemaVersionLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>CTSchemaVersionLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.change.tracking.service.CTSchemaVersionLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>CTSchemaVersionLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>CTSchemaVersionLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -142,6 +148,13 @@ public abstract class CTSchemaVersionLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return ctSchemaVersionPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -310,6 +323,11 @@ public abstract class CTSchemaVersionLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement CTSchemaVersionLocalServiceImpl#deleteCTSchemaVersion(CTSchemaVersion) to avoid orphaned data");
+		}
+
 		return ctSchemaVersionLocalService.deleteCTSchemaVersion(
 			(CTSchemaVersion)persistedModel);
 	}
@@ -373,6 +391,11 @@ public abstract class CTSchemaVersionLocalServiceBaseImpl
 		return ctSchemaVersionPersistence.update(ctSchemaVersion);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -384,6 +407,8 @@ public abstract class CTSchemaVersionLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		ctSchemaVersionLocalService = (CTSchemaVersionLocalService)aopProxy;
+
+		_setLocalServiceUtilService(ctSchemaVersionLocalService);
 	}
 
 	/**
@@ -428,6 +453,23 @@ public abstract class CTSchemaVersionLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		CTSchemaVersionLocalService ctSchemaVersionLocalService) {
+
+		try {
+			Field field =
+				CTSchemaVersionLocalServiceUtil.class.getDeclaredField(
+					"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, ctSchemaVersionLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected CTSchemaVersionLocalService ctSchemaVersionLocalService;
 
 	@Reference
@@ -437,8 +479,7 @@ public abstract class CTSchemaVersionLocalServiceBaseImpl
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@Reference
-	protected com.liferay.portal.kernel.service.ReleaseLocalService
-		releaseLocalService;
+	private static final Log _log = LogFactoryUtil.getLog(
+		CTSchemaVersionLocalServiceBaseImpl.class);
 
 }

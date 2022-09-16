@@ -14,18 +14,28 @@
 
 package com.liferay.portal.minifier;
 
+import com.liferay.osgi.service.tracker.collections.map.ServiceReferenceMapper;
+import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
+import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.petra.io.unsync.UnsyncStringReader;
 import com.liferay.petra.io.unsync.UnsyncStringWriter;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.internal.minifier.MinifierThreadLocal;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.module.util.SystemBundleUtil;
+import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.ServiceProxyFactory;
 import com.liferay.portal.util.PropsValues;
-import com.liferay.registry.Registry;
-import com.liferay.registry.RegistryUtil;
-import com.liferay.registry.ServiceTracker;
+
+import javax.servlet.ServletContext;
 
 import org.apache.commons.lang.time.StopWatch;
+
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 
 /**
  * @author Brian Wing Shun Chan
@@ -50,6 +60,32 @@ public class MinifierUtil {
 		}
 
 		return content;
+	}
+
+	private static String _getServletContextPath(String resourceName) {
+		String pathModule = Portal.PATH_MODULE;
+
+		int i = resourceName.indexOf(StringPool.SLASH, pathModule.length() + 1);
+
+		if (i == -1) {
+			return StringPool.BLANK;
+		}
+
+		return resourceName.substring(0, i);
+	}
+
+	private static boolean _isLiferayResource(String resourceName) {
+		if (resourceName.startsWith(Portal.PATH_MODULE + "/admin-theme/") ||
+			resourceName.startsWith(Portal.PATH_MODULE + "/classic-theme/") ||
+			resourceName.startsWith(
+				Portal.PATH_MODULE + "/js/resolved-module/") ||
+			_liferayServletContextsMap.containsKey(
+				_getServletContextPath(resourceName))) {
+
+			return true;
+		}
+
+		return false;
 	}
 
 	private static String _minifyCss(String content) {
@@ -96,10 +132,9 @@ public class MinifierUtil {
 	private static String _minifyJavaScript(
 		String resourceName, String content) {
 
-		JavaScriptMinifier javaScriptMinifier =
-			_javaScriptMinifierServiceTracker.getService();
+		JavaScriptMinifier javaScriptMinifier = _javaScriptMinifier;
 
-		if (javaScriptMinifier == null) {
+		if ((javaScriptMinifier == null) || _isLiferayResource(resourceName)) {
 			return content;
 		}
 
@@ -134,16 +169,47 @@ public class MinifierUtil {
 
 	private static final Log _log = LogFactoryUtil.getLog(MinifierUtil.class);
 
-	private static final ServiceTracker<JavaScriptMinifier, JavaScriptMinifier>
-		_javaScriptMinifierServiceTracker;
+	private static volatile JavaScriptMinifier _javaScriptMinifier =
+		ServiceProxyFactory.newServiceTrackedInstance(
+			JavaScriptMinifier.class, MinifierUtil.class, "_javaScriptMinifier",
+			false, true);
+	private static final ServiceTrackerMap<String, ServletContext>
+		_liferayServletContextsMap;
 
 	static {
-		Registry registry = RegistryUtil.getRegistry();
+		_liferayServletContextsMap =
+			ServiceTrackerMapFactory.openSingleValueMap(
+				SystemBundleUtil.getBundleContext(), ServletContext.class, null,
+				new ServiceReferenceMapper<String, ServletContext>() {
 
-		_javaScriptMinifierServiceTracker = registry.trackServices(
-			JavaScriptMinifier.class);
+					@Override
+					public void map(
+						ServiceReference<ServletContext> serviceReference,
+						Emitter<String> emitter) {
 
-		_javaScriptMinifierServiceTracker.open();
+						Bundle bundle = serviceReference.getBundle();
+
+						String symbolicName = bundle.getSymbolicName();
+
+						if (!symbolicName.startsWith("com.liferay.")) {
+							return;
+						}
+
+						BundleContext bundleContext =
+							SystemBundleUtil.getBundleContext();
+
+						ServletContext servletContext =
+							bundleContext.getService(serviceReference);
+
+						try {
+							emitter.emit(servletContext.getContextPath());
+						}
+						finally {
+							bundleContext.ungetService(serviceReference);
+						}
+					}
+
+				});
 	}
 
 }

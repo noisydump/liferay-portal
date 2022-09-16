@@ -14,7 +14,7 @@
 
 import ClayIcon from '@clayui/icon';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
-import {useEventListener} from 'frontend-js-react-web';
+import {useEventListener} from '@liferay/frontend-js-react-web';
 import {openToast} from 'frontend-js-web';
 import React, {useEffect, useState} from 'react';
 
@@ -25,7 +25,7 @@ const LoadingText = ({children}) => (
 		<span className="d-none d-sm-block m-0 navbar-text page-editor__status-bar text-info">
 			{children}
 		</span>
-		<ClayLoadingIndicator className={'my-0'} small />
+		<ClayLoadingIndicator className="my-0" small />
 	</>
 );
 
@@ -34,7 +34,7 @@ const SuccessText = ({children}) => (
 		<span className="d-none d-sm-block m-0 navbar-text page-editor__status-bar text-success">
 			{children}
 		</span>
-		<ClayIcon className={'text-success'} symbol={'check-circle'} />
+		<ClayIcon className="text-success" symbol="check-circle" />
 	</>
 );
 

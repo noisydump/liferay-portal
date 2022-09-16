@@ -68,148 +68,174 @@ if (ddlDisplayContext.isAdminPortlet()) {
 	<portlet:param name="mvcPath" value="/edit_record_set.jsp" />
 </portlet:actionURL>
 
-<aui:form action="<%= (recordSet == null) ? addRecordSetURL : updateRecordSetURL %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "saveRecordSet();" %>'>
-	<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
-	<aui:input name="closeRedirect" type="hidden" value="<%= closeRedirect %>" />
-	<aui:input name="portletResource" type="hidden" value="<%= portletResource %>" />
-	<aui:input name="groupId" type="hidden" value="<%= groupId %>" />
-	<aui:input name="recordSetId" type="hidden" value="<%= recordSetId %>" />
-	<aui:input name="ddmStructureId" type="hidden" value="<%= ddmStructureId %>" />
-	<aui:input name="scope" type="hidden" value="<%= DDLRecordSetConstants.SCOPE_DYNAMIC_DATA_LISTS %>" />
+<clay:container-fluid
+	cssClass="container-form-lg"
+>
+	<aui:form action="<%= (recordSet == null) ? addRecordSetURL : updateRecordSetURL %>" method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "saveRecordSet();" %>'>
+		<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
+		<aui:input name="closeRedirect" type="hidden" value="<%= closeRedirect %>" />
+		<aui:input name="portletResource" type="hidden" value="<%= portletResource %>" />
+		<aui:input name="groupId" type="hidden" value="<%= groupId %>" />
+		<aui:input name="recordSetId" type="hidden" value="<%= recordSetId %>" />
+		<aui:input name="ddmStructureId" type="hidden" value="<%= ddmStructureId %>" />
+		<aui:input name="scope" type="hidden" value="<%= DDLRecordSetConstants.SCOPE_DYNAMIC_DATA_LISTS %>" />
 
-	<liferay-ui:error exception="<%= RecordSetDDMStructureIdException.class %>" message="please-enter-a-valid-definition" />
-	<liferay-ui:error exception="<%= RecordSetNameException.class %>" message="please-enter-a-valid-name" />
+		<liferay-ui:error exception="<%= RecordSetDDMStructureIdException.class %>" message="please-enter-a-valid-definition" />
+		<liferay-ui:error exception="<%= RecordSetNameException.class %>" message="please-enter-a-valid-name" />
 
-	<liferay-asset:asset-categories-error />
+		<liferay-asset:asset-categories-error />
 
-	<liferay-asset:asset-tags-error />
+		<liferay-asset:asset-tags-error />
 
-	<aui:model-context bean="<%= recordSet %>" model="<%= DDLRecordSet.class %>" />
+		<aui:model-context bean="<%= recordSet %>" model="<%= DDLRecordSet.class %>" />
 
-	<aui:fieldset-group markupView="lexicon">
-		<aui:fieldset>
-			<c:if test="<%= (recordSet != null) && (DDMStorageLinkLocalServiceUtil.getStructureStorageLinksCount(recordSet.getDDMStructureId()) > 0) %>">
-				<div class="alert alert-warning">
-					<liferay-ui:message key="updating-the-data-definition-may-cause-data-loss" />
+		<aui:fieldset-group markupView="lexicon">
+			<aui:fieldset>
+				<c:if test="<%= (recordSet != null) && (DDMStorageLinkLocalServiceUtil.getStructureStorageLinksCount(recordSet.getDDMStructureId()) > 0) %>">
+					<div class="alert alert-warning">
+						<liferay-ui:message key="updating-the-data-definition-may-cause-data-loss" />
+					</div>
+				</c:if>
+
+				<aui:input autoFocus="<%= windowState.equals(WindowState.MAXIMIZED) %>" name="name" />
+
+				<aui:input name="description" />
+
+				<div class="form-group">
+					<aui:input label="data-definition" name="ddmStructureNameDisplay" required="<%= true %>" type="resource" value="<%= ddmStructureName %>" />
+
+					<liferay-ui:icon
+						cssClass="open-record-set-modal"
+						label="<%= true %>"
+						linkCssClass="btn btn-secondary"
+						message="select"
+						url="javascript:void(0);"
+					/>
 				</div>
-			</c:if>
 
-			<aui:input autoFocus="<%= windowState.equals(WindowState.MAXIMIZED) %>" name="name" />
+				<c:if test="<%= WorkflowEngineManagerUtil.isDeployed() && (WorkflowHandlerRegistryUtil.getWorkflowHandler(DDLRecord.class.getName()) != null) && !scopeGroup.isLayoutSetPrototype() %>">
+					<aui:select label="workflow" name="workflowDefinition">
 
-			<aui:input name="description" />
+						<%
+						WorkflowDefinitionLink workflowDefinitionLink = null;
 
-			<div class="form-group">
-				<aui:input label="data-definition" name="ddmStructureNameDisplay" required="<%= true %>" type="resource" value="<%= ddmStructureName %>" />
-
-				<liferay-ui:icon
-					label="<%= true %>"
-					linkCssClass="btn btn-secondary"
-					message="select"
-					url='<%= "javascript:" + liferayPortletResponse.getNamespace() + "openDDMStructureSelector();" %>'
-				/>
-			</div>
-
-			<c:if test="<%= WorkflowEngineManagerUtil.isDeployed() && (WorkflowHandlerRegistryUtil.getWorkflowHandler(DDLRecord.class.getName()) != null) && !scopeGroup.isLayoutSetPrototype() %>">
-				<aui:select label="workflow" name="workflowDefinition">
-
-					<%
-					WorkflowDefinitionLink workflowDefinitionLink = null;
-
-					try {
-						workflowDefinitionLink = WorkflowDefinitionLinkLocalServiceUtil.getWorkflowDefinitionLink(company.getCompanyId(), themeDisplay.getScopeGroupId(), DDLRecordSet.class.getName(), recordSetId, 0, true);
-					}
-					catch (NoSuchWorkflowDefinitionLinkException nswdle) {
-					}
-					%>
-
-					<aui:option><liferay-ui:message key="no-workflow" /></aui:option>
-
-					<%
-					List<WorkflowDefinition> workflowDefinitions = WorkflowDefinitionManagerUtil.getActiveWorkflowDefinitions(company.getCompanyId(), QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
-
-					for (WorkflowDefinition workflowDefinition : workflowDefinitions) {
-						boolean selected = false;
-
-						if ((workflowDefinitionLink != null) && Objects.equals(workflowDefinitionLink.getWorkflowDefinitionName(), workflowDefinition.getName()) && (workflowDefinitionLink.getWorkflowDefinitionVersion() == workflowDefinition.getVersion())) {
-							selected = true;
+						try {
+							workflowDefinitionLink = WorkflowDefinitionLinkLocalServiceUtil.getWorkflowDefinitionLink(company.getCompanyId(), themeDisplay.getScopeGroupId(), DDLRecordSet.class.getName(), recordSetId, 0, true);
 						}
-					%>
+						catch (NoSuchWorkflowDefinitionLinkException nswdle) {
+						}
+						%>
 
-						<aui:option label="<%= HtmlUtil.escape(workflowDefinition.getTitle(languageId)) %>" selected="<%= selected %>" value="<%= HtmlUtil.escapeAttribute(workflowDefinition.getName()) + StringPool.AT + workflowDefinition.getVersion() %>" />
+						<aui:option><liferay-ui:message key="no-workflow" /></aui:option>
 
-					<%
-					}
-					%>
+						<%
+						List<WorkflowDefinition> workflowDefinitions = WorkflowDefinitionManagerUtil.getActiveWorkflowDefinitions(company.getCompanyId(), QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 
-				</aui:select>
-			</c:if>
-		</aui:fieldset>
+						for (WorkflowDefinition workflowDefinition : workflowDefinitions) {
+							boolean selected = false;
 
-		<c:if test="<%= recordSet == null %>">
-			<aui:fieldset collapsed="<%= true %>" collapsible="<%= true %>" label="permissions">
-				<liferay-ui:input-permissions
-					modelName="<%= DDLRecordSet.class.getName() %>"
-				/>
+							if ((workflowDefinitionLink != null) && Objects.equals(workflowDefinitionLink.getWorkflowDefinitionName(), workflowDefinition.getName()) && (workflowDefinitionLink.getWorkflowDefinitionVersion() == workflowDefinition.getVersion())) {
+								selected = true;
+							}
+						%>
+
+							<aui:option label="<%= HtmlUtil.escape(workflowDefinition.getTitle(languageId)) %>" selected="<%= selected %>" value="<%= HtmlUtil.escapeAttribute(workflowDefinition.getName()) + StringPool.AT + workflowDefinition.getVersion() %>" />
+
+						<%
+						}
+						%>
+
+					</aui:select>
+				</c:if>
 			</aui:fieldset>
-		</c:if>
-	</aui:fieldset-group>
 
-	<aui:button-row>
-		<aui:button name="saveButton" type="submit" value="save" />
+			<c:if test="<%= recordSet == null %>">
+				<aui:fieldset collapsed="<%= true %>" collapsible="<%= true %>" label="permissions">
+					<liferay-ui:input-permissions
+						modelName="<%= DDLRecordSet.class.getName() %>"
+					/>
+				</aui:fieldset>
+			</c:if>
 
-		<aui:button href="<%= redirect %>" name="cancelButton" type="cancel" />
-	</aui:button-row>
-</aui:form>
+			<div class="sheet-footer">
+				<aui:button name="saveButton" type="submit" value="save" />
+
+				<aui:button href="<%= redirect %>" name="cancelButton" type="cancel" />
+			</div>
+		</aui:fieldset-group>
+	</aui:form>
+</clay:container-fluid>
 
 <aui:script>
-	var form = document.<portlet:namespace />fm;
 
-	function <portlet:namespace />openDDMStructureSelector() {
-		Liferay.Util.openDDMPortlet(
-			{
-				basePortletURL:
-					'<%= PortletURLFactoryUtil.create(request, PortletProviderUtil.getPortletId(DDMStructure.class.getName(), PortletProvider.Action.VIEW), PortletRequest.RENDER_PHASE) %>',
-				classPK: <%= ddmStructureId %>,
-				dialog: {
-					destroyOnHide: true,
-				},
-				eventName: '<portlet:namespace />selectDDMStructure',
-				groupId: <%= groupId %>,
-				mvcPath: '/select_structure.jsp',
-				navigationStartsOn: '<%= DDMNavigationHelper.SELECT_STRUCTURE %>',
+	<%
+	Portlet portlet = PortletLocalServiceUtil.getPortletById(portletDisplay.getId());
+	%>
 
-				<%
-				Portlet portlet = PortletLocalServiceUtil.getPortletById(portletDisplay.getId());
-				%>
-
-				refererPortletName: '<%= portlet.getPortletName() %>',
-				refererWebDAVToken: '<%= WebDAVUtil.getStorageToken(portlet) %>',
-				showAncestorScopes: true,
-				title:
-					'<%= UnicodeLanguageUtil.get(request, "data-definitions") %>',
-			},
-			function (event) {
-				Liferay.Util.setFormValues(form, {
-					ddmStructureId: event.ddmstructureid,
-					ddmStructureNameDisplay: Liferay.Util.unescape(event.name),
-				});
-			}
-		);
-	}
+	<liferay-frontend:component
+		context='<%=
+			HashMapBuilder.<String, Object>put(
+				"itemSelectorURL",
+				PortletURLBuilder.create(
+					PortletURLFactoryUtil.create(request, PortletProviderUtil.getPortletId(DDMStructure.class.getName(), PortletProvider.Action.VIEW), themeDisplay.getPlid(), PortletRequest.RENDER_PHASE)
+				).setMVCPath(
+					"/select_structure.jsp"
+				).setParameter(
+					"classNameId", PortalUtil.getClassNameId(DDMStructure.class)
+				).setParameter(
+					"classPK", ddmStructureId
+				).setParameter(
+					"groupId", groupId
+				).setParameter(
+					"navigationStartsOn", DDMNavigationHelper.SELECT_STRUCTURE
+				).setParameter(
+					"portletResourceNamespace", liferayPortletResponse.getNamespace()
+				).setParameter(
+					"refererPortletName", portlet.getPortletName()
+				).setParameter(
+					"refererWebDAVToken", WebDAVUtil.getStorageToken(portlet)
+				).setParameter(
+					"showAncestorScopes", true
+				).setParameter(
+					"showBackURL", false
+				).setParameter(
+					"showHeader", false
+				).setParameter(
+					"structureAvailableFields", liferayPortletResponse.getNamespace() + "getAvailableFields"
+				).setWindowState(
+					LiferayWindowState.POP_UP
+				).buildString()
+			).put(
+				"portletNamespace", liferayPortletResponse.getNamespace()
+			).put(
+				"selectEventName", "<portlet:namespace />selectDDMStructure"
+			).build()
+		%>'
+		module="js/EditRecordSetStructureSelector"
+	/>
 
 	function <portlet:namespace />saveRecordSet() {
+		var form = document.<portlet:namespace />fm;
+
+		if (!form) {
+			return;
+		}
+
 		submitForm(form);
 	}
 </aui:script>
 
 <%
 if (recordSet != null) {
-	PortletURL portletURL = renderResponse.createRenderURL();
-
-	portletURL.setParameter("mvcPath", "/edit_record_set.jsp");
-	portletURL.setParameter("recordSetId", String.valueOf(recordSet.getRecordSetId()));
-
-	PortalUtil.addPortletBreadcrumbEntry(request, recordSet.getName(locale), portletURL.toString());
+	PortalUtil.addPortletBreadcrumbEntry(
+		request, recordSet.getName(locale),
+		PortletURLBuilder.createRenderURL(
+			renderResponse
+		).setMVCPath(
+			"/edit_record_set.jsp"
+		).setParameter(
+			"recordSetId", recordSet.getRecordSetId()
+		).buildString());
 
 	PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(request, "edit"), currentURL);
 }

@@ -16,27 +16,26 @@ package com.liferay.dynamic.data.mapping.service.base;
 
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.service.DDMStructureService;
-import com.liferay.dynamic.data.mapping.service.persistence.DDMDataProviderInstanceLinkPersistence;
+import com.liferay.dynamic.data.mapping.service.DDMStructureServiceUtil;
 import com.liferay.dynamic.data.mapping.service.persistence.DDMStructureFinder;
-import com.liferay.dynamic.data.mapping.service.persistence.DDMStructureLayoutPersistence;
-import com.liferay.dynamic.data.mapping.service.persistence.DDMStructureLinkFinder;
-import com.liferay.dynamic.data.mapping.service.persistence.DDMStructureLinkPersistence;
 import com.liferay.dynamic.data.mapping.service.persistence.DDMStructurePersistence;
-import com.liferay.dynamic.data.mapping.service.persistence.DDMStructureVersionPersistence;
-import com.liferay.dynamic.data.mapping.service.persistence.DDMTemplateFinder;
-import com.liferay.dynamic.data.mapping.service.persistence.DDMTemplatePersistence;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.service.BaseServiceImpl;
 import com.liferay.portal.kernel.util.PortalUtil;
 
+import java.lang.reflect.Field;
+
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -57,8 +56,13 @@ public abstract class DDMStructureServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>DDMStructureService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.dynamic.data.mapping.service.DDMStructureServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>DDMStructureService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>DDMStructureServiceUtil</code>.
 	 */
+	@Deactivate
+	protected void deactivate() {
+		_setServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -69,6 +73,8 @@ public abstract class DDMStructureServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		ddmStructureService = (DDMStructureService)aopProxy;
+
+		_setServiceUtilService(ddmStructureService);
 	}
 
 	/**
@@ -113,6 +119,22 @@ public abstract class DDMStructureServiceBaseImpl
 		}
 	}
 
+	private void _setServiceUtilService(
+		DDMStructureService ddmStructureService) {
+
+		try {
+			Field field = DDMStructureServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, ddmStructureService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@Reference
 	protected com.liferay.dynamic.data.mapping.service.DDMStructureLocalService
 		ddmStructureLocalService;
@@ -129,45 +151,7 @@ public abstract class DDMStructureServiceBaseImpl
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@Reference
-	protected DDMDataProviderInstanceLinkPersistence
-		ddmDataProviderInstanceLinkPersistence;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.ClassNameLocalService
-		classNameLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.ClassNameService
-		classNameService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.ResourceLocalService
-		resourceLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserService userService;
-
-	@Reference
-	protected DDMStructureLayoutPersistence ddmStructureLayoutPersistence;
-
-	@Reference
-	protected DDMStructureLinkPersistence ddmStructureLinkPersistence;
-
-	@Reference
-	protected DDMStructureLinkFinder ddmStructureLinkFinder;
-
-	@Reference
-	protected DDMStructureVersionPersistence ddmStructureVersionPersistence;
-
-	@Reference
-	protected DDMTemplatePersistence ddmTemplatePersistence;
-
-	@Reference
-	protected DDMTemplateFinder ddmTemplateFinder;
+	private static final Log _log = LogFactoryUtil.getLog(
+		DDMStructureServiceBaseImpl.class);
 
 }

@@ -28,3 +28,14 @@ UnicodeProperties layoutSetTypeSettings = selLayoutSet.getSettingsProperties();
 />
 
 <aui:input label="paste-javascript-code-that-is-executed-at-the-bottom-of-every-page" name="TypeSettingsProperties--javascript--" placeholder="javascript" type="textarea" value='<%= layoutSetTypeSettings.getProperty("javascript") %>' wrap="soft" />
+
+<%
+LayoutLookAndFeelDisplayContext layoutLookAndFeelDisplayContext = new LayoutLookAndFeelDisplayContext(request, layoutsAdminDisplayContext, liferayPortletResponse);
+%>
+
+<clay:sheet-section>
+	<react:component
+		module="js/layout/look_and_feel/GlobalJSCETsConfiguration"
+		props="<%= layoutLookAndFeelDisplayContext.getGlobalJSCETsConfigurationProps(LayoutSet.class.getName(), selLayoutSet.getLayoutSetId()) %>"
+	/>
+</clay:sheet-section>

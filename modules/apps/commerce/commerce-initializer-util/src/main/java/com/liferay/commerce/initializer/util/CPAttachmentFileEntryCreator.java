@@ -19,22 +19,23 @@ import com.liferay.commerce.product.service.CPAttachmentFileEntryLocalService;
 import com.liferay.document.library.kernel.exception.NoSuchFileEntryException;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.service.DLAppService;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.ClassedModel;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.repository.Repository;
+import com.liferay.portal.kernel.repository.RepositoryProvider;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.kernel.util.FileUtil;
-import com.liferay.portal.kernel.util.FriendlyURLNormalizer;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.MimeTypes;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.kernel.util.TempFileEntryUtil;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
@@ -69,9 +70,11 @@ public class CPAttachmentFileEntryCreator {
 
 		ServiceContext serviceContext = new ServiceContext();
 
+		serviceContext.setAddGroupPermissions(true);
+		serviceContext.setAddGuestPermissions(true);
+		serviceContext.setCompanyId(user.getCompanyId());
 		serviceContext.setScopeGroupId(scopeGroupId);
 		serviceContext.setUserId(userId);
-		serviceContext.setCompanyId(user.getCompanyId());
 
 		Map<Locale, String> titleMap = HashMapBuilder.put(
 			serviceContext.getLocale(), fileName
@@ -115,15 +118,19 @@ public class CPAttachmentFileEntryCreator {
 		}
 		catch (NoSuchFileEntryException noSuchFileEntryException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(noSuchFileEntryException, noSuchFileEntryException);
+				_log.debug(noSuchFileEntryException);
 			}
+
+			Repository repository = _repositoryProvider.getRepository(
+				serviceContext.getScopeGroupId());
 
 			file = FileUtil.createTempFile(inputStream);
 
-			fileEntry = TempFileEntryUtil.addTempFileEntry(
-				serviceContext.getScopeGroupId(), serviceContext.getUserId(),
-				_TEMP_FOLDER_NAME, fileName, file,
-				_mimeTypes.getContentType(file));
+			fileEntry = _dlAppService.addFileEntry(
+				null, repository.getRepositoryId(),
+				DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, fileName,
+				_mimeTypes.getContentType(file), fileName, null, null, null,
+				file, null, null, serviceContext);
 		}
 		finally {
 			if (file != null) {
@@ -168,18 +175,15 @@ public class CPAttachmentFileEntryCreator {
 		long classPK = GetterUtil.getLong(classedModel.getPrimaryKeyObj());
 
 		return _cpAttachmentFileEntryLocalService.addCPAttachmentFileEntry(
-			serviceContext.getUserId(), fileEntry.getGroupId(),
+			StringPool.BLANK, serviceContext.getUserId(),
+			fileEntry.getGroupId(),
 			_portal.getClassNameId(classedModel.getModelClass()), classPK,
-			fileEntry.getFileEntryId(), displayDateMonth, displayDateDay,
-			displayDateYear, displayDateHour, displayDateMinute,
+			fileEntry.getFileEntryId(), false, null, displayDateMonth,
+			displayDateDay, displayDateYear, displayDateHour, displayDateMinute,
 			expirationDateMonth, expirationDateDay, expirationDateYear,
 			expirationDateHour, expirationDateMinute, true, titleMap, null,
-			priority, type, _friendlyURLNormalizer.normalize(fileName),
-			serviceContext);
+			priority, type, serviceContext);
 	}
-
-	private static final String _TEMP_FOLDER_NAME =
-		CPAttachmentFileEntryCreator.class.getName();
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		CPAttachmentFileEntryCreator.class);
@@ -192,13 +196,13 @@ public class CPAttachmentFileEntryCreator {
 	private DLAppService _dlAppService;
 
 	@Reference
-	private FriendlyURLNormalizer _friendlyURLNormalizer;
-
-	@Reference
 	private MimeTypes _mimeTypes;
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private RepositoryProvider _repositoryProvider;
 
 	@Reference
 	private UserLocalService _userLocalService;

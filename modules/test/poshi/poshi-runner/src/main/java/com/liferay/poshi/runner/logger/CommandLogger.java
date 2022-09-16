@@ -15,19 +15,27 @@
 package com.liferay.poshi.runner.logger;
 
 import com.liferay.poshi.core.PoshiContext;
-import com.liferay.poshi.core.PoshiGetterUtil;
 import com.liferay.poshi.core.PoshiStackTraceUtil;
 import com.liferay.poshi.core.PoshiVariablesUtil;
+import com.liferay.poshi.core.selenium.LiferaySelenium;
 import com.liferay.poshi.core.util.FileUtil;
 import com.liferay.poshi.core.util.GetterUtil;
+import com.liferay.poshi.core.util.PropsValues;
 import com.liferay.poshi.core.util.StringUtil;
 import com.liferay.poshi.core.util.Validator;
 import com.liferay.poshi.runner.exception.PoshiRunnerLoggerException;
-import com.liferay.poshi.runner.selenium.LiferaySeleniumUtil;
+import com.liferay.poshi.runner.selenium.SeleniumUtil;
 import com.liferay.poshi.runner.util.HtmlUtil;
+
+import java.io.IOException;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Properties;
 
 import org.dom4j.Element;
 
@@ -43,6 +51,32 @@ public final class CommandLogger {
 		_commandLogLoggerElement.setAttribute("data-logid", "01");
 		_commandLogLoggerElement.setClassName("collapse command-log");
 		_commandLogLoggerElement.setName("ul");
+	}
+
+	public void copyOcularImage(
+			String imageName, String filePath, int detailsLinkId)
+		throws IOException {
+
+		Path sourcePath = Paths.get(
+			PropsValues.TEST_DEPENDENCIES_DIR_NAME + "/ocular/" + imageName +
+				"/" + filePath);
+
+		String testClassCommandName =
+			PoshiContext.getTestCaseNamespacedClassCommandName();
+
+		testClassCommandName = StringUtil.replace(
+			testClassCommandName, "#", "_");
+
+		Path targetPath = Paths.get(
+			"test-results/" + testClassCommandName + "/screenshots/" +
+				imageName + detailsLinkId + ".jpg");
+
+		try {
+			Files.copy(sourcePath, targetPath);
+		}
+		catch (IOException ioException) {
+			throw ioException;
+		}
 	}
 
 	public void failCommand(Element element, SyntaxLogger syntaxLogger)
@@ -68,7 +102,7 @@ public final class CommandLogger {
 	}
 
 	public int getDetailsLinkId() {
-		return _detailsLinkId - 1;
+		return _detailsLinkId;
 	}
 
 	public void logExternalMethodCommand(
@@ -110,11 +144,8 @@ public final class CommandLogger {
 	public void logNamespacedClassCommandName(
 		String namespacedClassCommandName) {
 
-		LoggerElement dividerLineLoggerElement = _getDividerLineLoggerElement(
-			namespacedClassCommandName);
-
 		_commandLogLoggerElement.addChildLoggerElement(
-			dividerLineLoggerElement);
+			_getDividerLineLoggerElement(namespacedClassCommandName));
 	}
 
 	public void logSeleniumCommand(Element element, List<String> arguments) {
@@ -123,6 +154,24 @@ public final class CommandLogger {
 
 		loggerElement.addChildLoggerElement(
 			_getRunLineLoggerElement(element, arguments));
+	}
+
+	public void ocularCommand(Element element, SyntaxLogger syntaxLogger)
+		throws PoshiRunnerLoggerException {
+
+		if (!_isCurrentCommand(element)) {
+			return;
+		}
+
+		try {
+			_commandElement = null;
+
+			_ocularLineGroupLoggerElement(element, lineGroupLoggerElement);
+		}
+		catch (Throwable throwable) {
+			throw new PoshiRunnerLoggerException(
+				throwable.getMessage(), throwable);
+		}
 	}
 
 	public void passCommand(Element element, SyntaxLogger syntaxLogger) {
@@ -373,21 +422,7 @@ public final class CommandLogger {
 
 		sb.append(_getLineItemText("command-name", namespacedClassCommandName));
 
-		String classCommandName =
-			PoshiGetterUtil.getClassCommandNameFromNamespacedClassCommandName(
-				namespacedClassCommandName);
-
-		String className =
-			PoshiGetterUtil.getClassNameFromNamespacedClassCommandName(
-				classCommandName);
-
-		String namespace = PoshiStackTraceUtil.getCurrentNamespace(
-			namespacedClassCommandName);
-
-		int functionLocatorCount = PoshiContext.getFunctionLocatorCount(
-			className, namespace);
-
-		for (int i = 0; i < functionLocatorCount; i++) {
+		for (int i = 0; i < PoshiContext.getFunctionMaxArgumentCount(); i++) {
 			String locatorKey = "locator" + (i + 1);
 
 			if (PoshiVariablesUtil.containsKeyInExecuteMap(locatorKey)) {
@@ -503,6 +538,50 @@ public final class CommandLogger {
 		return loggerElement;
 	}
 
+	private LoggerElement _getOcularErrorDetailsContainerLoggerElement(
+			Element element)
+		throws Exception {
+
+		LoggerElement loggerElement = new LoggerElement();
+
+		loggerElement.setClassName("details-container hidden");
+
+		loggerElement.addChildLoggerElement(
+			_getConsoleLoggerElement(_detailsLinkId));
+
+		loggerElement.addChildLoggerElement(
+			_getOcularScreenshotsLoggerElement(_detailsLinkId, element));
+
+		_detailsLinkId++;
+
+		return loggerElement;
+	}
+
+	private LoggerElement _getOcularScreenshotsLoggerElement(
+			int detailsLinkId, Element element)
+		throws Exception {
+
+		LoggerElement loggerElement = new LoggerElement();
+
+		loggerElement.setAttribute(
+			"data-detailslinkid", "screenshots-" + detailsLinkId);
+		loggerElement.setClassName("detailsPanel screenshots toggle");
+
+		String filePath = element.attributeValue("value1");
+
+		copyOcularImage("baseline", filePath, detailsLinkId);
+
+		loggerElement.addChildLoggerElement(
+			_getScreenshotContainerLoggerElement("baseline", detailsLinkId));
+
+		copyOcularImage("result", filePath, detailsLinkId);
+
+		loggerElement.addChildLoggerElement(
+			_getScreenshotContainerLoggerElement("result", detailsLinkId));
+
+		return loggerElement;
+	}
+
 	private LoggerElement _getRunLineLoggerElement(
 		Element element, List<String> arguments) {
 
@@ -613,13 +692,12 @@ public final class CommandLogger {
 	}
 
 	private boolean _isCommand(Element element) {
-		if (!Objects.equals(element.getName(), "condition") &&
-			!Objects.equals(element.getName(), "execute")) {
+		if ((!Objects.equals(element.getName(), "condition") &&
+			 !Objects.equals(element.getName(), "execute") &&
+			 !Objects.equals(element.getName(), "var")) ||
+			(Validator.isNull(element.attributeValue("function")) &&
+			 Validator.isNull(element.attributeValue("method")))) {
 
-			return false;
-		}
-
-		if (Validator.isNull(element.attributeValue("function"))) {
 			return false;
 		}
 
@@ -657,6 +735,29 @@ public final class CommandLogger {
 		_functionLinkId++;
 	}
 
+	private void _ocularLineGroupLoggerElement(
+			Element element, LoggerElement lineGroupLoggerElement)
+		throws Exception {
+
+		lineGroupLoggerElement.addClassName("failed");
+
+		lineGroupLoggerElement.addChildLoggerElement(
+			_getOcularErrorDetailsContainerLoggerElement(element));
+
+		LoggerElement childContainerLoggerElement =
+			lineGroupLoggerElement.loggerElement("ul");
+
+		List<LoggerElement> runLineLoggerElements =
+			childContainerLoggerElement.loggerElements("li");
+
+		if (!runLineLoggerElements.isEmpty()) {
+			LoggerElement runLineLoggerElement = runLineLoggerElements.get(
+				runLineLoggerElements.size() - 1);
+
+			runLineLoggerElement.addClassName("error-line");
+		}
+	}
+
 	private void _screenshotLineGroupLoggerElement(
 			LoggerElement lineGroupLoggerElement)
 		throws Exception {
@@ -673,10 +774,22 @@ public final class CommandLogger {
 		String testClassCommandName =
 			PoshiContext.getTestCaseNamespacedClassCommandName();
 
+		Properties properties =
+			PoshiContext.getNamespacedClassCommandNameProperties(
+				testClassCommandName);
+
+		if (GetterUtil.getBoolean(
+				properties.getProperty("disable-webdriver"))) {
+
+			return;
+		}
+
 		testClassCommandName = StringUtil.replace(
 			testClassCommandName, "#", "_");
 
-		LiferaySeleniumUtil.captureScreen(
+		LiferaySelenium liferaySelenium = SeleniumUtil.getSelenium();
+
+		liferaySelenium.saveScreenshot(
 			FileUtil.getCanonicalPath(".") + "/test-results/" +
 				testClassCommandName + "/screenshots/" + screenshotName +
 					detailsLinkId + ".jpg");

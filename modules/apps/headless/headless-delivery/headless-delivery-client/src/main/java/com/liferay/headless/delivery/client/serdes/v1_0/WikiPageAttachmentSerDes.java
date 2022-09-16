@@ -97,6 +97,20 @@ public class WikiPageAttachmentSerDes {
 			sb.append("\"");
 		}
 
+		if (wikiPageAttachment.getExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"externalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(wikiPageAttachment.getExternalReferenceCode()));
+
+			sb.append("\"");
+		}
+
 		if (wikiPageAttachment.getFileExtension() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -193,6 +207,15 @@ public class WikiPageAttachmentSerDes {
 				String.valueOf(wikiPageAttachment.getEncodingFormat()));
 		}
 
+		if (wikiPageAttachment.getExternalReferenceCode() == null) {
+			map.put("externalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"externalReferenceCode",
+				String.valueOf(wikiPageAttachment.getExternalReferenceCode()));
+		}
+
 		if (wikiPageAttachment.getFileExtension() == null) {
 			map.put("fileExtension", null);
 		}
@@ -264,6 +287,14 @@ public class WikiPageAttachmentSerDes {
 						(String)jsonParserFieldValue);
 				}
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "externalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					wikiPageAttachment.setExternalReferenceCode(
+						(String)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "fileExtension")) {
 				if (jsonParserFieldValue != null) {
 					wikiPageAttachment.setFileExtension(
@@ -286,9 +317,6 @@ public class WikiPageAttachmentSerDes {
 				if (jsonParserFieldValue != null) {
 					wikiPageAttachment.setTitle((String)jsonParserFieldValue);
 				}
-			}
-			else if (jsonParserFieldName.equals("status")) {
-				throw new IllegalArgumentException();
 			}
 		}
 
@@ -318,7 +346,7 @@ public class WikiPageAttachmentSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -354,7 +382,7 @@ public class WikiPageAttachmentSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

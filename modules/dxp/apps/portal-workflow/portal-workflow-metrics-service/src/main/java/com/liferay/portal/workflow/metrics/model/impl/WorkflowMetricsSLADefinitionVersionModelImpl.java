@@ -30,15 +30,16 @@ import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.workflow.metrics.model.WorkflowMetricsSLADefinitionVersion;
 import com.liferay.portal.workflow.metrics.model.WorkflowMetricsSLADefinitionVersionModel;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
 import java.util.Collections;
@@ -46,6 +47,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -137,31 +139,31 @@ public class WorkflowMetricsSLADefinitionVersionModelImpl
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long COMPANYID_COLUMN_BITMASK = 1L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long GROUPID_COLUMN_BITMASK = 2L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long UUID_COLUMN_BITMASK = 4L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long VERSION_COLUMN_BITMASK = 8L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long WORKFLOWMETRICSSLADEFINITIONID_COLUMN_BITMASK =
@@ -169,7 +171,7 @@ public class WorkflowMetricsSLADefinitionVersionModelImpl
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *		#getColumnBitmask(String)
+	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long MODIFIEDDATE_COLUMN_BITMASK = 32L;
@@ -275,35 +277,6 @@ public class WorkflowMetricsSLADefinitionVersionModelImpl
 		getAttributeSetterBiConsumers() {
 
 		return _attributeSetterBiConsumers;
-	}
-
-	private static Function
-		<InvocationHandler, WorkflowMetricsSLADefinitionVersion>
-			_getProxyProviderFunction() {
-
-		Class<?> proxyClass = ProxyUtil.getProxyClass(
-			WorkflowMetricsSLADefinitionVersion.class.getClassLoader(),
-			WorkflowMetricsSLADefinitionVersion.class, ModelWrapper.class);
-
-		try {
-			Constructor<WorkflowMetricsSLADefinitionVersion> constructor =
-				(Constructor<WorkflowMetricsSLADefinitionVersion>)
-					proxyClass.getConstructor(InvocationHandler.class);
-
-			return invocationHandler -> {
-				try {
-					return constructor.newInstance(invocationHandler);
-				}
-				catch (ReflectiveOperationException
-							reflectiveOperationException) {
-
-					throw new InternalError(reflectiveOperationException);
-				}
-			};
-		}
-		catch (NoSuchMethodException noSuchMethodException) {
-			throw new InternalError(noSuchMethodException);
-		}
 	}
 
 	private static final Map
@@ -1096,7 +1069,9 @@ public class WorkflowMetricsSLADefinitionVersionModelImpl
 		for (Map.Entry<String, Object> entry :
 				_columnOriginalValues.entrySet()) {
 
-			if (entry.getValue() != getColumnValue(entry.getKey())) {
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
 				_columnBitmask |= _columnBitmasks.get(entry.getKey());
 			}
 		}
@@ -1180,6 +1155,68 @@ public class WorkflowMetricsSLADefinitionVersionModelImpl
 		workflowMetricsSLADefinitionVersionImpl.setStatusDate(getStatusDate());
 
 		workflowMetricsSLADefinitionVersionImpl.resetOriginalValues();
+
+		return workflowMetricsSLADefinitionVersionImpl;
+	}
+
+	@Override
+	public WorkflowMetricsSLADefinitionVersion cloneWithOriginalValues() {
+		WorkflowMetricsSLADefinitionVersionImpl
+			workflowMetricsSLADefinitionVersionImpl =
+				new WorkflowMetricsSLADefinitionVersionImpl();
+
+		workflowMetricsSLADefinitionVersionImpl.setMvccVersion(
+			this.<Long>getColumnOriginalValue("mvccVersion"));
+		workflowMetricsSLADefinitionVersionImpl.setUuid(
+			this.<String>getColumnOriginalValue("uuid_"));
+		workflowMetricsSLADefinitionVersionImpl.
+			setWorkflowMetricsSLADefinitionVersionId(
+				this.<Long>getColumnOriginalValue("wmSLADefinitionVersionId"));
+		workflowMetricsSLADefinitionVersionImpl.setGroupId(
+			this.<Long>getColumnOriginalValue("groupId"));
+		workflowMetricsSLADefinitionVersionImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		workflowMetricsSLADefinitionVersionImpl.setUserId(
+			this.<Long>getColumnOriginalValue("userId"));
+		workflowMetricsSLADefinitionVersionImpl.setUserName(
+			this.<String>getColumnOriginalValue("userName"));
+		workflowMetricsSLADefinitionVersionImpl.setCreateDate(
+			this.<Date>getColumnOriginalValue("createDate"));
+		workflowMetricsSLADefinitionVersionImpl.setModifiedDate(
+			this.<Date>getColumnOriginalValue("modifiedDate"));
+		workflowMetricsSLADefinitionVersionImpl.setActive(
+			this.<Boolean>getColumnOriginalValue("active_"));
+		workflowMetricsSLADefinitionVersionImpl.setCalendarKey(
+			this.<String>getColumnOriginalValue("calendarKey"));
+		workflowMetricsSLADefinitionVersionImpl.setDescription(
+			this.<String>getColumnOriginalValue("description"));
+		workflowMetricsSLADefinitionVersionImpl.setDuration(
+			this.<Long>getColumnOriginalValue("duration"));
+		workflowMetricsSLADefinitionVersionImpl.setName(
+			this.<String>getColumnOriginalValue("name"));
+		workflowMetricsSLADefinitionVersionImpl.setPauseNodeKeys(
+			this.<String>getColumnOriginalValue("pauseNodeKeys"));
+		workflowMetricsSLADefinitionVersionImpl.setProcessId(
+			this.<Long>getColumnOriginalValue("processId"));
+		workflowMetricsSLADefinitionVersionImpl.setProcessVersion(
+			this.<String>getColumnOriginalValue("processVersion"));
+		workflowMetricsSLADefinitionVersionImpl.setStartNodeKeys(
+			this.<String>getColumnOriginalValue("startNodeKeys"));
+		workflowMetricsSLADefinitionVersionImpl.setStopNodeKeys(
+			this.<String>getColumnOriginalValue("stopNodeKeys"));
+		workflowMetricsSLADefinitionVersionImpl.setVersion(
+			this.<String>getColumnOriginalValue("version"));
+		workflowMetricsSLADefinitionVersionImpl.
+			setWorkflowMetricsSLADefinitionId(
+				this.<Long>getColumnOriginalValue("wmSLADefinitionId"));
+		workflowMetricsSLADefinitionVersionImpl.setStatus(
+			this.<Integer>getColumnOriginalValue("status"));
+		workflowMetricsSLADefinitionVersionImpl.setStatusByUserId(
+			this.<Long>getColumnOriginalValue("statusByUserId"));
+		workflowMetricsSLADefinitionVersionImpl.setStatusByUserName(
+			this.<String>getColumnOriginalValue("statusByUserName"));
+		workflowMetricsSLADefinitionVersionImpl.setStatusDate(
+			this.<Date>getColumnOriginalValue("statusDate"));
 
 		return workflowMetricsSLADefinitionVersionImpl;
 	}
@@ -1442,7 +1479,7 @@ public class WorkflowMetricsSLADefinitionVersionModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			(4 * attributeGetterFunctions.size()) + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -1454,11 +1491,27 @@ public class WorkflowMetricsSLADefinitionVersionModelImpl
 			Function<WorkflowMetricsSLADefinitionVersion, Object>
 				attributeGetterFunction = entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(
-				attributeGetterFunction.apply(
-					(WorkflowMetricsSLADefinitionVersion)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply(
+				(WorkflowMetricsSLADefinitionVersion)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -1510,7 +1563,9 @@ public class WorkflowMetricsSLADefinitionVersionModelImpl
 		private static final Function
 			<InvocationHandler, WorkflowMetricsSLADefinitionVersion>
 				_escapedModelProxyProviderFunction =
-					_getProxyProviderFunction();
+					ProxyUtil.getProxyProviderFunction(
+						WorkflowMetricsSLADefinitionVersion.class,
+						ModelWrapper.class);
 
 	}
 

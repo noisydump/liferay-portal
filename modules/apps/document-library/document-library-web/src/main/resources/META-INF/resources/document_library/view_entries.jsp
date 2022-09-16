@@ -17,14 +17,8 @@
 <%@ include file="/document_library/init.jsp" %>
 
 <%
+DLPortletInstanceSettingsHelper dlPortletInstanceSettingsHelper = new DLPortletInstanceSettingsHelper(dlRequestHelper);
 DLViewEntriesDisplayContext dlViewEntriesDisplayContext = new DLViewEntriesDisplayContext(liferayPortletRequest, liferayPortletResponse);
-
-boolean portletTitleBasedNavigation = GetterUtil.getBoolean(portletConfig.getInitParameter("portlet-title-based-navigation"));
-
-if (portletTitleBasedNavigation && !dlViewEntriesDisplayContext.isRootFolder() && Validator.isNotNull(dlViewEntriesDisplayContext.getRedirect())) {
-	portletDisplay.setShowBackIcon(true);
-	portletDisplay.setURLBack(dlViewEntriesDisplayContext.getRedirect());
-}
 %>
 
 <div class="document-container" id="<portlet:namespace />entriesContainer">
@@ -69,6 +63,8 @@ if (portletTitleBasedNavigation && !dlViewEntriesDisplayContext.isRootFolder() &
 					String thumbnailSrc = dlViewEntriesDisplayContext.getThumbnailSrc(latestFileVersion);
 					%>
 
+					<div class="d-none digital-signature-file-extensions"><%= fileEntry.getFileEntryId() %>-<%= fileEntry.getExtension() %></div>
+
 					<c:choose>
 						<c:when test="<%= dlViewEntriesDisplayContext.isDescriptiveDisplayStyle() %>">
 							<c:choose>
@@ -93,29 +89,36 @@ if (portletTitleBasedNavigation && !dlViewEntriesDisplayContext.isRootFolder() &
 								path="/document_library/view_file_entry_descriptive.jsp"
 							/>
 
-							<liferay-ui:search-container-column-jsp
-								path="/document_library/file_entry_action.jsp"
-							/>
+							<c:if test="<%= dlPortletInstanceSettingsHelper.isShowActions() %>">
+								<liferay-ui:search-container-column-jsp
+									path="/document_library/file_entry_action.jsp"
+								/>
+							</c:if>
 						</c:when>
 						<c:when test="<%= dlViewEntriesDisplayContext.isIconDisplayStyle() %>">
+
+							<%
+							String fileEntryActionJsp = dlPortletInstanceSettingsHelper.isShowActions() ? "/document_library/file_entry_action.jsp" : null;
+							%>
+
 							<liferay-ui:search-container-column-text>
 								<c:choose>
 									<c:when test="<%= dlViewFileVersionDisplayContext.hasCustomThumbnail() %>">
 										<liferay-util:buffer
-											var="customThumbnailHtml"
+											var="customThumbnailHTML"
 										>
 
 											<%
-											dlViewFileVersionDisplayContext.renderCustomThumbnail(request, PipingServletResponse.createPipingServletResponse(pageContext));
+											dlViewFileVersionDisplayContext.renderCustomThumbnail(request, PipingServletResponseFactory.createPipingServletResponse(pageContext));
 											%>
 
 										</liferay-util:buffer>
 
 										<liferay-frontend:html-vertical-card
-											actionJsp="/document_library/file_entry_action.jsp"
+											actionJsp="<%= fileEntryActionJsp %>"
 											actionJspServletContext="<%= application %>"
 											cssClass="entry-display-style file-card"
-											html="<%= customThumbnailHtml %>"
+											html="<%= customThumbnailHTML %>"
 											resultRow="<%= row %>"
 											rowChecker="<%= searchContainer.getRowChecker() %>"
 											title="<%= latestFileVersion.getTitle() %>"
@@ -126,7 +129,7 @@ if (portletTitleBasedNavigation && !dlViewEntriesDisplayContext.isRootFolder() &
 									</c:when>
 									<c:when test="<%= Validator.isNull(thumbnailSrc) %>">
 										<liferay-frontend:icon-vertical-card
-											actionJsp="/document_library/file_entry_action.jsp"
+											actionJsp="<%= fileEntryActionJsp %>"
 											actionJspServletContext="<%= application %>"
 											cssClass="entry-display-style file-card"
 											icon="documents-and-media"
@@ -140,7 +143,7 @@ if (portletTitleBasedNavigation && !dlViewEntriesDisplayContext.isRootFolder() &
 									</c:when>
 									<c:otherwise>
 										<liferay-frontend:vertical-card
-											actionJsp="/document_library/file_entry_action.jsp"
+											actionJsp="<%= fileEntryActionJsp %>"
 											actionJspServletContext="<%= application %>"
 											cssClass="entry-display-style file-card"
 											imageUrl="<%= thumbnailSrc %>"
@@ -164,15 +167,23 @@ if (portletTitleBasedNavigation && !dlViewEntriesDisplayContext.isRootFolder() &
 								<c:choose>
 									<c:when test='<%= curEntryColumn.equals("name") %>'>
 										<liferay-ui:search-container-column-text
-											cssClass="table-cell-expand table-cell-minw-200 table-title"
+											cssClass="table-cell-expand table-cell-minw-200"
 											name="title"
 										>
-											<liferay-document-library:mime-type-sticker
-												cssClass="sticker-secondary"
-												fileVersion="<%= latestFileVersion %>"
-											/>
+											<div class="autofit-row">
+												<div class="autofit-col">
+													<liferay-document-library:mime-type-sticker
+														cssClass="sticker-secondary"
+														fileVersion="<%= latestFileVersion %>"
+													/>
+												</div>
 
-											<aui:a href="<%= dlViewEntriesDisplayContext.getViewFileEntryURL(fileEntry) %>"><%= latestFileVersion.getTitle() %></aui:a>
+												<div class="autofit-col autofit-col-expand">
+													<div class="table-title">
+														<aui:a href="<%= dlViewEntriesDisplayContext.getViewFileEntryURL(fileEntry) %>"><%= latestFileVersion.getTitle() %></aui:a>
+													</div>
+												</div>
+											</div>
 
 											<c:if test="<%= fileEntry.hasLock() || fileEntry.isCheckedOut() %>">
 												<span class="inline-item inline-item-after state-icon">
@@ -263,9 +274,11 @@ if (portletTitleBasedNavigation && !dlViewEntriesDisplayContext.isRootFolder() &
 										/>
 									</c:when>
 									<c:when test='<%= curEntryColumn.equals("action") %>'>
-										<liferay-ui:search-container-column-jsp
-											path="/document_library/file_entry_action.jsp"
-										/>
+										<c:if test="<%= dlPortletInstanceSettingsHelper.isShowActions() %>">
+											<liferay-ui:search-container-column-jsp
+												path="/document_library/file_entry_action.jsp"
+											/>
+										</c:if>
 									</c:when>
 								</c:choose>
 
@@ -307,9 +320,11 @@ if (portletTitleBasedNavigation && !dlViewEntriesDisplayContext.isRootFolder() &
 								path="/document_library/view_folder_descriptive.jsp"
 							/>
 
-							<liferay-ui:search-container-column-jsp
-								path="/document_library/folder_action.jsp"
-							/>
+							<c:if test="<%= dlPortletInstanceSettingsHelper.isShowActions() %>">
+								<liferay-ui:search-container-column-jsp
+									path="/document_library/folder_action.jsp"
+								/>
+							</c:if>
 						</c:when>
 						<c:when test="<%= dlViewEntriesDisplayContext.isIconDisplayStyle() %>">
 
@@ -321,12 +336,22 @@ if (portletTitleBasedNavigation && !dlViewEntriesDisplayContext.isRootFolder() &
 								colspan="<%= 2 %>"
 							>
 								<liferay-frontend:horizontal-card
-									actionJsp="/document_library/folder_action.jsp"
+									actionJsp='<%= dlPortletInstanceSettingsHelper.isShowActions() ? "/document_library/folder_action.jsp" : null %>'
 									actionJspServletContext="<%= application %>"
 									resultRow="<%= row %>"
 									rowChecker="<%= searchContainer.getRowChecker() %>"
 									text="<%= curFolder.getName() %>"
-									url="<%= dlViewEntriesDisplayContext.getRowURL(curFolder) %>"
+									url='<%=
+										PortletURLBuilder.createRenderURL(
+											liferayPortletResponse
+										).setMVCRenderCommandName(
+											"/document_library/view_folder"
+										).setRedirect(
+											currentURL
+										).setParameter(
+											"folderId", curFolder.getFolderId()
+										).buildString()
+									%>'
 								>
 									<liferay-frontend:horizontal-card-col>
 										<liferay-frontend:horizontal-card-icon
@@ -345,16 +370,38 @@ if (portletTitleBasedNavigation && !dlViewEntriesDisplayContext.isRootFolder() &
 								<c:choose>
 									<c:when test='<%= curEntryColumn.equals("name") %>'>
 										<liferay-ui:search-container-column-text
-											cssClass="table-cell-expand table-cell-minw-200 table-title"
+											cssClass="table-cell-expand table-cell-minw-200"
 											name="name"
 										>
-											<clay:sticker
-												cssClass="sticker-document"
-												displayType="secondary"
-												icon='<%= curFolder.isMountPoint() ? "repository" : "folder" %>'
-											/>
+											<div class="autofit-row">
+												<div class="autofit-col">
+													<clay:sticker
+														cssClass="sticker-document"
+														displayType="secondary"
+														icon='<%= curFolder.isMountPoint() ? "repository" : "folder" %>'
+													/>
+												</div>
 
-											<aui:a href="<%= dlViewEntriesDisplayContext.getRowURL(curFolder) %>"><%= HtmlUtil.escape(curFolder.getName()) %></aui:a>
+												<div class="autofit-col autofit-col-expand">
+													<div class="table-title">
+														<aui:a
+															href='<%=
+																PortletURLBuilder.createRenderURL(
+																	liferayPortletResponse
+																).setMVCRenderCommandName(
+																	"/document_library/view_folder"
+																).setRedirect(
+																	currentURL
+																).setParameter(
+																	"folderId", curFolder.getFolderId()
+																).buildString()
+															%>'
+														>
+															<%= HtmlUtil.escape(curFolder.getName()) %>
+														</aui:a>
+													</div>
+												</div>
+											</div>
 										</liferay-ui:search-container-column-text>
 									</c:when>
 									<c:when test='<%= curEntryColumn.equals("description") %>'>
@@ -403,13 +450,15 @@ if (portletTitleBasedNavigation && !dlViewEntriesDisplayContext.isRootFolder() &
 										<liferay-ui:search-container-column-date
 											cssClass="table-cell-expand-smallest table-cell-ws-nowrap"
 											name="modified-date"
-											value="<%= curFolder.getLastPostDate() %>"
+											value="<%= curFolder.getModifiedDate() %>"
 										/>
 									</c:when>
 									<c:when test='<%= curEntryColumn.equals("action") %>'>
-										<liferay-ui:search-container-column-jsp
-											path="/document_library/folder_action.jsp"
-										/>
+										<c:if test="<%= dlPortletInstanceSettingsHelper.isShowActions() %>">
+											<liferay-ui:search-container-column-jsp
+												path="/document_library/folder_action.jsp"
+											/>
+										</c:if>
 									</c:when>
 								</c:choose>
 

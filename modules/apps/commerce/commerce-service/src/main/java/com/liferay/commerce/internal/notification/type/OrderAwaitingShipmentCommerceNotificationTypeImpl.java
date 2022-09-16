@@ -17,13 +17,12 @@ package com.liferay.commerce.internal.notification.type;
 import com.liferay.commerce.constants.CommerceOrderConstants;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.notification.type.CommerceNotificationType;
-import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.util.ResourceBundleUtil;
+import com.liferay.portal.kernel.language.Language;
 
 import java.util.Locale;
-import java.util.ResourceBundle;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Luca Pellizzon
@@ -66,12 +65,12 @@ public class OrderAwaitingShipmentCommerceNotificationTypeImpl
 
 	@Override
 	public String getLabel(Locale locale) {
-		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
-			"content.Language", locale, getClass());
-
-		return LanguageUtil.get(
-			resourceBundle,
+		return _language.get(
+			locale,
 			CommerceOrderConstants.ORDER_NOTIFICATION_AWAITING_SHIPMENT);
 	}
+
+	@Reference
+	private Language _language;
 
 }

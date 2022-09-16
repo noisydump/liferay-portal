@@ -55,7 +55,7 @@ import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 							value = {
 								"dataType", "name", "showLabel", "repeatable",
 								"type", "validation", "visibilityExpression",
-								"visualProperty"
+								"visualProperty", "objectFieldName"
 							}
 						)
 					}
@@ -88,6 +88,11 @@ public interface DefaultDDMFormFieldTypeSettings
 	)
 	public LocalizedValue label();
 
+	@DDMFormField(predefinedValue = "true", visibilityExpression = "FALSE")
+	public default boolean labelAtStructureLevel() {
+		return true;
+	}
+
 	@DDMFormField(
 		label = "%localizable", predefinedValue = "true",
 		visibilityExpression = "FALSE"
@@ -98,6 +103,9 @@ public interface DefaultDDMFormFieldTypeSettings
 	public default boolean nativeField() {
 		return false;
 	}
+
+	@DDMFormField(label = "%object-field", type = "object_field")
+	public String objectFieldName();
 
 	@DDMFormField(
 		label = "%predefined-value",
@@ -123,6 +131,27 @@ public interface DefaultDDMFormFieldTypeSettings
 	public boolean required();
 
 	@DDMFormField(
+		label = "%error-message",
+		properties = {
+			"placeholder=%this-field-is-required", "visualProperty=true"
+		},
+		type = "text"
+	)
+	public default LocalizedValue requiredErrorMessage() {
+		return new LocalizedValue();
+	}
+
+	@DDMFormField(predefinedValue = "true", visibilityExpression = "FALSE")
+	public default boolean rulesActionDisabled() {
+		return true;
+	}
+
+	@DDMFormField(predefinedValue = "true", visibilityExpression = "FALSE")
+	public default boolean rulesConditionDisabled() {
+		return true;
+	}
+
+	@DDMFormField(
 		label = "%show-label", predefinedValue = "true",
 		properties = {"showAsSwitcher=true", "visualProperty=true"}
 	)
@@ -139,7 +168,8 @@ public interface DefaultDDMFormFieldTypeSettings
 	public LocalizedValue tip();
 
 	@DDMFormField(
-		dataType = "string", label = "%validation", type = "validation"
+		dataType = "string", label = "%validation", type = "validation",
+		visibilityExpression = "FALSE"
 	)
 	public DDMFormFieldValidation validation();
 

@@ -14,7 +14,9 @@
 
 package com.liferay.poshi.core;
 
+import com.liferay.poshi.core.selenium.LiferaySeleniumMethod;
 import com.liferay.poshi.core.util.FileUtil;
+import com.liferay.poshi.core.util.PropsUtil;
 
 import java.io.File;
 
@@ -44,6 +46,10 @@ public class PoshiContextTest extends TestCase {
 
 		String poshiFileDir =
 			"src/test/resources/com/liferay/poshi/core/dependencies/test";
+
+		PropsUtil.clear();
+
+		PropsUtil.set("test.base.dir.name", poshiFileDir);
 
 		PoshiContext.readFiles(poshiFileNames, poshiFileDir);
 	}
@@ -126,11 +132,16 @@ public class PoshiContextTest extends TestCase {
 
 	@Test
 	public void testGetSeleniumParameterCount() {
-		int count = PoshiContext.getSeleniumParameterCount("clickAt");
+		LiferaySeleniumMethod seleniumMethod =
+			PoshiContext.getLiferaySeleniumMethod("clickAt");
+
+		int count = seleniumMethod.getParameterCount();
 
 		Assert.assertEquals("getSeleniumParameterCount is failing", 2, count);
 
-		count = PoshiContext.getSeleniumParameterCount("click");
+		seleniumMethod = PoshiContext.getLiferaySeleniumMethod("click");
+
+		count = seleniumMethod.getParameterCount();
 
 		Assert.assertEquals("getSeleniumParameterCount is failing", 1, count);
 	}

@@ -222,6 +222,11 @@ public class MBThreadWrapper
 	}
 
 	@Override
+	public MBThread cloneWithOriginalValues() {
+		return wrap(model.cloneWithOriginalValues());
+	}
+
+	@Override
 	public long getAttachmentsFolderId() {
 		return model.getAttachmentsFolderId();
 	}
@@ -538,18 +543,6 @@ public class MBThreadWrapper
 	@Override
 	public long getTrashEntryClassPK() {
 		return model.getTrashEntryClassPK();
-	}
-
-	/**
-	 * Returns the trash handler for this message boards thread.
-	 *
-	 * @return the trash handler for this message boards thread
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public com.liferay.portal.kernel.trash.TrashHandler getTrashHandler() {
-		return model.getTrashHandler();
 	}
 
 	/**

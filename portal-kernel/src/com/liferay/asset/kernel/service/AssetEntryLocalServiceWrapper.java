@@ -29,6 +29,10 @@ import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersisten
 public class AssetEntryLocalServiceWrapper
 	implements AssetEntryLocalService, ServiceWrapper<AssetEntryLocalService> {
 
+	public AssetEntryLocalServiceWrapper() {
+		this(null);
+	}
+
 	public AssetEntryLocalServiceWrapper(
 		AssetEntryLocalService assetEntryLocalService) {
 
@@ -196,6 +200,13 @@ public class AssetEntryLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _assetEntryLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _assetEntryLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -851,6 +862,28 @@ public class AssetEntryLocalServiceWrapper
 			classUuid, classTypeId, categoryIds, tagNames, listable, visible,
 			startDate, endDate, publishDate, expirationDate, mimeType, title,
 			description, summary, url, layoutUuid, height, width, priority);
+	}
+
+	@Override
+	public AssetEntry updateEntry(
+			long userId, long groupId, java.util.Date createDate,
+			java.util.Date modifiedDate, String className, long classPK,
+			String classUuid, long classTypeId, long[] categoryIds,
+			String[] tagNames, boolean listable, boolean visible,
+			java.util.Date startDate, java.util.Date endDate,
+			java.util.Date publishDate, java.util.Date expirationDate,
+			String mimeType, String title, String description, String summary,
+			String url, String layoutUuid, int height, int width,
+			Double priority,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _assetEntryLocalService.updateEntry(
+			userId, groupId, createDate, modifiedDate, className, classPK,
+			classUuid, classTypeId, categoryIds, tagNames, listable, visible,
+			startDate, endDate, publishDate, expirationDate, mimeType, title,
+			description, summary, url, layoutUuid, height, width, priority,
+			serviceContext);
 	}
 
 	@Override

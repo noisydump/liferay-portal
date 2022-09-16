@@ -4,9 +4,9 @@ definition {
 	function assertCssValue {
 		WaitForSPARefresh();
 
-		selenium.waitForVisible();
+		selenium.waitForElementPresent();
 
-		selenium.assertCssValue("${locator1}", "${locator2}");
+		selenium.assertCssValue("${locator1}", "${locator2}", "${value1}");
 
 		selenium.assertJavaScriptErrors();
 

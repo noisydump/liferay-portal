@@ -14,7 +14,9 @@
 
 package com.liferay.portal.search.web.internal.type.facet.portlet.shared.search;
 
+import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.search.asset.SearchableAssetClassNamesProvider;
 import com.liferay.portal.search.facet.type.TypeFacetSearchContributor;
 import com.liferay.portal.search.searcher.SearchRequestBuilder;
 import com.liferay.portal.search.web.internal.type.facet.constants.TypeFacetPortletKeys;
@@ -43,7 +45,9 @@ public class TypeFacetPortletSharedSearchContributor
 
 		TypeFacetPortletPreferences typeFacetPortletPreferences =
 			new TypeFacetPortletPreferencesImpl(
-				portletSharedSearchSettings.getPortletPreferencesOptional());
+				objectDefinitionLocalService,
+				portletSharedSearchSettings.getPortletPreferencesOptional(),
+				searchableAssetClassNamesProvider);
 
 		SearchRequestBuilder searchRequestBuilder =
 			portletSharedSearchSettings.getSearchRequestBuilder();
@@ -66,6 +70,13 @@ public class TypeFacetPortletSharedSearchContributor
 			typeFacetPortletPreferences.getCurrentAssetTypesArray(
 				themeDisplay.getCompanyId()));
 	}
+
+	@Reference
+	protected ObjectDefinitionLocalService objectDefinitionLocalService;
+
+	@Reference
+	protected SearchableAssetClassNamesProvider
+		searchableAssetClassNamesProvider;
 
 	@Reference
 	protected TypeFacetSearchContributor typeFacetSearchContributor;

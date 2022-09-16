@@ -16,6 +16,7 @@ package com.liferay.fragment.web.internal.display.context;
 
 import com.liferay.fragment.model.FragmentCollection;
 import com.liferay.fragment.service.FragmentCollectionLocalServiceUtil;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -24,8 +25,6 @@ import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-
-import java.util.List;
 
 import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
@@ -59,36 +58,30 @@ public class FragmentCollectionResourcesDisplayContext {
 			return _searchContainer;
 		}
 
-		PortletURL portletURL = _renderResponse.createRenderURL();
-
-		portletURL.setParameter("mvcRenderCommandName", "/fragment/view");
-		portletURL.setParameter("tabs1", "resources");
-		portletURL.setParameter(
-			"redirect", _fragmentDisplayContext.getRedirect());
-		portletURL.setParameter(
+		PortletURL portletURL = PortletURLBuilder.createRenderURL(
+			_renderResponse
+		).setRedirect(
+			_fragmentDisplayContext.getRedirect()
+		).setTabs1(
+			"resources"
+		).setParameter(
 			"fragmentCollectionId",
-			String.valueOf(_fragmentDisplayContext.getFragmentCollectionId()));
+			_fragmentDisplayContext.getFragmentCollectionId()
+		).buildPortletURL();
 
 		SearchContainer<FileEntry> searchContainer = new SearchContainer(
 			_renderRequest, portletURL, null, "there-are-no-resources");
 
-		searchContainer.setRowChecker(
-			new EmptyOnClickRowChecker(_renderResponse));
-
-		int fileEntriesCount =
-			PortletFileRepositoryUtil.getPortletFileEntriesCount(
-				_themeDisplay.getScopeGroupId(), _getFolderId());
-
-		searchContainer.setTotal(fileEntriesCount);
-
-		List<FileEntry> fileEntries =
-			PortletFileRepositoryUtil.getPortletFileEntries(
+		searchContainer.setResultsAndTotal(
+			() -> PortletFileRepositoryUtil.getPortletFileEntries(
 				_themeDisplay.getScopeGroupId(), _getFolderId(),
 				WorkflowConstants.STATUS_ANY, searchContainer.getStart(),
 				searchContainer.getEnd(),
-				searchContainer.getOrderByComparator());
-
-		searchContainer.setResults(fileEntries);
+				searchContainer.getOrderByComparator()),
+			PortletFileRepositoryUtil.getPortletFileEntriesCount(
+				_themeDisplay.getScopeGroupId(), _getFolderId()));
+		searchContainer.setRowChecker(
+			new EmptyOnClickRowChecker(_renderResponse));
 
 		_searchContainer = searchContainer;
 

@@ -51,6 +51,11 @@ public class WorkflowDefinitionLinkPortletTab extends BaseWorkflowPortletTab {
 	}
 
 	@Override
+	public ServletContext getServletContext() {
+		return _servletContext;
+	}
+
+	@Override
 	public void prepareRender(
 			RenderRequest renderRequest, RenderResponse renderResponse)
 		throws PortletException {
@@ -59,9 +64,7 @@ public class WorkflowDefinitionLinkPortletTab extends BaseWorkflowPortletTab {
 			new WorkflowDefinitionLinkDisplayContext(
 				renderRequest, renderResponse,
 				workflowDefinitionLinkLocalService,
-				ResourceBundleLoaderUtil.
-					getResourceBundleLoaderByBundleSymbolicName(
-						"com.liferay.portal.workflow.web"));
+				ResourceBundleLoaderUtil.getPortalResourceBundleLoader());
 
 		renderRequest.setAttribute(
 			WorkflowWebKeys.WORKFLOW_DEFINITION_LINK_DISPLAY_CONTEXT,
@@ -73,17 +76,13 @@ public class WorkflowDefinitionLinkPortletTab extends BaseWorkflowPortletTab {
 		return "/definition_link/view.jsp";
 	}
 
-	@Override
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.portal.workflow.web)",
-		unbind = "-"
-	)
-	protected void setServletContext(ServletContext servletContext) {
-		super.setServletContext(servletContext);
-	}
-
 	@Reference(unbind = "-")
 	protected WorkflowDefinitionLinkLocalService
 		workflowDefinitionLinkLocalService;
+
+	@Reference(
+		target = "(osgi.web.symbolicname=com.liferay.portal.workflow.web)"
+	)
+	private ServletContext _servletContext;
 
 }

@@ -15,19 +15,29 @@
 import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
 import ClayDropDown from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
-import ClayLink from '@clayui/link';
-import React, {useRef, useState} from 'react';
+import classNames from 'classnames';
+import {sub} from 'frontend-js-web';
+import React, {useContext, useRef, useState} from 'react';
+
+import getDataAttributes from '../get_data_attributes';
+import FeatureFlagContext from './FeatureFlagContext';
+import LinkOrButton from './LinkOrButton';
+
+import './CreationMenu.scss';
 
 const CreationMenu = ({
 	maxPrimaryItems,
 	maxSecondaryItems,
 	maxTotalItems = 15,
+	onCreateButtonClick,
+	onCreationMenuItemClick,
 	onShowMoreButtonClick,
 	primaryItems,
 	secondaryItems,
 	viewMoreURL,
 }) => {
 	const [active, setActive] = useState(false);
+	const {showDesignImprovements} = useContext(FeatureFlagContext);
 
 	const secondaryItemsCountRef = useRef(
 		secondaryItems?.reduce((acc, cur) => {
@@ -38,6 +48,19 @@ const CreationMenu = ({
 	const totalItemsCountRef = useRef(
 		primaryItems.length + secondaryItemsCountRef.current
 	);
+
+	const firstItemRef = useRef(
+		primaryItems?.[0] ||
+			secondaryItems?.[0].items?.[0] ||
+			secondaryItems?.[0]
+	);
+
+	const getPlusIconLabel = () => {
+		const item =
+			totalItemsCountRef.current === 1 ? firstItemRef.current : null;
+
+		return item?.label || Liferay.Language.get('new');
+	};
 
 	const getVisibleItemsCount = () => {
 		const primaryItemsCount = primaryItems.length;
@@ -82,17 +105,97 @@ const CreationMenu = ({
 		getVisibleItemsCount()
 	);
 
+	const Item = ({item}) => {
+		return (
+			<ClayDropDown.Item
+				href={item.href}
+				onClick={(event) => {
+					onCreationMenuItemClick(event, {item});
+				}}
+				symbolLeft={item.icon}
+				{...getDataAttributes(item.data)}
+			>
+				{Liferay.Util.unescapeHTML(item.label)}
+			</ClayDropDown.Item>
+		);
+	};
+
+	const ItemList = () => {
+		let currentItemCount = 0;
+
+		return (
+			<ClayDropDown.ItemList
+				className={classNames({
+					'dropdown-menu-indicator-start': primaryItems.some(
+						(item) => item.icon
+					),
+				})}
+			>
+				{primaryItems?.map((item, index) => {
+					currentItemCount++;
+
+					if (currentItemCount > visibleItemsCount) {
+						return false;
+					}
+
+					return <Item item={item} key={index} />;
+				})}
+
+				{secondaryItems?.map((secondaryItemsGroup, index) => (
+					<ClayDropDown.Group
+						header={secondaryItemsGroup.label}
+						key={index}
+					>
+						{secondaryItemsGroup.items.map((item, index) => {
+							currentItemCount++;
+
+							if (currentItemCount > visibleItemsCount) {
+								return false;
+							}
+
+							return <Item item={item} key={index} />;
+						})}
+
+						{secondaryItemsGroup.separator && (
+							<ClayDropDown.Divider />
+						)}
+					</ClayDropDown.Group>
+				))}
+			</ClayDropDown.ItemList>
+		);
+	};
+
 	return (
 		<>
-			{primaryItems.length > 1 || secondaryItems ? (
+			{totalItemsCountRef.current > 1 ? (
 				<ClayDropDown
 					active={active}
+					className="creation-menu"
 					onActiveChange={setActive}
 					trigger={
-						<ClayButtonWithIcon
-							className="nav-btn nav-btn-monospaced"
-							symbol="plus"
-						/>
+						showDesignImprovements ? (
+							<ClayButton
+								aria-label={getPlusIconLabel()}
+								className="nav-btn"
+								title={getPlusIconLabel()}
+							>
+								<ClayIcon
+									className="d-md-none dropdown-icon"
+									symbol="plus"
+								/>
+
+								<span className="d-md-block d-none pl-3 pr-3">
+									{getPlusIconLabel()}
+								</span>
+							</ClayButton>
+						) : (
+							<ClayButtonWithIcon
+								aria-label={getPlusIconLabel()}
+								className="nav-btn nav-btn-monospaced"
+								symbol="plus"
+								title={getPlusIconLabel()}
+							/>
+						)
 					}
 				>
 					{visibleItemsCount < totalItemsCountRef.current ? (
@@ -106,7 +209,7 @@ const CreationMenu = ({
 							</div>
 
 							<div className="dropdown-caption">
-								{Liferay.Util.sub(
+								{sub(
 									Liferay.Language.get(
 										'showing-x-of-x-elements'
 									),
@@ -116,101 +219,72 @@ const CreationMenu = ({
 							</div>
 
 							<div className="dropdown-section">
-								{viewMoreURL ? (
-									<ClayLink
-										button={{block: true}}
-										displayType="secondary"
-										href={viewMoreURL}
-									>
-										{Liferay.Language.get('more')}
-									</ClayLink>
-								) : (
-									<ClayButton
-										block={true}
-										displayType="secondary"
-										onClick={() => {
-											if (onShowMoreButtonClick) {
-												onShowMoreButtonClick();
+								<LinkOrButton
+									button={{block: true}}
+									displayType="secondary"
+									href={viewMoreURL}
+									onClick={() => {
+										if (onShowMoreButtonClick) {
+											onShowMoreButtonClick();
 
-												return;
-											}
+											return;
+										}
 
-											setVisibleItemsCount(
-												totalItemsCountRef.current
-											);
-										}}
-									>
-										{Liferay.Language.get('more')}
-									</ClayButton>
-								)}
+										setVisibleItemsCount(
+											totalItemsCountRef.current
+										);
+									}}
+								>
+									{Liferay.Language.get('more')}
+								</LinkOrButton>
 							</div>
 						</>
 					) : (
 						<ItemList
+							onCreationMenuItemClick={onCreationMenuItemClick}
 							primaryItems={primaryItems}
 							secondaryItems={secondaryItems}
 							visibleItemsCount={totalItemsCountRef.current}
 						/>
 					)}
 				</ClayDropDown>
+			) : showDesignImprovements ? (
+				<>
+					<LinkOrButton
+						aria-label={getPlusIconLabel()}
+						button={true}
+						className="nav-btn"
+						displayType="primary"
+						href={firstItemRef.current.href}
+						onClick={(event) => {
+							onCreateButtonClick(event, {
+								item: firstItemRef.current,
+							});
+						}}
+						symbol="plus"
+						title={getPlusIconLabel()}
+						wide
+					>
+						{Liferay.Language.get('new')}
+					</LinkOrButton>
+				</>
 			) : (
-				<ClayLink
+				<LinkOrButton
+					aria-label={getPlusIconLabel()}
 					button={true}
 					className="nav-btn nav-btn-monospaced"
 					displayType="primary"
-					href={primaryItems[0].href}
-				>
-					<ClayIcon symbol="plus" />
-				</ClayLink>
+					href={firstItemRef.current.href}
+					onClick={(event) => {
+						onCreateButtonClick(event, {
+							item: firstItemRef.current,
+						});
+					}}
+					symbol="plus"
+					title={getPlusIconLabel()}
+				/>
 			)}
 		</>
-	);
-};
-
-const ItemList = ({primaryItems, secondaryItems, visibleItemsCount}) => {
-	let currentItemCount = 0;
-
-	return (
-		<ClayDropDown.ItemList>
-			{primaryItems?.map((item, index) => {
-				currentItemCount++;
-
-				if (currentItemCount > visibleItemsCount) {
-					return false;
-				}
-
-				return (
-					<ClayDropDown.Item href={item.href} key={index}>
-						{item.label}
-					</ClayDropDown.Item>
-				);
-			})}
-
-			{secondaryItems?.map((secondaryItemsGroup, index) => (
-				<ClayDropDown.Group
-					header={secondaryItemsGroup.label}
-					key={index}
-				>
-					{secondaryItemsGroup.items.map((item, index) => {
-						currentItemCount++;
-
-						if (currentItemCount > visibleItemsCount) {
-							return false;
-						}
-
-						return (
-							<ClayDropDown.Item href={item.href} key={index}>
-								{item.label}
-							</ClayDropDown.Item>
-						);
-					})}
-
-					{secondaryItemsGroup.separator && (
-						<ClayDropDown.Item className="dropdown-divider" />
-					)}
-				</ClayDropDown.Group>
-			))}
-		</ClayDropDown.ItemList>
 	);
 };
 

@@ -1,12 +1,12 @@
 definition {
 
-	macro activateAppCP {
+	macro activateApp {
 		LexiconEntry.openEntryMenu(rowEntry = "${appName}");
 
 		MenuItem.clickNoError(menuItem = "Activate");
 	}
 
-	macro deactivateAppCP {
+	macro deactivateApp {
 		LexiconEntry.openEntryMenu(rowEntry = "${appName}");
 
 		MenuItem.clickNoError(menuItem = "Deactivate");
@@ -14,29 +14,119 @@ definition {
 		AssertConfirm(value1 = "Are you sure you want to deactivate this?");
 	}
 
-	macro selectAppCP {
-		var key_appName = "${appName}";
+	macro filtersApp {
+		var key_filterName = "${filterName}";
 
-		while (IsElementNotPresent(locator1 = "AppManager#APP_NAME")) {
-			Click(locator1 = "Pagination#NEXT_LINK");
+		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MARKETPLACE_STORE_PORTLET_IFRAME");
+
+		WaitForElementPresent(
+			key_filterName = "${filterName}",
+			locator1 = "AppManager#APP_FILTER_LABEL");
+
+		if (isSet(filterBy)) {
+			Select(
+				locator1 = "AppManager#APP_FILTER_SELECT_DROP_DOWN_LIST",
+				value1 = "${filterBy}");
 		}
 
-		AssertClick(
-			locator1 = "AppManager#APP_NAME",
-			value1 = "${appName}");
+		Click(locator1 = "AppManager#SEARCH_BUTTON");
 	}
 
-	macro uninstallAppCP {
+	macro loginMarketplaceStore {
+		AssertElementPresent(
+			locator1 = "AppManager#MARKETPLACE_DESCRIPTION",
+			value1 = "Liferay Marketplace is an integral part of the Liferay platform experience for all users. Enterprise subscribers also have exclusive access to Liferay Subscription Apps through the Liferay Marketplace. Log in with your Liferay account to browse hundreds of apps to help you build your business or technical solution.");
+
+		AssertClick(
+			locator1 = "AppManager#USER_SIGN_IN",
+			value1 = "Sign In");
+
+		WaitForElementPresent(
+			key_text = "Email Address",
+			locator1 = "AppManager#LOGIN_INPUT_FIELD");
+
+		var marketplaceClientId = PropsUtil.get("marketplace.email.address.6");
+
+		Type(
+			key_text = "Email Address",
+			locator1 = "AppManager#LOGIN_INPUT_FIELD",
+			value1 = "${marketplaceClientId}");
+
+		var marketplaceClientSecret = PropsUtil.get("marketplace.email.password.6");
+
+		Type(
+			key_text = "Password",
+			locator1 = "AppManager#LOGIN_INPUT_FIELD",
+			value1 = "${marketplaceClientSecret}");
+
+		AssertClick(
+			locator1 = "AppManager#APP_SUBMIT",
+			value1 = "Sign In");
+
+		AssertClick(
+			locator1 = "AppManager#APP_SUBMIT",
+			value1 = "Grant Access");
+
+		WaitForPageLoad();
+
+		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MARKETPLACE_STORE_PORTLET_IFRAME");
+
+		AssertElementPresent(locator1 = "AppManager#APP_RESULT_BOX");
+	}
+
+	macro purchaseApp {
+		var key_searchName = "${searchName}";
+
+		AssertElementPresent(
+			key_searchName = "${searchName}",
+			locator1 = "AppManager#APP_TITLE_TYPE");
+
+		AssertClick(
+			key_searchName = "${searchName}",
+			locator1 = "AppManager#APP_TITLE_TYPE",
+			value1 = "${searchName}");
+
+		AssertClick(
+			key_type = "${type}",
+			locator1 = "AppManager#APP_PURCHASE",
+			value1 = "${type}");
+
+		WaitForPageLoad();
+
+		Click(locator1 = "AppManager#APP_PURCHASE_USER_SELECT");
+
+		Click(locator1 = "AppManager#APP_PURCHASE_AGREE_CHECKBOX");
+
+		Click(locator1 = "AppManager#APP_SUBMIT");
+
+		WaitForPageLoad();
+
+		AssertElementPresent(locator1 = "AppManager#APP_PURCHASE_INFO");
+	}
+
+	macro searchApp {
+		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MARKETPLACE_STORE_PORTLET_IFRAME");
+
+		Type(
+			locator1 = "AppManager#APP_RESULT_BOX",
+			value1 = "${searchName}");
+
+		Click(locator1 = "AppManager#SEARCH_BUTTON");
+
+		AssertElementPresent(
+			key_searchName = "${searchName}",
+			locator1 = "AppManager#APP_TITLE_TYPE");
+	}
+
+	macro uninstallApp {
 		LexiconEntry.openEntryMenu(rowEntry = "${appName}");
 
 		MenuItem.clickNoError(menuItem = "Uninstall");
 
 		AssertConfirm(value1 = "Are you sure you want to delete this? It will be deleted immediately.");
-
-		Pause(locator1 = "15000");
 	}
 
-	macro uploadAppCP {
+	macro uploadApp {
 		var key_appName = "${appName}";
 
 		Click(locator1 = "Portlet#OPTIONS_ICON");
@@ -47,9 +137,7 @@ definition {
 
 		AssertElementPresent(locator1 = "TextInput#FILE");
 
-		UploadCommonFile.uploadCommonFileHiddenNoMouseOver(
-			locator1 = "TextInput#FILE",
-			value1 = "${warFileName}");
+		UploadDependencyFile.uploadArchiveFile(fileName = "${warFileName}");
 
 		Button.clickInstall();
 
@@ -70,7 +158,7 @@ definition {
 		AssertConsoleTextNotPresent(value1 = "HotDeployException: Error registering portlets for ${appName}");
 	}
 
-	macro viewAppCP {
+	macro viewApp {
 		var key_appName = "${appName}";
 
 		if (isSet(searchTerm)) {
@@ -85,39 +173,22 @@ definition {
 			value1 = "${appName}");
 
 		if (isSet(appStatus)) {
-			AppManager.viewStatus(
-				appName = "${appName}",
-				appStatus = "${appStatus}");
+			var key_appStatus = "${appStatus}";
+
+			AssertTextEquals.assertPartialText(
+				locator1 = "AppManager#APP_STATUS",
+				value1 = "${appStatus}");
 		}
 	}
 
-	macro viewNoAppCP {
-		var key_appName = "${appName}";
+	macro viewLogoutMarketplace {
+		AssertElementPresent(
+			locator1 = "AppManager#USER_SIGN_IN",
+			value1 = "Sign In");
 
-		AssertElementNotPresent(locator1 = "AppManager#APP_NAME");
-
-		while (IsElementPresent(locator1 = "Pagination#NEXT_LINK")) {
-			Click(locator1 = "Pagination#NEXT_LINK");
-
-			AssertElementNotPresent(locator1 = "AppManager#APP_NAME");
-		}
-	}
-
-	macro viewStatus {
-		var key_appName = "${appName}";
-		var key_appStatus = "${appStatus}";
-
-		AssertTextEquals.assertPartialText(
-			locator1 = "AppManager#APP_STATUS",
-			value1 = "${appStatus}");
-	}
-
-	macro viewUninstallAppCP {
-		Search.searchCP(searchTerm = "${appName}");
-
-		AssertElementNotPresent(
-			key_appName = "${appName}",
-			locator1 = "AppManager#APP_NAME");
+		AssertElementPresent(
+			locator1 = "AppManager#MARKETPLACE_DESCRIPTION",
+			value1 = "Liferay Marketplace is an integral part of the Liferay platform experience for all users. Enterprise subscribers also have exclusive access to Liferay Subscription Apps through the Liferay Marketplace. Log in with your Liferay account to browse hundreds of apps to help you build your business or technical solution.");
 	}
 
 }

@@ -16,6 +16,7 @@ package com.liferay.password.policies.admin.web.internal.display.context;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemListBuilder;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
@@ -25,7 +26,6 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.portlet.PortletException;
@@ -83,26 +83,28 @@ public class PasswordPolicyDisplayContext {
 
 		String tabs1 = ParamUtil.getString(
 			_httpServletRequest, "tabs1", "details");
-		String redirect = ParamUtil.getString(_httpServletRequest, "redirect");
 
-		PortletURL portletURL = _renderResponse.createRenderURL();
-
-		portletURL.setParameter("redirect", redirect);
-		portletURL.setParameter(
-			"passwordPolicyId", String.valueOf(_passwordPolicyId));
+		PortletURL portletURL = PortletURLBuilder.createRenderURL(
+			_renderResponse
+		).setRedirect(
+			ParamUtil.getString(_httpServletRequest, "redirect")
+		).setParameter(
+			"passwordPolicyId", _passwordPolicyId
+		).buildPortletURL();
 
 		List<NavigationItem> navigationItems = NavigationItemListBuilder.add(
 			() -> (_passwordPolicyId == 0) || _hasPermission(ActionKeys.UPDATE),
 			navigationItem -> {
 				navigationItem.setActive(tabs1.equals("details"));
 
-				PortletURL detailsURL = PortletURLUtil.clone(
-					portletURL, _renderResponse);
-
-				detailsURL.setParameter("mvcPath", "/edit_password_policy.jsp");
-				detailsURL.setParameter("tabs1", "details");
-
-				navigationItem.setHref(detailsURL.toString());
+				navigationItem.setHref(
+					PortletURLBuilder.create(
+						PortletURLUtil.clone(portletURL, _renderResponse)
+					).setMVCPath(
+						"/edit_password_policy.jsp"
+					).setTabs1(
+						"details"
+					).buildString());
 
 				navigationItem.setLabel(
 					LanguageUtil.get(_httpServletRequest, "details"));
@@ -112,14 +114,14 @@ public class PasswordPolicyDisplayContext {
 			navigationItem -> {
 				navigationItem.setActive(tabs1.equals("assignees"));
 
-				PortletURL assigneesURL = PortletURLUtil.clone(
-					portletURL, _renderResponse);
-
-				assigneesURL.setParameter(
-					"mvcPath", "/edit_password_policy_assignments.jsp");
-				assigneesURL.setParameter("tabs1", "assignees");
-
-				navigationItem.setHref(assigneesURL.toString());
+				navigationItem.setHref(
+					PortletURLBuilder.create(
+						PortletURLUtil.clone(portletURL, _renderResponse)
+					).setMVCPath(
+						"/edit_password_policy_assignments.jsp"
+					).setTabs1(
+						"assignees"
+					).buildString());
 
 				navigationItem.setLabel(
 					LanguageUtil.get(_httpServletRequest, "assignees"));
@@ -129,23 +131,6 @@ public class PasswordPolicyDisplayContext {
 		if (navigationItems.isEmpty()) {
 			return null;
 		}
-
-		return navigationItems;
-	}
-
-	public List<NavigationItem> getSelectMembersNavigationItems() {
-		String tabs2 = ParamUtil.getString(
-			_httpServletRequest, "tabs2", "users");
-
-		List<NavigationItem> navigationItems = new ArrayList<>();
-
-		NavigationItem entriesNavigationItem = new NavigationItem();
-
-		entriesNavigationItem.setActive(true);
-		entriesNavigationItem.setLabel(
-			LanguageUtil.get(_httpServletRequest, tabs2));
-
-		navigationItems.add(entriesNavigationItem);
 
 		return navigationItems;
 	}

@@ -2,11 +2,13 @@
 <head>
 <title>JSONWSUser</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">JSONWSUser</td></tr>
 </thead>
+
 <tbody>
 <tr>
 	<td>API_METHOD</td>
@@ -18,7 +20,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--API_EXECUTE-->
+
 <tr>
 	<td>API_EXECUTE_USER_ID_FIELD</td>
 	<td>//textarea[@name='userId']</td>

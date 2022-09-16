@@ -27,6 +27,10 @@ public class CommerceOrderItemLocalServiceWrapper
 	implements CommerceOrderItemLocalService,
 			   ServiceWrapper<CommerceOrderItemLocalService> {
 
+	public CommerceOrderItemLocalServiceWrapper() {
+		this(null);
+	}
+
 	public CommerceOrderItemLocalServiceWrapper(
 		CommerceOrderItemLocalService commerceOrderItemLocalService) {
 
@@ -60,6 +64,34 @@ public class CommerceOrderItemLocalServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _commerceOrderItemLocalService.addCommerceOrderItem(
+			commerceOrderId, cpInstanceId, json, quantity, shippedQuantity,
+			commerceContext, serviceContext);
+	}
+
+	@Override
+	public com.liferay.commerce.model.CommerceOrderItem
+			addOrUpdateCommerceOrderItem(
+				long commerceOrderId, long cpInstanceId, int quantity,
+				int shippedQuantity,
+				com.liferay.commerce.context.CommerceContext commerceContext,
+				com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _commerceOrderItemLocalService.addOrUpdateCommerceOrderItem(
+			commerceOrderId, cpInstanceId, quantity, shippedQuantity,
+			commerceContext, serviceContext);
+	}
+
+	@Override
+	public com.liferay.commerce.model.CommerceOrderItem
+			addOrUpdateCommerceOrderItem(
+				long commerceOrderId, long cpInstanceId, String json,
+				int quantity, int shippedQuantity,
+				com.liferay.commerce.context.CommerceContext commerceContext,
+				com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _commerceOrderItemLocalService.addOrUpdateCommerceOrderItem(
 			commerceOrderId, cpInstanceId, json, quantity, shippedQuantity,
 			commerceContext, serviceContext);
 	}
@@ -162,6 +194,16 @@ public class CommerceOrderItemLocalServiceWrapper
 			cpInstanceId);
 	}
 
+	@Override
+	public void deleteMissingCommerceOrderItems(
+			long commerceOrderId, Long[] commerceOrderItemIds,
+			String[] externalReferenceCodes)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_commerceOrderItemLocalService.deleteMissingCommerceOrderItems(
+			commerceOrderId, commerceOrderItemIds, externalReferenceCodes);
+	}
+
 	/**
 	 * @throws PortalException
 	 */
@@ -177,6 +219,13 @@ public class CommerceOrderItemLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _commerceOrderItemLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _commerceOrderItemLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -273,10 +322,10 @@ public class CommerceOrderItemLocalServiceWrapper
 	@Override
 	public com.liferay.commerce.model.CommerceOrderItem
 		fetchByExternalReferenceCode(
-			long companyId, String externalReferenceCode) {
+			String externalReferenceCode, long companyId) {
 
 		return _commerceOrderItemLocalService.fetchByExternalReferenceCode(
-			companyId, externalReferenceCode);
+			externalReferenceCode, companyId);
 	}
 
 	@Override
@@ -304,12 +353,41 @@ public class CommerceOrderItemLocalServiceWrapper
 	 */
 	@Override
 	public com.liferay.commerce.model.CommerceOrderItem
+		fetchCommerceOrderItemByExternalReferenceCode(
+			long companyId, String externalReferenceCode) {
+
+		return _commerceOrderItemLocalService.
+			fetchCommerceOrderItemByExternalReferenceCode(
+				companyId, externalReferenceCode);
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #fetchCommerceOrderItemByExternalReferenceCode(long, String)}
+	 */
+	@Deprecated
+	@Override
+	public com.liferay.commerce.model.CommerceOrderItem
 		fetchCommerceOrderItemByReferenceCode(
 			long companyId, String externalReferenceCode) {
 
 		return _commerceOrderItemLocalService.
 			fetchCommerceOrderItemByReferenceCode(
 				companyId, externalReferenceCode);
+	}
+
+	/**
+	 * Returns the commerce order item matching the UUID and group.
+	 *
+	 * @param uuid the commerce order item's UUID
+	 * @param groupId the primary key of the group
+	 * @return the matching commerce order item, or <code>null</code> if a matching commerce order item could not be found
+	 */
+	@Override
+	public com.liferay.commerce.model.CommerceOrderItem
+		fetchCommerceOrderItemByUuidAndGroupId(String uuid, long groupId) {
+
+		return _commerceOrderItemLocalService.
+			fetchCommerceOrderItemByUuidAndGroupId(uuid, groupId);
 	}
 
 	@Override
@@ -359,6 +437,42 @@ public class CommerceOrderItemLocalServiceWrapper
 
 		return _commerceOrderItemLocalService.getCommerceOrderItem(
 			commerceOrderItemId);
+	}
+
+	/**
+	 * Returns the commerce order item with the matching external reference code and company.
+	 *
+	 * @param companyId the primary key of the company
+	 * @param externalReferenceCode the commerce order item's external reference code
+	 * @return the matching commerce order item
+	 * @throws PortalException if a matching commerce order item could not be found
+	 */
+	@Override
+	public com.liferay.commerce.model.CommerceOrderItem
+			getCommerceOrderItemByExternalReferenceCode(
+				long companyId, String externalReferenceCode)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _commerceOrderItemLocalService.
+			getCommerceOrderItemByExternalReferenceCode(
+				companyId, externalReferenceCode);
+	}
+
+	/**
+	 * Returns the commerce order item matching the UUID and group.
+	 *
+	 * @param uuid the commerce order item's UUID
+	 * @param groupId the primary key of the group
+	 * @return the matching commerce order item
+	 * @throws PortalException if a matching commerce order item could not be found
+	 */
+	@Override
+	public com.liferay.commerce.model.CommerceOrderItem
+			getCommerceOrderItemByUuidAndGroupId(String uuid, long groupId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _commerceOrderItemLocalService.
+			getCommerceOrderItemByUuidAndGroupId(uuid, groupId);
 	}
 
 	/**
@@ -431,6 +545,44 @@ public class CommerceOrderItemLocalServiceWrapper
 	}
 
 	/**
+	 * Returns all the commerce order items matching the UUID and company.
+	 *
+	 * @param uuid the UUID of the commerce order items
+	 * @param companyId the primary key of the company
+	 * @return the matching commerce order items, or an empty list if no matches were found
+	 */
+	@Override
+	public java.util.List<com.liferay.commerce.model.CommerceOrderItem>
+		getCommerceOrderItemsByUuidAndCompanyId(String uuid, long companyId) {
+
+		return _commerceOrderItemLocalService.
+			getCommerceOrderItemsByUuidAndCompanyId(uuid, companyId);
+	}
+
+	/**
+	 * Returns a range of commerce order items matching the UUID and company.
+	 *
+	 * @param uuid the UUID of the commerce order items
+	 * @param companyId the primary key of the company
+	 * @param start the lower bound of the range of commerce order items
+	 * @param end the upper bound of the range of commerce order items (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the range of matching commerce order items, or an empty list if no matches were found
+	 */
+	@Override
+	public java.util.List<com.liferay.commerce.model.CommerceOrderItem>
+		getCommerceOrderItemsByUuidAndCompanyId(
+			String uuid, long companyId, int start, int end,
+			com.liferay.portal.kernel.util.OrderByComparator
+				<com.liferay.commerce.model.CommerceOrderItem>
+					orderByComparator) {
+
+		return _commerceOrderItemLocalService.
+			getCommerceOrderItemsByUuidAndCompanyId(
+				uuid, companyId, start, end, orderByComparator);
+	}
+
+	/**
 	 * Returns the number of commerce order items.
 	 *
 	 * @return the number of commerce order items
@@ -469,6 +621,16 @@ public class CommerceOrderItemLocalServiceWrapper
 	}
 
 	@Override
+	public com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery
+		getExportActionableDynamicQuery(
+			com.liferay.exportimport.kernel.lar.PortletDataContext
+				portletDataContext) {
+
+		return _commerceOrderItemLocalService.getExportActionableDynamicQuery(
+			portletDataContext);
+	}
+
+	@Override
 	public com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery
 		getIndexableActionableDynamicQuery() {
 
@@ -503,6 +665,21 @@ public class CommerceOrderItemLocalServiceWrapper
 
 		return _commerceOrderItemLocalService.getSubscriptionCommerceOrderItems(
 			commerceOrderId);
+	}
+
+	@Override
+	public com.liferay.commerce.model.CommerceOrderItem importCommerceOrderItem(
+			String externalReferenceCode, long commerceOrderItemId,
+			long commerceOrderId, long cpInstanceId,
+			String cpMeasurementUnitKey, java.math.BigDecimal decimalQuantity,
+			int quantity, int shippedQuantity,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _commerceOrderItemLocalService.importCommerceOrderItem(
+			externalReferenceCode, commerceOrderItemId, commerceOrderId,
+			cpInstanceId, cpMeasurementUnitKey, decimalQuantity, quantity,
+			shippedQuantity, serviceContext);
 	}
 
 	@Override
@@ -591,6 +768,28 @@ public class CommerceOrderItemLocalServiceWrapper
 
 	@Override
 	public com.liferay.commerce.model.CommerceOrderItem updateCommerceOrderItem(
+			long commerceOrderItemId, long cpMeasurementUnitId, int quantity,
+			com.liferay.commerce.context.CommerceContext commerceContext,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _commerceOrderItemLocalService.updateCommerceOrderItem(
+			commerceOrderItemId, cpMeasurementUnitId, quantity, commerceContext,
+			serviceContext);
+	}
+
+	@Override
+	public com.liferay.commerce.model.CommerceOrderItem updateCommerceOrderItem(
+			long commerceOrderItemId, long cpMeasurementUnitId, int quantity,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _commerceOrderItemLocalService.updateCommerceOrderItem(
+			commerceOrderItemId, cpMeasurementUnitId, quantity, serviceContext);
+	}
+
+	@Override
+	public com.liferay.commerce.model.CommerceOrderItem updateCommerceOrderItem(
 			long commerceOrderItemId, String json, int quantity,
 			com.liferay.commerce.context.CommerceContext commerceContext,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
@@ -599,6 +798,16 @@ public class CommerceOrderItemLocalServiceWrapper
 		return _commerceOrderItemLocalService.updateCommerceOrderItem(
 			commerceOrderItemId, json, quantity, commerceContext,
 			serviceContext);
+	}
+
+	@Override
+	public com.liferay.commerce.model.CommerceOrderItem updateCommerceOrderItem(
+			long commerceOrderItemId, String json, int quantity,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _commerceOrderItemLocalService.updateCommerceOrderItem(
+			commerceOrderItemId, json, quantity, serviceContext);
 	}
 
 	@Override
@@ -737,6 +946,18 @@ public class CommerceOrderItemLocalServiceWrapper
 	@Override
 	public com.liferay.commerce.model.CommerceOrderItem
 			updateCommerceOrderItemUnitPrice(
+				long userId, long commerceOrderItemId,
+				java.math.BigDecimal decimalQuantity,
+				java.math.BigDecimal unitPrice)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _commerceOrderItemLocalService.updateCommerceOrderItemUnitPrice(
+			userId, commerceOrderItemId, decimalQuantity, unitPrice);
+	}
+
+	@Override
+	public com.liferay.commerce.model.CommerceOrderItem
+			updateCommerceOrderItemUnitPrice(
 				long userId, long commerceOrderItemId, int quantity,
 				java.math.BigDecimal unitPrice)
 		throws com.liferay.portal.kernel.exception.PortalException {
@@ -756,29 +977,13 @@ public class CommerceOrderItemLocalServiceWrapper
 	}
 
 	@Override
-	public com.liferay.commerce.model.CommerceOrderItem upsertCommerceOrderItem(
-			long commerceOrderId, long cpInstanceId, int quantity,
-			int shippedQuantity,
-			com.liferay.commerce.context.CommerceContext commerceContext,
-			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+	public com.liferay.commerce.model.CommerceOrderItem
+			updateExternalReferenceCode(
+				long commerceOrderItemId, String externalReferenceCode)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
-		return _commerceOrderItemLocalService.upsertCommerceOrderItem(
-			commerceOrderId, cpInstanceId, quantity, shippedQuantity,
-			commerceContext, serviceContext);
-	}
-
-	@Override
-	public com.liferay.commerce.model.CommerceOrderItem upsertCommerceOrderItem(
-			long commerceOrderId, long cpInstanceId, String json, int quantity,
-			int shippedQuantity,
-			com.liferay.commerce.context.CommerceContext commerceContext,
-			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return _commerceOrderItemLocalService.upsertCommerceOrderItem(
-			commerceOrderId, cpInstanceId, json, quantity, shippedQuantity,
-			commerceContext, serviceContext);
+		return _commerceOrderItemLocalService.updateExternalReferenceCode(
+			commerceOrderItemId, externalReferenceCode);
 	}
 
 	@Override

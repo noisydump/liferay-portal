@@ -20,21 +20,6 @@
 String rootMenuItemType = siteNavigationMenuDisplayContext.getRootMenuItemType();
 
 SiteNavigationMenu siteNavigationMenu = siteNavigationMenuDisplayContext.getSiteNavigationMenu();
-
-String siteNavigationMenuName = StringPool.BLANK;
-
-if (siteNavigationMenu != null) {
-	siteNavigationMenuName = HtmlUtil.escape(siteNavigationMenu.getName());
-}
-else if (siteNavigationMenuDisplayContext.getSelectSiteNavigationMenuType() == SiteNavigationConstants.TYPE_PRIVATE_PAGES_HIERARCHY) {
-	siteNavigationMenuName = LanguageUtil.get(request, "private-pages-hierarchy");
-}
-else if (siteNavigationMenuDisplayContext.getSelectSiteNavigationMenuType() == SiteNavigationConstants.TYPE_PUBLIC_PAGES_HIERARCHY) {
-	siteNavigationMenuName = LanguageUtil.get(request, "public-pages-hierarchy");
-}
-else {
-	siteNavigationMenuName = LanguageUtil.get(request, layout.isPrivateLayout() ? "private-pages-hierarchy" : "public-pages-hierarchy");
-}
 %>
 
 <liferay-portlet:actionURL portletConfiguration="<%= true %>" var="configurationActionURL" />
@@ -70,13 +55,22 @@ else {
 							Group scopeGroup = themeDisplay.getScopeGroup();
 							%>
 
-							<c:if test="<%= scopeGroup.hasPublicLayouts() && layout.isPublicLayout() %>">
-								<aui:option label="public-pages-hierarchy" selected="<%= siteNavigationMenuDisplayContext.getSelectSiteNavigationMenuType() == SiteNavigationConstants.TYPE_PUBLIC_PAGES_HIERARCHY %>" value="<%= SiteNavigationConstants.TYPE_PUBLIC_PAGES_HIERARCHY %>" />
-							</c:if>
+							<c:choose>
+								<c:when test="<%= scopeGroup.isPrivateLayoutsEnabled() %>">
+									<c:if test="<%= scopeGroup.hasPublicLayouts() && layout.isPublicLayout() %>">
+										<aui:option label="public-pages-hierarchy" selected="<%= siteNavigationMenuDisplayContext.getSelectSiteNavigationMenuType() == SiteNavigationConstants.TYPE_PUBLIC_PAGES_HIERARCHY %>" value="<%= SiteNavigationConstants.TYPE_PUBLIC_PAGES_HIERARCHY %>" />
+									</c:if>
 
-							<c:if test="<%= scopeGroup.hasPrivateLayouts() && layout.isPrivateLayout() %>">
-								<aui:option label="private-pages-hierarchy" selected="<%= siteNavigationMenuDisplayContext.getSelectSiteNavigationMenuType() == SiteNavigationConstants.TYPE_PRIVATE_PAGES_HIERARCHY %>" value="<%= SiteNavigationConstants.TYPE_PRIVATE_PAGES_HIERARCHY %>" />
-							</c:if>
+									<c:if test="<%= scopeGroup.hasPrivateLayouts() && layout.isPrivateLayout() %>">
+										<aui:option label="private-pages-hierarchy" selected="<%= siteNavigationMenuDisplayContext.getSelectSiteNavigationMenuType() == SiteNavigationConstants.TYPE_PRIVATE_PAGES_HIERARCHY %>" value="<%= SiteNavigationConstants.TYPE_PRIVATE_PAGES_HIERARCHY %>" />
+									</c:if>
+								</c:when>
+								<c:otherwise>
+									<c:if test="<%= scopeGroup.hasPublicLayouts() && layout.isPublicLayout() %>">
+										<aui:option label="pages-hierarchy" selected="<%= siteNavigationMenuDisplayContext.getSelectSiteNavigationMenuType() == SiteNavigationConstants.TYPE_PUBLIC_PAGES_HIERARCHY %>" value="<%= SiteNavigationConstants.TYPE_PUBLIC_PAGES_HIERARCHY %>" />
+									</c:if>
+								</c:otherwise>
+							</c:choose>
 
 							<aui:option label="primary-navigation" selected="<%= siteNavigationMenuDisplayContext.getSelectSiteNavigationMenuType() == SiteNavigationConstants.TYPE_PRIMARY %>" value="<%= SiteNavigationConstants.TYPE_PRIMARY %>" />
 							<aui:option label="secondary-navigation" selected="<%= siteNavigationMenuDisplayContext.getSelectSiteNavigationMenuType() == SiteNavigationConstants.TYPE_SECONDARY %>" value="<%= SiteNavigationConstants.TYPE_SECONDARY %>" />
@@ -88,7 +82,7 @@ else {
 						<div class="mb-2 text-muted">
 							<span id="<portlet:namespace />navigationMenuName">
 								<c:if test="<%= siteNavigationMenuDisplayContext.isSiteNavigationMenuSelected() && (siteNavigationMenu != null) %>">
-									<%= siteNavigationMenuName %>
+									<%= siteNavigationMenuDisplayContext.getSiteNavigationMenuName() %>
 								</c:if>
 							</span>
 							<span class="mt-1 <%= (siteNavigationMenuDisplayContext.isSiteNavigationMenuSelected() && (siteNavigationMenu != null)) ? StringPool.BLANK : "hide" %>" id="<portlet:namespace />removeSiteNavigationMenu" role="button">
@@ -99,7 +93,7 @@ else {
 						<aui:button disabled="<%= !siteNavigationMenuDisplayContext.isSiteNavigationMenuSelected() %>" name="chooseSiteNavigationMenu" value="select" />
 
 						<div class="display-template mt-4">
-							<liferay-ddm:template-selector
+							<liferay-template:template-selector
 								className="<%= NavItem.class.getName() %>"
 								displayStyle="<%= siteNavigationMenuDisplayContext.getDisplayStyle() %>"
 								displayStyleGroupId="<%= siteNavigationMenuDisplayContext.getDisplayStyleGroupId() %>"
@@ -153,7 +147,7 @@ else {
 										<aui:input id="rootMenuItemId" ignoreRequestValue="<%= true %>" name="preferences--rootMenuItemId--" type="hidden" value="<%= siteNavigationMenuDisplayContext.getRootMenuItemId() %>" />
 
 										<%
-										String rootMenuItemName = siteNavigationMenuName;
+										String rootMenuItemName = siteNavigationMenuDisplayContext.getSiteNavigationMenuName();
 
 										SiteNavigationMenuItem siteNavigationMenuItem = SiteNavigationMenuItemLocalServiceUtil.fetchSiteNavigationMenuItem(GetterUtil.getLong(siteNavigationMenuDisplayContext.getRootMenuItemId()));
 
@@ -339,7 +333,7 @@ else {
 		selectSiteNavigationMenuTypeSelect &&
 		siteNavigationMenuIdInput
 	) {
-		chooseRootMenuItemButton.addEventListener('click', function (event) {
+		chooseRootMenuItemButton.addEventListener('click', (event) => {
 			event.preventDefault();
 
 			var uri =
@@ -357,6 +351,7 @@ else {
 			);
 
 			Liferay.Util.openSelectionModal({
+				height: '70vh',
 				onSelect: function (selectedItem) {
 					if (selectedItem) {
 						rootMenuItemIdInput.value =
@@ -369,6 +364,7 @@ else {
 				},
 				selectEventName:
 					'<%= siteNavigationMenuDisplayContext.getRootMenuItemEventName() %>',
+				size: 'md',
 				title:
 					'<liferay-ui:message key="select-site-navigation-menu-item" />',
 				url: uri,
@@ -394,15 +390,17 @@ else {
 		rootMenuItemNameSpan &&
 		siteNavigationMenuIdInput
 	) {
-		chooseSiteNavigationMenuButton.addEventListener('click', function (event) {
+		chooseSiteNavigationMenuButton.addEventListener('click', (event) => {
 			Liferay.Util.openSelectionModal({
 				id: '<portlet:namespace />selectSiteNavigationMenu',
 				onSelect: function (selectedItem) {
-					if (selectedItem) {
-						navigationMenuName.innerText = selectedItem.name;
+					const itemValue = JSON.parse(selectedItem.value);
+
+					if (itemValue) {
+						navigationMenuName.innerText = itemValue.name;
 						rootMenuItemIdInput.value = '0';
-						rootMenuItemNameSpan.innerText = selectedItem.name;
-						siteNavigationMenuIdInput.value = selectedItem.id;
+						rootMenuItemNameSpan.innerText = itemValue.name;
+						siteNavigationMenuIdInput.value = itemValue.id;
 
 						removeSiteNavigationMenu.classList.toggle('hide');
 
@@ -430,7 +428,7 @@ else {
 		rootMenuItemNameSpan &&
 		siteNavigationMenuIdInput
 	) {
-		removeSiteNavigationMenuButton.addEventListener('click', function (event) {
+		removeSiteNavigationMenuButton.addEventListener('click', (event) => {
 			navigationMenuName.innerText = '';
 			rootMenuItemIdInput.value = '0';
 			rootMenuItemNameSpan.innerText = '';
@@ -450,7 +448,7 @@ else {
 
 	Liferay.Util.toggleSelectBox(
 		'<portlet:namespace />rootMenuItemType',
-		function (currentValue, value) {
+		(currentValue, value) => {
 			return currentValue === 'absolute' || currentValue === 'relative';
 		},
 		'<portlet:namespace />rootMenuItemLevel'
@@ -465,7 +463,7 @@ else {
 		selectSiteNavigationMenuTypeSelect &&
 		siteNavigationMenuType
 	) {
-		selectSiteNavigationMenuTypeSelect.addEventListener('change', function () {
+		selectSiteNavigationMenuTypeSelect.addEventListener('change', () => {
 			var selectedSelectSiteNavigationMenuType = document.querySelector(
 				'#<portlet:namespace />selectSiteNavigationMenuType option:checked'
 			);
@@ -496,7 +494,7 @@ else {
 			document.<portlet:namespace />fm,
 			'change',
 			'.select-navigation',
-			function () {
+			() => {
 				var siteNavigationDisabled =
 					selectSiteNavigationMenuTypeSelect.disabled;
 

@@ -64,7 +64,7 @@ public class ProductSerDes {
 		sb.append("{");
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+			"yyyy-MM-dd'T'HH:mm:ssXX");
 
 		if (product.getAttachments() != null) {
 			if (sb.length() > 1) {
@@ -255,6 +255,16 @@ public class ProductSerDes {
 			sb.append("\"");
 		}
 
+		if (product.getProductConfiguration() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"productConfiguration\": ");
+
+			sb.append(String.valueOf(product.getProductConfiguration()));
+		}
+
 		if (product.getProductId() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -428,6 +438,16 @@ public class ProductSerDes {
 			sb.append("\"");
 		}
 
+		if (product.getUrls() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"urls\": ");
+
+			sb.append(_toJSON(product.getUrls()));
+		}
+
 		sb.append("}");
 
 		return sb.toString();
@@ -447,7 +467,7 @@ public class ProductSerDes {
 		Map<String, String> map = new TreeMap<>();
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+			"yyyy-MM-dd'T'HH:mm:ssXX");
 
 		if (product.getAttachments() == null) {
 			map.put("attachments", null);
@@ -548,6 +568,15 @@ public class ProductSerDes {
 			map.put("name", String.valueOf(product.getName()));
 		}
 
+		if (product.getProductConfiguration() == null) {
+			map.put("productConfiguration", null);
+		}
+		else {
+			map.put(
+				"productConfiguration",
+				String.valueOf(product.getProductConfiguration()));
+		}
+
 		if (product.getProductId() == null) {
 			map.put("productId", null);
 		}
@@ -623,6 +652,13 @@ public class ProductSerDes {
 		}
 		else {
 			map.put("urlImage", String.valueOf(product.getUrlImage()));
+		}
+
+		if (product.getUrls() == null) {
+			map.put("urls", null);
+		}
+		else {
+			map.put("urls", String.valueOf(product.getUrls()));
 		}
 
 		return map;
@@ -736,6 +772,15 @@ public class ProductSerDes {
 					product.setName((String)jsonParserFieldValue);
 				}
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "productConfiguration")) {
+
+				if (jsonParserFieldValue != null) {
+					product.setProductConfiguration(
+						ProductConfigurationSerDes.toDTO(
+							(String)jsonParserFieldValue));
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "productId")) {
 				if (jsonParserFieldValue != null) {
 					product.setProductId(
@@ -818,8 +863,11 @@ public class ProductSerDes {
 					product.setUrlImage((String)jsonParserFieldValue);
 				}
 			}
-			else if (jsonParserFieldName.equals("status")) {
-				throw new IllegalArgumentException();
+			else if (Objects.equals(jsonParserFieldName, "urls")) {
+				if (jsonParserFieldValue != null) {
+					product.setUrls(
+						(Map)ProductSerDes.toMap((String)jsonParserFieldValue));
+				}
 			}
 		}
 
@@ -849,7 +897,7 @@ public class ProductSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -885,7 +933,7 @@ public class ProductSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

@@ -47,9 +47,21 @@ import org.osgi.service.component.annotations.Reference;
 	},
 	service = MVCActionCommand.class
 )
-public class AddStructureMVCActionCommand extends DDMBaseMVCActionCommand {
+public class AddStructureMVCActionCommand extends BaseDDMMVCActionCommand {
 
-	protected DDMStructure addStructure(ActionRequest actionRequest)
+	@Override
+	protected void doProcessAction(
+			ActionRequest actionRequest, ActionResponse actionResponse)
+		throws Exception {
+
+		DDMStructure structure = _addStructure(actionRequest);
+
+		addSuccessMessage(actionRequest, actionResponse);
+
+		setRedirectAttribute(actionRequest, structure);
+	}
+
+	private DDMStructure _addStructure(ActionRequest actionRequest)
 		throws Exception {
 
 		long groupId = ParamUtil.getLong(actionRequest, "groupId");
@@ -80,31 +92,10 @@ public class AddStructureMVCActionCommand extends DDMBaseMVCActionCommand {
 			DDMStructureConstants.TYPE_DEFAULT, serviceContext);
 	}
 
-	@Override
-	protected void doProcessAction(
-			ActionRequest actionRequest, ActionResponse actionResponse)
-		throws Exception {
-
-		DDMStructure structure = addStructure(actionRequest);
-
-		addSuccessMessage(actionRequest, actionResponse);
-
-		setRedirectAttribute(actionRequest, structure);
-	}
-
-	@Reference(unbind = "-")
-	protected void setDDM(DDM ddm) {
-		_ddm = ddm;
-	}
-
-	@Reference(unbind = "-")
-	protected void setDDMStructureService(
-		DDMStructureService ddmStructureService) {
-
-		_ddmStructureService = ddmStructureService;
-	}
-
+	@Reference
 	private DDM _ddm;
+
+	@Reference
 	private DDMStructureService _ddmStructureService;
 
 }

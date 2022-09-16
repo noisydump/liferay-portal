@@ -14,18 +14,19 @@
 
 package com.liferay.layout.content.page.editor.web.internal.util;
 
-import com.liferay.info.list.provider.item.selector.criterion.InfoListProviderItemSelectorCriterion;
+import com.liferay.info.collection.provider.item.selector.criterion.InfoCollectionProviderItemSelectorCriterion;
 import com.liferay.info.list.provider.item.selector.criterion.InfoListProviderItemSelectorReturnType;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.criteria.InfoItemItemSelectorReturnType;
 import com.liferay.item.selector.criteria.InfoListItemSelectorReturnType;
 import com.liferay.item.selector.criteria.info.item.criterion.InfoItemItemSelectorCriterion;
 import com.liferay.item.selector.criteria.info.item.criterion.InfoListItemSelectorCriterion;
+import com.liferay.layout.content.page.editor.constants.ContentPageEditorPortletKeys;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONObject;
-import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.ArrayList;
@@ -43,13 +44,16 @@ public class FragmentEntryLinkItemSelectorUtil {
 
 	public static void addFragmentEntryLinkFieldsSelectorURL(
 		ItemSelector itemSelector, HttpServletRequest httpServletRequest,
-		LiferayPortletResponse liferayPortletResponse, JSONObject jsonObject) {
+		JSONObject jsonObject) {
 
 		JSONArray fieldSetsJSONArray = jsonObject.getJSONArray("fieldSets");
 
 		if (fieldSetsJSONArray == null) {
 			return;
 		}
+
+		String namespace = PortalUtil.getPortletNamespace(
+			ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET);
 
 		for (int i = 0; i < fieldSetsJSONArray.length(); i++) {
 			JSONObject fieldSetsJSONObject = fieldSetsJSONArray.getJSONObject(
@@ -81,8 +85,8 @@ public class FragmentEntryLinkItemSelectorUtil {
 						typeOptionsJSONObject.put(
 							"infoItemSelectorURL",
 							_getInfoItemSelectorURL(
-								itemSelector, httpServletRequest,
-								liferayPortletResponse, typeOptionsJSONObject));
+								itemSelector, httpServletRequest, namespace,
+								typeOptionsJSONObject));
 					}
 				}
 
@@ -94,8 +98,8 @@ public class FragmentEntryLinkItemSelectorUtil {
 						typeOptionsJSONObject.put(
 							"infoListSelectorURL",
 							_getInfoListSelectorURL(
-								itemSelector, httpServletRequest,
-								liferayPortletResponse, typeOptionsJSONObject));
+								itemSelector, httpServletRequest, namespace,
+								typeOptionsJSONObject));
 					}
 				}
 			}
@@ -104,8 +108,7 @@ public class FragmentEntryLinkItemSelectorUtil {
 
 	private static String _getInfoItemSelectorURL(
 		ItemSelector itemSelector, HttpServletRequest httpServletRequest,
-		LiferayPortletResponse liferayPortletResponse,
-		JSONObject typeOptionsJSONObject) {
+		String namespace, JSONObject typeOptionsJSONObject) {
 
 		InfoItemItemSelectorCriterion itemSelectorCriterion =
 			new InfoItemItemSelectorCriterion();
@@ -141,8 +144,7 @@ public class FragmentEntryLinkItemSelectorUtil {
 
 		PortletURL infoItemSelectorURL = itemSelector.getItemSelectorURL(
 			RequestBackedPortletURLFactoryUtil.create(httpServletRequest),
-			liferayPortletResponse.getNamespace() + "selectInfoItem",
-			itemSelectorCriterion);
+			namespace + "selectInfoItem", itemSelectorCriterion);
 
 		if (infoItemSelectorURL == null) {
 			return StringPool.BLANK;
@@ -153,22 +155,21 @@ public class FragmentEntryLinkItemSelectorUtil {
 
 	private static String _getInfoListSelectorURL(
 		ItemSelector itemSelector, HttpServletRequest httpServletRequest,
-		LiferayPortletResponse liferayPortletResponse,
-		JSONObject typeOptionsJSONObject) {
+		String namespace, JSONObject typeOptionsJSONObject) {
 
 		InfoListItemSelectorCriterion infoListItemSelectorCriterion =
 			new InfoListItemSelectorCriterion();
 
-		InfoListProviderItemSelectorCriterion
-			infoListProviderItemSelectorCriterion =
-				new InfoListProviderItemSelectorCriterion();
+		InfoCollectionProviderItemSelectorCriterion
+			infoCollectionProviderItemSelectorCriterion =
+				new InfoCollectionProviderItemSelectorCriterion();
 
 		String itemType = typeOptionsJSONObject.getString("itemType");
 
 		if (Validator.isNotNull(itemType)) {
 			infoListItemSelectorCriterion.setItemType(itemType);
 
-			infoListProviderItemSelectorCriterion.setItemType(itemType);
+			infoCollectionProviderItemSelectorCriterion.setItemType(itemType);
 
 			String itemSubtype = typeOptionsJSONObject.getString("itemSubtype");
 
@@ -180,14 +181,14 @@ public class FragmentEntryLinkItemSelectorUtil {
 		infoListItemSelectorCriterion.setDesiredItemSelectorReturnTypes(
 			new InfoListItemSelectorReturnType());
 
-		infoListProviderItemSelectorCriterion.setDesiredItemSelectorReturnTypes(
-			new InfoListProviderItemSelectorReturnType());
+		infoCollectionProviderItemSelectorCriterion.
+			setDesiredItemSelectorReturnTypes(
+				new InfoListProviderItemSelectorReturnType());
 
 		PortletURL infoListSelectorURL = itemSelector.getItemSelectorURL(
 			RequestBackedPortletURLFactoryUtil.create(httpServletRequest),
-			liferayPortletResponse.getNamespace() + "selectInfoList",
-			infoListItemSelectorCriterion,
-			infoListProviderItemSelectorCriterion);
+			namespace + "selectInfoList", infoListItemSelectorCriterion,
+			infoCollectionProviderItemSelectorCriterion);
 
 		if (infoListSelectorURL == null) {
 			return StringPool.BLANK;

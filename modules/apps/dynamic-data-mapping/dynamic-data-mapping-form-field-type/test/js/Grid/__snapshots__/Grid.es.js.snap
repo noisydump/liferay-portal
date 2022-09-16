@@ -6,7 +6,7 @@ exports[`Grid has a label 1`] = `
     class="form-group hide"
   >
     <label
-      aria-describedby="undefined_fieldDetails"
+      aria-labelledby="undefined_fieldDetails"
       class="ddm-label"
       tabindex="0"
     >
@@ -16,8 +16,6 @@ exports[`Grid has a label 1`] = `
       class="table-responsive"
     >
       <input
-        aria-hidden="true"
-        class="form-control"
         type="hidden"
         value=""
       />
@@ -78,12 +76,16 @@ exports[`Grid has a label 1`] = `
         </table>
       </div>
     </div>
+    <input
+      name="undefined_edited"
+      type="hidden"
+      value="false"
+    />
     <span
       class="sr-only"
       id="undefined_fieldDetails"
     >
       label
-      <br />
     </span>
   </div>
 </div>
@@ -100,8 +102,6 @@ exports[`Grid has a tip 1`] = `
       class="table-responsive"
     >
       <input
-        aria-hidden="true"
-        class="form-control"
         type="hidden"
         value=""
       />
@@ -162,18 +162,24 @@ exports[`Grid has a tip 1`] = `
         </table>
       </div>
     </div>
-    <span
+    <input
+      name="undefined_edited"
+      type="hidden"
+      value="false"
+    />
+    <div
       aria-hidden="true"
-      class="form-text"
+      class="form-feedback-group lfr-de__field-feedback"
     >
-      Type something
-    </span>
+      <div>
+        Type something
+      </div>
+    </div>
     <span
       class="sr-only"
       id="undefined_fieldDetails"
     >
       Type something
-      <br />
     </span>
   </div>
 </div>
@@ -182,7 +188,7 @@ exports[`Grid has a tip 1`] = `
 exports[`Grid has an id 1`] = `
 <div>
   <div
-    aria-labelledby="undefined_fieldDetails"
+    aria-labelledby="Id_fieldDetails"
     class="form-group hide"
     tabindex="0"
   >
@@ -190,8 +196,6 @@ exports[`Grid has an id 1`] = `
       class="table-responsive"
     >
       <input
-        aria-hidden="true"
-        class="form-control"
         type="hidden"
         value=""
       />
@@ -252,6 +256,11 @@ exports[`Grid has an id 1`] = `
         </table>
       </div>
     </div>
+    <input
+      name="undefined_edited"
+      type="hidden"
+      value="false"
+    />
     
   </div>
 </div>
@@ -325,6 +334,11 @@ exports[`Grid is not editable 1`] = `
         </table>
       </div>
     </div>
+    <input
+      name="undefined_edited"
+      type="hidden"
+      value="false"
+    />
     
   </div>
 </div>
@@ -341,8 +355,6 @@ exports[`Grid is not required 1`] = `
       class="table-responsive"
     >
       <input
-        aria-hidden="true"
-        class="form-control"
         type="hidden"
         value=""
       />
@@ -403,6 +415,11 @@ exports[`Grid is not required 1`] = `
         </table>
       </div>
     </div>
+    <input
+      name="undefined_edited"
+      type="hidden"
+      value="false"
+    />
     
   </div>
 </div>
@@ -414,7 +431,7 @@ exports[`Grid renders Label if showLabel is true 1`] = `
     class="form-group hide"
   >
     <label
-      aria-describedby="undefined_fieldDetails"
+      aria-labelledby="undefined_fieldDetails"
       class="ddm-label"
       tabindex="0"
     >
@@ -424,8 +441,6 @@ exports[`Grid renders Label if showLabel is true 1`] = `
       class="table-responsive"
     >
       <input
-        aria-hidden="true"
-        class="form-control"
         type="hidden"
         value=""
       />
@@ -486,12 +501,16 @@ exports[`Grid renders Label if showLabel is true 1`] = `
         </table>
       </div>
     </div>
+    <input
+      name="undefined_edited"
+      type="hidden"
+      value="false"
+    />
     <span
       class="sr-only"
       id="undefined_fieldDetails"
     >
       text
-      <br />
     </span>
   </div>
 </div>
@@ -508,8 +527,6 @@ exports[`Grid renders columns 1`] = `
       class="table-responsive"
     >
       <input
-        aria-hidden="true"
-        class="form-control"
         type="hidden"
         value=""
       />
@@ -597,6 +614,11 @@ exports[`Grid renders columns 1`] = `
         </table>
       </div>
     </div>
+    <input
+      name="undefined_edited"
+      type="hidden"
+      value="false"
+    />
     
   </div>
 </div>
@@ -613,8 +635,6 @@ exports[`Grid renders no columns when columns comes empty 1`] = `
       class="table-responsive"
     >
       <input
-        aria-hidden="true"
-        class="form-control"
         type="hidden"
         value=""
       />
@@ -648,6 +668,11 @@ exports[`Grid renders no columns when columns comes empty 1`] = `
         </table>
       </div>
     </div>
+    <input
+      name="undefined_edited"
+      type="hidden"
+      value="false"
+    />
     
   </div>
 </div>
@@ -687,6 +712,11 @@ exports[`Grid renders no rows when row comes empty 1`] = `
         </table>
       </div>
     </div>
+    <input
+      name="undefined_edited"
+      type="hidden"
+      value="false"
+    />
     
   </div>
 </div>
@@ -703,14 +733,10 @@ exports[`Grid renders rows 1`] = `
       class="table-responsive"
     >
       <input
-        aria-hidden="true"
-        class="form-control"
         type="hidden"
         value=""
       />
       <input
-        aria-hidden="true"
-        class="form-control"
         type="hidden"
         value=""
       />
@@ -803,6 +829,11 @@ exports[`Grid renders rows 1`] = `
         </table>
       </div>
     </div>
+    <input
+      name="undefined_edited"
+      type="hidden"
+      value="false"
+    />
     
   </div>
 </div>

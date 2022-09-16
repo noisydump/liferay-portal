@@ -32,10 +32,12 @@ renderResponse.setTitle((ddmStructure != null) ? LanguageUtil.format(request, "e
 
 DDMForm ddmForm = null;
 long ddmStructureId = 0L;
+String ddmStructureKey = StringPool.BLANK;
 
 if (ddmStructure != null) {
 	ddmForm = ddmStructure.getDDMForm();
 	ddmStructureId = ddmStructure.getStructureId();
+	ddmStructureKey = ddmStructure.getStructureKey();
 }
 
 PortletURL editDDMStructureURL = renderResponse.createActionURL();
@@ -48,13 +50,15 @@ else {
 }
 
 editDDMStructureURL.setParameter("mvcPath", "/edit_data_definition.jsp");
+editDDMStructureURL.setParameter("ddmStructureId", String.valueOf(ddmStructureId));
+editDDMStructureURL.setParameter("structureKey", String.valueOf(ddmStructureKey));
 %>
 
 <liferay-util:html-top>
 	<link href="<%= PortalUtil.getStaticResourceURL(request, PortalUtil.getPathModule() + "/journal-web/css/ddm_form.css") %>" rel="stylesheet" />
 </liferay-util:html-top>
 
-<aui:form action="<%= editDDMStructureURL.toString() %>" cssClass="edit-article-form" enctype="multipart/form-data" method="post" name="fm" onSubmit="event.preventDefault();">
+<aui:form action="<%= editDDMStructureURL %>" cssClass="edit-article-form" enctype="multipart/form-data" method="post" name="fm" onSubmit="event.preventDefault();">
 	<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
 	<aui:input name="groupId" type="hidden" value="<%= groupId %>" />
 	<aui:input name="dataDefinition" type="hidden" />
@@ -68,13 +72,13 @@ editDDMStructureURL.setParameter("mvcPath", "/edit_data_definition.jsp");
 		<clay:container-fluid>
 			<ul class="tbar-nav">
 				<li class="tbar-item tbar-item-expand">
-					<aui:input cssClass="form-control-inline" defaultLanguageId="<%= (ddmForm == null) ? LocaleUtil.toLanguageId(LocaleUtil.getSiteDefault()): LocaleUtil.toLanguageId(ddmForm.getDefaultLocale()) %>" label="" name="name" placeholder='<%= LanguageUtil.format(request, "untitled-x", "structure") %>' wrapperCssClass="article-content-title mb-0" />
+					<aui:input activeLanguageIds="<%= journalEditDDMStructuresDisplayContext.getAvailableLanguageIds() %>" adminMode="<%= true %>" cssClass="form-control-inline" defaultLanguageId="<%= (ddmForm == null) ? LocaleUtil.toLanguageId(LocaleUtil.getSiteDefault()): LocaleUtil.toLanguageId(ddmForm.getDefaultLocale()) %>" label="" languagesDropdownDirection="down" localized="<%= true %>" name="name" placeholder='<%= LanguageUtil.format(request, "untitled-x", "structure") %>' required="<%= true %>" type="text" wrapperCssClass="article-content-title mb-0" />
 				</li>
 				<li class="tbar-item">
 					<div class="journal-article-button-row tbar-section text-right">
-						<aui:button cssClass="btn-secondary btn-sm mr-3" href="<%= redirect %>" type="cancel" />
+						<aui:button cssClass="btn-sm mr-3" href="<%= redirect %>" type="cancel" />
 
-						<aui:button cssClass="btn-sm mr-3" type="submit" value="<%= journalEditDDMStructuresDisplayContext.getSaveButtonLabel() %>" />
+						<aui:button cssClass="btn-sm mr-3" id="submitButton" type="submit" value="save" />
 					</div>
 				</li>
 			</ul>
@@ -112,7 +116,10 @@ editDDMStructureURL.setParameter("mvcPath", "/edit_data_definition.jsp");
 						dataDefinitionId="<%= ddmStructureId %>"
 						groupId="<%= groupId %>"
 						namespace="<%= liferayPortletResponse.getNamespace() %>"
+						scopes='<%= SetUtil.fromCollection(Arrays.asList("journal")) %>'
+						searchableFieldsDisabled="<%= !journalEditDDMStructuresDisplayContext.isStructureFieldIndexableEnable() %>"
 						singlePage="<%= true %>"
+						submitButtonId='<%= liferayPortletResponse.getNamespace() + "submitButton" %>'
 					/>
 				</div>
 			</div>
@@ -121,93 +128,15 @@ editDDMStructureURL.setParameter("mvcPath", "/edit_data_definition.jsp");
 </aui:form>
 
 <liferay-frontend:component
-	componentId='<%= liferayPortletResponse.getNamespace() + "LocaleChangedHandlerComponent" %>'
-	context="<%= journalEditDDMStructuresDisplayContext.getComponentContext() %>"
-	module="js/LocaleChangedHandler.es"
+	componentId='<%= liferayPortletResponse.getNamespace() + "DataEngineLayoutBuilderHandler" %>'
+	context="<%= journalEditDDMStructuresDisplayContext.getDataEngineLayoutBuilderHandlerContext() %>"
+	module="js/DataEngineLayoutBuilderHandler.es"
 	servletContext="<%= application %>"
 />
 
-<aui:script sandbox="<%= true %>">
-	function <portlet:namespace />getInputLocalizedValues(field) {
-		var inputLocalized = Liferay.component('<portlet:namespace />' + field);
-		var localizedValues = {};
-
-		if (inputLocalized) {
-			var translatedLanguages = inputLocalized
-				.get('translatedLanguages')
-				.values();
-
-			translatedLanguages.forEach(function (languageId) {
-				localizedValues[languageId] = inputLocalized.getValue(languageId);
-			});
-		}
-
-		return localizedValues;
-	}
-
-	function <portlet:namespace />saveDDMStructure() {
-		Liferay.componentReady('<portlet:namespace />dataLayoutBuilder').then(
-			function (dataLayoutBuilder) {
-				const nameInput = document.getElementById(
-					'<portlet:namespace />name'
-				);
-
-				var name = <portlet:namespace />getInputLocalizedValues('name');
-
-				if (
-					!nameInput.value ||
-					!name[
-						'<%= journalEditDDMStructuresDisplayContext.getDefaultLanguageId() %>'
-					]
-				) {
-					Liferay.Util.openToast({
-						message:
-							'<liferay-ui:message arguments="<%= LocaleUtil.toW3cLanguageId(journalEditDDMStructuresDisplayContext.getDefaultLanguageId()) %>" key="please-enter-a-valid-title-for-the-default-language-x" />',
-						title: '<liferay-ui:message key="error" />',
-						type: 'danger',
-					});
-
-					nameInput.focus();
-
-					return;
-				}
-
-				var description = <portlet:namespace />getInputLocalizedValues(
-					'description'
-				);
-
-				var formData = dataLayoutBuilder.getFormData();
-
-				var dataDefinition = formData.definition;
-
-				dataDefinition.description = description;
-				dataDefinition.name = name;
-
-				var dataLayout = formData.layout;
-
-				dataLayout.description = description;
-				dataLayout.name = name;
-
-				Liferay.Util.postForm(document.<portlet:namespace />fm, {
-					data: {
-						dataDefinition: JSON.stringify(dataDefinition),
-						dataLayout: JSON.stringify(dataLayout),
-					},
-				});
-			}
-		);
-	}
-
-	const form = document.getElementById('<portlet:namespace />fm');
-
-	if (form) {
-		form.addEventListener('submit', <portlet:namespace />saveDDMStructure);
-
-		Liferay.once('destroyPortlet', function () {
-			form.removeEventListener(
-				'submit',
-				<portlet:namespace />saveDDMStructure
-			);
-		});
-	}
-</aui:script>
+<liferay-frontend:component
+	componentId='<%= liferayPortletResponse.getNamespace() + "LocaleChangedHandlerComponent" %>'
+	context="<%= journalEditDDMStructuresDisplayContext.getLocaleChangedHandlerContext() %>"
+	module="js/LocaleChangedHandler.es"
+	servletContext="<%= application %>"
+/>

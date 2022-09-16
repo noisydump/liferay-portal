@@ -16,8 +16,7 @@ package com.liferay.dynamic.data.lists.service.base;
 
 import com.liferay.dynamic.data.lists.model.DDLRecordVersion;
 import com.liferay.dynamic.data.lists.service.DDLRecordVersionService;
-import com.liferay.dynamic.data.lists.service.persistence.DDLRecordFinder;
-import com.liferay.dynamic.data.lists.service.persistence.DDLRecordPersistence;
+import com.liferay.dynamic.data.lists.service.DDLRecordVersionServiceUtil;
 import com.liferay.dynamic.data.lists.service.persistence.DDLRecordVersionPersistence;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
@@ -25,12 +24,17 @@ import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.service.BaseServiceImpl;
 import com.liferay.portal.kernel.util.PortalUtil;
 
+import java.lang.reflect.Field;
+
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -51,8 +55,13 @@ public abstract class DDLRecordVersionServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>DDLRecordVersionService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.dynamic.data.lists.service.DDLRecordVersionServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>DDLRecordVersionService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>DDLRecordVersionServiceUtil</code>.
 	 */
+	@Deactivate
+	protected void deactivate() {
+		_setServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -63,6 +72,8 @@ public abstract class DDLRecordVersionServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		ddlRecordVersionService = (DDLRecordVersionService)aopProxy;
+
+		_setServiceUtilService(ddlRecordVersionService);
 	}
 
 	/**
@@ -107,6 +118,22 @@ public abstract class DDLRecordVersionServiceBaseImpl
 		}
 	}
 
+	private void _setServiceUtilService(
+		DDLRecordVersionService ddlRecordVersionService) {
+
+		try {
+			Field field = DDLRecordVersionServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, ddlRecordVersionService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@Reference
 	protected
 		com.liferay.dynamic.data.lists.service.DDLRecordVersionLocalService
@@ -121,10 +148,7 @@ public abstract class DDLRecordVersionServiceBaseImpl
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@Reference
-	protected DDLRecordPersistence ddlRecordPersistence;
-
-	@Reference
-	protected DDLRecordFinder ddlRecordFinder;
+	private static final Log _log = LogFactoryUtil.getLog(
+		DDLRecordVersionServiceBaseImpl.class);
 
 }

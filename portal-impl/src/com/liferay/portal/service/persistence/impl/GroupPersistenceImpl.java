@@ -17,7 +17,6 @@ package com.liferay.portal.service.persistence.impl;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.change.tracking.CTColumnResolutionType;
-import com.liferay.portal.kernel.dao.orm.ArgumentsResolver;
 import com.liferay.portal.kernel.dao.orm.EntityCache;
 import com.liferay.portal.kernel.dao.orm.EntityCacheUtil;
 import com.liferay.portal.kernel.dao.orm.FinderCache;
@@ -30,11 +29,13 @@ import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.exception.NoSuchGroupException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupTable;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.persistence.GroupPersistence;
+import com.liferay.portal.kernel.service.persistence.GroupUtil;
 import com.liferay.portal.kernel.service.persistence.OrganizationPersistence;
 import com.liferay.portal.kernel.service.persistence.RolePersistence;
 import com.liferay.portal.kernel.service.persistence.UserGroupPersistence;
@@ -44,8 +45,11 @@ import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
 import com.liferay.portal.kernel.service.persistence.impl.TableMapper;
 import com.liferay.portal.kernel.service.persistence.impl.TableMapperFactory;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -53,16 +57,15 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 import com.liferay.portal.model.impl.GroupImpl;
 import com.liferay.portal.model.impl.GroupModelImpl;
-import com.liferay.registry.Registry;
-import com.liferay.registry.RegistryUtil;
-import com.liferay.registry.ServiceRegistration;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -71,7 +74,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * The persistence implementation for the group service.
@@ -3334,8 +3336,236 @@ public class GroupPersistenceImpl
 	private static final String _FINDER_COLUMN_C_P_PARENTGROUPID_2 =
 		"group_.parentGroupId = ?";
 
+	private FinderPath _finderPathWithPaginationFindByC_GK;
+	private FinderPath _finderPathWithoutPaginationFindByC_GK;
 	private FinderPath _finderPathFetchByC_GK;
 	private FinderPath _finderPathCountByC_GK;
+	private FinderPath _finderPathWithPaginationCountByC_GK;
+
+	/**
+	 * Returns all the groups where companyId = &#63; and groupKey = any &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>GroupModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param groupKeys the group keys
+	 * @return the matching groups
+	 */
+	@Override
+	public List<Group> findByC_GK(long companyId, String[] groupKeys) {
+		return findByC_GK(
+			companyId, groupKeys, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+	}
+
+	/**
+	 * Returns a range of all the groups where companyId = &#63; and groupKey = any &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>GroupModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param groupKeys the group keys
+	 * @param start the lower bound of the range of groups
+	 * @param end the upper bound of the range of groups (not inclusive)
+	 * @return the range of matching groups
+	 */
+	@Override
+	public List<Group> findByC_GK(
+		long companyId, String[] groupKeys, int start, int end) {
+
+		return findByC_GK(companyId, groupKeys, start, end, null);
+	}
+
+	/**
+	 * Returns an ordered range of all the groups where companyId = &#63; and groupKey = any &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>GroupModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param groupKeys the group keys
+	 * @param start the lower bound of the range of groups
+	 * @param end the upper bound of the range of groups (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching groups
+	 */
+	@Override
+	public List<Group> findByC_GK(
+		long companyId, String[] groupKeys, int start, int end,
+		OrderByComparator<Group> orderByComparator) {
+
+		return findByC_GK(
+			companyId, groupKeys, start, end, orderByComparator, true);
+	}
+
+	/**
+	 * Returns an ordered range of all the groups where companyId = &#63; and groupKey = &#63;, optionally using the finder cache.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>GroupModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param groupKeys the group keys
+	 * @param start the lower bound of the range of groups
+	 * @param end the upper bound of the range of groups (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching groups
+	 */
+	@Override
+	public List<Group> findByC_GK(
+		long companyId, String[] groupKeys, int start, int end,
+		OrderByComparator<Group> orderByComparator, boolean useFinderCache) {
+
+		if (groupKeys == null) {
+			groupKeys = new String[0];
+		}
+		else if (groupKeys.length > 1) {
+			for (int i = 0; i < groupKeys.length; i++) {
+				groupKeys[i] = Objects.toString(groupKeys[i], "");
+			}
+
+			groupKeys = ArrayUtil.sortedUnique(groupKeys);
+		}
+
+		if (groupKeys.length == 1) {
+			Group group = fetchByC_GK(companyId, groupKeys[0]);
+
+			if (group == null) {
+				return Collections.emptyList();
+			}
+			else {
+				List<Group> list = new ArrayList<Group>(1);
+
+				list.add(group);
+
+				return list;
+			}
+		}
+
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			Group.class);
+
+		Object[] finderArgs = null;
+
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			(orderByComparator == null)) {
+
+			if (useFinderCache && productionMode) {
+				finderArgs = new Object[] {
+					companyId, StringUtil.merge(groupKeys)
+				};
+			}
+		}
+		else if (useFinderCache && productionMode) {
+			finderArgs = new Object[] {
+				companyId, StringUtil.merge(groupKeys), start, end,
+				orderByComparator
+			};
+		}
+
+		List<Group> list = null;
+
+		if (useFinderCache && productionMode) {
+			list = (List<Group>)FinderCacheUtil.getResult(
+				_finderPathWithPaginationFindByC_GK, finderArgs);
+
+			if ((list != null) && !list.isEmpty()) {
+				for (Group group : list) {
+					if ((companyId != group.getCompanyId()) ||
+						!ArrayUtil.contains(groupKeys, group.getGroupKey())) {
+
+						list = null;
+
+						break;
+					}
+				}
+			}
+		}
+
+		if (list == null) {
+			StringBundler sb = new StringBundler();
+
+			sb.append(_SQL_SELECT_GROUP__WHERE);
+
+			sb.append(_FINDER_COLUMN_C_GK_COMPANYID_2);
+
+			if (groupKeys.length > 0) {
+				sb.append("(");
+
+				for (int i = 0; i < groupKeys.length; i++) {
+					String groupKey = groupKeys[i];
+
+					if (groupKey.isEmpty()) {
+						sb.append(_FINDER_COLUMN_C_GK_GROUPKEY_3);
+					}
+					else {
+						sb.append(_FINDER_COLUMN_C_GK_GROUPKEY_2);
+					}
+
+					if ((i + 1) < groupKeys.length) {
+						sb.append(WHERE_OR);
+					}
+				}
+
+				sb.append(")");
+			}
+
+			sb.setStringAt(
+				removeConjunction(sb.stringAt(sb.index() - 1)), sb.index() - 1);
+
+			if (orderByComparator != null) {
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+			}
+			else {
+				sb.append(GroupModelImpl.ORDER_BY_JPQL);
+			}
+
+			String sql = sb.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query query = session.createQuery(sql);
+
+				QueryPos queryPos = QueryPos.getInstance(query);
+
+				queryPos.add(companyId);
+
+				for (String groupKey : groupKeys) {
+					if ((groupKey != null) && !groupKey.isEmpty()) {
+						queryPos.add(groupKey);
+					}
+				}
+
+				list = (List<Group>)QueryUtil.list(
+					query, getDialect(), start, end);
+
+				cacheResult(list);
+
+				if (useFinderCache && productionMode) {
+					FinderCacheUtil.putResult(
+						_finderPathWithPaginationFindByC_GK, finderArgs, list);
+				}
+			}
+			catch (Exception exception) {
+				throw processException(exception);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		return list;
+	}
 
 	/**
 	 * Returns the group where companyId = &#63; and groupKey = &#63; or throws a <code>NoSuchGroupException</code> if it could not be found.
@@ -3575,6 +3805,109 @@ public class GroupPersistenceImpl
 
 				if (productionMode) {
 					FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				}
+			}
+			catch (Exception exception) {
+				throw processException(exception);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		return count.intValue();
+	}
+
+	/**
+	 * Returns the number of groups where companyId = &#63; and groupKey = any &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param groupKeys the group keys
+	 * @return the number of matching groups
+	 */
+	@Override
+	public int countByC_GK(long companyId, String[] groupKeys) {
+		if (groupKeys == null) {
+			groupKeys = new String[0];
+		}
+		else if (groupKeys.length > 1) {
+			for (int i = 0; i < groupKeys.length; i++) {
+				groupKeys[i] = Objects.toString(groupKeys[i], "");
+			}
+
+			groupKeys = ArrayUtil.sortedUnique(groupKeys);
+		}
+
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			Group.class);
+
+		Object[] finderArgs = null;
+
+		Long count = null;
+
+		if (productionMode) {
+			finderArgs = new Object[] {companyId, StringUtil.merge(groupKeys)};
+
+			count = (Long)FinderCacheUtil.getResult(
+				_finderPathWithPaginationCountByC_GK, finderArgs);
+		}
+
+		if (count == null) {
+			StringBundler sb = new StringBundler();
+
+			sb.append(_SQL_COUNT_GROUP__WHERE);
+
+			sb.append(_FINDER_COLUMN_C_GK_COMPANYID_2);
+
+			if (groupKeys.length > 0) {
+				sb.append("(");
+
+				for (int i = 0; i < groupKeys.length; i++) {
+					String groupKey = groupKeys[i];
+
+					if (groupKey.isEmpty()) {
+						sb.append(_FINDER_COLUMN_C_GK_GROUPKEY_3);
+					}
+					else {
+						sb.append(_FINDER_COLUMN_C_GK_GROUPKEY_2);
+					}
+
+					if ((i + 1) < groupKeys.length) {
+						sb.append(WHERE_OR);
+					}
+				}
+
+				sb.append(")");
+			}
+
+			sb.setStringAt(
+				removeConjunction(sb.stringAt(sb.index() - 1)), sb.index() - 1);
+
+			String sql = sb.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query query = session.createQuery(sql);
+
+				QueryPos queryPos = QueryPos.getInstance(query);
+
+				queryPos.add(companyId);
+
+				for (String groupKey : groupKeys) {
+					if ((groupKey != null) && !groupKey.isEmpty()) {
+						queryPos.add(groupKey);
+					}
+				}
+
+				count = (Long)query.uniqueResult();
+
+				if (productionMode) {
+					FinderCacheUtil.putResult(
+						_finderPathWithPaginationCountByC_GK, finderArgs,
+						count);
 				}
 			}
 			catch (Exception exception) {
@@ -6044,8 +6377,8 @@ public class GroupPersistenceImpl
 	private static final String _FINDER_COLUMN_T_A_ACTIVE_2 =
 		"group_.active = ?";
 
-	private FinderPath _finderPathWithPaginationFindByG_C_P;
-	private FinderPath _finderPathWithPaginationCountByG_C_P;
+	private FinderPath _finderPathWithPaginationFindByGtG_C_P;
+	private FinderPath _finderPathWithPaginationCountByGtG_C_P;
 
 	/**
 	 * Returns all the groups where groupId &gt; &#63; and companyId = &#63; and parentGroupId = &#63;.
@@ -6056,10 +6389,10 @@ public class GroupPersistenceImpl
 	 * @return the matching groups
 	 */
 	@Override
-	public List<Group> findByG_C_P(
+	public List<Group> findByGtG_C_P(
 		long groupId, long companyId, long parentGroupId) {
 
-		return findByG_C_P(
+		return findByGtG_C_P(
 			groupId, companyId, parentGroupId, QueryUtil.ALL_POS,
 			QueryUtil.ALL_POS, null);
 	}
@@ -6079,10 +6412,11 @@ public class GroupPersistenceImpl
 	 * @return the range of matching groups
 	 */
 	@Override
-	public List<Group> findByG_C_P(
+	public List<Group> findByGtG_C_P(
 		long groupId, long companyId, long parentGroupId, int start, int end) {
 
-		return findByG_C_P(groupId, companyId, parentGroupId, start, end, null);
+		return findByGtG_C_P(
+			groupId, companyId, parentGroupId, start, end, null);
 	}
 
 	/**
@@ -6101,11 +6435,11 @@ public class GroupPersistenceImpl
 	 * @return the ordered range of matching groups
 	 */
 	@Override
-	public List<Group> findByG_C_P(
+	public List<Group> findByGtG_C_P(
 		long groupId, long companyId, long parentGroupId, int start, int end,
 		OrderByComparator<Group> orderByComparator) {
 
-		return findByG_C_P(
+		return findByGtG_C_P(
 			groupId, companyId, parentGroupId, start, end, orderByComparator,
 			true);
 	}
@@ -6127,7 +6461,7 @@ public class GroupPersistenceImpl
 	 * @return the ordered range of matching groups
 	 */
 	@Override
-	public List<Group> findByG_C_P(
+	public List<Group> findByGtG_C_P(
 		long groupId, long companyId, long parentGroupId, int start, int end,
 		OrderByComparator<Group> orderByComparator, boolean useFinderCache) {
 
@@ -6137,7 +6471,7 @@ public class GroupPersistenceImpl
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
-		finderPath = _finderPathWithPaginationFindByG_C_P;
+		finderPath = _finderPathWithPaginationFindByGtG_C_P;
 		finderArgs = new Object[] {
 			groupId, companyId, parentGroupId, start, end, orderByComparator
 		};
@@ -6175,11 +6509,11 @@ public class GroupPersistenceImpl
 
 			sb.append(_SQL_SELECT_GROUP__WHERE);
 
-			sb.append(_FINDER_COLUMN_G_C_P_GROUPID_2);
+			sb.append(_FINDER_COLUMN_GTG_C_P_GROUPID_2);
 
-			sb.append(_FINDER_COLUMN_G_C_P_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_GTG_C_P_COMPANYID_2);
 
-			sb.append(_FINDER_COLUMN_G_C_P_PARENTGROUPID_2);
+			sb.append(_FINDER_COLUMN_GTG_C_P_PARENTGROUPID_2);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
@@ -6237,12 +6571,12 @@ public class GroupPersistenceImpl
 	 * @throws NoSuchGroupException if a matching group could not be found
 	 */
 	@Override
-	public Group findByG_C_P_First(
+	public Group findByGtG_C_P_First(
 			long groupId, long companyId, long parentGroupId,
 			OrderByComparator<Group> orderByComparator)
 		throws NoSuchGroupException {
 
-		Group group = fetchByG_C_P_First(
+		Group group = fetchByGtG_C_P_First(
 			groupId, companyId, parentGroupId, orderByComparator);
 
 		if (group != null) {
@@ -6277,11 +6611,11 @@ public class GroupPersistenceImpl
 	 * @return the first matching group, or <code>null</code> if a matching group could not be found
 	 */
 	@Override
-	public Group fetchByG_C_P_First(
+	public Group fetchByGtG_C_P_First(
 		long groupId, long companyId, long parentGroupId,
 		OrderByComparator<Group> orderByComparator) {
 
-		List<Group> list = findByG_C_P(
+		List<Group> list = findByGtG_C_P(
 			groupId, companyId, parentGroupId, 0, 1, orderByComparator);
 
 		if (!list.isEmpty()) {
@@ -6302,12 +6636,12 @@ public class GroupPersistenceImpl
 	 * @throws NoSuchGroupException if a matching group could not be found
 	 */
 	@Override
-	public Group findByG_C_P_Last(
+	public Group findByGtG_C_P_Last(
 			long groupId, long companyId, long parentGroupId,
 			OrderByComparator<Group> orderByComparator)
 		throws NoSuchGroupException {
 
-		Group group = fetchByG_C_P_Last(
+		Group group = fetchByGtG_C_P_Last(
 			groupId, companyId, parentGroupId, orderByComparator);
 
 		if (group != null) {
@@ -6342,17 +6676,17 @@ public class GroupPersistenceImpl
 	 * @return the last matching group, or <code>null</code> if a matching group could not be found
 	 */
 	@Override
-	public Group fetchByG_C_P_Last(
+	public Group fetchByGtG_C_P_Last(
 		long groupId, long companyId, long parentGroupId,
 		OrderByComparator<Group> orderByComparator) {
 
-		int count = countByG_C_P(groupId, companyId, parentGroupId);
+		int count = countByGtG_C_P(groupId, companyId, parentGroupId);
 
 		if (count == 0) {
 			return null;
 		}
 
-		List<Group> list = findByG_C_P(
+		List<Group> list = findByGtG_C_P(
 			groupId, companyId, parentGroupId, count - 1, count,
 			orderByComparator);
 
@@ -6371,11 +6705,11 @@ public class GroupPersistenceImpl
 	 * @param parentGroupId the parent group ID
 	 */
 	@Override
-	public void removeByG_C_P(
+	public void removeByGtG_C_P(
 		long groupId, long companyId, long parentGroupId) {
 
 		for (Group group :
-				findByG_C_P(
+				findByGtG_C_P(
 					groupId, companyId, parentGroupId, QueryUtil.ALL_POS,
 					QueryUtil.ALL_POS, null)) {
 
@@ -6392,7 +6726,9 @@ public class GroupPersistenceImpl
 	 * @return the number of matching groups
 	 */
 	@Override
-	public int countByG_C_P(long groupId, long companyId, long parentGroupId) {
+	public int countByGtG_C_P(
+		long groupId, long companyId, long parentGroupId) {
+
 		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
 			Group.class);
 
@@ -6402,7 +6738,7 @@ public class GroupPersistenceImpl
 		Long count = null;
 
 		if (productionMode) {
-			finderPath = _finderPathWithPaginationCountByG_C_P;
+			finderPath = _finderPathWithPaginationCountByGtG_C_P;
 
 			finderArgs = new Object[] {groupId, companyId, parentGroupId};
 
@@ -6414,11 +6750,11 @@ public class GroupPersistenceImpl
 
 			sb.append(_SQL_COUNT_GROUP__WHERE);
 
-			sb.append(_FINDER_COLUMN_G_C_P_GROUPID_2);
+			sb.append(_FINDER_COLUMN_GTG_C_P_GROUPID_2);
 
-			sb.append(_FINDER_COLUMN_G_C_P_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_GTG_C_P_COMPANYID_2);
 
-			sb.append(_FINDER_COLUMN_G_C_P_PARENTGROUPID_2);
+			sb.append(_FINDER_COLUMN_GTG_C_P_PARENTGROUPID_2);
 
 			String sql = sb.toString();
 
@@ -6454,13 +6790,13 @@ public class GroupPersistenceImpl
 		return count.intValue();
 	}
 
-	private static final String _FINDER_COLUMN_G_C_P_GROUPID_2 =
+	private static final String _FINDER_COLUMN_GTG_C_P_GROUPID_2 =
 		"group_.groupId > ? AND ";
 
-	private static final String _FINDER_COLUMN_G_C_P_COMPANYID_2 =
+	private static final String _FINDER_COLUMN_GTG_C_P_COMPANYID_2 =
 		"group_.companyId = ? AND ";
 
-	private static final String _FINDER_COLUMN_G_C_P_PARENTGROUPID_2 =
+	private static final String _FINDER_COLUMN_GTG_C_P_PARENTGROUPID_2 =
 		"group_.parentGroupId = ?";
 
 	private FinderPath _finderPathFetchByC_C_C;
@@ -8788,8 +9124,8 @@ public class GroupPersistenceImpl
 	private static final String _FINDER_COLUMN_C_L_GK_GROUPKEY_3 =
 		"(group_.groupKey IS NULL OR group_.groupKey = '')";
 
-	private FinderPath _finderPathWithPaginationFindByC_T_S;
-	private FinderPath _finderPathWithPaginationCountByC_T_S;
+	private FinderPath _finderPathWithPaginationFindByC_LikeT_S;
+	private FinderPath _finderPathWithPaginationCountByC_LikeT_S;
 
 	/**
 	 * Returns all the groups where companyId = &#63; and treePath LIKE &#63; and site = &#63;.
@@ -8800,10 +9136,10 @@ public class GroupPersistenceImpl
 	 * @return the matching groups
 	 */
 	@Override
-	public List<Group> findByC_T_S(
+	public List<Group> findByC_LikeT_S(
 		long companyId, String treePath, boolean site) {
 
-		return findByC_T_S(
+		return findByC_LikeT_S(
 			companyId, treePath, site, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
 			null);
 	}
@@ -8823,10 +9159,10 @@ public class GroupPersistenceImpl
 	 * @return the range of matching groups
 	 */
 	@Override
-	public List<Group> findByC_T_S(
+	public List<Group> findByC_LikeT_S(
 		long companyId, String treePath, boolean site, int start, int end) {
 
-		return findByC_T_S(companyId, treePath, site, start, end, null);
+		return findByC_LikeT_S(companyId, treePath, site, start, end, null);
 	}
 
 	/**
@@ -8845,11 +9181,11 @@ public class GroupPersistenceImpl
 	 * @return the ordered range of matching groups
 	 */
 	@Override
-	public List<Group> findByC_T_S(
+	public List<Group> findByC_LikeT_S(
 		long companyId, String treePath, boolean site, int start, int end,
 		OrderByComparator<Group> orderByComparator) {
 
-		return findByC_T_S(
+		return findByC_LikeT_S(
 			companyId, treePath, site, start, end, orderByComparator, true);
 	}
 
@@ -8870,7 +9206,7 @@ public class GroupPersistenceImpl
 	 * @return the ordered range of matching groups
 	 */
 	@Override
-	public List<Group> findByC_T_S(
+	public List<Group> findByC_LikeT_S(
 		long companyId, String treePath, boolean site, int start, int end,
 		OrderByComparator<Group> orderByComparator, boolean useFinderCache) {
 
@@ -8882,7 +9218,7 @@ public class GroupPersistenceImpl
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
-		finderPath = _finderPathWithPaginationFindByC_T_S;
+		finderPath = _finderPathWithPaginationFindByC_LikeT_S;
 		finderArgs = new Object[] {
 			companyId, treePath, site, start, end, orderByComparator
 		};
@@ -8922,20 +9258,20 @@ public class GroupPersistenceImpl
 
 			sb.append(_SQL_SELECT_GROUP__WHERE);
 
-			sb.append(_FINDER_COLUMN_C_T_S_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_C_LIKET_S_COMPANYID_2);
 
 			boolean bindTreePath = false;
 
 			if (treePath.isEmpty()) {
-				sb.append(_FINDER_COLUMN_C_T_S_TREEPATH_3);
+				sb.append(_FINDER_COLUMN_C_LIKET_S_TREEPATH_3);
 			}
 			else {
 				bindTreePath = true;
 
-				sb.append(_FINDER_COLUMN_C_T_S_TREEPATH_2);
+				sb.append(_FINDER_COLUMN_C_LIKET_S_TREEPATH_2);
 			}
 
-			sb.append(_FINDER_COLUMN_C_T_S_SITE_2);
+			sb.append(_FINDER_COLUMN_C_LIKET_S_SITE_2);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
@@ -8995,12 +9331,12 @@ public class GroupPersistenceImpl
 	 * @throws NoSuchGroupException if a matching group could not be found
 	 */
 	@Override
-	public Group findByC_T_S_First(
+	public Group findByC_LikeT_S_First(
 			long companyId, String treePath, boolean site,
 			OrderByComparator<Group> orderByComparator)
 		throws NoSuchGroupException {
 
-		Group group = fetchByC_T_S_First(
+		Group group = fetchByC_LikeT_S_First(
 			companyId, treePath, site, orderByComparator);
 
 		if (group != null) {
@@ -9035,11 +9371,11 @@ public class GroupPersistenceImpl
 	 * @return the first matching group, or <code>null</code> if a matching group could not be found
 	 */
 	@Override
-	public Group fetchByC_T_S_First(
+	public Group fetchByC_LikeT_S_First(
 		long companyId, String treePath, boolean site,
 		OrderByComparator<Group> orderByComparator) {
 
-		List<Group> list = findByC_T_S(
+		List<Group> list = findByC_LikeT_S(
 			companyId, treePath, site, 0, 1, orderByComparator);
 
 		if (!list.isEmpty()) {
@@ -9060,12 +9396,12 @@ public class GroupPersistenceImpl
 	 * @throws NoSuchGroupException if a matching group could not be found
 	 */
 	@Override
-	public Group findByC_T_S_Last(
+	public Group findByC_LikeT_S_Last(
 			long companyId, String treePath, boolean site,
 			OrderByComparator<Group> orderByComparator)
 		throws NoSuchGroupException {
 
-		Group group = fetchByC_T_S_Last(
+		Group group = fetchByC_LikeT_S_Last(
 			companyId, treePath, site, orderByComparator);
 
 		if (group != null) {
@@ -9100,17 +9436,17 @@ public class GroupPersistenceImpl
 	 * @return the last matching group, or <code>null</code> if a matching group could not be found
 	 */
 	@Override
-	public Group fetchByC_T_S_Last(
+	public Group fetchByC_LikeT_S_Last(
 		long companyId, String treePath, boolean site,
 		OrderByComparator<Group> orderByComparator) {
 
-		int count = countByC_T_S(companyId, treePath, site);
+		int count = countByC_LikeT_S(companyId, treePath, site);
 
 		if (count == 0) {
 			return null;
 		}
 
-		List<Group> list = findByC_T_S(
+		List<Group> list = findByC_LikeT_S(
 			companyId, treePath, site, count - 1, count, orderByComparator);
 
 		if (!list.isEmpty()) {
@@ -9132,7 +9468,7 @@ public class GroupPersistenceImpl
 	 * @throws NoSuchGroupException if a group with the primary key could not be found
 	 */
 	@Override
-	public Group[] findByC_T_S_PrevAndNext(
+	public Group[] findByC_LikeT_S_PrevAndNext(
 			long groupId, long companyId, String treePath, boolean site,
 			OrderByComparator<Group> orderByComparator)
 		throws NoSuchGroupException {
@@ -9148,13 +9484,13 @@ public class GroupPersistenceImpl
 
 			Group[] array = new GroupImpl[3];
 
-			array[0] = getByC_T_S_PrevAndNext(
+			array[0] = getByC_LikeT_S_PrevAndNext(
 				session, group, companyId, treePath, site, orderByComparator,
 				true);
 
 			array[1] = group;
 
-			array[2] = getByC_T_S_PrevAndNext(
+			array[2] = getByC_LikeT_S_PrevAndNext(
 				session, group, companyId, treePath, site, orderByComparator,
 				false);
 
@@ -9168,7 +9504,7 @@ public class GroupPersistenceImpl
 		}
 	}
 
-	protected Group getByC_T_S_PrevAndNext(
+	protected Group getByC_LikeT_S_PrevAndNext(
 		Session session, Group group, long companyId, String treePath,
 		boolean site, OrderByComparator<Group> orderByComparator,
 		boolean previous) {
@@ -9186,20 +9522,20 @@ public class GroupPersistenceImpl
 
 		sb.append(_SQL_SELECT_GROUP__WHERE);
 
-		sb.append(_FINDER_COLUMN_C_T_S_COMPANYID_2);
+		sb.append(_FINDER_COLUMN_C_LIKET_S_COMPANYID_2);
 
 		boolean bindTreePath = false;
 
 		if (treePath.isEmpty()) {
-			sb.append(_FINDER_COLUMN_C_T_S_TREEPATH_3);
+			sb.append(_FINDER_COLUMN_C_LIKET_S_TREEPATH_3);
 		}
 		else {
 			bindTreePath = true;
 
-			sb.append(_FINDER_COLUMN_C_T_S_TREEPATH_2);
+			sb.append(_FINDER_COLUMN_C_LIKET_S_TREEPATH_2);
 		}
 
-		sb.append(_FINDER_COLUMN_C_T_S_SITE_2);
+		sb.append(_FINDER_COLUMN_C_LIKET_S_SITE_2);
 
 		if (orderByComparator != null) {
 			String[] orderByConditionFields =
@@ -9304,9 +9640,11 @@ public class GroupPersistenceImpl
 	 * @param site the site
 	 */
 	@Override
-	public void removeByC_T_S(long companyId, String treePath, boolean site) {
+	public void removeByC_LikeT_S(
+		long companyId, String treePath, boolean site) {
+
 		for (Group group :
-				findByC_T_S(
+				findByC_LikeT_S(
 					companyId, treePath, site, QueryUtil.ALL_POS,
 					QueryUtil.ALL_POS, null)) {
 
@@ -9323,7 +9661,7 @@ public class GroupPersistenceImpl
 	 * @return the number of matching groups
 	 */
 	@Override
-	public int countByC_T_S(long companyId, String treePath, boolean site) {
+	public int countByC_LikeT_S(long companyId, String treePath, boolean site) {
 		treePath = Objects.toString(treePath, "");
 
 		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
@@ -9335,7 +9673,7 @@ public class GroupPersistenceImpl
 		Long count = null;
 
 		if (productionMode) {
-			finderPath = _finderPathWithPaginationCountByC_T_S;
+			finderPath = _finderPathWithPaginationCountByC_LikeT_S;
 
 			finderArgs = new Object[] {companyId, treePath, site};
 
@@ -9347,20 +9685,20 @@ public class GroupPersistenceImpl
 
 			sb.append(_SQL_COUNT_GROUP__WHERE);
 
-			sb.append(_FINDER_COLUMN_C_T_S_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_C_LIKET_S_COMPANYID_2);
 
 			boolean bindTreePath = false;
 
 			if (treePath.isEmpty()) {
-				sb.append(_FINDER_COLUMN_C_T_S_TREEPATH_3);
+				sb.append(_FINDER_COLUMN_C_LIKET_S_TREEPATH_3);
 			}
 			else {
 				bindTreePath = true;
 
-				sb.append(_FINDER_COLUMN_C_T_S_TREEPATH_2);
+				sb.append(_FINDER_COLUMN_C_LIKET_S_TREEPATH_2);
 			}
 
-			sb.append(_FINDER_COLUMN_C_T_S_SITE_2);
+			sb.append(_FINDER_COLUMN_C_LIKET_S_SITE_2);
 
 			String sql = sb.toString();
 
@@ -9398,16 +9736,17 @@ public class GroupPersistenceImpl
 		return count.intValue();
 	}
 
-	private static final String _FINDER_COLUMN_C_T_S_COMPANYID_2 =
+	private static final String _FINDER_COLUMN_C_LIKET_S_COMPANYID_2 =
 		"group_.companyId = ? AND ";
 
-	private static final String _FINDER_COLUMN_C_T_S_TREEPATH_2 =
+	private static final String _FINDER_COLUMN_C_LIKET_S_TREEPATH_2 =
 		"group_.treePath LIKE ? AND ";
 
-	private static final String _FINDER_COLUMN_C_T_S_TREEPATH_3 =
+	private static final String _FINDER_COLUMN_C_LIKET_S_TREEPATH_3 =
 		"(group_.treePath IS NULL OR group_.treePath LIKE '') AND ";
 
-	private static final String _FINDER_COLUMN_C_T_S_SITE_2 = "group_.site = ?";
+	private static final String _FINDER_COLUMN_C_LIKET_S_SITE_2 =
+		"group_.site = ?";
 
 	private FinderPath _finderPathWithPaginationFindByC_LikeN_S;
 	private FinderPath _finderPathWithPaginationCountByC_LikeN_S;
@@ -10616,8 +10955,8 @@ public class GroupPersistenceImpl
 	private static final String _FINDER_COLUMN_C_S_A_ACTIVE_2 =
 		"group_.active = ?";
 
-	private FinderPath _finderPathWithPaginationFindByG_C_C_P;
-	private FinderPath _finderPathWithPaginationCountByG_C_C_P;
+	private FinderPath _finderPathWithPaginationFindByGtG_C_C_P;
+	private FinderPath _finderPathWithPaginationCountByGtG_C_C_P;
 
 	/**
 	 * Returns all the groups where groupId &gt; &#63; and companyId = &#63; and classNameId = &#63; and parentGroupId = &#63;.
@@ -10629,10 +10968,10 @@ public class GroupPersistenceImpl
 	 * @return the matching groups
 	 */
 	@Override
-	public List<Group> findByG_C_C_P(
+	public List<Group> findByGtG_C_C_P(
 		long groupId, long companyId, long classNameId, long parentGroupId) {
 
-		return findByG_C_C_P(
+		return findByGtG_C_C_P(
 			groupId, companyId, classNameId, parentGroupId, QueryUtil.ALL_POS,
 			QueryUtil.ALL_POS, null);
 	}
@@ -10653,11 +10992,11 @@ public class GroupPersistenceImpl
 	 * @return the range of matching groups
 	 */
 	@Override
-	public List<Group> findByG_C_C_P(
+	public List<Group> findByGtG_C_C_P(
 		long groupId, long companyId, long classNameId, long parentGroupId,
 		int start, int end) {
 
-		return findByG_C_C_P(
+		return findByGtG_C_C_P(
 			groupId, companyId, classNameId, parentGroupId, start, end, null);
 	}
 
@@ -10678,11 +11017,11 @@ public class GroupPersistenceImpl
 	 * @return the ordered range of matching groups
 	 */
 	@Override
-	public List<Group> findByG_C_C_P(
+	public List<Group> findByGtG_C_C_P(
 		long groupId, long companyId, long classNameId, long parentGroupId,
 		int start, int end, OrderByComparator<Group> orderByComparator) {
 
-		return findByG_C_C_P(
+		return findByGtG_C_C_P(
 			groupId, companyId, classNameId, parentGroupId, start, end,
 			orderByComparator, true);
 	}
@@ -10705,7 +11044,7 @@ public class GroupPersistenceImpl
 	 * @return the ordered range of matching groups
 	 */
 	@Override
-	public List<Group> findByG_C_C_P(
+	public List<Group> findByGtG_C_C_P(
 		long groupId, long companyId, long classNameId, long parentGroupId,
 		int start, int end, OrderByComparator<Group> orderByComparator,
 		boolean useFinderCache) {
@@ -10716,7 +11055,7 @@ public class GroupPersistenceImpl
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
-		finderPath = _finderPathWithPaginationFindByG_C_C_P;
+		finderPath = _finderPathWithPaginationFindByGtG_C_C_P;
 		finderArgs = new Object[] {
 			groupId, companyId, classNameId, parentGroupId, start, end,
 			orderByComparator
@@ -10756,13 +11095,13 @@ public class GroupPersistenceImpl
 
 			sb.append(_SQL_SELECT_GROUP__WHERE);
 
-			sb.append(_FINDER_COLUMN_G_C_C_P_GROUPID_2);
+			sb.append(_FINDER_COLUMN_GTG_C_C_P_GROUPID_2);
 
-			sb.append(_FINDER_COLUMN_G_C_C_P_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_GTG_C_C_P_COMPANYID_2);
 
-			sb.append(_FINDER_COLUMN_G_C_C_P_CLASSNAMEID_2);
+			sb.append(_FINDER_COLUMN_GTG_C_C_P_CLASSNAMEID_2);
 
-			sb.append(_FINDER_COLUMN_G_C_C_P_PARENTGROUPID_2);
+			sb.append(_FINDER_COLUMN_GTG_C_C_P_PARENTGROUPID_2);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
@@ -10823,12 +11162,12 @@ public class GroupPersistenceImpl
 	 * @throws NoSuchGroupException if a matching group could not be found
 	 */
 	@Override
-	public Group findByG_C_C_P_First(
+	public Group findByGtG_C_C_P_First(
 			long groupId, long companyId, long classNameId, long parentGroupId,
 			OrderByComparator<Group> orderByComparator)
 		throws NoSuchGroupException {
 
-		Group group = fetchByG_C_C_P_First(
+		Group group = fetchByGtG_C_C_P_First(
 			groupId, companyId, classNameId, parentGroupId, orderByComparator);
 
 		if (group != null) {
@@ -10867,11 +11206,11 @@ public class GroupPersistenceImpl
 	 * @return the first matching group, or <code>null</code> if a matching group could not be found
 	 */
 	@Override
-	public Group fetchByG_C_C_P_First(
+	public Group fetchByGtG_C_C_P_First(
 		long groupId, long companyId, long classNameId, long parentGroupId,
 		OrderByComparator<Group> orderByComparator) {
 
-		List<Group> list = findByG_C_C_P(
+		List<Group> list = findByGtG_C_C_P(
 			groupId, companyId, classNameId, parentGroupId, 0, 1,
 			orderByComparator);
 
@@ -10894,12 +11233,12 @@ public class GroupPersistenceImpl
 	 * @throws NoSuchGroupException if a matching group could not be found
 	 */
 	@Override
-	public Group findByG_C_C_P_Last(
+	public Group findByGtG_C_C_P_Last(
 			long groupId, long companyId, long classNameId, long parentGroupId,
 			OrderByComparator<Group> orderByComparator)
 		throws NoSuchGroupException {
 
-		Group group = fetchByG_C_C_P_Last(
+		Group group = fetchByGtG_C_C_P_Last(
 			groupId, companyId, classNameId, parentGroupId, orderByComparator);
 
 		if (group != null) {
@@ -10938,18 +11277,18 @@ public class GroupPersistenceImpl
 	 * @return the last matching group, or <code>null</code> if a matching group could not be found
 	 */
 	@Override
-	public Group fetchByG_C_C_P_Last(
+	public Group fetchByGtG_C_C_P_Last(
 		long groupId, long companyId, long classNameId, long parentGroupId,
 		OrderByComparator<Group> orderByComparator) {
 
-		int count = countByG_C_C_P(
+		int count = countByGtG_C_C_P(
 			groupId, companyId, classNameId, parentGroupId);
 
 		if (count == 0) {
 			return null;
 		}
 
-		List<Group> list = findByG_C_C_P(
+		List<Group> list = findByGtG_C_C_P(
 			groupId, companyId, classNameId, parentGroupId, count - 1, count,
 			orderByComparator);
 
@@ -10969,11 +11308,11 @@ public class GroupPersistenceImpl
 	 * @param parentGroupId the parent group ID
 	 */
 	@Override
-	public void removeByG_C_C_P(
+	public void removeByGtG_C_C_P(
 		long groupId, long companyId, long classNameId, long parentGroupId) {
 
 		for (Group group :
-				findByG_C_C_P(
+				findByGtG_C_C_P(
 					groupId, companyId, classNameId, parentGroupId,
 					QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
 
@@ -10991,7 +11330,7 @@ public class GroupPersistenceImpl
 	 * @return the number of matching groups
 	 */
 	@Override
-	public int countByG_C_C_P(
+	public int countByGtG_C_C_P(
 		long groupId, long companyId, long classNameId, long parentGroupId) {
 
 		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
@@ -11003,7 +11342,7 @@ public class GroupPersistenceImpl
 		Long count = null;
 
 		if (productionMode) {
-			finderPath = _finderPathWithPaginationCountByG_C_C_P;
+			finderPath = _finderPathWithPaginationCountByGtG_C_C_P;
 
 			finderArgs = new Object[] {
 				groupId, companyId, classNameId, parentGroupId
@@ -11017,13 +11356,13 @@ public class GroupPersistenceImpl
 
 			sb.append(_SQL_COUNT_GROUP__WHERE);
 
-			sb.append(_FINDER_COLUMN_G_C_C_P_GROUPID_2);
+			sb.append(_FINDER_COLUMN_GTG_C_C_P_GROUPID_2);
 
-			sb.append(_FINDER_COLUMN_G_C_C_P_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_GTG_C_C_P_COMPANYID_2);
 
-			sb.append(_FINDER_COLUMN_G_C_C_P_CLASSNAMEID_2);
+			sb.append(_FINDER_COLUMN_GTG_C_C_P_CLASSNAMEID_2);
 
-			sb.append(_FINDER_COLUMN_G_C_C_P_PARENTGROUPID_2);
+			sb.append(_FINDER_COLUMN_GTG_C_C_P_PARENTGROUPID_2);
 
 			String sql = sb.toString();
 
@@ -11061,20 +11400,20 @@ public class GroupPersistenceImpl
 		return count.intValue();
 	}
 
-	private static final String _FINDER_COLUMN_G_C_C_P_GROUPID_2 =
+	private static final String _FINDER_COLUMN_GTG_C_C_P_GROUPID_2 =
 		"group_.groupId > ? AND ";
 
-	private static final String _FINDER_COLUMN_G_C_C_P_COMPANYID_2 =
+	private static final String _FINDER_COLUMN_GTG_C_C_P_COMPANYID_2 =
 		"group_.companyId = ? AND ";
 
-	private static final String _FINDER_COLUMN_G_C_C_P_CLASSNAMEID_2 =
+	private static final String _FINDER_COLUMN_GTG_C_C_P_CLASSNAMEID_2 =
 		"group_.classNameId = ? AND ";
 
-	private static final String _FINDER_COLUMN_G_C_C_P_PARENTGROUPID_2 =
+	private static final String _FINDER_COLUMN_GTG_C_C_P_PARENTGROUPID_2 =
 		"group_.parentGroupId = ?";
 
-	private FinderPath _finderPathWithPaginationFindByG_C_P_S;
-	private FinderPath _finderPathWithPaginationCountByG_C_P_S;
+	private FinderPath _finderPathWithPaginationFindByGtG_C_P_S;
+	private FinderPath _finderPathWithPaginationCountByGtG_C_P_S;
 
 	/**
 	 * Returns all the groups where groupId &gt; &#63; and companyId = &#63; and parentGroupId = &#63; and site = &#63;.
@@ -11086,10 +11425,10 @@ public class GroupPersistenceImpl
 	 * @return the matching groups
 	 */
 	@Override
-	public List<Group> findByG_C_P_S(
+	public List<Group> findByGtG_C_P_S(
 		long groupId, long companyId, long parentGroupId, boolean site) {
 
-		return findByG_C_P_S(
+		return findByGtG_C_P_S(
 			groupId, companyId, parentGroupId, site, QueryUtil.ALL_POS,
 			QueryUtil.ALL_POS, null);
 	}
@@ -11110,11 +11449,11 @@ public class GroupPersistenceImpl
 	 * @return the range of matching groups
 	 */
 	@Override
-	public List<Group> findByG_C_P_S(
+	public List<Group> findByGtG_C_P_S(
 		long groupId, long companyId, long parentGroupId, boolean site,
 		int start, int end) {
 
-		return findByG_C_P_S(
+		return findByGtG_C_P_S(
 			groupId, companyId, parentGroupId, site, start, end, null);
 	}
 
@@ -11135,11 +11474,11 @@ public class GroupPersistenceImpl
 	 * @return the ordered range of matching groups
 	 */
 	@Override
-	public List<Group> findByG_C_P_S(
+	public List<Group> findByGtG_C_P_S(
 		long groupId, long companyId, long parentGroupId, boolean site,
 		int start, int end, OrderByComparator<Group> orderByComparator) {
 
-		return findByG_C_P_S(
+		return findByGtG_C_P_S(
 			groupId, companyId, parentGroupId, site, start, end,
 			orderByComparator, true);
 	}
@@ -11162,7 +11501,7 @@ public class GroupPersistenceImpl
 	 * @return the ordered range of matching groups
 	 */
 	@Override
-	public List<Group> findByG_C_P_S(
+	public List<Group> findByGtG_C_P_S(
 		long groupId, long companyId, long parentGroupId, boolean site,
 		int start, int end, OrderByComparator<Group> orderByComparator,
 		boolean useFinderCache) {
@@ -11173,7 +11512,7 @@ public class GroupPersistenceImpl
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
-		finderPath = _finderPathWithPaginationFindByG_C_P_S;
+		finderPath = _finderPathWithPaginationFindByGtG_C_P_S;
 		finderArgs = new Object[] {
 			groupId, companyId, parentGroupId, site, start, end,
 			orderByComparator
@@ -11213,13 +11552,13 @@ public class GroupPersistenceImpl
 
 			sb.append(_SQL_SELECT_GROUP__WHERE);
 
-			sb.append(_FINDER_COLUMN_G_C_P_S_GROUPID_2);
+			sb.append(_FINDER_COLUMN_GTG_C_P_S_GROUPID_2);
 
-			sb.append(_FINDER_COLUMN_G_C_P_S_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_GTG_C_P_S_COMPANYID_2);
 
-			sb.append(_FINDER_COLUMN_G_C_P_S_PARENTGROUPID_2);
+			sb.append(_FINDER_COLUMN_GTG_C_P_S_PARENTGROUPID_2);
 
-			sb.append(_FINDER_COLUMN_G_C_P_S_SITE_2);
+			sb.append(_FINDER_COLUMN_GTG_C_P_S_SITE_2);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
@@ -11280,12 +11619,12 @@ public class GroupPersistenceImpl
 	 * @throws NoSuchGroupException if a matching group could not be found
 	 */
 	@Override
-	public Group findByG_C_P_S_First(
+	public Group findByGtG_C_P_S_First(
 			long groupId, long companyId, long parentGroupId, boolean site,
 			OrderByComparator<Group> orderByComparator)
 		throws NoSuchGroupException {
 
-		Group group = fetchByG_C_P_S_First(
+		Group group = fetchByGtG_C_P_S_First(
 			groupId, companyId, parentGroupId, site, orderByComparator);
 
 		if (group != null) {
@@ -11324,11 +11663,11 @@ public class GroupPersistenceImpl
 	 * @return the first matching group, or <code>null</code> if a matching group could not be found
 	 */
 	@Override
-	public Group fetchByG_C_P_S_First(
+	public Group fetchByGtG_C_P_S_First(
 		long groupId, long companyId, long parentGroupId, boolean site,
 		OrderByComparator<Group> orderByComparator) {
 
-		List<Group> list = findByG_C_P_S(
+		List<Group> list = findByGtG_C_P_S(
 			groupId, companyId, parentGroupId, site, 0, 1, orderByComparator);
 
 		if (!list.isEmpty()) {
@@ -11350,12 +11689,12 @@ public class GroupPersistenceImpl
 	 * @throws NoSuchGroupException if a matching group could not be found
 	 */
 	@Override
-	public Group findByG_C_P_S_Last(
+	public Group findByGtG_C_P_S_Last(
 			long groupId, long companyId, long parentGroupId, boolean site,
 			OrderByComparator<Group> orderByComparator)
 		throws NoSuchGroupException {
 
-		Group group = fetchByG_C_P_S_Last(
+		Group group = fetchByGtG_C_P_S_Last(
 			groupId, companyId, parentGroupId, site, orderByComparator);
 
 		if (group != null) {
@@ -11394,17 +11733,17 @@ public class GroupPersistenceImpl
 	 * @return the last matching group, or <code>null</code> if a matching group could not be found
 	 */
 	@Override
-	public Group fetchByG_C_P_S_Last(
+	public Group fetchByGtG_C_P_S_Last(
 		long groupId, long companyId, long parentGroupId, boolean site,
 		OrderByComparator<Group> orderByComparator) {
 
-		int count = countByG_C_P_S(groupId, companyId, parentGroupId, site);
+		int count = countByGtG_C_P_S(groupId, companyId, parentGroupId, site);
 
 		if (count == 0) {
 			return null;
 		}
 
-		List<Group> list = findByG_C_P_S(
+		List<Group> list = findByGtG_C_P_S(
 			groupId, companyId, parentGroupId, site, count - 1, count,
 			orderByComparator);
 
@@ -11424,11 +11763,11 @@ public class GroupPersistenceImpl
 	 * @param site the site
 	 */
 	@Override
-	public void removeByG_C_P_S(
+	public void removeByGtG_C_P_S(
 		long groupId, long companyId, long parentGroupId, boolean site) {
 
 		for (Group group :
-				findByG_C_P_S(
+				findByGtG_C_P_S(
 					groupId, companyId, parentGroupId, site, QueryUtil.ALL_POS,
 					QueryUtil.ALL_POS, null)) {
 
@@ -11446,7 +11785,7 @@ public class GroupPersistenceImpl
 	 * @return the number of matching groups
 	 */
 	@Override
-	public int countByG_C_P_S(
+	public int countByGtG_C_P_S(
 		long groupId, long companyId, long parentGroupId, boolean site) {
 
 		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
@@ -11458,7 +11797,7 @@ public class GroupPersistenceImpl
 		Long count = null;
 
 		if (productionMode) {
-			finderPath = _finderPathWithPaginationCountByG_C_P_S;
+			finderPath = _finderPathWithPaginationCountByGtG_C_P_S;
 
 			finderArgs = new Object[] {groupId, companyId, parentGroupId, site};
 
@@ -11470,13 +11809,13 @@ public class GroupPersistenceImpl
 
 			sb.append(_SQL_COUNT_GROUP__WHERE);
 
-			sb.append(_FINDER_COLUMN_G_C_P_S_GROUPID_2);
+			sb.append(_FINDER_COLUMN_GTG_C_P_S_GROUPID_2);
 
-			sb.append(_FINDER_COLUMN_G_C_P_S_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_GTG_C_P_S_COMPANYID_2);
 
-			sb.append(_FINDER_COLUMN_G_C_P_S_PARENTGROUPID_2);
+			sb.append(_FINDER_COLUMN_GTG_C_P_S_PARENTGROUPID_2);
 
-			sb.append(_FINDER_COLUMN_G_C_P_S_SITE_2);
+			sb.append(_FINDER_COLUMN_GTG_C_P_S_SITE_2);
 
 			String sql = sb.toString();
 
@@ -11514,16 +11853,16 @@ public class GroupPersistenceImpl
 		return count.intValue();
 	}
 
-	private static final String _FINDER_COLUMN_G_C_P_S_GROUPID_2 =
+	private static final String _FINDER_COLUMN_GTG_C_P_S_GROUPID_2 =
 		"group_.groupId > ? AND ";
 
-	private static final String _FINDER_COLUMN_G_C_P_S_COMPANYID_2 =
+	private static final String _FINDER_COLUMN_GTG_C_P_S_COMPANYID_2 =
 		"group_.companyId = ? AND ";
 
-	private static final String _FINDER_COLUMN_G_C_P_S_PARENTGROUPID_2 =
+	private static final String _FINDER_COLUMN_GTG_C_P_S_PARENTGROUPID_2 =
 		"group_.parentGroupId = ? AND ";
 
-	private static final String _FINDER_COLUMN_G_C_P_S_SITE_2 =
+	private static final String _FINDER_COLUMN_GTG_C_P_S_SITE_2 =
 		"group_.site = ?";
 
 	private FinderPath _finderPathFetchByC_C_L_GK;
@@ -13219,6 +13558,8 @@ public class GroupPersistenceImpl
 			group);
 	}
 
+	private int _valueObjectFinderCacheListThreshold;
+
 	/**
 	 * Caches the groups in the entity cache if it is enabled.
 	 *
@@ -13226,6 +13567,13 @@ public class GroupPersistenceImpl
 	 */
 	@Override
 	public void cacheResult(List<Group> groups) {
+		if ((_valueObjectFinderCacheListThreshold == 0) ||
+			((_valueObjectFinderCacheListThreshold > 0) &&
+			 (groups.size() > _valueObjectFinderCacheListThreshold))) {
+
+			return;
+		}
+
 		for (Group group : groups) {
 			if (group.getCtCollectionId() != 0) {
 				continue;
@@ -13486,6 +13834,20 @@ public class GroupPersistenceImpl
 			group.setUuid(uuid);
 		}
 
+		if (!groupModelImpl.hasSetModifiedDate()) {
+			ServiceContext serviceContext =
+				ServiceContextThreadLocal.getServiceContext();
+
+			Date date = new Date();
+
+			if (serviceContext == null) {
+				group.setModifiedDate(date);
+			}
+			else {
+				group.setModifiedDate(serviceContext.getModifiedDate(date));
+			}
+		}
+
 		Session session = null;
 
 		try {
@@ -13577,7 +13939,7 @@ public class GroupPersistenceImpl
 	 */
 	@Override
 	public Group fetchByPrimaryKey(Serializable primaryKey) {
-		if (CTPersistenceHelperUtil.isProductionMode(Group.class)) {
+		if (CTPersistenceHelperUtil.isProductionMode(Group.class, primaryKey)) {
 			return super.fetchByPrimaryKey(primaryKey);
 		}
 
@@ -13638,6 +14000,26 @@ public class GroupPersistenceImpl
 
 			if (group != null) {
 				map.put(primaryKey, group);
+			}
+
+			return map;
+		}
+
+		if ((databaseInMaxParameters > 0) &&
+			(primaryKeys.size() > databaseInMaxParameters)) {
+
+			Iterator<Serializable> iterator = primaryKeys.iterator();
+
+			while (iterator.hasNext()) {
+				Set<Serializable> page = new HashSet<>();
+
+				for (int i = 0;
+					 (i < databaseInMaxParameters) && iterator.hasNext(); i++) {
+
+					page.add(iterator.next());
+				}
+
+				map.putAll(fetchByPrimaryKeys(page));
 			}
 
 			return map;
@@ -15158,7 +15540,8 @@ public class GroupPersistenceImpl
 	public Set<String> getCTColumnNames(
 		CTColumnResolutionType ctColumnResolutionType) {
 
-		return _ctColumnNamesMap.get(ctColumnResolutionType);
+		return _ctColumnNamesMap.getOrDefault(
+			ctColumnResolutionType, Collections.emptySet());
 	}
 
 	@Override
@@ -15192,7 +15575,6 @@ public class GroupPersistenceImpl
 	static {
 		Set<String> ctControlColumnNames = new HashSet<String>();
 		Set<String> ctIgnoreColumnNames = new HashSet<String>();
-		Set<String> ctMergeColumnNames = new HashSet<String>();
 		Set<String> ctStrictColumnNames = new HashSet<String>();
 
 		ctControlColumnNames.add("mvccVersion");
@@ -15200,6 +15582,7 @@ public class GroupPersistenceImpl
 		ctStrictColumnNames.add("uuid_");
 		ctStrictColumnNames.add("companyId");
 		ctStrictColumnNames.add("creatorUserId");
+		ctIgnoreColumnNames.add("modifiedDate");
 		ctStrictColumnNames.add("classNameId");
 		ctStrictColumnNames.add("classPK");
 		ctStrictColumnNames.add("parentGroupId");
@@ -15226,7 +15609,6 @@ public class GroupPersistenceImpl
 			CTColumnResolutionType.CONTROL, ctControlColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.IGNORE, ctIgnoreColumnNames);
-		_ctColumnNamesMap.put(CTColumnResolutionType.MERGE, ctMergeColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.PK, Collections.singleton("groupId"));
 		_ctColumnNamesMap.put(
@@ -15259,10 +15641,8 @@ public class GroupPersistenceImpl
 	 * Initializes the group persistence.
 	 */
 	public void afterPropertiesSet() {
-		Registry registry = RegistryUtil.getRegistry();
-
-		_argumentsResolverServiceRegistration = registry.registerService(
-			ArgumentsResolver.class, new GroupModelArgumentsResolver());
+		_valueObjectFinderCacheListThreshold = GetterUtil.getInteger(
+			PropsUtil.get(PropsKeys.VALUE_OBJECT_FINDER_CACHE_LIST_THRESHOLD));
 
 		groupToOrganizationTableMapper = TableMapperFactory.getTableMapper(
 			"Groups_Orgs", "companyId", "groupId", "organizationId", this,
@@ -15405,6 +15785,20 @@ public class GroupPersistenceImpl
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"companyId", "parentGroupId"}, false);
 
+		_finderPathWithPaginationFindByC_GK = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_GK",
+			new String[] {
+				Long.class.getName(), String.class.getName(),
+				Integer.class.getName(), Integer.class.getName(),
+				OrderByComparator.class.getName()
+			},
+			new String[] {"companyId", "groupKey"}, true);
+
+		_finderPathWithoutPaginationFindByC_GK = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByC_GK",
+			new String[] {Long.class.getName(), String.class.getName()},
+			new String[] {"companyId", "groupKey"}, true);
+
 		_finderPathFetchByC_GK = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByC_GK",
 			new String[] {Long.class.getName(), String.class.getName()},
@@ -15412,6 +15806,11 @@ public class GroupPersistenceImpl
 
 		_finderPathCountByC_GK = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_GK",
+			new String[] {Long.class.getName(), String.class.getName()},
+			new String[] {"companyId", "groupKey"}, false);
+
+		_finderPathWithPaginationCountByC_GK = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByC_GK",
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"companyId", "groupKey"}, false);
 
@@ -15501,8 +15900,8 @@ public class GroupPersistenceImpl
 			new String[] {Integer.class.getName(), Boolean.class.getName()},
 			new String[] {"type_", "active_"}, false);
 
-		_finderPathWithPaginationFindByG_C_P = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_C_P",
+		_finderPathWithPaginationFindByGtG_C_P = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByGtG_C_P",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Long.class.getName(), Integer.class.getName(),
@@ -15510,8 +15909,8 @@ public class GroupPersistenceImpl
 			},
 			new String[] {"groupId", "companyId", "parentGroupId"}, true);
 
-		_finderPathWithPaginationCountByG_C_P = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByG_C_P",
+		_finderPathWithPaginationCountByGtG_C_P = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByGtG_C_P",
 			new String[] {
 				Long.class.getName(), Long.class.getName(), Long.class.getName()
 			},
@@ -15620,8 +16019,8 @@ public class GroupPersistenceImpl
 			},
 			new String[] {"companyId", "liveGroupId", "groupKey"}, false);
 
-		_finderPathWithPaginationFindByC_T_S = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_T_S",
+		_finderPathWithPaginationFindByC_LikeT_S = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_LikeT_S",
 			new String[] {
 				Long.class.getName(), String.class.getName(),
 				Boolean.class.getName(), Integer.class.getName(),
@@ -15629,8 +16028,8 @@ public class GroupPersistenceImpl
 			},
 			new String[] {"companyId", "treePath", "site"}, true);
 
-		_finderPathWithPaginationCountByC_T_S = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByC_T_S",
+		_finderPathWithPaginationCountByC_LikeT_S = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByC_LikeT_S",
 			new String[] {
 				Long.class.getName(), String.class.getName(),
 				Boolean.class.getName()
@@ -15679,8 +16078,8 @@ public class GroupPersistenceImpl
 			},
 			new String[] {"companyId", "site", "active_"}, false);
 
-		_finderPathWithPaginationFindByG_C_C_P = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_C_C_P",
+		_finderPathWithPaginationFindByGtG_C_C_P = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByGtG_C_C_P",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Long.class.getName(), Long.class.getName(),
@@ -15692,8 +16091,8 @@ public class GroupPersistenceImpl
 			},
 			true);
 
-		_finderPathWithPaginationCountByG_C_C_P = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByG_C_C_P",
+		_finderPathWithPaginationCountByGtG_C_C_P = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByGtG_C_C_P",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Long.class.getName(), Long.class.getName()
@@ -15703,8 +16102,8 @@ public class GroupPersistenceImpl
 			},
 			false);
 
-		_finderPathWithPaginationFindByG_C_P_S = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_C_P_S",
+		_finderPathWithPaginationFindByGtG_C_P_S = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByGtG_C_P_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Long.class.getName(), Boolean.class.getName(),
@@ -15714,8 +16113,8 @@ public class GroupPersistenceImpl
 			new String[] {"groupId", "companyId", "parentGroupId", "site"},
 			true);
 
-		_finderPathWithPaginationCountByG_C_P_S = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByG_C_P_S",
+		_finderPathWithPaginationCountByGtG_C_P_S = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByGtG_C_P_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Long.class.getName(), Boolean.class.getName()
@@ -15797,17 +16196,32 @@ public class GroupPersistenceImpl
 				"companyId", "parentGroupId", "site", "inheritContent"
 			},
 			false);
+
+		_setGroupUtilPersistence(this);
 	}
 
 	public void destroy() {
-		EntityCacheUtil.removeCache(GroupImpl.class.getName());
+		_setGroupUtilPersistence(null);
 
-		_argumentsResolverServiceRegistration.unregister();
+		EntityCacheUtil.removeCache(GroupImpl.class.getName());
 
 		TableMapperFactory.removeTableMapper("Groups_Orgs");
 		TableMapperFactory.removeTableMapper("Groups_Roles");
 		TableMapperFactory.removeTableMapper("Groups_UserGroups");
 		TableMapperFactory.removeTableMapper("Users_Groups");
+	}
+
+	private void _setGroupUtilPersistence(GroupPersistence groupPersistence) {
+		try {
+			Field field = GroupUtil.class.getDeclaredField("_persistence");
+
+			field.setAccessible(true);
+
+			field.set(null, groupPersistence);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
 	}
 
 	@BeanReference(type = OrganizationPersistence.class)
@@ -15863,93 +16277,6 @@ public class GroupPersistenceImpl
 	@Override
 	protected FinderCache getFinderCache() {
 		return FinderCacheUtil.getFinderCache();
-	}
-
-	private ServiceRegistration<ArgumentsResolver>
-		_argumentsResolverServiceRegistration;
-
-	private static class GroupModelArgumentsResolver
-		implements ArgumentsResolver {
-
-		@Override
-		public Object[] getArguments(
-			FinderPath finderPath, BaseModel<?> baseModel, boolean checkColumn,
-			boolean original) {
-
-			String[] columnNames = finderPath.getColumnNames();
-
-			if ((columnNames == null) || (columnNames.length == 0)) {
-				if (baseModel.isNew()) {
-					return FINDER_ARGS_EMPTY;
-				}
-
-				return null;
-			}
-
-			GroupModelImpl groupModelImpl = (GroupModelImpl)baseModel;
-
-			long columnBitmask = groupModelImpl.getColumnBitmask();
-
-			if (!checkColumn || (columnBitmask == 0)) {
-				return _getValue(groupModelImpl, columnNames, original);
-			}
-
-			Long finderPathColumnBitmask = _finderPathColumnBitmasksCache.get(
-				finderPath);
-
-			if (finderPathColumnBitmask == null) {
-				finderPathColumnBitmask = 0L;
-
-				for (String columnName : columnNames) {
-					finderPathColumnBitmask |= groupModelImpl.getColumnBitmask(
-						columnName);
-				}
-
-				_finderPathColumnBitmasksCache.put(
-					finderPath, finderPathColumnBitmask);
-			}
-
-			if ((columnBitmask & finderPathColumnBitmask) != 0) {
-				return _getValue(groupModelImpl, columnNames, original);
-			}
-
-			return null;
-		}
-
-		@Override
-		public String getClassName() {
-			return GroupImpl.class.getName();
-		}
-
-		@Override
-		public String getTableName() {
-			return GroupTable.INSTANCE.getTableName();
-		}
-
-		private Object[] _getValue(
-			GroupModelImpl groupModelImpl, String[] columnNames,
-			boolean original) {
-
-			Object[] arguments = new Object[columnNames.length];
-
-			for (int i = 0; i < arguments.length; i++) {
-				String columnName = columnNames[i];
-
-				if (original) {
-					arguments[i] = groupModelImpl.getColumnOriginalValue(
-						columnName);
-				}
-				else {
-					arguments[i] = groupModelImpl.getColumnValue(columnName);
-				}
-			}
-
-			return arguments;
-		}
-
-		private static Map<FinderPath, Long> _finderPathColumnBitmasksCache =
-			new ConcurrentHashMap<>();
-
 	}
 
 }

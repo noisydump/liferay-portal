@@ -17,7 +17,6 @@ package com.liferay.portal.kernel.model;
 import com.liferay.petra.sql.dsl.Column;
 import com.liferay.petra.sql.dsl.base.BaseTable;
 
-import java.sql.Clob;
 import java.sql.Types;
 
 /**
@@ -39,14 +38,13 @@ public class PortalPreferencesTable extends BaseTable<PortalPreferencesTable> {
 		createColumn(
 			"portalPreferencesId", Long.class, Types.BIGINT,
 			Column.FLAG_PRIMARY);
+	public final Column<PortalPreferencesTable, Long> companyId = createColumn(
+		"companyId", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
 	public final Column<PortalPreferencesTable, Long> ownerId = createColumn(
 		"ownerId", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
 	public final Column<PortalPreferencesTable, Integer> ownerType =
 		createColumn(
 			"ownerType", Integer.class, Types.INTEGER, Column.FLAG_DEFAULT);
-	public final Column<PortalPreferencesTable, Clob> preferences =
-		createColumn(
-			"preferences", Clob.class, Types.CLOB, Column.FLAG_DEFAULT);
 
 	private PortalPreferencesTable() {
 		super("PortalPreferences", PortalPreferencesTable::new);

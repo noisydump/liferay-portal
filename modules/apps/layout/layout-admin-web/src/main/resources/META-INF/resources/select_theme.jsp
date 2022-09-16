@@ -20,8 +20,8 @@
 SelectThemeDisplayContext selectThemeDisplayContext = new SelectThemeDisplayContext(request, liferayPortletRequest, liferayPortletResponse);
 %>
 
-<clay:management-toolbar-v2
-	displayContext="<%= new SelectThemeManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, selectThemeDisplayContext) %>"
+<clay:management-toolbar
+	managementToolbarDisplayContext="<%= new SelectThemeManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, selectThemeDisplayContext) %>"
 />
 
 <c:if test="<%= permissionChecker.isOmniadmin() && PortletLocalServiceUtil.hasPortlet(themeDisplay.getCompanyId(), PortletKeys.MARKETPLACE_STORE) && PropsValues.AUTO_DEPLOY_ENABLED %>">
@@ -71,7 +71,7 @@ SelectThemeDisplayContext selectThemeDisplayContext = new SelectThemeDisplayCont
 						colspan="<%= 2 %>"
 					>
 						<h5>
-							<aui:a cssClass="selector-button" data="<%= data %>" href="javascript:;">
+							<aui:a cssClass="selector-button" data="<%= data %>" href="javascript:void(0);">
 								<%= theme.getName() %>
 							</aui:a>
 						</h5>
@@ -100,7 +100,7 @@ SelectThemeDisplayContext selectThemeDisplayContext = new SelectThemeDisplayCont
 						name="name"
 						truncate="<%= true %>"
 					>
-						<aui:a cssClass="selector-button" data="<%= data %>" href="javascript:;">
+						<aui:a cssClass="selector-button" data="<%= data %>" href="javascript:void(0);">
 							<%= theme.getName() %>
 						</aui:a>
 					</liferay-ui:search-container-column-text>

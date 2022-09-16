@@ -113,48 +113,6 @@ public class AssetEntryFinderImpl
 		}
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public double findPriorityByC_C(long classNameId, long classPK) {
-		Session session = null;
-
-		try {
-			session = openSession();
-
-			String sql = CustomSQLUtil.get(FIND_PRIORITY_BY_C_C);
-
-			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
-
-			sqlQuery.addScalar("priority", Type.DOUBLE);
-
-			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
-
-			queryPos.add(classNameId);
-			queryPos.add(classPK);
-
-			Iterator<Double> iterator = sqlQuery.iterate();
-
-			if (iterator.hasNext()) {
-				Double priority = iterator.next();
-
-				if (priority != null) {
-					return priority;
-				}
-			}
-
-			return 0;
-		}
-		catch (Exception exception) {
-			throw new SystemException(exception);
-		}
-		finally {
-			closeSession(session);
-		}
-	}
-
 	protected void buildAllCategoriesSQL(long[] categoryIds, StringBundler sb) {
 		String findByAndCategoryIdsSQL = CustomSQLUtil.get(
 			FIND_BY_AND_CATEGORY_IDS);
@@ -264,7 +222,7 @@ public class AssetEntryFinderImpl
 	protected SQLQuery buildAssetQuerySQL(
 		AssetEntryQuery entryQuery, boolean count, Session session) {
 
-		StringBundler sb = new StringBundler(67);
+		StringBundler sb = new StringBundler(77);
 
 		if (count) {
 			sb.append("SELECT COUNT(DISTINCT AssetEntry.entryId) AS ");
@@ -280,11 +238,14 @@ public class AssetEntryFinderImpl
 			String orderByCol2 = entryQuery.getOrderByCol2();
 
 			if (orderByCol1.equals("ratings") ||
-				orderByCol2.equals("ratings")) {
+				orderByCol2.equals("ratings") ||
+				orderByCol1.equals("ratingsTotalScore") ||
+				orderByCol2.equals("ratingsTotalScore")) {
 
 				selectRatings = true;
 
-				sb.append(", TEMP_TABLE_ASSET_ENTRY.averageScore ");
+				sb.append(", TEMP_TABLE_ASSET_ENTRY.averageScore, ");
+				sb.append("TEMP_TABLE_ASSET_ENTRY.totalScore ");
 			}
 
 			if (orderByCol1.equals("viewCount") ||
@@ -298,7 +259,8 @@ public class AssetEntryFinderImpl
 			sb.append("FROM (SELECT DISTINCT AssetEntry.entryId ");
 
 			if (selectRatings) {
-				sb.append(", RatingsStats.averageScore ");
+				sb.append(", RatingsStats.averageScore, ");
+				sb.append(" RatingsStats.totalScore ");
 			}
 
 			if (selectViewCount) {
@@ -315,13 +277,20 @@ public class AssetEntryFinderImpl
 			sb.append("AssetEntries_AssetTags.tagId) ");
 		}
 
-		if (entryQuery.getLinkedAssetEntryId() > 0) {
+		String linkedAssetEntryIdsSQL = _getLinkedAssetEntryIdsSQL(entryQuery);
+
+		if (Validator.isNotNull(linkedAssetEntryIdsSQL)) {
 			sb.append("INNER JOIN (SELECT AssetLink.entryId1 AS entryId ");
-			sb.append("FROM AssetLink WHERE AssetLink.entryId2 = ? AND ");
-			sb.append("AssetLink.entryId1 != ? UNION SELECT ");
-			sb.append("AssetLink.entryId2 AS entryId FROM AssetLink WHERE ");
-			sb.append("AssetLink.entryId1 = ? AND AssetLink.entryId2 != ? ) ");
-			sb.append("TEMP_TABLE_ASSET_LINK ON ");
+			sb.append("FROM AssetLink WHERE AssetLink.entryId2 IN ");
+			sb.append(linkedAssetEntryIdsSQL);
+			sb.append("AND AssetLink.entryId1 NOT IN ");
+			sb.append(linkedAssetEntryIdsSQL);
+			sb.append("UNION SELECT AssetLink.entryId2 AS entryId FROM ");
+			sb.append("AssetLink WHERE AssetLink.entryId1 IN ");
+			sb.append(linkedAssetEntryIdsSQL);
+			sb.append(" AND AssetLink.entryId2 NOT IN ");
+			sb.append(linkedAssetEntryIdsSQL);
+			sb.append(" ) TEMP_TABLE_ASSET_LINK ON ");
 			sb.append("(TEMP_TABLE_ASSET_LINK.entryId = AssetEntry.entryId) ");
 		}
 
@@ -348,14 +317,18 @@ public class AssetEntryFinderImpl
 			}
 		}
 
-		if (orderByCol1.equals("ratings") || orderByCol2.equals("ratings")) {
+		if (orderByCol1.equals("ratings") || orderByCol2.equals("ratings") ||
+			orderByCol1.equals("ratingsTotalScore") ||
+			orderByCol2.equals("ratingsTotalScore")) {
+
 			sb.append(" LEFT JOIN RatingsStats ON (RatingsStats.classNameId ");
 			sb.append("= AssetEntry.classNameId) AND (RatingsStats.classPK = ");
 			sb.append("AssetEntry.classPK)");
 		}
 
-		if (orderByCol1.equals("viewCount") ||
-			orderByCol2.equals("viewCount")) {
+		if (!entryQuery.isExcludeZeroViewCount() &&
+			(orderByCol1.equals("viewCount") ||
+			 orderByCol2.equals("viewCount"))) {
 
 			sb.append(" LEFT JOIN ViewCountEntry ON ");
 			sb.append("(ViewCountEntry.companyId = AssetEntry.companyId) AND ");
@@ -369,8 +342,10 @@ public class AssetEntryFinderImpl
 
 		int whereIndex = sb.index();
 
-		if (entryQuery.getLinkedAssetEntryId() > 0) {
-			sb.append(" AND (AssetEntry.entryId != ?)");
+		if (Validator.isNotNull(linkedAssetEntryIdsSQL)) {
+			sb.append(" AND (AssetEntry.entryId NOT IN ");
+			sb.append(linkedAssetEntryIdsSQL);
+			sb.append(" )");
 		}
 
 		if (entryQuery.isListable() != null) {
@@ -490,7 +465,23 @@ public class AssetEntryFinderImpl
 			if (orderByCol1.equals("ratings")) {
 				sb.append("CASE WHEN TEMP_TABLE_ASSET_ENTRY.averageScore ");
 				sb.append("IS NULL THEN 0 ");
+				sb.append("ELSE TEMP_TABLE_ASSET_ENTRY.averageScore END ");
+				sb.append(entryQuery.getOrderByType1());
+				sb.append(", CASE WHEN TEMP_TABLE_ASSET_ENTRY.totalScore ");
+				sb.append("IS NULL THEN 0 ");
+				sb.append("ELSE TEMP_TABLE_ASSET_ENTRY.totalScore END");
+			}
+			else if (orderByCol1.equals("ratingsTotalScore")) {
+				sb.append("CASE WHEN TEMP_TABLE_ASSET_ENTRY.totalScore ");
+				sb.append("IS NULL THEN 0 ");
+				sb.append("ELSE TEMP_TABLE_ASSET_ENTRY.totalScore END ");
+				sb.append(entryQuery.getOrderByType1());
+				sb.append(", CASE WHEN TEMP_TABLE_ASSET_ENTRY.averageScore ");
+				sb.append("IS NULL THEN 0 ");
 				sb.append("ELSE TEMP_TABLE_ASSET_ENTRY.averageScore END");
+			}
+			else if (orderByCol1.equals("title")) {
+				sb.append("CAST_CLOB_TEXT(AssetEntry.title)");
 			}
 			else if (orderByCol1.equals("viewCount")) {
 				sb.append("CASE WHEN TEMP_TABLE_ASSET_ENTRY.viewCount ");
@@ -512,7 +503,24 @@ public class AssetEntryFinderImpl
 					sb.append(", CASE WHEN ");
 					sb.append("TEMP_TABLE_ASSET_ENTRY.averageScore IS NULL ");
 					sb.append("THEN 0 ELSE ");
+					sb.append("TEMP_TABLE_ASSET_ENTRY.averageScore END ");
+					sb.append(entryQuery.getOrderByType2());
+					sb.append(", CASE WHEN TEMP_TABLE_ASSET_ENTRY.totalScore ");
+					sb.append("IS NULL THEN 0 ");
+					sb.append("ELSE TEMP_TABLE_ASSET_ENTRY.totalScore END");
+				}
+				else if (orderByCol2.equals("ratingsTotalScore")) {
+					sb.append(", CASE WHEN TEMP_TABLE_ASSET_ENTRY.totalScore ");
+					sb.append("IS NULL THEN 0 ");
+					sb.append("ELSE TEMP_TABLE_ASSET_ENTRY.totalScore END ");
+					sb.append(entryQuery.getOrderByType2());
+					sb.append(", CASE WHEN ");
+					sb.append("TEMP_TABLE_ASSET_ENTRY.averageScore IS NULL ");
+					sb.append("THEN 0 ELSE ");
 					sb.append("TEMP_TABLE_ASSET_ENTRY.averageScore END");
+				}
+				else if (orderByCol2.equals("title")) {
+					sb.append(", CAST_CLOB_TEXT(AssetEntry.title)");
 				}
 				else if (orderByCol2.equals("viewCount")) {
 					sb.append(", CASE WHEN ");
@@ -550,14 +558,6 @@ public class AssetEntryFinderImpl
 		}
 
 		QueryPos queryPos = QueryPos.getInstance(sqlQuery);
-
-		if (entryQuery.getLinkedAssetEntryId() > 0) {
-			queryPos.add(entryQuery.getLinkedAssetEntryId());
-			queryPos.add(entryQuery.getLinkedAssetEntryId());
-			queryPos.add(entryQuery.getLinkedAssetEntryId());
-			queryPos.add(entryQuery.getLinkedAssetEntryId());
-			queryPos.add(entryQuery.getLinkedAssetEntryId());
-		}
 
 		if (entryQuery.isListable() != null) {
 			queryPos.add(entryQuery.isListable());
@@ -833,6 +833,30 @@ public class AssetEntryFinderImpl
 
 			queryPos.add(expirationDate_TS);
 		}
+	}
+
+	private String _getLinkedAssetEntryIdsSQL(AssetEntryQuery entryQuery) {
+		if (ArrayUtil.isEmpty(entryQuery.getLinkedAssetEntryIds())) {
+			return null;
+		}
+
+		StringBundler sb = new StringBundler();
+
+		sb.append(" (");
+
+		long[] linkedAssetEntryIds = entryQuery.getLinkedAssetEntryIds();
+
+		for (int i = 0; i < linkedAssetEntryIds.length; i++) {
+			if (i > 0) {
+				sb.append(StringPool.COMMA);
+			}
+
+			sb.append(linkedAssetEntryIds[i]);
+		}
+
+		sb.append(") ");
+
+		return sb.toString();
 	}
 
 }

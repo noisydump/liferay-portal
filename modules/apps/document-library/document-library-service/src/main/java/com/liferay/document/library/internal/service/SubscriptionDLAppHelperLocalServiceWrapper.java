@@ -14,19 +14,20 @@
 
 package com.liferay.document.library.internal.service;
 
+import com.liferay.document.library.internal.util.DLSubscriptionSender;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFileEntryConstants;
 import com.liferay.document.library.kernel.model.DLFileEntryType;
 import com.liferay.document.library.kernel.model.DLFileEntryTypeConstants;
 import com.liferay.document.library.kernel.model.DLFolder;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
-import com.liferay.document.library.kernel.service.DLAppHelperLocalService;
 import com.liferay.document.library.kernel.service.DLAppHelperLocalServiceWrapper;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService;
 import com.liferay.document.library.kernel.util.DLAppHelperThreadLocal;
+import com.liferay.portal.json.jabsorb.serializer.LiferayJSONDeserializationWhitelist;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.notifications.UserNotificationDefinition;
 import com.liferay.portal.kernel.portlet.PortletProvider;
 import com.liferay.portal.kernel.portlet.PortletProviderUtil;
@@ -38,7 +39,6 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
 import com.liferay.portal.kernel.settings.LocalizedValuesMap;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.EscapableLocalizableFunction;
-import com.liferay.portal.kernel.util.GroupSubscriptionCheckSubscriptionSender;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.SubscriptionSender;
 import com.liferay.portal.kernel.util.Validator;
@@ -48,11 +48,15 @@ import com.liferay.portlet.documentlibrary.DLGroupServiceSettings;
 import com.liferay.portlet.documentlibrary.constants.DLConstants;
 import com.liferay.subscription.service.SubscriptionLocalService;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.io.Serializable;
 
 import java.util.Map;
 
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -61,16 +65,6 @@ import org.osgi.service.component.annotations.Reference;
 @Component(service = ServiceWrapper.class)
 public class SubscriptionDLAppHelperLocalServiceWrapper
 	extends DLAppHelperLocalServiceWrapper {
-
-	public SubscriptionDLAppHelperLocalServiceWrapper() {
-		super(null);
-	}
-
-	public SubscriptionDLAppHelperLocalServiceWrapper(
-		DLAppHelperLocalService dlAppHelperLocalService) {
-
-		super(dlAppHelperLocalService);
-	}
 
 	@Override
 	public void deleteFileEntry(FileEntry fileEntry) throws PortalException {
@@ -119,14 +113,51 @@ public class SubscriptionDLAppHelperLocalServiceWrapper
 
 			// Subscriptions
 
-			notifySubscribers(
+			_notifySubscribers(
 				userId, latestFileVersion,
 				(String)workflowContext.get(WorkflowConstants.CONTEXT_URL),
 				serviceContext);
 		}
 	}
 
-	protected void notifySubscribers(
+	@Activate
+	protected void activate() {
+		_closeable = _liferayJSONDeserializationWhitelist.register(
+			DLSubscriptionSender.class.getName());
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		try {
+			_closeable.close();
+		}
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
+		}
+	}
+
+	private boolean _isEnabled(FileEntry fileEntry) {
+		if (!DLAppHelperThreadLocal.isEnabled() ||
+			RepositoryUtil.isExternalRepository(fileEntry.getRepositoryId())) {
+
+			return false;
+		}
+
+		return true;
+	}
+
+	private boolean _isEnabled(Folder folder) {
+		if (!DLAppHelperThreadLocal.isEnabled() ||
+			(!folder.isMountPoint() &&
+			 RepositoryUtil.isExternalRepository(folder.getRepositoryId()))) {
+
+			return false;
+		}
+
+		return true;
+	}
+
+	private void _notifySubscribers(
 			long userId, FileVersion fileVersion, String entryURL,
 			ServiceContext serviceContext)
 		throws PortalException {
@@ -187,9 +218,8 @@ public class SubscriptionDLAppHelperLocalServiceWrapper
 			folder = _dlAppLocalService.getFolder(folderId);
 		}
 
-		SubscriptionSender subscriptionSender =
-			new GroupSubscriptionCheckSubscriptionSender(
-				DLConstants.RESOURCE_NAME);
+		SubscriptionSender subscriptionSender = new DLSubscriptionSender(
+			DLConstants.RESOURCE_NAME, folderId);
 
 		DLFileEntry dlFileEntry = (DLFileEntry)fileEntry.getModel();
 
@@ -209,7 +239,7 @@ public class SubscriptionDLAppHelperLocalServiceWrapper
 			subscriptionSender.setLocalizedContextAttribute(
 				"[$FOLDER_NAME$]",
 				new EscapableLocalizableFunction(
-					locale -> LanguageUtil.get(locale, "home")));
+					locale -> _language.get(locale, "home")));
 		}
 
 		subscriptionSender.setContextAttributes(
@@ -243,16 +273,15 @@ public class SubscriptionDLAppHelperLocalServiceWrapper
 		}
 
 		subscriptionSender.setNotificationType(notificationType);
-
-		String portletId = PortletProviderUtil.getPortletId(
-			FileEntry.class.getName(), PortletProvider.Action.VIEW);
-
-		subscriptionSender.setPortletId(portletId);
-
+		subscriptionSender.setPortletId(
+			PortletProviderUtil.getPortletId(
+				FileEntry.class.getName(), PortletProvider.Action.VIEW));
 		subscriptionSender.setReplyToAddress(fromAddress);
 		subscriptionSender.setScopeGroupId(fileVersion.getGroupId());
 		subscriptionSender.setServiceContext(serviceContext);
 
+		subscriptionSender.addAssetEntryPersistedSubscribers(
+			DLFileEntry.class.getName(), dlFileEntry.getPrimaryKey());
 		subscriptionSender.addPersistedSubscribers(
 			DLFolder.class.getName(), fileVersion.getGroupId());
 
@@ -284,37 +313,20 @@ public class SubscriptionDLAppHelperLocalServiceWrapper
 		subscriptionSender.flushNotificationsAsync();
 	}
 
-	private boolean _isEnabled(FileEntry fileEntry) {
-		if (!DLAppHelperThreadLocal.isEnabled()) {
-			return false;
-		}
-
-		if (RepositoryUtil.isExternalRepository(fileEntry.getRepositoryId())) {
-			return false;
-		}
-
-		return true;
-	}
-
-	private boolean _isEnabled(Folder folder) {
-		if (!DLAppHelperThreadLocal.isEnabled()) {
-			return false;
-		}
-
-		if (!folder.isMountPoint() &&
-			RepositoryUtil.isExternalRepository(folder.getRepositoryId())) {
-
-			return false;
-		}
-
-		return true;
-	}
+	private Closeable _closeable;
 
 	@Reference
 	private DLAppLocalService _dlAppLocalService;
 
 	@Reference
 	private DLFileEntryTypeLocalService _dlFileEntryTypeLocalService;
+
+	@Reference
+	private Language _language;
+
+	@Reference
+	private LiferayJSONDeserializationWhitelist
+		_liferayJSONDeserializationWhitelist;
 
 	@Reference
 	private SubscriptionLocalService _subscriptionLocalService;

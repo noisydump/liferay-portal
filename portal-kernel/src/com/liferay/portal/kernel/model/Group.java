@@ -81,12 +81,19 @@ public interface Group extends GroupModel, PersistedModel, TreeModel {
 	public String getDescriptiveName(java.util.Locale locale)
 		throws com.liferay.portal.kernel.exception.PortalException;
 
+	public java.util.Map<java.util.Locale, String> getDescriptiveNameMap()
+		throws com.liferay.portal.kernel.exception.PortalException;
+
 	public String getDisplayURL(
 		com.liferay.portal.kernel.theme.ThemeDisplay themeDisplay);
 
 	public String getDisplayURL(
 		com.liferay.portal.kernel.theme.ThemeDisplay themeDisplay,
 		boolean privateLayout);
+
+	public String getDisplayURL(
+		com.liferay.portal.kernel.theme.ThemeDisplay themeDisplay,
+		boolean privateLayout, boolean controlPanel);
 
 	public String getIconCssClass();
 
@@ -179,6 +186,8 @@ public interface Group extends GroupModel, PersistedModel, TreeModel {
 	public boolean isLimitedToParentSiteMembers();
 
 	public boolean isOrganization();
+
+	public boolean isPrivateLayoutsEnabled();
 
 	public boolean isRegularSite();
 

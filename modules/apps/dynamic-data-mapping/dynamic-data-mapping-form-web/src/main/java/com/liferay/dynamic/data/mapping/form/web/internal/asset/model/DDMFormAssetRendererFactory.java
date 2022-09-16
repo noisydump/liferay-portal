@@ -92,7 +92,7 @@ public class DDMFormAssetRendererFactory
 			}
 		}
 
-		return createAssetRenderer(
+		return _createAssetRenderer(
 			formInstanceRecord, formInstanceRecordVersion, type);
 	}
 
@@ -126,15 +126,7 @@ public class DDMFormAssetRendererFactory
 			permissionChecker, ddmFormInstance, actionId);
 	}
 
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.dynamic.data.mapping.form.web)",
-		unbind = "-"
-	)
-	public void setServletContext(ServletContext servletContext) {
-		_servletContext = servletContext;
-	}
-
-	protected AssetRenderer<DDMFormInstanceRecord> createAssetRenderer(
+	private AssetRenderer<DDMFormInstanceRecord> _createAssetRenderer(
 		DDMFormInstanceRecord formInstanceRecord,
 		DDMFormInstanceRecordVersion formInstanceRecordVersion, int type) {
 
@@ -187,6 +179,9 @@ public class DDMFormAssetRendererFactory
 	@Reference
 	private Portal _portal;
 
+	@Reference(
+		target = "(osgi.web.symbolicname=com.liferay.dynamic.data.mapping.form.web)"
+	)
 	private ServletContext _servletContext;
 
 }

@@ -12,16 +12,25 @@
  * details.
  */
 
+import ClayAlert from '@clayui/alert';
 import ClayButton from '@clayui/button';
 import ClayLayout from '@clayui/layout';
+import ClayLink from '@clayui/link';
+import classNames from 'classnames';
 import {FieldArray, withFormik} from 'formik';
-import {debounce, fetch, openModal} from 'frontend-js-web';
+import {
+	debounce,
+	fetch,
+	navigate,
+	openConfirmModal,
+	openModal,
+	openToast,
+} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {Component} from 'react';
 
 import ThemeContext from '../../ThemeContext.es';
 import {
-	SOURCES,
 	SUPPORTED_CONJUNCTIONS,
 	SUPPORTED_OPERATORS,
 	SUPPORTED_PROPERTY_TYPES,
@@ -53,12 +62,14 @@ class SegmentEdit extends Component {
 		initialMembersCount: PropTypes.number,
 		initialSegmentActive: PropTypes.bool,
 		initialSegmentName: PropTypes.object,
+		isSegmentationEnabled: PropTypes.bool,
 		locale: PropTypes.string.isRequired,
 		portletNamespace: PropTypes.string,
 		previewMembersURL: PropTypes.string,
 		propertyGroups: PropTypes.array,
 		redirect: PropTypes.string.isRequired,
 		requestMembersCountURL: PropTypes.string,
+		segmentsConfigurationURL: PropTypes.string,
 		setFieldValue: PropTypes.func,
 		setValues: PropTypes.func,
 		showInEditMode: PropTypes.bool,
@@ -97,7 +108,9 @@ class SegmentEdit extends Component {
 			disabledSave: this._isQueryEmpty(contributors),
 			editing: showInEditMode,
 			hasChanged: false,
+			isSegmentationDisabledAlertDismissed: false,
 			membersCount: initialMembersCount,
+			queryHasEmptyValues: false,
 			validTitle: !!values.name[props.defaultLanguageId],
 		};
 
@@ -140,7 +153,7 @@ class SegmentEdit extends Component {
 			.catch(() => {
 				this.setState({membersCountLoading: false});
 
-				Liferay.Util.openToast({
+				openToast({
 					message: Liferay.Language.get(
 						'an-unexpected-error-occurred'
 					),
@@ -164,6 +177,7 @@ class SegmentEdit extends Component {
 				disabledSave: this._isQueryEmpty(contributors),
 				hasChanged: true,
 				membersCountLoading: true,
+				queryHasEmptyValues: false,
 			};
 		}, this._debouncedFetchMembersCount);
 	};
@@ -196,6 +210,48 @@ class SegmentEdit extends Component {
 	_isQueryEmpty = (contributors) =>
 		contributors.every((contributor) => !contributor.query);
 
+	/**
+	 * Checks if every item inside criteriaMap > items array has empry/falsy value in its value property.
+	 * @return {boolean} True if a non trythy values is found.
+	 */
+	_queryHasEmptyValues = (contributors) => {
+		const _checkForEmptyValuesInItems = (items) => {
+			return items.some((item) => {
+				const {items, value} = item;
+
+				if (Object.prototype.hasOwnProperty.call(item, 'items')) {
+					return _checkForEmptyValuesInItems(items);
+				}
+
+				if (Object.prototype.hasOwnProperty.call(item, 'value')) {
+					return !value.trim();
+				}
+
+				return false;
+			});
+		};
+
+		/* get all items form each contributor object, generating a plain array */
+		const items = contributors.reduce(
+			(acc, contributor) => [
+				...acc,
+				...(contributor.criteriaMap?.items || []),
+			],
+			[]
+		);
+
+		return _checkForEmptyValuesInItems(items);
+	};
+
+	_handleAlertClose = () => {
+		this.setState((prevState) => {
+			return {
+				...prevState,
+				queryHasEmptyValues: false,
+			};
+		});
+	};
+
 	_renderContributors = () => {
 		const {
 			locale,
@@ -209,6 +265,7 @@ class SegmentEdit extends Component {
 			editing,
 			membersCount,
 			membersCountLoading,
+			queryHasEmptyValues,
 		} = this.state;
 
 		const emptyContributors = this._isQueryEmpty(contributors);
@@ -220,12 +277,18 @@ class SegmentEdit extends Component {
 				contributors={contributors}
 				editing={editing}
 				emptyContributors={emptyContributors}
+				isSegmentationDisabledAlertDismissed={
+					this.state.isSegmentationDisabledAlertDismissed
+				}
+				isSegmentationEnabled={this.props.isSegmentationEnabled}
 				membersCount={membersCount}
 				membersCountLoading={membersCountLoading}
+				onAlertClose={this._handleAlertClose}
 				onConjunctionChange={this._handleConjunctionChange}
 				onPreviewMembers={this._handlePreviewMembers}
 				onQueryChange={this._handleQueryChange}
 				propertyGroups={propertyGroups}
+				renderEmptyValuesErrors={queryHasEmptyValues}
 				requestMembersCountURL={requestMembersCountURL}
 				segmentName={segmentName}
 				supportedConjunctions={SUPPORTED_CONJUNCTIONS}
@@ -244,13 +307,16 @@ class SegmentEdit extends Component {
 		const {hasChanged} = this.state;
 
 		if (hasChanged) {
-			const confirmed = confirm(
-				Liferay.Language.get('criteria-cancel-confirmation-message')
-			);
-
-			if (confirmed) {
-				this._redirect();
-			}
+			openConfirmModal({
+				message: Liferay.Language.get(
+					'criteria-cancel-confirmation-message'
+				),
+				onConfirm: (isConfirmed) => {
+					if (isConfirmed) {
+						this._redirect();
+					}
+				},
+			});
 		}
 		else {
 			this._redirect();
@@ -263,7 +329,7 @@ class SegmentEdit extends Component {
 	 * @memberof SegmentEdit
 	 */
 	_redirect = () => {
-		Liferay.Util.navigate(this.props.redirect);
+		navigate(this.props.redirect);
 	};
 
 	/**
@@ -298,6 +364,22 @@ class SegmentEdit extends Component {
 	 * @param {Class} event Event to prevent a form submission from occurring.
 	 */
 	_handleValidate = (event) => {
+		const {contributors} = this.state;
+		const queryHasEmptyValues = this._queryHasEmptyValues(contributors);
+
+		this.setState((prevState) => {
+			return {
+				...prevState,
+				queryHasEmptyValues,
+			};
+		});
+
+		if (queryHasEmptyValues) {
+			event.preventDefault();
+
+			return;
+		}
+
 		const {validateForm} = this.props;
 
 		event.persist();
@@ -309,7 +391,7 @@ class SegmentEdit extends Component {
 				event.preventDefault();
 
 				errorMessages.forEach((message) => {
-					Liferay.Util.openToast({
+					openToast({
 						message,
 						type: 'danger',
 					});
@@ -336,12 +418,14 @@ class SegmentEdit extends Component {
 							type="hidden"
 							value={value}
 						/>
+
 						<input
 							name={`${portletNamespace}key`}
 							readOnly
 							type="hidden"
 							value={value}
 						/>
+
 						<input
 							name={`${portletNamespace}name`}
 							readOnly
@@ -373,21 +457,34 @@ class SegmentEdit extends Component {
 			availableLocales,
 			defaultLanguageId,
 			hasUpdatePermission,
+			isSegmentationEnabled,
 			portletNamespace,
-			source,
 			values,
 		} = this.props;
 
-		const {contributors, disabledSave, editing, validTitle} = this.state;
-
-		const {assetsPath} = this.context;
+		const {
+			contributors,
+			disabledSave,
+			editing,
+			isSegmentationDisabledAlertDismissed,
+			queryHasEmptyValues,
+			validTitle,
+		} = this.state;
 
 		const disabledSaveButton = disabledSave || !validTitle;
 
 		const placeholder = Liferay.Language.get('untitled-segment');
 
+		const showDisabledSegmentationAlert =
+			!isSegmentationEnabled && !isSegmentationDisabledAlertDismissed;
+
 		return (
-			<div className="segment-edit-page-root">
+			<div
+				className={classNames('segment-edit-page-root', {
+					'segment-edit-page-root--has-alert': queryHasEmptyValues,
+					'segment-edit-page-root--with-warning': showDisabledSegmentationAlert,
+				})}
+			>
 				<input
 					name={`${portletNamespace}active`}
 					type="hidden"
@@ -413,25 +510,6 @@ class SegmentEdit extends Component {
 								portletNamespace={portletNamespace}
 								readOnly={!editing}
 							/>
-
-							<div className="align-self-center">
-								<img
-									className="lfr-portal-tooltip source-icon"
-									data-testid="source-icon"
-									src={
-										source ===
-										SOURCES.ASAH_FARO_BACKEND.name
-											? `${assetsPath}${SOURCES.ASAH_FARO_BACKEND.icon}`
-											: `${assetsPath}${SOURCES.DEFAULT.icon}`
-									}
-									title={
-										source ===
-										SOURCES.ASAH_FARO_BACKEND.name
-											? SOURCES.ASAH_FARO_BACKEND.label
-											: SOURCES.DEFAULT.label
-									}
-								/>
-							</div>
 						</div>
 
 						{hasUpdatePermission && (
@@ -465,7 +543,9 @@ class SegmentEdit extends Component {
 											className="text-capitalize"
 											disabled={disabledSaveButton}
 											displayType="primary"
-											onClick={this._handleValidate}
+											onClick={(event) =>
+												this._handleValidate(event)
+											}
 											small={true}
 											type="submit"
 										>
@@ -479,10 +559,44 @@ class SegmentEdit extends Component {
 				</div>
 
 				<div className="form-body">
+					{showDisabledSegmentationAlert && (
+						<ClayAlert
+							className="mx-0"
+							displayType="warning"
+							onClose={() =>
+								this.setState({
+									isSegmentationDisabledAlertDismissed: true,
+								})
+							}
+							variant="stripe"
+						>
+							<strong className="lead">
+								{Liferay.Language.get(
+									'segmentation-is-disabled'
+								)}
+							</strong>
+
+							{this.props.segmentsConfigurationURL ? (
+								<ClayLink
+									href={this.props.segmentsConfigurationURL}
+								>
+									{Liferay.Language.get(
+										'to-enable,-go-to-instance-settings'
+									)}
+								</ClayLink>
+							) : (
+								Liferay.Language.get(
+									'contact-your-system-administrator-to-enable-it'
+								)
+							)}
+						</ClayAlert>
+					)}
+
 					<FieldArray
 						name="contributors"
 						render={this._renderContributors}
 					/>
+
 					<ContributorInputs contributors={contributors} />
 				</div>
 			</div>

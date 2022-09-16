@@ -22,8 +22,9 @@ import com.liferay.commerce.inventory.model.CommerceInventoryWarehouseItem;
 import com.liferay.commerce.inventory.service.CommerceInventoryReplenishmentItemService;
 import com.liferay.commerce.inventory.service.CommerceInventoryWarehouseItemService;
 import com.liferay.commerce.inventory.service.CommerceInventoryWarehouseService;
-import com.liferay.commerce.product.display.context.util.CPRequestHelper;
+import com.liferay.commerce.product.display.context.helper.CPRequestHelper;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -33,14 +34,12 @@ import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
-import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.portlet.ActionRequest;
 import javax.portlet.PortletURL;
 import javax.portlet.RenderResponse;
 import javax.portlet.RenderURL;
@@ -77,19 +76,15 @@ public class CommerceInventoryDisplayContext {
 	}
 
 	public String getAddQuantityActionURL() throws Exception {
-		LiferayPortletResponse liferayPortletResponse =
-			_cpRequestHelper.getLiferayPortletResponse();
-
-		PortletURL portletURL = liferayPortletResponse.createRenderURL();
-
-		portletURL.setParameter(
-			"mvcRenderCommandName",
-			"/commerce_inventory/edit_commerce_inventory_warehouse");
-		portletURL.setParameter("sku", _sku);
-
-		portletURL.setWindowState(LiferayWindowState.POP_UP);
-
-		return portletURL.toString();
+		return PortletURLBuilder.createRenderURL(
+			_cpRequestHelper.getLiferayPortletResponse()
+		).setMVCRenderCommandName(
+			"/commerce_inventory/edit_commerce_inventory_warehouse"
+		).setParameter(
+			"sku", _sku
+		).setWindowState(
+			LiferayWindowState.POP_UP
+		).buildString();
 	}
 
 	public CommerceInventoryReplenishmentItem
@@ -160,34 +155,25 @@ public class CommerceInventoryDisplayContext {
 	}
 
 	public String getCreateInventoryItemActionURL() throws Exception {
-		LiferayPortletResponse liferayPortletResponse =
-			_cpRequestHelper.getLiferayPortletResponse();
-
-		PortletURL portletURL = liferayPortletResponse.createRenderURL();
-
-		portletURL.setParameter(
-			"mvcRenderCommandName",
-			"/commerce_inventory/add_commerce_inventory_item");
-
-		portletURL.setWindowState(LiferayWindowState.POP_UP);
-
-		return portletURL.toString();
+		return PortletURLBuilder.createRenderURL(
+			_cpRequestHelper.getLiferayPortletResponse()
+		).setMVCRenderCommandName(
+			"/commerce_inventory/add_commerce_inventory_item"
+		).setWindowState(
+			LiferayWindowState.POP_UP
+		).buildString();
 	}
 
 	public String getCreateReplenishmentActionURL() throws Exception {
-		LiferayPortletResponse liferayPortletResponse =
-			_cpRequestHelper.getLiferayPortletResponse();
-
-		PortletURL portletURL = liferayPortletResponse.createRenderURL();
-
-		portletURL.setParameter(
-			"mvcRenderCommandName",
-			"/commerce_inventory/edit_commerce_inventory_replenishment_item");
-		portletURL.setParameter("sku", _sku);
-
-		portletURL.setWindowState(LiferayWindowState.POP_UP);
-
-		return portletURL.toString();
+		return PortletURLBuilder.createRenderURL(
+			_cpRequestHelper.getLiferayPortletResponse()
+		).setMVCRenderCommandName(
+			"/commerce_inventory/edit_commerce_inventory_replenishment_item"
+		).setParameter(
+			"sku", _sku
+		).setWindowState(
+			LiferayWindowState.POP_UP
+		).buildString();
 	}
 
 	public List<HeaderActionModel> getHeaderActionModels()
@@ -273,34 +259,29 @@ public class CommerceInventoryDisplayContext {
 	}
 
 	public String getTransferQuantitiesActionURL() throws Exception {
-		LiferayPortletResponse liferayPortletResponse =
-			_cpRequestHelper.getLiferayPortletResponse();
-
-		PortletURL portletURL = liferayPortletResponse.createRenderURL();
-
-		portletURL.setParameter(
-			"mvcRenderCommandName", "/commerce_inventory/transfer_quantities");
-		portletURL.setParameter("sku", _sku);
-
-		portletURL.setWindowState(LiferayWindowState.POP_UP);
-
-		return portletURL.toString();
+		return PortletURLBuilder.createRenderURL(
+			_cpRequestHelper.getLiferayPortletResponse()
+		).setMVCRenderCommandName(
+			"/commerce_inventory/transfer_quantities"
+		).setParameter(
+			"sku", _sku
+		).setWindowState(
+			LiferayWindowState.POP_UP
+		).buildString();
 	}
 
 	public PortletURL getTransitionInventoryPortletURL() {
-		LiferayPortletResponse liferayPortletResponse =
-			_cpRequestHelper.getLiferayPortletResponse();
-
-		PortletURL portletURL = liferayPortletResponse.createActionURL();
-
-		portletURL.setParameter(
-			ActionRequest.ACTION_NAME,
-			"/commerce_inventory/edit_commerce_inventory_item");
-		portletURL.setParameter(Constants.CMD, "transition");
-		portletURL.setParameter("sku", _sku);
-		portletURL.setParameter("redirect", _cpRequestHelper.getCurrentURL());
-
-		return portletURL;
+		return PortletURLBuilder.createActionURL(
+			_cpRequestHelper.getLiferayPortletResponse()
+		).setActionName(
+			"/commerce_inventory/edit_commerce_inventory_item"
+		).setCMD(
+			"transition"
+		).setRedirect(
+			_cpRequestHelper.getCurrentURL()
+		).setParameter(
+			"sku", _sku
+		).buildPortletURL();
 	}
 
 	public CreationMenu getWarehousesCreationMenu() throws Exception {

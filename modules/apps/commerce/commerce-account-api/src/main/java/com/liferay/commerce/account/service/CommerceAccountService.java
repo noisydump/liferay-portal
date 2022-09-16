@@ -21,7 +21,6 @@ import com.liferay.portal.kernel.jsonwebservice.JSONWebService;
 import com.liferay.portal.kernel.security.access.control.AccessControlled;
 import com.liferay.portal.kernel.service.BaseService;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.spring.osgi.OSGiBeanProperties;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
@@ -41,13 +40,6 @@ import org.osgi.annotation.versioning.ProviderType;
  */
 @AccessControlled
 @JSONWebService
-@OSGiBeanProperties(
-	property = {
-		"json.web.service.context.name=commerce",
-		"json.web.service.context.path=CommerceAccount"
-	},
-	service = CommerceAccountService.class
-)
 @ProviderType
 @Transactional(
 	isolation = Isolation.PORTAL,
@@ -71,6 +63,13 @@ public interface CommerceAccountService extends BaseService {
 			String name, long parentCommerceAccountId, String email,
 			String taxId, int type, boolean active,
 			String externalReferenceCode, ServiceContext serviceContext)
+		throws PortalException;
+
+	public CommerceAccount addOrUpdateCommerceAccount(
+			String name, long parentCommerceAccountId, boolean logo,
+			byte[] logoBytes, String email, String taxId, int type,
+			boolean active, String externalReferenceCode,
+			ServiceContext serviceContext)
 		throws PortalException;
 
 	public void deleteCommerceAccount(long commerceAccountId)
@@ -157,13 +156,6 @@ public interface CommerceAccountService extends BaseService {
 
 	public CommerceAccount updateDefaultShippingAddress(
 			long commerceAccountId, long commerceAddressId)
-		throws PortalException;
-
-	public CommerceAccount upsertCommerceAccount(
-			String name, long parentCommerceAccountId, boolean logo,
-			byte[] logoBytes, String email, String taxId, int type,
-			boolean active, String externalReferenceCode,
-			ServiceContext serviceContext)
 		throws PortalException;
 
 }

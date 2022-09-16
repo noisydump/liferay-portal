@@ -15,29 +15,31 @@
 package com.liferay.asset.auto.tagger.internal.configuration.persistence.listener;
 
 import com.liferay.portal.configuration.persistence.listener.ConfigurationModelListenerException;
+import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
+import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoaderUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
-import com.liferay.portal.kernel.util.HashMapDictionary;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
-import java.util.Dictionary;
 import java.util.Locale;
 
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-import org.mockito.Matchers;
-
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.mockito.Mockito;
 
 /**
  * @author Alicia Garcia
  */
-@PrepareForTest(ResourceBundleUtil.class)
-@RunWith(PowerMockRunner.class)
 public class AssetAutoTaggerSystemConfigurationModelListenerTest {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Before
 	public void setUp() {
@@ -49,12 +51,11 @@ public class AssetAutoTaggerSystemConfigurationModelListenerTest {
 	public void testMaximumNumberOfTagsPerAssetNegative()
 		throws ConfigurationModelListenerException {
 
-		Dictionary<String, Object> properties = new HashMapDictionary<>();
-
-		properties.put("maximumNumberOfTagsPerAsset", -1);
-
 		_assetAutoTaggerSystemConfigurationModelListener.onBeforeSave(
-			RandomTestUtil.randomString(), properties);
+			RandomTestUtil.randomString(),
+			HashMapDictionaryBuilder.<String, Object>put(
+				"maximumNumberOfTagsPerAsset", -1
+			).build());
 	}
 
 	private void _setUpAssetAutoTaggerSystemConfigurationModelListener() {
@@ -63,12 +64,15 @@ public class AssetAutoTaggerSystemConfigurationModelListenerTest {
 	}
 
 	private void _setUpResourceBundleUtil() {
-		PowerMockito.mockStatic(ResourceBundleUtil.class);
+		ResourceBundleLoader resourceBundleLoader = Mockito.mock(
+			ResourceBundleLoader.class);
 
-		PowerMockito.when(
-			ResourceBundleUtil.getBundle(
-				Matchers.anyString(), Matchers.any(Locale.class),
-				Matchers.any(ClassLoader.class))
+		ResourceBundleLoaderUtil.setPortalResourceBundleLoader(
+			resourceBundleLoader);
+
+		Mockito.when(
+			resourceBundleLoader.loadResourceBundle(
+				Mockito.nullable(Locale.class))
 		).thenReturn(
 			ResourceBundleUtil.EMPTY_RESOURCE_BUNDLE
 		);

@@ -15,19 +15,13 @@
 package com.liferay.portal.vulcan.internal.jaxrs.message.body;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.PropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 
-import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.vulcan.fields.FieldsQueryParam;
 import com.liferay.portal.vulcan.fields.RestrictFieldsQueryParam;
 import com.liferay.portal.vulcan.internal.jackson.databind.ser.VulcanPropertyFilter;
-import com.liferay.portal.vulcan.internal.jaxrs.serializer.JSONArrayStdSerializer;
-import com.liferay.portal.vulcan.internal.jaxrs.serializer.PageJsonSerializer;
-import com.liferay.portal.vulcan.pagination.Page;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -80,51 +74,13 @@ public abstract class BaseMessageBodyWriter
 
 		ObjectMapper objectMapper = _getObjectMapper(clazz);
 
-		SimpleModule simpleModule = new SimpleModule();
-
-		simpleModule.addSerializer(
-			JSONArray.class, new JSONArrayStdSerializer(JSONArray.class));
-
-		if (mediaType.equals(MediaType.APPLICATION_XML_TYPE)) {
-			simpleModule.addSerializer(
-				(Class<Page<Object>>)(Class<?>)Page.class,
-				new PageJsonSerializer());
-		}
-
-		objectMapper.registerModule(simpleModule);
-
-		ObjectWriter objectWriter = objectMapper.writerFor(
-			objectMapper.constructType(genericType));
-
-		objectWriter.writeValue(outputStream, object);
+		objectMapper.writer(
+			_getSimpleFilterProvider()
+		).writeValue(
+			outputStream, object
+		);
 
 		outputStream.flush();
-	}
-
-	private ObjectMapper _addFilter(ObjectMapper objectMapper) {
-		objectMapper.setFilterProvider(
-			new SimpleFilterProvider() {
-				{
-					PropertyFilter propertyFilter = null;
-
-					Set<String> fieldNames = _fieldsQueryParam.getFieldNames();
-					Set<String> restrictFieldNames =
-						_restrictFieldsQueryParam.getRestrictFieldNames();
-
-					if ((fieldNames == null) && (restrictFieldNames == null)) {
-						propertyFilter =
-							SimpleBeanPropertyFilter.serializeAll();
-					}
-					else {
-						propertyFilter = VulcanPropertyFilter.of(
-							fieldNames, restrictFieldNames);
-					}
-
-					addFilter("Liferay.Vulcan", propertyFilter);
-				}
-			});
-
-		return objectMapper;
 	}
 
 	private ObjectMapper _getObjectMapper(Class<?> clazz) {
@@ -132,12 +88,32 @@ public abstract class BaseMessageBodyWriter
 			_providers.getContextResolver(_contextType, _mediaType)
 		).map(
 			contextResolver -> contextResolver.getContext(clazz)
-		).map(
-			this::_addFilter
 		).orElseThrow(
 			() -> new InternalServerErrorException(
 				"Unable to generate object mapper for class " + clazz)
 		);
+	}
+
+	private SimpleFilterProvider _getSimpleFilterProvider() {
+		return new SimpleFilterProvider() {
+			{
+				PropertyFilter propertyFilter = null;
+
+				Set<String> fieldNames = _fieldsQueryParam.getFieldNames();
+				Set<String> restrictFieldNames =
+					_restrictFieldsQueryParam.getRestrictFieldNames();
+
+				if ((fieldNames == null) && (restrictFieldNames == null)) {
+					propertyFilter = SimpleBeanPropertyFilter.serializeAll();
+				}
+				else {
+					propertyFilter = VulcanPropertyFilter.of(
+						fieldNames, restrictFieldNames);
+				}
+
+				addFilter("Liferay.Vulcan", propertyFilter);
+			}
+		};
 	}
 
 	private final Class<? extends ObjectMapper> _contextType;

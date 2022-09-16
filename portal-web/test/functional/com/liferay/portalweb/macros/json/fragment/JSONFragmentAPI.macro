@@ -36,14 +36,34 @@ definition {
 			-d groupId=${groupId} \
 			-d fragmentCollectionId=${collectionId} \
 			-d fragmentEntryKey= \
-			-d name=${name} \
+			-d <CURL_DATA[name=${name}]CURL_DATA> \
 			-d css= \
-			-d html=${html} \
+			-d <CURL_DATA[html=${html}]CURL_DATA> \
 			-d js= \
+			-d cacheable=false \
 			-d configuration=${configuration} \
+			-d icon= \
 			-d previewFileEntryId=0 \
 			-d type=${type} \
+			-d typeOptions= \
 			-d status=${status}
+		''';
+
+		var fragmentEntryId = JSONCurlUtil.post("${curl}", "$..fragmentEntryId");
+
+		return "${fragmentEntryId}";
+	}
+
+	@summary = "Directly calls the JSON WS API to delete a fragment collection"
+	macro _deleteCollection {
+		Variables.assertDefined(parameterList = "${collectionId}");
+
+		var portalURL = JSONCompany.getPortalURL();
+
+		var curl = '''
+			${portalURL}/api/jsonws/fragment.fragmentcollection/delete-fragment-collection \
+			-u test@liferay.com:test \
+			-d fragmentCollectionId=${collectionId}
 		''';
 
 		com.liferay.poshi.runner.util.JSONCurlUtil.post("${curl}");
@@ -66,10 +86,8 @@ definition {
 		''';
 
 		var collectionId = JSONCurlUtil.post("${curl}", "$.[?(@['name'] == '${collectionName}')]['fragmentCollectionId']");
-		var collectionId = StringUtil.replace("${collectionId}", "[&quot;", "");
-		var collectionId = StringUtil.replace("${collectionId}", "&quot;]", "");
 
-		if ("${collectionId}" == "[]") {
+		if ("${collectionId}" == "") {
 			fail("FAIL. Cannot find collection.");
 		}
 

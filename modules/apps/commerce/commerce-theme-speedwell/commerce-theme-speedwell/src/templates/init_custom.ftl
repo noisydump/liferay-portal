@@ -1,5 +1,8 @@
 <#assign
 	copyright = getterUtil.getString(themeDisplay.getThemeSetting("copyright"))
+	mini_cart_display_total_items_count = getterUtil.getBoolean(themeDisplay.getThemeSetting("mini-cart-display-total-items-count"))
+	mini_cart_keep_open = getterUtil.getBoolean(themeDisplay.getThemeSetting("mini-cart-keep-open"))
+	show_mini_cart = getterUtil.getBoolean(themeDisplay.getThemeSetting("show-mini-cart"))
 	show_top_menu = getterUtil.getBoolean(themeDisplay.getThemeSetting("show-top-menu"))
 	my_account_url = themeDisplay.getPathFriendlyURLPublic() + themeDisplay.getScopeGroup().getFriendlyURL() + "/my-account"
 	wishlistUrl = commerceWishListHttpHelper.getCommerceWishListPortletURL(request)
@@ -37,7 +40,9 @@
 	/>
 </#if>
 
-<#macro site_navigation_menu_main default_preferences = "">
+<#macro site_navigation_menu_main
+	default_preferences = ""
+>
 	<@liferay_portlet["runtime"]
 		defaultPreferences=default_preferences
 		instanceId="siteNavigationMenuPortlet_main"
@@ -45,7 +50,9 @@
 	/>
 </#macro>
 
-<#macro site_navigation_menu_sub_navigation default_preferences = "">
+<#macro site_navigation_menu_sub_navigation
+	default_preferences = ""
+>
 	<@liferay_portlet["runtime"]
 		defaultPreferences=default_preferences
 		instanceId="siteNavigationMenuPortlet_sub_navigation"
@@ -53,7 +60,9 @@
 	/>
 </#macro>
 
-<#macro site_navigation_menu_account default_preferences = "">
+<#macro site_navigation_menu_account
+	default_preferences = ""
+>
 	<@liferay_portlet["runtime"]
 		defaultPreferences=default_preferences
 		instanceId="siteNavigationMenuPortlet_account"
@@ -61,7 +70,9 @@
 	/>
 </#macro>
 
-<#macro commerce_category_navigation_menu default_preferences = "">
+<#macro commerce_category_navigation_menu
+	default_preferences = ""
+>
 	<@liferay_portlet["runtime"]
 		defaultPreferences=default_preferences
 		instanceId="cpAssetCategoriesNavigationPortlet_navigation_menu"

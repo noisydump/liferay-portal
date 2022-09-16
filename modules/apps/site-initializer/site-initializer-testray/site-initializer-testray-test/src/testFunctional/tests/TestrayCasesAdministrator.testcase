@@ -1,0 +1,248 @@
+@component-name = "portal-solutions"
+definition {
+
+	property osgi.modules.includes = "site-initializer-testray";
+	property portal.release = "false";
+	property portal.upstream = "true";
+	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
+	property testray.main.component.name = "Site Initializer Testray";
+
+	setUp {
+		task ("Login and create a Testray Site") {
+			TestCase.setUpPortalInstance();
+
+			User.firstLoginPG();
+
+			Testray.createTestraySite(siteName = "Testray 2");
+
+			Refresh();
+		}
+
+		task ("Go to Testray, Create Project and change pagination") {
+			ApplicationsMenu.gotoSite(site = "Testray 2");
+
+			Testray.createProjectTestray(
+				description = "Projects_1 Description",
+				key_name = "Projects_1 Project");
+
+			Testray.changePagination(
+				numberItems = "20",
+				valuePagination = "150");
+		}
+
+		task ("Go to created project and add a new team") {
+			TestrayContextMenu.clickContextMenuProjects(name = "Projects_1 Project");
+
+			TestrayContextMenu.selectItemFromProjectsContextMenu(item = "Manage Teams");
+
+			Testray.addNewTeam(teamName = "Components_1 Team");
+
+			TestrayManage.closeModalInOptions();
+		}
+
+		task ("Go to created project and add a component") {
+			TestrayContextMenu.clickContextMenuProjects(name = "Projects_1 Project");
+
+			TestrayContextMenu.selectItemFromProjectsContextMenu(item = "Manage Components");
+
+			Testray.addNewComponent(
+				componentName = "Components_1 Project 1",
+				teamName = "Components_1 Team");
+
+			Refresh();
+		}
+
+		task ("Go to Testray 2 and change the pagination") {
+			ApplicationsMenu.gotoSite(site = "Testray 2");
+
+			Testray.changePagination(
+				numberItems = "20",
+				valuePagination = "150");
+		}
+	}
+
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
+
+		Testray.deleteAllProjects();
+
+		Testray.tearDownCP();
+
+		if ("${testPortalInstance}" == "true") {
+			PortalInstances.tearDownCP();
+		}
+	}
+
+	@description = "This is a test for LPS-156790 - Verify if as an Administrator I am able to add Cases without Subcomponents"
+	@priority = "5"
+	test AdminCanAddCase {
+		task ("Given that the user goes to project page") {
+			Testray.goToProjectPage(projectName = "Projects_1 Project");
+		}
+
+		task ("And given that the user adds a new Case") {
+			Testray.projectTabNavigator(navTabName = "Cases");
+
+			TestrayCases.typeCasesField(
+				caseName = "Cases_1 Case",
+				caseTypeId = "Automated Functional Test",
+				componentId = "Components_1 Project 1",
+				description = "Cases_1 Case Description",
+				duration = "60",
+				priority = "5",
+				steps = "Auto Test Steps");
+		}
+
+		task ("Then the case is displayed with the new infos") {
+			TestrayCases.verifyCase(
+				caseName = "Cases_1 Case",
+				casePriority = "5",
+				key_caseComponent = "Components_1 Project 1");
+		}
+	}
+
+	@description = "This is a test for LPS-156933 - Verify if as an Administrator I should not be able to add a duplicate case"
+	@ignore = "Test Stub"
+	@priority = "5"
+	test AdminCanAddDuplicateCase {
+
+		// TODO LPS-156933 AdminCanAddDuplicateCase pending implementation
+
+	}
+
+	@description = "This is a test for LPS-156791 - Verify if as an Administrator I am able to delete Cases without Subcomponents"
+	@priority = "5"
+	test AdminCanDeleteCase {
+		task ("Given that the user goes to project page") {
+			Testray.goToProjectPage(projectName = "Projects_1 Project");
+		}
+
+		task ("When given that the user adds a new Case") {
+			Testray.projectTabNavigator(navTabName = "Cases");
+
+			TestrayCases.typeCasesField(
+				caseName = "Cases_1 Case",
+				caseTypeId = "Automated Functional Test",
+				componentId = "Components_1 Project 1",
+				description = "Cases_1 Case Description",
+				duration = "60",
+				priority = "5",
+				steps = "Auto Test Steps");
+		}
+
+		task ("When the user goes to delete a case") {
+			TestrayContextMenu.clickContextMenuProjects(name = "Cases_1 Case");
+
+			TestrayContextMenu.selectItemFromProjectsContextMenu(item = "Delete");
+
+			AssertConfirm(value1 = "Are you sure you want to delete this item?");
+		}
+
+		task ("then the Case should not be displayed anymore") {
+			Testray.assertItemNotPresent(itemName = "Cases_1 Case");
+		}
+	}
+
+	@description = "This is a test for LPS-156793 - Verify if as an Administrator I am able to edit Cases without Subcomponents"
+	@priority = "5"
+	test AdminCanEditCasee {
+		task ("Given that the user goes to project page") {
+			Testray.goToProjectPage(projectName = "Projects_1 Project");
+		}
+
+		task ("When given that the user adds a new Case") {
+			Testray.projectTabNavigator(navTabName = "Cases");
+
+			TestrayCases.typeCasesField(
+				caseName = "Cases_1 Case",
+				caseTypeId = "Automated Functional Test",
+				componentId = "Components_1 Project 1",
+				description = "Cases_1 Case Description",
+				duration = "60",
+				priority = "5",
+				steps = "Auto Test Steps");
+
+			TestrayCases.verifyCase(
+				caseName = "Cases_1 Case",
+				casePriority = "5",
+				key_caseComponent = "Components_1 Project 1");
+		}
+
+		task ("And the user goes to edit a case") {
+			TestrayContextMenu.clickContextMenuProjects(name = "Cases_1 Case");
+
+			TestrayContextMenu.selectItemFromProjectsContextMenu(item = "Edit");
+
+			TestrayCases.editCases(
+				caseName = "Cases_1 Case Edited",
+				caseTypeId = "Automated Functional Test",
+				componentId = "Smoke",
+				description = "Cases_1 Case Description Edited",
+				duration = "30",
+				priority = "4",
+				steps = "http://test.edit.com");
+		}
+
+		task ("Then the case is displayed with the new infos") {
+			TestrayCases.verifyCase(
+				caseName = "Cases_1 Case Edited",
+				casePriority = "4",
+				key_caseComponent = "Smoke");
+		}
+	}
+
+	@description = "This is a test for LPS-156916 - Verify if as an Administrator I am able to Import Cases from another Project"
+	@ignore = "Test Stub"
+	@priority = "3"
+	test AdminCanImportCase {
+
+		// TODO LPS-156916 AdminCanImportCase pending implementation
+
+	}
+
+	@description = "This is a test for LPS-156919 - Verify if as an Administrator, I should be able to link Requirements to a Case"
+	@ignore = "Test Stub"
+	@priority = "3"
+	test AdminCanLinkRequirements {
+
+		// TODO LPS-156919 AdminCanLinkRequirements pending implementation
+
+	}
+
+	@description = "This is a test for LPS-156950 - Verify if as an Administrator I should be able to Sort by Errors"
+	@ignore = "Test Stub"
+	@priority = "4"
+	test AdminCanSortErros {
+
+		// TODO LPS-156950 AdminCanSortErros pending implementation
+
+	}
+
+	@description = "This is a test for LPS-156947 - Verify if as an Administrator I should be able to Sort by Product Version"
+	@ignore = "Test Stub"
+	@priority = "4"
+	test AdminCanSortProductVersion {
+
+		// TODO LPS-156947 AdminCanSortProductVersion pending implementation
+
+	}
+
+	@description = "This is a test for LPS-156949 - Verify if as an Administrator I should be able to Sort by Status"
+	@ignore = "Test Stub"
+	@priority = "4"
+	test AdminCanSortStatus {
+
+		// TODO LPS-156949 AdminCanSortStatus pending implementation
+
+	}
+
+	@description = "This is a test for LPS-156923 - Verify if as an Administrator, I should be able to unlink Requirements to a Case"
+	@ignore = "Test Stub"
+	@priority = "3"
+	test AdminCanUnlinkRequirements {
+
+		// TODO LPS-156923 AdminCanUnlinkRequirements pending implementation
+
+	}
+
+}

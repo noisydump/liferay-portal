@@ -133,6 +133,9 @@ public interface DepotAppCustomizationLocalService
 	public <T> T dslQuery(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
 
 	/**
@@ -235,6 +238,10 @@ public interface DepotAppCustomizationLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<DepotAppCustomization> getDepotAppCustomizations(
 		int start, int end);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<DepotAppCustomization> getDepotAppCustomizations(
+		long depotEntryId);
 
 	/**
 	 * Returns the number of depot app customizations.

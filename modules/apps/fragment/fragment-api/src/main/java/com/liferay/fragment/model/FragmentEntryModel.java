@@ -384,6 +384,21 @@ public interface FragmentEntryModel
 	public void setConfiguration(String configuration);
 
 	/**
+	 * Returns the icon of this fragment entry.
+	 *
+	 * @return the icon of this fragment entry
+	 */
+	@AutoEscape
+	public String getIcon();
+
+	/**
+	 * Sets the icon of this fragment entry.
+	 *
+	 * @param icon the icon of this fragment entry
+	 */
+	public void setIcon(String icon);
+
+	/**
 	 * Returns the preview file entry ID of this fragment entry.
 	 *
 	 * @return the preview file entry ID of this fragment entry
@@ -431,6 +446,21 @@ public interface FragmentEntryModel
 	 * @param type the type of this fragment entry
 	 */
 	public void setType(int type);
+
+	/**
+	 * Returns the type options of this fragment entry.
+	 *
+	 * @return the type options of this fragment entry
+	 */
+	@AutoEscape
+	public String getTypeOptions();
+
+	/**
+	 * Sets the type options of this fragment entry.
+	 *
+	 * @param typeOptions the type options of this fragment entry
+	 */
+	public void setTypeOptions(String typeOptions);
 
 	/**
 	 * Returns the last publish date of this fragment entry.
@@ -592,5 +622,8 @@ public interface FragmentEntryModel
 	 */
 	@Override
 	public boolean isScheduled();
+
+	@Override
+	public FragmentEntry cloneWithOriginalValues();
 
 }

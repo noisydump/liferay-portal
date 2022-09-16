@@ -18,7 +18,6 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.workflow.kaleo.model.KaleoCondition;
 import com.liferay.portal.workflow.kaleo.model.KaleoInstanceToken;
 import com.liferay.portal.workflow.kaleo.model.KaleoNode;
-import com.liferay.portal.workflow.kaleo.model.KaleoTimer;
 import com.liferay.portal.workflow.kaleo.model.KaleoTransition;
 import com.liferay.portal.workflow.kaleo.runtime.ExecutionContext;
 import com.liferay.portal.workflow.kaleo.runtime.condition.ConditionEvaluator;
@@ -82,12 +81,6 @@ public class ConditionNodeExecutor extends BaseNodeExecutor {
 			newExecutionContext);
 
 		remainingPathElements.add(pathElement);
-	}
-
-	@Override
-	protected void doExecuteTimer(
-		KaleoNode currentKaleoNode, KaleoTimer kaleoTimer,
-		ExecutionContext executionContext) {
 	}
 
 	@Override

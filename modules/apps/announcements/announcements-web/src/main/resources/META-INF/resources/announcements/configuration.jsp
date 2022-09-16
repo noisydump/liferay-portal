@@ -100,20 +100,22 @@ announcementsPortletInstanceConfiguration = ParameterMapUtil.setParameterMap(Ann
 
 								<%
 								List<KeyValuePair> leftList = new ArrayList<KeyValuePair>();
-
-								for (Group curGroup : groups) {
-									if (announcementsDisplayContext.isScopeGroupSelected(curGroup)) {
-										leftList.add(new KeyValuePair(String.valueOf(curGroup.getGroupId()), curGroup.getDescriptiveName(locale)));
-									}
-								}
-
 								List<KeyValuePair> rightList = new ArrayList<KeyValuePair>();
 
 								for (Group curGroup : groups) {
-									KeyValuePair tempKeyValuePair = new KeyValuePair(String.valueOf(curGroup.getGroupId()), curGroup.getDescriptiveName(locale));
+									if (!curGroup.isSite()) {
+										continue;
+									}
 
-									if (!leftList.contains(tempKeyValuePair)) {
-										rightList.add(tempKeyValuePair);
+									String descriptiveName = curGroup.isOrganization() ? String.format("%s (%s)", curGroup.getDescriptiveName(locale), LanguageUtil.get(request, OrganizationConstants.TYPE_ORGANIZATION)) : curGroup.getDescriptiveName(locale);
+
+									KeyValuePair keyValuePair = new KeyValuePair(String.valueOf(curGroup.getGroupId()), descriptiveName);
+
+									if (announcementsDisplayContext.isScopeGroupSelected(curGroup)) {
+										leftList.add(keyValuePair);
+									}
+									else {
+										rightList.add(keyValuePair);
 									}
 								}
 								%>
@@ -290,7 +292,7 @@ announcementsPortletInstanceConfiguration = ParameterMapUtil.setParameterMap(Ann
 		if (customizeAnnouncementsDisplayedCheckbox) {
 			customizeAnnouncementsDisplayedCheckbox.addEventListener(
 				'change',
-				function () {
+				() => {
 					<portlet:namespace />modified(
 						document.getElementById(
 							'<portlet:namespace />announcementsDisplayedPanel'
@@ -324,7 +326,7 @@ announcementsPortletInstanceConfiguration = ParameterMapUtil.setParameterMap(Ann
 			selectedHTML = selectedHTML.concat(selected[i].innerHTML);
 		}
 
-		Liferay.on('inputmoveboxes:moveItem', function (event) {
+		Liferay.on('inputmoveboxes:moveItem', (event) => {
 			var currSelectedHTML = '';
 
 			for (var i = selected.length - 1; i >= 0; --i) {
@@ -347,7 +349,7 @@ announcementsPortletInstanceConfiguration = ParameterMapUtil.setParameterMap(Ann
 		);
 
 		if (pageDeltaInput) {
-			pageDeltaInput.addEventListener('change', function (event) {
+			pageDeltaInput.addEventListener('change', (event) => {
 				var displaySettingsPanel = document.getElementById(
 					'<portlet:namespace />displaySettingsPanel'
 				);
@@ -369,7 +371,7 @@ announcementsPortletInstanceConfiguration = ParameterMapUtil.setParameterMap(Ann
 			if (currentScopeGroupIds && selectedScopeGroupIds) {
 				selectedScopeGroupIds.setAttribute(
 					'value',
-					Liferay.Util.listSelect(currentScopeGroupIds)
+					Liferay.Util.getSelectedOptionValues(currentScopeGroupIds)
 				);
 			}
 
@@ -383,7 +385,9 @@ announcementsPortletInstanceConfiguration = ParameterMapUtil.setParameterMap(Ann
 			if (currentScopeOrganizationIds && selectedScopeOrganizationIds) {
 				selectedScopeOrganizationIds.setAttribute(
 					'value',
-					Liferay.Util.listSelect(currentScopeOrganizationIds)
+					Liferay.Util.getSelectedOptionValues(
+						currentScopeOrganizationIds
+					)
 				);
 			}
 
@@ -397,7 +401,7 @@ announcementsPortletInstanceConfiguration = ParameterMapUtil.setParameterMap(Ann
 			if (currentScopeRoleIds && selectedScopeRoleIds) {
 				selectedScopeRoleIds.setAttribute(
 					'value',
-					Liferay.Util.listSelect(currentScopeRoleIds)
+					Liferay.Util.getSelectedOptionValues(currentScopeRoleIds)
 				);
 			}
 
@@ -411,7 +415,7 @@ announcementsPortletInstanceConfiguration = ParameterMapUtil.setParameterMap(Ann
 			if (currentScopeUserGroupIds && selectedScopeUserGroupIds) {
 				selectedScopeUserGroupIds.setAttribute(
 					'value',
-					Liferay.Util.listSelect(currentScopeUserGroupIds)
+					Liferay.Util.getSelectedOptionValues(currentScopeUserGroupIds)
 				);
 			}
 

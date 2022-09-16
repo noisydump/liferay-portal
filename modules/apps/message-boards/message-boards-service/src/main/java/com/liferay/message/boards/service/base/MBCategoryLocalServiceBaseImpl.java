@@ -23,6 +23,7 @@ import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.message.boards.model.MBCategory;
 import com.liferay.message.boards.service.MBCategoryLocalService;
+import com.liferay.message.boards.service.MBCategoryLocalServiceUtil;
 import com.liferay.message.boards.service.persistence.MBCategoryFinder;
 import com.liferay.message.boards.service.persistence.MBCategoryPersistence;
 import com.liferay.petra.function.UnsafeFunction;
@@ -47,6 +48,8 @@ import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -63,10 +66,13 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -87,7 +93,7 @@ public abstract class MBCategoryLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>MBCategoryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.message.boards.service.MBCategoryLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>MBCategoryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>MBCategoryLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -156,6 +162,13 @@ public abstract class MBCategoryLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return mbCategoryPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -461,6 +474,11 @@ public abstract class MBCategoryLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement MBCategoryLocalServiceImpl#deleteMBCategory(MBCategory) to avoid orphaned data");
+		}
+
 		return mbCategoryLocalService.deleteMBCategory(
 			(MBCategory)persistedModel);
 	}
@@ -570,6 +588,11 @@ public abstract class MBCategoryLocalServiceBaseImpl
 		return mbCategoryPersistence.update(mbCategory);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -581,6 +604,8 @@ public abstract class MBCategoryLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		mbCategoryLocalService = (MBCategoryLocalService)aopProxy;
+
+		_setLocalServiceUtilService(mbCategoryLocalService);
 	}
 
 	/**
@@ -640,6 +665,22 @@ public abstract class MBCategoryLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		MBCategoryLocalService mbCategoryLocalService) {
+
+		try {
+			Field field = MBCategoryLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, mbCategoryLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected MBCategoryLocalService mbCategoryLocalService;
 
 	@Reference
@@ -652,20 +693,7 @@ public abstract class MBCategoryLocalServiceBaseImpl
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@Reference
-	protected com.liferay.portal.kernel.service.ResourceLocalService
-		resourceLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
-
-	@Reference
-	protected com.liferay.expando.kernel.service.ExpandoRowLocalService
-		expandoRowLocalService;
-
-	@Reference
-	protected com.liferay.ratings.kernel.service.RatingsStatsLocalService
-		ratingsStatsLocalService;
+	private static final Log _log = LogFactoryUtil.getLog(
+		MBCategoryLocalServiceBaseImpl.class);
 
 }

@@ -168,6 +168,11 @@ public class ExportImportConfigurationWrapper
 		}
 	}
 
+	@Override
+	public ExportImportConfiguration cloneWithOriginalValues() {
+		return wrap(model.cloneWithOriginalValues());
+	}
+
 	/**
 	 * Returns the company ID of this export import configuration.
 	 *
@@ -343,18 +348,6 @@ public class ExportImportConfigurationWrapper
 	@Override
 	public long getTrashEntryClassPK() {
 		return model.getTrashEntryClassPK();
-	}
-
-	/**
-	 * Returns the trash handler for this export import configuration.
-	 *
-	 * @return the trash handler for this export import configuration
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public com.liferay.portal.kernel.trash.TrashHandler getTrashHandler() {
-		return model.getTrashHandler();
 	}
 
 	/**

@@ -20,8 +20,8 @@
 SelectRolesDisplayContext selectRolesDisplayContext = new SelectRolesDisplayContext(request, renderRequest, renderResponse);
 %>
 
-<clay:management-toolbar-v2
-	displayContext="<%= new SelectRolesManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, selectRolesDisplayContext) %>"
+<clay:management-toolbar
+	managementToolbarDisplayContext="<%= new SelectRolesManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, selectRolesDisplayContext) %>"
 />
 
 <aui:form cssClass="container-fluid container-fluid-max-xl portlet-site-memberships-assign-roles" name="fm">
@@ -55,7 +55,7 @@ SelectRolesDisplayContext selectRolesDisplayContext = new SelectRolesDisplayCont
 						colspan="<%= 2 %>"
 					>
 						<h5>
-							<aui:a cssClass="selector-button" data="<%= data %>" href="javascript:;">
+							<aui:a cssClass="selector-button" data="<%= data %>" href="javascript:void(0);">
 								<%= HtmlUtil.escape(role.getTitle(locale)) %>
 							</aui:a>
 						</h5>
@@ -75,7 +75,7 @@ SelectRolesDisplayContext selectRolesDisplayContext = new SelectRolesDisplayCont
 						name="title"
 						truncate="<%= true %>"
 					>
-						<aui:a cssClass="selector-button" data="<%= data %>" href="javascript:;">
+						<aui:a cssClass="selector-button" data="<%= data %>" href="javascript:void(0);">
 							<%= HtmlUtil.escape(role.getTitle(locale)) %>
 						</aui:a>
 					</liferay-ui:search-container-column-text>
@@ -100,10 +100,3 @@ SelectRolesDisplayContext selectRolesDisplayContext = new SelectRolesDisplayCont
 		/>
 	</liferay-ui:search-container>
 </aui:form>
-
-<aui:script>
-	Liferay.Util.selectEntityHandler(
-		'#<portlet:namespace />fm',
-		'<%= HtmlUtil.escapeJS(selectRolesDisplayContext.getEventName()) %>'
-	);
-</aui:script>

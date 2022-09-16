@@ -25,6 +25,8 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
+import java.util.Date;
+
 /**
  * The cache model class for representing AccountGroupRel in entity cache.
  *
@@ -47,8 +49,8 @@ public class AccountGroupRelCacheModel
 		AccountGroupRelCacheModel accountGroupRelCacheModel =
 			(AccountGroupRelCacheModel)object;
 
-		if ((AccountGroupRelId ==
-				accountGroupRelCacheModel.AccountGroupRelId) &&
+		if ((accountGroupRelId ==
+				accountGroupRelCacheModel.accountGroupRelId) &&
 			(mvccVersion == accountGroupRelCacheModel.mvccVersion)) {
 
 			return true;
@@ -59,7 +61,7 @@ public class AccountGroupRelCacheModel
 
 	@Override
 	public int hashCode() {
-		int hashCode = HashUtil.hash(0, AccountGroupRelId);
+		int hashCode = HashUtil.hash(0, accountGroupRelId);
 
 		return HashUtil.hash(hashCode, mvccVersion);
 	}
@@ -76,14 +78,22 @@ public class AccountGroupRelCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(13);
+		StringBundler sb = new StringBundler(21);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
-		sb.append(", AccountGroupRelId=");
-		sb.append(AccountGroupRelId);
+		sb.append(", accountGroupRelId=");
+		sb.append(accountGroupRelId);
 		sb.append(", companyId=");
 		sb.append(companyId);
+		sb.append(", userId=");
+		sb.append(userId);
+		sb.append(", userName=");
+		sb.append(userName);
+		sb.append(", createDate=");
+		sb.append(createDate);
+		sb.append(", modifiedDate=");
+		sb.append(modifiedDate);
 		sb.append(", accountGroupId=");
 		sb.append(accountGroupId);
 		sb.append(", classNameId=");
@@ -100,8 +110,31 @@ public class AccountGroupRelCacheModel
 		AccountGroupRelImpl accountGroupRelImpl = new AccountGroupRelImpl();
 
 		accountGroupRelImpl.setMvccVersion(mvccVersion);
-		accountGroupRelImpl.setAccountGroupRelId(AccountGroupRelId);
+		accountGroupRelImpl.setAccountGroupRelId(accountGroupRelId);
 		accountGroupRelImpl.setCompanyId(companyId);
+		accountGroupRelImpl.setUserId(userId);
+
+		if (userName == null) {
+			accountGroupRelImpl.setUserName("");
+		}
+		else {
+			accountGroupRelImpl.setUserName(userName);
+		}
+
+		if (createDate == Long.MIN_VALUE) {
+			accountGroupRelImpl.setCreateDate(null);
+		}
+		else {
+			accountGroupRelImpl.setCreateDate(new Date(createDate));
+		}
+
+		if (modifiedDate == Long.MIN_VALUE) {
+			accountGroupRelImpl.setModifiedDate(null);
+		}
+		else {
+			accountGroupRelImpl.setModifiedDate(new Date(modifiedDate));
+		}
+
 		accountGroupRelImpl.setAccountGroupId(accountGroupId);
 		accountGroupRelImpl.setClassNameId(classNameId);
 		accountGroupRelImpl.setClassPK(classPK);
@@ -115,9 +148,14 @@ public class AccountGroupRelCacheModel
 	public void readExternal(ObjectInput objectInput) throws IOException {
 		mvccVersion = objectInput.readLong();
 
-		AccountGroupRelId = objectInput.readLong();
+		accountGroupRelId = objectInput.readLong();
 
 		companyId = objectInput.readLong();
+
+		userId = objectInput.readLong();
+		userName = objectInput.readUTF();
+		createDate = objectInput.readLong();
+		modifiedDate = objectInput.readLong();
 
 		accountGroupId = objectInput.readLong();
 
@@ -130,9 +168,21 @@ public class AccountGroupRelCacheModel
 	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(mvccVersion);
 
-		objectOutput.writeLong(AccountGroupRelId);
+		objectOutput.writeLong(accountGroupRelId);
 
 		objectOutput.writeLong(companyId);
+
+		objectOutput.writeLong(userId);
+
+		if (userName == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(userName);
+		}
+
+		objectOutput.writeLong(createDate);
+		objectOutput.writeLong(modifiedDate);
 
 		objectOutput.writeLong(accountGroupId);
 
@@ -142,8 +192,12 @@ public class AccountGroupRelCacheModel
 	}
 
 	public long mvccVersion;
-	public long AccountGroupRelId;
+	public long accountGroupRelId;
 	public long companyId;
+	public long userId;
+	public String userName;
+	public long createDate;
+	public long modifiedDate;
 	public long accountGroupId;
 	public long classNameId;
 	public long classPK;

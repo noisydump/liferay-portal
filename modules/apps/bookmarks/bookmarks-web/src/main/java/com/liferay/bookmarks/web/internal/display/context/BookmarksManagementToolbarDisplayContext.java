@@ -27,6 +27,7 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuil
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItemListBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItemList;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -91,21 +92,9 @@ public class BookmarksManagementToolbarDisplayContext {
 		return DropdownItemListBuilder.add(
 			dropdownItem -> {
 				dropdownItem.putData("action", "deleteEntries");
-
-				if (_trashHelper.isTrashEnabled(
-						_themeDisplay.getScopeGroupId())) {
-
-					dropdownItem.setIcon("trash");
-					dropdownItem.setLabel(
-						LanguageUtil.get(
-							_httpServletRequest, "move-to-recycle-bin"));
-				}
-				else {
-					dropdownItem.setIcon("times-circle");
-					dropdownItem.setLabel(
-						LanguageUtil.get(_httpServletRequest, "delete"));
-				}
-
+				dropdownItem.setIcon("trash");
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "delete"));
 				dropdownItem.setQuickAction(true);
 			}
 		).build();
@@ -179,11 +168,11 @@ public class BookmarksManagementToolbarDisplayContext {
 
 				User user = _themeDisplay.getUser();
 
-				String label = String.format(
-					"%s: %s", LanguageUtil.get(_httpServletRequest, "owner"),
-					user.getFullName());
-
-				labelItem.setLabel(label);
+				labelItem.setLabel(
+					String.format(
+						"%s: %s",
+						LanguageUtil.get(_httpServletRequest, "owner"),
+						user.getFullName()));
 			}
 		).add(
 			() -> navigation.equals("recent"),
@@ -193,7 +182,6 @@ public class BookmarksManagementToolbarDisplayContext {
 					_removeNavigartionParameter(_currentURLObj));
 
 				labelItem.setCloseable(true);
-
 				labelItem.setLabel(
 					LanguageUtil.get(_httpServletRequest, "recent"));
 			}
@@ -201,14 +189,15 @@ public class BookmarksManagementToolbarDisplayContext {
 	}
 
 	public String getSearchActionURL() {
-		PortletURL searchActionURL = _liferayPortletResponse.createRenderURL();
-
-		searchActionURL.setParameter("mvcRenderCommandName", "/bookmarks/view");
-		searchActionURL.setParameter(
-			"redirect", PortalUtil.getCurrentURL(_httpServletRequest));
-		searchActionURL.setParameter("folderId", String.valueOf(_folderId));
-
-		return searchActionURL.toString();
+		return PortletURLBuilder.createRenderURL(
+			_liferayPortletResponse
+		).setMVCRenderCommandName(
+			"/bookmarks/view"
+		).setRedirect(
+			PortalUtil.getCurrentURL(_httpServletRequest)
+		).setParameter(
+			"folderId", _folderId
+		).buildString();
 	}
 
 	public String getSearchContainerId() {
@@ -311,12 +300,12 @@ public class BookmarksManagementToolbarDisplayContext {
 					navigationKeys = new String[] {"all", "recent"};
 				}
 
-				PortletURL portletURL = _getPortletURL();
-
-				portletURL.setParameter(
+				PortletURL portletURL = PortletURLBuilder.create(
+					_getPortletURL()
+				).setParameter(
 					"folderId",
-					String.valueOf(
-						BookmarksFolderConstants.DEFAULT_PARENT_FOLDER_ID));
+					BookmarksFolderConstants.DEFAULT_PARENT_FOLDER_ID
+				).buildPortletURL();
 
 				for (String navigationKey : navigationKeys) {
 					add(
@@ -344,33 +333,37 @@ public class BookmarksManagementToolbarDisplayContext {
 	}
 
 	private PortletURL _getPortletURL() {
-		PortletURL portletURL = _liferayPortletResponse.createRenderURL();
+		return PortletURLBuilder.createRenderURL(
+			_liferayPortletResponse
+		).setParameter(
+			"categoryId", StringPool.BLANK
+		).setParameter(
+			"deltaEntry",
+			() -> {
+				int deltaEntry = ParamUtil.getInteger(
+					_httpServletRequest, "deltaEntry");
 
-		portletURL.setParameter("categoryId", StringPool.BLANK);
+				if (deltaEntry > 0) {
+					return deltaEntry;
+				}
 
-		int deltaEntry = ParamUtil.getInteger(
-			_httpServletRequest, "deltaEntry");
-
-		if (deltaEntry > 0) {
-			portletURL.setParameter("deltaEntry", String.valueOf(deltaEntry));
-		}
-
-		portletURL.setParameter("folderId", String.valueOf(_folderId));
-		portletURL.setParameter("tag", StringPool.BLANK);
-
-		return portletURL;
+				return null;
+			}
+		).setParameter(
+			"folderId", _folderId
+		).setParameter(
+			"tag", StringPool.BLANK
+		).buildPortletURL();
 	}
 
 	private String _removeNavigartionParameter(PortletURL portletURL)
 		throws PortletException {
 
-		PortletURL removeNavigationParameterPortletURL = PortletURLUtil.clone(
-			portletURL, _liferayPortletResponse);
-
-		removeNavigationParameterPortletURL.setParameter(
-			"navigation", (String)null);
-
-		return removeNavigationParameterPortletURL.toString();
+		return PortletURLBuilder.create(
+			PortletURLUtil.clone(portletURL, _liferayPortletResponse)
+		).setNavigation(
+			(String)null
+		).buildString();
 	}
 
 	private final BookmarksGroupServiceOverriddenConfiguration

@@ -14,6 +14,8 @@
 
 package com.liferay.portal.search.elasticsearch7.internal.connection;
 
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
+
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -25,6 +27,8 @@ import org.elasticsearch.client.RestHighLevelClient;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 import org.mockito.Mockito;
@@ -33,6 +37,11 @@ import org.mockito.Mockito;
  * @author André de Oliveira
  */
 public class ElasticsearchConnectionTest {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Before
 	public void setUp() {
@@ -67,7 +76,7 @@ public class ElasticsearchConnectionTest {
 			Mockito.any()
 		);
 
-		assertNetworkHostAddress("localhost", 9200);
+		_assertNetworkHostAddress("localhost", 9200);
 
 		_elasticsearchConnection.close();
 
@@ -84,10 +93,10 @@ public class ElasticsearchConnectionTest {
 
 		Assert.assertTrue(_elasticsearchConnection.isConnected());
 
-		assertNetworkHostAddress("127.0.0.1", 9999);
+		_assertNetworkHostAddress("127.0.0.1", 9999);
 	}
 
-	protected void assertNetworkHostAddress(String hostString, int port) {
+	private void _assertNetworkHostAddress(String hostString, int port) {
 		RestHighLevelClient restHighLevelClient =
 			_elasticsearchConnection.getRestHighLevelClient();
 

@@ -31,15 +31,12 @@ import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.CompanyService;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.servlet.SessionMessages;
-import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
-
-import javax.servlet.ServletContext;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -57,35 +54,22 @@ import org.osgi.service.component.annotations.Reference;
 )
 public class EditInstanceMVCActionCommand extends BaseMVCActionCommand {
 
-	protected void deleteInstance(ActionRequest actionRequest)
-		throws Exception {
-
-		long companyId = ParamUtil.getLong(actionRequest, "companyId");
-
-		_companyService.deleteCompany(companyId);
-
-		synchronizePortalInstances();
-	}
-
 	@Override
 	protected void doProcessAction(
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
 
-		String cmd = ParamUtil.getString(actionRequest, Constants.CMD);
-
 		try {
-			if (cmd.equals(Constants.DELETE)) {
-				deleteInstance(actionRequest);
-			}
-			else {
-				updateInstance(actionRequest);
-			}
+			_updateInstance(actionRequest);
 
 			sendRedirect(actionRequest, actionResponse);
 		}
 		catch (Exception exception) {
 			String mvcPath = "/error.jsp";
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 
 			if (exception instanceof NoSuchCompanyException ||
 				exception instanceof PrincipalException) {
@@ -118,7 +102,7 @@ public class EditInstanceMVCActionCommand extends BaseMVCActionCommand {
 				SessionErrors.add(actionRequest, exception.getClass());
 			}
 			else {
-				_log.error(exception, exception);
+				_log.error(exception);
 
 				throw exception;
 			}
@@ -127,45 +111,24 @@ public class EditInstanceMVCActionCommand extends BaseMVCActionCommand {
 		}
 	}
 
-	protected void synchronizePortalInstances() {
-		_portalInstancesLocalService.synchronizePortalInstances();
-	}
-
-	protected void updateInstance(ActionRequest actionRequest)
-		throws Exception {
-
+	private void _updateInstance(ActionRequest actionRequest) throws Exception {
 		long companyId = ParamUtil.getLong(actionRequest, "companyId");
 
 		String virtualHostname = ParamUtil.getString(
 			actionRequest, "virtualHostname");
 		String mx = ParamUtil.getString(actionRequest, "mx");
 		int maxUsers = ParamUtil.getInteger(actionRequest, "maxUsers");
+
 		boolean active = ParamUtil.getBoolean(actionRequest, "active");
 
-		if (companyId <= 0) {
-
-			// Add instance
-
-			String webId = ParamUtil.getString(actionRequest, "webId");
-
-			Company company = _companyService.addCompany(
-				webId, virtualHostname, mx, false, maxUsers, active);
-
-			ServletContext servletContext =
-				(ServletContext)actionRequest.getAttribute(WebKeys.CTX);
-
-			_portalInstancesLocalService.initializePortalInstance(
-				servletContext, company.getWebId());
-		}
-		else {
-
-			// Update instance
-
-			_companyService.updateCompany(
-				companyId, virtualHostname, mx, maxUsers, active);
+		if (companyId == _portalInstancesLocalService.getDefaultCompanyId()) {
+			active = true;
 		}
 
-		synchronizePortalInstances();
+		_companyService.updateCompany(
+			companyId, virtualHostname, mx, maxUsers, active);
+
+		_portalInstancesLocalService.synchronizePortalInstances();
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

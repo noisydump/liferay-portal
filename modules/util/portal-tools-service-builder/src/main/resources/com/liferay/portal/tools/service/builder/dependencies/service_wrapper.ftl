@@ -25,6 +25,12 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
 </#if>
 public class ${entity.name}${sessionTypeName}ServiceWrapper implements ${entity.name}${sessionTypeName}Service, ServiceWrapper<${entity.name}${sessionTypeName}Service> {
 
+	<#if serviceBuilder.isVersionGTE_7_4_0()>
+		public ${entity.name}${sessionTypeName}ServiceWrapper() {
+			this(null);
+		}
+	</#if>
+
 	public ${entity.name}${sessionTypeName}ServiceWrapper(${entity.name}${sessionTypeName}Service ${entity.variableName}${sessionTypeName}Service) {
 		_${entity.variableName}${sessionTypeName}Service = ${entity.variableName}${sessionTypeName}Service;
 	}
@@ -40,11 +46,7 @@ public class ${entity.name}${sessionTypeName}ServiceWrapper implements ${entity.
 			@Override
 			public
 
-			<#if (method.name = "dslQuery" && (serviceBuilder.getTypeGenericsName(method.returns) == "T")) || (method.name = "dynamicQuery" && (serviceBuilder.getTypeGenericsName(method.returns) == "java.util.List<T>"))>
-				<T>
-			</#if>
-
-			${serviceBuilder.getTypeGenericsName(method.returns)} ${method.name}(
+			${serviceBuilder.getTypeParametersDefinition(method.typeParameters)} ${serviceBuilder.getTypeGenericsName(method.returns)} ${method.name}(
 
 			<#list method.parameters as parameter>
 				${serviceBuilder.getTypeGenericsName(parameter.type)} ${parameter.name}

@@ -14,9 +14,8 @@
 
 package com.liferay.dispatch.talend.web.internal.process;
 
-import com.liferay.dispatch.talend.web.internal.TalendArchiveUtil;
-import com.liferay.dispatch.talend.web.internal.archive.TalendArchive;
-import com.liferay.dispatch.talend.web.internal.archive.TalendArchiveParserUtil;
+import com.liferay.dispatch.talend.archive.TalendArchive;
+import com.liferay.dispatch.talend.archive.TalendArchiveParserUtil;
 import com.liferay.petra.process.ProcessConfig;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -26,9 +25,14 @@ import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.portal.util.FastDateFormatFactoryImpl;
 import com.liferay.portal.util.FileImpl;
 import com.liferay.portal.util.PortalClassPathUtil;
+
+import java.io.InputStream;
+
+import java.net.URL;
 
 import java.text.SimpleDateFormat;
 
@@ -39,12 +43,19 @@ import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
  * @author Igor Beslic
  */
 public class TalendProcessTest {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@BeforeClass
 	public static void setUpClass() {
@@ -81,7 +92,7 @@ public class TalendProcessTest {
 		talendProcessBuilder.lastRunStartDate(null);
 
 		TalendArchive talendArchive = TalendArchiveParserUtil.parse(
-			TalendArchiveUtil.getInputStream());
+			_getInputStream());
 
 		talendProcessBuilder.talendArchive(talendArchive);
 
@@ -141,12 +152,25 @@ public class TalendProcessTest {
 			talendProcess.getMainMethodArguments());
 
 		SimpleDateFormat simpleDateFormat = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+			TalendProcess.ISO_8601_PATTERN);
 
 		Assert.assertTrue(
 			processConfigArguments.contains(
 				"--context_param lastRunStartDate=".concat(
 					simpleDateFormat.format(date))));
+	}
+
+	private InputStream _getInputStream() throws Exception {
+		URL url = TalendProcessTest.class.getResource("/jobInfo.properties");
+
+		String urlString = String.valueOf(url);
+
+		URL zipURL = new URL(
+			urlString.substring(
+				"jar:".length(),
+				urlString.length() - "!/jobInfo.properties".length()));
+
+		return zipURL.openStream();
 	}
 
 }

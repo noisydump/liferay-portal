@@ -14,16 +14,18 @@
 
 package com.liferay.site.admin.web.internal.handler;
 
+import com.liferay.asset.kernel.exception.AssetCategoryException;
+import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.exception.DataLimitExceededException;
 import com.liferay.portal.kernel.exception.DuplicateGroupException;
 import com.liferay.portal.kernel.exception.GroupInheritContentException;
 import com.liferay.portal.kernel.exception.GroupKeyException;
 import com.liferay.portal.kernel.exception.GroupParentException;
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -38,6 +40,7 @@ import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Pavel Savinov
@@ -47,11 +50,11 @@ public class GroupExceptionRequestHandler {
 
 	public void handlePortalException(
 			ActionRequest actionRequest, ActionResponse actionResponse,
-			PortalException portalException)
+			Exception exception)
 		throws Exception {
 
 		if (_log.isDebugEnabled()) {
-			_log.debug(portalException, portalException);
+			_log.debug(exception);
 		}
 
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
@@ -59,31 +62,65 @@ public class GroupExceptionRequestHandler {
 
 		String errorMessage = null;
 
-		if (portalException instanceof DuplicateGroupException) {
-			errorMessage = LanguageUtil.get(
+		if (exception instanceof AssetCategoryException) {
+			AssetCategoryException assetCategoryException =
+				(AssetCategoryException)exception;
+
+			AssetVocabulary assetVocabulary =
+				assetCategoryException.getVocabulary();
+
+			String assetVocabularyTitle = StringPool.BLANK;
+
+			if (assetVocabulary != null) {
+				assetVocabularyTitle = assetVocabulary.getTitle(
+					themeDisplay.getLocale());
+			}
+
+			if (assetCategoryException.getType() ==
+					AssetCategoryException.AT_LEAST_ONE_CATEGORY) {
+
+				errorMessage = _language.format(
+					themeDisplay.getRequest(),
+					"please-select-at-least-one-category-for-x",
+					assetVocabularyTitle);
+			}
+			else if (assetCategoryException.getType() ==
+						AssetCategoryException.TOO_MANY_CATEGORIES) {
+
+				errorMessage = _language.format(
+					themeDisplay.getRequest(),
+					"you-cannot-select-more-than-one-category-for-x",
+					assetVocabularyTitle);
+			}
+		}
+		else if (exception instanceof DataLimitExceededException) {
+			errorMessage = _language.get(
+				themeDisplay.getRequest(),
+				"unable-to-exceed-maximum-number-of-allowed-sites");
+		}
+		else if (exception instanceof DuplicateGroupException) {
+			errorMessage = _language.get(
 				themeDisplay.getRequest(), "please-enter-a-unique-name");
 		}
-		else if (portalException instanceof GroupInheritContentException) {
-			errorMessage = LanguageUtil.get(
+		else if (exception instanceof GroupInheritContentException) {
+			errorMessage = _language.get(
 				themeDisplay.getRequest(),
 				"this-site-cannot-inherit-content-from-its-parent-site");
 		}
-		else if (portalException instanceof GroupKeyException) {
+		else if (exception instanceof GroupKeyException) {
 			errorMessage = _handleGroupKeyException(actionRequest);
 		}
-		else if (portalException instanceof
-					GroupParentException.MustNotBeOwnParent) {
-
-			errorMessage = LanguageUtil.get(
+		else if (exception instanceof GroupParentException.MustNotBeOwnParent) {
+			errorMessage = _language.get(
 				themeDisplay.getRequest(),
 				"this-site-cannot-inherit-content-from-its-parent-site");
 		}
 
 		if (Validator.isNull(errorMessage)) {
-			errorMessage = LanguageUtil.get(
+			errorMessage = _language.get(
 				themeDisplay.getRequest(), "an-unexpected-error-occurred");
 
-			_log.error(portalException.getMessage());
+			_log.error(exception);
 		}
 
 		JSONObject jsonObject = JSONUtil.put("error", errorMessage);
@@ -99,7 +136,7 @@ public class GroupExceptionRequestHandler {
 		StringBundler sb = new StringBundler(5);
 
 		sb.append(
-			LanguageUtil.format(
+			_language.format(
 				themeDisplay.getRequest(),
 				"the-x-cannot-be-x-or-a-reserved-word-such-as-x",
 				new String[] {
@@ -112,7 +149,7 @@ public class GroupExceptionRequestHandler {
 		sb.append(StringPool.SPACE);
 
 		sb.append(
-			LanguageUtil.format(
+			_language.format(
 				themeDisplay.getRequest(),
 				"the-x-cannot-contain-the-following-invalid-characters-x",
 				new String[] {
@@ -126,7 +163,7 @@ public class GroupExceptionRequestHandler {
 			Group.class.getName(), "groupKey");
 
 		sb.append(
-			LanguageUtil.format(
+			_language.format(
 				themeDisplay.getRequest(),
 				"the-x-cannot-contain-more-than-x-characters",
 				new String[] {
@@ -138,5 +175,8 @@ public class GroupExceptionRequestHandler {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		GroupExceptionRequestHandler.class);
+
+	@Reference
+	private Language _language;
 
 }

@@ -1,5 +1,30 @@
 # Liferay Gradle Plugins TLDDoc Builder Change Log
 
+## 1.3.8 - 2021-03-16
+
+### Commits
+- [LPS-105380] Partial revert (b333b86a75)
+
+## 1.3.7 - 2021-03-11
+
+### Commits
+- [LPS-105380] rename (de9faa2d3e)
+- [LPS-84621] Test (b1257fdfe4)
+- [LPS-84621] Check local definition files (f7f3cbd44c)
+- [LPS-105380] Inline (e47639f436)
+
+## 1.3.6 - 2020-11-02
+
+### Commits
+- [LPS-111291] Import statements (d414bad0fa)
+- [LPS-111291] Update readme (a87d2593e9)
+- [LPS-111291] Gradle 5.6.4 tests (40f4f9e2f3)
+- [LPS-111291] Update README.markdown (eea12b7f8f)
+- [LPS-111291] Update plugins Gradle version (003c3832b0)
+
+### Dependencies
+- [LPS-111291] Update the com.liferay.gradle.util dependency to version 1.0.44.
+
 ## 1.3.5 - 2020-08-26
 
 ### Commits
@@ -256,6 +281,7 @@ component of the same application.
 [LPS-106149]: https://issues.liferay.com/browse/LPS-106149
 [LPS-110283]: https://issues.liferay.com/browse/LPS-110283
 [LPS-110422]: https://issues.liferay.com/browse/LPS-110422
+[LPS-111291]: https://issues.liferay.com/browse/LPS-111291
 [LPS-111896]: https://issues.liferay.com/browse/LPS-111896
 [LPS-113624]: https://issues.liferay.com/browse/LPS-113624
 [LPS-115019]: https://issues.liferay.com/browse/LPS-115019

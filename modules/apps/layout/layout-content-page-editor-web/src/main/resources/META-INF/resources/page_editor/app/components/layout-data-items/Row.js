@@ -15,164 +15,107 @@
 import ClayLayout from '@clayui/layout';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
-import React, {useEffect, useMemo, useState} from 'react';
+import React, {useMemo} from 'react';
 
+import {useId} from '../../../core/hooks/useId';
 import {getLayoutDataItemPropTypes} from '../../../prop-types/index';
 import {LAYOUT_DATA_ITEM_TYPES} from '../../config/constants/layoutDataItemTypes';
-import {useSelector} from '../../store/index';
-import {getFrontendTokenValue} from '../../utils/getFrontendTokenValue';
+import {useGetFieldValue} from '../../contexts/CollectionItemContext';
+import {useSelector} from '../../contexts/StoreContext';
+import getLayoutDataItemClassName from '../../utils/getLayoutDataItemClassName';
+import getLayoutDataItemCssClasses from '../../utils/getLayoutDataItemCssClasses';
+import getLayoutDataItemUniqueClassName from '../../utils/getLayoutDataItemUniqueClassName';
 import {getResponsiveConfig} from '../../utils/getResponsiveConfig';
-import loadBackgroundImage from '../../utils/loadBackgroundImage';
-import {useBackgroundImageMediaQueries} from '../../utils/useBackgroundImageQueries';
-import {useId} from '../../utils/useId';
+import useBackgroundImageValue from '../../utils/useBackgroundImageValue';
 
-const Row = React.forwardRef(
-	({children, className, item, withinTopper = false}, ref) => {
-		const selectedViewportSize = useSelector(
-			(state) => state.selectedViewportSize
-		);
+const Row = React.forwardRef(({children, className, item}, ref) => {
+	const selectedViewportSize = useSelector(
+		(state) => state.selectedViewportSize
+	);
 
-		const itemConfig = getResponsiveConfig(
-			item.config,
-			selectedViewportSize
-		);
-		const {modulesPerRow, reverseOrder} = itemConfig;
+	const itemConfig = getResponsiveConfig(item.config, selectedViewportSize);
+	const {modulesPerRow, reverseOrder} = itemConfig;
 
-		const {
-			backgroundColor,
-			backgroundImage,
-			borderColor,
-			borderRadius,
-			borderWidth,
-			fontFamily,
-			fontSize,
-			fontWeight,
-			height,
-			marginBottom,
-			marginLeft,
-			marginRight,
-			marginTop,
-			maxHeight,
-			maxWidth,
-			minHeight,
-			minWidth,
-			opacity,
-			overflow,
-			paddingBottom,
-			paddingLeft,
-			paddingRight,
-			paddingTop,
-			shadow,
-			textAlign,
-			textColor,
-			width,
-		} = itemConfig.styles;
+	const {backgroundImage} = itemConfig.styles;
 
-		const [backgroundImageValue, setBackgroundImageValue] = useState('');
+	const elementId = useId();
+	const getFieldValue = useGetFieldValue();
+	const backgroundImageValue = useBackgroundImageValue(
+		elementId,
+		backgroundImage,
+		getFieldValue
+	);
 
-		const elementId = useId();
+	const style = {};
 
-		const backgroundImageMediaQueries = useBackgroundImageMediaQueries(
-			elementId,
-			backgroundImage
-		);
+	if (backgroundImageValue.url) {
+		style[
+			`--lfr-background-image-${item.itemId}`
+		] = `url(${backgroundImageValue.url})`;
 
-		useEffect(() => {
-			loadBackgroundImage(backgroundImage).then(setBackgroundImageValue);
-		}, [backgroundImage]);
-
-		const style = {};
-
-		style.backgroundColor = getFrontendTokenValue(backgroundColor);
-		style.border = `solid ${borderWidth}px`;
-		style.borderColor = getFrontendTokenValue(borderColor);
-		style.borderRadius = getFrontendTokenValue(borderRadius);
-		style.boxShadow = getFrontendTokenValue(shadow);
-		style.color = getFrontendTokenValue(textColor);
-		style.fontFamily = getFrontendTokenValue(fontFamily);
-		style.fontSize = getFrontendTokenValue(fontSize);
-		style.fontWeight = getFrontendTokenValue(fontWeight);
-		style.height = height;
-		style.maxHeight = maxHeight;
-		style.minHeight = minHeight;
-		style.opacity = opacity ? opacity / 100 : null;
-		style.overflow = overflow;
-
-		if (!withinTopper) {
-			style.maxWidth = maxWidth;
-			style.minWidth = minWidth;
-			style.width = width;
+		if (backgroundImage?.fileEntryId) {
+			style['--background-image-file-entry-id'] =
+				backgroundImage.fileEntryId;
 		}
+	}
 
-		if (backgroundImageValue) {
-			style.backgroundImage = `url(${backgroundImageValue})`;
-			style.backgroundPosition = '50% 50%';
-			style.backgroundRepeat = 'no-repeat';
-			style.backgroundSize = 'cover';
-		}
-
-		const rowContent = (
+	const rowContent = (
+		<div
+			className={classNames(
+				getLayoutDataItemClassName(item.type),
+				getLayoutDataItemCssClasses(item),
+				getLayoutDataItemUniqueClassName(item.itemId)
+			)}
+		>
 			<ClayLayout.Row
 				className={classNames(
 					className,
-					`mb-${marginBottom || 0}`,
-					`mt-${marginTop || 0}`,
-					`pb-${paddingBottom || 0}`,
-					`pl-${paddingLeft || 0}`,
-					`pr-${paddingRight || 0}`,
-					`pt-${paddingTop || 0}`,
+
 					{
 						'flex-column-reverse':
 							item.config.numberOfColumns === 2 &&
 							modulesPerRow === 1 &&
 							reverseOrder,
-						[`ml-${marginLeft}`]: marginLeft && marginLeft !== '0',
-						[`mr-${marginRight}`]:
-							marginRight && marginRight !== '0',
 						'no-gutters': !item.config.gutters,
-						[textAlign
-							? textAlign.startsWith('text-')
-								? textAlign
-								: `text-${textAlign}`
-							: '']: textAlign,
 					}
 				)}
 				id={elementId}
 				ref={ref}
 				style={style}
 			>
-				<style>{backgroundImageMediaQueries}</style>
+				{backgroundImageValue.mediaQueries ? (
+					<style>{backgroundImageValue.mediaQueries}</style>
+				) : null}
+
 				{children}
 			</ClayLayout.Row>
-		);
+		</div>
+	);
 
-		const masterLayoutData = useSelector(
-			(state) => state.masterLayout?.masterLayoutData
-		);
+	const masterLayoutData = useSelector(
+		(state) => state.masterLayout?.masterLayoutData
+	);
 
-		const masterParent = useMemo(() => {
-			const dropZone =
-				masterLayoutData &&
-				masterLayoutData.items[masterLayoutData.rootItems.dropZone];
+	const masterParent = useMemo(() => {
+		const dropZone =
+			masterLayoutData &&
+			masterLayoutData.items[masterLayoutData.rootItems.dropZone];
 
-			return dropZone
-				? getItemParent(dropZone, masterLayoutData)
-				: undefined;
-		}, [masterLayoutData]);
+		return dropZone ? getItemParent(dropZone, masterLayoutData) : undefined;
+	}, [masterLayoutData]);
 
-		const shouldAddContainer = useSelector(
-			(state) => !getItemParent(item, state.layoutData) && !masterParent
-		);
+	const shouldAddContainer = useSelector(
+		(state) => !getItemParent(item, state.layoutData) && !masterParent
+	);
 
-		return shouldAddContainer ? (
-			<ClayLayout.ContainerFluid className="p-0" size={false}>
-				{rowContent}
-			</ClayLayout.ContainerFluid>
-		) : (
-			rowContent
-		);
-	}
-);
+	return shouldAddContainer ? (
+		<ClayLayout.ContainerFluid className="p-0" size={false}>
+			{rowContent}
+		</ClayLayout.ContainerFluid>
+	) : (
+		rowContent
+	);
+});
 
 Row.propTypes = {
 	item: getLayoutDataItemPropTypes({

@@ -20,6 +20,7 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItemListBuilder;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -36,8 +37,6 @@ import com.liferay.translation.model.TranslationEntry;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.portlet.PortletURL;
-
 import javax.servlet.http.HttpServletRequest;
 
 /**
@@ -47,7 +46,7 @@ public class TranslationEntryManagementToolbarDisplayContext
 	extends SearchContainerManagementToolbarDisplayContext {
 
 	public TranslationEntryManagementToolbarDisplayContext(
-		String defaultEventHandler, HttpServletRequest httpServletRequest,
+		HttpServletRequest httpServletRequest,
 		LiferayPortletRequest liferayPortletRequest,
 		LiferayPortletResponse liferayPortletResponse,
 		SearchContainer<?> searchContainer) {
@@ -55,8 +54,6 @@ public class TranslationEntryManagementToolbarDisplayContext
 		super(
 			httpServletRequest, liferayPortletRequest, liferayPortletResponse,
 			searchContainer);
-
-		_defaultEventHandler = defaultEventHandler;
 
 		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
@@ -68,6 +65,15 @@ public class TranslationEntryManagementToolbarDisplayContext
 			dropdownItem -> {
 				dropdownItem.putData(
 					"action", "deleteSelectedTranslationEntries");
+
+				dropdownItem.putData(
+					"delete-translation-entries-url",
+					PortletURLBuilder.createActionURL(
+						liferayPortletResponse
+					).setActionName(
+						"/translation/delete_translation_entry"
+					).buildString());
+
 				dropdownItem.setIcon("times-circle");
 				dropdownItem.setLabel(
 					LanguageUtil.get(httpServletRequest, "delete"));
@@ -78,18 +84,15 @@ public class TranslationEntryManagementToolbarDisplayContext
 
 	@Override
 	public String getClearResultsURL() {
-		PortletURL portletURL = getPortletURL();
-
-		portletURL.setParameter("keywords", StringPool.BLANK);
-		portletURL.setParameter("orderByCol", getOrderByCol());
-		portletURL.setParameter("orderByType", getOrderByType());
-
-		return portletURL.toString();
-	}
-
-	@Override
-	public String getDefaultEventHandler() {
-		return _defaultEventHandler;
+		return PortletURLBuilder.create(
+			getPortletURL()
+		).setKeywords(
+			StringPool.BLANK
+		).setParameter(
+			"orderByCol", getOrderByCol()
+		).setParameter(
+			"orderByType", getOrderByType()
+		).buildString();
 	}
 
 	@Override
@@ -100,12 +103,14 @@ public class TranslationEntryManagementToolbarDisplayContext
 
 		return LabelItemListBuilder.add(
 			labelItem -> {
-				PortletURL removeLabelURL = PortletURLUtil.clone(
-					getPortletURL(), liferayPortletResponse);
-
-				removeLabelURL.setParameter("status", (String)null);
-
-				labelItem.putData("removeLabelURL", removeLabelURL.toString());
+				labelItem.putData(
+					"removeLabelURL",
+					PortletURLBuilder.create(
+						PortletURLUtil.clone(
+							getPortletURL(), liferayPortletResponse)
+					).setParameter(
+						"status", (String)null
+					).buildString());
 
 				labelItem.setDismissible(true);
 				labelItem.setLabel(
@@ -121,12 +126,13 @@ public class TranslationEntryManagementToolbarDisplayContext
 
 	@Override
 	public String getSearchActionURL() {
-		PortletURL portletURL = liferayPortletResponse.createRenderURL();
-
-		portletURL.setParameter("orderByCol", getOrderByCol());
-		portletURL.setParameter("orderByType", getOrderByType());
-
-		return portletURL.toString();
+		return PortletURLBuilder.createRenderURL(
+			liferayPortletResponse
+		).setParameter(
+			"orderByCol", getOrderByCol()
+		).setParameter(
+			"orderByType", getOrderByType()
+		).buildString();
 	}
 
 	@Override
@@ -198,7 +204,6 @@ public class TranslationEntryManagementToolbarDisplayContext
 		return statuses;
 	}
 
-	private final String _defaultEventHandler;
 	private Integer _status;
 	private final ThemeDisplay _themeDisplay;
 

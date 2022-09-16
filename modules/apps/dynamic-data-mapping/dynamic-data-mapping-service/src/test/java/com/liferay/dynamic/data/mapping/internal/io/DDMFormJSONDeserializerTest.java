@@ -34,6 +34,7 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.lang.reflect.Field;
 
@@ -44,11 +45,11 @@ import java.util.ResourceBundle;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
-import org.mockito.Matchers;
-import org.mockito.Mock;
-import org.mockito.invocation.InvocationOnMock;
+import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 
 /**
@@ -57,12 +58,17 @@ import org.mockito.stubbing.Answer;
 public class DDMFormJSONDeserializerTest
 	extends BaseDDMFormDeserializerTestCase {
 
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
 	@Before
 	@Override
 	public void setUp() throws Exception {
 		super.setUp();
 
-		setUpDDMFormJSONDeserializer();
+		_setUpDDMFormJSONDeserializer();
 		setUpPortalUtil();
 	}
 
@@ -74,6 +80,33 @@ public class DDMFormJSONDeserializerTest
 					"version.json"));
 
 		Assert.assertEquals("2.0", ddmForm.getDefinitionSchemaVersion());
+	}
+
+	@Test
+	public void testDDMFormSuccessPageSettingsDifferentDefaultLocale()
+		throws Exception {
+
+		DDMForm ddmForm = deserialize(
+			read(
+				"ddm-form-success-page-settings-different-default-" +
+					"locale.json"));
+
+		DDMFormSuccessPageSettings ddmFormSuccessPageSettings =
+			ddmForm.getDDMFormSuccessPageSettings();
+
+		Assert.assertNotNull(ddmFormSuccessPageSettings);
+
+		LocalizedValue body = ddmFormSuccessPageSettings.getBody();
+
+		Assert.assertEquals("Texto", body.getString(LocaleUtil.BRAZIL));
+		Assert.assertEquals("Texto", body.getString(LocaleUtil.NETHERLANDS));
+
+		LocalizedValue title = ddmFormSuccessPageSettings.getTitle();
+
+		Assert.assertEquals("Título", title.getString(LocaleUtil.BRAZIL));
+		Assert.assertEquals("Título", title.getString(LocaleUtil.NETHERLANDS));
+
+		Assert.assertTrue(ddmFormSuccessPageSettings.isEnabled());
 	}
 
 	@Override
@@ -99,29 +132,29 @@ public class DDMFormJSONDeserializerTest
 
 		setUpDefaultDDMFormFieldType();
 
-		DDMFormFieldTypeServicesTracker ddmFormFieldTypeServicesTracker = mock(
-			DDMFormFieldTypeServicesTracker.class);
+		DDMFormFieldTypeServicesTracker ddmFormFieldTypeServicesTracker =
+			Mockito.mock(DDMFormFieldTypeServicesTracker.class);
 
-		DDMFormFieldRenderer ddmFormFieldRenderer = mock(
+		DDMFormFieldRenderer ddmFormFieldRenderer = Mockito.mock(
 			DDMFormFieldRenderer.class);
 
-		when(
+		Mockito.when(
 			ddmFormFieldTypeServicesTracker.getDDMFormFieldRenderer(
-				Matchers.anyString())
+				Mockito.anyString())
 		).thenReturn(
 			ddmFormFieldRenderer
 		);
 
-		when(
+		Mockito.when(
 			ddmFormFieldTypeServicesTracker.getDDMFormFieldType(
-				Matchers.anyString())
+				Mockito.anyString())
 		).thenReturn(
 			_defaultDDMFormFieldType
 		);
 
-		when(
+		Mockito.when(
 			ddmFormFieldTypeServicesTracker.getDDMFormFieldTypeProperties(
-				Matchers.anyString())
+				Mockito.anyString())
 		).thenReturn(
 			HashMapBuilder.<String, Object>put(
 				"ddm.form.field.type.icon", "my-icon"
@@ -140,52 +173,25 @@ public class DDMFormJSONDeserializerTest
 		return ".json";
 	}
 
-	protected void setUpDDMFormJSONDeserializer() throws Exception {
-
-		// DDM form field type services tracker
-
-		Field field = ReflectionUtil.getDeclaredField(
-			DDMFormJSONDeserializer.class, "_ddmFormFieldTypeServicesTracker");
-
-		field.set(
-			_ddmFormJSONDeserializer,
-			getMockedDDMFormFieldTypeServicesTracker());
-
-		// JSON factory
-
-		field = ReflectionUtil.getDeclaredField(
-			DDMFormJSONDeserializer.class, "_jsonFactory");
-
-		field.set(_ddmFormJSONDeserializer, new JSONFactoryImpl());
-	}
-
 	protected void setUpDefaultDDMFormFieldType() {
-		when(
+		Mockito.when(
 			_defaultDDMFormFieldType.getDDMFormFieldTypeSettings()
 		).then(
-			new Answer<Class<? extends DDMFormFieldTypeSettings>>() {
-
-				@Override
-				public Class<? extends DDMFormFieldTypeSettings> answer(
-						InvocationOnMock invocationOnMock)
-					throws Throwable {
-
-					return DDMFormFieldTypeSettingsTestUtil.getSettings();
-				}
-
-			}
+			(Answer<Class<? extends DDMFormFieldTypeSettings>>)
+				invocationOnMock ->
+					DDMFormFieldTypeSettingsTestUtil.getSettings()
 		);
 	}
 
 	protected void setUpPortalUtil() {
 		PortalUtil portalUtil = new PortalUtil();
 
-		Portal portal = mock(Portal.class);
+		Portal portal = Mockito.mock(Portal.class);
 
-		ResourceBundle resourceBundle = mock(ResourceBundle.class);
+		ResourceBundle resourceBundle = Mockito.mock(ResourceBundle.class);
 
-		when(
-			portal.getResourceBundle(Matchers.any(Locale.class))
+		Mockito.when(
+			portal.getResourceBundle(Mockito.any(Locale.class))
 		).thenReturn(
 			resourceBundle
 		);
@@ -263,10 +269,28 @@ public class DDMFormJSONDeserializerTest
 		Assert.assertEquals("false", ddmFormField.getVisibilityExpression());
 	}
 
+	private void _setUpDDMFormJSONDeserializer() throws Exception {
+
+		// DDM form field type services tracker
+
+		Field field = ReflectionUtil.getDeclaredField(
+			DDMFormJSONDeserializer.class, "_ddmFormFieldTypeServicesTracker");
+
+		field.set(
+			_ddmFormJSONDeserializer,
+			getMockedDDMFormFieldTypeServicesTracker());
+
+		// JSON factory
+
+		field = ReflectionUtil.getDeclaredField(
+			DDMFormJSONDeserializer.class, "_jsonFactory");
+
+		field.set(_ddmFormJSONDeserializer, new JSONFactoryImpl());
+	}
+
 	private final DDMFormJSONDeserializer _ddmFormJSONDeserializer =
 		new DDMFormJSONDeserializer();
-
-	@Mock
-	private DDMFormFieldType _defaultDDMFormFieldType;
+	private final DDMFormFieldType _defaultDDMFormFieldType = Mockito.mock(
+		DDMFormFieldType.class);
 
 }

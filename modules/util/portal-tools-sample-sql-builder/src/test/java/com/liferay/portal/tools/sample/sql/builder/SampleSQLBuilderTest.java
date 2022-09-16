@@ -14,12 +14,11 @@
 
 package com.liferay.portal.tools.sample.sql.builder;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.db.DBType;
 import com.liferay.portal.kernel.util.FileUtil;
-import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.SystemProperties;
 import com.liferay.portal.test.rule.LogAssertionTestRule;
 import com.liferay.portal.tools.HypersonicLoader;
@@ -38,7 +37,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
 
-import java.util.Enumeration;
 import java.util.Properties;
 
 import org.junit.Assert;
@@ -82,7 +80,7 @@ public class SampleSQLBuilderTest {
 			SystemProperties.get(SystemProperties.TMP_DIR),
 			String.valueOf(System.currentTimeMillis()));
 
-		_initProperties(properties, tempDir.getAbsolutePath());
+		_initProperties(properties);
 
 		File tempPropertiesFile = File.createTempFile("test", ".properties");
 
@@ -91,56 +89,71 @@ public class SampleSQLBuilderTest {
 
 			System.setProperty(
 				"sample-sql-properties", tempPropertiesFile.getAbsolutePath());
+			System.setProperty("user.dir", tempDir.getAbsolutePath());
 
 			new SampleSQLBuilder();
 
-			_loadHypersonic("../../../sql", tempDir.getAbsolutePath());
+			_loadHypersonic(tempDir.getAbsolutePath());
 		}
 		finally {
 			FileUtil.deltree(tempDir);
 		}
 	}
 
-	private ClassLoader _getClassLoader() {
-		Class<?> clazz = getClass();
-
-		return clazz.getClassLoader();
-	}
-
-	private Enumeration<URL> _getServiceComponentsIndexesSQLURLs()
-		throws Exception {
-
-		ClassLoader classLoader = _getClassLoader();
-
-		return classLoader.getResources("META-INF/sql/indexes.sql");
-	}
-
-	private Enumeration<URL> _getServiceComponentsTablesSQLURLs()
-		throws Exception {
-
-		ClassLoader classLoader = _getClassLoader();
-
-		return classLoader.getResources("META-INF/sql/tables.sql");
-	}
-
-	private void _initProperties(Properties properties, String outputDir) {
+	private void _initProperties(Properties properties) {
+		properties.put(
+			BenchmarksPropsKeys.COMMERCE_LAYOUT_EXCLUDED_PORTLETS,
+			StringPool.BLANK);
 		properties.put(BenchmarksPropsKeys.DB_TYPE, "hypersonic");
 		properties.put(BenchmarksPropsKeys.MAX_ASSET_CATEGORY_COUNT, "1");
 		properties.put(
 			BenchmarksPropsKeys.MAX_ASSET_ENTRY_TO_ASSET_CATEGORY_COUNT, "1");
 		properties.put(
 			BenchmarksPropsKeys.MAX_ASSET_ENTRY_TO_ASSET_TAG_COUNT, "1");
-		properties.put(BenchmarksPropsKeys.MAX_ASSETPUBLISHER_PAGE_COUNT, "2");
 		properties.put(BenchmarksPropsKeys.MAX_ASSET_TAG_COUNT, "1");
 		properties.put(BenchmarksPropsKeys.MAX_ASSET_VUCABULARY_COUNT, "1");
+		properties.put(BenchmarksPropsKeys.MAX_ASSETPUBLISHER_PAGE_COUNT, "2");
 		properties.put(BenchmarksPropsKeys.MAX_BLOGS_ENTRY_COMMENT_COUNT, "1");
 		properties.put(BenchmarksPropsKeys.MAX_BLOGS_ENTRY_COUNT, "1");
+		properties.put(
+			BenchmarksPropsKeys.MAX_COMMERCE_ACCOUNT_ENTRY_COUNT, "1");
+		properties.put(BenchmarksPropsKeys.MAX_COMMERCE_CATALOG_COUNT, "1");
+		properties.put(BenchmarksPropsKeys.MAX_COMMERCE_GROUP_COUNT, "1");
+		properties.put(
+			BenchmarksPropsKeys.MAX_COMMERCE_INVENTORY_WAREHOUSE_COUNT, "1");
+		properties.put(
+			BenchmarksPropsKeys.MAX_COMMERCE_INVENTORY_WAREHOUSE_ITEM_QUANTITY,
+			"1");
+		properties.put(
+			BenchmarksPropsKeys.MAX_COMMERCE_ORDER_STATUS_CANCELLED_COUNT, "1");
+		properties.put(
+			BenchmarksPropsKeys.MAX_COMMERCE_ORDER_STATUS_OPEN_COUNT, "1");
+		properties.put(
+			BenchmarksPropsKeys.MAX_COMMERCE_ORDER_STATUS_PENDING_COUNT, "1");
+		properties.put(BenchmarksPropsKeys.MAX_COMMERCE_PRICE_LIST_COUNT, "1");
 		properties.put(BenchmarksPropsKeys.MAX_COMMERCE_PRODUCT_COUNT, "1");
 		properties.put(
 			BenchmarksPropsKeys.MAX_COMMERCE_PRODUCT_DEFINITION_COUNT, "1");
 		properties.put(
 			BenchmarksPropsKeys.MAX_COMMERCE_PRODUCT_INSTANCE_COUNT, "1");
+		properties.put(
+			BenchmarksPropsKeys.MAX_COMMERCE_PRODUCT_OPTION_CATEGORY_COUNT,
+			"1");
+		properties.put(BenchmarksPropsKeys.MAX_COMPANY_COUNT, "2");
+		properties.put(BenchmarksPropsKeys.MAX_COMPANY_USER_COUNT, "1");
 		properties.put(BenchmarksPropsKeys.MAX_CONTENT_LAYOUT_COUNT, "1");
+		properties.put(
+			BenchmarksPropsKeys.MAX_CP_DEFINITION_ATTACHMENT_TYPE_IMAGE_COUNT,
+			"1");
+		properties.put(
+			BenchmarksPropsKeys.MAX_CP_DEFINITION_ATTACHMENT_TYPE_PDF_COUNT,
+			"1");
+		properties.put(
+			BenchmarksPropsKeys.
+				MAX_CP_DEFINITION_SPECIFICATION_OPTION_VALUE_COUNT,
+			"1");
+		properties.put(
+			BenchmarksPropsKeys.MAX_CP_SPECIFICATION_OPTION_COUNT, "1");
 		properties.put(BenchmarksPropsKeys.MAX_DDL_CUSTOM_FIELD_COUNT, "1");
 		properties.put(BenchmarksPropsKeys.MAX_DDL_RECORD_COUNT, "1");
 		properties.put(BenchmarksPropsKeys.MAX_DDL_RECORD_SET_COUNT, "1");
@@ -166,9 +179,11 @@ public class SampleSQLBuilderTest {
 		properties.put(BenchmarksPropsKeys.OPTIMIZE_BUFFER_SIZE, "8192");
 		properties.put(
 			BenchmarksPropsKeys.OUTPUT_CSV_FILE_NAMES,
-			"assetPublisher,blog,company,documentLibrary,dynamicDataList," +
-				"fragment,layout,mbCategory,mbThread,repository,segments,wiki");
-		properties.put(BenchmarksPropsKeys.OUTPUT_DIR, outputDir);
+			StringBundler.concat(
+				"assetPublisher,blog,company,commerceInventoryWarehouseItem,",
+				"commerceOrder,commerceProduct,cpDefinition,documentLibrary,",
+				"dynamicDataList,fragment,layout,mbCategory,mbThread,",
+				"repository,user,wiki"));
 		properties.put(BenchmarksPropsKeys.OUTPUT_MERGE, "true");
 		properties.put(
 			BenchmarksPropsKeys.SCRIPT,
@@ -178,19 +193,10 @@ public class SampleSQLBuilderTest {
 		properties.put(BenchmarksPropsKeys.VIRTUAL_HOST_NAME, "localhost");
 	}
 
-	private void _loadHypersonic(String sqlDir, String outputDir)
-		throws Exception {
-
+	private void _loadHypersonic(String outputDir) throws Exception {
 		try (Connection connection = DriverManager.getConnection(
 				"jdbc:hsqldb:mem:testSampleSQLBuilderDB;shutdown=true", "sa",
 				"")) {
-
-			HypersonicLoader.loadHypersonic(
-				connection, sqlDir + "/portal/portal-hypersonic.sql");
-			HypersonicLoader.loadHypersonic(
-				connection, sqlDir + "/indexes/indexes-hypersonic.sql");
-
-			_loadServiceComponentsSQL(connection);
 
 			HypersonicLoader.loadHypersonic(
 				connection, outputDir + "/sample-hypersonic.sql");
@@ -199,34 +205,6 @@ public class SampleSQLBuilderTest {
 				statement.execute("SHUTDOWN COMPACT");
 			}
 		}
-	}
-
-	private void _loadServiceComponentsSQL(Connection connection)
-		throws Exception {
-
-		DBManagerUtil.setDB(DBType.HYPERSONIC, null);
-
-		Enumeration<URL> tablesURLEnumeration =
-			_getServiceComponentsTablesSQLURLs();
-
-		while (tablesURLEnumeration.hasMoreElements()) {
-			_runSQL(connection, tablesURLEnumeration.nextElement());
-		}
-
-		Enumeration<URL> indexesURLEnumeration =
-			_getServiceComponentsIndexesSQLURLs();
-
-		while (indexesURLEnumeration.hasMoreElements()) {
-			_runSQL(connection, indexesURLEnumeration.nextElement());
-		}
-	}
-
-	private void _runSQL(Connection connection, URL url) throws Exception {
-		DB db = DBManagerUtil.getDB();
-
-		String sql = StringUtil.read(url.openStream());
-
-		db.runSQLTemplateString(connection, sql, true);
 	}
 
 	private static final String _SAMPLE_FTL_END =

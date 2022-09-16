@@ -261,7 +261,7 @@ public class ProductShippingConfigurationSerDes {
 			if (Objects.equals(jsonParserFieldName, "depth")) {
 				if (jsonParserFieldValue != null) {
 					productShippingConfiguration.setDepth(
-						(BigDecimal)jsonParserFieldValue);
+						new BigDecimal((String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "freeShipping")) {
@@ -273,7 +273,7 @@ public class ProductShippingConfigurationSerDes {
 			else if (Objects.equals(jsonParserFieldName, "height")) {
 				if (jsonParserFieldValue != null) {
 					productShippingConfiguration.setHeight(
-						(BigDecimal)jsonParserFieldValue);
+						new BigDecimal((String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "shippable")) {
@@ -287,7 +287,7 @@ public class ProductShippingConfigurationSerDes {
 
 				if (jsonParserFieldValue != null) {
 					productShippingConfiguration.setShippingExtraPrice(
-						(BigDecimal)jsonParserFieldValue);
+						new BigDecimal((String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(
@@ -301,17 +301,14 @@ public class ProductShippingConfigurationSerDes {
 			else if (Objects.equals(jsonParserFieldName, "weight")) {
 				if (jsonParserFieldValue != null) {
 					productShippingConfiguration.setWeight(
-						(BigDecimal)jsonParserFieldValue);
+						new BigDecimal((String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "width")) {
 				if (jsonParserFieldValue != null) {
 					productShippingConfiguration.setWidth(
-						(BigDecimal)jsonParserFieldValue);
+						new BigDecimal((String)jsonParserFieldValue));
 				}
-			}
-			else if (jsonParserFieldName.equals("status")) {
-				throw new IllegalArgumentException();
 			}
 		}
 
@@ -341,7 +338,7 @@ public class ProductShippingConfigurationSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -377,7 +374,7 @@ public class ProductShippingConfigurationSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

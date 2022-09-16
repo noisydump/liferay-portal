@@ -18,51 +18,63 @@ import {useFilter} from '../../shared/hooks/useFilter.es';
 import {useProcessTitle} from '../../shared/hooks/useProcessTitle.es';
 import {useTimeRangeFetch} from '../filter/hooks/useTimeRangeFetch.es';
 import {getTimeRangeParams} from '../filter/util/timeRangeUtil.es';
-import {Body} from './PerformanceByStepPageBody.es';
-import {Header} from './PerformanceByStepPageHeader.es';
+import Body from './PerformanceByStepPageBody.es';
+import Header from './PerformanceByStepPageHeader.es';
 
-const PerformanceByStepPage = ({query, routeParams}) => {
+function PerformanceByStepPage({query, routeParams}) {
 	useTimeRangeFetch();
 
 	const {processId, ...paginationParams} = routeParams;
 	const {search = null} = parse(query);
+	const filterKeys = ['processVersion'];
+	const hideFilters = ['processVersion'];
 
 	useProcessTitle(processId, Liferay.Language.get('performance-by-step'));
 
 	const {
-		filterValues: {dateEnd, dateStart},
+		filterValues: {dateEnd, dateStart, processVersion},
 		prefixedKeys,
-	} = useFilter({});
-
-	const timeRange = useMemo(() => getTimeRangeParams(dateStart, dateEnd), [
-		dateEnd,
-		dateStart,
-	]);
+		selectedFilters,
+	} = useFilter({filterKeys});
 
 	const {data, fetchData} = useFetch({
 		params: {
 			completed: true,
 			key: search,
+			processVersion:
+				processVersion?.indexOf('allVersions') === -1
+					? processVersion
+					: undefined,
 			...paginationParams,
-			...timeRange,
+			...getTimeRangeParams(dateStart, dateEnd),
 		},
 		url: `/processes/${processId}/nodes/metrics`,
 	});
 
-	const promises = useMemo(() => [fetchData()], [fetchData]);
+	const promises = useMemo(
+		() => [fetchData()],
+
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[routeParams]
+	);
 
 	return (
 		<PromisesResolver promises={promises}>
 			<PerformanceByStepPage.Header
 				filterKeys={prefixedKeys}
+				hideFilters={hideFilters}
 				routeParams={{...routeParams, search}}
-				totalCount={data.totalCount}
+				selectedFilters={selectedFilters}
+				totalCount={data?.totalCount}
 			/>
 
-			<PerformanceByStepPage.Body {...data} filtered={search} />
+			<PerformanceByStepPage.Body
+				{...data}
+				filtered={search || !!selectedFilters.length}
+			/>
 		</PromisesResolver>
 	);
-};
+}
 
 PerformanceByStepPage.Body = Body;
 PerformanceByStepPage.Header = Header;

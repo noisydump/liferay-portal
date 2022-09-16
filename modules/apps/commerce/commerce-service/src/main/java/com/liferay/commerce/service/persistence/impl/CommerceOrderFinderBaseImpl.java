@@ -39,17 +39,11 @@ public class CommerceOrderFinderBaseImpl
 
 		dbColumnNames.put("uuid", "uuid_");
 		dbColumnNames.put(
-			"subtotalDiscountPercentageLevel1",
-			"subtotalDiscountPercentLevel1");
+			"deliveryCommerceTermEntryDescription",
+			"deliveryCTermEntryDescription");
 		dbColumnNames.put(
-			"subtotalDiscountPercentageLevel2",
-			"subtotalDiscountPercentLevel2");
-		dbColumnNames.put(
-			"subtotalDiscountPercentageLevel3",
-			"subtotalDiscountPercentLevel3");
-		dbColumnNames.put(
-			"subtotalDiscountPercentageLevel4",
-			"subtotalDiscountPercentLevel4");
+			"paymentCommerceTermEntryDescription",
+			"paymentCTermEntryDescription");
 		dbColumnNames.put(
 			"shippingDiscountPercentageLevel1",
 			"shippingDiscountPercentLevel1");
@@ -63,18 +57,6 @@ public class CommerceOrderFinderBaseImpl
 			"shippingDiscountPercentageLevel4",
 			"shippingDiscountPercentLevel4");
 		dbColumnNames.put(
-			"subtotalDiscountPercentageLevel1WithTaxAmount",
-			"subtotalDiscountPctLev1WithTax");
-		dbColumnNames.put(
-			"subtotalDiscountPercentageLevel2WithTaxAmount",
-			"subtotalDiscountPctLev2WithTax");
-		dbColumnNames.put(
-			"subtotalDiscountPercentageLevel3WithTaxAmount",
-			"subtotalDiscountPctLev3WithTax");
-		dbColumnNames.put(
-			"subtotalDiscountPercentageLevel4WithTaxAmount",
-			"subtotalDiscountPctLev4WithTax");
-		dbColumnNames.put(
 			"shippingDiscountPercentageLevel1WithTaxAmount",
 			"shippingDiscountPctLev1WithTax");
 		dbColumnNames.put(
@@ -86,6 +68,30 @@ public class CommerceOrderFinderBaseImpl
 		dbColumnNames.put(
 			"shippingDiscountPercentageLevel4WithTaxAmount",
 			"shippingDiscountPctLev4WithTax");
+		dbColumnNames.put(
+			"subtotalDiscountPercentageLevel1",
+			"subtotalDiscountPercentLevel1");
+		dbColumnNames.put(
+			"subtotalDiscountPercentageLevel2",
+			"subtotalDiscountPercentLevel2");
+		dbColumnNames.put(
+			"subtotalDiscountPercentageLevel3",
+			"subtotalDiscountPercentLevel3");
+		dbColumnNames.put(
+			"subtotalDiscountPercentageLevel4",
+			"subtotalDiscountPercentLevel4");
+		dbColumnNames.put(
+			"subtotalDiscountPercentageLevel1WithTaxAmount",
+			"subtotalDiscountPctLev1WithTax");
+		dbColumnNames.put(
+			"subtotalDiscountPercentageLevel2WithTaxAmount",
+			"subtotalDiscountPctLev2WithTax");
+		dbColumnNames.put(
+			"subtotalDiscountPercentageLevel3WithTaxAmount",
+			"subtotalDiscountPctLev3WithTax");
+		dbColumnNames.put(
+			"subtotalDiscountPercentageLevel4WithTaxAmount",
+			"subtotalDiscountPctLev4WithTax");
 		dbColumnNames.put(
 			"totalDiscountPercentageLevel1WithTaxAmount",
 			"totalDiscountPctLev1WithTax");

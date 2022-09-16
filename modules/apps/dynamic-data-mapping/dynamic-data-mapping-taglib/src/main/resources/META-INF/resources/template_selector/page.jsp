@@ -88,48 +88,53 @@ Group ddmTemplateGroup = GroupLocalServiceUtil.getGroup(ddmTemplateGroupId);
 				label="<%= true %>"
 				markupView="lexicon"
 				message='<%= LanguageUtil.get(request, "manage-templates") %>'
-				url="javascript:;"
+				url="javascript:void(0);"
 			/>
 		</clay:content-col>
 	</c:if>
 </clay:content-row>
 
-<liferay-portlet:renderURL plid="<%= themeDisplay.getPlid() %>" portletName="<%= PortletProviderUtil.getPortletId(DDMTemplate.class.getName(), PortletProvider.Action.VIEW) %>" var="basePortletURL">
-	<portlet:param name="showHeader" value="<%= Boolean.FALSE.toString() %>" />
-</liferay-portlet:renderURL>
-
 <aui:script sandbox="<%= true %>">
-	var selectDDMTemplateLink = document.getElementById(
+	const manageDDMTemplatesLink = document.getElementById(
 		'<portlet:namespace />selectDDMTemplate'
 	);
 
-	if (selectDDMTemplateLink) {
-		selectDDMTemplateLink.addEventListener('click', function (event) {
-			Liferay.Util.openDDMPortlet(
-				{
-					basePortletURL: '<%= basePortletURL %>',
-					classNameId: '<%= classNameId %>',
-					dialog: {
-						width: 1024,
-					},
-					eventName: '<portlet:namespace />saveTemplate',
-					groupId: <%= ddmTemplateGroupId %>,
-					mvcPath: '/view_template.jsp',
-					navigationStartsOn: '<%= DDMNavigationHelper.VIEW_TEMPLATES %>',
-					refererPortletName:
-						'<%= PortletKeys.PORTLET_DISPLAY_TEMPLATE %>',
-					title:
-						'<%= UnicodeLanguageUtil.get(request, "widget-templates") %>',
-				},
-				function (event) {
-					if (!event.newVal) {
-						submitForm(
-							document.<portlet:namespace />fm,
-							'<%= HtmlUtil.escapeJS(refreshURL) %>'
-						);
+	if (manageDDMTemplatesLink) {
+		manageDDMTemplatesLink.addEventListener('click', (event) => {
+			const openerWindow = Liferay.Util.getOpener();
+
+			openerWindow.Liferay.Util.openModal({
+				iframeBodyCssClass: '',
+				onClose: () => {
+					const form = document.getElementById('<portlet:namespace />fm');
+
+					if (form) {
+						submitForm(form, '<%= HtmlUtil.escapeJS(refreshURL) %>');
 					}
-				}
-			);
+				},
+				title:
+					'<%= UnicodeLanguageUtil.get(request, "widget-templates") %>',
+				url:
+					'<%=
+						PortletURLBuilder.create(
+							PortletURLFactoryUtil.create(request, PortletProviderUtil.getPortletId(DDMTemplate.class.getName(), PortletProvider.Action.VIEW), themeDisplay.getPlid(), PortletRequest.RENDER_PHASE)
+						).setMVCPath(
+							"/view_template.jsp"
+						).setParameter(
+							"classNameId", classNameId
+						).setParameter(
+							"groupId", ddmTemplateGroupId
+						).setParameter(
+							"navigationStartsOn", DDMNavigationHelper.VIEW_TEMPLATES
+						).setParameter(
+							"refererPortletName", PortletKeys.PORTLET_DISPLAY_TEMPLATE
+						).setParameter(
+							"showHeader", false
+						).setWindowState(
+							LiferayWindowState.POP_UP
+						).buildString()
+				%>',
+			});
 		});
 	}
 
@@ -139,7 +144,7 @@ Group ddmTemplateGroup = GroupLocalServiceUtil.getGroup(ddmTemplateGroupId);
 	);
 
 	if (displayStyle && displayStyleGroupIdInput) {
-		displayStyle.addEventListener('change', function (event) {
+		displayStyle.addEventListener('change', (event) => {
 			var selectedDisplayStyle = displayStyle.querySelector('option:checked');
 
 			if (selectedDisplayStyle) {

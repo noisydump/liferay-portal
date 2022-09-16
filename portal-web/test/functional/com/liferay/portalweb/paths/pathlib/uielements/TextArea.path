@@ -2,11 +2,13 @@
 <head>
 <title>TextArea</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">TextArea</td></tr>
 </thead>
+
 <tbody>
 <tr>
 	<td>ACE_EDITOR</td>
@@ -20,7 +22,12 @@
 </tr>
 <tr>
 	<td>ANY_LABELED</td>
-	<td>//*[normalize-space(text())='${key_label}']/following-sibling::textarea</td>
+	<td>//*[normalize-space(text())='${key_label}']/following-sibling::textarea | //div[normalize-space()='${key_label}']/following-sibling::textarea</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ANY_LABELED_N</td>
+	<td>xpath=(//*[normalize-space(text())='${key_label}']/following-sibling::textarea)[${key_indexNumber}]</td>
 	<td></td>
 </tr>
 <tr>
@@ -54,13 +61,8 @@
 	<td></td>
 </tr>
 <tr>
-	<td>SEO_META_TAGS_KEYWORDS</td>
-	<td>//textarea[contains(@id,'keywords')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>TRANSLATIONS_TARGET_TEXT_BOX_FIELD</td>
-	<td>//div[contains(@class,'form-group') and contains(.,'${key_fieldName}')]//textarea[not(contains(@readonly,'true'))]</td>
+	<td>//div[contains(@class,'form-group') and contains(.,'${key_fieldName}')]//textarea[not(@readonly)]</td>
 	<td></td>
 </tr>
 <tr>

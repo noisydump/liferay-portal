@@ -9,7 +9,7 @@
  * distribution rights of the Software.
  */
 
-import React, {useMemo} from 'react';
+import React from 'react';
 
 import {useFetch} from '../../shared/hooks/useFetch.es';
 import {useFilter} from '../../shared/hooks/useFilter.es';
@@ -17,15 +17,15 @@ import {useProcessTitle} from '../../shared/hooks/useProcessTitle.es';
 import {processStatusConstants} from '../filter/ProcessStatusFilter.es';
 import {useTimeRangeFetch} from '../filter/hooks/useTimeRangeFetch.es';
 import {getTimeRangeParams} from '../filter/util/timeRangeUtil.es';
-import {Body} from './InstanceListPageBody.es';
-import {Header} from './InstanceListPageHeader.es';
+import Body from './InstanceListPageBody.es';
+import Header from './InstanceListPageHeader.es';
 import InstanceListPageProvider from './InstanceListPageProvider.es';
 import ModalProvider from './modal/ModalProvider.es';
 
-const InstanceListPage = ({routeParams}) => {
+function InstanceListPage({routeParams}) {
 	useTimeRangeFetch();
 
-	const {page, pageSize, processId} = routeParams;
+	const {page, pageSize, processId, sort} = routeParams;
 
 	useProcessTitle(processId, Liferay.Language.get('all-items'));
 
@@ -43,34 +43,27 @@ const InstanceListPage = ({routeParams}) => {
 			dateEnd,
 			dateStart,
 			slaStatuses,
-			statuses = [],
+			statuses,
 			taskNames,
 		},
 		prefixedKeys,
 		selectedFilters,
 	} = useFilter({filterKeys});
 
-	const completedStatus = statuses.some(
+	const completed = statuses?.some(
 		(status) => status === processStatusConstants.completed
 	);
 
-	const completed =
-		statuses && statuses.length == 1
-			? statuses[0] === processStatusConstants.completed
-			: undefined;
-
-	const timeRange = useMemo(
-		() => (completedStatus ? getTimeRangeParams(dateStart, dateEnd) : {}),
-		[completedStatus, dateEnd, dateStart]
-	);
+	const timeRange = completed ? getTimeRangeParams(dateStart, dateEnd) : {};
 
 	const {data, fetchData} = useFetch({
 		params: {
 			assigneeIds,
-			completed,
 			page,
 			pageSize,
 			slaStatuses,
+			sort,
+			statuses,
 			taskNames,
 			...timeRange,
 		},
@@ -82,23 +75,23 @@ const InstanceListPage = ({routeParams}) => {
 			<InstanceListPageProvider>
 				<InstanceListPage.Header
 					filterKeys={prefixedKeys}
-					items={data.items}
+					items={data?.items}
 					processId={processId}
 					routeParams={routeParams}
 					selectedFilters={selectedFilters}
-					totalCount={data.totalCount}
+					totalCount={data?.totalCount}
 				/>
 
 				<InstanceListPage.Body
 					data={data}
 					fetchData={fetchData}
-					filtered={selectedFilters.length > 0}
+					filtered={!!selectedFilters.length}
 					routeParams={routeParams}
 				/>
 			</InstanceListPageProvider>
 		</ModalProvider>
 	);
-};
+}
 
 InstanceListPage.Body = Body;
 InstanceListPage.Header = Header;

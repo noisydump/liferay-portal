@@ -13,61 +13,67 @@
  */
 
 import PropTypes from 'prop-types';
-import React, {useEffect} from 'react';
+import React from 'react';
 
 import {StyleBookContextProvider} from '../../plugins/page-design-options/hooks/useStyleBook';
 import {INIT} from '../actions/types';
-import {config} from '../config/index';
+import {CollectionActiveItemContextProvider} from '../contexts/CollectionActiveItemContext';
+import {ControlsProvider} from '../contexts/ControlsContext';
+import {DisplayPagePreviewItemContextProvider} from '../contexts/DisplayPagePreviewItemContext';
+import {EditableProcessorContextProvider} from '../contexts/EditableProcessorContext';
+import {FormValidationContextProvider} from '../contexts/FormValidationContext';
+import {GlobalContextProvider} from '../contexts/GlobalContext';
+import {StoreContextProvider} from '../contexts/StoreContext';
+import WidgetsManager from '../contexts/WidgetsManager';
 import {reducer} from '../reducers/index';
-import selectLanguageId from '../selectors/selectLanguageId';
-import {StoreContextProvider, useSelector} from '../store/index';
-import {DragAndDropContextProvider} from '../utils/dragAndDrop/useDragAndDrop';
-import {CollectionActiveItemContextProvider} from './CollectionActiveItemContext';
-import {ControlsProvider} from './Controls';
+import {DragAndDropContextProvider} from '../utils/drag-and-drop/useDragAndDrop';
+import CommonStylesManager from './CommonStylesManager';
+import {DisplayPagePreviewItemSelector} from './DisplayPagePreviewItemSelector';
 import DragPreview from './DragPreview';
-import {GlobalContextProvider} from './GlobalContext';
+import ItemConfigurationSidebar from './ItemConfigurationSidebar';
 import LayoutViewport from './LayoutViewport';
 import ShortcutManager from './ShortcutManager';
 import Sidebar from './Sidebar';
 import Toolbar from './Toolbar';
-import URLParser from './URLParser';
-
-const DEFAULT_SESSION_LENGTH = 60 * 1000;
+import AppHooks from './app-hooks/index';
 
 export default function App({state}) {
 	const initialState = reducer(state, {type: INIT});
 
-	useEffect(() => {
-		if (Liferay.Session && config.autoExtendSessionEnabled) {
-			const sessionLength =
-				Liferay.Session.get('sessionLength') || DEFAULT_SESSION_LENGTH;
-
-			const interval = setInterval(() => {
-				Liferay.Session.extend();
-			}, sessionLength / 2);
-
-			return () => clearInterval(interval);
-		}
-	}, []);
-
 	return (
 		<StoreContextProvider initialState={initialState} reducer={reducer}>
-			<LanguageDirection />
-			<URLParser />
 			<ControlsProvider>
 				<CollectionActiveItemContextProvider>
 					<DragAndDropContextProvider>
-						<DragPreview />
-						<Toolbar />
-						<ShortcutManager />
+						<EditableProcessorContextProvider>
+							<DisplayPagePreviewItemContextProvider>
+								<AppHooks />
 
-						<GlobalContextProvider>
-							<LayoutViewport />
+								<DisplayPagePreviewItemSelector dark />
 
-							<StyleBookContextProvider>
-								<Sidebar />
-							</StyleBookContextProvider>
-						</GlobalContextProvider>
+								<DragPreview />
+
+								<WidgetsManager />
+
+								<FormValidationContextProvider>
+									<Toolbar />
+
+									<ShortcutManager />
+
+									<GlobalContextProvider>
+										<CommonStylesManager />
+
+										<LayoutViewport />
+
+										<StyleBookContextProvider>
+											<Sidebar />
+
+											<ItemConfigurationSidebar />
+										</StyleBookContextProvider>
+									</GlobalContextProvider>
+								</FormValidationContextProvider>
+							</DisplayPagePreviewItemContextProvider>
+						</EditableProcessorContextProvider>
 					</DragAndDropContextProvider>
 				</CollectionActiveItemContextProvider>
 			</ControlsProvider>
@@ -77,20 +83,4 @@ export default function App({state}) {
 
 App.propTypes = {
 	state: PropTypes.object.isRequired,
-};
-
-const LanguageDirection = () => {
-	const languageId = useSelector(selectLanguageId);
-
-	useEffect(() => {
-		const currentLanguageDirection = config.languageDirection[languageId];
-		const wrapper = document.getElementById('wrapper');
-
-		if (wrapper) {
-			wrapper.dir = currentLanguageDirection;
-			wrapper.lang = languageId;
-		}
-	}, [languageId]);
-
-	return null;
 };

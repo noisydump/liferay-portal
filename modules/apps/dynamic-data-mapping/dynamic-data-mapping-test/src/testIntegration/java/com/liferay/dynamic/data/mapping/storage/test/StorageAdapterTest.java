@@ -39,8 +39,10 @@ import com.liferay.dynamic.data.mapping.util.DDMFormValuesToFieldsConverter;
 import com.liferay.dynamic.data.mapping.util.FieldsToDDMFormValuesConverter;
 import com.liferay.dynamic.data.mapping.validator.DDMFormValuesValidationException;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONSerializer;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.constants.TestDataConstants;
@@ -52,9 +54,8 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.registry.Registry;
-import com.liferay.registry.RegistryUtil;
 
 import java.io.Serializable;
 
@@ -96,8 +97,6 @@ public class StorageAdapterTest extends BaseDDMServiceTestCase {
 	public void setUp() throws Exception {
 		super.setUp();
 
-		setUpDDMFormValuesToFieldsConverter();
-		setUpFieldsToDDMFormValuesConverter();
 		setUpJSONStorageAdapter();
 	}
 
@@ -333,18 +332,19 @@ public class StorageAdapterTest extends BaseDDMServiceTestCase {
 				TestPropsValues.getGroupId(), TestPropsValues.getUserId());
 
 		FileEntry file1 = DLAppLocalServiceUtil.addFileEntry(
-			TestPropsValues.getUserId(), TestPropsValues.getGroupId(),
+			null, TestPropsValues.getUserId(), TestPropsValues.getGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, "Test 1.txt",
-			ContentTypes.TEXT_PLAIN, TestDataConstants.TEST_BYTE_ARRAY,
-			serviceContext);
+			ContentTypes.TEXT_PLAIN, "Test 1.txt", StringPool.BLANK,
+			StringPool.BLANK, StringPool.BLANK,
+			TestDataConstants.TEST_BYTE_ARRAY, null, null, serviceContext);
 
 		String file1Value = getDocLibraryFieldValue(file1);
 
 		FileEntry file2 = DLAppLocalServiceUtil.addFileEntry(
-			TestPropsValues.getUserId(), TestPropsValues.getGroupId(),
+			null, TestPropsValues.getUserId(), TestPropsValues.getGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, "Test 2.txt",
-			ContentTypes.TEXT_PLAIN, TestDataConstants.TEST_BYTE_ARRAY,
-			serviceContext);
+			ContentTypes.TEXT_PLAIN, TestDataConstants.TEST_BYTE_ARRAY, null,
+			null, serviceContext);
 
 		String file2Value = getDocLibraryFieldValue(file2);
 
@@ -401,33 +401,37 @@ public class StorageAdapterTest extends BaseDDMServiceTestCase {
 
 	@Test
 	public void testLinkToPageField() throws Exception {
-		String definition = read("ddm-structure-link-to-page-field.xsd");
-
 		DDMStructure structure = addStructure(
-			_classNameId, null, "Link to Page Field Structure", definition,
+			_classNameId, null, "Link to Page Field Structure",
+			read("ddm-structure-link-to-page-field.xsd"),
 			StorageType.DEFAULT.getValue(), DDMStructureConstants.TYPE_DEFAULT);
 
 		Fields fields = new Fields();
 
-		Field linkToPageField = new Field(
-			structure.getStructureId(), "link_to_page",
-			HashMapBuilder.<Locale, List<Serializable>>put(
-				_enLocale,
-				ListUtil.fromArray(
-					"{\"layoutId\":\"1\",\"privateLayout\":false}")
-			).put(
-				_ptLocale,
-				ListUtil.fromArray(
-					"{\"layoutId\":\"2\",\"privateLayout\":true}")
-			).build(),
-			_enLocale);
-
-		fields.put(linkToPageField);
-
-		Field fieldsDisplayField = createFieldsDisplayField(
-			structure.getStructureId(), "link_to_page_INSTANCE_rztm");
-
-		fields.put(fieldsDisplayField);
+		fields.put(
+			new Field(
+				structure.getStructureId(), "link_to_page",
+				HashMapBuilder.<Locale, List<Serializable>>put(
+					_enLocale,
+					ListUtil.fromArray(
+						JSONUtil.put(
+							"layoutId", "1"
+						).put(
+							"privateLayout", false
+						).toString())
+				).put(
+					_ptLocale,
+					ListUtil.fromArray(
+						JSONUtil.put(
+							"layoutId", "2"
+						).put(
+							"privateLayout", true
+						).toString())
+				).build(),
+				_enLocale));
+		fields.put(
+			createFieldsDisplayField(
+				structure.getStructureId(), "link_to_page_INSTANCE_rztm"));
 
 		validate(structure.getStructureId(), fields);
 	}
@@ -624,39 +628,13 @@ public class StorageAdapterTest extends BaseDDMServiceTestCase {
 	}
 
 	protected String getDocLibraryFieldValue(FileEntry fileEntry) {
-		StringBundler sb = new StringBundler(7);
-
-		sb.append("{\"groupId\":");
-		sb.append(fileEntry.getGroupId());
-		sb.append(",\"uuid\":\"");
-		sb.append(fileEntry.getUuid());
-		sb.append("\",\"version\":\"");
-		sb.append(fileEntry.getVersion());
-		sb.append("\"}");
-
-		return sb.toString();
-	}
-
-	protected void setUpDDMFormValuesToFieldsConverter() {
-		Registry registry = RegistryUtil.getRegistry();
-
-		_ddmFormValuesToFieldsConverter = registry.getService(
-			registry.getServiceReference(DDMFormValuesToFieldsConverter.class));
-	}
-
-	protected void setUpFieldsToDDMFormValuesConverter() {
-		Registry registry = RegistryUtil.getRegistry();
-
-		_fieldsToDDMFormValuesConverter = registry.getService(
-			registry.getServiceReference(FieldsToDDMFormValuesConverter.class));
+		return StringBundler.concat(
+			"{\"groupId\":", fileEntry.getGroupId(), ",\"uuid\":\"",
+			fileEntry.getUuid(), "\",\"version\":\"", fileEntry.getVersion(),
+			"\"}");
 	}
 
 	protected void setUpJSONStorageAdapter() {
-		Registry registry = RegistryUtil.getRegistry();
-
-		_storageAdapterRegistry = registry.getService(
-			registry.getServiceReference(StorageAdapterRegistry.class));
-
 		_defaultStorageAdapter = _storageAdapterRegistry.getStorageAdapter(
 			StorageType.DEFAULT.toString());
 	}
@@ -687,9 +665,15 @@ public class StorageAdapterTest extends BaseDDMServiceTestCase {
 	private static Locale _enLocale;
 	private static Locale _ptLocale;
 
+	@Inject
 	private DDMFormValuesToFieldsConverter _ddmFormValuesToFieldsConverter;
+
 	private StorageAdapter _defaultStorageAdapter;
+
+	@Inject
 	private FieldsToDDMFormValuesConverter _fieldsToDDMFormValuesConverter;
+
+	@Inject
 	private StorageAdapterRegistry _storageAdapterRegistry;
 
 }

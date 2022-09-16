@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.cache;
 
-import com.liferay.portal.kernel.nio.intraband.proxy.annotation.Proxy;
-
 import java.io.Serializable;
 
 import java.net.URL;
@@ -36,7 +34,6 @@ public interface PortalCacheManager<K extends Serializable, V> {
 	public static final String PORTAL_CACHE_MANAGER_TYPE =
 		"portal.cache.manager.type";
 
-	@Proxy
 	public void clearAll() throws PortalCacheException;
 
 	public void destroy();
@@ -46,17 +43,12 @@ public interface PortalCacheManager<K extends Serializable, V> {
 	public PortalCache<K, V> getPortalCache(String portalCacheName)
 		throws PortalCacheException;
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *             #getPortalCache(String)}
-	 */
-	@Deprecated
 	public PortalCache<K, V> getPortalCache(
-			String portalCacheName, boolean blocking)
+			String portalCacheName, boolean mvcc)
 		throws PortalCacheException;
 
 	public PortalCache<K, V> getPortalCache(
-			String portalCacheName, boolean blocking, boolean mvcc)
+			String portalCacheName, boolean mvcc, boolean sharded)
 		throws PortalCacheException;
 
 	public Set<PortalCacheManagerListener> getPortalCacheManagerListeners();
@@ -65,15 +57,6 @@ public interface PortalCacheManager<K extends Serializable, V> {
 
 	public boolean isClusterAware();
 
-	/**
-	 * @deprecated As of Mueller (7.2.x), replaced by {@link
-	 *             #reconfigurePortalCaches(URL, ClassLoader)}
-	 */
-	@Deprecated
-	@Proxy
-	public void reconfigurePortalCaches(URL configurationURL);
-
-	@Proxy
 	public void reconfigurePortalCaches(
 		URL configurationURL, ClassLoader classLoader);
 
@@ -81,6 +64,8 @@ public interface PortalCacheManager<K extends Serializable, V> {
 		PortalCacheManagerListener portalCacheManagerListener);
 
 	public void removePortalCache(String portalCacheName);
+
+	public void removePortalCaches(long companyId);
 
 	public boolean unregisterPortalCacheManagerListener(
 		PortalCacheManagerListener portalCacheManagerListener);

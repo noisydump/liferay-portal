@@ -17,9 +17,7 @@ package com.liferay.sharepoint.soap.repository.connector;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.FileUtil;
-import com.liferay.portal.kernel.util.HtmlUtil;
-import com.liferay.portal.util.FileImpl;
-import com.liferay.portal.util.HtmlImpl;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.sharepoint.soap.repository.connector.internal.util.test.SharepointConnectionTestUtil;
 import com.liferay.sharepoint.soap.repository.connector.schema.query.Query;
 import com.liferay.sharepoint.soap.repository.connector.schema.query.QueryField;
@@ -43,12 +41,17 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 /**
  * @author Iván Zaera
  */
 public class SharepointConnectionTest {
+
+	@ClassRule
+	public static LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@BeforeClass
 	public static void setUpClass() {
@@ -84,14 +87,6 @@ public class SharepointConnectionTest {
 
 		_folderPath1 = StringPool.SLASH + _folderName1;
 		_folderPath2 = StringPool.SLASH + _folderName2;
-
-		FileUtil fileUtil = new FileUtil();
-
-		fileUtil.setFile(new FileImpl());
-
-		HtmlUtil htmlUtil = new HtmlUtil();
-
-		htmlUtil.setHtml(new HtmlImpl());
 
 		deleteSharepointObjects();
 	}
@@ -151,13 +146,9 @@ public class SharepointConnectionTest {
 			_filePath1);
 
 		Assert.assertNull(sharepointObject.getCheckedOutBy());
-
-		InputStream inputStream = _sharepointConnection.getInputStream(
-			sharepointObject);
-
-		String inputStreamString = getString(inputStream);
-
-		Assert.assertEquals(_CONTENT_BYE_WORLD, inputStreamString);
+		Assert.assertEquals(
+			_CONTENT_BYE_WORLD,
+			getString(_sharepointConnection.getInputStream(sharepointObject)));
 	}
 
 	@Test
@@ -350,10 +341,11 @@ public class SharepointConnectionTest {
 	public void testGetSharepointObjectInputStream() throws Exception {
 		addSharepointObjects(true, false, false, false);
 
-		InputStream inputStream = _sharepointConnection.getInputStream(
-			_sharepointConnection.getSharepointObject(_filePath1));
-
-		Assert.assertEquals(_CONTENT_HELLO_WORLD, getString(inputStream));
+		Assert.assertEquals(
+			_CONTENT_HELLO_WORLD,
+			getString(
+				_sharepointConnection.getInputStream(
+					_sharepointConnection.getSharepointObject(_filePath1))));
 	}
 
 	@Test
@@ -466,15 +458,16 @@ public class SharepointConnectionTest {
 		List<SharepointVersion> sharepointVersions =
 			_sharepointConnection.getSharepointVersions(_filePath1);
 
-		InputStream inputStream = _sharepointConnection.getInputStream(
-			sharepointVersions.get(0));
-
-		Assert.assertEquals(_CONTENT_BYE_WORLD, getString(inputStream));
-
-		inputStream = _sharepointConnection.getInputStream(
-			sharepointVersions.get(1));
-
-		Assert.assertEquals(_CONTENT_HELLO_WORLD, getString(inputStream));
+		Assert.assertEquals(
+			_CONTENT_BYE_WORLD,
+			getString(
+				_sharepointConnection.getInputStream(
+					sharepointVersions.get(0))));
+		Assert.assertEquals(
+			_CONTENT_HELLO_WORLD,
+			getString(
+				_sharepointConnection.getInputStream(
+					sharepointVersions.get(1))));
 	}
 
 	@Test

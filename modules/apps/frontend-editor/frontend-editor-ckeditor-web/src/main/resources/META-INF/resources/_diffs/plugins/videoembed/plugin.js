@@ -12,6 +12,8 @@
  * details.
  */
 
+/* eslint-disable @liferay/no-get-data-attribute */
+
 if (!CKEDITOR.plugins.get('videoembed')) {
 	const REGEX_HTTP = /^https?/;
 
@@ -182,8 +184,8 @@ if (!CKEDITOR.plugins.get('videoembed')) {
 		return result;
 	};
 
-	const resizeElement = function (el, width, height) {
-		const wrapperElement = el.parentElement;
+	const resizeElement = function (element, width, height) {
+		const wrapperElement = element.parentElement;
 
 		if (wrapperElement && width > 0 && height > 0) {
 			wrapperElement.setAttribute('style', `width:${width}px;`);
@@ -225,7 +227,7 @@ if (!CKEDITOR.plugins.get('videoembed')) {
 
 				if (wrapperElement) {
 					const elementList = wrapperElement.$;
-					if (elementList.length > 0) {
+					if (elementList.length) {
 						const lastElement = new CKEDITOR.dom.element(
 							elementList[elementList.length - 1]
 						);
@@ -522,7 +524,6 @@ if (!CKEDITOR.plugins.get('videoembed')) {
 					);
 
 					const doc = instance.wrapper.getDocument();
-					doc.appendStyleSheet('/o/frontend-css-web/main.css');
 
 					function mouseDownListener(event) {
 						const result = getSelectedElement(editor);
@@ -670,9 +671,9 @@ if (!CKEDITOR.plugins.get('videoembed')) {
 				}
 			});
 
-			var path = instance.path;
+			const path = instance.path;
 
-			var dependencies = [
+			const dependencies = [
 				CKEDITOR.getUrl(path + 'DragEvent.es.js'),
 				CKEDITOR.getUrl(path + 'Resizer.es.js'),
 			];

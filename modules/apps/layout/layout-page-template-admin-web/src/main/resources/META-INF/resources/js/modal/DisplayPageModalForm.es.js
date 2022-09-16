@@ -19,12 +19,12 @@ import FormField from './FormField.es';
 
 const DisplayPageModalForm = React.forwardRef((props, ref) => {
 	const [subtypes, setSubtypes] = useState([]);
-	const nameInput = useRef(null);
+	const nameInputRef = useRef(null);
 	const [error, setError] = useState(props.error);
 
 	useEffect(() => {
-		if (nameInput.current) {
-			nameInput.current.focus();
+		if (nameInputRef.current) {
+			nameInputRef.current.focus();
 		}
 	}, []);
 
@@ -62,75 +62,73 @@ const DisplayPageModalForm = React.forwardRef((props, ref) => {
 				name={Liferay.Language.get('name')}
 			>
 				<input
-					className={'form-control'}
+					className="form-control"
 					defaultValue={props.displayPageName}
 					id={`${props.namespace}name`}
 					name={`${props.namespace}name`}
 					onChange={() => setError({...error, name: null})}
-					ref={nameInput}
+					ref={nameInputRef}
 				/>
 			</FormField>
 
-			{Array.isArray(props.mappingTypes) &&
-				props.mappingTypes.length > 0 && (
-					<fieldset>
+			{Array.isArray(props.mappingTypes) && !!props.mappingTypes.length && (
+				<fieldset>
+					<FormField
+						error={error && error.classNameId}
+						id={`${props.namespace}classNameId`}
+						name={Liferay.Language.get('content-type')}
+					>
+						<select
+							className="form-control"
+							name={`${props.namespace}classNameId`}
+							onChange={onChange}
+						>
+							<option value="">
+								{`-- ${Liferay.Language.get(
+									'not-selected'
+								)} --`}
+							</option>
+
+							{props.mappingTypes.map((mappingType) => (
+								<option
+									key={mappingType.id}
+									value={mappingType.id}
+								>
+									{mappingType.label}
+								</option>
+							))}
+						</select>
+					</FormField>
+
+					{Array.isArray(subtypes) && !!subtypes.length && (
 						<FormField
-							error={error && error.classNameId}
-							id={`${props.namespace}classNameId`}
-							name={Liferay.Language.get('content-type')}
+							error={error && error.classTypeId}
+							id={`${props.namespace}classTypeId`}
+							name={Liferay.Language.get('subtype')}
 						>
 							<select
 								className="form-control"
-								name={`${props.namespace}classNameId`}
-								onChange={onChange}
+								name={`${props.namespace}classTypeId`}
+								onChange={() =>
+									setError({...error, classTypeId: null})
+								}
 							>
 								<option value="">
 									{`-- ${Liferay.Language.get(
 										'not-selected'
 									)} --`}
 								</option>
-								{props.mappingTypes.map((mappingType) => (
-									<option
-										key={mappingType.id}
-										value={mappingType.id}
-									>
-										{mappingType.label}
+
+								{subtypes.map((subtype) => (
+									<option key={subtype.id} value={subtype.id}>
+										{subtype.label}
 									</option>
 								))}
 							</select>
 						</FormField>
-
-						{Array.isArray(subtypes) && subtypes.length > 0 && (
-							<FormField
-								error={error && error.classTypeId}
-								id={`${props.namespace}classTypeId`}
-								name={Liferay.Language.get('subtype')}
-							>
-								<select
-									className="form-control"
-									name={`${props.namespace}classTypeId`}
-									onChange={() =>
-										setError({...error, classTypeId: null})
-									}
-								>
-									<option value="">
-										{`-- ${Liferay.Language.get(
-											'not-selected'
-										)} --`}
-									</option>
-									{subtypes.map((subtype) => (
-										<option
-											key={subtype.id}
-											value={subtype.id}
-										>
-											{subtype.label}
-										</option>
-									))}
-								</select>
-							</FormField>
-						)}
-					</fieldset>
-				)}
+					)}
+				</fieldset>
+			)}
 		</form>
 	);
 });
@@ -151,7 +149,7 @@ DisplayPageModalForm.propTypes = {
 		})
 	),
 	namespace: PropTypes.string.isRequired,
-	onSubmit: PropTypes.func.isRequire,
+	onSubmit: PropTypes.func.isRequired,
 };
 
 export {DisplayPageModalForm};

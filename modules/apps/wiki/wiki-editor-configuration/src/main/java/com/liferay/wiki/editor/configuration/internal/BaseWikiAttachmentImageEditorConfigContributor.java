@@ -16,11 +16,13 @@ package com.liferay.wiki.editor.configuration.internal;
 
 import com.liferay.item.selector.ItemSelectorCriterion;
 import com.liferay.item.selector.ItemSelectorReturnType;
+import com.liferay.item.selector.constants.ItemSelectorCriterionConstants;
 import com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType;
 import com.liferay.item.selector.criteria.URLItemSelectorReturnType;
 import com.liferay.item.selector.criteria.image.criterion.ImageItemSelectorCriterion;
 import com.liferay.item.selector.criteria.upload.criterion.UploadItemSelectorCriterion;
 import com.liferay.item.selector.criteria.url.criterion.URLItemSelectorCriterion;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.editor.configuration.BaseEditorConfigContributor;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -38,9 +40,6 @@ import com.liferay.wiki.item.selector.criterion.WikiAttachmentItemSelectorCriter
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.PortletURL;
 
 /**
  * @author Sergio González
@@ -134,24 +133,27 @@ public abstract class BaseWikiAttachmentImageEditorConfigContributor
 		long wikiPageResourcePrimKey, ThemeDisplay themeDisplay,
 		RequestBackedPortletURLFactory requestBackedPortletURLFactory) {
 
-		PortletURL uploadURL = requestBackedPortletURLFactory.createActionURL(
-			WikiPortletKeys.WIKI);
-
-		uploadURL.setParameter(
-			ActionRequest.ACTION_NAME, "/wiki/upload_page_attachment");
-		uploadURL.setParameter("mimeTypes", _getMimeTypes());
-		uploadURL.setParameter(
-			"resourcePrimKey", String.valueOf(wikiPageResourcePrimKey));
-
-		ItemSelectorCriterion itemSelectorCriterion =
-			new UploadItemSelectorCriterion(
-				WikiPortletKeys.WIKI, uploadURL.toString(),
-				LanguageUtil.get(themeDisplay.getLocale(), "page-attachments"));
-
-		itemSelectorCriterion.setDesiredItemSelectorReturnTypes(
-			new FileEntryItemSelectorReturnType());
-
-		return itemSelectorCriterion;
+		return UploadItemSelectorCriterion.builder(
+		).desiredItemSelectorReturnTypes(
+			new FileEntryItemSelectorReturnType()
+		).mimeTypeRestriction(
+			ItemSelectorCriterionConstants.MIME_TYPE_RESTRICTION_IMAGE
+		).portletId(
+			WikiPortletKeys.WIKI
+		).repositoryName(
+			LanguageUtil.get(themeDisplay.getLocale(), "page-attachments")
+		).url(
+			PortletURLBuilder.create(
+				requestBackedPortletURLFactory.createActionURL(
+					WikiPortletKeys.WIKI)
+			).setActionName(
+				"/wiki/upload_page_attachment"
+			).setParameter(
+				"mimeTypes", _getMimeTypes()
+			).setParameter(
+				"resourcePrimKey", wikiPageResourcePrimKey
+			).buildString()
+		).build();
 	}
 
 	protected ItemSelectorCriterion getURLItemSelectorCriterion() {

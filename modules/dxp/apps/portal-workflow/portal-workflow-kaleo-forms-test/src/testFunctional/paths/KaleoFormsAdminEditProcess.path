@@ -2,11 +2,13 @@
 <head>
 <title>KaleoFormsAdminEditProcess</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">KaleoFormsAdminEditProcess</td></tr>
 </thead>
+
 <tbody>
 <tr>
 	<td>NEXT_BUTTON_INACTIVE</td>
@@ -14,14 +16,26 @@
 	<td></td>
 </tr>
 <tr>
+	<td>DROPDOWN_LANGUAGE</td>
+	<td>//div[contains(@class,'input-localized-palette-container')]//a[contains(@class,'dropdown-item') and contains(.,'${key_tagLanguage}') and contains(.,'${key_infoLaguage}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SAVE_BUTTON_INACTIVE</td>
+	<td>//button[@disabled='' and contains(.,'Save')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td></td>
 	<td></td>
 	<td></td>
 </tr>
+
 <!--FORM_NAVIGATOR-->
+
 <tr>
 	<td>FORM_NAVIGATOR_PROGRESS_BAR_NAME</td>
-	<td>//ul[contains(@class,'nav-list')]/li[contains(@id,'${key_kfProgressName}Tab')]//div[@class='progress-bar-title']</td>
+	<td>//div[@class='progress-bar-title' and text()='${key_kfProgressName}']</td>
 	<td></td>
 </tr>
 <tr>
@@ -30,11 +44,18 @@
 	<td></td>
 </tr>
 <tr>
+	<td>FORM_NAVIGATOR_MULTI_STEP_PROGRESS_BAR</td>
+	<td>//div[contains(text(),'${key_stepProcess}')]//..//*[name()='svg'][contains(@class,'lexicon-icon lexicon-icon-${key_iconType}')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td></td>
 	<td></td>
 	<td></td>
 </tr>
+
 <!--FIELD_SET-->
+
 <tr>
 	<td>SELECTED_FIELD_SET</td>
 	<td>//div[contains(@class,'ddm-field-group')]/a[contains(.,'${key_kfFieldSetName}')]</td>
@@ -50,10 +71,12 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--FIELD_SET_PAGINATION-->
+
 <tr>
 	<td>FIELD_SET_PAGINATION_SELECTOR_BUTTON</td>
-	<td>//div[@class='dropdown pagination-items-per-page']//a[@role='button']</td>
+	<td>//div[@class='dropdown pagination-items-per-page']</td>
 	<td></td>
 </tr>
 <tr>
@@ -61,7 +84,14 @@
 	<td></td>
 	<td></td>
 </tr>
+<tr>
+	<td>FIELD_NAME_REQUIRED</td>
+	<td>//*[contains(text(),'Name')]//..//*[name()='svg'][contains(@class,'lexicon-icon lexicon-icon-asterisk')]</td>
+	<td></td>
+</tr>
+
 <!--WORKFLOW-->
+
 <tr>
 	<td>SELECTED_WORKFLOW</td>
 	<td>//div[contains(.,'Selected Workflow')]//span[contains(@id,'workflowDefinitionDisplay')]</td>
@@ -77,7 +107,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--WORKFLOW_NAVIGATION-->
+
 <tr>
 	<td>WORKFLOW_NAVIGATION_PUBLISHED_TAB</td>
 	<td>//a[@title='Published']/span</td>
@@ -93,7 +125,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--WORKFLOW_TABLE-->
+
 <tr>
 	<td>WORKFLOW_TABLE_TITLE</td>
 	<td>//tr[contains(.,'${key_workflowDefinitionTitle}')]/td[contains(.,'${key_workflowDefinitionTitle}')]</td>
@@ -104,7 +138,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--FORMS_TABLE-->
+
 <tr>
 	<td>FORMS_TABLE_TASK</td>
 	<td>//table[contains(@class,'table-autofit')]//tr[contains(.,'${key_workflowTask}')]/td</td>

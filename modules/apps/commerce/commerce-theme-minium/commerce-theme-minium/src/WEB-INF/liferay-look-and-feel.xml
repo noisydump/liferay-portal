@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!DOCTYPE look-and-feel PUBLIC "-//Liferay//DTD Look and Feel 7.3.0//EN" "http://www.liferay.com/dtd/liferay-look-and-feel_7_3_0.dtd">
+<!DOCTYPE look-and-feel PUBLIC "-//Liferay//DTD Look and Feel 7.4.0//EN" "http://www.liferay.com/dtd/liferay-look-and-feel_7_4_0.dtd">
 
 <look-and-feel>
 	<compatibility>
@@ -12,7 +12,8 @@
 		<template-extension>ftl</template-extension>
 		<settings>
 			<setting configurable="true" key="is-login-page" type="checkbox" value="false" />
-			<setting configurable="true" key="redirect-to-private-layouts" type="checkbox" value="false" />
+			<setting configurable="true" key="mini-cart-display-total-items-count" type="checkbox" value="false" />
+			<setting configurable="true" key="mini-cart-keep-open" type="checkbox" value="false" />
 			<setting configurable="true" key="show-account-selector" type="checkbox" value="true" />
 			<setting configurable="true" key="show-mini-cart" type="checkbox" value="true" />
 			<setting configurable="true" key="show-search-bar" type="checkbox" value="true" />

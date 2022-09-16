@@ -21,7 +21,7 @@ import com.liferay.portal.kernel.util.SystemProperties;
 import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 import com.liferay.portal.kernel.zip.ZipReader;
 import com.liferay.portal.kernel.zip.ZipWriter;
-import com.liferay.portal.util.FileImpl;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.portal.uuid.PortalUUIDImpl;
 
 import java.io.File;
@@ -35,6 +35,7 @@ import java.nio.file.Paths;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 /**
@@ -42,12 +43,12 @@ import org.junit.Test;
  */
 public class ZipWriterImplTest {
 
+	@ClassRule
+	public static LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		FileUtil fileUtil = new FileUtil();
-
-		fileUtil.setFile(new FileImpl());
-
 		PortalUUIDUtil portalUUIDUtil = new PortalUUIDUtil();
 
 		portalUUIDUtil.setPortalUUID(new PortalUUIDImpl());
@@ -217,9 +218,7 @@ public class ZipWriterImplTest {
 	public void testAddEntryFromStringBuilderThatIsEmpty() throws Exception {
 		ZipWriter zipWriter = new ZipWriterImpl(new File(_tempZipFilePath));
 
-		StringBuilder sb = new StringBuilder();
-
-		zipWriter.addEntry("empty.txt", sb);
+		zipWriter.addEntry("empty.txt", new StringBuilder());
 
 		File file = zipWriter.getFile();
 
@@ -304,6 +303,28 @@ public class ZipWriterImplTest {
 		Assert.assertEquals(zipFile.getPath(), file2.getPath());
 
 		file2.delete();
+	}
+
+	@Test
+	public void testConstructorWithSpecialCharacters() throws IOException {
+		Path path = Files.createTempDirectory("A B ");
+
+		File zipFile = new File(path.toFile(), "C D .zip");
+
+		ZipWriter zipWriter = new ZipWriterImpl(zipFile);
+
+		File file = zipWriter.getFile();
+
+		try {
+			Assert.assertNotNull(file);
+			Assert.assertTrue(file.exists());
+			Assert.assertEquals(zipFile.getPath(), file.getPath());
+		}
+		finally {
+			file.delete();
+
+			Files.delete(path);
+		}
 	}
 
 	@Test

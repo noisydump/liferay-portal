@@ -27,7 +27,4 @@ public interface CryptoHashGenerator {
 
 	public CryptoHashResponse generate(byte[] input) throws CryptoHashException;
 
-	public boolean verify(byte[] input, byte[] hash, byte[] salt)
-		throws CryptoHashException;
-
 }

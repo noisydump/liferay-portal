@@ -12,17 +12,6 @@ definition {
 		AssertClick(
 			locator1 = "ReportsAdminViewReportEntry#ENTRY_FILE_MENULIST_DOWNLOAD",
 			value1 = "Download");
-
-		Pause(locator1 = "2000");
-
-		if ("${reportFormat}" == "pdf") {
-			if ("${reportsFileName}" == "reports_admin_template_source_sample_list_type.pdf") {
-				SikuliAssertElementPresent(locator1 = "ReportsAdmin#REPORT_PDF_LIST_TYPE_PNG");
-			}
-			else {
-				SikuliAssertElementPresent(locator1 = "ReportsAdmin#REPORT_PDF_CLASS_NAME_PNG");
-			}
-		}
 	}
 
 	macro viewReportEntry {

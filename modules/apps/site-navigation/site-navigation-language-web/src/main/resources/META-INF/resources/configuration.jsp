@@ -37,7 +37,7 @@
 				label="display-settings"
 			>
 				<div class="display-template">
-					<liferay-ddm:template-selector
+					<liferay-template:template-selector
 						className="<%= LanguageEntry.class.getName() %>"
 						displayStyle="<%= languagePortletInstanceConfiguration.displayStyle() %>"
 						displayStyleGroupId="<%= siteNavigationLanguageDisplayContext.getDisplayStyleGroupId() %>"
@@ -87,7 +87,9 @@
 		if (currentLanguageIdsInput) {
 			Liferay.Util.postForm(form, {
 				data: {
-					languageIds: Liferay.Util.listSelect(currentLanguageIdsInput),
+					languageIds: Liferay.Util.getSelectedOptionValues(
+						currentLanguageIdsInput
+					),
 				},
 			});
 		}

@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
@@ -56,6 +57,10 @@ public class PriceListAccount implements Serializable {
 		return ObjectMapperUtil.readValue(PriceListAccount.class, json);
 	}
 
+	public static PriceListAccount unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(PriceListAccount.class, json);
+	}
+
 	@Schema
 	@Valid
 	public Account getAccount() {
@@ -85,7 +90,7 @@ public class PriceListAccount implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Account account;
 
-	@Schema
+	@Schema(example = "DAB-34098-789-N")
 	public String getAccountExternalReferenceCode() {
 		return accountExternalReferenceCode;
 	}
@@ -118,7 +123,7 @@ public class PriceListAccount implements Serializable {
 	protected String accountExternalReferenceCode;
 
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "30324")
 	public Long getAccountId() {
 		return accountId;
 	}
@@ -178,7 +183,7 @@ public class PriceListAccount implements Serializable {
 	protected Map<String, Map<String, String>> actions;
 
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "1")
 	public Integer getOrder() {
 		return order;
 	}
@@ -207,7 +212,7 @@ public class PriceListAccount implements Serializable {
 	protected Integer order;
 
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "30643")
 	public Long getPriceListAccountId() {
 		return priceListAccountId;
 	}
@@ -235,7 +240,7 @@ public class PriceListAccount implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Long priceListAccountId;
 
-	@Schema
+	@Schema(example = "PAB-34098-789-N")
 	public String getPriceListExternalReferenceCode() {
 		return priceListExternalReferenceCode;
 	}
@@ -268,7 +273,7 @@ public class PriceListAccount implements Serializable {
 	protected String priceListExternalReferenceCode;
 
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "30130")
 	public Long getPriceListId() {
 		return priceListId;
 	}
@@ -418,15 +423,16 @@ public class PriceListAccount implements Serializable {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.commerce.admin.pricing.dto.v2_0.PriceListAccount",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
 	}
 
 	private static boolean _isArray(Object value) {
@@ -452,8 +458,8 @@ public class PriceListAccount implements Serializable {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -484,7 +490,7 @@ public class PriceListAccount implements Serializable {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -492,7 +498,7 @@ public class PriceListAccount implements Serializable {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -500,5 +506,10 @@ public class PriceListAccount implements Serializable {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

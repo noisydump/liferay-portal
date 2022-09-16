@@ -27,21 +27,24 @@ Organization organization = OrganizationServiceUtil.fetchOrganization(organizati
 
 String type = BeanParamUtil.getString(organization, request, "type");
 
-PortletURL portletURL = liferayPortletResponse.createRenderURL();
-
-portletURL.setParameter("mvcRenderCommandName", "/users_admin/edit_organization");
+PortletURL portletURL = PortletURLBuilder.createRenderURL(
+	liferayPortletResponse
+).setMVCRenderCommandName(
+	"/users_admin/edit_organization"
+).buildPortletURL();
 
 if (Validator.isNotNull(redirect)) {
 	portletURL.setParameter("redirect", redirect);
 }
 
 if (Validator.isNull(backURL)) {
-	PortletURL viewOrganizationsURL = liferayPortletResponse.createRenderURL();
-
-	viewOrganizationsURL.setParameter("toolbarItem", "view-all-organizations");
-	viewOrganizationsURL.setParameter("usersListView", UserConstants.LIST_VIEW_FLAT_ORGANIZATIONS);
-
-	backURL = viewOrganizationsURL.toString();
+	backURL = PortletURLBuilder.createRenderURL(
+		liferayPortletResponse
+	).setParameter(
+		"toolbarItem", "view-all-organizations"
+	).setParameter(
+		"usersListView", UserConstants.LIST_VIEW_FLAT_ORGANIZATIONS
+	).buildString();
 }
 
 portletURL.setParameter("backURL", backURL);

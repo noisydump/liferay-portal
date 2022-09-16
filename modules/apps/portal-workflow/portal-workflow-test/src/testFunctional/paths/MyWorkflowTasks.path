@@ -2,11 +2,13 @@
 <head>
 <title>MyWorkflowTasks</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">MyWorkflowTasks</td></tr>
 </thead>
+
 <tbody>
 <tr>
 	<td>ASSIGNED_TO_ME_ACTIVE</td>
@@ -18,7 +20,14 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--TABLE_GENERIC-->
+
+<tr>
+	<td>UNPUBLISH_ALERT_ERROR_MESSAGE_LINK</td>
+	<td>//a[text()='Configure assignments']</td>
+	<td></td>
+</tr>
 <tr>
 	<td>TABLE_GENERIC_ASSET_TITLE</td>
 	<td>//tr[contains(.,'${key_workflowAssetTitle}')]/td[1]//a</td>
@@ -26,7 +35,7 @@
 </tr>
 <tr>
 	<td>REVERSE_SORT_DIRECTION_BUTTON</td>
-	<td>//*[contains(@class, 'lexicon-icon lexicon-icon-order-arrow')]</td>
+	<td>//*[contains(@class, 'lexicon-icon lexicon-icon-order')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -34,7 +43,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--ASSIGNED_TO_ME_TABLE-->
+
 <tr>
 	<td>ASSIGNED_TO_ME_TABLE_ASSET_TITLE_2</td>
 	<td>//tr[contains(.,'${key_workflowAssetTitle}')][2]/td[1]//a</td>
@@ -90,7 +101,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--ASSIGNED_TO_MY_ROLES_TABLE-->
+
 <tr>
 	<td>ASSIGNED_TO_MY_ROLES_TABLE_ASSET_TITLE</td>
 	<td>//tr[contains(.,'${key_workflowTask}') and contains(.,'${key_workflowAssetTitle}')]/td[1]//a</td>
@@ -104,6 +117,21 @@
 <tr>
 	<td>ASSIGNED_TO_MY_ROLES_TABLE_ASSET_TYPE</td>
 	<td>//tr[contains(.,'${key_workflowTask}') and contains(.,'${key_workflowAssetTitle}')]/td[2]//a</td>
+	<td></td>
+</tr>
+<tr>
+	<td>MY_WORKFLOW_TASKS_SEARCH_INPUT_FIELD</td>
+	<td>//input[contains(@name,'keywords')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>MY_WORKFLOW_TASKS_SEARCH_ICON</td>
+	<td>//button[contains(@class, 'btn btn-monospaced btn-unstyled')][2]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>MY_WORKFLOW_TASKS_SEARCH_RESULT_BAR</td>
+	<td>//span[contains(@class, 'text-truncate') and contains(., '${key_resultBarMessage}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -127,11 +155,18 @@
 	<td></td>
 </tr>
 <tr>
+	<td>MY_WORKFLOW_TASK_ITEM_POSITION</td>
+	<td>//tr[@data-qa-id='row'][${key_rowPosition}]//a//span[@class='text-truncate' and contains(text(),'${key_title}')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td></td>
 	<td></td>
 	<td></td>
 </tr>
+
 <!--DIALOG_BOX-->
+
 <tr>
 	<td>IFRAME_UPDATE_DUE_DATE</td>
 	<td>//iframe[@title='Update Due Date']</td>
@@ -140,6 +175,11 @@
 <tr>
 	<td>DIALOG_BOX_DUE_DATE</td>
 	<td>//input[contains(@id,'_dueDate')] | //label[contains(@for,'dateInput')]/following-sibling::input</td>
+	<td></td>
+</tr>
+<tr>
+	<td>DONE_BUTTON</td>
+	<td>//button[contains(@class,'btn btn-primary') and '${status}']</td>
 	<td></td>
 </tr>
 <tr>
@@ -163,14 +203,62 @@
 	<td></td>
 </tr>
 <tr>
+	<td>DUE_DATE_ALERT</td>
+	<td>//div[contains(@role, 'alert')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td></td>
 	<td></td>
 	<td></td>
 </tr>
+
 <!--COMPLETED_TABLE-->
+
 <tr>
 	<td>COMPLETED_TABLE_ASSET_TITLE</td>
 	<td>//tr[contains(.,'${key_workflowAssetTitle}')]/td//a</td>
+	<td></td>
+</tr>
+
+<!--Menu-->
+
+<tr>
+	<td>DROPDOWN_MENU_OPTION</td>
+	<td>//a[contains(@class,'dropdown-item') and contains(text(), '${key_selectOption}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PROCESS_NAME_TABLE_ROW</td>
+	<td>//tr[${key_rowNumber}]//td[1]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>COMPLETED_TABLE_PAGINATION</td>
+	<td>//li[contains(@class,'page-item active')]/a[contains(.,'${key_pageNumber}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SUMMARY_TEXT_CONTENT</td>
+	<td>//div[contains(@class,'widget-content')]/p | //div[contains(@class,'asset-summary')]</td>
+	<td></td>
+</tr>
+
+<!--REVIEW_THREAD_MESSAGE_SUBJECT-->
+
+<tr>
+	<td>REVIEW_PAGE_ELEMENTS_DISPLAYS</td>
+	<td>//span[contains(@class, 'control-label') and contains(., '${key_reviewDisplay}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>MESSAGE_BOARD_SUBJECT_TITLE</td>
+	<td>//span[contains(@class, 'taglib-text ') and contains(., 'Thread Message Subject')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>NAME_AUTHOR</td>
+	<td>//span[contains(@class, 'user-info') and contains(., '${key_nameAuthor}')]</td>
 	<td></td>
 </tr>
 </tbody>

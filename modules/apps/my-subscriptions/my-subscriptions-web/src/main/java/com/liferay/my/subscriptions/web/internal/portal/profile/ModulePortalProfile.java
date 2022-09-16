@@ -16,13 +16,11 @@ package com.liferay.my.subscriptions.web.internal.portal.profile;
 
 import com.liferay.my.subscriptions.web.internal.application.list.MySubscriptionPanelApp;
 import com.liferay.my.subscriptions.web.internal.portlet.MySubscriptionsPortlet;
-import com.liferay.my.subscriptions.web.internal.upgrade.MySubscriptionsWebUpgrade;
+import com.liferay.my.subscriptions.web.internal.upgrade.registry.MySubscriptionsWebUpgradeStepRegistrator;
 import com.liferay.portal.profile.BaseDSModulePortalProfile;
 import com.liferay.portal.profile.PortalProfile;
 
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
@@ -36,16 +34,14 @@ public class ModulePortalProfile extends BaseDSModulePortalProfile {
 
 	@Activate
 	protected void activate(ComponentContext componentContext) {
-		Set<String> supportedPortalProfileNames = new HashSet<>(
+		init(
+			componentContext,
 			Arrays.asList(
 				PortalProfile.PORTAL_PROFILE_NAME_CE,
-				PortalProfile.PORTAL_PROFILE_NAME_DXP));
-
-		init(
-			componentContext, supportedPortalProfileNames,
+				PortalProfile.PORTAL_PROFILE_NAME_DXP),
 			MySubscriptionPanelApp.class.getName(),
 			MySubscriptionsPortlet.class.getName(),
-			MySubscriptionsWebUpgrade.class.getName());
+			MySubscriptionsWebUpgradeStepRegistrator.class.getName());
 	}
 
 }

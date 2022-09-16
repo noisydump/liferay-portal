@@ -6,7 +6,7 @@ definition {
 		AssetPublisherPortlet.addAsset(assetType = "Bookmarks Entry");
 
 		if (isSet(bookmarkFolderName)) {
-			AssertClick.pauseAssertTextClickAt(
+			AssertClick(
 				locator1 = "Button#SELECT",
 				value1 = "Select");
 
@@ -31,7 +31,7 @@ definition {
 
 		PortletEntry.inputDescription(description = "${bookmarkDescription}");
 
-		AssertClick.pauseAssertTextClickAt(
+		AssertClick(
 			locator1 = "Button#SAVE",
 			value1 = "Save");
 	}
@@ -285,18 +285,12 @@ definition {
 			value1 = "${bookmarkName}");
 
 		LexiconEntry.gotoEntryMenuItem(
-			menuItem = "Move to Recycle Bin",
+			menuItem = "Delete",
 			rowEntry = "${bookmarkName}");
 
 		VerifyElementPresent(locator1 = "Message#SUCCESS");
 
-		Navigator.openURL();
-
-		ProductMenu.gotoPortlet(
-			category = "Recycle Bin",
-			portlet = "Recycle Bin");
-
-		RecycleBin.emptyCP();
+		JSONRecycleBin.emptyRecycleBin();
 	}
 
 	macro editCP {
@@ -442,11 +436,7 @@ definition {
 			locator1 = "Message#EMPTY_INFO",
 			value1 = "There are no bookmarks in this folder.");
 
-		Navigator.openURL();
-
-		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			portlet = "Bookmarks");
+		Bookmark.openBookmarksAdmin(siteURLKey = "guest");
 
 		var key_assetName = "${bookmarkName}";
 
@@ -456,11 +446,7 @@ definition {
 	}
 
 	macro moveToRecycleBinCP {
-		Navigator.openURL();
-
-		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			portlet = "Bookmarks");
+		Bookmark.openBookmarksAdmin(siteURLKey = "guest");
 
 		var key_assetName = "${bookmarkName}";
 
@@ -469,7 +455,7 @@ definition {
 			value1 = "${bookmarkName}");
 
 		LexiconEntry.gotoEntryMenuItem(
-			menuItem = "Move to Recycle Bin",
+			menuItem = "Delete",
 			rowEntry = "${bookmarkName}");
 
 		VerifyElementPresent(locator1 = "Message#SUCCESS");
@@ -481,10 +467,16 @@ definition {
 
 	macro moveToRecycleBinPG {
 		LexiconEntry.gotoEntryMenuItem(
-			menuItem = "Move to Recycle Bin",
+			menuItem = "Delete",
 			rowEntry = "${bookmarkName}");
 
 		VerifyElementPresent(locator1 = "Message#SUCCESS");
+	}
+
+	macro openBookmarksAdmin {
+		Navigator.openWithAppendToBaseURL(
+			baseURL = "${baseURL}",
+			urlAppend = "group/${siteURLKey}/~/control_panel/manage?p_p_id=com_liferay_bookmarks_web_portlet_BookmarksAdminPortlet");
 	}
 
 	macro searchNullCP {
@@ -502,11 +494,7 @@ definition {
 	}
 
 	macro tearDownCP {
-		Navigator.openURL();
-
-		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			portlet = "Bookmarks");
+		Bookmark.openBookmarksAdmin(siteURLKey = "guest");
 
 		if (IsElementNotPresent(locator1 = "Message#EMPTY_INFO")) {
 			PortletEntry.selectAll();
@@ -518,13 +506,7 @@ definition {
 			AssertElementPresent(locator1 = "Message#EMPTY_INFO");
 		}
 
-		Navigator.openURL();
-
-		ProductMenu.gotoPortlet(
-			category = "Recycle Bin",
-			portlet = "Recycle Bin");
-
-		RecycleBin.emptyCP();
+		JSONRecycleBin.emptyRecycleBin();
 	}
 
 	macro viewBookmark {
@@ -555,7 +537,7 @@ definition {
 
 		SelectWindow(locator1 = "title=Digital Experience Software Tailored to Your Needs | Liferay");
 
-		AssertElementPresent.assertElementPresent(locator1 = "AP#ASSET_ABSTRACT_BOOKMARK_LIFERAY_LOGO");
+		AssertLocation.assertPartialLocation(value1 = "https://www.liferay.com");
 
 		Close(locator1 = "title=Digital Experience Software Tailored to Your Needs | Liferay");
 	}

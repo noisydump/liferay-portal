@@ -19,9 +19,16 @@ import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.service.AssetTagLocalServiceUtil;
 import com.liferay.asset.test.util.AssetTestUtil;
 import com.liferay.headless.admin.taxonomy.client.dto.v1_0.Keyword;
+import com.liferay.headless.admin.taxonomy.client.pagination.Page;
+import com.liferay.headless.admin.taxonomy.client.pagination.Pagination;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 
-import org.junit.Before;
+import java.util.Arrays;
+import java.util.List;
+
+import org.junit.Assert;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /**
@@ -30,12 +37,65 @@ import org.junit.runner.RunWith;
 @RunWith(Arquillian.class)
 public class KeywordResourceTest extends BaseKeywordResourceTestCase {
 
-	@Before
 	@Override
-	public void setUp() throws Exception {
-		super.setUp();
+	@Test
+	public void testGetKeywordsRankedPage() throws Exception {
+		Page<Keyword> page = keywordResource.getKeywordsRankedPage(
+			testGroup.getGroupId(), RandomTestUtil.randomString(),
+			Pagination.of(1, 2));
 
-		testGroup = testDepotEntry.getGroup();
+		Assert.assertEquals(0, page.getTotalCount());
+
+		Keyword keyword1 = testGetKeywordsRankedPage_addKeyword(
+			randomKeyword());
+		Keyword keyword2 = testGetKeywordsRankedPage_addKeyword(
+			randomKeyword());
+
+		page = keywordResource.getKeywordsRankedPage(
+			testGroup.getGroupId(), null, Pagination.of(1, 2));
+
+		Assert.assertEquals(2, page.getTotalCount());
+
+		assertEqualsIgnoringOrder(
+			Arrays.asList(keyword1, keyword2), (List<Keyword>)page.getItems());
+		assertValid(page);
+
+		keywordResource.deleteKeyword(keyword1.getId());
+		keywordResource.deleteKeyword(keyword2.getId());
+	}
+
+	@Override
+	@Test
+	public void testGetKeywordsRankedPageWithPagination() throws Exception {
+		Keyword keyword1 = testGetKeywordsRankedPage_addKeyword(
+			randomKeyword());
+		Keyword keyword2 = testGetKeywordsRankedPage_addKeyword(
+			randomKeyword());
+		Keyword keyword3 = testGetKeywordsRankedPage_addKeyword(
+			randomKeyword());
+
+		Page<Keyword> page1 = keywordResource.getKeywordsRankedPage(
+			testGroup.getGroupId(), null, Pagination.of(1, 2));
+
+		List<Keyword> keywords1 = (List<Keyword>)page1.getItems();
+
+		Assert.assertEquals(keywords1.toString(), 2, keywords1.size());
+
+		Page<Keyword> page2 = keywordResource.getKeywordsRankedPage(
+			testGroup.getGroupId(), null, Pagination.of(2, 2));
+
+		Assert.assertEquals(3, page2.getTotalCount());
+
+		List<Keyword> keywords2 = (List<Keyword>)page2.getItems();
+
+		Assert.assertEquals(keywords2.toString(), 1, keywords2.size());
+
+		Page<Keyword> page3 = keywordResource.getKeywordsRankedPage(
+			testGroup.getGroupId(), null, Pagination.of(1, 3));
+
+		assertEqualsIgnoringOrder(
+			Arrays.asList(keyword1, keyword2, keyword3),
+			(List<Keyword>)page3.getItems());
 	}
 
 	@Override

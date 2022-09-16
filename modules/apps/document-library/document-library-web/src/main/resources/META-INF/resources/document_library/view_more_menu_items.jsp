@@ -26,9 +26,8 @@ DLViewMoreMenuItemsDisplayContext dlViewMoreMenuItemsDisplayContext = new DLView
 	navigationItems="<%= dlViewMoreMenuItemsDisplayContext.getNavigationItems() %>"
 />
 
-<clay:management-toolbar-v2
+<clay:management-toolbar
 	clearResultsURL="<%= dlViewMoreMenuItemsDisplayContext.getClearResultsURL() %>"
-	componentId="dlViewMoreMenuItemsManagementToolbar"
 	disabled="<%= dlViewMoreMenuItemsDisplayContext.getTotalItems() == 0 %>"
 	itemsTotal="<%= dlViewMoreMenuItemsDisplayContext.getTotalItems() %>"
 	searchActionURL="<%= dlViewMoreMenuItemsDisplayContext.getSearchActionURL() %>"
@@ -56,7 +55,7 @@ DLViewMoreMenuItemsDisplayContext dlViewMoreMenuItemsDisplayContext = new DLView
 							"fileEntryTypeId", String.valueOf(fileEntryType.getFileEntryTypeId())
 						).build()
 					%>'
-					href="javascript:;"
+					href="javascript:void(0);"
 				>
 					<%= HtmlUtil.escape(fileEntryType.getName(locale)) %>
 				</aui:a>
@@ -89,7 +88,7 @@ DLViewMoreMenuItemsDisplayContext dlViewMoreMenuItemsDisplayContext = new DLView
 
 	A.one('#<portlet:namespace />addMenuItemFm').delegate(
 		'click',
-		function (event) {
+		(event) => {
 			Util.getOpener().Liferay.fire(
 				'<%= HtmlUtil.escapeJS(dlViewMoreMenuItemsDisplayContext.getEventName()) %>',
 				{

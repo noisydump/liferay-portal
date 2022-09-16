@@ -30,7 +30,7 @@ definition {
 
 			JSONUser.tearDownNonAdminUsers();
 
-			Role.removeStagingAdminRole();
+			JSONRole.deleteRole(roleTitle = "Staging Admin");
 
 			JSONGroup.deleteGroupByName(groupName = "Site Name");
 		}
@@ -38,9 +38,9 @@ definition {
 
 	@priority = "4"
 	test StagingDemoLocalLive1 {
-		Staging.openStagingAdmin(siteURLKey = "site-name");
+		property name.skip.portal.instance = "StagingUsecaseWithRoles#StagingDemoLocalLive1";
 
-		Staging.activateStagingCP(siteName = "Site Name");
+		JSONStaging.enableLocalStaging(groupName = "Site Name");
 
 		JSONRole.addSiteRole(
 			roleKey = "Staging Admin",
@@ -106,6 +106,8 @@ definition {
 
 		Navigator.openStagingSiteURL(siteName = "Site Name");
 
+		DMDocument.enableActionsMenuOnPortlet();
+
 		DMDocument.addPG(
 			dmDocumentDescription = "DM Document Description",
 			dmDocumentFile = "Document_1.doc",
@@ -146,55 +148,55 @@ definition {
 
 	@priority = "4"
 	test StagingDemoLocalLive2 {
-		Staging.openStagingAdmin(siteURLKey = "site-name");
+		property name.skip.portal.instance = "StagingUsecaseWithRoles#StagingDemoLocalLive2";
 
-		Staging.activateStagingCP(
-			pageVersioningEnabled = "true",
-			siteName = "Site Name");
+		JSONStaging.enableLocalStaging(
+			branchingPrivate = "true",
+			branchingPublic = "true",
+			groupName = "Site Name");
 
 		Staging.addStagingAdminRole();
 
 		Staging.assignStagingAdminToSite(siteName = "Site Name");
 
-		SitePages.openPagesAdmin(siteURLKey = "site-name-staging");
+		PagesAdmin.openPagesAdmin(siteURLKey = "site-name-staging");
 
-		SitePages.configurePage(
+		PagesAdmin.configurePage(
 			columnName = "1 Column",
 			pageName = "Staging Test Page",
-			privacy = "Public Pages",
 			sitePageType = "Widget Page");
 
-		SitePages.openPagesAdmin(siteURLKey = "site-name-staging");
+		PagesAdmin.openPagesAdmin(siteURLKey = "site-name-staging");
 
-		SitePages.gotoPageMenuItem(
+		PagesAdmin.gotoPageEllipsisMenuItem(
 			menuItem = "Configure",
 			pageName = "Staging Test Page");
 
-		Page.viewPageLayoutColumn(columnName = "1 Column");
+		PagesAdmin.viewSelectedLayoutColumn(columnName = "1 Column");
 
 		Navigator.openStagingSiteURL(siteName = "Site Name");
 
 		Staging.undoStagingPageVersioningPG();
 
-		SitePages.openPagesAdmin(siteURLKey = "site-name-staging");
+		PagesAdmin.openPagesAdmin(siteURLKey = "site-name-staging");
 
-		SitePages.gotoPageMenuItem(
+		PagesAdmin.gotoPageEllipsisMenuItem(
 			menuItem = "Configure",
 			pageName = "Staging Test Page");
 
-		Page.viewPageLayoutColumn(columnName = "2 Columns");
+		PagesAdmin.viewSelectedLayoutColumn(columnName = "2 Columns");
 
 		Navigator.openStagingSiteURL(siteName = "Site Name");
 
 		Staging.redoStagingPageVersioningPG();
 
-		SitePages.openPagesAdmin(siteURLKey = "site-name-staging");
+		PagesAdmin.openPagesAdmin(siteURLKey = "site-name-staging");
 
-		SitePages.gotoPageMenuItem(
+		PagesAdmin.gotoPageEllipsisMenuItem(
 			menuItem = "Configure",
 			pageName = "Staging Test Page");
 
-		Page.viewPageLayoutColumn(columnName = "1 Column");
+		PagesAdmin.viewSelectedLayoutColumn(columnName = "1 Column");
 
 		Navigator.openStagingSiteURL(siteName = "Site Name");
 
@@ -202,26 +204,27 @@ definition {
 
 		Staging.publishToLive();
 
-		SitePages.openPagesAdmin(siteURLKey = "site-name-staging");
+		PagesAdmin.openPagesAdmin(siteURLKey = "site-name-staging");
 
-		SitePages.gotoPageMenuItem(
+		PagesAdmin.gotoPageEllipsisMenuItem(
 			menuItem = "Configure",
 			pageName = "Staging Test Page");
 
-		Page.viewPageLayoutColumn(columnName = "1 Column");
+		PagesAdmin.viewSelectedLayoutColumn(columnName = "1 Column");
 	}
 
 	@priority = "4"
 	test StagingDemoLocalLive3 {
+		property name.skip.portal.instance = "StagingUsecaseWithRoles#StagingDemoLocalLive3";
+
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
 			layoutName = "Wiki");
 
-		Staging.openStagingAdmin(siteURLKey = "site-name");
-
-		Staging.activateStagingCP(
-			pageVersioningEnabled = "true",
-			siteName = "Site Name");
+		JSONStaging.enableLocalStaging(
+			branchingPrivate = "true",
+			branchingPublic = "true",
+			groupName = "Site Name");
 
 		Staging.addStagingAdminRole();
 
@@ -249,21 +252,17 @@ definition {
 
 		Navigator.openStagingSiteURL(siteName = "Site Name");
 
-		Page.view(
-			pageName = "Staging Test Page",
-			privacy = "Public Pages");
+		PagesAdmin.viewPageItemPresent(pageName = "Staging Test Page");
 
 		Navigator.gotoStagedSitePage(
 			pageName = "Wiki",
 			siteName = "Site Name");
 
-		Page.view(
-			pageName = "Wiki",
-			privacy = "Public Pages");
+		PagesAdmin.viewPageItemPresent(pageName = "Wiki");
 
-		SitePages.openPagesAdmin(siteURLKey = "site-name-staging");
+		PagesAdmin.openPagesAdmin(siteURLKey = "site-name-staging");
 
-		SitePages.addPublicPage(pageName = "Test Page Name");
+		PagesAdmin.addPage(pageName = "Test Page Name");
 
 		Navigator.openStagingSiteURL(siteName = "Site Name");
 
@@ -277,7 +276,6 @@ definition {
 
 		Staging.enablePageInSitePagesVariation(
 			pageName = "Test Page Name",
-			privacy = "Public Pages",
 			sitePagesVariationName = "Main Variation Edit");
 
 		Navigator.gotoStagedSitePage(
@@ -290,13 +288,11 @@ definition {
 			pageName = "Test Page Name",
 			siteName = "Site Name");
 
-		Page.view(
-			pageName = "Test Page Name",
-			privacy = "Public Pages");
+		PagesAdmin.viewPageItemPresent(pageName = "Test Page Name");
 
-		SitePages.openPagesAdmin(siteURLKey = "site-name-staging");
+		PagesAdmin.openPagesAdmin(siteURLKey = "site-name-staging");
 
-		SitePages.deletePage(pageName = "Staging Test Page");
+		PagesAdmin.deletePage(pageName = "Staging Test Page");
 
 		Navigator.gotoStagedSitePage(
 			pageName = "Test Page Name",
@@ -310,9 +306,7 @@ definition {
 
 		Navigator.openStagingSiteURL(siteName = "Site Name");
 
-		Page.view(
-			pageName = "Staging Test Page",
-			privacy = "Public Pages");
+		PagesAdmin.viewPageItemPresent(pageName = "Staging Test Page");
 
 		Navigator.gotoStagedSitePage(
 			pageName = "Test Page Name",
@@ -338,9 +332,9 @@ definition {
 			copySitePagesVariationName = "None (Empty Site Pages Variation)",
 			sitePagesVariationName = "Empty Variation");
 
-		SitePages.openPagesAdmin(siteURLKey = "site-name-staging");
+		PagesAdmin.openPagesAdmin(siteURLKey = "site-name-staging");
 
-		SitePages.addPublicPage(pageName = "Empty Page Name");
+		PagesAdmin.addPage(pageName = "Empty Page Name");
 
 		Navigator.gotoStagedSitePage(
 			pageName = "Empty Page Name",
@@ -372,9 +366,7 @@ definition {
 
 		Staging.viewSitePagesVariationPG(sitePagesVariationName = "Empty Variation");
 
-		Page.view(
-			pageName = "Staging Test Page",
-			privacy = "Public Pages");
+		PagesAdmin.viewPageItemPresent(pageName = "Staging Test Page");
 
 		Navigator.gotoStagedSitePage(
 			pageName = "Wiki",
@@ -382,9 +374,7 @@ definition {
 
 		Staging.viewSitePagesVariationPG(sitePagesVariationName = "Empty Variation");
 
-		Page.view(
-			pageName = "Wiki",
-			privacy = "Public Pages");
+		PagesAdmin.viewPageItemPresent(pageName = "Wiki");
 
 		Navigator.gotoStagedSitePage(
 			pageName = "Test Page Name",
@@ -392,24 +382,22 @@ definition {
 
 		Staging.viewSitePagesVariationPG(sitePagesVariationName = "Empty Variation");
 
-		Page.view(
-			pageName = "Test Page Name",
-			privacy = "Public Pages");
+		PagesAdmin.viewPageItemPresent(pageName = "Test Page Name");
 	}
 
 	@priority = "5"
 	test StagingDemoLocalLive4 {
+		property name.skip.portal.instance = "StagingUsecaseWithRoles#StagingDemoLocalLive4";
 		property testray.component.names = "Training";
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
 			layoutName = "Wiki");
 
-		Staging.openStagingAdmin(siteURLKey = "site-name");
-
-		Staging.activateStagingCP(
-			pageVersioningEnabled = "true",
-			siteName = "Site Name");
+		JSONStaging.enableLocalStaging(
+			branchingPrivate = "true",
+			branchingPublic = "true",
+			groupName = "Site Name");
 
 		Staging.addStagingAdminRole();
 
@@ -421,9 +409,9 @@ definition {
 			copySitePagesVariationName = "Main Variation",
 			sitePagesVariationName = "New Variation");
 
-		SitePages.openPagesAdmin(siteURLKey = "site-name-staging");
+		PagesAdmin.openPagesAdmin(siteURLKey = "site-name-staging");
 
-		SitePages.deletePage(pageName = "Wiki");
+		PagesAdmin.deletePage(pageName = "Wiki");
 
 		Navigator.openStagingSiteURL(siteName = "Site Name");
 
@@ -446,9 +434,9 @@ definition {
 			AssertElementNotPresent(locator1 = "Home#PAGE_2");
 		}
 
-		SitePages.openPagesAdmin(siteURLKey = "site-name-staging");
+		PagesAdmin.openPagesAdmin(siteURLKey = "site-name-staging");
 
-		SitePages.addPublicPage(pageName = "New Page Name");
+		PagesAdmin.addPage(pageName = "New Page Name");
 
 		Navigator.gotoStagedSitePage(
 			pageName = "New Page Name",
@@ -469,7 +457,9 @@ definition {
 			AssertElementNotPresent(locator1 = "Home#PAGE_2_GUEST_VIEW");
 		}
 
-		Pause(locator1 = "180000");
+		// This pause is required to allow the test to wait for the scheduled Publication to be published. See LRQA-7161 and LRQA-75872 for more details.
+
+		Pause(locator1 = "300000");
 
 		Navigator.gotoSitePage(
 			pageName = "Staging Test Page",
@@ -483,9 +473,9 @@ definition {
 	@description = "This is a use case for LPS-82564."
 	@priority = "4"
 	test StagingLocalLiveWebContent {
-		Staging.openStagingAdmin(siteURLKey = "site-name");
+		property name.skip.portal.instance = "StagingUsecaseWithRoles#StagingLocalLiveWebContent";
 
-		Staging.activateStagingCP(siteName = "Site Name");
+		JSONStaging.enableLocalStaging(groupName = "Site Name");
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name-staging");
 
@@ -601,11 +591,12 @@ definition {
 
 	@priority = "4"
 	test StagingLocalLiveWorkflow {
-		Staging.openStagingAdmin(siteURLKey = "site-name");
+		property name.skip.portal.instance = "StagingUsecaseWithRoles#StagingLocalLiveWorkflow";
 
-		Staging.activateStagingCP(
-			pageVersioningEnabled = "true",
-			siteName = "Site Name");
+		JSONStaging.enableLocalStaging(
+			branchingPrivate = "true",
+			branchingPublic = "true",
+			groupName = "Site Name");
 
 		Workflow.openWorkflowAdmin(siteURLKey = "site-name-staging");
 
@@ -766,7 +757,7 @@ definition {
 
 		Portlet.addPG(portletName = "Web Content Display");
 
-		WebContent.addWithWorkflowPGViaWCD(
+		WebContentDisplayPortlet.addWithWorkflow(
 			webContentContent = "Web Content Content",
 			webContentTitle = "Web Content Title");
 
@@ -834,7 +825,9 @@ definition {
 			pageName = "Staging Test Page",
 			siteName = "Site Name");
 
-		WebContent.viewPGViaWCD(webContentContent = "Web Content Content");
+		WebContentDisplayPortlet.viewContent(
+			webContentContent = "Web Content Content",
+			webContentTitle = "Web Content Title");
 
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "contentapprover@liferay.com",
@@ -855,6 +848,7 @@ definition {
 
 	@priority = "5"
 	test StagingPublishPage {
+		property name.skip.portal.instance = "StagingUsecaseWithRoles#StagingPublishPage";
 		property testray.component.names = "Training";
 
 		JSONLayout.addPublicLayout(
@@ -866,11 +860,10 @@ definition {
 			layoutName = "Wiki",
 			widgetName = "Wiki");
 
-		Staging.openStagingAdmin(siteURLKey = "site-name");
-
-		Staging.activateStagingCP(
-			pageVersioningEnabled = "true",
-			siteName = "Site Name");
+		JSONStaging.enableLocalStaging(
+			branchingPrivate = "true",
+			branchingPublic = "true",
+			groupName = "Site Name");
 
 		Staging.addStagingAdminRole();
 
@@ -896,13 +889,13 @@ definition {
 
 		Navigator.openStagingSiteURL(siteName = "Site Name");
 
-		Portlet.addPG(portletName = "Navigation Menu");
+		Portlet.addPG(portletName = "Menu Display");
 
 		Staging.markAsReadyForPublication();
 
-		SitePages.openPagesAdmin(siteURLKey = "site-name-staging");
+		PagesAdmin.openPagesAdmin(siteURLKey = "site-name-staging");
 
-		SitePages.deletePage(pageName = "Wiki");
+		PagesAdmin.deletePage(pageName = "Wiki");
 
 		Navigator.openStagingSiteURL(siteName = "Site Name");
 
@@ -916,7 +909,7 @@ definition {
 			pageName = "Staging Test Page",
 			siteName = "Site Name");
 
-		Portlet.viewPG(portletName = "Navigation Menu");
+		Portlet.viewPG(portletName = "Menu Display");
 
 		Navigator.gotoSitePage(
 			pageName = "Wiki",
@@ -928,9 +921,9 @@ definition {
 	@description = "This is a use case for LPS-88004."
 	@priority = "3"
 	test UpdateAndDeleteWebContentCommentOnLiveSite {
-		Staging.openStagingAdmin(siteURLKey = "site-name");
+		property name.skip.portal.instance = "StagingUsecaseWithRoles#UpdateAndDeleteWebContentCommentOnLiveSite";
 
-		Staging.activateStagingCP(siteName = "Site Name");
+		JSONStaging.enableLocalStaging(groupName = "Site Name");
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name-staging");
 

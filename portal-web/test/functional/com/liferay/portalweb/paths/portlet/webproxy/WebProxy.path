@@ -2,13 +2,17 @@
 <head>
 <title>WebProxy</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">WebProxy</td></tr>
 </thead>
+
 <tbody>
+
 <!--SCREENSHOTS-->
+
 <tr>
 	<td>SCREENSHOTS_GOOGLE_IMAGES_PNG</td>
 	<td>portal/screenshots/webproxy/google_images.png</td>

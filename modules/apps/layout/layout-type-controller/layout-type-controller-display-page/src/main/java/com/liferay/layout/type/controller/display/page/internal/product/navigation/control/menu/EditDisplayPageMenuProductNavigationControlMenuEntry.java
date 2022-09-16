@@ -56,8 +56,8 @@ import org.osgi.service.component.annotations.Reference;
 @Component(
 	immediate = true,
 	property = {
-		"product.navigation.control.menu.category.key=" + ProductNavigationControlMenuCategoryKeys.TOOLS,
-		"product.navigation.control.menu.entry.order:Integer=200"
+		"product.navigation.control.menu.category.key=" + ProductNavigationControlMenuCategoryKeys.USER,
+		"product.navigation.control.menu.entry.order:Integer=50"
 	},
 	service = ProductNavigationControlMenuEntry.class
 )
@@ -113,11 +113,7 @@ public class EditDisplayPageMenuProductNavigationControlMenuEntry
 
 		Layout layout = themeDisplay.getLayout();
 
-		if (layout.isTypeControlPanel()) {
-			return false;
-		}
-
-		if (!layout.isTypeAssetDisplay()) {
+		if (layout.isTypeControlPanel() || !layout.isTypeAssetDisplay()) {
 			return false;
 		}
 
@@ -172,12 +168,8 @@ public class EditDisplayPageMenuProductNavigationControlMenuEntry
 	}
 
 	@Override
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.layout.type.controller.display.page)",
-		unbind = "-"
-	)
-	public void setServletContext(ServletContext servletContext) {
-		super.setServletContext(servletContext);
+	protected ServletContext getServletContext() {
+		return _servletContext;
 	}
 
 	@Reference
@@ -185,5 +177,10 @@ public class EditDisplayPageMenuProductNavigationControlMenuEntry
 
 	@Reference
 	private Portal _portal;
+
+	@Reference(
+		target = "(osgi.web.symbolicname=com.liferay.layout.type.controller.display.page)"
+	)
+	private ServletContext _servletContext;
 
 }

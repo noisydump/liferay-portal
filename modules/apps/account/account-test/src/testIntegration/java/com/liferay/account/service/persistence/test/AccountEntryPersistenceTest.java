@@ -126,6 +126,8 @@ public class AccountEntryPersistenceTest {
 
 		newAccountEntry.setMvccVersion(RandomTestUtil.nextLong());
 
+		newAccountEntry.setUuid(RandomTestUtil.randomString());
+
 		newAccountEntry.setExternalReferenceCode(RandomTestUtil.randomString());
 
 		newAccountEntry.setCompanyId(RandomTestUtil.nextLong());
@@ -139,6 +141,9 @@ public class AccountEntryPersistenceTest {
 		newAccountEntry.setModifiedDate(RandomTestUtil.nextDate());
 
 		newAccountEntry.setDefaultBillingAddressId(RandomTestUtil.nextLong());
+
+		newAccountEntry.setDefaultCPaymentMethodKey(
+			RandomTestUtil.randomString());
 
 		newAccountEntry.setDefaultShippingAddressId(RandomTestUtil.nextLong());
 
@@ -171,6 +176,8 @@ public class AccountEntryPersistenceTest {
 			existingAccountEntry.getMvccVersion(),
 			newAccountEntry.getMvccVersion());
 		Assert.assertEquals(
+			existingAccountEntry.getUuid(), newAccountEntry.getUuid());
+		Assert.assertEquals(
 			existingAccountEntry.getExternalReferenceCode(),
 			newAccountEntry.getExternalReferenceCode());
 		Assert.assertEquals(
@@ -192,6 +199,9 @@ public class AccountEntryPersistenceTest {
 		Assert.assertEquals(
 			existingAccountEntry.getDefaultBillingAddressId(),
 			newAccountEntry.getDefaultBillingAddressId());
+		Assert.assertEquals(
+			existingAccountEntry.getDefaultCPaymentMethodKey(),
+			newAccountEntry.getDefaultCPaymentMethodKey());
 		Assert.assertEquals(
 			existingAccountEntry.getDefaultShippingAddressId(),
 			newAccountEntry.getDefaultShippingAddressId());
@@ -220,6 +230,24 @@ public class AccountEntryPersistenceTest {
 			existingAccountEntry.getType(), newAccountEntry.getType());
 		Assert.assertEquals(
 			existingAccountEntry.getStatus(), newAccountEntry.getStatus());
+	}
+
+	@Test
+	public void testCountByUuid() throws Exception {
+		_persistence.countByUuid("");
+
+		_persistence.countByUuid("null");
+
+		_persistence.countByUuid((String)null);
+	}
+
+	@Test
+	public void testCountByUuid_C() throws Exception {
+		_persistence.countByUuid_C("", RandomTestUtil.nextLong());
+
+		_persistence.countByUuid_C("null", 0L);
+
+		_persistence.countByUuid_C((String)null, 0L);
 	}
 
 	@Test
@@ -280,10 +308,11 @@ public class AccountEntryPersistenceTest {
 
 	protected OrderByComparator<AccountEntry> getOrderByComparator() {
 		return OrderByComparatorFactoryUtil.create(
-			"AccountEntry", "mvccVersion", true, "externalReferenceCode", true,
-			"accountEntryId", true, "companyId", true, "userId", true,
-			"userName", true, "createDate", true, "modifiedDate", true,
-			"defaultBillingAddressId", true, "defaultShippingAddressId", true,
+			"AccountEntry", "mvccVersion", true, "uuid", true,
+			"externalReferenceCode", true, "accountEntryId", true, "companyId",
+			true, "userId", true, "userName", true, "createDate", true,
+			"modifiedDate", true, "defaultBillingAddressId", true,
+			"defaultCPaymentMethodKey", true, "defaultShippingAddressId", true,
 			"parentAccountEntryId", true, "description", true, "domains", true,
 			"emailAddress", true, "logoId", true, "name", true,
 			"taxExemptionCode", true, "taxIdNumber", true, "type", true,
@@ -573,6 +602,8 @@ public class AccountEntryPersistenceTest {
 
 		accountEntry.setMvccVersion(RandomTestUtil.nextLong());
 
+		accountEntry.setUuid(RandomTestUtil.randomString());
+
 		accountEntry.setExternalReferenceCode(RandomTestUtil.randomString());
 
 		accountEntry.setCompanyId(RandomTestUtil.nextLong());
@@ -586,6 +617,8 @@ public class AccountEntryPersistenceTest {
 		accountEntry.setModifiedDate(RandomTestUtil.nextDate());
 
 		accountEntry.setDefaultBillingAddressId(RandomTestUtil.nextLong());
+
+		accountEntry.setDefaultCPaymentMethodKey(RandomTestUtil.randomString());
 
 		accountEntry.setDefaultShippingAddressId(RandomTestUtil.nextLong());
 

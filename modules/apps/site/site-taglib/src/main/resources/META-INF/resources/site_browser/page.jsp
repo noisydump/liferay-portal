@@ -17,12 +17,11 @@
 <%@ include file="/site_browser/init.jsp" %>
 
 <%
-String eventName = GetterUtil.getString(request.getAttribute("liferay-site:site-browser:eventName"));
 long[] selectedGroupIds = GetterUtil.getLongValues(request.getAttribute("liferay-site:site-browser:selectedGroupIds"));
 %>
 
-<clay:management-toolbar-v2
-	displayContext="<%= new SiteBrowserManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, siteBrowserDisplayContext) %>"
+<clay:management-toolbar
+	managementToolbarDisplayContext="<%= new SiteBrowserManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, siteBrowserDisplayContext) %>"
 />
 
 <aui:form action="<%= siteBrowserDisplayContext.getPortletURL() %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="selectGroupFm">
@@ -71,7 +70,7 @@ long[] selectedGroupIds = GetterUtil.getLongValues(request.getAttribute("liferay
 									</span>
 								</c:when>
 								<c:otherwise>
-									<aui:a cssClass="selector-button" data="<%= data %>" href="javascript:;">
+									<aui:a cssClass="selector-button" data="<%= data %>" href="javascript:void(0);">
 										<%= HtmlUtil.escape(group.getDescriptiveName(locale)) %>
 									</aui:a>
 								</c:otherwise>
@@ -102,7 +101,7 @@ long[] selectedGroupIds = GetterUtil.getLongValues(request.getAttribute("liferay
 								</span>
 							</c:when>
 							<c:otherwise>
-								<aui:a cssClass="selector-button" data="<%= data %>" href="javascript:;">
+								<aui:a cssClass="selector-button" data="<%= data %>" href="javascript:void(0);">
 									<%= HtmlUtil.escape(group.getDescriptiveName(locale)) %>
 								</aui:a>
 							</c:otherwise>
@@ -123,10 +122,3 @@ long[] selectedGroupIds = GetterUtil.getLongValues(request.getAttribute("liferay
 		/>
 	</liferay-ui:search-container>
 </aui:form>
-
-<aui:script use="aui-base">
-	Liferay.Util.selectEntityHandler(
-		'#<portlet:namespace />selectGroupFm',
-		'<%= HtmlUtil.escapeJS(eventName) %>'
-	);
-</aui:script>

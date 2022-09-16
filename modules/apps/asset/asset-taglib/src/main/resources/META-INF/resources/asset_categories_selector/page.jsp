@@ -31,9 +31,9 @@ List<Map<String, Object>> vocabularies = (List<Map<String, Object>>)data.get("vo
 		%>
 
 			<div class="field-content">
-				<div class="form-group" id="<%= "namespace_assetCategoriesSelector_" + vocabularyId %>">
+				<div class="form-group" id="namespace_assetCategoriesSelector_<%= vocabularyId %>">
 					<c:if test='<%= Validator.isNotNull(vocabulary.get("title")) %>'>
-						<label>
+						<label for="namespace_assetCategoriesSelector_<%= vocabularyId %>_MultiSelect">
 							<%= HtmlUtil.escape(GetterUtil.getString(vocabulary.get("title"))) %>
 
 							<c:if test='<%= GetterUtil.getBoolean(vocabulary.get("required")) %>'>
@@ -42,7 +42,7 @@ List<Map<String, Object>> vocabularies = (List<Map<String, Object>>)data.get("vo
 										symbol="asterisk"
 									/>
 
-									<span class="hide-accessible">
+									<span class="hide-accessible sr-only">
 										<liferay-ui:message key="required" />
 									</span>
 								</span>
@@ -67,7 +67,7 @@ List<Map<String, Object>> vocabularies = (List<Map<String, Object>>)data.get("vo
 
 											<clay:label
 												dismissible="<%= true %>"
-												label='<%= GetterUtil.getString(selectedItem.get("label")) %>'
+												label='<%= HtmlUtil.escape(GetterUtil.getString(selectedItem.get("label"))) %>'
 											/>
 
 											<input name="<%= (String)data.get("inputName") %>" type="hidden" value="<%= GetterUtil.getString(selectedItem.get("value")) %>" />
@@ -78,7 +78,7 @@ List<Map<String, Object>> vocabularies = (List<Map<String, Object>>)data.get("vo
 
 									</c:if>
 
-									<input class="form-control-inset" type="text" value="" />
+									<input class="form-control-inset" id="namespace_assetCategoriesSelector_<%= vocabularyId %>_MultiSelect" type="text" value="" />
 								</div>
 							</div>
 						</div>

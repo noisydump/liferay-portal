@@ -51,7 +51,6 @@ import com.liferay.site.util.RecentGroupManager;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.portlet.PortletURL;
 import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceResponse;
 
@@ -209,13 +208,19 @@ public class ApplicationsMenuPanelAppsMVCResourceCommand
 				themeDisplay.getScopeGroup());
 
 		for (PanelCategory panelCategory : applicationsMenuPanelCategories) {
-			JSONArray childPanelCategoriesJSONArray =
+			JSONArray childCategoriesJSONArray =
 				_getChildPanelCategoriesJSONArray(
 					httpServletRequest, panelCategory.getKey(), themeDisplay);
 
+			if ((childCategoriesJSONArray == null) ||
+				(childCategoriesJSONArray.length() <= 0)) {
+
+				continue;
+			}
+
 			panelCategoriesJSONArray.put(
 				JSONUtil.put(
-					"childCategories", childPanelCategoriesJSONArray
+					"childCategories", childCategoriesJSONArray
 				).put(
 					"key", panelCategory.getKey()
 				).put(
@@ -330,12 +335,11 @@ public class ApplicationsMenuPanelAppsMVCResourceCommand
 		siteItemSelectorCriterion.setDesiredItemSelectorReturnTypes(
 			new URLItemSelectorReturnType());
 
-		PortletURL itemSelectorURL = _itemSelector.getItemSelectorURL(
-			RequestBackedPortletURLFactoryUtil.create(resourceRequest),
-			resourceResponse.getNamespace() + "selectSite",
-			siteItemSelectorCriterion);
-
-		return itemSelectorURL.toString();
+		return String.valueOf(
+			_itemSelector.getItemSelectorURL(
+				RequestBackedPortletURLFactoryUtil.create(resourceRequest),
+				resourceResponse.getNamespace() + "selectSite",
+				siteItemSelectorCriterion));
 	}
 
 	private boolean _isApplicationMenuApp(

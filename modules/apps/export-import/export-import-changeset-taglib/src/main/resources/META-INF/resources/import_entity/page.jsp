@@ -17,16 +17,16 @@
 <%@ include file="/import_entity/init.jsp" %>
 
 <c:if test="<%= GroupPermissionUtil.contains(permissionChecker, themeDisplay.getScopeGroup(), ActionKeys.EXPORT_IMPORT_PORTLET_INFO) %>">
-
-	<%
-	PortletURL portletURL = PortletURLFactoryUtil.create(request, ExportImportPortletKeys.EXPORT_IMPORT, PortletRequest.RENDER_PHASE);
-
-	portletURL.setParameter("mvcPath", "/import_portlet.jsp");
-	portletURL.setParameter("portletResource", ChangesetPortletKeys.CHANGESET);
-	%>
-
-	<liferay-frontend:add-menu-item
-		title='<%= LanguageUtil.get(resourceBundle, "import") %>'
-		url="<%= portletURL.toString() %>"
+	<liferay-ui:icon
+		message="import"
+		url='<%=
+			PortletURLBuilder.create(
+				PortletURLFactoryUtil.create(request, ExportImportPortletKeys.EXPORT_IMPORT, PortletRequest.RENDER_PHASE)
+			).setMVCPath(
+				"/import_portlet.jsp"
+			).setParameter(
+				"portletResource", ChangesetPortletKeys.CHANGESET
+			).buildString()
+		%>'
 	/>
 </c:if>

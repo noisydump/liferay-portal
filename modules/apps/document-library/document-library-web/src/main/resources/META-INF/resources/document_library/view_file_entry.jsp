@@ -41,7 +41,7 @@ if (portletTitleBasedNavigation) {
 }
 %>
 
-<div class="<%= portletTitleBasedNavigation ? StringPool.BLANK : "closed sidenav-container sidenav-right" %>" id="<%= liferayPortletResponse.getNamespace() + (portletTitleBasedNavigation ? "FileEntry" : "infoPanelId") %>">
+<div class="<%= portletTitleBasedNavigation ? StringPool.BLANK : "closed sidenav-container sidenav-right" %>" id="<%= liferayPortletResponse.getNamespace() + (portletTitleBasedNavigation ? "FileEntry" : ("infoPanelId_" + fileEntry.getFileEntryId())) %>">
 	<c:if test="<%= portletTitleBasedNavigation %>">
 		<liferay-util:include page="/document_library/file_entry_upper_tbar.jsp" servletContext="<%= application %>" />
 	</c:if>
@@ -68,7 +68,7 @@ if (portletTitleBasedNavigation) {
 
 	<c:choose>
 		<c:when test="<%= portletTitleBasedNavigation %>">
-			<div class="contextual-sidebar sidebar-light sidebar-preview" id="<%= liferayPortletResponse.getNamespace() + "ContextualSidebar" %>">
+			<div class="contextual-sidebar sidebar-light sidebar-preview" id="<portlet:namespace />ContextualSidebar">
 
 				<%
 				request.setAttribute("info_panel.jsp-fileEntry", dlViewFileEntryDisplayContext.getFileEntry());
@@ -98,8 +98,9 @@ if (portletTitleBasedNavigation) {
 
 			<c:if test="<%= !portletTitleBasedNavigation %>">
 				<div class="file-entry-actions">
-					<liferay-frontend:management-bar-sidenav-toggler-button
+					<liferay-frontend:sidebar-toggler-button
 						label="info"
+						sidenavId='<%= liferayPortletResponse.getNamespace() + "infoPanelId_" + fileEntry.getFileEntryId() %>'
 					/>
 
 					<%
@@ -156,10 +157,34 @@ if (portletTitleBasedNavigation) {
 	<liferay-util:include page="/document_library/version_details.jsp" servletContext="<%= application %>" />
 </c:if>
 
-<portlet:renderURL var="selectFolderURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
-	<portlet:param name="mvcRenderCommandName" value="/document_library/select_folder" />
-	<portlet:param name="folderId" value="<%= String.valueOf(fileEntry.getFolderId()) %>" />
-</portlet:renderURL>
+<div>
+	<portlet:actionURL name="/document_library/edit_file_entry_image_editor" var="editImageURL" />
+
+	<react:component
+		module="document_library/js/image-editor/EditImageWithImageEditor"
+		props='<%=
+			HashMapBuilder.<String, Object>put(
+				"editImageURL", editImageURL
+			).put(
+				"redirectURL", currentURL
+			).build()
+		%>'
+	/>
+</div>
+
+<%
+ItemSelector itemSelector = (ItemSelector)request.getAttribute(ItemSelector.class.getName());
+
+FolderItemSelectorCriterion folderItemSelectorCriterion = new FolderItemSelectorCriterion();
+
+folderItemSelectorCriterion.setDesiredItemSelectorReturnTypes(new FolderItemSelectorReturnType());
+folderItemSelectorCriterion.setFolderId(fileEntry.getFolderId());
+folderItemSelectorCriterion.setRepositoryId(fileEntry.getRepositoryId());
+folderItemSelectorCriterion.setSelectedFolderId(fileEntry.getFolderId());
+folderItemSelectorCriterion.setSelectedRepositoryId(fileEntry.getRepositoryId());
+
+PortletURL selectFolderURL = itemSelector.getItemSelectorURL(RequestBackedPortletURLFactoryUtil.create(request), portletDisplay.getNamespace() + "folderSelected", folderItemSelectorCriterion);
+%>
 
 <portlet:actionURL name="/document_library/edit_entry" var="editEntryURL" />
 
@@ -172,8 +197,13 @@ if (portletTitleBasedNavigation) {
 		var namespace = '<portlet:namespace />';
 
 		Liferay.Util.openSelectionModal({
-			id: namespace + 'selectFolder',
+			selectEventName: '<portlet:namespace />folderSelected',
+			multiple: false,
 			onSelect: function (selectedItem) {
+				if (!selectedItem) {
+					return;
+				}
+
 				var form = document.getElementById(namespace + 'fm');
 
 				if (parameterName && parameterValue) {
@@ -191,10 +221,9 @@ if (portletTitleBasedNavigation) {
 
 				submitForm(form, actionUrl, false);
 			},
-			selectEventName: namespace + 'selectFolder',
 			title:
 				'<liferay-ui:message arguments="<%= 1 %>" key="select-destination-folder-for-x-items" translateArguments="<%= false %>" />',
-			url: '<%= selectFolderURL.toString() %>',
+			url: '<%= HtmlUtil.escapeJS(selectFolderURL.toString()) %>',
 		});
 	}
 </aui:script>
@@ -206,7 +235,7 @@ if (portletTitleBasedNavigation) {
 		);
 
 		if (openContextualSidebarButton) {
-			openContextualSidebarButton.addEventListener('click', function (event) {
+			openContextualSidebarButton.addEventListener('click', (event) => {
 				event.currentTarget.classList.toggle('active');
 
 				document
@@ -218,3 +247,5 @@ if (portletTitleBasedNavigation) {
 </c:if>
 
 <liferay-util:dynamic-include key="com.liferay.document.library.web#/document_library/view_file_entry.jsp#post" />
+
+<%@ include file="/document_library/friendly_url_changed_message.jspf" %>

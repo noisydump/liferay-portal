@@ -2,13 +2,17 @@
 <head>
 <title>KaleoFormsAdminViewProcessRecords</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">KaleoFormsAdminViewProcessRecords</td></tr>
 </thead>
+
 <tbody>
+
 <!--RECORD_TABLE-->
+
 <tr>
 	<td>RECORD_TABLE_RECORD</td>
 	<td>//td[contains(.,'${key_kfProcessFieldData}')]</td>
@@ -29,7 +33,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--EXPORT_DIALOG_BOX-->
+
 <tr>
 	<td>EXPORT_DIALOG_BOX_FILE_EXTENSION_SELECT</td>
 	<td>//select[contains(@id,'fileExtension')]</td>
@@ -43,6 +49,11 @@
 <tr>
 	<td>EXPORT_DIALOG_BOX_OK_BUTTON</td>
 	<td>//div[contains(@class,'kaleo-process-export-dialog')]//button[contains(.,'OK')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>EXPORT_TABLE_MODAL</td>
+	<td>//div[contains(@class,'modal-content kaleo-process-export')]</td>
 	<td></td>
 </tr>
 </tbody>

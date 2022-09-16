@@ -40,6 +40,16 @@
 	<#assign useCache = "useFinderCache && productionMode" />
 </#if>
 
+<#if osgiModule && serviceBuilder.isVersionGTE_7_4_0() && entity.hasUuid()>
+	<#assign
+		portalUUID = "_portalUUID"
+	/>
+<#else>
+	<#assign
+		portalUUID = "PortalUUIDUtil"
+	/>
+</#if>
+
 package ${packagePath}.service.persistence.impl;
 
 import ${serviceBuilder.getCompatJavaClassName("StringBundler")};
@@ -56,6 +66,7 @@ import ${apiPackagePath}.model.${entity.name};
 import ${packagePath}.model.impl.${entity.name}Impl;
 import ${packagePath}.model.impl.${entity.name}ModelImpl;
 import ${apiPackagePath}.service.persistence.${entity.name}Persistence;
+import ${apiPackagePath}.service.persistence.${entity.name}Util;
 
 <#if entity.hasCompoundPK()>
 	import ${apiPackagePath}.service.persistence.${entity.PKClassName};
@@ -117,6 +128,7 @@ import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.uuid.PortalUUID;
 import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 import com.liferay.portal.spring.extender.service.ServiceReference;
 import com.liferay.registry.Registry;
@@ -177,6 +189,21 @@ import org.osgi.service.component.annotations.Reference;
 		</#if>
 	</#if>
 </#list>
+
+<#if entity.localizedEntity??>
+	<#assign localizedEntity = entity.localizedEntity />
+
+	import ${apiPackagePath}.service.persistence.${localizedEntity.name}Persistence;
+</#if>
+
+<#if entity.versionedEntity?? && entity.versionedEntity.localizedEntity??>
+	<#assign
+		versionedEntity = entity.versionedEntity
+		localizedVersionEntity = versionedEntity.localizedEntity.versionEntity
+	/>
+
+	import ${apiPackagePath}.service.persistence.${localizedVersionEntity.name}Persistence;
+</#if>
 
 /**
  * The persistence implementation for the ${entity.humanName} service.
@@ -348,6 +375,8 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 		</#if>
 	}
 
+	private int _valueObjectFinderCacheListThreshold;
+
 	/**
 	 * Caches the ${entity.pluralHumanName} in the entity cache if it is enabled.
 	 *
@@ -355,6 +384,15 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 	 */
 	@Override
 	public void cacheResult(List<${entity.name}> ${entity.pluralVariableName}) {
+		<#if serviceBuilder.isVersionGTE_7_0_0()>
+			if ((_valueObjectFinderCacheListThreshold == 0) ||
+				((_valueObjectFinderCacheListThreshold > 0) &&
+				 (${entity.pluralVariableName}.size() > _valueObjectFinderCacheListThreshold))) {
+
+				return;
+			}
+		</#if>
+
 		for (${entity.name} ${entity.variableName} : ${entity.pluralVariableName}) {
 			<#if entity.isChangeTrackingEnabled()>
 				if (${entity.variableName}.getCtCollectionId() != 0) {
@@ -366,17 +404,39 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 				}
 			</#if>
 
-			if (${entityCache}.getResult(
-				<#if serviceBuilder.isVersionLTE_7_2_0()>
-					${entityCacheEnabled},
-				</#if>
-				${entity.name}Impl.class, ${entity.variableName}.getPrimaryKey()) == null) {
-				cacheResult(${entity.variableName});
-			}
-			<#if serviceBuilder.isVersionLTE_7_2_0()>
-				else {
-					${entity.variableName}.resetOriginalValues();
+			<#if (cacheFields?size > 0)>
+				${entity.name} cached${entity.name} = (${entity.name})${entityCache}.getResult(
+					<#if serviceBuilder.isVersionLTE_7_2_0()>
+						${entityCacheEnabled},
+					</#if>
+					${entity.name}Impl.class, ${entity.variableName}.getPrimaryKey());
+
+				if (cached${entity.name} == null) {
+					cacheResult(${entity.variableName});
 				}
+				else {
+					${entity.name}ModelImpl ${entity.variableName}ModelImpl = (${entity.name}ModelImpl)${entity.variableName};
+					${entity.name}ModelImpl cached${entity.name}ModelImpl = (${entity.name}ModelImpl)cached${entity.name};
+
+					<#list cacheFields as cacheField>
+						<#assign methodName = serviceBuilder.getCacheFieldMethodName(cacheField) />
+
+						${entity.variableName}ModelImpl.set${methodName}(cached${entity.name}ModelImpl.get${methodName}());
+					</#list>
+				}
+			<#else>
+				if (${entityCache}.getResult(
+					<#if serviceBuilder.isVersionLTE_7_2_0()>
+						${entityCacheEnabled},
+					</#if>
+					${entity.name}Impl.class, ${entity.variableName}.getPrimaryKey()) == null) {
+					cacheResult(${entity.variableName});
+				}
+				<#if serviceBuilder.isVersionLTE_7_2_0()>
+					else {
+						${entity.variableName}.resetOriginalValues();
+					}
+				</#if>
 			</#if>
 		}
 	}
@@ -586,7 +646,7 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 		${entity.variableName}.setPrimaryKey(${entity.PKVariableName});
 
 		<#if entity.hasUuid()>
-			String uuid = PortalUUIDUtil.generate();
+			String uuid = ${portalUUID}.generate();
 
 			${entity.variableName}.setUuid(uuid);
 		</#if>
@@ -657,6 +717,25 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 			</#if>
 		</#list>
 
+		<#if entity.localizedEntity??>
+			<#assign
+				localizedEntity = entity.localizedEntity
+				pkEntityColumn = entity.PKEntityColumns?first
+			/>
+
+			${localizedEntity.variableName}Persistence.removeBy${pkEntityColumn.methodName}(${entity.variableName}.get${pkEntityColumn.methodName}());
+		</#if>
+
+		<#if entity.versionedEntity?? && entity.versionedEntity.localizedEntity??>
+			<#assign
+				versionedEntity = entity.versionedEntity
+				localizedVersionEntity = versionedEntity.localizedEntity.versionEntity
+				pkEntityColumn = versionedEntity.PKEntityColumns?first
+			/>
+
+			${localizedVersionEntity.variableName}Persistence.removeBy${pkEntityColumn.methodName}_Version(${entity.variableName}.getVersionedModelId(), ${entity.variableName}.getVersion());
+		</#if>
+
 		Session session = null;
 
 		try {
@@ -707,7 +786,7 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 	public ${entity.name} updateImpl(${apiPackagePath}.model.${entity.name} ${entity.variableName}) {
 		boolean isNew = ${entity.variableName}.isNew();
 
-		<#if entity.isHierarchicalTree() || (entity.collectionEntityFinders?size != 0) || (entity.uniqueEntityFinders?size &gt; 0) || (entity.hasEntityColumn("createDate", "Date") && entity.hasEntityColumn("modifiedDate", "Date"))>
+		<#if entity.isHierarchicalTree() || (entity.collectionEntityFinders?size != 0) || (entity.uniqueEntityFinders?size &gt; 0) || entity.hasEntityColumn("createDate", "Date") || entity.hasEntityColumn("modifiedDate", "Date")>
 			if (!(${entity.variableName} instanceof ${entity.name}ModelImpl)) {
 				InvocationHandler invocationHandler = null;
 
@@ -725,32 +804,60 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 
 		<#if entity.hasUuid()>
 			if (Validator.isNull(${entity.variableName}.getUuid())) {
-				String uuid = PortalUUIDUtil.generate();
+				String uuid = ${portalUUID}.generate();
 
 				${entity.variableName}.setUuid(uuid);
+			}
+		</#if>
+
+		<#if entity.hasExternalReferenceCode() || entity.hasEntityColumn("externalReferenceCode")>
+			if (Validator.isNull(${entity.variableName}.getExternalReferenceCode())) {
+				<#if entity.hasUuid()>
+					${entity.variableName}.setExternalReferenceCode(${entity.variableName}.getUuid());
+				<#else>
+					${entity.variableName}.setExternalReferenceCode(String.valueOf(${entity.variableName}.getPrimaryKey()));
+				</#if>
 			}
 		</#if>
 
 		<#if entity.hasEntityColumn("createDate", "Date") && entity.hasEntityColumn("modifiedDate", "Date")>
 			ServiceContext serviceContext = ServiceContextThreadLocal.getServiceContext();
 
-			Date now = new Date();
+			Date date = new Date();
+		</#if>
 
+		<#if entity.hasEntityColumn("createDate", "Date")>
 			if (isNew && (${entity.variableName}.getCreateDate() == null)) {
+
+			<#if !entity.hasEntityColumn("modifiedDate", "Date")>
+				ServiceContext serviceContext = ServiceContextThreadLocal.getServiceContext();
+
+				Date date = new Date();
+			</#if>
+
 				if (serviceContext == null) {
-					${entity.variableName}.setCreateDate(now);
+					${entity.variableName}.setCreateDate(date);
 				}
 				else {
-					${entity.variableName}.setCreateDate(serviceContext.getCreateDate(now));
+					${entity.variableName}.setCreateDate(serviceContext.getCreateDate(date));
 				}
 			}
+		</#if>
 
+		<#if entity.hasEntityColumn("modifiedDate", "Date")>
 			if (!${entity.variableName}ModelImpl.hasSetModifiedDate()) {
+
+			<#if !entity.hasEntityColumn("createDate", "Date")>
+				ServiceContext serviceContext = ServiceContextThreadLocal.getServiceContext();
+
+				Date date = new Date();
+			</#if>
+
 				if (serviceContext == null) {
-					${entity.variableName}.setModifiedDate(now);
+					${entity.variableName}.setModifiedDate(date);
 				}
 				else {
-					${entity.variableName}.setModifiedDate(serviceContext.getModifiedDate(now));
+					${entity.variableName}.setModifiedDate(serviceContext.getModifiedDate(date));
 				}
 			}
 		</#if>
@@ -1135,7 +1242,11 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 		 */
 		@Override
 		public ${entity.name} fetchByPrimaryKey(Serializable primaryKey) {
-			if (${ctPersistenceHelper}.isProductionMode(${entity.name}.class)) {
+			<#if serviceBuilder.isVersionGTE_7_3_0()>
+				if (${ctPersistenceHelper}.isProductionMode(${entity.name}.class, primaryKey)) {
+			<#else>
+				if (${ctPersistenceHelper}.isProductionMode(${entity.name}.class)) {
+			</#if>
 				return super.fetchByPrimaryKey(primaryKey);
 			}
 
@@ -1207,6 +1318,24 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 
 					return map;
 				}
+
+				<#if serviceBuilder.isVersionGTE_7_1_0()>
+					if ((databaseInMaxParameters > 0) && (primaryKeys.size() > databaseInMaxParameters)) {
+						Iterator<Serializable> iterator = primaryKeys.iterator();
+
+						while (iterator.hasNext()) {
+							Set<Serializable> page = new HashSet<>();
+
+							for (int i = 0; (i < databaseInMaxParameters) && iterator.hasNext(); i++) {
+								page.add(iterator.next());
+							}
+
+							map.putAll(fetchByPrimaryKeys(page));
+						}
+
+						return map;
+					}
+				</#if>
 
 				Set<Serializable> uncachedPrimaryKeys = null;
 
@@ -1314,6 +1443,22 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 
 				if (${entity.variableName} != null) {
 					map.put(primaryKey, ${entity.variableName});
+				}
+
+				return map;
+			}
+
+			if ((databaseInMaxParameters > 0) && (primaryKeys.size() > databaseInMaxParameters)) {
+				Iterator<Serializable> iterator = primaryKeys.iterator();
+
+				while (iterator.hasNext()) {
+					Set<Serializable> page = new HashSet<>();
+
+					for (int i = 0; (i < databaseInMaxParameters) && iterator.hasNext();i++) {
+						page.add(iterator.next());
+					}
+
+					map.putAll(fetchByPrimaryKeys(page));
 				}
 
 				return map;
@@ -1954,7 +2099,7 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 	<#if entity.isChangeTrackingEnabled()>
 		@Override
 		public Set<String> getCTColumnNames(CTColumnResolutionType ctColumnResolutionType) {
-			return _ctColumnNamesMap.get(ctColumnResolutionType);
+			return _ctColumnNamesMap.getOrDefault(ctColumnResolutionType, Collections.emptySet());
 		}
 
 		@Override
@@ -1982,28 +2127,25 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 		private static final List<String[]> _uniqueIndexColumnNames = new ArrayList<String[]>();
 
 		static {
-			Set<String> ctControlColumnNames = new HashSet<String>();
-			Set<String> ctIgnoreColumnNames = new HashSet<String>();
-			Set<String> ctMergeColumnNames = new HashSet<String>();
-			Set<String> ctStrictColumnNames = new HashSet<String>();
-
-			<#list entity.entityColumns as entityColumn>
-				<#if entityColumn.isChangeTrackingControl()>
-					ctControlColumnNames.add("${entityColumn.DBName}");
-				<#elseif entityColumn.isChangeTrackingIgnore()>
-					ctIgnoreColumnNames.add("${entityColumn.DBName}");
-				<#elseif entityColumn.isChangeTrackingMerge()>
-					ctMergeColumnNames.add("${entityColumn.DBName}");
-				<#elseif entityColumn.isChangeTrackingStrict()>
-					ctStrictColumnNames.add("${entityColumn.DBName}");
+			<#list entity.getCTColumnResolutionTypeNames() as ctColumnResolutionTypeName>
+				<#if !stringUtil.equals(ctColumnResolutionTypeName, "Pk")>
+					Set<String> ct${ctColumnResolutionTypeName}ColumnNames = new HashSet<String>();
 				</#if>
 			</#list>
 
-			_ctColumnNamesMap.put(CTColumnResolutionType.CONTROL, ctControlColumnNames);
-			_ctColumnNamesMap.put(CTColumnResolutionType.IGNORE, ctIgnoreColumnNames);
-			_ctColumnNamesMap.put(CTColumnResolutionType.MERGE, ctMergeColumnNames);
-			_ctColumnNamesMap.put(CTColumnResolutionType.PK, Collections.singleton("${entity.PKDBName}"));
-			_ctColumnNamesMap.put(CTColumnResolutionType.STRICT, ctStrictColumnNames);
+			<#list entity.entityColumns as entityColumn>
+				<#if !stringUtil.equals(entityColumn.getCTColumnResolutionTypeName(), "Pk")>
+					ct${entityColumn.getCTColumnResolutionTypeName()}ColumnNames.add("${entityColumn.DBName}");
+				</#if>
+			</#list>
+
+			<#list entity.getCTColumnResolutionTypeNames() as ctColumnResolutionTypeName>
+				<#if stringUtil.equals(ctColumnResolutionTypeName, "Pk")>
+					_ctColumnNamesMap.put(CTColumnResolutionType.${stringUtil.toUpperCase(ctColumnResolutionTypeName)}, Collections.singleton("${entity.PKDBName}"));
+				<#else>
+					_ctColumnNamesMap.put(CTColumnResolutionType.${stringUtil.toUpperCase(ctColumnResolutionTypeName)}, ct${ctColumnResolutionTypeName}ColumnNames);
+				</#if>
+			</#list>
 
 			<#list entity.entityColumns as entityColumn>
 				<#if entityColumn.isCollection() && entityColumn.isMappingManyToMany()>
@@ -2279,7 +2421,9 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 	 */
 	<#if dependencyInjectorDS>
 		@Activate
-		<#if serviceBuilder.isVersionGTE_7_3_0()>
+		<#if serviceBuilder.isVersionGTE_7_4_0()>
+			public void activate() {
+		<#elseif serviceBuilder.isVersionGTE_7_3_0()>
 			public void activate(BundleContext bundleContext) {
 				_bundleContext = bundleContext;
 		<#else>
@@ -2290,8 +2434,7 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 	<#else>
 		public void afterPropertiesSet() {
 	</#if>
-
-		<#if serviceBuilder.isVersionGTE_7_3_0()>
+		<#if serviceBuilder.isVersionGTE_7_3_0() && serviceBuilder.isVersionLTE_7_3_0()>
 			<#if osgiModule>
 				<#if !dependencyInjectorDS>
 					Bundle bundle = FrameworkUtil.getBundle(${entity.name}PersistenceImpl.class);
@@ -2301,24 +2444,26 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 
 				_argumentsResolverServiceRegistration = _bundleContext.registerService(
 					ArgumentsResolver.class, new ${entity.name}ModelArgumentsResolver(),
-					<#if serviceBuilder.isVersionGTE_7_4_0()>
-						new HashMapDictionary<>()
-					<#else>
-						MapUtil.singletonDictionary("model.class.name", ${entity.name}.class.getName())
-					</#if>
-				);
+						MapUtil.singletonDictionary("model.class.name", ${entity.name}.class.getName()));
 			<#else>
 				Registry registry = RegistryUtil.getRegistry();
 
 				_argumentsResolverServiceRegistration = registry.registerService(
-					ArgumentsResolver.class, new ${entity.name}ModelArgumentsResolver()
-					<#if serviceBuilder.isVersionLTE_7_3_0()>
-						,
+					ArgumentsResolver.class, new ${entity.name}ModelArgumentsResolver(),
 						HashMapBuilder.<String, Object>put(
 							"model.class.name", ${entity.name}.class.getName()
-						).build()
-					</#if>);
+						).build());
 			</#if>
+		</#if>
+
+		<#if serviceBuilder.isVersionGTE_7_0_0()>
+			_valueObjectFinderCacheListThreshold = GetterUtil.getInteger(PropsUtil.get(
+				<#if serviceBuilder.isVersionGTE_7_1_0()>
+					PropsKeys.VALUE_OBJECT_FINDER_CACHE_LIST_THRESHOLD
+				<#else>
+					"value.object.finder.cache.list.threshold"
+				</#if>
+			));
 		</#if>
 
 		<#list entity.entityColumns as entityColumn>
@@ -2701,6 +2846,8 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 					);
 			</#if>
 		</#list>
+
+		_set${entity.name}UtilPersistence(this);
 	}
 
 	<#if dependencyInjectorDS>
@@ -2710,19 +2857,19 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 		public void destroy() {
 	</#if>
 
+		_set${entity.name}UtilPersistence(null);
+
 		${entityCache}.removeCache(${entity.name}Impl.class.getName());
 
-		<#if serviceBuilder.isVersionGTE_7_3_0()>
+		<#if serviceBuilder.isVersionGTE_7_3_0() && serviceBuilder.isVersionLTE_7_3_0()>
 			_argumentsResolverServiceRegistration.unregister();
 
-			<#if !serviceBuilder.isVersionGTE_7_4_0()>
-				for (ServiceRegistration<FinderPath> serviceRegistration :
-					_serviceRegistrations) {
+			for (ServiceRegistration<FinderPath> serviceRegistration :
+				_serviceRegistrations) {
 
-					serviceRegistration.unregister();
-				}
-			</#if>
-		<#else>
+				serviceRegistration.unregister();
+			}
+		<#elseif serviceBuilder.isVersionLTE_7_2_0()>
 			${finderCache}.removeCache(FINDER_CLASS_NAME_ENTITY);
 			${finderCache}.removeCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
 			${finderCache}.removeCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
@@ -2739,6 +2886,19 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 		</#list>
 	}
 
+	private void _set${entity.name}UtilPersistence(${entity.name}Persistence ${entity.variableName}Persistence) {
+		try {
+			Field field = ${entity.name}Util.class.getDeclaredField("_persistence");
+
+			field.setAccessible(true);
+
+			field.set(null, ${entity.variableName}Persistence);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	<#if dependencyInjectorDS>
 		<#include "persistence_references.ftl">
 
@@ -2748,7 +2908,7 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 	</#if>
 
 	<#if osgiModule>
-		<#if serviceBuilder.isVersionGTE_7_3_0()>
+		<#if serviceBuilder.isVersionGTE_7_3_0() && serviceBuilder.isVersionLTE_7_3_0()>
 			private BundleContext _bundleContext;
 		</#if>
 
@@ -2791,6 +2951,33 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 			protected TableMapper<${entity.name}, ${referenceEntity.apiPackagePath}.model.${referenceEntity.name}> ${entity.variableName}To${referenceEntity.name}TableMapper;
 		</#if>
 	</#list>
+
+	<#if entity.localizedEntity??>
+		<#assign localizedEntity = entity.localizedEntity />
+
+		<#if dependencyInjectorDS>
+			@Reference
+		<#else>
+			@BeanReference(type = ${localizedEntity.name}Persistence.class)
+		</#if>
+
+		protected ${localizedEntity.name}Persistence ${localizedEntity.variableName}Persistence;
+	</#if>
+
+	<#if entity.versionedEntity?? && entity.versionedEntity.localizedEntity??>
+		<#assign
+			versionedEntity = entity.versionedEntity
+			localizedVersionEntity = versionedEntity.localizedEntity.versionEntity
+		/>
+
+		<#if dependencyInjectorDS>
+			@Reference
+		<#else>
+			@BeanReference(type = ${localizedVersionEntity.name}Persistence.class)
+		</#if>
+
+		protected ${localizedVersionEntity.name}Persistence ${localizedVersionEntity.variableName}Persistence;
+	</#if>
 
 	<#if entity.isHierarchicalTree()>
 		protected NestedSetsTreeManager<${entity.name}> nestedSetsTreeManager = new PersistenceNestedSetsTreeManager<${entity.name}>(this, "${entity.table}", "${entity.name}", ${entity.name}Impl.class, "${pkEntityColumn.DBName}", "${scopeEntityColumn.DBName}", "left${pkEntityColumn.methodName}", "right${pkEntityColumn.methodName}");
@@ -2914,121 +3101,50 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 		}
 	</#if>
 
-	<#if serviceBuilder.isVersionGTE_7_3_0()>
-		<#if serviceBuilder.isVersionLTE_7_3_0()>
-			private FinderPath _createFinderPath(
-				String cacheName, String methodName, String[] params,
-				String[] columnNames, boolean baseModelResult) {
+	<#if serviceBuilder.isVersionGTE_7_3_0() && serviceBuilder.isVersionLTE_7_3_0()>
+		private FinderPath _createFinderPath(
+			String cacheName, String methodName, String[] params,
+			String[] columnNames, boolean baseModelResult) {
 
-				FinderPath finderPath = new FinderPath(cacheName, methodName, params, columnNames, baseModelResult);
+			FinderPath finderPath = new FinderPath(cacheName, methodName, params, columnNames, baseModelResult);
 
-				if (!cacheName.equals(FINDER_CLASS_NAME_LIST_WITH_PAGINATION)) {
-					<#if osgiModule>
-						_serviceRegistrations.add(_bundleContext.registerService(FinderPath.class, finderPath, MapUtil.singletonDictionary("cache.name", cacheName)));
-					<#else>
-						Registry registry = RegistryUtil.getRegistry();
+			if (!cacheName.equals(FINDER_CLASS_NAME_LIST_WITH_PAGINATION)) {
+				<#if osgiModule>
+					_serviceRegistrations.add(_bundleContext.registerService(FinderPath.class, finderPath, MapUtil.singletonDictionary("cache.name", cacheName)));
+				<#else>
+					Registry registry = RegistryUtil.getRegistry();
 
-						_serviceRegistrations.add(
-							registry.registerService(
-								FinderPath.class, finderPath,
-								HashMapBuilder.<String, Object>put(
-									"cache.name", cacheName
-								).build()));
-					</#if>
-				}
-
-				return finderPath;
+					_serviceRegistrations.add(
+						registry.registerService(
+							FinderPath.class, finderPath,
+							HashMapBuilder.<String, Object>put(
+								"cache.name", cacheName
+							).build()));
+				</#if>
 			}
 
-			private Set<ServiceRegistration<FinderPath>> _serviceRegistrations = new HashSet<>();
-		</#if>
+			return finderPath;
+		}
+
+		private Set<ServiceRegistration<FinderPath>> _serviceRegistrations = new HashSet<>();
 
 		private ServiceRegistration<ArgumentsResolver> _argumentsResolverServiceRegistration;
 
-		private static class ${entity.name}ModelArgumentsResolver implements ArgumentsResolver {
+		<#include "model_arguments_resolver.ftl">
+	</#if>
 
-			@Override
-			public Object[] getArguments(
-				FinderPath finderPath, BaseModel<?> baseModel,
-				boolean checkColumn, boolean original) {
+	<#if osgiModule && serviceBuilder.isVersionGTE_7_4_0() && entity.hasUuid()>
+		<#if dependencyInjectorDS>
+			@Reference
+		<#else>
+			@ServiceReference(type = PortalUUID.class)
+		</#if>
+		private PortalUUID ${portalUUID};
+	</#if>
 
-				String[] columnNames = finderPath.getColumnNames();
-
-				if ((columnNames == null) || (columnNames.length == 0)) {
-					if (baseModel.isNew()) {
-						return FINDER_ARGS_EMPTY;
-					}
-
-					return null;
-				}
-
-				${entity.name}ModelImpl ${entity.variableName}ModelImpl = (${entity.name}ModelImpl)baseModel;
-
-				<#if columnBitmaskEnabled>
-					long columnBitmask = ${entity.variableName}ModelImpl.getColumnBitmask();
-
-					if (!checkColumn || (columnBitmask == 0)) {
-						return _getValue(${entity.variableName}ModelImpl, columnNames, original);
-					}
-
-					Long finderPathColumnBitmask = _finderPathColumnBitmasksCache.get(finderPath);
-
-					if (finderPathColumnBitmask == null) {
-						finderPathColumnBitmask = 0L;
-
-						for (String columnName : columnNames) {
-							finderPathColumnBitmask |= ${entity.variableName}ModelImpl.getColumnBitmask(columnName);
-						}
-
-						_finderPathColumnBitmasksCache.put(finderPath, finderPathColumnBitmask);
-					}
-
-					if ((columnBitmask & finderPathColumnBitmask) != 0) {
-						return _getValue(${entity.variableName}ModelImpl, columnNames, original);
-					}
-				<#else>
-					Object[] values = _getValue(${entity.variableName}ModelImpl, columnNames, original);
-
-					if (!checkColumn || !Arrays.equals(values, _getValue(${entity.variableName}ModelImpl, columnNames, !original))) {
-						return values;
-					}
-				</#if>
-
-				return null;
-			}
-
-			<#if serviceBuilder.isVersionGTE_7_4_0()>
-				@Override
-				public String getClassName() {
-					return ${entity.name}Impl.class.getName();
-				}
-
-				@Override
-				public String getTableName() {
-					return ${entity.name}Table.INSTANCE.getTableName();
-				}
-			</#if>
-
-			private Object[] _getValue(${entity.name}ModelImpl ${entity.variableName}ModelImpl, String[] columnNames, boolean original) {
-				Object[] arguments = new Object[columnNames.length];
-
-				for (int i = 0; i < arguments.length; i ++) {
-					String columnName = columnNames[i];
-
-					if (original) {
-						arguments[i] = ${entity.variableName}ModelImpl.getColumnOriginalValue(columnName);
-					}
-					else {
-						arguments[i] = ${entity.variableName}ModelImpl.getColumnValue(columnName);
-					}
-				}
-
-				return arguments;
-			}
-
-			private static Map<FinderPath, Long> _finderPathColumnBitmasksCache = new ConcurrentHashMap<>();
-
-		}
+	<#if serviceBuilder.isVersionGTE_7_4_0() && dependencyInjectorDS>
+		@Reference
+		private ${entity.name}ModelArgumentsResolver _${entity.variableName}ModelArgumentsResolver;
 	</#if>
 }
 

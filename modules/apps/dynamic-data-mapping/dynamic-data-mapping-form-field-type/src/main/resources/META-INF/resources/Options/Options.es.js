@@ -13,9 +13,9 @@
  */
 
 import ClayIcon from '@clayui/icon';
+import {usePrevious} from '@liferay/frontend-js-react-web';
 import classNames from 'classnames';
-import {RulesSupport} from 'dynamic-data-mapping-form-builder';
-import {usePage} from 'dynamic-data-mapping-form-renderer';
+import {RulesSupport, useFormState} from 'data-engine-js-components-web';
 import {openModal} from 'frontend-js-web';
 import React, {useEffect, useRef, useState} from 'react';
 import {DndProvider} from 'react-dnd';
@@ -31,6 +31,7 @@ import {
 	getDefaultOptionValue,
 	isOptionValueGenerated,
 	normalizeFields,
+	normalizeReference,
 	random,
 } from './util.es';
 
@@ -87,6 +88,7 @@ const getInitialOption = (generateOptionValueUsingOptionLabel) => {
 };
 
 const refreshFields = (
+	allowSpecialCharacters,
 	defaultLanguageId,
 	editingLanguageId,
 	generateOptionValueUsingOptionLabel,
@@ -115,15 +117,17 @@ const refreshFields = (
 			generateKeyword: generateOptionValueUsingOptionLabel,
 			...initialOption,
 		},
-	].filter((field) => field && Object.keys(field).length > 0);
+	].filter((field) => field && !!Object.keys(field).length);
 
 	return normalizeFields(
+		allowSpecialCharacters,
 		refreshedFields,
 		generateOptionValueUsingOptionLabel
 	);
 };
 
 const Options = ({
+	allowSpecialCharacters,
 	children,
 	defaultLanguageId,
 	disabled,
@@ -132,7 +136,7 @@ const Options = ({
 	onChange,
 	value = {},
 }) => {
-	const {builderRules} = usePage();
+	const {builderRules} = useFormState();
 
 	const initialOptionRef = useRef(
 		getInitialOption(generateOptionValueUsingOptionLabel)
@@ -148,8 +152,9 @@ const Options = ({
 				);
 			}
 
-			formattedValue[languageId] = formattedValue[languageId].map(
-				(option) => {
+			formattedValue[languageId] = normalizeFields(
+				allowSpecialCharacters,
+				formattedValue[languageId].map((option) => {
 					let newOption = {
 						id: random(),
 						...option,
@@ -173,7 +178,8 @@ const Options = ({
 					}
 
 					return newOption;
-				}
+				}),
+				generateOptionValueUsingOptionLabel
 			);
 		});
 
@@ -189,6 +195,7 @@ const Options = ({
 			[];
 
 		return refreshFields(
+			allowSpecialCharacters,
 			defaultLanguageId,
 			editingLanguageId,
 			generateOptionValueUsingOptionLabel,
@@ -197,42 +204,64 @@ const Options = ({
 		);
 	});
 
+	const prevEditingLanguageId = usePrevious(editingLanguageId);
+
 	useEffect(() => {
-		const availableLanguageIds = Object.getOwnPropertyNames(value);
+		const hasOwnProperty = Object.prototype.hasOwnProperty;
 
-		availableLanguageIds.forEach((languageId) => {
-			normalizedValue[languageId] = value[languageId].map((option) => {
-				if (option.edited) {
-					return option;
-				}
+		if (
+			prevEditingLanguageId !== editingLanguageId ||
+			(!hasOwnProperty.call(normalizedValue, editingLanguageId) &&
+				hasOwnProperty.call(value, editingLanguageId))
+		) {
+			const availableLanguageIds = Object.getOwnPropertyNames(value);
 
-				const {label} = value[defaultLanguageId].find(
-					(defaultOption) => defaultOption.value === option.value
+			availableLanguageIds.forEach((languageId) => {
+				normalizedValue[languageId] = normalizeFields(
+					allowSpecialCharacters,
+					value[languageId].map((option) => {
+						if (option.edited) {
+							return {
+								id: random(),
+								...option,
+							};
+						}
+
+						const {label} = value[languageId].find(
+							(defaultOption) =>
+								defaultOption.value === option.value
+						);
+
+						return {
+							id: random(),
+							...option,
+							label,
+						};
+					}),
+					generateOptionValueUsingOptionLabel
 				);
-
-				return {
-					...option,
-					label,
-				};
 			});
-		});
 
-		const options = normalizedValue[editingLanguageId] || [];
+			const options = normalizedValue[editingLanguageId] || [];
 
-		setFields(
-			refreshFields(
-				defaultLanguageId,
-				editingLanguageId,
-				generateOptionValueUsingOptionLabel,
-				initialOptionRef.current,
-				options
-			)
-		);
+			setFields(
+				refreshFields(
+					allowSpecialCharacters,
+					defaultLanguageId,
+					editingLanguageId,
+					generateOptionValueUsingOptionLabel,
+					initialOptionRef.current,
+					options
+				)
+			);
+		}
 	}, [
+		allowSpecialCharacters,
 		defaultLanguageId,
 		editingLanguageId,
 		generateOptionValueUsingOptionLabel,
 		normalizedValue,
+		prevEditingLanguageId,
 		value,
 	]);
 
@@ -263,10 +292,14 @@ const Options = ({
 					return {
 						...existingValue,
 						label: field.label,
+						reference: field.reference,
 					};
 				}
 
-				return existingValue;
+				return {
+					...existingValue,
+					reference: field.reference,
+				};
 			}
 
 			let copyFrom = editingLanguageId;
@@ -311,7 +344,12 @@ const Options = ({
 	};
 
 	const checkValidReference = (fields, value, fieldName) => {
-		const field = fields.find((field) => field['reference'] === value);
+		const field = fields
+			.filter(({value}) => value !== fieldName)
+			.find(
+				({reference}) =>
+					reference?.toLowerCase() === value?.toLowerCase()
+			);
 
 		return field ? fieldName : null;
 	};
@@ -327,7 +365,7 @@ const Options = ({
 				generateOptionValueUsingOptionLabel
 			);
 		}
-		else if (property == 'reference') {
+		else if (property === 'reference') {
 			setFieldError(
 				checkValidReference(fields, value, fields[index].value)
 			);
@@ -337,9 +375,26 @@ const Options = ({
 	};
 
 	const set = (fields) => {
+		const set = new Set();
+		const normalizedField = fields.map((option) => {
+			if (set.has(option.reference)) {
+				return {
+					...option,
+					reference: option.value,
+				};
+			}
+			else {
+				set.add(option.reference);
+
+				return option;
+			}
+		});
+
 		setFields(fields);
 
-		const synchronizedNormalizedValue = getSynchronizedValue(fields);
+		const synchronizedNormalizedValue = getSynchronizedValue(
+			normalizedField
+		);
 
 		onChange(synchronizedNormalizedValue);
 	};
@@ -404,10 +459,22 @@ const Options = ({
 		return [fields];
 	};
 
-	const normalize = (fields) => {
+	const normalize = (fields, index) => {
 		clearError();
 
-		return [normalizeFields(fields, generateOptionValueUsingOptionLabel)];
+		fields[index]['reference'] = normalizeReference(
+			fields,
+			fields[index],
+			index
+		);
+
+		return [
+			normalizeFields(
+				allowSpecialCharacters,
+				fields,
+				generateOptionValueUsingOptionLabel
+			),
+		];
 	};
 
 	const composedAdd = compose(clone, dedup, add, set);
@@ -452,6 +519,7 @@ const Options = ({
 	return (
 		<div className="ddm-field-options-container">
 			<DragPreview component={Option}>{children}</DragPreview>
+
 			{fields.map((option, index) => (
 				<DnD
 					index={index}
@@ -469,7 +537,7 @@ const Options = ({
 						{children({
 							defaultOptionRef,
 							fieldError,
-							handleBlur: composedBlur,
+							handleBlur: composedBlur.bind(this, index),
 							handleField: !(fields.length - 1 === index)
 								? composedChange.bind(this, index)
 								: composedAdd.bind(this, index),
@@ -484,6 +552,7 @@ const Options = ({
 };
 
 const Main = ({
+	allowSpecialCharacters,
 	defaultLanguageId = themeDisplay.getDefaultLanguageId(),
 	editingLanguageId = themeDisplay.getDefaultLanguageId(),
 	generateOptionValueUsingOptionLabel = false,
@@ -500,6 +569,7 @@ const Main = ({
 	<DndProvider backend={HTML5Backend} context={window}>
 		<FieldBase {...otherProps} readOnly={readOnly} visible={visible}>
 			<Options
+				allowSpecialCharacters={allowSpecialCharacters}
 				defaultLanguageId={defaultLanguageId}
 				disabled={readOnly}
 				editingLanguageId={editingLanguageId}
@@ -519,6 +589,7 @@ const Main = ({
 				}) =>
 					option && (
 						<KeyValue
+							allowSpecialCharacters={allowSpecialCharacters}
 							displayErrors={
 								fieldError && fieldError === option.value
 							}
@@ -531,9 +602,7 @@ const Main = ({
 							keywordReadOnly={keywordReadOnly}
 							name={`option${index}`}
 							onBlur={handleBlur}
-							onChange={(event) =>
-								handleField('label', event.target.value)
-							}
+							onChange={(value) => handleField('label', value)}
 							onFocus={() => {
 								if (defaultOptionRef.current) {
 									handleField('label', '');
@@ -541,14 +610,14 @@ const Main = ({
 								}
 							}}
 							onKeywordBlur={handleBlur}
-							onKeywordChange={(event, value, generate) => {
+							onKeywordChange={(value, generate) => {
 								handleField('generateKeyword', generate);
 								handleField('value', value);
 							}}
 							onReferenceBlur={handleBlur}
-							onReferenceChange={(event) => {
-								handleField('reference', event.target.value);
-							}}
+							onReferenceChange={(value) =>
+								handleField('reference', value)
+							}
 							placeholder={placeholder}
 							readOnly={option.disabled}
 							reference={option.reference}

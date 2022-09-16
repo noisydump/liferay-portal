@@ -22,12 +22,12 @@ import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.dynamic.data.mapping.test.util.DDMFormTestUtil;
 import com.liferay.dynamic.data.mapping.test.util.DDMFormValuesTestUtil;
-import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.util.HtmlImpl;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -35,10 +35,10 @@ import org.junit.Test;
  */
 public class RadioDDMFormFieldValueRendererTest {
 
-	@Before
-	public void setUp() {
-		_setUpHtmlUtil();
-	}
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Test
 	public void testRender() throws Exception {
@@ -51,7 +51,7 @@ public class RadioDDMFormFieldValueRendererTest {
 			ddmFormField.getDDMFormFieldOptions();
 
 		ddmFormFieldOptions.addOptionLabel(
-			"value 1", LocaleUtil.US, "option 1");
+			"value 1", LocaleUtil.US, "option with &");
 		ddmFormFieldOptions.addOptionLabel(
 			"value 2", LocaleUtil.US, "option 2");
 
@@ -67,16 +67,16 @@ public class RadioDDMFormFieldValueRendererTest {
 		ddmFormValues.addDDMFormFieldValue(ddmFormFieldValue);
 
 		RadioDDMFormFieldValueRenderer radioDDMFormFieldValueRenderer =
-			createRadioDDMFormFieldValueRenderer();
+			_createRadioDDMFormFieldValueRenderer();
 
 		Assert.assertEquals(
-			"option 1",
+			"option with &amp;",
 			radioDDMFormFieldValueRenderer.render(
 				ddmFormFieldValue, LocaleUtil.US));
 	}
 
-	protected RadioDDMFormFieldValueRenderer
-			createRadioDDMFormFieldValueRenderer()
+	private RadioDDMFormFieldValueRenderer
+			_createRadioDDMFormFieldValueRenderer()
 		throws Exception {
 
 		RadioDDMFormFieldValueRenderer radioDDMFormFieldValueRenderer =
@@ -86,12 +86,6 @@ public class RadioDDMFormFieldValueRendererTest {
 			new RadioDDMFormFieldValueAccessor();
 
 		return radioDDMFormFieldValueRenderer;
-	}
-
-	private void _setUpHtmlUtil() {
-		HtmlUtil htmlUtil = new HtmlUtil();
-
-		htmlUtil.setHtml(new HtmlImpl());
 	}
 
 }

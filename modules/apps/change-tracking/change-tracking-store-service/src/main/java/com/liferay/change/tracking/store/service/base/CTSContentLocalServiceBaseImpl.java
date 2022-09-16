@@ -17,6 +17,7 @@ package com.liferay.change.tracking.store.service.base;
 import com.liferay.change.tracking.store.model.CTSContent;
 import com.liferay.change.tracking.store.model.CTSContentDataBlobModel;
 import com.liferay.change.tracking.store.service.CTSContentLocalService;
+import com.liferay.change.tracking.store.service.CTSContentLocalServiceUtil;
 import com.liferay.change.tracking.store.service.persistence.CTSContentPersistence;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.io.AutoDeleteFileInputStream;
@@ -37,6 +38,8 @@ import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -54,6 +57,8 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import java.io.InputStream;
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.sql.Blob;
 
 import java.util.List;
@@ -61,6 +66,7 @@ import java.util.List;
 import javax.sql.DataSource;
 
 import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -81,7 +87,7 @@ public abstract class CTSContentLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>CTSContentLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.change.tracking.store.service.CTSContentLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>CTSContentLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>CTSContentLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -152,6 +158,13 @@ public abstract class CTSContentLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return ctsContentPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -317,6 +330,11 @@ public abstract class CTSContentLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement CTSContentLocalServiceImpl#deleteCTSContent(CTSContent) to avoid orphaned data");
+		}
+
 		return ctsContentLocalService.deleteCTSContent(
 			(CTSContent)persistedModel);
 	}
@@ -436,6 +454,11 @@ public abstract class CTSContentLocalServiceBaseImpl
 		}
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -447,6 +470,8 @@ public abstract class CTSContentLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		ctsContentLocalService = (CTSContentLocalService)aopProxy;
+
+		_setLocalServiceUtilService(ctsContentLocalService);
 	}
 
 	/**
@@ -506,6 +531,22 @@ public abstract class CTSContentLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		CTSContentLocalService ctsContentLocalService) {
+
+		try {
+			Field field = CTSContentLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, ctsContentLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected CTSContentLocalService ctsContentLocalService;
 
 	@Reference
@@ -514,6 +555,9 @@ public abstract class CTSContentLocalServiceBaseImpl
 	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		CTSContentLocalServiceBaseImpl.class);
 
 	@Reference
 	protected File _file;

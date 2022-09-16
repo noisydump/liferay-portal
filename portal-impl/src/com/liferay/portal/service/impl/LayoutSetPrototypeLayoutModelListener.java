@@ -21,10 +21,9 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.model.LayoutSetPrototype;
+import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutSetLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutSetPrototypeLocalServiceUtil;
-import com.liferay.portal.kernel.util.UnicodeProperties;
-import com.liferay.sites.kernel.util.Sites;
 
 import java.util.Date;
 
@@ -45,7 +44,7 @@ public class LayoutSetPrototypeLayoutModelListener
 	}
 
 	@Override
-	public void onAfterUpdate(Layout layout) {
+	public void onAfterUpdate(Layout originalLayout, Layout layout) {
 		updateLayoutSetPrototype(layout, layout.getModifiedDate());
 	}
 
@@ -54,7 +53,7 @@ public class LayoutSetPrototypeLayoutModelListener
 			return;
 		}
 
-		Group group = layout.getGroup();
+		Group group = GroupLocalServiceUtil.fetchGroup(layout.getGroupId());
 
 		if ((group == null) || !group.isLayoutSetPrototype()) {
 			return;
@@ -65,24 +64,14 @@ public class LayoutSetPrototypeLayoutModelListener
 				LayoutSetPrototypeLocalServiceUtil.getLayoutSetPrototype(
 					group.getClassPK());
 
-			layoutSetPrototype.setModifiedDate(modifiedDate);
-
-			LayoutSetPrototypeLocalServiceUtil.updateLayoutSetPrototype(
-				layoutSetPrototype);
-
 			LayoutSet layoutSet = layoutSetPrototype.getLayoutSet();
 
 			layoutSet.setModifiedDate(modifiedDate);
 
-			UnicodeProperties settingsUnicodeProperties =
-				layoutSet.getSettingsProperties();
-
-			settingsUnicodeProperties.remove(Sites.MERGE_FAIL_COUNT);
-
 			LayoutSetLocalServiceUtil.updateLayoutSet(layoutSet);
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 		}
 	}
 

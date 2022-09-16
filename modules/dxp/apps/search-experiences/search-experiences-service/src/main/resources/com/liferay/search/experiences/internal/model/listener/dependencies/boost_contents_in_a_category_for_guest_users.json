@@ -1,0 +1,65 @@
+{
+	"description_i18n": {
+		"en_US": "Boost contents in a category if a user is not logged in.",
+		"ja_JP": "ユーザーがログインしていない場合、カテゴリ内のコンテンツをブーストします。"
+	},
+	"elementDefinition": {
+		"category": "conditional",
+		"configuration": {
+			"queryConfiguration": {
+				"queryEntries": [
+					{
+						"clauses": [
+							{
+								"context": "query",
+								"occur": "should",
+								"query": {
+									"term": {
+										"assetCategoryIds": {
+											"boost": "${configuration.boost}",
+											"value": "${configuration.asset_category_id}"
+										}
+									}
+								}
+							}
+						],
+						"condition": {
+							"equals": {
+								"parameterName": "user.is_signed_in",
+								"value": false
+							}
+						}
+					}
+				]
+			}
+		},
+		"icon": "thumbs-up",
+		"uiConfiguration": {
+			"fieldSets": [
+				{
+					"fields": [
+						{
+							"label": "Asset Category ID",
+							"name": "asset_category_id",
+							"type": "number"
+						},
+						{
+							"defaultValue": 20,
+							"label": "Boost",
+							"name": "boost",
+							"type": "number",
+							"typeOptions": {
+								"min": 0
+							}
+						}
+					]
+				}
+			]
+		}
+	},
+	"externalReferenceCode": "BOOST_CONTENTS_IN_A_CATEGORY_FOR_GUEST_USERS",
+	"title_i18n": {
+		"en_US": "Boost Contents in a Category for Guest Users",
+		"ja_JP": "ゲストユーザー向けにカテゴリー内のコンテンツをブースト"
+	}
+}

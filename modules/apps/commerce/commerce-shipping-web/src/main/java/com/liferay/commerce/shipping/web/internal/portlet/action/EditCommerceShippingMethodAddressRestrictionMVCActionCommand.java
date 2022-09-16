@@ -15,18 +15,20 @@
 package com.liferay.commerce.shipping.web.internal.portlet.action;
 
 import com.liferay.commerce.exception.NoSuchAddressRestrictionException;
-import com.liferay.commerce.model.CommerceCountry;
 import com.liferay.commerce.model.CommerceShippingMethod;
 import com.liferay.commerce.product.constants.CPPortletKeys;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CommerceChannelService;
-import com.liferay.commerce.service.CommerceCountryService;
 import com.liferay.commerce.service.CommerceShippingMethodService;
+import com.liferay.commerce.util.comparator.CommerceShippingMethodPriorityComparator;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Country;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
+import com.liferay.portal.kernel.service.CountryService;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.TransactionConfig;
@@ -90,8 +92,7 @@ public class EditCommerceShippingMethodAddressRestrictionMVCActionCommand
 		}
 	}
 
-	protected void updateCommerceAddressRestrictions(
-			ActionRequest actionRequest)
+	private void _updateCommerceAddressRestrictions(ActionRequest actionRequest)
 		throws Exception {
 
 		long commerceChannelId = ParamUtil.getLong(
@@ -102,7 +103,9 @@ public class EditCommerceShippingMethodAddressRestrictionMVCActionCommand
 
 		List<CommerceShippingMethod> commerceShippingMethods =
 			_commerceShippingMethodService.getCommerceShippingMethods(
-				commerceChannel.getGroupId(), true);
+				commerceChannel.getGroupId(), true, QueryUtil.ALL_POS,
+				QueryUtil.ALL_POS,
+				new CommerceShippingMethodPriorityComparator());
 
 		for (CommerceShippingMethod commerceShippingMethod :
 				commerceShippingMethods) {
@@ -111,14 +114,12 @@ public class EditCommerceShippingMethodAddressRestrictionMVCActionCommand
 				commerceShippingMethod.getCommerceShippingMethodId());
 		}
 
-		List<CommerceCountry> commerceCountries =
-			_commerceCountryService.getCommerceCountries(
-				_portal.getCompanyId(actionRequest), true);
+		List<Country> commerceCountries = _countryService.getCompanyCountries(
+			_portal.getCompanyId(actionRequest), true);
 
-		for (CommerceCountry commerceCountry : commerceCountries) {
+		for (Country country : commerceCountries) {
 			long[] commercePaymentMethodGroupRelIds = ParamUtil.getLongValues(
-				actionRequest,
-				String.valueOf(commerceCountry.getCommerceCountryId()));
+				actionRequest, String.valueOf(country.getCountryId()));
 
 			if (ArrayUtil.isEmpty(commercePaymentMethodGroupRelIds)) {
 				continue;
@@ -132,10 +133,8 @@ public class EditCommerceShippingMethodAddressRestrictionMVCActionCommand
 				}
 
 				_commerceShippingMethodService.addCommerceAddressRestriction(
-					_portal.getUserId(actionRequest),
 					commerceChannel.getGroupId(),
-					commercePaymentMethodGroupRelId,
-					commerceCountry.getCommerceCountryId());
+					commercePaymentMethodGroupRelId, country.getCountryId());
 			}
 		}
 	}
@@ -151,10 +150,10 @@ public class EditCommerceShippingMethodAddressRestrictionMVCActionCommand
 	private CommerceChannelService _commerceChannelService;
 
 	@Reference
-	private CommerceCountryService _commerceCountryService;
+	private CommerceShippingMethodService _commerceShippingMethodService;
 
 	@Reference
-	private CommerceShippingMethodService _commerceShippingMethodService;
+	private CountryService _countryService;
 
 	@Reference
 	private Portal _portal;
@@ -164,7 +163,7 @@ public class EditCommerceShippingMethodAddressRestrictionMVCActionCommand
 
 		@Override
 		public Object call() throws Exception {
-			updateCommerceAddressRestrictions(_actionRequest);
+			_updateCommerceAddressRestrictions(_actionRequest);
 
 			return null;
 		}

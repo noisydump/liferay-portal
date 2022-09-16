@@ -1,4 +1,4 @@
-@component-name = "portal-collaboration"
+@component-name = "portal-lima"
 definition {
 
 	property custom.properties = "default.layout.template.id=1_column";
@@ -18,7 +18,7 @@ definition {
 			category = "Site Builder",
 			portlet = "Pages");
 
-		SitePages.addPublicPage(
+		PagesAdmin.addPage(
 			pageName = "My Subscriptions Page",
 			sitePageType = "Widget Page");
 
@@ -34,16 +34,18 @@ definition {
 			PortalInstances.tearDownCP();
 		}
 		else {
-			Page.tearDownCP();
+			PagesAdmin.tearDownCP();
 		}
 	}
 
 	test SubscribeAndUnsubscribetoDMFolder {
+		property custom.properties = "dl.actions.visible=true";
+
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
 			portlet = "Pages");
 
-		SitePages.addPublicPage(
+		PagesAdmin.addPage(
 			pageName = "Test Page",
 			sitePageType = "Widget Page");
 

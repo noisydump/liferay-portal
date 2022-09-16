@@ -12,120 +12,68 @@
  * details.
  */
 
-import {ClayInput, ClaySelectWithOption} from '@clayui/form';
 import classnames from 'classnames';
 import PropTypes from 'prop-types';
-import React, {useCallback, useEffect, useRef, useState} from 'react';
+import React, {forwardRef, useRef} from 'react';
 
-import {UPDATE_AFTER, generateQuantityOptions} from './utils/index';
+import InputQuantitySelector from './InputQuantitySelector';
+import ListQuantitySelector from './ListQuantitySelector';
 
-function QuantitySelector({
-	componentId,
-	disabled,
-	forceDropdown,
-	large,
-	name,
-	onUpdate,
-	quantity,
-	...optionSettings
-}) {
-	const [selectedQuantity, setSelectedQuantity] = useState(
-		Math.max(optionSettings.minQuantity, quantity)
-	);
+const QuantitySelector = forwardRef(
+	(
+		{
+			alignment,
+			allowedQuantities,
+			disabled,
+			max,
+			min,
+			name,
+			onUpdate,
+			quantity,
+			size,
+			step,
+		},
+		providedRef
+	) => {
+		const inputRef = useRef();
 
-	const isDropdown =
-		optionSettings.allowedQuantities.length > 0 || forceDropdown;
+		const Selector =
+			allowedQuantities?.length > 0
+				? ListQuantitySelector
+				: InputQuantitySelector;
 
-	/**
-	 * If source is <input /> and multipleQuantity > 1,
-	 * the newly set value will always be floored to the
-	 * closest lower multiple value.
-	 */
-	const onChange = ({target}) => {
-		if (target.value) {
-			const value = parseInt(target.value, 10);
-
-			setSelectedQuantity(
-				value - (value % optionSettings.multipleQuantity)
-			);
-		}
-		else {
-			setSelectedQuantity(optionSettings.minQuantity || 1);
-		}
-	};
-
-	const keypressDebounce = useRef();
-
-	const willUpdate = useCallback(() => {
-		clearTimeout(keypressDebounce.current);
-
-		keypressDebounce.current = setTimeout(
-			() => {
-				onUpdate(selectedQuantity);
-			},
-			isDropdown ? 0 : UPDATE_AFTER
+		return (
+			<Selector
+				alignment={alignment}
+				allowedQuantities={allowedQuantities}
+				className={classnames({
+					[`form-control-${size}`]: size,
+					'quantity-selector': true,
+				})}
+				disabled={disabled}
+				max={max}
+				min={min}
+				name={name}
+				onUpdate={onUpdate}
+				quantity={quantity}
+				ref={providedRef || inputRef}
+				step={step}
+			/>
 		);
-	}, [isDropdown, onUpdate, selectedQuantity]);
-
-	// eslint-disable-next-line react-hooks/exhaustive-deps
-	useEffect(willUpdate, [selectedQuantity]);
-
-	const commonProps = {
-		className: classnames({
-			'form-control-lg': large,
-			'quantity-selector': true,
-		}),
-		'data-component-id': componentId,
-		disabled,
-		name,
-		onChange,
-		value: selectedQuantity,
-	};
-
-	return (
-		<>
-			{isDropdown ? (
-				<ClaySelectWithOption
-					options={generateQuantityOptions(optionSettings)}
-					{...commonProps}
-				/>
-			) : (
-				<ClayInput
-					max={optionSettings.maxQuantity}
-					min={optionSettings.minQuantity}
-					step={optionSettings.multipleQuantity}
-					type={'number'}
-					{...commonProps}
-				/>
-			)}
-		</>
-	);
-}
+	}
+);
 
 QuantitySelector.defaultProps = {
-	allowedQuantities: [],
 	disabled: false,
-	forceDropdown: false,
-	large: false,
-	maxQuantity: 99,
-	minQuantity: 1,
-	multipleQuantity: 1,
-	onUpdate: () => {},
-	quantity: 1,
 };
 
 QuantitySelector.propTypes = {
-	allowedQuantities: PropTypes.arrayOf(PropTypes.number),
-	componentId: PropTypes.string,
+	alignment: PropTypes.oneOf(['top', 'bottom']),
 	disabled: PropTypes.bool,
-	forceDropdown: PropTypes.bool,
-	large: PropTypes.bool,
-	maxQuantity: PropTypes.number,
-	minQuantity: PropTypes.number,
-	multipleQuantity: PropTypes.number,
 	name: PropTypes.string,
-	onUpdate: PropTypes.func,
+	onUpdate: PropTypes.func.isRequired,
 	quantity: PropTypes.number,
+	size: PropTypes.oneOf(['lg', 'md', 'sm']),
 };
 
 export default QuantitySelector;

@@ -12,9 +12,9 @@
  * details.
  */
 
+import {ReactPortal} from '@liferay/frontend-js-react-web';
 import React, {useRef} from 'react';
 import {useDragLayer} from 'react-dnd';
-import ReactDOM from 'react-dom';
 
 import {OPTIONS_TYPES} from './DnD.es';
 
@@ -28,15 +28,14 @@ const layerStyles = {
 	zIndex: 100,
 };
 
-const getItemStyles = (currentOffset, ref) => {
-	if (!currentOffset || !ref.current) {
+const getItemStyles = (currentOffset, ref, initialOffset) => {
+	if (!currentOffset || !ref.current || !initialOffset) {
 		return {
 			display: 'none',
 		};
 	}
 
-	const {x, y} = currentOffset;
-	const transform = `translate(${x}px, ${y}px)`;
+	const transform = `translate(${initialOffset.x}px, ${currentOffset.y}px)`;
 
 	return {
 		WebkitTransform: transform,
@@ -47,27 +46,31 @@ const getItemStyles = (currentOffset, ref) => {
 export default function DragPreview({children, component: Component}) {
 	const ref = useRef();
 
-	const {currentOffset, isDragging, item} = useDragLayer((monitor) => ({
-		currentOffset: monitor.getClientOffset(),
-		isDragging: monitor.isDragging(),
-		item: monitor.getItem(),
-	}));
+	const {currentOffset, initialOffset, isDragging, item} = useDragLayer(
+		(monitor) => ({
+			currentOffset: monitor.getClientOffset(),
+			initialOffset: monitor.getInitialClientOffset(),
+			isDragging: monitor.isDragging(),
+			item: monitor.getItem(),
+		})
+	);
 
 	if (!isDragging || (isDragging && item.type !== OPTIONS_TYPES.OPTION)) {
 		return null;
 	}
 
-	return ReactDOM.createPortal(
-		<div style={layerStyles}>
-			<Component
-				{...item.option}
-				className="dragging"
-				ref={ref}
-				style={getItemStyles(currentOffset, ref)}
-			>
-				{children({index: item.position, option: item.option})}
-			</Component>
-		</div>,
-		document.body
+	return (
+		<ReactPortal>
+			<div style={layerStyles}>
+				<Component
+					{...item.option}
+					className="dragging"
+					ref={ref}
+					style={getItemStyles(currentOffset, ref, initialOffset)}
+				>
+					{children({index: item.position, option: item.option})}
+				</Component>
+			</div>
+		</ReactPortal>
 	);
 }

@@ -15,8 +15,10 @@
 package com.liferay.portal.security.sso.openid.connect;
 
 /**
- * @author Edward C. Han
+ * @author     Edward C. Han
+ * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
  */
+@Deprecated
 public enum OpenIdConnectFlowState {
 
 	AUTH_COMPLETE, AUTH_REQUESTED, INITIALIZED, PORTAL_AUTH_COMPLETE

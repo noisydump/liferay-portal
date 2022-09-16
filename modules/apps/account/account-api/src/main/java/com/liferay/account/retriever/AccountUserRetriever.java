@@ -19,6 +19,9 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
+import java.io.Serializable;
+
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.osgi.annotation.versioning.ProviderType;
@@ -39,17 +42,8 @@ public interface AccountUserRetriever {
 		throws PortalException;
 
 	public BaseModelSearchResult<User> searchAccountUsers(
-			long accountEntryId, String keywords, int status, int cur,
-			int delta, String sortField, boolean reverse)
-		throws PortalException;
-
-	public BaseModelSearchResult<User> searchAccountUsers(
-			long accountEntryId, String[] emailAddressDomains, String keywords,
-			int status, int cur, int delta, String sortField, boolean reverse)
-		throws PortalException;
-
-	public BaseModelSearchResult<User> searchAccountUsers(
-			long[] accountEntryIds, String keywords, int status, int cur,
+			long[] accountEntryIds, String keywords,
+			LinkedHashMap<String, Serializable> params, int status, int cur,
 			int delta, String sortField, boolean reverse)
 		throws PortalException;
 

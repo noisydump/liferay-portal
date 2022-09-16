@@ -19,8 +19,8 @@ import com.liferay.portal.kernel.exception.AddressCityException;
 import com.liferay.portal.kernel.exception.AddressStreetException;
 import com.liferay.portal.kernel.exception.AddressZipException;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.model.Account;
 import com.liferay.portal.kernel.model.Address;
+import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Contact;
 import com.liferay.portal.kernel.model.Country;
 import com.liferay.portal.kernel.model.ListType;
@@ -41,9 +41,13 @@ import com.liferay.portal.kernel.search.QueryConfig;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.search.Sort;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
+import com.liferay.portal.kernel.service.ListTypeLocalService;
 import com.liferay.portal.kernel.service.PhoneLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.service.persistence.CountryPersistence;
+import com.liferay.portal.kernel.service.persistence.UserPersistence;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -64,40 +68,22 @@ import java.util.List;
  */
 public class AddressLocalServiceImpl extends AddressLocalServiceBaseImpl {
 
-	/**
-	 * @deprecated As of Cavanaugh (7.4.x)
-	 */
-	@Deprecated
-	@Override
-	public Address addAddress(
-			long userId, String className, long classPK, String street1,
-			String street2, String street3, String city, String zip,
-			long regionId, long countryId, long typeId, boolean mailing,
-			boolean primary, ServiceContext serviceContext)
-		throws PortalException {
-
-		return addressLocalService.addAddress(
-			null, userId, className, classPK, null, null, street1, street2,
-			street3, city, zip, regionId, countryId, typeId, mailing, primary,
-			null, serviceContext);
-	}
-
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public Address addAddress(
 			String externalReferenceCode, long userId, String className,
 			long classPK, String name, String description, String street1,
 			String street2, String street3, String city, String zip,
-			long regionId, long countryId, long typeId, boolean mailing,
+			long regionId, long countryId, long listTypeId, boolean mailing,
 			boolean primary, String phoneNumber, ServiceContext serviceContext)
 		throws PortalException {
 
-		User user = userPersistence.findByPrimaryKey(userId);
-		long classNameId = classNameLocalService.getClassNameId(className);
+		User user = _userPersistence.findByPrimaryKey(userId);
+		long classNameId = _classNameLocalService.getClassNameId(className);
 
 		validate(
 			0, user.getCompanyId(), classNameId, classPK, street1, city, zip,
-			regionId, countryId, typeId, mailing, primary);
+			regionId, countryId, listTypeId, mailing, primary);
 
 		long addressId = counterLocalService.increment();
 
@@ -110,18 +96,18 @@ public class AddressLocalServiceImpl extends AddressLocalServiceBaseImpl {
 		address.setUserName(user.getFullName());
 		address.setClassNameId(classNameId);
 		address.setClassPK(classPK);
-		address.setName(name);
+		address.setCountryId(countryId);
+		address.setListTypeId(listTypeId);
+		address.setRegionId(regionId);
+		address.setCity(city);
 		address.setDescription(description);
+		address.setMailing(mailing);
+		address.setName(name);
+		address.setPrimary(primary);
 		address.setStreet1(street1);
 		address.setStreet2(street2);
 		address.setStreet3(street3);
-		address.setCity(city);
 		address.setZip(zip);
-		address.setRegionId(regionId);
-		address.setCountryId(countryId);
-		address.setTypeId(typeId);
-		address.setMailing(mailing);
-		address.setPrimary(primary);
 
 		address = addressPersistence.update(address);
 
@@ -141,12 +127,12 @@ public class AddressLocalServiceImpl extends AddressLocalServiceBaseImpl {
 		Address address = addressPersistence.findByPrimaryKey(addressId);
 
 		return addressLocalService.addAddress(
-			address.getExternalReferenceCode(), serviceContext.getUserId(),
-			className, classPK, address.getName(), address.getDescription(),
-			address.getStreet1(), address.getStreet2(), address.getStreet3(),
-			address.getCity(), address.getZip(), address.getRegionId(),
-			address.getCountryId(), address.getTypeId(), address.isMailing(),
-			address.isPrimary(), address.getPhoneNumber(), serviceContext);
+			null, serviceContext.getUserId(), className, classPK,
+			address.getName(), address.getDescription(), address.getStreet1(),
+			address.getStreet2(), address.getStreet3(), address.getCity(),
+			address.getZip(), address.getRegionId(), address.getCountryId(),
+			address.getListTypeId(), address.isMailing(), address.isPrimary(),
+			address.getPhoneNumber(), serviceContext);
 	}
 
 	@Indexable(type = IndexableType.DELETE)
@@ -177,7 +163,7 @@ public class AddressLocalServiceImpl extends AddressLocalServiceBaseImpl {
 		long companyId, String className, long classPK) {
 
 		List<Address> addresses = addressPersistence.findByC_C_C(
-			companyId, classNameLocalService.getClassNameId(className),
+			companyId, _classNameLocalService.getClassNameId(className),
 			classPK);
 
 		for (Address address : addresses) {
@@ -213,7 +199,7 @@ public class AddressLocalServiceImpl extends AddressLocalServiceBaseImpl {
 		long companyId, String className, long classPK) {
 
 		return addressPersistence.findByC_C_C(
-			companyId, classNameLocalService.getClassNameId(className),
+			companyId, _classNameLocalService.getClassNameId(className),
 			classPK);
 	}
 
@@ -223,8 +209,8 @@ public class AddressLocalServiceImpl extends AddressLocalServiceBaseImpl {
 		OrderByComparator<Address> orderByComparator) {
 
 		return addressPersistence.findByC_C_C(
-			companyId, classNameLocalService.getClassNameId(className), classPK,
-			start, end, orderByComparator);
+			companyId, _classNameLocalService.getClassNameId(className),
+			classPK, start, end, orderByComparator);
 	}
 
 	@Override
@@ -232,8 +218,27 @@ public class AddressLocalServiceImpl extends AddressLocalServiceBaseImpl {
 		long companyId, String className, long classPK) {
 
 		return addressPersistence.countByC_C_C(
-			companyId, classNameLocalService.getClassNameId(className),
+			companyId, _classNameLocalService.getClassNameId(className),
 			classPK);
+	}
+
+	@Override
+	public List<Address> getTypeAddresses(
+		long companyId, String className, long classPK, long[] listTypeIds) {
+
+		return addressPersistence.findByC_C_C_L(
+			companyId, _classNameLocalService.getClassNameId(className),
+			classPK, listTypeIds);
+	}
+
+	@Override
+	public List<Address> getTypeAddresses(
+		long companyId, String className, long classPK, long[] listTypeIds,
+		int start, int end, OrderByComparator<Address> orderByComparator) {
+
+		return addressPersistence.findByC_C_C_L(
+			companyId, _classNameLocalService.getClassNameId(className),
+			classPK, listTypeIds, start, end, orderByComparator);
 	}
 
 	@Override
@@ -251,16 +256,16 @@ public class AddressLocalServiceImpl extends AddressLocalServiceBaseImpl {
 	@Override
 	public Address updateAddress(
 			long addressId, String street1, String street2, String street3,
-			String city, String zip, long regionId, long countryId, long typeId,
-			boolean mailing, boolean primary)
+			String city, String zip, long regionId, long countryId,
+			long listTypeId, boolean mailing, boolean primary)
 		throws PortalException {
 
 		Address address = addressPersistence.findByPrimaryKey(addressId);
 
 		return addressLocalService.updateAddress(
 			addressId, address.getName(), address.getDescription(), street1,
-			street2, street3, city, zip, regionId, countryId, typeId, mailing,
-			primary, address.getPhoneNumber());
+			street2, street3, city, zip, regionId, countryId, listTypeId,
+			mailing, primary, address.getPhoneNumber());
 	}
 
 	@Indexable(type = IndexableType.REINDEX)
@@ -268,28 +273,28 @@ public class AddressLocalServiceImpl extends AddressLocalServiceBaseImpl {
 	public Address updateAddress(
 			long addressId, String name, String description, String street1,
 			String street2, String street3, String city, String zip,
-			long regionId, long countryId, long typeId, boolean mailing,
+			long regionId, long countryId, long listTypeId, boolean mailing,
 			boolean primary, String phoneNumber)
 		throws PortalException {
 
 		validate(
-			addressId, 0, 0, 0, street1, city, zip, regionId, countryId, typeId,
-			mailing, primary);
+			addressId, 0, 0, 0, street1, city, zip, regionId, countryId,
+			listTypeId, mailing, primary);
 
 		Address address = addressPersistence.findByPrimaryKey(addressId);
 
-		address.setName(name);
+		address.setCountryId(countryId);
+		address.setListTypeId(listTypeId);
+		address.setRegionId(regionId);
+		address.setCity(city);
 		address.setDescription(description);
+		address.setMailing(mailing);
+		address.setName(name);
+		address.setPrimary(primary);
 		address.setStreet1(street1);
 		address.setStreet2(street2);
 		address.setStreet3(street3);
-		address.setCity(city);
 		address.setZip(zip);
-		address.setRegionId(regionId);
-		address.setCountryId(countryId);
-		address.setTypeId(typeId);
-		address.setMailing(mailing);
-		address.setPrimary(primary);
 
 		address = addressPersistence.update(address);
 
@@ -304,6 +309,8 @@ public class AddressLocalServiceImpl extends AddressLocalServiceBaseImpl {
 				Phone phone = phones.get(0);
 
 				phone.setNumber(phoneNumber);
+
+				_phoneLocalService.updatePhone(phone);
 			}
 		}
 
@@ -319,7 +326,7 @@ public class AddressLocalServiceImpl extends AddressLocalServiceBaseImpl {
 		searchContext.setAttributes(
 			HashMapBuilder.<String, Serializable>put(
 				Field.CLASS_NAME_ID,
-				classNameLocalService.getClassNameId(className)
+				_classNameLocalService.getClassNameId(className)
 			).put(
 				Field.CLASS_PK, classPK
 			).put(
@@ -448,7 +455,7 @@ public class AddressLocalServiceImpl extends AddressLocalServiceBaseImpl {
 	protected void validate(
 			long addressId, long companyId, long classNameId, long classPK,
 			String street1, String city, String zip, long regionId,
-			long countryId, long typeId, boolean mailing, boolean primary)
+			long countryId, long listTypeId, boolean mailing, boolean primary)
 		throws PortalException {
 
 		if (Validator.isNull(street1)) {
@@ -458,7 +465,7 @@ public class AddressLocalServiceImpl extends AddressLocalServiceBaseImpl {
 			throw new AddressCityException();
 		}
 		else if (Validator.isNull(zip)) {
-			Country country = countryPersistence.fetchByPrimaryKey(countryId);
+			Country country = _countryPersistence.fetchByPrimaryKey(countryId);
 
 			if ((country != null) && country.isZipRequired()) {
 				throw new AddressZipException();
@@ -473,15 +480,15 @@ public class AddressLocalServiceImpl extends AddressLocalServiceBaseImpl {
 			classPK = address.getClassPK();
 		}
 
-		if ((classNameId == classNameLocalService.getClassNameId(
-				Account.class)) ||
-			(classNameId == classNameLocalService.getClassNameId(
+		if ((classNameId == _classNameLocalService.getClassNameId(
+				Company.class)) ||
+			(classNameId == _classNameLocalService.getClassNameId(
 				Contact.class)) ||
-			(classNameId == classNameLocalService.getClassNameId(
+			(classNameId == _classNameLocalService.getClassNameId(
 				Organization.class))) {
 
-			listTypeLocalService.validate(
-				typeId, classNameId, ListTypeConstants.ADDRESS);
+			_listTypeLocalService.validate(
+				listTypeId, classNameId, ListTypeConstants.ADDRESS);
 		}
 
 		validate(addressId, companyId, classNameId, classPK, mailing, primary);
@@ -490,7 +497,7 @@ public class AddressLocalServiceImpl extends AddressLocalServiceBaseImpl {
 	private void _addAddressPhone(long addressId, String phoneNumber)
 		throws PortalException {
 
-		ListType listType = listTypeLocalService.getListType(
+		ListType listType = _listTypeLocalService.getListType(
 			"phone-number", ListTypeConstants.ADDRESS_PHONE);
 
 		ServiceContext serviceContext =
@@ -501,7 +508,19 @@ public class AddressLocalServiceImpl extends AddressLocalServiceBaseImpl {
 			phoneNumber, null, listType.getListTypeId(), false, serviceContext);
 	}
 
+	@BeanReference(type = ClassNameLocalService.class)
+	private ClassNameLocalService _classNameLocalService;
+
+	@BeanReference(type = CountryPersistence.class)
+	private CountryPersistence _countryPersistence;
+
+	@BeanReference(type = ListTypeLocalService.class)
+	private ListTypeLocalService _listTypeLocalService;
+
 	@BeanReference(type = PhoneLocalService.class)
 	private PhoneLocalService _phoneLocalService;
+
+	@BeanReference(type = UserPersistence.class)
+	private UserPersistence _userPersistence;
 
 }

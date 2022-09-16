@@ -1,0 +1,126 @@
+@component-name = "portal-solutions"
+definition {
+
+	property osgi.modules.includes = "osb-site-initializer-customer-portal";
+	property portal.release = "false";
+	property portal.upstream = "true";
+	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
+	property testray.main.component.name = "OSB Site Initializer Customer Portal";
+
+	var testSiteName = "Customer Portal Site";
+	var testSiteURL = "customer-portal-site";
+
+	setUp {
+		task ("Set up instance and sign in") {
+			TestCase.setUpPortalInstance();
+
+			User.firstLoginPG();
+		}
+
+		task ("Create a new Customer Portal Site") {
+			CustomerPortal.addCustomerPortalSite(siteName = "${testSiteName}");
+		}
+	}
+
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
+
+		CustomerPortal.customerPortalTearDown();
+
+		if ("${testPortalInstance}" == "true") {
+			PortalInstances.tearDownCP();
+		}
+		else {
+			JSONGroup.deleteGroupByName(groupName = "${testSiteName}");
+		}
+	}
+
+	@description = "Automation ID: LPS-146292 | Test Summary: Check if there is a 'Cancel' button if the user wants to leave the process"
+	@ignore = "true"
+	@priority = "4"
+	test CancelButtonIsPresent {
+		task ("Change the user role in the project") {
+			Accounts.openAccountsAdmin();
+
+			CustomerPortal.accountTableProject(title = "Test Account LXC-SM");
+
+			Accounts.addAssigneeToRoleViaUsersTab(
+				accountRoleTitle = "Partner Manager",
+				accountUserName = "Test Test");
+		}
+
+		// Reason: Not able to reproduce scenario without OKTA workaround.
+
+		task ("Login in Okta") {
+			CustomerPortal.loginOktaToUpdateCP();
+
+			SelectWindow(locator1 = "title=Home - Customer Portal Site - Liferay DXP");
+		}
+
+		task ("Go to CP2.0 and join a project") {
+			ApplicationsMenu.gotoSite(key_site = "Customer Portal Site");
+
+			CustomerPortal.enterOnProject(projectName = "Test Account LXC-SM");
+		}
+
+		task ("Go to the Team Members page and open the invitation modal") {
+			CP2NavigationMenu.goToTeamMembers();
+
+			CP2TeamMembers.clickInviteMembers();
+		}
+
+		task ("Click the Cancel button and assert that the user has returned to the Team Members page") {
+			CP2NavigationMenu.cancelTeamMembersInvitation();
+
+			CP2TeamMembers.viewTeamMembersPage();
+		}
+	}
+
+	@description = "Automation ID: LPS-146292 | Test Summary: Verify if after inviting member, the screen goes back to previous screen (Team Members page)"
+	@ignore = "true"
+	@priority = "4"
+	test CanGoBackOnTeamMembersPage {
+		task ("Change the user role in the project") {
+			Accounts.openAccountsAdmin();
+
+			CustomerPortal.accountTableProject(title = "Test Account LXC-SM");
+
+			Accounts.addAssigneeToRoleViaUsersTab(
+				accountRoleTitle = "Partner Manager",
+				accountUserName = "Test Test");
+		}
+
+		// Reason: Not able to reproduce scenario without OKTA workaround.
+
+		task ("Login in Okta") {
+			CustomerPortal.loginOktaToUpdateCP();
+
+			SelectWindow(locator1 = "title=Home - Customer Portal Site - Liferay DXP");
+		}
+
+		task ("Go to CP2.0 and join a project") {
+			ApplicationsMenu.gotoSite(key_site = "Customer Portal Site");
+
+			CustomerPortal.enterOnProject(projectName = "Test Account LXC-SM");
+		}
+
+		task ("Go to the invite modal and invite a member to the project") {
+			CP2NavigationMenu.goToTeamMembers();
+
+			CP2TeamMembers.clickInviteMembers();
+
+			CP2TeamMembers.addFieldsTeamMembersExtra(
+				position = "0",
+				positionNumber = "0",
+				rowEmail = "test1@liferay.com",
+				rowRole = "User");
+
+			CP2TeamMembers.clickTeamMembersSendInvitation();
+		}
+
+		task ("Assert that remained on the Team Members page") {
+			CP2TeamMembers.viewTeamMembersPage();
+		}
+	}
+
+}

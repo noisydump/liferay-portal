@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
@@ -44,7 +45,10 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @generated
  */
 @Generated("")
-@GraphQLName("Language")
+@GraphQLName(
+	description = "Describes a specific language in the platform.",
+	value = "Language"
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "Language")
 public class Language implements Serializable {
@@ -53,7 +57,11 @@ public class Language implements Serializable {
 		return ObjectMapperUtil.readValue(Language.class, json);
 	}
 
-	@Schema
+	public static Language unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(Language.class, json);
+	}
+
+	@Schema(description = "The language's contry name.")
 	public String getCountryName() {
 		return countryName;
 	}
@@ -77,11 +85,11 @@ public class Language implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The language's contry name.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String countryName;
 
-	@Schema
+	@Schema(description = "The localized language's country name values.")
 	@Valid
 	public Map<String, String> getCountryName_i18n() {
 		return countryName_i18n;
@@ -107,11 +115,11 @@ public class Language implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The localized language's country name values.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Map<String, String> countryName_i18n;
 
-	@Schema
+	@Schema(description = "The language's ID.")
 	public String getId() {
 		return id;
 	}
@@ -133,11 +141,13 @@ public class Language implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The language's ID.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String id;
 
-	@Schema
+	@Schema(
+		description = "A flag that indicates whether the language has benn marked as default language."
+	)
 	public Boolean getMarkedAsDefault() {
 		return markedAsDefault;
 	}
@@ -161,11 +171,13 @@ public class Language implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "A flag that indicates whether the language has benn marked as default language."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Boolean markedAsDefault;
 
-	@Schema
+	@Schema(description = "The language's name.")
 	public String getName() {
 		return name;
 	}
@@ -187,11 +199,11 @@ public class Language implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The language's name.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String name;
 
-	@Schema
+	@Schema(description = "The localized language's name values.")
 	@Valid
 	public Map<String, String> getName_i18n() {
 		return name_i18n;
@@ -217,7 +229,7 @@ public class Language implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The localized language's name values.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Map<String, String> name_i18n;
 
@@ -326,15 +338,16 @@ public class Language implements Serializable {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.Language",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
 	}
 
 	private static boolean _isArray(Object value) {
@@ -360,8 +373,8 @@ public class Language implements Serializable {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -392,7 +405,7 @@ public class Language implements Serializable {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -400,7 +413,7 @@ public class Language implements Serializable {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -408,5 +421,10 @@ public class Language implements Serializable {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

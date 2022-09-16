@@ -14,9 +14,8 @@
 
 package com.liferay.layout.content.page.editor.web.internal.portlet.action;
 
-import com.liferay.fragment.processor.PortletRegistry;
 import com.liferay.layout.content.page.editor.constants.ContentPageEditorPortletKeys;
-import com.liferay.layout.content.page.editor.listener.ContentPageEditorListenerTracker;
+import com.liferay.layout.content.page.editor.web.internal.util.FragmentEntryLinkManager;
 import com.liferay.layout.content.page.editor.web.internal.util.layout.structure.LayoutStructureUtil;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
@@ -35,6 +34,7 @@ import com.liferay.portal.kernel.servlet.SessionMessages;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
@@ -122,10 +122,19 @@ public class PublishLayoutPageTemplateEntryMVCActionCommand
 		throws Exception {
 
 		LayoutStructureUtil.deleteMarkedForDeletionItems(
-			draftLayout.getCompanyId(), _contentPageEditorListenerTracker,
-			draftLayout.getGroupId(), draftLayout.getPlid(), _portletRegistry);
+			_fragmentEntryLinkManager, draftLayout.getGroupId(),
+			draftLayout.getPlid());
+
+		_layoutCopyHelper.copyLayout(draftLayout, layout);
 
 		draftLayout = _layoutLocalService.fetchLayout(draftLayout.getPlid());
+
+		UnicodeProperties typeSettingsUnicodeProperties =
+			draftLayout.getTypeSettingsProperties();
+
+		typeSettingsUnicodeProperties.put("published", Boolean.TRUE.toString());
+
+		draftLayout.setTypeSettingsProperties(typeSettingsUnicodeProperties);
 
 		draftLayout.setStatus(WorkflowConstants.STATUS_APPROVED);
 
@@ -134,8 +143,6 @@ public class PublishLayoutPageTemplateEntryMVCActionCommand
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.
 				fetchLayoutPageTemplateEntryByPlid(draftLayout.getClassPK());
-
-		_layoutCopyHelper.copyLayout(draftLayout, layout);
 
 		_layoutPageTemplateEntryService.updateStatus(
 			layoutPageTemplateEntry.getLayoutPageTemplateEntryId(),
@@ -149,7 +156,7 @@ public class PublishLayoutPageTemplateEntryMVCActionCommand
 	}
 
 	@Reference
-	private ContentPageEditorListenerTracker _contentPageEditorListenerTracker;
+	private FragmentEntryLinkManager _fragmentEntryLinkManager;
 
 	@Reference
 	private LayoutCopyHelper _layoutCopyHelper;
@@ -166,8 +173,5 @@ public class PublishLayoutPageTemplateEntryMVCActionCommand
 
 	@Reference
 	private Portal _portal;
-
-	@Reference
-	private PortletRegistry _portletRegistry;
 
 }

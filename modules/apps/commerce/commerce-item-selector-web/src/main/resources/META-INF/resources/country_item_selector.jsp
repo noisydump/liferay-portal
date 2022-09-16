@@ -20,36 +20,11 @@
 CommerceCountryItemSelectorViewDisplayContext commerceCountryItemSelectorViewDisplayContext = (CommerceCountryItemSelectorViewDisplayContext)request.getAttribute(WebKeys.PORTLET_DISPLAY_CONTEXT);
 
 String itemSelectedEventName = commerceCountryItemSelectorViewDisplayContext.getItemSelectedEventName();
-
-PortletURL portletURL = commerceCountryItemSelectorViewDisplayContext.getPortletURL();
 %>
 
-<liferay-frontend:management-bar
-	includeCheckBox="<%= true %>"
-	searchContainerId="commerceCountries"
->
-	<liferay-frontend:management-bar-buttons>
-		<liferay-frontend:management-bar-display-buttons
-			displayViews='<%= new String[] {"list"} %>'
-			portletURL="<%= portletURL %>"
-			selectedDisplayStyle="list"
-		/>
-	</liferay-frontend:management-bar-buttons>
-
-	<liferay-frontend:management-bar-filters>
-		<liferay-frontend:management-bar-navigation
-			navigationKeys='<%= new String[] {"all"} %>'
-			portletURL="<%= portletURL %>"
-		/>
-
-		<liferay-frontend:management-bar-sort
-			orderByCol="<%= commerceCountryItemSelectorViewDisplayContext.getOrderByCol() %>"
-			orderByType="<%= commerceCountryItemSelectorViewDisplayContext.getOrderByType() %>"
-			orderColumns='<%= new String[] {"priority"} %>'
-			portletURL="<%= portletURL %>"
-		/>
-	</liferay-frontend:management-bar-filters>
-</liferay-frontend:management-bar>
+<clay:management-toolbar
+	managementToolbarDisplayContext="<%= new CommerceCountryItemSelectorViewManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, commerceCountryItemSelectorViewDisplayContext.getSearchContainer()) %>"
+/>
 
 <div class="container-fluid container-fluid-max-xl" id="<portlet:namespace />commerceCountrySelectorWrapper">
 	<liferay-ui:search-container
@@ -57,38 +32,39 @@ PortletURL portletURL = commerceCountryItemSelectorViewDisplayContext.getPortlet
 		searchContainer="<%= commerceCountryItemSelectorViewDisplayContext.getSearchContainer() %>"
 	>
 		<liferay-ui:search-container-row
-			className="com.liferay.commerce.model.CommerceCountry"
+			className="com.liferay.portal.kernel.model.Country"
 			cssClass="commerce-country-row"
-			keyProperty="commerceCountryId"
-			modelVar="commerceCountry"
+			keyProperty="countryId"
+			modelVar="country"
 		>
 			<liferay-ui:search-container-column-text
 				cssClass="table-cell-expand"
 				name="name"
-				value="<%= commerceCountry.getName(locale) %>"
+				value="<%= HtmlUtil.escape(country.getName(locale)) %>"
 			/>
 
 			<liferay-ui:search-container-column-text
 				cssClass="table-cell-expand"
 				name="billing-allowed"
-				value='<%= LanguageUtil.get(request, commerceCountry.isBillingAllowed() ? "yes" : "no") %>'
+				value='<%= LanguageUtil.get(request, country.isBillingAllowed() ? "yes" : "no") %>'
 			/>
 
 			<liferay-ui:search-container-column-text
 				cssClass="table-cell-expand"
 				name="shipping-allowed"
-				value='<%= LanguageUtil.get(request, commerceCountry.isShippingAllowed() ? "yes" : "no") %>'
+				value='<%= LanguageUtil.get(request, country.isShippingAllowed() ? "yes" : "no") %>'
 			/>
 
 			<liferay-ui:search-container-column-text
 				cssClass="table-cell-expand"
 				name="two-letter-iso-code"
-				property="twoLettersISOCode"
+				property="a2"
 			/>
 
 			<liferay-ui:search-container-column-text
 				cssClass="table-cell-expand"
-				property="priority"
+				name="priority"
+				property="position"
 			/>
 		</liferay-ui:search-container-row>
 
@@ -113,11 +89,11 @@ PortletURL portletURL = commerceCountryItemSelectorViewDisplayContext.getPortlet
 		'<portlet:namespace />commerceCountries'
 	);
 
-	searchContainer.on('rowToggled', function (event) {
+	searchContainer.on('rowToggled', (event) => {
 		Liferay.Util.getOpener().Liferay.fire(
 			'<%= HtmlUtil.escapeJS(itemSelectedEventName) %>',
 			{
-				data: Liferay.Util.listCheckedExcept(
+				data: Liferay.Util.getCheckedCheckboxes(
 					commerceCountrySelectorWrapper,
 					'<portlet:namespace />allRowIds'
 				),

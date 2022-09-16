@@ -12,8 +12,8 @@
  * details.
  */
 
+import {useEventListener} from '@liferay/frontend-js-react-web';
 import {Editor} from 'frontend-editor-ckeditor-web';
-import {useEventListener} from 'frontend-js-react-web';
 import {isPhone, isTablet} from 'frontend-js-web';
 import React, {useContext, useEffect, useMemo, useRef, useState} from 'react';
 
@@ -96,24 +96,27 @@ const QuestionsEditor = ({
 		window
 	);
 
-	const insertTextAtCursor = (el, text) => {
-		const val = el.value;
+	const insertTextAtCursor = (element, text) => {
+		const val = element.value;
 		let endIndex;
 		let range;
 		if (
-			typeof el.selectionStart != 'undefined' &&
-			typeof el.selectionEnd != 'undefined'
+			typeof element.selectionStart !== 'undefined' &&
+			typeof element.selectionEnd !== 'undefined'
 		) {
-			endIndex = el.selectionEnd;
-			el.value =
-				val.slice(0, el.selectionStart) + text + val.slice(endIndex);
-			el.selectionStart = el.selectionEnd = endIndex + text.length;
+			endIndex = element.selectionEnd;
+			element.value =
+				val.slice(0, element.selectionStart) +
+				text +
+				val.slice(endIndex);
+			element.selectionStart = element.selectionEnd =
+				endIndex + text.length;
 		}
 		else if (
-			typeof document.selection != 'undefined' &&
-			typeof document.selection.createRange != 'undefined'
+			typeof document.selection !== 'undefined' &&
+			typeof document.selection.createRange !== 'undefined'
 		) {
-			el.focus();
+			element.focus();
 			range = document.selection.createRange();
 			range.collapse(false);
 			range.text = text;
@@ -144,12 +147,10 @@ const QuestionsEditor = ({
 						CKEDITOR.dtd.$removeEmpty.span = 0;
 
 						CKEDITOR.on('instanceCreated', ({editor}) => {
-							editor.name = name;
-
 							if (context.imageBrowseURL) {
 								editor.config.filebrowserImageBrowseUrl = context.imageBrowseURL.replace(
 									'EDITOR_NAME_',
-									name
+									editor.name
 								);
 							}
 

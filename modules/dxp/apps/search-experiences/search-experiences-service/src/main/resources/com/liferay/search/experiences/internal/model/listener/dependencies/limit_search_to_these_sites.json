@@ -1,0 +1,47 @@
+{
+	"description_i18n": {
+		"en_US": "Limit the search scope to the given sites.",
+		"ja_JP": "検索範囲を指定したサイトに限定する。"
+	},
+	"elementDefinition": {
+		"category": "filter",
+		"configuration": {
+			"queryConfiguration": {
+				"queryEntries": [
+					{
+						"clauses": [
+							{
+								"context": "query",
+								"occur": "filter",
+								"query": {
+									"terms": {
+										"scopeGroupId": "${configuration.scope_group_ids}"
+									}
+								}
+							}
+						]
+					}
+				]
+			}
+		},
+		"icon": "filter",
+		"uiConfiguration": {
+			"fieldSets": [
+				{
+					"fields": [
+						{
+							"label": "Group IDs",
+							"name": "scope_group_ids",
+							"type": "multiselect"
+						}
+					]
+				}
+			]
+		}
+	},
+	"externalReferenceCode": "LIMIT_SEARCH_TO_THESE_SITES",
+	"title_i18n": {
+		"en_US": "Limit Search to These Sites",
+		"ja_JP": "検索範囲を指定したサイトに限定"
+	}
+}

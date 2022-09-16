@@ -25,15 +25,15 @@ import {renderComponent} from '../../helpers.es';
 
 const mockAnswer = {
 	actions: {
-		delete: {
+		'delete': {
 			operation: 'deleteMessageBoardMessage',
 			type: 'mutation',
 		},
-		get: {
+		'get': {
 			operation: 'messageBoardMessage',
 			type: 'query',
 		},
-		replace: {
+		'replace': {
 			operation: 'updateMessageBoardMessage',
 			type: 'mutation',
 		},
@@ -41,15 +41,15 @@ const mockAnswer = {
 			operation: 'createMessageBoardMessageMessageBoardMessage',
 			type: 'mutation',
 		},
-		subscribe: {
+		'subscribe': {
 			operation: 'updateMessageBoardMessageSubscribe',
 			type: 'mutation',
 		},
-		unsubscribe: {
+		'unsubscribe': {
 			operation: 'updateMessageBoardMessageSubscribe',
 			type: 'mutation',
 		},
-		update: {
+		'update': {
 			operation: 'patchMessageBoardMessage',
 			type: 'mutation',
 		},
@@ -67,6 +67,7 @@ const mockAnswer = {
 		postsNumber: 12,
 		rank: 'Youngling',
 	},
+	dateCreated: '2020-07-30T09:44:49Z',
 	encodingFormat: 'html',
 	friendlyUrlPath: 're-new-question',
 	id: 36801,
@@ -103,8 +104,17 @@ describe('Answer', () => {
 	it('Show as a valid answer in the case that it is', async () => {
 		const mockIsSignedIn = jest.fn();
 		window.Liferay.ThemeDisplay.isSignedIn = mockIsSignedIn;
+
+		global.fetch.mockImplementationOnce(() =>
+			Promise.resolve({
+				json: () => Promise.resolve(apolloMocks),
+				ok: true,
+				text: () => Promise.resolve(JSON.stringify(apolloMocks)),
+			})
+		);
+
 		const {getByTestId} = renderComponent({
-			apolloMocks,
+			fetch,
 			ui: (
 				<Answer
 					answer={mockAnswer}
@@ -115,7 +125,7 @@ describe('Answer', () => {
 		});
 
 		let markAsAnswerButton = getByTestId('mark-as-answer-button');
-		expect(markAsAnswerButton.textContent).toMatch('Unmark as answer');
+		expect(markAsAnswerButton.textContent).toMatch('unmark-as-answer');
 
 		let markAsAnswerStyle = getByTestId('mark-as-answer-style');
 		expect(
@@ -137,7 +147,7 @@ describe('Answer', () => {
 		);
 
 		markAsAnswerButton = getByTestId('mark-as-answer-button');
-		expect(markAsAnswerButton.textContent).toMatch('Mark as answer');
+		expect(markAsAnswerButton.textContent).toMatch('mark-as-answer');
 
 		markAsAnswerStyle = getByTestId('mark-as-answer-style');
 		expect(

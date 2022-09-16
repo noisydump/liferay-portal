@@ -52,13 +52,17 @@ if (filterManageableOrganizations && organizations.isEmpty()) {
 	showList = false;
 }
 
-PortletURL homeURL = renderResponse.createRenderURL();
-
-homeURL.setParameter("mvcPath", "/view.jsp");
-homeURL.setParameter("toolbarItem", "view-all-organizations");
-homeURL.setParameter("usersListView", UserConstants.LIST_VIEW_FLAT_ORGANIZATIONS);
-
-PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(request, "users-and-organizations"), homeURL.toString());
+PortalUtil.addPortletBreadcrumbEntry(
+	request, LanguageUtil.get(request, "users-and-organizations"),
+	PortletURLBuilder.createRenderURL(
+		renderResponse
+	).setMVCPath(
+		"/view.jsp"
+	).setParameter(
+		"toolbarItem", "view-all-organizations"
+	).setParameter(
+		"usersListView", UserConstants.LIST_VIEW_FLAT_ORGANIZATIONS
+	).buildString());
 
 if (organization != null) {
 	UsersAdminUtil.addPortletBreadcrumbEntries(organization, request, renderResponse);
@@ -74,14 +78,19 @@ if (organization != null) {
 		SearchContainer<Object> searchContainer = viewTreeManagementToolbarDisplayContext.getSearchContainer();
 		%>
 
-		<clay:management-toolbar-v2
+		<clay:management-toolbar
 			actionDropdownItems="<%= viewTreeManagementToolbarDisplayContext.getActionDropdownItems() %>"
+			additionalProps='<%=
+				HashMapBuilder.<String, Object>put(
+					"basePortletURL", String.valueOf(renderResponse.createRenderURL())
+				).build()
+			%>'
 			clearResultsURL="<%= viewTreeManagementToolbarDisplayContext.getClearResultsURL() %>"
-			componentId="viewTreeManagementToolbar"
 			creationMenu="<%= viewTreeManagementToolbarDisplayContext.getCreationMenu() %>"
 			filterDropdownItems="<%= viewTreeManagementToolbarDisplayContext.getFilterDropdownItems() %>"
 			filterLabelItems="<%= viewTreeManagementToolbarDisplayContext.getFilterLabelItems() %>"
 			itemsTotal="<%= searchContainer.getTotal() %>"
+			propsTransformer="js/ViewTreeManagementToolbarPropsTransformer"
 			searchActionURL="<%= viewTreeManagementToolbarDisplayContext.getSearchActionURL() %>"
 			searchContainerId="organizationUsers"
 			searchFormName="searchFm"
@@ -140,11 +149,14 @@ if (organization != null) {
 
 					<%
 					Organization curOrganization = null;
+					OrganizationActionDropdownItems organizationActionDropdownItems = null;
 					Map<String, Object> rowData = new HashMap<String, Object>();
 					User user2 = null;
 
 					if (result instanceof Organization) {
 						curOrganization = (Organization)result;
+
+						organizationActionDropdownItems = new OrganizationActionDropdownItems(curOrganization, renderRequest, renderResponse);
 
 						rowData.put("actions", StringUtil.merge(viewTreeManagementToolbarDisplayContext.getAvailableActions(curOrganization)));
 					}
@@ -195,7 +207,7 @@ if (organization != null) {
 		Liferay.Util.postForm(form, {
 			data: {
 				deleteOrganizationIds: organizationIds,
-				deleteUserIds: Liferay.Util.listCheckedExcept(
+				deleteUserIds: Liferay.Util.getCheckedCheckboxes(
 					form,
 					'<portlet:namespace />allRowIds',
 					'<portlet:namespace />rowIdsUser'
@@ -216,12 +228,12 @@ if (organization != null) {
 
 		Liferay.Util.postForm(form, {
 			data: {
-				removeOrganizationIds: Liferay.Util.listCheckedExcept(
+				removeOrganizationIds: Liferay.Util.getCheckedCheckboxes(
 					form,
 					'<portlet:namespace />allRowIds',
 					'<portlet:namespace />rowIdsOrganization'
 				),
-				removeUserIds: Liferay.Util.listCheckedExcept(
+				removeUserIds: Liferay.Util.getCheckedCheckboxes(
 					form,
 					'<portlet:namespace />allRowIds',
 					'<portlet:namespace />rowIdsUser'
@@ -230,24 +242,4 @@ if (organization != null) {
 			url: '<%= removeOrganizationsAndUsersURL.toString() %>',
 		});
 	}
-
-	var selectUsers = function (organizationId) {
-		<portlet:namespace />openSelectUsersDialog(organizationId);
-	};
-
-	var ACTIONS = {
-		selectUsers: selectUsers,
-	};
-
-	Liferay.componentReady('viewTreeManagementToolbar').then(function (
-		managementToolbar
-	) {
-		managementToolbar.on('creationMenuItemClicked', function (event) {
-			var itemData = event.data.item.data;
-
-			if (itemData && itemData.action && ACTIONS[itemData.action]) {
-				ACTIONS[itemData.action](itemData.organizationId);
-			}
-		});
-	});
 </aui:script>

@@ -2,18 +2,22 @@
 <head>
 <title>GoogleDoc</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">GoogleDoc</td></tr>
 </thead>
+
 <tbody>
 <tr>
 	<td></td>
 	<td></td>
 	<td></td>
 </tr>
+
 <!--GOOGLE_DOCS-->
+
 <tr>
 	<td>DISMISS</td>
 	<td>//div[contains(@class,'jfk-butterBar-shown')]/a[contains(.,'Dismiss')]</td>
@@ -24,10 +28,12 @@
 	<td>//div/input[contains(@class,'docs-title-input')]</td>
 	<td></td>
 </tr>
+
 <!--INSERT_LINK-->
+
 <tr>
 	<td>INSERT_LINK_APPLY_BUTTON</td>
-	<td>//div[contains(@class,'insertlinkbubble-buttonbar')]</td>
+	<td>//div[contains(@class,'docs-link-smartlinksuggestion-title')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -47,12 +53,12 @@
 </tr>
 <tr>
 	<td>INSERT_LINK_LINK</td>
-	<td>//div[contains(@class,'urlinput-url-container')]/input[@type='text']</td>
+	<td>//div[contains(@class,'docs-smart-link-searchinput-search-container')]/input[@type='text']</td>
 	<td></td>
 </tr>
 <tr>
 	<td>INSERT_LINK_TEXT</td>
-	<td>//div[@class="docs-link-insertlinkbubble-toppane"]/input[@type='text']</td>
+	<td>//div[@class="docs-link-smartinsertlinkbubble-text-wrapper"]/input[@type='text']</td>
 	<td></td>
 </tr>
 </tbody>

@@ -2,13 +2,17 @@
 <head>
 <title>MessageBoardsAdminConfiguration</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">MessageBoardsAdminConfiguration</td></tr>
 </thead>
+
 <tbody>
+
 <!--GENERAL-->
+
 <tr>
 	<td>GENERAL_ALLOW_ANONYMOUS_POSTING_CHECKBOX</td>
 	<td>//input[contains(@id,'allowAnonymousPosting')]</td>
@@ -24,7 +28,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--MESSAGE_ADDED_EMAIL-->
+
 <tr>
 	<td>MESSAGE_ADDED_EMAIL_ENABLED_CHECKBOX</td>
 	<td>//input[contains(@id,'emailMessageAddedEnabled')]</td>
@@ -35,7 +41,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--MESSAGE_UPDATED_EMAIL-->
+
 <tr>
 	<td>MESSAGE_UPDATED_EMAIL_ENABLED_CHECKBOX</td>
 	<td>//input[contains(@id,'emailMessageUpdatedEnabled')]</td>
@@ -46,7 +54,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--SETUP_NAVIGATION-->
+
 <tr>
 	<td>SETUP_NAVIGATION_EMAIL_FROM</td>
 	<td>//ul[contains(@class,'nav nav-underline')]/li/a[contains(.,'Email From')]</td>

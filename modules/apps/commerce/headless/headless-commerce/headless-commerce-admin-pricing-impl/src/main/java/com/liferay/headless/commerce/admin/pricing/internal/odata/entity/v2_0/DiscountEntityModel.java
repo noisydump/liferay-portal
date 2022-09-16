@@ -20,9 +20,6 @@ import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.odata.entity.IntegerEntityField;
 
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author Alessio Antonio Rendina
@@ -30,7 +27,7 @@ import java.util.stream.Stream;
 public class DiscountEntityModel implements EntityModel {
 
 	public DiscountEntityModel() {
-		_entityFieldsMap = Stream.of(
+		_entityFieldsMap = EntityModel.toEntityFieldsMap(
 			new CollectionEntityField(
 				new IntegerEntityField(
 					"accountId", locale -> "commerceAccountId")),
@@ -39,10 +36,10 @@ public class DiscountEntityModel implements EntityModel {
 					"accountGroupId", locale -> "commerceAccountGroupIds")),
 			new CollectionEntityField(
 				new IntegerEntityField(
-					"channelId", locale -> "commerceChannelId"))
-		).collect(
-			Collectors.toMap(EntityField::getName, Function.identity())
-		);
+					"channelId", locale -> "commerceChannelId")),
+			new CollectionEntityField(
+				new IntegerEntityField(
+					"orderTypeId", locale -> "commerceOrderTypeId")));
 	}
 
 	@Override

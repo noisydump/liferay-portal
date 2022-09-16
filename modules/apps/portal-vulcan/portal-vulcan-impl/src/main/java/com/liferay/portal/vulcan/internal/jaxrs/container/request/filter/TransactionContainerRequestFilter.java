@@ -19,6 +19,7 @@ import com.liferay.portal.kernel.bean.PortalBeanLocatorUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.transaction.Transactional;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.spring.transaction.TransactionAttributeAdapter;
 import com.liferay.portal.spring.transaction.TransactionAttributeBuilder;
 import com.liferay.portal.spring.transaction.TransactionHandler;
@@ -30,6 +31,9 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.annotation.Priority;
+
+import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseContext;
@@ -40,6 +44,7 @@ import javax.ws.rs.ext.Provider;
 /**
  * @author Javier Gamarra
  */
+@Priority(Priorities.USER - 10)
 @Provider
 @Transactional(rollbackFor = Exception.class)
 public class TransactionContainerRequestFilter
@@ -48,6 +53,17 @@ public class TransactionContainerRequestFilter
 	@Override
 	public void filter(ContainerRequestContext containerRequestContext)
 		throws IOException {
+
+		if (GetterUtil.getBoolean(
+				containerRequestContext.getHeaderString(
+					"X-Liferay-Transaction-Disabled"))) {
+
+			if (_log.isDebugEnabled()) {
+				_log.debug("Transaction management is disabled");
+			}
+
+			return;
+		}
 
 		if (_transactionRequiredMethodNames.contains(
 				containerRequestContext.getMethod())) {

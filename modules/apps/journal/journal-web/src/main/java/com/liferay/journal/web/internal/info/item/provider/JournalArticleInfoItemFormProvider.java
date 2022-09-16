@@ -35,9 +35,10 @@ import com.liferay.journal.web.internal.info.item.JournalArticleInfoItemFields;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.template.info.item.provider.TemplateInfoItemFieldSetProvider;
 
 import java.util.HashMap;
 import java.util.Locale;
@@ -63,7 +64,7 @@ public class JournalArticleInfoItemFormProvider
 	public InfoForm getInfoForm() {
 		try {
 			return _getInfoForm(
-				0,
+				StringPool.BLANK,
 				_assetEntryInfoItemFieldSetProvider.getInfoFieldSet(
 					JournalArticle.class.getName()));
 		}
@@ -80,7 +81,7 @@ public class JournalArticleInfoItemFormProvider
 
 		try {
 			return _getInfoForm(
-				ddmStructureId,
+				String.valueOf(ddmStructureId),
 				_assetEntryInfoItemFieldSetProvider.getInfoFieldSet(
 					_assetEntryLocalService.getEntry(
 						JournalArticle.class.getName(),
@@ -105,7 +106,7 @@ public class JournalArticleInfoItemFormProvider
 		throws NoSuchFormVariationException {
 
 		return _getInfoForm(
-			GetterUtil.getLong(formVariationKey),
+			formVariationKey,
 			_assetEntryInfoItemFieldSetProvider.getInfoFieldSet(
 				AssetEntry.class.getName()));
 	}
@@ -115,7 +116,7 @@ public class JournalArticleInfoItemFormProvider
 		throws NoSuchFormVariationException {
 
 		return _getInfoForm(
-			GetterUtil.getLong(formVariationKey),
+			formVariationKey,
 			_assetEntryInfoItemFieldSetProvider.getInfoFieldSet(
 				JournalArticle.class.getName(),
 				GetterUtil.getLong(formVariationKey), groupId));
@@ -167,10 +168,10 @@ public class JournalArticleInfoItemFormProvider
 	}
 
 	private InfoForm _getInfoForm(
-			long ddmStructureId, InfoFieldSet assetEntryInfoFieldSet)
+			String formVariationKey, InfoFieldSet assetEntryInfoFieldSet)
 		throws NoSuchFormVariationException {
 
-		Set<Locale> availableLocales = LanguageUtil.getAvailableLocales();
+		Set<Locale> availableLocales = _language.getAvailableLocales();
 
 		InfoLocalizedValue.Builder infoLocalizedValueBuilder =
 			InfoLocalizedValue.builder();
@@ -187,20 +188,25 @@ public class JournalArticleInfoItemFormProvider
 			).infoFieldSetEntry(
 				_getBasicInformationInfoFieldSet()
 			).<NoSuchStructureException>infoFieldSetEntry(
-				consumer -> {
+				unsafeConsumer -> {
+					long ddmStructureId = GetterUtil.getLong(formVariationKey);
+
 					if (ddmStructureId != 0) {
-						consumer.accept(
+						unsafeConsumer.accept(
 							_ddmStructureInfoItemFieldSetProvider.
 								getInfoItemFieldSet(
 									ddmStructureId,
 									_getStructureFieldSetNameInfoLocalizedValue(
 										ddmStructureId)));
 
-						consumer.accept(
+						unsafeConsumer.accept(
 							_ddmTemplateInfoItemFieldSetProvider.
 								getInfoItemFieldSet(ddmStructureId));
 					}
 				}
+			).infoFieldSetEntry(
+				_templateInfoItemFieldSetProvider.getInfoFieldSet(
+					JournalArticle.class.getName(), formVariationKey)
 			).infoFieldSetEntry(
 				_getDisplayPageInfoFieldSet()
 			).infoFieldSetEntry(
@@ -223,7 +229,7 @@ public class JournalArticleInfoItemFormProvider
 		}
 		catch (NoSuchStructureException noSuchStructureException) {
 			throw new NoSuchFormVariationException(
-				String.valueOf(ddmStructureId), noSuchStructureException);
+				formVariationKey, noSuchStructureException);
 		}
 	}
 
@@ -253,7 +259,7 @@ public class JournalArticleInfoItemFormProvider
 
 			nameMap.replaceAll(
 				(locale, name) -> StringBundler.concat(
-					LanguageUtil.get(locale, "content"), StringPool.SPACE,
+					_language.get(locale, "content"), StringPool.SPACE,
 					StringPool.OPEN_PARENTHESIS, name,
 					StringPool.CLOSE_PARENTHESIS));
 
@@ -294,5 +300,11 @@ public class JournalArticleInfoItemFormProvider
 	@Reference
 	private InfoItemFieldReaderFieldSetProvider
 		_infoItemFieldReaderFieldSetProvider;
+
+	@Reference
+	private Language _language;
+
+	@Reference
+	private TemplateInfoItemFieldSetProvider _templateInfoItemFieldSetProvider;
 
 }

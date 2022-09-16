@@ -40,6 +40,7 @@ import com.liferay.portal.kernel.model.PortletPreferences;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.PortletConfigFactoryUtil;
+import com.liferay.portal.kernel.portlet.PortletIdCodec;
 import com.liferay.portal.kernel.portlet.PortletProvider;
 import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
@@ -54,7 +55,6 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HtmlUtil;
-import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -68,11 +68,11 @@ import com.liferay.portal.kernel.util.comparator.PortletCategoryComparator;
 import com.liferay.portal.kernel.util.comparator.PortletTitleComparator;
 import com.liferay.portal.util.PortletCategoryUtil;
 import com.liferay.portal.util.WebAppPool;
-import com.liferay.product.navigation.control.menu.constants.ProductNavigationControlMenuPortletKeys;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -82,7 +82,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.portlet.PortletConfig;
-import javax.portlet.PortletURL;
 import javax.portlet.ResourceURL;
 
 import javax.servlet.ServletContext;
@@ -164,6 +163,7 @@ public class AddContentPanelDisplayContext {
 
 		AssetEntryQuery assetEntryQuery = new AssetEntryQuery();
 
+		assetEntryQuery.setAttribute("showNonindexable", Boolean.TRUE);
 		assetEntryQuery.setClassNameIds(_getAvailableClassNameIds());
 		assetEntryQuery.setEnd(_getDelta());
 		assetEntryQuery.setGroupIds(
@@ -354,16 +354,9 @@ public class AddContentPanelDisplayContext {
 						curGroupId = group.getLiveGroupId();
 					}
 
-					PortletURL portletURL =
-						assetPublisherAddItemHolder.getPortletURL();
-
-					portletURL.setParameter(
-						"portletResource",
-						ProductNavigationControlMenuPortletKeys.
-							PRODUCT_NAVIGATION_CONTROL_MENU);
-
 					return _assetHelper.getAddURLPopUp(
-						curGroupId, _themeDisplay.getPlid(), portletURL, false,
+						curGroupId, _themeDisplay.getPlid(),
+						assetPublisherAddItemHolder.getPortletURL(), false,
 						_themeDisplay.getLayout());
 				}
 			).build()
@@ -404,7 +397,7 @@ public class AddContentPanelDisplayContext {
 		}
 		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(portalException, portalException);
+				_log.debug(portalException);
 			}
 		}
 
@@ -444,8 +437,8 @@ public class AddContentPanelDisplayContext {
 		int deltaDefault = GetterUtil.getInteger(
 			SessionClicks.get(
 				_httpServletRequest,
-				"com.liferay.product.navigation.control.menu.web_" +
-					"addPanelNumItems",
+				"com.liferay.product.navigation.control.menu." +
+					"web_addPanelNumItems",
 				"10"));
 
 		_delta = ParamUtil.getInteger(
@@ -474,6 +467,28 @@ public class AddContentPanelDisplayContext {
 			Collectors.toMap(
 				LocaleUtil::toLanguageId,
 				locale -> LanguageUtil.get(locale, "lang.dir")));
+	}
+
+	private Set<String> _getLayoutDecodedPortletNames() {
+		if (_layoutDecodedPortletNames != null) {
+			return _layoutDecodedPortletNames;
+		}
+
+		Set<String> layoutDecodedPortletNames = new HashSet<>();
+
+		LayoutTypePortlet layoutTypePortlet =
+			_themeDisplay.getLayoutTypePortlet();
+
+		for (Portlet layoutPortlet : layoutTypePortlet.getPortlets()) {
+			String decodedPortletName = PortletIdCodec.decodePortletName(
+				layoutPortlet.getPortletId());
+
+			layoutDecodedPortletNames.add(decodedPortletName);
+		}
+
+		_layoutDecodedPortletNames = layoutDecodedPortletNames;
+
+		return _layoutDecodedPortletNames;
 	}
 
 	private String _getPortletCategoryTitle(PortletCategory portletCategory) {
@@ -597,13 +612,8 @@ public class AddContentPanelDisplayContext {
 	}
 
 	private String _getRedirectURL() throws Exception {
-		String layoutFullURL = PortalUtil.getLayoutFullURL(
+		return PortalUtil.getLayoutFullURL(
 			_themeDisplay.getLayout(), _themeDisplay);
-
-		return HttpUtil.addParameter(
-			layoutFullURL, "portletResource",
-			ProductNavigationControlMenuPortletKeys.
-				PRODUCT_NAVIGATION_CONTROL_MENU);
 	}
 
 	private List<Map<String, Object>> _getWidgetCategories(
@@ -653,10 +663,13 @@ public class AddContentPanelDisplayContext {
 			return false;
 		}
 
+		Set<String> layoutDecodedPortletNames = _getLayoutDecodedPortletNames();
 		LayoutTypePortlet layoutTypePortlet =
 			_themeDisplay.getLayoutTypePortlet();
 
-		if (layoutTypePortlet.hasPortletId(portlet.getPortletId())) {
+		if (layoutDecodedPortletNames.contains(portlet.getPortletId()) ||
+			layoutTypePortlet.hasPortletId(portlet.getPortletId())) {
+
 			return true;
 		}
 
@@ -674,6 +687,7 @@ public class AddContentPanelDisplayContext {
 	private Boolean _hasLayoutUpdatePermission;
 	private final HttpServletRequest _httpServletRequest;
 	private String _keywords;
+	private Set<String> _layoutDecodedPortletNames;
 	private final LiferayPortletRequest _liferayPortletRequest;
 	private final LiferayPortletResponse _liferayPortletResponse;
 	private final ThemeDisplay _themeDisplay;

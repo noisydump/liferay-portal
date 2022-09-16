@@ -35,7 +35,6 @@ import java.util.Set;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.BailErrorStrategy;
-import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
@@ -47,31 +46,14 @@ public class DDMExpressionImpl<T> implements DDMExpression<T> {
 
 	@Override
 	public T evaluate() throws DDMExpressionException {
-		Map<String, DDMExpressionFunctionFactory> ddmExpressionFunctions =
-			_ddmExpressionFunctionTracker.getDDMExpressionFunctionFactories(
-				_ddmExpressionFunctionNames);
-
 		try {
-			Set<String> undefinedFunctionNames = new HashSet<>(
-				_ddmExpressionFunctionNames);
-
-			undefinedFunctionNames.removeAll(ddmExpressionFunctions.keySet());
-
-			if (!undefinedFunctionNames.isEmpty()) {
-				throw new DDMExpressionException.FunctionNotDefined(
-					undefinedFunctionNames);
-			}
-
 			DDMExpressionEvaluatorVisitor ddmExpressionEvaluatorVisitor =
 				new DDMExpressionEvaluatorVisitor(
-					ddmExpressionFunctions, _variables,
+					_ddmExpressionFunctionFactories, _variables,
 					_ddmExpressionActionHandler, _ddmExpressionFieldAccessor,
 					_ddmExpressionObserver, _ddmExpressionParameterAccessor);
 
 			return (T)_expressionContext.accept(ddmExpressionEvaluatorVisitor);
-		}
-		catch (DDMExpressionException ddmExpressionException) {
-			throw ddmExpressionException;
 		}
 		catch (Exception exception) {
 			throw new DDMExpressionException(exception);
@@ -80,10 +62,7 @@ public class DDMExpressionImpl<T> implements DDMExpression<T> {
 
 	@Override
 	public Expression getModel() {
-		DDMExpressionModelVisitor ddmExpressionModelVisitor =
-			new DDMExpressionModelVisitor();
-
-		return _expressionContext.accept(ddmExpressionModelVisitor);
+		return _expressionContext.accept(new DDMExpressionModelVisitor());
 	}
 
 	@Override
@@ -95,22 +74,23 @@ public class DDMExpressionImpl<T> implements DDMExpression<T> {
 		_variables.put(name, value);
 	}
 
-	protected DDMExpressionImpl(String expressionString)
+	@Override
+	public void setVariables(Map<String, Object> variables) {
+		_variables.putAll(variables);
+	}
+
+	protected DDMExpressionImpl(
+			DDMExpressionFunctionTracker ddmExpressionFunctionTracker,
+			String expression)
 		throws DDMExpressionException {
 
-		_expressionString = expressionString;
-
-		if ((expressionString == null) || expressionString.isEmpty()) {
+		if ((expression == null) || expression.isEmpty()) {
 			throw new IllegalArgumentException();
 		}
 
-		CharStream charStream = new ANTLRInputStream(_expressionString);
-
-		DDMExpressionLexer ddmExpressionLexer = new DDMExpressionLexer(
-			charStream);
-
 		DDMExpressionParser ddmExpressionParser = new DDMExpressionParser(
-			new CommonTokenStream(ddmExpressionLexer));
+			new CommonTokenStream(
+				new DDMExpressionLexer(new ANTLRInputStream(expression))));
 
 		ddmExpressionParser.setErrorHandler(new BailErrorStrategy());
 
@@ -128,7 +108,23 @@ public class DDMExpressionImpl<T> implements DDMExpression<T> {
 
 		parseTreeWalker.walk(ddmExpressionListener, _expressionContext);
 
-		_ddmExpressionFunctionNames = ddmExpressionListener.getFunctionNames();
+		Set<String> ddmExpressionFunctionNames =
+			ddmExpressionListener.getFunctionNames();
+
+		_ddmExpressionFunctionFactories =
+			ddmExpressionFunctionTracker.getDDMExpressionFunctionFactories(
+				ddmExpressionFunctionNames);
+
+		Set<String> undefinedDDMExpressionFunctionNames = new HashSet<>(
+			ddmExpressionFunctionNames);
+
+		undefinedDDMExpressionFunctionNames.removeAll(
+			_ddmExpressionFunctionFactories.keySet());
+
+		if (!undefinedDDMExpressionFunctionNames.isEmpty()) {
+			throw new DDMExpressionException.FunctionNotDefined(
+				undefinedDDMExpressionFunctionNames);
+		}
 
 		for (String variableName : ddmExpressionListener.getVariableNames()) {
 			_variables.put(variableName, null);
@@ -151,12 +147,6 @@ public class DDMExpressionImpl<T> implements DDMExpression<T> {
 		_ddmExpressionFieldAccessor = ddmExpressionFieldAccessor;
 	}
 
-	protected void setDDMExpressionFunctionTracker(
-		DDMExpressionFunctionTracker ddmExpressionFunctionTracker) {
-
-		_ddmExpressionFunctionTracker = ddmExpressionFunctionTracker;
-	}
-
 	protected void setDDMExpressionObserver(
 		DDMExpressionObserver ddmExpressionObserver) {
 
@@ -171,12 +161,11 @@ public class DDMExpressionImpl<T> implements DDMExpression<T> {
 
 	private DDMExpressionActionHandler _ddmExpressionActionHandler;
 	private DDMExpressionFieldAccessor _ddmExpressionFieldAccessor;
-	private final Set<String> _ddmExpressionFunctionNames;
-	private DDMExpressionFunctionTracker _ddmExpressionFunctionTracker;
+	private final Map<String, DDMExpressionFunctionFactory>
+		_ddmExpressionFunctionFactories;
 	private DDMExpressionObserver _ddmExpressionObserver;
 	private DDMExpressionParameterAccessor _ddmExpressionParameterAccessor;
 	private final DDMExpressionParser.ExpressionContext _expressionContext;
-	private final String _expressionString;
 	private final Map<String, Object> _variables = new HashMap<>();
 
 }

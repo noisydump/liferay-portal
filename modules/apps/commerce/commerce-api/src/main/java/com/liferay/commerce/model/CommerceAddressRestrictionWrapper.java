@@ -45,6 +45,7 @@ public class CommerceAddressRestrictionWrapper
 	public Map<String, Object> getModelAttributes() {
 		Map<String, Object> attributes = new HashMap<String, Object>();
 
+		attributes.put("mvccVersion", getMvccVersion());
 		attributes.put(
 			"commerceAddressRestrictionId", getCommerceAddressRestrictionId());
 		attributes.put("groupId", getGroupId());
@@ -55,13 +56,19 @@ public class CommerceAddressRestrictionWrapper
 		attributes.put("modifiedDate", getModifiedDate());
 		attributes.put("classNameId", getClassNameId());
 		attributes.put("classPK", getClassPK());
-		attributes.put("commerceCountryId", getCommerceCountryId());
+		attributes.put("countryId", getCountryId());
 
 		return attributes;
 	}
 
 	@Override
 	public void setModelAttributes(Map<String, Object> attributes) {
+		Long mvccVersion = (Long)attributes.get("mvccVersion");
+
+		if (mvccVersion != null) {
+			setMvccVersion(mvccVersion);
+		}
+
 		Long commerceAddressRestrictionId = (Long)attributes.get(
 			"commerceAddressRestrictionId");
 
@@ -117,11 +124,16 @@ public class CommerceAddressRestrictionWrapper
 			setClassPK(classPK);
 		}
 
-		Long commerceCountryId = (Long)attributes.get("commerceCountryId");
+		Long countryId = (Long)attributes.get("countryId");
 
-		if (commerceCountryId != null) {
-			setCommerceCountryId(commerceCountryId);
+		if (countryId != null) {
+			setCountryId(countryId);
 		}
+	}
+
+	@Override
+	public CommerceAddressRestriction cloneWithOriginalValues() {
+		return wrap(model.cloneWithOriginalValues());
 	}
 
 	/**
@@ -164,23 +176,6 @@ public class CommerceAddressRestrictionWrapper
 		return model.getCommerceAddressRestrictionId();
 	}
 
-	@Override
-	public CommerceCountry getCommerceCountry()
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return model.getCommerceCountry();
-	}
-
-	/**
-	 * Returns the commerce country ID of this commerce address restriction.
-	 *
-	 * @return the commerce country ID of this commerce address restriction
-	 */
-	@Override
-	public long getCommerceCountryId() {
-		return model.getCommerceCountryId();
-	}
-
 	/**
 	 * Returns the company ID of this commerce address restriction.
 	 *
@@ -189,6 +184,23 @@ public class CommerceAddressRestrictionWrapper
 	@Override
 	public long getCompanyId() {
 		return model.getCompanyId();
+	}
+
+	@Override
+	public com.liferay.portal.kernel.model.Country getCountry()
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return model.getCountry();
+	}
+
+	/**
+	 * Returns the country ID of this commerce address restriction.
+	 *
+	 * @return the country ID of this commerce address restriction
+	 */
+	@Override
+	public long getCountryId() {
+		return model.getCountryId();
 	}
 
 	/**
@@ -219,6 +231,16 @@ public class CommerceAddressRestrictionWrapper
 	@Override
 	public Date getModifiedDate() {
 		return model.getModifiedDate();
+	}
+
+	/**
+	 * Returns the mvcc version of this commerce address restriction.
+	 *
+	 * @return the mvcc version of this commerce address restriction
+	 */
+	@Override
+	public long getMvccVersion() {
+		return model.getMvccVersion();
 	}
 
 	/**
@@ -304,16 +326,6 @@ public class CommerceAddressRestrictionWrapper
 	}
 
 	/**
-	 * Sets the commerce country ID of this commerce address restriction.
-	 *
-	 * @param commerceCountryId the commerce country ID of this commerce address restriction
-	 */
-	@Override
-	public void setCommerceCountryId(long commerceCountryId) {
-		model.setCommerceCountryId(commerceCountryId);
-	}
-
-	/**
 	 * Sets the company ID of this commerce address restriction.
 	 *
 	 * @param companyId the company ID of this commerce address restriction
@@ -321,6 +333,16 @@ public class CommerceAddressRestrictionWrapper
 	@Override
 	public void setCompanyId(long companyId) {
 		model.setCompanyId(companyId);
+	}
+
+	/**
+	 * Sets the country ID of this commerce address restriction.
+	 *
+	 * @param countryId the country ID of this commerce address restriction
+	 */
+	@Override
+	public void setCountryId(long countryId) {
+		model.setCountryId(countryId);
 	}
 
 	/**
@@ -351,6 +373,16 @@ public class CommerceAddressRestrictionWrapper
 	@Override
 	public void setModifiedDate(Date modifiedDate) {
 		model.setModifiedDate(modifiedDate);
+	}
+
+	/**
+	 * Sets the mvcc version of this commerce address restriction.
+	 *
+	 * @param mvccVersion the mvcc version of this commerce address restriction
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		model.setMvccVersion(mvccVersion);
 	}
 
 	/**

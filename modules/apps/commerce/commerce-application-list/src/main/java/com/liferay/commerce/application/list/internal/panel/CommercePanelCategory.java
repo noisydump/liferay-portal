@@ -20,11 +20,11 @@ import com.liferay.application.list.PanelCategory;
 import com.liferay.application.list.constants.PanelCategoryKeys;
 import com.liferay.commerce.application.list.constants.CommercePanelCategoryKeys;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
-import com.liferay.portal.kernel.service.permission.PortalPermissionUtil;
+import com.liferay.portal.kernel.service.permission.PortalPermission;
 
 import java.util.Locale;
 
@@ -51,14 +51,14 @@ public class CommercePanelCategory extends BasePanelCategory {
 
 	@Override
 	public String getLabel(Locale locale) {
-		return LanguageUtil.get(locale, "commerce");
+		return _language.get(locale, "commerce");
 	}
 
 	@Override
 	public boolean isShow(PermissionChecker permissionChecker, Group group)
 		throws PortalException {
 
-		if (PortalPermissionUtil.contains(
+		if (_portalPermission.contains(
 				permissionChecker, ActionKeys.VIEW_CONTROL_PANEL)) {
 
 			return true;
@@ -67,11 +67,13 @@ public class CommercePanelCategory extends BasePanelCategory {
 		return false;
 	}
 
-	@Reference(unbind = "-")
-	protected void setPanelAppRegistry(PanelAppRegistry panelAppRegistry) {
-		_panelAppRegistry = panelAppRegistry;
-	}
+	@Reference
+	private Language _language;
 
+	@Reference
 	private PanelAppRegistry _panelAppRegistry;
+
+	@Reference
+	private PortalPermission _portalPermission;
 
 }

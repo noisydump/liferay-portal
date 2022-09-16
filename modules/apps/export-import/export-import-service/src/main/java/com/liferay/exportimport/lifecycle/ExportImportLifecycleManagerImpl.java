@@ -23,7 +23,7 @@ import com.liferay.portal.kernel.messaging.DestinationFactory;
 import com.liferay.portal.kernel.messaging.DestinationNames;
 import com.liferay.portal.kernel.messaging.Message;
 import com.liferay.portal.kernel.messaging.MessageBus;
-import com.liferay.portal.kernel.util.HashMapDictionary;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 
 import java.io.Serializable;
 
@@ -111,9 +111,10 @@ public class ExportImportLifecycleManagerImpl
 		Destination destination = _destinationFactory.createDestination(
 			destinationConfiguration);
 
-		Dictionary<String, Object> dictionary = new HashMapDictionary<>();
-
-		dictionary.put("destination.name", destination.getName());
+		Dictionary<String, Object> dictionary =
+			HashMapDictionaryBuilder.<String, Object>put(
+				"destination.name", destination.getName()
+			).build();
 
 		ServiceRegistration<Destination> serviceRegistration =
 			bundleContext.registerService(
@@ -124,30 +125,18 @@ public class ExportImportLifecycleManagerImpl
 		return serviceRegistration;
 	}
 
-	@Reference(unbind = "-")
-	protected void setDestinationFactory(
-		DestinationFactory destinationFactory) {
-
-		_destinationFactory = destinationFactory;
-	}
-
-	@Reference(unbind = "-")
-	protected void setExportImportLifecycleEventFactory(
-		ExportImportLifecycleEventFactory exportImportLifecycleEventFactory) {
-
-		_exportImportLifecycleEventFactory = exportImportLifecycleEventFactory;
-	}
-
-	@Reference(unbind = "-")
-	protected void setMessageBus(MessageBus messageBus) {
-		_messageBus = messageBus;
-	}
-
 	private volatile BundleContext _bundleContext;
+
+	@Reference
 	private DestinationFactory _destinationFactory;
+
+	@Reference
 	private ExportImportLifecycleEventFactory
 		_exportImportLifecycleEventFactory;
+
+	@Reference
 	private MessageBus _messageBus;
+
 	private final Set<ServiceRegistration<Destination>> _serviceRegistrations =
 		new HashSet<>();
 

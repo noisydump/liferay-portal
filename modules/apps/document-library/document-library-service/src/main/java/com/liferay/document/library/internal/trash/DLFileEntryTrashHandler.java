@@ -53,9 +53,9 @@ import com.liferay.portal.kernel.trash.TrashHandler;
 import com.liferay.portal.kernel.trash.TrashHandlerRegistryUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.trash.constants.TrashActionKeys;
+import com.liferay.trash.constants.TrashEntryConstants;
 import com.liferay.trash.kernel.exception.RestoreEntryException;
 import com.liferay.trash.kernel.model.TrashEntry;
-import com.liferay.trash.kernel.model.TrashEntryConstants;
 
 import javax.portlet.PortletRequest;
 
@@ -73,14 +73,14 @@ import org.osgi.service.component.annotations.Reference;
 	property = "model.class.name=com.liferay.document.library.kernel.model.DLFileEntry",
 	service = TrashHandler.class
 )
-public class DLFileEntryTrashHandler extends DLBaseTrashHandler {
+public class DLFileEntryTrashHandler extends BaseDLTrashHandler {
 
 	@Override
 	public void checkRestorableEntry(
 			long classPK, long containerModelId, String newName)
 		throws PortalException {
 
-		DLFileEntry dlFileEntry = getDLFileEntry(classPK);
+		DLFileEntry dlFileEntry = _getDLFileEntry(classPK);
 
 		checkRestorableEntry(
 			classPK, 0, containerModelId, dlFileEntry.getFileName(),
@@ -129,11 +129,18 @@ public class DLFileEntryTrashHandler extends DLBaseTrashHandler {
 	public ContainerModel getParentContainerModel(long classPK)
 		throws PortalException {
 
-		DLFileEntry dlFileEntry = getDLFileEntry(classPK);
+		DLFileEntry dlFileEntry = _getDLFileEntry(classPK);
 
 		long parentFolderId = dlFileEntry.getFolderId();
 
 		if (parentFolderId <= 0) {
+			return null;
+		}
+
+		DLFolder parentFolder = _dlFolderLocalService.fetchDLFolder(
+			parentFolderId);
+
+		if (parentFolder == null) {
 			return null;
 		}
 
@@ -154,7 +161,7 @@ public class DLFileEntryTrashHandler extends DLBaseTrashHandler {
 			PortletRequest portletRequest, long classPK)
 		throws PortalException {
 
-		DLFileEntry dlFileEntry = getDLFileEntry(classPK);
+		DLFileEntry dlFileEntry = _getDLFileEntry(classPK);
 
 		return _dlURLHelper.getFileEntryControlPanelLink(
 			portletRequest, dlFileEntry.getFileEntryId());
@@ -165,7 +172,7 @@ public class DLFileEntryTrashHandler extends DLBaseTrashHandler {
 			PortletRequest portletRequest, long classPK)
 		throws PortalException {
 
-		DLFileEntry dlFileEntry = getDLFileEntry(classPK);
+		DLFileEntry dlFileEntry = _getDLFileEntry(classPK);
 
 		return _dlURLHelper.getFolderControlPanelLink(
 			portletRequest, dlFileEntry.getFolderId());
@@ -175,7 +182,7 @@ public class DLFileEntryTrashHandler extends DLBaseTrashHandler {
 	public String getRestoreMessage(PortletRequest portletRequest, long classPK)
 		throws PortalException {
 
-		DLFileEntry dlFileEntry = getDLFileEntry(classPK);
+		DLFileEntry dlFileEntry = _getDLFileEntry(classPK);
 
 		DLFolder dlFolder = dlFileEntry.getFolder();
 
@@ -190,11 +197,11 @@ public class DLFileEntryTrashHandler extends DLBaseTrashHandler {
 	@Override
 	public TrashedModel getTrashedModel(long classPK) {
 		try {
-			return getDLFileEntry(classPK);
+			return _getDLFileEntry(classPK);
 		}
 		catch (PortalException | UnsupportedCapabilityException exception) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(exception, exception);
+				_log.debug(exception);
 			}
 
 			return null;
@@ -219,7 +226,7 @@ public class DLFileEntryTrashHandler extends DLBaseTrashHandler {
 
 	@Override
 	public boolean isMovable(long classPK) throws PortalException {
-		DLFileEntry dlFileEntry = fetchDLFileEntry(classPK);
+		DLFileEntry dlFileEntry = _fetchDLFileEntry(classPK);
 
 		if (dlFileEntry.getFolderId() > 0) {
 			DLFolder parentFolder = _dlFolderLocalService.fetchFolder(
@@ -235,7 +242,7 @@ public class DLFileEntryTrashHandler extends DLBaseTrashHandler {
 
 	@Override
 	public boolean isRestorable(long classPK) throws PortalException {
-		DLFileEntry dlFileEntry = fetchDLFileEntry(classPK);
+		DLFileEntry dlFileEntry = _fetchDLFileEntry(classPK);
 
 		if ((dlFileEntry == null) ||
 			((dlFileEntry.getFolderId() > 0) &&
@@ -282,7 +289,7 @@ public class DLFileEntryTrashHandler extends DLBaseTrashHandler {
 	public void restoreTrashEntry(long userId, long classPK)
 		throws PortalException {
 
-		DLFileEntry dlFileEntry = getDLFileEntry(classPK);
+		DLFileEntry dlFileEntry = _getDLFileEntry(classPK);
 
 		if ((dlFileEntry.getClassNameId() > 0) &&
 			(dlFileEntry.getClassPK() > 0)) {
@@ -302,7 +309,7 @@ public class DLFileEntryTrashHandler extends DLBaseTrashHandler {
 
 	@Override
 	public void updateTitle(long classPK, String name) throws PortalException {
-		DLFileEntry dlFileEntry = getDLFileEntry(classPK);
+		DLFileEntry dlFileEntry = _getDLFileEntry(classPK);
 
 		String fileName = DLUtil.getSanitizedFileName(
 			name, dlFileEntry.getExtension());
@@ -316,7 +323,6 @@ public class DLFileEntryTrashHandler extends DLBaseTrashHandler {
 		DLFileVersion dlFileVersion = dlFileEntry.getFileVersion();
 
 		dlFileVersion.setFileName(fileName);
-
 		dlFileVersion.setTitle(name);
 
 		_dlFileVersionLocalService.updateDLFileVersion(dlFileVersion);
@@ -339,7 +345,7 @@ public class DLFileEntryTrashHandler extends DLBaseTrashHandler {
 			throw restoreEntryException;
 		}
 
-		DLFileEntry dlFileEntry = getDLFileEntry(classPK);
+		DLFileEntry dlFileEntry = _getDLFileEntry(classPK);
 
 		if (containerModelId == TrashEntryConstants.DEFAULT_CONTAINER_ID) {
 			containerModelId = dlFileEntry.getFolderId();
@@ -391,36 +397,6 @@ public class DLFileEntryTrashHandler extends DLBaseTrashHandler {
 		}
 	}
 
-	protected DLFileEntry fetchDLFileEntry(long classPK)
-		throws PortalException {
-
-		Repository repository = RepositoryProviderUtil.getFileEntryRepository(
-			classPK);
-
-		if (!repository.isCapabilityProvided(TrashCapability.class)) {
-			return null;
-		}
-
-		FileEntry fileEntry = repository.getFileEntry(classPK);
-
-		return (DLFileEntry)fileEntry.getModel();
-	}
-
-	protected DLFileEntry getDLFileEntry(long classPK) throws PortalException {
-		Repository repository = RepositoryProviderUtil.getFileEntryRepository(
-			classPK);
-
-		if (!repository.isCapabilityProvided(TrashCapability.class)) {
-			throw new UnsupportedCapabilityException(
-				TrashCapability.class,
-				"Repository " + repository.getRepositoryId());
-		}
-
-		FileEntry fileEntry = repository.getFileEntry(classPK);
-
-		return (DLFileEntry)fileEntry.getModel();
-	}
-
 	@Override
 	protected DocumentRepository getDocumentRepository(long classPK)
 		throws PortalException {
@@ -442,7 +418,7 @@ public class DLFileEntryTrashHandler extends DLBaseTrashHandler {
 			PermissionChecker permissionChecker, long classPK, String actionId)
 		throws PortalException {
 
-		DLFileEntry dlFileEntry = getDLFileEntry(classPK);
+		DLFileEntry dlFileEntry = _getDLFileEntry(classPK);
 
 		if (dlFileEntry.isInHiddenFolder() &&
 			actionId.equals(ActionKeys.VIEW)) {
@@ -454,46 +430,50 @@ public class DLFileEntryTrashHandler extends DLBaseTrashHandler {
 			permissionChecker, classPK, actionId);
 	}
 
-	@Reference(unbind = "-")
-	protected void setDLAppLocalService(DLAppLocalService dlAppLocalService) {
-		_dlAppLocalService = dlAppLocalService;
+	private DLFileEntry _fetchDLFileEntry(long classPK) throws PortalException {
+		Repository repository = RepositoryProviderUtil.getFileEntryRepository(
+			classPK);
+
+		if (!repository.isCapabilityProvided(TrashCapability.class)) {
+			return null;
+		}
+
+		FileEntry fileEntry = repository.getFileEntry(classPK);
+
+		return (DLFileEntry)fileEntry.getModel();
 	}
 
-	@Reference(unbind = "-")
-	protected void setDLFileEntryLocalService(
-		DLFileEntryLocalService dlFileEntryLocalService) {
+	private DLFileEntry _getDLFileEntry(long classPK) throws PortalException {
+		Repository repository = RepositoryProviderUtil.getFileEntryRepository(
+			classPK);
 
-		_dlFileEntryLocalService = dlFileEntryLocalService;
-	}
+		if (!repository.isCapabilityProvided(TrashCapability.class)) {
+			throw new UnsupportedCapabilityException(
+				TrashCapability.class,
+				"Repository " + repository.getRepositoryId());
+		}
 
-	@Reference(unbind = "-")
-	protected void setDLFileVersionLocalService(
-		DLFileVersionLocalService dlFileVersionLocalService) {
+		FileEntry fileEntry = repository.getFileEntry(classPK);
 
-		_dlFileVersionLocalService = dlFileVersionLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setDLFolderLocalService(
-		DLFolderLocalService dlFolderLocalService) {
-
-		_dlFolderLocalService = dlFolderLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setDLTrashLocalService(
-		DLTrashLocalService dlTrashLocalService) {
-
-		_dlTrashLocalService = dlTrashLocalService;
+		return (DLFileEntry)fileEntry.getModel();
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		DLFileEntryTrashHandler.class);
 
+	@Reference
 	private DLAppLocalService _dlAppLocalService;
+
+	@Reference
 	private DLFileEntryLocalService _dlFileEntryLocalService;
+
+	@Reference
 	private DLFileVersionLocalService _dlFileVersionLocalService;
+
+	@Reference
 	private DLFolderLocalService _dlFolderLocalService;
+
+	@Reference
 	private DLTrashLocalService _dlTrashLocalService;
 
 	@Reference

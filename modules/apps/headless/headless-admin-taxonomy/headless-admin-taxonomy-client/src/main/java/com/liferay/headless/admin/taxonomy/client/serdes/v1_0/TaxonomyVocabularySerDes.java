@@ -61,7 +61,7 @@ public class TaxonomyVocabularySerDes {
 		sb.append("{");
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+			"yyyy-MM-dd'T'HH:mm:ssXX");
 
 		if (taxonomyVocabulary.getActions() != null) {
 			if (sb.length() > 1) {
@@ -205,6 +205,20 @@ public class TaxonomyVocabularySerDes {
 			sb.append(_toJSON(taxonomyVocabulary.getDescription_i18n()));
 		}
 
+		if (taxonomyVocabulary.getExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"externalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(taxonomyVocabulary.getExternalReferenceCode()));
+
+			sb.append("\"");
+		}
+
 		if (taxonomyVocabulary.getId() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -295,7 +309,7 @@ public class TaxonomyVocabularySerDes {
 		Map<String, String> map = new TreeMap<>();
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+			"yyyy-MM-dd'T'HH:mm:ssXX");
 
 		if (taxonomyVocabulary.getActions() == null) {
 			map.put("actions", null);
@@ -374,6 +388,15 @@ public class TaxonomyVocabularySerDes {
 			map.put(
 				"description_i18n",
 				String.valueOf(taxonomyVocabulary.getDescription_i18n()));
+		}
+
+		if (taxonomyVocabulary.getExternalReferenceCode() == null) {
+			map.put("externalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"externalReferenceCode",
+				String.valueOf(taxonomyVocabulary.getExternalReferenceCode()));
 		}
 
 		if (taxonomyVocabulary.getId() == null) {
@@ -509,6 +532,14 @@ public class TaxonomyVocabularySerDes {
 							(String)jsonParserFieldValue));
 				}
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "externalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					taxonomyVocabulary.setExternalReferenceCode(
+						(String)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "id")) {
 				if (jsonParserFieldValue != null) {
 					taxonomyVocabulary.setId(
@@ -548,9 +579,6 @@ public class TaxonomyVocabularySerDes {
 							(String)jsonParserFieldValue));
 				}
 			}
-			else if (jsonParserFieldName.equals("status")) {
-				throw new IllegalArgumentException();
-			}
 		}
 
 	}
@@ -579,7 +607,7 @@ public class TaxonomyVocabularySerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -615,7 +643,7 @@ public class TaxonomyVocabularySerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

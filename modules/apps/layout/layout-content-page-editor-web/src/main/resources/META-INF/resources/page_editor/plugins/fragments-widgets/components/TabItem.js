@@ -12,29 +12,63 @@
  * details.
  */
 
-import ClayButton from '@clayui/button';
+import {ClayButtonWithIcon} from '@clayui/button';
+import ClayCard from '@clayui/card';
 import ClayIcon from '@clayui/icon';
-import ClayPopover from '@clayui/popover';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
-import React, {useState} from 'react';
+import React from 'react';
 
+import {FRAGMENTS_DISPLAY_STYLES} from '../../../app/config/constants/fragmentsDisplayStyles';
 import {LAYOUT_DATA_ITEM_TYPES} from '../../../app/config/constants/layoutDataItemTypes';
+import {useDispatch, useSelector} from '../../../app/contexts/StoreContext';
 import selectSegmentsExperienceId from '../../../app/selectors/selectSegmentsExperienceId';
-import {useDispatch, useSelector} from '../../../app/store/index';
 import addFragment from '../../../app/thunks/addFragment';
 import addItem from '../../../app/thunks/addItem';
 import addWidget from '../../../app/thunks/addWidget';
-import {useDragSymbol} from '../../../app/utils/dragAndDrop/useDragAndDrop';
+import toggleFragmentHighlighted from '../../../app/thunks/toggleFragmentHighlighted';
+import toggleWidgetHighlighted from '../../../app/thunks/toggleWidgetHighlighted';
+import {useDragSymbol} from '../../../app/utils/drag-and-drop/useDragAndDrop';
 
-export default function TabItem({item}) {
+const ITEM_PROPTYPES_SHAPE = PropTypes.shape({
+	data: PropTypes.object.isRequired,
+	highlighted: PropTypes.bool,
+	icon: PropTypes.string.isRequired,
+	label: PropTypes.string.isRequired,
+	preview: PropTypes.string,
+	type: PropTypes.string.isRequired,
+});
+
+export default function TabItem({displayStyle, item}) {
 	const dispatch = useDispatch();
 	const segmentsExperienceId = useSelector(selectSegmentsExperienceId);
-	const [showPreview, setShowPreview] = useState(false);
 
-	const {sourceRef} = useDragSymbol(
+	const onToggleHighlighted = () => {
+		if (item.data.portletId) {
+			dispatch(
+				toggleWidgetHighlighted({
+					groupId: item.data.groupId,
+					highlighted: !item.highlighted,
+					portletId: item.data.portletId,
+				})
+			);
+		}
+		else {
+			dispatch(
+				toggleFragmentHighlighted({
+					fragmentEntryKey: item.itemId,
+					groupId: item.data.groupId,
+					highlighted: !item.highlighted,
+				})
+			);
+		}
+	};
+
+	const {isDraggingSource, sourceRef} = useDragSymbol(
 		{
+			fragmentEntryType: item.data.type,
 			icon: item.icon,
+			isWidget: item.data.portletId,
 			label: item.label,
 			type: item.type,
 		},
@@ -56,6 +90,7 @@ export default function TabItem({item}) {
 			dispatch(
 				thunk({
 					...item.data,
+					itemType: item.type,
 					parentItemId: parentId,
 					position,
 					store: {segmentsExperienceId},
@@ -64,51 +99,166 @@ export default function TabItem({item}) {
 		}
 	);
 
-	return (
-		<li
-			className={classNames('page-editor__fragments-widgets__tab-item', {
-				disabled: item.disabled,
-				'page-editor__fragments-widgets__tab-portlet-item':
-					item.data.portletItemId,
-			})}
+	return displayStyle === FRAGMENTS_DISPLAY_STYLES.CARDS ? (
+		<CardItem
+			disabled={item.disabled || isDraggingSource}
+			item={item}
+			onToggleHighlighted={onToggleHighlighted}
+			ref={sourceRef}
+		/>
+	) : (
+		<ListItem
+			disabled={item.disabled || isDraggingSource}
+			item={item}
+			onToggleHighlighted={onToggleHighlighted}
 			ref={item.disabled ? null : sourceRef}
-		>
-			<div className="page-editor__fragments-widgets__tab-item-body">
-				<ClayIcon className="mr-3" symbol={item.icon} />
-				<div className="text-truncate title">{item.label}</div>
-			</div>
-
-			{item.preview && (
-				<div className="page-editor__fragments-widgets__tab-item-preview">
-					<ClayButton
-						className="btn-monospaced preview-icon"
-						displayType="unstyled"
-						onBlur={() => setShowPreview(false)}
-						onFocus={() => setShowPreview(true)}
-						onMouseLeave={() => setShowPreview(false)}
-						onMouseOver={() => setShowPreview(true)}
-						small
-					>
-						<ClayIcon symbol="info-circle-open" />
-						<span className="sr-only">{name}</span>
-					</ClayButton>
-					{showPreview && (
-						<ClayPopover disableScroll>
-							<img alt="thumbnail" src={item.preview} />
-						</ClayPopover>
-					)}
-				</div>
-			)}
-		</li>
+		/>
 	);
 }
 
 TabItem.propTypes = {
-	item: PropTypes.shape({
-		data: PropTypes.object.isRequired,
-		icon: PropTypes.string.isRequired,
-		label: PropTypes.string.isRequired,
-		preview: PropTypes.string,
-		type: PropTypes.string.isRequired,
-	}).isRequired,
+	displayStyle: PropTypes.oneOf(Object.values(FRAGMENTS_DISPLAY_STYLES)),
+	item: ITEM_PROPTYPES_SHAPE.isRequired,
+};
+
+const ListItem = React.forwardRef(
+	({disabled, item, onToggleHighlighted}, ref) => {
+		return (
+			<li
+				className={classNames(
+					'align-items-center mb-1 d-flex page-editor__fragments-widgets__tab-list-item rounded',
+					{
+						disabled,
+						'ml-3 page-editor__fragments-widgets__tab-portlet-item':
+							item.data.portletItemId,
+					}
+				)}
+				ref={ref}
+			>
+				<div className="align-items-center d-flex page-editor__fragments-widgets__tab-list-item-body">
+					<ClayIcon className="mr-3" symbol={item.icon} />
+
+					<div className="text-truncate title">{item.label}</div>
+				</div>
+
+				<HighlightButton
+					item={item}
+					onToggleHighlighted={onToggleHighlighted}
+				/>
+			</li>
+		);
+	}
+);
+
+ListItem.propTypes = {
+	disabled: PropTypes.bool.isRequired,
+	item: ITEM_PROPTYPES_SHAPE.isRequired,
+	onToggleHighlighted: PropTypes.func.isRequired,
+};
+
+const CardItem = React.forwardRef(
+	({disabled, item, onToggleHighlighted}, ref) => {
+		return (
+			<li
+				className={classNames(
+					'page-editor__fragments-widgets__tab-card-item',
+					{disabled}
+				)}
+				ref={ref}
+			>
+				<ClayCard
+					aria-label={item.label}
+					className="mb-0"
+					displayType={item.preview ? 'image' : 'file'}
+					selectable
+				>
+					<ClayCard.AspectRatio className="card-item-first">
+						{item.preview ? (
+							<img
+								alt="thumbnail"
+								className="aspect-ratio-item aspect-ratio-item-center-middle aspect-ratio-item-fluid"
+								src={item.preview}
+							/>
+						) : (
+							<div className="aspect-ratio-item aspect-ratio-item-center-middle aspect-ratio-item-fluid card-type-asset-icon">
+								<ClayIcon symbol={item.icon} />
+							</div>
+						)}
+					</ClayCard.AspectRatio>
+
+					<ClayCard.Body className="align-items-center d-flex p-2 rounded-bottom">
+						<ClayCard.Row>
+							<div className="autofit-col autofit-col-expand">
+								<section className="autofit-section">
+									<ClayCard.Description
+										displayType="title"
+										title={item.label}
+										truncate={false}
+									>
+										<span className="align-items-center d-flex justify-content-between">
+											<span
+												className="lfr-portal-tooltip text-truncate"
+												data-tooltip-align="center"
+											>
+												{item.label}
+											</span>
+
+											<HighlightButton
+												item={item}
+												onToggleHighlighted={
+													onToggleHighlighted
+												}
+											/>
+										</span>
+									</ClayCard.Description>
+								</section>
+							</div>
+						</ClayCard.Row>
+					</ClayCard.Body>
+				</ClayCard>
+			</li>
+		);
+	}
+);
+
+CardItem.propTypes = {
+	disabled: PropTypes.bool.isRequired,
+	item: ITEM_PROPTYPES_SHAPE.isRequired,
+	onToggleHighlighted: PropTypes.func.isRequired,
+};
+
+const HighlightButton = ({item, onToggleHighlighted}) => {
+	if (!Liferay.FeatureFlags['LPS-158737'] || item.data.portletItemId) {
+		return null;
+	}
+
+	const {highlighted} = item;
+
+	return (
+		<ClayButtonWithIcon
+			aria-label={
+				highlighted
+					? Liferay.Language.get('unmark-favorite')
+					: Liferay.Language.get('mark-favorite')
+			}
+			borderless
+			className={classNames(
+				'page-editor__fragments-widgets__tab-highlight-button',
+				{highlighted}
+			)}
+			displayType="secondary"
+			onClick={onToggleHighlighted}
+			symbol={highlighted ? 'star' : 'star-o'}
+			title={
+				highlighted
+					? Liferay.Language.get('unmark-favorite')
+					: Liferay.Language.get('mark-favorite')
+			}
+		/>
+	);
+};
+
+HighlightButton.propTypes = {
+	item: ITEM_PROPTYPES_SHAPE.isRequired,
+	onToggleHighlighted: PropTypes.func.isRequired,
 };

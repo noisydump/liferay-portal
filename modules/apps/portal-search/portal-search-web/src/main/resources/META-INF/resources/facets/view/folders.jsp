@@ -17,17 +17,17 @@
 <%@ include file="/facets/init.jsp" %>
 
 <%
-FolderSearchFacetDisplayBuilder folderSearchFacetDisplayBuilder = new FolderSearchFacetDisplayBuilder(renderRequest);
+FolderSearchFacetDisplayContextBuilder folderSearchFacetDisplayContextBuilder = new FolderSearchFacetDisplayContextBuilder(renderRequest);
 
-folderSearchFacetDisplayBuilder.setFacet(facet);
-folderSearchFacetDisplayBuilder.setFolderTitleLookup(new FolderTitleLookupImpl(new FolderSearcher(), request));
-folderSearchFacetDisplayBuilder.setFrequenciesVisible(dataJSONObject.getBoolean("showAssetCount", true));
-folderSearchFacetDisplayBuilder.setFrequencyThreshold(dataJSONObject.getInt("frequencyThreshold"));
-folderSearchFacetDisplayBuilder.setMaxTerms(dataJSONObject.getInt("maxTerms", 10));
-folderSearchFacetDisplayBuilder.setParameterName(facet.getFieldId());
-folderSearchFacetDisplayBuilder.setParameterValue(fieldParam);
+folderSearchFacetDisplayContextBuilder.setFacet(facet);
+folderSearchFacetDisplayContextBuilder.setFolderTitleLookup(new FolderTitleLookupImpl(new FolderSearcher(), request));
+folderSearchFacetDisplayContextBuilder.setFrequenciesVisible(dataJSONObject.getBoolean("showAssetCount", true));
+folderSearchFacetDisplayContextBuilder.setFrequencyThreshold(dataJSONObject.getInt("frequencyThreshold"));
+folderSearchFacetDisplayContextBuilder.setMaxTerms(dataJSONObject.getInt("maxTerms", 10));
+folderSearchFacetDisplayContextBuilder.setParameterName(facet.getFieldId());
+folderSearchFacetDisplayContextBuilder.setParameterValue(fieldParam);
 
-FolderSearchFacetDisplayContext folderSearchFacetDisplayContext = folderSearchFacetDisplayBuilder.build();
+FolderSearchFacetDisplayContext folderSearchFacetDisplayContext = folderSearchFacetDisplayContextBuilder.build();
 %>
 
 <c:choose>
@@ -50,7 +50,7 @@ FolderSearchFacetDisplayContext folderSearchFacetDisplayContext = folderSearchFa
 
 					<ul class="folders list-unstyled">
 						<li class="default facet-value">
-							<a class="<%= folderSearchFacetDisplayContext.isNothingSelected() ? "facet-term-selected" : "facet-term-unselected" %>" data-value="" href="javascript:;"><liferay-ui:message key="<%= HtmlUtil.escape(facetConfiguration.getLabel()) %>" /></a>
+							<a class="<%= folderSearchFacetDisplayContext.isNothingSelected() ? "facet-term-selected" : "facet-term-unselected" %>" data-value="" href="javascript:void(0);"><liferay-ui:message key="<%= HtmlUtil.escape(facetConfiguration.getLabel()) %>" /></a>
 						</li>
 
 						<%
@@ -60,7 +60,7 @@ FolderSearchFacetDisplayContext folderSearchFacetDisplayContext = folderSearchFa
 						%>
 
 							<li class="facet-value">
-								<a class="<%= folderSearchFacetTermDisplayContext.isSelected() ? "facet-term-selected" : "facet-term-unselected" %>" data-value="<%= folderSearchFacetTermDisplayContext.getFolderId() %>" href="javascript:;">
+								<a class="<%= folderSearchFacetTermDisplayContext.isSelected() ? "facet-term-selected" : "facet-term-unselected" %>" data-value="<%= folderSearchFacetTermDisplayContext.getFolderId() %>" href="javascript:void(0);">
 									<%= HtmlUtil.escape(folderSearchFacetTermDisplayContext.getDisplayName()) %>
 
 									<c:if test="<%= folderSearchFacetTermDisplayContext.isFrequencyVisible() %>">

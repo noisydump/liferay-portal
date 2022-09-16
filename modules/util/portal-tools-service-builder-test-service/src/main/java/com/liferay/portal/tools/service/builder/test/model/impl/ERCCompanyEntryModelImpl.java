@@ -18,30 +18,29 @@ import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.expando.kernel.util.ExpandoBridgeFactoryUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.bean.AutoEscapeBeanHandler;
-import com.liferay.portal.kernel.json.JSON;
 import com.liferay.portal.kernel.model.CacheModel;
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.impl.BaseModelImpl;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.tools.service.builder.test.model.ERCCompanyEntry;
 import com.liferay.portal.tools.service.builder.test.model.ERCCompanyEntryModel;
-import com.liferay.portal.tools.service.builder.test.model.ERCCompanyEntrySoap;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
-import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -56,7 +55,6 @@ import java.util.function.Function;
  * @see ERCCompanyEntryImpl
  * @generated
  */
-@JSON(strict = true)
 public class ERCCompanyEntryModelImpl
 	extends BaseModelImpl<ERCCompanyEntry> implements ERCCompanyEntryModel {
 
@@ -68,7 +66,7 @@ public class ERCCompanyEntryModelImpl
 	public static final String TABLE_NAME = "ERCCompanyEntry";
 
 	public static final Object[][] TABLE_COLUMNS = {
-		{"externalReferenceCode", Types.VARCHAR},
+		{"uuid_", Types.VARCHAR}, {"externalReferenceCode", Types.VARCHAR},
 		{"ercCompanyEntryId", Types.BIGINT}, {"companyId", Types.BIGINT}
 	};
 
@@ -76,13 +74,14 @@ public class ERCCompanyEntryModelImpl
 		new HashMap<String, Integer>();
 
 	static {
+		TABLE_COLUMNS_MAP.put("uuid_", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("externalReferenceCode", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("ercCompanyEntryId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("companyId", Types.BIGINT);
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table ERCCompanyEntry (externalReferenceCode VARCHAR(75) null,ercCompanyEntryId LONG not null primary key,companyId LONG)";
+		"create table ERCCompanyEntry (uuid_ VARCHAR(75) null,externalReferenceCode VARCHAR(75) null,ercCompanyEntryId LONG not null primary key,companyId LONG)";
 
 	public static final String TABLE_SQL_DROP = "drop table ERCCompanyEntry";
 
@@ -117,70 +116,29 @@ public class ERCCompanyEntryModelImpl
 	public static final boolean COLUMN_BITMASK_ENABLED = true;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long COMPANYID_COLUMN_BITMASK = 1L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long EXTERNALREFERENCECODE_COLUMN_BITMASK = 2L;
 
 	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
+	public static final long UUID_COLUMN_BITMASK = 4L;
+
+	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *		#getColumnBitmask(String)
+	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long ERCCOMPANYENTRYID_COLUMN_BITMASK = 4L;
-
-	/**
-	 * Converts the soap model instance into a normal model instance.
-	 *
-	 * @param soapModel the soap model instance to convert
-	 * @return the normal model instance
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static ERCCompanyEntry toModel(ERCCompanyEntrySoap soapModel) {
-		if (soapModel == null) {
-			return null;
-		}
-
-		ERCCompanyEntry model = new ERCCompanyEntryImpl();
-
-		model.setExternalReferenceCode(soapModel.getExternalReferenceCode());
-		model.setErcCompanyEntryId(soapModel.getErcCompanyEntryId());
-		model.setCompanyId(soapModel.getCompanyId());
-
-		return model;
-	}
-
-	/**
-	 * Converts the soap model instances into normal model instances.
-	 *
-	 * @param soapModels the soap model instances to convert
-	 * @return the normal model instances
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static List<ERCCompanyEntry> toModels(
-		ERCCompanyEntrySoap[] soapModels) {
-
-		if (soapModels == null) {
-			return null;
-		}
-
-		List<ERCCompanyEntry> models = new ArrayList<ERCCompanyEntry>(
-			soapModels.length);
-
-		for (ERCCompanyEntrySoap soapModel : soapModels) {
-			models.add(toModel(soapModel));
-		}
-
-		return models;
-	}
+	public static final long ERCCOMPANYENTRYID_COLUMN_BITMASK = 8L;
 
 	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(
 		com.liferay.portal.tools.service.builder.test.service.util.ServiceProps.
@@ -272,34 +230,6 @@ public class ERCCompanyEntryModelImpl
 		return _attributeSetterBiConsumers;
 	}
 
-	private static Function<InvocationHandler, ERCCompanyEntry>
-		_getProxyProviderFunction() {
-
-		Class<?> proxyClass = ProxyUtil.getProxyClass(
-			ERCCompanyEntry.class.getClassLoader(), ERCCompanyEntry.class,
-			ModelWrapper.class);
-
-		try {
-			Constructor<ERCCompanyEntry> constructor =
-				(Constructor<ERCCompanyEntry>)proxyClass.getConstructor(
-					InvocationHandler.class);
-
-			return invocationHandler -> {
-				try {
-					return constructor.newInstance(invocationHandler);
-				}
-				catch (ReflectiveOperationException
-							reflectiveOperationException) {
-
-					throw new InternalError(reflectiveOperationException);
-				}
-			};
-		}
-		catch (NoSuchMethodException noSuchMethodException) {
-			throw new InternalError(noSuchMethodException);
-		}
-	}
-
 	private static final Map<String, Function<ERCCompanyEntry, Object>>
 		_attributeGetterFunctions;
 	private static final Map<String, BiConsumer<ERCCompanyEntry, Object>>
@@ -312,6 +242,10 @@ public class ERCCompanyEntryModelImpl
 		Map<String, BiConsumer<ERCCompanyEntry, ?>> attributeSetterBiConsumers =
 			new LinkedHashMap<String, BiConsumer<ERCCompanyEntry, ?>>();
 
+		attributeGetterFunctions.put("uuid", ERCCompanyEntry::getUuid);
+		attributeSetterBiConsumers.put(
+			"uuid",
+			(BiConsumer<ERCCompanyEntry, String>)ERCCompanyEntry::setUuid);
 		attributeGetterFunctions.put(
 			"externalReferenceCode", ERCCompanyEntry::getExternalReferenceCode);
 		attributeSetterBiConsumers.put(
@@ -336,7 +270,34 @@ public class ERCCompanyEntryModelImpl
 			(Map)attributeSetterBiConsumers);
 	}
 
-	@JSON
+	@Override
+	public String getUuid() {
+		if (_uuid == null) {
+			return "";
+		}
+		else {
+			return _uuid;
+		}
+	}
+
+	@Override
+	public void setUuid(String uuid) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_uuid = uuid;
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
+	public String getOriginalUuid() {
+		return getColumnOriginalValue("uuid_");
+	}
+
 	@Override
 	public String getExternalReferenceCode() {
 		if (_externalReferenceCode == null) {
@@ -365,7 +326,6 @@ public class ERCCompanyEntryModelImpl
 		return getColumnOriginalValue("externalReferenceCode");
 	}
 
-	@JSON
 	@Override
 	public long getErcCompanyEntryId() {
 		return _ercCompanyEntryId;
@@ -380,7 +340,6 @@ public class ERCCompanyEntryModelImpl
 		_ercCompanyEntryId = ercCompanyEntryId;
 	}
 
-	@JSON
 	@Override
 	public long getCompanyId() {
 		return _companyId;
@@ -419,7 +378,9 @@ public class ERCCompanyEntryModelImpl
 		for (Map.Entry<String, Object> entry :
 				_columnOriginalValues.entrySet()) {
 
-			if (entry.getValue() != getColumnValue(entry.getKey())) {
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
 				_columnBitmask |= _columnBitmasks.get(entry.getKey());
 			}
 		}
@@ -459,12 +420,29 @@ public class ERCCompanyEntryModelImpl
 	public Object clone() {
 		ERCCompanyEntryImpl ercCompanyEntryImpl = new ERCCompanyEntryImpl();
 
+		ercCompanyEntryImpl.setUuid(getUuid());
 		ercCompanyEntryImpl.setExternalReferenceCode(
 			getExternalReferenceCode());
 		ercCompanyEntryImpl.setErcCompanyEntryId(getErcCompanyEntryId());
 		ercCompanyEntryImpl.setCompanyId(getCompanyId());
 
 		ercCompanyEntryImpl.resetOriginalValues();
+
+		return ercCompanyEntryImpl;
+	}
+
+	@Override
+	public ERCCompanyEntry cloneWithOriginalValues() {
+		ERCCompanyEntryImpl ercCompanyEntryImpl = new ERCCompanyEntryImpl();
+
+		ercCompanyEntryImpl.setUuid(
+			this.<String>getColumnOriginalValue("uuid_"));
+		ercCompanyEntryImpl.setExternalReferenceCode(
+			this.<String>getColumnOriginalValue("externalReferenceCode"));
+		ercCompanyEntryImpl.setErcCompanyEntryId(
+			this.<Long>getColumnOriginalValue("ercCompanyEntryId"));
+		ercCompanyEntryImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
 
 		return ercCompanyEntryImpl;
 	}
@@ -541,6 +519,14 @@ public class ERCCompanyEntryModelImpl
 		ERCCompanyEntryCacheModel ercCompanyEntryCacheModel =
 			new ERCCompanyEntryCacheModel();
 
+		ercCompanyEntryCacheModel.uuid = getUuid();
+
+		String uuid = ercCompanyEntryCacheModel.uuid;
+
+		if ((uuid != null) && (uuid.length() == 0)) {
+			ercCompanyEntryCacheModel.uuid = null;
+		}
+
 		ercCompanyEntryCacheModel.externalReferenceCode =
 			getExternalReferenceCode();
 
@@ -566,7 +552,7 @@ public class ERCCompanyEntryModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			(4 * attributeGetterFunctions.size()) + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -577,9 +563,26 @@ public class ERCCompanyEntryModelImpl
 			Function<ERCCompanyEntry, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((ERCCompanyEntry)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply((ERCCompanyEntry)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -626,15 +629,20 @@ public class ERCCompanyEntryModelImpl
 	private static class EscapedModelProxyProviderFunctionHolder {
 
 		private static final Function<InvocationHandler, ERCCompanyEntry>
-			_escapedModelProxyProviderFunction = _getProxyProviderFunction();
+			_escapedModelProxyProviderFunction =
+				ProxyUtil.getProxyProviderFunction(
+					ERCCompanyEntry.class, ModelWrapper.class);
 
 	}
 
+	private String _uuid;
 	private String _externalReferenceCode;
 	private long _ercCompanyEntryId;
 	private long _companyId;
 
 	public <T> T getColumnValue(String columnName) {
+		columnName = _attributeNames.getOrDefault(columnName, columnName);
+
 		Function<ERCCompanyEntry, Object> function =
 			_attributeGetterFunctions.get(columnName);
 
@@ -661,10 +669,21 @@ public class ERCCompanyEntryModelImpl
 	private void _setColumnOriginalValues() {
 		_columnOriginalValues = new HashMap<String, Object>();
 
+		_columnOriginalValues.put("uuid_", _uuid);
 		_columnOriginalValues.put(
 			"externalReferenceCode", _externalReferenceCode);
 		_columnOriginalValues.put("ercCompanyEntryId", _ercCompanyEntryId);
 		_columnOriginalValues.put("companyId", _companyId);
+	}
+
+	private static final Map<String, String> _attributeNames;
+
+	static {
+		Map<String, String> attributeNames = new HashMap<>();
+
+		attributeNames.put("uuid_", "uuid");
+
+		_attributeNames = Collections.unmodifiableMap(attributeNames);
 	}
 
 	private transient Map<String, Object> _columnOriginalValues;
@@ -678,11 +697,13 @@ public class ERCCompanyEntryModelImpl
 	static {
 		Map<String, Long> columnBitmasks = new HashMap<>();
 
-		columnBitmasks.put("externalReferenceCode", 1L);
+		columnBitmasks.put("uuid_", 1L);
 
-		columnBitmasks.put("ercCompanyEntryId", 2L);
+		columnBitmasks.put("externalReferenceCode", 2L);
 
-		columnBitmasks.put("companyId", 4L);
+		columnBitmasks.put("ercCompanyEntryId", 4L);
+
+		columnBitmasks.put("companyId", 8L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}

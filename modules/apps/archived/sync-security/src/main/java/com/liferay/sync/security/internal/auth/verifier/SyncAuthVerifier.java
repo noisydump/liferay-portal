@@ -18,6 +18,8 @@ import com.google.common.collect.Lists;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.auth.AccessControlContext;
 import com.liferay.portal.kernel.security.auth.AuthException;
@@ -74,7 +76,7 @@ public class SyncAuthVerifier implements AuthVerifier {
 
 	public String getUserId(String tokenString) {
 		try {
-			JsonTokenParser jsonTokenParser = getJsonTokenParser();
+			JsonTokenParser jsonTokenParser = _getJsonTokenParser();
 
 			JsonToken jsonToken = jsonTokenParser.verifyAndDeserialize(
 				tokenString);
@@ -103,6 +105,10 @@ public class SyncAuthVerifier implements AuthVerifier {
 			return String.valueOf(userId);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			return null;
 		}
 	}
@@ -167,7 +173,7 @@ public class SyncAuthVerifier implements AuthVerifier {
 				httpServletRequest);
 
 			if (userId > 0) {
-				token = createToken(userId);
+				token = _createToken(userId);
 
 				if (token != null) {
 					HttpServletResponse httpServletResponse =
@@ -191,13 +197,22 @@ public class SyncAuthVerifier implements AuthVerifier {
 		}
 	}
 
-	protected String createToken(long userId) {
+	@Reference(unbind = "-")
+	protected void setUserLocalService(UserLocalService userLocalService) {
+		_userLocalService = userLocalService;
+	}
+
+	private String _createToken(long userId) {
 		Signer signer = null;
 
 		try {
-			signer = getSigner();
+			signer = _getSigner();
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			return null;
 		}
 
@@ -216,11 +231,15 @@ public class SyncAuthVerifier implements AuthVerifier {
 			return jsonToken.serializeAndSign();
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			return null;
 		}
 	}
 
-	protected JsonTokenParser getJsonTokenParser() throws Exception {
+	private JsonTokenParser _getJsonTokenParser() throws Exception {
 		if (_jsonTokenParser != null) {
 			return _jsonTokenParser;
 		}
@@ -254,7 +273,7 @@ public class SyncAuthVerifier implements AuthVerifier {
 		return _jsonTokenParser;
 	}
 
-	protected Signer getSigner() {
+	private Signer _getSigner() {
 		if (_signer != null) {
 			return _signer;
 		}
@@ -265,13 +284,12 @@ public class SyncAuthVerifier implements AuthVerifier {
 			return _signer;
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			return null;
 		}
-	}
-
-	@Reference(unbind = "-")
-	protected void setUserLocalService(UserLocalService userLocalService) {
-		_userLocalService = userLocalService;
 	}
 
 	private static final long _EXPIRATION = 3600000;
@@ -279,6 +297,9 @@ public class SyncAuthVerifier implements AuthVerifier {
 	private static final String _SECRET = PwdGenerator.getPassword();
 
 	private static final String _TOKEN_HEADER = "Sync-JWT";
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		SyncAuthVerifier.class);
 
 	private static JsonTokenParser _jsonTokenParser;
 	private static Signer _signer;

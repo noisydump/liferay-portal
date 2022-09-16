@@ -17,7 +17,9 @@ package com.liferay.analytics.reports.journal.internal.content.dashboard.item.ac
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.asset.display.page.constants.AssetDisplayPageConstants;
 import com.liferay.asset.display.page.service.AssetDisplayPageEntryLocalService;
+import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
+import com.liferay.asset.util.LinkedAssetEntryIdsUtil;
 import com.liferay.content.dashboard.item.action.ContentDashboardItemAction;
 import com.liferay.content.dashboard.item.action.provider.ContentDashboardItemActionProvider;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
@@ -36,7 +38,9 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -49,7 +53,7 @@ import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.Http;
+import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -138,15 +142,16 @@ public class ViewInPanelJournalArticleContentDashboardItemActionProviderTest {
 							LAYOUT_DISPLAY_PAGE_OBJECT_PROVIDER);
 
 		Assert.assertEquals(
-			String.valueOf(layoutDisplayPageObjectProvider.getClassNameId()),
-			_http.getParameter(
+			_portal.getClassName(
+				layoutDisplayPageObjectProvider.getClassNameId()),
+			HttpComponentsUtil.getParameter(
 				contentDashboardItemAction.getURL(),
 				"_com_liferay_analytics_reports_web_internal_portlet_" +
-					"AnalyticsReportsPortlet_classNameId",
+					"AnalyticsReportsPortlet_className",
 				false));
 		Assert.assertEquals(
 			String.valueOf(layoutDisplayPageObjectProvider.getClassPK()),
-			_http.getParameter(
+			HttpComponentsUtil.getParameter(
 				contentDashboardItemAction.getURL(),
 				"_com_liferay_analytics_reports_web_internal_portlet_" +
 					"AnalyticsReportsPortlet_classPK",
@@ -154,7 +159,7 @@ public class ViewInPanelJournalArticleContentDashboardItemActionProviderTest {
 
 		Assert.assertEquals(
 			"%2Fanalytics_reports_panel.jsp",
-			_http.getParameter(
+			HttpComponentsUtil.getParameter(
 				contentDashboardItemAction.getURL(),
 				"_com_liferay_analytics_reports_web_internal_portlet_" +
 					"AnalyticsReportsPortlet_mvcPath",
@@ -165,7 +170,13 @@ public class ViewInPanelJournalArticleContentDashboardItemActionProviderTest {
 	public void testGetContentDashboardItemActionWithUserWithoutEditPermission()
 		throws Exception {
 
+		PermissionChecker permissionChecker =
+			PermissionThreadLocal.getPermissionChecker();
+
 		User user = UserTestUtil.addUser();
+
+		PermissionThreadLocal.setPermissionChecker(
+			PermissionCheckerFactoryUtil.create(user));
 
 		try {
 			Assert.assertNull(
@@ -174,6 +185,8 @@ public class ViewInPanelJournalArticleContentDashboardItemActionProviderTest {
 						_journalArticle, _getHttpServletRequest(user)));
 		}
 		finally {
+			PermissionThreadLocal.setPermissionChecker(permissionChecker);
+
 			_userLocalService.deleteUser(user);
 		}
 	}
@@ -190,7 +203,13 @@ public class ViewInPanelJournalArticleContentDashboardItemActionProviderTest {
 	public void testIsShowContentDashboardItemActionWithUserWithoutEditPermission()
 		throws Exception {
 
+		PermissionChecker permissionChecker =
+			PermissionThreadLocal.getPermissionChecker();
+
 		User user = UserTestUtil.addUser();
+
+		PermissionThreadLocal.setPermissionChecker(
+			PermissionCheckerFactoryUtil.create(user));
 
 		try {
 			Assert.assertFalse(
@@ -198,6 +217,8 @@ public class ViewInPanelJournalArticleContentDashboardItemActionProviderTest {
 					_journalArticle, _getHttpServletRequest(user)));
 		}
 		finally {
+			PermissionThreadLocal.setPermissionChecker(permissionChecker);
+
 			_userLocalService.deleteUser(user);
 		}
 	}
@@ -208,11 +229,15 @@ public class ViewInPanelJournalArticleContentDashboardItemActionProviderTest {
 		MockHttpServletRequest mockHttpServletRequest =
 			new MockHttpServletRequest();
 
+		AssetEntry assetEntry = _assetEntryLocalService.getEntry(
+			JournalArticle.class.getName(),
+			_journalArticle.getResourcePrimKey());
+
 		mockHttpServletRequest.setAttribute(
-			WebKeys.LAYOUT_ASSET_ENTRY,
-			_assetEntryLocalService.getEntry(
-				JournalArticle.class.getName(),
-				_journalArticle.getResourcePrimKey()));
+			WebKeys.LAYOUT_ASSET_ENTRY, assetEntry);
+
+		LinkedAssetEntryIdsUtil.addLinkedAssetEntryId(
+			mockHttpServletRequest, assetEntry.getEntryId());
 
 		mockHttpServletRequest.setAttribute(
 			LayoutDisplayPageWebKeys.LAYOUT_DISPLAY_PAGE_OBJECT_PROVIDER,
@@ -267,9 +292,6 @@ public class ViewInPanelJournalArticleContentDashboardItemActionProviderTest {
 
 	@DeleteAfterTestRun
 	private Group _group;
-
-	@Inject
-	private Http _http;
 
 	private JournalArticle _journalArticle;
 

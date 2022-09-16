@@ -20,8 +20,8 @@
 SelectUserGroupsDisplayContext selectUserGroupsDisplayContext = new SelectUserGroupsDisplayContext(request, renderRequest, renderResponse);
 %>
 
-<clay:management-toolbar-v2
-	displayContext="<%= new SelectUserGroupsManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, selectUserGroupsDisplayContext) %>"
+<clay:management-toolbar
+	managementToolbarDisplayContext="<%= new SelectUserGroupsManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, selectUserGroupsDisplayContext) %>"
 />
 
 <aui:form cssClass="container-fluid container-fluid-max-xl" name="selectUserGroupFm">
@@ -94,18 +94,3 @@ SelectUserGroupsDisplayContext selectUserGroupsDisplayContext = new SelectUserGr
 		/>
 	</liferay-ui:search-container>
 </aui:form>
-
-<aui:script use="liferay-search-container">
-	var searchContainer = Liferay.SearchContainer.get(
-		'<portlet:namespace />userGroups'
-	);
-
-	searchContainer.on('rowToggled', function (event) {
-		Liferay.Util.getOpener().Liferay.fire(
-			'<%= HtmlUtil.escapeJS(selectUserGroupsDisplayContext.getEventName()) %>',
-			{
-				data: event.elements.allSelectedElements.getDOMNodes(),
-			}
-		);
-	});
-</aui:script>

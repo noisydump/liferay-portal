@@ -27,14 +27,22 @@ import com.liferay.portal.search.elasticsearch7.internal.LiferayElasticsearchInd
 import com.liferay.portal.search.test.util.indexing.BaseIndexingTestCase;
 import com.liferay.portal.search.test.util.indexing.DocumentCreationHelpers;
 import com.liferay.portal.search.test.util.indexing.IndexingFixture;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
  * @author Bryan Engler
  */
 public class GeoDistanceFilterTest extends BaseIndexingTestCase {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Test
 	public void testGeoDistanceFilter() throws Exception {
@@ -44,11 +52,11 @@ public class GeoDistanceFilterTest extends BaseIndexingTestCase {
 		GeoLocationPoint geoLocationPoint = new GeoLocationPoint(
 			33.9977, -117.8145);
 
-		assertCountWithinDistance(2, 500.0, geoLocationPoint);
+		_assertCountWithinDistance(2, 500.0, geoLocationPoint);
 
-		assertCountWithinDistance(1, 250.0, geoLocationPoint);
+		_assertCountWithinDistance(1, 250.0, geoLocationPoint);
 
-		assertCountWithinDistance(0, 100.0, geoLocationPoint);
+		_assertCountWithinDistance(0, 100.0, geoLocationPoint);
 	}
 
 	@Test
@@ -59,47 +67,11 @@ public class GeoDistanceFilterTest extends BaseIndexingTestCase {
 		GeoLocationPoint geoLocationPoint = new GeoLocationPoint(
 			33.9977, -117.8145);
 
-		assertCountWithinDistanceRange(2, 100.0, 600.0, geoLocationPoint);
+		_assertCountWithinDistanceRange(2, 100.0, 600.0, geoLocationPoint);
 
-		assertCountWithinDistanceRange(1, 160.0, 300.0, geoLocationPoint);
+		_assertCountWithinDistanceRange(1, 160.0, 300.0, geoLocationPoint);
 
-		assertCountWithinDistanceRange(0, 50.0, 150.0, geoLocationPoint);
-	}
-
-	protected void assertCount(int expected, Filter filter) throws Exception {
-		assertSearch(
-			indexingTestHelper -> {
-				indexingTestHelper.setFilter(filter);
-
-				indexingTestHelper.search();
-
-				indexingTestHelper.verify(
-					hits -> Assert.assertEquals(
-						indexingTestHelper.getRequestString(), expected,
-						hits.getLength()));
-			});
-	}
-
-	protected void assertCountWithinDistance(
-			int expected, double distance, GeoLocationPoint geoLocationPoint)
-		throws Exception {
-
-		assertCount(
-			expected,
-			new GeoDistanceFilter(
-				FIELD, geoLocationPoint, new GeoDistance(distance)));
-	}
-
-	protected void assertCountWithinDistanceRange(
-			int expected, double fromDistance, double toDistance,
-			GeoLocationPoint geoLocationPoint)
-		throws Exception {
-
-		assertCount(
-			expected,
-			new GeoDistanceRangeFilter(
-				FIELD, true, true, new GeoDistance(fromDistance),
-				geoLocationPoint, new GeoDistance(toDistance)));
+		_assertCountWithinDistanceRange(0, 50.0, 150.0, geoLocationPoint);
 	}
 
 	@Override
@@ -123,5 +95,41 @@ public class GeoDistanceFilterTest extends BaseIndexingTestCase {
 	}
 
 	protected static final String FIELD = Field.GEO_LOCATION;
+
+	private void _assertCount(int expected, Filter filter) throws Exception {
+		assertSearch(
+			indexingTestHelper -> {
+				indexingTestHelper.setFilter(filter);
+
+				indexingTestHelper.search();
+
+				indexingTestHelper.verify(
+					hits -> Assert.assertEquals(
+						indexingTestHelper.getRequestString(), expected,
+						hits.getLength()));
+			});
+	}
+
+	private void _assertCountWithinDistance(
+			int expected, double distance, GeoLocationPoint geoLocationPoint)
+		throws Exception {
+
+		_assertCount(
+			expected,
+			new GeoDistanceFilter(
+				FIELD, geoLocationPoint, new GeoDistance(distance)));
+	}
+
+	private void _assertCountWithinDistanceRange(
+			int expected, double fromDistance, double toDistance,
+			GeoLocationPoint geoLocationPoint)
+		throws Exception {
+
+		_assertCount(
+			expected,
+			new GeoDistanceRangeFilter(
+				FIELD, true, true, new GeoDistance(fromDistance),
+				geoLocationPoint, new GeoDistance(toDistance)));
+	}
 
 }

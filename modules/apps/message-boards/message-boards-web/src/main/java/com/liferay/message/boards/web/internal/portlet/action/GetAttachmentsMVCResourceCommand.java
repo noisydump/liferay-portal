@@ -16,10 +16,11 @@ package com.liferay.message.boards.web.internal.portlet.action;
 
 import com.liferay.message.boards.constants.MBPortletKeys;
 import com.liferay.message.boards.model.MBMessage;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCResourceCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
@@ -34,7 +35,6 @@ import com.liferay.trash.TrashHelper;
 
 import java.util.List;
 
-import javax.portlet.ActionRequest;
 import javax.portlet.PortletURL;
 import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceResponse;
@@ -101,7 +101,7 @@ public class GetAttachmentsMVCResourceCommand extends BaseMVCResourceCommand {
 					"id", fileEntry.getFileEntryId()
 				).put(
 					"size",
-					LanguageUtil.formatStorageSize(
+					_language.formatStorageSize(
 						fileEntry.getSize(), resourceRequest.getLocale())
 				).put(
 					"title", fileEntry.getTitle()
@@ -129,20 +129,21 @@ public class GetAttachmentsMVCResourceCommand extends BaseMVCResourceCommand {
 			ResourceResponse resourceResponse, FileEntry fileEntry)
 		throws Exception {
 
-		PortletURL deleteURL = resourceResponse.createActionURL();
-
-		deleteURL.setParameter(
-			ActionRequest.ACTION_NAME,
-			"/message_boards/edit_message_attachments");
-		deleteURL.setParameter(
-			Constants.CMD, _getDeleteCommand(resourceRequest));
-		deleteURL.setParameter(
-			"fileName", HtmlUtil.unescape(fileEntry.getTitle()));
-		deleteURL.setParameter(
-			"messageId", String.valueOf(message.getMessageId()));
-
-		return deleteURL;
+		return PortletURLBuilder.createActionURL(
+			resourceResponse
+		).setActionName(
+			"/message_boards/edit_message_attachments"
+		).setCMD(
+			_getDeleteCommand(resourceRequest)
+		).setParameter(
+			"fileName", HtmlUtil.unescape(fileEntry.getTitle())
+		).setParameter(
+			"messageId", message.getMessageId()
+		).buildPortletURL();
 	}
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private Portal _portal;

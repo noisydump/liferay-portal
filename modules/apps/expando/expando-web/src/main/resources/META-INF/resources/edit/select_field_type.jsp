@@ -38,13 +38,17 @@ renderResponse.setTitle(modelResourceName + ": " + ((expandoColumn == null) ? La
 
 PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(request, "custom-field"), String.valueOf(renderResponse.createRenderURL()));
 
-PortletURL viewAttributesURL = renderResponse.createRenderURL();
-
-viewAttributesURL.setParameter("mvcPath", "/view_attributes.jsp");
-viewAttributesURL.setParameter("redirect", redirect);
-viewAttributesURL.setParameter("modelResource", modelResource);
-
-PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(request, "view-attributes"), viewAttributesURL.toString());
+PortalUtil.addPortletBreadcrumbEntry(
+	request, LanguageUtil.get(request, "view-attributes"),
+	PortletURLBuilder.createRenderURL(
+		renderResponse
+	).setMVCPath(
+		"/view_attributes.jsp"
+	).setRedirect(
+		redirect
+	).setParameter(
+		"modelResource", modelResource
+	).buildString());
 
 PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(request, "new-custom-field"), null);
 %>

@@ -57,7 +57,7 @@ public class CommentSerDes {
 		sb.append("{");
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+			"yyyy-MM-dd'T'HH:mm:ssXX");
 
 		if (comment.getActions() != null) {
 			if (sb.length() > 1) {
@@ -104,6 +104,20 @@ public class CommentSerDes {
 
 			sb.append(
 				liferayToJSONDateFormat.format(comment.getDateModified()));
+
+			sb.append("\"");
+		}
+
+		if (comment.getExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"externalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(comment.getExternalReferenceCode()));
 
 			sb.append("\"");
 		}
@@ -171,7 +185,7 @@ public class CommentSerDes {
 		Map<String, String> map = new TreeMap<>();
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+			"yyyy-MM-dd'T'HH:mm:ssXX");
 
 		if (comment.getActions() == null) {
 			map.put("actions", null);
@@ -203,6 +217,15 @@ public class CommentSerDes {
 			map.put(
 				"dateModified",
 				liferayToJSONDateFormat.format(comment.getDateModified()));
+		}
+
+		if (comment.getExternalReferenceCode() == null) {
+			map.put("externalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"externalReferenceCode",
+				String.valueOf(comment.getExternalReferenceCode()));
 		}
 
 		if (comment.getId() == null) {
@@ -281,6 +304,14 @@ public class CommentSerDes {
 						toDate((String)jsonParserFieldValue));
 				}
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "externalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					comment.setExternalReferenceCode(
+						(String)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "id")) {
 				if (jsonParserFieldValue != null) {
 					comment.setId(Long.valueOf((String)jsonParserFieldValue));
@@ -302,9 +333,6 @@ public class CommentSerDes {
 				if (jsonParserFieldValue != null) {
 					comment.setText((String)jsonParserFieldValue);
 				}
-			}
-			else if (jsonParserFieldName.equals("status")) {
-				throw new IllegalArgumentException();
 			}
 		}
 
@@ -334,7 +362,7 @@ public class CommentSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -370,7 +398,7 @@ public class CommentSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

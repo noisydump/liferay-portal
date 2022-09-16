@@ -25,7 +25,7 @@ String taglibOnChange = "Liferay.Util.toggleDisabled('#" + liferayPortletRespons
 %>
 
 <aui:fieldset>
-	<aui:input checked="<%= useCustomName %>" helpMessage="use-custom-name-help" label="use-custom-name" name="TypeSettingsProperties--useCustomName--" onChange="<%= taglibOnChange %>" type="checkbox" />
+	<aui:input checked="<%= useCustomName %>" helpMessage="use-custom-name-help" label="use-custom-name" labelCssClass="font-weight-normal" name="TypeSettingsProperties--useCustomName--" onChange="<%= taglibOnChange %>" type="checkbox" />
 </aui:fieldset>
 
 <aui:input autoFocus="<%= true %>" disabled="<%= !useCustomName %>" label="name" localized="<%= true %>" maxlength='<%= ModelHintsUtil.getMaxLength(SiteNavigationMenuItem.class.getName(), "name") %>' name="name" placeholder="name" type="text" value='<%= SiteNavigationMenuItemUtil.getSiteNavigationMenuItemXML(siteNavigationMenuItem, "name") %>'>
@@ -63,39 +63,42 @@ String taglibOnChange = "Liferay.Util.toggleDisabled('#" + liferayPortletRespons
 	</aui:input>
 </div>
 
-<clay:button
-	cssClass="mb-4"
-	displayType="secondary"
-	id='<%= liferayPortletResponse.getNamespace() + "chooseLayout" %>'
-	label='<%= LanguageUtil.get(resourceBundle, "choose") %>'
-	small="<%= true %>"
-/>
-
 <%
 String eventName = liferayPortletResponse.getNamespace() + "selectLayout";
 
 ItemSelector itemSelector = (ItemSelector)request.getAttribute(SiteNavigationMenuItemTypeLayoutWebKeys.ITEM_SELECTOR);
 
-ItemSelectorCriterion itemSelectorCriterion = new LayoutItemSelectorCriterion();
+LayoutItemSelectorCriterion layoutItemSelectorCriterion = new LayoutItemSelectorCriterion();
 
-itemSelectorCriterion.setDesiredItemSelectorReturnTypes(new UUIDItemSelectorReturnType());
+layoutItemSelectorCriterion.setDesiredItemSelectorReturnTypes(new UUIDItemSelectorReturnType());
+layoutItemSelectorCriterion.setShowBreadcrumb(false);
+layoutItemSelectorCriterion.setShowHiddenPages(true);
 
-PortletURL itemSelectorURL = itemSelector.getItemSelectorURL(RequestBackedPortletURLFactoryUtil.create(renderRequest), eventName, itemSelectorCriterion);
+PortletURL itemSelectorURL = itemSelector.getItemSelectorURL(RequestBackedPortletURLFactoryUtil.create(renderRequest), eventName, layoutItemSelectorCriterion);
 
 if (selLayout != null) {
 	itemSelectorURL.setParameter("layoutUuid", selLayout.getUuid());
 }
 %>
 
-<liferay-frontend:component
-	componentId='<%= liferayPortletResponse.getNamespace() + "editLayout" %>'
-	context='<%=
+<clay:button
+	additionalProps='<%=
 		HashMapBuilder.<String, Object>put(
 			"eventName", eventName
 		).put(
 			"itemSelectorURL", itemSelectorURL.toString()
 		).build()
 	%>'
+	cssClass="mb-4"
+	displayType="secondary"
+	id='<%= liferayPortletResponse.getNamespace() + "chooseLayout" %>'
+	label='<%= LanguageUtil.get(resourceBundle, "choose") %>'
+	propsTransformer="js/ChooseLayoutButtonPropsTransformer"
+	small="<%= true %>"
+/>
+
+<liferay-frontend:component
+	componentId='<%= liferayPortletResponse.getNamespace() + "editLayout" %>'
 	module="js/EditLayout"
 	servletContext="<%= application %>"
 />

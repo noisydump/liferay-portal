@@ -273,7 +273,8 @@ public class TierPriceSerDes {
 			}
 			else if (Objects.equals(jsonParserFieldName, "price")) {
 				if (jsonParserFieldValue != null) {
-					tierPrice.setPrice((BigDecimal)jsonParserFieldValue);
+					tierPrice.setPrice(
+						new BigDecimal((String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(
@@ -293,11 +294,9 @@ public class TierPriceSerDes {
 			}
 			else if (Objects.equals(jsonParserFieldName, "promoPrice")) {
 				if (jsonParserFieldValue != null) {
-					tierPrice.setPromoPrice((BigDecimal)jsonParserFieldValue);
+					tierPrice.setPromoPrice(
+						new BigDecimal((String)jsonParserFieldValue));
 				}
-			}
-			else if (jsonParserFieldName.equals("status")) {
-				throw new IllegalArgumentException();
 			}
 		}
 
@@ -327,7 +326,7 @@ public class TierPriceSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -363,7 +362,7 @@ public class TierPriceSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

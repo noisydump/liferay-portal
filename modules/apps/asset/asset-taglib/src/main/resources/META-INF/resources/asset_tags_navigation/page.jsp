@@ -26,43 +26,41 @@ boolean showZeroAssetCount = GetterUtil.getBoolean((String)request.getAttribute(
 
 String tag = ParamUtil.getString(request, "tag");
 
-PortletURL portletURL = renderResponse.createRenderURL();
-
-String tagsNavigation = _buildTagsNavigation(scopeGroupId, tag, portletURL, classNameId, displayStyle, maxAssetTags, showAssetCount, showZeroAssetCount);
-
-if (Validator.isNotNull(tagsNavigation)) {
+String tagsNavigation = _buildTagsNavigation(scopeGroupId, tag, classNameId, displayStyle, maxAssetTags, renderResponse, showAssetCount, showZeroAssetCount);
 %>
 
-	<liferay-ui:panel-container
-		cssClass="taglib-asset-tags-navigation"
-		extended="<%= true %>"
-		persistState="<%= true %>"
-	>
-		<%= tagsNavigation %>
-	</liferay-ui:panel-container>
+<c:choose>
+	<c:when test="<%= Validator.isNotNull(tagsNavigation) %>">
+		<liferay-ui:panel-container
+			cssClass="taglib-asset-tags-navigation"
+			extended="<%= true %>"
+			persistState="<%= true %>"
+		>
+			<%= tagsNavigation %>
+		</liferay-ui:panel-container>
+	</c:when>
+	<c:otherwise>
+
+		<%
+		if (hidePortletWhenEmpty) {
+			renderRequest.setAttribute(WebKeys.PORTLET_CONFIGURATOR_VISIBILITY, Boolean.TRUE);
+		}
+		%>
+
+		<div class="alert alert-info">
+			<liferay-ui:message key="there-are-no-tags" />
+		</div>
+	</c:otherwise>
+</c:choose>
 
 <%
-}
-else {
-	if (hidePortletWhenEmpty) {
-		renderRequest.setAttribute(WebKeys.PORTLET_CONFIGURATOR_VISIBILITY, Boolean.TRUE);
-	}
-%>
-
-	<div class="alert alert-info">
-		<liferay-ui:message key="there-are-no-tags" />
-	</div>
-
-<%
-}
-
 if (Validator.isNotNull(tag)) {
 	PortalUtil.addPortletBreadcrumbEntry(request, tag, currentURL, null, false);
 }
 %>
 
 <%!
-private String _buildTagsNavigation(long scopeGroupId, String selectedTagName, PortletURL portletURL, long classNameId, String displayStyle, int maxAssetTags, boolean showAssetCount, boolean showZeroAssetCount) throws Exception {
+private String _buildTagsNavigation(long scopeGroupId, String selectedTagName, long classNameId, String displayStyle, int maxAssetTags, RenderResponse renderResponse, boolean showAssetCount, boolean showZeroAssetCount) throws Exception {
 	List<AssetTag> tags = null;
 
 	if (showAssetCount && (classNameId > 0)) {
@@ -120,10 +118,6 @@ private String _buildTagsNavigation(long scopeGroupId, String selectedTagName, P
 		multiplier = (double)5 / (maxCount - minCount);
 	}
 
-	portletURL.setParameter("tag", StringPool.BLANK);
-
-	String originalPortletURLString = portletURL.toString();
-
 	for (AssetTag tag : tags) {
 		String tagName = tag.getName();
 
@@ -148,12 +142,24 @@ private String _buildTagsNavigation(long scopeGroupId, String selectedTagName, P
 
 		if (tagName.equals(selectedTagName)) {
 			sb.append("<a class=\"tag-selected\" href=\"");
-			sb.append(HtmlUtil.escape(originalPortletURLString));
+
+			PortletURL portletURL = PortletURLBuilder.createRenderURL(
+				renderResponse
+			).setParameter(
+				"tag", StringPool.BLANK
+			).buildPortletURL();
+
+			sb.append(HtmlUtil.escape(portletURL.toString()));
 		}
 		else {
-			portletURL.setParameter("tag", tagName);
-
 			sb.append("<a href=\"");
+
+			PortletURL portletURL = PortletURLBuilder.createRenderURL(
+				renderResponse
+			).setParameter(
+				"tag", tagName
+			).buildPortletURL();
+
 			sb.append(HtmlUtil.escape(portletURL.toString()));
 		}
 

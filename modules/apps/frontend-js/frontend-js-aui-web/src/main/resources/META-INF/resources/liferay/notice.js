@@ -18,22 +18,22 @@
 AUI.add(
 	'liferay-notice',
 	(A) => {
-		var ADOM = A.DOM;
-		var ANode = A.Node;
-		var Do = A.Do;
-		var Lang = A.Lang;
+		const ADOM = A.DOM;
+		const ANode = A.Node;
+		const Do = A.Do;
+		const Lang = A.Lang;
 
-		var CSS_ALERTS = 'has-alerts';
+		const CSS_ALERTS = 'has-alerts';
 
-		var STR_CLICK = 'click';
+		const STR_CLICK = 'click';
 
-		var STR_EMPTY = '';
+		const STR_EMPTY = '';
 
-		var STR_HIDE = 'hide';
+		const STR_HIDE = 'hide';
 
-		var STR_PX = 'px';
+		const STR_PX = 'px';
 
-		var STR_SHOW = 'show';
+		const STR_SHOW = 'show';
 
 		/**
 		 * @deprecated As of Wilberforce (7.0.x)
@@ -61,8 +61,8 @@ AUI.add(
 		 * @module liferay-notice
 		 */
 
-		var Notice = function (options) {
-			var instance = this;
+		const Notice = function (options) {
+			const instance = this;
 
 			options = options || {};
 
@@ -91,6 +91,7 @@ AUI.add(
 
 			instance._timeout = options.timeout;
 
+			// eslint-disable-next-line @liferay/aui/no-get-body
 			instance._body = A.getBody();
 
 			instance._useToggleButton = false;
@@ -106,7 +107,7 @@ AUI.add(
 				instance._useToggleButton = true;
 			}
 
-			if (instance._noticeType == 'warning') {
+			if (instance._noticeType === 'warning') {
 				instance._noticeClass = 'alert-danger popup-alert-warning';
 			}
 
@@ -123,9 +124,9 @@ AUI.add(
 
 		Notice.prototype = {
 			_addCloseButton(notice) {
-				var instance = this;
+				const instance = this;
 
-				var closeButton;
+				let closeButton;
 
 				if (instance._closeText !== false) {
 					instance._closeText =
@@ -137,8 +138,8 @@ AUI.add(
 				}
 
 				if (instance._useCloseButton) {
-					var html =
-						'<button class="btn btn-secondary submit popup-alert-close">' +
+					const html =
+						'<button class="btn btn-secondary c-ml-1 submit">' +
 						instance._closeText +
 						'</button>';
 
@@ -154,7 +155,7 @@ AUI.add(
 			},
 
 			_addToggleButton(notice) {
-				var instance = this;
+				const instance = this;
 
 				if (instance._useToggleButton) {
 					instance._hideText =
@@ -164,20 +165,20 @@ AUI.add(
 						instance._toggleText.show ||
 						Liferay.Language.get('show');
 
-					var toggleButton = ANode.create(
-						'<a class="toggle-button" href="javascript:;"><span>' +
+					const toggleButton = ANode.create(
+						'<a class="toggle-button" href="javascript:void(0);"><span>' +
 							instance._hideText +
 							'</span></a>'
 					);
-					var toggleSpan = toggleButton.one('span');
+					const toggleSpan = toggleButton.one('span');
 
-					var visible = 0;
+					let visible = 0;
 
-					var hideText = instance._hideText;
-					var showText = instance._showText;
+					const hideText = instance._hideText;
+					const showText = instance._showText;
 
 					toggleButton.on(STR_CLICK, () => {
-						var text = showText;
+						let text = showText;
 
 						if (visible === 0) {
 							text = hideText;
@@ -197,20 +198,20 @@ AUI.add(
 			},
 
 			_afterNoticeShow() {
-				var instance = this;
+				const instance = this;
 
 				instance._preventHide();
 
-				var notice = instance._notice;
+				const notice = instance._notice;
 
 				if (instance._useAnimation) {
-					var animationConfig = instance._animationConfig;
+					const animationConfig = instance._animationConfig;
 
-					var left = animationConfig.left;
-					var top = animationConfig.top;
+					let left = animationConfig.left;
+					let top = animationConfig.top;
 
 					if (!left) {
-						var noticeRegion = ADOM.region(
+						const noticeRegion = ADOM.region(
 							ANode.getDOMNode(notice)
 						);
 
@@ -246,12 +247,13 @@ AUI.add(
 			},
 
 			_beforeNoticeHide() {
-				var instance = this;
+				const instance = this;
 
-				var returnVal;
+				let returnVal;
 
 				if (instance._useAnimation) {
-					var animationConfig = A.merge(instance._animationConfig, {
+					// eslint-disable-next-line @liferay/aui/no-merge
+					const animationConfig = A.merge(instance._animationConfig, {
 						top: -instance._notice.get('offsetHeight') + STR_PX,
 					});
 
@@ -271,18 +273,18 @@ AUI.add(
 			},
 
 			_beforeNoticeShow() {
-				var instance = this;
+				const instance = this;
 
 				instance._notice.toggle(true);
 			},
 
 			_createHTML() {
-				var instance = this;
+				const instance = this;
 
-				var content = instance._content;
-				var node = A.one(instance._node);
+				const content = instance._content;
+				const node = A.one(instance._node);
 
-				var notice =
+				const notice =
 					node ||
 					ANode.create(
 						'<div class="alert alert-warning" dynamic="true"></div>'
@@ -325,7 +327,7 @@ AUI.add(
 			},
 
 			_preventHide() {
-				var instance = this;
+				const instance = this;
 
 				if (instance._hideHandle) {
 					instance._hideHandle.cancel();
@@ -335,9 +337,9 @@ AUI.add(
 			},
 
 			close() {
-				var instance = this;
+				const instance = this;
 
-				var notice = instance._notice;
+				const notice = instance._notice;
 
 				notice.hide();
 
@@ -349,14 +351,17 @@ AUI.add(
 			},
 
 			setClosing() {
-				var instance = this;
+				const instance = this;
 
-				var alerts = A.all('.popup-alert-notice, .popup-alert-warning');
+				const alerts = A.all(
+					'.popup-alert-notice, .popup-alert-warning'
+				);
 
 				if (alerts.size()) {
 					instance._useCloseButton = true;
 
 					if (!instance._body) {
+						// eslint-disable-next-line @liferay/aui/no-get-body
 						instance._body = A.getBody();
 					}
 

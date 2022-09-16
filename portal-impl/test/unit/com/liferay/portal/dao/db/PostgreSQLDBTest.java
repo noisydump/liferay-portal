@@ -16,8 +16,11 @@ package com.liferay.portal.dao.db;
 
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.test.BaseDBTestCase;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -25,6 +28,11 @@ import org.junit.Test;
  * @author Alberto Chaparro
  */
 public class PostgreSQLDBTest extends BaseDBTestCase {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Test
 	public void testRewordAlterColumnType() throws Exception {
@@ -64,7 +72,9 @@ public class PostgreSQLDBTest extends BaseDBTestCase {
 	@Test
 	public void testRewordRenameTable() throws Exception {
 		Assert.assertEquals(
-			"alter table a rename to b;\n", buildSQL(RENAME_TABLE_QUERY));
+			"alter table a rename to b;alter table b rename constraint " +
+				"a_pkey to b_pkey;\n",
+			buildSQL(RENAME_TABLE_QUERY));
 	}
 
 	@Override

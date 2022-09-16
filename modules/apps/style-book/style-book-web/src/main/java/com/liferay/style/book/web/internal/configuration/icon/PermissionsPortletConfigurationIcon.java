@@ -15,7 +15,7 @@
 package com.liferay.style.book.web.internal.configuration.icon;
 
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
@@ -49,8 +49,13 @@ public class PermissionsPortletConfigurationIcon
 	extends BasePortletConfigurationIcon {
 
 	@Override
+	public String getIconCssClass() {
+		return "password-policies";
+	}
+
+	@Override
 	public String getMessage(PortletRequest portletRequest) {
-		return LanguageUtil.get(
+		return _language.get(
 			getResourceBundle(getLocale(portletRequest)), "permissions");
 	}
 
@@ -73,7 +78,7 @@ public class PermissionsPortletConfigurationIcon
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(exception, exception);
+				_log.debug(exception);
 			}
 		}
 
@@ -82,7 +87,7 @@ public class PermissionsPortletConfigurationIcon
 
 	@Override
 	public double getWeight() {
-		return 101;
+		return 99;
 	}
 
 	@Override
@@ -109,7 +114,7 @@ public class PermissionsPortletConfigurationIcon
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(exception, exception);
+				_log.debug(exception);
 			}
 
 			return false;
@@ -130,6 +135,9 @@ public class PermissionsPortletConfigurationIcon
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		PermissionsPortletConfigurationIcon.class);
+
+	@Reference
+	private Language _language;
 
 	@Reference(
 		target = "(resource.name=" + StyleBookConstants.RESOURCE_NAME + ")"

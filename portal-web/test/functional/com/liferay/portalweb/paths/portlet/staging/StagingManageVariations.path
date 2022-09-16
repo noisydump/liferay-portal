@@ -2,11 +2,13 @@
 <head>
 <title>StagingManageVariations</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">StagingManageVariations</td></tr>
 </thead>
+
 <tbody>
 <tr>
 	<td>ADD</td>
@@ -18,7 +20,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--SITE_VARIATION-->
+
 <tr>
 	<td>ADD_SITE_PAGES_VARIATIONS_BUTTON</td>
 	<td>//a[contains(@id,'_addBranchButton')]</td>
@@ -29,7 +33,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--SITE_PAGES_VARIATIONS_TABLE-->
+
 <tr>
 	<td>UPDATE_BUTTON</td>
 	<td>//div[contains(@class,'button-holder')]//button[contains(@id,'StagingBarPortlet') and contains(.,'Update')]</td>
@@ -40,7 +46,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--ADD_SITE_PAGES_VARIATION-->
+
 <tr>
 	<td>MANAGE_VARIATION</td>
 	<td>//input[contains(@id,'_name')]</td>
@@ -56,7 +64,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--MERGE_SITE_PAGES_VARIATION_TABLE-->
+
 <tr>
 	<td>MERGE_SITE_PAGES_VARIATION_TABLE_BRANCH</td>
 	<td>xpath=(//tbody//tr[contains(.,'${key_sitePagesVariationMergeName}')]/td)[1]</td>

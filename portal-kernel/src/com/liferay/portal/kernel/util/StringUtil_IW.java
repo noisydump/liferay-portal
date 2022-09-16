@@ -46,6 +46,10 @@ public class StringUtil_IW {
 		return StringUtil.appendParentheticalSuffix(s, suffix);
 	}
 
+	public java.util.List<java.lang.String> asList(java.lang.Object object) {
+		return StringUtil.asList(object);
+	}
+
 	public java.lang.String bytesToHexString(byte[] bytes) {
 		return StringUtil.bytesToHexString(bytes);
 	}
@@ -138,6 +142,10 @@ public class StringUtil_IW {
 
 	public java.lang.String extractLeadingDigits(java.lang.String s) {
 		return StringUtil.extractLeadingDigits(s);
+	}
+
+	public byte[] hexStringToBytes(java.lang.String hexString) {
+		return StringUtil.hexStringToBytes(hexString);
 	}
 
 	public int indexOfAny(java.lang.String s, char[] chars) {
@@ -363,6 +371,11 @@ public class StringUtil_IW {
 		return StringUtil.removeChars(s, oldSubs);
 	}
 
+	public java.lang.String removeFirst(java.lang.String s,
+		java.lang.String oldSub) {
+		return StringUtil.removeFirst(s, oldSub);
+	}
+
 	public java.lang.String removeFromList(java.lang.String s,
 		java.lang.String element) {
 		return StringUtil.removeFromList(s, element);
@@ -371,6 +384,11 @@ public class StringUtil_IW {
 	public java.lang.String removeFromList(java.lang.String s,
 		java.lang.String element, java.lang.String delimiter) {
 		return StringUtil.removeFromList(s, element, delimiter);
+	}
+
+	public java.lang.String removeLast(java.lang.String s,
+		java.lang.String oldSub) {
+		return StringUtil.removeLast(s, oldSub);
 	}
 
 	public java.lang.String removeSubstring(java.lang.String s,
@@ -474,15 +492,15 @@ public class StringUtil_IW {
 		return StringUtil.replaceLast(s, oldSubs, newSubs);
 	}
 
-	public com.liferay.portal.kernel.util.StringBundler replaceToStringBundler(
+	public com.liferay.petra.string.StringBundler replaceToStringBundler(
 		java.lang.String s, java.lang.String begin, java.lang.String end,
 		java.util.Map<java.lang.String, java.lang.String> values) {
 		return StringUtil.replaceToStringBundler(s, begin, end, values);
 	}
 
-	public com.liferay.portal.kernel.util.StringBundler replaceWithStringBundler(
+	public com.liferay.petra.string.StringBundler replaceWithStringBundler(
 		java.lang.String s, java.lang.String begin, java.lang.String end,
-		java.util.Map<java.lang.String, com.liferay.portal.kernel.util.StringBundler> values) {
+		java.util.Map<java.lang.String, com.liferay.petra.string.StringBundler> values) {
 		return StringUtil.replaceWithStringBundler(s, begin, end, values);
 	}
 

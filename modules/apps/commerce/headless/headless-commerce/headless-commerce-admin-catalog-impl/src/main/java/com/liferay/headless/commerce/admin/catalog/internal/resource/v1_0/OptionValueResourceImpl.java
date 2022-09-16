@@ -26,6 +26,9 @@ import com.liferay.headless.commerce.admin.catalog.internal.dto.v1_0.converter.O
 import com.liferay.headless.commerce.admin.catalog.resource.v1_0.OptionValueResource;
 import com.liferay.headless.commerce.core.util.LanguageUtils;
 import com.liferay.headless.commerce.core.util.ServiceContextHelper;
+import com.liferay.portal.kernel.change.tracking.CTAware;
+import com.liferay.portal.kernel.search.BaseModelSearchResult;
+import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
@@ -45,8 +48,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import javax.validation.constraints.NotNull;
-
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
@@ -65,11 +66,12 @@ import org.osgi.service.component.annotations.ServiceScope;
 	scope = ServiceScope.PROTOTYPE,
 	service = {NestedFieldSupport.class, OptionValueResource.class}
 )
+@CTAware
 public class OptionValueResourceImpl
 	extends BaseOptionValueResourceImpl implements NestedFieldSupport {
 
 	@Override
-	public Response deleteOptionValue(@NotNull Long id) throws Exception {
+	public Response deleteOptionValue(Long id) throws Exception {
 		_cpOptionValueService.deleteCPOptionValue(id);
 
 		Response.ResponseBuilder responseBuilder = Response.ok();
@@ -79,16 +81,16 @@ public class OptionValueResourceImpl
 
 	@Override
 	public Response deleteOptionValueByExternalReferenceCode(
-			@NotNull String externalReferenceCode)
+			String externalReferenceCode)
 		throws Exception {
 
 		CPOptionValue cpOptionValue =
 			_cpOptionValueService.fetchByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (cpOptionValue == null) {
 			throw new NoSuchCPOptionValueException(
-				"Unable to find Option Value with externalReferenceCode: " +
+				"Unable to find option value with external reference code " +
 					externalReferenceCode);
 		}
 
@@ -102,65 +104,74 @@ public class OptionValueResourceImpl
 
 	@Override
 	public Page<OptionValue> getOptionByExternalReferenceCodeOptionValuesPage(
-			String externalReferenceCode, Pagination pagination)
+			String externalReferenceCode, String search, Pagination pagination,
+			Sort[] sorts)
 		throws Exception {
 
 		CPOption cpOption = _cpOptionService.fetchByExternalReferenceCode(
-			contextCompany.getCompanyId(), externalReferenceCode);
+			externalReferenceCode, contextCompany.getCompanyId());
 
 		if (cpOption == null) {
 			throw new NoSuchCPOptionException(
-				"Unable to find Option with externalReferenceCode: " +
+				"Unable to find option with external reference code " +
 					externalReferenceCode);
 		}
 
-		List<CPOptionValue> cpOptionValues =
-			_cpOptionValueService.getCPOptionValues(
-				cpOption.getCPOptionId(), pagination.getStartPosition(),
-				pagination.getEndPosition());
+		BaseModelSearchResult<CPOptionValue>
+			cpOptionValueBaseModelSearchResult =
+				_cpOptionValueService.searchCPOptionValues(
+					cpOption.getCompanyId(), cpOption.getCPOptionId(), search,
+					pagination.getStartPosition(), pagination.getEndPosition(),
+					sorts);
 
-		int totalItems = _cpOptionValueService.getCPOptionValuesCount(
-			cpOption.getCPOptionId());
+		int totalItems = _cpOptionValueService.searchCPOptionValuesCount(
+			cpOption.getCompanyId(), cpOption.getCPOptionId(), search);
 
-		return Page.of(_toOptionValues(cpOptionValues), pagination, totalItems);
+		return Page.of(
+			_toOptionValues(cpOptionValueBaseModelSearchResult.getBaseModels()),
+			pagination, totalItems);
 	}
 
 	@NestedField(parentClass = Option.class, value = "values")
 	@Override
 	public Page<OptionValue> getOptionIdOptionValuesPage(
-			Long id, Pagination pagination)
+			Long id, String search, Pagination pagination, Sort[] sorts)
 		throws Exception {
 
 		CPOption cpOption = _cpOptionService.getCPOption(id);
 
-		List<CPOptionValue> cpOptionValues =
-			_cpOptionValueService.getCPOptionValues(
-				cpOption.getCPOptionId(), pagination.getStartPosition(),
-				pagination.getEndPosition());
+		BaseModelSearchResult<CPOptionValue>
+			cpOptionValueBaseModelSearchResult =
+				_cpOptionValueService.searchCPOptionValues(
+					cpOption.getCompanyId(), cpOption.getCPOptionId(), search,
+					pagination.getStartPosition(), pagination.getEndPosition(),
+					sorts);
 
-		int totalItems = _cpOptionValueService.getCPOptionValuesCount(
-			cpOption.getCPOptionId());
+		int totalItems = _cpOptionValueService.searchCPOptionValuesCount(
+			cpOption.getCompanyId(), cpOption.getCPOptionId(), search);
 
-		return Page.of(_toOptionValues(cpOptionValues), pagination, totalItems);
+		return Page.of(
+			_toOptionValues(cpOptionValueBaseModelSearchResult.getBaseModels()),
+			pagination, totalItems);
 	}
 
 	@Override
-	public OptionValue getOptionValue(@NotNull Long id) throws Exception {
+	public OptionValue getOptionValue(Long id) throws Exception {
 		return _toOptionValue(id);
 	}
 
 	@Override
 	public OptionValue getOptionValueByExternalReferenceCode(
-			@NotNull String externalReferenceCode)
+			String externalReferenceCode)
 		throws Exception {
 
 		CPOptionValue cpOptionValue =
 			_cpOptionValueService.fetchByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (cpOptionValue == null) {
 			throw new NoSuchCPOptionValueException(
-				"Unable to find Option Value with externalReferenceCode: " +
+				"Unable to find option value with external reference code " +
 					externalReferenceCode);
 		}
 
@@ -168,13 +179,13 @@ public class OptionValueResourceImpl
 	}
 
 	@Override
-	public Response patchOptionValue(@NotNull Long id, OptionValue optionValue)
+	public Response patchOptionValue(Long id, OptionValue optionValue)
 		throws Exception {
 
 		CPOptionValue cpOptionValue = _cpOptionValueService.getCPOptionValue(
 			id);
 
-		_upsertOptionValue(cpOptionValue.getCPOption(), optionValue);
+		_addOrUpdateOptionValue(cpOptionValue.getCPOption(), optionValue);
 
 		Response.ResponseBuilder responseBuilder = Response.ok();
 
@@ -183,20 +194,20 @@ public class OptionValueResourceImpl
 
 	@Override
 	public Response patchOptionValueByExternalReferenceCode(
-			@NotNull String externalReferenceCode, OptionValue optionValue)
+			String externalReferenceCode, OptionValue optionValue)
 		throws Exception {
 
 		CPOptionValue cpOptionValue =
 			_cpOptionValueService.fetchByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (cpOptionValue == null) {
 			throw new NoSuchCPOptionValueException(
-				"Unable to find Option Value with externalReferenceCode: " +
+				"Unable to find option value with external reference code " +
 					externalReferenceCode);
 		}
 
-		_upsertOptionValue(cpOptionValue.getCPOption(), optionValue);
+		_addOrUpdateOptionValue(cpOptionValue.getCPOption(), optionValue);
 
 		Response.ResponseBuilder responseBuilder = Response.ok();
 
@@ -209,22 +220,22 @@ public class OptionValueResourceImpl
 		throws Exception {
 
 		CPOption cpOption = _cpOptionService.fetchByExternalReferenceCode(
-			contextCompany.getCompanyId(), externalReferenceCode);
+			externalReferenceCode, contextCompany.getCompanyId());
 
 		if (cpOption == null) {
 			throw new NoSuchCPOptionException(
-				"Unable to find Option with externalReferenceCode: " +
+				"Unable to find option with external reference code " +
 					externalReferenceCode);
 		}
 
-		return _upsertOptionValue(cpOption, optionValue);
+		return _addOrUpdateOptionValue(cpOption, optionValue);
 	}
 
 	@Override
 	public OptionValue postOptionIdOptionValue(Long id, OptionValue optionValue)
 		throws Exception {
 
-		return _upsertOptionValue(
+		return _addOrUpdateOptionValue(
 			_cpOptionService.getCPOption(id), optionValue);
 	}
 
@@ -257,6 +268,22 @@ public class OptionValueResourceImpl
 		).put(
 			"method", _getHttpMethodName(clazz, _getMethod(clazz, methodName))
 		).build();
+	}
+
+	private OptionValue _addOrUpdateOptionValue(
+			CPOption cpOption, OptionValue optionValue)
+		throws Exception {
+
+		CPOptionValue cpOptionValue =
+			_cpOptionValueService.addOrUpdateCPOptionValue(
+				optionValue.getExternalReferenceCode(),
+				cpOption.getCPOptionId(),
+				LanguageUtils.getLocalizedMap(optionValue.getName()),
+				GetterUtil.get(optionValue.getPriority(), 0D),
+				optionValue.getKey(),
+				_serviceContextHelper.getServiceContext());
+
+		return _toOptionValue(cpOptionValue.getCPOptionValueId());
 	}
 
 	private Map<String, Map<String, String>> _getActions(long cpOptionValueId)
@@ -350,20 +377,6 @@ public class OptionValueResourceImpl
 		}
 
 		return productOptionValues;
-	}
-
-	private OptionValue _upsertOptionValue(
-			CPOption cpOption, OptionValue optionValue)
-		throws Exception {
-
-		CPOptionValue cpOptionValue = _cpOptionValueService.upsertCPOptionValue(
-			cpOption.getCPOptionId(),
-			LanguageUtils.getLocalizedMap(optionValue.getName()),
-			GetterUtil.get(optionValue.getPriority(), 0D), optionValue.getKey(),
-			optionValue.getExternalReferenceCode(),
-			_serviceContextHelper.getServiceContext());
-
-		return _toOptionValue(cpOptionValue.getCPOptionValueId());
 	}
 
 	@Reference

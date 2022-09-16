@@ -29,25 +29,22 @@ request.setAttribute("view.jsp-portletURL", portletURL);
 <%@ include file="/navbar_definitions.jspf" %>
 
 <div class="container-fluid container-fluid-max-xl pt-4" id="<portlet:namespace />productInstancesContainer">
-	<aui:form action="<%= portletURL.toString() %>" method="post" name="fm">
+	<aui:form action="<%= portletURL %>" method="post" name="fm">
 		<aui:input name="<%= Constants.CMD %>" type="hidden" />
 		<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
 		<aui:input name="deleteCPInstanceIds" type="hidden" />
 
 		<liferay-ui:error exception="<%= NoSuchSkuContributorCPDefinitionOptionRelException.class %>" message="there-are-no-options-set-as-sku-contributor" />
 
-		<clay:data-set-display
+		<frontend-data-set:classic-display
 			contextParams='<%=
 				HashMapBuilder.<String, String>put(
 					"cpDefinitionId", String.valueOf(cpInstanceDisplayContext.getCPDefinitionId())
 				).build()
 			%>'
-			dataProviderKey="<%= CommerceProductDataSetConstants.COMMERCE_DATA_SET_KEY_ALL_PRODUCT_INSTANCES %>"
-			id="<%= CommerceProductDataSetConstants.COMMERCE_DATA_SET_KEY_ALL_PRODUCT_INSTANCES %>"
+			dataProviderKey="<%= CommerceProductFDSNames.ALL_PRODUCT_INSTANCES %>"
+			id="<%= CommerceProductFDSNames.ALL_PRODUCT_INSTANCES %>"
 			itemsPerPage="<%= 10 %>"
-			namespace="<%= liferayPortletResponse.getNamespace() %>"
-			pageNumber="<%= 1 %>"
-			portletURL="<%= currentURLObj %>"
 			style="stacked"
 		/>
 	</aui:form>

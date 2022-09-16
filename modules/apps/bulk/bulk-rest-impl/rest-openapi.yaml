@@ -89,7 +89,7 @@ components:
 info:
     description:
         "A Java client JAR is available for use with the group ID 'com.liferay', artifact ID
-        'com.liferay.bulk.rest.client', and version '3.0.0'."
+        'com.liferay.bulk.rest.client', and version '3.0.14'."
     license:
         name: "Apache 2.0"
         url: "http://www.apache.org/licenses/LICENSE-2.0.html"
@@ -117,8 +117,6 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/Selection"
-                    description:
-                        ""
             tags: ["Selection"]
     "/keywords/batch":
         patch:
@@ -131,11 +129,10 @@ paths:
                         schema:
                             $ref: "#/components/schemas/KeywordBulkSelection"
             responses:
-                200:
+                204:
                     content:
-                        {}
-                    description:
-                        ""
+                        application/json: {}
+                        application/xml: {}
             tags: ["Keyword"]
         put:
             requestBody:
@@ -147,11 +144,10 @@ paths:
                         schema:
                             $ref: "#/components/schemas/KeywordBulkSelection"
             responses:
-                200:
+                204:
                     content:
-                        {}
-                    description:
-                        ""
+                        application/json: {}
+                        application/xml: {}
             tags: ["Keyword"]
     "/keywords/common":
         post:
@@ -177,8 +173,6 @@ paths:
                                 items:
                                     $ref: "#/components/schemas/Keyword"
                                 type: array
-                    description:
-                        ""
             tags: ["Keyword"]
     "/sites/{siteId}/taxonomy-vocabularies/common":
         post:
@@ -211,8 +205,6 @@ paths:
                                 items:
                                     $ref: "#/components/schemas/TaxonomyVocabulary"
                                 type: array
-                    description:
-                        ""
             tags: ["TaxonomyVocabulary"]
     "/status":
         get:
@@ -226,8 +218,6 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/Status"
-                    description:
-                        ""
             tags: ["Status"]
     "/taxonomy-categories/batch":
         patch:
@@ -240,11 +230,10 @@ paths:
                         schema:
                             $ref: "#/components/schemas/TaxonomyCategoryBulkSelection"
             responses:
-                200:
+                204:
                     content:
-                        {}
-                    description:
-                        ""
+                        application/json: {}
+                        application/xml: {}
             tags: ["TaxonomyCategory"]
         put:
             requestBody:
@@ -258,7 +247,6 @@ paths:
             responses:
                 200:
                     content:
-                        {}
-                    description:
-                        ""
+                        application/json: {}
+                        application/xml: {}
             tags: ["TaxonomyCategory"]

@@ -42,16 +42,6 @@ GroupDisplayContextHelper groupDisplayContextHelper = new GroupDisplayContextHel
 Map<String, Serializable> settingsMap = exportImportConfiguration.getSettingsMap();
 
 Map<String, String[]> parameterMap = (Map<String, String[]>)settingsMap.get("parameterMap");
-
-PortletURL advancedPublishURL = renderResponse.createRenderURL();
-
-advancedPublishURL.setParameter("mvcRenderCommandName", "/export_import/publish_layouts");
-advancedPublishURL.setParameter(Constants.CMD, cmd);
-advancedPublishURL.setParameter("tabs1", privateLayout ? "private-pages" : "public-pages");
-advancedPublishURL.setParameter("groupId", String.valueOf(groupDisplayContextHelper.getGroupId()));
-advancedPublishURL.setParameter("layoutSetBranchId", MapUtil.getString(parameterMap, "layoutSetBranchId"));
-advancedPublishURL.setParameter("selPlid", String.valueOf(selPlid));
-advancedPublishURL.setParameter("privateLayout", String.valueOf(privateLayout));
 %>
 
 <clay:container-fluid
@@ -59,7 +49,25 @@ advancedPublishURL.setParameter("privateLayout", String.valueOf(privateLayout));
 >
 	<clay:link
 		displayType="link"
-		href="<%= advancedPublishURL.toString() %>"
+		href='<%=
+			PortletURLBuilder.createRenderURL(
+				renderResponse
+			).setMVCRenderCommandName(
+				"/export_import/publish_layouts"
+			).setCMD(
+				cmd
+			).setTabs1(
+				privateLayout ? "private-pages" : "public-pages"
+			).setParameter(
+				"groupId", groupDisplayContextHelper.getGroupId()
+			).setParameter(
+				"layoutSetBranchId", MapUtil.getString(parameterMap, "layoutSetBranchId")
+			).setParameter(
+				"privateLayout", privateLayout
+			).setParameter(
+				"selPlid", selPlid
+			).buildString()
+		%>'
 		label="switch-to-advanced-publish-process"
 		small="<%= true %>"
 		type="button"
@@ -116,8 +124,11 @@ advancedPublishURL.setParameter("privateLayout", String.valueOf(privateLayout));
 								Set<String> portletDataHandlerClassNames = new HashSet<String>();
 
 								List<Portlet> dataSiteLevelPortlets = ExportImportHelperUtil.getDataSiteLevelPortlets(company.getCompanyId(), false);
+								%>
 
-								if (!dataSiteLevelPortlets.isEmpty()) {
+								<c:if test="<%= !dataSiteLevelPortlets.isEmpty() %>">
+
+									<%
 									boolean displayingChanges = false;
 
 									for (Portlet portlet : dataSiteLevelPortlets) {
@@ -147,10 +158,13 @@ advancedPublishURL.setParameter("privateLayout", String.valueOf(privateLayout));
 										long modelDeletionCount = manifestSummary.getModelDeletionCount(portletDataHandler.getDeletionSystemEventStagedModelTypes());
 
 										UnicodeProperties liveGroupTypeSettings = liveGroup.getTypeSettingsProperties();
+									%>
 
-										if (((exportModelCount > 0) || (modelDeletionCount > 0)) && GetterUtil.getBoolean(liveGroupTypeSettings.getProperty(StagingUtil.getStagedPortletId(portlet.getRootPortletId())), portletDataHandler.isPublishToLiveByDefault())) {
+										<c:if test="<%= ((exportModelCount > 0) || (modelDeletionCount > 0)) && GetterUtil.getBoolean(liveGroupTypeSettings.getProperty(StagingUtil.getStagedPortletId(portlet.getRootPortletId())), portletDataHandler.isPublishToLiveByDefault()) %>">
+
+											<%
 											displayingChanges = true;
-								%>
+											%>
 
 											<liferay-util:buffer
 												var="badgeHTML"
@@ -163,21 +177,18 @@ advancedPublishURL.setParameter("privateLayout", String.valueOf(privateLayout));
 											<li class="tree-item">
 												<liferay-ui:message key="<%= PortalUtil.getPortletTitle(portlet, application, locale) + StringPool.SPACE + badgeHTML %>" />
 											</li>
+										</c:if>
 
 									<%
-										}
 									}
 
-									if (!displayingChanges) {
+									settingsMap.remove("portletId");
 									%>
 
+									<c:if test="<%= !displayingChanges %>">
 										<liferay-ui:message key="none" />
-
-								<%
-									}
-								}
-								%>
-
+									</c:if>
+								</c:if>
 							</ul>
 						</li>
 					</aui:fieldset>

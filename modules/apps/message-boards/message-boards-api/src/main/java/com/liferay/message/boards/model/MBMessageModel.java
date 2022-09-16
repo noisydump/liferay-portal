@@ -117,6 +117,21 @@ public interface MBMessageModel
 	public void setUuid(String uuid);
 
 	/**
+	 * Returns the external reference code of this message-boards message.
+	 *
+	 * @return the external reference code of this message-boards message
+	 */
+	@AutoEscape
+	public String getExternalReferenceCode();
+
+	/**
+	 * Sets the external reference code of this message-boards message.
+	 *
+	 * @param externalReferenceCode the external reference code of this message-boards message
+	 */
+	public void setExternalReferenceCode(String externalReferenceCode);
+
+	/**
 	 * Returns the message ID of this message-boards message.
 	 *
 	 * @return the message ID of this message-boards message
@@ -608,16 +623,6 @@ public interface MBMessageModel
 	public long getTrashEntryClassPK();
 
 	/**
-	 * Returns the trash handler for this message-boards message.
-	 *
-	 * @return the trash handler for this message-boards message
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public com.liferay.portal.kernel.trash.TrashHandler getTrashHandler();
-
-	/**
 	 * Returns <code>true</code> if this message-boards message is in the Recycle Bin.
 	 *
 	 * @return <code>true</code> if this message-boards message is in the Recycle Bin; <code>false</code> otherwise
@@ -702,5 +707,8 @@ public interface MBMessageModel
 	 */
 	@Override
 	public boolean isScheduled();
+
+	@Override
+	public MBMessage cloneWithOriginalValues();
 
 }

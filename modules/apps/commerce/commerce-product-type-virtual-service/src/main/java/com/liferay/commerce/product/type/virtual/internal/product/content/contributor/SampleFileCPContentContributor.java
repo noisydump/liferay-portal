@@ -25,7 +25,7 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -108,16 +108,10 @@ public class SampleFileCPContentContributor implements CPContentContributor {
 	private String _getSampleFileHtml(
 		String sampleURL, HttpServletRequest httpServletRequest) {
 
-		StringBundler sb = new StringBundler(6);
-
-		sb.append("<a class=\"btn btn-primary\" href=\"");
-		sb.append(sampleURL);
-		sb.append(StringPool.QUOTE);
-		sb.append(StringPool.GREATER_THAN);
-		sb.append(LanguageUtil.get(httpServletRequest, "download-sample-file"));
-		sb.append("</a>");
-
-		return sb.toString();
+		return StringBundler.concat(
+			"<a class=\"btn btn-primary\" href=\"", sampleURL, StringPool.QUOTE,
+			StringPool.GREATER_THAN,
+			_language.get(httpServletRequest, "download-sample-file"), "</a>");
 	}
 
 	@Reference
@@ -126,6 +120,9 @@ public class SampleFileCPContentContributor implements CPContentContributor {
 
 	@Reference
 	private JSONFactory _jsonFactory;
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private VirtualCPTypeHelper _virtualCPTypeHelper;

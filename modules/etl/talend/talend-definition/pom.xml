@@ -5,11 +5,12 @@
 	<parent>
 		<groupId>com.liferay</groupId>
 		<artifactId>com.liferay.talend</artifactId>
-		<version>0.5.0-SNAPSHOT</version>
+		<version>0.7.0-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<groupId>com.liferay</groupId>
 	<artifactId>com.liferay.talend.definition</artifactId>
+	<version>0.7.0-SNAPSHOT</version>
 	<name>Liferay Talend Definition</name>
 	<packaging>bundle</packaging>
 	<dependencies>
@@ -24,7 +25,7 @@
 		<dependency>
 			<groupId>com.liferay</groupId>
 			<artifactId>com.liferay.talend.common</artifactId>
-			<version>${project.parent.version}</version>
+			<version>0.7.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>javax.activation</groupId>
@@ -52,64 +53,14 @@
 			<version>1.1.4</version>
 		</dependency>
 		<dependency>
-			<groupId>org.glassfish.hk2</groupId>
-			<artifactId>hk2-api</artifactId>
-			<version>2.4.0-b34</version>
-		</dependency>
-		<dependency>
-			<groupId>org.glassfish.hk2</groupId>
-			<artifactId>hk2-locator</artifactId>
-			<version>2.4.0-b34</version>
-		</dependency>
-		<dependency>
-			<groupId>org.glassfish.hk2</groupId>
-			<artifactId>hk2-utils</artifactId>
-			<version>2.4.0-b34</version>
-		</dependency>
-		<dependency>
-			<groupId>org.glassfish.hk2</groupId>
-			<artifactId>osgi-resource-locator</artifactId>
-			<version>1.0.1</version>
-		</dependency>
-		<dependency>
-			<groupId>org.glassfish.hk2.external</groupId>
-			<artifactId>aopalliance-repackaged</artifactId>
-			<version>2.4.0-b34</version>
-		</dependency>
-		<dependency>
 			<groupId>org.glassfish.hk2.external</groupId>
 			<artifactId>javax.inject</artifactId>
 			<version>2.4.0-b34</version>
 		</dependency>
 		<dependency>
-			<groupId>org.glassfish.jersey.bundles.repackaged</groupId>
-			<artifactId>jersey-guava</artifactId>
-			<version>2.22.2</version>
-		</dependency>
-		<dependency>
-			<groupId>org.glassfish.jersey.core</groupId>
-			<artifactId>jersey-client</artifactId>
-			<version>2.22.2</version>
-		</dependency>
-		<dependency>
 			<groupId>org.glassfish.jersey.core</groupId>
 			<artifactId>jersey-common</artifactId>
-			<version>2.22.2</version>
-		</dependency>
-		<dependency>
-			<groupId>org.glassfish.jersey.core</groupId>
-			<artifactId>jersey-server</artifactId>
-			<version>2.22.2</version>
-		</dependency>
-		<dependency>
-			<groupId>org.glassfish.jersey.ext</groupId>
-			<artifactId>jersey-entity-filtering</artifactId>
-			<version>2.22.2</version>
-		</dependency>
-		<dependency>
-			<groupId>org.glassfish.jersey.media</groupId>
-			<artifactId>jersey-media-jaxb</artifactId>
-			<version>2.22.2</version>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.javassist</groupId>

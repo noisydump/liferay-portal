@@ -1,0 +1,132 @@
+@component-name = "portal-commerce"
+definition {
+
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
+	property testray.main.component.name = "Product Info Management";
+
+	setUp {
+		CommerceConfiguration.commerceSetUp(storeFront = "true");
+	}
+
+	tearDown {
+		CommerceConfiguration.commerceTearDown();
+	}
+
+	@description = "This is a test for COMMERCE-6088. AddAccountGroupFilter"
+	@ignore = "true"
+	@priority = "3"
+	test AddAccountGroupFilter {
+		property portal.acceptance = "false";
+
+		// TODO COMMERCE-6088 AddAccountGroupFilter
+
+	}
+
+	@description = "This is a test for COMMERCE-6086. AddAChannelFilter"
+	@priority = "3"
+	test AddAChannelFilter {
+		property portal.acceptance = "false";
+
+		// TODO Review
+
+		CommerceNavigator.gotoPortlet(
+			category = "Store Management",
+			portlet = "Channels");
+
+		Click(locator1 = "Button#PLUS");
+
+		CommerceEntry.addNewChannelsEntry(
+			channelCurrency = "US Dollar",
+			channelName = "Test Channel",
+			channelType = "Site");
+
+		CommerceNavigator.gotoPortlet(
+			category = "Product Management",
+			portlet = "Products");
+
+		CPCommerceCatalog.newProductsEntry(
+			productCatalog = "Master",
+			productName = "Simple T-Shirt",
+			productType = "Simple");
+
+		CommerceDiagram.setVisibility(
+			checkboxName = "Test Channel",
+			name = "Channels");
+	}
+
+	@description = "This is a test for COMMERCE-6089. RemoveAccountGroupFilter"
+	@priority = "3"
+	test RemoveAccountGroupFilter {
+		property portal.acceptance = "false";
+		property portal.upstream = "quarantine";
+
+		// TODO Review
+
+		AccountGroups.openAccountGroupsAdmin();
+
+		Click(locator1 = "Button#PLUS");
+
+		CommerceEntry.addNewAccountGroupsEntry(entryName = "Guest");
+
+		Button.clickSave();
+
+		CommerceNavigator.gotoPortlet(
+			category = "Product Management",
+			portlet = "Products");
+
+		CPCommerceCatalog.newProductsEntry(
+			productCatalog = "Master",
+			productName = "Simple T-Shirt",
+			productType = "Simple");
+
+		CommerceDiagram.setVisibility(
+			checkboxName = "Guest",
+			name = "Account Groups",
+			webContentTitle = "Add Account Group Relation to Simple T-Shirt");
+
+		Button.click(button = "Delete");
+
+		SelectFrameTop();
+
+		AssertElementPresent(locator1 = "Message#SUCCESS");
+
+		Click(
+			key_name = "Account Groups",
+			locator1 = "ToggleSwitch#ENABLE_SPECIFIC_TOGGLE_SWITCH");
+	}
+
+	@description = "This is a test for COMMERCE-6087. RemoveAChannelFilter"
+	@priority = "3"
+	test RemoveAChannelFilter {
+		property portal.acceptance = "true";
+		property test.name.skip.portal.instance = "CPCommerceProductVisibility#RemoveAChannelFilter";
+
+		CommerceNavigator.gotoPortlet(
+			category = "Product Management",
+			portlet = "Products");
+
+		CPCommerceCatalog.newProductsEntry(
+			productCatalog = "Master",
+			productName = "Simple T-Shirt",
+			productType = "Simple");
+
+		CommerceDiagram.setVisibility(
+			checkboxName = "Test Channel",
+			name = "Channels");
+
+		WaitForElementPresent(
+			key_productName = "Test Channel",
+			locator1 = "CommerceOrders#ORDER_DETAILS_PRODUCT_NAME");
+
+		Button.click(button = "Delete");
+
+		Alert.viewSuccessMessage();
+
+		Click(
+			key_name = "Channels",
+			locator1 = "ToggleSwitch#ENABLE_SPECIFIC_TOGGLE_SWITCH");
+	}
+
+}

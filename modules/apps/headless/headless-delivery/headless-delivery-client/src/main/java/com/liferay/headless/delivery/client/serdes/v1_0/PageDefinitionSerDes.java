@@ -75,6 +75,16 @@ public class PageDefinitionSerDes {
 			sb.append(String.valueOf(pageDefinition.getSettings()));
 		}
 
+		if (pageDefinition.getVersion() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"version\": ");
+
+			sb.append(pageDefinition.getVersion());
+		}
+
 		sb.append("}");
 
 		return sb.toString();
@@ -107,6 +117,13 @@ public class PageDefinitionSerDes {
 		}
 		else {
 			map.put("settings", String.valueOf(pageDefinition.getSettings()));
+		}
+
+		if (pageDefinition.getVersion() == null) {
+			map.put("version", null);
+		}
+		else {
+			map.put("version", String.valueOf(pageDefinition.getVersion()));
 		}
 
 		return map;
@@ -142,8 +159,11 @@ public class PageDefinitionSerDes {
 						SettingsSerDes.toDTO((String)jsonParserFieldValue));
 				}
 			}
-			else if (jsonParserFieldName.equals("status")) {
-				throw new IllegalArgumentException();
+			else if (Objects.equals(jsonParserFieldName, "version")) {
+				if (jsonParserFieldValue != null) {
+					pageDefinition.setVersion(
+						Double.valueOf((String)jsonParserFieldValue));
+				}
 			}
 		}
 
@@ -173,7 +193,7 @@ public class PageDefinitionSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -209,7 +229,7 @@ public class PageDefinitionSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

@@ -14,7 +14,7 @@
 
 package com.liferay.portal.workflow.kaleo.designer.web.internal.portlet.action;
 
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
@@ -36,7 +36,6 @@ import com.liferay.portal.workflow.kaleo.model.KaleoDefinitionVersion;
 
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.ResourceBundle;
 
 import javax.portlet.ActionRequest;
@@ -64,9 +63,6 @@ public class PublishKaleoDefinitionVersionMVCActionCommand
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
 		Map<Locale, String> titleMap = LocalizationUtil.getLocalizationMap(
 			actionRequest, "title");
 
@@ -78,6 +74,9 @@ public class PublishKaleoDefinitionVersionMVCActionCommand
 			throw new WorkflowDefinitionFileException(
 				"please-enter-a-valid-definition-before-publishing");
 		}
+
+		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
 
 		validateWorkflowDefinition(actionRequest, content.getBytes());
 
@@ -118,7 +117,7 @@ public class PublishKaleoDefinitionVersionMVCActionCommand
 		}
 		catch (WorkflowException workflowException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(workflowException, workflowException);
+				_log.debug(workflowException);
 			}
 		}
 
@@ -134,12 +133,11 @@ public class PublishKaleoDefinitionVersionMVCActionCommand
 				KaleoDesignerWebKeys.PUBLISH_DEFINITION_ACTION));
 
 		if (definitionPublishing) {
-			return LanguageUtil.get(
+			return language.get(
 				resourceBundle, "workflow-published-successfully");
 		}
 
-		return LanguageUtil.get(
-			resourceBundle, "workflow-updated-successfully");
+		return language.get(resourceBundle, "workflow-updated-successfully");
 	}
 
 	protected void validateTitle(
@@ -148,12 +146,7 @@ public class PublishKaleoDefinitionVersionMVCActionCommand
 
 		String title = titleMap.get(LocaleUtil.getDefault());
 
-		String defaultTitle = LanguageUtil.get(
-			getResourceBundle(actionRequest), "untitled-workflow");
-
-		if (titleMap.isEmpty() || Validator.isNull(title) ||
-			Objects.equals(title, defaultTitle)) {
-
+		if (titleMap.isEmpty() || Validator.isNull(title)) {
 			throw new WorkflowDefinitionTitleException();
 		}
 	}
@@ -167,7 +160,7 @@ public class PublishKaleoDefinitionVersionMVCActionCommand
 				bytes);
 		}
 		catch (WorkflowException workflowException) {
-			String message = LanguageUtil.get(
+			String message = language.get(
 				getResourceBundle(actionRequest),
 				"please-enter-a-valid-definition-before-publishing");
 
@@ -175,6 +168,9 @@ public class PublishKaleoDefinitionVersionMVCActionCommand
 				message, workflowException);
 		}
 	}
+
+	@Reference
+	protected Language language;
 
 	@Reference(target = "(proxy.bean=false)")
 	protected WorkflowDefinitionManager unproxiedWorkflowDefinitionManager;

@@ -37,19 +37,13 @@ import java.math.RoundingMode;
 
 import java.util.List;
 
+import org.osgi.service.component.annotations.Reference;
+
 /**
  * @author Riccardo Alberti
  */
 public abstract class BaseCommerceOrderPriceCalculation
 	implements CommerceOrderPriceCalculation {
-
-	public BaseCommerceOrderPriceCalculation(
-		CommerceChannelLocalService commerceChannelLocalService,
-		CommerceMoneyFactory commerceMoneyFactory) {
-
-		this.commerceChannelLocalService = commerceChannelLocalService;
-		this.commerceMoneyFactory = commerceMoneyFactory;
-	}
 
 	@Override
 	public CommerceOrderItemPrice getCommerceOrderItemPrice(
@@ -123,6 +117,10 @@ public abstract class BaseCommerceOrderPriceCalculation
 
 		BigDecimal total = commerceOrder.getTotal();
 
+		if (CommerceBigDecimalUtil.gte(total, commerceOrder.getTaxAmount())) {
+			total = total.subtract(commerceOrder.getTaxAmount());
+		}
+
 		BigDecimal totalDiscountAmount = BigDecimal.ZERO;
 
 		if (commerceOrder.getTotalDiscountAmount() != null) {
@@ -137,9 +135,13 @@ public abstract class BaseCommerceOrderPriceCalculation
 			commerceOrder.getTotalDiscountPercentageLevel3(),
 			commerceOrder.getTotalDiscountPercentageLevel4());
 
-		BigDecimal totalWithTaxAmount = commerceOrder.getTotalWithTaxAmount();
+		BigDecimal totalWithTaxAmount = total;
 
-		BigDecimal totalDiscountWithTaxAmount = BigDecimal.ZERO;
+		if (commerceOrder.getTotalWithTaxAmount() != null) {
+			totalWithTaxAmount = commerceOrder.getTotalWithTaxAmount();
+		}
+
+		BigDecimal totalDiscountWithTaxAmount = totalDiscountAmount;
 
 		if (commerceOrder.getTotalDiscountWithTaxAmount() != null) {
 			totalDiscountWithTaxAmount =
@@ -236,8 +238,6 @@ public abstract class BaseCommerceOrderPriceCalculation
 			CommerceOrder commerceOrder)
 		throws PortalException {
 
-		CommerceCurrency commerceCurrency = commerceOrder.getCommerceCurrency();
-
 		if (discountsTargetNetPrice) {
 			commerceOrderPriceImpl.setShippingDiscountValue(
 				orderShippingCommerceDiscountValue);
@@ -247,6 +247,9 @@ public abstract class BaseCommerceOrderPriceCalculation
 				orderTotalCommerceDiscountValue);
 		}
 		else {
+			CommerceCurrency commerceCurrency =
+				commerceOrder.getCommerceCurrency();
+
 			RoundingMode roundingMode = RoundingMode.valueOf(
 				commerceCurrency.getRoundingMode());
 
@@ -312,8 +315,11 @@ public abstract class BaseCommerceOrderPriceCalculation
 		}
 	}
 
-	protected final CommerceChannelLocalService commerceChannelLocalService;
-	protected final CommerceMoneyFactory commerceMoneyFactory;
+	@Reference
+	protected CommerceChannelLocalService commerceChannelLocalService;
+
+	@Reference
+	protected CommerceMoneyFactory commerceMoneyFactory;
 
 	private CommerceDiscountValue _createCommerceDiscountValue(
 		BigDecimal amount, CommerceCurrency commerceCurrency,
@@ -527,13 +533,13 @@ public abstract class BaseCommerceOrderPriceCalculation
 	}
 
 	private boolean _greaterThanZero(BigDecimal value) {
-		if ((value != null) ||
-			CommerceBigDecimalUtil.gt(value, BigDecimal.ZERO)) {
+		if ((value == null) ||
+			CommerceBigDecimalUtil.lte(value, BigDecimal.ZERO)) {
 
-			return true;
+			return false;
 		}
 
-		return false;
+		return true;
 	}
 
 	private void _updateDiscounts(
@@ -562,13 +568,11 @@ public abstract class BaseCommerceOrderPriceCalculation
 
 		commerceOrderItemPrice.setDiscountAmount(
 			commerceMoneyFactory.create(commerceCurrency, discountAmount));
-
-		BigDecimal discountPercentage = _getDiscountPercentage(
-			activePrice.multiply(BigDecimal.valueOf(quantity)), discountAmount,
-			RoundingMode.valueOf(commerceCurrency.getRoundingMode()));
-
-		commerceOrderItemPrice.setDiscountPercentage(discountPercentage);
-
+		commerceOrderItemPrice.setDiscountPercentage(
+			_getDiscountPercentage(
+				activePrice.multiply(BigDecimal.valueOf(quantity)),
+				discountAmount,
+				RoundingMode.valueOf(commerceCurrency.getRoundingMode())));
 		commerceOrderItemPrice.setDiscountPercentageLevel1(
 			discountPercentageLevel1);
 		commerceOrderItemPrice.setDiscountPercentageLevel2(

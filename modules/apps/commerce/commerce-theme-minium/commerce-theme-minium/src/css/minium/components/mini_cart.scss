@@ -63,40 +63,14 @@
 		&-errors,
 		.price-value-discount,
 		.price-value-final,
+		.price-value-percentages,
 		.price-value-promo {
 			color: $color-mood-bad;
 		}
 
-		.price-value {
-			font-size: 0.9rem;
-
-			&-percentages::after {
-				color: $color-mood-bad;
-			}
-		}
-
 		&-delete {
-			font-size: 0.9rem;
+			font-size: 1rem;
 			margin: 25px 0;
-		}
-
-		&-quantity {
-			.btn {
-				border: 0;
-				border-radius: 8px;
-				font-size: 16px;
-				height: 40px;
-				width: auto;
-			}
-
-			input,
-			select {
-				background-color: transparent;
-				border: 2px solid $color-border;
-				border-radius: 8px;
-				height: 40px;
-				margin: 0 3px;
-			}
 		}
 
 		.item-sku {

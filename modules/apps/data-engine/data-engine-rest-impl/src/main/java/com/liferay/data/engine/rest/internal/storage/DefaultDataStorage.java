@@ -24,12 +24,8 @@ import com.liferay.dynamic.data.lists.service.DDLRecordSetLocalService;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.service.DDMFieldLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
-import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
-import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.util.ListUtil;
 
-import java.util.List;
 import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
@@ -59,14 +55,10 @@ public class DefaultDataStorage implements DataStorage {
 		DDMStructure ddmStructure = _ddmStructureLocalService.getStructure(
 			dataDefinitionId);
 
-		DDMFormValues ddmFormValues = _ddmFieldLocalService.getDDMFormValues(
-			ddmStructure.getFullHierarchyDDMForm(), dataStorageId);
-
-		_addNestedDDmFormValues(
-			ListUtil.copy(ddmFormValues.getDDMFormFieldValues()),
-			ddmFormValues);
-
-		return DataStorageUtil.toDataRecordValues(ddmFormValues, ddmStructure);
+		return DataStorageUtil.toDataRecordValues(
+			_ddmFieldLocalService.getDDMFormValues(
+				ddmStructure.getFullHierarchyDDMForm(), dataStorageId),
+			ddmStructure);
 	}
 
 	@Override
@@ -91,28 +83,6 @@ public class DefaultDataStorage implements DataStorage {
 				null));
 
 		return primaryKey;
-	}
-
-	private void _addNestedDDmFormValues(
-		List<DDMFormFieldValue> ddmFormFieldValues,
-		DDMFormValues ddmFormValues) {
-
-		ddmFormFieldValues.forEach(
-			ddmFormFieldValue -> {
-				List<DDMFormFieldValue> nestedDDMFormFieldValues =
-					ddmFormFieldValue.getNestedDDMFormFieldValues();
-
-				nestedDDMFormFieldValues.forEach(
-					nestedDDMFormFieldValue -> {
-						ddmFormValues.addDDMFormFieldValue(
-							nestedDDMFormFieldValue);
-
-						_addNestedDDmFormValues(
-							nestedDDMFormFieldValue.
-								getNestedDDMFormFieldValues(),
-							ddmFormValues);
-					});
-			});
 	}
 
 	@Reference

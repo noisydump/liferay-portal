@@ -36,6 +36,7 @@ import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.jsp.JspException;
@@ -70,7 +71,8 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 			setNamespacedAttribute(
 				httpServletRequest, "fieldTypes",
 				DataLayoutTaglibUtil.getFieldTypesJSONArray(
-					httpServletRequest, getScopes()));
+					httpServletRequest, getScopes(),
+					getSearchableFieldsDisabled()));
 			setNamespacedAttribute(
 				httpServletRequest, "fieldTypesModules",
 				DataLayoutTaglibUtil.resolveFieldTypesModules());
@@ -79,7 +81,7 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(exception, exception);
+				_log.debug(exception);
 			}
 		}
 
@@ -114,20 +116,24 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 		setNamespacedAttribute(
 			httpServletRequest, "dataLayout",
 			DataLayoutTaglibUtil.getDataLayoutJSONObject(
-				availableLocales, getDataDefinitionId(), getDataLayoutId(),
-				httpServletRequest,
+				availableLocales, getContentType(), getDataDefinitionId(),
+				getDataLayoutId(), httpServletRequest,
 				(HttpServletResponse)pageContext.getResponse()));
 		setNamespacedAttribute(
 			httpServletRequest, "defaultLanguageId", _getDefaultLanguageId());
+		setNamespacedAttribute(httpServletRequest, "module", _getModule());
+		setNamespacedAttribute(
+			httpServletRequest, "moduleServletContext",
+			_getModuleServletContext());
 	}
 
 	private String _getDefaultLanguageId() {
-		long dataDefinitionId = getDataDefinitionId();
+		Long dataDefinitionId = getDataDefinitionId();
 
 		String languageId = LocaleUtil.toLanguageId(
 			LocaleUtil.getSiteDefault());
 
-		if (dataDefinitionId <= 0) {
+		if ((dataDefinitionId == null) || (dataDefinitionId <= 0)) {
 			return languageId;
 		}
 
@@ -151,6 +157,28 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 		);
 	}
 
+	private String _getModule() {
+		if (Validator.isBlank(getModule())) {
+			return "data_layout_builder/js/App";
+		}
+
+		return getModule();
+	}
+
+	private ServletContext _getModuleServletContext() {
+		if (getModuleServletContext() == null) {
+			return getServletContext();
+		}
+
+		return getModuleServletContext();
+	}
+
+	private String _getPluginEntryPoint(String value) {
+		return DataLayoutTaglibUtil.resolveModule(
+			"data-engine-taglib/data_layout_builder/js/plugins/" + value +
+				"/index");
+	}
+
 	private Map<String, Object> _getSidebarPanels() {
 		HttpServletRequest httpServletRequest = getRequest();
 
@@ -167,37 +195,35 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 				).put(
 					"label", LanguageUtil.get(resourceBundle, "builder")
 				).put(
-					"pluginEntryPoint",
-					DataLayoutTaglibUtil.resolveModule(
-						"data-engine-taglib/data_layout_builder/js/plugins" +
-							"/fields-sidebar/index.es")
+					"pluginEntryPoint", _getPluginEntryPoint("fields-sidebar")
 				).put(
 					"sidebarPanelId", "fields"
 				).build()
-			).build();
-
-		JSONObject dataLayoutConfigJSONObject =
-			DataLayoutTaglibUtil.getDataLayoutConfigJSONObject(
-				getContentType(), httpServletRequest.getLocale());
-
-		if (dataLayoutConfigJSONObject.getBoolean("allowRules")) {
-			sidebarPanels.put(
+			).put(
 				"rules",
-				HashMapBuilder.<String, Object>put(
-					"icon", "rules"
-				).put(
-					"isLink", false
-				).put(
-					"label", LanguageUtil.get(resourceBundle, "rules")
-				).put(
-					"pluginEntryPoint",
-					DataLayoutTaglibUtil.resolveModule(
-						"data-engine-taglib/data_layout_builder/js/plugins" +
-							"/rules-sidebar/index.es")
-				).put(
-					"sidebarPanelId", "rules"
-				).build());
-		}
+				() -> {
+					JSONObject dataLayoutConfigJSONObject =
+						DataLayoutTaglibUtil.getDataLayoutConfigJSONObject(
+							getContentType(), httpServletRequest.getLocale());
+
+					if (dataLayoutConfigJSONObject.getBoolean("allowRules")) {
+						return HashMapBuilder.<String, Object>put(
+							"icon", "rules"
+						).put(
+							"isLink", false
+						).put(
+							"label", LanguageUtil.get(resourceBundle, "rules")
+						).put(
+							"pluginEntryPoint",
+							_getPluginEntryPoint("rules-sidebar")
+						).put(
+							"sidebarPanelId", "rules"
+						).build();
+					}
+
+					return null;
+				}
+			).build();
 
 		List<Map<String, Object>> additionalPanels = getAdditionalPanels();
 

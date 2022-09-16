@@ -21,17 +21,23 @@ WikiPage wikiPage = (WikiPage)request.getAttribute(WikiWebKeys.WIKI_PAGE);
 
 double sourceVersion = ParamUtil.getDouble(request, "sourceVersion");
 
-PortletURL portletURL = renderResponse.createRenderURL();
-
-portletURL.setParameter("mvcRenderCommandName", "/wiki/select_version");
-portletURL.setParameter("redirect", currentURL);
-portletURL.setParameter("nodeId", String.valueOf(wikiPage.getNodeId()));
-portletURL.setParameter("title", HtmlUtil.unescape(wikiPage.getTitle()));
-portletURL.setParameter("sourceVersion", String.valueOf(sourceVersion));
+PortletURL portletURL = PortletURLBuilder.createRenderURL(
+	renderResponse
+).setMVCRenderCommandName(
+	"/wiki/select_version"
+).setRedirect(
+	currentURL
+).setParameter(
+	"nodeId", wikiPage.getNodeId()
+).setParameter(
+	"sourceVersion", sourceVersion
+).setParameter(
+	"title", HtmlUtil.unescape(wikiPage.getTitle())
+).buildPortletURL();
 %>
 
 <clay:container-fluid>
-	<aui:form action="<%= portletURL.toString() %>" method="post" name="selectVersionFm">
+	<aui:form action="<%= portletURL %>" method="post" name="selectVersionFm">
 		<liferay-ui:search-container
 			id="wikiPageVersionSearchContainer"
 			iteratorURL="<%= portletURL %>"
@@ -72,7 +78,7 @@ portletURL.setParameter("sourceVersion", String.valueOf(sourceVersion));
 										"targetversion", curTargetVersion
 									).build()
 								%>'
-								href="javascript:;"
+								href="javascript:void(0);"
 							>
 								<%= String.valueOf(curWikiPage.getVersion()) %>
 							</aui:a>

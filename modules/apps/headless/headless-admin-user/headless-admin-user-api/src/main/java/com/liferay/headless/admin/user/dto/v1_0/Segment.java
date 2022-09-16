@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
@@ -39,6 +40,7 @@ import java.util.Set;
 
 import javax.annotation.Generated;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 
 import javax.xml.bind.annotation.XmlRootElement;
@@ -48,17 +50,24 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @generated
  */
 @Generated("")
-@GraphQLName("Segment")
+@GraphQLName(
+	description = "Represents a set of users that meet certain criteria. Segments may be used to create customized experiences for users.",
+	value = "Segment"
+)
 @JsonFilter("Liferay.Vulcan")
 @Schema(
-	requiredProperties = {"criteria", "name"},
-	description = "Represents a set of users that meet certain criteria. Segments may be used to create customized experiences for users."
+	description = "Represents a set of users that meet certain criteria. Segments may be used to create customized experiences for users.",
+	requiredProperties = {"criteria", "name"}
 )
 @XmlRootElement(name = "Segment")
 public class Segment implements Serializable {
 
 	public static Segment toDTO(String json) {
 		return ObjectMapperUtil.readValue(Segment.class, json);
+	}
+
+	public static Segment unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(Segment.class, json);
 	}
 
 	@Schema(
@@ -121,6 +130,36 @@ public class Segment implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	@NotEmpty
 	protected String criteria;
+
+	@Schema(description = "The segment's criteria in JSON.")
+	@Valid
+	public Map<String, Object> getCriteriaValue() {
+		return criteriaValue;
+	}
+
+	public void setCriteriaValue(Map<String, Object> criteriaValue) {
+		this.criteriaValue = criteriaValue;
+	}
+
+	@JsonIgnore
+	public void setCriteriaValue(
+		UnsafeSupplier<Map<String, Object>, Exception>
+			criteriaValueUnsafeSupplier) {
+
+		try {
+			criteriaValue = criteriaValueUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(description = "The segment's criteria in JSON.")
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Map<String, Object> criteriaValue;
 
 	@Schema(description = "The segment's creation date.")
 	public Date getDateCreated() {
@@ -341,6 +380,16 @@ public class Segment implements Serializable {
 			sb.append("\"");
 		}
 
+		if (criteriaValue != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"criteriaValue\": ");
+
+			sb.append(_toJSON(criteriaValue));
+		}
+
 		if (dateCreated != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -423,15 +472,16 @@ public class Segment implements Serializable {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.admin.user.dto.v1_0.Segment",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
 	}
 
 	private static boolean _isArray(Object value) {
@@ -457,8 +507,8 @@ public class Segment implements Serializable {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -489,7 +539,7 @@ public class Segment implements Serializable {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -497,7 +547,7 @@ public class Segment implements Serializable {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -505,5 +555,10 @@ public class Segment implements Serializable {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

@@ -27,7 +27,9 @@ import com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecord;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecordVersion;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceVersionLocalService;
+import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.dynamic.data.mapping.util.DDMFormValuesMerger;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -38,6 +40,7 @@ import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 
@@ -86,7 +89,7 @@ public class DDMFormAssetRenderer
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(exception, exception);
+				_log.warn(exception);
 			}
 		}
 
@@ -168,21 +171,29 @@ public class DDMFormAssetRenderer
 
 		String portletNamespace = DDMPortletKeys.DYNAMIC_DATA_MAPPING_FORM;
 
-		PortletURL portletURL = _portal.getControlPanelPortletURL(
-			httpServletRequest, portletNamespace, PortletRequest.RENDER_PHASE);
+		return PortletURLBuilder.create(
+			_portal.getControlPanelPortletURL(
+				httpServletRequest, portletNamespace,
+				PortletRequest.RENDER_PHASE)
+		).setMVCPath(
+			"/display/edit_form_instance_record.jsp"
+		).setRedirect(
+			_portal.getCurrentURL(httpServletRequest)
+		).setParameter(
+			"defaultLanguageId",
+			() -> {
+				DDMFormValues ddmFormValues =
+					_ddmFormInstanceRecordVersion.getDDMFormValues();
 
-		portletURL.setParameter(
-			"mvcPath", "/display/edit_form_instance_record.jsp");
-		portletURL.setParameter(
-			"redirect", _portal.getCurrentURL(httpServletRequest));
-		portletURL.setParameter(
+				return LocaleUtil.toLanguageId(
+					ddmFormValues.getDefaultLocale());
+			}
+		).setParameter(
+			"formInstanceId", _ddmFormInstanceRecord.getFormInstanceId()
+		).setParameter(
 			"formInstanceRecordId",
-			String.valueOf(_ddmFormInstanceRecord.getFormInstanceRecordId()));
-		portletURL.setParameter(
-			"formInstanceId",
-			String.valueOf(_ddmFormInstanceRecord.getFormInstanceId()));
-
-		return portletURL;
+			_ddmFormInstanceRecord.getFormInstanceRecordId()
+		).buildPortletURL();
 	}
 
 	@Override
@@ -228,7 +239,7 @@ public class DDMFormAssetRenderer
 			return false;
 		}
 		catch (PortalException portalException) {
-			_log.error(portalException, portalException);
+			_log.error(portalException);
 		}
 
 		return false;
@@ -241,7 +252,7 @@ public class DDMFormAssetRenderer
 				permissionChecker, _ddmFormInstanceRecord, ActionKeys.VIEW);
 		}
 		catch (PortalException portalException) {
-			_log.error(portalException, portalException);
+			_log.error(portalException);
 		}
 
 		return false;

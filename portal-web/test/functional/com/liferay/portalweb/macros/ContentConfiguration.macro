@@ -4,7 +4,7 @@ definition {
 		for (var contentName : list "${checkContentNameList}") {
 			var key_contentName = "${contentName}";
 
-			Check.checkToggleSwitch(locator1 = "PagesConfiguration#CONTENT_CHOOSE_CONTENT_CHECKBOX_LABEL");
+			Check.checkToggleSwitch(locator1 = "PagesConfiguration#CONTENT_CHOOSE_CONTENT_CONTENT_CHECKBOX");
 		}
 	}
 
@@ -45,9 +45,7 @@ definition {
 			Click(locator1 = "PagesConfiguration#CHANGE_TO_PUBLIC_PAGES");
 		}
 
-		Click(locator1 = "PagesConfiguration#PAGES_ALL_PUBLIC_PAGES_CHECKBOX");
-
-		Click(locator1 = "PagesConfiguration#PAGES_ALL_PUBLIC_PAGES_CHECKBOX");
+		ContentConfiguration.uncheckPages();
 
 		for (var pageName : list "${checkPublicPages}") {
 			var key_pageName = "${pageName}";
@@ -126,11 +124,33 @@ definition {
 			value1 = "${publicationTitle}");
 	}
 
+	macro uncheckAllPages {
+		if ((IsElementNotPresent(locator1 = "PagesConfiguration#PAGES_ALL_PAGES_CHECKED")) && (IsElementPresent(locator1 = "PagesConfiguration#PAGES_ANY_PAGE_CHECKED"))) {
+			Click(locator1 = "PagesConfiguration#PAGES_ALL_PAGES_CHECKBOX");
+
+			Click(locator1 = "PagesConfiguration#PAGES_ALL_PAGES_CHECKBOX");
+		}
+		else {
+			Click(locator1 = "PagesConfiguration#PAGES_ALL_PAGES_CHECKBOX");
+		}
+	}
+
+	macro uncheckAllPublicPages {
+		if ((IsElementNotPresent(locator1 = "PagesConfiguration#PAGES_ALL_PUBLIC_PAGES_CHECKED")) && (IsElementPresent(locator1 = "PagesConfiguration#PAGES_ANY_PAGE_CHECKED"))) {
+			Click(locator1 = "PagesConfiguration#PAGES_ALL_PUBLIC_PAGES_CHECKBOX");
+
+			Click(locator1 = "PagesConfiguration#PAGES_ALL_PUBLIC_PAGES_CHECKBOX");
+		}
+		else {
+			Click(locator1 = "PagesConfiguration#PAGES_ALL_PUBLIC_PAGES_CHECKBOX");
+		}
+	}
+
 	macro uncheckContentNameList {
 		for (var contentName : list "${uncheckContentNameList}") {
 			Uncheck.uncheckToggleSwitch(
 				key_contentName = "${contentName}",
-				locator1 = "PagesConfiguration#CONTENT_CHOOSE_CONTENT_CHECKBOX_LABEL");
+				locator1 = "PagesConfiguration#CONTENT_CHOOSE_CONTENT_CONTENT_CHECKBOX");
 		}
 	}
 
@@ -139,9 +159,12 @@ definition {
 	}
 
 	macro uncheckPages {
-		Click(locator1 = "PagesConfiguration#PAGES_ALL_PUBLIC_PAGES_CHECKBOX");
-
-		Click(locator1 = "PagesConfiguration#PAGES_ALL_PUBLIC_PAGES_CHECKBOX");
+		if (IsElementPresent(locator1 = "PagesConfiguration#PAGES_ALL_PAGES_CHECKBOX")) {
+			ContentConfiguration.uncheckAllPages();
+		}
+		else {
+			ContentConfiguration.uncheckAllPublicPages();
+		}
 	}
 
 	macro uncheckSitePagesSettings {
@@ -154,6 +177,8 @@ definition {
 
 	macro uncheckSubContent {
 		var key_contentName = "${mainContent}";
+
+		WaitForElementPresent(locator1 = "ExportImport#CONTENT_CHOOSE_CONTENT_CONTENT_CHANGE_LINK");
 
 		Click(locator1 = "ExportImport#CONTENT_CHOOSE_CONTENT_CONTENT_CHANGE_LINK");
 

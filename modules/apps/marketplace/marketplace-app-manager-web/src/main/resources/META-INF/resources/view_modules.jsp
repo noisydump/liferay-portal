@@ -25,12 +25,13 @@ AppDisplay appDisplay = viewModulesManagementToolbarDisplayContext.getAppDisplay
 
 SearchContainer<Object> searchContainer = viewModulesManagementToolbarDisplayContext.getSearchContainer();
 
-PortletURL backURL = renderResponse.createRenderURL();
-
-backURL.setParameter("mvcPath", "/view.jsp");
-
 portletDisplay.setShowBackIcon(true);
-portletDisplay.setURLBack(backURL.toString());
+portletDisplay.setURLBack(
+	PortletURLBuilder.createRenderURL(
+		renderResponse
+	).setMVCPath(
+		"/view.jsp"
+	).buildString());
 
 renderResponse.setTitle(appDisplay.getDisplayTitle());
 
@@ -42,7 +43,7 @@ MarketplaceAppManagerUtil.addPortletBreadcrumbEntry(appDisplay, request, renderR
 	<portlet:param name="app" value="<%= app %>" />
 </portlet:renderURL>
 
-<clay:management-toolbar-v2
+<clay:management-toolbar
 	filterDropdownItems="<%= viewModulesManagementToolbarDisplayContext.getFilterDropdownItems() %>"
 	searchActionURL="<%= viewModulesManagementToolbarDisplayContext.getSearchActionURL() %>"
 	searchContainerId="bundles"

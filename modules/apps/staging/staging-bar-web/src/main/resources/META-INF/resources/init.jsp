@@ -32,12 +32,14 @@ taglib uri="http://liferay.com/tld/util" prefix="liferay-util" %>
 page import="com.liferay.exportimport.kernel.exception.RemoteExportException" %><%@
 page import="com.liferay.exportimport.kernel.staging.LayoutStagingUtil" %><%@
 page import="com.liferay.exportimport.kernel.staging.StagingUtil" %><%@
+page import="com.liferay.petra.portlet.url.builder.PortletURLBuilder" %><%@
 page import="com.liferay.petra.string.StringPool" %><%@
 page import="com.liferay.portal.kernel.dao.orm.QueryUtil" %><%@
 page import="com.liferay.portal.kernel.dao.search.ResultRow" %><%@
 page import="com.liferay.portal.kernel.exception.LayoutBranchNameException" %><%@
 page import="com.liferay.portal.kernel.exception.LayoutSetBranchNameException" %><%@
 page import="com.liferay.portal.kernel.exception.PortalException" %><%@
+page import="com.liferay.portal.kernel.frontend.icons.FrontendIconsUtil" %><%@
 page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
 page import="com.liferay.portal.kernel.model.Group" %><%@
 page import="com.liferay.portal.kernel.model.Layout" %><%@
@@ -63,7 +65,7 @@ page import="com.liferay.portal.kernel.service.permission.LayoutSetBranchPermiss
 page import="com.liferay.portal.kernel.servlet.SessionErrors" %><%@
 page import="com.liferay.portal.kernel.util.GetterUtil" %><%@
 page import="com.liferay.portal.kernel.util.HtmlUtil" %><%@
-page import="com.liferay.portal.kernel.util.HttpUtil" %><%@
+page import="com.liferay.portal.kernel.util.HttpComponentsUtil" %><%@
 page import="com.liferay.portal.kernel.util.ListUtil" %><%@
 page import="com.liferay.portal.kernel.util.ParamUtil" %><%@
 page import="com.liferay.portal.kernel.util.PortalUtil" %><%@
@@ -78,6 +80,7 @@ page import="com.liferay.portal.kernel.workflow.WorkflowTask" %><%@
 page import="com.liferay.portal.util.PropsValues" %><%@
 page import="com.liferay.staging.bar.web.internal.display.context.LayoutBranchDisplayContext" %><%@
 page import="com.liferay.staging.bar.web.internal.display.context.LayoutSetBranchDisplayContext" %><%@
+page import="com.liferay.staging.bar.web.internal.display.context.StagingBarDisplayContext" %><%@
 page import="com.liferay.staging.constants.StagingProcessesWebKeys" %>
 
 <%@ page import="java.util.ArrayList" %><%@
@@ -85,8 +88,7 @@ page import="java.util.List" %><%@
 page import="java.util.Objects" %>
 
 <%@ page import="javax.portlet.PortletMode" %><%@
-page import="javax.portlet.PortletRequest" %><%@
-page import="javax.portlet.PortletURL" %>
+page import="javax.portlet.PortletRequest" %>
 
 <liferay-frontend:defineObjects />
 
@@ -99,10 +101,11 @@ page import="javax.portlet.PortletURL" %>
 <%
 group = (Group)renderRequest.getAttribute(WebKeys.GROUP);
 layout = (Layout)renderRequest.getAttribute(WebKeys.LAYOUT);
-privateLayout = (boolean)renderRequest.getAttribute(WebKeys.PRIVATE_LAYOUT);
+privateLayout = GetterUtil.getBoolean((String)renderRequest.getAttribute(WebKeys.PRIVATE_LAYOUT));
 
 LayoutBranchDisplayContext layoutBranchDisplayContext = new LayoutBranchDisplayContext(request);
 LayoutSetBranchDisplayContext layoutSetBranchDisplayContext = new LayoutSetBranchDisplayContext(request);
+StagingBarDisplayContext stagingBarDisplayContext = new StagingBarDisplayContext(liferayPortletRequest, layout);
 %>
 
 <%!

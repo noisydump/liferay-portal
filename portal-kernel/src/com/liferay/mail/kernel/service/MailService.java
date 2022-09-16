@@ -14,6 +14,7 @@
 
 package com.liferay.mail.kernel.service;
 
+import com.liferay.mail.kernel.model.Account;
 import com.liferay.mail.kernel.model.Filter;
 import com.liferay.mail.kernel.model.MailMessage;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -44,11 +45,15 @@ public interface MailService {
 
 	public void clearSession();
 
+	public void clearSession(long companyId);
+
 	public void deleteEmailAddress(long companyId, long userId);
 
 	public void deleteUser(long companyId, long userId);
 
 	public Session getSession();
+
+	public Session getSession(Account account);
 
 	public void sendEmail(MailMessage mailMessage);
 

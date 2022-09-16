@@ -20,9 +20,8 @@
 SelectSegmentsEntryDisplayContext selectSegmentsEntryDisplayContext = (SelectSegmentsEntryDisplayContext)request.getAttribute(SegmentsWebKeys.SELECT_SEGMENTS_ENTRY_DISPLAY_CONTEXT);
 %>
 
-<clay:management-toolbar-v2
+<clay:management-toolbar
 	clearResultsURL="<%= selectSegmentsEntryDisplayContext.getClearResultsURL() %>"
-	componentId="selectSegmentsEntryManagementToolbar"
 	disabled="<%= selectSegmentsEntryDisplayContext.isDisabledManagementBar() %>"
 	filterDropdownItems="<%= selectSegmentsEntryDisplayContext.getFilterItemsDropdownItems() %>"
 	itemsTotal="<%= selectSegmentsEntryDisplayContext.getTotalItems() %>"
@@ -60,7 +59,7 @@ SelectSegmentsEntryDisplayContext selectSegmentsEntryDisplayContext = (SelectSeg
 									"entityname", segmentsEntry.getName(locale)
 								).build()
 							%>'
-							href="javascript:;"
+							href="javascript:void(0);"
 						>
 							<%= HtmlUtil.escape(segmentsEntry.getName(locale)) %>
 						</aui:a>
@@ -89,10 +88,3 @@ SelectSegmentsEntryDisplayContext selectSegmentsEntryDisplayContext = (SelectSeg
 		/>
 	</liferay-ui:search-container>
 </aui:form>
-
-<aui:script>
-	Liferay.Util.selectEntityHandler(
-		'#<portlet:namespace />selectSegmentsEntryFm',
-		'<%= HtmlUtil.escapeJS(selectSegmentsEntryDisplayContext.getEventName()) %>'
-	);
-</aui:script>

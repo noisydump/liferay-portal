@@ -1,0 +1,41 @@
+<html>
+<head>
+<title>TestrayTestflow</title>
+</head>
+
+<body>
+<table border="1" cellpadding="1" cellspacing="1">
+<thead>
+<tr><td rowspan="1" colspan="3">TestrayTestflow</td></tr>
+</thead>
+
+<tbody>
+<tr>
+	<td>TESTFLOW_SIDEBAR</td>
+	<td>//div[contains(@class, 'testray-sidebar')]//a[contains(@href, 'testflow')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>STATUS_EDIT</td>
+	<td>//div[contains(@data-field-name, 'dueStatus')]//input[contains(@type, 'text')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ADD_NAME_TASKS</td>
+	<td>//div[contains(@class, 'panel-group')]//div[contains(@data-field-name, 'name')]//input[contains(@type, 'text')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ADD_BUILD_TASKS</td>
+	<td>//div[contains(@class, 'panel-group')]//div[contains(@data-field-name, 'buildToTasks')]//input[contains(@type, 'text')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>STATUS_TASKS</td>
+	<td>//div[(@class='testray-content')]//div[contains(@class, 'table-responsive') and contains(., '${key_value}')]</td>
+	<td></td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>

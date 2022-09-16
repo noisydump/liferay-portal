@@ -16,10 +16,11 @@ package com.liferay.portal.workflow.kaleo.forms.web.internal.upgrade.v1_0_2;
 
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.LayoutTypePortletConstants;
-import com.liferay.portal.kernel.upgrade.BaseUpgradePortletId;
+import com.liferay.portal.kernel.upgrade.BasePortletIdUpgradeProcess;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
+import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.workflow.kaleo.forms.constants.KaleoFormsPortletKeys;
 
 import java.sql.PreparedStatement;
@@ -31,37 +32,24 @@ import java.util.Set;
 /**
  * @author Inácio Nery
  */
-public class UpgradePortletId extends BaseUpgradePortletId {
-
-	protected void deletePortletReferences(String portletId) throws Exception {
-		runSQL("delete from Portlet where portletId = '" + portletId + "'");
-
-		runSQL(
-			"delete from PortletPreferences where portletId = '" + portletId +
-				"'");
-
-		runSQL("delete from ResourceAction where name = '" + portletId + "'");
-
-		runSQL(
-			"delete from ResourcePermission where name = '" + portletId + "'");
-
-		removePortletIdFromLayouts(portletId);
-	}
+public class UpgradePortletId extends BasePortletIdUpgradeProcess {
 
 	@Override
 	protected void doUpgrade() throws Exception {
 		super.doUpgrade();
 
-		deletePortletReferences("1_WAR_kaleoformsportlet");
+		_deletePortletReferences("1_WAR_kaleoformsportlet");
 	}
 
 	protected String getNewTypeSettings(
 		String typeSettings, String oldRootPortletId) {
 
-		UnicodeProperties typeSettingsUnicodeProperties = new UnicodeProperties(
-			true);
-
-		typeSettingsUnicodeProperties.fastLoad(typeSettings);
+		UnicodeProperties typeSettingsUnicodeProperties =
+			UnicodePropertiesBuilder.create(
+				true
+			).fastLoad(
+				typeSettings
+			).build();
 
 		Set<String> keys = typeSettingsUnicodeProperties.keySet();
 
@@ -106,25 +94,37 @@ public class UpgradePortletId extends BaseUpgradePortletId {
 		};
 	}
 
-	protected void removePortletIdFromLayouts(String oldRootPortletId)
+	private void _deletePortletReferences(String portletId) throws Exception {
+		runSQL("delete from Portlet where portletId = '" + portletId + "'");
+
+		runSQL(
+			"delete from PortletPreferences where portletId = '" + portletId +
+				"'");
+
+		runSQL("delete from ResourceAction where name = '" + portletId + "'");
+
+		runSQL(
+			"delete from ResourcePermission where name = '" + portletId + "'");
+
+		_removePortletIdFromLayouts(portletId);
+	}
+
+	private void _removePortletIdFromLayouts(String oldRootPortletId)
 		throws Exception {
 
 		String sql =
 			"select plid, typeSettings from Layout where " +
 				getTypeSettingsCriteria(oldRootPortletId);
 
-		try (PreparedStatement ps = connection.prepareStatement(sql);
-			ResultSet rs = ps.executeQuery()) {
+		try (PreparedStatement preparedStatement = connection.prepareStatement(
+				sql);
+			ResultSet resultSet = preparedStatement.executeQuery()) {
 
-			while (rs.next()) {
-				long plid = rs.getLong("plid");
-
-				String typeSettings = rs.getString("typeSettings");
-
-				String newTypeSettings = getNewTypeSettings(
-					typeSettings, oldRootPortletId);
-
-				updateLayout(plid, newTypeSettings);
+			while (resultSet.next()) {
+				updateLayout(
+					resultSet.getLong("plid"),
+					getNewTypeSettings(
+						resultSet.getString("typeSettings"), oldRootPortletId));
 			}
 		}
 	}

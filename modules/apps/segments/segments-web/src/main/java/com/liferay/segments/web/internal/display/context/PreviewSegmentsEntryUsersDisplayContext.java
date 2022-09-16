@@ -14,6 +14,7 @@
 
 package com.liferay.segments.web.internal.display.context;
 
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
@@ -32,7 +33,6 @@ import com.liferay.segments.service.SegmentsEntryService;
 import com.liferay.segments.web.internal.constants.SegmentsWebKeys;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
@@ -74,7 +74,7 @@ public class PreviewSegmentsEntryUsersDisplayContext {
 		}
 
 		SearchContainer<User> userSearchContainer = new SearchContainer(
-			_renderRequest, getPortletURL(), null,
+			_renderRequest, _getPortletURL(), null,
 			"no-users-have-been-assigned-to-this-segment");
 
 		userSearchContainer.setId("segmentsEntryUsers");
@@ -83,11 +83,8 @@ public class PreviewSegmentsEntryUsersDisplayContext {
 			return userSearchContainer;
 		}
 
-		int total = 0;
-		List<User> users = null;
-
 		try {
-			Criteria criteria = getCriteriaFromSession();
+			Criteria criteria = _getCriteriaFromSession();
 
 			SegmentsEntry segmentsEntry = getSegmentsEntry();
 
@@ -95,38 +92,39 @@ public class PreviewSegmentsEntryUsersDisplayContext {
 				Validator.isNotNull(
 					criteria.getFilterString(Criteria.Type.MODEL))) {
 
-				total = _userODataRetriever.getResultsCount(
-					_themeDisplay.getCompanyId(),
-					criteria.getFilterString(Criteria.Type.MODEL),
-					_themeDisplay.getLocale());
-
-				users = _userODataRetriever.getResults(
-					_themeDisplay.getCompanyId(),
-					criteria.getFilterString(Criteria.Type.MODEL),
-					_themeDisplay.getLocale(), userSearchContainer.getStart(),
-					userSearchContainer.getEnd());
+				userSearchContainer.setResultsAndTotal(
+					() -> _userODataRetriever.getResults(
+						_themeDisplay.getCompanyId(),
+						criteria.getFilterString(Criteria.Type.MODEL),
+						_themeDisplay.getLocale(),
+						userSearchContainer.getStart(),
+						userSearchContainer.getEnd()),
+					_userODataRetriever.getResultsCount(
+						_themeDisplay.getCompanyId(),
+						criteria.getFilterString(Criteria.Type.MODEL),
+						_themeDisplay.getLocale()));
 			}
 			else if ((criteria == null) && (segmentsEntry != null)) {
-				total =
+				userSearchContainer.setResultsAndTotal(
+					() -> {
+						LongStream segmentsEntryClassPKsLongStream =
+							Arrays.stream(
+								_segmentsEntryProviderRegistry.
+									getSegmentsEntryClassPKs(
+										segmentsEntry.getSegmentsEntryId(),
+										userSearchContainer.getStart(),
+										userSearchContainer.getEnd()));
+
+						return segmentsEntryClassPKsLongStream.boxed(
+						).map(
+							userId -> _userLocalService.fetchUser(userId)
+						).collect(
+							Collectors.toList()
+						);
+					},
 					_segmentsEntryProviderRegistry.
 						getSegmentsEntryClassPKsCount(
-							segmentsEntry.getSegmentsEntryId());
-
-				long[] segmentsEntryClassPKs =
-					_segmentsEntryProviderRegistry.getSegmentsEntryClassPKs(
-						segmentsEntry.getSegmentsEntryId(),
-						userSearchContainer.getStart(),
-						userSearchContainer.getEnd());
-
-				LongStream segmentsEntryClassPKsLongStream = Arrays.stream(
-					segmentsEntryClassPKs);
-
-				users = segmentsEntryClassPKsLongStream.boxed(
-				).map(
-					userId -> _userLocalService.fetchUser(userId)
-				).collect(
-					Collectors.toList()
-				);
+							segmentsEntry.getSegmentsEntryId()));
 			}
 		}
 		catch (PortalException portalException) {
@@ -137,36 +135,9 @@ public class PreviewSegmentsEntryUsersDisplayContext {
 			}
 		}
 
-		userSearchContainer.setResults(users);
-		userSearchContainer.setTotal(total);
-
 		_userSearchContainer = userSearchContainer;
 
 		return _userSearchContainer;
-	}
-
-	protected Criteria getCriteriaFromSession() {
-		PortletSession portletSession = _renderRequest.getPortletSession();
-
-		return (Criteria)portletSession.getAttribute(
-			SegmentsWebKeys.PREVIEW_SEGMENTS_ENTRY_CRITERIA);
-	}
-
-	protected PortletURL getPortletURL() {
-		PortletURL portletURL = _renderResponse.createRenderURL();
-
-		portletURL.setParameter(
-			"mvcRenderCommandName", "/segments/preview_segments_entry_users");
-
-		SegmentsEntry segmentsEntry = getSegmentsEntry();
-
-		if (segmentsEntry != null) {
-			portletURL.setParameter(
-				"segmentsEntryId",
-				String.valueOf(segmentsEntry.getSegmentsEntryId()));
-		}
-
-		return portletURL;
 	}
 
 	protected SegmentsEntry getSegmentsEntry() {
@@ -192,6 +163,32 @@ public class PreviewSegmentsEntryUsersDisplayContext {
 		}
 
 		return _segmentsEntry;
+	}
+
+	private Criteria _getCriteriaFromSession() {
+		PortletSession portletSession = _renderRequest.getPortletSession();
+
+		return (Criteria)portletSession.getAttribute(
+			SegmentsWebKeys.PREVIEW_SEGMENTS_ENTRY_CRITERIA);
+	}
+
+	private PortletURL _getPortletURL() {
+		return PortletURLBuilder.createRenderURL(
+			_renderResponse
+		).setMVCRenderCommandName(
+			"/segments/preview_segments_entry_users"
+		).setParameter(
+			"segmentsEntryId",
+			() -> {
+				SegmentsEntry segmentsEntry = getSegmentsEntry();
+
+				if (segmentsEntry != null) {
+					return segmentsEntry.getSegmentsEntryId();
+				}
+
+				return null;
+			}
+		).buildPortletURL();
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

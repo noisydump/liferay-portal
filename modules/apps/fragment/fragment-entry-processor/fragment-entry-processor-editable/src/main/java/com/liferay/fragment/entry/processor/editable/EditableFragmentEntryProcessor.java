@@ -24,6 +24,9 @@ import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.processor.FragmentEntryProcessor;
 import com.liferay.fragment.processor.FragmentEntryProcessorContext;
 import com.liferay.fragment.processor.PortletRegistry;
+import com.liferay.info.constants.InfoDisplayWebKeys;
+import com.liferay.info.item.InfoItemFieldValues;
+import com.liferay.info.item.provider.InfoItemFieldValuesProvider;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -31,7 +34,7 @@ import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -44,6 +47,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.Set;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -140,13 +145,12 @@ public class EditableFragmentEntryProcessor implements FragmentEntryProcessor {
 			jsonObject.put(
 				clazz.getName(),
 				getDefaultEditableValuesJSONObject(
-					fragmentEntryLink.getHtml(),
-					fragmentEntryLink.getConfiguration()));
+					html, fragmentEntryLink.getConfiguration()));
 		}
 
 		Document document = _getDocument(html);
 
-		Map<Long, Map<String, Object>> infoDisplaysFieldValues =
+		Map<Long, InfoItemFieldValues> infoDisplaysFieldValues =
 			new HashMap<>();
 
 		for (Element element :
@@ -185,52 +189,57 @@ public class EditableFragmentEntryProcessor implements FragmentEntryProcessor {
 					fragmentEntryProcessorContext.getMode()) &&
 				editableValueJSONObject.has("mappedField")) {
 
-				value = editableValueJSONObject.getString("mappedField");
+				String mappedField = editableValueJSONObject.getString(
+					"mappedField");
 
-				if (Validator.isNotNull(value)) {
-					mappedValueConfigJSONObject =
-						editableElementParser.getFieldTemplateConfigJSONObject(
-							value, fragmentEntryProcessorContext.getLocale(),
-							null);
+				if (Validator.isNotNull(mappedField)) {
+					HttpServletRequest httpServletRequest =
+						fragmentEntryProcessorContext.getHttpServletRequest();
 
-					if (mappedValueConfigJSONObject.has("alt")) {
-						String alt = mappedValueConfigJSONObject.getString(
-							"alt", StringPool.BLANK);
+					Object infoItem = httpServletRequest.getAttribute(
+						InfoDisplayWebKeys.INFO_ITEM);
 
-						alt = _fragmentEntryProcessorHelper.processTemplate(
-							alt, fragmentEntryProcessorContext);
+					InfoItemFieldValuesProvider<Object>
+						infoItemFieldValuesProvider =
+							(InfoItemFieldValuesProvider)
+								httpServletRequest.getAttribute(
+									InfoDisplayWebKeys.
+										INFO_ITEM_FIELD_VALUES_PROVIDER);
 
-						mappedValueConfigJSONObject.put("alt", alt);
+					Object fieldValue =
+						_fragmentEntryProcessorHelper.
+							getMappedInfoItemFieldValue(
+								mappedField, infoItemFieldValuesProvider,
+								fragmentEntryProcessorContext.getLocale(),
+								infoItem);
+
+					if (fieldValue != null) {
+						mappedValueConfigJSONObject =
+							editableElementParser.
+								getFieldTemplateConfigJSONObject(
+									mappedField,
+									fragmentEntryProcessorContext.getLocale(),
+									fieldValue);
+
+						value = editableElementParser.parseFieldValue(
+							fieldValue);
 					}
-
-					if (mappedValueConfigJSONObject.has("fileEntryId")) {
-						String fileEntryId =
-							mappedValueConfigJSONObject.getString(
-								"fileEntryId", StringPool.BLANK);
-
-						fileEntryId = StringUtil.trim(
-							_fragmentEntryProcessorHelper.processTemplate(
-								fileEntryId, fragmentEntryProcessorContext));
-
-						mappedValueConfigJSONObject.put(
-							"fileEntryId", fileEntryId);
+					else {
+						value = editableValueJSONObject.getString(
+							"defaultValue");
 					}
-
-					value = StringUtil.replace(
-						editableElementParser.getFieldTemplate(), "field_name",
-						value);
-
-					value = _fragmentEntryProcessorHelper.processTemplate(
-						value, fragmentEntryProcessorContext);
 				}
 			}
 			else if (_fragmentEntryProcessorHelper.isMapped(
 						editableValueJSONObject)) {
 
 				Object fieldValue =
-					_fragmentEntryProcessorHelper.getMappedValue(
+					_fragmentEntryProcessorHelper.getMappedInfoItemFieldValue(
 						editableValueJSONObject, infoDisplaysFieldValues,
-						fragmentEntryProcessorContext);
+						fragmentEntryProcessorContext.getLocale(),
+						fragmentEntryProcessorContext.getMode(),
+						fragmentEntryProcessorContext.getPreviewClassPK(),
+						fragmentEntryProcessorContext.getPreviewVersion());
 
 				if (fieldValue != null) {
 					String fieldId = editableValueJSONObject.getString(
@@ -242,9 +251,6 @@ public class EditableFragmentEntryProcessor implements FragmentEntryProcessor {
 							fieldValue);
 
 					value = editableElementParser.parseFieldValue(fieldValue);
-
-					value = _fragmentEntryProcessorHelper.processTemplate(
-						value, fragmentEntryProcessorContext);
 				}
 				else {
 					value = editableValueJSONObject.getString("defaultValue");
@@ -255,7 +261,10 @@ public class EditableFragmentEntryProcessor implements FragmentEntryProcessor {
 
 				Object fieldValue =
 					_fragmentEntryProcessorHelper.getMappedCollectionValue(
-						editableValueJSONObject, fragmentEntryProcessorContext);
+						fragmentEntryProcessorContext.
+							getDisplayObjectOptional(),
+						editableValueJSONObject,
+						fragmentEntryProcessorContext.getLocale());
 
 				if (fieldValue != null) {
 					String fieldId = editableValueJSONObject.getString(
@@ -267,9 +276,6 @@ public class EditableFragmentEntryProcessor implements FragmentEntryProcessor {
 							fieldValue);
 
 					value = editableElementParser.parseFieldValue(fieldValue);
-
-					value = _fragmentEntryProcessorHelper.processTemplate(
-						value, fragmentEntryProcessorContext);
 				}
 				else {
 					value = editableValueJSONObject.getString("defaultValue");
@@ -329,7 +335,16 @@ public class EditableFragmentEntryProcessor implements FragmentEntryProcessor {
 			for (Element element : document.select("lfr-editable")) {
 				element.removeAttr("id");
 				element.removeAttr("type");
-				element.tagName("div");
+
+				String tagName = element.attr("view-tag-name");
+
+				if (!Objects.equals(tagName, "span")) {
+					tagName = "div";
+				}
+
+				element.tagName(tagName);
+
+				element.removeAttr("view-tag-name");
 			}
 		}
 
@@ -485,7 +500,7 @@ public class EditableFragmentEntryProcessor implements FragmentEntryProcessor {
 			"content.Language", getClass());
 
 		throw new FragmentEntryContentException(
-			LanguageUtil.format(
+			_language.format(
 				resourceBundle,
 				"you-must-define-all-required-attributes-x-for-each-editable-" +
 					"element",
@@ -530,7 +545,7 @@ public class EditableFragmentEntryProcessor implements FragmentEntryProcessor {
 				"content.Language", getClass());
 
 			throw new FragmentEntryContentException(
-				LanguageUtil.get(
+				_language.get(
 					resourceBundle,
 					"you-must-define-a-unique-id-for-each-editable-element"));
 		}
@@ -570,7 +585,7 @@ public class EditableFragmentEntryProcessor implements FragmentEntryProcessor {
 				"content.Language", getClass());
 
 			throw new FragmentEntryContentException(
-				LanguageUtil.get(
+				_language.get(
 					resourceBundle,
 					"editable-fields-cannot-include-nested-editables-drop-" +
 						"zones-or-widgets-in-it"));
@@ -591,7 +606,7 @@ public class EditableFragmentEntryProcessor implements FragmentEntryProcessor {
 			"content.Language", getClass());
 
 		throw new FragmentEntryContentException(
-			LanguageUtil.get(
+			_language.get(
 				resourceBundle,
 				"you-must-define-a-valid-type-for-each-editable-element"));
 	}
@@ -605,6 +620,9 @@ public class EditableFragmentEntryProcessor implements FragmentEntryProcessor {
 
 	@Reference
 	private FragmentEntryProcessorHelper _fragmentEntryProcessorHelper;
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private PortletRegistry _portletRegistry;

@@ -24,7 +24,7 @@ String videoPosterURL = (String)request.getAttribute(DLVideoWebKeys.VIDEO_POSTER
 <liferay-util:html-top
 	outputKey="document_library_video_embed_css"
 >
-	<link href="<%= PortalUtil.getStaticResourceURL(request, application.getContextPath() + "/css/embed.css") %>" rel="stylesheet" type="text/css" />
+	<link href="<%= PortalUtil.getStaticResourceURL(request, PortalUtil.getPathProxy() + application.getContextPath() + "/css/embed.css") %>" rel="stylesheet" type="text/css" />
 </liferay-util:html-top>
 
 <video
@@ -48,14 +48,13 @@ String videoPosterURL = (String)request.getAttribute(DLVideoWebKeys.VIDEO_POSTER
 				type = "video/ogv";
 			}
 		}
-
-		if (type != null) {
 	%>
 
+		<c:if test="<%= type != null %>">
 			<source src="<%= previewFileURL %>" type="<%= type %>" />
+		</c:if>
 
 	<%
-		}
 	}
 	%>
 

@@ -45,6 +45,11 @@ public class DefaultWorkflowInstance implements Serializable, WorkflowInstance {
 	}
 
 	@Override
+	public List<WorkflowNode> getCurrentWorkflowNodes() {
+		return _currentWorkflowNodes;
+	}
+
+	@Override
 	public Date getEndDate() {
 		return _endDate;
 	}
@@ -69,11 +74,6 @@ public class DefaultWorkflowInstance implements Serializable, WorkflowInstance {
 	}
 
 	@Override
-	public String getState() {
-		return _state;
-	}
-
-	@Override
 	public Map<String, Serializable> getWorkflowContext() {
 		return _workflowContext;
 	}
@@ -94,6 +94,11 @@ public class DefaultWorkflowInstance implements Serializable, WorkflowInstance {
 	}
 
 	@Override
+	public boolean isActive() {
+		return _active;
+	}
+
+	@Override
 	public boolean isComplete() {
 		if (getEndDate() != null) {
 			return true;
@@ -102,10 +107,20 @@ public class DefaultWorkflowInstance implements Serializable, WorkflowInstance {
 		return false;
 	}
 
+	public void setActive(boolean active) {
+		_active = active;
+	}
+
 	public void setChildrenWorkflowInstances(
 		List<WorkflowInstance> childrenWorkflowInstances) {
 
 		_childrenWorkflowInstances = childrenWorkflowInstances;
+	}
+
+	public void setCurrentWorkflowNodes(
+		List<WorkflowNode> currentWorkflowNodes) {
+
+		_currentWorkflowNodes = currentWorkflowNodes;
 	}
 
 	public void setEndDate(Date endDate) {
@@ -121,10 +136,6 @@ public class DefaultWorkflowInstance implements Serializable, WorkflowInstance {
 
 	public void setStartDate(Date startDate) {
 		_startDate = startDate;
-	}
-
-	public void setState(String state) {
-		_state = state;
 	}
 
 	public void setWorkflowContext(Map<String, Serializable> workflowContext) {
@@ -143,12 +154,13 @@ public class DefaultWorkflowInstance implements Serializable, WorkflowInstance {
 		_workflowInstanceId = workflowInstanceId;
 	}
 
+	private boolean _active;
 	private List<WorkflowInstance> _childrenWorkflowInstances =
 		new ArrayList<>();
+	private List<WorkflowNode> _currentWorkflowNodes;
 	private Date _endDate;
 	private WorkflowInstance _parentWorkflowInstance;
 	private Date _startDate;
-	private String _state;
 	private Map<String, Serializable> _workflowContext;
 	private String _workflowDefinitionName;
 	private int _workflowDefinitionVersion;

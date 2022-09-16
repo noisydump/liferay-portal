@@ -16,6 +16,8 @@ package com.liferay.sync.internal.servlet.filter;
 
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.servlet.HttpHeaders;
 import com.liferay.portal.kernel.upload.UploadServletRequest;
 import com.liferay.portal.kernel.util.Constants;
@@ -125,7 +127,7 @@ public class SyncJSONFilter implements Filter {
 					httpServletRequest);
 			}
 
-			if (!isSyncJSONRequest(servletRequest)) {
+			if (!_isSyncJSONRequest(servletRequest)) {
 				filterChain.doFilter(servletRequest, servletResponse);
 
 				return;
@@ -231,7 +233,7 @@ public class SyncJSONFilter implements Filter {
 	public void init(FilterConfig filterConfig) {
 	}
 
-	protected boolean isSyncJSONRequest(ServletRequest servletRequest) {
+	private boolean _isSyncJSONRequest(ServletRequest servletRequest) {
 		try {
 			String cmd = servletRequest.getParameter(Constants.CMD);
 
@@ -271,6 +273,10 @@ public class SyncJSONFilter implements Filter {
 			}
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			return false;
 		}
 
@@ -282,6 +288,8 @@ public class SyncJSONFilter implements Filter {
 	private static final int _ABSOLUTE_SYNC_CLIENT_MIN_BUILD_DESKTOP = 3200;
 
 	private static final int _ABSOLUTE_SYNC_CLIENT_MIN_BUILD_IOS = 7;
+
+	private static final Log _log = LogFactoryUtil.getLog(SyncJSONFilter.class);
 
 	@Reference
 	private Portal _portal;

@@ -15,21 +15,23 @@
 package com.liferay.commerce.address.web.internal.portlet.action;
 
 import com.liferay.commerce.constants.CommercePortletKeys;
-import com.liferay.commerce.exception.CommerceCountryAlreadyExistsException;
-import com.liferay.commerce.exception.CommerceCountryNameException;
-import com.liferay.commerce.exception.CommerceCountryThreeLettersISOCodeException;
-import com.liferay.commerce.exception.CommerceCountryTwoLettersISOCodeException;
 import com.liferay.commerce.exception.NoSuchCountryException;
-import com.liferay.commerce.model.CommerceCountry;
 import com.liferay.commerce.product.model.CommerceChannelRel;
 import com.liferay.commerce.product.service.CommerceChannelRelService;
-import com.liferay.commerce.service.CommerceCountryService;
+import com.liferay.portal.kernel.exception.CountryA2Exception;
+import com.liferay.portal.kernel.exception.CountryA3Exception;
+import com.liferay.portal.kernel.exception.CountryNameException;
+import com.liferay.portal.kernel.exception.DuplicateCountryException;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Country;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
+import com.liferay.portal.kernel.service.CountryLocalService;
+import com.liferay.portal.kernel.service.CountryService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.servlet.SessionErrors;
@@ -37,6 +39,7 @@ import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.TransactionConfig;
 import com.liferay.portal.kernel.transaction.TransactionInvokerUtil;
 import com.liferay.portal.kernel.util.Constants;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -68,29 +71,6 @@ import org.osgi.service.component.annotations.Reference;
 )
 public class EditCommerceCountryMVCActionCommand extends BaseMVCActionCommand {
 
-	protected void deleteCommerceCountries(ActionRequest actionRequest)
-		throws Exception {
-
-		long[] deleteCommerceCountryIds = null;
-
-		long commerceCountryId = ParamUtil.getLong(
-			actionRequest, "commerceCountryId");
-
-		if (commerceCountryId > 0) {
-			deleteCommerceCountryIds = new long[] {commerceCountryId};
-		}
-		else {
-			deleteCommerceCountryIds = StringUtil.split(
-				ParamUtil.getString(actionRequest, "deleteCommerceCountryIds"),
-				0L);
-		}
-
-		for (long deleteCommerceCountryId : deleteCommerceCountryIds) {
-			_commerceCountryService.deleteCommerceCountry(
-				deleteCommerceCountryId);
-		}
-	}
-
 	@Override
 	protected void doProcessAction(
 			ActionRequest actionRequest, ActionResponse actionResponse)
@@ -100,16 +80,15 @@ public class EditCommerceCountryMVCActionCommand extends BaseMVCActionCommand {
 
 		try {
 			if (cmd.equals(Constants.ADD) || cmd.equals(Constants.UPDATE)) {
-				CommerceCountry commerceCountry = updateCommerceCountry(
-					actionRequest);
+				Country country = _updateCountry(actionRequest);
 
-				String redirect = getSaveAndContinueRedirect(
-					actionRequest, commerceCountry);
+				String redirect = _getSaveAndContinueRedirect(
+					actionRequest, country);
 
 				sendRedirect(actionRequest, actionResponse, redirect);
 			}
 			else if (cmd.equals(Constants.DELETE)) {
-				deleteCommerceCountries(actionRequest);
+				_deleteCountries(actionRequest);
 			}
 			else if (cmd.equals("setActive")) {
 				setActive(actionRequest);
@@ -130,13 +109,10 @@ public class EditCommerceCountryMVCActionCommand extends BaseMVCActionCommand {
 
 				actionResponse.setRenderParameter("mvcPath", "/error.jsp");
 			}
-			else if (throwable instanceof
-						CommerceCountryAlreadyExistsException ||
-					 throwable instanceof CommerceCountryNameException ||
-					 throwable instanceof
-						 CommerceCountryThreeLettersISOCodeException ||
-					 throwable instanceof
-						 CommerceCountryTwoLettersISOCodeException) {
+			else if (throwable instanceof CountryA2Exception ||
+					 throwable instanceof CountryA3Exception ||
+					 throwable instanceof CountryNameException ||
+					 throwable instanceof DuplicateCountryException) {
 
 				hideDefaultErrorMessage(actionRequest);
 				hideDefaultSuccessMessage(actionRequest);
@@ -155,21 +131,49 @@ public class EditCommerceCountryMVCActionCommand extends BaseMVCActionCommand {
 		}
 	}
 
-	protected String getSaveAndContinueRedirect(
-			ActionRequest actionRequest, CommerceCountry commerceCountry)
+	protected void setActive(ActionRequest actionRequest)
+		throws PortalException {
+
+		long countryId = ParamUtil.getLong(actionRequest, "countryId");
+
+		boolean active = ParamUtil.getBoolean(actionRequest, "active");
+
+		_countryService.updateActive(countryId, active);
+	}
+
+	private void _deleteCountries(ActionRequest actionRequest)
+		throws Exception {
+
+		long[] deleteCountryIds = null;
+
+		long countryId = ParamUtil.getLong(actionRequest, "countryId");
+
+		if (countryId > 0) {
+			deleteCountryIds = new long[] {countryId};
+		}
+		else {
+			deleteCountryIds = ParamUtil.getLongValues(actionRequest, "rowIds");
+		}
+
+		for (long deleteCountryId : deleteCountryIds) {
+			_countryService.deleteCountry(deleteCountryId);
+		}
+	}
+
+	private String _getSaveAndContinueRedirect(
+			ActionRequest actionRequest, Country country)
 		throws Exception {
 
 		PortletURL portletURL = _portal.getControlPanelPortletURL(
 			actionRequest, CommercePortletKeys.COMMERCE_COUNTRY,
 			PortletRequest.RENDER_PHASE);
 
-		if (commerceCountry != null) {
+		if (country != null) {
 			portletURL.setParameter(
 				"mvcRenderCommandName",
 				"/commerce_country/edit_commerce_country");
 			portletURL.setParameter(
-				"commerceCountryId",
-				String.valueOf(commerceCountry.getCommerceCountryId()));
+				"countryId", String.valueOf(country.getCountryId()));
 
 			String backURL = ParamUtil.getString(actionRequest, "backURL");
 
@@ -179,22 +183,8 @@ public class EditCommerceCountryMVCActionCommand extends BaseMVCActionCommand {
 		return portletURL.toString();
 	}
 
-	protected void setActive(ActionRequest actionRequest)
-		throws PortalException {
-
-		long commerceCountryId = ParamUtil.getLong(
-			actionRequest, "commerceCountryId");
-
-		boolean active = ParamUtil.getBoolean(actionRequest, "active");
-
-		_commerceCountryService.setActive(commerceCountryId, active);
-	}
-
-	protected void updateChannels(ActionRequest actionRequest)
-		throws PortalException {
-
-		long commerceCountryId = ParamUtil.getLong(
-			actionRequest, "commerceCountryId");
+	private void _updateChannels(ActionRequest actionRequest) throws Exception {
+		long countryId = ParamUtil.getLong(actionRequest, "countryId");
 
 		long[] commerceChannelIds = StringUtil.split(
 			ParamUtil.getString(actionRequest, "commerceChannelIds"), 0L);
@@ -206,7 +196,7 @@ public class EditCommerceCountryMVCActionCommand extends BaseMVCActionCommand {
 			CommerceChannelRel.class.getName(), actionRequest);
 
 		_commerceChannelRelService.deleteCommerceChannelRels(
-			CommerceCountry.class.getName(), commerceCountryId);
+			Country.class.getName(), countryId);
 
 		for (long commerceChannelId : commerceChannelIds) {
 			if (commerceChannelId == 0) {
@@ -214,56 +204,57 @@ public class EditCommerceCountryMVCActionCommand extends BaseMVCActionCommand {
 			}
 
 			_commerceChannelRelService.addCommerceChannelRel(
-				CommerceCountry.class.getName(), commerceCountryId,
-				commerceChannelId, serviceContext);
+				Country.class.getName(), countryId, commerceChannelId,
+				serviceContext);
 		}
 
-		_commerceCountryService.updateCommerceCountryChannelFilter(
-			commerceCountryId, channelFilterEnabled);
+		_countryService.updateGroupFilterEnabled(
+			countryId, channelFilterEnabled);
 	}
 
-	protected CommerceCountry updateCommerceCountry(ActionRequest actionRequest)
+	private Country _updateCountry(ActionRequest actionRequest)
 		throws Exception {
 
-		long commerceCountryId = ParamUtil.getLong(
-			actionRequest, "commerceCountryId");
+		long countryId = ParamUtil.getLong(actionRequest, "countryId");
 
-		Map<Locale, String> nameMap = LocalizationUtil.getLocalizationMap(
-			actionRequest, "name");
+		String a2 = ParamUtil.getString(actionRequest, "a2");
+		String a3 = ParamUtil.getString(actionRequest, "a3");
+		boolean active = ParamUtil.getBoolean(actionRequest, "active");
 		boolean billingAllowed = ParamUtil.getBoolean(
 			actionRequest, "billingAllowed");
+		Map<Locale, String> nameMap = LocalizationUtil.getLocalizationMap(
+			actionRequest, "name");
+		String number = ParamUtil.getString(actionRequest, "number");
+		double position = ParamUtil.getDouble(actionRequest, "position");
 		boolean shippingAllowed = ParamUtil.getBoolean(
 			actionRequest, "shippingAllowed");
-		String twoLettersISOCode = ParamUtil.getString(
-			actionRequest, "twoLettersISOCode");
-		String threeLettersISOCode = ParamUtil.getString(
-			actionRequest, "threeLettersISOCode");
-		int numericISOCode = ParamUtil.getInteger(
-			actionRequest, "numericISOCode");
 		boolean subjectToVAT = ParamUtil.getBoolean(
 			actionRequest, "subjectToVAT");
-		double priority = ParamUtil.getDouble(actionRequest, "priority");
-		boolean active = ParamUtil.getBoolean(actionRequest, "active");
 
-		ServiceContext serviceContext = ServiceContextFactory.getInstance(
-			CommerceCountry.class.getName(), actionRequest);
+		Country country = null;
 
-		CommerceCountry commerceCountry = null;
-
-		if (commerceCountryId <= 0) {
-			commerceCountry = _commerceCountryService.addCommerceCountry(
-				nameMap, billingAllowed, shippingAllowed, twoLettersISOCode,
-				threeLettersISOCode, numericISOCode, subjectToVAT, priority,
-				active, serviceContext);
+		if (countryId <= 0) {
+			country = _countryService.addCountry(
+				a2, a3, active, billingAllowed, null,
+				nameMap.get(LocaleUtil.getDefault()), number, position,
+				shippingAllowed, subjectToVAT, false,
+				ServiceContextFactory.getInstance(
+					Country.class.getName(), actionRequest));
 		}
 		else {
-			commerceCountry = _commerceCountryService.updateCommerceCountry(
-				commerceCountryId, nameMap, billingAllowed, shippingAllowed,
-				twoLettersISOCode, threeLettersISOCode, numericISOCode,
-				subjectToVAT, priority, active, serviceContext);
+			country = _countryService.updateCountry(
+				countryId, a2, a3, active, billingAllowed, null,
+				nameMap.get(LocaleUtil.getDefault()), number, position,
+				shippingAllowed, subjectToVAT);
 		}
 
-		return commerceCountry;
+		for (Map.Entry<Locale, String> entry : nameMap.entrySet()) {
+			_countryLocalService.updateCountryLocalization(
+				country, _language.getLanguageId(entry.getKey()),
+				entry.getValue());
+		}
+
+		return country;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -277,7 +268,13 @@ public class EditCommerceCountryMVCActionCommand extends BaseMVCActionCommand {
 	private CommerceChannelRelService _commerceChannelRelService;
 
 	@Reference
-	private CommerceCountryService _commerceCountryService;
+	private CountryLocalService _countryLocalService;
+
+	@Reference
+	private CountryService _countryService;
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private Portal _portal;
@@ -286,7 +283,7 @@ public class EditCommerceCountryMVCActionCommand extends BaseMVCActionCommand {
 
 		@Override
 		public Object call() throws Exception {
-			updateChannels(_actionRequest);
+			_updateChannels(_actionRequest);
 
 			return null;
 		}

@@ -16,7 +16,7 @@
 
 <c:choose>
 	<c:when test="<%= Validator.isNotNull(icon) %>">
-		<aui:icon cssClass="<%= iconCssClass %>" image="<%= icon %>" markupView="<%= markupView %>" />
+		<aui:icon cssClass="<%= iconCssClass %>" image="<%= icon %>" />
 	</c:when>
 	<c:when test="<%= auiImage %>">
 		<aui:icon image="<%= image.substring(_AUI_PATH.length()) %>" />
@@ -47,6 +47,8 @@
 		<span class="taglib-text-icon"><%= localizeMessage ? LanguageUtil.get(resourceBundle, message) : message %></span>
 	</c:when>
 	<c:otherwise>
-		<span class="taglib-text <%= label ? StringPool.BLANK : "hide-accessible" %>"><%= localizeMessage ? LanguageUtil.get(resourceBundle, message) : message %></span>
+		<c:if test="<%= Validator.isNotNull(message) %>">
+			<span class="taglib-text <%= label ? StringPool.BLANK : "hide-accessible sr-only" %>"><%= localizeMessage ? LanguageUtil.get(resourceBundle, message) : message %></span>
+		</c:if>
 	</c:otherwise>
 </c:choose>

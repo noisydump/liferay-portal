@@ -19,9 +19,12 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Team;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
@@ -52,6 +55,8 @@ public class SiteTeamsManagementToolbarDisplayContext
 		super(
 			httpServletRequest, liferayPortletRequest, liferayPortletResponse,
 			siteTeamsDisplayContext.getSearchContainer());
+
+		_siteTeamsDisplayContext = siteTeamsDisplayContext;
 	}
 
 	@Override
@@ -83,11 +88,11 @@ public class SiteTeamsManagementToolbarDisplayContext
 
 	@Override
 	public String getClearResultsURL() {
-		PortletURL clearResultsURL = getPortletURL();
-
-		clearResultsURL.setParameter("keywords", StringPool.BLANK);
-
-		return clearResultsURL.toString();
+		return PortletURLBuilder.create(
+			getPortletURL()
+		).setKeywords(
+			StringPool.BLANK
+		).buildString();
 	}
 
 	@Override
@@ -106,11 +111,6 @@ public class SiteTeamsManagementToolbarDisplayContext
 					LanguageUtil.get(httpServletRequest, "add-team"));
 			}
 		).build();
-	}
-
-	@Override
-	public String getDefaultEventHandler() {
-		return "siteTeamsManagementToolbarDefaultEventHandler";
 	}
 
 	@Override
@@ -140,9 +140,17 @@ public class SiteTeamsManagementToolbarDisplayContext
 			}
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return false;
+	}
+
+	@Override
+	protected String getDisplayStyle() {
+		return _siteTeamsDisplayContext.getDisplayStyle();
 	}
 
 	@Override
@@ -159,5 +167,10 @@ public class SiteTeamsManagementToolbarDisplayContext
 	protected String[] getOrderByKeys() {
 		return new String[] {"name"};
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		SiteTeamsManagementToolbarDisplayContext.class);
+
+	private final SiteTeamsDisplayContext _siteTeamsDisplayContext;
 
 }

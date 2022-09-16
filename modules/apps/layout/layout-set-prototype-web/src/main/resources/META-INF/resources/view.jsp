@@ -16,16 +16,18 @@
 
 <%@ include file="/init.jsp" %>
 
+<%@ include file="/propagation_alert.jspf" %>
+
 <liferay-ui:error exception="<%= RequiredLayoutSetPrototypeException.class %>" message="you-cannot-delete-site-templates-that-are-used-by-a-site" />
 
-<clay:management-toolbar-v2
+<clay:management-toolbar
 	actionDropdownItems="<%= layoutSetPrototypeDisplayContext.getActionDropdownItems() %>"
 	clearResultsURL="<%= layoutSetPrototypeDisplayContext.getClearResultsURL() %>"
-	componentId="layoutSetPrototypeWebManagementToolbar"
 	creationMenu="<%= layoutSetPrototypeDisplayContext.isShowAddButton() ? layoutSetPrototypeDisplayContext.getCreationMenu() : null %>"
 	filterDropdownItems="<%= layoutSetPrototypeDisplayContext.getFilterDropdownItems() %>"
 	infoPanelId="infoPanelId"
 	itemsTotal="<%= layoutSetPrototypeDisplayContext.getTotalItems() %>"
+	propsTransformer="js/LayoutSetPrototypeManagementToolbarPropsTransformer"
 	searchActionURL="<%= layoutSetPrototypeDisplayContext.getSearchActionURL() %>"
 	searchContainerId="layoutSetPrototype"
 	searchFormName="searchFm"
@@ -96,45 +98,19 @@
 						</h6>
 					</liferay-ui:search-container-column-text>
 
-					<liferay-ui:search-container-column-jsp
-						path="/layout_set_prototype_action.jsp"
-					/>
+					<liferay-ui:search-container-column-text>
+						<clay:dropdown-actions
+							dropdownItems="<%= layoutSetPrototypeDisplayContext.getLayoutSetPrototypeActionDropdownItems(layoutSetPrototype) %>"
+							propsTransformer="js/LayoutSetPrototypeDropdownDefaultPropsTransformer"
+						/>
+					</liferay-ui:search-container-column-text>
 				</c:when>
 				<c:when test="<%= layoutSetPrototypeDisplayContext.isIconView() %>">
 					<liferay-ui:search-container-column-text>
-						<liferay-frontend:icon-vertical-card
-							actionJsp="/layout_set_prototype_action.jsp"
-							actionJspServletContext="<%= application %>"
-							icon="site-template"
-							resultRow="<%= row %>"
-							rowChecker="<%= searchContainer.getRowChecker() %>"
-							title="<%= layoutSetPrototype.getName(locale) %>"
-							url="<%= (rowURL != null) ? rowURL.toString() : StringPool.BLANK %>"
-						>
-							<liferay-frontend:vertical-card-header>
-
-								<%
-								Date createDate = layoutSetPrototype.getModifiedDate();
-								%>
-
-								<label class="text-default">
-									<liferay-ui:message arguments="<%= LanguageUtil.getTimeDescription(request, System.currentTimeMillis() - createDate.getTime(), true) %>" key="created-x-ago" />
-								</label>
-							</liferay-frontend:vertical-card-header>
-
-							<liferay-frontend:vertical-card-footer>
-								<label class="text-default">
-									<c:choose>
-										<c:when test="<%= layoutSetPrototype.isActive() %>">
-											<liferay-ui:message key="active" />
-										</c:when>
-										<c:otherwise>
-											<liferay-ui:message key="not-active" />
-										</c:otherwise>
-									</c:choose>
-								</label>
-							</liferay-frontend:vertical-card-footer>
-						</liferay-frontend:icon-vertical-card>
+						<clay:vertical-card
+							propsTransformer="js/LayoutSetPrototypeDropdownDefaultPropsTransformer"
+							verticalCard="<%= new LayoutSetPrototypeVerticalCard(layoutSetPrototype, renderRequest, renderResponse, searchContainer.getRowChecker()) %>"
+						/>
 					</liferay-ui:search-container-column-text>
 				</c:when>
 				<c:when test="<%= layoutSetPrototypeDisplayContext.isListView() %>">
@@ -171,10 +147,12 @@
 						value='<%= LanguageUtil.get(request, layoutSetPrototype.isActive()? "yes" : "no") %>'
 					/>
 
-					<liferay-ui:search-container-column-jsp
-						href="<%= rowURL %>"
-						path="/layout_set_prototype_action.jsp"
-					/>
+					<liferay-ui:search-container-column-text>
+						<clay:dropdown-actions
+							dropdownItems="<%= layoutSetPrototypeDisplayContext.getLayoutSetPrototypeActionDropdownItems(layoutSetPrototype) %>"
+							propsTransformer="js/LayoutSetPrototypeDropdownDefaultPropsTransformer"
+						/>
+					</liferay-ui:search-container-column-text>
 				</c:when>
 			</c:choose>
 		</liferay-ui:search-container-row>
@@ -185,31 +163,3 @@
 		/>
 	</liferay-ui:search-container>
 </aui:form>
-
-<aui:script sandbox="<%= true %>">
-	var deleteLayoutSetPrototypes = function () {
-		if (
-			confirm(
-				'<liferay-ui:message key="are-you-sure-you-want-to-delete-this" />'
-			)
-		) {
-			submitForm(document.querySelector('#<portlet:namespace />fm'));
-		}
-	};
-
-	var ACTIONS = {
-		deleteLayoutSetPrototypes: deleteLayoutSetPrototypes,
-	};
-
-	Liferay.componentReady('layoutSetPrototypeWebManagementToolbar').then(function (
-		managementToolbar
-	) {
-		managementToolbar.on('actionItemClicked', function (event) {
-			var itemData = event.data.item.data;
-
-			if (itemData && itemData.action && ACTIONS[itemData.action]) {
-				ACTIONS[itemData.action]();
-			}
-		});
-	});
-</aui:script>

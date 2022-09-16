@@ -126,7 +126,14 @@ public class CPMeasurementUnitPersistenceTest {
 
 		CPMeasurementUnit newCPMeasurementUnit = _persistence.create(pk);
 
+		newCPMeasurementUnit.setMvccVersion(RandomTestUtil.nextLong());
+
+		newCPMeasurementUnit.setCtCollectionId(RandomTestUtil.nextLong());
+
 		newCPMeasurementUnit.setUuid(RandomTestUtil.randomString());
+
+		newCPMeasurementUnit.setExternalReferenceCode(
+			RandomTestUtil.randomString());
 
 		newCPMeasurementUnit.setGroupId(RandomTestUtil.nextLong());
 
@@ -160,8 +167,17 @@ public class CPMeasurementUnitPersistenceTest {
 			_persistence.findByPrimaryKey(newCPMeasurementUnit.getPrimaryKey());
 
 		Assert.assertEquals(
+			existingCPMeasurementUnit.getMvccVersion(),
+			newCPMeasurementUnit.getMvccVersion());
+		Assert.assertEquals(
+			existingCPMeasurementUnit.getCtCollectionId(),
+			newCPMeasurementUnit.getCtCollectionId());
+		Assert.assertEquals(
 			existingCPMeasurementUnit.getUuid(),
 			newCPMeasurementUnit.getUuid());
+		Assert.assertEquals(
+			existingCPMeasurementUnit.getExternalReferenceCode(),
+			newCPMeasurementUnit.getExternalReferenceCode());
 		Assert.assertEquals(
 			existingCPMeasurementUnit.getCPMeasurementUnitId(),
 			newCPMeasurementUnit.getCPMeasurementUnitId());
@@ -241,21 +257,20 @@ public class CPMeasurementUnitPersistenceTest {
 	}
 
 	@Test
+	public void testCountByC_K() throws Exception {
+		_persistence.countByC_K(RandomTestUtil.nextLong(), "");
+
+		_persistence.countByC_K(0L, "null");
+
+		_persistence.countByC_K(0L, (String)null);
+	}
+
+	@Test
 	public void testCountByC_T() throws Exception {
 		_persistence.countByC_T(
 			RandomTestUtil.nextLong(), RandomTestUtil.nextInt());
 
 		_persistence.countByC_T(0L, 0);
-	}
-
-	@Test
-	public void testCountByC_K_T() throws Exception {
-		_persistence.countByC_K_T(
-			RandomTestUtil.nextLong(), "", RandomTestUtil.nextInt());
-
-		_persistence.countByC_K_T(0L, "null", 0);
-
-		_persistence.countByC_K_T(0L, (String)null, 0);
 	}
 
 	@Test
@@ -265,6 +280,15 @@ public class CPMeasurementUnitPersistenceTest {
 			RandomTestUtil.nextInt());
 
 		_persistence.countByC_P_T(0L, RandomTestUtil.randomBoolean(), 0);
+	}
+
+	@Test
+	public void testCountByC_ERC() throws Exception {
+		_persistence.countByC_ERC(RandomTestUtil.nextLong(), "");
+
+		_persistence.countByC_ERC(0L, "null");
+
+		_persistence.countByC_ERC(0L, (String)null);
 	}
 
 	@Test
@@ -292,11 +316,12 @@ public class CPMeasurementUnitPersistenceTest {
 
 	protected OrderByComparator<CPMeasurementUnit> getOrderByComparator() {
 		return OrderByComparatorFactoryUtil.create(
-			"CPMeasurementUnit", "uuid", true, "CPMeasurementUnitId", true,
-			"groupId", true, "companyId", true, "userId", true, "userName",
-			true, "createDate", true, "modifiedDate", true, "name", true, "key",
-			true, "rate", true, "primary", true, "priority", true, "type", true,
-			"lastPublishDate", true);
+			"CPMeasurementUnit", "mvccVersion", true, "ctCollectionId", true,
+			"uuid", true, "externalReferenceCode", true, "CPMeasurementUnitId",
+			true, "groupId", true, "companyId", true, "userId", true,
+			"userName", true, "createDate", true, "modifiedDate", true, "name",
+			true, "key", true, "rate", true, "primary", true, "priority", true,
+			"type", true, "lastPublishDate", true);
 	}
 
 	@Test
@@ -593,11 +618,17 @@ public class CPMeasurementUnitPersistenceTest {
 			ReflectionTestUtil.invoke(
 				cpMeasurementUnit, "getColumnOriginalValue",
 				new Class<?>[] {String.class}, "key_"));
+
 		Assert.assertEquals(
-			Integer.valueOf(cpMeasurementUnit.getType()),
-			ReflectionTestUtil.<Integer>invoke(
+			Long.valueOf(cpMeasurementUnit.getCompanyId()),
+			ReflectionTestUtil.<Long>invoke(
 				cpMeasurementUnit, "getColumnOriginalValue",
-				new Class<?>[] {String.class}, "type_"));
+				new Class<?>[] {String.class}, "companyId"));
+		Assert.assertEquals(
+			cpMeasurementUnit.getExternalReferenceCode(),
+			ReflectionTestUtil.invoke(
+				cpMeasurementUnit, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "externalReferenceCode"));
 	}
 
 	protected CPMeasurementUnit addCPMeasurementUnit() throws Exception {
@@ -605,7 +636,14 @@ public class CPMeasurementUnitPersistenceTest {
 
 		CPMeasurementUnit cpMeasurementUnit = _persistence.create(pk);
 
+		cpMeasurementUnit.setMvccVersion(RandomTestUtil.nextLong());
+
+		cpMeasurementUnit.setCtCollectionId(RandomTestUtil.nextLong());
+
 		cpMeasurementUnit.setUuid(RandomTestUtil.randomString());
+
+		cpMeasurementUnit.setExternalReferenceCode(
+			RandomTestUtil.randomString());
 
 		cpMeasurementUnit.setGroupId(RandomTestUtil.nextLong());
 

@@ -25,6 +25,7 @@ import com.liferay.headless.commerce.admin.catalog.internal.helper.v1_0.ProductS
 import com.liferay.headless.commerce.admin.catalog.internal.util.v1_0.ProductSpecificationUtil;
 import com.liferay.headless.commerce.admin.catalog.resource.v1_0.ProductSpecificationResource;
 import com.liferay.headless.commerce.core.util.ServiceContextHelper;
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -48,6 +49,7 @@ import org.osgi.service.component.annotations.ServiceScope;
 	scope = ServiceScope.PROTOTYPE,
 	service = {NestedFieldSupport.class, ProductSpecificationResource.class}
 )
+@CTAware
 public class ProductSpecificationResourceImpl
 	extends BaseProductSpecificationResourceImpl implements NestedFieldSupport {
 
@@ -66,36 +68,10 @@ public class ProductSpecificationResourceImpl
 			Long id, ProductSpecification productSpecification)
 		throws Exception {
 
-		return _upsertProductSpecification(id, productSpecification);
+		return _addOrUpdateProductSpecification(id, productSpecification);
 	}
 
-	private ProductSpecification _toProductSpecification(
-			Long cpDefinitionSpecificationOptionValueId)
-		throws Exception {
-
-		return _productSpecificationDTOConverter.toDTO(
-			new DefaultDTOConverterContext(
-				cpDefinitionSpecificationOptionValueId,
-				contextAcceptLanguage.getPreferredLocale()));
-	}
-
-	private CPDefinitionSpecificationOptionValue _updateProductSpecification(
-			Long id, ProductSpecification productSpecification)
-		throws PortalException {
-
-		CPDefinitionSpecificationOptionValue
-			cpDefinitionSpecificationOptionValue =
-				_cpDefinitionSpecificationOptionValueService.
-					getCPDefinitionSpecificationOptionValue(id);
-
-		return ProductSpecificationUtil.
-			updateCPDefinitionSpecificationOptionValue(
-				_cpDefinitionSpecificationOptionValueService,
-				cpDefinitionSpecificationOptionValue, productSpecification,
-				_serviceContextHelper.getServiceContext());
-	}
-
-	private ProductSpecification _upsertProductSpecification(
+	private ProductSpecification _addOrUpdateProductSpecification(
 			Long id, ProductSpecification productSpecification)
 		throws Exception {
 
@@ -135,6 +111,33 @@ public class ProductSpecificationResourceImpl
 		return _toProductSpecification(
 			cpDefinitionSpecificationOptionValue.
 				getCPDefinitionSpecificationOptionValueId());
+	}
+
+	private ProductSpecification _toProductSpecification(
+			Long cpDefinitionSpecificationOptionValueId)
+		throws Exception {
+
+		return _productSpecificationDTOConverter.toDTO(
+			new DefaultDTOConverterContext(
+				cpDefinitionSpecificationOptionValueId,
+				contextAcceptLanguage.getPreferredLocale()));
+	}
+
+	private CPDefinitionSpecificationOptionValue _updateProductSpecification(
+			Long id, ProductSpecification productSpecification)
+		throws PortalException {
+
+		CPDefinitionSpecificationOptionValue
+			cpDefinitionSpecificationOptionValue =
+				_cpDefinitionSpecificationOptionValueService.
+					getCPDefinitionSpecificationOptionValue(id);
+
+		return ProductSpecificationUtil.
+			updateCPDefinitionSpecificationOptionValue(
+				_cpDefinitionSpecificationOptionValueService,
+				cpDefinitionSpecificationOptionValue,
+				_cpSpecificationOptionService, productSpecification,
+				_serviceContextHelper.getServiceContext());
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

@@ -26,18 +26,21 @@ import com.liferay.portal.kernel.model.impl.BaseModelImpl;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -64,8 +67,8 @@ public class PortalPreferencesModelImpl
 
 	public static final Object[][] TABLE_COLUMNS = {
 		{"mvccVersion", Types.BIGINT}, {"portalPreferencesId", Types.BIGINT},
-		{"ownerId", Types.BIGINT}, {"ownerType", Types.INTEGER},
-		{"preferences", Types.CLOB}
+		{"companyId", Types.BIGINT}, {"ownerId", Types.BIGINT},
+		{"ownerType", Types.INTEGER}
 	};
 
 	public static final Map<String, Integer> TABLE_COLUMNS_MAP =
@@ -74,13 +77,13 @@ public class PortalPreferencesModelImpl
 	static {
 		TABLE_COLUMNS_MAP.put("mvccVersion", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("portalPreferencesId", Types.BIGINT);
+		TABLE_COLUMNS_MAP.put("companyId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("ownerId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("ownerType", Types.INTEGER);
-		TABLE_COLUMNS_MAP.put("preferences", Types.CLOB);
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table PortalPreferences (mvccVersion LONG default 0 not null,portalPreferencesId LONG not null primary key,ownerId LONG,ownerType INTEGER,preferences TEXT null)";
+		"create table PortalPreferences (mvccVersion LONG default 0 not null,portalPreferencesId LONG not null primary key,companyId LONG,ownerId LONG,ownerType INTEGER)";
 
 	public static final String TABLE_SQL_DROP = "drop table PortalPreferences";
 
@@ -115,20 +118,20 @@ public class PortalPreferencesModelImpl
 	public static final boolean COLUMN_BITMASK_ENABLED = true;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long OWNERID_COLUMN_BITMASK = 1L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long OWNERTYPE_COLUMN_BITMASK = 2L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *		#getColumnBitmask(String)
+	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long PORTALPREFERENCESID_COLUMN_BITMASK = 4L;
@@ -222,34 +225,6 @@ public class PortalPreferencesModelImpl
 		return _attributeSetterBiConsumers;
 	}
 
-	private static Function<InvocationHandler, PortalPreferences>
-		_getProxyProviderFunction() {
-
-		Class<?> proxyClass = ProxyUtil.getProxyClass(
-			PortalPreferences.class.getClassLoader(), PortalPreferences.class,
-			ModelWrapper.class);
-
-		try {
-			Constructor<PortalPreferences> constructor =
-				(Constructor<PortalPreferences>)proxyClass.getConstructor(
-					InvocationHandler.class);
-
-			return invocationHandler -> {
-				try {
-					return constructor.newInstance(invocationHandler);
-				}
-				catch (ReflectiveOperationException
-							reflectiveOperationException) {
-
-					throw new InternalError(reflectiveOperationException);
-				}
-			};
-		}
-		catch (NoSuchMethodException noSuchMethodException) {
-			throw new InternalError(noSuchMethodException);
-		}
-	}
-
 	private static final Map<String, Function<PortalPreferences, Object>>
 		_attributeGetterFunctions;
 	private static final Map<String, BiConsumer<PortalPreferences, Object>>
@@ -276,6 +251,12 @@ public class PortalPreferencesModelImpl
 			"portalPreferencesId",
 			(BiConsumer<PortalPreferences, Long>)
 				PortalPreferences::setPortalPreferencesId);
+		attributeGetterFunctions.put(
+			"companyId", PortalPreferences::getCompanyId);
+		attributeSetterBiConsumers.put(
+			"companyId",
+			(BiConsumer<PortalPreferences, Long>)
+				PortalPreferences::setCompanyId);
 		attributeGetterFunctions.put("ownerId", PortalPreferences::getOwnerId);
 		attributeSetterBiConsumers.put(
 			"ownerId",
@@ -286,12 +267,6 @@ public class PortalPreferencesModelImpl
 			"ownerType",
 			(BiConsumer<PortalPreferences, Integer>)
 				PortalPreferences::setOwnerType);
-		attributeGetterFunctions.put(
-			"preferences", PortalPreferences::getPreferences);
-		attributeSetterBiConsumers.put(
-			"preferences",
-			(BiConsumer<PortalPreferences, String>)
-				PortalPreferences::setPreferences);
 
 		_attributeGetterFunctions = Collections.unmodifiableMap(
 			attributeGetterFunctions);
@@ -325,6 +300,20 @@ public class PortalPreferencesModelImpl
 		}
 
 		_portalPreferencesId = portalPreferencesId;
+	}
+
+	@Override
+	public long getCompanyId() {
+		return _companyId;
+	}
+
+	@Override
+	public void setCompanyId(long companyId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_companyId = companyId;
 	}
 
 	@Override
@@ -374,25 +363,6 @@ public class PortalPreferencesModelImpl
 			this.<Integer>getColumnOriginalValue("ownerType"));
 	}
 
-	@Override
-	public String getPreferences() {
-		if (_preferences == null) {
-			return "";
-		}
-		else {
-			return _preferences;
-		}
-	}
-
-	@Override
-	public void setPreferences(String preferences) {
-		if (_columnOriginalValues == Collections.EMPTY_MAP) {
-			_setColumnOriginalValues();
-		}
-
-		_preferences = preferences;
-	}
-
 	public long getColumnBitmask() {
 		if (_columnBitmask > 0) {
 			return _columnBitmask;
@@ -407,7 +377,9 @@ public class PortalPreferencesModelImpl
 		for (Map.Entry<String, Object> entry :
 				_columnOriginalValues.entrySet()) {
 
-			if (entry.getValue() != getColumnValue(entry.getKey())) {
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
 				_columnBitmask |= _columnBitmasks.get(entry.getKey());
 			}
 		}
@@ -418,7 +390,7 @@ public class PortalPreferencesModelImpl
 	@Override
 	public ExpandoBridge getExpandoBridge() {
 		return ExpandoBridgeFactoryUtil.getExpandoBridge(
-			0, PortalPreferences.class.getName(), getPrimaryKey());
+			getCompanyId(), PortalPreferences.class.getName(), getPrimaryKey());
 	}
 
 	@Override
@@ -450,11 +422,30 @@ public class PortalPreferencesModelImpl
 
 		portalPreferencesImpl.setMvccVersion(getMvccVersion());
 		portalPreferencesImpl.setPortalPreferencesId(getPortalPreferencesId());
+		portalPreferencesImpl.setCompanyId(getCompanyId());
 		portalPreferencesImpl.setOwnerId(getOwnerId());
 		portalPreferencesImpl.setOwnerType(getOwnerType());
-		portalPreferencesImpl.setPreferences(getPreferences());
 
 		portalPreferencesImpl.resetOriginalValues();
+
+		return portalPreferencesImpl;
+	}
+
+	@Override
+	public PortalPreferences cloneWithOriginalValues() {
+		PortalPreferencesImpl portalPreferencesImpl =
+			new PortalPreferencesImpl();
+
+		portalPreferencesImpl.setMvccVersion(
+			this.<Long>getColumnOriginalValue("mvccVersion"));
+		portalPreferencesImpl.setPortalPreferencesId(
+			this.<Long>getColumnOriginalValue("portalPreferencesId"));
+		portalPreferencesImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		portalPreferencesImpl.setOwnerId(
+			this.<Long>getColumnOriginalValue("ownerId"));
+		portalPreferencesImpl.setOwnerType(
+			this.<Integer>getColumnOriginalValue("ownerType"));
 
 		return portalPreferencesImpl;
 	}
@@ -536,17 +527,11 @@ public class PortalPreferencesModelImpl
 		portalPreferencesCacheModel.portalPreferencesId =
 			getPortalPreferencesId();
 
+		portalPreferencesCacheModel.companyId = getCompanyId();
+
 		portalPreferencesCacheModel.ownerId = getOwnerId();
 
 		portalPreferencesCacheModel.ownerType = getOwnerType();
-
-		portalPreferencesCacheModel.preferences = getPreferences();
-
-		String preferences = portalPreferencesCacheModel.preferences;
-
-		if ((preferences != null) && (preferences.length() == 0)) {
-			portalPreferencesCacheModel.preferences = null;
-		}
 
 		return portalPreferencesCacheModel;
 	}
@@ -557,7 +542,7 @@ public class PortalPreferencesModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			(4 * attributeGetterFunctions.size()) + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -568,9 +553,27 @@ public class PortalPreferencesModelImpl
 			Function<PortalPreferences, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((PortalPreferences)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply(
+				(PortalPreferences)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -617,15 +620,17 @@ public class PortalPreferencesModelImpl
 	private static class EscapedModelProxyProviderFunctionHolder {
 
 		private static final Function<InvocationHandler, PortalPreferences>
-			_escapedModelProxyProviderFunction = _getProxyProviderFunction();
+			_escapedModelProxyProviderFunction =
+				ProxyUtil.getProxyProviderFunction(
+					PortalPreferences.class, ModelWrapper.class);
 
 	}
 
 	private long _mvccVersion;
 	private long _portalPreferencesId;
+	private long _companyId;
 	private long _ownerId;
 	private int _ownerType;
-	private String _preferences;
 
 	public <T> T getColumnValue(String columnName) {
 		Function<PortalPreferences, Object> function =
@@ -656,9 +661,9 @@ public class PortalPreferencesModelImpl
 
 		_columnOriginalValues.put("mvccVersion", _mvccVersion);
 		_columnOriginalValues.put("portalPreferencesId", _portalPreferencesId);
+		_columnOriginalValues.put("companyId", _companyId);
 		_columnOriginalValues.put("ownerId", _ownerId);
 		_columnOriginalValues.put("ownerType", _ownerType);
-		_columnOriginalValues.put("preferences", _preferences);
 	}
 
 	private transient Map<String, Object> _columnOriginalValues;
@@ -676,11 +681,11 @@ public class PortalPreferencesModelImpl
 
 		columnBitmasks.put("portalPreferencesId", 2L);
 
-		columnBitmasks.put("ownerId", 4L);
+		columnBitmasks.put("companyId", 4L);
 
-		columnBitmasks.put("ownerType", 8L);
+		columnBitmasks.put("ownerId", 8L);
 
-		columnBitmasks.put("preferences", 16L);
+		columnBitmasks.put("ownerType", 16L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}

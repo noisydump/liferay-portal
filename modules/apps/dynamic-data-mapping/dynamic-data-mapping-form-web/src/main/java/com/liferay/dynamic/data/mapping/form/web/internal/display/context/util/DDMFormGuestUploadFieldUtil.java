@@ -48,7 +48,7 @@ public class DDMFormGuestUploadFieldUtil {
 	public static boolean isMaximumSubmissionLimitReached(
 			DDMFormInstance ddmFormInstance,
 			HttpServletRequest httpServletRequest,
-			int maximumSubmissionsForGuestUploadFields)
+			int guestUploadMaximumSubmissions)
 		throws PortalException {
 
 		ThemeDisplay themeDisplay =
@@ -74,7 +74,7 @@ public class DDMFormGuestUploadFieldUtil {
 			if (Objects.equals(
 					ddmFormInstanceRecord.getIpAddress(),
 					httpServletRequest.getRemoteAddr()) &&
-				((i + 1) == maximumSubmissionsForGuestUploadFields)) {
+				((i + 1) == guestUploadMaximumSubmissions)) {
 
 				return true;
 			}
@@ -96,14 +96,16 @@ public class DDMFormGuestUploadFieldUtil {
 
 		Collection<DDMFormField> ddmFormFields = ddmFormFieldsMap.values();
 
-		Stream<DDMFormField> ddmFormFieldStream = ddmFormFields.stream();
+		Stream<DDMFormField> ddmFormFieldsStream = ddmFormFields.stream();
 
-		Optional<DDMFormField> ddmFormFieldOptional = ddmFormFieldStream.filter(
-			ddmFormField ->
-				Objects.equals(ddmFormField.getType(), "document_library") &&
-				GetterUtil.getBoolean(
-					ddmFormField.getProperty("allowGuestUsers"))
-		).findFirst();
+		Optional<DDMFormField> ddmFormFieldOptional =
+			ddmFormFieldsStream.filter(
+				ddmFormField ->
+					Objects.equals(
+						ddmFormField.getType(), "document_library") &&
+					GetterUtil.getBoolean(
+						ddmFormField.getProperty("allowGuestUsers"))
+			).findFirst();
 
 		return ddmFormFieldOptional.isPresent();
 	}

@@ -1,14 +1,24 @@
-@component-name = "portal-document-management"
+@component-name = "data-engine"
 definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Documents Management";
+	property testray.main.component.name = "Data Engine";
 
 	setUp {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
+
+		JSONGroup.addGroup(groupName = "Test Site Name");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "test-site-name");
+
+		DMNavigator.gotoDocumentType();
+
+		DMDocumentType.addWithoutSave(
+			dmDocumentTypeFieldNames = "Text",
+			dmDocumentTypeName = "DM Document Type Name");
 	}
 
 	tearDown {
@@ -18,25 +28,16 @@ definition {
 			PortalInstances.tearDownCP();
 		}
 		else {
-			DMDocument.tearDownCP();
+			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
 
 			User.logoutPG();
 		}
 	}
 
-	@description = "This is a test for LPS-98077. As a Developer, I want to the ability to nest fields"
+	@description = "This test ensures data on a field group persists for a new Document Type."
 	@priority = "3"
 	test CheckIfFieldGroupDataPersists {
 		property portal.acceptance = "false";
-
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		DMNavigator.gotoDocumentType();
-
-		DMDocumentType.addWithoutSave(
-			dmDocumentTypeDescription = "DM Document Type Description",
-			dmDocumentTypeFieldNames = "Text",
-			dmDocumentTypeName = "DM Document Type Name");
 
 		DataEngine.addFieldNested(
 			fieldFieldLabel = "Numeric",
@@ -45,141 +46,69 @@ definition {
 
 		DDLDataDefinition.save();
 
-		Navigator.gotoNavItem(navItem = "Documents and Media");
+		Navigator.gotoNavItem(navItem = "Files");
 
 		DMDocument.addCP(
-			dmDocumentTitle = "DM Name",
+			dmDocumentTitle = "DM Title",
 			dmDocumentTypeName = "DM Document Type Name",
-			numericField = "7",
+			numericField = "123",
 			textField = "Test Text");
 
 		LexiconEntry.gotoEntryMenuItem(
 			menuItem = "Edit",
-			rowEntry = "DM Name");
+			rowEntry = "DM Title");
 
 		AssertTextEquals.assertValue(
 			locator1 = "TextInput#TEXT_SPECIFIC",
 			value1 = "Test Text");
 
 		AssertTextEquals.assertValue(
+			key_fieldLabel = "Numeric",
 			locator1 = "TextInput#NUMERIC",
-			value1 = "7");
+			value1 = "123");
 	}
 
-	@description = "This is a test for LPS-98077. As a Developer, I want to the ability to nest fields"
+	@description = "This test ensures its possible to delete a field group inside another field group."
 	@priority = "5"
-	test CreateFieldGroup {
+	test DeleteNestedFieldGroupOnDocumentType {
 		property portal.acceptance = "false";
-
-		var dmDocumentTypeName = "DM Document Type Name";
-
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		DMNavigator.gotoDocumentType();
-
-		DMDocumentType.addWithoutSave(
-			dmDocumentTypeDescription = "DM Document Type Description",
-			dmDocumentTypeFieldNames = "Text",
-			dmDocumentTypeName = "${dmDocumentTypeName}");
 
 		DataEngine.addFieldNested(
 			fieldFieldLabel = "Numeric",
 			fieldName = "Numeric",
 			targetFieldLabel = "Text");
 
-		PortletEntry.save();
-
-		DMDocumentType.viewCP(dmDocumentTypeName = "${dmDocumentTypeName}");
-
-		LexiconEntry.gotoEntry(rowEntry = "${dmDocumentTypeName}");
-
-		AssertElementPresent(locator1 = "DataEngineBuilder#FORM_FIELDS_GROUP_1");
-
-		PortletEntry.save();
-
-		DMDocument.deleteCP(
-			dmDocumentTitle = "${dmDocumentTypeName}",
-			recycleBinDisabled = "true");
-	}
-
-	@description = "This is a test for LPS-98077. As a Developer, I want to the ability to nest fields"
-	@ignore = "true"
-	@priority = "4"
-	test DeleteAFieldFromAFieldGroup {
-		property portal.acceptance = "false";
-
-		// TODO LPS-98077 DeleteAFieldFromAFieldGroup pending implementation
-
-	}
-
-	@description = "This is a test for LPS-98077. As a Developer, I want to the ability to nest fields"
-	@ignore = "true"
-	@priority = "5"
-	test DeleteFieldGroupOnStructure {
-		property portal.acceptance = "false";
-
-		// TODO LPS-98077 DeleteFieldGroupOnStructure pending implementation
-	}
-
-	@description = "This is a test for LPS-98077. As a Developer, I want to the ability to nest fields"
-	@priority = "5"
-	test DeleteNestedFieldGroupOnStructure {
-		property portal.acceptance = "false";
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Documents and Media");
-
-		NavItem.click(navItem = "Document Types");
-
-		DMDocumentType.addWithoutSave(
-			dmDocumentTypeDescription = "DM Document Type Description",
-			dmDocumentTypeFieldNames = "Text",
-			dmDocumentTypeName = "DM Document Type Name");
-
-		DataEngine.addFieldNested(
-			fieldFieldLabel = "Numeric",
-			fieldName = "Numeric",
-			targetFieldLabel = "Text");
+		DataEngine.editFieldLabel(
+			fieldFieldLabel = "Fields Group",
+			fieldFieldLabelEdit = "Fields Group Edit");
 
 		DataEngine.addFieldNested(
 			fieldFieldLabel = "Color",
 			fieldName = "Color",
 			targetFieldLabel = "Numeric");
 
-		Click(locator1 = "DataEngineBuilder#FORM_FIELDS_GROUP");
+		DDLDataDefinition.save();
 
-		Click(locator1 = "DataEngineBuilder#FORM_FIELDS_GROUP_VERTICAL_ELLIPSIS");
+		DMNavigator.gotoEditDocumentType(dmDocumentTypeName = "DM Document Type Name");
 
-		Click(locator1 = "DataEngineBuilder#NESTED_FIELD_GROUP_DELETE");
+		DataEngine.delete(fieldsGroupLabel = "Fields Group");
 
 		DDLDataDefinition.save();
 
-		LexiconEntry.openEntryMenu(rowEntry = "DM Document Type Name");
+		DMNavigator.gotoEditDocumentType(dmDocumentTypeName = "DM Document Type Name");
 
-		MenuItem.clickNoError(menuItem = "Edit");
-
-		AssertElementNotPresent(locator1 = "DataEngineBuilder#FORM_FIELDS_GROUP");
+		AssertElementNotPresent(
+			index = "1",
+			key_fieldLabel = "Fields Group",
+			locator1 = "DataEngineBuilder#FIELD_LABEL_INDEXED");
 	}
 
-	@description = "This is a test for LPS-98077. As a Developer, I want to the ability to nest fields"
+	@description = "This test ensures it's possible to duplicate a field group."
 	@priority = "5"
 	test DuplicateAFieldGroup {
 		property portal.acceptance = "false";
 
 		var formGroupLabel = "Copy of Fields Group";
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Documents and Media");
-
-		DMNavigator.gotoDocumentType();
-
-		DMDocumentType.add(
-			dmDocumentTypeFieldNames = "Text",
-			dmDocumentTypeName = "${dmDocumentTypeName}");
-
-		DMNavigator.gotoDocumentCP(dmDocumentTitle = "${dmDocumentTypeName}");
 
 		DataEngine.addFieldNested(
 			fieldFieldLabel = "Numeric",
@@ -190,33 +119,18 @@ definition {
 
 		Button.clickSave();
 
-		DMNavigator.gotoDocumentCP(dmDocumentTitle = "${dmDocumentTypeName}");
+		DMNavigator.gotoEditDocumentType(dmDocumentTypeName = "DM Document Type Name");
 
 		AssertTextEquals(
+			key_fieldFieldLabel = "${formGroupLabel}",
 			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL",
 			value1 = "${formGroupLabel}");
-
-		Button.clickSave();
-
-		DMDocumentType.deletePG(dmDocumentTypeName = "DM Document Type Name");
 	}
 
-	@description = "This is a test for LPS-98077. As a Developer, I want to the ability to nest fields"
+	@description = "This test ensures its possible to duplicate a field group that is inside another field group."
 	@priority = "5"
 	test DuplicateANestedFieldGroup {
 		property portal.acceptance = "false";
-
-		var fieldGroupLabel = "Fields Group";
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Documents and Media");
-
-		DMNavigator.gotoDocumentType();
-
-		DMDocumentType.addWithoutSave(
-			dmDocumentTypeFieldNames = "Text",
-			dmDocumentTypeName = "DM Document Type Name");
 
 		DataEngine.addFieldNested(
 			fieldFieldLabel = "Date",
@@ -225,103 +139,60 @@ definition {
 
 		DataEngine.editFieldLabel(
 			fieldFieldLabel = "Fields Group",
-			fieldFieldLabelEdit = "Field 1");
+			fieldFieldLabelEdit = "Fields Group Edit");
 
 		DataEngine.addFieldNested(
 			fieldFieldLabel = "Numeric",
 			fieldName = "Numeric",
 			targetFieldLabel = "Date");
 
-		Click(locator1 = "DataEngineBuilder#FORM_FIELDS_GROUP_NESTED_LABEL");
-
-		Click(locator1 = "DataEngineBuilder#FORM_FIELDS_GROUP_VERTICAL_ELLIPSIS");
-
-		MenuItem.click(menuItem = "Duplicate");
+		DataEngine.duplicate(fieldsGroupLabel = "Fields Group");
 
 		DDLDataDefinition.save();
 
 		DMNavigator.gotoDocumentCP(dmDocumentTitle = "DM Document Type Name");
 
-		fieldGroupLabel = "Copy of Fields Group";
-
-		Click(locator1 = "DataEngineBuilder#FORM_FIELDS_GROUP_NESTED_LABEL");
-
-		AssertTextEquals(
-			locator1 = "DataEngineBuilder#DUPLICATED_FORM_FIELDS_GROUP_LABEL",
-			value1 = "Copy of Fields Group");
+		DEBuilder.assertFieldsGroup(
+			fieldGroupDepth = "2",
+			fieldGroupLabel = "Copy of Fields Group",
+			fieldsLabelList = "Copy of Date,Copy of Numeric");
 	}
 
-	@description = "This is a test for LPS-98077. As a Developer, I want to the ability to nest fields"
+	@description = "This test ensure user can edit the field group label."
 	@priority = "4"
 	test EditFieldGroupLabel {
 		property portal.acceptance = "false";
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Documents and Media");
-
-		DMNavigator.gotoDocumentType();
-
-		DMDocumentType.addWithoutSave(
-			dmDocumentTypeDescription = " DM Document Type Description",
-			dmDocumentTypeFieldNames = "Text",
-			dmDocumentTypeName = "DM Document Type Name");
-
-		DataEngine.addFieldNested(
-			fieldFieldLabel = "Text2",
-			fieldName = "Text",
-			targetFieldLabel = "Text");
-
-		DataEngine.editFieldLabel(
-			fieldFieldLabel = "Fields Group",
-			fieldFieldLabelEdit = "New name");
-
-		DDLDataDefinition.save();
-
-		LexiconEntry.gotoEntry(rowEntry = "DM Document Type Name");
-
-		AssertTextEquals(
-			locator1 = "//div[contains(@class, 'ddm-field-types')]//label",
-			value1 = "New name");
-	}
-
-	@description = "This is a test for LPS-98077. As a Developer, I want to the ability to nest fields"
-	@priority = "3"
-	test EditFieldOnDuplicatedFieldGroup {
-		var dmDocumentTypeName = "DM Document Type Name";
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Documents and Media");
-
-		AppBuilderAdmin.switchTab(tabName = "Document Types");
-
-		DMDocumentType.add(
-			dmDocumentTypeFieldNames = "Text",
-			dmDocumentTypeName = "DM Document Type Name");
-
-		DMNavigator.gotoDocumentCP(dmDocumentTitle = "DM Document Type Name");
 
 		DataEngine.addFieldNested(
 			fieldFieldLabel = "Numeric",
 			fieldName = "Numeric",
 			targetFieldLabel = "Text");
 
-		Click(
-			key_fieldFieldLabel = "1",
-			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL");
+		DataEngine.editFieldLabel(
+			fieldFieldLabel = "Fields Group",
+			fieldFieldLabelEdit = "Fields Group Edited");
 
-		Click(locator1 = "DataEngineBuilder#FORM_FIELDS_GROUP_VERTICAL_ELLIPSIS");
+		DDLDataDefinition.save();
 
-		MenuItem.clickNoError(menuItem = "Duplicate");
+		LexiconEntry.gotoEntry(rowEntry = "DM Document Type Name");
 
-		Button.clickSave();
+		DEBuilder.assertFieldsGroup(
+			fieldGroupDepth = "1",
+			fieldGroupLabel = "Fields Group Edited",
+			fieldsLabelList = "Text,Numeric");
+	}
 
-		DMNavigator.gotoDocumentCP(dmDocumentTitle = "DM Document Type Name");
+	@description = "This test ensures it's possible to edit a field's property for a field inside a field group."
+	@priority = "3"
+	test EditFieldOnDuplicatedFieldGroup {
+		var dmDocumentTypeName = "DM Document Type Name";
 
-		AssertElementPresent(
-			key_fieldFieldLabel = "Copy of Fields Group",
-			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL");
+		DataEngine.addFieldNested(
+			fieldFieldLabel = "Numeric",
+			fieldName = "Numeric",
+			targetFieldLabel = "Text");
+
+		DataEngine.duplicate(fieldsGroupLabel = "Fields Group");
 
 		for (var fieldName : list "Text,Numeric") {
 			DataEngine.editFieldLabel(
@@ -333,6 +204,10 @@ definition {
 
 		DMNavigator.gotoDocumentCP(dmDocumentTitle = "${dmDocumentTypeName}");
 
+		AssertElementPresent(
+			key_fieldsGroupLabel = "Copy of Fields Group",
+			locator1 = "DDMEditStructure#FORM_FIELDS_GROUP_CONTAINER");
+
 		for (var fieldName : list "Text,Numeric") {
 			DataEngine.viewField(
 				fieldFieldLabel = "Duplicated ${fieldName}",
@@ -340,88 +215,88 @@ definition {
 		}
 	}
 
-	@description = "This is a test for LPS-98077. As a Developer, I want to the ability to nest fields"
-	@ignore = "true"
+	@description = "This test validates that upon removing all fields of a field group, the field group is deleted."
 	@priority = "4"
 	test EmptyAFieldGroup {
-		property portal.acceptance = "false";
+		DataEngine.addFieldNested(
+			fieldFieldLabel = "Numeric",
+			fieldName = "Numeric",
+			targetFieldLabel = "Text");
 
-		// TODO LPS-98077 EmptyAFieldGroup pending implementation
+		DDLDataDefinition.save();
+
+		DMNavigator.gotoDocumentCP(dmDocumentTitle = "DM Document Type Name");
+
+		DataEngine.delete(fieldFieldLabel = "Text");
+
+		DataEngine.delete(fieldFieldLabel = "Numeric");
+
+		DataEngine.addField(
+			fieldFieldLabel = "Date",
+			fieldName = "Date");
+
+		DDLDataDefinition.save();
+
+		DMNavigator.gotoDocumentCP(dmDocumentTitle = "DM Document Type Name");
+
+		AssertElementNotPresent(
+			key_fieldFieldLabel = "Fields Group",
+			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL");
+
+		for (var label : list "Text,Numeric") {
+			AssertElementNotPresent(
+				key_fieldFieldLabel = "${label}",
+				locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL");
+		}
 	}
 
-	@description = "This is a test for LPS-98077. As a Developer, I want to the ability to nest fields"
+	@description = "This test ensures it's possible to create a field group inside another field group."
 	@priority = "5"
 	test NestAFieldGroupOnAnotherFieldGroup {
 		property portal.acceptance = "false";
-
-		var label1 = "Field 1";
-
-		var label2 = "Fields Group";
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Documents and Media");
-
-		DMNavigator.gotoDocumentType();
-
-		DMDocumentType.addWithoutSave(
-			dmDocumentTypeDescription = "DM Document Type Description",
-			dmDocumentTypeFieldNames = "Text",
-			dmDocumentTypeName = "DM Document Type Name");
 
 		DataEngine.addFieldNested(
 			fieldFieldLabel = "Numeric",
 			fieldName = "Numeric",
 			targetFieldLabel = "Text");
 
+		DataEngine.editFieldLabel(
+			fieldFieldLabel = "Fields Group",
+			fieldFieldLabelEdit = "Fields Group Edited");
+
 		DataEngine.addFieldNested(
 			fieldFieldLabel = "Date",
 			fieldName = "Date",
 			targetFieldLabel = "Numeric");
 
-		DataEngine.editFieldLabel(
-			fieldFieldLabel = "Fields Group",
-			fieldFieldLabelEdit = "Field 1");
-
 		DDLDataDefinition.save();
 
-		LexiconEntry.gotoEntry(rowEntry = "DM Document Type Name");
+		DMNavigator.gotoDocumentCP(dmDocumentTitle = "DM Document Type Name");
 
-		AssertTextEquals(
-			key_FieldGroupLabel = "${label1}",
-			locator1 = "DataEngineBuilder#FIELDS_GROUP_LOCATOR",
-			value1 = "Field 1");
+		DEBuilder.assertFieldsGroup(
+			fieldGroupDepth = "1",
+			fieldGroupLabel = "Fields Group Edited",
+			fieldsLabelList = "Text");
 
-		AssertTextEquals(
-			key_FieldGroupLabel = "${label2}",
-			locator1 = "DataEngineBuilder#FIELDS_GROUP_LOCATOR",
-			value1 = "Fields Group");
+		DEBuilder.assertFieldsGroup(
+			fieldGroupDepth = "2",
+			fieldGroupLabel = "Fields Group",
+			fieldsLabelList = "Numeric,Date");
 	}
 
-	@description = "This is a test for LPS-98077. As a Developer, I want to the ability to nest fields"
+	@description = "This test validates that a collapsible field group can be collapsed when uploading a Document and Media."
 	@priority = "4"
 	test SetFieldGroupAsCollapsibleAndExecuteOnUpload {
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		DMNavigator.gotoDocumentType();
-
-		DMDocumentType.addWithoutSave(
-			dmDocumentTypeDescription = "DM Document Type Description",
-			dmDocumentTypeFieldNames = "Text",
-			dmDocumentTypeName = "DM Document Type Name");
-
 		DataEngine.addFieldNested(
-			fieldFieldLabel = "Text1",
-			fieldName = "Text",
+			fieldFieldLabel = "Numeric",
+			fieldName = "Numeric",
 			targetFieldLabel = "Text");
 
 		DataEngine.editFieldsGroupCollapsible();
 
 		PortletEntry.save();
 
-		DMNavigator.gotoDocumentType();
-
-		Navigator.gotoNavItem(navItem = "Documents and Media");
+		Navigator.gotoNavItem(navItem = "Files");
 
 		DMNavigator.gotoAddDocumentTypeCP(dmDocumentTypeName = "DM Document Type Name");
 
@@ -434,13 +309,41 @@ definition {
 		Click(locator1 = "DataEngineBuilder#PANEL_COLLAPSE_BUTTON");
 	}
 
-	@description = "This is a test for LPS-98077. As a Developer, I want to the ability to nest fields"
-	@ignore = "true"
+	@description = "This test validates that a repeatable field group can be duplicated when uploading a document and media."
 	@priority = "4"
 	test SetFieldGroupAsRepeatableAndExecuteOnUpload {
 		property portal.acceptance = "false";
 
-		// TODO LPS-98077 SetFieldGroupAsRepeatableAndExecuteOnUpload pending implementation
+		var dmDocumentTitle = "Title";
+		var newLabel = "Image";
+		var webTitle = "WC Title";
+
+		DataEngine.addFieldNested(
+			fieldFieldLabel = "Numeric",
+			fieldName = "Numeric",
+			targetFieldLabel = "Text");
+
+		DataEngine.toggleFieldRepeatable(fieldsGroupLabel = "Fields Group");
+
+		Button.clickSave();
+
+		Navigator.gotoNavItem(navItem = "Files");
+
+		DMNavigator.gotoAddDocumentTypeCP(dmDocumentTypeName = "DM Document Type Name");
+
+		PortletEntry.inputTitle(title = "${dmDocumentTitle}");
+
+		DataEngine.addRepeatableField(fieldLabel = "Fields Group");
+
+		PortletEntry.publish();
+
+		LexiconEntry.gotoEntryMenuItem(
+			menuItem = "Edit",
+			rowEntry = "${dmDocumentTitle}");
+
+		WebContent.viewDuplicatedField(
+			fieldLabel = "Fields Group",
+			totalPortletCount = "2");
 	}
 
 }

@@ -62,7 +62,7 @@ public class FrontPageAssetEntryValidatorExclusionRule
 			}
 			catch (PortalException portalException) {
 				if (_log.isWarnEnabled()) {
-					_log.warn(portalException, portalException);
+					_log.warn(portalException);
 				}
 
 				return false;
@@ -90,7 +90,8 @@ public class FrontPageAssetEntryValidatorExclusionRule
 	private static final Log _log = LogFactoryUtil.getLog(
 		FrontPageAssetEntryValidatorExclusionRule.class);
 
-	private WikiGroupServiceConfiguration _wikiGroupServiceConfiguration;
+	private volatile WikiGroupServiceConfiguration
+		_wikiGroupServiceConfiguration;
 
 	@Reference(unbind = "-")
 	private WikiPageLocalService _wikiPageLocalService;

@@ -14,16 +14,15 @@
 
 package com.liferay.portal.search.elasticsearch7.internal.search.engine.adapter.cluster;
 
-import com.liferay.portal.json.JSONFactoryImpl;
-import com.liferay.portal.kernel.json.JSONFactory;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.search.elasticsearch7.internal.connection.ElasticsearchConnectionFixture;
 import com.liferay.portal.search.engine.adapter.cluster.StatsClusterRequest;
 import com.liferay.portal.search.engine.adapter.cluster.StatsClusterResponse;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 /**
@@ -31,10 +30,12 @@ import org.junit.Test;
  */
 public class StatsClusterRequestExecutorTest {
 
+	@ClassRule
+	public static LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
 	@Before
 	public void setUp() throws Exception {
-		setUpJSONFactoryUtil();
-
 		ElasticsearchConnectionFixture elasticsearchConnectionFixture =
 			ElasticsearchConnectionFixture.builder(
 			).clusterName(
@@ -74,15 +75,8 @@ public class StatsClusterRequestExecutorTest {
 		Assert.assertNotNull(statsClusterResponse.getClusterHealthStatus());
 	}
 
-	protected void setUpJSONFactoryUtil() {
-		JSONFactoryUtil jsonFactoryUtil = new JSONFactoryUtil();
-
-		jsonFactoryUtil.setJSONFactory(_jsonFactory);
-	}
-
 	private static final String _NODE_ID = "liferay";
 
 	private ElasticsearchConnectionFixture _elasticsearchConnectionFixture;
-	private final JSONFactory _jsonFactory = new JSONFactoryImpl();
 
 }

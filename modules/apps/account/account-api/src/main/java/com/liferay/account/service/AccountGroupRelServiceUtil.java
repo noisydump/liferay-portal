@@ -14,9 +14,8 @@
 
 package com.liferay.account.service;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.util.tracker.ServiceTracker;
+import com.liferay.account.model.AccountGroupRel;
+import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * Provides the remote service utility for AccountGroupRel. This utility wraps
@@ -37,6 +36,28 @@ public class AccountGroupRelServiceUtil {
 	 *
 	 * Never modify this class directly. Add custom service methods to <code>com.liferay.account.service.impl.AccountGroupRelServiceImpl</code> and rerun ServiceBuilder to regenerate this class.
 	 */
+	public static AccountGroupRel addAccountGroupRel(
+			long accountGroupId, String className, long classPK)
+		throws PortalException {
+
+		return getService().addAccountGroupRel(
+			accountGroupId, className, classPK);
+	}
+
+	public static void addAccountGroupRels(
+			long accountGroupId, String className, long[] classPKs)
+		throws PortalException {
+
+		getService().addAccountGroupRels(accountGroupId, className, classPKs);
+	}
+
+	public static void deleteAccountGroupRels(
+			long accountGroupId, String className, long[] classPKs)
+		throws PortalException {
+
+		getService().deleteAccountGroupRels(
+			accountGroupId, className, classPKs);
+	}
 
 	/**
 	 * Returns the OSGi service identifier.
@@ -48,25 +69,9 @@ public class AccountGroupRelServiceUtil {
 	}
 
 	public static AccountGroupRelService getService() {
-		return _serviceTracker.getService();
+		return _service;
 	}
 
-	private static ServiceTracker
-		<AccountGroupRelService, AccountGroupRelService> _serviceTracker;
-
-	static {
-		Bundle bundle = FrameworkUtil.getBundle(AccountGroupRelService.class);
-
-		ServiceTracker<AccountGroupRelService, AccountGroupRelService>
-			serviceTracker =
-				new ServiceTracker
-					<AccountGroupRelService, AccountGroupRelService>(
-						bundle.getBundleContext(), AccountGroupRelService.class,
-						null);
-
-		serviceTracker.open();
-
-		_serviceTracker = serviceTracker;
-	}
+	private static volatile AccountGroupRelService _service;
 
 }

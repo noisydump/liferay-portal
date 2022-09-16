@@ -25,10 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.util.tracker.ServiceTracker;
-
 /**
  * The persistence utility for the calendar booking service. This utility wraps <code>com.liferay.calendar.service.persistence.impl.CalendarBookingPersistenceImpl</code> and provides direct access to the database for CRUD operations. This utility should only be used by the service layer, as it must operate within a transaction. Never access this utility in a JSP, controller, model, or other front-end class.
  *
@@ -1618,7 +1614,7 @@ public class CalendarBookingUtil {
 	 * </p>
 	 *
 	 * @param calendarId the calendar ID
-	 * @param status the status
+	 * @param statuses the statuses
 	 * @param start the lower bound of the range of calendar bookings
 	 * @param end the upper bound of the range of calendar bookings (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
@@ -2006,27 +2002,9 @@ public class CalendarBookingUtil {
 	}
 
 	public static CalendarBookingPersistence getPersistence() {
-		return _serviceTracker.getService();
+		return _persistence;
 	}
 
-	private static ServiceTracker
-		<CalendarBookingPersistence, CalendarBookingPersistence>
-			_serviceTracker;
-
-	static {
-		Bundle bundle = FrameworkUtil.getBundle(
-			CalendarBookingPersistence.class);
-
-		ServiceTracker<CalendarBookingPersistence, CalendarBookingPersistence>
-			serviceTracker =
-				new ServiceTracker
-					<CalendarBookingPersistence, CalendarBookingPersistence>(
-						bundle.getBundleContext(),
-						CalendarBookingPersistence.class, null);
-
-		serviceTracker.open();
-
-		_serviceTracker = serviceTracker;
-	}
+	private static volatile CalendarBookingPersistence _persistence;
 
 }

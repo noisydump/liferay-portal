@@ -34,6 +34,8 @@ public class AccountEntryTable extends BaseTable<AccountEntryTable> {
 
 	public final Column<AccountEntryTable, Long> mvccVersion = createColumn(
 		"mvccVersion", Long.class, Types.BIGINT, Column.FLAG_NULLITY);
+	public final Column<AccountEntryTable, String> uuid = createColumn(
+		"uuid_", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
 	public final Column<AccountEntryTable, String> externalReferenceCode =
 		createColumn(
 			"externalReferenceCode", String.class, Types.VARCHAR,
@@ -53,6 +55,10 @@ public class AccountEntryTable extends BaseTable<AccountEntryTable> {
 	public final Column<AccountEntryTable, Long> defaultBillingAddressId =
 		createColumn(
 			"defaultBillingAddressId", Long.class, Types.BIGINT,
+			Column.FLAG_DEFAULT);
+	public final Column<AccountEntryTable, String> defaultCPaymentMethodKey =
+		createColumn(
+			"defaultCPaymentMethodKey", String.class, Types.VARCHAR,
 			Column.FLAG_DEFAULT);
 	public final Column<AccountEntryTable, Long> defaultShippingAddressId =
 		createColumn(

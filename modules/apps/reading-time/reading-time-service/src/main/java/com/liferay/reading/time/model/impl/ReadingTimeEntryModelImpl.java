@@ -32,26 +32,25 @@ import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.reading.time.model.ReadingTimeEntry;
 import com.liferay.reading.time.model.ReadingTimeEntryModel;
-import com.liferay.reading.time.model.ReadingTimeEntrySoap;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -78,6 +77,7 @@ public class ReadingTimeEntryModelImpl
 	public static final String TABLE_NAME = "ReadingTimeEntry";
 
 	public static final Object[][] TABLE_COLUMNS = {
+		{"mvccVersion", Types.BIGINT}, {"ctCollectionId", Types.BIGINT},
 		{"uuid_", Types.VARCHAR}, {"readingTimeEntryId", Types.BIGINT},
 		{"groupId", Types.BIGINT}, {"companyId", Types.BIGINT},
 		{"createDate", Types.TIMESTAMP}, {"modifiedDate", Types.TIMESTAMP},
@@ -89,6 +89,8 @@ public class ReadingTimeEntryModelImpl
 		new HashMap<String, Integer>();
 
 	static {
+		TABLE_COLUMNS_MAP.put("mvccVersion", Types.BIGINT);
+		TABLE_COLUMNS_MAP.put("ctCollectionId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("uuid_", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("readingTimeEntryId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("groupId", Types.BIGINT);
@@ -101,7 +103,7 @@ public class ReadingTimeEntryModelImpl
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table ReadingTimeEntry (uuid_ VARCHAR(75) null,readingTimeEntryId LONG not null primary key,groupId LONG,companyId LONG,createDate DATE null,modifiedDate DATE null,classNameId LONG,classPK LONG,readingTime LONG)";
+		"create table ReadingTimeEntry (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,uuid_ VARCHAR(75) null,readingTimeEntryId LONG not null,groupId LONG,companyId LONG,createDate DATE null,modifiedDate DATE null,classNameId LONG,classPK LONG,readingTime LONG,primary key (readingTimeEntryId, ctCollectionId))";
 
 	public static final String TABLE_SQL_DROP = "drop table ReadingTimeEntry";
 
@@ -118,38 +120,38 @@ public class ReadingTimeEntryModelImpl
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long CLASSNAMEID_COLUMN_BITMASK = 1L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long CLASSPK_COLUMN_BITMASK = 2L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long COMPANYID_COLUMN_BITMASK = 4L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long GROUPID_COLUMN_BITMASK = 8L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long UUID_COLUMN_BITMASK = 16L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *		#getColumnBitmask(String)
+	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long CREATEDATE_COLUMN_BITMASK = 32L;
@@ -166,59 +168,6 @@ public class ReadingTimeEntryModelImpl
 	 */
 	@Deprecated
 	public static void setFinderCacheEnabled(boolean finderCacheEnabled) {
-	}
-
-	/**
-	 * Converts the soap model instance into a normal model instance.
-	 *
-	 * @param soapModel the soap model instance to convert
-	 * @return the normal model instance
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static ReadingTimeEntry toModel(ReadingTimeEntrySoap soapModel) {
-		if (soapModel == null) {
-			return null;
-		}
-
-		ReadingTimeEntry model = new ReadingTimeEntryImpl();
-
-		model.setUuid(soapModel.getUuid());
-		model.setReadingTimeEntryId(soapModel.getReadingTimeEntryId());
-		model.setGroupId(soapModel.getGroupId());
-		model.setCompanyId(soapModel.getCompanyId());
-		model.setCreateDate(soapModel.getCreateDate());
-		model.setModifiedDate(soapModel.getModifiedDate());
-		model.setClassNameId(soapModel.getClassNameId());
-		model.setClassPK(soapModel.getClassPK());
-		model.setReadingTime(soapModel.getReadingTime());
-
-		return model;
-	}
-
-	/**
-	 * Converts the soap model instances into normal model instances.
-	 *
-	 * @param soapModels the soap model instances to convert
-	 * @return the normal model instances
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static List<ReadingTimeEntry> toModels(
-		ReadingTimeEntrySoap[] soapModels) {
-
-		if (soapModels == null) {
-			return null;
-		}
-
-		List<ReadingTimeEntry> models = new ArrayList<ReadingTimeEntry>(
-			soapModels.length);
-
-		for (ReadingTimeEntrySoap soapModel : soapModels) {
-			models.add(toModel(soapModel));
-		}
-
-		return models;
 	}
 
 	public ReadingTimeEntryModelImpl() {
@@ -306,34 +255,6 @@ public class ReadingTimeEntryModelImpl
 		return _attributeSetterBiConsumers;
 	}
 
-	private static Function<InvocationHandler, ReadingTimeEntry>
-		_getProxyProviderFunction() {
-
-		Class<?> proxyClass = ProxyUtil.getProxyClass(
-			ReadingTimeEntry.class.getClassLoader(), ReadingTimeEntry.class,
-			ModelWrapper.class);
-
-		try {
-			Constructor<ReadingTimeEntry> constructor =
-				(Constructor<ReadingTimeEntry>)proxyClass.getConstructor(
-					InvocationHandler.class);
-
-			return invocationHandler -> {
-				try {
-					return constructor.newInstance(invocationHandler);
-				}
-				catch (ReflectiveOperationException
-							reflectiveOperationException) {
-
-					throw new InternalError(reflectiveOperationException);
-				}
-			};
-		}
-		catch (NoSuchMethodException noSuchMethodException) {
-			throw new InternalError(noSuchMethodException);
-		}
-	}
-
 	private static final Map<String, Function<ReadingTimeEntry, Object>>
 		_attributeGetterFunctions;
 	private static final Map<String, BiConsumer<ReadingTimeEntry, Object>>
@@ -347,6 +268,18 @@ public class ReadingTimeEntryModelImpl
 			attributeSetterBiConsumers =
 				new LinkedHashMap<String, BiConsumer<ReadingTimeEntry, ?>>();
 
+		attributeGetterFunctions.put(
+			"mvccVersion", ReadingTimeEntry::getMvccVersion);
+		attributeSetterBiConsumers.put(
+			"mvccVersion",
+			(BiConsumer<ReadingTimeEntry, Long>)
+				ReadingTimeEntry::setMvccVersion);
+		attributeGetterFunctions.put(
+			"ctCollectionId", ReadingTimeEntry::getCtCollectionId);
+		attributeSetterBiConsumers.put(
+			"ctCollectionId",
+			(BiConsumer<ReadingTimeEntry, Long>)
+				ReadingTimeEntry::setCtCollectionId);
 		attributeGetterFunctions.put("uuid", ReadingTimeEntry::getUuid);
 		attributeSetterBiConsumers.put(
 			"uuid",
@@ -399,6 +332,36 @@ public class ReadingTimeEntryModelImpl
 			attributeGetterFunctions);
 		_attributeSetterBiConsumers = Collections.unmodifiableMap(
 			(Map)attributeSetterBiConsumers);
+	}
+
+	@JSON
+	@Override
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_mvccVersion = mvccVersion;
+	}
+
+	@JSON
+	@Override
+	public long getCtCollectionId() {
+		return _ctCollectionId;
+	}
+
+	@Override
+	public void setCtCollectionId(long ctCollectionId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_ctCollectionId = ctCollectionId;
 	}
 
 	@JSON
@@ -643,7 +606,8 @@ public class ReadingTimeEntryModelImpl
 		}
 
 		com.liferay.portal.kernel.trash.TrashHandler trashHandler =
-			getTrashHandler();
+			com.liferay.portal.kernel.trash.TrashHandlerRegistryUtil.
+				getTrashHandler(getModelClassName());
 
 		if (Validator.isNotNull(
 				trashHandler.getContainerModelClassName(getPrimaryKey()))) {
@@ -687,16 +651,6 @@ public class ReadingTimeEntryModelImpl
 		return getPrimaryKey();
 	}
 
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public com.liferay.portal.kernel.trash.TrashHandler getTrashHandler() {
-		return com.liferay.portal.kernel.trash.TrashHandlerRegistryUtil.
-			getTrashHandler(getModelClassName());
-	}
-
 	@Override
 	public boolean isInTrash() {
 		if (getStatus() == WorkflowConstants.STATUS_IN_TRASH) {
@@ -710,7 +664,8 @@ public class ReadingTimeEntryModelImpl
 	@Override
 	public boolean isInTrashContainer() {
 		com.liferay.portal.kernel.trash.TrashHandler trashHandler =
-			getTrashHandler();
+			com.liferay.portal.kernel.trash.TrashHandlerRegistryUtil.
+				getTrashHandler(getModelClassName());
 
 		if ((trashHandler == null) ||
 			Validator.isNull(
@@ -785,7 +740,9 @@ public class ReadingTimeEntryModelImpl
 		for (Map.Entry<String, Object> entry :
 				_columnOriginalValues.entrySet()) {
 
-			if (entry.getValue() != getColumnValue(entry.getKey())) {
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
 				_columnBitmask |= _columnBitmasks.get(entry.getKey());
 			}
 		}
@@ -825,6 +782,8 @@ public class ReadingTimeEntryModelImpl
 	public Object clone() {
 		ReadingTimeEntryImpl readingTimeEntryImpl = new ReadingTimeEntryImpl();
 
+		readingTimeEntryImpl.setMvccVersion(getMvccVersion());
+		readingTimeEntryImpl.setCtCollectionId(getCtCollectionId());
 		readingTimeEntryImpl.setUuid(getUuid());
 		readingTimeEntryImpl.setReadingTimeEntryId(getReadingTimeEntryId());
 		readingTimeEntryImpl.setGroupId(getGroupId());
@@ -836,6 +795,36 @@ public class ReadingTimeEntryModelImpl
 		readingTimeEntryImpl.setReadingTime(getReadingTime());
 
 		readingTimeEntryImpl.resetOriginalValues();
+
+		return readingTimeEntryImpl;
+	}
+
+	@Override
+	public ReadingTimeEntry cloneWithOriginalValues() {
+		ReadingTimeEntryImpl readingTimeEntryImpl = new ReadingTimeEntryImpl();
+
+		readingTimeEntryImpl.setMvccVersion(
+			this.<Long>getColumnOriginalValue("mvccVersion"));
+		readingTimeEntryImpl.setCtCollectionId(
+			this.<Long>getColumnOriginalValue("ctCollectionId"));
+		readingTimeEntryImpl.setUuid(
+			this.<String>getColumnOriginalValue("uuid_"));
+		readingTimeEntryImpl.setReadingTimeEntryId(
+			this.<Long>getColumnOriginalValue("readingTimeEntryId"));
+		readingTimeEntryImpl.setGroupId(
+			this.<Long>getColumnOriginalValue("groupId"));
+		readingTimeEntryImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		readingTimeEntryImpl.setCreateDate(
+			this.<Date>getColumnOriginalValue("createDate"));
+		readingTimeEntryImpl.setModifiedDate(
+			this.<Date>getColumnOriginalValue("modifiedDate"));
+		readingTimeEntryImpl.setClassNameId(
+			this.<Long>getColumnOriginalValue("classNameId"));
+		readingTimeEntryImpl.setClassPK(
+			this.<Long>getColumnOriginalValue("classPK"));
+		readingTimeEntryImpl.setReadingTime(
+			this.<Long>getColumnOriginalValue("readingTime"));
 
 		return readingTimeEntryImpl;
 	}
@@ -915,6 +904,10 @@ public class ReadingTimeEntryModelImpl
 		ReadingTimeEntryCacheModel readingTimeEntryCacheModel =
 			new ReadingTimeEntryCacheModel();
 
+		readingTimeEntryCacheModel.mvccVersion = getMvccVersion();
+
+		readingTimeEntryCacheModel.ctCollectionId = getCtCollectionId();
+
 		readingTimeEntryCacheModel.uuid = getUuid();
 
 		String uuid = readingTimeEntryCacheModel.uuid;
@@ -962,7 +955,7 @@ public class ReadingTimeEntryModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			(4 * attributeGetterFunctions.size()) + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -973,9 +966,27 @@ public class ReadingTimeEntryModelImpl
 			Function<ReadingTimeEntry, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((ReadingTimeEntry)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply(
+				(ReadingTimeEntry)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -1022,10 +1033,14 @@ public class ReadingTimeEntryModelImpl
 	private static class EscapedModelProxyProviderFunctionHolder {
 
 		private static final Function<InvocationHandler, ReadingTimeEntry>
-			_escapedModelProxyProviderFunction = _getProxyProviderFunction();
+			_escapedModelProxyProviderFunction =
+				ProxyUtil.getProxyProviderFunction(
+					ReadingTimeEntry.class, ModelWrapper.class);
 
 	}
 
+	private long _mvccVersion;
+	private long _ctCollectionId;
 	private String _uuid;
 	private long _readingTimeEntryId;
 	private long _groupId;
@@ -1066,6 +1081,8 @@ public class ReadingTimeEntryModelImpl
 	private void _setColumnOriginalValues() {
 		_columnOriginalValues = new HashMap<String, Object>();
 
+		_columnOriginalValues.put("mvccVersion", _mvccVersion);
+		_columnOriginalValues.put("ctCollectionId", _ctCollectionId);
 		_columnOriginalValues.put("uuid_", _uuid);
 		_columnOriginalValues.put("readingTimeEntryId", _readingTimeEntryId);
 		_columnOriginalValues.put("groupId", _groupId);
@@ -1098,23 +1115,27 @@ public class ReadingTimeEntryModelImpl
 	static {
 		Map<String, Long> columnBitmasks = new HashMap<>();
 
-		columnBitmasks.put("uuid_", 1L);
+		columnBitmasks.put("mvccVersion", 1L);
 
-		columnBitmasks.put("readingTimeEntryId", 2L);
+		columnBitmasks.put("ctCollectionId", 2L);
 
-		columnBitmasks.put("groupId", 4L);
+		columnBitmasks.put("uuid_", 4L);
 
-		columnBitmasks.put("companyId", 8L);
+		columnBitmasks.put("readingTimeEntryId", 8L);
 
-		columnBitmasks.put("createDate", 16L);
+		columnBitmasks.put("groupId", 16L);
 
-		columnBitmasks.put("modifiedDate", 32L);
+		columnBitmasks.put("companyId", 32L);
 
-		columnBitmasks.put("classNameId", 64L);
+		columnBitmasks.put("createDate", 64L);
 
-		columnBitmasks.put("classPK", 128L);
+		columnBitmasks.put("modifiedDate", 128L);
 
-		columnBitmasks.put("readingTime", 256L);
+		columnBitmasks.put("classNameId", 256L);
+
+		columnBitmasks.put("classPK", 512L);
+
+		columnBitmasks.put("readingTime", 1024L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}

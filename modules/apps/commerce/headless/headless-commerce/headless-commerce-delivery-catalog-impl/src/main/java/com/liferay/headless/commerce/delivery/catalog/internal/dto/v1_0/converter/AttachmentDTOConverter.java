@@ -21,7 +21,7 @@ import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.Attachment;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.util.Validator;
@@ -39,7 +39,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Andrea Sbarra
  */
 @Component(
-	enabled = false, property = "model.class.name=CPAttachmentFileEntry",
+	enabled = false, property = "dto.class.name=CPAttachmentFileEntry",
 	service = {AttachmentDTOConverter.class, DTOConverter.class}
 )
 public class AttachmentDTOConverter
@@ -54,17 +54,21 @@ public class AttachmentDTOConverter
 	public Attachment toDTO(DTOConverterContext dtoConverterContext)
 		throws Exception {
 
+		AttachmentDTOConverterContext attachmentDTOConverterContext =
+			(AttachmentDTOConverterContext)dtoConverterContext;
+
 		CPAttachmentFileEntry cpAttachmentFileEntry =
 			_cpAttachmentFileEntryLocalService.getCPAttachmentFileEntry(
-				(Long)dtoConverterContext.getId());
-
-		String languageId = LanguageUtil.getLanguageId(
-			dtoConverterContext.getLocale());
+				(Long)attachmentDTOConverterContext.getId());
 
 		Company company = _companyLocalService.getCompany(
 			cpAttachmentFileEntry.getCompanyId());
 
 		String portalURL = company.getPortalURL(0);
+
+		String downloadURL = _commerceMediaResolver.getDownloadURL(
+			attachmentDTOConverterContext.getCommerceAccountId(),
+			cpAttachmentFileEntry.getCPAttachmentFileEntryId());
 
 		return new Attachment() {
 			{
@@ -73,13 +77,10 @@ public class AttachmentDTOConverter
 				id = cpAttachmentFileEntry.getCPAttachmentFileEntryId();
 				options = _getAttachmentOptions(cpAttachmentFileEntry);
 				priority = cpAttachmentFileEntry.getPriority();
-
-				String downloadUrl = _commerceMediaResolver.getDownloadUrl(
-					cpAttachmentFileEntry.getCPAttachmentFileEntryId());
-
-				src = portalURL + downloadUrl;
-
-				title = cpAttachmentFileEntry.getTitle(languageId);
+				src = portalURL + downloadURL;
+				title = cpAttachmentFileEntry.getTitle(
+					_language.getLanguageId(
+						attachmentDTOConverterContext.getLocale()));
 				type = cpAttachmentFileEntry.getType();
 			}
 		};
@@ -125,5 +126,8 @@ public class AttachmentDTOConverter
 
 	@Reference
 	private JSONFactory _jsonFactory;
+
+	@Reference
+	private Language _language;
 
 }

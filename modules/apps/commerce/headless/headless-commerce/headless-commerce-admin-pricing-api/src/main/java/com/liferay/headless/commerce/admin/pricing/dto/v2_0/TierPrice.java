@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
@@ -62,6 +63,10 @@ public class TierPrice implements Serializable {
 		return ObjectMapperUtil.readValue(TierPrice.class, json);
 	}
 
+	public static TierPrice unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(TierPrice.class, json);
+	}
+
 	@Schema
 	@Valid
 	public Map<String, Map<String, String>> getActions() {
@@ -92,7 +97,7 @@ public class TierPrice implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Map<String, Map<String, String>> actions;
 
-	@Schema
+	@Schema(example = "true")
 	public Boolean getActive() {
 		return active;
 	}
@@ -149,7 +154,7 @@ public class TierPrice implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Map<String, ?> customFields;
 
-	@Schema
+	@Schema(example = "true")
 	public Boolean getDiscountDiscovery() {
 		return discountDiscovery;
 	}
@@ -178,7 +183,7 @@ public class TierPrice implements Serializable {
 	protected Boolean discountDiscovery;
 
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "30130")
 	@Valid
 	public BigDecimal getDiscountLevel1() {
 		return discountLevel1;
@@ -208,7 +213,7 @@ public class TierPrice implements Serializable {
 	protected BigDecimal discountLevel1;
 
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "30130")
 	@Valid
 	public BigDecimal getDiscountLevel2() {
 		return discountLevel2;
@@ -238,7 +243,7 @@ public class TierPrice implements Serializable {
 	protected BigDecimal discountLevel2;
 
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "30130")
 	@Valid
 	public BigDecimal getDiscountLevel3() {
 		return discountLevel3;
@@ -268,7 +273,7 @@ public class TierPrice implements Serializable {
 	protected BigDecimal discountLevel3;
 
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "30130")
 	@Valid
 	public BigDecimal getDiscountLevel4() {
 		return discountLevel4;
@@ -297,7 +302,7 @@ public class TierPrice implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected BigDecimal discountLevel4;
 
-	@Schema
+	@Schema(example = "2017-07-21")
 	public Date getDisplayDate() {
 		return displayDate;
 	}
@@ -325,7 +330,7 @@ public class TierPrice implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Date displayDate;
 
-	@Schema
+	@Schema(example = "2017-08-21")
 	public Date getExpirationDate() {
 		return expirationDate;
 	}
@@ -353,7 +358,7 @@ public class TierPrice implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Date expirationDate;
 
-	@Schema
+	@Schema(example = "AB-34098-789-N")
 	public String getExternalReferenceCode() {
 		return externalReferenceCode;
 	}
@@ -382,7 +387,7 @@ public class TierPrice implements Serializable {
 	protected String externalReferenceCode;
 
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "31130")
 	public Long getId() {
 		return id;
 	}
@@ -409,7 +414,7 @@ public class TierPrice implements Serializable {
 	protected Long id;
 
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "5")
 	public Integer getMinimumQuantity() {
 		return minimumQuantity;
 	}
@@ -438,7 +443,7 @@ public class TierPrice implements Serializable {
 	@NotNull
 	protected Integer minimumQuantity;
 
-	@Schema
+	@Schema(example = "true")
 	public Boolean getNeverExpire() {
 		return neverExpire;
 	}
@@ -495,7 +500,7 @@ public class TierPrice implements Serializable {
 	@NotNull
 	protected Double price;
 
-	@Schema
+	@Schema(example = "CAB-34098-789-N")
 	public String getPriceEntryExternalReferenceCode() {
 		return priceEntryExternalReferenceCode;
 	}
@@ -528,7 +533,7 @@ public class TierPrice implements Serializable {
 	protected String priceEntryExternalReferenceCode;
 
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "30130")
 	public Long getPriceEntryId() {
 		return priceEntryId;
 	}
@@ -821,15 +826,16 @@ public class TierPrice implements Serializable {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.commerce.admin.pricing.dto.v2_0.TierPrice",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
 	}
 
 	private static boolean _isArray(Object value) {
@@ -855,8 +861,8 @@ public class TierPrice implements Serializable {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -887,7 +893,7 @@ public class TierPrice implements Serializable {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -895,7 +901,7 @@ public class TierPrice implements Serializable {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -903,5 +909,10 @@ public class TierPrice implements Serializable {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

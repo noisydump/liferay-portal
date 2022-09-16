@@ -21,7 +21,6 @@ long templateId = ParamUtil.getLong(request, "templateId");
 
 long classNameId = ParamUtil.getLong(request, "classNameId");
 long classPK = ParamUtil.getLong(request, "classPK");
-String eventName = ParamUtil.getString(request, "eventName", "selectTemplate");
 
 DDMStructure structure = null;
 
@@ -34,16 +33,15 @@ if ((classPK > 0) && (structureClassNameId == classNameId)) {
 
 <liferay-util:include page="/navigation_bar.jsp" servletContext="<%= application %>" />
 
-<clay:management-toolbar-v2
+<clay:management-toolbar
 	clearResultsURL="<%= ddmDisplayContext.getClearResultsURL() %>"
-	componentId="ddmTemplateManagementToolbar"
 	creationMenu="<%= ddmDisplayContext.getTemplateCreationMenu() %>"
 	disabled="<%= ddmDisplayContext.isDisabledManagementBar(DDMWebKeys.DYNAMIC_DATA_MAPPING_TEMPLATE) %>"
 	filterDropdownItems="<%= ddmDisplayContext.getFilterItemsDropdownItems() %>"
 	itemsTotal="<%= ddmDisplayContext.getTotalItems(DDMWebKeys.DYNAMIC_DATA_MAPPING_TEMPLATE) %>"
-	namespace="<%= liferayPortletResponse.getNamespace() %>"
 	searchActionURL="<%= ddmDisplayContext.getSelectTemplateSearchActionURL() %>"
 	searchFormName="searchForm"
+	searchInputAutoFocus="<%= true %>"
 	selectable="<%= false %>"
 	sortingOrder="<%= ddmDisplayContext.getOrderByType() %>"
 	sortingURL="<%= ddmDisplayContext.getSortingURL() %>"
@@ -86,7 +84,7 @@ if ((classPK > 0) && (structureClassNameId == classNameId)) {
 							data.put("name", template.getName(locale));
 							%>
 
-							<aui:a cssClass="selector-button" data="<%= data %>" href="javascript:;">
+							<aui:a cssClass="selector-button" data="<%= data %>" href="javascript:void(0);">
 								<%= HtmlUtil.escape(template.getName(locale)) %>
 							</aui:a>
 						</c:when>
@@ -114,18 +112,3 @@ if ((classPK > 0) && (structureClassNameId == classNameId)) {
 		</liferay-ui:search-container>
 	</clay:container-fluid>
 </aui:form>
-
-<aui:script>
-	Liferay.componentReady('ddmTemplateManagementToolbar').then(function () {
-		Liferay.Util.focusFormField(
-			document.<portlet:namespace />searchForm.<portlet:namespace />keywords
-		);
-	});
-</aui:script>
-
-<aui:script>
-	Liferay.Util.selectEntityHandler(
-		'#<portlet:namespace />selectTemplateFm',
-		'<%= HtmlUtil.escapeJS(eventName) %>'
-	);
-</aui:script>

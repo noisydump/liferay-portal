@@ -18,6 +18,10 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 
+import org.hibernate.dialect.pagination.AbstractLimitHandler;
+import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.engine.spi.RowSelection;
+
 /**
  * @author Shepherd Ching
  * @author Jian Cao
@@ -33,6 +37,11 @@ public class DB2Dialect extends org.hibernate.dialect.DB2Dialect {
 	@Override
 	public String getForUpdateString() {
 		return " for read only with rs use and keep exclusive locks";
+	}
+
+	@Override
+	public LimitHandler getLimitHandler() {
+		return _db2LimitHandler;
 	}
 
 	@Override
@@ -84,30 +93,6 @@ public class DB2Dialect extends org.hibernate.dialect.DB2Dialect {
 		return _SUPPORTS_VARIABLE_LIMIT;
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	protected void addOptimizeForLimitedRows(
-		com.liferay.portal.kernel.util.StringBundler sb, int limit) {
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *             #addQueryForLimitedRows(StringBundler, String, int)}
-	 */
-	@Deprecated
-	protected void addQueryForLimitedRows(
-		com.liferay.portal.kernel.util.StringBundler sb, String sql,
-		int limit) {
-
-		StringBundler petraSB = new StringBundler();
-
-		addQueryForLimitedRows(petraSB, sql, limit);
-
-		sb.append(petraSB.getStrings());
-	}
-
 	protected void addQueryForLimitedRows(
 		StringBundler sb, String sql, int limit) {
 
@@ -123,5 +108,32 @@ public class DB2Dialect extends org.hibernate.dialect.DB2Dialect {
 		"FETCH FIRST [$LIMIT$] ROWS ONLY";
 
 	private static final boolean _SUPPORTS_VARIABLE_LIMIT = false;
+
+	private final DB2LimitHandler _db2LimitHandler = new DB2LimitHandler();
+
+	private final class DB2LimitHandler extends AbstractLimitHandler {
+
+		@Override
+		public String processSql(String sql, RowSelection selection) {
+			return getLimitString(
+				sql, selection.getFirstRow(), getMaxOrLimit(selection));
+		}
+
+		@Override
+		public boolean supportsLimit() {
+			return true;
+		}
+
+		@Override
+		public boolean supportsVariableLimit() {
+			return false;
+		}
+
+		@Override
+		public boolean useMaxForLimit() {
+			return true;
+		}
+
+	}
 
 }

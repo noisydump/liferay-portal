@@ -30,11 +30,17 @@ public interface DDMDataDefinitionConverter {
 			long parentStructureLayoutId)
 		throws Exception;
 
+	public String convertDDMFormDataDefinition(
+			String dataDefinition, long groupId, long parentStructureId,
+			long parentStructureLayoutId, long structureId)
+		throws Exception;
+
 	public DDMFormLayout convertDDMFormLayoutDataDefinition(
 		DDMForm ddmForm, DDMFormLayout ddmFormLayout);
 
 	public String convertDDMFormLayoutDataDefinition(
-			String structureLayoutDataDefinition,
+			long groupId, long structureId,
+			String structureLayoutDataDefinition, long structureLayoutId,
 			String structureVersionDataDefinition)
 		throws Exception;
 

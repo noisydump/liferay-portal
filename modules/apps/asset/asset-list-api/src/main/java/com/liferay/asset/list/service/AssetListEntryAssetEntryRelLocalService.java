@@ -162,6 +162,9 @@ public interface AssetListEntryAssetEntryRelLocalService
 	public <T> T dslQuery(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
 
 	/**
@@ -299,11 +302,6 @@ public interface AssetListEntryAssetEntryRelLocalService
 	public List<AssetListEntryAssetEntryRel> getAssetListEntryAssetEntryRels(
 		long assetListEntryId, long[] segmentsEntryIds, int start, int end);
 
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<AssetListEntryAssetEntryRel> getAssetListEntryAssetEntryRels(
-		long assetListEntryId, long[] segmentsEntryIds,
-		long[][] assetCategoryIds, int start, int end);
-
 	/**
 	 * Returns all the asset list entry asset entry rels matching the UUID and company.
 	 *
@@ -354,11 +352,6 @@ public interface AssetListEntryAssetEntryRelLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getAssetListEntryAssetEntryRelsCount(
 		long assetListEntryId, long[] segmentsEntryIds);
-
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public int getAssetListEntryAssetEntryRelsCount(
-		long assetListEntryId, long[] segmentsEntryIds,
-		long[][] assetCategoryIds);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ExportActionableDynamicQuery getExportActionableDynamicQuery(

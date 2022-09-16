@@ -20,8 +20,8 @@
 assetTagsSelectorDisplayContext = new AssetTagsSelectorDisplayContext(request, renderRequest, renderResponse, false);
 %>
 
-<clay:management-toolbar-v2
-	displayContext="<%= new AssetTagsSelectorManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, assetTagsSelectorDisplayContext) %>"
+<clay:management-toolbar
+	managementToolbarDisplayContext="<%= new AssetTagsSelectorManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, assetTagsSelectorDisplayContext) %>"
 />
 
 <aui:form action="<%= assetTagsSelectorDisplayContext.getPortletURL() %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="selectAssetTagFm">
@@ -49,7 +49,7 @@ assetTagsSelectorDisplayContext = new AssetTagsSelectorDisplayContext(request, r
 							"entityname", tag.getName()
 						).build()
 					%>'
-					href="javascript:;"
+					href="javascript:void(0);"
 				>
 					<%= HtmlUtil.escape(tag.getName()) %>
 				</aui:a>
@@ -62,11 +62,3 @@ assetTagsSelectorDisplayContext = new AssetTagsSelectorDisplayContext(request, r
 		/>
 	</liferay-ui:search-container>
 </aui:form>
-
-<aui:script>
-	Liferay.Util.selectEntityHandler(
-		'#<portlet:namespace />selectAssetTagFm',
-		'<%= HtmlUtil.escapeJS(assetTagsSelectorDisplayContext.getEventName()) %>',
-		true
-	);
-</aui:script>

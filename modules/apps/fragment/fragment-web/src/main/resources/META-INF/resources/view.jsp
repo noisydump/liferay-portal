@@ -49,7 +49,7 @@ List<FragmentCollectionContributor> fragmentCollectionContributors = fragmentDis
 										expand="<%= true %>"
 									>
 										<strong class="text-uppercase">
-											<liferay-ui:message key="collections" />
+											<liferay-ui:message key="fragment-sets" />
 										</strong>
 									</clay:content-col>
 
@@ -67,9 +67,27 @@ List<FragmentCollectionContributor> fragmentCollectionContributors = fragmentDis
 												</c:if>
 											</li>
 											<li>
+
+												<%
+												Map<String, Object> fragmentCollectionsViewContext = fragmentDisplayContext.getFragmentCollectionsViewContext();
+												%>
+
 												<clay:dropdown-actions
-													defaultEventHandler="FragmentCollectionsViewDefaultEventHandler"
+													additionalProps='<%=
+														HashMapBuilder.<String, Object>put(
+															"deleteFragmentCollectionURL", fragmentCollectionsViewContext.get("deleteFragmentCollectionURL")
+														).put(
+															"exportFragmentCollectionsURL", fragmentCollectionsViewContext.get("exportFragmentCollectionsURL")
+														).put(
+															"viewDeleteFragmentCollectionsURL", fragmentCollectionsViewContext.get("viewDeleteFragmentCollectionsURL")
+														).put(
+															"viewExportFragmentCollectionsURL", fragmentCollectionsViewContext.get("viewExportFragmentCollectionsURL")
+														).put(
+															"viewImportURL", fragmentCollectionsViewContext.get("viewImportURL")
+														).build()
+													%>'
 													dropdownItems="<%= fragmentDisplayContext.getCollectionsDropdownItems() %>"
+													propsTransformer="js/FragmentCollectionViewDefaultPropsTransformer"
 												/>
 											</li>
 										</ul>
@@ -87,15 +105,16 @@ List<FragmentCollectionContributor> fragmentCollectionContributors = fragmentDis
 										%>
 
 											<li class="nav-item">
-
-												<%
-												PortletURL fragmentCollectionURL = renderResponse.createRenderURL();
-
-												fragmentCollectionURL.setParameter("mvcRenderCommandName", "/fragment/view");
-												fragmentCollectionURL.setParameter("fragmentCollectionKey", String.valueOf(fragmentCollectionContributor.getFragmentCollectionKey()));
-												%>
-
-												<a class="d-flex nav-link <%= Objects.equals(fragmentCollectionContributor.getFragmentCollectionKey(), fragmentDisplayContext.getFragmentCollectionKey()) ? "active" : StringPool.BLANK %>" href="<%= fragmentCollectionURL.toString() %>">
+												<a
+													class="d-flex nav-link <%= Objects.equals(fragmentCollectionContributor.getFragmentCollectionKey(), fragmentDisplayContext.getFragmentCollectionKey()) ? "active" : StringPool.BLANK %>"
+													href="<%=
+														PortletURLBuilder.createRenderURL(
+															renderResponse
+														).setParameter(
+															"fragmentCollectionKey", fragmentCollectionContributor.getFragmentCollectionKey()
+														).buildString()
+													%>"
+												>
 													<span class="text-truncate"><%= HtmlUtil.escape(fragmentCollectionContributor.getName(locale)) %></span>
 
 													<liferay-ui:icon
@@ -113,15 +132,16 @@ List<FragmentCollectionContributor> fragmentCollectionContributors = fragmentDis
 										%>
 
 											<li class="nav-item">
-
-												<%
-												PortletURL fragmentCollectionURL = renderResponse.createRenderURL();
-
-												fragmentCollectionURL.setParameter("mvcRenderCommandName", "/fragment/view");
-												fragmentCollectionURL.setParameter("fragmentCollectionId", String.valueOf(fragmentCollection.getFragmentCollectionId()));
-												%>
-
-												<a class="d-flex nav-link <%= (fragmentCollection.getFragmentCollectionId() == fragmentDisplayContext.getFragmentCollectionId()) ? "active" : StringPool.BLANK %>" href="<%= fragmentCollectionURL.toString() %>">
+												<a
+													class="d-flex nav-link <%= (fragmentCollection.getFragmentCollectionId() == fragmentDisplayContext.getFragmentCollectionId()) ? "active" : StringPool.BLANK %>"
+													href="<%=
+														PortletURLBuilder.createRenderURL(
+															renderResponse
+														).setParameter(
+															"fragmentCollectionId", fragmentCollection.getFragmentCollectionId()
+														).buildString()
+													%>"
+												>
 													<span class="text-truncate"><%= HtmlUtil.escape(fragmentCollection.getName()) %></span>
 
 													<c:if test="<%= fragmentDisplayContext.isLocked(fragmentCollection) %>">
@@ -154,15 +174,16 @@ List<FragmentCollectionContributor> fragmentCollectionContributors = fragmentDis
 										%>
 
 											<li class="nav-item">
-
-												<%
-												PortletURL fragmentCollectionURL = renderResponse.createRenderURL();
-
-												fragmentCollectionURL.setParameter("mvcRenderCommandName", "/fragment/view");
-												fragmentCollectionURL.setParameter("fragmentCollectionId", String.valueOf(fragmentCollection.getFragmentCollectionId()));
-												%>
-
-												<a class="d-flex nav-link <%= (fragmentCollection.getFragmentCollectionId() == fragmentDisplayContext.getFragmentCollectionId()) ? "active" : StringPool.BLANK %>" href="<%= fragmentCollectionURL.toString() %>">
+												<a
+													class="d-flex nav-link <%= (fragmentCollection.getFragmentCollectionId() == fragmentDisplayContext.getFragmentCollectionId()) ? "active" : StringPool.BLANK %>"
+													href="<%=
+														PortletURLBuilder.createRenderURL(
+															renderResponse
+														).setParameter(
+															"fragmentCollectionId", fragmentCollection.getFragmentCollectionId()
+														).buildString()
+													%>"
+												>
 													<span class="text-truncate"><%= HtmlUtil.escape(fragmentCollection.getName()) %></span>
 
 													<liferay-ui:icon
@@ -189,15 +210,16 @@ List<FragmentCollectionContributor> fragmentCollectionContributors = fragmentDis
 										%>
 
 											<li class="nav-item">
-
-												<%
-												PortletURL fragmentCollectionURL = renderResponse.createRenderURL();
-
-												fragmentCollectionURL.setParameter("mvcRenderCommandName", "/fragment/view");
-												fragmentCollectionURL.setParameter("fragmentCollectionId", String.valueOf(fragmentCollection.getFragmentCollectionId()));
-												%>
-
-												<a class="d-flex nav-link <%= (fragmentCollection.getFragmentCollectionId() == fragmentDisplayContext.getFragmentCollectionId()) ? "active" : StringPool.BLANK %>" href="<%= fragmentCollectionURL.toString() %>">
+												<a
+													class="d-flex nav-link <%= (fragmentCollection.getFragmentCollectionId() == fragmentDisplayContext.getFragmentCollectionId()) ? "active" : StringPool.BLANK %>"
+													href="<%=
+														PortletURLBuilder.createRenderURL(
+															renderResponse
+														).setParameter(
+															"fragmentCollectionId", fragmentCollection.getFragmentCollectionId()
+														).buildString()
+													%>"
+												>
 													<span class="text-truncate"><%= HtmlUtil.escape(fragmentCollection.getName()) %></span>
 
 													<c:if test="<%= fragmentDisplayContext.isLocked(fragmentCollection) %>">
@@ -219,15 +241,18 @@ List<FragmentCollectionContributor> fragmentCollectionContributors = fragmentDis
 							</c:when>
 							<c:otherwise>
 								<p class="text-uppercase">
-									<strong><liferay-ui:message key="collections" /></strong>
+									<strong><liferay-ui:message key="fragment-sets" /></strong>
 								</p>
 
 								<liferay-frontend:empty-result-message
 									actionDropdownItems="<%= FragmentPermission.contains(permissionChecker, scopeGroupId, FragmentActionKeys.MANAGE_FRAGMENT_ENTRIES) ? fragmentDisplayContext.getActionDropdownItems() : null %>"
+									additionalProps="<%= fragmentDisplayContext.getFragmentCollectionsViewContext() %>"
 									animationType="<%= EmptyResultMessageKeys.AnimationType.NONE %>"
-									defaultEventHandler="FragmentCollectionsViewDefaultEventHandler"
-									description='<%= LanguageUtil.get(request, "collections-are-needed-to-create-fragments") %>'
-									elementType='<%= LanguageUtil.get(request, "collections") %>'
+									buttonPropsTransformer="js/FragmentCollectionViewButtonPropsTransformer"
+									description='<%= LanguageUtil.get(request, "fragment-sets-are-needed-to-create-fragments") %>'
+									elementType='<%= LanguageUtil.get(request, "fragment-sets") %>'
+									propsTransformer="js/FragmentCollectionViewDefaultPropsTransformer"
+									propsTransformerServletContext="<%= application %>"
 								/>
 							</c:otherwise>
 						</c:choose>
@@ -255,7 +280,15 @@ List<FragmentCollectionContributor> fragmentCollectionContributors = fragmentDis
 								<clay:content-col
 									cssClass="inline-item-after"
 								>
-									<liferay-util:include page="/fragment_collection_action.jsp" servletContext="<%= application %>" />
+
+									<%
+									FragmentCollectionActionDropdownItemsProvider fragmentCollectionActionDropdownItemsProvider = new FragmentCollectionActionDropdownItemsProvider(fragmentDisplayContext, request, renderResponse);
+									%>
+
+									<clay:dropdown-actions
+										dropdownItems="<%= fragmentCollectionActionDropdownItemsProvider.getActionDropdownItems() %>"
+										propsTransformer="js/FragmentCollectionDropdownPropsTransformer"
+									/>
 								</clay:content-col>
 							</c:if>
 						</clay:content-row>
@@ -290,11 +323,5 @@ List<FragmentCollectionContributor> fragmentCollectionContributors = fragmentDis
 	</clay:row>
 </clay:container-fluid>
 
-<aui:form cssClass="hide" name="fragmentCollectionsFm">
+<aui:form cssClass="hide" name="fm">
 </aui:form>
-
-<liferay-frontend:component
-	componentId="FragmentCollectionsViewDefaultEventHandler"
-	context="<%= fragmentDisplayContext.getFragmentCollectionsViewContext() %>"
-	module="js/FragmentCollectionsViewDefaultEventHandler.es"
-/>

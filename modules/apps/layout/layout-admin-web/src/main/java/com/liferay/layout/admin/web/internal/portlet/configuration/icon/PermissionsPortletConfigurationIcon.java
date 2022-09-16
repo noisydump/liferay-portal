@@ -17,7 +17,7 @@ package com.liferay.layout.admin.web.internal.portlet.configuration.icon;
 import com.liferay.exportimport.kernel.staging.Staging;
 import com.liferay.layout.admin.constants.LayoutAdminPortletKeys;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -33,7 +33,6 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.taglib.security.PermissionsURLTag;
 
 import javax.portlet.PortletRequest;
@@ -58,7 +57,7 @@ public class PermissionsPortletConfigurationIcon
 
 	@Override
 	public String getMessage(PortletRequest portletRequest) {
-		return LanguageUtil.get(getLocale(portletRequest), "permissions");
+		return _language.get(getLocale(portletRequest), "permissions");
 	}
 
 	@Override
@@ -86,7 +85,7 @@ public class PermissionsPortletConfigurationIcon
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(exception, exception);
+				_log.debug(exception);
 			}
 		}
 
@@ -97,15 +96,9 @@ public class PermissionsPortletConfigurationIcon
 	public boolean isShow(PortletRequest portletRequest) {
 		Layout layout = _getLayout(portletRequest);
 
-		if (layout == null) {
-			return false;
-		}
+		if ((layout == null) || layout.isDraft() ||
+			_staging.isIncomplete(layout)) {
 
-		if (layout.getStatus() == WorkflowConstants.STATUS_DRAFT) {
-			return false;
-		}
-
-		if (_staging.isIncomplete(layout)) {
 			return false;
 		}
 
@@ -125,7 +118,7 @@ public class PermissionsPortletConfigurationIcon
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(exception, exception);
+				_log.debug(exception);
 			}
 		}
 
@@ -151,6 +144,9 @@ public class PermissionsPortletConfigurationIcon
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		PermissionsPortletConfigurationIcon.class);
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private LayoutLocalService _layoutLocalService;

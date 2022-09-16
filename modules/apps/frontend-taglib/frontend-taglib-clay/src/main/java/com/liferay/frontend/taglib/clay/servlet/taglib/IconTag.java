@@ -16,11 +16,13 @@ package com.liferay.frontend.taglib.clay.servlet.taglib;
 
 import com.liferay.frontend.taglib.clay.internal.servlet.taglib.BaseContainerTag;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.frontend.icons.FrontendIconsUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.util.Set;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.JspWriter;
 
@@ -38,50 +40,19 @@ public class IconTag extends BaseContainerTag {
 		setDynamicAttribute(StringPool.BLANK, "role", "presentation");
 		setDynamicAttribute(StringPool.BLANK, "viewBox", "0 0 512 512");
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		HttpServletRequest httpServletRequest = getRequest();
 
-		String pathThemeImages = themeDisplay.getPathThemeImages();
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
-		_spritemap = pathThemeImages.concat("/clay/icons.svg");
+		_spritemap = FrontendIconsUtil.getSpritemap(themeDisplay);
 
 		return super.doStartTag();
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public boolean getMonospaced() {
-		return _monospaced;
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public String getSpritemap() {
-		return _spritemap;
-	}
-
 	public String getSymbol() {
 		return _symbol;
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public void setMonospaced(boolean monospaced) {
-		_monospaced = monospaced;
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public void setSpritemap(String spritemap) {
-		_spritemap = spritemap;
 	}
 
 	public void setSymbol(String symbol) {
@@ -92,7 +63,6 @@ public class IconTag extends BaseContainerTag {
 	protected void cleanUp() {
 		super.cleanUp();
 
-		_monospaced = false;
 		_spritemap = null;
 		_symbol = null;
 	}
@@ -122,7 +92,6 @@ public class IconTag extends BaseContainerTag {
 
 	private static final String _ATTRIBUTE_NAMESPACE = "clay:icon:";
 
-	private boolean _monospaced;
 	private String _spritemap;
 	private String _symbol;
 

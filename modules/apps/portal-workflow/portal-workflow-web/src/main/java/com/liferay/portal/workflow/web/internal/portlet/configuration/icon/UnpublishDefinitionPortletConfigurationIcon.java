@@ -14,26 +14,20 @@
 
 package com.liferay.portal.workflow.web.internal.portlet.configuration.icon;
 
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.portlet.configuration.icon.BasePortletConfigurationIcon;
 import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfigurationIcon;
-import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowDefinition;
 import com.liferay.portal.workflow.constants.WorkflowPortletKeys;
 
-import java.util.ResourceBundle;
-
-import javax.portlet.ActionRequest;
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
-import javax.portlet.PortletURL;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * Defines the icon triggering the deactivation of a workflow definition.
@@ -53,10 +47,7 @@ public class UnpublishDefinitionPortletConfigurationIcon
 
 	@Override
 	public String getMessage(PortletRequest portletRequest) {
-		ResourceBundle resourceBundle =
-			_resourceBundleLoader.loadResourceBundle(getLocale(portletRequest));
-
-		return LanguageUtil.get(resourceBundle, "unpublish");
+		return _language.get(getLocale(portletRequest), "unpublish");
 	}
 
 	/**
@@ -71,20 +62,19 @@ public class UnpublishDefinitionPortletConfigurationIcon
 	public String getURL(
 		PortletRequest portletRequest, PortletResponse portletResponse) {
 
-		PortletURL portletURL = _portal.getControlPanelPortletURL(
-			portletRequest, WorkflowPortletKeys.CONTROL_PANEL_WORKFLOW,
-			PortletRequest.ACTION_PHASE);
-
-		portletURL.setParameter(
-			ActionRequest.ACTION_NAME,
-			"/portal_workflow/deactivate_workflow_definition");
-		portletURL.setParameter(
-			"mvcPath", portletRequest.getParameter("mvcPath"));
-		portletURL.setParameter("name", portletRequest.getParameter("name"));
-		portletURL.setParameter(
-			"version", portletRequest.getParameter("version"));
-
-		return portletURL.toString();
+		return PortletURLBuilder.create(
+			_portal.getControlPanelPortletURL(
+				portletRequest, WorkflowPortletKeys.CONTROL_PANEL_WORKFLOW,
+				PortletRequest.ACTION_PHASE)
+		).setActionName(
+			"/portal_workflow/deactivate_workflow_definition"
+		).setMVCPath(
+			portletRequest.getParameter("mvcPath")
+		).setParameter(
+			"name", portletRequest.getParameter("name")
+		).setParameter(
+			"version", portletRequest.getParameter("version")
+		).buildString();
 	}
 
 	@Override
@@ -101,13 +91,9 @@ public class UnpublishDefinitionPortletConfigurationIcon
 	}
 
 	@Reference
-	private Portal _portal;
+	private Language _language;
 
-	@Reference(
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY,
-		target = "(bundle.symbolic.name=com.liferay.portal.workflow.web)"
-	)
-	private volatile ResourceBundleLoader _resourceBundleLoader;
+	@Reference
+	private Portal _portal;
 
 }

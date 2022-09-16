@@ -27,23 +27,14 @@ public class CommerceShipmentServiceWrapper
 	implements CommerceShipmentService,
 			   ServiceWrapper<CommerceShipmentService> {
 
+	public CommerceShipmentServiceWrapper() {
+		this(null);
+	}
+
 	public CommerceShipmentServiceWrapper(
 		CommerceShipmentService commerceShipmentService) {
 
 		_commerceShipmentService = commerceShipmentService;
-	}
-
-	@Override
-	public com.liferay.commerce.model.CommerceShipment addCommerceShipment(
-			long groupId, long commerceAccountId, long commerceAddressId,
-			long commerceShippingMethodId, String commerceShippingOptionName,
-			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return _commerceShipmentService.addCommerceShipment(
-			groupId, commerceAccountId, commerceAddressId,
-			commerceShippingMethodId, commerceShippingOptionName,
-			serviceContext);
 	}
 
 	@Override
@@ -54,6 +45,20 @@ public class CommerceShipmentServiceWrapper
 
 		return _commerceShipmentService.addCommerceShipment(
 			commerceOrderId, serviceContext);
+	}
+
+	@Override
+	public com.liferay.commerce.model.CommerceShipment addCommerceShipment(
+			String externalReferenceCode, long groupId, long commerceAccountId,
+			long commerceAddressId, long commerceShippingMethodId,
+			String commerceShippingOptionName,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _commerceShipmentService.addCommerceShipment(
+			externalReferenceCode, groupId, commerceAccountId,
+			commerceAddressId, commerceShippingMethodId,
+			commerceShippingOptionName, serviceContext);
 	}
 
 	/**
@@ -74,6 +79,17 @@ public class CommerceShipmentServiceWrapper
 
 		_commerceShipmentService.deleteCommerceShipment(
 			commerceShipmentId, restoreStockQuantity);
+	}
+
+	@Override
+	public com.liferay.commerce.model.CommerceShipment
+			fetchCommerceShipmentByExternalReferenceCode(
+				long companyId, String externalReferenceCode)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _commerceShipmentService.
+			fetchCommerceShipmentByExternalReferenceCode(
+				companyId, externalReferenceCode);
 	}
 
 	@Override
@@ -197,63 +213,106 @@ public class CommerceShipmentServiceWrapper
 	}
 
 	@Override
+	public com.liferay.commerce.model.CommerceShipment
+			reprocessCommerceShipment(long commerceShipmentId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _commerceShipmentService.reprocessCommerceShipment(
+			commerceShipmentId);
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #updateAddress(long, String, String, String, String, String, String,
+	 String, long, long, String, ServiceContext)}
+	 */
+	@Deprecated
+	@Override
 	public com.liferay.commerce.model.CommerceShipment updateAddress(
 			long commerceShipmentId, String name, String description,
 			String street1, String street2, String street3, String city,
-			String zip, long commerceRegionId, long commerceCountryId,
-			String phoneNumber)
+			String zip, long regionId, long countryId, String phoneNumber)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _commerceShipmentService.updateAddress(
 			commerceShipmentId, name, description, street1, street2, street3,
-			city, zip, commerceRegionId, commerceCountryId, phoneNumber);
+			city, zip, regionId, countryId, phoneNumber);
+	}
+
+	@Override
+	public com.liferay.commerce.model.CommerceShipment updateAddress(
+			long commerceShipmentId, String name, String description,
+			String street1, String street2, String street3, String city,
+			String zip, long regionId, long countryId, String phoneNumber,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _commerceShipmentService.updateAddress(
+			commerceShipmentId, name, description, street1, street2, street3,
+			city, zip, regionId, countryId, phoneNumber, serviceContext);
 	}
 
 	@Override
 	public com.liferay.commerce.model.CommerceShipment updateCarrierDetails(
-			long commerceShipmentId, String carrier, String trackingNumber)
+			long commerceShipmentId, long commerceShippingMethodId,
+			String carrier, String trackingNumber, String trackingURL)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _commerceShipmentService.updateCarrierDetails(
-			commerceShipmentId, carrier, trackingNumber);
+			commerceShipmentId, commerceShippingMethodId, carrier,
+			trackingNumber, trackingURL);
 	}
 
 	@Override
 	public com.liferay.commerce.model.CommerceShipment updateCommerceShipment(
-			long commerceShipmentId, String carrier, String trackingNumber,
-			int status, int shippingDateMonth, int shippingDateDay,
-			int shippingDateYear, int shippingDateHour, int shippingDateMinute,
-			int expectedDateMonth, int expectedDateDay, int expectedDateYear,
-			int expectedDateHour, int expectedDateMinute)
+			com.liferay.commerce.model.CommerceShipment commerceShipment)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _commerceShipmentService.updateCommerceShipment(
-			commerceShipmentId, carrier, trackingNumber, status,
-			shippingDateMonth, shippingDateDay, shippingDateYear,
-			shippingDateHour, shippingDateMinute, expectedDateMonth,
-			expectedDateDay, expectedDateYear, expectedDateHour,
-			expectedDateMinute);
+			commerceShipment);
 	}
 
 	@Override
 	public com.liferay.commerce.model.CommerceShipment updateCommerceShipment(
-			long commerceShipmentId, String name, String description,
-			String street1, String street2, String street3, String city,
-			String zip, long commerceRegionId, long commerceCountryId,
-			String phoneNumber, String carrier, String trackingNumber,
-			int status, int shippingDateMonth, int shippingDateDay,
-			int shippingDateYear, int shippingDateHour, int shippingDateMinute,
-			int expectedDateMonth, int expectedDateDay, int expectedDateYear,
-			int expectedDateHour, int expectedDateMinute)
+			long commerceShipmentId, long commerceShippingMethodId,
+			String carrier, int expectedDateMonth, int expectedDateDay,
+			int expectedDateYear, int expectedDateHour, int expectedDateMinute,
+			int shippingDateMonth, int shippingDateDay, int shippingDateYear,
+			int shippingDateHour, int shippingDateMinute, String trackingNumber,
+			String trackingURL, int status,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _commerceShipmentService.updateCommerceShipment(
-			commerceShipmentId, name, description, street1, street2, street3,
-			city, zip, commerceRegionId, commerceCountryId, phoneNumber,
-			carrier, trackingNumber, status, shippingDateMonth, shippingDateDay,
-			shippingDateYear, shippingDateHour, shippingDateMinute,
+			commerceShipmentId, commerceShippingMethodId, carrier,
 			expectedDateMonth, expectedDateDay, expectedDateYear,
-			expectedDateHour, expectedDateMinute);
+			expectedDateHour, expectedDateMinute, shippingDateMonth,
+			shippingDateDay, shippingDateYear, shippingDateHour,
+			shippingDateMinute, trackingNumber, trackingURL, status,
+			serviceContext);
+	}
+
+	@Override
+	public com.liferay.commerce.model.CommerceShipment updateCommerceShipment(
+			long commerceShipmentId, long commerceShippingMethodId,
+			String carrier, int expectedDateMonth, int expectedDateDay,
+			int expectedDateYear, int expectedDateHour, int expectedDateMinute,
+			int shippingDateMonth, int shippingDateDay, int shippingDateYear,
+			int shippingDateHour, int shippingDateMinute, String trackingNumber,
+			String trackingURL, int status, String name, String description,
+			String street1, String street2, String street3, String city,
+			String zip, long regionId, long countryId, String phoneNumber,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _commerceShipmentService.updateCommerceShipment(
+			commerceShipmentId, commerceShippingMethodId, carrier,
+			expectedDateMonth, expectedDateDay, expectedDateYear,
+			expectedDateHour, expectedDateMinute, shippingDateMonth,
+			shippingDateDay, shippingDateYear, shippingDateHour,
+			shippingDateMinute, trackingNumber, trackingURL, status, name,
+			description, street1, street2, street3, city, zip, regionId,
+			countryId, phoneNumber, serviceContext);
 	}
 
 	@Override
@@ -265,6 +324,16 @@ public class CommerceShipmentServiceWrapper
 		return _commerceShipmentService.updateExpectedDate(
 			commerceShipmentId, expectedDateMonth, expectedDateDay,
 			expectedDateYear, expectedDateHour, expectedDateMinute);
+	}
+
+	@Override
+	public com.liferay.commerce.model.CommerceShipment
+			updateExternalReferenceCode(
+				long commerceShipmentId, String externalReferenceCode)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _commerceShipmentService.updateExternalReferenceCode(
+			commerceShipmentId, externalReferenceCode);
 	}
 
 	@Override

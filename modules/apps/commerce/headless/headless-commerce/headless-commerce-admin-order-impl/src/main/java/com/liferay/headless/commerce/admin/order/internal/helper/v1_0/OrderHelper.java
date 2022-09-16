@@ -16,7 +16,7 @@ package com.liferay.headless.commerce.admin.order.internal.helper.v1_0;
 
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.product.model.CommerceChannel;
-import com.liferay.commerce.product.service.CommerceChannelService;
+import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.headless.commerce.admin.order.dto.v1_0.Order;
 import com.liferay.headless.commerce.admin.order.internal.dto.v1_0.converter.OrderDTOConverter;
 import com.liferay.petra.function.UnsafeConsumer;
@@ -58,7 +58,7 @@ public class OrderHelper {
 
 		return SearchUtil.search(
 			null, booleanQuery -> booleanQuery.getPreBooleanFilter(), filter,
-			CommerceOrder.class, search, pagination,
+			CommerceOrder.class.getName(), search, pagination,
 			queryConfig -> queryConfig.setSelectedFieldNames(
 				Field.ENTRY_CLASS_PK),
 			new UnsafeConsumer() {
@@ -66,11 +66,10 @@ public class OrderHelper {
 				public void accept(Object object) throws Exception {
 					SearchContext searchContext = (SearchContext)object;
 
-					searchContext.setCompanyId(companyId);
-
 					searchContext.setAttribute(
 						"useSearchResultPermissionFilter",
 						useSearchResultPermissionFilter);
+					searchContext.setCompanyId(companyId);
 
 					long[] commerceChannelGroupIds =
 						_getCommerceChannelGroupIds(companyId);
@@ -107,7 +106,7 @@ public class OrderHelper {
 		throws Exception {
 
 		List<CommerceChannel> commerceChannels =
-			_commerceChannelService.searchCommerceChannels(companyId);
+			_commerceChannelLocalService.getCommerceChannels(companyId);
 
 		Stream<CommerceChannel> stream = commerceChannels.stream();
 
@@ -117,7 +116,7 @@ public class OrderHelper {
 	}
 
 	@Reference
-	private CommerceChannelService _commerceChannelService;
+	private CommerceChannelLocalService _commerceChannelLocalService;
 
 	@Reference
 	private DTOConverterRegistry _dtoConverterRegistry;

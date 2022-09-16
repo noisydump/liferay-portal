@@ -14,7 +14,6 @@
 
 package com.liferay.portal.security.sso.facebook.connect.internal.auto.login;
 
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.facebook.FacebookConnect;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.auto.login.AutoLogin;
@@ -61,7 +60,7 @@ public class FacebookConnectAutoLogin extends BaseAutoLogin {
 			return null;
 		}
 
-		User user = getUser(httpServletRequest, companyId);
+		User user = _getUser(httpServletRequest, companyId);
 
 		if (user == null) {
 			return null;
@@ -76,24 +75,23 @@ public class FacebookConnectAutoLogin extends BaseAutoLogin {
 		return credentials;
 	}
 
-	protected User getUser(
-			HttpServletRequest httpServletRequest, long companyId)
-		throws PortalException {
+	private User _getUser(HttpServletRequest httpServletRequest, long companyId)
+		throws Exception {
 
-		HttpSession session = httpServletRequest.getSession();
+		HttpSession httpSession = httpServletRequest.getSession();
 
-		String emailAddress = (String)session.getAttribute(
+		String emailAddress = (String)httpSession.getAttribute(
 			WebKeys.FACEBOOK_USER_EMAIL_ADDRESS);
 
 		if (Validator.isNotNull(emailAddress)) {
-			session.removeAttribute(WebKeys.FACEBOOK_USER_EMAIL_ADDRESS);
+			httpSession.removeAttribute(WebKeys.FACEBOOK_USER_EMAIL_ADDRESS);
 
 			return _userLocalService.getUserByEmailAddress(
 				companyId, emailAddress);
 		}
 
 		long facebookId = GetterUtil.getLong(
-			(String)session.getAttribute(
+			(String)httpSession.getAttribute(
 				FacebookConnectWebKeys.FACEBOOK_USER_ID));
 
 		if (facebookId > 0) {
@@ -103,21 +101,13 @@ public class FacebookConnectAutoLogin extends BaseAutoLogin {
 		return null;
 	}
 
-	@Reference(unbind = "-")
-	protected void setFacebookConnect(FacebookConnect facebookConnect) {
-		_facebookConnect = facebookConnect;
-	}
-
-	@Reference(unbind = "-")
-	protected void setUserLocalService(UserLocalService userLocalService) {
-		_userLocalService = userLocalService;
-	}
-
+	@Reference
 	private FacebookConnect _facebookConnect;
 
 	@Reference
 	private Portal _portal;
 
+	@Reference
 	private UserLocalService _userLocalService;
 
 }

@@ -14,9 +14,11 @@
 
 package com.liferay.account.service;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.util.tracker.ServiceTracker;
+import com.liferay.account.model.AccountEntry;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.util.OrderByComparator;
+
+import java.util.List;
 
 /**
  * Provides the remote service utility for AccountEntry. This utility wraps
@@ -37,61 +39,87 @@ public class AccountEntryServiceUtil {
 	 *
 	 * Never modify this class directly. Add custom service methods to <code>com.liferay.account.service.impl.AccountEntryServiceImpl</code> and rerun ServiceBuilder to regenerate this class.
 	 */
+	public static void activateAccountEntries(long[] accountEntryIds)
+		throws PortalException {
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 #addAccountEntry(long, long, String, String, String[],
-	 byte[], String, int, ServiceContext)}
-	 */
-	@Deprecated
-	public static com.liferay.account.model.AccountEntry addAccountEntry(
-			long userId, long parentAccountEntryId, String name,
-			String description, String[] domains, byte[] logoBytes, int status)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return getService().addAccountEntry(
-			userId, parentAccountEntryId, name, description, domains, logoBytes,
-			status);
+		getService().activateAccountEntries(accountEntryIds);
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 #addAccountEntry(long, long, String, String, String[],
-	 byte[], String, int, ServiceContext)}
-	 */
-	@Deprecated
-	public static com.liferay.account.model.AccountEntry addAccountEntry(
-			long userId, long parentAccountEntryId, String name,
-			String description, String[] domains, byte[] logoBytes, int status,
-			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static AccountEntry activateAccountEntry(long accountEntryId)
+		throws PortalException {
 
-		return getService().addAccountEntry(
-			userId, parentAccountEntryId, name, description, domains, logoBytes,
-			status, serviceContext);
+		return getService().activateAccountEntry(accountEntryId);
 	}
 
-	public static com.liferay.account.model.AccountEntry addAccountEntry(
+	public static AccountEntry addAccountEntry(
 			long userId, long parentAccountEntryId, String name,
 			String description, String[] domains, String email,
 			byte[] logoBytes, String taxIdNumber, String type, int status,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		return getService().addAccountEntry(
 			userId, parentAccountEntryId, name, description, domains, email,
 			logoBytes, taxIdNumber, type, status, serviceContext);
 	}
 
-	public static java.util.List<com.liferay.account.model.AccountEntry>
-			getAccountEntries(
-				long companyId, int status, int start, int end,
-				com.liferay.portal.kernel.util.OrderByComparator
-					<com.liferay.account.model.AccountEntry> orderByComparator)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static AccountEntry addOrUpdateAccountEntry(
+			String externalReferenceCode, long userId,
+			long parentAccountEntryId, String name, String description,
+			String[] domains, String emailAddress, byte[] logoBytes,
+			String taxIdNumber, String type, int status,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws PortalException {
+
+		return getService().addOrUpdateAccountEntry(
+			externalReferenceCode, userId, parentAccountEntryId, name,
+			description, domains, emailAddress, logoBytes, taxIdNumber, type,
+			status, serviceContext);
+	}
+
+	public static void deactivateAccountEntries(long[] accountEntryIds)
+		throws PortalException {
+
+		getService().deactivateAccountEntries(accountEntryIds);
+	}
+
+	public static AccountEntry deactivateAccountEntry(long accountEntryId)
+		throws PortalException {
+
+		return getService().deactivateAccountEntry(accountEntryId);
+	}
+
+	public static void deleteAccountEntries(long[] accountEntryIds)
+		throws PortalException {
+
+		getService().deleteAccountEntries(accountEntryIds);
+	}
+
+	public static void deleteAccountEntry(long accountEntryId)
+		throws PortalException {
+
+		getService().deleteAccountEntry(accountEntryId);
+	}
+
+	public static AccountEntry fetchAccountEntry(long accountEntryId)
+		throws PortalException {
+
+		return getService().fetchAccountEntry(accountEntryId);
+	}
+
+	public static List<AccountEntry> getAccountEntries(
+			long companyId, int status, int start, int end,
+			OrderByComparator<AccountEntry> orderByComparator)
+		throws PortalException {
 
 		return getService().getAccountEntries(
 			companyId, status, start, end, orderByComparator);
+	}
+
+	public static AccountEntry getAccountEntry(long accountEntryId)
+		throws PortalException {
+
+		return getService().getAccountEntry(accountEntryId);
 	}
 
 	/**
@@ -104,32 +132,47 @@ public class AccountEntryServiceUtil {
 	}
 
 	public static com.liferay.portal.kernel.search.BaseModelSearchResult
-		<com.liferay.account.model.AccountEntry> searchAccountEntries(
-			String keywords, java.util.LinkedHashMap<String, Object> params,
-			int cur, int delta, String orderByField, boolean reverse) {
+		<AccountEntry> searchAccountEntries(
+				String keywords, java.util.LinkedHashMap<String, Object> params,
+				int cur, int delta, String orderByField, boolean reverse)
+			throws PortalException {
 
 		return getService().searchAccountEntries(
 			keywords, params, cur, delta, orderByField, reverse);
 	}
 
+	public static AccountEntry updateAccountEntry(AccountEntry accountEntry)
+		throws PortalException {
+
+		return getService().updateAccountEntry(accountEntry);
+	}
+
+	public static AccountEntry updateAccountEntry(
+			long accountEntryId, long parentAccountEntryId, String name,
+			String description, boolean deleteLogo, String[] domains,
+			String emailAddress, byte[] logoBytes, String taxIdNumber,
+			int status,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws PortalException {
+
+		return getService().updateAccountEntry(
+			accountEntryId, parentAccountEntryId, name, description, deleteLogo,
+			domains, emailAddress, logoBytes, taxIdNumber, status,
+			serviceContext);
+	}
+
+	public static AccountEntry updateExternalReferenceCode(
+			long accountEntryId, String externalReferenceCode)
+		throws PortalException {
+
+		return getService().updateExternalReferenceCode(
+			accountEntryId, externalReferenceCode);
+	}
+
 	public static AccountEntryService getService() {
-		return _serviceTracker.getService();
+		return _service;
 	}
 
-	private static ServiceTracker<AccountEntryService, AccountEntryService>
-		_serviceTracker;
-
-	static {
-		Bundle bundle = FrameworkUtil.getBundle(AccountEntryService.class);
-
-		ServiceTracker<AccountEntryService, AccountEntryService>
-			serviceTracker =
-				new ServiceTracker<AccountEntryService, AccountEntryService>(
-					bundle.getBundleContext(), AccountEntryService.class, null);
-
-		serviceTracker.open();
-
-		_serviceTracker = serviceTracker;
-	}
+	private static volatile AccountEntryService _service;
 
 }

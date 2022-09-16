@@ -25,10 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.util.tracker.ServiceTracker;
-
 /**
  * The persistence utility for the de data definition field link service. This utility wraps <code>com.liferay.data.engine.service.persistence.impl.DEDataDefinitionFieldLinkPersistenceImpl</code> and provides direct access to the database for CRUD operations. This utility should only be used by the service layer, as it must operate within a transaction. Never access this utility in a JSP, controller, model, or other front-end class.
  *
@@ -1360,7 +1356,7 @@ public class DEDataDefinitionFieldLinkUtil {
 	 * </p>
 	 *
 	 * @param ddmStructureId the ddm structure ID
-	 * @param fieldName the field name
+	 * @param fieldNames the field names
 	 * @param start the lower bound of the range of de data definition field links
 	 * @param end the upper bound of the range of de data definition field links (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
@@ -1669,7 +1665,7 @@ public class DEDataDefinitionFieldLinkUtil {
 	 *
 	 * @param classNameId the class name ID
 	 * @param ddmStructureId the ddm structure ID
-	 * @param fieldName the field name
+	 * @param fieldNames the field names
 	 * @param start the lower bound of the range of de data definition field links
 	 * @param end the upper bound of the range of de data definition field links (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
@@ -2000,29 +1996,9 @@ public class DEDataDefinitionFieldLinkUtil {
 	}
 
 	public static DEDataDefinitionFieldLinkPersistence getPersistence() {
-		return _serviceTracker.getService();
+		return _persistence;
 	}
 
-	private static ServiceTracker
-		<DEDataDefinitionFieldLinkPersistence,
-		 DEDataDefinitionFieldLinkPersistence> _serviceTracker;
-
-	static {
-		Bundle bundle = FrameworkUtil.getBundle(
-			DEDataDefinitionFieldLinkPersistence.class);
-
-		ServiceTracker
-			<DEDataDefinitionFieldLinkPersistence,
-			 DEDataDefinitionFieldLinkPersistence> serviceTracker =
-				new ServiceTracker
-					<DEDataDefinitionFieldLinkPersistence,
-					 DEDataDefinitionFieldLinkPersistence>(
-						 bundle.getBundleContext(),
-						 DEDataDefinitionFieldLinkPersistence.class, null);
-
-		serviceTracker.open();
-
-		_serviceTracker = serviceTracker;
-	}
+	private static volatile DEDataDefinitionFieldLinkPersistence _persistence;
 
 }

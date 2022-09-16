@@ -1,4 +1,7 @@
 @import 'atlas-variables';
+@import 'cadmin-variables';
+
+@import 'image_editor_modal';
 
 @mixin file-icon($colorIndex, $color) {
 	[data-file-icon-color='#{$colorIndex}'] .lexicon-icon {
@@ -26,18 +29,19 @@ $productMenuWidth: 320px;
 	@import 'document_library_preview';
 
 	.bulk-status-container {
-		height: 32px;
-		margin-top: -1.25rem;
-
 		.bulk-status {
 			background: #2e5aac;
 			color: #fff;
 			font-size: 0.875rem;
+			left: 0;
 			line-height: 32px;
 			max-height: 32px;
 			opacity: 1;
+			position: absolute;
+			right: 0;
 			text-align: center;
 			width: 100%;
+			z-index: $zindex-modal;
 
 			@include transition(all 0.4s ease-in-out);
 
@@ -176,6 +180,10 @@ $productMenuWidth: 320px;
 
 	.file-entry-actions > a {
 		margin-bottom: 1rem;
+	}
+
+	.file-entry-type-fields .ddm-form-builder-app .CodeMirror {
+		height: 100%;
 	}
 
 	.file-entry-list-description {
@@ -355,6 +363,9 @@ $productMenuWidth: 320px;
 	}
 
 	.lfr-header-row {
+		border: 1px solid #7b7b7b;
+		min-height: 31px;
+
 		.lfr-asset-summary {
 			margin-left: 5px;
 
@@ -379,11 +390,16 @@ $productMenuWidth: 320px;
 				font-weight: bold;
 			}
 		}
+
+		.lfr-search-combobox {
+			border-color: #5f5f5f;
+			float: right;
+			margin: -2px 0 0 2px;
+		}
 	}
 
 	.lfr-header-row-content {
-		padding-left: 0;
-		padding-top: 0;
+		padding: 0 4px 0 0;
 
 		.edit-toolbar {
 			margin: 0;
@@ -391,6 +407,16 @@ $productMenuWidth: 320px;
 
 		.nav-item-icon {
 			width: 15px;
+		}
+	}
+
+	.lfr-header-row,
+	.lfr-header-row-content {
+		&:after {
+			clear: both;
+			content: '';
+			display: block;
+			height: 0;
 		}
 	}
 
@@ -524,26 +550,6 @@ $productMenuWidth: 320px;
 		.entry-title-text {
 			background: no-repeat 0 50%;
 		}
-
-		&.upload-error,
-		&.upload-success,
-		&.upload-warning {
-			.entry-title-text {
-				padding-left: 20px;
-			}
-		}
-
-		&.upload-error .entry-title-text {
-			background-image: url(@theme_image_path@/messages/error.png);
-		}
-
-		&.upload-success .entry-title-text {
-			background-image: url(@theme_image_path@/messages/success.png);
-		}
-
-		&.upload-warning .entry-title-text {
-			background-image: url(@theme_image_path@/messages/alert.png);
-		}
 	}
 
 	.app-view-entry-taglib.entry-display-style.display-descriptive {
@@ -600,8 +606,7 @@ $productMenuWidth: 320px;
 			text-shadow: 1px 1px #fff;
 		}
 
-		.user-date,
-		.taglib-asset-tags-summary {
+		.user-date {
 			font-weight: bold;
 		}
 
@@ -722,6 +727,15 @@ $productMenuWidth: 320px;
 		padding-bottom: 15px;
 	}
 
+	.expiration-date,
+	.review-date {
+		margin-bottom: 1rem;
+
+		.form-group-autofit {
+			margin-bottom: 0.5rem;
+		}
+	}
+
 	.lfr-asset-column-details .lfr-panel {
 		margin-bottom: 0.5em;
 		padding-bottom: 0;
@@ -738,7 +752,33 @@ $productMenuWidth: 320px;
 	.upload-drop-active &,
 	.upload-drop-intent & {
 		.document-container {
-			background-color: #eef4ff;
+			background-color: $primary-l3;
+		}
+	}
+
+	.upload-drop-active & {
+		.document-container {
+			border-radius: 2px;
+			box-shadow: 0 0 0 2px $primary-l2;
+
+			.active-area {
+				background-color: transparent !important;
+
+				.card-type-directory .card,
+				&.list-group-item,
+				td {
+					background-color: $primary-l3 !important;
+				}
+
+				.card-type-directory .card {
+					box-shadow: 0 0 0 2px $primary-l2;
+				}
+			}
+
+			.taglib-empty-result-message {
+				background-color: $primary-l3;
+				border-color: transparent;
+			}
 		}
 	}
 
@@ -751,6 +791,16 @@ $productMenuWidth: 320px;
 			float: right;
 		}
 	}
+
+	.common-file-metadata-container.selected {
+		border-radius: 5px;
+	}
+
+	.entry-thumbnail .label {
+		border-bottom-left-radius: 0;
+		border-top-left-radius: 0;
+		border-top-right-radius: 0;
+	}
 }
 
 .active-area-proxy {
@@ -759,10 +809,24 @@ $productMenuWidth: 320px;
 	padding: 0.3em;
 }
 
+html#{$cadmin-selector} .cadmin {
+	.alert.alert-full {
+		width: $cadmin-alert-notifications-max-width;
+	}
+}
+
 .autocomplete-dropdown-menu {
 	z-index: 2000;
 }
 
-.pick-button-icon {
-	width: 32px;
+.portlet-document-library-upload-mask {
+	.progress p {
+		font-weight: 600;
+		margin: auto;
+	}
+
+	.overlaymask-content {
+		background-color: #fff;
+		border-radius: 5px;
+	}
 }

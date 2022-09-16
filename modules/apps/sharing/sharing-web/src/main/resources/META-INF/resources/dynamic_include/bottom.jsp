@@ -17,13 +17,17 @@
 <%@ include file="/dynamic_include/init.jsp" %>
 
 <%
-PortletURL manageCollaboratorsURL = PortletProviderUtil.getPortletURL(request, SharingEntry.class.getName(), PortletProvider.Action.MANAGE);
+PortletURL manageCollaboratorsURL = PortletURLBuilder.create(
+	PortletProviderUtil.getPortletURL(request, SharingEntry.class.getName(), PortletProvider.Action.MANAGE)
+).setWindowState(
+	LiferayWindowState.POP_UP
+).buildPortletURL();
 
-manageCollaboratorsURL.setWindowState(LiferayWindowState.POP_UP);
-
-PortletURL sharingURL = PortletProviderUtil.getPortletURL(request, SharingEntry.class.getName(), PortletProvider.Action.EDIT);
-
-sharingURL.setWindowState(LiferayWindowState.POP_UP);
+PortletURL sharingURL = PortletURLBuilder.create(
+	PortletProviderUtil.getPortletURL(request, SharingEntry.class.getName(), PortletProvider.Action.EDIT)
+).setWindowState(
+	LiferayWindowState.POP_UP
+).buildPortletURL();
 %>
 
 <aui:script sandbox="<%= true %>">
@@ -31,9 +35,9 @@ sharingURL.setWindowState(LiferayWindowState.POP_UP);
 		Liferay.Util.openModal({
 			id: 'sharingDialog',
 			iframeBodyCssClass: 'sharing-dialog',
-			height: 475,
+			height: '475px',
 			size: 'md',
-			title: Liferay.Util.escapeHTML(title),
+			title: title,
 			url: uri,
 		});
 	}

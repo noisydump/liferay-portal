@@ -19,6 +19,7 @@ import com.liferay.layout.page.template.admin.constants.LayoutPageTemplateAdminP
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
@@ -27,8 +28,10 @@ import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.permission.LayoutPermission;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Html;
+import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -45,6 +48,7 @@ import java.io.Writer;
 
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.ResourceBundle;
 
 import javax.portlet.PortletRequest;
@@ -94,19 +98,20 @@ public class ManageLayoutProductNavigationControlMenuEntry
 
 		Layout layout = themeDisplay.getLayout();
 
-		if (layout.getClassNameId() == _portal.getClassNameId(Layout.class)) {
+		if (layout.isDraftLayout()) {
 			layout = _layoutLocalService.fetchLayout(layout.getClassPK());
 		}
 
 		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
 			"content.Language", themeDisplay.getLocale(), getClass());
 
-		PortletURL editPageURL = _portal.getControlPanelPortletURL(
-			httpServletRequest, LayoutAdminPortletKeys.GROUP_PAGES,
-			PortletRequest.RENDER_PHASE);
-
-		editPageURL.setParameter(
-			"mvcRenderCommandName", "/layout_admin/edit_layout");
+		PortletURL editPageURL = PortletURLBuilder.create(
+			_portal.getControlPanelPortletURL(
+				httpServletRequest, LayoutAdminPortletKeys.GROUP_PAGES,
+				PortletRequest.RENDER_PHASE)
+		).setMVCRenderCommandName(
+			"/layout_admin/edit_layout"
+		).buildPortletURL();
 
 		String currentURL = _portal.getCurrentURL(httpServletRequest);
 
@@ -137,7 +142,6 @@ public class ManageLayoutProductNavigationControlMenuEntry
 
 			iconTag.setCssClass("icon-monospaced");
 			iconTag.setImage("cog");
-			iconTag.setMarkupView("lexicon");
 
 			PageContext pageContext = PageContextFactoryUtil.create(
 				httpServletRequest, httpServletResponse);
@@ -149,7 +153,7 @@ public class ManageLayoutProductNavigationControlMenuEntry
 			successTag.setKey("layoutUpdated");
 			successTag.setMessage(
 				_language.get(
-					resourceBundle, "the-page-was-updated-succesfully"));
+					resourceBundle, "the-page-was-updated-successfully"));
 			successTag.setTargetNode("#controlMenuAlertsContainer");
 
 			values.put(
@@ -176,39 +180,38 @@ public class ManageLayoutProductNavigationControlMenuEntry
 
 		Layout layout = themeDisplay.getLayout();
 
-		if (layout.isTypeControlPanel()) {
-			return false;
-		}
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			_getLayoutPageTemplateEntry(layout);
 
-		if (_isMasterLayout(layout)) {
-			return false;
-		}
-
-		if (isEmbeddedPersonalApplicationLayout(layout)) {
-			return false;
-		}
-
-		if (!(themeDisplay.isShowLayoutTemplatesIcon() ||
+		if (layout.isTypeControlPanel() ||
+			_isMasterLayout(layout, layoutPageTemplateEntry) ||
+			isEmbeddedPersonalApplicationLayout(layout) ||
+			!(themeDisplay.isShowLayoutTemplatesIcon() ||
 			  themeDisplay.isShowPageSettingsIcon())) {
 
 			return false;
 		}
 
-		if (layout.isSystem() && layout.isTypeContent()) {
-			layout = _layoutLocalService.getLayout(layout.getClassPK());
+		String mode = ParamUtil.getString(
+			httpServletRequest, "p_l_mode", Constants.VIEW);
 
+		if ((layout.isTypeAssetDisplay() || layout.isTypeContent()) &&
+			Objects.equals(mode, Constants.EDIT)) {
+
+			return false;
+		}
+
+		if (layout.isSystem() && layout.isTypeContent()) {
 			return _layoutPermission.contains(
-				themeDisplay.getPermissionChecker(), layout, ActionKeys.UPDATE);
+				themeDisplay.getPermissionChecker(),
+				_layoutLocalService.getLayout(layout.getClassPK()),
+				ActionKeys.UPDATE);
 		}
 
 		return super.isShow(httpServletRequest);
 	}
 
-	private boolean _isMasterLayout(Layout layout) {
-		if (layout.getMasterLayoutPlid() > 0) {
-			return false;
-		}
-
+	private LayoutPageTemplateEntry _getLayoutPageTemplateEntry(Layout layout) {
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.
 				fetchLayoutPageTemplateEntryByPlid(layout.getPlid());
@@ -219,7 +222,14 @@ public class ManageLayoutProductNavigationControlMenuEntry
 					fetchLayoutPageTemplateEntryByPlid(layout.getClassPK());
 		}
 
-		if ((layoutPageTemplateEntry == null) ||
+		return layoutPageTemplateEntry;
+	}
+
+	private boolean _isMasterLayout(
+		Layout layout, LayoutPageTemplateEntry layoutPageTemplateEntry) {
+
+		if ((layout.getMasterLayoutPlid() > 0) ||
+			(layoutPageTemplateEntry == null) ||
 			(layoutPageTemplateEntry.getType() !=
 				LayoutPageTemplateEntryTypeConstants.TYPE_MASTER_LAYOUT)) {
 
@@ -231,8 +241,8 @@ public class ManageLayoutProductNavigationControlMenuEntry
 
 	private static final String _TMPL_CONTENT = StringUtil.read(
 		ManageLayoutProductNavigationControlMenuEntry.class,
-		"/META-INF/resources/control/menu/edit_layout_control_menu_entry_" +
-			"icon.tmpl");
+		"/META-INF/resources/control/menu" +
+			"/edit_layout_control_menu_entry_icon.tmpl");
 
 	@Reference
 	private Html _html;

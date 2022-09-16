@@ -103,10 +103,11 @@ public class LibraryReferenceTest {
 
 	@Test
 	public void testIntelliJLibPreModules() {
+		StringBundler sb = new StringBundler();
+
 		for (Map.Entry<String, List<String>> entry :
 				_intelliJModuleSourceModules.entrySet()) {
 
-			String intelliJFileName = entry.getKey();
 			List<String> modules = entry.getValue();
 
 			List<String> missingModules = new ArrayList<>();
@@ -123,12 +124,15 @@ public class LibraryReferenceTest {
 				}
 			}
 
-			Assert.assertTrue(
-				intelliJFileName +
-					" is missing orderEntry elements for modules " +
-						missingModules,
-				missingModules.isEmpty());
+			if (!missingModules.isEmpty()) {
+				sb.append(entry.getKey());
+				sb.append(" is missing orderEntry elements for modules: ");
+				sb.append(missingModules);
+				sb.append(StringPool.NEW_LINE);
+			}
 		}
+
+		Assert.assertEquals(sb.toString(), 0, sb.index());
 	}
 
 	@Test
@@ -139,6 +143,10 @@ public class LibraryReferenceTest {
 	@Test
 	public void testLibDependencyJarsInVersionsExt() {
 		for (String jar : _libDependencyJars) {
+			if (_excludeJars.contains(jar)) {
+				continue;
+			}
+
 			Assert.assertTrue(
 				_VERSIONS_EXT_FILE_NAME + " is missing a reference to " + jar,
 				_versionsExtJars.contains(jar));
@@ -487,10 +495,10 @@ public class LibraryReferenceTest {
 
 		Properties properties = new Properties();
 
-		try (InputStream in = Files.newInputStream(
+		try (InputStream inputStream = Files.newInputStream(
 				Paths.get(_NETBEANS_PROPERTIES_FILE_NAME))) {
 
-			properties.load(in);
+			properties.load(inputStream);
 		}
 
 		Collections.addAll(

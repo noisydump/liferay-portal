@@ -19,10 +19,6 @@ import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.service.CPDefinitionLocalService;
 import com.liferay.commerce.product.service.CPInstanceLocalService;
 import com.liferay.commerce.wish.list.model.impl.CommerceWishListItemModelImpl;
-import com.liferay.petra.string.StringBundler;
-import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 
 import java.sql.PreparedStatement;
@@ -45,23 +41,19 @@ public class CommerceWishListItemUpgradeProcess extends UpgradeProcess {
 
 	@Override
 	protected void doUpgrade() throws Exception {
-		_addColumn(
-			CommerceWishListItemModelImpl.class,
-			CommerceWishListItemModelImpl.TABLE_NAME, "CPInstanceUuid",
-			"VARCHAR(75)");
-		_addColumn(
-			CommerceWishListItemModelImpl.class,
-			CommerceWishListItemModelImpl.TABLE_NAME, "CProductId", "LONG");
+		alterTableAddColumn(
+			"CommerceWishListItem", "CPInstanceUuid", "VARCHAR(75)");
+		alterTableAddColumn("CommerceWishListItem", "CProductId", "LONG");
 
-		try (PreparedStatement ps = connection.prepareStatement(
+		try (PreparedStatement preparedStatement = connection.prepareStatement(
 				"update CommerceWishListItem set CProductId = ?," +
 					"CPInstanceUuid = ? where CPInstanceId = ?");
 			Statement s = connection.createStatement();
-			ResultSet rs = s.executeQuery(
+			ResultSet resultSet = s.executeQuery(
 				"select distinct CPInstanceId from CommerceWishListItem")) {
 
-			while (rs.next()) {
-				long cpInstanceId = rs.getLong("CPInstanceId");
+			while (resultSet.next()) {
+				long cpInstanceId = resultSet.getLong("CPInstanceId");
 
 				CPInstance cpInstance = _cpInstanceLocalService.getCPInstance(
 					cpInstanceId);
@@ -70,72 +62,20 @@ public class CommerceWishListItemUpgradeProcess extends UpgradeProcess {
 					_cpDefinitionLocalService.getCPDefinition(
 						cpInstance.getCPDefinitionId());
 
-				ps.setLong(1, cpDefinition.getCProductId());
+				preparedStatement.setLong(1, cpDefinition.getCProductId());
 
-				ps.setString(2, cpInstance.getCPInstanceUuid());
-				ps.setLong(3, cpInstanceId);
+				preparedStatement.setString(2, cpInstance.getCPInstanceUuid());
+				preparedStatement.setLong(3, cpInstanceId);
 
-				ps.execute();
+				preparedStatement.execute();
 			}
 		}
 
-		_dropColumn(CommerceWishListItemModelImpl.TABLE_NAME, "CPDefinitionId");
-		_dropColumn(CommerceWishListItemModelImpl.TABLE_NAME, "CPInstanceId");
+		alterTableDropColumn(
+			CommerceWishListItemModelImpl.TABLE_NAME, "CPDefinitionId");
+		alterTableDropColumn(
+			CommerceWishListItemModelImpl.TABLE_NAME, "CPInstanceId");
 	}
-
-	private void _addColumn(
-			Class<?> entityClass, String tableName, String columnName,
-			String columnType)
-		throws Exception {
-
-		if (_log.isInfoEnabled()) {
-			_log.info(
-				String.format(
-					"Adding column %s to table %s", columnName, tableName));
-		}
-
-		if (!hasColumn(tableName, columnName)) {
-			alter(
-				entityClass,
-				new AlterTableAddColumn(
-					columnName + StringPool.SPACE + columnType));
-		}
-		else {
-			if (_log.isInfoEnabled()) {
-				_log.info(
-					String.format(
-						"Column %s already exists on table %s", columnName,
-						tableName));
-			}
-		}
-	}
-
-	private void _dropColumn(String tableName, String columnName)
-		throws Exception {
-
-		if (_log.isInfoEnabled()) {
-			_log.info(
-				String.format(
-					"Dropping column %s from table %s", columnName, tableName));
-		}
-
-		if (hasColumn(tableName, columnName)) {
-			runSQL(
-				StringBundler.concat(
-					"alter table ", tableName, " drop column ", columnName));
-		}
-		else {
-			if (_log.isInfoEnabled()) {
-				_log.info(
-					String.format(
-						"Column %s already does not exist on table %s",
-						columnName, tableName));
-			}
-		}
-	}
-
-	private static final Log _log = LogFactoryUtil.getLog(
-		CommerceWishListItemUpgradeProcess.class);
 
 	private final CPDefinitionLocalService _cpDefinitionLocalService;
 	private final CPInstanceLocalService _cpInstanceLocalService;

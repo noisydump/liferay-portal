@@ -80,6 +80,11 @@ public interface UserGroupLocalService
 
 	public void addGroupUserGroups(long groupId, long[] userGroupIds);
 
+	public UserGroup addOrUpdateUserGroup(
+			String externalReferenceCode, long userId, long companyId,
+			String name, String description, ServiceContext serviceContext)
+		throws PortalException;
+
 	public void addTeamUserGroup(long teamId, long userGroupId);
 
 	public void addTeamUserGroup(long teamId, UserGroup userGroup);
@@ -224,6 +229,9 @@ public interface UserGroupLocalService
 	public <T> T dslQuery(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
 
 	/**
@@ -302,6 +310,14 @@ public interface UserGroupLocalService
 	 * @param externalReferenceCode the user group's external reference code
 	 * @return the matching user group, or <code>null</code> if a matching user group could not be found
 	 */
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public UserGroup fetchUserGroupByExternalReferenceCode(
+		long companyId, String externalReferenceCode);
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #fetchUserGroupByExternalReferenceCode(long, String)}
+	 */
+	@Deprecated
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public UserGroup fetchUserGroupByReferenceCode(
 		long companyId, String externalReferenceCode);
@@ -411,6 +427,19 @@ public interface UserGroupLocalService
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public UserGroup getUserGroup(long companyId, String name)
+		throws PortalException;
+
+	/**
+	 * Returns the user group with the matching external reference code and company.
+	 *
+	 * @param companyId the primary key of the company
+	 * @param externalReferenceCode the user group's external reference code
+	 * @return the matching user group
+	 * @throws PortalException if a matching user group could not be found
+	 */
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public UserGroup getUserGroupByExternalReferenceCode(
+			long companyId, String externalReferenceCode)
 		throws PortalException;
 
 	/**
@@ -727,6 +756,11 @@ public interface UserGroupLocalService
 	 * @param userGroupIds the primary keys of the user groups
 	 */
 	public void unsetTeamUserGroups(long teamId, long[] userGroupIds);
+
+	@Indexable(type = IndexableType.REINDEX)
+	public UserGroup updateExternalReferenceCode(
+			UserGroup userGroup, String externalReferenceCode)
+		throws PortalException;
 
 	/**
 	 * Updates the user group.

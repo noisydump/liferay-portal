@@ -16,6 +16,10 @@
 
 <%@ include file="/social_activities/init.jsp" %>
 
+<liferay-util:html-top>
+	<link href="<%= PortalUtil.getStaticResourceURL(request, PortalUtil.getPathProxy() + application.getContextPath() + "/css/main.css") %>" rel="stylesheet" type="text/css" />
+</liferay-util:html-top>
+
 <div class="taglib-social-activities">
 
 	<%
@@ -23,7 +27,7 @@
 
 	boolean hasActivities = false;
 
-	Date now = new Date();
+	Date date = new Date();
 
 	int daysBetween = -1;
 
@@ -36,22 +40,18 @@
 
 		Date activityDate = new Date(activityDescriptor.getCreateDate());
 
-		int curDaysBetween = DateUtil.getDaysBetween(activityDate, now, timeZone);
+		int curDaysBetween = DateUtil.getDaysBetween(activityDate, date, timeZone);
 	%>
 
 		<c:if test="<%= curDaysBetween > daysBetween %>">
 
 			<%
 			daysBetween = curDaysBetween;
-
-			if (hasActivities) {
 			%>
 
+			<c:if test="<%= hasActivities %>">
 				</ul>
-
-			<%
-			}
-			%>
+			</c:if>
 
 			<div class="autofit-row mb-1">
 				<div class="autofit-col autofit-col-expand">
@@ -63,11 +63,11 @@
 							<c:when test="<%= curDaysBetween == 1 %>">
 								<liferay-ui:message key="yesterday" />
 							</c:when>
-							<c:when test="<%= DateUtil.getYear(activityDate) == DateUtil.getYear(now) %>">
-								<%= dateFormatDate.format(activityDescriptor.getCreateDate()) %>
+							<c:when test="<%= DateUtil.getYear(activityDate) == DateUtil.getYear(date) %>">
+								<%= dateFormat.format(activityDescriptor.getCreateDate()) %>
 							</c:when>
 							<c:otherwise>
-								<%= yearDateFormatDate.format(activityDescriptor.getCreateDate()) %>
+								<%= yearDateFormat.format(activityDescriptor.getCreateDate()) %>
 							</c:otherwise>
 						</c:choose>
 					</div>
@@ -105,7 +105,7 @@
 
 						<div class="autofit-col autofit-col-expand">
 							<h5 class="component-subtitle">
-								<%= timeFormatDate.format(activityDescriptor.getCreateDate()) %>
+								<%= timeFormat.format(activityDescriptor.getCreateDate()) %>
 							</h5>
 
 							<div>

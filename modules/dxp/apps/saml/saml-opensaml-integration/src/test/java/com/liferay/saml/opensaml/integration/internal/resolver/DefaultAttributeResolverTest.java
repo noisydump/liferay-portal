@@ -16,7 +16,6 @@ package com.liferay.saml.opensaml.integration.internal.resolver;
 
 import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.portal.kernel.bean.BeanProperties;
-import com.liferay.portal.kernel.bean.BeanPropertiesUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.Role;
@@ -28,7 +27,9 @@ import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.UserGroupGroupRoleLocalService;
 import com.liferay.portal.kernel.service.UserGroupRoleLocalService;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.saml.opensaml.integration.internal.BaseSamlTestCase;
 import com.liferay.saml.opensaml.integration.internal.metadata.MetadataManager;
 import com.liferay.saml.opensaml.integration.internal.util.SamlUtil;
@@ -38,6 +39,8 @@ import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 import org.mockito.Mockito;
@@ -53,40 +56,44 @@ import org.opensaml.saml.saml2.core.AuthnRequest;
  */
 public class DefaultAttributeResolverTest extends BaseSamlTestCase {
 
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
 	@Before
 	@Override
 	public void setUp() throws Exception {
 		super.setUp();
 
-		BeanPropertiesUtil beanPropertiesUtil = new BeanPropertiesUtil();
+		_beanProperties = Mockito.mock(BeanProperties.class);
 
-		_beanProperties = mock(BeanProperties.class);
-
-		beanPropertiesUtil.setBeanProperties(_beanProperties);
+		ReflectionTestUtil.setFieldValue(
+			_defaultAttributeResolver, "_beanProperties", _beanProperties);
 
 		_defaultAttributeResolver.setGroupLocalService(groupLocalService);
 
-		_metadataManager = mock(MetadataManager.class);
+		_metadataManager = Mockito.mock(MetadataManager.class);
 
 		_defaultAttributeResolver.setMetadataManager(_metadataManager);
 
-		when(
+		Mockito.when(
 			_metadataManager.isAttributesEnabled(Mockito.eq(SP_ENTITY_ID))
 		).thenReturn(
 			true
 		);
 
-		_user = mock(User.class);
+		_user = Mockito.mock(User.class);
 
-		_expandoBridge = mock(ExpandoBridge.class);
+		_expandoBridge = Mockito.mock(ExpandoBridge.class);
 
-		when(
+		Mockito.when(
 			_user.getExpandoBridge()
 		).thenReturn(
 			_expandoBridge
 		);
 
-		_roleLocalService = mock(RoleLocalService.class);
+		_roleLocalService = Mockito.mock(RoleLocalService.class);
 
 		_defaultAttributeResolver.setRoleLocalService(_roleLocalService);
 
@@ -97,13 +104,14 @@ public class DefaultAttributeResolverTest extends BaseSamlTestCase {
 
 		samlPeerEntityContext.setEntityId(SP_ENTITY_ID);
 
-		_userGroupGroupRoleLocalService = mock(
+		_userGroupGroupRoleLocalService = Mockito.mock(
 			UserGroupGroupRoleLocalService.class);
 
 		_defaultAttributeResolver.setUserGroupGroupRoleLocalService(
 			_userGroupGroupRoleLocalService);
 
-		_userGroupRoleLocalService = mock(UserGroupRoleLocalService.class);
+		_userGroupRoleLocalService = Mockito.mock(
+			UserGroupRoleLocalService.class);
 
 		_defaultAttributeResolver.setUserGroupRoleLocalService(
 			_userGroupRoleLocalService);
@@ -111,14 +119,14 @@ public class DefaultAttributeResolverTest extends BaseSamlTestCase {
 
 	@Test
 	public void testResolveExpandoAttributes() throws Exception {
-		when(
+		Mockito.when(
 			_expandoBridge.getAttribute(
 				Mockito.eq("customerId"), Mockito.anyBoolean())
 		).thenReturn(
 			"12345"
 		);
 
-		when(
+		Mockito.when(
 			_metadataManager.getAttributeNames(Mockito.eq(SP_ENTITY_ID))
 		).thenReturn(
 			new String[] {"expando:customerId"}
@@ -137,7 +145,7 @@ public class DefaultAttributeResolverTest extends BaseSamlTestCase {
 
 	@Test
 	public void testResolveGroupsAttributes() throws Exception {
-		when(
+		Mockito.when(
 			_metadataManager.getAttributeNames(Mockito.eq(SP_ENTITY_ID))
 		).thenReturn(
 			new String[] {"groups"}
@@ -145,9 +153,9 @@ public class DefaultAttributeResolverTest extends BaseSamlTestCase {
 
 		List<Group> groups = new ArrayList<>();
 
-		Group group1 = mock(Group.class);
+		Group group1 = Mockito.mock(Group.class);
 
-		when(
+		Mockito.when(
 			group1.getName()
 		).thenReturn(
 			"Test 1"
@@ -155,9 +163,9 @@ public class DefaultAttributeResolverTest extends BaseSamlTestCase {
 
 		groups.add(group1);
 
-		Group group2 = mock(Group.class);
+		Group group2 = Mockito.mock(Group.class);
 
-		when(
+		Mockito.when(
 			group2.getName()
 		).thenReturn(
 			"Test 2"
@@ -165,7 +173,7 @@ public class DefaultAttributeResolverTest extends BaseSamlTestCase {
 
 		groups.add(group2);
 
-		when(
+		Mockito.when(
 			_user.getGroups()
 		).thenReturn(
 			groups
@@ -185,43 +193,43 @@ public class DefaultAttributeResolverTest extends BaseSamlTestCase {
 
 	@Test
 	public void testResolveOrganizationRolesAttributes() throws Exception {
-		when(
+		Mockito.when(
 			_metadataManager.getAttributeNames(Mockito.eq(SP_ENTITY_ID))
 		).thenReturn(
 			new String[] {"organizationRoles"}
 		);
 
-		Group group1 = mock(Group.class);
+		Group group1 = Mockito.mock(Group.class);
 
-		when(
+		Mockito.when(
 			group1.getName()
 		).thenReturn(
 			"Group Test 1"
 		);
 
-		Role role1 = mock(Role.class);
+		Role role1 = Mockito.mock(Role.class);
 
-		when(
+		Mockito.when(
 			role1.getName()
 		).thenReturn(
 			"Role Test 1"
 		);
 
-		when(
+		Mockito.when(
 			role1.getType()
 		).thenReturn(
 			RoleConstants.TYPE_ORGANIZATION
 		);
 
-		Role role2 = mock(Role.class);
+		Role role2 = Mockito.mock(Role.class);
 
-		when(
+		Mockito.when(
 			role2.getName()
 		).thenReturn(
 			"Role Test 2"
 		);
 
-		when(
+		Mockito.when(
 			role2.getType()
 		).thenReturn(
 			RoleConstants.TYPE_ORGANIZATION
@@ -229,15 +237,15 @@ public class DefaultAttributeResolverTest extends BaseSamlTestCase {
 
 		List<UserGroupRole> userGroupRoles = new ArrayList<>();
 
-		UserGroupRole userGroupRole1 = mock(UserGroupRole.class);
+		UserGroupRole userGroupRole1 = Mockito.mock(UserGroupRole.class);
 
-		when(
+		Mockito.when(
 			userGroupRole1.getGroup()
 		).thenReturn(
 			group1
 		);
 
-		when(
+		Mockito.when(
 			userGroupRole1.getRole()
 		).thenReturn(
 			role1
@@ -245,15 +253,15 @@ public class DefaultAttributeResolverTest extends BaseSamlTestCase {
 
 		userGroupRoles.add(userGroupRole1);
 
-		UserGroupRole userGroupRole2 = mock(UserGroupRole.class);
+		UserGroupRole userGroupRole2 = Mockito.mock(UserGroupRole.class);
 
-		when(
+		Mockito.when(
 			userGroupRole2.getGroup()
 		).thenReturn(
 			group1
 		);
 
-		when(
+		Mockito.when(
 			userGroupRole2.getRole()
 		).thenReturn(
 			role2
@@ -261,7 +269,7 @@ public class DefaultAttributeResolverTest extends BaseSamlTestCase {
 
 		userGroupRoles.add(userGroupRole2);
 
-		when(
+		Mockito.when(
 			_userGroupRoleLocalService.getUserGroupRoles(Mockito.anyLong())
 		).thenReturn(
 			userGroupRoles
@@ -282,7 +290,7 @@ public class DefaultAttributeResolverTest extends BaseSamlTestCase {
 
 	@Test
 	public void testResolveOrganizationsAttributes() throws Exception {
-		when(
+		Mockito.when(
 			_metadataManager.getAttributeNames(Mockito.eq(SP_ENTITY_ID))
 		).thenReturn(
 			new String[] {"organizations"}
@@ -290,9 +298,9 @@ public class DefaultAttributeResolverTest extends BaseSamlTestCase {
 
 		List<Organization> organizations = new ArrayList<>();
 
-		Organization organization1 = mock(Organization.class);
+		Organization organization1 = Mockito.mock(Organization.class);
 
-		when(
+		Mockito.when(
 			organization1.getName()
 		).thenReturn(
 			"Test 1"
@@ -300,9 +308,9 @@ public class DefaultAttributeResolverTest extends BaseSamlTestCase {
 
 		organizations.add(organization1);
 
-		Organization organization2 = mock(Organization.class);
+		Organization organization2 = Mockito.mock(Organization.class);
 
-		when(
+		Mockito.when(
 			organization2.getName()
 		).thenReturn(
 			"Test 2"
@@ -310,7 +318,7 @@ public class DefaultAttributeResolverTest extends BaseSamlTestCase {
 
 		organizations.add(organization2);
 
-		when(
+		Mockito.when(
 			_user.getOrganizations()
 		).thenReturn(
 			organizations
@@ -330,7 +338,7 @@ public class DefaultAttributeResolverTest extends BaseSamlTestCase {
 
 	@Test
 	public void testResolveRolesAttributes() throws Exception {
-		when(
+		Mockito.when(
 			_metadataManager.getAttributeNames(Mockito.eq(SP_ENTITY_ID))
 		).thenReturn(
 			new String[] {"roles"}
@@ -338,9 +346,9 @@ public class DefaultAttributeResolverTest extends BaseSamlTestCase {
 
 		List<Role> roles = new ArrayList<>();
 
-		Role role1 = mock(Role.class);
+		Role role1 = Mockito.mock(Role.class);
 
-		when(
+		Mockito.when(
 			role1.getName()
 		).thenReturn(
 			"Test 1"
@@ -348,9 +356,9 @@ public class DefaultAttributeResolverTest extends BaseSamlTestCase {
 
 		roles.add(role1);
 
-		Role role2 = mock(Role.class);
+		Role role2 = Mockito.mock(Role.class);
 
-		when(
+		Mockito.when(
 			role2.getName()
 		).thenReturn(
 			"Test 2"
@@ -358,7 +366,7 @@ public class DefaultAttributeResolverTest extends BaseSamlTestCase {
 
 		roles.add(role2);
 
-		when(
+		Mockito.when(
 			_user.getRoles()
 		).thenReturn(
 			roles
@@ -366,9 +374,9 @@ public class DefaultAttributeResolverTest extends BaseSamlTestCase {
 
 		List<Group> groups = new ArrayList<>();
 
-		Group group1 = mock(Group.class);
+		Group group1 = Mockito.mock(Group.class);
 
-		when(
+		Mockito.when(
 			group1.getName()
 		).thenReturn(
 			"Group Test 1"
@@ -376,13 +384,13 @@ public class DefaultAttributeResolverTest extends BaseSamlTestCase {
 
 		groups.add(group1);
 
-		when(
+		Mockito.when(
 			_user.getGroups()
 		).thenReturn(
 			groups
 		);
 
-		when(
+		Mockito.when(
 			_roleLocalService.hasGroupRoles(Mockito.anyLong())
 		).thenReturn(
 			Boolean.TRUE
@@ -390,9 +398,9 @@ public class DefaultAttributeResolverTest extends BaseSamlTestCase {
 
 		List<Role> groupRoles = new ArrayList<>();
 
-		Role groupRole1 = mock(Role.class);
+		Role groupRole1 = Mockito.mock(Role.class);
 
-		when(
+		Mockito.when(
 			groupRole1.getName()
 		).thenReturn(
 			"Group Role Test 1"
@@ -400,7 +408,7 @@ public class DefaultAttributeResolverTest extends BaseSamlTestCase {
 
 		groupRoles.add(groupRole1);
 
-		when(
+		Mockito.when(
 			_roleLocalService.getGroupRoles(Mockito.anyLong())
 		).thenReturn(
 			groupRoles
@@ -420,53 +428,53 @@ public class DefaultAttributeResolverTest extends BaseSamlTestCase {
 
 	@Test
 	public void testResolveSiteRolesAttributes() throws Exception {
-		when(
+		Mockito.when(
 			_metadataManager.getAttributeNames(Mockito.eq(SP_ENTITY_ID))
 		).thenReturn(
 			new String[] {"siteRoles"}
 		);
 
-		Group group1 = mock(Group.class);
+		Group group1 = Mockito.mock(Group.class);
 
-		when(
+		Mockito.when(
 			group1.getName()
 		).thenReturn(
 			"Group Test 1"
 		);
 
-		Role role1 = mock(Role.class);
+		Role role1 = Mockito.mock(Role.class);
 
-		when(
+		Mockito.when(
 			role1.getName()
 		).thenReturn(
 			"Role Test 1"
 		);
 
-		Role role2 = mock(Role.class);
+		Role role2 = Mockito.mock(Role.class);
 
-		when(
+		Mockito.when(
 			role2.getName()
 		).thenReturn(
 			"Role Test 2"
 		);
 
-		Role role3 = mock(Role.class);
+		Role role3 = Mockito.mock(Role.class);
 
-		when(
+		Mockito.when(
 			role3.getName()
 		).thenReturn(
 			"Org Role Test"
 		);
 
-		when(
+		Mockito.when(
 			role3.getType()
 		).thenReturn(
 			RoleConstants.TYPE_ORGANIZATION
 		);
 
-		Role role4 = mock(Role.class);
+		Role role4 = Mockito.mock(Role.class);
 
-		when(
+		Mockito.when(
 			role4.getName()
 		).thenReturn(
 			"Inherited Role Test"
@@ -474,15 +482,15 @@ public class DefaultAttributeResolverTest extends BaseSamlTestCase {
 
 		List<UserGroupRole> userGroupRoles = new ArrayList<>();
 
-		UserGroupRole userGroupRole1 = mock(UserGroupRole.class);
+		UserGroupRole userGroupRole1 = Mockito.mock(UserGroupRole.class);
 
-		when(
+		Mockito.when(
 			userGroupRole1.getGroup()
 		).thenReturn(
 			group1
 		);
 
-		when(
+		Mockito.when(
 			userGroupRole1.getRole()
 		).thenReturn(
 			role1
@@ -490,15 +498,15 @@ public class DefaultAttributeResolverTest extends BaseSamlTestCase {
 
 		userGroupRoles.add(userGroupRole1);
 
-		UserGroupRole userGroupRole2 = mock(UserGroupRole.class);
+		UserGroupRole userGroupRole2 = Mockito.mock(UserGroupRole.class);
 
-		when(
+		Mockito.when(
 			userGroupRole2.getGroup()
 		).thenReturn(
 			group1
 		);
 
-		when(
+		Mockito.when(
 			userGroupRole2.getRole()
 		).thenReturn(
 			role2
@@ -506,15 +514,15 @@ public class DefaultAttributeResolverTest extends BaseSamlTestCase {
 
 		userGroupRoles.add(userGroupRole2);
 
-		UserGroupRole userGroupRole3 = mock(UserGroupRole.class);
+		UserGroupRole userGroupRole3 = Mockito.mock(UserGroupRole.class);
 
-		when(
+		Mockito.when(
 			userGroupRole3.getGroup()
 		).thenReturn(
 			group1
 		);
 
-		when(
+		Mockito.when(
 			userGroupRole3.getRole()
 		).thenReturn(
 			role3
@@ -522,7 +530,7 @@ public class DefaultAttributeResolverTest extends BaseSamlTestCase {
 
 		userGroupRoles.add(userGroupRole3);
 
-		when(
+		Mockito.when(
 			_userGroupRoleLocalService.getUserGroupRoles(Mockito.anyLong())
 		).thenReturn(
 			userGroupRoles
@@ -530,15 +538,16 @@ public class DefaultAttributeResolverTest extends BaseSamlTestCase {
 
 		List<UserGroupGroupRole> userGroupGroupRoles = new ArrayList<>();
 
-		UserGroupGroupRole userGroupGroupRole = mock(UserGroupGroupRole.class);
+		UserGroupGroupRole userGroupGroupRole = Mockito.mock(
+			UserGroupGroupRole.class);
 
-		when(
+		Mockito.when(
 			userGroupGroupRole.getGroup()
 		).thenReturn(
 			group1
 		);
 
-		when(
+		Mockito.when(
 			userGroupGroupRole.getRole()
 		).thenReturn(
 			role4
@@ -546,7 +555,7 @@ public class DefaultAttributeResolverTest extends BaseSamlTestCase {
 
 		userGroupGroupRoles.add(userGroupGroupRole);
 
-		when(
+		Mockito.when(
 			_userGroupGroupRoleLocalService.getUserGroupGroupRolesByUser(
 				Mockito.anyLong())
 		).thenReturn(
@@ -567,7 +576,7 @@ public class DefaultAttributeResolverTest extends BaseSamlTestCase {
 
 	@Test
 	public void testResolveStaticAttributes() throws Exception {
-		when(
+		Mockito.when(
 			_metadataManager.getAttributeNames(Mockito.eq(SP_ENTITY_ID))
 		).thenReturn(
 			new String[] {
@@ -591,42 +600,42 @@ public class DefaultAttributeResolverTest extends BaseSamlTestCase {
 
 	@Test
 	public void testResolveUserAttributes() throws Exception {
-		when(
+		Mockito.when(
 			_beanProperties.getObject(
 				Mockito.any(User.class), Mockito.eq("emailAddress"))
 		).thenReturn(
 			"test@liferay.com"
 		);
 
-		when(
+		Mockito.when(
 			_beanProperties.getObject(
 				Mockito.any(User.class), Mockito.eq("firstName"))
 		).thenReturn(
 			"Test"
 		);
 
-		when(
+		Mockito.when(
 			_beanProperties.getObject(
 				Mockito.any(User.class), Mockito.eq("lastName"))
 		).thenReturn(
 			"Test"
 		);
 
-		when(
+		Mockito.when(
 			_beanProperties.getObject(
 				Mockito.any(User.class), Mockito.eq("screenName"))
 		).thenReturn(
 			"test"
 		);
 
-		when(
+		Mockito.when(
 			_beanProperties.getObject(
 				Mockito.any(User.class), Mockito.eq("uuid"))
 		).thenReturn(
 			"xxxx-xxxx-xxx-xxxx"
 		);
 
-		when(
+		Mockito.when(
 			_metadataManager.getAttributeNames(Mockito.eq(SP_ENTITY_ID))
 		).thenReturn(
 			new String[] {
@@ -652,45 +661,45 @@ public class DefaultAttributeResolverTest extends BaseSamlTestCase {
 
 	@Test
 	public void testResolveUserGroupRolesAttributes() throws Exception {
-		when(
+		Mockito.when(
 			_metadataManager.getAttributeNames(Mockito.eq(SP_ENTITY_ID))
 		).thenReturn(
 			new String[] {"userGroupRoles"}
 		);
 
-		Group group1 = mock(Group.class);
+		Group group1 = Mockito.mock(Group.class);
 
-		when(
+		Mockito.when(
 			group1.getName()
 		).thenReturn(
 			"Group Test 1"
 		);
 
-		Role role1 = mock(Role.class);
+		Role role1 = Mockito.mock(Role.class);
 
-		when(
+		Mockito.when(
 			role1.getName()
 		).thenReturn(
 			"Role Test 1"
 		);
 
-		Role role2 = mock(Role.class);
+		Role role2 = Mockito.mock(Role.class);
 
-		when(
+		Mockito.when(
 			role2.getName()
 		).thenReturn(
 			"Role Test 2"
 		);
 
-		Role role3 = mock(Role.class);
+		Role role3 = Mockito.mock(Role.class);
 
-		when(
+		Mockito.when(
 			role3.getName()
 		).thenReturn(
 			"Org Role Test"
 		);
 
-		when(
+		Mockito.when(
 			role3.getType()
 		).thenReturn(
 			RoleConstants.TYPE_ORGANIZATION
@@ -698,15 +707,15 @@ public class DefaultAttributeResolverTest extends BaseSamlTestCase {
 
 		List<UserGroupRole> userGroupRoles = new ArrayList<>();
 
-		UserGroupRole userGroupRole1 = mock(UserGroupRole.class);
+		UserGroupRole userGroupRole1 = Mockito.mock(UserGroupRole.class);
 
-		when(
+		Mockito.when(
 			userGroupRole1.getGroup()
 		).thenReturn(
 			group1
 		);
 
-		when(
+		Mockito.when(
 			userGroupRole1.getRole()
 		).thenReturn(
 			role1
@@ -714,15 +723,15 @@ public class DefaultAttributeResolverTest extends BaseSamlTestCase {
 
 		userGroupRoles.add(userGroupRole1);
 
-		UserGroupRole userGroupRole2 = mock(UserGroupRole.class);
+		UserGroupRole userGroupRole2 = Mockito.mock(UserGroupRole.class);
 
-		when(
+		Mockito.when(
 			userGroupRole2.getGroup()
 		).thenReturn(
 			group1
 		);
 
-		when(
+		Mockito.when(
 			userGroupRole2.getRole()
 		).thenReturn(
 			role2
@@ -730,15 +739,15 @@ public class DefaultAttributeResolverTest extends BaseSamlTestCase {
 
 		userGroupRoles.add(userGroupRole2);
 
-		UserGroupRole userGroupRole3 = mock(UserGroupRole.class);
+		UserGroupRole userGroupRole3 = Mockito.mock(UserGroupRole.class);
 
-		when(
+		Mockito.when(
 			userGroupRole3.getGroup()
 		).thenReturn(
 			group1
 		);
 
-		when(
+		Mockito.when(
 			userGroupRole3.getRole()
 		).thenReturn(
 			role3
@@ -746,7 +755,7 @@ public class DefaultAttributeResolverTest extends BaseSamlTestCase {
 
 		userGroupRoles.add(userGroupRole3);
 
-		when(
+		Mockito.when(
 			_userGroupRoleLocalService.getUserGroupRoles(Mockito.anyLong())
 		).thenReturn(
 			userGroupRoles
@@ -767,7 +776,7 @@ public class DefaultAttributeResolverTest extends BaseSamlTestCase {
 
 	@Test
 	public void testResolveUserGroupsAttributes() throws Exception {
-		when(
+		Mockito.when(
 			_metadataManager.getAttributeNames(Mockito.eq(SP_ENTITY_ID))
 		).thenReturn(
 			new String[] {"userGroups"}
@@ -775,9 +784,9 @@ public class DefaultAttributeResolverTest extends BaseSamlTestCase {
 
 		List<UserGroup> userGroups = new ArrayList<>();
 
-		UserGroup userGroup1 = mock(UserGroup.class);
+		UserGroup userGroup1 = Mockito.mock(UserGroup.class);
 
-		when(
+		Mockito.when(
 			userGroup1.getName()
 		).thenReturn(
 			"Test 1"
@@ -785,9 +794,9 @@ public class DefaultAttributeResolverTest extends BaseSamlTestCase {
 
 		userGroups.add(userGroup1);
 
-		UserGroup userGroup2 = mock(UserGroup.class);
+		UserGroup userGroup2 = Mockito.mock(UserGroup.class);
 
-		when(
+		Mockito.when(
 			userGroup2.getName()
 		).thenReturn(
 			"Test 2"
@@ -795,7 +804,7 @@ public class DefaultAttributeResolverTest extends BaseSamlTestCase {
 
 		userGroups.add(userGroup2);
 
-		when(
+		Mockito.when(
 			_user.getUserGroups()
 		).thenReturn(
 			userGroups

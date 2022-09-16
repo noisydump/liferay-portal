@@ -21,7 +21,7 @@ public interface WebCachePool {
 
 	public void clear();
 
-	public Object get(String key, WebCacheItem wci);
+	public Object get(String key, WebCacheItem webCacheItem);
 
 	public void remove(String key);
 

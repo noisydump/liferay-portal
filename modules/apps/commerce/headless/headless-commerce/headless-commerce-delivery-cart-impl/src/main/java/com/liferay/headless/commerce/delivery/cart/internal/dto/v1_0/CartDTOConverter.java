@@ -19,17 +19,19 @@ import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.model.CommerceMoney;
 import com.liferay.commerce.currency.util.CommercePriceFormatter;
 import com.liferay.commerce.model.CommerceOrder;
+import com.liferay.commerce.model.CommerceOrderType;
 import com.liferay.commerce.payment.engine.CommercePaymentEngine;
 import com.liferay.commerce.pricing.constants.CommercePricingConstants;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.service.CommerceOrderItemService;
 import com.liferay.commerce.service.CommerceOrderService;
+import com.liferay.commerce.service.CommerceOrderTypeService;
 import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.headless.commerce.delivery.cart.dto.v1_0.Cart;
 import com.liferay.headless.commerce.delivery.cart.dto.v1_0.Status;
 import com.liferay.headless.commerce.delivery.cart.dto.v1_0.Summary;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.language.LanguageResources;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
@@ -51,7 +53,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	enabled = false,
-	property = "model.class.name=com.liferay.headless.commerce.delivery.cart.dto.v1_0.Cart",
+	property = "dto.class.name=com.liferay.headless.commerce.delivery.cart.dto.v1_0.Cart",
 	service = {CartDTOConverter.class, DTOConverter.class}
 )
 public class CartDTOConverter implements DTOConverter<CommerceOrder, Cart> {
@@ -79,7 +81,7 @@ public class CartDTOConverter implements DTOConverter<CommerceOrder, Cart> {
 			CommerceOrderConstants.getOrderStatusLabel(
 				commerceOrder.getOrderStatus());
 
-		String commerceOrderStatusLabelI18n = LanguageUtil.get(
+		String commerceOrderStatusLabelI18n = _language.get(
 			resourceBundle,
 			CommerceOrderConstants.getOrderStatusLabel(
 				commerceOrder.getOrderStatus()));
@@ -87,7 +89,7 @@ public class CartDTOConverter implements DTOConverter<CommerceOrder, Cart> {
 		String commerceOrderWorkflowStatusLabel =
 			WorkflowConstants.getStatusLabel(commerceOrder.getStatus());
 
-		String commerceOrderWorkflowStatusLabelI18n = LanguageUtil.get(
+		String commerceOrderWorkflowStatusLabelI18n = _language.get(
 			resourceBundle,
 			WorkflowConstants.getStatusLabel(commerceOrder.getStatus()));
 
@@ -95,7 +97,7 @@ public class CartDTOConverter implements DTOConverter<CommerceOrder, Cart> {
 			CommerceOrderConstants.getPaymentStatusLabel(
 				commerceOrder.getPaymentStatus());
 
-		String commerceOrderPaymentStatusLabelI18n = LanguageUtil.get(
+		String commerceOrderPaymentStatusLabelI18n = _language.get(
 			resourceBundle,
 			CommerceOrderConstants.getPaymentStatusLabel(
 				commerceOrder.getPaymentStatus()));
@@ -115,6 +117,10 @@ public class CartDTOConverter implements DTOConverter<CommerceOrder, Cart> {
 				orderStatusInfo = _getOrderStatusInfo(
 					commerceOrder.getOrderStatus(), commerceOrderStatusLabel,
 					commerceOrderStatusLabelI18n);
+				orderTypeExternalReferenceCode =
+					_getOrderTypeExternalReferenceCode(
+						commerceOrder.getCommerceOrderTypeId());
+				orderTypeId = commerceOrder.getCommerceOrderTypeId();
 				orderUUID = commerceOrder.getUuid();
 				paymentMethod = commerceOrder.getCommercePaymentMethodKey();
 				paymentStatus = commerceOrder.getPaymentStatus();
@@ -128,7 +134,7 @@ public class CartDTOConverter implements DTOConverter<CommerceOrder, Cart> {
 				shippingAddressId = commerceOrder.getShippingAddressId();
 				status = commerceOrderWorkflowStatusLabel;
 				summary = _getSummary(commerceOrder, locale);
-				workflowStatusInfo = _getWorkflowStatusInfo(
+				workflowStatusInfo = _toStatus(
 					commerceOrder.getStatus(), commerceOrderWorkflowStatusLabel,
 					commerceOrderWorkflowStatusLabelI18n);
 			}
@@ -183,6 +189,20 @@ public class CartDTOConverter implements DTOConverter<CommerceOrder, Cart> {
 				label_i18n = commerceOrderStatusLabelI18n;
 			}
 		};
+	}
+
+	private String _getOrderTypeExternalReferenceCode(long commerceOrderTypeId)
+		throws Exception {
+
+		CommerceOrderType commerceOrderType =
+			_commerceOrderTypeService.fetchCommerceOrderType(
+				commerceOrderTypeId);
+
+		if (commerceOrderType == null) {
+			return null;
+		}
+
+		return commerceOrderType.getExternalReferenceCode();
 	}
 
 	private Status _getPaymentStatusInfo(
@@ -296,19 +316,6 @@ public class CartDTOConverter implements DTOConverter<CommerceOrder, Cart> {
 			commerceChannel.getPriceDisplayType(), summary);
 
 		return summary;
-	}
-
-	private Status _getWorkflowStatusInfo(
-		int orderStatus, String commerceOrderWorkflowStatusLabel,
-		String commerceOrderWorkflowStatusLabelI18n) {
-
-		return new Status() {
-			{
-				code = orderStatus;
-				label = commerceOrderWorkflowStatusLabel;
-				label_i18n = commerceOrderWorkflowStatusLabelI18n;
-			}
-		};
 	}
 
 	private void _setShippingDiscountOnSummary(
@@ -472,6 +479,19 @@ public class CartDTOConverter implements DTOConverter<CommerceOrder, Cart> {
 			_formatPrice(totalDiscountAmount, commerceCurrency, locale));
 	}
 
+	private Status _toStatus(
+		int orderStatus, String commerceOrderWorkflowStatusLabel,
+		String commerceOrderWorkflowStatusLabelI18n) {
+
+		return new Status() {
+			{
+				code = orderStatus;
+				label = commerceOrderWorkflowStatusLabel;
+				label_i18n = commerceOrderWorkflowStatusLabelI18n;
+			}
+		};
+	}
+
 	@Reference
 	private CommerceChannelLocalService _commerceChannelLocalService;
 
@@ -482,9 +502,15 @@ public class CartDTOConverter implements DTOConverter<CommerceOrder, Cart> {
 	private CommerceOrderService _commerceOrderService;
 
 	@Reference
+	private CommerceOrderTypeService _commerceOrderTypeService;
+
+	@Reference
 	private CommercePaymentEngine _commercePaymentEngine;
 
 	@Reference
 	private CommercePriceFormatter _commercePriceFormatter;
+
+	@Reference
+	private Language _language;
 
 }

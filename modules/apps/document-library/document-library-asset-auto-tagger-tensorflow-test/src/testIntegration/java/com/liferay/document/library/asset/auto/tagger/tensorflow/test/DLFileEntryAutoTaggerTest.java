@@ -36,7 +36,7 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.FileUtil;
-import com.liferay.portal.kernel.util.HashMapDictionary;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
@@ -72,16 +72,16 @@ public class DLFileEntryAutoTaggerTest {
 
 	@Test
 	public void testAutoTagsABMPImage() throws Exception {
-		_withTensorflowAutoTagProviderEnabled(
+		_withTensorFlowAutoTagProviderEnabled(
 			() -> {
 				FileEntry fileEntry = DLAppServiceUtil.addFileEntry(
-					_serviceContext.getScopeGroupId(),
+					null, _serviceContext.getScopeGroupId(),
 					DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 					"indigobunting.bmp", ContentTypes.IMAGE_BMP,
 					"indigobunting", StringUtil.randomString(),
-					StringUtil.randomString(),
-					FileUtil.getBytes(getClass(), "indigobunting.bmp"),
-					_serviceContext);
+					StringUtil.randomString(), StringUtil.randomString(),
+					FileUtil.getBytes(getClass(), "indigobunting.bmp"), null,
+					null, _serviceContext);
 
 				AssetEntry assetEntry = _assetEntryLocalService.getEntry(
 					DLFileEntryConstants.getClassName(),
@@ -93,14 +93,15 @@ public class DLFileEntryAutoTaggerTest {
 
 	@Test
 	public void testAutoTagsAJPEGImage() throws Exception {
-		_withTensorflowAutoTagProviderEnabled(
+		_withTensorFlowAutoTagProviderEnabled(
 			() -> {
 				FileEntry fileEntry = DLAppServiceUtil.addFileEntry(
-					_serviceContext.getScopeGroupId(),
+					null, _serviceContext.getScopeGroupId(),
 					DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, "goldfinch.jpg",
 					ContentTypes.IMAGE_JPEG, "goldfinch",
 					StringUtil.randomString(), StringUtil.randomString(),
-					FileUtil.getBytes(getClass(), "goldfinch.jpg"),
+					StringUtil.randomString(),
+					FileUtil.getBytes(getClass(), "goldfinch.jpg"), null, null,
 					_serviceContext);
 
 				AssetEntry assetEntry = _assetEntryLocalService.getEntry(
@@ -113,15 +114,16 @@ public class DLFileEntryAutoTaggerTest {
 
 	@Test
 	public void testAutoTagsAPNGImage() throws Exception {
-		_withTensorflowAutoTagProviderEnabled(
+		_withTensorFlowAutoTagProviderEnabled(
 			() -> {
 				FileEntry fileEntry = DLAppServiceUtil.addFileEntry(
-					_serviceContext.getScopeGroupId(),
+					null, _serviceContext.getScopeGroupId(),
 					DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 					"hummingbird.png", ContentTypes.IMAGE_PNG, "hummingbird",
 					StringUtil.randomString(), StringUtil.randomString(),
-					FileUtil.getBytes(getClass(), "hummingbird.png"),
-					_serviceContext);
+					StringUtil.randomString(),
+					FileUtil.getBytes(getClass(), "hummingbird.png"), null,
+					null, _serviceContext);
 
 				AssetEntry assetEntry = _assetEntryLocalService.getEntry(
 					DLFileEntryConstants.getClassName(),
@@ -141,22 +143,23 @@ public class DLFileEntryAutoTaggerTest {
 		throw new AssertionError("The asset entry was not tagged with " + tag);
 	}
 
-	private void _withTensorflowAutoTagProviderEnabled(
+	private void _withTensorFlowAutoTagProviderEnabled(
 			UnsafeRunnable<Exception> unsafeRunnable)
 		throws Exception {
 
-		StringBundler sb = new StringBundler(3);
-
-		sb.append("com.liferay.document.library.asset.auto.tagger.tensorflow.");
-		sb.append("internal.configuration.");
-		sb.append("TensorFlowImageAssetAutoTagProviderCompanyConfiguration");
-
-		Dictionary<String, Object> dictionary = new HashMapDictionary<>();
-
-		dictionary.put("enabled", true);
+		Dictionary<String, Object> dictionary =
+			HashMapDictionaryBuilder.<String, Object>put(
+				"enabled", true
+			).build();
 
 		try (ConfigurationTemporarySwapper configurationTemporarySwapper =
-				new ConfigurationTemporarySwapper(sb.toString(), dictionary)) {
+				new ConfigurationTemporarySwapper(
+					StringBundler.concat(
+						"com.liferay.document.library.asset.auto.tagger.",
+						"tensorflow.internal.configuration.",
+						"TensorFlowImageAssetAutoTagProviderCompany",
+						"Configuration"),
+					dictionary)) {
 
 			unsafeRunnable.run();
 		}

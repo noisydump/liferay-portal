@@ -27,12 +27,12 @@ if (Validator.isNull(id) && (searchContainer != null)) {
 	id = id.concat("PageIterator");
 }
 
+String markupView = (String)request.getAttribute("liferay-ui:search:markupView");
 String type = (String)request.getAttribute("liferay-ui:search:type");
 
 PortletURL iteratorURL = searchContainer.getIteratorURL();
 
 if (iteratorURL != null) {
-	iteratorURL.setParameter(searchContainer.getCurParam(), (String)null);
 	iteratorURL.setParameter("resetCur", Boolean.FALSE.toString());
 }
 %>
@@ -46,6 +46,7 @@ if (iteratorURL != null) {
 		deltaParam="<%= searchContainer.getDeltaParam() %>"
 		forcePost="<%= searchContainer.isForcePost() %>"
 		id="<%= id %>"
+		markupView="<%= markupView %>"
 		maxPages="<%= PropsValues.SEARCH_CONTAINER_PAGE_ITERATOR_MAX_PAGES %>"
 		portletURL="<%= iteratorURL %>"
 		total="<%= searchContainer.getTotal() %>"

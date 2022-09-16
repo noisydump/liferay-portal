@@ -166,12 +166,10 @@ public class RepositoryStagedModelDataHandler
 				if (existingRepository == null) {
 					serviceContext.setUuid(repository.getUuid());
 
-					long repositoryClassNameId = _getRepositoryClassNameId(
-						repositoryElement, repository.getClassNameId());
-
 					importedRepository = _repositoryLocalService.addRepository(
 						userId, portletDataContext.getScopeGroupId(),
-						repositoryClassNameId,
+						_getRepositoryClassNameId(
+							repositoryElement, repository.getClassNameId()),
 						DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 						repository.getName(), repository.getDescription(),
 						repository.getPortletId(),
@@ -187,12 +185,10 @@ public class RepositoryStagedModelDataHandler
 				}
 			}
 			else if (existingRepository == null) {
-				long repositoryClassNameId = _getRepositoryClassNameId(
-					repositoryElement, repository.getClassNameId());
-
 				importedRepository = _repositoryLocalService.addRepository(
 					userId, portletDataContext.getScopeGroupId(),
-					repositoryClassNameId,
+					_getRepositoryClassNameId(
+						repositoryElement, repository.getClassNameId()),
 					DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 					repository.getName(), repository.getDescription(),
 					repository.getPortletId(),
@@ -202,22 +198,23 @@ public class RepositoryStagedModelDataHandler
 			else {
 				importedRepository = existingRepository;
 			}
+
+			portletDataContext.importClassedModel(
+				repository, importedRepository);
+
+			StagedModelDataHandlerUtil.importReferenceStagedModels(
+				portletDataContext, repository, RepositoryEntry.class);
 		}
 		catch (Exception exception) {
-			if (_log.isWarnEnabled()) {
-				_log.warn(
-					StringBundler.concat(
-						"Unable to connect to repository {name=",
-						repository.getName(), ", typeSettings=",
-						repository.getTypeSettingsProperties(), "}"),
-					exception);
-			}
+			_log.error(
+				StringBundler.concat(
+					"Unable to connect to repository {name=",
+					repository.getName(), ", typeSettings=",
+					repository.getTypeSettingsProperties(), "}"),
+				exception);
+
+			throw exception;
 		}
-
-		portletDataContext.importClassedModel(repository, importedRepository);
-
-		StagedModelDataHandlerUtil.importReferenceStagedModels(
-			portletDataContext, repository, RepositoryEntry.class);
 	}
 
 	@Override

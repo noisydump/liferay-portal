@@ -22,9 +22,12 @@ import com.liferay.dynamic.data.mapping.model.DDMFormFieldValidationExpression;
 import com.liferay.dynamic.data.mapping.util.DDMFormFactory;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
+import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoaderUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.Locale;
 import java.util.Map;
@@ -32,28 +35,28 @@ import java.util.ResourceBundle;
 import java.util.Set;
 
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-import org.mockito.Matchers;
-
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.mockito.Mockito;
 
 /**
  * @author Leonardo Barros
  */
-@PrepareForTest(ResourceBundleUtil.class)
-@RunWith(PowerMockRunner.class)
 public class DDMRESTDataProviderSettingsTest {
 
-	@Before
-	public void setUp() {
-		setUpLanguageUtil();
-		setUpPortalUtil();
-		setUpResourceBundleUtil();
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
+	@BeforeClass
+	public static void setUpClass() {
+		_setUpLanguageUtil();
+		_setUpPortalUtil();
+		_setUpResourceBundleUtil();
 	}
 
 	@Test
@@ -66,23 +69,58 @@ public class DDMRESTDataProviderSettingsTest {
 
 		Assert.assertEquals(ddmFormFields.toString(), 12, ddmFormFields.size());
 
-		assertCacheable(ddmFormFields.get("cacheable"));
-		assertFilterable(ddmFormFields.get("filterable"));
-		assertFilterParameterName(ddmFormFields.get("filterParameterName"));
-		assertInputParameters(ddmFormFields.get("inputParameters"));
-		assertOutputParameters(ddmFormFields.get("outputParameters"));
-		assertPagination(ddmFormFields.get("pagination"));
-		assertPaginationEndParameterName(
+		_assertCacheable(ddmFormFields.get("cacheable"));
+		_assertFilterable(ddmFormFields.get("filterable"));
+		_assertFilterParameterName(ddmFormFields.get("filterParameterName"));
+		_assertInputParameters(ddmFormFields.get("inputParameters"));
+		_assertOutputParameters(ddmFormFields.get("outputParameters"));
+		_assertPagination(ddmFormFields.get("pagination"));
+		_assertPaginationEndParameterName(
 			ddmFormFields.get("paginationEndParameterName"));
-		assertPassword(ddmFormFields.get("password"));
-		assertStartPaginationParameterName(
+		_assertPassword(ddmFormFields.get("password"));
+		_assertStartPaginationParameterName(
 			ddmFormFields.get("paginationStartParameterName"));
-		assertTimeout(ddmFormFields.get("timeout"));
-		assertURL(ddmFormFields.get("url"));
-		assertUsername(ddmFormFields.get("username"));
+		_assertTimeout(ddmFormFields.get("timeout"));
+		_assertURL(ddmFormFields.get("url"));
+		_assertUsername(ddmFormFields.get("username"));
 	}
 
-	protected void assertCacheable(DDMFormField ddmFormField) {
+	private static void _setUpLanguageUtil() {
+		LanguageUtil languageUtil = new LanguageUtil();
+
+		languageUtil.setLanguage(Mockito.mock(Language.class));
+	}
+
+	private static void _setUpPortalUtil() {
+		PortalUtil portalUtil = new PortalUtil();
+
+		Portal portal = Mockito.mock(Portal.class);
+		ResourceBundle resourceBundle = Mockito.mock(ResourceBundle.class);
+
+		Mockito.when(
+			portal.getResourceBundle(Mockito.any(Locale.class))
+		).thenReturn(
+			resourceBundle
+		);
+
+		portalUtil.setPortal(portal);
+	}
+
+	private static void _setUpResourceBundleUtil() {
+		ResourceBundleLoader resourceBundleLoader = Mockito.mock(
+			ResourceBundleLoader.class);
+
+		ResourceBundleLoaderUtil.setPortalResourceBundleLoader(
+			resourceBundleLoader);
+
+		Mockito.when(
+			resourceBundleLoader.loadResourceBundle(Mockito.any(Locale.class))
+		).thenReturn(
+			ResourceBundleUtil.EMPTY_RESOURCE_BUNDLE
+		);
+	}
+
+	private void _assertCacheable(DDMFormField ddmFormField) {
 		Assert.assertNotNull(ddmFormField);
 
 		Assert.assertEquals("boolean", ddmFormField.getDataType());
@@ -90,7 +128,7 @@ public class DDMRESTDataProviderSettingsTest {
 		Assert.assertEquals("checkbox", ddmFormField.getType());
 	}
 
-	protected void assertFilterable(DDMFormField ddmFormField) {
+	private void _assertFilterable(DDMFormField ddmFormField) {
 		Assert.assertNotNull(ddmFormField);
 
 		Assert.assertEquals("boolean", ddmFormField.getDataType());
@@ -98,7 +136,7 @@ public class DDMRESTDataProviderSettingsTest {
 		Assert.assertEquals("checkbox", ddmFormField.getType());
 	}
 
-	protected void assertFilterParameterName(DDMFormField ddmFormField) {
+	private void _assertFilterParameterName(DDMFormField ddmFormField) {
 		Assert.assertNotNull(ddmFormField);
 
 		Assert.assertEquals("string", ddmFormField.getDataType());
@@ -111,7 +149,7 @@ public class DDMRESTDataProviderSettingsTest {
 		Assert.assertEquals("text", ddmFormField.getType());
 	}
 
-	protected void assertInputParameters(DDMFormField ddmFormField) {
+	private void _assertInputParameters(DDMFormField ddmFormField) {
 		Assert.assertNotNull(ddmFormField);
 
 		Assert.assertEquals("", ddmFormField.getDataType());
@@ -197,7 +235,7 @@ public class DDMRESTDataProviderSettingsTest {
 			"boolean", inputParameterRequiredDDMFormField.getDataType());
 	}
 
-	protected void assertOutputParameters(DDMFormField ddmFormField) {
+	private void _assertOutputParameters(DDMFormField ddmFormField) {
 		Assert.assertNotNull(ddmFormField);
 
 		Assert.assertEquals("", ddmFormField.getDataType());
@@ -272,7 +310,7 @@ public class DDMRESTDataProviderSettingsTest {
 			optionsValues.toString(), optionsValues.contains("number"));
 	}
 
-	protected void assertPagination(DDMFormField ddmFormField) {
+	private void _assertPagination(DDMFormField ddmFormField) {
 		Assert.assertNotNull(ddmFormField);
 
 		Assert.assertEquals("boolean", ddmFormField.getDataType());
@@ -280,14 +318,14 @@ public class DDMRESTDataProviderSettingsTest {
 		Assert.assertEquals("checkbox", ddmFormField.getType());
 	}
 
-	protected void assertPaginationEndParameterName(DDMFormField ddmFormField) {
+	private void _assertPaginationEndParameterName(DDMFormField ddmFormField) {
 		Assert.assertNotNull(ddmFormField);
 
 		Assert.assertEquals("string", ddmFormField.getDataType());
 		Assert.assertEquals("text", ddmFormField.getType());
 	}
 
-	protected void assertPassword(DDMFormField ddmFormField) {
+	private void _assertPassword(DDMFormField ddmFormField) {
 		Assert.assertNotNull(ddmFormField);
 
 		Assert.assertEquals("string", ddmFormField.getDataType());
@@ -300,7 +338,7 @@ public class DDMRESTDataProviderSettingsTest {
 		Assert.assertEquals("password", ddmFormField.getType());
 	}
 
-	protected void assertStartPaginationParameterName(
+	private void _assertStartPaginationParameterName(
 		DDMFormField ddmFormField) {
 
 		Assert.assertNotNull(ddmFormField);
@@ -309,7 +347,7 @@ public class DDMRESTDataProviderSettingsTest {
 		Assert.assertEquals("text", ddmFormField.getType());
 	}
 
-	protected void assertTimeout(DDMFormField ddmFormField) {
+	private void _assertTimeout(DDMFormField ddmFormField) {
 		Assert.assertNotNull(ddmFormField);
 
 		Assert.assertTrue(ddmFormField.isRequired());
@@ -333,7 +371,7 @@ public class DDMRESTDataProviderSettingsTest {
 		Assert.assertEquals("numeric", ddmFormField.getType());
 	}
 
-	protected void assertURL(DDMFormField ddmFormField) {
+	private void _assertURL(DDMFormField ddmFormField) {
 		Assert.assertNotNull(ddmFormField);
 
 		Assert.assertTrue(ddmFormField.isRequired());
@@ -347,7 +385,7 @@ public class DDMRESTDataProviderSettingsTest {
 		Assert.assertEquals("text", ddmFormField.getType());
 	}
 
-	protected void assertUsername(DDMFormField ddmFormField) {
+	private void _assertUsername(DDMFormField ddmFormField) {
 		Assert.assertNotNull(ddmFormField);
 
 		Assert.assertEquals("string", ddmFormField.getDataType());
@@ -358,54 +396,6 @@ public class DDMRESTDataProviderSettingsTest {
 		Assert.assertTrue(properties.containsKey("tooltip"));
 
 		Assert.assertEquals("text", ddmFormField.getType());
-	}
-
-	protected void assertValue(DDMFormField ddmFormField) {
-		Assert.assertNotNull(ddmFormField);
-
-		Assert.assertTrue(ddmFormField.isRequired());
-
-		Assert.assertEquals("string", ddmFormField.getDataType());
-
-		Map<String, Object> properties = ddmFormField.getProperties();
-
-		Assert.assertTrue(properties.containsKey("placeholder"));
-		Assert.assertTrue(properties.containsKey("tooltip"));
-
-		Assert.assertEquals("text", ddmFormField.getType());
-	}
-
-	protected void setUpLanguageUtil() {
-		LanguageUtil languageUtil = new LanguageUtil();
-
-		languageUtil.setLanguage(PowerMockito.mock(Language.class));
-	}
-
-	protected void setUpPortalUtil() {
-		PortalUtil portalUtil = new PortalUtil();
-
-		Portal portal = PowerMockito.mock(Portal.class);
-		ResourceBundle resourceBundle = PowerMockito.mock(ResourceBundle.class);
-
-		PowerMockito.when(
-			portal.getResourceBundle(Matchers.any(Locale.class))
-		).thenReturn(
-			resourceBundle
-		);
-
-		portalUtil.setPortal(portal);
-	}
-
-	protected void setUpResourceBundleUtil() {
-		PowerMockito.mockStatic(ResourceBundleUtil.class);
-
-		PowerMockito.when(
-			ResourceBundleUtil.getBundle(
-				Matchers.anyString(), Matchers.any(Locale.class),
-				Matchers.any(ClassLoader.class))
-		).thenReturn(
-			ResourceBundleUtil.EMPTY_RESOURCE_BUNDLE
-		);
 	}
 
 }

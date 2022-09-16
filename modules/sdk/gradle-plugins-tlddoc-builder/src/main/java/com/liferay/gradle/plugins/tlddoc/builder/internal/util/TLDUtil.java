@@ -16,6 +16,7 @@ package com.liferay.gradle.plugins.tlddoc.builder.internal.util;
 
 import java.io.File;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -48,10 +49,39 @@ public class TLDUtil {
 			return;
 		}
 
+		Map<String, File> definitionFiles = _getDefinitionFiles(tldFile);
 		Document document = _getDocument(tldFile);
 
-		_scanDTD(document, dtdConsumer);
-		_scanXSD(document, xsdConsumer);
+		_scanDTD(document, definitionFiles, dtdConsumer);
+		_scanXSD(document, definitionFiles, xsdConsumer);
+	}
+
+	private static Map<String, File> _getDefinitionFiles(File tldFile) {
+		if (!_portalDefinitions.isEmpty()) {
+			return _portalDefinitions;
+		}
+
+		File tldDir = tldFile.getParentFile();
+
+		if (tldDir == null) {
+			return Collections.emptyMap();
+		}
+
+		File definitionFilesDir = new File(tldDir, "definitions");
+
+		if (!definitionFilesDir.exists()) {
+			return Collections.emptyMap();
+		}
+
+		Map<String, File> definitionFiles = new HashMap<>();
+
+		for (File definitionFile : definitionFilesDir.listFiles()) {
+			String definitionFileName = definitionFile.getName();
+
+			definitionFiles.put(definitionFileName, definitionFile);
+		}
+
+		return definitionFiles;
 	}
 
 	private static Document _getDocument(File file) throws Exception {
@@ -79,7 +109,8 @@ public class TLDUtil {
 	}
 
 	private static void _scanDTD(
-		Document document, BiConsumer<String, File> dtdConsumer) {
+		Document document, Map<String, File> definitionFiles,
+		BiConsumer<String, File> dtdConsumer) {
 
 		DocumentType documentType = document.getDoctype();
 
@@ -101,7 +132,7 @@ public class TLDUtil {
 
 		String definitionFileName = _getFileName(systemId);
 
-		File dtdFile = _portalDefinitions.get(definitionFileName);
+		File dtdFile = definitionFiles.get(definitionFileName);
 
 		if (dtdFile == null) {
 			return;
@@ -110,7 +141,8 @@ public class TLDUtil {
 		dtdConsumer.accept(publicId, dtdFile);
 	}
 
-	private static Map<String, File> _scanNestedXSD(File xsdFile)
+	private static Map<String, File> _scanNestedXSD(
+			File xsdFile, Map<String, File> definitionFiles)
 		throws Exception {
 
 		Map<String, File> nestedXSDs = new HashMap<>();
@@ -152,7 +184,7 @@ public class TLDUtil {
 					continue;
 				}
 
-				File curDefinitionFile = _portalDefinitions.get(
+				File curDefinitionFile = definitionFiles.get(
 					_getFileName(schemaLocation));
 
 				if (curDefinitionFile == null) {
@@ -185,7 +217,7 @@ public class TLDUtil {
 					continue;
 				}
 
-				File curDefinitionFile = _portalDefinitions.get(
+				File curDefinitionFile = definitionFiles.get(
 					_getFileName(schemaLocation));
 
 				if (curDefinitionFile == null) {
@@ -200,7 +232,8 @@ public class TLDUtil {
 	}
 
 	private static void _scanXSD(
-			Document document, BiConsumer<String, File> xsdConsumer)
+			Document document, Map<String, File> definitionFiles,
+			BiConsumer<String, File> xsdConsumer)
 		throws Exception {
 
 		Node rootNode = document.getDocumentElement();
@@ -229,7 +262,7 @@ public class TLDUtil {
 		for (int i = 0; i < values.length; i += 2) {
 			String definitionFileName = _getFileName(values[i + 1]);
 
-			File xsdFile = _portalDefinitions.get(definitionFileName);
+			File xsdFile = definitionFiles.get(definitionFileName);
 
 			if (xsdFile == null) {
 				return;
@@ -241,7 +274,7 @@ public class TLDUtil {
 				xsdFile,
 				keyXSDFile -> {
 					try {
-						return _scanNestedXSD(keyXSDFile);
+						return _scanNestedXSD(keyXSDFile, definitionFiles);
 					}
 					catch (Exception exception) {
 						throw new RuntimeException(exception);
@@ -266,11 +299,13 @@ public class TLDUtil {
 				String gradleUserHome = System.getProperty("gradle.user.home");
 
 				if (gradleUserHome != null) {
-					File definitionsDir = new File(
+					File definitionFilesDir = new File(
 						gradleUserHome, "/../definitions");
 
-					if (definitionsDir.exists()) {
-						for (File definitionFile : definitionsDir.listFiles()) {
+					if (definitionFilesDir.exists()) {
+						for (File definitionFile :
+								definitionFilesDir.listFiles()) {
+
 							String definitionFileName =
 								definitionFile.getName();
 

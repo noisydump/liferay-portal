@@ -16,7 +16,7 @@ package com.liferay.fragment.web.internal.portlet.action;
 
 import com.liferay.fragment.constants.FragmentPortletKeys;
 import com.liferay.fragment.service.FragmentCompositionService;
-import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -24,7 +24,6 @@ import com.liferay.portal.kernel.util.Portal;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
-import javax.portlet.PortletURL;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -48,24 +47,25 @@ public class MoveFragmentCompositionMVCActionCommand
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
 
-		long fragmentCompositionId = ParamUtil.getLong(
-			actionRequest, "fragmentCompositionId");
+		sendRedirect(
+			actionRequest, actionResponse,
+			PortletURLBuilder.createRenderURL(
+				_portal.getLiferayPortletResponse(actionResponse)
+			).setParameter(
+				"fragmentCollectionId",
+				() -> {
+					long fragmentCompositionId = ParamUtil.getLong(
+						actionRequest, "fragmentCompositionId");
 
-		long fragmentCollectionId = ParamUtil.getLong(
-			actionRequest, "fragmentCollectionId");
+					long fragmentCollectionId = ParamUtil.getLong(
+						actionRequest, "fragmentCollectionId");
 
-		_fragmentCompositionService.moveFragmentComposition(
-			fragmentCompositionId, fragmentCollectionId);
+					_fragmentCompositionService.moveFragmentComposition(
+						fragmentCompositionId, fragmentCollectionId);
 
-		LiferayPortletResponse liferayPortletResponse =
-			_portal.getLiferayPortletResponse(actionResponse);
-
-		PortletURL redirectURL = liferayPortletResponse.createRenderURL();
-
-		redirectURL.setParameter(
-			"fragmentCollectionId", String.valueOf(fragmentCollectionId));
-
-		sendRedirect(actionRequest, actionResponse, redirectURL.toString());
+					return fragmentCollectionId;
+				}
+			).buildString());
 	}
 
 	@Reference

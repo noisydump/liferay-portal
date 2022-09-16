@@ -26,18 +26,21 @@ import com.liferay.portal.kernel.model.impl.BaseModelImpl;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -95,14 +98,14 @@ public class CTSchemaVersionModelImpl
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long COMPANYID_COLUMN_BITMASK = 1L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *		#getColumnBitmask(String)
+	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long SCHEMAVERSIONID_COLUMN_BITMASK = 2L;
@@ -204,34 +207,6 @@ public class CTSchemaVersionModelImpl
 		getAttributeSetterBiConsumers() {
 
 		return _attributeSetterBiConsumers;
-	}
-
-	private static Function<InvocationHandler, CTSchemaVersion>
-		_getProxyProviderFunction() {
-
-		Class<?> proxyClass = ProxyUtil.getProxyClass(
-			CTSchemaVersion.class.getClassLoader(), CTSchemaVersion.class,
-			ModelWrapper.class);
-
-		try {
-			Constructor<CTSchemaVersion> constructor =
-				(Constructor<CTSchemaVersion>)proxyClass.getConstructor(
-					InvocationHandler.class);
-
-			return invocationHandler -> {
-				try {
-					return constructor.newInstance(invocationHandler);
-				}
-				catch (ReflectiveOperationException
-							reflectiveOperationException) {
-
-					throw new InternalError(reflectiveOperationException);
-				}
-			};
-		}
-		catch (NoSuchMethodException noSuchMethodException) {
-			throw new InternalError(noSuchMethodException);
-		}
 	}
 
 	private static final Map<String, Function<CTSchemaVersion, Object>>
@@ -355,7 +330,9 @@ public class CTSchemaVersionModelImpl
 		for (Map.Entry<String, Object> entry :
 				_columnOriginalValues.entrySet()) {
 
-			if (entry.getValue() != getColumnValue(entry.getKey())) {
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
 				_columnBitmask |= _columnBitmasks.get(entry.getKey());
 			}
 		}
@@ -401,6 +378,22 @@ public class CTSchemaVersionModelImpl
 		ctSchemaVersionImpl.setSchemaContext(getSchemaContext());
 
 		ctSchemaVersionImpl.resetOriginalValues();
+
+		return ctSchemaVersionImpl;
+	}
+
+	@Override
+	public CTSchemaVersion cloneWithOriginalValues() {
+		CTSchemaVersionImpl ctSchemaVersionImpl = new CTSchemaVersionImpl();
+
+		ctSchemaVersionImpl.setMvccVersion(
+			this.<Long>getColumnOriginalValue("mvccVersion"));
+		ctSchemaVersionImpl.setSchemaVersionId(
+			this.<Long>getColumnOriginalValue("schemaVersionId"));
+		ctSchemaVersionImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		ctSchemaVersionImpl.setSchemaContext(
+			this.<Map>getColumnOriginalValue("schemaContext"));
 
 		return ctSchemaVersionImpl;
 	}
@@ -502,7 +495,7 @@ public class CTSchemaVersionModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			(4 * attributeGetterFunctions.size()) + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -513,9 +506,26 @@ public class CTSchemaVersionModelImpl
 			Function<CTSchemaVersion, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((CTSchemaVersion)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply((CTSchemaVersion)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -562,7 +572,9 @@ public class CTSchemaVersionModelImpl
 	private static class EscapedModelProxyProviderFunctionHolder {
 
 		private static final Function<InvocationHandler, CTSchemaVersion>
-			_escapedModelProxyProviderFunction = _getProxyProviderFunction();
+			_escapedModelProxyProviderFunction =
+				ProxyUtil.getProxyProviderFunction(
+					CTSchemaVersion.class, ModelWrapper.class);
 
 	}
 

@@ -14,12 +14,12 @@
 
 package com.liferay.style.book.web.internal.portlet.action;
 
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
-import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -34,7 +34,6 @@ import com.liferay.style.book.web.internal.handler.StyleBookEntryExceptionReques
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
-import javax.portlet.PortletURL;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -61,7 +60,7 @@ public class AddStyleBookEntryMVCActionCommand extends BaseMVCActionCommand {
 			StyleBookEntry styleBookEntry = _addStyleBookEntry(actionRequest);
 
 			JSONObject jsonObject = JSONUtil.put(
-				"redirectURL", getRedirectURL(actionResponse, styleBookEntry));
+				"redirectURL", _getRedirectURL(actionResponse, styleBookEntry));
 
 			if (SessionErrors.contains(
 					actionRequest, "styleBookEntryNameInvalid")) {
@@ -82,23 +81,6 @@ public class AddStyleBookEntryMVCActionCommand extends BaseMVCActionCommand {
 		}
 	}
 
-	protected String getRedirectURL(
-		ActionResponse actionResponse, StyleBookEntry styleBookEntry) {
-
-		LiferayPortletResponse liferayPortletResponse =
-			_portal.getLiferayPortletResponse(actionResponse);
-
-		PortletURL portletURL = liferayPortletResponse.createRenderURL();
-
-		portletURL.setParameter(
-			"mvcRenderCommandName", "/style_book/edit_style_book_entry");
-		portletURL.setParameter(
-			"styleBookEntryId",
-			String.valueOf(styleBookEntry.getStyleBookEntryId()));
-
-		return portletURL.toString();
-	}
-
 	private StyleBookEntry _addStyleBookEntry(ActionRequest actionRequest)
 		throws PortalException {
 
@@ -110,6 +92,18 @@ public class AddStyleBookEntryMVCActionCommand extends BaseMVCActionCommand {
 		return _styleBookEntryService.addStyleBookEntry(
 			serviceContext.getScopeGroupId(), name, StringPool.BLANK,
 			serviceContext);
+	}
+
+	private String _getRedirectURL(
+		ActionResponse actionResponse, StyleBookEntry styleBookEntry) {
+
+		return PortletURLBuilder.createRenderURL(
+			_portal.getLiferayPortletResponse(actionResponse)
+		).setMVCRenderCommandName(
+			"/style_book/edit_style_book_entry"
+		).setParameter(
+			"styleBookEntryId", styleBookEntry.getStyleBookEntryId()
+		).buildString();
 	}
 
 	@Reference

@@ -14,10 +14,13 @@
 
 package com.liferay.petra.reflect;
 
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -26,8 +29,10 @@ import org.junit.Test;
 public class GenericUtilTest {
 
 	@ClassRule
-	public static final CodeCoverageAssertor codeCoverageAssertor =
-		CodeCoverageAssertor.INSTANCE;
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			CodeCoverageAssertor.INSTANCE, LiferayUnitTestRule.INSTANCE);
 
 	@Test
 	public void testConstructor() {
@@ -36,6 +41,9 @@ public class GenericUtilTest {
 
 	@Test
 	public void testGetGenericClass() {
+
+		// Index 0
+
 		Assert.assertEquals(
 			String.class,
 			GenericUtil.getGenericClass(new StringParameterizedType()));
@@ -51,6 +59,26 @@ public class GenericUtilTest {
 		Assert.assertEquals(
 			String.class,
 			GenericUtil.getGenericClass(StringParameterizedType.class));
+
+		// Index 1
+
+		Assert.assertEquals(
+			String.class,
+			GenericUtil.getGenericClass(
+				new StringDoubleParameterizedType(), 1));
+		Assert.assertEquals(
+			Object.class,
+			GenericUtil.getGenericClass(new NoParameterizedTypeImpl(), 1));
+		Assert.assertEquals(
+			Object.class,
+			GenericUtil.getGenericClass(
+				ExtendsNoParameterizedTypeImpl.class, 1));
+		Assert.assertEquals(
+			Object.class,
+			GenericUtil.getGenericClass(NoParameterizedTypeImpl.class, 1));
+		Assert.assertEquals(
+			Object.class,
+			GenericUtil.getGenericClass(StringParameterizedType.class, 1));
 	}
 
 	@Test
@@ -70,8 +98,15 @@ public class GenericUtilTest {
 	public static class NoParameterizedTypeImpl implements NoParameterizedType {
 	}
 
+	public static class StringDoubleParameterizedType
+		implements DoubleParameterizedType<Object, String> {
+	}
+
 	public static class StringParameterizedType
 		implements ParameterizedType<String> {
+	}
+
+	public interface DoubleParameterizedType<O, T> {
 	}
 
 	public interface NoParameterizedType {

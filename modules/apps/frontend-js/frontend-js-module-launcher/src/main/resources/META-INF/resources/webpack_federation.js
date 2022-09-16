@@ -19,6 +19,7 @@
 	const CONTAINERS_SYMBOL = Symbol.for('__LIFERAY_WEBPACK_CONTAINERS__');
 	const GET_MODULE_SYMBOL = Symbol.for('__LIFERAY_WEBPACK_GET_MODULE__');
 	const SHARED_SCOPE_SYMBOL = Symbol.for('__LIFERAY_WEBPACK_SHARED_SCOPE__');
+	const WEBPACK_HELPERS_SYMBOL = Symbol.for('__LIFERAY_WEBPACK_HELPERS__');
 
 	window[CONTAINER_REQUESTS_SYMBOL] = window[CONTAINER_REQUESTS_SYMBOL] || {};
 	window[CONTAINERS_SYMBOL] = window[CONTAINERS_SYMBOL] || {};
@@ -40,27 +41,27 @@
 
 		const containerRequest = {
 
-			// set to the container's exported object
+			// Set to the container's exported object
 
 			container: undefined,
 
-			// set if request failed
+			// Set if request failed
 
 			error: undefined,
 
-			// set to true if the .js file has been fetched from the server
+			// Set to true if the .js file has been fetched from the server
 
 			fetched: false,
 
-			// set to the exported values of each module (undefined if error set)
+			// Set to the exported values of each module (undefined if error set)
 
 			modules: undefined,
 
-			// set to the <script> DOM node while it is being retrieved (undefined after)
+			// Set to the <script> DOM node while it is being retrieved (undefined after)
 
 			script,
 
-			// set to an array of functions to be invoked once the <script> loads
+			// Set to an array of functions to be invoked once the <script> loads
 
 			subscribers: [],
 		};
@@ -84,6 +85,44 @@
 	}
 
 	/**
+	 * Transform a webpack chunk script file name.
+	 *
+	 * The webpack federation runtimes for projects built with npm-scripts
+	 * delegate to this method the logic to compose the URL to retrieve the
+	 * chunk files from server.
+	 */
+	function transformChunkScriptFilename(chunkScriptFileName) {
+		return (
+			chunkScriptFileName +
+			'?languageId=' +
+			Liferay.ThemeDisplay.getLanguageId()
+		);
+	}
+
+	/**
+	 * Compute container URL for a given containerId
+	 */
+	function getContainerURL(containerId) {
+
+		// Strip the scope to derive the context path (this can be done because
+		// our SF rules enforce a certain structure on context and package
+		// names, but it is not valid for the general case).
+
+		if (containerId[0] === '@') {
+			const i = containerId.indexOf('/');
+
+			containerId = containerId.substr(i + 1);
+		}
+
+		return (
+			'/o/' +
+			containerId +
+			'/__generated__/container.js?languageId=' +
+			Liferay.ThemeDisplay.getLanguageId()
+		);
+	}
+
+	/**
 	 * Fetch a container
 	 */
 	function fetchContainer(callId, containerId, resolve, reject) {
@@ -93,14 +132,14 @@
 			);
 		}
 
-		const url = '/o/' + containerId + '/__generated__/container.js';
+		const url = getContainerURL(containerId);
 
 		explain(callId, 'Fetching container from URL', url);
 
 		containerRequests[containerId] = createContainerRequest(
 			url,
 			(containerRequest) => {
-				explain(callId, 'Fetched container');
+				explain(callId, 'Fetched container', containerId);
 
 				const container = getContainer(containerId);
 
@@ -202,6 +241,10 @@
 	 * Get a defined container object
 	 */
 	function getContainer(containerId) {
+		if (containerId[0] === '@') {
+			containerId = containerId.substr(1).replace('/', '!');
+		}
+
 		return window[CONTAINERS_SYMBOL][containerId];
 	}
 
@@ -280,10 +323,10 @@
 
 							dispatchNextQueuedCall();
 						})
-						.catch((err) => {
-							explain(callId, 'Rejecting module', err);
+						.catch((error) => {
+							explain(callId, 'Rejecting module', error);
 
-							reject(err);
+							reject(error);
 
 							dispatchNextQueuedCall();
 						});
@@ -334,9 +377,16 @@
 	 * Split a module name in its `containerId` and `path` parts
 	 */
 	function splitModuleName(moduleName) {
-		const i = moduleName.indexOf('/');
+		let i = moduleName.indexOf('/');
 
-		let containerId, path;
+		// Skip first / for scoped packages
+
+		if (moduleName[0] === '@') {
+			i = moduleName.indexOf('/', i + 1);
+		}
+
+		let containerId;
+		let path;
 
 		if (i === -1) {
 			containerId = moduleName;
@@ -359,4 +409,7 @@
 	}
 
 	window[GET_MODULE_SYMBOL] = getModule;
+	window[WEBPACK_HELPERS_SYMBOL] = {
+		transformChunkScriptFilename,
+	};
 })();

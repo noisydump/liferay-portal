@@ -51,6 +51,14 @@ public class ContentStructureResourceTest
 
 	@Override
 	protected ContentStructure
+			testGetAssetLibraryContentStructurePermissionsPage_addContentStructure()
+		throws Exception {
+
+		return testGetContentStructure_addContentStructure();
+	}
+
+	@Override
+	protected ContentStructure
 			testGetAssetLibraryContentStructuresPage_addContentStructure(
 				Long assetLibraryId, ContentStructure contentStructure)
 		throws Exception {
@@ -70,6 +78,22 @@ public class ContentStructureResourceTest
 
 	@Override
 	protected ContentStructure
+			testGetContentStructurePermissionsPage_addContentStructure()
+		throws Exception {
+
+		return testGetContentStructure_addContentStructure();
+	}
+
+	@Override
+	protected ContentStructure
+			testGetSiteContentStructurePermissionsPage_addContentStructure()
+		throws Exception {
+
+		return testGetContentStructure_addContentStructure();
+	}
+
+	@Override
+	protected ContentStructure
 			testGetSiteContentStructuresPage_addContentStructure(
 				Long siteId, ContentStructure contentStructure)
 		throws Exception {
@@ -82,6 +106,30 @@ public class ContentStructureResourceTest
 
 	@Override
 	protected ContentStructure testGraphQLContentStructure_addContentStructure()
+		throws Exception {
+
+		return testGetContentStructure_addContentStructure();
+	}
+
+	@Override
+	protected ContentStructure
+			testPutAssetLibraryContentStructurePermissionsPage_addContentStructure()
+		throws Exception {
+
+		return testGetContentStructure_addContentStructure();
+	}
+
+	@Override
+	protected ContentStructure
+			testPutContentStructurePermissionsPage_addContentStructure()
+		throws Exception {
+
+		return testGetContentStructure_addContentStructure();
+	}
+
+	@Override
+	protected ContentStructure
+			testPutSiteContentStructurePermissionsPage_addContentStructure()
 		throws Exception {
 
 		return testGetContentStructure_addContentStructure();

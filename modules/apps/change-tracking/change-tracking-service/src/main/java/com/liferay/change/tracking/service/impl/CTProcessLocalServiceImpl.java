@@ -14,13 +14,13 @@
 
 package com.liferay.change.tracking.service.impl;
 
-import com.liferay.change.tracking.constants.CTConstants;
 import com.liferay.change.tracking.internal.background.task.CTPublishBackgroundTaskExecutor;
 import com.liferay.change.tracking.model.CTCollection;
 import com.liferay.change.tracking.model.CTProcess;
 import com.liferay.change.tracking.service.CTPreferencesLocalService;
 import com.liferay.change.tracking.service.base.CTProcessLocalServiceBaseImpl;
-import com.liferay.petra.lang.SafeClosable;
+import com.liferay.change.tracking.service.persistence.CTCollectionPersistence;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.background.task.model.BackgroundTask;
 import com.liferay.portal.background.task.service.BackgroundTaskLocalService;
@@ -29,6 +29,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
+import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
@@ -55,7 +56,7 @@ public class CTProcessLocalServiceImpl extends CTProcessLocalServiceBaseImpl {
 	public CTProcess addCTProcess(long userId, long ctCollectionId)
 		throws PortalException {
 
-		CTCollection ctCollection = ctCollectionPersistence.findByPrimaryKey(
+		CTCollection ctCollection = _ctCollectionPersistence.findByPrimaryKey(
 			ctCollectionId);
 
 		if (ctCollection.getStatus() == WorkflowConstants.STATUS_APPROVED) {
@@ -66,7 +67,7 @@ public class CTProcessLocalServiceImpl extends CTProcessLocalServiceBaseImpl {
 
 		ctCollection.setStatus(WorkflowConstants.STATUS_PENDING);
 
-		ctCollection = ctCollectionPersistence.update(ctCollection);
+		ctCollection = _ctCollectionPersistence.update(ctCollection);
 
 		_ctPreferencesLocalService.resetCTPreferences(
 			ctCollection.getCtCollectionId());
@@ -81,7 +82,7 @@ public class CTProcessLocalServiceImpl extends CTProcessLocalServiceBaseImpl {
 		ctProcess.setCreateDate(new Date());
 		ctProcess.setCtCollectionId(ctCollectionId);
 
-		Company company = companyLocalService.getCompany(
+		Company company = _companyLocalService.getCompany(
 			ctCollection.getCompanyId());
 
 		Map<String, Serializable> taskContextMap =
@@ -91,9 +92,8 @@ public class CTProcessLocalServiceImpl extends CTProcessLocalServiceBaseImpl {
 				"ctProcessId", ctProcessId
 			).build();
 
-		try (SafeClosable safeClosable =
-				CTCollectionThreadLocal.setCTCollectionId(
-					CTConstants.CT_COLLECTION_ID_PRODUCTION)) {
+		try (SafeCloseable safeCloseable =
+				CTCollectionThreadLocal.setProductionModeWithSafeCloseable()) {
 
 			BackgroundTask backgroundTask =
 				_backgroundTaskLocalService.addBackgroundTask(
@@ -120,7 +120,7 @@ public class CTProcessLocalServiceImpl extends CTProcessLocalServiceBaseImpl {
 					backgroundTask);
 			}
 			catch (PortalException portalException) {
-				_log.error(portalException, portalException);
+				_log.error(portalException);
 			}
 		}
 
@@ -134,7 +134,7 @@ public class CTProcessLocalServiceImpl extends CTProcessLocalServiceBaseImpl {
 
 	@Override
 	public List<CTProcess> getCTProcesses(long ctCollectionId) {
-		return ctProcessPersistence.findByCollectionId(ctCollectionId);
+		return ctProcessPersistence.findByCtCollectionId(ctCollectionId);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -142,6 +142,12 @@ public class CTProcessLocalServiceImpl extends CTProcessLocalServiceBaseImpl {
 
 	@Reference
 	private BackgroundTaskLocalService _backgroundTaskLocalService;
+
+	@Reference
+	private CompanyLocalService _companyLocalService;
+
+	@Reference
+	private CTCollectionPersistence _ctCollectionPersistence;
 
 	@Reference
 	private CTPreferencesLocalService _ctPreferencesLocalService;

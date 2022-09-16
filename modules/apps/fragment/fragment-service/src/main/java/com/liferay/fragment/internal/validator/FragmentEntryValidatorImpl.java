@@ -14,28 +14,30 @@
 
 package com.liferay.fragment.internal.validator;
 
+import com.liferay.fragment.constants.FragmentConstants;
 import com.liferay.fragment.exception.FragmentEntryConfigurationException;
+import com.liferay.fragment.exception.FragmentEntryFieldTypesException;
+import com.liferay.fragment.exception.FragmentEntryTypeOptionsException;
 import com.liferay.fragment.validator.FragmentEntryValidator;
-import com.liferay.petra.json.validator.JSONValidator;
-import com.liferay.petra.json.validator.JSONValidatorException;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.json.validator.JSONValidator;
+import com.liferay.portal.json.validator.JSONValidatorException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.ResourceBundleUtil;
-import com.liferay.portal.kernel.util.StringBundler;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Validator;
-
-import java.io.InputStream;
 
 import java.util.HashSet;
 import java.util.Objects;
-import java.util.ResourceBundle;
 import java.util.Set;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Rubén Pulido
@@ -59,13 +61,8 @@ public class FragmentEntryValidatorImpl implements FragmentEntryValidator {
 			return;
 		}
 
-		InputStream configurationJSONSchemaInputStream =
-			FragmentEntryValidatorImpl.class.getResourceAsStream(
-				"dependencies/configuration-json-schema.json");
-
 		try {
-			JSONValidator.validate(
-				configuration, configurationJSONSchemaInputStream);
+			_configurationJSONValidator.validate(configuration);
 
 			JSONObject configurationJSONObject =
 				JSONFactoryUtil.createJSONObject(configuration);
@@ -145,6 +142,56 @@ public class FragmentEntryValidatorImpl implements FragmentEntryValidator {
 		}
 	}
 
+	@Override
+	public void validateTypeOptions(int fragmentEntryType, String typeOptions)
+		throws FragmentEntryTypeOptionsException {
+
+		if (Validator.isNull(typeOptions)) {
+			return;
+		}
+
+		try {
+			_typeOptionsJSONValidator.validate(typeOptions);
+
+			JSONObject configurationJSONObject =
+				JSONFactoryUtil.createJSONObject(typeOptions);
+
+			JSONArray fieldTypesJSONArray =
+				configurationJSONObject.getJSONArray("fieldTypes");
+
+			if (!Objects.equals(
+					FragmentConstants.TYPE_INPUT, fragmentEntryType)) {
+
+				if (!JSONUtil.isEmpty(fieldTypesJSONArray)) {
+					throw new FragmentEntryFieldTypesException(
+						"Only fragment type input can have field types");
+				}
+
+				return;
+			}
+
+			if (JSONUtil.isEmpty(fieldTypesJSONArray)) {
+				throw new FragmentEntryFieldTypesException(
+					"Fragment type input must have at least one field type");
+			}
+
+			if ((fieldTypesJSONArray.length() > 1) &&
+				JSONUtil.hasValue(fieldTypesJSONArray, "captcha")) {
+
+				throw new FragmentEntryFieldTypesException(
+					"Captcha field type cannot be mixed with other field " +
+						"types");
+			}
+		}
+		catch (JSONException jsonException) {
+			throw new FragmentEntryTypeOptionsException(
+				_getMessage(jsonException.getMessage()), jsonException);
+		}
+		catch (JSONValidatorException jsonValidatorException) {
+			throw new FragmentEntryTypeOptionsException(jsonValidatorException);
+		}
+	}
+
 	private boolean _checkValidationRules(
 		String value, JSONObject validationJSONObject) {
 
@@ -194,18 +241,22 @@ public class FragmentEntryValidatorImpl implements FragmentEntryValidator {
 	}
 
 	private String _getMessage(String message) {
-		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
-			"content.Language", getClass());
-
-		StringBundler sb = new StringBundler(3);
-
-		sb.append(
-			LanguageUtil.get(
-				resourceBundle, "fragment-configuration-is-invalid"));
-		sb.append(System.lineSeparator());
-		sb.append(message);
-
-		return sb.toString();
+		return StringBundler.concat(
+			_language.get(
+				LocaleUtil.getDefault(), "fragment-configuration-is-invalid"),
+			System.lineSeparator(), message);
 	}
+
+	private static final JSONValidator _configurationJSONValidator =
+		new JSONValidator(
+			FragmentEntryValidatorImpl.class.getResourceAsStream(
+				"dependencies/configuration-json-schema.json"));
+	private static final JSONValidator _typeOptionsJSONValidator =
+		new JSONValidator(
+			FragmentEntryValidatorImpl.class.getResourceAsStream(
+				"dependencies/type-options-json-schema.json"));
+
+	@Reference
+	private Language _language;
 
 }

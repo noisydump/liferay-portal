@@ -20,6 +20,7 @@ import com.liferay.blogs.exception.NoSuchEntryException;
 import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.friendly.url.model.FriendlyURLEntry;
 import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.constants.MVCRenderConstants;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
@@ -32,7 +33,6 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.util.PropsValues;
 
 import javax.portlet.PortletException;
-import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 
@@ -100,17 +100,17 @@ public class ViewEntryMVCRenderCommand implements MVCRenderCommand {
 			if (redirectToLastFriendlyURL && Validator.isNotNull(urlTitle) &&
 				!urlTitle.equals(mainFriendlyURLEntry.getUrlTitle())) {
 
-				PortletURL portletURL = renderResponse.createRenderURL();
-
-				portletURL.setParameter(
-					"mvcRenderCommandName", "/blogs/view_entry");
-				portletURL.setParameter(
-					"urlTitle", mainFriendlyURLEntry.getUrlTitle());
-
 				HttpServletResponse httpServletResponse =
 					_portal.getHttpServletResponse(renderResponse);
 
-				httpServletResponse.sendRedirect(portletURL.toString());
+				httpServletResponse.sendRedirect(
+					PortletURLBuilder.createRenderURL(
+						renderResponse
+					).setMVCRenderCommandName(
+						"/blogs/view_entry"
+					).setParameter(
+						"urlTitle", mainFriendlyURLEntry.getUrlTitle()
+					).buildString());
 
 				return MVCRenderConstants.MVC_PATH_VALUE_SKIP_DISPATCH;
 			}

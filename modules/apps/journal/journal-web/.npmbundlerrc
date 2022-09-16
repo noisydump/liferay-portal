@@ -1,7 +1,9 @@
 {
-    "ignore": [
-        "**/config.js",
-        "**/navigation.js",
-        "**/main.js"
-    ]
+	"config": {
+		"imports": {
+			"@liferay/template-web": {
+				"/": ">=1.0.0"
+			}
+		}
+	}
 }

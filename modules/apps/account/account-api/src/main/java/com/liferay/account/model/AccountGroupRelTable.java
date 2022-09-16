@@ -19,6 +19,8 @@ import com.liferay.petra.sql.dsl.base.BaseTable;
 
 import java.sql.Types;
 
+import java.util.Date;
+
 /**
  * The table class for the &quot;AccountGroupRel&quot; database table.
  *
@@ -33,11 +35,19 @@ public class AccountGroupRelTable extends BaseTable<AccountGroupRelTable> {
 
 	public final Column<AccountGroupRelTable, Long> mvccVersion = createColumn(
 		"mvccVersion", Long.class, Types.BIGINT, Column.FLAG_NULLITY);
-	public final Column<AccountGroupRelTable, Long> AccountGroupRelId =
+	public final Column<AccountGroupRelTable, Long> accountGroupRelId =
 		createColumn(
-			"AccountGroupRelId", Long.class, Types.BIGINT, Column.FLAG_PRIMARY);
+			"accountGroupRelId", Long.class, Types.BIGINT, Column.FLAG_PRIMARY);
 	public final Column<AccountGroupRelTable, Long> companyId = createColumn(
 		"companyId", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
+	public final Column<AccountGroupRelTable, Long> userId = createColumn(
+		"userId", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
+	public final Column<AccountGroupRelTable, String> userName = createColumn(
+		"userName", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
+	public final Column<AccountGroupRelTable, Date> createDate = createColumn(
+		"createDate", Date.class, Types.TIMESTAMP, Column.FLAG_DEFAULT);
+	public final Column<AccountGroupRelTable, Date> modifiedDate = createColumn(
+		"modifiedDate", Date.class, Types.TIMESTAMP, Column.FLAG_DEFAULT);
 	public final Column<AccountGroupRelTable, Long> accountGroupId =
 		createColumn(
 			"accountGroupId", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);

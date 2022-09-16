@@ -20,14 +20,12 @@ import com.amazonaws.ClientConfiguration;
 import com.amazonaws.Protocol;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
-import com.amazonaws.internal.StaticCredentialsProvider;
-import com.amazonaws.regions.Region;
-import com.amazonaws.regions.Regions;
+import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.S3ClientOptions;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.model.DeleteObjectsRequest;
 import com.amazonaws.services.s3.model.GetObjectMetadataRequest;
@@ -40,7 +38,7 @@ import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.model.StorageClass;
 import com.amazonaws.services.s3.transfer.TransferManager;
-import com.amazonaws.services.s3.transfer.TransferManagerConfiguration;
+import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
 import com.amazonaws.services.s3.transfer.Upload;
 
 import com.liferay.document.library.kernel.exception.AccessDeniedException;
@@ -69,7 +67,6 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -97,9 +94,8 @@ public class S3Store implements Store {
 
 	@Override
 	public void addFile(
-			long companyId, long repositoryId, String fileName,
-			String versionLabel, InputStream inputStream)
-		throws PortalException {
+		long companyId, long repositoryId, String fileName, String versionLabel,
+		InputStream inputStream) {
 
 		if (hasFile(companyId, repositoryId, fileName, versionLabel)) {
 			deleteFile(companyId, repositoryId, fileName, versionLabel);
@@ -159,13 +155,17 @@ public class S3Store implements Store {
 			String versionLabel)
 		throws PortalException {
 
-		try {
-			_s3FileCache.cleanUpCacheFiles();
+		_s3FileCache.cleanUpCacheFiles();
 
+		try {
 			S3Object s3Object = getS3Object(
 				companyId, repositoryId, fileName, versionLabel);
 
-			return _s3FileCache.getCacheFileInputStream(s3Object, fileName);
+			ObjectMetadata objectMetadata = s3Object.getObjectMetadata();
+
+			return _s3FileCache.getCacheFileInputStream(
+				s3Object, fileName, s3Object::getObjectContent,
+				objectMetadata.getLastModified());
 		}
 		catch (IOException ioException) {
 			throw new SystemException(ioException);
@@ -290,7 +290,7 @@ public class S3Store implements Store {
 			// LPS-52675
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(noSuchFileException, noSuchFileException);
+				_log.debug(noSuchFileException);
 			}
 
 			return false;
@@ -375,30 +375,6 @@ public class S3Store implements Store {
 		}
 	}
 
-	protected void configureS3Endpoint(AmazonS3 amazonS3) {
-		String s3Endpoint = _s3StoreConfiguration.s3Endpoint();
-
-		if (Validator.isNull(s3Endpoint)) {
-			return;
-		}
-
-		amazonS3.setEndpoint(s3Endpoint);
-	}
-
-	protected void configureS3PathStyle(AmazonS3 amazonS3) {
-		boolean s3PathStyle = _s3StoreConfiguration.s3PathStyle();
-
-		if (!s3PathStyle) {
-			return;
-		}
-
-		S3ClientOptions s3ClientOptions = new S3ClientOptions();
-
-		s3ClientOptions.setPathStyleAccess(true);
-
-		amazonS3.setS3ClientOptions(s3ClientOptions);
-	}
-
 	protected void configureSignerOverride(
 		ClientConfiguration clientConfiguration) {
 
@@ -458,18 +434,38 @@ public class S3Store implements Store {
 	protected AmazonS3 getAmazonS3(
 		AWSCredentialsProvider awsCredentialsProvider) {
 
-		AmazonS3 amazonS3 = new AmazonS3Client(
-			awsCredentialsProvider, getClientConfiguration());
+		if (Validator.isNotNull(_s3StoreConfiguration.s3Endpoint()) &&
+			Validator.isNotNull(_s3StoreConfiguration.s3Region())) {
 
-		Region region = Region.getRegion(
-			Regions.fromName(_s3StoreConfiguration.s3Region()));
+			return AmazonS3ClientBuilder.standard(
+			).withCredentials(
+				awsCredentialsProvider
+			).withClientConfiguration(
+				getClientConfiguration()
+			).withEndpointConfiguration(
+				new AwsClientBuilder.EndpointConfiguration(
+					_s3StoreConfiguration.s3Endpoint(),
+					_s3StoreConfiguration.s3Region())
+			).withPathStyleAccessEnabled(
+				_s3StoreConfiguration.s3PathStyle()
+			).build();
+		}
 
-		amazonS3.setRegion(region);
+		AmazonS3ClientBuilder amazonS3ClientBuilder =
+			AmazonS3ClientBuilder.standard(
+			).withCredentials(
+				awsCredentialsProvider
+			).withClientConfiguration(
+				getClientConfiguration()
+			).withPathStyleAccessEnabled(
+				_s3StoreConfiguration.s3PathStyle()
+			);
 
-		configureS3Endpoint(amazonS3);
-		configureS3PathStyle(amazonS3);
+		if (Validator.isNotNull(_s3StoreConfiguration.s3Region())) {
+			amazonS3ClientBuilder.setRegion(_s3StoreConfiguration.s3Region());
+		}
 
-		return amazonS3;
+		return amazonS3ClientBuilder.build();
 	}
 
 	protected AWSCredentialsProvider getAWSCredentialsProvider() {
@@ -480,7 +476,7 @@ public class S3Store implements Store {
 				_s3StoreConfiguration.accessKey(),
 				_s3StoreConfiguration.secretKey());
 
-			return new StaticCredentialsProvider(awsCredentials);
+			return new AWSStaticCredentialsProvider(awsCredentials);
 		}
 
 		return new DefaultAWSCredentialsProviderChain();
@@ -605,24 +601,20 @@ public class S3Store implements Store {
 	}
 
 	protected TransferManager getTransferManager(AmazonS3 amazonS3) {
-		ExecutorService executorService = new ThreadPoolExecutor(
-			_s3StoreConfiguration.corePoolSize(),
-			_s3StoreConfiguration.maxPoolSize());
-
-		TransferManager transferManager = new TransferManager(
-			amazonS3, executorService, false);
-
-		TransferManagerConfiguration transferManagerConfiguration =
-			new TransferManagerConfiguration();
-
-		transferManagerConfiguration.setMinimumUploadPartSize(
-			_s3StoreConfiguration.minimumUploadPartSize());
-		transferManagerConfiguration.setMultipartUploadThreshold(
-			_s3StoreConfiguration.multipartUploadThreshold());
-
-		transferManager.setConfiguration(transferManagerConfiguration);
-
-		return transferManager;
+		return TransferManagerBuilder.standard(
+		).withS3Client(
+			amazonS3
+		).withExecutorFactory(
+			() -> new ThreadPoolExecutor(
+				_s3StoreConfiguration.corePoolSize(),
+				_s3StoreConfiguration.maxPoolSize())
+		).withMinimumUploadPartSize(
+			(long)_s3StoreConfiguration.minimumUploadPartSize()
+		).withMultipartUploadThreshold(
+			(long)_s3StoreConfiguration.multipartUploadThreshold()
+		).withShutDownThreadPools(
+			false
+		).build();
 	}
 
 	protected boolean isFileNotFound(
@@ -653,9 +645,8 @@ public class S3Store implements Store {
 	}
 
 	protected void putObject(
-			long companyId, long repositoryId, String fileName,
-			String versionLabel, File file)
-		throws PortalException {
+		long companyId, long repositoryId, String fileName, String versionLabel,
+		File file) {
 
 		Upload upload = null;
 
@@ -677,7 +668,7 @@ public class S3Store implements Store {
 		}
 		catch (InterruptedException interruptedException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(interruptedException, interruptedException);
+				_log.debug(interruptedException);
 			}
 
 			upload.abort();
@@ -686,16 +677,6 @@ public class S3Store implements Store {
 
 			thread.interrupt();
 		}
-	}
-
-	@Reference(unbind = "-")
-	protected void setS3FileCache(S3FileCache s3FileCache) {
-		_s3FileCache = s3FileCache;
-	}
-
-	@Reference(unbind = "-")
-	protected void setS3KeyTransformer(S3KeyTransformer s3KeyTransformer) {
-		_s3KeyTransformer = s3KeyTransformer;
 	}
 
 	protected SystemException transform(
@@ -747,8 +728,13 @@ public class S3Store implements Store {
 	private AmazonS3 _amazonS3;
 	private AWSCredentialsProvider _awsCredentialsProvider;
 	private String _bucketName;
+
+	@Reference
 	private S3FileCache _s3FileCache;
+
+	@Reference
 	private S3KeyTransformer _s3KeyTransformer;
+
 	private StorageClass _storageClass;
 	private TransferManager _transferManager;
 

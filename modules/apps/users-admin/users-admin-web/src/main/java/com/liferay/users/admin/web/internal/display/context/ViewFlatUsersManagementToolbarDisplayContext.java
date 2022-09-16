@@ -21,6 +21,7 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItemListBuilder;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
@@ -31,10 +32,12 @@ import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.permission.PortalPermissionUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portlet.usersadmin.search.UserSearchTerms;
+import com.liferay.users.admin.web.internal.util.DisplayStyleUtil;
 
 import java.util.List;
 
@@ -111,12 +114,13 @@ public class ViewFlatUsersManagementToolbarDisplayContext
 
 	@Override
 	public String getClearResultsURL() {
-		PortletURL clearResultsURL = getPortletURL();
-
-		clearResultsURL.setParameter("keywords", StringPool.BLANK);
-		clearResultsURL.setParameter("navigation", (String)null);
-
-		return clearResultsURL.toString();
+		return PortletURLBuilder.create(
+			getPortletURL()
+		).setKeywords(
+			StringPool.BLANK
+		).setNavigation(
+			(String)null
+		).buildString();
 	}
 
 	@Override
@@ -137,19 +141,20 @@ public class ViewFlatUsersManagementToolbarDisplayContext
 		return LabelItemListBuilder.add(
 			() -> !_navigation.equals("active"),
 			labelItem -> {
-				PortletURL removeLabelURL = getPortletURL();
-
-				removeLabelURL.setParameter("navigation", (String)null);
-
-				labelItem.putData("removeLabelURL", removeLabelURL.toString());
+				labelItem.putData(
+					"removeLabelURL",
+					PortletURLBuilder.create(
+						getPortletURL()
+					).setNavigation(
+						(String)null
+					).buildString());
 
 				labelItem.setCloseable(true);
-
-				String label = String.format(
-					"%s: %s", LanguageUtil.get(httpServletRequest, "status"),
-					LanguageUtil.get(httpServletRequest, _navigation));
-
-				labelItem.setLabel(label);
+				labelItem.setLabel(
+					String.format(
+						"%s: %s",
+						LanguageUtil.get(httpServletRequest, "status"),
+						LanguageUtil.get(httpServletRequest, _navigation)));
 			}
 		).build();
 	}
@@ -182,6 +187,12 @@ public class ViewFlatUsersManagementToolbarDisplayContext
 	}
 
 	@Override
+	protected String getDisplayStyle() {
+		return DisplayStyleUtil.getDisplayStyle(
+			liferayPortletRequest, getDefaultDisplayStyle());
+	}
+
+	@Override
 	protected String[] getDisplayViews() {
 		return new String[] {"icon", "descriptive", "list"};
 	}
@@ -203,17 +214,24 @@ public class ViewFlatUsersManagementToolbarDisplayContext
 
 	@Override
 	protected String[] getOrderByKeys() {
-		return new String[] {"first-name", "last-name", "screen-name"};
+		String[] orderColumns = {"first-name", "last-name", "screen-name"};
+
+		if (searchContainer.isSearch()) {
+			orderColumns = ArrayUtil.append(orderColumns, "relevance");
+		}
+
+		return orderColumns;
 	}
 
 	@Override
 	protected PortletURL getPortletURL() {
-		PortletURL portletURL = super.getPortletURL();
-
-		portletURL.setParameter("orderByCol", getOrderByCol());
-		portletURL.setParameter("orderByType", getOrderByType());
-
-		return portletURL;
+		return PortletURLBuilder.create(
+			super.getPortletURL()
+		).setParameter(
+			"orderByCol", getOrderByCol()
+		).setParameter(
+			"orderByType", getOrderByType()
+		).buildPortletURL();
 	}
 
 	private final String _navigation;

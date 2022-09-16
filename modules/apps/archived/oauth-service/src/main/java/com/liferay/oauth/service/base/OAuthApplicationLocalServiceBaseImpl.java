@@ -16,6 +16,7 @@ package com.liferay.oauth.service.base;
 
 import com.liferay.oauth.model.OAuthApplication;
 import com.liferay.oauth.service.OAuthApplicationLocalService;
+import com.liferay.oauth.service.OAuthApplicationLocalServiceUtil;
 import com.liferay.oauth.service.persistence.OAuthApplicationPersistence;
 import com.liferay.oauth.service.persistence.OAuthUserPersistence;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
@@ -32,6 +33,8 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -45,10 +48,13 @@ import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -70,7 +76,7 @@ public abstract class OAuthApplicationLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>OAuthApplicationLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.oauth.service.OAuthApplicationLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>OAuthApplicationLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>OAuthApplicationLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -147,6 +153,13 @@ public abstract class OAuthApplicationLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return oAuthApplicationPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -318,6 +331,11 @@ public abstract class OAuthApplicationLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement OAuthApplicationLocalServiceImpl#deleteOAuthApplication(OAuthApplication) to avoid orphaned data");
+		}
+
 		return oAuthApplicationLocalService.deleteOAuthApplication(
 			(OAuthApplication)persistedModel);
 	}
@@ -381,6 +399,11 @@ public abstract class OAuthApplicationLocalServiceBaseImpl
 		return oAuthApplicationPersistence.update(oAuthApplication);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -392,6 +415,8 @@ public abstract class OAuthApplicationLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		oAuthApplicationLocalService = (OAuthApplicationLocalService)aopProxy;
+
+		_setLocalServiceUtilService(oAuthApplicationLocalService);
 	}
 
 	/**
@@ -436,6 +461,23 @@ public abstract class OAuthApplicationLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		OAuthApplicationLocalService oAuthApplicationLocalService) {
+
+		try {
+			Field field =
+				OAuthApplicationLocalServiceUtil.class.getDeclaredField(
+					"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, oAuthApplicationLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected OAuthApplicationLocalService oAuthApplicationLocalService;
 
 	@Reference
@@ -453,15 +495,14 @@ public abstract class OAuthApplicationLocalServiceBaseImpl
 		classNameLocalService;
 
 	@Reference
-	protected com.liferay.portal.kernel.service.ImageLocalService
-		imageLocalService;
-
-	@Reference
 	protected com.liferay.portal.kernel.service.ResourceLocalService
 		resourceLocalService;
 
 	@Reference
 	protected com.liferay.portal.kernel.service.UserLocalService
 		userLocalService;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		OAuthApplicationLocalServiceBaseImpl.class);
 
 }

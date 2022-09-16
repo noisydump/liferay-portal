@@ -25,7 +25,7 @@ public class Order {
 
 	public static final String KEY_METRIC_NAME = "_key";
 
-	public static final Order count(boolean ascending) {
+	public static Order count(boolean ascending) {
 		Order order = new Order(null);
 
 		order.setMetricName(COUNT_METRIC_NAME);
@@ -34,7 +34,7 @@ public class Order {
 		return order;
 	}
 
-	public static final Order key(boolean ascending) {
+	public static Order key(boolean ascending) {
 		Order order = new Order(null);
 
 		order.setMetricName(KEY_METRIC_NAME);
@@ -57,17 +57,12 @@ public class Order {
 			return false;
 		}
 
-		final Order order = (Order)object;
+		Order order = (Order)object;
 
-		if (_ascending != order._ascending) {
-			return false;
-		}
+		if ((_ascending != order._ascending) ||
+			!Objects.equals(_metricName, order._metricName) ||
+			!Objects.equals(_path, order._path)) {
 
-		if (!Objects.equals(_metricName, order._metricName)) {
-			return false;
-		}
-
-		if (!Objects.equals(_path, order._path)) {
 			return false;
 		}
 

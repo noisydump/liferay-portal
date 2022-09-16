@@ -32,7 +32,7 @@ if (Validator.isNotNull(tempFileName)) {
 <c:choose>
 	<c:when test="<%= keyStore == null %>">
 		<div class="lfr-form-content lfr-dynamic-uploader <%= (fileEntry == null) ? "hide-dialog-footer" : StringPool.BLANK %>">
-			<liferay-ui:error key="certificateException" message="problem-reading-one-or-more-certificates-in-the-keystore" />
+			<liferay-ui:error key="certificateException" message="there-was-a-problem-reading-one-or-more-certificates-in-the-keystore" />
 			<liferay-ui:error key="incorrectKeyStorePassword" message="incorrect-keystore-password" />
 			<liferay-ui:error key="keyStoreIntegrityCheckingAlgorithmNotSupported" message="the-keystore-uses-an-integrity-checking-algorithm-which-is-not-supported" />
 
@@ -43,36 +43,36 @@ if (Validator.isNotNull(tempFileName)) {
 
 		<aui:script use="liferay-upload">
 			var liferayUpload = new Liferay.Upload({
-				boundingBox: '#<portlet:namespace />fileUpload',
+				'boundingBox': '#<portlet:namespace />fileUpload',
 
 				<%
 				DecimalFormatSymbols decimalFormatSymbols = DecimalFormatSymbols.getInstance(locale);
 				%>
 
-				decimalSeparator: '<%= decimalFormatSymbols.getDecimalSeparator() %>',
-				deleteFile:
+				'decimalSeparator': '<%= decimalFormatSymbols.getDecimalSeparator() %>',
+				'deleteFile':
 					'<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/admin/update_certificate"><portlet:param name="<%= Constants.CMD %>" value="<%= Constants.DELETE_TEMP %>" /></liferay-portlet:resourceURL>',
-				fileDescription: '*.p12 *.pfx',
-				maxFileSize:
+				'fileDescription': '*.p12 *.pfx',
+				'maxFileSize':
 					'<%= UploadServletRequestConfigurationHelperUtil.getMaxSize() %> B',
-				multipleFiles: false,
-				namespace: '<portlet:namespace />',
-				tempFileURL:
+				'multipleFiles': false,
+				'namespace': '<portlet:namespace />',
+				'tempFileURL':
 					'<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/admin/update_certificate"><portlet:param name="selectUploadedFile" value="<%= Constants.GET_TEMP %>" /><portlet:param name="selectUploadedFile" value='<%= ParamUtil.getString(request, "selectUploadedFile") %>' /></liferay-portlet:resourceURL>',
-				tempRandomSuffix: '<%= SamlTempFileEntryUtil.TEMP_RANDOM_SUFFIX %>',
+				'tempRandomSuffix': '<%= SamlTempFileEntryUtil.TEMP_RANDOM_SUFFIX %>',
 				'strings.dropFileText':
 					'<liferay-ui:message key="drop-a-pkcs12-formatted-keystore-file-here-to-inspect" />',
 				'strings.fileCannotBeSavedText':
 					'<liferay-ui:message key="the-file-x-cannot-be-inspected" />',
-				uploadFile:
+				'uploadFile':
 					'<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/admin/update_certificate"><portlet:param name="<%= Constants.CMD %>" value="<%= Constants.ADD_TEMP %>" /></liferay-portlet:resourceURL>',
 			});
 
-			liferayUpload._uploader.on('alluploadscomplete', function (event) {
+			liferayUpload._uploader.on('alluploadscomplete', (event) => {
 				toggleContinueButton();
 			});
 
-			Liferay.on('tempFileRemoved', function (event) {
+			Liferay.on('tempFileRemoved', (event) => {
 				toggleContinueButton();
 			});
 
@@ -206,7 +206,7 @@ if (Validator.isNotNull(tempFileName)) {
 				'input[name="<portlet:namespace />selectKeyStoreAlias"]'
 			);
 
-			keyStoreEntryRadios.on('click', function (event) {
+			keyStoreEntryRadios.on('click', (event) => {
 				var keyStoreEntryAlias = event.currentTarget.val();
 
 				A.all('.certificate-preview div[data-keyStoreEntryAlias]').hide();

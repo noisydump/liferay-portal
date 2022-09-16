@@ -82,34 +82,59 @@ renderResponse.setTitle((structure == null) ? LanguageUtil.get(request, "new-ele
 		<aui:input name="groupId" type="hidden" value="<%= groupId %>" />
 		<aui:input name="structureId" type="hidden" value="<%= structureId %>" />
 		<aui:input name="structureKey" type="hidden" value="<%= structureKey %>" />
-		<aui:input name="serializedFormBuilderContext" type="hidden" value="<%= serializedFormBuilderContext %>" />
+		<aui:input name="name" type="hidden" />
+		<aui:input name="description" type="hidden" />
+		<aui:input name="serializedFormBuilderContext" type="hidden" value="<%= formBuilderContextJSONObject %>" />
 		<aui:input name="serializedSettingsContext" type="hidden" value="" />
 
 		<%@ include file="/admin/exceptions.jspf" %>
 
-		<div class="ddm-form-basic-info">
-			<clay:container-fluid>
-				<h1>
-					<aui:input autoSize="<%= true %>" cssClass="ddm-form-name ddm-placeholder hidden" label="" name="nameEditor" placeholder='<%= LanguageUtil.get(request, "untitled-element-set") %>' type="textarea" value="<%= HtmlUtil.escape(ddmFormAdminDisplayContext.getFormName()) %>" />
-				</h1>
-
-				<aui:input name="name" type="hidden" />
-
-				<h5>
-					<aui:input autoSize="<%= true %>" cssClass="ddm-form-description ddm-placeholder hidden" label="" name="descriptionEditor" placeholder='<%= LanguageUtil.get(request, "add-a-short-description-for-this-element-set") %>' type="textarea" value="<%= HtmlUtil.escape(ddmFormAdminDisplayContext.getFormDescription()) %>" />
-				</h5>
-
-				<aui:input name="description" type="hidden" />
-			</clay:container-fluid>
+		<div id="<portlet:namespace />-container">
+			<react:component
+				module="admin/js/App.es"
+				props='<%=
+					HashMapBuilder.<String, Object>put(
+						"availableLanguageIds", ddmFormAdminDisplayContext.getAvailableLanguageIdsJSONArray()
+					).put(
+						"context", formBuilderContextJSONObject
+					).put(
+						"dataProviderInstanceParameterSettingsURL", dataProviderInstanceParameterSettingsURL
+					).put(
+						"dataProviderInstancesURL", dataProviderInstancesURL
+					).put(
+						"defaultLanguageId", ddmFormAdminDisplayContext.getDefaultLanguageId()
+					).put(
+						"elementSets", ddmFormAdminDisplayContext.getFieldSetsJSONArray()
+					).put(
+						"fieldSetDefinitionURL", ddmFormAdminDisplayContext.getFieldSetDefinitionURL()
+					).put(
+						"fieldTypes", ddmFormAdminDisplayContext.getDDMFormFieldTypesJSONArray()
+					).put(
+						"groupId", groupId
+					).put(
+						"localizedDescription", ddmFormAdminDisplayContext.getFormLocalizedDescriptionJSONObject()
+					).put(
+						"localizedName", ddmFormAdminDisplayContext.getFormLocalizedNameJSONObject(structure)
+					).put(
+						"mainRequire", ddmFormAdminDisplayContext.getMainRequire()
+					).put(
+						"portletNamespace", liferayPortletResponse.getNamespace()
+					).put(
+						"redirectURL", HtmlUtil.escape(redirect)
+					).put(
+						"spritemap", FrontendIconsUtil.getSpritemap(themeDisplay)
+					).put(
+						"view", "fieldSets"
+					).build()
+				%>'
+			/>
 		</div>
-
-		<div id="<portlet:namespace />-container"></div>
 	</aui:form>
 </div>
 
 <div class="hide">
 	<react:component
-		module="admin/js/index.es"
+		module="admin/js/FormView"
 		props="<%= ddmFormAdminDisplayContext.getDDMFormSettingsContext(pageContext) %>"
 	/>
 </div>
@@ -118,77 +143,16 @@ renderResponse.setTitle((structure == null) ? LanguageUtil.get(request, "new-ele
 	Liferay.namespace('DDM').FormSettings = {
 		portletNamespace: '<portlet:namespace />',
 		showPagination: false,
-		spritemap: '<%= themeDisplay.getPathThemeImages() %>/clay/icons.svg',
-	};
-
-	Liferay.Forms.App = {
-		dispose: function () {
-			if (Liferay.Forms.instance) {
-				Liferay.Forms.instance.dispose();
-				Liferay.Forms.instance = null;
-			}
-		},
-		reset: function () {
-			var pages;
-
-			if (Liferay.Forms.instance) {
-				pages = Liferay.Forms.instance.state.pages;
-			}
-
-			this.dispose();
-			this.start(pages);
-		},
-		start: function (initialPages) {
-			Liferay.Loader.require(
-				'<%= mainRequire %>',
-				function (packageName) {
-					var context = <%= serializedFormBuilderContext %>;
-
-					if (context.pages.length === 0 && initialPages) {
-						context.pages = initialPages;
-					}
-
-					Liferay.Forms.instance = new packageName.Form(
-						{
-							context: context,
-							dataProviderInstanceParameterSettingsURL:
-								'<%= dataProviderInstanceParameterSettingsURL %>',
-							dataProviderInstancesURL:
-								'<%= dataProviderInstancesURL %>',
-							defaultLanguageId:
-								'<%= ddmFormAdminDisplayContext.getDefaultLanguageId() %>',
-							fieldSetDefinitionURL:
-								'<%= ddmFormAdminDisplayContext.getFieldSetDefinitionURL() %>',
-							fieldSets: <%= ddmFormAdminDisplayContext.getFieldSetsJSONArray() %>,
-							fieldTypes: <%= ddmFormAdminDisplayContext.getDDMFormFieldTypesJSONArray() %>,
-							groupId: <%= groupId %>,
-							localizedDescription: <%= ddmFormAdminDisplayContext.getFormLocalizedDescription() %>,
-							localizedName: <%= ddmFormAdminDisplayContext.getFormLocalizedName(structure) %>,
-							namespace: '<portlet:namespace />',
-							redirectURL: '<%= HtmlUtil.escape(redirect) %>',
-							spritemap: Liferay.DDM.FormSettings.spritemap,
-							strings: Liferay.DDM.FormSettings.strings,
-							view: 'fieldSets',
-						},
-						'#<portlet:namespace />-container'
-					);
-				},
-				function (error) {
-					throw error;
-				}
-			);
-		},
+		spritemap: '<%= FrontendIconsUtil.getSpritemap(themeDisplay) %>',
 	};
 
 	var clearPortletHandlers = function (event) {
 		if (event.portletId === '<%= portletDisplay.getRootPortletId() %>') {
-			Liferay.Forms.App.dispose();
-
 			var translationManager = Liferay.component(
 				'<portlet:namespace />translationManager'
 			);
 
-			Liferay.destroyComponents(function (component) {
+			Liferay.destroyComponents((component) => {
 				var destroy = false;
 
 				if (component === translationManager) {
@@ -203,6 +167,4 @@ renderResponse.setTitle((structure == null) ? LanguageUtil.get(request, "new-ele
 	};
 
 	Liferay.on('destroyPortlet', clearPortletHandlers);
-
-	Liferay.Forms.App.start();
 </aui:script>

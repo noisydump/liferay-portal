@@ -17,12 +17,13 @@
 <%@ include file="/init.jsp" %>
 
 <%
-PortletURL portletURL = renderResponse.createRenderURL();
-
-portletURL.setParameter("mvcRenderCommandName", "/configuration_admin/view_configuration_screen");
-portletURL.setParameter("configurationScreenKey", "2-synced-contact-data");
-
-String redirect = portletURL.toString();
+String redirect = PortletURLBuilder.createRenderURL(
+	renderResponse
+).setMVCRenderCommandName(
+	"/configuration_admin/view_configuration_screen"
+).setParameter(
+	"configurationScreenKey", "2-synced-contact-data"
+).buildString();
 
 AnalyticsConfiguration analyticsConfiguration = (AnalyticsConfiguration)request.getAttribute(AnalyticsSettingsWebKeys.ANALYTICS_CONFIGURATION);
 AnalyticsUsersManager analyticsUsersManager = (AnalyticsUsersManager)request.getAttribute(AnalyticsSettingsWebKeys.ANALYTICS_USERS_MANAGER);
@@ -119,8 +120,8 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(resourceBundle, "
 
 				<div class="pr-3">
 					<clay:sticker
-						cssClass="sticker-light"
-						displayType="light"
+						cssClass="sticker-dark"
+						displayType="dark"
 						icon="users"
 					/>
 				</div>
@@ -160,8 +161,8 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(resourceBundle, "
 
 				<div class="pr-3">
 					<clay:sticker
-						cssClass="sticker-light"
-						displayType="light"
+						cssClass="sticker-dark"
+						displayType="dark"
 						icon="organizations"
 					/>
 				</div>

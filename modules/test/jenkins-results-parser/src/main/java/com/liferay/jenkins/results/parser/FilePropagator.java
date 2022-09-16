@@ -80,7 +80,7 @@ public class FilePropagator {
 			"File propagation starting with " + threadCount + " threads.");
 
 		try {
-			long start = System.currentTimeMillis();
+			long start = JenkinsResultsParserUtil.getCurrentTimeMillis();
 
 			while (!_targetSlaves.isEmpty() || !_busySlaves.isEmpty()) {
 				synchronized (this) {
@@ -113,7 +113,8 @@ public class FilePropagator {
 				sb.append("\nTarget slaves:");
 				sb.append(_targetSlaves.size());
 				sb.append("\nTotal duration: ");
-				sb.append(System.currentTimeMillis() - start);
+				sb.append(
+					JenkinsResultsParserUtil.getCurrentTimeMillis() - start);
 				sb.append("\n");
 
 				System.out.println(sb.toString());
@@ -123,7 +124,8 @@ public class FilePropagator {
 
 			System.out.println(
 				"File propagation completed in " +
-					(System.currentTimeMillis() - start) + "ms.");
+					(JenkinsResultsParserUtil.getCurrentTimeMillis() - start) +
+						"ms.");
 
 			if (!_errorSlaves.isEmpty()) {
 				System.out.println(
@@ -153,8 +155,36 @@ public class FilePropagator {
 			commands.add(_getMkdirCommand(targetFileName));
 
 			if (sourceFileName.startsWith("http")) {
-				commands.add(
-					"curl -o " + targetFileName + " " + sourceFileName);
+				StringBuilder sb = new StringBuilder();
+
+				sb.append("curl ");
+
+				try {
+					if (sourceFileName.startsWith(
+							"https://release.liferay.com")) {
+
+						sb.append(" -u ");
+						sb.append(
+							JenkinsResultsParserUtil.getBuildProperty(
+								"jenkins.admin.user.name"));
+						sb.append(":");
+						sb.append(
+							JenkinsResultsParserUtil.getBuildProperty(
+								"jenkins.admin.user.password"));
+					}
+				}
+				catch (IOException ioException) {
+					throw new RuntimeException(
+						"Unable to get jenkins-admin user credentials",
+						ioException);
+				}
+
+				sb.append("-o ");
+				sb.append(targetFileName);
+				sb.append(" ");
+				sb.append(sourceFileName);
+
+				commands.add(sb.toString());
 			}
 			else {
 				commands.add(
@@ -258,7 +288,7 @@ public class FilePropagator {
 
 		@Override
 		public void run() {
-			long start = System.currentTimeMillis();
+			long start = JenkinsResultsParserUtil.getCurrentTimeMillis();
 
 			List<FilePropagatorTask> filePropagatorTasks =
 				_filePropagator._filePropagatorTasks;
@@ -286,7 +316,7 @@ public class FilePropagator {
 				_successful = false;
 			}
 
-			_duration = System.currentTimeMillis() - start;
+			_duration = JenkinsResultsParserUtil.getCurrentTimeMillis() - start;
 
 			synchronized (_filePropagator) {
 				_filePropagator._busySlaves.remove(_mirrorSlave);

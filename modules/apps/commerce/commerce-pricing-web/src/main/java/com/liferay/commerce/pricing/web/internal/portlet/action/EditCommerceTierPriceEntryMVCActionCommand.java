@@ -22,6 +22,10 @@ import com.liferay.commerce.price.list.model.CommerceTierPriceEntry;
 import com.liferay.commerce.price.list.service.CommercePriceEntryService;
 import com.liferay.commerce.price.list.service.CommerceTierPriceEntryService;
 import com.liferay.commerce.pricing.constants.CommercePricingPortletKeys;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
@@ -43,6 +47,7 @@ import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletURL;
+import javax.portlet.WindowStateException;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -144,34 +149,52 @@ public class EditCommerceTierPriceEntryMVCActionCommand
 			ActionRequest actionRequest, long commerceTierPriceEntryId)
 		throws Exception {
 
-		PortletURL portletURL = _portal.getControlPanelPortletURL(
-			actionRequest, CommercePriceListPortletKeys.COMMERCE_PRICE_LIST,
-			PortletRequest.RENDER_PHASE);
+		PortletURL portletURL = PortletURLBuilder.create(
+			_portal.getControlPanelPortletURL(
+				actionRequest, CommercePriceListPortletKeys.COMMERCE_PRICE_LIST,
+				PortletRequest.RENDER_PHASE)
+		).setMVCRenderCommandName(
+			"/commerce_price_list/edit_commerce_tier_price_entry"
+		).setParameter(
+			"commercePriceEntryId",
+			() -> {
+				long commercePriceEntryId = ParamUtil.getLong(
+					actionRequest, "commercePriceEntryId");
 
-		portletURL.setParameter(
-			"mvcRenderCommandName",
-			"/commerce_price_list/edit_commerce_tier_price_entry");
+				if (commercePriceEntryId > 0) {
+					return commercePriceEntryId;
+				}
 
-		long commercePriceEntryId = ParamUtil.getLong(
-			actionRequest, "commercePriceEntryId");
+				return null;
+			}
+		).setParameter(
+			"commercePriceListId",
+			() -> {
+				long commercePriceListId = ParamUtil.getLong(
+					actionRequest, "commercePriceListId");
 
-		if (commercePriceEntryId > 0) {
-			portletURL.setParameter(
-				"commercePriceEntryId", String.valueOf(commercePriceEntryId));
+				if (commercePriceListId > 0) {
+					return commercePriceListId;
+				}
+
+				return null;
+			}
+		).setParameter(
+			"commerceTierPriceEntryId",
+			() -> {
+				if (commerceTierPriceEntryId > 0) {
+					return commerceTierPriceEntryId;
+				}
+
+				return null;
+			}
+		).buildPortletURL();
+
+		try {
+			portletURL.setWindowState(LiferayWindowState.POP_UP);
 		}
-
-		long commercePriceListId = ParamUtil.getLong(
-			actionRequest, "commercePriceListId");
-
-		if (commercePriceListId > 0) {
-			portletURL.setParameter(
-				"commercePriceListId", String.valueOf(commercePriceListId));
-		}
-
-		if (commerceTierPriceEntryId > 0) {
-			portletURL.setParameter(
-				"commerceTierPriceEntryId",
-				String.valueOf(commerceTierPriceEntryId));
+		catch (WindowStateException windowStateException) {
+			_log.error(windowStateException);
 		}
 
 		return portletURL.toString();
@@ -202,9 +225,9 @@ public class EditCommerceTierPriceEntryMVCActionCommand
 		BigDecimal discountLevel4 = (BigDecimal)ParamUtil.getNumber(
 			actionRequest, "discountLevel4", BigDecimal.ZERO);
 
-		Date now = new Date();
+		Date date = new Date();
 
-		Calendar calendar = CalendarFactoryUtil.getCalendar(now.getTime());
+		Calendar calendar = CalendarFactoryUtil.getCalendar(date.getTime());
 
 		int displayDateMonth = ParamUtil.getInteger(
 			actionRequest, "displayDateMonth", calendar.get(Calendar.MONTH));
@@ -252,7 +275,7 @@ public class EditCommerceTierPriceEntryMVCActionCommand
 		if (commerceTierPriceEntryId <= 0) {
 			commerceTierPriceEntry =
 				_commerceTierPriceEntryService.addCommerceTierPriceEntry(
-					commercePriceEntryId, null, price, minQuantity,
+					null, commercePriceEntryId, price, minQuantity,
 					commercePriceEntry.isBulkPricing(), !overrideDiscount,
 					discountLevel1, discountLevel2, discountLevel3,
 					discountLevel4, displayDateMonth, displayDateDay,
@@ -276,6 +299,9 @@ public class EditCommerceTierPriceEntryMVCActionCommand
 
 		return commerceTierPriceEntry;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		EditCommerceTierPriceEntryMVCActionCommand.class);
 
 	@Reference
 	private CommercePriceEntryService _commercePriceEntryService;

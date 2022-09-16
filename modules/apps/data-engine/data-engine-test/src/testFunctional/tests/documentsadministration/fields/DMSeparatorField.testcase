@@ -1,9 +1,9 @@
-@component-name = "portal-document-management"
+@component-name = "data-engine"
 definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Documents Management";
+	property testray.main.component.name = "Data Engine";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -52,6 +52,7 @@ definition {
 		property portal.acceptance = "false";
 
 		// TODO LPS-98081 DeleteSeparatorOnBuilder pending implementation
+
 	}
 
 	@description = "This is a test for LPS-98081. As a Developer, I want to use separators"
@@ -61,6 +62,7 @@ definition {
 		property portal.acceptance = "false";
 
 		// TODO LPS-98081 DuplicateSeparatorOnBuilder pending implementation
+
 	}
 
 	@description = "This is a test for LPS-98081. As a Developer, I want to use separators"
@@ -70,6 +72,7 @@ definition {
 		property portal.acceptance = "false";
 
 		// TODO LPS-98081 EditHelpTextOfSeparator pending implementation
+
 	}
 
 	@description = "This is a test for LPS-98081. As a Developer, I want to use separators"
@@ -79,6 +82,7 @@ definition {
 		property portal.acceptance = "false";
 
 		// TODO LPS-98081 EditLabelOfSeparator pending implementation
+
 	}
 
 	@description = "This is a test for LPS-98081. As a Developer, I want to use separators"
@@ -86,19 +90,18 @@ definition {
 	test EditReferenceOfSeparator {
 		property portal.acceptance = "false";
 
-		DMDocumentType.addWithoutSave(
+		DMDocumentType.add(
 			dmDocumentTypeDescription = "Document Type Description",
+			dmDocumentTypeFieldNames = "Separator",
 			dmDocumentTypeName = "Document Type Name");
+
+		DMNavigator.gotoEditDocumentType(dmDocumentTypeName = "Document Type Name");
 
 		var assertFieldReference = "Myreference123";
 
-		DataEngine.addField(
-			fieldFieldLabel = "Separator test",
-			fieldName = "Separator");
-
 		DataEngine.editFieldReference(
 			assertFieldReference = "${assertFieldReference}",
-			fieldFieldLabel = "Separator test",
+			fieldFieldLabel = "Separator",
 			fieldName = "Separator",
 			fieldReference = "${assertFieldReference}");
 
@@ -106,9 +109,8 @@ definition {
 
 		DMNavigator.gotoDocumentCP(dmDocumentTitle = "Document Type Name");
 
-		DataEngine.viewFieldReference(
-			fieldFieldLabel = "Separator test",
-			fieldName = "Separator",
+		DEBuilder.assertFieldReference(
+			fieldLabel = "Separator",
 			fieldReference = "${assertFieldReference}");
 
 		Button.clickSave();
@@ -120,22 +122,20 @@ definition {
 		property portal.acceptance = "false";
 
 		var assertFieldReference = "Myreference";
-
 		var fieldReferenceWithInvalidChars = "Myreference@#$%¨&*";
 
 		DMNavigator.gotoDocumentType();
 
-		DMDocumentType.addWithoutSave(
+		DMDocumentType.add(
 			dmDocumentTypeDescription = "Document Type Description",
+			dmDocumentTypeFieldNames = "Separator",
 			dmDocumentTypeName = "Document Type Name");
 
-		DataEngine.addField(
-			fieldFieldLabel = "Separator test",
-			fieldName = "Separator");
+		DMNavigator.gotoEditDocumentType(dmDocumentTypeName = "Document Type Name");
 
 		DataEngine.editFieldReference(
 			assertFieldReference = "${assertFieldReference}",
-			fieldFieldLabel = "Separator test",
+			fieldFieldLabel = "Separator",
 			fieldName = "Separator",
 			fieldReference = "${fieldReferenceWithInvalidChars}");
 
@@ -143,9 +143,8 @@ definition {
 
 		DMNavigator.gotoDocumentCP(dmDocumentTitle = "Document Type Name");
 
-		DataEngine.viewFieldReference(
-			fieldFieldLabel = "Separator test",
-			fieldName = "Separator",
+		DEBuilder.assertFieldReference(
+			fieldLabel = "Separator",
 			fieldReference = "${assertFieldReference}");
 
 		Button.clickSave();
@@ -158,6 +157,7 @@ definition {
 		property portal.acceptance = "false";
 
 		// TODO LPS-98081 RepeatSeparatorOnUpload pending implementation
+
 	}
 
 	@description = "This is a test for LPS-98081. As a Developer, I want to use separators"
@@ -167,7 +167,7 @@ definition {
 
 		DMNavigator.gotoDocumentCP(dmDocumentTitle = "Document Type Name");
 
-		DataEngine.editFieldRepeatable(fieldFieldLabel = "Separator");
+		DataEngine.toggleFieldRepeatable(fieldFieldLabel = "Separator");
 
 		Button.clickSave();
 
@@ -189,7 +189,7 @@ definition {
 
 		FormViewBuilder.switchToAdvancedTab();
 
-		FormFields.viewSwitcherLabel(
+		FormFields.viewSwitchLabel(
 			fieldLabel = "Separator",
 			fieldName = "Separator");
 
@@ -197,7 +197,7 @@ definition {
 			checkboxName = "Show Label",
 			locator1 = "Checkbox#ANY_CHECKBOX");
 
-		FormFields.viewSwitcherLabelNotPresent(
+		FormFields.viewSwitchLabelNotPresent(
 			fieldLabel = "Separator Label",
 			fieldName = "Separator");
 

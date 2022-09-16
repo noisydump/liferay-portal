@@ -25,6 +25,8 @@ import com.liferay.segments.experiment.web.internal.configuration.SegmentsExperi
 import com.liferay.segments.experiment.web.internal.constants.SegmentsExperimentWebKeys;
 import com.liferay.segments.experiment.web.internal.display.context.SegmentsExperimentDisplayContext;
 import com.liferay.segments.experiment.web.internal.product.navigation.control.menu.SegmentsExperimentProductNavigationControlMenuEntry;
+import com.liferay.segments.manager.SegmentsExperienceManager;
+import com.liferay.segments.service.SegmentsExperienceLocalService;
 import com.liferay.segments.service.SegmentsExperienceService;
 import com.liferay.segments.service.SegmentsExperimentRelService;
 import com.liferay.segments.service.SegmentsExperimentService;
@@ -63,7 +65,8 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.display-name=Segments Experiment",
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + SegmentsPortletKeys.SEGMENTS_EXPERIMENT,
-		"javax.portlet.resource-bundle=content.Language"
+		"javax.portlet.resource-bundle=content.Language",
+		"javax.portlet.version=3.0"
 	},
 	service = {Portlet.class, SegmentsExperimentPortlet.class}
 )
@@ -96,10 +99,11 @@ public class SegmentsExperimentPortlet extends MVCPortlet {
 
 		SegmentsExperimentDisplayContext segmentsExperimentDisplayContext =
 			new SegmentsExperimentDisplayContext(
-				httpServletRequest, _layoutLocalService, _portal,
+				httpServletRequest, _layoutLocalService, _portal, renderRequest,
 				renderResponse, _segmentsExperienceService,
-				_segmentsExperimentConfiguration, _segmentsExperimentRelService,
-				_segmentsExperimentService);
+				_segmentsExperimentConfiguration,
+				new SegmentsExperienceManager(_segmentsExperienceLocalService),
+				_segmentsExperimentRelService, _segmentsExperimentService);
 
 		renderRequest.setAttribute(
 			SegmentsExperimentWebKeys.SEGMENTS_EXPERIMENT_DISPLAY_CONTEXT,
@@ -118,6 +122,9 @@ public class SegmentsExperimentPortlet extends MVCPortlet {
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private SegmentsExperienceLocalService _segmentsExperienceLocalService;
 
 	@Reference
 	private SegmentsExperienceService _segmentsExperienceService;

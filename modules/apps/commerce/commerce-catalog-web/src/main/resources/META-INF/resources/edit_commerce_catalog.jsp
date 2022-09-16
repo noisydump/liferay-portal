@@ -40,7 +40,7 @@ else {
 	actions="<%= commerceCatalogDisplayContext.getHeaderActionModels() %>"
 	bean="<%= commerceCatalog %>"
 	beanIdLabel="id"
-	externalReferenceCode="<%= commerceCatalog.getExternalReferenceCode() %>"
+	externalReferenceCode="<%= HtmlUtil.escape(commerceCatalog.getExternalReferenceCode()) %>"
 	externalReferenceCodeEditUrl="<%= editCommerceCatalogExternalReferenceCodeURL %>"
 	model="<%= CommerceCatalog.class %>"
 	title="<%= commerceCatalog.getName() %>"
@@ -48,7 +48,7 @@ else {
 
 <div id="<portlet:namespace />editCatalogContainer">
 	<liferay-frontend:screen-navigation
-		fullContainerCssClass="col-12 pt-4"
+		containerWrapperCssClass="container"
 		key="<%= CommerceCatalogScreenNavigationConstants.SCREEN_NAVIGATION_KEY_COMMERCE_CATALOG_GENERAL %>"
 		modelBean="<%= commerceCatalog %>"
 		portletURL="<%= currentURLObj %>"

@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
@@ -42,7 +43,10 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @generated
  */
 @Generated("")
-@GraphQLName("Fragment")
+@GraphQLName(
+	description = "Represents a template made up of CSS, HTML, and JavaScript used to build Content Pages.",
+	value = "Fragment"
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "Fragment")
 public class Fragment implements Serializable {
@@ -51,7 +55,11 @@ public class Fragment implements Serializable {
 		return ObjectMapperUtil.readValue(Fragment.class, json);
 	}
 
-	@Schema
+	public static Fragment unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(Fragment.class, json);
+	}
+
+	@Schema(description = "The collection name this fragment belongs to.")
 	public String getCollectionName() {
 		return collectionName;
 	}
@@ -75,11 +83,11 @@ public class Fragment implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The collection name this fragment belongs to.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String collectionName;
 
-	@Schema
+	@Schema(description = "The fragment's key.")
 	public String getKey() {
 		return key;
 	}
@@ -101,11 +109,11 @@ public class Fragment implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The fragment's key.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String key;
 
-	@Schema
+	@Schema(description = "The fragment's name.")
 	public String getName() {
 		return name;
 	}
@@ -127,7 +135,7 @@ public class Fragment implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The fragment's name.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String name;
 
@@ -206,15 +214,16 @@ public class Fragment implements Serializable {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.Fragment",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
 	}
 
 	private static boolean _isArray(Object value) {
@@ -240,8 +249,8 @@ public class Fragment implements Serializable {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -272,7 +281,7 @@ public class Fragment implements Serializable {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -280,7 +289,7 @@ public class Fragment implements Serializable {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -288,5 +297,10 @@ public class Fragment implements Serializable {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

@@ -20,13 +20,13 @@
 
 <%@ taglib uri="http://liferay.com/tld/aui" prefix="aui" %><%@
 taglib uri="http://liferay.com/tld/clay" prefix="clay" %><%@
+taglib uri="http://liferay.com/tld/frontend" prefix="liferay-frontend" %><%@
 taglib uri="http://liferay.com/tld/portlet" prefix="liferay-portlet" %><%@
 taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %><%@
 taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %>
 
 <%@ page import="com.liferay.petra.lang.ClassResolverUtil" %><%@
 page import="com.liferay.petra.string.StringPool" %><%@
-page import="com.liferay.portal.kernel.dao.search.DisplayTerms" %><%@
 page import="com.liferay.portal.kernel.dao.search.SearchContainer" %><%@
 page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
 page import="com.liferay.portal.kernel.util.CalendarFactoryUtil" %><%@
@@ -35,17 +35,16 @@ page import="com.liferay.portal.kernel.util.MethodKey" %><%@
 page import="com.liferay.portal.kernel.util.ParamUtil" %><%@
 page import="com.liferay.portal.kernel.util.PortalClassInvoker" %><%@
 page import="com.liferay.portal.kernel.util.PortalClassLoaderUtil" %><%@
-page import="com.liferay.portal.kernel.util.PortalUtil" %><%@
 page import="com.liferay.portal.kernel.util.Validator" %><%@
-page import="com.liferay.portal.kernel.util.WebKeys" %><%@
 page import="com.liferay.portal.security.audit.AuditEvent" %><%@
-page import="com.liferay.portal.security.audit.storage.comparator.AuditEventCreateDateComparator" %><%@
-page import="com.liferay.portal.security.audit.web.internal.AuditEventManagerUtil" %>
+page import="com.liferay.portal.security.audit.web.internal.AuditEventManagerUtil" %><%@
+page import="com.liferay.portal.security.audit.web.internal.display.context.AuditDisplayContext" %>
 
 <%@ page import="java.text.Format" %>
 
-<%@ page import="java.util.Calendar" %><%@
-page import="java.util.Date" %>
+<%@ page import="java.util.Calendar" %>
+
+<liferay-frontend:defineObjects />
 
 <liferay-theme:defineObjects />
 
@@ -53,6 +52,8 @@ page import="java.util.Date" %>
 
 <%
 Calendar today = CalendarFactoryUtil.getCalendar(timeZone, locale);
+
+today.add(Calendar.MINUTE, 1);
 
 Calendar yesterday = CalendarFactoryUtil.getCalendar(timeZone, locale);
 

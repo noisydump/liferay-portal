@@ -16,7 +16,13 @@ package com.liferay.layout.admin.web.internal.change.tracking.spi.display;
 
 import com.liferay.change.tracking.spi.display.BaseCTDisplayRenderer;
 import com.liferay.change.tracking.spi.display.CTDisplayRenderer;
+import com.liferay.change.tracking.spi.display.context.DisplayContext;
 import com.liferay.layout.admin.constants.LayoutAdminPortletKeys;
+import com.liferay.layout.crawler.LayoutCrawler;
+import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
+import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalService;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.ColorScheme;
 import com.liferay.portal.kernel.model.Group;
@@ -48,6 +54,16 @@ import org.osgi.service.component.annotations.Reference;
 public class LayoutCTDisplayRenderer extends BaseCTDisplayRenderer<Layout> {
 
 	@Override
+	public String[] getAvailableLanguageIds(Layout layout) {
+		return layout.getAvailableLanguageIds();
+	}
+
+	@Override
+	public String getDefaultLanguageId(Layout layout) {
+		return layout.getDefaultLanguageId();
+	}
+
+	@Override
 	public String getEditURL(
 			HttpServletRequest httpServletRequest, Layout layout)
 		throws PortalException {
@@ -64,12 +80,13 @@ public class LayoutCTDisplayRenderer extends BaseCTDisplayRenderer<Layout> {
 			return null;
 		}
 
-		PortletURL portletURL = _portal.getControlPanelPortletURL(
-			httpServletRequest, LayoutAdminPortletKeys.GROUP_PAGES,
-			PortletRequest.RENDER_PHASE);
-
-		portletURL.setParameter(
-			"mvcRenderCommandName", "/layout_admin/edit_layout");
+		PortletURL portletURL = PortletURLBuilder.create(
+			_portal.getControlPanelPortletURL(
+				httpServletRequest, LayoutAdminPortletKeys.GROUP_PAGES,
+				PortletRequest.RENDER_PHASE)
+		).setMVCRenderCommandName(
+			"/layout_admin/edit_layout"
+		).buildPortletURL();
 
 		String currentURL = _portal.getCurrentURL(httpServletRequest);
 
@@ -97,6 +114,28 @@ public class LayoutCTDisplayRenderer extends BaseCTDisplayRenderer<Layout> {
 	@Override
 	public boolean isHideable(Layout layout) {
 		return layout.isSystem();
+	}
+
+	@Override
+	public String renderPreview(DisplayContext<Layout> displayContext)
+		throws Exception {
+
+		Layout layout = displayContext.getModel();
+
+		HttpServletRequest httpServletRequest =
+			displayContext.getHttpServletRequest();
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		return StringBundler.concat(
+			"<div style=\"pointer-events: none;\"><iframe frameborder=\"0\" ",
+			"onload=\"this.style.height = (this.contentWindow.document.body.",
+			"scrollHeight+20) + 'px';\" src=\"",
+			_portal.getLayoutFullURL(layout, themeDisplay),
+			"?p_l_mode=preview&previewCTCollectionId=",
+			layout.getCtCollectionId(), "\" width=\"100%\"></iframe></div>");
 	}
 
 	@Override
@@ -186,6 +225,17 @@ public class LayoutCTDisplayRenderer extends BaseCTDisplayRenderer<Layout> {
 			"priority", layout.getPriority()
 		);
 	}
+
+	@Reference
+	private LayoutCrawler _layoutCrawler;
+
+	@Reference
+	private LayoutPageTemplateEntryLocalService
+		_layoutPageTemplateEntryLocalService;
+
+	@Reference
+	private LayoutPageTemplateStructureLocalService
+		_layoutPageTemplateStructureLocalService;
 
 	@Reference
 	private LayoutPermission _layoutPermission;

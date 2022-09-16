@@ -15,18 +15,11 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 
-import {PRODUCT_OPTIONS_CHANGED} from '../../utilities/eventsDefinitions';
+import {CP_INSTANCE_CHANGED} from '../../utilities/eventsDefinitions';
 import MainImage from './MainImage';
 import Overlay from './Overlay';
 import Thumbnails from './Thumbnails';
-
-function fetchImage(url) {
-	return new Promise((resolve) => {
-		const img = new Image();
-		img.src = url;
-		img.onload = () => resolve(url);
-	});
-}
+import {fetchImage, updateGallery} from './util/index';
 
 export default class Gallery extends React.Component {
 	constructor(props) {
@@ -51,25 +44,44 @@ export default class Gallery extends React.Component {
 	}
 
 	componentDidMount() {
-		Liferay.on(PRODUCT_OPTIONS_CHANGED, this._handleImagesUpdate, this);
+		Liferay.on(
+			`${this.props.namespace}${CP_INSTANCE_CHANGED}`,
+			this._handleImagesUpdate,
+			this
+		);
 	}
 
 	componentWillUnmount() {
-		Liferay.detach(PRODUCT_OPTIONS_CHANGED, this._handleImagesUpdate, this);
+		Liferay.detach(
+			`${this.props.namespace}${CP_INSTANCE_CHANGED}`,
+			this._handleImagesUpdate,
+			this
+		);
 	}
 
-	_handleImagesUpdate(e) {
-		if (e.images) {
-			this.setState({
-				images: e.images,
-				selected: 0,
-			});
-		}
+	_handleImagesUpdate({formFields}) {
+		const {namespace, viewCPAttachmentURL} = this.props;
+
+		updateGallery(formFields, namespace, viewCPAttachmentURL).then(
+			(selectedImage) => {
+				const selectedImageIndex =
+					this.state.images.length > 1
+						? this.state.images.findIndex(
+								({URL}) => URL === selectedImage[0].url
+						  )
+						: 0;
+
+				const selected =
+					selectedImageIndex >= 0 ? selectedImageIndex : 0;
+
+				this.setState({selected});
+			}
+		);
 	}
 
 	fullscreenOpen() {
 		if (!this.state.loading) {
-			this.imageLoad(this.state.images[this.state.selected].url).then(
+			this.imageLoad(this.state.images[this.state.selected].URL).then(
 				() => {
 					this.setState({fullscreen: true});
 				}
@@ -87,13 +99,13 @@ export default class Gallery extends React.Component {
 		);
 	}
 
-	goToPrev(e) {
-		e.stopPropagation();
+	goToPrev(event) {
+		event.stopPropagation();
 		this.goTo(this.state.selected - 1);
 	}
 
-	goToNext(e) {
-		e.stopPropagation();
+	goToNext(event) {
+		event.stopPropagation();
 		this.goTo(this.state.selected + 1);
 	}
 
@@ -121,7 +133,7 @@ export default class Gallery extends React.Component {
 
 	imageSelect(toSelect) {
 		if (toSelect !== this.state.selected && !this.state.loading) {
-			this.imageLoad(this.state.images[toSelect].url).then(() => {
+			this.imageLoad(this.state.images[toSelect].URL).then(() => {
 				this.setState({selected: toSelect});
 			});
 		}
@@ -133,14 +145,17 @@ export default class Gallery extends React.Component {
 
 		return (
 			<div className="product-gallery">
-				{images && images.length > 0 && (
+				{images && !!images.length && (
 					<MainImage
+						adaptiveMediaImageHTMLTag={
+							images[selected].adaptiveMediaImageHTMLTag
+						}
 						background={background}
 						loading={loading}
 						onNext={images.length > 1 ? this.goToNext : null}
 						onPrev={images.length > 1 ? this.goToPrev : null}
 						onZoom={this.fullscreenOpen}
-						src={images[selected].url}
+						src={images[selected].URL}
 						title={images[selected].title}
 					/>
 				)}
@@ -156,11 +171,14 @@ export default class Gallery extends React.Component {
 
 				{fullscreen ? (
 					<Overlay
+						adaptiveMediaImageHTMLTag={
+							images[selected].adaptiveMediaImageHTMLTag
+						}
 						background={background}
 						onClose={this.fullscreenClose}
 						onNext={images.length > 1 ? this.goToNext : null}
 						onPrev={images.length > 1 ? this.goToPrev : null}
-						src={images[selected].url}
+						src={images[selected].URL}
 						title={images[selected].title}
 					/>
 				) : null}
@@ -173,9 +191,11 @@ Gallery.propTypes = {
 	background: PropTypes.string,
 	images: PropTypes.arrayOf(
 		PropTypes.shape({
-			thumbnailUrl: PropTypes.string.isRequired,
+			URL: PropTypes.string.isRequired,
+			thumbnailURL: PropTypes.string.isRequired,
 			title: PropTypes.string.isRequired,
-			url: PropTypes.string.isRequired,
 		})
 	),
+	namespace: PropTypes.string,
+	viewCPAttachmentURL: PropTypes.string.isRequired,
 };

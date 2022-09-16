@@ -16,6 +16,7 @@ package com.liferay.configuration.admin.web.internal.util;
 
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.Arrays;
 import java.util.Dictionary;
@@ -24,11 +25,11 @@ import java.util.Vector;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
-import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.metatype.AttributeDefinition;
@@ -38,10 +39,13 @@ import org.osgi.service.metatype.AttributeDefinition;
  */
 public class AttributeDefinitionUtilTest {
 
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
 	@Before
 	public void setUp() {
-		MockitoAnnotations.initMocks(this);
-
 		Mockito.doReturn(
 			_ID
 		).when(
@@ -57,18 +61,18 @@ public class AttributeDefinitionUtilTest {
 
 	@Test
 	public void testDefaultValueArray() {
-		mockCardinality(Integer.MAX_VALUE);
+		_mockCardinality(Integer.MAX_VALUE);
 
-		mockDefaultValue("A", "B", "C");
+		_mockDefaultValue("A", "B", "C");
 
-		assertDefaultValue("A", "B", "C");
+		_assertDefaultValue("A", "B", "C");
 	}
 
 	@Test
 	public void testDefaultValueBlankString() {
-		mockDefaultValue(StringPool.BLANK);
+		_mockDefaultValue(StringPool.BLANK);
 
-		assertDefaultValue(StringPool.BLANK);
+		_assertDefaultValue(StringPool.BLANK);
 	}
 
 	@Test
@@ -79,69 +83,69 @@ public class AttributeDefinitionUtilTest {
 			_attributeDefinition
 		).getDefaultValue();
 
-		assertDefaultValue(StringPool.BLANK);
+		_assertDefaultValue(StringPool.BLANK);
 	}
 
 	@Test
 	public void testDefaultValueWithPipesArray() {
-		mockCardinality(42);
+		_mockCardinality(42);
 
-		mockDefaultValue("A|B|C");
+		_mockDefaultValue("A|B|C");
 
-		assertDefaultValue("A", "B", "C");
+		_assertDefaultValue("A", "B", "C");
 	}
 
 	@Test
 	public void testDefaultValueWithPipesString() {
-		mockDefaultValue("A|B|C");
+		_mockDefaultValue("A|B|C");
 
-		assertDefaultValue("A|B|C");
+		_assertDefaultValue("A|B|C");
 	}
 
 	@Test
 	public void testPropertyArray() {
-		mockCardinality(2);
+		_mockCardinality(2);
 
-		mockProperty(new Object[] {false, true});
+		_mockProperty(new Object[] {false, true});
 
-		assertProperty("false", "true");
+		_assertProperty("false", "true");
 	}
 
 	@Test
 	public void testPropertyEmpty() {
-		assertProperty();
+		_assertProperty();
 	}
 
 	@Test
 	public void testPropertyObject() {
-		mockProperty(42);
+		_mockProperty(42);
 
-		assertProperty("42");
+		_assertProperty("42");
 	}
 
 	@Test
 	public void testPropertyVector() {
-		mockCardinality(-3);
+		_mockCardinality(-3);
 
-		mockProperty(new Vector<Integer>(Arrays.asList(1, 2, 3)));
+		_mockProperty(new Vector<Integer>(Arrays.asList(1, 2, 3)));
 
-		assertProperty("1", "2", "3");
+		_assertProperty("1", "2", "3");
 	}
 
-	protected void assertDefaultValue(String... expecteds) {
+	private void _assertDefaultValue(String... expecteds) {
 		Assert.assertArrayEquals(
 			expecteds,
 			AttributeDefinitionUtil.getDefaultValue(_attributeDefinition));
 	}
 
-	protected void assertProperty(String... expecteds) {
+	private void _assertProperty(String... expecteds) {
 		Assert.assertArrayEquals(
 			expecteds,
 			AttributeDefinitionUtil.getPropertyStringArray(
 				_attributeDefinition, _configuration));
 	}
 
-	protected void mockCardinality(int value) {
+	private void _mockCardinality(int value) {
 		Mockito.doReturn(
 			value
 		).when(
@@ -149,7 +153,7 @@ public class AttributeDefinitionUtilTest {
 		).getCardinality();
 	}
 
-	protected void mockDefaultValue(String... value) {
+	private void _mockDefaultValue(String... value) {
 		Mockito.doReturn(
 			value
 		).when(
@@ -157,18 +161,16 @@ public class AttributeDefinitionUtilTest {
 		).getDefaultValue();
 	}
 
-	protected void mockProperty(Object value) {
+	private void _mockProperty(Object value) {
 		_properties.put(_ID, value);
 	}
 
 	private static final String _ID = RandomTestUtil.randomString();
 
-	@Mock
-	private AttributeDefinition _attributeDefinition;
-
-	@Mock
-	private Configuration _configuration;
-
+	private final AttributeDefinition _attributeDefinition = Mockito.mock(
+		AttributeDefinition.class);
+	private final Configuration _configuration = Mockito.mock(
+		Configuration.class);
 	private final Dictionary<String, Object> _properties = new Hashtable<>();
 
 }

@@ -14,22 +14,26 @@
 
 package com.liferay.site.navigation.admin.web.internal.portlet.action;
 
-import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
-import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.site.navigation.admin.constants.SiteNavigationAdminPortletKeys;
+import com.liferay.site.navigation.admin.web.internal.util.SiteNavigationMenuPortletUtil;
 import com.liferay.site.navigation.exception.InvalidSiteNavigationMenuItemOrderException;
 import com.liferay.site.navigation.model.SiteNavigationMenuItem;
 import com.liferay.site.navigation.service.SiteNavigationMenuItemService;
+import com.liferay.site.navigation.type.SiteNavigationMenuItemTypeRegistry;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
-import javax.portlet.PortletURL;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -53,6 +57,11 @@ public class EditSiteNavigationMenuItemParentMVCActionCommand
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
 
+		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
+
+		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
 		long siteNavigationMenuItemId = ParamUtil.getLong(
 			actionRequest, "siteNavigationMenuItemId");
 
@@ -66,54 +75,50 @@ public class EditSiteNavigationMenuItemParentMVCActionCommand
 					siteNavigationMenuItemId, parentSiteNavigationMenuItemId,
 					order);
 
-			String redirect = _getRedirect(
-				actionRequest, siteNavigationMenuItem);
-
-			actionRequest.setAttribute(WebKeys.REDIRECT, redirect);
+			jsonObject.put(
+				"siteNavigationMenuItems",
+				SiteNavigationMenuPortletUtil.
+					getSiteNavigationMenuItemsJSONArray(
+						0, siteNavigationMenuItem.getSiteNavigationMenuId(),
+						_siteNavigationMenuItemTypeRegistry, themeDisplay));
 		}
 		catch (InvalidSiteNavigationMenuItemOrderException
 					invalidSiteNavigationMenuItemOrderException) {
 
-			SessionErrors.add(
-				actionRequest,
-				invalidSiteNavigationMenuItemOrderException.getClass());
+			Class<?> exceptionClass =
+				invalidSiteNavigationMenuItemOrderException.getClass();
 
-			sendRedirect(actionRequest, actionResponse);
+			jsonObject.put(
+				"error",
+				_language.get(
+					themeDisplay.getRequest(), exceptionClass.getName()));
+		}
+		catch (Exception exception) {
+			_log.error(exception);
+
+			jsonObject.put(
+				"error",
+				_language.get(
+					themeDisplay.getRequest(), "an-unexpected-error-occurred"));
 		}
 
 		hideDefaultSuccessMessage(actionRequest);
+
+		JSONPortletResponseUtil.writeJSON(
+			actionRequest, actionResponse, jsonObject);
 	}
 
-	private String _getRedirect(
-		ActionRequest actionRequest,
-		SiteNavigationMenuItem siteNavigationMenuItem) {
-
-		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
-		String redirect = ParamUtil.getString(actionRequest, "redirect");
-
-		PortletURL redirectURL = PortletURLFactoryUtil.create(
-			actionRequest, SiteNavigationAdminPortletKeys.SITE_NAVIGATION_ADMIN,
-			themeDisplay.getPlid(), ActionRequest.RENDER_PHASE);
-
-		redirectURL.setParameter("mvcPath", "/edit_site_navigation_menu.jsp");
-		redirectURL.setParameter("redirect", redirect);
-		redirectURL.setParameter(
-			"siteNavigationMenuId",
-			String.valueOf(siteNavigationMenuItem.getSiteNavigationMenuId()));
-		redirectURL.setParameter(
-			"selectedSiteNavigationMenuItemId",
-			String.valueOf(
-				siteNavigationMenuItem.getSiteNavigationMenuItemId()));
-
-		return redirectURL.toString();
-	}
+	private static final Log _log = LogFactoryUtil.getLog(
+		EditSiteNavigationMenuItemParentMVCActionCommand.class);
 
 	@Reference
-	private Http _http;
+	private Language _language;
 
 	@Reference
 	private SiteNavigationMenuItemService _siteNavigationMenuItemService;
+
+	@Reference
+	private SiteNavigationMenuItemTypeRegistry
+		_siteNavigationMenuItemTypeRegistry;
 
 }

@@ -15,14 +15,22 @@
 package com.liferay.journal.internal.exportimport.content.processor;
 
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
  * @author Mariano Álvaro Sáiz
  */
 public class JournalArticleExportImportContentProcessorTest {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Test
 	public void testMultipleLinesHTMLComment() {
@@ -53,13 +61,9 @@ public class JournalArticleExportImportContentProcessorTest {
 	private void _testExcludeHTMLComments(
 		String expectedContent, String content) {
 
-		JournalArticleExportImportContentProcessor
-			journalArticleExportImportContentProcessor =
-				new JournalArticleExportImportContentProcessor();
-
 		String excludedHtmlCommentContent = ReflectionTestUtil.invoke(
-			journalArticleExportImportContentProcessor, "_excludeHTMLComments",
-			new Class<?>[] {String.class}, content);
+			new JournalArticleExportImportContentProcessor(),
+			"_excludeHTMLComments", new Class<?>[] {String.class}, content);
 
 		Assert.assertEquals(expectedContent, excludedHtmlCommentContent);
 	}

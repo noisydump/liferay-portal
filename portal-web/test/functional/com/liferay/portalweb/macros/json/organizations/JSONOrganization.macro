@@ -4,9 +4,7 @@ definition {
 		Variables.assertDefined(parameterList = "${organizationName}");
 
 		if (isSet(parentOrganizationName)) {
-			var parentOrganizationId = JSONOrganization.getOrganizationIdByName(
-				organizationName = "${parentOrganizationName}"
-			);
+			var parentOrganizationId = JSONOrganization.getOrganizationIdByName(organizationName = "${parentOrganizationName}");
 		}
 
 		JSONOrganizationAPI._addOrganization(
@@ -16,13 +14,51 @@ definition {
 			parentOrganizationId = "${parentOrganizationId}");
 	}
 
+	macro addOrganizationToDepot {
+		Variables.assertDefined(parameterList = "${organizationName},${depotName}");
+
+		var organizationId = JSONOrganization.getOrganizationIdByName(organizationName = "${organizationName}");
+		var depotId = JSONUserSetter.setGroupId(
+			groupName = "${depotName}",
+			site = "false");
+
+		JSONOrganizationAPI._addOrganizationToSite(
+			groupId = "${depotId}",
+			organizationId = "${organizationId}");
+	}
+
+	macro addOrganizationToSite {
+		Variables.assertDefined(parameterList = "${organizationName},${siteName}");
+
+		var organizationId = JSONOrganization.getOrganizationIdByName(organizationName = "${organizationName}");
+		var groupId = JSONUserSetter.setGroupId(groupName = "${siteName}");
+
+		JSONOrganizationAPI._addOrganizationToSite(
+			groupId = "${groupId}",
+			organizationId = "${organizationId}");
+	}
+
+	macro assignPasswordPolicyToOrganization {
+		Variables.assertDefined(parameterList = "${organizationName},${passwordPolicyName}");
+
+		var organizationId = JSONOrganization.getOrganizationIdByName(organizationName = "${organizationName}");
+		var passwordPolicyId = JSONPasswordPolicy.getPasswordPolicyIdByName(passwordPolicyName = "${passwordPolicyName}");
+
+		JSONOrganizationAPI._assignPasswordPolicyToOrganization(
+			organizationId = "${organizationId}",
+			passwordPolicyId = "${passwordPolicyId}");
+	}
+
 	macro assignUserToOrganization {
 		Variables.assertDefined(parameterList = "${organizationName},${userEmailAddress}");
 
-		var organizationId = JSONOrganization.getOrganizationIdByName(
-			organizationName = "${organizationName}"
-		);
+		if (isSet(parentOrganizationName)) {
+			var parentOrganizationId = JSONOrganization.getOrganizationIdByName(organizationName = "${parentOrganizationName}");
+		}
 
+		var organizationId = JSONOrganization.getOrganizationIdByName(
+			organizationName = "${organizationName}",
+			parentOrganizationId = "${parentOrganizationId}");
 		var userId = JSONUserAPI._getUserIdByEmailAddress(userEmailAddress = "${userEmailAddress}");
 
 		JSONOrganizationAPI._assignUserToOrganization(
@@ -33,9 +69,16 @@ definition {
 	macro deleteOrganizationByName {
 		Variables.assertDefined(parameterList = "${organizationName}");
 
-		var organizationId = JSONOrganization.getOrganizationIdByName(
-			organizationName = "${organizationName}"
-		);
+		if (isSet(parentOrganizationName)) {
+			var parentOrganizationId = JSONOrganization.getOrganizationIdByName(organizationName = "${parentOrganizationName}");
+
+			var organizationId = JSONOrganization.getOrganizationIdByName(
+				organizationName = "${organizationName}",
+				parentOrganizationId = "${parentOrganizationId}");
+		}
+		else {
+			var organizationId = JSONOrganization.getOrganizationIdByName(organizationName = "${organizationName}");
+		}
 
 		JSONOrganizationAPI._deleteOrganization(organizationId = "${organizationId}");
 	}
@@ -44,17 +87,18 @@ definition {
 		Variables.assertDefined(parameterList = "${organizationName}");
 
 		var companyId = JSONCompany.getCompanyId();
-
 		var portalURL = JSONCompany.getPortalURL();
 
+		if (!(isSet(parentOrganizationId))) {
+			var parentOrganizationId = "0";
+		}
+
 		var curl = '''
-			${portalURL}/api/jsonws/organization/get-organizations/company-id/${companyId}/parent-organization-id/0 \
+			${portalURL}/api/jsonws/organization/get-organizations/company-id/${companyId}/parent-organization-id/${parentOrganizationId} \
 				-u test@liferay.com:test
 		''';
 
 		var organizationId = JSONCurlUtil.get("${curl}", "$.[?(@['name'] == '${organizationName}')]['organizationId']");
-		var organizationId = StringUtil.replace("${organizationId}", "[&quot;", "");
-		var organizationId = StringUtil.replace("${organizationId}", "&quot;]", "");
 
 		return "${organizationId}";
 	}

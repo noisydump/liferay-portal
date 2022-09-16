@@ -14,6 +14,8 @@
 
 package com.liferay.commerce.internal.price;
 
+import com.liferay.account.model.AccountEntry;
+import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.commerce.account.model.CommerceAccount;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.currency.model.CommerceCurrency;
@@ -28,12 +30,16 @@ import com.liferay.commerce.price.CommerceProductPrice;
 import com.liferay.commerce.price.CommerceProductPriceCalculation;
 import com.liferay.commerce.price.CommerceProductPriceImpl;
 import com.liferay.commerce.product.constants.CPConstants;
+import com.liferay.commerce.product.constants.CommerceChannelAccountEntryRelConstants;
 import com.liferay.commerce.product.model.CPDefinitionOptionRel;
 import com.liferay.commerce.product.model.CPDefinitionOptionValueRel;
 import com.liferay.commerce.product.model.CPInstance;
+import com.liferay.commerce.product.model.CommerceChannelAccountEntryRel;
 import com.liferay.commerce.product.option.CommerceOptionValue;
 import com.liferay.commerce.product.service.CPDefinitionOptionRelLocalService;
 import com.liferay.commerce.product.service.CPInstanceLocalService;
+import com.liferay.commerce.product.service.CommerceChannelAccountEntryRelLocalService;
+import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.tax.CommerceTaxCalculation;
 import com.liferay.commerce.util.CommerceBigDecimalUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -45,24 +51,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
+import org.osgi.service.component.annotations.Reference;
+
 /**
  * @author Matija Petanjek
  */
 public abstract class BaseCommerceProductPriceCalculation
 	implements CommerceProductPriceCalculation {
-
-	public BaseCommerceProductPriceCalculation(
-		CommerceMoneyFactory commerceMoneyFactory,
-		CommerceTaxCalculation commerceTaxCalculation,
-		CPDefinitionOptionRelLocalService cpDefinitionOptionRelLocalService,
-		CPInstanceLocalService cpInstanceLocalService) {
-
-		this.commerceMoneyFactory = commerceMoneyFactory;
-		this.commerceTaxCalculation = commerceTaxCalculation;
-		this.cpDefinitionOptionRelLocalService =
-			cpDefinitionOptionRelLocalService;
-		this.cpInstanceLocalService = cpInstanceLocalService;
-	}
 
 	@Override
 	public CommerceMoney getCPDefinitionMinimumPrice(
@@ -186,10 +181,41 @@ public abstract class BaseCommerceProductPriceCalculation
 				commerceContext.getCommerceAccount();
 
 			if (commerceAccount != null) {
-				commerceBillingAddressId =
-					commerceAccount.getDefaultBillingAddressId();
-				commerceShippingAddressId =
-					commerceAccount.getDefaultShippingAddressId();
+				AccountEntry accountEntry =
+					accountEntryLocalService.fetchAccountEntry(
+						commerceAccount.getCommerceAccountId());
+
+				if (accountEntry != null) {
+					CommerceChannelAccountEntryRel
+						billingAddressCommerceChannelAccountEntryRel =
+							commerceChannelAccountEntryRelLocalService.
+								fetchCommerceChannelAccountEntryRel(
+									accountEntry.getAccountEntryId(),
+									commerceContext.getCommerceChannelId(),
+									CommerceChannelAccountEntryRelConstants.
+										TYPE_BILLING_ADDRESS);
+
+					if (billingAddressCommerceChannelAccountEntryRel != null) {
+						commerceBillingAddressId =
+							billingAddressCommerceChannelAccountEntryRel.
+								getClassPK();
+					}
+
+					CommerceChannelAccountEntryRel
+						shippingAddressCommerceChannelAccountEntryRel =
+							commerceChannelAccountEntryRelLocalService.
+								fetchCommerceChannelAccountEntryRel(
+									accountEntry.getAccountEntryId(),
+									commerceContext.getCommerceChannelId(),
+									CommerceChannelAccountEntryRelConstants.
+										TYPE_SHIPPING_ADDRESS);
+
+					if (shippingAddressCommerceChannelAccountEntryRel != null) {
+						commerceShippingAddressId =
+							shippingAddressCommerceChannelAccountEntryRel.
+								getClassPK();
+					}
+				}
 			}
 		}
 
@@ -358,11 +384,11 @@ public abstract class BaseCommerceProductPriceCalculation
 			activePrice = BigDecimal.ZERO;
 		}
 
-		activePrice = activePrice.multiply(BigDecimal.valueOf(quantity));
-
 		if (discountsTargetNetPrice) {
 			CommerceCurrency commerceCurrency =
 				commerceContext.getCommerceCurrency();
+
+			activePrice = activePrice.multiply(BigDecimal.valueOf(quantity));
 
 			commerceProductPriceImpl.setCommerceDiscountValueWithTaxAmount(
 				CommercePriceConverterUtil.getConvertedCommerceDiscountValue(
@@ -381,11 +407,28 @@ public abstract class BaseCommerceProductPriceCalculation
 				finalPriceWithTaxAmount));
 	}
 
-	protected final CommerceMoneyFactory commerceMoneyFactory;
-	protected final CommerceTaxCalculation commerceTaxCalculation;
-	protected final CPDefinitionOptionRelLocalService
+	@Reference
+	protected AccountEntryLocalService accountEntryLocalService;
+
+	@Reference
+	protected CommerceChannelAccountEntryRelLocalService
+		commerceChannelAccountEntryRelLocalService;
+
+	@Reference
+	protected CommerceChannelLocalService commerceChannelLocalService;
+
+	@Reference
+	protected CommerceMoneyFactory commerceMoneyFactory;
+
+	@Reference
+	protected CommerceTaxCalculation commerceTaxCalculation;
+
+	@Reference
+	protected CPDefinitionOptionRelLocalService
 		cpDefinitionOptionRelLocalService;
-	protected final CPInstanceLocalService cpInstanceLocalService;
+
+	@Reference
+	protected CPInstanceLocalService cpInstanceLocalService;
 
 	private BigDecimal _getCPDefinitionOptionMinDynamicPrice(
 			CPDefinitionOptionRel cpDefinitionOptionRel,

@@ -16,50 +16,38 @@ package com.liferay.portal.crypto.hash.internal;
 
 import com.liferay.portal.crypto.hash.CryptoHashGenerator;
 import com.liferay.portal.crypto.hash.CryptoHashResponse;
+import com.liferay.portal.crypto.hash.CryptoHashVerificationContext;
 import com.liferay.portal.crypto.hash.exception.CryptoHashException;
-import com.liferay.portal.kernel.security.SecureRandomUtil;
-import com.liferay.portal.kernel.util.ArrayUtil;
-
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-
-import org.osgi.service.component.annotations.Component;
+import com.liferay.portal.crypto.hash.spi.CryptoHashProvider;
+import com.liferay.portal.crypto.hash.spi.CryptoHashProviderResponse;
 
 /**
  * @author Arthur Chan
  * @author Carlos Sierra Andrés
  */
-@Component(service = CryptoHashGenerator.class)
 public class CryptoHashGeneratorImpl implements CryptoHashGenerator {
 
-	public CryptoHashGeneratorImpl() throws NoSuchAlgorithmException {
-		_messageDigest = MessageDigest.getInstance("SHA-256");
+	public CryptoHashGeneratorImpl(CryptoHashProvider cryptoHashProvider) {
+		_cryptoHashProvider = cryptoHashProvider;
 	}
 
 	@Override
 	public CryptoHashResponse generate(byte[] input)
 		throws CryptoHashException {
 
-		byte[] salt = new byte[16];
+		byte[] salt = _cryptoHashProvider.generateSalt();
 
-		for (int i = 0; i < 16; ++i) {
-			salt[i] = SecureRandomUtil.nextByte();
-		}
+		CryptoHashProviderResponse cryptoHashProviderResponse =
+			_cryptoHashProvider.generate(salt, input);
 
-		return new CryptoHashResponse(_digest(salt, input), salt);
+		return new CryptoHashResponse(
+			new CryptoHashVerificationContext(
+				cryptoHashProviderResponse.getCryptoHashProviderFactoryName(),
+				cryptoHashProviderResponse.getCryptoHashProviderProperties(),
+				salt),
+			cryptoHashProviderResponse.getHash());
 	}
 
-	@Override
-	public boolean verify(byte[] input, byte[] hash, byte[] salt)
-		throws CryptoHashException {
-
-		return MessageDigest.isEqual(_digest(salt, input), hash);
-	}
-
-	private byte[] _digest(byte[] salt, byte[] input) {
-		return _messageDigest.digest(ArrayUtil.append(salt, input));
-	}
-
-	private final MessageDigest _messageDigest;
+	private final CryptoHashProvider _cryptoHashProvider;
 
 }

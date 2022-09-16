@@ -15,37 +15,35 @@
 AUI.add(
 	'liferay-scheduler-models',
 	(A) => {
-		var AObject = A.Object;
+		const DateMath = A.DataType.DateMath;
+		const Lang = A.Lang;
 
-		var DateMath = A.DataType.DateMath;
-		var Lang = A.Lang;
+		const CalendarWorkflow = Liferay.CalendarWorkflow;
 
-		var CalendarWorkflow = Liferay.CalendarWorkflow;
+		const isBoolean = Lang.isBoolean;
+		const isFunction = Lang.isFunction;
+		const isObject = Lang.isObject;
+		const isValue = Lang.isValue;
 
-		var isBoolean = Lang.isBoolean;
-		var isFunction = Lang.isFunction;
-		var isObject = Lang.isObject;
-		var isValue = Lang.isValue;
-
-		var toInitialCap = A.cached((str) => {
+		const toInitialCap = A.cached((str) => {
 			return str.substring(0, 1).toUpperCase() + str.substring(1);
 		});
 
-		var toInt = function (value) {
+		const toInt = function (value) {
 			return Lang.toInt(value, 10, 0);
 		};
 
-		var STR_BLANK = '';
+		const STR_BLANK = '';
 
-		var CalendarUtil = Liferay.CalendarUtil;
+		const CalendarUtil = Liferay.CalendarUtil;
 
-		var SchedulerModelSync = function () {};
+		const SchedulerModelSync = function () {};
 
 		SchedulerModelSync.prototype = {
 			_doRead() {
-				var args = arguments;
+				const args = arguments;
 
-				var callback = args[args.length - 1];
+				const callback = args[args.length - 1];
 
 				if (isFunction(callback)) {
 					callback();
@@ -53,9 +51,9 @@ AUI.add(
 			},
 
 			sync(action, options, callback) {
-				var instance = this;
+				const instance = this;
 
-				var actionMethod = instance['_do' + toInitialCap(action)];
+				const actionMethod = instance['_do' + toInitialCap(action)];
 
 				if (isFunction(actionMethod)) {
 					actionMethod.apply(instance, [options, callback]);
@@ -65,7 +63,7 @@ AUI.add(
 
 		Liferay.SchedulerModelSync = SchedulerModelSync;
 
-		var SchedulerEvent = A.Component.create({
+		const SchedulerEvent = A.Component.create({
 			ATTRS: {
 				calendarBookingId: {
 					setter: toInt,
@@ -77,9 +75,15 @@ AUI.add(
 					value: 0,
 				},
 
+				calendarResourceName: {
+					setter: String,
+					validator: isValue,
+					value: STR_BLANK,
+				},
+
 				content: {
 					getter(val) {
-						var content = val;
+						let content = val;
 
 						if (val) {
 							content = Liferay.Util.escapeHTML(val);
@@ -88,7 +92,7 @@ AUI.add(
 						return content;
 					},
 					setter(val) {
-						var content = val;
+						let content = val;
 
 						if (val) {
 							content = Liferay.Util.unescapeHTML(val + '');
@@ -164,7 +168,7 @@ AUI.add(
 
 				reminder: {
 					getter() {
-						var instance = this;
+						const instance = this;
 
 						return (
 							instance.get('firstReminder') > 0 ||
@@ -210,16 +214,16 @@ AUI.add(
 
 			prototype: {
 				_isPastEvent() {
-					var instance = this;
+					const instance = this;
 
-					var endDate = instance.get('endDate');
+					const endDate = instance.get('endDate');
 
-					var result;
+					let result;
 
-					var scheduler = instance.get('scheduler');
+					const scheduler = instance.get('scheduler');
 
 					if (scheduler) {
-						var currentTime = scheduler.get('currentTime');
+						const currentTime = scheduler.get('currentTime');
 
 						result = endDate.getTime() < currentTime.getTime();
 					}
@@ -231,16 +235,16 @@ AUI.add(
 				},
 
 				_isShortDurationEventIntersecting(evtStartDate) {
-					var instance = this;
-					var shortDurationEventIntersecting = false;
+					const instance = this;
+					let shortDurationEventIntersecting = false;
 
 					if (instance.getMinutesDuration() < 30) {
-						var earlierEvtStartDate = DateMath.subtract(
+						const earlierEvtStartDate = DateMath.subtract(
 							DateMath.clone(evtStartDate),
 							DateMath.MINUTES,
 							30
 						);
-						var endDate = instance.get('endDate');
+						const endDate = instance.get('endDate');
 
 						shortDurationEventIntersecting =
 							DateMath.between(
@@ -254,32 +258,32 @@ AUI.add(
 				},
 
 				_onLoadingChange(event) {
-					var instance = this;
+					const instance = this;
 
 					instance._uiSetLoading(event.newVal);
 				},
 
 				_onStartDateChange(event) {
-					var instance = this;
+					const instance = this;
 
 					instance._uiSetStartDate(event.newVal);
 				},
 
 				_onStatusChange(event) {
-					var instance = this;
+					const instance = this;
 
 					instance._uiSetStatus(event.newVal);
 				},
 
 				_uiSetEndDate(val) {
-					var instance = this;
+					const instance = this;
 
 					Liferay.SchedulerEvent.superclass._uiSetEndDate.apply(
 						instance,
 						arguments
 					);
 
-					var node = instance.get('node');
+					const node = instance.get('node');
 
 					node.attr(
 						'data-endDate',
@@ -292,7 +296,7 @@ AUI.add(
 				},
 
 				_uiSetLoading(val) {
-					var instance = this;
+					const instance = this;
 
 					instance
 						.get('node')
@@ -300,9 +304,9 @@ AUI.add(
 				},
 
 				_uiSetStartDate(val) {
-					var instance = this;
+					const instance = this;
 
-					var node = instance.get('node');
+					const node = instance.get('node');
 
 					node.attr(
 						'data-startDate',
@@ -315,9 +319,9 @@ AUI.add(
 				},
 
 				_uiSetStatus(val) {
-					var instance = this;
+					const instance = this;
 
-					var node = instance.get('node');
+					const node = instance.get('node');
 
 					node.toggleClass(
 						'calendar-portlet-event-approved',
@@ -344,7 +348,7 @@ AUI.add(
 				eventModel: Liferay.SchedulerEvent,
 
 				initializer() {
-					var instance = this;
+					const instance = this;
 
 					instance._uiSetLoading(instance.get('loading'));
 					instance._uiSetStartDate(instance.get('startDate'));
@@ -355,25 +359,25 @@ AUI.add(
 					instance.on('statusChange', instance._onStatusChange);
 				},
 
-				intersects(evt) {
-					var instance = this;
+				intersects(event) {
+					const instance = this;
 
-					var endDate = instance.get('endDate');
-					var startDate = instance.get('startDate');
+					const endDate = instance.get('endDate');
+					const startDate = instance.get('startDate');
 
-					var evtStartDate = evt.get('startDate');
+					const evtStartDate = event.get('startDate');
 
 					return (
 						DateMath.between(evtStartDate, startDate, endDate) ||
 						instance._isShortDurationEventIntersecting(
 							evtStartDate
 						) ||
-						instance.sameStartDate(evt)
+						instance.sameStartDate(event)
 					);
 				},
 
 				isMasterBooking() {
-					var instance = this;
+					const instance = this;
 
 					return (
 						instance.get('parentCalendarBookingId') ===
@@ -382,28 +386,28 @@ AUI.add(
 				},
 
 				isRecurring() {
-					var instance = this;
+					const instance = this;
 
 					return (
 						instance.get('recurrence') !== STR_BLANK ||
-						instance.get('calendarBookingId') !=
+						instance.get('calendarBookingId') !==
 							instance.get('recurringCalendarBookingId')
 					);
 				},
 
 				syncNodeColorUI() {
-					var instance = this;
+					const instance = this;
 
 					Liferay.SchedulerEvent.superclass.syncNodeColorUI.apply(
 						instance,
 						arguments
 					);
 
-					var node = instance.get('node');
-					var scheduler = instance.get('scheduler');
+					const node = instance.get('node');
+					const scheduler = instance.get('scheduler');
 
 					if (scheduler && !instance.get('editingEvent')) {
-						var activeViewName = scheduler
+						const activeViewName = scheduler
 							.get('activeView')
 							.get('name');
 
@@ -422,11 +426,11 @@ AUI.add(
 				},
 
 				syncNodeTitleUI() {
-					var instance = this,
-						format = instance.get('titleDateFormat'),
-						startDate = instance.get('startDate'),
-						endDate = instance.get('endDate'),
-						title = [];
+					const instance = this;
+					const format = instance.get('titleDateFormat');
+					const startDate = instance.get('startDate');
+					const endDate = instance.get('endDate');
+					const title = [];
 
 					if (format.startDate) {
 						title.push(
@@ -445,7 +449,7 @@ AUI.add(
 				},
 
 				syncUI() {
-					var instance = this;
+					const instance = this;
 
 					Liferay.SchedulerEvent.superclass.syncUI.apply(
 						instance,
@@ -456,17 +460,17 @@ AUI.add(
 				},
 
 				syncWithServer() {
-					var instance = this;
+					const instance = this;
 
-					var calendarBookingId = instance.get('calendarBookingId');
+					const calendarBookingId = instance.get('calendarBookingId');
 
-					var scheduler = instance.get('scheduler');
+					const scheduler = instance.get('scheduler');
 
-					var schedulerEvents = scheduler.getEventsByCalendarBookingId(
+					const schedulerEvents = scheduler.getEventsByCalendarBookingId(
 						calendarBookingId
 					);
 
-					var remoteServices = scheduler.get('remoteServices');
+					const remoteServices = scheduler.get('remoteServices');
 
 					remoteServices.getEvent(
 						calendarBookingId,
@@ -482,7 +486,7 @@ AUI.add(
 
 		Liferay.SchedulerEvent = SchedulerEvent;
 
-		var Calendar = A.Component.create({
+		const Calendar = A.Component.create({
 			ATTRS: {
 				calendarId: {
 					setter: toInt,
@@ -520,6 +524,11 @@ AUI.add(
 					value: 0,
 				},
 
+				hasMenuItems: {
+					setter: A.DataType.Boolean.parse,
+					value: true,
+				},
+
 				manageable: {
 					setter: A.DataType.Boolean.parse,
 					value: true,
@@ -528,7 +537,7 @@ AUI.add(
 				permissions: {
 					lazyAdd: false,
 					setter(val) {
-						var instance = this;
+						const instance = this;
 
 						instance.set('disabled', !val.MANAGE_BOOKINGS);
 
@@ -549,21 +558,21 @@ AUI.add(
 
 			prototype: {
 				_afterColorChange(event) {
-					var instance = this;
+					const instance = this;
 
 					Calendar.superclass._afterColorChange.apply(
 						instance,
 						arguments
 					);
 
-					var calendarId = instance.get('calendarId');
+					const calendarId = instance.get('calendarId');
 
-					var color = event.newVal;
+					const color = event.newVal;
 
 					if (instance.get('permissions.UPDATE')) {
-						var scheduler = instance.get('scheduler');
+						const scheduler = instance.get('scheduler');
 
-						var remoteServices = scheduler.get('remoteServices');
+						const remoteServices = scheduler.get('remoteServices');
 
 						remoteServices.updateCalendarColor(calendarId, color);
 					}
@@ -578,29 +587,29 @@ AUI.add(
 				},
 
 				_afterVisibleChange() {
-					var instance = this;
+					const instance = this;
 
 					Calendar.superclass._afterVisibleChange.apply(
 						instance,
 						arguments
 					);
 
-					var scheduler = instance.get('scheduler');
+					const scheduler = instance.get('scheduler');
 
 					scheduler.syncEventsUI();
 				},
 
 				getDisplayName() {
-					var instance = this;
+					const instance = this;
 
-					var name = instance.get('name');
+					let name = instance.get('name');
 
-					var showCalendarResourceName = instance.get(
+					const showCalendarResourceName = instance.get(
 						'showCalendarResourceName'
 					);
 
 					if (showCalendarResourceName) {
-						var calendarResourceName = instance.get(
+						const calendarResourceName = instance.get(
 							'calendarResourceName'
 						);
 
@@ -623,24 +632,26 @@ AUI.add(
 			[Liferay.SchedulerModelSync],
 			{
 				_doRead(_options, callback) {
-					var instance = this;
+					const instance = this;
 
-					var scheduler = instance.get('scheduler');
+					const scheduler = instance.get('scheduler');
 
-					var activeView = scheduler.get('activeView');
-					var eventsPerPage = scheduler.get('eventsPerPage');
-					var filterCalendarBookings = scheduler.get(
+					const activeView = scheduler.get('activeView');
+					const eventsPerPage = scheduler.get('eventsPerPage');
+					const filterCalendarBookings = scheduler.get(
 						'filterCalendarBookings'
 					);
-					var maxDaysDisplayed = scheduler.get('maxDaysDisplayed');
+					const maxDaysDisplayed = scheduler.get('maxDaysDisplayed');
 
-					var calendarContainer = scheduler.get('calendarContainer');
+					const calendarContainer = scheduler.get(
+						'calendarContainer'
+					);
 
-					var calendarIds = AObject.keys(
+					const calendarIds = Object.keys(
 						calendarContainer.get('availableCalendars')
 					);
 
-					var remoteServices = scheduler.get('remoteServices');
+					const remoteServices = scheduler.get('remoteServices');
 
 					remoteServices.getEvents(
 						calendarIds,
@@ -667,7 +678,7 @@ AUI.add(
 				},
 
 				getEventsPerPage(activeView, eventsPerPage) {
-					var viewName = activeView.get('name');
+					const viewName = activeView.get('name');
 
 					if (viewName !== 'agenda') {
 						eventsPerPage = -1;
@@ -677,9 +688,9 @@ AUI.add(
 				},
 
 				getLoadEndDate(activeView, maxDaysDisplayed) {
-					var date = activeView.getNextDate();
+					let date = activeView.getNextDate();
 
-					var viewName = activeView.get('name');
+					const viewName = activeView.get('name');
 
 					if (viewName === 'agenda') {
 						date = DateMath.add(
@@ -698,10 +709,10 @@ AUI.add(
 				},
 
 				getLoadStartDate(activeView) {
-					var scheduler = activeView.get('scheduler');
-					var viewName = activeView.get('name');
+					const scheduler = activeView.get('scheduler');
+					const viewName = activeView.get('name');
 
-					var date = scheduler.get('viewDate');
+					let date = scheduler.get('viewDate');
 
 					if (viewName === 'month') {
 						date = DateMath.subtract(date, DateMath.WEEK, 1);

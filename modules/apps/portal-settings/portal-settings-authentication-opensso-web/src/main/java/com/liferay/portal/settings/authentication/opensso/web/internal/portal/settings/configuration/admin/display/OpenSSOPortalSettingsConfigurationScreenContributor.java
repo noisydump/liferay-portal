@@ -14,9 +14,7 @@
 
 package com.liferay.portal.settings.authentication.opensso.web.internal.portal.settings.configuration.admin.display;
 
-import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.util.ResourceBundleUtil;
-import com.liferay.portal.security.sso.opensso.configuration.OpenSSOConfiguration;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.settings.configuration.admin.display.PortalSettingsConfigurationScreenContributor;
 
 import java.util.Locale;
@@ -58,9 +56,7 @@ public class OpenSSOPortalSettingsConfigurationScreenContributor
 
 	@Override
 	public String getName(Locale locale) {
-		return LanguageUtil.get(
-			ResourceBundleUtil.getBundle(locale, OpenSSOConfiguration.class),
-			"opensso-configuration-name");
+		return _language.get(locale, "opensso-configuration-name");
 	}
 
 	@Override
@@ -84,6 +80,9 @@ public class OpenSSOPortalSettingsConfigurationScreenContributor
 
 		return renderResponse.getNamespace() + "testOpenSSOSettings();";
 	}
+
+	@Reference
+	private Language _language;
 
 	@Reference(
 		target = "(osgi.web.symbolicname=com.liferay.portal.settings.authentication.opensso.web)",

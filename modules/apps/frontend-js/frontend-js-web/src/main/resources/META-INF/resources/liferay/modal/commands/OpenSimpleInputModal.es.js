@@ -12,7 +12,7 @@
  * details.
  */
 
-import {render} from 'frontend-js-react-web';
+import {render} from '@liferay/frontend-js-react-web';
 import React from 'react';
 import {unmountComponentAtNode} from 'react-dom';
 
@@ -51,6 +51,7 @@ function openSimpleInputModalImplementation({
 	idFieldValue,
 	mainFieldLabel,
 	mainFieldName,
+	mainFieldValue,
 	namespace,
 	onFormSuccess,
 	placeholder,
@@ -71,6 +72,7 @@ function openSimpleInputModalImplementation({
 			initialVisible="true"
 			mainFieldLabel={mainFieldLabel}
 			mainFieldName={mainFieldName}
+			mainFieldValue={mainFieldValue}
 			namespace={namespace}
 			onFormSuccess={onFormSuccess}
 			placeholder={placeholder}

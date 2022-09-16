@@ -14,6 +14,7 @@
 
 package com.liferay.account.service.test;
 
+import com.liferay.account.exception.AccountGroupNameException;
 import com.liferay.account.exception.DefaultAccountGroupException;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.model.AccountGroup;
@@ -34,6 +35,7 @@ import com.liferay.portal.kernel.test.util.CompanyTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.OrderByComparatorFactoryUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
@@ -44,6 +46,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -60,6 +63,40 @@ public class AccountGroupLocalServiceTest {
 	@Rule
 	public static final LiferayIntegrationTestRule liferayIntegrationTestRule =
 		new LiferayIntegrationTestRule();
+
+	@BeforeClass
+	public static void setUpClass() throws Exception {
+		_company = CompanyTestUtil.addCompany();
+	}
+
+	@Test
+	public void testAccountGroupName() throws Exception {
+		try {
+			_accountGroupLocalService.addAccountGroup(
+				TestPropsValues.getUserId(), null, "");
+
+			Assert.fail();
+		}
+		catch (AccountGroupNameException accountGroupNameException) {
+			String message = accountGroupNameException.getMessage();
+
+			Assert.assertTrue(message.contains("Name is null"));
+		}
+
+		AccountGroup accountGroup = _addAccountGroup();
+
+		try {
+			_accountGroupLocalService.updateAccountGroup(
+				accountGroup.getUserId(), null, "");
+
+			Assert.fail();
+		}
+		catch (AccountGroupNameException accountGroupNameException) {
+			String message = accountGroupNameException.getMessage();
+
+			Assert.assertTrue(message.contains("Name is null"));
+		}
+	}
 
 	@Test
 	public void testAddAccountGroup() throws Exception {
@@ -120,31 +157,39 @@ public class AccountGroupLocalServiceTest {
 	public void testHasDefaultAccountGroupWhenCompanyIsCreated()
 		throws Exception {
 
-		Company company = CompanyTestUtil.addCompany();
-
 		Assert.assertTrue(
 			_accountGroupLocalService.hasDefaultAccountGroup(
-				company.getCompanyId()));
+				_company.getCompanyId()));
 
 		AccountGroup defaultAccountGroup =
 			_accountGroupLocalService.getDefaultAccountGroup(
-				company.getCompanyId());
+				_company.getCompanyId());
 
 		Assert.assertEquals(
-			company.getCompanyId(), defaultAccountGroup.getCompanyId());
+			_company.getCompanyId(), defaultAccountGroup.getCompanyId());
 	}
 
 	@Test
 	public void testSearchAccountGroups() throws Exception {
-		List<AccountGroup> expectedAccountGroups = Arrays.asList(
-			_addAccountGroup(), _addAccountGroup());
+		_addAccountGroup();
+		_addAccountGroup();
+
+		OrderByComparator<AccountGroup> orderByComparator =
+			OrderByComparatorFactoryUtil.create("AccountGroup", "name", true);
+
+		List<AccountGroup> expectedAccountGroups =
+			_accountGroupLocalService.getAccountGroups(
+				TestPropsValues.getCompanyId(), QueryUtil.ALL_POS,
+				QueryUtil.ALL_POS, orderByComparator);
+
+		expectedAccountGroups = ListUtil.filter(
+			expectedAccountGroups,
+			accountGroup -> !accountGroup.isDefaultAccountGroup());
 
 		BaseModelSearchResult<AccountGroup> baseModelSearchResult =
 			_accountGroupLocalService.searchAccountGroups(
 				TestPropsValues.getCompanyId(), null, QueryUtil.ALL_POS,
-				QueryUtil.ALL_POS,
-				OrderByComparatorFactoryUtil.create(
-					"AccountGroup", "createDate", true));
+				QueryUtil.ALL_POS, orderByComparator);
 
 		Assert.assertEquals(
 			expectedAccountGroups.size(), baseModelSearchResult.getLength());
@@ -280,6 +325,8 @@ public class AccountGroupLocalServiceTest {
 			ListUtil.subList(expectedAccountGroups, start, start + delta),
 			actualAccountGroups);
 	}
+
+	private static Company _company;
 
 	@Inject
 	private AccountEntryLocalService _accountEntryLocalService;

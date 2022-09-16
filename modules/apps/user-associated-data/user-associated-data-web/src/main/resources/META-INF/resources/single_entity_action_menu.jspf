@@ -72,9 +72,7 @@
 		deleteURL.setParameter(ActionRequest.ACTION_NAME, "/user_associated_data/delete_uad_entities");
 		deleteURL.setParameter("primaryKey__" + typeClass.getSimpleName(), String.valueOf(uadEntity.getPrimaryKey()));
 	}
-	%>
 
-	<%
 	String anonymizeSingleMessage = "are-you-sure-you-want-to-anonymize-this-entity";
 
 	if (applicationKey.equals(UADConstants.ALL_APPLICATIONS)) {
@@ -88,7 +86,7 @@
 	<liferay-ui:icon
 		message="anonymize"
 		onClick='<%= liferayPortletResponse.getNamespace() + "confirmAction('viewUADEntitiesFm', '" + autoAnonymizeURL.toString() + "', '" + UnicodeLanguageUtil.get(request, anonymizeSingleMessage) + "')" %>'
-		url="javascript:;"
+		url="javascript:void(0);"
 	/>
 
 	<%
@@ -105,6 +103,6 @@
 	<liferay-ui:icon
 		message="delete"
 		onClick='<%= liferayPortletResponse.getNamespace() + "confirmAction('viewUADEntitiesFm', '" + deleteURL.toString() + "', '" + UnicodeLanguageUtil.get(request, deleteSingleMessage) + "')" %>'
-		url="javascript:;"
+		url="javascript:void(0);"
 	/>
 </liferay-ui:icon-menu>

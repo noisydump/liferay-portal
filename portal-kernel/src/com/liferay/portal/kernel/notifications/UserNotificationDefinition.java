@@ -14,6 +14,8 @@
 
 package com.liferay.portal.kernel.notifications;
 
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 
@@ -29,6 +31,10 @@ import java.util.ResourceBundle;
 public class UserNotificationDefinition {
 
 	public static final int NOTIFICATION_TYPE_ADD_ENTRY = 0;
+
+	public static final int NOTIFICATION_TYPE_EXPIRED_ENTRY = 3;
+
+	public static final int NOTIFICATION_TYPE_REVIEW_ENTRY = 2;
 
 	public static final int NOTIFICATION_TYPE_UPDATE_ENTRY = 1;
 
@@ -91,11 +97,18 @@ public class UserNotificationDefinition {
 				"content.Language", locale, getClass());
 		}
 		catch (MissingResourceException missingResourceException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(missingResourceException);
+			}
+
 			return ResourceBundleUtil.getBundle(
 				"content.Language", locale,
 				PortalClassLoaderUtil.getClassLoader());
 		}
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		UserNotificationDefinition.class);
 
 	private final long _classNameId;
 	private final String _description;

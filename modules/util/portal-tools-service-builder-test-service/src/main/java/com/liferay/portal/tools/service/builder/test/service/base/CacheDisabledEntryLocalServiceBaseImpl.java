@@ -28,6 +28,8 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -41,9 +43,12 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.spring.extender.service.ServiceReference;
 import com.liferay.portal.tools.service.builder.test.model.CacheDisabledEntry;
 import com.liferay.portal.tools.service.builder.test.service.CacheDisabledEntryLocalService;
+import com.liferay.portal.tools.service.builder.test.service.CacheDisabledEntryLocalServiceUtil;
 import com.liferay.portal.tools.service.builder.test.service.persistence.CacheDisabledEntryPersistence;
 
 import java.io.Serializable;
+
+import java.lang.reflect.Field;
 
 import java.util.List;
 
@@ -67,7 +72,7 @@ public abstract class CacheDisabledEntryLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>CacheDisabledEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.tools.service.builder.test.service.CacheDisabledEntryLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>CacheDisabledEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>CacheDisabledEntryLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -145,6 +150,13 @@ public abstract class CacheDisabledEntryLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return cacheDisabledEntryPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -322,6 +334,11 @@ public abstract class CacheDisabledEntryLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement CacheDisabledEntryLocalServiceImpl#deleteCacheDisabledEntry(CacheDisabledEntry) to avoid orphaned data");
+		}
+
 		return cacheDisabledEntryLocalService.deleteCacheDisabledEntry(
 			(CacheDisabledEntry)persistedModel);
 	}
@@ -454,11 +471,15 @@ public abstract class CacheDisabledEntryLocalServiceBaseImpl
 		persistedModelLocalServiceRegistry.register(
 			"com.liferay.portal.tools.service.builder.test.model.CacheDisabledEntry",
 			cacheDisabledEntryLocalService);
+
+		_setLocalServiceUtilService(cacheDisabledEntryLocalService);
 	}
 
 	public void destroy() {
 		persistedModelLocalServiceRegistry.unregister(
 			"com.liferay.portal.tools.service.builder.test.model.CacheDisabledEntry");
+
+		_setLocalServiceUtilService(null);
 	}
 
 	/**
@@ -504,6 +525,23 @@ public abstract class CacheDisabledEntryLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		CacheDisabledEntryLocalService cacheDisabledEntryLocalService) {
+
+		try {
+			Field field =
+				CacheDisabledEntryLocalServiceUtil.class.getDeclaredField(
+					"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, cacheDisabledEntryLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@BeanReference(type = CacheDisabledEntryLocalService.class)
 	protected CacheDisabledEntryLocalService cacheDisabledEntryLocalService;
 
@@ -515,6 +553,9 @@ public abstract class CacheDisabledEntryLocalServiceBaseImpl
 	)
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		CacheDisabledEntryLocalServiceBaseImpl.class);
 
 	@ServiceReference(type = PersistedModelLocalServiceRegistry.class)
 	protected PersistedModelLocalServiceRegistry

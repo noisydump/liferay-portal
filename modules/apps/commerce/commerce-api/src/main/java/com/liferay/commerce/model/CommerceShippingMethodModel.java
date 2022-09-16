@@ -19,6 +19,7 @@ import com.liferay.portal.kernel.exception.LocaleException;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.GroupedModel;
 import com.liferay.portal.kernel.model.LocalizedModel;
+import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
 
 import java.util.Date;
@@ -41,7 +42,7 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface CommerceShippingMethodModel
 	extends BaseModel<CommerceShippingMethod>, GroupedModel, LocalizedModel,
-			ShardedModel {
+			MVCCModel, ShardedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -62,6 +63,22 @@ public interface CommerceShippingMethodModel
 	 * @param primaryKey the primary key of this commerce shipping method
 	 */
 	public void setPrimaryKey(long primaryKey);
+
+	/**
+	 * Returns the mvcc version of this commerce shipping method.
+	 *
+	 * @return the mvcc version of this commerce shipping method
+	 */
+	@Override
+	public long getMvccVersion();
+
+	/**
+	 * Sets the mvcc version of this commerce shipping method.
+	 *
+	 * @param mvccVersion the mvcc version of this commerce shipping method
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion);
 
 	/**
 	 * Returns the commerce shipping method ID of this commerce shipping method.
@@ -391,49 +408,6 @@ public interface CommerceShippingMethodModel
 		Map<Locale, String> descriptionMap, Locale defaultLocale);
 
 	/**
-	 * Returns the image ID of this commerce shipping method.
-	 *
-	 * @return the image ID of this commerce shipping method
-	 */
-	public long getImageId();
-
-	/**
-	 * Sets the image ID of this commerce shipping method.
-	 *
-	 * @param imageId the image ID of this commerce shipping method
-	 */
-	public void setImageId(long imageId);
-
-	/**
-	 * Returns the engine key of this commerce shipping method.
-	 *
-	 * @return the engine key of this commerce shipping method
-	 */
-	@AutoEscape
-	public String getEngineKey();
-
-	/**
-	 * Sets the engine key of this commerce shipping method.
-	 *
-	 * @param engineKey the engine key of this commerce shipping method
-	 */
-	public void setEngineKey(String engineKey);
-
-	/**
-	 * Returns the priority of this commerce shipping method.
-	 *
-	 * @return the priority of this commerce shipping method
-	 */
-	public double getPriority();
-
-	/**
-	 * Sets the priority of this commerce shipping method.
-	 *
-	 * @param priority the priority of this commerce shipping method
-	 */
-	public void setPriority(double priority);
-
-	/**
 	 * Returns the active of this commerce shipping method.
 	 *
 	 * @return the active of this commerce shipping method
@@ -454,6 +428,64 @@ public interface CommerceShippingMethodModel
 	 */
 	public void setActive(boolean active);
 
+	/**
+	 * Returns the engine key of this commerce shipping method.
+	 *
+	 * @return the engine key of this commerce shipping method
+	 */
+	@AutoEscape
+	public String getEngineKey();
+
+	/**
+	 * Sets the engine key of this commerce shipping method.
+	 *
+	 * @param engineKey the engine key of this commerce shipping method
+	 */
+	public void setEngineKey(String engineKey);
+
+	/**
+	 * Returns the image ID of this commerce shipping method.
+	 *
+	 * @return the image ID of this commerce shipping method
+	 */
+	public long getImageId();
+
+	/**
+	 * Sets the image ID of this commerce shipping method.
+	 *
+	 * @param imageId the image ID of this commerce shipping method
+	 */
+	public void setImageId(long imageId);
+
+	/**
+	 * Returns the priority of this commerce shipping method.
+	 *
+	 * @return the priority of this commerce shipping method
+	 */
+	public double getPriority();
+
+	/**
+	 * Sets the priority of this commerce shipping method.
+	 *
+	 * @param priority the priority of this commerce shipping method
+	 */
+	public void setPriority(double priority);
+
+	/**
+	 * Returns the tracking url of this commerce shipping method.
+	 *
+	 * @return the tracking url of this commerce shipping method
+	 */
+	@AutoEscape
+	public String getTrackingURL();
+
+	/**
+	 * Sets the tracking url of this commerce shipping method.
+	 *
+	 * @param trackingURL the tracking url of this commerce shipping method
+	 */
+	public void setTrackingURL(String trackingURL);
+
 	@Override
 	public String[] getAvailableLanguageIds();
 
@@ -466,5 +498,8 @@ public interface CommerceShippingMethodModel
 	@Override
 	public void prepareLocalizedFieldsForImport(Locale defaultImportLocale)
 		throws LocaleException;
+
+	@Override
+	public CommerceShippingMethod cloneWithOriginalValues();
 
 }

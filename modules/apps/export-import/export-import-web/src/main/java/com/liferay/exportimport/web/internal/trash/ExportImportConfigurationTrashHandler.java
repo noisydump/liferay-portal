@@ -17,16 +17,15 @@ package com.liferay.exportimport.web.internal.trash;
 import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
 import com.liferay.exportimport.kernel.service.ExportImportConfigurationLocalService;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.TrashedModel;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.GroupLocalService;
-import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
+import com.liferay.portal.kernel.service.permission.GroupPermission;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.trash.BaseTrashHandler;
 import com.liferay.portal.kernel.trash.TrashHandler;
 import com.liferay.portal.kernel.trash.TrashRenderer;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.trash.BaseTrashHandler;
 
 import javax.portlet.PortletRequest;
 
@@ -81,7 +80,7 @@ public class ExportImportConfigurationTrashHandler extends BaseTrashHandler {
 						getExportImportConfiguration(classPK));
 
 		exportImportConfigurationTrashRenderer.setServletContext(
-			servletContext);
+			_servletContext);
 
 		return exportImportConfigurationTrashRenderer;
 	}
@@ -94,14 +93,6 @@ public class ExportImportConfigurationTrashHandler extends BaseTrashHandler {
 			restoreExportImportConfigurationFromTrash(userId, classPK);
 	}
 
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.exportimport.web)",
-		unbind = "-"
-	)
-	public void setServletContext(ServletContext servletContext) {
-		this.servletContext = servletContext;
-	}
-
 	@Override
 	protected boolean hasPermission(
 			PermissionChecker permissionChecker, long classPK, String actionId)
@@ -111,30 +102,23 @@ public class ExportImportConfigurationTrashHandler extends BaseTrashHandler {
 			_exportImportConfigurationLocalService.getExportImportConfiguration(
 				classPK);
 
-		Group group = _groupLocalService.getGroup(
-			exportImportConfiguration.getGroupId());
-
-		return GroupPermissionUtil.contains(permissionChecker, group, actionId);
+		return _groupPermission.contains(
+			permissionChecker,
+			_groupLocalService.getGroup(exportImportConfiguration.getGroupId()),
+			actionId);
 	}
 
-	@Reference(unbind = "-")
-	protected void setExportImportConfigurationLocalService(
-		ExportImportConfigurationLocalService
-			exportImportConfigurationLocalService) {
-
-		_exportImportConfigurationLocalService =
-			exportImportConfigurationLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setGroupLocalService(GroupLocalService groupLocalService) {
-		_groupLocalService = groupLocalService;
-	}
-
-	protected ServletContext servletContext;
-
+	@Reference
 	private ExportImportConfigurationLocalService
 		_exportImportConfigurationLocalService;
+
+	@Reference
 	private GroupLocalService _groupLocalService;
+
+	@Reference
+	private GroupPermission _groupPermission;
+
+	@Reference(target = "(osgi.web.symbolicname=com.liferay.exportimport.web)")
+	private ServletContext _servletContext;
 
 }

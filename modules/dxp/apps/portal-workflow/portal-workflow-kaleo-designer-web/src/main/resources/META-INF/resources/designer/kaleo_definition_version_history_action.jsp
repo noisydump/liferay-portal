@@ -27,7 +27,7 @@ KaleoDefinitionVersion kaleoDefinitionVersion = (KaleoDefinitionVersion)row.getO
 %>
 
 <portlet:renderURL var="viewURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
-	<portlet:param name="mvcPath" value="/designer/edit_kaleo_definition_version.jsp" />
+	<portlet:param name="mvcPath" value="/designer/edit_workflow_definition.jsp" />
 	<portlet:param name="redirect" value="<%= currentURL %>" />
 	<portlet:param name="name" value="<%= kaleoDefinitionVersion.getName() %>" />
 	<portlet:param name="draftVersion" value="<%= kaleoDefinitionVersion.getVersion() %>" />
@@ -52,7 +52,7 @@ KaleoDefinitionVersion kaleoDefinitionVersion = (KaleoDefinitionVersion)row.getO
 		<liferay-ui:icon
 			id='<%= "previewBeforeRevert" + kaleoDefinitionVersion.getVersion() %>'
 			message="preview"
-			url="javascript:;"
+			url="javascript:void(0);"
 		/>
 
 		<liferay-ui:icon

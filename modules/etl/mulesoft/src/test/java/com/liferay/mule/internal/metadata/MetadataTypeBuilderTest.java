@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
+ * Copyright (c) 2000-2021 Liferay, Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the Free
@@ -31,7 +31,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.mockito.Matchers;
 import org.mockito.Mockito;
 
 import org.mule.metadata.api.builder.BaseTypeBuilder;
@@ -64,8 +63,7 @@ public class MetadataTypeBuilderTest {
 		ClassLoader classLoader = clazz.getClassLoader();
 
 		InputStream inputStream = classLoader.getResourceAsStream(
-			"com/liferay/mule/internal/metadata/oas-fragment-metadata-types." +
-				"json");
+			"com/liferay/mule/internal/metadata/openapi.json");
 
 		ObjectMapper objectMapper = new ObjectMapper();
 
@@ -79,7 +77,7 @@ public class MetadataTypeBuilderTest {
 		).when(
 			metadataTypeBuilder
 		).getObjectTypeBuilder(
-			Matchers.anyObject(), Matchers.anyString()
+			Mockito.any(), Mockito.anyString()
 		);
 
 		Mockito.doReturn(
@@ -87,7 +85,7 @@ public class MetadataTypeBuilderTest {
 		).when(
 			metadataTypeBuilder
 		).getArrayTypeBuilder(
-			Matchers.anyObject(), Matchers.anyString()
+			Mockito.any(), Mockito.anyString()
 		);
 
 		Mockito.doReturn(
@@ -95,7 +93,7 @@ public class MetadataTypeBuilderTest {
 		).when(
 			metadataTypeBuilder
 		).getOASJsonNode(
-			Matchers.anyObject()
+			Mockito.any()
 		);
 
 		Mockito.doReturn(
@@ -103,7 +101,7 @@ public class MetadataTypeBuilderTest {
 		).when(
 			metadataTypeBuilder
 		).resolveAnyMetadataType(
-			Matchers.anyObject()
+			Mockito.any()
 		);
 	}
 
@@ -185,6 +183,34 @@ public class MetadataTypeBuilderTest {
 	}
 
 	@Test
+	public void testBuildMetadataType_EntityArrayField() throws Exception {
+		MetadataType entityArrayMetadataType = getFieldMetadataType(
+			getEntityMetadataType("/entities/{id}", OASConstants.OPERATION_GET),
+			"entityArrayField");
+
+		Assert.assertTrue(entityArrayMetadataType instanceof ArrayType);
+
+		DefaultArrayType entityArrayType =
+			(DefaultArrayType)entityArrayMetadataType;
+
+		MetadataType entityMetadataType = entityArrayType.getType();
+
+		Assert.assertTrue(entityMetadataType instanceof ObjectType);
+
+		DefaultObjectType entityObjectType =
+			(DefaultObjectType)entityMetadataType;
+
+		Collection<ObjectFieldType> fields = entityObjectType.getFields();
+
+		Assert.assertEquals(fields.toString(), 1, fields.size());
+
+		Optional<ObjectFieldType> entityObjectFieldTypeOptional =
+			entityObjectType.getFieldByName("Entity");
+
+		Assert.assertTrue(entityObjectFieldTypeOptional.isPresent());
+	}
+
+	@Test
 	public void testBuildMetadataType_FloatField() throws Exception {
 		MetadataType fieldMetadataType = getFieldMetadataType(
 			getEntityMetadataType("/entities/{id}", OASConstants.OPERATION_GET),
@@ -212,12 +238,12 @@ public class MetadataTypeBuilderTest {
 	}
 
 	@Test
-	public void testBuildMetadataType_NestedArrayField() throws Exception {
-		MetadataType entityMetadataType = getEntityMetadataType(
-			"/entities/{id}", OASConstants.OPERATION_GET);
+	public void testBuildMetadataType_NestedEntityArrayField()
+		throws Exception {
 
 		MetadataType nestedEntityArrayMetadataType = getFieldMetadataType(
-			entityMetadataType, "nestedEntityArrayField");
+			getEntityMetadataType("/entities/{id}", OASConstants.OPERATION_GET),
+			"nestedEntityArrayField");
 
 		Assert.assertTrue(nestedEntityArrayMetadataType instanceof ArrayType);
 
@@ -235,11 +261,9 @@ public class MetadataTypeBuilderTest {
 
 	@Test
 	public void testBuildMetadataType_NestedEntityField() throws Exception {
-		MetadataType entityMetadataType = getEntityMetadataType(
-			"/entities/{id}", OASConstants.OPERATION_GET);
-
 		MetadataType nestedEntityMetadataType = getFieldMetadataType(
-			entityMetadataType, "nestedEntityField");
+			getEntityMetadataType("/entities/{id}", OASConstants.OPERATION_GET),
+			"nestedEntityField");
 
 		Assert.assertTrue(nestedEntityMetadataType instanceof ObjectType);
 
@@ -250,7 +274,7 @@ public class MetadataTypeBuilderTest {
 			nestedEntityDefaultObjectType.getFields();
 
 		Assert.assertEquals(
-			objectFieldTypes.toString(), 1, objectFieldTypes.size());
+			objectFieldTypes.toString(), 2, objectFieldTypes.size());
 
 		Iterator<ObjectFieldType> iterator = objectFieldTypes.iterator();
 
@@ -260,6 +284,15 @@ public class MetadataTypeBuilderTest {
 			"nestedEntityStringField", getObjectFieldName(objectFieldType));
 
 		Assert.assertTrue(objectFieldType.getValue() instanceof StringType);
+	}
+
+	@Test
+	public void testBuildMetadataType_ObjectField() throws Exception {
+		MetadataType fieldMetadataType = getFieldMetadataType(
+			getEntityMetadataType("/entities/{id}", OASConstants.OPERATION_GET),
+			"objectField");
+
+		Assert.assertTrue(fieldMetadataType instanceof ObjectType);
 	}
 
 	@Test
@@ -279,11 +312,17 @@ public class MetadataTypeBuilderTest {
 		MetadataType arrayItemMetadataType = defaultArrayType.getType();
 
 		Assert.assertTrue(arrayItemMetadataType instanceof ObjectType);
+		Assert.assertEquals(
+			getEntityMetadataType("/entities/{id}"), arrayItemMetadataType);
+	}
 
-		MetadataType entityMetadataType = getEntityMetadataType(
-			"/entities/{id}");
+	@Test
+	public void testBuildMetadataType_ParentEntityField() throws Exception {
+		MetadataType fieldMetadataType = getFieldMetadataType(
+			getEntityMetadataType("/entities/{id}", OASConstants.OPERATION_GET),
+			"parentEntityField");
 
-		Assert.assertEquals(entityMetadataType, arrayItemMetadataType);
+		Assert.assertTrue(fieldMetadataType instanceof ObjectType);
 	}
 
 	@Test
@@ -308,13 +347,11 @@ public class MetadataTypeBuilderTest {
 
 	@Test
 	public void testBuildMetadataType_StringField() throws Exception {
-		MetadataType entityMetadataType = getEntityMetadataType(
-			"/entities/{id}", OASConstants.OPERATION_GET);
-
-		MetadataType fieldMetadataType = getFieldMetadataType(
-			entityMetadataType, "stringField");
-
-		Assert.assertTrue(fieldMetadataType instanceof StringType);
+		Assert.assertTrue(
+			getFieldMetadataType(
+				getEntityMetadataType(
+					"/entities/{id}", OASConstants.OPERATION_GET),
+				"stringField") instanceof StringType);
 	}
 
 	@Test
@@ -327,7 +364,7 @@ public class MetadataTypeBuilderTest {
 		Mockito.verify(
 			metadataTypeBuilder, Mockito.times(1)
 		).resolveAnyMetadataType(
-			Matchers.anyObject()
+			Mockito.anyObject()
 		);
 	}
 

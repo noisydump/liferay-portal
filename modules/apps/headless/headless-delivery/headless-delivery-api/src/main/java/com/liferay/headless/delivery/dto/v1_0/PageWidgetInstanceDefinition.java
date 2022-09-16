@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
@@ -44,7 +45,10 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @generated
  */
 @Generated("")
-@GraphQLName("PageWidgetInstanceDefinition")
+@GraphQLName(
+	description = "Represents a definition of a Page Widget instance.",
+	value = "PageWidgetInstanceDefinition"
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "PageWidgetInstanceDefinition")
 public class PageWidgetInstanceDefinition implements Serializable {
@@ -54,7 +58,104 @@ public class PageWidgetInstanceDefinition implements Serializable {
 			PageWidgetInstanceDefinition.class, json);
 	}
 
-	@Schema
+	public static PageWidgetInstanceDefinition unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(
+			PageWidgetInstanceDefinition.class, json);
+	}
+
+	@Schema(
+		description = "A list of CSS Classes that are applied to the element."
+	)
+	public String[] getCssClasses() {
+		return cssClasses;
+	}
+
+	public void setCssClasses(String[] cssClasses) {
+		this.cssClasses = cssClasses;
+	}
+
+	@JsonIgnore
+	public void setCssClasses(
+		UnsafeSupplier<String[], Exception> cssClassesUnsafeSupplier) {
+
+		try {
+			cssClasses = cssClassesUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(
+		description = "A list of CSS Classes that are applied to the element."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String[] cssClasses;
+
+	@Schema(description = "Custom CSS that is applied on the fragment.")
+	public String getCustomCSS() {
+		return customCSS;
+	}
+
+	public void setCustomCSS(String customCSS) {
+		this.customCSS = customCSS;
+	}
+
+	@JsonIgnore
+	public void setCustomCSS(
+		UnsafeSupplier<String, Exception> customCSSUnsafeSupplier) {
+
+		try {
+			customCSS = customCSSUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(description = "Custom CSS that is applied on the fragment.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String customCSS;
+
+	@Schema(description = "The custom CSS viewports of the page collection.")
+	@Valid
+	public CustomCSSViewport[] getCustomCSSViewports() {
+		return customCSSViewports;
+	}
+
+	public void setCustomCSSViewports(CustomCSSViewport[] customCSSViewports) {
+		this.customCSSViewports = customCSSViewports;
+	}
+
+	@JsonIgnore
+	public void setCustomCSSViewports(
+		UnsafeSupplier<CustomCSSViewport[], Exception>
+			customCSSViewportsUnsafeSupplier) {
+
+		try {
+			customCSSViewports = customCSSViewportsUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(
+		description = "The custom CSS viewports of the page collection."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected CustomCSSViewport[] customCSSViewports;
+
+	@Schema(description = "The fragment style of the page widget instance.")
 	@Valid
 	public FragmentStyle getFragmentStyle() {
 		return fragmentStyle;
@@ -79,11 +180,15 @@ public class PageWidgetInstanceDefinition implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "The fragment style of the page widget instance."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected FragmentStyle fragmentStyle;
 
-	@Schema
+	@Schema(
+		description = "A list of fragment viewports of the page widget instance."
+	)
 	@Valid
 	public FragmentViewport[] getFragmentViewports() {
 		return fragmentViewports;
@@ -109,11 +214,39 @@ public class PageWidgetInstanceDefinition implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "A list of fragment viewports of the page widget instance."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected FragmentViewport[] fragmentViewports;
 
-	@Schema
+	@Schema(description = "The custom name of a Page Widget instance.")
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	@JsonIgnore
+	public void setName(UnsafeSupplier<String, Exception> nameUnsafeSupplier) {
+		try {
+			name = nameUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(description = "The custom name of a Page Widget instance.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String name;
+
+	@Schema(description = "The widget instance of the page widget instance.")
 	@Valid
 	public WidgetInstance getWidgetInstance() {
 		return widgetInstance;
@@ -139,7 +272,9 @@ public class PageWidgetInstanceDefinition implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "The widget instance of the page widget instance."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected WidgetInstance widgetInstance;
 
@@ -172,6 +307,64 @@ public class PageWidgetInstanceDefinition implements Serializable {
 
 		sb.append("{");
 
+		if (cssClasses != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"cssClasses\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < cssClasses.length; i++) {
+				sb.append("\"");
+
+				sb.append(_escape(cssClasses[i]));
+
+				sb.append("\"");
+
+				if ((i + 1) < cssClasses.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
+		if (customCSS != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"customCSS\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(customCSS));
+
+			sb.append("\"");
+		}
+
+		if (customCSSViewports != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"customCSSViewports\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < customCSSViewports.length; i++) {
+				sb.append(String.valueOf(customCSSViewports[i]));
+
+				if ((i + 1) < customCSSViewports.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
 		if (fragmentStyle != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -202,6 +395,20 @@ public class PageWidgetInstanceDefinition implements Serializable {
 			sb.append("]");
 		}
 
+		if (name != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"name\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(name));
+
+			sb.append("\"");
+		}
+
 		if (widgetInstance != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -218,15 +425,16 @@ public class PageWidgetInstanceDefinition implements Serializable {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.PageWidgetInstanceDefinition",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
 	}
 
 	private static boolean _isArray(Object value) {
@@ -252,8 +460,8 @@ public class PageWidgetInstanceDefinition implements Serializable {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -284,7 +492,7 @@ public class PageWidgetInstanceDefinition implements Serializable {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -292,7 +500,7 @@ public class PageWidgetInstanceDefinition implements Serializable {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -300,5 +508,10 @@ public class PageWidgetInstanceDefinition implements Serializable {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

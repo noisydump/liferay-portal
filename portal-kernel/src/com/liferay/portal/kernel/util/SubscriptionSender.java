@@ -14,6 +14,9 @@
 
 package com.liferay.portal.kernel.util;
 
+import com.liferay.asset.kernel.model.AssetEntry;
+import com.liferay.asset.kernel.model.AssetTag;
+import com.liferay.asset.kernel.service.AssetEntryLocalServiceUtil;
 import com.liferay.mail.kernel.model.FileAttachment;
 import com.liferay.mail.kernel.model.MailMessage;
 import com.liferay.mail.kernel.model.SMTPAccount;
@@ -79,6 +82,22 @@ import javax.mail.internet.InternetAddress;
  * @author Roberto Díaz
  */
 public class SubscriptionSender implements Serializable {
+
+	public void addAssetEntryPersistedSubscribers(
+		String assetEntryClassName, long assetEntryClassPK) {
+
+		AssetEntry assetEntry = AssetEntryLocalServiceUtil.fetchEntry(
+			assetEntryClassName, assetEntryClassPK);
+
+		if (assetEntry == null) {
+			return;
+		}
+
+		for (AssetTag assetTag : assetEntry.getTags()) {
+			addPersistedSubscribers(
+				AssetTag.class.getName(), assetTag.getTagId());
+		}
+	}
 
 	public void addFileAttachment(File file) {
 		addFileAttachment(file, null);
@@ -305,14 +324,14 @@ public class SubscriptionSender implements Serializable {
 		setContextAttribute("[$COMPANY_NAME$]", company.getName());
 
 		if (Validator.isNotNull(_entryURL)) {
-			boolean secureConnection = HttpUtil.isSecure(_entryURL);
+			boolean secureConnection = HttpComponentsUtil.isSecure(_entryURL);
 
-			String portalURL = PortalUtil.getPortalURL(
-				company.getVirtualHostname(),
-				PortalUtil.getPortalServerPort(secureConnection),
-				secureConnection);
+			if (_entryURL.startsWith(
+					PortalUtil.getPortalURL(
+						company.getVirtualHostname(),
+						PortalUtil.getPortalServerPort(secureConnection),
+						secureConnection))) {
 
-			if (_entryURL.startsWith(portalURL)) {
 				setContextAttribute(
 					"[$PORTAL_URL$]",
 					company.getPortalURL(
@@ -546,7 +565,7 @@ public class SubscriptionSender implements Serializable {
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(exception, exception);
+				_log.debug(exception);
 			}
 		}
 
@@ -658,33 +677,12 @@ public class SubscriptionSender implements Serializable {
 		return Boolean.TRUE;
 	}
 
-	/**
-	 * @deprecated As of Mueller (7.2.x)
-	 */
-	@Deprecated
-	protected void notifyPersistedSubscriber(Subscription subscription)
-		throws Exception {
-
-		notifyPersistedSubscriber(subscription, true);
-	}
-
 	protected void notifyPersistedSubscriber(
 			Subscription subscription, boolean notifyImmediately)
 		throws Exception {
 
 		notifyPersistedSubscriber(
 			subscription, _className, _classPK, notifyImmediately);
-	}
-
-	/**
-	 * @deprecated As of Mueller (7.2.x)
-	 */
-	@Deprecated
-	protected void notifyPersistedSubscriber(
-			Subscription subscription, String className, long classPK)
-		throws Exception {
-
-		notifyPersistedSubscriber(subscription, _className, _classPK, true);
 	}
 
 	protected void notifyPersistedSubscriber(
@@ -764,7 +762,7 @@ public class SubscriptionSender implements Serializable {
 			}
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 
 			return;
 		}
@@ -807,7 +805,7 @@ public class SubscriptionSender implements Serializable {
 				return;
 			}
 
-			sendNotification(user);
+			sendNotification(user, true);
 		}
 	}
 

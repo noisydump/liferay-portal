@@ -15,6 +15,8 @@
 package com.liferay.weather.web.internal.util;
 
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.webcache.WebCacheItem;
 import com.liferay.portal.kernel.webcache.WebCachePoolUtil;
 import com.liferay.weather.web.internal.model.Weather;
@@ -27,16 +29,22 @@ public class WeatherUtil {
 	public static Weather getWeather(String zip, String apiKey) {
 		String key = WeatherUtil.class.getName() + StringPool.PERIOD + zip;
 
-		WebCacheItem wci = new WeatherWebCacheItem(zip, apiKey);
+		WebCacheItem webCacheItem = new WeatherWebCacheItem(zip, apiKey);
 
 		try {
-			return (Weather)WebCachePoolUtil.get(key, wci);
+			return (Weather)WebCachePoolUtil.get(key, webCacheItem);
 		}
 		catch (ClassCastException classCastException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(classCastException);
+			}
+
 			WebCachePoolUtil.remove(key);
 
-			return (Weather)WebCachePoolUtil.get(key, wci);
+			return (Weather)WebCachePoolUtil.get(key, webCacheItem);
 		}
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(WeatherUtil.class);
 
 }

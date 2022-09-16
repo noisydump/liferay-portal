@@ -14,6 +14,8 @@
 
 package com.liferay.saml.opensaml.integration.internal.provider;
 
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.saml.opensaml.integration.internal.util.SamlUtil;
@@ -72,7 +74,7 @@ public class DBMetadataResolver extends AbstractMetadataResolver {
 		}
 
 		try {
-			EntityDescriptor entityDescriptor = getEntityDescriptor(
+			EntityDescriptor entityDescriptor = _getEntityDescriptor(
 				entityIdCriterion.getEntityId());
 
 			if (isValid(entityDescriptor)) {
@@ -93,15 +95,34 @@ public class DBMetadataResolver extends AbstractMetadataResolver {
 		_parserPool = parserPool;
 	}
 
-	protected EntityDescriptor getEntityDescriptor(String entityID)
+	@Nonnull
+	@Override
+	protected List<EntityDescriptor> lookupEntityID(@Nonnull String entityID)
+		throws ResolverException {
+
+		try {
+			EntityDescriptor entityDescriptor = _getEntityDescriptor(entityID);
+
+			if (entityDescriptor == null) {
+				return Collections.emptyList();
+			}
+
+			return Collections.singletonList(entityDescriptor);
+		}
+		catch (Exception exception) {
+			throw new ResolverException(exception);
+		}
+	}
+
+	private EntityDescriptor _getEntityDescriptor(String entityID)
 		throws Exception {
 
 		return SamlUtil.getEntityDescriptorById(
-			entityID, getMetadata(entityID));
+			entityID, _getMetadata(entityID));
 	}
 
-	protected XMLObject getMetadata(String entityID) throws Exception {
-		String metadataXml = getMetadataXml(entityID);
+	private XMLObject _getMetadata(String entityID) throws Exception {
+		String metadataXml = _getMetadataXml(entityID);
 
 		if (Validator.isNull(metadataXml)) {
 			return null;
@@ -119,7 +140,7 @@ public class DBMetadataResolver extends AbstractMetadataResolver {
 		return metadataXMLObject;
 	}
 
-	protected String getMetadataXml(String entityId) throws Exception {
+	private String _getMetadataXml(String entityId) throws Exception {
 		long companyId = CompanyThreadLocal.getCompanyId();
 
 		if (_samlProviderConfigurationHelper.isRoleIdp()) {
@@ -136,6 +157,10 @@ public class DBMetadataResolver extends AbstractMetadataResolver {
 			}
 			catch (NoSuchIdpSpConnectionException
 						noSuchIdpSpConnectionException) {
+
+				if (_log.isDebugEnabled()) {
+					_log.debug(noSuchIdpSpConnectionException);
+				}
 
 				return null;
 			}
@@ -155,6 +180,10 @@ public class DBMetadataResolver extends AbstractMetadataResolver {
 			catch (NoSuchSpIdpConnectionException
 						noSuchSpIdpConnectionException) {
 
+				if (_log.isDebugEnabled()) {
+					_log.debug(noSuchSpIdpConnectionException);
+				}
+
 				return null;
 			}
 		}
@@ -162,24 +191,8 @@ public class DBMetadataResolver extends AbstractMetadataResolver {
 		return null;
 	}
 
-	@Nonnull
-	@Override
-	protected List<EntityDescriptor> lookupEntityID(@Nonnull String entityID)
-		throws ResolverException {
-
-		try {
-			EntityDescriptor entityDescriptor = getEntityDescriptor(entityID);
-
-			if (entityDescriptor == null) {
-				return Collections.emptyList();
-			}
-
-			return Collections.singletonList(entityDescriptor);
-		}
-		catch (Exception exception) {
-			throw new ResolverException(exception);
-		}
-	}
+	private static final Log _log = LogFactoryUtil.getLog(
+		DBMetadataResolver.class);
 
 	@Reference
 	private ParserPool _parserPool;

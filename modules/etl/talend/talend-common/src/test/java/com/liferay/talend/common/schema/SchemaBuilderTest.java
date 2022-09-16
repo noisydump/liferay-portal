@@ -146,6 +146,40 @@ public class SchemaBuilderTest extends BaseTestCase {
 	}
 
 	@Test(expected = OASException.class)
+	public void testInferSchemaInvalidRequestContentBody() {
+		String endpoint = "/v1.0/organization";
+
+		_getSchema(
+			endpoint, OASConstants.OPERATION_POST,
+			readObject("openapi_data_types.json"));
+	}
+
+	@Test
+	public void testInferSchemaIterableRequestContentBody() {
+		String endpoint = "/v1.0/organization";
+
+		Schema schema = _getSchema(
+			endpoint, OASConstants.OPERATION_PATCH,
+			readObject("openapi_data_types.json"));
+
+		List<Schema.Field> fields = schema.getFields();
+
+		Boolean iterable = (Boolean)schema.getObjectProp("iterable");
+
+		Assert.assertNotNull(iterable);
+
+		Assert.assertThat(fields.size(), CoreMatchers.equalTo(6));
+
+		Schema.Field field = schema.getField("id");
+
+		Schema fieldSchema = AvroUtils.unwrapIfNullable(field.schema());
+
+		Assert.assertTrue(
+			"OAS integer in iterable request body maps to AVRO long",
+			AvroUtils.isSameType(fieldSchema, AvroUtils._long()));
+	}
+
+	@Test(expected = OASException.class)
 	public void testInferSchemaNonexistingSchema() {
 		String endpoint = "/v1.0/schema_builder_breaker";
 

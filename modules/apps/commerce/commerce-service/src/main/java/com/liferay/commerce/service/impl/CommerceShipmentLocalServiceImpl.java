@@ -14,19 +14,32 @@
 
 package com.liferay.commerce.service.impl;
 
-import com.liferay.commerce.constants.CommerceDestinationNames;
+import com.liferay.commerce.constants.CommerceAddressConstants;
 import com.liferay.commerce.constants.CommerceShipmentConstants;
 import com.liferay.commerce.exception.CommerceShipmentExpectedDateException;
 import com.liferay.commerce.exception.CommerceShipmentItemQuantityException;
 import com.liferay.commerce.exception.CommerceShipmentShippingDateException;
 import com.liferay.commerce.exception.CommerceShipmentStatusException;
+import com.liferay.commerce.exception.DuplicateCommerceShipmentException;
 import com.liferay.commerce.model.CommerceAddress;
 import com.liferay.commerce.model.CommerceOrder;
+import com.liferay.commerce.model.CommerceOrderItem;
 import com.liferay.commerce.model.CommerceShipment;
 import com.liferay.commerce.model.CommerceShipmentItem;
+import com.liferay.commerce.model.CommerceShippingMethod;
+import com.liferay.commerce.service.CommerceAddressLocalService;
+import com.liferay.commerce.service.CommerceOrderItemLocalService;
+import com.liferay.commerce.service.CommerceOrderLocalService;
+import com.liferay.commerce.service.CommerceShipmentItemLocalService;
+import com.liferay.commerce.service.CommerceShippingMethodLocalService;
 import com.liferay.commerce.service.base.CommerceShipmentLocalServiceBaseImpl;
+import com.liferay.expando.kernel.service.ExpandoRowLocalService;
+import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.messaging.DestinationNames;
 import com.liferay.portal.kernel.messaging.Message;
 import com.liferay.portal.kernel.messaging.MessageBusUtil;
 import com.liferay.portal.kernel.model.SystemEventConstants;
@@ -43,21 +56,27 @@ import com.liferay.portal.kernel.search.QueryConfig;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.TransactionCommitCallbackUtil;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.spring.extender.service.ServiceReference;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
+import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
+import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.Callable;
+import java.util.TimeZone;
 
 /**
  * @author Alessio Antonio Rendina
@@ -65,19 +84,22 @@ import java.util.concurrent.Callable;
 public class CommerceShipmentLocalServiceImpl
 	extends CommerceShipmentLocalServiceBaseImpl {
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #addDeliverySubscriptionCommerceShipment(long, long)}
+	 */
+	@Deprecated
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public CommerceShipment addCommerceDeliverySubscriptionShipment(
 			long userId, long commerceOrderId, String name, String description,
 			String street1, String street2, String street3, String city,
-			String zip, long commerceRegionId, long commerceCountryId,
-			String phoneNumber)
+			String zip, long regionId, long countryId, String phoneNumber)
 		throws PortalException {
 
-		User user = userLocalService.getUser(userId);
+		User user = _userLocalService.getUser(userId);
 
 		CommerceOrder commerceOrder =
-			commerceOrderLocalService.getCommerceOrder(commerceOrderId);
+			_commerceOrderLocalService.getCommerceOrder(commerceOrderId);
 
 		long commerceShipmentId = counterLocalService.increment();
 
@@ -101,39 +123,10 @@ public class CommerceShipmentLocalServiceImpl
 
 		CommerceAddress commerceAddress = updateCommerceShipmentAddress(
 			commerceShipment, name, description, street1, street2, street3,
-			city, zip, commerceRegionId, commerceCountryId, phoneNumber);
+			city, zip, regionId, countryId, phoneNumber, null);
 
 		commerceShipment.setCommerceAddressId(
 			commerceAddress.getCommerceAddressId());
-
-		return commerceShipmentPersistence.update(commerceShipment);
-	}
-
-	@Indexable(type = IndexableType.REINDEX)
-	@Override
-	public CommerceShipment addCommerceShipment(
-			long groupId, long commerceAccountId, long commerceAddressId,
-			long commerceShippingMethodId, String commerceShippingOptionName,
-			ServiceContext serviceContext)
-		throws PortalException {
-
-		User user = userLocalService.getUser(serviceContext.getUserId());
-
-		long commerceShipmentId = counterLocalService.increment();
-
-		CommerceShipment commerceShipment = commerceShipmentPersistence.create(
-			commerceShipmentId);
-
-		commerceShipment.setGroupId(groupId);
-		commerceShipment.setCompanyId(user.getCompanyId());
-		commerceShipment.setUserId(user.getUserId());
-		commerceShipment.setUserName(user.getFullName());
-		commerceShipment.setCommerceAccountId(commerceAccountId);
-		commerceShipment.setCommerceAddressId(commerceAddressId);
-		commerceShipment.setCommerceShippingMethodId(commerceShippingMethodId);
-		commerceShipment.setShippingOptionName(commerceShippingOptionName);
-		commerceShipment.setStatus(
-			CommerceShipmentConstants.SHIPMENT_STATUS_PROCESSING);
 
 		return commerceShipmentPersistence.update(commerceShipment);
 	}
@@ -144,13 +137,108 @@ public class CommerceShipmentLocalServiceImpl
 		throws PortalException {
 
 		CommerceOrder commerceOrder =
-			commerceOrderLocalService.getCommerceOrder(commerceOrderId);
+			_commerceOrderLocalService.getCommerceOrder(commerceOrderId);
 
 		return commerceShipmentLocalService.addCommerceShipment(
-			commerceOrder.getGroupId(), commerceOrder.getCommerceAccountId(),
+			null, commerceOrder.getGroupId(),
+			commerceOrder.getCommerceAccountId(),
 			commerceOrder.getShippingAddressId(),
 			commerceOrder.getCommerceShippingMethodId(),
 			commerceOrder.getShippingOptionName(), serviceContext);
+	}
+
+	@Indexable(type = IndexableType.REINDEX)
+	@Override
+	public CommerceShipment addCommerceShipment(
+			String externalReferenceCode, long groupId, long commerceAccountId,
+			long commerceAddressId, long commerceShippingMethodId,
+			String commerceShippingOptionName, ServiceContext serviceContext)
+		throws PortalException {
+
+		User user = _userLocalService.getUser(serviceContext.getUserId());
+
+		if (Validator.isBlank(externalReferenceCode)) {
+			externalReferenceCode = null;
+		}
+
+		_validateExternalReferenceCode(
+			0, serviceContext.getCompanyId(), externalReferenceCode);
+
+		long commerceShipmentId = counterLocalService.increment();
+
+		CommerceShipment commerceShipment = commerceShipmentPersistence.create(
+			commerceShipmentId);
+
+		commerceShipment.setExternalReferenceCode(externalReferenceCode);
+		commerceShipment.setGroupId(groupId);
+		commerceShipment.setCompanyId(user.getCompanyId());
+		commerceShipment.setUserId(user.getUserId());
+		commerceShipment.setUserName(user.getFullName());
+		commerceShipment.setCommerceAccountId(commerceAccountId);
+		commerceShipment.setCommerceAddressId(commerceAddressId);
+
+		CommerceShippingMethod commerceShippingMethod =
+			_commerceShippingMethodLocalService.fetchCommerceShippingMethod(
+				commerceShippingMethodId);
+
+		if (commerceShippingMethod != null) {
+			commerceShipment.setCommerceShippingMethodId(
+				commerceShippingMethodId);
+			commerceShipment.setShippingOptionName(commerceShippingOptionName);
+			commerceShipment.setTrackingURL(
+				commerceShippingMethod.getTrackingURL());
+		}
+
+		commerceShipment.setStatus(
+			CommerceShipmentConstants.SHIPMENT_STATUS_PROCESSING);
+		commerceShipment.setExpandoBridgeAttributes(serviceContext);
+
+		return commerceShipmentPersistence.update(commerceShipment);
+	}
+
+	@Indexable(type = IndexableType.REINDEX)
+	@Override
+	public CommerceShipment addDeliverySubscriptionCommerceShipment(
+			long userId, long commerceOrderItemId)
+		throws PortalException {
+
+		long commerceShipmentId = counterLocalService.increment();
+
+		CommerceShipment commerceShipment = commerceShipmentPersistence.create(
+			commerceShipmentId);
+
+		User user = _userLocalService.getUser(userId);
+
+		CommerceOrderItem commerceOrderItem =
+			_commerceOrderItemLocalService.getCommerceOrderItem(
+				commerceOrderItemId);
+
+		CommerceOrder commerceOrder = commerceOrderItem.getCommerceOrder();
+
+		commerceShipment.setGroupId(commerceOrder.getGroupId());
+
+		commerceShipment.setCompanyId(user.getCompanyId());
+		commerceShipment.setUserId(user.getUserId());
+		commerceShipment.setUserName(user.getFullName());
+		commerceShipment.setCommerceAccountId(
+			commerceOrder.getCommerceAccountId());
+		commerceShipment.setCommerceAddressId(
+			commerceOrder.getShippingAddressId());
+		commerceShipment.setCommerceShippingMethodId(
+			commerceOrder.getCommerceShippingMethodId());
+		commerceShipment.setShippingOptionName(
+			commerceOrder.getShippingOptionName());
+		commerceShipment.setStatus(
+			CommerceShipmentConstants.SHIPMENT_STATUS_PROCESSING);
+
+		commerceShipment = commerceShipmentPersistence.update(commerceShipment);
+
+		_commerceShipmentItemLocalService.
+			addDeliverySubscriptionCommerceShipmentItem(
+				commerceOrder.getScopeGroupId(), userId, commerceShipmentId,
+				commerceOrderItemId);
+
+		return commerceShipment;
 	}
 
 	@Indexable(type = IndexableType.DELETE)
@@ -160,14 +248,15 @@ public class CommerceShipmentLocalServiceImpl
 			CommerceShipment commerceShipment, boolean restoreStockQuantity)
 		throws PortalException {
 
-		// Commerce shipment items
+		commerceShipment = commerceShipmentPersistence.remove(commerceShipment);
 
-		commerceShipmentItemLocalService.deleteCommerceShipmentItems(
+		_commerceShipmentItemLocalService.deleteCommerceShipmentItems(
 			commerceShipment.getCommerceShipmentId(), restoreStockQuantity);
 
-		// Commerce shipment
+		_expandoRowLocalService.deleteRows(
+			commerceShipment.getCommerceShipmentId());
 
-		return commerceShipmentPersistence.remove(commerceShipment);
+		return commerceShipment;
 	}
 
 	@Override
@@ -220,7 +309,7 @@ public class CommerceShipmentLocalServiceImpl
 		long[] groupIds, int start, int end,
 		OrderByComparator<CommerceShipment> orderByComparator) {
 
-		return commerceShipmentPersistence.findByGroupIds(
+		return commerceShipmentPersistence.findByGroupId(
 			groupIds, start, end, orderByComparator);
 	}
 
@@ -258,7 +347,7 @@ public class CommerceShipmentLocalServiceImpl
 
 	@Override
 	public int getCommerceShipmentsCount(long[] groupIds) {
-		return commerceShipmentPersistence.countByGroupIds(groupIds);
+		return commerceShipmentPersistence.countByGroupId(groupIds);
 	}
 
 	@Override
@@ -280,6 +369,33 @@ public class CommerceShipmentLocalServiceImpl
 
 		return commerceShipmentFinder.
 			findCommerceShipmentStatusesByCommerceOrderId(commerceOrderId);
+	}
+
+	@Indexable(type = IndexableType.REINDEX)
+	@Override
+	public CommerceShipment reprocessCommerceShipment(long commerceShipmentId)
+		throws PortalException {
+
+		CommerceShipment commerceShipment =
+			commerceShipmentPersistence.findByPrimaryKey(commerceShipmentId);
+
+		if (commerceShipment.getStatus() ==
+				CommerceShipmentConstants.SHIPMENT_STATUS_DELIVERED) {
+
+			throw new CommerceShipmentStatusException();
+		}
+
+		commerceShipment.setStatus(
+			CommerceShipmentConstants.SHIPMENT_STATUS_PROCESSING);
+
+		if (ArrayUtil.contains(
+				messageShipmentStatuses,
+				CommerceShipmentConstants.SHIPMENT_STATUS_PROCESSING)) {
+
+			sendShipmentStatusMessage(commerceShipment);
+		}
+
+		return commerceShipmentPersistence.update(commerceShipment);
 	}
 
 	@Override
@@ -318,13 +434,31 @@ public class CommerceShipmentLocalServiceImpl
 		return indexer.searchCount(searchContext);
 	}
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 * #updateAddress(long, String, String, String, String, String, String,
+	 * String, long, long, String, ServiceContext)}
+	 */
+	@Deprecated
+	@Override
+	public CommerceShipment updateAddress(
+			long commerceShipmentId, String name, String description,
+			String street1, String street2, String street3, String city,
+			String zip, long regionId, long countryId, String phoneNumber)
+		throws PortalException {
+
+		return commerceShipmentLocalService.updateAddress(
+			commerceShipmentId, name, description, street1, street2, street3,
+			city, zip, regionId, countryId, phoneNumber, null);
+	}
+
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public CommerceShipment updateAddress(
 			long commerceShipmentId, String name, String description,
 			String street1, String street2, String street3, String city,
-			String zip, long commerceRegionId, long commerceCountryId,
-			String phoneNumber)
+			String zip, long regionId, long countryId, String phoneNumber,
+			ServiceContext serviceContext)
 		throws PortalException {
 
 		CommerceShipment commerceShipment =
@@ -332,7 +466,7 @@ public class CommerceShipmentLocalServiceImpl
 
 		CommerceAddress commerceAddress = updateCommerceShipmentAddress(
 			commerceShipment, name, description, street1, street2, street3,
-			city, zip, commerceRegionId, commerceCountryId, phoneNumber);
+			city, zip, regionId, countryId, phoneNumber, serviceContext);
 
 		commerceShipment.setCommerceAddressId(
 			commerceAddress.getCommerceAddressId());
@@ -343,25 +477,36 @@ public class CommerceShipmentLocalServiceImpl
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public CommerceShipment updateCarrierDetails(
-			long commerceShipmentId, String carrier, String trackingNumber)
+			long commerceShipmentId, long commerceShippingMethodId,
+			String carrier, String trackingNumber, String trackingURL)
 		throws PortalException {
 
 		CommerceShipment commerceShipment =
 			commerceShipmentPersistence.findByPrimaryKey(commerceShipmentId);
 
+		if (commerceShipment.getCommerceShippingMethodId() !=
+				commerceShippingMethodId) {
+
+			commerceShipment.setCommerceShippingMethodId(
+				commerceShippingMethodId);
+			commerceShipment.setShippingOptionName(null);
+		}
+
 		commerceShipment.setCarrier(carrier);
 		commerceShipment.setTrackingNumber(trackingNumber);
+		commerceShipment.setTrackingURL(trackingURL);
 
 		return commerceShipmentPersistence.update(commerceShipment);
 	}
 
 	@Override
 	public CommerceShipment updateCommerceShipment(
-			long commerceShipmentId, String carrier, String trackingNumber,
-			int status, int shippingDateMonth, int shippingDateDay,
-			int shippingDateYear, int shippingDateHour, int shippingDateMinute,
-			int expectedDateMonth, int expectedDateDay, int expectedDateYear,
-			int expectedDateHour, int expectedDateMinute)
+			long commerceShipmentId, long commerceShippingMethodId,
+			String carrier, int expectedDateMonth, int expectedDateDay,
+			int expectedDateYear, int expectedDateHour, int expectedDateMinute,
+			int shippingDateMonth, int shippingDateDay, int shippingDateYear,
+			int shippingDateHour, int shippingDateMinute, String trackingNumber,
+			String trackingURL, int status, ServiceContext serviceContext)
 		throws PortalException {
 
 		String name = null;
@@ -371,8 +516,8 @@ public class CommerceShipmentLocalServiceImpl
 		String street3 = null;
 		String city = null;
 		String zip = null;
-		long commerceRegionId = 0;
-		long commerceCountryId = 0;
+		long regionId = 0;
+		long countryId = 0;
 		String phoneNumber = null;
 
 		CommerceShipment commerceShipment =
@@ -389,66 +534,83 @@ public class CommerceShipmentLocalServiceImpl
 			street3 = commerceAddress.getStreet3();
 			city = commerceAddress.getCity();
 			zip = commerceAddress.getZip();
-			commerceRegionId = commerceAddress.getCommerceRegionId();
-			commerceCountryId = commerceAddress.getCommerceCountryId();
+			regionId = commerceAddress.getRegionId();
+			countryId = commerceAddress.getCountryId();
 			phoneNumber = commerceAddress.getPhoneNumber();
 		}
 
 		return commerceShipmentLocalService.updateCommerceShipment(
-			commerceShipmentId, name, description, street1, street2, street3,
-			city, zip, commerceRegionId, commerceCountryId, phoneNumber,
-			carrier, trackingNumber, status, shippingDateMonth, shippingDateDay,
-			shippingDateYear, shippingDateHour, shippingDateMinute,
+			commerceShipmentId, commerceShippingMethodId, carrier,
 			expectedDateMonth, expectedDateDay, expectedDateYear,
-			expectedDateHour, expectedDateMinute);
+			expectedDateHour, expectedDateMinute, shippingDateMonth,
+			shippingDateDay, shippingDateYear, shippingDateHour,
+			shippingDateMinute, trackingNumber, trackingURL, status, name,
+			description, street1, street2, street3, city, zip, regionId,
+			countryId, phoneNumber, serviceContext);
 	}
 
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public CommerceShipment updateCommerceShipment(
-			long commerceShipmentId, String name, String description,
+			long commerceShipmentId, long commerceShippingMethodId,
+			String carrier, int expectedDateMonth, int expectedDateDay,
+			int expectedDateYear, int expectedDateHour, int expectedDateMinute,
+			int shippingDateMonth, int shippingDateDay, int shippingDateYear,
+			int shippingDateHour, int shippingDateMinute, String trackingNumber,
+			String trackingURL, int status, String name, String description,
 			String street1, String street2, String street3, String city,
-			String zip, long commerceRegionId, long commerceCountryId,
-			String phoneNumber, String carrier, String trackingNumber,
-			int status, int shippingDateMonth, int shippingDateDay,
-			int shippingDateYear, int shippingDateHour, int shippingDateMinute,
-			int expectedDateMonth, int expectedDateDay, int expectedDateYear,
-			int expectedDateHour, int expectedDateMinute)
+			String zip, long regionId, long countryId, String phoneNumber,
+			ServiceContext serviceContext)
 		throws PortalException {
-
-		// Commerce shipment
 
 		CommerceShipment commerceShipment =
 			commerceShipmentPersistence.findByPrimaryKey(commerceShipmentId);
 
-		User user = userLocalService.getUser(commerceShipment.getUserId());
+		User user = _userLocalService.getUser(serviceContext.getUserId());
 
 		int oldStatus = commerceShipment.getStatus();
 
-		validate(status, oldStatus);
+		_validateStatus(status, oldStatus);
 
-		Date shippingDate = PortalUtil.getDate(
-			shippingDateMonth, shippingDateDay, shippingDateYear,
-			shippingDateHour, shippingDateMinute, user.getTimeZone(),
-			CommerceShipmentShippingDateException.class);
+		if (commerceShipment.getCommerceShippingMethodId() !=
+				commerceShippingMethodId) {
 
-		Date expectedDate = PortalUtil.getDate(
-			expectedDateMonth, expectedDateDay, expectedDateYear,
-			expectedDateHour, expectedDateMinute, user.getTimeZone(),
-			CommerceShipmentExpectedDateException.class);
+			commerceShipment.setCommerceShippingMethodId(
+				commerceShippingMethodId);
+			commerceShipment.setShippingOptionName(null);
+		}
 
 		CommerceAddress commerceAddress = updateCommerceShipmentAddress(
 			commerceShipment, name, description, street1, street2, street3,
-			city, zip, commerceRegionId, commerceCountryId, phoneNumber);
+			city, zip, regionId, countryId, phoneNumber, serviceContext);
 
 		commerceShipment.setCommerceAddressId(
 			commerceAddress.getCommerceAddressId());
 
 		commerceShipment.setCarrier(carrier);
 		commerceShipment.setTrackingNumber(trackingNumber);
-		commerceShipment.setShippingDate(shippingDate);
-		commerceShipment.setExpectedDate(expectedDate);
+		commerceShipment.setTrackingURL(trackingURL);
+
+		Date shippingDate = _getDate(
+			shippingDateMonth, shippingDateDay, shippingDateYear,
+			shippingDateHour, shippingDateMinute, user.getTimeZone(),
+			CommerceShipmentShippingDateException.class);
+
+		if (shippingDate != null) {
+			commerceShipment.setShippingDate(shippingDate);
+		}
+
+		Date expectedDate = _getDate(
+			expectedDateMonth, expectedDateDay, expectedDateYear,
+			expectedDateHour, expectedDateMinute, user.getTimeZone(),
+			CommerceShipmentExpectedDateException.class);
+
+		if (expectedDate != null) {
+			commerceShipment.setExpectedDate(expectedDate);
+		}
+
 		commerceShipment.setStatus(status);
+		commerceShipment.setExpandoBridgeAttributes(serviceContext);
 
 		return commerceShipmentPersistence.update(commerceShipment);
 	}
@@ -463,14 +625,38 @@ public class CommerceShipmentLocalServiceImpl
 		CommerceShipment commerceShipment =
 			commerceShipmentPersistence.findByPrimaryKey(commerceShipmentId);
 
-		User user = userLocalService.getUser(commerceShipment.getUserId());
+		User user = _userLocalService.getUser(commerceShipment.getUserId());
 
-		Date expectedDate = PortalUtil.getDate(
-			expectedDateMonth, expectedDateDay, expectedDateYear,
-			expectedDateHour, expectedDateMinute, user.getTimeZone(),
-			CommerceShipmentShippingDateException.class);
+		commerceShipment.setExpectedDate(
+			_getDate(
+				expectedDateMonth, expectedDateDay, expectedDateYear,
+				expectedDateHour, expectedDateMinute, user.getTimeZone(),
+				CommerceShipmentShippingDateException.class));
 
-		commerceShipment.setExpectedDate(expectedDate);
+		return commerceShipmentPersistence.update(commerceShipment);
+	}
+
+	@Indexable(type = IndexableType.REINDEX)
+	@Override
+	public CommerceShipment updateExternalReferenceCode(
+			long commerceShipmentId, String externalReferenceCode)
+		throws PortalException {
+
+		CommerceShipment commerceShipment =
+			commerceShipmentPersistence.findByPrimaryKey(commerceShipmentId);
+
+		if (Objects.equals(
+				commerceShipment.getExternalReferenceCode(),
+				externalReferenceCode)) {
+
+			return commerceShipment;
+		}
+
+		_validateExternalReferenceCode(
+			commerceShipmentId, commerceShipment.getCompanyId(),
+			externalReferenceCode);
+
+		commerceShipment.setExternalReferenceCode(externalReferenceCode);
 
 		return commerceShipmentPersistence.update(commerceShipment);
 	}
@@ -485,14 +671,13 @@ public class CommerceShipmentLocalServiceImpl
 		CommerceShipment commerceShipment =
 			commerceShipmentPersistence.findByPrimaryKey(commerceShipmentId);
 
-		User user = userLocalService.getUser(commerceShipment.getUserId());
+		User user = _userLocalService.getUser(commerceShipment.getUserId());
 
-		Date shippingDate = PortalUtil.getDate(
-			shippingDateMonth, shippingDateDay, shippingDateYear,
-			shippingDateHour, shippingDateMinute, user.getTimeZone(),
-			CommerceShipmentShippingDateException.class);
-
-		commerceShipment.setShippingDate(shippingDate);
+		commerceShipment.setShippingDate(
+			_getDate(
+				shippingDateMonth, shippingDateDay, shippingDateYear,
+				shippingDateHour, shippingDateMinute, user.getTimeZone(),
+				CommerceShipmentShippingDateException.class));
 
 		return commerceShipmentPersistence.update(commerceShipment);
 	}
@@ -506,7 +691,7 @@ public class CommerceShipmentLocalServiceImpl
 			commerceShipmentPersistence.findByPrimaryKey(commerceShipmentId);
 
 		List<CommerceShipmentItem> commerceShipmentItems =
-			commerceShipmentItemLocalService.getCommerceShipmentItems(
+			_commerceShipmentItemLocalService.getCommerceShipmentItems(
 				commerceShipmentId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 
 		if (commerceShipmentItems.isEmpty()) {
@@ -526,7 +711,7 @@ public class CommerceShipmentLocalServiceImpl
 		commerceShipment.setStatus(status);
 
 		if (ArrayUtil.contains(messageShipmentStatuses, status)) {
-			sendShipmentStatusMessage(commerceShipmentId);
+			sendShipmentStatusMessage(commerceShipment);
 		}
 
 		return commerceShipmentPersistence.update(commerceShipment);
@@ -601,30 +786,47 @@ public class CommerceShipmentLocalServiceImpl
 	@Transactional(
 		propagation = Propagation.REQUIRED, rollbackFor = Exception.class
 	)
-	protected void sendShipmentStatusMessage(long commerceShipmentId) {
+	protected void sendShipmentStatusMessage(
+		CommerceShipment commerceShipment) {
+
 		TransactionCommitCallbackUtil.registerCallback(
-			new Callable<Void>() {
+			() -> {
+				Message message = new Message();
 
-				@Override
-				public Void call() throws Exception {
-					Message message = new Message();
+				message.setPayload(
+					JSONUtil.put(
+						"commerceShipment",
+						() -> {
+							DTOConverter<?, ?> dtoConverter =
+								_dtoConverterRegistry.getDTOConverter(
+									CommerceShipment.class.getName());
 
-					message.put("commerceShipmentId", commerceShipmentId);
+							Object object = dtoConverter.toDTO(
+								new DefaultDTOConverterContext(
+									_dtoConverterRegistry,
+									commerceShipment.getCommerceShipmentId(),
+									LocaleUtil.getSiteDefault(), null, null));
 
-					MessageBusUtil.sendMessage(
-						CommerceDestinationNames.SHIPMENT_STATUS, message);
+							return JSONFactoryUtil.createJSONObject(
+								JSONFactoryUtil.looseSerializeDeep(object));
+						}
+					).put(
+						"commerceShipmentId",
+						commerceShipment.getCommerceShipmentId()
+					));
 
-					return null;
-				}
+				MessageBusUtil.sendMessage(
+					DestinationNames.COMMERCE_SHIPMENT_STATUS, message);
 
+				return null;
 			});
 	}
 
 	protected CommerceAddress updateCommerceShipmentAddress(
 			CommerceShipment commerceShipment, String name, String description,
 			String street1, String street2, String street3, String city,
-			String zip, long commerceRegionId, long commerceCountryId,
-			String phoneNumber)
+			String zip, long regionId, long countryId, String phoneNumber,
+			ServiceContext serviceContext)
 		throws PortalException {
 
 		CommerceAddress commerceAddress =
@@ -637,32 +839,99 @@ public class CommerceShipmentLocalServiceImpl
 			Objects.equals(street3, commerceAddress.getStreet3()) &&
 			Objects.equals(city, commerceAddress.getCity()) &&
 			Objects.equals(zip, commerceAddress.getZip()) &&
-			Objects.equals(
-				commerceRegionId, commerceAddress.getCommerceRegionId()) &&
-			Objects.equals(
-				commerceCountryId, commerceAddress.getCommerceCountryId()) &&
+			Objects.equals(regionId, commerceAddress.getRegionId()) &&
+			Objects.equals(countryId, commerceAddress.getCountryId()) &&
 			Objects.equals(phoneNumber, commerceAddress.getPhoneNumber())) {
 
 			return commerceAddress;
 		}
 
-		return commerceAddressLocalService.addCommerceAddress(
+		return _commerceAddressLocalService.addCommerceAddress(
 			commerceShipment.getModelClassName(),
 			commerceShipment.getCommerceShipmentId(), name, description,
-			street1, street2, street3, city, zip, commerceRegionId,
-			commerceCountryId, phoneNumber, false, false,
-			ServiceContextThreadLocal.getServiceContext());
-	}
-
-	protected void validate(int status, int oldStatus) throws PortalException {
-		if (status < oldStatus) {
-			throw new CommerceShipmentStatusException();
-		}
+			street1, street2, street3, city, zip, regionId, countryId,
+			phoneNumber,
+			CommerceAddressConstants.ADDRESS_TYPE_BILLING_AND_SHIPPING,
+			serviceContext);
 	}
 
 	protected int[] messageShipmentStatuses = {
 		CommerceShipmentConstants.SHIPMENT_STATUS_SHIPPED,
 		CommerceShipmentConstants.SHIPMENT_STATUS_DELIVERED
 	};
+
+	private Date _getDate(
+			int dateMonth, int dateDay, int dateYear, int dateHour,
+			int dateMinute, TimeZone timeZone,
+			Class<? extends PortalException> clazz)
+		throws PortalException {
+
+		if ((dateMonth == 0) && (dateDay == 0) && (dateYear == 0) &&
+			(dateHour == 0) && (dateMinute == 0)) {
+
+			return null;
+		}
+
+		return PortalUtil.getDate(
+			dateMonth, dateDay, dateYear, dateHour, dateMinute, timeZone,
+			clazz);
+	}
+
+	private void _validateExternalReferenceCode(
+			long commerceShipmentId, long companyId,
+			String externalReferenceCode)
+		throws PortalException {
+
+		if (Validator.isNull(externalReferenceCode)) {
+			return;
+		}
+
+		CommerceShipment commerceShipment =
+			commerceShipmentPersistence.fetchByC_ERC(
+				companyId, externalReferenceCode);
+
+		if (commerceShipment == null) {
+			return;
+		}
+
+		if (commerceShipment.getCommerceShipmentId() != commerceShipmentId) {
+			throw new DuplicateCommerceShipmentException(
+				"There is another commerce shipment with external reference " +
+					"code " + externalReferenceCode);
+		}
+	}
+
+	private void _validateStatus(int status, int oldStatus)
+		throws PortalException {
+
+		if (status < oldStatus) {
+			throw new CommerceShipmentStatusException();
+		}
+	}
+
+	@BeanReference(type = CommerceAddressLocalService.class)
+	private CommerceAddressLocalService _commerceAddressLocalService;
+
+	@BeanReference(type = CommerceOrderItemLocalService.class)
+	private CommerceOrderItemLocalService _commerceOrderItemLocalService;
+
+	@BeanReference(type = CommerceOrderLocalService.class)
+	private CommerceOrderLocalService _commerceOrderLocalService;
+
+	@BeanReference(type = CommerceShipmentItemLocalService.class)
+	private CommerceShipmentItemLocalService _commerceShipmentItemLocalService;
+
+	@BeanReference(type = CommerceShippingMethodLocalService.class)
+	private CommerceShippingMethodLocalService
+		_commerceShippingMethodLocalService;
+
+	@ServiceReference(type = DTOConverterRegistry.class)
+	private DTOConverterRegistry _dtoConverterRegistry;
+
+	@ServiceReference(type = ExpandoRowLocalService.class)
+	private ExpandoRowLocalService _expandoRowLocalService;
+
+	@ServiceReference(type = UserLocalService.class)
+	private UserLocalService _userLocalService;
 
 }

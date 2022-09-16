@@ -16,20 +16,27 @@ package com.liferay.portal.kernel.service.persistence.impl;
 
 import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.petra.sql.dsl.Column;
+import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
 import com.liferay.petra.sql.dsl.Table;
 import com.liferay.petra.sql.dsl.ast.ASTNode;
 import com.liferay.petra.sql.dsl.expression.Alias;
 import com.liferay.petra.sql.dsl.expression.Expression;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.petra.sql.dsl.query.FromStep;
+import com.liferay.petra.sql.dsl.query.GroupByStep;
+import com.liferay.petra.sql.dsl.query.JoinStep;
 import com.liferay.petra.sql.dsl.spi.ast.BaseASTNode;
 import com.liferay.petra.sql.dsl.spi.ast.DefaultASTNodeListener;
 import com.liferay.petra.sql.dsl.spi.expression.AggregateExpression;
 import com.liferay.petra.sql.dsl.spi.expression.DSLFunction;
 import com.liferay.petra.sql.dsl.spi.expression.DSLFunctionType;
 import com.liferay.petra.sql.dsl.spi.expression.TableStar;
+import com.liferay.petra.sql.dsl.spi.query.QueryTable;
 import com.liferay.petra.sql.dsl.spi.query.Select;
+import com.liferay.petra.sql.dsl.spi.query.SetOperation;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.configuration.Configuration;
 import com.liferay.portal.kernel.configuration.Filter;
 import com.liferay.portal.kernel.dao.db.DB;
@@ -51,11 +58,13 @@ import com.liferay.portal.kernel.dao.orm.SQLQuery;
 import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.dao.orm.SessionFactory;
 import com.liferay.portal.kernel.dao.orm.Type;
+import com.liferay.portal.kernel.exception.DataLimitExceededException;
 import com.liferay.portal.kernel.exception.NoSuchModelException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.internal.spring.transaction.ReadOnlyTransactionThreadLocal;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.AuditedModel;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.CacheModel;
 import com.liferay.portal.kernel.model.MVCCModel;
@@ -171,8 +180,6 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 
 		dslQuery.toSQL(sb::append, defaultASTNodeListener);
 
-		String[] tableNames = defaultASTNodeListener.getTableNames();
-
 		Select select = null;
 
 		ASTNode astNode = dslQuery;
@@ -181,18 +188,31 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 			if (astNode instanceof Select) {
 				select = (Select)astNode;
 
-				break;
+				astNode = _unwrapQueryTable(select);
+
+				if (astNode == null) {
+					break;
+				}
 			}
 
 			BaseASTNode baseASTNode = (BaseASTNode)astNode;
 
-			astNode = baseASTNode.getChild();
+			if (baseASTNode instanceof SetOperation) {
+				SetOperation setOperation = (SetOperation)astNode;
+
+				astNode = setOperation.getLeftDSLQuery();
+			}
+			else {
+				astNode = baseASTNode.getChild();
+			}
 		}
 
 		if (select == null) {
 			throw new IllegalArgumentException(
 				"No Select found for " + dslQuery);
 		}
+
+		String[] tableNames = defaultASTNodeListener.getTableNames();
 
 		ProjectionType projectionType = _getProjectionType(
 			tableNames, select.getExpressions());
@@ -208,7 +228,9 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 
 		Object cacheResult = finderCache.getResult(finderPath, arguments);
 
-		if (cacheResult != null) {
+		boolean productionMode = CTCollectionThreadLocal.isProductionMode();
+
+		if ((cacheResult != null) && productionMode) {
 			return (R)cacheResult;
 		}
 
@@ -275,7 +297,9 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 					defaultASTNodeListener.getEnd());
 			}
 
-			finderCache.putResult(finderPath, arguments, result);
+			if (productionMode) {
+				finderCache.putResult(finderPath, arguments, result);
+			}
 
 			return (R)result;
 		}
@@ -388,6 +412,26 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 		}
 
 		if (uncachedPrimaryKeys == null) {
+			return map;
+		}
+
+		if ((databaseInMaxParameters > 0) &&
+			(uncachedPrimaryKeys.size() > databaseInMaxParameters)) {
+
+			Iterator<Serializable> iterator = uncachedPrimaryKeys.iterator();
+
+			while (iterator.hasNext()) {
+				Set<Serializable> page = new HashSet<>();
+
+				for (int i = 0;
+					 (i < databaseInMaxParameters) && iterator.hasNext(); i++) {
+
+					page.add(iterator.next());
+				}
+
+				map.putAll(fetchByPrimaryKeys(page));
+			}
+
 			return map;
 		}
 
@@ -549,6 +593,7 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 		return _dataSource;
 	}
 
+	@Override
 	public DB getDB() {
 		if (_db == null) {
 			_db = DBManagerUtil.getDB(_dialect, _dataSource);
@@ -588,15 +633,15 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 			_log.error("Caught unexpected exception", exception);
 		}
 		else if (_log.isDebugEnabled()) {
-			_log.debug(exception, exception);
+			_log.debug(exception);
 		}
 
 		return new SystemException(exception);
 	}
 
 	@Override
-	public void registerListener(ModelListener<T> listener) {
-		ModelListenerRegistrationUtil.register(listener);
+	public void registerListener(ModelListener<T> modelListener) {
+		ModelListenerRegistrationUtil.register(modelListener);
 	}
 
 	@Override
@@ -617,16 +662,20 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 			model = modelWrapper.getWrappedModel();
 		}
 
-		ModelListener<T>[] listeners = getListeners();
+		ModelListener<T>[] modelListeners = getListeners();
 
-		for (ModelListener<T> listener : listeners) {
-			listener.onBeforeRemove(model);
+		for (ModelListener<T> modelListener : modelListeners) {
+			modelListener.onBeforeRemove(model);
 		}
 
-		model = removeImpl(model);
+		T removedModel = removeImpl(model);
 
-		for (ModelListener<T> listener : listeners) {
-			listener.onAfterRemove(model);
+		if (removedModel != null) {
+			model = removedModel;
+		}
+
+		for (ModelListener<T> modelListener : modelListeners) {
+			modelListener.onAfterRemove(model);
 		}
 
 		return model;
@@ -673,8 +722,8 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 	}
 
 	@Override
-	public void unregisterListener(ModelListener<T> listener) {
-		ModelListenerRegistrationUtil.unregister(listener);
+	public void unregisterListener(ModelListener<T> modelListener) {
+		ModelListenerRegistrationUtil.unregister(modelListener);
 	}
 
 	@Override
@@ -684,6 +733,8 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 				"Update called with read only transaction");
 		}
 
+		Class<?> clazz = model.getModelClass();
+
 		while (model instanceof ModelWrapper) {
 			ModelWrapper<T> modelWrapper = (ModelWrapper<T>)model;
 
@@ -692,25 +743,54 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 
 		boolean isNew = model.isNew();
 
-		ModelListener<T>[] listeners = getListeners();
+		if (isNew && (_dataLimitModelMaxCount > 0)) {
+			AuditedModel auditedModel = (AuditedModel)model;
 
-		for (ModelListener<T> listener : listeners) {
+			FromStep fromStep = DSLQueryFactoryUtil.count();
+
+			JoinStep joinStep = fromStep.from(_table);
+
+			GroupByStep groupByStep = joinStep.where(
+				_table.getColumn(
+					"companyId", Long.class
+				).eq(
+					auditedModel.getCompanyId()
+				));
+
+			int modelCount = dslQueryCount(groupByStep);
+
+			if (modelCount >= _dataLimitModelMaxCount) {
+				throw new DataLimitExceededException(
+					"Unable to exceed maximum number of allowed " +
+						clazz.getName());
+			}
+		}
+
+		T oldModel = null;
+
+		if (!isNew) {
+			oldModel = model.cloneWithOriginalValues();
+		}
+
+		ModelListener<T>[] modelListeners = getListeners();
+
+		for (ModelListener<T> modelListener : modelListeners) {
 			if (isNew) {
-				listener.onBeforeCreate(model);
+				modelListener.onBeforeCreate(model);
 			}
 			else {
-				listener.onBeforeUpdate(model);
+				modelListener.onBeforeUpdate(oldModel, model);
 			}
 		}
 
 		model = updateImpl(model);
 
-		for (ModelListener<T> listener : listeners) {
+		for (ModelListener<T> modelListener : modelListeners) {
 			if (isNew) {
-				listener.onAfterCreate(model);
+				modelListener.onAfterCreate(model);
 			}
 			else {
-				listener.onAfterUpdate(model);
+				modelListener.onAfterUpdate(oldModel, model);
 			}
 		}
 
@@ -867,6 +947,17 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 
 	protected void setModelClass(Class<T> modelClass) {
 		_modelClass = modelClass;
+
+		long dataLimitModelMaxCount = GetterUtil.getLong(
+			PropsUtil.get(
+				"data.limit.model.max.count",
+				new Filter(modelClass.getName())));
+
+		if (AuditedModel.class.isAssignableFrom(modelClass) &&
+			(dataLimitModelMaxCount > 0)) {
+
+			_dataLimitModelMaxCount = dataLimitModelMaxCount;
+		}
 	}
 
 	protected void setModelImplClass(Class<? extends T> modelImplClass) {
@@ -1066,6 +1157,35 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 		throw new IllegalArgumentException(expression.toString());
 	}
 
+	private ASTNode _unwrapQueryTable(Select select) {
+		Collection<? extends Expression<?>> expressions =
+			select.getExpressions();
+
+		if (expressions.size() != 1) {
+			return null;
+		}
+
+		Iterator<? extends Expression<?>> iterator = expressions.iterator();
+
+		Expression<?> expression = iterator.next();
+
+		if (!(expression instanceof TableStar)) {
+			return null;
+		}
+
+		TableStar tableStar = (TableStar)expression;
+
+		Table table = tableStar.getTable();
+
+		if (!(table instanceof QueryTable)) {
+			return null;
+		}
+
+		QueryTable queryTable = (QueryTable)table;
+
+		return queryTable.getDslQuery();
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		BasePersistenceImpl.class);
 
@@ -1093,6 +1213,7 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 		).build();
 
 	private int _databaseOrderByMaxColumns;
+	private long _dataLimitModelMaxCount;
 	private DataSource _dataSource;
 	private DB _db;
 	private Map<String, String> _dbColumnNames = Collections.emptyMap();
@@ -1109,6 +1230,11 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 		@Override
 		public Object clone() {
 			return this;
+		}
+
+		@Override
+		public NullModel cloneWithOriginalValues() {
+			throw new UnsupportedOperationException();
 		}
 
 		@Override

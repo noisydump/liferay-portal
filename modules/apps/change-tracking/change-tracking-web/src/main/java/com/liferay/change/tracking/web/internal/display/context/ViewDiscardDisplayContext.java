@@ -18,6 +18,8 @@ import com.liferay.change.tracking.model.CTEntry;
 import com.liferay.change.tracking.model.CTEntryTable;
 import com.liferay.change.tracking.service.CTCollectionLocalService;
 import com.liferay.change.tracking.web.internal.display.CTDisplayRendererRegistry;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.frontend.icons.FrontendIconsUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -34,9 +36,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionURL;
-import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 import javax.portlet.ResourceURL;
@@ -122,7 +121,7 @@ public class ViewDiscardDisplayContext {
 				return ctEntriesJSONArray;
 			}
 		).put(
-			"spritemap", _themeDisplay.getPathThemeImages() + "/clay/icons.svg"
+			"spritemap", FrontendIconsUtil.getSpritemap(_themeDisplay)
 		).put(
 			"typeNames",
 			DisplayContextUtil.getTypeNamesJSONObject(
@@ -144,29 +143,29 @@ public class ViewDiscardDisplayContext {
 			return redirect;
 		}
 
-		PortletURL portletURL = _renderResponse.createRenderURL();
-
-		portletURL.setParameter(
-			"mvcRenderCommandName", "/change_tracking/view_changes");
-		portletURL.setParameter(
-			"ctCollectionId", String.valueOf(_ctCollectionId));
-
-		return portletURL.toString();
+		return PortletURLBuilder.createRenderURL(
+			_renderResponse
+		).setMVCRenderCommandName(
+			"/change_tracking/view_changes"
+		).setParameter(
+			"ctCollectionId", _ctCollectionId
+		).buildString();
 	}
 
 	public String getSubmitURL() {
-		ActionURL submitURL = _renderResponse.createActionURL();
-
-		submitURL.setParameter(
-			ActionRequest.ACTION_NAME, "/change_tracking/discard_changes");
-		submitURL.setParameter("redirect", getRedirectURL());
-		submitURL.setParameter(
-			"ctCollectionId", String.valueOf(_ctCollectionId));
-		submitURL.setParameter(
-			"modelClassNameId", String.valueOf(_modelClassNameId));
-		submitURL.setParameter("modelClassPK", String.valueOf(_modelClassPK));
-
-		return submitURL.toString();
+		return PortletURLBuilder.createActionURL(
+			_renderResponse
+		).setActionName(
+			"/change_tracking/discard_changes"
+		).setRedirect(
+			getRedirectURL()
+		).setParameter(
+			"ctCollectionId", _ctCollectionId
+		).setParameter(
+			"modelClassNameId", _modelClassNameId
+		).setParameter(
+			"modelClassPK", _modelClassPK
+		).buildString();
 	}
 
 	private final long _ctCollectionId;

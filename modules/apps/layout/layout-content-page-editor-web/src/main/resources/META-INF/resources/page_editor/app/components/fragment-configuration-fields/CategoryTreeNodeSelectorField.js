@@ -12,37 +12,33 @@
  * details.
  */
 
-import ClayForm from '@clayui/form';
 import PropTypes from 'prop-types';
 import React from 'react';
 
 import ItemSelector from '../../../common/components/ItemSelector';
 import {ConfigurationFieldPropTypes} from '../../../prop-types/index';
 import {config} from '../../config/index';
+import itemSelectorValueToCategoryTreeNode from '../../utils/item-selector-value/itemSelectorValueToCategoryTreeNode';
 
-export const CategoryTreeNodeSelectorField = ({
-	field,
-	onValueSelect,
-	value,
-}) => {
+export function CategoryTreeNodeSelectorField({field, onValueSelect, value}) {
 	const eventName = `${config.portletNamespace}selectAssetCategoryTreeNode`;
 
 	return (
-		<ClayForm.Group small>
-			<ItemSelector
-				eventName={eventName}
-				itemSelectorURL={config.assetCategoryTreeNodeItemSelectorURL}
-				label={field.label}
-				modalProps={{height: '60vh', size: 'lg'}}
-				onItemSelect={(categoryTreeNode) => {
-					onValueSelect(field.name, categoryTreeNode);
-				}}
-				selectedItemTitle={value ? value.title : null}
-				showMappedItems={false}
-			/>
-		</ClayForm.Group>
+		<ItemSelector
+			eventName={eventName}
+			helpText={field.description}
+			itemSelectorURL={config.assetCategoryTreeNodeItemSelectorURL}
+			label={field.label}
+			modalProps={{height: '60vh', size: 'lg'}}
+			onItemSelect={(categoryTreeNode) => {
+				onValueSelect(field.name, categoryTreeNode);
+			}}
+			selectedItem={value}
+			showMappedItems={false}
+			transformValueCallback={itemSelectorValueToCategoryTreeNode}
+		/>
 	);
-};
+}
 
 CategoryTreeNodeSelectorField.propTypes = {
 	field: PropTypes.shape(ConfigurationFieldPropTypes).isRequired,

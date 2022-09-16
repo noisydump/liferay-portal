@@ -184,13 +184,11 @@ public interface ResourcePermissionLocalService
 	 optionally an empty string if no instance exists
 	 * @param portletActions whether to associate portlet actions with the
 	 resource
-	 * @param addGroupPermissions whether to add group permissions
-	 * @param addGuestPermissions whether to add guest permissions
 	 */
 	public void addResourcePermissions(
 			long companyId, long groupId, long userId, String name,
-			String primKey, boolean portletActions, boolean addGroupPermissions,
-			boolean addGuestPermissions)
+			String primKey, boolean portletActions,
+			ServiceContext serviceContext)
 		throws PortalException;
 
 	/**
@@ -323,6 +321,9 @@ public interface ResourcePermissionLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public <T> T dslQuery(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
@@ -504,6 +505,9 @@ public interface ResourcePermissionLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<ResourcePermission> getResourcePermissions(
 		long companyId, String name, int scope, String primKey);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<ResourcePermission> getResourcePermissions(String name);
 
 	/**
 	 * Returns the number of resource permissions.

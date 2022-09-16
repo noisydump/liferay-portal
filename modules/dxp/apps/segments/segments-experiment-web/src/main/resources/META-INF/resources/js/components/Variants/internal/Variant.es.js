@@ -13,6 +13,7 @@ import ClayButton from '@clayui/button';
 import ClayDropDown from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
 import ClayList from '@clayui/list';
+import {openConfirmModal} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useContext, useState} from 'react';
 
@@ -102,10 +103,20 @@ function Variant({
 						>
 							<ClayDropDown.ItemList>
 								<ClayDropDown.Item onClick={_handleEdition}>
+									<ClayIcon
+										className="c-mr-3 text-4"
+										symbol="pencil"
+									/>
+
 									{Liferay.Language.get('edit')}
 								</ClayDropDown.Item>
 
 								<ClayDropDown.Item onClick={_handleDeletion}>
+									<ClayIcon
+										className="c-mr-3 text-4"
+										symbol="trash"
+									/>
+
 									{Liferay.Language.get('delete')}
 								</ClayDropDown.Item>
 							</ClayDropDown.ItemList>
@@ -113,6 +124,7 @@ function Variant({
 					</ClayList.ItemField>
 				</>
 			)}
+
 			{showSplit && (
 				<ClayList.ItemField>
 					<span
@@ -139,13 +151,16 @@ function Variant({
 	);
 
 	function _handleDeletion() {
-		const confirmed = confirm(
-			Liferay.Language.get('are-you-sure-you-want-to-delete-this')
-		);
-
-		if (confirmed) {
-			return onVariantDeletion(variantId);
-		}
+		openConfirmModal({
+			message: Liferay.Language.get(
+				'are-you-sure-you-want-to-delete-this'
+			),
+			onConfirm: (isConfirmed) => {
+				if (isConfirmed) {
+					return onVariantDeletion(variantId);
+				}
+			},
+		});
 	}
 
 	function _handleEdition() {

@@ -18,7 +18,6 @@ import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.expando.kernel.util.ExpandoBridgeFactoryUtil;
 import com.liferay.oauth2.provider.model.OAuth2Authorization;
 import com.liferay.oauth2.provider.model.OAuth2AuthorizationModel;
-import com.liferay.oauth2.provider.model.OAuth2AuthorizationSoap;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.bean.AutoEscapeBeanHandler;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -30,21 +29,21 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -83,7 +82,8 @@ public class OAuth2AuthorizationModelImpl
 		{"refreshTokenContent", Types.CLOB},
 		{"refreshTokenContentHash", Types.BIGINT},
 		{"refreshTokenCreateDate", Types.TIMESTAMP},
-		{"refreshTokenExpirationDate", Types.TIMESTAMP}
+		{"refreshTokenExpirationDate", Types.TIMESTAMP},
+		{"rememberDeviceContent", Types.VARCHAR}
 	};
 
 	public static final Map<String, Integer> TABLE_COLUMNS_MAP =
@@ -107,10 +107,11 @@ public class OAuth2AuthorizationModelImpl
 		TABLE_COLUMNS_MAP.put("refreshTokenContentHash", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("refreshTokenCreateDate", Types.TIMESTAMP);
 		TABLE_COLUMNS_MAP.put("refreshTokenExpirationDate", Types.TIMESTAMP);
+		TABLE_COLUMNS_MAP.put("rememberDeviceContent", Types.VARCHAR);
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table OAuth2Authorization (oAuth2AuthorizationId LONG not null primary key,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,oAuth2ApplicationId LONG,oA2AScopeAliasesId LONG,accessTokenContent TEXT null,accessTokenContentHash LONG,accessTokenCreateDate DATE null,accessTokenExpirationDate DATE null,remoteHostInfo VARCHAR(255) null,remoteIPInfo VARCHAR(75) null,refreshTokenContent TEXT null,refreshTokenContentHash LONG,refreshTokenCreateDate DATE null,refreshTokenExpirationDate DATE null)";
+		"create table OAuth2Authorization (oAuth2AuthorizationId LONG not null primary key,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,oAuth2ApplicationId LONG,oA2AScopeAliasesId LONG,accessTokenContent TEXT null,accessTokenContentHash LONG,accessTokenCreateDate DATE null,accessTokenExpirationDate DATE null,remoteHostInfo VARCHAR(255) null,remoteIPInfo VARCHAR(75) null,refreshTokenContent TEXT null,refreshTokenContentHash LONG,refreshTokenCreateDate DATE null,refreshTokenExpirationDate DATE null,rememberDeviceContent VARCHAR(75) null)";
 
 	public static final String TABLE_SQL_DROP =
 		"drop table OAuth2Authorization";
@@ -128,41 +129,47 @@ public class OAuth2AuthorizationModelImpl
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long ACCESSTOKENCONTENTHASH_COLUMN_BITMASK = 1L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long COMPANYID_COLUMN_BITMASK = 2L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long OAUTH2APPLICATIONID_COLUMN_BITMASK = 4L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long REFRESHTOKENCONTENTHASH_COLUMN_BITMASK = 8L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long USERID_COLUMN_BITMASK = 16L;
+	public static final long REMEMBERDEVICECONTENT_COLUMN_BITMASK = 16L;
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
+	public static final long USERID_COLUMN_BITMASK = 32L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *		#getColumnBitmask(String)
+	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long OAUTH2AUTHORIZATIONID_COLUMN_BITMASK = 32L;
+	public static final long OAUTH2AUTHORIZATIONID_COLUMN_BITMASK = 64L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
@@ -176,73 +183,6 @@ public class OAuth2AuthorizationModelImpl
 	 */
 	@Deprecated
 	public static void setFinderCacheEnabled(boolean finderCacheEnabled) {
-	}
-
-	/**
-	 * Converts the soap model instance into a normal model instance.
-	 *
-	 * @param soapModel the soap model instance to convert
-	 * @return the normal model instance
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static OAuth2Authorization toModel(
-		OAuth2AuthorizationSoap soapModel) {
-
-		if (soapModel == null) {
-			return null;
-		}
-
-		OAuth2Authorization model = new OAuth2AuthorizationImpl();
-
-		model.setOAuth2AuthorizationId(soapModel.getOAuth2AuthorizationId());
-		model.setCompanyId(soapModel.getCompanyId());
-		model.setUserId(soapModel.getUserId());
-		model.setUserName(soapModel.getUserName());
-		model.setCreateDate(soapModel.getCreateDate());
-		model.setOAuth2ApplicationId(soapModel.getOAuth2ApplicationId());
-		model.setOAuth2ApplicationScopeAliasesId(
-			soapModel.getOAuth2ApplicationScopeAliasesId());
-		model.setAccessTokenContent(soapModel.getAccessTokenContent());
-		model.setAccessTokenContentHash(soapModel.getAccessTokenContentHash());
-		model.setAccessTokenCreateDate(soapModel.getAccessTokenCreateDate());
-		model.setAccessTokenExpirationDate(
-			soapModel.getAccessTokenExpirationDate());
-		model.setRemoteHostInfo(soapModel.getRemoteHostInfo());
-		model.setRemoteIPInfo(soapModel.getRemoteIPInfo());
-		model.setRefreshTokenContent(soapModel.getRefreshTokenContent());
-		model.setRefreshTokenContentHash(
-			soapModel.getRefreshTokenContentHash());
-		model.setRefreshTokenCreateDate(soapModel.getRefreshTokenCreateDate());
-		model.setRefreshTokenExpirationDate(
-			soapModel.getRefreshTokenExpirationDate());
-
-		return model;
-	}
-
-	/**
-	 * Converts the soap model instances into normal model instances.
-	 *
-	 * @param soapModels the soap model instances to convert
-	 * @return the normal model instances
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static List<OAuth2Authorization> toModels(
-		OAuth2AuthorizationSoap[] soapModels) {
-
-		if (soapModels == null) {
-			return null;
-		}
-
-		List<OAuth2Authorization> models = new ArrayList<OAuth2Authorization>(
-			soapModels.length);
-
-		for (OAuth2AuthorizationSoap soapModel : soapModels) {
-			models.add(toModel(soapModel));
-		}
-
-		return models;
 	}
 
 	public static final String MAPPING_TABLE_OA2AUTHS_OA2SCOPEGRANTS_NAME =
@@ -342,34 +282,6 @@ public class OAuth2AuthorizationModelImpl
 		getAttributeSetterBiConsumers() {
 
 		return _attributeSetterBiConsumers;
-	}
-
-	private static Function<InvocationHandler, OAuth2Authorization>
-		_getProxyProviderFunction() {
-
-		Class<?> proxyClass = ProxyUtil.getProxyClass(
-			OAuth2Authorization.class.getClassLoader(),
-			OAuth2Authorization.class, ModelWrapper.class);
-
-		try {
-			Constructor<OAuth2Authorization> constructor =
-				(Constructor<OAuth2Authorization>)proxyClass.getConstructor(
-					InvocationHandler.class);
-
-			return invocationHandler -> {
-				try {
-					return constructor.newInstance(invocationHandler);
-				}
-				catch (ReflectiveOperationException
-							reflectiveOperationException) {
-
-					throw new InternalError(reflectiveOperationException);
-				}
-			};
-		}
-		catch (NoSuchMethodException noSuchMethodException) {
-			throw new InternalError(noSuchMethodException);
-		}
 	}
 
 	private static final Map<String, Function<OAuth2Authorization, Object>>
@@ -495,6 +407,13 @@ public class OAuth2AuthorizationModelImpl
 			"refreshTokenExpirationDate",
 			(BiConsumer<OAuth2Authorization, Date>)
 				OAuth2Authorization::setRefreshTokenExpirationDate);
+		attributeGetterFunctions.put(
+			"rememberDeviceContent",
+			OAuth2Authorization::getRememberDeviceContent);
+		attributeSetterBiConsumers.put(
+			"rememberDeviceContent",
+			(BiConsumer<OAuth2Authorization, String>)
+				OAuth2Authorization::setRememberDeviceContent);
 
 		_attributeGetterFunctions = Collections.unmodifiableMap(
 			attributeGetterFunctions);
@@ -832,6 +751,34 @@ public class OAuth2AuthorizationModelImpl
 		_refreshTokenExpirationDate = refreshTokenExpirationDate;
 	}
 
+	@Override
+	public String getRememberDeviceContent() {
+		if (_rememberDeviceContent == null) {
+			return "";
+		}
+		else {
+			return _rememberDeviceContent;
+		}
+	}
+
+	@Override
+	public void setRememberDeviceContent(String rememberDeviceContent) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_rememberDeviceContent = rememberDeviceContent;
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
+	public String getOriginalRememberDeviceContent() {
+		return getColumnOriginalValue("rememberDeviceContent");
+	}
+
 	public long getColumnBitmask() {
 		if (_columnBitmask > 0) {
 			return _columnBitmask;
@@ -846,7 +793,9 @@ public class OAuth2AuthorizationModelImpl
 		for (Map.Entry<String, Object> entry :
 				_columnOriginalValues.entrySet()) {
 
-			if (entry.getValue() != getColumnValue(entry.getKey())) {
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
 				_columnBitmask |= _columnBitmasks.get(entry.getKey());
 			}
 		}
@@ -915,8 +864,55 @@ public class OAuth2AuthorizationModelImpl
 			getRefreshTokenCreateDate());
 		oAuth2AuthorizationImpl.setRefreshTokenExpirationDate(
 			getRefreshTokenExpirationDate());
+		oAuth2AuthorizationImpl.setRememberDeviceContent(
+			getRememberDeviceContent());
 
 		oAuth2AuthorizationImpl.resetOriginalValues();
+
+		return oAuth2AuthorizationImpl;
+	}
+
+	@Override
+	public OAuth2Authorization cloneWithOriginalValues() {
+		OAuth2AuthorizationImpl oAuth2AuthorizationImpl =
+			new OAuth2AuthorizationImpl();
+
+		oAuth2AuthorizationImpl.setOAuth2AuthorizationId(
+			this.<Long>getColumnOriginalValue("oAuth2AuthorizationId"));
+		oAuth2AuthorizationImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		oAuth2AuthorizationImpl.setUserId(
+			this.<Long>getColumnOriginalValue("userId"));
+		oAuth2AuthorizationImpl.setUserName(
+			this.<String>getColumnOriginalValue("userName"));
+		oAuth2AuthorizationImpl.setCreateDate(
+			this.<Date>getColumnOriginalValue("createDate"));
+		oAuth2AuthorizationImpl.setOAuth2ApplicationId(
+			this.<Long>getColumnOriginalValue("oAuth2ApplicationId"));
+		oAuth2AuthorizationImpl.setOAuth2ApplicationScopeAliasesId(
+			this.<Long>getColumnOriginalValue("oA2AScopeAliasesId"));
+		oAuth2AuthorizationImpl.setAccessTokenContent(
+			this.<String>getColumnOriginalValue("accessTokenContent"));
+		oAuth2AuthorizationImpl.setAccessTokenContentHash(
+			this.<Long>getColumnOriginalValue("accessTokenContentHash"));
+		oAuth2AuthorizationImpl.setAccessTokenCreateDate(
+			this.<Date>getColumnOriginalValue("accessTokenCreateDate"));
+		oAuth2AuthorizationImpl.setAccessTokenExpirationDate(
+			this.<Date>getColumnOriginalValue("accessTokenExpirationDate"));
+		oAuth2AuthorizationImpl.setRemoteHostInfo(
+			this.<String>getColumnOriginalValue("remoteHostInfo"));
+		oAuth2AuthorizationImpl.setRemoteIPInfo(
+			this.<String>getColumnOriginalValue("remoteIPInfo"));
+		oAuth2AuthorizationImpl.setRefreshTokenContent(
+			this.<String>getColumnOriginalValue("refreshTokenContent"));
+		oAuth2AuthorizationImpl.setRefreshTokenContentHash(
+			this.<Long>getColumnOriginalValue("refreshTokenContentHash"));
+		oAuth2AuthorizationImpl.setRefreshTokenCreateDate(
+			this.<Date>getColumnOriginalValue("refreshTokenCreateDate"));
+		oAuth2AuthorizationImpl.setRefreshTokenExpirationDate(
+			this.<Date>getColumnOriginalValue("refreshTokenExpirationDate"));
+		oAuth2AuthorizationImpl.setRememberDeviceContent(
+			this.<String>getColumnOriginalValue("rememberDeviceContent"));
 
 		return oAuth2AuthorizationImpl;
 	}
@@ -1113,6 +1109,18 @@ public class OAuth2AuthorizationModelImpl
 				Long.MIN_VALUE;
 		}
 
+		oAuth2AuthorizationCacheModel.rememberDeviceContent =
+			getRememberDeviceContent();
+
+		String rememberDeviceContent =
+			oAuth2AuthorizationCacheModel.rememberDeviceContent;
+
+		if ((rememberDeviceContent != null) &&
+			(rememberDeviceContent.length() == 0)) {
+
+			oAuth2AuthorizationCacheModel.rememberDeviceContent = null;
+		}
+
 		return oAuth2AuthorizationCacheModel;
 	}
 
@@ -1122,7 +1130,7 @@ public class OAuth2AuthorizationModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			(4 * attributeGetterFunctions.size()) + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -1133,9 +1141,27 @@ public class OAuth2AuthorizationModelImpl
 			Function<OAuth2Authorization, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((OAuth2Authorization)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply(
+				(OAuth2Authorization)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -1182,7 +1208,9 @@ public class OAuth2AuthorizationModelImpl
 	private static class EscapedModelProxyProviderFunctionHolder {
 
 		private static final Function<InvocationHandler, OAuth2Authorization>
-			_escapedModelProxyProviderFunction = _getProxyProviderFunction();
+			_escapedModelProxyProviderFunction =
+				ProxyUtil.getProxyProviderFunction(
+					OAuth2Authorization.class, ModelWrapper.class);
 
 	}
 
@@ -1203,6 +1231,7 @@ public class OAuth2AuthorizationModelImpl
 	private long _refreshTokenContentHash;
 	private Date _refreshTokenCreateDate;
 	private Date _refreshTokenExpirationDate;
+	private String _rememberDeviceContent;
 
 	public <T> T getColumnValue(String columnName) {
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
@@ -1258,6 +1287,8 @@ public class OAuth2AuthorizationModelImpl
 			"refreshTokenCreateDate", _refreshTokenCreateDate);
 		_columnOriginalValues.put(
 			"refreshTokenExpirationDate", _refreshTokenExpirationDate);
+		_columnOriginalValues.put(
+			"rememberDeviceContent", _rememberDeviceContent);
 	}
 
 	private static final Map<String, String> _attributeNames;
@@ -1315,6 +1346,8 @@ public class OAuth2AuthorizationModelImpl
 		columnBitmasks.put("refreshTokenCreateDate", 32768L);
 
 		columnBitmasks.put("refreshTokenExpirationDate", 65536L);
+
+		columnBitmasks.put("rememberDeviceContent", 131072L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}

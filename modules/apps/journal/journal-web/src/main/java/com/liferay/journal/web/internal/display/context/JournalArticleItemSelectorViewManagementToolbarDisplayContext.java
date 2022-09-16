@@ -20,6 +20,7 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItemListBuilder;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -69,12 +70,13 @@ public class JournalArticleItemSelectorViewManagementToolbarDisplayContext
 
 	@Override
 	public String getClearResultsURL() {
-		PortletURL clearResultsURL = getPortletURL();
-
-		clearResultsURL.setParameter("keywords", StringPool.BLANK);
-		clearResultsURL.setParameter("scope", StringPool.BLANK);
-
-		return clearResultsURL.toString();
+		return PortletURLBuilder.create(
+			getPortletURL()
+		).setKeywords(
+			StringPool.BLANK
+		).setParameter(
+			"scope", StringPool.BLANK
+		).buildString();
 	}
 
 	@Override
@@ -119,20 +121,20 @@ public class JournalArticleItemSelectorViewManagementToolbarDisplayContext
 
 		return LabelItemListBuilder.add(
 			labelItem -> {
-				PortletURL removeLabelURL = PortletURLUtil.clone(
-					getPortletURL(), liferayPortletResponse);
-
-				removeLabelURL.setParameter("scope", (String)null);
-
-				labelItem.putData("removeLabelURL", removeLabelURL.toString());
+				labelItem.putData(
+					"removeLabelURL",
+					PortletURLBuilder.create(
+						PortletURLUtil.clone(
+							getPortletURL(), liferayPortletResponse)
+					).setParameter(
+						"scope", (String)null
+					).buildString());
 
 				labelItem.setCloseable(true);
-
-				String label = String.format(
-					"%s: %s", LanguageUtil.get(httpServletRequest, "scope"),
-					_getScopeLabel(scope));
-
-				labelItem.setLabel(label);
+				labelItem.setLabel(
+					String.format(
+						"%s: %s", LanguageUtil.get(httpServletRequest, "scope"),
+						_getScopeLabel(scope)));
 			}
 		).build();
 	}
@@ -166,6 +168,11 @@ public class JournalArticleItemSelectorViewManagementToolbarDisplayContext
 	@Override
 	protected String getDefaultDisplayStyle() {
 		return "descriptive";
+	}
+
+	@Override
+	protected String getDisplayStyle() {
+		return _journalArticleItemSelectorViewDisplayContext.getDisplayStyle();
 	}
 
 	@Override

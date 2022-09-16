@@ -17,7 +17,6 @@ package com.liferay.commerce.price.list.internal.verify;
 import com.liferay.commerce.price.list.internal.helper.CommerceBasePriceListHelper;
 import com.liferay.commerce.product.model.CommerceCatalog;
 import com.liferay.commerce.product.service.CommerceCatalogLocalService;
-import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.util.LoggingTimer;
 import com.liferay.portal.verify.VerifyProcess;
@@ -37,26 +36,25 @@ import org.osgi.service.component.annotations.Reference;
 )
 public class CommercePriceListServiceVerifyProcess extends VerifyProcess {
 
+	public void verifyBasePriceLists() throws Exception {
+		try (LoggingTimer loggingTimer = new LoggingTimer()) {
+			_companyLocalService.forEachCompanyId(
+				companyId -> {
+					List<CommerceCatalog> commerceCatalogs =
+						_commerceCatalogLocalService.getCommerceCatalogs(
+							companyId, true);
+
+					for (CommerceCatalog commerceCatalog : commerceCatalogs) {
+						_commerceBasePriceListHelper.
+							addCatalogBaseCommercePriceList(commerceCatalog);
+					}
+				});
+		}
+	}
+
 	@Override
 	protected void doVerify() throws Exception {
 		verifyBasePriceLists();
-	}
-
-	protected void verifyBasePriceLists() throws Exception {
-		try (LoggingTimer loggingTimer = new LoggingTimer()) {
-			List<Company> companies = _companyLocalService.getCompanies();
-
-			for (Company company : companies) {
-				List<CommerceCatalog> commerceCatalogs =
-					_commerceCatalogLocalService.getCommerceCatalogs(
-						company.getCompanyId(), true);
-
-				for (CommerceCatalog commerceCatalog : commerceCatalogs) {
-					_commerceBasePriceListHelper.
-						addCatalogBaseCommercePriceList(commerceCatalog);
-				}
-			}
-		}
 	}
 
 	@Reference

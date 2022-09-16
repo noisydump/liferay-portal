@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
@@ -44,7 +45,10 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @generated
  */
 @Generated("")
-@GraphQLName("PageRowDefinition")
+@GraphQLName(
+	description = "Represents a definition of a Page row.",
+	value = "PageRowDefinition"
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "PageRowDefinition")
 public class PageRowDefinition implements Serializable {
@@ -53,7 +57,103 @@ public class PageRowDefinition implements Serializable {
 		return ObjectMapperUtil.readValue(PageRowDefinition.class, json);
 	}
 
-	@Schema
+	public static PageRowDefinition unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(PageRowDefinition.class, json);
+	}
+
+	@Schema(
+		description = "A list of CSS Classes that are applied to the element."
+	)
+	public String[] getCssClasses() {
+		return cssClasses;
+	}
+
+	public void setCssClasses(String[] cssClasses) {
+		this.cssClasses = cssClasses;
+	}
+
+	@JsonIgnore
+	public void setCssClasses(
+		UnsafeSupplier<String[], Exception> cssClassesUnsafeSupplier) {
+
+		try {
+			cssClasses = cssClassesUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(
+		description = "A list of CSS Classes that are applied to the element."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String[] cssClasses;
+
+	@Schema(description = "Custom CSS that is applied on the fragment.")
+	public String getCustomCSS() {
+		return customCSS;
+	}
+
+	public void setCustomCSS(String customCSS) {
+		this.customCSS = customCSS;
+	}
+
+	@JsonIgnore
+	public void setCustomCSS(
+		UnsafeSupplier<String, Exception> customCSSUnsafeSupplier) {
+
+		try {
+			customCSS = customCSSUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(description = "Custom CSS that is applied on the fragment.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String customCSS;
+
+	@Schema(description = "The custom CSS viewports of the page collection.")
+	@Valid
+	public CustomCSSViewport[] getCustomCSSViewports() {
+		return customCSSViewports;
+	}
+
+	public void setCustomCSSViewports(CustomCSSViewport[] customCSSViewports) {
+		this.customCSSViewports = customCSSViewports;
+	}
+
+	@JsonIgnore
+	public void setCustomCSSViewports(
+		UnsafeSupplier<CustomCSSViewport[], Exception>
+			customCSSViewportsUnsafeSupplier) {
+
+		try {
+			customCSSViewports = customCSSViewportsUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(
+		description = "The custom CSS viewports of the page collection."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected CustomCSSViewport[] customCSSViewports;
+
+	@Schema(description = "The fragment style of a Page row.")
 	@Valid
 	public FragmentStyle getFragmentStyle() {
 		return fragmentStyle;
@@ -78,11 +178,11 @@ public class PageRowDefinition implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The fragment style of a Page row.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected FragmentStyle fragmentStyle;
 
-	@Schema
+	@Schema(description = "A list of fragment viewports of a Page row.")
 	@Valid
 	public FragmentViewport[] getFragmentViewports() {
 		return fragmentViewports;
@@ -108,11 +208,13 @@ public class PageRowDefinition implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "A list of fragment viewports of a Page row.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected FragmentViewport[] fragmentViewports;
 
-	@Schema
+	@Schema(
+		description = "A flag that indicates whether the page row has gutters."
+	)
 	public Boolean getGutters() {
 		return gutters;
 	}
@@ -136,11 +238,45 @@ public class PageRowDefinition implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "A flag that indicates whether the page row has gutters."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Boolean gutters;
 
-	@Schema
+	@Schema(
+		description = "A flag that indicates whether the page row is indexed or not."
+	)
+	public Boolean getIndexed() {
+		return indexed;
+	}
+
+	public void setIndexed(Boolean indexed) {
+		this.indexed = indexed;
+	}
+
+	@JsonIgnore
+	public void setIndexed(
+		UnsafeSupplier<Boolean, Exception> indexedUnsafeSupplier) {
+
+		try {
+			indexed = indexedUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(
+		description = "A flag that indicates whether the page row is indexed or not."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Boolean indexed;
+
+	@Schema(description = "The page row's modules per row.")
 	public Integer getModulesPerRow() {
 		return modulesPerRow;
 	}
@@ -164,11 +300,37 @@ public class PageRowDefinition implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The page row's modules per row.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Integer modulesPerRow;
 
-	@Schema
+	@Schema(description = "The custom name of a Page row.")
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	@JsonIgnore
+	public void setName(UnsafeSupplier<String, Exception> nameUnsafeSupplier) {
+		try {
+			name = nameUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(description = "The custom name of a Page row.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String name;
+
+	@Schema(description = "The page row's number of columns.")
 	public Integer getNumberOfColumns() {
 		return numberOfColumns;
 	}
@@ -192,11 +354,13 @@ public class PageRowDefinition implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The page row's number of columns.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Integer numberOfColumns;
 
-	@Schema
+	@Schema(
+		description = "A flag that indicates whether the page row has reverse order."
+	)
 	public Boolean getReverseOrder() {
 		return reverseOrder;
 	}
@@ -220,7 +384,9 @@ public class PageRowDefinition implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "A flag that indicates whether the page row has reverse order."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Boolean reverseOrder;
 
@@ -260,7 +426,7 @@ public class PageRowDefinition implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected RowViewportConfig rowViewportConfig;
 
-	@Schema
+	@Schema(description = "A list of viewports of the page row.")
 	@Valid
 	public RowViewport[] getRowViewports() {
 		return rowViewports;
@@ -285,11 +451,11 @@ public class PageRowDefinition implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "A list of viewports of the page row.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected RowViewport[] rowViewports;
 
-	@Schema
+	@Schema(description = "The vertical aligment property of the page row.")
 	public String getVerticalAlignment() {
 		return verticalAlignment;
 	}
@@ -313,7 +479,9 @@ public class PageRowDefinition implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "The vertical aligment property of the page row."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String verticalAlignment;
 
@@ -343,6 +511,64 @@ public class PageRowDefinition implements Serializable {
 		StringBundler sb = new StringBundler();
 
 		sb.append("{");
+
+		if (cssClasses != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"cssClasses\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < cssClasses.length; i++) {
+				sb.append("\"");
+
+				sb.append(_escape(cssClasses[i]));
+
+				sb.append("\"");
+
+				if ((i + 1) < cssClasses.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
+		if (customCSS != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"customCSS\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(customCSS));
+
+			sb.append("\"");
+		}
+
+		if (customCSSViewports != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"customCSSViewports\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < customCSSViewports.length; i++) {
+				sb.append(String.valueOf(customCSSViewports[i]));
+
+				if ((i + 1) < customCSSViewports.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
 
 		if (fragmentStyle != null) {
 			if (sb.length() > 1) {
@@ -384,6 +610,16 @@ public class PageRowDefinition implements Serializable {
 			sb.append(gutters);
 		}
 
+		if (indexed != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"indexed\": ");
+
+			sb.append(indexed);
+		}
+
 		if (modulesPerRow != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -392,6 +628,20 @@ public class PageRowDefinition implements Serializable {
 			sb.append("\"modulesPerRow\": ");
 
 			sb.append(modulesPerRow);
+		}
+
+		if (name != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"name\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(name));
+
+			sb.append("\"");
 		}
 
 		if (numberOfColumns != null) {
@@ -464,15 +714,16 @@ public class PageRowDefinition implements Serializable {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.PageRowDefinition",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
 	}
 
 	private static boolean _isArray(Object value) {
@@ -498,8 +749,8 @@ public class PageRowDefinition implements Serializable {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -530,7 +781,7 @@ public class PageRowDefinition implements Serializable {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -538,7 +789,7 @@ public class PageRowDefinition implements Serializable {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -546,5 +797,10 @@ public class PageRowDefinition implements Serializable {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

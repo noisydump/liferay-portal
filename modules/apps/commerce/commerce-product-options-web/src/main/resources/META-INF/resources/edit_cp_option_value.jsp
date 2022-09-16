@@ -38,7 +38,7 @@ if (cpOptionValue != null) {
 
 <portlet:actionURL name="/cp_options/edit_cp_option_value" var="editProductOptionValueActionURL" />
 
-<commerce-ui:side-panel-content
+<liferay-frontend:side-panel-content
 	title='<%= LanguageUtil.format(request, "edit-x", cpOptionValue.getName(), false) %>'
 >
 	<aui:form action="<%= editProductOptionValueActionURL %>" method="post" name="fm">
@@ -66,7 +66,7 @@ if (cpOptionValue != null) {
 
 				<aui:input id="name" name="name" wrapperCssClass="commerce-product-option-value-title" />
 
-				<aui:input name="priority" />
+				<aui:input label="position" name="priority" />
 			</aui:fieldset>
 
 			<c:if test="<%= CustomAttributesUtil.hasCustomAttributes(company.getCompanyId(), CPOptionValue.class.getName(), cpOptionValueId, null) %>">
@@ -91,4 +91,4 @@ if (cpOptionValue != null) {
 			<aui:button cssClass="btn-lg" type="cancel" />
 		</aui:button-row>
 	</aui:form>
-</commerce-ui:side-panel-content>
+</liferay-frontend:side-panel-content>

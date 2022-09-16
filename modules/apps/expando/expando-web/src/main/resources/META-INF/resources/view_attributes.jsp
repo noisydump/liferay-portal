@@ -29,11 +29,15 @@ List<String> attributeNames = Collections.list(expandoBridge.getAttributeNames()
 
 ExpandoDisplayContext expandoDisplayContext = new ExpandoDisplayContext(request);
 
-PortletURL portletURL = renderResponse.createRenderURL();
-
-portletURL.setParameter("mvcPath", "/view_attributes.jsp");
-portletURL.setParameter("redirect", redirect);
-portletURL.setParameter("modelResource", modelResource);
+PortletURL portletURL = PortletURLBuilder.createRenderURL(
+	renderResponse
+).setMVCPath(
+	"/view_attributes.jsp"
+).setRedirect(
+	redirect
+).setParameter(
+	"modelResource", modelResource
+).buildPortletURL();
 
 portletDisplay.setShowBackIcon(true);
 portletDisplay.setURLBack(redirect);
@@ -49,17 +53,20 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(request, "view-at
 	navigationItems='<%= expandoDisplayContext.getNavigationItems("fields") %>'
 />
 
-<clay:management-toolbar-v2
+<clay:management-toolbar
 	actionDropdownItems="<%= expandoDisplayContext.getActionDropdownItems() %>"
+	additionalProps="<%= expandoDisplayContext.getAdditionalProps() %>"
 	creationMenu="<%= expandoDisplayContext.getCreationMenu() %>"
 	disabled="<%= attributeNames.size() == 0 %>"
+	itemsTotal="<%= attributeNames.size() %>"
+	propsTransformer="js/ExpandoManagementToolbarPropsTransformer"
 	searchContainerId="customFields"
 	selectable="<%= true %>"
 	showCreationMenu="<%= expandoDisplayContext.showCreationMenu() %>"
 	showSearch="<%= false %>"
 />
 
-<aui:form action="<%= portletURL.toString() %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="fm">
+<aui:form action="<%= portletURL %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="fm">
 	<aui:input name="redirect" type="hidden" value="<%= portletURL.toString() %>" />
 	<aui:input name="columnIds" type="hidden" />
 
@@ -123,24 +130,3 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(request, "view-at
 		/>
 	</liferay-ui:search-container>
 </aui:form>
-
-<aui:script>
-	function <portlet:namespace />deleteCustomFields() {
-		var form = document.getElementById('<portlet:namespace />fm');
-
-		if (form) {
-			var columnIds = form.querySelector('#<portlet:namespace />columnIds');
-
-			if (columnIds) {
-				var checkedIds = Liferay.Util.listCheckedExcept(
-					form,
-					'<portlet:namespace />allRowIds'
-				);
-
-				columnIds.setAttribute('value', checkedIds);
-
-				submitForm(form, '<portlet:actionURL name="deleteExpandos" />');
-			}
-		}
-	}
-</aui:script>

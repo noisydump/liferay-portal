@@ -26,8 +26,11 @@ import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.model.Region;
 import com.liferay.portal.kernel.model.RegionLocalization;
+import com.liferay.portal.kernel.model.SystemEventConstants;
+import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
+import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
@@ -35,6 +38,7 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.io.Serializable;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -128,13 +132,16 @@ public interface RegionLocalService
 	 *
 	 * @param region the region
 	 * @return the region that was removed
-	 * @throws PortalException
 	 */
 	@Indexable(type = IndexableType.DELETE)
-	public Region deleteRegion(Region region) throws PortalException;
+	@SystemEvent(type = SystemEventConstants.TYPE_DELETE)
+	public Region deleteRegion(Region region);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public <T> T dslQuery(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
@@ -326,6 +333,13 @@ public interface RegionLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getRegionsCount(long countryId, boolean active);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public BaseModelSearchResult<Region> searchRegions(
+			long companyId, Boolean active, String keywords,
+			LinkedHashMap<String, Object> params, int start, int end,
+			OrderByComparator<Region> orderByComparator)
+		throws PortalException;
 
 	public Region updateActive(long regionId, boolean active)
 		throws PortalException;

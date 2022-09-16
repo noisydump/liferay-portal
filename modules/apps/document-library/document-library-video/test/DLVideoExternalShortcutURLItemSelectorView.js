@@ -13,19 +13,23 @@
  */
 
 import {waitForElementToBeRemoved} from '@testing-library/dom';
-import {cleanup, fireEvent, render} from '@testing-library/react';
+import {fireEvent, render} from '@testing-library/react';
+import {getOpener} from 'frontend-js-web';
 import React from 'react';
 
 import '@testing-library/jest-dom/extend-expect';
 
 import DLVideoExternalShortcutURLItemSelectorView from '../src/main/resources/META-INF/resources/js/DLVideoExternalShortcutURLItemSelectorView';
 
-const liferayOpenerfireMock = jest.fn();
+const mockLiferayOpenerFire = jest.fn();
 
-Liferay.Util.getOpener = jest.fn(() => ({
-	Liferay: {
-		fire: liferayOpenerfireMock,
-	},
+jest.mock('frontend-js-web', () => ({
+	...jest.requireActual('frontend-js-web'),
+	getOpener: jest.fn(() => ({
+		Liferay: {
+			fire: mockLiferayOpenerFire,
+		},
+	})),
 }));
 
 const defaultProps = {
@@ -39,8 +43,6 @@ const renderComponent = (props) =>
 	render(<DLVideoExternalShortcutURLItemSelectorView {...props} />);
 
 describe('DLVideoExternalShortcutURLItemSelectorView', () => {
-	afterEach(cleanup);
-
 	describe('when rendered with the default props', () => {
 		let result;
 
@@ -49,10 +51,10 @@ describe('DLVideoExternalShortcutURLItemSelectorView', () => {
 		});
 
 		it('has an add button disabled', () => {
-			const add = result.getByRole('button');
+			const addButton = result.getByRole('button');
 
-			expect(add).toBeInTheDocument();
-			expect(add).toBeDisabled();
+			expect(addButton).toBeInTheDocument();
+			expect(addButton).toBeDisabled();
 		});
 	});
 
@@ -73,6 +75,7 @@ describe('DLVideoExternalShortcutURLItemSelectorView', () => {
 			fetch.mockResponseOnce(JSON.stringify(responseFields));
 
 			result = renderComponent(defaultProps);
+
 			const {getByLabelText} = result;
 
 			fireEvent.change(getByLabelText('video-url'), {
@@ -104,18 +107,21 @@ describe('DLVideoExternalShortcutURLItemSelectorView', () => {
 
 		describe('when the form is submitted', () => {
 			beforeEach(async () => {
-				fireEvent.submit(result.getByRole('form'));
+				fireEvent.submit(result.container.querySelector('form'));
 			});
 
 			it('fires an event in the opener', () => {
-				expect(Liferay.Util.getOpener).toHaveBeenCalled();
+				expect(getOpener).toHaveBeenCalled();
 
-				expect(liferayOpenerfireMock).toHaveBeenCalledWith(
+				expect(mockLiferayOpenerFire).toHaveBeenCalledWith(
 					defaultProps.eventName,
 					{
 						data: {
 							returnType: defaultProps.returnType,
-							value: responseFields.HTML,
+							value: {
+								html: responseFields.HTML,
+								title: responseFields.TITLE,
+							},
 						},
 					}
 				);
@@ -131,6 +137,7 @@ describe('DLVideoExternalShortcutURLItemSelectorView', () => {
 			fetch.mockResponseOnce('');
 
 			result = renderComponent(defaultProps);
+
 			const {getByLabelText} = result;
 
 			fireEvent.change(getByLabelText('video-url'), {
@@ -154,20 +161,20 @@ describe('DLVideoExternalShortcutURLItemSelectorView', () => {
 		});
 
 		it('has an add button disabled', () => {
-			const add = result.getByRole('button');
+			const addButton = result.getByRole('button');
 
-			expect(add).toBeInTheDocument();
-			expect(add).toBeDisabled();
+			expect(addButton).toBeInTheDocument();
+			expect(addButton).toBeDisabled();
 		});
 
 		describe('when the form is submitted', () => {
 			beforeEach(async () => {
-				fireEvent.submit(result.getByRole('form'));
+				fireEvent.submit(result.container.querySelector('form'));
 			});
 
 			it('does not fire an event in the opener', () => {
-				expect(Liferay.Util.getOpener).not.toHaveBeenCalled();
-				expect(liferayOpenerfireMock).not.toHaveBeenCalled();
+				expect(getOpener).not.toHaveBeenCalled();
+				expect(mockLiferayOpenerFire).not.toHaveBeenCalled();
 			});
 		});
 	});

@@ -23,12 +23,13 @@ import com.liferay.commerce.model.CommerceShippingEngine;
 import com.liferay.commerce.model.CommerceShippingMethod;
 import com.liferay.commerce.model.CommerceShippingOption;
 import com.liferay.commerce.product.service.CPMeasurementUnitLocalService;
+import com.liferay.commerce.product.service.CommerceChannelService;
 import com.liferay.commerce.service.CommerceAddressRestrictionLocalService;
 import com.liferay.commerce.service.CommerceShippingMethodLocalService;
-import com.liferay.commerce.shipping.engine.fedex.internal.util.FedExCommerceShippingOptionHelper;
+import com.liferay.commerce.shipping.engine.fedex.internal.helper.FedExCommerceShippingOptionHelper;
 import com.liferay.commerce.shipping.origin.locator.CommerceShippingOriginLocator;
 import com.liferay.commerce.util.CommerceShippingHelper;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 
@@ -65,6 +66,47 @@ public class FedExCommerceShippingEngine implements CommerceShippingEngine {
 			Locale locale)
 		throws CommerceShippingEngineException {
 
+		return _getCommerceShippingOptions(
+			commerceContext, commerceOrder, locale);
+	}
+
+	@Override
+	public String getDescription(Locale locale) {
+		return _language.get(_getResourceBundle(locale), "fedex-description");
+	}
+
+	@Override
+	public List<CommerceShippingOption> getEnabledCommerceShippingOptions(
+			CommerceContext commerceContext, CommerceOrder commerceOrder,
+			Locale locale)
+		throws CommerceShippingEngineException {
+
+		return _getCommerceShippingOptions(
+			commerceContext, commerceOrder, locale);
+	}
+
+	@Override
+	public String getName(Locale locale) {
+		return _language.get(_getResourceBundle(locale), "fedex");
+	}
+
+	private long _getCommerceShippingMethodId(CommerceOrder commerceOrder) {
+		CommerceShippingMethod commerceShippingMethod =
+			_commerceShippingMethodLocalService.fetchCommerceShippingMethod(
+				commerceOrder.getGroupId(), KEY);
+
+		if (commerceShippingMethod == null) {
+			return 0;
+		}
+
+		return commerceShippingMethod.getCommerceShippingMethodId();
+	}
+
+	private List<CommerceShippingOption> _getCommerceShippingOptions(
+			CommerceContext commerceContext, CommerceOrder commerceOrder,
+			Locale locale)
+		throws CommerceShippingEngineException {
+
 		try {
 			CommerceAddress commerceAddress =
 				commerceOrder.getShippingAddress();
@@ -73,7 +115,7 @@ public class FedExCommerceShippingEngine implements CommerceShippingEngine {
 				_commerceAddressRestrictionLocalService.
 					isCommerceShippingMethodRestricted(
 						_getCommerceShippingMethodId(commerceOrder),
-						commerceAddress.getCommerceCountryId());
+						commerceAddress.getCountryId());
 
 			if (restricted) {
 				return Collections.emptyList();
@@ -82,7 +124,7 @@ public class FedExCommerceShippingEngine implements CommerceShippingEngine {
 			FedExCommerceShippingOptionHelper
 				fedExCommerceShippingOptionHelper =
 					new FedExCommerceShippingOptionHelper(
-						commerceContext, commerceOrder,
+						_commerceChannelService, commerceContext, commerceOrder,
 						_commerceCurrencyLocalService, _commerceShippingHelper,
 						_commerceShippingOriginLocator,
 						_cpMeasurementUnitLocalService, _configurationProvider,
@@ -101,29 +143,6 @@ public class FedExCommerceShippingEngine implements CommerceShippingEngine {
 		}
 	}
 
-	@Override
-	public String getDescription(Locale locale) {
-		return LanguageUtil.get(
-			_getResourceBundle(locale), "fedex-description");
-	}
-
-	@Override
-	public String getName(Locale locale) {
-		return LanguageUtil.get(_getResourceBundle(locale), "fedex");
-	}
-
-	private long _getCommerceShippingMethodId(CommerceOrder commerceOrder) {
-		CommerceShippingMethod commerceShippingMethod =
-			_commerceShippingMethodLocalService.fetchCommerceShippingMethod(
-				commerceOrder.getGroupId(), KEY);
-
-		if (commerceShippingMethod == null) {
-			return 0;
-		}
-
-		return commerceShippingMethod.getCommerceShippingMethodId();
-	}
-
 	private ResourceBundle _getResourceBundle(Locale locale) {
 		return ResourceBundleUtil.getBundle(
 			"content.Language", locale, getClass());
@@ -132,6 +151,9 @@ public class FedExCommerceShippingEngine implements CommerceShippingEngine {
 	@Reference
 	private CommerceAddressRestrictionLocalService
 		_commerceAddressRestrictionLocalService;
+
+	@Reference
+	private CommerceChannelService _commerceChannelService;
 
 	@Reference
 	private CommerceCurrencyLocalService _commerceCurrencyLocalService;
@@ -151,5 +173,8 @@ public class FedExCommerceShippingEngine implements CommerceShippingEngine {
 
 	@Reference
 	private CPMeasurementUnitLocalService _cpMeasurementUnitLocalService;
+
+	@Reference
+	private Language _language;
 
 }

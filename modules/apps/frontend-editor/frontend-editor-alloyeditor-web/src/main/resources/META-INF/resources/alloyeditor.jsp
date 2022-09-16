@@ -66,6 +66,10 @@ if (editorOptions != null) {
 </c:if>
 
 <script data-senna-track="temporary" type="text/javascript">
+	CKEDITOR.ADDITIONAL_RESOURCE_PARAMS = {
+		languageId: themeDisplay.getLanguageId(),
+	};
+
 	CKEDITOR.disableAutoInline = true;
 
 	CKEDITOR.dtd.$removeEmpty.i = 0;
@@ -74,10 +78,22 @@ if (editorOptions != null) {
 	CKEDITOR.env.isCompatible = true;
 </script>
 
+<liferay-util:html-top>
+	<link href="<%= PortalUtil.getStaticResourceURL(request, PortalUtil.getPathProxy() + application.getContextPath() + "/css/main.css") %>" rel="stylesheet" type="text/css" />
+</liferay-util:html-top>
+
 <liferay-util:buffer
 	var="alloyEditor"
 >
-	<div class="alloy-editor alloy-editor-placeholder <%= HtmlUtil.escapeAttribute(cssClass) %>" contenteditable="false" data-placeholder="<%= LanguageUtil.get(request, placeholder) %>" data-required="<%= required %>" id="<%= HtmlUtil.escapeAttribute(name) %>" name="<%= HtmlUtil.escapeAttribute(name) %>"></div>
+	<div class="alloy-editor <%= HtmlUtil.escapeAttribute(cssClass) %>" contenteditable="false" data-placeholder="<%= LanguageUtil.get(request, placeholder) %>" data-required="<%= required %>" id="<%= HtmlUtil.escapeAttribute(name) %>" name="<%= HtmlUtil.escapeAttribute(name) %>"></div>
+
+	<div class="alloy-editor-placeholder <%= HtmlUtil.escapeAttribute(cssClass) %>">
+		<%= LanguageUtil.get(request, placeholder) %>
+
+		<c:if test="<%= Boolean.parseBoolean(required) %>">
+			<span class="text-warning">*</span>
+		</c:if>
+	</div>
 
 	<aui:icon cssClass="alloy-editor-icon" image="text-editor" markupView="lexicon" />
 </liferay-util:buffer>
@@ -195,7 +211,7 @@ name = HtmlUtil.escapeJS(name);
 		if (editorConfig.extraPlugins) {
 			editorConfig.extraPlugins = A.Array.filter(
 				editorConfig.extraPlugins.split(','),
-				function (item) {
+				(item) => {
 					return item !== 'ae_embed';
 				}
 			).join(',');
@@ -214,7 +230,7 @@ name = HtmlUtil.escapeJS(name);
 			{
 				documentBrowseLinkCallback: documentBrowseLinkCallback,
 				htmlEncodeOutput: true,
-				spritemap: themeDisplay.getPathThemeImages() + '/clay/icons.svg',
+				spritemap: '<%= FrontendIconsUtil.getSpritemap(themeDisplay) %>',
 				title: false,
 				uiNode: uiNode,
 			},
@@ -256,11 +272,7 @@ name = HtmlUtil.escapeJS(name);
 			portletId: '<%= portletId %>',
 			textMode: <%= (editorOptions != null) ? editorOptions.isTextMode() : Boolean.FALSE.toString() %>,
 
-			<%
-			boolean useCustomDataProcessor = (editorOptionsDynamicAttributes != null) && GetterUtil.getBoolean(editorOptionsDynamicAttributes.get("useCustomDataProcessor"));
-			%>
-
-			useCustomDataProcessor: <%= useCustomDataProcessor %>,
+			useCustomDataProcessor: <%= (editorOptionsDynamicAttributes != null) && GetterUtil.getBoolean(editorOptionsDynamicAttributes.get("useCustomDataProcessor")) %>,
 		}).render();
 
 		CKEDITOR.dom.selection.prototype.selectElement = function (element) {
@@ -281,7 +293,7 @@ name = HtmlUtil.escapeJS(name);
 
 	var ignoreClass = ['ddm-options-target'];
 
-	var preventImageDragoverHandler = windowNode.on('dragover', function (event) {
+	var preventImageDragoverHandler = windowNode.on('dragover', (event) => {
 		var validDropTarget = event.target.getDOMNode().isContentEditable;
 
 		if (!validDropTarget) {
@@ -289,9 +301,9 @@ name = HtmlUtil.escapeJS(name);
 		}
 	});
 
-	var preventImageDropHandler = windowNode.on('drop', function (event) {
+	var preventImageDropHandler = windowNode.on('drop', (event) => {
 		var node = event.target.getDOMNode();
-		var ignoreNode = node.className.split(' ').filter(function (value) {
+		var ignoreNode = node.className.split(' ').filter((value) => {
 			return ignoreClass.includes(value);
 		});
 		var validDropTarget = ignoreNode.length > 0 ? true : node.isContentEditable;

@@ -34,7 +34,7 @@
 			data='<%= (Map<String, Object>)selectorEntry.get("data") %>'
 			id='<%= (String)selectorEntry.get("id") %>'
 			message='<%= HtmlUtil.escape((String)selectorEntry.get("message")) %>'
-			url="javascript:;"
+			url="javascript:void(0);"
 		/>
 
 	<%
@@ -92,7 +92,7 @@
 		<liferay-ui:search-container-column-text
 			cssClass="text-right"
 		>
-			<a class="modify-link" data-rowId="<%= assetLinkEntry.getEntryId() %>" href="javascript:;"><%= removeLinkIcon %></a>
+			<a class="modify-link" data-rowId="<%= assetLinkEntry.getEntryId() %>" href="javascript:void(0);"><%= removeLinkIcon %></a>
 		</liferay-ui:search-container-column-text>
 	</liferay-ui:search-container-row>
 
@@ -114,7 +114,7 @@
 <aui:script use="aui-base,liferay-search-container">
 	var assetSelectorHandle = A.getBody().delegate(
 		'click',
-		function (event) {
+		(event) => {
 			event.preventDefault();
 
 			var searchContainerName =
@@ -136,40 +136,43 @@
 				multiple: true,
 				onSelect: function (assetEntryIds) {
 					if (assetEntryIds) {
-						Array.prototype.forEach.call(assetEntryIds, function (
-							assetEntry
-						) {
-							var entityId = assetEntry.entityid;
+						Array.prototype.forEach.call(
+							assetEntryIds,
+							(assetEntry) => {
+								var entityId = assetEntry.entityid;
 
-							if (searchContainerData.indexOf(entityId) == -1) {
-								var entryLink =
-									'<div class="text-right"><a class="modify-link" data-rowId="' +
-									entityId +
-									'" href="javascript:;"><%= UnicodeFormatter.toString(removeLinkIcon) %></a></div>';
+								if (searchContainerData.indexOf(entityId) == -1) {
+									var entryLink =
+										'<div class="text-right"><a class="modify-link" data-rowId="' +
+										entityId +
+										'" href="javascript:void(0);"><%= UnicodeFormatter.toString(removeLinkIcon) %></a></div>';
 
-								var entryHtml =
-									'<h4 class="list-group-title">' +
-									Liferay.Util.escapeHTML(assetEntry.assettitle) +
-									'</h4><p class="list-group-subtitle">' +
-									Liferay.Util.escapeHTML(assetEntry.assettype) +
-									'</p><p class="list-group-subtitle">' +
-									Liferay.Util.escapeHTML(
-										assetEntry.groupdescriptivename
-									) +
-									'</p>';
+									var entryHtml =
+										'<h4 class="list-group-title">' +
+										Liferay.Util.escapeHTML(
+											assetEntry.assettitle
+										) +
+										'</h4><p class="list-group-subtitle">' +
+										Liferay.Util.escapeHTML(
+											assetEntry.assettype
+										) +
+										'</p><p class="list-group-subtitle"><liferay-ui:message key="scope" />: ' +
+										Liferay.Util.escapeHTML(
+											assetEntry.groupdescriptivename
+										) +
+										'</p>';
 
-								searchContainer.addRow(
-									[entryHtml, entryLink],
-									entityId
-								);
+									searchContainer.addRow(
+										[entryHtml, entryLink],
+										entityId
+									);
 
-								searchContainer.updateDataStore();
+									searchContainer.updateDataStore();
+								}
 							}
-						});
+						);
 					}
 				},
-				selectEventName:
-					'<%= inputAssetLinksDisplayContext.getEventName() %>',
 				title: event.currentTarget.attr('data-title'),
 				url: event.currentTarget.attr('data-href'),
 			});
@@ -195,7 +198,7 @@
 
 	searchContainer.get('contentBox').delegate(
 		'click',
-		function (event) {
+		(event) => {
 			var link = event.currentTarget;
 
 			var tr = link.ancestor('tr');

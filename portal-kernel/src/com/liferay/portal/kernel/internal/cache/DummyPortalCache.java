@@ -60,17 +60,13 @@ public class DummyPortalCache<K extends Serializable, V>
 		return _portalCacheName;
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
 	@Override
-	public boolean isBlocking() {
+	public boolean isMVCC() {
 		return false;
 	}
 
 	@Override
-	public boolean isMVCC() {
+	public boolean isSharded() {
 		return false;
 	}
 

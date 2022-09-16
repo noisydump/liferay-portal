@@ -173,7 +173,6 @@ public class NewEnvTestRule implements TestRule {
 			arguments.add("-Djvm.debug=true");
 		}
 
-		arguments.add("-Dliferay.mode=test");
 		arguments.add("-Dsun.zip.disableMemoryMapping=true");
 
 		String whipAgentLine = System.getProperty("whip.agent");
@@ -230,17 +229,19 @@ public class NewEnvTestRule implements TestRule {
 		for (String variable : variables) {
 			String resolvedVariable = resolveSystemProperty(variable);
 
-			String[] parts = StringUtil.split(resolvedVariable, CharPool.EQUAL);
+			int index = resolvedVariable.indexOf(CharPool.EQUAL);
 
-			if (parts.length != 2) {
+			if (index == -1) {
 				throw new IllegalArgumentException(
 					StringBundler.concat(
 						"Wrong environment variable ", variable,
 						" resolved as ", resolvedVariable,
-						". Need to be \"key=value\" format"));
+						". Need to contain \"=\""));
 			}
 
-			environmentMap.put(parts[0], parts[1]);
+			environmentMap.put(
+				resolvedVariable.substring(0, index),
+				resolvedVariable.substring(index + 1));
 		}
 
 		return environmentMap;
@@ -408,14 +409,9 @@ public class NewEnvTestRule implements TestRule {
 
 		@Override
 		public String toString() {
-			StringBundler sb = new StringBundler(4);
-
-			sb.append(_testClassName);
-			sb.append(StringPool.PERIOD);
-			sb.append(_testMethodKey.getMethodName());
-			sb.append("()");
-
-			return sb.toString();
+			return StringBundler.concat(
+				_testClassName, StringPool.PERIOD,
+				_testMethodKey.getMethodName(), "()");
 		}
 
 		private static final long serialVersionUID = 1L;

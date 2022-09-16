@@ -15,6 +15,8 @@
 package com.liferay.portal.service.impl;
 
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.bean.BeanReference;
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.Property;
@@ -30,6 +32,7 @@ import com.liferay.portal.kernel.model.UserNotificationEvent;
 import com.liferay.portal.kernel.notifications.NotificationEvent;
 import com.liferay.portal.kernel.notifications.NotificationEventFactoryUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.persistence.UserPersistence;
 import com.liferay.portal.kernel.transaction.TransactionCommitCallbackUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.service.base.UserNotificationEventLocalServiceBaseImpl;
@@ -38,12 +41,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 
 /**
  * @author Edward Han
  * @author Brian Wing Shun Chan
  */
+@CTAware
 public class UserNotificationEventLocalServiceImpl
 	extends UserNotificationEventLocalServiceBaseImpl {
 
@@ -68,26 +71,12 @@ public class UserNotificationEventLocalServiceImpl
 			notificationEvent.isArchived(), serviceContext);
 	}
 
-	/**
-	 * @deprecated As of Mueller (7.2.x)
-	 */
-	@Deprecated
-	@Override
-	public UserNotificationEvent addUserNotificationEvent(
-			long userId, boolean actionRequired,
-			NotificationEvent notificationEvent)
-		throws PortalException {
-
-		return addUserNotificationEvent(
-			userId, true, actionRequired, notificationEvent);
-	}
-
 	@Override
 	public UserNotificationEvent addUserNotificationEvent(
 			long userId, NotificationEvent notificationEvent)
 		throws PortalException {
 
-		return addUserNotificationEvent(userId, false, notificationEvent);
+		return addUserNotificationEvent(userId, true, false, notificationEvent);
 	}
 
 	@Override
@@ -98,7 +87,7 @@ public class UserNotificationEventLocalServiceImpl
 			ServiceContext serviceContext)
 		throws PortalException {
 
-		User user = userPersistence.findByPrimaryKey(userId);
+		User user = _userPersistence.findByPrimaryKey(userId);
 
 		long userNotificationEventId = counterLocalService.increment();
 
@@ -120,22 +109,6 @@ public class UserNotificationEventLocalServiceImpl
 		return userNotificationEventPersistence.update(userNotificationEvent);
 	}
 
-	/**
-	 * @deprecated As of Mueller (7.2.x)
-	 */
-	@Deprecated
-	@Override
-	public UserNotificationEvent addUserNotificationEvent(
-			long userId, String type, long timestamp, int deliveryType,
-			long deliverBy, String payload, boolean actionRequired,
-			boolean archived, ServiceContext serviceContext)
-		throws PortalException {
-
-		return addUserNotificationEvent(
-			userId, type, timestamp, deliveryType, deliverBy, true, payload,
-			actionRequired, archived, serviceContext);
-	}
-
 	@Override
 	public UserNotificationEvent addUserNotificationEvent(
 			long userId, String type, long timestamp, int deliveryType,
@@ -144,8 +117,8 @@ public class UserNotificationEventLocalServiceImpl
 		throws PortalException {
 
 		return addUserNotificationEvent(
-			userId, type, timestamp, deliveryType, deliverBy, payload, false,
-			archived, serviceContext);
+			userId, type, timestamp, deliveryType, deliverBy, true, payload,
+			false, archived, serviceContext);
 	}
 
 	@Override
@@ -175,7 +148,7 @@ public class UserNotificationEventLocalServiceImpl
 			getArchivedUserNotificationEventsCount(
 				userId, deliveryType, true, actionRequired, false);
 
-		final IntervalActionProcessor<Void> intervalActionProcessor =
+		IntervalActionProcessor<Void> intervalActionProcessor =
 			new IntervalActionProcessor<>(userNotificationEventsCount);
 
 		intervalActionProcessor.setPerformIntervalActionMethod(
@@ -652,27 +625,23 @@ public class UserNotificationEventLocalServiceImpl
 		return userNotificationEvents;
 	}
 
-	protected void sendPushNotification(
-		final NotificationEvent notificationEvent) {
-
+	protected void sendPushNotification(NotificationEvent notificationEvent) {
 		TransactionCommitCallbackUtil.registerCallback(
-			new Callable<Void>() {
+			() -> {
+				Message message = new Message();
 
-				@Override
-				public Void call() throws Exception {
-					Message message = new Message();
+				message.setPayload(notificationEvent.getPayload());
 
-					message.setPayload(notificationEvent.getPayload());
+				MessageBusUtil.sendMessage(_PUSH_NOTIFICATION, message);
 
-					MessageBusUtil.sendMessage(_PUSH_NOTIFICATION, message);
-
-					return null;
-				}
-
+				return null;
 			});
 	}
 
 	private static final String _PUSH_NOTIFICATION =
 		"liferay/push_notification";
+
+	@BeanReference(type = UserPersistence.class)
+	private UserPersistence _userPersistence;
 
 }

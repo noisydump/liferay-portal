@@ -15,6 +15,7 @@
 package com.liferay.portlet.exportimport.service.base;
 
 import com.liferay.exportimport.kernel.service.ExportImportLocalService;
+import com.liferay.exportimport.kernel.service.ExportImportLocalServiceUtil;
 import com.liferay.exportimport.kernel.service.persistence.ExportImportConfigurationFinder;
 import com.liferay.exportimport.kernel.service.persistence.ExportImportConfigurationPersistence;
 import com.liferay.portal.kernel.bean.BeanReference;
@@ -23,6 +24,8 @@ import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
 import com.liferay.portal.kernel.service.persistence.ClassNamePersistence;
@@ -30,6 +33,8 @@ import com.liferay.portal.kernel.service.persistence.UserFinder;
 import com.liferay.portal.kernel.service.persistence.UserPersistence;
 import com.liferay.portal.kernel.util.InfrastructureUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+
+import java.lang.reflect.Field;
 
 import javax.sql.DataSource;
 
@@ -51,7 +56,7 @@ public abstract class ExportImportLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>ExportImportLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.exportimport.kernel.service.ExportImportLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>ExportImportLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>ExportImportLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -317,9 +322,11 @@ public abstract class ExportImportLocalServiceBaseImpl
 	}
 
 	public void afterPropertiesSet() {
+		_setLocalServiceUtilService(exportImportLocalService);
 	}
 
 	public void destroy() {
+		_setLocalServiceUtilService(null);
 	}
 
 	/**
@@ -353,6 +360,22 @@ public abstract class ExportImportLocalServiceBaseImpl
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
+		}
+	}
+
+	private void _setLocalServiceUtilService(
+		ExportImportLocalService exportImportLocalService) {
+
+		try {
+			Field field = ExportImportLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, exportImportLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
 		}
 	}
 
@@ -411,5 +434,8 @@ public abstract class ExportImportLocalServiceBaseImpl
 
 	@BeanReference(type = UserFinder.class)
 	protected UserFinder userFinder;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		ExportImportLocalServiceBaseImpl.class);
 
 }

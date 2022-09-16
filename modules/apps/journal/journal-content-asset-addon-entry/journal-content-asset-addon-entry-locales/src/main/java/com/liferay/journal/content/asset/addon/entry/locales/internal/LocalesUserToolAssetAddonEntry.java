@@ -15,7 +15,7 @@
 package com.liferay.journal.content.asset.addon.entry.locales.internal;
 
 import com.liferay.journal.content.asset.addon.entry.UserToolAssetAddonEntry;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.servlet.taglib.ui.BaseJSPAssetAddonEntry;
 
 import java.util.Locale;
@@ -49,7 +49,12 @@ public class LocalesUserToolAssetAddonEntry
 
 	@Override
 	public String getLabel(Locale locale) {
-		return LanguageUtil.get(locale, "translations");
+		return _language.get(locale, "translations");
+	}
+
+	@Override
+	public ServletContext getServletContext() {
+		return _servletContext;
 	}
 
 	@Override
@@ -57,13 +62,12 @@ public class LocalesUserToolAssetAddonEntry
 		return 1.0;
 	}
 
-	@Override
+	@Reference
+	private Language _language;
+
 	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.journal.content.asset.addon.entry.locales)",
-		unbind = "-"
+		target = "(osgi.web.symbolicname=com.liferay.journal.content.asset.addon.entry.locales)"
 	)
-	public void setServletContext(ServletContext servletContext) {
-		super.setServletContext(servletContext);
-	}
+	private ServletContext _servletContext;
 
 }

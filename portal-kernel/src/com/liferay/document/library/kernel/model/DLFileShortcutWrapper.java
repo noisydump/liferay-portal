@@ -199,6 +199,11 @@ public class DLFileShortcutWrapper
 		return model.buildTreePath();
 	}
 
+	@Override
+	public DLFileShortcut cloneWithOriginalValues() {
+		return wrap(model.cloneWithOriginalValues());
+	}
+
 	/**
 	 * Returns the active of this document library file shortcut.
 	 *
@@ -426,18 +431,6 @@ public class DLFileShortcutWrapper
 	@Override
 	public long getTrashEntryClassPK() {
 		return model.getTrashEntryClassPK();
-	}
-
-	/**
-	 * Returns the trash handler for this document library file shortcut.
-	 *
-	 * @return the trash handler for this document library file shortcut
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public com.liferay.portal.kernel.trash.TrashHandler getTrashHandler() {
-		return model.getTrashHandler();
 	}
 
 	/**

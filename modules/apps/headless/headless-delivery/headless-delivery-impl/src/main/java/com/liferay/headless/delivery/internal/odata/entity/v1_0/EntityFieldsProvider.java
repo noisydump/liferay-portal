@@ -14,8 +14,8 @@
 
 package com.liferay.headless.delivery.internal.odata.entity.v1_0;
 
+import com.liferay.dynamic.data.mapping.form.field.type.constants.DDMFormFieldTypeConstants;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
-import com.liferay.dynamic.data.mapping.model.DDMFormFieldType;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.storage.constants.FieldConstants;
 import com.liferay.dynamic.data.mapping.util.DDMIndexer;
@@ -81,12 +81,14 @@ public class EntityFieldsProvider {
 			return null;
 		}
 
-		if (Objects.equals(ddmFormField.getType(), DDMFormFieldType.CHECKBOX)) {
+		if (Objects.equals(
+				ddmFormField.getType(), DDMFormFieldTypeConstants.CHECKBOX)) {
+
 			return new BooleanEntityField(
 				ddmFormField.getFieldReference(),
 				locale -> _toFilterableOrSortableFieldName(
-					ddmStructure.getStructureId(), ddmFormField.getName(),
-					locale, "String"));
+					ddmStructure.getStructureId(),
+					ddmFormField.getFieldReference(), locale, "String"));
 		}
 		else if (Objects.equals(
 					ddmFormField.getDataType(), FieldConstants.DATE)) {
@@ -94,11 +96,11 @@ public class EntityFieldsProvider {
 			return new DateEntityField(
 				ddmFormField.getFieldReference(),
 				locale -> _toFilterableOrSortableFieldName(
-					ddmStructure.getStructureId(), ddmFormField.getName(),
-					locale, "String"),
+					ddmStructure.getStructureId(),
+					ddmFormField.getFieldReference(), locale, "String"),
 				locale -> _toFilterableOrSortableFieldName(
-					ddmStructure.getStructureId(), ddmFormField.getName(),
-					locale, "String"),
+					ddmStructure.getStructureId(),
+					ddmFormField.getFieldReference(), locale, "String"),
 				this::_toFieldValue);
 		}
 		else if (Objects.equals(
@@ -109,8 +111,8 @@ public class EntityFieldsProvider {
 			return new DoubleEntityField(
 				ddmFormField.getFieldReference(),
 				locale -> _toFilterableOrSortableFieldName(
-					ddmStructure.getStructureId(), ddmFormField.getName(),
-					locale, "Number"));
+					ddmStructure.getStructureId(),
+					ddmFormField.getFieldReference(), locale, "Number"));
 		}
 		else if (Objects.equals(
 					ddmFormField.getDataType(), FieldConstants.INTEGER) ||
@@ -120,20 +122,28 @@ public class EntityFieldsProvider {
 			return new IntegerEntityField(
 				ddmFormField.getFieldReference(),
 				locale -> _toFilterableOrSortableFieldName(
-					ddmStructure.getStructureId(), ddmFormField.getName(),
-					locale, "Number"));
+					ddmStructure.getStructureId(),
+					ddmFormField.getFieldReference(), locale, "Number"));
 		}
 		else if (Objects.equals(
-					ddmFormField.getType(), DDMFormFieldType.RADIO) ||
-				 (Objects.equals(
-					 ddmFormField.getType(), DDMFormFieldType.TEXT) &&
-				  Objects.equals(ddmFormField.getIndexType(), "keyword"))) {
+					ddmFormField.getDataType(),
+					DDMFormFieldTypeConstants.RADIO) ||
+				 (Objects.equals(ddmFormField.getIndexType(), "keyword") &&
+				  (Objects.equals(
+					  ddmFormField.getType(),
+					  DDMFormFieldTypeConstants.CHECKBOX_MULTIPLE) ||
+				   Objects.equals(
+					   ddmFormField.getType(),
+					   DDMFormFieldTypeConstants.SELECT) ||
+				   Objects.equals(
+					   ddmFormField.getType(),
+					   DDMFormFieldTypeConstants.TEXT)))) {
 
 			return new StringEntityField(
 				ddmFormField.getFieldReference(),
 				locale -> _toFilterableOrSortableFieldName(
-					ddmStructure.getStructureId(), ddmFormField.getName(),
-					locale, "String"));
+					ddmStructure.getStructureId(),
+					ddmFormField.getFieldReference(), locale, "String"));
 		}
 
 		return null;
@@ -157,11 +167,12 @@ public class EntityFieldsProvider {
 	}
 
 	private String _toFilterableOrSortableFieldName(
-		long ddmStructureId, String fieldName, Locale locale, String type) {
+		long ddmStructureId, String fieldReference, Locale locale,
+		String type) {
 
 		return Field.getSortableFieldName(
 			StringBundler.concat(
-				_ddmIndexer.encodeName(ddmStructureId, fieldName, locale),
+				_ddmIndexer.encodeName(ddmStructureId, fieldReference, locale),
 				StringPool.UNDERLINE, type));
 	}
 

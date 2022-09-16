@@ -62,11 +62,14 @@ public class BackgroundImageSerDes {
 
 			sb.append("\"description\": ");
 
-			sb.append("\"");
-
-			sb.append(_escape(backgroundImage.getDescription()));
-
-			sb.append("\"");
+			if (backgroundImage.getDescription() instanceof String) {
+				sb.append("\"");
+				sb.append((String)backgroundImage.getDescription());
+				sb.append("\"");
+			}
+			else {
+				sb.append(backgroundImage.getDescription());
+			}
 		}
 
 		if (backgroundImage.getTitle() != null) {
@@ -76,11 +79,14 @@ public class BackgroundImageSerDes {
 
 			sb.append("\"title\": ");
 
-			sb.append("\"");
-
-			sb.append(_escape(backgroundImage.getTitle()));
-
-			sb.append("\"");
+			if (backgroundImage.getTitle() instanceof String) {
+				sb.append("\"");
+				sb.append((String)backgroundImage.getTitle());
+				sb.append("\"");
+			}
+			else {
+				sb.append(backgroundImage.getTitle());
+			}
 		}
 
 		if (backgroundImage.getUrl() != null) {
@@ -90,11 +96,14 @@ public class BackgroundImageSerDes {
 
 			sb.append("\"url\": ");
 
-			sb.append("\"");
-
-			sb.append(_escape(backgroundImage.getUrl()));
-
-			sb.append("\"");
+			if (backgroundImage.getUrl() instanceof String) {
+				sb.append("\"");
+				sb.append((String)backgroundImage.getUrl());
+				sb.append("\"");
+			}
+			else {
+				sb.append(backgroundImage.getUrl());
+			}
 		}
 
 		sb.append("}");
@@ -176,9 +185,6 @@ public class BackgroundImageSerDes {
 					backgroundImage.setUrl((Object)jsonParserFieldValue);
 				}
 			}
-			else if (jsonParserFieldName.equals("status")) {
-				throw new IllegalArgumentException();
-			}
 		}
 
 	}
@@ -207,7 +213,7 @@ public class BackgroundImageSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -243,7 +249,7 @@ public class BackgroundImageSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

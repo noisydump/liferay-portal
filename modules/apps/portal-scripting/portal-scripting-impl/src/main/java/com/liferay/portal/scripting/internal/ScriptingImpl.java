@@ -22,6 +22,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.scripting.Scripting;
 import com.liferay.portal.kernel.scripting.ScriptingException;
 import com.liferay.portal.kernel.scripting.ScriptingExecutor;
+import com.liferay.portal.kernel.scripting.ScriptingValidator;
 import com.liferay.portal.kernel.scripting.UnsupportedLanguageException;
 
 import java.io.IOException;
@@ -89,7 +90,7 @@ public class ScriptingImpl implements Scripting {
 		}
 		catch (Exception exception) {
 			throw new ScriptingException(
-				getErrorMessage(script, exception), exception);
+				_getErrorMessage(script, exception), exception);
 		}
 		finally {
 			if (_log.isDebugEnabled()) {
@@ -113,7 +114,51 @@ public class ScriptingImpl implements Scripting {
 		return _scriptingExecutors.keySet();
 	}
 
-	protected String getErrorMessage(String script, Exception exception) {
+	@Override
+	public void validate(String language, String script)
+		throws ScriptingException {
+
+		ScriptingValidator scriptingValidator = _scriptingValidators.get(
+			language);
+
+		scriptingValidator.validate(script);
+	}
+
+	@Reference(
+		cardinality = ReferenceCardinality.MULTIPLE,
+		policy = ReferencePolicy.DYNAMIC,
+		policyOption = ReferencePolicyOption.GREEDY
+	)
+	protected void setScriptingExecutors(ScriptingExecutor scriptingExecutor) {
+		_scriptingExecutors.put(
+			scriptingExecutor.getLanguage(), scriptingExecutor);
+	}
+
+	@Reference(
+		cardinality = ReferenceCardinality.MULTIPLE,
+		policy = ReferencePolicy.DYNAMIC,
+		policyOption = ReferencePolicyOption.GREEDY
+	)
+	protected void setScriptingValidator(
+		ScriptingValidator scriptingValidator) {
+
+		_scriptingValidators.put(
+			scriptingValidator.getLanguage(), scriptingValidator);
+	}
+
+	protected void unsetScriptingExecutors(
+		ScriptingExecutor scriptingExecutor) {
+
+		_scriptingExecutors.remove(scriptingExecutor.getLanguage());
+	}
+
+	protected void unsetScriptingValidator(
+		ScriptingValidator scriptingValidator) {
+
+		_scriptingValidators.remove(scriptingValidator.getLanguage());
+	}
+
+	private String _getErrorMessage(String script, Exception exception) {
 		StringBundler sb = new StringBundler();
 
 		sb.append(exception.getMessage());
@@ -139,7 +184,7 @@ public class ScriptingImpl implements Scripting {
 		}
 		catch (IOException ioException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(ioException, ioException);
+				_log.debug(ioException);
 			}
 
 			sb.setIndex(0);
@@ -152,25 +197,11 @@ public class ScriptingImpl implements Scripting {
 		return sb.toString();
 	}
 
-	@Reference(
-		cardinality = ReferenceCardinality.MULTIPLE,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY
-	)
-	protected void setScriptingExecutors(ScriptingExecutor scriptingExecutor) {
-		_scriptingExecutors.put(
-			scriptingExecutor.getLanguage(), scriptingExecutor);
-	}
-
-	protected void unsetScriptingExecutors(
-		ScriptingExecutor scriptingExecutor) {
-
-		_scriptingExecutors.remove(scriptingExecutor.getLanguage());
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(ScriptingImpl.class);
 
 	private final Map<String, ScriptingExecutor> _scriptingExecutors =
+		new ConcurrentHashMap<>();
+	private final Map<String, ScriptingValidator> _scriptingValidators =
 		new ConcurrentHashMap<>();
 
 }

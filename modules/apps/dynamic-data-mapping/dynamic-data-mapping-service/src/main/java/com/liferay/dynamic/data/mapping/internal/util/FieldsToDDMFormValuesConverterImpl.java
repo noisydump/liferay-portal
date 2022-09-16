@@ -26,13 +26,13 @@ import com.liferay.dynamic.data.mapping.storage.Field;
 import com.liferay.dynamic.data.mapping.storage.Fields;
 import com.liferay.dynamic.data.mapping.util.DDMFieldsCounter;
 import com.liferay.dynamic.data.mapping.util.FieldsToDDMFormValuesConverter;
+import com.liferay.dynamic.data.mapping.util.NumericDDMFormFieldUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.kernel.util.Validator;
 
 import java.io.Serializable;
 
-import java.text.NumberFormat;
+import java.text.DecimalFormat;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -65,9 +65,9 @@ public class FieldsToDDMFormValuesConverterImpl
 		DDMFieldsCounter ddmFieldsCounter = new DDMFieldsCounter();
 
 		for (String fieldName :
-				getDDMFormFieldNames(ddmForm.getDDMFormFields())) {
+				_getDDMFormFieldNames(ddmForm.getDDMFormFields())) {
 
-			int repetitions = countDDMFieldRepetitions(
+			int repetitions = _countDDMFieldRepetitions(
 				ddmFormFieldsMap, fields, fieldName, null, -1);
 
 			for (int i = 0; i < repetitions; i++) {
@@ -81,7 +81,7 @@ public class FieldsToDDMFormValuesConverterImpl
 						ddmFormField.getFieldReference());
 				}
 
-				setDDMFormFieldValueProperties(
+				_setDDMFormFieldValueProperties(
 					ddmFormFieldValue, ddmFormFieldsMap, fields,
 					ddmFieldsCounter);
 
@@ -92,7 +92,32 @@ public class FieldsToDDMFormValuesConverterImpl
 		return ddmFormValues;
 	}
 
-	protected int countDDMFieldRepetitions(
+	protected DDMFormFieldValue createDDMFormFieldValue(String name) {
+		DDMFormFieldValue ddmFormFieldValue = new DDMFormFieldValue();
+
+		ddmFormFieldValue.setName(name);
+
+		return ddmFormFieldValue;
+	}
+
+	protected DDMFormValues createDDMFormValues(
+		DDMForm ddmForm, Set<Locale> availableLocales, Locale defaultLocale) {
+
+		DDMFormValues ddmFormValues = new DDMFormValues(ddmForm);
+
+		ddmFormValues.setAvailableLocales(availableLocales);
+		ddmFormValues.setDefaultLocale(defaultLocale);
+
+		return ddmFormValues;
+	}
+
+	protected String[] splitFieldsDisplayValue(Field fieldsDisplayField) {
+		String value = (String)fieldsDisplayField.getValue();
+
+		return StringUtil.split(value);
+	}
+
+	private int _countDDMFieldRepetitions(
 			Map<String, DDMFormField> ddmFormFieldsMap, Fields ddmFields,
 			String fieldName, String parentFieldName, int parentOffset)
 		throws PortalException {
@@ -108,7 +133,7 @@ public class FieldsToDDMFormValuesConverterImpl
 			return 0;
 		}
 
-		String[] ddmFieldsDisplayValues = getDDMFieldsDisplayValues(
+		String[] ddmFieldsDisplayValues = _getDDMFieldsDisplayValues(
 			ddmFormFieldsMap, ddmFieldsDisplayField);
 
 		int offset = -1;
@@ -134,26 +159,7 @@ public class FieldsToDDMFormValuesConverterImpl
 		return repetitions;
 	}
 
-	protected DDMFormFieldValue createDDMFormFieldValue(String name) {
-		DDMFormFieldValue ddmFormFieldValue = new DDMFormFieldValue();
-
-		ddmFormFieldValue.setName(name);
-
-		return ddmFormFieldValue;
-	}
-
-	protected DDMFormValues createDDMFormValues(
-		DDMForm ddmForm, Set<Locale> availableLocales, Locale defaultLocale) {
-
-		DDMFormValues ddmFormValues = new DDMFormValues(ddmForm);
-
-		ddmFormValues.setAvailableLocales(availableLocales);
-		ddmFormValues.setDefaultLocale(defaultLocale);
-
-		return ddmFormValues;
-	}
-
-	protected String getDDMFieldInstanceId(
+	private String _getDDMFieldInstanceId(
 		Fields ddmFields, String fieldName, int index) {
 
 		Field ddmFieldsDisplayField = ddmFields.get(
@@ -182,7 +188,7 @@ public class FieldsToDDMFormValuesConverterImpl
 		return null;
 	}
 
-	protected String[] getDDMFieldsDisplayValues(
+	private String[] _getDDMFieldsDisplayValues(
 			Map<String, DDMFormField> ddmFormFieldsMap,
 			Field ddmFieldsDisplayField)
 		throws PortalException {
@@ -208,7 +214,7 @@ public class FieldsToDDMFormValuesConverterImpl
 		}
 	}
 
-	protected String getDDMFieldValueString(
+	private String _getDDMFieldValueString(
 		Field ddmField, Locale locale, int index) {
 
 		Serializable fieldValue = ddmField.getValue(locale, index);
@@ -221,22 +227,23 @@ public class FieldsToDDMFormValuesConverterImpl
 		else if ((fieldValue instanceof Number) &&
 				 !(fieldValue instanceof Integer)) {
 
-			NumberFormat numberFormat = NumberFormat.getInstance(locale);
+			DecimalFormat decimalFormat =
+				NumericDDMFormFieldUtil.getDecimalFormat(locale);
 
 			Number number = (Number)fieldValue;
 
 			if (number instanceof Double || number instanceof Float) {
-				numberFormat.setMaximumFractionDigits(Integer.MAX_VALUE);
-				numberFormat.setMinimumFractionDigits(1);
+				decimalFormat.setMaximumFractionDigits(Integer.MAX_VALUE);
+				decimalFormat.setMinimumFractionDigits(1);
 			}
 
-			return numberFormat.format(number.doubleValue());
+			return decimalFormat.format(number.doubleValue());
 		}
 
 		return String.valueOf(fieldValue);
 	}
 
-	protected List<String> getDDMFormFieldNames(
+	private List<String> _getDDMFormFieldNames(
 		List<DDMFormField> ddmFormFields) {
 
 		List<String> fieldNames = new ArrayList<>();
@@ -248,25 +255,24 @@ public class FieldsToDDMFormValuesConverterImpl
 		return fieldNames;
 	}
 
-	protected void setDDMFormFieldValueInstanceId(
+	private void _setDDMFormFieldValueInstanceId(
 		DDMFormFieldValue ddmFormFieldValue, Fields ddmFields,
 		DDMFieldsCounter ddmFieldsCounter) {
 
 		String name = ddmFormFieldValue.getName();
 
-		String instanceId = getDDMFieldInstanceId(
-			ddmFields, name, ddmFieldsCounter.get(name));
-
-		ddmFormFieldValue.setInstanceId(instanceId);
+		ddmFormFieldValue.setInstanceId(
+			_getDDMFieldInstanceId(
+				ddmFields, name, ddmFieldsCounter.get(name)));
 	}
 
-	protected void setDDMFormFieldValueLocalizedValue(
+	private void _setDDMFormFieldValueLocalizedValue(
 		DDMFormFieldValue ddmFormFieldValue, Field ddmField, int index) {
 
 		Value value = new LocalizedValue(ddmField.getDefaultLocale());
 
 		for (Locale availableLocale : ddmField.getAvailableLocales()) {
-			String valueString = getDDMFieldValueString(
+			String valueString = _getDDMFieldValueString(
 				ddmField, availableLocale, index);
 
 			value.addString(availableLocale, valueString);
@@ -275,26 +281,26 @@ public class FieldsToDDMFormValuesConverterImpl
 		ddmFormFieldValue.setValue(value);
 	}
 
-	protected void setDDMFormFieldValueProperties(
+	private void _setDDMFormFieldValueProperties(
 			DDMFormFieldValue ddmFormFieldValue,
 			Map<String, DDMFormField> ddmFormFieldsMap, Fields ddmFields,
 			DDMFieldsCounter ddmFieldsCounter)
 		throws PortalException {
 
-		setDDMFormFieldValueInstanceId(
+		_setDDMFormFieldValueInstanceId(
 			ddmFormFieldValue, ddmFields, ddmFieldsCounter);
 
-		setNestedDDMFormFieldValues(
+		_setNestedDDMFormFieldValues(
 			ddmFormFieldValue, ddmFormFieldsMap, ddmFields, ddmFieldsCounter);
 
-		setDDMFormFieldValueValues(
+		_setDDMFormFieldValueValues(
 			ddmFormFieldValue, ddmFormFieldsMap, ddmFields, ddmFieldsCounter);
 	}
 
-	protected void setDDMFormFieldValueUnlocalizedValue(
+	private void _setDDMFormFieldValueUnlocalizedValue(
 		DDMFormFieldValue ddmFormFieldValue, Field ddmField, int index) {
 
-		String valueString = getDDMFieldValueString(
+		String valueString = _getDDMFieldValueString(
 			ddmField, ddmField.getDefaultLocale(), index);
 
 		Value value = new UnlocalizedValue(valueString);
@@ -302,7 +308,7 @@ public class FieldsToDDMFormValuesConverterImpl
 		ddmFormFieldValue.setValue(value);
 	}
 
-	protected void setDDMFormFieldValueValues(
+	private void _setDDMFormFieldValueValues(
 			DDMFormFieldValue ddmFormFieldValue,
 			Map<String, DDMFormField> ddmFormFieldMap, Fields ddmFields,
 			DDMFieldsCounter ddmFieldsCounter)
@@ -312,23 +318,23 @@ public class FieldsToDDMFormValuesConverterImpl
 
 		DDMFormField ddmFormField = ddmFormFieldMap.get(fieldName);
 
-		if (Validator.isNotNull(ddmFormField.getDataType())) {
+		Field field = ddmFields.get(fieldName);
+
+		if (!ddmFormField.isTransient() && (field != null)) {
 			if (ddmFormField.isLocalizable()) {
-				setDDMFormFieldValueLocalizedValue(
-					ddmFormFieldValue, ddmFields.get(fieldName),
-					ddmFieldsCounter.get(fieldName));
+				_setDDMFormFieldValueLocalizedValue(
+					ddmFormFieldValue, field, ddmFieldsCounter.get(fieldName));
 			}
 			else {
-				setDDMFormFieldValueUnlocalizedValue(
-					ddmFormFieldValue, ddmFields.get(fieldName),
-					ddmFieldsCounter.get(fieldName));
+				_setDDMFormFieldValueUnlocalizedValue(
+					ddmFormFieldValue, field, ddmFieldsCounter.get(fieldName));
 			}
 		}
 
 		ddmFieldsCounter.incrementKey(fieldName);
 	}
 
-	protected void setNestedDDMFormFieldValues(
+	private void _setNestedDDMFormFieldValues(
 			DDMFormFieldValue ddmFormFieldValue,
 			Map<String, DDMFormField> ddmFormFieldsMap, Fields ddmFields,
 			DDMFieldsCounter ddmFieldsCounter)
@@ -340,11 +346,11 @@ public class FieldsToDDMFormValuesConverterImpl
 
 		DDMFormField parentDDMFormField = ddmFormFieldsMap.get(fieldName);
 
-		List<String> nestedFieldNames = getDDMFormFieldNames(
+		List<String> nestedFieldNames = _getDDMFormFieldNames(
 			parentDDMFormField.getNestedDDMFormFields());
 
 		for (String nestedFieldName : nestedFieldNames) {
-			int repetitions = countDDMFieldRepetitions(
+			int repetitions = _countDDMFieldRepetitions(
 				ddmFormFieldsMap, ddmFields, nestedFieldName, fieldName,
 				parentOffset);
 
@@ -360,7 +366,7 @@ public class FieldsToDDMFormValuesConverterImpl
 						nestedDDMFormField.getFieldReference());
 				}
 
-				setDDMFormFieldValueProperties(
+				_setDDMFormFieldValueProperties(
 					nestedDDMFormFieldValue, ddmFormFieldsMap, ddmFields,
 					ddmFieldsCounter);
 
@@ -368,12 +374,6 @@ public class FieldsToDDMFormValuesConverterImpl
 					nestedDDMFormFieldValue);
 			}
 		}
-	}
-
-	protected String[] splitFieldsDisplayValue(Field fieldsDisplayField) {
-		String value = (String)fieldsDisplayField.getValue();
-
-		return StringUtil.split(value);
 	}
 
 }

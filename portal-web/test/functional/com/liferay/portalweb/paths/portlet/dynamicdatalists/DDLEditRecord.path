@@ -2,13 +2,17 @@
 <head>
 <title>DDLEditRecord</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">DDLEditRecord</td></tr>
 </thead>
+
 <tbody>
+
 <!--FIELDS-->
+
 <tr>
 	<td>FIELD_LABEL</td>
 	<td>//div[@data-fieldname='${key_fieldName}']//label | //div[@data-fieldname='${key_fieldName}']//span</td>
@@ -96,7 +100,7 @@
 </tr>
 <tr>
 	<td>SEPARATOR_FIELD</td>
-	<td>//div[@class='separator']</td>
+	<td>//div[@class='separator'] | //hr[@class='separator']</td>
 	<td></td>
 </tr>
 <tr>

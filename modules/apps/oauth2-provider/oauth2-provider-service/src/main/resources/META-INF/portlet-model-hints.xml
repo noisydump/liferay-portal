@@ -2,6 +2,8 @@
 
 <model-hints>
 	<model name="com.liferay.oauth2.provider.model.OAuth2Application">
+		<field name="uuid" type="String" />
+		<field name="externalReferenceCode" type="String" />
 		<field name="oAuth2ApplicationId" type="long" />
 		<field name="companyId" type="long" />
 		<field name="userId" type="long" />
@@ -9,7 +11,10 @@
 		<field name="createDate" type="Date" />
 		<field name="modifiedDate" type="Date" />
 		<field name="oAuth2ApplicationScopeAliasesId" type="long" />
-		<field name="allowedGrantTypes" type="String" />
+		<field name="allowedGrantTypes" type="String">
+			<hint name="max-length">128</hint>
+		</field>
+		<field name="clientAuthenticationMethod" type="String" />
 		<field name="clientCredentialUserId" type="long" />
 		<field name="clientCredentialUserName" type="String" />
 		<field name="clientId" type="String" />
@@ -26,6 +31,9 @@
 			<validator name="url" />
 		</field>
 		<field name="iconFileEntryId" type="long" />
+		<field name="jwks" type="String">
+			<hint name="max-length">3999</hint>
+		</field>
 		<field name="name" type="String" />
 		<field name="privacyPolicyURL" type="String">
 			<hint-collection name="URL" />
@@ -34,6 +42,8 @@
 		<field name="redirectURIs" type="String">
 			<hint-collection name="TEXTAREA" />
 		</field>
+		<field name="rememberDevice" type="boolean" />
+		<field name="trustedApplication" type="boolean" />
 	</model>
 	<model name="com.liferay.oauth2.provider.model.OAuth2ApplicationScopeAliases">
 		<field name="oAuth2ApplicationScopeAliasesId" type="long" />
@@ -67,6 +77,7 @@
 		<field name="refreshTokenContentHash" type="long" />
 		<field name="refreshTokenCreateDate" type="Date" />
 		<field name="refreshTokenExpirationDate" type="Date" />
+		<field name="rememberDeviceContent" type="String" />
 	</model>
 	<model name="com.liferay.oauth2.provider.model.OAuth2ScopeGrant">
 		<field name="oAuth2ScopeGrantId" type="long" />

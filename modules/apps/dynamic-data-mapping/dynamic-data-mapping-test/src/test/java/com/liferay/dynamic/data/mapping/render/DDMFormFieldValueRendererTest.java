@@ -14,6 +14,7 @@
 
 package com.liferay.dynamic.data.mapping.render;
 
+import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.document.library.kernel.service.DLAppLocalServiceUtil;
 import com.liferay.dynamic.data.mapping.BaseDDMTestCase;
 import com.liferay.dynamic.data.mapping.internal.render.CheckboxDDMFormFieldValueRenderer;
@@ -33,12 +34,15 @@ import com.liferay.dynamic.data.mapping.model.UnlocalizedValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.service.LayoutService;
 import com.liferay.portal.kernel.service.LayoutServiceUtil;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
@@ -46,6 +50,7 @@ import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.JavaDetector;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.portal.util.CalendarFactoryImpl;
 import com.liferay.portal.util.DateFormatFactoryImpl;
 import com.liferay.portal.util.FastDateFormatFactoryImpl;
@@ -53,17 +58,21 @@ import com.liferay.portal.util.HtmlImpl;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
-import org.mockito.Matchers;
-
-import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.mockito.Mockito;
 
 /**
  * @author Marcellus Tavares
  */
-@PrepareForTest({DLAppLocalServiceUtil.class, LayoutServiceUtil.class})
 public class DDMFormFieldValueRendererTest extends BaseDDMTestCase {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Before
 	@Override
@@ -78,7 +87,6 @@ public class DDMFormFieldValueRendererTest extends BaseDDMTestCase {
 		setUpJSONFactoryUtil();
 		setUpLanguageUtil();
 		setUpLayoutServiceUtil();
-		setUpLocaleUtil();
 	}
 
 	@Test
@@ -92,12 +100,12 @@ public class DDMFormFieldValueRendererTest extends BaseDDMTestCase {
 		String renderedValue = ddmFormFieldValueRenderer.render(
 			ddmFormFieldValue, LocaleUtil.US);
 
-		Assert.assertEquals("No", renderedValue);
+		Assert.assertEquals("False", renderedValue);
 
 		renderedValue = ddmFormFieldValueRenderer.render(
 			ddmFormFieldValue, LocaleUtil.BRAZIL);
 
-		Assert.assertEquals("Sim", renderedValue);
+		Assert.assertEquals("Verdadeiro", renderedValue);
 	}
 
 	@Test
@@ -120,12 +128,12 @@ public class DDMFormFieldValueRendererTest extends BaseDDMTestCase {
 		String renderedValue = ddmFormFieldValueRenderer.render(
 			ddmFormValues.getDDMFormFieldValues(), LocaleUtil.US);
 
-		Assert.assertEquals("No, Yes", renderedValue);
+		Assert.assertEquals("False, True", renderedValue);
 
 		renderedValue = ddmFormFieldValueRenderer.render(
 			ddmFormValues.getDDMFormFieldValues(), LocaleUtil.BRAZIL);
 
-		Assert.assertEquals("Sim, Sim", renderedValue);
+		Assert.assertEquals("Verdadeiro, Verdadeiro", renderedValue);
 	}
 
 	@Test
@@ -485,20 +493,24 @@ public class DDMFormFieldValueRendererTest extends BaseDDMTestCase {
 		dateFormatFactoryUtil.setDateFormatFactory(new DateFormatFactoryImpl());
 	}
 
-	protected void setUpDLAppLocalServiceUtil() throws Exception {
-		mockStatic(DLAppLocalServiceUtil.class);
+	protected void setUpDLAppLocalServiceUtil() throws PortalException {
+		FileEntry fileEntry = Mockito.mock(FileEntry.class);
 
-		FileEntry fileEntry = mock(FileEntry.class);
-
-		when(
+		Mockito.when(
 			fileEntry.getTitle()
 		).thenReturn(
 			"File Entry Title"
 		);
 
-		when(
-			DLAppLocalServiceUtil.getFileEntryByUuidAndGroupId(
-				Matchers.anyString(), Matchers.anyLong())
+		DLAppLocalService dlAppLocalService = Mockito.mock(
+			DLAppLocalService.class);
+
+		ReflectionTestUtil.setFieldValue(
+			DLAppLocalServiceUtil.class, "_service", dlAppLocalService);
+
+		Mockito.when(
+			dlAppLocalService.getFileEntryByUuidAndGroupId(
+				Mockito.anyString(), Mockito.anyLong())
 		).thenReturn(
 			fileEntry
 		);
@@ -512,7 +524,6 @@ public class DDMFormFieldValueRendererTest extends BaseDDMTestCase {
 			new FastDateFormatFactoryImpl());
 	}
 
-	@Override
 	protected void setUpHtmlUtil() {
 		HtmlUtil htmlUtil = new HtmlUtil();
 
@@ -520,20 +531,22 @@ public class DDMFormFieldValueRendererTest extends BaseDDMTestCase {
 	}
 
 	protected void setUpLayoutServiceUtil() throws Exception {
-		mockStatic(LayoutServiceUtil.class);
+		LayoutService layoutService = Mockito.mock(LayoutService.class);
 
-		when(
-			LayoutServiceUtil.getLayoutName(
-				Matchers.anyLong(), Matchers.anyBoolean(), Matchers.anyLong(),
-				Matchers.eq("en_US"))
+		ReflectionTestUtil.setFieldValue(
+			LayoutServiceUtil.class, "_service", layoutService);
+		Mockito.when(
+			layoutService.getLayoutName(
+				Mockito.anyLong(), Mockito.anyBoolean(), Mockito.anyLong(),
+				Mockito.eq("en_US"))
 		).thenReturn(
 			"Layout Name"
 		);
 
-		when(
-			LayoutServiceUtil.getLayoutName(
-				Matchers.anyLong(), Matchers.anyBoolean(), Matchers.anyLong(),
-				Matchers.eq("pt_BR"))
+		Mockito.when(
+			layoutService.getLayoutName(
+				Mockito.anyLong(), Mockito.anyBoolean(), Mockito.anyLong(),
+				Mockito.eq("pt_BR"))
 		).thenReturn(
 			"Nome da Pagina"
 		);

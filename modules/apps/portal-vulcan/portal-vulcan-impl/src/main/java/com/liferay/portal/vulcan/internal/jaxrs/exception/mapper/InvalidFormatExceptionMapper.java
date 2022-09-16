@@ -53,12 +53,14 @@ public class InvalidFormatExceptionMapper
 
 		Class<?> clazz = invalidFormatException.getTargetType();
 
-		String message = StringBundler.concat(
-			"Unable to map JSON path \"", path, "\" with value \"",
-			invalidFormatException.getValue(), "\" to class \"",
-			clazz.getSimpleName(), "\"");
-
-		return new Problem(Response.Status.BAD_REQUEST, message);
+		return new Problem(
+			invalidFormatException.getLocalizedMessage(),
+			Response.Status.BAD_REQUEST,
+			StringBundler.concat(
+				"Unable to map JSON path \"", path, "\" with value \"",
+				invalidFormatException.getValue(), "\" to class \"",
+				clazz.getSimpleName(), "\""),
+			"InvalidFormatException");
 	}
 
 }

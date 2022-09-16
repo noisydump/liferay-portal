@@ -14,9 +14,9 @@
 
 package com.liferay.portal.poller;
 
-import com.liferay.petra.encryptor.Encryptor;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.encryptor.EncryptorUtil;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -35,7 +35,7 @@ import com.liferay.portal.kernel.poller.PollerResponse;
 import com.liferay.portal.kernel.service.BrowserTrackerLocalServiceUtil;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.HttpUtil;
+import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
@@ -94,7 +94,7 @@ public class PollerRequestHandlerImpl
 		}
 
 		boolean receiveRequest = isReceiveRequest(
-			HttpUtil.normalizePath(httpServletRequest.getPathInfo()));
+			HttpComponentsUtil.normalizePath(httpServletRequest.getPathInfo()));
 
 		String pollerSessionId = getPollerSessionId(pollerHeader);
 
@@ -214,7 +214,7 @@ public class PollerRequestHandlerImpl
 				}
 			}
 			catch (Exception exception) {
-				_log.error(exception, exception);
+				_log.error(exception);
 			}
 		}
 
@@ -233,7 +233,7 @@ public class PollerRequestHandlerImpl
 					pollerRequests.add(pollerRequest);
 				}
 				catch (Exception exception) {
-					_log.error(exception, exception);
+					_log.error(exception);
 				}
 			}
 		}
@@ -334,7 +334,7 @@ public class PollerRequestHandlerImpl
 			Company company = CompanyLocalServiceUtil.getCompany(companyId);
 
 			userId = GetterUtil.getLong(
-				Encryptor.decrypt(company.getKeyObj(), userIdString));
+				EncryptorUtil.decrypt(company.getKeyObj(), userIdString));
 		}
 		catch (Exception exception) {
 			_log.error(

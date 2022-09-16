@@ -13,10 +13,14 @@
  */
 
 import {ClayButtonWithIcon} from '@clayui/button';
-import ClayManagementToolbar from '@clayui/management-toolbar';
-import React, {useEffect, useRef} from 'react';
+import classNames from 'classnames';
+import {ManagementToolbar} from 'frontend-js-components-web';
+import React, {useContext, useEffect, useRef} from 'react';
 
-const InfoPanelControl = ({disabled, infoPanelId, onInfoButtonClick}) => {
+import FeatureFlagContext from './FeatureFlagContext';
+
+const InfoPanelControl = ({infoPanelId, onInfoButtonClick, separator}) => {
+	const {showDesignImprovements} = useContext(FeatureFlagContext);
 	const infoButtonRef = useRef();
 
 	useEffect(() => {
@@ -42,17 +46,23 @@ const InfoPanelControl = ({disabled, infoPanelId, onInfoButtonClick}) => {
 	}, [infoButtonRef, infoPanelId]);
 
 	return (
-		<ClayManagementToolbar.Item>
+		<ManagementToolbar.Item
+			className={
+				showDesignImprovements &&
+				classNames('d-none d-md-flex', {
+					'management-bar-separator-left': separator,
+				})
+			}
+		>
 			<ClayButtonWithIcon
 				className="nav-link nav-link-monospaced"
-				disabled={disabled}
 				displayType="unstyled"
 				id={infoPanelId && `${infoPanelId}_trigger`}
 				onClick={onInfoButtonClick}
 				ref={infoButtonRef}
 				symbol="info-circle-open"
 			/>
-		</ClayManagementToolbar.Item>
+		</ManagementToolbar.Item>
 	);
 };
 

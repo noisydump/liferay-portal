@@ -17,8 +17,11 @@ package com.liferay.dynamic.data.mapping.util;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.filter.QueryFilter;
+import com.liferay.portal.search.sort.Sort;
+import com.liferay.portal.search.sort.SortOrder;
 
 import java.io.Serializable;
 
@@ -49,15 +52,29 @@ public interface DDMIndexer {
 		Document document, DDMStructure ddmStructure,
 		DDMFormValues ddmFormValues);
 
+	public Sort createDDMStructureFieldSort(
+			DDMStructure ddmStructure, String fieldReference, Locale locale,
+			SortOrder sortOrder)
+		throws PortalException;
+
+	public Sort createDDMStructureFieldSort(
+			String ddmStructureFieldName, Locale locale, SortOrder sortOrder)
+		throws PortalException;
+
+	public QueryFilter createFieldValueQueryFilter(
+			DDMStructure ddmStructure, String fieldReference, Locale locale,
+			Serializable value)
+		throws Exception;
+
 	public QueryFilter createFieldValueQueryFilter(
 			String ddmStructureFieldName, Serializable ddmStructureFieldValue,
 			Locale locale)
 		throws Exception;
 
-	public String encodeName(long ddmStructureId, String fieldName);
+	public String encodeName(long ddmStructureId, String fieldReference);
 
 	public String encodeName(
-		long ddmStructureId, String fieldName, Locale locale);
+		long ddmStructureId, String fieldReference, Locale locale);
 
 	public String extractIndexableAttributes(
 		DDMStructure ddmStructure, DDMFormValues ddmFormValues, Locale locale);

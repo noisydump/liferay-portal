@@ -52,31 +52,31 @@ String redirect = ParamUtil.getString(request, "redirect");
 
 	<aui:script use="liferay-upload">
 		var liferayUpload = new Liferay.Upload({
-			boundingBox: '#<portlet:namespace />fileUpload',
+			'boundingBox': '#<portlet:namespace />fileUpload',
 
 			<%
 			DecimalFormatSymbols decimalFormatSymbols = DecimalFormatSymbols.getInstance(locale);
 			%>
 
-			decimalSeparator: '<%= decimalFormatSymbols.getDecimalSeparator() %>',
+			'decimalSeparator': '<%= decimalFormatSymbols.getDecimalSeparator() %>',
 
-			deleteFile:
+			'deleteFile':
 				'<liferay-portlet:actionURL doAsUserId="<%= user.getUserId() %>" name="/export_import/export_import"><portlet:param name="mvcRenderCommandName" value="/export_import/export_import" /><portlet:param name="<%= Constants.CMD %>" value="<%= Constants.DELETE_TEMP %>" /><portlet:param name="redirect" value="<%= redirect %>" /><portlet:param name="portletResource" value="<%= portletResource %>" /></liferay-portlet:actionURL>&ticketKey=<%= ticket.getKey() %><liferay-ui:input-permissions-params modelName="<%= Group.class.getName() %>" />',
 
 			<%
 			DLConfiguration dlConfiguration = ConfigurationProviderUtil.getSystemConfiguration(DLConfiguration.class);
 			%>
 
-			fileDescription:
+			'fileDescription':
 				'<%= StringUtil.merge(dlConfiguration.fileExtensions()) %>',
 
-			maxFileSize:
+			'maxFileSize':
 				'<%= UploadServletRequestConfigurationHelperUtil.getMaxSize() %> B',
-			metadataContainer: '#<portlet:namespace />commonFileMetadataContainer',
-			metadataExplanationContainer:
+			'metadataContainer': '#<portlet:namespace />commonFileMetadataContainer',
+			'metadataExplanationContainer':
 				'#<portlet:namespace />metadataExplanationContainer',
-			multipleFiles: false,
-			namespace: '<portlet:namespace />',
+			'multipleFiles': false,
+			'namespace': '<portlet:namespace />',
 			'strings.dropFileText':
 				'<liferay-ui:message key="drop-a-lar-file-here-to-import" />',
 			'strings.fileCannotBeSavedText':
@@ -85,7 +85,7 @@ String redirect = ParamUtil.getString(request, "redirect");
 				'<liferay-ui:message key="this-file-was-previously-uploaded-but-not-actually-imported" />',
 			'strings.uploadsCompleteText':
 				'<liferay-ui:message key="the-file-is-ready-to-be-imported" />',
-			tempFileURL: {
+			'tempFileURL': {
 				method: Liferay.Service.bind('/layout/get-temp-file-names'),
 				params: {
 					folderName:
@@ -93,15 +93,15 @@ String redirect = ParamUtil.getString(request, "redirect");
 					groupId: <%= scopeGroupId %>,
 				},
 			},
-			uploadFile:
+			'uploadFile':
 				'<liferay-portlet:actionURL doAsUserId="<%= user.getUserId() %>" name="/export_import/export_import"><portlet:param name="mvcRenderCommandName" value="/export_import/export_import" /><portlet:param name="<%= Constants.CMD %>" value="<%= Constants.ADD_TEMP %>" /><portlet:param name="redirect" value="<%= redirect %>" /><portlet:param name="plid" value="<%= String.valueOf(plid) %>" /> <portlet:param name="groupId" value="<%= String.valueOf(themeDisplay.getScopeGroupId()) %>" /><portlet:param name="portletResource" value="<%= portletResource %>" /></liferay-portlet:actionURL>&ticketKey=<%= ticket.getKey() %><liferay-ui:input-permissions-params modelName="<%= Group.class.getName() %>" />',
 		});
 
-		liferayUpload._uploader.on('alluploadscomplete', function (event) {
+		liferayUpload._uploader.on('alluploadscomplete', (event) => {
 			toggleContinueButton();
 		});
 
-		Liferay.on('tempFileRemoved', function (event) {
+		Liferay.on('tempFileRemoved', (event) => {
 			toggleContinueButton();
 		});
 
@@ -134,14 +134,14 @@ String redirect = ParamUtil.getString(request, "redirect");
 	if (continueButton && exportImportOptions) {
 		var form = document.<portlet:namespace />fm1;
 
-		continueButton.addEventListener('click', function (event) {
+		continueButton.addEventListener('click', (event) => {
 			event.preventDefault();
 
 			Liferay.Util.fetch(form.action)
-				.then(function (response) {
+				.then((response) => {
 					return response.text();
 				})
-				.then(function (response) {
+				.then((response) => {
 					exportImportOptions.innerHTML = response;
 
 					runScriptsInElement.default(exportImportOptions);

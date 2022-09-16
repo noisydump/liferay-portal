@@ -13,7 +13,13 @@
  */
 
 module.exports = {
-	check: [],
-	fix: [],
-	preset: '@liferay/npm-scripts/src/presets/standard',
+	build: {
+		bundler: {
+			exclude: {
+				'*': ['test?(s)/**/*', 'test.js'],
+			},
+		},
+	},
+	check: false,
+	fix: false,
 };

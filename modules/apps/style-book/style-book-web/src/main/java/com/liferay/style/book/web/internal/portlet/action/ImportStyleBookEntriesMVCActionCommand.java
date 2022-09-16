@@ -14,7 +14,7 @@
 
 package com.liferay.style.book.web.internal.portlet.action;
 
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.servlet.SessionErrors;
@@ -26,7 +26,8 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.style.book.constants.StyleBookPortletKeys;
-import com.liferay.style.book.web.internal.portlet.zip.StyleBookEntryZipProcessor;
+import com.liferay.style.book.zip.processor.StyleBookEntryZipProcessor;
+import com.liferay.style.book.zip.processor.StyleBookEntryZipProcessorImportResultEntry;
 
 import java.io.File;
 
@@ -56,7 +57,7 @@ public class ImportStyleBookEntriesMVCActionCommand
 	protected void addSuccessMessage(
 		ActionRequest actionRequest, ActionResponse actionResponse) {
 
-		String successMessage = LanguageUtil.get(
+		String successMessage = _language.get(
 			_portal.getHttpServletRequest(actionRequest),
 			"the-files-were-imported-correctly");
 
@@ -80,7 +81,7 @@ public class ImportStyleBookEntriesMVCActionCommand
 			actionRequest, "overwrite", true);
 
 		try {
-			List<StyleBookEntryZipProcessor.ImportResultEntry>
+			List<StyleBookEntryZipProcessorImportResultEntry>
 				styleBookEntryZipProcessorImportResultEntries =
 					_importStyleBookEntries(
 						themeDisplay.getUserId(),
@@ -104,7 +105,7 @@ public class ImportStyleBookEntriesMVCActionCommand
 		sendRedirect(actionRequest, actionResponse);
 	}
 
-	private List<StyleBookEntryZipProcessor.ImportResultEntry>
+	private List<StyleBookEntryZipProcessorImportResultEntry>
 			_importStyleBookEntries(
 				long userId, long groupId, File file, boolean overwrite)
 		throws Exception {
@@ -112,6 +113,9 @@ public class ImportStyleBookEntriesMVCActionCommand
 		return _styleBookEntryZipProcessor.importStyleBookEntries(
 			userId, groupId, file, overwrite);
 	}
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private Portal _portal;

@@ -17,21 +17,21 @@
 <%@ include file="/facets/init.jsp" %>
 
 <%
-AssetCategoriesSearchFacetDisplayBuilder assetCategoriesSearchFacetDisplayBuilder = new AssetCategoriesSearchFacetDisplayBuilder(renderRequest);
+AssetCategoriesSearchFacetDisplayContextBuilder assetCategoriesSearchFacetDisplayContextBuilder = new AssetCategoriesSearchFacetDisplayContextBuilder(renderRequest);
 
-assetCategoriesSearchFacetDisplayBuilder.setAssetCategoryLocalService(AssetCategoryLocalServiceUtil.getService());
-assetCategoriesSearchFacetDisplayBuilder.setAssetCategoryPermissionChecker(new AssetCategoryPermissionCheckerImpl(themeDisplay.getPermissionChecker()));
-assetCategoriesSearchFacetDisplayBuilder.setDisplayStyle(dataJSONObject.getString("displayStyle", "cloud"));
-assetCategoriesSearchFacetDisplayBuilder.setFacet(facet);
-assetCategoriesSearchFacetDisplayBuilder.setFrequenciesVisible(dataJSONObject.getBoolean("showAssetCount", true));
-assetCategoriesSearchFacetDisplayBuilder.setFrequencyThreshold(dataJSONObject.getInt("frequencyThreshold"));
-assetCategoriesSearchFacetDisplayBuilder.setLocale(locale);
-assetCategoriesSearchFacetDisplayBuilder.setMaxTerms(dataJSONObject.getInt("maxTerms", 10));
-assetCategoriesSearchFacetDisplayBuilder.setParameterName(facet.getFieldId());
-assetCategoriesSearchFacetDisplayBuilder.setParameterValue(fieldParam);
-assetCategoriesSearchFacetDisplayBuilder.setPortal(PortalUtil.getPortal());
+assetCategoriesSearchFacetDisplayContextBuilder.setAssetCategoryLocalService(AssetCategoryLocalServiceUtil.getService());
+assetCategoriesSearchFacetDisplayContextBuilder.setAssetCategoryPermissionChecker(new AssetCategoryPermissionCheckerImpl(themeDisplay.getPermissionChecker()));
+assetCategoriesSearchFacetDisplayContextBuilder.setDisplayStyle(dataJSONObject.getString("displayStyle", "cloud"));
+assetCategoriesSearchFacetDisplayContextBuilder.setFacet(facet);
+assetCategoriesSearchFacetDisplayContextBuilder.setFrequenciesVisible(dataJSONObject.getBoolean("showAssetCount", true));
+assetCategoriesSearchFacetDisplayContextBuilder.setFrequencyThreshold(dataJSONObject.getInt("frequencyThreshold"));
+assetCategoriesSearchFacetDisplayContextBuilder.setLocale(locale);
+assetCategoriesSearchFacetDisplayContextBuilder.setMaxTerms(dataJSONObject.getInt("maxTerms", 10));
+assetCategoriesSearchFacetDisplayContextBuilder.setParameterName(facet.getFieldId());
+assetCategoriesSearchFacetDisplayContextBuilder.setParameterValue(fieldParam);
+assetCategoriesSearchFacetDisplayContextBuilder.setPortal(PortalUtil.getPortal());
 
-AssetCategoriesSearchFacetDisplayContext assetCategoriesSearchFacetDisplayContext = assetCategoriesSearchFacetDisplayBuilder.build();
+AssetCategoriesSearchFacetDisplayContext assetCategoriesSearchFacetDisplayContext = assetCategoriesSearchFacetDisplayContextBuilder.build();
 %>
 
 <c:choose>
@@ -52,7 +52,7 @@ AssetCategoriesSearchFacetDisplayContext assetCategoriesSearchFacetDisplayContex
 
 					<ul class="<%= assetCategoriesSearchFacetDisplayContext.isCloud() ? "tag-cloud" : "tag-list" %> list-unstyled">
 						<li class="default facet-value">
-							<a class="<%= assetCategoriesSearchFacetDisplayContext.isNothingSelected() ? "facet-term-selected" : "facet-term-unselected" %>" data-value="" href="javascript:;"><liferay-ui:message key="<%= HtmlUtil.escape(facetConfiguration.getLabel()) %>" /></a>
+							<a class="<%= assetCategoriesSearchFacetDisplayContext.isNothingSelected() ? "facet-term-selected" : "facet-term-unselected" %>" data-value="" href="javascript:void(0);"><liferay-ui:message key="<%= HtmlUtil.escape(facetConfiguration.getLabel()) %>" /></a>
 						</li>
 
 						<%
@@ -60,7 +60,7 @@ AssetCategoriesSearchFacetDisplayContext assetCategoriesSearchFacetDisplayContex
 						%>
 
 							<li class="facet-value tag-popularity-<%= assetCategoriesSearchFacetTermDisplayContext.getPopularity() %>">
-								<a class="<%= assetCategoriesSearchFacetTermDisplayContext.isSelected() ? "facet-term-selected" : "facet-term-unselected" %>" data-value="<%= HtmlUtil.escapeAttribute(String.valueOf(assetCategoriesSearchFacetTermDisplayContext.getAssetCategoryId())) %>" href="javascript:;">
+								<a class="<%= assetCategoriesSearchFacetTermDisplayContext.isSelected() ? "facet-term-selected" : "facet-term-unselected" %>" data-value="<%= HtmlUtil.escapeAttribute(String.valueOf(assetCategoriesSearchFacetTermDisplayContext.getAssetCategoryId())) %>" href="javascript:void(0);">
 									<%= HtmlUtil.escape(assetCategoriesSearchFacetTermDisplayContext.getDisplayName()) %>
 
 									<c:if test="<%= assetCategoriesSearchFacetTermDisplayContext.isFrequencyVisible() %>">

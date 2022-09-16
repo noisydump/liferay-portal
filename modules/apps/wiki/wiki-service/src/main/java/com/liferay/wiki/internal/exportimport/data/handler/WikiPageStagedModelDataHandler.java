@@ -83,11 +83,10 @@ public class WikiPageStagedModelDataHandler
 			return;
 		}
 
-		WikiPage latestPage = _wikiPageLocalService.getLatestPage(
-			pageResource.getResourcePrimKey(), WorkflowConstants.STATUS_ANY,
-			true);
-
-		deleteStagedModel(latestPage);
+		deleteStagedModel(
+			_wikiPageLocalService.getLatestPage(
+				pageResource.getResourcePrimKey(), WorkflowConstants.STATUS_ANY,
+				true));
 	}
 
 	@Override
@@ -218,9 +217,10 @@ public class WikiPageStagedModelDataHandler
 
 			if (existingPage == null) {
 				importedPage = _wikiPageLocalService.addPage(
-					userId, nodeId, page.getTitle(), page.getVersion(),
-					page.getContent(), page.getSummary(), page.isMinorEdit(),
-					page.getFormat(), page.isHead(), page.getParentTitle(),
+					page.getExternalReferenceCode(), userId, nodeId,
+					page.getTitle(), page.getVersion(), page.getContent(),
+					page.getSummary(), page.isMinorEdit(), page.getFormat(),
+					page.isHead(), page.getParentTitle(),
 					page.getRedirectTitle(), serviceContext);
 
 				String pageResourceUuid = GetterUtil.getString(
@@ -394,7 +394,7 @@ public class WikiPageStagedModelDataHandler
 				// LPS-52675
 
 				if (_log.isDebugEnabled()) {
-					_log.debug(noSuchFileException, noSuchFileException);
+					_log.debug(noSuchFileException);
 				}
 
 				return null;

@@ -1,5 +1,39 @@
 definition {
 
+	macro changeVocabulary {
+		SelectFrame(
+			key_title = "Commerce Categories Navigation",
+			locator1 = "IFrame#MODAL_ANY");
+
+		Select(
+			key_title = "Vocabulary",
+			locator1 = "CommerceEntry#CATALOGS_FORM",
+			value1 = "${newVocabularyName}");
+
+		Button.clickSave();
+
+		Alert.viewSuccessMessage();
+
+		IFrame.closeFrame();
+	}
+
+	macro clearSearchBar {
+		DoubleClick(locator1 = "CommerceEntry#SEARCH_PRODUCT_RELATIONS");
+
+		KeyPress(
+			locator1 = "CommerceEntry#SEARCH_PRODUCT_RELATIONS",
+			value1 = "\BACK_SPACE");
+
+		Click(locator1 = "AppBuilder#SEARCH_BUTTON");
+	}
+
+	macro editMiniCartItemQuantity {
+		Type(
+			key_cartItemSku = "${cartItemSku}",
+			locator1 = "CommerceAccelerators#MINI_CART_ITEM_QUANTITY",
+			value1 = "${productQuantity}");
+	}
+
 	macro gotoCommercePortletNavItem {
 		AssertClick(
 			key_navItem = "${navItem}",
@@ -12,23 +46,48 @@ definition {
 			key_entryName = "${entryName}",
 			locator1 = "CommerceNavigation#ENTRY_NAME",
 			value1 = "${entryName}");
+
+		WaitForPageLoad();
 	}
 
 	macro gotoFrontStoreProductPage {
+		var baseURL = PropsUtil.get("portal.url");
 		var productName = StringUtil.replace("${productName}", " ", "-");
+
 		var productName = StringUtil.lowerCase("${productName}");
 
-		Navigator.openSpecificURL(url = "localhost:8080/web/guest/p/${productName}");
+		Navigator.openWithAppendToBaseURL(urlAppend = "web/guest/p/${productName}");
 	}
 
 	macro gotoMiniCart {
 		Click.clickNoMouseOver(locator1 = "CommerceAccelerators#MINI_CART_BUTTON");
+
+		WaitForElementPresent(locator1 = "CommerceAccelerators#MINI_CART_OPENED");
+	}
+
+	macro gotoMiniCartEntry {
+		AssertClickNoError(
+			key_cartItemSku = "${cartItemSku}",
+			locator1 = "CommerceAccelerators#MINI_CART_ITEM_NAME_USING_SKU",
+			value1 = "${entryName}");
+	}
+
+	macro gotoMiniumAccountOrderDefaults {
+		Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/account-management");
+
+		CommerceNavigator.gotoEntry(entryName = "${accountName}");
+
+		CommerceEntry.gotoMenuTab(menuTab = "Order Defaults");
 	}
 
 	macro gotoMiniumSidebarItem {
+		ScrollBy(value1 = "0, -1000");
+
 		Click(
 			key_menuItem = "${menuItem}",
 			locator1 = "CommerceAccelerators#MINIUM_SIDEBAR_MENU_ITEM");
+
+		WaitForPageLoad();
 	}
 
 	macro gotoOptionValues {
@@ -55,6 +114,20 @@ definition {
 			category = "${category}",
 			panel = "Commerce",
 			portlet = "${portlet}");
+
+		WaitForPageLoad();
+	}
+
+	macro gotoProductDetails {
+		var productName = CommerceUtilities.convertStringToKey(string = "${productName}");
+
+		Click(
+			key_productName = "${productName}",
+			locator1 = "CommerceFrontStore#PRODUCT_CARD_CATALOG_IMAGE");
+	}
+
+	macro goToProductOptionsAdminViaURL {
+		Navigator.openWithAppendToBaseURL(urlAppend = "group/guest/~/control_panel/manage?p_p_id=com_liferay_commerce_product_options_web_internal_portlet_CPOptionsPortlet&p_p_lifecycle=0&p_p_state=maximized&p_v_l_s_g_id=20121");
 	}
 
 	macro gotoSpeedwellAccountDropdownItem {
@@ -85,6 +158,18 @@ definition {
 			locator1 = "CommerceEntry#TABLE_LIST_TITLE");
 	}
 
+	macro goToWishLists {
+		Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/lists");
+	}
+
+	macro searchCatalog {
+		Type(
+			locator1 = "AppBuilder#SEARCH_BAR_INPUT",
+			value1 = "${productName}");
+
+		Click(locator1 = "Button#SUBMIT");
+	}
+
 	macro searchEntry {
 		AssertElementPresent(locator1 = "CommerceNavigation#SEARCH_FIELD");
 
@@ -95,6 +180,46 @@ definition {
 		KeyPress(
 			locator1 = "CommerceNavigation#SEARCH_FIELD",
 			value1 = "\RETURN");
+	}
+
+	macro selectItemFromTreeNode {
+		var key_itemName = "${itemName}";
+
+		Click(locator1 = "Treeview#NODE_LIST_ITEM");
+	}
+
+	macro sortField {
+		Click(
+			key_sortFieldName = "${sortFieldName}",
+			locator1 = "CommerceNavigation#SORT_FIELD",
+			value1 = "${sortFieldName}");
+	}
+
+	macro validateMiniCartItemQuantity {
+		AssertTextEquals(
+			key_cartItemSku = "${cartItemSku}",
+			locator1 = "CommerceAccelerators#MINI_CART_ITEM_QUANTITY",
+			value1 = "${productQuantity}");
+	}
+
+	macro viewCartPortletEntry {
+		Click(
+			key_productName = "${productName}",
+			locator1 = "CommerceAccelerators#CART_PORTLET_ORDER_DESCRIPTION");
+	}
+
+	macro viewFilterResultsSpecificOrder {
+		var resultOrder = "0";
+
+		for (var searchAssetTitle : list "${resultsList}") {
+			var resultOrder = ${resultOrder} + 1;
+
+			AssertTextEquals.assertPartialText(
+				key_entryName = "${searchAssetTitle}",
+				locator1 = "CommerceNavigation#ENTRY_NAME",
+				resultOrder = "${resultOrder}",
+				value1 = "${searchAssetTitle}");
+		}
 	}
 
 }

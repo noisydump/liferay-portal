@@ -1,19 +1,18 @@
-.minium-frame .btn:not(.btn-unstyled) {
+.minium-frame .btn:not(.btn-unstyled),
+.account-selector-dropdown-menu .btn:not(.btn-unstyled) {
 	align-content: center;
 	align-items: center;
 	background: transparent;
 	border-radius: $border-radius;
 	border-width: 2px;
 	display: inline-flex;
-	font-size: 0.75rem;
-	font-weight: 900;
+	font-size: 0.9rem;
+	font-weight: $font-weight-semi-bold;
 	justify-content: center;
-	letter-spacing: 1px;
 	line-height: 1.25;
 	overflow: hidden;
 	position: relative;
 	text-decoration: none;
-	text-transform: uppercase;
 	transition: border-color 0.3s ease-in;
 	white-space: nowrap;
 	z-index: 2;

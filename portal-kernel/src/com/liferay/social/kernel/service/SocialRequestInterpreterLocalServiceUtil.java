@@ -14,8 +14,6 @@
 
 package com.liferay.social.kernel.service;
 
-import com.liferay.portal.kernel.bean.PortalBeanLocatorUtil;
-
 /**
  * Provides the local service utility for SocialRequestInterpreter. This utility wraps
  * <code>com.liferay.portlet.social.service.impl.SocialRequestInterpreterLocalServiceImpl</code> and
@@ -37,37 +35,11 @@ public class SocialRequestInterpreterLocalServiceUtil {
 	 */
 
 	/**
-	 * Adds the social request interpreter to the list of available
-	 * interpreters.
-	 *
-	 * @param requestInterpreter the social request interpreter
-	 */
-	public static void addRequestInterpreter(
-		com.liferay.social.kernel.model.SocialRequestInterpreter
-			requestInterpreter) {
-
-		getService().addRequestInterpreter(requestInterpreter);
-	}
-
-	/**
-	 * Removes the social request interpreter from the list of available
-	 * interpreters.
-	 *
-	 * @param requestInterpreter the social request interpreter
-	 */
-	public static void deleteRequestInterpreter(
-		com.liferay.social.kernel.model.SocialRequestInterpreter
-			requestInterpreter) {
-
-		getService().deleteRequestInterpreter(requestInterpreter);
-	}
-
-	/**
 	 * Returns the OSGi service identifier.
 	 *
 	 * @return the OSGi service identifier
 	 */
-	public static String getOSGiServiceIdentifier() {
+	public static java.lang.String getOSGiServiceIdentifier() {
 		return getService().getOSGiServiceIdentifier();
 	}
 
@@ -139,16 +111,9 @@ public class SocialRequestInterpreterLocalServiceUtil {
 	}
 
 	public static SocialRequestInterpreterLocalService getService() {
-		if (_service == null) {
-			_service =
-				(SocialRequestInterpreterLocalService)
-					PortalBeanLocatorUtil.locate(
-						SocialRequestInterpreterLocalService.class.getName());
-		}
-
 		return _service;
 	}
 
-	private static SocialRequestInterpreterLocalService _service;
+	private static volatile SocialRequestInterpreterLocalService _service;
 
 }

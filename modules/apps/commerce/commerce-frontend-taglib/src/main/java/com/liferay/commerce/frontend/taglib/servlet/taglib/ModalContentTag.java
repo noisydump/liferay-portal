@@ -17,6 +17,7 @@ package com.liferay.commerce.frontend.taglib.servlet.taglib;
 import com.liferay.commerce.frontend.taglib.internal.servlet.ServletContextUtil;
 import com.liferay.taglib.util.IncludeTag;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.PageContext;
 
@@ -34,16 +35,21 @@ public class ModalContentTag extends IncludeTag {
 
 	@Override
 	public int doStartTag() throws JspException {
-		request.setAttribute(
+		HttpServletRequest httpServletRequest = getRequest();
+
+		httpServletRequest.setAttribute(
 			_ATTRIBUTE_NAMESPACE + "contentCssClasses", _contentCssClasses);
-		request.setAttribute(_ATTRIBUTE_NAMESPACE + "modalId", _modalId);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
+			_ATTRIBUTE_NAMESPACE + "modalId", _modalId);
+		httpServletRequest.setAttribute(
+			_ATTRIBUTE_NAMESPACE + "redirect", _redirect);
+		httpServletRequest.setAttribute(
 			_ATTRIBUTE_NAMESPACE + "showCancelButton", _showCancelButton);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			_ATTRIBUTE_NAMESPACE + "showSubmitButton", _showSubmitButton);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			_ATTRIBUTE_NAMESPACE + "submitButtonLabel", _submitButtonLabel);
-		request.setAttribute(_ATTRIBUTE_NAMESPACE + "title", _title);
+		httpServletRequest.setAttribute(_ATTRIBUTE_NAMESPACE + "title", _title);
 
 		super.doStartTag();
 
@@ -56,6 +62,10 @@ public class ModalContentTag extends IncludeTag {
 
 	public String getModalId() {
 		return _modalId;
+	}
+
+	public String getRedirect() {
+		return _redirect;
 	}
 
 	public boolean getShowCancelButton() {
@@ -86,7 +96,11 @@ public class ModalContentTag extends IncludeTag {
 	public void setPageContext(PageContext pageContext) {
 		super.setPageContext(pageContext);
 
-		servletContext = ServletContextUtil.getServletContext();
+		setServletContext(ServletContextUtil.getServletContext());
+	}
+
+	public void setRedirect(String redirect) {
+		_redirect = redirect;
 	}
 
 	public void setShowCancelButton(boolean showCancelButton) {
@@ -111,6 +125,7 @@ public class ModalContentTag extends IncludeTag {
 
 		_contentCssClasses = null;
 		_modalId = null;
+		_redirect = null;
 		_showCancelButton = true;
 		_showSubmitButton = true;
 		_submitButtonLabel = null;
@@ -136,6 +151,7 @@ public class ModalContentTag extends IncludeTag {
 
 	private String _contentCssClasses;
 	private String _modalId;
+	private String _redirect;
 	private boolean _showCancelButton = true;
 	private boolean _showSubmitButton = true;
 	private String _submitButtonLabel;

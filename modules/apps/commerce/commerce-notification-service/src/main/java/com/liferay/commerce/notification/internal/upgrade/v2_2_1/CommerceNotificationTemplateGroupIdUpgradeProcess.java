@@ -15,6 +15,7 @@
 package com.liferay.commerce.notification.internal.upgrade.v2_2_1;
 
 import com.liferay.commerce.product.model.CommerceChannel;
+import com.liferay.portal.kernel.dao.jdbc.AutoBatchPreparedStatementUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
@@ -43,34 +44,32 @@ public class CommerceNotificationTemplateGroupIdUpgradeProcess
 	protected void doUpgrade() throws Exception {
 		try (Statement s = connection.createStatement();
 
-			ResultSet rs = s.executeQuery(
+			ResultSet resultSet = s.executeQuery(
 				"select commerceNotificationTemplateId, groupId from " +
-					"CommerceNotificationTemplate")) {
+					"CommerceNotificationTemplate");
+			PreparedStatement preparedStatement =
+				AutoBatchPreparedStatementUtil.concurrentAutoBatch(
+					connection,
+					"update CommerceNotificationTemplate set groupId = ? " +
+						"where commerceNotificationTemplateId = ?")) {
 
-			PreparedStatement ps = null;
+			while (resultSet.next()) {
+				long commerceChannelGroupId =
+					_getCommerceChannelGroupIdBySiteGroupId(
+						resultSet.getLong("groupId"));
 
-			while (rs.next()) {
-				long groupId = rs.getLong("groupId");
-
-				long channelGroupId = _getCommerceChannelGroupIdBySiteGroupId(
-					groupId);
-
-				if (channelGroupId == 0) {
+				if (commerceChannelGroupId == 0) {
 					continue;
 				}
 
-				long commerceNotificationTemplateId = rs.getLong(
-					"commerceNotificationTemplateId");
+				preparedStatement.setLong(1, commerceChannelGroupId);
+				preparedStatement.setLong(
+					2, resultSet.getLong("commerceNotificationTemplateId"));
 
-				ps = connection.prepareStatement(
-					"update CommerceNotificationTemplate set groupId = ? " +
-						"where commerceNotificationTemplateId = ?");
-
-				ps.setLong(1, channelGroupId);
-				ps.setLong(2, commerceNotificationTemplateId);
-
-				ps.executeUpdate();
+				preparedStatement.addBatch();
 			}
+
+			preparedStatement.executeBatch();
 		}
 	}
 
@@ -86,19 +85,19 @@ public class CommerceNotificationTemplateGroupIdUpgradeProcess
 		try (Statement s = connection.createStatement()) {
 			s.setMaxRows(1);
 
-			try (ResultSet rs = s.executeQuery(sql)) {
-				if (rs.next()) {
-					companyId = rs.getLong("companyId");
-					commerceChannelId = rs.getLong("commerceChannelId");
+			try (ResultSet resultSet = s.executeQuery(sql)) {
+				if (resultSet.next()) {
+					companyId = resultSet.getLong("companyId");
+					commerceChannelId = resultSet.getLong("commerceChannelId");
 				}
 			}
 		}
 
-		long classNameId = _classNameLocalService.getClassNameId(
-			CommerceChannel.class.getName());
-
 		Group group = _groupLocalService.fetchGroup(
-			companyId, classNameId, commerceChannelId);
+			companyId,
+			_classNameLocalService.getClassNameId(
+				CommerceChannel.class.getName()),
+			commerceChannelId);
 
 		if (group != null) {
 			return group.getGroupId();

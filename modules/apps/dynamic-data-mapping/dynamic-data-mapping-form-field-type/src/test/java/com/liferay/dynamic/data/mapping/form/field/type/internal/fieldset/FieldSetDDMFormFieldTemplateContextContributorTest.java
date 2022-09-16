@@ -20,12 +20,14 @@ import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
-import java.io.IOException;
 import java.io.InputStream;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -33,6 +35,11 @@ import org.junit.Test;
  */
 public class FieldSetDDMFormFieldTemplateContextContributorTest
 	extends BaseDDMFormFieldTypeSettingsTestCase {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Before
 	@Override
@@ -44,7 +51,7 @@ public class FieldSetDDMFormFieldTemplateContextContributorTest
 
 	@Test
 	public void testGetRows() throws Exception {
-		String ddmFormLayoutDefinition = read("ddm-structure-layout.json");
+		String ddmFormLayoutDefinition = _read("ddm-structure-layout.json");
 
 		JSONArray rowsJSONArray =
 			_fieldSetDDMFormFieldTemplateContextContributor.getRowsJSONArray(
@@ -110,7 +117,7 @@ public class FieldSetDDMFormFieldTemplateContextContributorTest
 		Assert.assertEquals(12, firstColumnJSONObject.getInt("size"));
 	}
 
-	protected String read(String fileName) throws IOException {
+	private String _read(String fileName) throws Exception {
 		Class<?> clazz = getClass();
 
 		InputStream inputStream = clazz.getResourceAsStream(

@@ -20,7 +20,6 @@ import com.liferay.portal.search.learning.to.rank.configuration.LearningToRankCo
 import com.liferay.portal.search.query.Queries;
 import com.liferay.portal.search.query.Query;
 import com.liferay.portal.search.rescore.Rescore;
-import com.liferay.portal.search.rescore.RescoreBuilder;
 import com.liferay.portal.search.rescore.RescoreBuilderFactory;
 import com.liferay.portal.search.searcher.SearchRequest;
 import com.liferay.portal.search.searcher.SearchRequestBuilder;
@@ -41,7 +40,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	configurationPid = "com.liferay.portal.search.learning.to.rank.configuration.LearningToRankConfiguration",
-	immediate = true,
+	enabled = false, immediate = true,
 	property = "search.request.contributor.id=com.liferay.portal.search.learning.to.rank",
 	service = SearchRequestContributor.class
 )
@@ -57,10 +56,7 @@ public class LearningToRankSearchRequestContributor
 		SearchRequestBuilder searchRequestBuilder =
 			searchRequestBuilderFactory.builder(searchRequest);
 
-		List<Rescore> rescores = getRescores(
-			searchRequest, rescoreBuilderFactory.getRescoreBuilder());
-
-		searchRequestBuilder.rescores(rescores);
+		searchRequestBuilder.rescores(_getRescores(searchRequest));
 
 		return searchRequestBuilder.build();
 	}
@@ -76,7 +72,16 @@ public class LearningToRankSearchRequestContributor
 		_model = learningToRankConfiguration.model();
 	}
 
-	protected Query getRescoreQuery(String model, String keywords) {
+	@Reference
+	protected Queries queries;
+
+	@Reference
+	protected RescoreBuilderFactory rescoreBuilderFactory;
+
+	@Reference
+	protected SearchRequestBuilderFactory searchRequestBuilderFactory;
+
+	private Query _getRescoreQuery(String model, String keywords) {
 		return queries.wrapper(
 			JSONUtil.put(
 				"sltr",
@@ -88,27 +93,16 @@ public class LearningToRankSearchRequestContributor
 			).toString());
 	}
 
-	protected List<Rescore> getRescores(
-		SearchRequest searchRequest, RescoreBuilder rescoreBuilder) {
-
+	private List<Rescore> _getRescores(SearchRequest searchRequest) {
 		return Arrays.asList(
-			rescoreBuilder.query(
-				getRescoreQuery(_model, searchRequest.getQueryString())
+			rescoreBuilderFactory.builder(
+				_getRescoreQuery(_model, searchRequest.getQueryString())
 			).windowSize(
 				1000
 			).build());
 	}
 
-	@Reference
-	protected Queries queries;
-
-	@Reference
-	protected RescoreBuilderFactory rescoreBuilderFactory;
-
-	@Reference
-	protected SearchRequestBuilderFactory searchRequestBuilderFactory;
-
-	private boolean _enabled;
-	private String _model;
+	private volatile boolean _enabled;
+	private volatile String _model;
 
 }

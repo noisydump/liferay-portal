@@ -15,7 +15,8 @@
 package com.liferay.portal.verify.test.util;
 
 import com.liferay.petra.string.StringBundler;
-import com.liferay.portal.kernel.model.Company;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.settings.CompanyServiceSettingsLocator;
 import com.liferay.portal.kernel.settings.ModifiableSettings;
@@ -28,8 +29,6 @@ import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.verify.VerifyException;
 import com.liferay.portal.verify.VerifyProcess;
-
-import java.util.List;
 
 import javax.portlet.PortletPreferences;
 
@@ -66,29 +65,25 @@ public abstract class BaseCompanySettingsVerifyProcessTestCase
 
 		populateLegacyProperties(unicodeProperties);
 
-		List<Company> companies = companyLocalService.getCompanies(false);
-
-		for (Company company : companies) {
-			companyLocalService.updatePreferences(
-				company.getCompanyId(), unicodeProperties);
-		}
+		companyLocalService.forEachCompanyId(
+			companyId -> companyLocalService.updatePreferences(
+				companyId, unicodeProperties));
 	}
 
 	@After
 	@Override
 	public void tearDown() throws Exception {
-		List<Company> companies = companyLocalService.getCompanies(false);
+		companyLocalService.forEachCompanyId(
+			companyId -> {
+				Settings settings = getSettings(companyId);
 
-		for (Company company : companies) {
-			Settings settings = getSettings(company.getCompanyId());
+				ModifiableSettings modifiableSettings =
+					settings.getModifiableSettings();
 
-			ModifiableSettings modifiableSettings =
-				settings.getModifiableSettings();
+				modifiableSettings.reset();
 
-			modifiableSettings.reset();
-
-			modifiableSettings.store();
-		}
+				modifiableSettings.store();
+			});
 
 		super.tearDown();
 	}
@@ -97,18 +92,17 @@ public abstract class BaseCompanySettingsVerifyProcessTestCase
 	protected void doVerify() throws VerifyException {
 		super.doVerify();
 
-		List<Company> companies = companyLocalService.getCompanies(false);
+		companyLocalService.forEachCompanyId(
+			companyId -> {
+				PortletPreferences portletPreferences =
+					prefsProps.getPreferences(companyId, true);
 
-		for (Company company : companies) {
-			PortletPreferences portletPreferences = prefsProps.getPreferences(
-				company.getCompanyId(), true);
+				Settings settings = getSettings(companyId);
 
-			Settings settings = getSettings(company.getCompanyId());
+				Assert.assertNotNull(settings);
 
-			Assert.assertNotNull(settings);
-
-			doVerify(portletPreferences, settings);
-		}
+				doVerify(portletPreferences, settings);
+			});
 	}
 
 	protected abstract void doVerify(
@@ -145,6 +139,10 @@ public abstract class BaseCompanySettingsVerifyProcessTestCase
 				serviceReferences[0]);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			throw new IllegalStateException("Unable to get verify process");
 		}
 	}
@@ -162,6 +160,9 @@ public abstract class BaseCompanySettingsVerifyProcessTestCase
 
 	@Inject
 	protected SettingsFactory settingsFactory;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		BaseCompanySettingsVerifyProcessTestCase.class);
 
 	private static BundleContext _bundleContext;
 

@@ -27,14 +27,15 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.workflow.kaleo.model.KaleoCondition;
 import com.liferay.portal.workflow.kaleo.model.KaleoConditionModel;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
 import java.util.Collections;
@@ -42,6 +43,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -67,11 +69,11 @@ public class KaleoConditionModelImpl
 	public static final String TABLE_NAME = "KaleoCondition";
 
 	public static final Object[][] TABLE_COLUMNS = {
-		{"mvccVersion", Types.BIGINT}, {"kaleoConditionId", Types.BIGINT},
-		{"groupId", Types.BIGINT}, {"companyId", Types.BIGINT},
-		{"userId", Types.BIGINT}, {"userName", Types.VARCHAR},
-		{"createDate", Types.TIMESTAMP}, {"modifiedDate", Types.TIMESTAMP},
-		{"kaleoDefinitionId", Types.BIGINT},
+		{"mvccVersion", Types.BIGINT}, {"ctCollectionId", Types.BIGINT},
+		{"kaleoConditionId", Types.BIGINT}, {"groupId", Types.BIGINT},
+		{"companyId", Types.BIGINT}, {"userId", Types.BIGINT},
+		{"userName", Types.VARCHAR}, {"createDate", Types.TIMESTAMP},
+		{"modifiedDate", Types.TIMESTAMP}, {"kaleoDefinitionId", Types.BIGINT},
 		{"kaleoDefinitionVersionId", Types.BIGINT},
 		{"kaleoNodeId", Types.BIGINT}, {"script", Types.CLOB},
 		{"scriptLanguage", Types.VARCHAR},
@@ -83,6 +85,7 @@ public class KaleoConditionModelImpl
 
 	static {
 		TABLE_COLUMNS_MAP.put("mvccVersion", Types.BIGINT);
+		TABLE_COLUMNS_MAP.put("ctCollectionId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("kaleoConditionId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("groupId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("companyId", Types.BIGINT);
@@ -99,7 +102,7 @@ public class KaleoConditionModelImpl
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table KaleoCondition (mvccVersion LONG default 0 not null,kaleoConditionId LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(200) null,createDate DATE null,modifiedDate DATE null,kaleoDefinitionId LONG,kaleoDefinitionVersionId LONG,kaleoNodeId LONG,script TEXT null,scriptLanguage VARCHAR(75) null,scriptRequiredContexts STRING null)";
+		"create table KaleoCondition (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,kaleoConditionId LONG not null,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(200) null,createDate DATE null,modifiedDate DATE null,kaleoDefinitionId LONG,kaleoDefinitionVersionId LONG,kaleoNodeId LONG,script TEXT null,scriptLanguage VARCHAR(75) null,scriptRequiredContexts STRING null,primary key (kaleoConditionId, ctCollectionId))";
 
 	public static final String TABLE_SQL_DROP = "drop table KaleoCondition";
 
@@ -116,26 +119,26 @@ public class KaleoConditionModelImpl
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long COMPANYID_COLUMN_BITMASK = 1L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long KALEODEFINITIONVERSIONID_COLUMN_BITMASK = 2L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long KALEONODEID_COLUMN_BITMASK = 4L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *		#getColumnBitmask(String)
+	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long KALEOCONDITIONID_COLUMN_BITMASK = 8L;
@@ -239,34 +242,6 @@ public class KaleoConditionModelImpl
 		return _attributeSetterBiConsumers;
 	}
 
-	private static Function<InvocationHandler, KaleoCondition>
-		_getProxyProviderFunction() {
-
-		Class<?> proxyClass = ProxyUtil.getProxyClass(
-			KaleoCondition.class.getClassLoader(), KaleoCondition.class,
-			ModelWrapper.class);
-
-		try {
-			Constructor<KaleoCondition> constructor =
-				(Constructor<KaleoCondition>)proxyClass.getConstructor(
-					InvocationHandler.class);
-
-			return invocationHandler -> {
-				try {
-					return constructor.newInstance(invocationHandler);
-				}
-				catch (ReflectiveOperationException
-							reflectiveOperationException) {
-
-					throw new InternalError(reflectiveOperationException);
-				}
-			};
-		}
-		catch (NoSuchMethodException noSuchMethodException) {
-			throw new InternalError(noSuchMethodException);
-		}
-	}
-
 	private static final Map<String, Function<KaleoCondition, Object>>
 		_attributeGetterFunctions;
 	private static final Map<String, BiConsumer<KaleoCondition, Object>>
@@ -283,6 +258,12 @@ public class KaleoConditionModelImpl
 		attributeSetterBiConsumers.put(
 			"mvccVersion",
 			(BiConsumer<KaleoCondition, Long>)KaleoCondition::setMvccVersion);
+		attributeGetterFunctions.put(
+			"ctCollectionId", KaleoCondition::getCtCollectionId);
+		attributeSetterBiConsumers.put(
+			"ctCollectionId",
+			(BiConsumer<KaleoCondition, Long>)
+				KaleoCondition::setCtCollectionId);
 		attributeGetterFunctions.put(
 			"kaleoConditionId", KaleoCondition::getKaleoConditionId);
 		attributeSetterBiConsumers.put(
@@ -369,6 +350,20 @@ public class KaleoConditionModelImpl
 		}
 
 		_mvccVersion = mvccVersion;
+	}
+
+	@Override
+	public long getCtCollectionId() {
+		return _ctCollectionId;
+	}
+
+	@Override
+	public void setCtCollectionId(long ctCollectionId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_ctCollectionId = ctCollectionId;
 	}
 
 	@Override
@@ -639,7 +634,9 @@ public class KaleoConditionModelImpl
 		for (Map.Entry<String, Object> entry :
 				_columnOriginalValues.entrySet()) {
 
-			if (entry.getValue() != getColumnValue(entry.getKey())) {
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
 				_columnBitmask |= _columnBitmasks.get(entry.getKey());
 			}
 		}
@@ -680,6 +677,7 @@ public class KaleoConditionModelImpl
 		KaleoConditionImpl kaleoConditionImpl = new KaleoConditionImpl();
 
 		kaleoConditionImpl.setMvccVersion(getMvccVersion());
+		kaleoConditionImpl.setCtCollectionId(getCtCollectionId());
 		kaleoConditionImpl.setKaleoConditionId(getKaleoConditionId());
 		kaleoConditionImpl.setGroupId(getGroupId());
 		kaleoConditionImpl.setCompanyId(getCompanyId());
@@ -697,6 +695,44 @@ public class KaleoConditionModelImpl
 			getScriptRequiredContexts());
 
 		kaleoConditionImpl.resetOriginalValues();
+
+		return kaleoConditionImpl;
+	}
+
+	@Override
+	public KaleoCondition cloneWithOriginalValues() {
+		KaleoConditionImpl kaleoConditionImpl = new KaleoConditionImpl();
+
+		kaleoConditionImpl.setMvccVersion(
+			this.<Long>getColumnOriginalValue("mvccVersion"));
+		kaleoConditionImpl.setCtCollectionId(
+			this.<Long>getColumnOriginalValue("ctCollectionId"));
+		kaleoConditionImpl.setKaleoConditionId(
+			this.<Long>getColumnOriginalValue("kaleoConditionId"));
+		kaleoConditionImpl.setGroupId(
+			this.<Long>getColumnOriginalValue("groupId"));
+		kaleoConditionImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		kaleoConditionImpl.setUserId(
+			this.<Long>getColumnOriginalValue("userId"));
+		kaleoConditionImpl.setUserName(
+			this.<String>getColumnOriginalValue("userName"));
+		kaleoConditionImpl.setCreateDate(
+			this.<Date>getColumnOriginalValue("createDate"));
+		kaleoConditionImpl.setModifiedDate(
+			this.<Date>getColumnOriginalValue("modifiedDate"));
+		kaleoConditionImpl.setKaleoDefinitionId(
+			this.<Long>getColumnOriginalValue("kaleoDefinitionId"));
+		kaleoConditionImpl.setKaleoDefinitionVersionId(
+			this.<Long>getColumnOriginalValue("kaleoDefinitionVersionId"));
+		kaleoConditionImpl.setKaleoNodeId(
+			this.<Long>getColumnOriginalValue("kaleoNodeId"));
+		kaleoConditionImpl.setScript(
+			this.<String>getColumnOriginalValue("script"));
+		kaleoConditionImpl.setScriptLanguage(
+			this.<String>getColumnOriginalValue("scriptLanguage"));
+		kaleoConditionImpl.setScriptRequiredContexts(
+			this.<String>getColumnOriginalValue("scriptRequiredContexts"));
 
 		return kaleoConditionImpl;
 	}
@@ -783,6 +819,8 @@ public class KaleoConditionModelImpl
 
 		kaleoConditionCacheModel.mvccVersion = getMvccVersion();
 
+		kaleoConditionCacheModel.ctCollectionId = getCtCollectionId();
+
 		kaleoConditionCacheModel.kaleoConditionId = getKaleoConditionId();
 
 		kaleoConditionCacheModel.groupId = getGroupId();
@@ -861,7 +899,7 @@ public class KaleoConditionModelImpl
 			getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			(4 * attributeGetterFunctions.size()) + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -872,9 +910,26 @@ public class KaleoConditionModelImpl
 			Function<KaleoCondition, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((KaleoCondition)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply((KaleoCondition)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -921,11 +976,14 @@ public class KaleoConditionModelImpl
 	private static class EscapedModelProxyProviderFunctionHolder {
 
 		private static final Function<InvocationHandler, KaleoCondition>
-			_escapedModelProxyProviderFunction = _getProxyProviderFunction();
+			_escapedModelProxyProviderFunction =
+				ProxyUtil.getProxyProviderFunction(
+					KaleoCondition.class, ModelWrapper.class);
 
 	}
 
 	private long _mvccVersion;
+	private long _ctCollectionId;
 	private long _kaleoConditionId;
 	private long _groupId;
 	private long _companyId;
@@ -969,6 +1027,7 @@ public class KaleoConditionModelImpl
 		_columnOriginalValues = new HashMap<String, Object>();
 
 		_columnOriginalValues.put("mvccVersion", _mvccVersion);
+		_columnOriginalValues.put("ctCollectionId", _ctCollectionId);
 		_columnOriginalValues.put("kaleoConditionId", _kaleoConditionId);
 		_columnOriginalValues.put("groupId", _groupId);
 		_columnOriginalValues.put("companyId", _companyId);
@@ -999,31 +1058,33 @@ public class KaleoConditionModelImpl
 
 		columnBitmasks.put("mvccVersion", 1L);
 
-		columnBitmasks.put("kaleoConditionId", 2L);
+		columnBitmasks.put("ctCollectionId", 2L);
 
-		columnBitmasks.put("groupId", 4L);
+		columnBitmasks.put("kaleoConditionId", 4L);
 
-		columnBitmasks.put("companyId", 8L);
+		columnBitmasks.put("groupId", 8L);
 
-		columnBitmasks.put("userId", 16L);
+		columnBitmasks.put("companyId", 16L);
 
-		columnBitmasks.put("userName", 32L);
+		columnBitmasks.put("userId", 32L);
 
-		columnBitmasks.put("createDate", 64L);
+		columnBitmasks.put("userName", 64L);
 
-		columnBitmasks.put("modifiedDate", 128L);
+		columnBitmasks.put("createDate", 128L);
 
-		columnBitmasks.put("kaleoDefinitionId", 256L);
+		columnBitmasks.put("modifiedDate", 256L);
 
-		columnBitmasks.put("kaleoDefinitionVersionId", 512L);
+		columnBitmasks.put("kaleoDefinitionId", 512L);
 
-		columnBitmasks.put("kaleoNodeId", 1024L);
+		columnBitmasks.put("kaleoDefinitionVersionId", 1024L);
 
-		columnBitmasks.put("script", 2048L);
+		columnBitmasks.put("kaleoNodeId", 2048L);
 
-		columnBitmasks.put("scriptLanguage", 4096L);
+		columnBitmasks.put("script", 4096L);
 
-		columnBitmasks.put("scriptRequiredContexts", 8192L);
+		columnBitmasks.put("scriptLanguage", 8192L);
+
+		columnBitmasks.put("scriptRequiredContexts", 16384L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}

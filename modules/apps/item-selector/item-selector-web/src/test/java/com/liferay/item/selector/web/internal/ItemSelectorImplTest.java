@@ -25,19 +25,17 @@ import com.liferay.item.selector.web.internal.util.ItemSelectorKeyUtil;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.json.JSONFactoryImpl;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.LiferayPortletURL;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.HttpUtil;
+import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ProxyFactory;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.model.impl.GroupImpl;
-import com.liferay.portal.util.HttpImpl;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.portal.util.PortalImpl;
 
 import java.util.List;
@@ -46,21 +44,26 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 import org.mockito.Mockito;
-
-import org.powermock.api.mockito.PowerMockito;
 
 /**
  * @author Iván Zaera
  * @author Roberto Díaz
  */
-public class ItemSelectorImplTest extends PowerMockito {
+public class ItemSelectorImplTest {
 
-	@Before
-	public void setUp() {
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
+	@BeforeClass
+	public static void setUpClass() {
 		_flickrItemSelectorCriterion = new FlickrItemSelectorCriterion();
 
 		_flickrItemSelectorCriterion.setDesiredItemSelectorReturnTypes(
@@ -79,8 +82,6 @@ public class ItemSelectorImplTest extends PowerMockito {
 			_stubItemSelectorCriterionSerializerImpl);
 
 		ReflectionTestUtil.setFieldValue(
-			_itemSelectorImpl, "_http", new HttpImpl());
-		ReflectionTestUtil.setFieldValue(
 			_itemSelectorImpl, "_portal", new PortalImpl());
 		ReflectionTestUtil.setFieldValue(
 			_itemSelectorImpl, "_serviceTrackerMap",
@@ -95,14 +96,6 @@ public class ItemSelectorImplTest extends PowerMockito {
 			new TestFileEntryItemSelectorReturnType(),
 			_testURLItemSelectorReturnType);
 
-		HttpUtil httpUtil = new HttpUtil();
-
-		httpUtil.setHttp(new HttpImpl());
-
-		JSONFactoryUtil jsonFactoryUtil = new JSONFactoryUtil();
-
-		jsonFactoryUtil.setJSONFactory(new JSONFactoryImpl());
-
 		PortalUtil portalUtil = new PortalUtil();
 
 		portalUtil.setPortal(new PortalImpl());
@@ -114,7 +107,7 @@ public class ItemSelectorImplTest extends PowerMockito {
 			"testItemSelectedEventName", _mediaItemSelectorCriterion,
 			_flickrItemSelectorCriterion);
 
-		setUpItemSelectionCriterionHandlers();
+		_setUpItemSelectionCriterionHandlers();
 
 		Assert.assertEquals(
 			"testItemSelectedEventName",
@@ -127,7 +120,7 @@ public class ItemSelectorImplTest extends PowerMockito {
 			StringUtil.randomString(), _mediaItemSelectorCriterion,
 			_flickrItemSelectorCriterion);
 
-		setUpItemSelectionCriterionHandlers();
+		_setUpItemSelectionCriterionHandlers();
 
 		List<ItemSelectorCriterion> itemSelectorCriteria =
 			_itemSelectorImpl.getItemSelectorCriteria(itemSelectorURL);
@@ -191,7 +184,7 @@ public class ItemSelectorImplTest extends PowerMockito {
 
 	@Test
 	public void testGetItemSelectorRendering() {
-		setUpItemSelectionCriterionHandlers();
+		_setUpItemSelectionCriterionHandlers();
 
 		ItemSelectorRendering itemSelectorRendering =
 			getItemSelectorRendering();
@@ -243,12 +236,13 @@ public class ItemSelectorImplTest extends PowerMockito {
 	}
 
 	protected ItemSelectorRendering getItemSelectorRendering() {
-		RequestBackedPortletURLFactory requestBackedPortletURLFactory = mock(
-			RequestBackedPortletURLFactory.class);
+		RequestBackedPortletURLFactory requestBackedPortletURLFactory =
+			Mockito.mock(RequestBackedPortletURLFactory.class);
 
-		LiferayPortletURL mockLiferayPortletURL = mock(LiferayPortletURL.class);
+		LiferayPortletURL mockLiferayPortletURL = Mockito.mock(
+			LiferayPortletURL.class);
 
-		when(
+		Mockito.when(
 			requestBackedPortletURLFactory.createControlPanelRenderURL(
 				Mockito.anyString(), Mockito.any(Group.class),
 				Mockito.anyLong(), Mockito.anyLong())
@@ -261,11 +255,11 @@ public class ItemSelectorImplTest extends PowerMockito {
 				"itemSelectedEventName", _mediaItemSelectorCriterion,
 				_flickrItemSelectorCriterion);
 
-		ThemeDisplay themeDisplay = mock(ThemeDisplay.class);
+		ThemeDisplay themeDisplay = Mockito.mock(ThemeDisplay.class);
 
 		themeDisplay.setScopeGroupId(12345);
 
-		when(
+		Mockito.when(
 			themeDisplay.getScopeGroup()
 		).thenReturn(
 			new GroupImpl()
@@ -303,7 +297,7 @@ public class ItemSelectorImplTest extends PowerMockito {
 		for (Map.Entry<String, String[]> entry :
 				itemSelectorParameters.entrySet()) {
 
-			itemSelectorURL = HttpUtil.addParameter(
+			itemSelectorURL = HttpComponentsUtil.addParameter(
 				itemSelectorURL, namespace + entry.getKey(),
 				entry.getValue()[0]);
 		}
@@ -311,27 +305,29 @@ public class ItemSelectorImplTest extends PowerMockito {
 		return itemSelectorURL;
 	}
 
-	protected void setUpItemSelectionCriterionHandlers() {
+	private void _setUpItemSelectionCriterionHandlers() {
 		_itemSelectorImpl.setItemSelectionCriterionHandler(
 			new FlickrItemSelectorCriterionHandler());
 		_itemSelectorImpl.setItemSelectionCriterionHandler(
 			new MediaItemSelectorCriterionHandler());
 	}
 
-	private FlickrItemSelectorCriterion _flickrItemSelectorCriterion;
-	private ItemSelectorImpl _itemSelectorImpl;
-	private MediaItemSelectorCriterion _mediaItemSelectorCriterion;
-	private final StubItemSelectorCriterionSerializerImpl
+	private static FlickrItemSelectorCriterion _flickrItemSelectorCriterion;
+	private static ItemSelectorImpl _itemSelectorImpl;
+	private static MediaItemSelectorCriterion _mediaItemSelectorCriterion;
+	private static final StubItemSelectorCriterionSerializerImpl
 		_stubItemSelectorCriterionSerializerImpl =
 			new StubItemSelectorCriterionSerializerImpl();
-	private final ItemSelectorReturnType _testFileEntryItemSelectorReturnType =
-		new TestFileEntryItemSelectorReturnType();
-	private final ItemSelectorReturnType _testStringItemSelectorReturnType =
-		new TestStringItemSelectorReturnType();
-	private final ItemSelectorReturnType _testURLItemSelectorReturnType =
+	private static final ItemSelectorReturnType
+		_testFileEntryItemSelectorReturnType =
+			new TestFileEntryItemSelectorReturnType();
+	private static final ItemSelectorReturnType
+		_testStringItemSelectorReturnType =
+			new TestStringItemSelectorReturnType();
+	private static final ItemSelectorReturnType _testURLItemSelectorReturnType =
 		new TestURLItemSelectorReturnType();
 
-	private class StubItemSelectorCriterionSerializerImpl
+	private static class StubItemSelectorCriterionSerializerImpl
 		extends ItemSelectorCriterionSerializerImpl {
 
 		@Override

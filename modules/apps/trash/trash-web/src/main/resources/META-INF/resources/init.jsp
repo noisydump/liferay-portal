@@ -29,7 +29,8 @@ taglib uri="http://liferay.com/tld/trash" prefix="liferay-trash" %><%@
 taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %><%@
 taglib uri="http://liferay.com/tld/util" prefix="liferay-util" %>
 
-<%@ page import="com.liferay.petra.string.StringPool" %><%@
+<%@ page import="com.liferay.petra.portlet.url.builder.PortletURLBuilder" %><%@
+page import="com.liferay.petra.string.StringPool" %><%@
 page import="com.liferay.portal.kernel.exception.TrashPermissionException" %><%@
 page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
 page import="com.liferay.portal.kernel.model.ClassedModel" %><%@
@@ -58,9 +59,9 @@ page import="com.liferay.trash.web.internal.display.context.TrashContainerManage
 page import="com.liferay.trash.web.internal.display.context.TrashContainerModelDisplayContext" %><%@
 page import="com.liferay.trash.web.internal.display.context.TrashDisplayContext" %><%@
 page import="com.liferay.trash.web.internal.display.context.TrashManagementToolbarDisplayContext" %><%@
-page import="com.liferay.trash.web.internal.servlet.taglib.clay.TrashContentHorizontalCard" %><%@
-page import="com.liferay.trash.web.internal.servlet.taglib.clay.TrashContentVerticalCard" %><%@
-page import="com.liferay.trash.web.internal.servlet.taglib.clay.TrashEntryVerticalCard" %><%@
+page import="com.liferay.trash.web.internal.frontend.taglib.clay.servlet.taglib.TrashContentHorizontalCard" %><%@
+page import="com.liferay.trash.web.internal.frontend.taglib.clay.servlet.taglib.TrashContentVerticalCard" %><%@
+page import="com.liferay.trash.web.internal.frontend.taglib.clay.servlet.taglib.TrashEntryVerticalCard" %><%@
 page import="com.liferay.trash.web.internal.servlet.taglib.util.TrashContainerActionDropdownItemsProvider" %>
 
 <%@ page import="java.text.Format" %>

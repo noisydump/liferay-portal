@@ -2,11 +2,13 @@
 <head>
 <title>AddTask</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">AddTask</td></tr>
 </thead>
+
 <tbody>
 <tr>
 	<td>ADD_TASK_IFRAME</td>
@@ -48,7 +50,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--DUE_DATE-->
+
 <tr>
 	<td>DUE_DATE_FIELD</td>
 	<td>//input[@name='_1_WAR_tasksportlet_dueDate']</td>

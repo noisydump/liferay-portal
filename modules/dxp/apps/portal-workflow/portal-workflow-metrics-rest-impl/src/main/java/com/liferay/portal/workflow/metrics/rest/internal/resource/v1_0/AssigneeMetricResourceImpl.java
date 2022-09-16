@@ -14,8 +14,6 @@
 
 package com.liferay.portal.workflow.metrics.rest.internal.resource.v1_0;
 
-import com.liferay.petra.string.StringBundler;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.User;
@@ -52,7 +50,6 @@ import com.liferay.portal.search.sort.SortOrder;
 import com.liferay.portal.search.sort.Sorts;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
-import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.workflow.metrics.rest.dto.v1_0.AssigneeMetric;
 import com.liferay.portal.workflow.metrics.rest.dto.v1_0.AssigneeMetricBulkSelection;
 import com.liferay.portal.workflow.metrics.rest.internal.dto.v1_0.util.AssigneeUtil;
@@ -84,8 +81,7 @@ import org.osgi.service.component.annotations.ServiceScope;
 	properties = "OSGI-INF/liferay/rest/v1_0/assignee-metric.properties",
 	scope = ServiceScope.PROTOTYPE, service = AssigneeMetricResource.class
 )
-public class AssigneeMetricResourceImpl
-	extends BaseAssigneeMetricResourceImpl implements EntityModelResource {
+public class AssigneeMetricResourceImpl extends BaseAssigneeMetricResourceImpl {
 
 	@Override
 	public EntityModel getEntityModel(MultivaluedMap multivaluedMap)
@@ -218,6 +214,7 @@ public class AssigneeMetricResourceImpl
 		}
 
 		return booleanQuery.addMustQueryClauses(
+			_queries.term("active", Boolean.TRUE),
 			_queries.term("assigneeType", User.class.getName()),
 			_queries.term("companyId", contextCompany.getCompanyId()),
 			_queries.term("deleted", Boolean.FALSE),
@@ -485,7 +482,7 @@ public class AssigneeMetricResourceImpl
 		return Stream.of(
 			_userLocalService.search(
 				contextCompany.getCompanyId(), keywords, keywords, keywords,
-				null, null, WorkflowConstants.STATUS_APPROVED, params, false,
+				null, null, WorkflowConstants.STATUS_ANY, params, false,
 				QueryUtil.ALL_POS, QueryUtil.ALL_POS,
 				(OrderByComparator<User>)null)
 		).flatMap(
@@ -499,11 +496,7 @@ public class AssigneeMetricResourceImpl
 
 	private boolean _isOrderByDurationTaskAvg(String fieldName) {
 		if (StringUtil.equals(fieldName, "durationTaskAvg") ||
-			StringUtil.equals(
-				fieldName,
-				StringBundler.concat(
-					"countFilter", StringPool.GREATER_THAN,
-					"durationTaskAvg"))) {
+			StringUtil.equals(fieldName, "countFilter>durationTaskAvg")) {
 
 			return true;
 		}
@@ -513,10 +506,7 @@ public class AssigneeMetricResourceImpl
 
 	private boolean _isOrderByOnTimeTaskCount(String fieldName) {
 		if (StringUtil.equals(fieldName, "onTimeTaskCount") ||
-			StringUtil.equals(
-				fieldName,
-				StringBundler.concat(
-					"onTime", StringPool.GREATER_THAN, "taskCount.value"))) {
+			StringUtil.equals(fieldName, "onTime>taskCount.value")) {
 
 			return true;
 		}
@@ -526,10 +516,7 @@ public class AssigneeMetricResourceImpl
 
 	private boolean _isOrderByOverdueTaskCount(String fieldName) {
 		if (StringUtil.equals(fieldName, "overdueTaskCount") ||
-			StringUtil.equals(
-				fieldName,
-				StringBundler.concat(
-					"overdue", StringPool.GREATER_THAN, "taskCount.value"))) {
+			StringUtil.equals(fieldName, "overdue>taskCount.value")) {
 
 			return true;
 		}
@@ -539,10 +526,7 @@ public class AssigneeMetricResourceImpl
 
 	private boolean _isOrderByTaskCount(String fieldName) {
 		if (StringUtil.equals(fieldName, "taskCount") ||
-			StringUtil.equals(
-				fieldName,
-				StringBundler.concat(
-					"countFilter", StringPool.GREATER_THAN, "taskCount"))) {
+			StringUtil.equals(fieldName, "countFilter>taskCount")) {
 
 			return true;
 		}
@@ -578,19 +562,17 @@ public class AssigneeMetricResourceImpl
 		String fieldName = sort.getFieldName();
 
 		if (_isOrderByDurationTaskAvg(fieldName)) {
-			fieldName = StringBundler.concat(
-				"countFilter", StringPool.GREATER_THAN, "durationTaskAvg");
+			fieldName = "countFilter>durationTaskAvg";
 		}
 		else if (_isOrderByTaskCount(fieldName)) {
-			fieldName = StringBundler.concat(
-				"countFilter", StringPool.GREATER_THAN, "taskCount");
+			fieldName = "countFilter>taskCount";
 		}
 		else if (_isOrderByOnTimeTaskCount(fieldName) ||
 				 _isOrderByOverdueTaskCount(fieldName)) {
 
-			fieldName = StringBundler.concat(
-				StringUtil.extractFirst(fieldName, "TaskCount"),
-				StringPool.GREATER_THAN, "taskCount.value");
+			fieldName =
+				StringUtil.extractFirst(fieldName, "TaskCount") +
+					">taskCount.value";
 		}
 
 		FieldSort fieldSort = _sorts.field(fieldName);

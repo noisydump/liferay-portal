@@ -22,8 +22,8 @@ import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionFactory;
+import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.service.permission.PortalPermissionUtil;
 
 import java.util.List;
 
@@ -35,17 +35,21 @@ public class CommerceCatalogServiceImpl extends CommerceCatalogServiceBaseImpl {
 
 	@Override
 	public CommerceCatalog addCommerceCatalog(
-			String name, String commerceCurrencyCode,
-			String catalogDefaultLanguageId, String externalReferenceCode,
+			String externalReferenceCode, String name,
+			String commerceCurrencyCode, String catalogDefaultLanguageId,
 			ServiceContext serviceContext)
 		throws PortalException {
 
-		PortalPermissionUtil.check(
-			getPermissionChecker(), CPActionKeys.ADD_COMMERCE_CATALOG);
+		PortletResourcePermission portletResourcePermission =
+			_commerceCatalogModelResourcePermission.
+				getPortletResourcePermission();
+
+		portletResourcePermission.check(
+			getPermissionChecker(), null, CPActionKeys.ADD_COMMERCE_CATALOG);
 
 		return commerceCatalogLocalService.addCommerceCatalog(
-			name, commerceCurrencyCode, catalogDefaultLanguageId,
-			externalReferenceCode, serviceContext);
+			externalReferenceCode, name, commerceCurrencyCode,
+			catalogDefaultLanguageId, serviceContext);
 	}
 
 	@Override
@@ -61,12 +65,12 @@ public class CommerceCatalogServiceImpl extends CommerceCatalogServiceBaseImpl {
 
 	@Override
 	public CommerceCatalog fetchByExternalReferenceCode(
-			long companyId, String externalReferenceCode)
+			String externalReferenceCode, long companyId)
 		throws PortalException {
 
 		CommerceCatalog commerceCatalog =
 			commerceCatalogLocalService.fetchByExternalReferenceCode(
-				companyId, externalReferenceCode);
+				externalReferenceCode, companyId);
 
 		if (commerceCatalog != null) {
 			_commerceCatalogModelResourcePermission.check(
@@ -126,11 +130,11 @@ public class CommerceCatalogServiceImpl extends CommerceCatalogServiceBaseImpl {
 	}
 
 	@Override
-	public List<CommerceCatalog> searchCommerceCatalogs(
+	public List<CommerceCatalog> search(
 			long companyId, String keywords, int start, int end, Sort sort)
 		throws PortalException {
 
-		return commerceCatalogLocalService.searchCommerceCatalogs(
+		return commerceCatalogLocalService.search(
 			companyId, keywords, start, end, sort);
 	}
 
@@ -158,7 +162,7 @@ public class CommerceCatalogServiceImpl extends CommerceCatalogServiceBaseImpl {
 
 	@Override
 	public CommerceCatalog updateCommerceCatalogExternalReferenceCode(
-			long commerceCatalogId, String externalReferenceCode)
+			String externalReferenceCode, long commerceCatalogId)
 		throws PortalException {
 
 		_commerceCatalogModelResourcePermission.check(
@@ -166,7 +170,7 @@ public class CommerceCatalogServiceImpl extends CommerceCatalogServiceBaseImpl {
 
 		return commerceCatalogLocalService.
 			updateCommerceCatalogExternalReferenceCode(
-				commerceCatalogId, externalReferenceCode);
+				externalReferenceCode, commerceCatalogId);
 	}
 
 	private static volatile ModelResourcePermission<CommerceCatalog>

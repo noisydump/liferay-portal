@@ -22,7 +22,7 @@ import com.liferay.commerce.order.status.CommerceOrderStatus;
 import com.liferay.commerce.service.CommerceOrderService;
 import com.liferay.commerce.util.CommerceShippingHelper;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 
 import java.util.Locale;
 
@@ -70,7 +70,7 @@ public class ShippedCommerceOrderStatusImpl implements CommerceOrderStatus {
 
 	@Override
 	public String getLabel(Locale locale) {
-		return LanguageUtil.get(
+		return _language.get(
 			locale, CommerceOrderConstants.getOrderStatusLabel(KEY));
 	}
 
@@ -101,8 +101,9 @@ public class ShippedCommerceOrderStatusImpl implements CommerceOrderStatus {
 		for (CommerceOrderItem shippedCommerceOrderItem :
 				commerceOrder.getCommerceOrderItems()) {
 
-			if (shippedCommerceOrderItem.getShippedQuantity() <
-					shippedCommerceOrderItem.getQuantity()) {
+			if ((shippedCommerceOrderItem.getShippedQuantity() <
+					shippedCommerceOrderItem.getQuantity()) &&
+				shippedCommerceOrderItem.isShippable()) {
 
 				allOrderItemsShipped = false;
 			}
@@ -112,8 +113,7 @@ public class ShippedCommerceOrderStatusImpl implements CommerceOrderStatus {
 				CommerceOrderConstants.ORDER_STATUS_PROCESSING) ||
 			 (commerceOrder.getOrderStatus() ==
 				 CommerceOrderConstants.ORDER_STATUS_PARTIALLY_SHIPPED)) &&
-			(allOrderItemsShipped ||
-			 !_commerceShippingHelper.isShippable(commerceOrder))) {
+			allOrderItemsShipped) {
 
 			return true;
 		}
@@ -143,5 +143,8 @@ public class ShippedCommerceOrderStatusImpl implements CommerceOrderStatus {
 
 	@Reference
 	private CommerceShippingHelper _commerceShippingHelper;
+
+	@Reference
+	private Language _language;
 
 }

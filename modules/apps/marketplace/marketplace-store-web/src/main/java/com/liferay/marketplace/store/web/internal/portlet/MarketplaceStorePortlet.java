@@ -29,7 +29,9 @@ import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.patcher.PatcherUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.patcher.Patcher;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -86,7 +88,8 @@ import org.scribe.model.Verb;
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + MarketplaceStorePortletKeys.MARKETPLACE_STORE,
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=administrator"
+		"javax.portlet.security-role-ref=administrator",
+		"javax.portlet.version=3.0"
 	},
 	service = Portlet.class
 )
@@ -109,7 +112,7 @@ public class MarketplaceStorePortlet extends RemoteMVCPortlet {
 
 			App app = _appService.updateApp(file);
 
-			JSONObject jsonObject = getAppJSONObject(app.getRemoteAppId());
+			JSONObject jsonObject = _getAppJSONObject(app.getRemoteAppId());
 
 			jsonObject.put(
 				"cmd", "downloadApp"
@@ -132,7 +135,7 @@ public class MarketplaceStorePortlet extends RemoteMVCPortlet {
 
 		long remoteAppId = ParamUtil.getLong(actionRequest, "appId");
 
-		JSONObject jsonObject = getAppJSONObject(remoteAppId);
+		JSONObject jsonObject = _getAppJSONObject(remoteAppId);
 
 		jsonObject.put(
 			"cmd", "getApp"
@@ -150,7 +153,7 @@ public class MarketplaceStorePortlet extends RemoteMVCPortlet {
 		writeJSON(
 			actionRequest, actionResponse,
 			JSONUtil.put(
-				"apps", getInstalledAppsJSONArray()
+				"apps", _getInstalledAppsJSONArray()
 			).put(
 				"cmd", "getInstalledApps"
 			).put(
@@ -214,7 +217,7 @@ public class MarketplaceStorePortlet extends RemoteMVCPortlet {
 
 		_appService.installApp(remoteAppId);
 
-		JSONObject jsonObject = getAppJSONObject(remoteAppId);
+		JSONObject jsonObject = _getAppJSONObject(remoteAppId);
 
 		jsonObject.put(
 			"cmd", "installApp"
@@ -234,6 +237,10 @@ public class MarketplaceStorePortlet extends RemoteMVCPortlet {
 			super.render(renderRequest, renderResponse);
 		}
 		catch (PortletException portletException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(portletException);
+			}
+
 			include("/error.jsp", renderRequest, renderResponse);
 		}
 	}
@@ -246,7 +253,7 @@ public class MarketplaceStorePortlet extends RemoteMVCPortlet {
 
 		_appService.uninstallApp(remoteAppId);
 
-		JSONObject jsonObject = getAppJSONObject(remoteAppId);
+		JSONObject jsonObject = _getAppJSONObject(remoteAppId);
 
 		jsonObject.put(
 			"cmd", "uninstallApp"
@@ -290,7 +297,7 @@ public class MarketplaceStorePortlet extends RemoteMVCPortlet {
 
 			_appService.installApp(app.getRemoteAppId());
 
-			JSONObject jsonObject = getAppJSONObject(app.getRemoteAppId());
+			JSONObject jsonObject = _getAppJSONObject(app.getRemoteAppId());
 
 			jsonObject.put(
 				"cmd", "updateApp"
@@ -366,9 +373,13 @@ public class MarketplaceStorePortlet extends RemoteMVCPortlet {
 
 						_appService.installApp(app.getRemoteAppId());
 
-						jsonArray.put(getAppJSONObject(app));
+						jsonArray.put(_getAppJSONObject(app));
 					}
 					catch (Exception exception) {
+						if (_log.isDebugEnabled()) {
+							_log.debug(exception);
+						}
+
 						jsonObject.put("message", "failed");
 					}
 					finally {
@@ -453,53 +464,9 @@ public class MarketplaceStorePortlet extends RemoteMVCPortlet {
 		FileUtil.write(file, response.getStream());
 	}
 
-	protected JSONObject getAppJSONObject(App app) throws Exception {
-		return JSONUtil.put(
-			"appId", app.getRemoteAppId()
-		).put(
-			"downloaded", app.isDownloaded()
-		).put(
-			"installed", app.isInstalled()
-		).put(
-			"version", app.getVersion()
-		);
-	}
-
-	protected JSONObject getAppJSONObject(long remoteAppId) throws Exception {
-		App app = _appLocalService.fetchRemoteApp(remoteAppId);
-
-		if (app != null) {
-			return getAppJSONObject(app);
-		}
-
-		return JSONUtil.put(
-			"appId", remoteAppId
-		).put(
-			"downloaded", false
-		).put(
-			"installed", false
-		).put(
-			"version", StringPool.BLANK
-		);
-	}
-
 	@Override
 	protected String getClientPortletId() {
 		return MarketplaceStorePortletKeys.MARKETPLACE_STORE;
-	}
-
-	protected JSONArray getInstalledAppsJSONArray() throws Exception {
-		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
-
-		List<App> apps = _appLocalService.getInstalledApps();
-
-		for (App app : apps) {
-			if (app.getRemoteAppId() > 0) {
-				jsonArray.put(getAppJSONObject(app));
-			}
-		}
-
-		return jsonArray;
 	}
 
 	@Override
@@ -528,7 +495,7 @@ public class MarketplaceStorePortlet extends RemoteMVCPortlet {
 				new String[] {String.valueOf(ReleaseInfo.getBuildNumber())});
 		}
 
-		parameterMap.put("installedPatches", PatcherUtil.getInstalledPatches());
+		parameterMap.put("installedPatches", patcher.getInstalledPatches());
 		parameterMap.put(
 			"supportsHotDeploy", new String[] {Boolean.TRUE.toString()});
 	}
@@ -548,6 +515,56 @@ public class MarketplaceStorePortlet extends RemoteMVCPortlet {
 	protected void setOAuthManager(OAuthManager oAuthManager) {
 		super.setOAuthManager(oAuthManager);
 	}
+
+	@Reference
+	protected Patcher patcher;
+
+	private JSONObject _getAppJSONObject(App app) throws Exception {
+		return JSONUtil.put(
+			"appId", app.getRemoteAppId()
+		).put(
+			"downloaded", app.isDownloaded()
+		).put(
+			"installed", app.isInstalled()
+		).put(
+			"version", app.getVersion()
+		);
+	}
+
+	private JSONObject _getAppJSONObject(long remoteAppId) throws Exception {
+		App app = _appLocalService.fetchRemoteApp(remoteAppId);
+
+		if (app != null) {
+			return _getAppJSONObject(app);
+		}
+
+		return JSONUtil.put(
+			"appId", remoteAppId
+		).put(
+			"downloaded", false
+		).put(
+			"installed", false
+		).put(
+			"version", StringPool.BLANK
+		);
+	}
+
+	private JSONArray _getInstalledAppsJSONArray() throws Exception {
+		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
+
+		List<App> apps = _appLocalService.getInstalledApps();
+
+		for (App app : apps) {
+			if (app.getRemoteAppId() > 0) {
+				jsonArray.put(_getAppJSONObject(app));
+			}
+		}
+
+		return jsonArray;
+	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		MarketplaceStorePortlet.class);
 
 	private AppLocalService _appLocalService;
 	private AppService _appService;

@@ -20,12 +20,12 @@ import com.liferay.account.constants.AccountActionKeys;
 import com.liferay.account.constants.AccountPortletKeys;
 import com.liferay.frontend.taglib.servlet.taglib.ScreenNavigationEntry;
 import com.liferay.frontend.taglib.servlet.taglib.util.JSPRenderer;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
-import com.liferay.portal.kernel.service.permission.UserPermissionUtil;
+import com.liferay.portal.kernel.service.permission.UserPermission;
 
 import java.io.IOException;
 
@@ -63,7 +63,7 @@ public class AccountUserAccountEntriesScreenNavigationEntry
 
 	@Override
 	public String getLabel(Locale locale) {
-		return LanguageUtil.get(
+		return _language.get(
 			locale, AccountScreenNavigationEntryConstants.ENTRY_KEY_ACCOUNTS);
 	}
 
@@ -81,7 +81,7 @@ public class AccountUserAccountEntriesScreenNavigationEntry
 		if (AccountPermission.contains(
 				permissionChecker, AccountPortletKeys.ACCOUNT_USERS_ADMIN,
 				AccountActionKeys.ASSIGN_ACCOUNTS) ||
-			UserPermissionUtil.contains(
+			_userPermission.contains(
 				permissionChecker, selUser.getUserId(), ActionKeys.UPDATE)) {
 
 			return true;
@@ -96,11 +96,17 @@ public class AccountUserAccountEntriesScreenNavigationEntry
 			HttpServletResponse httpServletResponse)
 		throws IOException {
 
-		jspRenderer.renderJSP(
+		_jspRenderer.renderJSP(
 			httpServletRequest, httpServletResponse, getJspPath());
 	}
 
 	@Reference
-	protected JSPRenderer jspRenderer;
+	private JSPRenderer _jspRenderer;
+
+	@Reference
+	private Language _language;
+
+	@Reference
+	private UserPermission _userPermission;
 
 }

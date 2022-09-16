@@ -15,9 +15,9 @@
 package com.liferay.fragment.renderer;
 
 import com.liferay.fragment.model.FragmentEntryLink;
+import com.liferay.info.form.InfoForm;
 
 import java.util.Locale;
-import java.util.Map;
 import java.util.Optional;
 
 import org.osgi.annotation.versioning.ProviderType;
@@ -30,9 +30,11 @@ public interface FragmentRendererContext {
 
 	public Optional<Object> getDisplayObjectOptional();
 
-	public Optional<Map<String, Object>> getFieldValuesOptional();
+	public String getFragmentElementId();
 
 	public FragmentEntryLink getFragmentEntryLink();
+
+	public Optional<InfoForm> getInfoFormOptional();
 
 	public Locale getLocale();
 
@@ -46,7 +48,7 @@ public interface FragmentRendererContext {
 
 	public String getPreviewVersion();
 
-	public long[] getSegmentsExperienceIds();
+	public long[] getSegmentsEntryIds();
 
 	public boolean isUseCachedContent();
 

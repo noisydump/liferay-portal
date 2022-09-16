@@ -46,7 +46,6 @@ import com.liferay.portal.kernel.service.permission.OrganizationPermissionUtil;
 import com.liferay.portal.kernel.service.permission.UserGroupPermissionUtil;
 import com.liferay.portal.kernel.service.permission.UserPermissionUtil;
 import com.liferay.portal.kernel.spring.osgi.OSGiBeanProperties;
-import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.workflow.permission.WorkflowPermissionUtil;
 import com.liferay.portal.util.LayoutTypeControllerTracker;
 import com.liferay.portal.util.PropsValues;
@@ -130,6 +129,50 @@ public class LayoutPermissionImpl
 	}
 
 	@Override
+	public void checkLayoutRestrictedUpdatePermission(
+			PermissionChecker permissionChecker, Layout layout)
+		throws PortalException {
+
+		if (!containsLayoutRestrictedUpdatePermission(
+				permissionChecker, layout)) {
+
+			throw new PrincipalException.MustHavePermission(
+				permissionChecker, Layout.class.getName(), layout.getPlid(),
+				ActionKeys.UPDATE);
+		}
+	}
+
+	@Override
+	public void checkLayoutRestrictedUpdatePermission(
+			PermissionChecker permissionChecker, long plid)
+		throws PortalException {
+
+		checkLayoutRestrictedUpdatePermission(
+			permissionChecker, LayoutLocalServiceUtil.getLayout(plid));
+	}
+
+	@Override
+	public void checkLayoutUpdatePermission(
+			PermissionChecker permissionChecker, Layout layout)
+		throws PortalException {
+
+		if (!containsLayoutUpdatePermission(permissionChecker, layout)) {
+			throw new PrincipalException.MustHavePermission(
+				permissionChecker, Layout.class.getName(), layout.getPlid(),
+				ActionKeys.UPDATE);
+		}
+	}
+
+	@Override
+	public void checkLayoutUpdatePermission(
+			PermissionChecker permissionChecker, long plid)
+		throws PortalException {
+
+		checkLayoutUpdatePermission(
+			permissionChecker, LayoutLocalServiceUtil.getLayout(plid));
+	}
+
+	@Override
 	public boolean contains(
 			PermissionChecker permissionChecker, Layout layout,
 			boolean checkViewableGroup, String actionId)
@@ -168,10 +211,10 @@ public class LayoutPermissionImpl
 			boolean privateLayout, long layoutId, String actionId)
 		throws PortalException {
 
-		Layout layout = LayoutLocalServiceUtil.getLayout(
-			groupId, privateLayout, layoutId);
-
-		return contains(permissionChecker, layout, actionId);
+		return contains(
+			permissionChecker,
+			LayoutLocalServiceUtil.getLayout(groupId, privateLayout, layoutId),
+			actionId);
 	}
 
 	@Override
@@ -182,6 +225,60 @@ public class LayoutPermissionImpl
 		return contains(
 			permissionChecker, LayoutLocalServiceUtil.getLayout(plid),
 			actionId);
+	}
+
+	@Override
+	public boolean containsLayoutRestrictedUpdatePermission(
+			PermissionChecker permissionChecker, Layout layout)
+		throws PortalException {
+
+		if (contains(permissionChecker, layout, ActionKeys.UPDATE) ||
+			contains(
+				permissionChecker, layout, ActionKeys.UPDATE_LAYOUT_BASIC) ||
+			contains(
+				permissionChecker, layout, ActionKeys.UPDATE_LAYOUT_LIMITED)) {
+
+			return true;
+		}
+
+		return false;
+	}
+
+	@Override
+	public boolean containsLayoutRestrictedUpdatePermission(
+			PermissionChecker permissionChecker, long plid)
+		throws PortalException {
+
+		return containsLayoutRestrictedUpdatePermission(
+			permissionChecker, LayoutLocalServiceUtil.getLayout(plid));
+	}
+
+	@Override
+	public boolean containsLayoutUpdatePermission(
+			PermissionChecker permissionChecker, Layout layout)
+		throws PortalException {
+
+		if (contains(permissionChecker, layout, ActionKeys.UPDATE) ||
+			contains(
+				permissionChecker, layout, ActionKeys.UPDATE_LAYOUT_BASIC) ||
+			contains(
+				permissionChecker, layout, ActionKeys.UPDATE_LAYOUT_CONTENT) ||
+			contains(
+				permissionChecker, layout, ActionKeys.UPDATE_LAYOUT_LIMITED)) {
+
+			return true;
+		}
+
+		return false;
+	}
+
+	@Override
+	public boolean containsLayoutUpdatePermission(
+			PermissionChecker permissionChecker, long plid)
+		throws PortalException {
+
+		return containsLayoutUpdatePermission(
+			permissionChecker, LayoutLocalServiceUtil.getLayout(plid));
 	}
 
 	@Override
@@ -280,16 +377,11 @@ public class LayoutPermissionImpl
 			}
 		}
 
-		if ((layout.getClassNameId() == PortalUtil.getClassNameId(
-				Layout.class)) &&
-			(layout.getClassPK() != 0) &&
+		if ((layout.isDraftLayout() &&
+			 permissionChecker.hasPermission(
+				 group, Layout.class.getName(), layout.getClassPK(),
+				 actionId)) ||
 			permissionChecker.hasPermission(
-				group, Layout.class.getName(), layout.getClassPK(), actionId)) {
-
-			return true;
-		}
-
-		if (permissionChecker.hasPermission(
 				group, Layout.class.getName(), layout.getPlid(), actionId)) {
 
 			return true;
@@ -602,8 +694,6 @@ public class LayoutPermissionImpl
 				if (count >= 0) {
 					return true;
 				}
-
-				return false;
 			}
 			catch (PortalException | RuntimeException exception) {
 				throw exception;

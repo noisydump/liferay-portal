@@ -16,6 +16,7 @@ package com.liferay.talend.properties.resource;
 
 import com.liferay.talend.LiferayDefinition;
 import com.liferay.talend.common.daikon.DaikonUtil;
+import com.liferay.talend.common.headless.HeadlessUtil;
 import com.liferay.talend.common.oas.OASExplorer;
 import com.liferay.talend.common.oas.OASParameter;
 import com.liferay.talend.common.oas.OASSource;
@@ -246,6 +247,19 @@ public class LiferayResourceProperties extends ComponentPropertiesImpl {
 		_setupRequestParameterProperties();
 	}
 
+	public ValidationResult validateOpenAPIModule() {
+		ValidationResult validationResult = _validateOpenAPIModule();
+
+		if (validationResult.getStatus() == ValidationResult.Result.ERROR) {
+			return validationResult;
+		}
+
+		openAPIModule.setValue(
+			HeadlessUtil.sanitizeOpenAPIModuleURI(openAPIModule.getValue()));
+
+		return ValidationResult.OK;
+	}
+
 	public LiferayConnectionProperties connection =
 		new LiferayConnectionProperties("connection");
 	public StringProperty endpoint = new StringProperty("endpoint");
@@ -256,8 +270,24 @@ public class LiferayResourceProperties extends ComponentPropertiesImpl {
 	public StringProperty openAPIModule = new StringProperty("openAPIModule");
 	public Property<Operation> operations = new EnumProperty<>(
 		Operation.class, "operations");
+
 	public SchemaProperties outboundSchemaProperties = new SchemaProperties(
-		"outboundSchemaProperties");
+		"outboundSchemaProperties") {
+
+		public ValidationResult afterSchema() {
+			entitySchemaProperties.schema.setValue(
+				outboundSchemaProperties.schema.getValue());
+			inboundSchemaProperties.schema.setValue(
+				outboundSchemaProperties.schema.getValue());
+			rejectSchemaProperties.schema.setValue(
+				SchemaUtils.createRejectSchema(
+					outboundSchemaProperties.schema.getValue()));
+
+			return ValidationResult.OK;
+		}
+
+	};
+
 	public RequestParameterProperties parameters =
 		new RequestParameterProperties("parameters");
 	public SchemaProperties rejectSchemaProperties = new SchemaProperties(
@@ -331,16 +361,7 @@ public class LiferayResourceProperties extends ComponentPropertiesImpl {
 				parameters.getRequestParameters();
 
 			for (RequestParameter requestParameter : requestParameters) {
-				if (requestParameter.isPathLocation()) {
-					uriBuilder.resolveTemplate(
-						requestParameter.getName(),
-						requestParameter.getValue());
-
-					continue;
-				}
-
-				uriBuilder.queryParam(
-					requestParameter.getName(), requestParameter.getValue());
+				requestParameter.apply(uriBuilder);
 			}
 		}
 
@@ -366,8 +387,14 @@ public class LiferayResourceProperties extends ComponentPropertiesImpl {
 	private String _getOpenAPIModuleVersionPath() {
 		String openAPIModuleValue = openAPIModule.getValue();
 
-		return openAPIModuleValue.substring(
+		String version = openAPIModuleValue.substring(
 			openAPIModuleValue.lastIndexOf("/"));
+
+		if (version.matches("/v[0-9.]+")) {
+			return version;
+		}
+
+		return "";
 	}
 
 	private String[] _getOperations() {

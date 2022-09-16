@@ -14,6 +14,7 @@
 
 package com.liferay.commerce.initializer.util;
 
+import com.liferay.account.model.AccountEntry;
 import com.liferay.commerce.account.configuration.CommerceAccountGroupServiceConfiguration;
 import com.liferay.commerce.account.constants.CommerceAccountConstants;
 import com.liferay.commerce.account.model.CommerceAccount;
@@ -49,6 +50,7 @@ import com.liferay.commerce.service.CommerceOrderItemLocalService;
 import com.liferay.commerce.service.CommerceOrderLocalService;
 import com.liferay.commerce.service.CommerceShippingMethodLocalService;
 import com.liferay.commerce.util.CommerceShippingEngineRegistry;
+import com.liferay.commerce.util.comparator.CommerceShippingMethodPriorityComparator;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
@@ -146,7 +148,7 @@ public class CommerceOrderGenerator {
 				_commerceChannelLocalService.
 					getCommerceChannelGroupIdBySiteGroupId(groupId),
 				commerceAccountUserRel.getCommerceAccountId(),
-				commerceCurrency.getCommerceCurrencyId());
+				commerceCurrency.getCommerceCurrencyId(), 0);
 
 		// Commerce order items
 
@@ -170,7 +172,7 @@ public class CommerceOrderGenerator {
 
 		List<CommerceAddress> commerceAddresses =
 			_commerceAddressLocalService.getCommerceAddressesByCompanyId(
-				commerceAccount.getCompanyId(), CommerceAccount.class.getName(),
+				commerceAccount.getCompanyId(), AccountEntry.class.getName(),
 				commerceAccount.getCommerceAccountId(), 0, 1, null);
 
 		if (commerceAddresses.isEmpty()) {
@@ -192,7 +194,7 @@ public class CommerceOrderGenerator {
 
 		// Commerce shipping options
 
-		String commerceShippingOptionName =
+		String commerceShippingOptionKey =
 			commerceOrder.getShippingOptionName();
 
 		List<CommerceShippingOption> commerceShippingOptions =
@@ -203,20 +205,21 @@ public class CommerceOrderGenerator {
 			CommerceShippingOption commerceShippingOption =
 				commerceShippingOptions.get(0);
 
-			commerceShippingOptionName = commerceShippingOption.getName();
+			commerceShippingOptionKey = commerceShippingOption.getKey();
 		}
 
 		// Update commerce order
 
 		commerceOrder = _commerceOrderLocalService.updateCommerceOrder(
-			commerceOrder.getCommerceOrderId(),
+			null, commerceOrder.getCommerceOrderId(),
+			commerceAddress.getCommerceAddressId(), commerceShippingMethodId,
 			commerceAddress.getCommerceAddressId(),
-			commerceAddress.getCommerceAddressId(),
+			commerceOrder.getAdvanceStatus(),
 			commerceOrder.getCommercePaymentMethodKey(),
-			commerceShippingMethodId, commerceShippingOptionName,
-			commerceOrder.getPurchaseOrderNumber(), commerceOrder.getSubtotal(),
-			commerceOrder.getShippingAmount(), commerceOrder.getTotal(),
-			commerceOrder.getAdvanceStatus(), commerceContext);
+			commerceOrder.getPurchaseOrderNumber(),
+			commerceOrder.getShippingAmount(), commerceShippingOptionKey,
+			commerceOrder.getSubtotal(), commerceOrder.getTotal(),
+			commerceContext);
 
 		// Checkout commerce order
 
@@ -282,7 +285,7 @@ public class CommerceOrderGenerator {
 					commerceContext, serviceContext);
 			}
 			catch (Exception exception) {
-				_log.error(exception, exception);
+				_log.error(exception);
 			}
 		}
 	}
@@ -299,7 +302,7 @@ public class CommerceOrderGenerator {
 		// Commerce accounts
 
 		List<CommerceAccount> commerceAccounts =
-			_commerceAccountLocalService.searchCommerceAccounts(
+			_commerceAccountLocalService.search(
 				group.getCompanyId(),
 				CommerceAccountConstants.DEFAULT_PARENT_ACCOUNT_ID, null,
 				_getAccountType(groupId), true, QueryUtil.ALL_POS,
@@ -364,7 +367,7 @@ public class CommerceOrderGenerator {
 			}
 			catch (PortalException portalException) {
 				if (_log.isInfoEnabled()) {
-					_log.info(portalException, portalException);
+					_log.info(portalException);
 				}
 
 				// Order not generated, retry
@@ -374,7 +377,7 @@ public class CommerceOrderGenerator {
 					retryNumber++;
 				}
 				else {
-					_log.error(portalException.getMessage(), portalException);
+					_log.error(portalException);
 				}
 			}
 		}
@@ -418,7 +421,9 @@ public class CommerceOrderGenerator {
 		List<CommerceShippingMethod> commerceShippingMethods =
 			_commerceShippingMethodLocalService.getCommerceShippingMethods(
 				_commerceChannelLocalService.
-					getCommerceChannelGroupIdBySiteGroupId(groupId));
+					getCommerceChannelGroupIdBySiteGroupId(groupId),
+				QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+				new CommerceShippingMethodPriorityComparator());
 
 		if (commerceShippingMethods.isEmpty()) {
 			return 0;

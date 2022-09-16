@@ -20,13 +20,23 @@
 LayoutItemSelectorViewDisplayContext layoutItemSelectorViewDisplayContext = (LayoutItemSelectorViewDisplayContext)request.getAttribute(LayoutsItemSelectorWebKeys.LAYOUT_ITEM_SELECTOR_VIEW_DISPLAY_CONTEXT);
 %>
 
+<c:if test="<%= layoutItemSelectorViewDisplayContext.isShowBreadcrumb() %>">
+	<div class="container-fluid container-fluid-max-xl mt-2 pl-3">
+		<liferay-site-navigation:breadcrumb
+			breadcrumbEntries="<%= layoutItemSelectorViewDisplayContext.getPortletBreadcrumbEntries() %>"
+		/>
+	</div>
+</c:if>
+
 <liferay-layout:select-layout
 	checkDisplayPage="<%= layoutItemSelectorViewDisplayContext.isCheckDisplayPage() %>"
 	enableCurrentPage="<%= layoutItemSelectorViewDisplayContext.isEnableCurrentPage() %>"
 	followURLOnTitleClick="<%= layoutItemSelectorViewDisplayContext.isFollowURLOnTitleClick() %>"
-	itemSelectorSaveEvent="<%= HtmlUtil.escapeJS(layoutItemSelectorViewDisplayContext.getItemSelectedEventName()) %>"
+	itemSelectorReturnType="<%= layoutItemSelectorViewDisplayContext.getItemSelectedReturnType() %>"
+	itemSelectorSaveEvent="<%= layoutItemSelectorViewDisplayContext.getItemSelectedEventName() %>"
 	multiSelection="<%= layoutItemSelectorViewDisplayContext.isMultiSelection() %>"
 	namespace="<%= liferayPortletResponse.getNamespace() %>"
 	privateLayout="<%= layoutItemSelectorViewDisplayContext.isPrivateLayout() %>"
+	showDraftLayouts="<%= layoutItemSelectorViewDisplayContext.isShowDraftPages() %>"
 	showHiddenLayouts="<%= layoutItemSelectorViewDisplayContext.isShowHiddenPages() %>"
 />

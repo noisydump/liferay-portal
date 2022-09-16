@@ -49,6 +49,11 @@ public class LayoutSetAdvancedFormNavigatorEntry
 	}
 
 	@Override
+	public ServletContext getServletContext() {
+		return _servletContext;
+	}
+
+	@Override
 	public boolean isVisible(User user, LayoutSet layoutSet) {
 		try {
 			Group group = layoutSet.getGroup();
@@ -58,19 +63,10 @@ public class LayoutSetAdvancedFormNavigatorEntry
 			}
 		}
 		catch (PortalException portalException) {
-			_log.error(portalException, portalException);
+			_log.error(portalException);
 		}
 
 		return true;
-	}
-
-	@Override
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.layout.admin.web)",
-		unbind = "-"
-	)
-	public void setServletContext(ServletContext servletContext) {
-		super.setServletContext(servletContext);
 	}
 
 	@Override
@@ -80,5 +76,8 @@ public class LayoutSetAdvancedFormNavigatorEntry
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		LayoutSetAdvancedFormNavigatorEntry.class);
+
+	@Reference(target = "(osgi.web.symbolicname=com.liferay.layout.admin.web)")
+	private ServletContext _servletContext;
 
 }

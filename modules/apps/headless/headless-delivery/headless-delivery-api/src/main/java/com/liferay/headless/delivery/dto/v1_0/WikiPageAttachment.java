@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
@@ -42,13 +43,20 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @generated
  */
 @Generated("")
-@GraphQLName("WikiPageAttachment")
+@GraphQLName(
+	description = "A binary file attached to a wiki page.",
+	value = "WikiPageAttachment"
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "WikiPageAttachment")
 public class WikiPageAttachment implements Serializable {
 
 	public static WikiPageAttachment toDTO(String json) {
 		return ObjectMapperUtil.readValue(WikiPageAttachment.class, json);
+	}
+
+	public static WikiPageAttachment unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(WikiPageAttachment.class, json);
 	}
 
 	@Schema(description = "The file's relative URL.")
@@ -80,7 +88,7 @@ public class WikiPageAttachment implements Serializable {
 	protected String contentUrl;
 
 	@Schema(
-		description = "optional field with the content of the document in Base64, can be embedded with nestedFields"
+		description = "Optional field with the content of the document in Base64, can be embedded with nestedFields."
 	)
 	public String getContentValue() {
 		return contentValue;
@@ -106,7 +114,7 @@ public class WikiPageAttachment implements Serializable {
 	}
 
 	@GraphQLField(
-		description = "optional field with the content of the document in Base64, can be embedded with nestedFields"
+		description = "Optional field with the content of the document in Base64, can be embedded with nestedFields."
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected String contentValue;
@@ -142,6 +150,34 @@ public class WikiPageAttachment implements Serializable {
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected String encodingFormat;
+
+	@Schema
+	public String getExternalReferenceCode() {
+		return externalReferenceCode;
+	}
+
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		this.externalReferenceCode = externalReferenceCode;
+	}
+
+	@JsonIgnore
+	public void setExternalReferenceCode(
+		UnsafeSupplier<String, Exception> externalReferenceCodeUnsafeSupplier) {
+
+		try {
+			externalReferenceCode = externalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String externalReferenceCode;
 
 	@Schema(description = "The file's extension.")
 	public String getFileExtension() {
@@ -322,6 +358,20 @@ public class WikiPageAttachment implements Serializable {
 			sb.append("\"");
 		}
 
+		if (externalReferenceCode != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"externalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(externalReferenceCode));
+
+			sb.append("\"");
+		}
+
 		if (fileExtension != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -376,15 +426,16 @@ public class WikiPageAttachment implements Serializable {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.WikiPageAttachment",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
 	}
 
 	private static boolean _isArray(Object value) {
@@ -410,8 +461,8 @@ public class WikiPageAttachment implements Serializable {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -442,7 +493,7 @@ public class WikiPageAttachment implements Serializable {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -450,7 +501,7 @@ public class WikiPageAttachment implements Serializable {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -458,5 +509,10 @@ public class WikiPageAttachment implements Serializable {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

@@ -197,6 +197,54 @@ public interface CommerceDiscountLocalService
 			boolean neverExpire, ServiceContext serviceContext)
 		throws PortalException;
 
+	@Indexable(type = IndexableType.REINDEX)
+	public CommerceDiscount addOrUpdateCommerceDiscount(
+			String externalReferenceCode, long userId, long commerceDiscountId,
+			String title, String target, boolean useCouponCode,
+			String couponCode, boolean usePercentage,
+			BigDecimal maximumDiscountAmount, BigDecimal level1,
+			BigDecimal level2, BigDecimal level3, BigDecimal level4,
+			String limitationType, int limitationTimes, boolean active,
+			int displayDateMonth, int displayDateDay, int displayDateYear,
+			int displayDateHour, int displayDateMinute, int expirationDateMonth,
+			int expirationDateDay, int expirationDateYear,
+			int expirationDateHour, int expirationDateMinute,
+			boolean neverExpire, ServiceContext serviceContext)
+		throws PortalException;
+
+	@Indexable(type = IndexableType.REINDEX)
+	public CommerceDiscount addOrUpdateCommerceDiscount(
+			String externalReferenceCode, long userId, long commerceDiscountId,
+			String title, String target, boolean useCouponCode,
+			String couponCode, boolean usePercentage,
+			BigDecimal maximumDiscountAmount, String level, BigDecimal level1,
+			BigDecimal level2, BigDecimal level3, BigDecimal level4,
+			String limitationType, int limitationTimes,
+			boolean rulesConjunction, boolean active, int displayDateMonth,
+			int displayDateDay, int displayDateYear, int displayDateHour,
+			int displayDateMinute, int expirationDateMonth,
+			int expirationDateDay, int expirationDateYear,
+			int expirationDateHour, int expirationDateMinute,
+			boolean neverExpire, ServiceContext serviceContext)
+		throws PortalException;
+
+	@Indexable(type = IndexableType.REINDEX)
+	public CommerceDiscount addOrUpdateCommerceDiscount(
+			String externalReferenceCode, long userId, long commerceDiscountId,
+			String title, String target, boolean useCouponCode,
+			String couponCode, boolean usePercentage,
+			BigDecimal maximumDiscountAmount, String level, BigDecimal level1,
+			BigDecimal level2, BigDecimal level3, BigDecimal level4,
+			String limitationType, int limitationTimes,
+			int limitationTimesPerAccount, boolean rulesConjunction,
+			boolean active, int displayDateMonth, int displayDateDay,
+			int displayDateYear, int displayDateHour, int displayDateMinute,
+			int expirationDateMonth, int expirationDateDay,
+			int expirationDateYear, int expirationDateHour,
+			int expirationDateMinute, boolean neverExpire,
+			ServiceContext serviceContext)
+		throws PortalException;
+
 	public void checkCommerceDiscounts() throws PortalException;
 
 	/**
@@ -257,6 +305,9 @@ public interface CommerceDiscountLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public <T> T dslQuery(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
@@ -348,6 +399,14 @@ public interface CommerceDiscountLocalService
 	 * @return the matching commerce discount, or <code>null</code> if a matching commerce discount could not be found
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public CommerceDiscount fetchCommerceDiscountByExternalReferenceCode(
+		long companyId, String externalReferenceCode);
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #fetchCommerceDiscountByExternalReferenceCode(long, String)}
+	 */
+	@Deprecated
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public CommerceDiscount fetchCommerceDiscountByReferenceCode(
 		long companyId, String externalReferenceCode);
 
@@ -363,39 +422,86 @@ public interface CommerceDiscountLocalService
 		String uuid, long companyId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<CommerceDiscount> getAccountAndChannelCommerceDiscounts(
-		long commerceAccountId, long commerceChannelId, long cpDefinitionId);
+	public CommerceDiscount fetchDefaultCommerceDiscount(
+		long commerceChannelAccountEntryRelId, long cpDefinitionId,
+		long cpInstanceId);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<CommerceDiscount>
+		getAccountAndChannelAndOrderTypeCommerceDiscounts(
+			long commerceAccountId, long commerceChannelId,
+			long commerceOrderTypeId, long cpDefinitionId, long cpInstanceId);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<CommerceDiscount>
+		getAccountAndChannelAndOrderTypeCommerceDiscounts(
+			long commerceAccountId, long commerceChannelId,
+			long commerceOrderTypeId, String target);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<CommerceDiscount> getAccountAndChannelCommerceDiscounts(
-		long commerceAccountId, long commerceChannelId,
-		String commerceDiscountTargetType);
+		long commerceAccountId, long commerceChannelId, long cpDefinitionId,
+		long cpInstanceId);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<CommerceDiscount> getAccountAndChannelCommerceDiscounts(
+		long commerceAccountId, long commerceChannelId, String target);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<CommerceDiscount> getAccountAndOrderTypeCommerceDiscounts(
+		long commerceAccountId, long commerceOrderTypeId, String target);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<CommerceDiscount> getAccountCommerceAndOrderTypeDiscounts(
+		long commerceAccountId, long commerceOrderTypeId, long cpDefinitionId,
+		long cpInstanceId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<CommerceDiscount> getAccountCommerceDiscounts(
-		long commerceAccountId, long cpDefinitionId);
+		long commerceAccountId, long cpDefinitionId, long cpInstanceId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<CommerceDiscount> getAccountCommerceDiscounts(
-		long commerceAccountId, String commerceDiscountTargetType);
+		long commerceAccountId, String target);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<CommerceDiscount>
+		getAccountGroupAndChannelAndOrderTypeCommerceDiscount(
+			long[] commerceAccountGroupIds, long commerceChannelId,
+			long commerceOrderTypeId, long cpDefinitionId, long cpInstanceId);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<CommerceDiscount>
+		getAccountGroupAndChannelAndOrderTypeCommerceDiscount(
+			long[] commerceAccountGroupIds, long commerceChannelId,
+			long commerceOrderTypeId, String target);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<CommerceDiscount> getAccountGroupAndChannelCommerceDiscount(
 		long[] commerceAccountGroupIds, long commerceChannelId,
-		long cpDefinitionId);
+		long cpDefinitionId, long cpInstanceId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<CommerceDiscount> getAccountGroupAndChannelCommerceDiscount(
-		long[] commerceAccountGroupIds, long commerceChannelId,
-		String commerceDiscountTargetType);
+		long[] commerceAccountGroupIds, long commerceChannelId, String target);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<CommerceDiscount> getAccountGroupAndOrderTypeCommerceDiscount(
+		long[] commerceAccountGroupIds, long commerceOrderTypeId,
+		long cpDefinitionId, long cpInstanceId);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<CommerceDiscount> getAccountGroupAndOrderTypeCommerceDiscount(
+		long[] commerceAccountGroupIds, long commerceOrderTypeId,
+		String target);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<CommerceDiscount> getAccountGroupCommerceDiscount(
-		long[] commerceAccountGroupIds, long cpDefinitionId);
+		long[] commerceAccountGroupIds, long cpDefinitionId, long cpInstanceId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<CommerceDiscount> getAccountGroupCommerceDiscount(
-		long[] commerceAccountGroupIds, String commerceDiscountTargetType);
+		long[] commerceAccountGroupIds, String target);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ActionableDynamicQuery getActionableDynamicQuery();
@@ -410,12 +516,21 @@ public interface CommerceDiscountLocalService
 		long companyId, String couponCode, boolean active);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<CommerceDiscount> getChannelCommerceDiscounts(
-		long commerceChannelId, long cpDefinitionId);
+	public List<CommerceDiscount> getChannelAndOrderTypeCommerceDiscounts(
+		long commerceChannelId, long commerceOrderTypeId, long cpDefinitionId,
+		long cpInstanceId);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<CommerceDiscount> getChannelAndOrderTypeCommerceDiscounts(
+		long commerceChannelId, long commerceOrderTypeId, String target);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<CommerceDiscount> getChannelCommerceDiscounts(
-		long commerceChannelId, String commerceDiscountTargetType);
+		long commerceChannelId, long cpDefinitionId, long cpInstanceId);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<CommerceDiscount> getChannelCommerceDiscounts(
+		long commerceChannelId, String target);
 
 	/**
 	 * Returns the commerce discount with the primary key.
@@ -426,6 +541,19 @@ public interface CommerceDiscountLocalService
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public CommerceDiscount getCommerceDiscount(long commerceDiscountId)
+		throws PortalException;
+
+	/**
+	 * Returns the commerce discount with the matching external reference code and company.
+	 *
+	 * @param companyId the primary key of the company
+	 * @param externalReferenceCode the commerce discount's external reference code
+	 * @return the matching commerce discount
+	 * @throws PortalException if a matching commerce discount could not be found
+	 */
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public CommerceDiscount getCommerceDiscountByExternalReferenceCode(
+			long companyId, String externalReferenceCode)
 		throws PortalException;
 
 	/**
@@ -463,6 +591,10 @@ public interface CommerceDiscountLocalService
 	public List<CommerceDiscount> getCommerceDiscounts(
 		long companyId, String couponCode);
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<CommerceDiscount> getCommerceDiscounts(
+		long companyId, String level, boolean active, int status);
+
 	/**
 	 * Returns the number of commerce discounts.
 	 *
@@ -489,6 +621,14 @@ public interface CommerceDiscountLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public IndexableActionableDynamicQuery getIndexableActionableDynamicQuery();
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<CommerceDiscount> getOrderTypeCommerceDiscounts(
+		long commerceOrderTypeId, long cpDefinitionId, long cpInstanceId);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<CommerceDiscount> getOrderTypeCommerceDiscounts(
+		long commerceOrderTypeId, String target);
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *
@@ -510,11 +650,15 @@ public interface CommerceDiscountLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<CommerceDiscount> getUnqualifiedCommerceDiscounts(
-		long companyId, long cpDefinitionId);
+		long companyId, long cpDefinitionId, long cpInstanceId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<CommerceDiscount> getUnqualifiedCommerceDiscounts(
-		long companyId, String commerceDiscountTargetType);
+		long companyId, String target);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getValidCommerceDiscountsCount(
+		long commerceDiscountId, long cpDefinitionId, long cpInstanceId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getValidCommerceDiscountsCount(
@@ -624,7 +768,7 @@ public interface CommerceDiscountLocalService
 
 	/**
 	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
-	 #upsertCommerceDiscount(String, long, long, String, String,
+	 #addOrUpdateCommerceDiscount(String, long, long, String, String,
 	 boolean, String, boolean, BigDecimal, BigDecimal,
 	 BigDecimal, BigDecimal, BigDecimal, String, int, boolean,
 	 int, int, int, int, int, int, int, int, int, int, boolean,
@@ -648,7 +792,7 @@ public interface CommerceDiscountLocalService
 
 	/**
 	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
-	 #upsertCommerceDiscount(String, long, long, String, String,
+	 #addOrUpdateCommerceDiscount(String, long, long, String, String,
 	 boolean, String, boolean, BigDecimal, String, BigDecimal,
 	 BigDecimal, BigDecimal, BigDecimal, String, int, boolean,
 	 boolean, int, int, int, int, int, int, int, int, int, int,
@@ -673,7 +817,7 @@ public interface CommerceDiscountLocalService
 
 	/**
 	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
-	 #upsertCommerceDiscount(String, long, long, String, String,
+	 #addOrUpdateCommerceDiscount(String, long, long, String, String,
 	 boolean, String, boolean, BigDecimal, String, BigDecimal,
 	 BigDecimal, BigDecimal, BigDecimal, String, int, int,
 	 boolean, boolean, int, int, int, int, int, int, int, int,
@@ -694,54 +838,6 @@ public interface CommerceDiscountLocalService
 			int expirationDateYear, int expirationDateHour,
 			int expirationDateMinute, String externalReferenceCode,
 			boolean neverExpire, ServiceContext serviceContext)
-		throws PortalException;
-
-	@Indexable(type = IndexableType.REINDEX)
-	public CommerceDiscount upsertCommerceDiscount(
-			String externalReferenceCode, long userId, long commerceDiscountId,
-			String title, String target, boolean useCouponCode,
-			String couponCode, boolean usePercentage,
-			BigDecimal maximumDiscountAmount, BigDecimal level1,
-			BigDecimal level2, BigDecimal level3, BigDecimal level4,
-			String limitationType, int limitationTimes, boolean active,
-			int displayDateMonth, int displayDateDay, int displayDateYear,
-			int displayDateHour, int displayDateMinute, int expirationDateMonth,
-			int expirationDateDay, int expirationDateYear,
-			int expirationDateHour, int expirationDateMinute,
-			boolean neverExpire, ServiceContext serviceContext)
-		throws PortalException;
-
-	@Indexable(type = IndexableType.REINDEX)
-	public CommerceDiscount upsertCommerceDiscount(
-			String externalReferenceCode, long userId, long commerceDiscountId,
-			String title, String target, boolean useCouponCode,
-			String couponCode, boolean usePercentage,
-			BigDecimal maximumDiscountAmount, String level, BigDecimal level1,
-			BigDecimal level2, BigDecimal level3, BigDecimal level4,
-			String limitationType, int limitationTimes,
-			boolean rulesConjunction, boolean active, int displayDateMonth,
-			int displayDateDay, int displayDateYear, int displayDateHour,
-			int displayDateMinute, int expirationDateMonth,
-			int expirationDateDay, int expirationDateYear,
-			int expirationDateHour, int expirationDateMinute,
-			boolean neverExpire, ServiceContext serviceContext)
-		throws PortalException;
-
-	@Indexable(type = IndexableType.REINDEX)
-	public CommerceDiscount upsertCommerceDiscount(
-			String externalReferenceCode, long userId, long commerceDiscountId,
-			String title, String target, boolean useCouponCode,
-			String couponCode, boolean usePercentage,
-			BigDecimal maximumDiscountAmount, String level, BigDecimal level1,
-			BigDecimal level2, BigDecimal level3, BigDecimal level4,
-			String limitationType, int limitationTimes,
-			int limitationTimesPerAccount, boolean rulesConjunction,
-			boolean active, int displayDateMonth, int displayDateDay,
-			int displayDateYear, int displayDateHour, int displayDateMinute,
-			int expirationDateMonth, int expirationDateDay,
-			int expirationDateYear, int expirationDateHour,
-			int expirationDateMinute, boolean neverExpire,
-			ServiceContext serviceContext)
 		throws PortalException;
 
 }

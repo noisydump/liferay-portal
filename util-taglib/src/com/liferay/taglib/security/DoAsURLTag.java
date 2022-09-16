@@ -14,11 +14,11 @@
 
 package com.liferay.taglib.security;
 
-import com.liferay.petra.encryptor.Encryptor;
+import com.liferay.portal.kernel.encryptor.EncryptorUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.HttpUtil;
+import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -58,10 +58,11 @@ public class DoAsURLTag extends TagSupport {
 			doAsUserId = defaultUser.getUserId();
 		}
 
-		String encDoAsUserId = Encryptor.encrypt(
+		String encDoAsUserId = EncryptorUtil.encrypt(
 			company.getKeyObj(), String.valueOf(doAsUserId));
 
-		return HttpUtil.addParameter(doAsURL, "doAsUserId", encDoAsUserId);
+		return HttpComponentsUtil.addParameter(
+			doAsURL, "doAsUserId", encDoAsUserId);
 	}
 
 	@Override

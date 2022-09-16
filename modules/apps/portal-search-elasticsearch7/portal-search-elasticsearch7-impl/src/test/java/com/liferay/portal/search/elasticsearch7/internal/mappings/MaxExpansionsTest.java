@@ -14,17 +14,43 @@
 
 package com.liferay.portal.search.elasticsearch7.internal.mappings;
 
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.search.elasticsearch7.internal.ElasticsearchIndexingFixture;
 import com.liferay.portal.search.elasticsearch7.internal.connection.ElasticsearchFixture;
 import com.liferay.portal.search.test.util.indexing.IndexingFixture;
 import com.liferay.portal.search.test.util.mappings.BaseMaxExpansionsTestCase;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
+import java.util.Map;
+
+import org.junit.After;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
  * @author Wade Cao
  */
 public class MaxExpansionsTest extends BaseMaxExpansionsTestCase {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
+	@After
+	@Override
+	public void tearDown() {
+		try {
+			super.tearDown();
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+		}
+	}
 
 	@Override
 	@Test
@@ -57,10 +83,24 @@ public class MaxExpansionsTest extends BaseMaxExpansionsTestCase {
 	protected IndexingFixture createIndexingFixture() throws Exception {
 		return new ElasticsearchIndexingFixture() {
 			{
-				setElasticsearchFixture(new ElasticsearchFixture(getClass()));
+				ElasticsearchFixture elasticsearchFixture =
+					new ElasticsearchFixture(getClass());
+
+				Map<String, Object> elasticsearchConfigurationProperties =
+					elasticsearchFixture.
+						getElasticsearchConfigurationProperties();
+
+				elasticsearchConfigurationProperties.put(
+					"sidecarJVMOptions", "-Xms512m|-Xmx512m");
+
+				setElasticsearchFixture(elasticsearchFixture);
+
 				setLiferayMappingsAddedToIndex(true);
 			}
 		};
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		MaxExpansionsTest.class);
 
 }

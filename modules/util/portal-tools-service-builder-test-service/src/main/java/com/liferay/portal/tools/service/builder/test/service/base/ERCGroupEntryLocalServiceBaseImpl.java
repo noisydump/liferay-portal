@@ -28,6 +28,8 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -41,9 +43,12 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.spring.extender.service.ServiceReference;
 import com.liferay.portal.tools.service.builder.test.model.ERCGroupEntry;
 import com.liferay.portal.tools.service.builder.test.service.ERCGroupEntryLocalService;
+import com.liferay.portal.tools.service.builder.test.service.ERCGroupEntryLocalServiceUtil;
 import com.liferay.portal.tools.service.builder.test.service.persistence.ERCGroupEntryPersistence;
 
 import java.io.Serializable;
+
+import java.lang.reflect.Field;
 
 import java.util.List;
 
@@ -67,7 +72,7 @@ public abstract class ERCGroupEntryLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>ERCGroupEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.tools.service.builder.test.service.ERCGroupEntryLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>ERCGroupEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>ERCGroupEntryLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -138,6 +143,13 @@ public abstract class ERCGroupEntryLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return ercGroupEntryPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -233,6 +245,20 @@ public abstract class ERCGroupEntryLocalServiceBaseImpl
 	}
 
 	/**
+	 * Returns the erc group entry matching the UUID and group.
+	 *
+	 * @param uuid the erc group entry's UUID
+	 * @param groupId the primary key of the group
+	 * @return the matching erc group entry, or <code>null</code> if a matching erc group entry could not be found
+	 */
+	@Override
+	public ERCGroupEntry fetchERCGroupEntryByUuidAndGroupId(
+		String uuid, long groupId) {
+
+		return ercGroupEntryPersistence.fetchByUUID_G(uuid, groupId);
+	}
+
+	/**
 	 * Returns the erc group entry with the matching external reference code and group.
 	 *
 	 * @param groupId the primary key of the group
@@ -240,10 +266,39 @@ public abstract class ERCGroupEntryLocalServiceBaseImpl
 	 * @return the matching erc group entry, or <code>null</code> if a matching erc group entry could not be found
 	 */
 	@Override
-	public ERCGroupEntry fetchERCGroupEntryByReferenceCode(
+	public ERCGroupEntry fetchERCGroupEntryByExternalReferenceCode(
 		long groupId, String externalReferenceCode) {
 
 		return ercGroupEntryPersistence.fetchByG_ERC(
+			groupId, externalReferenceCode);
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #fetchERCGroupEntryByExternalReferenceCode(long, String)}
+	 */
+	@Deprecated
+	@Override
+	public ERCGroupEntry fetchERCGroupEntryByReferenceCode(
+		long groupId, String externalReferenceCode) {
+
+		return fetchERCGroupEntryByExternalReferenceCode(
+			groupId, externalReferenceCode);
+	}
+
+	/**
+	 * Returns the erc group entry with the matching external reference code and group.
+	 *
+	 * @param groupId the primary key of the group
+	 * @param externalReferenceCode the erc group entry's external reference code
+	 * @return the matching erc group entry
+	 * @throws PortalException if a matching erc group entry could not be found
+	 */
+	@Override
+	public ERCGroupEntry getERCGroupEntryByExternalReferenceCode(
+			long groupId, String externalReferenceCode)
+		throws PortalException {
+
+		return ercGroupEntryPersistence.findByG_ERC(
 			groupId, externalReferenceCode);
 	}
 
@@ -321,6 +376,11 @@ public abstract class ERCGroupEntryLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement ERCGroupEntryLocalServiceImpl#deleteERCGroupEntry(ERCGroupEntry) to avoid orphaned data");
+		}
+
 		return ercGroupEntryLocalService.deleteERCGroupEntry(
 			(ERCGroupEntry)persistedModel);
 	}
@@ -338,6 +398,55 @@ public abstract class ERCGroupEntryLocalServiceBaseImpl
 		throws PortalException {
 
 		return ercGroupEntryPersistence.findByPrimaryKey(primaryKeyObj);
+	}
+
+	/**
+	 * Returns all the erc group entries matching the UUID and company.
+	 *
+	 * @param uuid the UUID of the erc group entries
+	 * @param companyId the primary key of the company
+	 * @return the matching erc group entries, or an empty list if no matches were found
+	 */
+	@Override
+	public List<ERCGroupEntry> getERCGroupEntriesByUuidAndCompanyId(
+		String uuid, long companyId) {
+
+		return ercGroupEntryPersistence.findByUuid_C(uuid, companyId);
+	}
+
+	/**
+	 * Returns a range of erc group entries matching the UUID and company.
+	 *
+	 * @param uuid the UUID of the erc group entries
+	 * @param companyId the primary key of the company
+	 * @param start the lower bound of the range of erc group entries
+	 * @param end the upper bound of the range of erc group entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the range of matching erc group entries, or an empty list if no matches were found
+	 */
+	@Override
+	public List<ERCGroupEntry> getERCGroupEntriesByUuidAndCompanyId(
+		String uuid, long companyId, int start, int end,
+		OrderByComparator<ERCGroupEntry> orderByComparator) {
+
+		return ercGroupEntryPersistence.findByUuid_C(
+			uuid, companyId, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns the erc group entry matching the UUID and group.
+	 *
+	 * @param uuid the erc group entry's UUID
+	 * @param groupId the primary key of the group
+	 * @return the matching erc group entry
+	 * @throws PortalException if a matching erc group entry could not be found
+	 */
+	@Override
+	public ERCGroupEntry getERCGroupEntryByUuidAndGroupId(
+			String uuid, long groupId)
+		throws PortalException {
+
+		return ercGroupEntryPersistence.findByUUID_G(uuid, groupId);
 	}
 
 	/**
@@ -449,11 +558,15 @@ public abstract class ERCGroupEntryLocalServiceBaseImpl
 		persistedModelLocalServiceRegistry.register(
 			"com.liferay.portal.tools.service.builder.test.model.ERCGroupEntry",
 			ercGroupEntryLocalService);
+
+		_setLocalServiceUtilService(ercGroupEntryLocalService);
 	}
 
 	public void destroy() {
 		persistedModelLocalServiceRegistry.unregister(
 			"com.liferay.portal.tools.service.builder.test.model.ERCGroupEntry");
+
+		_setLocalServiceUtilService(null);
 	}
 
 	/**
@@ -498,6 +611,22 @@ public abstract class ERCGroupEntryLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		ERCGroupEntryLocalService ercGroupEntryLocalService) {
+
+		try {
+			Field field = ERCGroupEntryLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, ercGroupEntryLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@BeanReference(type = ERCGroupEntryLocalService.class)
 	protected ERCGroupEntryLocalService ercGroupEntryLocalService;
 
@@ -509,6 +638,9 @@ public abstract class ERCGroupEntryLocalServiceBaseImpl
 	)
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		ERCGroupEntryLocalServiceBaseImpl.class);
 
 	@ServiceReference(type = PersistedModelLocalServiceRegistry.class)
 	protected PersistedModelLocalServiceRegistry

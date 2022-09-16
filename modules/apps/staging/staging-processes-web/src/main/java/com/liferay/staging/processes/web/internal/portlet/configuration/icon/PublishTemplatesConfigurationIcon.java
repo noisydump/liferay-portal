@@ -14,8 +14,9 @@
 
 package com.liferay.staging.processes.web.internal.portlet.configuration.icon;
 
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -23,7 +24,7 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.configuration.icon.BasePortletConfigurationIcon;
 import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfigurationIcon;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
-import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
+import com.liferay.portal.kernel.service.permission.GroupPermission;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
@@ -34,7 +35,6 @@ import java.util.ResourceBundle;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
-import javax.portlet.PortletURL;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -55,25 +55,28 @@ public class PublishTemplatesConfigurationIcon
 		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
 			"content.Language", getLocale(portletRequest), getClass());
 
-		return LanguageUtil.get(resourceBundle, "publish-templates");
+		return _language.get(resourceBundle, "publish-templates");
 	}
 
 	@Override
 	public String getURL(
 		PortletRequest portletRequest, PortletResponse portletResponse) {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		return PortletURLBuilder.create(
+			_portal.getControlPanelPortletURL(
+				portletRequest, StagingProcessesPortletKeys.STAGING_PROCESSES,
+				PortletRequest.RENDER_PHASE)
+		).setMVCPath(
+			"/publish_templates/view_publish_configurations.jsp"
+		).setRedirect(
+			() -> {
+				ThemeDisplay themeDisplay =
+					(ThemeDisplay)portletRequest.getAttribute(
+						WebKeys.THEME_DISPLAY);
 
-		PortletURL portletURL = _portal.getControlPanelPortletURL(
-			portletRequest, StagingProcessesPortletKeys.STAGING_PROCESSES,
-			PortletRequest.RENDER_PHASE);
-
-		portletURL.setParameter(
-			"mvcPath", "/publish_templates/view_publish_configurations.jsp");
-		portletURL.setParameter("redirect", themeDisplay.getURLCurrent());
-
-		return portletURL.toString();
+				return themeDisplay.getURLCurrent();
+			}
+		).buildString();
 	}
 
 	@Override
@@ -89,7 +92,7 @@ public class PublishTemplatesConfigurationIcon
 		Group scopeGroup = themeDisplay.getScopeGroup();
 
 		try {
-			if (!GroupPermissionUtil.contains(
+			if (!_groupPermission.contains(
 					themeDisplay.getPermissionChecker(), scopeGroup,
 					ActionKeys.PUBLISH_STAGING)) {
 
@@ -98,7 +101,7 @@ public class PublishTemplatesConfigurationIcon
 		}
 		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(portalException, portalException);
+				_log.debug(portalException);
 			}
 
 			return false;
@@ -134,6 +137,12 @@ public class PublishTemplatesConfigurationIcon
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		PublishTemplatesConfigurationIcon.class);
+
+	@Reference
+	private GroupPermission _groupPermission;
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private Portal _portal;

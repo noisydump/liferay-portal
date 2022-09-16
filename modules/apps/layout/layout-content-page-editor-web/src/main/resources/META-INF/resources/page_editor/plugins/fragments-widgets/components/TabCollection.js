@@ -15,29 +15,56 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 
+import {FRAGMENTS_DISPLAY_STYLES} from '../../../app/config/constants/fragmentsDisplayStyles';
+import {config} from '../../../app/config/index';
 import Collapse from '../../../common/components/Collapse';
+import {useSessionState} from '../../../core/hooks/useSessionState';
 import TabItem from './TabItem';
 
-export default function TabCollection({collection, isSearchResult, open}) {
+export default function TabCollection({
+	collection,
+	displayStyle,
+	initialOpen,
+	isSearchResult,
+}) {
+	const [open, setOpen] = useSessionState(
+		`${config.portletNamespace}_fragment-collection_${collection.collectionId}_open`,
+		initialOpen
+	);
+
+	const handleOpen = (nextOpen) => {
+		setOpen(nextOpen);
+	};
+
 	return (
 		<Collapse
 			key={collection.collectionId}
 			label={collection.label}
+			onOpen={handleOpen}
 			open={isSearchResult || open}
 		>
 			{collection.collections &&
 				collection.collections.map((collection, index) => (
 					<TabCollection
 						collection={collection}
+						displayStyle={displayStyle}
+						initialOpen={false}
 						isSearchResult={isSearchResult}
 						key={index}
 					/>
 				))}
 
-			<ul className="list-unstyled">
+			<ul
+				className={`list-unstyled page-editor__fragments-widgets__tab-collection-${displayStyle} pb-2 w-100`}
+			>
 				{collection.children.map((item) => (
 					<React.Fragment key={item.itemId}>
-						<TabItem item={item} key={item.itemId} />
+						<TabItem
+							displayStyle={displayStyle}
+							item={item}
+							key={item.itemId}
+						/>
+
 						{item.portletItems?.length && (
 							<TabPortletItems item={item} />
 						)}
@@ -54,12 +81,13 @@ TabCollection.proptypes = {
 		collectionId: PropTypes.string,
 		label: PropTypes.string,
 	}).isRequired,
+	displayStyle: PropTypes.oneOf(Object.values(FRAGMENTS_DISPLAY_STYLES)),
 	isSearchResult: PropTypes.bool,
 	open: PropTypes.bool,
 };
 
 const TabPortletItems = ({item}) => (
-	<ul className="list-unstyled">
+	<ul className="d-flex flex-wrap list-unstyled w-100">
 		{item.portletItems.map((portlet, index) => (
 			<TabItem item={portlet} key={index} />
 		))}

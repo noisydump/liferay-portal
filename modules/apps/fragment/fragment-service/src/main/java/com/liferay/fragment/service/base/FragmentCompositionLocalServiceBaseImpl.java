@@ -23,6 +23,7 @@ import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.fragment.model.FragmentComposition;
 import com.liferay.fragment.service.FragmentCompositionLocalService;
+import com.liferay.fragment.service.FragmentCompositionLocalServiceUtil;
 import com.liferay.fragment.service.persistence.FragmentCompositionPersistence;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
@@ -46,6 +47,8 @@ import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -62,10 +65,13 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -87,7 +93,7 @@ public abstract class FragmentCompositionLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>FragmentCompositionLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.fragment.service.FragmentCompositionLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>FragmentCompositionLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>FragmentCompositionLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -167,6 +173,13 @@ public abstract class FragmentCompositionLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return fragmentCompositionPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -491,6 +504,11 @@ public abstract class FragmentCompositionLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement FragmentCompositionLocalServiceImpl#deleteFragmentComposition(FragmentComposition) to avoid orphaned data");
+		}
+
 		return fragmentCompositionLocalService.deleteFragmentComposition(
 			(FragmentComposition)persistedModel);
 	}
@@ -605,6 +623,11 @@ public abstract class FragmentCompositionLocalServiceBaseImpl
 		return fragmentCompositionPersistence.update(fragmentComposition);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -618,6 +641,8 @@ public abstract class FragmentCompositionLocalServiceBaseImpl
 	public void setAopProxy(Object aopProxy) {
 		fragmentCompositionLocalService =
 			(FragmentCompositionLocalService)aopProxy;
+
+		_setLocalServiceUtilService(fragmentCompositionLocalService);
 	}
 
 	/**
@@ -678,6 +703,23 @@ public abstract class FragmentCompositionLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		FragmentCompositionLocalService fragmentCompositionLocalService) {
+
+		try {
+			Field field =
+				FragmentCompositionLocalServiceUtil.class.getDeclaredField(
+					"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, fragmentCompositionLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected FragmentCompositionLocalService fragmentCompositionLocalService;
 
 	@Reference
@@ -687,12 +729,7 @@ public abstract class FragmentCompositionLocalServiceBaseImpl
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@Reference
-	protected com.liferay.portal.kernel.service.ResourceLocalService
-		resourceLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
+	private static final Log _log = LogFactoryUtil.getLog(
+		FragmentCompositionLocalServiceBaseImpl.class);
 
 }

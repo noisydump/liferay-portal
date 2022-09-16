@@ -21,6 +21,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.kernel.util.Html;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -56,7 +57,7 @@ public class AssetCategoryModelDocumentContributor
 		document.addKeyword(
 			Field.ASSET_CATEGORY_ID, assetCategory.getCategoryId());
 
-		addSearchAssetCategoryTitles(
+		_addSearchAssetCategoryTitles(
 			document, Field.ASSET_CATEGORY_TITLE,
 			Collections.singletonList(assetCategory));
 
@@ -66,11 +67,23 @@ public class AssetCategoryModelDocumentContributor
 		document.addKeyword(
 			Field.ASSET_VOCABULARY_ID, assetCategory.getVocabularyId());
 
+		String[] availableLanguageIds =
+			LocalizationUtil.getAvailableLanguageIds(
+				assetCategory.getDescription());
+
+		for (String availableLanguageId : availableLanguageIds) {
+			document.addText(
+				LocalizationUtil.getLocalizedName(
+					Field.DESCRIPTION, availableLanguageId),
+				_html.stripHtml(
+					assetCategory.getDescription(availableLanguageId)));
+		}
+
 		Locale siteDefaultLocale = getSiteDefaultLocale(assetCategory);
 
-		_searchLocalizationHelper.addLocalizedField(
-			document, Field.DESCRIPTION, siteDefaultLocale,
-			assetCategory.getDescriptionMap());
+		document.addText(
+			Field.DESCRIPTION,
+			_html.stripHtml(assetCategory.getDescription(siteDefaultLocale)));
 
 		document.addText(Field.NAME, assetCategory.getName());
 
@@ -88,7 +101,19 @@ public class AssetCategoryModelDocumentContributor
 			true, true);
 	}
 
-	protected void addSearchAssetCategoryTitles(
+	protected Locale getSiteDefaultLocale(AssetCategory assetCategory) {
+		try {
+			return portal.getSiteDefaultLocale(assetCategory.getGroupId());
+		}
+		catch (PortalException portalException) {
+			throw new SystemException(portalException);
+		}
+	}
+
+	@Reference
+	protected Portal portal;
+
+	private void _addSearchAssetCategoryTitles(
 		Document document, String field, List<AssetCategory> assetCategories) {
 
 		Map<Locale, List<String>> assetCategoryTitles = new HashMap<>();
@@ -139,17 +164,8 @@ public class AssetCategoryModelDocumentContributor
 		}
 	}
 
-	protected Locale getSiteDefaultLocale(AssetCategory assetCategory) {
-		try {
-			return portal.getSiteDefaultLocale(assetCategory.getGroupId());
-		}
-		catch (PortalException portalException) {
-			throw new SystemException(portalException);
-		}
-	}
-
 	@Reference
-	protected Portal portal;
+	private Html _html;
 
 	@Reference
 	private SearchLocalizationHelper _searchLocalizationHelper;

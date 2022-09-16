@@ -56,7 +56,7 @@ definition {
 
 		Select(
 			locator1 = "Select#REPORT_FORMAT",
-			value1 = "csv");
+			value1 = "CSV");
 
 		Type(
 			locator1 = "TextInput#EMAIL_NOTIFICATIONS",
@@ -121,7 +121,9 @@ definition {
 			locator1 = "ReportsAdminViewReportEntry#INFO_MESSAGE",
 			value1 = "Processing report. This may take several minutes.");
 
-		Pause(locator1 = "180000");
+		while ((IsElementPresent(locator1 = "ReportsAdminViewReportEntry#INFO_MESSAGE")) && (maxIterations = "40")) {
+			Refresh();
+		}
 
 		Navigator.openURL();
 
@@ -159,7 +161,7 @@ definition {
 		ReportsAdmin.addReportEntry(
 			emailNotificationsAddress = "test@liferay.com",
 			emailRecipientAddress = "test@liferay.com",
-			reportFormat = "csv",
+			reportFormat = "CSV",
 			reportName = "Custom Name",
 			reportsDefinitionName = "Reports Definition Name");
 
@@ -173,6 +175,32 @@ definition {
 			userName = "Test Test");
 
 		ReportsAdmin.viewNoReportEntryFile(reportsFileName = "reports_admin_template_source_sample_class_name");
+	}
+
+	@description = "LRQA-64780 - Automate LPS-127390: Filter and Order options in Reports Admin do not function properly"
+	@priority = "5"
+	test CheckFilterAndOrderOption {
+		property portal.acceptance = "true";
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Configuration",
+			portlet = "Reports Admin");
+
+		ReportsAdmin.gotoDefinitions();
+
+		ReportsAdmin.addReportDefinition(
+			dataSource = "Portal",
+			reportsDefinitionDescription = "Reports Definition Description",
+			reportsDefinitionName = "Reports Definition Name",
+			templateFile = "reports_admin_template_source_sample_class_name.jrxml");
+
+		Click(locator1 = "Dropdown#FILTER_AND_ORDER");
+
+		MenuItem.click(menuItem = "All");
+
+		ReportsAdmin.assertReportEntryPresent(reportsDefinitionName = "Reports Definition Name");
 	}
 
 	@priority = "4"
@@ -194,7 +222,7 @@ definition {
 		ReportsAdmin.addReportEntry(
 			emailNotificationsAddress = "test@liferay.com",
 			emailRecipientAddress = "test@liferay.com",
-			reportFormat = "csv",
+			reportFormat = "CSV",
 			reportsDefinitionName = "Reports Definition Name");
 
 		ReportsAdmin.viewReportEntry(reportsDefinitionName = "Reports Definition Name");
@@ -221,6 +249,7 @@ definition {
 
 	@priority = "4"
 	test DeliverReportToEmail {
+		property portal.upstream = "quarantine";
 		property test.assert.javascript.errors = "false";
 		property test.smtp.server.enabled = "true";
 
@@ -288,7 +317,7 @@ definition {
 		ReportsAdmin.addReportEntry(
 			emailNotificationsAddress = "test@liferay.com",
 			emailRecipientAddress = "test@liferay.com",
-			reportFormat = "csv",
+			reportFormat = "CSV",
 			reportsDefinitionName = "Reports Definition Name");
 
 		ReportsAdmin.viewReportEntry(reportsDefinitionName = "Reports Definition Name");
@@ -368,9 +397,9 @@ definition {
 			reportsFileName = "reports_admin_template_source_sample_class_name.pdf",
 			userName = "Test Test");
 
-		ReportsAdmin.downloadReportEntryFile(
-			reportFormat = "pdf",
-			reportsFileName = "reports_admin_template_source_sample_class_name.pdf");
+		takeScreenshot();
+
+		ReportsAdmin.downloadReportEntryFile(reportsFileName = "reports_admin_template_source_sample_class_name.pdf");
 	}
 
 	@priority = "4"
@@ -538,13 +567,13 @@ definition {
 		PortletEntry.save();
 	}
 
+	@ignore = "true"
 	@priority = "4"
 	test ViewEmailNotificationDelivery {
 		property test.assert.javascript.errors = "false";
 		property test.name.skip.portal.instance = "CPReportsadmin#ViewEmailNotificationDelivery";
 
 		var portalURL = PropsUtil.get("portal.url");
-
 		var siteName = TestCase.getSiteName(siteName = "${siteName}");
 
 		ApplicationsMenu.gotoPortlet(
@@ -571,17 +600,15 @@ definition {
 			templateFile = "reports_admin_template_source_sample_class_name.jrxml");
 
 		ReportsAdmin.addReportEntry(
-			emailNotificationsAddress = PropsUtil.get("email.address.3"),
+			emailNotificationsAddress = PropsUtil.get("email.address.4"),
 			emailRecipientAddress = "test@liferay.com",
 			reportFormat = "pdf",
 			reportName = "Custom Report Name",
 			reportsDefinitionName = "Reports Definition Name");
 
-		Pause(locator1 = "30000");
-
 		Gmail.login(
-			userEmailAddress = PropsUtil.get("email.address.3"),
-			userPassword = PropsUtil.get("email.password.3"));
+			userEmailAddress = PropsUtil.get("email.address.4"),
+			userPassword = PropsUtil.get("email.password.4"));
 
 		Gmail.gotoHtmlMode();
 
@@ -597,8 +624,6 @@ definition {
 		AssertClick.assertPartialTextClickAt(
 			locator1 = "Gmail#GMAIL_HTML_MODE_MESSAGE_BODY_LINK",
 			value1 = "report");
-
-		Pause(locator1 = "30000");
 
 		SelectWindow(locator1 = "title=Reports Definition Name - ${siteName}");
 
@@ -616,6 +641,7 @@ definition {
 		Navigator.openSpecificURL(url = "${portalURL}");
 	}
 
+	@ignore = "true"
 	@priority = "4"
 	test ViewEmailRecipientDelivery {
 		property test.assert.javascript.errors = "false";
@@ -651,8 +677,6 @@ definition {
 			emailRecipientAddress = PropsUtil.get("email.address.4"),
 			reportFormat = "pdf",
 			reportsDefinitionName = "Reports Definition Name");
-
-		Pause(locator1 = "30000");
 
 		Gmail.login(
 			userEmailAddress = PropsUtil.get("email.address.4"),

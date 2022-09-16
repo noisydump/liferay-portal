@@ -21,7 +21,7 @@ import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.model.JournalContentSearch;
 import com.liferay.journal.service.JournalArticleService;
 import com.liferay.journal.service.JournalContentSearchLocalService;
-import com.liferay.petra.string.StringBundler;
+import com.liferay.journal.util.JournalHelper;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.search.Document;
@@ -75,7 +75,64 @@ public class JournalOpenSearchImpl extends HitsOpenSearchImpl {
 		return TITLE + keywords;
 	}
 
-	protected String getLayoutURL(ThemeDisplay themeDisplay, String articleId)
+	@Override
+	protected String getURL(
+			ThemeDisplay themeDisplay, long groupId, Document result,
+			PortletURL portletURL)
+		throws Exception {
+
+		String articleId = result.get("articleId");
+
+		JournalArticle article = _journalArticleService.getArticle(
+			groupId, articleId);
+
+		if (Validator.isNotNull(article.getLayoutUuid())) {
+			return _journalHelper.createURLPattern(
+				article, themeDisplay.getLocale(), false,
+				JournalArticleConstants.CANONICAL_URL_SEPARATOR, themeDisplay);
+		}
+
+		Layout layout = themeDisplay.getLayout();
+
+		List<Long> hitLayoutIds =
+			_journalContentSearchLocalService.getLayoutIds(
+				layout.getGroupId(), layout.isPrivateLayout(), articleId);
+
+		for (Long hitLayoutId : hitLayoutIds) {
+			if (LayoutPermissionUtil.contains(
+					themeDisplay.getPermissionChecker(), layout.getGroupId(),
+					layout.isPrivateLayout(), hitLayoutId, ActionKeys.VIEW)) {
+
+				Layout hitLayout = _layoutLocalService.getLayout(
+					layout.getGroupId(), layout.isPrivateLayout(),
+					hitLayoutId.longValue());
+
+				return _portal.getLayoutURL(hitLayout, themeDisplay);
+			}
+		}
+
+		String layoutURL = _getLayoutURL(themeDisplay, articleId);
+
+		if (layoutURL != null) {
+			return layoutURL;
+		}
+
+		AssetEntry assetEntry = _assetEntryLocalService.fetchEntry(
+			JournalArticle.class.getName(), article.getResourcePrimKey());
+
+		if (assetEntry == null) {
+			return null;
+		}
+
+		portletURL.setParameter(
+			"assetEntryId", String.valueOf(assetEntry.getEntryId()));
+		portletURL.setParameter("groupId", String.valueOf(groupId));
+		portletURL.setParameter("articleId", articleId);
+
+		return portletURL.toString();
+	}
+
+	private String _getLayoutURL(ThemeDisplay themeDisplay, String articleId)
 		throws Exception {
 
 		PermissionChecker permissionChecker =
@@ -109,114 +166,25 @@ public class JournalOpenSearchImpl extends HitsOpenSearchImpl {
 		return null;
 	}
 
-	@Override
-	protected String getURL(
-			ThemeDisplay themeDisplay, long groupId, Document result,
-			PortletURL portletURL)
-		throws Exception {
-
-		String articleId = result.get("articleId");
-
-		JournalArticle article = _journalArticleService.getArticle(
-			groupId, articleId);
-
-		if (Validator.isNotNull(article.getLayoutUuid())) {
-			String groupFriendlyURL = _portal.getGroupFriendlyURL(
-				_layoutSetLocalService.getLayoutSet(
-					article.getGroupId(), false),
-				themeDisplay);
-
-			return StringBundler.concat(
-				groupFriendlyURL,
-				JournalArticleConstants.CANONICAL_URL_SEPARATOR,
-				article.getUrlTitle());
-		}
-
-		Layout layout = themeDisplay.getLayout();
-
-		List<Long> hitLayoutIds =
-			_journalContentSearchLocalService.getLayoutIds(
-				layout.getGroupId(), layout.isPrivateLayout(), articleId);
-
-		for (Long hitLayoutId : hitLayoutIds) {
-			if (LayoutPermissionUtil.contains(
-					themeDisplay.getPermissionChecker(), layout.getGroupId(),
-					layout.isPrivateLayout(), hitLayoutId, ActionKeys.VIEW)) {
-
-				Layout hitLayout = _layoutLocalService.getLayout(
-					layout.getGroupId(), layout.isPrivateLayout(),
-					hitLayoutId.longValue());
-
-				return _portal.getLayoutURL(hitLayout, themeDisplay);
-			}
-		}
-
-		String layoutURL = getLayoutURL(themeDisplay, articleId);
-
-		if (layoutURL != null) {
-			return layoutURL;
-		}
-
-		AssetEntry assetEntry = _assetEntryLocalService.fetchEntry(
-			JournalArticle.class.getName(), article.getResourcePrimKey());
-
-		if (assetEntry == null) {
-			return null;
-		}
-
-		portletURL.setParameter(
-			"assetEntryId", String.valueOf(assetEntry.getEntryId()));
-		portletURL.setParameter("groupId", String.valueOf(groupId));
-		portletURL.setParameter("articleId", articleId);
-
-		return portletURL.toString();
-	}
-
-	@Reference(unbind = "-")
-	protected void setAssetEntryLocalService(
-		AssetEntryLocalService assetEntryLocalService) {
-
-		_assetEntryLocalService = assetEntryLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setGroupLocalService(GroupLocalService groupLocalService) {
-		_groupLocalService = groupLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setJournalArticleService(
-		JournalArticleService journalArticleService) {
-
-		_journalArticleService = journalArticleService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setJournalContentSearchLocalService(
-		JournalContentSearchLocalService journalContentSearchLocalService) {
-
-		_journalContentSearchLocalService = journalContentSearchLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setLayoutLocalService(
-		LayoutLocalService layoutLocalService) {
-
-		_layoutLocalService = layoutLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setLayoutSetLocalService(
-		LayoutSetLocalService layoutSetLocalService) {
-
-		_layoutSetLocalService = layoutSetLocalService;
-	}
-
+	@Reference
 	private AssetEntryLocalService _assetEntryLocalService;
+
+	@Reference
 	private GroupLocalService _groupLocalService;
+
+	@Reference
 	private JournalArticleService _journalArticleService;
+
+	@Reference
 	private JournalContentSearchLocalService _journalContentSearchLocalService;
+
+	@Reference
+	private JournalHelper _journalHelper;
+
+	@Reference
 	private LayoutLocalService _layoutLocalService;
+
+	@Reference
 	private LayoutSetLocalService _layoutSetLocalService;
 
 	@Reference

@@ -1,6 +1,6 @@
 Bundle-Name: Liferay Portal Search API
 Bundle-SymbolicName: com.liferay.portal.search.api
-Bundle-Version: 5.0.0
+Bundle-Version: 5.7.0
 Export-Package:\
 	com.liferay.portal.search.aggregation,\
 	com.liferay.portal.search.aggregation.bucket,\
@@ -19,11 +19,13 @@ Export-Package:\
 	com.liferay.portal.search.contributor.sort,\
 	com.liferay.portal.search.document,\
 	com.liferay.portal.search.engine,\
+	com.liferay.portal.search.expando,\
 	com.liferay.portal.search.facet,\
 	com.liferay.portal.search.facet.category,\
 	com.liferay.portal.search.facet.custom,\
 	com.liferay.portal.search.facet.folder,\
 	com.liferay.portal.search.facet.modified,\
+	com.liferay.portal.search.facet.nested,\
 	com.liferay.portal.search.facet.site,\
 	com.liferay.portal.search.facet.tag,\
 	com.liferay.portal.search.facet.type,\
@@ -56,10 +58,7 @@ Export-Package:\
 	com.liferay.portal.search.sort,\
 	com.liferay.portal.search.stats,\
 	com.liferay.portal.search.suggest,\
+	com.liferay.portal.search.suggestions,\
 	com.liferay.portal.search.summary,\
 	com.liferay.portal.search.synonym
-Import-Package:\
-	com.liferay.portal.kernel.search;version="[8.1.0,9.5.0)",\
-	\
-	*
 -dsannotations-options: inherit

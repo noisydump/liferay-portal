@@ -40,9 +40,9 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.SessionTreeJSClicks;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.taglib.ui.util.SessionTreeJSClicks;
 import com.liferay.trash.service.TrashEntryService;
 
 import java.io.Serializable;
@@ -130,14 +130,14 @@ public class EditExportConfigurationMVCActionCommand
 
 			if (moveToTrash) {
 				ExportImportConfiguration exportImportConfiguration =
-					_exportImportConfigurationService.
+					exportImportConfigurationService.
 						moveExportImportConfigurationToTrash(
 							deleteExportImportConfigurationId);
 
 				trashedModels.add(exportImportConfiguration);
 			}
 			else {
-				_exportImportConfigurationService.
+				exportImportConfigurationService.
 					deleteExportImportConfiguration(
 						deleteExportImportConfigurationId);
 			}
@@ -165,7 +165,7 @@ public class EditExportConfigurationMVCActionCommand
 			if (cmd.equals(Constants.ADD) || cmd.equals(Constants.UPDATE)) {
 				setLayoutIdMap(actionRequest);
 
-				updateExportConfiguration(actionRequest);
+				_updateExportConfiguration(actionRequest);
 			}
 			else if (cmd.equals(Constants.DELETE)) {
 				deleteExportImportConfiguration(actionRequest, false);
@@ -174,10 +174,10 @@ public class EditExportConfigurationMVCActionCommand
 				deleteExportImportConfiguration(actionRequest, true);
 			}
 			else if (cmd.equals(Constants.RESTORE)) {
-				restoreTrashEntries(actionRequest);
+				_restoreTrashEntries(actionRequest);
 			}
 			else if (cmd.equals(Constants.RELAUNCH)) {
-				relaunchExportLayoutConfiguration(actionRequest);
+				_relaunchExportLayoutConfiguration(actionRequest);
 			}
 			else if (Validator.isNull(cmd)) {
 				addSessionMessages(actionRequest);
@@ -188,14 +188,56 @@ public class EditExportConfigurationMVCActionCommand
 			sendRedirect(actionRequest, actionResponse, redirect);
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 
 			SessionErrors.add(actionRequest, exception.getClass());
 		}
 	}
 
-	protected void relaunchExportLayoutConfiguration(
-			ActionRequest actionRequest)
+	protected void setLayoutIdMap(ActionRequest actionRequest) {
+		HttpServletRequest httpServletRequest = portal.getHttpServletRequest(
+			actionRequest);
+
+		long groupId = ParamUtil.getLong(actionRequest, "groupId");
+		boolean privateLayout = ParamUtil.getBoolean(
+			actionRequest, "privateLayout");
+
+		String treeId = ParamUtil.getString(actionRequest, "treeId");
+
+		actionRequest.setAttribute(
+			"layoutIdMap",
+			exportImportHelper.getSelectedLayoutsJSON(
+				groupId, privateLayout,
+				SessionTreeJSClicks.getOpenNodes(
+					httpServletRequest, treeId + "SelectedNode")));
+	}
+
+	@Reference
+	protected BackgroundTaskManager backgroundTaskManager;
+
+	protected ExportImportConfigurationLocalService
+		exportImportConfigurationLocalService;
+
+	@Reference
+	protected ExportImportConfigurationService exportImportConfigurationService;
+
+	@Reference
+	protected ExportImportConfigurationSettingsMapFactory
+		exportImportConfigurationSettingsMapFactory;
+
+	@Reference
+	protected ExportImportHelper exportImportHelper;
+
+	@Reference
+	protected ExportImportService exportImportService;
+
+	@Reference
+	protected Portal portal;
+
+	@Reference
+	protected TrashEntryService trashEntryService;
+
+	private void _relaunchExportLayoutConfiguration(ActionRequest actionRequest)
 		throws Exception {
 
 		long backgroundTaskId = ParamUtil.getLong(
@@ -214,69 +256,22 @@ public class EditExportConfigurationMVCActionCommand
 			ExportImportConfigurationFactory.cloneExportImportConfiguration(
 				exportImportConfiguration);
 
-		_exportImportService.exportLayoutsAsFileInBackground(
+		exportImportService.exportLayoutsAsFileInBackground(
 			exportImportConfiguration);
 	}
 
-	protected void restoreTrashEntries(ActionRequest actionRequest)
+	private void _restoreTrashEntries(ActionRequest actionRequest)
 		throws Exception {
 
 		long[] restoreTrashEntryIds = StringUtil.split(
 			ParamUtil.getString(actionRequest, "restoreTrashEntryIds"), 0L);
 
 		for (long restoreTrashEntryId : restoreTrashEntryIds) {
-			_trashEntryService.restoreEntry(restoreTrashEntryId);
+			trashEntryService.restoreEntry(restoreTrashEntryId);
 		}
 	}
 
-	@Reference(unbind = "-")
-	protected void setExportImportConfigurationLocalService(
-		ExportImportConfigurationLocalService
-			exportImportConfigurationLocalService) {
-
-		this.exportImportConfigurationLocalService =
-			exportImportConfigurationLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setExportImportConfigurationService(
-		ExportImportConfigurationService exportImportConfigurationService) {
-
-		_exportImportConfigurationService = exportImportConfigurationService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setExportImportService(
-		ExportImportService exportImportService) {
-
-		_exportImportService = exportImportService;
-	}
-
-	protected void setLayoutIdMap(ActionRequest actionRequest) {
-		HttpServletRequest httpServletRequest = portal.getHttpServletRequest(
-			actionRequest);
-
-		long groupId = ParamUtil.getLong(actionRequest, "groupId");
-		boolean privateLayout = ParamUtil.getBoolean(
-			actionRequest, "privateLayout");
-
-		String treeId = ParamUtil.getString(actionRequest, "treeId");
-
-		String openNodes = SessionTreeJSClicks.getOpenNodes(
-			httpServletRequest, treeId + "SelectedNode");
-
-		String selectedLayoutsJSON = exportImportHelper.getSelectedLayoutsJSON(
-			groupId, privateLayout, openNodes);
-
-		actionRequest.setAttribute("layoutIdMap", selectedLayoutsJSON);
-	}
-
-	@Reference(unbind = "-")
-	protected void setTrashEntryService(TrashEntryService trashEntryService) {
-		_trashEntryService = trashEntryService;
-	}
-
-	protected ExportImportConfiguration updateExportConfiguration(
+	private ExportImportConfiguration _updateExportConfiguration(
 			ActionRequest actionRequest)
 		throws Exception {
 
@@ -292,27 +287,7 @@ public class EditExportConfigurationMVCActionCommand
 			addExportLayoutExportImportConfiguration(actionRequest);
 	}
 
-	@Reference
-	protected BackgroundTaskManager backgroundTaskManager;
-
-	protected ExportImportConfigurationLocalService
-		exportImportConfigurationLocalService;
-
-	@Reference
-	protected ExportImportConfigurationSettingsMapFactory
-		exportImportConfigurationSettingsMapFactory;
-
-	@Reference
-	protected ExportImportHelper exportImportHelper;
-
-	@Reference
-	protected Portal portal;
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		EditExportConfigurationMVCActionCommand.class);
-
-	private ExportImportConfigurationService _exportImportConfigurationService;
-	private ExportImportService _exportImportService;
-	private TrashEntryService _trashEntryService;
 
 }

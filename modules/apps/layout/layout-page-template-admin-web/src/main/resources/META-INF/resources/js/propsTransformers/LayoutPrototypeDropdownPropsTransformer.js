@@ -14,15 +14,16 @@
 
 import {openModal} from 'frontend-js-web';
 
+import openDeletePageTemplateModal from '../modal/openDeletePageTemplateModal';
+
 const ACTIONS = {
 	deleteLayoutPrototype({deleteLayoutPrototypeURL}) {
-		if (
-			confirm(
-				Liferay.Language.get('are-you-sure-you-want-to-delete-this')
-			)
-		) {
-			submitForm(document.hrefFm, deleteLayoutPrototypeURL);
-		}
+		openDeletePageTemplateModal({
+			onDelete: () => {
+				submitForm(document.hrefFm, deleteLayoutPrototypeURL);
+			},
+			title: Liferay.Language.get('page-template'),
+		});
 	},
 
 	exportLayoutPrototype({exportLayoutPrototypeURL}) {
@@ -56,15 +57,20 @@ export default function LayoutPrototypeDropdownPropsTransformer({
 		actions: actions?.map((item) => {
 			return {
 				...item,
-				onClick(event) {
-					const action = item.data?.action;
+				items: item.items?.map((child) => {
+					return {
+						...child,
+						onClick(event) {
+							const action = child.data?.action;
 
-					if (action) {
-						event.preventDefault();
+							if (action) {
+								event.preventDefault();
 
-						ACTIONS[action](item.data);
-					}
-				},
+								ACTIONS[action](child.data);
+							}
+						},
+					};
+				}),
 			};
 		}),
 	};

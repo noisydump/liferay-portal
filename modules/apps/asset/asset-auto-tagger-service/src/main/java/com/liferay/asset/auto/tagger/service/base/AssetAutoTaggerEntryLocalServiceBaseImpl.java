@@ -16,6 +16,7 @@ package com.liferay.asset.auto.tagger.service.base;
 
 import com.liferay.asset.auto.tagger.model.AssetAutoTaggerEntry;
 import com.liferay.asset.auto.tagger.service.AssetAutoTaggerEntryLocalService;
+import com.liferay.asset.auto.tagger.service.AssetAutoTaggerEntryLocalServiceUtil;
 import com.liferay.asset.auto.tagger.service.persistence.AssetAutoTaggerEntryPersistence;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
@@ -32,6 +33,8 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -47,10 +50,13 @@ import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -72,7 +78,7 @@ public abstract class AssetAutoTaggerEntryLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>AssetAutoTaggerEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.asset.auto.tagger.service.AssetAutoTaggerEntryLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>AssetAutoTaggerEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>AssetAutoTaggerEntryLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -150,6 +156,13 @@ public abstract class AssetAutoTaggerEntryLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return assetAutoTaggerEntryPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -330,6 +343,11 @@ public abstract class AssetAutoTaggerEntryLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement AssetAutoTaggerEntryLocalServiceImpl#deleteAssetAutoTaggerEntry(AssetAutoTaggerEntry) to avoid orphaned data");
+		}
+
 		return assetAutoTaggerEntryLocalService.deleteAssetAutoTaggerEntry(
 			(AssetAutoTaggerEntry)persistedModel);
 	}
@@ -395,6 +413,11 @@ public abstract class AssetAutoTaggerEntryLocalServiceBaseImpl
 		return assetAutoTaggerEntryPersistence.update(assetAutoTaggerEntry);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -408,6 +431,8 @@ public abstract class AssetAutoTaggerEntryLocalServiceBaseImpl
 	public void setAopProxy(Object aopProxy) {
 		assetAutoTaggerEntryLocalService =
 			(AssetAutoTaggerEntryLocalService)aopProxy;
+
+		_setLocalServiceUtilService(assetAutoTaggerEntryLocalService);
 	}
 
 	/**
@@ -468,6 +493,23 @@ public abstract class AssetAutoTaggerEntryLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		AssetAutoTaggerEntryLocalService assetAutoTaggerEntryLocalService) {
+
+		try {
+			Field field =
+				AssetAutoTaggerEntryLocalServiceUtil.class.getDeclaredField(
+					"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, assetAutoTaggerEntryLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected AssetAutoTaggerEntryLocalService assetAutoTaggerEntryLocalService;
 
 	@Reference
@@ -476,5 +518,8 @@ public abstract class AssetAutoTaggerEntryLocalServiceBaseImpl
 	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		AssetAutoTaggerEntryLocalServiceBaseImpl.class);
 
 }

@@ -21,6 +21,8 @@ import com.liferay.journal.constants.JournalPortletKeys;
 import com.liferay.journal.model.JournalFolder;
 import com.liferay.journal.service.JournalFolderLocalService;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.LiferayPortletURL;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
@@ -99,6 +101,9 @@ public class JournalFolderAssetRendererFactory
 			liferayPortletURL.setWindowState(windowState);
 		}
 		catch (WindowStateException windowStateException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(windowStateException);
+			}
 		}
 
 		return liferayPortletURL;
@@ -113,20 +118,10 @@ public class JournalFolderAssetRendererFactory
 			permissionChecker, classPK, actionId);
 	}
 
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.journal.web)", unbind = "-"
-	)
-	public void setServletContext(ServletContext servletContext) {
-		_servletContext = servletContext;
-	}
+	private static final Log _log = LogFactoryUtil.getLog(
+		JournalFolderAssetRendererFactory.class);
 
-	@Reference(unbind = "-")
-	protected void setJournalFolderLocalService(
-		JournalFolderLocalService journalFolderLocalService) {
-
-		_journalFolderLocalService = journalFolderLocalService;
-	}
-
+	@Reference
 	private JournalFolderLocalService _journalFolderLocalService;
 
 	@Reference(
@@ -135,6 +130,7 @@ public class JournalFolderAssetRendererFactory
 	private ModelResourcePermission<JournalFolder>
 		_journalFolderModelResourcePermission;
 
+	@Reference(target = "(osgi.web.symbolicname=com.liferay.journal.web)")
 	private ServletContext _servletContext;
 
 	@Reference

@@ -17,16 +17,12 @@ package com.liferay.depot.internal.instance.lifecycle;
 import com.liferay.depot.constants.DepotRolesConstants;
 import com.liferay.portal.instance.lifecycle.BasePortalInstanceLifecycleListener;
 import com.liferay.portal.instance.lifecycle.PortalInstanceLifecycleListener;
-import com.liferay.portal.kernel.exception.NoSuchRoleException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.role.RoleConstants;
-import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.ResourceLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
@@ -64,8 +60,8 @@ public class DepotRolesPortalInstanceLifecycleListener
 	}
 
 	private String _getDescription(Locale locale, String name) {
-		ResourceBundle resourceBundle =
-			_resourceBundleLoader.loadResourceBundle(locale);
+		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
+			locale, getClass());
 
 		if (Objects.equals(
 				DepotRolesConstants.ASSET_LIBRARY_ADMINISTRATOR, name)) {
@@ -114,22 +110,9 @@ public class DepotRolesPortalInstanceLifecycleListener
 			long companyId, String name, Map<Locale, String> descriptionMap)
 		throws PortalException {
 
-		try {
-			Role role = _roleLocalService.getRole(companyId, name);
+		Role role = _roleLocalService.fetchRole(companyId, name);
 
-			if (!Objects.equals(descriptionMap, role.getDescriptionMap())) {
-				role.setDescriptionMap(descriptionMap);
-
-				return _roleLocalService.updateRole(role);
-			}
-
-			return role;
-		}
-		catch (NoSuchRoleException noSuchRoleException) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(noSuchRoleException, noSuchRoleException);
-			}
-
+		if (role == null) {
 			boolean addResource = PermissionThreadLocal.isAddResource();
 
 			try {
@@ -145,6 +128,14 @@ public class DepotRolesPortalInstanceLifecycleListener
 				PermissionThreadLocal.setAddResource(addResource);
 			}
 		}
+
+		if (!Objects.equals(descriptionMap, role.getDescriptionMap())) {
+			role.setDescriptionMap(descriptionMap);
+
+			return _roleLocalService.updateRole(role);
+		}
+
+		return role;
 	}
 
 	private static final String[] _DEPOT_ROLE_NAMES = {
@@ -155,14 +146,8 @@ public class DepotRolesPortalInstanceLifecycleListener
 		DepotRolesConstants.ASSET_LIBRARY_OWNER
 	};
 
-	private static final Log _log = LogFactoryUtil.getLog(
-		DepotRolesPortalInstanceLifecycleListener.class);
-
 	@Reference
 	private Language _language;
-
-	@Reference(target = "(bundle.symbolic.name=com.liferay.depot.service)")
-	private ResourceBundleLoader _resourceBundleLoader;
 
 	@Reference
 	private ResourceLocalService _resourceLocalService;

@@ -17,6 +17,7 @@ package com.liferay.commerce.order;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.portal.kernel.exception.PortalException;
 
+import javax.portlet.ActionRequest;
 import javax.portlet.PortletURL;
 
 import javax.servlet.http.HttpServletRequest;
@@ -28,6 +29,10 @@ import javax.servlet.http.HttpServletRequest;
 public interface CommerceOrderHttpHelper {
 
 	public CommerceOrder addCommerceOrder(HttpServletRequest httpServletRequest)
+		throws PortalException;
+
+	public void deleteCommerceOrder(
+			ActionRequest actionRequest, long commerceOrderId)
 		throws PortalException;
 
 	public PortletURL getCommerceCartPortletURL(
@@ -51,7 +56,7 @@ public interface CommerceOrderHttpHelper {
 			HttpServletRequest httpServletRequest)
 		throws PortalException;
 
-	public String getCookieName(long groupId);
+	public String getCookieName(long commerceChannelId);
 
 	public CommerceOrder getCurrentCommerceOrder(
 			HttpServletRequest httpServletRequest)

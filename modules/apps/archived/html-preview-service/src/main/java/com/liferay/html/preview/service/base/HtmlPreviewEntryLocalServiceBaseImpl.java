@@ -16,6 +16,7 @@ package com.liferay.html.preview.service.base;
 
 import com.liferay.html.preview.model.HtmlPreviewEntry;
 import com.liferay.html.preview.service.HtmlPreviewEntryLocalService;
+import com.liferay.html.preview.service.HtmlPreviewEntryLocalServiceUtil;
 import com.liferay.html.preview.service.persistence.HtmlPreviewEntryPersistence;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.aop.AopService;
@@ -31,6 +32,8 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -44,10 +47,13 @@ import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -69,7 +75,7 @@ public abstract class HtmlPreviewEntryLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>HtmlPreviewEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.html.preview.service.HtmlPreviewEntryLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>HtmlPreviewEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>HtmlPreviewEntryLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -146,6 +152,13 @@ public abstract class HtmlPreviewEntryLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return htmlPreviewEntryPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -317,6 +330,11 @@ public abstract class HtmlPreviewEntryLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement HtmlPreviewEntryLocalServiceImpl#deleteHtmlPreviewEntry(HtmlPreviewEntry) to avoid orphaned data");
+		}
+
 		return htmlPreviewEntryLocalService.deleteHtmlPreviewEntry(
 			(HtmlPreviewEntry)persistedModel);
 	}
@@ -380,6 +398,11 @@ public abstract class HtmlPreviewEntryLocalServiceBaseImpl
 		return htmlPreviewEntryPersistence.update(htmlPreviewEntry);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -391,6 +414,8 @@ public abstract class HtmlPreviewEntryLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		htmlPreviewEntryLocalService = (HtmlPreviewEntryLocalService)aopProxy;
+
+		_setLocalServiceUtilService(htmlPreviewEntryLocalService);
 	}
 
 	/**
@@ -435,6 +460,23 @@ public abstract class HtmlPreviewEntryLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		HtmlPreviewEntryLocalService htmlPreviewEntryLocalService) {
+
+		try {
+			Field field =
+				HtmlPreviewEntryLocalServiceUtil.class.getDeclaredField(
+					"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, htmlPreviewEntryLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected HtmlPreviewEntryLocalService htmlPreviewEntryLocalService;
 
 	@Reference
@@ -444,8 +486,7 @@ public abstract class HtmlPreviewEntryLocalServiceBaseImpl
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
+	private static final Log _log = LogFactoryUtil.getLog(
+		HtmlPreviewEntryLocalServiceBaseImpl.class);
 
 }

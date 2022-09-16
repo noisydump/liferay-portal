@@ -1,13 +1,5 @@
 definition {
 
-	macro addBasicWebContent {
-		ManagementBar.clickAddMenuItem(menuItem = "Basic Web Content");
-	}
-
-	macro addFolder {
-		ManagementBar.clickAddMenuItem(menuItem = "Folder");
-	}
-
 	macro changeDisplayStyle {
 		ManagementBar.changeDisplayStyle(displayStyle = "${displayStyle}");
 	}
@@ -26,6 +18,32 @@ definition {
 		ManagementBar.clickSelectAllCheckbox();
 	}
 
+	macro configureEmailNotifications {
+		Navigator.gotoNavTab(navTab = "${navTab}");
+
+		if ("${enabled}" == "true") {
+			Check(
+				inputFieldId = "${fieldName}",
+				locator1 = "TextInput#INPUT_ID");
+		}
+
+		if (isSet(notificationsSubject)) {
+			Type(
+				inputFieldId = "${fieldName}Subject",
+				locator1 = "TextInput#INPUT_ID",
+				value1 = "${notificationsSubject}");
+		}
+
+		if (isSet(notificationsBody)) {
+			Type.typeCKEditor(
+				bodyFieldId = "${fieldName}",
+				locator1 = "CKEditor#BODY_FIELD_ID",
+				value1 = "${notificationsBody}");
+		}
+
+		PortletEntry.save();
+	}
+
 	macro gotoEntry {
 		LexiconList.clickListEntryTitle(listEntry = "${entry}");
 	}
@@ -33,7 +51,7 @@ definition {
 	macro moveEntryToRecycleBin {
 		WebContentAdmin.clickEntryEllipsisItem(
 			entry = "${entry}",
-			item = "Move to Recycle Bin");
+			item = "Delete");
 
 		Confirm();
 	}

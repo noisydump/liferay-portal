@@ -23,6 +23,8 @@ import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.UserLocalService;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -42,7 +44,7 @@ public class ChangesetCollectionLocalServiceImpl
 			long userId, long groupId, String name, String description)
 		throws PortalException {
 
-		User user = userLocalService.getUser(userId);
+		User user = _userLocalService.getUser(userId);
 
 		long changesetCollectionId = counterLocalService.increment();
 
@@ -90,9 +92,9 @@ public class ChangesetCollectionLocalServiceImpl
 			return changesetCollection;
 		}
 
-		Group group = groupLocalService.getGroup(groupId);
+		Group group = _groupLocalService.getGroup(groupId);
 
-		User user = userLocalService.getDefaultUser(group.getCompanyId());
+		User user = _userLocalService.getDefaultUser(group.getCompanyId());
 
 		return changesetCollectionLocalService.addChangesetCollection(
 			user.getUserId(), groupId, name, StringPool.BLANK);
@@ -107,5 +109,11 @@ public class ChangesetCollectionLocalServiceImpl
 
 	@Reference
 	private ChangesetEntryLocalService _changesetEntryLocalService;
+
+	@Reference
+	private GroupLocalService _groupLocalService;
+
+	@Reference
+	private UserLocalService _userLocalService;
 
 }

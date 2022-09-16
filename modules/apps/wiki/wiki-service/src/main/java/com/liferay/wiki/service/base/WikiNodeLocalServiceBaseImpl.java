@@ -42,6 +42,8 @@ import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -55,16 +57,18 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.wiki.model.WikiNode;
 import com.liferay.wiki.service.WikiNodeLocalService;
+import com.liferay.wiki.service.WikiNodeLocalServiceUtil;
 import com.liferay.wiki.service.persistence.WikiNodePersistence;
-import com.liferay.wiki.service.persistence.WikiPageFinder;
-import com.liferay.wiki.service.persistence.WikiPagePersistence;
 
 import java.io.Serializable;
+
+import java.lang.reflect.Field;
 
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -85,7 +89,7 @@ public abstract class WikiNodeLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>WikiNodeLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.wiki.service.WikiNodeLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>WikiNodeLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>WikiNodeLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -154,6 +158,13 @@ public abstract class WikiNodeLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return wikiNodePersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -258,6 +269,48 @@ public abstract class WikiNodeLocalServiceBaseImpl
 	@Override
 	public WikiNode fetchWikiNodeByUuidAndGroupId(String uuid, long groupId) {
 		return wikiNodePersistence.fetchByUUID_G(uuid, groupId);
+	}
+
+	/**
+	 * Returns the wiki node with the matching external reference code and group.
+	 *
+	 * @param groupId the primary key of the group
+	 * @param externalReferenceCode the wiki node's external reference code
+	 * @return the matching wiki node, or <code>null</code> if a matching wiki node could not be found
+	 */
+	@Override
+	public WikiNode fetchWikiNodeByExternalReferenceCode(
+		long groupId, String externalReferenceCode) {
+
+		return wikiNodePersistence.fetchByG_ERC(groupId, externalReferenceCode);
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #fetchWikiNodeByExternalReferenceCode(long, String)}
+	 */
+	@Deprecated
+	@Override
+	public WikiNode fetchWikiNodeByReferenceCode(
+		long groupId, String externalReferenceCode) {
+
+		return fetchWikiNodeByExternalReferenceCode(
+			groupId, externalReferenceCode);
+	}
+
+	/**
+	 * Returns the wiki node with the matching external reference code and group.
+	 *
+	 * @param groupId the primary key of the group
+	 * @param externalReferenceCode the wiki node's external reference code
+	 * @return the matching wiki node
+	 * @throws PortalException if a matching wiki node could not be found
+	 */
+	@Override
+	public WikiNode getWikiNodeByExternalReferenceCode(
+			long groupId, String externalReferenceCode)
+		throws PortalException {
+
+		return wikiNodePersistence.findByG_ERC(groupId, externalReferenceCode);
 	}
 
 	/**
@@ -457,6 +510,11 @@ public abstract class WikiNodeLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement WikiNodeLocalServiceImpl#deleteWikiNode(WikiNode) to avoid orphaned data");
+		}
+
 		return wikiNodeLocalService.deleteWikiNode((WikiNode)persistedModel);
 	}
 
@@ -565,6 +623,11 @@ public abstract class WikiNodeLocalServiceBaseImpl
 		return wikiNodePersistence.update(wikiNode);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -576,6 +639,8 @@ public abstract class WikiNodeLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		wikiNodeLocalService = (WikiNodeLocalService)aopProxy;
+
+		_setLocalServiceUtilService(wikiNodeLocalService);
 	}
 
 	/**
@@ -620,6 +685,22 @@ public abstract class WikiNodeLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		WikiNodeLocalService wikiNodeLocalService) {
+
+		try {
+			Field field = WikiNodeLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, wikiNodeLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected WikiNodeLocalService wikiNodeLocalService;
 
 	@Reference
@@ -629,22 +710,7 @@ public abstract class WikiNodeLocalServiceBaseImpl
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@Reference
-	protected com.liferay.portal.kernel.service.GroupLocalService
-		groupLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.ResourceLocalService
-		resourceLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
-
-	@Reference
-	protected WikiPagePersistence wikiPagePersistence;
-
-	@Reference
-	protected WikiPageFinder wikiPageFinder;
+	private static final Log _log = LogFactoryUtil.getLog(
+		WikiNodeLocalServiceBaseImpl.class);
 
 }

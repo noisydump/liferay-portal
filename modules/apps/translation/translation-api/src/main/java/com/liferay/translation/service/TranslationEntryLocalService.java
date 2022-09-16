@@ -124,9 +124,11 @@ public interface TranslationEntryLocalService
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException;
 
-	public void deleteTranslationEntries(long classNameId, long classPK);
+	public void deleteTranslationEntries(long classNameId, long classPK)
+		throws PortalException;
 
-	public void deleteTranslationEntries(String className, long classPK);
+	public void deleteTranslationEntries(String className, long classPK)
+		throws PortalException;
 
 	/**
 	 * Deletes the translation entry with the primary key from the database. Also notifies the appropriate model listeners.
@@ -159,6 +161,9 @@ public interface TranslationEntryLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public <T> T dslQuery(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
@@ -321,6 +326,10 @@ public interface TranslationEntryLocalService
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getTranslationEntriesCount();
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getTranslationEntriesCount(
+		String className, long classPK, int[] statuses, boolean exclude);
 
 	/**
 	 * Returns the translation entry with the primary key.

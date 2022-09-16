@@ -19,6 +19,7 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuil
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemList;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemListBuilder;
 import com.liferay.item.selector.ItemSelector;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -27,12 +28,14 @@ import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
+import com.liferay.portal.kernel.portlet.SearchOrderByUtil;
 import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.servlet.taglib.ui.Menu;
 import com.liferay.portal.kernel.servlet.taglib.ui.MenuItem;
 import com.liferay.portal.kernel.servlet.taglib.ui.URLMenuItem;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -49,6 +52,7 @@ import com.liferay.sharing.security.permission.SharingPermission;
 import com.liferay.sharing.service.SharingEntryLocalService;
 import com.liferay.sharing.servlet.taglib.ui.SharingEntryMenuItemContributor;
 import com.liferay.sharing.util.comparator.SharingEntryModifiedDateComparator;
+import com.liferay.sharing.web.internal.constants.SharingPortletKeys;
 import com.liferay.sharing.web.internal.filter.SharedAssetsFilterItemTracker;
 import com.liferay.sharing.web.internal.item.selector.SharedAssetsFilterItemItemSelectorCriterion;
 import com.liferay.sharing.web.internal.servlet.taglib.ui.SharingEntryMenuItemContributorRegistry;
@@ -147,13 +151,12 @@ public class ViewSharedAssetsDisplayContext {
 			navigationItem -> {
 				navigationItem.setActive(_isIncoming());
 
-				PortletURL sharedWithMeURL =
-					_liferayPortletResponse.createRenderURL();
-
-				sharedWithMeURL.setParameter(
-					"incoming", Boolean.TRUE.toString());
-
-				navigationItem.setHref(sharedWithMeURL);
+				navigationItem.setHref(
+					PortletURLBuilder.createRenderURL(
+						_liferayPortletResponse
+					).setParameter(
+						"incoming", true
+					).buildPortletURL());
 
 				navigationItem.setLabel(
 					LanguageUtil.get(_httpServletRequest, "shared-with-me"));
@@ -162,18 +165,29 @@ public class ViewSharedAssetsDisplayContext {
 			navigationItem -> {
 				navigationItem.setActive(!_isIncoming());
 
-				PortletURL sharedByMeURL =
-					_liferayPortletResponse.createRenderURL();
-
-				sharedByMeURL.setParameter(
-					"incoming", Boolean.FALSE.toString());
-
-				navigationItem.setHref(sharedByMeURL);
+				navigationItem.setHref(
+					PortletURLBuilder.createRenderURL(
+						_liferayPortletResponse
+					).setParameter(
+						"incoming", false
+					).buildPortletURL());
 
 				navigationItem.setLabel(
 					LanguageUtil.get(_httpServletRequest, "shared-by-me"));
 			}
 		).build();
+	}
+
+	public String getOrderByCol() {
+		if (Validator.isNotNull(_orderByCol)) {
+			return _orderByCol;
+		}
+
+		_orderByCol = SearchOrderByUtil.getOrderByCol(
+			_httpServletRequest, SharingPortletKeys.SHARED_ASSETS,
+			"modified-date");
+
+		return _orderByCol;
 	}
 
 	public PortletURL getSelectAssetTypeURL() {
@@ -219,13 +233,11 @@ public class ViewSharedAssetsDisplayContext {
 					_httpServletRequest));
 		}
 
-		boolean containsManageCollaboratorsPermission =
-			_sharingPermission.containsManageCollaboratorsPermission(
+		if (_sharingPermission.containsManageCollaboratorsPermission(
 				_themeDisplay.getPermissionChecker(),
 				sharingEntry.getClassNameId(), sharingEntry.getClassPK(),
-				_themeDisplay.getScopeGroupId());
+				_themeDisplay.getScopeGroupId())) {
 
-		if (containsManageCollaboratorsPermission) {
 			menuItems.add(
 				_sharingMenuItemFactory.createManageCollaboratorsMenuItem(
 					sharingEntry.getClassName(), sharingEntry.getClassPK(),
@@ -247,18 +259,29 @@ public class ViewSharedAssetsDisplayContext {
 	}
 
 	public String getSortingOrder() {
-		return ParamUtil.getString(_httpServletRequest, "orderByType", "asc");
+		if (Validator.isNotNull(_orderByType)) {
+			return _orderByType;
+		}
+
+		_orderByType = SearchOrderByUtil.getOrderByType(
+			_httpServletRequest, SharingPortletKeys.SHARED_ASSETS, "asc");
+
+		return _orderByType;
 	}
 
 	public PortletURL getSortingURL() throws PortletException {
-		String orderByType = getSortingOrder();
+		return PortletURLBuilder.create(
+			_getCurrentSortingURL()
+		).setParameter(
+			"orderByType",
+			() -> {
+				if (Objects.equals(getSortingOrder(), "asc")) {
+					return "desc";
+				}
 
-		PortletURL sortingURL = _getCurrentSortingURL();
-
-		sortingURL.setParameter(
-			"orderByType", Objects.equals(orderByType, "asc") ? "desc" : "asc");
-
-		return sortingURL;
+				return "asc";
+			}
+		).buildPortletURL();
 	}
 
 	public String getTitle(SharingEntry sharingEntry) {
@@ -269,18 +292,16 @@ public class ViewSharedAssetsDisplayContext {
 			return StringPool.BLANK;
 		}
 
-		return sharingEntryInterpreter.getTitle(sharingEntry);
+		return HtmlUtil.escape(sharingEntryInterpreter.getTitle(sharingEntry));
 	}
 
 	public boolean isVisible(SharingEntry sharingEntry) throws PortalException {
 		SharingEntryInterpreter sharingEntryInterpreter =
 			_sharingEntryInterpreterFunction.apply(sharingEntry);
 
-		if (sharingEntryInterpreter == null) {
-			return false;
-		}
+		if ((sharingEntryInterpreter == null) ||
+			!sharingEntryInterpreter.isVisible(sharingEntry)) {
 
-		if (!sharingEntryInterpreter.isVisible(sharingEntry)) {
 			return false;
 		}
 
@@ -296,45 +317,28 @@ public class ViewSharedAssetsDisplayContext {
 	}
 
 	public void populateResults(SearchContainer<SharingEntry> searchContainer) {
-		long classNameId = 0;
-
-		String className = ParamUtil.getString(
-			_httpServletRequest, "className");
-
-		if (Validator.isNotNull(className)) {
-			classNameId = ClassNameLocalServiceUtil.getClassNameId(className);
-		}
+		long classNameId = ClassNameLocalServiceUtil.getClassNameId(
+			ParamUtil.getString(_httpServletRequest, "className"));
 
 		if (_isIncoming()) {
-			int total = _sharingEntryLocalService.getToUserSharingEntriesCount(
-				_themeDisplay.getUserId(), classNameId);
-
-			searchContainer.setTotal(total);
-
-			List<SharingEntry> sharingEntries =
-				_sharingEntryLocalService.getToUserSharingEntries(
+			searchContainer.setResultsAndTotal(
+				() -> _sharingEntryLocalService.getToUserSharingEntries(
 					_themeDisplay.getUserId(), classNameId,
 					searchContainer.getStart(), searchContainer.getEnd(),
 					new SharingEntryModifiedDateComparator(
-						Objects.equals(getSortingOrder(), "asc")));
-
-			searchContainer.setResults(sharingEntries);
+						Objects.equals(getSortingOrder(), "asc"))),
+				_sharingEntryLocalService.getToUserSharingEntriesCount(
+					_themeDisplay.getUserId(), classNameId));
 		}
 		else {
-			int total =
-				_sharingEntryLocalService.getFromUserSharingEntriesCount(
-					_themeDisplay.getUserId(), classNameId);
-
-			searchContainer.setTotal(total);
-
-			List<SharingEntry> sharingEntries =
-				_sharingEntryLocalService.getFromUserSharingEntries(
+			searchContainer.setResultsAndTotal(
+				() -> _sharingEntryLocalService.getFromUserSharingEntries(
 					_themeDisplay.getUserId(), classNameId,
 					searchContainer.getStart(), searchContainer.getEnd(),
 					new SharingEntryModifiedDateComparator(
-						Objects.equals(getSortingOrder(), "asc")));
-
-			searchContainer.setResults(sharingEntries);
+						Objects.equals(getSortingOrder(), "asc"))),
+				_sharingEntryLocalService.getFromUserSharingEntriesCount(
+					_themeDisplay.getUserId(), classNameId));
 		}
 	}
 
@@ -385,12 +389,13 @@ public class ViewSharedAssetsDisplayContext {
 			dropdownItem -> {
 				dropdownItem.setActive(Validator.isNull(className));
 
-				PortletURL viewAllClassNamesURL = PortletURLUtil.clone(
-					_currentURLObj, _liferayPortletResponse);
-
-				viewAllClassNamesURL.setParameter("className", (String)null);
-
-				dropdownItem.setHref(viewAllClassNamesURL);
+				dropdownItem.setHref(
+					PortletURLBuilder.create(
+						PortletURLUtil.clone(
+							_currentURLObj, _liferayPortletResponse)
+					).setParameter(
+						"className", (String)null
+					).buildPortletURL());
 
 				dropdownItem.setLabel(
 					LanguageUtil.get(_httpServletRequest, "all"));
@@ -407,11 +412,8 @@ public class ViewSharedAssetsDisplayContext {
 	private List<DropdownItem> _getOrderByDropdownItems() {
 		return DropdownItemListBuilder.add(
 			dropdownItem -> {
-				String orderByCol = ParamUtil.getString(
-					_httpServletRequest, "orderByCol", "sharedDate");
-
 				dropdownItem.setActive(
-					Objects.equals(orderByCol, "sharedDate"));
+					Objects.equals(getOrderByCol(), "sharedDate"));
 
 				dropdownItem.setHref(
 					_getCurrentSortingURL(), "orderByCol", "sharedDate");
@@ -473,6 +475,8 @@ public class ViewSharedAssetsDisplayContext {
 	private final ItemSelector _itemSelector;
 	private final LiferayPortletRequest _liferayPortletRequest;
 	private final LiferayPortletResponse _liferayPortletResponse;
+	private String _orderByCol;
+	private String _orderByType;
 	private final SharedAssetsFilterItemTracker _sharedAssetsFilterItemTracker;
 	private final SharingConfigurationFactory _sharingConfigurationFactory;
 	private final Function<SharingEntry, SharingEntryInterpreter>

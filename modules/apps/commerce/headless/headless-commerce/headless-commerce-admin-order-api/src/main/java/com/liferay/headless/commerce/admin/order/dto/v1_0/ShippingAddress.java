@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
@@ -55,7 +56,11 @@ public class ShippingAddress implements Serializable {
 		return ObjectMapperUtil.readValue(ShippingAddress.class, json);
 	}
 
-	@Schema
+	public static ShippingAddress unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(ShippingAddress.class, json);
+	}
+
+	@Schema(example = "Diamond Bar")
 	public String getCity() {
 		return city;
 	}
@@ -82,7 +87,7 @@ public class ShippingAddress implements Serializable {
 	@NotEmpty
 	protected String city;
 
-	@Schema
+	@Schema(example = "US")
 	public String getCountryISOCode() {
 		return countryISOCode;
 	}
@@ -111,7 +116,7 @@ public class ShippingAddress implements Serializable {
 	@NotEmpty
 	protected String countryISOCode;
 
-	@Schema
+	@Schema(example = "right stairs, first room on the left")
 	public String getDescription() {
 		return description;
 	}
@@ -139,7 +144,7 @@ public class ShippingAddress implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String description;
 
-	@Schema
+	@Schema(example = "AB-34098-789-N")
 	public String getExternalReferenceCode() {
 		return externalReferenceCode;
 	}
@@ -168,7 +173,7 @@ public class ShippingAddress implements Serializable {
 	protected String externalReferenceCode;
 
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "31130")
 	public Long getId() {
 		return id;
 	}
@@ -194,7 +199,7 @@ public class ShippingAddress implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Long id;
 
-	@Schema
+	@Schema(example = "33.9976884")
 	public Double getLatitude() {
 		return latitude;
 	}
@@ -222,7 +227,7 @@ public class ShippingAddress implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Double latitude;
 
-	@Schema
+	@Schema(example = "-117.8144595")
 	public Double getLongitude() {
 		return longitude;
 	}
@@ -250,7 +255,7 @@ public class ShippingAddress implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Double longitude;
 
-	@Schema
+	@Schema(example = "Alessio Antonio Rendina")
 	public String getName() {
 		return name;
 	}
@@ -277,7 +282,7 @@ public class ShippingAddress implements Serializable {
 	@NotEmpty
 	protected String name;
 
-	@Schema
+	@Schema(example = "(123) 456 7890")
 	public String getPhoneNumber() {
 		return phoneNumber;
 	}
@@ -305,7 +310,7 @@ public class ShippingAddress implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String phoneNumber;
 
-	@Schema
+	@Schema(example = "CA")
 	public String getRegionISOCode() {
 		return regionISOCode;
 	}
@@ -333,7 +338,7 @@ public class ShippingAddress implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String regionISOCode;
 
-	@Schema
+	@Schema(example = "1400 Montefino Ave")
 	public String getStreet1() {
 		return street1;
 	}
@@ -362,7 +367,7 @@ public class ShippingAddress implements Serializable {
 	@NotEmpty
 	protected String street1;
 
-	@Schema
+	@Schema(example = "1st floor")
 	public String getStreet2() {
 		return street2;
 	}
@@ -390,7 +395,7 @@ public class ShippingAddress implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String street2;
 
-	@Schema
+	@Schema(example = "suite 200")
 	public String getStreet3() {
 		return street3;
 	}
@@ -418,7 +423,7 @@ public class ShippingAddress implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String street3;
 
-	@Schema
+	@Schema(example = "91765")
 	public String getZip() {
 		return zip;
 	}
@@ -661,15 +666,16 @@ public class ShippingAddress implements Serializable {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.commerce.admin.order.dto.v1_0.ShippingAddress",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
 	}
 
 	private static boolean _isArray(Object value) {
@@ -695,8 +701,8 @@ public class ShippingAddress implements Serializable {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -727,7 +733,7 @@ public class ShippingAddress implements Serializable {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -735,7 +741,7 @@ public class ShippingAddress implements Serializable {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -743,5 +749,10 @@ public class ShippingAddress implements Serializable {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

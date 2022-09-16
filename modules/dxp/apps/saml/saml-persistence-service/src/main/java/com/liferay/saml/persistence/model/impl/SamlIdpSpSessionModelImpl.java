@@ -27,14 +27,15 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.saml.persistence.model.SamlIdpSpSession;
 import com.liferay.saml.persistence.model.SamlIdpSpSessionModel;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
 import java.util.Collections;
@@ -42,6 +43,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -71,8 +73,7 @@ public class SamlIdpSpSessionModelImpl
 		{"userId", Types.BIGINT}, {"userName", Types.VARCHAR},
 		{"createDate", Types.TIMESTAMP}, {"modifiedDate", Types.TIMESTAMP},
 		{"samlIdpSsoSessionId", Types.BIGINT},
-		{"samlSpEntityId", Types.VARCHAR}, {"nameIdFormat", Types.VARCHAR},
-		{"nameIdValue", Types.VARCHAR}
+		{"samlPeerBindingId", Types.BIGINT}
 	};
 
 	public static final Map<String, Integer> TABLE_COLUMNS_MAP =
@@ -86,13 +87,11 @@ public class SamlIdpSpSessionModelImpl
 		TABLE_COLUMNS_MAP.put("createDate", Types.TIMESTAMP);
 		TABLE_COLUMNS_MAP.put("modifiedDate", Types.TIMESTAMP);
 		TABLE_COLUMNS_MAP.put("samlIdpSsoSessionId", Types.BIGINT);
-		TABLE_COLUMNS_MAP.put("samlSpEntityId", Types.VARCHAR);
-		TABLE_COLUMNS_MAP.put("nameIdFormat", Types.VARCHAR);
-		TABLE_COLUMNS_MAP.put("nameIdValue", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("samlPeerBindingId", Types.BIGINT);
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table SamlIdpSpSession (samlIdpSpSessionId LONG not null primary key,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,samlIdpSsoSessionId LONG,samlSpEntityId VARCHAR(1024) null,nameIdFormat VARCHAR(1024) null,nameIdValue VARCHAR(1024) null)";
+		"create table SamlIdpSpSession (samlIdpSpSessionId LONG not null primary key,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,samlIdpSsoSessionId LONG,samlPeerBindingId LONG)";
 
 	public static final String TABLE_SQL_DROP = "drop table SamlIdpSpSession";
 
@@ -109,29 +108,23 @@ public class SamlIdpSpSessionModelImpl
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long CREATEDATE_COLUMN_BITMASK = 1L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long SAMLIDPSSOSESSIONID_COLUMN_BITMASK = 2L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
-	 */
-	@Deprecated
-	public static final long SAMLSPENTITYID_COLUMN_BITMASK = 4L;
-
-	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *		#getColumnBitmask(String)
+	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long SAMLIDPSPSESSIONID_COLUMN_BITMASK = 8L;
+	public static final long SAMLIDPSPSESSIONID_COLUMN_BITMASK = 4L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
@@ -232,34 +225,6 @@ public class SamlIdpSpSessionModelImpl
 		return _attributeSetterBiConsumers;
 	}
 
-	private static Function<InvocationHandler, SamlIdpSpSession>
-		_getProxyProviderFunction() {
-
-		Class<?> proxyClass = ProxyUtil.getProxyClass(
-			SamlIdpSpSession.class.getClassLoader(), SamlIdpSpSession.class,
-			ModelWrapper.class);
-
-		try {
-			Constructor<SamlIdpSpSession> constructor =
-				(Constructor<SamlIdpSpSession>)proxyClass.getConstructor(
-					InvocationHandler.class);
-
-			return invocationHandler -> {
-				try {
-					return constructor.newInstance(invocationHandler);
-				}
-				catch (ReflectiveOperationException
-							reflectiveOperationException) {
-
-					throw new InternalError(reflectiveOperationException);
-				}
-			};
-		}
-		catch (NoSuchMethodException noSuchMethodException) {
-			throw new InternalError(noSuchMethodException);
-		}
-	}
-
 	private static final Map<String, Function<SamlIdpSpSession, Object>>
 		_attributeGetterFunctions;
 	private static final Map<String, BiConsumer<SamlIdpSpSession, Object>>
@@ -312,23 +277,11 @@ public class SamlIdpSpSessionModelImpl
 			(BiConsumer<SamlIdpSpSession, Long>)
 				SamlIdpSpSession::setSamlIdpSsoSessionId);
 		attributeGetterFunctions.put(
-			"samlSpEntityId", SamlIdpSpSession::getSamlSpEntityId);
+			"samlPeerBindingId", SamlIdpSpSession::getSamlPeerBindingId);
 		attributeSetterBiConsumers.put(
-			"samlSpEntityId",
-			(BiConsumer<SamlIdpSpSession, String>)
-				SamlIdpSpSession::setSamlSpEntityId);
-		attributeGetterFunctions.put(
-			"nameIdFormat", SamlIdpSpSession::getNameIdFormat);
-		attributeSetterBiConsumers.put(
-			"nameIdFormat",
-			(BiConsumer<SamlIdpSpSession, String>)
-				SamlIdpSpSession::setNameIdFormat);
-		attributeGetterFunctions.put(
-			"nameIdValue", SamlIdpSpSession::getNameIdValue);
-		attributeSetterBiConsumers.put(
-			"nameIdValue",
-			(BiConsumer<SamlIdpSpSession, String>)
-				SamlIdpSpSession::setNameIdValue);
+			"samlPeerBindingId",
+			(BiConsumer<SamlIdpSpSession, Long>)
+				SamlIdpSpSession::setSamlPeerBindingId);
 
 		_attributeGetterFunctions = Collections.unmodifiableMap(
 			attributeGetterFunctions);
@@ -481,69 +434,17 @@ public class SamlIdpSpSessionModelImpl
 	}
 
 	@Override
-	public String getSamlSpEntityId() {
-		if (_samlSpEntityId == null) {
-			return "";
-		}
-		else {
-			return _samlSpEntityId;
-		}
+	public long getSamlPeerBindingId() {
+		return _samlPeerBindingId;
 	}
 
 	@Override
-	public void setSamlSpEntityId(String samlSpEntityId) {
+	public void setSamlPeerBindingId(long samlPeerBindingId) {
 		if (_columnOriginalValues == Collections.EMPTY_MAP) {
 			_setColumnOriginalValues();
 		}
 
-		_samlSpEntityId = samlSpEntityId;
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *             #getColumnOriginalValue(String)}
-	 */
-	@Deprecated
-	public String getOriginalSamlSpEntityId() {
-		return getColumnOriginalValue("samlSpEntityId");
-	}
-
-	@Override
-	public String getNameIdFormat() {
-		if (_nameIdFormat == null) {
-			return "";
-		}
-		else {
-			return _nameIdFormat;
-		}
-	}
-
-	@Override
-	public void setNameIdFormat(String nameIdFormat) {
-		if (_columnOriginalValues == Collections.EMPTY_MAP) {
-			_setColumnOriginalValues();
-		}
-
-		_nameIdFormat = nameIdFormat;
-	}
-
-	@Override
-	public String getNameIdValue() {
-		if (_nameIdValue == null) {
-			return "";
-		}
-		else {
-			return _nameIdValue;
-		}
-	}
-
-	@Override
-	public void setNameIdValue(String nameIdValue) {
-		if (_columnOriginalValues == Collections.EMPTY_MAP) {
-			_setColumnOriginalValues();
-		}
-
-		_nameIdValue = nameIdValue;
+		_samlPeerBindingId = samlPeerBindingId;
 	}
 
 	public long getColumnBitmask() {
@@ -560,7 +461,9 @@ public class SamlIdpSpSessionModelImpl
 		for (Map.Entry<String, Object> entry :
 				_columnOriginalValues.entrySet()) {
 
-			if (entry.getValue() != getColumnValue(entry.getKey())) {
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
 				_columnBitmask |= _columnBitmasks.get(entry.getKey());
 			}
 		}
@@ -607,11 +510,33 @@ public class SamlIdpSpSessionModelImpl
 		samlIdpSpSessionImpl.setCreateDate(getCreateDate());
 		samlIdpSpSessionImpl.setModifiedDate(getModifiedDate());
 		samlIdpSpSessionImpl.setSamlIdpSsoSessionId(getSamlIdpSsoSessionId());
-		samlIdpSpSessionImpl.setSamlSpEntityId(getSamlSpEntityId());
-		samlIdpSpSessionImpl.setNameIdFormat(getNameIdFormat());
-		samlIdpSpSessionImpl.setNameIdValue(getNameIdValue());
+		samlIdpSpSessionImpl.setSamlPeerBindingId(getSamlPeerBindingId());
 
 		samlIdpSpSessionImpl.resetOriginalValues();
+
+		return samlIdpSpSessionImpl;
+	}
+
+	@Override
+	public SamlIdpSpSession cloneWithOriginalValues() {
+		SamlIdpSpSessionImpl samlIdpSpSessionImpl = new SamlIdpSpSessionImpl();
+
+		samlIdpSpSessionImpl.setSamlIdpSpSessionId(
+			this.<Long>getColumnOriginalValue("samlIdpSpSessionId"));
+		samlIdpSpSessionImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		samlIdpSpSessionImpl.setUserId(
+			this.<Long>getColumnOriginalValue("userId"));
+		samlIdpSpSessionImpl.setUserName(
+			this.<String>getColumnOriginalValue("userName"));
+		samlIdpSpSessionImpl.setCreateDate(
+			this.<Date>getColumnOriginalValue("createDate"));
+		samlIdpSpSessionImpl.setModifiedDate(
+			this.<Date>getColumnOriginalValue("modifiedDate"));
+		samlIdpSpSessionImpl.setSamlIdpSsoSessionId(
+			this.<Long>getColumnOriginalValue("samlIdpSsoSessionId"));
+		samlIdpSpSessionImpl.setSamlPeerBindingId(
+			this.<Long>getColumnOriginalValue("samlPeerBindingId"));
 
 		return samlIdpSpSessionImpl;
 	}
@@ -725,29 +650,7 @@ public class SamlIdpSpSessionModelImpl
 		samlIdpSpSessionCacheModel.samlIdpSsoSessionId =
 			getSamlIdpSsoSessionId();
 
-		samlIdpSpSessionCacheModel.samlSpEntityId = getSamlSpEntityId();
-
-		String samlSpEntityId = samlIdpSpSessionCacheModel.samlSpEntityId;
-
-		if ((samlSpEntityId != null) && (samlSpEntityId.length() == 0)) {
-			samlIdpSpSessionCacheModel.samlSpEntityId = null;
-		}
-
-		samlIdpSpSessionCacheModel.nameIdFormat = getNameIdFormat();
-
-		String nameIdFormat = samlIdpSpSessionCacheModel.nameIdFormat;
-
-		if ((nameIdFormat != null) && (nameIdFormat.length() == 0)) {
-			samlIdpSpSessionCacheModel.nameIdFormat = null;
-		}
-
-		samlIdpSpSessionCacheModel.nameIdValue = getNameIdValue();
-
-		String nameIdValue = samlIdpSpSessionCacheModel.nameIdValue;
-
-		if ((nameIdValue != null) && (nameIdValue.length() == 0)) {
-			samlIdpSpSessionCacheModel.nameIdValue = null;
-		}
+		samlIdpSpSessionCacheModel.samlPeerBindingId = getSamlPeerBindingId();
 
 		return samlIdpSpSessionCacheModel;
 	}
@@ -758,7 +661,7 @@ public class SamlIdpSpSessionModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			(4 * attributeGetterFunctions.size()) + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -769,9 +672,27 @@ public class SamlIdpSpSessionModelImpl
 			Function<SamlIdpSpSession, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((SamlIdpSpSession)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply(
+				(SamlIdpSpSession)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -818,7 +739,9 @@ public class SamlIdpSpSessionModelImpl
 	private static class EscapedModelProxyProviderFunctionHolder {
 
 		private static final Function<InvocationHandler, SamlIdpSpSession>
-			_escapedModelProxyProviderFunction = _getProxyProviderFunction();
+			_escapedModelProxyProviderFunction =
+				ProxyUtil.getProxyProviderFunction(
+					SamlIdpSpSession.class, ModelWrapper.class);
 
 	}
 
@@ -830,9 +753,7 @@ public class SamlIdpSpSessionModelImpl
 	private Date _modifiedDate;
 	private boolean _setModifiedDate;
 	private long _samlIdpSsoSessionId;
-	private String _samlSpEntityId;
-	private String _nameIdFormat;
-	private String _nameIdValue;
+	private long _samlPeerBindingId;
 
 	public <T> T getColumnValue(String columnName) {
 		Function<SamlIdpSpSession, Object> function =
@@ -868,9 +789,7 @@ public class SamlIdpSpSessionModelImpl
 		_columnOriginalValues.put("createDate", _createDate);
 		_columnOriginalValues.put("modifiedDate", _modifiedDate);
 		_columnOriginalValues.put("samlIdpSsoSessionId", _samlIdpSsoSessionId);
-		_columnOriginalValues.put("samlSpEntityId", _samlSpEntityId);
-		_columnOriginalValues.put("nameIdFormat", _nameIdFormat);
-		_columnOriginalValues.put("nameIdValue", _nameIdValue);
+		_columnOriginalValues.put("samlPeerBindingId", _samlPeerBindingId);
 	}
 
 	private transient Map<String, Object> _columnOriginalValues;
@@ -898,11 +817,7 @@ public class SamlIdpSpSessionModelImpl
 
 		columnBitmasks.put("samlIdpSsoSessionId", 64L);
 
-		columnBitmasks.put("samlSpEntityId", 128L);
-
-		columnBitmasks.put("nameIdFormat", 256L);
-
-		columnBitmasks.put("nameIdValue", 512L);
+		columnBitmasks.put("samlPeerBindingId", 128L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}

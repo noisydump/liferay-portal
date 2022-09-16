@@ -24,7 +24,7 @@ import com.liferay.portal.kernel.model.ClassName;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
-import com.liferay.portal.kernel.upgrade.UpgradeViewCount;
+import com.liferay.portal.kernel.upgrade.ViewCountUpgradeProcess;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
@@ -60,9 +60,9 @@ public class UpgradeViewCountTest {
 
 		_db.runSQL(
 			"create table UpgradeViewCount (primaryKey LONG not null primary " +
-				"key, companyId LONG not null, readCount LONG);");
+				"key, companyId LONG not null, readCount LONG)");
 
-		_db.runSQL("insert into UpgradeViewCount values (1, 2, 3);");
+		_db.runSQL("insert into UpgradeViewCount values (1, 2, 3)");
 	}
 
 	@After
@@ -76,7 +76,7 @@ public class UpgradeViewCountTest {
 
 	@Test
 	public void testUpgrade() throws Exception {
-		UpgradeViewCount upgradeCTModel = new UpgradeViewCount(
+		ViewCountUpgradeProcess upgradeCTModel = new ViewCountUpgradeProcess(
 			"UpgradeViewCount", UpgradeViewCountTest.class, "primaryKey",
 			"readCount");
 
@@ -90,18 +90,18 @@ public class UpgradeViewCountTest {
 		upgradeCTModel.upgrade();
 
 		try (Connection connection = DataAccess.getConnection();
-			PreparedStatement ps = connection.prepareStatement(
+			PreparedStatement preparedStatement = connection.prepareStatement(
 				StringBundler.concat(
 					"select * from ViewCountEntry where companyId = 2 AND ",
 					"classNameId = ", _className.getClassNameId(),
 					" AND classPK = 1"));
-			ResultSet rs = ps.executeQuery()) {
+			ResultSet resultSet = preparedStatement.executeQuery()) {
 
-			Assert.assertTrue(rs.next());
+			Assert.assertTrue(resultSet.next());
 
-			Assert.assertEquals(3, rs.getLong("viewCount"));
+			Assert.assertEquals(3, resultSet.getLong("viewCount"));
 
-			Assert.assertFalse(rs.next());
+			Assert.assertFalse(resultSet.next());
 
 			DBInspector dbInspector = new DBInspector(connection);
 

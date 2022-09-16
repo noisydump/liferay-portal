@@ -19,6 +19,7 @@ import com.liferay.knowledge.base.constants.AdminActivityKeys;
 import com.liferay.knowledge.base.constants.KBCommentConstants;
 import com.liferay.knowledge.base.constants.KBConstants;
 import com.liferay.knowledge.base.exception.KBCommentContentException;
+import com.liferay.knowledge.base.exception.NoSuchArticleException;
 import com.liferay.knowledge.base.internal.util.AdminSubscriptionSenderFactory;
 import com.liferay.knowledge.base.model.KBArticle;
 import com.liferay.knowledge.base.model.KBComment;
@@ -27,6 +28,7 @@ import com.liferay.knowledge.base.service.KBArticleLocalService;
 import com.liferay.knowledge.base.service.KBTemplateLocalService;
 import com.liferay.knowledge.base.service.base.KBCommentLocalServiceBaseImpl;
 import com.liferay.knowledge.base.util.comparator.KBCommentCreateDateComparator;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactory;
@@ -38,7 +40,9 @@ import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
@@ -48,6 +52,8 @@ import com.liferay.portal.kernel.util.SubscriptionSender;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.ratings.kernel.model.RatingsEntry;
+import com.liferay.ratings.kernel.service.RatingsEntryLocalService;
+import com.liferay.social.kernel.service.SocialActivityLocalService;
 
 import java.text.DateFormat;
 
@@ -75,9 +81,9 @@ public class KBCommentLocalServiceImpl extends KBCommentLocalServiceBaseImpl {
 
 		// KB comment
 
-		User user = userLocalService.getUser(userId);
+		User user = _userLocalService.getUser(userId);
 		long groupId = serviceContext.getScopeGroupId();
-		Date now = new Date();
+		Date date = new Date();
 
 		validate(content);
 
@@ -90,8 +96,8 @@ public class KBCommentLocalServiceImpl extends KBCommentLocalServiceBaseImpl {
 		kbComment.setCompanyId(user.getCompanyId());
 		kbComment.setUserId(user.getUserId());
 		kbComment.setUserName(user.getFullName());
-		kbComment.setCreateDate(serviceContext.getCreateDate(now));
-		kbComment.setModifiedDate(serviceContext.getModifiedDate(now));
+		kbComment.setCreateDate(serviceContext.getCreateDate(date));
+		kbComment.setModifiedDate(serviceContext.getModifiedDate(date));
 		kbComment.setClassNameId(classNameId);
 		kbComment.setClassPK(classPK);
 		kbComment.setContent(content);
@@ -106,7 +112,7 @@ public class KBCommentLocalServiceImpl extends KBCommentLocalServiceBaseImpl {
 
 		putTitle(extraDataJSONObject, kbComment);
 
-		socialActivityLocalService.addActivity(
+		_socialActivityLocalService.addActivity(
 			userId, kbComment.getGroupId(), KBComment.class.getName(),
 			kbCommentId, AdminActivityKeys.ADD_KB_COMMENT,
 			extraDataJSONObject.toString(), 0);
@@ -140,7 +146,7 @@ public class KBCommentLocalServiceImpl extends KBCommentLocalServiceBaseImpl {
 
 		// Social
 
-		socialActivityLocalService.deleteActivities(
+		_socialActivityLocalService.deleteActivities(
 			KBComment.class.getName(), kbComment.getKbCommentId());
 
 		return kbComment;
@@ -159,7 +165,7 @@ public class KBCommentLocalServiceImpl extends KBCommentLocalServiceBaseImpl {
 		throws PortalException {
 
 		List<KBComment> kbComments = kbCommentPersistence.findByC_C(
-			classNameLocalService.getClassNameId(className), classPK);
+			_classNameLocalService.getClassNameId(className), classPK);
 
 		for (KBComment kbComment : kbComments) {
 			kbCommentLocalService.deleteKBComment(kbComment);
@@ -171,7 +177,7 @@ public class KBCommentLocalServiceImpl extends KBCommentLocalServiceBaseImpl {
 		throws PortalException {
 
 		return kbCommentPersistence.findByU_C_C_Last(
-			userId, classNameLocalService.getClassNameId(className), classPK,
+			userId, _classNameLocalService.getClassNameId(className), classPK,
 			new KBCommentCreateDateComparator());
 	}
 
@@ -206,7 +212,7 @@ public class KBCommentLocalServiceImpl extends KBCommentLocalServiceBaseImpl {
 		OrderByComparator<KBComment> orderByComparator) {
 
 		return kbCommentPersistence.findByU_C_C(
-			userId, classNameLocalService.getClassNameId(className), classPK,
+			userId, _classNameLocalService.getClassNameId(className), classPK,
 			start, end, orderByComparator);
 	}
 
@@ -225,7 +231,7 @@ public class KBCommentLocalServiceImpl extends KBCommentLocalServiceBaseImpl {
 		OrderByComparator<KBComment> orderByComparator) {
 
 		return kbCommentPersistence.findByC_C_S(
-			classNameLocalService.getClassNameId(className), classPK, status,
+			_classNameLocalService.getClassNameId(className), classPK, status,
 			start, end, orderByComparator);
 	}
 
@@ -235,7 +241,7 @@ public class KBCommentLocalServiceImpl extends KBCommentLocalServiceBaseImpl {
 		OrderByComparator<KBComment> orderByComparator) {
 
 		return kbCommentPersistence.findByC_C(
-			classNameLocalService.getClassNameId(className), classPK, start,
+			_classNameLocalService.getClassNameId(className), classPK, start,
 			end, orderByComparator);
 	}
 
@@ -244,7 +250,7 @@ public class KBCommentLocalServiceImpl extends KBCommentLocalServiceBaseImpl {
 		String className, long classPK, int[] status, int start, int end) {
 
 		return kbCommentPersistence.findByC_C_S(
-			classNameLocalService.getClassNameId(className), classPK, status,
+			_classNameLocalService.getClassNameId(className), classPK, status,
 			start, end, new KBCommentCreateDateComparator());
 	}
 
@@ -256,19 +262,19 @@ public class KBCommentLocalServiceImpl extends KBCommentLocalServiceBaseImpl {
 	@Override
 	public int getKBCommentsCount(long userId, String className, long classPK) {
 		return kbCommentPersistence.countByU_C_C(
-			userId, classNameLocalService.getClassNameId(className), classPK);
+			userId, _classNameLocalService.getClassNameId(className), classPK);
 	}
 
 	@Override
 	public int getKBCommentsCount(String className, long classPK) {
 		return kbCommentPersistence.countByC_C(
-			classNameLocalService.getClassNameId(className), classPK);
+			_classNameLocalService.getClassNameId(className), classPK);
 	}
 
 	@Override
 	public int getKBCommentsCount(String className, long classPK, int status) {
 		return kbCommentPersistence.countByC_C_S(
-			classNameLocalService.getClassNameId(className), classPK, status);
+			_classNameLocalService.getClassNameId(className), classPK, status);
 	}
 
 	@Override
@@ -276,7 +282,7 @@ public class KBCommentLocalServiceImpl extends KBCommentLocalServiceBaseImpl {
 		String className, long classPK, int[] status) {
 
 		return kbCommentPersistence.countByC_C_S(
-			classNameLocalService.getClassNameId(className), classPK, status);
+			_classNameLocalService.getClassNameId(className), classPK, status);
 	}
 
 	@Override
@@ -307,7 +313,7 @@ public class KBCommentLocalServiceImpl extends KBCommentLocalServiceBaseImpl {
 
 		putTitle(extraDataJSONObject, kbComment);
 
-		socialActivityLocalService.addActivity(
+		_socialActivityLocalService.addActivity(
 			kbComment.getUserId(), kbComment.getGroupId(),
 			KBComment.class.getName(), kbCommentId,
 			AdminActivityKeys.UPDATE_KB_COMMENT, extraDataJSONObject.toString(),
@@ -402,9 +408,9 @@ public class KBCommentLocalServiceImpl extends KBCommentLocalServiceBaseImpl {
 	protected int getUserRating(long userId, long classNameId, long classPK)
 		throws PortalException {
 
-		ClassName className = classNameLocalService.getClassName(classNameId);
+		ClassName className = _classNameLocalService.getClassName(classNameId);
 
-		RatingsEntry ratingsEntry = ratingsEntryLocalService.fetchEntry(
+		RatingsEntry ratingsEntry = _ratingsEntryLocalService.fetchEntry(
 			userId, className.getValue(), classPK);
 
 		if (ratingsEntry == null) {
@@ -450,6 +456,24 @@ public class KBCommentLocalServiceImpl extends KBCommentLocalServiceBaseImpl {
 			return;
 		}
 
+		KBArticle kbArticle = _kbArticleLocalService.fetchLatestKBArticle(
+			kbComment.getClassPK(), WorkflowConstants.STATUS_APPROVED);
+
+		if (kbArticle == null) {
+			KBTemplate kbTemplate = _kbTemplateLocalService.fetchKBTemplate(
+				kbComment.getClassPK());
+
+			if (kbTemplate != null) {
+				return;
+			}
+
+			throw new NoSuchArticleException(
+				StringBundler.concat(
+					"No KBArticle exists with the key {resourcePrimKey=",
+					kbComment.getClassPK(), ", status=",
+					WorkflowConstants.STATUS_APPROVED, "}"));
+		}
+
 		String fromName = kbGroupServiceConfiguration.emailFromName();
 		String fromAddress = kbGroupServiceConfiguration.emailFromAddress();
 
@@ -457,9 +481,6 @@ public class KBCommentLocalServiceImpl extends KBCommentLocalServiceBaseImpl {
 			kbComment.getStatus(), kbGroupServiceConfiguration);
 		String body = getEmailKBArticleSuggestionNotificationBody(
 			kbComment.getStatus(), kbGroupServiceConfiguration);
-
-		KBArticle kbArticle = _kbArticleLocalService.getLatestKBArticle(
-			kbComment.getClassPK(), WorkflowConstants.STATUS_APPROVED);
 
 		String kbArticleContent = StringUtil.replace(
 			kbArticle.getContent(), new String[] {"href=\"/", "src=\"/"},
@@ -493,7 +514,7 @@ public class KBCommentLocalServiceImpl extends KBCommentLocalServiceBaseImpl {
 		subscriptionSender.setScopeGroupId(kbArticle.getGroupId());
 		subscriptionSender.setSubject(subject);
 
-		User user = userLocalService.getUser(kbComment.getUserId());
+		User user = _userLocalService.getUser(kbComment.getUserId());
 
 		subscriptionSender.addRuntimeSubscribers(
 			user.getEmailAddress(), user.getFullName());
@@ -544,6 +565,9 @@ public class KBCommentLocalServiceImpl extends KBCommentLocalServiceBaseImpl {
 		KBCommentLocalServiceImpl.class);
 
 	@Reference
+	private ClassNameLocalService _classNameLocalService;
+
+	@Reference
 	private ConfigurationProvider _configurationProvider;
 
 	@Reference
@@ -554,5 +578,14 @@ public class KBCommentLocalServiceImpl extends KBCommentLocalServiceBaseImpl {
 
 	@Reference
 	private KBTemplateLocalService _kbTemplateLocalService;
+
+	@Reference
+	private RatingsEntryLocalService _ratingsEntryLocalService;
+
+	@Reference
+	private SocialActivityLocalService _socialActivityLocalService;
+
+	@Reference
+	private UserLocalService _userLocalService;
 
 }

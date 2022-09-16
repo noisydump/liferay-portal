@@ -16,7 +16,6 @@ package com.liferay.account.model.impl;
 
 import com.liferay.account.model.AccountEntryUserRel;
 import com.liferay.account.model.AccountEntryUserRelModel;
-import com.liferay.account.model.AccountEntryUserRelSoap;
 import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.expando.kernel.util.ExpandoBridgeFactoryUtil;
 import com.liferay.petra.string.StringBundler;
@@ -31,20 +30,21 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
-import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -107,20 +107,20 @@ public class AccountEntryUserRelModelImpl
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long ACCOUNTENTRYID_COLUMN_BITMASK = 1L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long ACCOUNTUSERID_COLUMN_BITMASK = 2L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *		#getColumnBitmask(String)
+	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long ACCOUNTENTRYUSERRELID_COLUMN_BITMASK = 4L;
@@ -137,57 +137,6 @@ public class AccountEntryUserRelModelImpl
 	 */
 	@Deprecated
 	public static void setFinderCacheEnabled(boolean finderCacheEnabled) {
-	}
-
-	/**
-	 * Converts the soap model instance into a normal model instance.
-	 *
-	 * @param soapModel the soap model instance to convert
-	 * @return the normal model instance
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static AccountEntryUserRel toModel(
-		AccountEntryUserRelSoap soapModel) {
-
-		if (soapModel == null) {
-			return null;
-		}
-
-		AccountEntryUserRel model = new AccountEntryUserRelImpl();
-
-		model.setMvccVersion(soapModel.getMvccVersion());
-		model.setAccountEntryUserRelId(soapModel.getAccountEntryUserRelId());
-		model.setCompanyId(soapModel.getCompanyId());
-		model.setAccountEntryId(soapModel.getAccountEntryId());
-		model.setAccountUserId(soapModel.getAccountUserId());
-
-		return model;
-	}
-
-	/**
-	 * Converts the soap model instances into normal model instances.
-	 *
-	 * @param soapModels the soap model instances to convert
-	 * @return the normal model instances
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static List<AccountEntryUserRel> toModels(
-		AccountEntryUserRelSoap[] soapModels) {
-
-		if (soapModels == null) {
-			return null;
-		}
-
-		List<AccountEntryUserRel> models = new ArrayList<AccountEntryUserRel>(
-			soapModels.length);
-
-		for (AccountEntryUserRelSoap soapModel : soapModels) {
-			models.add(toModel(soapModel));
-		}
-
-		return models;
 	}
 
 	public AccountEntryUserRelModelImpl() {
@@ -273,34 +222,6 @@ public class AccountEntryUserRelModelImpl
 		getAttributeSetterBiConsumers() {
 
 		return _attributeSetterBiConsumers;
-	}
-
-	private static Function<InvocationHandler, AccountEntryUserRel>
-		_getProxyProviderFunction() {
-
-		Class<?> proxyClass = ProxyUtil.getProxyClass(
-			AccountEntryUserRel.class.getClassLoader(),
-			AccountEntryUserRel.class, ModelWrapper.class);
-
-		try {
-			Constructor<AccountEntryUserRel> constructor =
-				(Constructor<AccountEntryUserRel>)proxyClass.getConstructor(
-					InvocationHandler.class);
-
-			return invocationHandler -> {
-				try {
-					return constructor.newInstance(invocationHandler);
-				}
-				catch (ReflectiveOperationException
-							reflectiveOperationException) {
-
-					throw new InternalError(reflectiveOperationException);
-				}
-			};
-		}
-		catch (NoSuchMethodException noSuchMethodException) {
-			throw new InternalError(noSuchMethodException);
-		}
 	}
 
 	private static final Map<String, Function<AccountEntryUserRel, Object>>
@@ -480,7 +401,9 @@ public class AccountEntryUserRelModelImpl
 		for (Map.Entry<String, Object> entry :
 				_columnOriginalValues.entrySet()) {
 
-			if (entry.getValue() != getColumnValue(entry.getKey())) {
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
 				_columnBitmask |= _columnBitmasks.get(entry.getKey());
 			}
 		}
@@ -530,6 +453,25 @@ public class AccountEntryUserRelModelImpl
 		accountEntryUserRelImpl.setAccountUserId(getAccountUserId());
 
 		accountEntryUserRelImpl.resetOriginalValues();
+
+		return accountEntryUserRelImpl;
+	}
+
+	@Override
+	public AccountEntryUserRel cloneWithOriginalValues() {
+		AccountEntryUserRelImpl accountEntryUserRelImpl =
+			new AccountEntryUserRelImpl();
+
+		accountEntryUserRelImpl.setMvccVersion(
+			this.<Long>getColumnOriginalValue("mvccVersion"));
+		accountEntryUserRelImpl.setAccountEntryUserRelId(
+			this.<Long>getColumnOriginalValue("accountEntryUserRelId"));
+		accountEntryUserRelImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		accountEntryUserRelImpl.setAccountEntryId(
+			this.<Long>getColumnOriginalValue("accountEntryId"));
+		accountEntryUserRelImpl.setAccountUserId(
+			this.<Long>getColumnOriginalValue("accountUserId"));
 
 		return accountEntryUserRelImpl;
 	}
@@ -626,7 +568,7 @@ public class AccountEntryUserRelModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			(4 * attributeGetterFunctions.size()) + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -637,9 +579,27 @@ public class AccountEntryUserRelModelImpl
 			Function<AccountEntryUserRel, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((AccountEntryUserRel)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply(
+				(AccountEntryUserRel)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -686,7 +646,9 @@ public class AccountEntryUserRelModelImpl
 	private static class EscapedModelProxyProviderFunctionHolder {
 
 		private static final Function<InvocationHandler, AccountEntryUserRel>
-			_escapedModelProxyProviderFunction = _getProxyProviderFunction();
+			_escapedModelProxyProviderFunction =
+				ProxyUtil.getProxyProviderFunction(
+					AccountEntryUserRel.class, ModelWrapper.class);
 
 	}
 

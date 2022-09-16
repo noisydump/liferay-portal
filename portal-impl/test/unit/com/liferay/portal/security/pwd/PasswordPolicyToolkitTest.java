@@ -17,15 +17,23 @@ package com.liferay.portal.security.pwd;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.PasswordPolicy;
 import com.liferay.portal.model.impl.PasswordPolicyImpl;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
  * @author Mika Koivisto
  */
 public class PasswordPolicyToolkitTest {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Before
 	public void setUp() throws Exception {
@@ -54,47 +62,47 @@ public class PasswordPolicyToolkitTest {
 
 	@Test
 	public void testValidateLength() {
-		Assert.assertEquals(false, validate("xH9fxM@"));
+		Assert.assertFalse(validate("xH9fxM@"));
 	}
 
 	@Test
 	public void testValidateMinAlphanumeric() {
-		Assert.assertEquals(false, validate("xH9f.,@-"));
+		Assert.assertFalse(validate("xH9f.,@-"));
 	}
 
 	@Test
 	public void testValidateMinLowerChars() {
-		Assert.assertEquals(false, validate("xHFXM@W"));
+		Assert.assertFalse(validate("xHFXM@W"));
 	}
 
 	@Test
 	public void testValidateMinNumbers() {
-		Assert.assertEquals(false, validate("xHafxMkw"));
+		Assert.assertFalse(validate("xHafxMkw"));
 	}
 
 	@Test
 	public void testValidateMinSpecial() {
-		Assert.assertEquals(false, validate("xH9fxMkw"));
+		Assert.assertFalse(validate("xH9fxMkw"));
 	}
 
 	@Test
 	public void testValidateMinUpperChars() {
-		Assert.assertEquals(false, validate("xh9fxM@w"));
+		Assert.assertFalse(validate("xh9fxM@w"));
 	}
 
 	@Test
 	public void testValidateRegex() {
-		Assert.assertEquals(false, validate("xH9fxM@"));
+		Assert.assertFalse(validate("xH9fxM@"));
 	}
 
 	@Test
 	public void testValidateValid() {
-		Assert.assertEquals(true, validate("xH9fxM@w"));
+		Assert.assertTrue(validate("xH9fxM@w"));
 	}
 
 	@Test
 	public void testValidateValidUpperCase() {
-		Assert.assertEquals(true, validate("xO9fxlM@w"));
+		Assert.assertTrue(validate("xO9fxlM@w"));
 	}
 
 	protected boolean validate(String password) {

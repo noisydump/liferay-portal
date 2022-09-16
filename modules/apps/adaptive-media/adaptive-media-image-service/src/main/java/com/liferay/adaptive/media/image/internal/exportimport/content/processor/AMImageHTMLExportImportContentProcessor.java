@@ -96,7 +96,7 @@ public class AMImageHTMLExportImportContentProcessor
 		}
 		catch (PortalException portalException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(portalException, portalException);
+				_log.warn(portalException);
 			}
 
 			return null;
@@ -205,11 +205,8 @@ public class AMImageHTMLExportImportContentProcessor
 					ExportImportPathUtil.getModelPath(fileEntry));
 			}
 			catch (PortalException portalException) {
-				if (_log.isDebugEnabled()) {
-					_log.debug(portalException, portalException);
-				}
-				else if (_log.isWarnEnabled()) {
-					_log.warn(portalException.getMessage());
+				if (_log.isWarnEnabled()) {
+					_log.warn(portalException);
 				}
 			}
 		}

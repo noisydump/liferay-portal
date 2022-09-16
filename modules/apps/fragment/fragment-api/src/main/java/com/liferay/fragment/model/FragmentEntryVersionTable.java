@@ -91,6 +91,8 @@ public class FragmentEntryVersionTable
 	public final Column<FragmentEntryVersionTable, Clob> configuration =
 		createColumn(
 			"configuration", Clob.class, Types.CLOB, Column.FLAG_DEFAULT);
+	public final Column<FragmentEntryVersionTable, String> icon = createColumn(
+		"icon", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
 	public final Column<FragmentEntryVersionTable, Long> previewFileEntryId =
 		createColumn(
 			"previewFileEntryId", Long.class, Types.BIGINT,
@@ -100,6 +102,9 @@ public class FragmentEntryVersionTable
 			"readOnly", Boolean.class, Types.BOOLEAN, Column.FLAG_DEFAULT);
 	public final Column<FragmentEntryVersionTable, Integer> type = createColumn(
 		"type_", Integer.class, Types.INTEGER, Column.FLAG_DEFAULT);
+	public final Column<FragmentEntryVersionTable, Clob> typeOptions =
+		createColumn(
+			"typeOptions", Clob.class, Types.CLOB, Column.FLAG_DEFAULT);
 	public final Column<FragmentEntryVersionTable, Date> lastPublishDate =
 		createColumn(
 			"lastPublishDate", Date.class, Types.TIMESTAMP,

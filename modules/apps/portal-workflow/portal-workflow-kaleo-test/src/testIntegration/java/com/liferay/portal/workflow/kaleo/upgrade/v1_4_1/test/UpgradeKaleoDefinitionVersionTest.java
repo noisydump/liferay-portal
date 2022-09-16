@@ -40,8 +40,6 @@ import com.liferay.portal.workflow.kaleo.model.KaleoDefinition;
 import com.liferay.portal.workflow.kaleo.model.KaleoDefinitionVersion;
 import com.liferay.portal.workflow.kaleo.service.KaleoDefinitionLocalService;
 import com.liferay.portal.workflow.kaleo.service.KaleoDefinitionVersionLocalService;
-import com.liferay.registry.Registry;
-import com.liferay.registry.RegistryUtil;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -99,7 +97,7 @@ public class UpgradeKaleoDefinitionVersionTest {
 		_addKaleoDefinition(
 			company2.getCompanyId(), company2.getGroupId(), _name, 3);
 
-		_upgradeKaleoDefinitionVersion.upgrade();
+		_kaleoDefinitionVersionUpgradeProcess.upgrade();
 
 		_getKaleoDefinition(company1.getCompanyId(), _name);
 		_getKaleoDefinitionVersion(company1.getCompanyId(), _name, 1);
@@ -132,39 +130,35 @@ public class UpgradeKaleoDefinitionVersionTest {
 			long companyId, long groupId, String name, int version)
 		throws Exception {
 
-		StringBundler sb = new StringBundler(5);
+		try (Connection connection = DataAccess.getConnection();
+			PreparedStatement preparedStatement = connection.prepareStatement(
+				StringBundler.concat(
+					"insert into KaleoDefinition (kaleoDefinitionId, groupId, ",
+					"companyId, userId, userName, createDate, modifiedDate, ",
+					"name, title, description, content, version, active_, ",
+					"startKaleoNodeId) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ",
+					"?, ?, ?, ?)"))) {
 
-		sb.append("insert into KaleoDefinition (kaleoDefinitionId, groupId, ");
-		sb.append("companyId, userId, userName, createDate, modifiedDate, ");
-		sb.append("name, title, description, content, version, active_, ");
-		sb.append("startKaleoNodeId) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ");
-		sb.append("?, ?, ?, ?)");
-
-		String sql = sb.toString();
-
-		try (Connection con = DataAccess.getConnection();
-			PreparedStatement ps = con.prepareStatement(sql)) {
-
-			ps.setLong(1, RandomTestUtil.randomLong());
-			ps.setLong(2, groupId);
-			ps.setLong(3, companyId);
-			ps.setLong(4, TestPropsValues.getUserId());
+			preparedStatement.setLong(1, RandomTestUtil.randomLong());
+			preparedStatement.setLong(2, groupId);
+			preparedStatement.setLong(3, companyId);
+			preparedStatement.setLong(4, TestPropsValues.getUserId());
 
 			User user = TestPropsValues.getUser();
 
-			ps.setString(5, user.getFullName());
+			preparedStatement.setString(5, user.getFullName());
 
-			ps.setTimestamp(6, _timestamp);
-			ps.setTimestamp(7, _timestamp);
-			ps.setString(8, name);
-			ps.setString(9, StringUtil.randomString());
-			ps.setString(10, StringUtil.randomString());
-			ps.setString(11, StringUtil.randomString());
-			ps.setInt(12, version);
-			ps.setBoolean(13, true);
-			ps.setLong(14, RandomTestUtil.randomLong());
+			preparedStatement.setTimestamp(6, _timestamp);
+			preparedStatement.setTimestamp(7, _timestamp);
+			preparedStatement.setString(8, name);
+			preparedStatement.setString(9, StringUtil.randomString());
+			preparedStatement.setString(10, StringUtil.randomString());
+			preparedStatement.setString(11, StringUtil.randomString());
+			preparedStatement.setInt(12, version);
+			preparedStatement.setBoolean(13, true);
+			preparedStatement.setLong(14, RandomTestUtil.randomLong());
 
-			ps.executeUpdate();
+			preparedStatement.executeUpdate();
 		}
 	}
 
@@ -199,8 +193,8 @@ public class UpgradeKaleoDefinitionVersionTest {
 	}
 
 	private void _setUpOldColumnsAndIndexes() throws Exception {
-		try (Connection con = DataAccess.getConnection()) {
-			_dbInspector = new DBInspector(con);
+		try (Connection connection = DataAccess.getConnection()) {
+			_dbInspector = new DBInspector(connection);
 
 			_addColumn("KaleoDefinition", "startKaleoNodeId");
 
@@ -209,14 +203,7 @@ public class UpgradeKaleoDefinitionVersionTest {
 	}
 
 	private void _setUpUpgradeKaleoDefinitionVersion() {
-		Registry registry = RegistryUtil.getRegistry();
-
-		UpgradeStepRegistrator upgradeStepRegistror = registry.getService(
-			registry.getServiceReference(
-				"com.liferay.portal.workflow.kaleo.internal.upgrade." +
-					"KaleoServiceUpgrade"));
-
-		upgradeStepRegistror.register(
+		_upgradeStepRegistrator.register(
 			new UpgradeStepRegistrator.Registry() {
 
 				@Override
@@ -230,12 +217,17 @@ public class UpgradeKaleoDefinitionVersionTest {
 						String className = clazz.getName();
 
 						if (className.contains(
-								"UpgradeKaleoDefinitionVersion")) {
+								"KaleoDefinitionVersionUpgradeProcess")) {
 
-							_upgradeKaleoDefinitionVersion =
+							_kaleoDefinitionVersionUpgradeProcess =
 								(UpgradeProcess)upgradeStep;
 						}
 					}
+				}
+
+				@Override
+				public void registerInitialDeploymentUpgradeSteps(
+					UpgradeStep... upgradeSteps) {
 				}
 
 			});
@@ -251,8 +243,13 @@ public class UpgradeKaleoDefinitionVersionTest {
 	private KaleoDefinitionVersionLocalService
 		_kaleoDefinitionVersionLocalService;
 
+	private UpgradeProcess _kaleoDefinitionVersionUpgradeProcess;
 	private String _name;
 	private Timestamp _timestamp;
-	private UpgradeProcess _upgradeKaleoDefinitionVersion;
+
+	@Inject(
+		filter = "component.name=com.liferay.portal.workflow.kaleo.internal.upgrade.registry.KaleoServiceUpgradeStepRegistrator"
+	)
+	private UpgradeStepRegistrator _upgradeStepRegistrator;
 
 }

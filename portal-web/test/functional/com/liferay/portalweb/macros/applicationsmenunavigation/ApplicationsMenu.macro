@@ -1,5 +1,9 @@
 definition {
 
+	macro assertMenuButtonIsNotPresent {
+		AssertElementNotPresent(locator1 = "ApplicationsMenu#TOGGLE");
+	}
+
 	@summary = "Navigate to Applications Menu > ${site}"
 	macro gotoLocalizedSite {
 		ApplicationsMenuHelper.openApplicationsMenu();
@@ -47,15 +51,13 @@ definition {
 
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
-		Pause(locator1 = "3000");
-
 		if (isSet(depotName)) {
 			Navigator.gotoNavItem(navItem = "Asset Libraries");
 
 			LexiconCard.clickCard(card = "${depotName}");
 		}
 		else {
-			Navigator.gotoNavItem(navItem = "My Sites");
+			Navigator.gotoNavItem(navItem = "All Sites");
 
 			SiteSelector.selectSite(site = "${site}");
 

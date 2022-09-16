@@ -17,7 +17,9 @@ package com.liferay.commerce.model;
 import com.liferay.portal.kernel.bean.AutoEscape;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.GroupedModel;
+import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
+import com.liferay.portal.kernel.model.StagedAuditedModel;
 
 import java.util.Date;
 
@@ -36,7 +38,8 @@ import org.osgi.annotation.versioning.ProviderType;
  */
 @ProviderType
 public interface CommerceOrderNoteModel
-	extends BaseModel<CommerceOrderNote>, GroupedModel, ShardedModel {
+	extends BaseModel<CommerceOrderNote>, GroupedModel, MVCCModel, ShardedModel,
+			StagedAuditedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -57,6 +60,39 @@ public interface CommerceOrderNoteModel
 	 * @param primaryKey the primary key of this commerce order note
 	 */
 	public void setPrimaryKey(long primaryKey);
+
+	/**
+	 * Returns the mvcc version of this commerce order note.
+	 *
+	 * @return the mvcc version of this commerce order note
+	 */
+	@Override
+	public long getMvccVersion();
+
+	/**
+	 * Sets the mvcc version of this commerce order note.
+	 *
+	 * @param mvccVersion the mvcc version of this commerce order note
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion);
+
+	/**
+	 * Returns the uuid of this commerce order note.
+	 *
+	 * @return the uuid of this commerce order note
+	 */
+	@AutoEscape
+	@Override
+	public String getUuid();
+
+	/**
+	 * Sets the uuid of this commerce order note.
+	 *
+	 * @param uuid the uuid of this commerce order note
+	 */
+	@Override
+	public void setUuid(String uuid);
 
 	/**
 	 * Returns the external reference code of this commerce order note.
@@ -249,5 +285,8 @@ public interface CommerceOrderNoteModel
 	 * @param restricted the restricted of this commerce order note
 	 */
 	public void setRestricted(boolean restricted);
+
+	@Override
+	public CommerceOrderNote cloneWithOriginalValues();
 
 }

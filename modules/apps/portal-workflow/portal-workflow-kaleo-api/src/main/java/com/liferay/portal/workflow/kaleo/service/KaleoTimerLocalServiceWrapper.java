@@ -14,7 +14,10 @@
 
 package com.liferay.portal.workflow.kaleo.service;
 
+import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.portal.kernel.service.ServiceWrapper;
+import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
+import com.liferay.portal.workflow.kaleo.model.KaleoTimer;
 
 /**
  * Provides a wrapper for {@link KaleoTimerLocalService}.
@@ -25,6 +28,10 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
  */
 public class KaleoTimerLocalServiceWrapper
 	implements KaleoTimerLocalService, ServiceWrapper<KaleoTimerLocalService> {
+
+	public KaleoTimerLocalServiceWrapper() {
+		this(null);
+	}
 
 	public KaleoTimerLocalServiceWrapper(
 		KaleoTimerLocalService kaleoTimerLocalService) {
@@ -43,14 +50,12 @@ public class KaleoTimerLocalServiceWrapper
 	 * @return the kaleo timer that was added
 	 */
 	@Override
-	public com.liferay.portal.workflow.kaleo.model.KaleoTimer addKaleoTimer(
-		com.liferay.portal.workflow.kaleo.model.KaleoTimer kaleoTimer) {
-
+	public KaleoTimer addKaleoTimer(KaleoTimer kaleoTimer) {
 		return _kaleoTimerLocalService.addKaleoTimer(kaleoTimer);
 	}
 
 	@Override
-	public com.liferay.portal.workflow.kaleo.model.KaleoTimer addKaleoTimer(
+	public KaleoTimer addKaleoTimer(
 			String kaleoClassName, long kaleoClassPK, long kaleoDefinitionId,
 			long kaleoDefinitionVersionId,
 			com.liferay.portal.workflow.kaleo.definition.Timer timer,
@@ -69,9 +74,7 @@ public class KaleoTimerLocalServiceWrapper
 	 * @return the new kaleo timer
 	 */
 	@Override
-	public com.liferay.portal.workflow.kaleo.model.KaleoTimer createKaleoTimer(
-		long kaleoTimerId) {
-
+	public KaleoTimer createKaleoTimer(long kaleoTimerId) {
 		return _kaleoTimerLocalService.createKaleoTimer(kaleoTimerId);
 	}
 
@@ -97,9 +100,7 @@ public class KaleoTimerLocalServiceWrapper
 	 * @return the kaleo timer that was removed
 	 */
 	@Override
-	public com.liferay.portal.workflow.kaleo.model.KaleoTimer deleteKaleoTimer(
-		com.liferay.portal.workflow.kaleo.model.KaleoTimer kaleoTimer) {
-
+	public KaleoTimer deleteKaleoTimer(KaleoTimer kaleoTimer) {
 		return _kaleoTimerLocalService.deleteKaleoTimer(kaleoTimer);
 	}
 
@@ -115,8 +116,7 @@ public class KaleoTimerLocalServiceWrapper
 	 * @throws PortalException if a kaleo timer with the primary key could not be found
 	 */
 	@Override
-	public com.liferay.portal.workflow.kaleo.model.KaleoTimer deleteKaleoTimer(
-			long kaleoTimerId)
+	public KaleoTimer deleteKaleoTimer(long kaleoTimerId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _kaleoTimerLocalService.deleteKaleoTimer(kaleoTimerId);
@@ -136,6 +136,13 @@ public class KaleoTimerLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _kaleoTimerLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _kaleoTimerLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -229,9 +236,7 @@ public class KaleoTimerLocalServiceWrapper
 	}
 
 	@Override
-	public com.liferay.portal.workflow.kaleo.model.KaleoTimer fetchKaleoTimer(
-		long kaleoTimerId) {
-
+	public KaleoTimer fetchKaleoTimer(long kaleoTimerId) {
 		return _kaleoTimerLocalService.fetchKaleoTimer(kaleoTimerId);
 	}
 
@@ -257,8 +262,7 @@ public class KaleoTimerLocalServiceWrapper
 	 * @throws PortalException if a kaleo timer with the primary key could not be found
 	 */
 	@Override
-	public com.liferay.portal.workflow.kaleo.model.KaleoTimer getKaleoTimer(
-			long kaleoTimerId)
+	public KaleoTimer getKaleoTimer(long kaleoTimerId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _kaleoTimerLocalService.getKaleoTimer(kaleoTimerId);
@@ -276,24 +280,21 @@ public class KaleoTimerLocalServiceWrapper
 	 * @return the range of kaleo timers
 	 */
 	@Override
-	public java.util.List<com.liferay.portal.workflow.kaleo.model.KaleoTimer>
-		getKaleoTimers(int start, int end) {
-
+	public java.util.List<KaleoTimer> getKaleoTimers(int start, int end) {
 		return _kaleoTimerLocalService.getKaleoTimers(start, end);
 	}
 
 	@Override
-	public java.util.List<com.liferay.portal.workflow.kaleo.model.KaleoTimer>
-		getKaleoTimers(String kaleoClassName, long kaleoClassPK) {
+	public java.util.List<KaleoTimer> getKaleoTimers(
+		String kaleoClassName, long kaleoClassPK) {
 
 		return _kaleoTimerLocalService.getKaleoTimers(
 			kaleoClassName, kaleoClassPK);
 	}
 
 	@Override
-	public java.util.List<com.liferay.portal.workflow.kaleo.model.KaleoTimer>
-		getKaleoTimers(
-			String kaleoClassName, long kaleoClassPK, boolean blocking) {
+	public java.util.List<KaleoTimer> getKaleoTimers(
+		String kaleoClassName, long kaleoClassPK, boolean blocking) {
 
 		return _kaleoTimerLocalService.getKaleoTimers(
 			kaleoClassName, kaleoClassPK, blocking);
@@ -341,10 +342,28 @@ public class KaleoTimerLocalServiceWrapper
 	 * @return the kaleo timer that was updated
 	 */
 	@Override
-	public com.liferay.portal.workflow.kaleo.model.KaleoTimer updateKaleoTimer(
-		com.liferay.portal.workflow.kaleo.model.KaleoTimer kaleoTimer) {
-
+	public KaleoTimer updateKaleoTimer(KaleoTimer kaleoTimer) {
 		return _kaleoTimerLocalService.updateKaleoTimer(kaleoTimer);
+	}
+
+	@Override
+	public CTPersistence<KaleoTimer> getCTPersistence() {
+		return _kaleoTimerLocalService.getCTPersistence();
+	}
+
+	@Override
+	public Class<KaleoTimer> getModelClass() {
+		return _kaleoTimerLocalService.getModelClass();
+	}
+
+	@Override
+	public <R, E extends Throwable> R updateWithUnsafeFunction(
+			UnsafeFunction<CTPersistence<KaleoTimer>, R, E>
+				updateUnsafeFunction)
+		throws E {
+
+		return _kaleoTimerLocalService.updateWithUnsafeFunction(
+			updateUnsafeFunction);
 	}
 
 	@Override

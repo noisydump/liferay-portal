@@ -28,6 +28,8 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -40,15 +42,19 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.security.wedeploy.auth.model.WeDeployAuthApp;
 import com.liferay.portal.security.wedeploy.auth.service.WeDeployAuthAppLocalService;
+import com.liferay.portal.security.wedeploy.auth.service.WeDeployAuthAppLocalServiceUtil;
 import com.liferay.portal.security.wedeploy.auth.service.persistence.WeDeployAuthAppPersistence;
 import com.liferay.portal.security.wedeploy.auth.service.persistence.WeDeployAuthTokenPersistence;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -70,7 +76,7 @@ public abstract class WeDeployAuthAppLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>WeDeployAuthAppLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.security.wedeploy.auth.service.WeDeployAuthAppLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>WeDeployAuthAppLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>WeDeployAuthAppLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -143,6 +149,13 @@ public abstract class WeDeployAuthAppLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return weDeployAuthAppPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -311,6 +324,11 @@ public abstract class WeDeployAuthAppLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement WeDeployAuthAppLocalServiceImpl#deleteWeDeployAuthApp(WeDeployAuthApp) to avoid orphaned data");
+		}
+
 		return weDeployAuthAppLocalService.deleteWeDeployAuthApp(
 			(WeDeployAuthApp)persistedModel);
 	}
@@ -374,6 +392,11 @@ public abstract class WeDeployAuthAppLocalServiceBaseImpl
 		return weDeployAuthAppPersistence.update(weDeployAuthApp);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -385,6 +408,8 @@ public abstract class WeDeployAuthAppLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		weDeployAuthAppLocalService = (WeDeployAuthAppLocalService)aopProxy;
+
+		_setLocalServiceUtilService(weDeployAuthAppLocalService);
 	}
 
 	/**
@@ -429,6 +454,23 @@ public abstract class WeDeployAuthAppLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		WeDeployAuthAppLocalService weDeployAuthAppLocalService) {
+
+		try {
+			Field field =
+				WeDeployAuthAppLocalServiceUtil.class.getDeclaredField(
+					"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, weDeployAuthAppLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected WeDeployAuthAppLocalService weDeployAuthAppLocalService;
 
 	@Reference
@@ -452,5 +494,8 @@ public abstract class WeDeployAuthAppLocalServiceBaseImpl
 	@Reference
 	protected com.liferay.portal.kernel.service.UserLocalService
 		userLocalService;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		WeDeployAuthAppLocalServiceBaseImpl.class);
 
 }

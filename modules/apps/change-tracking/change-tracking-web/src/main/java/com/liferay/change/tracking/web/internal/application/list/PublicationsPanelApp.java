@@ -17,15 +17,21 @@ package com.liferay.change.tracking.web.internal.application.list;
 import com.liferay.application.list.BasePanelApp;
 import com.liferay.application.list.PanelApp;
 import com.liferay.application.list.constants.PanelCategoryKeys;
-import com.liferay.change.tracking.model.CTPreferences;
+import com.liferay.change.tracking.constants.CTPortletKeys;
 import com.liferay.change.tracking.service.CTPreferencesLocalService;
-import com.liferay.change.tracking.web.internal.constants.CTPortletKeys;
+import com.liferay.change.tracking.web.internal.configuration.helper.CTSettingsConfigurationHelper;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.permission.PortletPermission;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.WebKeys;
+
+import javax.portlet.PortletURL;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -49,19 +55,41 @@ public class PublicationsPanelApp extends BasePanelApp {
 	}
 
 	@Override
+	public PortletURL getPortletURL(HttpServletRequest httpServletRequest)
+		throws PortalException {
+
+		PortletURL portletURL = super.getPortletURL(httpServletRequest);
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		if (!_ctSettingsConfigurationHelper.isEnabled(
+				themeDisplay.getCompanyId())) {
+
+			portletURL.setParameter(
+				"mvcRenderCommandName", "/change_tracking/view_settings");
+		}
+
+		return portletURL;
+	}
+
+	@Override
 	public boolean isShow(PermissionChecker permissionChecker, Group group)
 		throws PortalException {
 
-		CTPreferences ctPreferences =
-			_ctPreferencesLocalService.fetchCTPreferences(
-				group.getCompanyId(), 0);
+		if (_portletPermission.contains(
+				permissionChecker, CTPortletKeys.PUBLICATIONS,
+				ActionKeys.CONFIGURATION) ||
+			(_ctSettingsConfigurationHelper.isEnabled(group.getCompanyId()) &&
+			 _portletPermission.contains(
+				 permissionChecker, CTPortletKeys.PUBLICATIONS,
+				 ActionKeys.VIEW))) {
 
-		if (ctPreferences == null) {
-			return false;
+			return true;
 		}
 
-		return _portletPermission.contains(
-			permissionChecker, CTPortletKeys.PUBLICATIONS, ActionKeys.VIEW);
+		return false;
 	}
 
 	@Override
@@ -75,6 +103,9 @@ public class PublicationsPanelApp extends BasePanelApp {
 
 	@Reference
 	private CTPreferencesLocalService _ctPreferencesLocalService;
+
+	@Reference
+	private CTSettingsConfigurationHelper _ctSettingsConfigurationHelper;
 
 	@Reference
 	private PortletPermission _portletPermission;

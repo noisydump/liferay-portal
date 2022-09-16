@@ -228,7 +228,7 @@ public class EditWorkspaceConnectionMVCActionCommand
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(exception, exception);
+				_log.debug(exception);
 			}
 
 			SessionErrors.add(actionRequest, "unableToNotifyAnalyticsCloud");
@@ -284,13 +284,13 @@ public class EditWorkspaceConnectionMVCActionCommand
 			configurationProperties.put(
 				"syncedContactFieldNames",
 				new String[] {
-					"accountId", "birthday", "classNameId", "classPK",
-					"companyId", "contactId", "createDate", "emailAddress",
-					"employeeNumber", "employeeStatusId", "facebookSn",
-					"firstName", "hoursOfOperation", "jabberSn", "jobClass",
-					"jobTitle", "lastName", "male", "middleName",
-					"modifiedDate", "parentContactId", "prefixId", "skypeSn",
-					"smsSn", "suffixId", "twitterSn", "userId", "userName"
+					"birthday", "classNameId", "classPK", "companyId",
+					"contactId", "createDate", "emailAddress", "employeeNumber",
+					"employeeStatusId", "facebookSn", "firstName",
+					"hoursOfOperation", "jabberSn", "jobClass", "jobTitle",
+					"lastName", "male", "middleName", "modifiedDate",
+					"parentContactId", "prefixId", "skypeSn", "smsSn",
+					"suffixId", "twitterSn", "userId", "userName"
 				});
 			configurationProperties.put(
 				"syncedUserFieldNames",

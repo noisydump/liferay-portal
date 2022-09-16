@@ -20,13 +20,16 @@ import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
 import com.liferay.portal.kernel.service.ResourceLocalService;
-import com.liferay.portal.kernel.service.persistence.ResourcePermissionFinder;
-import com.liferay.portal.kernel.service.persistence.ResourcePermissionPersistence;
+import com.liferay.portal.kernel.service.ResourceLocalServiceUtil;
 import com.liferay.portal.kernel.util.InfrastructureUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+
+import java.lang.reflect.Field;
 
 import javax.sql.DataSource;
 
@@ -48,7 +51,7 @@ public abstract class ResourceLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>ResourceLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.kernel.service.ResourceLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>ResourceLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>ResourceLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -94,73 +97,12 @@ public abstract class ResourceLocalServiceBaseImpl
 		this.counterLocalService = counterLocalService;
 	}
 
-	/**
-	 * Returns the resource permission local service.
-	 *
-	 * @return the resource permission local service
-	 */
-	public com.liferay.portal.kernel.service.ResourcePermissionLocalService
-		getResourcePermissionLocalService() {
-
-		return resourcePermissionLocalService;
-	}
-
-	/**
-	 * Sets the resource permission local service.
-	 *
-	 * @param resourcePermissionLocalService the resource permission local service
-	 */
-	public void setResourcePermissionLocalService(
-		com.liferay.portal.kernel.service.ResourcePermissionLocalService
-			resourcePermissionLocalService) {
-
-		this.resourcePermissionLocalService = resourcePermissionLocalService;
-	}
-
-	/**
-	 * Returns the resource permission persistence.
-	 *
-	 * @return the resource permission persistence
-	 */
-	public ResourcePermissionPersistence getResourcePermissionPersistence() {
-		return resourcePermissionPersistence;
-	}
-
-	/**
-	 * Sets the resource permission persistence.
-	 *
-	 * @param resourcePermissionPersistence the resource permission persistence
-	 */
-	public void setResourcePermissionPersistence(
-		ResourcePermissionPersistence resourcePermissionPersistence) {
-
-		this.resourcePermissionPersistence = resourcePermissionPersistence;
-	}
-
-	/**
-	 * Returns the resource permission finder.
-	 *
-	 * @return the resource permission finder
-	 */
-	public ResourcePermissionFinder getResourcePermissionFinder() {
-		return resourcePermissionFinder;
-	}
-
-	/**
-	 * Sets the resource permission finder.
-	 *
-	 * @param resourcePermissionFinder the resource permission finder
-	 */
-	public void setResourcePermissionFinder(
-		ResourcePermissionFinder resourcePermissionFinder) {
-
-		this.resourcePermissionFinder = resourcePermissionFinder;
-	}
-
 	public void afterPropertiesSet() {
+		_setLocalServiceUtilService(resourceLocalService);
 	}
 
 	public void destroy() {
+		_setLocalServiceUtilService(null);
 	}
 
 	/**
@@ -197,6 +139,22 @@ public abstract class ResourceLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		ResourceLocalService resourceLocalService) {
+
+		try {
+			Field field = ResourceLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, resourceLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@BeanReference(type = ResourceLocalService.class)
 	protected ResourceLocalService resourceLocalService;
 
@@ -206,16 +164,7 @@ public abstract class ResourceLocalServiceBaseImpl
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@BeanReference(
-		type = com.liferay.portal.kernel.service.ResourcePermissionLocalService.class
-	)
-	protected com.liferay.portal.kernel.service.ResourcePermissionLocalService
-		resourcePermissionLocalService;
-
-	@BeanReference(type = ResourcePermissionPersistence.class)
-	protected ResourcePermissionPersistence resourcePermissionPersistence;
-
-	@BeanReference(type = ResourcePermissionFinder.class)
-	protected ResourcePermissionFinder resourcePermissionFinder;
+	private static final Log _log = LogFactoryUtil.getLog(
+		ResourceLocalServiceBaseImpl.class);
 
 }

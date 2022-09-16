@@ -35,7 +35,6 @@ import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
@@ -44,19 +43,16 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.search.test.util.SearchTestRule;
-import com.liferay.portal.test.log.CaptureAppender;
-import com.liferay.portal.test.log.Log4JLoggerTestUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import java.text.DateFormat;
@@ -66,9 +62,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -76,10 +74,7 @@ import javax.annotation.Generated;
 
 import javax.ws.rs.core.MultivaluedHashMap;
 
-import org.apache.commons.beanutils.BeanUtils;
-import org.apache.commons.beanutils.BeanUtilsBean;
 import org.apache.commons.lang.time.DateUtils;
-import org.apache.log4j.Level;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -259,7 +254,8 @@ public abstract class BaseCatalogResourceTestCase {
 	public void testGraphQLGetCatalogByExternalReferenceCode()
 		throws Exception {
 
-		Catalog catalog = testGraphQLCatalog_addCatalog();
+		Catalog catalog =
+			testGraphQLGetCatalogByExternalReferenceCode_addCatalog();
 
 		Assert.assertTrue(
 			equals(
@@ -309,6 +305,12 @@ public abstract class BaseCatalogResourceTestCase {
 				"Object/code"));
 	}
 
+	protected Catalog testGraphQLGetCatalogByExternalReferenceCode_addCatalog()
+		throws Exception {
+
+		return testGraphQLCatalog_addCatalog();
+	}
+
 	@Test
 	public void testPatchCatalogByExternalReferenceCode() throws Exception {
 		Assert.assertTrue(false);
@@ -336,7 +338,7 @@ public abstract class BaseCatalogResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteCatalog() throws Exception {
-		Catalog catalog = testGraphQLCatalog_addCatalog();
+		Catalog catalog = testGraphQLDeleteCatalog_addCatalog();
 
 		Assert.assertTrue(
 			JSONUtil.getValueAsBoolean(
@@ -349,26 +351,23 @@ public abstract class BaseCatalogResourceTestCase {
 							}
 						})),
 				"JSONObject/data", "Object/deleteCatalog"));
+		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"catalog",
+					new HashMap<String, Object>() {
+						{
+							put("id", catalog.getId());
+						}
+					},
+					new GraphQLField("id"))),
+			"JSONArray/errors");
 
-		try (CaptureAppender captureAppender =
-				Log4JLoggerTestUtil.configureLog4JLogger(
-					"graphql.execution.SimpleDataFetcherExceptionHandler",
-					Level.WARN)) {
+		Assert.assertTrue(errorsJSONArray.length() > 0);
+	}
 
-			JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"catalog",
-						new HashMap<String, Object>() {
-							{
-								put("id", catalog.getId());
-							}
-						},
-						new GraphQLField("id"))),
-				"JSONArray/errors");
-
-			Assert.assertTrue(errorsJSONArray.length() > 0);
-		}
+	protected Catalog testGraphQLDeleteCatalog_addCatalog() throws Exception {
+		return testGraphQLCatalog_addCatalog();
 	}
 
 	@Test
@@ -388,7 +387,7 @@ public abstract class BaseCatalogResourceTestCase {
 
 	@Test
 	public void testGraphQLGetCatalog() throws Exception {
-		Catalog catalog = testGraphQLCatalog_addCatalog();
+		Catalog catalog = testGraphQLGetCatalog_addCatalog();
 
 		Assert.assertTrue(
 			equals(
@@ -427,6 +426,10 @@ public abstract class BaseCatalogResourceTestCase {
 				"Object/code"));
 	}
 
+	protected Catalog testGraphQLGetCatalog_addCatalog() throws Exception {
+		return testGraphQLCatalog_addCatalog();
+	}
+
 	@Test
 	public void testPatchCatalog() throws Exception {
 		Assert.assertTrue(false);
@@ -435,21 +438,21 @@ public abstract class BaseCatalogResourceTestCase {
 	@Test
 	public void testGetCatalogsPage() throws Exception {
 		Page<Catalog> page = catalogResource.getCatalogsPage(
-			RandomTestUtil.randomString(), null, Pagination.of(1, 2), null);
+			null, null, Pagination.of(1, 10), null);
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		Catalog catalog1 = testGetCatalogsPage_addCatalog(randomCatalog());
 
 		Catalog catalog2 = testGetCatalogsPage_addCatalog(randomCatalog());
 
 		page = catalogResource.getCatalogsPage(
-			null, null, Pagination.of(1, 2), null);
+			null, null, Pagination.of(1, 10), null);
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(catalog1, catalog2), (List<Catalog>)page.getItems());
+		assertContains(catalog1, (List<Catalog>)page.getItems());
+		assertContains(catalog2, (List<Catalog>)page.getItems());
 		assertValid(page);
 
 		catalogResource.deleteCatalog(catalog1.getId());
@@ -473,6 +476,31 @@ public abstract class BaseCatalogResourceTestCase {
 		for (EntityField entityField : entityFields) {
 			Page<Catalog> page = catalogResource.getCatalogsPage(
 				null, getFilterString(entityField, "between", catalog1),
+				Pagination.of(1, 2), null);
+
+			assertEquals(
+				Collections.singletonList(catalog1),
+				(List<Catalog>)page.getItems());
+		}
+	}
+
+	@Test
+	public void testGetCatalogsPageWithFilterDoubleEquals() throws Exception {
+		List<EntityField> entityFields = getEntityFields(
+			EntityField.Type.DOUBLE);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		Catalog catalog1 = testGetCatalogsPage_addCatalog(randomCatalog());
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Catalog catalog2 = testGetCatalogsPage_addCatalog(randomCatalog());
+
+		for (EntityField entityField : entityFields) {
+			Page<Catalog> page = catalogResource.getCatalogsPage(
+				null, getFilterString(entityField, "eq", catalog1),
 				Pagination.of(1, 2), null);
 
 			assertEquals(
@@ -508,6 +536,11 @@ public abstract class BaseCatalogResourceTestCase {
 
 	@Test
 	public void testGetCatalogsPageWithPagination() throws Exception {
+		Page<Catalog> totalPage = catalogResource.getCatalogsPage(
+			null, null, null, null);
+
+		int totalCount = GetterUtil.getInteger(totalPage.getTotalCount());
+
 		Catalog catalog1 = testGetCatalogsPage_addCatalog(randomCatalog());
 
 		Catalog catalog2 = testGetCatalogsPage_addCatalog(randomCatalog());
@@ -515,27 +548,28 @@ public abstract class BaseCatalogResourceTestCase {
 		Catalog catalog3 = testGetCatalogsPage_addCatalog(randomCatalog());
 
 		Page<Catalog> page1 = catalogResource.getCatalogsPage(
-			null, null, Pagination.of(1, 2), null);
+			null, null, Pagination.of(1, totalCount + 2), null);
 
 		List<Catalog> catalogs1 = (List<Catalog>)page1.getItems();
 
-		Assert.assertEquals(catalogs1.toString(), 2, catalogs1.size());
+		Assert.assertEquals(
+			catalogs1.toString(), totalCount + 2, catalogs1.size());
 
 		Page<Catalog> page2 = catalogResource.getCatalogsPage(
-			null, null, Pagination.of(2, 2), null);
+			null, null, Pagination.of(2, totalCount + 2), null);
 
-		Assert.assertEquals(3, page2.getTotalCount());
+		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
 		List<Catalog> catalogs2 = (List<Catalog>)page2.getItems();
 
 		Assert.assertEquals(catalogs2.toString(), 1, catalogs2.size());
 
 		Page<Catalog> page3 = catalogResource.getCatalogsPage(
-			null, null, Pagination.of(1, 3), null);
+			null, null, Pagination.of(1, totalCount + 3), null);
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(catalog1, catalog2, catalog3),
-			(List<Catalog>)page3.getItems());
+		assertContains(catalog1, (List<Catalog>)page3.getItems());
+		assertContains(catalog2, (List<Catalog>)page3.getItems());
+		assertContains(catalog3, (List<Catalog>)page3.getItems());
 	}
 
 	@Test
@@ -543,9 +577,19 @@ public abstract class BaseCatalogResourceTestCase {
 		testGetCatalogsPageWithSort(
 			EntityField.Type.DATE_TIME,
 			(entityField, catalog1, catalog2) -> {
-				BeanUtils.setProperty(
+				BeanTestUtil.setProperty(
 					catalog1, entityField.getName(),
 					DateUtils.addMinutes(new Date(), -2));
+			});
+	}
+
+	@Test
+	public void testGetCatalogsPageWithSortDouble() throws Exception {
+		testGetCatalogsPageWithSort(
+			EntityField.Type.DOUBLE,
+			(entityField, catalog1, catalog2) -> {
+				BeanTestUtil.setProperty(catalog1, entityField.getName(), 0.1);
+				BeanTestUtil.setProperty(catalog2, entityField.getName(), 0.5);
 			});
 	}
 
@@ -554,8 +598,8 @@ public abstract class BaseCatalogResourceTestCase {
 		testGetCatalogsPageWithSort(
 			EntityField.Type.INTEGER,
 			(entityField, catalog1, catalog2) -> {
-				BeanUtils.setProperty(catalog1, entityField.getName(), 0);
-				BeanUtils.setProperty(catalog2, entityField.getName(), 1);
+				BeanTestUtil.setProperty(catalog1, entityField.getName(), 0);
+				BeanTestUtil.setProperty(catalog2, entityField.getName(), 1);
 			});
 	}
 
@@ -574,21 +618,21 @@ public abstract class BaseCatalogResourceTestCase {
 				Class<?> returnType = method.getReturnType();
 
 				if (returnType.isAssignableFrom(Map.class)) {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						catalog1, entityFieldName,
 						Collections.singletonMap("Aaa", "Aaa"));
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						catalog2, entityFieldName,
 						Collections.singletonMap("Bbb", "Bbb"));
 				}
 				else if (entityFieldName.contains("email")) {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						catalog1, entityFieldName,
 						"aaa" +
 							StringUtil.toLowerCase(
 								RandomTestUtil.randomString()) +
 									"@liferay.com");
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						catalog2, entityFieldName,
 						"bbb" +
 							StringUtil.toLowerCase(
@@ -596,12 +640,12 @@ public abstract class BaseCatalogResourceTestCase {
 									"@liferay.com");
 				}
 				else {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						catalog1, entityFieldName,
 						"aaa" +
 							StringUtil.toLowerCase(
 								RandomTestUtil.randomString()));
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						catalog2, entityFieldName,
 						"bbb" +
 							StringUtil.toLowerCase(
@@ -666,7 +710,7 @@ public abstract class BaseCatalogResourceTestCase {
 			new HashMap<String, Object>() {
 				{
 					put("page", 1);
-					put("pageSize", 2);
+					put("pageSize", 10);
 				}
 			},
 			new GraphQLField("items", getGraphQLFields()),
@@ -676,21 +720,30 @@ public abstract class BaseCatalogResourceTestCase {
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/catalogs");
 
-		Assert.assertEquals(0, catalogsJSONObject.get("totalCount"));
+		long totalCount = catalogsJSONObject.getLong("totalCount");
 
-		Catalog catalog1 = testGraphQLCatalog_addCatalog();
-		Catalog catalog2 = testGraphQLCatalog_addCatalog();
+		Catalog catalog1 = testGraphQLGetCatalogsPage_addCatalog();
+		Catalog catalog2 = testGraphQLGetCatalogsPage_addCatalog();
 
 		catalogsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/catalogs");
 
-		Assert.assertEquals(2, catalogsJSONObject.get("totalCount"));
+		Assert.assertEquals(
+			totalCount + 2, catalogsJSONObject.getLong("totalCount"));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(catalog1, catalog2),
+		assertContains(
+			catalog1,
 			Arrays.asList(
 				CatalogSerDes.toDTOs(catalogsJSONObject.getString("items"))));
+		assertContains(
+			catalog2,
+			Arrays.asList(
+				CatalogSerDes.toDTOs(catalogsJSONObject.getString("items"))));
+	}
+
+	protected Catalog testGraphQLGetCatalogsPage_addCatalog() throws Exception {
+		return testGraphQLCatalog_addCatalog();
 	}
 
 	@Test
@@ -701,20 +754,6 @@ public abstract class BaseCatalogResourceTestCase {
 
 		assertEquals(randomCatalog, postCatalog);
 		assertValid(postCatalog);
-
-		randomCatalog = randomCatalog();
-
-		assertHttpResponseStatusCode(
-			404,
-			catalogResource.getCatalogByExternalReferenceCodeHttpResponse(
-				randomCatalog.getExternalReferenceCode()));
-
-		testPostCatalog_addCatalog(randomCatalog);
-
-		assertHttpResponseStatusCode(
-			200,
-			catalogResource.getCatalogByExternalReferenceCodeHttpResponse(
-				randomCatalog.getExternalReferenceCode()));
 	}
 
 	protected Catalog testPostCatalog_addCatalog(Catalog catalog)
@@ -750,7 +789,8 @@ public abstract class BaseCatalogResourceTestCase {
 	public void testGraphQLGetProductByExternalReferenceCodeCatalog()
 		throws Exception {
 
-		Catalog catalog = testGraphQLCatalog_addCatalog();
+		Catalog catalog =
+			testGraphQLGetProductByExternalReferenceCodeCatalog_addCatalog();
 
 		Assert.assertTrue(
 			equals(
@@ -800,6 +840,13 @@ public abstract class BaseCatalogResourceTestCase {
 				"Object/code"));
 	}
 
+	protected Catalog
+			testGraphQLGetProductByExternalReferenceCodeCatalog_addCatalog()
+		throws Exception {
+
+		return testGraphQLCatalog_addCatalog();
+	}
+
 	@Test
 	public void testGetProductIdCatalog() throws Exception {
 		Catalog postCatalog = testGetProductIdCatalog_addCatalog();
@@ -818,7 +865,7 @@ public abstract class BaseCatalogResourceTestCase {
 
 	@Test
 	public void testGraphQLGetProductIdCatalog() throws Exception {
-		Catalog catalog = testGraphQLCatalog_addCatalog();
+		Catalog catalog = testGraphQLGetProductIdCatalog_addCatalog();
 
 		Assert.assertTrue(
 			equals(
@@ -857,12 +904,32 @@ public abstract class BaseCatalogResourceTestCase {
 				"Object/code"));
 	}
 
+	protected Catalog testGraphQLGetProductIdCatalog_addCatalog()
+		throws Exception {
+
+		return testGraphQLCatalog_addCatalog();
+	}
+
 	@Rule
 	public SearchTestRule searchTestRule = new SearchTestRule();
 
 	protected Catalog testGraphQLCatalog_addCatalog() throws Exception {
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	protected void assertContains(Catalog catalog, List<Catalog> catalogs) {
+		boolean contains = false;
+
+		for (Catalog item : catalogs) {
+			if (equals(catalog, item)) {
+				contains = true;
+
+				break;
+			}
+		}
+
+		Assert.assertTrue(catalogs + " does not contain " + catalog, contains);
 	}
 
 	protected void assertHttpResponseStatusCode(
@@ -1007,8 +1074,8 @@ public abstract class BaseCatalogResourceTestCase {
 	protected List<GraphQLField> getGraphQLFields() throws Exception {
 		List<GraphQLField> graphQLFields = new ArrayList<>();
 
-		for (Field field :
-				ReflectionUtil.getDeclaredFields(
+		for (java.lang.reflect.Field field :
+				getDeclaredFields(
 					com.liferay.headless.commerce.admin.catalog.dto.v1_0.
 						Catalog.class)) {
 
@@ -1024,12 +1091,13 @@ public abstract class BaseCatalogResourceTestCase {
 		return graphQLFields;
 	}
 
-	protected List<GraphQLField> getGraphQLFields(Field... fields)
+	protected List<GraphQLField> getGraphQLFields(
+			java.lang.reflect.Field... fields)
 		throws Exception {
 
 		List<GraphQLField> graphQLFields = new ArrayList<>();
 
-		for (Field field : fields) {
+		for (java.lang.reflect.Field field : fields) {
 			com.liferay.portal.vulcan.graphql.annotation.GraphQLField
 				vulcanGraphQLField = field.getAnnotation(
 					com.liferay.portal.vulcan.graphql.annotation.GraphQLField.
@@ -1043,7 +1111,7 @@ public abstract class BaseCatalogResourceTestCase {
 				}
 
 				List<GraphQLField> childrenGraphQLFields = getGraphQLFields(
-					ReflectionUtil.getDeclaredFields(clazz));
+					getDeclaredFields(clazz));
 
 				graphQLFields.add(
 					new GraphQLField(field.getName(), childrenGraphQLFields));
@@ -1173,6 +1241,19 @@ public abstract class BaseCatalogResourceTestCase {
 		}
 
 		return false;
+	}
+
+	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
+		throws Exception {
+
+		Stream<java.lang.reflect.Field> stream = Stream.of(
+			ReflectionUtil.getDeclaredFields(clazz));
+
+		return stream.filter(
+			field -> !field.isSynthetic()
+		).toArray(
+			java.lang.reflect.Field[]::new
+		);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -1344,6 +1425,115 @@ public abstract class BaseCatalogResourceTestCase {
 	protected Company testCompany;
 	protected Group testGroup;
 
+	protected static class BeanTestUtil {
+
+		public static void copyProperties(Object source, Object target)
+			throws Exception {
+
+			Class<?> sourceClass = _getSuperClass(source.getClass());
+
+			Class<?> targetClass = target.getClass();
+
+			for (java.lang.reflect.Field field :
+					sourceClass.getDeclaredFields()) {
+
+				if (field.isSynthetic()) {
+					continue;
+				}
+
+				Method getMethod = _getMethod(
+					sourceClass, field.getName(), "get");
+
+				Method setMethod = _getMethod(
+					targetClass, field.getName(), "set",
+					getMethod.getReturnType());
+
+				setMethod.invoke(target, getMethod.invoke(source));
+			}
+		}
+
+		public static boolean hasProperty(Object bean, String name) {
+			Method setMethod = _getMethod(
+				bean.getClass(), "set" + StringUtil.upperCaseFirstLetter(name));
+
+			if (setMethod != null) {
+				return true;
+			}
+
+			return false;
+		}
+
+		public static void setProperty(Object bean, String name, Object value)
+			throws Exception {
+
+			Class<?> clazz = bean.getClass();
+
+			Method setMethod = _getMethod(
+				clazz, "set" + StringUtil.upperCaseFirstLetter(name));
+
+			if (setMethod == null) {
+				throw new NoSuchMethodException();
+			}
+
+			Class<?>[] parameterTypes = setMethod.getParameterTypes();
+
+			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
+		}
+
+		private static Method _getMethod(Class<?> clazz, String name) {
+			for (Method method : clazz.getMethods()) {
+				if (name.equals(method.getName()) &&
+					(method.getParameterCount() == 1) &&
+					_parameterTypes.contains(method.getParameterTypes()[0])) {
+
+					return method;
+				}
+			}
+
+			return null;
+		}
+
+		private static Method _getMethod(
+				Class<?> clazz, String fieldName, String prefix,
+				Class<?>... parameterTypes)
+			throws Exception {
+
+			return clazz.getMethod(
+				prefix + StringUtil.upperCaseFirstLetter(fieldName),
+				parameterTypes);
+		}
+
+		private static Class<?> _getSuperClass(Class<?> clazz) {
+			Class<?> superClass = clazz.getSuperclass();
+
+			if ((superClass == null) || (superClass == Object.class)) {
+				return clazz;
+			}
+
+			return superClass;
+		}
+
+		private static Object _translateValue(
+			Class<?> parameterType, Object value) {
+
+			if ((value instanceof Integer) &&
+				parameterType.equals(Long.class)) {
+
+				Integer intValue = (Integer)value;
+
+				return intValue.longValue();
+			}
+
+			return value;
+		}
+
+		private static final Set<Class<?>> _parameterTypes = new HashSet<>(
+			Arrays.asList(
+				Boolean.class, Date.class, Double.class, Integer.class,
+				Long.class, Map.class, String.class));
+
+	}
+
 	protected class GraphQLField {
 
 		public GraphQLField(String key, GraphQLField... graphQLFields) {
@@ -1383,12 +1573,12 @@ public abstract class BaseCatalogResourceTestCase {
 						_parameterMap.entrySet()) {
 
 					sb.append(entry.getKey());
-					sb.append(":");
+					sb.append(": ");
 					sb.append(entry.getValue());
-					sb.append(",");
+					sb.append(", ");
 				}
 
-				sb.setLength(sb.length() - 1);
+				sb.setLength(sb.length() - 2);
 
 				sb.append(")");
 			}
@@ -1398,10 +1588,10 @@ public abstract class BaseCatalogResourceTestCase {
 
 				for (GraphQLField graphQLField : _graphQLFields) {
 					sb.append(graphQLField.toString());
-					sb.append(",");
+					sb.append(", ");
 				}
 
-				sb.setLength(sb.length() - 1);
+				sb.setLength(sb.length() - 2);
 
 				sb.append("}");
 			}
@@ -1415,21 +1605,9 @@ public abstract class BaseCatalogResourceTestCase {
 
 	}
 
-	private static final Log _log = LogFactoryUtil.getLog(
-		BaseCatalogResourceTestCase.class);
+	private static final com.liferay.portal.kernel.log.Log _log =
+		LogFactoryUtil.getLog(BaseCatalogResourceTestCase.class);
 
-	private static BeanUtilsBean _beanUtilsBean = new BeanUtilsBean() {
-
-		@Override
-		public void copyProperty(Object bean, String name, Object value)
-			throws IllegalAccessException, InvocationTargetException {
-
-			if (value != null) {
-				super.copyProperty(bean, name, value);
-			}
-		}
-
-	};
 	private static DateFormat _dateFormat;
 
 	@Inject

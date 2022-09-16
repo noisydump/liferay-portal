@@ -146,7 +146,7 @@ public class AsahFaroBackendClientImpl implements AsahFaroBackendClient {
 
 			List<Individual> items = individualResults.getItems();
 
-			if (!ListUtil.isEmpty(items)) {
+			if (ListUtil.isNotEmpty(items)) {
 				return items.get(0);
 			}
 
@@ -189,9 +189,6 @@ public class AsahFaroBackendClientImpl implements AsahFaroBackendClient {
 
 		FilterBuilder filterBuilder = new FilterBuilder();
 
-		filterBuilder.addFilter(
-			"individualCount",
-			FilterConstants.COMPARISON_OPERATOR_GREATER_THAN_OR_EQUAL, 1);
 		filterBuilder.addFilter(
 			"status", FilterConstants.COMPARISON_OPERATOR_EQUALS,
 			IndividualSegment.Status.ACTIVE.name());
@@ -270,18 +267,12 @@ public class AsahFaroBackendClientImpl implements AsahFaroBackendClient {
 	}
 
 	private Map<String, String> _getHeaders(long companyId) {
-		Map<String, String> headers = HashMapBuilder.put(
+		return HashMapBuilder.put(
 			"OSB-Asah-Faro-Backend-Security-Signature",
 			AsahUtil.getAsahFaroBackendSecuritySignature(companyId)
+		).put(
+			"OSB-Asah-Project-ID", () -> AsahUtil.getAsahProjectId(companyId)
 		).build();
-
-		String projectId = AsahUtil.getAsahProjectId(companyId);
-
-		if (projectId != null) {
-			headers.put("OSB-Asah-Project-ID", projectId);
-		}
-
-		return headers;
 	}
 
 	private MultivaluedMap<String, Object> _getParameters(
@@ -325,7 +316,7 @@ public class AsahFaroBackendClientImpl implements AsahFaroBackendClient {
 		uriVariables.putSingle("page", cur - 1);
 		uriVariables.putSingle("size", delta);
 
-		if ((orderByFields == null) || orderByFields.isEmpty()) {
+		if (ListUtil.isEmpty(orderByFields)) {
 			return uriVariables;
 		}
 

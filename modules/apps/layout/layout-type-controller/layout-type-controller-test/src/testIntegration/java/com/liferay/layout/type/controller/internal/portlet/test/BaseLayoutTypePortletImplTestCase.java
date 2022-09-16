@@ -42,18 +42,17 @@ public abstract class BaseLayoutTypePortletImplTestCase {
 	public void setUp() throws Exception {
 		_group = GroupTestUtil.addGroup();
 
-		layout = LayoutTestUtil.addLayout(_group, false);
+		layout = LayoutTestUtil.addTypePortletLayout(_group, false);
 
 		layoutTypePortlet = (LayoutTypePortlet)layout.getLayoutType();
-
-		_layoutStaticPortletsAll = PropsValues.LAYOUT_STATIC_PORTLETS_ALL;
 	}
 
 	@After
 	public void tearDown() {
-		StringBundler sb = new StringBundler(_layoutStaticPortletsAll.length);
+		StringBundler sb = new StringBundler(
+			_LAYOUT_STATIC_PORTLETS_ALL.length);
 
-		for (String layoutStaticPortlet : _layoutStaticPortletsAll) {
+		for (String layoutStaticPortlet : _LAYOUT_STATIC_PORTLETS_ALL) {
 			sb.append(layoutStaticPortlet);
 		}
 
@@ -73,9 +72,10 @@ public abstract class BaseLayoutTypePortletImplTestCase {
 	protected Layout layout;
 	protected LayoutTypePortlet layoutTypePortlet;
 
+	private static final String[] _LAYOUT_STATIC_PORTLETS_ALL =
+		PropsValues.LAYOUT_STATIC_PORTLETS_ALL;
+
 	@DeleteAfterTestRun
 	private Group _group;
-
-	private String[] _layoutStaticPortletsAll;
 
 }

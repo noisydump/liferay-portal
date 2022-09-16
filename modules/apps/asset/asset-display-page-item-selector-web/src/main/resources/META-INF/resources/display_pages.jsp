@@ -20,8 +20,8 @@
 AssetDisplayPagesItemSelectorViewDisplayContext assetDisplayPagesItemSelectorViewDisplayContext = (AssetDisplayPagesItemSelectorViewDisplayContext)request.getAttribute(AssetDisplayPageItemSelectorWebKeys.ASSET_DISPLAY_PAGES_ITEM_SELECTOR_VIEW_DISPLAY_CONTEXT);
 %>
 
-<clay:management-toolbar-v2
-	displayContext="<%= new AssetDisplayPagesItemSelectorViewManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, assetDisplayPagesItemSelectorViewDisplayContext) %>"
+<clay:management-toolbar
+	managementToolbarDisplayContext="<%= new AssetDisplayPagesItemSelectorViewManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, assetDisplayPagesItemSelectorViewDisplayContext) %>"
 />
 
 <aui:form cssClass="container-fluid container-fluid-max-xl container-view" name="fm">
@@ -57,11 +57,11 @@ AssetDisplayPagesItemSelectorViewDisplayContext assetDisplayPagesItemSelectorVie
 		document.querySelector('#<portlet:namespace />fm'),
 		'click',
 		'.layout-page-template-entry',
-		function (event) {
+		(event) => {
 			var activeCards = document.querySelectorAll('.form-check-card.active');
 
 			if (activeCards.length) {
-				activeCards.forEach(function (card) {
+				activeCards.forEach((card) => {
 					card.classList.remove('active');
 				});
 			}

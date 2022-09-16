@@ -24,11 +24,13 @@ import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalService;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
@@ -68,7 +70,7 @@ public interface CommerceShippingMethodLocalService
 	 */
 	public CommerceAddressRestriction addCommerceAddressRestriction(
 			long userId, long groupId, long commerceShippingMethodId,
-			long commerceCountryId)
+			long countryId)
 		throws PortalException;
 
 	/**
@@ -76,7 +78,7 @@ public interface CommerceShippingMethodLocalService
 	 */
 	@Deprecated
 	public CommerceAddressRestriction addCommerceAddressRestriction(
-			long commerceShippingMethodId, long commerceCountryId,
+			long commerceShippingMethodId, long countryId,
 			ServiceContext serviceContext)
 		throws PortalException;
 
@@ -96,8 +98,9 @@ public interface CommerceShippingMethodLocalService
 
 	public CommerceShippingMethod addCommerceShippingMethod(
 			long userId, long groupId, Map<Locale, String> nameMap,
-			Map<Locale, String> descriptionMap, File imageFile,
-			String engineKey, double priority, boolean active)
+			Map<Locale, String> descriptionMap, boolean active,
+			String engineKey, File imageFile, double priority,
+			String trackingURL)
 		throws PortalException;
 
 	/**
@@ -132,6 +135,7 @@ public interface CommerceShippingMethodLocalService
 	 * @throws PortalException
 	 */
 	@Indexable(type = IndexableType.DELETE)
+	@SystemEvent(type = SystemEventConstants.TYPE_DELETE)
 	public CommerceShippingMethod deleteCommerceShippingMethod(
 			CommerceShippingMethod commerceShippingMethod)
 		throws PortalException;
@@ -164,6 +168,9 @@ public interface CommerceShippingMethodLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public <T> T dslQuery(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
@@ -280,15 +287,17 @@ public interface CommerceShippingMethodLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<CommerceShippingMethod> getCommerceShippingMethods(
-		long groupId);
+		long groupId, boolean active, int start, int end,
+		OrderByComparator<CommerceShippingMethod> orderByComparator);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<CommerceShippingMethod> getCommerceShippingMethods(
-		long groupId, boolean active);
+		long groupId, int start, int end,
+		OrderByComparator<CommerceShippingMethod> orderByComparator);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<CommerceShippingMethod> getCommerceShippingMethods(
-		long groupId, long commerceCountryId, boolean active);
+		long groupId, long countryId, boolean active);
 
 	/**
 	 * Returns the number of commerce shipping methods.
@@ -297,6 +306,9 @@ public interface CommerceShippingMethodLocalService
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getCommerceShippingMethodsCount();
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getCommerceShippingMethodsCount(long groupId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getCommerceShippingMethodsCount(long groupId, boolean active);
@@ -339,8 +351,8 @@ public interface CommerceShippingMethodLocalService
 
 	public CommerceShippingMethod updateCommerceShippingMethod(
 			long commerceShippingMethodId, Map<Locale, String> nameMap,
-			Map<Locale, String> descriptionMap, File imageFile, double priority,
-			boolean active)
+			Map<Locale, String> descriptionMap, boolean active, File imageFile,
+			double priority, String trackingURL)
 		throws PortalException;
 
 }

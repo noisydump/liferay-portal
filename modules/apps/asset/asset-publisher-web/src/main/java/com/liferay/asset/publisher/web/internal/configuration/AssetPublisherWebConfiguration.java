@@ -64,7 +64,7 @@ public interface AssetPublisherWebConfiguration {
 	 * @return <code>true</code> if dynamic export is enabled.
 	 */
 	@Meta.AD(
-		deflt = "true", description = "dynamic-export-enabled-key-description",
+		deflt = "false", description = "dynamic-export-enabled-key-description",
 		name = "dynamic-export-enabled", required = false
 	)
 	public boolean dynamicExportEnabled();
@@ -101,10 +101,22 @@ public interface AssetPublisherWebConfiguration {
 	 * @return <code>true</code> if manual export is enabled.
 	 */
 	@Meta.AD(
-		deflt = "true", description = "manual-export-enabled-key-description",
+		deflt = "false", description = "manual-export-enabled-key-description",
 		name = "manual-export-enabled", required = false
 	)
 	public boolean manualExportEnabled();
+
+	/**
+	 * Set this to <code>true</code> to disable autoscroll when opening
+	 * an asset.
+	 *
+	 * @return <code>true</code> autoScroll is enabled.
+	 */
+	@Meta.AD(
+		deflt = "true", description = "enable-asset-auto-scroll-description",
+		name = "enable-asset-auto-scroll", required = false
+	)
+	public boolean enableAutoscroll();
 
 	/**
 	 * Set this to <code>true</code> to search assets in Asset Publisher from

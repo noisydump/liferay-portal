@@ -54,17 +54,16 @@ public class DiscountProductGroupUtil {
 		else {
 			commercePricingClass =
 				commercePricingClassService.fetchByExternalReferenceCode(
-					serviceContext.getCompanyId(),
-					discountProductGroup.
-						getProductGroupExternalReferenceCode());
+					discountProductGroup.getProductGroupExternalReferenceCode(),
+					serviceContext.getCompanyId());
 
 			if (commercePricingClass == null) {
 				String productGroupExternalReferenceCode =
 					discountProductGroup.getProductGroupExternalReferenceCode();
 
 				throw new NoSuchPricingClassException(
-					"Unable to find ProductGroup with externalReferenceCode: " +
-						productGroupExternalReferenceCode);
+					"Unable to find product group with external reference " +
+						"code " + productGroupExternalReferenceCode);
 			}
 		}
 

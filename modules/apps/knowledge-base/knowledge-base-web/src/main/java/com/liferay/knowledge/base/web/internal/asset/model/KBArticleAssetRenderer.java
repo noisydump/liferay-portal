@@ -22,6 +22,7 @@ import com.liferay.knowledge.base.model.KBArticle;
 import com.liferay.knowledge.base.util.KnowledgeBaseUtil;
 import com.liferay.knowledge.base.web.internal.constants.KBWebKeys;
 import com.liferay.knowledge.base.web.internal.security.permission.resource.KBArticlePermission;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
@@ -29,7 +30,7 @@ import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.HtmlUtil;
+import com.liferay.portal.kernel.util.HtmlParser;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -49,7 +50,8 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class KBArticleAssetRenderer extends BaseJSPAssetRenderer<KBArticle> {
 
-	public KBArticleAssetRenderer(KBArticle kbArticle) {
+	public KBArticleAssetRenderer(HtmlParser htmlParser, KBArticle kbArticle) {
+		_htmlParser = htmlParser;
 		_kbArticle = kbArticle;
 	}
 
@@ -95,14 +97,12 @@ public class KBArticleAssetRenderer extends BaseJSPAssetRenderer<KBArticle> {
 	public String getSummary(
 		PortletRequest portletRequest, PortletResponse portletResponse) {
 
-		String summary = _kbArticle.getDescription();
-
-		if (Validator.isNull(summary)) {
-			summary = StringUtil.shorten(
-				HtmlUtil.extractText(_kbArticle.getContent()), 200);
+		if (Validator.isNull(_kbArticle.getDescription())) {
+			return StringUtil.shorten(
+				_htmlParser.extractText(_kbArticle.getContent()), 200);
 		}
 
-		return summary;
+		return _kbArticle.getDescription();
 	}
 
 	@Override
@@ -116,25 +116,16 @@ public class KBArticleAssetRenderer extends BaseJSPAssetRenderer<KBArticle> {
 			LiferayPortletResponse liferayPortletResponse)
 		throws Exception {
 
-		Group group = GroupLocalServiceUtil.fetchGroup(_kbArticle.getGroupId());
-
-		if (group.isCompany()) {
-			ThemeDisplay themeDisplay =
-				(ThemeDisplay)liferayPortletRequest.getAttribute(
-					WebKeys.THEME_DISPLAY);
-
-			group = themeDisplay.getScopeGroup();
-		}
-
-		PortletURL portletURL = PortalUtil.getControlPanelPortletURL(
-			liferayPortletRequest, group, KBPortletKeys.KNOWLEDGE_BASE_ADMIN, 0,
-			0, PortletRequest.RENDER_PHASE);
-
-		portletURL.setParameter("mvcPath", "/admin/edit_article.jsp");
-		portletURL.setParameter(
-			"resourcePrimKey", String.valueOf(_kbArticle.getResourcePrimKey()));
-
-		return portletURL;
+		return PortletURLBuilder.create(
+			PortalUtil.getControlPanelPortletURL(
+				liferayPortletRequest, _getGroup(liferayPortletRequest),
+				KBPortletKeys.KNOWLEDGE_BASE_ADMIN, 0, 0,
+				PortletRequest.RENDER_PHASE)
+		).setMVCPath(
+			"/admin/common/edit_kb_article.jsp"
+		).setParameter(
+			"resourcePrimKey", _kbArticle.getResourcePrimKey()
+		).buildPortletURL();
 	}
 
 	@Override
@@ -210,6 +201,21 @@ public class KBArticleAssetRenderer extends BaseJSPAssetRenderer<KBArticle> {
 		return kbArticle.getResourcePrimKey();
 	}
 
+	private Group _getGroup(LiferayPortletRequest liferayPortletRequest) {
+		Group group = GroupLocalServiceUtil.fetchGroup(_kbArticle.getGroupId());
+
+		if ((group != null) && !group.isCompany()) {
+			return group;
+		}
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)liferayPortletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		return themeDisplay.getScopeGroup();
+	}
+
+	private final HtmlParser _htmlParser;
 	private final KBArticle _kbArticle;
 
 }

@@ -25,6 +25,7 @@ import com.liferay.dynamic.data.lists.model.DDLRecordSet;
 import com.liferay.dynamic.data.lists.model.DDLRecordVersion;
 import com.liferay.dynamic.data.lists.service.DDLRecordLocalService;
 import com.liferay.dynamic.data.lists.service.DDLRecordVersionLocalService;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
@@ -122,18 +123,23 @@ public class DDLRecordAssetRendererFactory
 		LiferayPortletRequest liferayPortletRequest,
 		LiferayPortletResponse liferayPortletResponse, long classTypeId) {
 
-		PortletURL portletURL = _portal.getControlPanelPortletURL(
-			liferayPortletRequest, getGroup(liferayPortletRequest),
-			DDLPortletKeys.DYNAMIC_DATA_LISTS, 0, 0,
-			PortletRequest.RENDER_PHASE);
+		return PortletURLBuilder.create(
+			_portal.getControlPanelPortletURL(
+				liferayPortletRequest, getGroup(liferayPortletRequest),
+				DDLPortletKeys.DYNAMIC_DATA_LISTS, 0, 0,
+				PortletRequest.RENDER_PHASE)
+		).setMVCPath(
+			"/edit_record.jsp"
+		).setParameter(
+			"recordSetId",
+			() -> {
+				if (classTypeId > 0) {
+					return classTypeId;
+				}
 
-		portletURL.setParameter("mvcPath", "/edit_record.jsp");
-
-		if (classTypeId > 0) {
-			portletURL.setParameter("recordSetId", String.valueOf(classTypeId));
-		}
-
-		return portletURL;
+				return null;
+			}
+		).buildPortletURL();
 	}
 
 	@Override
@@ -160,28 +166,7 @@ public class DDLRecordAssetRendererFactory
 			permissionChecker, record.getRecordSetId(), actionId);
 	}
 
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.dynamic.data.lists.web)",
-		unbind = "-"
-	)
-	public void setServletContext(ServletContext servletContext) {
-		_servletContext = servletContext;
-	}
-
-	@Reference(unbind = "-")
-	protected void setDDLRecordLocalService(
-		DDLRecordLocalService ddlRecordLocalService) {
-
-		_ddlRecordLocalService = ddlRecordLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setDDLRecordVersionLocalService(
-		DDLRecordVersionLocalService ddlRecordVersionLocalService) {
-
-		_ddlRecordVersionLocalService = ddlRecordVersionLocalService;
-	}
-
+	@Reference
 	private DDLRecordLocalService _ddlRecordLocalService;
 
 	@Reference(
@@ -190,11 +175,15 @@ public class DDLRecordAssetRendererFactory
 	private ModelResourcePermission<DDLRecordSet>
 		_ddlRecordSetModelResourcePermission;
 
+	@Reference
 	private DDLRecordVersionLocalService _ddlRecordVersionLocalService;
 
 	@Reference
 	private Portal _portal;
 
+	@Reference(
+		target = "(osgi.web.symbolicname=com.liferay.dynamic.data.lists.web)"
+	)
 	private ServletContext _servletContext;
 
 }

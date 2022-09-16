@@ -33,17 +33,11 @@ public class SynonymSetToDocumentTranslatorImpl
 		).setString(
 			SynonymSetFields.SYNONYMS, synonymSet.getSynonyms()
 		).setString(
-			SynonymSetFields.UID, synonymSet.getId()
+			SynonymSetFields.UID, synonymSet.getSynonymSetDocumentId()
 		).build();
 	}
 
-	@Reference(unbind = "-")
-	protected void setDocumentBuilderFactory(
-		DocumentBuilderFactory documentBuilderFactory) {
-
-		_documentBuilderFactory = documentBuilderFactory;
-	}
-
+	@Reference
 	private DocumentBuilderFactory _documentBuilderFactory;
 
 }

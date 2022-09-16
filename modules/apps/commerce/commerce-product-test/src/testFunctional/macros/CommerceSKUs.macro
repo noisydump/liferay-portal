@@ -16,7 +16,7 @@ definition {
 
 			Click(locator1 = "Button#PLUS");
 
-			if (IsElementPresent(locator1 = "MenuItem#DROPDOWN_MENU_ITEM", key_menuItem = "Add SKU")) {
+			if (IsElementPresent(key_menuItem = "Add SKU", locator1 = "MenuItem#DROPDOWN_MENU_ITEM")) {
 				AssertClick(
 					key_menuItem = "Add SKU",
 					locator1 = "MenuItem#DROPDOWN_MENU_ITEM",
@@ -26,8 +26,11 @@ definition {
 			SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
 
 			CommerceEntry.addSKUsEntry(
+				noOption = "${noOption}",
 				optionValue = "${optionValue}",
-				productSKU = "${optionValueUppercase}SKU");
+				productSku = "${optionValueUppercase}SKU");
+
+			WaitForElementNotPresent(locator1 = "TextInput#REQUIRED_ALERT");
 
 			Check.checkToggleSwitch(
 				key_toggleSwitchLabel = "Purchasable",
@@ -43,6 +46,37 @@ definition {
 		}
 
 		Refresh();
+	}
+
+	macro editSkuPricing {
+		SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
+
+		if (isSet(basePrice)) {
+			Type(
+				key_text = "Base Price",
+				locator1 = "TextInput#ANY",
+				value1 = "${basePrice}");
+		}
+
+		if (isSet(promoPrice)) {
+			Type(
+				key_text = "Promotion Price",
+				locator1 = "TextInput#ANY",
+				value1 = "${promoPrice}");
+		}
+
+		if (isSet(cost)) {
+			Type(
+				key_text = "Cost",
+				locator1 = "TextInput#ANY",
+				value1 = "${cost}");
+		}
+
+		Button.clickPublish();
+
+		Click(locator1 = "Icon#CLOSE");
+
+		SelectFrame.selectFrameTop();
 	}
 
 }

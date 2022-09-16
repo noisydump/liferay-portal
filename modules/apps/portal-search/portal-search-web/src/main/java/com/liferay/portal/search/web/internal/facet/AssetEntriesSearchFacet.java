@@ -30,13 +30,13 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.search.asset.SearchableAssetClassNamesProvider;
 import com.liferay.portal.search.facet.Facet;
 import com.liferay.portal.search.facet.FacetFactory;
 import com.liferay.portal.search.facet.type.AssetEntriesFacetFactory;
 import com.liferay.portal.search.web.facet.BaseJSPSearchFacet;
 import com.liferay.portal.search.web.facet.SearchFacet;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.IntStream;
@@ -124,17 +124,21 @@ public class AssetEntriesSearchFacet extends BaseJSPSearchFacet {
 
 		facetConfiguration.setClassName(getFacetClassName());
 
-		JSONObject jsonObject = JSONUtil.put("frequencyThreshold", 1);
+		facetConfiguration.setDataJSONObject(
+			JSONUtil.put(
+				"frequencyThreshold", 1
+			).put(
+				"values",
+				() -> {
+					JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
 
-		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
+					for (String assetType : getAssetTypes(companyId)) {
+						jsonArray.put(assetType);
+					}
 
-		for (String assetType : getAssetTypes(companyId)) {
-			jsonArray.put(assetType);
-		}
-
-		jsonObject.put("values", jsonArray);
-
-		facetConfiguration.setDataJSONObject(jsonObject);
+					return jsonArray;
+				}
+			));
 
 		facetConfiguration.setFieldName(getFieldName());
 		facetConfiguration.setLabel(getLabel());
@@ -164,31 +168,34 @@ public class AssetEntriesSearchFacet extends BaseJSPSearchFacet {
 
 	@Override
 	public JSONObject getJSONData(ActionRequest actionRequest) {
-		int frequencyThreshold = ParamUtil.getInteger(
-			actionRequest, getClassName() + "frequencyThreshold", 1);
+		return JSONUtil.put(
+			"frequencyThreshold",
+			ParamUtil.getInteger(
+				actionRequest, getClassName() + "frequencyThreshold", 1)
+		).put(
+			"values",
+			() -> {
+				String[] assetTypes = StringUtil.split(
+					ParamUtil.getString(
+						actionRequest, getClassName() + "assetTypes"));
 
-		JSONObject jsonObject = JSONUtil.put(
-			"frequencyThreshold", frequencyThreshold);
+				JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
 
-		String[] assetTypes = StringUtil.split(
-			ParamUtil.getString(actionRequest, getClassName() + "assetTypes"));
+				if (ArrayUtil.isEmpty(assetTypes)) {
+					ThemeDisplay themeDisplay =
+						(ThemeDisplay)actionRequest.getAttribute(
+							WebKeys.THEME_DISPLAY);
 
-		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
+					assetTypes = getAssetTypes(themeDisplay.getCompanyId());
+				}
 
-		if (ArrayUtil.isEmpty(assetTypes)) {
-			ThemeDisplay themeDisplay =
-				(ThemeDisplay)actionRequest.getAttribute(WebKeys.THEME_DISPLAY);
+				for (String assetType : assetTypes) {
+					jsonArray.put(assetType);
+				}
 
-			assetTypes = getAssetTypes(themeDisplay.getCompanyId());
-		}
-
-		for (String assetType : assetTypes) {
-			jsonArray.put(assetType);
-		}
-
-		jsonObject.put("values", jsonArray);
-
-		return jsonObject;
+				return jsonArray;
+			}
+		);
 	}
 
 	@Override
@@ -201,33 +208,8 @@ public class AssetEntriesSearchFacet extends BaseJSPSearchFacet {
 		return "asset-type";
 	}
 
-	@Override
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.portal.search.web)",
-		unbind = "-"
-	)
-	public void setServletContext(ServletContext servletContext) {
-		super.setServletContext(servletContext);
-	}
-
 	protected String[] getAssetTypes(long companyId) {
-		List<String> assetTypes = new ArrayList<>();
-
-		List<AssetRendererFactory<?>> assetRendererFactories =
-			AssetRendererFactoryRegistryUtil.getAssetRendererFactories(
-				companyId);
-
-		for (AssetRendererFactory<?> assetRendererFactory :
-				assetRendererFactories) {
-
-			if (!assetRendererFactory.isSearchable()) {
-				continue;
-			}
-
-			assetTypes.add(assetRendererFactory.getClassName());
-		}
-
-		return ArrayUtil.toStringArray(assetTypes);
+		return searchableAssetClassNamesProvider.getClassNames(companyId);
 	}
 
 	@Override
@@ -235,10 +217,22 @@ public class AssetEntriesSearchFacet extends BaseJSPSearchFacet {
 		return assetEntriesFacetFactory;
 	}
 
+	@Override
+	protected ServletContext getServletContext() {
+		return _servletContext;
+	}
+
 	@Reference
 	protected AssetEntriesFacetFactory assetEntriesFacetFactory;
 
+	@Reference
+	protected SearchableAssetClassNamesProvider
+		searchableAssetClassNamesProvider;
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		AssetEntriesSearchFacet.class);
+
+	@Reference(target = "(osgi.web.symbolicname=com.liferay.portal.search.web)")
+	private ServletContext _servletContext;
 
 }

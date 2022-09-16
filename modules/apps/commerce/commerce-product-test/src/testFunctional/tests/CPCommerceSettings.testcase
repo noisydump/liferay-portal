@@ -2,31 +2,41 @@
 definition {
 
 	property portal.release = "true";
-	property testray.main.component.name = "Commerce";
+	property portal.upstream = "true";
+	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
+	property testray.main.component.name = "Product Info Management";
 
 	setUp {
-		TestCase.setUpPortalInstance();
-
-		User.firstLoginPG();
+		CommerceConfiguration.commerceSetUp();
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
+		CommerceConfiguration.commerceTearDown();
+	}
 
-		if ("${testPortalInstance}" == "true") {
-			PortalInstances.tearDownCP();
-		}
-		else {
-			Navigator.openURL();
+	@description = "This is a test for COMMERCE-6912. Bulk delete countries"
+	@priority = "3"
+	test BulkDeleteCountries {
+		property portal.acceptance = "false";
+		property test.name.skip.portal.instance = "CPCommerceSettings#BulkDeleteCountries";
 
-			CommerceConfiguration.commerceAdminTearDown();
+		CommerceNavigator.gotoPortlet(
+			category = "Settings",
+			portlet = "Countries");
+
+		AssertElementPresent(locator1 = "CommerceEntry#ROW_VERTICAL_ELLIPSIS");
+
+		Pagination.changePagination(itemsPerPage = "60");
+
+		while (IsElementPresent(locator1 = "CommerceEntry#ROW_VERTICAL_ELLIPSIS")) {
+			CommerceProducts.deleteEntries(deleteMessage = "Are you sure you want to delete the selected countries?");
 		}
+
+		AssertElementNotPresent(locator1 = "CommerceEntry#ROW_VERTICAL_ELLIPSIS");
 	}
 
 	test CreateNewAvailabilityEstimate {
-		property portal.acceptance = "quarantine";
-		property portal.upstream = "quarantine";
-		property test.name.skip.portal.instance = "CPCommerceSettings#CreateNewAvailabilityEstimate";
+		property portal.acceptance = "false";
 
 		CommerceNavigator.gotoPortlet(
 			category = "Settings",
@@ -42,9 +52,8 @@ definition {
 	}
 
 	test CreateNewCountry {
-		property portal.acceptance = "quarantine";
-		property portal.upstream = "quarantine";
-		property test.name.skip.portal.instance = "CPCommerceSettings#CreateNewCountry";
+		property portal.acceptance = "false";
+		property portal.upstream = "false";
 
 		CommerceNavigator.gotoPortlet(
 			category = "Settings",
@@ -55,7 +64,7 @@ definition {
 		CommerceEntry.addNewCountriesEntry(
 			entryIsoNumber = "020",
 			entryIsoThreeLetters = "TCO",
-			entryIsoTwoLetters = "TC",
+			entryIsoTwoLetters = "54",
 			entryName = "Test Country");
 
 		Button.clickSave();
@@ -73,12 +82,14 @@ definition {
 		Button.clickSave();
 
 		AssertElementPresent(locator1 = "Message#SUCCESS");
+
+		AssertElementPresent(
+			key_entry = "Test Region",
+			locator1 = "CommerceNavigation#ANY_ENTRY_NAME");
 	}
 
 	test CreateNewMeasurementUnits {
-		property portal.acceptance = "quarantine";
-		property portal.upstream = "quarantine";
-		property test.name.skip.portal.instance = "CPCommerceSettings#CreateNewMeasurementUnits";
+		property portal.acceptance = "false";
 
 		CommerceNavigator.gotoPortlet(
 			category = "Settings",
@@ -105,9 +116,7 @@ definition {
 
 	test ViewInstanceCurrenciesAvailable {
 		property environment.acceptance = "true";
-		property portal.acceptance = "quarantine";
-		property portal.upstream = "quarantine";
-		property test.name.skip.portal.instance = "CommerceSmoke#ViewAvailableCurrencies";
+		property portal.acceptance = "false";
 
 		CommerceNavigator.gotoPortlet(
 			category = "Store Management",

@@ -13,10 +13,12 @@
  */
 
 import {act, cleanup, render} from '@testing-library/react';
-import {PageProvider} from 'dynamic-data-mapping-form-renderer';
+import {PageProvider} from 'data-engine-js-components-web';
 import React from 'react';
 
 import DocumentLibrary from '../../../src/main/resources/META-INF/resources/DocumentLibrary/DocumentLibrary.es';
+
+const globalLanguageDirection = Liferay.Language.direction;
 
 const spritemap = 'icons.svg';
 
@@ -43,11 +45,17 @@ describe('Field DocumentLibrary', () => {
 			}
 			originalWarn.call(console, ...args);
 		};
+
+		Liferay.Language.direction = {
+			en_US: 'rtl',
+		};
 	});
 
 	afterAll(() => {
 		// eslint-disable-next-line no-console
 		console.warn = originalWarn;
+
+		Liferay.Language.direction = globalLanguageDirection;
 	});
 
 	afterEach(cleanup);

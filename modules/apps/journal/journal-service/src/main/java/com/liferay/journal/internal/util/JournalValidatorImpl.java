@@ -53,7 +53,7 @@ public final class JournalValidatorImpl implements JournalValidator {
 				journalServiceConfiguration.charactersblacklist();
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 		}
 
 		for (String blacklistChar : charactersBlacklist) {
@@ -86,16 +86,10 @@ public final class JournalValidatorImpl implements JournalValidator {
 		}
 	}
 
-	@Reference(unbind = "-")
-	protected void setConfigurationProvider(
-		ConfigurationProvider configurationProvider) {
-
-		_configurationProvider = configurationProvider;
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		JournalValidatorImpl.class);
 
+	@Reference
 	private ConfigurationProvider _configurationProvider;
 
 }

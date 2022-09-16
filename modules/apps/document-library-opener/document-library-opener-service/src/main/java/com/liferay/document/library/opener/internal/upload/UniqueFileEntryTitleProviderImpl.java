@@ -24,11 +24,9 @@ import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.upload.UniqueFileNameProvider;
 
 import java.util.Locale;
-import java.util.ResourceBundle;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -44,12 +42,8 @@ public class UniqueFileEntryTitleProviderImpl
 	public String provide(long groupId, long folderId, Locale locale)
 		throws PortalException {
 
-		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
-			locale, UniqueFileEntryTitleProviderImpl.class);
-
 		return _provide(
-			groupId, folderId, StringPool.BLANK,
-			_language.get(resourceBundle, "untitled"));
+			groupId, folderId, StringPool.BLANK, _getDefaultTitle(locale));
 	}
 
 	/**
@@ -68,6 +62,14 @@ public class UniqueFileEntryTitleProviderImpl
 
 	@Override
 	public String provide(
+			long groupId, long folderId, String extension, Locale locale)
+		throws PortalException {
+
+		return _provide(groupId, folderId, extension, _getDefaultTitle(locale));
+	}
+
+	@Override
+	public String provide(
 			long groupId, long folderId, String extension, String title)
 		throws PortalException {
 
@@ -82,7 +84,7 @@ public class UniqueFileEntryTitleProviderImpl
 		}
 		catch (NoSuchFileEntryException noSuchFileEntryException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(noSuchFileEntryException, noSuchFileEntryException);
+				_log.debug(noSuchFileEntryException);
 			}
 		}
 		catch (PortalException portalException) {
@@ -98,6 +100,10 @@ public class UniqueFileEntryTitleProviderImpl
 		return _exists(
 			() -> _dlAppLocalService.getFileEntryByFileName(
 				groupId, folderId, fileName));
+	}
+
+	private String _getDefaultTitle(Locale locale) {
+		return _language.get(locale, "untitled");
 	}
 
 	private String _provide(

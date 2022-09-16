@@ -58,11 +58,13 @@ public class CommercePriceListTestUtil {
 
 		CommercePriceListAccountRelLocalServiceUtil.
 			addCommercePriceListAccountRel(
+				serviceContext.getUserId(),
 				commercePriceList.getCommercePriceListId(), commerceAccountId,
 				0, serviceContext);
 
 		CommercePriceListChannelRelLocalServiceUtil.
 			addCommercePriceListChannelRel(
+				serviceContext.getUserId(),
 				commercePriceList.getCommercePriceListId(), commerceChannelId,
 				0, serviceContext);
 
@@ -83,12 +85,14 @@ public class CommercePriceListTestUtil {
 		for (long commerceAccountGroupId : commerceAccountGroupIds) {
 			CommercePriceListCommerceAccountGroupRelLocalServiceUtil.
 				addCommercePriceListCommerceAccountGroupRel(
+					serviceContext.getUserId(),
 					commercePriceList.getCommercePriceListId(),
 					commerceAccountGroupId, 0, serviceContext);
 		}
 
 		CommercePriceListChannelRelLocalServiceUtil.
 			addCommercePriceListChannelRel(
+				serviceContext.getUserId(),
 				commercePriceList.getCommercePriceListId(), commerceChannelId,
 				0, serviceContext);
 
@@ -108,6 +112,7 @@ public class CommercePriceListTestUtil {
 		for (long commerceAccountGroupId : commerceAccountGroupIds) {
 			CommercePriceListCommerceAccountGroupRelLocalServiceUtil.
 				addCommercePriceListCommerceAccountGroupRel(
+					serviceContext.getUserId(),
 					commercePriceList.getCommercePriceListId(),
 					commerceAccountGroupId, 0, serviceContext);
 		}
@@ -130,6 +135,7 @@ public class CommercePriceListTestUtil {
 		for (long commerceAccountGroupId : commerceAccountGroupIds) {
 			CommercePriceListCommerceAccountGroupRelLocalServiceUtil.
 				addCommercePriceListCommerceAccountGroupRel(
+					serviceContext.getUserId(),
 					commercePriceList.getCommercePriceListId(),
 					commerceAccountGroupId, 0, serviceContext);
 		}
@@ -144,10 +150,14 @@ public class CommercePriceListTestUtil {
 		CommercePriceList commercePriceList = addCommercePriceList(
 			groupId, false, type, 1.0);
 
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(groupId);
+
 		CommercePriceListAccountRelLocalServiceUtil.
 			addCommercePriceListAccountRel(
+				serviceContext.getUserId(),
 				commercePriceList.getCommercePriceListId(), commerceAccountId,
-				0, ServiceContextTestUtil.getServiceContext(groupId));
+				0, serviceContext);
 
 		return commercePriceList;
 	}
@@ -160,10 +170,14 @@ public class CommercePriceListTestUtil {
 			CommercePriceListLocalServiceUtil.getCommercePriceList(
 				commercePriceListId);
 
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(groupId);
+
 		CommercePriceListAccountRelLocalServiceUtil.
 			addCommercePriceListAccountRel(
+				serviceContext.getUserId(),
 				commercePriceList.getCommercePriceListId(), commerceAccountId,
-				0, ServiceContextTestUtil.getServiceContext(groupId));
+				0, serviceContext);
 
 		return commercePriceList;
 	}
@@ -175,10 +189,14 @@ public class CommercePriceListTestUtil {
 		CommercePriceList commercePriceList = addCommercePriceList(
 			groupId, false, type, 1.0);
 
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(groupId);
+
 		CommercePriceListChannelRelLocalServiceUtil.
 			addCommercePriceListChannelRel(
+				serviceContext.getUserId(),
 				commercePriceList.getCommercePriceListId(), commerceChannelId,
-				0, ServiceContextTestUtil.getServiceContext(groupId));
+				0, serviceContext);
 
 		return commercePriceList;
 	}
@@ -191,10 +209,14 @@ public class CommercePriceListTestUtil {
 			CommercePriceListLocalServiceUtil.getCommercePriceList(
 				commercePriceListId);
 
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(groupId);
+
 		CommercePriceListChannelRelLocalServiceUtil.
 			addCommercePriceListChannelRel(
+				serviceContext.getUserId(),
 				commercePriceList.getCommercePriceListId(), commerceChannelId,
-				0, ServiceContextTestUtil.getServiceContext(groupId));
+				0, serviceContext);
 
 		return commercePriceList;
 	}
@@ -219,21 +241,22 @@ public class CommercePriceListTestUtil {
 		serviceContext.setWorkflowAction(WorkflowConstants.ACTION_PUBLISH);
 
 		return CommercePriceListLocalServiceUtil.addCommercePriceList(
-			groupId, user.getUserId(), commerceCurrency.getCommerceCurrencyId(),
-			true, type, 0, catalogBasePriceList, RandomTestUtil.randomString(),
-			priority, calendar.get(Calendar.MONTH),
-			calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.YEAR),
-			calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE),
+			null, groupId, user.getUserId(),
+			commerceCurrency.getCommerceCurrencyId(), true, type, 0,
+			catalogBasePriceList, RandomTestUtil.randomString(), priority,
 			calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH),
 			calendar.get(Calendar.YEAR), calendar.get(Calendar.HOUR_OF_DAY),
-			calendar.get(Calendar.MINUTE), "", true, serviceContext);
+			calendar.get(Calendar.MINUTE), calendar.get(Calendar.MONTH),
+			calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.YEAR),
+			calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE),
+			true, serviceContext);
 	}
 
 	public static CommercePriceList addCommercePriceList(
-			long groupId, String currency, boolean netPrice,
-			long parentCommercePriceListId, String name, Double priority,
-			Boolean neverExpire, Date displayDate, Date expirationDate,
-			String externalReferenceCode)
+			String externalReferenceCode, long groupId, String currency,
+			boolean netPrice, long parentCommercePriceListId, String name,
+			Double priority, Boolean neverExpire, Date displayDate,
+			Date expirationDate)
 		throws PortalException {
 
 		if (priority == null) {
@@ -267,11 +290,10 @@ public class CommercePriceListTestUtil {
 		DateElements expirationDateElements = new DateElements(
 			expirationDate, defaultExpirationCalendar);
 
-		long commerceCurrencyId = _getCommerceCurrencyId(
-			serviceContext.getCompanyId(), currency);
-
 		return CommercePriceListLocalServiceUtil.addCommercePriceList(
-			commerceCatalog.getGroupId(), user.getUserId(), commerceCurrencyId,
+			externalReferenceCode, commerceCatalog.getGroupId(),
+			user.getUserId(),
+			_getCommerceCurrencyId(serviceContext.getCompanyId(), currency),
 			netPrice, CommercePriceListConstants.TYPE_PRICE_LIST,
 			parentCommercePriceListId, false, name, priority,
 			displayDateElements.getMonth(), displayDateElements.getDay(),
@@ -279,41 +301,105 @@ public class CommercePriceListTestUtil {
 			displayDateElements.getMinute(), expirationDateElements.getMonth(),
 			expirationDateElements.getDay(), expirationDateElements.getYear(),
 			expirationDateElements.getHour(),
-			expirationDateElements.getMinute(), externalReferenceCode,
-			neverExpire, serviceContext);
+			expirationDateElements.getMinute(), neverExpire, serviceContext);
 	}
 
 	public static CommercePriceList addCommercePriceList(
-			long groupId, String currency, boolean netPrice, String name,
-			Double priority, Boolean neverExpire, Date displayDate,
-			Date expirationDate, String externalReferenceCode)
+			String externalReferenceCode, long groupId, String currency,
+			boolean netPrice, String name, Double priority, Boolean neverExpire,
+			Date displayDate, Date expirationDate)
 		throws PortalException {
 
 		return addCommercePriceList(
-			groupId, currency, netPrice, 0, name, priority, neverExpire,
-			displayDate, expirationDate, externalReferenceCode);
+			externalReferenceCode, groupId, currency, netPrice, 0, name,
+			priority, neverExpire, displayDate, expirationDate);
 	}
 
 	public static CommercePriceList addCommercePriceList(
-			long groupId, String currency, long parentCommercePriceListId,
+			String externalReferenceCode, long groupId, String currency,
+			long parentCommercePriceListId, String name, Double priority,
+			Boolean neverExpire, Date displayDate, Date expirationDate)
+		throws PortalException {
+
+		return addCommercePriceList(
+			externalReferenceCode, groupId, currency, true,
+			parentCommercePriceListId, name, priority, neverExpire, displayDate,
+			expirationDate);
+	}
+
+	public static CommercePriceList addCommercePriceList(
+			String externalReferenceCode, long groupId, String currency,
 			String name, Double priority, Boolean neverExpire, Date displayDate,
-			Date expirationDate, String externalReferenceCode)
+			Date expirationDate)
 		throws PortalException {
 
 		return addCommercePriceList(
-			groupId, currency, true, parentCommercePriceListId, name, priority,
-			neverExpire, displayDate, expirationDate, externalReferenceCode);
+			externalReferenceCode, groupId, currency, true, 0, name, priority,
+			neverExpire, displayDate, expirationDate);
 	}
 
-	public static CommercePriceList addCommercePriceList(
-			long groupId, String currency, String name, Double priority,
-			Boolean neverExpire, Date displayDate, Date expirationDate,
-			String externalReferenceCode)
+	public static CommercePriceList addOrUpdateCommercePriceList(
+			String externalReferenceCode, long groupId,
+			long commercePriceListId, String currency,
+			long parentCommercePriceListId, String name, Double priority,
+			Boolean neverExpire, Date displayDate, Date expirationDate)
 		throws PortalException {
 
-		return addCommercePriceList(
-			groupId, currency, true, 0, name, priority, neverExpire,
-			displayDate, expirationDate, externalReferenceCode);
+		if (neverExpire == null) {
+			neverExpire = Boolean.TRUE;
+		}
+
+		if (priority == null) {
+			priority = 0D;
+		}
+
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(groupId);
+
+		User user = UserLocalServiceUtil.getUserById(
+			serviceContext.getUserId());
+
+		List<CommerceCatalog> commerceCatalogs =
+			CommerceCatalogLocalServiceUtil.getCommerceCatalogs(
+				user.getCompanyId(), true);
+
+		CommerceCatalog commerceCatalog = commerceCatalogs.get(0);
+
+		DateElements displayDateElements = new DateElements(
+			displayDate, CalendarFactoryUtil.getCalendar(user.getTimeZone()));
+
+		Calendar defaultExpirationCalendar = CalendarFactoryUtil.getCalendar(
+			user.getTimeZone());
+
+		defaultExpirationCalendar.add(Calendar.MONTH, 1);
+
+		DateElements expirationDateElements = new DateElements(
+			expirationDate, defaultExpirationCalendar);
+
+		return CommercePriceListLocalServiceUtil.addOrUpdateCommercePriceList(
+			externalReferenceCode, commerceCatalog.getGroupId(),
+			user.getUserId(), commercePriceListId,
+			_getCommerceCurrencyId(serviceContext.getCompanyId(), currency),
+			true, CommercePriceListConstants.TYPE_PRICE_LIST,
+			parentCommercePriceListId, false, name, priority,
+			displayDateElements.getMonth(), displayDateElements.getDay(),
+			displayDateElements.getYear(), displayDateElements.getHour(),
+			displayDateElements.getMinute(), expirationDateElements.getMonth(),
+			expirationDateElements.getDay(), expirationDateElements.getYear(),
+			expirationDateElements.getHour(),
+			expirationDateElements.getMinute(), neverExpire, serviceContext);
+	}
+
+	public static CommercePriceList addOrUpdateCommercePriceList(
+			String externalReferenceCode, long groupId,
+			long commercePriceListId, String currency, String name,
+			Double priority, Boolean neverExpire, Date displayDate,
+			Date expirationDate)
+		throws PortalException {
+
+		return addOrUpdateCommercePriceList(
+			externalReferenceCode, groupId, commercePriceListId, currency, 0,
+			name, priority, neverExpire, displayDate, expirationDate);
 	}
 
 	public static CommercePriceList updateCommercePriceList(
@@ -347,81 +433,16 @@ public class CommercePriceListTestUtil {
 		DateElements expirationDateElements = new DateElements(
 			expirationDate, defaultExpirationCalendar);
 
-		long commerceCurrencyId = _getCommerceCurrencyId(
-			serviceContext.getCompanyId(), currency);
-
 		return CommercePriceListLocalServiceUtil.updateCommercePriceList(
-			commercePriceListId, commerceCurrencyId, parentCommercePriceListId,
-			name, priority, displayDateElements.getMonth(),
-			displayDateElements.getDay(), displayDateElements.getYear(),
-			displayDateElements.getHour(), displayDateElements.getMinute(),
-			expirationDateElements.getMonth(), expirationDateElements.getDay(),
-			expirationDateElements.getYear(), expirationDateElements.getHour(),
-			expirationDateElements.getMinute(), neverExpire, serviceContext);
-	}
-
-	public static CommercePriceList upsertCommercePriceList(
-			long groupId, long commercePriceListId, String currency,
-			long parentCommercePriceListId, String name, Double priority,
-			Boolean neverExpire, Date displayDate, Date expirationDate,
-			String externalReferenceCode)
-		throws PortalException {
-
-		if (neverExpire == null) {
-			neverExpire = Boolean.TRUE;
-		}
-
-		if (priority == null) {
-			priority = 0D;
-		}
-
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(groupId);
-
-		User user = UserLocalServiceUtil.getUserById(
-			serviceContext.getUserId());
-
-		List<CommerceCatalog> commerceCatalogs =
-			CommerceCatalogLocalServiceUtil.getCommerceCatalogs(
-				user.getCompanyId(), true);
-
-		CommerceCatalog commerceCatalog = commerceCatalogs.get(0);
-
-		DateElements displayDateElements = new DateElements(
-			displayDate, CalendarFactoryUtil.getCalendar(user.getTimeZone()));
-
-		Calendar defaultExpirationCalendar = CalendarFactoryUtil.getCalendar(
-			user.getTimeZone());
-
-		defaultExpirationCalendar.add(Calendar.MONTH, 1);
-
-		DateElements expirationDateElements = new DateElements(
-			expirationDate, defaultExpirationCalendar);
-
-		long commerceCurrencyId = _getCommerceCurrencyId(
-			serviceContext.getCompanyId(), currency);
-
-		return CommercePriceListLocalServiceUtil.upsertCommercePriceList(
-			commerceCatalog.getGroupId(), user.getUserId(), commercePriceListId,
-			commerceCurrencyId, parentCommercePriceListId, name, priority,
+			commercePriceListId,
+			_getCommerceCurrencyId(serviceContext.getCompanyId(), currency),
+			true, parentCommercePriceListId, name, priority,
 			displayDateElements.getMonth(), displayDateElements.getDay(),
 			displayDateElements.getYear(), displayDateElements.getHour(),
 			displayDateElements.getMinute(), expirationDateElements.getMonth(),
 			expirationDateElements.getDay(), expirationDateElements.getYear(),
 			expirationDateElements.getHour(),
-			expirationDateElements.getMinute(), externalReferenceCode,
-			neverExpire, serviceContext);
-	}
-
-	public static CommercePriceList upsertCommercePriceList(
-			long groupId, long commercePriceListId, String currency,
-			String name, Double priority, Boolean neverExpire, Date displayDate,
-			Date expirationDate, String externalReferenceCode)
-		throws PortalException {
-
-		return upsertCommercePriceList(
-			groupId, commercePriceListId, currency, 0, name, priority,
-			neverExpire, displayDate, expirationDate, externalReferenceCode);
+			expirationDateElements.getMinute(), neverExpire, serviceContext);
 	}
 
 	private static long _getCommerceCurrencyId(

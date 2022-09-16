@@ -2,13 +2,17 @@
 <head>
 <title>LanguageConfiguration</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">LanguageConfiguration</td></tr>
 </thead>
+
 <tbody>
+
 <!--LANGUAGES-->
+
 <tr>
 	<td>LANGUAGES_CURRENT</td>
 	<td>//select[contains(@id,'currentLanguageIds')]</td>
@@ -29,7 +33,9 @@
 	<td>//select[contains(@id,'displayStyle')]</td>
 	<td></td>
 </tr>
+
 <!--DEPOT-->
+
 <tr>
 	<td>DEPOT_DEFAULT_LANGUAGE</td>
 	<td>//td[contains(.,'${key_language}') and contains(.,'Default')]</td>
@@ -47,22 +53,22 @@
 </tr>
 <tr>
 	<td>DEPOT_LANGUAGE_LOCALIZATION_NAME_1</td>
-	<td>//div[contains(@class,'menu-open')]//li[@role='presentation'][1]//a</td>
+	<td>//div[contains(@class,'menu-open')]//li[@role][1]//a</td>
 	<td></td>
 </tr>
 <tr>
 	<td>DEPOT_LANGUAGE_LOCALIZATION_NAME_2</td>
-	<td>//div[contains(@class,'menu-open')]//li[@role='presentation'][2]//a</td>
+	<td>//div[contains(@class,'menu-open')]//li[@role][2]//a</td>
 	<td></td>
 </tr>
 <tr>
 	<td>DEPOT_LANGUAGE_LOCALIZATION_NAME_3</td>
-	<td>//div[contains(@class,'menu-open')]//li[@role='presentation'][3]//a</td>
+	<td>//div[contains(@class,'menu-open')]//li[@role][3]//a</td>
 	<td></td>
 </tr>
 <tr>
 	<td>DEPOT_LANGUAGE_LOCALIZATION_NAME_4</td>
-	<td>//div[contains(@class,'menu-open')]//li[@role='presentation'][4]//a</td>
+	<td>//div[contains(@class,'menu-open')]//li[@role][4]//a</td>
 	<td></td>
 </tr>
 <tr>

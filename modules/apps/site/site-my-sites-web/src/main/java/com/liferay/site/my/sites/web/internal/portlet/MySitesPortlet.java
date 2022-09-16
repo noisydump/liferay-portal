@@ -64,7 +64,8 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + MySitesPortletKeys.MY_SITES,
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=power-user,user"
+		"javax.portlet.security-role-ref=power-user,user",
+		"javax.portlet.version=3.0"
 	},
 	service = Portlet.class
 )
@@ -116,12 +117,12 @@ public class MySitesPortlet extends MVCPortlet {
 		long[] addUserIds = StringUtil.split(
 			ParamUtil.getString(actionRequest, "addUserIds"), 0L);
 
-		addUserIds = filterAddUserIds(groupId, addUserIds);
+		addUserIds = _filterAddUserIds(groupId, addUserIds);
 
 		long[] removeUserIds = StringUtil.split(
 			ParamUtil.getString(actionRequest, "removeUserIds"), 0L);
 
-		removeUserIds = filterRemoveUserIds(groupId, removeUserIds);
+		removeUserIds = _filterRemoveUserIds(groupId, removeUserIds);
 
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			actionRequest);
@@ -132,34 +133,6 @@ public class MySitesPortlet extends MVCPortlet {
 		LiveUsers.joinGroup(themeDisplay.getCompanyId(), groupId, addUserIds);
 		LiveUsers.leaveGroup(
 			themeDisplay.getCompanyId(), groupId, removeUserIds);
-	}
-
-	protected long[] filterAddUserIds(long groupId, long[] userIds)
-		throws Exception {
-
-		Set<Long> filteredUserIds = new HashSet<>();
-
-		for (long userId : userIds) {
-			if (!_userLocalService.hasGroupUser(groupId, userId)) {
-				filteredUserIds.add(userId);
-			}
-		}
-
-		return ArrayUtil.toArray(filteredUserIds.toArray(new Long[0]));
-	}
-
-	protected long[] filterRemoveUserIds(long groupId, long[] userIds)
-		throws Exception {
-
-		Set<Long> filteredUserIds = new HashSet<>();
-
-		for (long userId : userIds) {
-			if (_userLocalService.hasGroupUser(groupId, userId)) {
-				filteredUserIds.add(userId);
-			}
-		}
-
-		return ArrayUtil.toArray(filteredUserIds.toArray(new Long[0]));
 	}
 
 	@Override
@@ -174,32 +147,46 @@ public class MySitesPortlet extends MVCPortlet {
 		return false;
 	}
 
-	@Reference(unbind = "-")
-	protected void setMembershipRequestLocalService(
-		MembershipRequestLocalService membershipRequestLocalService) {
+	private long[] _filterAddUserIds(long groupId, long[] userIds)
+		throws Exception {
 
-		_membershipRequestLocalService = membershipRequestLocalService;
+		Set<Long> filteredUserIds = new HashSet<>();
+
+		for (long userId : userIds) {
+			if (!_userLocalService.hasGroupUser(groupId, userId)) {
+				filteredUserIds.add(userId);
+			}
+		}
+
+		return ArrayUtil.toArray(filteredUserIds.toArray(new Long[0]));
 	}
+
+	private long[] _filterRemoveUserIds(long groupId, long[] userIds)
+		throws Exception {
+
+		Set<Long> filteredUserIds = new HashSet<>();
+
+		for (long userId : userIds) {
+			if (_userLocalService.hasGroupUser(groupId, userId)) {
+				filteredUserIds.add(userId);
+			}
+		}
+
+		return ArrayUtil.toArray(filteredUserIds.toArray(new Long[0]));
+	}
+
+	@Reference
+	private MembershipRequestLocalService _membershipRequestLocalService;
 
 	@Reference(
-		target = "(&(release.bundle.symbolic.name=com.liferay.site.my.sites.web)(&(release.schema.version>=1.0.0)(!(release.schema.version>=2.0.0))))",
-		unbind = "-"
+		target = "(&(release.bundle.symbolic.name=com.liferay.site.my.sites.web)(&(release.schema.version>=1.0.0)(!(release.schema.version>=2.0.0))))"
 	)
-	protected void setRelease(Release release) {
-	}
+	private Release _release;
 
-	@Reference(unbind = "-")
-	protected void setUserLocalService(UserLocalService userLocalService) {
-		_userLocalService = userLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setUserService(UserService userService) {
-		_userService = userService;
-	}
-
-	private MembershipRequestLocalService _membershipRequestLocalService;
+	@Reference
 	private UserLocalService _userLocalService;
+
+	@Reference
 	private UserService _userService;
 
 }

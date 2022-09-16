@@ -16,15 +16,17 @@ package com.liferay.commerce.product.internal.channel;
 
 import com.liferay.commerce.product.channel.CommerceChannelType;
 import com.liferay.commerce.product.constants.CommerceChannelConstants;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
+import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 
 import java.util.Locale;
 import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Alec Sloan
@@ -46,7 +48,7 @@ public class SiteCommerceChannelTypeImpl implements CommerceChannelType {
 
 	@Override
 	public String getLabel(Locale locale) {
-		return LanguageUtil.get(
+		return _language.get(
 			locale, CommerceChannelConstants.CHANNEL_TYPE_SITE);
 	}
 
@@ -54,16 +56,18 @@ public class SiteCommerceChannelTypeImpl implements CommerceChannelType {
 	public UnicodeProperties getTypeSettingsProperties(
 		Map<String, String[]> parameterMap) {
 
-		UnicodeProperties typeSettingsUnicodeProperties = new UnicodeProperties(
-			true);
-
-		long[] groupIds = GetterUtil.getLongValues(
-			parameterMap.get("CommerceChannelSitesSearchContainerPrimaryKeys"));
-
-		typeSettingsUnicodeProperties.put(
-			"groupIds", StringUtil.merge(groupIds));
-
-		return typeSettingsUnicodeProperties;
+		return UnicodePropertiesBuilder.create(
+			true
+		).put(
+			"groupIds",
+			StringUtil.merge(
+				GetterUtil.getLongValues(
+					parameterMap.get(
+						"CommerceChannelSitesSearchContainerPrimaryKeys")))
+		).build();
 	}
+
+	@Reference
+	private Language _language;
 
 }

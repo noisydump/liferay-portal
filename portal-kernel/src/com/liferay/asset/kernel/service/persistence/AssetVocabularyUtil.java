@@ -15,7 +15,6 @@
 package com.liferay.asset.kernel.service.persistence;
 
 import com.liferay.asset.kernel.model.AssetVocabulary;
-import com.liferay.portal.kernel.bean.PortalBeanLocatorUtil;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.OrderByComparator;
@@ -856,7 +855,7 @@ public class AssetVocabularyUtil {
 	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetVocabularyModelImpl</code>.
 	 * </p>
 	 *
-	 * @param groupId the group ID
+	 * @param groupIds the group IDs
 	 * @param start the lower bound of the range of asset vocabularies
 	 * @param end the upper bound of the range of asset vocabularies (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
@@ -1786,8 +1785,8 @@ public class AssetVocabularyUtil {
 	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetVocabularyModelImpl</code>.
 	 * </p>
 	 *
-	 * @param groupId the group ID
-	 * @param visibilityType the visibility type
+	 * @param groupIds the group IDs
+	 * @param visibilityTypes the visibility types
 	 * @param start the lower bound of the range of asset vocabularies
 	 * @param end the upper bound of the range of asset vocabularies (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
@@ -1859,73 +1858,71 @@ public class AssetVocabularyUtil {
 	}
 
 	/**
-	 * Returns the asset vocabulary where companyId = &#63; and externalReferenceCode = &#63; or throws a <code>NoSuchVocabularyException</code> if it could not be found.
+	 * Returns the asset vocabulary where groupId = &#63; and externalReferenceCode = &#63; or throws a <code>NoSuchVocabularyException</code> if it could not be found.
 	 *
-	 * @param companyId the company ID
+	 * @param groupId the group ID
 	 * @param externalReferenceCode the external reference code
 	 * @return the matching asset vocabulary
 	 * @throws NoSuchVocabularyException if a matching asset vocabulary could not be found
 	 */
-	public static AssetVocabulary findByC_ERC(
-			long companyId, String externalReferenceCode)
+	public static AssetVocabulary findByG_ERC(
+			long groupId, String externalReferenceCode)
 		throws com.liferay.asset.kernel.exception.NoSuchVocabularyException {
 
-		return getPersistence().findByC_ERC(companyId, externalReferenceCode);
+		return getPersistence().findByG_ERC(groupId, externalReferenceCode);
 	}
 
 	/**
-	 * Returns the asset vocabulary where companyId = &#63; and externalReferenceCode = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 * Returns the asset vocabulary where groupId = &#63; and externalReferenceCode = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
 	 *
-	 * @param companyId the company ID
+	 * @param groupId the group ID
 	 * @param externalReferenceCode the external reference code
 	 * @return the matching asset vocabulary, or <code>null</code> if a matching asset vocabulary could not be found
 	 */
-	public static AssetVocabulary fetchByC_ERC(
-		long companyId, String externalReferenceCode) {
+	public static AssetVocabulary fetchByG_ERC(
+		long groupId, String externalReferenceCode) {
 
-		return getPersistence().fetchByC_ERC(companyId, externalReferenceCode);
+		return getPersistence().fetchByG_ERC(groupId, externalReferenceCode);
 	}
 
 	/**
-	 * Returns the asset vocabulary where companyId = &#63; and externalReferenceCode = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	 * Returns the asset vocabulary where groupId = &#63; and externalReferenceCode = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
 	 *
-	 * @param companyId the company ID
+	 * @param groupId the group ID
 	 * @param externalReferenceCode the external reference code
 	 * @param useFinderCache whether to use the finder cache
 	 * @return the matching asset vocabulary, or <code>null</code> if a matching asset vocabulary could not be found
 	 */
-	public static AssetVocabulary fetchByC_ERC(
-		long companyId, String externalReferenceCode, boolean useFinderCache) {
+	public static AssetVocabulary fetchByG_ERC(
+		long groupId, String externalReferenceCode, boolean useFinderCache) {
 
-		return getPersistence().fetchByC_ERC(
-			companyId, externalReferenceCode, useFinderCache);
+		return getPersistence().fetchByG_ERC(
+			groupId, externalReferenceCode, useFinderCache);
 	}
 
 	/**
-	 * Removes the asset vocabulary where companyId = &#63; and externalReferenceCode = &#63; from the database.
+	 * Removes the asset vocabulary where groupId = &#63; and externalReferenceCode = &#63; from the database.
 	 *
-	 * @param companyId the company ID
+	 * @param groupId the group ID
 	 * @param externalReferenceCode the external reference code
 	 * @return the asset vocabulary that was removed
 	 */
-	public static AssetVocabulary removeByC_ERC(
-			long companyId, String externalReferenceCode)
+	public static AssetVocabulary removeByG_ERC(
+			long groupId, String externalReferenceCode)
 		throws com.liferay.asset.kernel.exception.NoSuchVocabularyException {
 
-		return getPersistence().removeByC_ERC(companyId, externalReferenceCode);
+		return getPersistence().removeByG_ERC(groupId, externalReferenceCode);
 	}
 
 	/**
-	 * Returns the number of asset vocabularies where companyId = &#63; and externalReferenceCode = &#63;.
+	 * Returns the number of asset vocabularies where groupId = &#63; and externalReferenceCode = &#63;.
 	 *
-	 * @param companyId the company ID
+	 * @param groupId the group ID
 	 * @param externalReferenceCode the external reference code
 	 * @return the number of matching asset vocabularies
 	 */
-	public static int countByC_ERC(
-		long companyId, String externalReferenceCode) {
-
-		return getPersistence().countByC_ERC(companyId, externalReferenceCode);
+	public static int countByG_ERC(long groupId, String externalReferenceCode) {
+		return getPersistence().countByG_ERC(groupId, externalReferenceCode);
 	}
 
 	/**
@@ -2078,15 +2075,9 @@ public class AssetVocabularyUtil {
 	}
 
 	public static AssetVocabularyPersistence getPersistence() {
-		if (_persistence == null) {
-			_persistence =
-				(AssetVocabularyPersistence)PortalBeanLocatorUtil.locate(
-					AssetVocabularyPersistence.class.getName());
-		}
-
 		return _persistence;
 	}
 
-	private static AssetVocabularyPersistence _persistence;
+	private static volatile AssetVocabularyPersistence _persistence;
 
 }

@@ -60,6 +60,8 @@ public abstract class BaseLayoutTypeControllerImpl
 			HttpServletResponse httpServletResponse, Layout layout)
 		throws Exception {
 
+		ServletContext servletContext = getServletContext();
+
 		RequestDispatcher requestDispatcher =
 			TransferHeadersHelperUtil.getTransferHeadersRequestDispatcher(
 				servletContext.getRequestDispatcher(getEditPage()));
@@ -86,6 +88,8 @@ public abstract class BaseLayoutTypeControllerImpl
 			HttpServletRequest httpServletRequest,
 			HttpServletResponse httpServletResponse, Layout layout)
 		throws Exception {
+
+		ServletContext servletContext = getServletContext();
 
 		RequestDispatcher requestDispatcher =
 			TransferHeadersHelperUtil.getTransferHeadersRequestDispatcher(
@@ -170,28 +174,17 @@ public abstract class BaseLayoutTypeControllerImpl
 	protected void addAttributes(HttpServletRequest httpServletRequest) {
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *             #createServletResponse(HttpServletResponse,
-	 *             UnsyncStringWriter)}
-	 */
-	@Deprecated
-	protected abstract ServletResponse createServletResponse(
-		HttpServletResponse httpServletResponse,
-		com.liferay.portal.kernel.io.unsync.UnsyncStringWriter
-			unsyncStringWriter);
-
 	protected abstract ServletResponse createServletResponse(
 		HttpServletResponse httpServletResponse,
 		UnsyncStringWriter unsyncStringWriter);
 
 	protected abstract String getEditPage();
 
+	protected abstract ServletContext getServletContext();
+
 	protected abstract String getViewPage();
 
 	protected void removeAttributes(HttpServletRequest httpServletRequest) {
 	}
-
-	protected ServletContext servletContext;
 
 }

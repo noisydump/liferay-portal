@@ -16,13 +16,60 @@ definition {
 		SelectFrame(value1 = "relative=top");
 	}
 
-	macro viewBlogsEntryViaBAPortletPG {
-		for (var entryTitle : list "${viewEntryTitle}") {
-			var key_entryTitle = "${entryTitle}";
+	macro selectDisplayStyle {
+		Portlet.gotoPortletOptions(portletOption = "Configuration");
 
-			AssertTextEquals(
-				locator1 = "BlogsAggregator#ENTRY_TITLE",
-				value1 = "${entryTitle}");
+		BlogsConfiguration.selectConfigurationIFrame();
+
+		Select(
+			locator1 = "Select#DISPLAY_STYLE",
+			value1 = "${displayStyle}");
+
+		IFrame.saveConfiguration();
+	}
+
+	macro selectOrganization {
+		Portlet.gotoPortletOptions(
+			portletName = "Blogs Aggregator",
+			portletOption = "Configuration");
+
+		SelectFrame(locator1 = "IFrame#CONFIGURATION");
+
+		AssertClick(
+			locator1 = "Button#SELECT",
+			value1 = "Select");
+
+		SelectFrame.selectSecondFrame(locator1 = "IFrame#MODAL_BODY");
+
+		Click(
+			key_roleTitle = "${organizationName}",
+			locator1 = "UsersAndOrganizationsEditUser#ROLES_REGULAR_SELECT_CHOOSE_BUTTON");
+
+		SelectFrame(value1 = "relative=top");
+
+		SelectFrame(locator1 = "IFrame#CONFIGURATION");
+
+		IFrame.saveConfiguration();
+	}
+
+	macro viewBlogsEntryViaBAPortletPG {
+		AssertTextEquals(
+			key_entryTitle = "${entryTitle}",
+			locator1 = "BlogsAggregator#ENTRY_TITLE",
+			value1 = "${entryTitle}");
+
+		if (isSet(entryContent)) {
+			AssertTextEquals.assertPartialText(
+				key_entryContent = "${entryContent}",
+				locator1 = "BlogsAggregator#ENTRY_CONTENT",
+				value1 = "${entryContent}");
+		}
+
+		if (isSet(entryQuoteContent)) {
+			AssertTextEquals.assertPartialText(
+				key_entryContent = "${entryQuoteContent}",
+				locator1 = "BlogsAggregator#ENTRY_QUOTE_CONTENT",
+				value1 = "${entryQuoteContent}");
 		}
 	}
 

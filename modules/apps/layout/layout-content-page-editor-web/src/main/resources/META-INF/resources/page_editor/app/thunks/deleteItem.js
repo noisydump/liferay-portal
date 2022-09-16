@@ -12,16 +12,33 @@
  * details.
  */
 
+import {openToast} from 'frontend-js-web';
+
 import deleteItemAction from '../actions/deleteItem';
-import deleteWidgets from '../actions/deleteWidgets';
 import updatePageContents from '../actions/updatePageContents';
+import {FREEMARKER_FRAGMENT_ENTRY_PROCESSOR} from '../config/constants/freemarkerFragmentEntryProcessor';
 import {LAYOUT_DATA_ITEM_TYPES} from '../config/constants/layoutDataItemTypes';
+import selectEditableValue from '../selectors/selectEditableValue';
+import selectFormConfiguration from '../selectors/selectFormConfiguration';
+import FormService from '../services/FormService';
 import InfoItemService from '../services/InfoItemService';
 import LayoutService from '../services/LayoutService';
+import {CACHE_KEYS, getCacheItem, getCacheKey} from '../utils/cache';
+import {
+	FORM_ERROR_TYPES,
+	getFormErrorDescription,
+} from '../utils/getFormErrorDescription';
+import getFragmentEntryLinkIdsFromItemId from '../utils/getFragmentEntryLinkIdsFromItemId';
+import {hasFormParent} from '../utils/hasFormParent';
+import {isRequiredFormInput} from '../utils/isRequiredFormInput';
 
-export default function deleteItem({itemId, selectItem = () => {}, store}) {
-	return (dispatch) => {
-		const {fragmentEntryLinks, layoutData, segmentsExperienceId} = store;
+export default function deleteItem({itemId, selectItem = () => {}}) {
+	return (dispatch, getState) => {
+		const {
+			fragmentEntryLinks,
+			layoutData,
+			segmentsExperienceId,
+		} = getState();
 
 		return markItemForDeletion({
 			fragmentEntryLinks,
@@ -30,40 +47,29 @@ export default function deleteItem({itemId, selectItem = () => {}, store}) {
 			onNetworkStatus: dispatch,
 			segmentsExperienceId,
 		})
-			.then(
-				({
-					deletedFragmentEntryLinkIds = [],
-					portletIds = [],
-					layoutData,
-				}) => {
-					const deletedWidgets = deletedFragmentEntryLinkIds
-						.map(
-							(fragmentEntryLinkId) =>
-								store.fragmentEntryLinks[fragmentEntryLinkId]
-						)
-						.filter(
-							(fragmentEntryLink) =>
-								fragmentEntryLink.editableValues.portletId
-						);
+			.then(({portletIds = [], layoutData: nextLayoutData}) => {
+				selectItem(null);
 
-					if (deletedWidgets.length) {
-						dispatch(deleteWidgets(deletedWidgets));
-					}
+				const fragmentEntryLinkIds = getFragmentEntryLinkIdsFromItemId({
+					itemId,
+					layoutData: nextLayoutData,
+				});
 
-					selectItem(null);
+				dispatch(
+					deleteItemAction({
+						fragmentEntryLinkIds,
+						itemId,
+						layoutData: nextLayoutData,
+						portletIds,
+					})
+				);
 
-					dispatch(
-						deleteItemAction({
-							itemId,
-							layoutData,
-							portletIds,
-						})
-					);
-				}
-			)
+				maybeShowAlert(layoutData, itemId, fragmentEntryLinks);
+			})
 			.then(() => {
 				InfoItemService.getPageContents({
 					onNetworkStatus: dispatch,
+					segmentsExperienceId,
 				}).then((pageContents) => {
 					dispatch(
 						updatePageContents({
@@ -107,8 +113,12 @@ function findPortletIds(itemId, layoutData, fragmentEntryLinks) {
 			config.fragmentEntryLinkId
 		];
 
-		if (editableValues.portletId && !editableValues.instanceId) {
-			return [editableValues.portletId];
+		if (editableValues.portletId) {
+			return [
+				editableValues.instanceId
+					? `${editableValues.portletId}_INSTANCE_${editableValues.instanceId}`
+					: editableValues.portletId,
+			];
 		}
 	}
 
@@ -121,4 +131,66 @@ function findPortletIds(itemId, layoutData, fragmentEntryLinks) {
 	});
 
 	return deletedWidgets;
+}
+
+function maybeShowAlert(layoutData, itemId, fragmentEntryLinks) {
+	const item = layoutData?.items?.[itemId];
+
+	if (
+		!item ||
+		item.type !== LAYOUT_DATA_ITEM_TYPES.fragment ||
+		!hasFormParent(item, layoutData)
+	) {
+		return null;
+	}
+
+	const {classNameId, classTypeId} = selectFormConfiguration(
+		item,
+		layoutData
+	);
+
+	const cacheKey = getCacheKey([
+		CACHE_KEYS.formFields,
+		classNameId,
+		classTypeId,
+	]);
+
+	const {data: fields} = getCacheItem(cacheKey);
+
+	const promise = fields
+		? Promise.resolve(fields)
+		: FormService.getFormFields({
+				classNameId,
+				classTypeId,
+		  });
+
+	promise.then((formFields) => {
+		if (
+			item.type === LAYOUT_DATA_ITEM_TYPES.fragment &&
+			isRequiredFormInput(item, fragmentEntryLinks, formFields)
+		) {
+			const fieldId = selectEditableValue(
+				{fragmentEntryLinks},
+				item.config.fragmentEntryLinkId,
+				'inputFieldId',
+				FREEMARKER_FRAGMENT_ENTRY_PROCESSOR
+			);
+
+			const {message} = getFormErrorDescription({
+				name: getFieldLabel(fieldId, formFields),
+				type: FORM_ERROR_TYPES.deletedFragment,
+			});
+
+			openToast({
+				message,
+				type: 'warning',
+			});
+		}
+	});
+}
+
+function getFieldLabel(fieldId, formFields) {
+	const flattenedFields = formFields.flatMap((fieldSet) => fieldSet.fields);
+
+	return flattenedFields.find((field) => field.key === fieldId).label;
 }

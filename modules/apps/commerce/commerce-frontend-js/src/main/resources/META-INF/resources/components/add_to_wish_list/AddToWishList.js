@@ -17,25 +17,18 @@ import ClayIcon from '@clayui/icon';
 import PropTypes from 'prop-types';
 import React, {useState} from 'react';
 
+import {showErrorNotification} from '../../utilities/notifications';
 import LegacyWishListResource from './util/LegacyWishListResource';
 
-function AddToWishList({
-	iconOnly,
-	isInWishlist,
-	large,
-	spritemap,
-	...productInfo
-}) {
-	const [isAdded, setIsAdded] = useState(isInWishlist);
+function AddToWishList({iconOnly, isInWishList, large, ...productInfo}) {
+	const [isAdded, setIsAdded] = useState(isInWishList);
 
 	const toggleInWishList = () =>
-		LegacyWishListResource.toggleInWishList(productInfo).then(
-			({success = false}) => {
-				if (success) {
-					setIsAdded(!isAdded);
-				}
-			}
-		);
+		LegacyWishListResource.toggleInWishList(productInfo)
+			.then(({success}) => setIsAdded(success))
+			.catch((error) => {
+				showErrorNotification(error);
+			});
 
 	/**
 	 * The following to become a trigger
@@ -44,22 +37,19 @@ function AddToWishList({
 	return (
 		<ClayButton
 			className={`btn-outline-borderless btn-${large ? 'lg' : 'sm'}`}
-			displayType={'secondary'}
+			displayType="secondary"
 			onClick={toggleInWishList}
 		>
 			{!iconOnly && (
-				<span className={'text-truncate-inline'}>
-					<span className={'font-weight-normal text-truncate'}>
+				<span className="text-truncate-inline">
+					<span className="font-weight-normal text-truncate">
 						{Liferay.Language.get('add-to-list')}
 					</span>
 				</span>
 			)}
 
-			<span className={'wish-list-icon'}>
-				<ClayIcon
-					spritemap={spritemap}
-					symbol={`heart${isAdded ? '-full' : ''}`}
-				/>
+			<span className="wish-list-icon">
+				<ClayIcon symbol={`heart${isAdded ? '-full' : ''}`} />
 			</span>
 		</ClayButton>
 	);
@@ -76,7 +66,6 @@ AddToWishList.propTypes = {
 	isInWishList: PropTypes.bool,
 	large: PropTypes.bool,
 	skuId: PropTypes.number,
-	spritemap: PropTypes.string,
 };
 
 export default AddToWishList;

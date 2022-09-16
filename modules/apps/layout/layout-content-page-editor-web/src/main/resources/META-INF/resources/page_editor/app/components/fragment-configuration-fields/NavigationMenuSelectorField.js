@@ -12,40 +12,48 @@
  * details.
  */
 
-import ClayForm from '@clayui/form';
 import PropTypes from 'prop-types';
 import React from 'react';
 
 import ItemSelector from '../../../common/components/ItemSelector';
 import {ConfigurationFieldPropTypes} from '../../../prop-types/index';
 import {config} from '../../config/index';
+import itemSelectorValueToSiteNavigationMenuItem from '../../utils/item-selector-value/itemSelectorValueToSiteNavigationMenuItem';
 
-export const NavigationMenuSelectorField = ({field, onValueSelect, value}) => {
+export function NavigationMenuSelectorField({field, onValueSelect, value}) {
 	const eventName = `${config.portletNamespace}selectSiteNavigationMenu`;
 
-	const title = value
-		? value.parentSiteNavigationMenuItemId &&
-		  value.parentSiteNavigationMenuItemId !== '0'
-			? `... / ${value.title}`
-			: value.title
-		: Liferay.Language.get('public-pages-hierarchy');
+	const selectedValue = value
+		? {
+				...value,
+				title:
+					value.parentSiteNavigationMenuItemId &&
+					value.parentSiteNavigationMenuItemId !== '0'
+						? `... / ${value.title}`
+						: value.title,
+		  }
+		: {
+				title: config.isPrivateLayoutsEnabled
+					? Liferay.Language.get('public-pages-hierarchy')
+					: Liferay.Language.get('pages-hierarchy'),
+		  };
 
 	return (
-		<ClayForm.Group small>
-			<ItemSelector
-				eventName={eventName}
-				itemSelectorURL={config.siteNavigationMenuItemSelectorURL}
-				label={field.label}
-				modalProps={{height: '60vh', size: 'lg'}}
-				onItemSelect={(navigationMenu) => {
-					onValueSelect(field.name, navigationMenu);
-				}}
-				selectedItemTitle={title}
-				showMappedItems={false}
-			/>
-		</ClayForm.Group>
+		<ItemSelector
+			eventName={eventName}
+			helpText={field.description}
+			itemSelectorURL={config.siteNavigationMenuItemSelectorURL}
+			label={field.label}
+			modalProps={{height: '60vh', size: 'lg'}}
+			onItemSelect={(navigationMenu) => {
+				onValueSelect(field.name, navigationMenu);
+			}}
+			selectedItem={selectedValue}
+			showMappedItems={false}
+			transformValueCallback={itemSelectorValueToSiteNavigationMenuItem}
+		/>
 	);
-};
+}
 
 NavigationMenuSelectorField.propTypes = {
 	field: PropTypes.shape(ConfigurationFieldPropTypes).isRequired,

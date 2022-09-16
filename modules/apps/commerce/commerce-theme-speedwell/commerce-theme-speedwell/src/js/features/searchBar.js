@@ -13,22 +13,22 @@
  */
 
 (function (w) {
-	var searchToggles = w.document.querySelectorAll('.js-toggle-search'),
-		HAS_SEARCH_CLASS = 'has-search',
-		IS_OPEN_CLASS = 'is-open',
-		IS_ACTIVE_CLASS = 'is-active',
-		SEARCHBAR_SELECTOR = '.speedwell-search';
+	const searchToggles = w.document.querySelectorAll('.js-toggle-search');
+	const HAS_SEARCH_CLASS = 'has-search';
+	const IS_OPEN_CLASS = 'is-open';
+	const IS_ACTIVE_CLASS = 'is-active';
+	const SEARCHBAR_SELECTOR = '.speedwell-search';
 
-	var searchBarElement;
+	let searchBarElement;
 
-	var searchBar = w.Liferay.component('search-bar');
+	const searchBar = w.Liferay.component('search-bar');
 
 	if (searchBar) {
 		searchBarElement = w.document.querySelector(SEARCHBAR_SELECTOR);
 
 		searchBar.on('toggled', (status) => {
-			searchToggles.forEach((el) => {
-				el.classList.toggle(IS_ACTIVE_CLASS, status);
+			searchToggles.forEach((element) => {
+				element.classList.toggle(IS_ACTIVE_CLASS, status);
 			});
 
 			w.document

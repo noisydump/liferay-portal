@@ -12,23 +12,13 @@
  * details.
  */
 
-import {ClayButtonWithIcon} from '@clayui/button';
-import {ClayInput} from '@clayui/form';
+import ClayForm, {ClayInput} from '@clayui/form';
+import ClayIcon from '@clayui/icon';
 import ClayLayout from '@clayui/layout';
-import ClayManagementToolbar from '@clayui/management-toolbar';
-import {Treeview} from 'frontend-js-components-web';
 import PropTypes from 'prop-types';
 import React, {useState} from 'react';
 
-function visit(nodes, callback) {
-	nodes.forEach((node) => {
-		callback(node);
-
-		if (node.children) {
-			visit(node.children, callback);
-		}
-	});
-}
+import {SelectLayoutTree} from './SelectLayoutTree.es';
 
 /**
  * SelectLayout
@@ -43,106 +33,60 @@ const SelectLayout = ({
 	followURLOnTitleClick,
 	itemSelectorSaveEvent,
 	multiSelection,
-	namespace,
 	nodes,
 	selectedLayoutIds,
 }) => {
 	const [filter, setFilter] = useState();
 
-	const handleSelectionChange = (selectedNodeIds) => {
-		if (!selectedNodeIds.size) {
-			return;
-		}
-
-		let data = [];
-
-		visit(nodes, (node) => {
-			if (selectedNodeIds.has(node.id)) {
-				data.push({
-					groupId: node.groupId,
-					id: node.id,
-					layoutId: node.layoutId,
-					name: node.value,
-					privateLayout: node.privateLayout,
-					value: node.url,
-				});
-			}
-		});
-
-		if (!multiSelection) {
-			data = data[0];
-		}
-
-		if (followURLOnTitleClick) {
-			Liferay.Util.getOpener().document.location.href = data.url;
-		}
-		else {
-			Liferay.fire(itemSelectorSaveEvent, {
-				data,
-			});
-
-			Liferay.Util.getOpener().Liferay.fire(itemSelectorSaveEvent, {
-				data,
-			});
-		}
-	};
+	const empty = !nodes.length;
 
 	return (
-		<div className="select-layout">
-			<ClayManagementToolbar>
-				<ClayManagementToolbar.Search
-					onSubmit={(event) => {
-						event.preventDefault();
-					}}
-				>
-					<ClayInput.Group>
-						<ClayInput.GroupItem>
-							<ClayInput
-								className="form-control input-group-inset input-group-inset-after"
-								name={`${namespace}filterKeywords`}
-								onInput={(event) => {
-									setFilter(event.target.value.toLowerCase());
-								}}
-								placeholder={Liferay.Language.get('search-for')}
-								type="text"
-							/>
-							<ClayInput.GroupInsetItem after tag="span">
-								<ClayButtonWithIcon
-									className="navbar-breakpoint-d-none"
-									displayType="unstyled"
-									symbol="times"
-								/>
-								<ClayButtonWithIcon
-									className="navbar-breakpoint-d-block"
-									displayType="unstyled"
-									symbol="search"
-								/>
-							</ClayInput.GroupInsetItem>
-						</ClayInput.GroupItem>
-					</ClayInput.Group>
-				</ClayManagementToolbar.Search>
-			</ClayManagementToolbar>
-
-			<ClayLayout.ContainerFluid
-				className="layouts-selector"
-				id={`${namespace}selectLayoutFm`}
-			>
-				<fieldset className="panel-body">
-					<div
-						className="layout-tree"
-						id={`${namespace}layoutContainer`}
-					>
-						<Treeview
-							NodeComponent={Treeview.Card}
-							filter={filter}
-							initialSelectedNodeIds={selectedLayoutIds}
-							multiSelection={multiSelection}
-							nodes={nodes}
-							onSelectedNodesChange={handleSelectionChange}
+		<ClayLayout.ContainerFluid className="p-4 select-layout">
+			<ClayForm.Group>
+				<ClayInput.Group>
+					<ClayInput.GroupItem prepend>
+						<ClayInput
+							aria-label={Liferay.Language.get('search')}
+							className="input-group-inset input-group-inset-after"
+							disabled={empty}
+							onChange={(event) => setFilter(event.target.value)}
+							placeholder={`${Liferay.Language.get('search')}`}
+							type="text"
 						/>
-					</div>
-				</fieldset>
-			</ClayLayout.ContainerFluid>
+
+						<ClayInput.GroupInsetItem after>
+							<div className="link-monospaced">
+								<ClayIcon symbol="search" />
+							</div>
+						</ClayInput.GroupInsetItem>
+					</ClayInput.GroupItem>
+				</ClayInput.Group>
+			</ClayForm.Group>
+
+			{empty ? (
+				<EmptyState />
+			) : (
+				<SelectLayoutTree
+					filter={filter}
+					followURLOnTitleClick={followURLOnTitleClick}
+					itemSelectorSaveEvent={itemSelectorSaveEvent}
+					items={nodes}
+					multiSelection={multiSelection}
+					selectedLayoutIds={selectedLayoutIds}
+				/>
+			)}
+		</ClayLayout.ContainerFluid>
+	);
+};
+
+const EmptyState = () => {
+	return (
+		<div className="sheet taglib-empty-result-message">
+			<div className="taglib-empty-result-message-header"></div>
+
+			<div className="sheet-text text-center">
+				{Liferay.Language.get('there-are-no-pages')}
+			</div>
 		</div>
 	);
 };

@@ -22,6 +22,7 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItemListBuilder;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
@@ -51,6 +52,10 @@ public class AMManagementToolbarDisplayContext {
 		_currentURLObj = currentURLObj;
 	}
 
+	public String getClearResultsURL() {
+		return String.valueOf(getPortletURL());
+	}
+
 	public CreationMenu getCreationMenu() {
 		return CreationMenuBuilder.addDropdownItem(
 			dropdownItem -> {
@@ -78,25 +83,35 @@ public class AMManagementToolbarDisplayContext {
 	}
 
 	public List<LabelItem> getFilterLabelItems() {
-		final String entriesNavigation = _getEntriesNavigation();
+		String entriesNavigation = _getEntriesNavigation();
 
 		return LabelItemListBuilder.add(
 			() ->
 				entriesNavigation.equals("enabled") ||
 				entriesNavigation.equals("disabled"),
 			labelItem -> {
-				PortletURL removeLabelURL = PortletURLUtil.clone(
-					_currentURLObj, _liferayPortletResponse);
-
-				removeLabelURL.setParameter("entriesNavigation", (String)null);
-
-				labelItem.putData("removeLabelURL", removeLabelURL.toString());
+				labelItem.putData(
+					"removeLabelURL",
+					PortletURLBuilder.create(
+						PortletURLUtil.clone(
+							_currentURLObj, _liferayPortletResponse)
+					).setParameter(
+						"entriesNavigation", (String)null
+					).buildString());
 
 				labelItem.setCloseable(true);
 				labelItem.setLabel(
 					LanguageUtil.get(_httpServletRequest, entriesNavigation));
 			}
 		).build();
+	}
+
+	public PortletURL getPortletURL() {
+		return PortletURLBuilder.createRenderURL(
+			_liferayPortletResponse
+		).setParameter(
+			"entriesNavigation", (String)null
+		).buildPortletURL();
 	}
 
 	public List<AMImageConfigurationEntry> getSelectedConfigurationEntries() {
@@ -132,7 +147,7 @@ public class AMManagementToolbarDisplayContext {
 	}
 
 	private List<DropdownItem> _getFilterNavigationDropdownItems() {
-		final String entriesNavigation = _getEntriesNavigation();
+		String entriesNavigation = _getEntriesNavigation();
 
 		return DropdownItemListBuilder.add(
 			dropdownItem -> {

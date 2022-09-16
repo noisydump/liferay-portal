@@ -17,6 +17,7 @@ package com.liferay.dispatch.web.internal.portlet;
 import com.liferay.dispatch.constants.DispatchPortletKeys;
 import com.liferay.dispatch.constants.DispatchWebKeys;
 import com.liferay.dispatch.executor.DispatchTaskExecutorRegistry;
+import com.liferay.dispatch.metadata.DispatchTriggerMetadataProvider;
 import com.liferay.dispatch.model.DispatchTrigger;
 import com.liferay.dispatch.service.DispatchTriggerLocalService;
 import com.liferay.dispatch.web.internal.display.context.DispatchTriggerDisplayContext;
@@ -53,10 +54,11 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.portlet.scopeable=true",
 		"javax.portlet.display-name=Dispatch",
 		"javax.portlet.expiration-cache=0",
-		"javax.portlet.init-param.view-template=/view.jsp",
+		"javax.portlet.init-param.view-template=/view_dispatch_trigger.jsp",
 		"javax.portlet.name=" + DispatchPortletKeys.DISPATCH,
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=administrator"
+		"javax.portlet.security-role-ref=administrator",
+		"javax.portlet.version=3.0"
 	},
 	service = Portlet.class
 )
@@ -84,7 +86,7 @@ public class DispatchPortlet extends MVCPortlet {
 		DispatchTriggerDisplayContext dispatchTriggerDisplayContext =
 			new DispatchTriggerDisplayContext(
 				_dispatchTaskExecutorRegistry, _dispatchTriggerLocalService,
-				renderRequest);
+				_dispatchTriggerMetadataProvider, renderRequest);
 
 		renderRequest.setAttribute(
 			WebKeys.PORTLET_DISPLAY_CONTEXT, dispatchTriggerDisplayContext);
@@ -97,6 +99,9 @@ public class DispatchPortlet extends MVCPortlet {
 
 	@Reference
 	private DispatchTriggerLocalService _dispatchTriggerLocalService;
+
+	@Reference
+	private DispatchTriggerMetadataProvider _dispatchTriggerMetadataProvider;
 
 	@Reference
 	private Portal _portal;

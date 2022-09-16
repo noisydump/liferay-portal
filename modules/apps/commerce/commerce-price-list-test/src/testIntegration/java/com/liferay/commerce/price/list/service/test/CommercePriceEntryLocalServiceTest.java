@@ -32,8 +32,6 @@ import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
-import com.liferay.portal.kernel.test.rule.DataGuard;
-import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.CompanyTestUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -52,6 +50,7 @@ import org.hamcrest.CoreMatchers;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -62,7 +61,6 @@ import org.junit.runner.RunWith;
  * @author Ethan Bustad
  * @author Luca Pellizzon
  */
-@DataGuard(scope = DataGuard.Scope.METHOD)
 @RunWith(Arquillian.class)
 public class CommercePriceEntryLocalServiceTest {
 
@@ -73,10 +71,13 @@ public class CommercePriceEntryLocalServiceTest {
 			new LiferayIntegrationTestRule(),
 			PermissionCheckerMethodTestRule.INSTANCE);
 
+	@BeforeClass
+	public static void setUpClass() throws Exception {
+		_company = CompanyTestUtil.addCompany();
+	}
+
 	@Before
 	public void setUp() throws Exception {
-		_company = CompanyTestUtil.addCompany();
-
 		User defaultUser = _company.getDefaultUser();
 
 		_group = GroupTestUtil.addGroup(
@@ -124,8 +125,8 @@ public class CommercePriceEntryLocalServiceTest {
 
 		CommercePriceList commercePriceList =
 			CommercePriceListTestUtil.addCommercePriceList(
-				commerceCatalog.getGroupId(), _commerceCurrency.getCode(), name,
-				RandomTestUtil.randomDouble(), true, null, null, null);
+				null, commerceCatalog.getGroupId(), _commerceCurrency.getCode(),
+				name, RandomTestUtil.randomDouble(), true, null, null);
 
 		double price = RandomTestUtil.randomDouble();
 		double promoPrice = RandomTestUtil.randomDouble();
@@ -173,8 +174,8 @@ public class CommercePriceEntryLocalServiceTest {
 
 		CommercePriceList commercePriceList =
 			CommercePriceListTestUtil.addCommercePriceList(
-				commerceCatalog.getGroupId(), _commerceCurrency.getCode(), name,
-				RandomTestUtil.randomDouble(), true, null, null, null);
+				null, commerceCatalog.getGroupId(), _commerceCurrency.getCode(),
+				name, RandomTestUtil.randomDouble(), true, null, null);
 
 		String externalReferenceCode = RandomTestUtil.randomString();
 		double price = RandomTestUtil.randomDouble();
@@ -191,6 +192,273 @@ public class CommercePriceEntryLocalServiceTest {
 			externalReferenceCode,
 			CoreMatchers.equalTo(
 				commercePriceEntry.getExternalReferenceCode()));
+	}
+
+	@Test
+	public void testAddOrUpdateCommercePriceEntry1() throws Exception {
+		frutillaRule.scenario(
+			"Adding a new Price Entry"
+		).given(
+			"A Price List"
+		).and(
+			"A (SKU) CpInstance in a random CpDefinition"
+		).and(
+			"The SKU of the new entry"
+		).and(
+			"The price of the entry"
+		).and(
+			"The promo price of the entry"
+		).when(
+			"The SKU (cpInstance) of the Price Entry"
+		).and(
+			"The price"
+		).and(
+			"The promo price are checked against the input data"
+		).and(
+			"commercePriceEntryId"
+		).and(
+			"the external references codes (externalReferenceCode, " +
+				"skuExternalReferenceCode) are not used"
+		).then(
+			"The result should be a new Price Entry on the Price List"
+		);
+
+		CPInstance cpInstance = CPTestUtil.addCPInstance(_group.getGroupId());
+
+		String name = RandomTestUtil.randomString();
+
+		CommercePriceList commercePriceList =
+			CommercePriceListTestUtil.addCommercePriceList(
+				null, _group.getGroupId(), _commerceCurrency.getCode(), name,
+				RandomTestUtil.randomDouble(), true, null, null);
+
+		double price = RandomTestUtil.randomDouble();
+		double promoPrice = RandomTestUtil.randomDouble();
+
+		CommercePriceEntry commercePriceEntry =
+			CommercePriceEntryTestUtil.addOrUpdateCommercePriceEntry(
+				null, 0L, cpInstance.getCPInstanceId(),
+				commercePriceList.getCommercePriceListId(), null, price,
+				promoPrice);
+
+		_assertPriceEntryAttributes(
+			cpInstance, price, promoPrice, commercePriceEntry);
+	}
+
+	@Test
+	public void testAddOrUpdateCommercePriceEntry2() throws Exception {
+		frutillaRule.scenario(
+			"Updating a new Price Entry"
+		).given(
+			"A Price List"
+		).and(
+			"A (SKU) CpInstance in a random CpDefinition"
+		).and(
+			"The SKU of the entry"
+		).and(
+			"The price of the entry"
+		).and(
+			"The promo price of the entry"
+		).when(
+			"The SKU (cpInstance) of the Price Entry"
+		).and(
+			"The price"
+		).and(
+			"The promo price are checked against the input data"
+		).and(
+			"commercePriceEntryId"
+		).and(
+			"skuExternalReferenceCode are not used"
+		).and(
+			"the external references codes (externalReferenceCode) is used"
+		).then(
+			"The result should be the updated Price Entry on the Price List"
+		);
+
+		CPInstance cpInstance = CPTestUtil.addCPInstance(_group.getGroupId());
+
+		String name = RandomTestUtil.randomString();
+
+		CommercePriceList commercePriceList =
+			CommercePriceListTestUtil.addCommercePriceList(
+				null, _group.getGroupId(), _commerceCurrency.getCode(), name,
+				RandomTestUtil.randomDouble(), true, null, null);
+
+		String externalReferenceCode = RandomTestUtil.randomString();
+		double price = RandomTestUtil.randomDouble();
+		double promoPrice = RandomTestUtil.randomDouble();
+
+		CommercePriceEntryTestUtil.addOrUpdateCommercePriceEntry(
+			externalReferenceCode, 0L, cpInstance.getCPInstanceId(),
+			commercePriceList.getCommercePriceListId(), null, price,
+			promoPrice);
+
+		CommercePriceEntry commercePriceEntry =
+			_commercePriceEntryLocalService.fetchByExternalReferenceCode(
+				externalReferenceCode, _group.getCompanyId());
+
+		_assertPriceEntryAttributes(
+			cpInstance, price, promoPrice, commercePriceEntry);
+	}
+
+	@Test
+	public void testAddOrUpdateCommercePriceEntry3() throws Exception {
+		frutillaRule.scenario(
+			"Updating a new Price Entry"
+		).given(
+			"A Price List"
+		).and(
+			"A (SKU) CpInstance in a random CpDefinition"
+		).and(
+			"The SKU of the entry"
+		).and(
+			"The price of the entry"
+		).and(
+			"The promo price of the entry"
+		).when(
+			"The SKU (cpInstance) of the Price Entry"
+		).and(
+			"The price"
+		).and(
+			"The promo price are checked against the input data"
+		).and(
+			"externalReferenceCode"
+		).and(
+			"skuExternalReferenceCode are not used"
+		).and(
+			"commercePriceEntryId is used"
+		).then(
+			"The result should be the updated Price Entry on the Price List"
+		);
+
+		CPInstance cpInstance = CPTestUtil.addCPInstance(_group.getGroupId());
+
+		String name = RandomTestUtil.randomString();
+
+		CommercePriceList commercePriceList =
+			CommercePriceListTestUtil.addCommercePriceList(
+				null, _group.getGroupId(), _commerceCurrency.getCode(), name,
+				RandomTestUtil.randomDouble(), true, null, null);
+
+		double price = RandomTestUtil.randomDouble();
+		double promoPrice = RandomTestUtil.randomDouble();
+
+		CommercePriceEntry commercePriceEntry =
+			CommercePriceEntryTestUtil.addCommercePriceEntry(
+				null, cpInstance.getCPInstanceId(),
+				commercePriceList.getCommercePriceListId(), price, promoPrice);
+
+		long commercePriceEntryId =
+			commercePriceEntry.getCommercePriceEntryId();
+
+		double updatedPrice = RandomTestUtil.randomDouble();
+		double updatedPromoPrice = RandomTestUtil.randomDouble();
+
+		CommercePriceEntryTestUtil.addOrUpdateCommercePriceEntry(
+			null, commercePriceEntryId, cpInstance.getCPInstanceId(),
+			commercePriceList.getCommercePriceListId(), null, updatedPrice,
+			updatedPromoPrice);
+
+		CommercePriceEntry updatedCommercePriceEntry =
+			_commercePriceEntryLocalService.getCommercePriceEntry(
+				commercePriceEntryId);
+
+		_assertPriceEntryAttributes(
+			cpInstance, updatedPrice, updatedPromoPrice,
+			updatedCommercePriceEntry);
+	}
+
+	@Test
+	public void testAddOrUpdateCommercePriceEntry4() throws Exception {
+		frutillaRule.scenario(
+			"Adding a new Price Entry on a Price List where the same SKU is " +
+				"already present in another entry"
+		).given(
+			"A Price List"
+		).and(
+			"A (SKU) CpInstance in a random CpDefinition"
+		).and(
+			"The SKU of the entry"
+		).and(
+			"The price of the entry"
+		).and(
+			"The promo price of the entry"
+		).when(
+			"The SKU (cpInstance) of the Price Entry is used already"
+		).and(
+			"externalReferenceCode"
+		).and(
+			"skuExternalReferenceCode are not used"
+		).and(
+			"commercePriceEntryId is not used either"
+		).then(
+			"The result should be a DuplicateCommercePriceEntryException"
+		);
+
+		CPInstance cpInstance = CPTestUtil.addCPInstance(_group.getGroupId());
+
+		String name = RandomTestUtil.randomString();
+
+		CommercePriceList commercePriceList =
+			CommercePriceListTestUtil.addCommercePriceList(
+				null, _group.getGroupId(), _commerceCurrency.getCode(), name,
+				RandomTestUtil.randomDouble(), true, null, null);
+
+		double price = RandomTestUtil.randomDouble();
+		double promoPrice = RandomTestUtil.randomDouble();
+
+		CommercePriceEntryTestUtil.addCommercePriceEntry(
+			null, cpInstance.getCPInstanceId(),
+			commercePriceList.getCommercePriceListId(), price, promoPrice);
+
+		CommercePriceEntryTestUtil.addOrUpdateCommercePriceEntry(
+			null, 0L, cpInstance.getCPInstanceId(),
+			commercePriceList.getCommercePriceListId(), null, price,
+			promoPrice);
+	}
+
+	@Test(expected = NoSuchCPInstanceException.class)
+	public void testAddOrUpdateCommercePriceEntry5() throws Exception {
+		frutillaRule.scenario(
+			"Adding a new Price Entry on a Price List where the referred SKU " +
+				"does not exist"
+		).given(
+			"A Price List"
+		).and(
+			"A non-existent CpInstanceId"
+		).and(
+			"The SKU of the entry"
+		).and(
+			"The price of the entry"
+		).and(
+			"The promo price of the entry"
+		).when(
+			"The SKU is not present in Commerce"
+		).and(
+			"externalReferenceCode"
+		).and(
+			"skuExternalReferenceCode are not used"
+		).and(
+			"commercePriceEntryId is used not used either"
+		).then(
+			"The result should be a NoSuchCPInstanceException"
+		);
+
+		long cpInstanceId = RandomTestUtil.randomInt();
+
+		String name = RandomTestUtil.randomString();
+
+		CommercePriceList commercePriceList =
+			CommercePriceListTestUtil.addCommercePriceList(
+				null, _group.getGroupId(), _commerceCurrency.getCode(), name,
+				RandomTestUtil.randomDouble(), true, null, null);
+
+		double price = RandomTestUtil.randomDouble();
+		double promoPrice = RandomTestUtil.randomDouble();
+
+		CommercePriceEntryTestUtil.addOrUpdateCommercePriceEntry(
+			null, 0L, cpInstanceId, commercePriceList.getCommercePriceListId(),
+			null, price, promoPrice);
 	}
 
 	@Test
@@ -215,9 +483,9 @@ public class CommercePriceEntryLocalServiceTest {
 
 		CommercePriceList commercePriceList =
 			CommercePriceListTestUtil.addCommercePriceList(
-				commerceCatalog.getGroupId(), _commerceCurrency.getCode(),
+				null, commerceCatalog.getGroupId(), _commerceCurrency.getCode(),
 				RandomTestUtil.randomString(), RandomTestUtil.randomDouble(),
-				true, null, null, null);
+				true, null, null);
 
 		CommercePriceEntry commercePriceEntry =
 			CommercePriceEntryTestUtil.addCommercePriceEntry(
@@ -258,15 +526,13 @@ public class CommercePriceEntryLocalServiceTest {
 
 		CommercePriceList commercePriceList =
 			CommercePriceListTestUtil.addCommercePriceList(
-				commerceCatalog.getGroupId(), _commerceCurrency.getCode(),
+				null, commerceCatalog.getGroupId(), _commerceCurrency.getCode(),
 				RandomTestUtil.randomString(), RandomTestUtil.randomDouble(),
-				true, null, null, null);
+				true, null, null);
 
-		CommercePriceEntry commercePriceEntry =
+		Assert.assertNull(
 			_commercePriceEntryLocalService.fetchCommercePriceEntry(
-				cpInstanceId, commercePriceList.getCommercePriceListId());
-
-		Assert.assertNull(commercePriceEntry);
+				cpInstanceId, commercePriceList.getCommercePriceListId()));
 	}
 
 	@Test
@@ -293,16 +559,16 @@ public class CommercePriceEntryLocalServiceTest {
 
 		CommercePriceList parentCommercePriceList =
 			CommercePriceListTestUtil.addCommercePriceList(
-				_group.getGroupId(), _commerceCurrency.getCode(),
+				null, _group.getGroupId(), _commerceCurrency.getCode(),
 				RandomTestUtil.randomString(), RandomTestUtil.randomDouble(),
-				true, null, null, null);
+				true, null, null);
 
 		CommercePriceList childCommercePriceList =
 			CommercePriceListTestUtil.addCommercePriceList(
-				_group.getGroupId(), _commerceCurrency.getCode(),
+				null, _group.getGroupId(), _commerceCurrency.getCode(),
 				parentCommercePriceList.getCommercePriceListId(),
 				RandomTestUtil.randomString(), RandomTestUtil.randomDouble(),
-				true, null, null, null);
+				true, null, null);
 
 		CommercePriceEntry commercePriceEntry =
 			CommercePriceEntryTestUtil.addCommercePriceEntry(
@@ -347,16 +613,16 @@ public class CommercePriceEntryLocalServiceTest {
 
 		CommercePriceList parentCommercePriceList =
 			CommercePriceListTestUtil.addCommercePriceList(
-				_group.getGroupId(), _commerceCurrency.getCode(),
+				null, _group.getGroupId(), _commerceCurrency.getCode(),
 				RandomTestUtil.randomString(), RandomTestUtil.randomDouble(),
-				true, null, null, null);
+				true, null, null);
 
 		CommercePriceList childCommercePriceList =
 			CommercePriceListTestUtil.addCommercePriceList(
-				_group.getGroupId(), _commerceCurrency.getCode(),
+				null, _group.getGroupId(), _commerceCurrency.getCode(),
 				parentCommercePriceList.getCommercePriceListId(),
 				RandomTestUtil.randomString(), RandomTestUtil.randomDouble(),
-				true, null, null, null);
+				true, null, null);
 
 		CommercePriceEntryTestUtil.addCommercePriceEntry(
 			RandomTestUtil.randomString(), cpInstance.getCPInstanceId(),
@@ -404,16 +670,16 @@ public class CommercePriceEntryLocalServiceTest {
 
 		CommercePriceList parentCommercePriceList =
 			CommercePriceListTestUtil.addCommercePriceList(
-				_group.getGroupId(), _commerceCurrency.getCode(),
+				null, _group.getGroupId(), _commerceCurrency.getCode(),
 				RandomTestUtil.randomString(), RandomTestUtil.randomDouble(),
-				true, null, null, null);
+				true, null, null);
 
 		CommercePriceList childCommercePriceList =
 			CommercePriceListTestUtil.addCommercePriceList(
-				_group.getGroupId(), _commerceCurrency.getCode(),
+				null, _group.getGroupId(), _commerceCurrency.getCode(),
 				parentCommercePriceList.getCommercePriceListId(),
 				RandomTestUtil.randomString(), RandomTestUtil.randomDouble(),
-				true, null, null, null);
+				true, null, null);
 
 		CommercePriceEntryTestUtil.addCommercePriceEntry(
 			RandomTestUtil.randomString(), cpInstance.getCPInstanceId(),
@@ -426,273 +692,6 @@ public class CommercePriceEntryLocalServiceTest {
 				childCommercePriceList.getCommercePriceListId(), false);
 
 		Assert.assertNull(fetchedCommercePriceEntry);
-	}
-
-	@Test
-	public void testUpsertCommercePriceEntry1() throws Exception {
-		frutillaRule.scenario(
-			"Adding a new Price Entry"
-		).given(
-			"A Price List"
-		).and(
-			"A (SKU) CpInstance in a random CpDefinition"
-		).and(
-			"The SKU of the new entry"
-		).and(
-			"The price of the entry"
-		).and(
-			"The promo price of the entry"
-		).when(
-			"The SKU (cpInstance) of the Price Entry"
-		).and(
-			"The price"
-		).and(
-			"The promo price are checked against the input data"
-		).and(
-			"commercePriceEntryId"
-		).and(
-			"the external references codes (externalReferenceCode, " +
-				"skuExternalReferenceCode) are not used"
-		).then(
-			"The result should be a new Price Entry on the Price List"
-		);
-
-		CPInstance cpInstance = CPTestUtil.addCPInstance(_group.getGroupId());
-
-		String name = RandomTestUtil.randomString();
-
-		CommercePriceList commercePriceList =
-			CommercePriceListTestUtil.addCommercePriceList(
-				_group.getGroupId(), _commerceCurrency.getCode(), name,
-				RandomTestUtil.randomDouble(), true, null, null, null);
-
-		double price = RandomTestUtil.randomDouble();
-		double promoPrice = RandomTestUtil.randomDouble();
-
-		CommercePriceEntry commercePriceEntry =
-			CommercePriceEntryTestUtil.upsertCommercePriceEntry(
-				null, 0L, cpInstance.getCPInstanceId(),
-				commercePriceList.getCommercePriceListId(), null, price,
-				promoPrice);
-
-		_assertPriceEntryAttributes(
-			cpInstance, price, promoPrice, commercePriceEntry);
-	}
-
-	@Test
-	public void testUpsertCommercePriceEntry2() throws Exception {
-		frutillaRule.scenario(
-			"Updating a new Price Entry"
-		).given(
-			"A Price List"
-		).and(
-			"A (SKU) CpInstance in a random CpDefinition"
-		).and(
-			"The SKU of the entry"
-		).and(
-			"The price of the entry"
-		).and(
-			"The promo price of the entry"
-		).when(
-			"The SKU (cpInstance) of the Price Entry"
-		).and(
-			"The price"
-		).and(
-			"The promo price are checked against the input data"
-		).and(
-			"commercePriceEntryId"
-		).and(
-			"skuExternalReferenceCode are not used"
-		).and(
-			"the external references codes (externalReferenceCode) is used"
-		).then(
-			"The result should be the updated Price Entry on the Price List"
-		);
-
-		CPInstance cpInstance = CPTestUtil.addCPInstance(_group.getGroupId());
-
-		String name = RandomTestUtil.randomString();
-
-		CommercePriceList commercePriceList =
-			CommercePriceListTestUtil.addCommercePriceList(
-				_group.getGroupId(), _commerceCurrency.getCode(), name,
-				RandomTestUtil.randomDouble(), true, null, null, null);
-
-		String externalReferenceCode = RandomTestUtil.randomString();
-		double price = RandomTestUtil.randomDouble();
-		double promoPrice = RandomTestUtil.randomDouble();
-
-		CommercePriceEntryTestUtil.upsertCommercePriceEntry(
-			externalReferenceCode, 0L, cpInstance.getCPInstanceId(),
-			commercePriceList.getCommercePriceListId(), null, price,
-			promoPrice);
-
-		CommercePriceEntry commercePriceEntry =
-			_commercePriceEntryLocalService.fetchByExternalReferenceCode(
-				_group.getCompanyId(), externalReferenceCode);
-
-		_assertPriceEntryAttributes(
-			cpInstance, price, promoPrice, commercePriceEntry);
-	}
-
-	@Test
-	public void testUpsertCommercePriceEntry3() throws Exception {
-		frutillaRule.scenario(
-			"Updating a new Price Entry"
-		).given(
-			"A Price List"
-		).and(
-			"A (SKU) CpInstance in a random CpDefinition"
-		).and(
-			"The SKU of the entry"
-		).and(
-			"The price of the entry"
-		).and(
-			"The promo price of the entry"
-		).when(
-			"The SKU (cpInstance) of the Price Entry"
-		).and(
-			"The price"
-		).and(
-			"The promo price are checked against the input data"
-		).and(
-			"externalReferenceCode"
-		).and(
-			"skuExternalReferenceCode are not used"
-		).and(
-			"commercePriceEntryId is used"
-		).then(
-			"The result should be the updated Price Entry on the Price List"
-		);
-
-		CPInstance cpInstance = CPTestUtil.addCPInstance(_group.getGroupId());
-
-		String name = RandomTestUtil.randomString();
-
-		CommercePriceList commercePriceList =
-			CommercePriceListTestUtil.addCommercePriceList(
-				_group.getGroupId(), _commerceCurrency.getCode(), name,
-				RandomTestUtil.randomDouble(), true, null, null, null);
-
-		double price = RandomTestUtil.randomDouble();
-		double promoPrice = RandomTestUtil.randomDouble();
-
-		CommercePriceEntry commercePriceEntry =
-			CommercePriceEntryTestUtil.addCommercePriceEntry(
-				null, cpInstance.getCPInstanceId(),
-				commercePriceList.getCommercePriceListId(), price, promoPrice);
-
-		long commercePriceEntryId =
-			commercePriceEntry.getCommercePriceEntryId();
-
-		double updatedPrice = RandomTestUtil.randomDouble();
-		double updatedPromoPrice = RandomTestUtil.randomDouble();
-
-		CommercePriceEntryTestUtil.upsertCommercePriceEntry(
-			null, commercePriceEntryId, cpInstance.getCPInstanceId(),
-			commercePriceList.getCommercePriceListId(), null, updatedPrice,
-			updatedPromoPrice);
-
-		CommercePriceEntry updatedCommercePriceEntry =
-			_commercePriceEntryLocalService.getCommercePriceEntry(
-				commercePriceEntryId);
-
-		_assertPriceEntryAttributes(
-			cpInstance, updatedPrice, updatedPromoPrice,
-			updatedCommercePriceEntry);
-	}
-
-	@Test
-	public void testUpsertCommercePriceEntry4() throws Exception {
-		frutillaRule.scenario(
-			"Adding a new Price Entry on a Price List where the same SKU is " +
-				"already present in another entry"
-		).given(
-			"A Price List"
-		).and(
-			"A (SKU) CpInstance in a random CpDefinition"
-		).and(
-			"The SKU of the entry"
-		).and(
-			"The price of the entry"
-		).and(
-			"The promo price of the entry"
-		).when(
-			"The SKU (cpInstance) of the Price Entry is used already"
-		).and(
-			"externalReferenceCode"
-		).and(
-			"skuExternalReferenceCode are not used"
-		).and(
-			"commercePriceEntryId is not used either"
-		).then(
-			"The result should be a DuplicateCommercePriceEntryException"
-		);
-
-		CPInstance cpInstance = CPTestUtil.addCPInstance(_group.getGroupId());
-
-		String name = RandomTestUtil.randomString();
-
-		CommercePriceList commercePriceList =
-			CommercePriceListTestUtil.addCommercePriceList(
-				_group.getGroupId(), _commerceCurrency.getCode(), name,
-				RandomTestUtil.randomDouble(), true, null, null, null);
-
-		double price = RandomTestUtil.randomDouble();
-		double promoPrice = RandomTestUtil.randomDouble();
-
-		CommercePriceEntryTestUtil.addCommercePriceEntry(
-			null, cpInstance.getCPInstanceId(),
-			commercePriceList.getCommercePriceListId(), price, promoPrice);
-
-		CommercePriceEntryTestUtil.upsertCommercePriceEntry(
-			null, 0L, cpInstance.getCPInstanceId(),
-			commercePriceList.getCommercePriceListId(), null, price,
-			promoPrice);
-	}
-
-	@Test(expected = NoSuchCPInstanceException.class)
-	public void testUpsertCommercePriceEntry5() throws Exception {
-		frutillaRule.scenario(
-			"Adding a new Price Entry on a Price List where the referred SKU " +
-				"does not exist"
-		).given(
-			"A Price List"
-		).and(
-			"A non-existent CpInstanceId"
-		).and(
-			"The SKU of the entry"
-		).and(
-			"The price of the entry"
-		).and(
-			"The promo price of the entry"
-		).when(
-			"The SKU is not present in Commerce"
-		).and(
-			"externalReferenceCode"
-		).and(
-			"skuExternalReferenceCode are not used"
-		).and(
-			"commercePriceEntryId is used not used either"
-		).then(
-			"The result should be a NoSuchCPInstanceException"
-		);
-
-		long cpInstanceId = RandomTestUtil.randomInt();
-
-		String name = RandomTestUtil.randomString();
-
-		CommercePriceList commercePriceList =
-			CommercePriceListTestUtil.addCommercePriceList(
-				_group.getGroupId(), _commerceCurrency.getCode(), name,
-				RandomTestUtil.randomDouble(), true, null, null, null);
-
-		double price = RandomTestUtil.randomDouble();
-		double promoPrice = RandomTestUtil.randomDouble();
-
-		CommercePriceEntryTestUtil.upsertCommercePriceEntry(
-			null, 0L, cpInstanceId, commercePriceList.getCommercePriceListId(),
-			null, price, promoPrice);
 	}
 
 	@Rule
@@ -718,6 +717,8 @@ public class CommercePriceEntryLocalServiceTest {
 			promoPrice, CoreMatchers.equalTo(actualPromoPrice.doubleValue()));
 	}
 
+	private static Company _company;
+
 	private CommerceCurrency _commerceCurrency;
 
 	@Inject
@@ -725,9 +726,6 @@ public class CommercePriceEntryLocalServiceTest {
 
 	@Inject
 	private CommercePriceListLocalService _commercePriceListLocalService;
-
-	@DeleteAfterTestRun
-	private Company _company;
 
 	private Group _group;
 

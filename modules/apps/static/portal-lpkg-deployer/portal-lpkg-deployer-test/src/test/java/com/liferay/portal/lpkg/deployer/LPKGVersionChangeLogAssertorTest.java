@@ -14,6 +14,9 @@
 
 package com.liferay.portal.lpkg.deployer;
 
+import com.liferay.portal.kernel.util.SystemProperties;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
+
 import java.io.File;
 import java.io.IOException;
 
@@ -27,6 +30,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -34,14 +39,19 @@ import org.junit.Test;
  */
 public class LPKGVersionChangeLogAssertorTest {
 
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
 	@Test
 	public void testUpgradeLog() throws IOException {
-		String liferayHome = System.getProperty("liferay.home");
+		String liferayHome = SystemProperties.get("liferay.home");
 
 		Assert.assertNotNull(
 			"Missing system property \"liferay.home\"", liferayHome);
 
-		final Set<String> symbolicNames = new HashSet<>();
+		Set<String> symbolicNames = new HashSet<>();
 
 		try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(
 				Paths.get(liferayHome, "/osgi/marketplace"))) {

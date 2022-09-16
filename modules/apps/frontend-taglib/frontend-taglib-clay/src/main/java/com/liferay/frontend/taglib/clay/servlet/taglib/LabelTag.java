@@ -16,6 +16,7 @@ package com.liferay.frontend.taglib.clay.servlet.taglib;
 
 import com.liferay.frontend.taglib.clay.internal.servlet.taglib.BaseContainerTag;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.taglib.util.TagResourceBundleUtil;
 
@@ -40,15 +41,6 @@ public class LabelTag extends BaseContainerTag {
 		return super.doStartTag();
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *             #getDismissible()}
-	 */
-	@Deprecated
-	public boolean getCloseable() {
-		return getDismissible();
-	}
-
 	public boolean getDismissible() {
 		return _dismissible;
 	}
@@ -57,66 +49,24 @@ public class LabelTag extends BaseContainerTag {
 		return _displayType;
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public String getHref() {
-		return _href;
-	}
-
 	public String getLabel() {
 		return _label;
 	}
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #isLarge()}
+	 */
+	@Deprecated
 	public boolean getLarge() {
 		return _large;
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public String getMessage() {
-		return _message;
+	public boolean isLarge() {
+		return _large;
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getLarge()}
-	 */
-	@Deprecated
-	public String getSize() {
-		if (_large) {
-			return "lg";
-		}
-
-		return null;
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public String getSpritemap() {
-		return _spritemap;
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *             #getDisplayType()}
-	 */
-	@Deprecated
-	public String getStyle() {
-		return getDisplayType();
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *             #setDismissible(boolean)}
-	 */
-	@Deprecated
-	public void setCloseable(boolean closeable) {
-		setDismissible(closeable);
+	public boolean isTranslated() {
+		return _translated;
 	}
 
 	public void setDismissible(boolean dismissible) {
@@ -127,14 +77,6 @@ public class LabelTag extends BaseContainerTag {
 		_displayType = displayType;
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public void setHref(String href) {
-		_href = href;
-	}
-
 	public void setLabel(String label) {
 		_label = label;
 	}
@@ -143,38 +85,8 @@ public class LabelTag extends BaseContainerTag {
 		_large = large;
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public void setMessage(String message) {
-		_message = message;
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *             #setLarge(boolean)}
-	 */
-	@Deprecated
-	public void setSize(String size) {
-		setLarge(size.equals("lg"));
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public void setSpritemap(String spritemap) {
-		_spritemap = spritemap;
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *             #setDisplayType(String)}
-	 */
-	@Deprecated
-	public void setStyle(String style) {
-		setDisplayType(style);
+	public void setTranslated(boolean translated) {
+		_translated = translated;
 	}
 
 	@Override
@@ -183,11 +95,9 @@ public class LabelTag extends BaseContainerTag {
 
 		_dismissible = false;
 		_displayType = "secondary";
-		_href = null;
 		_label = null;
 		_large = false;
-		_message = null;
-		_spritemap = null;
+		_translated = true;
 	}
 
 	@Override
@@ -215,10 +125,15 @@ public class LabelTag extends BaseContainerTag {
 
 			jspWriter.write("<span class=\"label-item label-item-expand\">");
 
-			jspWriter.write(
-				LanguageUtil.get(
+			String translatedLabel = _label;
+
+			if (_translated) {
+				translatedLabel = LanguageUtil.get(
 					TagResourceBundleUtil.getResourceBundle(pageContext),
-					_label));
+					_label);
+			}
+
+			jspWriter.write(HtmlUtil.escape(translatedLabel));
 
 			jspWriter.write("</span>");
 
@@ -247,10 +162,8 @@ public class LabelTag extends BaseContainerTag {
 
 	private boolean _dismissible;
 	private String _displayType = "secondary";
-	private String _href;
 	private String _label;
 	private boolean _large;
-	private String _message;
-	private String _spritemap;
+	private boolean _translated = true;
 
 }

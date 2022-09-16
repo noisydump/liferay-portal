@@ -18,15 +18,36 @@ import com.liferay.dynamic.data.mapping.kernel.DDMStructure;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.portal.kernel.exception.PortalException;
 
+import java.util.Collections;
+import java.util.Locale;
+import java.util.Map;
+
 /**
  * @author Iván Zaera
  */
 public interface DLEditFileEntryDisplayContext extends DLDisplayContext {
 
+	public default Map<String, Long> getAllMimeTypeSizeLimit()
+		throws PortalException {
+
+		return Collections.emptyMap();
+	}
+
+	public DDMFormValues getDDMFormValues(
+			DDMStructure ddmStructure, long fileVersionId)
+		throws PortalException;
+
 	public DDMFormValues getDDMFormValues(long classPK) throws PortalException;
+
+	public String getDLFileEntryTypeLanguageId(
+		DDMStructure ddmStructure, Locale locale);
 
 	public DLFilePicker getDLFilePicker(String onFilePickCallback)
 		throws PortalException;
+
+	public default String getFriendlyURLBase() throws PortalException {
+		return null;
+	}
 
 	public long getMaximumUploadRequestSize() throws PortalException;
 
@@ -58,6 +79,14 @@ public interface DLEditFileEntryDisplayContext extends DLDisplayContext {
 	}
 
 	public boolean isFolderSelectionVisible() throws PortalException;
+
+	public default boolean isNeverExpire() throws PortalException {
+		return true;
+	}
+
+	public default boolean isNeverReview() throws PortalException {
+		return true;
+	}
 
 	public default boolean isPermissionsVisible() throws PortalException {
 		return true;

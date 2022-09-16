@@ -33,7 +33,7 @@
 		<liferay-frontend:fieldset-group>
 			<liferay-frontend:fieldset>
 				<div class="display-template">
-					<liferay-ddm:template-selector
+					<liferay-template:template-selector
 						className="<%= AssetCategory.class.getName() %>"
 						displayStyle="<%= assetCategoriesNavigationPortletInstanceConfiguration.displayStyle() %>"
 						displayStyleGroupId="<%= assetCategoriesNavigationDisplayContext.getDisplayStyleGroupId() %>"
@@ -77,7 +77,7 @@
 
 		Liferay.Util.postForm(form, {
 			data: {
-				assetVocabularyIds: Liferay.Util.listSelect(
+				assetVocabularyIds: Liferay.Util.getSelectedOptionValues(
 					Liferay.Util.getFormElement(form, 'currentAssetVocabularyIds')
 				),
 			},

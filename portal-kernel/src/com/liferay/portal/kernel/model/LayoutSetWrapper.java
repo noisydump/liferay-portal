@@ -54,6 +54,7 @@ public class LayoutSetWrapper
 		attributes.put("logoId", getLogoId());
 		attributes.put("themeId", getThemeId());
 		attributes.put("colorSchemeId", getColorSchemeId());
+		attributes.put("faviconFileEntryId", getFaviconFileEntryId());
 		attributes.put("css", getCss());
 		attributes.put("settings", getSettings());
 		attributes.put("layoutSetPrototypeUuid", getLayoutSetPrototypeUuid());
@@ -131,6 +132,12 @@ public class LayoutSetWrapper
 			setColorSchemeId(colorSchemeId);
 		}
 
+		Long faviconFileEntryId = (Long)attributes.get("faviconFileEntryId");
+
+		if (faviconFileEntryId != null) {
+			setFaviconFileEntryId(faviconFileEntryId);
+		}
+
 		String css = (String)attributes.get("css");
 
 		if (css != null) {
@@ -156,6 +163,11 @@ public class LayoutSetWrapper
 		if (layoutSetPrototypeLinkEnabled != null) {
 			setLayoutSetPrototypeLinkEnabled(layoutSetPrototypeLinkEnabled);
 		}
+	}
+
+	@Override
+	public LayoutSet cloneWithOriginalValues() {
+		return wrap(model.cloneWithOriginalValues());
 	}
 
 	/**
@@ -227,6 +239,21 @@ public class LayoutSetWrapper
 	@Override
 	public long getCtCollectionId() {
 		return model.getCtCollectionId();
+	}
+
+	/**
+	 * Returns the favicon file entry ID of this layout set.
+	 *
+	 * @return the favicon file entry ID of this layout set
+	 */
+	@Override
+	public long getFaviconFileEntryId() {
+		return model.getFaviconFileEntryId();
+	}
+
+	@Override
+	public String getFaviconURL() {
+		return model.getFaviconURL();
 	}
 
 	/**
@@ -407,34 +434,18 @@ public class LayoutSetWrapper
 	}
 
 	/**
-	 * Returns the name of the layout set's default virtual host.
-	 *
-	 * <p>
-	 * When accessing a layout set that has a the virtual host, the URL elements
-	 * "/web/sitename" or "/group/sitename" can be omitted.
-	 * </p>
-	 *
-	 * @return the layout set's default virtual host name, or an empty
-	 string if the layout set has no virtual hosts configured
-	 * @deprecated As of Mueller (7.2.x), replaced by {@link
-	 #getVirtualHostnames()}
-	 */
-	@Deprecated
-	@Override
-	public String getVirtualHostname() {
-		return model.getVirtualHostname();
-	}
-
-	/**
 	 * Returns the names of the layout set's virtual hosts.
 	 *
 	 * <p>
-	 * When accessing a layout set that has a the virtual host, the URL elements
+	 * When accessing a layout set that has a virtual host, the URL elements
 	 * "/web/sitename" or "/group/sitename" can be omitted.
 	 * </p>
 	 *
-	 * @return the layout set's virtual host names, or an empty string if the
-	 layout set has no virtual hosts configured
+	 * @return a map from the layout set's virtual host names to the language
+	 ids configured for them. If the virtual host is configured
+	 for the default language, it will map to the empty string instead
+	 of a language id. If the layout set has no virtual hosts
+	 configured, the returned map will be empty.
 	 */
 	@Override
 	public java.util.TreeMap<String, String> getVirtualHostnames() {
@@ -536,6 +547,16 @@ public class LayoutSetWrapper
 	@Override
 	public void setCtCollectionId(long ctCollectionId) {
 		model.setCtCollectionId(ctCollectionId);
+	}
+
+	/**
+	 * Sets the favicon file entry ID of this layout set.
+	 *
+	 * @param faviconFileEntryId the favicon file entry ID of this layout set
+	 */
+	@Override
+	public void setFaviconFileEntryId(long faviconFileEntryId) {
+		model.setFaviconFileEntryId(faviconFileEntryId);
 	}
 
 	/**
@@ -659,20 +680,6 @@ public class LayoutSetWrapper
 	}
 
 	/**
-	 * Sets the name of the layout set's virtual host.
-	 *
-	 * @param virtualHostname the name of the layout set's virtual host
-	 * @see #getVirtualHostname()
-	 * @deprecated As of Mueller (7.2.x), replaced by {@link
-	 #setVirtualHostnames(TreeMap)}
-	 */
-	@Deprecated
-	@Override
-	public void setVirtualHostname(String virtualHostname) {
-		model.setVirtualHostname(virtualHostname);
-	}
-
-	/**
 	 * Sets the names of the layout set's virtual host name and language IDs.
 	 *
 	 * @param virtualHostnames the map of the layout set's virtual host name and
@@ -680,7 +687,9 @@ public class LayoutSetWrapper
 	 * @see #getVirtualHostnames()
 	 */
 	@Override
-	public void setVirtualHostnames(java.util.TreeMap virtualHostnames) {
+	public void setVirtualHostnames(
+		java.util.TreeMap<String, String> virtualHostnames) {
+
 		model.setVirtualHostnames(virtualHostnames);
 	}
 

@@ -24,7 +24,7 @@ import com.liferay.journal.util.JournalContent;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.portlet.PortletRequestModel;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.servlet.ServletResponseUtil;
@@ -78,7 +78,7 @@ public class ExportArticleHelperImpl implements ExportArticleHelper {
 
 		long groupId = ParamUtil.getLong(portletRequest, "groupId");
 		String articleId = ParamUtil.getString(portletRequest, "articleId");
-		String languageId = LanguageUtil.getLanguageId(portletRequest);
+		String languageId = _language.getLanguageId(portletRequest);
 		PortletRequestModel portletRequestModel = new PortletRequestModel(
 			portletRequest, portletResponse);
 
@@ -135,12 +135,10 @@ public class ExportArticleHelperImpl implements ExportArticleHelper {
 
 		sb.append(PrincipalThreadLocal.getUserId());
 		sb.append(StringPool.UNDERLINE);
-
-		String tempFileId = DLUtil.getTempFileId(
-			articleDisplay.getId(), String.valueOf(articleDisplay.getVersion()),
-			languageId);
-
-		sb.append(tempFileId);
+		sb.append(
+			DLUtil.getTempFileId(
+				articleDisplay.getId(),
+				String.valueOf(articleDisplay.getVersion()), languageId));
 
 		File convertedFile = DocumentConversionUtil.convert(
 			sb.toString(), inputStream, sourceExtension, targetExtension);
@@ -166,6 +164,9 @@ public class ExportArticleHelperImpl implements ExportArticleHelper {
 
 	@Reference
 	private JournalContent _journalContent;
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private Portal _portal;

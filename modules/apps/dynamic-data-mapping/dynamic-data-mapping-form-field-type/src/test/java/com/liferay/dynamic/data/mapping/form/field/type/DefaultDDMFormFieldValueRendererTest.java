@@ -20,24 +20,27 @@ import com.liferay.portal.kernel.util.Html;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
-import org.mockito.Matchers;
-import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 
 /**
  * @author Marcellus Tavares
  */
 public class DefaultDDMFormFieldValueRendererTest {
 
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
 	@Before
 	public void setUp() {
-		MockitoAnnotations.initMocks(this);
-
 		setUpHtmlUtil();
 	}
 
@@ -55,7 +58,7 @@ public class DefaultDDMFormFieldValueRendererTest {
 		Mockito.verify(
 			_html
 		).escape(
-			Matchers.anyString()
+			Mockito.anyString()
 		);
 	}
 
@@ -68,8 +71,6 @@ public class DefaultDDMFormFieldValueRendererTest {
 	private final DefaultDDMFormFieldValueRenderer
 		_defaultDDMFormFieldValueRenderer =
 			new DefaultDDMFormFieldValueRenderer();
-
-	@Mock
-	private Html _html;
+	private final Html _html = Mockito.mock(Html.class);
 
 }

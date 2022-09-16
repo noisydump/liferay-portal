@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE service-builder PUBLIC "-//Liferay//DTD Service Builder 7.4.0//EN" "http://www.liferay.com/dtd/liferay-service-builder_7_4_0.dtd">
 
-<service-builder auto-namespace-tables="false" mvcc-enabled="false" package-path="com.liferay.commerce.tax.engine.fixed">
+<service-builder auto-namespace-tables="false" dependency-injector="ds" mvcc-enabled="true" package-path="com.liferay.commerce.tax.engine.fixed">
 	<author>Alessio Antonio Rendina</author>
 	<namespace>Commerce</namespace>
 	<entity local-service="true" name="CommerceTaxFixedRate" remote-service="true">
@@ -69,8 +69,8 @@
 
 		<column name="commerceTaxMethodId" type="long" />
 		<column name="CPTaxCategoryId" type="long" />
-		<column name="commerceCountryId" type="long" />
-		<column name="commerceRegionId" type="long" />
+		<column name="countryId" type="long" />
+		<column name="regionId" type="long" />
 		<column name="zip" type="String" />
 		<column name="rate" type="double" />
 
@@ -88,8 +88,8 @@
 		<finder name="CPTaxCategoryId" return-type="Collection">
 			<finder-column name="CPTaxCategoryId" />
 		</finder>
-		<finder name="CommerceCountryId" return-type="Collection">
-			<finder-column name="commerceCountryId" />
+		<finder name="CountryId" return-type="Collection">
+			<finder-column name="countryId" />
 		</finder>
 	</entity>
 	<exceptions>

@@ -40,12 +40,13 @@ public class JournalScheduleFormNavigatorEntry
 	}
 
 	@Override
+	public ServletContext getServletContext() {
+		return _servletContext;
+	}
+
+	@Override
 	public boolean isVisible(User user, JournalArticle article) {
 		if (!PropsValues.SCHEDULER_ENABLED) {
-			return false;
-		}
-
-		if (isEditDefaultValues(article)) {
 			return false;
 		}
 
@@ -53,16 +54,11 @@ public class JournalScheduleFormNavigatorEntry
 	}
 
 	@Override
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.journal.web)", unbind = "-"
-	)
-	public void setServletContext(ServletContext servletContext) {
-		super.setServletContext(servletContext);
-	}
-
-	@Override
 	protected String getJspPath() {
 		return "/article/schedule.jsp";
 	}
+
+	@Reference(target = "(osgi.web.symbolicname=com.liferay.journal.web)")
+	private ServletContext _servletContext;
 
 }

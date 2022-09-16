@@ -18,6 +18,7 @@ import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.workflow.kaleo.definition.Assignment;
 import com.liferay.portal.workflow.kaleo.definition.Task;
 import com.liferay.portal.workflow.kaleo.definition.TaskForm;
@@ -49,8 +50,9 @@ public class KaleoTaskLocalServiceImpl extends KaleoTaskLocalServiceBaseImpl {
 
 		// Kaleo task
 
-		User user = userLocalService.getUser(serviceContext.getGuestOrUserId());
-		Date now = new Date();
+		User user = _userLocalService.getUser(
+			serviceContext.getGuestOrUserId());
+		Date date = new Date();
 
 		long kaleoTaskId = counterLocalService.increment();
 
@@ -59,8 +61,8 @@ public class KaleoTaskLocalServiceImpl extends KaleoTaskLocalServiceBaseImpl {
 		kaleoTask.setCompanyId(user.getCompanyId());
 		kaleoTask.setUserId(user.getUserId());
 		kaleoTask.setUserName(user.getFullName());
-		kaleoTask.setCreateDate(now);
-		kaleoTask.setModifiedDate(now);
+		kaleoTask.setCreateDate(date);
+		kaleoTask.setModifiedDate(date);
 		kaleoTask.setKaleoDefinitionId(kaleoDefinitionId);
 		kaleoTask.setKaleoDefinitionVersionId(kaleoDefinitionVersionId);
 		kaleoTask.setKaleoNodeId(kaleoNodeId);
@@ -142,5 +144,8 @@ public class KaleoTaskLocalServiceImpl extends KaleoTaskLocalServiceBaseImpl {
 
 	@Reference
 	private KaleoTaskFormLocalService _kaleoTaskFormLocalService;
+
+	@Reference
+	private UserLocalService _userLocalService;
 
 }

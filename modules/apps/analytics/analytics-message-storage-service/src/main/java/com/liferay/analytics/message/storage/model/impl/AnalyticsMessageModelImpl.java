@@ -34,7 +34,6 @@ import com.liferay.portal.kernel.util.ProxyUtil;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
 import java.sql.Blob;
@@ -45,6 +44,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -107,14 +107,14 @@ public class AnalyticsMessageModelImpl
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long COMPANYID_COLUMN_BITMASK = 1L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *		#getColumnBitmask(String)
+	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long ANALYTICSMESSAGEID_COLUMN_BITMASK = 2L;
@@ -216,34 +216,6 @@ public class AnalyticsMessageModelImpl
 		getAttributeSetterBiConsumers() {
 
 		return _attributeSetterBiConsumers;
-	}
-
-	private static Function<InvocationHandler, AnalyticsMessage>
-		_getProxyProviderFunction() {
-
-		Class<?> proxyClass = ProxyUtil.getProxyClass(
-			AnalyticsMessage.class.getClassLoader(), AnalyticsMessage.class,
-			ModelWrapper.class);
-
-		try {
-			Constructor<AnalyticsMessage> constructor =
-				(Constructor<AnalyticsMessage>)proxyClass.getConstructor(
-					InvocationHandler.class);
-
-			return invocationHandler -> {
-				try {
-					return constructor.newInstance(invocationHandler);
-				}
-				catch (ReflectiveOperationException
-							reflectiveOperationException) {
-
-					throw new InternalError(reflectiveOperationException);
-				}
-			};
-		}
-		catch (NoSuchMethodException noSuchMethodException) {
-			throw new InternalError(noSuchMethodException);
-		}
 	}
 
 	private static final Map<String, Function<AnalyticsMessage, Object>>
@@ -467,7 +439,9 @@ public class AnalyticsMessageModelImpl
 		for (Map.Entry<String, Object> entry :
 				_columnOriginalValues.entrySet()) {
 
-			if (entry.getValue() != getColumnValue(entry.getKey())) {
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
 				_columnBitmask |= _columnBitmasks.get(entry.getKey());
 			}
 		}
@@ -515,6 +489,26 @@ public class AnalyticsMessageModelImpl
 		analyticsMessageImpl.setCreateDate(getCreateDate());
 
 		analyticsMessageImpl.resetOriginalValues();
+
+		return analyticsMessageImpl;
+	}
+
+	@Override
+	public AnalyticsMessage cloneWithOriginalValues() {
+		AnalyticsMessageImpl analyticsMessageImpl = new AnalyticsMessageImpl();
+
+		analyticsMessageImpl.setMvccVersion(
+			this.<Long>getColumnOriginalValue("mvccVersion"));
+		analyticsMessageImpl.setAnalyticsMessageId(
+			this.<Long>getColumnOriginalValue("analyticsMessageId"));
+		analyticsMessageImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		analyticsMessageImpl.setUserId(
+			this.<Long>getColumnOriginalValue("userId"));
+		analyticsMessageImpl.setUserName(
+			this.<String>getColumnOriginalValue("userName"));
+		analyticsMessageImpl.setCreateDate(
+			this.<Date>getColumnOriginalValue("createDate"));
 
 		return analyticsMessageImpl;
 	}
@@ -635,18 +629,29 @@ public class AnalyticsMessageModelImpl
 	public String toString() {
 		StringBundler sb = new StringBundler(15);
 
-		sb.append("{mvccVersion=");
+		sb.append("{\"mvccVersion\": ");
+
 		sb.append(getMvccVersion());
-		sb.append(", analyticsMessageId=");
+
+		sb.append(", \"analyticsMessageId\": ");
+
 		sb.append(getAnalyticsMessageId());
-		sb.append(", companyId=");
+
+		sb.append(", \"companyId\": ");
+
 		sb.append(getCompanyId());
-		sb.append(", userId=");
+
+		sb.append(", \"userId\": ");
+
 		sb.append(getUserId());
-		sb.append(", userName=");
-		sb.append(getUserName());
-		sb.append(", createDate=");
-		sb.append(getCreateDate());
+
+		sb.append(", \"userName\": ");
+
+		sb.append("\"" + getUserName() + "\"");
+
+		sb.append(", \"createDate\": ");
+
+		sb.append("\"" + getCreateDate() + "\"");
 
 		return sb.toString();
 	}
@@ -662,27 +667,39 @@ public class AnalyticsMessageModelImpl
 
 		sb.append(
 			"<column><column-name>mvccVersion</column-name><column-value><![CDATA[");
+
 		sb.append(getMvccVersion());
+
 		sb.append("]]></column-value></column>");
 		sb.append(
 			"<column><column-name>analyticsMessageId</column-name><column-value><![CDATA[");
+
 		sb.append(getAnalyticsMessageId());
+
 		sb.append("]]></column-value></column>");
 		sb.append(
 			"<column><column-name>companyId</column-name><column-value><![CDATA[");
+
 		sb.append(getCompanyId());
+
 		sb.append("]]></column-value></column>");
 		sb.append(
 			"<column><column-name>userId</column-name><column-value><![CDATA[");
+
 		sb.append(getUserId());
+
 		sb.append("]]></column-value></column>");
 		sb.append(
 			"<column><column-name>userName</column-name><column-value><![CDATA[");
+
 		sb.append(getUserName());
+
 		sb.append("]]></column-value></column>");
 		sb.append(
 			"<column><column-name>createDate</column-name><column-value><![CDATA[");
+
 		sb.append(getCreateDate());
+
 		sb.append("]]></column-value></column>");
 
 		sb.append("</model>");
@@ -693,7 +710,9 @@ public class AnalyticsMessageModelImpl
 	private static class EscapedModelProxyProviderFunctionHolder {
 
 		private static final Function<InvocationHandler, AnalyticsMessage>
-			_escapedModelProxyProviderFunction = _getProxyProviderFunction();
+			_escapedModelProxyProviderFunction =
+				ProxyUtil.getProxyProviderFunction(
+					AnalyticsMessage.class, ModelWrapper.class);
 
 	}
 

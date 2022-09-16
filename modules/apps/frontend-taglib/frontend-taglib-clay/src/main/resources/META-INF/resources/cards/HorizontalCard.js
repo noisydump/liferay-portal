@@ -13,9 +13,10 @@
  */
 
 import {ClayCardWithHorizontal} from '@clayui/card';
-import React, {useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 
-import getDataAttributes from '../get_data_attributes';
+import {EVENT_MANAGEMENT_TOOLBAR_TOGGLE_ALL_ITEMS} from '../constants';
+import normalizeDropdownItems from '../normalize_dropdown_items';
 
 export default function HorizontalCard({
 	actions,
@@ -37,16 +38,30 @@ export default function HorizontalCard({
 }) {
 	const [selected, setSelected] = useState(initialSelected);
 
+	const handleToggleAllItems = useCallback(
+		({checked}) => {
+			setSelected(checked);
+		},
+		[setSelected]
+	);
+
+	useEffect(() => {
+		Liferay.on(
+			EVENT_MANAGEMENT_TOOLBAR_TOGGLE_ALL_ITEMS,
+			handleToggleAllItems
+		);
+
+		return () => {
+			Liferay.detach(
+				EVENT_MANAGEMENT_TOOLBAR_TOGGLE_ALL_ITEMS,
+				handleToggleAllItems
+			);
+		};
+	}, [handleToggleAllItems]);
+
 	return (
 		<ClayCardWithHorizontal
-			actions={actions?.map(({data, ...rest}) => {
-				const dataAttributes = getDataAttributes(data);
-
-				return {
-					...dataAttributes,
-					...rest,
-				};
-			})}
+			actions={normalizeDropdownItems(actions)}
 			checkboxProps={{
 				name: inputName ?? '',
 				value: inputValue ?? '',

@@ -15,11 +15,8 @@
 package com.liferay.portal.reports.engine.console.web.internal.admin.search;
 
 import com.liferay.portal.kernel.dao.search.SearchContainer;
-import com.liferay.portal.kernel.portlet.PortalPreferences;
-import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
+import com.liferay.portal.kernel.portlet.SearchOrderByUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
-import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.reports.engine.console.constants.ReportsEngineConsolePortletKeys;
 import com.liferay.portal.reports.engine.console.model.Source;
 import com.liferay.portal.reports.engine.console.util.comparator.SourceCreateDateComparator;
@@ -59,45 +56,21 @@ public class SourceSearch extends SearchContainer<Source> {
 			SourceDisplayTerms.DRIVER_URL,
 			definitionDisplayTerms.getDriverUrl());
 
-		PortalPreferences preferences =
-			PortletPreferencesFactoryUtil.getPortalPreferences(portletRequest);
+		setOrderByCol(
+			SearchOrderByUtil.getOrderByCol(
+				portletRequest, ReportsEngineConsolePortletKeys.REPORTS_ADMIN,
+				"create-date"));
 
-		String orderByCol = ParamUtil.getString(portletRequest, "orderByCol");
+		String orderByType = SearchOrderByUtil.getOrderByType(
+			portletRequest, ReportsEngineConsolePortletKeys.REPORTS_ADMIN,
+			"asc");
 
-		if (Validator.isNotNull(orderByCol)) {
-			preferences.setValue(
-				ReportsEngineConsolePortletKeys.REPORTS_ADMIN, "order-by-col",
-				orderByCol);
-		}
-		else {
-			orderByCol = preferences.getValue(
-				ReportsEngineConsolePortletKeys.REPORTS_ADMIN, "order-by-col",
-				"create-date");
-		}
-
-		String orderByType = ParamUtil.getString(portletRequest, "orderByType");
-
-		if (Validator.isNotNull(orderByType)) {
-			preferences.setValue(
-				ReportsEngineConsolePortletKeys.REPORTS_ADMIN, "order-by-type",
-				orderByType);
-		}
-		else {
-			orderByType = preferences.getValue(
-				ReportsEngineConsolePortletKeys.REPORTS_ADMIN, "order-by-type",
-				"asc");
-		}
-
-		setOrderByCol(orderByCol);
-
-		setOrderByComparator(
-			getSourceOrderByComparator(orderByCol, orderByType));
-
+		setOrderByComparator(_getSourceOrderByComparator(orderByType));
 		setOrderByType(orderByType);
 	}
 
-	protected OrderByComparator<Source> getSourceOrderByComparator(
-		String orderByCol, String orderByType) {
+	private OrderByComparator<Source> _getSourceOrderByComparator(
+		String orderByType) {
 
 		boolean orderByAsc = false;
 

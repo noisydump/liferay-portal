@@ -60,10 +60,9 @@ renderResponse.setTitle(StringBundler.concat(selectedUser.getFullName(), " - ", 
 				}
 				%>
 
-				<clay:management-toolbar-v2
+				<clay:management-toolbar
 					disabled="<%= disableManagementBar %>"
 					itemsTotal="<%= uadApplicationExportDisplayList.size() %>"
-					namespace="<%= liferayPortletResponse.getNamespace() %>"
 					searchContainerId="uadApplicationExportDisplay"
 					selectable="<%= true %>"
 					showSearch="<%= false %>"
@@ -76,7 +75,8 @@ renderResponse.setTitle(StringBundler.concat(selectedUser.getFullName(), " - ", 
 					total="<%= uadApplicationExportDisplayList.size() %>"
 				>
 					<liferay-ui:search-container-results
-						results="<%= ListUtil.subList(uadApplicationExportDisplayList, searchContainer.getStart(), searchContainer.getEnd()) %>"
+						calculateStartAndEnd="<%= true %>"
+						results="<%= uadApplicationExportDisplayList %>"
 					/>
 
 					<liferay-ui:search-container-row
@@ -145,7 +145,7 @@ renderResponse.setTitle(StringBundler.concat(selectedUser.getFullName(), " - ", 
 			if (applicationKeys) {
 				applicationKeys.setAttribute(
 					'value',
-					Liferay.Util.listCheckedExcept(
+					Liferay.Util.getCheckedCheckboxes(
 						form,
 						'<portlet:namespace />allRowIds',
 						'<portlet:namespace />rowIds'

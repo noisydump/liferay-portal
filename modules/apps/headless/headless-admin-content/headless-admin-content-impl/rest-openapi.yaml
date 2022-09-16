@@ -104,19 +104,19 @@ components:
             description:
                 Specific settings related to Open Graph
             properties:
-                descriptionMappingField:
+                descriptionMappingFieldKey:
                     description:
                         Field of the content type that will be used as the description
                     type: string
-                imageAltMappingField:
+                imageAltMappingFieldKey:
                     description:
                         Field of the content type that will be used as the alt property of the image
                     type: string
-                imageMappingField:
+                imageMappingFieldKey:
                     description:
                         Field of the content type that will be used as the image
                     type: string
-                titleMappingField:
+                titleMappingFieldKey:
                     description:
                         Field of the content type that will be used as the title
                     type: string
@@ -125,11 +125,11 @@ components:
             description:
                 Specific settings related to SEO
             properties:
-                descriptionMappingField:
+                descriptionMappingFieldKey:
                     description:
                         Field of the content type that will be used as the description
                     type: string
-                htmlTitleMappingField:
+                htmlTitleMappingFieldKey:
                     description:
                         Field of the content type that will be used as the HTML title
                     type: string
@@ -143,11 +143,50 @@ components:
                     description:
                         Internationalized field of the robots of the page that renders the Display Page Template
                     type: object
+        Status:
+            # @review
+            description:
+                Represents the status of a resource
+            properties:
+                code:
+                    # @review
+                    description:
+                        A number which identifies a specific status
+                    format: int32
+                    readOnly: true
+                    type: integer
+                label:
+                    # @review
+                    description:
+                        Label associated to the status
+                    readOnly: true
+                    type: string
+                label_i18n:
+                    additionalProperties:
+                        type: string
+                    readOnly: true
+                    type: object
+        Version:
+            properties:
+                number:
+                    # @review
+                    description:
+                        The version of a resource
+                    format: double
+                    readOnly: true
+                    type: number
+                status:
+                    allOf:
+                        - $ref: "#/components/schemas/Status"
+                    # @review
+                    description:
+                        Represents the status of a resource
+                    readOnly: true
             type: object
 info:
     description:
         "A Java client JAR is available for use with the group ID 'com.liferay', artifact ID
-        'com.liferay.headless.admin.content.client', and version '2.0.0'."
+        'com.liferay.headless.admin.content.client', and version '2.0.17'."
     license:
         name: "Apache 2.0"
         url: "http://www.apache.org/licenses/LICENSE-2.0.html"
@@ -168,6 +207,18 @@ paths:
                   schema:
                       format: int64
                       type: integer
+                - in: query
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
+                  schema:
+                      type: string
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: page
                   schema:
@@ -193,8 +244,6 @@ paths:
                                 items:
                                     $ref: "#/components/schemas/DisplayPageTemplate"
                                 type: array
-                    description:
-                        ""
             tags: ["DisplayPageTemplate"]
     "/sites/{siteId}/display-page-templates/{displayPageTemplateKey}":
         get:
@@ -214,6 +263,18 @@ paths:
                   required: true
                   schema:
                       type: string
+                - in: query
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
+                  schema:
+                      type: string
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: header
                   name: Accept-Language
                   schema:
@@ -227,14 +288,13 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/DisplayPageTemplate"
-                    description:
-                        ""
             tags: ["DisplayPageTemplate"]
     "/sites/{siteId}/page-definitions/preview":
         # @review
         post:
             description:
                 Renders and retrieves HTML for the page definition using the theme of specified site.
+            operationId: postSitePageDefinitionPreview
             parameters:
                 - in: path
                   name: siteId
@@ -256,6 +316,217 @@ paths:
                         text/html:
                             schema:
                                 type: string
-                    description:
-                        ""
             tags: ["PageDefinition"]
+    "/sites/{siteId}/structured-contents":
+        get:
+            # @review
+            description:
+                Retrieves the site's structured contents latest version. Results can be paginated, filtered, searched,
+                flattened, and sorted.
+            operationId: getSiteStructuredContentsPage
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: query
+                  name: aggregationTerms
+                  schema:
+                      items:
+                          type: string
+                      type: array
+                - in: query
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
+                  name: flatten
+                  schema:
+                      type: boolean
+                - in: query
+                  name: nestedFields
+                  schema:
+                      type: string
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
+                - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+                - in: query
+                  name: search
+                  schema:
+                      type: string
+                - in: query
+                  name: sort
+                  schema:
+                      type: string
+                - in: header
+                  name: Accept-Language
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "../../headless-delivery/headless-delivery-impl/rest-openapi.yaml#StructuredContent"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "../../headless-delivery/headless-delivery-impl/rest-openapi.yaml#StructuredContent"
+                                type: array
+            tags: ["StructuredContent"]
+    "/sites/{siteId}/structured-contents/draft":
+        # @review
+        post:
+            description:
+                Creates a draft of a structured content
+            operationId: postSiteStructuredContentDraft
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "../../headless-delivery/headless-delivery-impl/rest-openapi.yaml#StructuredContent"
+                    application/xml:
+                        schema:
+                            $ref: "../../headless-delivery/headless-delivery-impl/rest-openapi.yaml#StructuredContent"
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "../../headless-delivery/headless-delivery-impl/rest-openapi.yaml#StructuredContent"
+                        application/xml:
+                            schema:
+                                $ref: "../../headless-delivery/headless-delivery-impl/rest-openapi.yaml#StructuredContent"
+            tags: ["StructuredContent"]
+    "/structured-contents/{structuredContentId}/by-version/{version}":
+        delete:
+            # @review
+            description:
+                Deletes a version of a structured content via its ID.
+            operationId: deleteStructuredContentByVersion
+            parameters:
+                - in: path
+                  name: structuredContentId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: path
+                  name: version
+                  required: true
+                  schema:
+                      format: double
+                      type: number
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
+            tags: ["StructuredContent"]
+        get:
+            # @review
+            description:
+                Retrieves a version of a structured content
+            operationId: getStructuredContentByVersion
+            parameters:
+                - in: path
+                  name: structuredContentId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: path
+                  name: version
+                  required: true
+                  schema:
+                      format: double
+                      type: number
+                - in: query
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
+                  schema:
+                      type: string
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "../../headless-delivery/headless-delivery-impl/rest-openapi.yaml#StructuredContent"
+                        application/xml:
+                            schema:
+                                $ref: "../../headless-delivery/headless-delivery-impl/rest-openapi.yaml#StructuredContent"
+            tags: ["StructuredContent"]
+    "/structured-contents/{structuredContentId}/versions":
+        get:
+            # @review
+            description:
+                Retrieves all versions of a structured content via its ID.
+            operationId: getStructuredContentsVersionsPage
+            parameters:
+                - in: path
+                  name: structuredContentId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: query
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
+                  schema:
+                      type: string
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
+                - in: header
+                  name: Accept-Language
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "../../headless-delivery/headless-delivery-impl/rest-openapi.yaml#StructuredContent"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "../../headless-delivery/headless-delivery-impl/rest-openapi.yaml#StructuredContent"
+                                type: array
+            tags: ["StructuredContent"]

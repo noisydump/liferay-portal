@@ -87,25 +87,37 @@ if (configuredPublish) {
 
 treeId = treeId + privateLayout + layoutSetBranchId;
 
-PortletURL portletURL = renderResponse.createActionURL();
-
 if (group.isStaged() && group.isStagedRemotely()) {
 	cmd = Constants.PUBLISH_TO_REMOTE;
 }
 
-portletURL.setParameter(ActionRequest.ACTION_NAME, "/export_import/publish_layouts");
-portletURL.setParameter("mvcRenderCommandName", "/export_import/publish_layouts");
-portletURL.setParameter("closeRedirect", closeRedirect);
-portletURL.setParameter("stagingGroupId", String.valueOf(stagingGroupId));
+PortletURL portletURL = PortletURLBuilder.createActionURL(
+	renderResponse
+).setActionName(
+	"/export_import/publish_layouts"
+).setMVCRenderCommandName(
+	"/export_import/publish_layouts"
+).setParameter(
+	"closeRedirect", closeRedirect
+).setParameter(
+	"stagingGroupId", stagingGroupId
+).buildPortletURL();
 
-PortletURL redirectURL = renderResponse.createRenderURL();
-
-redirectURL.setParameter("mvcRenderCommandName", "/export_import/publish_layouts");
-redirectURL.setParameter("closeRedirect", closeRedirect);
-redirectURL.setParameter("groupId", String.valueOf(stagingGroupId));
-redirectURL.setParameter("layoutSetBranchId", String.valueOf(layoutSetBranchId));
-redirectURL.setParameter("layoutSetBranchName", layoutSetBranchName);
-redirectURL.setParameter("privateLayout", String.valueOf(privateLayout));
+PortletURL redirectURL = PortletURLBuilder.createRenderURL(
+	renderResponse
+).setMVCRenderCommandName(
+	"/export_import/publish_layouts"
+).setParameter(
+	"closeRedirect", closeRedirect
+).setParameter(
+	"groupId", stagingGroupId
+).setParameter(
+	"layoutSetBranchId", layoutSetBranchId
+).setParameter(
+	"layoutSetBranchName", layoutSetBranchName
+).setParameter(
+	"privateLayout", privateLayout
+).buildPortletURL();
 
 response.setHeader("Ajax-ID", request.getHeader("Ajax-ID"));
 %>
@@ -154,9 +166,7 @@ response.setHeader("Ajax-ID", request.getHeader("Ajax-ID"));
 			<ul>
 
 				<%
-				List<Tuple> missingLayoutPrototypes = lpe.getMissingLayoutPrototypes();
-
-				for (Tuple missingLayoutPrototype : missingLayoutPrototypes) {
+				for (Tuple missingLayoutPrototype : lpe.getMissingLayoutPrototypes()) {
 					String layoutPrototypeClassName = (String)missingLayoutPrototype.getObject(0);
 					String layoutPrototypeUuid = (String)missingLayoutPrototype.getObject(1);
 					String layoutPrototypeName = (String)missingLayoutPrototype.getObject(2);

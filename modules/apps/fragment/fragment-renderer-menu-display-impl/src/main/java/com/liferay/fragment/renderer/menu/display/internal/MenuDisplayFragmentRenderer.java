@@ -15,7 +15,7 @@
 package com.liferay.fragment.renderer.menu.display.internal;
 
 import com.liferay.dynamic.data.mapping.model.DDMTemplate;
-import com.liferay.dynamic.data.mapping.service.DDMTemplateService;
+import com.liferay.dynamic.data.mapping.service.DDMTemplateLocalService;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.renderer.FragmentRenderer;
 import com.liferay.fragment.renderer.FragmentRendererContext;
@@ -23,13 +23,14 @@ import com.liferay.fragment.renderer.menu.display.internal.MenuDisplayFragmentCo
 import com.liferay.fragment.renderer.menu.display.internal.MenuDisplayFragmentConfiguration.DisplayStyle;
 import com.liferay.fragment.renderer.menu.display.internal.MenuDisplayFragmentConfiguration.SiteNavigationMenuSource;
 import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
-import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.service.GroupLocalService;
@@ -87,6 +88,10 @@ public class MenuDisplayFragmentRenderer implements FragmentRenderer {
 				jsonObject, resourceBundle);
 		}
 		catch (JSONException jsonException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(jsonException);
+			}
+
 			return StringPool.BLANK;
 		}
 	}
@@ -101,7 +106,7 @@ public class MenuDisplayFragmentRenderer implements FragmentRenderer {
 		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
 			"content.Language", getClass());
 
-		return LanguageUtil.get(resourceBundle, "menu-display");
+		return _language.get(resourceBundle, "menu-display");
 	}
 
 	@Override
@@ -116,9 +121,10 @@ public class MenuDisplayFragmentRenderer implements FragmentRenderer {
 			FragmentEntryLink fragmentEntryLink =
 				fragmentRendererContext.getFragmentEntryLink();
 
-			String fragmentId = _getFragmentId(fragmentEntryLink);
+			String fragmentElementId =
+				fragmentRendererContext.getFragmentElementId();
 
-			printWriter.write("<div id=\"" + fragmentId + "\">");
+			printWriter.write("<div id=\"" + fragmentElementId + "\">");
 
 			ThemeDisplay themeDisplay =
 				(ThemeDisplay)httpServletRequest.getAttribute(
@@ -131,7 +137,8 @@ public class MenuDisplayFragmentRenderer implements FragmentRenderer {
 					themeDisplay.getScopeGroupId());
 
 			_writeCss(
-				fragmentId, menuDisplayFragmentConfiguration, printWriter);
+				fragmentElementId, menuDisplayFragmentConfiguration,
+				printWriter);
 
 			NavigationMenuTag navigationMenuTag = _getNavigationMenuTag(
 				themeDisplay.getCompanyId(), menuDisplayFragmentConfiguration);
@@ -216,17 +223,6 @@ public class MenuDisplayFragmentRenderer implements FragmentRenderer {
 			menuDisplayFragmentConfiguration.sublevels() + 1);
 	}
 
-	private String _getFragmentId(FragmentEntryLink fragmentEntryLink) {
-		StringBundler fragmentIdSB = new StringBundler(4);
-
-		fragmentIdSB.append("fragment-");
-		fragmentIdSB.append(fragmentEntryLink.getFragmentEntryId());
-		fragmentIdSB.append("-");
-		fragmentIdSB.append(fragmentEntryLink.getNamespace());
-
-		return fragmentIdSB.toString();
-	}
-
 	private NavigationMenuTag _getNavigationMenuTag(
 			long companyId,
 			MenuDisplayFragmentConfiguration menuDisplayFragmentConfiguration)
@@ -259,7 +255,7 @@ public class MenuDisplayFragmentRenderer implements FragmentRenderer {
 			ddmTemplateKey = "LIST-MENU-FTL";
 		}
 
-		return _ddmTemplateService.fetchTemplate(
+		return _ddmTemplateLocalService.fetchTemplate(
 			companyGroup.getGroupId(), _portal.getClassNameId(NavItem.class),
 			ddmTemplateKey);
 	}
@@ -273,7 +269,7 @@ public class MenuDisplayFragmentRenderer implements FragmentRenderer {
 	}
 
 	private void _writeCss(
-			String fragmentId,
+			String fragmentElementId,
 			MenuDisplayFragmentConfiguration menuDisplayFragmentConfiguration,
 			PrintWriter printWriter)
 		throws IOException {
@@ -285,7 +281,7 @@ public class MenuDisplayFragmentRenderer implements FragmentRenderer {
 					"/dependencies/styles.tmpl"),
 			"${", "}",
 			HashMapBuilder.put(
-				"fragmentId", fragmentId
+				"fragmentElementId", fragmentElementId
 			).put(
 				"hoveredItemColor",
 				() -> {
@@ -309,14 +305,20 @@ public class MenuDisplayFragmentRenderer implements FragmentRenderer {
 		printWriter.write(styles);
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		MenuDisplayFragmentRenderer.class);
+
 	@Reference
-	private DDMTemplateService _ddmTemplateService;
+	private DDMTemplateLocalService _ddmTemplateLocalService;
 
 	@Reference
 	private FragmentEntryConfigurationParser _fragmentEntryConfigurationParser;
 
 	@Reference
 	private GroupLocalService _groupLocalService;
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private LayoutLocalService _layoutLocalService;

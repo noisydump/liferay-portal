@@ -23,6 +23,9 @@ public interface ContentTypes {
 
 	public static final String APPLICATION_GZIP = "application/gzip";
 
+	public static final String APPLICATION_JAVASCRIPT =
+		"application/javascript";
+
 	public static final String APPLICATION_JSON = "application/json";
 
 	public static final String APPLICATION_MSWORD = "application/msword";
@@ -33,6 +36,10 @@ public interface ContentTypes {
 	public static final String APPLICATION_PDF = "application/pdf";
 
 	public static final String APPLICATION_TEXT = "application/text";
+
+	public static final String
+		APPLICATION_VND_LIFERAY_VIDEO_EXTERNAL_SHORTCUT_HTML =
+			"application/vnd+liferay.video.external.shortcut+html";
 
 	public static final String APPLICATION_VND_MS_EXCEL =
 		"application/vnd.ms-excel";
@@ -46,6 +53,8 @@ public interface ContentTypes {
 		"application/x-java-serialized-object";
 
 	public static final String APPLICATION_X_PDF = "application/x-pdf";
+
+	public static final String APPLICATION_X_SH = "application/x-sh";
 
 	public static final String APPLICATION_X_WWW_FORM_URLENCODED =
 		"application/x-www-form-urlencoded";
@@ -107,6 +116,10 @@ public interface ContentTypes {
 	public static final String TEXT_PLAIN_UTF8 = "text/plain; charset=UTF-8";
 
 	public static final String TEXT_WML = "text/wml";
+
+	public static final String TEXT_X_JAVA_SOURCE = "text/x-java-source";
+
+	public static final String TEXT_X_JSP = "text/x-jsp";
 
 	public static final String TEXT_XML = "text/xml";
 

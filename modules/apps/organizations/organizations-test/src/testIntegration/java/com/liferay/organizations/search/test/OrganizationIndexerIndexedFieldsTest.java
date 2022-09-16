@@ -20,7 +20,6 @@ import com.liferay.expando.kernel.model.ExpandoColumnConstants;
 import com.liferay.expando.kernel.model.ExpandoTable;
 import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
 import com.liferay.expando.kernel.service.ExpandoTableLocalService;
-import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Group;
@@ -242,8 +241,6 @@ public class OrganizationIndexerIndexedFieldsTest {
 		).put(
 			Field.USER_ID, String.valueOf(organization.getUserId())
 		).put(
-			Field.USER_NAME, StringUtil.toLowerCase(organization.getUserName())
-		).put(
 			"country", _organizationFixture.getCountryNames(organization)
 		).put(
 			"nameTreePath", organization.getName()
@@ -262,9 +259,15 @@ public class OrganizationIndexerIndexedFieldsTest {
 				return StringUtil.toLowerCase(region.getName());
 			}
 		).put(
-			Field.getSortableFieldName(
-				StringBundler.concat("type", StringPool.UNDERLINE, "String")),
-			organization.getType()
+			Field.getSortableFieldName("region"),
+			() -> {
+				Region region = regionService.getRegion(
+					organization.getRegionId());
+
+				return StringUtil.toLowerCase(region.getName());
+			}
+		).put(
+			Field.getSortableFieldName("type_String"), organization.getType()
 		).build();
 	}
 

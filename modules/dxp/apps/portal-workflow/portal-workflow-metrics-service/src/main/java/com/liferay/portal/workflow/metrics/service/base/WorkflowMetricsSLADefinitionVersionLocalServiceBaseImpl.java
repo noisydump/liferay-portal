@@ -41,6 +41,8 @@ import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -54,16 +56,20 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.workflow.metrics.model.WorkflowMetricsSLADefinitionVersion;
 import com.liferay.portal.workflow.metrics.service.WorkflowMetricsSLADefinitionVersionLocalService;
+import com.liferay.portal.workflow.metrics.service.WorkflowMetricsSLADefinitionVersionLocalServiceUtil;
 import com.liferay.portal.workflow.metrics.service.persistence.WorkflowMetricsSLADefinitionPersistence;
 import com.liferay.portal.workflow.metrics.service.persistence.WorkflowMetricsSLADefinitionVersionFinder;
 import com.liferay.portal.workflow.metrics.service.persistence.WorkflowMetricsSLADefinitionVersionPersistence;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -85,7 +91,7 @@ public abstract class WorkflowMetricsSLADefinitionVersionLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>WorkflowMetricsSLADefinitionVersionLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.workflow.metrics.service.WorkflowMetricsSLADefinitionVersionLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>WorkflowMetricsSLADefinitionVersionLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>WorkflowMetricsSLADefinitionVersionLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -174,6 +180,13 @@ public abstract class WorkflowMetricsSLADefinitionVersionLocalServiceBaseImpl
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return workflowMetricsSLADefinitionVersionPersistence.dslQuery(
 			dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -481,6 +494,11 @@ public abstract class WorkflowMetricsSLADefinitionVersionLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement WorkflowMetricsSLADefinitionVersionLocalServiceImpl#deleteWorkflowMetricsSLADefinitionVersion(WorkflowMetricsSLADefinitionVersion) to avoid orphaned data");
+		}
+
 		return workflowMetricsSLADefinitionVersionLocalService.
 			deleteWorkflowMetricsSLADefinitionVersion(
 				(WorkflowMetricsSLADefinitionVersion)persistedModel);
@@ -609,6 +627,11 @@ public abstract class WorkflowMetricsSLADefinitionVersionLocalServiceBaseImpl
 			workflowMetricsSLADefinitionVersion);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -621,6 +644,9 @@ public abstract class WorkflowMetricsSLADefinitionVersionLocalServiceBaseImpl
 	public void setAopProxy(Object aopProxy) {
 		workflowMetricsSLADefinitionVersionLocalService =
 			(WorkflowMetricsSLADefinitionVersionLocalService)aopProxy;
+
+		_setLocalServiceUtilService(
+			workflowMetricsSLADefinitionVersionLocalService);
 	}
 
 	/**
@@ -666,6 +692,24 @@ public abstract class WorkflowMetricsSLADefinitionVersionLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		WorkflowMetricsSLADefinitionVersionLocalService
+			workflowMetricsSLADefinitionVersionLocalService) {
+
+		try {
+			Field field =
+				WorkflowMetricsSLADefinitionVersionLocalServiceUtil.class.
+					getDeclaredField("_service");
+
+			field.setAccessible(true);
+
+			field.set(null, workflowMetricsSLADefinitionVersionLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@Reference
 	protected WorkflowMetricsSLADefinitionPersistence
 		workflowMetricsSLADefinitionPersistence;
@@ -696,5 +740,8 @@ public abstract class WorkflowMetricsSLADefinitionVersionLocalServiceBaseImpl
 	@Reference
 	protected com.liferay.portal.kernel.service.UserLocalService
 		userLocalService;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		WorkflowMetricsSLADefinitionVersionLocalServiceBaseImpl.class);
 
 }

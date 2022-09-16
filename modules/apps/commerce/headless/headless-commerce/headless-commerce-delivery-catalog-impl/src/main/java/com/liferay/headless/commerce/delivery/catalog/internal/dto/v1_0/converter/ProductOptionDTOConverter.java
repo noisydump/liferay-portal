@@ -21,7 +21,7 @@ import com.liferay.commerce.product.service.CPDefinitionOptionRelLocalService;
 import com.liferay.commerce.product.service.CPDefinitionOptionValueRelLocalService;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.ProductOption;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.ProductOptionValue;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 
@@ -35,7 +35,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Andrea Sbarra
  */
 @Component(
-	enabled = false, property = "model.class.name=CPDefinitionOptionRel",
+	enabled = false, property = "dto.class.name=CPDefinitionOptionRel",
 	service = {DTOConverter.class, ProductOptionDTOConverter.class}
 )
 public class ProductOptionDTOConverter
@@ -54,7 +54,7 @@ public class ProductOptionDTOConverter
 			_cpDefinitionOptionRelLocalService.getCPDefinitionOptionRel(
 				(Long)dtoConverterContext.getId());
 
-		String languageId = LanguageUtil.getLanguageId(
+		String languageId = _language.getLanguageId(
 			dtoConverterContext.getLocale());
 
 		CPOption cpOption = cpDefinitionOptionRel.getCPOption();
@@ -122,5 +122,8 @@ public class ProductOptionDTOConverter
 	@Reference
 	private CPDefinitionOptionValueRelLocalService
 		_cpDefinitionOptionValueRelLocalService;
+
+	@Reference
+	private Language _language;
 
 }

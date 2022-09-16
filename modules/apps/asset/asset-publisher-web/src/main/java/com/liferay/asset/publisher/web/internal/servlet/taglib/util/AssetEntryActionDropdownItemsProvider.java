@@ -18,7 +18,10 @@ import com.liferay.asset.kernel.action.AssetEntryAction;
 import com.liferay.asset.kernel.model.AssetRenderer;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
@@ -93,6 +96,10 @@ public class AssetEntryActionDropdownItemsProvider {
 							}
 						}
 						catch (Exception exception) {
+							if (_log.isDebugEnabled()) {
+								_log.debug(exception);
+							}
+
 							continue;
 						}
 
@@ -141,22 +148,30 @@ public class AssetEntryActionDropdownItemsProvider {
 				redirect = _fullContentRedirect;
 			}
 
-			PortletURL portletURL = _assetRenderer.getURLEdit(
-				_liferayPortletRequest, _liferayPortletResponse,
-				LiferayWindowState.NORMAL, redirect);
+			return PortletURLBuilder.create(
+				_assetRenderer.getURLEdit(
+					_liferayPortletRequest, _liferayPortletResponse,
+					LiferayWindowState.NORMAL, redirect)
+			).setPortletResource(
+				() -> {
+					PortletDisplay portletDisplay =
+						_themeDisplay.getPortletDisplay();
 
-			PortletDisplay portletDisplay = _themeDisplay.getPortletDisplay();
-
-			portletURL.setParameter(
-				"portletResource", portletDisplay.getPortletName());
-
-			return portletURL;
+					return portletDisplay.getPortletName();
+				}
+			).buildPortletURL();
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return null;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		AssetEntryActionDropdownItemsProvider.class);
 
 	private final List<AssetEntryAction<?>> _assetEntryActions;
 	private final AssetRenderer<?> _assetRenderer;

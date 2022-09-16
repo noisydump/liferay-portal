@@ -19,7 +19,7 @@ import com.liferay.commerce.tax.model.CommerceTaxMethod;
 import com.liferay.frontend.taglib.servlet.taglib.ScreenNavigationCategory;
 import com.liferay.frontend.taglib.servlet.taglib.ScreenNavigationEntry;
 import com.liferay.frontend.taglib.servlet.taglib.util.JSPRenderer;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 
 import java.io.IOException;
 
@@ -61,7 +61,7 @@ public class CommerceTaxMethodDetailScreenNavigationCategory
 
 	@Override
 	public String getLabel(Locale locale) {
-		return LanguageUtil.get(
+		return _language.get(
 			locale,
 			CommerceTaxScreenNavigationConstants.
 				ENTRY_KEY_COMMERCE_TAX_METHOD_DETAIL);
@@ -81,11 +81,14 @@ public class CommerceTaxMethodDetailScreenNavigationCategory
 
 		_jspRenderer.renderJSP(
 			_servletContext, httpServletRequest, httpServletResponse,
-			"/tax_method/detail.jsp");
+			"/commerce_tax_method/detail.jsp");
 	}
 
 	@Reference
 	private JSPRenderer _jspRenderer;
+
+	@Reference
+	private Language _language;
 
 	@Reference(target = "(osgi.web.symbolicname=com.liferay.commerce.tax.web)")
 	private ServletContext _servletContext;

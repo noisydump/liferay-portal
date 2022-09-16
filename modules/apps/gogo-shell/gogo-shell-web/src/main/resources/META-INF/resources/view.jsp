@@ -37,18 +37,30 @@ String commandOutput = (String)SessionMessages.get(renderRequest, "commandOutput
 
 		<aui:fieldset-group markupView="lexicon">
 			<aui:fieldset>
+				<clay:alert
+					displayType="info"
+					message='<%= LanguageUtil.get(request, "command-will-only-be-executed-on-this-node") %>'
+				/>
+
 				<aui:input autoFocus="<%= windowState.equals(WindowState.MAXIMIZED) || windowState.equals(LiferayWindowState.POP_UP) %>" name="command" prefix='<%= (String)SessionMessages.get(renderRequest, "prompt") %>' value='<%= (String)SessionMessages.get(renderRequest, "command") %>' />
 			</aui:fieldset>
 		</aui:fieldset-group>
 
 		<aui:button-row>
 			<aui:button primary="<%= true %>" type="submit" value="execute" />
+
+			<div class="btn float-right">
+				<liferay-learn:message
+					key="general"
+					resource="gogo-shell-web"
+				/>
+			</div>
 		</aui:button-row>
 
 		<c:if test="<%= Validator.isNotNull(commandOutput) %>">
 			<b><liferay-ui:message key="output" /></b>
 
-			<pre><%= commandOutput %></pre>
+			<pre><%= HtmlUtil.escape(commandOutput) %></pre>
 		</c:if>
 	</aui:form>
 </clay:container-fluid>

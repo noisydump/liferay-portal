@@ -28,6 +28,8 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -41,9 +43,12 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.spring.extender.service.ServiceReference;
 import com.liferay.portal.tools.service.builder.test.model.ManyColumnsEntry;
 import com.liferay.portal.tools.service.builder.test.service.ManyColumnsEntryLocalService;
+import com.liferay.portal.tools.service.builder.test.service.ManyColumnsEntryLocalServiceUtil;
 import com.liferay.portal.tools.service.builder.test.service.persistence.ManyColumnsEntryPersistence;
 
 import java.io.Serializable;
+
+import java.lang.reflect.Field;
 
 import java.util.List;
 
@@ -67,7 +72,7 @@ public abstract class ManyColumnsEntryLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>ManyColumnsEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.tools.service.builder.test.service.ManyColumnsEntryLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>ManyColumnsEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>ManyColumnsEntryLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -142,6 +147,13 @@ public abstract class ManyColumnsEntryLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return manyColumnsEntryPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -313,6 +325,11 @@ public abstract class ManyColumnsEntryLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement ManyColumnsEntryLocalServiceImpl#deleteManyColumnsEntry(ManyColumnsEntry) to avoid orphaned data");
+		}
+
 		return manyColumnsEntryLocalService.deleteManyColumnsEntry(
 			(ManyColumnsEntry)persistedModel);
 	}
@@ -443,11 +460,15 @@ public abstract class ManyColumnsEntryLocalServiceBaseImpl
 		persistedModelLocalServiceRegistry.register(
 			"com.liferay.portal.tools.service.builder.test.model.ManyColumnsEntry",
 			manyColumnsEntryLocalService);
+
+		_setLocalServiceUtilService(manyColumnsEntryLocalService);
 	}
 
 	public void destroy() {
 		persistedModelLocalServiceRegistry.unregister(
 			"com.liferay.portal.tools.service.builder.test.model.ManyColumnsEntry");
+
+		_setLocalServiceUtilService(null);
 	}
 
 	/**
@@ -492,6 +513,23 @@ public abstract class ManyColumnsEntryLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		ManyColumnsEntryLocalService manyColumnsEntryLocalService) {
+
+		try {
+			Field field =
+				ManyColumnsEntryLocalServiceUtil.class.getDeclaredField(
+					"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, manyColumnsEntryLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@BeanReference(type = ManyColumnsEntryLocalService.class)
 	protected ManyColumnsEntryLocalService manyColumnsEntryLocalService;
 
@@ -503,6 +541,9 @@ public abstract class ManyColumnsEntryLocalServiceBaseImpl
 	)
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		ManyColumnsEntryLocalServiceBaseImpl.class);
 
 	@ServiceReference(type = PersistedModelLocalServiceRegistry.class)
 	protected PersistedModelLocalServiceRegistry

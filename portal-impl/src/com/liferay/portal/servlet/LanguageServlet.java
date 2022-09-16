@@ -120,11 +120,11 @@ public class LanguageServlet extends HttpServlet {
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(exception, exception);
+				_log.warn(exception);
 			}
 		}
 
-		if (!LanguageUtil.isValidLanguageKey(locale, key)) {
+		if (Validator.isNull(LanguageUtil.get(locale, key, StringPool.BLANK))) {
 			httpServletResponse.setDateHeader(HttpHeaders.EXPIRES, 0);
 			httpServletResponse.setHeader(
 				HttpHeaders.CACHE_CONTROL,

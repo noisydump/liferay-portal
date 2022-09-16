@@ -19,6 +19,8 @@ import ClayLink from '@clayui/link';
 import classNames from 'classnames';
 import React from 'react';
 
+import normalizeDropdownItems from './normalize_dropdown_items';
+
 export default function DropdownMenu({
 	actionsDropdown = false,
 	additionalProps: _additionalProps,
@@ -28,6 +30,7 @@ export default function DropdownMenu({
 	items,
 	label,
 	locale: _locale,
+	menuProps,
 	portletId: _portletId,
 	portletNamespace: _portletNamespace,
 	...otherProps
@@ -38,20 +41,8 @@ export default function DropdownMenu({
 				className={classNames({
 					'dropdown-action': actionsDropdown,
 				})}
-				items={items.map(({data, ...rest}) => {
-					const dataAttributes = data
-						? Object.entries(data).reduce((acc, [key, value]) => {
-								acc[`data-${key}`] = value;
-
-								return acc;
-						  }, {})
-						: {};
-
-					return {
-						...dataAttributes,
-						...rest,
-					};
-				})}
+				items={normalizeDropdownItems(items) || []}
+				menuElementAttrs={menuProps}
 				trigger={
 					<ClayButton
 						className={classNames(cssClass, {
@@ -75,13 +66,15 @@ export default function DropdownMenu({
 			/>
 
 			<div className="quick-action-menu">
-				{items.map(({data, href, icon, quickAction, ...rest}) =>
+				{items.map(({data, href, icon, label, quickAction, ...rest}) =>
 					data?.action && quickAction ? (
 						<ClayButtonWithIcon
 							className="component-action quick-action-item"
 							displayType="unstyled"
+							key={data.action}
 							small={true}
 							symbol={icon}
+							title={label}
 							{...rest}
 						/>
 					) : (
@@ -91,6 +84,8 @@ export default function DropdownMenu({
 							<ClayLink
 								className="component-action quick-action-item"
 								href={href}
+								key={href}
+								title={label}
 								{...rest}
 							>
 								<ClayIcon symbol={icon} />

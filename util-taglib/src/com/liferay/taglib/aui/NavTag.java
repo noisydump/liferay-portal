@@ -15,6 +15,7 @@
 package com.liferay.taglib.aui;
 
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.DisplayTerms;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
@@ -23,7 +24,6 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -144,24 +144,11 @@ public class NavTag extends BaseNavTag implements BodyTag {
 	}
 
 	protected String getMarkupView() {
-		String markupView = StringPool.BLANK;
-
-		NavBarTag navBarTag = (NavBarTag)findAncestorWithClass(
-			this, NavBarTag.class);
-
-		if (navBarTag != null) {
-			markupView = navBarTag.getMarkupView();
-		}
-
-		return markupView;
+		return null;
 	}
 
 	@Override
 	protected String getPage() {
-		if (Validator.isNotNull(getMarkupView())) {
-			return "/html/taglib/aui/nav/" + getMarkupView() + "/page.jsp";
-		}
-
 		return "/html/taglib/aui/nav/page.jsp";
 	}
 

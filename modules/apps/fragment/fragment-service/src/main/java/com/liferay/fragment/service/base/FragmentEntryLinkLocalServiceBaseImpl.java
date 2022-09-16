@@ -21,11 +21,9 @@ import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.service.FragmentEntryLinkLocalService;
-import com.liferay.fragment.service.persistence.FragmentCollectionPersistence;
-import com.liferay.fragment.service.persistence.FragmentEntryFinder;
+import com.liferay.fragment.service.FragmentEntryLinkLocalServiceUtil;
 import com.liferay.fragment.service.persistence.FragmentEntryLinkFinder;
 import com.liferay.fragment.service.persistence.FragmentEntryLinkPersistence;
-import com.liferay.fragment.service.persistence.FragmentEntryPersistence;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.aop.AopService;
@@ -44,6 +42,8 @@ import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -59,10 +59,13 @@ import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -84,7 +87,7 @@ public abstract class FragmentEntryLinkLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>FragmentEntryLinkLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.fragment.service.FragmentEntryLinkLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>FragmentEntryLinkLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>FragmentEntryLinkLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -159,6 +162,13 @@ public abstract class FragmentEntryLinkLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return fragmentEntryLinkPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -440,6 +450,11 @@ public abstract class FragmentEntryLinkLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement FragmentEntryLinkLocalServiceImpl#deleteFragmentEntryLink(FragmentEntryLink) to avoid orphaned data");
+		}
+
 		return fragmentEntryLinkLocalService.deleteFragmentEntryLink(
 			(FragmentEntryLink)persistedModel);
 	}
@@ -552,6 +567,11 @@ public abstract class FragmentEntryLinkLocalServiceBaseImpl
 		return fragmentEntryLinkPersistence.update(fragmentEntryLink);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -563,6 +583,8 @@ public abstract class FragmentEntryLinkLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		fragmentEntryLinkLocalService = (FragmentEntryLinkLocalService)aopProxy;
+
+		_setLocalServiceUtilService(fragmentEntryLinkLocalService);
 	}
 
 	/**
@@ -623,6 +645,23 @@ public abstract class FragmentEntryLinkLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		FragmentEntryLinkLocalService fragmentEntryLinkLocalService) {
+
+		try {
+			Field field =
+				FragmentEntryLinkLocalServiceUtil.class.getDeclaredField(
+					"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, fragmentEntryLinkLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected FragmentEntryLinkLocalService fragmentEntryLinkLocalService;
 
 	@Reference
@@ -635,17 +674,7 @@ public abstract class FragmentEntryLinkLocalServiceBaseImpl
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@Reference
-	protected FragmentCollectionPersistence fragmentCollectionPersistence;
-
-	@Reference
-	protected FragmentEntryPersistence fragmentEntryPersistence;
-
-	@Reference
-	protected FragmentEntryFinder fragmentEntryFinder;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
+	private static final Log _log = LogFactoryUtil.getLog(
+		FragmentEntryLinkLocalServiceBaseImpl.class);
 
 }

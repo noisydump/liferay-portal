@@ -28,6 +28,8 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -40,9 +42,11 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.saml.persistence.model.SamlSpAuthRequest;
 import com.liferay.saml.persistence.service.SamlSpAuthRequestLocalService;
+import com.liferay.saml.persistence.service.SamlSpAuthRequestLocalServiceUtil;
 import com.liferay.saml.persistence.service.persistence.SamlIdpSpConnectionPersistence;
 import com.liferay.saml.persistence.service.persistence.SamlIdpSpSessionPersistence;
 import com.liferay.saml.persistence.service.persistence.SamlIdpSsoSessionPersistence;
+import com.liferay.saml.persistence.service.persistence.SamlPeerBindingPersistence;
 import com.liferay.saml.persistence.service.persistence.SamlSpAuthRequestPersistence;
 import com.liferay.saml.persistence.service.persistence.SamlSpIdpConnectionPersistence;
 import com.liferay.saml.persistence.service.persistence.SamlSpMessagePersistence;
@@ -50,10 +54,13 @@ import com.liferay.saml.persistence.service.persistence.SamlSpSessionPersistence
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -75,7 +82,7 @@ public abstract class SamlSpAuthRequestLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>SamlSpAuthRequestLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.saml.persistence.service.SamlSpAuthRequestLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>SamlSpAuthRequestLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>SamlSpAuthRequestLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -152,6 +159,13 @@ public abstract class SamlSpAuthRequestLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return samlSpAuthRequestPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -326,6 +340,11 @@ public abstract class SamlSpAuthRequestLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement SamlSpAuthRequestLocalServiceImpl#deleteSamlSpAuthRequest(SamlSpAuthRequest) to avoid orphaned data");
+		}
+
 		return samlSpAuthRequestLocalService.deleteSamlSpAuthRequest(
 			(SamlSpAuthRequest)persistedModel);
 	}
@@ -389,6 +408,11 @@ public abstract class SamlSpAuthRequestLocalServiceBaseImpl
 		return samlSpAuthRequestPersistence.update(samlSpAuthRequest);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -400,6 +424,8 @@ public abstract class SamlSpAuthRequestLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		samlSpAuthRequestLocalService = (SamlSpAuthRequestLocalService)aopProxy;
+
+		_setLocalServiceUtilService(samlSpAuthRequestLocalService);
 	}
 
 	/**
@@ -445,6 +471,23 @@ public abstract class SamlSpAuthRequestLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		SamlSpAuthRequestLocalService samlSpAuthRequestLocalService) {
+
+		try {
+			Field field =
+				SamlSpAuthRequestLocalServiceUtil.class.getDeclaredField(
+					"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, samlSpAuthRequestLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@Reference
 	protected SamlIdpSpConnectionPersistence samlIdpSpConnectionPersistence;
 
@@ -453,6 +496,9 @@ public abstract class SamlSpAuthRequestLocalServiceBaseImpl
 
 	@Reference
 	protected SamlIdpSsoSessionPersistence samlIdpSsoSessionPersistence;
+
+	@Reference
+	protected SamlPeerBindingPersistence samlPeerBindingPersistence;
 
 	protected SamlSpAuthRequestLocalService samlSpAuthRequestLocalService;
 
@@ -483,5 +529,8 @@ public abstract class SamlSpAuthRequestLocalServiceBaseImpl
 	@Reference
 	protected com.liferay.portal.kernel.service.UserLocalService
 		userLocalService;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		SamlSpAuthRequestLocalServiceBaseImpl.class);
 
 }

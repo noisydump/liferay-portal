@@ -40,10 +40,10 @@
 					>
 						<clay:row>
 							<aui:select name="preferences--sites--" value="<%= sitesDirectoryDisplayContext.getSites() %>">
-								<aui:option label="<%= SitesDirectoryTag.SITES_TOP_LEVEL %>" />
-								<aui:option label="<%= SitesDirectoryTag.SITES_PARENT_LEVEL %>" />
-								<aui:option label="<%= SitesDirectoryTag.SITES_SIBLINGS %>" />
-								<aui:option label="<%= SitesDirectoryTag.SITES_CHILDREN %>" />
+								<aui:option label="top-level" />
+								<aui:option label="parent-level" />
+								<aui:option label="siblings" />
+								<aui:option label="children" />
 							</aui:select>
 						</clay:row>
 
@@ -97,11 +97,11 @@
 	var sitesSelect = Liferay.Util.getFormElement(form, 'sites');
 
 	if (displayStyleSelect && sitesSelect) {
-		form.addEventListener('change', function () {
+		form.addEventListener('change', () => {
 			refreshPreview(displayStyleSelect.value, sitesSelect.value);
 		});
 
-		form.addEventListener('select', function () {
+		form.addEventListener('select', () => {
 			refreshPreview(displayStyleSelect.value, sitesSelect.value);
 		});
 	}

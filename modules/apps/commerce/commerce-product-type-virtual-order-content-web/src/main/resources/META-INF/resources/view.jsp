@@ -33,7 +33,7 @@ CommerceVirtualOrderItemContentDisplayContext commerceVirtualOrderItemContentDis
 			"commerceVirtualOrderItemContentDisplayContext", commerceVirtualOrderItemContentDisplayContext
 		).build();
 
-		SearchContainer<CommerceVirtualOrderItem> commerceVirtualOrderContentDisplayContextSearchContainer = commerceVirtualOrderItemContentDisplayContext.getSearchContainer();
+		SearchContainer<CommerceVirtualOrderItem> commerceVirtualOrderItemContentDisplayContextSearchContainer = commerceVirtualOrderItemContentDisplayContext.getSearchContainer();
 		%>
 
 		<liferay-ddm:template-renderer
@@ -41,14 +41,14 @@ CommerceVirtualOrderItemContentDisplayContext commerceVirtualOrderItemContentDis
 			contextObjects="<%= contextObjects %>"
 			displayStyle="<%= commerceVirtualOrderItemContentDisplayContext.getDisplayStyle() %>"
 			displayStyleGroupId="<%= commerceVirtualOrderItemContentDisplayContext.getDisplayStyleGroupId() %>"
-			entries="<%= commerceVirtualOrderContentDisplayContextSearchContainer.getResults() %>"
+			entries="<%= commerceVirtualOrderItemContentDisplayContextSearchContainer.getResults() %>"
 		>
 			<div class="container-fluid container-fluid-max-xl" id="<portlet:namespace />virtualOrderItemsContainer">
 				<div class="commerce-virtual-order-items-container" id="<portlet:namespace />entriesContainer">
 					<liferay-ui:search-container
 						id="commerceVirtualOrderItems"
 						iteratorURL="<%= currentURLObj %>"
-						searchContainer="<%= commerceVirtualOrderContentDisplayContextSearchContainer %>"
+						searchContainer="<%= commerceVirtualOrderItemContentDisplayContextSearchContainer %>"
 					>
 						<liferay-ui:search-container-row
 							className="com.liferay.commerce.product.type.virtual.order.model.CommerceVirtualOrderItem"
@@ -61,11 +61,9 @@ CommerceVirtualOrderItemContentDisplayContext commerceVirtualOrderItemContentDis
 
 							String thumbnailSrc = commerceVirtualOrderItemContentDisplayContext.getCommerceOrderItemThumbnailSrc(commerceOrderItem);
 
-							List<KeyValuePair> keyValuePairs = commerceVirtualOrderItemContentDisplayContext.getKeyValuePairs(commerceOrderItem.getCPDefinitionId(), commerceOrderItem.getJson(), locale);
-
 							StringJoiner stringJoiner = new StringJoiner(StringPool.COMMA);
 
-							for (KeyValuePair keyValuePair : keyValuePairs) {
+							for (KeyValuePair keyValuePair : commerceVirtualOrderItemContentDisplayContext.getKeyValuePairs(commerceOrderItem.getCPDefinitionId(), commerceOrderItem.getJson(), locale)) {
 								stringJoiner.add(keyValuePair.getValue());
 							}
 							%>
@@ -86,7 +84,7 @@ CommerceVirtualOrderItemContentDisplayContext commerceVirtualOrderItemContentDis
 							</liferay-ui:search-container-column-text>
 
 							<liferay-ui:search-container-column-text
-								cssClass="entry-action-column important"
+								cssClass="entry-action-column font-weight-bold important"
 							>
 
 								<%
@@ -132,7 +130,7 @@ CommerceVirtualOrderItemContentDisplayContext commerceVirtualOrderItemContentDis
 				Liferay.provide(
 					window,
 					'<portlet:namespace />closePopup',
-					function (dialogId) {
+					(dialogId) => {
 						var dialog = Liferay.Util.Window.getById(dialogId);
 
 						dialog.destroy();
@@ -143,7 +141,7 @@ CommerceVirtualOrderItemContentDisplayContext commerceVirtualOrderItemContentDis
 				Liferay.provide(
 					window,
 					'<portlet:namespace />downloadCommerceVirtualOrderItem',
-					function (dialogId, commerceVirtualOrderItemId) {
+					(dialogId, commerceVirtualOrderItemId) => {
 						<portlet:namespace />closePopup(dialogId);
 
 						var formName =

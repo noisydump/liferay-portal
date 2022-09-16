@@ -13,45 +13,50 @@
  */
 
 CKEDITOR.on('dialogDefinition', (event) => {
-	if (event.editor === ckEditor) {
-		var boundingWindow = event.editor.window;
+	const boundingWindow = event.editor.window;
 
-		var dialogDefinition = event.data.definition;
+	const dialogDefinition = event.data.definition;
 
-		var dialog = event.data.dialog;
+	const dialog = event.data.dialog;
 
-		var onShow = dialogDefinition.onShow;
+	const onShow = dialogDefinition.onShow;
 
-		var centerDialog = function () {
-			var dialogSize = dialog.getSize();
+	const centerDialog = function () {
+		const dialogSize = dialog.getSize();
 
-			var x = window.innerWidth / 2 - dialogSize.width / 2;
-			var y = window.innerHeight / 2 - dialogSize.height / 2;
+		const x = window.innerWidth / 2 - dialogSize.width / 2;
+		const y = window.innerHeight / 2 - dialogSize.height / 2;
 
-			dialog.move(x, y, false);
+		dialog.move(x, y, false);
+	};
+
+	dialogDefinition.onShow = function () {
+		if (typeof onShow === 'function') {
+			onShow.apply(this, arguments);
+		}
+
+		centerDialog();
+	};
+
+	const debounce = function (fn, delay) {
+		return function debounced() {
+			clearTimeout(debounced.id);
+			debounced.id = setTimeout(() => {
+				fn();
+			}, delay);
 		};
+	};
 
-		dialogDefinition.onShow = function () {
-			if (typeof onShow === 'function') {
-				onShow.apply(this, arguments);
-			}
-
+	const debounced = boundingWindow.on(
+		'resize',
+		debounce(() => {
 			centerDialog();
-		};
+		}, 250)
+	);
 
-		AUI().use('aui-debounce', (A) => {
-			boundingWindow.on(
-				'resize',
-				A.debounce(() => {
-					centerDialog();
-				}, 250)
-			);
-		});
+	const clearEventHandler = function () {
+		clearTimeout(debounced.id);
+	};
 
-		var clearEventHandler = function () {
-			Liferay.detach('resize', boundingWindow);
-		};
-
-		Liferay.once('destroyPortlet', clearEventHandler);
-	}
+	Liferay.once('destroyPortlet', clearEventHandler);
 });

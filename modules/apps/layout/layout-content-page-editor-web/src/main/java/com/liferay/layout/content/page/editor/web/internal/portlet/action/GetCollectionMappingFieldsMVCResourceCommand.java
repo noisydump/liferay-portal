@@ -14,31 +14,25 @@
 
 package com.liferay.layout.content.page.editor.web.internal.portlet.action;
 
-import com.liferay.document.library.kernel.model.DLFileEntryConstants;
 import com.liferay.info.form.InfoForm;
 import com.liferay.info.item.InfoItemFormVariation;
 import com.liferay.info.item.InfoItemServiceTracker;
 import com.liferay.info.item.provider.InfoItemFormProvider;
 import com.liferay.info.item.provider.InfoItemFormVariationsProvider;
+import com.liferay.info.search.InfoSearchClassMapperTracker;
 import com.liferay.layout.content.page.editor.constants.ContentPageEditorPortletKeys;
 import com.liferay.layout.content.page.editor.web.internal.util.MappingContentUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCResourceCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
-import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
-
-import java.util.Collection;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Stream;
 
 import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceResponse;
@@ -69,15 +63,11 @@ public class GetCollectionMappingFieldsMVCResourceCommand
 		ThemeDisplay themeDisplay = (ThemeDisplay)resourceRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		String fieldType = ParamUtil.getString(resourceRequest, "fieldType");
 		String itemSubtype = ParamUtil.getString(
 			resourceRequest, "itemSubtype");
 
-		String itemType = ParamUtil.getString(resourceRequest, "itemType");
-
-		if (Objects.equals(DLFileEntryConstants.getClassName(), itemType)) {
-			itemType = FileEntry.class.getName();
-		}
+		String itemType = _infoSearchClassMapperTracker.getClassName(
+			ParamUtil.getString(resourceRequest, "itemType"));
 
 		String itemSubtypeLabel = StringPool.BLANK;
 
@@ -86,23 +76,11 @@ public class GetCollectionMappingFieldsMVCResourceCommand
 				InfoItemFormVariationsProvider.class, itemType);
 
 		if (infoItemFormVariationsProvider != null) {
-			Collection<InfoItemFormVariation> infoItemFormVariations =
-				infoItemFormVariationsProvider.getInfoItemFormVariations(
-					themeDisplay.getScopeGroupId());
+			InfoItemFormVariation infoItemFormVariation =
+				infoItemFormVariationsProvider.getInfoItemFormVariation(
+					themeDisplay.getScopeGroupId(), itemSubtype);
 
-			Stream<InfoItemFormVariation> stream =
-				infoItemFormVariations.stream();
-
-			Optional<InfoItemFormVariation> infoItemFormVariationOptional =
-				stream.filter(
-					infoItemFormVariation -> Objects.equals(
-						itemSubtype, infoItemFormVariation.getKey())
-				).findFirst();
-
-			if (infoItemFormVariationOptional.isPresent()) {
-				InfoItemFormVariation infoItemFormVariation =
-					infoItemFormVariationOptional.get();
-
+			if (infoItemFormVariation != null) {
 				itemSubtypeLabel = infoItemFormVariation.getLabel(
 					themeDisplay.getLocale());
 			}
@@ -126,8 +104,9 @@ public class GetCollectionMappingFieldsMVCResourceCommand
 				).put(
 					"mappingFields",
 					MappingContentUtil.getMappingFieldsJSONArray(
-						fieldType, itemSubtype, _infoItemServiceTracker,
-						itemType, resourceRequest)
+						itemSubtype, themeDisplay.getScopeGroupId(),
+						_infoItemServiceTracker, itemType,
+						themeDisplay.getLocale())
 				));
 		}
 		catch (Exception exception) {
@@ -137,7 +116,7 @@ public class GetCollectionMappingFieldsMVCResourceCommand
 				resourceRequest, resourceResponse,
 				JSONUtil.put(
 					"error",
-					LanguageUtil.get(
+					_language.get(
 						themeDisplay.getRequest(),
 						"an-unexpected-error-occurred")));
 		}
@@ -148,5 +127,11 @@ public class GetCollectionMappingFieldsMVCResourceCommand
 
 	@Reference
 	private InfoItemServiceTracker _infoItemServiceTracker;
+
+	@Reference
+	private InfoSearchClassMapperTracker _infoSearchClassMapperTracker;
+
+	@Reference
+	private Language _language;
 
 }

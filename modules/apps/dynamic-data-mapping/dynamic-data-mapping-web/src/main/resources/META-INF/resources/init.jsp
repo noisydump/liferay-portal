@@ -72,6 +72,7 @@ page import="com.liferay.dynamic.data.mapping.web.internal.search.TemplateSearch
 page import="com.liferay.dynamic.data.mapping.web.internal.security.permission.resource.DDMStructurePermission" %><%@
 page import="com.liferay.dynamic.data.mapping.web.internal.security.permission.resource.DDMTemplatePermission" %><%@
 page import="com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItem" %><%@
+page import="com.liferay.petra.portlet.url.builder.PortletURLBuilder" %><%@
 page import="com.liferay.petra.string.CharPool" %><%@
 page import="com.liferay.petra.string.StringBundler" %><%@
 page import="com.liferay.petra.string.StringPool" %><%@
@@ -105,6 +106,7 @@ page import="com.liferay.portal.kernel.template.TemplateHandler" %><%@
 page import="com.liferay.portal.kernel.template.TemplateHandlerRegistryUtil" %><%@
 page import="com.liferay.portal.kernel.template.TemplateVariableDefinition" %><%@
 page import="com.liferay.portal.kernel.template.TemplateVariableGroup" %><%@
+page import="com.liferay.portal.kernel.util.HashMapBuilder" %><%@
 page import="com.liferay.portal.kernel.util.HtmlUtil" %><%@
 page import="com.liferay.portal.kernel.util.LocaleUtil" %><%@
 page import="com.liferay.portal.kernel.util.ParamUtil" %><%@
@@ -141,7 +143,6 @@ page import="org.osgi.framework.FrameworkUtil" %>
 
 <%
 String refererWebDAVToken = ParamUtil.getString(request, "refererWebDAVToken", portletConfig.getInitParameter("refererWebDAVToken"));
-String scopeTitle = ParamUtil.getString(request, "scopeTitle");
 boolean showManageTemplates = ParamUtil.getBoolean(request, "showManageTemplates", true);
 
 DDMDisplay ddmDisplay = null;
@@ -152,6 +153,7 @@ String scopeAvailableFields = StringPool.BLANK;
 long scopeClassNameId = 0;
 String scopeStorageType = StringPool.BLANK;
 String scopeTemplateType = StringPool.BLANK;
+String scopeTitle = StringPool.BLANK;
 
 DDMDisplayContext ddmDisplayContext = (DDMDisplayContext)request.getAttribute(WebKeys.PORTLET_DISPLAY_CONTEXT);
 
@@ -164,6 +166,7 @@ if (ddmDisplayContext != null) {
 	scopeClassNameId = PortalUtil.getClassNameId(ddmDisplay.getStructureType());
 	scopeStorageType = ddmDisplay.getStorageType();
 	scopeTemplateType = ddmDisplay.getTemplateType();
+	scopeTitle = ddmDisplayContext.getScopedStructureLabel();
 }
 
 String storageTypeValue = StringPool.BLANK;

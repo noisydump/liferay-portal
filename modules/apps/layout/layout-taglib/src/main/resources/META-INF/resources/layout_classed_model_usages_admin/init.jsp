@@ -25,14 +25,13 @@ taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %>
 <%@ page import="com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem" %><%@
 page import="com.liferay.layout.taglib.internal.display.context.LayoutClassedModelUsagesDisplayContext" %><%@
 page import="com.liferay.layout.taglib.internal.display.context.LayoutClassedModelUsagesManagementToolbarDisplayContext" %><%@
+page import="com.liferay.petra.portlet.url.builder.PortletURLBuilder" %><%@
 page import="com.liferay.petra.string.StringPool" %><%@
 page import="com.liferay.portal.kernel.util.GetterUtil" %><%@
 page import="com.liferay.portal.kernel.util.ListUtil" %>
 
 <%@ page import="java.util.List" %><%@
 page import="java.util.Objects" %>
-
-<%@ page import="javax.portlet.PortletURL" %>
 
 <liferay-theme:defineObjects />
 

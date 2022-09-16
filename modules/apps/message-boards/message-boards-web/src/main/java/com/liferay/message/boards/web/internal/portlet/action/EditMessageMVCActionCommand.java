@@ -44,6 +44,8 @@ import com.liferay.message.boards.web.internal.upload.format.MBMessageFormatUplo
 import com.liferay.message.boards.web.internal.upload.format.MBMessageFormatUploadHandlerProvider;
 import com.liferay.message.boards.web.internal.util.MBAttachmentFileEntryReference;
 import com.liferay.message.boards.web.internal.util.MBAttachmentFileEntryUtil;
+import com.liferay.message.boards.web.internal.util.MBRequestUtil;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.captcha.CaptchaConfigurationException;
 import com.liferay.portal.kernel.captcha.CaptchaException;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -92,7 +94,6 @@ import java.util.List;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
-import javax.portlet.PortletURL;
 import javax.portlet.WindowState;
 
 import org.osgi.service.component.annotations.Component;
@@ -112,24 +113,6 @@ import org.osgi.service.component.annotations.Reference;
 	service = MVCActionCommand.class
 )
 public class EditMessageMVCActionCommand extends BaseMVCActionCommand {
-
-	protected void addAnswer(ActionRequest actionRequest) throws Exception {
-		long messageId = ParamUtil.getLong(actionRequest, "messageId");
-
-		_mbMessageService.updateAnswer(messageId, true, false);
-	}
-
-	protected void deleteAnswer(ActionRequest actionRequest) throws Exception {
-		long messageId = ParamUtil.getLong(actionRequest, "messageId");
-
-		_mbMessageService.updateAnswer(messageId, false, false);
-	}
-
-	protected void deleteMessage(ActionRequest actionRequest) throws Exception {
-		long messageId = ParamUtil.getLong(actionRequest, "messageId");
-
-		_mbMessageService.deleteMessage(messageId);
-	}
 
 	@Override
 	protected void doProcessAction(
@@ -166,36 +149,35 @@ public class EditMessageMVCActionCommand extends BaseMVCActionCommand {
 					 cmd.equals(Constants.UPDATE)) {
 
 				message = TransactionInvokerUtil.invoke(
-					_transactionConfig,
-					() -> updateMessage(actionRequest, actionResponse));
+					_transactionConfig, () -> _updateMessage(actionRequest));
 			}
 			else if (cmd.equals(Constants.ADD_ANSWER)) {
-				addAnswer(actionRequest);
+				_addAnswer(actionRequest);
 			}
 			else if (cmd.equals(Constants.DELETE)) {
-				deleteMessage(actionRequest);
+				_deleteMessage(actionRequest);
 			}
 			else if (cmd.equals(Constants.DELETE_ANSWER)) {
-				deleteAnswer(actionRequest);
+				_deleteAnswer(actionRequest);
 			}
 			else if (cmd.equals(Constants.LOCK)) {
 				lockThreads(actionRequest);
 			}
 			else if (cmd.equals(Constants.SUBSCRIBE)) {
-				subscribeMessage(actionRequest);
+				_subscribeMessage(actionRequest);
 			}
 			else if (cmd.equals(Constants.UNLOCK)) {
 				unlockThreads(actionRequest);
 			}
 			else if (cmd.equals(Constants.UNSUBSCRIBE)) {
-				unsubscribeMessage(actionRequest);
+				_unsubscribeMessage(actionRequest);
 			}
 
 			if (Validator.isNotNull(cmd)) {
 				WindowState windowState = actionRequest.getWindowState();
 
 				if (!windowState.equals(LiferayWindowState.POP_UP)) {
-					String redirect = getRedirect(
+					String redirect = _getRedirect(
 						actionRequest, actionResponse, message);
 
 					sendRedirect(actionRequest, actionResponse, redirect);
@@ -268,68 +250,6 @@ public class EditMessageMVCActionCommand extends BaseMVCActionCommand {
 		}
 	}
 
-	protected String getRedirect(
-		ActionRequest actionRequest, ActionResponse actionResponse,
-		MBMessage message) {
-
-		if (message == null) {
-			return ParamUtil.getString(actionRequest, "redirect");
-		}
-
-		int workflowAction = ParamUtil.getInteger(
-			actionRequest, "workflowAction", WorkflowConstants.ACTION_PUBLISH);
-
-		if (workflowAction == WorkflowConstants.ACTION_SAVE_DRAFT) {
-			return getSaveAndContinueRedirect(
-				actionRequest, actionResponse, message);
-		}
-
-		String portletResource = ParamUtil.getString(
-			actionRequest, "portletResource");
-
-		if (Validator.isNotNull(portletResource)) {
-			return ParamUtil.getString(actionRequest, "redirect");
-		}
-
-		LiferayActionResponse liferayActionResponse =
-			(LiferayActionResponse)actionResponse;
-
-		PortletURL portletURL = liferayActionResponse.createRenderURL();
-
-		portletURL.setParameter(
-			"mvcRenderCommandName", "/message_boards/view_message");
-		portletURL.setParameter(
-			"messageId", String.valueOf(message.getMessageId()));
-
-		return portletURL.toString();
-	}
-
-	protected String getSaveAndContinueRedirect(
-		ActionRequest actionRequest, ActionResponse actionResponse,
-		MBMessage message) {
-
-		String redirect = ParamUtil.getString(actionRequest, "redirect");
-
-		boolean preview = ParamUtil.getBoolean(actionRequest, "preview");
-
-		LiferayActionResponse liferayActionResponse =
-			(LiferayActionResponse)actionResponse;
-
-		PortletURL portletURL = liferayActionResponse.createRenderURL();
-
-		portletURL.setParameter(
-			"mvcRenderCommandName", "/message_boards/edit_message");
-		portletURL.setParameter("redirect", redirect);
-		portletURL.setParameter(
-			"portletResource",
-			ParamUtil.getString(actionRequest, "portletResource"));
-		portletURL.setParameter(
-			"messageId", String.valueOf(message.getMessageId()));
-		portletURL.setParameter("preview", String.valueOf(preview));
-
-		return portletURL.toString();
-	}
-
 	protected void lockThreads(ActionRequest actionRequest) throws Exception {
 		long threadId = ParamUtil.getLong(actionRequest, "threadId");
 
@@ -344,14 +264,6 @@ public class EditMessageMVCActionCommand extends BaseMVCActionCommand {
 				_mbThreadService.lockThread(curThreadId);
 			}
 		}
-	}
-
-	protected void subscribeMessage(ActionRequest actionRequest)
-		throws Exception {
-
-		long messageId = ParamUtil.getLong(actionRequest, "messageId");
-
-		_mbMessageService.subscribeMessage(messageId);
 	}
 
 	protected void unlockThreads(ActionRequest actionRequest) throws Exception {
@@ -370,7 +282,177 @@ public class EditMessageMVCActionCommand extends BaseMVCActionCommand {
 		}
 	}
 
-	protected void unsubscribeMessage(ActionRequest actionRequest)
+	private void _addAnswer(ActionRequest actionRequest) throws Exception {
+		long messageId = ParamUtil.getLong(actionRequest, "messageId");
+
+		_mbMessageService.updateAnswer(messageId, true, false);
+	}
+
+	private String _addBodyAttachmentTempFiles(
+			List<FileEntry> tempMBAttachmentFileEntries,
+			ThemeDisplay themeDisplay, String body, MBMessage message,
+			MBMessageFormatUploadHandler formatHandler)
+		throws PortalException {
+
+		Folder folder = message.addAttachmentsFolder();
+
+		List<MBAttachmentFileEntryReference> mbAttachmentFileEntryReferences =
+			MBAttachmentFileEntryUtil.addMBAttachmentFileEntries(
+				message.getGroupId(), themeDisplay.getUserId(),
+				message.getMessageId(), folder.getFolderId(),
+				tempMBAttachmentFileEntries,
+				fileName -> _uniqueFileNameProvider.provide(
+					fileName,
+					curFileName -> _hasFileEntry(
+						message.getGroupId(), folder.getFolderId(),
+						curFileName)));
+
+		for (FileEntry tempMBAttachment : tempMBAttachmentFileEntries) {
+			PortletFileRepositoryUtil.deletePortletFileEntry(
+				tempMBAttachment.getFileEntryId());
+		}
+
+		return formatHandler.replaceImageReferences(
+			body, mbAttachmentFileEntryReferences);
+	}
+
+	private void _deleteAnswer(ActionRequest actionRequest) throws Exception {
+		long messageId = ParamUtil.getLong(actionRequest, "messageId");
+
+		_mbMessageService.updateAnswer(messageId, false, false);
+	}
+
+	private void _deleteMessage(ActionRequest actionRequest) throws Exception {
+		long messageId = ParamUtil.getLong(actionRequest, "messageId");
+
+		_mbMessageService.deleteMessage(messageId);
+	}
+
+	private String _getRedirect(
+		ActionRequest actionRequest, ActionResponse actionResponse,
+		MBMessage message) {
+
+		if (message == null) {
+			return ParamUtil.getString(actionRequest, "redirect");
+		}
+
+		int workflowAction = ParamUtil.getInteger(
+			actionRequest, "workflowAction", WorkflowConstants.ACTION_PUBLISH);
+
+		if (workflowAction == WorkflowConstants.ACTION_SAVE_DRAFT) {
+			return _getSaveAndContinueRedirect(
+				actionRequest, actionResponse, message);
+		}
+
+		String portletResource = ParamUtil.getString(
+			actionRequest, "portletResource");
+
+		if (Validator.isNotNull(portletResource)) {
+			return ParamUtil.getString(actionRequest, "redirect");
+		}
+
+		LiferayActionResponse liferayActionResponse =
+			(LiferayActionResponse)actionResponse;
+
+		return PortletURLBuilder.createRenderURL(
+			liferayActionResponse
+		).setMVCRenderCommandName(
+			"/message_boards/view_message"
+		).setParameter(
+			"messageId", message.getMessageId()
+		).buildString();
+	}
+
+	private String _getSaveAndContinueRedirect(
+		ActionRequest actionRequest, ActionResponse actionResponse,
+		MBMessage message) {
+
+		LiferayActionResponse liferayActionResponse =
+			(LiferayActionResponse)actionResponse;
+
+		return PortletURLBuilder.createRenderURL(
+			liferayActionResponse
+		).setMVCRenderCommandName(
+			"/message_boards/edit_message"
+		).setRedirect(
+			ParamUtil.getString(actionRequest, "redirect")
+		).setPortletResource(
+			ParamUtil.getString(actionRequest, "portletResource")
+		).setParameter(
+			"messageId", message.getMessageId()
+		).setParameter(
+			"preview", ParamUtil.getBoolean(actionRequest, "preview")
+		).buildString();
+	}
+
+	private boolean _hasFileEntry(
+		long groupId, long folderId, String fileName) {
+
+		FileEntry fileEntry = _portletFileRepository.fetchPortletFileEntry(
+			groupId, folderId, fileName);
+
+		if (fileEntry == null) {
+			return false;
+		}
+
+		return true;
+	}
+
+	private List<FileEntry> _populateInputStreamOVPs(
+			ActionRequest actionRequest, long messageId,
+			List<ObjectValuePair<String, InputStream>> inputStreamOVPs)
+		throws PortalException {
+
+		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
+		String[] selectedFileNames = ParamUtil.getParameterValues(
+			actionRequest, "selectedFileName");
+
+		List<FileEntry> tempFileEntries = new ArrayList<>(
+			selectedFileNames.length);
+
+		for (String selectedFileName : selectedFileNames) {
+			FileEntry tempFileEntry = TempFileEntryUtil.getTempFileEntry(
+				themeDisplay.getScopeGroupId(), themeDisplay.getUserId(),
+				MBMessageConstants.TEMP_FOLDER_NAME, selectedFileName);
+
+			tempFileEntries.add(tempFileEntry);
+
+			String originalSelectedFileName =
+				TempFileEntryUtil.getOriginalTempFileName(
+					tempFileEntry.getFileName());
+
+			String uniqueFileName = originalSelectedFileName;
+
+			if (messageId > 0) {
+				MBMessage message = _mbMessageService.getMessage(messageId);
+
+				uniqueFileName = DLUtil.getUniqueFileName(
+					tempFileEntry.getGroupId(),
+					message.getAttachmentsFolderId(), originalSelectedFileName,
+					false);
+			}
+
+			ObjectValuePair<String, InputStream> inputStreamOVP =
+				new ObjectValuePair<>(
+					uniqueFileName, tempFileEntry.getContentStream());
+
+			inputStreamOVPs.add(inputStreamOVP);
+		}
+
+		return tempFileEntries;
+	}
+
+	private void _subscribeMessage(ActionRequest actionRequest)
+		throws Exception {
+
+		long messageId = ParamUtil.getLong(actionRequest, "messageId");
+
+		_mbMessageService.subscribeMessage(messageId);
+	}
+
+	private void _unsubscribeMessage(ActionRequest actionRequest)
 		throws Exception {
 
 		long messageId = ParamUtil.getLong(actionRequest, "messageId");
@@ -378,8 +460,7 @@ public class EditMessageMVCActionCommand extends BaseMVCActionCommand {
 		_mbMessageService.unsubscribeMessage(messageId);
 	}
 
-	protected MBMessage updateMessage(
-			ActionRequest actionRequest, ActionResponse actionResponse)
+	private MBMessage _updateMessage(ActionRequest actionRequest)
 		throws Exception {
 
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
@@ -394,7 +475,9 @@ public class EditMessageMVCActionCommand extends BaseMVCActionCommand {
 		String body = ParamUtil.getString(actionRequest, "body");
 
 		MBGroupServiceSettings mbGroupServiceSettings =
-			MBGroupServiceSettings.getInstance(themeDisplay.getSiteGroupId());
+			MBRequestUtil.getMBGroupServiceSettings(
+				_portal.getHttpServletRequest(actionRequest),
+				themeDisplay.getSiteGroupId());
 
 		List<ObjectValuePair<String, InputStream>> inputStreamOVPs =
 			new ArrayList<>(5);
@@ -545,97 +628,11 @@ public class EditMessageMVCActionCommand extends BaseMVCActionCommand {
 				}
 				catch (IOException ioException) {
 					if (_log.isWarnEnabled()) {
-						_log.warn(ioException, ioException);
+						_log.warn(ioException);
 					}
 				}
 			}
 		}
-	}
-
-	private String _addBodyAttachmentTempFiles(
-			List<FileEntry> tempMBAttachmentFileEntries,
-			ThemeDisplay themeDisplay, String body, MBMessage message,
-			MBMessageFormatUploadHandler formatHandler)
-		throws PortalException {
-
-		Folder folder = message.addAttachmentsFolder();
-
-		List<MBAttachmentFileEntryReference> mbAttachmentFileEntryReferences =
-			MBAttachmentFileEntryUtil.addMBAttachmentFileEntries(
-				message.getGroupId(), themeDisplay.getUserId(),
-				message.getMessageId(), folder.getFolderId(),
-				tempMBAttachmentFileEntries,
-				fileName -> _uniqueFileNameProvider.provide(
-					fileName,
-					curFileName -> _hasFileEntry(
-						message.getGroupId(), folder.getFolderId(),
-						curFileName)));
-
-		for (FileEntry tempMBAttachment : tempMBAttachmentFileEntries) {
-			PortletFileRepositoryUtil.deletePortletFileEntry(
-				tempMBAttachment.getFileEntryId());
-		}
-
-		return formatHandler.replaceImageReferences(
-			body, mbAttachmentFileEntryReferences);
-	}
-
-	private boolean _hasFileEntry(
-		long groupId, long folderId, String fileName) {
-
-		FileEntry fileEntry = _portletFileRepository.fetchPortletFileEntry(
-			groupId, folderId, fileName);
-
-		if (fileEntry == null) {
-			return false;
-		}
-
-		return true;
-	}
-
-	private List<FileEntry> _populateInputStreamOVPs(
-			ActionRequest actionRequest, long messageId,
-			List<ObjectValuePair<String, InputStream>> inputStreamOVPs)
-		throws PortalException {
-
-		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
-		String[] selectedFileNames = ParamUtil.getParameterValues(
-			actionRequest, "selectedFileName");
-
-		List<FileEntry> tempFileEntries = new ArrayList<>(
-			selectedFileNames.length);
-
-		for (String selectedFileName : selectedFileNames) {
-			FileEntry tempFileEntry = TempFileEntryUtil.getTempFileEntry(
-				themeDisplay.getScopeGroupId(), themeDisplay.getUserId(),
-				MBMessageConstants.TEMP_FOLDER_NAME, selectedFileName);
-
-			tempFileEntries.add(tempFileEntry);
-
-			String originalSelectedFileName =
-				TempFileEntryUtil.getOriginalTempFileName(
-					tempFileEntry.getFileName());
-
-			String uniqueFileName = originalSelectedFileName;
-
-			if (messageId > 0) {
-				MBMessage message = _mbMessageService.getMessage(messageId);
-
-				uniqueFileName = DLUtil.getUniqueFileName(
-					tempFileEntry.getGroupId(),
-					message.getAttachmentsFolderId(), originalSelectedFileName);
-			}
-
-			ObjectValuePair<String, InputStream> inputStreamOVP =
-				new ObjectValuePair<>(
-					uniqueFileName, tempFileEntry.getContentStream());
-
-			inputStreamOVPs.add(inputStreamOVP);
-		}
-
-		return tempFileEntries;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

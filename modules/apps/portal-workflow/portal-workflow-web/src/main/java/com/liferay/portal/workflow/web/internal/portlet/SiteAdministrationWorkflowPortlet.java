@@ -14,7 +14,7 @@
 
 package com.liferay.portal.workflow.web.internal.portlet;
 
-import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
+import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoaderUtil;
 import com.liferay.portal.workflow.constants.WorkflowPortletKeys;
 import com.liferay.portal.workflow.constants.WorkflowWebKeys;
 import com.liferay.portal.workflow.web.internal.display.context.WorkflowNavigationDisplayContext;
@@ -26,9 +26,6 @@ import javax.portlet.Portlet;
 import javax.portlet.RenderRequest;
 
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Adam Brandizzi
@@ -53,7 +50,8 @@ import org.osgi.service.component.annotations.ReferencePolicyOption;
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + WorkflowPortletKeys.SITE_ADMINISTRATION_WORKFLOW,
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=power-user,user"
+		"javax.portlet.security-role-ref=power-user,user",
+		"javax.portlet.version=3.0"
 	},
 	service = Portlet.class
 )
@@ -70,18 +68,12 @@ public class SiteAdministrationWorkflowPortlet extends BaseWorkflowPortlet {
 
 		WorkflowNavigationDisplayContext workflowNavigationDisplayContext =
 			new WorkflowNavigationDisplayContext(
-				renderRequest, resourceBundleLoader);
+				renderRequest,
+				ResourceBundleLoaderUtil.getPortalResourceBundleLoader());
 
 		renderRequest.setAttribute(
 			WorkflowWebKeys.WORKFLOW_NAVIGATION_DISPLAY_CONTEXT,
 			workflowNavigationDisplayContext);
 	}
-
-	@Reference(
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY,
-		target = "(bundle.symbolic.name=com.liferay.portal.workflow.web)"
-	)
-	protected volatile ResourceBundleLoader resourceBundleLoader;
 
 }

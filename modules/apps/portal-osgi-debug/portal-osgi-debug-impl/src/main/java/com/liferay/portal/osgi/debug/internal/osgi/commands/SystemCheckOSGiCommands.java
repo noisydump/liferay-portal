@@ -20,6 +20,8 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.framework.ModuleServiceLifecycle;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.Props;
+import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.osgi.debug.SystemChecker;
 
@@ -49,7 +51,7 @@ public class SystemCheckOSGiCommands {
 	}
 
 	@Activate
-	protected void activate(final BundleContext bundleContext) {
+	protected void activate(BundleContext bundleContext) {
 		_serviceTracker = new ServiceTracker<>(
 			bundleContext, SystemChecker.class, null);
 
@@ -61,10 +63,10 @@ public class SystemCheckOSGiCommands {
 					"the command \"system:check\" in Gogo shell.");
 		}
 
-		if (GetterUtil.getBoolean(
-				bundleContext.getProperty("initial.system.check.enabled"),
-				true)) {
+		boolean checkEnabled = GetterUtil.getBoolean(
+			_props.get(PropsKeys.INITIAL_SYSTEM_CHECK_ENABLED), true);
 
+		if (checkEnabled) {
 			DependencyManagerSyncUtil.sync();
 
 			if (_log.isInfoEnabled()) {
@@ -78,11 +80,6 @@ public class SystemCheckOSGiCommands {
 	@Deactivate
 	protected void deactivate() {
 		_serviceTracker.close();
-	}
-
-	@Reference(target = ModuleServiceLifecycle.SYSTEM_CHECK, unbind = "-")
-	protected void setModuleServiceLifecycle(
-		ModuleServiceLifecycle moduleServiceLifecycle) {
 	}
 
 	private void _check(boolean useSystemOut) {
@@ -143,6 +140,12 @@ public class SystemCheckOSGiCommands {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		SystemCheckOSGiCommands.class);
+
+	@Reference(target = ModuleServiceLifecycle.SYSTEM_CHECK)
+	private ModuleServiceLifecycle _moduleServiceLifecycle;
+
+	@Reference
+	private Props _props;
 
 	private ServiceTracker<SystemChecker, SystemChecker> _serviceTracker;
 

@@ -16,7 +16,7 @@ package com.liferay.headless.delivery.internal.resource.v1_0;
 
 import com.liferay.document.library.util.DLURLHelper;
 import com.liferay.headless.delivery.dto.v1_0.KnowledgeBaseAttachment;
-import com.liferay.headless.delivery.internal.dto.v1_0.util.ContentValueUtil;
+import com.liferay.headless.delivery.dto.v1_0.util.ContentValueUtil;
 import com.liferay.headless.delivery.resource.v1_0.KnowledgeBaseAttachmentResource;
 import com.liferay.knowledge.base.constants.KBConstants;
 import com.liferay.knowledge.base.model.KBArticle;
@@ -86,18 +86,18 @@ public class KnowledgeBaseAttachmentResourceImpl
 				Long knowledgeBaseArticleId, MultipartBody multipartBody)
 		throws Exception {
 
-		KBArticle kbArticle = _kbArticleService.getLatestKBArticle(
-			knowledgeBaseArticleId, WorkflowConstants.STATUS_APPROVED);
-
 		BinaryFile binaryFile = multipartBody.getBinaryFile("file");
 
 		if (binaryFile == null) {
 			throw new BadRequestException("No file found in body");
 		}
 
+		KBArticle kbArticle = _kbArticleService.getLatestKBArticle(
+			knowledgeBaseArticleId, WorkflowConstants.STATUS_APPROVED);
+
 		return _toKnowledgeBaseAttachment(
 			_portletFileRepository.addPortletFileEntry(
-				kbArticle.getGroupId(), contextUser.getUserId(),
+				null, kbArticle.getGroupId(), contextUser.getUserId(),
 				KBArticle.class.getName(), kbArticle.getClassPK(),
 				KBConstants.SERVICE_NAME, kbArticle.getAttachmentsFolderId(),
 				binaryFile.getInputStream(), binaryFile.getFileName(),

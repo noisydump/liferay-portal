@@ -16,19 +16,11 @@ package com.liferay.analytics.reports.web.internal.portlet.action;
 
 import com.liferay.analytics.reports.web.internal.constants.AnalyticsReportsPortletKeys;
 import com.liferay.analytics.reports.web.internal.data.provider.AnalyticsReportsDataProvider;
-import com.liferay.analytics.reports.web.internal.info.display.contributor.util.LayoutDisplayPageProviderUtil;
-import com.liferay.analytics.reports.web.internal.layout.seo.CanonicalURLProvider;
 import com.liferay.analytics.reports.web.internal.model.HistoricalMetric;
 import com.liferay.analytics.reports.web.internal.model.TimeSpan;
-import com.liferay.asset.display.page.portlet.AssetDisplayPageFriendlyURLProvider;
-import com.liferay.layout.display.page.LayoutDisplayPageObjectProvider;
-import com.liferay.layout.display.page.LayoutDisplayPageProviderTracker;
-import com.liferay.layout.seo.kernel.LayoutSEOLinkManager;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
-import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
-import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
@@ -42,8 +34,6 @@ import com.liferay.portal.kernel.util.WebKeys;
 
 import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -69,30 +59,7 @@ public class GetHistoricalViewsMVCResourceCommand
 
 		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
 
-		HttpServletRequest httpServletRequest = _portal.getHttpServletRequest(
-			resourceRequest);
-
 		try {
-			LayoutDisplayPageObjectProvider<Object>
-				layoutDisplayPageObjectProvider =
-					(LayoutDisplayPageObjectProvider<Object>)
-						LayoutDisplayPageProviderUtil.
-							getLayoutDisplayPageObjectProvider(
-								httpServletRequest,
-								_layoutDisplayPageProviderTracker, _portal);
-
-			if (layoutDisplayPageObjectProvider == null) {
-				JSONPortletResponseUtil.writeJSON(
-					resourceRequest, resourceResponse,
-					JSONUtil.put(
-						"error",
-						_language.get(
-							httpServletRequest,
-							"an-unexpected-error-occurred")));
-
-				return;
-			}
-
 			AnalyticsReportsDataProvider analyticsReportsDataProvider =
 				new AnalyticsReportsDataProvider(_http);
 
@@ -104,22 +71,20 @@ public class GetHistoricalViewsMVCResourceCommand
 			int timeSpanOffset = ParamUtil.getInteger(
 				resourceRequest, "timeSpanOffset");
 
-			CanonicalURLProvider canonicalURLProvider =
-				new CanonicalURLProvider(
-					httpServletRequest, _layoutSEOLinkManager, _portal);
+			String canonicalURL = ParamUtil.getString(
+				resourceRequest, "canonicalURL");
 
 			HistoricalMetric historicalMetric =
 				analyticsReportsDataProvider.getHistoricalViewsHistoricalMetric(
 					_portal.getCompanyId(resourceRequest),
-					timeSpan.toTimeRange(timeSpanOffset),
-					canonicalURLProvider.getCanonicalURL());
+					timeSpan.toTimeRange(timeSpanOffset), canonicalURL);
 
 			jsonObject.put(
 				"analyticsReportsHistoricalViews",
 				historicalMetric.toJSONObject());
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 
 			ThemeDisplay themeDisplay =
 				(ThemeDisplay)resourceRequest.getAttribute(
@@ -127,7 +92,7 @@ public class GetHistoricalViewsMVCResourceCommand
 
 			jsonObject.put(
 				"error",
-				LanguageUtil.get(
+				_language.get(
 					themeDisplay.getRequest(), "an-unexpected-error-occurred"));
 		}
 
@@ -139,20 +104,10 @@ public class GetHistoricalViewsMVCResourceCommand
 		GetHistoricalViewsMVCResourceCommand.class);
 
 	@Reference
-	private AssetDisplayPageFriendlyURLProvider
-		_assetDisplayPageFriendlyURLProvider;
-
-	@Reference
 	private Http _http;
 
 	@Reference
 	private Language _language;
-
-	@Reference
-	private LayoutDisplayPageProviderTracker _layoutDisplayPageProviderTracker;
-
-	@Reference
-	private LayoutSEOLinkManager _layoutSEOLinkManager;
 
 	@Reference
 	private Portal _portal;

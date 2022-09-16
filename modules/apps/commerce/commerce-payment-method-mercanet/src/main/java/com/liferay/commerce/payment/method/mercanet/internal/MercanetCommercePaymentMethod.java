@@ -30,15 +30,15 @@ import com.liferay.commerce.service.CommerceOrderService;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
-import com.liferay.portal.kernel.util.Http;
+import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.URLCodec;
-import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
+import com.liferay.portal.kernel.uuid.PortalUUID;
 
 import com.worldline.sips.model.CaptureMode;
 import com.worldline.sips.model.Currency;
@@ -106,7 +106,7 @@ public class MercanetCommercePaymentMethod implements CommercePaymentMethod {
 
 	@Override
 	public String getDescription(Locale locale) {
-		return LanguageUtil.get(
+		return _language.get(
 			_getResourceBundle(locale), "mercanet-description");
 	}
 
@@ -117,7 +117,7 @@ public class MercanetCommercePaymentMethod implements CommercePaymentMethod {
 
 	@Override
 	public String getName(Locale locale) {
-		return LanguageUtil.get(_getResourceBundle(locale), KEY);
+		return _language.get(_getResourceBundle(locale), KEY);
 	}
 
 	@Override
@@ -177,22 +177,17 @@ public class MercanetCommercePaymentMethod implements CommercePaymentMethod {
 
 		URL returnURL = new URL(mercanetCommercePaymentRequest.getReturnUrl());
 
-		Map<String, String[]> parameters = _http.getParameterMap(
+		Map<String, String[]> parameters = HttpComponentsUtil.getParameterMap(
 			returnURL.getQuery());
 
 		URL baseURL = new URL(
 			returnURL.getProtocol(), returnURL.getHost(), returnURL.getPort(),
 			returnURL.getPath());
 
-		StringBundler automaticURLSB = new StringBundler(5);
-
-		automaticURLSB.append(baseURL.toString());
-		automaticURLSB.append("?groupId=");
-		automaticURLSB.append(parameters.get("groupId")[0]);
-		automaticURLSB.append("&type=automatic&uuid=");
-		automaticURLSB.append(parameters.get("uuid")[0]);
-
-		URL automaticURL = new URL(automaticURLSB.toString());
+		URL automaticURL = new URL(
+			StringBundler.concat(
+				baseURL.toString(), "?groupId=", parameters.get("groupId")[0],
+				"&type=automatic&uuid=", parameters.get("uuid")[0]));
 
 		paymentRequest.setAutomaticResponseUrl(automaticURL);
 
@@ -219,7 +214,7 @@ public class MercanetCommercePaymentMethod implements CommercePaymentMethod {
 		paymentRequest.setOrderId(
 			String.valueOf(commerceOrder.getCommerceOrderId()));
 
-		String transactionUuid = PortalUUIDUtil.generate();
+		String transactionUuid = _portalUUID.generate();
 
 		String transactionId = StringUtil.replace(
 			transactionUuid, CharPool.DASH, StringPool.BLANK);
@@ -256,15 +251,16 @@ public class MercanetCommercePaymentMethod implements CommercePaymentMethod {
 				resultMessage, false);
 		}
 
-		URL redirectionURL = initializationResponse.getRedirectionUrl();
-
 		String url = StringBundler.concat(
-			_getServletUrl(mercanetCommercePaymentRequest), "?redirectUrl=",
-			URLCodec.encodeURL(redirectionURL.toString()), "&redirectionData=",
+			_getServletUrl(mercanetCommercePaymentRequest), "?redirectURL=",
+			URLCodec.encodeURL(
+				String.valueOf(initializationResponse.getRedirectionUrl())),
+			"&redirectionData=",
 			URLEncoder.encode(
-				initializationResponse.getRedirectionData(), "UTF-8"),
+				initializationResponse.getRedirectionData(), StringPool.UTF8),
 			"&seal=",
-			URLEncoder.encode(initializationResponse.getSeal(), "UTF-8"));
+			URLEncoder.encode(
+				initializationResponse.getSeal(), StringPool.UTF8));
 
 		return new CommercePaymentResult(
 			transactionId, commerceOrder.getCommerceOrderId(),
@@ -303,9 +299,12 @@ public class MercanetCommercePaymentMethod implements CommercePaymentMethod {
 	private ConfigurationProvider _configurationProvider;
 
 	@Reference
-	private Http _http;
+	private Language _language;
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private PortalUUID _portalUUID;
 
 }

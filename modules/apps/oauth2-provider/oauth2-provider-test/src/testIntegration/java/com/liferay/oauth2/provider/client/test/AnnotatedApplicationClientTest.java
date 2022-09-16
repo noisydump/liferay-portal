@@ -21,10 +21,10 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
-import com.liferay.portal.kernel.util.HashMapDictionary;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.test.log.CaptureAppender;
-import com.liferay.portal.test.log.Log4JLoggerTestUtil;
+import com.liferay.portal.test.log.LogCapture;
+import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.util.Arrays;
@@ -33,8 +33,6 @@ import java.util.Dictionary;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
-
-import org.apache.log4j.Level;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
@@ -57,9 +55,8 @@ public class AnnotatedApplicationClientTest extends BaseClientTestCase {
 
 	@Test
 	public void test() throws Exception {
-		try (CaptureAppender captureAppender =
-				Log4JLoggerTestUtil.configureLog4JLogger(
-					"portal_web.docroot.errors.code_jsp", Level.WARN)) {
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				"portal_web.docroot.errors.code_jsp", LoggerTestUtil.WARN)) {
 
 			testNoScopeAnnotation("/annotated-impl/no-scope");
 			testRequiresScopeAnnotation("/annotated-impl");
@@ -78,10 +75,12 @@ public class AnnotatedApplicationClientTest extends BaseClientTestCase {
 
 			User user = UserTestUtil.getAdminUser(defaultCompanyId);
 
-			Dictionary<String, Object> properties = new HashMapDictionary<>();
-
-			properties.put("auth.verifier.guest.allowed", false);
-			properties.put("oauth2.scope.checker.type", "annotations");
+			Dictionary<String, Object> properties =
+				HashMapDictionaryBuilder.<String, Object>put(
+					"auth.verifier.guest.allowed", false
+				).put(
+					"oauth2.scope.checker.type", "annotations"
+				).build();
 
 			registerJaxRsApplication(
 				new TestInterfaceAnnotatedApplication(), "annotated-interface",

@@ -9,7 +9,7 @@
  * distribution rights of the Software.
  */
 
-import {cleanup, render} from '@testing-library/react';
+import {render} from '@testing-library/react';
 import React from 'react';
 
 import Translation from '../../../src/main/resources/META-INF/resources/js/components/Translation';
@@ -21,12 +21,14 @@ const mockViewURLs = [
 	{
 		default: true,
 		languageId: 'en-US',
+		languageLabel: 'English (United States)',
 		selected: true,
 		viewURL: 'http://localhost:8080/en/web/guest/-/basic-web-content',
 	},
 	{
 		default: false,
 		languageId: 'es-ES',
+		languageLabel: 'Spanish (Spain)',
 		selected: false,
 		viewURL: 'http://localhost:8080/es/web/guest/-/contenido-web-basico',
 	},
@@ -37,7 +39,6 @@ const noop = () => {};
 describe('Translation', () => {
 	afterEach(() => {
 		jest.clearAllMocks();
-		cleanup();
 	});
 
 	it('renders', () => {
@@ -73,7 +74,7 @@ describe('Translation', () => {
 			timeSpanKey: 'last-7-days',
 		};
 
-		const {getAllByText, getByText} = render(
+		const {getByText} = render(
 			<ChartStateContextProvider
 				publishDate={testProps.pagePublishDate}
 				timeRange={testProps.timeRange}
@@ -87,16 +88,9 @@ describe('Translation', () => {
 			</ChartStateContextProvider>
 		);
 
-		expect(getByText('languages-translated-into')).toBeInTheDocument();
-		expect(
-			getByText('select-language-to-view-its-metrics')
-		).toBeInTheDocument();
-
-		const englishLanguage = getAllByText('en-US');
-		expect(englishLanguage.length).toBe(2);
+		expect(getByText('en-US')).toBeInTheDocument();
+		expect(getByText('English (United States)')).toBeInTheDocument();
 		expect(getByText('default')).toBeInTheDocument();
-
-		expect(getByText('es-ES')).toBeInTheDocument();
-		expect(getByText('translated')).toBeInTheDocument();
+		expect(getByText('Spanish (Spain)')).toBeInTheDocument();
 	});
 });

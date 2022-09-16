@@ -73,12 +73,12 @@ public class WarehouseItemResourceImpl
 
 		CommerceInventoryWarehouseItem commerceInventoryWarehouseItem =
 			_commerceInventoryWarehouseItemService.
-				fetchCommerceInventoryWarehouseItemByReferenceCode(
-					contextCompany.getCompanyId(), externalReferenceCode);
+				fetchCommerceInventoryWarehouseItemByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceInventoryWarehouseItem == null) {
 			throw new NoSuchInventoryWarehouseItemException(
-				"Unable to find WarehouseItem with externalReferenceCode: " +
+				"Unable to find warehouse item with external reference code " +
 					externalReferenceCode);
 		}
 
@@ -104,7 +104,7 @@ public class WarehouseItemResourceImpl
 
 		if (commerceInventoryWarehouse == null) {
 			throw new NoSuchInventoryWarehouseException(
-				"Unable to find Warehouse with externalReferenceCode: " +
+				"Unable to find warehouse with external reference code " +
 					externalReferenceCode);
 		}
 
@@ -141,12 +141,12 @@ public class WarehouseItemResourceImpl
 
 		CommerceInventoryWarehouseItem commerceInventoryWarehouseItem =
 			_commerceInventoryWarehouseItemService.
-				fetchCommerceInventoryWarehouseItemByReferenceCode(
-					contextCompany.getCompanyId(), externalReferenceCode);
+				fetchCommerceInventoryWarehouseItemByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceInventoryWarehouseItem == null) {
 			throw new NoSuchInventoryWarehouseItemException(
-				"Unable to find WarehouseItem with externalReferenceCode: " +
+				"Unable to find warehouse item with external reference code " +
 					externalReferenceCode);
 		}
 
@@ -218,12 +218,11 @@ public class WarehouseItemResourceImpl
 
 		CommerceInventoryWarehouse commerceInventoryWarehouse =
 			_commerceInventoryWarehouseService.getCommerceInventoryWarehouse(
-				id);
+				warehouseItem.getWarehouseId());
 
 		_commerceInventoryWarehouseItemService.
 			updateCommerceInventoryWarehouseItem(
-				commerceInventoryWarehouse.getCommerceInventoryWarehouseId(),
-				GetterUtil.getInteger(warehouseItem.getQuantity()),
+				id, GetterUtil.getInteger(warehouseItem.getQuantity()),
 				commerceInventoryWarehouse.getMvccVersion());
 
 		Response.ResponseBuilder responseBuilder = Response.ok();
@@ -238,12 +237,12 @@ public class WarehouseItemResourceImpl
 
 		CommerceInventoryWarehouseItem commerceInventoryWarehouseItem =
 			_commerceInventoryWarehouseItemService.
-				fetchCommerceInventoryWarehouseItemByReferenceCode(
-					contextCompany.getCompanyId(), externalReferenceCode);
+				fetchCommerceInventoryWarehouseItemByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceInventoryWarehouseItem == null) {
 			throw new NoSuchInventoryWarehouseItemException(
-				"Unable to find WarehouseItem with externalReferenceCode: " +
+				"Unable to find warehouse item with external reference code " +
 					externalReferenceCode);
 		}
 
@@ -270,31 +269,16 @@ public class WarehouseItemResourceImpl
 
 		if (commerceInventoryWarehouse == null) {
 			throw new NoSuchInventoryWarehouseException(
-				"Unable to find Warehouse with externalReferenceCode: " +
+				"Unable to find warehouse with external reference code " +
 					externalReferenceCode);
 		}
 
-		CommerceInventoryWarehouseItem commerceInventoryWarehouseItem = null;
-
-		if (warehouseItem.getExternalReferenceCode() != null) {
-			commerceInventoryWarehouseItem =
-				_commerceInventoryWarehouseItemService.
-					upsertCommerceInventoryWarehouseItem(
-						warehouseItem.getExternalReferenceCode(),
-						contextUser.getCompanyId(), contextUser.getUserId(),
-						commerceInventoryWarehouse.
-							getCommerceInventoryWarehouseId(),
-						warehouseItem.getSku(), warehouseItem.getQuantity());
-		}
-		else {
-			commerceInventoryWarehouseItem =
-				_commerceInventoryWarehouseItemService.
-					upsertCommerceInventoryWarehouseItem(
-						contextUser.getUserId(),
-						commerceInventoryWarehouse.
-							getCommerceInventoryWarehouseId(),
-						warehouseItem.getSku(), warehouseItem.getQuantity());
-		}
+		CommerceInventoryWarehouseItem commerceInventoryWarehouseItem =
+			_commerceInventoryWarehouseItemService.
+				addCommerceInventoryWarehouseItem(
+					commerceInventoryWarehouse.
+						getCommerceInventoryWarehouseId(),
+					warehouseItem.getSku(), warehouseItem.getQuantity());
 
 		return _warehouseItemDTOConverter.toDTO(
 			new DefaultDTOConverterContext(
@@ -330,8 +314,8 @@ public class WarehouseItemResourceImpl
 
 		CommerceInventoryWarehouseItem commerceInventoryWarehouseItem =
 			_commerceInventoryWarehouseItemService.
-				fetchCommerceInventoryWarehouseItemByReferenceCode(
-					contextCompany.getCompanyId(), externalReferenceCode);
+				fetchCommerceInventoryWarehouseItemByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceInventoryWarehouseItem != null) {
 			throw new DuplicateCommerceInventoryWarehouseItemException(
@@ -342,7 +326,7 @@ public class WarehouseItemResourceImpl
 		commerceInventoryWarehouseItem =
 			_commerceInventoryWarehouseItemService.
 				addCommerceInventoryWarehouseItem(
-					externalReferenceCode, contextUser.getUserId(),
+					externalReferenceCode,
 					commerceInventoryWarehouse.
 						getCommerceInventoryWarehouseId(),
 					warehouseItem.getSku(), warehouseItem.getQuantity());
@@ -367,7 +351,6 @@ public class WarehouseItemResourceImpl
 			_commerceInventoryWarehouseItemService.
 				addCommerceInventoryWarehouseItem(
 					warehouseItem.getExternalReferenceCode(),
-					contextUser.getUserId(),
 					commerceInventoryWarehouse.
 						getCommerceInventoryWarehouseId(),
 					warehouseItem.getSku(), warehouseItem.getQuantity());

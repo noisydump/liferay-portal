@@ -23,6 +23,7 @@ import com.liferay.portal.search.elasticsearch7.configuration.ElasticsearchConfi
 import com.liferay.portal.search.elasticsearch7.internal.configuration.ElasticsearchConfigurationWrapper;
 import com.liferay.portal.search.elasticsearch7.internal.connection.ElasticsearchConnectionFixture;
 import com.liferay.portal.search.elasticsearch7.internal.connection.ElasticsearchFixture;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.Collections;
 
@@ -33,6 +34,7 @@ import org.elasticsearch.client.indices.GetIndexResponse;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import org.mockito.Mockito;
@@ -41,6 +43,10 @@ import org.mockito.Mockito;
  * @author André de Oliveira
  */
 public class CompanyIdIndexNameBuilderTest {
+
+	@ClassRule
+	public static LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Before
 	public void setUp() throws Exception {
@@ -89,48 +95,31 @@ public class CompanyIdIndexNameBuilderTest {
 
 	@Test
 	public void testIndexNamePrefixBlank() throws Exception {
-		assertIndexNamePrefix(StringPool.BLANK, StringPool.BLANK);
+		_assertIndexNamePrefix(StringPool.BLANK, StringPool.BLANK);
 	}
 
 	@Test(expected = ElasticsearchStatusException.class)
 	public void testIndexNamePrefixInvalidIndexName() throws Exception {
-		createIndices(StringPool.STAR, 0);
+		createIndices(StringPool.SLASH, 0);
 	}
 
 	@Test
 	public void testIndexNamePrefixNull() throws Exception {
-		assertIndexNamePrefix(null, StringPool.BLANK);
+		_assertIndexNamePrefix(null, StringPool.BLANK);
 	}
 
 	@Test
 	public void testIndexNamePrefixTrim() throws Exception {
 		String string = RandomTestUtil.randomString();
 
-		assertIndexNamePrefix(
+		_assertIndexNamePrefix(
 			StringPool.TAB + string + StringPool.SPACE,
 			StringUtil.toLowerCase(string));
 	}
 
 	@Test
 	public void testIndexNamePrefixUppercase() throws Exception {
-		assertIndexNamePrefix("UPPERCASE", "uppercase");
-	}
-
-	protected void assertIndexNamePrefix(
-			String indexNamePrefix, String expectedIndexNamePrefix)
-		throws Exception {
-
-		long companyId = RandomTestUtil.randomLong();
-
-		createIndices(indexNamePrefix, companyId);
-
-		String expectedIndexName = expectedIndexNamePrefix + companyId;
-
-		GetIndexResponse getIndexResponse = _elasticsearchFixture.getIndex(
-			expectedIndexName);
-
-		Assert.assertArrayEquals(
-			new String[] {expectedIndexName}, getIndexResponse.getIndices());
+		_assertIndexNamePrefix("UPPERCASE", "uppercase");
 	}
 
 	protected ElasticsearchConfigurationWrapper
@@ -168,6 +157,23 @@ public class CompanyIdIndexNameBuilderTest {
 
 		companyIndexFactory.createIndices(
 			restHighLevelClient.indices(), companyId);
+	}
+
+	private void _assertIndexNamePrefix(
+			String indexNamePrefix, String expectedIndexNamePrefix)
+		throws Exception {
+
+		long companyId = RandomTestUtil.randomLong();
+
+		createIndices(indexNamePrefix, companyId);
+
+		String expectedIndexName = expectedIndexNamePrefix + companyId;
+
+		GetIndexResponse getIndexResponse = _elasticsearchFixture.getIndex(
+			expectedIndexName);
+
+		Assert.assertArrayEquals(
+			new String[] {expectedIndexName}, getIndexResponse.getIndices());
 	}
 
 	private ElasticsearchFixture _elasticsearchFixture;

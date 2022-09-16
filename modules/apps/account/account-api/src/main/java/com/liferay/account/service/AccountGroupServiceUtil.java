@@ -14,9 +14,9 @@
 
 package com.liferay.account.service;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.util.tracker.ServiceTracker;
+import com.liferay.account.model.AccountGroup;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.util.OrderByComparator;
 
 /**
  * Provides the remote service utility for AccountGroup. This utility wraps
@@ -37,6 +37,24 @@ public class AccountGroupServiceUtil {
 	 *
 	 * Never modify this class directly. Add custom service methods to <code>com.liferay.account.service.impl.AccountGroupServiceImpl</code> and rerun ServiceBuilder to regenerate this class.
 	 */
+	public static AccountGroup addAccountGroup(
+			long userId, String description, String name)
+		throws PortalException {
+
+		return getService().addAccountGroup(userId, description, name);
+	}
+
+	public static AccountGroup deleteAccountGroup(long accountGroupId)
+		throws PortalException {
+
+		return getService().deleteAccountGroup(accountGroupId);
+	}
+
+	public static void deleteAccountGroups(long[] accountGroupIds)
+		throws PortalException {
+
+		getService().deleteAccountGroups(accountGroupIds);
+	}
 
 	/**
 	 * Returns the OSGi service identifier.
@@ -47,24 +65,36 @@ public class AccountGroupServiceUtil {
 		return getService().getOSGiServiceIdentifier();
 	}
 
+	public static com.liferay.portal.kernel.search.BaseModelSearchResult
+		<AccountGroup> searchAccountGroups(
+				long companyId, String keywords, int start, int end,
+				OrderByComparator<AccountGroup> orderByComparator)
+			throws PortalException {
+
+		return getService().searchAccountGroups(
+			companyId, keywords, start, end, orderByComparator);
+	}
+
+	public static AccountGroup updateAccountGroup(
+			long accountGroupId, String description, String name)
+		throws PortalException {
+
+		return getService().updateAccountGroup(
+			accountGroupId, description, name);
+	}
+
+	public static AccountGroup updateExternalReferenceCode(
+			long accountGroupId, String externalReferenceCode)
+		throws PortalException {
+
+		return getService().updateExternalReferenceCode(
+			accountGroupId, externalReferenceCode);
+	}
+
 	public static AccountGroupService getService() {
-		return _serviceTracker.getService();
+		return _service;
 	}
 
-	private static ServiceTracker<AccountGroupService, AccountGroupService>
-		_serviceTracker;
-
-	static {
-		Bundle bundle = FrameworkUtil.getBundle(AccountGroupService.class);
-
-		ServiceTracker<AccountGroupService, AccountGroupService>
-			serviceTracker =
-				new ServiceTracker<AccountGroupService, AccountGroupService>(
-					bundle.getBundleContext(), AccountGroupService.class, null);
-
-		serviceTracker.open();
-
-		_serviceTracker = serviceTracker;
-	}
+	private static volatile AccountGroupService _service;
 
 }

@@ -32,11 +32,15 @@ if (!cpSubscriptionTypes.isEmpty()) {
 	defaultCPSubscriptionType = firstCPSubscriptionType.getName();
 }
 
-PortletURL productSkusURL = renderResponse.createRenderURL();
-
-productSkusURL.setParameter("mvcRenderCommandName", "/cp_definitions/edit_cp_definition");
-productSkusURL.setParameter("cpDefinitionId", String.valueOf(cpDefinition.getCPDefinitionId()));
-productSkusURL.setParameter("screenNavigationCategoryKey", cpInstanceSubscriptionInfoDisplayContext.getScreenNavigationCategoryKey());
+PortletURL productSkusURL = PortletURLBuilder.createRenderURL(
+	renderResponse
+).setMVCRenderCommandName(
+	"/cp_definitions/edit_cp_definition"
+).setParameter(
+	"cpDefinitionId", cpDefinition.getCPDefinitionId()
+).setParameter(
+	"screenNavigationCategoryKey", cpInstanceSubscriptionInfoDisplayContext.getScreenNavigationCategoryKey()
+).buildPortletURL();
 
 boolean overrideSubscriptionInfo = BeanParamUtil.getBoolean(cpInstance, request, "overrideSubscriptionInfo", false);
 boolean subscriptionEnabled = BeanParamUtil.getBoolean(cpInstance, request, "subscriptionEnabled", false);
@@ -119,14 +123,29 @@ if (deliveryMaxSubscriptionCycles > 0) {
 
 				<%
 				if (cpSubscriptionTypeJSPContributor != null) {
-					cpSubscriptionTypeJSPContributor.render(cpInstance, request, PipingServletResponse.createPipingServletResponse(pageContext));
+					cpSubscriptionTypeJSPContributor.render(cpInstance, request, PipingServletResponseFactory.createPipingServletResponse(pageContext));
 				}
 				%>
 
 				<div id="<portlet:namespace />cycleLengthContainer">
 					<aui:input name="subscriptionLength" suffix="<%= defaultCPSubscriptionTypeLabel %>" value="<%= String.valueOf(subscriptionLength) %>">
 						<aui:validator name="digits" />
-						<aui:validator name="min">1</aui:validator>
+
+						<aui:validator errorMessage='<%= LanguageUtil.format(request, "please-enter-a-value-greater-than-or-equal-to-x", 1) %>' name="custom">
+							function(val) {
+								var subscriptionEnabled = window.document.querySelector('#<portlet:namespace />subscriptionEnabled');
+
+								if (!subscriptionEnabled.checked) {
+									return true;
+								}
+
+								if (subscriptionEnabled.checked && parseInt(val, 10) > 0) {
+									return true;
+								}
+
+								return false;
+							}
+						</aui:validator>
 					</aui:input>
 				</div>
 
@@ -181,14 +200,29 @@ if (deliveryMaxSubscriptionCycles > 0) {
 
 				<%
 				if (deliveryCPSubscriptionTypeJSPContributor != null) {
-					deliveryCPSubscriptionTypeJSPContributor.render(cpDefinition, request, PipingServletResponse.createPipingServletResponse(pageContext), false);
+					deliveryCPSubscriptionTypeJSPContributor.render(cpDefinition, request, PipingServletResponseFactory.createPipingServletResponse(pageContext), false);
 				}
 				%>
 
 				<div id="<portlet:namespace />deliveryCycleLengthContainer">
 					<aui:input label="subscription-length" name="deliverySubscriptionLength" suffix="<%= defaultDeliveryCPSubscriptionTypeLabel %>" value="<%= String.valueOf(deliverySubscriptionLength) %>">
 						<aui:validator name="digits" />
-						<aui:validator name="min">1</aui:validator>
+
+						<aui:validator errorMessage='<%= LanguageUtil.format(request, "please-enter-a-value-greater-than-or-equal-to-x", 1) %>' name="custom">
+							function(val) {
+								var deliverySubscriptionEnabled = window.document.querySelector('#<portlet:namespace />deliverySubscriptionEnabled');
+
+								if (!deliverySubscriptionEnabled.checked) {
+									return true;
+								}
+
+								if (deliverySubscriptionEnabled.checked && parseInt(val, 10) > 0) {
+									return true;
+								}
+
+								return false;
+							}
+						</aui:validator>
 					</aui:input>
 				</div>
 
@@ -239,7 +273,7 @@ if (deliveryMaxSubscriptionCycles > 0) {
 	Liferay.provide(
 		window,
 		'<portlet:namespace />selectSubscriptionType',
-		function () {
+		() => {
 			var A = AUI();
 
 			var overrideSubscriptionInfo = A.one(
@@ -286,7 +320,7 @@ if (deliveryMaxSubscriptionCycles > 0) {
 	Liferay.provide(
 		window,
 		'<portlet:namespace />selectDeliverySubscriptionType',
-		function () {
+		() => {
 			var A = AUI();
 
 			var overrideSubscriptionInfo = A.one(
@@ -341,14 +375,14 @@ if (deliveryMaxSubscriptionCycles > 0) {
 </aui:script>
 
 <aui:script use="liferay-form">
-	A.one('#<portlet:namespace />neverEnds').on('change', function (event) {
+	A.one('#<portlet:namespace />neverEnds').on('change', (event) => {
 		var formValidator = Liferay.Form.get('<portlet:namespace />fm')
 			.formValidator;
 
 		formValidator.validateField('<portlet:namespace />maxSubscriptionCycles');
 	});
 
-	A.one('#<portlet:namespace />deliveryNeverEnds').on('change', function (event) {
+	A.one('#<portlet:namespace />deliveryNeverEnds').on('change', (event) => {
 		var formValidator = Liferay.Form.get('<portlet:namespace />fm')
 			.formValidator;
 

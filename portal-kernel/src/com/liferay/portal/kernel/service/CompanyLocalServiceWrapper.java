@@ -24,6 +24,10 @@ package com.liferay.portal.kernel.service;
 public class CompanyLocalServiceWrapper
 	implements CompanyLocalService, ServiceWrapper<CompanyLocalService> {
 
+	public CompanyLocalServiceWrapper() {
+		this(null);
+	}
+
 	public CompanyLocalServiceWrapper(CompanyLocalService companyLocalService) {
 		_companyLocalService = companyLocalService;
 	}
@@ -53,8 +57,6 @@ public class CompanyLocalServiceWrapper
 	 * @param webId the the company's web domain
 	 * @param virtualHostname the company's virtual host name
 	 * @param mx the company's mail domain
-	 * @param system whether the company is the very first company (i.e., the
-	 super company)
 	 * @param maxUsers the max number of company users (optionally
 	 <code>0</code>)
 	 * @param active whether the company is active
@@ -63,12 +65,12 @@ public class CompanyLocalServiceWrapper
 	@Override
 	public com.liferay.portal.kernel.model.Company addCompany(
 			java.lang.Long companyId, java.lang.String webId,
-			java.lang.String virtualHostname, java.lang.String mx,
-			boolean system, int maxUsers, boolean active)
+			java.lang.String virtualHostname, java.lang.String mx, int maxUsers,
+			boolean active)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _companyLocalService.addCompany(
-			companyId, webId, virtualHostname, mx, system, maxUsers, active);
+			companyId, webId, virtualHostname, mx, maxUsers, active);
 	}
 
 	/**
@@ -91,11 +93,11 @@ public class CompanyLocalServiceWrapper
 	@Override
 	public com.liferay.portal.kernel.model.Company addCompany(
 			java.lang.String webId, java.lang.String virtualHostname,
-			java.lang.String mx, boolean system, int maxUsers, boolean active)
+			java.lang.String mx, int maxUsers, boolean active)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _companyLocalService.addCompany(
-			webId, virtualHostname, mx, system, maxUsers, active);
+			webId, virtualHostname, mx, maxUsers, active);
 	}
 
 	/**
@@ -237,6 +239,13 @@ public class CompanyLocalServiceWrapper
 	}
 
 	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _companyLocalService.dslQueryCount(dslQuery);
+	}
+
+	@Override
 	public com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery() {
 		return _companyLocalService.dynamicQuery();
 	}
@@ -361,6 +370,44 @@ public class CompanyLocalServiceWrapper
 	}
 
 	@Override
+	public <E extends java.lang.Exception> void forEachCompany(
+			com.liferay.petra.function.UnsafeConsumer
+				<com.liferay.portal.kernel.model.Company, E> unsafeConsumer)
+		throws E {
+
+		_companyLocalService.forEachCompany(unsafeConsumer);
+	}
+
+	@Override
+	public <E extends java.lang.Exception> void forEachCompany(
+			com.liferay.petra.function.UnsafeConsumer
+				<com.liferay.portal.kernel.model.Company, E> unsafeConsumer,
+			java.util.List<com.liferay.portal.kernel.model.Company> companies)
+		throws E {
+
+		_companyLocalService.forEachCompany(unsafeConsumer, companies);
+	}
+
+	@Override
+	public <E extends java.lang.Exception> void forEachCompanyId(
+			com.liferay.petra.function.UnsafeConsumer<java.lang.Long, E>
+				unsafeConsumer)
+		throws E {
+
+		_companyLocalService.forEachCompanyId(unsafeConsumer);
+	}
+
+	@Override
+	public <E extends java.lang.Exception> void forEachCompanyId(
+			com.liferay.petra.function.UnsafeConsumer<java.lang.Long, E>
+				unsafeConsumer,
+			long[] companyIds)
+		throws E {
+
+		_companyLocalService.forEachCompanyId(unsafeConsumer, companyIds);
+	}
+
+	@Override
 	public com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery
 		getActionableDynamicQuery() {
 
@@ -377,27 +424,6 @@ public class CompanyLocalServiceWrapper
 		getCompanies() {
 
 		return _companyLocalService.getCompanies();
-	}
-
-	/**
-	 * Returns all the companies used by WSRP.
-	 *
-	 * @param system whether the company is the very first company (i.e., the
-	 super company)
-	 * @return the companies used by WSRP
-	 */
-	@Override
-	public java.util.List<com.liferay.portal.kernel.model.Company> getCompanies(
-		boolean system) {
-
-		return _companyLocalService.getCompanies(system);
-	}
-
-	@Override
-	public java.util.List<com.liferay.portal.kernel.model.Company> getCompanies(
-		boolean system, int start, int end) {
-
-		return _companyLocalService.getCompanies(system, start, end);
 	}
 
 	/**
@@ -426,18 +452,6 @@ public class CompanyLocalServiceWrapper
 	@Override
 	public int getCompaniesCount() {
 		return _companyLocalService.getCompaniesCount();
-	}
-
-	/**
-	 * Returns the number of companies used by WSRP.
-	 *
-	 * @param system whether the company is the very first company (i.e., the
-	 super company)
-	 * @return the number of companies used by WSRP
-	 */
-	@Override
-	public int getCompaniesCount(boolean system) {
-		return _companyLocalService.getCompaniesCount(system);
 	}
 
 	/**

@@ -15,17 +15,18 @@
 package com.liferay.layout.page.template.headless.delivery.dto.v1_0.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.fragment.constants.FragmentConstants;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.processor.FragmentEntryProcessorRegistry;
 import com.liferay.fragment.service.FragmentEntryLinkLocalService;
 import com.liferay.headless.delivery.dto.v1_0.WidgetInstance;
 import com.liferay.headless.delivery.dto.v1_0.WidgetPermission;
 import com.liferay.layout.page.template.importer.PortletPreferencesPortletConfigurationImporter;
+import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
-import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.ResourceAction;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.portlet.PortletIdCodec;
@@ -44,11 +45,12 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.HashMapDictionary;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+import com.liferay.segments.service.SegmentsExperienceLocalService;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -70,7 +72,6 @@ import org.junit.runner.RunWith;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
-import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
 /**
@@ -133,20 +134,18 @@ public class WidgetInstanceDefinitionDTOConverterTest {
 			"portletId", _testPortletName
 		);
 
-		Layout layout = _layoutLocalService.addLayout(
-			TestPropsValues.getUserId(), _group.getGroupId(), false,
-			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID,
-			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			StringPool.BLANK, LayoutConstants.TYPE_CONTENT, false,
-			StringPool.BLANK, _serviceContext);
+		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
 
 		FragmentEntryLink fragmentEntryLink =
 			_fragmentEntryLinkLocalService.addFragmentEntryLink(
 				_serviceContext.getUserId(), _serviceContext.getScopeGroupId(),
-				0, 0, 0, layout.getPlid(), StringPool.BLANK, StringPool.BLANK,
+				0, 0,
+				_segmentsExperienceLocalService.
+					fetchDefaultSegmentsExperienceId(layout.getPlid()),
+				layout.getPlid(), StringPool.BLANK, StringPool.BLANK,
 				StringPool.BLANK, StringPool.BLANK,
 				editableValueJSONObject.toString(), namespace, 0, null,
-				_serviceContext);
+				FragmentConstants.TYPE_COMPONENT, _serviceContext);
 
 		String testPortletId = PortletIdCodec.encode(
 			_testPortletName, instanceId);
@@ -228,24 +227,21 @@ public class WidgetInstanceDefinitionDTOConverterTest {
 	}
 
 	private Object _getService() {
-		ServiceReference<?> serviceReference =
+		return _bundleContext.getService(
 			_bundleContext.getServiceReference(
 				"com.liferay.headless.delivery.internal.dto.v1_0.mapper." +
-					"WidgetInstanceMapper");
-
-		return _bundleContext.getService(serviceReference);
+					"WidgetInstanceMapper"));
 	}
 
-	private void _registerTestPortlet(final String portletId) throws Exception {
+	private void _registerTestPortlet(String portletId) throws Exception {
 		_serviceRegistrations.add(
 			_bundleContext.registerService(
 				Portlet.class, new TestPortlet(),
-				new HashMapDictionary<String, String>() {
-					{
-						put("com.liferay.portlet.instanceable", "true");
-						put("javax.portlet.name", portletId);
-					}
-				}));
+				HashMapDictionaryBuilder.put(
+					"com.liferay.portlet.instanceable", "true"
+				).put(
+					"javax.portlet.name", portletId
+				).build()));
 	}
 
 	private BundleContext _bundleContext;
@@ -277,6 +273,9 @@ public class WidgetInstanceDefinitionDTOConverterTest {
 
 	@Inject
 	private RoleLocalService _roleLocalService;
+
+	@Inject
+	private SegmentsExperienceLocalService _segmentsExperienceLocalService;
 
 	private ServiceContext _serviceContext;
 	private final List<ServiceRegistration<?>> _serviceRegistrations =

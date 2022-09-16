@@ -39,6 +39,7 @@ import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.segments.model.SegmentsExperience;
 
 import java.io.Serializable;
@@ -74,15 +75,29 @@ public interface SegmentsExperienceLocalService
 	 *
 	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.segments.service.impl.SegmentsExperienceLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the segments experience local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link SegmentsExperienceLocalServiceUtil} if injection and service tracking are not available.
 	 */
+	public SegmentsExperience addDefaultSegmentsExperience(
+			long userId, long plid, ServiceContext serviceContext)
+		throws PortalException;
+
 	public SegmentsExperience addSegmentsExperience(
-			long segmentsEntryId, long classNameId, long classPK,
-			Map<Locale, String> nameMap, boolean active,
+			long userId, long groupId, long segmentsEntryId, long classNameId,
+			long classPK, Map<Locale, String> nameMap, boolean active,
+			UnicodeProperties typeSettingsUnicodeProperties,
 			ServiceContext serviceContext)
 		throws PortalException;
 
 	public SegmentsExperience addSegmentsExperience(
-			long segmentsEntryId, long classNameId, long classPK,
+			long userId, long groupId, long segmentsEntryId, long classNameId,
+			long classPK, Map<Locale, String> nameMap, int priority,
+			boolean active, UnicodeProperties typeSettingsUnicodeProperties,
+			ServiceContext serviceContext)
+		throws PortalException;
+
+	public SegmentsExperience addSegmentsExperience(
+			long userId, long groupId, long segmentsEntryId,
+			String segmentsExperienceKey, long classNameId, long classPK,
 			Map<Locale, String> nameMap, int priority, boolean active,
+			UnicodeProperties typeSettingsUnicodeProperties,
 			ServiceContext serviceContext)
 		throws PortalException;
 
@@ -101,8 +116,15 @@ public interface SegmentsExperienceLocalService
 		SegmentsExperience segmentsExperience);
 
 	public SegmentsExperience appendSegmentsExperience(
-			long segmentsEntryId, long classNameId, long classPK,
-			Map<Locale, String> nameMap, boolean active,
+			long userId, long groupId, long segmentsEntryId, long classNameId,
+			long classPK, Map<Locale, String> nameMap, boolean active,
+			ServiceContext serviceContext)
+		throws PortalException;
+
+	public SegmentsExperience appendSegmentsExperience(
+			long userId, long groupId, long segmentsEntryId, long classNameId,
+			long classPK, Map<Locale, String> nameMap, boolean active,
+			UnicodeProperties typeSettingsUnicodeProperties,
 			ServiceContext serviceContext)
 		throws PortalException;
 
@@ -173,6 +195,9 @@ public interface SegmentsExperienceLocalService
 	public <T> T dslQuery(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
 
 	/**
@@ -239,6 +264,9 @@ public interface SegmentsExperienceLocalService
 		DynamicQuery dynamicQuery, Projection projection);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public long fetchDefaultSegmentsExperienceId(long plid);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public SegmentsExperience fetchSegmentsExperience(
 		long segmentsExperienceId);
 
@@ -248,7 +276,8 @@ public interface SegmentsExperienceLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public SegmentsExperience fetchSegmentsExperience(
-		long groupId, String segmentsExperienceKey);
+		long groupId, String segmentsExperienceKey, long classNameId,
+		long classPK);
 
 	/**
 	 * Returns the segments experience matching the UUID and group.
@@ -299,7 +328,8 @@ public interface SegmentsExperienceLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public SegmentsExperience getSegmentsExperience(
-			long groupId, String segmentsExperienceKey)
+			long groupId, String segmentsExperienceKey, long classNameId,
+			long classPK)
 		throws PortalException;
 
 	/**
@@ -399,6 +429,12 @@ public interface SegmentsExperienceLocalService
 	public SegmentsExperience updateSegmentsExperience(
 			long segmentsExperienceId, long segmentsEntryId,
 			Map<Locale, String> nameMap, boolean active)
+		throws PortalException;
+
+	public SegmentsExperience updateSegmentsExperience(
+			long segmentsExperienceId, long segmentsEntryId,
+			Map<Locale, String> nameMap, boolean active,
+			UnicodeProperties typeSettingsUnicodeProperties)
 		throws PortalException;
 
 	/**

@@ -2,11 +2,13 @@
 <head>
 <title>AssetRelatedAssets</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">AssetRelatedAssets</td></tr>
 </thead>
+
 <tbody>
 <tr>
 	<td>HEADER</td>
@@ -38,7 +40,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--This is temporary. After path restructure, the ideal solution is to make the path variable more generic.-->
+
 <tr>
 	<td>KB_RELATED_ASSETS_LINKS</td>
 	<td>//ul[@class='list-group sidebar-list-group']/li//a[contains(.,'${key_kbArticleRelatedAssetTitle}')]</td>
@@ -49,7 +53,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--RELATED_ASSETS_TABLE-->
+
 <tr>
 	<td>RELATED_ASSETS_TABLE_TYPE</td>
 	<td>//tr[contains(.,'${key_assetTitle}')]//p</td>
@@ -75,7 +81,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--MESSAGE_BOARDS_THREAD-->
+
 <tr>
 	<td>MESSAGE_BOARDS_THREAD_TITLE</td>
 	<td>//h4[@title='${key_assetTitle}']</td>
@@ -96,7 +104,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--KB_ASSET_TABLE-->
+
 <tr>
 	<td>KB_ASSET_TABLE_TITLE_LINK</td>
 	<td>//div[contains(@id,'assetEntriesSearchContainer')]//tr[contains(.,'${key_kbArticleRelatedAssetTitle}')]/td[1]//a[contains(.,'${key_kbArticleRelatedAssetTitle}')]</td>
@@ -107,7 +117,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--ASSET_TABLE-->
+
 <tr>
 	<td>ASSET_TABLE_CHECKBOX</td>
 	<td>//tr[contains(.,'${key_assetTitle}')]/td//input[@type='checkbox']</td>

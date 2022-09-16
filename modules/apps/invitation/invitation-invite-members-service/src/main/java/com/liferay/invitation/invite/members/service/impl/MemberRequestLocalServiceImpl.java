@@ -38,17 +38,19 @@ import com.liferay.portal.kernel.notifications.NotificationEventFactoryUtil;
 import com.liferay.portal.kernel.notifications.UserNotificationManagerUtil;
 import com.liferay.portal.kernel.portlet.PortletProvider;
 import com.liferay.portal.kernel.portlet.PortletProviderUtil;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserGroupRoleLocalService;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.service.UserNotificationEventLocalService;
 import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService;
-import com.liferay.portal.kernel.util.Http;
-import com.liferay.portal.kernel.util.HttpUtil;
+import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
+import com.liferay.portal.kernel.uuid.PortalUUID;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.util.Date;
@@ -79,10 +81,10 @@ public class MemberRequestLocalServiceImpl
 
 		// Member request
 
-		User user = userLocalService.getUserById(userId);
+		User user = _userLocalService.getUserById(userId);
 
 		try {
-			User receiverUser = userLocalService.getUserByEmailAddress(
+			User receiverUser = _userLocalService.getUserByEmailAddress(
 				serviceContext.getCompanyId(), receiverEmailAddress);
 
 			receiverUserId = receiverUser.getUserId();
@@ -92,11 +94,11 @@ public class MemberRequestLocalServiceImpl
 			// LPS-52675
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(noSuchUserException, noSuchUserException);
+				_log.debug(noSuchUserException);
 			}
 		}
 
-		Date now = new Date();
+		Date date = new Date();
 
 		long memberRequestId = counterLocalService.increment();
 
@@ -107,9 +109,9 @@ public class MemberRequestLocalServiceImpl
 		memberRequest.setCompanyId(user.getCompanyId());
 		memberRequest.setUserId(userId);
 		memberRequest.setUserName(user.getFullName());
-		memberRequest.setCreateDate(now);
-		memberRequest.setModifiedDate(now);
-		memberRequest.setKey(PortalUUIDUtil.generate());
+		memberRequest.setCreateDate(date);
+		memberRequest.setModifiedDate(date);
+		memberRequest.setKey(_portalUUID.generate());
 		memberRequest.setReceiverUserId(receiverUserId);
 		memberRequest.setInvitedRoleId(invitedRoleId);
 		memberRequest.setInvitedTeamId(invitedTeamId);
@@ -147,7 +149,7 @@ public class MemberRequestLocalServiceImpl
 				continue;
 			}
 
-			User user = userLocalService.getUser(receiverUserId);
+			User user = _userLocalService.getUser(receiverUserId);
 
 			addMemberRequest(
 				userId, groupId, receiverUserId, user.getEmailAddress(),
@@ -237,19 +239,19 @@ public class MemberRequestLocalServiceImpl
 		memberRequest = memberRequestPersistence.update(memberRequest);
 
 		if (status == InviteMembersConstants.STATUS_ACCEPTED) {
-			userLocalService.addGroupUsers(
+			_userLocalService.addGroupUsers(
 				memberRequest.getGroupId(),
 				new long[] {memberRequest.getReceiverUserId()});
 
 			if (memberRequest.getInvitedRoleId() > 0) {
-				userGroupRoleLocalService.addUserGroupRoles(
+				_userGroupRoleLocalService.addUserGroupRoles(
 					new long[] {memberRequest.getReceiverUserId()},
 					memberRequest.getGroupId(),
 					memberRequest.getInvitedRoleId());
 			}
 
 			if (memberRequest.getInvitedTeamId() > 0) {
-				userLocalService.addTeamUsers(
+				_userLocalService.addTeamUsers(
 					memberRequest.getInvitedTeamId(),
 					new long[] {memberRequest.getReceiverUserId()});
 			}
@@ -281,13 +283,14 @@ public class MemberRequestLocalServiceImpl
 	protected static String addParameterWithPortletNamespace(
 		String url, String name, String value) {
 
-		String portletId = HttpUtil.getParameter(url, "p_p_id", false);
+		String portletId = HttpComponentsUtil.getParameter(
+			url, "p_p_id", false);
 
 		if (Validator.isNotNull(portletId)) {
 			name = PortalUtil.getPortletNamespace(portletId) + name;
 		}
 
-		return HttpUtil.addParameter(url, name, value);
+		return HttpComponentsUtil.addParameter(url, name, value);
 	}
 
 	protected String getCreateAccountURL(
@@ -335,7 +338,8 @@ public class MemberRequestLocalServiceImpl
 		redirectURL = addParameterWithPortletNamespace(
 			redirectURL, "key", memberRequest.getKey());
 
-		return _http.addParameter(loginURL, "redirect", redirectURL);
+		return HttpComponentsUtil.addParameter(
+			loginURL, "redirect", redirectURL);
 	}
 
 	protected String getRedirectURL(ServiceContext serviceContext) {
@@ -355,14 +359,14 @@ public class MemberRequestLocalServiceImpl
 
 		long companyId = memberRequest.getCompanyId();
 
-		Group group = groupLocalService.getGroup(memberRequest.getGroupId());
+		Group group = _groupLocalService.getGroup(memberRequest.getGroupId());
 
-		User user = userLocalService.getUser(memberRequest.getUserId());
+		User user = _userLocalService.getUser(memberRequest.getUserId());
 
 		User receiverUser = null;
 
 		if (memberRequest.getReceiverUserId() > 0) {
-			receiverUser = userLocalService.getUser(
+			receiverUser = _userLocalService.getUser(
 				memberRequest.getReceiverUserId());
 		}
 
@@ -457,7 +461,8 @@ public class MemberRequestLocalServiceImpl
 				UserNotificationDeliveryConstants.TYPE_WEBSITE);
 
 			_userNotificationEventLocalService.addUserNotificationEvent(
-				memberRequest.getReceiverUserId(), true, notificationEvent);
+				memberRequest.getReceiverUserId(), true, true,
+				notificationEvent);
 		}
 	}
 
@@ -478,10 +483,19 @@ public class MemberRequestLocalServiceImpl
 		MemberRequestLocalServiceImpl.class);
 
 	@Reference
-	private Http _http;
+	private GroupLocalService _groupLocalService;
 
 	@Reference
 	private MailService _mailService;
+
+	@Reference
+	private PortalUUID _portalUUID;
+
+	@Reference
+	private UserGroupRoleLocalService _userGroupRoleLocalService;
+
+	@Reference
+	private UserLocalService _userLocalService;
 
 	@Reference
 	private UserNotificationEventLocalService

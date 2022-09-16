@@ -13,17 +13,16 @@
  */
 
 module.exports = {
-	federation: {
-		bridges: [
-			'classnames',
+	build: {
+		exports: [
+			{name: 'classnames', symbols: 'auto'},
 			'formik',
-			'prop-types',
-			'react',
-			'react-dnd',
+			{name: 'prop-types', symbols: 'auto'},
+			{name: 'react', symbols: 'auto'},
+			{name: 'react-dnd', symbols: 'auto'},
 			'react-dnd-html5-backend',
-			'react-dom',
+			{name: 'react-dom', symbols: 'auto'},
 		],
-		runLegacyBuild: false,
+		main: 'src/main/resources/META-INF/resources/js/index.ts',
 	},
-	preset: '@liferay/npm-scripts/src/presets/standard',
 };

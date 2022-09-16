@@ -1,0 +1,163 @@
+<html>
+<head>
+<title>ObjectField</title>
+</head>
+
+<body>
+<table border="1" cellpadding="1" cellspacing="1">
+<thead><tr><td rowspan="1" colspan="3">ObjectField</td></tr></thead>
+<tbody>
+	<tr>
+		<td>DOCUMENT_NAME</td>
+		<td>//p[contains(@class,'card-title text-truncate')]//a</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>FIELD_TYPE_DESCRIPTION</td>
+		<td>//div[text() = "${key_type}"]/..//span[@class = 'text-small']</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>VIEW_HOME_FOLDER</td>
+		<td>//span[@class='active breadcrumb-text-truncate' and contains(text(),'${key_viewHomeFolder}')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>INPUT_MAXIMUM_FILE_SIZE</td>
+		<td>//label[contains(text(),'Maximum File Size')]/..//input</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>LABEL_ACCEPTED_FILE_EXTENSIONS</td>
+		<td>//div[@class = 'form-group']//label[contains(text(),'Accepted File Extensions')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>LABEL_INPUT</td>
+		<td>//input[@name='label']</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>LABEL_LOCALIZED</td>
+		<td>//div[contains(@class,'lfr-objects__input-localized')]//input</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>LABEL_MAXIMUM_FILE_SIZE</td>
+		<td>//div[@class = 'form-group']//label[contains(text(),'Maximum File Size')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>LABEL_STORAGE_FOLDER</td>
+		<td>//div[@class = 'form-group']//label[contains(text(),'Storage Folder')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>STORAGE_FOLDER_INPUT</td>
+		<td>//label[contains(text(),'Storage Folder')]/..//input</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>MAXIMUM_NUMBER_CHARACTERS_OPTION</td>
+		<td>//input[contains(@value, '${key_maxValue}')]//..//label[contains(text(),'Maximum Number of Characters')]/..//input</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>DEFAULT_TOGGLE_SWITCH</td>
+		<td>//span[@class='toggle-switch-label' and contains(text(), '${key_labelName}')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>MANDATORY_TOGGLE</td>
+		<td>//input[@name="required"]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>MANDATORY_TOGGLE_DISABLED</td>
+		<td>//input[@name="required" and @disabled]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>MODAL_CLOSE_BUTTON</td>
+		<td>//button[contains(@class, 'close')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>NAME_FIELD</td>
+		<td>//input[@name="name"]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>NAME_FIELD_DISABLED</td>
+		<td>//input[@name="name" and @disabled]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>REQUEST_FILES_INPUT</td>
+		<td>//label[contains(text(), 'Request Files')]/..//input[@placeholder='Choose an Option']</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>SEARCHABLE_LANGUAGE_SELECT</td>
+		<td>//select[@name="indexedLanguageId"]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>SEARCHABLE_LANGUAGE_OPTION</td>
+		<td>//select[@name="indexedLanguageId"]//option[contains(., '${key_language}')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>TYPE_FIELD</td>
+		<td>//input[(@placeholder='Choose an Option' or @placeholder='Escolha uma Opção')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>TYPE_FIELD_DISABLED</td>
+		<td>//input[@placeholder='Choose an Option' and @disabled]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>TYPE_OPTION</td>
+		<td>//button[@class='dropdown-item']//div[(text()="${key_fieldType}")]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>SAVE_BUTTON</td>
+		<td>//div[contains(@class,'lfr-objects__side-panel-content-container')]//button[@type='submit']</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>TYPE_MAXIMUM_NUMBER_CHARACTERS</td>
+		<td>//label[contains(text(),'Maximum Number of Characters')]/..//input</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>HELP_TEXT</td>
+		<td>//div[contains(@class,'form-feedback-group') and contains(.,'${key_helpText}')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>SHOW_FILES_IN_DM_SIDE_PANEL_DISABLED</td>
+		<td>//input[@name='showFilesInDocumentsAndMedia' and (@disabled)]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>SHOW_FILES_IN_DM_SIDE_PANEL_NOT_DISABLED</td>
+		<td>//input[@name='showFilesInDocumentsAndMedia' and not(@disabled)]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>VIEW_COUNT_CHARACTERS_ON_ENTRIES</td>
+		<td>//div[contains(@data-field-name,'${key_fieldName}')]//span[contains(@class,'form-text') and contains(text(),'${key_viewCountCharacters}')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>MARK_AS_STATE_TOGGLE</td>
+		<td>//input[@name="state"]</td>
+		<td></td>
+	</tr>
+</tbody>
+</table>
+</body>
+</html>

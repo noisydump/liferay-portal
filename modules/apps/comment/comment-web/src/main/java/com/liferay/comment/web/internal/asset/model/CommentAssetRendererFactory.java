@@ -24,9 +24,12 @@ import com.liferay.portal.kernel.comment.CommentManager;
 import com.liferay.portal.kernel.comment.DiscussionPermission;
 import com.liferay.portal.kernel.comment.WorkflowableComment;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.LiferayPortletURL;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.util.HtmlParser;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletURL;
@@ -72,7 +75,7 @@ public class CommentAssetRendererFactory
 		WorkflowableComment workflowableComment = (WorkflowableComment)comment;
 
 		CommentAssetRenderer commentAssetRenderer = new CommentAssetRenderer(
-			workflowableComment, this);
+			this, _htmlParser, workflowableComment);
 
 		commentAssetRenderer.setAssetRendererType(type);
 		commentAssetRenderer.setServletContext(_servletContext);
@@ -103,6 +106,9 @@ public class CommentAssetRendererFactory
 			liferayPortletURL.setWindowState(windowState);
 		}
 		catch (WindowStateException windowStateException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(windowStateException);
+			}
 		}
 
 		return liferayPortletURL;
@@ -126,8 +132,14 @@ public class CommentAssetRendererFactory
 
 	private static final boolean _SELECTABLE = false;
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		CommentAssetRendererFactory.class);
+
 	@Reference
 	private CommentManager _commentManager;
+
+	@Reference
+	private HtmlParser _htmlParser;
 
 	@Reference(target = "(osgi.web.symbolicname=com.liferay.comment.web)")
 	private ServletContext _servletContext;

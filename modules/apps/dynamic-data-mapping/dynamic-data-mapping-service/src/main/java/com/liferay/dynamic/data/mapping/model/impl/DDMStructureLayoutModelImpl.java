@@ -16,7 +16,6 @@ package com.liferay.dynamic.data.mapping.model.impl;
 
 import com.liferay.dynamic.data.mapping.model.DDMStructureLayout;
 import com.liferay.dynamic.data.mapping.model.DDMStructureLayoutModel;
-import com.liferay.dynamic.data.mapping.model.DDMStructureLayoutSoap;
 import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.expando.kernel.util.ExpandoBridgeFactoryUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
@@ -36,23 +35,23 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.BiConsumer;
@@ -132,44 +131,44 @@ public class DDMStructureLayoutModelImpl
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long CLASSNAMEID_COLUMN_BITMASK = 1L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long COMPANYID_COLUMN_BITMASK = 2L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long GROUPID_COLUMN_BITMASK = 4L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long STRUCTURELAYOUTKEY_COLUMN_BITMASK = 8L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long STRUCTUREVERSIONID_COLUMN_BITMASK = 16L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long UUID_COLUMN_BITMASK = 32L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *		#getColumnBitmask(String)
+	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long STRUCTURELAYOUTID_COLUMN_BITMASK = 64L;
@@ -186,66 +185,6 @@ public class DDMStructureLayoutModelImpl
 	 */
 	@Deprecated
 	public static void setFinderCacheEnabled(boolean finderCacheEnabled) {
-	}
-
-	/**
-	 * Converts the soap model instance into a normal model instance.
-	 *
-	 * @param soapModel the soap model instance to convert
-	 * @return the normal model instance
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static DDMStructureLayout toModel(DDMStructureLayoutSoap soapModel) {
-		if (soapModel == null) {
-			return null;
-		}
-
-		DDMStructureLayout model = new DDMStructureLayoutImpl();
-
-		model.setMvccVersion(soapModel.getMvccVersion());
-		model.setCtCollectionId(soapModel.getCtCollectionId());
-		model.setUuid(soapModel.getUuid());
-		model.setStructureLayoutId(soapModel.getStructureLayoutId());
-		model.setGroupId(soapModel.getGroupId());
-		model.setCompanyId(soapModel.getCompanyId());
-		model.setUserId(soapModel.getUserId());
-		model.setUserName(soapModel.getUserName());
-		model.setCreateDate(soapModel.getCreateDate());
-		model.setModifiedDate(soapModel.getModifiedDate());
-		model.setClassNameId(soapModel.getClassNameId());
-		model.setStructureLayoutKey(soapModel.getStructureLayoutKey());
-		model.setStructureVersionId(soapModel.getStructureVersionId());
-		model.setName(soapModel.getName());
-		model.setDescription(soapModel.getDescription());
-		model.setDefinition(soapModel.getDefinition());
-
-		return model;
-	}
-
-	/**
-	 * Converts the soap model instances into normal model instances.
-	 *
-	 * @param soapModels the soap model instances to convert
-	 * @return the normal model instances
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static List<DDMStructureLayout> toModels(
-		DDMStructureLayoutSoap[] soapModels) {
-
-		if (soapModels == null) {
-			return null;
-		}
-
-		List<DDMStructureLayout> models = new ArrayList<DDMStructureLayout>(
-			soapModels.length);
-
-		for (DDMStructureLayoutSoap soapModel : soapModels) {
-			models.add(toModel(soapModel));
-		}
-
-		return models;
 	}
 
 	public DDMStructureLayoutModelImpl() {
@@ -331,34 +270,6 @@ public class DDMStructureLayoutModelImpl
 		getAttributeSetterBiConsumers() {
 
 		return _attributeSetterBiConsumers;
-	}
-
-	private static Function<InvocationHandler, DDMStructureLayout>
-		_getProxyProviderFunction() {
-
-		Class<?> proxyClass = ProxyUtil.getProxyClass(
-			DDMStructureLayout.class.getClassLoader(), DDMStructureLayout.class,
-			ModelWrapper.class);
-
-		try {
-			Constructor<DDMStructureLayout> constructor =
-				(Constructor<DDMStructureLayout>)proxyClass.getConstructor(
-					InvocationHandler.class);
-
-			return invocationHandler -> {
-				try {
-					return constructor.newInstance(invocationHandler);
-				}
-				catch (ReflectiveOperationException
-							reflectiveOperationException) {
-
-					throw new InternalError(reflectiveOperationException);
-				}
-			};
-		}
-		catch (NoSuchMethodException noSuchMethodException) {
-			throw new InternalError(noSuchMethodException);
-		}
 	}
 
 	private static final Map<String, Function<DDMStructureLayout, Object>>
@@ -1053,7 +964,9 @@ public class DDMStructureLayoutModelImpl
 		for (Map.Entry<String, Object> entry :
 				_columnOriginalValues.entrySet()) {
 
-			if (entry.getValue() != getColumnValue(entry.getKey())) {
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
 				_columnBitmask |= _columnBitmasks.get(entry.getKey());
 			}
 		}
@@ -1201,6 +1114,47 @@ public class DDMStructureLayoutModelImpl
 		ddmStructureLayoutImpl.setDefinition(getDefinition());
 
 		ddmStructureLayoutImpl.resetOriginalValues();
+
+		return ddmStructureLayoutImpl;
+	}
+
+	@Override
+	public DDMStructureLayout cloneWithOriginalValues() {
+		DDMStructureLayoutImpl ddmStructureLayoutImpl =
+			new DDMStructureLayoutImpl();
+
+		ddmStructureLayoutImpl.setMvccVersion(
+			this.<Long>getColumnOriginalValue("mvccVersion"));
+		ddmStructureLayoutImpl.setCtCollectionId(
+			this.<Long>getColumnOriginalValue("ctCollectionId"));
+		ddmStructureLayoutImpl.setUuid(
+			this.<String>getColumnOriginalValue("uuid_"));
+		ddmStructureLayoutImpl.setStructureLayoutId(
+			this.<Long>getColumnOriginalValue("structureLayoutId"));
+		ddmStructureLayoutImpl.setGroupId(
+			this.<Long>getColumnOriginalValue("groupId"));
+		ddmStructureLayoutImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		ddmStructureLayoutImpl.setUserId(
+			this.<Long>getColumnOriginalValue("userId"));
+		ddmStructureLayoutImpl.setUserName(
+			this.<String>getColumnOriginalValue("userName"));
+		ddmStructureLayoutImpl.setCreateDate(
+			this.<Date>getColumnOriginalValue("createDate"));
+		ddmStructureLayoutImpl.setModifiedDate(
+			this.<Date>getColumnOriginalValue("modifiedDate"));
+		ddmStructureLayoutImpl.setClassNameId(
+			this.<Long>getColumnOriginalValue("classNameId"));
+		ddmStructureLayoutImpl.setStructureLayoutKey(
+			this.<String>getColumnOriginalValue("structureLayoutKey"));
+		ddmStructureLayoutImpl.setStructureVersionId(
+			this.<Long>getColumnOriginalValue("structureVersionId"));
+		ddmStructureLayoutImpl.setName(
+			this.<String>getColumnOriginalValue("name"));
+		ddmStructureLayoutImpl.setDescription(
+			this.<String>getColumnOriginalValue("description"));
+		ddmStructureLayoutImpl.setDefinition(
+			this.<String>getColumnOriginalValue("definition"));
 
 		return ddmStructureLayoutImpl;
 	}
@@ -1368,6 +1322,8 @@ public class DDMStructureLayoutModelImpl
 			ddmStructureLayoutCacheModel.definition = null;
 		}
 
+		setDDMFormLayout(null);
+
 		ddmStructureLayoutCacheModel._ddmFormLayout = getDDMFormLayout();
 
 		return ddmStructureLayoutCacheModel;
@@ -1379,7 +1335,7 @@ public class DDMStructureLayoutModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			(4 * attributeGetterFunctions.size()) + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -1390,9 +1346,27 @@ public class DDMStructureLayoutModelImpl
 			Function<DDMStructureLayout, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((DDMStructureLayout)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply(
+				(DDMStructureLayout)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -1439,7 +1413,9 @@ public class DDMStructureLayoutModelImpl
 	private static class EscapedModelProxyProviderFunctionHolder {
 
 		private static final Function<InvocationHandler, DDMStructureLayout>
-			_escapedModelProxyProviderFunction = _getProxyProviderFunction();
+			_escapedModelProxyProviderFunction =
+				ProxyUtil.getProxyProviderFunction(
+					DDMStructureLayout.class, ModelWrapper.class);
 
 	}
 

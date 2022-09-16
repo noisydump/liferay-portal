@@ -29,12 +29,13 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
 import java.util.Collections;
@@ -42,6 +43,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -131,13 +133,13 @@ public class AccountModelImpl
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long ADDRESS_COLUMN_BITMASK = 1L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long USERID_COLUMN_BITMASK = 2L;
@@ -238,33 +240,6 @@ public class AccountModelImpl
 		getAttributeSetterBiConsumers() {
 
 		return _attributeSetterBiConsumers;
-	}
-
-	private static Function<InvocationHandler, Account>
-		_getProxyProviderFunction() {
-
-		Class<?> proxyClass = ProxyUtil.getProxyClass(
-			Account.class.getClassLoader(), Account.class, ModelWrapper.class);
-
-		try {
-			Constructor<Account> constructor =
-				(Constructor<Account>)proxyClass.getConstructor(
-					InvocationHandler.class);
-
-			return invocationHandler -> {
-				try {
-					return constructor.newInstance(invocationHandler);
-				}
-				catch (ReflectiveOperationException
-							reflectiveOperationException) {
-
-					throw new InternalError(reflectiveOperationException);
-				}
-			};
-		}
-		catch (NoSuchMethodException noSuchMethodException) {
-			throw new InternalError(noSuchMethodException);
-		}
 	}
 
 	private static final Map<String, Function<Account, Object>>
@@ -880,7 +855,9 @@ public class AccountModelImpl
 		for (Map.Entry<String, Object> entry :
 				_columnOriginalValues.entrySet()) {
 
-			if (entry.getValue() != getColumnValue(entry.getKey())) {
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
 				_columnBitmask |= _columnBitmasks.get(entry.getKey());
 			}
 		}
@@ -948,6 +925,63 @@ public class AccountModelImpl
 		accountImpl.setDefaultSender(isDefaultSender());
 
 		accountImpl.resetOriginalValues();
+
+		return accountImpl;
+	}
+
+	@Override
+	public Account cloneWithOriginalValues() {
+		AccountImpl accountImpl = new AccountImpl();
+
+		accountImpl.setAccountId(
+			this.<Long>getColumnOriginalValue("accountId"));
+		accountImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		accountImpl.setUserId(this.<Long>getColumnOriginalValue("userId"));
+		accountImpl.setUserName(
+			this.<String>getColumnOriginalValue("userName"));
+		accountImpl.setCreateDate(
+			this.<Date>getColumnOriginalValue("createDate"));
+		accountImpl.setModifiedDate(
+			this.<Date>getColumnOriginalValue("modifiedDate"));
+		accountImpl.setAddress(this.<String>getColumnOriginalValue("address"));
+		accountImpl.setPersonalName(
+			this.<String>getColumnOriginalValue("personalName"));
+		accountImpl.setProtocol(
+			this.<String>getColumnOriginalValue("protocol"));
+		accountImpl.setIncomingHostName(
+			this.<String>getColumnOriginalValue("incomingHostName"));
+		accountImpl.setIncomingPort(
+			this.<Integer>getColumnOriginalValue("incomingPort"));
+		accountImpl.setIncomingSecure(
+			this.<Boolean>getColumnOriginalValue("incomingSecure"));
+		accountImpl.setOutgoingHostName(
+			this.<String>getColumnOriginalValue("outgoingHostName"));
+		accountImpl.setOutgoingPort(
+			this.<Integer>getColumnOriginalValue("outgoingPort"));
+		accountImpl.setOutgoingSecure(
+			this.<Boolean>getColumnOriginalValue("outgoingSecure"));
+		accountImpl.setLogin(this.<String>getColumnOriginalValue("login"));
+		accountImpl.setPassword(
+			this.<String>getColumnOriginalValue("password_"));
+		accountImpl.setSavePassword(
+			this.<Boolean>getColumnOriginalValue("savePassword"));
+		accountImpl.setSignature(
+			this.<String>getColumnOriginalValue("signature"));
+		accountImpl.setUseSignature(
+			this.<Boolean>getColumnOriginalValue("useSignature"));
+		accountImpl.setFolderPrefix(
+			this.<String>getColumnOriginalValue("folderPrefix"));
+		accountImpl.setInboxFolderId(
+			this.<Long>getColumnOriginalValue("inboxFolderId"));
+		accountImpl.setDraftFolderId(
+			this.<Long>getColumnOriginalValue("draftFolderId"));
+		accountImpl.setSentFolderId(
+			this.<Long>getColumnOriginalValue("sentFolderId"));
+		accountImpl.setTrashFolderId(
+			this.<Long>getColumnOriginalValue("trashFolderId"));
+		accountImpl.setDefaultSender(
+			this.<Boolean>getColumnOriginalValue("defaultSender"));
 
 		return accountImpl;
 	}
@@ -1158,7 +1192,7 @@ public class AccountModelImpl
 			getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			(4 * attributeGetterFunctions.size()) + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -1169,9 +1203,26 @@ public class AccountModelImpl
 			Function<Account, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((Account)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply((Account)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -1218,7 +1269,9 @@ public class AccountModelImpl
 	private static class EscapedModelProxyProviderFunctionHolder {
 
 		private static final Function<InvocationHandler, Account>
-			_escapedModelProxyProviderFunction = _getProxyProviderFunction();
+			_escapedModelProxyProviderFunction =
+				ProxyUtil.getProxyProviderFunction(
+					Account.class, ModelWrapper.class);
 
 	}
 

@@ -14,6 +14,7 @@
 
 package com.liferay.segments.web.internal.display.context;
 
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.BeanParamUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -26,25 +27,31 @@ import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.segments.constants.SegmentsEntryConstants;
+import com.liferay.portal.odata.filter.FilterParser;
+import com.liferay.portal.odata.filter.FilterParserProvider;
+import com.liferay.portal.odata.filter.expression.BinaryExpression;
+import com.liferay.portal.odata.filter.expression.Expression;
+import com.liferay.segments.configuration.provider.SegmentsConfigurationProvider;
 import com.liferay.segments.criteria.Criteria;
 import com.liferay.segments.criteria.contributor.SegmentsCriteriaContributor;
 import com.liferay.segments.criteria.contributor.SegmentsCriteriaContributorRegistry;
 import com.liferay.segments.model.SegmentsEntry;
 import com.liferay.segments.provider.SegmentsEntryProviderRegistry;
 import com.liferay.segments.service.SegmentsEntryService;
+import com.liferay.segments.web.internal.odata.ExpressionVisitorImpl;
 import com.liferay.segments.web.internal.security.permission.resource.SegmentsEntryPermission;
 
 import java.util.HashMap;
@@ -65,15 +72,19 @@ import javax.servlet.http.HttpServletRequest;
 public class EditSegmentsEntryDisplayContext {
 
 	public EditSegmentsEntryDisplayContext(
+		FilterParserProvider filterParserProvider,
 		HttpServletRequest httpServletRequest, RenderRequest renderRequest,
 		RenderResponse renderResponse,
+		SegmentsConfigurationProvider segmentsConfigurationProvider,
 		SegmentsCriteriaContributorRegistry segmentsCriteriaContributorRegistry,
 		SegmentsEntryProviderRegistry segmentsEntryProviderRegistry,
 		SegmentsEntryService segmentsEntryService) {
 
+		_filterParserProvider = filterParserProvider;
 		_httpServletRequest = httpServletRequest;
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
+		_segmentsConfigurationProvider = segmentsConfigurationProvider;
 		_segmentsCriteriaContributorRegistry =
 			segmentsCriteriaContributorRegistry;
 		_segmentsEntryProviderRegistry = segmentsEntryProviderRegistry;
@@ -102,9 +113,9 @@ public class EditSegmentsEntryDisplayContext {
 		}
 
 		_data = HashMapBuilder.<String, Object>put(
-			"context", getContext()
+			"context", _getContext()
 		).put(
-			"props", getProps()
+			"props", _getProps()
 		).build();
 
 		return _data;
@@ -196,52 +207,6 @@ public class EditSegmentsEntryDisplayContext {
 			_httpServletRequest, "type", User.class.getName());
 	}
 
-	protected Map<String, Object> getContext() {
-		return HashMapBuilder.<String, Object>put(
-			"assetsPath", PortalUtil.getPathContext(_renderRequest) + "/assets"
-		).put(
-			"namespace", _renderResponse.getNamespace()
-		).put(
-			"requestFieldValueNameURL", _getSegmentsFieldValueNameURL()
-		).build();
-	}
-
-	protected Map<String, Object> getProps() throws Exception {
-		return HashMapBuilder.<String, Object>put(
-			"availableLocales", _getAvailableLocales()
-		).put(
-			"contributors", _getContributorsJSONArray()
-		).put(
-			"defaultLanguageId", _getDefaultLanguageId()
-		).put(
-			"formId", _renderResponse.getNamespace() + "editSegmentFm"
-		).put(
-			"hasUpdatePermission", _hasUpdatePermission()
-		).put(
-			"initialMembersCount", _getSegmentsEntryClassPKsCount()
-		).put(
-			"initialSegmentActive", _isInitialSegmentActive()
-		).put(
-			"initialSegmentName", _getInitialSegmentsNameJSONObject()
-		).put(
-			"locale", _locale.toString()
-		).put(
-			"portletNamespace", _renderResponse.getNamespace()
-		).put(
-			"previewMembersURL", _getPreviewMembersURL()
-		).put(
-			"propertyGroups", _getPropertyGroupsJSONArray()
-		).put(
-			"redirect", HtmlUtil.escape(getRedirect())
-		).put(
-			"requestMembersCountURL", _getSegmentsEntryClassPKsCountURL()
-		).put(
-			"showInEditMode", _isShowInEditMode()
-		).put(
-			"source", _getSource()
-		).build();
-	}
-
 	private Map<String, String> _getAvailableLocales() throws Exception {
 		Map<String, String> availableLocales = new HashMap<>();
 
@@ -256,6 +221,16 @@ public class EditSegmentsEntryDisplayContext {
 		}
 
 		return availableLocales;
+	}
+
+	private Map<String, Object> _getContext() {
+		return HashMapBuilder.<String, Object>put(
+			"imagesPath", PortalUtil.getPathContext(_renderRequest) + "/images"
+		).put(
+			"namespace", _renderResponse.getNamespace()
+		).put(
+			"requestFieldValueNameURL", _getSegmentsFieldValueNameURL()
+		).build();
 	}
 
 	private JSONArray _getContributorsJSONArray() throws Exception {
@@ -278,7 +253,9 @@ public class EditSegmentsEntryDisplayContext {
 					_renderResponse.getNamespace() + "criterionConjunction" +
 						segmentsCriteriaContributor.getKey()
 				).put(
-					"initialQuery", _getCriterionFilterString(criterion)
+					"initialQuery",
+					_getInitialQueryJSONObject(
+						criterion, segmentsCriteriaContributor)
 				).put(
 					"inputId",
 					_renderResponse.getNamespace() + "criterionFilter" +
@@ -326,7 +303,7 @@ public class EditSegmentsEntryDisplayContext {
 			siteDefaultLocale = PortalUtil.getSiteDefaultLocale(_getGroupId());
 		}
 		catch (PortalException portalException) {
-			_log.error(portalException, portalException);
+			_log.error(portalException);
 
 			siteDefaultLocale = LocaleUtil.getSiteDefault();
 		}
@@ -347,6 +324,41 @@ public class EditSegmentsEntryDisplayContext {
 			_themeDisplay.getScopeGroupId());
 	}
 
+	private JSONObject _getInitialQueryJSONObject(
+			Criteria.Criterion criterion,
+			SegmentsCriteriaContributor segmentsCriteriaContributor)
+		throws Exception {
+
+		String criterionFilterString = _getCriterionFilterString(criterion);
+
+		if (Validator.isNull(criterionFilterString)) {
+			return null;
+		}
+
+		FilterParser filterParser = _filterParserProvider.provide(
+			segmentsCriteriaContributor.getEntityModel());
+
+		Expression expression = filterParser.parse(criterionFilterString);
+
+		JSONObject jsonObject = (JSONObject)expression.accept(
+			new ExpressionVisitorImpl(
+				1, segmentsCriteriaContributor.getEntityModel()));
+
+		if (Validator.isNull(jsonObject.getString("groupId"))) {
+			jsonObject = JSONUtil.put(
+				"conjunctionName",
+				StringUtil.toLowerCase(
+					String.valueOf(BinaryExpression.Operation.AND))
+			).put(
+				"groupId", "group_0"
+			).put(
+				"items", JSONUtil.putAll(jsonObject)
+			);
+		}
+
+		return jsonObject;
+	}
+
 	private JSONObject _getInitialSegmentsNameJSONObject() throws Exception {
 		SegmentsEntry segmentsEntry = _getSegmentsEntry();
 
@@ -361,15 +373,15 @@ public class EditSegmentsEntryDisplayContext {
 	}
 
 	private String _getPreviewMembersURL() throws Exception {
-		PortletURL portletURL = _renderResponse.createRenderURL();
-
-		portletURL.setParameter(
-			"mvcRenderCommandName", "/segments/preview_segments_entry_users");
-		portletURL.setParameter(
-			"segmentsEntryId", String.valueOf(getSegmentsEntryId()));
-		portletURL.setWindowState(LiferayWindowState.POP_UP);
-
-		return portletURL.toString();
+		return PortletURLBuilder.createRenderURL(
+			_renderResponse
+		).setMVCRenderCommandName(
+			"/segments/preview_segments_entry_users"
+		).setParameter(
+			"segmentsEntryId", getSegmentsEntryId()
+		).setWindowState(
+			LiferayWindowState.POP_UP
+		).buildString();
 	}
 
 	private JSONArray _getPropertyGroupsJSONArray() throws Exception {
@@ -398,6 +410,57 @@ public class EditSegmentsEntryDisplayContext {
 		}
 
 		return jsonContributorsJSONArray;
+	}
+
+	private Map<String, Object> _getProps() throws Exception {
+		return HashMapBuilder.<String, Object>put(
+			"availableLocales", _getAvailableLocales()
+		).put(
+			"contributors", _getContributorsJSONArray()
+		).put(
+			"defaultLanguageId", _getDefaultLanguageId()
+		).put(
+			"formId", _renderResponse.getNamespace() + "editSegmentFm"
+		).put(
+			"hasUpdatePermission", _hasUpdatePermission()
+		).put(
+			"initialMembersCount", _getSegmentsEntryClassPKsCount()
+		).put(
+			"initialSegmentActive", _isInitialSegmentActive()
+		).put(
+			"initialSegmentName", _getInitialSegmentsNameJSONObject()
+		).put(
+			"isSegmentationEnabled",
+			_isSegmentationEnabled(_themeDisplay.getCompanyId())
+		).put(
+			"locale", _locale.toString()
+		).put(
+			"portletNamespace", _renderResponse.getNamespace()
+		).put(
+			"previewMembersURL", _getPreviewMembersURL()
+		).put(
+			"propertyGroups", _getPropertyGroupsJSONArray()
+		).put(
+			"redirect", getRedirect()
+		).put(
+			"requestMembersCountURL", _getSegmentsEntryClassPKsCountURL()
+		).put(
+			"segmentsConfigurationURL", _getSegmentsCompanyConfigurationURL()
+		).put(
+			"showInEditMode", _isShowInEditMode()
+		).build();
+	}
+
+	private String _getSegmentsCompanyConfigurationURL() {
+		try {
+			return _segmentsConfigurationProvider.getCompanyConfigurationURL(
+				_httpServletRequest);
+		}
+		catch (PortalException portalException) {
+			_log.error(portalException);
+		}
+
+		return StringPool.BLANK;
 	}
 
 	private List<SegmentsCriteriaContributor> _getSegmentsCriteriaContributors()
@@ -455,18 +518,6 @@ public class EditSegmentsEntryDisplayContext {
 		return resourceURL.toString();
 	}
 
-	private String _getSource() throws Exception {
-		SegmentsEntry segmentsEntry = _getSegmentsEntry();
-
-		if (segmentsEntry != null) {
-			return segmentsEntry.getSource();
-		}
-
-		return ParamUtil.getString(
-			_httpServletRequest, "source",
-			SegmentsEntryConstants.SOURCE_DEFAULT);
-	}
-
 	private boolean _hasUpdatePermission() throws Exception {
 		SegmentsEntry segmentsEntry = _getSegmentsEntry();
 
@@ -489,6 +540,18 @@ public class EditSegmentsEntryDisplayContext {
 		return false;
 	}
 
+	private boolean _isSegmentationEnabled(long companyId) {
+		try {
+			return _segmentsConfigurationProvider.isSegmentationEnabled(
+				companyId);
+		}
+		catch (ConfigurationException configurationException) {
+			_log.error(configurationException);
+		}
+
+		return false;
+	}
+
 	private boolean _isShowInEditMode() {
 		return ParamUtil.getBoolean(
 			_httpServletRequest, "showInEditMode", true);
@@ -499,12 +562,14 @@ public class EditSegmentsEntryDisplayContext {
 
 	private String _backURL;
 	private Map<String, Object> _data;
+	private final FilterParserProvider _filterParserProvider;
 	private Long _groupId;
 	private final HttpServletRequest _httpServletRequest;
 	private final Locale _locale;
 	private String _redirect;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
+	private final SegmentsConfigurationProvider _segmentsConfigurationProvider;
 	private final SegmentsCriteriaContributorRegistry
 		_segmentsCriteriaContributorRegistry;
 	private Long _segmentsEntryId;

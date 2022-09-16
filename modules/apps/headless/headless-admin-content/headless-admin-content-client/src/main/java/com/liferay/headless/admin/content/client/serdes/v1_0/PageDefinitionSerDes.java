@@ -15,8 +15,6 @@
 package com.liferay.headless.admin.content.client.serdes.v1_0;
 
 import com.liferay.headless.admin.content.client.dto.v1_0.PageDefinition;
-import com.liferay.headless.admin.content.client.dto.v1_0.PageElement;
-import com.liferay.headless.admin.content.client.dto.v1_0.Settings;
 import com.liferay.headless.admin.content.client.json.BaseJSONParser;
 
 import java.util.Iterator;
@@ -77,6 +75,16 @@ public class PageDefinitionSerDes {
 			sb.append(pageDefinition.getSettings());
 		}
 
+		if (pageDefinition.getVersion() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"version\": ");
+
+			sb.append(pageDefinition.getVersion());
+		}
+
 		sb.append("}");
 
 		return sb.toString();
@@ -111,6 +119,13 @@ public class PageDefinitionSerDes {
 			map.put("settings", String.valueOf(pageDefinition.getSettings()));
 		}
 
+		if (pageDefinition.getVersion() == null) {
+			map.put("version", null);
+		}
+		else {
+			map.put("version", String.valueOf(pageDefinition.getVersion()));
+		}
+
 		return map;
 	}
 
@@ -135,16 +150,20 @@ public class PageDefinitionSerDes {
 			if (Objects.equals(jsonParserFieldName, "pageElement")) {
 				if (jsonParserFieldValue != null) {
 					pageDefinition.setPageElement(
-						(PageElement)jsonParserFieldValue);
+						PageElementSerDes.toDTO((String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "settings")) {
 				if (jsonParserFieldValue != null) {
-					pageDefinition.setSettings((Settings)jsonParserFieldValue);
+					pageDefinition.setSettings(
+						SettingsSerDes.toDTO((String)jsonParserFieldValue));
 				}
 			}
-			else if (jsonParserFieldName.equals("status")) {
-				throw new IllegalArgumentException();
+			else if (Objects.equals(jsonParserFieldName, "version")) {
+				if (jsonParserFieldValue != null) {
+					pageDefinition.setVersion(
+						Double.valueOf((String)jsonParserFieldValue));
+				}
 			}
 		}
 
@@ -174,7 +193,7 @@ public class PageDefinitionSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -210,7 +229,7 @@ public class PageDefinitionSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

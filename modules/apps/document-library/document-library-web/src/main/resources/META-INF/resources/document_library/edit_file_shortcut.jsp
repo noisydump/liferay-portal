@@ -24,9 +24,12 @@ DLEditFileShortcutDisplayContext dlEditFileShortcutDisplayContext = (DLEditFileS
 renderResponse.setTitle(dlEditFileShortcutDisplayContext.getTitle());
 %>
 
-<clay:container-fluid>
+<clay:container-fluid
+	cssClass="container-form-lg"
+>
 	<aui:form action="<%= dlEditFileShortcutDisplayContext.getEditFileShortcutURL() %>" method="post" name="fm">
 		<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
+		<aui:input name="portletResource" type="hidden" value='<%= ParamUtil.getString(request, "portletResource") %>' />
 		<aui:input name="fileShortcutId" type="hidden" value="<%= dlEditFileShortcutDisplayContext.getFileShortcutId() %>" />
 		<aui:input name="repositoryId" type="hidden" value="<%= dlEditFileShortcutDisplayContext.getRepositoryId() %>" />
 		<aui:input name="folderId" type="hidden" value="<%= dlEditFileShortcutDisplayContext.getFolderId() %>" />
@@ -55,13 +58,13 @@ renderResponse.setTitle(dlEditFileShortcutDisplayContext.getTitle());
 					/>
 				</aui:fieldset>
 			</c:if>
+
+			<div class="sheet-footer">
+				<aui:button type="submit" />
+
+				<aui:button href="<%= redirect %>" type="cancel" />
+			</div>
 		</aui:fieldset-group>
-
-		<aui:button-row>
-			<aui:button type="submit" />
-
-			<aui:button href="<%= redirect %>" type="cancel" />
-		</aui:button-row>
 	</aui:form>
 </clay:container-fluid>
 
@@ -70,7 +73,7 @@ renderResponse.setTitle(dlEditFileShortcutDisplayContext.getTitle());
 		'<portlet:namespace />selectToFileEntryButton'
 	);
 
-	selectToFileEntryButton.addEventListener('click', function (event) {
+	selectToFileEntryButton.addEventListener('click', (event) => {
 		Liferay.Util.openSelectionModal({
 			onSelect: function (selectedItem) {
 				if (selectedItem) {

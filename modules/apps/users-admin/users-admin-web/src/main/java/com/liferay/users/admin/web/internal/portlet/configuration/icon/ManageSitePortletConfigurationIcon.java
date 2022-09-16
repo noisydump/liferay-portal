@@ -14,8 +14,11 @@
 
 package com.liferay.users.admin.web.internal.portlet.configuration.icon;
 
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.portlet.PortletProvider;
@@ -24,8 +27,8 @@ import com.liferay.portal.kernel.portlet.configuration.icon.BasePortletConfigura
 import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfigurationIcon;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
-import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
-import com.liferay.portal.kernel.service.permission.OrganizationPermissionUtil;
+import com.liferay.portal.kernel.service.permission.GroupPermission;
+import com.liferay.portal.kernel.service.permission.OrganizationPermission;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
@@ -37,7 +40,6 @@ import java.util.ResourceBundle;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
-import javax.portlet.PortletURL;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -61,7 +63,7 @@ public class ManageSitePortletConfigurationIcon
 		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
 			"content.Language", getLocale(portletRequest), getClass());
 
-		return LanguageUtil.get(resourceBundle, "manage-site");
+		return _language.get(resourceBundle, "manage-site");
 	}
 
 	@Override
@@ -74,17 +76,19 @@ public class ManageSitePortletConfigurationIcon
 
 			Group organizationGroup = organization.getGroup();
 
-			PortletURL portletURL = PortletProviderUtil.getPortletURL(
-				portletRequest, organizationGroup, Group.class.getName(),
-				PortletProvider.Action.EDIT);
-
-			portletURL.setParameter(
+			return PortletURLBuilder.create(
+				PortletProviderUtil.getPortletURL(
+					portletRequest, organizationGroup, Group.class.getName(),
+					PortletProvider.Action.EDIT)
+			).setParameter(
 				"viewOrganizationsRedirect",
-				_portal.getCurrentURL(portletRequest));
-
-			return portletURL.toString();
+				_portal.getCurrentURL(portletRequest)
+			).buildString();
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return StringPool.BLANK;
@@ -110,20 +114,35 @@ public class ManageSitePortletConfigurationIcon
 			Group organizationGroup = organization.getGroup();
 
 			if (organizationGroup.isSite() &&
-				(GroupPermissionUtil.contains(
+				(_groupPermission.contains(
 					permissionChecker, organizationGroup,
 					ActionKeys.MANAGE_STAGING) ||
-				 OrganizationPermissionUtil.contains(
+				 _organizationPermission.contains(
 					 permissionChecker, organization, ActionKeys.UPDATE))) {
 
 				return true;
 			}
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return false;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		ManageSitePortletConfigurationIcon.class);
+
+	@Reference
+	private GroupPermission _groupPermission;
+
+	@Reference
+	private Language _language;
+
+	@Reference
+	private OrganizationPermission _organizationPermission;
 
 	@Reference
 	private Portal _portal;

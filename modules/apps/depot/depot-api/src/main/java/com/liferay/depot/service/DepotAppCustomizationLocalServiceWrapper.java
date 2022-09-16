@@ -27,6 +27,10 @@ public class DepotAppCustomizationLocalServiceWrapper
 	implements DepotAppCustomizationLocalService,
 			   ServiceWrapper<DepotAppCustomizationLocalService> {
 
+	public DepotAppCustomizationLocalServiceWrapper() {
+		this(null);
+	}
+
 	public DepotAppCustomizationLocalServiceWrapper(
 		DepotAppCustomizationLocalService depotAppCustomizationLocalService) {
 
@@ -134,6 +138,13 @@ public class DepotAppCustomizationLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _depotAppCustomizationLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _depotAppCustomizationLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -284,6 +295,14 @@ public class DepotAppCustomizationLocalServiceWrapper
 
 		return _depotAppCustomizationLocalService.getDepotAppCustomizations(
 			start, end);
+	}
+
+	@Override
+	public java.util.List<com.liferay.depot.model.DepotAppCustomization>
+		getDepotAppCustomizations(long depotEntryId) {
+
+		return _depotAppCustomizationLocalService.getDepotAppCustomizations(
+			depotEntryId);
 	}
 
 	/**

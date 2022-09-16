@@ -20,9 +20,10 @@ import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.web.internal.portlet.action.ActionUtil;
 import com.liferay.document.library.web.internal.util.DLFolderUtil;
 import com.liferay.document.library.web.internal.util.DLPortletConfigurationIconUtil;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.portlet.configuration.icon.BasePortletConfigurationIcon;
 import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfigurationIcon;
 import com.liferay.portal.kernel.repository.model.Folder;
@@ -59,8 +60,13 @@ public class EditFolderPortletConfigurationIcon
 	extends BasePortletConfigurationIcon {
 
 	@Override
+	public String getIconCssClass() {
+		return "pencil";
+	}
+
+	@Override
 	public String getMessage(PortletRequest portletRequest) {
-		return LanguageUtil.get(
+		return _language.get(
 			getResourceBundle(getLocale(portletRequest)), "edit");
 	}
 
@@ -69,15 +75,17 @@ public class EditFolderPortletConfigurationIcon
 		PortletRequest portletRequest, PortletResponse portletResponse) {
 
 		try {
-			PortletURL portletURL = _portal.getControlPanelPortletURL(
-				portletRequest, DLPortletKeys.DOCUMENT_LIBRARY_ADMIN,
-				PortletRequest.RENDER_PHASE);
-
 			ThemeDisplay themeDisplay =
 				(ThemeDisplay)portletRequest.getAttribute(
 					WebKeys.THEME_DISPLAY);
 
-			portletURL.setParameter("redirect", themeDisplay.getURLCurrent());
+			PortletURL portletURL = PortletURLBuilder.create(
+				_portal.getControlPanelPortletURL(
+					portletRequest, DLPortletKeys.DOCUMENT_LIBRARY_ADMIN,
+					PortletRequest.RENDER_PHASE)
+			).setRedirect(
+				themeDisplay.getURLCurrent()
+			).buildPortletURL();
 
 			Folder folder = ActionUtil.getFolder(portletRequest);
 
@@ -183,6 +191,9 @@ public class EditFolderPortletConfigurationIcon
 		target = "(model.class.name=com.liferay.portal.kernel.repository.model.Folder)"
 	)
 	private ModelResourcePermission<Folder> _folderModelResourcePermission;
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private Portal _portal;

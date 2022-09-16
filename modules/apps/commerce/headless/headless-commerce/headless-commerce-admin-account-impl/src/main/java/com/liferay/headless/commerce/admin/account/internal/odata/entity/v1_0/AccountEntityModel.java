@@ -15,15 +15,12 @@
 package com.liferay.headless.commerce.admin.account.internal.odata.entity.v1_0;
 
 import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.odata.entity.DateTimeEntityField;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
-import com.liferay.portal.odata.entity.IntegerEntityField;
 import com.liferay.portal.odata.entity.StringEntityField;
 
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author Andrea Sbarra
@@ -31,14 +28,18 @@ import java.util.stream.Stream;
 public class AccountEntityModel implements EntityModel {
 
 	public AccountEntityModel() {
-		_entityFieldsMap = Stream.of(
+		_entityFieldsMap = EntityModel.toEntityFieldsMap(
+			new DateTimeEntityField(
+				"dateCreated",
+				locale -> Field.getSortableFieldName(Field.CREATE_DATE),
+				locale -> Field.CREATE_DATE),
+			new DateTimeEntityField(
+				"dateModified",
+				locale -> Field.getSortableFieldName(Field.MODIFIED_DATE),
+				locale -> Field.MODIFIED_DATE),
 			new StringEntityField(
 				"name", locale -> Field.getSortableFieldName(Field.NAME)),
-			new IntegerEntityField(
-				"type", locale -> Field.getSortableFieldName(Field.TYPE))
-		).collect(
-			Collectors.toMap(EntityField::getName, Function.identity())
-		);
+			new StringEntityField("type", locale -> Field.TYPE));
 	}
 
 	@Override

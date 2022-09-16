@@ -73,6 +73,9 @@ public class PoshiLogger {
 			FileUtil.copyFileFromResource(
 				"META-INF/resources/js/main.js",
 				currentDirName + "/test-results/js/main.js");
+			FileUtil.copyFileFromResource(
+				"META-INF/resources/js/update_images.js",
+				currentDirName + "/test-results/js/update_images.js");
 		}
 		else {
 			indexHTMLContent = StringUtil.replace(
@@ -87,6 +90,11 @@ public class PoshiLogger {
 				indexHTMLContent, "<script defer src=\"../js/main.js\"",
 				"<script defer src=\"" + PropsValues.LOGGER_RESOURCES_URL +
 					"/js/main.js\"");
+			indexHTMLContent = StringUtil.replace(
+				indexHTMLContent,
+				"<script defer src=\"../js/update_images.js\"",
+				"<script defer src=\"" + PropsValues.LOGGER_RESOURCES_URL +
+					"/js/update_images.js\"");
 		}
 
 		StringBuilder sb = new StringBuilder();
@@ -144,6 +152,16 @@ public class PoshiLogger {
 		throws PoshiRunnerLoggerException {
 
 		_commandLogger.logSeleniumCommand(element, arguments);
+	}
+
+	public void ocularCommand(Element element)
+		throws PoshiRunnerLoggerException {
+
+		_commandLogger.ocularCommand(element, _syntaxLogger);
+
+		LoggerElement syntaxLoggerElement = _getSyntaxLoggerElement();
+
+		syntaxLoggerElement.setAttribute("data-status01", "fail");
 	}
 
 	public void passCommand(Element element) throws PoshiRunnerLoggerException {
@@ -207,7 +225,11 @@ public class PoshiLogger {
 			classCommandName, namespace);
 
 		if (commandElement instanceof PoshiElement) {
-			return new PoshiScriptSyntaxLogger(namespacedClassCommandName);
+			PoshiElement poshiCommandElement = (PoshiElement)commandElement;
+
+			if (!poshiCommandElement.isPoshiProse()) {
+				return new PoshiScriptSyntaxLogger(namespacedClassCommandName);
+			}
 		}
 
 		return new XMLSyntaxLogger(namespacedClassCommandName);

@@ -91,11 +91,9 @@ public class DepotTestUtil {
 			UnsafeRunnable<Exception> unsafeRunnable)
 		throws Exception {
 
-		Role role = RoleLocalServiceUtil.getRole(
-			group.getCompanyId(), roleName);
-
 		RoleTestUtil.addResourcePermission(
-			role, resourceName, ResourceConstants.SCOPE_GROUP,
+			RoleLocalServiceUtil.getRole(group.getCompanyId(), roleName),
+			resourceName, ResourceConstants.SCOPE_GROUP,
 			String.valueOf(group.getGroupId()), actionId);
 
 		try {
@@ -105,6 +103,33 @@ public class DepotTestUtil {
 			RoleTestUtil.removeResourcePermission(
 				roleName, resourceName, ResourceConstants.SCOPE_GROUP,
 				String.valueOf(group.getGroupId()), actionId);
+		}
+	}
+
+	public static void withLocalStagingEnabled(
+			DepotEntry depotEntry,
+			UnsafeConsumer<DepotEntry, Exception> unsafeConsumer)
+		throws Exception {
+
+		try {
+			unsafeConsumer.accept(
+				DepotStagingTestUtil.enableLocalStaging(depotEntry));
+		}
+		finally {
+			DepotStagingTestUtil.disableStaging(depotEntry);
+		}
+	}
+
+	public static void withLocalStagingEnabled(
+			Group group, UnsafeConsumer<Group, Exception> unsafeConsumer)
+		throws Exception {
+
+		try {
+			unsafeConsumer.accept(
+				DepotStagingTestUtil.enableLocalStaging(group));
+		}
+		finally {
+			DepotStagingTestUtil.disableStaging(group);
 		}
 	}
 

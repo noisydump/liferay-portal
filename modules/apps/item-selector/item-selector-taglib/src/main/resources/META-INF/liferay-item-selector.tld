@@ -34,7 +34,7 @@
 		<tag-class>com.liferay.item.selector.taglib.servlet.taglib.ImageSelectorTag</tag-class>
 		<body-content>JSP</body-content>
 		<attribute>
-			<description>A CSS class to specify the direction of the image drag. Possible values are <![CDATA[<code>vertical</code>]]>, <![CDATA[<code>horizontal</code>]]>, <![CDATA[<code>both</code>]]>, or <![CDATA[<code>none</code>]]>.</description>
+			<description>Deprecated as of 7.4.0, replaced by the attribute <![CDATA[<code>imageCropDirection</code>]]>.</description>
 			<name>draggableImage</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
@@ -43,6 +43,12 @@
 			<description>The ID of a previously selected file entry.</description>
 			<name>fileEntryId</name>
 			<required>true</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description>The direction of the image drag to crop it. Possible values are <![CDATA[<code>both</code>]]>, <![CDATA[<code>horizontal</code>]]>, <![CDATA[<code>none</code>]]>, or <![CDATA[<code>vertical</code>]]>.</description>
+			<name>imageCropDirection</name>
+			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
@@ -88,6 +94,13 @@
 		<tag-class>com.liferay.item.selector.taglib.servlet.taglib.RepositoryEntryBrowserTag</tag-class>
 		<body-content>JSP</body-content>
 		<attribute>
+			<description>The set of menu items that will be displayed in the creation menu.</description>
+			<name>allowedCreationMenuUIItemKeys</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+			<type>java.util.Set</type>
+		</attribute>
+		<attribute>
 			<description>Deprecated as of 1.1.0, with no direct replacement.</description>
 			<name>desiredItemSelectorReturnTypes</name>
 			<required>false</required>
@@ -102,6 +115,12 @@
 		<attribute>
 			<description>Deprecated as of 7.2.0, with no direct replacement.</description>
 			<name>dlMimeTypeDisplayContext</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description>The target URL for the method to edit the image via image editor.</description>
+			<name>editImageURL</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
@@ -132,6 +151,11 @@
 		<attribute>
 			<description>The maximum file size that the backend can handle. It is used in generating error messages.</description>
 			<name>maxFileSize</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>mimeTypeRestriction</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>

@@ -19,7 +19,9 @@ definition {
 			locator1 = "SearchTuning#RESULT_RANKINGS_ADD_RESULT_SEARCH_BAR",
 			value1 = "\RETURN");
 
-		FormFields.enableCheckbox(fieldName = "${assetTitle}");
+		Check.checkNotVisible(
+			key_assetTitle = "${assetTitle}",
+			locator1 = "SearchTuning#RESULT_RANKINGS_ADD_RESULT_CHECKBOX_LABEL");
 
 		Button.click(button = "Add");
 
@@ -130,6 +132,14 @@ definition {
 		AssertElementNotPresent(
 			key_assetTitle = "${assetTitle}",
 			locator1 = "SearchTuning#RESULT_RANKINGS_RESULT");
+	}
+
+	macro openResultRankingsAdmin {
+		Navigator.openWithAppendToBaseURL(urlAppend = "group/control_panel/manage?p_p_id=com_liferay_portal_search_tuning_rankings_web_internal_portlet_ResultRankingsPortlet");
+	}
+
+	macro openSynonymsAdmin {
+		Navigator.openWithAppendToBaseURL(urlAppend = "group/control_panel/manage?p_p_id=com_liferay_portal_search_tuning_synonyms_web_internal_portlet_SynonymsPortlet");
 	}
 
 	macro pinResult {

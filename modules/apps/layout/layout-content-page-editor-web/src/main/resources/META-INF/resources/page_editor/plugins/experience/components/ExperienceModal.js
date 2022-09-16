@@ -17,8 +17,8 @@ import ClayButton from '@clayui/button';
 import ClayForm, {ClayInput, ClaySelect} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import ClayModal from '@clayui/modal';
+import {useIsMounted} from '@liferay/frontend-js-react-web';
 import classNames from 'classnames';
-import {useIsMounted} from 'frontend-js-react-web';
 import PropTypes from 'prop-types';
 import React, {useState} from 'react';
 
@@ -26,13 +26,13 @@ import {config} from '../../../app/config/index';
 import Button from '../../../common/components/Button';
 
 const ExperienceModal = ({
+	canUpdateSegments,
 	errorMessage,
 	experienceId,
-	canUpdateSegments,
 	initialName = '',
 	observer,
-	onErrorDismiss,
 	onClose,
+	onErrorDismiss,
 	onNewSegmentClick,
 	onSubmit,
 	segmentId,
@@ -109,7 +109,11 @@ const ExperienceModal = ({
 		: Liferay.Language.get('new-experience');
 
 	return (
-		<ClayModal observer={observer} size="md">
+		<ClayModal
+			containerProps={{className: 'cadmin'}}
+			observer={observer}
+			size="md"
+		>
 			<ClayModal.Header>{modalTitle}</ClayModal.Header>
 
 			<ClayModal.Body>
@@ -126,6 +130,7 @@ const ExperienceModal = ({
 							title={errorMessage}
 						/>
 					)}
+
 					<ClayForm.Group className={nameGroupClassName}>
 						<label htmlFor={nameInputId}>
 							{Liferay.Language.get('name')}
@@ -156,6 +161,7 @@ const ExperienceModal = ({
 									className="mr-1"
 									symbol="exclamation-full"
 								/>
+
 								{Liferay.Language.get(
 									'an-experience-name-is-required'
 								)}
@@ -174,9 +180,10 @@ const ExperienceModal = ({
 								symbol="asterisk"
 							/>
 						</label>
+
 						<div className="d-flex">
 							<ClaySelect
-								disabled={segments.length === 0}
+								disabled={!segments.length}
 								id={segmentSelectId}
 								onChange={handleSegmentChange}
 								value={selectedSegmentId}
@@ -216,6 +223,7 @@ const ExperienceModal = ({
 					</ClayForm.Group>
 				</ClayForm>
 			</ClayModal.Body>
+
 			<ClayModal.Footer
 				last={
 					<ClayButton.Group spaced>

@@ -1,178 +1,165 @@
-@import 'atlas-variables';
+@import 'cadmin-variables';
 
 $controlMenuDesktopHeight: 56px;
-$previewInfoBarHeight: 36px;
+$controlMenuHeight: 48px;
 $toolbarDesktopHeight: 56px;
+$previewSelectorWidth: 168px;
+$undoHistoryOverlayZIndex: 1001;
 
-.style-book-editor {
-	--style-book-color-picker-color: none;
+html#{$cadmin-selector} {
+	.cadmin {
+		&.style-book-editor {
+			--style-book-color-picker-color: none;
 
-	display: flex;
-	height: calc(100vh - #{$controlMenuDesktopHeight});
-	left: 0;
-	position: absolute;
-	top: 0;
-	width: 100%;
-
-	&__color-frontend-token {
-		.clay-color-picker .clay-color .input-group-item .input-group-text {
-			border-radius: 0.25rem 0 0 0.25rem;
-		}
-
-		.clay-color-btn {
-			background-color: var(--style-book-color-picker-color) !important;
-		}
-	}
-
-	&__page-preview {
-		flex-grow: 1;
-		position: relative;
-
-		&-frame {
-			border: none;
-			height: calc(100% - #{$previewInfoBarHeight});
+			height: calc(100vh - #{$controlMenuDesktopHeight});
+			left: 0;
+			overflow: hidden;
+			position: absolute;
+			top: 0;
 			width: 100%;
 		}
 
-		&-info-bar {
-			align-items: center;
-			background: $primary-l1;
-			color: $white;
-			display: flex;
-			font-size: 0.875rem;
-			height: $previewInfoBarHeight;
-			justify-content: space-between;
-			padding-bottom: 1px;
-			padding-left: 24px;
-			padding-right: 24px;
-
-			.dropdown-toggle.btn {
-				&:active {
-					background-color: rgba($white, 0.25);
+		.style-book-editor {
+			&__color-frontend-token {
+				.clay-color-picker
+					.clay-color
+					.input-group-item
+					.input-group-text {
+					border-radius: 4px 0 0 4px;
 				}
-				&:hover {
-					background-color: rgba($white, 0.15);
+
+				.clay-color-btn {
+					background-color: var(
+						--style-book-color-picker-color
+					) !important;
+				}
+			}
+
+			&__page-preview {
+				flex-grow: 1;
+				position: relative;
+
+				&-empty-site-message {
+					.c-empty-state-title {
+						display: none;
+					}
+
+					.c-empty-state-text {
+						margin-top: 32px;
+					}
+				}
+
+				&-frame {
+					border: none;
+					height: 100%;
+					width: 100%;
+				}
+
+				&-text {
+					font-weight: 700;
+				}
+			}
+
+			&__page-type-selector {
+				border-bottom: 1px solid $cadmin-gray-300;
+				padding: 16px;
+			}
+
+			&__page-selector {
+				min-width: 320px;
+				padding: 0;
+
+				.dropdown-item:hover {
+					background-color: $cadmin-white;
+				}
+			}
+
+			&__preview-selector {
+				overflow: hidden;
+				text-overflow: ellipsis;
+				width: $previewSelectorWidth;
+			}
+
+			&__sidebar {
+				background-color: $cadmin-white;
+				border-left: 1px solid $cadmin-gray-300;
+				width: 320px;
+			}
+
+			&__sidebar-content {
+				height: calc(
+					100vh - #{$controlMenuDesktopHeight + $toolbarDesktopHeight}
+				);
+				overflow-y: auto;
+				padding: 16px;
+
+				.form-group-sm label {
+					font-size: 12px;
+				}
+			}
+
+			&__status-text {
+				font-size: 0.875rem;
+				font-weight: 600;
+			}
+
+			&__status-icon {
+				color: $cadmin-success;
+				font-size: 0.875rem;
+			}
+
+			&__toolbar {
+				background-color: $cadmin-white;
+				border-bottom: 1px solid fade_out($cadmin-secondary-l2, 0.5);
+				flex: 1 1 100%;
+			}
+
+			&__undo-history {
+				&.dropdown-menu {
+					max-height: 320px;
+					max-width: 280px;
+					width: 280px;
+				}
+
+				.dropdown-item {
+					padding-right: 2.25rem;
+					text-overflow: ellipsis;
+					white-space: nowrap;
+
+					span {
+						font-size: 0.75rem;
+					}
+				}
+
+				&__overlay {
+					height: 100vh;
+					left: 0;
+					position: fixed;
+					top: 0;
+					width: 100vw;
+					z-index: $undoHistoryOverlayZIndex;
 				}
 			}
 		}
+	}
 
-		&-no-page-message {
-			align-items: center;
-			background-color: $gray-100;
-			color: $gray-500;
-			display: flex;
-			font-size: 0.875rem;
-			font-weight: 600;
-			height: 100%;
-			justify-content: center;
-		}
+	body.has-control-menu .cadmin .style-book-editor__undo-history__overlay {
+		height: calc(100vh - #{$controlMenuHeight});
+		top: $controlMenuHeight;
 
-		&-text {
-			font-weight: 700;
+		@include media-breakpoint-up(sm) {
+			height: calc(100vh - #{$controlMenuDesktopHeight});
+			top: $controlMenuDesktopHeight;
 		}
 	}
 
-	&__page-type-selector {
-		border-bottom: 1px solid $gray-300;
-		padding: 16px;
-	}
-
-	&__page-selector {
-		min-width: 320px;
-		padding: 0;
-
-		.dropdown-item:hover {
-			background-color: $white;
-		}
-	}
-
-	&__page-tree {
-		padding: 16px 0;
-
-		.tree-expanded > .tree-hitarea {
-			padding-right: 4px;
-		}
-
-		.tree-container:not(.tree-root-container) {
-			margin-left: 22px;
-		}
-
-		.lexicon-icon:not(.lexicon-icon-hr):not(.lexicon-icon-plus) {
-			margin-right: 4px;
-		}
-
-		.tree-node {
-			margin-bottom: 8px;
-			margin-top: 8px;
-
-			.tree-hitarea {
-				font-size: 8px;
-				margin-right: 0;
-				text-align: center;
-			}
-		}
-	}
-
-	&__sidebar {
-		background-color: $white;
-		border-left: 1px solid $gray-300;
-		width: 320px;
-	}
-
-	&__sidebar-collapse {
-		cursor: pointer;
-
-		.collapse-icon {
-			background: none;
-			border: none;
-			color: $gray-600;
-			font-size: 0.7rem;
-			height: 2rem;
-			margin-bottom: 4px;
-			padding-left: 0;
-			text-align: left;
-			width: 100%;
-
-			&-closed {
-				.rtl & {
+	&.rtl {
+		.cadmin {
+			.style-book-editor__sidebar-collapse {
+				.collapse-icon-closed {
 					transform: rotate(-180deg);
 				}
 			}
 		}
-
-		.sheet-subtitle {
-			line-height: inherit;
-		}
-	}
-
-	&__sidebar-content {
-		height: calc(
-			100vh - #{$controlMenuDesktopHeight + $toolbarDesktopHeight}
-		);
-		overflow-y: auto;
-		padding: 1rem;
-
-		.form-group-sm label {
-			font-size: 0.75rem;
-		}
-	}
-
-	&__status-text {
-		font-size: 0.75rem;
-		font-weight: 600;
-	}
-
-	&__status-icon {
-		color: $success;
-		font-size: 0.75rem;
-	}
-
-	&__toolbar {
-		align-items: center;
-		border-bottom: 1px solid $gray-300;
-		display: flex;
-		flex-direction: row;
-		height: $toolbarDesktopHeight;
-		justify-content: space-between;
 	}
 }

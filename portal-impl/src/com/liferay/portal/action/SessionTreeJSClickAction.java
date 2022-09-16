@@ -16,6 +16,8 @@ package com.liferay.portal.action;
 
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.portlet.PortalPreferences;
@@ -26,12 +28,12 @@ import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.SessionTreeJSClicks;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.struts.Action;
 import com.liferay.portal.struts.model.ActionForward;
 import com.liferay.portal.struts.model.ActionMapping;
-import com.liferay.taglib.ui.util.SessionTreeJSClicks;
 
 import java.util.ConcurrentModificationException;
 
@@ -194,8 +196,15 @@ public class SessionTreeJSClickAction implements Action {
 			}
 			catch (ConcurrentModificationException
 						concurrentModificationException) {
+
+				if (_log.isDebugEnabled()) {
+					_log.debug(concurrentModificationException);
+				}
 			}
 		}
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		SessionTreeJSClickAction.class);
 
 }

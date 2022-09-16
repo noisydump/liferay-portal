@@ -14,21 +14,28 @@
 
 package com.liferay.user.groups.admin.web.internal.display.context;
 
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItemList;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserGroup;
+import com.liferay.portal.kernel.portlet.LiferayWindowState;
+import com.liferay.portal.kernel.portlet.SearchOrderByUtil;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.UserGroupServiceUtil;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.service.permission.PortalPermissionUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -37,9 +44,11 @@ import com.liferay.portlet.usergroupsadmin.search.SetUserUserGroupChecker;
 import com.liferay.portlet.usergroupsadmin.search.UnsetUserUserGroupChecker;
 import com.liferay.portlet.usersadmin.search.UserSearch;
 import com.liferay.portlet.usersadmin.search.UserSearchTerms;
+import com.liferay.user.groups.admin.constants.UserGroupsAdminPortletKeys;
 
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import javax.portlet.PortletURL;
@@ -64,17 +73,16 @@ public class EditUserGroupAssignmentsManagementToolbarDisplayContext {
 		_displayStyle = displayStyle;
 		_mvcPath = mvcPath;
 
-		long userGroupId = ParamUtil.getLong(httpServletRequest, "userGroupId");
-
-		_userGroup = UserGroupServiceUtil.fetchUserGroup(userGroupId);
+		_userGroup = UserGroupServiceUtil.fetchUserGroup(
+			ParamUtil.getLong(httpServletRequest, "userGroupId"));
 	}
 
 	public List<DropdownItem> getActionDropdownItems() {
 		return DropdownItemListBuilder.add(
 			() -> _hasAddUserGroupPermission(),
 			dropdownItem -> {
-				dropdownItem.setHref("javascript:;");
-				dropdownItem.setIcon("minus-circle");
+				dropdownItem.putData("action", "removeUsers");
+				dropdownItem.setIcon("times-circle");
 				dropdownItem.setLabel(
 					LanguageUtil.get(_httpServletRequest, "remove"));
 				dropdownItem.setQuickAction(true);
@@ -82,12 +90,48 @@ public class EditUserGroupAssignmentsManagementToolbarDisplayContext {
 		).build();
 	}
 
+	public Map<String, Object> getAdditionalProps() {
+		return HashMapBuilder.<String, Object>put(
+			"editUserGroupAssignmentsURL",
+			PortletURLBuilder.createActionURL(
+				_renderResponse
+			).setActionName(
+				"editUserGroupAssignments"
+			).buildString()
+		).put(
+			"portletURL", String.valueOf(getPortletURL())
+		).put(
+			"selectUsersURL",
+			PortletURLBuilder.createActionURL(
+				_renderResponse
+			).setMVCPath(
+				"/select_user_group_users.jsp"
+			).setParameter(
+				"userGroupId", _userGroup.getUserGroupId()
+			).setWindowState(
+				LiferayWindowState.POP_UP
+			).buildString()
+		).put(
+			"userGroupName", () -> HtmlUtil.escape(_userGroup.getName())
+		).build();
+	}
+
 	public String getClearResultsURL() {
-		PortletURL clearResultsURL = getPortletURL();
+		return PortletURLBuilder.create(
+			getPortletURL()
+		).setKeywords(
+			StringPool.BLANK
+		).buildString();
+	}
 
-		clearResultsURL.setParameter("keywords", StringPool.BLANK);
-
-		return clearResultsURL.toString();
+	public CreationMenu getCreationMenu() {
+		return CreationMenuBuilder.addPrimaryDropdownItem(
+			dropdownItem -> {
+				dropdownItem.putData("action", "addUsers");
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "add-users"));
+			}
+		).build();
 	}
 
 	public List<DropdownItem> getFilterDropdownItems() {
@@ -117,42 +161,53 @@ public class EditUserGroupAssignmentsManagementToolbarDisplayContext {
 	}
 
 	public String getOrderByCol() {
-		if (Validator.isNull(_orderByCol)) {
-			_orderByCol = ParamUtil.getString(
-				_httpServletRequest, "orderByCol", "first-name");
+		if (Validator.isNotNull(_orderByCol)) {
+			return _orderByCol;
 		}
+
+		_orderByCol = SearchOrderByUtil.getOrderByCol(
+			_httpServletRequest, UserGroupsAdminPortletKeys.USER_GROUPS_ADMIN,
+			"edit-user-groups-order-by-col", "first-name");
 
 		return _orderByCol;
 	}
 
 	public String getOrderByType() {
-		if (Validator.isNull(_orderByType)) {
-			_orderByType = ParamUtil.getString(
-				_httpServletRequest, "orderByType", "asc");
+		if (Validator.isNotNull(_orderByType)) {
+			return _orderByType;
 		}
+
+		_orderByType = SearchOrderByUtil.getOrderByType(
+			_httpServletRequest, UserGroupsAdminPortletKeys.USER_GROUPS_ADMIN,
+			"edit-user-groups-order-by-type", "asc");
 
 		return _orderByType;
 	}
 
 	public PortletURL getPortletURL() {
-		PortletURL portletURL = _renderResponse.createRenderURL();
+		PortletURL portletURL = PortletURLBuilder.createRenderURL(
+			_renderResponse
+		).setMVCPath(
+			_mvcPath
+		).setRedirect(
+			ParamUtil.getString(_httpServletRequest, "redirect")
+		).setKeywords(
+			() -> {
+				if (Validator.isNotNull(getKeywords())) {
+					return getKeywords();
+				}
 
-		portletURL.setParameter("mvcPath", _mvcPath);
-		portletURL.setParameter(
-			"userGroupId", String.valueOf(_userGroup.getUserGroupId()));
-
-		String redirect = ParamUtil.getString(_httpServletRequest, "redirect");
-
-		portletURL.setParameter("redirect", redirect);
-
-		portletURL.setParameter("displayStyle", _displayStyle);
-
-		if (Validator.isNotNull(getKeywords())) {
-			portletURL.setParameter("keywords", getKeywords());
-		}
-
-		portletURL.setParameter("orderByCol", getOrderByCol());
-		portletURL.setParameter("orderByType", getOrderByType());
+				return null;
+			}
+		).setParameter(
+			"displayStyle", _displayStyle
+		).setParameter(
+			"orderByCol", getOrderByCol()
+		).setParameter(
+			"orderByType", getOrderByType()
+		).setParameter(
+			"userGroupId", _userGroup.getUserGroupId()
+		).buildPortletURL();
 
 		if (_userSearch != null) {
 			portletURL.setParameter(
@@ -167,12 +222,11 @@ public class EditUserGroupAssignmentsManagementToolbarDisplayContext {
 	}
 
 	public String getSearchActionURL() {
-		PortletURL searchActionURL = getPortletURL();
-
-		searchActionURL.setParameter(
-			"redirect", PortalUtil.getCurrentURL(_httpServletRequest));
-
-		return searchActionURL.toString();
+		return PortletURLBuilder.create(
+			getPortletURL()
+		).setRedirect(
+			PortalUtil.getCurrentURL(_httpServletRequest)
+		).buildString();
 	}
 
 	public SearchContainer<User> getSearchContainer(
@@ -185,6 +239,22 @@ public class EditUserGroupAssignmentsManagementToolbarDisplayContext {
 
 		UserSearch userSearch = new UserSearch(_renderRequest, getPortletURL());
 
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		UserSearchTerms searchTerms =
+			(UserSearchTerms)userSearch.getSearchTerms();
+
+		userSearch.setResultsAndTotal(
+			() -> UserLocalServiceUtil.search(
+				themeDisplay.getCompanyId(), searchTerms.getKeywords(),
+				searchTerms.getStatus(), userParams, userSearch.getStart(),
+				userSearch.getEnd(), userSearch.getOrderByComparator()),
+			UserLocalServiceUtil.searchCount(
+				themeDisplay.getCompanyId(), searchTerms.getKeywords(),
+				searchTerms.getStatus(), userParams));
+
 		if (_mvcPath.equals("/edit_user_group_assignments.jsp")) {
 			userSearch.setRowChecker(
 				new UnsetUserUserGroupChecker(_renderResponse, _userGroup));
@@ -194,38 +264,18 @@ public class EditUserGroupAssignmentsManagementToolbarDisplayContext {
 				new SetUserUserGroupChecker(_renderResponse, _userGroup));
 		}
 
-		ThemeDisplay themeDisplay =
-			(ThemeDisplay)_httpServletRequest.getAttribute(
-				WebKeys.THEME_DISPLAY);
-
-		UserSearchTerms searchTerms =
-			(UserSearchTerms)userSearch.getSearchTerms();
-
-		List<User> results = UserLocalServiceUtil.search(
-			themeDisplay.getCompanyId(), searchTerms.getKeywords(),
-			searchTerms.getStatus(), userParams, userSearch.getStart(),
-			userSearch.getEnd(), userSearch.getOrderByComparator());
-
-		int total = UserLocalServiceUtil.searchCount(
-			themeDisplay.getCompanyId(), searchTerms.getKeywords(),
-			searchTerms.getStatus(), userParams);
-
-		userSearch.setResults(results);
-		userSearch.setTotal(total);
-
 		_userSearch = userSearch;
 
 		return _userSearch;
 	}
 
 	public String getSortingURL() {
-		PortletURL sortingURL = getPortletURL();
-
-		sortingURL.setParameter(
+		return PortletURLBuilder.create(
+			getPortletURL()
+		).setParameter(
 			"orderByType",
-			Objects.equals(getOrderByType(), "asc") ? "desc" : "asc");
-
-		return sortingURL.toString();
+			Objects.equals(getOrderByType(), "asc") ? "desc" : "asc"
+		).buildString();
 	}
 
 	public List<ViewTypeItem> getViewTypeItems() {

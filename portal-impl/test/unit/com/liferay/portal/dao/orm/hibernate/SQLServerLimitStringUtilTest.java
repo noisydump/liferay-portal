@@ -14,13 +14,33 @@
 
 package com.liferay.portal.dao.orm.hibernate;
 
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
+
 import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
  * @author Sampsa Sohlman
  */
 public class SQLServerLimitStringUtilTest {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
+	@Test
+	public void testDistinct() throws Exception {
+		String sql = SQLServerLimitStringUtil.getLimitString(
+			"SELECT DISTINCT JournalArticle.* FROM JournalArticle ORDER BY " +
+				"userName ASC",
+			10, 30);
+
+		Assert.assertFalse(sql.contains("SELECT top DISTINCT"));
+		Assert.assertTrue(sql.contains("SELECT DISTINCT top"));
+	}
 
 	@Test
 	public void testInnerOrderBy() throws Exception {

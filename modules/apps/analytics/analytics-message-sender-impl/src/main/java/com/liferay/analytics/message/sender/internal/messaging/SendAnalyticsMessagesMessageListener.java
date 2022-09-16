@@ -29,7 +29,6 @@ import com.liferay.portal.kernel.messaging.BaseMessageListener;
 import com.liferay.portal.kernel.messaging.DestinationNames;
 import com.liferay.portal.kernel.messaging.Message;
 import com.liferay.portal.kernel.messaging.MessageListener;
-import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.module.framework.ModuleServiceLifecycle;
 import com.liferay.portal.kernel.scheduler.SchedulerEngineHelper;
 import com.liferay.portal.kernel.scheduler.SchedulerEntry;
@@ -38,6 +37,8 @@ import com.liferay.portal.kernel.scheduler.TimeUnit;
 import com.liferay.portal.kernel.scheduler.Trigger;
 import com.liferay.portal.kernel.scheduler.TriggerFactory;
 import com.liferay.portal.kernel.service.CompanyLocalService;
+import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.PropsUtil;
 
 import java.nio.charset.StandardCharsets;
 
@@ -46,7 +47,6 @@ import java.util.List;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -60,7 +60,6 @@ import org.osgi.service.component.annotations.Reference;
 public class SendAnalyticsMessagesMessageListener extends BaseMessageListener {
 
 	@Activate
-	@Modified
 	protected void activate() {
 		Class<?> clazz = getClass();
 
@@ -87,9 +86,7 @@ public class SendAnalyticsMessagesMessageListener extends BaseMessageListener {
 			return;
 		}
 
-		for (Company company : _companyLocalService.getCompanies(false)) {
-			_process(company.getCompanyId());
-		}
+		_companyLocalService.forEachCompanyId(companyId -> _process(companyId));
 	}
 
 	@Override
@@ -99,11 +96,6 @@ public class SendAnalyticsMessagesMessageListener extends BaseMessageListener {
 		}
 
 		_process(companyId);
-	}
-
-	@Reference(target = ModuleServiceLifecycle.PORTAL_INITIALIZED, unbind = "-")
-	protected void setModuleServiceLifecycle(
-		ModuleServiceLifecycle moduleServiceLifecycle) {
 	}
 
 	private void _process(long companyId) throws Exception {
@@ -160,7 +152,9 @@ public class SendAnalyticsMessagesMessageListener extends BaseMessageListener {
 	}
 
 	private boolean _skipProcess(Message message) {
-		if (!_analyticsConfigurationTracker.isActive()) {
+		if (GetterUtil.getBoolean(PropsUtil.get("feature.flag.LRAC-10632")) ||
+			!_analyticsConfigurationTracker.isActive()) {
+
 			return true;
 		}
 
@@ -193,6 +187,9 @@ public class SendAnalyticsMessagesMessageListener extends BaseMessageListener {
 
 	@Reference
 	private CompanyLocalService _companyLocalService;
+
+	@Reference(target = ModuleServiceLifecycle.PORTAL_INITIALIZED)
+	private ModuleServiceLifecycle _moduleServiceLifecycle;
 
 	@Reference
 	private SchedulerEngineHelper _schedulerEngineHelper;

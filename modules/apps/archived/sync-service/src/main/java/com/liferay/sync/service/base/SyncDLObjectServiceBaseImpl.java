@@ -20,18 +20,24 @@ import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.service.BaseServiceImpl;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.sync.model.SyncDLObject;
 import com.liferay.sync.service.SyncDLObjectService;
+import com.liferay.sync.service.SyncDLObjectServiceUtil;
 import com.liferay.sync.service.persistence.SyncDLFileVersionDiffPersistence;
 import com.liferay.sync.service.persistence.SyncDLObjectFinder;
 import com.liferay.sync.service.persistence.SyncDLObjectPersistence;
 import com.liferay.sync.service.persistence.SyncDevicePersistence;
 
+import java.lang.reflect.Field;
+
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -52,8 +58,13 @@ public abstract class SyncDLObjectServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>SyncDLObjectService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.sync.service.SyncDLObjectServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>SyncDLObjectService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>SyncDLObjectServiceUtil</code>.
 	 */
+	@Deactivate
+	protected void deactivate() {
+		_setServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -64,6 +75,8 @@ public abstract class SyncDLObjectServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		syncDLObjectService = (SyncDLObjectService)aopProxy;
+
+		_setServiceUtilService(syncDLObjectService);
 	}
 
 	/**
@@ -108,6 +121,22 @@ public abstract class SyncDLObjectServiceBaseImpl
 		}
 	}
 
+	private void _setServiceUtilService(
+		SyncDLObjectService syncDLObjectService) {
+
+		try {
+			Field field = SyncDLObjectServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, syncDLObjectService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@Reference
 	protected SyncDevicePersistence syncDevicePersistence;
 
@@ -139,39 +168,8 @@ public abstract class SyncDLObjectServiceBaseImpl
 		classNameService;
 
 	@Reference
-	protected com.liferay.portal.kernel.service.GroupLocalService
-		groupLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.GroupService groupService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.OrganizationLocalService
-		organizationLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.OrganizationService
-		organizationService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.RepositoryLocalService
-		repositoryLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.RepositoryService
-		repositoryService;
-
-	@Reference
 	protected com.liferay.portal.kernel.service.ResourceLocalService
 		resourceLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.ResourcePermissionLocalService
-		resourcePermissionLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.ResourcePermissionService
-		resourcePermissionService;
 
 	@Reference
 	protected com.liferay.portal.kernel.service.UserLocalService
@@ -180,46 +178,7 @@ public abstract class SyncDLObjectServiceBaseImpl
 	@Reference
 	protected com.liferay.portal.kernel.service.UserService userService;
 
-	@Reference
-	protected com.liferay.document.library.kernel.service.DLAppLocalService
-		dlAppLocalService;
-
-	@Reference
-	protected com.liferay.document.library.kernel.service.DLAppService
-		dlAppService;
-
-	@Reference
-	protected
-		com.liferay.document.library.kernel.service.DLFileEntryLocalService
-			dlFileEntryLocalService;
-
-	@Reference
-	protected com.liferay.document.library.kernel.service.DLFileEntryService
-		dlFileEntryService;
-
-	@Reference
-	protected
-		com.liferay.document.library.kernel.service.DLFileVersionLocalService
-			dlFileVersionLocalService;
-
-	@Reference
-	protected com.liferay.document.library.kernel.service.DLFileVersionService
-		dlFileVersionService;
-
-	@Reference
-	protected com.liferay.document.library.kernel.service.DLFolderLocalService
-		dlFolderLocalService;
-
-	@Reference
-	protected com.liferay.document.library.kernel.service.DLFolderService
-		dlFolderService;
-
-	@Reference
-	protected com.liferay.document.library.kernel.service.DLTrashLocalService
-		dlTrashLocalService;
-
-	@Reference
-	protected com.liferay.document.library.kernel.service.DLTrashService
-		dlTrashService;
+	private static final Log _log = LogFactoryUtil.getLog(
+		SyncDLObjectServiceBaseImpl.class);
 
 }

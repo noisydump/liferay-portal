@@ -47,7 +47,6 @@ import com.liferay.portal.search.sort.SortOrder;
 import com.liferay.portal.search.sort.Sorts;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
-import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.workflow.metrics.rest.dto.v1_0.Process;
 import com.liferay.portal.workflow.metrics.rest.dto.v1_0.ProcessMetric;
 import com.liferay.portal.workflow.metrics.rest.internal.dto.v1_0.util.ProcessUtil;
@@ -79,8 +78,7 @@ import org.osgi.service.component.annotations.ServiceScope;
 	properties = "OSGI-INF/liferay/rest/v1_0/process-metric.properties",
 	scope = ServiceScope.PROTOTYPE, service = ProcessMetricResource.class
 )
-public class ProcessMetricResourceImpl
-	extends BaseProcessMetricResourceImpl implements EntityModelResource {
+public class ProcessMetricResourceImpl extends BaseProcessMetricResourceImpl {
 
 	@Override
 	public EntityModel getEntityModel(MultivaluedMap multivaluedMap)
@@ -234,6 +232,7 @@ public class ProcessMetricResourceImpl
 		}
 
 		return booleanQuery.addMustQueryClauses(
+			_queries.term("active", Boolean.TRUE),
 			_queries.term("companyId", contextCompany.getCompanyId()),
 			_queries.term("deleted", Boolean.FALSE),
 			_createBooleanQuery(completed),
@@ -311,6 +310,8 @@ public class ProcessMetricResourceImpl
 		}
 
 		return booleanQuery.addMustQueryClauses(
+			_queries.term("active", Boolean.TRUE),
+			_queries.term("blocked", Boolean.FALSE),
 			_queries.term("companyId", contextCompany.getCompanyId()),
 			_queries.term("deleted", Boolean.FALSE),
 			_createProcessIdTermsQuery(processIds));
@@ -463,7 +464,7 @@ public class ProcessMetricResourceImpl
 		if (_isOrderByInstanceCount(fieldSort.getField())) {
 			for (Bucket bucket : instanceTermsAggregationResult.getBuckets()) {
 				ProcessMetric processMetric = processMetricsMap.remove(
-					Long.valueOf(bucket.getKey()));
+					GetterUtil.getLong(bucket.getKey()));
 
 				_populateProcessWithSLAMetrics(
 					slaTermsAggregationResult.getBucket(bucket.getKey()),
@@ -495,7 +496,7 @@ public class ProcessMetricResourceImpl
 		else {
 			for (Bucket bucket : slaTermsAggregationResult.getBuckets()) {
 				ProcessMetric processMetric = processMetricsMap.remove(
-					Long.valueOf(bucket.getKey()));
+					GetterUtil.getLong(bucket.getKey()));
 
 				_populateProcessWithSLAMetrics(bucket, processMetric);
 				_setInstanceCount(

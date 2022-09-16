@@ -15,7 +15,7 @@
 import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
 import {useModal} from '@clayui/modal';
-import {useIsMounted} from 'frontend-js-react-web';
+import {useIsMounted} from '@liferay/frontend-js-react-web';
 import {fetch, objectToFormData} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useContext, useState} from 'react';
@@ -32,6 +32,7 @@ import FlagsModal from './FlagsModal.es';
 
 const Flags = ({
 	baseData,
+	btnProps,
 	captchaURI,
 	companyName,
 	disabled = false,
@@ -39,9 +40,11 @@ const Flags = ({
 	message = Liferay.Language.get('report'),
 	onlyIcon = false,
 	pathTermsOfUse,
+	showIcon = true,
 	reasons,
 	signedIn = false,
 	uri,
+	viewMode,
 }) => {
 	const [isSending, setIsSending] = useState(false);
 	const [reportDialogOpen, setReportDialogOpen] = useState(false);
@@ -75,6 +78,12 @@ const Flags = ({
 		setReportDialogOpen(false);
 	};
 
+	const form = {
+		otherReason,
+		reporterEmailAddress,
+		selectedReason,
+	};
+
 	const handleInputChange = (event) => {
 		const target = event.target;
 		const value =
@@ -102,13 +111,10 @@ const Flags = ({
 		const formDataObj = {
 			...baseData,
 			[`${namespace}reason`]: getReason(),
+			[`${namespace}reporterEmailAddress`]: signedIn
+				? Liferay.ThemeDisplay.getUserEmailAddress()
+				: reporterEmailAddress,
 		};
-
-		if (!signedIn) {
-			formDataObj[
-				`${namespace}reporterEmailAddress`
-			] = reporterEmailAddress;
-		}
 
 		fetch(uri, {
 			body: objectToFormData(formDataObj, new FormData(event.target)),
@@ -142,19 +148,25 @@ const Flags = ({
 					onlyIcon ? 'lfr-portal-tooltip' : ''
 				}`}
 				data-title={onlyIcon ? message : undefined}
-				disabled={disabled}
+				disabled={!viewMode || disabled}
 				displayType="secondary"
 				monospaced={onlyIcon}
 				onClick={handleClickShow}
 				small
+				{...btnProps}
 			>
-				<span
-					className={
-						!onlyIcon ? 'inline-item inline-item-before' : undefined
-					}
-				>
-					<ClayIcon symbol="flag-empty" />
-				</span>
+				{showIcon && (
+					<span
+						className={
+							onlyIcon
+								? undefined
+								: 'inline-item inline-item-before'
+						}
+					>
+						<ClayIcon symbol="flag-empty" />
+					</span>
+				)}
+
 				<span className={onlyIcon ? 'sr-only' : undefined}>
 					{message}
 				</span>
@@ -164,6 +176,7 @@ const Flags = ({
 					captchaURI={captchaURI}
 					companyName={companyName}
 					error={error}
+					form={form}
 					handleClose={onClose}
 					handleInputChange={handleInputChange}
 					handleSubmit={handleSubmitReport}
@@ -181,6 +194,7 @@ const Flags = ({
 };
 Flags.propTypes = {
 	baseData: PropTypes.object.isRequired,
+	btnProps: PropTypes.object,
 	captchaURI: PropTypes.string.isRequired,
 	companyName: PropTypes.string.isRequired,
 	disabled: PropTypes.bool,
@@ -189,6 +203,7 @@ Flags.propTypes = {
 	onlyIcon: PropTypes.bool,
 	pathTermsOfUse: PropTypes.string.isRequired,
 	reasons: PropTypes.object.isRequired,
+	showIcon: PropTypes.bool,
 	signedIn: PropTypes.bool,
 	uri: PropTypes.string.isRequired,
 };

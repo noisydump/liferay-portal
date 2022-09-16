@@ -15,27 +15,27 @@
 AUI.add(
 	'liferay-admin',
 	(A) => {
-		var Lang = A.Lang;
+		const Lang = A.Lang;
 
-		var IN_PROGRESS_SELECTOR = '.background-task-status-in-progress';
+		const IN_PROGRESS_SELECTOR = '.background-task-status-in-progress';
 
-		var INTERVAL_RENDER_IDLE = 60000;
+		const INTERVAL_RENDER_IDLE = 60000;
 
-		var INTERVAL_RENDER_IN_PROGRESS = 2000;
+		const INTERVAL_RENDER_IN_PROGRESS = 2000;
 
-		var MAP_DATA_PARAMS = {
+		const MAP_DATA_PARAMS = {
 			classname: 'className',
 		};
 
-		var STR_CLICK = 'click';
+		const STR_CLICK = 'click';
 
-		var STR_FORM = 'form';
+		const STR_FORM = 'form';
 
-		var STR_INDEX_ACTIONS_PANEL = 'indexActionsPanel';
+		const STR_INDEX_ACTIONS_PANEL = 'indexActionsPanel';
 
-		var STR_URL = 'url';
+		const STR_URL = 'url';
 
-		var Admin = A.Component.create({
+		const Admin = A.Component.create({
 			ATTRS: {
 				controlMenuCategoryKey: {
 					validator: Lang.isString,
@@ -80,14 +80,15 @@ AUI.add(
 
 			prototype: {
 				_addInputsFromData(data) {
-					var instance = this;
+					const instance = this;
 
-					var form = instance.get(STR_FORM);
+					const form = instance.get(STR_FORM);
 
-					var inputsArray = A.Object.map(data, (value, key) => {
+					// eslint-disable-next-line @liferay/aui/no-object
+					const inputsArray = A.Object.map(data, (value, key) => {
 						key = MAP_DATA_PARAMS[key] || key;
 
-						var nsKey = instance.ns(key);
+						const nsKey = instance.ns(key);
 
 						return (
 							'<input id="' +
@@ -126,9 +127,9 @@ AUI.add(
 				},
 
 				_isBackgroundTaskInProgress() {
-					var instance = this;
+					const instance = this;
 
-					var indexActionsNode = A.one(
+					const indexActionsNode = A.one(
 						instance.get(STR_INDEX_ACTIONS_PANEL)
 					);
 
@@ -139,12 +140,12 @@ AUI.add(
 				},
 
 				_onSubmit(event) {
-					var instance = this;
+					const instance = this;
 
-					var data = event.currentTarget.getData();
-					var form = instance.get(STR_FORM);
+					const data = event.currentTarget.getData();
+					const form = instance.get(STR_FORM);
 
-					var redirect = instance.one('#redirect', form);
+					const redirect = instance.one('#redirect', form);
 
 					if (redirect) {
 						redirect.val(instance.get('redirectUrl'));
@@ -152,13 +153,32 @@ AUI.add(
 
 					instance._addInputsFromData(data);
 
+					const companyIds = document.getElementsByName(
+						instance.ns('companyIds')
+					)[0].value;
+
+					if (!companyIds) {
+						this._showError(
+							Liferay.Language.get('missing-instance-error')
+						);
+
+						return;
+					}
+
 					submitForm(form, instance.get(STR_URL));
 				},
 
-				_updateIndexActions() {
-					var instance = this;
+				_showError(message) {
+					Liferay.Util.openToast({
+						message,
+						type: 'danger',
+					});
+				},
 
-					var currentAdminIndexPanel = A.one(
+				_updateIndexActions() {
+					const instance = this;
+
+					const currentAdminIndexPanel = A.one(
 						instance.get(STR_INDEX_ACTIONS_PANEL)
 					);
 
@@ -170,11 +190,13 @@ AUI.add(
 								return response.text();
 							})
 							.then((response) => {
-								var responseDataNode = A.Node.create(response);
+								const responseDataNode = A.Node.create(
+									response
+								);
 
 								// Replace each progress bar
 
-								var responseAdminIndexPanel = responseDataNode.one(
+								const responseAdminIndexPanel = responseDataNode.one(
 									instance.get(STR_INDEX_ACTIONS_PANEL)
 								);
 
@@ -182,13 +204,13 @@ AUI.add(
 									currentAdminIndexPanel &&
 									responseAdminIndexPanel
 								) {
-									var responseAdminIndexNodeList = responseAdminIndexPanel.all(
+									const responseAdminIndexNodeList = responseAdminIndexPanel.all(
 										instance.get(
 											'indexActionWrapperSelector'
 										)
 									);
 
-									var currentAdminIndexNodeList = currentAdminIndexPanel.all(
+									const currentAdminIndexNodeList = currentAdminIndexPanel.all(
 										instance.get(
 											'indexActionWrapperSelector'
 										)
@@ -196,11 +218,11 @@ AUI.add(
 
 									currentAdminIndexNodeList.each(
 										(currentNode, index) => {
-											var responseAdminIndexNode = responseAdminIndexNodeList.item(
+											const responseAdminIndexNode = responseAdminIndexNodeList.item(
 												index
 											);
 
-											var inProgress =
+											const inProgress =
 												currentNode.one(
 													IN_PROGRESS_SELECTOR
 												) ||
@@ -274,7 +296,7 @@ AUI.add(
 
 								// Start timeout for refreshing the data
 
-								var renderInterval = INTERVAL_RENDER_IDLE;
+								let renderInterval = INTERVAL_RENDER_IDLE;
 
 								if (instance._isBackgroundTaskInProgress()) {
 									renderInterval = INTERVAL_RENDER_IN_PROGRESS;
@@ -290,7 +312,7 @@ AUI.add(
 				},
 
 				bindUI() {
-					var instance = this;
+					const instance = this;
 
 					instance._eventHandles.push(
 						instance
@@ -304,7 +326,7 @@ AUI.add(
 				},
 
 				destructor() {
-					var instance = this;
+					const instance = this;
 
 					A.Array.invoke(instance._eventHandles, 'detach');
 
@@ -314,7 +336,7 @@ AUI.add(
 				},
 
 				initializer() {
-					var instance = this;
+					const instance = this;
 
 					instance._eventHandles = [];
 

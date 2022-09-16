@@ -43,12 +43,11 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.petra.string.StringUtil;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.json.JSONDeserializer;
 import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONSerializer;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
@@ -66,7 +65,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
@@ -234,7 +232,7 @@ public class DDMFieldLocalServiceImpl extends DDMFieldLocalServiceBaseImpl {
 
 	@Override
 	public int getDDMFormValuesCount(long structureId) {
-		Long count = ddmFieldPersistence.dslQuery(
+		return ddmFieldPersistence.dslQueryCount(
 			DSLQueryFactoryUtil.count(
 			).from(
 				DDMFieldTable.INSTANCE
@@ -247,8 +245,6 @@ public class DDMFieldLocalServiceImpl extends DDMFieldLocalServiceBaseImpl {
 						structureId)
 				)
 			));
-
-		return count.intValue();
 	}
 
 	@Override
@@ -319,15 +315,13 @@ public class DDMFieldLocalServiceImpl extends DDMFieldLocalServiceBaseImpl {
 			languageIdColumn = aliasDDMFieldAttributeTable.languageId;
 		}
 
-		Long count = ddmFieldPersistence.dslQuery(
+		return ddmFieldPersistence.dslQueryCount(
 			joinStep.where(
 				DDMFieldTable.INSTANCE.companyId.eq(
 					companyId
 				).and(
 					DDMFieldTable.INSTANCE.fieldType.eq(fieldType)
 				)));
-
-		return count.intValue();
 	}
 
 	@Override
@@ -486,11 +480,9 @@ public class DDMFieldLocalServiceImpl extends DDMFieldLocalServiceBaseImpl {
 					++batchCounter);
 			}
 
-			long fieldId = instanceToFieldIdMap.get(
-				ddmFieldAttributeInfo._ddmFieldInfo._instanceId);
-
-			ddmFieldAttribute.setFieldId(fieldId);
-
+			ddmFieldAttribute.setFieldId(
+				instanceToFieldIdMap.get(
+					ddmFieldAttributeInfo._ddmFieldInfo._instanceId));
 			ddmFieldAttribute.setStorageId(storageId);
 			ddmFieldAttribute.setAttributeName(
 				ddmFieldAttributeInfo._attributeName);
@@ -511,11 +503,22 @@ public class DDMFieldLocalServiceImpl extends DDMFieldLocalServiceBaseImpl {
 			DDMFormField ddmFormField = ddmFormFieldMap.get(
 				ddmFormFieldValue.getName());
 
+			if (ddmFormField == null) {
+				continue;
+			}
+
+			String instanceId = ddmFormFieldValue.getInstanceId();
+
+			while (ddmFieldInfoMap.containsKey(instanceId)) {
+				instanceId =
+					com.liferay.portal.kernel.util.StringUtil.randomString();
+			}
+
 			DDMFieldInfo ddmFieldInfo = new DDMFieldInfo(
-				ddmFormFieldValue.getName(), ddmFormFieldValue.getInstanceId(),
+				ddmFormFieldValue.getName(), instanceId,
 				ddmFormField.isLocalizable(), parentInstanceId);
 
-			ddmFieldInfoMap.put(ddmFieldInfo._instanceId, ddmFieldInfo);
+			ddmFieldInfoMap.put(instanceId, ddmFieldInfo);
 
 			Value value = ddmFormFieldValue.getValue();
 
@@ -523,8 +526,7 @@ public class DDMFieldLocalServiceImpl extends DDMFieldLocalServiceBaseImpl {
 				Map<Locale, String> values = value.getValues();
 
 				for (Map.Entry<Locale, String> entry : values.entrySet()) {
-					String languageId = LanguageUtil.getLanguageId(
-						entry.getKey());
+					String languageId = _language.getLanguageId(entry.getKey());
 
 					ddmFieldInfo._ddmFieldAttributeInfos.put(
 						languageId,
@@ -535,8 +537,7 @@ public class DDMFieldLocalServiceImpl extends DDMFieldLocalServiceBaseImpl {
 
 			_collectDDMFieldInfos(
 				ddmFieldInfoMap, ddmFormFieldMap,
-				ddmFormFieldValue.getNestedDDMFormFieldValues(),
-				ddmFieldInfo._instanceId);
+				ddmFormFieldValue.getNestedDDMFormFieldValues(), instanceId);
 		}
 	}
 
@@ -764,23 +765,18 @@ public class DDMFieldLocalServiceImpl extends DDMFieldLocalServiceBaseImpl {
 			}
 		}
 
-		Map<String, Object> map = new TreeMap<>();
-
-		JSONDeserializer<Object> jsonDeserializer =
-			_jsonFactory.createJSONDeserializer();
+		JSONObject jsonObject = _jsonFactory.createJSONObject();
 
 		for (DDMFieldAttributeInfo ddmFieldAttributeInfo :
 				ddmFieldAttributeInfos) {
 
-			map.put(
+			jsonObject.put(
 				ddmFieldAttributeInfo._attributeName,
-				jsonDeserializer.deserialize(
+				_jsonFactory.looseDeserialize(
 					ddmFieldAttributeInfo._attributeValue));
 		}
 
-		JSONSerializer jsonSerializer = _jsonFactory.createJSONSerializer();
-
-		return jsonSerializer.serialize(map);
+		return jsonObject.toString();
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -794,6 +790,9 @@ public class DDMFieldLocalServiceImpl extends DDMFieldLocalServiceBaseImpl {
 
 	@Reference
 	private JSONFactory _jsonFactory;
+
+	@Reference
+	private Language _language;
 
 	private static class DDMFieldAttributeInfo {
 

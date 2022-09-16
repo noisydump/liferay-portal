@@ -19,12 +19,11 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.servlet.taglib.BaseJSPDynamicInclude;
 import com.liferay.portal.kernel.servlet.taglib.DynamicInclude;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.segments.constants.SegmentsExperienceConstants;
-import com.liferay.segments.constants.SegmentsWebKeys;
 import com.liferay.segments.experiment.web.internal.constants.SegmentsExperimentWebKeys;
 import com.liferay.segments.experiment.web.internal.util.SegmentsExperimentUtil;
+import com.liferay.segments.manager.SegmentsExperienceManager;
 import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 
@@ -45,6 +44,11 @@ public class SegmentsExperimentAnalyticsTopHeadJSPDynamicInclude
 	extends BaseJSPDynamicInclude {
 
 	@Override
+	public ServletContext getServletContext() {
+		return _servletContext;
+	}
+
+	@Override
 	public void include(
 			HttpServletRequest httpServletRequest,
 			HttpServletResponse httpServletResponse, String key)
@@ -60,14 +64,15 @@ public class SegmentsExperimentAnalyticsTopHeadJSPDynamicInclude
 			return;
 		}
 
-		long[] segmentsExperienceIds = GetterUtil.getLongValues(
-			httpServletRequest.getAttribute(
-				SegmentsWebKeys.SEGMENTS_EXPERIENCE_IDS));
+		SegmentsExperienceManager segmentsExperienceManager =
+			new SegmentsExperienceManager(_segmentsExperienceLocalService);
 
 		httpServletRequest.setAttribute(
 			SegmentsExperimentWebKeys.
 				SEGMENTS_EXPERIMENT_SEGMENTS_EXPERIENCE_KEY,
-			_getSegmentsExperienceKey(segmentsExperienceIds));
+			_getSegmentsExperienceKey(
+				segmentsExperienceManager.getSegmentsExperienceId(
+					httpServletRequest)));
 
 		super.include(httpServletRequest, httpServletResponse, key);
 	}
@@ -88,24 +93,13 @@ public class SegmentsExperimentAnalyticsTopHeadJSPDynamicInclude
 		return _log;
 	}
 
-	@Override
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.segments.experiment.web)",
-		unbind = "-"
-	)
-	protected void setServletContext(ServletContext servletContext) {
-		super.setServletContext(servletContext);
-	}
+	private String _getSegmentsExperienceKey(long segmentsExperienceId) {
+		SegmentsExperience segmentsExperience =
+			_segmentsExperienceLocalService.fetchSegmentsExperience(
+				segmentsExperienceId);
 
-	private String _getSegmentsExperienceKey(long[] segmentsExperienceIds) {
-		if (segmentsExperienceIds.length > 0) {
-			SegmentsExperience segmentsExperience =
-				_segmentsExperienceLocalService.fetchSegmentsExperience(
-					segmentsExperienceIds[0]);
-
-			if (segmentsExperience != null) {
-				return segmentsExperience.getSegmentsExperienceKey();
-			}
+		if (segmentsExperience != null) {
+			return segmentsExperience.getSegmentsExperienceKey();
 		}
 
 		return SegmentsExperienceConstants.KEY_DEFAULT;
@@ -116,5 +110,10 @@ public class SegmentsExperimentAnalyticsTopHeadJSPDynamicInclude
 
 	@Reference
 	private SegmentsExperienceLocalService _segmentsExperienceLocalService;
+
+	@Reference(
+		target = "(osgi.web.symbolicname=com.liferay.segments.experiment.web)"
+	)
+	private ServletContext _servletContext;
 
 }

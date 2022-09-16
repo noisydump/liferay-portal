@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -198,11 +199,15 @@ public class ExperienceSerDes {
 			}
 			else if (Objects.equals(jsonParserFieldName, "segments")) {
 				if (jsonParserFieldValue != null) {
-					experience.setSegments((Segment[])jsonParserFieldValue);
+					experience.setSegments(
+						Stream.of(
+							toStrings((Object[])jsonParserFieldValue)
+						).map(
+							object -> SegmentSerDes.toDTO((String)object)
+						).toArray(
+							size -> new Segment[size]
+						));
 				}
-			}
-			else if (jsonParserFieldName.equals("status")) {
-				throw new IllegalArgumentException();
 			}
 		}
 
@@ -232,7 +237,7 @@ public class ExperienceSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -268,7 +273,7 @@ public class ExperienceSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

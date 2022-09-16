@@ -12,19 +12,20 @@
  * details.
  */
 
+import {ClayButtonWithIcon} from '@clayui/button';
 import ClayIcon from '@clayui/icon';
 import ClayLayout from '@clayui/layout';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
 import ClaySticker from '@clayui/sticker';
-import {ClayTooltipProvider} from '@clayui/tooltip';
 import classnames from 'classnames';
+import {DRAG_TYPES} from 'data-engine-js-components-web';
 import React, {useEffect, useState} from 'react';
 import {useDrag} from 'react-dnd';
 import {getEmptyImage} from 'react-dnd-html5-backend';
 
-import {DRAG_FIELD_TYPE} from '../../drag-and-drop/dragTypes.es';
-import Button from '../button/Button.es';
 import DropDown from '../drop-down/DropDown.es';
+
+import './FieldType.scss';
 import FieldTypeDragPreview from './FieldTypeDragPreview.es';
 
 const ICONS = {
@@ -35,7 +36,7 @@ const ICONS = {
 	select: 'list',
 };
 
-export default (props) => {
+const FieldType = (props) => {
 	const {
 		actions,
 		active,
@@ -45,7 +46,7 @@ export default (props) => {
 		disabled,
 		dragAlignment = 'left',
 		draggable = true,
-		dragType = DRAG_FIELD_TYPE,
+		dragType = DRAG_TYPES.DRAG_FIELD_TYPE_ADD,
 		icon,
 		label,
 		name,
@@ -80,7 +81,7 @@ export default (props) => {
 			return;
 		}
 
-		onDoubleClick({...props});
+		onDoubleClick?.({...props});
 	};
 
 	const [loading, setLoading] = useState(false);
@@ -97,8 +98,9 @@ export default (props) => {
 			})}
 			data-field-type-name={name}
 			onClick={onClick && handleOnClick}
-			onDoubleClick={onDoubleClick && handleOnDoubleClick}
+			onDoubleClick={handleOnDoubleClick}
 			ref={drag}
+			title={label}
 			verticalAlign="center"
 		>
 			{draggable && dragAlignment === 'left' && (
@@ -114,7 +116,7 @@ export default (props) => {
 			>
 				<ClaySticker
 					className="data-layout-builder-field-sticker"
-					displayType="light"
+					displayType="dark"
 					size="md"
 				>
 					<ClayIcon symbol={fieldIcon} />
@@ -124,6 +126,7 @@ export default (props) => {
 			<ClayLayout.ContentCol className="pr-2" expand>
 				<div className="d-flex list-group-title">
 					<span className="text-truncate">{label}</span>
+
 					{required && (
 						<span className="reference-mark">
 							<ClayIcon symbol="asterisk" />
@@ -153,32 +156,33 @@ export default (props) => {
 					{loading ? (
 						<ClayLoadingIndicator />
 					) : (
-						<ClayTooltipProvider>
-							<Button
-								borderless
-								data-tooltip-align="right"
-								data-tooltip-delay="200"
-								displayType="secondary"
-								onClick={(event) => {
-									event.stopPropagation();
+						<ClayButtonWithIcon
+							borderless
+							data-tooltip-align="right"
+							data-tooltip-delay="200"
+							displayType="secondary"
+							onClick={(event) => {
+								event.stopPropagation();
 
-									setLoading(true);
+								setLoading(true);
 
-									onDelete(name)
-										.then(() => setLoading(false))
-										.catch((error) => {
-											setLoading(false);
+								onDelete(name)
+									.then(() => setLoading(false))
+									.catch((error) => {
+										setLoading(false);
 
-											throw error;
-										});
-								}}
-								symbol="times-circle"
-								title={deleteLabel}
-							/>
-						</ClayTooltipProvider>
+										throw error;
+									});
+							}}
+							symbol="times-circle"
+							title={deleteLabel}
+						/>
 					)}
 				</div>
 			)}
 		</ClayLayout.ContentRow>
 	);
 };
+
+FieldType.displayName = 'FieldType';
+export default FieldType;

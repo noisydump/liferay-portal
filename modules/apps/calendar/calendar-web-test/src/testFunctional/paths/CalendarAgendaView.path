@@ -2,11 +2,13 @@
 <head>
 <title>CalendarAgendaView</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">CalendarAgendaView</td></tr>
 </thead>
+
 <tbody>
 <tr>
 	<td>SCHEDULER_VIEW_AGENDA</td>
@@ -23,7 +25,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--SCHEDULER_EVENT-->
+
 <tr>
 	<td>SCHEDULER_EVENT_SPECIFIC_1</td>
 	<td>xpath=(//div[contains(@class,'scheduler-view-agenda-event-content') and contains(.,'${key_eventTitle}')])[1]</td>

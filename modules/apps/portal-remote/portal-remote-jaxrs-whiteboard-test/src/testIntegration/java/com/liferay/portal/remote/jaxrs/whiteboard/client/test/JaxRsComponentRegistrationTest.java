@@ -16,7 +16,7 @@ package com.liferay.portal.remote.jaxrs.whiteboard.client.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
-import com.liferay.portal.kernel.util.HashMapDictionary;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
@@ -64,37 +64,40 @@ public class JaxRsComponentRegistrationTest {
 
 		BundleContext bundleContext = bundle.getBundleContext();
 
-		Dictionary<String, Object> properties = new HashMapDictionary<>();
-
-		properties.put("liferay.auth.verifier", false);
-		properties.put("liferay.oauth2", false);
-		properties.put("osgi.jaxrs.application.base", "/test-rest/greeter1");
+		Dictionary<String, Object> properties =
+			HashMapDictionaryBuilder.<String, Object>put(
+				"liferay.auth.verifier", false
+			).put(
+				"liferay.oauth2", false
+			).put(
+				"osgi.jaxrs.application.base", "/rest-test/greeter1"
+			).build();
 
 		_serviceRegistrations.add(
 			bundleContext.registerService(
 				Application.class, new Greeter(), properties));
 
-		properties.put("osgi.jaxrs.application.base", "/test-rest/greeter2");
+		properties.put("osgi.jaxrs.application.base", "/rest-test/greeter2");
 
 		_serviceRegistrations.add(
 			bundleContext.registerService(
 				Application.class, new Greeter(), properties));
 
 		properties.put("addonable", Boolean.TRUE);
-		properties.put("osgi.jaxrs.application.base", "/test-rest/greeter3");
+		properties.put("osgi.jaxrs.application.base", "/rest-test/greeter3");
 
 		_serviceRegistrations.add(
 			bundleContext.registerService(
 				Application.class, new Greeter(), properties));
 
-		properties = new HashMapDictionary<>();
-
-		properties.put("osgi.jaxrs.application.select", "(addonable=true)");
-		properties.put("osgi.jaxrs.resource", Boolean.TRUE);
-
 		_serviceRegistrations.add(
 			bundleContext.registerService(
-				Object.class, new Addon(), properties));
+				Object.class, new Addon(),
+				HashMapDictionaryBuilder.<String, Object>put(
+					"osgi.jaxrs.application.select", "(addonable=true)"
+				).put(
+					"osgi.jaxrs.resource", Boolean.TRUE
+				).build()));
 	}
 
 	@AfterClass
@@ -109,21 +112,28 @@ public class JaxRsComponentRegistrationTest {
 	@Test
 	public void testIsRegistered() throws Exception {
 		URL url = new URL(
-			"http://localhost:8080/o/test-rest/greeter1/sayHello");
+			"http://localhost:8080/o/rest-test/greeter1/sayHello");
 
 		Assert.assertEquals("Hello.", StringUtil.read(url.openStream()));
 
-		url = new URL("http://localhost:8080/o/test-rest/greeter2/sayHello");
+		url = new URL("http://localhost:8080/o/rest-test/greeter2/sayHello");
 
 		Assert.assertEquals("Hello.", StringUtil.read(url.openStream()));
 
-		url = new URL("http://localhost:8080/o/test-rest/greeter3/sayHello");
+		url = new URL("http://localhost:8080/o/rest-test/greeter3/sayHello");
 
 		Assert.assertEquals("Hello.", StringUtil.read(url.openStream()));
 
-		url = new URL("http://localhost:8080/o/test-rest/greeter3/addon");
+		url = new URL("http://localhost:8080/o/rest-test/greeter3/addon");
 
 		Assert.assertEquals("addon", StringUtil.read(url.openStream()));
+	}
+
+	@Test(expected = Exception.class)
+	public void testServiceListIsUnavailable() throws Exception {
+		URL url = new URL("http://localhost:8080/o/soap-test/services");
+
+		StringUtil.read(url.openStream());
 	}
 
 	public static class Addon {

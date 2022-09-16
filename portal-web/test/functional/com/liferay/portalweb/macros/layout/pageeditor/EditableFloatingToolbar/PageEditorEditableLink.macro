@@ -1,14 +1,22 @@
 definition {
 
-	@summary = "gotoEditableFieldLink must be called first"
-	macro _gotoFromContentField {
-		Select(
-			locator1 = "PageEditorEditableLink#LINK_TYPE",
-			value1 = "From Content Field");
-	}
-
 	macro _selectContent {
-		Click(locator1 = "PageEditor#EDITABLE_FIELD_TOOLBAR_MAP_ASSET_SELECT_POPUP_BUTTON");
+		if (IsTextEqual(key_fieldLabel = "Item", locator1 = "PageEditor#ITEM_SELECTOR_CONTENT_INPUT", value1 = "")) {
+			Click(
+				key_fieldLabel = "Item",
+				key_text = "plus",
+				locator1 = "Icon#ANY_ITEM_SELECTOR");
+		}
+		else {
+			Click(
+				key_fieldLabel = "Item",
+				key_text = "change",
+				locator1 = "Icon#ANY_ITEM_SELECTOR");
+		}
+
+		if (IsElementPresent(key_menuItem = "Select Item...", locator1 = "MenuItem#ANY_MENU_ITEM")) {
+			MenuItem.click(menuItem = "Select Item...");
+		}
 
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
@@ -20,10 +28,12 @@ definition {
 			key_card = "${entryTitle}",
 			locator1 = "Card#CARD_TITLE");
 
-		Pause(locator1 = "3000");
+		SelectFrameTop();
 	}
 
 	macro _selectField {
+		WaitForEditable(locator1 = "PageEditorEditableLink#FIELD");
+
 		Select(
 			locator1 = "PageEditorEditableLink#FIELD",
 			value1 = "${field}");
@@ -35,16 +45,62 @@ definition {
 			fragmentName = "${fragmentName}",
 			id = "${id}");
 
-		PageEditor.gotoTab(tabName = "Selection");
+		Navigator.gotoNavTab(navTab = "Link");
+	}
 
-		AssertClick(
-			key_navItem = "Link",
-			locator1 = "PageEditor#NAV_ITEM_BUTTON",
-			value1 = "Link");
+	macro mapEditableFieldToPage {
+		PageEditorEditableLink.gotoEditableFieldLink(
+			fragmentName = "${fragmentName}",
+			id = "${id}");
+
+		Select(
+			key_fieldLabel = "Link",
+			locator1 = "Select#GENERIC_SELECT_FIELD",
+			value1 = "Page");
+
+		if (IsTextEqual(key_fieldLabel = "Page", locator1 = "PageEditor#ITEM_SELECTOR_CONTENT_INPUT", value1 = "")) {
+			Click(
+				key_fieldLabel = "Page",
+				key_text = "plus",
+				locator1 = "Icon#ANY_ITEM_SELECTOR");
+		}
+		else {
+			Click(
+				key_fieldLabel = "Page",
+				key_text = "change",
+				locator1 = "Icon#ANY_ITEM_SELECTOR");
+		}
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
+
+		if (isSet(navItem)) {
+			Navigator.gotoNavItem(navItem = "${navItem}");
+		}
+
+		if (isSet(keywords)) {
+			Type(
+				locator1 = "TextInput#SEARCH",
+				value1 = "${keywords}");
+		}
+		else {
+			Portlet.expandTree();
+		}
+
+		AssertClick.assertPartialTextClickAt(
+			key_nodeName = "${pageName}",
+			locator1 = "Treeview#NODE_UNSELECTED",
+			value1 = "${pageName}");
+
+		SelectFrameTop();
+
+		PageEditor.waitForAutoSave();
 	}
 
 	macro mapURLToAsset {
-		PageEditorEditableLink._gotoFromContentField();
+		Select(
+			key_fieldLabel = "Link",
+			locator1 = "Select#GENERIC_SELECT_FIELD",
+			value1 = "Mapped URL");
 
 		if (isSet(entryTitle)) {
 			PageEditorEditableLink._selectContent(
@@ -53,6 +109,10 @@ definition {
 		}
 
 		if (isSet(source)) {
+			WaitForEditable(
+				key_fieldLabel = "Source",
+				locator1 = "Select#GENERIC_SELECT_FIELD");
+
 			Select(
 				key_fieldLabel = "Source",
 				locator1 = "Select#GENERIC_SELECT_FIELD",
@@ -66,30 +126,23 @@ definition {
 		Variables.assertDefined(parameterList = "${url}");
 
 		Type(
-			locator1 = "PageEditorEditableLink#URL",
+			key_text = "URL",
+			locator1 = "TextInput#ANY",
 			value1 = "${url}");
 
 		Click(
-			key_sidebarButton = "Selection",
+			key_sidebarButton = "Browser",
 			locator1 = "PageEditor#FRAGMENT_SIDEBAR_TITLE");
 
 		if ("${target}" == "Blank") {
-			while (IsNotChecked.isNotCheckedNotVisible(checkboxName = "Open in a new tab.", locator1 = "Checkbox#ANY_CHECKBOX")) {
-				Click.clickAtNotVisible(
-					checkboxName = "Open in a new tab.",
-					locator1 = "Checkbox#ANY_CHECKBOX");
-			}
-
-			Pause(locator1 = "3000");
+			Check.checkToggleSwitch(
+				checkboxName = "Open in a new tab.",
+				locator1 = "Checkbox#ANY_CHECKBOX");
 		}
 		else if ("${target}" == "Self") {
-			while (IsChecked.isNotCheckedNotVisible(checkboxName = "Open in a new tab.", locator1 = "Checkbox#ANY_CHECKBOX")) {
-				Click.clickAtNotVisible(
-					checkboxName = "Open in a new tab.",
-					locator1 = "Checkbox#ANY_CHECKBOX");
-			}
-
-			Pause(locator1 = "3000");
+			Uncheck.uncheckToggleSwitch(
+				checkboxName = "Open in a new tab.",
+				locator1 = "Checkbox#ANY_CHECKBOX");
 		}
 
 		PageEditor.waitForAutoSave();

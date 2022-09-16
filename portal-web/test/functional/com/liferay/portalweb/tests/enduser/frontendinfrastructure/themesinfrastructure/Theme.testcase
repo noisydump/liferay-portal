@@ -16,56 +16,18 @@ definition {
 		if ("${testPortalInstance}" == "true") {
 			PortalInstances.tearDownCP();
 		}
+		else {
+			PagesAdmin.tearDownCP();
 
-		Page.changeSinglePageTheme(
-			pageName = "Home",
-			tabName = "Look and Feel",
-			themeName = "Classic");
-
-		Navigator.gotoBack();
-
-		Button.clickPublish();
+			FileInstall.deleteWarOffline(liferayDependencyWars = "test-theme.war");
+		}
 	}
 
+	@description = "Verify page theme can be applied to page"
 	@priority = "5"
-	test ActivateStagingForSiteWithTheme {
-		property test.name.skip.portal.instance = "Theme#ActivateStagingForSiteWithTheme";
-
-		FileInstall.deployFileOnServer(liferayDependencyJars = "test-theme.war");
-
-		WaitForConsoleTextPresent(value1 = "STARTED test-theme");
-
-		User.firstLoginPG();
-
-		Page.changeSinglePageTheme(themeName = "test-theme-7-4");
-
-		Navigator.gotoBack();
-
-		Button.clickPublish();
-
-		Staging.openStagingAdmin(siteURLKey = "guest");
-
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
-
-		Staging.activateStagingCP(
-			pageVersioningEnabled = "true",
-			siteName = "${siteName}");
-
-		Navigator.openStagingSiteURL(defaultSite = "true");
-
-		// Workaround for LPS-110206
-
-		//Theme.viewTestThemeBackgroundColor();
-
-		Navigator.openURL();
-
-		Theme.viewTestThemeBackgroundColor();
-	}
-
-	@description = "This test validates that a theme can be applied to a single page."
-	@priority = "5"
-	test ApplyThemeToSinglePage {
-		property test.name.skip.portal.instance = "Theme#ApplyThemeToSinglePage";
+	@refactordone
+	test CanBeAppliedToPage {
+		property test.name.skip.portal.instance = "Theme#CanBeAppliedToPage";
 
 		User.firstLoginPG();
 
@@ -74,7 +36,7 @@ definition {
 			panel = "Control Panel",
 			portlet = "App Manager");
 
-		AppManager.uploadAppCP(
+		AppManager.uploadApp(
 			appName = "test-theme",
 			warFileName = "test-theme.war");
 
@@ -91,139 +53,18 @@ definition {
 		Theme.viewTestThemeBackgroundColor();
 	}
 
+	@description = "Verify portal will apply different available page theme if classic theme not available"
 	@priority = "5"
-	test DeactivateAndReactivateTheme {
-		property test.name.skip.portal.instance = "Theme#DeactivateAndReactivateTheme";
-
-		var appName = "test-theme";
-
-		User.firstLoginPG();
-
-		FileInstall.deployFileOnServer(liferayDependencyJars = "${appName}.war");
-
-		WaitForConsoleTextPresent(value1 = "STARTED ${appName}");
-
-		JSONLayout.addPublicLayout(
-			groupName = "Guest",
-			layoutName = "Theme Test Page");
-
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
-
-		Page.changeCurrentTheme(
-			pageName = "Theme Test Page",
-			themeName = "test-theme-7-4");
-
-		Navigator.openSitePage(
-			pageName = "Theme Test Page",
-			siteName = "Guest");
-
-		Theme.viewTestThemeBackgroundColor();
-
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "App Manager");
-
-		Search.searchCP(searchTerm = "${appName}");
-
-		AppManager.deactivateAppCP(appName = "${appName}");
-
-		AssertConsoleTextPresent(value1 = "STOPPED test-theme_1.0.0");
-
-		Navigator.openSitePage(
-			pageName = "Theme Test Page",
-			siteName = "Guest");
-
-		AssertConsoleTextPresent(value1 = "No theme found for specified theme id testtheme74_WAR_testtheme. Returning the default theme.");
-
-		Theme.viewClassicThemeBackgroundColor();
-
-		Page.viewCurrentTheme(
-			page = "Public Pages",
-			pageName = "Theme Test Page",
-			themeName = "Classic");
-
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "App Manager");
-
-		Search.searchCP(searchTerm = "${appName}");
-
-		AppManager.activateAppCP(appName = "${appName}");
-
-		Navigator.openSitePage(
-			pageName = "Theme Test Page",
-			siteName = "Guest");
-
-		Theme.viewTestThemeBackgroundColor();
-
-		Page.viewCurrentTheme(
-			page = "Public Pages",
-			pageName = "Theme Test Page",
-			themeName = "test-theme-7-4");
-	}
-
-	// Ignore test until LPS-126081 is resolved
-
-	@ignore = "true"
-	@priority = "5"
-	test PublishThemeFromStagedToLive {
-		property test.name.skip.portal.instance = "Theme#PublishThemeFromStagedToLive";
-
-		FileInstall.deployFileOnServer(liferayDependencyJars = "test-theme.war");
-
-		WaitForConsoleTextPresent(value1 = "STARTED test-theme");
-
-		User.firstLoginPG();
-
-		Staging.openStagingAdmin(siteURLKey = "guest");
-
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
-
-		Staging.activateStagingCP(
-			pageVersioningEnabled = "true",
-			siteName = "${siteName}");
-
-		Navigator.openStagingSiteURL(defaultSite = "true");
-
-		Page.changeSinglePageTheme(themeName = "test-theme-7-4");
-
-		Navigator.gotoBack();
-
-		Button.clickPublish();
-
-		// Workaround for LPS-110206
-
-		//Theme.viewTestThemeBackgroundColor();
-
-		Navigator.openURL();
-
-		Theme.viewClassicThemeBackgroundColor();
-
-		Navigator.openStagingSiteURL(defaultSite = "true");
-
-		Staging.gotoPublishToLive();
-
-		Staging.publishToLive();
-
-		Navigator.openURL();
-
-		Theme.viewTestThemeBackgroundColor();
-	}
-
-	@priority = "5"
-	test StartPortalWithoutClassicTheme {
-		property skip.start-app-server = "true";
-		property test.name.skip.portal.instance = "Theme#StartPortalWithoutClassicTheme";
+	@refactordone
+	test CanBeAppliedToPageWhenClassicThemeNotAvailable {
+		property portal.upstream = "true";
+		property test.name.skip.portal.instance = "Theme#CanBeAppliedToPageWhenClassicThemeNotAvailable";
 
 		AntCommand(
 			locator1 = "build-test.xml",
 			value1 = "delete-portal-theme -Dtheme-name=classic-theme");
 
-		FileInstall.deployFileOnServer(liferayDependencyJars = "test-theme.war");
+		FileInstall.deployFileOnServer(jarFile = "test-theme.war");
 
 		Portlet.startServer(deleteLiferayHome = "false");
 
@@ -237,20 +78,20 @@ definition {
 
 		AssertHTMLSourceTextNotPresent(value1 = "classic-theme/images/favicon.ico");
 
-		Portlet.viewTitle(portletName = "Hello World");
-
 		takeScreenshot();
 	}
 
+	@description = "Verify page theme can be deactivated and reactivated"
 	@priority = "5"
-	test UninstallAndRedeployTheme {
-		property test.name.skip.portal.instance = "Theme#UninstallAndRedeployTheme";
+	@refactordone
+	test CanBeDeactivatedAndReactivated {
+		property test.name.skip.portal.instance = "Theme#CanBeDeactivatedAndReactivated";
 
 		var appName = "test-theme";
 
 		User.firstLoginPG();
 
-		FileInstall.deployFileOnServer(liferayDependencyJars = "${appName}.war");
+		FileInstall.deployFileOnServer(jarFile = "${appName}.war");
 
 		WaitForConsoleTextPresent(value1 = "STARTED ${appName}");
 
@@ -262,7 +103,7 @@ definition {
 			category = "Site Builder",
 			portlet = "Pages");
 
-		Page.changeCurrentTheme(
+		PagesAdmin.changeWidgetPageCurrentTheme(
 			pageName = "Theme Test Page",
 			themeName = "test-theme-7-4");
 
@@ -279,9 +120,9 @@ definition {
 
 		Search.searchCP(searchTerm = "${appName}");
 
-		AppManager.uninstallAppCP(appName = "${appName}");
+		AppManager.deactivateApp(appName = "${appName}");
 
-		AssertConsoleTextPresent(value1 = "Stopping blacklisted bundle test-theme_1.0.0");
+		AssertConsoleTextPresent(value1 = "STOPPED test-theme_1.0.0");
 
 		Navigator.openSitePage(
 			pageName = "Theme Test Page",
@@ -291,22 +132,98 @@ definition {
 
 		Theme.viewClassicThemeBackgroundColor();
 
-		Page.viewCurrentTheme(
-			page = "Public Pages",
+		PagesAdmin.viewWidgetPageCurrentTheme(
 			pageName = "Theme Test Page",
 			themeName = "Classic");
 
-		Click(locator1 = "SitePagesEditPage#CHANGE_CURRENT_THEME_BUTTON");
+		ApplicationsMenu.gotoPortlet(
+			category = "System",
+			panel = "Control Panel",
+			portlet = "App Manager");
+
+		Search.searchCP(searchTerm = "${appName}");
+
+		AppManager.activateApp(appName = "${appName}");
+
+		Navigator.openSitePage(
+			pageName = "Theme Test Page",
+			siteName = "Guest");
+
+		Theme.viewTestThemeBackgroundColor();
+
+		PagesAdmin.viewWidgetPageCurrentTheme(
+			pageName = "Theme Test Page",
+			themeName = "test-theme-7-4");
+	}
+
+	@description = "Verify page theme can be uninstalled and redeployed"
+	@priority = "5"
+	@refactordone
+	test CanBeUnInstalledAndRedeployed {
+		property test.name.skip.portal.instance = "Theme#CanBeUnInstalledAndRedeployed";
+
+		var appName = "test-theme";
+
+		User.firstLoginPG();
+
+		FileInstall.deployFileOnServer(jarFile = "${appName}.war");
+
+		WaitForConsoleTextPresent(value1 = "STARTED ${appName}");
+
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Theme Test Page");
+
+		ProductMenu.gotoPortlet(
+			category = "Site Builder",
+			portlet = "Pages");
+
+		PagesAdmin.changeWidgetPageCurrentTheme(
+			pageName = "Theme Test Page",
+			themeName = "test-theme-7-4");
+
+		Navigator.openSitePage(
+			pageName = "Theme Test Page",
+			siteName = "Guest");
+
+		Theme.viewTestThemeBackgroundColor();
+
+		ApplicationsMenu.gotoPortlet(
+			category = "System",
+			panel = "Control Panel",
+			portlet = "App Manager");
+
+		Search.searchCP(searchTerm = "${appName}");
+
+		AppManager.uninstallApp(appName = "${appName}");
+
+		WaitForConsoleTextPresent(value1 = "Stopping blacklisted bundle test-theme_1.0.0");
+
+		Navigator.openSitePage(
+			pageName = "Theme Test Page",
+			siteName = "Guest");
+
+		AssertConsoleTextPresent(value1 = "No theme found for specified theme id testtheme74_WAR_testtheme. Returning the default theme.");
+
+		Theme.viewClassicThemeBackgroundColor();
+
+		PagesAdmin.viewWidgetPageCurrentTheme(
+			pageName = "Theme Test Page",
+			themeName = "Classic");
+
+		Click(
+			key_text = "Change Current Theme",
+			locator1 = "Button#ANY");
 
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		LexiconCard.viewCardNotPresent(card = "test-theme-7-4");
 
-		FileInstall.deleteWarOffline(liferayDependencyWars = "test-theme.war");
+		FileInstall.deleteWarOffline(warFile = "test-theme.war");
 
-		FileInstall.deployFileOnServer(liferayDependencyJars = "${appName}.war");
+		FileInstall.deployFileOnServer(jarFile = "${appName}.war");
 
-		Pause(locator1 = "30000");
+		WaitForConsoleTextPresent(value1 = "STARTED ${appName}");
 
 		Navigator.openSitePage(
 			pageName = "Theme Test Page",
@@ -314,12 +231,13 @@ definition {
 
 		Theme.viewClassicThemeBackgroundColor();
 
-		Page.viewCurrentTheme(
-			page = "Public Pages",
+		PagesAdmin.viewWidgetPageCurrentTheme(
 			pageName = "Theme Test Page",
 			themeName = "Classic");
 
-		Click(locator1 = "SitePagesEditPage#CHANGE_CURRENT_THEME_BUTTON");
+		Click(
+			key_text = "Change Current Theme",
+			locator1 = "Button#ANY");
 
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 

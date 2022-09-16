@@ -25,6 +25,7 @@ import com.liferay.dynamic.data.mapping.model.Value;
 import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.dynamic.data.mapping.util.DDM;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -59,7 +60,6 @@ import javax.portlet.PortletConfig;
 import javax.portlet.PortletMode;
 import javax.portlet.PortletPreferences;
 import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -80,7 +80,7 @@ public class PortletExtenderConfigurationAction
 		_ddmFormValuesFactory = ddmFormValuesFactory;
 		_preferencesJSONObject = preferencesJSONObject;
 
-		_ddmForm = ddm.getDDMForm(preferencesJSONObject.toJSONString());
+		_ddmForm = ddm.getDDMForm(preferencesJSONObject.toString());
 
 		_ddmFormFieldsMap = _ddmForm.getDDMFormFieldsMap(true);
 
@@ -250,24 +250,31 @@ public class PortletExtenderConfigurationAction
 			PortletDisplay portletDisplay)
 		throws Exception {
 
-		PortletURL actionURL = PortletURLFactoryUtil.create(
-			httpServletRequest, portletDisplay.getPortletName(),
-			PortletRequest.ACTION_PHASE);
-
-		actionURL.setParameter(ActionRequest.ACTION_NAME, "editConfiguration");
-		actionURL.setParameter("mvcPath", "/edit_configuration.jsp");
-		actionURL.setParameter(
-			"p_auth", AuthTokenUtil.getToken(httpServletRequest));
-		actionURL.setParameter("p_p_mode", PortletMode.VIEW.toString());
-		actionURL.setParameter("portletConfiguration", Boolean.TRUE.toString());
-		actionURL.setParameter(
-			"portletResource", portletDisplay.getPortletResource());
-		actionURL.setParameter("previewWidth", StringPool.BLANK);
-		actionURL.setParameter("returnToFullPageURL", "/");
-		actionURL.setParameter("settingsScope", "portletInstance");
-		actionURL.setWindowState(LiferayWindowState.POP_UP);
-
-		return actionURL.toString();
+		return PortletURLBuilder.create(
+			PortletURLFactoryUtil.create(
+				httpServletRequest, portletDisplay.getPortletName(),
+				PortletRequest.ACTION_PHASE)
+		).setActionName(
+			"editConfiguration"
+		).setMVCPath(
+			"/edit_configuration.jsp"
+		).setPortletResource(
+			portletDisplay.getPortletResource()
+		).setParameter(
+			"p_auth", AuthTokenUtil.getToken(httpServletRequest)
+		).setParameter(
+			"portletConfiguration", true
+		).setParameter(
+			"previewWidth", StringPool.BLANK
+		).setParameter(
+			"returnToFullPageURL", "/"
+		).setParameter(
+			"settingsScope", "portletInstance"
+		).setPortletMode(
+			PortletMode.VIEW
+		).setWindowState(
+			LiferayWindowState.POP_UP
+		).buildString();
 	}
 
 	private void _populateFieldNames() {

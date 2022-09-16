@@ -173,10 +173,10 @@ public class DDMDataProviderInstanceServiceImpl
 			ddmDataProviderInstanceFinder.filterByKeywords(
 				companyId, groupIds, keywords, start, end, orderByComparator);
 
-		Stream<DDMDataProviderInstance> ddmDataProviderInstanceStream =
+		Stream<DDMDataProviderInstance> ddmDataProviderInstancesStream =
 			ddmDataProviderInstances.stream();
 
-		return ddmDataProviderInstanceStream.filter(
+		return ddmDataProviderInstancesStream.filter(
 			ddmDataProviderInstance -> {
 				try {
 					return _ddmDataProviderInstanceModelResourcePermission.
@@ -186,7 +186,7 @@ public class DDMDataProviderInstanceServiceImpl
 							ActionKeys.VIEW);
 				}
 				catch (PortalException portalException) {
-					_log.error(portalException, portalException);
+					_log.error(portalException);
 
 					return false;
 				}
@@ -240,11 +240,6 @@ public class DDMDataProviderInstanceServiceImpl
 			ddmFormValues, serviceContext);
 	}
 
-	@Reference(unbind = "-")
-	protected void setJSONFactory(JSONFactory jsonFactory) {
-		_jsonFactory = jsonFactory;
-	}
-
 	private JSONArray _filterFieldValues(JSONArray fieldValuesJSONArray) {
 		JSONArray filteredFieldValuesJSONArray = _jsonFactory.createJSONArray();
 
@@ -285,7 +280,7 @@ public class DDMDataProviderInstanceServiceImpl
 				"fieldValues", _filterFieldValues(fieldValuesJSONArray));
 
 			ddmDataProviderInstance.setDefinition(
-				definitionJSONObject.toJSONString());
+				definitionJSONObject.toString());
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {

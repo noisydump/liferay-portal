@@ -19,12 +19,14 @@ import com.liferay.commerce.currency.configuration.RoundingTypeConfiguration;
 import com.liferay.commerce.currency.constants.CommerceCurrencyActionKeys;
 import com.liferay.commerce.currency.constants.CommerceCurrencyConstants;
 import com.liferay.commerce.currency.constants.CommerceCurrencyExchangeRateConstants;
+import com.liferay.commerce.currency.constants.CommerceCurrencyPortletKeys;
 import com.liferay.commerce.currency.constants.RoundingTypeConstants;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.service.CommerceCurrencyService;
 import com.liferay.commerce.currency.util.CommercePriceFormatter;
 import com.liferay.commerce.currency.util.ExchangeRateProviderRegistry;
 import com.liferay.commerce.currency.web.internal.util.CommerceCurrencyUtil;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.CharPool;
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.dao.search.RowChecker;
@@ -32,20 +34,19 @@ import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
+import com.liferay.portal.kernel.portlet.SearchOrderByUtil;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.settings.CompanyServiceSettingsLocator;
 import com.liferay.portal.kernel.settings.SystemSettingsLocator;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-
-import java.util.List;
 
 import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
@@ -110,26 +111,26 @@ public class CommerceCurrenciesDisplayContext {
 	}
 
 	public String getDefaultFormatPattern() throws ConfigurationException {
-		return CommerceCurrencyConstants.DEFAULT_FORMAT_PATTERN;
+		return CommerceCurrencyConstants.DECIMAL_FORMAT_PATTERN;
 	}
 
 	public int getDefaultMaxFractionDigits() throws ConfigurationException {
 		RoundingTypeConfiguration roundingTypeConfiguration =
-			getRoundingTypeConfiguration();
+			_getRoundingTypeConfiguration();
 
 		return roundingTypeConfiguration.maximumFractionDigits();
 	}
 
 	public int getDefaultMinFractionDigits() throws ConfigurationException {
 		RoundingTypeConfiguration roundingTypeConfiguration =
-			getRoundingTypeConfiguration();
+			_getRoundingTypeConfiguration();
 
 		return roundingTypeConfiguration.minimumFractionDigits();
 	}
 
 	public String getDefaultRoundingMode() throws ConfigurationException {
 		RoundingTypeConfiguration roundingTypeConfiguration =
-			getRoundingTypeConfiguration();
+			_getRoundingTypeConfiguration();
 
 		RoundingMode roundingMode = roundingTypeConfiguration.roundingMode();
 
@@ -141,24 +142,39 @@ public class CommerceCurrenciesDisplayContext {
 	}
 
 	public String getOrderByCol() {
-		return ParamUtil.getString(
-			_renderRequest, SearchContainer.DEFAULT_ORDER_BY_COL_PARAM,
+		if (Validator.isNotNull(_orderByCol)) {
+			return _orderByCol;
+		}
+
+		_orderByCol = SearchOrderByUtil.getOrderByCol(
+			_renderRequest, CommerceCurrencyPortletKeys.COMMERCE_CURRENCY,
 			"priority");
+
+		return _orderByCol;
 	}
 
 	public String getOrderByType() {
-		return ParamUtil.getString(
-			_renderRequest, SearchContainer.DEFAULT_ORDER_BY_TYPE_PARAM, "asc");
+		if (Validator.isNotNull(_orderByType)) {
+			return _orderByType;
+		}
+
+		_orderByType = SearchOrderByUtil.getOrderByType(
+			_renderRequest, CommerceCurrencyPortletKeys.COMMERCE_CURRENCY,
+			"asc");
+
+		return _orderByType;
 	}
 
 	public PortletURL getPortletURL() {
-		PortletURL portletURL = _renderResponse.createRenderURL();
-
-		portletURL.setParameter("navigation", getNavigation());
-		portletURL.setParameter("orderByCol", getOrderByCol());
-		portletURL.setParameter("orderByType", getOrderByType());
-
-		return portletURL;
+		return PortletURLBuilder.createRenderURL(
+			_renderResponse
+		).setNavigation(
+			_getNavigation()
+		).setParameter(
+			"orderByCol", getOrderByCol()
+		).setParameter(
+			"orderByType", getOrderByType()
+		).buildPortletURL();
 	}
 
 	public CommerceCurrency getPrimaryCommerceCurrency()
@@ -196,7 +212,7 @@ public class CommerceCurrenciesDisplayContext {
 		Boolean active = null;
 		String emptyResultsMessage = "there-are-no-currencies";
 
-		String navigation = getNavigation();
+		String navigation = _getNavigation();
 
 		if (navigation.equals("active")) {
 			active = Boolean.TRUE;
@@ -210,39 +226,34 @@ public class CommerceCurrenciesDisplayContext {
 		_searchContainer = new SearchContainer<>(
 			_renderRequest, getPortletURL(), null, emptyResultsMessage);
 
-		String orderByCol = getOrderByCol();
-		String orderByType = getOrderByType();
-
-		OrderByComparator<CommerceCurrency> orderByComparator =
+		_searchContainer.setOrderByCol(getOrderByCol());
+		_searchContainer.setOrderByComparator(
 			CommerceCurrencyUtil.getCommerceCurrencyOrderByComparator(
-				orderByCol, orderByType);
-
-		_searchContainer.setOrderByCol(orderByCol);
-		_searchContainer.setOrderByComparator(orderByComparator);
-		_searchContainer.setOrderByType(orderByType);
-		_searchContainer.setRowChecker(getRowChecker());
-
-		int total;
-		List<CommerceCurrency> results;
+				getOrderByCol(), getOrderByType()));
+		_searchContainer.setOrderByType(getOrderByType());
 
 		if (active != null) {
-			total = _commerceCurrencyService.getCommerceCurrenciesCount(
-				themeDisplay.getCompanyId(), active);
-			results = _commerceCurrencyService.getCommerceCurrencies(
-				themeDisplay.getCompanyId(), active,
-				_searchContainer.getStart(), _searchContainer.getEnd(),
-				orderByComparator);
+			boolean navigationActive = active;
+
+			_searchContainer.setResultsAndTotal(
+				() -> _commerceCurrencyService.getCommerceCurrencies(
+					themeDisplay.getCompanyId(), navigationActive,
+					_searchContainer.getStart(), _searchContainer.getEnd(),
+					_searchContainer.getOrderByComparator()),
+				_commerceCurrencyService.getCommerceCurrenciesCount(
+					themeDisplay.getCompanyId(), navigationActive));
 		}
 		else {
-			total = _commerceCurrencyService.getCommerceCurrenciesCount(
-				themeDisplay.getCompanyId());
-			results = _commerceCurrencyService.getCommerceCurrencies(
-				themeDisplay.getCompanyId(), _searchContainer.getStart(),
-				_searchContainer.getEnd(), orderByComparator);
+			_searchContainer.setResultsAndTotal(
+				() -> _commerceCurrencyService.getCommerceCurrencies(
+					themeDisplay.getCompanyId(), _searchContainer.getStart(),
+					_searchContainer.getEnd(),
+					_searchContainer.getOrderByComparator()),
+				_commerceCurrencyService.getCommerceCurrenciesCount(
+					themeDisplay.getCompanyId()));
 		}
 
-		_searchContainer.setTotal(total);
-		_searchContainer.setResults(results);
+		_searchContainer.setRowChecker(_getRowChecker());
 
 		return _searchContainer;
 	}
@@ -256,11 +267,11 @@ public class CommerceCurrenciesDisplayContext {
 			CommerceCurrencyActionKeys.MANAGE_COMMERCE_CURRENCIES);
 	}
 
-	protected String getNavigation() {
+	private String _getNavigation() {
 		return ParamUtil.getString(_renderRequest, "navigation");
 	}
 
-	protected RoundingTypeConfiguration getRoundingTypeConfiguration()
+	private RoundingTypeConfiguration _getRoundingTypeConfiguration()
 		throws ConfigurationException {
 
 		return _configurationProvider.getConfiguration(
@@ -268,7 +279,7 @@ public class CommerceCurrenciesDisplayContext {
 			new SystemSettingsLocator(RoundingTypeConstants.SERVICE_NAME));
 	}
 
-	protected RowChecker getRowChecker() {
+	private RowChecker _getRowChecker() {
 		if (_rowChecker == null) {
 			_rowChecker = new EmptyOnClickRowChecker(_renderResponse);
 		}
@@ -281,6 +292,8 @@ public class CommerceCurrenciesDisplayContext {
 	private final CommercePriceFormatter _commercePriceFormatter;
 	private final ConfigurationProvider _configurationProvider;
 	private final ExchangeRateProviderRegistry _exchangeRateProviderRegistry;
+	private String _orderByCol;
+	private String _orderByType;
 	private final PortletResourcePermission _portletResourcePermission;
 	private CommerceCurrency _primaryCommerceCurrency;
 	private final RenderRequest _renderRequest;

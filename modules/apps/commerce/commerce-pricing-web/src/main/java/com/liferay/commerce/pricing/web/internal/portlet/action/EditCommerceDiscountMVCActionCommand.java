@@ -16,6 +16,7 @@ package com.liferay.commerce.pricing.web.internal.portlet.action;
 
 import com.liferay.commerce.discount.constants.CommerceDiscountConstants;
 import com.liferay.commerce.discount.exception.CommerceDiscountCouponCodeException;
+import com.liferay.commerce.discount.exception.CommerceDiscountMaxPriceValueException;
 import com.liferay.commerce.discount.exception.NoSuchDiscountException;
 import com.liferay.commerce.discount.model.CommerceDiscount;
 import com.liferay.commerce.discount.service.CommerceDiscountService;
@@ -61,7 +62,7 @@ public class EditCommerceDiscountMVCActionCommand extends BaseMVCActionCommand {
 
 		try {
 			if (cmd.equals(Constants.ADD) || cmd.equals(Constants.UPDATE)) {
-				updateCommerceDiscount(actionRequest);
+				_updateCommerceDiscount(actionRequest);
 			}
 		}
 		catch (Throwable throwable) {
@@ -76,6 +77,19 @@ public class EditCommerceDiscountMVCActionCommand extends BaseMVCActionCommand {
 
 				sendRedirect(actionRequest, actionResponse, redirect);
 			}
+			else if (throwable instanceof
+						CommerceDiscountMaxPriceValueException) {
+
+				hideDefaultErrorMessage(actionRequest);
+				hideDefaultSuccessMessage(actionRequest);
+
+				SessionErrors.add(actionRequest, throwable.getClass());
+
+				String redirect = ParamUtil.getString(
+					actionRequest, "redirect");
+
+				sendRedirect(actionRequest, actionResponse, redirect);
+			}
 			else {
 				SessionErrors.add(actionRequest, throwable.getClass());
 
@@ -84,7 +98,51 @@ public class EditCommerceDiscountMVCActionCommand extends BaseMVCActionCommand {
 		}
 	}
 
-	protected CommerceDiscount updateCommerceDiscount(
+	private BigDecimal[] _getDiscountLevels(String level, BigDecimal amount) {
+		BigDecimal[] discountLevels = {
+			BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO
+		};
+
+		if (Objects.equals(level, CommerceDiscountConstants.LEVEL_L1)) {
+			discountLevels[0] = amount;
+		}
+
+		if (Objects.equals(level, CommerceDiscountConstants.LEVEL_L2)) {
+			discountLevels[1] = amount;
+		}
+
+		if (Objects.equals(level, CommerceDiscountConstants.LEVEL_L3)) {
+			discountLevels[2] = amount;
+		}
+
+		if (Objects.equals(level, CommerceDiscountConstants.LEVEL_L4)) {
+			discountLevels[3] = amount;
+		}
+
+		return discountLevels;
+	}
+
+	private String _getLimitationType(
+		int limitationTimes, int limitationTimesPerAccount) {
+
+		if ((limitationTimes > 0) && (limitationTimesPerAccount > 0)) {
+			return CommerceDiscountConstants.
+				LIMITATION_TYPE_LIMITED_FOR_ACCOUNTS_AND_TOTAL;
+		}
+
+		if (limitationTimes > 0) {
+			return CommerceDiscountConstants.LIMITATION_TYPE_LIMITED;
+		}
+
+		if (limitationTimesPerAccount > 0) {
+			return CommerceDiscountConstants.
+				LIMITATION_TYPE_LIMITED_FOR_ACCOUNTS;
+		}
+
+		return CommerceDiscountConstants.LIMITATION_TYPE_UNLIMITED;
+	}
+
+	private CommerceDiscount _updateCommerceDiscount(
 			ActionRequest actionRequest)
 		throws Exception {
 
@@ -179,61 +237,17 @@ public class EditCommerceDiscountMVCActionCommand extends BaseMVCActionCommand {
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			CommerceDiscount.class.getName(), actionRequest);
 
-		return _commerceDiscountService.upsertCommerceDiscount(
-			externalReferenceCode, serviceContext.getUserId(),
-			commerceDiscountId, title, target, useCouponCode, couponCode,
-			usePercentage, maximumDiscountAmount, level, discountLevels[0],
-			discountLevels[1], discountLevels[2], discountLevels[3],
+		return _commerceDiscountService.addOrUpdateCommerceDiscount(
+			externalReferenceCode, commerceDiscountId, title, target,
+			useCouponCode, couponCode, usePercentage, maximumDiscountAmount,
+			level, discountLevels[0], discountLevels[1], discountLevels[2],
+			discountLevels[3],
 			_getLimitationType(limitationTimes, limitationTimesPerAccount),
 			limitationTimes, limitationTimesPerAccount, rulesConjunction,
 			active, displayDateMonth, displayDateDay, displayDateYear,
 			displayDateHour, displayDateMinute, expirationDateMonth,
 			expirationDateDay, expirationDateYear, expirationDateHour,
 			expirationDateMinute, neverExpire, serviceContext);
-	}
-
-	private BigDecimal[] _getDiscountLevels(String level, BigDecimal amount) {
-		BigDecimal[] discountLevels = {
-			BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO
-		};
-
-		if (Objects.equals(level, CommerceDiscountConstants.LEVEL_L1)) {
-			discountLevels[0] = amount;
-		}
-
-		if (Objects.equals(level, CommerceDiscountConstants.LEVEL_L2)) {
-			discountLevels[1] = amount;
-		}
-
-		if (Objects.equals(level, CommerceDiscountConstants.LEVEL_L3)) {
-			discountLevels[2] = amount;
-		}
-
-		if (Objects.equals(level, CommerceDiscountConstants.LEVEL_L4)) {
-			discountLevels[3] = amount;
-		}
-
-		return discountLevels;
-	}
-
-	private String _getLimitationType(
-		int limitationTimes, int limitationTimesPerAccount) {
-
-		if ((limitationTimes > 0) && (limitationTimesPerAccount > 0)) {
-			return CommerceDiscountConstants.
-				LIMITATION_TYPE_LIMITED_FOR_ACCOUNTS_AND_TOTAL;
-		}
-
-		if (limitationTimes > 0) {
-			return CommerceDiscountConstants.LIMITATION_TYPE_LIMITED;
-		}
-
-		if (limitationTimesPerAccount > 0) {
-			return CommerceDiscountConstants.
-				LIMITATION_TYPE_LIMITED_FOR_ACCOUNTS;
-		}
-
-		return CommerceDiscountConstants.LIMITATION_TYPE_UNLIMITED;
 	}
 
 	@Reference

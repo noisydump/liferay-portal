@@ -92,13 +92,11 @@ public class DDMFormInstanceReportLocalServiceImpl
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append("Unable to update dynamic data mapping form ");
-				sb.append("instance report ");
-				sb.append(formInstanceReportId);
-
-				_log.warn(sb.toString(), exception);
+				_log.warn(
+					StringBundler.concat(
+						"Unable to update dynamic data mapping form instance ",
+						"report ", formInstanceReportId),
+					exception);
 			}
 		}
 	}
@@ -215,7 +213,7 @@ public class DDMFormInstanceReportLocalServiceImpl
 				ddmFormFieldTypeReportProcessor.process(
 					ddmFormFieldValue,
 					JSONFactoryUtil.createJSONObject(
-						fieldJSONObject.toJSONString()),
+						fieldJSONObject.toString()),
 					ddmFormInstanceRecordVersion.getFormInstanceRecordId(),
 					ddmFormInstanceReportEvent);
 

@@ -14,6 +14,7 @@
 
 package com.liferay.portal.action;
 
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -22,7 +23,7 @@ import com.liferay.portal.kernel.portlet.WindowStateFactory;
 import com.liferay.portal.kernel.security.auth.AuthTokenUtil;
 import com.liferay.portal.kernel.security.auth.session.AuthenticatedSessionManagerUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.HttpUtil;
+import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
@@ -37,7 +38,6 @@ import com.liferay.portal.util.PropsValues;
 
 import javax.portlet.PortletMode;
 import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
 import javax.portlet.WindowState;
 
 import javax.servlet.http.HttpServletRequest;
@@ -71,14 +71,11 @@ public class LoginAction implements Action {
 		if (PropsValues.COMPANY_SECURITY_AUTH_REQUIRES_HTTPS &&
 			!httpServletRequest.isSecure()) {
 
-			StringBundler sb = new StringBundler(4);
-
-			sb.append(PortalUtil.getPortalURL(httpServletRequest, true));
-			sb.append(httpServletRequest.getRequestURI());
-			sb.append(StringPool.QUESTION);
-			sb.append(httpServletRequest.getQueryString());
-
-			httpServletResponse.sendRedirect(sb.toString());
+			httpServletResponse.sendRedirect(
+				StringBundler.concat(
+					PortalUtil.getPortalURL(httpServletRequest, true),
+					httpServletRequest.getRequestURI(), StringPool.QUESTION,
+					httpServletRequest.getQueryString()));
 
 			return null;
 		}
@@ -100,10 +97,10 @@ public class LoginAction implements Action {
 				rememberMe, authType);
 		}
 
-		HttpSession session = httpServletRequest.getSession();
+		HttpSession httpSession = httpServletRequest.getSession();
 
-		if ((session.getAttribute("j_username") != null) &&
-			(session.getAttribute("j_password") != null)) {
+		if ((httpSession.getAttribute("j_username") != null) &&
+			(httpSession.getAttribute("j_password") != null)) {
 
 			if (PropsValues.PORTAL_JAAS_ENABLE) {
 				return actionMapping.getActionForward(
@@ -140,16 +137,19 @@ public class LoginAction implements Action {
 		}
 
 		if (Validator.isNull(redirect)) {
-			PortletURL portletURL = PortletURLFactoryUtil.create(
-				httpServletRequest, PortletKeys.LOGIN,
-				PortletRequest.RENDER_PHASE);
-
-			portletURL.setParameter("saveLastPath", Boolean.FALSE.toString());
-			portletURL.setParameter("mvcRenderCommandName", "/login/login");
-			portletURL.setPortletMode(PortletMode.VIEW);
-			portletURL.setWindowState(getWindowState(httpServletRequest));
-
-			redirect = portletURL.toString();
+			redirect = PortletURLBuilder.create(
+				PortletURLFactoryUtil.create(
+					httpServletRequest, PortletKeys.LOGIN,
+					PortletRequest.RENDER_PHASE)
+			).setMVCRenderCommandName(
+				"/login/login"
+			).setParameter(
+				"saveLastPath", false
+			).setPortletMode(
+				PortletMode.VIEW
+			).setWindowState(
+				getWindowState(httpServletRequest)
+			).buildString();
 		}
 
 		if (PropsValues.COMPANY_SECURITY_AUTH_REQUIRES_HTTPS) {
@@ -179,11 +179,11 @@ public class LoginAction implements Action {
 				String loginRedirectParameter =
 					loginPortletNamespace + "redirect";
 
-				redirect = HttpUtil.setParameter(
+				redirect = HttpComponentsUtil.setParameter(
 					redirect, "p_p_id", PropsValues.AUTH_LOGIN_PORTLET_NAME);
-				redirect = HttpUtil.setParameter(
+				redirect = HttpComponentsUtil.setParameter(
 					redirect, "p_p_lifecycle", "0");
-				redirect = HttpUtil.setParameter(
+				redirect = HttpComponentsUtil.setParameter(
 					redirect, loginRedirectParameter, loginRedirect);
 			}
 		}

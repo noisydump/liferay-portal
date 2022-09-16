@@ -14,11 +14,11 @@
 
 package com.liferay.layout.content.page.editor.web.internal.portlet.action;
 
-import com.liferay.asset.info.display.contributor.util.ContentAccessor;
 import com.liferay.fragment.entry.processor.helper.FragmentEntryProcessorHelper;
 import com.liferay.info.field.InfoFieldValue;
 import com.liferay.info.item.ClassPKInfoItemIdentifier;
 import com.liferay.info.item.InfoItemIdentifier;
+import com.liferay.info.item.InfoItemReference;
 import com.liferay.info.item.InfoItemServiceTracker;
 import com.liferay.info.item.provider.InfoItemFieldValuesProvider;
 import com.liferay.info.item.provider.InfoItemObjectProvider;
@@ -33,11 +33,14 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCResourceCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
+import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
+
+import java.util.Objects;
 
 import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceResponse;
@@ -112,9 +115,6 @@ public class GetInfoItemFieldValueMVCResourceCommand
 
 		String fieldId = ParamUtil.getString(resourceRequest, "fieldId");
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)resourceRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
 		JSONObject jsonObject = JSONUtil.put(
 			"classNameId", classNameId
 		).put(
@@ -123,39 +123,69 @@ public class GetInfoItemFieldValueMVCResourceCommand
 			"fieldId", fieldId
 		);
 
-		InfoFieldValue<Object> infoFieldValue =
-			infoItemFieldValuesProvider.getInfoItemFieldValue(object, fieldId);
-
 		Object value = StringPool.BLANK;
 
-		if (infoFieldValue != null) {
-			String languageId = ParamUtil.getString(
-				resourceRequest, "languageId", themeDisplay.getLanguageId());
+		ThemeDisplay themeDisplay = (ThemeDisplay)resourceRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
 
+		String languageId = ParamUtil.getString(
+			resourceRequest, "languageId", themeDisplay.getLanguageId());
+
+		InfoFieldValue<Object> infoFieldValue =
+			infoItemFieldValuesProvider.getInfoFieldValue(object, fieldId);
+
+		if (infoFieldValue != null) {
 			value = infoFieldValue.getValue(
 				LocaleUtil.fromLanguageId(languageId));
-		}
-
-		if (value instanceof ContentAccessor) {
-			ContentAccessor contentAccessor = (ContentAccessor)value;
-
-			value = contentAccessor.getContent();
 		}
 
 		if (value instanceof WebImage) {
 			WebImage webImage = (WebImage)value;
 
 			value = webImage.toJSONObject();
+
+			long fileEntryId = _getFileEntryId(webImage);
+
+			if (fileEntryId != 0) {
+				JSONObject valueJSONObject = (JSONObject)value;
+
+				valueJSONObject.put("fileEntryId", String.valueOf(fileEntryId));
+			}
 		}
 		else {
 			value = _fragmentEntryProcessorHelper.formatMappedValue(
-				value, themeDisplay.getLocale());
+				value, LocaleUtil.fromLanguageId(languageId));
 		}
 
 		jsonObject.put("fieldValue", value);
 
 		JSONPortletResponseUtil.writeJSON(
 			resourceRequest, resourceResponse, jsonObject);
+	}
+
+	private long _getFileEntryId(WebImage webImage) {
+		InfoItemReference infoItemReference = webImage.getInfoItemReference();
+
+		if ((infoItemReference == null) ||
+			!Objects.equals(
+				infoItemReference.getClassName(), FileEntry.class.getName())) {
+
+			return 0;
+		}
+
+		InfoItemIdentifier fileEntryInfoItemIdentifier =
+			infoItemReference.getInfoItemIdentifier();
+
+		if (!(fileEntryInfoItemIdentifier instanceof
+				ClassPKInfoItemIdentifier)) {
+
+			return 0;
+		}
+
+		ClassPKInfoItemIdentifier classPKInfoItemIdentifier =
+			(ClassPKInfoItemIdentifier)fileEntryInfoItemIdentifier;
+
+		return classPKInfoItemIdentifier.getClassPK();
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

@@ -28,6 +28,8 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -40,14 +42,18 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.lock.model.Lock;
 import com.liferay.portal.lock.service.LockLocalService;
+import com.liferay.portal.lock.service.LockLocalServiceUtil;
 import com.liferay.portal.lock.service.persistence.LockPersistence;
 
 import java.io.Serializable;
+
+import java.lang.reflect.Field;
 
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -68,7 +74,7 @@ public abstract class LockLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>LockLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.lock.service.LockLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>LockLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>LockLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -137,6 +143,13 @@ public abstract class LockLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return lockPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -310,6 +323,11 @@ public abstract class LockLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement LockLocalServiceImpl#deleteLock(Lock) to avoid orphaned data");
+		}
+
 		return lockLocalService.deleteLock((Lock)persistedModel);
 	}
 
@@ -385,6 +403,11 @@ public abstract class LockLocalServiceBaseImpl
 		return lockPersistence.update(lock);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -396,6 +419,8 @@ public abstract class LockLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		lockLocalService = (LockLocalService)aopProxy;
+
+		_setLocalServiceUtilService(lockLocalService);
 	}
 
 	/**
@@ -440,6 +465,22 @@ public abstract class LockLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		LockLocalService lockLocalService) {
+
+		try {
+			Field field = LockLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, lockLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected LockLocalService lockLocalService;
 
 	@Reference
@@ -449,8 +490,7 @@ public abstract class LockLocalServiceBaseImpl
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
+	private static final Log _log = LogFactoryUtil.getLog(
+		LockLocalServiceBaseImpl.class);
 
 }

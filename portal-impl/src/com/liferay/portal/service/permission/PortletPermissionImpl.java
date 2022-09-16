@@ -339,10 +339,9 @@ public class PortletPermissionImpl implements PortletPermission {
 			Portlet portlet, String actionId)
 		throws PortalException {
 
-		Layout layout = LayoutLocalServiceUtil.fetchLayout(plid);
-
 		return contains(
-			permissionChecker, groupId, layout, portlet, actionId,
+			permissionChecker, groupId,
+			LayoutLocalServiceUtil.fetchLayout(plid), portlet, actionId,
 			_STRICT_DEFAULT);
 	}
 
@@ -352,10 +351,10 @@ public class PortletPermissionImpl implements PortletPermission {
 			Portlet portlet, String actionId, boolean strict)
 		throws PortalException {
 
-		Layout layout = LayoutLocalServiceUtil.fetchLayout(plid);
-
 		return contains(
-			permissionChecker, groupId, layout, portlet, actionId, strict);
+			permissionChecker, groupId,
+			LayoutLocalServiceUtil.fetchLayout(plid), portlet, actionId,
+			strict);
 	}
 
 	public boolean contains(
@@ -363,10 +362,9 @@ public class PortletPermissionImpl implements PortletPermission {
 			String portletId, String actionId)
 		throws PortalException {
 
-		Layout layout = LayoutLocalServiceUtil.fetchLayout(plid);
-
 		return contains(
-			permissionChecker, groupId, layout, portletId, actionId,
+			permissionChecker, groupId,
+			LayoutLocalServiceUtil.fetchLayout(plid), portletId, actionId,
 			_STRICT_DEFAULT);
 	}
 
@@ -376,10 +374,10 @@ public class PortletPermissionImpl implements PortletPermission {
 			String portletId, String actionId, boolean strict)
 		throws PortalException {
 
-		Layout layout = LayoutLocalServiceUtil.fetchLayout(plid);
-
 		return contains(
-			permissionChecker, groupId, layout, portletId, actionId, strict);
+			permissionChecker, groupId,
+			LayoutLocalServiceUtil.fetchLayout(plid), portletId, actionId,
+			strict);
 	}
 
 	@Override
@@ -388,10 +386,9 @@ public class PortletPermissionImpl implements PortletPermission {
 			String actionId)
 		throws PortalException {
 
-		Layout layout = LayoutLocalServiceUtil.fetchLayout(plid);
-
 		return contains(
-			permissionChecker, layout, portlet, actionId, _STRICT_DEFAULT);
+			permissionChecker, LayoutLocalServiceUtil.fetchLayout(plid),
+			portlet, actionId, _STRICT_DEFAULT);
 	}
 
 	@Override
@@ -400,10 +397,9 @@ public class PortletPermissionImpl implements PortletPermission {
 			String actionId, boolean strict)
 		throws PortalException {
 
-		Layout layout = LayoutLocalServiceUtil.fetchLayout(plid);
-
 		return contains(
-			permissionChecker, 0, layout, portlet, actionId, strict);
+			permissionChecker, 0, LayoutLocalServiceUtil.fetchLayout(plid),
+			portlet, actionId, strict);
 	}
 
 	@Override
@@ -412,10 +408,9 @@ public class PortletPermissionImpl implements PortletPermission {
 			String actionId)
 		throws PortalException {
 
-		Layout layout = LayoutLocalServiceUtil.fetchLayout(plid);
-
 		return contains(
-			permissionChecker, layout, portletId, actionId, _STRICT_DEFAULT);
+			permissionChecker, LayoutLocalServiceUtil.fetchLayout(plid),
+			portletId, actionId, _STRICT_DEFAULT);
 	}
 
 	@Override
@@ -424,10 +419,9 @@ public class PortletPermissionImpl implements PortletPermission {
 			String actionId, boolean strict)
 		throws PortalException {
 
-		Layout layout = LayoutLocalServiceUtil.fetchLayout(plid);
-
 		return contains(
-			permissionChecker, 0, layout, portletId, actionId, strict);
+			permissionChecker, 0, LayoutLocalServiceUtil.fetchLayout(plid),
+			portletId, actionId, strict);
 	}
 
 	@Override
@@ -485,12 +479,8 @@ public class PortletPermissionImpl implements PortletPermission {
 		for (Portlet portlet : layoutTypePortlet.getAllPortlets(false)) {
 			if (contains(
 					permissionChecker, groupId, layout, portlet.getPortletId(),
-					actionId)) {
-
-				return true;
-			}
-
-			if (contains(
+					actionId) ||
+				contains(
 					permissionChecker, groupId, null,
 					portlet.getRootPortletId(), actionId)) {
 
@@ -574,7 +564,7 @@ public class PortletPermissionImpl implements PortletPermission {
 			return layoutManagerActions.contains(actionId);
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 
 			return false;
 		}

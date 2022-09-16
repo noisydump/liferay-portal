@@ -47,27 +47,25 @@ public class UpgradeSubscription extends UpgradeProcess {
 	protected void addClassName(long classNameId, String className)
 		throws Exception {
 
-		try (PreparedStatement ps = connection.prepareStatement(
+		try (PreparedStatement preparedStatement = connection.prepareStatement(
 				"insert into ClassName_ (mvccVersion, classNameId, value) " +
 					"values (?, ?, ?)")) {
 
-			ps.setLong(1, 0);
-			ps.setLong(2, classNameId);
-			ps.setString(3, className);
+			preparedStatement.setLong(1, 0);
+			preparedStatement.setLong(2, classNameId);
+			preparedStatement.setString(3, className);
 
-			ps.executeUpdate();
+			preparedStatement.executeUpdate();
 		}
 	}
 
 	protected void deleteOrphanedSubscriptions() throws Exception {
 		try (LoggingTimer loggingTimer = new LoggingTimer()) {
-			long classNameId = PortalUtil.getClassNameId(
-				PortletPreferences.class.getName());
-
 			runSQL(
 				StringBundler.concat(
 					"delete from Subscription where classNameId = ",
-					classNameId,
+					PortalUtil.getClassNameId(
+						PortletPreferences.class.getName()),
 					" and classPK not in (select portletPreferencesId from ",
 					"PortletPreferences)"));
 		}
@@ -113,16 +111,41 @@ public class UpgradeSubscription extends UpgradeProcess {
 			return 0;
 		}
 
+		String tableName = groupIdSQLParts[0];
+
 		String sql = StringBundler.concat(
-			"select ", groupIdSQLParts[1], " from ", groupIdSQLParts[0],
-			" where ", groupIdSQLParts[2], " = ?");
+			"select ", groupIdSQLParts[1], " from ", tableName, " where ",
+			groupIdSQLParts[2], " = ?");
 
-		try (PreparedStatement ps = connection.prepareStatement(sql)) {
-			ps.setLong(1, classPK);
+		try (PreparedStatement preparedStatement1 = connection.prepareStatement(
+				sql)) {
 
-			try (ResultSet rs = ps.executeQuery()) {
-				if (rs.next()) {
-					return rs.getLong("groupId");
+			preparedStatement1.setLong(1, classPK);
+
+			try (ResultSet resultSet1 = preparedStatement1.executeQuery()) {
+				if (resultSet1.next()) {
+					if (tableName.equals("PortletPreferences")) {
+						long plid = resultSet1.getLong("plid");
+
+						try (PreparedStatement preparedStatement2 =
+								connection.prepareStatement(
+									"select groupId from Layout where plid = " +
+										"?")) {
+
+							preparedStatement2.setLong(1, plid);
+
+							try (ResultSet resultSet2 =
+									preparedStatement2.executeQuery()) {
+
+								if (resultSet2.next()) {
+									return resultSet2.getLong("groupId");
+								}
+							}
+						}
+					}
+					else {
+						return resultSet1.getLong("groupId");
+					}
 				}
 			}
 		}
@@ -131,14 +154,14 @@ public class UpgradeSubscription extends UpgradeProcess {
 	}
 
 	protected boolean hasGroup(long groupId) throws Exception {
-		try (PreparedStatement ps = connection.prepareStatement(
+		try (PreparedStatement preparedStatement = connection.prepareStatement(
 				"select count(*) from Group_ where groupId = ?")) {
 
-			ps.setLong(1, groupId);
+			preparedStatement.setLong(1, groupId);
 
-			try (ResultSet rs = ps.executeQuery()) {
-				if (rs.next()) {
-					int count = rs.getInt(1);
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				if (resultSet.next()) {
+					int count = resultSet.getInt(1);
 
 					if (count > 0) {
 						return true;
@@ -155,32 +178,29 @@ public class UpgradeSubscription extends UpgradeProcess {
 		throws Exception {
 
 		try (LoggingTimer loggingTimer = new LoggingTimer(oldClassName)) {
-			StringBundler sb = new StringBundler(4);
-
-			sb.append("update Subscription set classNameId = ");
-			sb.append(getClassNameId(newClassName));
-			sb.append(" where classNameId = ");
-			sb.append(PortalUtil.getClassNameId(oldClassName));
-
-			runSQL(sb.toString());
+			runSQL(
+				StringBundler.concat(
+					"update Subscription set classNameId = ",
+					getClassNameId(newClassName), " where classNameId = ",
+					PortalUtil.getClassNameId(oldClassName)));
 		}
 	}
 
 	protected void updateSubscriptionGroupIds() throws Exception {
 		try (LoggingTimer loggingTimer = new LoggingTimer();
-			PreparedStatement ps1 = connection.prepareStatement(
+			PreparedStatement preparedStatement1 = connection.prepareStatement(
 				"select subscriptionId, classNameId, classPK from " +
 					"Subscription");
-			PreparedStatement ps2 =
+			PreparedStatement preparedStatement2 =
 				AutoBatchPreparedStatementUtil.concurrentAutoBatch(
 					connection,
 					"update Subscription set groupId = ? where " +
 						"subscriptionId = ?");
-			ResultSet rs = ps1.executeQuery()) {
+			ResultSet resultSet = preparedStatement1.executeQuery()) {
 
-			while (rs.next()) {
-				long classNameId = rs.getLong("classNameId");
-				long classPK = rs.getLong("classPK");
+			while (resultSet.next()) {
+				long classNameId = resultSet.getLong("classNameId");
+				long classPK = resultSet.getLong("classPK");
 
 				long groupId = getGroupId(classNameId, classPK);
 
@@ -189,17 +209,17 @@ public class UpgradeSubscription extends UpgradeProcess {
 				}
 
 				if (groupId != 0) {
-					ps2.setLong(1, groupId);
+					preparedStatement2.setLong(1, groupId);
 
-					long subscriptionId = rs.getLong("subscriptionId");
+					long subscriptionId = resultSet.getLong("subscriptionId");
 
-					ps2.setLong(2, subscriptionId);
+					preparedStatement2.setLong(2, subscriptionId);
 
-					ps2.addBatch();
+					preparedStatement2.addBatch();
 				}
 			}
 
-			ps2.executeBatch();
+			preparedStatement2.executeBatch();
 		}
 	}
 
@@ -220,6 +240,9 @@ public class UpgradeSubscription extends UpgradeProcess {
 			"com.liferay.calendar.model.CalendarBooking",
 			"CalendarBooking,groupId,calendarBookingId"
 		).put(
+			"com.liferay.knowledgebase.model.KBArticle",
+			"KBArticle,groupId,kbArticleId"
+		).put(
 			"com.liferay.message.boards.kernel.model.MBCategory",
 			"MBCategory,groupId,categoryId"
 		).put(
@@ -237,6 +260,9 @@ public class UpgradeSubscription extends UpgradeProcess {
 		).put(
 			"com.liferay.journal.model.JournalFolder",
 			"JournalFolder,groupId,folderId"
+		).put(
+			"com.liferay.portal.kernel.model.PortletPreferences",
+			"PortletPreferences,plid,portletPreferencesId"
 		).put(
 			"com.liferay.portlet.bookmarks.model.BookmarksEntry",
 			"BookmarksEntry,groupId,entryId"

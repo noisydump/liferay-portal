@@ -29,8 +29,30 @@ portletDisplay.setURLBack(ParamUtil.getString(request, "backURL", String.valueOf
 renderResponse.setTitle(accountEntryDisplay.getName());
 %>
 
-<clay:management-toolbar-v2
-	displayContext="<%= viewAccountUsersManagementToolbarDisplayContext %>"
+<portlet:actionURL name="/account_admin/assign_account_users" var="assignAccountUsersURL">
+	<portlet:param name="redirect" value="<%= currentURL %>" />
+</portlet:actionURL>
+
+<portlet:renderURL var="selectAccountUsersURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
+	<portlet:param name="mvcPath" value="/account_entries_admin/select_account_users.jsp" />
+	<portlet:param name="redirect" value="<%= currentURL %>" />
+	<portlet:param name="accountEntryId" value="<%= String.valueOf(accountEntryDisplay.getAccountEntryId()) %>" />
+	<portlet:param name="openModalOnRedirect" value="<%= Boolean.TRUE.toString() %>" />
+	<portlet:param name="showCreateButton" value="<%= Boolean.TRUE.toString() %>" />
+</portlet:renderURL>
+
+<clay:management-toolbar
+	additionalProps='<%=
+		HashMapBuilder.<String, Object>put(
+			"accountEntryName", accountEntryDisplay.getName()
+		).put(
+			"assignAccountUsersURL", assignAccountUsersURL
+		).put(
+			"selectAccountUsersURL", selectAccountUsersURL
+		).build()
+	%>'
+	managementToolbarDisplayContext="<%= viewAccountUsersManagementToolbarDisplayContext %>"
+	propsTransformer="account_entries_admin/js/AccountUsersManagementToolbarPropsTransformer"
 />
 
 <clay:container-fluid>
@@ -46,35 +68,56 @@ renderResponse.setTitle(accountEntryDisplay.getName());
 				keyProperty="userId"
 				modelVar="accountUser"
 			>
+				<portlet:renderURL var="rowURL">
+					<portlet:param name="p_u_i_d" value="<%= String.valueOf(accountUser.getUserId()) %>" />
+					<portlet:param name="mvcPath" value="/account_users_admin/edit_account_user.jsp" />
+					<portlet:param name="backURL" value="<%= currentURL %>" />
+				</portlet:renderURL>
+
+				<%
+				if (!portletName.equals(AccountPortletKeys.ACCOUNT_ENTRIES_MANAGEMENT) || !UserPermissionUtil.contains(permissionChecker, accountUser.getUserId(), ActionKeys.UPDATE)) {
+					rowURL = null;
+				}
+				%>
+
 				<liferay-ui:search-container-column-text
 					cssClass="table-cell-expand-small table-cell-minw-150"
+					href="<%= rowURL %>"
 					name="name"
 					property="name"
 				/>
 
 				<liferay-ui:search-container-column-text
 					cssClass="table-cell-expand-small table-cell-minw-150"
+					href="<%= rowURL %>"
 					name="email-address"
 					property="emailAddress"
 				/>
 
 				<liferay-ui:search-container-column-text
 					cssClass="table-cell-expand-small table-cell-minw-150"
+					href="<%= rowURL %>"
 					name="job-title"
 					property="jobTitle"
 				/>
 
 				<liferay-ui:search-container-column-text
 					cssClass="table-cell-expand-small table-cell-minw-150"
+					href="<%= rowURL %>"
 					name="account-roles"
 					value="<%= accountUser.getAccountRoleNamesString(accountEntryDisplay.getAccountEntryId(), locale) %>"
 				/>
 
-				<c:if test="<%= AccountEntryPermission.contains(permissionChecker, accountEntryDisplay.getAccountEntryId(), ActionKeys.MANAGE_USERS) %>">
-					<liferay-ui:search-container-column-jsp
-						path="/account_entries_admin/account_user_action.jsp"
+				<%
+				AccountUserActionDropdownItemsProvider accountUserActionDropdownItemsProvider = new AccountUserActionDropdownItemsProvider(accountEntryDisplay.getAccountEntryId(), accountUser.getUserId(), permissionChecker, renderRequest, renderResponse);
+				%>
+
+				<liferay-ui:search-container-column-text>
+					<clay:dropdown-actions
+						dropdownItems="<%= accountUserActionDropdownItemsProvider.getActionDropdownItems() %>"
+						propsTransformer="account_entries_admin/js/AccountUserDropdownDefaultPropsTransformer"
 					/>
-				</c:if>
+				</liferay-ui:search-container-column-text>
 			</liferay-ui:search-container-row>
 
 			<liferay-ui:search-iterator
@@ -83,29 +126,3 @@ renderResponse.setTitle(accountEntryDisplay.getName());
 		</liferay-ui:search-container>
 	</aui:form>
 </clay:container-fluid>
-
-<portlet:actionURL name="/account_admin/assign_account_users" var="assignAccountUsersURL">
-	<portlet:param name="redirect" value="<%= currentURL %>" />
-</portlet:actionURL>
-
-<portlet:renderURL var="selectAccountUsersURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
-	<portlet:param name="mvcPath" value="/account_entries_admin/select_account_users.jsp" />
-	<portlet:param name="redirect" value="<%= currentURL %>" />
-	<portlet:param name="accountEntryId" value="<%= String.valueOf(accountEntryDisplay.getAccountEntryId()) %>" />
-	<portlet:param name="openModalOnRedirect" value="<%= Boolean.TRUE.toString() %>" />
-	<portlet:param name="showCreateButton" value="<%= Boolean.TRUE.toString() %>" />
-</portlet:renderURL>
-
-<liferay-frontend:component
-	componentId="<%= viewAccountUsersManagementToolbarDisplayContext.getDefaultEventHandler() %>"
-	context='<%=
-		HashMapBuilder.<String, Object>put(
-			"accountEntryName", accountEntryDisplay.getName()
-		).put(
-			"assignAccountUsersURL", assignAccountUsersURL
-		).put(
-			"selectAccountUsersURL", selectAccountUsersURL
-		).build()
-	%>'
-	module="account_entries_admin/js/AccountUsersManagementToolbarDefaultEventHandler.es"
-/>

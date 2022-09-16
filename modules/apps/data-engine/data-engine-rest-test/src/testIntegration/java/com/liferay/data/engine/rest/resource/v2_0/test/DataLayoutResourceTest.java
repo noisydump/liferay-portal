@@ -29,6 +29,7 @@ import com.liferay.data.engine.rest.client.problem.Problem;
 import com.liferay.data.engine.rest.client.resource.v2_0.DataDefinitionResource;
 import com.liferay.data.engine.rest.resource.v2_0.test.util.DataDefinitionTestUtil;
 import com.liferay.data.engine.rest.resource.v2_0.test.util.DataLayoutTestUtil;
+import com.liferay.data.engine.rest.strategy.util.DataRecordValueKeyUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -124,9 +125,7 @@ public class DataLayoutResourceTest extends BaseDataLayoutResourceTestCase {
 				new GraphQLField(
 					"dataLayoutByContentTypeByDataLayoutKey",
 					HashMapBuilder.<String, Object>put(
-						"contentType",
-						StringBundler.concat(
-							StringPool.QUOTE, "app-builder", StringPool.QUOTE)
+						"contentType", "\"test\""
 					).put(
 						"dataLayoutKey",
 						StringBundler.concat(
@@ -163,7 +162,7 @@ public class DataLayoutResourceTest extends BaseDataLayoutResourceTestCase {
 					new GraphQLField(
 						"dataLayoutByContentTypeByDataLayoutKey",
 						HashMapBuilder.<String, Object>put(
-							"contentType", "\"native-object\""
+							"contentType", "\"test\""
 						).put(
 							"dataLayoutKey",
 							"\"" + RandomTestUtil.randomString() + "\""
@@ -181,14 +180,27 @@ public class DataLayoutResourceTest extends BaseDataLayoutResourceTestCase {
 	public void testPostDataDefinitionDataLayout() throws Exception {
 		super.testPostDataDefinitionDataLayout();
 
+		// Data layout with data layout fields (visual property)
+
+		DataLayout randomDataLayout = _randomDataLayout(true);
+
+		DataLayout postDataLayout =
+			testPostDataDefinitionDataLayout_addDataLayout(randomDataLayout);
+
+		assertEquals(randomDataLayout, postDataLayout);
+		assertValid(postDataLayout);
+		Assert.assertTrue(
+			equals(
+				randomDataLayout.getDataLayoutFields(),
+				postDataLayout.getDataLayoutFields()));
+
 		// Multiple data layouts with the same data definition
 
 		for (int i = 0; i < 3; i++) {
-			DataLayout randomDataLayout = randomDataLayout();
+			randomDataLayout = randomDataLayout();
 
-			DataLayout postDataLayout =
-				testPostDataDefinitionDataLayout_addDataLayout(
-					randomDataLayout);
+			postDataLayout = testPostDataDefinitionDataLayout_addDataLayout(
+				randomDataLayout);
 
 			assertEquals(randomDataLayout, postDataLayout);
 			assertValid(postDataLayout);
@@ -205,7 +217,7 @@ public class DataLayoutResourceTest extends BaseDataLayoutResourceTestCase {
 
 		DataDefinition dataDefinition =
 			dataDefinitionResource.postSiteDataDefinitionByContentType(
-				testGroup.getGroupId(), "app-builder",
+				testGroup.getGroupId(), "test",
 				new DataDefinition() {
 					{
 						availableLanguageIds = new String[] {"en_US", "pt_BR"};
@@ -295,7 +307,7 @@ public class DataLayoutResourceTest extends BaseDataLayoutResourceTestCase {
 		catch (Problem.ProblemException problemException) {
 			Problem problem = problemException.getProblem();
 
-			Assert.assertEquals("text1", problem.getDetail());
+			Assert.assertNull(problem.getDetail());
 			Assert.assertEquals("BAD_REQUEST", problem.getStatus());
 			Assert.assertEquals("MustNotDuplicateFieldName", problem.getType());
 		}
@@ -320,7 +332,9 @@ public class DataLayoutResourceTest extends BaseDataLayoutResourceTestCase {
 					{
 						containerId = "testContainer";
 						dataRecordValues = HashMapBuilder.<String, Object>put(
-							"Text",
+							DataRecordValueKeyUtil.createDataRecordValueKey(
+								"Text", RandomTestUtil.randomString(),
+								StringPool.BLANK, 0),
 							HashMapBuilder.<String, Object>put(
 								"en_US", "value"
 							).put(
@@ -347,6 +361,34 @@ public class DataLayoutResourceTest extends BaseDataLayoutResourceTestCase {
 	}
 
 	@Override
+	@Test
+	public void testPutDataLayout() throws Exception {
+		super.testPutDataLayout();
+
+		DataLayout dataLayout = testPutDataLayout_addDataLayout();
+		DataLayout randomDataLayout = _randomDataLayout(true);
+
+		DataLayout putDataLayout = dataLayoutResource.putDataLayout(
+			dataLayout.getId(), randomDataLayout);
+
+		assertEquals(randomDataLayout, putDataLayout);
+		assertValid(putDataLayout);
+		Assert.assertTrue(
+			equals(
+				randomDataLayout.getDataLayoutFields(),
+				putDataLayout.getDataLayoutFields()));
+
+		dataLayout = dataLayoutResource.getDataLayout(dataLayout.getId());
+
+		assertEquals(randomDataLayout, dataLayout);
+		assertValid(dataLayout);
+		Assert.assertTrue(
+			equals(
+				randomDataLayout.getDataLayoutFields(),
+				dataLayout.getDataLayoutFields()));
+	}
+
+	@Override
 	protected String[] getAdditionalAssertFieldNames() {
 		return new String[] {"dataDefinitionId", "name", "paginationMode"};
 	}
@@ -370,15 +412,15 @@ public class DataLayoutResourceTest extends BaseDataLayoutResourceTestCase {
 	}
 
 	@Override
-	protected DataLayout testDeleteDataLayout_addDataLayout() throws Exception {
+	protected DataLayout testDeleteDataDefinitionDataLayout_addDataLayout()
+		throws Exception {
+
 		return dataLayoutResource.postDataDefinitionDataLayout(
 			_dataDefinition.getId(), randomDataLayout());
 	}
 
 	@Override
-	protected DataLayout testDeleteDataLayoutsDataDefinition_addDataLayout()
-		throws Exception {
-
+	protected DataLayout testDeleteDataLayout_addDataLayout() throws Exception {
 		return dataLayoutResource.postDataDefinitionDataLayout(
 			_dataDefinition.getId(), randomDataLayout());
 	}
@@ -404,7 +446,7 @@ public class DataLayoutResourceTest extends BaseDataLayoutResourceTestCase {
 		DataLayout dataLayout = dataLayoutResource.postDataDefinitionDataLayout(
 			_dataDefinition.getId(), randomDataLayout());
 
-		dataLayout.setContentType("app-builder");
+		dataLayout.setContentType("test");
 
 		return dataLayout;
 	}
@@ -421,6 +463,59 @@ public class DataLayoutResourceTest extends BaseDataLayoutResourceTestCase {
 	protected DataLayout testPutDataLayout_addDataLayout() throws Exception {
 		return dataLayoutResource.postDataDefinitionDataLayout(
 			_dataDefinition.getId(), randomDataLayout());
+	}
+
+	private DataLayout _randomDataLayout(boolean withVisualProperties) {
+		DataLayout dataLayout = randomDataLayout();
+
+		if (!withVisualProperties) {
+			return dataLayout;
+		}
+
+		DataDefinitionField dataDefinitionField =
+			_dataDefinition.getDataDefinitionFields()[0];
+
+		dataLayout.setDataLayoutFields(
+			HashMapBuilder.<String, Object>put(
+				dataDefinitionField.getName(),
+				HashMapBuilder.<String, Object>put(
+					"label",
+					HashMapBuilder.<String, Object>put(
+						_dataDefinition.getDefaultLanguageId(),
+						RandomTestUtil.randomString()
+					).build()
+				).put(
+					"placeholder",
+					HashMapBuilder.<String, Object>put(
+						_dataDefinition.getDefaultLanguageId(),
+						RandomTestUtil.randomString()
+					).build()
+				).put(
+					"predefinedValue",
+					HashMapBuilder.<String, Object>put(
+						_dataDefinition.getDefaultLanguageId(),
+						RandomTestUtil.randomString()
+					).build()
+				).put(
+					"required", RandomTestUtil.randomBoolean()
+				).put(
+					"requiredErrorMessage",
+					HashMapBuilder.<String, Object>put(
+						_dataDefinition.getDefaultLanguageId(),
+						RandomTestUtil.randomString()
+					).build()
+				).put(
+					"showLabel", RandomTestUtil.randomBoolean()
+				).put(
+					"tip",
+					HashMapBuilder.<String, Object>put(
+						_dataDefinition.getDefaultLanguageId(),
+						RandomTestUtil.randomString()
+					).build()
+				).build()
+			).build());
+
+		return dataLayout;
 	}
 
 	private void _testGetDataDefinitionDataLayoutsPage(

@@ -10,17 +10,21 @@
  * distribution rights of the Software.
  */
 
+import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
 import ClayLayout from '@clayui/layout';
-import ClayModal from '@clayui/modal';
+import ClayLink from '@clayui/link';
+import ClayModal, {useModal} from '@clayui/modal';
 import {ClayTooltipProvider} from '@clayui/tooltip';
-import React, {useMemo} from 'react';
+import WorkflowInstanceTracker from '@liferay/portal-workflow-instance-tracker-web/js/components/WorkflowInstanceTracker';
+import React, {useState} from 'react';
 
 import ContentView from '../../../../shared/components/content-view/ContentView.es';
 import RetryButton from '../../../../shared/components/list/RetryButton.es';
+import {remainingTimeFormat} from '../../../../shared/util/duration.es';
 import moment from '../../../../shared/util/moment.es';
 
-const Body = ({
+function Body({
 	assetTitle,
 	assetType,
 	assignees = [{name: Liferay.Language.get('unassigned')}],
@@ -32,139 +36,199 @@ const Body = ({
 	id,
 	slaResults = [],
 	taskNames = [],
-}) => {
-	const SLAs = {open: [], resolved: []};
+}) {
+	const SLAs = {notStarted: [], open: [], resolved: []};
 
 	slaResults.forEach((result) => {
-		SLAs[result.status === 'Stopped' ? 'resolved' : 'open'].push(result);
+		let slaGroup = '';
+
+		switch (result.status) {
+			case 'NEW': {
+				slaGroup = 'notStarted';
+				break;
+			}
+			case 'STOPPED': {
+				slaGroup = 'resolved';
+				break;
+			}
+			default: {
+				slaGroup = 'open';
+			}
+		}
+
+		SLAs[slaGroup].push(result);
 	});
 
-	const statesProps = useMemo(
-		() => ({
-			errorProps: {
-				actionButton: (
-					<RetryButton
-						onClick={() => setRetry((retry) => retry + 1)}
-					/>
-				),
-				className: 'py-8',
-				hideAnimation: true,
-				message: Liferay.Language.get('unable-to-retrieve-data'),
-				messageClassName: 'small',
-			},
-			loadingProps: {className: 'py-8'},
-		}),
-		[setRetry]
+	const statesProps = {
+		errorProps: {
+			actionButton: (
+				<RetryButton onClick={() => setRetry((retry) => retry + 1)} />
+			),
+			className: 'py-8',
+			hideAnimation: true,
+			message: Liferay.Language.get('unable-to-retrieve-data'),
+			messageClassName: 'small',
+		},
+		loadingProps: {className: 'py-8'},
+	};
+
+	const [showInstanceTrackerModal, setShowInstanceTrackerModal] = useState(
+		false
 	);
 
+	const {observer} = useModal({
+		onClose: () => {
+			setShowInstanceTrackerModal(false);
+		},
+	});
+
 	return (
-		<ClayModal.Body>
-			<ContentView {...statesProps}>
-				<Body.SectionTitle>
-					{Liferay.Language.get('due-date-by-sla')}
-				</Body.SectionTitle>
+		<>
+			<ClayModal.Body>
+				<ContentView {...statesProps}>
+					<Body.SectionTitle>
+						{Liferay.Language.get('due-date-by-sla')}
+					</Body.SectionTitle>
 
-				{slaResults.length === 0 && (
-					<p>
-						<span className="font-weight-medium text-muted">
-							{Liferay.Language.get(
-								'no-sla-records-for-this-item'
+					{!slaResults.length && (
+						<p>
+							<span className="font-weight-medium text-muted">
+								{Liferay.Language.get(
+									'no-sla-records-for-this-item'
+								)}
+							</span>
+						</p>
+					)}
+
+					{!!SLAs.open.length && (
+						<Body.SectionSubTitle>
+							{`${Liferay.Language.get('open').toUpperCase()} (${
+								SLAs.open.length
+							})`}
+						</Body.SectionSubTitle>
+					)}
+
+					{SLAs.open.map((item) => (
+						<Body.SLAResultItem key={item.id} {...item} />
+					))}
+
+					{!!SLAs.resolved.length && (
+						<Body.SectionSubTitle>
+							{`${Liferay.Language.get(
+								'resolved'
+							).toUpperCase()} (${SLAs.resolved.length})`}
+						</Body.SectionSubTitle>
+					)}
+
+					{SLAs.resolved.map((item) => (
+						<Body.SLAResultItem key={item.id} {...item} />
+					))}
+
+					{!!SLAs.notStarted.length && (
+						<Body.SectionSubTitle>
+							{`${Liferay.Language.get(
+								'not-started'
+							).toUpperCase()} (${SLAs.notStarted.length})`}
+						</Body.SectionSubTitle>
+					)}
+
+					{SLAs.notStarted.map((item) => (
+						<Body.SLAResultItem key={item.id} {...item} />
+					))}
+
+					<Body.SectionTitle className="mt-5">
+						{Liferay.Language.get('process-details')}
+					</Body.SectionTitle>
+
+					<Body.SectionAttribute
+						description={Liferay.Language.get('process-status')}
+						detail={
+							<>
+								{completed
+									? Liferay.Language.get('completed')
+									: Liferay.Language.get('pending')}
+
+								<ClayTooltipProvider>
+									<ClayLink
+										className="ml-1 tracker-tooltip"
+										data-tooltip-align="top"
+										onClick={() =>
+											setShowInstanceTrackerModal(true)
+										}
+										title={Liferay.Language.get(
+											'click-and-see'
+										)}
+									>
+										(
+										{Liferay.Language.get('track-workflow')}
+										)
+									</ClayLink>
+								</ClayTooltipProvider>
+							</>
+						}
+					/>
+
+					<Body.SectionAttribute
+						description={Liferay.Language.get('created-by')}
+						detail={creator ? creator.name : ''}
+					/>
+
+					{dateCreated && (
+						<Body.SectionAttribute
+							description={Liferay.Language.get('creation-date')}
+							detail={moment
+								.utc(dateCreated)
+								.format(Liferay.Language.get('mmm-dd-yyyy-lt'))}
+						/>
+					)}
+
+					<Body.SectionAttribute
+						description={Liferay.Language.get('asset-type')}
+						detail={assetType}
+					/>
+
+					<Body.SectionAttribute
+						description={Liferay.Language.get('asset-title')}
+						detail={assetTitle}
+					/>
+
+					{!completed && (
+						<Body.SectionAttribute
+							description={Liferay.Language.get('current-step')}
+							detail={taskNames.join(', ')}
+						/>
+					)}
+
+					{completed && dateCompletion && (
+						<Body.SectionAttribute
+							description={Liferay.Language.get('end-date')}
+							detail={moment
+								.utc(dateCompletion)
+								.format(Liferay.Language.get('mmm-dd-yyyy-lt'))}
+						/>
+					)}
+
+					{!completed && (
+						<Body.SectionAttribute
+							description={Liferay.Language.get(
+								'current-assignee'
 							)}
-						</span>
-					</p>
-				)}
+							detail={assignees[0].name}
+						/>
+					)}
 
-				{SLAs.open.length > 0 && (
-					<Body.SectionSubTitle>
-						{`${Liferay.Language.get('open').toUpperCase()} (${
-							SLAs.open.length
-						})`}
-					</Body.SectionSubTitle>
-				)}
-
-				{SLAs.open.map((item) => (
-					<Body.SLAResultItem key={item.id} {...item} />
-				))}
-
-				{SLAs.resolved.length > 0 && (
-					<Body.SectionSubTitle>
-						{`${Liferay.Language.get('resolved').toUpperCase()} (${
-							SLAs.resolved.length
-						})`}
-					</Body.SectionSubTitle>
-				)}
-
-				{SLAs.resolved.map((item) => (
-					<Body.SLAResultItem key={item.id} {...item} />
-				))}
-
-				<Body.SectionTitle className="mt-5">
-					{Liferay.Language.get('process-details')}
-				</Body.SectionTitle>
-
-				<Body.SectionAttribute
-					description={Liferay.Language.get('process-status')}
-					detail={
-						completed
-							? Liferay.Language.get('completed')
-							: Liferay.Language.get('pending')
-					}
-				/>
-
-				<Body.SectionAttribute
-					description={Liferay.Language.get('created-by')}
-					detail={creator ? creator.name : ''}
-				/>
-
-				{dateCreated && (
-					<Body.SectionAttribute
-						description={Liferay.Language.get('creation-date')}
-						detail={moment
-							.utc(dateCreated)
-							.format(Liferay.Language.get('mmm-dd-yyyy-lt'))}
-					/>
-				)}
-
-				<Body.SectionAttribute
-					description={Liferay.Language.get('asset-type')}
-					detail={assetType}
-				/>
-
-				<Body.SectionAttribute
-					description={Liferay.Language.get('asset-title')}
-					detail={assetTitle}
-				/>
-
-				{!completed && (
-					<Body.SectionAttribute
-						description={Liferay.Language.get('current-step')}
-						detail={taskNames.join(', ')}
-					/>
-				)}
-
-				{completed && dateCompletion && (
-					<Body.SectionAttribute
-						description={Liferay.Language.get('end-date')}
-						detail={moment
-							.utc(dateCompletion)
-							.format(Liferay.Language.get('mmm-dd-yyyy-lt'))}
-					/>
-				)}
-
-				{!completed && (
-					<Body.SectionAttribute
-						description={Liferay.Language.get('current-assignee')}
-						detail={assignees.map((user) => user.name).join(', ')}
-					/>
-				)}
-
-				<ClayTooltipProvider>
-					<a
-						className="btn btn-secondary btn-sm font-weight-medium mb-1 mt-3"
+					<ClayButton
+						className="mb-1 mt-3"
 						data-tooltip-align="bottom"
 						data-tooltip-delay="0"
-						href={`/group/control_panel/manage/-/workflow_instance/view/${id}`}
-						target="_blank"
+						displayType="secondary"
+						onClick={() =>
+							window.open(
+								`/group/control_panel/manage/-/workflow_instance/view/${id}`,
+								'_blank'
+							)
+						}
+						small
 						title={Liferay.Language.get('open-page-in-a-new-tab')}
 					>
 						{Liferay.Language.get('go-to-submission-page')}
@@ -172,28 +236,40 @@ const Body = ({
 						<span className="inline-item inline-item-after">
 							<ClayIcon symbol="shortcut" />
 						</span>
-					</a>
-				</ClayTooltipProvider>
-			</ContentView>
-		</ClayModal.Body>
-	);
-};
+					</ClayButton>
+				</ContentView>
+			</ClayModal.Body>
 
-const SectionTitle = ({children, className = ''}) => {
+			{showInstanceTrackerModal && (
+				<ClayModal observer={observer} size="full-screen">
+					<ClayModal.Header>
+						{Liferay.Language.get('track-workflow')}
+					</ClayModal.Header>
+
+					<ClayModal.Body>
+						<WorkflowInstanceTracker workflowInstanceId={id} />
+					</ClayModal.Body>
+				</ClayModal>
+			)}
+		</>
+	);
+}
+
+function SectionTitle({children, className = ''}) {
 	const classNames = `${className} font-weight-medium mb-4`;
 
 	return <h4 className={classNames}>{children}</h4>;
-};
+}
 
-const SectionSubTitle = ({children}) => {
+function SectionSubTitle({children}) {
 	return (
 		<h5 className="font-weight-medium mb-4 mt-4 text-secondary">
 			{children}
 		</h5>
 	);
-};
+}
 
-const SectionAttribute = ({description, detail}) => {
+function SectionAttribute({description, detail}) {
 	return (
 		<ClayLayout.Row containerElement="p">
 			<ClayLayout.Col
@@ -209,32 +285,36 @@ const SectionAttribute = ({description, detail}) => {
 			</ClayLayout.Col>
 		</ClayLayout.Row>
 	);
-};
+}
 
-const SLAResultItem = ({dateOverdue, name, onTime, remainingTime, status}) => {
-	const bgColor = onTime ? 'success' : 'danger';
-	const iconName = onTime ? 'check-circle' : 'exclamation-circle';
+function getResultItemInfo({onTime, status}) {
+	if (status === 'NEW') {
+		return {bgColor: 'text-info', iconName: 'hr'};
+	}
+
+	if (onTime) {
+		return {bgColor: 'success', iconName: 'check-circle'};
+	}
+
+	return {bgColor: 'danger', iconName: 'exclamation-circle'};
+}
+
+function SLAResultItem({dateOverdue, name, onTime, remainingTime, status}) {
+	const {bgColor, iconName} = getResultItemInfo({onTime, status});
 
 	const getStatusText = (status) => {
 		switch (status) {
-			case 'Paused': {
+			case 'NEW': {
+				return `(${Liferay.Language.get('untracked')})`;
+			}
+			case 'PAUSED': {
 				return `(${Liferay.Language.get('sla-paused')})`;
 			}
-			case 'Running': {
-				const remainingTimePositive = onTime
-					? remainingTime
-					: remainingTime * -1;
-
-				const remainingTimeUTC = moment.utc(remainingTimePositive);
-
-				const durationText =
-					remainingTimeUTC.format('D') -
-					1 +
-					remainingTimeUTC.format('[d] HH[h] mm[min]');
-
-				const onTimeText = onTime
-					? Liferay.Language.get('left')
-					: Liferay.Language.get('overdue');
+			case 'RUNNING': {
+				const [durationText, onTimeText] = remainingTimeFormat(
+					onTime,
+					remainingTime
+				);
 
 				return `${moment
 					.utc(dateOverdue)
@@ -243,7 +323,7 @@ const SLAResultItem = ({dateOverdue, name, onTime, remainingTime, status}) => {
 					)} (${durationText} ${onTimeText})`;
 			}
 			default: {
-				if (status === 'Stopped' && onTime) {
+				if (status === 'STOPPED' && onTime) {
 					return `(${Liferay.Language.get('resolved-on-time')})`;
 				}
 
@@ -259,17 +339,17 @@ const SLAResultItem = ({dateOverdue, name, onTime, remainingTime, status}) => {
 			</span>
 
 			<span className="font-weight-medium small text-secondary">
-				{`${name}`}{' '}
+				{`${name}` + ' '}
 			</span>
 
 			<span className="small">{getStatusText(status)}</span>
 		</div>
 	);
-};
+}
 
 Body.SLAResultItem = SLAResultItem;
 Body.SectionTitle = SectionTitle;
 Body.SectionSubTitle = SectionSubTitle;
 Body.SectionAttribute = SectionAttribute;
 
-export {Body};
+export default Body;

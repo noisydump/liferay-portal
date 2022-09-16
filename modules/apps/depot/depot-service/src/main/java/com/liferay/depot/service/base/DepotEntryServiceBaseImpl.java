@@ -16,6 +16,7 @@ package com.liferay.depot.service.base;
 
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryService;
+import com.liferay.depot.service.DepotEntryServiceUtil;
 import com.liferay.depot.service.persistence.DepotEntryPersistence;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
@@ -23,12 +24,17 @@ import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.service.BaseServiceImpl;
 import com.liferay.portal.kernel.util.PortalUtil;
 
+import java.lang.reflect.Field;
+
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -49,8 +55,13 @@ public abstract class DepotEntryServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>DepotEntryService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.depot.service.DepotEntryServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>DepotEntryService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>DepotEntryServiceUtil</code>.
 	 */
+	@Deactivate
+	protected void deactivate() {
+		_setServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -61,6 +72,8 @@ public abstract class DepotEntryServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		depotEntryService = (DepotEntryService)aopProxy;
+
+		_setServiceUtilService(depotEntryService);
 	}
 
 	/**
@@ -105,6 +118,20 @@ public abstract class DepotEntryServiceBaseImpl
 		}
 	}
 
+	private void _setServiceUtilService(DepotEntryService depotEntryService) {
+		try {
+			Field field = DepotEntryServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, depotEntryService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@Reference
 	protected com.liferay.depot.service.DepotEntryLocalService
 		depotEntryLocalService;
@@ -118,8 +145,7 @@ public abstract class DepotEntryServiceBaseImpl
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@Reference
-	protected com.liferay.portal.kernel.service.ResourceLocalService
-		resourceLocalService;
+	private static final Log _log = LogFactoryUtil.getLog(
+		DepotEntryServiceBaseImpl.class);
 
 }

@@ -2,17 +2,14 @@
 <head>
 <title>IFrame</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">IFrame</td></tr>
 </thead>
+
 <tbody>
-<tr>
-	<td>ADD_ASSIGNEE_TO_ACCOUNT</td>
-	<td>//iframe[@title='Assign ${key_assigneeType} to ${key_accountName}']</td>
-	<td></td>
-</tr>
 <tr>
 	<td>ADD_DOMAIN</td>
 	<td>//iframe[@title='Add Domain']</td>
@@ -109,6 +106,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>IFRAME_SRC</td>
+	<td>//iframe[contains(@src,'${key_src}')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>IFRAME_TITLE</td>
 	<td>//div[contains(@class,'modal-header')]/h3[@class='modal-title' and contains(.,'${key_iframeTitle}')]</td>
 	<td></td>
@@ -129,13 +131,23 @@
 	<td></td>
 </tr>
 <tr>
+	<td>MARKETPLACE_PURCHASED_PORTLET_IFRAME</td>
+	<td>//iframe[contains(@id,'MarketplacePurchasedPortlet_frame')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>MARKETPLACE_STORE_PORTLET_IFRAME</td>
+	<td>//iframe[contains(@id,'MarketplaceStorePortlet_frame')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>METADATA_SETS_IFRAME</td>
 	<td>//div[contains(@class,'modal-body')]/iframe</td>
 	<td></td>
 </tr>
 <tr>
 	<td>MODAL_BODY</td>
-	<td>//div[contains(@class,'modal-body')]/iframe</td>
+	<td>//div[contains(@class,'modal-body')]//iframe</td>
 	<td></td>
 </tr>
 <tr>

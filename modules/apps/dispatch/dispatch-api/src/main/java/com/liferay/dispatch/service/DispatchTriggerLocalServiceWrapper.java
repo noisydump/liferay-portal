@@ -27,6 +27,10 @@ public class DispatchTriggerLocalServiceWrapper
 	implements DispatchTriggerLocalService,
 			   ServiceWrapper<DispatchTriggerLocalService> {
 
+	public DispatchTriggerLocalServiceWrapper() {
+		this(null);
+	}
+
 	public DispatchTriggerLocalServiceWrapper(
 		DispatchTriggerLocalService dispatchTriggerLocalService) {
 
@@ -52,14 +56,15 @@ public class DispatchTriggerLocalServiceWrapper
 
 	@Override
 	public com.liferay.dispatch.model.DispatchTrigger addDispatchTrigger(
-			long userId, String dispatchTaskExecutorType,
+			String externalReferenceCode, long userId,
+			String dispatchTaskExecutorType,
 			com.liferay.portal.kernel.util.UnicodeProperties
 				dispatchTaskSettingsUnicodeProperties,
 			String name, boolean system)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _dispatchTriggerLocalService.addDispatchTrigger(
-			userId, dispatchTaskExecutorType,
+			externalReferenceCode, userId, dispatchTaskExecutorType,
 			dispatchTaskSettingsUnicodeProperties, name, system);
 	}
 
@@ -143,6 +148,13 @@ public class DispatchTriggerLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _dispatchTriggerLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _dispatchTriggerLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -252,6 +264,57 @@ public class DispatchTriggerLocalServiceWrapper
 			companyId, name);
 	}
 
+	/**
+	 * Returns the dispatch trigger with the matching external reference code and company.
+	 *
+	 * @param companyId the primary key of the company
+	 * @param externalReferenceCode the dispatch trigger's external reference code
+	 * @return the matching dispatch trigger, or <code>null</code> if a matching dispatch trigger could not be found
+	 */
+	@Override
+	public com.liferay.dispatch.model.DispatchTrigger
+		fetchDispatchTriggerByExternalReferenceCode(
+			long companyId, String externalReferenceCode) {
+
+		return _dispatchTriggerLocalService.
+			fetchDispatchTriggerByExternalReferenceCode(
+				companyId, externalReferenceCode);
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #fetchDispatchTriggerByExternalReferenceCode(long, String)}
+	 */
+	@Deprecated
+	@Override
+	public com.liferay.dispatch.model.DispatchTrigger
+		fetchDispatchTriggerByReferenceCode(
+			long companyId, String externalReferenceCode) {
+
+		return _dispatchTriggerLocalService.fetchDispatchTriggerByReferenceCode(
+			companyId, externalReferenceCode);
+	}
+
+	/**
+	 * Returns the dispatch trigger with the matching UUID and company.
+	 *
+	 * @param uuid the dispatch trigger's UUID
+	 * @param companyId the primary key of the company
+	 * @return the matching dispatch trigger, or <code>null</code> if a matching dispatch trigger could not be found
+	 */
+	@Override
+	public com.liferay.dispatch.model.DispatchTrigger
+		fetchDispatchTriggerByUuidAndCompanyId(String uuid, long companyId) {
+
+		return _dispatchTriggerLocalService.
+			fetchDispatchTriggerByUuidAndCompanyId(uuid, companyId);
+	}
+
+	@Override
+	public java.util.Date fetchNextFireDate(long dispatchTriggerId) {
+		return _dispatchTriggerLocalService.fetchNextFireDate(
+			dispatchTriggerId);
+	}
+
 	@Override
 	public java.util.Date fetchPreviousFireDate(long dispatchTriggerId) {
 		return _dispatchTriggerLocalService.fetchPreviousFireDate(
@@ -279,6 +342,42 @@ public class DispatchTriggerLocalServiceWrapper
 
 		return _dispatchTriggerLocalService.getDispatchTrigger(
 			dispatchTriggerId);
+	}
+
+	/**
+	 * Returns the dispatch trigger with the matching external reference code and company.
+	 *
+	 * @param companyId the primary key of the company
+	 * @param externalReferenceCode the dispatch trigger's external reference code
+	 * @return the matching dispatch trigger
+	 * @throws PortalException if a matching dispatch trigger could not be found
+	 */
+	@Override
+	public com.liferay.dispatch.model.DispatchTrigger
+			getDispatchTriggerByExternalReferenceCode(
+				long companyId, String externalReferenceCode)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _dispatchTriggerLocalService.
+			getDispatchTriggerByExternalReferenceCode(
+				companyId, externalReferenceCode);
+	}
+
+	/**
+	 * Returns the dispatch trigger with the matching UUID and company.
+	 *
+	 * @param uuid the dispatch trigger's UUID
+	 * @param companyId the primary key of the company
+	 * @return the matching dispatch trigger
+	 * @throws PortalException if a matching dispatch trigger could not be found
+	 */
+	@Override
+	public com.liferay.dispatch.model.DispatchTrigger
+			getDispatchTriggerByUuidAndCompanyId(String uuid, long companyId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _dispatchTriggerLocalService.
+			getDispatchTriggerByUuidAndCompanyId(uuid, companyId);
 	}
 
 	@Override
@@ -331,6 +430,16 @@ public class DispatchTriggerLocalServiceWrapper
 	@Override
 	public int getDispatchTriggersCount(long companyId) {
 		return _dispatchTriggerLocalService.getDispatchTriggersCount(companyId);
+	}
+
+	@Override
+	public com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery
+		getExportActionableDynamicQuery(
+			com.liferay.exportimport.kernel.lar.PortletDataContext
+				portletDataContext) {
+
+		return _dispatchTriggerLocalService.getExportActionableDynamicQuery(
+			portletDataContext);
 	}
 
 	@Override
@@ -418,14 +527,14 @@ public class DispatchTriggerLocalServiceWrapper
 			int endDateMonth, int endDateDay, int endDateYear, int endDateHour,
 			int endDateMinute, boolean neverEnd, boolean overlapAllowed,
 			int startDateMonth, int startDateDay, int startDateYear,
-			int startDateHour, int startDateMinute)
+			int startDateHour, int startDateMinute, String timeZoneId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _dispatchTriggerLocalService.updateDispatchTrigger(
 			dispatchTriggerId, active, cronExpression, dispatchTaskClusterMode,
 			endDateMonth, endDateDay, endDateYear, endDateHour, endDateMinute,
 			neverEnd, overlapAllowed, startDateMonth, startDateDay,
-			startDateYear, startDateHour, startDateMinute);
+			startDateYear, startDateHour, startDateMinute, timeZoneId);
 	}
 
 	@Override

@@ -33,26 +33,25 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.reports.engine.console.model.Source;
 import com.liferay.portal.reports.engine.console.model.SourceModel;
-import com.liferay.portal.reports.engine.console.model.SourceSoap;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.BiConsumer;
@@ -127,26 +126,26 @@ public class SourceModelImpl
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long COMPANYID_COLUMN_BITMASK = 1L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long GROUPID_COLUMN_BITMASK = 2L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long UUID_COLUMN_BITMASK = 4L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *		#getColumnBitmask(String)
+	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long SOURCEID_COLUMN_BITMASK = 8L;
@@ -163,61 +162,6 @@ public class SourceModelImpl
 	 */
 	@Deprecated
 	public static void setFinderCacheEnabled(boolean finderCacheEnabled) {
-	}
-
-	/**
-	 * Converts the soap model instance into a normal model instance.
-	 *
-	 * @param soapModel the soap model instance to convert
-	 * @return the normal model instance
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static Source toModel(SourceSoap soapModel) {
-		if (soapModel == null) {
-			return null;
-		}
-
-		Source model = new SourceImpl();
-
-		model.setUuid(soapModel.getUuid());
-		model.setSourceId(soapModel.getSourceId());
-		model.setGroupId(soapModel.getGroupId());
-		model.setCompanyId(soapModel.getCompanyId());
-		model.setUserId(soapModel.getUserId());
-		model.setUserName(soapModel.getUserName());
-		model.setCreateDate(soapModel.getCreateDate());
-		model.setModifiedDate(soapModel.getModifiedDate());
-		model.setLastPublishDate(soapModel.getLastPublishDate());
-		model.setName(soapModel.getName());
-		model.setDriverClassName(soapModel.getDriverClassName());
-		model.setDriverUrl(soapModel.getDriverUrl());
-		model.setDriverUserName(soapModel.getDriverUserName());
-		model.setDriverPassword(soapModel.getDriverPassword());
-
-		return model;
-	}
-
-	/**
-	 * Converts the soap model instances into normal model instances.
-	 *
-	 * @param soapModels the soap model instances to convert
-	 * @return the normal model instances
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static List<Source> toModels(SourceSoap[] soapModels) {
-		if (soapModels == null) {
-			return null;
-		}
-
-		List<Source> models = new ArrayList<Source>(soapModels.length);
-
-		for (SourceSoap soapModel : soapModels) {
-			models.add(toModel(soapModel));
-		}
-
-		return models;
 	}
 
 	public SourceModelImpl() {
@@ -299,33 +243,6 @@ public class SourceModelImpl
 		getAttributeSetterBiConsumers() {
 
 		return _attributeSetterBiConsumers;
-	}
-
-	private static Function<InvocationHandler, Source>
-		_getProxyProviderFunction() {
-
-		Class<?> proxyClass = ProxyUtil.getProxyClass(
-			Source.class.getClassLoader(), Source.class, ModelWrapper.class);
-
-		try {
-			Constructor<Source> constructor =
-				(Constructor<Source>)proxyClass.getConstructor(
-					InvocationHandler.class);
-
-			return invocationHandler -> {
-				try {
-					return constructor.newInstance(invocationHandler);
-				}
-				catch (ReflectiveOperationException
-							reflectiveOperationException) {
-
-					throw new InternalError(reflectiveOperationException);
-				}
-			};
-		}
-		catch (NoSuchMethodException noSuchMethodException) {
-			throw new InternalError(noSuchMethodException);
-		}
 	}
 
 	private static final Map<String, Function<Source, Object>>
@@ -798,7 +715,9 @@ public class SourceModelImpl
 		for (Map.Entry<String, Object> entry :
 				_columnOriginalValues.entrySet()) {
 
-			if (entry.getValue() != getColumnValue(entry.getKey())) {
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
 				_columnBitmask |= _columnBitmasks.get(entry.getKey());
 			}
 		}
@@ -920,6 +839,35 @@ public class SourceModelImpl
 		sourceImpl.setDriverPassword(getDriverPassword());
 
 		sourceImpl.resetOriginalValues();
+
+		return sourceImpl;
+	}
+
+	@Override
+	public Source cloneWithOriginalValues() {
+		SourceImpl sourceImpl = new SourceImpl();
+
+		sourceImpl.setUuid(this.<String>getColumnOriginalValue("uuid_"));
+		sourceImpl.setSourceId(this.<Long>getColumnOriginalValue("sourceId"));
+		sourceImpl.setGroupId(this.<Long>getColumnOriginalValue("groupId"));
+		sourceImpl.setCompanyId(this.<Long>getColumnOriginalValue("companyId"));
+		sourceImpl.setUserId(this.<Long>getColumnOriginalValue("userId"));
+		sourceImpl.setUserName(this.<String>getColumnOriginalValue("userName"));
+		sourceImpl.setCreateDate(
+			this.<Date>getColumnOriginalValue("createDate"));
+		sourceImpl.setModifiedDate(
+			this.<Date>getColumnOriginalValue("modifiedDate"));
+		sourceImpl.setLastPublishDate(
+			this.<Date>getColumnOriginalValue("lastPublishDate"));
+		sourceImpl.setName(this.<String>getColumnOriginalValue("name"));
+		sourceImpl.setDriverClassName(
+			this.<String>getColumnOriginalValue("driverClassName"));
+		sourceImpl.setDriverUrl(
+			this.<String>getColumnOriginalValue("driverUrl"));
+		sourceImpl.setDriverUserName(
+			this.<String>getColumnOriginalValue("driverUserName"));
+		sourceImpl.setDriverPassword(
+			this.<String>getColumnOriginalValue("driverPassword"));
 
 		return sourceImpl;
 	}
@@ -1097,7 +1045,7 @@ public class SourceModelImpl
 			getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			(4 * attributeGetterFunctions.size()) + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -1107,9 +1055,26 @@ public class SourceModelImpl
 			String attributeName = entry.getKey();
 			Function<Source, Object> attributeGetterFunction = entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((Source)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply((Source)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -1155,7 +1120,9 @@ public class SourceModelImpl
 	private static class EscapedModelProxyProviderFunctionHolder {
 
 		private static final Function<InvocationHandler, Source>
-			_escapedModelProxyProviderFunction = _getProxyProviderFunction();
+			_escapedModelProxyProviderFunction =
+				ProxyUtil.getProxyProviderFunction(
+					Source.class, ModelWrapper.class);
 
 	}
 

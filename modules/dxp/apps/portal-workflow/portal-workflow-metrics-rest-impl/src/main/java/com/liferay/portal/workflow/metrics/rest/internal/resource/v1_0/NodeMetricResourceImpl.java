@@ -14,9 +14,8 @@
 
 package com.liferay.portal.workflow.metrics.rest.internal.resource.v1_0;
 
-import com.liferay.petra.string.StringBundler;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
@@ -44,7 +43,6 @@ import com.liferay.portal.search.sort.SortOrder;
 import com.liferay.portal.search.sort.Sorts;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
-import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.workflow.metrics.rest.dto.v1_0.Node;
 import com.liferay.portal.workflow.metrics.rest.dto.v1_0.NodeMetric;
 import com.liferay.portal.workflow.metrics.rest.internal.odata.entity.v1_0.NodeMetricEntityModel;
@@ -75,8 +73,7 @@ import org.osgi.service.component.annotations.ServiceScope;
 	properties = "OSGI-INF/liferay/rest/v1_0/node-metric.properties",
 	scope = ServiceScope.PROTOTYPE, service = NodeMetricResource.class
 )
-public class NodeMetricResourceImpl
-	extends BaseNodeMetricResourceImpl implements EntityModelResource {
+public class NodeMetricResourceImpl extends BaseNodeMetricResourceImpl {
 
 	@Override
 	public EntityModel getEntityModel(MultivaluedMap multivaluedMap)
@@ -88,18 +85,20 @@ public class NodeMetricResourceImpl
 	@Override
 	public Page<NodeMetric> getProcessNodeMetricsPage(
 			Long processId, Boolean completed, Date dateEnd, Date dateStart,
-			String key, Pagination pagination, Sort[] sorts)
+			String key, String processVersion, Pagination pagination,
+			Sort[] sorts)
 		throws Exception {
 
 		String latestProcessVersion = _resourceHelper.getLatestProcessVersion(
 			contextCompany.getCompanyId(), processId);
 
 		Map<String, Bucket> taskBuckets = _getTaskBuckets(
-			GetterUtil.getBoolean(completed), key, processId,
-			latestProcessVersion);
+			GetterUtil.getBoolean(completed), key, latestProcessVersion,
+			processId, processVersion);
 
 		Map<String, NodeMetric> nodeMetrics = _getNodeMetrics(
-			key, processId, taskBuckets.keySet(), latestProcessVersion);
+			key, latestProcessVersion, processId, processVersion,
+			taskBuckets.keySet());
 
 		long count = nodeMetrics.size();
 
@@ -192,45 +191,6 @@ public class NodeMetricResourceImpl
 			_queries.term("slaDefinitionId", 0));
 	}
 
-	private BooleanQuery _createFilterBooleanQuery(
-		boolean completed, String key, long processId, String version) {
-
-		BooleanQuery booleanQuery = _queries.booleanQuery();
-
-		if (Validator.isNotNull(key)) {
-			booleanQuery.addMustQueryClauses(
-				_queries.wildcard("name", "*" + key + "*"));
-		}
-
-		booleanQuery.addShouldQueryClauses(
-			_createBooleanQuery(completed, processId));
-
-		return booleanQuery.addShouldQueryClauses(
-			_createBooleanQuery(processId, version));
-	}
-
-	private BooleanQuery _createFilterBooleanQuery(
-		String key, long processId, Set<String> taskNames, String version) {
-
-		BooleanQuery booleanQuery = _queries.booleanQuery();
-
-		if (Validator.isNotNull(key)) {
-			booleanQuery.addMustQueryClauses(
-				_queries.wildcard("name", "*" + key + "*"));
-		}
-
-		if (!taskNames.isEmpty()) {
-			TermsQuery termsQuery = _queries.terms("name");
-
-			termsQuery.addValues(taskNames.toArray(new Object[0]));
-
-			booleanQuery.addShouldQueryClauses(termsQuery);
-		}
-
-		return booleanQuery.addShouldQueryClauses(
-			_createBooleanQuery(processId, version));
-	}
-
 	private NodeMetric _createNodeMetric(String nodeName) {
 		return new NodeMetric() {
 			{
@@ -249,12 +209,37 @@ public class NodeMetricResourceImpl
 	}
 
 	private BooleanQuery _createNodesBooleanQuery(
-		String key, long processId, Set<String> taskNames, String version) {
+		String key, String latestProcessVersion, long processId,
+		String processVersion, Set<String> taskNames) {
+
+		BooleanQuery filterBooleanQuery = _queries.booleanQuery();
+
+		if (Validator.isNotNull(key)) {
+			filterBooleanQuery.addMustQueryClauses(
+				_queries.wildcard(
+					Field.getSortableFieldName("name"),
+					"*" + StringUtil.toLowerCase(key) + "*"));
+		}
+
+		TermsQuery termsQuery = _queries.terms("name");
+
+		termsQuery.addValues(taskNames.toArray(new Object[0]));
+
+		if (processVersion != null) {
+			filterBooleanQuery.addMustQueryClauses(
+				termsQuery, _queries.term("deleted", false),
+				_queries.term("processId", processId),
+				_queries.term("version", processVersion));
+		}
+		else {
+			filterBooleanQuery.addShouldQueryClauses(
+				termsQuery,
+				_createBooleanQuery(processId, latestProcessVersion));
+		}
 
 		BooleanQuery booleanQuery = _queries.booleanQuery();
 
-		booleanQuery.addFilterQueryClauses(
-			_createFilterBooleanQuery(key, processId, taskNames, version));
+		booleanQuery.addFilterQueryClauses(filterBooleanQuery);
 
 		return booleanQuery.addMustQueryClauses(
 			_queries.term("companyId", contextCompany.getCompanyId()),
@@ -317,6 +302,7 @@ public class NodeMetricResourceImpl
 		}
 
 		return booleanQuery.addMustQueryClauses(
+			_queries.term("active", true),
 			_queries.term("companyId", contextCompany.getCompanyId()),
 			_queries.term("completed", completed),
 			_queries.term("deleted", Boolean.FALSE),
@@ -325,14 +311,40 @@ public class NodeMetricResourceImpl
 	}
 
 	private BooleanQuery _createTasksBooleanQuery(
-		boolean completed, String key, long processId, String version) {
+		boolean completed, String key, String latestProcessVersion,
+		long processId, String processVersion) {
+
+		BooleanQuery filterBooleanQuery = _queries.booleanQuery();
+
+		if (Validator.isNotNull(key)) {
+			filterBooleanQuery.addMustQueryClauses(
+				_queries.wildcard(
+					Field.getSortableFieldName("name"),
+					"*" + StringUtil.toLowerCase(key) + "*"));
+		}
 
 		BooleanQuery booleanQuery = _queries.booleanQuery();
 
-		booleanQuery.addFilterQueryClauses(
-			_createFilterBooleanQuery(completed, key, processId, version));
+		if (processVersion != null) {
+			booleanQuery.addMustNotQueryClauses(_queries.term("taskId", 0));
+
+			booleanQuery.addMustQueryClauses(
+				_queries.term("instanceCompleted", completed));
+
+			filterBooleanQuery.addMustQueryClauses(
+				_queries.term("processId", processId),
+				_queries.term("version", processVersion));
+		}
+		else {
+			filterBooleanQuery.addShouldQueryClauses(
+				_createBooleanQuery(completed, processId),
+				_createBooleanQuery(processId, latestProcessVersion));
+		}
+
+		booleanQuery.addFilterQueryClauses(filterBooleanQuery);
 
 		return booleanQuery.addMustQueryClauses(
+			_queries.term("active", Boolean.TRUE),
 			_queries.term("companyId", contextCompany.getCompanyId()),
 			_queries.term("deleted", Boolean.FALSE));
 	}
@@ -437,7 +449,8 @@ public class NodeMetricResourceImpl
 	}
 
 	private Map<String, NodeMetric> _getNodeMetrics(
-		String key, long processId, Set<String> taskNames, String version) {
+		String key, String latestProcessVersion, long processId,
+		String processVersion, Set<String> taskNames) {
 
 		SearchSearchRequest searchSearchRequest = new SearchSearchRequest();
 
@@ -450,8 +463,11 @@ public class NodeMetricResourceImpl
 		searchSearchRequest.setIndexNames(
 			_nodeWorkflowMetricsIndexNameBuilder.getIndexName(
 				contextCompany.getCompanyId()));
+
 		searchSearchRequest.setQuery(
-			_createNodesBooleanQuery(key, processId, taskNames, version));
+			_createNodesBooleanQuery(
+				key, latestProcessVersion, processId, processVersion,
+				taskNames));
 
 		return Stream.of(
 			_searchRequestExecutor.executeSearchRequest(searchSearchRequest)
@@ -489,7 +505,8 @@ public class NodeMetricResourceImpl
 	}
 
 	private Map<String, Bucket> _getTaskBuckets(
-		boolean completed, String key, long processId, String version) {
+		boolean completed, String key, String latestProcessVersion,
+		long processId, String processVersion) {
 
 		SearchSearchRequest searchSearchRequest = new SearchSearchRequest();
 
@@ -502,8 +519,11 @@ public class NodeMetricResourceImpl
 		searchSearchRequest.setIndexNames(
 			_taskWorkflowMetricsIndexNameBuilder.getIndexName(
 				contextCompany.getCompanyId()));
+
 		searchSearchRequest.setQuery(
-			_createTasksBooleanQuery(completed, key, processId, version));
+			_createTasksBooleanQuery(
+				completed, key, latestProcessVersion, processId,
+				processVersion));
 
 		SearchSearchResponse searchSearchResponse =
 			_searchRequestExecutor.executeSearchRequest(searchSearchRequest);
@@ -525,10 +545,7 @@ public class NodeMetricResourceImpl
 
 	private boolean _isOrderByDurationAvg(String fieldName) {
 		if (StringUtil.equals(fieldName, "durationAvg") ||
-			StringUtil.equals(
-				fieldName,
-				StringBundler.concat(
-					"countFilter", StringPool.GREATER_THAN, "durationAvg"))) {
+			StringUtil.equals(fieldName, "countFilter>durationAvg")) {
 
 			return true;
 		}
@@ -538,10 +555,7 @@ public class NodeMetricResourceImpl
 
 	private boolean _isOrderByInstanceCount(String fieldName) {
 		if (StringUtil.equals(fieldName, "instanceCount") ||
-			StringUtil.equals(
-				fieldName,
-				StringBundler.concat(
-					"countFilter", StringPool.GREATER_THAN, "instanceCount"))) {
+			StringUtil.equals(fieldName, "countFilter>instanceCount")) {
 
 			return true;
 		}
@@ -551,11 +565,7 @@ public class NodeMetricResourceImpl
 
 	private boolean _isOrderByOnTimeInstanceCount(String fieldName) {
 		if (StringUtil.equals(fieldName, "onTimeInstanceCount") ||
-			StringUtil.equals(
-				fieldName,
-				StringBundler.concat(
-					"onTime", StringPool.GREATER_THAN,
-					"instanceCount.value"))) {
+			StringUtil.equals(fieldName, "onTime>instanceCount.value")) {
 
 			return true;
 		}
@@ -565,11 +575,7 @@ public class NodeMetricResourceImpl
 
 	private boolean _isOrderByOverdueInstanceCount(String fieldName) {
 		if (StringUtil.equals(fieldName, "overdueInstanceCount") ||
-			StringUtil.equals(
-				fieldName,
-				StringBundler.concat(
-					"overdue", StringPool.GREATER_THAN,
-					"instanceCount.value"))) {
+			StringUtil.equals(fieldName, "overdue>instanceCount.value")) {
 
 			return true;
 		}
@@ -683,19 +689,17 @@ public class NodeMetricResourceImpl
 		String fieldName = sort.getFieldName();
 
 		if (_isOrderByDurationAvg(fieldName)) {
-			fieldName = StringBundler.concat(
-				"countFilter", StringPool.GREATER_THAN, "durationAvg");
+			fieldName = "countFilter>durationAvg";
 		}
 		else if (_isOrderByInstanceCount(fieldName)) {
-			fieldName = StringBundler.concat(
-				"countFilter", StringPool.GREATER_THAN, "instanceCount");
+			fieldName = "countFilter>instanceCount";
 		}
 		else if (_isOrderByOnTimeInstanceCount(fieldName) ||
 				 _isOrderByOverdueInstanceCount(fieldName)) {
 
-			fieldName = StringBundler.concat(
-				StringUtil.extractFirst(fieldName, "InstanceCount"),
-				StringPool.GREATER_THAN, "instanceCount.value");
+			fieldName =
+				StringUtil.extractFirst(fieldName, "InstanceCount") +
+					">instanceCount.value";
 		}
 
 		FieldSort fieldSort = _sorts.field(fieldName);

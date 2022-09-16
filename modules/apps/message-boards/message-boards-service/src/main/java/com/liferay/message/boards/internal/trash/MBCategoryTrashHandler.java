@@ -19,6 +19,7 @@ import com.liferay.message.boards.model.MBCategory;
 import com.liferay.message.boards.model.MBThread;
 import com.liferay.message.boards.service.MBCategoryLocalService;
 import com.liferay.message.boards.service.MBThreadLocalService;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.ContainerModel;
 import com.liferay.portal.kernel.model.LayoutConstants;
@@ -32,13 +33,13 @@ import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.trash.BaseTrashHandler;
 import com.liferay.portal.kernel.trash.TrashHandler;
 import com.liferay.portal.kernel.trash.TrashRenderer;
 import com.liferay.portal.kernel.trash.TrashRendererFactory;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.trash.BaseTrashHandler;
 import com.liferay.trash.constants.TrashActionKeys;
 
 import java.util.ArrayList;
@@ -155,12 +156,11 @@ public class MBCategoryTrashHandler extends BaseTrashHandler {
 
 		MBCategory category = _mbCategoryLocalService.getCategory(classPK);
 
-		PortletURL portletURL = getRestoreURL(portletRequest, classPK);
-
-		portletURL.setParameter(
-			"mbCategoryId", String.valueOf(category.getCategoryId()));
-
-		return portletURL.toString();
+		return PortletURLBuilder.create(
+			getRestoreURL(portletRequest, classPK)
+		).setParameter(
+			"mbCategoryId", category.getCategoryId()
+		).buildString();
 	}
 
 	@Override
@@ -168,14 +168,13 @@ public class MBCategoryTrashHandler extends BaseTrashHandler {
 			PortletRequest portletRequest, long classPK)
 		throws PortalException {
 
-		PortletURL portletURL = getRestoreURL(portletRequest, classPK);
-
 		MBCategory category = _mbCategoryLocalService.getCategory(classPK);
 
-		portletURL.setParameter(
-			"mbCategoryId", String.valueOf(category.getParentCategoryId()));
-
-		return portletURL.toString();
+		return PortletURLBuilder.create(
+			getRestoreURL(portletRequest, classPK)
+		).setParameter(
+			"mbCategoryId", category.getParentCategoryId()
+		).buildString();
 	}
 
 	@Override
@@ -301,11 +300,6 @@ public class MBCategoryTrashHandler extends BaseTrashHandler {
 
 	@Override
 	public boolean isContainerModel() {
-		return true;
-	}
-
-	@Override
-	public boolean isMovable() {
 		return true;
 	}
 

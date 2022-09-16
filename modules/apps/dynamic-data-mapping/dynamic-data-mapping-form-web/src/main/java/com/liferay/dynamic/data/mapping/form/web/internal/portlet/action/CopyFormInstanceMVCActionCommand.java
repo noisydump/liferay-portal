@@ -15,6 +15,7 @@
 package com.liferay.dynamic.data.mapping.form.web.internal.portlet.action;
 
 import com.liferay.dynamic.data.mapping.constants.DDMPortletKeys;
+import com.liferay.dynamic.data.mapping.form.web.internal.portlet.action.helper.SaveFormInstanceMVCCommandHelper;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstance;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.UnlocalizedValue;
@@ -22,7 +23,7 @@ import com.liferay.dynamic.data.mapping.service.DDMFormInstanceService;
 import com.liferay.dynamic.data.mapping.service.DDMStructureService;
 import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseTransactionalMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -65,7 +66,7 @@ public class CopyFormInstanceMVCActionCommand
 		DDMFormValues settingsDDMFormValuesCopy =
 			formInstance.getSettingsDDMFormValues();
 
-		setDefaultPublishedDDMFormFieldValue(settingsDDMFormValuesCopy);
+		_setDefaultPublishedDDMFormFieldValue(settingsDDMFormValuesCopy);
 
 		return settingsDDMFormValuesCopy;
 	}
@@ -104,7 +105,7 @@ public class CopyFormInstanceMVCActionCommand
 
 		Map<Locale, String> nameMap = formInstance.getNameMap();
 
-		String name = LanguageUtil.format(
+		String name = _language.format(
 			getResourceBundle(defaultLocale), "copy-of-x",
 			nameMap.get(defaultLocale));
 
@@ -123,7 +124,19 @@ public class CopyFormInstanceMVCActionCommand
 			moduleResourceBundle, portalResourceBundle);
 	}
 
-	protected void setDefaultPublishedDDMFormFieldValue(
+	@Reference
+	protected DDMFormInstanceService ddmFormInstanceService;
+
+	@Reference
+	protected DDMStructureService ddmStructureService;
+
+	@Reference
+	protected Portal portal;
+
+	@Reference
+	protected SaveFormInstanceMVCCommandHelper saveFormInstanceMVCCommandHelper;
+
+	private void _setDefaultPublishedDDMFormFieldValue(
 		DDMFormValues ddmFormValues) {
 
 		for (DDMFormFieldValue ddmFormFieldValue :
@@ -136,15 +149,6 @@ public class CopyFormInstanceMVCActionCommand
 	}
 
 	@Reference
-	protected DDMFormInstanceService ddmFormInstanceService;
-
-	@Reference
-	protected DDMStructureService ddmStructureService;
-
-	@Reference
-	protected Portal portal;
-
-	@Reference
-	protected SaveFormInstanceMVCCommandHelper saveFormInstanceMVCCommandHelper;
+	private Language _language;
 
 }

@@ -21,7 +21,7 @@ import com.liferay.commerce.discount.service.CommerceDiscountRelLocalService;
 import com.liferay.commerce.discount.target.CommerceDiscountProductTarget;
 import com.liferay.commerce.discount.target.CommerceDiscountTarget;
 import com.liferay.commerce.product.model.CPDefinition;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.filter.BooleanFilter;
@@ -72,7 +72,8 @@ public class ApplyToProductCommerceDiscountTargetImpl
 
 		long[] cpDefinitionIds = longStream.toArray();
 
-		document.addKeyword("target_product_ids", cpDefinitionIds);
+		document.addKeyword(
+			"commerce_discount_target_cp_definition_ids", cpDefinitionIds);
 	}
 
 	@Override
@@ -85,7 +86,7 @@ public class ApplyToProductCommerceDiscountTargetImpl
 		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
 			"content.Language", locale, getClass());
 
-		return LanguageUtil.get(resourceBundle, "products");
+		return _language.get(resourceBundle, "products");
 	}
 
 	@Override
@@ -98,10 +99,11 @@ public class ApplyToProductCommerceDiscountTargetImpl
 		BooleanFilter contextBooleanFilter, CPDefinition cpDefinition) {
 
 		TermFilter termFilter = new TermFilter(
-			"target_product_ids",
+			"commerce_discount_target_cp_definition_ids",
 			String.valueOf(cpDefinition.getCPDefinitionId()));
 
-		Filter existFilter = new ExistsFilter("target_product_ids");
+		Filter existFilter = new ExistsFilter(
+			"commerce_discount_target_cp_definition_ids");
 
 		BooleanFilter existBooleanFilter = new BooleanFilter();
 
@@ -117,5 +119,8 @@ public class ApplyToProductCommerceDiscountTargetImpl
 
 	@Reference
 	private CommerceDiscountRelLocalService _commerceDiscountRelLocalService;
+
+	@Reference
+	private Language _language;
 
 }

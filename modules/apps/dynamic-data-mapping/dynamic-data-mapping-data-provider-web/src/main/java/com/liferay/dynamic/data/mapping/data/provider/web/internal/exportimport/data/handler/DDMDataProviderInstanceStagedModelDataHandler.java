@@ -107,18 +107,6 @@ public class DDMDataProviderInstanceStagedModelDataHandler
 		return dataProviderInstance.getNameCurrentValue();
 	}
 
-	protected DDMFormValues deserialize(String content, DDMForm ddmForm) {
-		DDMFormValuesDeserializerDeserializeRequest.Builder builder =
-			DDMFormValuesDeserializerDeserializeRequest.Builder.newBuilder(
-				content, ddmForm);
-
-		DDMFormValuesDeserializerDeserializeResponse
-			ddmFormValuesDeserializerDeserializeResponse =
-				_jsonDDMFormValuesDeserializer.deserialize(builder.build());
-
-		return ddmFormValuesDeserializerDeserializeResponse.getDDMFormValues();
-	}
-
 	@Override
 	protected void doExportStagedModel(
 			PortletDataContext portletDataContext,
@@ -205,7 +193,7 @@ public class DDMDataProviderInstanceStagedModelDataHandler
 
 		DDMForm ddmForm = DDMFormFactory.create(ddmDataProvider.getSettings());
 
-		DDMFormValues ddmFormValues = deserialize(
+		DDMFormValues ddmFormValues = _deserialize(
 			dataProviderInstance.getDefinition(), ddmForm);
 
 		ServiceContext serviceContext = portletDataContext.createServiceContext(
@@ -228,14 +216,16 @@ public class DDMDataProviderInstanceStagedModelDataHandler
 		return _stagedModelRepository;
 	}
 
-	@Reference(
-		target = "(model.class.name=com.liferay.dynamic.data.mapping.model.DDMDataProviderInstance)",
-		unbind = "-"
-	)
-	protected void setStagedModelRepository(
-		StagedModelRepository<DDMDataProviderInstance> stagedModelRepository) {
+	private DDMFormValues _deserialize(String content, DDMForm ddmForm) {
+		DDMFormValuesDeserializerDeserializeRequest.Builder builder =
+			DDMFormValuesDeserializerDeserializeRequest.Builder.newBuilder(
+				content, ddmForm);
 
-		_stagedModelRepository = stagedModelRepository;
+		DDMFormValuesDeserializerDeserializeResponse
+			ddmFormValuesDeserializerDeserializeResponse =
+				_jsonDDMFormValuesDeserializer.deserialize(builder.build());
+
+		return ddmFormValuesDeserializerDeserializeResponse.getDDMFormValues();
 	}
 
 	@Reference
@@ -248,6 +238,9 @@ public class DDMDataProviderInstanceStagedModelDataHandler
 	@Reference(target = "(ddm.form.values.deserializer.type=json)")
 	private DDMFormValuesDeserializer _jsonDDMFormValuesDeserializer;
 
+	@Reference(
+		target = "(model.class.name=com.liferay.dynamic.data.mapping.model.DDMDataProviderInstance)"
+	)
 	private StagedModelRepository<DDMDataProviderInstance>
 		_stagedModelRepository;
 

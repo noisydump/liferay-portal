@@ -22,14 +22,14 @@
 AUI.add(
 	'liferay-store',
 	(A) => {
-		var Lang = A.Lang;
+		const Lang = A.Lang;
 
-		var isObject = Lang.isObject;
+		const isObject = Lang.isObject;
 
-		var TOKEN_SERIALIZE = 'serialize://';
+		const TOKEN_SERIALIZE = 'serialize://';
 
-		var Store = function (key, value) {
-			var method;
+		const Store = function (key, value) {
+			let method;
 
 			if (Lang.isFunction(value)) {
 				method = 'get';
@@ -44,7 +44,7 @@ AUI.add(
 				if (isObject(key)) {
 					method = 'setAll';
 				}
-				else if (arguments.length == 1) {
+				else if (arguments.length === 1) {
 					method = null;
 				}
 			}
@@ -56,9 +56,9 @@ AUI.add(
 
 		A.mix(Store, {
 			_getValues(cmd, key, callback) {
-				var instance = this;
+				const instance = this;
 
-				var config = {
+				const config = {
 					callback,
 					data: {
 						cmd,
@@ -66,7 +66,7 @@ AUI.add(
 					},
 				};
 
-				if (cmd == 'getAll') {
+				if (cmd === 'getAll') {
 					config.dataType = 'json';
 				}
 
@@ -76,7 +76,7 @@ AUI.add(
 			_ioRequest(config) {
 				config.data.p_auth = Liferay.authToken;
 
-				var doAsUserIdEncoded = themeDisplay.getDoAsUserIdEncoded();
+				const doAsUserIdEncoded = themeDisplay.getDoAsUserIdEncoded();
 
 				if (doAsUserIdEncoded) {
 					config.data.doAsUserId = doAsUserIdEncoded;
@@ -121,7 +121,7 @@ AUI.add(
 										data.substring(TOKEN_SERIALIZE.length)
 									);
 								}
-								catch (e) {}
+								catch (error) {}
 							}
 						}
 
@@ -132,7 +132,7 @@ AUI.add(
 			},
 
 			_setValues(data) {
-				var instance = this;
+				const instance = this;
 
 				instance._ioRequest({
 					data,
@@ -140,35 +140,35 @@ AUI.add(
 			},
 
 			get(key, callback) {
-				var instance = this;
+				const instance = this;
 
 				instance._getValues('get', key, callback);
 			},
 
 			getAll(keys, callback) {
-				var instance = this;
+				const instance = this;
 
 				instance._getValues('getAll', keys, callback);
 			},
 
 			set(key, value) {
-				var instance = this;
+				const instance = this;
 
-				var obj = {};
+				const object = {};
 
 				if (isObject(value)) {
 					value = TOKEN_SERIALIZE + JSON.stringify(value);
 				}
 
-				obj[key] = value;
+				object[key] = value;
 
-				instance._setValues(obj);
+				instance._setValues(object);
 			},
 
-			setAll(obj) {
-				var instance = this;
+			setAll(object) {
+				const instance = this;
 
-				instance._setValues(obj);
+				instance._setValues(object);
 			},
 		});
 

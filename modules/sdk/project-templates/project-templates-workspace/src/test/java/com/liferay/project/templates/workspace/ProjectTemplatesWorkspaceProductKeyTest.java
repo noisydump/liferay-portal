@@ -48,7 +48,9 @@ public class ProjectTemplatesWorkspaceProductKeyTest
 	@Parameterized.Parameters(name = "Testcase-{index}: testing {0}")
 	public static Iterable<Object[]> data() {
 		return Arrays.asList(
-			new Object[][] {{"7.0.6"}, {"7.1.3"}, {"7.2.1"}, {"7.3.5"}});
+			new Object[][] {
+				{"7.0.6-2"}, {"7.1.3-1"}, {"7.2.1-1"}, {"7.3.7"}, {"7.4.3.36"}
+			});
 	}
 
 	@BeforeClass
@@ -77,24 +79,29 @@ public class ProjectTemplatesWorkspaceProductKeyTest
 			temporaryFolder, "gradle", "foows", _liferayVersion, mavenExecutor);
 
 		if (_liferayVersion.startsWith("7.0")) {
-			testContains(
-				workspaceProjectDir, "gradle.properties",
-				"liferay.workspace.product=portal-7.0");
+			writeGradlePropertiesInWorkspace(
+				workspaceProjectDir,
+				"liferay.workspace.product=portal-7.0-ga7");
 		}
 		else if (_liferayVersion.startsWith("7.1")) {
-			testContains(
-				workspaceProjectDir, "gradle.properties",
-				"liferay.workspace.product=portal-7.1");
+			writeGradlePropertiesInWorkspace(
+				workspaceProjectDir,
+				"liferay.workspace.product=portal-7.1-ga4");
 		}
 		else if (_liferayVersion.startsWith("7.2")) {
-			testContains(
-				workspaceProjectDir, "gradle.properties",
-				"liferay.workspace.product=portal-7.2");
+			writeGradlePropertiesInWorkspace(
+				workspaceProjectDir,
+				"liferay.workspace.product=portal-7.2-ga2");
+		}
+		else if (_liferayVersion.startsWith("7.3")) {
+			writeGradlePropertiesInWorkspace(
+				workspaceProjectDir,
+				"liferay.workspace.product=portal-7.3-ga7");
 		}
 		else {
-			testContains(
-				workspaceProjectDir, "gradle.properties",
-				"liferay.workspace.product=portal-7.3");
+			writeGradlePropertiesInWorkspace(
+				workspaceProjectDir,
+				"liferay.workspace.product=portal-7.4-ga4");
 		}
 
 		if (isBuildProjects()) {
@@ -124,10 +131,15 @@ public class ProjectTemplatesWorkspaceProductKeyTest
 					gradleOutput.contains(
 						"release.portal.bom:" + _liferayVersion));
 			}
+			else if (_liferayVersion.startsWith("7.3")) {
+				Assert.assertTrue(
+					gradleOutput.contains(
+						"release.portal.bom:" + _liferayVersion));
+			}
 			else {
 				Assert.assertTrue(
 					gradleOutput.contains(
-						"release.portal.bom:" + getDefaultLiferayVersion()));
+						"release.portal.bom:" + _liferayVersion));
 			}
 		}
 	}

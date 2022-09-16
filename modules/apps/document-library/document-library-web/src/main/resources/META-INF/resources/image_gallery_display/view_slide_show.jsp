@@ -68,18 +68,14 @@ int defaultSpeed = 3000;
 <table class="lfr-table">
 	<tr>
 		<td>
+			<c:if test="<%= !fileEntries.isEmpty() %>">
 
-			<%
-			if (!fileEntries.isEmpty()) {
+				<%
 				FileEntry fileEntry = fileEntries.get(0);
-			%>
+				%>
 
 				<img alt="<liferay-ui:message escapeAttribute="<%= true %>" key="slide-show" />" name="<portlet:namespace />slideShow" src="<%= DLURLHelperUtil.getPreviewURL(fileEntry, fileEntry.getFileVersion(), themeDisplay, StringPool.BLANK) %>" />
-
-			<%
-			}
-			%>
-
+			</c:if>
 		</td>
 	</tr>
 </table>
@@ -90,11 +86,10 @@ int defaultSpeed = 3000;
 	<%
 	for (int i = 0; i < fileEntries.size(); i++) {
 		FileEntry fileEntry = fileEntries.get(i);
-
-		String largeSrc = DLURLHelperUtil.getPreviewURL(fileEntry, fileEntry.getFileVersion(), themeDisplay, StringPool.BLANK);
 	%>
 
-		<portlet:namespace />imgArray[<%= i %>] = '<%= largeSrc %>';
+		<portlet:namespace />imgArray[<%= i %>] =
+			'<%= DLURLHelperUtil.getPreviewURL(fileEntry, fileEntry.getFileVersion(), themeDisplay, StringPool.BLANK) %>';
 
 	<%
 	}

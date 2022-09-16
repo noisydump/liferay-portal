@@ -13,22 +13,13 @@
  */
 
 import '@testing-library/jest-dom/extend-expect';
-import {cleanup, render, waitForElement} from '@testing-library/react';
+import {render} from '@testing-library/react';
 import React from 'react';
 
 import Container from '../../../../../src/main/resources/META-INF/resources/page_editor/app/components/layout-data-items/Container';
 import {LAYOUT_DATA_ITEM_TYPES} from '../../../../../src/main/resources/META-INF/resources/page_editor/app/config/constants/layoutDataItemTypes';
 import {VIEWPORT_SIZES} from '../../../../../src/main/resources/META-INF/resources/page_editor/app/config/constants/viewportSizes';
-import {StoreAPIContextProvider} from '../../../../../src/main/resources/META-INF/resources/page_editor/app/store';
-
-jest.mock(
-	'../../../../../src/main/resources/META-INF/resources/page_editor/app/config',
-	() => ({
-		config: {
-			frontendTokens: {},
-		},
-	})
-);
+import {StoreAPIContextProvider} from '../../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/StoreContext';
 
 const renderContainer = (config) => {
 	return render(
@@ -46,7 +37,6 @@ const renderContainer = (config) => {
 					itemId: 'containerId',
 					type: LAYOUT_DATA_ITEM_TYPES.container,
 				}}
-				withinTopper={false}
 			>
 				Container
 			</Container>
@@ -55,20 +45,30 @@ const renderContainer = (config) => {
 };
 
 describe('Container', () => {
-	afterEach(cleanup);
-
 	it('wraps the container inside a link if configuration is specified', async () => {
-		const link = renderContainer({
+		const {findByRole} = renderContainer({
 			link: {
 				href: 'https://sandro.vero.victor.com',
 				target: '_blank',
 			},
-		}).getByRole('link');
+		});
 
-		await waitForElement(() => link);
+		const link = await findByRole('link');
 
 		expect(link.href).toBe('https://sandro.vero.victor.com/');
 		expect(link.target).toBe('_blank');
 		expect(link.textContent).toBe('Container');
+	});
+
+	it('adds content-visibility: auto when that configuration is set', () => {
+		renderContainer({
+			contentVisibility: 'auto',
+		});
+
+		const container = document.querySelector(
+			'.lfr-layout-structure-item-container'
+		);
+
+		expect(container.style.contentVisibility).toBe('auto');
 	});
 });

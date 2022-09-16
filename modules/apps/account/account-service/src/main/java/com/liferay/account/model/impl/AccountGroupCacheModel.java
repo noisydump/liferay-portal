@@ -77,10 +77,12 @@ public class AccountGroupCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(23);
+		StringBundler sb = new StringBundler(27);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
+		sb.append(", uuid=");
+		sb.append(uuid);
 		sb.append(", externalReferenceCode=");
 		sb.append(externalReferenceCode);
 		sb.append(", accountGroupId=");
@@ -101,6 +103,8 @@ public class AccountGroupCacheModel
 		sb.append(description);
 		sb.append(", name=");
 		sb.append(name);
+		sb.append(", type=");
+		sb.append(type);
 		sb.append("}");
 
 		return sb.toString();
@@ -111,6 +115,13 @@ public class AccountGroupCacheModel
 		AccountGroupImpl accountGroupImpl = new AccountGroupImpl();
 
 		accountGroupImpl.setMvccVersion(mvccVersion);
+
+		if (uuid == null) {
+			accountGroupImpl.setUuid("");
+		}
+		else {
+			accountGroupImpl.setUuid(uuid);
+		}
 
 		if (externalReferenceCode == null) {
 			accountGroupImpl.setExternalReferenceCode("");
@@ -160,6 +171,13 @@ public class AccountGroupCacheModel
 			accountGroupImpl.setName(name);
 		}
 
+		if (type == null) {
+			accountGroupImpl.setType("");
+		}
+		else {
+			accountGroupImpl.setType(type);
+		}
+
 		accountGroupImpl.resetOriginalValues();
 
 		return accountGroupImpl;
@@ -168,6 +186,7 @@ public class AccountGroupCacheModel
 	@Override
 	public void readExternal(ObjectInput objectInput) throws IOException {
 		mvccVersion = objectInput.readLong();
+		uuid = objectInput.readUTF();
 		externalReferenceCode = objectInput.readUTF();
 
 		accountGroupId = objectInput.readLong();
@@ -182,11 +201,19 @@ public class AccountGroupCacheModel
 		defaultAccountGroup = objectInput.readBoolean();
 		description = objectInput.readUTF();
 		name = objectInput.readUTF();
+		type = objectInput.readUTF();
 	}
 
 	@Override
 	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(mvccVersion);
+
+		if (uuid == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(uuid);
+		}
 
 		if (externalReferenceCode == null) {
 			objectOutput.writeUTF("");
@@ -226,9 +253,17 @@ public class AccountGroupCacheModel
 		else {
 			objectOutput.writeUTF(name);
 		}
+
+		if (type == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(type);
+		}
 	}
 
 	public long mvccVersion;
+	public String uuid;
 	public String externalReferenceCode;
 	public long accountGroupId;
 	public long companyId;
@@ -239,5 +274,6 @@ public class AccountGroupCacheModel
 	public boolean defaultAccountGroup;
 	public String description;
 	public String name;
+	public String type;
 
 }

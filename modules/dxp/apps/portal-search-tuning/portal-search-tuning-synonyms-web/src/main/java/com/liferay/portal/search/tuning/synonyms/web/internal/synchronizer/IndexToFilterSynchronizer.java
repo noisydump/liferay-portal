@@ -14,7 +14,7 @@
 
 package com.liferay.portal.search.tuning.synonyms.web.internal.synchronizer;
 
-import com.liferay.portal.search.tuning.synonyms.web.internal.index.name.SynonymSetIndexName;
+import com.liferay.portal.search.tuning.synonyms.index.name.SynonymSetIndexName;
 
 /**
  * @author Adam Brandizzi
@@ -22,6 +22,7 @@ import com.liferay.portal.search.tuning.synonyms.web.internal.index.name.Synonym
 public interface IndexToFilterSynchronizer {
 
 	public void copyToFilter(
-		SynonymSetIndexName synonymSetIndexName, String companyIndexName);
+		SynonymSetIndexName synonymSetIndexName, String companyIndexName,
+		boolean deletion);
 
 }

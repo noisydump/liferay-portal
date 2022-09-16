@@ -44,6 +44,7 @@ page import="com.liferay.oauth2.provider.web.internal.display.context.OAuth2Auth
 page import="com.liferay.oauth2.provider.web.internal.display.context.SelectUsersDisplayContext" %><%@
 page import="com.liferay.oauth2.provider.web.internal.display.context.SelectUsersManagementToolbarDisplayContext" %><%@
 page import="com.liferay.oauth2.provider.web.internal.tree.Tree" %><%@
+page import="com.liferay.petra.portlet.url.builder.PortletURLBuilder" %><%@
 page import="com.liferay.petra.string.StringBundler" %><%@
 page import="com.liferay.petra.string.StringPool" %><%@
 page import="com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker" %><%@
@@ -63,6 +64,6 @@ page import="java.util.Iterator" %>
 <%@ page import="javax.portlet.PortletURL" %>
 
 <%
-OAuth2AdminPortletDisplayContext oAuth2AdminPortletDisplayContext = (OAuth2AdminPortletDisplayContext)request.getAttribute(OAuth2ProviderWebKeys.OAUTH2_ADMIN_PORTLET_DISPLAY_CONTEXT);
 AssignScopesTreeDisplayContext assignScopesTreeDisplayContext = (AssignScopesTreeDisplayContext)request.getAttribute(OAuth2ProviderWebKeys.ASSIGN_SCOPES_TREE_DISPLAY_CONTEXT);
+OAuth2AdminPortletDisplayContext oAuth2AdminPortletDisplayContext = (OAuth2AdminPortletDisplayContext)request.getAttribute(OAuth2ProviderWebKeys.OAUTH2_ADMIN_PORTLET_DISPLAY_CONTEXT);
 %>

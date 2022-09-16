@@ -2,13 +2,17 @@
 <head>
 <title>MessageBoardsStatistics</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">MessageBoardsStatistics</td></tr>
 </thead>
+
 <tbody>
+
 <!--GENERAL-->
+
 <tr>
 	<td>GENERAL_DROPDOWN</td>
 	<td>//div[@id='messageBoardsGeneralStatisticsPanel']</td>
@@ -39,7 +43,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--TOP_POSTERS-->
+
 <tr>
 	<td>TOP_POSTERS_DROPDOWN</td>
 	<td>//div[@id='messageBoardsTopPostersPanel']</td>

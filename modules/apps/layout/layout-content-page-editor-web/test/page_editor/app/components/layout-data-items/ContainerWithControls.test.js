@@ -18,33 +18,30 @@ import React from 'react';
 import {DndProvider} from 'react-dnd';
 import {HTML5Backend} from 'react-dnd-html5-backend';
 
-import {
-	ControlsProvider,
-	useSelectItem,
-} from '../../../../../src/main/resources/META-INF/resources/page_editor/app/components/Controls';
 import {ContainerWithControls} from '../../../../../src/main/resources/META-INF/resources/page_editor/app/components/layout-data-items';
 import {LAYOUT_DATA_ITEM_TYPES} from '../../../../../src/main/resources/META-INF/resources/page_editor/app/config/constants/layoutDataItemTypes';
 import {VIEWPORT_SIZES} from '../../../../../src/main/resources/META-INF/resources/page_editor/app/config/constants/viewportSizes';
-import {StoreAPIContextProvider} from '../../../../../src/main/resources/META-INF/resources/page_editor/app/store';
+import {
+	ControlsProvider,
+	useSelectItem,
+} from '../../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/ControlsContext';
+import {StoreAPIContextProvider} from '../../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/StoreContext';
+import getLayoutDataItemClassName from '../../../../../src/main/resources/META-INF/resources/page_editor/app/utils/getLayoutDataItemClassName';
+import getLayoutDataItemTopperUniqueClassName from '../../../../../src/main/resources/META-INF/resources/page_editor/app/utils/getLayoutDataItemTopperUniqueClassName';
+import getLayoutDataItemUniqueClassName from '../../../../../src/main/resources/META-INF/resources/page_editor/app/utils/getLayoutDataItemUniqueClassName';
 
-jest.mock(
-	'../../../../../src/main/resources/META-INF/resources/page_editor/app/config',
-	() => ({
-		config: {
-			frontendTokens: {},
-		},
-	})
-);
+const CONTAINER_ID = 'CONTAINER_ID';
 
 const renderContainer = ({
 	activeItemId = 'container',
+	containerConfig = {styles: {}},
 	hasUpdatePermissions = true,
 	lockedExperience = false,
 } = {}) => {
 	const container = {
 		children: [],
-		config: {styles: {}},
-		itemId: 'container',
+		config: containerConfig,
+		itemId: CONTAINER_ID,
 		parentId: null,
 		type: LAYOUT_DATA_ITEM_TYPES.container,
 	};
@@ -64,6 +61,7 @@ const renderContainer = ({
 			<ControlsProvider>
 				<StoreAPIContextProvider
 					getState={() => ({
+						fragmentEntryLinks: {},
 						permissions: {
 							LOCKED_SEGMENTS_EXPERIMENT: lockedExperience,
 							UPDATE: hasUpdatePermissions,
@@ -72,6 +70,7 @@ const renderContainer = ({
 					})}
 				>
 					<AutoSelect />
+
 					<ContainerWithControls
 						item={container}
 						layoutData={layoutData}
@@ -96,5 +95,21 @@ describe('ContainerWithControls', () => {
 
 		expect(queryByText(baseElement, 'delete')).not.toBeInTheDocument();
 		expect(queryByText(baseElement, 'duplicate')).not.toBeInTheDocument();
+	});
+
+	it('set classes for referencing the item', () => {
+		const {baseElement} = renderContainer();
+
+		const classes = [
+			getLayoutDataItemClassName(LAYOUT_DATA_ITEM_TYPES.container),
+			getLayoutDataItemTopperUniqueClassName(CONTAINER_ID),
+			getLayoutDataItemUniqueClassName(CONTAINER_ID),
+		];
+
+		classes.forEach((className) => {
+			const item = baseElement.querySelector(`.${className}`);
+
+			expect(item).toBeVisible();
+		});
 	});
 });

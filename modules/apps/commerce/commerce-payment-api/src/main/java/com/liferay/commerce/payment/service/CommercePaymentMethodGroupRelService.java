@@ -22,7 +22,6 @@ import com.liferay.portal.kernel.jsonwebservice.JSONWebService;
 import com.liferay.portal.kernel.security.access.control.AccessControlled;
 import com.liferay.portal.kernel.service.BaseService;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.spring.osgi.OSGiBeanProperties;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
@@ -47,13 +46,6 @@ import org.osgi.annotation.versioning.ProviderType;
  */
 @AccessControlled
 @JSONWebService
-@OSGiBeanProperties(
-	property = {
-		"json.web.service.context.name=commerce",
-		"json.web.service.context.path=CommercePaymentMethodGroupRel"
-	},
-	service = CommercePaymentMethodGroupRelService.class
-)
 @ProviderType
 @Transactional(
 	isolation = Isolation.PORTAL,
@@ -67,7 +59,7 @@ public interface CommercePaymentMethodGroupRelService extends BaseService {
 	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.commerce.payment.service.impl.CommercePaymentMethodGroupRelServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the commerce payment method group rel remote service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link CommercePaymentMethodGroupRelServiceUtil} if injection and service tracking are not available.
 	 */
 	public CommerceAddressRestriction addCommerceAddressRestriction(
-			long userId, long groupId, long classPK, long commerceCountryId)
+			long groupId, long classPK, long countryId)
 		throws PortalException;
 
 	/**
@@ -75,11 +67,11 @@ public interface CommercePaymentMethodGroupRelService extends BaseService {
 	 */
 	@Deprecated
 	public CommerceAddressRestriction addCommerceAddressRestriction(
-			long classPK, long commerceCountryId, ServiceContext serviceContext)
+			long classPK, long countryId, ServiceContext serviceContext)
 		throws PortalException;
 
 	public CommercePaymentMethodGroupRel addCommercePaymentMethodGroupRel(
-			long userId, long groupId, Map<Locale, String> nameMap,
+			long groupId, Map<Locale, String> nameMap,
 			Map<Locale, String> descriptionMap, File imageFile,
 			String engineKey, double priority, boolean active)
 		throws PortalException;
@@ -156,7 +148,7 @@ public interface CommercePaymentMethodGroupRelService extends BaseService {
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<CommercePaymentMethodGroupRel>
 			getCommercePaymentMethodGroupRels(
-				long groupId, long commerceCountryId, boolean active)
+				long groupId, long countryId, boolean active)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)

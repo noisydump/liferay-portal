@@ -18,6 +18,7 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.calendar.constants.CalendarPortletKeys;
 import com.liferay.exportimport.kernel.lar.DataLevel;
 import com.liferay.exportimport.test.util.lar.BasePortletDataHandlerTestCase;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
@@ -47,6 +48,11 @@ public class CalendarPortletDataHandlerTest
 	}
 
 	@Override
+	protected String[] getDataPortletPreferences() {
+		return new String[] {StringPool.BLANK};
+	}
+
+	@Override
 	protected String getPortletId() {
 		return CalendarPortletKeys.CALENDAR;
 	}
@@ -64,6 +70,11 @@ public class CalendarPortletDataHandlerTest
 	@Override
 	protected boolean isDataSiteLevel() {
 		return false;
+	}
+
+	@Override
+	protected boolean isDisplayPortlet() {
+		return true;
 	}
 
 }

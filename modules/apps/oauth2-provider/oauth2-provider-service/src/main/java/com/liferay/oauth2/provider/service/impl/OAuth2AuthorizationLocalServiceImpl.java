@@ -19,6 +19,7 @@ import com.liferay.oauth2.provider.exception.NoSuchOAuth2AuthorizationException;
 import com.liferay.oauth2.provider.model.OAuth2Authorization;
 import com.liferay.oauth2.provider.model.OAuth2ScopeGrant;
 import com.liferay.oauth2.provider.service.base.OAuth2AuthorizationLocalServiceBaseImpl;
+import com.liferay.oauth2.provider.service.persistence.OAuth2ScopeGrantPersistence;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
@@ -34,6 +35,8 @@ import java.util.Map;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Modified;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Brian Wing Shun Chan
@@ -108,7 +111,7 @@ public class OAuth2AuthorizationLocalServiceImpl
 		Date purgeDate = new Date();
 
 		purgeDate.setTime(
-			purgeDate.getTime() +
+			purgeDate.getTime() -
 				_expiredAuthorizationsAfterlifeDurationMillis);
 
 		for (OAuth2Authorization oAuth2Authorization :
@@ -132,7 +135,7 @@ public class OAuth2AuthorizationLocalServiceImpl
 		String accessTokenContent) {
 
 		List<OAuth2Authorization> oAuth2Authorizations =
-			oAuth2AuthorizationPersistence.findByAccessTokenContentHash(
+			oAuth2AuthorizationPersistence.findByC_ATCH(
 				CompanyThreadLocal.getCompanyId(),
 				accessTokenContent.hashCode());
 
@@ -152,7 +155,7 @@ public class OAuth2AuthorizationLocalServiceImpl
 		String refreshTokenContent) {
 
 		List<OAuth2Authorization> oAuth2Authorizations =
-			oAuth2AuthorizationPersistence.findByRefreshTokenContentHash(
+			oAuth2AuthorizationPersistence.findByC_RTCH(
 				CompanyThreadLocal.getCompanyId(),
 				refreshTokenContent.hashCode());
 
@@ -165,6 +168,14 @@ public class OAuth2AuthorizationLocalServiceImpl
 		}
 
 		return null;
+	}
+
+	@Override
+	public OAuth2Authorization fetchOAuth2AuthorizationByRememberDeviceContent(
+		long userId, long oAuth2ApplicationId, String rememberDeviceContent) {
+
+		return oAuth2AuthorizationPersistence.fetchByU_O_R_First(
+			userId, oAuth2ApplicationId, rememberDeviceContent, null);
 	}
 
 	@Override
@@ -220,7 +231,7 @@ public class OAuth2AuthorizationLocalServiceImpl
 	public Collection<OAuth2ScopeGrant> getOAuth2ScopeGrants(
 		long oAuth2AuthorizationId) {
 
-		return oAuth2ScopeGrantPersistence.
+		return _oAuth2ScopeGrantPersistence.
 			getOAuth2AuthorizationOAuth2ScopeGrants(oAuth2AuthorizationId);
 	}
 
@@ -238,20 +249,37 @@ public class OAuth2AuthorizationLocalServiceImpl
 		return oAuth2AuthorizationPersistence.countByUserId(userId);
 	}
 
+	@Override
+	public OAuth2Authorization updateRememberDeviceContent(
+		String refreshTokenContent, String rememberDeviceContent) {
+
+		OAuth2Authorization oAuth2Authorization =
+			fetchOAuth2AuthorizationByRefreshTokenContent(refreshTokenContent);
+
+		oAuth2Authorization.setRememberDeviceContent(rememberDeviceContent);
+
+		return oAuth2AuthorizationPersistence.update(oAuth2Authorization);
+	}
+
 	@Activate
+	@Modified
 	protected void activate(Map<String, Object> properties) {
 		OAuth2ProviderConfiguration oAuth2ProviderConfiguration =
 			ConfigurableUtil.createConfigurable(
 				OAuth2ProviderConfiguration.class, properties);
 
-		int expiredAuthorizationsAfterlifeDuration =
+		int expiredAuthorizationsAfterlifeDuration = Math.max(
 			oAuth2ProviderConfiguration.
-				expiredAuthorizationsAfterlifeDuration();
+				expiredAuthorizationsAfterlifeDuration(),
+			0);
 
 		_expiredAuthorizationsAfterlifeDurationMillis =
 			expiredAuthorizationsAfterlifeDuration * Time.SECOND;
 	}
 
-	private long _expiredAuthorizationsAfterlifeDurationMillis;
+	private volatile long _expiredAuthorizationsAfterlifeDurationMillis;
+
+	@Reference
+	private OAuth2ScopeGrantPersistence _oAuth2ScopeGrantPersistence;
 
 }

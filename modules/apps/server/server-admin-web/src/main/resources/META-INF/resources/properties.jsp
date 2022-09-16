@@ -18,15 +18,19 @@
 
 <%
 int delta = ParamUtil.getInteger(request, SearchContainer.DEFAULT_DELTA_PARAM, SearchContainer.DEFAULT_DELTA);
-
-PortletURL serverURL = renderResponse.createRenderURL();
-
-serverURL.setParameter("mvcRenderCommandName", "/server_admin/view");
-serverURL.setParameter("tabs1", tabs1);
-serverURL.setParameter("delta", String.valueOf(delta));
 %>
 
 <liferay-frontend:screen-navigation
 	key="<%= ServerAdminNavigationEntryConstants.SCREEN_NAVIGATION_KEY_PROPERTIES %>"
-	portletURL="<%= serverURL %>"
+	portletURL='<%=
+		PortletURLBuilder.createRenderURL(
+			renderResponse
+		).setMVCRenderCommandName(
+			"/server_admin/view"
+		).setTabs1(
+			tabs1
+		).setParameter(
+			"delta", delta
+		).buildPortletURL()
+	%>'
 />

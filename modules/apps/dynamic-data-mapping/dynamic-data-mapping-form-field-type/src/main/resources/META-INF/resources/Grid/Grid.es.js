@@ -12,16 +12,18 @@
  * details.
  */
 
-import {ClayInput, ClayRadio} from '@clayui/form';
+import {ClayRadio} from '@clayui/form';
 import ClayTable from '@clayui/table';
-import React, {useState} from 'react';
+import React from 'react';
 
 import {FieldBase} from '../FieldBase/ReactFieldBase.es';
+import {useSyncValue} from '../hooks/useSyncValue.es';
 
 const TableHead = ({columns}) => (
 	<ClayTable.Head>
 		<ClayTable.Row>
 			<ClayTable.Cell headingCell />
+
 			{columns.map((column, colIndex) => {
 				return (
 					<ClayTable.Cell
@@ -88,8 +90,7 @@ const Grid = ({
 					: '';
 
 				return (
-					<ClayInput
-						aria-hidden="true"
+					<input
 						key={`row-${row.value}-${rowIndex}`}
 						name={name}
 						type="hidden"
@@ -139,7 +140,7 @@ const Main = ({
 	value = {},
 	...otherProps
 }) => {
-	const [state, setState] = useState(value);
+	const [state, setState] = useSyncValue(value, false);
 
 	return (
 		<FieldBase name={name} readOnly={readOnly} {...otherProps}>

@@ -1,0 +1,43 @@
+@component-name = "portal-commerce"
+definition {
+
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
+	property testray.main.component.name = "Product Info Management";
+
+	setUp {
+		CommerceConfiguration.commerceSetUp(storeFront = "true");
+	}
+
+	tearDown {
+		CommerceConfiguration.commerceTearDown();
+	}
+
+	@description = "This is a test for COMMERCE-6085. UseSubscriptions"
+	@priority = "3"
+	test UseSubscriptions {
+		property portal.acceptance = "true";
+
+		// TODO Review
+
+		CommerceNavigator.gotoPortlet(
+			category = "Product Management",
+			portlet = "Products");
+
+		CPCommerceCatalog.newProductsEntry(
+			productName = "Simple T-Shirt",
+			productType = "Simple");
+
+		CommerceEntry.gotoMenuTab(menuTab = "Subscription");
+
+		Click(locator1 = "CommerceEntry#PAYMENT_SUBSCRIPTION_TOGGLE");
+
+		Click(locator1 = "CommerceEntry#DELIVERY_SUBSCRIPTION_TOGGLE");
+
+		Button.clickPublish();
+
+		Alert.viewSuccessMessage();
+	}
+
+}

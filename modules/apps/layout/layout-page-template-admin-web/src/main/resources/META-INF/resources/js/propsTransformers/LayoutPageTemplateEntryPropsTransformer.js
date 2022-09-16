@@ -13,20 +13,22 @@
  */
 
 import {
+	openConfirmModal,
 	openModal,
 	openSelectionModal,
 	openSimpleInputModal,
 } from 'frontend-js-web';
 
+import openDeletePageTemplateModal from '../modal/openDeletePageTemplateModal';
+
 const ACTIONS = {
 	deleteLayoutPageTemplateEntry({deleteLayoutPageTemplateEntryURL}) {
-		if (
-			confirm(
-				Liferay.Language.get('are-you-sure-you-want-to-delete-this')
-			)
-		) {
-			send(deleteLayoutPageTemplateEntryURL);
-		}
+		openDeletePageTemplateModal({
+			onDelete: () => {
+				send(deleteLayoutPageTemplateEntryURL);
+			},
+			title: Liferay.Language.get('page-template'),
+		});
 	},
 
 	deleteLayoutPageTemplateEntryPreview({
@@ -36,15 +38,44 @@ const ACTIONS = {
 	},
 
 	discardDraft({discardDraftURL}) {
-		if (
-			confirm(
-				Liferay.Language.get(
-					'are-you-sure-you-want-to-discard-current-draft-and-apply-latest-published-changes'
-				)
-			)
-		) {
-			send(discardDraftURL);
-		}
+		openConfirmModal({
+			message: Liferay.Language.get(
+				'are-you-sure-you-want-to-discard-current-draft-and-apply-latest-published-changes'
+			),
+			onConfirm: (isConfirmed) => {
+				if (isConfirmed) {
+					send(discardDraftURL);
+				}
+			},
+		});
+	},
+
+	moveLayoutPageTemplateEntry(
+		{itemSelectorURL, moveLayoutPageTemplateEntryURL},
+		namespace
+	) {
+		openSelectionModal({
+			onSelect: (selectedItem) => {
+				if (!selectedItem) {
+					return;
+				}
+
+				const value = JSON.parse(selectedItem.value);
+
+				const portletURL = new Liferay.Util.PortletURL.createPortletURL(
+					moveLayoutPageTemplateEntryURL,
+					{
+						targetLayoutPageTemplateCollectionId:
+							value.layoutPageTemplateCollectionId,
+					}
+				);
+
+				send(portletURL.toString());
+			},
+			selectEventName: `${namespace}selectItem`,
+			title: Liferay.Language.get('select-destination'),
+			url: itemSelectorURL,
+		});
 	},
 
 	permissionsLayoutPageTemplateEntry({
@@ -122,15 +153,20 @@ export default function LayoutPageTemplateEntryPropsTransformer({
 		actions: actions?.map((item) => {
 			return {
 				...item,
-				onClick(event) {
-					const action = item.data?.action;
+				items: item.items?.map((child) => {
+					return {
+						...child,
+						onClick(event) {
+							const action = child.data?.action;
 
-					if (action) {
-						event.preventDefault();
+							if (action) {
+								event.preventDefault();
 
-						ACTIONS[action](item.data, portletNamespace);
-					}
-				},
+								ACTIONS[action](child.data, portletNamespace);
+							}
+						},
+					};
+				}),
 			};
 		}),
 		portletNamespace,

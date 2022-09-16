@@ -1,5 +1,304 @@
 # Liferay Gradle Plugins Workspace Change Log
 
+## 3.4.23 - 2022-01-12
+
+### Commits
+- [LPS-105380] prep nex (797e97c019)
+
+### Dependencies
+- [POSHI-232] Update the com.liferay.gradle.plugins.target.platform dependency
+to version 2.1.39.
+
+## 3.4.22 - 2021-12-16
+
+### Commits
+- [LPS-143544] Change node package manager to yarn (b0c1130e49)
+
+## 3.4.21 - 2021-12-14
+
+### Dependencies
+- [LPS-143577] Update the com.liferay.gradle.plugins.target.platform dependency
+to version 2.1.38.
+
+## 3.4.19 - 2021-11-22
+
+### Commits
+- [LPS-142100] [LPS-141250] revert (eee87baefd)
+
+## 3.4.17 - 2021-11-15
+
+### Commits
+- [LPS-142340] Support target platform verson end with u1 (c2b61ec639)
+- [LPS-142398] - Update liferay-font-awesome to 3.5.0 (961becb5ed)
+- [LPS-105380] Use version 1.4.0 (a3c60a486e)
+- [LPS-137358] Remove unneeded dependencies (ae57f93369)
+
+## 3.4.16 - 2021-10-19
+
+### Dependencies
+- [LPS-140947] Update the com.liferay.gradle.plugins.target.platform dependency
+to version 2.1.37.
+- [LPS-140947] Update the com.liferay.ant.bnd dependency to version 3.2.8.
+
+## 3.4.15 - 2021-10-07
+
+### Commits
+- [LPS-136872] Fixed the impact of LPS-136872 on other former gradleTests
+(96be8fe844)
+- [LPS-138982] Update `liferay-font-awesome` to 3.4.2 (2e7db218b9)
+- [LPS-136872] Add gradle test (6174f26926)
+- [LPS-105380] Remove final from parameters (a4e6ca0985)
+- [LPS-105380] Remove final from variables (5a4e0b26b4)
+- [LPS-105380] Revert "LPS-105380 Remove final from variables" (cdda76fc8e)
+- [LPS-105380] Revert "LPS-105380 Remove final from parameters" (b2f9eed2c2)
+- [LPS-105380] Remove final from parameters (f615ff77ff)
+- [LPS-105380] Remove final from variables (ffe6186e71)
+
+## 3.4.14 - 2021-08-11
+
+### Commits
+- [LPS-136872] Rename for consistency (971708b268)
+- [LPS-136872] disable verify task when use a customized bundle url (9a8d7543db)
+- [LPS-136872] As a workspace developer, I expect Liferay to provide md5
+checksums for its own bundles (221fdf4446)
+- [LPS-105380] Merge consecutive if-statements (1ec70acda6)
+
+## 3.4.13 - 2021-07-06
+
+### Commits
+- [LPS-134301] Sort (903441863d)
+- [LPS-134301] Tests should use port 8888 to avoid conflicts (93988214ca)
+- [LPS-134301] Call cleanDockerImage (6488860f54)
+- [LPS-134301] Use simplified docker tags (84a71810dd)
+- [LPS-134301] Fix existing Ext test case (19c057efab)
+- [LPS-134571] Move deps from bintray to s3 (5132aeba33)
+
+### Dependencies
+- [LPS-135076] Update the com.liferay.gradle.plugins.target.platform dependency
+to version 2.1.36.
+
+## 3.4.12 - 2021-06-11
+
+### Dependencies
+- [LPS-133987] Update the com.liferay.gradle.plugins.target.platform dependency
+to version 2.1.35.
+- [LPS-133987] Update the com.liferay.ant.bnd dependency to version 3.2.7.
+
+## 3.4.11 - 2021-06-03
+
+### Commits
+- [LPS-132042] rename (f7b0ae2656)
+- [LPS-132042] Could not get property during war-core-ext build (04e5faf73a)
+
+## 3.4.10 - 2021-06-01
+
+### Dependencies
+- [LPS-132730] Update the com.liferay.gradle.plugins.target.platform dependency
+to version 2.1.34.
+- [LPS-132252] Update the com.liferay.gradle.plugins.target.platform dependency
+to version 2.1.33.
+
+## 3.4.9 - 2021-05-03
+
+### Commits
+- [LPS-131439] sort and rename (aaed42fcd8)
+- [LPS-131439] force docker gradle plugin to download new version image
+(88430cdb05)
+- [LPS-130505] reverted, republish (a1551030f2)
+- [LPS-130505] Revert "LPS-130505 SF, no need to call methods" (69c643075f)
+- [LPS-130505] SF, no need to call methods (879c7f4801)
+- [LPS-123192] Fix test (feb36753c5)
+
+## 3.4.8 - 2021-03-31
+
+### Commits
+- [LPS-129956] Automatically apply RESTBuilderPlugin to java projects
+(432711a79e)
+
+## 3.4.7 - 2021-03-30
+
+### Dependencies
+- [LPS-129874] Update the com.liferay.gradle.plugins.target.platform dependency
+to version 2.1.32.
+
+## 3.4.6 - 2021-03-24
+
+### Commits
+- [LPS-129696] Automatically apply service builder plugin to all osgi projects
+(7b289ea5e6)
+
+## 3.4.5 - 2021-03-17
+
+### Commits
+- [LPS-129267] Update default metal-cli version (f42daa8d6f)
+- [LPS-105380] Partial revert (aafd3818ae)
+
+### Dependencies
+- [LPS-129267] Update the com.liferay.gradle.plugins.target.platform dependency
+to version 2.1.31.
+
+## 3.4.4 - 2021-03-10
+
+### Commits
+- [LPS-128853] Add non cdn url as backup (690c1950d5)
+
+### Dependencies
+- [LPS-128853] Update the com.liferay.gradle.plugins.target.platform dependency
+to version 2.1.30.
+
+## 3.4.3 - 2021-02-19
+
+### Commits
+- [LPS-128116] Sublime sort (8f9e0ec597)
+- [LPS-128116] make sure that default docker image/container id are docker safe
+(2caf25b814)
+- [LPS-126919] make sures configs dir exists in build/docker even if it is empty
+(c005912dcb)
+- [LPS-105380] Auto SF, XMLDTDVersionCheck (a7cb83d66b)
+
+## 3.4.2 - 2021-02-12
+
+### Commits
+- [LPS-124343] make bundle.checksum.md5 an opt-in explicit setting (29d7b0eea6)
+- [LPS-125998] Remove it from sdk. SPI never worked since 7.0, so it should be
+safe to remove these from Gradle sdks. (be83d09f77)
+- [LPS-105380] Make var final (12e010029a)
+
+### Dependencies
+- [LPS-127801] Update the com.liferay.gradle.plugins.target.platform dependency
+to version 2.1.29.
+
+## 3.4.1 - 2021-01-12
+
+### Commits
+- [LPS-125632] Sort (106f710ccd)
+- [LPS-125632] don't overwrite dockerImageId and dockerContainerId if they have
+already been set (c8837bfa56)
+- [LPS-125580] use Set for the field type (f16bf9c441)
+- [LPS-125580] Preserve order for configurators (5ff5c783ad)
+
+## 3.4.0 - 2020-12-30
+
+### Dependencies
+- [LPS-124343] Update the com.liferay.gradle.plugins.target.platform dependency
+to version 2.1.28.
+
+## 3.3.3 - 2020-12-30
+
+### Commits
+- [LPS-124343] fix tests (5dbd19f540)
+- [LPS-124343] make bundleChecksumMD5 backward compatible (454a41286d)
+- [LPS-124343] assert that verifyBundle fails when bad md5sum is given
+(5415d4fb91)
+- [LPS-124343] assert the existence of MD5 file (be0de24207)
+- [LPS-124343] lets instead just use the liferay.workspace.bundle.url that is
+set globally (2e778be501)
+- [LPS-124343] rename task (d76085903c)
+- [LPS-124343] move to gradle.properties file like other tests (0ad0b4b806)
+- [LPS-124343] add gradle test (211f4c72dd)
+- [LPS-124343] configure verify task via afterEvaluate so we can use taskOutputs
+(658456263c)
+- [LPS-124343] fixed setter name (e63b5f3543)
+- [LPS-124343] Use bundle checksum data from product_infos to verify bundle
+downloads (6db20e0fa5)
+- [LPS-105380] Inline (e47639f436)
+- [LPS-123871] rename (dba6a5d7e7)
+
+## 3.3.2 - 2020-12-02
+
+### Commits
+- [LPS-123871] feel free to rename this, but the nesting was too deep
+(ad79802d17)
+- [LPS-123871] fix the filename extension of marketplace/override (4d3085f653)
+
+## 3.3.1 - 2020-12-01
+
+### Commits
+- [LPS-123937] sort (cebd4efa82)
+- [LPS-123937] Failed to run createDockerContainer task due to invalid volume
+specification on Windows (424c71923b)
+
+## 3.2.1 - 2020-11-30
+
+### Commits
+- [LPS-123871] Baseline (4a2406ba16)
+- [LPS-123871] Whitespace (7874bfed5f)
+- [LPS-123871] fix test (246f4731b6)
+- [LPS-123871] copy modules_ext jar into each deployed docker config
+osgi/marketplace/override folder (350c68104f)
+
+## 3.2.0 - 2020-11-25
+
+### Dependencies
+- [LPS-123192] Update the com.liferay.gradle.plugins.target.platform dependency
+to version 2.1.27.
+
+## 3.1.1 - 2020-11-25
+
+### Commits
+- [LPS-123192] Backward compatibility (tests) (8e3c12bffe)
+- [LPS-123192] Backward compatibility (5cb1401f3c)
+
+## 3.1.0 - 2020-11-16
+
+### Dependencies
+- [LPS-123192 LPS-82091] Update the com.liferay.gradle.plugins.target.platform
+dependency to version 2.1.26.
+
+## 3.0.17 - 2020-11-16
+
+### Commits
+- [LPS-123192] Fix tests (a0769d730f)
+- [LPS-123192] Backward compatibility (tests) (f16b34fa77)
+- [LPS-123192] Backward compatibility (d6076deb36)
+
+## 3.0.16 - 2020-11-13
+
+### Commits
+- [LPS-122967] use afterEvaluate and avoid using concrete type (f9c16beb11)
+- [LPS-122967] configure processResources only if buildCSS exists (3fbf5e0b99)
+- [LPS-122967] remove problematic eclipse build/gradleTest/src/groovy folder
+(de7af5d29a)
+- [LPS-122967] configure processResources task to process scss and sass-cache
+files (ff759d231d)
+
+## 3.0.15 - 2020-11-04
+
+### Commits
+- [LPS-122958] Source formatting (a57da45918)
+- [LPS-122958] allow developers to append instructions to dockerfile via a file
+(fdb013e43d)
+- [LPS-122958] upgrade gradle-docker-plugin to 6.6.1 (b22f5164b7)
+- [LPS-111291] Fix tests (01ce02be78)
+
+### Dependencies
+- [LPS-122958] Update the gradle-docker-plugin dependency to version 6.6.1.
+
+## 3.0.14 - 2020-11-02
+
+### Commits
+- [LPS-111291] Import statements (d414bad0fa)
+- [LPS-111291] Update readme (a87d2593e9)
+- [LPS-111291] Gradle 5.6.4 tests (40f4f9e2f3)
+- [LPS-111291] Update README.markdown (eea12b7f8f)
+- [LPS-111291] Update plugins Gradle version (003c3832b0)
+
+### Dependencies
+- [LPS-111291] Update the com.liferay.gradle.plugins.target.platform dependency
+to version 2.1.25.
+
+## 3.0.13 - 2020-10-27
+
+### Commits
+- [LPS-121824] Update workspace and project templates for 7.4 (7cf8361f15)
+
+## 3.0.12 - 2020-10-08
+
+### Commits
+- [POSHI-115] Update com.liferay.gradle.plugins.workspace to 3.0.12 (aaa56944bc)
+- [POSHI-115] Update com.liferay.gradle.plugins.poshi.runner to 3.0.6
+(a3bf78c6e7)
+
 ## 3.0.10 - 2020-10-01
 
 ### Commits
@@ -4707,6 +5006,7 @@ from settings.gradle (b4be4c57fd)
 [LPS-81895]: https://issues.liferay.com/browse/LPS-81895
 [LPS-81944]: https://issues.liferay.com/browse/LPS-81944
 [LPS-82001]: https://issues.liferay.com/browse/LPS-82001
+[LPS-82091]: https://issues.liferay.com/browse/LPS-82091
 [LPS-82121]: https://issues.liferay.com/browse/LPS-82121
 [LPS-82178]: https://issues.liferay.com/browse/LPS-82178
 [LPS-82261]: https://issues.liferay.com/browse/LPS-82261
@@ -4958,6 +5258,7 @@ from settings.gradle (b4be4c57fd)
 [LPS-110131]: https://issues.liferay.com/browse/LPS-110131
 [LPS-110422]: https://issues.liferay.com/browse/LPS-110422
 [LPS-110835]: https://issues.liferay.com/browse/LPS-110835
+[LPS-111291]: https://issues.liferay.com/browse/LPS-111291
 [LPS-111460]: https://issues.liferay.com/browse/LPS-111460
 [LPS-111461]: https://issues.liferay.com/browse/LPS-111461
 [LPS-111700]: https://issues.liferay.com/browse/LPS-111700
@@ -4984,6 +5285,43 @@ from settings.gradle (b4be4c57fd)
 [LPS-118918]: https://issues.liferay.com/browse/LPS-118918
 [LPS-118936]: https://issues.liferay.com/browse/LPS-118936
 [LPS-119389]: https://issues.liferay.com/browse/LPS-119389
+[LPS-121824]: https://issues.liferay.com/browse/LPS-121824
+[LPS-122958]: https://issues.liferay.com/browse/LPS-122958
+[LPS-122967]: https://issues.liferay.com/browse/LPS-122967
+[LPS-123192]: https://issues.liferay.com/browse/LPS-123192
+[LPS-123871]: https://issues.liferay.com/browse/LPS-123871
+[LPS-123937]: https://issues.liferay.com/browse/LPS-123937
+[LPS-124343]: https://issues.liferay.com/browse/LPS-124343
+[LPS-125580]: https://issues.liferay.com/browse/LPS-125580
+[LPS-125632]: https://issues.liferay.com/browse/LPS-125632
+[LPS-125998]: https://issues.liferay.com/browse/LPS-125998
+[LPS-126919]: https://issues.liferay.com/browse/LPS-126919
+[LPS-127801]: https://issues.liferay.com/browse/LPS-127801
+[LPS-128116]: https://issues.liferay.com/browse/LPS-128116
+[LPS-128853]: https://issues.liferay.com/browse/LPS-128853
+[LPS-129267]: https://issues.liferay.com/browse/LPS-129267
+[LPS-129696]: https://issues.liferay.com/browse/LPS-129696
+[LPS-129874]: https://issues.liferay.com/browse/LPS-129874
+[LPS-129956]: https://issues.liferay.com/browse/LPS-129956
+[LPS-130505]: https://issues.liferay.com/browse/LPS-130505
+[LPS-131439]: https://issues.liferay.com/browse/LPS-131439
+[LPS-132042]: https://issues.liferay.com/browse/LPS-132042
+[LPS-132252]: https://issues.liferay.com/browse/LPS-132252
+[LPS-132730]: https://issues.liferay.com/browse/LPS-132730
+[LPS-133987]: https://issues.liferay.com/browse/LPS-133987
+[LPS-134301]: https://issues.liferay.com/browse/LPS-134301
+[LPS-134571]: https://issues.liferay.com/browse/LPS-134571
+[LPS-135076]: https://issues.liferay.com/browse/LPS-135076
+[LPS-136872]: https://issues.liferay.com/browse/LPS-136872
+[LPS-137358]: https://issues.liferay.com/browse/LPS-137358
+[LPS-138982]: https://issues.liferay.com/browse/LPS-138982
+[LPS-140947]: https://issues.liferay.com/browse/LPS-140947
+[LPS-141250]: https://issues.liferay.com/browse/LPS-141250
+[LPS-142100]: https://issues.liferay.com/browse/LPS-142100
+[LPS-142340]: https://issues.liferay.com/browse/LPS-142340
+[LPS-142398]: https://issues.liferay.com/browse/LPS-142398
+[LPS-143544]: https://issues.liferay.com/browse/LPS-143544
+[LPS-143577]: https://issues.liferay.com/browse/LPS-143577
 [LRCI-65]: https://issues.liferay.com/browse/LRCI-65
 [LRCI-264]: https://issues.liferay.com/browse/LRCI-264
 [LRCI-350]: https://issues.liferay.com/browse/LRCI-350
@@ -5002,4 +5340,6 @@ from settings.gradle (b4be4c57fd)
 [LRQA-46630]: https://issues.liferay.com/browse/LRQA-46630
 [LRQA-46662]: https://issues.liferay.com/browse/LRQA-46662
 [LRQA-47104]: https://issues.liferay.com/browse/LRQA-47104
+[POSHI-115]: https://issues.liferay.com/browse/POSHI-115
+[POSHI-232]: https://issues.liferay.com/browse/POSHI-232
 [RELEASE-1607]: https://issues.liferay.com/browse/RELEASE-1607

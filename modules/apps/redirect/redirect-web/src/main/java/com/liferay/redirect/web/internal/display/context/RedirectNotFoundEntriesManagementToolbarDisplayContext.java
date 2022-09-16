@@ -21,6 +21,7 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuil
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItemListBuilder;
 import com.liferay.petra.function.UnsafeConsumer;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
@@ -36,10 +37,6 @@ import com.liferay.redirect.service.RedirectNotFoundEntryLocalService;
 import java.util.List;
 import java.util.Map;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionURL;
-import javax.portlet.PortletURL;
-
 import javax.servlet.http.HttpServletRequest;
 
 /**
@@ -52,15 +49,14 @@ public class RedirectNotFoundEntriesManagementToolbarDisplayContext
 		HttpServletRequest httpServletRequest,
 		LiferayPortletRequest liferayPortletRequest,
 		LiferayPortletResponse liferayPortletResponse,
+		RedirectNotFoundEntryLocalService redirectNotFoundEntryLocalService,
 		SearchContainer<RedirectNotFoundEntry> searchContainer) {
 
 		super(
 			httpServletRequest, liferayPortletRequest, liferayPortletResponse,
 			searchContainer);
 
-		_redirectNotFoundEntryLocalService =
-			(RedirectNotFoundEntryLocalService)httpServletRequest.getAttribute(
-				RedirectNotFoundEntryLocalService.class.getName());
+		_redirectNotFoundEntryLocalService = redirectNotFoundEntryLocalService;
 	}
 
 	@Override
@@ -86,6 +82,26 @@ public class RedirectNotFoundEntriesManagementToolbarDisplayContext
 		).build();
 	}
 
+	@Override
+	public Map<String, Object> getAdditionalProps() {
+		return HashMapBuilder.<String, Object>put(
+			"editRedirectNotFoundEntriesURL",
+			() -> PortletURLBuilder.createActionURL(
+				liferayPortletResponse
+			).setActionName(
+				"/redirect/edit_redirect_not_found_entry"
+			).setRedirect(
+				() -> {
+					ThemeDisplay themeDisplay =
+						(ThemeDisplay)httpServletRequest.getAttribute(
+							WebKeys.THEME_DISPLAY);
+
+					return themeDisplay.getURLCurrent();
+				}
+			).buildString()
+		).build();
+	}
+
 	public String getAvailableActions(
 		RedirectNotFoundEntry redirectNotFoundEntry) {
 
@@ -98,34 +114,11 @@ public class RedirectNotFoundEntriesManagementToolbarDisplayContext
 
 	@Override
 	public String getClearResultsURL() {
-		PortletURL clearResultsURL = liferayPortletResponse.createRenderURL();
-
-		clearResultsURL.setParameter("navigation", "404-urls");
-
-		return clearResultsURL.toString();
-	}
-
-	public Map<String, Object> getComponentContext() {
-		return HashMapBuilder.<String, Object>put(
-			"editRedirectNotFoundEntriesURL",
-			() -> {
-				ActionURL editRedirectNotFoundEntriesURL =
-					liferayPortletResponse.createActionURL();
-
-				editRedirectNotFoundEntriesURL.setParameter(
-					ActionRequest.ACTION_NAME,
-					"/redirect/edit_redirect_not_found_entry");
-
-				ThemeDisplay themeDisplay =
-					(ThemeDisplay)httpServletRequest.getAttribute(
-						WebKeys.THEME_DISPLAY);
-
-				editRedirectNotFoundEntriesURL.setParameter(
-					"redirect", themeDisplay.getURLCurrent());
-
-				return editRedirectNotFoundEntriesURL.toString();
-			}
-		).build();
+		return PortletURLBuilder.createRenderURL(
+			liferayPortletResponse
+		).setNavigation(
+			"404-urls"
+		).buildString();
 	}
 
 	@Override
@@ -174,48 +167,49 @@ public class RedirectNotFoundEntriesManagementToolbarDisplayContext
 		return LabelItemListBuilder.add(
 			() -> !StringUtil.equals(getNavigation(), "active-urls"),
 			labelItem -> {
-				PortletURL removeLabelURL = getPortletURL();
-
-				removeLabelURL.setParameter(getNavigationParam(), (String)null);
-
-				labelItem.putData("removeLabelURL", removeLabelURL.toString());
+				labelItem.putData(
+					"removeLabelURL",
+					PortletURLBuilder.create(
+						getPortletURL()
+					).setParameter(
+						getNavigationParam(), (String)null
+					).buildString());
 
 				labelItem.setCloseable(true);
-
-				String label = String.format(
-					"%s: %s", LanguageUtil.get(httpServletRequest, "type"),
-					LanguageUtil.get(httpServletRequest, getNavigation()));
-
-				labelItem.setLabel(label);
+				labelItem.setLabel(
+					String.format(
+						"%s: %s", LanguageUtil.get(httpServletRequest, "type"),
+						LanguageUtil.get(httpServletRequest, getNavigation())));
 			}
 		).add(
 			() -> _getFilterDate() != 0,
 			labelItem -> {
-				PortletURL removeLabelURL = getPortletURL();
-
-				removeLabelURL.setParameter("filterDate", (String)null);
-
-				labelItem.putData("removeLabelURL", removeLabelURL.toString());
+				labelItem.putData(
+					"removeLabelURL",
+					PortletURLBuilder.create(
+						getPortletURL()
+					).setParameter(
+						"filterDate", (String)null
+					).buildString());
 
 				labelItem.setCloseable(true);
-
-				String label = String.format(
-					"%s: %s", LanguageUtil.get(httpServletRequest, "date"),
-					_getFilterDateLabel(_getFilterDate()));
-
-				labelItem.setLabel(label);
+				labelItem.setLabel(
+					String.format(
+						"%s: %s", LanguageUtil.get(httpServletRequest, "date"),
+						_getFilterDateLabel(_getFilterDate())));
 			}
 		).build();
 	}
 
 	@Override
 	public String getSearchActionURL() {
-		PortletURL searchActionURL = getPortletURL();
-
-		searchActionURL.setParameter("orderByCol", getOrderByCol());
-		searchActionURL.setParameter("orderByType", getOrderByType());
-
-		return searchActionURL.toString();
+		return PortletURLBuilder.create(
+			getPortletURL()
+		).setParameter(
+			"orderByCol", getOrderByCol()
+		).setParameter(
+			"orderByType", getOrderByType()
+		).buildString();
 	}
 
 	@Override
@@ -279,11 +273,12 @@ public class RedirectNotFoundEntriesManagementToolbarDisplayContext
 		return dropdownItem -> {
 			dropdownItem.setActive(days == _getFilterDate());
 
-			PortletURL portletURL = getPortletURL();
-
-			portletURL.setParameter("filterDate", String.valueOf(days));
-
-			dropdownItem.setHref(portletURL);
+			dropdownItem.setHref(
+				PortletURLBuilder.create(
+					getPortletURL()
+				).setParameter(
+					"filterDate", days
+				).buildPortletURL());
 
 			dropdownItem.setLabel(_getFilterDateLabel(days));
 		};

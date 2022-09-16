@@ -9,7 +9,8 @@
  * distribution rights of the Software.
  */
 
-import React, {useCallback, useContext, useMemo} from 'react';
+import ClayTable from '@clayui/table';
+import React, {useContext} from 'react';
 
 import filterConstants from '../../shared/components/filter/util/filterConstants.es';
 import ListHeadItem from '../../shared/components/list/ListHeadItem.es';
@@ -19,36 +20,28 @@ import {AppContext} from '../AppContext.es';
 import {processStatusConstants} from '../filter/ProcessStatusFilter.es';
 import {slaStatusConstants} from '../filter/SLAStatusFilter.es';
 
-const Item = ({
+function Item({
 	assignee: {id, image, name},
 	onTimeTaskCount,
 	overdueTaskCount,
 	processId,
 	taskCount,
 	taskNames,
-}) => {
+}) {
 	const {defaultDelta} = useContext(AppContext);
 
-	const getFiltersQuery = useCallback(
-		(slaStatus) => ({
-			[filterConstants.assignee.key]: [id],
-			[filterConstants.processStatus.key]: [
-				processStatusConstants.pending,
-			],
-			[filterConstants.processStep.key]: taskNames,
-			[filterConstants.slaStatus.key]: [slaStatus],
-		}),
-		[id, taskNames]
-	);
+	const getFiltersQuery = (slaStatus) => ({
+		[filterConstants.assignee.key]: [id],
+		[filterConstants.processStatus.key]: [processStatusConstants.pending],
+		[filterConstants.processStep.key]: taskNames,
+		[filterConstants.slaStatus.key]: [slaStatus],
+	});
 
-	const instancesListPath = useMemo(
-		() => `/instance/${processId}/${defaultDelta}/1`,
-		[defaultDelta, processId]
-	);
+	const instancesListPath = `/instance/${processId}/${defaultDelta}/1/dateOverdue:asc`;
 
 	return (
-		<tr>
-			<td className="lfr-title-column table-cell-expand table-title">
+		<ClayTable.Row>
+			<ClayTable.Cell>
 				<UserAvatar className="mr-3" image={image} />
 
 				<ChildLink
@@ -58,9 +51,9 @@ const Item = ({
 				>
 					<span>{name}</span>
 				</ChildLink>
-			</td>
+			</ClayTable.Cell>
 
-			<td className="table-cell-minw-75 text-right">
+			<ClayTable.Cell className="table-cell-minw-75 text-right">
 				<ChildLink
 					className="workload-by-step-link"
 					query={{
@@ -70,9 +63,9 @@ const Item = ({
 				>
 					{overdueTaskCount}
 				</ChildLink>
-			</td>
+			</ClayTable.Cell>
 
-			<td className="table-cell-minw-75 text-right">
+			<ClayTable.Cell className="table-cell-minw-75 text-right">
 				<ChildLink
 					className="workload-by-step-link"
 					query={{
@@ -82,9 +75,9 @@ const Item = ({
 				>
 					{onTimeTaskCount}
 				</ChildLink>
-			</td>
+			</ClayTable.Cell>
 
-			<td className="table-cell-minw-75 text-right">
+			<ClayTable.Cell className="table-cell-minw-75 text-right">
 				<ChildLink
 					className="workload-by-step-link"
 					query={{filters: getFiltersQuery()}}
@@ -92,66 +85,70 @@ const Item = ({
 				>
 					{taskCount}
 				</ChildLink>
-			</td>
-		</tr>
+			</ClayTable.Cell>
+		</ClayTable.Row>
 	);
-};
+}
 
-const Table = ({items, processId, taskNames}) => {
+function Table({items, processId, taskNames}) {
 	return (
-		<div className="table-responsive workflow-process-dashboard">
-			<table className="table table-heading-nowrap table-hover table-list">
-				<thead>
-					<tr>
-						<th
-							className="table-cell-expand table-head-title"
-							style={{width: '62%'}}
-						>
-							{Liferay.Language.get('assignee-name')}
-						</th>
+		<ClayTable headingNoWrap>
+			<ClayTable.Head>
+				<ClayTable.Row>
+					<ClayTable.Cell headingCell style={{width: '62%'}}>
+						{Liferay.Language.get('assignee-name')}
+					</ClayTable.Cell>
 
-						<th className="table-cell-minw-75 table-head-title text-right">
-							<ListHeadItem
-								iconColor="danger"
-								iconName="exclamation-circle"
-								name="overdueTaskCount"
-								title={Liferay.Language.get('overdue')}
-							/>
-						</th>
-
-						<th className="table-cell-minw-75 table-head-title text-right">
-							<ListHeadItem
-								iconColor="success"
-								iconName="check-circle"
-								name="onTimeTaskCount"
-								title={Liferay.Language.get('on-time')}
-							/>
-						</th>
-
-						<th className="table-cell-minw-75 table-head-title text-right">
-							<ListHeadItem
-								name="taskCount"
-								title={Liferay.Language.get('total-pending')}
-							/>
-						</th>
-					</tr>
-				</thead>
-
-				<tbody>
-					{items.map((item, index) => (
-						<Table.Item
-							{...item}
-							key={index}
-							processId={processId}
-							taskNames={taskNames}
+					<ClayTable.Cell
+						className="table-cell-minw-75 text-right"
+						headingCell
+					>
+						<ListHeadItem
+							iconColor="danger"
+							iconName="exclamation-circle"
+							name="overdueTaskCount"
+							title={Liferay.Language.get('overdue')}
 						/>
-					))}
-				</tbody>
-			</table>
-		</div>
+					</ClayTable.Cell>
+
+					<ClayTable.Cell
+						className="table-cell-minw-75 text-right"
+						headingCell
+					>
+						<ListHeadItem
+							iconColor="success"
+							iconName="check-circle"
+							name="onTimeTaskCount"
+							title={Liferay.Language.get('on-time')}
+						/>
+					</ClayTable.Cell>
+
+					<ClayTable.Cell
+						className="table-cell-minw-75 text-right"
+						headingCell
+					>
+						<ListHeadItem
+							name="taskCount"
+							title={Liferay.Language.get('total-pending')}
+						/>
+					</ClayTable.Cell>
+				</ClayTable.Row>
+			</ClayTable.Head>
+
+			<ClayTable.Body>
+				{items.map((item, index) => (
+					<Table.Item
+						{...item}
+						key={index}
+						processId={processId}
+						taskNames={taskNames}
+					/>
+				))}
+			</ClayTable.Body>
+		</ClayTable>
 	);
-};
+}
 
 Table.Item = Item;
 
-export {Table};
+export default Table;

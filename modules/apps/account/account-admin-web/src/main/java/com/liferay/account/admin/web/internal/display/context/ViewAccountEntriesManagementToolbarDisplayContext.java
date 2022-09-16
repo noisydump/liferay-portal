@@ -14,19 +14,21 @@
 
 package com.liferay.account.admin.web.internal.display.context;
 
+import com.liferay.account.admin.web.internal.constants.AccountWebKeys;
 import com.liferay.account.admin.web.internal.display.AccountEntryDisplay;
 import com.liferay.account.admin.web.internal.security.permission.resource.AccountEntryPermission;
-import com.liferay.account.admin.web.internal.security.permission.resource.AccountPermission;
 import com.liferay.account.constants.AccountActionKeys;
 import com.liferay.account.constants.AccountConstants;
 import com.liferay.frontend.taglib.clay.servlet.taglib.display.context.SearchContainerManagementToolbarDisplayContext;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownGroupItem;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownGroupItemBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItemListBuilder;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -37,9 +39,10 @@ import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.service.permission.PortalPermissionUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.Constants;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
@@ -47,7 +50,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import javax.portlet.ActionRequest;
 import javax.portlet.PortletURL;
 
 import javax.servlet.http.HttpServletRequest;
@@ -77,88 +79,71 @@ public class ViewAccountEntriesManagementToolbarDisplayContext
 					return null;
 				}
 
-				DropdownItem dropdownItem = new DropdownItem();
-
-				dropdownItem.putData("action", "deactivateAccountEntries");
-
-				PortletURL deactivateAccountEntriesURL =
-					liferayPortletResponse.createActionURL();
-
-				deactivateAccountEntriesURL.setParameter(
-					ActionRequest.ACTION_NAME,
-					"/account_admin/update_account_entry_status");
-				deactivateAccountEntriesURL.setParameter(
-					Constants.CMD, Constants.DEACTIVATE);
-				deactivateAccountEntriesURL.setParameter(
-					"navigation", getNavigation());
-
-				dropdownItem.putData(
+				return DropdownItemBuilder.putData(
+					"action", "deactivateAccountEntries"
+				).putData(
 					"deactivateAccountEntriesURL",
-					deactivateAccountEntriesURL.toString());
-
-				dropdownItem.setIcon("hidden");
-				dropdownItem.setLabel(
-					LanguageUtil.get(httpServletRequest, "deactivate"));
-				dropdownItem.setQuickAction(true);
-
-				return dropdownItem;
+					PortletURLBuilder.createActionURL(
+						liferayPortletResponse
+					).setActionName(
+						"/account_admin/update_account_entry_status"
+					).setCMD(
+						Constants.DEACTIVATE
+					).setNavigation(
+						getNavigation()
+					).buildString()
+				).setIcon(
+					"hidden"
+				).setLabel(
+					LanguageUtil.get(httpServletRequest, "deactivate")
+				).setQuickAction(
+					true
+				).build();
 			},
 			() -> {
 				if (Objects.equals(getNavigation(), "active")) {
 					return null;
 				}
 
-				DropdownItem dropdownItem = new DropdownItem();
-
-				dropdownItem.putData("action", "activateAccountEntries");
-
-				PortletURL activateAccountEntriesURL =
-					liferayPortletResponse.createActionURL();
-
-				activateAccountEntriesURL.setParameter(
-					ActionRequest.ACTION_NAME,
-					"/account_admin/update_account_entry_status");
-				activateAccountEntriesURL.setParameter(
-					Constants.CMD, Constants.RESTORE);
-				activateAccountEntriesURL.setParameter(
-					"navigation", getNavigation());
-
-				dropdownItem.putData(
+				return DropdownItemBuilder.putData(
+					"action", "activateAccountEntries"
+				).putData(
 					"activateAccountEntriesURL",
-					activateAccountEntriesURL.toString());
-
-				dropdownItem.setIcon("undo");
-				dropdownItem.setLabel(
-					LanguageUtil.get(httpServletRequest, "activate"));
-				dropdownItem.setQuickAction(true);
-
-				return dropdownItem;
+					PortletURLBuilder.createActionURL(
+						liferayPortletResponse
+					).setActionName(
+						"/account_admin/update_account_entry_status"
+					).setCMD(
+						Constants.RESTORE
+					).setNavigation(
+						getNavigation()
+					).buildString()
+				).setIcon(
+					"undo"
+				).setLabel(
+					LanguageUtil.get(httpServletRequest, "activate")
+				).setQuickAction(
+					true
+				).build();
 			},
-			() -> {
-				DropdownItem dropdownItem = new DropdownItem();
-
-				dropdownItem.putData("action", "deleteAccountEntries");
-
-				PortletURL deleteAccountEntriesURL =
-					liferayPortletResponse.createActionURL();
-
-				deleteAccountEntriesURL.setParameter(
-					ActionRequest.ACTION_NAME,
-					"/account_admin/delete_account_entry");
-				deleteAccountEntriesURL.setParameter(
-					"navigation", getNavigation());
-
-				dropdownItem.putData(
-					"deleteAccountEntriesURL",
-					deleteAccountEntriesURL.toString());
-
-				dropdownItem.setIcon("times-circle");
-				dropdownItem.setLabel(
-					LanguageUtil.get(httpServletRequest, "delete"));
-				dropdownItem.setQuickAction(true);
-
-				return dropdownItem;
-			});
+			() -> DropdownItemBuilder.putData(
+				"action", "deleteAccountEntries"
+			).putData(
+				"deleteAccountEntriesURL",
+				PortletURLBuilder.createActionURL(
+					liferayPortletResponse
+				).setActionName(
+					"/account_admin/delete_account_entry"
+				).setNavigation(
+					getNavigation()
+				).buildString()
+			).setIcon(
+				"times-circle"
+			).setLabel(
+				LanguageUtil.get(httpServletRequest, "delete")
+			).setQuickAction(
+				true
+			).build());
 	}
 
 	public List<String> getAvailableActions(
@@ -192,13 +177,15 @@ public class ViewAccountEntriesManagementToolbarDisplayContext
 
 	@Override
 	public String getClearResultsURL() {
-		PortletURL clearResultsURL = getPortletURL();
-
-		clearResultsURL.setParameter("keywords", StringPool.BLANK);
-		clearResultsURL.setParameter("navigation", (String)null);
-		clearResultsURL.setParameter("type", (String)null);
-
-		return clearResultsURL.toString();
+		return PortletURLBuilder.create(
+			getPortletURL()
+		).setKeywords(
+			StringPool.BLANK
+		).setNavigation(
+			(String)null
+		).setParameter(
+			"type", (String)null
+		).buildString();
 	}
 
 	@Override
@@ -221,15 +208,10 @@ public class ViewAccountEntriesManagementToolbarDisplayContext
 	}
 
 	@Override
-	public String getDefaultEventHandler() {
-		return "ACCOUNT_ENTRIES_MANAGEMENT_TOOLBAR_DEFAULT_EVENT_HANDLER";
-	}
-
-	@Override
 	public List<DropdownItem> getFilterDropdownItems() {
 		List<DropdownItem> filterDropdownItems = super.getFilterDropdownItems();
 
-		addFilterTypeDropdownItems(filterDropdownItems);
+		_addFilterTypeDropdownItems(filterDropdownItems);
 
 		return filterDropdownItems;
 	}
@@ -239,36 +221,35 @@ public class ViewAccountEntriesManagementToolbarDisplayContext
 		return LabelItemListBuilder.add(
 			() -> !Objects.equals(getNavigation(), "active"),
 			labelItem -> {
-				PortletURL removeLabelURL = getPortletURL();
-
-				removeLabelURL.setParameter("navigation", (String)null);
-
-				labelItem.putData("removeLabelURL", removeLabelURL.toString());
-
+				labelItem.putData(
+					"removeLabelURL",
+					PortletURLBuilder.create(
+						getPortletURL()
+					).setNavigation(
+						(String)null
+					).buildString());
 				labelItem.setCloseable(true);
-
-				String label = String.format(
-					"%s: %s", LanguageUtil.get(httpServletRequest, "status"),
-					LanguageUtil.get(httpServletRequest, getNavigation()));
-
-				labelItem.setLabel(label);
+				labelItem.setLabel(
+					String.format(
+						"%s: %s",
+						LanguageUtil.get(httpServletRequest, "status"),
+						LanguageUtil.get(httpServletRequest, getNavigation())));
 			}
 		).add(
-			() -> !Objects.equals(getType(), "all"),
+			() -> !Objects.equals(_getType(), "all"),
 			labelItem -> {
-				PortletURL removeLabelURL = getPortletURL();
-
-				removeLabelURL.setParameter("type", (String)null);
-
-				labelItem.putData("removeLabelURL", removeLabelURL.toString());
-
+				labelItem.putData(
+					"removeLabelURL",
+					PortletURLBuilder.create(
+						getPortletURL()
+					).setParameter(
+						"type", (String)null
+					).buildString());
 				labelItem.setCloseable(true);
-
-				String label = String.format(
-					"%s: %s", LanguageUtil.get(httpServletRequest, "type"),
-					LanguageUtil.get(httpServletRequest, getType()));
-
-				labelItem.setLabel(label);
+				labelItem.setLabel(
+					String.format(
+						"%s: %s", LanguageUtil.get(httpServletRequest, "type"),
+						LanguageUtil.get(httpServletRequest, _getType())));
 			}
 		).build();
 	}
@@ -285,7 +266,7 @@ public class ViewAccountEntriesManagementToolbarDisplayContext
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(exception, exception);
+				_log.warn(exception);
 			}
 
 			return liferayPortletResponse.createRenderURL();
@@ -310,30 +291,9 @@ public class ViewAccountEntriesManagementToolbarDisplayContext
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		return AccountPermission.contains(
-			themeDisplay.getPermissionChecker(), themeDisplay.getScopeGroupId(),
+		return PortalPermissionUtil.contains(
+			themeDisplay.getPermissionChecker(),
 			AccountActionKeys.ADD_ACCOUNT_ENTRY);
-	}
-
-	protected void addFilterTypeDropdownItems(
-		List<DropdownItem> filterDropdownItems) {
-
-		DropdownGroupItem filterDropdownItemsGroup = new DropdownGroupItem();
-
-		filterDropdownItemsGroup.setDropdownItems(
-			getDropdownItems(
-				getDefaultEntriesMap(getFilterByTypeKeys()), getPortletURL(),
-				"type", getType()));
-		filterDropdownItemsGroup.setLabel(
-			LanguageUtil.get(httpServletRequest, "filter-by-type"));
-
-		filterDropdownItems.add(1, filterDropdownItemsGroup);
-	}
-
-	protected String[] getFilterByTypeKeys() {
-		return ArrayUtil.append(
-			new String[] {"all"}, AccountConstants.ACCOUNT_ENTRY_TYPES,
-			new String[] {"guest"});
 	}
 
 	@Override
@@ -352,7 +312,28 @@ public class ViewAccountEntriesManagementToolbarDisplayContext
 		return new String[] {"name"};
 	}
 
-	protected String getType() {
+	private void _addFilterTypeDropdownItems(
+		List<DropdownItem> filterDropdownItems) {
+
+		filterDropdownItems.add(
+			1,
+			DropdownGroupItemBuilder.setDropdownItems(
+				getDropdownItems(
+					getDefaultEntriesMap(_getFilterByTypeKeys()),
+					getPortletURL(), "type", _getType())
+			).setLabel(
+				LanguageUtil.get(httpServletRequest, "filter-by-type")
+			).build());
+	}
+
+	private String[] _getFilterByTypeKeys() {
+		return GetterUtil.getStringValues(
+			liferayPortletRequest.getAttribute(
+				AccountWebKeys.ACCOUNT_ENTRY_ALLOWED_TYPES),
+			AccountConstants.ACCOUNT_ENTRY_TYPES);
+	}
+
+	private String _getType() {
 		return ParamUtil.getString(liferayPortletRequest, "type", "all");
 	}
 

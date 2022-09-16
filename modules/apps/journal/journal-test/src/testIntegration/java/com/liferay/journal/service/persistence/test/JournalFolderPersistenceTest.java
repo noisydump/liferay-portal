@@ -130,6 +130,9 @@ public class JournalFolderPersistenceTest {
 
 		newJournalFolder.setUuid(RandomTestUtil.randomString());
 
+		newJournalFolder.setExternalReferenceCode(
+			RandomTestUtil.randomString());
+
 		newJournalFolder.setGroupId(RandomTestUtil.nextLong());
 
 		newJournalFolder.setCompanyId(RandomTestUtil.nextLong());
@@ -175,6 +178,9 @@ public class JournalFolderPersistenceTest {
 			newJournalFolder.getCtCollectionId());
 		Assert.assertEquals(
 			existingJournalFolder.getUuid(), newJournalFolder.getUuid());
+		Assert.assertEquals(
+			existingJournalFolder.getExternalReferenceCode(),
+			newJournalFolder.getExternalReferenceCode());
 		Assert.assertEquals(
 			existingJournalFolder.getFolderId(),
 			newJournalFolder.getFolderId());
@@ -319,12 +325,21 @@ public class JournalFolderPersistenceTest {
 	}
 
 	@Test
-	public void testCountByF_C_P_NotS() throws Exception {
-		_persistence.countByF_C_P_NotS(
+	public void testCountByGtF_C_P_NotS() throws Exception {
+		_persistence.countByGtF_C_P_NotS(
 			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(),
 			RandomTestUtil.nextLong(), RandomTestUtil.nextInt());
 
-		_persistence.countByF_C_P_NotS(0L, 0L, 0L, 0);
+		_persistence.countByGtF_C_P_NotS(0L, 0L, 0L, 0);
+	}
+
+	@Test
+	public void testCountByG_ERC() throws Exception {
+		_persistence.countByG_ERC(RandomTestUtil.nextLong(), "");
+
+		_persistence.countByG_ERC(0L, "null");
+
+		_persistence.countByG_ERC(0L, (String)null);
 	}
 
 	@Test
@@ -359,12 +374,13 @@ public class JournalFolderPersistenceTest {
 	protected OrderByComparator<JournalFolder> getOrderByComparator() {
 		return OrderByComparatorFactoryUtil.create(
 			"JournalFolder", "mvccVersion", true, "ctCollectionId", true,
-			"uuid", true, "folderId", true, "groupId", true, "companyId", true,
-			"userId", true, "userName", true, "createDate", true,
-			"modifiedDate", true, "parentFolderId", true, "treePath", true,
-			"name", true, "description", true, "restrictionType", true,
-			"lastPublishDate", true, "status", true, "statusByUserId", true,
-			"statusByUserName", true, "statusDate", true);
+			"uuid", true, "externalReferenceCode", true, "folderId", true,
+			"groupId", true, "companyId", true, "userId", true, "userName",
+			true, "createDate", true, "modifiedDate", true, "parentFolderId",
+			true, "treePath", true, "name", true, "description", true,
+			"restrictionType", true, "lastPublishDate", true, "status", true,
+			"statusByUserId", true, "statusByUserName", true, "statusDate",
+			true);
 	}
 
 	@Test
@@ -664,6 +680,17 @@ public class JournalFolderPersistenceTest {
 			ReflectionTestUtil.invoke(
 				journalFolder, "getColumnOriginalValue",
 				new Class<?>[] {String.class}, "name"));
+
+		Assert.assertEquals(
+			Long.valueOf(journalFolder.getGroupId()),
+			ReflectionTestUtil.<Long>invoke(
+				journalFolder, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "groupId"));
+		Assert.assertEquals(
+			journalFolder.getExternalReferenceCode(),
+			ReflectionTestUtil.invoke(
+				journalFolder, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "externalReferenceCode"));
 	}
 
 	protected JournalFolder addJournalFolder() throws Exception {
@@ -676,6 +703,8 @@ public class JournalFolderPersistenceTest {
 		journalFolder.setCtCollectionId(RandomTestUtil.nextLong());
 
 		journalFolder.setUuid(RandomTestUtil.randomString());
+
+		journalFolder.setExternalReferenceCode(RandomTestUtil.randomString());
 
 		journalFolder.setGroupId(RandomTestUtil.nextLong());
 

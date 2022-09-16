@@ -20,11 +20,11 @@ import com.liferay.application.list.constants.ApplicationListWebKeys;
 import com.liferay.application.list.constants.PanelCategoryKeys;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
-import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
+import com.liferay.portal.kernel.service.permission.GroupPermission;
 import com.liferay.product.navigation.site.administration.internal.constants.SiteAdministrationWebKeys;
 import com.liferay.site.util.GroupURLProvider;
 import com.liferay.site.util.RecentGroupManager;
@@ -70,7 +70,7 @@ public class SiteAdministrationPanelCategory extends BaseJSPPanelCategory {
 
 	@Override
 	public String getLabel(Locale locale) {
-		return LanguageUtil.get(locale, "site-administration");
+		return _language.get(locale, "site-administration");
 	}
 
 	@Override
@@ -112,7 +112,7 @@ public class SiteAdministrationPanelCategory extends BaseJSPPanelCategory {
 			return false;
 		}
 
-		if (GroupPermissionUtil.contains(
+		if (_groupPermission.contains(
 				permissionChecker, group,
 				ActionKeys.VIEW_SITE_ADMINISTRATION)) {
 
@@ -123,13 +123,12 @@ public class SiteAdministrationPanelCategory extends BaseJSPPanelCategory {
 	}
 
 	@Override
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.product.navigation.site.administration)",
-		unbind = "-"
-	)
-	public void setServletContext(ServletContext servletContext) {
-		super.setServletContext(servletContext);
+	protected ServletContext getServletContext() {
+		return _servletContext;
 	}
+
+	@Reference
+	private GroupPermission _groupPermission;
 
 	@Reference
 	private GroupURLProvider _groupURLProvider;
@@ -138,6 +137,14 @@ public class SiteAdministrationPanelCategory extends BaseJSPPanelCategory {
 	private ItemSelector _itemSelector;
 
 	@Reference
+	private Language _language;
+
+	@Reference
 	private RecentGroupManager _recentGroupManager;
+
+	@Reference(
+		target = "(osgi.web.symbolicname=com.liferay.product.navigation.site.administration)"
+	)
+	private ServletContext _servletContext;
 
 }

@@ -144,7 +144,7 @@ request.setAttribute("view_user.jsp-user", user2);
 				</clay:col>
 			</clay:row>
 
-			<div class="field-group lfr-detail-info" data-title="<%= LanguageUtil.get(request, "details") %>">
+			<div class="lfr-detail-info lfr-field-group" data-title="<%= LanguageUtil.get(request, "details") %>">
 
 				<%
 				PortletURL editDetailsURL = PortletURLFactoryUtil.create(request, PortletKeys.MY_ACCOUNT, embeddedPersonalApplicationLayout, PortletRequest.RENDER_PHASE);
@@ -299,7 +299,7 @@ request.setAttribute("view_user.jsp-user", user2);
 
 									<c:choose>
 										<c:when test="<%= !assetTags.isEmpty() %>">
-											<div class="field-group user-tags-wrapper" data-title="<%= LanguageUtil.get(request, "tags") %>">
+											<div class="lfr-field-group user-tags-wrapper" data-title="<%= LanguageUtil.get(request, "tags") %>">
 
 												<%
 												PortletURL editCategorizationURL = PortletURLFactoryUtil.create(request, PortletKeys.MY_ACCOUNT, embeddedPersonalApplicationLayout, PortletRequest.RENDER_PHASE);
@@ -319,12 +319,17 @@ request.setAttribute("view_user.jsp-user", user2);
 													String searchPortletId = PortletProviderUtil.getPortletId(PortalSearchApplicationType.Search.CLASS_NAME, PortletProvider.Action.VIEW);
 
 													for (AssetTag assetTag : assetTags) {
-														PortletURL searchURL = liferayPortletResponse.createRenderURL(searchPortletId);
-
-														searchURL.setParameter("mvcPath", "/search.jsp");
-														searchURL.setParameter("groupId", "0");
-														searchURL.setParameter("keywords", assetTag.getName());
-														searchURL.setWindowState(WindowState.MAXIMIZED);
+														PortletURL searchURL = PortletURLBuilder.createRenderURL(
+															liferayPortletResponse, searchPortletId
+														).setMVCPath(
+															"/search.jsp"
+														).setKeywords(
+															assetTag.getName()
+														).setParameter(
+															"groupId", "0"
+														).setWindowState(
+															WindowState.MAXIMIZED
+														).buildPortletURL();
 
 														sb.append("<li><a href=\"");
 														sb.append(searchURL);

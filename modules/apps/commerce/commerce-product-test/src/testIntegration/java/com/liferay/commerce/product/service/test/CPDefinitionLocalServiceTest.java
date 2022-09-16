@@ -15,10 +15,15 @@
 package com.liferay.commerce.product.service.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.commerce.price.list.model.CommercePriceEntry;
+import com.liferay.commerce.price.list.model.CommercePriceList;
+import com.liferay.commerce.price.list.service.CommercePriceEntryLocalService;
+import com.liferay.commerce.price.list.service.CommercePriceListLocalService;
 import com.liferay.commerce.product.constants.CPInstanceConstants;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.model.CPOption;
+import com.liferay.commerce.product.model.CProduct;
 import com.liferay.commerce.product.model.CommerceCatalog;
 import com.liferay.commerce.product.service.CPDefinitionLocalService;
 import com.liferay.commerce.product.service.CPDefinitionOptionRelLocalService;
@@ -29,18 +34,23 @@ import com.liferay.commerce.product.service.CommerceCatalogLocalServiceUtil;
 import com.liferay.commerce.product.test.util.CPTestUtil;
 import com.liferay.commerce.product.type.simple.constants.SimpleCPTypeConstants;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Company;
+import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
-import com.liferay.portal.kernel.test.rule.DataGuard;
-import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.CompanyTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+
+import java.math.BigDecimal;
 
 import java.util.List;
 
@@ -49,6 +59,7 @@ import org.frutilla.FrutillaRule;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -58,7 +69,6 @@ import org.junit.runner.RunWith;
  * @author Luca Pellizzon
  * @author Alessio Antonio Rendina
  */
-@DataGuard(scope = DataGuard.Scope.METHOD)
 @RunWith(Arquillian.class)
 public class CPDefinitionLocalServiceTest {
 
@@ -69,14 +79,23 @@ public class CPDefinitionLocalServiceTest {
 			new LiferayIntegrationTestRule(),
 			PermissionCheckerMethodTestRule.INSTANCE);
 
-	@Before
-	public void setUp() throws Exception {
+	@BeforeClass
+	public static void setUpClass() throws Exception {
 		_company = CompanyTestUtil.addCompany();
 
+		_user = UserTestUtil.addUser(_company);
+	}
+
+	@Before
+	public void setUp() throws Exception {
+		_serviceContext = ServiceContextTestUtil.getServiceContext(
+			_company.getGroupId(), _user.getUserId());
+
+		ServiceContextThreadLocal.pushServiceContext(_serviceContext);
+
 		_commerceCatalog = CommerceCatalogLocalServiceUtil.addCommerceCatalog(
-			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			LocaleUtil.US.getDisplayLanguage(), null,
-			ServiceContextTestUtil.getServiceContext(_company.getGroupId()));
+			null, RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+			LocaleUtil.US.getDisplayLanguage(), _serviceContext);
 	}
 
 	@After
@@ -140,7 +159,8 @@ public class CPDefinitionLocalServiceTest {
 
 		List<CPInstance> cpInstances =
 			_cpInstanceLocalService.getCPDefinitionInstances(
-				cpDefinition.getCPDefinitionId());
+				cpDefinition.getCPDefinitionId(), WorkflowConstants.STATUS_ANY,
+				QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 
 		Assert.assertEquals(cpInstances.toString(), 1, cpInstances.size());
 
@@ -332,7 +352,7 @@ public class CPDefinitionLocalServiceTest {
 			WorkflowConstants.STATUS_APPROVED, cpDefinition.getStatus());
 
 		List<CPInstance> cpInstances =
-			_cpInstanceLocalService.getCPDefinitionInstances(
+			_cpInstanceLocalService.getCPDefinitionApprovedCPInstances(
 				cpDefinition.getCPDefinitionId());
 
 		int approvedCPInstances = 0;
@@ -372,7 +392,7 @@ public class CPDefinitionLocalServiceTest {
 			WorkflowConstants.STATUS_APPROVED, cpDefinition.getStatus());
 
 		List<CPInstance> cpInstances =
-			_cpInstanceLocalService.getCPDefinitionInstances(
+			_cpInstanceLocalService.getCPDefinitionApprovedCPInstances(
 				cpDefinition.getCPDefinitionId());
 
 		Assert.assertEquals(cpInstances.toString(), 1, cpInstances.size());
@@ -386,16 +406,119 @@ public class CPDefinitionLocalServiceTest {
 			WorkflowConstants.STATUS_APPROVED, cpDefinition.getStatus());
 	}
 
+	@Test
+	public void testDuplicateDefinitionPriceChangeDoesNotAffectParent()
+		throws PortalException {
+
+		frutillaRule.scenario(
+			"Change Price of a duplicate product sku"
+		).given(
+			"A product definition"
+		).when(
+			"ignoreSKUCombinations set to true"
+		).and(
+			"hasDefaultInstance set true"
+		).and(
+			"delete default product instance"
+		).then(
+			"product definition should be APPROVED"
+		);
+
+		BigDecimal basePrice = new BigDecimal(5);
+
+		CPInstance cpInstance = CPTestUtil.addCPInstanceWithRandomSku(
+			_commerceCatalog.getGroupId(), basePrice);
+
+		Assert.assertEquals(
+			WorkflowConstants.STATUS_APPROVED, cpInstance.getStatus());
+
+		BigDecimal promoPrice = new BigDecimal(0);
+
+		CPDefinition duplicateCPDefinition =
+			_cpDefinitionLocalService.copyCPDefinition(
+				cpInstance.getCPDefinitionId());
+
+		CPInstance duplicateCPInstance = _cpInstanceLocalService.getCPInstance(
+			duplicateCPDefinition.getCPDefinitionId(), cpInstance.getSku());
+
+		CommercePriceList commercePriceList =
+			_commercePriceListLocalService.fetchCatalogBaseCommercePriceList(
+				duplicateCPInstance.getGroupId());
+
+		CommercePriceEntry commercePriceEntry =
+			_commercePriceEntryLocalService.fetchCommercePriceEntry(
+				commercePriceList.getCommercePriceListId(),
+				duplicateCPInstance.getCPInstanceUuid());
+
+		BigDecimal newPrice = new BigDecimal(10);
+
+		commercePriceEntry =
+			_commercePriceEntryLocalService.updateCommercePriceEntry(
+				commercePriceEntry.getCommercePriceEntryId(), newPrice,
+				promoPrice, _serviceContext);
+
+		CommercePriceList parentPriceList =
+			_commercePriceListLocalService.fetchCatalogBaseCommercePriceList(
+				cpInstance.getGroupId());
+
+		CommercePriceEntry parentPriceEntry =
+			_commercePriceEntryLocalService.fetchCommercePriceEntry(
+				parentPriceList.getCommercePriceListId(),
+				cpInstance.getCPInstanceUuid());
+
+		BigDecimal priceEntry = commercePriceEntry.getPrice();
+
+		Assert.assertEquals(newPrice.intValue(), priceEntry.intValue());
+
+		Assert.assertNotEquals(
+			parentPriceEntry.getPrice(), commercePriceEntry.getPrice());
+	}
+
+	@Test
+	public void testUpdateCPDefinitionExternalReferenceCode() throws Exception {
+		frutillaRule.scenario(
+			"Update product definition external reference code"
+		).given(
+			"I add a product definition"
+		).when(
+			"external reference code is set"
+		).then(
+			"product definition should have that external reference code"
+		);
+
+		CPDefinition cpDefinition = CPTestUtil.addCPDefinitionFromCatalog(
+			_commerceCatalog.getGroupId(), SimpleCPTypeConstants.NAME, false,
+			false);
+
+		long cpDefinitionId = cpDefinition.getCPDefinitionId();
+
+		_cpDefinitionLocalService.updateExternalReferenceCode(
+			"ERC", cpDefinitionId);
+
+		cpDefinition = _cpDefinitionLocalService.getCPDefinition(
+			cpDefinitionId);
+
+		CProduct cProduct = cpDefinition.getCProduct();
+
+		Assert.assertEquals("ERC", cProduct.getExternalReferenceCode());
+	}
+
 	@Rule
 	public final FrutillaRule frutillaRule = new FrutillaRule();
+
+	private static Company _company;
+	private static User _user;
 
 	private CommerceCatalog _commerceCatalog;
 
 	@Inject
 	private CommerceCatalogLocalService _commerceCatalogLocalService;
 
-	@DeleteAfterTestRun
-	private Company _company;
+	@Inject
+	private CommercePriceEntryLocalService _commercePriceEntryLocalService;
+
+	@Inject
+	private CommercePriceListLocalService _commercePriceListLocalService;
 
 	@Inject
 	private CPDefinitionLocalService _cpDefinitionLocalService;
@@ -409,5 +532,7 @@ public class CPDefinitionLocalServiceTest {
 
 	@Inject
 	private CPOptionLocalService _cpOptionLocalService;
+
+	private ServiceContext _serviceContext;
 
 }

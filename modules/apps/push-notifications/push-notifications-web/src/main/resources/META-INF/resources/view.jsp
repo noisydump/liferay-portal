@@ -19,9 +19,11 @@
 <%
 String tabs1 = ParamUtil.getString(request, "tabs1", "devices");
 
-PortletURL portletURL = renderResponse.createRenderURL();
-
-portletURL.setParameter("tabs1", tabs1);
+PortletURL portletURL = PortletURLBuilder.createRenderURL(
+	renderResponse
+).setTabs1(
+	tabs1
+).buildPortletURL();
 %>
 
 <clay:navigation-bar
@@ -45,13 +47,11 @@ portletURL.setParameter("tabs1", tabs1);
 	%>'
 />
 
-<clay:container-fluid>
-	<c:choose>
-		<c:when test='<%= tabs1.equals("test") %>'>
-			<%@ include file="/test.jspf" %>
-		</c:when>
-		<c:otherwise>
-			<%@ include file="/devices.jspf" %>
-		</c:otherwise>
-	</c:choose>
-</clay:container-fluid>
+<c:choose>
+	<c:when test='<%= tabs1.equals("test") %>'>
+		<%@ include file="/test.jspf" %>
+	</c:when>
+	<c:otherwise>
+		<%@ include file="/devices.jspf" %>
+	</c:otherwise>
+</c:choose>

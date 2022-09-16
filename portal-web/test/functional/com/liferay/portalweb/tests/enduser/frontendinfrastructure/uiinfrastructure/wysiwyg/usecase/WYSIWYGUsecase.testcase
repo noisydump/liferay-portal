@@ -12,6 +12,8 @@ definition {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
+
+		JSONGroup.addGroup(groupName = "WYSIWYG Site Name");
 	}
 
 	tearDown {
@@ -21,23 +23,26 @@ definition {
 			PortalInstances.tearDownCP();
 		}
 		else {
-			Page.tearDownCP();
+			JSONGroup.deleteGroupByName(groupName = "WYSIWYG Site Name");
 		}
 	}
 
 	@priority = "4"
-	test AddBlogsEntryWithImageViaBlogsImages {
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
+	@refactordone
+	test CanAddBlogsEntryWithImageViaBlogsImages {
+		JSONLayout.addPublicLayout(
+			groupName = "WYSIWYG Site Name",
+			layoutName = "${pageName}");
 
-		SitePages.addPublicPage(pageName = "${pageName}");
+		JSONLayout.addWidgetToPublicLayout(
+			column = "1",
+			groupName = "WYSIWYG Site Name",
+			layoutName = "${pageName}",
+			widgetName = "Blogs");
 
-		Navigator.gotoPage(pageName = "${pageName}");
-
-		Portlet.addPG(portletName = "Blogs");
-
-		Navigator.gotoPage(pageName = "${pageName}");
+		Navigator.gotoSitePage(
+			pageName = "${pageName}",
+			siteName = "WYSIWYG Site Name");
 
 		Blogs.addEntryWithUploadedCoverImage(
 			coverImageName = "Document_1",
@@ -47,7 +52,7 @@ definition {
 			navTab = "Blog Images",
 			uploadFileName = "Document_1.jpg");
 
-		Pause(locator1 = "1000");
+		WaitForElementPresent(locator1 = "Button#SAVE_AS_DRAFT");
 
 		BlogsEntry.saveAsDraft();
 
@@ -74,9 +79,42 @@ definition {
 		BlogsEntry.viewInlineImage(uploadFileName = "Document_1");
 	}
 
+	@description = "Verify existing text can be formatted as a hyperlink"
 	@priority = "4"
-	test AddMBThreadWithLinkToDocument {
+	@refactordone
+	test CanAddHyperlinkToExistingText {
 		property portal.acceptance = "true";
+
+		JSONWebcontent.addWebContent(
+			content = "Test Link",
+			groupName = "WYSIWYG Site Name",
+			title = "Test Web Content");
+
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "wysiwyg-site-name");
+
+		WebContent.viewTitle(webContentTitle = "Test Web Content");
+
+		WebContentNavigator.gotoEditCP(webContentTitle = "Test Web Content");
+
+		CKEditor.addEntryExternalURLToExistingText(
+			entryExternalURL = "/web/guest/home",
+			fieldLabel = "Content");
+
+		SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME_2");
+
+		AssertElementPresent(
+			key_href = "/web/guest/home",
+			key_text = "Test Link",
+			locator1 = "CKEditor#BODY_TEXT_HREF");
+	}
+
+	@priority = "4"
+	@refactordone
+	test CanAddWebContentArticleWithImageViaURL {
+		JSONWebcontent.addWebContent(
+			content = "",
+			groupName = "WYSIWYG Site Name",
+			title = "Web Content Title");
 
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
@@ -85,77 +123,114 @@ definition {
 			mimeType = "image/jpeg",
 			sourceFileName = "Document_1.jpg");
 
-		MessageBoardsAdmin.openMessageBoardsAdmin(siteURLKey = "guest");
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "wysiwyg-site-name");
 
-		LexiconEntry.gotoAdd();
+		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
 
-		MenuItem.click(menuItem = "Thread");
+		ItemSelector.gotoItemSelectorViaCKEditor();
 
-		Type(
-			locator1 = "TextInput#SUBJECT",
-			value1 = "MB Thread Message Subject");
+		var portalURL = PropsUtil.get("portal.url");
 
-		CKEditor.addTextWithLink(
-			displayText = "Link to Document",
-			dmDocumentTitle = "Document_1.jpg",
-			fieldLabel = "Body");
+		ItemSelector.addImageFromURL(
+			imageSourceURL = "${portalURL}/webdav/guest/document_library/Document_1.jpg",
+			navTab = "URL");
 
 		PortletEntry.publish();
 
-		MessageBoardsAdmin.openMessageBoardsAdmin(siteURLKey = "guest");
+		WebContentNavigator.gotoPreviewEntryCP(webContentTitle = "Web Content Title");
 
-		LexiconEntry.gotoEntry(rowEntry = "MB Thread Message Subject");
-
-		Click(
-			key_text = "Link to Document",
-			locator1 = "Link#ANY");
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		AssertElementPresent(locator1 = "//img[contains(@src,'Document_1.jpg')]");
 	}
 
+	@description = "Verify content can display content from left to right"
 	@priority = "4"
-	test AddMBThreadWithLinkToPage {
+	@refactordone
+	test CanDisplayContentLeftToRight {
 		property portal.acceptance = "true";
 
 		JSONLayout.addPublicLayout(
-			groupName = "Guest",
+			groupName = "WYSIWYG Site Name",
 			layoutName = "${pageName}");
 
-		MessageBoardsAdmin.openMessageBoardsAdmin(siteURLKey = "guest");
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "WYSIWYG Site Name",
+			layoutName = "${pageName}",
+			widgetName = "Wiki");
 
-		LexiconEntry.gotoAdd();
+		Navigator.gotoSitePage(
+			pageName = "${pageName}",
+			siteName = "WYSIWYG Site Name");
 
-		MenuItem.click(menuItem = "Thread");
+		WikiPage.addLocalizedFrontPagePG(
+			emptyPageMessage = "This page is empty. Edit it to add some text.",
+			successMessage = "Your request completed successfully.",
+			wikiPageContent = "Wiki Left to Right Content");
 
-		Type(
-			locator1 = "TextInput#SUBJECT",
-			value1 = "MB Thread Message Subject");
+		Navigator.gotoSitePage(
+			pageName = "${pageName}",
+			siteName = "WYSIWYG Site Name");
 
-		CKEditor.addTextWithLink(
-			displayText = "Link to Page",
-			fieldLabel = "Body",
-			pageName = "${pageName}");
-
-		PortletEntry.publish();
-
-		MessageBoardsAdmin.openMessageBoardsAdmin(siteURLKey = "guest");
-
-		LexiconEntry.gotoEntry(rowEntry = "MB Thread Message Subject");
-
-		Click(
-			key_text = "Link to Page",
-			locator1 = "Link#ANY");
-
-		AssertVisible(
-			key_pageName = "${pageName}",
-			locator1 = "Home#PAGE_ACTIVE");
+		WikiPage.viewLocalizedFrontPagePG(wikiPageContent = "Wiki Left to Right Content");
 	}
 
+	@description = "Verify content localized with a right to left language is displayed from right to left"
 	@priority = "4"
-	test AddWebContentArticleCopyPasteContent {
-		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
-		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
+	@refactordone
+	test CanDisplayContentRightToLeft {
+		property portal.acceptance = "true";
+		property test.name.skip.portal.instance = "WYSIWIGUsecase#ViewWikiFrontPageRightToLeft";
+
+		JSONLayout.addPublicLayout(
+			groupName = "WYSIWYG Site Name",
+			layoutName = "${pageName}");
+
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "WYSIWYG Site Name",
+			layoutName = "${pageName}",
+			widgetName = "Language Selector");
+
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "WYSIWYG Site Name",
+			layoutName = "${pageName}",
+			widgetName = "Wiki");
+
+		Navigator.gotoSitePage(
+			pageName = "${pageName}",
+			siteName = "WYSIWYG Site Name");
+
+		LanguagePortlet.selectLanguagePG(
+			locale = "ar_SA",
+			textIcon = "العربية-السعودية");
+
+		WikiPage.addLocalizedFrontPagePG(
+			emptyPageMessage = "هذه الصفحة فارغة. قم بتحريرها لإضافة نص.",
+			rtl = "true",
+			successMessage = "نجاح:تم تنفيذ طلبك بنجاح",
+			wikiPageContent = "Wiki Right to Left يحتوى");
+
+		Navigator.gotoSitePage(
+			pageName = "${pageName}",
+			siteName = "WYSIWYG Site Name");
+
+		WikiPage.viewLocalizedFrontPagePG(
+			rightToLeft = "true",
+			wikiPageContent = "Wiki Right to Left يحتوى");
+
+		LanguagePortlet.selectLanguagePG(
+			locale = "en_US",
+			textIcon = "english-United States");
+	}
+
+	@description = "Verify editor can display html formatted contents from copy paste"
+	@priority = "4"
+	@refactordone
+	test CanDisplayFormattedHTMLFromCopyPaste {
+		property app.server.types = "tomcat";
+		property database.types = "mysql";
 		property environment.acceptance = "true";
+		property portal.acceptance = "true";
 
 		Open(locator1 = "http://www.standards-schmandards.com/exhibits/wysiwyg/sampledoc.htm");
 
@@ -170,8 +245,6 @@ definition {
 				locator1 = "//body",
 				value1 = "a");
 
-			Pause(locator1 = "1000");
-
 			KeyPress(
 				locator1 = "//body",
 				value1 = "c");
@@ -180,7 +253,6 @@ definition {
 				locator1 = "//body",
 				value1 = "\COMMAND");
 		}
-
 		else {
 			SelectFieldText(locator1 = "//body");
 
@@ -189,13 +261,18 @@ definition {
 
 		Navigator.openURL();
 
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Web Content");
+		JSONWebcontent.addWebContent(
+			content = "WC WebContent Content",
+			groupName = "WYSIWYG Site Name",
+			title = "Web Content Title");
 
-		WebContentNavigator.gotoAddCP();
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "wysiwyg-site-name");
 
-		PortletEntry.inputTitle(title = "Web Content Title");
+		VerifyElementPresent(
+			key_assetTitle = "Web Content Title",
+			locator1 = "WC#ENTRY_LIST_TITLE");
+
+		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
 
 		SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME_2");
 
@@ -219,12 +296,13 @@ definition {
 				locator1 = "AlloyEditor#EDITOR",
 				value1 = "\COMMAND");
 		}
-
 		else {
 			RobotType.robotTypeShortcut(locator1 = "Ctrl + v");
 		}
 
-		Pause(locator1 = "5000");
+		WaitForElementPresent(
+			key_text = "Sample document for editor area test",
+			locator1 = "CKEditor#BODY_TEXT");
 
 		takeScreenshot();
 
@@ -245,68 +323,17 @@ definition {
 		takeScreenshot();
 	}
 
+	@description = "Verify source content can be previewed"
 	@priority = "4"
-	test AddWebContentArticleWithImageViaURL {
-		Navigator.openURL();
+	@refactordone
+	test CanEditTextInPreviewSourceContent {
+		property portal.acceptance = "true";
 
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Web Content");
+		JSONWebcontent.addWebContent(
+			content = "",
+			groupName = "WYSIWYG Site Name",
+			title = "Web Content Title");
 
-		WebContentNavigator.gotoAddCP();
-
-		PortletEntry.inputTitle(title = "Web Content Title");
-
-		ItemSelector.gotoItemSelectorViaCKEditor();
-
-		ItemSelector.addImageFromURL(
-			imageSourceURL = "https://raw.githubusercontent.com/liferay/liferay-portal/master/portal-web/test/functional/com/liferay/portalweb/dependencies/Document_1.jpg",
-			navTab = "URL");
-
-		PortletEntry.publish();
-
-		WebContentNavigator.gotoPreviewEntryCP(webContentTitle = "Web Content Title");
-
-		SelectFrame(locator1 = "IFrame#MODAL_BODY");
-
-		AssertElementPresent(locator1 = "//img[contains(@src,'Document_1.jpg')]");
-	}
-
-	@priority = "4"
-	test PreviewSourceContent {
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Web Content");
-
-		WebContentNavigator.gotoAddCP();
-
-		PortletEntry.inputTitle(title = "Web Content Title");
-
-		Click(locator1 = "CKEditor#TOOLBAR_SOURCE_BUTTON");
-
-		Click(locator1 = "CKEditor#TOOLBAR_PREVIEW_BUTTON");
-
-		Type.typeCodeMirrorEditorNoError(
-			locator1 = "CKEditor#SOURCE_CODE_DIALOG",
-			value1 = "<h1>Sample Header 1</h1><p>sample text</p>");
-
-		AssertTextEquals.assertPartialText(
-			locator1 = "CKEditor#SOURCE_CODE_DIALOG",
-			value1 = "<h1>Sample Header 1</h1>");
-
-		AssertTextEquals.assertPartialText(
-			locator1 = "CKEditor#SOURCE_CODE_DIALOG",
-			value1 = "<p>sample text</p>");
-
-		SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#CODE_PREVIEW_IFRAME");
-
-		AssertElementPresent(locator1 = "//h1[normalize-space(text())='Sample Header 1']");
-
-		AssertElementPresent(locator1 = "//p[normalize-space(text())='sample text']");
-	}
-
-	@priority = "4"
-	test PreviewSourceContentEditContent {
 		Open(locator1 = "http://www.standards-schmandards.com/exhibits/wysiwyg/sampledoc.htm");
 
 		SelectFieldText(locator1 = "//body");
@@ -315,13 +342,9 @@ definition {
 
 		Navigator.openURL();
 
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Web Content");
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "wysiwyg-site-name");
 
-		WebContentNavigator.gotoAddCP();
-
-		PortletEntry.inputTitle(title = "Web Content Title");
+		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
 
 		SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME_2");
 
@@ -348,15 +371,79 @@ definition {
 		AssertElementPresent(locator1 = "//h1[normalize-space(text())='Sample document for editor area test edit']");
 	}
 
+	@description = "Verify source content can be previewed"
 	@priority = "4"
-	test ViewSourceCodeFormattedInTextView {
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Web Content");
+	@refactordone
+	test CanPreviewSourceContent {
+		property portal.acceptance = "true";
 
-		WebContentNavigator.gotoAddCP();
+		JSONWebcontent.addWebContent(
+			content = "WC WebContent Content",
+			groupName = "WYSIWYG Site Name",
+			title = "Web Content Title");
 
-		PortletEntry.inputTitle(title = "Web Content Title");
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "wysiwyg-site-name");
+
+		VerifyElementPresent(
+			key_assetTitle = "Web Content Title",
+			locator1 = "WC#ENTRY_LIST_TITLE");
+
+		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
+
+		Click(locator1 = "CKEditor#TOOLBAR_SOURCE_BUTTON");
+
+		Click(locator1 = "CKEditor#TOOLBAR_PREVIEW_BUTTON");
+
+		Type.typeCodeMirrorEditorNoError(
+			locator1 = "CKEditor#SOURCE_CODE_DIALOG",
+			value1 = "<h1>Sample Header 1</h1><p>sample text</p>");
+
+		AssertTextEquals.assertPartialText(
+			locator1 = "CKEditor#SOURCE_CODE_DIALOG",
+			value1 = "<h1>Sample Header 1</h1>");
+
+		AssertTextEquals.assertPartialText(
+			locator1 = "CKEditor#SOURCE_CODE_DIALOG",
+			value1 = "<p>sample text</p>");
+
+		SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#CODE_PREVIEW_IFRAME");
+
+		AssertElementPresent(locator1 = "//h1[normalize-space(text())='Sample Header 1']");
+
+		AssertElementPresent(locator1 = "//p[normalize-space(text())='sample text']");
+	}
+
+	@description = "Verify a styling button can be toggled on text"
+	@ignore = "Test Stub"
+	@priority = "5"
+	test CanToggleTextStyling {
+		property portal.acceptance = "false";
+
+		// TODO LPS-133050 CanToggleContentStyling pending implementation
+
+	}
+
+	@description = "Verify styled content can be added from source view"
+	@priority = "4"
+	@refactordone
+	test CanViewSourceCodeFormattedInTextView {
+		property app.server.types = "tomcat";
+		property database.types = "mysql";
+		property environment.acceptance = "true";
+		property portal.acceptance = "true";
+
+		JSONWebcontent.addWebContent(
+			content = "WC WebContent Content",
+			groupName = "WYSIWYG Site Name",
+			title = "Web Content Title");
+
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "wysiwyg-site-name");
+
+		VerifyElementPresent(
+			key_assetTitle = "Web Content Title",
+			locator1 = "WC#ENTRY_LIST_TITLE");
+
+		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
 
 		Click(locator1 = "CKEditor#TOOLBAR_SOURCE_BUTTON");
 
@@ -373,67 +460,53 @@ definition {
 		AssertElementPresent(locator1 = "//p[normalize-space(text())='sample text']");
 	}
 
-	@priority = "4"
-	test ViewWikiFrontPageLeftToRight {
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
+	@description = "Verify that basic CKEditor toolbar is present on DM"
+	@priority = "3"
+	@refactorneeded
+	test DMCanFormatTextWithEditorToolbar {
+		DMNavigator.openDocumentTypesAdmin(siteURLKey = "wysiwyg-site-name");
 
-		SitePages.addPublicPage(pageName = "${pageName}");
+		DMDocumentType.add(
+			dmDocumentTypeDescription = "DM Document Type Description",
+			dmDocumentTypeFieldNames = "Rich Text",
+			dmDocumentTypeName = "DM Document Type Name");
 
-		Navigator.gotoPage(pageName = "${pageName}");
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "wysiwyg-site-name");
 
-		Portlet.addPG(portletName = "Wiki");
+		DMDocument.addCP(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentFile = "Document_1.txt",
+			dmDocumentTitle = "DM Document Title");
 
-		Navigator.gotoPage(pageName = "${pageName}");
+		DMDocument.editCP(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentFile = "Document_1.txt",
+			dmDocumentTitle = "DM Document Title",
+			dmDocumentTypeEdit = "DM Document Type Name");
 
-		WikiPage.addLocalizedFrontPagePG(
-			emptyPageMessage = "This page is empty. Edit it to add some text.",
-			successMessage = "Your request completed successfully.",
-			wikiPageContent = "Wiki Left to Right Content");
+		LexiconEntry.gotoEntryMenuItem(
+			menuItem = "Edit",
+			rowEntry = "DM Document Title");
 
-		Navigator.gotoPage(pageName = "${pageName}");
+		AssertElementPresent(locator1 = "CKEditor#TOOLBAR");
 
-		WikiPage.viewLocalizedFrontPagePG(wikiPageContent = "Wiki Left to Right Content");
-	}
+		Click(locator1 = "CKEditor#TOOLBAR_SOURCE_BUTTON");
 
-	@priority = "4"
-	test ViewWikiFrontPageRightToLeft {
-		property test.name.skip.portal.instance = "WYSIWIGUsecase#ViewWikiFrontPageRightToLeft";
+		Click(locator1 = "CKEditor#TOOLBAR_PREVIEW_BUTTON");
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
+		Type.typeCodeMirrorEditorNoError(
+			locator1 = "CKEditor#SOURCE_CODE_DIALOG",
+			value1 = "<h1>Sample Header 1</h1><p>sample text</p>");
 
-		SitePages.addPublicPage(pageName = "${pageName}");
+		AssertTextEquals.assertPartialText(
+			locator1 = "CKEditor#SOURCE_CODE_DIALOG",
+			value1 = "<h1>Sample Header 1</h1>");
 
-		Navigator.gotoPage(pageName = "${pageName}");
+		AssertTextEquals.assertPartialText(
+			locator1 = "CKEditor#SOURCE_CODE_DIALOG",
+			value1 = "<p>sample text</p>");
 
-		Portlet.addPG(portletName = "Language Selector");
-
-		Navigator.gotoPage(pageName = "${pageName}");
-
-		Portlet.addPG(portletName = "Wiki");
-
-		LanguagePortlet.selectLanguagePG(
-			locale = "ar_SA",
-			textIcon = "العربية-السعودية");
-
-		WikiPage.addLocalizedFrontPagePG(
-			emptyPageMessage = "هذه الصفحة فارغة. قم بتحريرها لإضافة نص.",
-			rtl = "true",
-			successMessage = "نجاح:تم تنفيذ طلبك بنجاح",
-			wikiPageContent = "Wiki Right to Left يحتوى");
-
-		Navigator.gotoPage(pageName = "${pageName}");
-
-		WikiPage.viewLocalizedFrontPagePG(
-			rightToLeft = "true",
-			wikiPageContent = "Wiki Right to Left يحتوى");
-
-		LanguagePortlet.selectLanguagePG(
-			locale = "en_US",
-			textIcon = "english-United States");
+		takeScreenshot();
 	}
 
 }

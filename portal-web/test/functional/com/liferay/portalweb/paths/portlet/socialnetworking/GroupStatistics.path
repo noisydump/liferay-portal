@@ -2,11 +2,13 @@
 <head>
 <title>GroupStatistics</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">GroupStatistics</td></tr>
 </thead>
+
 <tbody>
 <tr>
 	<td>SITE_STATISTICS_PANEL</td>
@@ -18,7 +20,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--GROUP_STATISTICS_BODY-->
+
 <tr>
 	<td>GROUP_STATISTICS_BODY_CHART</td>
 	<td>//div[contains(@class,'chart-column')]//div[contains(@class,'group-statistics-chart')]</td>

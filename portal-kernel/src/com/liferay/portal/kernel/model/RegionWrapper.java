@@ -153,6 +153,11 @@ public class RegionWrapper
 		}
 	}
 
+	@Override
+	public Region cloneWithOriginalValues() {
+		return wrap(model.cloneWithOriginalValues());
+	}
+
 	/**
 	 * Returns the active of this region.
 	 *
@@ -306,6 +311,11 @@ public class RegionWrapper
 	@Override
 	public String getTitle(String languageId, boolean useDefault) {
 		return model.getTitle(languageId, useDefault);
+	}
+
+	@Override
+	public String getTitleCurrentLanguageId() {
+		return model.getTitleCurrentLanguageId();
 	}
 
 	@Override
@@ -496,6 +506,11 @@ public class RegionWrapper
 	@Override
 	public void setRegionId(long regionId) {
 		model.setRegionId(regionId);
+	}
+
+	@Override
+	public void setTitleCurrentLanguageId(String languageId) {
+		model.setTitleCurrentLanguageId(languageId);
 	}
 
 	/**

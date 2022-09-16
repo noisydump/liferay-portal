@@ -16,20 +16,25 @@ package com.liferay.dispatch.service.base;
 
 import com.liferay.dispatch.model.DispatchLog;
 import com.liferay.dispatch.service.DispatchLogService;
+import com.liferay.dispatch.service.DispatchLogServiceUtil;
 import com.liferay.dispatch.service.persistence.DispatchLogPersistence;
-import com.liferay.dispatch.service.persistence.DispatchTriggerPersistence;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.service.BaseServiceImpl;
 import com.liferay.portal.kernel.util.PortalUtil;
 
+import java.lang.reflect.Field;
+
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -50,8 +55,13 @@ public abstract class DispatchLogServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>DispatchLogService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.dispatch.service.DispatchLogServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>DispatchLogService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>DispatchLogServiceUtil</code>.
 	 */
+	@Deactivate
+	protected void deactivate() {
+		_setServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -62,6 +72,8 @@ public abstract class DispatchLogServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		dispatchLogService = (DispatchLogService)aopProxy;
+
+		_setServiceUtilService(dispatchLogService);
 	}
 
 	/**
@@ -106,6 +118,20 @@ public abstract class DispatchLogServiceBaseImpl
 		}
 	}
 
+	private void _setServiceUtilService(DispatchLogService dispatchLogService) {
+		try {
+			Field field = DispatchLogServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, dispatchLogService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@Reference
 	protected com.liferay.dispatch.service.DispatchLogLocalService
 		dispatchLogLocalService;
@@ -116,29 +142,10 @@ public abstract class DispatchLogServiceBaseImpl
 	protected DispatchLogPersistence dispatchLogPersistence;
 
 	@Reference
-	protected DispatchTriggerPersistence dispatchTriggerPersistence;
-
-	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@Reference
-	protected com.liferay.portal.kernel.service.ClassNameLocalService
-		classNameLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.ClassNameService
-		classNameService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.ResourceLocalService
-		resourceLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserService userService;
+	private static final Log _log = LogFactoryUtil.getLog(
+		DispatchLogServiceBaseImpl.class);
 
 }

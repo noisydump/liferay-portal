@@ -14,8 +14,6 @@
 
 package com.liferay.portal.kernel.model;
 
-import com.liferay.portal.kernel.bean.AutoEscape;
-
 import org.osgi.annotation.versioning.ProviderType;
 
 /**
@@ -31,7 +29,7 @@ import org.osgi.annotation.versioning.ProviderType;
  */
 @ProviderType
 public interface PortalPreferencesModel
-	extends BaseModel<PortalPreferences>, MVCCModel {
+	extends BaseModel<PortalPreferences>, MVCCModel, ShardedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -84,6 +82,22 @@ public interface PortalPreferencesModel
 	public void setPortalPreferencesId(long portalPreferencesId);
 
 	/**
+	 * Returns the company ID of this portal preferences.
+	 *
+	 * @return the company ID of this portal preferences
+	 */
+	@Override
+	public long getCompanyId();
+
+	/**
+	 * Sets the company ID of this portal preferences.
+	 *
+	 * @param companyId the company ID of this portal preferences
+	 */
+	@Override
+	public void setCompanyId(long companyId);
+
+	/**
 	 * Returns the owner ID of this portal preferences.
 	 *
 	 * @return the owner ID of this portal preferences
@@ -111,19 +125,7 @@ public interface PortalPreferencesModel
 	 */
 	public void setOwnerType(int ownerType);
 
-	/**
-	 * Returns the preferences of this portal preferences.
-	 *
-	 * @return the preferences of this portal preferences
-	 */
-	@AutoEscape
-	public String getPreferences();
-
-	/**
-	 * Sets the preferences of this portal preferences.
-	 *
-	 * @param preferences the preferences of this portal preferences
-	 */
-	public void setPreferences(String preferences);
+	@Override
+	public PortalPreferences cloneWithOriginalValues();
 
 }

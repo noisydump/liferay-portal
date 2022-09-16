@@ -15,7 +15,7 @@
 package com.liferay.roles.admin.web.internal.portlet.configuration.icon;
 
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Role;
@@ -25,7 +25,7 @@ import com.liferay.portal.kernel.portlet.configuration.icon.BasePortletConfigura
 import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfigurationIcon;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.RoleService;
-import com.liferay.portal.kernel.service.permission.RolePermissionUtil;
+import com.liferay.portal.kernel.service.permission.RolePermission;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -56,7 +56,7 @@ public class PermissionsPortletConfigurationIcon
 
 	@Override
 	public String getMessage(PortletRequest portletRequest) {
-		return LanguageUtil.get(
+		return _language.get(
 			getResourceBundle(getLocale(portletRequest)), "permissions");
 	}
 
@@ -89,7 +89,7 @@ public class PermissionsPortletConfigurationIcon
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(exception, exception);
+				_log.debug(exception);
 			}
 		}
 
@@ -115,7 +115,7 @@ public class PermissionsPortletConfigurationIcon
 			String roleName = role.getName();
 
 			if (!roleName.equals(RoleConstants.OWNER) &&
-				RolePermissionUtil.contains(
+				_rolePermission.contains(
 					themeDisplay.getPermissionChecker(), roleId,
 					ActionKeys.PERMISSIONS)) {
 
@@ -126,7 +126,7 @@ public class PermissionsPortletConfigurationIcon
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(exception, exception);
+				_log.debug(exception);
 			}
 		}
 
@@ -138,11 +138,6 @@ public class PermissionsPortletConfigurationIcon
 		return true;
 	}
 
-	@Reference(unbind = "-")
-	protected void setRoleService(RoleService roleService) {
-		_roleService = roleService;
-	}
-
 	private long _getRoleId(PortletRequest portletRequest) {
 		return ParamUtil.getLong(
 			_portal.getHttpServletRequest(portletRequest), "roleId");
@@ -152,8 +147,15 @@ public class PermissionsPortletConfigurationIcon
 		PermissionsPortletConfigurationIcon.class);
 
 	@Reference
+	private Language _language;
+
+	@Reference
 	private Portal _portal;
 
+	@Reference
+	private RolePermission _rolePermission;
+
+	@Reference
 	private RoleService _roleService;
 
 }

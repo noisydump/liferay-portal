@@ -23,19 +23,19 @@ import com.liferay.layout.display.page.LayoutDisplayPageObjectProvider;
 import com.liferay.layout.display.page.LayoutDisplayPageProvider;
 import com.liferay.layout.display.page.constants.LayoutDisplayPageWebKeys;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Tuple;
 
 import java.util.Locale;
-import java.util.ResourceBundle;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Pavel Savinov
@@ -60,7 +60,7 @@ public class ContentFlagsFragmentRenderer
 					"fields",
 					JSONUtil.putAll(
 						JSONUtil.put(
-							"label", "content"
+							"label", "item"
 						).put(
 							"name", "itemSelector"
 						).put(
@@ -83,10 +83,7 @@ public class ContentFlagsFragmentRenderer
 
 	@Override
 	public String getLabel(Locale locale) {
-		ResourceBundle resourceBundle = resourceBundleLoader.loadResourceBundle(
-			locale);
-
-		return LanguageUtil.get(resourceBundle, "content-flags");
+		return _language.get(locale, "content-flags");
 	}
 
 	@Override
@@ -115,13 +112,13 @@ public class ContentFlagsFragmentRenderer
 
 		try {
 			flagsTag.setMessage(
-				LanguageUtil.get(
+				_language.get(
 					httpServletRequest,
 					GetterUtil.getString(
 						fragmentEntryConfigurationParser.getFieldValue(
 							getConfiguration(fragmentRendererContext),
 							fragmentEntryLink.getEditableValues(),
-							"message"))));
+							fragmentRendererContext.getLocale(), "message"))));
 
 			LayoutDisplayPageProvider<?> layoutDisplayPageProvider =
 				(LayoutDisplayPageProvider<?>)httpServletRequest.getAttribute(
@@ -150,5 +147,8 @@ public class ContentFlagsFragmentRenderer
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		ContentFlagsFragmentRenderer.class);
+
+	@Reference
+	private Language _language;
 
 }

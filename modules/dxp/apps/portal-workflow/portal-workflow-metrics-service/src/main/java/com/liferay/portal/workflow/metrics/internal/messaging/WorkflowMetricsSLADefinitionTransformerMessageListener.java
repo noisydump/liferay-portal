@@ -14,7 +14,7 @@
 
 package com.liferay.portal.workflow.metrics.internal.messaging;
 
-import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
+import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -22,7 +22,6 @@ import com.liferay.portal.kernel.messaging.BaseMessageListener;
 import com.liferay.portal.kernel.messaging.DestinationNames;
 import com.liferay.portal.kernel.messaging.Message;
 import com.liferay.portal.kernel.messaging.MessageListener;
-import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.module.framework.ModuleServiceLifecycle;
 import com.liferay.portal.kernel.scheduler.SchedulerEngineHelper;
 import com.liferay.portal.kernel.scheduler.SchedulerEntry;
@@ -40,6 +39,7 @@ import com.liferay.portal.search.hits.SearchHit;
 import com.liferay.portal.search.hits.SearchHits;
 import com.liferay.portal.search.query.BooleanQuery;
 import com.liferay.portal.search.query.Queries;
+import com.liferay.portal.workflow.metrics.internal.configuration.WorkflowMetricsConfiguration;
 import com.liferay.portal.workflow.metrics.internal.sla.transformer.WorkflowMetricsSLADefinitionTransformer;
 import com.liferay.portal.workflow.metrics.search.index.name.WorkflowMetricsIndexNameBuilder;
 
@@ -52,14 +52,12 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Rafael Praxedes
  */
 @Component(
+	configurationPid = "com.liferay.portal.workflow.metrics.internal.configuration.WorkflowMetricsConfiguration",
 	immediate = true,
 	service = {
 		MessageListener.class,
@@ -72,12 +70,17 @@ public class WorkflowMetricsSLADefinitionTransformerMessageListener
 	@Activate
 	@Modified
 	protected void activate(Map<String, Object> properties) {
+		_workflowMetricsConfiguration = ConfigurableUtil.createConfigurable(
+			WorkflowMetricsConfiguration.class, properties);
+
 		Class<?> clazz = getClass();
 
 		String className = clazz.getName();
 
 		Trigger trigger = _triggerFactory.createTrigger(
-			className, className, null, null, 1, TimeUnit.MINUTE);
+			className, className, null, null,
+			_workflowMetricsConfiguration.checkSLADefinitionsJobInterval(),
+			TimeUnit.MINUTE);
 
 		SchedulerEntry schedulerEntry = new SchedulerEntryImpl(
 			className, trigger);
@@ -93,33 +96,13 @@ public class WorkflowMetricsSLADefinitionTransformerMessageListener
 
 	@Override
 	protected void doReceive(Message message) throws Exception {
-		if (_searchEngineAdapter == null) {
-			return;
-		}
-
-		ActionableDynamicQuery actionableDynamicQuery =
-			_companyLocalService.getActionableDynamicQuery();
-
-		actionableDynamicQuery.setPerformActionMethod(
-			(Company company) -> _transform(company.getCompanyId()));
-
-		actionableDynamicQuery.performActions();
+		_companyLocalService.forEachCompanyId(
+			companyId -> _transform(companyId));
 	}
 
 	@Override
 	protected void doReceive(Message message, long companyId) {
-		if (_searchEngineAdapter == null) {
-			return;
-		}
-
 		_transform(companyId);
-	}
-
-	@Reference(
-		target = ModuleServiceLifecycle.PORTLETS_INITIALIZED, unbind = "-"
-	)
-	protected void setModuleServiceLifecycle(
-		ModuleServiceLifecycle moduleServiceLifecycle) {
 	}
 
 	private BooleanQuery _createBooleanQuery(long companyId) {
@@ -179,7 +162,7 @@ public class WorkflowMetricsSLADefinitionTransformerMessageListener
 						document.getLong("processId"));
 				}
 				catch (PortalException portalException) {
-					_log.error(portalException, portalException);
+					_log.error(portalException);
 				}
 			}
 		);
@@ -191,6 +174,9 @@ public class WorkflowMetricsSLADefinitionTransformerMessageListener
 	@Reference
 	private CompanyLocalService _companyLocalService;
 
+	@Reference(target = ModuleServiceLifecycle.PORTLETS_INITIALIZED)
+	private ModuleServiceLifecycle _moduleServiceLifecycle;
+
 	@Reference(target = "(workflow.metrics.index.entity.name=process)")
 	private WorkflowMetricsIndexNameBuilder
 		_processWorkflowMetricsIndexNameBuilder;
@@ -201,16 +187,13 @@ public class WorkflowMetricsSLADefinitionTransformerMessageListener
 	@Reference
 	private SchedulerEngineHelper _schedulerEngineHelper;
 
-	@Reference(
-		cardinality = ReferenceCardinality.OPTIONAL,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY,
-		target = "(search.engine.impl=Elasticsearch)"
-	)
+	@Reference(target = "(search.engine.impl=Elasticsearch)")
 	private volatile SearchEngineAdapter _searchEngineAdapter;
 
 	@Reference
 	private TriggerFactory _triggerFactory;
+
+	private volatile WorkflowMetricsConfiguration _workflowMetricsConfiguration;
 
 	@Reference
 	private WorkflowMetricsSLADefinitionTransformer

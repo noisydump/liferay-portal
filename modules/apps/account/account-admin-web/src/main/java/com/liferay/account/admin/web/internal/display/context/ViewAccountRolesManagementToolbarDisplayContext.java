@@ -15,11 +15,16 @@
 package com.liferay.account.admin.web.internal.display.context;
 
 import com.liferay.account.admin.web.internal.display.AccountRoleDisplay;
+import com.liferay.account.admin.web.internal.security.permission.resource.AccountEntryPermission;
+import com.liferay.account.admin.web.internal.security.permission.resource.AccountRolePermission;
+import com.liferay.account.constants.AccountActionKeys;
 import com.liferay.frontend.taglib.clay.servlet.taglib.display.context.SearchContainerManagementToolbarDisplayContext;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -28,11 +33,14 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.WebKeys;
 
+import java.util.Collections;
 import java.util.List;
 
-import javax.portlet.ActionRequest;
 import javax.portlet.PortletURL;
 
 import javax.servlet.http.HttpServletRequest;
@@ -57,59 +65,64 @@ public class ViewAccountRolesManagementToolbarDisplayContext
 	@Override
 	public List<DropdownItem> getActionDropdownItems() {
 		return DropdownItemList.of(
-			() -> {
-				DropdownItem dropdownItem = new DropdownItem();
+			DropdownItemBuilder.putData(
+				"action", "deleteAccountRoles"
+			).putData(
+				"deleteAccountRolesURL",
+				PortletURLBuilder.createActionURL(
+					liferayPortletResponse
+				).setActionName(
+					"/account_admin/delete_account_roles"
+				).setRedirect(
+					currentURLObj
+				).buildString()
+			).setIcon(
+				"times-circle"
+			).setLabel(
+				LanguageUtil.get(httpServletRequest, "delete")
+			).setQuickAction(
+				true
+			).build());
+	}
 
-				dropdownItem.putData("action", "deleteAccountRoles");
+	public List<String> getAvailableActions(
+		AccountRoleDisplay accountRoleDisplay) {
 
-				PortletURL deleteAccountRolesURL =
-					liferayPortletResponse.createActionURL();
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
-				deleteAccountRolesURL.setParameter(
-					ActionRequest.ACTION_NAME,
-					"/account_admin/delete_account_roles");
-				deleteAccountRolesURL.setParameter(
-					"redirect", currentURLObj.toString());
+		if (AccountRolePermission.contains(
+				themeDisplay.getPermissionChecker(),
+				accountRoleDisplay.getAccountRoleId(), ActionKeys.DELETE)) {
 
-				dropdownItem.putData(
-					"deleteAccountRolesURL", deleteAccountRolesURL.toString());
+			return Collections.<String>singletonList("deleteAccountRoles");
+		}
 
-				dropdownItem.setIcon("times-circle");
-				dropdownItem.setLabel(
-					LanguageUtil.get(httpServletRequest, "delete"));
-				dropdownItem.setQuickAction(true);
-
-				return dropdownItem;
-			});
+		return Collections.<String>emptyList();
 	}
 
 	@Override
 	public String getClearResultsURL() {
-		PortletURL clearResultsURL = getPortletURL();
-
-		clearResultsURL.setParameter("keywords", StringPool.BLANK);
-
-		return clearResultsURL.toString();
+		return PortletURLBuilder.create(
+			getPortletURL()
+		).setKeywords(
+			StringPool.BLANK
+		).buildString();
 	}
 
 	@Override
 	public CreationMenu getCreationMenu() {
 		return CreationMenuBuilder.addPrimaryDropdownItem(
-			dropdownItem -> {
-				dropdownItem.setHref(
-					liferayPortletResponse.createRenderURL(), "mvcPath",
-					"/account_entries_admin/edit_account_role.jsp",
-					"accountEntryId",
-					ParamUtil.getString(httpServletRequest, "accountEntryId"));
-				dropdownItem.setLabel(
-					LanguageUtil.get(httpServletRequest, "add-account-role"));
-			}
+			DropdownItemBuilder.setHref(
+				liferayPortletResponse.createRenderURL(), "mvcPath",
+				"/account_entries_admin/edit_account_role.jsp",
+				"accountEntryId",
+				ParamUtil.getString(httpServletRequest, "accountEntryId")
+			).setLabel(
+				LanguageUtil.get(httpServletRequest, "add-account-role")
+			).build()
 		).build();
-	}
-
-	@Override
-	public String getDefaultEventHandler() {
-		return "ACCOUNT_ROLES_MANAGEMENT_TOOLBAR_DEFAULT_EVENT_HANDLER";
 	}
 
 	@Override
@@ -119,7 +132,7 @@ public class ViewAccountRolesManagementToolbarDisplayContext
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(exception, exception);
+				_log.warn(exception);
 			}
 
 			return liferayPortletResponse.createRenderURL();
@@ -136,6 +149,18 @@ public class ViewAccountRolesManagementToolbarDisplayContext
 	@Override
 	public Boolean isDisabled() {
 		return false;
+	}
+
+	@Override
+	public Boolean isShowCreationMenu() {
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		return AccountEntryPermission.contains(
+			themeDisplay.getPermissionChecker(),
+			ParamUtil.getLong(httpServletRequest, "accountEntryId"),
+			AccountActionKeys.ADD_ACCOUNT_ROLE);
 	}
 
 	@Override

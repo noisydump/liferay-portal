@@ -18,15 +18,14 @@ import com.liferay.portal.json.JSONFactoryImpl;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.util.PropsImpl;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import javax.servlet.http.HttpServletRequest;
 
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -36,10 +35,9 @@ import org.springframework.mock.web.MockHttpServletRequest;
  */
 public class CheckboxMultipleDDMFormFieldValueRequestParameterRetrieverTest {
 
-	@BeforeClass
-	public static void setUpClass() throws Exception {
-		PropsUtil.setProps(new PropsImpl());
-	}
+	@ClassRule
+	public static LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Before
 	public void setUp() {
@@ -52,14 +50,14 @@ public class CheckboxMultipleDDMFormFieldValueRequestParameterRetrieverTest {
 
 	@Test
 	public void testCompletedSubmission() {
-		String expectedResult = createJSONArrayString("Option 2");
+		String expectedResult = _createJSONArrayString("Option 2");
 
-		String defaultDDMFormFieldParameterValue = createJSONArrayString(
+		String defaultDDMFormFieldParameterValue = _createJSONArrayString(
 			"Option 1");
 
 		String actualResult =
 			_checkboxMultipleDDMFormFieldValueRequestParameterRetriever.get(
-				createHttpServletRequest("Option 2"),
+				_createHttpServletRequest("Option 2"),
 				_CHECKBOX_MULTIPLE_SUBMISSION,
 				defaultDDMFormFieldParameterValue);
 
@@ -70,18 +68,18 @@ public class CheckboxMultipleDDMFormFieldValueRequestParameterRetrieverTest {
 	public void testEmptySubmission() {
 		String expectedResult = "[]";
 
-		String defaultDDMFormFieldParameterValue = createJSONArrayString(
+		String defaultDDMFormFieldParameterValue = _createJSONArrayString(
 			"Option 1");
 
 		String actualResult =
 			_checkboxMultipleDDMFormFieldValueRequestParameterRetriever.get(
-				createHttpServletRequest(), _CHECKBOX_MULTIPLE_SUBMISSION,
+				_createHttpServletRequest(), _CHECKBOX_MULTIPLE_SUBMISSION,
 				defaultDDMFormFieldParameterValue);
 
 		Assert.assertEquals(expectedResult, actualResult);
 	}
 
-	protected MockHttpServletRequest createHttpServletRequest() {
+	private MockHttpServletRequest _createHttpServletRequest() {
 		MockHttpServletRequest mockHttpServletRequest =
 			new MockHttpServletRequest();
 
@@ -95,9 +93,9 @@ public class CheckboxMultipleDDMFormFieldValueRequestParameterRetrieverTest {
 		return mockHttpServletRequest;
 	}
 
-	protected HttpServletRequest createHttpServletRequest(String... strings) {
+	private HttpServletRequest _createHttpServletRequest(String... strings) {
 		MockHttpServletRequest mockHttpServletRequest =
-			createHttpServletRequest();
+			_createHttpServletRequest();
 
 		mockHttpServletRequest.addParameter(
 			_CHECKBOX_MULTIPLE_SUBMISSION, strings);
@@ -105,7 +103,7 @@ public class CheckboxMultipleDDMFormFieldValueRequestParameterRetrieverTest {
 		return mockHttpServletRequest;
 	}
 
-	protected String createJSONArrayString(String... strings) {
+	private String _createJSONArrayString(String... strings) {
 		JSONArray jsonArray = _jsonFactory.createJSONArray();
 
 		for (String string : strings) {

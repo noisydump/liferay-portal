@@ -28,6 +28,7 @@ import com.liferay.commerce.discount.model.CommerceDiscount;
 import com.liferay.commerce.discount.service.CommerceDiscountLocalService;
 import com.liferay.commerce.discount.service.CommerceDiscountUsageEntryLocalService;
 import com.liferay.commerce.discount.test.util.CommerceDiscountTestUtil;
+import com.liferay.commerce.inventory.model.CommerceInventoryWarehouse;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.order.engine.CommerceOrderEngine;
 import com.liferay.commerce.price.CommerceProductPrice;
@@ -43,10 +44,10 @@ import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CommerceCatalogLocalService;
 import com.liferay.commerce.product.test.util.CPTestUtil;
 import com.liferay.commerce.service.CommerceOrderLocalService;
+import com.liferay.commerce.test.util.CommerceInventoryTestUtil;
 import com.liferay.commerce.test.util.CommerceTestUtil;
-import com.liferay.commerce.test.util.TestCommerceContext;
+import com.liferay.commerce.test.util.context.TestCommerceContext;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
@@ -54,9 +55,6 @@ import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUti
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
-import com.liferay.portal.kernel.test.rule.DataGuard;
-import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
-import com.liferay.portal.kernel.test.util.CompanyTestUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
@@ -85,7 +83,6 @@ import org.junit.runner.RunWith;
 /**
  * @author Riccardo Alberti
  */
-@DataGuard(scope = DataGuard.Scope.METHOD)
 @RunWith(Arquillian.class)
 public class CommerceDiscountUsageTest {
 
@@ -97,17 +94,14 @@ public class CommerceDiscountUsageTest {
 
 	@Before
 	public void setUp() throws Exception {
-		_company = CompanyTestUtil.addCompany();
+		_group = GroupTestUtil.addGroup();
 
-		_user = UserTestUtil.addUser(_company);
+		_user = UserTestUtil.addUser();
 
 		PermissionThreadLocal.setPermissionChecker(
 			PermissionCheckerFactoryUtil.create(_user));
 
 		PrincipalThreadLocal.setName(_user.getUserId());
-
-		_group = GroupTestUtil.addGroup(
-			_company.getCompanyId(), _user.getUserId(), 0);
 
 		_commerceAccount =
 			_commerceAccountLocalService.getPersonalCommerceAccount(
@@ -115,8 +109,6 @@ public class CommerceDiscountUsageTest {
 
 		_commerceCurrency = CommerceCurrencyTestUtil.addCommerceCurrency(
 			_group.getCompanyId());
-
-		_commerceOrders = new ArrayList<>();
 	}
 
 	@After
@@ -170,8 +162,8 @@ public class CommerceDiscountUsageTest {
 
 		CommerceCatalog catalog =
 			_commerceCatalogLocalService.addCommerceCatalog(
-				RandomTestUtil.randomString(), _commerceCurrency.getCode(),
-				LocaleUtil.US.getDisplayLanguage(), null,
+				null, RandomTestUtil.randomString(),
+				_commerceCurrency.getCode(), LocaleUtil.US.getDisplayLanguage(),
 				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		CPInstance cpInstance = CPTestUtil.addCPInstanceFromCatalog(
@@ -215,6 +207,20 @@ public class CommerceDiscountUsageTest {
 
 		_commerceOrderLocalService.updateCommerceOrder(commerceOrder);
 
+		CommerceInventoryWarehouse commerceInventoryWarehouse =
+			CommerceInventoryTestUtil.addCommerceInventoryWarehouse(
+				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+
+		CommerceTestUtil.addWarehouseCommerceChannelRel(
+			commerceInventoryWarehouse.getCommerceInventoryWarehouseId(),
+			commerceChannel.getCommerceChannelId());
+
+		int quantity = 10;
+
+		CommerceInventoryTestUtil.addCommerceInventoryWarehouseItem(
+			_user.getUserId(), commerceInventoryWarehouse, cpInstance.getSku(),
+			quantity);
+
 		String couponCode = StringUtil.randomString();
 
 		CommerceDiscount commerceDiscount =
@@ -223,6 +229,14 @@ public class CommerceDiscountUsageTest {
 				CommerceDiscountConstants.LIMITATION_TYPE_LIMITED, 3, 0,
 				CommerceDiscountConstants.TARGET_PRODUCTS,
 				cpDefinition.getCPDefinitionId());
+
+		CommerceTestUtil.addCommerceOrderItem(
+			commerceOrder.getCommerceOrderId(), cpInstance.getCPInstanceId(), 1,
+			commerceContext);
+
+		commerceContext = new TestCommerceContext(
+			_commerceCurrency, commerceChannel, _user, _group, _commerceAccount,
+			commerceOrder);
 
 		commerceProductPrice =
 			_commerceProductPriceCalculation.getCommerceProductPrice(
@@ -305,8 +319,8 @@ public class CommerceDiscountUsageTest {
 
 		CommerceCatalog catalog =
 			_commerceCatalogLocalService.addCommerceCatalog(
-				RandomTestUtil.randomString(), _commerceCurrency.getCode(),
-				LocaleUtil.US.getDisplayLanguage(), null,
+				null, RandomTestUtil.randomString(),
+				_commerceCurrency.getCode(), LocaleUtil.US.getDisplayLanguage(),
 				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		CPInstance cpInstance = CPTestUtil.addCPInstanceFromCatalog(
@@ -325,6 +339,20 @@ public class CommerceDiscountUsageTest {
 			cpInstance.getCPInstanceUuid(),
 			commercePriceList.getCommercePriceListId(), priceEntryPrice);
 
+		CommerceInventoryWarehouse commerceInventoryWarehouse =
+			CommerceInventoryTestUtil.addCommerceInventoryWarehouse(
+				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+
+		CommerceTestUtil.addWarehouseCommerceChannelRel(
+			commerceInventoryWarehouse.getCommerceInventoryWarehouseId(),
+			commerceChannel.getCommerceChannelId());
+
+		int quantity = 10;
+
+		CommerceInventoryTestUtil.addCommerceInventoryWarehouseItem(
+			_user.getUserId(), commerceInventoryWarehouse, cpInstance.getSku(),
+			quantity);
+
 		String couponCode = StringUtil.randomString();
 
 		CommerceDiscount commerceDiscount =
@@ -336,6 +364,10 @@ public class CommerceDiscountUsageTest {
 		CommerceContext commerceContext = new TestCommerceContext(
 			_commerceCurrency, commerceChannel, _user, _group, _commerceAccount,
 			commerceOrder);
+
+		CommerceTestUtil.addCommerceOrderItem(
+			commerceOrder.getCommerceOrderId(), cpInstance.getCPInstanceId(), 1,
+			commerceContext);
 
 		commerceOrder = _commerceOrderLocalService.applyCouponCode(
 			commerceOrder.getCommerceOrderId(), couponCode, commerceContext);
@@ -490,8 +522,8 @@ public class CommerceDiscountUsageTest {
 
 		CommerceCatalog catalog =
 			_commerceCatalogLocalService.addCommerceCatalog(
-				RandomTestUtil.randomString(), _commerceCurrency.getCode(),
-				LocaleUtil.US.getDisplayLanguage(), null,
+				null, RandomTestUtil.randomString(),
+				_commerceCurrency.getCode(), LocaleUtil.US.getDisplayLanguage(),
 				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		CPInstance cpInstance = CPTestUtil.addCPInstanceFromCatalog(
@@ -510,6 +542,20 @@ public class CommerceDiscountUsageTest {
 				StringPool.BLANK, cpDefinition.getCProductId(),
 				cpInstance.getCPInstanceUuid(),
 				commercePriceList.getCommercePriceListId(), priceEntryPrice);
+
+		CommerceInventoryWarehouse commerceInventoryWarehouse =
+			CommerceInventoryTestUtil.addCommerceInventoryWarehouse(
+				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+
+		CommerceTestUtil.addWarehouseCommerceChannelRel(
+			commerceInventoryWarehouse.getCommerceInventoryWarehouseId(),
+			commerceChannel.getCommerceChannelId());
+
+		int quantity = 1000;
+
+		CommerceInventoryTestUtil.addCommerceInventoryWarehouseItem(
+			_user.getUserId(), commerceInventoryWarehouse, cpInstance.getSku(),
+			quantity);
 
 		String couponCode = StringUtil.randomString();
 
@@ -533,6 +579,10 @@ public class CommerceDiscountUsageTest {
 			CommerceContext commerceContext = new TestCommerceContext(
 				_commerceCurrency, commerceChannel, _user, _group,
 				_commerceAccount, commerceOrder);
+
+			CommerceTestUtil.addCommerceOrderItem(
+				commerceOrder.getCommerceOrderId(),
+				cpInstance.getCPInstanceId(), 1, commerceContext);
 
 			commerceOrder = _commerceOrderLocalService.applyCouponCode(
 				commerceOrder.getCommerceOrderId(), couponCode,
@@ -598,6 +648,10 @@ public class CommerceDiscountUsageTest {
 
 		_commerceOrders.add(commerceOrder);
 
+		CommerceTestUtil.addCommerceOrderItem(
+			commerceOrder.getCommerceOrderId(), cpInstance.getCPInstanceId(), 1,
+			commerceContext);
+
 		commerceOrder = _commerceOrderLocalService.applyCouponCode(
 			commerceOrder.getCommerceOrderId(), couponCode, commerceContext);
 
@@ -645,6 +699,8 @@ public class CommerceDiscountUsageTest {
 			commerceOrder, _user.getUserId());
 	}
 
+	private static User _user;
+
 	private CommerceAccount _commerceAccount;
 
 	@Inject
@@ -668,7 +724,7 @@ public class CommerceDiscountUsageTest {
 	@Inject
 	private CommerceOrderLocalService _commerceOrderLocalService;
 
-	private List<CommerceOrder> _commerceOrders;
+	private final List<CommerceOrder> _commerceOrders = new ArrayList<>();
 
 	@Inject
 	private CommercePriceListLocalService _commercePriceListLocalService;
@@ -676,11 +732,7 @@ public class CommerceDiscountUsageTest {
 	@Inject
 	private CommerceProductPriceCalculation _commerceProductPriceCalculation;
 
-	@DeleteAfterTestRun
-	private Company _company;
-
 	private Group _group;
-	private User _user;
 
 	@Inject
 	private UserLocalService _userLocalService;

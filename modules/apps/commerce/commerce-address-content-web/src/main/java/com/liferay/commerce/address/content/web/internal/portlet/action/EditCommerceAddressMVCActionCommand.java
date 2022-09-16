@@ -14,7 +14,7 @@
 
 package com.liferay.commerce.address.content.web.internal.portlet.action;
 
-import com.liferay.commerce.account.model.CommerceAccount;
+import com.liferay.account.model.AccountEntry;
 import com.liferay.commerce.constants.CommercePortletKeys;
 import com.liferay.commerce.exception.CommerceAddressCityException;
 import com.liferay.commerce.exception.CommerceAddressCountryException;
@@ -51,17 +51,6 @@ import org.osgi.service.component.annotations.Reference;
 )
 public class EditCommerceAddressMVCActionCommand extends BaseMVCActionCommand {
 
-	protected void deleteCommerceAddress(ActionRequest actionRequest)
-		throws Exception {
-
-		long commerceAddressId = ParamUtil.getLong(
-			actionRequest, "commerceAddressId");
-
-		if (commerceAddressId > 0) {
-			_commerceAddressService.deleteCommerceAddress(commerceAddressId);
-		}
-	}
-
 	@Override
 	protected void doProcessAction(
 			ActionRequest actionRequest, ActionResponse actionResponse)
@@ -71,12 +60,12 @@ public class EditCommerceAddressMVCActionCommand extends BaseMVCActionCommand {
 
 		try {
 			if (cmd.equals(Constants.DELETE)) {
-				deleteCommerceAddress(actionRequest);
+				_deleteCommerceAddress(actionRequest);
 			}
 			else if (cmd.equals(Constants.ADD) ||
 					 cmd.equals(Constants.UPDATE)) {
 
-				updateCommerceAddress(actionRequest);
+				_updateCommerceAddress(actionRequest);
 			}
 		}
 		catch (Exception exception) {
@@ -107,7 +96,18 @@ public class EditCommerceAddressMVCActionCommand extends BaseMVCActionCommand {
 		hideDefaultSuccessMessage(actionRequest);
 	}
 
-	protected void updateCommerceAddress(ActionRequest actionRequest)
+	private void _deleteCommerceAddress(ActionRequest actionRequest)
+		throws Exception {
+
+		long commerceAddressId = ParamUtil.getLong(
+			actionRequest, "commerceAddressId");
+
+		if (commerceAddressId > 0) {
+			_commerceAddressService.deleteCommerceAddress(commerceAddressId);
+		}
+	}
+
+	private void _updateCommerceAddress(ActionRequest actionRequest)
 		throws Exception {
 
 		long commerceAddressId = ParamUtil.getLong(
@@ -120,10 +120,8 @@ public class EditCommerceAddressMVCActionCommand extends BaseMVCActionCommand {
 		String street3 = ParamUtil.getString(actionRequest, "street3");
 		String city = ParamUtil.getString(actionRequest, "city");
 		String zip = ParamUtil.getString(actionRequest, "zip");
-		long commerceCountryId = ParamUtil.getLong(
-			actionRequest, "commerceCountryId");
-		long commerceRegionId = ParamUtil.getLong(
-			actionRequest, "commerceRegionId");
+		long regionId = ParamUtil.getLong(actionRequest, "regionId");
+		long countryId = ParamUtil.getLong(actionRequest, "countryId");
 		String phoneNumber = ParamUtil.getString(actionRequest, "phoneNumber");
 		boolean defaultBilling = ParamUtil.getBoolean(
 			actionRequest, "defaultBilling");
@@ -138,16 +136,16 @@ public class EditCommerceAddressMVCActionCommand extends BaseMVCActionCommand {
 				actionRequest, "commerceAccountId");
 
 			_commerceAddressService.addCommerceAddress(
-				CommerceAccount.class.getName(), commerceAccountId, name,
-				description, street1, street2, street3, city, zip,
-				commerceRegionId, commerceCountryId, phoneNumber,
-				defaultBilling, defaultShipping, serviceContext);
+				AccountEntry.class.getName(), commerceAccountId, name,
+				description, street1, street2, street3, city, zip, regionId,
+				countryId, phoneNumber, defaultBilling, defaultShipping,
+				serviceContext);
 		}
 		else {
 			_commerceAddressService.updateCommerceAddress(
 				commerceAddressId, name, description, street1, street2, street3,
-				city, zip, commerceRegionId, commerceCountryId, phoneNumber,
-				defaultBilling, defaultShipping, serviceContext);
+				city, zip, regionId, countryId, phoneNumber, defaultBilling,
+				defaultShipping, serviceContext);
 		}
 	}
 

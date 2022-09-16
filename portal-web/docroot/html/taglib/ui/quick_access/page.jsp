@@ -17,34 +17,40 @@
 <%@ include file="/html/taglib/ui/quick_access/init.jsp" %>
 
 <%
+String linkClass = "d-block p-2 sr-only sr-only-focusable text-reset";
 String randomNamespace = StringUtil.randomId() + StringPool.UNDERLINE;
 %>
 
 <c:if test="<%= ((quickAccessEntries != null) && !quickAccessEntries.isEmpty()) || Validator.isNotNull(contentId) %>">
-	<nav aria-label="<liferay-ui:message key="quick-links" />" class="quick-access-nav" id="<%= randomNamespace %>quickAccessNav">
-		<h1 class="hide-accessible"><liferay-ui:message key="navigation" /></h1>
+	<nav aria-label="<liferay-ui:message key="quick-links" />" class="bg-dark cadmin d-none d-xl-block quick-access-nav text-center text-white" id="<%= randomNamespace %>quickAccessNav">
+		<h1 class="sr-only"><liferay-ui:message key="navigation" /></h1>
 
-		<ul>
+		<ul class="list-unstyled mb-0">
 			<c:if test="<%= Validator.isNotNull(contentId) %>">
-				<li><a href="<%= contentId %>"><liferay-ui:message key="skip-to-content" /></a></li>
+				<li>
+					<a class="<%= linkClass %>" href="<%= contentId %>">
+						<liferay-ui:message key="skip-to-content" />
+					</a>
+				</li>
 			</c:if>
 
-			<%
-			if ((quickAccessEntries != null) && !quickAccessEntries.isEmpty()) {
+			<c:if test="<%= (quickAccessEntries != null) && !quickAccessEntries.isEmpty() %>">
+
+				<%
 				for (QuickAccessEntry quickAccessEntry : quickAccessEntries) {
-			%>
+				%>
 
 					<li>
-						<a href="<%= quickAccessEntry.getURL() %>" id="<%= randomNamespace + quickAccessEntry.getId() %>" onclick="<%= quickAccessEntry.getOnClick() %>">
+						<a class="<%= linkClass %>" href="<%= quickAccessEntry.getURL() %>" id="<%= randomNamespace + quickAccessEntry.getId() %>" onclick="<%= quickAccessEntry.getOnClick() %>">
 							<%= quickAccessEntry.getContent() %>
 						</a>
 					</li>
 
-			<%
+				<%
 				}
-			}
-			%>
+				%>
 
+			</c:if>
 		</ul>
 	</nav>
 </c:if>

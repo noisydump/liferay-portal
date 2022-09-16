@@ -16,7 +16,6 @@ package com.liferay.exportimport.internal.background.task;
 
 import com.liferay.changeset.service.ChangesetEntryLocalServiceUtil;
 import com.liferay.changeset.util.ChangesetThreadLocal;
-import com.liferay.exportimport.configuration.ExportImportServiceConfiguration;
 import com.liferay.exportimport.kernel.lar.MissingReference;
 import com.liferay.exportimport.kernel.lar.MissingReferences;
 import com.liferay.exportimport.kernel.staging.StagingUtil;
@@ -41,6 +40,7 @@ import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.staging.configuration.StagingConfiguration;
 
 import java.io.File;
 import java.io.Serializable;
@@ -79,11 +79,10 @@ public abstract class BaseStagingBackgroundTaskExecutor
 	}
 
 	protected void deleteTempLarOnFailure(File file) {
-		ExportImportServiceConfiguration exportImportServiceConfiguration =
-			getExportImportServiceConfiguration();
+		StagingConfiguration stagingConfiguration = _getStagingConfiguration();
 
-		if ((exportImportServiceConfiguration == null) ||
-			exportImportServiceConfiguration.stagingDeleteTempLarOnFailure()) {
+		if ((stagingConfiguration == null) ||
+			stagingConfiguration.stagingDeleteTempLAROnFailure()) {
 
 			FileUtil.delete(file);
 		}
@@ -93,34 +92,16 @@ public abstract class BaseStagingBackgroundTaskExecutor
 	}
 
 	protected void deleteTempLarOnSuccess(File file) {
-		ExportImportServiceConfiguration exportImportServiceConfiguration =
-			getExportImportServiceConfiguration();
+		StagingConfiguration stagingConfiguration = _getStagingConfiguration();
 
-		if ((exportImportServiceConfiguration == null) ||
-			exportImportServiceConfiguration.stagingDeleteTempLarOnSuccess()) {
+		if ((stagingConfiguration == null) ||
+			stagingConfiguration.stagingDeleteTempLAROnSuccess()) {
 
 			FileUtil.delete(file);
 		}
 		else if ((file != null) && _log.isDebugEnabled()) {
 			_log.debug("Kept temporary LAR file " + file.getAbsolutePath());
 		}
-	}
-
-	protected ExportImportServiceConfiguration
-		getExportImportServiceConfiguration() {
-
-		try {
-			return ConfigurationProviderUtil.getCompanyConfiguration(
-				ExportImportServiceConfiguration.class,
-				CompanyThreadLocal.getCompanyId());
-		}
-		catch (ConfigurationException configurationException) {
-			_log.error(
-				"Unable to load export import service configuration",
-				configurationException);
-		}
-
-		return null;
 	}
 
 	protected void initThreadLocals(long groupId, boolean privateLayout)
@@ -139,11 +120,8 @@ public abstract class BaseStagingBackgroundTaskExecutor
 		serviceContext.setCompanyId(layoutSet.getCompanyId());
 
 		serviceContext.setSignedIn(false);
-
-		long defaultUserId = UserLocalServiceUtil.getDefaultUserId(
-			layoutSet.getCompanyId());
-
-		serviceContext.setUserId(defaultUserId);
+		serviceContext.setUserId(
+			UserLocalServiceUtil.getDefaultUserId(layoutSet.getCompanyId()));
 
 		ServiceContextThreadLocal.pushServiceContext(serviceContext);
 	}
@@ -188,16 +166,29 @@ public abstract class BaseStagingBackgroundTaskExecutor
 			missingReferences.getWeakMissingReferences();
 
 		if (MapUtil.isNotEmpty(weakMissingReferences)) {
-			BackgroundTask backgroundTask =
-				BackgroundTaskManagerUtil.fetchBackgroundTask(backgroundTaskId);
-
 			JSONArray jsonArray = StagingUtil.getWarningMessagesJSONArray(
-				getLocale(backgroundTask), weakMissingReferences);
+				getLocale(
+					BackgroundTaskManagerUtil.fetchBackgroundTask(
+						backgroundTaskId)),
+				weakMissingReferences);
 
 			backgroundTaskResult.setStatusMessage(jsonArray.toString());
 		}
 
 		return backgroundTaskResult;
+	}
+
+	private StagingConfiguration _getStagingConfiguration() {
+		try {
+			return ConfigurationProviderUtil.getCompanyConfiguration(
+				StagingConfiguration.class, CompanyThreadLocal.getCompanyId());
+		}
+		catch (ConfigurationException configurationException) {
+			_log.error(
+				"Unable to load staging configuration", configurationException);
+		}
+
+		return null;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

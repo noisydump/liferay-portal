@@ -14,7 +14,6 @@
 
 package com.liferay.commerce.internal.upgrade.v2_1_0;
 
-import com.liferay.commerce.internal.upgrade.base.BaseCommerceServiceUpgradeProcess;
 import com.liferay.commerce.model.impl.CommerceOrderItemModelImpl;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPInstance;
@@ -23,6 +22,7 @@ import com.liferay.commerce.product.service.CPInstanceLocalService;
 import com.liferay.portal.kernel.dao.db.IndexMetadata;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.util.ObjectValuePair;
 
 import java.sql.DatabaseMetaData;
@@ -36,8 +36,7 @@ import java.util.Objects;
 /**
  * @author Alec Sloan
  */
-public class CommerceOrderItemUpgradeProcess
-	extends BaseCommerceServiceUpgradeProcess {
+public class CommerceOrderItemUpgradeProcess extends UpgradeProcess {
 
 	public CommerceOrderItemUpgradeProcess(
 		CPDefinitionLocalService cpDefinitionLocalService,
@@ -49,21 +48,19 @@ public class CommerceOrderItemUpgradeProcess
 
 	@Override
 	protected void doUpgrade() throws Exception {
-		addColumn(
-			CommerceOrderItemModelImpl.class,
-			CommerceOrderItemModelImpl.TABLE_NAME, "CProductId", "LONG");
+		alterTableAddColumn("CommerceOrderItem", "CProductId", "LONG");
 
 		_addIndexes(CommerceOrderItemModelImpl.TABLE_NAME);
 
-		try (PreparedStatement ps = connection.prepareStatement(
+		try (PreparedStatement preparedStatement = connection.prepareStatement(
 				"update CommerceOrderItem set CProductId = ? where " +
 					"CPInstanceId = ?");
 			Statement s = connection.createStatement();
-			ResultSet rs = s.executeQuery(
+			ResultSet resultSet = s.executeQuery(
 				"select distinct CPInstanceId from CommerceOrderItem")) {
 
-			while (rs.next()) {
-				long cpInstanceId = rs.getLong("CPInstanceId");
+			while (resultSet.next()) {
+				long cpInstanceId = resultSet.getLong("CPInstanceId");
 
 				CPInstance cpInstance = _cpInstanceLocalService.getCPInstance(
 					cpInstanceId);
@@ -72,11 +69,11 @@ public class CommerceOrderItemUpgradeProcess
 					_cpDefinitionLocalService.getCPDefinition(
 						cpInstance.getCPDefinitionId());
 
-				ps.setLong(1, cpDefinition.getCProductId());
+				preparedStatement.setLong(1, cpDefinition.getCProductId());
 
-				ps.setLong(2, cpInstanceId);
+				preparedStatement.setLong(2, cpInstanceId);
 
-				ps.execute();
+				preparedStatement.execute();
 			}
 		}
 	}
@@ -114,11 +111,11 @@ public class CommerceOrderItemUpgradeProcess
 
 		DatabaseMetaData metadata = connection.getMetaData();
 
-		try (ResultSet rs = metadata.getIndexInfo(
+		try (ResultSet resultSet = metadata.getIndexInfo(
 				null, null, tableName, false, false)) {
 
-			while (rs.next()) {
-				String curIndexName = rs.getString("index_name");
+			while (resultSet.next()) {
+				String curIndexName = resultSet.getString("index_name");
 
 				if (Objects.equals(indexName, curIndexName)) {
 					return true;

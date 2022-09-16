@@ -150,7 +150,7 @@ if (Validator.isNotNull(requestUpdateStructureURL)) {
 			%>
 
 			<c:if test="<%= le.getType() == LocaleException.TYPE_CONTENT %>">
-				<liferay-ui:message arguments="<%= new String[] {StringUtil.merge(le.getSourceAvailableLocales(), StringPool.COMMA_AND_SPACE), StringUtil.merge(le.getTargetAvailableLocales(), StringPool.COMMA_AND_SPACE)} %>" key="the-default-language-x-does-not-match-the-portal's-available-languages-x" />
+				<liferay-ui:message arguments="<%= new String[] {StringUtil.merge(le.getSourceAvailableLanguageIds(), StringPool.COMMA_AND_SPACE), StringUtil.merge(le.getTargetAvailableLanguageIds(), StringPool.COMMA_AND_SPACE)} %>" key="the-default-language-x-does-not-match-the-portal's-available-languages-x" />
 			</c:if>
 		</liferay-ui:error>
 
@@ -347,29 +347,22 @@ if (Validator.isNotNull(requestUpdateStructureURL)) {
 
 <aui:script>
 	function <portlet:namespace />openParentStructureSelector() {
-		Liferay.Util.openDDMPortlet(
-			{
-				basePortletURL:
-					'<%= PortletURLFactoryUtil.create(request, DDMPortletKeys.DYNAMIC_DATA_MAPPING, PortletRequest.RENDER_PHASE) %>',
-				classPK: <%= (structure != null) ? structure.getPrimaryKey() : 0 %>,
-				dialog: {
-					destroyOnHide: true,
-				},
-				eventName: '<portlet:namespace />selectParentStructure',
-				mvcPath: '/select_structure.jsp',
-				showAncestorScopes: true,
-				showManageTemplates: false,
-				title: '<%= HtmlUtil.escapeJS(scopeTitle) %>',
-			},
-			function (event) {
-				var form = document.<portlet:namespace />fm;
+		const opener = Liferay.Util.getOpener();
+
+		opener.Liferay.Util.openSelectionModal({
+			onSelect: function (selectedItem) {
+				const form = document.<portlet:namespace />fm;
+
+				if (!form) {
+					return;
+				}
 
 				Liferay.Util.setFormValues(form, {
-					parentStructureId: event.ddmstructureid,
-					parentStructureName: Liferay.Util.unescape(event.name),
+					parentStructureId: selectedItem.ddmstructureid,
+					parentStructureName: Liferay.Util.unescape(selectedItem.name),
 				});
 
-				var removeParentStructureButton = Liferay.Util.getFormElement(
+				const removeParentStructureButton = Liferay.Util.getFormElement(
 					form,
 					'removeParentStructureButton'
 				);
@@ -377,19 +370,62 @@ if (Validator.isNotNull(requestUpdateStructureURL)) {
 				if (removeParentStructureButton) {
 					Liferay.Util.toggleDisabled(removeParentStructureButton, false);
 				}
-			}
-		);
+			},
+			selectEventName: '<portlet:namespace />selectParentStructure',
+			title: '<%= HtmlUtil.escapeJS(scopeTitle) %>',
+
+			<%
+			Portlet portlet = PortletLocalServiceUtil.getPortletById(portletDisplay.getId());
+			%>
+
+			url:
+				'<%=
+					PortletURLBuilder.create(
+						PortletURLFactoryUtil.create(request, DDMPortletKeys.DYNAMIC_DATA_MAPPING, PortletRequest.RENDER_PHASE)
+					).setMVCPath(
+						"/select_structure.jsp"
+					).setParameter(
+						"classNameId", PortalUtil.getClassNameId(DDMStructure.class)
+					).setParameter(
+						"classPK", (structure != null) ? structure.getPrimaryKey() : 0
+					).setParameter(
+						"groupId", groupId
+					).setParameter(
+						"navigationStartsOn", DDMNavigationHelper.EDIT_STRUCTURE
+					).setParameter(
+						"portletResourceNamespace", liferayPortletResponse.getNamespace()
+					).setParameter(
+						"refererPortletName", refererPortletName
+					).setParameter(
+						"showAncestorScopes", true
+					).setParameter(
+						"showBackURL", false
+					).setParameter(
+						"showHeader", false
+					).setParameter(
+						"showManageTemplates", false
+					).setParameter(
+						"structureAvailableFields", liferayPortletResponse.getNamespace() + "getAvailableFields"
+					).setWindowState(
+						LiferayWindowState.POP_UP
+					).buildString()
+				%>',
+		});
 	}
 
 	function <portlet:namespace />removeParentStructure() {
-		var form = document.<portlet:namespace />fm;
+		const form = document.<portlet:namespace />fm;
+
+		if (!form) {
+			return;
+		}
 
 		Liferay.Util.setFormValues(form, {
 			parentStructureId: '',
 			parentStructureName: '',
 		});
 
-		var removeParentStructureButton = Liferay.Util.getFormElement(
+		const removeParentStructureButton = Liferay.Util.getFormElement(
 			form,
 			'removeParentStructureButton'
 		);

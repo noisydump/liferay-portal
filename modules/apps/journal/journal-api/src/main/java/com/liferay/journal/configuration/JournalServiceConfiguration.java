@@ -51,18 +51,6 @@ public interface JournalServiceConfiguration {
 	)
 	public String errorTemplateFTL();
 
-	@Meta.AD(
-		deflt = "${resource:com/liferay/journal/dependencies/error.vm}",
-		name = "error-template-vm", required = false
-	)
-	public String errorTemplateVM();
-
-	@Meta.AD(
-		deflt = "${resource:com/liferay/journal/dependencies/error.xsl}",
-		name = "error-template-xsl", required = false
-	)
-	public String errorTemplateXSL();
-
 	@Meta.AD(deflt = "15", name = "check-interval", required = false)
 	public int checkInterval();
 
@@ -97,16 +85,6 @@ public interface JournalServiceConfiguration {
 	)
 	public boolean expireAllArticleVersionsEnabled();
 
-	/**
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	@Meta.AD(
-		deflt = "true", description = "journal-article-view-permission-check",
-		name = "article-view-permissions-check-enabled", required = false
-	)
-	public boolean articleViewPermissionsCheckEnabled();
-
 	@Meta.AD(
 		deflt = "true", description = "journal-article-index-all-versions",
 		name = "index-all-article-versions-enabled", required = false
@@ -130,6 +108,14 @@ public interface JournalServiceConfiguration {
 		name = "sync-content-search-on-startup", required = false
 	)
 	public boolean syncContentSearchOnStartup();
+
+	@Meta.AD(
+		deflt = "true",
+		description = "journal-article-export-import-processor-cache-enabled-help",
+		name = "journal-article-export-import-processor-cache-enabled",
+		required = false
+	)
+	public boolean journalArticleExportImportProcessorCacheEnabled();
 
 	@Meta.AD(
 		deflt = "@page_break@",
@@ -163,5 +149,16 @@ public interface JournalServiceConfiguration {
 		required = false
 	)
 	public boolean enableContentTransformerListener();
+
+	@Meta.AD(
+		deflt = "0", name = "terms-of-use-journal-article-group-id",
+		required = false
+	)
+	public long termsOfUseJournalArticleGroupId();
+
+	@Meta.AD(
+		deflt = "", name = "terms-of-use-journal-article-id", required = false
+	)
+	public String termsOfUseJournalArticleId();
 
 }

@@ -24,30 +24,30 @@ import com.liferay.portal.kernel.search.SearchResult;
 import com.liferay.portal.kernel.search.SearchResultManager;
 import com.liferay.portal.kernel.search.SummaryFactory;
 import com.liferay.portal.kernel.search.result.SearchResultTranslator;
-import com.liferay.portal.kernel.test.CaptureHandler;
-import com.liferay.portal.kernel.test.JDKLoggerTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.search.internal.result.SearchResultManagerImpl;
 import com.liferay.portal.search.internal.result.SearchResultTranslatorImpl;
 import com.liferay.portal.search.internal.result.SummaryFactoryImpl;
 import com.liferay.portal.search.test.util.BaseSearchResultUtilTestCase;
 import com.liferay.portal.search.test.util.SearchTestUtil;
+import com.liferay.portal.test.log.LogCapture;
+import com.liferay.portal.test.log.LogEntry;
+import com.liferay.portal.test.log.LoggerTestUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.List;
 import java.util.logging.Level;
-import java.util.logging.LogRecord;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
-import org.mockito.Matchers;
-import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 
 /**
  * @author André de Oliveira
@@ -55,10 +55,14 @@ import org.mockito.MockitoAnnotations;
 public class SearchResultUtilJournalArticleTest
 	extends BaseSearchResultUtilTestCase {
 
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
 	@Before
 	@Override
 	public void setUp() throws Exception {
-		MockitoAnnotations.initMocks(this);
 		super.setUp();
 	}
 
@@ -78,8 +82,8 @@ public class SearchResultUtilJournalArticleTest
 		).when(
 			_indexer
 		).getSummary(
-			(Document)Matchers.any(), Matchers.anyString(),
-			(PortletRequest)Matchers.any(), (PortletResponse)Matchers.any()
+			(Document)Mockito.any(), Mockito.anyString(),
+			(PortletRequest)Mockito.any(), (PortletResponse)Mockito.any()
 		);
 
 		Mockito.when(
@@ -90,10 +94,8 @@ public class SearchResultUtilJournalArticleTest
 
 		Document document = createDocument();
 
-		try (CaptureHandler captureHandler =
-				JDKLoggerTestUtil.configureJDKLogger(
-					SearchResultTranslatorImpl.class.getName(),
-					Level.WARNING)) {
+		try (LogCapture logCapture = LoggerTestUtil.configureJDKLogger(
+				SearchResultTranslatorImpl.class.getName(), Level.WARNING)) {
 
 			SearchResult searchResult = assertOneSearchResult(document);
 
@@ -107,16 +109,16 @@ public class SearchResultUtilJournalArticleTest
 				document, StringPool.BLANK, null, null
 			);
 
-			List<LogRecord> logRecords = captureHandler.getLogRecords();
+			List<LogEntry> logEntries = logCapture.getLogEntries();
 
-			Assert.assertEquals(logRecords.toString(), 1, logRecords.size());
+			Assert.assertEquals(logEntries.toString(), 1, logEntries.size());
 
-			LogRecord logRecord = logRecords.get(0);
+			LogEntry logEntry = logEntries.get(0);
 
 			Assert.assertEquals(
 				"Search index is stale and contains entry {" +
 					document.get(Field.ENTRY_CLASS_PK) + "}",
-				logRecord.getMessage());
+				logEntry.getMessage());
 		}
 	}
 
@@ -178,10 +180,8 @@ public class SearchResultUtilJournalArticleTest
 	private static final String _DOCUMENT_VERSION = String.valueOf(
 		RandomTestUtil.randomInt());
 
-	@Mock
-	private Indexer<Object> _indexer;
-
-	@Mock
-	private IndexerRegistry _indexerRegistry;
+	private final Indexer<Object> _indexer = Mockito.mock(Indexer.class);
+	private final IndexerRegistry _indexerRegistry = Mockito.mock(
+		IndexerRegistry.class);
 
 }

@@ -17,8 +17,6 @@ package com.liferay.commerce.tax.engine.remote.internal;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.liferay.commerce.model.CommerceAddress;
-import com.liferay.commerce.model.CommerceCountry;
-import com.liferay.commerce.model.CommerceRegion;
 import com.liferay.commerce.product.model.CPTaxCategory;
 import com.liferay.commerce.tax.CommerceTaxCalculateRequest;
 import com.liferay.commerce.tax.CommerceTaxValue;
@@ -26,7 +24,10 @@ import com.liferay.commerce.tax.engine.remote.internal.configuration.RemoteComme
 import com.liferay.commerce.tax.model.CommerceTaxMethod;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringUtil;
+import com.liferay.portal.kernel.model.Country;
+import com.liferay.portal.kernel.model.Region;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpExchange;
@@ -48,6 +49,8 @@ import java.util.Map;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 import org.mockito.Mockito;
@@ -56,6 +59,11 @@ import org.mockito.Mockito;
  * @author Ivica Cardic
  */
 public class RemoteCommerceTaxEngineTest {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Before
 	public void setUp() throws Exception {
@@ -171,10 +179,10 @@ public class RemoteCommerceTaxEngineTest {
 			commerceAddress.getCity(),
 			_recordedParameterMap.get(prefix + "AddressCity"));
 
-		CommerceCountry commerceCountry = commerceAddress.getCommerceCountry();
+		Country country = commerceAddress.getCountry();
 
 		Assert.assertEquals(
-			commerceCountry.getThreeLettersISOCode(),
+			country.getA3(),
 			_recordedParameterMap.get(prefix + "AddressCountryISOCode"));
 
 		Assert.assertEquals(
@@ -194,11 +202,11 @@ public class RemoteCommerceTaxEngineTest {
 			commerceAddress.getPhoneNumber(),
 			_recordedParameterMap.get(prefix + "AddressPhoneNumber"));
 
-		CommerceRegion commerceRegion = commerceAddress.getCommerceRegion();
+		Region region = commerceAddress.getRegion();
 
 		Assert.assertEquals(
 			_recordedParameterMap.get(prefix + "AddressRegionISOCode"),
-			commerceRegion.getCode());
+			region.getRegionCode());
 
 		Assert.assertEquals(
 			commerceAddress.getStreet1(),
@@ -291,48 +299,23 @@ public class RemoteCommerceTaxEngineTest {
 			zip
 		);
 
-		CommerceCountry commerceCountry = _getCommerceCountry(
-			commerceCountryThreeLettersISOCode);
+		Country country = _getCountry(commerceCountryThreeLettersISOCode);
 
 		Mockito.when(
-			commerceAddress.getCommerceCountry()
+			commerceAddress.getCountry()
 		).thenReturn(
-			commerceCountry
+			country
 		);
 
-		CommerceRegion commerceRegion = _getCommerceRegion(commerceRegionCode);
+		Region region = _getRegion(commerceRegionCode);
 
 		Mockito.when(
-			commerceAddress.getCommerceRegion()
+			commerceAddress.getRegion()
 		).thenReturn(
-			commerceRegion
+			region
 		);
 
 		return commerceAddress;
-	}
-
-	private CommerceCountry _getCommerceCountry(String threeLettersISOCode) {
-		CommerceCountry commerceCountry = Mockito.mock(CommerceCountry.class);
-
-		Mockito.when(
-			commerceCountry.getThreeLettersISOCode()
-		).thenReturn(
-			threeLettersISOCode
-		);
-
-		return commerceCountry;
-	}
-
-	private CommerceRegion _getCommerceRegion(String code) {
-		CommerceRegion commerceRegion = Mockito.mock(CommerceRegion.class);
-
-		Mockito.when(
-			commerceRegion.getCode()
-		).thenReturn(
-			code
-		);
-
-		return commerceRegion;
 	}
 
 	private CommerceTaxCalculateRequest _getCommerceTaxCalculateRequest() {
@@ -343,7 +326,7 @@ public class RemoteCommerceTaxEngineTest {
 				setCommerceTaxMethodId(3);
 				setPercentage(true);
 				setPrice(BigDecimal.valueOf(99));
-				setChannelGroupId(4);
+				setCommerceChannelGroupId(4);
 				setTaxCategoryId(5);
 			}
 		};
@@ -374,6 +357,18 @@ public class RemoteCommerceTaxEngineTest {
 		return commerceTaxMethod;
 	}
 
+	private Country _getCountry(String threeLettersISOCode) {
+		Country country = Mockito.mock(Country.class);
+
+		Mockito.when(
+			country.getA3()
+		).thenReturn(
+			threeLettersISOCode
+		);
+
+		return country;
+	}
+
 	private CPTaxCategory _getCPTaxCategory() {
 		CPTaxCategory cpTaxCategory = Mockito.mock(CPTaxCategory.class);
 
@@ -384,6 +379,18 @@ public class RemoteCommerceTaxEngineTest {
 		);
 
 		return cpTaxCategory;
+	}
+
+	private Region _getRegion(String code) {
+		Region region = Mockito.mock(Region.class);
+
+		Mockito.when(
+			region.getRegionCode()
+		).thenReturn(
+			code
+		);
+
+		return region;
 	}
 
 	private RemoteCommerceTaxConfiguration

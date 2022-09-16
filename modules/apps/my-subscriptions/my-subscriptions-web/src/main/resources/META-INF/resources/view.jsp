@@ -24,11 +24,11 @@ MySubscriptionsManagementToolbarDisplayContext mySubscriptionsManagementToolbarD
 int subscriptionsCount = mySubscriptionsManagementToolbarDisplayContext.getTotalItems();
 %>
 
-<clay:management-toolbar-v2
+<clay:management-toolbar
 	actionDropdownItems="<%= mySubscriptionsManagementToolbarDisplayContext.getActionDropdownItems() %>"
-	componentId="mySubscriptionsManagementToolbar"
 	disabled="<%= mySubscriptionsManagementToolbarDisplayContext.isDisabled() %>"
 	itemsTotal="<%= subscriptionsCount %>"
+	propsTransformer="js/MySubscriptionsManagementToolbarPropsTransformer"
 	searchContainerId="subscriptions"
 	selectable="<%= mySubscriptionsManagementToolbarDisplayContext.isSelectable() %>"
 	showSearch="<%= mySubscriptionsManagementToolbarDisplayContext.isShowSearch() %>"
@@ -88,7 +88,7 @@ int subscriptionsCount = mySubscriptionsManagementToolbarDisplayContext.getTotal
 					<liferay-ui:search-container-column-text
 						href="<%= rowURL %>"
 						name="asset-type"
-						value="<%= ResourceActionsUtil.getModelResource(locale, subscription.getClassName()) %>"
+						value="<%= MySubscriptionsUtil.getAssetTypeDescription(locale, subscription.getClassName()) %>"
 					/>
 
 					<liferay-ui:search-container-column-date
@@ -122,46 +122,4 @@ int subscriptionsCount = mySubscriptionsManagementToolbarDisplayContext.getTotal
 			url: url,
 		});
 	};
-</aui:script>
-
-<aui:script sandbox="<%= true %>">
-	var unsubscribe = function () {
-		var form = document.getElementById('<portlet:namespace />fm');
-
-		if (form) {
-			form.setAttribute('method', 'post');
-
-			var subscriptionIds = form.querySelector(
-				'#<portlet:namespace />subscriptionIds'
-			);
-
-			if (subscriptionIds) {
-				subscriptionIds.setAttribute(
-					'value',
-					Liferay.Util.listCheckedExcept(
-						form,
-						'<portlet:namespace />allRowIds'
-					)
-				);
-
-				submitForm(form);
-			}
-		}
-	};
-
-	var ACTIONS = {
-		unsubscribe: unsubscribe,
-	};
-
-	Liferay.componentReady('mySubscriptionsManagementToolbar').then(function (
-		managementToolbar
-	) {
-		managementToolbar.on('actionItemClicked', function (event) {
-			var itemData = event.data.item.data;
-
-			if (itemData && itemData.action && ACTIONS[itemData.action]) {
-				ACTIONS[itemData.action]();
-			}
-		});
-	});
 </aui:script>

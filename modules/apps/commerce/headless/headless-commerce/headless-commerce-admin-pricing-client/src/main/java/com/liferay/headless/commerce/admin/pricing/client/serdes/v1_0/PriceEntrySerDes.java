@@ -362,7 +362,8 @@ public class PriceEntrySerDes {
 			}
 			else if (Objects.equals(jsonParserFieldName, "price")) {
 				if (jsonParserFieldValue != null) {
-					priceEntry.setPrice((BigDecimal)jsonParserFieldValue);
+					priceEntry.setPrice(
+						new BigDecimal((String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(
@@ -382,7 +383,8 @@ public class PriceEntrySerDes {
 			}
 			else if (Objects.equals(jsonParserFieldName, "promoPrice")) {
 				if (jsonParserFieldValue != null) {
-					priceEntry.setPromoPrice((BigDecimal)jsonParserFieldValue);
+					priceEntry.setPromoPrice(
+						new BigDecimal((String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "sku")) {
@@ -416,9 +418,6 @@ public class PriceEntrySerDes {
 						));
 				}
 			}
-			else if (jsonParserFieldName.equals("status")) {
-				throw new IllegalArgumentException();
-			}
 		}
 
 	}
@@ -447,7 +446,7 @@ public class PriceEntrySerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -483,7 +482,7 @@ public class PriceEntrySerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

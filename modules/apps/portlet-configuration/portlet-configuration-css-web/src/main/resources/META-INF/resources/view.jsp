@@ -24,6 +24,8 @@
 
 		<liferay-frontend:edit-form
 			action="<%= updateLookAndFeelURL %>"
+			cssClass="pt-0"
+			fluid="<%= true %>"
 			method="post"
 			name="fm"
 		>
@@ -51,18 +53,33 @@
 				document.getElementById('<portlet:namespace />fm'),
 				'change',
 				'input[type=checkbox]',
-				function (event) {
+				(event) => {
 					var toggle = event.delegateTarget;
 
-					var disableOnChecked = toggle.dataset.disableonchecked;
+					var disableOnChecked =
+						toggle.dataset.disableonchecked === undefined ||
+						toggle.dataset.disableonchecked === 'true';
 					var inputs = document.querySelectorAll(toggle.dataset.inputselector);
 
 					for (var i = 0; i < inputs.length; i++) {
 						var input = inputs[i];
 
 						input.disabled = disableOnChecked
-							? !toggle.checked
-							: toggle.checked;
+							? toggle.checked
+							: !toggle.checked;
+
+						if (!input.disabled) {
+							input.classList.remove('disabled');
+
+							if (input.labels.length > 0) {
+								input.labels[0].classList.remove('disabled');
+							}
+						}
+						else {
+							if (input.labels.length > 0) {
+								input.labels[0].classList.add('disabled');
+							}
+						}
 					}
 				}
 			);

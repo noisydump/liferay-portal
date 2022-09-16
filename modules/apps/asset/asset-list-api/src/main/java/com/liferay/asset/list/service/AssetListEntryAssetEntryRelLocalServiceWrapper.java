@@ -30,6 +30,10 @@ public class AssetListEntryAssetEntryRelLocalServiceWrapper
 	implements AssetListEntryAssetEntryRelLocalService,
 			   ServiceWrapper<AssetListEntryAssetEntryRelLocalService> {
 
+	public AssetListEntryAssetEntryRelLocalServiceWrapper() {
+		this(null);
+	}
+
 	public AssetListEntryAssetEntryRelLocalServiceWrapper(
 		AssetListEntryAssetEntryRelLocalService
 			assetListEntryAssetEntryRelLocalService) {
@@ -179,6 +183,13 @@ public class AssetListEntryAssetEntryRelLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _assetListEntryAssetEntryRelLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _assetListEntryAssetEntryRelLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -389,18 +400,6 @@ public class AssetListEntryAssetEntryRelLocalServiceWrapper
 				assetListEntryId, segmentsEntryIds, start, end);
 	}
 
-	@Override
-	public java.util.List<AssetListEntryAssetEntryRel>
-		getAssetListEntryAssetEntryRels(
-			long assetListEntryId, long[] segmentsEntryIds,
-			long[][] assetCategoryIds, int start, int end) {
-
-		return _assetListEntryAssetEntryRelLocalService.
-			getAssetListEntryAssetEntryRels(
-				assetListEntryId, segmentsEntryIds, assetCategoryIds, start,
-				end);
-	}
-
 	/**
 	 * Returns all the asset list entry asset entry rels matching the UUID and company.
 	 *
@@ -481,16 +480,6 @@ public class AssetListEntryAssetEntryRelLocalServiceWrapper
 		return _assetListEntryAssetEntryRelLocalService.
 			getAssetListEntryAssetEntryRelsCount(
 				assetListEntryId, segmentsEntryIds);
-	}
-
-	@Override
-	public int getAssetListEntryAssetEntryRelsCount(
-		long assetListEntryId, long[] segmentsEntryIds,
-		long[][] assetCategoryIds) {
-
-		return _assetListEntryAssetEntryRelLocalService.
-			getAssetListEntryAssetEntryRelsCount(
-				assetListEntryId, segmentsEntryIds, assetCategoryIds);
 	}
 
 	@Override

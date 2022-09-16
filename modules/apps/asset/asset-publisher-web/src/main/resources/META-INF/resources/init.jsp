@@ -31,11 +31,15 @@ taglib uri="http://liferay.com/tld/react" prefix="react" %><%@
 taglib uri="http://liferay.com/tld/rss" prefix="liferay-rss" %><%@
 taglib uri="http://liferay.com/tld/site" prefix="liferay-site" %><%@
 taglib uri="http://liferay.com/tld/social-bookmarks" prefix="liferay-social-bookmarks" %><%@
+taglib uri="http://liferay.com/tld/template" prefix="liferay-template" %><%@
 taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %><%@
 taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %><%@
 taglib uri="http://liferay.com/tld/util" prefix="liferay-util" %>
 
 <%@ page import="com.liferay.asset.constants.AssetWebKeys" %><%@
+page import="com.liferay.asset.display.page.constants.AssetDisplayPageConstants" %><%@
+page import="com.liferay.asset.display.page.model.AssetDisplayPageEntry" %><%@
+page import="com.liferay.asset.display.page.service.AssetDisplayPageEntryLocalServiceUtil" %><%@
 page import="com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil" %><%@
 page import="com.liferay.asset.kernel.exception.DuplicateQueryRuleException" %><%@
 page import="com.liferay.asset.kernel.model.AssetEntry" %><%@
@@ -52,9 +56,11 @@ page import="com.liferay.asset.publisher.constants.AssetPublisherPortletKeys" %>
 page import="com.liferay.asset.publisher.constants.AssetPublisherWebKeys" %><%@
 page import="com.liferay.asset.publisher.util.AssetEntryResult" %><%@
 page import="com.liferay.asset.publisher.util.AssetPublisherHelper" %><%@
+page import="com.liferay.asset.publisher.web.internal.constants.AssetPublisherSelectionStyleConstants" %><%@
 page import="com.liferay.asset.publisher.web.internal.display.context.AssetPublisherDisplayContext" %><%@
 page import="com.liferay.asset.publisher.web.internal.display.context.AssetPublisherViewContentDisplayContext" %><%@
 page import="com.liferay.asset.publisher.web.internal.display.context.ItemSelectorViewDisplayContext" %><%@
+page import="com.liferay.asset.publisher.web.internal.display.context.SelectStructureFieldDisplayContext" %><%@
 page import="com.liferay.asset.publisher.web.internal.helper.AssetPublisherWebHelper" %><%@
 page import="com.liferay.asset.publisher.web.internal.servlet.taglib.util.AssetEntryActionDropdownItemsProvider" %><%@
 page import="com.liferay.asset.publisher.web.internal.util.AssetRendererUtil" %><%@
@@ -64,17 +70,19 @@ page import="com.liferay.asset.util.comparator.AssetRendererFactoryTypeNameCompa
 page import="com.liferay.document.library.kernel.document.conversion.DocumentConversionUtil" %><%@
 page import="com.liferay.dynamic.data.mapping.model.DDMStructure" %><%@
 page import="com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem" %><%@
-page import="com.liferay.info.list.provider.InfoListProvider" %><%@
+page import="com.liferay.info.list.provider.item.selector.criterion.InfoListProviderItemSelectorReturnType" %><%@
 page import="com.liferay.item.selector.ItemSelector" %><%@
 page import="com.liferay.item.selector.criteria.GroupItemSelectorReturnType" %><%@
+page import="com.liferay.item.selector.criteria.InfoListItemSelectorReturnType" %><%@
 page import="com.liferay.item.selector.criteria.group.criterion.GroupItemSelectorCriterion" %><%@
+page import="com.liferay.petra.portlet.url.builder.PortletURLBuilder" %><%@
 page import="com.liferay.petra.string.StringBundler" %><%@
 page import="com.liferay.petra.string.StringPool" %><%@
 page import="com.liferay.portal.kernel.dao.search.ResultRow" %><%@
 page import="com.liferay.portal.kernel.dao.search.SearchContainer" %><%@
 page import="com.liferay.portal.kernel.exception.NoSuchGroupException" %><%@
 page import="com.liferay.portal.kernel.exception.NoSuchModelException" %><%@
-page import="com.liferay.portal.kernel.json.JSONUtil" %><%@
+page import="com.liferay.portal.kernel.frontend.icons.FrontendIconsUtil" %><%@
 page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
 page import="com.liferay.portal.kernel.log.Log" %><%@
 page import="com.liferay.portal.kernel.log.LogFactoryUtil" %><%@
@@ -94,13 +102,12 @@ page import="com.liferay.portal.kernel.trash.TrashHandler" %><%@
 page import="com.liferay.portal.kernel.trash.TrashHandlerRegistryUtil" %><%@
 page import="com.liferay.portal.kernel.util.ArrayUtil" %><%@
 page import="com.liferay.portal.kernel.util.Constants" %><%@
-page import="com.liferay.portal.kernel.util.FastDateFormatConstants" %><%@
 page import="com.liferay.portal.kernel.util.FastDateFormatFactoryUtil" %><%@
 page import="com.liferay.portal.kernel.util.FriendlyURLNormalizerUtil" %><%@
 page import="com.liferay.portal.kernel.util.GetterUtil" %><%@
 page import="com.liferay.portal.kernel.util.HashMapBuilder" %><%@
 page import="com.liferay.portal.kernel.util.HtmlUtil" %><%@
-page import="com.liferay.portal.kernel.util.HttpUtil" %><%@
+page import="com.liferay.portal.kernel.util.HttpComponentsUtil" %><%@
 page import="com.liferay.portal.kernel.util.KeyValuePair" %><%@
 page import="com.liferay.portal.kernel.util.KeyValuePairComparator" %><%@
 page import="com.liferay.portal.kernel.util.ListUtil" %><%@
@@ -108,7 +115,6 @@ page import="com.liferay.portal.kernel.util.LocaleUtil" %><%@
 page import="com.liferay.portal.kernel.util.MapUtil" %><%@
 page import="com.liferay.portal.kernel.util.ParamUtil" %><%@
 page import="com.liferay.portal.kernel.util.PortalUtil" %><%@
-page import="com.liferay.portal.kernel.util.PrefsParamUtil" %><%@
 page import="com.liferay.portal.kernel.util.SetUtil" %><%@
 page import="com.liferay.portal.kernel.util.StringUtil" %><%@
 page import="com.liferay.portal.kernel.util.TextFormatter" %><%@
@@ -150,7 +156,6 @@ AssetPublisherHelper assetPublisherHelper = (AssetPublisherHelper)request.getAtt
 AssetPublisherWebHelper assetPublisherWebHelper = (AssetPublisherWebHelper)request.getAttribute(AssetPublisherWebKeys.ASSET_PUBLISHER_WEB_HELPER);
 
 Format dateFormatDate = FastDateFormatFactoryUtil.getDate(locale, timeZone);
-Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(FastDateFormatConstants.LONG, FastDateFormatConstants.SHORT, locale, timeZone);
 %>
 
 <%@ include file="/init-ext.jsp" %>

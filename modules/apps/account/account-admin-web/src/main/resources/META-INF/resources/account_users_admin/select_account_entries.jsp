@@ -20,8 +20,8 @@
 SearchContainer<AccountEntryDisplay> accountEntryDisplaySearchContainer = AccountEntryDisplaySearchContainerFactory.create(liferayPortletRequest, liferayPortletResponse);
 %>
 
-<clay:management-toolbar-v2
-	displayContext="<%= new SelectAccountEntriesManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, accountEntryDisplaySearchContainer) %>"
+<clay:management-toolbar
+	managementToolbarDisplayContext="<%= new SelectAccountEntriesManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, accountEntryDisplaySearchContainer) %>"
 />
 
 <clay:container-fluid>
@@ -55,28 +55,3 @@ SearchContainer<AccountEntryDisplay> accountEntryDisplaySearchContainer = Accoun
 		/>
 	</liferay-ui:search-container>
 </clay:container-fluid>
-
-<aui:script use="liferay-search-container">
-	var searchContainer = Liferay.SearchContainer.get(
-		'<portlet:namespace />accountEntries'
-	);
-
-	searchContainer.on('rowToggled', function (event) {
-		var selectedItems = event.elements.allSelectedElements;
-
-		var result = {};
-
-		if (!selectedItems.isEmpty()) {
-			result = {
-				data: {
-					value: selectedItems.get('value').join(','),
-				},
-			};
-		}
-
-		Liferay.Util.getOpener().Liferay.fire(
-			'<%= HtmlUtil.escapeJS(liferayPortletResponse.getNamespace() + "selectAccountEntries") %>',
-			result
-		);
-	});
-</aui:script>

@@ -18,6 +18,7 @@ import com.liferay.dynamic.data.mapping.data.provider.DDMDataProviderRequest;
 import com.liferay.dynamic.data.mapping.data.provider.DDMDataProviderResponse;
 import com.liferay.dynamic.data.mapping.storage.DDMStorageAdapterTracker;
 import com.liferay.portal.kernel.util.KeyValuePair;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,23 +28,25 @@ import java.util.TreeSet;
 import java.util.stream.Stream;
 
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
-
-import org.powermock.api.mockito.PowerMockito;
+import org.mockito.Mockito;
 
 /**
  * @author Leonardo Barros
  */
-@RunWith(MockitoJUnitRunner.class)
-public class DDMStorageTypesDataProviderTest extends PowerMockito {
+public class DDMStorageTypesDataProviderTest {
 
-	@Before
-	public void setUp() {
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
+	@BeforeClass
+	public static void setUpClass() {
 		_ddmStorageTypesDataProvider = new DDMStorageTypesDataProvider();
 
 		_ddmStorageTypesDataProvider.ddmStorageAdapterTracker =
@@ -56,7 +59,7 @@ public class DDMStorageTypesDataProviderTest extends PowerMockito {
 	}
 
 	@Test
-	public void testMultipleStorageAdapter() throws Exception {
+	public void testMultipleStorageAdapter() {
 		Set<String> expectedSet = new TreeSet<String>() {
 			{
 				add("json");
@@ -69,7 +72,7 @@ public class DDMStorageTypesDataProviderTest extends PowerMockito {
 	}
 
 	@Test
-	public void testSingleStorageAdapter() throws Exception {
+	public void testSingleStorageAdapter() {
 		Set<String> expectedSet = new TreeSet<String>() {
 			{
 				add("json");
@@ -79,8 +82,8 @@ public class DDMStorageTypesDataProviderTest extends PowerMockito {
 		_testStorageTypes(expectedSet);
 	}
 
-	private void _testStorageTypes(Set<String> expectedSet) throws Exception {
-		when(
+	private void _testStorageTypes(Set<String> expectedSet) {
+		Mockito.when(
 			_ddmStorageAdapterTracker.getDDMStorageAdapterTypes()
 		).thenReturn(
 			expectedSet
@@ -90,7 +93,9 @@ public class DDMStorageTypesDataProviderTest extends PowerMockito {
 
 		Stream<String> stream = expectedSet.stream();
 
-		stream.map(
+		stream.filter(
+			type -> !type.equals("json")
+		).map(
 			type -> new KeyValuePair(type, type)
 		).forEach(
 			keyValuePairs::add
@@ -113,9 +118,8 @@ public class DDMStorageTypesDataProviderTest extends PowerMockito {
 		Assert.assertEquals(keyValuePairs, optional.get());
 	}
 
-	@Mock
-	private DDMStorageAdapterTracker _ddmStorageAdapterTracker;
-
-	private DDMStorageTypesDataProvider _ddmStorageTypesDataProvider;
+	private static final DDMStorageAdapterTracker _ddmStorageAdapterTracker =
+		Mockito.mock(DDMStorageAdapterTracker.class);
+	private static DDMStorageTypesDataProvider _ddmStorageTypesDataProvider;
 
 }

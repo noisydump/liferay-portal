@@ -33,34 +33,23 @@ public class GroupModelListener extends BaseModelListener<Group> {
 	@Override
 	public void onBeforeRemove(Group group) throws ModelListenerException {
 		try {
-			doOnBeforeRemove(group);
+			_onBeforeRemove(group);
 		}
 		catch (Exception exception) {
 			throw new ModelListenerException(exception);
 		}
 	}
 
-	protected void doOnBeforeRemove(Group group) throws Exception {
+	private void _onBeforeRemove(Group group) throws Exception {
 		_kbArticleLocalService.deleteGroupKBArticles(group.getGroupId());
 
 		_kbTemplateLocalService.deleteGroupKBTemplates(group.getGroupId());
 	}
 
-	@Reference(unbind = "-")
-	protected void setKBArticleLocalService(
-		KBArticleLocalService kbArticleLocalService) {
-
-		_kbArticleLocalService = kbArticleLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setKBTemplateLocalService(
-		KBTemplateLocalService kbTemplateLocalService) {
-
-		_kbTemplateLocalService = kbTemplateLocalService;
-	}
-
+	@Reference
 	private KBArticleLocalService _kbArticleLocalService;
+
+	@Reference
 	private KBTemplateLocalService _kbTemplateLocalService;
 
 }

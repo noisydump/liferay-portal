@@ -53,7 +53,7 @@ public class AssetAutoTaggerConfigurationFactoryImpl
 			return new CompanyAssetAutoTaggerConfiguration(company);
 		}
 		catch (ConfigurationException configurationException) {
-			_log.error(configurationException, configurationException);
+			_log.error(configurationException);
 
 			return getSystemAssetAutoTaggerConfiguration();
 		}
@@ -67,7 +67,7 @@ public class AssetAutoTaggerConfigurationFactoryImpl
 			return new GroupAssetAutoTaggerConfiguration(group);
 		}
 		catch (PortalException portalException) {
-			_log.error(portalException, portalException);
+			_log.error(portalException);
 
 			return getSystemAssetAutoTaggerConfiguration();
 		}
@@ -93,6 +93,11 @@ public class AssetAutoTaggerConfigurationFactoryImpl
 			@Override
 			public boolean isEnabled() {
 				return _assetAutoTaggerSystemConfiguration.enabled();
+			}
+
+			@Override
+			public boolean isUpdateAutoTags() {
+				return false;
 			}
 
 		};
@@ -165,6 +170,11 @@ public class AssetAutoTaggerConfigurationFactoryImpl
 			return _assetAutoTaggerCompanyConfiguration.enabled();
 		}
 
+		@Override
+		public boolean isUpdateAutoTags() {
+			return _assetAutoTaggerCompanyConfiguration.updateAutoTags();
+		}
+
 		private final AssetAutoTaggerCompanyConfiguration
 			_assetAutoTaggerCompanyConfiguration;
 
@@ -222,11 +232,16 @@ public class AssetAutoTaggerConfigurationFactoryImpl
 			}
 			catch (ConfigurationException configurationException) {
 				if (_log.isDebugEnabled()) {
-					_log.debug(configurationException, configurationException);
+					_log.debug(configurationException);
 				}
 
 				return _assetAutoTaggerCompanyConfiguration.isEnabled();
 			}
+		}
+
+		@Override
+		public boolean isUpdateAutoTags() {
+			return _assetAutoTaggerCompanyConfiguration.isUpdateAutoTags();
 		}
 
 		private final AssetAutoTaggerConfiguration

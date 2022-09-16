@@ -27,6 +27,10 @@ public class CommerceOrderNoteServiceWrapper
 	implements CommerceOrderNoteService,
 			   ServiceWrapper<CommerceOrderNoteService> {
 
+	public CommerceOrderNoteServiceWrapper() {
+		this(null);
+	}
+
 	public CommerceOrderNoteServiceWrapper(
 		CommerceOrderNoteService commerceOrderNoteService) {
 
@@ -44,6 +48,19 @@ public class CommerceOrderNoteServiceWrapper
 	}
 
 	@Override
+	public com.liferay.commerce.model.CommerceOrderNote
+			addOrUpdateCommerceOrderNote(
+				String externalReferenceCode, long commerceOrderNoteId,
+				long commerceOrderId, String content, boolean restricted,
+				com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _commerceOrderNoteService.addOrUpdateCommerceOrderNote(
+			externalReferenceCode, commerceOrderNoteId, commerceOrderId,
+			content, restricted, serviceContext);
+	}
+
+	@Override
 	public void deleteCommerceOrderNote(long commerceOrderNoteId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -53,11 +70,11 @@ public class CommerceOrderNoteServiceWrapper
 	@Override
 	public com.liferay.commerce.model.CommerceOrderNote
 			fetchByExternalReferenceCode(
-				long companyId, String externalReferenceCode)
+				String externalReferenceCode, long companyId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _commerceOrderNoteService.fetchByExternalReferenceCode(
-			companyId, externalReferenceCode);
+			externalReferenceCode, companyId);
 	}
 
 	@Override
@@ -85,6 +102,16 @@ public class CommerceOrderNoteServiceWrapper
 
 		return _commerceOrderNoteService.getCommerceOrderNotes(
 			commerceOrderId, restricted);
+	}
+
+	@Override
+	public java.util.List<com.liferay.commerce.model.CommerceOrderNote>
+			getCommerceOrderNotes(
+				long commerceOrderId, boolean restricted, int start, int end)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _commerceOrderNoteService.getCommerceOrderNotes(
+			commerceOrderId, restricted, start, end);
 	}
 
 	@Override
@@ -130,18 +157,6 @@ public class CommerceOrderNoteServiceWrapper
 
 		return _commerceOrderNoteService.updateCommerceOrderNote(
 			commerceOrderNoteId, content, restricted);
-	}
-
-	@Override
-	public com.liferay.commerce.model.CommerceOrderNote upsertCommerceOrderNote(
-			long commerceOrderNoteId, long commerceOrderId, String content,
-			boolean restricted, String externalReferenceCode,
-			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return _commerceOrderNoteService.upsertCommerceOrderNote(
-			commerceOrderNoteId, commerceOrderId, content, restricted,
-			externalReferenceCode, serviceContext);
 	}
 
 	@Override

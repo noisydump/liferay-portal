@@ -1,23 +1,3 @@
-create table Account_ (
-	mvccVersion LONG default 0 not null,
-	accountId LONG not null primary key,
-	companyId LONG,
-	userId LONG,
-	userName VARCHAR(75) null,
-	createDate DATE null,
-	modifiedDate DATE null,
-	parentAccountId LONG,
-	name VARCHAR(75) null,
-	legalName VARCHAR(75) null,
-	legalId VARCHAR(75) null,
-	legalType VARCHAR(75) null,
-	sicCode VARCHAR(75) null,
-	tickerSymbol VARCHAR(75) null,
-	industry VARCHAR(75) null,
-	type_ VARCHAR(75) null,
-	size_ VARCHAR(75) null
-);
-
 create table Address (
 	mvccVersion LONG default 0 not null,
 	uuid_ VARCHAR(75) null,
@@ -30,20 +10,22 @@ create table Address (
 	modifiedDate DATE null,
 	classNameId LONG,
 	classPK LONG,
-	name VARCHAR(255) null,
+	countryId LONG,
+	listTypeId LONG,
+	regionId LONG,
+	city VARCHAR(75) null,
 	description STRING null,
+	latitude DOUBLE,
+	longitude DOUBLE,
+	mailing BOOLEAN,
+	name VARCHAR(255) null,
+	primary_ BOOLEAN,
 	street1 VARCHAR(255) null,
 	street2 VARCHAR(255) null,
 	street3 VARCHAR(255) null,
-	city VARCHAR(75) null,
-	zip VARCHAR(75) null,
-	regionId LONG,
-	countryId LONG,
-	latitude DOUBLE,
-	longitude DOUBLE,
-	typeId LONG,
-	mailing BOOLEAN,
-	primary_ BOOLEAN
+	validationDate DATE null,
+	validationStatus INTEGER,
+	zip VARCHAR(75) null
 );
 
 create table AnnouncementsDelivery (
@@ -103,8 +85,8 @@ create table AssetCategory (
 	parentCategoryId LONG,
 	treePath STRING null,
 	name VARCHAR(255) null,
-	title STRING null,
-	description STRING null,
+	title TEXT null,
+	description TEXT null,
 	vocabularyId LONG,
 	lastPublishDate DATE null,
 	primary key (categoryId, ctCollectionId)
@@ -140,7 +122,7 @@ create table AssetEntry (
 	publishDate DATE null,
 	expirationDate DATE null,
 	mimeType VARCHAR(75) null,
-	title STRING null,
+	title TEXT null,
 	description TEXT null,
 	summary TEXT null,
 	url STRING null,
@@ -221,14 +203,25 @@ create table ClassName_ (
 create table Company (
 	mvccVersion LONG default 0 not null,
 	companyId LONG not null primary key,
-	accountId LONG,
+	userId LONG,
+	userName VARCHAR(75) null,
+	createDate DATE null,
+	modifiedDate DATE null,
 	webId VARCHAR(75) null,
 	mx VARCHAR(200) null,
 	homeURL STRING null,
 	logoId LONG,
-	system_ BOOLEAN,
 	maxUsers INTEGER,
-	active_ BOOLEAN
+	active_ BOOLEAN,
+	name VARCHAR(75) null,
+	legalName VARCHAR(75) null,
+	legalId VARCHAR(75) null,
+	legalType VARCHAR(75) null,
+	sicCode VARCHAR(75) null,
+	tickerSymbol VARCHAR(75) null,
+	industry VARCHAR(75) null,
+	type_ VARCHAR(75) null,
+	size_ VARCHAR(75) null
 );
 
 create table CompanyInfo (
@@ -248,7 +241,6 @@ create table Contact_ (
 	modifiedDate DATE null,
 	classNameId LONG,
 	classPK LONG,
-	accountId LONG,
 	parentContactId LONG,
 	emailAddress VARCHAR(254) null,
 	firstName VARCHAR(75) null,
@@ -313,6 +305,7 @@ create table DLFileEntry (
 	mvccVersion LONG default 0 not null,
 	ctCollectionId LONG default 0 not null,
 	uuid_ VARCHAR(75) null,
+	externalReferenceCode VARCHAR(75) null,
 	fileEntryId LONG not null,
 	groupId LONG,
 	companyId LONG,
@@ -340,6 +333,8 @@ create table DLFileEntry (
 	custom1ImageId LONG,
 	custom2ImageId LONG,
 	manualCheckInRequired BOOLEAN,
+	expirationDate DATE null,
+	reviewDate DATE null,
 	lastPublishDate DATE null,
 	primary key (fileEntryId, ctCollectionId)
 );
@@ -372,6 +367,7 @@ create table DLFileEntryType (
 	fileEntryTypeKey VARCHAR(75) null,
 	name STRING null,
 	description STRING null,
+	scope INTEGER,
 	lastPublishDate DATE null,
 	primary key (fileEntryTypeId, ctCollectionId)
 );
@@ -435,6 +431,8 @@ create table DLFileVersion (
 	version VARCHAR(75) null,
 	size_ LONG,
 	checksum VARCHAR(75) null,
+	expirationDate DATE null,
+	reviewDate DATE null,
 	lastPublishDate DATE null,
 	status INTEGER,
 	statusByUserId LONG,
@@ -447,6 +445,7 @@ create table DLFolder (
 	mvccVersion LONG default 0 not null,
 	ctCollectionId LONG default 0 not null,
 	uuid_ VARCHAR(75) null,
+	externalReferenceCode VARCHAR(75) null,
 	folderId LONG not null,
 	groupId LONG,
 	companyId LONG,
@@ -493,6 +492,7 @@ create table ExpandoColumn (
 	ctCollectionId LONG default 0 not null,
 	columnId LONG not null,
 	companyId LONG,
+	modifiedDate DATE null,
 	tableId LONG,
 	name VARCHAR(75) null,
 	type_ INTEGER,
@@ -562,6 +562,7 @@ create table Group_ (
 	groupId LONG not null,
 	companyId LONG,
 	creatorUserId LONG,
+	modifiedDate DATE null,
 	classNameId LONG,
 	classPK LONG,
 	parentGroupId LONG,
@@ -640,7 +641,7 @@ create table Layout (
 	classNameId LONG,
 	classPK LONG,
 	name STRING null,
-	title STRING null,
+	title TEXT null,
 	description TEXT null,
 	keywords STRING null,
 	robots STRING null,
@@ -655,6 +656,7 @@ create table Layout (
 	styleBookEntryId LONG,
 	css TEXT null,
 	priority INTEGER,
+	faviconFileEntryId LONG,
 	masterLayoutPlid LONG,
 	layoutPrototypeUuid VARCHAR(75) null,
 	layoutPrototypeLinkEnabled BOOLEAN,
@@ -760,6 +762,7 @@ create table LayoutSet (
 	logoId LONG,
 	themeId VARCHAR(75) null,
 	colorSchemeId VARCHAR(75) null,
+	faviconFileEntryId LONG,
 	css TEXT null,
 	settings_ TEXT null,
 	layoutSetPrototypeUuid VARCHAR(75) null,
@@ -825,6 +828,28 @@ create table MembershipRequest (
 	statusId LONG
 );
 
+create table OrgLabor (
+	mvccVersion LONG default 0 not null,
+	orgLaborId LONG not null primary key,
+	companyId LONG,
+	organizationId LONG,
+	typeId LONG,
+	sunOpen INTEGER,
+	sunClose INTEGER,
+	monOpen INTEGER,
+	monClose INTEGER,
+	tueOpen INTEGER,
+	tueClose INTEGER,
+	wedOpen INTEGER,
+	wedClose INTEGER,
+	thuOpen INTEGER,
+	thuClose INTEGER,
+	friOpen INTEGER,
+	friClose INTEGER,
+	satOpen INTEGER,
+	satClose INTEGER
+);
+
 create table Organization_ (
 	mvccVersion LONG default 0 not null,
 	ctCollectionId LONG default 0 not null,
@@ -847,37 +872,6 @@ create table Organization_ (
 	comments STRING null,
 	logoId LONG,
 	primary key (organizationId, ctCollectionId)
-);
-
-create table OrgGroupRole (
-	mvccVersion LONG default 0 not null,
-	organizationId LONG not null,
-	groupId LONG not null,
-	roleId LONG not null,
-	companyId LONG,
-	primary key (organizationId, groupId, roleId)
-);
-
-create table OrgLabor (
-	mvccVersion LONG default 0 not null,
-	orgLaborId LONG not null primary key,
-	companyId LONG,
-	organizationId LONG,
-	typeId LONG,
-	sunOpen INTEGER,
-	sunClose INTEGER,
-	monOpen INTEGER,
-	monClose INTEGER,
-	tueOpen INTEGER,
-	tueClose INTEGER,
-	wedOpen INTEGER,
-	wedClose INTEGER,
-	thuOpen INTEGER,
-	thuClose INTEGER,
-	friOpen INTEGER,
-	friClose INTEGER,
-	satOpen INTEGER,
-	satClose INTEGER
 );
 
 create table PasswordPolicy (
@@ -963,12 +957,24 @@ create table PluginSetting (
 	active_ BOOLEAN
 );
 
+create table PortalPreferenceValue (
+	mvccVersion LONG default 0 not null,
+	portalPreferenceValueId LONG not null primary key,
+	companyId LONG,
+	portalPreferencesId LONG,
+	index_ INTEGER,
+	key_ VARCHAR(255) null,
+	largeValue TEXT null,
+	namespace VARCHAR(255) null,
+	smallValue VARCHAR(255) null
+);
+
 create table PortalPreferences (
 	mvccVersion LONG default 0 not null,
 	portalPreferencesId LONG not null primary key,
+	companyId LONG,
 	ownerId LONG,
-	ownerType INTEGER,
-	preferences TEXT null
+	ownerType INTEGER
 );
 
 create table Portlet (
@@ -1126,8 +1132,9 @@ create table Release_ (
 
 create table Repository (
 	mvccVersion LONG default 0 not null,
+	ctCollectionId LONG default 0 not null,
 	uuid_ VARCHAR(75) null,
-	repositoryId LONG not null primary key,
+	repositoryId LONG not null,
 	groupId LONG,
 	companyId LONG,
 	userId LONG,
@@ -1140,13 +1147,15 @@ create table Repository (
 	portletId VARCHAR(200) null,
 	typeSettings TEXT null,
 	dlFolderId LONG,
-	lastPublishDate DATE null
+	lastPublishDate DATE null,
+	primary key (repositoryId, ctCollectionId)
 );
 
 create table RepositoryEntry (
 	mvccVersion LONG default 0 not null,
+	ctCollectionId LONG default 0 not null,
 	uuid_ VARCHAR(75) null,
-	repositoryEntryId LONG not null primary key,
+	repositoryEntryId LONG not null,
 	groupId LONG,
 	companyId LONG,
 	userId LONG,
@@ -1156,7 +1165,8 @@ create table RepositoryEntry (
 	repositoryId LONG,
 	mappedId VARCHAR(255) null,
 	manualCheckInRequired BOOLEAN,
-	lastPublishDate DATE null
+	lastPublishDate DATE null,
+	primary key (repositoryEntryId, ctCollectionId)
 );
 
 create table ResourceAction (

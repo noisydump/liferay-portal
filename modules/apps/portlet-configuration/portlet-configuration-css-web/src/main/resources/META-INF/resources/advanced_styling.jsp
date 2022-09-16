@@ -42,20 +42,29 @@
 
 <aui:script>
 	function <portlet:namespace />insertCustomCSSValue(value) {
-		var customCSS = document.getElementById('<portlet:namespace />customCSS');
+		var customCSSTextarea = document.getElementById(
+			'<portlet:namespace />customCSS'
+		);
 
-		if (customCSS) {
-			var customCSSVal = customCSS.value.trim();
+		if (customCSSTextarea) {
+			var customCSSTextareaValue = customCSSTextarea.value.trim();
 
-			if (customCSSVal.length) {
-				customCSSVal += '\n\n';
+			if (customCSSTextareaValue.length) {
+				customCSSTextareaValue += '\n\n';
 			}
 
-			var newVal = customCSSVal + value + ' {\n\t\n}\n';
+			var newValue = customCSSTextareaValue + value + ' {\n\t\n}\n';
 
-			customCSS.value = newVal;
+			customCSSTextarea.value = newValue;
 
-			Liferay.Util.setCursorPosition(customCSS, newVal.length - 3);
+			customCSSTextarea.focus();
+
+			var newCursorPosition = customCSSTextarea.value.length - 3;
+
+			customCSSTextarea.setSelectionRange(
+				newCursorPosition,
+				newCursorPosition
+			);
 		}
 	}
 
@@ -64,7 +73,7 @@
 	);
 
 	if (<portlet:namespace />addId) {
-		<portlet:namespace />addId.addEventListener('click', function () {
+		<portlet:namespace />addId.addEventListener('click', () => {
 			<portlet:namespace />insertCustomCSSValue(
 				'#portlet_<%= HtmlUtil.escapeJS(portletConfigurationCSSPortletDisplayContext.getPortletResource()) %>'
 			);
@@ -76,7 +85,7 @@
 	);
 
 	if (<portlet:namespace />addClass) {
-		<portlet:namespace />addClass.addEventListener('click', function () {
+		<portlet:namespace />addClass.addEventListener('click', () => {
 			<portlet:namespace />insertCustomCSSValue(portletClasses);
 		});
 	}
@@ -107,17 +116,16 @@
 
 			portletContent
 				.getAttribute('class')
-				.replace(/(?:([\w\d-]+)-)?portlet(?:-?([\w\d-]+-?))?/g, function (
-					match,
-					subMatch1,
-					subMatch2
-				) {
-					var regexIgnoredClasses = /boundary|draggable/;
+				.replace(
+					/(?:([\w\d-]+)-)?portlet(?:-?([\w\d-]+-?))?/g,
+					(match, subMatch1, subMatch2) => {
+						var regexIgnoredClasses = /boundary|draggable/;
 
-					if (!regexIgnoredClasses.test(subMatch2)) {
-						boundaryClasses.push(match);
+						if (!regexIgnoredClasses.test(subMatch2)) {
+							boundaryClasses.push(match);
+						}
 					}
-				});
+				);
 
 			portletClasses = '.' + boundaryClasses.join('.') + portletClasses;
 

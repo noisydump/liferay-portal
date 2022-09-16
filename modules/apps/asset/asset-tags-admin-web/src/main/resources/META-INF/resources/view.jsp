@@ -16,12 +16,9 @@
 
 <%@ include file="/init.jsp" %>
 
-<%
-AssetTagsManagementToolbarDisplayContext assetTagsManagementToolbarDisplayContext = new AssetTagsManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, assetTagsDisplayContext);
-%>
-
-<clay:management-toolbar-v2
-	displayContext="<%= assetTagsManagementToolbarDisplayContext %>"
+<clay:management-toolbar
+	managementToolbarDisplayContext="<%= new AssetTagsManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, assetTagsDisplayContext) %>"
+	propsTransformer="js/ManagementToolbarPropsTransformer"
 />
 
 <portlet:actionURL name="deleteTag" var="deleteTagURL">
@@ -66,9 +63,12 @@ AssetTagsManagementToolbarDisplayContext assetTagsManagementToolbarDisplayContex
 						</span>
 					</liferay-ui:search-container-column-text>
 
-					<liferay-ui:search-container-column-jsp
-						path="/tag_action.jsp"
-					/>
+					<liferay-ui:search-container-column-text>
+						<clay:dropdown-actions
+							dropdownItems="<%= assetTagsDisplayContext.getAssetTagActionDropdownItems(tag) %>"
+							propsTransformer="js/AssetTagActionDropdownPropsTransformer"
+						/>
+					</liferay-ui:search-container-column-text>
 				</c:when>
 				<c:when test='<%= Objects.equals(assetTagsDisplayContext.getDisplayStyle(), "list") %>'>
 					<liferay-ui:search-container-column-text
@@ -83,9 +83,12 @@ AssetTagsManagementToolbarDisplayContext assetTagsManagementToolbarDisplayContex
 						value="<%= String.valueOf(fullTagsCount) %>"
 					/>
 
-					<liferay-ui:search-container-column-jsp
-						path="/tag_action.jsp"
-					/>
+					<liferay-ui:search-container-column-text>
+						<clay:dropdown-actions
+							dropdownItems="<%= assetTagsDisplayContext.getAssetTagActionDropdownItems(tag) %>"
+							propsTransformer="js/AssetTagActionDropdownPropsTransformer"
+						/>
+					</liferay-ui:search-container-column-text>
 				</c:when>
 			</c:choose>
 		</liferay-ui:search-container-row>
@@ -96,8 +99,3 @@ AssetTagsManagementToolbarDisplayContext assetTagsManagementToolbarDisplayContex
 		/>
 	</liferay-ui:search-container>
 </aui:form>
-
-<liferay-frontend:component
-	componentId="<%= assetTagsManagementToolbarDisplayContext.getDefaultEventHandler() %>"
-	module="js/ManagementToolbarDefaultEventHandler.es"
-/>

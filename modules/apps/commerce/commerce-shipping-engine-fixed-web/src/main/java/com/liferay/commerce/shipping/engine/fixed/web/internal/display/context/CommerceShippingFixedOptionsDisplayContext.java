@@ -24,8 +24,12 @@ import com.liferay.commerce.shipping.engine.fixed.model.CommerceShippingFixedOpt
 import com.liferay.commerce.shipping.engine.fixed.service.CommerceShippingFixedOptionService;
 import com.liferay.commerce.shipping.engine.fixed.web.internal.FixedCommerceShippingEngine;
 import com.liferay.commerce.shipping.engine.fixed.web.internal.frontend.taglib.servlet.taglib.CommerceShippingMethodFixedOptionsScreenNavigationCategory;
+import com.liferay.frontend.data.set.model.FDSSortItemBuilder;
+import com.liferay.frontend.data.set.model.FDSSortItemList;
+import com.liferay.frontend.data.set.model.FDSSortItemListBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
@@ -34,8 +38,9 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import java.util.ResourceBundle;
+
 import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 
@@ -48,8 +53,8 @@ public class CommerceShippingFixedOptionsDisplayContext
 	public CommerceShippingFixedOptionsDisplayContext(
 		CommerceChannelLocalService commerceChannelLocalService,
 		CommerceCurrencyLocalService commerceCurrencyLocalService,
-		CommerceShippingMethodService commerceShippingMethodService,
 		CommerceShippingFixedOptionService commerceShippingFixedOptionService,
+		CommerceShippingMethodService commerceShippingMethodService,
 		Portal portal, RenderRequest renderRequest,
 		RenderResponse renderResponse) {
 
@@ -63,20 +68,17 @@ public class CommerceShippingFixedOptionsDisplayContext
 	}
 
 	public String getAddShippingFixedOptionURL() throws Exception {
-		PortletURL portletURL = _portal.getControlPanelPortletURL(
-			renderRequest, CommercePortletKeys.COMMERCE_SHIPPING_METHODS,
-			PortletRequest.RENDER_PHASE);
-
-		portletURL.setParameter(
-			"mvcRenderCommandName",
-			"/commerce_shipping_methods/edit_commerce_shipping_fixed_option");
-		portletURL.setParameter(
-			"commerceShippingMethodId",
-			String.valueOf(getCommerceShippingMethodId()));
-
-		portletURL.setWindowState(LiferayWindowState.POP_UP);
-
-		return portletURL.toString();
+		return PortletURLBuilder.create(
+			_portal.getControlPanelPortletURL(
+				renderRequest, CommercePortletKeys.COMMERCE_SHIPPING_METHODS,
+				PortletRequest.RENDER_PHASE)
+		).setMVCRenderCommandName(
+			"/commerce_shipping_methods/edit_commerce_shipping_fixed_option"
+		).setParameter(
+			"commerceShippingMethodId", getCommerceShippingMethodId()
+		).setWindowState(
+			LiferayWindowState.POP_UP
+		).buildString();
 	}
 
 	public CommerceShippingFixedOption getCommerceShippingFixedOption()
@@ -105,6 +107,20 @@ public class CommerceShippingFixedOptionsDisplayContext
 		return commerceShippingFixedOption;
 	}
 
+	public String getCommerceShippingFixedOptionName(
+			ResourceBundle resourceBundle)
+		throws PortalException {
+
+		CommerceShippingFixedOption commerceShippingFixedOption =
+			getCommerceShippingFixedOption();
+
+		if (commerceShippingFixedOption == null) {
+			return LanguageUtil.get(resourceBundle, "shipping-option");
+		}
+
+		return commerceShippingFixedOption.getName(resourceBundle.getLocale());
+	}
+
 	public CreationMenu getCreationMenu() throws Exception {
 		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
@@ -117,6 +133,16 @@ public class CommerceShippingFixedOptionsDisplayContext
 						themeDisplay.getLocale(), "add-shipping-option"));
 				dropdownItem.setTarget("sidePanel");
 			}
+		).build();
+	}
+
+	public FDSSortItemList getFDSSortItemList() {
+		return FDSSortItemListBuilder.add(
+			FDSSortItemBuilder.setDirection(
+				"desc"
+			).setKey(
+				"priority"
+			).build()
 		).build();
 	}
 

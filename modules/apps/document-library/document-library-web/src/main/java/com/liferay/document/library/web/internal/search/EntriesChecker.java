@@ -24,6 +24,8 @@ import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.dao.search.ResultRow;
 import com.liferay.portal.kernel.dao.search.RowChecker;
 import com.liferay.portal.kernel.exception.NoSuchRepositoryEntryException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.repository.model.FileEntry;
@@ -84,6 +86,10 @@ public class EntriesChecker extends EmptyOnClickRowChecker {
 							folder = DLAppServiceUtil.getFolder(entryId);
 						}
 						catch (Exception exception3) {
+							if (_log.isDebugEnabled()) {
+								_log.debug(exception3);
+							}
+
 							return StringPool.BLANK;
 						}
 					}
@@ -109,7 +115,7 @@ public class EntriesChecker extends EmptyOnClickRowChecker {
 			name = _SIMPLE_NAME_FOLDER;
 		}
 
-		String checkBoxRowIds = getEntryRowIds();
+		String checkBoxRowIds = _getEntryRowIds();
 		String checkBoxAllRowIds = "'#" + getAllRowIds() + "'";
 		String checkBoxPostOnClick =
 			_liferayPortletResponse.getNamespace() + "toggleActionsButton();";
@@ -141,7 +147,7 @@ public class EntriesChecker extends EmptyOnClickRowChecker {
 			return StringPool.BLANK;
 		}
 
-		String checkBoxRowIds = getEntryRowIds();
+		String checkBoxRowIds = _getEntryRowIds();
 		String checkBoxAllRowIds = "'#" + getAllRowIds() + "'";
 		String checkBoxPostOnClick =
 			_liferayPortletResponse.getNamespace() + "toggleActionsButton();";
@@ -153,24 +159,13 @@ public class EntriesChecker extends EmptyOnClickRowChecker {
 			checkBoxPostOnClick);
 	}
 
-	protected String getEntryRowIds() {
-		StringBundler sb = new StringBundler(13);
-
-		sb.append("['");
-		sb.append(_liferayPortletResponse.getNamespace());
-		sb.append(RowChecker.ROW_IDS);
-		sb.append(_SIMPLE_NAME_FOLDER);
-		sb.append("', '");
-		sb.append(_liferayPortletResponse.getNamespace());
-		sb.append(RowChecker.ROW_IDS);
-		sb.append(_SIMPLE_NAME_DL_FILE_SHORTCUT);
-		sb.append("', '");
-		sb.append(_liferayPortletResponse.getNamespace());
-		sb.append(RowChecker.ROW_IDS);
-		sb.append(_SIMPLE_NAME_FILE_ENTRY);
-		sb.append("']");
-
-		return sb.toString();
+	private String _getEntryRowIds() {
+		return StringBundler.concat(
+			"['", _liferayPortletResponse.getNamespace(), RowChecker.ROW_IDS,
+			_SIMPLE_NAME_FOLDER, "', '", _liferayPortletResponse.getNamespace(),
+			RowChecker.ROW_IDS, _SIMPLE_NAME_DL_FILE_SHORTCUT, "', '",
+			_liferayPortletResponse.getNamespace(), RowChecker.ROW_IDS,
+			_SIMPLE_NAME_FILE_ENTRY, "']");
 	}
 
 	private static final String _SIMPLE_NAME_DL_FILE_SHORTCUT =
@@ -181,6 +176,8 @@ public class EntriesChecker extends EmptyOnClickRowChecker {
 
 	private static final String _SIMPLE_NAME_FOLDER =
 		Folder.class.getSimpleName();
+
+	private static final Log _log = LogFactoryUtil.getLog(EntriesChecker.class);
 
 	private final LiferayPortletResponse _liferayPortletResponse;
 

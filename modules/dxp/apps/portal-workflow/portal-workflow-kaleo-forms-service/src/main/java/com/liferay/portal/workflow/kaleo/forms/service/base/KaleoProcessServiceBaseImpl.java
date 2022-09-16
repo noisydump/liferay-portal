@@ -20,17 +20,23 @@ import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.service.BaseServiceImpl;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.workflow.kaleo.forms.model.KaleoProcess;
 import com.liferay.portal.workflow.kaleo.forms.service.KaleoProcessService;
+import com.liferay.portal.workflow.kaleo.forms.service.KaleoProcessServiceUtil;
 import com.liferay.portal.workflow.kaleo.forms.service.persistence.KaleoProcessFinder;
 import com.liferay.portal.workflow.kaleo.forms.service.persistence.KaleoProcessLinkPersistence;
 import com.liferay.portal.workflow.kaleo.forms.service.persistence.KaleoProcessPersistence;
 
+import java.lang.reflect.Field;
+
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -51,8 +57,13 @@ public abstract class KaleoProcessServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>KaleoProcessService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.workflow.kaleo.forms.service.KaleoProcessServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>KaleoProcessService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>KaleoProcessServiceUtil</code>.
 	 */
+	@Deactivate
+	protected void deactivate() {
+		_setServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -63,6 +74,8 @@ public abstract class KaleoProcessServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		kaleoProcessService = (KaleoProcessService)aopProxy;
+
+		_setServiceUtilService(kaleoProcessService);
 	}
 
 	/**
@@ -107,6 +120,22 @@ public abstract class KaleoProcessServiceBaseImpl
 		}
 	}
 
+	private void _setServiceUtilService(
+		KaleoProcessService kaleoProcessService) {
+
+		try {
+			Field field = KaleoProcessServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, kaleoProcessService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@Reference
 	protected
 		com.liferay.portal.workflow.kaleo.forms.service.KaleoProcessLocalService
@@ -128,22 +157,6 @@ public abstract class KaleoProcessServiceBaseImpl
 		counterLocalService;
 
 	@Reference
-	protected com.liferay.dynamic.data.lists.service.DDLRecordLocalService
-		ddlRecordLocalService;
-
-	@Reference
-	protected com.liferay.dynamic.data.lists.service.DDLRecordService
-		ddlRecordService;
-
-	@Reference
-	protected com.liferay.dynamic.data.lists.service.DDLRecordSetLocalService
-		ddlRecordSetLocalService;
-
-	@Reference
-	protected com.liferay.dynamic.data.lists.service.DDLRecordSetService
-		ddlRecordSetService;
-
-	@Reference
 	protected com.liferay.portal.kernel.service.ClassNameLocalService
 		classNameLocalService;
 
@@ -162,13 +175,7 @@ public abstract class KaleoProcessServiceBaseImpl
 	@Reference
 	protected com.liferay.portal.kernel.service.UserService userService;
 
-	@Reference
-	protected
-		com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService
-			workflowDefinitionLinkLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService
-		workflowInstanceLinkLocalService;
+	private static final Log _log = LogFactoryUtil.getLog(
+		KaleoProcessServiceBaseImpl.class);
 
 }

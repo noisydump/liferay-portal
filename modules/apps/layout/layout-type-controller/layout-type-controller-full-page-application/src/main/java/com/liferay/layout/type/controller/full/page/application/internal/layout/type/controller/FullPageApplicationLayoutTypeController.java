@@ -23,9 +23,9 @@ import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.LayoutTypeController;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.service.PortletLocalService;
+import com.liferay.portal.kernel.servlet.PipingServletResponse;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.taglib.servlet.PipingServletResponse;
 
 import java.util.List;
 
@@ -118,22 +118,6 @@ public class FullPageApplicationLayoutTypeController
 			portlets);
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *             #createServletResponse(HttpServletResponse,
-	 *             UnsyncStringWriter)}
-	 */
-	@Deprecated
-	@Override
-	protected ServletResponse createServletResponse(
-		HttpServletResponse httpServletResponse,
-		com.liferay.portal.kernel.io.unsync.UnsyncStringWriter
-			unsyncStringWriter) {
-
-		return new PipingServletResponse(
-			httpServletResponse, unsyncStringWriter);
-	}
-
 	@Override
 	protected ServletResponse createServletResponse(
 		HttpServletResponse httpServletResponse,
@@ -146,6 +130,11 @@ public class FullPageApplicationLayoutTypeController
 	@Override
 	protected String getEditPage() {
 		return _EDIT_PAGE;
+	}
+
+	@Override
+	protected ServletContext getServletContext() {
+		return _servletContext;
 	}
 
 	@Override
@@ -167,14 +156,6 @@ public class FullPageApplicationLayoutTypeController
 		_portletLocalService = portletLocalService;
 	}
 
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.layout.type.controller.full.page.application)",
-		unbind = "-"
-	)
-	protected void setServletContext(ServletContext servletContext) {
-		this.servletContext = servletContext;
-	}
-
 	private static final String _EDIT_PAGE =
 		"/layout/edit/full_page_application.jsp";
 
@@ -186,5 +167,10 @@ public class FullPageApplicationLayoutTypeController
 		"/layout/view/full_page_application.jsp";
 
 	private PortletLocalService _portletLocalService;
+
+	@Reference(
+		target = "(osgi.web.symbolicname=com.liferay.layout.type.controller.full.page.application)"
+	)
+	private ServletContext _servletContext;
 
 }

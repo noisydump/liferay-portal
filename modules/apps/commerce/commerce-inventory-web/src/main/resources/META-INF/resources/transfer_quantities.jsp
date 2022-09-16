@@ -37,12 +37,10 @@ CommerceInventoryDisplayContext commerceInventoryDisplayContext = (CommerceInven
 		<aui:select label="source" name="fromCommerceInventoryWarehouseId" required="<%= true %>">
 
 			<%
-			List<CommerceInventoryWarehouse> commerceInventoryWarehouses = commerceInventoryDisplayContext.getCommerceInventoryWarehouses();
-
-			for (CommerceInventoryWarehouse commerceInventoryWarehouse : commerceInventoryWarehouses) {
+			for (CommerceInventoryWarehouse commerceInventoryWarehouse : commerceInventoryDisplayContext.getCommerceInventoryWarehouses()) {
 			%>
 
-				<aui:option label="<%= commerceInventoryWarehouse.getName() %>" value="<%= commerceInventoryWarehouse.getCommerceInventoryWarehouseId() %>" />
+				<aui:option label="<%= HtmlUtil.escape(commerceInventoryWarehouse.getName()) %>" value="<%= commerceInventoryWarehouse.getCommerceInventoryWarehouseId() %>" />
 
 			<%
 			}
@@ -53,12 +51,10 @@ CommerceInventoryDisplayContext commerceInventoryDisplayContext = (CommerceInven
 		<aui:select label="destination" name="toCommerceInventoryWarehouseId" required="<%= true %>">
 
 			<%
-			List<CommerceInventoryWarehouse> commerceInventoryWarehouses = commerceInventoryDisplayContext.getCommerceInventoryWarehouses();
-
-			for (CommerceInventoryWarehouse commerceInventoryWarehouse : commerceInventoryWarehouses) {
+			for (CommerceInventoryWarehouse commerceInventoryWarehouse : commerceInventoryDisplayContext.getCommerceInventoryWarehouses()) {
 			%>
 
-				<aui:option label="<%= commerceInventoryWarehouse.getName() %>" value="<%= commerceInventoryWarehouse.getCommerceInventoryWarehouseId() %>" />
+				<aui:option label="<%= HtmlUtil.escape(commerceInventoryWarehouse.getName()) %>" value="<%= commerceInventoryWarehouse.getCommerceInventoryWarehouseId() %>" />
 
 			<%
 			}

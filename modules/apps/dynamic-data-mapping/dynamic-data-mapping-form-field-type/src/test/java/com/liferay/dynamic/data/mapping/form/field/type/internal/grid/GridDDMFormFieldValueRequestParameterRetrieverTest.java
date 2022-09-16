@@ -17,11 +17,13 @@ package com.liferay.dynamic.data.mapping.form.field.type.internal.grid;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.json.JSONFactoryImpl;
 import com.liferay.portal.kernel.json.JSONFactory;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -31,6 +33,11 @@ import org.springframework.mock.web.MockHttpServletRequest;
  */
 public class GridDDMFormFieldValueRequestParameterRetrieverTest {
 
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
 	@Before
 	public void setUp() {
 		_gridDDMFormFieldValueRequestParameterRetriever =
@@ -38,8 +45,6 @@ public class GridDDMFormFieldValueRequestParameterRetrieverTest {
 
 		_gridDDMFormFieldValueRequestParameterRetriever.jsonFactory =
 			_jsonFactory;
-
-		_setUpJSONFactoryUtil();
 	}
 
 	@Test
@@ -103,7 +108,25 @@ public class GridDDMFormFieldValueRequestParameterRetrieverTest {
 			parameterValue);
 	}
 
-	@Test(expected = IndexOutOfBoundsException.class)
+	@Test
+	public void testGetRequestParameterValueWithOneOption() {
+		MockHttpServletRequest mockHttpServletRequest =
+			new MockHttpServletRequest();
+
+		mockHttpServletRequest.addParameter(_PARAMETER_NAME, "row1;column1");
+
+		String parameterValue =
+			_gridDDMFormFieldValueRequestParameterRetriever.get(
+				mockHttpServletRequest, _PARAMETER_NAME, StringPool.BLANK);
+
+		Assert.assertEquals(
+			JSONUtil.put(
+				"row1", "column1"
+			).toString(),
+			parameterValue);
+	}
+
+	@Test
 	public void testGetRequestParameterWithMalformedString() {
 		MockHttpServletRequest mockHttpServletRequest =
 			new MockHttpServletRequest();
@@ -111,8 +134,15 @@ public class GridDDMFormFieldValueRequestParameterRetrieverTest {
 		mockHttpServletRequest.addParameter(
 			_PARAMETER_NAME, "row1/column2", "row2;column1");
 
-		_gridDDMFormFieldValueRequestParameterRetriever.get(
-			mockHttpServletRequest, _PARAMETER_NAME, StringPool.BLANK);
+		String parameterValue =
+			_gridDDMFormFieldValueRequestParameterRetriever.get(
+				mockHttpServletRequest, _PARAMETER_NAME, StringPool.BLANK);
+
+		Assert.assertEquals(
+			JSONUtil.put(
+				"row2", "column1"
+			).toString(),
+			parameterValue);
 	}
 
 	@Test
@@ -123,12 +153,6 @@ public class GridDDMFormFieldValueRequestParameterRetrieverTest {
 				StringPool.BLANK);
 
 		Assert.assertEquals("{}", parameterValue);
-	}
-
-	private void _setUpJSONFactoryUtil() {
-		JSONFactoryUtil jsonFactoryUtil = new JSONFactoryUtil();
-
-		jsonFactoryUtil.setJSONFactory(_jsonFactory);
 	}
 
 	private static final String _PARAMETER_NAME = "ddmFormFieldGrid";

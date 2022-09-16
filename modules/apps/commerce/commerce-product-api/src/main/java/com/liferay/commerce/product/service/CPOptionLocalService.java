@@ -16,7 +16,9 @@ package com.liferay.commerce.product.service;
 
 import com.liferay.commerce.product.model.CPOption;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
+import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery;
@@ -33,6 +35,8 @@ import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.service.BaseLocalService;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.change.tracking.CTService;
+import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
@@ -57,13 +61,14 @@ import org.osgi.annotation.versioning.ProviderType;
  * @see CPOptionLocalServiceUtil
  * @generated
  */
+@CTAware
 @ProviderType
 @Transactional(
 	isolation = Isolation.PORTAL,
 	rollbackFor = {PortalException.class, SystemException.class}
 )
 public interface CPOptionLocalService
-	extends BaseLocalService, PersistedModelLocalService {
+	extends BaseLocalService, CTService<CPOption>, PersistedModelLocalService {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -86,11 +91,17 @@ public interface CPOptionLocalService
 
 	@Indexable(type = IndexableType.REINDEX)
 	public CPOption addCPOption(
-			long userId, Map<Locale, String> nameMap,
-			Map<Locale, String> descriptionMap, String ddmFormFieldTypeName,
-			boolean facetable, boolean required, boolean skuContributor,
-			String key, String externalReferenceCode,
-			ServiceContext serviceContext)
+			String externalReferenceCode, long userId,
+			Map<Locale, String> nameMap, Map<Locale, String> descriptionMap,
+			String ddmFormFieldTypeName, boolean facetable, boolean required,
+			boolean skuContributor, String key, ServiceContext serviceContext)
+		throws PortalException;
+
+	public CPOption addOrUpdateCPOption(
+			String externalReferenceCode, long userId,
+			Map<Locale, String> nameMap, Map<Locale, String> descriptionMap,
+			String ddmFormFieldTypeName, boolean facetable, boolean required,
+			boolean skuContributor, String key, ServiceContext serviceContext)
 		throws PortalException;
 
 	/**
@@ -148,6 +159,9 @@ public interface CPOptionLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public <T> T dslQuery(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
@@ -217,14 +231,13 @@ public interface CPOptionLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public CPOption fetchByExternalReferenceCode(
-		long companyId, String externalReferenceCode);
+		String externalReferenceCode, long companyId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public CPOption fetchCPOption(long CPOptionId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public CPOption fetchCPOption(long companyId, String key)
-		throws PortalException;
+	public CPOption fetchCPOption(long companyId, String key);
 
 	/**
 	 * Returns the cp option with the matching external reference code and company.
@@ -233,6 +246,14 @@ public interface CPOptionLocalService
 	 * @param externalReferenceCode the cp option's external reference code
 	 * @return the matching cp option, or <code>null</code> if a matching cp option could not be found
 	 */
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public CPOption fetchCPOptionByExternalReferenceCode(
+		long companyId, String externalReferenceCode);
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #fetchCPOptionByExternalReferenceCode(long, String)}
+	 */
+	@Deprecated
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public CPOption fetchCPOptionByReferenceCode(
 		long companyId, String externalReferenceCode);
@@ -267,6 +288,19 @@ public interface CPOptionLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public CPOption getCPOption(long companyId, String key)
+		throws PortalException;
+
+	/**
+	 * Returns the cp option with the matching external reference code and company.
+	 *
+	 * @param companyId the primary key of the company
+	 * @param externalReferenceCode the cp option's external reference code
+	 * @return the matching cp option
+	 * @throws PortalException if a matching cp option could not be found
+	 */
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public CPOption getCPOptionByExternalReferenceCode(
+			long companyId, String externalReferenceCode)
 		throws PortalException;
 
 	/**
@@ -356,15 +390,21 @@ public interface CPOptionLocalService
 
 	@Indexable(type = IndexableType.REINDEX)
 	public CPOption updateCPOptionExternalReferenceCode(
-			long cpOptionId, String externalReferenceCode)
+			String externalReferenceCode, long cpOptionId)
 		throws PortalException;
 
-	public CPOption upsertCPOption(
-			long userId, Map<Locale, String> nameMap,
-			Map<Locale, String> descriptionMap, String ddmFormFieldTypeName,
-			boolean facetable, boolean required, boolean skuContributor,
-			String key, String externalReferenceCode,
-			ServiceContext serviceContext)
-		throws PortalException;
+	@Override
+	@Transactional(enabled = false)
+	public CTPersistence<CPOption> getCTPersistence();
+
+	@Override
+	@Transactional(enabled = false)
+	public Class<CPOption> getModelClass();
+
+	@Override
+	@Transactional(rollbackFor = Throwable.class)
+	public <R, E extends Throwable> R updateWithUnsafeFunction(
+			UnsafeFunction<CTPersistence<CPOption>, R, E> updateUnsafeFunction)
+		throws E;
 
 }

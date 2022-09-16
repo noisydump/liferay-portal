@@ -17,9 +17,11 @@ package com.liferay.asset.publisher.web.internal.portlet;
 import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.asset.publisher.constants.AssetPublisherPortletKeys;
+import com.liferay.asset.publisher.web.internal.constants.AssetPublisherSelectionStyleConstants;
 import com.liferay.asset.publisher.web.internal.helper.AssetPublisherWebHelper;
 import com.liferay.layout.model.LayoutClassedModelUsage;
 import com.liferay.layout.service.LayoutClassedModelUsageLocalService;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
@@ -62,11 +64,11 @@ public class AssetPublisherAddPortletProvider
 	public PortletURL getPortletURL(HttpServletRequest httpServletRequest)
 		throws PortalException {
 
-		PortletURL assetPublisherURL = super.getPortletURL(httpServletRequest);
-
-		assetPublisherURL.setParameter("mvcPath", "/view_content.jsp");
-
-		return assetPublisherURL;
+		return PortletURLBuilder.create(
+			super.getPortletURL(httpServletRequest)
+		).setMVCPath(
+			"/view_content.jsp"
+		).buildPortletURL();
 	}
 
 	@Override
@@ -87,7 +89,9 @@ public class AssetPublisherAddPortletProvider
 		portletPreferences.setValue("displayStyle", "full-content");
 		portletPreferences.setValue(
 			"emailAssetEntryAddedEnabled", Boolean.FALSE.toString());
-		portletPreferences.setValue("selectionStyle", "manual");
+		portletPreferences.setValue(
+			"selectionStyle",
+			AssetPublisherSelectionStyleConstants.TYPE_MANUAL);
 		portletPreferences.setValue(
 			"showAddContentButton", Boolean.FALSE.toString());
 		portletPreferences.setValue("showAssetTitle", Boolean.FALSE.toString());

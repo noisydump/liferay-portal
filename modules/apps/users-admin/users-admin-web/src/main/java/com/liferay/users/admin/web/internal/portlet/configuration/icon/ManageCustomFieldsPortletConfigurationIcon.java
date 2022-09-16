@@ -15,8 +15,11 @@
 package com.liferay.users.admin.web.internal.portlet.configuration.icon;
 
 import com.liferay.expando.kernel.model.ExpandoColumn;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserConstants;
 import com.liferay.portal.kernel.portlet.PortletProvider;
@@ -36,9 +39,9 @@ import java.util.ResourceBundle;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
-import javax.portlet.PortletURL;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Albert Lee
@@ -56,7 +59,7 @@ public class ManageCustomFieldsPortletConfigurationIcon
 		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
 			"content.Language", getLocale(portletRequest), getClass());
 
-		return LanguageUtil.get(resourceBundle, "manage-custom-fields");
+		return _language.get(resourceBundle, "manage-custom-fields");
 	}
 
 	@Override
@@ -67,16 +70,20 @@ public class ManageCustomFieldsPortletConfigurationIcon
 			WebKeys.THEME_DISPLAY);
 
 		try {
-			PortletURL portletURL = PortletProviderUtil.getPortletURL(
-				portletRequest, ExpandoColumn.class.getName(),
-				PortletProvider.Action.MANAGE);
-
-			portletURL.setParameter("modelResource", User.class.getName());
-			portletURL.setParameter("redirect", themeDisplay.getURLCurrent());
-
-			return portletURL.toString();
+			return PortletURLBuilder.create(
+				PortletProviderUtil.getPortletURL(
+					portletRequest, ExpandoColumn.class.getName(),
+					PortletProvider.Action.MANAGE)
+			).setRedirect(
+				themeDisplay.getURLCurrent()
+			).setParameter(
+				"modelResource", User.class.getName()
+			).buildString();
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return StringPool.BLANK;
@@ -109,9 +116,18 @@ public class ManageCustomFieldsPortletConfigurationIcon
 			}
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return false;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		ManageCustomFieldsPortletConfigurationIcon.class);
+
+	@Reference
+	private Language _language;
 
 }

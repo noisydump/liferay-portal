@@ -52,7 +52,6 @@ public class KnowledgeBaseOSGiCommands {
 			dynamicQuery -> dynamicQuery.add(
 				RestrictionsFactoryUtil.eq(
 					"name", KBConstants.RESOURCE_NAME_ADMIN)));
-
 		actionableDynamicQuery.setPerformActionMethod(
 			(ResourcePermission resourcePermission) -> {
 				if (_hasResourceAction(
@@ -64,20 +63,6 @@ public class KnowledgeBaseOSGiCommands {
 			});
 
 		actionableDynamicQuery.performActions();
-	}
-
-	@Reference(unbind = "-")
-	protected void setResourceActionLocalService(
-		ResourceActionLocalService resourceActionLocalService) {
-
-		_resourceActionLocalService = resourceActionLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setResourcePermissionLocalService(
-		ResourcePermissionLocalService resourcePermissionLocalService) {
-
-		_resourcePermissionLocalService = resourcePermissionLocalService;
 	}
 
 	private void _addResourceAction(
@@ -105,7 +90,10 @@ public class KnowledgeBaseOSGiCommands {
 		return _resourcePermissionLocalService.hasActionId(permission, action);
 	}
 
+	@Reference
 	private ResourceActionLocalService _resourceActionLocalService;
+
+	@Reference
 	private ResourcePermissionLocalService _resourcePermissionLocalService;
 
 }

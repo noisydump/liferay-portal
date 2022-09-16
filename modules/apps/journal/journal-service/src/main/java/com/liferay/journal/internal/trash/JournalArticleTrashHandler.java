@@ -44,9 +44,9 @@ import com.liferay.portal.kernel.trash.TrashRenderer;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.trash.constants.TrashActionKeys;
+import com.liferay.trash.constants.TrashEntryConstants;
 import com.liferay.trash.kernel.exception.RestoreEntryException;
 import com.liferay.trash.kernel.model.TrashEntry;
-import com.liferay.trash.kernel.model.TrashEntryConstants;
 
 import java.util.List;
 
@@ -66,7 +66,7 @@ import org.osgi.service.component.annotations.Reference;
 	property = "model.class.name=com.liferay.journal.model.JournalArticle",
 	service = TrashHandler.class
 )
-public class JournalArticleTrashHandler extends JournalBaseTrashHandler {
+public class JournalArticleTrashHandler extends BaseJournalTrashHandler {
 
 	@Override
 	public void checkRestorableEntry(
@@ -125,6 +125,13 @@ public class JournalArticleTrashHandler extends JournalBaseTrashHandler {
 		long parentFolderId = article.getFolderId();
 
 		if (parentFolderId <= 0) {
+			return null;
+		}
+
+		JournalFolder parentFolder = _journalFolderLocalService.fetchFolder(
+			parentFolderId);
+
+		if (parentFolder == null) {
 			return null;
 		}
 
@@ -219,14 +226,10 @@ public class JournalArticleTrashHandler extends JournalBaseTrashHandler {
 		JournalArticle article = _journalArticleLocalService.getLatestArticle(
 			classPK);
 
-		if ((article.getFolderId() > 0) &&
-			(_journalFolderLocalService.fetchFolder(article.getFolderId()) ==
-				null)) {
-
-			return false;
-		}
-
-		if (!hasTrashPermission(
+		if (((article.getFolderId() > 0) &&
+			 (_journalFolderLocalService.fetchFolder(article.getFolderId()) ==
+				 null)) ||
+			!hasTrashPermission(
 				PermissionThreadLocal.getPermissionChecker(),
 				article.getGroupId(), classPK, TrashActionKeys.RESTORE)) {
 
@@ -396,36 +399,10 @@ public class JournalArticleTrashHandler extends JournalBaseTrashHandler {
 			permissionChecker, classPK, actionId);
 	}
 
-	@Reference(unbind = "-")
-	protected void setDDMStructureLocalService(
-		DDMStructureLocalService ddmStructureLocalService) {
-
-		_ddmStructureLocalService = ddmStructureLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setJournalArticleLocalService(
-		JournalArticleLocalService journalArticleLocalService) {
-
-		_journalArticleLocalService = journalArticleLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setJournalArticleResourceLocalService(
-		JournalArticleResourceLocalService journalArticleResourceLocalService) {
-
-		_journalArticleResourceLocalService =
-			journalArticleResourceLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setJournalFolderLocalService(
-		JournalFolderLocalService journalFolderLocalService) {
-
-		_journalFolderLocalService = journalFolderLocalService;
-	}
-
+	@Reference
 	private DDMStructureLocalService _ddmStructureLocalService;
+
+	@Reference
 	private JournalArticleLocalService _journalArticleLocalService;
 
 	@Reference(
@@ -434,8 +411,11 @@ public class JournalArticleTrashHandler extends JournalBaseTrashHandler {
 	private ModelResourcePermission<JournalArticle>
 		_journalArticleModelResourcePermission;
 
+	@Reference
 	private JournalArticleResourceLocalService
 		_journalArticleResourceLocalService;
+
+	@Reference
 	private JournalFolderLocalService _journalFolderLocalService;
 
 	@Reference(

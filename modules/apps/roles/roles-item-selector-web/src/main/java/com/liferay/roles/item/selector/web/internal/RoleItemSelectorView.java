@@ -24,7 +24,6 @@ import com.liferay.portal.kernel.portlet.PortletURLUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.RoleService;
 import com.liferay.portal.kernel.util.JavaConstants;
-import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portlet.rolesadmin.search.RoleSearch;
 import com.liferay.portlet.rolesadmin.search.RoleSearchTerms;
@@ -57,8 +56,10 @@ import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Alessio Antonio Rendina
+ * @deprecated As of Mueller (7.2.x), , with no direct replacement
  */
 @Component(immediate = true, service = ItemSelectorView.class)
+@Deprecated
 public class RoleItemSelectorView
 	implements ItemSelectorView<RoleItemSelectorCriterion> {
 
@@ -100,7 +101,8 @@ public class RoleItemSelectorView
 
 		RoleItemSelectorViewDisplayContext roleItemSelectorViewDisplayContext =
 			new RoleItemSelectorViewDisplayContext(
-				httpServletRequest, itemSelectedEventName,
+				httpServletRequest, roleItemSelectorCriterion,
+				itemSelectedEventName,
 				_getSearchContainer(
 					renderRequest, renderResponse,
 					roleItemSelectorCriterion.getCheckedRoleIds(),
@@ -133,36 +135,30 @@ public class RoleItemSelectorView
 			renderRequest, currentURL);
 
 		searchContainer.setEmptyResultsMessage("no-roles-were-found");
-
-		OrderByComparator<Role> orderByComparator =
+		searchContainer.setOrderByComparator(
 			_usersAdmin.getRoleOrderByComparator(
 				searchContainer.getOrderByCol(),
-				searchContainer.getOrderByType());
-
-		searchContainer.setOrderByComparator(orderByComparator);
-
-		searchContainer.setRowChecker(
-			new RoleItemSelectorChecker(
-				renderResponse, checkedRoleIds, excludedRoleNames));
+				searchContainer.getOrderByType()));
 
 		RoleSearchTerms searchTerms =
 			(RoleSearchTerms)searchContainer.getSearchTerms();
 
 		searchTerms.setType(type);
 
-		List<Role> results = _roleService.search(
-			CompanyThreadLocal.getCompanyId(), searchTerms.getKeywords(),
-			searchTerms.getTypesObj(), new LinkedHashMap<String, Object>(),
-			searchContainer.getStart(), searchContainer.getEnd(),
-			searchContainer.getOrderByComparator());
+		searchContainer.setResultsAndTotal(
+			() -> _roleService.search(
+				CompanyThreadLocal.getCompanyId(), searchTerms.getKeywords(),
+				searchTerms.getTypesObj(), new LinkedHashMap<String, Object>(),
+				searchContainer.getStart(), searchContainer.getEnd(),
+				searchContainer.getOrderByComparator()),
+			_roleService.searchCount(
+				CompanyThreadLocal.getCompanyId(), searchTerms.getKeywords(),
+				searchTerms.getTypesObj(),
+				new LinkedHashMap<String, Object>()));
 
-		int total = _roleService.searchCount(
-			CompanyThreadLocal.getCompanyId(), searchTerms.getKeywords(),
-			searchTerms.getTypesObj(), new LinkedHashMap<String, Object>());
-
-		searchContainer.setTotal(total);
-
-		searchContainer.setResults(results);
+		searchContainer.setRowChecker(
+			new RoleItemSelectorChecker(
+				renderResponse, checkedRoleIds, excludedRoleNames));
 
 		return searchContainer;
 	}

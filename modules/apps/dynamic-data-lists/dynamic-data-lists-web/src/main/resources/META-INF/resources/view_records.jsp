@@ -17,8 +17,6 @@
 <%@ include file="/init.jsp" %>
 
 <%
-String randomNamespace = PortalUtil.generateRandomKey(request, "portlet_dynamic_data_lists_view_records") + StringPool.UNDERLINE;
-
 long formDDMTemplateId = ParamUtil.getLong(request, "formDDMTemplateId");
 
 DDLViewRecordsDisplayContext ddlViewRecordsDisplayContext = new DDLViewRecordsDisplayContext(liferayPortletRequest, liferayPortletResponse, formDDMTemplateId);
@@ -39,15 +37,24 @@ if (!ddlDisplayContext.isAdminPortlet()) {
 	/>
 </c:if>
 
-<clay:management-toolbar-v2
+<portlet:actionURL name="/dynamic_data_lists/delete_record" var="deleteRecordURL">
+	<portlet:param name="mvcPath" value="/view_records.jsp" />
+	<portlet:param name="redirect" value="<%= currentURL %>" />
+</portlet:actionURL>
+
+<clay:management-toolbar
 	actionDropdownItems="<%= ddlViewRecordsDisplayContext.getActionItemsDropdownItems() %>"
+	additionalProps='<%=
+		HashMapBuilder.<String, Object>put(
+			"deleteRecordURL", deleteRecordURL.toString()
+		).build()
+	%>'
 	clearResultsURL="<%= ddlViewRecordsDisplayContext.getClearResultsURL() %>"
-	componentId='<%= randomNamespace + "ddlViewRecordsManagementToolbar" %>'
 	creationMenu="<%= ddlViewRecordsDisplayContext.getCreationMenu() %>"
 	disabled="<%= ddlViewRecordsDisplayContext.isDisabledManagementBar() %>"
 	filterDropdownItems="<%= ddlViewRecordsDisplayContext.getFilterItemsDropdownItems() %>"
 	itemsTotal="<%= ddlViewRecordsDisplayContext.getTotalItems() %>"
-	namespace="<%= liferayPortletResponse.getNamespace() %>"
+	propsTransformer="js/ViewRecordsManagementToolbarPropsTransformer"
 	searchActionURL="<%= ddlViewRecordsDisplayContext.getSearchActionURL() %>"
 	searchContainerId="<%= ddlViewRecordsDisplayContext.getSearchContainerId() %>"
 	searchFormName="fm1"
@@ -60,7 +67,7 @@ if (!ddlDisplayContext.isAdminPortlet()) {
 	cssClass="view-records-container"
 	id='<%= liferayPortletResponse.getNamespace() + "formContainer" %>'
 >
-	<aui:form action="<%= portletURL.toString() %>" method="post" name="fm">
+	<aui:form action="<%= portletURL %>" method="post" name="fm">
 		<aui:input name="recordIds" type="hidden" />
 
 		<liferay-ui:search-container
@@ -89,14 +96,21 @@ if (!ddlDisplayContext.isAdminPortlet()) {
 				String href = StringPool.BLANK;
 
 				if (ddlViewRecordsDisplayContext.isEditable()) {
-					PortletURL rowURL = renderResponse.createRenderURL();
-
-					rowURL.setParameter("mvcPath", "/view_record.jsp");
-					rowURL.setParameter("redirect", currentURL);
-					rowURL.setParameter("recordId", String.valueOf(record.getRecordId()));
-					rowURL.setParameter("version", recordVersion.getVersion());
-					rowURL.setParameter("editable", String.valueOf(ddlViewRecordsDisplayContext.isEditable()));
-					rowURL.setParameter("formDDMTemplateId", String.valueOf(formDDMTemplateId));
+					PortletURL rowURL = PortletURLBuilder.createRenderURL(
+						renderResponse
+					).setMVCPath(
+						"/view_record.jsp"
+					).setRedirect(
+						currentURL
+					).setParameter(
+						"editable", ddlViewRecordsDisplayContext.isEditable()
+					).setParameter(
+						"formDDMTemplateId", formDDMTemplateId
+					).setParameter(
+						"recordId", record.getRecordId()
+					).setParameter(
+						"version", recordVersion.getVersion()
+					).buildPortletURL();
 
 					href = rowURL.toString();
 				}
@@ -165,51 +179,4 @@ if (!ddlDisplayContext.isAdminPortlet()) {
 
 <%@ include file="/export_record_set.jspf" %>
 
-<aui:script use="liferay-portlet-dynamic-data-lists">
-	var deleteRecords = function () {
-		if (
-			confirm(
-				'<%= UnicodeLanguageUtil.get(request, "are-you-sure-you-want-to-delete-this") %>'
-			)
-		) {
-			var form = document.<portlet:namespace />fm;
-
-			var searchContainer = form.querySelector(
-				'#<portlet:namespace />ddlRecord'
-			);
-
-			if (searchContainer) {
-				<portlet:actionURL name="/dynamic_data_lists/delete_record" var="deleteRecordURL">
-					<portlet:param name="mvcPath" value="/view_records.jsp" />
-					<portlet:param name="redirect" value="<%= currentURL %>" />
-				</portlet:actionURL>
-
-				Liferay.Util.postForm(form, {
-					data: {
-						recordIds: Liferay.Util.listCheckedExcept(
-							searchContainer,
-							'<portlet:namespace />allRowIds'
-						),
-					},
-					url: '<%= deleteRecordURL %>',
-				});
-			}
-		}
-	};
-
-	var ACTIONS = {
-		deleteRecords: deleteRecords,
-	};
-
-	Liferay.componentReady(
-		'<%= randomNamespace + "ddlViewRecordsManagementToolbar" %>'
-	).then(function (managementToolbar) {
-		managementToolbar.on('actionItemClicked', function (event) {
-			var itemData = event.data.item.data;
-
-			if (itemData && itemData.action && ACTIONS[itemData.action]) {
-				ACTIONS[itemData.action]();
-			}
-		});
-	});
-</aui:script>
+<aui:script use="liferay-portlet-dynamic-data-lists"></aui:script>

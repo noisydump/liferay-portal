@@ -25,6 +25,8 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.dao.search.RowChecker;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
@@ -71,90 +73,76 @@ public class EntriesChecker extends EmptyOnClickRowChecker {
 		HttpServletRequest httpServletRequest, boolean checked,
 		boolean disabled, String primaryKey) {
 
-		KBArticle kbArticle = null;
-		KBFolder kbFolder = null;
-
-		long entryId = GetterUtil.getLong(primaryKey);
-
 		try {
-			kbArticle = KBArticleServiceUtil.getLatestKBArticle(
-				entryId, WorkflowConstants.STATUS_ANY);
-		}
-		catch (Exception exception1) {
-			if (exception1 instanceof NoSuchArticleException) {
-				try {
-					kbFolder = KBFolderServiceUtil.getKBFolder(entryId);
+			KBArticle kbArticle = null;
+			KBFolder kbFolder = null;
+
+			long entryId = GetterUtil.getLong(primaryKey);
+
+			try {
+				kbArticle = KBArticleServiceUtil.getLatestKBArticle(
+					entryId, WorkflowConstants.STATUS_ANY);
+			}
+			catch (NoSuchArticleException noSuchArticleException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(noSuchArticleException);
 				}
-				catch (Exception exception2) {
+
+				kbFolder = KBFolderServiceUtil.getKBFolder(entryId);
+			}
+
+			String name = null;
+
+			if (kbArticle != null) {
+				name = KBArticle.class.getSimpleName();
+
+				if (!KBArticlePermission.contains(
+						_permissionChecker, kbArticle, ActionKeys.DELETE)) {
+
 					return StringPool.BLANK;
 				}
 			}
 			else {
-				return StringPool.BLANK;
-			}
-		}
+				name = KBFolder.class.getSimpleName();
 
-		boolean showInput = false;
-
-		String name = null;
-
-		if (kbArticle != null) {
-			name = KBArticle.class.getSimpleName();
-
-			try {
-				if (KBArticlePermission.contains(
-						_permissionChecker, kbArticle, ActionKeys.DELETE)) {
-
-					showInput = true;
-				}
-			}
-			catch (Exception exception) {
-			}
-		}
-		else {
-			name = KBFolder.class.getSimpleName();
-
-			try {
-				if (KBFolderPermission.contains(
+				if (!KBFolderPermission.contains(
 						_permissionChecker, kbFolder, ActionKeys.DELETE)) {
 
-					showInput = true;
+					return StringPool.BLANK;
 				}
 			}
-			catch (Exception exception) {
-			}
-		}
 
-		if (!showInput) {
+			String checkBoxRowIds = _getEntryRowIds();
+			String checkBoxAllRowIds = "'#" + getAllRowIds() + "'";
+			String checkBoxPostOnClick =
+				_liferayPortletResponse.getNamespace() +
+					"toggleActionsButton();";
+
+			return getRowCheckBox(
+				httpServletRequest, checked, disabled,
+				_liferayPortletResponse.getNamespace() + RowChecker.ROW_IDS +
+					name,
+				primaryKey, checkBoxRowIds, checkBoxAllRowIds,
+				checkBoxPostOnClick);
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			return StringPool.BLANK;
 		}
-
-		String checkBoxRowIds = getEntryRowIds();
-		String checkBoxAllRowIds = "'#" + getAllRowIds() + "'";
-		String checkBoxPostOnClick =
-			_liferayPortletResponse.getNamespace() + "toggleActionsButton();";
-
-		return getRowCheckBox(
-			httpServletRequest, checked, disabled,
-			_liferayPortletResponse.getNamespace() + RowChecker.ROW_IDS + name,
-			primaryKey, checkBoxRowIds, checkBoxAllRowIds, checkBoxPostOnClick);
 	}
 
-	protected String getEntryRowIds() {
-		StringBundler sb = new StringBundler(9);
-
-		sb.append("['");
-		sb.append(_liferayPortletResponse.getNamespace());
-		sb.append(RowChecker.ROW_IDS);
-		sb.append(KBArticle.class.getSimpleName());
-		sb.append("', '");
-		sb.append(_liferayPortletResponse.getNamespace());
-		sb.append(RowChecker.ROW_IDS);
-		sb.append(KBFolder.class.getSimpleName());
-		sb.append("']");
-
-		return sb.toString();
+	private String _getEntryRowIds() {
+		return StringBundler.concat(
+			"['", _liferayPortletResponse.getNamespace(), RowChecker.ROW_IDS,
+			KBArticle.class.getSimpleName(), "', '",
+			_liferayPortletResponse.getNamespace(), RowChecker.ROW_IDS,
+			KBFolder.class.getSimpleName(), "']");
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(EntriesChecker.class);
 
 	private final LiferayPortletResponse _liferayPortletResponse;
 	private final PermissionChecker _permissionChecker;

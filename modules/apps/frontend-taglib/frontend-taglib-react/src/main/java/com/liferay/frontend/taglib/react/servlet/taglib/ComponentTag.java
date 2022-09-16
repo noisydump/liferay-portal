@@ -18,6 +18,8 @@ import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolvedPackageNam
 import com.liferay.frontend.js.module.launcher.JSModuleResolver;
 import com.liferay.frontend.taglib.react.internal.util.ServicesProvider;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -31,6 +33,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.JspWriter;
 
@@ -54,7 +57,7 @@ public class ComponentTag extends ParamAndPropertyAncestorTagImpl {
 			ReactRenderer reactRenderer = ServicesProvider.getReactRenderer();
 
 			reactRenderer.renderReact(
-				componentDescriptor, props, request, jspWriter);
+				componentDescriptor, props, getRequest(), jspWriter);
 		}
 		catch (Exception exception) {
 			throw new JspException(exception);
@@ -132,13 +135,17 @@ public class ComponentTag extends ParamAndPropertyAncestorTagImpl {
 		ServletContext servletContext = pageContext.getServletContext();
 
 		if (_setServletContext) {
-			servletContext = this.servletContext;
+			servletContext = getServletContext();
 		}
 
 		try {
 			return NPMResolvedPackageNameUtil.get(servletContext);
 		}
 		catch (UnsupportedOperationException unsupportedOperationException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(unsupportedOperationException);
+			}
+
 			JSModuleResolver jsModuleResolver =
 				ServicesProvider.getJSModuleResolver();
 
@@ -151,14 +158,17 @@ public class ComponentTag extends ParamAndPropertyAncestorTagImpl {
 	}
 
 	protected boolean isPositionInLine() {
-		String fragmentId = ParamUtil.getString(request, "p_f_id");
+		HttpServletRequest httpServletRequest = getRequest();
+
+		String fragmentId = ParamUtil.getString(httpServletRequest, "p_f_id");
 
 		if (Validator.isNotNull(fragmentId)) {
 			return true;
 		}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		if (themeDisplay.isIsolated() || themeDisplay.isLifecycleResource() ||
 			themeDisplay.isStateExclusive()) {
@@ -192,6 +202,8 @@ public class ComponentTag extends ParamAndPropertyAncestorTagImpl {
 
 	protected void prepareProps(Map<String, Object> props) {
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(ComponentTag.class);
 
 	private String _componentId;
 	private String _module;

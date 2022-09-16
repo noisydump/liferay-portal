@@ -8,17 +8,17 @@ exports[`Field Color Picker renders field disabled 1`] = `
     data-field-name="colorPicker"
     tabindex="0"
   >
+    <input
+      name="colorPicker"
+      type="hidden"
+      value="000000"
+    />
     <div
       class="clay-color-picker"
     >
-      <input
-        name="colorPicker"
-        style="height: 0px; margin: 0px; padding: 0px; visibility: hidden; width: 0px;"
-        type="text"
-        value="#000000"
-      />
       <div
         class="input-group clay-color"
+        style=""
       >
         <div
           class="input-group-item input-group-item-shrink input-group-prepend"
@@ -54,6 +54,11 @@ exports[`Field Color Picker renders field disabled 1`] = `
         </div>
       </div>
     </div>
+    <input
+      name="colorPicker_edited"
+      type="hidden"
+      value="false"
+    />
     
   </div>
 </div>
@@ -67,17 +72,17 @@ exports[`Field Color Picker renders field with helptext 1`] = `
     data-field-name="colorPicker"
     tabindex="0"
   >
+    <input
+      name="colorPicker"
+      type="hidden"
+      value="000000"
+    />
     <div
       class="clay-color-picker"
     >
-      <input
-        name="colorPicker"
-        style="height: 0px; margin: 0px; padding: 0px; visibility: hidden; width: 0px;"
-        type="text"
-        value="#000000"
-      />
       <div
         class="input-group clay-color"
+        style=""
       >
         <div
           class="input-group-item input-group-item-shrink input-group-prepend"
@@ -111,18 +116,24 @@ exports[`Field Color Picker renders field with helptext 1`] = `
         </div>
       </div>
     </div>
-    <span
+    <input
+      name="colorPicker_edited"
+      type="hidden"
+      value="false"
+    />
+    <div
       aria-hidden="true"
-      class="form-text"
+      class="form-feedback-group lfr-de__field-feedback"
     >
-      Helptext
-    </span>
+      <div>
+        Helptext
+      </div>
+    </div>
     <span
       class="sr-only"
       id="colorPicker_fieldDetails"
     >
       Helptext
-      <br />
     </span>
   </div>
 </div>
@@ -135,23 +146,23 @@ exports[`Field Color Picker renders field with label 1`] = `
     data-field-name="colorPicker"
   >
     <label
-      aria-describedby="colorPicker_fieldDetails"
+      aria-labelledby="colorPicker_fieldDetails"
       class="ddm-label"
       tabindex="0"
     >
       label
     </label>
+    <input
+      name="colorPicker"
+      type="hidden"
+      value="000000"
+    />
     <div
       class="clay-color-picker"
     >
-      <input
-        name="colorPicker"
-        style="height: 0px; margin: 0px; padding: 0px; visibility: hidden; width: 0px;"
-        type="text"
-        value="#000000"
-      />
       <div
         class="input-group clay-color"
+        style=""
       >
         <div
           class="input-group-item input-group-item-shrink input-group-prepend"
@@ -185,12 +196,19 @@ exports[`Field Color Picker renders field with label 1`] = `
         </div>
       </div>
     </div>
-    <span
+    <input
+      name="colorPicker_edited"
+      type="hidden"
+      value="false"
+    />
+    <div
       aria-hidden="true"
-      class="form-text"
+      class="form-feedback-group lfr-de__field-feedback"
     >
-      Helptext
-    </span>
+      <div>
+        Helptext
+      </div>
+    </div>
     <span
       class="sr-only"
       id="colorPicker_fieldDetails"
@@ -198,7 +216,6 @@ exports[`Field Color Picker renders field with label 1`] = `
       label
       <br />
       Helptext
-      <br />
     </span>
   </div>
 </div>

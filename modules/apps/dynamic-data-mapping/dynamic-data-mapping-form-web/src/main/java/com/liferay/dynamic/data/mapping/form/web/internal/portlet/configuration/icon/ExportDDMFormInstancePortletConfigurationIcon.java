@@ -17,7 +17,7 @@ package com.liferay.dynamic.data.mapping.form.web.internal.portlet.configuration
 import com.liferay.dynamic.data.mapping.constants.DDMPortletKeys;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstance;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
@@ -58,7 +58,7 @@ public class ExportDDMFormInstancePortletConfigurationIcon
 
 	@Override
 	public String getMessage(PortletRequest portletRequest) {
-		return LanguageUtil.get(
+		return _language.get(
 			getResourceBundle(getLocale(portletRequest)), "export");
 	}
 
@@ -66,7 +66,7 @@ public class ExportDDMFormInstancePortletConfigurationIcon
 	public String getURL(
 		PortletRequest portletRequest, PortletResponse portletResponse) {
 
-		return "javascript:;";
+		return "javascript:void(0);";
 	}
 
 	@Override
@@ -102,7 +102,7 @@ public class ExportDDMFormInstancePortletConfigurationIcon
 			// LPS-52675
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(portalException, portalException);
+				_log.debug(portalException);
 			}
 
 			return false;
@@ -115,12 +115,8 @@ public class ExportDDMFormInstancePortletConfigurationIcon
 	}
 
 	@Override
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.dynamic.data.mapping.form.web)",
-		unbind = "-"
-	)
-	public void setServletContext(ServletContext servletContext) {
-		super.setServletContext(servletContext);
+	protected ServletContext getServletContext() {
+		return _servletContext;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -131,5 +127,13 @@ public class ExportDDMFormInstancePortletConfigurationIcon
 	)
 	private ModelResourcePermission<DDMFormInstance>
 		_ddmFormInstanceModelResourcePermission;
+
+	@Reference
+	private Language _language;
+
+	@Reference(
+		target = "(osgi.web.symbolicname=com.liferay.dynamic.data.mapping.form.web)"
+	)
+	private ServletContext _servletContext;
 
 }

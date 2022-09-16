@@ -61,7 +61,7 @@ List<Group> selectedGroups = editAssetListDisplayContext.getSelectedGroups();
 
 		<c:if test="<%= !editAssetListDisplayContext.isLiveGroup() %>">
 			<liferay-ui:search-container-column-text>
-				<a class="modify-link" data-rowId="<%= group.getGroupId() %>" href="javascript:;"><%= removeLinkIcon %></a>
+				<a class="modify-link" data-rowId="<%= group.getGroupId() %>" href="javascript:void(0);"><%= removeLinkIcon %></a>
 			</liferay-ui:search-container-column-text>
 		</c:if>
 	</liferay-ui:search-container-row>
@@ -93,7 +93,7 @@ List<Group> selectedGroups = editAssetListDisplayContext.getSelectedGroups();
 			<liferay-ui:icon
 				message="<%= group.getScopeDescriptiveName(themeDisplay) %>"
 				onClick="<%= taglibOnClick %>"
-				url="javascript:;"
+				url="javascript:void(0);"
 			/>
 
 		<%
@@ -105,7 +105,7 @@ List<Group> selectedGroups = editAssetListDisplayContext.getSelectedGroups();
 			id="selectManageableGroup"
 			message='<%= LanguageUtil.get(request, "other-site-or-asset-library") + StringPool.TRIPLE_PERIOD %>'
 			method="get"
-			url="javascript:;"
+			url="javascript:void(0);"
 		/>
 	</liferay-ui:icon-menu>
 </c:if>
@@ -117,7 +117,7 @@ List<Group> selectedGroups = editAssetListDisplayContext.getSelectedGroups();
 
 	searchContainer.get('contentBox').delegate(
 		'click',
-		function (event) {
+		(event) => {
 			var link = event.currentTarget;
 
 			var tr = link.ancestor('tr');
@@ -136,7 +136,7 @@ List<Group> selectedGroups = editAssetListDisplayContext.getSelectedGroups();
 	);
 
 	if (selectManageableGroupIcon) {
-		selectManageableGroupIcon.addEventListener('click', function (event) {
+		selectManageableGroupIcon.addEventListener('click', (event) => {
 			event.preventDefault();
 
 			Liferay.Util.openSelectionModal({
@@ -175,7 +175,7 @@ List<Group> selectedGroups = editAssetListDisplayContext.getSelectedGroups();
 		rowColumns.push(
 			'<a class="modify-link" data-rowId="' +
 				groupId +
-				'" href="javascript:;"><%= UnicodeFormatter.toString(removeLinkIcon) %></a>'
+				'" href="javascript:void(0);"><%= UnicodeFormatter.toString(removeLinkIcon) %></a>'
 		);
 
 		searchContainer.addRow(rowColumns, groupId);
@@ -192,6 +192,8 @@ List<Group> selectedGroups = editAssetListDisplayContext.getSelectedGroups();
 			var searchContainerData = searchContainer.getData();
 
 			groupIds.setAttribute('value', searchContainerData.split(','));
+
+			<portlet:namespace />saveSelectBoxes();
 		}
 	}
 </aui:script>

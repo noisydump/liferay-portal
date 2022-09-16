@@ -13,13 +13,7 @@ import ClayAlert from '@clayui/alert';
 import ClayButton from '@clayui/button';
 import {ClayInput} from '@clayui/form';
 import ClayModal, {useModal} from '@clayui/modal';
-import React, {
-	useCallback,
-	useContext,
-	useEffect,
-	useMemo,
-	useState,
-} from 'react';
+import React, {useCallback, useContext, useEffect, useState} from 'react';
 
 import {useToaster} from '../../../../../shared/components/toaster/hooks/useToaster.es';
 import {useFetch} from '../../../../../shared/hooks/useFetch.es';
@@ -27,7 +21,7 @@ import {usePost} from '../../../../../shared/hooks/usePost.es';
 import {InstanceListContext} from '../../../InstanceListPageProvider.es';
 import {ModalContext} from '../../ModalProvider.es';
 
-const SingleTransitionModal = () => {
+export default function SingleTransitionModal() {
 	const [comment, setComment] = useState('');
 	const {
 		closeModal,
@@ -35,7 +29,7 @@ const SingleTransitionModal = () => {
 		singleTransition,
 		visibleModal,
 	} = useContext(ModalContext);
-	const {selectedInstance, setSelectedItem, setSelectedItems} = useContext(
+	const {selectedInstance, setSelectedItems} = useContext(
 		InstanceListContext
 	);
 	const {title, transitionName} = singleTransition;
@@ -46,17 +40,17 @@ const SingleTransitionModal = () => {
 	const {data, fetchData} = useFetch({
 		admin: true,
 		params: {completed: false, page: 1, pageSize: 1},
-		url: `/workflow-instances/${selectedInstance.id}/workflow-tasks`,
+		url: `/workflow-instances/${selectedInstance?.id}/workflow-tasks`,
 	});
 
 	const onCloseModal = (refetch) => {
 		closeModal(refetch);
-		setSelectedItem({});
 		setSelectedItems([]);
 		setSingleTransition({
 			title: '',
 			transitionName: '',
 		});
+		window.location.reload();
 	};
 
 	const {observer, onClose} = useModal({
@@ -64,43 +58,41 @@ const SingleTransitionModal = () => {
 	});
 
 	useEffect(() => {
-		if (selectedInstance.id && visibleModal === 'singleTransition') {
+		if (selectedInstance?.id && visibleModal === 'singleTransition') {
 			fetchData();
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [fetchData, visibleModal]);
+	}, [visibleModal]);
 
-	const taskId = useMemo(() => (data && data.items ? data.items[0].id : {}), [
-		data,
-	]);
+	const taskId = data?.items?.[0].id;
 
 	const {postData} = usePost({
 		admin: true,
 		body: {comment, transitionName, workflowTaskId: taskId},
+		callback: () => {
+			toaster.success(
+				Liferay.Language.get(
+					'the-selected-step-has-transitioned-successfully'
+				)
+			);
+
+			onCloseModal(true);
+		},
 		url: `/workflow-tasks/${taskId}/change-transition`,
 	});
 
 	const handleDone = useCallback(() => {
 		setErrorToast(false);
-		postData()
-			.then(() => {
-				toaster.success(
-					Liferay.Language.get(
-						'the-selected-step-has-transitioned-successfully'
-					)
-				);
+		postData().catch(() => {
+			setErrorToast(
+				`${Liferay.Language.get(
+					'your-request-has-failed'
+				)} ${Liferay.Language.get('select-done-to-retry')}`
+			);
+		});
 
-				onCloseModal(true);
-			})
-			.catch(() => {
-				setErrorToast(
-					`${Liferay.Language.get(
-						'your-request-has-failed'
-					)} ${Liferay.Language.get('select-done-to-retry')}`
-				);
-			});
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [postData]);
+	}, [toaster]);
 
 	return (
 		<>
@@ -122,6 +114,7 @@ const SingleTransitionModal = () => {
 						<label htmlFor="commentTextArea">
 							{Liferay.Language.get('comment')}
 						</label>
+
 						<ClayInput
 							component="textarea"
 							id="commentTextArea"
@@ -152,6 +145,4 @@ const SingleTransitionModal = () => {
 			)}
 		</>
 	);
-};
-
-export default SingleTransitionModal;
+}

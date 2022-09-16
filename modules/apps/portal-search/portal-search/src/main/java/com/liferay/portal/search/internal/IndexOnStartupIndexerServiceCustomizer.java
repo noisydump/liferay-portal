@@ -62,12 +62,13 @@ public class IndexOnStartupIndexerServiceCustomizer
 		Indexer<?> indexer = _bundleContext.getService(serviceReference);
 
 		boolean indexerIndexOnStartup = GetterUtil.getBoolean(
-			serviceReference.getProperty(PropsKeys.INDEX_ON_STARTUP), true);
+			serviceReference.getProperty(PropsKeys.INDEX_ON_STARTUP),
+			GetterUtil.getBoolean(_props.get(PropsKeys.INDEX_ON_STARTUP)));
 
 		String className = indexer.getClassName();
 
 		if (!indexerIndexOnStartup || Validator.isNull(className) ||
-			isBaseSearcher(indexer.getClass())) {
+			_isBaseSearcher(indexer.getClass())) {
 
 			return indexer;
 		}
@@ -84,7 +85,7 @@ public class IndexOnStartupIndexerServiceCustomizer
 
 			PortalInstanceLifecycleListener portalInstanceLifecycleListener =
 				new IndexOnStartupPortalInstanceLifecycleListener(
-					_indexWriterHelper, _props, className);
+					_indexWriterHelper, className);
 
 			ServiceRegistration<PortalInstanceLifecycleListener>
 				serviceRegistration = _bundleContext.registerService(
@@ -172,7 +173,7 @@ public class IndexOnStartupIndexerServiceCustomizer
 		}
 	}
 
-	protected boolean isBaseSearcher(Class<?> indexerClass) {
+	private boolean _isBaseSearcher(Class<?> indexerClass) {
 		while ((indexerClass != null) && !Object.class.equals(indexerClass)) {
 			if (indexerClass.equals(BaseSearcher.class)) {
 				return true;
@@ -182,15 +183,6 @@ public class IndexOnStartupIndexerServiceCustomizer
 		}
 
 		return false;
-	}
-
-	@Reference(target = ModuleServiceLifecycle.PORTAL_INITIALIZED, unbind = "-")
-	protected void setModuleServiceLifecycle(
-		ModuleServiceLifecycle moduleServiceLifecycle) {
-	}
-
-	@Reference(target = "(search.engine.id=SYSTEM_ENGINE)", unbind = "-")
-	protected void setSearchEngine(SearchEngine searchEngine) {
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -204,8 +196,14 @@ public class IndexOnStartupIndexerServiceCustomizer
 	@Reference
 	private IndexWriterHelper _indexWriterHelper;
 
+	@Reference(target = ModuleServiceLifecycle.PORTAL_INITIALIZED)
+	private ModuleServiceLifecycle _moduleServiceLifecycle;
+
 	@Reference
 	private Props _props;
+
+	@Reference(target = "(search.engine.id=SYSTEM_ENGINE)")
+	private SearchEngine _searchEngine;
 
 	private final Map
 		<String, ServiceRegistration<PortalInstanceLifecycleListener>>

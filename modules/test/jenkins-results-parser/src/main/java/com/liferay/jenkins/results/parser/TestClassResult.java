@@ -27,11 +27,15 @@ public interface TestClassResult {
 
 	public long getDuration();
 
+	public long getOverheadDuration();
+
 	public String getPackageName();
 
 	public String getSimpleClassName();
 
 	public String getStatus();
+
+	public TestResult getTestResult(String testName);
 
 	public List<TestResult> getTestResults();
 

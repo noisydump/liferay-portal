@@ -54,10 +54,13 @@ for (String portletId : PortletCategoryUtil.getFirstChildPortletIds(portletCateg
 }
 
 portlets = ListUtil.sort(portlets, new PortletTitleComparator(application, locale));
-
-if (!portletCategories.isEmpty() || !portlets.isEmpty()) {
 %>
 
+<liferay-util:html-top>
+	<link href="<%= PortalUtil.getStaticResourceURL(request, PortalUtil.getPathProxy() + application.getContextPath() + "/css/main.css") %>" rel="stylesheet" type="text/css" />
+</liferay-util:html-top>
+
+<c:if test="<%= !portletCategories.isEmpty() || !portlets.isEmpty() %>">
 	<liferay-ui:panel
 		collapsible="<%= true %>"
 		cssClass="lfr-content-category list-unstyled panel-page-category"
@@ -80,16 +83,17 @@ if (!portletCategories.isEmpty() || !portlets.isEmpty()) {
 			%>
 
 				<c:if test="<%= !portlet.isInstanceable() %>">
-
-					<%
-					PortletURL portletURL = PortletURLFactoryUtil.create(request, portlet.getRootPortlet(), PortletRequest.ACTION_PHASE);
-
-					portletURL.setPortletMode(PortletMode.VIEW);
-					portletURL.setWindowState(WindowState.MAXIMIZED);
-					%>
-
 					<div>
-						<a href="<%= portletURL %>"><%= PortalUtil.getPortletTitle(portlet, application, locale) %></a>
+						<a
+							href="<%=
+PortletURLBuilder.create(
+						PortletURLFactoryUtil.create(request, portlet.getRootPortlet(), PortletRequest.ACTION_PHASE)
+					).setPortletMode(
+						PortletMode.VIEW
+					).setWindowState(
+						WindowState.MAXIMIZED
+					).buildPortletURL() %>"><%= PortalUtil.getPortletTitle(portlet, application, locale) %></a
+						>
 					</div>
 				</c:if>
 
@@ -99,7 +103,4 @@ if (!portletCategories.isEmpty() || !portlets.isEmpty()) {
 
 		</aui:nav>
 	</liferay-ui:panel>
-
-<%
-}
-%>
+</c:if>

@@ -25,8 +25,8 @@ SearchContainer<Object> searchContainer = itemSelectorViewDescriptorRendererDisp
 %>
 
 <c:if test="<%= itemSelectorViewDescriptor.isShowManagementToolbar() %>">
-	<clay:management-toolbar-v2
-		displayContext="<%= new ItemSelectorViewDescriptorRendererManagementToolbarDisplayContext(itemSelectorViewDescriptor, request, liferayPortletRequest, liferayPortletResponse, searchContainer) %>"
+	<clay:management-toolbar
+		managementToolbarDisplayContext="<%= new ItemSelectorViewDescriptorRendererManagementToolbarDisplayContext(itemSelectorViewDescriptorRendererDisplayContext, request, liferayPortletRequest, liferayPortletResponse, searchContainer) %>"
 	/>
 </c:if>
 
@@ -47,6 +47,7 @@ SearchContainer<Object> searchContainer = itemSelectorViewDescriptorRendererDisp
 	>
 		<liferay-ui:search-container-row
 			className="Object"
+			keyProperty="<%= itemSelectorViewDescriptor.getKeyProperty() %>"
 			modelVar="entry"
 		>
 
@@ -140,6 +141,12 @@ SearchContainer<Object> searchContainer = itemSelectorViewDescriptorRendererDisp
 						<p class="h6 text-default">
 							<%= itemDescriptor.getSubtitle(locale) %>
 						</p>
+
+						<c:if test="<%= itemDescriptor.getStatus() != null %>">
+							<span class="text-default">
+								<aui:workflow-status markupView="lexicon" showIcon="<%= false %>" showLabel="<%= false %>" status="<%= itemDescriptor.getStatus() %>" />
+							</span>
+						</c:if>
 					</liferay-ui:search-container-column-text>
 				</c:when>
 				<c:otherwise>
@@ -159,7 +166,7 @@ SearchContainer<Object> searchContainer = itemSelectorViewDescriptorRendererDisp
 					/>
 
 					<liferay-ui:search-container-column-text
-						cssClass="table-cell-expand-smaller table-cell-minw-150"
+						cssClass="table-cell-expand-smallest table-cell-ws-nowrap"
 						name="modified-date"
 					>
 						<c:if test="<%= Objects.nonNull(itemDescriptor.getModifiedDate()) %>">
@@ -169,10 +176,18 @@ SearchContainer<Object> searchContainer = itemSelectorViewDescriptorRendererDisp
 							%>
 
 							<span class="text-default">
-								<liferay-ui:message arguments="<%= LanguageUtil.getTimeDescription(request, System.currentTimeMillis() - modifiedDate.getTime(), true) %>" key="modified-x-ago" />
+								<liferay-ui:message arguments="<%= LanguageUtil.getTimeDescription(request, System.currentTimeMillis() - modifiedDate.getTime(), true) %>" key="x-ago" />
 							</span>
 						</c:if>
 					</liferay-ui:search-container-column-text>
+
+					<c:if test="<%= itemDescriptor.getStatus() != null %>">
+						<liferay-ui:search-container-column-status
+							cssClass="text-nowrap"
+							name="status"
+							status="<%= itemDescriptor.getStatus() %>"
+						/>
+					</c:if>
 				</c:otherwise>
 			</c:choose>
 		</liferay-ui:search-container-row>
@@ -192,7 +207,7 @@ SearchContainer<Object> searchContainer = itemSelectorViewDescriptorRendererDisp
 				'<portlet:namespace />entries'
 			);
 
-			searchContainer.on('rowToggled', function (event) {
+			searchContainer.on('rowToggled', (event) => {
 				var searchContainerItems = event.elements.allSelectedElements;
 
 				var arr = [];
@@ -202,6 +217,10 @@ SearchContainer<Object> searchContainer = itemSelectorViewDescriptorRendererDisp
 
 					if (domElement == null) {
 						domElement = this.ancestor('tr');
+					}
+
+					if (domElement == null) {
+						domElement = this.ancestor('dd');
 					}
 
 					if (domElement != null) {
@@ -232,11 +251,11 @@ SearchContainer<Object> searchContainer = itemSelectorViewDescriptorRendererDisp
 				document.querySelector('#<portlet:namespace />entriesContainer'),
 				'click',
 				'.entry',
-				function (event) {
+				(event) => {
 					var activeCards = document.querySelectorAll('.form-check-card.active');
 
 					if (activeCards.length) {
-						activeCards.forEach(function (card) {
+						activeCards.forEach((card) => {
 							card.classList.remove('active');
 						});
 					}
@@ -253,6 +272,10 @@ SearchContainer<Object> searchContainer = itemSelectorViewDescriptorRendererDisp
 
 					if (domElement == null) {
 						domElement = target.closest('tr');
+					}
+
+					if (domElement == null) {
+						domElement = target.closest('dd');
 					}
 
 					var itemValue = '';

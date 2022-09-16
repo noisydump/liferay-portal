@@ -1,0 +1,252 @@
+/**
+ * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
+ *
+ * This library is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation; either version 2.1 of the License, or (at your option)
+ * any later version.
+ *
+ * This library is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
+ */
+
+package com.liferay.frontend.data.set.taglib.servlet.taglib;
+
+import com.liferay.frontend.data.set.taglib.internal.js.loader.modules.extender.npm.NPMResolverProvider;
+import com.liferay.frontend.data.set.taglib.internal.util.ServicesProvider;
+import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolvedPackageNameUtil;
+import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolver;
+import com.liferay.frontend.js.module.launcher.JSModuleResolver;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.JavaConstants;
+import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.template.react.renderer.ComponentDescriptor;
+import com.liferay.portal.template.react.renderer.ReactRenderer;
+import com.liferay.taglib.util.AttributesTagSupport;
+
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+
+import javax.portlet.PortletResponse;
+import javax.portlet.PortletURL;
+
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.jsp.JspException;
+import javax.servlet.jsp.JspWriter;
+
+/**
+ * @author Marko Cikos
+ */
+public class BaseDisplayTag extends AttributesTagSupport {
+
+	@Override
+	public int doEndTag() throws JspException {
+		try {
+			return processEndTag();
+		}
+		catch (Exception exception) {
+			throw new JspException(exception);
+		}
+		finally {
+			doClearTag();
+		}
+	}
+
+	public Map<String, Object> getAdditionalProps() {
+		return _additionalProps;
+	}
+
+	public String getId() {
+		return _id;
+	}
+
+	public String getNamespace() {
+		if (_namespace != null) {
+			return _namespace;
+		}
+
+		HttpServletRequest httpServletRequest = getRequest();
+
+		PortletResponse portletResponse =
+			(PortletResponse)httpServletRequest.getAttribute(
+				JavaConstants.JAVAX_PORTLET_RESPONSE);
+
+		if (portletResponse != null) {
+			_namespace = portletResponse.getNamespace();
+		}
+
+		return _namespace;
+	}
+
+	public String getPropsTransformer() {
+		return _propsTransformer;
+	}
+
+	public String getRandomNamespace() {
+		return _randomNamespace;
+	}
+
+	public List<Object> getSelectedItems() {
+		return _selectedItems;
+	}
+
+	public void setAdditionalProps(Map<String, Object> additionalProps) {
+		_additionalProps = additionalProps;
+	}
+
+	public void setId(String id) {
+		_id = id;
+	}
+
+	public void setNamespace(String namespace) {
+		_namespace = namespace;
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
+	 */
+	@Deprecated
+	public void setPortletURL(PortletURL portletURL) {
+		_portletURL = portletURL;
+	}
+
+	public void setPropsTransformer(String propsTransformer) {
+		_propsTransformer = propsTransformer;
+	}
+
+	public void setPropsTransformerServletContext(
+		ServletContext propsTransformerServletContext) {
+
+		_propsTransformerServletContext = propsTransformerServletContext;
+	}
+
+	public void setRandomNamespace(String randomNamespace) {
+		_randomNamespace = randomNamespace;
+	}
+
+	public void setSelectedItems(List<Object> selectedItems) {
+		_selectedItems = selectedItems;
+	}
+
+	protected void cleanUp() {
+		_additionalProps = null;
+		_id = null;
+		_namespace = null;
+		_portletURL = null;
+		_propsTransformer = null;
+		_propsTransformerServletContext = null;
+		_randomNamespace = null;
+		_selectedItems = null;
+	}
+
+	protected void doClearTag() {
+		clearDynamicAttributes();
+		clearParams();
+		clearProperties();
+
+		cleanUp();
+	}
+
+	protected ServletContext getPropsTransformerServletContext() {
+		if (_propsTransformerServletContext != null) {
+			return _propsTransformerServletContext;
+		}
+
+		return pageContext.getServletContext();
+	}
+
+	protected Map<String, Object> prepareProps(Map<String, Object> props) {
+		return HashMapBuilder.<String, Object>putAll(
+			props
+		).put(
+			"additionalProps",
+			() -> {
+				if (_additionalProps != null) {
+					return _additionalProps;
+				}
+
+				return null;
+			}
+		).put(
+			"namespace", getNamespace()
+		).put(
+			"selectedItems", _selectedItems
+		).build();
+	}
+
+	protected int processEndTag() throws Exception {
+		JspWriter jspWriter = pageContext.getOut();
+
+		jspWriter.write("<div class=\"table-root\" id=\"");
+		jspWriter.write(getRandomNamespace());
+		jspWriter.write("table-id\"><span aria-hidden=\"true\" class=\"");
+		jspWriter.write("loading-animation my-7\"></span>");
+
+		NPMResolver npmResolver = NPMResolverProvider.getNPMResolver();
+
+		String moduleName = npmResolver.resolveModuleName(
+			"@liferay/frontend-data-set-web/FrontendDataSet");
+
+		String propsTransformer = null;
+
+		if (Validator.isNotNull(_propsTransformer)) {
+			String resolvedPackageName = null;
+
+			try {
+				resolvedPackageName = NPMResolvedPackageNameUtil.get(
+					getPropsTransformerServletContext());
+			}
+			catch (UnsupportedOperationException
+						unsupportedOperationException) {
+
+				if (_log.isDebugEnabled()) {
+					_log.debug(unsupportedOperationException);
+				}
+
+				JSModuleResolver jsModuleResolver =
+					ServicesProvider.getJSModuleResolver();
+
+				resolvedPackageName = jsModuleResolver.resolveModule(
+					getPropsTransformerServletContext(), null);
+			}
+
+			propsTransformer = resolvedPackageName + "/" + _propsTransformer;
+		}
+
+		ComponentDescriptor componentDescriptor = new ComponentDescriptor(
+			moduleName, getId(), new LinkedHashSet<>(), false,
+			propsTransformer);
+
+		ReactRenderer reactRenderer = ServicesProvider.getReactRenderer();
+
+		reactRenderer.renderReact(
+			componentDescriptor, prepareProps(new HashMap<>()), getRequest(),
+			jspWriter);
+
+		jspWriter.write("</div>");
+
+		return EVAL_PAGE;
+	}
+
+	protected void setAttributes(HttpServletRequest httpServletRequest) {
+	}
+
+	private static final Log _log = LogFactoryUtil.getLog(BaseDisplayTag.class);
+
+	private Map<String, Object> _additionalProps;
+	private String _id;
+	private String _namespace;
+	private PortletURL _portletURL;
+	private String _propsTransformer;
+	private ServletContext _propsTransformerServletContext;
+	private String _randomNamespace;
+	private List<Object> _selectedItems;
+
+}

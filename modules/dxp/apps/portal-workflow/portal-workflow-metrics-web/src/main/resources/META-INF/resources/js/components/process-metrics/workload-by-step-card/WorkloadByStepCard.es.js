@@ -9,41 +9,44 @@
  * distribution rights of the Software.
  */
 
-import ClayLayout from '@clayui/layout';
+import ClayPanel from '@clayui/panel';
 import React, {useMemo} from 'react';
 
-import Panel from '../../../shared/components/Panel.es';
+import PanelHeaderWithOptions from '../../../shared/components/panel-header-with-options/PanelHeaderWithOptions.es';
 import PromisesResolver from '../../../shared/components/promises-resolver/PromisesResolver.es';
 import {useFetch} from '../../../shared/hooks/useFetch.es';
-import {Body} from './WorkloadByStepCardBody.es';
+import Body from './WorkloadByStepCardBody.es';
 
-const WorkloadByStepCard = ({processId, routeParams}) => {
+function WorkloadByStepCard({processId, routeParams}) {
 	const {data, fetchData} = useFetch({
 		params: routeParams,
 		url: `/processes/${processId}/nodes/metrics`,
 	});
 
-	const promises = useMemo(() => [fetchData()], [fetchData]);
+	const promises = useMemo(
+		() => [fetchData()],
+
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[routeParams]
+	);
 
 	return (
 		<PromisesResolver promises={promises}>
-			<Panel>
-				<ClayLayout.ContainerFluid className="mt-4">
-					<Panel.HeaderWithOptions
-						description={Liferay.Language.get(
-							'workload-by-step-description'
-						)}
-						elementClasses="dashboard-panel-header"
-						title={Liferay.Language.get('workload-by-step')}
-						tooltipPosition="bottom"
-					/>
+			<ClayPanel className="mt-4">
+				<PanelHeaderWithOptions
+					className="tabs-panel-header"
+					description={Liferay.Language.get(
+						'workload-by-step-description'
+					)}
+					title={Liferay.Language.get('workload-by-step')}
+					tooltipPosition="bottom"
+				/>
 
-					<WorkloadByStepCard.Body {...data} {...routeParams} />
-				</ClayLayout.ContainerFluid>
-			</Panel>
+				<WorkloadByStepCard.Body {...data} {...routeParams} />
+			</ClayPanel>
 		</PromisesResolver>
 	);
-};
+}
 
 WorkloadByStepCard.Body = Body;
 

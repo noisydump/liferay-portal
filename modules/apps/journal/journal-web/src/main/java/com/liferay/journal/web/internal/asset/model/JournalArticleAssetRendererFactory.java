@@ -31,8 +31,11 @@ import com.liferay.journal.service.JournalArticleLocalService;
 import com.liferay.journal.service.JournalArticleResourceLocalService;
 import com.liferay.journal.util.JournalContent;
 import com.liferay.journal.util.JournalConverter;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.LiferayPortletURL;
@@ -40,6 +43,7 @@ import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
+import com.liferay.portal.kernel.util.HtmlParser;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
@@ -85,7 +89,7 @@ public class JournalArticleAssetRendererFactory
 		throws PortalException {
 
 		JournalArticleAssetRenderer journalArticleAssetRenderer =
-			getJournalArticleAssetRenderer(journalArticle);
+			_getJournalArticleAssetRenderer(journalArticle);
 
 		journalArticleAssetRenderer.setAssetRendererType(type);
 
@@ -130,7 +134,7 @@ public class JournalArticleAssetRendererFactory
 		}
 
 		JournalArticleAssetRenderer journalArticleAssetRenderer =
-			getJournalArticleAssetRenderer(article);
+			_getJournalArticleAssetRenderer(article);
 
 		journalArticleAssetRenderer.setAssetRendererType(type);
 
@@ -145,7 +149,7 @@ public class JournalArticleAssetRendererFactory
 		JournalArticle article =
 			_journalArticleLocalService.getArticleByUrlTitle(groupId, urlTitle);
 
-		return getJournalArticleAssetRenderer(article);
+		return _getJournalArticleAssetRenderer(article);
 	}
 
 	@Override
@@ -165,7 +169,7 @@ public class JournalArticleAssetRendererFactory
 
 	@Override
 	public String getSubtypeTitle(Locale locale) {
-		return LanguageUtil.get(locale, "structures");
+		return _language.get(locale, "structures");
 	}
 
 	@Override
@@ -182,6 +186,10 @@ public class JournalArticleAssetRendererFactory
 			return ddmStructure.getName(locale);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			return super.getTypeName(locale, subtypeId);
 		}
 	}
@@ -191,11 +199,13 @@ public class JournalArticleAssetRendererFactory
 		LiferayPortletRequest liferayPortletRequest,
 		LiferayPortletResponse liferayPortletResponse, long classTypeId) {
 
-		PortletURL portletURL = _portal.getControlPanelPortletURL(
-			liferayPortletRequest, getGroup(liferayPortletRequest),
-			JournalPortletKeys.JOURNAL, 0, 0, PortletRequest.RENDER_PHASE);
-
-		portletURL.setParameter("mvcPath", "/edit_article.jsp");
+		PortletURL portletURL = PortletURLBuilder.create(
+			_portal.getControlPanelPortletURL(
+				liferayPortletRequest, getGroup(liferayPortletRequest),
+				JournalPortletKeys.JOURNAL, 0, 0, PortletRequest.RENDER_PHASE)
+		).setMVCPath(
+			"/edit_article.jsp"
+		).buildPortletURL();
 
 		if (classTypeId > 0) {
 			DDMStructure ddmStructure =
@@ -223,6 +233,9 @@ public class JournalArticleAssetRendererFactory
 			liferayPortletURL.setWindowState(windowState);
 		}
 		catch (WindowStateException windowStateException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(windowStateException);
+			}
 		}
 
 		return liferayPortletURL;
@@ -233,11 +246,8 @@ public class JournalArticleAssetRendererFactory
 			PermissionChecker permissionChecker, long groupId, long classTypeId)
 		throws Exception {
 
-		if (classTypeId == 0) {
-			return false;
-		}
-
-		if (!_ddmStructureModelResourcePermission.contains(
+		if ((classTypeId == 0) ||
+			!_ddmStructureModelResourcePermission.contains(
 				permissionChecker, classTypeId, ActionKeys.VIEW)) {
 
 			return false;
@@ -256,18 +266,11 @@ public class JournalArticleAssetRendererFactory
 			permissionChecker, classPK, actionId);
 	}
 
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.journal.web)", unbind = "-"
-	)
-	public void setServletContext(ServletContext servletContext) {
-		_servletContext = servletContext;
-	}
-
-	protected JournalArticleAssetRenderer getJournalArticleAssetRenderer(
+	private JournalArticleAssetRenderer _getJournalArticleAssetRenderer(
 		JournalArticle article) {
 
 		JournalArticleAssetRenderer journalArticleAssetRenderer =
-			new JournalArticleAssetRenderer(article);
+			new JournalArticleAssetRenderer(article, _htmlParser);
 
 		journalArticleAssetRenderer.setAssetDisplayPageFriendlyURLProvider(
 			_assetDisplayPageFriendlyURLProvider);
@@ -279,6 +282,9 @@ public class JournalArticleAssetRendererFactory
 
 		return journalArticleAssetRenderer;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		JournalArticleAssetRendererFactory.class);
 
 	@Reference
 	private AssetDisplayPageFriendlyURLProvider
@@ -295,6 +301,9 @@ public class JournalArticleAssetRendererFactory
 
 	@Reference
 	private FieldsToDDMFormValuesConverter _fieldsToDDMFormValuesConverter;
+
+	@Reference
+	private HtmlParser _htmlParser;
 
 	@Reference
 	private JournalArticleLocalService _journalArticleLocalService;
@@ -316,6 +325,9 @@ public class JournalArticleAssetRendererFactory
 	private JournalConverter _journalConverter;
 
 	@Reference
+	private Language _language;
+
+	@Reference
 	private Portal _portal;
 
 	@Reference(
@@ -323,6 +335,7 @@ public class JournalArticleAssetRendererFactory
 	)
 	private PortletResourcePermission _portletResourcePermission;
 
+	@Reference(target = "(osgi.web.symbolicname=com.liferay.journal.web)")
 	private ServletContext _servletContext;
 
 }

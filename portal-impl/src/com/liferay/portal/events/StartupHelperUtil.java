@@ -28,18 +28,21 @@ import com.liferay.portal.kernel.service.ResourceActionLocalServiceUtil;
 import com.liferay.portal.kernel.upgrade.UpgradeException;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.upgrade.util.UpgradeProcessUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LoggingTimer;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.version.Version;
-import com.liferay.portal.tools.DBUpgrader;
 import com.liferay.portal.upgrade.PortalUpgradeProcess;
 import com.liferay.portal.util.PropsValues;
-import com.liferay.portal.verify.VerifyException;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -70,28 +73,12 @@ public class StartupHelperUtil {
 		return _startupFinished;
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static boolean isUpgraded() {
-		return _upgraded;
-	}
-
 	public static boolean isUpgrading() {
 		return _upgrading;
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static boolean isVerified() {
-		return true;
-	}
-
 	public static void printPatchLevel() {
-		if (_log.isInfoEnabled() && !PatcherUtil.hasInconsistentPatchLevels()) {
+		if (_log.isInfoEnabled()) {
 			String installedPatches = StringUtil.merge(
 				PatcherUtil.getInstalledPatches(), StringPool.COMMA_AND_SPACE);
 
@@ -128,57 +115,63 @@ public class StartupHelperUtil {
 	public static void updateIndexes(boolean dropIndexes) {
 		DB db = DBManagerUtil.getDB();
 
-		try (Connection connection = DataAccess.getConnection()) {
-			updateIndexes(db, connection, dropIndexes);
-		}
-		catch (Exception exception) {
-			if (_log.isWarnEnabled()) {
-				_log.warn(exception, exception);
-			}
-		}
-	}
-
-	public static void updateIndexes(
-		DB db, Connection connection, boolean dropIndexes) {
-
 		try {
-			Thread currentThread = Thread.currentThread();
+			db.process(
+				companyId -> {
+					String message = new String(
+						"Updating portal database indexes");
 
-			ClassLoader classLoader = currentThread.getContextClassLoader();
+					if (Validator.isNotNull(companyId) &&
+						_log.isInfoEnabled()) {
 
-			String tablesSQL = StringUtil.read(
-				classLoader,
-				"com/liferay/portal/tools/sql/dependencies/portal-tables.sql");
+						message += " for company " + companyId;
+					}
 
-			String indexesSQL = StringUtil.read(
-				classLoader,
-				"com/liferay/portal/tools/sql/dependencies/indexes.sql");
+					try (Connection connection = DataAccess.getConnection();
+						LoggingTimer loggingTimer = new LoggingTimer(message)) {
 
-			db.updateIndexes(connection, tablesSQL, indexesSQL, dropIndexes);
+						_updateIndexes(db, connection, dropIndexes);
+					}
+					catch (SQLException sqlException) {
+						if (_log.isWarnEnabled()) {
+							_log.warn(sqlException);
+						}
+					}
+				});
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(exception, exception);
+				_log.warn(exception);
 			}
 		}
 	}
 
 	public static void upgradeProcess(int buildNumber) throws UpgradeException {
+		List<String> upgradeProcessClassNames = new ArrayList<>();
+
+		if (GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-157670"))) {
+			Collections.addAll(
+				upgradeProcessClassNames,
+				"com.liferay.portal.upgrade.UpgradeProcess_6_1_1",
+				"com.liferay.portal.upgrade.UpgradeProcess_6_2_0");
+		}
+
+		Collections.addAll(
+			upgradeProcessClassNames,
+			"com.liferay.portal.upgrade.UpgradeProcess_7_0_0",
+			"com.liferay.portal.upgrade.UpgradeProcess_7_0_1",
+			"com.liferay.portal.upgrade.UpgradeProcess_7_0_3",
+			"com.liferay.portal.upgrade.UpgradeProcess_7_0_5",
+			"com.liferay.portal.upgrade.UpgradeProcess_7_0_6",
+			"com.liferay.portal.upgrade.PortalUpgradeProcess");
+
 		List<UpgradeProcess> upgradeProcesses =
 			UpgradeProcessUtil.initUpgradeProcesses(
 				PortalClassLoaderUtil.getClassLoader(),
-				_UPGRADE_PROCESS_CLASS_NAMES);
+				upgradeProcessClassNames.toArray(new String[0]));
 
 		_upgraded = UpgradeProcessUtil.upgradeProcess(
 			buildNumber, upgradeProcesses);
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static void verifyProcess(boolean verified) throws VerifyException {
-		DBUpgrader.verify();
 	}
 
 	public static void verifyRequiredSchemaVersion() throws Exception {
@@ -186,8 +179,10 @@ public class StartupHelperUtil {
 			_log.debug("Check the portal's required schema version");
 		}
 
-		if (!PortalUpgradeProcess.isInRequiredSchemaVersion(
-				DataAccess.getConnection())) {
+		try (Connection connection = DataAccess.getConnection()) {
+			if (PortalUpgradeProcess.isInRequiredSchemaVersion(connection)) {
+				return;
+			}
 
 			Version currentSchemaVersion =
 				PortalUpgradeProcess.getCurrentSchemaVersion(
@@ -215,14 +210,24 @@ public class StartupHelperUtil {
 		}
 	}
 
-	private static final String[] _UPGRADE_PROCESS_CLASS_NAMES = {
-		"com.liferay.portal.upgrade.UpgradeProcess_7_0_0",
-		"com.liferay.portal.upgrade.UpgradeProcess_7_0_1",
-		"com.liferay.portal.upgrade.UpgradeProcess_7_0_3",
-		"com.liferay.portal.upgrade.UpgradeProcess_7_0_5",
-		"com.liferay.portal.upgrade.UpgradeProcess_7_0_6",
-		"com.liferay.portal.upgrade.PortalUpgradeProcess"
-	};
+	private static void _updateIndexes(
+			DB db, Connection connection, boolean dropIndexes)
+		throws Exception {
+
+		Thread currentThread = Thread.currentThread();
+
+		ClassLoader classLoader = currentThread.getContextClassLoader();
+
+		String tablesSQL = StringUtil.read(
+			classLoader,
+			"com/liferay/portal/tools/sql/dependencies/portal-tables.sql");
+
+		String indexesSQL = StringUtil.read(
+			classLoader,
+			"com/liferay/portal/tools/sql/dependencies/indexes.sql");
+
+		db.updateIndexes(connection, tablesSQL, indexesSQL, dropIndexes);
+	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		StartupHelperUtil.class);

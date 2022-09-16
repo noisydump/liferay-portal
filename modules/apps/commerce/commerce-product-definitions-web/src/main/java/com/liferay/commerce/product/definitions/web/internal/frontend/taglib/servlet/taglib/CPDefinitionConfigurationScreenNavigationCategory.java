@@ -27,6 +27,9 @@ import com.liferay.commerce.product.service.CPTaxCategoryService;
 import com.liferay.commerce.product.service.CommerceCatalogService;
 import com.liferay.commerce.product.service.CommerceChannelRelService;
 import com.liferay.commerce.product.servlet.taglib.ui.constants.CPDefinitionScreenNavigationConstants;
+import com.liferay.commerce.product.type.CPType;
+import com.liferay.commerce.product.type.CPTypeServicesTracker;
+import com.liferay.commerce.product.url.CPFriendlyURL;
 import com.liferay.commerce.service.CPDAvailabilityEstimateService;
 import com.liferay.commerce.service.CPDefinitionInventoryService;
 import com.liferay.commerce.service.CommerceAvailabilityEstimateService;
@@ -36,10 +39,11 @@ import com.liferay.frontend.taglib.servlet.taglib.ScreenNavigationEntry;
 import com.liferay.frontend.taglib.servlet.taglib.util.JSPRenderer;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
@@ -83,7 +87,7 @@ public class CPDefinitionConfigurationScreenNavigationCategory
 
 	@Override
 	public String getLabel(Locale locale) {
-		return LanguageUtil.get(
+		return _language.get(
 			locale,
 			CPDefinitionScreenNavigationConstants.CATEGORY_KEY_CONFIGURATION);
 	}
@@ -103,13 +107,20 @@ public class CPDefinitionConfigurationScreenNavigationCategory
 		PermissionChecker permissionChecker =
 			PermissionThreadLocal.getPermissionChecker();
 
+		CPType cpType = _cpTypeServicesTracker.getCPType(
+			cpDefinition.getProductTypeName());
+
 		try {
-			return _commerceCatalogModelResourcePermission.contains(
-				permissionChecker, cpDefinition.getCommerceCatalog(),
-				ActionKeys.VIEW);
+			if (_commerceCatalogModelResourcePermission.contains(
+					permissionChecker, cpDefinition.getCommerceCatalog(),
+					ActionKeys.VIEW) &&
+				cpType.isConfigurationEnabled()) {
+
+				return true;
+			}
 		}
 		catch (PortalException portalException) {
-			_log.error(portalException, portalException);
+			_log.error(portalException);
 		}
 
 		return false;
@@ -129,12 +140,12 @@ public class CPDefinitionConfigurationScreenNavigationCategory
 					_commerceAvailabilityEstimateService,
 					_commerceCatalogService, _commerceChannelRelService,
 					_commerceCurrencyLocalService,
-					_commerceLowStockActivityRegistry,
+					_commerceLowStockActivityRegistry, _configurationProvider,
 					_cpdAvailabilityEstimateService,
 					_cpDefinitionInventoryEngineRegistry,
 					_cpDefinitionInventoryService, _cpDefinitionService,
 					_cpMeasurementUnitLocalService, _cpTaxCategoryService,
-					_itemSelector);
+					_cpFriendlyURL, _itemSelector);
 
 		httpServletRequest.setAttribute(
 			WebKeys.PORTLET_DISPLAY_CONTEXT,
@@ -142,7 +153,7 @@ public class CPDefinitionConfigurationScreenNavigationCategory
 
 		_jspRenderer.renderJSP(
 			_setServletContext, httpServletRequest, httpServletResponse,
-			"/edit_definition_configuration.jsp");
+			"/edit_cp_definition_configuration.jsp");
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -177,6 +188,9 @@ public class CPDefinitionConfigurationScreenNavigationCategory
 	private CommerceLowStockActivityRegistry _commerceLowStockActivityRegistry;
 
 	@Reference
+	private ConfigurationProvider _configurationProvider;
+
+	@Reference
 	private CPDAvailabilityEstimateService _cpdAvailabilityEstimateService;
 
 	@Reference
@@ -190,16 +204,25 @@ public class CPDefinitionConfigurationScreenNavigationCategory
 	private CPDefinitionService _cpDefinitionService;
 
 	@Reference
+	private CPFriendlyURL _cpFriendlyURL;
+
+	@Reference
 	private CPMeasurementUnitLocalService _cpMeasurementUnitLocalService;
 
 	@Reference
 	private CPTaxCategoryService _cpTaxCategoryService;
 
 	@Reference
+	private CPTypeServicesTracker _cpTypeServicesTracker;
+
+	@Reference
 	private ItemSelector _itemSelector;
 
 	@Reference
 	private JSPRenderer _jspRenderer;
+
+	@Reference
+	private Language _language;
 
 	@Reference(
 		target = "(osgi.web.symbolicname=com.liferay.commerce.product.definitions.web)"

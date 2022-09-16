@@ -17,15 +17,16 @@ package com.liferay.source.formatter.util;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TextFormatter;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.tools.ToolsUtil;
 import com.liferay.source.formatter.ExcludeSyntax;
 import com.liferay.source.formatter.ExcludeSyntaxPattern;
 import com.liferay.source.formatter.SourceFormatterExcludes;
-import com.liferay.source.formatter.checks.util.SourceUtil;
+import com.liferay.source.formatter.check.util.SourceUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -68,6 +69,13 @@ public class SourceFormatterUtil {
 
 	public static final String SOURCE_FORMATTER_TEST_PATH =
 		"/source/formatter/dependencies/";
+
+	public static final String UPGRADE_FROM_VERSION = "upgrade.from.version";
+
+	public static final String UPGRADE_INPUT_DATA_DIRECTORY_NAME =
+		"upgrade-to-7.4-input-data";
+
+	public static final String UPGRADE_TO_VERSION = "upgrade.to.version";
 
 	public static List<String> filterFileNames(
 		List<String> allFileNames, String[] excludes, String[] includes,
@@ -171,11 +179,9 @@ public class SourceFormatterUtil {
 			return new ArrayList<>();
 		}
 
-		PathMatchers pathMatchers = _getPathMatchers(
-			excludes, includes, sourceFormatterExcludes);
-
 		return _filterRecentChangesFileNames(
-			recentChangesFileNames, pathMatchers);
+			recentChangesFileNames,
+			_getPathMatchers(excludes, includes, sourceFormatterExcludes));
 	}
 
 	public static String getDocumentationURLString(Class<?> checkClass) {
@@ -224,11 +230,17 @@ public class SourceFormatterUtil {
 			return StringUtil.read(url.openStream());
 		}
 		catch (IOException ioException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(ioException);
+			}
+
 			return null;
 		}
 	}
 
 	public static String getMarkdownFileName(String camelCaseName) {
+		camelCaseName = StringUtil.replace(camelCaseName, "OSGi", "OSGI");
+
 		camelCaseName = camelCaseName.replaceAll("([A-Z])s([A-Z])", "$1S$2");
 
 		String markdownFileName = TextFormatter.format(
@@ -240,9 +252,8 @@ public class SourceFormatterUtil {
 		return markdownFileName + ".markdown";
 	}
 
-	public static File getPortalDir(String baseDirName) {
-		File portalImplDir = getFile(
-			baseDirName, "portal-impl", ToolsUtil.PORTAL_MAX_DIR_LEVEL);
+	public static File getPortalDir(String baseDirName, int maxDirLevel) {
+		File portalImplDir = getFile(baseDirName, "portal-impl", maxDirLevel);
 
 		if (portalImplDir == null) {
 			return null;
@@ -265,6 +276,10 @@ public class SourceFormatterUtil {
 					portalBranchName, StringPool.SLASH, fileName));
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			return null;
 		}
 	}
@@ -281,7 +296,7 @@ public class SourceFormatterUtil {
 
 	public static List<File> getSuppressionsFiles(
 		String baseDirName, List<String> allFileNames,
-		SourceFormatterExcludes sourceFormatterExcludes) {
+		SourceFormatterExcludes sourceFormatterExcludes, int maxDirLevel) {
 
 		List<File> suppressionsFiles = new ArrayList<>();
 
@@ -289,7 +304,7 @@ public class SourceFormatterUtil {
 
 		String parentDirName = baseDirName;
 
-		for (int j = 0; j < ToolsUtil.PORTAL_MAX_DIR_LEVEL; j++) {
+		for (int j = 0; j < maxDirLevel; j++) {
 			File suppressionsFile = new File(
 				parentDirName + _SUPPRESSIONS_FILE_NAME);
 
@@ -336,10 +351,10 @@ public class SourceFormatterUtil {
 			return new ArrayList<>();
 		}
 
-		PathMatchers pathMatchers = _getPathMatchers(
-			excludes, includes, sourceFormatterExcludes);
-
-		return _scanForFiles(baseDirName, pathMatchers, includeSubrepositories);
+		return _scanForFiles(
+			baseDirName,
+			_getPathMatchers(excludes, includes, sourceFormatterExcludes),
+			includeSubrepositories);
 	}
 
 	private static String _createRegex(String s) {
@@ -503,7 +518,7 @@ public class SourceFormatterUtil {
 		ClassLoader classLoader = SourceFormatterUtil.class.getClassLoader();
 
 		InputStream inputStream = classLoader.getResourceAsStream(
-			"documentation/checks/" + markdownFileName);
+			"documentation/check/" + markdownFileName);
 
 		if (inputStream != null) {
 			return _DOCUMENTATION_URL + markdownFileName;
@@ -586,6 +601,9 @@ public class SourceFormatterUtil {
 									}
 								}
 								catch (Exception exception) {
+									if (_log.isDebugEnabled()) {
+										_log.debug(exception);
+									}
 								}
 							}
 						}
@@ -679,10 +697,13 @@ public class SourceFormatterUtil {
 
 	private static final String _DOCUMENTATION_URL =
 		"https://github.com/liferay/liferay-portal/blob/master/modules/util" +
-			"/source-formatter/src/main/resources/documentation/checks/";
+			"/source-formatter/src/main/resources/documentation/check/";
 
 	private static final String _SUPPRESSIONS_FILE_NAME =
 		"source-formatter-suppressions.xml";
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		SourceFormatterUtil.class);
 
 	private static class PathMatchers {
 

@@ -17,8 +17,8 @@
 <%@ include file="/wiki/init.jsp" %>
 
 <%
-WikiPage wikiPage = (WikiPage)request.getAttribute(WikiWebKeys.WIKI_PAGE);
 WikiNode node = (WikiNode)request.getAttribute(WikiWebKeys.WIKI_NODE);
+WikiPage wikiPage = (WikiPage)request.getAttribute(WikiWebKeys.WIKI_PAGE);
 %>
 
 <portlet:actionURL name="/wiki/edit_page_attachment" var="undoTrashURL">
@@ -55,13 +55,19 @@ WikiNode node = (WikiNode)request.getAttribute(WikiWebKeys.WIKI_NODE);
 	int attachmentsFileEntriesCount = wikiPage.getDeletedAttachmentsFileEntriesCount();
 	String emptyResultsMessage = "this-page-does-not-have-file-attachments-in-the-recycle-bin";
 
-	PortletURL iteratorURL = renderResponse.createRenderURL();
-
-	iteratorURL.setParameter("mvcRenderCommandName", "/wiki/view_trash_page_attachments");
-	iteratorURL.setParameter("redirect", currentURL);
-	iteratorURL.setParameter("nodeId", String.valueOf(wikiPage.getNodeId()));
-	iteratorURL.setParameter("title", wikiPage.getTitle());
-	iteratorURL.setWindowState(LiferayWindowState.POP_UP);
+	PortletURL iteratorURL = PortletURLBuilder.createRenderURL(
+		renderResponse
+	).setMVCRenderCommandName(
+		"/wiki/view_trash_page_attachments"
+	).setRedirect(
+		currentURL
+	).setParameter(
+		"nodeId", wikiPage.getNodeId()
+	).setParameter(
+		"title", wikiPage.getTitle()
+	).setWindowState(
+		LiferayWindowState.POP_UP
+	).buildPortletURL();
 
 	boolean paginate = false;
 	boolean showPageAttachmentAction = true;

@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
@@ -56,8 +57,12 @@ public class AccountMember implements Serializable {
 		return ObjectMapperUtil.readValue(AccountMember.class, json);
 	}
 
+	public static AccountMember unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(AccountMember.class, json);
+	}
+
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "30130")
 	public Long getAccountId() {
 		return accountId;
 	}
@@ -85,7 +90,9 @@ public class AccountMember implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Long accountId;
 
-	@Schema
+	@Schema(
+		example = "[{description={en_US=Account Administrator Description US, hr_HR=Account Administrator Description HR, hu_HU=Account Administrator Description HU}}, {description={en_US=Order Manager Description US, hr_HR=Order Manager Description HR, hu_HU=Order Manager Description HU}}]"
+	)
 	@Valid
 	public AccountRole[] getAccountRoles() {
 		return accountRoles;
@@ -114,7 +121,7 @@ public class AccountMember implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected AccountRole[] accountRoles;
 
-	@Schema
+	@Schema(example = "joe.1@commerce.com")
 	public String getEmail() {
 		return email;
 	}
@@ -143,7 +150,7 @@ public class AccountMember implements Serializable {
 	@NotEmpty
 	protected String email;
 
-	@Schema
+	@Schema(example = "AB-34098-789-N")
 	public String getExternalReferenceCode() {
 		return externalReferenceCode;
 	}
@@ -171,7 +178,7 @@ public class AccountMember implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String externalReferenceCode;
 
-	@Schema
+	@Schema(example = "User Name")
 	public String getName() {
 		return name;
 	}
@@ -197,7 +204,7 @@ public class AccountMember implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String name;
 
-	@Schema
+	@Schema(example = "UAB-34098-789-N")
 	public String getUserExternalReferenceCode() {
 		return userExternalReferenceCode;
 	}
@@ -228,7 +235,7 @@ public class AccountMember implements Serializable {
 	protected String userExternalReferenceCode;
 
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "30002")
 	public Long getUserId() {
 		return userId;
 	}
@@ -385,15 +392,16 @@ public class AccountMember implements Serializable {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.commerce.admin.account.dto.v1_0.AccountMember",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
 	}
 
 	private static boolean _isArray(Object value) {
@@ -419,8 +427,8 @@ public class AccountMember implements Serializable {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -451,7 +459,7 @@ public class AccountMember implements Serializable {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -459,7 +467,7 @@ public class AccountMember implements Serializable {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -467,5 +475,10 @@ public class AccountMember implements Serializable {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

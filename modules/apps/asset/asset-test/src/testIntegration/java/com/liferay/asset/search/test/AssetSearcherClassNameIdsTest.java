@@ -65,7 +65,6 @@ public class AssetSearcherClassNameIdsTest {
 	@Before
 	public void setUp() throws Exception {
 		_group = GroupTestUtil.addGroup();
-		_users = new ArrayList<>();
 
 		_journalArticleFixture.setGroup(_group);
 
@@ -94,11 +93,11 @@ public class AssetSearcherClassNameIdsTest {
 		addBookmarksEntry();
 		addJournalArticle();
 
-		AssetEntryQuery assetEntryQuery = getAssetEntryQuery(
-			"com.liferay.bookmarks.model.BookmarksEntry",
-			"com.liferay.journal.model.JournalArticle");
-
-		Hits hits = search(assetEntryQuery, getSearchContext());
+		Hits hits = search(
+			getAssetEntryQuery(
+				"com.liferay.bookmarks.model.BookmarksEntry",
+				"com.liferay.journal.model.JournalArticle"),
+			getSearchContext());
 
 		Assert.assertEquals(hits.toString(), 2, hits.getLength());
 	}
@@ -111,10 +110,9 @@ public class AssetSearcherClassNameIdsTest {
 		addBookmarksEntry();
 		addJournalArticle();
 
-		AssetEntryQuery assetEntryQuery = getAssetEntryQuery(
-			"com.liferay.journal.model.JournalArticle");
-
-		Hits hits = search(assetEntryQuery, getSearchContext());
+		Hits hits = search(
+			getAssetEntryQuery("com.liferay.journal.model.JournalArticle"),
+			getSearchContext());
 
 		Assert.assertEquals(hits.toString(), 1, hits.getLength());
 	}
@@ -204,6 +202,6 @@ public class AssetSearcherClassNameIdsTest {
 
 	private final JournalArticleFixture _journalArticleFixture =
 		new JournalArticleFixture();
-	private List<User> _users;
+	private final List<User> _users = new ArrayList<>();
 
 }

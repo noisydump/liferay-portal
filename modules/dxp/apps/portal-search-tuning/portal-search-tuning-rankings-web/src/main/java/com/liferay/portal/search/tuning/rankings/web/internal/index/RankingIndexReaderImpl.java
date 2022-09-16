@@ -53,13 +53,13 @@ public class RankingIndexReaderImpl implements RankingIndexReader {
 		SearchSearchRequest searchSearchRequest = new SearchSearchRequest();
 
 		searchSearchRequest.setIndexNames(rankingIndexName.getIndexName());
-		searchSearchRequest.setQuery(getQueryStringQuery(queryString));
+		searchSearchRequest.setQuery(_getQueryStringQuery(queryString));
 		searchSearchRequest.setSize(1);
 
 		SearchSearchResponse searchSearchResponse =
 			_searchEngineAdapter.execute(searchSearchRequest);
 
-		return getFirstRankingOptional(rankingIndexName, searchSearchResponse);
+		return _getFirstRankingOptional(rankingIndexName, searchSearchResponse);
 	}
 
 	@Override
@@ -82,52 +82,6 @@ public class RankingIndexReaderImpl implements RankingIndexReader {
 			_searchEngineAdapter.execute(indicesExistsIndexRequest);
 
 		return indicesExistsIndexResponse.isExists();
-	}
-
-	protected Optional<Ranking> getFirstRankingOptional(
-		RankingIndexName rankingIndexName,
-		SearchSearchResponse searchSearchResponse) {
-
-		if (searchSearchResponse.getCount() == 0) {
-			return Optional.empty();
-		}
-
-		SearchHit searchHit = getFirstSearchHit(searchSearchResponse);
-
-		return fetchOptional(rankingIndexName, searchHit.getId());
-	}
-
-	protected SearchHit getFirstSearchHit(
-		SearchSearchResponse searchSearchResponse) {
-
-		SearchHits searchHits = searchSearchResponse.getSearchHits();
-
-		List<SearchHit> searchHitsList = searchHits.getSearchHits();
-
-		return searchHitsList.get(0);
-	}
-
-	protected BooleanQuery getQueryStringQuery(String queryString) {
-		BooleanQuery booleanQuery = _queries.booleanQuery();
-
-		booleanQuery.addFilterQueryClauses(
-			_queries.term(RankingFields.QUERY_STRINGS_KEYWORD, queryString));
-		booleanQuery.addMustNotQueryClauses(
-			_queries.term(RankingFields.INACTIVE, true));
-
-		return booleanQuery;
-	}
-
-	@Reference(unbind = "-")
-	protected void setQueries(Queries queries) {
-		_queries = queries;
-	}
-
-	@Reference(unbind = "-")
-	protected void setSearchEngineAdapter(
-		SearchEngineAdapter searchEngineAdapter) {
-
-		_searchEngineAdapter = searchEngineAdapter;
 	}
 
 	protected Ranking translate(Document document, String id) {
@@ -154,10 +108,47 @@ public class RankingIndexReaderImpl implements RankingIndexReader {
 		return null;
 	}
 
+	private Optional<Ranking> _getFirstRankingOptional(
+		RankingIndexName rankingIndexName,
+		SearchSearchResponse searchSearchResponse) {
+
+		if (searchSearchResponse.getCount() == 0) {
+			return Optional.empty();
+		}
+
+		SearchHit searchHit = _getFirstSearchHit(searchSearchResponse);
+
+		return fetchOptional(rankingIndexName, searchHit.getId());
+	}
+
+	private SearchHit _getFirstSearchHit(
+		SearchSearchResponse searchSearchResponse) {
+
+		SearchHits searchHits = searchSearchResponse.getSearchHits();
+
+		List<SearchHit> searchHitsList = searchHits.getSearchHits();
+
+		return searchHitsList.get(0);
+	}
+
+	private BooleanQuery _getQueryStringQuery(String queryString) {
+		BooleanQuery booleanQuery = _queries.booleanQuery();
+
+		booleanQuery.addFilterQueryClauses(
+			_queries.term(RankingFields.QUERY_STRINGS_KEYWORD, queryString));
+		booleanQuery.addMustNotQueryClauses(
+			_queries.term(RankingFields.INACTIVE, true));
+
+		return booleanQuery;
+	}
+
 	@Reference
 	private DocumentToRankingTranslator _documentToRankingTranslator;
 
+	@Reference
 	private Queries _queries;
+
+	@Reference
 	private SearchEngineAdapter _searchEngineAdapter;
 
 }

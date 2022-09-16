@@ -16,6 +16,7 @@ package com.liferay.contacts.service.base;
 
 import com.liferay.contacts.model.Entry;
 import com.liferay.contacts.service.EntryLocalService;
+import com.liferay.contacts.service.EntryLocalServiceUtil;
 import com.liferay.contacts.service.persistence.EntryFinder;
 import com.liferay.contacts.service.persistence.EntryPersistence;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
@@ -32,6 +33,8 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -45,10 +48,13 @@ import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -69,7 +75,7 @@ public abstract class EntryLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>EntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.contacts.service.EntryLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>EntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>EntryLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -138,6 +144,13 @@ public abstract class EntryLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return entryPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -299,6 +312,11 @@ public abstract class EntryLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement EntryLocalServiceImpl#deleteEntry(Entry) to avoid orphaned data");
+		}
+
 		return entryLocalService.deleteEntry((Entry)persistedModel);
 	}
 
@@ -359,6 +377,11 @@ public abstract class EntryLocalServiceBaseImpl
 		return entryPersistence.update(entry);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -370,6 +393,8 @@ public abstract class EntryLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		entryLocalService = (EntryLocalService)aopProxy;
+
+		_setLocalServiceUtilService(entryLocalService);
 	}
 
 	/**
@@ -414,6 +439,22 @@ public abstract class EntryLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		EntryLocalService entryLocalService) {
+
+		try {
+			Field field = EntryLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, entryLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected EntryLocalService entryLocalService;
 
 	@Reference
@@ -426,16 +467,7 @@ public abstract class EntryLocalServiceBaseImpl
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@Reference
-	protected com.liferay.portal.kernel.service.ClassNameLocalService
-		classNameLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.ResourceLocalService
-		resourceLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
+	private static final Log _log = LogFactoryUtil.getLog(
+		EntryLocalServiceBaseImpl.class);
 
 }

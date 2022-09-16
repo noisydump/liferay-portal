@@ -32,9 +32,11 @@ else {
 
 String usersListView = (String)request.getAttribute("view.jsp-usersListView");
 
-PortletURL portletURL = (PortletURL)request.getAttribute("view.jsp-portletURL");
-
-portletURL.setParameter("displayStyle", displayStyle);
+PortletURL portletURL = PortletURLBuilder.create(
+	(PortletURL)request.getAttribute("view.jsp-portletURL")
+).setParameter(
+	"displayStyle", displayStyle
+).buildPortletURL();
 
 String keywords = ParamUtil.getString(request, "keywords");
 
@@ -54,6 +56,8 @@ if (filterManageableOrganizations) {
 }
 %>
 
+<liferay-ui:success key="userAdded" message="the-user-was-created-successfully" />
+
 <c:choose>
 	<c:when test="<%= showList %>">
 
@@ -63,7 +67,7 @@ if (filterManageableOrganizations) {
 		SearchContainer<Organization> searchContainer = viewOrganizationsManagementToolbarDisplayContext.getSearchContainer(organizationParams, filterManageableOrganizations);
 		%>
 
-		<clay:management-toolbar-v2
+		<clay:management-toolbar
 			actionDropdownItems="<%= viewOrganizationsManagementToolbarDisplayContext.getActionDropdownItems() %>"
 			clearResultsURL="<%= viewOrganizationsManagementToolbarDisplayContext.getClearResultsURL() %>"
 			creationMenu="<%= viewOrganizationsManagementToolbarDisplayContext.getCreationMenu() %>"
@@ -80,7 +84,7 @@ if (filterManageableOrganizations) {
 			viewTypeItems="<%= viewOrganizationsManagementToolbarDisplayContext.getViewTypeItems() %>"
 		/>
 
-		<aui:form action="<%= portletURL.toString() %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "search();" %>'>
+		<aui:form action="<%= portletURL %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "search();" %>'>
 			<liferay-portlet:renderURLParams varImpl="portletURL" />
 			<aui:input name="<%= Constants.CMD %>" type="hidden" />
 			<aui:input name="toolbarItem" type="hidden" value="<%= toolbarItem %>" />
@@ -124,6 +128,8 @@ if (filterManageableOrganizations) {
 					if (!OrganizationPermissionUtil.contains(permissionChecker, organization, ActionKeys.VIEW)) {
 						rowURL = null;
 					}
+
+					OrganizationActionDropdownItems organizationActionDropdownItems = new OrganizationActionDropdownItems(organization, renderRequest, renderResponse);
 					%>
 
 					<%@ include file="/organization/search_columns.jspf" %>

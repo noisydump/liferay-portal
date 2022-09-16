@@ -1,6 +1,9 @@
 @component-name = "portal-publications"
 definition {
 
+	property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
+	property osgi.module.configuration.file.names = "com.liferay.change.tracking.configuration.CTSettingsConfiguration.config";
+	property osgi.module.configurations = "enabled=B&quot;true&quot;";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Publications";
@@ -9,13 +12,6 @@ definition {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
-
-		ApplicationsMenu.gotoPortlet(
-			category = "Publications",
-			panel = "Applications",
-			portlet = "Settings");
-
-		Publications.enablePublications(gotoOverview = "true");
 	}
 
 	tearDown {
@@ -25,67 +21,76 @@ definition {
 			PortalInstances.tearDownCP();
 		}
 		else {
-			ApplicationsMenu.gotoPortlet(
-				category = "Publications",
-				panel = "Applications",
-				portlet = "Settings");
-
 			Publications.disablePublications();
 		}
 	}
 
 	@priority = "3"
 	test CancelPublicationCreation {
-		Publications.cancelPublicationCreation(publicationsName = "Publication Name");
+		Publications.cancelPublicationCreation(publicationName = "Publication Name");
 
 		AssertElementNotPresent(
-			locator1 = "Publications#PUBLISHED_PUBLICATIONS_NAME",
+			locator1 = "Publications#PUBLISHED_PUBLICATION_NAME",
 			value1 = "Publication Name");
 	}
 
 	@priority = "3"
 	test CreateNewPublicationWithLongName {
 		Publications.createNewPublication(
-			gotoManagePublications = "true",
-			publicationsName = "Lopadotemachoselachogaleokranioleipsanodrimhypotrimmatosilphioparaomelitokatakechymenokichlepikossyphophattoperisteralektryonoptekephalliokigklopeleiolagoiosiraiobaphetraganopterygon");
+			gotoPublicationsAdmin = "true",
+			publicationName = "Lopadotemachoselachogaleokranioleipsanodrimhypotrimmatosilphioparaomelitokatakechymenokichlepikossyphophattoperisteralektryonoptekephalliokigklopeleiolagoiosiraiobaphetraganopterygon");
 
 		Alert.viewLengthValidationField();
 	}
 
 	@priority = "3"
 	test CreateNewPublicationWithoutName {
-		Publications.createNewPublication(gotoManagePublications = "true");
+		Publications.createNewPublication(gotoPublicationsAdmin = "true");
 
 		Alert.viewRequiredField();
 	}
 
 	@priority = "5"
 	test DeletePublication {
+		property portal.acceptance = "true";
+
 		Publications.createNewPublication(
-			gotoManagePublications = "true",
-			publicationsDescription = "Publication Description",
-			publicationsName = "Publication Name");
+			gotoPublicationsAdmin = "true",
+			publicationDescription = "Publication Description",
+			publicationName = "Publication Name");
+
+		PagesAdmin.openPagesAdmin(siteURLKey = "guest");
+
+		PagesAdmin.addPage(pageName = "Test Page");
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Publications",
 			panel = "Applications",
 			portlet = "Publications");
 
-		Publications.deletePublication(publicationsName = "Publication Name");
+		Publications.deletePublication(publicationName = "Publication Name");
 
 		AssertElementNotPresent(
-			key_publicationsName = "Publication Name",
-			locator1 = "Publications#PUBLISHED_PUBLICATIONS_NAME");
+			key_publicationName = "Publication Name",
+			locator1 = "Publications#PUBLISHED_PUBLICATION_NAME");
+
+		AssertTextPresent(
+			locator1 = "Publications#PUBLICATIONS_INDICATOR_TITLE",
+			value1 = "Production");
+
+		Navigator.openURL();
+
+		Page.viewNoPG(pageName = "Test Page");
 	}
 
 	@priority = "4"
 	test SwitchPublication {
-		Publications.createNewPublication(publicationsName = "Publication Name");
+		Publications.createNewPublication(publicationName = "Publication Name");
 
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
+			category = "Content & Data",
 			portlet = "Web Content");
 
 		WebContentNavigator.gotoAddCP();
@@ -96,12 +101,14 @@ definition {
 
 		PortletEntry.publish();
 
-		Publications.createNewPublication(publicationsName = "Publication 2 Name");
+		Publications.createNewPublication(
+			gotoPublicationsAdmin = "true",
+			publicationName = "Publication 2 Name");
 
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
+			category = "Content & Data",
 			portlet = "Web Content");
 
 		WebContentNavigator.gotoAddCP();
@@ -112,7 +119,7 @@ definition {
 
 		PortletEntry.publish();
 
-		Publications.selectPublication(publicationsName = "Publication Name");
+		Publications.selectPublication(publicationName = "Publication Name");
 
 		AssertElementPresent(
 			key_webContentTitle = "Web Content Title 1",
@@ -122,7 +129,15 @@ definition {
 			key_webContentTitle = "Web Content Title 2",
 			locator1 = "WC#ENTRY_LIST_TITLE");
 
-		Publications.selectPublication(publicationsName = "Publication 2 Name");
+		Publications.selectPublication(
+			gotoPublicationsAdmin = "true",
+			publicationName = "Publication 2 Name");
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Content & Data",
+			portlet = "Web Content");
 
 		AssertElementPresent(
 			key_webContentTitle = "Web Content Title 2",

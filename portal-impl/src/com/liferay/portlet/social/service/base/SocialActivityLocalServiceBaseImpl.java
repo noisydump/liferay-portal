@@ -14,8 +14,6 @@
 
 package com.liferay.portlet.social.service.base;
 
-import com.liferay.asset.kernel.service.persistence.AssetEntryFinder;
-import com.liferay.asset.kernel.service.persistence.AssetEntryPersistence;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.bean.BeanReference;
@@ -31,6 +29,8 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -38,29 +38,19 @@ import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
 import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistry;
 import com.liferay.portal.kernel.service.persistence.BasePersistence;
-import com.liferay.portal.kernel.service.persistence.ClassNamePersistence;
-import com.liferay.portal.kernel.service.persistence.GroupFinder;
-import com.liferay.portal.kernel.service.persistence.GroupPersistence;
-import com.liferay.portal.kernel.service.persistence.LayoutFinder;
-import com.liferay.portal.kernel.service.persistence.LayoutPersistence;
-import com.liferay.portal.kernel.service.persistence.UserFinder;
-import com.liferay.portal.kernel.service.persistence.UserPersistence;
 import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.social.kernel.model.SocialActivity;
 import com.liferay.social.kernel.service.SocialActivityLocalService;
-import com.liferay.social.kernel.service.persistence.SocialActivityCounterFinder;
-import com.liferay.social.kernel.service.persistence.SocialActivityCounterPersistence;
+import com.liferay.social.kernel.service.SocialActivityLocalServiceUtil;
 import com.liferay.social.kernel.service.persistence.SocialActivityFinder;
-import com.liferay.social.kernel.service.persistence.SocialActivityLimitPersistence;
 import com.liferay.social.kernel.service.persistence.SocialActivityPersistence;
-import com.liferay.social.kernel.service.persistence.SocialActivitySetFinder;
-import com.liferay.social.kernel.service.persistence.SocialActivitySetPersistence;
-import com.liferay.social.kernel.service.persistence.SocialActivitySettingPersistence;
 
 import java.io.Serializable;
+
+import java.lang.reflect.Field;
 
 import java.util.List;
 
@@ -84,7 +74,7 @@ public abstract class SocialActivityLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>SocialActivityLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.social.kernel.service.SocialActivityLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>SocialActivityLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>SocialActivityLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -155,6 +145,13 @@ public abstract class SocialActivityLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return socialActivityPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -322,6 +319,11 @@ public abstract class SocialActivityLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement SocialActivityLocalServiceImpl#deleteSocialActivity(SocialActivity) to avoid orphaned data");
+		}
+
 		return socialActivityLocalService.deleteSocialActivity(
 			(SocialActivity)persistedModel);
 	}
@@ -466,539 +468,19 @@ public abstract class SocialActivityLocalServiceBaseImpl
 		this.counterLocalService = counterLocalService;
 	}
 
-	/**
-	 * Returns the class name local service.
-	 *
-	 * @return the class name local service
-	 */
-	public com.liferay.portal.kernel.service.ClassNameLocalService
-		getClassNameLocalService() {
-
-		return classNameLocalService;
-	}
-
-	/**
-	 * Sets the class name local service.
-	 *
-	 * @param classNameLocalService the class name local service
-	 */
-	public void setClassNameLocalService(
-		com.liferay.portal.kernel.service.ClassNameLocalService
-			classNameLocalService) {
-
-		this.classNameLocalService = classNameLocalService;
-	}
-
-	/**
-	 * Returns the class name persistence.
-	 *
-	 * @return the class name persistence
-	 */
-	public ClassNamePersistence getClassNamePersistence() {
-		return classNamePersistence;
-	}
-
-	/**
-	 * Sets the class name persistence.
-	 *
-	 * @param classNamePersistence the class name persistence
-	 */
-	public void setClassNamePersistence(
-		ClassNamePersistence classNamePersistence) {
-
-		this.classNamePersistence = classNamePersistence;
-	}
-
-	/**
-	 * Returns the group local service.
-	 *
-	 * @return the group local service
-	 */
-	public com.liferay.portal.kernel.service.GroupLocalService
-		getGroupLocalService() {
-
-		return groupLocalService;
-	}
-
-	/**
-	 * Sets the group local service.
-	 *
-	 * @param groupLocalService the group local service
-	 */
-	public void setGroupLocalService(
-		com.liferay.portal.kernel.service.GroupLocalService groupLocalService) {
-
-		this.groupLocalService = groupLocalService;
-	}
-
-	/**
-	 * Returns the group persistence.
-	 *
-	 * @return the group persistence
-	 */
-	public GroupPersistence getGroupPersistence() {
-		return groupPersistence;
-	}
-
-	/**
-	 * Sets the group persistence.
-	 *
-	 * @param groupPersistence the group persistence
-	 */
-	public void setGroupPersistence(GroupPersistence groupPersistence) {
-		this.groupPersistence = groupPersistence;
-	}
-
-	/**
-	 * Returns the group finder.
-	 *
-	 * @return the group finder
-	 */
-	public GroupFinder getGroupFinder() {
-		return groupFinder;
-	}
-
-	/**
-	 * Sets the group finder.
-	 *
-	 * @param groupFinder the group finder
-	 */
-	public void setGroupFinder(GroupFinder groupFinder) {
-		this.groupFinder = groupFinder;
-	}
-
-	/**
-	 * Returns the layout local service.
-	 *
-	 * @return the layout local service
-	 */
-	public com.liferay.portal.kernel.service.LayoutLocalService
-		getLayoutLocalService() {
-
-		return layoutLocalService;
-	}
-
-	/**
-	 * Sets the layout local service.
-	 *
-	 * @param layoutLocalService the layout local service
-	 */
-	public void setLayoutLocalService(
-		com.liferay.portal.kernel.service.LayoutLocalService
-			layoutLocalService) {
-
-		this.layoutLocalService = layoutLocalService;
-	}
-
-	/**
-	 * Returns the layout persistence.
-	 *
-	 * @return the layout persistence
-	 */
-	public LayoutPersistence getLayoutPersistence() {
-		return layoutPersistence;
-	}
-
-	/**
-	 * Sets the layout persistence.
-	 *
-	 * @param layoutPersistence the layout persistence
-	 */
-	public void setLayoutPersistence(LayoutPersistence layoutPersistence) {
-		this.layoutPersistence = layoutPersistence;
-	}
-
-	/**
-	 * Returns the layout finder.
-	 *
-	 * @return the layout finder
-	 */
-	public LayoutFinder getLayoutFinder() {
-		return layoutFinder;
-	}
-
-	/**
-	 * Sets the layout finder.
-	 *
-	 * @param layoutFinder the layout finder
-	 */
-	public void setLayoutFinder(LayoutFinder layoutFinder) {
-		this.layoutFinder = layoutFinder;
-	}
-
-	/**
-	 * Returns the user local service.
-	 *
-	 * @return the user local service
-	 */
-	public com.liferay.portal.kernel.service.UserLocalService
-		getUserLocalService() {
-
-		return userLocalService;
-	}
-
-	/**
-	 * Sets the user local service.
-	 *
-	 * @param userLocalService the user local service
-	 */
-	public void setUserLocalService(
-		com.liferay.portal.kernel.service.UserLocalService userLocalService) {
-
-		this.userLocalService = userLocalService;
-	}
-
-	/**
-	 * Returns the user persistence.
-	 *
-	 * @return the user persistence
-	 */
-	public UserPersistence getUserPersistence() {
-		return userPersistence;
-	}
-
-	/**
-	 * Sets the user persistence.
-	 *
-	 * @param userPersistence the user persistence
-	 */
-	public void setUserPersistence(UserPersistence userPersistence) {
-		this.userPersistence = userPersistence;
-	}
-
-	/**
-	 * Returns the user finder.
-	 *
-	 * @return the user finder
-	 */
-	public UserFinder getUserFinder() {
-		return userFinder;
-	}
-
-	/**
-	 * Sets the user finder.
-	 *
-	 * @param userFinder the user finder
-	 */
-	public void setUserFinder(UserFinder userFinder) {
-		this.userFinder = userFinder;
-	}
-
-	/**
-	 * Returns the asset entry local service.
-	 *
-	 * @return the asset entry local service
-	 */
-	public com.liferay.asset.kernel.service.AssetEntryLocalService
-		getAssetEntryLocalService() {
-
-		return assetEntryLocalService;
-	}
-
-	/**
-	 * Sets the asset entry local service.
-	 *
-	 * @param assetEntryLocalService the asset entry local service
-	 */
-	public void setAssetEntryLocalService(
-		com.liferay.asset.kernel.service.AssetEntryLocalService
-			assetEntryLocalService) {
-
-		this.assetEntryLocalService = assetEntryLocalService;
-	}
-
-	/**
-	 * Returns the asset entry persistence.
-	 *
-	 * @return the asset entry persistence
-	 */
-	public AssetEntryPersistence getAssetEntryPersistence() {
-		return assetEntryPersistence;
-	}
-
-	/**
-	 * Sets the asset entry persistence.
-	 *
-	 * @param assetEntryPersistence the asset entry persistence
-	 */
-	public void setAssetEntryPersistence(
-		AssetEntryPersistence assetEntryPersistence) {
-
-		this.assetEntryPersistence = assetEntryPersistence;
-	}
-
-	/**
-	 * Returns the asset entry finder.
-	 *
-	 * @return the asset entry finder
-	 */
-	public AssetEntryFinder getAssetEntryFinder() {
-		return assetEntryFinder;
-	}
-
-	/**
-	 * Sets the asset entry finder.
-	 *
-	 * @param assetEntryFinder the asset entry finder
-	 */
-	public void setAssetEntryFinder(AssetEntryFinder assetEntryFinder) {
-		this.assetEntryFinder = assetEntryFinder;
-	}
-
-	/**
-	 * Returns the social activity counter local service.
-	 *
-	 * @return the social activity counter local service
-	 */
-	public com.liferay.social.kernel.service.SocialActivityCounterLocalService
-		getSocialActivityCounterLocalService() {
-
-		return socialActivityCounterLocalService;
-	}
-
-	/**
-	 * Sets the social activity counter local service.
-	 *
-	 * @param socialActivityCounterLocalService the social activity counter local service
-	 */
-	public void setSocialActivityCounterLocalService(
-		com.liferay.social.kernel.service.SocialActivityCounterLocalService
-			socialActivityCounterLocalService) {
-
-		this.socialActivityCounterLocalService =
-			socialActivityCounterLocalService;
-	}
-
-	/**
-	 * Returns the social activity counter persistence.
-	 *
-	 * @return the social activity counter persistence
-	 */
-	public SocialActivityCounterPersistence
-		getSocialActivityCounterPersistence() {
-
-		return socialActivityCounterPersistence;
-	}
-
-	/**
-	 * Sets the social activity counter persistence.
-	 *
-	 * @param socialActivityCounterPersistence the social activity counter persistence
-	 */
-	public void setSocialActivityCounterPersistence(
-		SocialActivityCounterPersistence socialActivityCounterPersistence) {
-
-		this.socialActivityCounterPersistence =
-			socialActivityCounterPersistence;
-	}
-
-	/**
-	 * Returns the social activity counter finder.
-	 *
-	 * @return the social activity counter finder
-	 */
-	public SocialActivityCounterFinder getSocialActivityCounterFinder() {
-		return socialActivityCounterFinder;
-	}
-
-	/**
-	 * Sets the social activity counter finder.
-	 *
-	 * @param socialActivityCounterFinder the social activity counter finder
-	 */
-	public void setSocialActivityCounterFinder(
-		SocialActivityCounterFinder socialActivityCounterFinder) {
-
-		this.socialActivityCounterFinder = socialActivityCounterFinder;
-	}
-
-	/**
-	 * Returns the social activity interpreter local service.
-	 *
-	 * @return the social activity interpreter local service
-	 */
-	public
-		com.liferay.social.kernel.service.SocialActivityInterpreterLocalService
-			getSocialActivityInterpreterLocalService() {
-
-		return socialActivityInterpreterLocalService;
-	}
-
-	/**
-	 * Sets the social activity interpreter local service.
-	 *
-	 * @param socialActivityInterpreterLocalService the social activity interpreter local service
-	 */
-	public void setSocialActivityInterpreterLocalService(
-		com.liferay.social.kernel.service.SocialActivityInterpreterLocalService
-			socialActivityInterpreterLocalService) {
-
-		this.socialActivityInterpreterLocalService =
-			socialActivityInterpreterLocalService;
-	}
-
-	/**
-	 * Returns the social activity limit local service.
-	 *
-	 * @return the social activity limit local service
-	 */
-	public com.liferay.social.kernel.service.SocialActivityLimitLocalService
-		getSocialActivityLimitLocalService() {
-
-		return socialActivityLimitLocalService;
-	}
-
-	/**
-	 * Sets the social activity limit local service.
-	 *
-	 * @param socialActivityLimitLocalService the social activity limit local service
-	 */
-	public void setSocialActivityLimitLocalService(
-		com.liferay.social.kernel.service.SocialActivityLimitLocalService
-			socialActivityLimitLocalService) {
-
-		this.socialActivityLimitLocalService = socialActivityLimitLocalService;
-	}
-
-	/**
-	 * Returns the social activity limit persistence.
-	 *
-	 * @return the social activity limit persistence
-	 */
-	public SocialActivityLimitPersistence getSocialActivityLimitPersistence() {
-		return socialActivityLimitPersistence;
-	}
-
-	/**
-	 * Sets the social activity limit persistence.
-	 *
-	 * @param socialActivityLimitPersistence the social activity limit persistence
-	 */
-	public void setSocialActivityLimitPersistence(
-		SocialActivityLimitPersistence socialActivityLimitPersistence) {
-
-		this.socialActivityLimitPersistence = socialActivityLimitPersistence;
-	}
-
-	/**
-	 * Returns the social activity set local service.
-	 *
-	 * @return the social activity set local service
-	 */
-	public com.liferay.social.kernel.service.SocialActivitySetLocalService
-		getSocialActivitySetLocalService() {
-
-		return socialActivitySetLocalService;
-	}
-
-	/**
-	 * Sets the social activity set local service.
-	 *
-	 * @param socialActivitySetLocalService the social activity set local service
-	 */
-	public void setSocialActivitySetLocalService(
-		com.liferay.social.kernel.service.SocialActivitySetLocalService
-			socialActivitySetLocalService) {
-
-		this.socialActivitySetLocalService = socialActivitySetLocalService;
-	}
-
-	/**
-	 * Returns the social activity set persistence.
-	 *
-	 * @return the social activity set persistence
-	 */
-	public SocialActivitySetPersistence getSocialActivitySetPersistence() {
-		return socialActivitySetPersistence;
-	}
-
-	/**
-	 * Sets the social activity set persistence.
-	 *
-	 * @param socialActivitySetPersistence the social activity set persistence
-	 */
-	public void setSocialActivitySetPersistence(
-		SocialActivitySetPersistence socialActivitySetPersistence) {
-
-		this.socialActivitySetPersistence = socialActivitySetPersistence;
-	}
-
-	/**
-	 * Returns the social activity set finder.
-	 *
-	 * @return the social activity set finder
-	 */
-	public SocialActivitySetFinder getSocialActivitySetFinder() {
-		return socialActivitySetFinder;
-	}
-
-	/**
-	 * Sets the social activity set finder.
-	 *
-	 * @param socialActivitySetFinder the social activity set finder
-	 */
-	public void setSocialActivitySetFinder(
-		SocialActivitySetFinder socialActivitySetFinder) {
-
-		this.socialActivitySetFinder = socialActivitySetFinder;
-	}
-
-	/**
-	 * Returns the social activity setting local service.
-	 *
-	 * @return the social activity setting local service
-	 */
-	public com.liferay.social.kernel.service.SocialActivitySettingLocalService
-		getSocialActivitySettingLocalService() {
-
-		return socialActivitySettingLocalService;
-	}
-
-	/**
-	 * Sets the social activity setting local service.
-	 *
-	 * @param socialActivitySettingLocalService the social activity setting local service
-	 */
-	public void setSocialActivitySettingLocalService(
-		com.liferay.social.kernel.service.SocialActivitySettingLocalService
-			socialActivitySettingLocalService) {
-
-		this.socialActivitySettingLocalService =
-			socialActivitySettingLocalService;
-	}
-
-	/**
-	 * Returns the social activity setting persistence.
-	 *
-	 * @return the social activity setting persistence
-	 */
-	public SocialActivitySettingPersistence
-		getSocialActivitySettingPersistence() {
-
-		return socialActivitySettingPersistence;
-	}
-
-	/**
-	 * Sets the social activity setting persistence.
-	 *
-	 * @param socialActivitySettingPersistence the social activity setting persistence
-	 */
-	public void setSocialActivitySettingPersistence(
-		SocialActivitySettingPersistence socialActivitySettingPersistence) {
-
-		this.socialActivitySettingPersistence =
-			socialActivitySettingPersistence;
-	}
-
 	public void afterPropertiesSet() {
 		persistedModelLocalServiceRegistry.register(
 			"com.liferay.social.kernel.model.SocialActivity",
 			socialActivityLocalService);
+
+		_setLocalServiceUtilService(socialActivityLocalService);
 	}
 
 	public void destroy() {
 		persistedModelLocalServiceRegistry.unregister(
 			"com.liferay.social.kernel.model.SocialActivity");
+
+		_setLocalServiceUtilService(null);
 	}
 
 	/**
@@ -1058,6 +540,22 @@ public abstract class SocialActivityLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		SocialActivityLocalService socialActivityLocalService) {
+
+		try {
+			Field field = SocialActivityLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, socialActivityLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@BeanReference(type = SocialActivityLocalService.class)
 	protected SocialActivityLocalService socialActivityLocalService;
 
@@ -1073,113 +571,8 @@ public abstract class SocialActivityLocalServiceBaseImpl
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@BeanReference(
-		type = com.liferay.portal.kernel.service.ClassNameLocalService.class
-	)
-	protected com.liferay.portal.kernel.service.ClassNameLocalService
-		classNameLocalService;
-
-	@BeanReference(type = ClassNamePersistence.class)
-	protected ClassNamePersistence classNamePersistence;
-
-	@BeanReference(
-		type = com.liferay.portal.kernel.service.GroupLocalService.class
-	)
-	protected com.liferay.portal.kernel.service.GroupLocalService
-		groupLocalService;
-
-	@BeanReference(type = GroupPersistence.class)
-	protected GroupPersistence groupPersistence;
-
-	@BeanReference(type = GroupFinder.class)
-	protected GroupFinder groupFinder;
-
-	@BeanReference(
-		type = com.liferay.portal.kernel.service.LayoutLocalService.class
-	)
-	protected com.liferay.portal.kernel.service.LayoutLocalService
-		layoutLocalService;
-
-	@BeanReference(type = LayoutPersistence.class)
-	protected LayoutPersistence layoutPersistence;
-
-	@BeanReference(type = LayoutFinder.class)
-	protected LayoutFinder layoutFinder;
-
-	@BeanReference(
-		type = com.liferay.portal.kernel.service.UserLocalService.class
-	)
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
-
-	@BeanReference(type = UserPersistence.class)
-	protected UserPersistence userPersistence;
-
-	@BeanReference(type = UserFinder.class)
-	protected UserFinder userFinder;
-
-	@BeanReference(
-		type = com.liferay.asset.kernel.service.AssetEntryLocalService.class
-	)
-	protected com.liferay.asset.kernel.service.AssetEntryLocalService
-		assetEntryLocalService;
-
-	@BeanReference(type = AssetEntryPersistence.class)
-	protected AssetEntryPersistence assetEntryPersistence;
-
-	@BeanReference(type = AssetEntryFinder.class)
-	protected AssetEntryFinder assetEntryFinder;
-
-	@BeanReference(
-		type = com.liferay.social.kernel.service.SocialActivityCounterLocalService.class
-	)
-	protected
-		com.liferay.social.kernel.service.SocialActivityCounterLocalService
-			socialActivityCounterLocalService;
-
-	@BeanReference(type = SocialActivityCounterPersistence.class)
-	protected SocialActivityCounterPersistence socialActivityCounterPersistence;
-
-	@BeanReference(type = SocialActivityCounterFinder.class)
-	protected SocialActivityCounterFinder socialActivityCounterFinder;
-
-	@BeanReference(
-		type = com.liferay.social.kernel.service.SocialActivityInterpreterLocalService.class
-	)
-	protected
-		com.liferay.social.kernel.service.SocialActivityInterpreterLocalService
-			socialActivityInterpreterLocalService;
-
-	@BeanReference(
-		type = com.liferay.social.kernel.service.SocialActivityLimitLocalService.class
-	)
-	protected com.liferay.social.kernel.service.SocialActivityLimitLocalService
-		socialActivityLimitLocalService;
-
-	@BeanReference(type = SocialActivityLimitPersistence.class)
-	protected SocialActivityLimitPersistence socialActivityLimitPersistence;
-
-	@BeanReference(
-		type = com.liferay.social.kernel.service.SocialActivitySetLocalService.class
-	)
-	protected com.liferay.social.kernel.service.SocialActivitySetLocalService
-		socialActivitySetLocalService;
-
-	@BeanReference(type = SocialActivitySetPersistence.class)
-	protected SocialActivitySetPersistence socialActivitySetPersistence;
-
-	@BeanReference(type = SocialActivitySetFinder.class)
-	protected SocialActivitySetFinder socialActivitySetFinder;
-
-	@BeanReference(
-		type = com.liferay.social.kernel.service.SocialActivitySettingLocalService.class
-	)
-	protected
-		com.liferay.social.kernel.service.SocialActivitySettingLocalService
-			socialActivitySettingLocalService;
-
-	@BeanReference(type = SocialActivitySettingPersistence.class)
-	protected SocialActivitySettingPersistence socialActivitySettingPersistence;
+	private static final Log _log = LogFactoryUtil.getLog(
+		SocialActivityLocalServiceBaseImpl.class);
 
 	@BeanReference(type = PersistedModelLocalServiceRegistry.class)
 	protected PersistedModelLocalServiceRegistry

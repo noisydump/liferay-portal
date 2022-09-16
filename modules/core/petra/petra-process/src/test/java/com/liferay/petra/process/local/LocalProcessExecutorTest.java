@@ -29,7 +29,9 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.petra.test.util.ThreadTestUtil;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.io.EOFException;
 import java.io.File;
@@ -75,6 +77,7 @@ import java.util.function.Supplier;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -83,24 +86,28 @@ import org.junit.Test;
 public class LocalProcessExecutorTest {
 
 	@ClassRule
-	public static final CodeCoverageAssertor codeCoverageAssertor =
-		new CodeCoverageAssertor() {
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new CodeCoverageAssertor() {
 
-			@Override
-			public void appendAssertClasses(List<Class<?>> assertClasses) {
-				assertClasses.add(ProcessConfig.class);
+				@Override
+				public void appendAssertClasses(List<Class<?>> assertClasses) {
+					assertClasses.add(ProcessConfig.class);
 
-				Collections.addAll(
-					assertClasses, ProcessConfig.class.getDeclaredClasses());
+					Collections.addAll(
+						assertClasses,
+						ProcessConfig.class.getDeclaredClasses());
 
-				assertClasses.add(LocalProcessLauncher.class);
+					assertClasses.add(LocalProcessLauncher.class);
 
-				Collections.addAll(
-					assertClasses,
-					LocalProcessLauncher.class.getDeclaredClasses());
-			}
+					Collections.addAll(
+						assertClasses,
+						LocalProcessLauncher.class.getDeclaredClasses());
+				}
 
-		};
+			},
+			LiferayUnitTestRule.INSTANCE);
 
 	@Test
 	public void testHeartBeatThreadDetachOnBrokenPipe() throws Exception {
@@ -278,7 +285,7 @@ public class LocalProcessExecutorTest {
 		Consumer<ProcessLog> consumer = processLog -> {
 		};
 
-		ClassLoader reactClasssLoader = new URLClassLoader(new URL[0]);
+		ClassLoader reactClassLoader = new URLClassLoader(new URL[0]);
 
 		String runtimeClassPath = "runtimeClassPath";
 
@@ -287,7 +294,7 @@ public class LocalProcessExecutorTest {
 		originalBuilder.setBootstrapClassPath(bootstrapClassPath);
 		originalBuilder.setJavaExecutable(javaExecutable);
 		originalBuilder.setProcessLogConsumer(consumer);
-		originalBuilder.setReactClassLoader(reactClasssLoader);
+		originalBuilder.setReactClassLoader(reactClassLoader);
 		originalBuilder.setRuntimeClassPath(runtimeClassPath);
 
 		ProcessConfig originalProcessConfig = originalBuilder.build();
@@ -311,7 +318,7 @@ public class LocalProcessExecutorTest {
 			javaExecutable, copyProcessConfig1.getJavaExecutable());
 		Assert.assertSame(consumer, copyProcessConfig1.getProcessLogConsumer());
 		Assert.assertSame(
-			reactClasssLoader, copyProcessConfig1.getReactClassLoader());
+			reactClassLoader, copyProcessConfig1.getReactClassLoader());
 		Assert.assertSame(
 			runtimeClassPath, copyProcessConfig1.getRuntimeClassPath());
 
@@ -349,7 +356,7 @@ public class LocalProcessExecutorTest {
 			javaExecutable, copyProcessConfig2.getJavaExecutable());
 		Assert.assertSame(consumer, copyProcessConfig2.getProcessLogConsumer());
 		Assert.assertSame(
-			reactClasssLoader, copyProcessConfig2.getReactClassLoader());
+			reactClassLoader, copyProcessConfig2.getReactClassLoader());
 		Assert.assertSame(
 			runtimeClassPath, copyProcessConfig2.getRuntimeClassPath());
 	}
@@ -1098,7 +1105,6 @@ public class LocalProcessExecutorTest {
 			arguments.add("-Djvm.debug=true");
 		}
 
-		arguments.add("-Dliferay.mode=test");
 		arguments.add("-Dsun.zip.disableMemoryMapping=true");
 
 		String whipAgentLine = System.getProperty("whip.agent");
@@ -1868,7 +1874,7 @@ public class LocalProcessExecutorTest {
 		}
 
 		private interface SerializableShutdownHook
-			extends Serializable, LocalProcessLauncher.ShutdownHook {
+			extends LocalProcessLauncher.ShutdownHook, Serializable {
 		}
 
 	}

@@ -191,7 +191,7 @@ renderResponse.setTitle((feed == null) ? LanguageUtil.get(request, "new-feed") :
 			<liferay-frontend:fieldset
 				collapsed="<%= true %>"
 				collapsible="<%= true %>"
-				label="web-content-contraints"
+				label="web-content-constraints"
 			>
 				<div class="form-group">
 					<aui:input name="ddmStructureKey" required="<%= true %>" type="hidden" value="<%= ddmStructureKey %>" />
@@ -261,28 +261,33 @@ renderResponse.setTitle((feed == null) ? LanguageUtil.get(request, "new-feed") :
 
 							for (DDMFormField ddmFormField : ddmFormFieldsMap.values()) {
 								String ddmFormFieldType = ddmFormField.getType();
-
-								if (ddmFormFieldType.equals("radio") || ddmFormFieldType.equals("select")) {
-									DDMFormFieldOptions ddmFormFieldOptions = ddmFormField.getDDMFormFieldOptions();
-
-									for (String optionValue : ddmFormFieldOptions.getOptionsValues()) {
-										LocalizedValue optionLabels = ddmFormFieldOptions.getOptionLabels(optionValue);
-
-										optionValue = ddmFormField.getName() + StringPool.UNDERLINE + optionValue;
 							%>
 
-										<aui:option label='<%= TextFormatter.format(optionLabels.getString(locale), TextFormatter.J) + "(" + LanguageUtil.get(request, ddmFormFieldType) + ")" %>' selected="<%= contentField.equals(optionValue) %>" value="<%= optionValue %>" />
+								<c:choose>
+									<c:when test='<%= ddmFormFieldType.equals("radio") || ddmFormFieldType.equals("select") %>'>
 
-								<%
-									}
-								}
-								else if (!ddmFormFieldType.equals("checkbox")) {
-								%>
+										<%
+										DDMFormFieldOptions ddmFormFieldOptions = ddmFormField.getDDMFormFieldOptions();
 
-									<aui:option label='<%= TextFormatter.format(ddmFormField.getName(), TextFormatter.J) + "(" + LanguageUtil.get(request, ddmFormFieldType) + ")" %>' selected="<%= contentField.equals(ddmFormField.getName()) %>" value="<%= ddmFormField.getName() %>" />
+										for (String optionValue : ddmFormFieldOptions.getOptionsValues()) {
+											LocalizedValue optionLabels = ddmFormFieldOptions.getOptionLabels(optionValue);
+
+											optionValue = ddmFormField.getName() + StringPool.UNDERLINE + optionValue;
+										%>
+
+											<aui:option label='<%= TextFormatter.format(optionLabels.getString(locale), TextFormatter.J) + "(" + LanguageUtil.get(request, ddmFormFieldType) + ")" %>' selected="<%= contentField.equals(optionValue) %>" value="<%= optionValue %>" />
+
+										<%
+										}
+										%>
+
+									</c:when>
+									<c:when test='<%= !ddmFormFieldType.equals("checkbox") %>'>
+										<aui:option label='<%= TextFormatter.format(ddmFormField.getName(), TextFormatter.J) + "(" + LanguageUtil.get(request, ddmFormFieldType) + ")" %>' selected="<%= contentField.equals(ddmFormField.getName()) %>" value="<%= ddmFormField.getName() %>" />
+									</c:when>
+								</c:choose>
 
 							<%
-								}
 							}
 							%>
 
@@ -344,38 +349,41 @@ renderResponse.setTitle((feed == null) ? LanguageUtil.get(request, "new-feed") :
 	function <portlet:namespace />openDDMStructureSelector() {
 		Liferay.Util.openSelectionModal({
 			onSelect: function (selectedItem) {
+				const itemValue = JSON.parse(selectedItem.value);
+
 				if (
 					document.<portlet:namespace />fm
 						.<portlet:namespace />ddmStructureKey.value !=
-					selectedItem.ddmstructurekey
+					itemValue.ddmstructurekey
 				) {
-					if (
-						confirm(
-							'<%= UnicodeLanguageUtil.get(request, "selecting-a-new-structure-changes-the-available-templates-and-available-feed-item-content") %>'
-						)
-					) {
-						document.<portlet:namespace />fm.<portlet:namespace />ddmStructureKey.value =
-							selectedItem.ddmstructurekey;
-						document.<portlet:namespace />fm.<portlet:namespace />ddmTemplateKey.value =
-							'';
-						document.<portlet:namespace />fm.<portlet:namespace />ddmRendererTemplateKey.value =
-							'';
-						document.<portlet:namespace />fm.<portlet:namespace />contentField.value =
-							'<%= JournalFeedConstants.WEB_CONTENT_DESCRIPTION %>';
+					Liferay.Util.openConfirmModal({
+						message:
+							'<%= UnicodeLanguageUtil.get(request, "selecting-a-new-structure-changes-the-available-templates-and-available-feed-item-content") %>',
+						onConfirm: (isConfirmed) => {
+							if (isConfirmed) {
+								document.<portlet:namespace />fm.<portlet:namespace />ddmStructureKey.value =
+									itemValue.ddmstructurekey;
+								document.<portlet:namespace />fm.<portlet:namespace />ddmTemplateKey.value =
+									'';
+								document.<portlet:namespace />fm.<portlet:namespace />ddmRendererTemplateKey.value =
+									'';
+								document.<portlet:namespace />fm.<portlet:namespace />contentField.value =
+									'<%= JournalFeedConstants.WEB_CONTENT_DESCRIPTION %>';
 
-						submitForm(
-							document.<portlet:namespace />fm,
-							null,
-							false,
-							false
-						);
-					}
+								submitForm(
+									document.<portlet:namespace />fm,
+									null,
+									false,
+									false
+								);
+							}
+						},
+					});
 				}
 			},
 			selectEventName: '<portlet:namespace />selectDDMStructure',
 			title: '<%= UnicodeLanguageUtil.get(request, "structures") %>',
-			url:
-				'<portlet:renderURL windowState="<%= LiferayWindowState.POP_UP.toString() %>"><portlet:param name="mvcPath" value="/select_ddm_structure.jsp" /></portlet:renderURL>',
+			url: '<%= journalDisplayContext.getSelectDDMStructureURL() %>>',
 		});
 	}
 
@@ -406,11 +414,16 @@ renderResponse.setTitle((feed == null) ? LanguageUtil.get(request, "new-feed") :
 		submitForm(document.<portlet:namespace />fm);
 	}
 
-	Liferay.Util.disableToggleBoxes(
-		'<portlet:namespace />autoFeedId',
-		'<portlet:namespace />newFeedId',
-		true
-	);
+	var autoFeedInput = document.getElementById('<portlet:namespace />autoFeedId');
+	var newFeedCheckbox = document.getElementById('<portlet:namespace />newFeedId');
+
+	if (autoFeedInput && newFeedCheckbox) {
+		newFeedCheckbox.disabled = autoFeedInput.checked;
+
+		autoFeedInput.addEventListener('click', () => {
+			Liferay.Util.toggleDisabled(newFeedCheckbox, !newFeedCheckbox.disabled);
+		});
+	}
 </aui:script>
 
 <aui:script sandbox="<%= true %>">
@@ -424,7 +437,7 @@ renderResponse.setTitle((feed == null) ? LanguageUtil.get(request, "new-feed") :
 	);
 
 	if (contentFieldSelector) {
-		contentFieldSelector.addEventListener('change', function () {
+		contentFieldSelector.addEventListener('change', () => {
 			var contentFieldValue = '';
 			var ddmRendererTemplateKeyValue = '';
 

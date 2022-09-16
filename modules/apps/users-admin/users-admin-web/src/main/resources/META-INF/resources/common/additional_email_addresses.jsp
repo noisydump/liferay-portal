@@ -37,21 +37,23 @@ List<EmailAddress> emailAddresses = EmailAddressServiceUtil.getEmailAddresses(cl
 
 	<clay:content-col>
 		<span class="heading-end">
-
-			<%
-			PortletURL editURL = liferayPortletResponse.createRenderURL();
-
-			editURL.setParameter("mvcPath", "/common/edit_email_address.jsp");
-			editURL.setParameter("redirect", currentURL);
-			editURL.setParameter("className", className);
-			editURL.setParameter("classPK", String.valueOf(classPK));
-			%>
-
 			<liferay-ui:icon
 				label="<%= true %>"
 				linkCssClass="add-email-address-link btn btn-secondary btn-sm"
 				message="add"
-				url="<%= editURL.toString() %>"
+				url='<%=
+					PortletURLBuilder.createRenderURL(
+						liferayPortletResponse
+					).setMVCPath(
+						"/common/edit_email_address.jsp"
+					).setRedirect(
+						currentURL
+					).setParameter(
+						"className", className
+					).setParameter(
+						"classPK", classPK
+					).buildString()
+				%>'
 			/>
 		</span>
 	</clay:content-col>
@@ -69,7 +71,8 @@ List<EmailAddress> emailAddresses = EmailAddressServiceUtil.getEmailAddresses(cl
 	total="<%= emailAddresses.size() %>"
 >
 	<liferay-ui:search-container-results
-		results="<%= emailAddresses.subList(searchContainer.getStart(), searchContainer.getResultEnd()) %>"
+		calculateStartAndEnd="<%= true %>"
+		results="<%= emailAddresses %>"
 	/>
 
 	<liferay-ui:search-container-row

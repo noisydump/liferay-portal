@@ -274,7 +274,7 @@ public class WorkflowMetricsDemo extends BasePortalInstanceLifecycleListener {
 						_toDate(completionLocalDateTime));
 				}
 				catch (Exception exception) {
-					_log.error(exception, exception);
+					_log.error(exception);
 				}
 			}
 		);
@@ -309,11 +309,6 @@ public class WorkflowMetricsDemo extends BasePortalInstanceLifecycleListener {
 
 		_omniAdminUserDemoDataCreator.delete();
 		_siteMemberUserDemoDataCreator.delete();
-	}
-
-	@Reference(target = ModuleServiceLifecycle.PORTAL_INITIALIZED, unbind = "-")
-	protected void setModuleServiceLifecycle(
-		ModuleServiceLifecycle moduleServiceLifecycle) {
 	}
 
 	private WorkflowInstance _addWorkflowInstance(
@@ -387,7 +382,7 @@ public class WorkflowMetricsDemo extends BasePortalInstanceLifecycleListener {
 					}
 				}
 				catch (Exception exception) {
-					_log.error(exception, exception);
+					_log.error(exception);
 				}
 			}
 		);
@@ -433,6 +428,9 @@ public class WorkflowMetricsDemo extends BasePortalInstanceLifecycleListener {
 
 	@Reference
 	private GroupLocalService _groupLocalService;
+
+	@Reference(target = ModuleServiceLifecycle.PORTAL_INITIALIZED)
+	private ModuleServiceLifecycle _moduleServiceLifecycle;
 
 	@Reference
 	private OmniAdminUserDemoDataCreator _omniAdminUserDemoDataCreator;

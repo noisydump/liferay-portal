@@ -21,6 +21,8 @@ import com.liferay.message.boards.web.internal.upload.TempAttachmentMBUploadFile
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
@@ -56,7 +58,49 @@ import org.osgi.service.component.annotations.Reference;
 public class EditMessageAttachmentsMVCActionCommand
 	extends BaseMVCActionCommand {
 
-	protected void addTempAttachment(
+	@Override
+	protected void doProcessAction(
+			ActionRequest actionRequest, ActionResponse actionResponse)
+		throws Exception {
+
+		String cmd = ParamUtil.getString(actionRequest, Constants.CMD);
+
+		try {
+			if (cmd.equals(Constants.ADD_TEMP)) {
+				_addTempAttachment(actionRequest, actionResponse);
+			}
+			else if (cmd.equals(Constants.DELETE)) {
+				_deleteAttachment(actionRequest, false);
+			}
+			else if (cmd.equals(Constants.DELETE_TEMP)) {
+				_deleteTempAttachment(actionRequest, actionResponse);
+			}
+			else if (cmd.equals(Constants.EMPTY_TRASH)) {
+				_emptyTrash(actionRequest);
+			}
+			else if (cmd.equals(Constants.MOVE_TO_TRASH)) {
+				_deleteAttachment(actionRequest, true);
+			}
+			else if (cmd.equals(Constants.RESTORE)) {
+				_restoreEntries(actionRequest);
+			}
+
+			if (Validator.isNotNull(cmd)) {
+				String redirect = ParamUtil.getString(
+					actionRequest, "redirect");
+
+				sendRedirect(actionRequest, actionResponse, redirect);
+			}
+		}
+		catch (PrincipalException principalException) {
+			SessionErrors.add(actionRequest, principalException.getClass());
+
+			actionResponse.setRenderParameter(
+				"mvcPath", "/message_boards/error.jsp");
+		}
+	}
+
+	private void _addTempAttachment(
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
 
@@ -65,7 +109,7 @@ public class EditMessageAttachmentsMVCActionCommand
 			_multipleUploadResponseHandler, actionRequest, actionResponse);
 	}
 
-	protected void deleteAttachment(
+	private void _deleteAttachment(
 			ActionRequest actionRequest, boolean moveToTrash)
 		throws PortalException {
 
@@ -81,7 +125,7 @@ public class EditMessageAttachmentsMVCActionCommand
 		}
 	}
 
-	protected void deleteTempAttachment(
+	private void _deleteTempAttachment(
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
 
@@ -104,6 +148,10 @@ public class EditMessageAttachmentsMVCActionCommand
 			jsonObject.put("deleted", Boolean.TRUE);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			jsonObject.put("deleted", Boolean.FALSE);
 
 			String errorMessage = themeDisplay.translate(
@@ -116,57 +164,13 @@ public class EditMessageAttachmentsMVCActionCommand
 			actionRequest, actionResponse, jsonObject);
 	}
 
-	@Override
-	protected void doProcessAction(
-			ActionRequest actionRequest, ActionResponse actionResponse)
-		throws Exception {
-
-		String cmd = ParamUtil.getString(actionRequest, Constants.CMD);
-
-		try {
-			if (cmd.equals(Constants.ADD_TEMP)) {
-				addTempAttachment(actionRequest, actionResponse);
-			}
-			else if (cmd.equals(Constants.DELETE)) {
-				deleteAttachment(actionRequest, false);
-			}
-			else if (cmd.equals(Constants.DELETE_TEMP)) {
-				deleteTempAttachment(actionRequest, actionResponse);
-			}
-			else if (cmd.equals(Constants.EMPTY_TRASH)) {
-				emptyTrash(actionRequest);
-			}
-			else if (cmd.equals(Constants.MOVE_TO_TRASH)) {
-				deleteAttachment(actionRequest, true);
-			}
-			else if (cmd.equals(Constants.RESTORE)) {
-				restoreEntries(actionRequest);
-			}
-
-			if (Validator.isNotNull(cmd)) {
-				String redirect = ParamUtil.getString(
-					actionRequest, "redirect");
-
-				sendRedirect(actionRequest, actionResponse, redirect);
-			}
-		}
-		catch (PrincipalException principalException) {
-			SessionErrors.add(actionRequest, principalException.getClass());
-
-			actionResponse.setRenderParameter(
-				"mvcPath", "/message_boards/error.jsp");
-		}
-	}
-
-	protected void emptyTrash(ActionRequest actionRequest) throws Exception {
+	private void _emptyTrash(ActionRequest actionRequest) throws Exception {
 		long messageId = ParamUtil.getLong(actionRequest, "messageId");
 
 		_mbMessageService.emptyMessageAttachments(messageId);
 	}
 
-	protected void restoreEntries(ActionRequest actionRequest)
-		throws Exception {
-
+	private void _restoreEntries(ActionRequest actionRequest) throws Exception {
 		long messageId = ParamUtil.getLong(actionRequest, "messageId");
 
 		String fileName = ParamUtil.getString(actionRequest, "fileName");
@@ -174,6 +178,9 @@ public class EditMessageAttachmentsMVCActionCommand
 		_mbMessageService.restoreMessageAttachmentFromTrash(
 			messageId, fileName);
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		EditMessageAttachmentsMVCActionCommand.class);
 
 	@Reference
 	private MBMessageService _mbMessageService;

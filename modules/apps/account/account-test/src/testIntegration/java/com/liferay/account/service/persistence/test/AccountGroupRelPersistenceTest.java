@@ -34,6 +34,7 @@ import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.util.IntegerWrapper;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.OrderByComparatorFactoryUtil;
+import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PersistenceTestRule;
 import com.liferay.portal.test.rule.TransactionalTestRule;
@@ -127,6 +128,14 @@ public class AccountGroupRelPersistenceTest {
 
 		newAccountGroupRel.setCompanyId(RandomTestUtil.nextLong());
 
+		newAccountGroupRel.setUserId(RandomTestUtil.nextLong());
+
+		newAccountGroupRel.setUserName(RandomTestUtil.randomString());
+
+		newAccountGroupRel.setCreateDate(RandomTestUtil.nextDate());
+
+		newAccountGroupRel.setModifiedDate(RandomTestUtil.nextDate());
+
 		newAccountGroupRel.setAccountGroupId(RandomTestUtil.nextLong());
 
 		newAccountGroupRel.setClassNameId(RandomTestUtil.nextLong());
@@ -148,6 +157,18 @@ public class AccountGroupRelPersistenceTest {
 			existingAccountGroupRel.getCompanyId(),
 			newAccountGroupRel.getCompanyId());
 		Assert.assertEquals(
+			existingAccountGroupRel.getUserId(),
+			newAccountGroupRel.getUserId());
+		Assert.assertEquals(
+			existingAccountGroupRel.getUserName(),
+			newAccountGroupRel.getUserName());
+		Assert.assertEquals(
+			Time.getShortTimestamp(existingAccountGroupRel.getCreateDate()),
+			Time.getShortTimestamp(newAccountGroupRel.getCreateDate()));
+		Assert.assertEquals(
+			Time.getShortTimestamp(existingAccountGroupRel.getModifiedDate()),
+			Time.getShortTimestamp(newAccountGroupRel.getModifiedDate()));
+		Assert.assertEquals(
 			existingAccountGroupRel.getAccountGroupId(),
 			newAccountGroupRel.getAccountGroupId());
 		Assert.assertEquals(
@@ -163,6 +184,14 @@ public class AccountGroupRelPersistenceTest {
 		_persistence.countByAccountGroupId(RandomTestUtil.nextLong());
 
 		_persistence.countByAccountGroupId(0L);
+	}
+
+	@Test
+	public void testCountByA_C() throws Exception {
+		_persistence.countByA_C(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong());
+
+		_persistence.countByA_C(0L, 0L);
 	}
 
 	@Test
@@ -207,9 +236,10 @@ public class AccountGroupRelPersistenceTest {
 
 	protected OrderByComparator<AccountGroupRel> getOrderByComparator() {
 		return OrderByComparatorFactoryUtil.create(
-			"AccountGroupRel", "mvccVersion", true, "AccountGroupRelId", true,
-			"companyId", true, "accountGroupId", true, "classNameId", true,
-			"classPK", true);
+			"AccountGroupRel", "mvccVersion", true, "accountGroupRelId", true,
+			"companyId", true, "userId", true, "userName", true, "createDate",
+			true, "modifiedDate", true, "accountGroupId", true, "classNameId",
+			true, "classPK", true);
 	}
 
 	@Test
@@ -357,7 +387,7 @@ public class AccountGroupRelPersistenceTest {
 
 		dynamicQuery.add(
 			RestrictionsFactoryUtil.eq(
-				"AccountGroupRelId",
+				"accountGroupRelId",
 				newAccountGroupRel.getAccountGroupRelId()));
 
 		List<AccountGroupRel> result = _persistence.findWithDynamicQuery(
@@ -377,7 +407,7 @@ public class AccountGroupRelPersistenceTest {
 
 		dynamicQuery.add(
 			RestrictionsFactoryUtil.eq(
-				"AccountGroupRelId", RandomTestUtil.nextLong()));
+				"accountGroupRelId", RandomTestUtil.nextLong()));
 
 		List<AccountGroupRel> result = _persistence.findWithDynamicQuery(
 			dynamicQuery);
@@ -393,13 +423,13 @@ public class AccountGroupRelPersistenceTest {
 			AccountGroupRel.class, _dynamicQueryClassLoader);
 
 		dynamicQuery.setProjection(
-			ProjectionFactoryUtil.property("AccountGroupRelId"));
+			ProjectionFactoryUtil.property("accountGroupRelId"));
 
 		Object newAccountGroupRelId = newAccountGroupRel.getAccountGroupRelId();
 
 		dynamicQuery.add(
 			RestrictionsFactoryUtil.in(
-				"AccountGroupRelId", new Object[] {newAccountGroupRelId}));
+				"accountGroupRelId", new Object[] {newAccountGroupRelId}));
 
 		List<Object> result = _persistence.findWithDynamicQuery(dynamicQuery);
 
@@ -416,11 +446,11 @@ public class AccountGroupRelPersistenceTest {
 			AccountGroupRel.class, _dynamicQueryClassLoader);
 
 		dynamicQuery.setProjection(
-			ProjectionFactoryUtil.property("AccountGroupRelId"));
+			ProjectionFactoryUtil.property("accountGroupRelId"));
 
 		dynamicQuery.add(
 			RestrictionsFactoryUtil.in(
-				"AccountGroupRelId", new Object[] {RandomTestUtil.nextLong()}));
+				"accountGroupRelId", new Object[] {RandomTestUtil.nextLong()}));
 
 		List<Object> result = _persistence.findWithDynamicQuery(dynamicQuery);
 
@@ -469,7 +499,7 @@ public class AccountGroupRelPersistenceTest {
 
 		dynamicQuery.add(
 			RestrictionsFactoryUtil.eq(
-				"AccountGroupRelId",
+				"accountGroupRelId",
 				newAccountGroupRel.getAccountGroupRelId()));
 
 		List<AccountGroupRel> result = _persistence.findWithDynamicQuery(
@@ -504,6 +534,14 @@ public class AccountGroupRelPersistenceTest {
 		accountGroupRel.setMvccVersion(RandomTestUtil.nextLong());
 
 		accountGroupRel.setCompanyId(RandomTestUtil.nextLong());
+
+		accountGroupRel.setUserId(RandomTestUtil.nextLong());
+
+		accountGroupRel.setUserName(RandomTestUtil.randomString());
+
+		accountGroupRel.setCreateDate(RandomTestUtil.nextDate());
+
+		accountGroupRel.setModifiedDate(RandomTestUtil.nextDate());
 
 		accountGroupRel.setAccountGroupId(RandomTestUtil.nextLong());
 

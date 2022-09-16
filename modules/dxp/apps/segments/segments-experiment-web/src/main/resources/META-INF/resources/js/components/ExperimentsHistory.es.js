@@ -11,6 +11,7 @@
 
 import ClayLabel from '@clayui/label';
 import ClayList from '@clayui/list';
+import {openConfirmModal} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React from 'react';
 
@@ -22,11 +23,11 @@ import {statusToLabelDisplayType} from '../util/statuses.es';
 const {useContext} = React;
 
 function ExperimentsHistory({experimentHistory, onDeleteSegmentsExperiment}) {
-	const {assetsPath} = useContext(SegmentsExperimentContext);
+	const {imagesPath} = useContext(SegmentsExperimentContext);
 
-	const noHistoryIllustration = `${assetsPath}${NO_EXPERIMENT_ILLUSTRATION_FILE_NAME}`;
+	const noHistoryIllustration = `${imagesPath}${NO_EXPERIMENT_ILLUSTRATION_FILE_NAME}`;
 
-	return experimentHistory.length === 0 ? (
+	return !experimentHistory.length ? (
 		<div className="text-center">
 			<img
 				alt=""
@@ -60,9 +61,11 @@ function ExperimentsHistory({experimentHistory, onDeleteSegmentsExperiment}) {
 							<ClayList.ItemTitle>
 								{experiment.name}
 							</ClayList.ItemTitle>
+
 							<ClayList.ItemText className="text-secondary">
 								{experiment.description}
 							</ClayList.ItemText>
+
 							<ClayList.ItemText>
 								<ClayLabel
 									displayType={statusToLabelDisplayType(
@@ -73,6 +76,7 @@ function ExperimentsHistory({experimentHistory, onDeleteSegmentsExperiment}) {
 								</ClayLabel>
 							</ClayList.ItemText>
 						</ClayList.ItemField>
+
 						<ClayList.ItemField>
 							<ClayList.QuickActionMenu>
 								<ClayList.QuickActionMenu.Item
@@ -92,13 +96,16 @@ function ExperimentsHistory({experimentHistory, onDeleteSegmentsExperiment}) {
 	);
 
 	function _handleDeleteExperiment(experimentId) {
-		const confirmed = confirm(
-			Liferay.Language.get('are-you-sure-you-want-to-delete-this')
-		);
-
-		if (confirmed) {
-			return onDeleteSegmentsExperiment(experimentId);
-		}
+		openConfirmModal({
+			message: Liferay.Language.get(
+				'are-you-sure-you-want-to-delete-this'
+			),
+			onConfirm: (isConfirmed) => {
+				if (isConfirmed) {
+					return onDeleteSegmentsExperiment(experimentId);
+				}
+			},
+		});
 	}
 }
 

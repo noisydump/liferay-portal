@@ -16,9 +16,9 @@ configurations {
 }
 
 dependencies {
-	compile group: "com.puppycrawl.tools", name: "checkstyle", version: "8.26"
+	compile group: "com.puppycrawl.tools", name: "checkstyle", version: "8.29"
 	compile group: "com.thoughtworks.qdox", name: "qdox", version: "2.0-M5"
-	compile group: "commons-io", name: "commons-io", version: "2.5"
+	compile group: "commons-io", name: "commons-io", version: "2.11.0"
 	compile group: "jalopy", name: "jalopy", transitive: false, version: "1.5rc3"
 	compile group: "jaxen", name: "jaxen", transitive: false, version: "1.1.1"
 	compile group: "log4j", name: "log4j", version: "1.2.17"
@@ -33,13 +33,13 @@ dependencies {
 	compileOnly group: "com.liferay", name: "com.liferay.petra.sql.dsl.api", version: "1.0.0"
 	compileOnly group: "com.liferay", name: "com.liferay.petra.string", version: "4.0.0"
 	compileOnly group: "com.liferay", name: "com.liferay.petra.xml", version: "1.0.0"
-	compileOnly group: "com.liferay", name: "com.liferay.portal.tools.java.parser", version: "1.0.34"
+	compileOnly group: "com.liferay", name: "com.liferay.portal.tools.java.parser", version: "1.0.41"
 	compileOnly group: "com.liferay.portal", name: "com.liferay.portal.impl", version: "2.71.9"
 	compileOnly group: "com.liferay.portal", name: "com.liferay.portal.kernel", version: "default"
 	compileOnly group: "com.liferay.portal", name: "com.liferay.util.java", version: "2.5.0"
-	compileOnly group: "org.apache.ant", name: "ant", transitive: false, version: "1.9.15"
+	compileOnly group: "org.apache.ant", name: "ant", transitive: false, version: "1.10.11"
 	compileOnly group: "org.apache.maven", name: "maven-plugin-api", transitive: false, version: "3.0.4"
-	compileOnly group: "xerces", name: "xercesImpl", transitive: false, version: "2.12.0"
+	compileOnly group: "xerces", name: "xercesImpl", transitive: false, version: "2.12.2"
 
 	xmltask group: "com.oopsconsultancy", name: "xmltask", version: "1.16"
 }
@@ -98,4 +98,5 @@ needed by Service Builder to generate model services.
 updateFileVersions {
 	match(/\t\t\t\t<version>(\d.+)<\/version>/, "samples/pom.xml")
 	match(/com\.liferay\.portal\.tools\.service\.builder=(\d.+)/, "../../sdk/gradle-plugins/src/main/resources/com/liferay/gradle/plugins/dependencies/portal-tools.properties")
+	match(/\t\t<dependency name="com.liferay.portal.tools.service.builder" org="com.liferay" rev="(\d.+)" \/>/, "../../../tools/sdk/dependencies/com.liferay.portal.tools.service.builder/ivy.xml")
 }

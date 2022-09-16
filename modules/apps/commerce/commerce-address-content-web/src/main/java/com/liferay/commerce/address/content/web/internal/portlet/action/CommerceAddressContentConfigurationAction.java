@@ -16,14 +16,15 @@ package com.liferay.commerce.address.content.web.internal.portlet.action;
 
 import com.liferay.commerce.account.util.CommerceAccountHelper;
 import com.liferay.commerce.address.content.web.internal.display.context.CommerceAddressDisplayContext;
+import com.liferay.commerce.address.content.web.internal.portlet.action.helper.ActionHelper;
 import com.liferay.commerce.constants.CommercePortletKeys;
 import com.liferay.commerce.service.CommerceAddressService;
-import com.liferay.commerce.service.CommerceCountryService;
-import com.liferay.commerce.service.CommerceRegionService;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
 import com.liferay.portal.kernel.portlet.DefaultConfigurationAction;
+import com.liferay.portal.kernel.service.CountryService;
+import com.liferay.portal.kernel.service.RegionService;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import javax.portlet.PortletConfig;
@@ -61,14 +62,14 @@ public class CommerceAddressContentConfigurationAction
 			CommerceAddressDisplayContext commerceAddressDisplayContext =
 				new CommerceAddressDisplayContext(
 					_actionHelper, _commerceAccountHelper,
-					_commerceAddressService, _commerceCountryService,
-					_commerceRegionService, httpServletRequest);
+					_commerceAddressService, _countryService,
+					httpServletRequest, _regionService);
 
 			httpServletRequest.setAttribute(
 				WebKeys.PORTLET_DISPLAY_CONTEXT, commerceAddressDisplayContext);
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 		}
 
 		super.include(portletConfig, httpServletRequest, httpServletResponse);
@@ -96,9 +97,9 @@ public class CommerceAddressContentConfigurationAction
 	private CommerceAddressService _commerceAddressService;
 
 	@Reference
-	private CommerceCountryService _commerceCountryService;
+	private CountryService _countryService;
 
 	@Reference
-	private CommerceRegionService _commerceRegionService;
+	private RegionService _regionService;
 
 }

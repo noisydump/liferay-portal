@@ -21,11 +21,17 @@ CPContentConfigurationDisplayContext cpContentConfigurationDisplayContext = (CPC
 
 CPContentHelper cpContentHelper = (CPContentHelper)request.getAttribute(CPContentWebKeys.CP_CONTENT_HELPER);
 
-Map<String, Object> contextObjects = HashMapBuilder.<String, Object>put(
-	"cpContentHelper", cpContentHelper
-).build();
-
 CPCatalogEntry cpCatalogEntry = cpContentHelper.getCPCatalogEntry(request);
+
+Map<String, Object> contextObjects = HashMapBuilder.<String, Object>put(
+	"cpCatalogEntry", cpCatalogEntry
+).put(
+	"cpContentHelper", cpContentHelper
+).put(
+	"groupedCPTypeHelper", (GroupedCPTypeHelper)request.getAttribute(GroupedCPTypeWebKeys.GROUPED_CP_TYPE_HELPER)
+).put(
+	"virtualCPTypeHelper", (VirtualCPTypeHelper)request.getAttribute(VirtualCPTypeWebKeys.VIRTUAL_CP_TYPE_HELPER)
+).build();
 
 CPInstance cpInstance = cpContentHelper.getDefaultCPInstance(request);
 

@@ -1,6 +1,9 @@
 @component-name = "portal-publications"
 definition {
 
+	property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
+	property osgi.module.configuration.file.names = "com.liferay.change.tracking.configuration.CTSettingsConfiguration.config";
+	property osgi.module.configurations = "enabled=B&quot;true&quot;";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Publications";
@@ -9,13 +12,6 @@ definition {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
-
-		ApplicationsMenu.gotoPortlet(
-			category = "Publications",
-			panel = "Applications",
-			portlet = "Settings");
-
-		Publications.enablePublications();
 	}
 
 	tearDown {
@@ -25,11 +21,6 @@ definition {
 			PortalInstances.tearDownCP();
 		}
 		else {
-			ApplicationsMenu.gotoPortlet(
-				category = "Publications",
-				panel = "Applications",
-				portlet = "Settings");
-
 			Publications.disablePublications();
 		}
 	}
@@ -38,18 +29,20 @@ definition {
 	test CheckoutAndCheckinDocumentInPublication {
 		property test.assert.warning.exceptions = "true";
 
-		Publications.createNewPublication(publicationsName = "Publication Name");
+		JSONPublications.addPublication(publicationName = "Publication Name");
 
-		Navigator.openURL();
+		JSONPublications.selectPublication(publicationName = "Publication Name");
 
-		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			portlet = "Documents and Media");
+		JSONGroup.addGroup(groupName = "Site Name");
 
-		DMDocument.addCP(
+		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
-			dmDocumentFile = "Document_1.jpg",
-			dmDocumentTitle = "DM Document Title");
+			dmDocumentTitle = "DM Document Title",
+			groupName = "Site Name",
+			mimeType = "image/jpeg",
+			sourceFileName = "Document_1.jpg");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name");
 
 		LexiconEntry.changeDisplayStyle(displayStyle = "list");
 
@@ -61,9 +54,7 @@ definition {
 			dmDocumentTitle = "Check in as major version",
 			revision = "Major");
 
-		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			portlet = "Documents and Media");
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name");
 
 		AssertElementNotPresent(
 			key_dmDocumentTitle = "Check in as major version",
@@ -73,15 +64,11 @@ definition {
 
 		DMDocument.viewDocumentVersionNumberCmdPG(dmDocumentVersionNumber = "2.0");
 
-		Publications.gotoPublish(publicationsName = "Publication Name");
+		JSONPublications.publishPublication(publicationName = "Publication Name");
 
-		Publications.publishPublication(publicationsName = "Publication Name");
+		Publications.viewPublicationPublished(publicationName = "Publication Name");
 
-		Navigator.openURL();
-
-		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			portlet = "Documents and Media");
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name");
 
 		DMDocument.checkDocumentCheckboxCP(dmDocumentTitle = "DM Document Title");
 
@@ -89,96 +76,79 @@ definition {
 	}
 
 	@priority = "4"
-	test ConflictingPublicationsNeedManualResolution {
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+	test DeleteDMFolderWithMultipleFiles {
+		JSONGroup.addGroup(groupName = "Site Name");
 
-		DMDocument.addCP(
-			dmDocumentDescription = "DM Document Description",
-			dmDocumentFile = "Document_1.txt",
-			dmDocumentTitle = "DM Document Title");
+		JSONFolder.addFolder(
+			dmFolderDescription = "DM Folder 1 Description",
+			dmFolderName = "DM Folder 1 Name",
+			groupName = "Site Name");
 
-		Publications.createNewPublication(publicationsName = "Publication Name");
+		JSONPublications.addPublication(publicationName = "Publication Name");
 
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+		JSONPublications.selectPublication(publicationName = "Publication Name");
 
-		DMDocument.editCP(
-			dmDocumentDescription = "DM Document Description1",
-			dmDocumentDescriptionEdit = "DM Document Description Edit",
-			dmDocumentTitle = "DM Document Title",
-			dmDocumentTitleEdit = "DM Document Title Edit");
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name");
 
-		DMDocument.viewEditCP(
-			dmDocumentTitleEdit = "DM Document Title Edit",
-			dmDocumentVersionNumber = "1.1");
+		DMNavigator.gotoFolder(dmFolderName = "DM Folder 1 Name");
 
-		Publications.createNewPublication(publicationsName = "Publication Name 2");
+		DMDocument.addMultipleCP(dmDocumentFileList = "Document_1.jpg,Document_2.pdf,Document_3.png");
 
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+		PublicationsNavigator.gotoReviewChanges(
+			gotoPublicationsAdmin = "true",
+			publicationName = "Publication Name");
 
-		DMDocument.editCP(
-			dmDocumentDescription = "DM Document Description1",
-			dmDocumentDescriptionEdit = "DM Document 2 Description Edit",
-			dmDocumentTitle = "DM Document Title",
-			dmDocumentTitleEdit = "DM Document 2 Title Edit");
+		PublicationsChanges.viewChanges(
+			changeCategory = "Documents Folder",
+			changeSite = "Site Name",
+			changeTitle = "DM Folder 1 Name",
+			changeType = "Modified",
+			changeUser = "Test Test");
 
-		DMDocument.viewEditCP(
-			dmDocumentTitleEdit = "DM Document 2 Title Edit",
-			dmDocumentVersionNumber = "1.1");
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name");
 
-		Publications.gotoPublish(publicationsName = "Publication Name 2");
+		DMFolder.moveToRecycleBinCP(
+			assetType = "Documents Folder",
+			dmFolderName = "DM Folder 1 Name");
 
-		Publications.publishPublication(publicationsName = "Publication Name 2");
+		PublicationsNavigator.gotoReviewChanges();
 
-		Publications.selectPublication(publicationsName = "Publication Name");
+		PublicationsChanges.viewChanges(
+			changeCategory = "Documents Folder",
+			changeSite = "Site Name",
+			changeTitle = "DM Folder 1 Name",
+			changeType = "Modified",
+			changeUser = "Test Test");
 
-		Publications.gotoPublish(publicationsName = "Publication Name");
+		RecycleBin.openRecycleBinAdmin(siteURLKey = "site-name");
 
-		Publications.viewNeedsManualResolution(
-			entryTitle = "DM Document Title Edit",
-			warningMessage = "The conflict cannot be automatically resolved.");
+		RecycleBin.emptyCP();
 
-		Publications.gotoViewDiffInConflictingPublications(entryTitle = "DM Document Title Edit");
+		PublicationsNavigator.gotoReviewChanges();
 
-		Publications.viewPublicationsDiff(
-			columnName = "Title",
-			columnValueInProduction = "DM Document 2 Title Edit",
-			columnValueInPublication = "DM Document Title Edit",
-			diffRemovedValue = "2",
-			publicationsName = "Publication Name");
-
-		IFrame.closeFrame();
-
-		Pause(locator1 = "3000");
-
-		Publications.discardPublications(
-			conflictingPublications = "true",
-			entryTitle = "DM Document Title Edit",
-			publicationsCategory = "Asset",
-			publicationsTitle = "DM Document Title Edit");
-
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		DMDocument.viewEditCP(
-			dmDocumentTitleEdit = "DM Document 2 Title Edit",
-			dmDocumentVersionNumber = "1.1");
+		PublicationsChanges.viewChanges(
+			changeCategory = "Documents Folder",
+			changeSite = "Site Name",
+			changeTitle = "DM Folder 1 Name",
+			changeType = "Deleted",
+			changeUser = "Test Test");
 	}
 
 	@priority = "4"
 	test PublishDocumentFolderWithEditedDocument {
-		Navigator.openURL();
+		JSONGroup.addGroup(groupName = "Site Name");
 
-		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			portlet = "Documents and Media");
+		JSONDocument.addFileWithUploadedFile(
+			dmDocumentTitle = "DM Document Title",
+			groupName = "Site Name",
+			mimeType = "text/plain",
+			sourceFileName = "Document_1.txt");
 
-		DMDocument.addCP(
-			dmDocumentDescription = "DM Document Description",
-			dmDocumentFile = "Document_1.txt",
-			dmDocumentTitle = "DM Document Title");
+		JSONPublications.addPublication(publicationName = "Publication Name");
 
-		Publications.createNewPublication(publicationsName = "Publication Name");
+		JSONPublications.selectPublication(publicationName = "Publication Name");
 
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name");
 
 		DMDocument.editCP(
 			dmDocumentDescription = "DM Document Description",
@@ -186,17 +156,13 @@ definition {
 			dmDocumentTitle = "DM Document Title",
 			dmDocumentTitleEdit = "DM Document Title Edit");
 
-		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			portlet = "Documents and Media");
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name");
 
 		DMFolder.addCP(
 			dmFolderDescription = "DM Folder Description",
 			dmFolderName = "DM Folder Name");
 
-		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			portlet = "Documents and Media");
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name");
 
 		DMDocument.moveToFolderCP(
 			dmDocumentTitle = "DM Document Title Edit",
@@ -206,41 +172,27 @@ definition {
 			dmDocumentTitle = "DM Document Title Edit",
 			dmFolderName = "DM Folder Name");
 
-		Publications.gotoReviewPublications();
+		PublicationsNavigator.gotoReviewChanges();
 
-		PublicationsChanges.viewPublicationsViaChangesStyle(
-			publicationsCategory = "Document",
-			publicationsSite = "Guest",
-			publicationsTitle = "DM Document Title Edit",
-			publicationsType = "Modified",
-			publicationsUser = "Test Test");
+		PublicationsChanges.viewChanges(
+			changeCategory = "Document",
+			changeSite = "Site Name",
+			changeTitle = "DM Document Title Edit",
+			changeType = "Modified",
+			changeUser = "Test Test");
 
-		PublicationsChanges.viewPublicationsViaChangesStyle(
-			publicationsCategory = "Documents Folder",
-			publicationsSite = "Guest",
-			publicationsTitle = "DM Folder Name",
-			publicationsType = "Added",
-			publicationsUser = "Test Test");
+		PublicationsChanges.viewChanges(
+			changeCategory = "Documents Folder",
+			changeSite = "Site Name",
+			changeTitle = "DM Folder Name",
+			changeType = "Added",
+			changeUser = "Test Test");
 
-		PublicationsChanges.viewPublicationsViaContextStyle(
-			publicationsCategory = "Document",
-			publicationsDescription = "Test Test modified a Document in Guest",
-			publicationsTitle = "DM Document Title Edit");
+		JSONPublications.publishPublication(publicationName = "Publication Name");
 
-		PublicationsChanges.viewPublicationsViaContextStyle(
-			publicationsCategory = "Documents Folder",
-			publicationsDescription = "Test Test added a Documents Folder in Guest",
-			publicationsTitle = "DM Folder Name");
+		Publications.viewPublicationPublished(publicationName = "Publication Name");
 
-		Publications.gotoPublish(publicationsName = "Publication Name");
-
-		Publications.publishPublication(publicationsName = "Publication Name");
-
-		Navigator.openURL();
-
-		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			portlet = "Documents and Media");
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name");
 
 		DMFolder.viewCP(dmFolderName = "DM Folder Name");
 
@@ -251,15 +203,13 @@ definition {
 
 	@priority = "4"
 	test PublishDocumentWithNewDocumentType {
-		Publications.createNewPublication(publicationsName = "Publication Name");
+		JSONPublications.addPublication(publicationName = "Publication Name");
 
-		Navigator.openURL();
+		JSONPublications.selectPublication(publicationName = "Publication Name");
 
-		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			portlet = "Documents and Media");
+		JSONGroup.addGroup(groupName = "Site Name");
 
-		DMNavigator.gotoDocumentType();
+		DMNavigator.openDocumentTypesAdmin(siteURLKey = "site-name");
 
 		DMDocumentType.add(
 			dmDocumentTypeDescription = "DM Document Type Description",
@@ -268,9 +218,7 @@ definition {
 
 		DMDocumentType.viewCP(dmDocumentTypeName = "DM Document Type Name");
 
-		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			portlet = "Documents and Media");
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name");
 
 		DMDocument.addCP(
 			dmDocumentDescription = "DM Document Description",
@@ -283,48 +231,215 @@ definition {
 
 		DMDocument.viewCP(dmDocumentTitle = "DM Document Title");
 
-		Publications.gotoReviewPublications();
+		PublicationsNavigator.gotoReviewChanges();
 
-		PublicationsChanges.viewPublicationsViaChangesStyle(
-			publicationsCategory = "Document",
-			publicationsSite = "Guest",
-			publicationsTitle = "DM Document Title",
-			publicationsType = "Added",
-			publicationsUser = "Test Test");
+		PublicationsChanges.viewChanges(
+			changeCategory = "Document",
+			changeSite = "Site Name",
+			changeTitle = "DM Document Title",
+			changeType = "Added",
+			changeUser = "Test Test");
 
-		PublicationsChanges.viewPublicationsViaChangesStyle(
-			publicationsCategory = "Dynamic Data Mapping Structure",
-			publicationsSite = "Guest",
-			publicationsTitle = "DM Document Type Name",
-			publicationsType = "Added",
-			publicationsUser = "Test Test");
+		PublicationsChanges.viewChanges(
+			changeCategory = "Dynamic Data Mapping Structure",
+			changeSite = "Site Name",
+			changeTitle = "DM Document Type Name",
+			changeType = "Added",
+			changeUser = "Test Test");
 
-		PublicationsChanges.viewPublicationsViaContextStyle(
-			publicationsCategory = "Document",
-			publicationsDescription = "Test Test added a Document in Guest",
-			publicationsTitle = "DM Document Title");
+		JSONPublications.publishPublication(publicationName = "Publication Name");
 
-		Publications.gotoPublish(publicationsName = "Publication Name");
+		Publications.viewPublicationPublished(publicationName = "Publication Name");
 
-		Publications.publishPublication(publicationsName = "Publication Name");
-
-		Navigator.openURL();
-
-		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			portlet = "Documents and Media");
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name");
 
 		DMNavigator.gotoDocumentCP(dmDocumentTitle = "DM Document Title");
 
 		DMDocument.viewCP(dmDocumentTitle = "DM Document Title");
 
-		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			portlet = "Documents and Media");
-
-		DMNavigator.gotoDocumentType();
+		DMNavigator.openDocumentTypesAdmin(siteURLKey = "site-name");
 
 		DMDocumentType.viewCP(dmDocumentTypeName = "DM Document Type Name");
+	}
+
+	@description = "Assert Shortcut can add within Publications and publish to production."
+	@priority = "4"
+	test PublishWithShortcut {
+		property test.name.skip.portal.instance = "PublicationsDM#PublishWithShortcut";
+
+		JSONPublications.addPublication(publicationName = "Publication Name");
+
+		JSONPublications.selectPublication(publicationName = "Publication Name");
+
+		JSONGroup.addGroup(groupName = "Site Name");
+
+		JSONDocument.addFileWithUploadedFile(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentTitle = "Document_1.jpg",
+			groupName = "Site Name",
+			mimeType = "image/jpeg",
+			sourceFileName = "Document_1.jpg");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+		DMDocument.addDMShortcutCP(
+			dmDocumentTitle = "Document_1.jpg",
+			siteName = "Site Name");
+
+		DMNavigator.gotoDocumentCP(dmDocumentTitle = "Document_1.jpg");
+
+		AssertVisible(
+			key_dmDocumentFileName = "Document_1.jpg",
+			locator1 = "DocumentsAndMediaDocument#DOCUMENT_DETAILS_IMAGE_PREVIEW");
+
+		DMDocument.viewCP(dmDocumentTitle = "Document_1.jpg");
+
+		PublicationsNavigator.gotoReviewChanges();
+
+		PublicationsChanges.viewChanges(
+			changeCategory = "Document",
+			changeSite = "Site Name",
+			changeTitle = "Document_1.jpg",
+			changeType = "Added",
+			changeUser = "Test Test");
+
+		// Workaround LPS-149071
+
+		/*PublicationsChanges.viewChanges(
+			changeCategory = "Shortcut",
+			changeSite = "Guest",
+			changeTitle = "Document_1.jpg",
+			changeType = "Added",
+			changeUser = "Test Test");*/
+
+		JSONPublications.publishPublication(publicationName = "Publication Name");
+
+		Publications.viewPublicationPublished(publicationName = "Publication Name");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+		DMNavigator.gotoDocumentCP(dmDocumentTitle = "Document_1.jpg");
+
+		DMDocument.viewCP(dmDocumentTitle = "Document_1.jpg");
+	}
+
+	@priority = "4"
+	test ResolveConflictingPublicationsByDiscarding {
+
+		// Workaround LPS-148148
+
+		property app.server.types = "jboss,tomcat,weblogic,wildfly";
+
+		JSONGroup.addGroup(groupName = "Site Name");
+
+		JSONDocument.addFileWithUploadedFile(
+			dmDocumentTitle = "DM Document Title",
+			groupName = "Site Name",
+			mimeType = "text/plain",
+			sourceFileName = "Document_1.txt");
+
+		JSONPublications.addPublication(publicationName = "Publication Name");
+
+		JSONPublications.selectPublication(publicationName = "Publication Name");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name");
+
+		DMDocument.editCP(
+			dmDocumentDescription = "DM Document Description1",
+			dmDocumentDescriptionEdit = "DM Document Description Edit",
+			dmDocumentTitle = "DM Document Title",
+			dmDocumentTitleEdit = "DM Document Title Edit");
+
+		DMDocument.viewEditCP(
+			dmDocumentTitleEdit = "DM Document Title Edit",
+			dmDocumentVersionNumber = "1.1");
+
+		JSONPublications.addPublication(publicationName = "Publication Name 2");
+
+		JSONPublications.selectPublication(publicationName = "Publication Name 2");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name");
+
+		DMDocument.editCP(
+			dmDocumentDescription = "DM Document Description1",
+			dmDocumentDescriptionEdit = "DM Document 2 Description Edit",
+			dmDocumentTitle = "DM Document Title",
+			dmDocumentTitleEdit = "DM Document 2 Title Edit");
+
+		DMDocument.viewEditCP(
+			dmDocumentTitleEdit = "DM Document 2 Title Edit",
+			dmDocumentVersionNumber = "1.1");
+
+		JSONPublications.publishPublication(publicationName = "Publication Name 2");
+
+		Publications.viewPublicationPublished(publicationName = "Publication Name 2");
+
+		PublicationsNavigator.gotoPublish(
+			gotoPublicationsAdmin = "true",
+			publicationName = "Publication Name");
+
+		Publications.viewNeedsManualResolution(
+			entryTitle = "DM Document Title Edit",
+			warningMessage = "The conflict cannot be automatically resolved.");
+
+		PublicationsNavigator.gotoViewConflictingChangeDetails(entryTitle = "DM Document Title Edit");
+
+		PublicationsChangeDetails.viewConflictingChangeDetails(
+			columnName = "Title",
+			columnValueInProduction = "DM Document 2 Title Edit",
+			columnValueInPublication = "DM Document Title Edit",
+			diffRemovedValue = "2",
+			modificationConflict = "true",
+			publicationName = "Publication Name");
+
+		IFrame.closeFrame();
+
+		PublicationsChanges.discardChanges(
+			changeCategory = "Asset",
+			changeTitle = "DM Document Title Edit",
+			conflictingChanges = "true",
+			entryTitle = "DM Document Title Edit");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name");
+
+		DMDocument.viewEditCP(
+			dmDocumentTitleEdit = "DM Document 2 Title Edit",
+			dmDocumentVersionNumber = "1.1");
+	}
+
+	@priority = "4"
+	test ViewPublicationsPreviewForAddedDocuments {
+		JSONPublications.addPublication(publicationName = "Publication Name");
+
+		JSONPublications.selectPublication(publicationName = "Publication Name");
+
+		JSONGroup.addGroup(groupName = "Site Name");
+
+		JSONDocument.addFileWithUploadedFile(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentTitle = "Document_1.jpg",
+			groupName = "Site Name",
+			mimeType = "image/jpeg",
+			sourceFileName = "Document_1.jpg");
+
+		PublicationsNavigator.gotoReviewChanges(
+			gotoPublicationsAdmin = "true",
+			publicationName = "Publication Name");
+
+		PublicationsNavigator.gotoViewChangeDetails(
+			changeCategory = "Document",
+			changeTitle = "Document_1.jpg");
+
+		PublicationsChangeDetails.viewDocumentChangeDetailsInDisplay(
+			changeType = "Added",
+			keyImage = "Document_1.jpg");
+
+		PublicationsNavigator.gotoNavbar(navBarTitle = "Data");
+
+		PublicationsChangeDetails.viewChangeDetailsInData(
+			changeType = "Added",
+			columnName = "Title",
+			columnValueInPublication = "Document_1.jpg");
 	}
 
 }

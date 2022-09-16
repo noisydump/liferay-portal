@@ -3,8 +3,6 @@ definition {
 	macro configureBreadcrumb {
 		SelectFrame(locator1 = "IFrame#CONFIGURATION");
 
-		Pause(locator1 = "3000");
-
 		if (isSet(checkSetupName)) {
 			for (var checkSetupName : list "${checkSetupName}") {
 				var key_checkSetupName = "${checkSetupName}";
@@ -21,18 +19,20 @@ definition {
 			}
 		}
 
-		if (isSet(selectADTType)) {
+		if (isSet(selectAdtType)) {
 			Select(
 				locator1 = "Select#DISPLAY_TEMPLATE",
-				value1 = "${selectADTType}");
+				value1 = "${selectAdtType}");
 		}
-
-		Pause(locator1 = "3000");
 
 		if ("${configureWithoutSave}" == "true") {
 			echo("Configuring Breadcrumb without saving to check bug.");
 		}
 		else {
+			WaitForElementPresent(
+				key_text = "Save",
+				locator1 = "Button#ANY_ENABLED");
+
 			PortletEntry.save();
 		}
 
@@ -64,7 +64,7 @@ definition {
 	}
 
 	macro viewADTApplied {
-		var key_breadcrumbADTType = "${breadcrumbADTType}";
+		var key_breadcrumbAdtType = "${breadcrumbAdtType}";
 
 		AssertElementPresent(locator1 = "BreadcrumbPortlet#BREADCRUMB_ADT");
 	}
@@ -119,6 +119,16 @@ definition {
 					locator1 = "BreadcrumbPortlet#BREADCRUMB_SPECIFIC_ENTRY");
 			}
 		}
+
+		SelectFrame(value1 = "relative=top");
+	}
+
+	macro viewDisplayTemplatePreview {
+		SelectFrame(locator1 = "IFrame#CONFIGURATION");
+
+		AssertTextEquals.assertPartialText(
+			locator1 = "Select#DISPLAY_TEMPLATE",
+			value1 = "${displayStyle}");
 
 		SelectFrame(value1 = "relative=top");
 	}

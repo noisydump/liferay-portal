@@ -15,16 +15,21 @@
 package com.liferay.commerce.product.service.impl;
 
 import com.liferay.commerce.product.exception.CPTaxCategoryNameException;
+import com.liferay.commerce.product.exception.DuplicateCPTaxCategoryException;
 import com.liferay.commerce.product.model.CPTaxCategory;
+import com.liferay.commerce.product.service.CPDefinitionLocalService;
 import com.liferay.commerce.product.service.base.CPTaxCategoryLocalServiceBaseImpl;
+import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.util.List;
 import java.util.Locale;
@@ -36,44 +41,15 @@ import java.util.Map;
 public class CPTaxCategoryLocalServiceImpl
 	extends CPTaxCategoryLocalServiceBaseImpl {
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *             #addCPTaxCategory(String, Map, Map, ServiceContext)}
-	 */
-	@Deprecated
-	@Override
-	public CPTaxCategory addCPTaxCategory(
-			Map<Locale, String> nameMap, Map<Locale, String> descriptionMap,
-			ServiceContext serviceContext)
-		throws PortalException {
-
-		User user = userLocalService.getUser(serviceContext.getUserId());
-
-		validate(nameMap);
-
-		long cpTaxCategoryId = counterLocalService.increment();
-
-		CPTaxCategory cpTaxCategory = cpTaxCategoryPersistence.create(
-			cpTaxCategoryId);
-
-		cpTaxCategory.setCompanyId(user.getCompanyId());
-		cpTaxCategory.setUserId(user.getUserId());
-		cpTaxCategory.setUserName(user.getFullName());
-		cpTaxCategory.setNameMap(nameMap);
-		cpTaxCategory.setDescriptionMap(descriptionMap);
-
-		return cpTaxCategoryPersistence.update(cpTaxCategory);
-	}
-
 	@Override
 	public CPTaxCategory addCPTaxCategory(
 			String externalReferenceCode, Map<Locale, String> nameMap,
 			Map<Locale, String> descriptionMap, ServiceContext serviceContext)
 		throws PortalException {
 
-		User user = userLocalService.getUser(serviceContext.getUserId());
+		User user = _userLocalService.getUser(serviceContext.getUserId());
 
-		validate(nameMap);
+		validate(user.getCompanyId(), 0, externalReferenceCode, nameMap);
 
 		long cpTaxCategoryId = counterLocalService.increment();
 
@@ -112,7 +88,7 @@ public class CPTaxCategoryLocalServiceImpl
 
 		// Commerce product definitions
 
-		cpDefinitionLocalService.updateCPDefinitionsByCPTaxCategoryId(
+		_cpDefinitionLocalService.updateCPDefinitionsByCPTaxCategoryId(
 			cpTaxCategory.getCPTaxCategoryId());
 
 		return cpTaxCategory;
@@ -155,28 +131,6 @@ public class CPTaxCategoryLocalServiceImpl
 		return cpTaxCategoryPersistence.countByCompanyId(companyId);
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *             #updateCPTaxCategory(String, long, Map, Map)}
-	 */
-	@Deprecated
-	@Override
-	public CPTaxCategory updateCPTaxCategory(
-			long cpTaxCategoryId, Map<Locale, String> nameMap,
-			Map<Locale, String> descriptionMap)
-		throws PortalException {
-
-		CPTaxCategory cpTaxCategory = cpTaxCategoryPersistence.findByPrimaryKey(
-			cpTaxCategoryId);
-
-		validate(nameMap);
-
-		cpTaxCategory.setNameMap(nameMap);
-		cpTaxCategory.setDescriptionMap(descriptionMap);
-
-		return cpTaxCategoryPersistence.update(cpTaxCategory);
-	}
-
 	@Override
 	public CPTaxCategory updateCPTaxCategory(
 			String externalReferenceCode, long cpTaxCategoryId,
@@ -186,13 +140,36 @@ public class CPTaxCategoryLocalServiceImpl
 		CPTaxCategory cpTaxCategory = cpTaxCategoryPersistence.findByPrimaryKey(
 			cpTaxCategoryId);
 
-		validate(nameMap);
+		validate(
+			cpTaxCategory.getCompanyId(), cpTaxCategoryId,
+			externalReferenceCode, nameMap);
 
 		cpTaxCategory.setExternalReferenceCode(externalReferenceCode);
 		cpTaxCategory.setNameMap(nameMap);
 		cpTaxCategory.setDescriptionMap(descriptionMap);
 
 		return cpTaxCategoryPersistence.update(cpTaxCategory);
+	}
+
+	protected void validate(
+			long companyId, long cpTaxCategoryId, String externalReferenceCode,
+			Map<Locale, String> nameMap)
+		throws PortalException {
+
+		if (Validator.isNotNull(externalReferenceCode)) {
+			CPTaxCategory cpTaxCategory = cpTaxCategoryPersistence.fetchByC_ERC(
+				companyId, externalReferenceCode);
+
+			if ((cpTaxCategory != null) &&
+				(cpTaxCategory.getCPTaxCategoryId() != cpTaxCategoryId)) {
+
+				throw new DuplicateCPTaxCategoryException(
+					"There is another commerce tax category with external " +
+						"reference code " + externalReferenceCode);
+			}
+		}
+
+		validate(nameMap);
 	}
 
 	protected void validate(Map<Locale, String> nameMap)
@@ -206,5 +183,11 @@ public class CPTaxCategoryLocalServiceImpl
 			throw new CPTaxCategoryNameException();
 		}
 	}
+
+	@BeanReference(type = CPDefinitionLocalService.class)
+	private CPDefinitionLocalService _cpDefinitionLocalService;
+
+	@ServiceReference(type = UserLocalService.class)
+	private UserLocalService _userLocalService;
 
 }

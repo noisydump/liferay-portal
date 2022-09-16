@@ -15,6 +15,8 @@
 package com.liferay.bookmarks.search.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.asset.kernel.model.AssetEntry;
+import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.bookmarks.model.BookmarksFolder;
 import com.liferay.bookmarks.service.BookmarksEntryLocalService;
 import com.liferay.bookmarks.service.BookmarksFolderService;
@@ -126,10 +128,12 @@ public class BookmarksFolderIndexerIndexedFieldsTest {
 				searchRequestBuilderFactory.builder(
 				).companyId(
 					_group.getCompanyId()
-				).groupIds(
-					_group.getGroupId()
+				).fetchSourceIncludes(
+					new String[] {"*_sortable"}
 				).fields(
 					StringPool.STAR
+				).groupIds(
+					_group.getGroupId()
 				).modelIndexerClasses(
 					BookmarksFolder.class
 				).queryString(
@@ -173,6 +177,9 @@ public class BookmarksFolderIndexerIndexedFieldsTest {
 		throws Exception {
 
 		Map<String, String> map = HashMapBuilder.put(
+			Field.ASSET_ENTRY_ID,
+			String.valueOf(_getAssetEntryId(bookmarksFolder))
+		).put(
 			Field.COMPANY_ID, String.valueOf(bookmarksFolder.getCompanyId())
 		).put(
 			Field.DESCRIPTION, bookmarksFolder.getDescription()
@@ -197,6 +204,9 @@ public class BookmarksFolderIndexerIndexedFieldsTest {
 		).put(
 			Field.USER_NAME, StringUtil.lowerCase(bookmarksFolder.getUserName())
 		).put(
+			"assetEntryId_sortable",
+			String.valueOf(_getAssetEntryId(bookmarksFolder))
+		).put(
 			"title_sortable", StringUtil.lowerCase(bookmarksFolder.getName())
 		).put(
 			"visible", "true"
@@ -215,6 +225,17 @@ public class BookmarksFolderIndexerIndexedFieldsTest {
 		_populateRoles(bookmarksFolder, map);
 
 		return map;
+	}
+
+	private long _getAssetEntryId(BookmarksFolder bookmarksFolder) {
+		AssetEntry assetEntry = _assetEntryLocalService.fetchEntry(
+			BookmarksFolder.class.getName(), bookmarksFolder.getFolderId());
+
+		if (assetEntry == null) {
+			return 0;
+		}
+
+		return assetEntry.getEntryId();
 	}
 
 	private void _populateDates(
@@ -238,6 +259,9 @@ public class BookmarksFolderIndexerIndexedFieldsTest {
 			bookmarksFolder.getFolderId(), bookmarksFolder.getGroupId(), null,
 			map);
 	}
+
+	@Inject
+	private AssetEntryLocalService _assetEntryLocalService;
 
 	private BookmarksFixture _bookmarksFixture;
 

@@ -29,9 +29,15 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.ResourceAction;
+import com.liferay.portal.kernel.model.Role;
+import com.liferay.portal.kernel.model.role.RoleConstants;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.security.permission.RolePermissions;
 import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
 import com.liferay.portal.kernel.service.ResourceActionLocalServiceUtil;
+import com.liferay.portal.kernel.service.RoleLocalServiceUtil;
 import com.liferay.portal.kernel.service.persistence.GroupFinder;
 import com.liferay.portal.kernel.service.persistence.GroupUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -84,9 +90,6 @@ public class GroupFinderImpl
 	public static final String FIND_BY_LIVE_GROUPS =
 		GroupFinder.class.getName() + ".findByLiveGroups";
 
-	public static final String FIND_BY_SYSTEM =
-		GroupFinder.class.getName() + ".findBySystem";
-
 	public static final String FIND_BY_C_P =
 		GroupFinder.class.getName() + ".findByC_P";
 
@@ -107,6 +110,9 @@ public class GroupFinderImpl
 		"GroupFinderImpl_findByC_A",
 		new String[] {Long.class.getName(), Boolean.class.getName()},
 		new String[] {"companyId", "active_"}, false);
+
+	public static final String JOIN_BY_ACTION_ID =
+		GroupFinder.class.getName() + ".joinByActionId";
 
 	public static final String JOIN_BY_ACTIVE =
 		GroupFinder.class.getName() + ".joinByActive";
@@ -340,6 +346,44 @@ public class GroupFinderImpl
 			}
 
 			return groupIds.size();
+		}
+		catch (Exception exception) {
+			throw new SystemException(exception);
+		}
+		finally {
+			closeSession(session);
+		}
+	}
+
+	@Override
+	public Group fetchByC_GK(long companyId, String groupKey)
+		throws NoSuchGroupException {
+
+		groupKey = StringUtil.lowerCase(groupKey);
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			String sql = CustomSQLUtil.get(FIND_BY_C_GK);
+
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
+
+			sqlQuery.addEntity("Group_", GroupImpl.class);
+
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
+
+			queryPos.add(companyId);
+			queryPos.add(groupKey);
+
+			List<Group> groups = sqlQuery.list();
+
+			if (groups.isEmpty()) {
+				return null;
+			}
+
+			return groups.get(0);
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
@@ -586,33 +630,6 @@ public class GroupFinderImpl
 	}
 
 	@Override
-	public List<Group> findBySystem(long companyId) {
-		Session session = null;
-
-		try {
-			session = openSession();
-
-			String sql = CustomSQLUtil.get(FIND_BY_SYSTEM);
-
-			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
-
-			sqlQuery.addEntity("Group_", GroupImpl.class);
-
-			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
-
-			queryPos.add(companyId);
-
-			return sqlQuery.list(true);
-		}
-		catch (Exception exception) {
-			throw new SystemException(exception);
-		}
-		finally {
-			closeSession(session);
-		}
-	}
-
-	@Override
 	public List<Long> findByC_P(
 		long companyId, long parentGroupId, long previousGroupId, int size) {
 
@@ -654,46 +671,16 @@ public class GroupFinderImpl
 	public Group findByC_GK(long companyId, String groupKey)
 		throws NoSuchGroupException {
 
-		groupKey = StringUtil.lowerCase(groupKey);
+		Group group = fetchByC_GK(companyId, groupKey);
 
-		Session session = null;
-
-		try {
-			session = openSession();
-
-			String sql = CustomSQLUtil.get(FIND_BY_C_GK);
-
-			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
-
-			sqlQuery.addEntity("Group_", GroupImpl.class);
-
-			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
-
-			queryPos.add(companyId);
-			queryPos.add(groupKey);
-
-			List<Group> groups = sqlQuery.list();
-
-			if (!groups.isEmpty()) {
-				return groups.get(0);
-			}
-		}
-		catch (Exception exception) {
-			throw new SystemException(exception);
-		}
-		finally {
-			closeSession(session);
+		if (group == null) {
+			throw new NoSuchGroupException(
+				StringBundler.concat(
+					"No Group exists with the key {companyId=", companyId,
+					", groupKey=", groupKey, "}"));
 		}
 
-		StringBundler sb = new StringBundler(5);
-
-		sb.append("No Group exists with the key {companyId=");
-		sb.append(companyId);
-		sb.append(", groupKey=");
-		sb.append(groupKey);
-		sb.append("}");
-
-		throw new NoSuchGroupException(sb.toString());
+		return group;
 	}
 
 	@Override
@@ -1187,8 +1174,40 @@ public class GroupFinderImpl
 		for (Map.Entry<String, Object> entry : params.entrySet()) {
 			String key = entry.getKey();
 
-			if (key.equals("active") || key.equals("layout") ||
-				key.equals("manualMembership") || key.equals("site")) {
+			if (key.equals("actionId")) {
+				Long companyId = CompanyThreadLocal.getCompanyId();
+
+				Role adminRole = RoleLocalServiceUtil.fetchRole(
+					companyId, RoleConstants.ADMINISTRATOR);
+				Role siteAdminRole = RoleLocalServiceUtil.fetchRole(
+					companyId, RoleConstants.SITE_ADMINISTRATOR);
+				Role siteOwnerRole = RoleLocalServiceUtil.fetchRole(
+					companyId, RoleConstants.SITE_OWNER);
+
+				Long userId = (Long)params.get("userId");
+
+				if (Validator.isNull(userId)) {
+					PermissionChecker permissionChecker =
+						PermissionThreadLocal.getPermissionChecker();
+
+					userId = permissionChecker.getUserId();
+				}
+
+				ResourceAction resourceAction =
+					ResourceActionLocalServiceUtil.getResourceAction(
+						Group.class.getName(), (String)entry.getValue());
+
+				queryPos.add(
+					RoleLocalServiceUtil.hasUserRole(
+						userId, adminRole.getRoleId()));
+				queryPos.add(userId);
+
+				queryPos.add(siteAdminRole.getRoleId());
+				queryPos.add(siteOwnerRole.getRoleId());
+				queryPos.add(resourceAction.getBitwiseValue());
+			}
+			else if (key.equals("active") || key.equals("layout") ||
+					 key.equals("manualMembership") || key.equals("site")) {
 
 				Boolean value = (Boolean)entry.getValue();
 
@@ -1218,15 +1237,11 @@ public class GroupFinderImpl
 
 				if (!groupsTree.isEmpty()) {
 					for (Group group : groupsTree) {
-						StringBundler sb = new StringBundler(5);
-
-						sb.append(StringPool.PERCENT);
-						sb.append(StringPool.SLASH);
-						sb.append(group.getGroupId());
-						sb.append(StringPool.SLASH);
-						sb.append(StringPool.PERCENT);
-
-						queryPos.add(sb.toString());
+						queryPos.add(
+							StringBundler.concat(
+								StringPool.PERCENT, StringPool.SLASH,
+								group.getGroupId(), StringPool.SLASH,
+								StringPool.PERCENT));
 					}
 				}
 			}
@@ -1262,6 +1277,8 @@ public class GroupFinderImpl
 
 				queryPos.add(userId);
 				queryPos.add(roleId);
+			}
+			else if (key.equals("userId")) {
 			}
 			else {
 				Object value = entry.getValue();
@@ -1361,9 +1378,9 @@ public class GroupFinderImpl
 			int pos = join.indexOf("WHERE");
 
 			if (pos != -1) {
-				join = join.substring(pos + 5);
+				join = StringPool.OPEN_PARENTHESIS + join.substring(pos + 5);
 
-				join = join.concat(" AND ");
+				join = join.concat(") AND ");
 			}
 			else {
 				join = StringPool.BLANK;
@@ -1390,6 +1407,8 @@ public class GroupFinderImpl
 		}
 
 		Map<String, String> joinMap = HashMapBuilder.put(
+			"actionId", _removeWhere(CustomSQLUtil.get(JOIN_BY_ACTION_ID))
+		).put(
 			"active", _removeWhere(CustomSQLUtil.get(JOIN_BY_ACTIVE))
 		).put(
 			"groupOrg", _removeWhere(CustomSQLUtil.get(JOIN_BY_GROUP_ORG))
@@ -1432,6 +1451,8 @@ public class GroupFinderImpl
 		}
 
 		Map<String, String> whereMap = HashMapBuilder.put(
+			"actionId", _getCondition(CustomSQLUtil.get(JOIN_BY_ACTION_ID))
+		).put(
 			"active", _getCondition(CustomSQLUtil.get(JOIN_BY_ACTIVE))
 		).put(
 			"creatorUserId",

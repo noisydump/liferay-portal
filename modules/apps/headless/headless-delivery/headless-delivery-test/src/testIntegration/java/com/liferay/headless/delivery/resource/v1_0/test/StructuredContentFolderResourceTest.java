@@ -15,11 +15,11 @@
 package com.liferay.headless.delivery.resource.v1_0.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.headless.delivery.client.dto.v1_0.StructuredContentFolder;
 import com.liferay.journal.model.JournalFolder;
 import com.liferay.journal.test.util.JournalTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 
-import org.junit.Before;
 import org.junit.runner.RunWith;
 
 /**
@@ -29,14 +29,6 @@ import org.junit.runner.RunWith;
 public class StructuredContentFolderResourceTest
 	extends BaseStructuredContentFolderResourceTestCase {
 
-	@Before
-	@Override
-	public void setUp() throws Exception {
-		super.setUp();
-
-		testGroup = testDepotEntry.getGroup();
-	}
-
 	@Override
 	protected String[] getAdditionalAssertFieldNames() {
 		return new String[] {"description", "name"};
@@ -45,6 +37,31 @@ public class StructuredContentFolderResourceTest
 	@Override
 	protected String[] getIgnoredEntityFieldNames() {
 		return new String[] {"creatorId"};
+	}
+
+	@Override
+	protected Long
+			testDeleteAssetLibraryStructuredContentFolderByExternalReferenceCode_getAssetLibraryId()
+		throws Exception {
+
+		return testDepotEntry.getDepotEntryId();
+	}
+
+	@Override
+	protected StructuredContentFolder
+			testGetAssetLibraryStructuredContentFolderByExternalReferenceCode_addStructuredContentFolder()
+		throws Exception {
+
+		return testPostAssetLibraryStructuredContentFolder_addStructuredContentFolder(
+			randomStructuredContentFolder());
+	}
+
+	@Override
+	protected Long
+			testGetAssetLibraryStructuredContentFolderByExternalReferenceCode_getAssetLibraryId()
+		throws Exception {
+
+		return testDepotEntry.getDepotEntryId();
 	}
 
 	@Override
@@ -67,6 +84,30 @@ public class StructuredContentFolderResourceTest
 			testGroup.getGroupId(), RandomTestUtil.randomString());
 
 		return journalFolder.getFolderId();
+	}
+
+	@Override
+	protected StructuredContentFolder
+			testGraphQLGetAssetLibraryStructuredContentFolderByExternalReferenceCode_addStructuredContentFolder()
+		throws Exception {
+
+		return testGetAssetLibraryStructuredContentFolderByExternalReferenceCode_addStructuredContentFolder();
+	}
+
+	@Override
+	protected Long
+			testGraphQLGetAssetLibraryStructuredContentFolderByExternalReferenceCode_getAssetLibraryId()
+		throws Exception {
+
+		return testDepotEntry.getDepotEntryId();
+	}
+
+	@Override
+	protected Long
+			testPutAssetLibraryStructuredContentFolderByExternalReferenceCode_getAssetLibraryId()
+		throws Exception {
+
+		return testDepotEntry.getDepotEntryId();
 	}
 
 }

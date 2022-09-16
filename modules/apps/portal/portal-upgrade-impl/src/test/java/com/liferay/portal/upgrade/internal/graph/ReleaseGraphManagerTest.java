@@ -16,12 +16,15 @@ package com.liferay.portal.upgrade.internal.graph;
 
 import com.liferay.portal.kernel.dao.db.DBProcessContext;
 import com.liferay.portal.kernel.upgrade.UpgradeStep;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.portal.upgrade.internal.registry.UpgradeInfo;
 
 import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -30,12 +33,17 @@ import org.junit.Test;
  */
 public class ReleaseGraphManagerTest {
 
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
 	@Test
 	public void testGetAutoUpgradePath() {
-		UpgradeInfo upgradeInfo1 = createUpgradeInfo("0.0.0", "0.1.0");
-		UpgradeInfo upgradeInfo2 = createUpgradeInfo("0.1.0", "0.2.0");
-		UpgradeInfo upgradeInfo3 = createUpgradeInfo("0.2.0", "1.0.0");
-		UpgradeInfo upgradeInfo4 = createUpgradeInfo("1.0.0", "2.0.0");
+		UpgradeInfo upgradeInfo1 = _createUpgradeInfo("0.0.0", "0.1.0");
+		UpgradeInfo upgradeInfo2 = _createUpgradeInfo("0.1.0", "0.2.0");
+		UpgradeInfo upgradeInfo3 = _createUpgradeInfo("0.2.0", "1.0.0");
+		UpgradeInfo upgradeInfo4 = _createUpgradeInfo("1.0.0", "2.0.0");
 
 		ReleaseGraphManager releaseGraphManager = new ReleaseGraphManager(
 			Arrays.asList(
@@ -54,12 +62,12 @@ public class ReleaseGraphManagerTest {
 
 	@Test
 	public void testGetAutoUpgradePathWhenInEndNode() {
-		UpgradeInfo upgradeInfo1 = createUpgradeInfo("0.0.0", "0.1.0");
-		UpgradeInfo upgradeInfo2 = createUpgradeInfo("0.1.0", "0.2.0");
-		UpgradeInfo upgradeInfo3 = createUpgradeInfo("0.2.0", "1.0.0");
-		UpgradeInfo upgradeInfo4 = createUpgradeInfo("1.0.0", "2.0.0");
-		UpgradeInfo upgradeInfo5 = createUpgradeInfo("0.1.0", "0.1.0.1");
-		UpgradeInfo upgradeInfo6 = createUpgradeInfo("0.1.0.1", "0.1.0");
+		UpgradeInfo upgradeInfo1 = _createUpgradeInfo("0.0.0", "0.1.0");
+		UpgradeInfo upgradeInfo2 = _createUpgradeInfo("0.1.0", "0.2.0");
+		UpgradeInfo upgradeInfo3 = _createUpgradeInfo("0.2.0", "1.0.0");
+		UpgradeInfo upgradeInfo4 = _createUpgradeInfo("1.0.0", "2.0.0");
+		UpgradeInfo upgradeInfo5 = _createUpgradeInfo("0.1.0", "0.1.0.1");
+		UpgradeInfo upgradeInfo6 = _createUpgradeInfo("0.1.0.1", "0.1.0");
 
 		ReleaseGraphManager releaseGraphManager = new ReleaseGraphManager(
 			Arrays.asList(
@@ -79,13 +87,13 @@ public class ReleaseGraphManagerTest {
 
 	@Test
 	public void testGetAutoUpgradePathWhenInEndNodeAndMultipleSinkNodes() {
-		UpgradeInfo upgradeInfo1 = createUpgradeInfo("0.0.0", "0.1.0");
-		UpgradeInfo upgradeInfo2 = createUpgradeInfo("0.1.0", "0.2.0");
-		UpgradeInfo upgradeInfo3 = createUpgradeInfo("0.2.0", "1.0.0");
-		UpgradeInfo upgradeInfo4 = createUpgradeInfo("1.0.0", "2.0.0");
-		UpgradeInfo upgradeInfo5 = createUpgradeInfo("0.1.0", "0.1.0.1");
-		UpgradeInfo upgradeInfo6 = createUpgradeInfo("0.1.0.1", "0.1.0");
-		UpgradeInfo upgradeInfo7 = createUpgradeInfo("0.1.0.1", "0.1.0.2");
+		UpgradeInfo upgradeInfo1 = _createUpgradeInfo("0.0.0", "0.1.0");
+		UpgradeInfo upgradeInfo2 = _createUpgradeInfo("0.1.0", "0.2.0");
+		UpgradeInfo upgradeInfo3 = _createUpgradeInfo("0.2.0", "1.0.0");
+		UpgradeInfo upgradeInfo4 = _createUpgradeInfo("1.0.0", "2.0.0");
+		UpgradeInfo upgradeInfo5 = _createUpgradeInfo("0.1.0", "0.1.0.1");
+		UpgradeInfo upgradeInfo6 = _createUpgradeInfo("0.1.0.1", "0.1.0");
+		UpgradeInfo upgradeInfo7 = _createUpgradeInfo("0.1.0.1", "0.1.0.2");
 
 		ReleaseGraphManager releaseGraphManager = new ReleaseGraphManager(
 			Arrays.asList(
@@ -101,10 +109,10 @@ public class ReleaseGraphManagerTest {
 
 	@Test
 	public void testGetAutoUpgradePathWhithoutEndNodes() {
-		UpgradeInfo upgradeInfo1 = createUpgradeInfo("0.0.0", "0.1.0");
-		UpgradeInfo upgradeInfo2 = createUpgradeInfo("0.1.0", "0.0.0");
-		UpgradeInfo upgradeInfo3 = createUpgradeInfo("0.1.0", "0.2.0");
-		UpgradeInfo upgradeInfo4 = createUpgradeInfo("0.2.0", "0.1.0");
+		UpgradeInfo upgradeInfo1 = _createUpgradeInfo("0.0.0", "0.1.0");
+		UpgradeInfo upgradeInfo2 = _createUpgradeInfo("0.1.0", "0.0.0");
+		UpgradeInfo upgradeInfo3 = _createUpgradeInfo("0.1.0", "0.2.0");
+		UpgradeInfo upgradeInfo4 = _createUpgradeInfo("0.2.0", "0.1.0");
 
 		ReleaseGraphManager releaseGraphManager = new ReleaseGraphManager(
 			Arrays.asList(
@@ -119,10 +127,10 @@ public class ReleaseGraphManagerTest {
 
 	@Test
 	public void testGetSinkNodes() {
-		UpgradeInfo upgradeInfo1 = createUpgradeInfo("0.0.0", "0.1.0");
-		UpgradeInfo upgradeInfo2 = createUpgradeInfo("0.1.0", "0.2.0");
-		UpgradeInfo upgradeInfo3 = createUpgradeInfo("0.2.0", "1.0.0");
-		UpgradeInfo upgradeInfo4 = createUpgradeInfo("1.0.0", "2.0.0");
+		UpgradeInfo upgradeInfo1 = _createUpgradeInfo("0.0.0", "0.1.0");
+		UpgradeInfo upgradeInfo2 = _createUpgradeInfo("0.1.0", "0.2.0");
+		UpgradeInfo upgradeInfo3 = _createUpgradeInfo("0.2.0", "1.0.0");
+		UpgradeInfo upgradeInfo4 = _createUpgradeInfo("1.0.0", "2.0.0");
 
 		ReleaseGraphManager releaseGraphManager = new ReleaseGraphManager(
 			Arrays.asList(
@@ -135,11 +143,11 @@ public class ReleaseGraphManagerTest {
 
 	@Test
 	public void testgetSinkNodesWithMultipleEndNodes() {
-		UpgradeInfo upgradeInfo1 = createUpgradeInfo("0.0.0", "0.1.0");
-		UpgradeInfo upgradeInfo2 = createUpgradeInfo("0.1.0", "0.2.0");
-		UpgradeInfo upgradeInfo3 = createUpgradeInfo("0.2.0", "1.0.0");
-		UpgradeInfo upgradeInfo4 = createUpgradeInfo("1.0.0", "2.0.0");
-		UpgradeInfo upgradeInfo5 = createUpgradeInfo("1.0.0", "2.2.0");
+		UpgradeInfo upgradeInfo1 = _createUpgradeInfo("0.0.0", "0.1.0");
+		UpgradeInfo upgradeInfo2 = _createUpgradeInfo("0.1.0", "0.2.0");
+		UpgradeInfo upgradeInfo3 = _createUpgradeInfo("0.2.0", "1.0.0");
+		UpgradeInfo upgradeInfo4 = _createUpgradeInfo("1.0.0", "2.0.0");
+		UpgradeInfo upgradeInfo5 = _createUpgradeInfo("1.0.0", "2.2.0");
 
 		ReleaseGraphManager releaseGraphManager = new ReleaseGraphManager(
 			Arrays.asList(
@@ -154,10 +162,10 @@ public class ReleaseGraphManagerTest {
 
 	@Test
 	public void testGetUpgradePath() {
-		UpgradeInfo upgradeInfo1 = createUpgradeInfo("0.0.0", "0.1.0");
-		UpgradeInfo upgradeInfo2 = createUpgradeInfo("0.1.0", "0.2.0");
-		UpgradeInfo upgradeInfo3 = createUpgradeInfo("0.2.0", "1.0.0");
-		UpgradeInfo upgradeInfo4 = createUpgradeInfo("1.0.0", "2.0.0");
+		UpgradeInfo upgradeInfo1 = _createUpgradeInfo("0.0.0", "0.1.0");
+		UpgradeInfo upgradeInfo2 = _createUpgradeInfo("0.1.0", "0.2.0");
+		UpgradeInfo upgradeInfo3 = _createUpgradeInfo("0.2.0", "1.0.0");
+		UpgradeInfo upgradeInfo4 = _createUpgradeInfo("1.0.0", "2.0.0");
 
 		ReleaseGraphManager releaseGraphManager = new ReleaseGraphManager(
 			Arrays.asList(
@@ -174,10 +182,10 @@ public class ReleaseGraphManagerTest {
 
 	@Test
 	public void testGetUpgradePathNotInOrder() {
-		UpgradeInfo upgradeInfo1 = createUpgradeInfo("0.0.0", "0.1.0");
-		UpgradeInfo upgradeInfo2 = createUpgradeInfo("0.1.0", "0.2.0");
-		UpgradeInfo upgradeInfo3 = createUpgradeInfo("0.2.0", "1.0.0");
-		UpgradeInfo upgradeInfo4 = createUpgradeInfo("1.0.0", "2.0.0");
+		UpgradeInfo upgradeInfo1 = _createUpgradeInfo("0.0.0", "0.1.0");
+		UpgradeInfo upgradeInfo2 = _createUpgradeInfo("0.1.0", "0.2.0");
+		UpgradeInfo upgradeInfo3 = _createUpgradeInfo("0.2.0", "1.0.0");
+		UpgradeInfo upgradeInfo4 = _createUpgradeInfo("1.0.0", "2.0.0");
 
 		ReleaseGraphManager releaseGraphManager = new ReleaseGraphManager(
 			Arrays.asList(
@@ -194,11 +202,11 @@ public class ReleaseGraphManagerTest {
 
 	@Test
 	public void testGetUpgradePathWithCyclesReturnsShortestPath() {
-		UpgradeInfo upgradeInfo1 = createUpgradeInfo("0.0.0", "0.1.0");
-		UpgradeInfo upgradeInfo2 = createUpgradeInfo("0.1.0", "0.2.0");
-		UpgradeInfo upgradeInfo3 = createUpgradeInfo("0.2.0", "1.0.0");
-		UpgradeInfo upgradeInfo4 = createUpgradeInfo("1.0.0", "2.0.0");
-		UpgradeInfo upgradeInfo5 = createUpgradeInfo("0.0.0", "2.0.0");
+		UpgradeInfo upgradeInfo1 = _createUpgradeInfo("0.0.0", "0.1.0");
+		UpgradeInfo upgradeInfo2 = _createUpgradeInfo("0.1.0", "0.2.0");
+		UpgradeInfo upgradeInfo3 = _createUpgradeInfo("0.2.0", "1.0.0");
+		UpgradeInfo upgradeInfo4 = _createUpgradeInfo("1.0.0", "2.0.0");
+		UpgradeInfo upgradeInfo5 = _createUpgradeInfo("0.0.0", "2.0.0");
 
 		ReleaseGraphManager releaseGraphManager = new ReleaseGraphManager(
 			Arrays.asList(
@@ -213,11 +221,11 @@ public class ReleaseGraphManagerTest {
 
 	@Test
 	public void testGetUpgradePathWithCyclesReturnsShortestPathWhenNotZero() {
-		UpgradeInfo upgradeInfo1 = createUpgradeInfo("0.0.0", "0.1.0");
-		UpgradeInfo upgradeInfo2 = createUpgradeInfo("0.1.0", "0.2.0");
-		UpgradeInfo upgradeInfo3 = createUpgradeInfo("0.2.0", "1.0.0");
-		UpgradeInfo upgradeInfo4 = createUpgradeInfo("1.0.0", "2.0.0");
-		UpgradeInfo upgradeInfo5 = createUpgradeInfo("0.0.0", "2.0.0");
+		UpgradeInfo upgradeInfo1 = _createUpgradeInfo("0.0.0", "0.1.0");
+		UpgradeInfo upgradeInfo2 = _createUpgradeInfo("0.1.0", "0.2.0");
+		UpgradeInfo upgradeInfo3 = _createUpgradeInfo("0.2.0", "1.0.0");
+		UpgradeInfo upgradeInfo4 = _createUpgradeInfo("1.0.0", "2.0.0");
+		UpgradeInfo upgradeInfo5 = _createUpgradeInfo("0.0.0", "2.0.0");
 
 		ReleaseGraphManager releaseGraphManager = new ReleaseGraphManager(
 			Arrays.asList(
@@ -234,10 +242,10 @@ public class ReleaseGraphManagerTest {
 
 	@Test
 	public void testGetUpgradePathWithIllegalArguments() {
-		UpgradeInfo upgradeInfo1 = createUpgradeInfo("0.0.0", "0.1.0");
-		UpgradeInfo upgradeInfo2 = createUpgradeInfo("0.1.0", "0.2.0");
-		UpgradeInfo upgradeInfo3 = createUpgradeInfo("0.2.0", "1.0.0");
-		UpgradeInfo upgradeInfo4 = createUpgradeInfo("1.0.0", "2.0.0");
+		UpgradeInfo upgradeInfo1 = _createUpgradeInfo("0.0.0", "0.1.0");
+		UpgradeInfo upgradeInfo2 = _createUpgradeInfo("0.1.0", "0.2.0");
+		UpgradeInfo upgradeInfo3 = _createUpgradeInfo("0.2.0", "1.0.0");
+		UpgradeInfo upgradeInfo4 = _createUpgradeInfo("1.0.0", "2.0.0");
 
 		ReleaseGraphManager releaseGraphManager = new ReleaseGraphManager(
 			Arrays.asList(
@@ -249,7 +257,7 @@ public class ReleaseGraphManagerTest {
 		Assert.assertEquals(upgradeInfos.toString(), 0, upgradeInfos.size());
 	}
 
-	protected UpgradeInfo createUpgradeInfo(String from, String to) {
+	private UpgradeInfo _createUpgradeInfo(String from, String to) {
 		return new UpgradeInfo(
 			from, to, 0, new TestUpgradeStep(from + " -> " + to));
 	}

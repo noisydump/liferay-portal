@@ -49,14 +49,16 @@ import java.util.TreeMap;
 import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Shinn Lok
  */
 @Component(
-	enabled = false,
-	property = "auth.verifier.AnalyticsSecurityAuthVerifier.urls.includes=/o/segments-asah/v1.0/experiments/*",
+	configurationPid = "com.liferay.analytics.settings.configuration.AnalyticsConfiguration.scoped",
+	configurationPolicy = ConfigurationPolicy.REQUIRE,
+	property = "auth.verifier.AnalyticsSecurityAuthVerifier.urls.includes=/o/segments-asah/v1.0/experiments/*,/v1.0/experiments/*",
 	service = AuthVerifier.class
 )
 public class AnalyticsSecurityAuthVerifier implements AuthVerifier {

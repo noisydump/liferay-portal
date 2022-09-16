@@ -37,21 +37,23 @@ List<Website> websites = WebsiteServiceUtil.getWebsites(className, classPK);
 
 	<clay:content-col>
 		<span class="heading-end">
-
-			<%
-			PortletURL editURL = liferayPortletResponse.createRenderURL();
-
-			editURL.setParameter("mvcPath", "/common/edit_website.jsp");
-			editURL.setParameter("redirect", currentURL);
-			editURL.setParameter("className", className);
-			editURL.setParameter("classPK", String.valueOf(classPK));
-			%>
-
 			<liferay-ui:icon
 				label="<%= true %>"
 				linkCssClass="add-website-link btn btn-secondary btn-sm"
 				message="add"
-				url="<%= editURL.toString() %>"
+				url='<%=
+					PortletURLBuilder.createRenderURL(
+						liferayPortletResponse
+					).setMVCPath(
+						"/common/edit_website.jsp"
+					).setRedirect(
+						currentURL
+					).setParameter(
+						"className", className
+					).setParameter(
+						"classPK", classPK
+					).buildString()
+				%>'
 			/>
 		</span>
 	</clay:content-col>
@@ -69,7 +71,8 @@ List<Website> websites = WebsiteServiceUtil.getWebsites(className, classPK);
 	total="<%= websites.size() %>"
 >
 	<liferay-ui:search-container-results
-		results="<%= websites.subList(searchContainer.getStart(), searchContainer.getResultEnd()) %>"
+		calculateStartAndEnd="<%= true %>"
+		results="<%= websites %>"
 	/>
 
 	<liferay-ui:search-container-row

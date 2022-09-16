@@ -93,8 +93,6 @@ public class ApplicationsMenuPanelAppsMVCResourceCommandTest {
 	public void setUp() throws Exception {
 		_group = GroupTestUtil.addGroup();
 
-		_groups = new ArrayList<>();
-
 		_themeDisplay = _getThemeDisplay();
 
 		_mockHttpServletRequest = new MockHttpServletRequest();
@@ -331,7 +329,7 @@ public class ApplicationsMenuPanelAppsMVCResourceCommandTest {
 		for (int i = 0; i < max; i++) {
 			Group group = GroupTestUtil.addGroup();
 
-			LayoutTestUtil.addLayout(group);
+			LayoutTestUtil.addTypePortletLayout(group);
 
 			_groups.add(group);
 
@@ -346,7 +344,7 @@ public class ApplicationsMenuPanelAppsMVCResourceCommandTest {
 		for (int i = 0; i < max; i++) {
 			Group group = GroupTestUtil.addGroup();
 
-			LayoutTestUtil.addLayout(group);
+			LayoutTestUtil.addTypePortletLayout(group);
 
 			_groups.add(group);
 
@@ -407,7 +405,7 @@ public class ApplicationsMenuPanelAppsMVCResourceCommandTest {
 	private ThemeDisplay _getThemeDisplay() throws Exception {
 		ThemeDisplay themeDisplay = new ThemeDisplay();
 
-		Layout layout = LayoutTestUtil.addLayout(_group);
+		Layout layout = LayoutTestUtil.addTypePortletLayout(_group);
 
 		themeDisplay.setCompany(
 			_companyLocalService.getCompany(_group.getCompanyId()));
@@ -462,7 +460,7 @@ public class ApplicationsMenuPanelAppsMVCResourceCommandTest {
 	private Group _group;
 
 	@DeleteAfterTestRun
-	private List<Group> _groups;
+	private List<Group> _groups = new ArrayList<>();
 
 	private HttpServletRequest _mockHttpServletRequest;
 	private MockPortletRequest _mockPortletRequest;

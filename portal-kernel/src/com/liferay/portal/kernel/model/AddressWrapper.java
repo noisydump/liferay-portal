@@ -53,20 +53,22 @@ public class AddressWrapper
 		attributes.put("modifiedDate", getModifiedDate());
 		attributes.put("classNameId", getClassNameId());
 		attributes.put("classPK", getClassPK());
-		attributes.put("name", getName());
+		attributes.put("countryId", getCountryId());
+		attributes.put("listTypeId", getListTypeId());
+		attributes.put("regionId", getRegionId());
+		attributes.put("city", getCity());
 		attributes.put("description", getDescription());
+		attributes.put("latitude", getLatitude());
+		attributes.put("longitude", getLongitude());
+		attributes.put("mailing", isMailing());
+		attributes.put("name", getName());
+		attributes.put("primary", isPrimary());
 		attributes.put("street1", getStreet1());
 		attributes.put("street2", getStreet2());
 		attributes.put("street3", getStreet3());
-		attributes.put("city", getCity());
+		attributes.put("validationDate", getValidationDate());
+		attributes.put("validationStatus", getValidationStatus());
 		attributes.put("zip", getZip());
-		attributes.put("regionId", getRegionId());
-		attributes.put("countryId", getCountryId());
-		attributes.put("latitude", getLatitude());
-		attributes.put("longitude", getLongitude());
-		attributes.put("typeId", getTypeId());
-		attributes.put("mailing", isMailing());
-		attributes.put("primary", isPrimary());
 
 		return attributes;
 	}
@@ -140,16 +142,64 @@ public class AddressWrapper
 			setClassPK(classPK);
 		}
 
-		String name = (String)attributes.get("name");
+		Long countryId = (Long)attributes.get("countryId");
 
-		if (name != null) {
-			setName(name);
+		if (countryId != null) {
+			setCountryId(countryId);
+		}
+
+		Long listTypeId = (Long)attributes.get("listTypeId");
+
+		if (listTypeId != null) {
+			setListTypeId(listTypeId);
+		}
+
+		Long regionId = (Long)attributes.get("regionId");
+
+		if (regionId != null) {
+			setRegionId(regionId);
+		}
+
+		String city = (String)attributes.get("city");
+
+		if (city != null) {
+			setCity(city);
 		}
 
 		String description = (String)attributes.get("description");
 
 		if (description != null) {
 			setDescription(description);
+		}
+
+		Double latitude = (Double)attributes.get("latitude");
+
+		if (latitude != null) {
+			setLatitude(latitude);
+		}
+
+		Double longitude = (Double)attributes.get("longitude");
+
+		if (longitude != null) {
+			setLongitude(longitude);
+		}
+
+		Boolean mailing = (Boolean)attributes.get("mailing");
+
+		if (mailing != null) {
+			setMailing(mailing);
+		}
+
+		String name = (String)attributes.get("name");
+
+		if (name != null) {
+			setName(name);
+		}
+
+		Boolean primary = (Boolean)attributes.get("primary");
+
+		if (primary != null) {
+			setPrimary(primary);
 		}
 
 		String street1 = (String)attributes.get("street1");
@@ -170,10 +220,16 @@ public class AddressWrapper
 			setStreet3(street3);
 		}
 
-		String city = (String)attributes.get("city");
+		Date validationDate = (Date)attributes.get("validationDate");
 
-		if (city != null) {
-			setCity(city);
+		if (validationDate != null) {
+			setValidationDate(validationDate);
+		}
+
+		Integer validationStatus = (Integer)attributes.get("validationStatus");
+
+		if (validationStatus != null) {
+			setValidationStatus(validationStatus);
 		}
 
 		String zip = (String)attributes.get("zip");
@@ -181,48 +237,11 @@ public class AddressWrapper
 		if (zip != null) {
 			setZip(zip);
 		}
+	}
 
-		Long regionId = (Long)attributes.get("regionId");
-
-		if (regionId != null) {
-			setRegionId(regionId);
-		}
-
-		Long countryId = (Long)attributes.get("countryId");
-
-		if (countryId != null) {
-			setCountryId(countryId);
-		}
-
-		Double latitude = (Double)attributes.get("latitude");
-
-		if (latitude != null) {
-			setLatitude(latitude);
-		}
-
-		Double longitude = (Double)attributes.get("longitude");
-
-		if (longitude != null) {
-			setLongitude(longitude);
-		}
-
-		Long typeId = (Long)attributes.get("typeId");
-
-		if (typeId != null) {
-			setTypeId(typeId);
-		}
-
-		Boolean mailing = (Boolean)attributes.get("mailing");
-
-		if (mailing != null) {
-			setMailing(mailing);
-		}
-
-		Boolean primary = (Boolean)attributes.get("primary");
-
-		if (primary != null) {
-			setPrimary(primary);
-		}
+	@Override
+	public Address cloneWithOriginalValues() {
+		return wrap(model.cloneWithOriginalValues());
 	}
 
 	/**
@@ -338,6 +357,16 @@ public class AddressWrapper
 	@Override
 	public double getLatitude() {
 		return model.getLatitude();
+	}
+
+	/**
+	 * Returns the list type ID of this address.
+	 *
+	 * @return the list type ID of this address
+	 */
+	@Override
+	public long getListTypeId() {
+		return model.getListTypeId();
 	}
 
 	/**
@@ -466,16 +495,6 @@ public class AddressWrapper
 	}
 
 	/**
-	 * Returns the type ID of this address.
-	 *
-	 * @return the type ID of this address
-	 */
-	@Override
-	public long getTypeId() {
-		return model.getTypeId();
-	}
-
-	/**
 	 * Returns the user ID of this address.
 	 *
 	 * @return the user ID of this address
@@ -513,6 +532,26 @@ public class AddressWrapper
 	@Override
 	public String getUuid() {
 		return model.getUuid();
+	}
+
+	/**
+	 * Returns the validation date of this address.
+	 *
+	 * @return the validation date of this address
+	 */
+	@Override
+	public Date getValidationDate() {
+		return model.getValidationDate();
+	}
+
+	/**
+	 * Returns the validation status of this address.
+	 *
+	 * @return the validation status of this address
+	 */
+	@Override
+	public int getValidationStatus() {
+		return model.getValidationStatus();
 	}
 
 	/**
@@ -656,6 +695,16 @@ public class AddressWrapper
 	}
 
 	/**
+	 * Sets the list type ID of this address.
+	 *
+	 * @param listTypeId the list type ID of this address
+	 */
+	@Override
+	public void setListTypeId(long listTypeId) {
+		model.setListTypeId(listTypeId);
+	}
+
+	/**
 	 * Sets the longitude of this address.
 	 *
 	 * @param longitude the longitude of this address
@@ -766,16 +815,6 @@ public class AddressWrapper
 	}
 
 	/**
-	 * Sets the type ID of this address.
-	 *
-	 * @param typeId the type ID of this address
-	 */
-	@Override
-	public void setTypeId(long typeId) {
-		model.setTypeId(typeId);
-	}
-
-	/**
 	 * Sets the user ID of this address.
 	 *
 	 * @param userId the user ID of this address
@@ -813,6 +852,26 @@ public class AddressWrapper
 	@Override
 	public void setUuid(String uuid) {
 		model.setUuid(uuid);
+	}
+
+	/**
+	 * Sets the validation date of this address.
+	 *
+	 * @param validationDate the validation date of this address
+	 */
+	@Override
+	public void setValidationDate(Date validationDate) {
+		model.setValidationDate(validationDate);
+	}
+
+	/**
+	 * Sets the validation status of this address.
+	 *
+	 * @param validationStatus the validation status of this address
+	 */
+	@Override
+	public void setValidationStatus(int validationStatus) {
+		model.setValidationStatus(validationStatus);
 	}
 
 	/**

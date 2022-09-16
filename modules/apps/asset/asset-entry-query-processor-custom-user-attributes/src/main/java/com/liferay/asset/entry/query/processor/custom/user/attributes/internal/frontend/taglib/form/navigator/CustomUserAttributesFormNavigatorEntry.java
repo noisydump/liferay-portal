@@ -17,7 +17,7 @@ package com.liferay.asset.entry.query.processor.custom.user.attributes.internal.
 import com.liferay.asset.publisher.constants.AssetPublisherConstants;
 import com.liferay.frontend.taglib.form.navigator.BaseJSPFormNavigatorEntry;
 import com.liferay.frontend.taglib.form.navigator.FormNavigatorEntry;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
@@ -67,12 +67,17 @@ public class CustomUserAttributesFormNavigatorEntry
 		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
 			"content.Language", locale, getClass());
 
-		return LanguageUtil.get(resourceBundle, "custom-user-attributes");
+		return _language.get(resourceBundle, "custom-user-attributes");
+	}
+
+	@Override
+	public ServletContext getServletContext() {
+		return _servletContext;
 	}
 
 	@Override
 	public boolean isVisible(User user, Object object) {
-		if (isDynamicAssetSelection()) {
+		if (_isDynamicAssetSelection()) {
 			return true;
 		}
 
@@ -80,20 +85,11 @@ public class CustomUserAttributesFormNavigatorEntry
 	}
 
 	@Override
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.asset.entry.query.processor.custom.user.attributes)",
-		unbind = "-"
-	)
-	public void setServletContext(ServletContext servletContext) {
-		super.setServletContext(servletContext);
-	}
-
-	@Override
 	protected String getJspPath() {
 		return "/custom_user_attributes.jsp";
 	}
 
-	protected boolean isDynamicAssetSelection() {
+	private boolean _isDynamicAssetSelection() {
 		ServiceContext serviceContext =
 			ServiceContextThreadLocal.getServiceContext();
 
@@ -106,7 +102,7 @@ public class CustomUserAttributesFormNavigatorEntry
 				themeDisplay.getLayout(), portletDisplay.getPortletResource());
 
 		String selectionStyle = GetterUtil.getString(
-			portletSetup.getValue("selectionStyle", null), "dynamic");
+			portletSetup.getValue("selectionStyle", null));
 
 		if (Objects.equals(selectionStyle, "dynamic")) {
 			return true;
@@ -114,5 +110,13 @@ public class CustomUserAttributesFormNavigatorEntry
 
 		return false;
 	}
+
+	@Reference
+	private Language _language;
+
+	@Reference(
+		target = "(osgi.web.symbolicname=com.liferay.asset.entry.query.processor.custom.user.attributes)"
+	)
+	private ServletContext _servletContext;
 
 }

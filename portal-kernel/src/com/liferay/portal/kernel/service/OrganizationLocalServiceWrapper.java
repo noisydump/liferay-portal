@@ -29,6 +29,10 @@ public class OrganizationLocalServiceWrapper
 	implements OrganizationLocalService,
 			   ServiceWrapper<OrganizationLocalService> {
 
+	public OrganizationLocalServiceWrapper() {
+		this(null);
+	}
+
 	public OrganizationLocalServiceWrapper(
 		OrganizationLocalService organizationLocalService) {
 
@@ -153,6 +157,31 @@ public class OrganizationLocalServiceWrapper
 			userId, organization);
 	}
 
+	@Override
+	public com.liferay.portal.kernel.model.User
+			addOrganizationUserByEmailAddress(
+				String emailAddress, long organizationId,
+				ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _organizationLocalService.addOrganizationUserByEmailAddress(
+			emailAddress, organizationId, serviceContext);
+	}
+
+	@Override
+	public Organization addOrUpdateOrganization(
+			String externalReferenceCode, long userId,
+			long parentOrganizationId, String name, String type, long regionId,
+			long countryId, long statusId, String comments, boolean hasLogo,
+			byte[] logoBytes, boolean site, ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _organizationLocalService.addOrUpdateOrganization(
+			externalReferenceCode, userId, parentOrganizationId, name, type,
+			regionId, countryId, statusId, comments, hasLogo, logoBytes, site,
+			serviceContext);
+	}
+
 	/**
 	 * Assigns the password policy to the organizations, removing any other
 	 * currently assigned password policies.
@@ -176,6 +205,15 @@ public class OrganizationLocalServiceWrapper
 	@Override
 	public void addUserOrganization(long userId, Organization organization) {
 		_organizationLocalService.addUserOrganization(userId, organization);
+	}
+
+	@Override
+	public void addUserOrganizationByEmailAddress(
+			String emailAddress, long organizationId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_organizationLocalService.addUserOrganizationByEmailAddress(
+			emailAddress, organizationId);
 	}
 
 	@Override
@@ -321,6 +359,15 @@ public class OrganizationLocalServiceWrapper
 	}
 
 	@Override
+	public void deleteUserOrganizationByEmailAddress(
+			String emailAddress, long organizationId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_organizationLocalService.deleteUserOrganizationByEmailAddress(
+			emailAddress, organizationId);
+	}
+
+	@Override
 	public void deleteUserOrganizations(
 		long userId, java.util.List<Organization> organizations) {
 
@@ -337,6 +384,13 @@ public class OrganizationLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _organizationLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _organizationLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -454,6 +508,19 @@ public class OrganizationLocalServiceWrapper
 	 * @param externalReferenceCode the organization's external reference code
 	 * @return the matching organization, or <code>null</code> if a matching organization could not be found
 	 */
+	@Override
+	public Organization fetchOrganizationByExternalReferenceCode(
+		long companyId, String externalReferenceCode) {
+
+		return _organizationLocalService.
+			fetchOrganizationByExternalReferenceCode(
+				companyId, externalReferenceCode);
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #fetchOrganizationByExternalReferenceCode(long, String)}
+	 */
+	@Deprecated
 	@Override
 	public Organization fetchOrganizationByReferenceCode(
 		long companyId, String externalReferenceCode) {
@@ -585,6 +652,23 @@ public class OrganizationLocalServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _organizationLocalService.getOrganization(companyId, name);
+	}
+
+	/**
+	 * Returns the organization with the matching external reference code and company.
+	 *
+	 * @param companyId the primary key of the company
+	 * @param externalReferenceCode the organization's external reference code
+	 * @return the matching organization
+	 * @throws PortalException if a matching organization could not be found
+	 */
+	@Override
+	public Organization getOrganizationByExternalReferenceCode(
+			long companyId, String externalReferenceCode)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _organizationLocalService.getOrganizationByExternalReferenceCode(
+			companyId, externalReferenceCode);
 	}
 
 	/**
@@ -1635,6 +1719,13 @@ public class OrganizationLocalServiceWrapper
 
 		_organizationLocalService.updateAsset(
 			userId, organization, assetCategoryIds, assetTagNames);
+	}
+
+	@Override
+	public Organization updateLogo(long organizationId, byte[] logoBytes)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _organizationLocalService.updateLogo(organizationId, logoBytes);
 	}
 
 	/**

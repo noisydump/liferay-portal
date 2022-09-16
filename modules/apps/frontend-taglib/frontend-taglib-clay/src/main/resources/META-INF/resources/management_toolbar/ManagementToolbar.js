@@ -12,19 +12,27 @@
  * details.
  */
 
-import {ClayButtonWithIcon} from '@clayui/button';
+import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
 import {ClayDropDownWithItems} from '@clayui/drop-down';
-import ClayManagementToolbar from '@clayui/management-toolbar';
+import ClayIcon from '@clayui/icon';
+import {LinkOrButton} from '@clayui/shared';
+import {ManagementToolbar as FrontendManagementToolbar} from 'frontend-js-components-web';
 import PropTypes from 'prop-types';
-import React, {useState} from 'react';
+import React, {useMemo, useState} from 'react';
 
+import normalizeDropdownItems from '../normalize_dropdown_items';
 import ActionControls from './ActionControls';
 import CreationMenu from './CreationMenu';
+import FeatureFlagContext from './FeatureFlagContext';
 import FilterOrderControls from './FilterOrderControls';
 import InfoPanelControl from './InfoPanelControl';
 import ResultsBar from './ResultsBar';
 import SearchControls from './SearchControls';
 import SelectionControls from './SelectionControls';
+
+import './ManagementToolbar.scss';
+
+const noop = () => {};
 
 function ManagementToolbar({
 	clearResultsURL,
@@ -39,25 +47,33 @@ function ManagementToolbar({
 	initialCheckboxStatus,
 	initialSelectAllButtonVisible,
 	initialSelectedItems,
-	onActionButtonClick = () => {},
-	onCheckboxChange = () => {},
-	onClearSelectionButtonClick = () => {},
-	onInfoButtonClick = () => {},
-	onSelectAllButtonClick = () => {},
+	onActionButtonClick = noop,
+	onCheckboxChange = noop,
+	onClearSelectionButtonClick = noop,
+	onCreateButtonClick = noop,
+	onCreationMenuItemClick = noop,
+	onInfoButtonClick = noop,
+	onFilterDropdownItemClick = noop,
+	onOrderDropdownItemClick = noop,
+	onSelectAllButtonClick = noop,
 	onShowMoreButtonClick,
+	orderDropdownItems,
 	searchActionURL,
 	searchContainerId,
 	searchData,
 	searchFormMethod,
 	searchFormName,
+	searchInputAutoFocus,
 	searchInputName,
 	searchValue,
 	selectAllURL,
 	selectable,
 	showCreationMenu,
+	showDesignImprovementsFF,
 	showInfoButton,
 	showResultsBar,
 	showSearch,
+	sortingOrder,
 	sortingURL,
 	supportsBulkActions,
 	viewTypeItems,
@@ -67,41 +83,65 @@ function ManagementToolbar({
 	);
 	const [active, setActive] = useState(initialCheckboxStatus !== 'unchecked');
 	const [searchMobile, setSearchMobile] = useState(false);
+	const normalizedViewTypeItems = useMemo(
+		() => normalizeDropdownItems(viewTypeItems),
+		[viewTypeItems]
+	);
+	const viewTypeIcon = useMemo(
+		() => viewTypeItems?.find((item) => item.active)?.icon,
+		[viewTypeItems]
+	);
 
 	return (
-		<>
-			<ClayManagementToolbar active={active}>
-				<ClayManagementToolbar.ItemList>
-					<SelectionControls
-						actionDropdownItems={actionDropdownItems}
-						active={active}
-						clearSelectionURL={clearSelectionURL}
-						disabled={disabled}
-						initialCheckboxStatus={initialCheckboxStatus}
-						initialSelectAllButtonVisible={
-							initialSelectAllButtonVisible
-						}
-						initialSelectedItems={initialSelectedItems}
-						itemsTotal={itemsTotal}
-						onCheckboxChange={onCheckboxChange}
-						onClearButtonClick={onClearSelectionButtonClick}
-						onSelectAllButtonClick={onSelectAllButtonClick}
-						searchContainerId={searchContainerId}
-						selectAllURL={selectAllURL}
-						selectable={selectable}
-						setActionDropdownItems={setActionDropdownItems}
-						setActive={setActive}
-						supportsBulkActions={supportsBulkActions}
-					/>
+		<FeatureFlagContext.Provider
+			value={{showDesignImprovements: showDesignImprovementsFF}}
+		>
+			<FrontendManagementToolbar.Container active={active}>
+				<FrontendManagementToolbar.ItemList>
+					{selectable && (
+						<SelectionControls
+							actionDropdownItems={actionDropdownItems}
+							active={active}
+							clearSelectionURL={clearSelectionURL}
+							disabled={disabled}
+							initialCheckboxStatus={initialCheckboxStatus}
+							initialSelectAllButtonVisible={
+								initialSelectAllButtonVisible
+							}
+							initialSelectedItems={initialSelectedItems}
+							itemsTotal={itemsTotal}
+							onCheckboxChange={onCheckboxChange}
+							onClearButtonClick={onClearSelectionButtonClick}
+							onSelectAllButtonClick={onSelectAllButtonClick}
+							searchContainerId={searchContainerId}
+							selectAllURL={selectAllURL}
+							setActionDropdownItems={setActionDropdownItems}
+							setActive={setActive}
+							showCheckBoxLabel={
+								!active &&
+								!filterDropdownItems &&
+								!sortingURL &&
+								!showSearch
+							}
+							supportsBulkActions={supportsBulkActions}
+						/>
+					)}
 
 					{!active && (
 						<FilterOrderControls
 							disabled={disabled}
 							filterDropdownItems={filterDropdownItems}
+							onFilterDropdownItemClick={
+								onFilterDropdownItemClick
+							}
+							onOrderDropdownItemClick={onOrderDropdownItemClick}
+							orderDropdownItems={orderDropdownItems}
+							sortingOrder={sortingOrder}
 							sortingURL={sortingURL}
 						/>
 					)}
-				</ClayManagementToolbar.ItemList>
+				</FrontendManagementToolbar.ItemList>
+
 				{!active && showSearch && (
 					<SearchControls
 						disabled={disabled}
@@ -109,26 +149,29 @@ function ManagementToolbar({
 						searchData={searchData}
 						searchFormMethod={searchFormMethod}
 						searchFormName={searchFormName}
+						searchInputAutoFocus={searchInputAutoFocus}
 						searchInputName={searchInputName}
 						searchMobile={searchMobile}
 						searchValue={searchValue}
 						setSearchMobile={setSearchMobile}
 					/>
 				)}
-				<ClayManagementToolbar.ItemList>
+
+				<FrontendManagementToolbar.ItemList>
 					{!active && showSearch && (
 						<SearchControls.ShowMobileButton
 							disabled={disabled}
 							setSearchMobile={setSearchMobile}
 						/>
 					)}
-					{showInfoButton && (
+
+					{!showDesignImprovementsFF && showInfoButton && (
 						<InfoPanelControl
-							disabled={disabled}
 							infoPanelId={infoPanelId}
 							onInfoButtonClick={onInfoButtonClick}
 						/>
 					)}
+
 					{active ? (
 						<>
 							<ActionControls
@@ -139,40 +182,94 @@ function ManagementToolbar({
 						</>
 					) : (
 						<>
-							{viewTypeItems && (
-								<ClayManagementToolbar.Item>
+							{normalizedViewTypeItems && (
+								<FrontendManagementToolbar.Item>
 									<ClayDropDownWithItems
-										items={viewTypeItems}
+										items={normalizedViewTypeItems}
 										trigger={
-											<ClayButtonWithIcon
-												className="nav-link nav-link-monospaced"
-												disabled={disabled}
-												displayType="unstyled"
-												symbol={
-													viewTypeItems.find(
-														(item) => item.active
-													)?.icon || ''
-												}
-											/>
+											showDesignImprovementsFF ? (
+												<ClayButton
+													className="nav-link"
+													displayType="unstyled"
+													title={Liferay.Language.get(
+														'show-view-options'
+													)}
+												>
+													{viewTypeIcon && (
+														<ClayIcon
+															symbol={
+																viewTypeIcon
+															}
+														/>
+													)}
+
+													<ClayIcon
+														className="inline-item inline-item-after"
+														symbol="caret-double-l"
+													/>
+												</ClayButton>
+											) : (
+												<ClayButtonWithIcon
+													className="nav-link nav-link-monospaced"
+													displayType="unstyled"
+													symbol={viewTypeIcon}
+													title={Liferay.Language.get(
+														'show-view-options'
+													)}
+												/>
+											)
 										}
 									/>
-								</ClayManagementToolbar.Item>
+								</FrontendManagementToolbar.Item>
 							)}
 
-							{showCreationMenu && creationMenu && (
-								<ClayManagementToolbar.Item>
-									<CreationMenu
-										{...creationMenu}
-										onShowMoreButtonClick={
-											onShowMoreButtonClick
-										}
-									/>
-								</ClayManagementToolbar.Item>
+							{showCreationMenu && (
+								<FrontendManagementToolbar.Item>
+									{creationMenu ? (
+										<CreationMenu
+											{...creationMenu}
+											onCreateButtonClick={
+												onCreateButtonClick
+											}
+											onCreationMenuItemClick={
+												onCreationMenuItemClick
+											}
+											onShowMoreButtonClick={
+												onShowMoreButtonClick
+											}
+										/>
+									) : showDesignImprovementsFF ? (
+										<LinkOrButton
+											className="nav-btn"
+											displayType="primary"
+											onClick={onCreateButtonClick}
+											symbol="plus"
+											wide
+										>
+											{Liferay.Language.get('new')}
+										</LinkOrButton>
+									) : (
+										<ClayButtonWithIcon
+											className="nav-btn nav-btn-monospaced"
+											displayType="primary"
+											onClick={onCreateButtonClick}
+											symbol="plus"
+										/>
+									)}
+								</FrontendManagementToolbar.Item>
 							)}
 						</>
 					)}
-				</ClayManagementToolbar.ItemList>
-			</ClayManagementToolbar>
+
+					{showDesignImprovementsFF && showInfoButton && (
+						<InfoPanelControl
+							infoPanelId={infoPanelId}
+							onInfoButtonClick={onInfoButtonClick}
+							separator={active}
+						/>
+					)}
+				</FrontendManagementToolbar.ItemList>
+			</FrontendManagementToolbar.Container>
 
 			{showResultsBar && (
 				<ResultsBar
@@ -182,7 +279,7 @@ function ManagementToolbar({
 					searchValue={searchValue}
 				/>
 			)}
-		</>
+		</FeatureFlagContext.Provider>
 	);
 }
 
@@ -207,8 +304,10 @@ ManagementToolbar.propTypes = {
 	]),
 	itemsTotal: PropTypes.number,
 	onCheckboxChange: PropTypes.func,
+	onCreateButtonClick: PropTypes.func,
 	onInfoButtonClick: PropTypes.func,
 	onViewTypeSelect: PropTypes.func,
+	orderDropdownItems: PropTypes.array,
 	searchActionURL: PropTypes.string,
 	searchContainerId: PropTypes.string,
 	searchData: PropTypes.object,
@@ -219,6 +318,7 @@ ManagementToolbar.propTypes = {
 	selectAllURL: PropTypes.string,
 	selectable: PropTypes.bool,
 	showCreationMenu: PropTypes.bool,
+	showDesignImprovementsFF: PropTypes.bool,
 	showInfoButton: PropTypes.bool,
 	showResultsBar: PropTypes.bool,
 	showSearch: PropTypes.bool,

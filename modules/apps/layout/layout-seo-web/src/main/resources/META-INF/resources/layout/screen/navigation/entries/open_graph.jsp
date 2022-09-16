@@ -31,7 +31,7 @@ Layout selLayout = layoutsSEODisplayContext.getSelLayout();
 %>
 
 <liferay-util:html-top>
-	<link href="<%= PortalUtil.getStaticResourceURL(request, application.getContextPath() + "/css/main.css") %>" rel="stylesheet" type="text/css" />
+	<link href="<%= PortalUtil.getStaticResourceURL(request, PortalUtil.getPathProxy() + application.getContextPath() + "/css/main.css") %>" rel="stylesheet" type="text/css" />
 </liferay-util:html-top>
 
 <portlet:actionURL copyCurrentRenderParameters="<%= true %>" name="/layout/edit_open_graph" var="editOpenGraphURL" />
@@ -58,6 +58,11 @@ Layout selLayout = layoutsSEODisplayContext.getSelLayout();
 				<liferay-ui:message key="open-graph-description" />
 			</p>
 
+			<clay:alert
+				displayType="info"
+				message='<%= LanguageUtil.get(request, "add-multiple-fields-to-define-how-the-meta-tags-will-be-filled") %>'
+			/>
+
 			<c:choose>
 				<c:when test="<%= selLayout.isTypeAssetDisplay() %>">
 					<div class="dpt-mapping">
@@ -68,7 +73,7 @@ Layout selLayout = layoutsSEODisplayContext.getSelLayout();
 								<liferay-ui:message arguments='<%= new String[] {"text", "title"} %>' key="map-a-x-field-it-will-be-used-as-x" />
 							</div>
 
-							<aui:input disabled="<%= true %>" label="description" localized="<%= false %>" name="openGraphDescription" />
+							<aui:input disabled="<%= true %>" label="description" localized="<%= false %>" name="openGraphDescription" type="textarea" />
 
 							<div class="form-text">
 								<liferay-ui:message arguments='<%= new String[] {"text", "description"} %>' key="map-a-x-field-it-will-be-used-as-x" />
@@ -80,7 +85,7 @@ Layout selLayout = layoutsSEODisplayContext.getSelLayout();
 								<liferay-ui:message arguments='<%= new String[] {"image", "image"} %>' key="map-a-x-field-it-will-be-used-as-x" />
 							</div>
 
-							<aui:input disabled="<%= true %>" label="open-graph-image-alt-description" name="openGraphImageAlt" />
+							<aui:input disabled="<%= true %>" label="open-graph-image-alt-description" name="openGraphImageAlt" type="textarea" />
 
 							<div class="form-text">
 								<liferay-ui:message arguments='<%= new String[] {"text", "open-graph-image-alt-description"} %>' key="map-a-x-field-it-will-be-used-as-x" />
@@ -132,7 +137,6 @@ Layout selLayout = layoutsSEODisplayContext.getSelLayout();
 						<label><liferay-ui:message key="preview" /> <liferay-ui:icon-help message="preview-help" /></label>
 
 						<div>
-
 							<react:component
 								module="js/seo/PreviewSeo.es"
 								props='<%=
@@ -157,15 +161,13 @@ Layout selLayout = layoutsSEODisplayContext.getSelLayout();
 										).put(
 											"title",
 											HashMapBuilder.<String, Object>put(
-												"defaultValue", layoutsSEODisplayContext.getDefaultPageTitleMap()
+												"defaultValue", layoutsSEODisplayContext.getDefaultPageTitleWithSuffixMap()
 											).put(
 												"id", "openGraphTitle"
 											).build()
 										).put(
 											"url", Collections.singletonMap("defaultValue", layoutsSEODisplayContext.getDefaultCanonicalURLMap())
 										).build()
-									).put(
-										"titleSuffix", layoutsSEODisplayContext.getPageTitleSuffix()
 									).build()
 								%>'
 								servletContext="<%= application %>"

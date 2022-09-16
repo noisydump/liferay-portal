@@ -16,13 +16,13 @@ package com.liferay.depot.web.internal.display.context;
 
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.web.internal.constants.DepotAdminWebKeys;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
@@ -64,8 +64,7 @@ public class DepotApplicationDisplayContext {
 
 		if (Validator.isNotNull(_portletId)) {
 			return LanguageUtil.format(
-				ResourceBundleUtil.getBundle(
-					_themeDisplay.getLocale(), getClass()),
+				_themeDisplay.getLocale(),
 				"x-application-is-disabled-for-this-scope.-please-go-back-to-" +
 					"selection",
 				new Object[] {
@@ -74,7 +73,7 @@ public class DepotApplicationDisplayContext {
 		}
 
 		return LanguageUtil.format(
-			ResourceBundleUtil.getBundle(_themeDisplay.getLocale(), getClass()),
+			_themeDisplay.getLocale(),
 			"application-is-not-supported.-please-go-back-to-selection",
 			new Object[] {viewGroupSelectorLink, "</a>"});
 	}
@@ -96,15 +95,15 @@ public class DepotApplicationDisplayContext {
 	}
 
 	private String _getViewGroupSelectorURL() throws PortletException {
-		PortletURL viewGroupSelectorURL = PortletURLUtil.clone(
-			getPortletURL(),
-			_portal.getLiferayPortletResponse(_portletResponse));
-
-		viewGroupSelectorURL.setParameter("groupType", "site");
-		viewGroupSelectorURL.setParameter(
-			"showGroupSelector", Boolean.TRUE.toString());
-
-		return viewGroupSelectorURL.toString();
+		return PortletURLBuilder.create(
+			PortletURLUtil.clone(
+				getPortletURL(),
+				_portal.getLiferayPortletResponse(_portletResponse))
+		).setParameter(
+			"groupType", "site"
+		).setParameter(
+			"showGroupSelector", true
+		).buildString();
 	}
 
 	private final Portal _portal;

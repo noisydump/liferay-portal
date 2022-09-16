@@ -61,9 +61,9 @@ public class CommerceShipmentTestUtil {
 		if (commerceChannel == null) {
 			commerceChannel =
 				CommerceChannelLocalServiceUtil.addCommerceChannel(
-					groupId, "Test Channel",
+					null, groupId, "Test Channel",
 					CommerceChannelConstants.CHANNEL_TYPE_SITE, null,
-					commerceCurrency.getCode(), null, serviceContext);
+					commerceCurrency.getCode(), serviceContext);
 		}
 
 		CommerceInventoryWarehouse commerceInventoryWarehouse =
@@ -84,9 +84,10 @@ public class CommerceShipmentTestUtil {
 				commerceContext);
 
 		return CommerceShipmentItemLocalServiceUtil.addCommerceShipmentItem(
-			commerceShipmentId, commerceOrderItem.getCommerceOrderItemId(),
+			null, commerceShipmentId,
+			commerceOrderItem.getCommerceOrderItemId(),
 			commerceInventoryWarehouse.getCommerceInventoryWarehouseId(),
-			addQuantity, serviceContext);
+			addQuantity, true, serviceContext);
 	}
 
 	public static CommerceShipment createEmptyOrderShipment(
@@ -115,9 +116,9 @@ public class CommerceShipmentTestUtil {
 				commerceOrder.getCommerceOrderItems()) {
 
 			CommerceShipmentItemLocalServiceUtil.addCommerceShipmentItem(
-				commerceShipment.getCommerceShipmentId(),
+				null, commerceShipment.getCommerceShipmentId(),
 				commerceOrderItem.getCommerceOrderItemId(), warehouseId,
-				commerceOrderItem.getQuantity(), serviceContext);
+				commerceOrderItem.getQuantity(), true, serviceContext);
 		}
 	}
 
@@ -139,9 +140,9 @@ public class CommerceShipmentTestUtil {
 				commerceOrder.getCommerceOrderItems()) {
 
 			CommerceShipmentItemLocalServiceUtil.addCommerceShipmentItem(
-				commerceShipment.getCommerceShipmentId(),
+				null, commerceShipment.getCommerceShipmentId(),
 				commerceOrderItem.getCommerceOrderItemId(), commerceWarehouseId,
-				commerceOrderItem.getQuantity(), serviceContext);
+				commerceOrderItem.getQuantity(), true, serviceContext);
 		}
 
 		return commerceShipment;

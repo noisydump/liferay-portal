@@ -58,7 +58,36 @@ import org.osgi.service.component.annotations.Reference;
 public class RenderStructureFieldMVCResourceCommand
 	extends BaseMVCResourceCommand {
 
-	protected DDMFormFieldRenderingContext createDDMFormFieldRenderingContext(
+	@Override
+	protected void doServeResource(
+			ResourceRequest resourceRequest, ResourceResponse resourceResponse)
+		throws Exception {
+
+		HttpServletResponse httpServletResponse =
+			_portal.getHttpServletResponse(resourceResponse);
+
+		HttpServletRequest httpServletRequest = _portal.getHttpServletRequest(
+			resourceRequest);
+
+		DDMFormField ddmFormField = _getDDMFormField(httpServletRequest);
+
+		DDMFormFieldRenderer ddmFormFieldRenderer =
+			_ddmFormFieldRendererRegistry.getDDMFormFieldRenderer(
+				ddmFormField.getType());
+
+		DDMFormFieldRenderingContext ddmFormFieldRenderingContext =
+			_createDDMFormFieldRenderingContext(
+				httpServletRequest, httpServletResponse);
+
+		String ddmFormFieldHTML = ddmFormFieldRenderer.render(
+			ddmFormField, ddmFormFieldRenderingContext);
+
+		httpServletResponse.setContentType(ContentTypes.TEXT_HTML);
+
+		ServletResponseUtil.write(httpServletResponse, ddmFormFieldHTML);
+	}
+
+	private DDMFormFieldRenderingContext _createDDMFormFieldRenderingContext(
 		HttpServletRequest httpServletRequest,
 		HttpServletResponse httpServletResponse) {
 
@@ -91,36 +120,7 @@ public class RenderStructureFieldMVCResourceCommand
 		return ddmFormFieldRenderingContext;
 	}
 
-	@Override
-	protected void doServeResource(
-			ResourceRequest resourceRequest, ResourceResponse resourceResponse)
-		throws Exception {
-
-		HttpServletResponse httpServletResponse =
-			_portal.getHttpServletResponse(resourceResponse);
-
-		HttpServletRequest httpServletRequest = _portal.getHttpServletRequest(
-			resourceRequest);
-
-		DDMFormField ddmFormField = getDDMFormField(httpServletRequest);
-
-		DDMFormFieldRenderer ddmFormFieldRenderer =
-			_ddmFormFieldRendererRegistry.getDDMFormFieldRenderer(
-				ddmFormField.getType());
-
-		DDMFormFieldRenderingContext ddmFormFieldRenderingContext =
-			createDDMFormFieldRenderingContext(
-				httpServletRequest, httpServletResponse);
-
-		String ddmFormFieldHTML = ddmFormFieldRenderer.render(
-			ddmFormField, ddmFormFieldRenderingContext);
-
-		httpServletResponse.setContentType(ContentTypes.TEXT_HTML);
-
-		ServletResponseUtil.write(httpServletResponse, ddmFormFieldHTML);
-	}
-
-	protected DDMFormField getDDMFormField(
+	private DDMFormField _getDDMFormField(
 		HttpServletRequest httpServletRequest) {
 
 		String definition = ParamUtil.getString(
@@ -143,13 +143,7 @@ public class RenderStructureFieldMVCResourceCommand
 		return ddmFormFieldsMap.get(fieldName);
 	}
 
-	@Reference(unbind = "-")
-	protected void setDDMFormFieldRendererRegistry(
-		DDMFormFieldRendererRegistry ddmFormFieldRendererRegistry) {
-
-		_ddmFormFieldRendererRegistry = ddmFormFieldRendererRegistry;
-	}
-
+	@Reference
 	private DDMFormFieldRendererRegistry _ddmFormFieldRendererRegistry;
 
 	@Reference(target = "(ddm.form.deserializer.type=json)")

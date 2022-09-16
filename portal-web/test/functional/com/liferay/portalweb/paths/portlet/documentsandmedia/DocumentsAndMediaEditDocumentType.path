@@ -2,11 +2,13 @@
 <head>
 <title>DocumentsAndMediaEditDocumentType</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">DocumentsAndMediaEditDocumentType</td></tr>
 </thead>
+
 <tbody>
 <tr>
 	<td>SELECT_BUTTON</td>
@@ -23,7 +25,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--DETAILS-->
+
 <tr>
 	<td>DETAILS_DESCRIPTION_FIELD</td>
 	<td>//textarea[contains(@id,'_description')]</td>

@@ -12,23 +12,31 @@
  * details.
  */
 
+import openDeleteEntryModal from './openDeleteEntryModal';
+
 export default function propsTransformer({
 	additionalProps: {restoreEntriesURL},
 	portletNamespace,
 	...otherProps
 }) {
 	const deleteSelectedEntries = () => {
-		if (
-			confirm(
-				Liferay.Language.get('are-you-sure-you-want-to-delete-this')
-			)
-		) {
-			submitForm(document[`${portletNamespace}fm`]);
-		}
+		openDeleteEntryModal({
+			onDelete: () => {
+				const form = document.getElementById(`${portletNamespace}fm`);
+
+				if (form) {
+					submitForm(form);
+				}
+			},
+		});
 	};
 
 	const restoreSelectedEntries = () => {
-		submitForm(document[`${portletNamespace}fm`], restoreEntriesURL);
+		const form = document.getElementById(`${portletNamespace}fm`);
+
+		if (form) {
+			submitForm(form, restoreEntriesURL);
+		}
 	};
 
 	return {

@@ -49,7 +49,7 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 					label="<%= true %>"
 					linkCssClass="btn btn-secondary btn-sm"
 					message="select"
-					url="javascript:;"
+					url="javascript:void(0);"
 				/>
 			</span>
 		</clay:content-col>
@@ -79,7 +79,8 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 	total="<%= userGroups.size() %>"
 >
 	<liferay-ui:search-container-results
-		results="<%= userGroups.subList(searchContainer.getStart(), searchContainer.getResultEnd()) %>"
+		calculateStartAndEnd="<%= true %>"
+		results="<%= userGroups %>"
 	/>
 
 	<liferay-ui:search-container-row
@@ -96,7 +97,7 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 
 		<c:if test="<%= !portletName.equals(myAccountPortletId) && !UserGroupMembershipPolicyUtil.isMembershipRequired((selUser != null) ? selUser.getUserId() : 0, userGroup.getUserGroupId()) %>">
 			<liferay-ui:search-container-column-text>
-				<a class="modify-link" data-rowId="<%= userGroup.getUserGroupId() %>" href="javascript:;"><%= removeUserGroupIcon %></a>
+				<a class="modify-link" data-rowId="<%= userGroup.getUserGroupId() %>" href="javascript:void(0);"><%= removeUserGroupIcon %></a>
 			</liferay-ui:search-container-column-text>
 		</c:if>
 	</liferay-ui:search-container-row>
@@ -121,7 +122,7 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 
 		searchContainerContentBox.delegate(
 			'click',
-			function (event) {
+			(event) => {
 				var link = event.currentTarget;
 
 				var rowId = link.attr('data-rowId');
@@ -156,7 +157,7 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 			'.modify-link'
 		);
 
-		A.one('#<portlet:namespace />openUserGroupsLink').on('click', function (event) {
+		A.one('#<portlet:namespace />openUserGroupsLink').on('click', (event) => {
 			Liferay.Util.openSelectionModal({
 				onSelect: function (selectedItem) {
 					var A = AUI();
@@ -169,7 +170,7 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 					rowColumns.push(
 						'<a class="modify-link" data-rowId="' +
 							entityId +
-							'" href="javascript:;"><%= UnicodeFormatter.toString(removeUserGroupIcon) %></a>'
+							'" href="javascript:void(0);"><%= UnicodeFormatter.toString(removeUserGroupIcon) %></a>'
 					);
 
 					searchContainer.addRow(rowColumns, entityId);
@@ -192,10 +193,13 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 				title: '<liferay-ui:message arguments="user-group" key="select-x" />',
 
 				<%
-				PortletURL selectUserGroupURL = PortletProviderUtil.getPortletURL(request, UserGroup.class.getName(), PortletProvider.Action.BROWSE);
-
-				selectUserGroupURL.setParameter("p_u_i_d", (selUser == null) ? "0" : String.valueOf(selUser.getUserId()));
-				selectUserGroupURL.setWindowState(LiferayWindowState.POP_UP);
+				PortletURL selectUserGroupURL = PortletURLBuilder.create(
+					PortletProviderUtil.getPortletURL(request, UserGroup.class.getName(), PortletProvider.Action.BROWSE)
+				).setParameter(
+					"p_u_i_d", (selUser == null) ? "0" : String.valueOf(selUser.getUserId())
+				).setWindowState(
+					LiferayWindowState.POP_UP
+				).buildPortletURL();
 				%>
 
 				url: '<%= selectUserGroupURL.toString() %>',

@@ -19,11 +19,14 @@ import com.liferay.portal.kernel.dao.search.ResultRowSplitter;
 import com.liferay.portal.kernel.dao.search.ResultRowSplitterEntry;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.workflow.DefaultWorkflowDefinition;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -31,10 +34,15 @@ import org.junit.Test;
  */
 public class WorkflowDefinitionResultRowSplitterTest {
 
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
 	@Test
 	public void testSplitDefinitions() {
-		addWorkflowDefinition(true);
-		addWorkflowDefinition(false);
+		_addWorkflowDefinition(true);
+		_addWorkflowDefinition(false);
 
 		List<ResultRowSplitterEntry> resultRowSplitterEntryList =
 			_resultRowSplitter.split(_resultRows);
@@ -73,7 +81,7 @@ public class WorkflowDefinitionResultRowSplitterTest {
 
 	@Test
 	public void testSplitNotPublishedDefinitions() {
-		addWorkflowDefinition(false);
+		_addWorkflowDefinition(false);
 
 		List<ResultRowSplitterEntry> resultRowSplitterEntryList =
 			_resultRowSplitter.split(_resultRows);
@@ -94,7 +102,7 @@ public class WorkflowDefinitionResultRowSplitterTest {
 
 	@Test
 	public void testSplitPublishedDefinitions() {
-		addWorkflowDefinition(true);
+		_addWorkflowDefinition(true);
 
 		List<ResultRowSplitterEntry> resultRowSplitterEntryList =
 			_resultRowSplitter.split(_resultRows);
@@ -113,7 +121,7 @@ public class WorkflowDefinitionResultRowSplitterTest {
 		Assert.assertEquals(resultRows.toString(), 1, resultRows.size());
 	}
 
-	protected void addWorkflowDefinition(boolean active) {
+	private void _addWorkflowDefinition(boolean active) {
 		DefaultWorkflowDefinition defaultWorkflowDefinition =
 			new DefaultWorkflowDefinition();
 

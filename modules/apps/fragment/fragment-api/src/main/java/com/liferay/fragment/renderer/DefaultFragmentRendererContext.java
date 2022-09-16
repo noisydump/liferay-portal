@@ -16,10 +16,11 @@ package com.liferay.fragment.renderer;
 
 import com.liferay.fragment.constants.FragmentEntryLinkConstants;
 import com.liferay.fragment.model.FragmentEntryLink;
+import com.liferay.info.form.InfoForm;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 
 import java.util.Locale;
-import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -29,6 +30,8 @@ public class DefaultFragmentRendererContext implements FragmentRendererContext {
 
 	public DefaultFragmentRendererContext(FragmentEntryLink fragmentEntryLink) {
 		_fragmentEntryLink = fragmentEntryLink;
+
+		_fragmentEntryElementId = "fragment-" + PortalUUIDUtil.generate();
 	}
 
 	@Override
@@ -37,13 +40,18 @@ public class DefaultFragmentRendererContext implements FragmentRendererContext {
 	}
 
 	@Override
-	public Optional<Map<String, Object>> getFieldValuesOptional() {
-		return Optional.ofNullable(_fieldValues);
+	public String getFragmentElementId() {
+		return _fragmentEntryElementId;
 	}
 
 	@Override
 	public FragmentEntryLink getFragmentEntryLink() {
 		return _fragmentEntryLink;
+	}
+
+	@Override
+	public Optional<InfoForm> getInfoFormOptional() {
+		return Optional.ofNullable(_infoForm);
 	}
 
 	@Override
@@ -77,8 +85,8 @@ public class DefaultFragmentRendererContext implements FragmentRendererContext {
 	}
 
 	@Override
-	public long[] getSegmentsExperienceIds() {
-		return _segmentsExperienceIds;
+	public long[] getSegmentsEntryIds() {
+		return _segmentsSegmentsEntryIds;
 	}
 
 	@Override
@@ -90,8 +98,8 @@ public class DefaultFragmentRendererContext implements FragmentRendererContext {
 		_displayObject = object;
 	}
 
-	public void setFieldValues(Map<String, Object> fieldValues) {
-		_fieldValues = fieldValues;
+	public void setInfoForm(InfoForm infoForm) {
+		_infoForm = infoForm;
 	}
 
 	public void setLocale(Locale locale) {
@@ -118,8 +126,8 @@ public class DefaultFragmentRendererContext implements FragmentRendererContext {
 		_previewVersion = previewVersion;
 	}
 
-	public void setSegmentsExperienceIds(long[] segmentsExperienceIds) {
-		_segmentsExperienceIds = segmentsExperienceIds;
+	public void setSegmentsEntryIds(long[] segmentsSegmentsEntryIds) {
+		_segmentsSegmentsEntryIds = segmentsSegmentsEntryIds;
 	}
 
 	public void setUseCachedContent(boolean useCachedContent) {
@@ -127,15 +135,16 @@ public class DefaultFragmentRendererContext implements FragmentRendererContext {
 	}
 
 	private Object _displayObject;
-	private Map<String, Object> _fieldValues;
+	private final String _fragmentEntryElementId;
 	private final FragmentEntryLink _fragmentEntryLink;
+	private InfoForm _infoForm;
 	private Locale _locale = LocaleUtil.getMostRelevantLocale();
 	private String _mode = FragmentEntryLinkConstants.VIEW;
 	private long _previewClassNameId;
 	private long _previewClassPK;
 	private int _previewType;
 	private String _previewVersion;
-	private long[] _segmentsExperienceIds = new long[0];
+	private long[] _segmentsSegmentsEntryIds = new long[0];
 	private boolean _useCachedContent = true;
 
 }

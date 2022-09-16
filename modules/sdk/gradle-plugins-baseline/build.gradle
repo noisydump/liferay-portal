@@ -4,7 +4,7 @@ apply plugin: "org.ysb33r.gradletest"
 task copyGradleTestDependencies(type: Copy)
 task installGradleTestSmokeSample100(type: GradleBuild)
 
-String gradleVersion = "6.6.1"
+String gradleVersion = "6.9.2"
 File userMavenRepoLocalDir = new File(System.getProperty("user.home"), ".m2/repository")
 
 tasks.eclipse {
@@ -17,8 +17,8 @@ copyGradleTestDependencies {
 }
 
 dependencies {
-	compile group: "com.liferay", name: "com.liferay.ant.bnd", version: "3.2.6"
-	compile group: "com.liferay", name: "com.liferay.gradle.util", version: "1.0.44"
+	compile group: "com.liferay", name: "com.liferay.ant.bnd", version: "3.2.9"
+	compile group: "com.liferay", name: "com.liferay.gradle.util", version: "1.0.47"
 
 	compileOnly fileTree(builtBy: [rootProject.tasks.getByName("extractGradleApi" + gradleVersion.replace(".", ""))], dir: new File(rootProject.buildDir, "gradle-${gradleVersion}"))
 }

@@ -39,7 +39,7 @@ import org.osgi.service.component.annotations.Reference;
 	},
 	service = MVCActionCommand.class
 )
-public class DeleteTemplateMVCActionCommand extends DDMBaseMVCActionCommand {
+public class DeleteTemplateMVCActionCommand extends BaseDDMMVCActionCommand {
 
 	@Override
 	protected void doProcessAction(
@@ -65,13 +65,7 @@ public class DeleteTemplateMVCActionCommand extends DDMBaseMVCActionCommand {
 		setRedirectAttribute(actionRequest);
 	}
 
-	@Reference(unbind = "-")
-	protected void setDDMTemplateService(
-		DDMTemplateService ddmTemplateService) {
-
-		_ddmTemplateService = ddmTemplateService;
-	}
-
+	@Reference
 	private DDMTemplateService _ddmTemplateService;
 
 }

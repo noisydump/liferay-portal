@@ -26,6 +26,36 @@ definition {
 		}
 	}
 
+	@description = "If virtual.hosts.strict.access=true is set, do not redirect to a default instance if there is no associated company"
+	@priority = "4"
+	test DoNotRedirectToDefaultInstanceWithNoCompany {
+		property custom.properties = "virtual.hosts.strict.access=true";
+
+		Navigator.openSpecificURL(url = "http://www.able.com:8080");
+
+		AssertTextPresent(
+			locator1 = "//body",
+			value1 = "Unknown Virtual Hostname: www.able.com");
+
+		AssertLocation(value1 = "http://www.able.com:8080/");
+
+		AssertConsoleTextPresent(value1 = "NoSuchVirtualHostException");
+	}
+
+	@description = "If virtual.hosts.strict.access=true is not set, redirect to a default instance even if there is no associated company"
+	@priority = "3"
+	test RedirectToDefaultInstanceWithNoCompany {
+		Navigator.openSpecificURL(url = "http://www.able.com:8080");
+
+		AssertTextNotPresent(
+			locator1 = "//body",
+			value1 = "Unknown Virtual Hostname: www.able.com");
+
+		AssertLocation(value1 = "http://www.able.com:8080/web/guest");
+
+		Smoke.viewWelcomeContentPage();
+	}
+
 	@priority = "4"
 	test VerifyFriendlyURLsOnlyDisplayLocaleOnce {
 		JSONLayout.addPublicLayout(
@@ -38,7 +68,7 @@ definition {
 			category = "Site Builder",
 			portlet = "Pages");
 
-		SitePages.gotoPageMenuItem(
+		PagesAdmin.gotoPageEllipsisMenuItem(
 			menuItem = "Configure",
 			pageName = "Test Page");
 
@@ -51,7 +81,8 @@ definition {
 			value1 = "Test Page");
 
 		Type(
-			locator1 = "TextInput#FRIENDLY_URL",
+			inputFieldId = "friendlyURL",
+			locator1 = "TextInput#INPUT_ID",
 			value1 = "/teszt-page");
 
 		Button.clickSave();
@@ -107,7 +138,11 @@ definition {
 
 		Site.configureCurrentLanguagesCP(defaultSiteLanguage = "French (France)");
 
-		Navigator.gotoNavTab(navTab = "General");
+		Navigator.gotoBack();
+
+		Click(
+			key_itemName = "Site Configuration",
+			locator1 = "ListGroupItem#ITEM_TEXT");
 
 		PortletEntry.inputName(name = "France Site Name");
 
@@ -117,7 +152,11 @@ definition {
 
 		Site.configureCurrentLanguagesCP(defaultSiteLanguage = "French (Canada)");
 
-		Navigator.gotoNavTab(navTab = "General");
+		Navigator.gotoBack();
+
+		Click(
+			key_itemName = "Site Configuration",
+			locator1 = "ListGroupItem#ITEM_TEXT");
 
 		PortletEntry.inputName(name = "Canada Site Name");
 
@@ -163,6 +202,85 @@ definition {
 			AssertElementPresent(
 				key_portletName = "Asset Publisher",
 				locator1 = "Portlet#TITLE");
+		}
+	}
+
+	@description = "This is a test for LPS-135619 and LPS-134072. View the Home page in different user languages."
+	@priority = "5"
+	test ViewLocaleChangeThroughFriendlyURL {
+		property environment.acceptance = "true";
+		property portal.acceptance = "true";
+
+		task ("View the inline text on Home page is in English as default") {
+			ContentPages.viewFragmentText(
+				fragmentName = "heading",
+				id = "element-text",
+				text = "Welcome to Liferay");
+		}
+
+		task ("View the tree page is shown on Home page") {
+			ContentPages.viewFragmentImage(
+				fragmentName = "image",
+				id = "image-square",
+				image = "tree.png");
+		}
+
+		task ("Change the locale to Chinese") {
+			Navigator.openWithAppendToBaseURL(urlAppend = "zh/web/guest/home");
+		}
+
+		task ("View the inline text on Home page is in Chinese") {
+			ContentPages.viewFragmentText(
+				fragmentName = "heading",
+				id = "element-text",
+				text = "欢迎来到Liferay");
+		}
+
+		task ("View the tree page is shown on Home page") {
+			ContentPages.viewFragmentImage(
+				fragmentName = "image",
+				id = "image-square",
+				image = "tree.png");
+		}
+
+		task ("Change the locale to Portuguese") {
+			Navigator.openWithAppendToBaseURL(urlAppend = "pt/web/guest/home");
+		}
+
+		task ("View the inline text on Home page is in Portuguese") {
+			ContentPages.viewFragmentText(
+				fragmentName = "heading",
+				id = "element-text",
+				text = "Bem Vindo ao Liferay");
+		}
+
+		task ("View the tree page is shown on Home page") {
+			ContentPages.viewFragmentImage(
+				fragmentName = "image",
+				id = "image-square",
+				image = "tree.png");
+		}
+
+		task ("Change the locale to French") {
+			Navigator.openWithAppendToBaseURL(urlAppend = "fr/web/guest/home");
+		}
+
+		task ("View the inline text on Home page is in French") {
+			ContentPages.viewFragmentText(
+				fragmentName = "heading",
+				id = "element-text",
+				text = "Bienvenue à Liferay");
+		}
+
+		task ("View the tree page is shown on Home page") {
+			ContentPages.viewFragmentImage(
+				fragmentName = "image",
+				id = "image-square",
+				image = "tree.png");
+		}
+
+		task ("Change the locale to English") {
+			Navigator.openWithAppendToBaseURL(urlAppend = "en/web/guest/home");
 		}
 	}
 

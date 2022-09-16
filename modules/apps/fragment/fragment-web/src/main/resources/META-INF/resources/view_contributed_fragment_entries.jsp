@@ -20,23 +20,33 @@
 ContributedFragmentManagementToolbarDisplayContext contributedFragmentManagementToolbarDisplayContext = new ContributedFragmentManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, fragmentDisplayContext);
 %>
 
-<clay:management-toolbar-v2
-	displayContext="<%= contributedFragmentManagementToolbarDisplayContext %>"
+<clay:management-toolbar
+	additionalProps="<%= contributedFragmentManagementToolbarDisplayContext.getComponentContext() %>"
+	managementToolbarDisplayContext="<%= contributedFragmentManagementToolbarDisplayContext %>"
+	propsTransformer="js/ViewContributedFragmentEntriesManagementToolbarPropsTransformer"
 />
 
 <aui:form name="fm">
 	<liferay-ui:search-container
-		searchContainer="<%= fragmentDisplayContext.getContributedFragmentEntriesSearchContainer() %>"
+		searchContainer="<%= fragmentDisplayContext.getContributedEntriesSearchContainer() %>"
 	>
 		<liferay-ui:search-container-row
-			className="com.liferay.fragment.model.FragmentEntry"
-			keyProperty="fragmentEntryKey"
-			modelVar="fragmentEntry"
+			className="Object"
+			modelVar="object"
 		>
 			<liferay-ui:search-container-column-text>
-				<clay:vertical-card
-					verticalCard="<%= new ContributedFragmentEntryVerticalCard(fragmentEntry, renderRequest, renderResponse, searchContainer.getRowChecker()) %>"
-				/>
+				<c:choose>
+					<c:when test="<%= object instanceof FragmentComposition %>">
+						<clay:vertical-card
+							verticalCard="<%= new ContributedFragmentCompositionVerticalCard((FragmentComposition)object, renderRequest, renderResponse, searchContainer.getRowChecker()) %>"
+						/>
+					</c:when>
+					<c:otherwise>
+						<clay:vertical-card
+							verticalCard="<%= new ContributedFragmentEntryVerticalCard((FragmentEntry)object, renderRequest, renderResponse, searchContainer.getRowChecker()) %>"
+						/>
+					</c:otherwise>
+				</c:choose>
 			</liferay-ui:search-container-column-text>
 		</liferay-ui:search-container-row>
 
@@ -48,17 +58,11 @@ ContributedFragmentManagementToolbarDisplayContext contributedFragmentManagement
 </aui:form>
 
 <aui:form name="fragmentEntryFm">
-	<aui:input name="fragmentEntryKeys" type="hidden" />
+	<aui:input name="contributedEntryKeys" type="hidden" />
 	<aui:input name="fragmentCollectionId" type="hidden" />
 </aui:form>
 
 <liferay-frontend:component
 	componentId="<%= FragmentWebKeys.FRAGMENT_ENTRY_DROPDOWN_DEFAULT_EVENT_HANDLER %>"
 	module="js/FragmentEntryDropdownDefaultEventHandler.es"
-/>
-
-<liferay-frontend:component
-	componentId="<%= contributedFragmentManagementToolbarDisplayContext.getDefaultEventHandler() %>"
-	context="<%= contributedFragmentManagementToolbarDisplayContext.getComponentContext() %>"
-	module="js/ManagementToolbarDefaultEventHandler.es"
 />

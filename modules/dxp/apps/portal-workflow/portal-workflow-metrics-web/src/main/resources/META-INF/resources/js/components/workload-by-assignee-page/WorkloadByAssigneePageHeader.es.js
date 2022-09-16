@@ -9,7 +9,7 @@
  * distribution rights of the Software.
  */
 
-import ClayManagementToolbar from '@clayui/management-toolbar';
+import {ManagementToolbar} from 'frontend-js-components-web';
 import React from 'react';
 
 import filterConstants from '../../shared/components/filter/util/filterConstants.es';
@@ -18,18 +18,23 @@ import SearchField from '../../shared/components/search-field/SearchField.es';
 import ProcessStepFilter from '../filter/ProcessStepFilter.es';
 import RoleFilter from '../filter/RoleFilter.es';
 
-const Header = ({filterKeys, routeParams, selectedFilters, totalCount}) => {
-	const showFiltersResult = routeParams.search || selectedFilters.length > 0;
+export default function Header({
+	filterKeys,
+	routeParams,
+	selectedFilters,
+	totalCount,
+}) {
+	const showFiltersResult = routeParams.search || !!selectedFilters.length;
 
 	return (
 		<>
-			<ClayManagementToolbar className="mb-0">
-				<ClayManagementToolbar.ItemList>
-					<ClayManagementToolbar.Item>
+			<ManagementToolbar.Container className="mb-0">
+				<ManagementToolbar.ItemList>
+					<ManagementToolbar.Item>
 						<strong className="ml-0 mr-0 navbar-text">
 							{Liferay.Language.get('filter-by')}
 						</strong>
-					</ClayManagementToolbar.Item>
+					</ManagementToolbar.Item>
 
 					<RoleFilter
 						filterKey={filterConstants.roles.key}
@@ -40,7 +45,7 @@ const Header = ({filterKeys, routeParams, selectedFilters, totalCount}) => {
 						filterKey={filterConstants.processStep.key}
 						processId={routeParams.processId}
 					/>
-				</ClayManagementToolbar.ItemList>
+				</ManagementToolbar.ItemList>
 
 				<SearchField
 					disabled={false}
@@ -48,7 +53,7 @@ const Header = ({filterKeys, routeParams, selectedFilters, totalCount}) => {
 						'search-for-assignee-name'
 					)}
 				/>
-			</ClayManagementToolbar>
+			</ManagementToolbar.Container>
 
 			{showFiltersResult && (
 				<ResultsBar>
@@ -71,6 +76,4 @@ const Header = ({filterKeys, routeParams, selectedFilters, totalCount}) => {
 			)}
 		</>
 	);
-};
-
-export {Header};
+}

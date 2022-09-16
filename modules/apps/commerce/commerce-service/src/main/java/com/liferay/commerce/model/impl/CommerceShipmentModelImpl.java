@@ -16,9 +16,9 @@ package com.liferay.commerce.model.impl;
 
 import com.liferay.commerce.model.CommerceShipment;
 import com.liferay.commerce.model.CommerceShipmentModel;
-import com.liferay.commerce.model.CommerceShipmentSoap;
 import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.expando.kernel.util.ExpandoBridgeFactoryUtil;
+import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.bean.AutoEscapeBeanHandler;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -31,22 +31,23 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -73,21 +74,26 @@ public class CommerceShipmentModelImpl
 	public static final String TABLE_NAME = "CommerceShipment";
 
 	public static final Object[][] TABLE_COLUMNS = {
+		{"mvccVersion", Types.BIGINT}, {"uuid_", Types.VARCHAR},
+		{"externalReferenceCode", Types.VARCHAR},
 		{"commerceShipmentId", Types.BIGINT}, {"groupId", Types.BIGINT},
 		{"companyId", Types.BIGINT}, {"userId", Types.BIGINT},
 		{"userName", Types.VARCHAR}, {"createDate", Types.TIMESTAMP},
 		{"modifiedDate", Types.TIMESTAMP}, {"commerceAccountId", Types.BIGINT},
 		{"commerceAddressId", Types.BIGINT},
-		{"commerceShippingMethodId", Types.BIGINT},
-		{"shippingOptionName", Types.CLOB}, {"carrier", Types.VARCHAR},
-		{"trackingNumber", Types.VARCHAR}, {"shippingDate", Types.TIMESTAMP},
-		{"expectedDate", Types.TIMESTAMP}, {"status", Types.INTEGER}
+		{"commerceShippingMethodId", Types.BIGINT}, {"carrier", Types.VARCHAR},
+		{"expectedDate", Types.TIMESTAMP}, {"shippingDate", Types.TIMESTAMP},
+		{"shippingOptionName", Types.CLOB}, {"trackingNumber", Types.VARCHAR},
+		{"trackingURL", Types.VARCHAR}, {"status", Types.INTEGER}
 	};
 
 	public static final Map<String, Integer> TABLE_COLUMNS_MAP =
 		new HashMap<String, Integer>();
 
 	static {
+		TABLE_COLUMNS_MAP.put("mvccVersion", Types.BIGINT);
+		TABLE_COLUMNS_MAP.put("uuid_", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("externalReferenceCode", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("commerceShipmentId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("groupId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("companyId", Types.BIGINT);
@@ -98,16 +104,17 @@ public class CommerceShipmentModelImpl
 		TABLE_COLUMNS_MAP.put("commerceAccountId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("commerceAddressId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("commerceShippingMethodId", Types.BIGINT);
-		TABLE_COLUMNS_MAP.put("shippingOptionName", Types.CLOB);
 		TABLE_COLUMNS_MAP.put("carrier", Types.VARCHAR);
-		TABLE_COLUMNS_MAP.put("trackingNumber", Types.VARCHAR);
-		TABLE_COLUMNS_MAP.put("shippingDate", Types.TIMESTAMP);
 		TABLE_COLUMNS_MAP.put("expectedDate", Types.TIMESTAMP);
+		TABLE_COLUMNS_MAP.put("shippingDate", Types.TIMESTAMP);
+		TABLE_COLUMNS_MAP.put("shippingOptionName", Types.CLOB);
+		TABLE_COLUMNS_MAP.put("trackingNumber", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("trackingURL", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("status", Types.INTEGER);
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table CommerceShipment (commerceShipmentId LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,commerceAccountId LONG,commerceAddressId LONG,commerceShippingMethodId LONG,shippingOptionName TEXT null,carrier VARCHAR(75) null,trackingNumber VARCHAR(75) null,shippingDate DATE null,expectedDate DATE null,status INTEGER)";
+		"create table CommerceShipment (mvccVersion LONG default 0 not null,uuid_ VARCHAR(75) null,externalReferenceCode VARCHAR(75) null,commerceShipmentId LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,commerceAccountId LONG,commerceAddressId LONG,commerceShippingMethodId LONG,carrier VARCHAR(75) null,expectedDate DATE null,shippingDate DATE null,shippingOptionName TEXT null,trackingNumber VARCHAR(75) null,trackingURL STRING null,status INTEGER)";
 
 	public static final String TABLE_SQL_DROP = "drop table CommerceShipment";
 
@@ -142,90 +149,47 @@ public class CommerceShipmentModelImpl
 	public static final boolean COLUMN_BITMASK_ENABLED = true;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long COMMERCEADDRESSID_COLUMN_BITMASK = 1L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long GROUPID_COLUMN_BITMASK = 2L;
+	public static final long COMPANYID_COLUMN_BITMASK = 2L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long STATUS_COLUMN_BITMASK = 4L;
+	public static final long EXTERNALREFERENCECODE_COLUMN_BITMASK = 4L;
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
+	public static final long GROUPID_COLUMN_BITMASK = 8L;
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
+	public static final long STATUS_COLUMN_BITMASK = 16L;
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
+	public static final long UUID_COLUMN_BITMASK = 32L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *		#getColumnBitmask(String)
+	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long CREATEDATE_COLUMN_BITMASK = 8L;
-
-	/**
-	 * Converts the soap model instance into a normal model instance.
-	 *
-	 * @param soapModel the soap model instance to convert
-	 * @return the normal model instance
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static CommerceShipment toModel(CommerceShipmentSoap soapModel) {
-		if (soapModel == null) {
-			return null;
-		}
-
-		CommerceShipment model = new CommerceShipmentImpl();
-
-		model.setCommerceShipmentId(soapModel.getCommerceShipmentId());
-		model.setGroupId(soapModel.getGroupId());
-		model.setCompanyId(soapModel.getCompanyId());
-		model.setUserId(soapModel.getUserId());
-		model.setUserName(soapModel.getUserName());
-		model.setCreateDate(soapModel.getCreateDate());
-		model.setModifiedDate(soapModel.getModifiedDate());
-		model.setCommerceAccountId(soapModel.getCommerceAccountId());
-		model.setCommerceAddressId(soapModel.getCommerceAddressId());
-		model.setCommerceShippingMethodId(
-			soapModel.getCommerceShippingMethodId());
-		model.setShippingOptionName(soapModel.getShippingOptionName());
-		model.setCarrier(soapModel.getCarrier());
-		model.setTrackingNumber(soapModel.getTrackingNumber());
-		model.setShippingDate(soapModel.getShippingDate());
-		model.setExpectedDate(soapModel.getExpectedDate());
-		model.setStatus(soapModel.getStatus());
-
-		return model;
-	}
-
-	/**
-	 * Converts the soap model instances into normal model instances.
-	 *
-	 * @param soapModels the soap model instances to convert
-	 * @return the normal model instances
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static List<CommerceShipment> toModels(
-		CommerceShipmentSoap[] soapModels) {
-
-		if (soapModels == null) {
-			return null;
-		}
-
-		List<CommerceShipment> models = new ArrayList<CommerceShipment>(
-			soapModels.length);
-
-		for (CommerceShipmentSoap soapModel : soapModels) {
-			models.add(toModel(soapModel));
-		}
-
-		return models;
-	}
+	public static final long CREATEDATE_COLUMN_BITMASK = 64L;
 
 	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(
 		com.liferay.commerce.service.util.ServiceProps.get(
@@ -316,34 +280,6 @@ public class CommerceShipmentModelImpl
 		return _attributeSetterBiConsumers;
 	}
 
-	private static Function<InvocationHandler, CommerceShipment>
-		_getProxyProviderFunction() {
-
-		Class<?> proxyClass = ProxyUtil.getProxyClass(
-			CommerceShipment.class.getClassLoader(), CommerceShipment.class,
-			ModelWrapper.class);
-
-		try {
-			Constructor<CommerceShipment> constructor =
-				(Constructor<CommerceShipment>)proxyClass.getConstructor(
-					InvocationHandler.class);
-
-			return invocationHandler -> {
-				try {
-					return constructor.newInstance(invocationHandler);
-				}
-				catch (ReflectiveOperationException
-							reflectiveOperationException) {
-
-					throw new InternalError(reflectiveOperationException);
-				}
-			};
-		}
-		catch (NoSuchMethodException noSuchMethodException) {
-			throw new InternalError(noSuchMethodException);
-		}
-	}
-
 	private static final Map<String, Function<CommerceShipment, Object>>
 		_attributeGetterFunctions;
 	private static final Map<String, BiConsumer<CommerceShipment, Object>>
@@ -357,6 +293,23 @@ public class CommerceShipmentModelImpl
 			attributeSetterBiConsumers =
 				new LinkedHashMap<String, BiConsumer<CommerceShipment, ?>>();
 
+		attributeGetterFunctions.put(
+			"mvccVersion", CommerceShipment::getMvccVersion);
+		attributeSetterBiConsumers.put(
+			"mvccVersion",
+			(BiConsumer<CommerceShipment, Long>)
+				CommerceShipment::setMvccVersion);
+		attributeGetterFunctions.put("uuid", CommerceShipment::getUuid);
+		attributeSetterBiConsumers.put(
+			"uuid",
+			(BiConsumer<CommerceShipment, String>)CommerceShipment::setUuid);
+		attributeGetterFunctions.put(
+			"externalReferenceCode",
+			CommerceShipment::getExternalReferenceCode);
+		attributeSetterBiConsumers.put(
+			"externalReferenceCode",
+			(BiConsumer<CommerceShipment, String>)
+				CommerceShipment::setExternalReferenceCode);
 		attributeGetterFunctions.put(
 			"commerceShipmentId", CommerceShipment::getCommerceShipmentId);
 		attributeSetterBiConsumers.put(
@@ -412,22 +365,16 @@ public class CommerceShipmentModelImpl
 			"commerceShippingMethodId",
 			(BiConsumer<CommerceShipment, Long>)
 				CommerceShipment::setCommerceShippingMethodId);
-		attributeGetterFunctions.put(
-			"shippingOptionName", CommerceShipment::getShippingOptionName);
-		attributeSetterBiConsumers.put(
-			"shippingOptionName",
-			(BiConsumer<CommerceShipment, String>)
-				CommerceShipment::setShippingOptionName);
 		attributeGetterFunctions.put("carrier", CommerceShipment::getCarrier);
 		attributeSetterBiConsumers.put(
 			"carrier",
 			(BiConsumer<CommerceShipment, String>)CommerceShipment::setCarrier);
 		attributeGetterFunctions.put(
-			"trackingNumber", CommerceShipment::getTrackingNumber);
+			"expectedDate", CommerceShipment::getExpectedDate);
 		attributeSetterBiConsumers.put(
-			"trackingNumber",
-			(BiConsumer<CommerceShipment, String>)
-				CommerceShipment::setTrackingNumber);
+			"expectedDate",
+			(BiConsumer<CommerceShipment, Date>)
+				CommerceShipment::setExpectedDate);
 		attributeGetterFunctions.put(
 			"shippingDate", CommerceShipment::getShippingDate);
 		attributeSetterBiConsumers.put(
@@ -435,11 +382,23 @@ public class CommerceShipmentModelImpl
 			(BiConsumer<CommerceShipment, Date>)
 				CommerceShipment::setShippingDate);
 		attributeGetterFunctions.put(
-			"expectedDate", CommerceShipment::getExpectedDate);
+			"shippingOptionName", CommerceShipment::getShippingOptionName);
 		attributeSetterBiConsumers.put(
-			"expectedDate",
-			(BiConsumer<CommerceShipment, Date>)
-				CommerceShipment::setExpectedDate);
+			"shippingOptionName",
+			(BiConsumer<CommerceShipment, String>)
+				CommerceShipment::setShippingOptionName);
+		attributeGetterFunctions.put(
+			"trackingNumber", CommerceShipment::getTrackingNumber);
+		attributeSetterBiConsumers.put(
+			"trackingNumber",
+			(BiConsumer<CommerceShipment, String>)
+				CommerceShipment::setTrackingNumber);
+		attributeGetterFunctions.put(
+			"trackingURL", CommerceShipment::getTrackingURL);
+		attributeSetterBiConsumers.put(
+			"trackingURL",
+			(BiConsumer<CommerceShipment, String>)
+				CommerceShipment::setTrackingURL);
 		attributeGetterFunctions.put("status", CommerceShipment::getStatus);
 		attributeSetterBiConsumers.put(
 			"status",
@@ -449,6 +408,79 @@ public class CommerceShipmentModelImpl
 			attributeGetterFunctions);
 		_attributeSetterBiConsumers = Collections.unmodifiableMap(
 			(Map)attributeSetterBiConsumers);
+	}
+
+	@JSON
+	@Override
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_mvccVersion = mvccVersion;
+	}
+
+	@JSON
+	@Override
+	public String getUuid() {
+		if (_uuid == null) {
+			return "";
+		}
+		else {
+			return _uuid;
+		}
+	}
+
+	@Override
+	public void setUuid(String uuid) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_uuid = uuid;
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
+	public String getOriginalUuid() {
+		return getColumnOriginalValue("uuid_");
+	}
+
+	@JSON
+	@Override
+	public String getExternalReferenceCode() {
+		if (_externalReferenceCode == null) {
+			return "";
+		}
+		else {
+			return _externalReferenceCode;
+		}
+	}
+
+	@Override
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_externalReferenceCode = externalReferenceCode;
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
+	public String getOriginalExternalReferenceCode() {
+		return getColumnOriginalValue("externalReferenceCode");
 	}
 
 	@JSON
@@ -503,6 +535,16 @@ public class CommerceShipmentModelImpl
 		}
 
 		_companyId = companyId;
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
+	public long getOriginalCompanyId() {
+		return GetterUtil.getLong(
+			this.<Long>getColumnOriginalValue("companyId"));
 	}
 
 	@JSON
@@ -649,26 +691,6 @@ public class CommerceShipmentModelImpl
 
 	@JSON
 	@Override
-	public String getShippingOptionName() {
-		if (_shippingOptionName == null) {
-			return "";
-		}
-		else {
-			return _shippingOptionName;
-		}
-	}
-
-	@Override
-	public void setShippingOptionName(String shippingOptionName) {
-		if (_columnOriginalValues == Collections.EMPTY_MAP) {
-			_setColumnOriginalValues();
-		}
-
-		_shippingOptionName = shippingOptionName;
-	}
-
-	@JSON
-	@Override
 	public String getCarrier() {
 		if (_carrier == null) {
 			return "";
@@ -685,6 +707,56 @@ public class CommerceShipmentModelImpl
 		}
 
 		_carrier = carrier;
+	}
+
+	@JSON
+	@Override
+	public Date getExpectedDate() {
+		return _expectedDate;
+	}
+
+	@Override
+	public void setExpectedDate(Date expectedDate) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_expectedDate = expectedDate;
+	}
+
+	@JSON
+	@Override
+	public Date getShippingDate() {
+		return _shippingDate;
+	}
+
+	@Override
+	public void setShippingDate(Date shippingDate) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_shippingDate = shippingDate;
+	}
+
+	@JSON
+	@Override
+	public String getShippingOptionName() {
+		if (_shippingOptionName == null) {
+			return "";
+		}
+		else {
+			return _shippingOptionName;
+		}
+	}
+
+	@Override
+	public void setShippingOptionName(String shippingOptionName) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_shippingOptionName = shippingOptionName;
 	}
 
 	@JSON
@@ -709,32 +781,22 @@ public class CommerceShipmentModelImpl
 
 	@JSON
 	@Override
-	public Date getShippingDate() {
-		return _shippingDate;
+	public String getTrackingURL() {
+		if (_trackingURL == null) {
+			return "";
+		}
+		else {
+			return _trackingURL;
+		}
 	}
 
 	@Override
-	public void setShippingDate(Date shippingDate) {
+	public void setTrackingURL(String trackingURL) {
 		if (_columnOriginalValues == Collections.EMPTY_MAP) {
 			_setColumnOriginalValues();
 		}
 
-		_shippingDate = shippingDate;
-	}
-
-	@JSON
-	@Override
-	public Date getExpectedDate() {
-		return _expectedDate;
-	}
-
-	@Override
-	public void setExpectedDate(Date expectedDate) {
-		if (_columnOriginalValues == Collections.EMPTY_MAP) {
-			_setColumnOriginalValues();
-		}
-
-		_expectedDate = expectedDate;
+		_trackingURL = trackingURL;
 	}
 
 	@JSON
@@ -762,6 +824,12 @@ public class CommerceShipmentModelImpl
 			this.<Integer>getColumnOriginalValue("status"));
 	}
 
+	@Override
+	public StagedModelType getStagedModelType() {
+		return new StagedModelType(
+			PortalUtil.getClassNameId(CommerceShipment.class.getName()));
+	}
+
 	public long getColumnBitmask() {
 		if (_columnBitmask > 0) {
 			return _columnBitmask;
@@ -776,7 +844,9 @@ public class CommerceShipmentModelImpl
 		for (Map.Entry<String, Object> entry :
 				_columnOriginalValues.entrySet()) {
 
-			if (entry.getValue() != getColumnValue(entry.getKey())) {
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
 				_columnBitmask |= _columnBitmasks.get(entry.getKey());
 			}
 		}
@@ -816,6 +886,10 @@ public class CommerceShipmentModelImpl
 	public Object clone() {
 		CommerceShipmentImpl commerceShipmentImpl = new CommerceShipmentImpl();
 
+		commerceShipmentImpl.setMvccVersion(getMvccVersion());
+		commerceShipmentImpl.setUuid(getUuid());
+		commerceShipmentImpl.setExternalReferenceCode(
+			getExternalReferenceCode());
 		commerceShipmentImpl.setCommerceShipmentId(getCommerceShipmentId());
 		commerceShipmentImpl.setGroupId(getGroupId());
 		commerceShipmentImpl.setCompanyId(getCompanyId());
@@ -827,14 +901,63 @@ public class CommerceShipmentModelImpl
 		commerceShipmentImpl.setCommerceAddressId(getCommerceAddressId());
 		commerceShipmentImpl.setCommerceShippingMethodId(
 			getCommerceShippingMethodId());
-		commerceShipmentImpl.setShippingOptionName(getShippingOptionName());
 		commerceShipmentImpl.setCarrier(getCarrier());
-		commerceShipmentImpl.setTrackingNumber(getTrackingNumber());
-		commerceShipmentImpl.setShippingDate(getShippingDate());
 		commerceShipmentImpl.setExpectedDate(getExpectedDate());
+		commerceShipmentImpl.setShippingDate(getShippingDate());
+		commerceShipmentImpl.setShippingOptionName(getShippingOptionName());
+		commerceShipmentImpl.setTrackingNumber(getTrackingNumber());
+		commerceShipmentImpl.setTrackingURL(getTrackingURL());
 		commerceShipmentImpl.setStatus(getStatus());
 
 		commerceShipmentImpl.resetOriginalValues();
+
+		return commerceShipmentImpl;
+	}
+
+	@Override
+	public CommerceShipment cloneWithOriginalValues() {
+		CommerceShipmentImpl commerceShipmentImpl = new CommerceShipmentImpl();
+
+		commerceShipmentImpl.setMvccVersion(
+			this.<Long>getColumnOriginalValue("mvccVersion"));
+		commerceShipmentImpl.setUuid(
+			this.<String>getColumnOriginalValue("uuid_"));
+		commerceShipmentImpl.setExternalReferenceCode(
+			this.<String>getColumnOriginalValue("externalReferenceCode"));
+		commerceShipmentImpl.setCommerceShipmentId(
+			this.<Long>getColumnOriginalValue("commerceShipmentId"));
+		commerceShipmentImpl.setGroupId(
+			this.<Long>getColumnOriginalValue("groupId"));
+		commerceShipmentImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		commerceShipmentImpl.setUserId(
+			this.<Long>getColumnOriginalValue("userId"));
+		commerceShipmentImpl.setUserName(
+			this.<String>getColumnOriginalValue("userName"));
+		commerceShipmentImpl.setCreateDate(
+			this.<Date>getColumnOriginalValue("createDate"));
+		commerceShipmentImpl.setModifiedDate(
+			this.<Date>getColumnOriginalValue("modifiedDate"));
+		commerceShipmentImpl.setCommerceAccountId(
+			this.<Long>getColumnOriginalValue("commerceAccountId"));
+		commerceShipmentImpl.setCommerceAddressId(
+			this.<Long>getColumnOriginalValue("commerceAddressId"));
+		commerceShipmentImpl.setCommerceShippingMethodId(
+			this.<Long>getColumnOriginalValue("commerceShippingMethodId"));
+		commerceShipmentImpl.setCarrier(
+			this.<String>getColumnOriginalValue("carrier"));
+		commerceShipmentImpl.setExpectedDate(
+			this.<Date>getColumnOriginalValue("expectedDate"));
+		commerceShipmentImpl.setShippingDate(
+			this.<Date>getColumnOriginalValue("shippingDate"));
+		commerceShipmentImpl.setShippingOptionName(
+			this.<String>getColumnOriginalValue("shippingOptionName"));
+		commerceShipmentImpl.setTrackingNumber(
+			this.<String>getColumnOriginalValue("trackingNumber"));
+		commerceShipmentImpl.setTrackingURL(
+			this.<String>getColumnOriginalValue("trackingURL"));
+		commerceShipmentImpl.setStatus(
+			this.<Integer>getColumnOriginalValue("status"));
 
 		return commerceShipmentImpl;
 	}
@@ -914,6 +1037,28 @@ public class CommerceShipmentModelImpl
 		CommerceShipmentCacheModel commerceShipmentCacheModel =
 			new CommerceShipmentCacheModel();
 
+		commerceShipmentCacheModel.mvccVersion = getMvccVersion();
+
+		commerceShipmentCacheModel.uuid = getUuid();
+
+		String uuid = commerceShipmentCacheModel.uuid;
+
+		if ((uuid != null) && (uuid.length() == 0)) {
+			commerceShipmentCacheModel.uuid = null;
+		}
+
+		commerceShipmentCacheModel.externalReferenceCode =
+			getExternalReferenceCode();
+
+		String externalReferenceCode =
+			commerceShipmentCacheModel.externalReferenceCode;
+
+		if ((externalReferenceCode != null) &&
+			(externalReferenceCode.length() == 0)) {
+
+			commerceShipmentCacheModel.externalReferenceCode = null;
+		}
+
 		commerceShipmentCacheModel.commerceShipmentId = getCommerceShipmentId();
 
 		commerceShipmentCacheModel.groupId = getGroupId();
@@ -955,17 +1100,6 @@ public class CommerceShipmentModelImpl
 		commerceShipmentCacheModel.commerceShippingMethodId =
 			getCommerceShippingMethodId();
 
-		commerceShipmentCacheModel.shippingOptionName = getShippingOptionName();
-
-		String shippingOptionName =
-			commerceShipmentCacheModel.shippingOptionName;
-
-		if ((shippingOptionName != null) &&
-			(shippingOptionName.length() == 0)) {
-
-			commerceShipmentCacheModel.shippingOptionName = null;
-		}
-
 		commerceShipmentCacheModel.carrier = getCarrier();
 
 		String carrier = commerceShipmentCacheModel.carrier;
@@ -974,12 +1108,13 @@ public class CommerceShipmentModelImpl
 			commerceShipmentCacheModel.carrier = null;
 		}
 
-		commerceShipmentCacheModel.trackingNumber = getTrackingNumber();
+		Date expectedDate = getExpectedDate();
 
-		String trackingNumber = commerceShipmentCacheModel.trackingNumber;
-
-		if ((trackingNumber != null) && (trackingNumber.length() == 0)) {
-			commerceShipmentCacheModel.trackingNumber = null;
+		if (expectedDate != null) {
+			commerceShipmentCacheModel.expectedDate = expectedDate.getTime();
+		}
+		else {
+			commerceShipmentCacheModel.expectedDate = Long.MIN_VALUE;
 		}
 
 		Date shippingDate = getShippingDate();
@@ -991,13 +1126,31 @@ public class CommerceShipmentModelImpl
 			commerceShipmentCacheModel.shippingDate = Long.MIN_VALUE;
 		}
 
-		Date expectedDate = getExpectedDate();
+		commerceShipmentCacheModel.shippingOptionName = getShippingOptionName();
 
-		if (expectedDate != null) {
-			commerceShipmentCacheModel.expectedDate = expectedDate.getTime();
+		String shippingOptionName =
+			commerceShipmentCacheModel.shippingOptionName;
+
+		if ((shippingOptionName != null) &&
+			(shippingOptionName.length() == 0)) {
+
+			commerceShipmentCacheModel.shippingOptionName = null;
 		}
-		else {
-			commerceShipmentCacheModel.expectedDate = Long.MIN_VALUE;
+
+		commerceShipmentCacheModel.trackingNumber = getTrackingNumber();
+
+		String trackingNumber = commerceShipmentCacheModel.trackingNumber;
+
+		if ((trackingNumber != null) && (trackingNumber.length() == 0)) {
+			commerceShipmentCacheModel.trackingNumber = null;
+		}
+
+		commerceShipmentCacheModel.trackingURL = getTrackingURL();
+
+		String trackingURL = commerceShipmentCacheModel.trackingURL;
+
+		if ((trackingURL != null) && (trackingURL.length() == 0)) {
+			commerceShipmentCacheModel.trackingURL = null;
 		}
 
 		commerceShipmentCacheModel.status = getStatus();
@@ -1011,7 +1164,7 @@ public class CommerceShipmentModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			(4 * attributeGetterFunctions.size()) + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -1022,9 +1175,27 @@ public class CommerceShipmentModelImpl
 			Function<CommerceShipment, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((CommerceShipment)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply(
+				(CommerceShipment)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -1071,10 +1242,15 @@ public class CommerceShipmentModelImpl
 	private static class EscapedModelProxyProviderFunctionHolder {
 
 		private static final Function<InvocationHandler, CommerceShipment>
-			_escapedModelProxyProviderFunction = _getProxyProviderFunction();
+			_escapedModelProxyProviderFunction =
+				ProxyUtil.getProxyProviderFunction(
+					CommerceShipment.class, ModelWrapper.class);
 
 	}
 
+	private long _mvccVersion;
+	private String _uuid;
+	private String _externalReferenceCode;
 	private long _commerceShipmentId;
 	private long _groupId;
 	private long _companyId;
@@ -1086,14 +1262,17 @@ public class CommerceShipmentModelImpl
 	private long _commerceAccountId;
 	private long _commerceAddressId;
 	private long _commerceShippingMethodId;
-	private String _shippingOptionName;
 	private String _carrier;
-	private String _trackingNumber;
-	private Date _shippingDate;
 	private Date _expectedDate;
+	private Date _shippingDate;
+	private String _shippingOptionName;
+	private String _trackingNumber;
+	private String _trackingURL;
 	private int _status;
 
 	public <T> T getColumnValue(String columnName) {
+		columnName = _attributeNames.getOrDefault(columnName, columnName);
+
 		Function<CommerceShipment, Object> function =
 			_attributeGetterFunctions.get(columnName);
 
@@ -1120,6 +1299,10 @@ public class CommerceShipmentModelImpl
 	private void _setColumnOriginalValues() {
 		_columnOriginalValues = new HashMap<String, Object>();
 
+		_columnOriginalValues.put("mvccVersion", _mvccVersion);
+		_columnOriginalValues.put("uuid_", _uuid);
+		_columnOriginalValues.put(
+			"externalReferenceCode", _externalReferenceCode);
 		_columnOriginalValues.put("commerceShipmentId", _commerceShipmentId);
 		_columnOriginalValues.put("groupId", _groupId);
 		_columnOriginalValues.put("companyId", _companyId);
@@ -1131,12 +1314,23 @@ public class CommerceShipmentModelImpl
 		_columnOriginalValues.put("commerceAddressId", _commerceAddressId);
 		_columnOriginalValues.put(
 			"commerceShippingMethodId", _commerceShippingMethodId);
-		_columnOriginalValues.put("shippingOptionName", _shippingOptionName);
 		_columnOriginalValues.put("carrier", _carrier);
-		_columnOriginalValues.put("trackingNumber", _trackingNumber);
-		_columnOriginalValues.put("shippingDate", _shippingDate);
 		_columnOriginalValues.put("expectedDate", _expectedDate);
+		_columnOriginalValues.put("shippingDate", _shippingDate);
+		_columnOriginalValues.put("shippingOptionName", _shippingOptionName);
+		_columnOriginalValues.put("trackingNumber", _trackingNumber);
+		_columnOriginalValues.put("trackingURL", _trackingURL);
 		_columnOriginalValues.put("status", _status);
+	}
+
+	private static final Map<String, String> _attributeNames;
+
+	static {
+		Map<String, String> attributeNames = new HashMap<>();
+
+		attributeNames.put("uuid_", "uuid");
+
+		_attributeNames = Collections.unmodifiableMap(attributeNames);
 	}
 
 	private transient Map<String, Object> _columnOriginalValues;
@@ -1150,37 +1344,45 @@ public class CommerceShipmentModelImpl
 	static {
 		Map<String, Long> columnBitmasks = new HashMap<>();
 
-		columnBitmasks.put("commerceShipmentId", 1L);
+		columnBitmasks.put("mvccVersion", 1L);
 
-		columnBitmasks.put("groupId", 2L);
+		columnBitmasks.put("uuid_", 2L);
 
-		columnBitmasks.put("companyId", 4L);
+		columnBitmasks.put("externalReferenceCode", 4L);
 
-		columnBitmasks.put("userId", 8L);
+		columnBitmasks.put("commerceShipmentId", 8L);
 
-		columnBitmasks.put("userName", 16L);
+		columnBitmasks.put("groupId", 16L);
 
-		columnBitmasks.put("createDate", 32L);
+		columnBitmasks.put("companyId", 32L);
 
-		columnBitmasks.put("modifiedDate", 64L);
+		columnBitmasks.put("userId", 64L);
 
-		columnBitmasks.put("commerceAccountId", 128L);
+		columnBitmasks.put("userName", 128L);
 
-		columnBitmasks.put("commerceAddressId", 256L);
+		columnBitmasks.put("createDate", 256L);
 
-		columnBitmasks.put("commerceShippingMethodId", 512L);
+		columnBitmasks.put("modifiedDate", 512L);
 
-		columnBitmasks.put("shippingOptionName", 1024L);
+		columnBitmasks.put("commerceAccountId", 1024L);
 
-		columnBitmasks.put("carrier", 2048L);
+		columnBitmasks.put("commerceAddressId", 2048L);
 
-		columnBitmasks.put("trackingNumber", 4096L);
+		columnBitmasks.put("commerceShippingMethodId", 4096L);
 
-		columnBitmasks.put("shippingDate", 8192L);
+		columnBitmasks.put("carrier", 8192L);
 
 		columnBitmasks.put("expectedDate", 16384L);
 
-		columnBitmasks.put("status", 32768L);
+		columnBitmasks.put("shippingDate", 32768L);
+
+		columnBitmasks.put("shippingOptionName", 65536L);
+
+		columnBitmasks.put("trackingNumber", 131072L);
+
+		columnBitmasks.put("trackingURL", 262144L);
+
+		columnBitmasks.put("status", 524288L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}

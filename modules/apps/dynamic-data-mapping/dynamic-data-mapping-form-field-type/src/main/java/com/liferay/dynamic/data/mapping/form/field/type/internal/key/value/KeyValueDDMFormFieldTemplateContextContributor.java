@@ -21,7 +21,7 @@ import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.dynamic.data.mapping.model.Value;
 import com.liferay.dynamic.data.mapping.render.DDMFormFieldRenderingContext;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -33,6 +33,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Marcellus Tavares
@@ -60,25 +61,25 @@ public class KeyValueDDMFormFieldTemplateContextContributor
 			GetterUtil.getBoolean(ddmFormField.getProperty("autoFocus"))
 		).put(
 			"placeholder",
-			getValueString(
+			_getValueString(
 				(LocalizedValue)ddmFormField.getProperty("placeholder"), locale)
 		).put(
 			"strings",
 			HashMapBuilder.put(
 				"keyLabel",
-				LanguageUtil.get(
-					getDisplayLocale(
+				_language.get(
+					_getDisplayLocale(
 						ddmFormFieldRenderingContext.getHttpServletRequest()),
 					"field-name")
 			).build()
 		).put(
 			"tooltip",
-			getValueString(
+			_getValueString(
 				(LocalizedValue)ddmFormField.getProperty("tooltip"), locale)
 		).build();
 	}
 
-	protected Locale getDisplayLocale(HttpServletRequest httpServletRequest) {
+	private Locale _getDisplayLocale(HttpServletRequest httpServletRequest) {
 		ThemeDisplay themeDisplay =
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
@@ -86,12 +87,15 @@ public class KeyValueDDMFormFieldTemplateContextContributor
 		return themeDisplay.getLocale();
 	}
 
-	protected String getValueString(Value value, Locale locale) {
+	private String _getValueString(Value value, Locale locale) {
 		if (value != null) {
 			return value.getString(locale);
 		}
 
 		return StringPool.BLANK;
 	}
+
+	@Reference
+	private Language _language;
 
 }

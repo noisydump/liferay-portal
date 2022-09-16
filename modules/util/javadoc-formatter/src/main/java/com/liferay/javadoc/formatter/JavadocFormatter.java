@@ -21,12 +21,13 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.petra.xml.Dom4jUtil;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayOutputStream;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Tuple;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.tools.ArgumentsUtil;
-import com.liferay.portal.tools.JavaImportsFormatter;
 import com.liferay.portal.tools.ToolsUtil;
 import com.liferay.portal.xml.SAXReaderFactory;
 import com.liferay.util.xml.Dom4jDocUtil;
@@ -163,7 +164,7 @@ public class JavadocFormatter {
 		String[] excludes = {
 			"**/.git/**", "**/.gradle/**", "**/bin/**", "**/build/**",
 			"**/classes/**", "**/node_modules/**", "**/node_modules_cache/**",
-			"**/portal-client/**", "**/tmp/**"
+			"**/tmp/**"
 		};
 
 		for (String limit : limits) {
@@ -1082,8 +1083,6 @@ public class JavadocFormatter {
 			return;
 		}
 
-		_imports = JavaImportsFormatter.getImports(originalContent);
-
 		JavaClass javaClass = null;
 
 		try {
@@ -1091,6 +1090,10 @@ public class JavadocFormatter {
 				fileName, new UnsyncStringReader(originalContent));
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			if (!fileName.contains("__")) {
 				System.out.println(
 					"Qdox parsing error while formatting file " + fileName);
@@ -1338,6 +1341,10 @@ public class JavadocFormatter {
 					_deprecationSyncDirName);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			_deprecationsDocument = DocumentHelper.createDocument();
 		}
 
@@ -2348,6 +2355,9 @@ public class JavadocFormatter {
 		Files.write(file.toPath(), s.getBytes(StandardCharsets.UTF_8));
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		JavadocFormatter.class);
+
 	private static final Pattern _paragraphTagPattern = Pattern.compile(
 		"(^.*?(?=\n\n|$)+|(?<=<p>\n).*?(?=\n</p>))", Pattern.DOTALL);
 
@@ -2356,7 +2366,6 @@ public class JavadocFormatter {
 	private final String _deprecationSyncDirName;
 	private String _fullyQualifiedName;
 	private final boolean _generateXml;
-	private String _imports;
 	private final boolean _initializeMissingJavadocs;
 	private final String _inputDirName;
 	private final Map<String, Tuple> _javadocxXmlTuples = new HashMap<>();

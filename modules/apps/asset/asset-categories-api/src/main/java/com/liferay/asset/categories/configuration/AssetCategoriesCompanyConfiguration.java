@@ -18,6 +18,8 @@ import aQute.bnd.annotation.metatype.Meta;
 
 import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * @author Eudaldo Alonso
  */
@@ -26,15 +28,17 @@ import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClass
 )
 @Meta.OCD(
 	id = "com.liferay.asset.categories.configuration.AssetCategoriesCompanyConfiguration",
-	localization = "content/Language", name = "categorization"
+	localization = "content/Language",
+	name = "categorization-configuration-name"
 )
+@ProviderType
 public interface AssetCategoriesCompanyConfiguration {
 
 	@Meta.AD(
-		deflt = "https://learn.liferay.com/dxp/7.x/en/content-authoring-and-management/tags-and-categories/defining-categories-and-vocabularies-for-content.html",
-		description = "link-to-documentation-url-description",
-		name = "link-to-documentation-url", required = false
+		deflt = "150",
+		description = "maximum-number-of-categories-per-vocabulary-description",
+		name = "maximum-number-of-categories-per-vocabulary", required = false
 	)
-	public String linkToDocumentationURL();
+	public int maximumNumberOfCategoriesPerVocabulary();
 
 }

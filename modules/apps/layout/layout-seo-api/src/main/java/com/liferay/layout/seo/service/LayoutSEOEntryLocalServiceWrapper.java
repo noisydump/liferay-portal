@@ -14,7 +14,10 @@
 
 package com.liferay.layout.seo.service;
 
+import com.liferay.layout.seo.model.LayoutSEOEntry;
+import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.portal.kernel.service.ServiceWrapper;
+import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 
 /**
  * Provides a wrapper for {@link LayoutSEOEntryLocalService}.
@@ -26,6 +29,10 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
 public class LayoutSEOEntryLocalServiceWrapper
 	implements LayoutSEOEntryLocalService,
 			   ServiceWrapper<LayoutSEOEntryLocalService> {
+
+	public LayoutSEOEntryLocalServiceWrapper() {
+		this(null);
+	}
 
 	public LayoutSEOEntryLocalServiceWrapper(
 		LayoutSEOEntryLocalService layoutSEOEntryLocalService) {
@@ -44,10 +51,29 @@ public class LayoutSEOEntryLocalServiceWrapper
 	 * @return the layout seo entry that was added
 	 */
 	@Override
-	public com.liferay.layout.seo.model.LayoutSEOEntry addLayoutSEOEntry(
-		com.liferay.layout.seo.model.LayoutSEOEntry layoutSEOEntry) {
-
+	public LayoutSEOEntry addLayoutSEOEntry(LayoutSEOEntry layoutSEOEntry) {
 		return _layoutSEOEntryLocalService.addLayoutSEOEntry(layoutSEOEntry);
+	}
+
+	@Override
+	public LayoutSEOEntry copyLayoutSEOEntry(
+			long userId, long groupId, boolean privateLayout, long layoutId,
+			boolean canonicalURLEnabled,
+			java.util.Map<java.util.Locale, String> canonicalURLMap,
+			long copyDDMStorageId, boolean openGraphDescriptionEnabled,
+			java.util.Map<java.util.Locale, String> openGraphDescriptionMap,
+			java.util.Map<java.util.Locale, String> openGraphImageAltMap,
+			long openGraphImageFileEntryId, boolean openGraphTitleEnabled,
+			java.util.Map<java.util.Locale, String> openGraphTitleMap,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _layoutSEOEntryLocalService.copyLayoutSEOEntry(
+			userId, groupId, privateLayout, layoutId, canonicalURLEnabled,
+			canonicalURLMap, copyDDMStorageId, openGraphDescriptionEnabled,
+			openGraphDescriptionMap, openGraphImageAltMap,
+			openGraphImageFileEntryId, openGraphTitleEnabled, openGraphTitleMap,
+			serviceContext);
 	}
 
 	/**
@@ -57,9 +83,7 @@ public class LayoutSEOEntryLocalServiceWrapper
 	 * @return the new layout seo entry
 	 */
 	@Override
-	public com.liferay.layout.seo.model.LayoutSEOEntry createLayoutSEOEntry(
-		long layoutSEOEntryId) {
-
+	public LayoutSEOEntry createLayoutSEOEntry(long layoutSEOEntryId) {
 		return _layoutSEOEntryLocalService.createLayoutSEOEntry(
 			layoutSEOEntryId);
 	}
@@ -86,9 +110,7 @@ public class LayoutSEOEntryLocalServiceWrapper
 	 * @return the layout seo entry that was removed
 	 */
 	@Override
-	public com.liferay.layout.seo.model.LayoutSEOEntry deleteLayoutSEOEntry(
-		com.liferay.layout.seo.model.LayoutSEOEntry layoutSEOEntry) {
-
+	public LayoutSEOEntry deleteLayoutSEOEntry(LayoutSEOEntry layoutSEOEntry) {
 		return _layoutSEOEntryLocalService.deleteLayoutSEOEntry(layoutSEOEntry);
 	}
 
@@ -104,8 +126,7 @@ public class LayoutSEOEntryLocalServiceWrapper
 	 * @throws PortalException if a layout seo entry with the primary key could not be found
 	 */
 	@Override
-	public com.liferay.layout.seo.model.LayoutSEOEntry deleteLayoutSEOEntry(
-			long layoutSEOEntryId)
+	public LayoutSEOEntry deleteLayoutSEOEntry(long layoutSEOEntryId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _layoutSEOEntryLocalService.deleteLayoutSEOEntry(
@@ -142,6 +163,13 @@ public class LayoutSEOEntryLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _layoutSEOEntryLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _layoutSEOEntryLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -236,15 +264,13 @@ public class LayoutSEOEntryLocalServiceWrapper
 	}
 
 	@Override
-	public com.liferay.layout.seo.model.LayoutSEOEntry fetchLayoutSEOEntry(
-		long layoutSEOEntryId) {
-
+	public LayoutSEOEntry fetchLayoutSEOEntry(long layoutSEOEntryId) {
 		return _layoutSEOEntryLocalService.fetchLayoutSEOEntry(
 			layoutSEOEntryId);
 	}
 
 	@Override
-	public com.liferay.layout.seo.model.LayoutSEOEntry fetchLayoutSEOEntry(
+	public LayoutSEOEntry fetchLayoutSEOEntry(
 		long groupId, boolean privateLayout, long layoutId) {
 
 		return _layoutSEOEntryLocalService.fetchLayoutSEOEntry(
@@ -259,8 +285,8 @@ public class LayoutSEOEntryLocalServiceWrapper
 	 * @return the matching layout seo entry, or <code>null</code> if a matching layout seo entry could not be found
 	 */
 	@Override
-	public com.liferay.layout.seo.model.LayoutSEOEntry
-		fetchLayoutSEOEntryByUuidAndGroupId(String uuid, long groupId) {
+	public LayoutSEOEntry fetchLayoutSEOEntryByUuidAndGroupId(
+		String uuid, long groupId) {
 
 		return _layoutSEOEntryLocalService.fetchLayoutSEOEntryByUuidAndGroupId(
 			uuid, groupId);
@@ -302,8 +328,8 @@ public class LayoutSEOEntryLocalServiceWrapper
 	 * @return the range of layout seo entries
 	 */
 	@Override
-	public java.util.List<com.liferay.layout.seo.model.LayoutSEOEntry>
-		getLayoutSEOEntries(int start, int end) {
+	public java.util.List<LayoutSEOEntry> getLayoutSEOEntries(
+		int start, int end) {
 
 		return _layoutSEOEntryLocalService.getLayoutSEOEntries(start, end);
 	}
@@ -316,8 +342,8 @@ public class LayoutSEOEntryLocalServiceWrapper
 	 * @return the matching layout seo entries, or an empty list if no matches were found
 	 */
 	@Override
-	public java.util.List<com.liferay.layout.seo.model.LayoutSEOEntry>
-		getLayoutSEOEntriesByUuidAndCompanyId(String uuid, long companyId) {
+	public java.util.List<LayoutSEOEntry> getLayoutSEOEntriesByUuidAndCompanyId(
+		String uuid, long companyId) {
 
 		return _layoutSEOEntryLocalService.
 			getLayoutSEOEntriesByUuidAndCompanyId(uuid, companyId);
@@ -334,12 +360,10 @@ public class LayoutSEOEntryLocalServiceWrapper
 	 * @return the range of matching layout seo entries, or an empty list if no matches were found
 	 */
 	@Override
-	public java.util.List<com.liferay.layout.seo.model.LayoutSEOEntry>
-		getLayoutSEOEntriesByUuidAndCompanyId(
-			String uuid, long companyId, int start, int end,
-			com.liferay.portal.kernel.util.OrderByComparator
-				<com.liferay.layout.seo.model.LayoutSEOEntry>
-					orderByComparator) {
+	public java.util.List<LayoutSEOEntry> getLayoutSEOEntriesByUuidAndCompanyId(
+		String uuid, long companyId, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator<LayoutSEOEntry>
+			orderByComparator) {
 
 		return _layoutSEOEntryLocalService.
 			getLayoutSEOEntriesByUuidAndCompanyId(
@@ -364,8 +388,7 @@ public class LayoutSEOEntryLocalServiceWrapper
 	 * @throws PortalException if a layout seo entry with the primary key could not be found
 	 */
 	@Override
-	public com.liferay.layout.seo.model.LayoutSEOEntry getLayoutSEOEntry(
-			long layoutSEOEntryId)
+	public LayoutSEOEntry getLayoutSEOEntry(long layoutSEOEntryId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _layoutSEOEntryLocalService.getLayoutSEOEntry(layoutSEOEntryId);
@@ -380,8 +403,8 @@ public class LayoutSEOEntryLocalServiceWrapper
 	 * @throws PortalException if a matching layout seo entry could not be found
 	 */
 	@Override
-	public com.liferay.layout.seo.model.LayoutSEOEntry
-			getLayoutSEOEntryByUuidAndGroupId(String uuid, long groupId)
+	public LayoutSEOEntry getLayoutSEOEntryByUuidAndGroupId(
+			String uuid, long groupId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _layoutSEOEntryLocalService.getLayoutSEOEntryByUuidAndGroupId(
@@ -410,7 +433,7 @@ public class LayoutSEOEntryLocalServiceWrapper
 	}
 
 	@Override
-	public com.liferay.layout.seo.model.LayoutSEOEntry updateCustomMetaTags(
+	public LayoutSEOEntry updateCustomMetaTags(
 			long userId, long groupId, boolean privateLayout, long layoutId,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
@@ -430,14 +453,12 @@ public class LayoutSEOEntryLocalServiceWrapper
 	 * @return the layout seo entry that was updated
 	 */
 	@Override
-	public com.liferay.layout.seo.model.LayoutSEOEntry updateLayoutSEOEntry(
-		com.liferay.layout.seo.model.LayoutSEOEntry layoutSEOEntry) {
-
+	public LayoutSEOEntry updateLayoutSEOEntry(LayoutSEOEntry layoutSEOEntry) {
 		return _layoutSEOEntryLocalService.updateLayoutSEOEntry(layoutSEOEntry);
 	}
 
 	@Override
-	public com.liferay.layout.seo.model.LayoutSEOEntry updateLayoutSEOEntry(
+	public LayoutSEOEntry updateLayoutSEOEntry(
 			long userId, long groupId, boolean privateLayout, long layoutId,
 			boolean canonicalURLEnabled,
 			java.util.Map<java.util.Locale, String> canonicalURLMap,
@@ -458,7 +479,7 @@ public class LayoutSEOEntryLocalServiceWrapper
 	}
 
 	@Override
-	public com.liferay.layout.seo.model.LayoutSEOEntry updateLayoutSEOEntry(
+	public LayoutSEOEntry updateLayoutSEOEntry(
 			long userId, long groupId, boolean privateLayout, long layoutId,
 			boolean canonicalURLEnabled,
 			java.util.Map<java.util.Locale, String> canonicalURLMap,
@@ -468,6 +489,26 @@ public class LayoutSEOEntryLocalServiceWrapper
 		return _layoutSEOEntryLocalService.updateLayoutSEOEntry(
 			userId, groupId, privateLayout, layoutId, canonicalURLEnabled,
 			canonicalURLMap, serviceContext);
+	}
+
+	@Override
+	public CTPersistence<LayoutSEOEntry> getCTPersistence() {
+		return _layoutSEOEntryLocalService.getCTPersistence();
+	}
+
+	@Override
+	public Class<LayoutSEOEntry> getModelClass() {
+		return _layoutSEOEntryLocalService.getModelClass();
+	}
+
+	@Override
+	public <R, E extends Throwable> R updateWithUnsafeFunction(
+			UnsafeFunction<CTPersistence<LayoutSEOEntry>, R, E>
+				updateUnsafeFunction)
+		throws E {
+
+		return _layoutSEOEntryLocalService.updateWithUnsafeFunction(
+			updateUnsafeFunction);
 	}
 
 	@Override

@@ -15,6 +15,9 @@
 package com.liferay.portal.file.install.internal;
 
 import com.liferay.petra.reflect.ReflectionUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -50,7 +53,7 @@ public class Scanner {
 
 		_watchedDirs = _canononize(dirs);
 
-		if ((filterString != null) && (filterString.length() > 0)) {
+		if (!Validator.isBlank(filterString)) {
 			_filenameFilter = new FilenameFilter() {
 
 				@Override
@@ -113,6 +116,7 @@ public class Scanner {
 		crc32.update(name.getBytes());
 
 		if (file.isFile()) {
+			_checksum(file.canWrite() ? 1000L : -1000L, crc32);
 			_checksum(file.lastModified(), crc32);
 			_checksum(file.length(), crc32);
 		}
@@ -143,6 +147,10 @@ public class Scanner {
 				canonicalFiles.add(file.getCanonicalFile());
 			}
 			catch (IOException ioException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(ioException);
+				}
+
 				canonicalFiles.add(file);
 			}
 		}
@@ -252,6 +260,8 @@ public class Scanner {
 
 		return files;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(Scanner.class);
 
 	private final FilenameFilter _filenameFilter;
 	private final Map<File, Long> _lastChecksums = new HashMap<>();

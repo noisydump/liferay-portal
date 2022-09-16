@@ -19,6 +19,7 @@ import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.processor.FragmentEntryProcessor;
 import com.liferay.fragment.processor.FragmentEntryProcessorContext;
 import com.liferay.fragment.renderer.FragmentDropZoneRenderer;
+import com.liferay.layout.constants.LayoutWebKeys;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalService;
 import com.liferay.layout.util.structure.LayoutStructure;
@@ -28,9 +29,9 @@ import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONUtil;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -78,19 +79,31 @@ public class DropZoneFragmentEntryProcessor implements FragmentEntryProcessor {
 			return html;
 		}
 
-		LayoutPageTemplateStructure layoutPageTemplateStructure =
-			_layoutPageTemplateStructureLocalService.
-				fetchLayoutPageTemplateStructure(
-					fragmentEntryLink.getGroupId(),
-					fragmentEntryLink.getPlid());
+		HttpServletRequest httpServletRequest =
+			fragmentEntryProcessorContext.getHttpServletRequest();
 
-		if (layoutPageTemplateStructure == null) {
-			return html;
+		LayoutStructure layoutStructure = null;
+
+		if (httpServletRequest != null) {
+			layoutStructure = (LayoutStructure)httpServletRequest.getAttribute(
+				LayoutWebKeys.LAYOUT_STRUCTURE);
 		}
 
-		LayoutStructure layoutStructure = LayoutStructure.of(
-			layoutPageTemplateStructure.getData(
-				fragmentEntryLink.getSegmentsExperienceId()));
+		if (layoutStructure == null) {
+			LayoutPageTemplateStructure layoutPageTemplateStructure =
+				_layoutPageTemplateStructureLocalService.
+					fetchLayoutPageTemplateStructure(
+						fragmentEntryLink.getGroupId(),
+						fragmentEntryLink.getPlid());
+
+			if (layoutPageTemplateStructure == null) {
+				return html;
+			}
+
+			layoutStructure = LayoutStructure.of(
+				layoutPageTemplateStructure.getData(
+					fragmentEntryLink.getSegmentsExperienceId()));
+		}
 
 		LayoutStructureItem layoutStructureItem =
 			layoutStructure.getLayoutStructureItemByFragmentEntryLinkId(
@@ -119,18 +132,14 @@ public class DropZoneFragmentEntryProcessor implements FragmentEntryProcessor {
 			return bodyElement.html();
 		}
 
-		Optional<Map<String, Object>> fieldValuesOptional =
-			fragmentEntryProcessorContext.getFieldValuesOptional();
-
 		for (int i = 0; i < elements.size(); i++) {
 			Element element = elements.get(i);
 
 			String dropZoneHTML = _fragmentDropZoneRenderer.renderDropZone(
 				fragmentEntryProcessorContext.getHttpServletRequest(),
 				fragmentEntryProcessorContext.getHttpServletResponse(),
-				fieldValuesOptional.orElse(null),
-				fragmentEntryLink.getGroupId(), 0, dropZoneItemIds.get(i),
-				fragmentEntryProcessorContext.getMode(), true);
+				dropZoneItemIds.get(i), fragmentEntryProcessorContext.getMode(),
+				true);
 
 			Element dropZoneElement = new Element("div");
 

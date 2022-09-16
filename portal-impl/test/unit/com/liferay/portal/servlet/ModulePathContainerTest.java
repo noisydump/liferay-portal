@@ -15,15 +15,14 @@
 package com.liferay.portal.servlet;
 
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.util.Http;
-import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.portal.tools.ToolDependencies;
-import com.liferay.portal.util.HttpImpl;
 
-import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -32,18 +31,14 @@ import org.junit.Test;
  */
 public class ModulePathContainerTest {
 
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
 	@BeforeClass
 	public static void setUpClass() throws Exception {
 		ToolDependencies.wireCaches();
-
-		_http = HttpUtil.getHttp();
-
-		_httpUtil.setHttp(new HttpImpl());
-	}
-
-	@AfterClass
-	public static void tearDownClass() {
-		_httpUtil.setHttp(_http);
 	}
 
 	@Test
@@ -75,8 +70,5 @@ public class ModulePathContainerTest {
 		Assert.assertEquals(
 			StringPool.BLANK, ComboServlet.getResourcePath(modulePath));
 	}
-
-	private static Http _http;
-	private static final HttpUtil _httpUtil = new HttpUtil();
 
 }

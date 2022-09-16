@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
@@ -48,12 +49,16 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Generated("")
 @GraphQLName("DiscountChannel")
 @JsonFilter("Liferay.Vulcan")
-@Schema(requiredProperties = {"channelId", "discountId"})
+@Schema(requiredProperties = {"channelId"})
 @XmlRootElement(name = "DiscountChannel")
 public class DiscountChannel implements Serializable {
 
 	public static DiscountChannel toDTO(String json) {
 		return ObjectMapperUtil.readValue(DiscountChannel.class, json);
+	}
+
+	public static DiscountChannel unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(DiscountChannel.class, json);
 	}
 
 	@Schema
@@ -115,7 +120,7 @@ public class DiscountChannel implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Channel channel;
 
-	@Schema
+	@Schema(example = "PAB-34098-789-N")
 	public String getChannelExternalReferenceCode() {
 		return channelExternalReferenceCode;
 	}
@@ -148,7 +153,7 @@ public class DiscountChannel implements Serializable {
 	protected String channelExternalReferenceCode;
 
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "30130")
 	public Long getChannelId() {
 		return channelId;
 	}
@@ -178,7 +183,7 @@ public class DiscountChannel implements Serializable {
 	protected Long channelId;
 
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "30643")
 	public Long getDiscountChannelId() {
 		return discountChannelId;
 	}
@@ -206,7 +211,7 @@ public class DiscountChannel implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Long discountChannelId;
 
-	@Schema
+	@Schema(example = "DAB-34098-789-N")
 	public String getDiscountExternalReferenceCode() {
 		return discountExternalReferenceCode;
 	}
@@ -239,7 +244,7 @@ public class DiscountChannel implements Serializable {
 	protected String discountExternalReferenceCode;
 
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "30324")
 	public Long getDiscountId() {
 		return discountId;
 	}
@@ -264,8 +269,7 @@ public class DiscountChannel implements Serializable {
 	}
 
 	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	@NotNull
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Long discountId;
 
 	@Override
@@ -379,15 +383,16 @@ public class DiscountChannel implements Serializable {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.commerce.admin.pricing.dto.v2_0.DiscountChannel",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
 	}
 
 	private static boolean _isArray(Object value) {
@@ -413,8 +418,8 @@ public class DiscountChannel implements Serializable {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -445,7 +450,7 @@ public class DiscountChannel implements Serializable {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -453,7 +458,7 @@ public class DiscountChannel implements Serializable {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -461,5 +466,10 @@ public class DiscountChannel implements Serializable {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

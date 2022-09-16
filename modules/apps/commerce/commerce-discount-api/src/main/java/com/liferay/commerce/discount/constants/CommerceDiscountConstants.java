@@ -76,6 +76,8 @@ public class CommerceDiscountConstants {
 
 	public static final String TARGET_SHIPPING = "shipping";
 
+	public static final String TARGET_SKUS = "skus";
+
 	public static final String TARGET_SUBTOTAL = "subtotal";
 
 	public static final String TARGET_TOTAL = "total";
@@ -97,5 +99,7 @@ public class CommerceDiscountConstants {
 
 	public static final String VALIDATOR_TYPE_PRE_QUALIFICATION =
 		"pre-qualification";
+
+	public static final String VALIDATOR_TYPE_TARGET = "target";
 
 }

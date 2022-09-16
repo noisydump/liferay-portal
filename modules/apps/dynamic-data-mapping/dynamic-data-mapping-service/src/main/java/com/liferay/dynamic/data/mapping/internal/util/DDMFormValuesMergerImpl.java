@@ -15,22 +15,14 @@
 package com.liferay.dynamic.data.mapping.internal.util;
 
 import com.liferay.dynamic.data.mapping.model.DDMForm;
-import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.Value;
 import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.dynamic.data.mapping.util.DDMFormValuesMerger;
-import com.liferay.portal.kernel.util.GetterUtil;
-
-import java.text.DecimalFormat;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 
@@ -42,7 +34,8 @@ public class DDMFormValuesMergerImpl implements DDMFormValuesMerger {
 
 	@Override
 	public DDMFormValues merge(
-		DDMFormValues newDDMFormValues, DDMFormValues existingDDMFormValues) {
+		DDMForm ddmForm, DDMFormValues newDDMFormValues,
+		DDMFormValues existingDDMFormValues) {
 
 		List<DDMFormFieldValue> newDDMFormFieldValues = new ArrayList<>(
 			newDDMFormValues.getDDMFormFieldValues());
@@ -55,8 +48,8 @@ public class DDMFormValuesMergerImpl implements DDMFormValuesMerger {
 		}
 
 		List<DDMFormFieldValue> mergedDDMFormFieldValues =
-			mergeDDMFormFieldValues(
-				newDDMFormFieldValues,
+			_mergeDDMFormFieldValues(
+				ddmForm, newDDMFormFieldValues,
 				existingDDMFormValues.getDDMFormFieldValues());
 
 		existingDDMFormValues.setDDMFormFieldValues(mergedDDMFormFieldValues);
@@ -64,7 +57,14 @@ public class DDMFormValuesMergerImpl implements DDMFormValuesMerger {
 		return existingDDMFormValues;
 	}
 
-	protected DDMFormFieldValue getDDMFormFieldValueByName(
+	@Override
+	public DDMFormValues merge(
+		DDMFormValues newDDMFormValues, DDMFormValues existingDDMFormValues) {
+
+		return merge(null, newDDMFormValues, existingDDMFormValues);
+	}
+
+	private DDMFormFieldValue _getDDMFormFieldValueByName(
 		List<DDMFormFieldValue> ddmFormFieldValues, String name) {
 
 		for (DDMFormFieldValue ddmFormFieldValue : ddmFormFieldValues) {
@@ -76,8 +76,8 @@ public class DDMFormValuesMergerImpl implements DDMFormValuesMerger {
 		return null;
 	}
 
-	protected List<DDMFormFieldValue> mergeDDMFormFieldValues(
-		List<DDMFormFieldValue> newDDMFormFieldValues,
+	private List<DDMFormFieldValue> _mergeDDMFormFieldValues(
+		DDMForm ddmForm, List<DDMFormFieldValue> newDDMFormFieldValues,
 		List<DDMFormFieldValue> existingDDMFormFieldValues) {
 
 		List<DDMFormFieldValue> mergedDDMFormFieldValues = new ArrayList<>(
@@ -88,36 +88,21 @@ public class DDMFormValuesMergerImpl implements DDMFormValuesMerger {
 				newDDMFormFieldValue.getDDMFormValues();
 
 			DDMFormFieldValue actualDDMFormFieldValue =
-				getDDMFormFieldValueByName(
+				_getDDMFormFieldValueByName(
 					existingDDMFormFieldValues, newDDMFormFieldValue.getName());
 
 			if (actualDDMFormFieldValue != null) {
-				DDMForm ddmForm = ddmFormValues.getDDMForm();
+				if (ddmForm == null) {
+					ddmForm = ddmFormValues.getDDMForm();
+				}
 
-				Map<String, DDMFormField> ddmFormFieldsMap =
-					ddmForm.getDDMFormFieldsMap(true);
-
-				Collection<DDMFormField> ddmFormFields =
-					ddmFormFieldsMap.values();
-
-				Stream<DDMFormField> stream = ddmFormFields.stream();
-
-				DDMFormField ddmFormField = stream.filter(
-					p -> p.getName(
-					).equals(
-						newDDMFormFieldValue.getName()
-					)
-				).findFirst(
-				).orElseGet(
-					() -> null
-				);
-
-				mergeValue(
+				_mergeValue(
 					newDDMFormFieldValue.getValue(),
-					actualDDMFormFieldValue.getValue(), ddmFormField);
+					actualDDMFormFieldValue.getValue());
 
 				List<DDMFormFieldValue> mergedNestedDDMFormFieldValues =
-					mergeDDMFormFieldValues(
+					_mergeDDMFormFieldValues(
+						null,
 						newDDMFormFieldValue.getNestedDDMFormFieldValues(),
 						actualDDMFormFieldValue.getNestedDDMFormFieldValues());
 
@@ -134,9 +119,7 @@ public class DDMFormValuesMergerImpl implements DDMFormValuesMerger {
 		return mergedDDMFormFieldValues;
 	}
 
-	protected void mergeValue(
-		Value newValue, Value existingValue, DDMFormField ddmFormField) {
-
+	private void _mergeValue(Value newValue, Value existingValue) {
 		if ((newValue == null) || (existingValue == null)) {
 			return;
 		}
@@ -144,41 +127,10 @@ public class DDMFormValuesMergerImpl implements DDMFormValuesMerger {
 		for (Locale locale : existingValue.getAvailableLocales()) {
 			String value = newValue.getString(locale);
 
-			String dataType = ddmFormField.getDataType();
-
-			if (dataType.equals("double")) {
-				DecimalFormat numberFormat = _getDecimalFormat(locale);
-
-				newValue.addString(
-					locale,
-					numberFormat.format(
-						GetterUtil.getDouble(
-							value, newValue.getDefaultLocale())));
-			}
-
 			if (value == null) {
 				newValue.addString(locale, existingValue.getString(locale));
 			}
 		}
 	}
-
-	private DecimalFormat _getDecimalFormat(Locale locale) {
-		DecimalFormat formatter = _decimalFormattersMap.get(locale);
-
-		if (formatter == null) {
-			formatter = (DecimalFormat)DecimalFormat.getInstance(locale);
-
-			formatter.setGroupingUsed(false);
-			formatter.setMaximumFractionDigits(Integer.MAX_VALUE);
-			formatter.setParseBigDecimal(true);
-
-			_decimalFormattersMap.put(locale, formatter);
-		}
-
-		return formatter;
-	}
-
-	private static final Map<Locale, DecimalFormat> _decimalFormattersMap =
-		new ConcurrentHashMap<>();
 
 }

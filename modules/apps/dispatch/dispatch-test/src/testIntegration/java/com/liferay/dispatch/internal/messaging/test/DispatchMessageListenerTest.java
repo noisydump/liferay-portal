@@ -18,14 +18,17 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.dispatch.constants.DispatchConstants;
 import com.liferay.dispatch.executor.DispatchTaskClusterMode;
 import com.liferay.dispatch.executor.DispatchTaskStatus;
+import com.liferay.dispatch.internal.messaging.TestDispatchTaskExecutor;
 import com.liferay.dispatch.model.DispatchLog;
 import com.liferay.dispatch.model.DispatchTrigger;
 import com.liferay.dispatch.service.DispatchLogLocalService;
 import com.liferay.dispatch.service.DispatchTriggerLocalService;
+import com.liferay.petra.concurrent.NoticeableExecutorService;
+import com.liferay.petra.executor.PortalExecutorManager;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.messaging.Destination;
 import com.liferay.portal.kernel.messaging.Message;
+import com.liferay.portal.kernel.messaging.MessageListener;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.test.rule.DataGuard;
@@ -41,6 +44,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -70,11 +74,36 @@ public class DispatchMessageListenerTest {
 	}
 
 	@Test
+	public void testDoReceiveMissingDispatchTaskExecutor() throws Exception {
+		int executeCount = RandomTestUtil.randomInt(1, 3);
+
+		DispatchTrigger dispatchTrigger = _executeDispatchTrigger(
+			executeCount, 1000, RandomTestUtil.randomBoolean(), "missingType");
+
+		List<DispatchLog> dispatchLogs =
+			_dispatchLogLocalService.getDispatchLogs(
+				dispatchTrigger.getDispatchTriggerId(), QueryUtil.ALL_POS,
+				QueryUtil.ALL_POS);
+
+		Assert.assertTrue(
+			String.format(
+				"Expected no more than %d dispatch logs", executeCount),
+			dispatchLogs.size() <= executeCount);
+
+		for (DispatchLog dispatchLog : dispatchLogs) {
+			Assert.assertEquals(
+				DispatchTaskStatus.CANCELED.getStatus(),
+				dispatchLog.getStatus());
+		}
+	}
+
+	@Test
 	public void testDoReceiveOverlapAllowed() throws Exception {
 		int executeCount = RandomTestUtil.randomInt(4, 10);
 
 		DispatchTrigger dispatchTrigger = _executeDispatchTrigger(
-			executeCount, 1000, true);
+			executeCount, 1000, true,
+			TestDispatchTaskExecutor.DISPATCH_TASK_EXECUTOR_TYPE_TEST);
 
 		_assertExecutionSequence(
 			_dispatchLogLocalService.getDispatchLogs(
@@ -88,14 +117,14 @@ public class DispatchMessageListenerTest {
 		int executeCount = RandomTestUtil.randomInt(4, 10);
 
 		DispatchTrigger dispatchTrigger = _executeDispatchTrigger(
-			executeCount, 750, false);
+			executeCount, 750, false,
+			TestDispatchTaskExecutor.DISPATCH_TASK_EXECUTOR_TYPE_TEST);
 
-		List<DispatchLog> dispatchLogs =
+		_assertExecutionSequence(
 			_dispatchLogLocalService.getDispatchLogs(
 				dispatchTrigger.getDispatchTriggerId(), QueryUtil.ALL_POS,
-				QueryUtil.ALL_POS);
-
-		_assertExecutionSequence(dispatchLogs, executeCount, false);
+				QueryUtil.ALL_POS),
+			executeCount, false);
 	}
 
 	private void _assertExecutionSequence(
@@ -121,8 +150,9 @@ public class DispatchMessageListenerTest {
 			Collectors.toList()
 		);
 
-		Assert.assertFalse(
-			"Expected at least one dispatch log", sortedDispatchLogs.isEmpty());
+		if (sortedDispatchLogs.isEmpty()) {
+			return;
+		}
 
 		Assert.assertTrue(
 			String.format(
@@ -142,12 +172,16 @@ public class DispatchMessageListenerTest {
 
 			if (overlapAllowed) {
 				Assert.assertTrue(
-					"Dispatch log execution order", difference > 0);
+					String.format(
+						"Dispatch log end at %s before next start at %s",
+						currentDispatchLog.getEndDate(),
+						nextDispatchLog.getStartDate()),
+					difference > 0);
 			}
 			else {
 				Assert.assertTrue(
 					String.format(
-						"Dispatch log end at %s before next start at %s in %s",
+						"Dispatch log end at %s after next start at %s in %s",
 						currentDispatchLog.getEndDate(),
 						nextDispatchLog.getStartDate(),
 						sortedDispatchLogs.toString()),
@@ -165,18 +199,32 @@ public class DispatchMessageListenerTest {
 
 		Message message = _getMessage(dispatchTriggerId);
 
-		while (executeCount-- > 0) {
-			_destination.send(message);
+		NoticeableExecutorService noticeableExecutorService =
+			_portalExecutorManager.getPortalExecutor(
+				DispatchMessageListenerTest.class.getName());
 
-			if (executeCount > 0) {
-				Thread.sleep(scheduledExecutionIntervalMillis);
-			}
+		while (executeCount-- > 0) {
+			noticeableExecutorService.submit(
+				() -> {
+					_messageListener.receive(message);
+
+					return null;
+				});
+
+			Thread.sleep(scheduledExecutionIntervalMillis);
 		}
+
+		noticeableExecutorService.shutdown();
+
+		Assert.assertTrue(
+			noticeableExecutorService.awaitTermination(
+				TestDispatchTaskExecutor.SLEEP_MILLIS * 10,
+				TimeUnit.MILLISECONDS));
 	}
 
 	private DispatchTrigger _executeDispatchTrigger(
 			int executeCount, long scheduledExecutionIntervalMillis,
-			boolean overlapAllowed)
+			boolean overlapAllowed, String type)
 		throws Exception {
 
 		Company company = CompanyTestUtil.addCompany();
@@ -185,20 +233,19 @@ public class DispatchMessageListenerTest {
 
 		DispatchTrigger dispatchTrigger =
 			_dispatchTriggerLocalService.addDispatchTrigger(
-				user.getUserId(),
-				TestDispatchTaskExecutor.DISPATCH_TASK_EXECUTOR_TYPE_TEST, null,
+				null, user.getUserId(), type, null,
 				RandomTestUtil.randomString(), RandomTestUtil.randomBoolean());
 
-		Date now = new Date();
+		Date date = new Date();
 
-		Calendar calendar = CalendarFactoryUtil.getCalendar(now.getTime());
+		Calendar calendar = CalendarFactoryUtil.getCalendar(date.getTime());
 
 		dispatchTrigger = _dispatchTriggerLocalService.updateDispatchTrigger(
 			dispatchTrigger.getDispatchTriggerId(), false, _CRON_EXPRESSION,
 			DispatchTaskClusterMode.NOT_APPLICABLE, 0, 0, 0, 0, 0, true,
 			overlapAllowed, calendar.get(Calendar.MONTH),
 			calendar.get(Calendar.DATE), calendar.get(Calendar.YEAR),
-			calendar.get(Calendar.HOUR), calendar.get(Calendar.MINUTE));
+			calendar.get(Calendar.HOUR), calendar.get(Calendar.MINUTE), "UTC");
 
 		_execute(
 			dispatchTrigger.getDispatchTriggerId(), executeCount,
@@ -211,23 +258,27 @@ public class DispatchMessageListenerTest {
 		Message message = new Message();
 
 		message.setPayload(
-			String.valueOf(
-				JSONUtil.put("dispatchTriggerId", dispatchTriggerId)));
+			JSONUtil.put(
+				"dispatchTriggerId", dispatchTriggerId
+			).toString());
 
 		return message;
 	}
 
 	private static final String _CRON_EXPRESSION = "0/1 * * * * ?";
 
-	@Inject(
-		filter = "destination.name=" + DispatchConstants.EXECUTOR_DESTINATION_NAME
-	)
-	private Destination _destination;
-
 	@Inject
 	private DispatchLogLocalService _dispatchLogLocalService;
 
 	@Inject
 	private DispatchTriggerLocalService _dispatchTriggerLocalService;
+
+	@Inject(
+		filter = "destination.name=" + DispatchConstants.EXECUTOR_DESTINATION_NAME
+	)
+	private MessageListener _messageListener;
+
+	@Inject
+	private PortalExecutorManager _portalExecutorManager;
 
 }

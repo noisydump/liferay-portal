@@ -18,6 +18,9 @@ import com.liferay.asset.kernel.model.BaseJSPAssetRenderer;
 import com.liferay.microblogs.constants.MicroblogsPortletKeys;
 import com.liferay.microblogs.model.MicroblogsEntry;
 import com.liferay.microblogs.web.internal.util.WebKeys;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
@@ -34,7 +37,6 @@ import java.util.Locale;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
-import javax.portlet.PortletURL;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -79,6 +81,9 @@ public class MicroblogsEntryAssetRenderer
 			return group.getGroupId();
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return 0;
@@ -121,24 +126,29 @@ public class MicroblogsEntryAssetRenderer
 			long portletPlid = PortalUtil.getPlidFromPortletId(
 				user.getGroupId(), MicroblogsPortletKeys.MICROBLOGS);
 
-			PortletURL portletURL = PortletURLFactoryUtil.create(
-				liferayPortletRequest, MicroblogsPortletKeys.MICROBLOGS,
-				portletPlid, PortletRequest.RENDER_PHASE);
+			return PortletURLBuilder.create(
+				PortletURLFactoryUtil.create(
+					liferayPortletRequest, MicroblogsPortletKeys.MICROBLOGS,
+					portletPlid, PortletRequest.RENDER_PHASE)
+			).setMVCPath(
+				"/microblogs/view.jsp"
+			).setParameter(
+				"parentMicroblogsEntryId",
+				() -> {
+					long microblogsEntryId = _entry.getMicroblogsEntryId();
 
-			portletURL.setParameter("mvcPath", "/microblogs/view.jsp");
+					if (_entry.getParentMicroblogsEntryId() > 0) {
+						microblogsEntryId = _entry.getParentMicroblogsEntryId();
+					}
 
-			long microblogsEntryId = _entry.getMicroblogsEntryId();
-
-			if (_entry.getParentMicroblogsEntryId() > 0) {
-				microblogsEntryId = _entry.getParentMicroblogsEntryId();
-			}
-
-			portletURL.setParameter(
-				"parentMicroblogsEntryId", String.valueOf(microblogsEntryId));
-
-			return portletURL.toString();
+					return microblogsEntryId;
+				}
+			).buildString();
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return null;
@@ -166,6 +176,9 @@ public class MicroblogsEntryAssetRenderer
 				permissionChecker, _entry, ActionKeys.VIEW);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return false;
@@ -181,6 +194,9 @@ public class MicroblogsEntryAssetRenderer
 
 		return super.include(httpServletRequest, httpServletResponse, template);
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		MicroblogsEntryAssetRenderer.class);
 
 	private final MicroblogsEntry _entry;
 	private final ModelResourcePermission<MicroblogsEntry>

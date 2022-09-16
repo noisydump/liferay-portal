@@ -14,9 +14,13 @@
 
 package com.liferay.portal.search.tuning.rankings.web.internal.index.name;
 
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.search.index.IndexNameBuilder;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -24,20 +28,26 @@ import org.junit.Test;
  */
 public class RankingIndexNameBuilderImplTest {
 
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
 	@Test
 	public void testMultiTenancy() {
-		assertIndexName(
+		_assertIndexName(
 			2021, companyId -> "liferay-" + companyId,
 			"liferay-2021-search-tuning-rankings");
 	}
 
-	protected void assertIndexName(
+	private void _assertIndexName(
 		long companyId, IndexNameBuilder indexNameBuilder, String expected) {
 
 		RankingIndexNameBuilderImpl rankingIndexNameBuilderImpl =
 			new RankingIndexNameBuilderImpl();
 
-		rankingIndexNameBuilderImpl.setIndexNameBuilder(indexNameBuilder);
+		ReflectionTestUtil.setFieldValue(
+			rankingIndexNameBuilderImpl, "_indexNameBuilder", indexNameBuilder);
 
 		RankingIndexName rankingIndexName =
 			rankingIndexNameBuilderImpl.getRankingIndexName(companyId);

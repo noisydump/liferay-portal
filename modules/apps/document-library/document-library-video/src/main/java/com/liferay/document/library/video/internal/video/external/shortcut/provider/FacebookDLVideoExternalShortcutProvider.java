@@ -18,6 +18,8 @@ import com.liferay.document.library.video.external.shortcut.DLVideoExternalShort
 import com.liferay.document.library.video.external.shortcut.provider.DLVideoExternalShortcutProvider;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 
 import java.io.UnsupportedEncodingException;
 
@@ -48,21 +50,6 @@ public class FacebookDLVideoExternalShortcutProvider
 		return new DLVideoExternalShortcut() {
 
 			@Override
-			public String getDescription() {
-				return null;
-			}
-
-			@Override
-			public String getThumbnailURL() {
-				return null;
-			}
-
-			@Override
-			public String getTitle() {
-				return null;
-			}
-
-			@Override
 			public String getURL() {
 				return url;
 			}
@@ -83,6 +70,10 @@ public class FacebookDLVideoExternalShortcutProvider
 				catch (UnsupportedEncodingException
 							unsupportedEncodingException) {
 
+					if (_log.isDebugEnabled()) {
+						_log.debug(unsupportedEncodingException);
+					}
+
 					return null;
 				}
 			}
@@ -101,6 +92,9 @@ public class FacebookDLVideoExternalShortcutProvider
 
 		return false;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		FacebookDLVideoExternalShortcutProvider.class);
 
 	private static final List<Pattern> _urlPatterns = Arrays.asList(
 		Pattern.compile(

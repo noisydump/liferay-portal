@@ -15,168 +15,151 @@
 AUI.add(
 	'document-library-upload',
 	(A) => {
-		var AArray = A.Array;
-		var ANode = A.Node;
-		var Lang = A.Lang;
-		var LString = Lang.String;
-		var UploaderQueue = A.Uploader.Queue;
+		const AArray = A.Array;
+		const ANode = A.Node;
+		const Lang = A.Lang;
+		const LString = Lang.String;
+		const UploaderQueue = A.Uploader.Queue;
 
-		var isNumber = Lang.isNumber;
-		var isString = Lang.isString;
+		const isNumber = Lang.isNumber;
+		const isString = Lang.isString;
 
-		var sub = Lang.sub;
+		const sub = Lang.sub;
 
-		var CSS_ACTIVE_AREA = 'active-area';
+		const CSS_ACTIVE_AREA = 'active-area';
 
-		var CSS_APP_VIEW_ENTRY = 'app-view-entry-taglib';
+		const CSS_APP_VIEW_ENTRY = 'app-view-entry-taglib';
 
-		var CSS_DISPLAY_DESCRIPTIVE = 'display-descriptive';
+		const CSS_DISPLAY_DESCRIPTIVE = 'display-descriptive';
 
-		var CSS_DISPLAY_ICON = 'display-icon';
+		const CSS_DISPLAY_ICON = 'display-icon';
 
-		var CSS_ENTRIES_EMPTY = 'entries-empty';
+		const CSS_ENTRIES_EMPTY = 'entries-empty';
 
-		var CSS_ENTRY_DISPLAY_STYLE = 'entry-display-style';
+		const CSS_ENTRY_DISPLAY_STYLE = 'entry-display-style';
 
-		var CSS_ENTRY_LINK = CSS_ENTRY_DISPLAY_STYLE + ' a';
+		const CSS_ENTRY_LINK = CSS_ENTRY_DISPLAY_STYLE + ' a';
 
-		var CSS_ENTRY_SELECTOR = 'entry-selector';
+		const CSS_ENTRY_SELECTOR = 'entry-selector';
 
-		var CSS_ICON = 'icon';
+		const CSS_ICON = 'icon';
 
-		var CSS_SEARCHCONTAINER = 'searchcontainer';
+		const CSS_SEARCHCONTAINER = 'searchcontainer';
 
-		var CSS_TAGLIB_ICON = 'taglib-icon';
+		const DOC = A.config.doc;
 
-		var CSS_TAGLIB_TEXT = 'taglib-text';
+		const REGEX_AUDIO = /\.(aac|auif|bwf|flac|mp3|mp4|m4a|wav|wma)$/i;
 
-		var CSS_UPLOAD_ERROR = 'upload-error';
+		const REGEX_COMPRESSED = /\.(dmg|gz|tar|tgz|zip)$/i;
 
-		var CSS_UPLOAD_SUCCESS = 'upload-success';
+		const REGEX_IMAGE = /\.(bmp|gif|jpeg|jpg|png|tiff)$/i;
 
-		var CSS_UPLOAD_WARNING = 'upload-warning';
+		const REGEX_VIDEO = /\.(avi|flv|mpe|mpg|mpeg|mov|m4v|ogg|wmv)$/i;
 
-		var DOC = A.config.doc;
+		const SELECTOR_DATA_FOLDER = '[data-folder="true"]';
 
-		var ERROR_RESULTS_MIXED = 1;
-
-		var PATH_THEME_IMAGES = themeDisplay.getPathThemeImages();
-
-		var REGEX_AUDIO = /\.(aac|auif|bwf|flac|mp3|mp4|m4a|wav|wma)$/i;
-
-		var REGEX_COMPRESSED = /\.(dmg|gz|tar|tgz|zip)$/i;
-
-		var REGEX_IMAGE = /\.(bmp|gif|jpeg|jpg|png|tiff)$/i;
-
-		var REGEX_VIDEO = /\.(avi|flv|mpe|mpg|mpeg|mov|m4v|ogg|wmv)$/i;
-
-		var SELECTOR_DATA_FOLDER = '[data-folder="true"]';
-
-		var SELECTOR_DATA_FOLDER_DATA_TITLE =
+		const SELECTOR_DATA_FOLDER_DATA_TITLE =
 			'[data-folder="true"][data-title]';
 
-		var STR_DOT = '.';
+		const STR_DOT = '.';
 
-		var SELECTOR_DISPLAY_DESCRIPTIVE = STR_DOT + CSS_DISPLAY_DESCRIPTIVE;
+		const SELECTOR_DISPLAY_DESCRIPTIVE = STR_DOT + CSS_DISPLAY_DESCRIPTIVE;
 
-		var SELECTOR_DISPLAY_ICON = STR_DOT + CSS_DISPLAY_ICON;
+		const SELECTOR_DISPLAY_ICON = STR_DOT + CSS_DISPLAY_ICON;
 
-		var SELECTOR_ENTRIES_EMPTY = STR_DOT + CSS_ENTRIES_EMPTY;
+		const SELECTOR_ENTRIES_EMPTY = STR_DOT + CSS_ENTRIES_EMPTY;
 
-		var SELECTOR_ENTRY_DISPLAY_STYLE = STR_DOT + CSS_ENTRY_DISPLAY_STYLE;
+		const SELECTOR_ENTRY_DISPLAY_STYLE = STR_DOT + CSS_ENTRY_DISPLAY_STYLE;
 
-		var SELECTOR_ENTRY_LINK = STR_DOT + CSS_ENTRY_LINK;
+		const SELECTOR_ENTRY_LINK = STR_DOT + CSS_ENTRY_LINK;
 
-		var SELECTOR_IMAGE_ICON = 'img.icon';
+		const SELECTOR_SEARCH_CONTAINER = STR_DOT + CSS_SEARCHCONTAINER;
 
-		var SELECTOR_SEARCH_CONTAINER = STR_DOT + CSS_SEARCHCONTAINER;
+		const STR_BLANK = '';
 
-		var SELECTOR_TAGLIB_ICON = STR_DOT + CSS_TAGLIB_ICON;
+		const STR_BOUNDING_BOX = 'boundingBox';
 
-		var STR_BLANK = '';
+		const STR_CONTENT_BOX = 'contentBox';
 
-		var STR_BOUNDING_BOX = 'boundingBox';
+		const STR_EXTENSION_PDF = '.pdf';
 
-		var STR_CONTENT_BOX = 'contentBox';
+		const STR_FIRST = 'first';
 
-		var STR_EXTENSION_PDF = '.pdf';
+		const STR_FOLDER_ID = 'folderId';
 
-		var STR_FIRST = 'first';
+		const STR_HOST = 'host';
 
-		var STR_FOLDER_ID = 'folderId';
+		const STR_LABEL = 'label';
 
-		var STR_HOST = 'host';
+		const STR_LIST = 'list';
 
-		var STR_LABEL = 'label';
+		const STR_NAME = 'name';
 
-		var STR_LIST = 'list';
+		const STR_NAVIGATION_OVERLAY_BACKGROUND = '#FFF';
 
-		var STR_NAME = 'name';
+		const STR_SIZE = 'size';
 
-		var STR_NAVIGATION_OVERLAY_BACKGROUND = '#FFF';
+		const STR_SPACE = ' ';
 
-		var STR_SIZE = 'size';
+		const STR_ICON_DEFAULT = 'document-default';
 
-		var STR_SPACE = ' ';
+		const STR_ICON_PDF = 'document-vector';
 
-		var STR_THUMBNAIL_EXTENSION = '.png';
+		const STR_ICON_IMAGE = 'document-image';
 
-		var STR_THUMBNAIL_DEFAULT = 'default' + STR_THUMBNAIL_EXTENSION;
+		const STR_ICON_COMPRESSED = 'document-compressed';
 
-		var STR_THUMBNAIL_PDF = 'pdf' + STR_THUMBNAIL_EXTENSION;
+		const STR_ICON_MULTIMEDIA = 'document-multimedia';
 
-		var STR_THUMBNAIL_AUDIO = 'music' + STR_THUMBNAIL_EXTENSION;
+		const TPL_ENTRIES_CONTAINER = '<dl class="{cssClass}"></dl>';
 
-		var STR_THUMBNAIL_COMPRESSED = 'compressed' + STR_THUMBNAIL_EXTENSION;
+		const TPL_ENTRY_ROW_TITLE = `<div class="autofit-row ${
+			CSS_APP_VIEW_ENTRY + STR_SPACE + CSS_ENTRY_DISPLAY_STYLE
+		}">
+			<div class="autofit-col">
+				<span class="sticker sticker-rounded sticker-document sticker-secondary file-icon-color-0">
+					<span class="sticker-overlay">
+						${Liferay.Util.getLexiconIconTpl(STR_ICON_DEFAULT)}
+					</span>
+				</span>
+			</div>
 
-		var STR_THUMBNAIL_VIDEO = 'video' + STR_THUMBNAIL_EXTENSION;
+			<div class="autofit-col autofit-col-expand">
+				<div class="table-title">
+					<a>{0}</a>
+				</div>
+			</div>
+		</div>`;
 
-		var STR_THUMBNAIL_PATH = PATH_THEME_IMAGES + '/file_system/large/';
+		const TPL_ENTRY_WRAPPER =
+			'<dd class="card-page-item card-page-item-asset" data-title="{title}"></dd>';
 
-		var TPL_ENTRIES_CONTAINER = '<ul class="{cssClass}"></ul>';
+		const TPL_ERROR_NOTIFICATION = new A.Template(
+			'{title}',
 
-		var TPL_ENTRY_ROW_TITLE =
-			'<span class="' +
-			CSS_APP_VIEW_ENTRY +
-			STR_SPACE +
-			CSS_ENTRY_DISPLAY_STYLE +
-			'">' +
-			'<a class="' +
-			CSS_TAGLIB_ICON +
-			'">' +
-			Liferay.Util.getLexiconIconTpl('document') +
-			'<span class="' +
-			CSS_TAGLIB_TEXT +
-			'">{0}</span>' +
-			'</a>' +
-			'</span>';
+			'<tpl if="invalidFiles.length < 3">',
 
-		var TPL_ENTRY_WRAPPER =
-			'<li class="card-page-item card-page-item-asset" data-title="{title}"></li>';
-
-		var TPL_ERROR_FOLDER = new A.Template(
-			'<span class="lfr-status-success-label">{validFilesLength}</span>',
-
-			'<span class="lfr-status-error-label">{invalidFilesLength}</span>',
-
-			'<ul class="list-unstyled">',
+			'<ul class="mb-0 mt-2 pl-3">',
 			'<tpl for="invalidFiles">',
 			'<li><b>{name}</b>: {errorMessage}</li>',
 			'</tpl>',
-			'</ul>'
+			'</ul>',
+
+			'</tpl>'
 		);
 
-		var TPL_HIDDEN_CHECK_BOX =
+		const TPL_HIDDEN_CHECK_BOX =
 			'<input class="hide ' +
 			CSS_ENTRY_SELECTOR +
 			'" name="{0}" type="checkbox" value="">';
 
-		var TPL_IMAGE_THUMBNAIL =
+		const TPL_IMAGE_THUMBNAIL =
 			themeDisplay.getPathContext() + '/documents/{0}/{1}/{2}';
 
-		var DocumentLibraryUpload = A.Component.create({
+		const DocumentLibraryUpload = A.Component.create({
 			ATTRS: {
 				appViewEntryTemplates: {
+					// eslint-disable-next-line @liferay/aui/no-one
 					validator: A.one,
 					value: {},
 				},
@@ -201,14 +184,20 @@ AUI.add(
 					value: STR_BLANK,
 				},
 
+				documentLibraryNamespace: {
+					validator: isString,
+					value: STR_BLANK,
+				},
+
 				entriesContainer: {
+					// eslint-disable-next-line @liferay/aui/no-one
 					validator: A.one,
 					value: {},
 				},
 
 				folderId: {
 					getter() {
-						var instance = this;
+						const instance = this;
 
 						return instance.get(STR_HOST).getFolderId();
 					},
@@ -257,9 +246,9 @@ AUI.add(
 
 			prototype: {
 				_addFilesToQueueBottom(files) {
-					var instance = this;
+					const instance = this;
 
-					var queue = instance._getUploader().queue;
+					const queue = instance._getUploader().queue;
 
 					files.forEach((item) => {
 						queue.addToQueueBottom(item);
@@ -267,12 +256,14 @@ AUI.add(
 				},
 
 				_attachSubscriptions(data) {
-					var instance = this;
+					const instance = this;
 
-					var handles = instance._handles;
+					const handles = instance._handles;
 
-					var displayStyle = instance._getDisplayStyle();
-					var uploader = instance._getUploader();
+					const displayStyle = instance._getDisplayStyle();
+					const uploader = instance._getUploader();
+
+					instance._detachSubscriptions();
 
 					if (data.folder) {
 						handles.push(
@@ -280,8 +271,7 @@ AUI.add(
 								'alluploadscomplete',
 								instance._showFolderUploadComplete,
 								instance,
-								data,
-								displayStyle
+								data
 							),
 							uploader.on(
 								'totaluploadprogress',
@@ -291,7 +281,7 @@ AUI.add(
 							),
 							uploader.on(
 								'uploadcomplete',
-								instance._detectFolderUploadError,
+								instance._detectUploadError,
 								instance,
 								data
 							),
@@ -326,37 +316,37 @@ AUI.add(
 				},
 
 				_bindDragDropUI() {
-					var instance = this;
+					const instance = this;
+					// eslint-disable-next-line @liferay/aui/no-one
+					const docElement = A.one(DOC.documentElement);
 
-					var docElement = A.one(DOC.documentElement);
+					const entriesContainer = instance._entriesContainer;
 
-					var entriesContainer = instance._entriesContainer;
-
-					var host = instance.get(STR_HOST);
+					const host = instance.get(STR_HOST);
 
 					A.getWin()._node.onbeforeunload = A.bind(
 						'_confirmUnload',
 						instance
 					);
 
-					var onDataRequestHandle = Liferay.on(
+					const onDataRequestHandle = Liferay.on(
 						host.ns('dataRequest'),
 						instance._onDataRequest,
 						instance
 					);
 
-					var removeCssClassTask = A.debounce(() => {
+					const removeCssClassTask = A.debounce(() => {
 						docElement.removeClass('upload-drop-intent');
 						docElement.removeClass('upload-drop-active');
 					}, 500);
 
-					var onDragOverHandle = docElement.on(
+					const onDragOverHandle = docElement.on(
 						'dragover',
 						(event) => {
-							var dataTransfer = event._event.dataTransfer;
+							const dataTransfer = event._event.dataTransfer;
 
 							if (dataTransfer && dataTransfer.types) {
-								var dataTransferTypes =
+								const dataTransferTypes =
 									dataTransfer.types || [];
 
 								if (
@@ -373,7 +363,7 @@ AUI.add(
 
 									docElement.addClass('upload-drop-intent');
 
-									var target = event.target;
+									const target = event.target;
 
 									docElement.toggleClass(
 										'upload-drop-active',
@@ -387,13 +377,13 @@ AUI.add(
 						}
 					);
 
-					var onDropHandle = docElement.delegate(
+					const onDropHandle = docElement.delegate(
 						'drop',
 						(event) => {
-							var dataTransfer = event._event.dataTransfer;
+							const dataTransfer = event._event.dataTransfer;
 
 							if (dataTransfer) {
-								var dataTransferTypes =
+								const dataTransferTypes =
 									dataTransfer.types || [];
 
 								if (
@@ -406,7 +396,7 @@ AUI.add(
 								) {
 									event.halt();
 
-									var dragDropFiles = AArray(
+									const dragDropFiles = AArray(
 										dataTransfer.files
 									);
 
@@ -416,7 +406,7 @@ AUI.add(
 										}
 									);
 
-									var uploader = instance._getUploader();
+									const uploader = instance._getUploader();
 
 									uploader.fire('fileselect', event);
 								}
@@ -425,12 +415,12 @@ AUI.add(
 						'body, .document-container, .overlaymask, .progressbar, [data-folder="true"]'
 					);
 
-					var entriesDragDelegateHandle = entriesContainer.delegate(
+					const entriesDragDelegateHandle = entriesContainer.delegate(
 						['dragleave', 'dragover'],
 						(event) => {
-							var dataTransfer = event._event.dataTransfer;
+							const dataTransfer = event._event.dataTransfer;
 
-							var dataTransferTypes = dataTransfer.types;
+							const dataTransferTypes = dataTransfer.types;
 
 							if (
 								AArray.indexOf(dataTransferTypes, 'Files') >
@@ -440,7 +430,7 @@ AUI.add(
 									'text/html'
 								) === -1
 							) {
-								var parentElement = event.target.ancestor(
+								let parentElement = event.target.ancestor(
 									'[data-folder="true"]'
 								);
 
@@ -450,22 +440,11 @@ AUI.add(
 
 								parentElement.toggleClass(
 									CSS_ACTIVE_AREA,
-									event.type == 'dragover'
+									event.type === 'dragover'
 								);
 							}
 						},
 						SELECTOR_DATA_FOLDER
-					);
-
-					var entriesClickDelegateHandle = entriesContainer.delegate(
-						'click',
-						(event) => {
-							event.preventDefault();
-						},
-						STR_DOT +
-							CSS_UPLOAD_ERROR +
-							STR_SPACE +
-							SELECTOR_ENTRY_LINK
 					);
 
 					instance._eventHandles = [
@@ -473,7 +452,6 @@ AUI.add(
 						onDragOverHandle,
 						onDropHandle,
 						entriesDragDelegateHandle,
-						entriesClickDelegateHandle,
 					];
 				},
 
@@ -484,7 +462,7 @@ AUI.add(
 				},
 
 				_confirmUnload() {
-					var instance = this;
+					const instance = this;
 
 					if (instance._isUploading()) {
 						return Liferay.Language.get(
@@ -494,14 +472,14 @@ AUI.add(
 				},
 
 				_createEntriesContainer(searchContainer, displayStyle) {
-					var containerClasses =
-						'display-style-descriptive tabular-list-group';
+					let containerClasses =
+						'list-group list-group-notification show-quick-actions-on-hover';
 
 					if (displayStyle === CSS_ICON) {
 						containerClasses = 'card-page card-page-equal-height';
 					}
 
-					var entriesContainer = ANode.create(
+					const entriesContainer = ANode.create(
 						Lang.sub(TPL_ENTRIES_CONTAINER, {
 							cssClass: containerClasses,
 						})
@@ -509,19 +487,19 @@ AUI.add(
 
 					searchContainer
 						.one('.searchcontainer-content')
-						.prepend(entriesContainer);
+						.append(entriesContainer);
 
 					return entriesContainer;
 				},
 
 				_createEntryNode(name, size, displayStyle) {
-					var instance = this;
+					const instance = this;
 
-					var entryNode;
+					let entryNode;
 
-					var entriesContainer = instance.get('entriesContainer');
+					let entriesContainer = instance.get('entriesContainer');
 
-					var searchContainer = entriesContainer.one(
+					const searchContainer = entriesContainer.one(
 						SELECTOR_SEARCH_CONTAINER
 					);
 
@@ -531,12 +509,20 @@ AUI.add(
 						entryNode = instance._createEntryRow(name, size);
 					}
 					else {
-						var entriesContainerSelector =
-							'ul.tabular-list-group:last-of-type';
+						let entriesContainerSelector =
+							'dl.list-group:last-of-type';
 
 						if (displayStyle === CSS_ICON) {
 							entriesContainerSelector =
-								'ul.card-page:last-of-type';
+								'dl.card-page:last-of-type';
+
+							if (
+								entriesContainer
+									.one(entriesContainerSelector)
+									?.one('.card-type-directory')
+							) {
+								entriesContainerSelector = null;
+							}
 						}
 
 						entriesContainer =
@@ -546,10 +532,10 @@ AUI.add(
 								displayStyle
 							);
 
-						var invisibleEntry =
+						let invisibleEntry =
 							instance._invisibleDescriptiveEntry;
 
-						var hiddenCheckbox = sub(TPL_HIDDEN_CHECK_BOX, [
+						const hiddenCheckbox = sub(TPL_HIDDEN_CHECK_BOX, [
 							instance.get(STR_HOST).ns('rowIdsFileEntry'),
 						]);
 
@@ -561,32 +547,35 @@ AUI.add(
 
 						entryNode.append(hiddenCheckbox);
 
-						var entryLink = entryNode.one('a');
+						const entryLink = entryNode.one('a');
 
-						var entryTitle = entryLink;
+						const entryTitle = entryLink;
 
 						entryLink.attr('title', name);
 
 						entryTitle.setContent(name);
 
-						instance._removeEmptyResultsMessage(searchContainer);
+						instance._hideEmptyResultsMessage(searchContainer);
 
-						var searchContainerWrapper = A.one(
-							'div.lfr-search-container-wrapper'
-						);
+						const searchContainerWrapper = instance
+							.get('entriesContainer')
+							.one('div.lfr-search-container-wrapper')
+							.getDOMNode();
 
 						if (searchContainerWrapper) {
-							searchContainerWrapper.show();
+							searchContainerWrapper.style.display = 'block';
+
+							searchContainerWrapper.classList.remove('hide');
 						}
 					}
 
 					entryNode.attr({
 						'data-title': name,
-						id: A.guid(),
+						'id': A.guid(),
 					});
 
-					if (displayStyle == CSS_ICON) {
-						var entryNodeWrapper = ANode.create(
+					if (displayStyle === CSS_ICON) {
+						const entryNodeWrapper = ANode.create(
 							Lang.sub(TPL_ENTRY_WRAPPER, {
 								title: name,
 							})
@@ -605,27 +594,21 @@ AUI.add(
 				},
 
 				_createEntryRow(name, size) {
-					var instance = this;
+					const instance = this;
 
-					var searchContainerNode = instance._entriesContainer.one(
-						SELECTOR_SEARCH_CONTAINER
-					);
+					const searchContainer = instance._getSearchContainer();
 
-					var searchContainer = Liferay.SearchContainer.get(
-						searchContainerNode.attr('id')
-					);
-
-					var columnValues = instance._columnNames.map(
+					const columnValues = instance._columnNames.map(
 						(item, index) => {
-							var value = STR_BLANK;
+							let value = STR_BLANK;
 
-							if (item == STR_NAME) {
+							if (item === STR_NAME) {
 								value = sub(TPL_ENTRY_ROW_TITLE, [name]);
 							}
-							else if (item == STR_SIZE) {
+							else if (item === STR_SIZE) {
 								value = Liferay.Util.formatStorage(size);
 							}
-							else if (item == 'downloads') {
+							else if (item === 'downloads') {
 								value = '0';
 							}
 							else if (index === 0) {
@@ -640,17 +623,25 @@ AUI.add(
 						}
 					);
 
-					var row = searchContainer.addRow(columnValues, A.guid());
+					const rowid = A.guid();
+					const row = searchContainer.addRow(columnValues, rowid);
 
 					row.attr('data-draggable', true);
+					row.attr('data-rowid', rowid);
 
 					return row;
 				},
 
 				_createOverlay(target, background) {
-					var overlay = new A.OverlayMask({
+					const instance = this;
+
+					const displayStyle = instance._getDisplayStyle();
+					const overlay = new A.OverlayMask({
 						background: background || null,
-						target,
+						target:
+							displayStyle !== CSS_ICON
+								? target
+								: target.one('.card'),
 					}).render();
 
 					overlay
@@ -661,12 +652,8 @@ AUI.add(
 				},
 
 				_createProgressBar(target) {
-					var height = target.height() / 5;
-
-					var width = target.width() * 0.8;
-
 					return new A.ProgressBar({
-						height,
+						height: 16,
 						on: {
 							complete() {
 								this.set(STR_LABEL, 'complete!');
@@ -675,15 +662,15 @@ AUI.add(
 								this.set(STR_LABEL, event.newVal + '%');
 							},
 						},
-						width,
+						width: target.width() * 0.8,
 					});
 				},
 
 				_createUploadStatus(target, file) {
-					var instance = this;
+					const instance = this;
 
-					var overlay = instance._createOverlay(target);
-					var progressBar = instance._createProgressBar(target);
+					const overlay = instance._createOverlay(target);
+					const progressBar = instance._createProgressBar(target);
 
 					overlay.show();
 
@@ -703,11 +690,11 @@ AUI.add(
 				},
 
 				_destroyEntry() {
-					var instance = this;
+					const instance = this;
 
-					var currentUploadData = instance._getCurrentUploadData();
+					const currentUploadData = instance._getCurrentUploadData();
 
-					var fileList = currentUploadData.fileList;
+					const fileList = currentUploadData.fileList;
 
 					if (!currentUploadData.folder) {
 						fileList.forEach((item) => {
@@ -721,113 +708,52 @@ AUI.add(
 				},
 
 				_detachSubscriptions() {
-					var instance = this;
+					const instance = this;
 
-					var handles = instance._handles;
+					const handles = instance._handles;
 
 					AArray.invoke(handles, 'detach');
 
 					handles.length = 0;
 				},
 
-				_detectFolderUploadError(event, data) {
-					var instance = this;
+				_detectUploadError(event, data, response) {
+					const instance = this;
 
-					var response = instance._getUploadResponse(event.data);
+					data = data || instance._getCurrentUploadData();
+					response =
+						response || instance._getUploadResponse(event.data);
 
 					if (response.error) {
-						var file = event.file;
+						const file = event.file;
 
-						file.errorMessage = response.message;
-
-						data.invalidFiles.push(file);
-					}
-				},
-
-				_displayEntryError(node, message, displayStyle) {
-					var instance = this;
-
-					if (displayStyle == STR_LIST) {
-						var imageIcon = node.one(SELECTOR_IMAGE_ICON);
-
-						imageIcon.attr(
-							'src',
-							PATH_THEME_IMAGES + '/common/close.png'
+						const invalidFileIndex = data.fileList.findIndex(
+							({name}) => file.name === name
 						);
-					}
-					else {
-						node.addClass(CSS_UPLOAD_ERROR);
-					}
 
-					instance._displayError(node, message);
-				},
+						if (invalidFileIndex !== -1) {
+							const invalidFile = data.fileList[invalidFileIndex];
+							invalidFile.errorMessage = response.message;
 
-				_displayError(node, message) {
-					var instance = this;
+							data.fileList.splice(invalidFileIndex, 1);
 
-					node.attr('data-message', message);
-
-					var tooltipDelegate = instance._tooltipDelegate;
-
-					if (!tooltipDelegate) {
-						tooltipDelegate = new A.TooltipDelegate({
-							formatter(val) {
-								return instance._formatTooltip(val, this);
-							},
-							trigger: '.app-view-entry.upload-error',
-							visible: false,
-						});
-
-						instance._tooltipDelegate = tooltipDelegate;
-					}
-
-					return node;
-				},
-
-				_displayResult(node, displayStyle, error) {
-					var resultsNode = node;
-
-					if (resultsNode) {
-						var uploadResultClass = CSS_UPLOAD_SUCCESS;
-
-						if (error) {
-							resultsNode
-								.removeClass(CSS_UPLOAD_ERROR)
-								.removeClass(CSS_UPLOAD_WARNING);
-
-							if (error === true) {
-								uploadResultClass = CSS_UPLOAD_ERROR;
-							}
-							else if (error == ERROR_RESULTS_MIXED) {
-								uploadResultClass = CSS_UPLOAD_WARNING;
-							}
+							data.invalidFiles.push(invalidFile);
 						}
-
-						resultsNode.addClass(uploadResultClass);
-						resultsNode.addClass(CSS_ENTRY_DISPLAY_STYLE);
 					}
-				},
-
-				_formatTooltip(val, tooltip) {
-					tooltip.set('zIndex', 2);
-
-					var node = tooltip.get('trigger');
-
-					return node.attr('data-message');
 				},
 
 				_getCurrentUploadData() {
-					var instance = this;
+					const instance = this;
 
-					var dataSet = instance._getDataSet();
+					const dataSet = instance._getDataSet();
 
 					return dataSet.get(STR_FIRST);
 				},
 
 				_getDataSet() {
-					var instance = this;
+					const instance = this;
 
-					var dataSet = instance._dataSet;
+					let dataSet = instance._dataSet;
 
 					if (!dataSet) {
 						dataSet = new A.DataSet();
@@ -839,21 +765,21 @@ AUI.add(
 				},
 
 				_getDisplayStyle(style) {
-					var instance = this;
+					const instance = this;
 
-					var displayStyle = instance._displayStyle;
+					let displayStyle = instance._displayStyle;
 
 					if (style) {
-						displayStyle = style == displayStyle;
+						displayStyle = style === displayStyle;
 					}
 
 					return displayStyle;
 				},
 
 				_getEmptyMessage() {
-					var instance = this;
+					const instance = this;
 
-					var emptyMessage = instance._emptyMessage;
+					let emptyMessage = instance._emptyMessage;
 
 					if (!emptyMessage) {
 						emptyMessage = instance._entriesContainer.one(
@@ -867,12 +793,14 @@ AUI.add(
 				},
 
 				_getFolderEntryNode(target) {
-					var folderEntry;
+					let folderEntry;
 
-					var overlayContentBox = target.hasClass('overlay-content');
+					const overlayContentBox = target.hasClass(
+						'overlay-content'
+					);
 
 					if (overlayContentBox) {
-						var overlay = A.Widget.getByNode(target);
+						const overlay = A.Widget.getByNode(target);
 
 						folderEntry = overlay._originalConfig.target;
 					}
@@ -897,54 +825,54 @@ AUI.add(
 					return folderEntry;
 				},
 
-				_getMediaThumbnail(fileName) {
-					var instance = this;
+				_getImageThumbnail(fileName) {
+					const instance = this;
 
-					var thumbnailName = STR_THUMBNAIL_DEFAULT;
+					return sub(TPL_IMAGE_THUMBNAIL, [
+						instance._scopeGroupId,
+						instance.get(STR_FOLDER_ID),
+						fileName,
+					]);
+				},
+
+				_getMediaIcon(fileName) {
+					let iconName = STR_ICON_DEFAULT;
 
 					if (REGEX_IMAGE.test(fileName)) {
-						thumbnailName = sub(TPL_IMAGE_THUMBNAIL, [
-							instance._scopeGroupId,
-							instance.get(STR_FOLDER_ID),
-							fileName,
-						]);
+						iconName = STR_ICON_IMAGE;
 					}
-					else {
-						if (
-							LString.endsWith(
-								fileName.toLowerCase(),
-								STR_EXTENSION_PDF
-							)
-						) {
-							thumbnailName = STR_THUMBNAIL_PDF;
-						}
-						else if (REGEX_AUDIO.test(fileName)) {
-							thumbnailName = STR_THUMBNAIL_AUDIO;
-						}
-						else if (REGEX_VIDEO.test(fileName)) {
-							thumbnailName = STR_THUMBNAIL_VIDEO;
-						}
-						else if (REGEX_COMPRESSED.test(fileName)) {
-							thumbnailName = STR_THUMBNAIL_COMPRESSED;
-						}
-
-						thumbnailName = STR_THUMBNAIL_PATH + thumbnailName;
+					else if (
+						LString.endsWith(
+							fileName.toLowerCase(),
+							STR_EXTENSION_PDF
+						)
+					) {
+						iconName = STR_ICON_PDF;
+					}
+					else if (
+						REGEX_AUDIO.test(fileName) ||
+						REGEX_VIDEO.test(fileName)
+					) {
+						iconName = STR_ICON_MULTIMEDIA;
+					}
+					else if (REGEX_COMPRESSED.test(fileName)) {
+						iconName = STR_ICON_COMPRESSED;
 					}
 
-					return thumbnailName;
+					return iconName;
 				},
 
 				_getNavigationOverlays() {
-					var instance = this;
+					const instance = this;
 
-					var navigationOverlays = instance._navigationOverlays;
+					let navigationOverlays = instance._navigationOverlays;
 
 					if (!navigationOverlays) {
 						navigationOverlays = [];
 
-						var createNavigationOverlay = function (target) {
+						const createNavigationOverlay = function (target) {
 							if (target) {
-								var overlay = instance._createOverlay(
+								const overlay = instance._createOverlay(
 									target,
 									STR_NAVIGATION_OVERLAY_BACKGROUND
 								);
@@ -953,7 +881,9 @@ AUI.add(
 							}
 						};
 
-						var entriesContainer = instance.get('entriesContainer');
+						const entriesContainer = instance.get(
+							'entriesContainer'
+						);
 
 						createNavigationOverlay(
 							entriesContainer.one(
@@ -970,10 +900,22 @@ AUI.add(
 					return navigationOverlays;
 				},
 
-				_getTargetFolderId(target) {
-					var instance = this;
+				_getSearchContainer() {
+					const instance = this;
 
-					var folderEntry = instance._getFolderEntryNode(target);
+					const searchContainerNode = instance._entriesContainer.one(
+						SELECTOR_SEARCH_CONTAINER
+					);
+
+					return Liferay.SearchContainer.get(
+						searchContainerNode.attr('id')
+					);
+				},
+
+				_getTargetFolderId(target) {
+					const instance = this;
+
+					const folderEntry = instance._getFolderEntryNode(target);
 
 					return (
 						(folderEntry &&
@@ -983,24 +925,28 @@ AUI.add(
 				},
 
 				_getUploadResponse(responseData) {
-					var instance = this;
+					const instance = this;
 
-					var error;
-					var message;
+					let error;
+					let message;
 
 					try {
 						responseData = JSON.parse(responseData);
 					}
-					catch (e) {}
+					catch (error) {}
 
 					if (Lang.isObject(responseData)) {
-						error =
-							responseData.status &&
-							responseData.status >= 490 &&
-							responseData.status < 500;
+						error = Boolean(
+							responseData.status === 0 ||
+								(responseData.status &&
+									responseData.status >= 490 &&
+									responseData.status < 500)
+						);
 
 						if (error) {
-							message = responseData.message;
+							message =
+								responseData.message ||
+								Liferay.Language.get('unexpected-error');
 						}
 						else {
 							message =
@@ -1016,41 +962,37 @@ AUI.add(
 				},
 
 				_getUploadStatus(key) {
-					var instance = this;
+					const instance = this;
 
-					var dataSet = instance._getDataSet();
+					const dataSet = instance._getDataSet();
 
 					return dataSet.item(String(key));
 				},
 
 				_getUploadURL(folderId) {
-					var instance = this;
+					const instance = this;
 
-					var uploadURL = instance._uploadURL;
-
-					if (!uploadURL) {
-						var redirect = instance.get('redirect');
-
-						uploadURL = instance.get('uploadURL');
-
-						instance._uploadURL = Liferay.Util.addParams(
-							{
-								redirect,
-								ts: Date.now(),
-							},
-							uploadURL
+					if (!instance._uploadURL) {
+						instance._uploadURL = instance._decodeURI(
+							Liferay.Util.addParams(
+								{
+									redirect: instance.get('redirect'),
+									ts: Date.now(),
+								},
+								instance.get('uploadURL')
+							)
 						);
 					}
 
-					return sub(uploadURL, {
+					return sub(instance._uploadURL, {
 						folderId,
 					});
 				},
 
 				_getUploader() {
-					var instance = this;
+					const instance = this;
 
-					var uploader = instance._uploader;
+					let uploader = instance._uploader;
 
 					if (!uploader) {
 						uploader = new A.Uploader({
@@ -1060,24 +1002,17 @@ AUI.add(
 							simLimit: 1,
 						});
 
-						var navigationOverlays = instance._getNavigationOverlays();
+						const navigationOverlays = instance._getNavigationOverlays();
 
 						uploader.on('uploadstart', () => {
 							AArray.invoke(navigationOverlays, 'show');
 						});
 
-						uploader.after('alluploadscomplete', () => {
-							AArray.invoke(navigationOverlays, 'hide');
-
-							var emptyMessage = instance._getEmptyMessage();
-
-							if (
-								emptyMessage &&
-								!emptyMessage.hasClass('hide')
-							) {
-								emptyMessage.hide(true);
-							}
-						});
+						uploader.after(
+							'alluploadscomplete',
+							instance._onAllUploadsComplete,
+							instance
+						);
 
 						uploader.get(STR_BOUNDING_BOX).hide();
 
@@ -1100,24 +1035,167 @@ AUI.add(
 					return uploader;
 				},
 
+				_hideEmptyResultsMessage(searchContainer) {
+					const id = searchContainer.getAttribute('id');
+
+					const emptyResultsMessage = document.getElementById(
+						`${id}EmptyResultsMessage`
+					);
+
+					if (emptyResultsMessage) {
+						emptyResultsMessage.style.display = 'none';
+
+						emptyResultsMessage.classList.remove('hide');
+					}
+				},
+
 				_isUploading() {
-					var instance = this;
+					const instance = this;
 
-					var uploader = instance._uploader;
+					const uploader = instance._uploader;
 
-					var queue = uploader && uploader.queue;
+					const queue = uploader && uploader.queue;
 
 					return (
 						!!queue &&
-						(queue.queuedFiles.length > 0 ||
+						(!!queue.queuedFiles.length ||
 							queue.numberOfUploads > 0 ||
+							// eslint-disable-next-line @liferay/aui/no-object
 							!A.Object.isEmpty(queue.currentFiles)) &&
-						queue._currentState == UploaderQueue.UPLOADING
+						queue._currentState === UploaderQueue.UPLOADING
 					);
 				},
 
+				_onAllUploadsComplete() {
+					const instance = this;
+					const navigationOverlays = instance._getNavigationOverlays();
+
+					AArray.invoke(navigationOverlays, 'hide');
+
+					const currentUploadData = instance._getCurrentUploadData();
+
+					const invalidFilesLength =
+						currentUploadData.invalidFiles.length;
+					const validFilesLength = currentUploadData.fileList.length;
+
+					const searchContainer = instance._getSearchContainer();
+
+					const emptyMessage = instance._getEmptyMessage();
+
+					if (
+						emptyMessage &&
+						!emptyMessage.hasClass('hide') &&
+						!validFilesLength
+					) {
+						emptyMessage.hide(true);
+					}
+
+					if (validFilesLength) {
+						const openToastSuccessProps = {
+							message: Liferay.Util.sub(
+								instance._strings.xValidFilesUploaded,
+								validFilesLength
+							),
+							toastProps: {
+								className: 'alert-full',
+							},
+							type: 'success',
+						};
+
+						if (!currentUploadData.folder && !invalidFilesLength) {
+							const reloadButtonClassName = 'dl-reload-button';
+
+							openToastSuccessProps.autoClose = 10000;
+
+							openToastSuccessProps.message =
+								openToastSuccessProps.message +
+								`<div class="alert-footer">
+										<div class="btn-group" role="group">
+											<button class="btn btn-sm btn-primary alert-btn ${reloadButtonClassName}">${instance._strings.reloadButton}</button>
+										</div>
+								</div>`;
+
+							openToastSuccessProps.onClick = ({
+								event,
+								onClose: closeToast,
+							}) => {
+								if (
+									event.target.classList.contains(
+										reloadButtonClassName
+									)
+								) {
+									Liferay.Portlet.refresh(
+										`#p_p_id${instance._documentLibraryNamespace}`
+									);
+									closeToast();
+								}
+							};
+						}
+
+						Liferay.Util.openToast(openToastSuccessProps);
+					}
+
+					if (invalidFilesLength) {
+						if (!currentUploadData.folder) {
+							const displayStyle = instance._getDisplayStyle();
+
+							currentUploadData.invalidFiles.forEach(
+								(invalidFile) => {
+									if (invalidFile.target) {
+										if (displayStyle !== STR_LIST) {
+											invalidFile.target.remove();
+											invalidFile.target.destroy();
+										}
+										else {
+											searchContainer.deleteRow(
+												invalidFile.target,
+												invalidFile.target.getAttribute(
+													'data-rowid'
+												)
+											);
+										}
+									}
+
+									invalidFile.progressBar?.destroy();
+									invalidFile.overlay?.destroy();
+								}
+							);
+
+							if (!validFilesLength) {
+								instance._showEmptyResultsMessage();
+							}
+						}
+						else {
+							instance._showFolderUploadComplete(
+								undefined,
+								currentUploadData
+							);
+						}
+
+						const openToastErrorProps = {
+							message: TPL_ERROR_NOTIFICATION.parse({
+								invalidFiles: currentUploadData.invalidFiles,
+								title: Liferay.Util.sub(
+									instance._strings.xInvalidFilesUploaded,
+									invalidFilesLength
+								),
+							}),
+							toastProps: {
+								className: 'alert-full',
+							},
+							type: 'danger',
+						};
+
+						if (invalidFilesLength < 3) {
+							openToastErrorProps.autoClose = false;
+						}
+
+						Liferay.Util.openToast(openToastErrorProps);
+					}
+				},
+
 				_onDataRequest(event) {
-					var instance = this;
+					const instance = this;
 
 					if (instance._isUploading()) {
 						event.halt();
@@ -1125,11 +1203,20 @@ AUI.add(
 				},
 
 				_onFileSelect(event) {
-					var instance = this;
+					const instance = this;
 
-					var target = event.details[0].target;
+					// LPS-159994
 
-					var filesPartition = instance._validateFiles(
+					if (
+						event.details[0].currentTarget !==
+						instance._entriesContainer
+					) {
+						return;
+					}
+
+					const target = event.details[0].target;
+
+					const filesPartition = instance._validateFiles(
 						event.fileList
 					);
 
@@ -1139,7 +1226,7 @@ AUI.add(
 				},
 
 				_positionProgressBar(overlay, progressBar) {
-					var progressBarBoundingBox = progressBar.get(
+					const progressBarBoundingBox = progressBar.get(
 						STR_BOUNDING_BOX
 					);
 
@@ -1149,23 +1236,23 @@ AUI.add(
 				},
 
 				_queueSelectedFiles(target, filesPartition) {
-					var instance = this;
+					const instance = this;
 
-					var key = instance._getTargetFolderId(target);
+					const key = instance._getTargetFolderId(target);
 
-					var keyData = instance._getUploadStatus(key);
+					const keyData = instance._getUploadStatus(key);
 
-					var validFiles = filesPartition.matches;
+					const validFiles = filesPartition.matches;
 
 					if (keyData) {
 						instance._updateDataSetEntry(key, keyData, validFiles);
 					}
 					else {
-						var dataSet = instance._getDataSet();
+						const dataSet = instance._getDataSet();
 
-						var folderNode = null;
+						let folderNode = null;
 
-						var folder = key !== instance.get(STR_FOLDER_ID);
+						const folder = key !== instance.get(STR_FOLDER_ID);
 
 						if (folder) {
 							folderNode = instance._getFolderEntryNode(target);
@@ -1185,51 +1272,65 @@ AUI.add(
 					}
 				},
 
-				_removeEmptyResultsMessage(searchContainer) {
-					var id = searchContainer.getAttribute('id');
+				_showEmptyResultsMessage() {
+					const instance = this;
 
-					var emptyResultsMessage = A.one(
-						'#' + id + 'EmptyResultsMessage'
+					const searchContainer = instance._getSearchContainer();
+					const entriesContainer = instance.get('entriesContainer');
+
+					if (
+						searchContainer.getSize() ||
+						entriesContainer
+							.all(SELECTOR_ENTRY_DISPLAY_STYLE)
+							.size()
+					) {
+						return;
+					}
+
+					const id = entriesContainer
+						.one(SELECTOR_SEARCH_CONTAINER)
+						.getAttribute('id');
+
+					const emptyResultsMessage = document.getElementById(
+						`${id}EmptyResultsMessage`
 					);
 
 					if (emptyResultsMessage) {
-						emptyResultsMessage.hide();
+						emptyResultsMessage.style.display = 'block';
+
+						emptyResultsMessage.classList.remove('hide');
 					}
 				},
 
 				_showFileUploadComplete(event, displayStyle) {
-					var instance = this;
+					const instance = this;
 
-					var file = event.file;
+					const file = event.file;
 
-					var fileNode = file.target;
+					const fileNode = file.target;
 
-					var response = instance._getUploadResponse(event.data);
+					const response = instance._getUploadResponse(event.data);
 
 					if (response) {
-						var hasErrors = !!response.error;
+						const hasErrors = !!response.error;
 
 						if (hasErrors) {
-							instance._displayEntryError(
-								fileNode,
-								response.message,
-								displayStyle
-							);
+							instance._detectUploadError(event, null, response);
 						}
 						else {
-							var displayStyleList = displayStyle == STR_LIST;
-
-							var fileEntryId = JSON.parse(event.data)
+							const fileEntryId = JSON.parse(event.data)
 								.fileEntryId;
 
-							if (!displayStyleList) {
-								instance._updateThumbnail(fileNode, file.name);
-							}
+							instance._updateEntryUI(
+								fileNode,
+								file.name,
+								displayStyle
+							);
 
 							instance._updateFileLink(
 								fileNode,
 								response.message,
-								displayStyleList
+								displayStyle
 							);
 
 							instance._updateFileHiddenInput(
@@ -1237,19 +1338,13 @@ AUI.add(
 								fileEntryId
 							);
 						}
-
-						instance._displayResult(
-							fileNode,
-							displayStyle,
-							hasErrors
-						);
 					}
 
 					file.overlay.hide();
 				},
 
 				_showFileUploadProgress(event) {
-					var instance = this;
+					const instance = this;
 
 					instance._updateProgress(
 						event.file.progressBar,
@@ -1258,9 +1353,9 @@ AUI.add(
 				},
 
 				_showFileUploadStarting(event) {
-					var instance = this;
+					const instance = this;
 
-					var file = event.file;
+					const file = event.file;
 
 					instance._positionProgressBar(
 						file.overlay,
@@ -1268,44 +1363,14 @@ AUI.add(
 					);
 				},
 
-				_showFolderUploadComplete(_event, uploadData, displayStyle) {
-					var instance = this;
-
-					var folderEntry = uploadData.target;
-					var invalidFiles = uploadData.invalidFiles;
-					var totalFilesLength = uploadData.fileList.length;
-
-					var invalidFilesLength = invalidFiles.length;
-
-					var hasErrors = invalidFilesLength !== 0;
-
-					if (hasErrors && invalidFilesLength !== totalFilesLength) {
-						hasErrors = ERROR_RESULTS_MIXED;
-					}
-
-					instance._displayResult(
-						folderEntry,
-						displayStyle,
-						hasErrors
-					);
-
-					if (hasErrors) {
-						instance._displayError(
-							folderEntry,
-							TPL_ERROR_FOLDER.parse({
-								invalidFiles,
-								invalidFilesLength,
-								validFilesLength:
-									totalFilesLength - invalidFilesLength,
-							})
-						);
-					}
+				_showFolderUploadComplete(_event, uploadData) {
+					const folderEntry = uploadData.target;
 
 					folderEntry.overlay.hide();
 				},
 
 				_showFolderUploadProgress(event, uploadData) {
-					var instance = this;
+					const instance = this;
 
 					instance._updateProgress(
 						uploadData.target.progressBar,
@@ -1314,9 +1379,9 @@ AUI.add(
 				},
 
 				_showFolderUploadStarting(_event, uploadData) {
-					var instance = this;
+					const instance = this;
 
-					var target = uploadData.target;
+					const target = uploadData.target;
 
 					instance._positionProgressBar(
 						target.overlay,
@@ -1325,11 +1390,11 @@ AUI.add(
 				},
 
 				_startNextUpload() {
-					var instance = this;
+					const instance = this;
 
 					instance._destroyEntry();
 
-					var dataSet = instance._getDataSet();
+					const dataSet = instance._getDataSet();
 
 					dataSet.removeAt(0);
 
@@ -1339,16 +1404,16 @@ AUI.add(
 				},
 
 				_startUpload() {
-					var instance = this;
+					const instance = this;
 
-					var uploadData = instance._getCurrentUploadData();
+					const uploadData = instance._getCurrentUploadData();
 
-					var fileList = uploadData.fileList;
+					const fileList = uploadData.fileList;
 
-					var uploader = instance._getUploader();
+					const uploader = instance._getUploader();
 
 					if (fileList.length) {
-						var uploadURL = instance._getUploadURL(
+						const uploadURL = instance._getUploadURL(
 							uploadData.folderId
 						);
 
@@ -1362,9 +1427,9 @@ AUI.add(
 				},
 
 				_updateDataSetEntry(key, data, unmergedData) {
-					var instance = this;
+					const instance = this;
 
-					var currentUploadData = instance._getCurrentUploadData();
+					const currentUploadData = instance._getCurrentUploadData();
 
 					if (currentUploadData.folderId === key) {
 						instance._addFilesToQueueBottom(unmergedData);
@@ -1372,33 +1437,51 @@ AUI.add(
 					else {
 						instance._combineFileLists(data.fileList, unmergedData);
 
-						var dataSet = instance._getDataSet();
+						const dataSet = instance._getDataSet();
 
 						dataSet.replace(key, data);
 					}
 				},
 
+				_updateEntryIcon(node, fileName) {
+					const instance = this;
+
+					const stickerNode = node.one('.sticker-overlay');
+					const mediaIcon = instance._getMediaIcon(fileName);
+
+					stickerNode.html(Liferay.Util.getLexiconIconTpl(mediaIcon));
+				},
+
+				_updateEntryUI(node, fileName, displayStyle) {
+					const instance = this;
+
+					const displayStyleList = displayStyle === STR_LIST;
+
+					instance._updateEntryIcon(node, fileName);
+
+					if (!displayStyleList && REGEX_IMAGE.test(fileName)) {
+						instance._updateThumbnail(node, fileName, displayStyle);
+					}
+				},
+
 				_updateFileHiddenInput(node, id) {
-					var inputNode = node.one('input');
+					const inputNode = node.one('input');
 
 					if (inputNode) {
 						inputNode.val(id);
 					}
 				},
 
-				_updateFileLink(node, id, displayStyleList) {
-					var instance = this;
+				_updateFileLink(node, id, displayStyle) {
+					const instance = this;
 
-					var selector = SELECTOR_ENTRY_LINK;
+					let selector = 'a';
 
-					if (displayStyleList) {
-						selector =
-							SELECTOR_ENTRY_DISPLAY_STYLE +
-							STR_SPACE +
-							SELECTOR_TAGLIB_ICON;
+					if (displayStyle === CSS_ICON) {
+						selector = SELECTOR_ENTRY_LINK;
 					}
 
-					var link = node.all(selector);
+					const link = node.all(selector);
 
 					if (link.size()) {
 						link.attr(
@@ -1416,26 +1499,26 @@ AUI.add(
 				},
 
 				_updateStatusUI(target, filesPartition) {
-					var instance = this;
+					const instance = this;
 
-					var folderId = instance._getTargetFolderId(target);
+					const folderId = instance._getTargetFolderId(target);
 
-					var folder = folderId !== instance.get(STR_FOLDER_ID);
+					const folder = folderId !== instance.get(STR_FOLDER_ID);
 
 					if (folder) {
-						var folderEntryNode = instance._getFolderEntryNode(
+						const folderEntryNode = instance._getFolderEntryNode(
 							target
 						);
 
-						var folderEntryNodeOverlay = folderEntryNode.overlay;
+						const folderEntryNodeOverlay = folderEntryNode.overlay;
 
 						if (folderEntryNodeOverlay) {
-							folderEntryNodeOverlay.show();
-
 							instance._updateProgress(
 								folderEntryNode.progressBar,
 								0
 							);
+
+							folderEntryNodeOverlay.show();
 						}
 						else {
 							instance._createUploadStatus(folderEntryNode);
@@ -1444,10 +1527,10 @@ AUI.add(
 						folderEntryNode.removeClass(CSS_ACTIVE_AREA);
 					}
 					else {
-						var displayStyle = instance._getDisplayStyle();
+						const displayStyle = instance._getDisplayStyle();
 
 						filesPartition.matches.map((file) => {
-							var entryNode = instance._createEntryNode(
+							const entryNode = instance._createEntryNode(
 								file.name,
 								file.size,
 								displayStyle
@@ -1455,55 +1538,51 @@ AUI.add(
 
 							instance._createUploadStatus(entryNode, file);
 						});
-
-						filesPartition.rejects.map((file) => {
-							var entryNode = instance._createEntryNode(
-								file.name,
-								file.size,
-								displayStyle
-							);
-
-							instance._displayEntryError(
-								entryNode,
-								file.errorMessage,
-								instance._getDisplayStyle()
-							);
-						});
 					}
 				},
 
-				_updateThumbnail(node, fileName) {
-					var instance = this;
+				_updateThumbnail(node, fileName, displayStyle) {
+					const instance = this;
 
-					var imageNode = node.one('img');
+					let imageNode = node.one('img');
+					const thumbnailPath = instance._getImageThumbnail(fileName);
 
-					var thumbnailPath = instance._getMediaThumbnail(fileName);
+					if (!imageNode) {
+						let targetNodeSelector = '.sticker-overlay svg';
+						let imageClassName = 'sticker-img';
 
-					imageNode.attr('src', thumbnailPath);
+						if (displayStyle === CSS_ICON) {
+							targetNodeSelector = '.card-type-asset-icon';
+							imageClassName =
+								'aspect-ratio-item-center-middle aspect-ratio-item-fluid';
+						}
 
-					if (instance._getDisplayStyle() === CSS_ICON) {
-						var divNode = imageNode.ancestor('div');
-
-						divNode.setStyle(
-							'backgroundImage',
-							'url("' + thumbnailPath + '")'
+						imageNode = A.Node.create(
+							`<img alt="" class="${imageClassName}" src="${thumbnailPath}" />`
 						);
-						divNode.setStyle('backgroundPosition', 'center');
-						divNode.setStyle('backgroundRepeat', 'no-repeat');
+
+						const targetNode = node.one(targetNodeSelector);
+
+						targetNode
+							.get('parentNode')
+							.replaceChild(imageNode, targetNode);
+					}
+					else {
+						imageNode.attr('src', thumbnailPath);
 					}
 				},
 
 				_validateFiles(data) {
-					var instance = this;
+					const instance = this;
 
-					var maxFileSize = instance._maxFileSize;
+					const maxFileSize = instance._maxFileSize;
 
 					return AArray.partition(data, (item) => {
-						var errorMessage;
+						let errorMessage;
 
-						var size = item.get(STR_SIZE) || 0;
+						const size = item.get(STR_SIZE) || 0;
 
-						var strings = instance._strings;
+						const strings = instance._strings;
 
 						if (maxFileSize !== 0 && size > maxFileSize) {
 							errorMessage = sub(strings.invalidFileSize, [
@@ -1525,7 +1604,7 @@ AUI.add(
 				},
 
 				destructor() {
-					var instance = this;
+					const instance = this;
 
 					if (instance._dataSet) {
 						instance._dataSet.destroy();
@@ -1539,25 +1618,24 @@ AUI.add(
 						instance._uploader.destroy();
 					}
 
-					if (instance._tooltipDelegate) {
-						instance._tooltipDelegate.destroy();
-					}
-
 					instance._detachSubscriptions();
 
 					new A.EventHandle(instance._eventHandles).detach();
 				},
 
 				initializer() {
-					var instance = this;
+					const instance = this;
 
-					var appViewEntryTemplates = instance.get(
+					const appViewEntryTemplates = instance.get(
 						'appViewEntryTemplates'
 					);
 
 					instance._columnNames = instance.get('columnNames');
 					instance._dimensions = instance.get('dimensions');
 					instance._displayStyle = instance.get('displayStyle');
+					instance._documentLibraryNamespace = instance.get(
+						'documentLibraryNamespace'
+					);
 					instance._entriesContainer = instance.get(
 						'entriesContainer'
 					);
@@ -1577,6 +1655,13 @@ AUI.add(
 					instance._strings = {
 						invalidFileSize: Liferay.Language.get(
 							'please-enter-a-file-with-a-valid-file-size-no-larger-than-x'
+						),
+						reloadButton: Liferay.Language.get('reload'),
+						xInvalidFilesUploaded: Liferay.Language.get(
+							'x-files-could-not-be-uploaded'
+						),
+						xValidFilesUploaded: Liferay.Language.get(
+							'x-files-were-uploaded'
 						),
 						zeroByteFile: Liferay.Language.get(
 							'the-file-contains-no-data-and-cannot-be-uploaded.-please-use-the-classic-uploader'
@@ -1600,7 +1685,6 @@ AUI.add(
 			'aui-parse-content',
 			'aui-progressbar',
 			'aui-template-deprecated',
-			'aui-tooltip',
 			'liferay-search-container',
 			'querystring-parse-simple',
 			'uploader',

@@ -14,19 +14,20 @@
 
 package com.liferay.headless.commerce.admin.account.internal.resource.v1_0;
 
+import com.liferay.commerce.account.exception.NoSuchAccountException;
 import com.liferay.commerce.account.exception.NoSuchAccountGroupException;
+import com.liferay.commerce.account.model.CommerceAccount;
 import com.liferay.commerce.account.model.CommerceAccountGroup;
 import com.liferay.commerce.account.service.CommerceAccountGroupService;
+import com.liferay.commerce.account.service.CommerceAccountService;
 import com.liferay.headless.commerce.admin.account.dto.v1_0.AccountGroup;
 import com.liferay.headless.commerce.admin.account.internal.dto.v1_0.converter.AccountGroupDTOConverter;
 import com.liferay.headless.commerce.admin.account.internal.odata.entity.v1_0.AccountGroupEntityModel;
 import com.liferay.headless.commerce.admin.account.resource.v1_0.AccountGroupResource;
 import com.liferay.headless.commerce.core.util.ExpandoUtil;
 import com.liferay.headless.commerce.core.util.ServiceContextHelper;
-import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.search.Field;
-import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -35,9 +36,10 @@ import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
-import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.SearchUtil;
+import com.liferay.portal.vulcan.util.TransformUtil;
 
+import java.util.Collections;
 import java.util.Map;
 
 import javax.ws.rs.core.MultivaluedMap;
@@ -55,8 +57,7 @@ import org.osgi.service.component.annotations.ServiceScope;
 	properties = "OSGI-INF/liferay/rest/v1_0/account-group.properties",
 	scope = ServiceScope.PROTOTYPE, service = AccountGroupResource.class
 )
-public class AccountGroupResourceImpl
-	extends BaseAccountGroupResourceImpl implements EntityModelResource {
+public class AccountGroupResourceImpl extends BaseAccountGroupResourceImpl {
 
 	@Override
 	public Response deleteAccountGroup(Long id) throws Exception {
@@ -78,7 +79,7 @@ public class AccountGroupResourceImpl
 
 		if (commerceAccountGroup == null) {
 			throw new NoSuchAccountGroupException(
-				"Unable to find AccountGroup with externalReferenceCode: " +
+				"Unable to find account group with external reference code " +
 					externalReferenceCode);
 		}
 
@@ -88,6 +89,26 @@ public class AccountGroupResourceImpl
 		Response.ResponseBuilder responseBuilder = Response.ok();
 
 		return responseBuilder.build();
+	}
+
+	@Override
+	public Page<AccountGroup>
+			getAccountByExternalReferenceCodeAccountGroupsPage(
+				String externalReferenceCode, Pagination pagination)
+		throws Exception {
+
+		CommerceAccount commerceAccount =
+			_commerceAccountService.fetchByExternalReferenceCode(
+				contextCompany.getCompanyId(), externalReferenceCode);
+
+		if (commerceAccount == null) {
+			throw new NoSuchAccountException(
+				"Unable to find account with external reference code " +
+					externalReferenceCode);
+		}
+
+		return _getAccountAccountGroups(
+			commerceAccount.getCommerceAccountId(), pagination);
 	}
 
 	@Override
@@ -109,7 +130,7 @@ public class AccountGroupResourceImpl
 
 		if (commerceAccountGroup == null) {
 			throw new NoSuchAccountGroupException(
-				"Unable to find AccountGroup with externalReferenceCode: " +
+				"Unable to find account group with external reference code " +
 					externalReferenceCode);
 		}
 
@@ -125,23 +146,26 @@ public class AccountGroupResourceImpl
 		throws Exception {
 
 		return SearchUtil.search(
+			Collections.emptyMap(),
 			booleanQuery -> booleanQuery.getPreBooleanFilter(), filter,
-			CommerceAccountGroup.class, StringPool.BLANK, pagination,
+			com.liferay.account.model.AccountGroup.class.getName(),
+			StringPool.BLANK, pagination,
 			queryConfig -> queryConfig.setSelectedFieldNames(
 				Field.ENTRY_CLASS_PK),
-			new UnsafeConsumer() {
-
-				public void accept(Object object) throws Exception {
-					SearchContext searchContext = (SearchContext)object;
-
-					searchContext.setCompanyId(contextCompany.getCompanyId());
-				}
-
-			},
+			searchContext -> searchContext.setCompanyId(
+				contextCompany.getCompanyId()),
+			sorts,
 			document -> _toAccountGroup(
 				_commerceAccountGroupService.getCommerceAccountGroup(
-					GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK)))),
-			sorts);
+					GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK)))));
+	}
+
+	@Override
+	public Page<AccountGroup> getAccountIdAccountGroupsPage(
+			Long id, Pagination pagination)
+		throws Exception {
+
+		return _getAccountAccountGroups(id, pagination);
 	}
 
 	@Override
@@ -175,7 +199,7 @@ public class AccountGroupResourceImpl
 
 		if (commerceAccountGroup == null) {
 			throw new NoSuchAccountGroupException(
-				"Unable to find AccountGroup with externalReferenceCode: " +
+				"Unable to find account group with external reference code " +
 					externalReferenceCode);
 		}
 
@@ -242,6 +266,23 @@ public class AccountGroupResourceImpl
 				contextAcceptLanguage.getPreferredLocale()));
 	}
 
+	private Page<AccountGroup> _getAccountAccountGroups(
+			long commerceAccountId, Pagination pagination)
+		throws Exception {
+
+		return Page.of(
+			TransformUtil.transform(
+				_commerceAccountGroupService.
+					getCommerceAccountGroupsByCommerceAccountId(
+						commerceAccountId, pagination.getStartPosition(),
+						pagination.getEndPosition()),
+				commerceAccountGroup -> _toAccountGroup(commerceAccountGroup)),
+			pagination,
+			_commerceAccountGroupService.
+				getCommerceAccountGroupsByCommerceAccountIdCount(
+					commerceAccountId));
+	}
+
 	private AccountGroup _toAccountGroup(
 			CommerceAccountGroup commerceAccountGroup)
 		throws Exception {
@@ -257,6 +298,9 @@ public class AccountGroupResourceImpl
 
 	@Reference
 	private CommerceAccountGroupService _commerceAccountGroupService;
+
+	@Reference
+	private CommerceAccountService _commerceAccountService;
 
 	private final EntityModel _entityModel = new AccountGroupEntityModel();
 

@@ -49,48 +49,16 @@ if (Validator.isNotNull(keywords)) {
 	userGroupParams.put("expandoAttributes", keywords);
 }
 
-int userGroupsCount = UserGroupServiceUtil.searchCount(company.getCompanyId(), keywords, userGroupParams);
+long companyId = company.getCompanyId();
 
-userGroupSearch.setTotal(userGroupsCount);
-
-List<UserGroup> userGroups = UserGroupServiceUtil.search(company.getCompanyId(), keywords, userGroupParams, userGroupSearch.getStart(), userGroupSearch.getEnd(), userGroupSearch.getOrderByComparator());
-
-userGroupSearch.setResults(userGroups);
+userGroupSearch.setResultsAndTotal(() -> UserGroupServiceUtil.search(companyId, keywords, userGroupParams, userGroupSearch.getStart(), userGroupSearch.getEnd(), userGroupSearch.getOrderByComparator()), UserGroupServiceUtil.searchCount(companyId, keywords, userGroupParams));
 %>
 
 <aui:input disabled="<%= true %>" name="userGroupsRedirect" type="hidden" value="<%= portletURL.toString() %>" />
 
-<liferay-frontend:management-bar>
-	<liferay-frontend:management-bar-buttons>
-		<liferay-frontend:management-bar-display-buttons
-			displayViews='<%= new String[] {"list"} %>'
-			portletURL="<%= portletURL %>"
-			selectedDisplayStyle="list"
-		/>
-	</liferay-frontend:management-bar-buttons>
-
-	<liferay-frontend:management-bar-filters>
-		<liferay-frontend:management-bar-navigation
-			navigationKeys='<%= new String[] {"all"} %>'
-			portletURL="<%= portletURL %>"
-		/>
-
-		<liferay-frontend:management-bar-sort
-			orderByCol="<%= userGroupSearch.getOrderByCol() %>"
-			orderByType="<%= userGroupSearch.getOrderByType() %>"
-			orderColumns='<%= new String[] {"name"} %>'
-			portletURL="<%= portletURL %>"
-		/>
-
-		<c:if test='<%= ParamUtil.getBoolean(request, "showSearch", true) %>'>
-			<li>
-				<liferay-ui:input-search
-					markupView="lexicon"
-				/>
-			</li>
-		</c:if>
-	</liferay-frontend:management-bar-filters>
-</liferay-frontend:management-bar>
+<clay:management-toolbar
+	managementToolbarDisplayContext="<%= new UserGroupManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, userGroupSearch) %>"
+/>
 
 <div class="container-fluid container-fluid-max-xl">
 	<liferay-ui:search-container

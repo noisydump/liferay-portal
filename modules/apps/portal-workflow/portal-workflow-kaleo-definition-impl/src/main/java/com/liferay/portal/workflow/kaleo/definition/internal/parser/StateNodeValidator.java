@@ -38,15 +38,15 @@ public class StateNodeValidator extends BaseNodeValidator<State> {
 		throws KaleoDefinitionValidationException {
 
 		if (state.isInitial()) {
-			validateInitialState(definition, state);
+			_validateInitialState(definition, state);
 		}
 		else if (state.getIncomingTransitionsCount() == 0) {
 			throw new KaleoDefinitionValidationException.
-				MustSetIncomingTransition(state.getName());
+				MustSetIncomingTransition(state.getDefaultLabel());
 		}
 	}
 
-	protected void validateInitialState(Definition definition, State state)
+	private void _validateInitialState(Definition definition, State state)
 		throws KaleoDefinitionValidationException {
 
 		State initialState = definition.getInitialState();
@@ -54,17 +54,17 @@ public class StateNodeValidator extends BaseNodeValidator<State> {
 		if (!Objects.equals(initialState, state)) {
 			throw new KaleoDefinitionValidationException.
 				MultipleInitialStateNodes(
-					state.getName(), initialState.getName());
+					state.getDefaultLabel(), initialState.getDefaultLabel());
 		}
 
 		if (state.getIncomingTransitionsCount() > 0) {
 			throw new KaleoDefinitionValidationException.
-				MustNotSetIncomingTransition(state.getName());
+				MustNotSetIncomingTransition(state.getDefaultLabel());
 		}
 
 		if (state.getOutgoingTransitionsCount() == 0) {
 			throw new KaleoDefinitionValidationException.
-				MustSetOutgoingTransition(state.getName());
+				MustSetOutgoingTransition(state.getDefaultLabel());
 		}
 	}
 

@@ -15,11 +15,11 @@
 package com.liferay.commerce.shipping.web.internal.frontend.taglib.servlet.taglib;
 
 import com.liferay.commerce.model.CommerceShippingMethod;
-import com.liferay.commerce.shipping.web.internal.servlet.taglib.ui.constants.CommerceShippingScreenNavigationConstants;
+import com.liferay.commerce.shipping.web.internal.constants.CommerceShippingScreenNavigationConstants;
 import com.liferay.frontend.taglib.servlet.taglib.ScreenNavigationCategory;
 import com.liferay.frontend.taglib.servlet.taglib.ScreenNavigationEntry;
 import com.liferay.frontend.taglib.servlet.taglib.util.JSPRenderer;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 
 import java.io.IOException;
 
@@ -60,7 +60,7 @@ public class CommerceShippingMethodDetailsScreenNavigationCategory
 
 	@Override
 	public String getLabel(Locale locale) {
-		return LanguageUtil.get(
+		return _language.get(
 			locale,
 			CommerceShippingScreenNavigationConstants.
 				ENTRY_KEY_COMMERCE_SHIPPING_METHOD_DETAILS);
@@ -80,10 +80,13 @@ public class CommerceShippingMethodDetailsScreenNavigationCategory
 
 		_jspRenderer.renderJSP(
 			httpServletRequest, httpServletResponse,
-			"/shipping_method/details.jsp");
+			"/commerce_shipping_method/details.jsp");
 	}
 
 	@Reference
 	private JSPRenderer _jspRenderer;
+
+	@Reference
+	private Language _language;
 
 }

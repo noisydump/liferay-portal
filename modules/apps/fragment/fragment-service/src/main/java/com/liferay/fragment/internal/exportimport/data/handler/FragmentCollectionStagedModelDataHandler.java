@@ -171,7 +171,7 @@ public class FragmentCollectionStagedModelDataHandler
 				}
 
 				PortletFileRepositoryUtil.addPortletFileEntry(
-					importedFragmentCollection.getGroupId(), userId,
+					null, importedFragmentCollection.getGroupId(), userId,
 					FragmentCollection.class.getName(),
 					importedFragmentCollection.getFragmentCollectionId(),
 					FragmentPortletKeys.FRAGMENT,
@@ -205,7 +205,7 @@ public class FragmentCollectionStagedModelDataHandler
 			}
 			catch (NoSuchFileException noSuchFileException) {
 				if (_log.isDebugEnabled()) {
-					_log.debug(noSuchFileException, noSuchFileException);
+					_log.debug(noSuchFileException);
 				}
 
 				return null;

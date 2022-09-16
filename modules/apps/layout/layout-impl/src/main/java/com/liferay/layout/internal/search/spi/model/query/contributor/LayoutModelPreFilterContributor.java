@@ -24,6 +24,7 @@ import com.liferay.portal.kernel.search.filter.TermsFilter;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.search.spi.model.query.contributor.ModelPreFilterContributor;
 import com.liferay.portal.search.spi.model.registrar.ModelSearchSettings;
 
@@ -48,7 +49,12 @@ public class LayoutModelPreFilterContributor
 		String[] types = GetterUtil.getStringValues(
 			searchContext.getAttribute(Field.TYPE),
 			new String[] {
-				LayoutConstants.TYPE_COLLECTION, LayoutConstants.TYPE_CONTENT
+				LayoutConstants.TYPE_COLLECTION, LayoutConstants.TYPE_CONTENT,
+				LayoutConstants.TYPE_EMBEDDED,
+				LayoutConstants.TYPE_LINK_TO_LAYOUT,
+				LayoutConstants.TYPE_FULL_PAGE_APPLICATION,
+				LayoutConstants.TYPE_PANEL, LayoutConstants.TYPE_PORTLET,
+				LayoutConstants.TYPE_URL
 			});
 
 		if (ArrayUtil.isNotEmpty(types)) {
@@ -67,6 +73,25 @@ public class LayoutModelPreFilterContributor
 				"privateLayout", privateLayout);
 
 			booleanFilter.add(privateLayoutTermFilter, BooleanClauseOccur.MUST);
+		}
+
+		int[] statuses = GetterUtil.getIntegerValues(
+			searchContext.getAttribute(Field.STATUS));
+
+		if (ArrayUtil.isEmpty(statuses)) {
+			int status = GetterUtil.getInteger(
+				searchContext.getAttribute(Field.STATUS),
+				WorkflowConstants.STATUS_APPROVED);
+
+			statuses = new int[] {status};
+		}
+
+		if (!ArrayUtil.contains(statuses, WorkflowConstants.STATUS_ANY)) {
+			TermsFilter statusesTermsFilter = new TermsFilter(Field.STATUS);
+
+			statusesTermsFilter.addValues(ArrayUtil.toStringArray(statuses));
+
+			booleanFilter.add(statusesTermsFilter, BooleanClauseOccur.MUST);
 		}
 	}
 

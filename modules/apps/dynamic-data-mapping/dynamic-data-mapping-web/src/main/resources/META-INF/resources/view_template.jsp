@@ -70,7 +70,7 @@ if (layout != null) {
 	</c:choose>
 </c:if>
 
-<aui:form action="<%= viewTemplateURL.toString() %>" method="post" name="fm">
+<aui:form action="<%= viewTemplateURL %>" method="post" name="fm">
 	<aui:input name="redirect" type="hidden" value="<%= ddmDisplayContext.getTemplateSearchActionURL() %>" />
 	<aui:input name="deleteTemplateIds" type="hidden" />
 
@@ -92,17 +92,23 @@ if (layout != null) {
 				String rowHREF = StringPool.BLANK;
 
 				if (DDMTemplatePermission.contains(permissionChecker, template, ActionKeys.UPDATE)) {
-					PortletURL rowURL = renderResponse.createRenderURL();
-
-					rowURL.setParameter("mvcPath", "/edit_template.jsp");
-					rowURL.setParameter("groupId", String.valueOf(template.getGroupId()));
-					rowURL.setParameter("templateId", String.valueOf(template.getTemplateId()));
-					rowURL.setParameter("classNameId", String.valueOf(classNameId));
-					rowURL.setParameter("classPK", String.valueOf(template.getClassPK()));
-					rowURL.setParameter("type", template.getType());
-					rowURL.setParameter("structureAvailableFields", liferayPortletResponse.getNamespace() + "getAvailableFields");
-
-					rowHREF = rowURL.toString();
+					rowHREF = PortletURLBuilder.createRenderURL(
+						renderResponse
+					).setMVCPath(
+						"/edit_template.jsp"
+					).setParameter(
+						"classNameId", classNameId
+					).setParameter(
+						"classPK", template.getClassPK()
+					).setParameter(
+						"groupId", template.getGroupId()
+					).setParameter(
+						"structureAvailableFields", liferayPortletResponse.getNamespace() + "getAvailableFields"
+					).setParameter(
+						"templateId", template.getTemplateId()
+					).setParameter(
+						"type", template.getType()
+					).buildString();
 				}
 				%>
 

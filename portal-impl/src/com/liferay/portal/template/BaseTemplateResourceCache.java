@@ -43,6 +43,10 @@ public abstract class BaseTemplateResourceCache
 		_singleVMPortalCache.removeAll();
 	}
 
+	public <T> PortalCache<TemplateResource, T> getSecondLevelPortalCache() {
+		return (PortalCache<TemplateResource, T>)_secondLevelPortalCache;
+	}
+
 	@Override
 	public TemplateResource getTemplateResource(String templateId) {
 		if (!isEnabled()) {
@@ -121,79 +125,71 @@ public abstract class BaseTemplateResourceCache
 		_singleVMPortalCache.remove(templateId);
 	}
 
-	@Override
-	public void setSecondLevelPortalCache(
-		PortalCache<TemplateResource, ?> portalCache) {
-
-		if (!isEnabled()) {
-			return;
-		}
-
-		if (_templateResourcePortalCacheListener != null) {
-			_multiVMPortalCache.unregisterPortalCacheListener(
-				_templateResourcePortalCacheListener);
-			_singleVMPortalCache.unregisterPortalCacheListener(
-				_templateResourcePortalCacheListener);
-		}
-
-		_templateResourcePortalCacheListener =
-			new TemplateResourcePortalCacheListener(portalCache);
-
-		_multiVMPortalCache.registerPortalCacheListener(
-			_templateResourcePortalCacheListener);
-		_singleVMPortalCache.registerPortalCacheListener(
-			_templateResourcePortalCacheListener);
-	}
-
 	protected void destroy() {
-		if (!isEnabled()) {
-			return;
-		}
+		_multiVMPool.removePortalCache(
+			_multiVMPortalCache.getPortalCacheName());
 
-		_multiVMPool.removePortalCache(_portalCacheName);
+		_singleVMPool.removePortalCache(
+			_singleVMPortalCache.getPortalCacheName());
 
-		_multiVMPortalCache = null;
-
-		_singleVMPool.removePortalCache(_portalCacheName);
-
-		_singleVMPortalCache = null;
-
-		_templateResourcePortalCacheListener = null;
+		_singleVMPool.removePortalCache(
+			_secondLevelPortalCache.getPortalCacheName());
 	}
 
 	protected void init(
 		long modificationCheckInterval, MultiVMPool multiVMPool,
-		SingleVMPool singleVMPool, String portalCacheName) {
+		SingleVMPool singleVMPool, String portalCacheName,
+		String secondLevelPortalCacheName) {
 
 		_modificationCheckInterval = modificationCheckInterval;
 		_multiVMPool = multiVMPool;
 		_singleVMPool = singleVMPool;
-		_portalCacheName = portalCacheName;
 
-		if (isEnabled()) {
-			_multiVMPortalCache =
-				(PortalCache<String, TemplateResource>)
-					multiVMPool.getPortalCache(portalCacheName);
-			_singleVMPortalCache =
-				(PortalCache<String, TemplateResource>)
-					singleVMPool.getPortalCache(portalCacheName);
-		}
+		_multiVMPortalCache =
+			(PortalCache<String, TemplateResource>)multiVMPool.getPortalCache(
+				portalCacheName);
+		_singleVMPortalCache =
+			(PortalCache<String, TemplateResource>)singleVMPool.getPortalCache(
+				portalCacheName);
+
+		_secondLevelPortalCache =
+			(PortalCache<TemplateResource, ?>)_singleVMPool.getPortalCache(
+				secondLevelPortalCacheName);
+
+		_setSecondLevelPortalCache(_secondLevelPortalCache);
+	}
+
+	protected void setModificationCheckInterval(
+		long modificationCheckInterval) {
+
+		_modificationCheckInterval = modificationCheckInterval;
 	}
 
 	protected static final TemplateResource DUMMY_TEMPLATE_RESOURCE =
 		ProxyFactory.newDummyInstance(TemplateResource.class);
+
+	private void _setSecondLevelPortalCache(
+		PortalCache<TemplateResource, ?> portalCache) {
+
+		TemplateResourcePortalCacheListener
+			templateResourcePortalCacheListener =
+				new TemplateResourcePortalCacheListener(portalCache);
+
+		_multiVMPortalCache.registerPortalCacheListener(
+			templateResourcePortalCacheListener);
+		_singleVMPortalCache.registerPortalCacheListener(
+			templateResourcePortalCacheListener);
+	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		BaseTemplateResourceCache.class);
 
 	private volatile long _modificationCheckInterval;
 	private MultiVMPool _multiVMPool;
-	private volatile PortalCache<String, TemplateResource> _multiVMPortalCache;
-	private String _portalCacheName;
+	private PortalCache<String, TemplateResource> _multiVMPortalCache;
+	private PortalCache<TemplateResource, ?> _secondLevelPortalCache;
 	private SingleVMPool _singleVMPool;
-	private volatile PortalCache<String, TemplateResource> _singleVMPortalCache;
-	private volatile TemplateResourcePortalCacheListener
-		_templateResourcePortalCacheListener;
+	private PortalCache<String, TemplateResource> _singleVMPortalCache;
 
 	private class TemplateResourcePortalCacheListener
 		implements PortalCacheListener<String, TemplateResource> {

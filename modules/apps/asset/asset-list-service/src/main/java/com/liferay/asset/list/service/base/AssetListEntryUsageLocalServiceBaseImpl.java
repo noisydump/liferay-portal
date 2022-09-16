@@ -16,6 +16,7 @@ package com.liferay.asset.list.service.base;
 
 import com.liferay.asset.list.model.AssetListEntryUsage;
 import com.liferay.asset.list.service.AssetListEntryUsageLocalService;
+import com.liferay.asset.list.service.AssetListEntryUsageLocalServiceUtil;
 import com.liferay.asset.list.service.persistence.AssetListEntryUsagePersistence;
 import com.liferay.exportimport.kernel.lar.ExportImportHelperUtil;
 import com.liferay.exportimport.kernel.lar.ManifestSummary;
@@ -40,6 +41,8 @@ import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -55,10 +58,13 @@ import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -80,7 +86,7 @@ public abstract class AssetListEntryUsageLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>AssetListEntryUsageLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.asset.list.service.AssetListEntryUsageLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>AssetListEntryUsageLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>AssetListEntryUsageLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -158,6 +164,13 @@ public abstract class AssetListEntryUsageLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return assetListEntryUsagePersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -448,6 +461,11 @@ public abstract class AssetListEntryUsageLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement AssetListEntryUsageLocalServiceImpl#deleteAssetListEntryUsage(AssetListEntryUsage) to avoid orphaned data");
+		}
+
 		return assetListEntryUsageLocalService.deleteAssetListEntryUsage(
 			(AssetListEntryUsage)persistedModel);
 	}
@@ -562,6 +580,11 @@ public abstract class AssetListEntryUsageLocalServiceBaseImpl
 		return assetListEntryUsagePersistence.update(assetListEntryUsage);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -575,6 +598,8 @@ public abstract class AssetListEntryUsageLocalServiceBaseImpl
 	public void setAopProxy(Object aopProxy) {
 		assetListEntryUsageLocalService =
 			(AssetListEntryUsageLocalService)aopProxy;
+
+		_setLocalServiceUtilService(assetListEntryUsageLocalService);
 	}
 
 	/**
@@ -635,6 +660,23 @@ public abstract class AssetListEntryUsageLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		AssetListEntryUsageLocalService assetListEntryUsageLocalService) {
+
+		try {
+			Field field =
+				AssetListEntryUsageLocalServiceUtil.class.getDeclaredField(
+					"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, assetListEntryUsageLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected AssetListEntryUsageLocalService assetListEntryUsageLocalService;
 
 	@Reference
@@ -644,8 +686,7 @@ public abstract class AssetListEntryUsageLocalServiceBaseImpl
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
+	private static final Log _log = LogFactoryUtil.getLog(
+		AssetListEntryUsageLocalServiceBaseImpl.class);
 
 }

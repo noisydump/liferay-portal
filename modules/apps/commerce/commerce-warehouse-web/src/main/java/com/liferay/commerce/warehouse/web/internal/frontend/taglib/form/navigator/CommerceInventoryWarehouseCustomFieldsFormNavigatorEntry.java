@@ -15,10 +15,10 @@
 package com.liferay.commerce.warehouse.web.internal.frontend.taglib.form.navigator;
 
 import com.liferay.commerce.inventory.model.CommerceInventoryWarehouse;
-import com.liferay.commerce.warehouse.web.internal.servlet.taglib.ui.constants.CommerceInventoryWarehouseFormNavigatorConstants;
+import com.liferay.commerce.warehouse.web.internal.constants.CommerceInventoryWarehouseFormNavigatorConstants;
 import com.liferay.frontend.taglib.form.navigator.BaseJSPFormNavigatorEntry;
 import com.liferay.frontend.taglib.form.navigator.FormNavigatorEntry;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
@@ -60,7 +60,12 @@ public class CommerceInventoryWarehouseCustomFieldsFormNavigatorEntry
 
 	@Override
 	public String getLabel(Locale locale) {
-		return LanguageUtil.get(locale, getKey());
+		return _language.get(locale, getKey());
+	}
+
+	@Override
+	public ServletContext getServletContext() {
+		return _servletContext;
 	}
 
 	@Override
@@ -85,7 +90,7 @@ public class CommerceInventoryWarehouseCustomFieldsFormNavigatorEntry
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(exception, exception);
+				_log.debug(exception);
 			}
 		}
 
@@ -93,20 +98,19 @@ public class CommerceInventoryWarehouseCustomFieldsFormNavigatorEntry
 	}
 
 	@Override
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.commerce.warehouse.web)",
-		unbind = "-"
-	)
-	public void setServletContext(ServletContext servletContext) {
-		super.setServletContext(servletContext);
-	}
-
-	@Override
 	protected String getJspPath() {
-		return "/warehouse/custom_fields.jsp";
+		return "/commerce_inventory_warehouse/custom_fields.jsp";
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		CommerceInventoryWarehouseCustomFieldsFormNavigatorEntry.class);
+
+	@Reference
+	private Language _language;
+
+	@Reference(
+		target = "(osgi.web.symbolicname=com.liferay.commerce.warehouse.web)"
+	)
+	private ServletContext _servletContext;
 
 }

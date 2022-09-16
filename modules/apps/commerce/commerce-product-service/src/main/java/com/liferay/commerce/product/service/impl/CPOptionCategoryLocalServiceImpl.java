@@ -20,7 +20,12 @@ import com.liferay.commerce.product.internal.search.CPOptionCategoryIndexer;
 import com.liferay.commerce.product.model.CPDefinitionSpecificationOptionValue;
 import com.liferay.commerce.product.model.CPOptionCategory;
 import com.liferay.commerce.product.model.CPSpecificationOption;
+import com.liferay.commerce.product.service.CPDefinitionSpecificationOptionValueLocalService;
+import com.liferay.commerce.product.service.CPSpecificationOptionLocalService;
 import com.liferay.commerce.product.service.base.CPOptionCategoryLocalServiceBaseImpl;
+import com.liferay.commerce.product.service.persistence.CPDefinitionSpecificationOptionValuePersistence;
+import com.liferay.commerce.product.service.persistence.CPSpecificationOptionPersistence;
+import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.SystemEventConstants;
@@ -37,13 +42,16 @@ import com.liferay.portal.kernel.search.QueryConfig;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.search.Sort;
+import com.liferay.portal.kernel.service.ResourceLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
-import com.liferay.portal.kernel.util.FriendlyURLNormalizerUtil;
+import com.liferay.portal.kernel.util.FriendlyURLNormalizer;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.io.Serializable;
 
@@ -67,9 +75,9 @@ public class CPOptionCategoryLocalServiceImpl
 			ServiceContext serviceContext)
 		throws PortalException {
 
-		User user = userLocalService.getUser(userId);
+		User user = _userLocalService.getUser(userId);
 
-		key = FriendlyURLNormalizerUtil.normalize(key);
+		key = _friendlyURLNormalizer.normalize(key);
 
 		validate(0, user.getCompanyId(), key);
 
@@ -90,7 +98,7 @@ public class CPOptionCategoryLocalServiceImpl
 
 		// Resources
 
-		resourceLocalService.addModelResources(
+		_resourceLocalService.addModelResources(
 			cpOptionCategory, serviceContext);
 
 		return cpOptionCategory;
@@ -122,19 +130,19 @@ public class CPOptionCategoryLocalServiceImpl
 
 		// Resources
 
-		resourceLocalService.deleteResource(
+		_resourceLocalService.deleteResource(
 			cpOptionCategory, ResourceConstants.SCOPE_INDIVIDUAL);
 
 		// Commerce product specification options
 
 		List<CPSpecificationOption> cpSpecificationOptions =
-			cpSpecificationOptionPersistence.findByCPOptionCategoryId(
+			_cpSpecificationOptionPersistence.findByCPOptionCategoryId(
 				cpOptionCategory.getCPOptionCategoryId());
 
 		for (CPSpecificationOption cpSpecificationOption :
 				cpSpecificationOptions) {
 
-			cpSpecificationOptionLocalService.updateCPOptionCategoryId(
+			_cpSpecificationOptionLocalService.updateCPOptionCategoryId(
 				cpSpecificationOption.getCPSpecificationOptionId(),
 				CPOptionCategoryConstants.DEFAULT_CP_OPTION_CATEGORY_ID);
 		}
@@ -143,7 +151,7 @@ public class CPOptionCategoryLocalServiceImpl
 
 		List<CPDefinitionSpecificationOptionValue>
 			cpDefinitionSpecificationOptionValues =
-				cpDefinitionSpecificationOptionValuePersistence.
+				_cpDefinitionSpecificationOptionValuePersistence.
 					findByCPOptionCategoryId(
 						cpOptionCategory.getCPOptionCategoryId());
 
@@ -151,7 +159,7 @@ public class CPOptionCategoryLocalServiceImpl
 				cpDefinitionSpecificationOptionValue :
 					cpDefinitionSpecificationOptionValues) {
 
-			cpDefinitionSpecificationOptionValueLocalService.
+			_cpDefinitionSpecificationOptionValueLocalService.
 				updateCPOptionCategoryId(
 					cpDefinitionSpecificationOptionValue.
 						getCPDefinitionSpecificationOptionValueId(),
@@ -213,7 +221,7 @@ public class CPOptionCategoryLocalServiceImpl
 		CPOptionCategory cpOptionCategory =
 			cpOptionCategoryPersistence.findByPrimaryKey(cpOptionCategoryId);
 
-		key = FriendlyURLNormalizerUtil.normalize(key);
+		key = _friendlyURLNormalizer.normalize(key);
 
 		validate(
 			cpOptionCategory.getCPOptionCategoryId(),
@@ -232,7 +240,7 @@ public class CPOptionCategoryLocalServiceImpl
 
 		SearchContext searchContext = new SearchContext();
 
-		Map<String, Serializable> attributes =
+		searchContext.setAttributes(
 			HashMapBuilder.<String, Serializable>put(
 				CPOptionCategoryIndexer.FIELD_KEY, keywords
 			).put(
@@ -246,10 +254,7 @@ public class CPOptionCategoryLocalServiceImpl
 				LinkedHashMapBuilder.<String, Object>put(
 					"keywords", keywords
 				).build()
-			).build();
-
-		searchContext.setAttributes(attributes);
-
+			).build());
 		searchContext.setCompanyId(companyId);
 		searchContext.setEnd(end);
 
@@ -337,5 +342,31 @@ public class CPOptionCategoryLocalServiceImpl
 	private static final String[] _SELECTED_FIELD_NAMES = {
 		Field.ENTRY_CLASS_PK, Field.COMPANY_ID, Field.UID
 	};
+
+	@BeanReference(
+		type = CPDefinitionSpecificationOptionValueLocalService.class
+	)
+	private CPDefinitionSpecificationOptionValueLocalService
+		_cpDefinitionSpecificationOptionValueLocalService;
+
+	@BeanReference(type = CPDefinitionSpecificationOptionValuePersistence.class)
+	private CPDefinitionSpecificationOptionValuePersistence
+		_cpDefinitionSpecificationOptionValuePersistence;
+
+	@BeanReference(type = CPSpecificationOptionLocalService.class)
+	private CPSpecificationOptionLocalService
+		_cpSpecificationOptionLocalService;
+
+	@BeanReference(type = CPSpecificationOptionPersistence.class)
+	private CPSpecificationOptionPersistence _cpSpecificationOptionPersistence;
+
+	@ServiceReference(type = FriendlyURLNormalizer.class)
+	private FriendlyURLNormalizer _friendlyURLNormalizer;
+
+	@ServiceReference(type = ResourceLocalService.class)
+	private ResourceLocalService _resourceLocalService;
+
+	@ServiceReference(type = UserLocalService.class)
+	private UserLocalService _userLocalService;
 
 }

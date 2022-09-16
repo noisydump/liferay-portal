@@ -141,6 +141,9 @@ public interface LayoutSetLocalService
 	public <T> T dslQuery(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
 
 	/**
@@ -285,6 +288,10 @@ public interface LayoutSetLocalService
 	@Override
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)
+		throws PortalException;
+
+	public LayoutSet updateFaviconFileEntryId(
+			long groupId, boolean privateLayout, long faviconFileEntryId)
 		throws PortalException;
 
 	/**

@@ -20,8 +20,8 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.LayoutTypeController;
+import com.liferay.portal.kernel.servlet.PipingServletResponse;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.taglib.servlet.PipingServletResponse;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletResponse;
@@ -82,22 +82,6 @@ public class URLLayoutTypeController extends BaseLayoutTypeControllerImpl {
 		return false;
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *             #createServletResponse(HttpServletResponse,
-	 *             UnsyncStringWriter)}
-	 */
-	@Deprecated
-	@Override
-	protected ServletResponse createServletResponse(
-		HttpServletResponse httpServletResponse,
-		com.liferay.portal.kernel.io.unsync.UnsyncStringWriter
-			unsyncStringWriter) {
-
-		return new PipingServletResponse(
-			httpServletResponse, unsyncStringWriter);
-	}
-
 	@Override
 	protected ServletResponse createServletResponse(
 		HttpServletResponse httpServletResponse,
@@ -113,20 +97,22 @@ public class URLLayoutTypeController extends BaseLayoutTypeControllerImpl {
 	}
 
 	@Override
-	protected String getViewPage() {
-		return StringPool.BLANK;
+	protected ServletContext getServletContext() {
+		return _servletContext;
 	}
 
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.layout.type.controller.url)",
-		unbind = "-"
-	)
-	protected void setServletContext(ServletContext servletContext) {
-		this.servletContext = servletContext;
+	@Override
+	protected String getViewPage() {
+		return StringPool.BLANK;
 	}
 
 	private static final String _EDIT_PAGE = "/layout/edit/url.jsp";
 
 	private static final String _URL = "${url}";
+
+	@Reference(
+		target = "(osgi.web.symbolicname=com.liferay.layout.type.controller.url)"
+	)
+	private ServletContext _servletContext;
 
 }

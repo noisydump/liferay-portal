@@ -14,7 +14,7 @@
  */
 --%>
 
-<commerce-ui:side-panel-content
+<liferay-frontend:side-panel-content
 	title="<%= title %>"
 >
 	<portlet:actionURL name="/cp_definitions/edit_cp_attachment_file_entry" var="editCPAttachmentFileEntryActionURL" />
@@ -94,7 +94,7 @@
 			<aui:button cssClass="btn-lg" type="cancel" />
 		</aui:button-row>
 	</aui:form>
-</commerce-ui:side-panel-content>
+</liferay-frontend:side-panel-content>
 
 <%
 String fieldValues = "[]";
@@ -112,50 +112,47 @@ if (cpAttachmentFileEntry != null) {
 	}
 	catch (_ignore) {}
 
-	Liferay.componentReady('ProductOptions<%= cpDefinitionId %>').then(function (
-		ddmForm
-	) {
-		if (!ddmForm.on) {
-			return;
+	Liferay.componentReady('ProductOptions<%= cpDefinitionId %>').then(
+		(ddmForm) => {
+			if (!fieldValues.length) {
+				var ddmFormJSONShape = ddmForm.reactComponentRef.current.toJSON();
+				fieldValues = FormsHelper.getDefaultFieldsShape(ddmFormJSONShape);
+			}
+			ddmForm.unstable_onEvent((event) => {
+				var eventName = event.type;
+				if (eventName === 'field_change') {
+					fieldValues = FormsHelper.updateFields(
+						fieldValues,
+						event.payload
+					);
+					var form = document['<portlet:namespace />fm'];
+					form[
+						'<portlet:namespace />ddmFormValues'
+					].value = JSON.stringify(fieldValues);
+				}
+			});
 		}
+	);
 
-		if (!fieldValues.length) {
-			fieldValues = FormsHelper.getDefaultFieldsShape(ddmForm);
-		}
+	Liferay.provide(window, '<portlet:namespace />saveAttachmentFileEntry', () => {
+		var form = window.document['<portlet:namespace />fm'];
 
-		ddmForm.on('fieldEdited', function (field) {
-			fieldValues = FormsHelper.updateFields(fieldValues, field);
+		var ddmForm = Liferay.component('ProductOptions<%= cpDefinitionId %>');
 
-			var form = document['<portlet:namespace />fm'];
+		if (ddmForm) {
 			form['<portlet:namespace />ddmFormValues'].value = JSON.stringify(
 				fieldValues
 			);
-		});
-	});
-
-	Liferay.provide(
-		window,
-		'<portlet:namespace />saveAttachmentFileEntry',
-		function () {
-			var form = window.document['<portlet:namespace />fm'];
-
-			var ddmForm = Liferay.component('ProductOptions<%= cpDefinitionId %>');
-
-			if (ddmForm) {
-				form['<portlet:namespace />ddmFormValues'].value = JSON.stringify(
-					fieldValues
-				);
-			}
-
-			submitForm(form);
 		}
-	);
+
+		submitForm(form);
+	});
 </aui:script>
 
 <aui:script use="aui-base,event-input">
 	var publishButton = A.one('#<portlet:namespace />publishButton');
 
-	publishButton.on('click', function () {
+	publishButton.on('click', () => {
 		var workflowActionInput = A.one('#<portlet:namespace />workflowAction');
 
 		if (workflowActionInput) {

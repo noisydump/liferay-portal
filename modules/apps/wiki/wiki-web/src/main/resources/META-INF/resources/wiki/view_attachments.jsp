@@ -27,24 +27,15 @@ final WikiPage wikiPage = (WikiPage)request.getAttribute(WikiWebKeys.WIKI_PAGE);
 		<clay:row>
 
 			<%
-			List<FileEntry> attachmentsFileEntries = wikiPage.getAttachmentsFileEntries();
-
-			for (FileEntry fileEntry : attachmentsFileEntries) {
+			for (FileEntry fileEntry : wikiPage.getAttachmentsFileEntries()) {
 			%>
 
 				<clay:col
 					md="4"
 				>
-					<liferay-frontend:horizontal-card
-						text="<%= fileEntry.getTitle() %>"
-						url='<%= PortletFileRepositoryUtil.getDownloadPortletFileEntryURL(themeDisplay, fileEntry, "status=" + WorkflowConstants.STATUS_APPROVED) %>'
-					>
-						<liferay-frontend:horizontal-card-col>
-							<liferay-document-library:mime-type-sticker
-								fileVersion="<%= fileEntry.getFileVersion() %>"
-							/>
-						</liferay-frontend:horizontal-card-col>
-					</liferay-frontend:horizontal-card>
+					<clay:horizontal-card
+						horizontalCard="<%= new WikiPageAttachmentHorizontalCard(fileEntry, request) %>"
+					/>
 				</clay:col>
 
 			<%

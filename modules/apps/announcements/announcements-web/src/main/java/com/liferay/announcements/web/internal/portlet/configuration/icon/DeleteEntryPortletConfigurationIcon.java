@@ -17,8 +17,9 @@ package com.liferay.announcements.web.internal.portlet.configuration.icon;
 import com.liferay.announcements.constants.AnnouncementsPortletKeys;
 import com.liferay.announcements.kernel.model.AnnouncementsEntry;
 import com.liferay.announcements.web.internal.portlet.action.ActionUtil;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.portlet.configuration.icon.BasePortletConfigurationIcon;
 import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfigurationIcon;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
@@ -28,7 +29,6 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portlet.announcements.service.permission.AnnouncementsEntryPermission;
 
-import javax.portlet.ActionRequest;
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
 import javax.portlet.PortletURL;
@@ -52,7 +52,7 @@ public class DeleteEntryPortletConfigurationIcon
 
 	@Override
 	public String getMessage(PortletRequest portletRequest) {
-		return LanguageUtil.get(
+		return _language.get(
 			getResourceBundle(getLocale(portletRequest)), "delete");
 	}
 
@@ -60,13 +60,15 @@ public class DeleteEntryPortletConfigurationIcon
 	public String getURL(
 		PortletRequest portletRequest, PortletResponse portletResponse) {
 
-		PortletURL portletURL = _portal.getControlPanelPortletURL(
-			portletRequest, AnnouncementsPortletKeys.ANNOUNCEMENTS_ADMIN,
-			PortletRequest.ACTION_PHASE);
-
-		portletURL.setParameter(
-			ActionRequest.ACTION_NAME, "/announcements/edit_entry");
-		portletURL.setParameter(Constants.CMD, Constants.DELETE);
+		PortletURL portletURL = PortletURLBuilder.create(
+			_portal.getControlPanelPortletURL(
+				portletRequest, AnnouncementsPortletKeys.ANNOUNCEMENTS_ADMIN,
+				PortletRequest.ACTION_PHASE)
+		).setActionName(
+			"/announcements/edit_entry"
+		).setCMD(
+			Constants.DELETE
+		).buildPortletURL();
 
 		PortletURL redirectURL = _portal.getControlPanelPortletURL(
 			portletRequest, AnnouncementsPortletKeys.ANNOUNCEMENTS_ADMIN,
@@ -113,6 +115,9 @@ public class DeleteEntryPortletConfigurationIcon
 	public boolean isToolTip() {
 		return false;
 	}
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private Portal _portal;

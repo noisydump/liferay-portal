@@ -18,18 +18,24 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.search.elasticsearch7.internal.connection.ElasticsearchConnection;
 import com.liferay.portal.search.elasticsearch7.internal.connection.ElasticsearchConnectionFixture;
 import com.liferay.portal.search.elasticsearch7.internal.connection.ElasticsearchConnectionManager;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.SnapshotClient;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 /**
  * @author André de Oliveira
  */
 public class ElasticsearchSearchEngineReconnectTest {
+
+	@ClassRule
+	public static LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
@@ -71,14 +77,14 @@ public class ElasticsearchSearchEngineReconnectTest {
 
 		elasticsearchSearchEngine.initialize(companyId);
 
-		reconnect(
+		_reconnect(
 			_elasticsearchSearchEngineFixture.
 				getElasticsearchConnectionManager());
 
 		elasticsearchSearchEngine.initialize(companyId);
 	}
 
-	protected void reconnect(
+	private void _reconnect(
 		ElasticsearchConnectionManager elasticsearchConnectionManager) {
 
 		ElasticsearchConnection elasticsearchConnection =

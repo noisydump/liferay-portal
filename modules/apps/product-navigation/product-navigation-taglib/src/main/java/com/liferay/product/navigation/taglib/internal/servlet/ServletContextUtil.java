@@ -30,31 +30,31 @@ import org.osgi.service.component.annotations.Reference;
 @Component(immediate = true, service = {})
 public class ServletContextUtil {
 
-	public static final String getContextPath() {
+	public static String getContextPath() {
 		return _servletContext.getContextPath();
 	}
 
-	public static final PanelAppRegistry getPanelAppRegistry() {
+	public static PanelAppRegistry getPanelAppRegistry() {
 		return _panelAppRegistry;
 	}
 
-	public static final PanelCategoryRegistry getPanelCategoryRegistry() {
+	public static PanelCategoryRegistry getPanelCategoryRegistry() {
 		return _panelCategoryRegistry;
 	}
 
-	public static final ProductNavigationControlMenuCategoryRegistry
+	public static ProductNavigationControlMenuCategoryRegistry
 		getProductNavigationControlMenuCategoryRegistry() {
 
 		return _productNavigationControlMenuCategoryRegistry;
 	}
 
-	public static final ProductNavigationControlMenuEntryRegistry
+	public static ProductNavigationControlMenuEntryRegistry
 		getProductNavigationControlMenuEntryRegistry() {
 
 		return _productNavigationControlMenuEntryRegistry;
 	}
 
-	public static final ServletContext getServletContext() {
+	public static ServletContext getServletContext() {
 		return _servletContext;
 	}
 

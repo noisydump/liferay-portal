@@ -17,6 +17,7 @@ package com.liferay.portal.search.elasticsearch7.internal.search.engine.adapter.
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.search.elasticsearch7.internal.connection.ElasticsearchFixture;
 import com.liferay.portal.search.engine.adapter.index.UpdateIndexSettingsIndexRequest;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.Arrays;
 
@@ -25,12 +26,17 @@ import org.elasticsearch.action.admin.indices.settings.put.UpdateSettingsRequest
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 /**
  * @author Michael C. Han
  */
 public class UpdateIndexSettingsIndexRequestExecutorTest {
+
+	@ClassRule
+	public static LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Before
 	public void setUp() throws Exception {
@@ -52,20 +58,13 @@ public class UpdateIndexSettingsIndexRequestExecutorTest {
 		UpdateIndexSettingsIndexRequest updateIndexSettingsIndexRequest =
 			new UpdateIndexSettingsIndexRequest(_INDEX_NAME);
 
-		StringBundler sb = new StringBundler(10);
-
-		sb.append("{\n");
-		sb.append("    \"analysis\": {\n");
-		sb.append("        \"analyzer\": {\n");
-		sb.append("            \"content\": {\n");
-		sb.append("                \"tokenizer\": \"whitespace\",\n");
-		sb.append("                \"type\": \"custom\"\n");
-		sb.append("            }\n");
-		sb.append("        }\n");
-		sb.append("    }\n");
-		sb.append("}");
-
-		updateIndexSettingsIndexRequest.setSettings(sb.toString());
+		updateIndexSettingsIndexRequest.setSettings(
+			StringBundler.concat(
+				"{\n", "    \"analysis\": {\n", "        \"analyzer\": {\n",
+				"            \"content\": {\n",
+				"                \"tokenizer\": \"whitespace\",\n",
+				"                \"type\": \"custom\"\n", "            }\n",
+				"        }\n", "    }\n", "}"));
 
 		UpdateIndexSettingsIndexRequestExecutorImpl
 			updateIndexSettingsIndexRequestExecutorImpl =

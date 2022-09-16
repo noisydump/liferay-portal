@@ -87,9 +87,10 @@ public interface MBMessageLocalService
 		throws PortalException;
 
 	public MBMessage addDiscussionMessage(
-			long userId, String userName, long groupId, String className,
-			long classPK, long threadId, long parentMessageId, String subject,
-			String body, ServiceContext serviceContext)
+			String externalReferenceCode, long userId, String userName,
+			long groupId, String className, long classPK, long threadId,
+			long parentMessageId, String subject, String body,
+			ServiceContext serviceContext)
 		throws PortalException;
 
 	/**
@@ -105,6 +106,13 @@ public interface MBMessageLocalService
 	@Indexable(type = IndexableType.REINDEX)
 	public MBMessage addMBMessage(MBMessage mbMessage);
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #addMessage(String, long, String, long, long, long, long,
+	 String, String, String, List, boolean, double, boolean,
+	 ServiceContext)}
+	 */
+	@Deprecated
 	public MBMessage addMessage(
 			long userId, String userName, long groupId, long categoryId,
 			long threadId, long parentMessageId, String subject, String body,
@@ -114,11 +122,25 @@ public interface MBMessageLocalService
 			ServiceContext serviceContext)
 		throws PortalException;
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #addMessage(String, long, String, long, long, long, long,
+	 String, String, String, List, boolean, double, boolean,
+	 ServiceContext)}
+	 */
+	@Deprecated
 	public MBMessage addMessage(
 			long userId, String userName, long groupId, long categoryId,
 			String subject, String body, ServiceContext serviceContext)
 		throws PortalException;
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #addMessage(String, long, String, long, long, long, long,
+	 String, String, String, List, boolean, double, boolean,
+	 ServiceContext)}
+	 */
+	@Deprecated
 	public MBMessage addMessage(
 			long userId, String userName, long groupId, long categoryId,
 			String subject, String body, String format,
@@ -127,12 +149,28 @@ public interface MBMessageLocalService
 			ServiceContext serviceContext)
 		throws PortalException;
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #addMessage(String, long, String, long, long, long, long,
+	 String, String, String, List, boolean, double, boolean,
+	 ServiceContext)}
+	 */
+	@Deprecated
 	public MBMessage addMessage(
 			long userId, String userName, long groupId, long categoryId,
 			String subject, String body, String format, String fileName,
 			File file, boolean anonymous, double priority,
 			boolean allowPingbacks, ServiceContext serviceContext)
 		throws FileNotFoundException, PortalException;
+
+	public MBMessage addMessage(
+			String externalReferenceCode, long userId, String userName,
+			long groupId, long categoryId, long threadId, long parentMessageId,
+			String subject, String body, String format,
+			List<ObjectValuePair<String, InputStream>> inputStreamOVPs,
+			boolean anonymous, double priority, boolean allowPingbacks,
+			ServiceContext serviceContext)
+		throws PortalException;
 
 	public void addMessageAttachment(
 			long userId, long messageId, String fileName, File file,
@@ -238,6 +276,9 @@ public interface MBMessageLocalService
 	public <T> T dslQuery(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
 
 	/**
@@ -315,6 +356,25 @@ public interface MBMessageLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public MBMessage fetchMBMessage(long messageId);
+
+	/**
+	 * Returns the message-boards message with the matching external reference code and group.
+	 *
+	 * @param groupId the primary key of the group
+	 * @param externalReferenceCode the message-boards message's external reference code
+	 * @return the matching message-boards message, or <code>null</code> if a matching message-boards message could not be found
+	 */
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public MBMessage fetchMBMessageByExternalReferenceCode(
+		long groupId, String externalReferenceCode);
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #fetchMBMessageByExternalReferenceCode(long, String)}
+	 */
+	@Deprecated
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public MBMessage fetchMBMessageByReferenceCode(
+		long groupId, String externalReferenceCode);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public MBMessage fetchMBMessageByUrlSubject(
@@ -447,6 +507,19 @@ public interface MBMessageLocalService
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public MBMessage getMBMessage(long messageId) throws PortalException;
+
+	/**
+	 * Returns the message-boards message with the matching external reference code and group.
+	 *
+	 * @param groupId the primary key of the group
+	 * @param externalReferenceCode the message-boards message's external reference code
+	 * @return the matching message-boards message
+	 * @throws PortalException if a matching message-boards message could not be found
+	 */
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public MBMessage getMBMessageByExternalReferenceCode(
+			long groupId, String externalReferenceCode)
+		throws PortalException;
 
 	/**
 	 * Returns the message-boards message matching the UUID and group.

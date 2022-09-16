@@ -16,6 +16,8 @@ package com.liferay.portal.search.tuning.synonyms.web.internal.index.name;
 
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.search.index.IndexNameBuilder;
+import com.liferay.portal.search.tuning.synonyms.index.name.SynonymSetIndexName;
+import com.liferay.portal.search.tuning.synonyms.index.name.SynonymSetIndexNameBuilder;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -34,14 +36,10 @@ public class SynonymSetIndexNameBuilderImpl
 				SYNONYMS_INDEX_NAME_SUFFIX);
 	}
 
-	@Reference(unbind = "-")
-	protected void setIndexNameBuilder(IndexNameBuilder indexNameBuilder) {
-		_indexNameBuilder = indexNameBuilder;
-	}
-
 	protected static final String SYNONYMS_INDEX_NAME_SUFFIX =
 		"search-tuning-synonyms";
 
+	@Reference
 	private IndexNameBuilder _indexNameBuilder;
 
 	private static class SynonymSetIndexNameImpl

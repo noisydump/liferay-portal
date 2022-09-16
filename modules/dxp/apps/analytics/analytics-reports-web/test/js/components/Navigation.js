@@ -9,7 +9,7 @@
  * distribution rights of the Software.
  */
 
-import {cleanup, render} from '@testing-library/react';
+import {render} from '@testing-library/react';
 import React from 'react';
 
 import Navigation from '../../../src/main/resources/META-INF/resources/js/components/Navigation';
@@ -20,12 +20,18 @@ import {StoreContextProvider} from '../../../src/main/resources/META-INF/resourc
 import '@testing-library/jest-dom/extend-expect';
 
 const mockEndpoints = {
-	analyticsReportsHistoricalReadsURL: 'analyticsReportsHistoricalReadsURL',
-	analyticsReportsHistoricalViewsURL: 'analyticsReportsHistoricalViewsURL',
-	analyticsReportsTotalReadsURL: 'analyticsReportsTotalReadsURL',
-	analyticsReportsTotalViewsURL: 'analyticsReportsTotalViewsURL',
-	analyticsReportsTrafficSourcesURL: 'analyticsReportsTrafficSourcesURL',
+	analyticsReportsHistoricalReadsURL: '/o/analyticsReportsHistoricalReadsURL',
+	analyticsReportsHistoricalViewsURL: '/o/analyticsReportsHistoricalViewsURL',
+	analyticsReportsTotalReadsURL: '/o/analyticsReportsTotalReadsURL',
+	analyticsReportsTotalViewsURL: '/o/analyticsReportsTotalViewsURL',
+	analyticsReportsTrafficSourcesURL: '/o/analyticsReportsTrafficSourcesURL',
 };
+
+const mockLanguageTag = 'en-US';
+
+const mockNamespace = 'namespace';
+
+const mockPage = {plid: 20};
 
 const mockTimeSpanOptions = [
 	{
@@ -42,12 +48,14 @@ const mockViewURLs = [
 	{
 		default: true,
 		languageId: 'en-US',
+		languageLabel: 'English (United States)',
 		selected: true,
 		viewURL: 'http://localhost:8080/en/web/guest/-/basic-web-content',
 	},
 	{
 		default: false,
 		languageId: 'es-ES',
+		languageLabel: 'Spanish (Spain)',
 		selected: false,
 		viewURL: 'http://localhost:8080/es/web/guest/-/contenido-web-basico',
 	},
@@ -62,7 +70,6 @@ describe('Navigation', () => {
 
 	afterEach(() => {
 		jest.clearAllMocks();
-		cleanup();
 	});
 
 	it('displays an alert error message if there is no valid connection', () => {
@@ -74,8 +81,6 @@ describe('Navigation', () => {
 			},
 			canonicalURL:
 				'http://localhost:8080/en/web/guest/-/basic-web-content',
-			languageTag: 'en-US',
-			page: {plid: 20},
 			pagePublishDate: 'Thu Aug 10 08:17:57 GMT 2020',
 			pageTitle: 'A testing page',
 			timeRange: {endDate: '2020-01-27', startDate: '2020-02-02'},
@@ -88,24 +93,32 @@ describe('Navigation', () => {
 					validAnalyticsConnection: false,
 				}}
 			>
-				<ChartStateContextProvider
-					publishDate={testProps.pagePublishDate}
-					timeRange={testProps.timeRange}
-					timeSpanKey={testProps.timeSpanKey}
+				<StoreContextProvider
+					value={{
+						endpoints: mockEndpoints,
+						languageTag: mockLanguageTag,
+						namespace: mockNamespace,
+						page: mockPage,
+					}}
 				>
-					<Navigation
-						author={testProps.author}
-						canonicalURL={testProps.canonicalURL}
-						endpoints={mockEndpoints}
-						languageTag={testProps.languageTag}
-						onSelectedLanguageClick={noop}
-						page={testProps.page}
-						pagePublishDate={testProps.pagePublishDate}
-						pageTitle={testProps.pageTitle}
-						timeSpanOptions={mockTimeSpanOptions}
-						viewURLs={mockViewURLs}
-					/>
-				</ChartStateContextProvider>
+					<ChartStateContextProvider
+						publishDate={testProps.pagePublishDate}
+						timeRange={testProps.timeRange}
+						timeSpanKey={testProps.timeSpanKey}
+					>
+						<Navigation
+							author={testProps.author}
+							canonicalURL={testProps.canonicalURL}
+							endpoints={mockEndpoints}
+							onSelectedLanguageClick={noop}
+							page={testProps.page}
+							pagePublishDate={testProps.pagePublishDate}
+							pageTitle={testProps.pageTitle}
+							timeSpanOptions={mockTimeSpanOptions}
+							viewURLs={mockViewURLs}
+						/>
+					</ChartStateContextProvider>
+				</StoreContextProvider>
 			</ConnectionContext.Provider>
 		);
 
@@ -121,8 +134,6 @@ describe('Navigation', () => {
 			},
 			canonicalURL:
 				'http://localhost:8080/en/web/guest/-/basic-web-content',
-			languageTag: 'en-US',
-			page: {plid: 20},
 			pagePublishDate: 'Thu Aug 10 08:17:57 GMT 2020',
 			pageTitle: 'A testing page',
 			timeRange: {endDate: '2020-01-27', startDate: '2020-02-02'},
@@ -130,7 +141,15 @@ describe('Navigation', () => {
 		};
 
 		const {getByText} = render(
-			<StoreContextProvider value={{warning: true}}>
+			<StoreContextProvider
+				value={{
+					endpoints: mockEndpoints,
+					languageTag: mockLanguageTag,
+					namespace: mockNamespace,
+					page: mockPage,
+					warning: true,
+				}}
+			>
 				<ChartStateContextProvider
 					publishDate={testProps.publishDate}
 					timeRange={testProps.timeRange}
@@ -140,7 +159,6 @@ describe('Navigation', () => {
 						author={testProps.author}
 						canonicalURL={testProps.canonicalURL}
 						endpoints={mockEndpoints}
-						languageTag={testProps.languageTag}
 						onSelectedLanguageClick={noop}
 						page={testProps.page}
 						pagePublishDate={testProps.pagePublishDate}
@@ -166,8 +184,6 @@ describe('Navigation', () => {
 			},
 			canonicalURL:
 				'http://localhost:8080/en/web/guest/-/basic-web-content',
-			languageTag: 'en-US',
-			page: {plid: 20},
 			pagePublishDate: 'Thu Feb 02 08:17:57 GMT 2020',
 			pageTitle: 'A testing page',
 			timeRange: {endDate: '2020-01-27', startDate: '2020-02-02'},
@@ -175,7 +191,15 @@ describe('Navigation', () => {
 		};
 
 		const {getByText} = render(
-			<StoreContextProvider value={{publishedToday: true}}>
+			<StoreContextProvider
+				value={{
+					endpoints: mockEndpoints,
+					languageTag: mockLanguageTag,
+					namespace: mockNamespace,
+					page: mockPage,
+					publishedToday: true,
+				}}
+			>
 				<ChartStateContextProvider
 					publishDate={testProps.pagePublishDate}
 					timeRange={testProps.timeRange}
@@ -185,7 +209,6 @@ describe('Navigation', () => {
 						author={testProps.author}
 						canonicalURL={testProps.canonicalURL}
 						endpoints={mockEndpoints}
-						languageTag={testProps.languageTag}
 						onSelectedLanguageClick={noop}
 						page={testProps.page}
 						pagePublishDate={testProps.pagePublishDate}

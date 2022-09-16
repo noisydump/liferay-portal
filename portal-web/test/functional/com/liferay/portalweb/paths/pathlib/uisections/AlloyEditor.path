@@ -2,11 +2,13 @@
 <head>
 <title>AlloyEditor</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">AlloyEditor</td></tr>
 </thead>
+
 <tbody>
 <tr>
 	<td>EDITOR</td>
@@ -34,11 +36,18 @@
 	<td></td>
 </tr>
 <tr>
+	<td>IMAGE_TOOLBAR</td>
+	<td>//div[contains(@class,'ae-toolbar') and contains(@class,'alloy-editor')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td></td>
 	<td></td>
 	<td></td>
 </tr>
+
 <!--CONTENT_ADD_MENUBAR-->
+
 <tr>
 	<td>CONTENT_ADD_MENUBAR_IMAGE</td>
 	<td>//button[contains(@data-type,'image')]</td>
@@ -54,7 +63,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--TEXT_FORMATTING-->
+
 <tr>
 	<td>TEXT_FORMATTING_STYLE</td>
 	<td>//button[contains(@class,'ae-toolbar-element')]//span[contains(@class,'selected-item')]</td>
@@ -73,6 +84,11 @@
 <tr>
 	<td>TEXT_FORMATTING_ITALIC</td>
 	<td>//button[contains(@data-type,'button-italic')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>TEXT_FORMATTING_REMOVE_LINK_BUTTON</td>
+	<td>//button[contains(@aria-label,'Remove link')]</td>
 	<td></td>
 </tr>
 <tr>

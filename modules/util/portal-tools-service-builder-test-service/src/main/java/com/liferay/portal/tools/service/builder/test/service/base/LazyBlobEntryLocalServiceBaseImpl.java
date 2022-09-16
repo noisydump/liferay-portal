@@ -32,6 +32,8 @@ import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -48,10 +50,13 @@ import com.liferay.portal.tools.service.builder.test.model.LazyBlobEntry;
 import com.liferay.portal.tools.service.builder.test.model.LazyBlobEntryBlob1BlobModel;
 import com.liferay.portal.tools.service.builder.test.model.LazyBlobEntryBlob2BlobModel;
 import com.liferay.portal.tools.service.builder.test.service.LazyBlobEntryLocalService;
+import com.liferay.portal.tools.service.builder.test.service.LazyBlobEntryLocalServiceUtil;
 import com.liferay.portal.tools.service.builder.test.service.persistence.LazyBlobEntryPersistence;
 
 import java.io.InputStream;
 import java.io.Serializable;
+
+import java.lang.reflect.Field;
 
 import java.sql.Blob;
 
@@ -77,7 +82,7 @@ public abstract class LazyBlobEntryLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>LazyBlobEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.tools.service.builder.test.service.LazyBlobEntryLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>LazyBlobEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>LazyBlobEntryLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -148,6 +153,13 @@ public abstract class LazyBlobEntryLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return lazyBlobEntryPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -329,6 +341,11 @@ public abstract class LazyBlobEntryLocalServiceBaseImpl
 	@Override
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
+
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement LazyBlobEntryLocalServiceImpl#deleteLazyBlobEntry(LazyBlobEntry) to avoid orphaned data");
+		}
 
 		return lazyBlobEntryLocalService.deleteLazyBlobEntry(
 			(LazyBlobEntry)persistedModel);
@@ -578,11 +595,15 @@ public abstract class LazyBlobEntryLocalServiceBaseImpl
 
 			_useTempFile = true;
 		}
+
+		_setLocalServiceUtilService(lazyBlobEntryLocalService);
 	}
 
 	public void destroy() {
 		persistedModelLocalServiceRegistry.unregister(
 			"com.liferay.portal.tools.service.builder.test.model.LazyBlobEntry");
+
+		_setLocalServiceUtilService(null);
 	}
 
 	/**
@@ -627,6 +648,22 @@ public abstract class LazyBlobEntryLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		LazyBlobEntryLocalService lazyBlobEntryLocalService) {
+
+		try {
+			Field field = LazyBlobEntryLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, lazyBlobEntryLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@BeanReference(type = LazyBlobEntryLocalService.class)
 	protected LazyBlobEntryLocalService lazyBlobEntryLocalService;
 
@@ -638,6 +675,9 @@ public abstract class LazyBlobEntryLocalServiceBaseImpl
 	)
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		LazyBlobEntryLocalServiceBaseImpl.class);
 
 	@BeanReference(type = File.class)
 	protected File _file;

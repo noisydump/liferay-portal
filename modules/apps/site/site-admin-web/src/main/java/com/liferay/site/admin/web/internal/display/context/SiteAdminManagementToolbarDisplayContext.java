@@ -19,9 +19,12 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
@@ -33,8 +36,6 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.util.List;
-
-import javax.portlet.PortletURL;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -63,7 +64,7 @@ public class SiteAdminManagementToolbarDisplayContext
 		return DropdownItemListBuilder.add(
 			dropdownItem -> {
 				dropdownItem.putData("action", "deleteSites");
-				dropdownItem.setIcon("times-circle");
+				dropdownItem.setIcon("trash");
 				dropdownItem.setLabel(
 					LanguageUtil.get(httpServletRequest, "delete"));
 				dropdownItem.setQuickAction(true);
@@ -81,13 +82,15 @@ public class SiteAdminManagementToolbarDisplayContext
 
 	@Override
 	public String getClearResultsURL() {
-		PortletURL clearResultsURL = getPortletURL();
-
-		clearResultsURL.setParameter("keywords", StringPool.BLANK);
-		clearResultsURL.setParameter("orderByCol", getOrderByCol());
-		clearResultsURL.setParameter("orderByType", getOrderByType());
-
-		return clearResultsURL.toString();
+		return PortletURLBuilder.create(
+			getPortletURL()
+		).setKeywords(
+			StringPool.BLANK
+		).setParameter(
+			"orderByCol", getOrderByCol()
+		).setParameter(
+			"orderByType", getOrderByType()
+		).buildString();
 	}
 
 	@Override
@@ -109,30 +112,40 @@ public class SiteAdminManagementToolbarDisplayContext
 		}
 
 		try {
-			PortletURL addSiteURL = liferayPortletResponse.createRenderURL();
-
-			addSiteURL.setParameter(
-				"mvcRenderCommandName", "/site_admin/select_site_initializer");
-			addSiteURL.setParameter("redirect", themeDisplay.getURLCurrent());
-
-			Group group = _siteAdminDisplayContext.getGroup();
-
-			if ((group != null) &&
-				_siteAdminDisplayContext.hasAddChildSitePermission(group)) {
-
-				addSiteURL.setParameter(
-					"parentGroupId", String.valueOf(group.getGroupId()));
-			}
-
 			return CreationMenuBuilder.addPrimaryDropdownItem(
 				dropdownItem -> {
-					dropdownItem.setHref(addSiteURL.toString());
+					dropdownItem.setHref(
+						PortletURLBuilder.createRenderURL(
+							liferayPortletResponse
+						).setMVCRenderCommandName(
+							"/site_admin/select_site_initializer"
+						).setRedirect(
+							themeDisplay.getURLCurrent()
+						).setParameter(
+							"parentGroupId",
+							() -> {
+								Group group =
+									_siteAdminDisplayContext.getGroup();
+
+								if ((group != null) &&
+									_siteAdminDisplayContext.
+										hasAddChildSitePermission(group)) {
+
+									return group.getGroupId();
+								}
+
+								return null;
+							}
+						).buildString());
 					dropdownItem.setLabel(
 						LanguageUtil.get(httpServletRequest, "add"));
 				}
 			).build();
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return null;
@@ -150,12 +163,13 @@ public class SiteAdminManagementToolbarDisplayContext
 
 	@Override
 	public String getSearchActionURL() {
-		PortletURL searchTagURL = getPortletURL();
-
-		searchTagURL.setParameter("orderByCol", getOrderByCol());
-		searchTagURL.setParameter("orderByType", getOrderByType());
-
-		return searchTagURL.toString();
+		return PortletURLBuilder.create(
+			getPortletURL()
+		).setParameter(
+			"orderByCol", getOrderByCol()
+		).setParameter(
+			"orderByType", getOrderByType()
+		).buildString();
 	}
 
 	@Override
@@ -177,6 +191,11 @@ public class SiteAdminManagementToolbarDisplayContext
 		}
 
 		return false;
+	}
+
+	@Override
+	protected String getDisplayStyle() {
+		return _siteAdminDisplayContext.getDisplayStyle();
 	}
 
 	@Override
@@ -207,17 +226,17 @@ public class SiteAdminManagementToolbarDisplayContext
 
 		if (!GroupPermissionUtil.contains(
 				themeDisplay.getPermissionChecker(), group,
-				ActionKeys.DELETE)) {
+				ActionKeys.DELETE) ||
+			PortalUtil.isSystemGroup(group.getGroupKey())) {
 
-			return false;
-		}
-
-		if (PortalUtil.isSystemGroup(group.getGroupKey())) {
 			return false;
 		}
 
 		return true;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		SiteAdminManagementToolbarDisplayContext.class);
 
 	private final SiteAdminDisplayContext _siteAdminDisplayContext;
 

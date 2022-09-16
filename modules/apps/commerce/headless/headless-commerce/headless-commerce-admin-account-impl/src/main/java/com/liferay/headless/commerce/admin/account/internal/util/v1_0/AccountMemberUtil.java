@@ -62,15 +62,21 @@ public class AccountMemberUtil {
 			long companyId)
 		throws PortalException {
 
-		User user;
+		User user = null;
 
-		if (Validator.isNotNull(accountMember.getUserExternalReferenceCode())) {
+		if (Validator.isNotNull(accountMember.getEmail())) {
+			user = userLocalService.getUserByEmailAddress(
+				companyId, accountMember.getEmail());
+		}
+		else if (Validator.isNotNull(
+					accountMember.getUserExternalReferenceCode())) {
+
 			user = userLocalService.fetchUserByReferenceCode(
 				companyId, accountMember.getUserExternalReferenceCode());
 
 			if (user == null) {
 				throw new NoSuchUserException(
-					"Unable to find User with externalReferenceCode: " +
+					"Unable to get user with external reference code " +
 						accountMember.getUserExternalReferenceCode());
 			}
 		}

@@ -2,13 +2,17 @@
 <head>
 <title>KaleoFormsAdminEditProcessForm</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">KaleoFormsAdminEditProcessForm</td></tr>
 </thead>
+
 <tbody>
+
 <!--FORM_TABLE-->
+
 <tr>
 	<td>FORM_TABLE_NAME</td>
 	<td>//tr[contains(.,'${key_kfFormName}')]/td[contains(.,'${key_kfFormName}')]</td>

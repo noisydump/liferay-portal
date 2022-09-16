@@ -15,19 +15,16 @@
 package com.liferay.commerce.item.selector.web.internal.display.context;
 
 import com.liferay.commerce.item.selector.web.internal.search.CommerceCountryItemSelectorChecker;
-import com.liferay.commerce.model.CommerceCountry;
-import com.liferay.commerce.service.CommerceCountryService;
 import com.liferay.commerce.util.CommerceUtil;
-import com.liferay.portal.kernel.dao.search.RowChecker;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.Country;
+import com.liferay.portal.kernel.service.CountryService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
-
-import java.util.List;
 
 import javax.portlet.PortletURL;
 
@@ -37,16 +34,15 @@ import javax.servlet.http.HttpServletRequest;
  * @author Alessio Antonio Rendina
  */
 public class CommerceCountryItemSelectorViewDisplayContext
-	extends BaseCommerceItemSelectorViewDisplayContext<CommerceCountry> {
+	extends BaseCommerceItemSelectorViewDisplayContext<Country> {
 
 	public CommerceCountryItemSelectorViewDisplayContext(
-		CommerceCountryService commerceCountryService,
-		HttpServletRequest httpServletRequest, PortletURL portletURL,
-		String itemSelectedEventName) {
+		CountryService countryService, HttpServletRequest httpServletRequest,
+		PortletURL portletURL, String itemSelectedEventName) {
 
 		super(httpServletRequest, portletURL, itemSelectedEventName);
 
-		_commerceCountryService = commerceCountryService;
+		_countryService = countryService;
 
 		setDefaultOrderByCol("priority");
 		setDefaultOrderByType("asc");
@@ -54,19 +50,15 @@ public class CommerceCountryItemSelectorViewDisplayContext
 
 	@Override
 	public PortletURL getPortletURL() {
-		PortletURL portletURL = super.getPortletURL();
-
-		String checkedCommerceCountryIds = StringUtil.merge(
-			getCheckedCommerceCountryIds());
-
-		portletURL.setParameter(
-			"checkedCommerceCountryIds", checkedCommerceCountryIds);
-
-		return portletURL;
+		return PortletURLBuilder.create(
+			super.getPortletURL()
+		).setParameter(
+			"checkedCountryIds", StringUtil.merge(_getCheckedCountryIds())
+		).buildPortletURL();
 	}
 
 	@Override
-	public SearchContainer<CommerceCountry> getSearchContainer()
+	public SearchContainer<Country> getSearchContainer()
 		throws PortalException {
 
 		if (searchContainer != null) {
@@ -78,46 +70,33 @@ public class CommerceCountryItemSelectorViewDisplayContext
 				WebKeys.THEME_DISPLAY);
 
 		searchContainer = new SearchContainer<>(
-			cpRequestHelper.getRenderRequest(), getPortletURL(), null, null);
-
-		searchContainer.setEmptyResultsMessage("there-are-no-countries");
+			cpRequestHelper.getRenderRequest(), getPortletURL(), null,
+			"there-are-no-countries");
 
 		searchContainer.setOrderByCol(getOrderByCol());
-
-		OrderByComparator<CommerceCountry> orderByComparator =
-			CommerceUtil.getCommerceCountryOrderByComparator(
-				getOrderByCol(), getOrderByType());
-
-		searchContainer.setOrderByComparator(orderByComparator);
-
+		searchContainer.setOrderByComparator(
+			CommerceUtil.getCountryOrderByComparator(
+				getOrderByCol(), getOrderByType()));
 		searchContainer.setOrderByType(getOrderByType());
-
-		RowChecker rowChecker = new CommerceCountryItemSelectorChecker(
-			cpRequestHelper.getRenderResponse(),
-			getCheckedCommerceCountryIds());
-
-		searchContainer.setRowChecker(rowChecker);
-
-		List<CommerceCountry> results =
-			_commerceCountryService.getCommerceCountries(
+		searchContainer.setResultsAndTotal(
+			() -> _countryService.getCompanyCountries(
 				themeDisplay.getCompanyId(), true, searchContainer.getStart(),
-				searchContainer.getEnd(), orderByComparator);
-
-		searchContainer.setResults(results);
-
-		int total = _commerceCountryService.getCommerceCountriesCount(
-			themeDisplay.getCompanyId());
-
-		searchContainer.setTotal(total);
+				searchContainer.getEnd(),
+				searchContainer.getOrderByComparator()),
+			_countryService.getCompanyCountriesCount(
+				themeDisplay.getCompanyId()));
+		searchContainer.setRowChecker(
+			new CommerceCountryItemSelectorChecker(
+				cpRequestHelper.getRenderResponse(), _getCheckedCountryIds()));
 
 		return searchContainer;
 	}
 
-	protected long[] getCheckedCommerceCountryIds() {
+	private long[] _getCheckedCountryIds() {
 		return ParamUtil.getLongValues(
-			cpRequestHelper.getRenderRequest(), "checkedCommerceCountryIds");
+			cpRequestHelper.getRenderRequest(), "checkedCountryIds");
 	}
 
-	private final CommerceCountryService _commerceCountryService;
+	private final CountryService _countryService;
 
 }

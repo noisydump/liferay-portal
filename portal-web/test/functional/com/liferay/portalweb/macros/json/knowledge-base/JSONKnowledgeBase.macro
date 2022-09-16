@@ -6,8 +6,9 @@ definition {
 			var site = "true";
 		}
 
-		var groupId = JSONGroupAPI._getGroupIdByName(groupName = "${groupName}", site = "${site}");
-
+		var groupId = JSONGroupAPI._getGroupIdByName(
+			groupName = "${groupName}",
+			site = "${site}");
 		var portalURL = JSONCompany.getPortalURL();
 
 		if (isSet(folderName)) {
@@ -34,10 +35,8 @@ definition {
 		''';
 
 		var resourcePrimKey = JSONCurlUtil.post("${curl}", "$.[?(@['title'] == '${kbChildArticleTitle}')]['resourcePrimKey']");
-		var resourcePrimKey = StringUtil.replace("${resourcePrimKey}", "[&quot;", "");
-		var resourcePrimKey = StringUtil.replace("${resourcePrimKey}", "&quot;]", "");
 
-		if ("${resourcePrimKey}" == "[]") {
+		if ("${resourcePrimKey}" == "") {
 			fail("FAIL. Cannot find resourcePrimKey.");
 		}
 		else {
@@ -60,8 +59,9 @@ definition {
 			var folderId = "0";
 		}
 
-		var groupId = JSONGroupAPI._getGroupIdByName(groupName = "${groupName}", site = "${site}");
-
+		var groupId = JSONGroupAPI._getGroupIdByName(
+			groupName = "${groupName}",
+			site = "${site}");
 		var portalURL = JSONCompany.getPortalURL();
 
 		var curl = '''
@@ -76,10 +76,8 @@ definition {
 		''';
 
 		var resourcePrimKey = JSONCurlUtil.post("${curl}", "$.[?(@['title'] == '${kbArticleTitle}')]['resourcePrimKey']");
-		var resourcePrimKey = StringUtil.replace("${resourcePrimKey}", "[&quot;", "");
-		var resourcePrimKey = StringUtil.replace("${resourcePrimKey}", "&quot;]", "");
 
-		if ("${resourcePrimKey}" == "[]") {
+		if ("${resourcePrimKey}" == "") {
 			fail("FAIL. Cannot find resourcePrimKey.");
 		}
 		else {
@@ -94,12 +92,34 @@ definition {
 		if (isSet(folderName)) {
 			Variables.assertDefined(parameterList = "${folderName},${groupName}");
 
+			if (isSet(parentFolderName)) {
+				var parentFolderId = JSONKnowledgeBase.getFolderIdByFolderName(
+					folderName = "${parentFolderName}",
+					groupName = "${groupName}");
+			}
+			else {
+				var parentFolderId = "0";
+			}
+
 			var folderId = JSONKnowledgeBase.getFolderIdByFolderName(
 				folderName = "${folderName}",
-				groupName = "${groupName}");
+				groupName = "${groupName}",
+				parentFolderId = "${parentFolderId}");
 		}
 		else {
 			var folderId = "0";
+		}
+
+		if (isSet(groupName)) {
+			var serviceContext = JSONServiceContextUtil.setServiceContext(
+				addGuestPermissions = "${addGuestPermissions}",
+				assetCategoryIds = "${assetCategoryIds}",
+				assetTagNames = "${assetTagNames}",
+				groupName = "${groupName}");
+		}
+
+		if (!(isSet(urlTitle))) {
+			var urlTitle = "";
 		}
 
 		var parentResourceClassNameId = JSONClassname._getClassNameId(value = "com.liferay.knowledge.base.model.KBFolder");
@@ -107,16 +127,18 @@ definition {
 		var curl = '''
 			${portalURL}/api/jsonws/kb.kbarticle/add-kb-article \
 				-u test@liferay.com:test \
+				-d externalReferenceCode= \
 				-d portletId=0 \
 				-d parentResourceClassNameId=${parentResourceClassNameId} \
 				-d parentResourcePrimKey=${folderId} \
 				-d title=${kbArticleTitle} \
-				-d urlTitle= \
+				-d urlTitle=${urlTitle} \
 				-d content=<p>${kbArticleContent}</p> \
 				-d description= \
 				-d sourceURL= \
 				-d sections= \
-				-d selectedFileNames=
+				-d selectedFileNames= \
+				-d serviceContext=${serviceContext}
 		''';
 
 		echo("## Adding a 'KBArticle' with the following info using JSONWS:");
@@ -131,7 +153,6 @@ definition {
 	@summary = "This calls the JSON WS API to add a kB child article"
 	macro addkBChildArticle {
 		var portalURL = JSONCompany.getPortalURL();
-
 		var parentResourceClassNameId = JSONClassname._getClassNameId(value = "com.liferay.knowledge.base.model.KBArticle");
 
 		if (isSet(folderName)) {
@@ -149,6 +170,7 @@ definition {
 		var curl = '''
 			${portalURL}/api/jsonws/kb.kbarticle/add-kb-article \
 				-u test@liferay.com:test \
+				-d externalReferenceCode= \
 				-d portletId=0 \
 				-d parentResourceClassNameId=${parentResourceClassNameId} \
 				-d parentResourcePrimKey=${parentResourcePrimKey} \
@@ -193,12 +215,14 @@ definition {
 			var description = "";
 		}
 
-		var groupId = JSONGroupAPI._getGroupIdByName(groupName = "${groupName}", site = "${site}");
-
+		var groupId = JSONGroupAPI._getGroupIdByName(
+			groupName = "${groupName}",
+			site = "${site}");
 		var parentResourceClassNameId = JSONClassname._getClassNameId(value = "com.liferay.knowledge.base.model.KBFolder");
 
 		var curl = '''
 			${portalURL}/api/jsonws/kb.kbfolder/add-kb-folder \
+				-d externalReferenceCode= \
 				-u test@liferay.com:test \
 				-d groupId=${groupId} \
 				-d parentResourceClassNameId=${parentResourceClassNameId} \
@@ -219,7 +243,6 @@ definition {
 	@summary = "This calls the JSON WS API to add a kB grandchild article"
 	macro addkBGrandchildArticle {
 		var portalURL = JSONCompany.getPortalURL();
-
 		var parentResourceClassNameId = JSONClassname._getClassNameId(value = "com.liferay.knowledge.base.model.KBArticle");
 
 		if (isSet(folderName)) {
@@ -239,6 +262,7 @@ definition {
 		var curl = '''
 			${portalURL}/api/jsonws/kb.kbarticle/add-kb-article \
 				-u test@liferay.com:test \
+				-d externalReferenceCode= \
 				-d portletId=0 \
 				-d parentResourceClassNameId=${parentResourceClassNameId} \
 				-d parentResourcePrimKey=${parentResourcePrimKey} \
@@ -287,24 +311,27 @@ definition {
 			var site = "true";
 		}
 
-		var groupId = JSONGroupAPI._getGroupIdByName(groupName = "${groupName}", site = "${site}");
+		if (!(isSet(parentFolderId))) {
+			var parentFolderId = "0";
+		}
 
+		var groupId = JSONGroupAPI._getGroupIdByName(
+			groupName = "${groupName}",
+			site = "${site}");
 		var portalURL = JSONCompany.getPortalURL();
 
 		var curl = '''
 			${portalURL}/api/jsonws/kb.kbfolder/get-kb-folders \
 				-u test@liferay.com:test \
 				-d groupId=${groupId} \
-				-d parentKBFolderId=0 \
+				-d parentKBFolderId=${parentFolderId} \
 				-d "start=-1" \
 				-d "end=-1"
 		''';
 
 		var kbFolderId = JSONCurlUtil.post("${curl}", "$.[?(@['name'] == '${folderName}')]['kbFolderId']");
-		var kbFolderId = StringUtil.replace("${kbFolderId}", "[&quot;", "");
-		var kbFolderId = StringUtil.replace("${kbFolderId}", "&quot;]", "");
 
-		if ("${kbFolderId}" == "[]") {
+		if ("${kbFolderId}" == "") {
 			fail("FAIL. Cannot find folder.");
 		}
 		else {

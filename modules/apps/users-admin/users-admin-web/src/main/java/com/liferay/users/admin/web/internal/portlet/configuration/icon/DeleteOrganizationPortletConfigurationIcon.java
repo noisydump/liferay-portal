@@ -15,12 +15,14 @@
 package com.liferay.users.admin.web.internal.portlet.configuration.icon;
 
 import com.liferay.petra.string.StringBundler;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.portlet.configuration.icon.BasePortletConfigurationIcon;
 import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfigurationIcon;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
-import com.liferay.portal.kernel.service.permission.OrganizationPermissionUtil;
+import com.liferay.portal.kernel.service.permission.OrganizationPermission;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HtmlUtil;
@@ -35,6 +37,7 @@ import javax.portlet.PortletResponse;
 import javax.portlet.RenderResponse;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Pei-Jung Lan
@@ -52,7 +55,7 @@ public class DeleteOrganizationPortletConfigurationIcon
 
 	@Override
 	public String getMessage(PortletRequest portletRequest) {
-		return LanguageUtil.get(
+		return _language.get(
 			getResourceBundle(getLocale(portletRequest)), "delete");
 	}
 
@@ -95,6 +98,9 @@ public class DeleteOrganizationPortletConfigurationIcon
 			sb.append("');");
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return sb.toString();
@@ -104,7 +110,7 @@ public class DeleteOrganizationPortletConfigurationIcon
 	public String getURL(
 		PortletRequest portletRequest, PortletResponse portletResponse) {
 
-		return "javascript:;";
+		return "javascript:void(0);";
 	}
 
 	@Override
@@ -118,7 +124,7 @@ public class DeleteOrganizationPortletConfigurationIcon
 			WebKeys.THEME_DISPLAY);
 
 		try {
-			if (OrganizationPermissionUtil.contains(
+			if (_organizationPermission.contains(
 					themeDisplay.getPermissionChecker(),
 					ActionUtil.getOrganization(portletRequest),
 					ActionKeys.DELETE)) {
@@ -127,9 +133,21 @@ public class DeleteOrganizationPortletConfigurationIcon
 			}
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return false;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		DeleteOrganizationPortletConfigurationIcon.class);
+
+	@Reference
+	private Language _language;
+
+	@Reference
+	private OrganizationPermission _organizationPermission;
 
 }

@@ -46,7 +46,7 @@
 			</c:if>
 		</span>
 	</c:when>
-	<c:otherwise>
+	<c:when test="<%= themeDisplay.isShowSignInIcon() %>">
 		<span class="sign-in text-default" role="presentation">
 			<aui:icon
 				cssClass="sign-in text-default"
@@ -100,10 +100,10 @@
 					loading = true;
 
 					Liferay.Util.fetch(modalSignInURL)
-						.then(function (response) {
+						.then((response) => {
 							return response.text();
 						})
-						.then(function (response) {
+						.then((response) => {
 							if (!loading) {
 								return;
 							}
@@ -122,7 +122,7 @@
 								setModalContent(response);
 							}
 						})
-						.catch(function () {
+						.catch(() => {
 							redirect = true;
 						});
 				};
@@ -130,7 +130,7 @@
 				signInLink.addEventListener('mouseover', fetchModalSignIn);
 				signInLink.addEventListener('focus', fetchModalSignIn);
 
-				signInLink.addEventListener('click', function (event) {
+				signInLink.addEventListener('click', (event) => {
 					event.preventDefault();
 
 					if (redirect) {
@@ -141,6 +141,9 @@
 
 					Liferay.Util.openModal({
 						bodyHTML: html ? html : '<span class="loading-animation">',
+						containerProps: {
+							className: '',
+						},
 						height: '400px',
 						onClose: function () {
 							loading = false;
@@ -161,5 +164,5 @@
 				});
 			}
 		</aui:script>
-	</c:otherwise>
+	</c:when>
 </c:choose>

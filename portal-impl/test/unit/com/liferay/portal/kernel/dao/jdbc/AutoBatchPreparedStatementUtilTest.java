@@ -20,19 +20,17 @@ import com.liferay.petra.executor.PortalExecutorManager;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.concurrent.DefaultNoticeableFuture;
-import com.liferay.portal.kernel.nio.intraband.PortalExecutorManagerInvocationHandler;
+import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.SwappableSecurityManager;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
 import com.liferay.portal.kernel.test.rule.NewEnv;
-import com.liferay.portal.kernel.test.rule.NewEnvTestRule;
 import com.liferay.portal.kernel.test.util.PropsTestUtil;
+import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.ProxyUtil;
-import com.liferay.registry.BasicRegistryImpl;
-import com.liferay.registry.Registry;
-import com.liferay.registry.RegistryUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
@@ -59,11 +57,15 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
 /**
  * @author Shuyang Zhou
@@ -76,20 +78,24 @@ public class AutoBatchPreparedStatementUtilTest {
 	@Rule
 	public static final AggregateTestRule aggregateTestRule =
 		new AggregateTestRule(
-			CodeCoverageAssertor.INSTANCE, NewEnvTestRule.INSTANCE);
+			CodeCoverageAssertor.INSTANCE, LiferayUnitTestRule.INSTANCE);
 
 	@Before
 	public void setUp() {
-		RegistryUtil.setRegistry(new BasicRegistryImpl());
+		BundleContext bundleContext = SystemBundleUtil.getBundleContext();
 
-		Registry registry = RegistryUtil.getRegistry();
-
-		registry.registerService(
+		_serviceRegistration = bundleContext.registerService(
 			PortalExecutorManager.class,
 			(PortalExecutorManager)ProxyUtil.newProxyInstance(
 				AutoBatchPreparedStatementUtilTest.class.getClassLoader(),
 				new Class<?>[] {PortalExecutorManager.class},
-				new PortalExecutorManagerInvocationHandler()));
+				new PortalExecutorManagerInvocationHandler()),
+			null);
+	}
+
+	@After
+	public void tearDown() {
+		_serviceRegistration.unregister();
 	}
 
 	@Test
@@ -126,40 +132,49 @@ public class AutoBatchPreparedStatementUtilTest {
 
 	@Test
 	public void testConcurrentCancellationException() {
-		Registry registry = RegistryUtil.getRegistry();
+		BundleContext bundleContext = SystemBundleUtil.getBundleContext();
 
-		registry.registerService(
-			PortalExecutorManager.class,
-			(PortalExecutorManager)ProxyUtil.newProxyInstance(
-				AutoBatchPreparedStatementUtilTest.class.getClassLoader(),
-				new Class<?>[] {PortalExecutorManager.class},
-				(proxy, method, args) -> {
-					if (Objects.equals(method.getName(), "getPortalExecutor")) {
-						return new NoticeableThreadPoolExecutor(
-							1, 1, 60, TimeUnit.SECONDS,
-							new LinkedBlockingQueue<>(1),
-							Executors.defaultThreadFactory(),
-							new ThreadPoolExecutor.AbortPolicy(),
-							new ThreadPoolHandlerAdapter()) {
+		ServiceRegistration<?> serviceRegistration =
+			bundleContext.registerService(
+				PortalExecutorManager.class,
+				(PortalExecutorManager)ProxyUtil.newProxyInstance(
+					AutoBatchPreparedStatementUtilTest.class.getClassLoader(),
+					new Class<?>[] {PortalExecutorManager.class},
+					(proxy, method, args) -> {
+						if (Objects.equals(
+								method.getName(), "getPortalExecutor")) {
 
-							@Override
-							public void execute(Runnable runnable) {
-								Future<?> future = (Future<?>)runnable;
+							return new NoticeableThreadPoolExecutor(
+								1, 1, 60, TimeUnit.SECONDS,
+								new LinkedBlockingQueue<>(1),
+								Executors.defaultThreadFactory(),
+								new ThreadPoolExecutor.AbortPolicy(),
+								new ThreadPoolHandlerAdapter()) {
 
-								future.cancel(true);
-							}
+								@Override
+								public void execute(Runnable runnable) {
+									Future<?> future = (Future<?>)runnable;
 
-						};
-					}
+									future.cancel(true);
+								}
 
-					return null;
-				}),
-			Collections.singletonMap("service.ranking", Integer.MAX_VALUE));
+							};
+						}
 
-		PropsTestUtil.setProps(PropsKeys.HIBERNATE_JDBC_BATCH_SIZE, "0");
+						return null;
+					}),
+				MapUtil.singletonDictionary(
+					"service.ranking", Integer.MAX_VALUE));
 
-		doTestConcurrentCancellationException(true);
-		doTestConcurrentCancellationException(false);
+		try {
+			PropsTestUtil.setProps(PropsKeys.HIBERNATE_JDBC_BATCH_SIZE, "0");
+
+			doTestConcurrentCancellationException(true);
+			doTestConcurrentCancellationException(false);
+		}
+		finally {
+			serviceRegistration.unregister();
+		}
 	}
 
 	@Test
@@ -342,10 +357,12 @@ public class AutoBatchPreparedStatementUtilTest {
 
 		try (PreparedStatement preparedStatement =
 				AutoBatchPreparedStatementUtil.autoBatch(
-					(PreparedStatement)ProxyUtil.newProxyInstance(
+					(Connection)ProxyUtil.newProxyInstance(
 						ClassLoader.getSystemClassLoader(),
-						new Class<?>[] {PreparedStatement.class},
-						preparedStatementInvocationHandler))) {
+						new Class<?>[] {Connection.class},
+						new ConnectionInvocationHandler(
+							preparedStatementInvocationHandler)),
+					"")) {
 
 			Assert.assertTrue(methods.toString(), methods.isEmpty());
 
@@ -377,6 +394,18 @@ public class AutoBatchPreparedStatementUtilTest {
 		Assert.assertEquals(methods.toString(), 1, methods.size());
 		Assert.assertEquals(
 			PreparedStatement.class.getMethod("close"), methods.remove(0));
+
+		try (PreparedStatement preparedStatement =
+				AutoBatchPreparedStatementUtil.autoBatch(
+					(Connection)ProxyUtil.newProxyInstance(
+						ClassLoader.getSystemClassLoader(),
+						new Class<?>[] {Connection.class},
+						new ConnectionInvocationHandler(
+							preparedStatementInvocationHandler)),
+					"")) {
+		}
+
+		Assert.assertTrue(methods.toString(), methods.isEmpty());
 	}
 
 	protected void doTestNotSupportBatchUpdatesConcurrent() throws Exception {
@@ -422,10 +451,6 @@ public class AutoBatchPreparedStatementUtilTest {
 				PreparedStatement.class.getMethod("execute"),
 				methods.remove(0));
 		}
-
-		Assert.assertEquals(methods.toString(), 1, methods.size());
-		Assert.assertEquals(
-			PreparedStatement.class.getMethod("close"), methods.remove(0));
 	}
 
 	protected void doTestSupportBaseUpdates() throws Exception {
@@ -434,12 +459,16 @@ public class AutoBatchPreparedStatementUtilTest {
 
 		List<Method> methods = preparedStatementInvocationHandler.getMethods();
 
+		Connection connection = (Connection)ProxyUtil.newProxyInstance(
+			ClassLoader.getSystemClassLoader(),
+			new Class<?>[] {Connection.class},
+			new ConnectionInvocationHandler(
+				preparedStatementInvocationHandler));
+
 		try (PreparedStatement preparedStatement =
-				AutoBatchPreparedStatementUtil.autoBatch(
-					(PreparedStatement)ProxyUtil.newProxyInstance(
-						ClassLoader.getSystemClassLoader(),
-						new Class<?>[] {PreparedStatement.class},
-						preparedStatementInvocationHandler))) {
+				AutoBatchPreparedStatementUtil.autoBatch(connection, "")) {
+
+			Assert.assertSame(connection, preparedStatement.getConnection());
 
 			InvocationHandler invocationHandler =
 				ProxyUtil.getInvocationHandler(preparedStatement);
@@ -634,11 +663,9 @@ public class AutoBatchPreparedStatementUtilTest {
 				Integer.valueOf(0),
 				ReflectionTestUtil.getFieldValue(invocationHandler, "_count"));
 		}
-
-		Assert.assertEquals(methods.toString(), 1, methods.size());
-		Assert.assertEquals(
-			PreparedStatement.class.getMethod("close"), methods.remove(0));
 	}
+
+	private ServiceRegistration<?> _serviceRegistration;
 
 	private static class ConnectionInvocationHandler
 		implements InvocationHandler {
@@ -717,22 +744,11 @@ public class AutoBatchPreparedStatementUtilTest {
 		public Object invoke(Object proxy, Method method, Object[] args)
 			throws NoSuchMethodException {
 
-			if (method.equals(
-					PreparedStatement.class.getMethod("getConnection"))) {
-
-				return ProxyUtil.newProxyInstance(
-					ClassLoader.getSystemClassLoader(),
-					new Class<?>[] {Connection.class},
-					new ConnectionInvocationHandler(this));
-			}
-
 			_methods.add(method);
 
-			if (method.equals(PreparedStatement.class.getMethod("addBatch"))) {
-				return null;
-			}
+			if (method.equals(PreparedStatement.class.getMethod("addBatch")) ||
+				method.equals(PreparedStatement.class.getMethod("close"))) {
 
-			if (method.equals(PreparedStatement.class.getMethod("close"))) {
 				return null;
 			}
 

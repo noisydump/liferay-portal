@@ -37,16 +37,13 @@ const slaStatuses = [
 	},
 ];
 
-const SLAStatusFilter = ({
+export default function SLAStatusFilter({
 	className,
 	filterKey = filterConstants.slaStatus.key,
 	options = {},
 	prefixKey = '',
-}) => {
+}) {
 	options = {
-		hideControl: false,
-		multiple: true,
-		position: 'left',
 		withSelectionTitle: true,
 		withoutRouteParams: false,
 		...options,
@@ -59,7 +56,7 @@ const SLAStatusFilter = ({
 		...options,
 	});
 
-	const defaultItem = useMemo(() => (items ? items[0] : undefined), [items]);
+	const defaultItem = useMemo(() => items[0], [items]);
 
 	const filterName = useFilterName(
 		options.multiple,
@@ -79,7 +76,6 @@ const SLAStatusFilter = ({
 			{...options}
 		/>
 	);
-};
+}
 
-export default SLAStatusFilter;
 export {slaStatusConstants};

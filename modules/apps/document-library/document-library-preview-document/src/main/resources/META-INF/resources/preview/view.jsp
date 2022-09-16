@@ -23,7 +23,7 @@ FileVersion fileVersion = (FileVersion)request.getAttribute(WebKeys.DOCUMENT_LIB
 
 int previewFileCount = PDFProcessorUtil.getPreviewFileCount(fileVersion);
 
-String previewQueryString = "&previewFileIndex=";
+String previewQueryString = "&previewFileIndex=1";
 
 int status = ParamUtil.getInteger(request, "status", WorkflowConstants.STATUS_ANY);
 
@@ -41,7 +41,7 @@ String previewFileURL = previewFileURLs[0];
 <liferay-util:html-top
 	outputKey="document_library_preview_document_css"
 >
-	<link href="<%= PortalUtil.getStaticResourceURL(request, application.getContextPath() + "/preview/css/main.css") %>" rel="stylesheet" type="text/css" />
+	<link href="<%= PortalUtil.getStaticResourceURL(request, PortalUtil.getPathProxy() + application.getContextPath() + "/preview/css/main.css") %>" rel="stylesheet" type="text/css" />
 </liferay-util:html-top>
 
 <div id="<portlet:namespace /><%= randomNamespace %>previewDocument">

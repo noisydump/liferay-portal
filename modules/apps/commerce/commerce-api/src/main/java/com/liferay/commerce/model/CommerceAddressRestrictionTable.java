@@ -34,6 +34,9 @@ public class CommerceAddressRestrictionTable
 	public static final CommerceAddressRestrictionTable INSTANCE =
 		new CommerceAddressRestrictionTable();
 
+	public final Column<CommerceAddressRestrictionTable, Long> mvccVersion =
+		createColumn(
+			"mvccVersion", Long.class, Types.BIGINT, Column.FLAG_NULLITY);
 	public final Column<CommerceAddressRestrictionTable, Long>
 		commerceAddressRestrictionId = createColumn(
 			"commerceAddressRestrictionId", Long.class, Types.BIGINT,
@@ -59,9 +62,9 @@ public class CommerceAddressRestrictionTable
 			"classNameId", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
 	public final Column<CommerceAddressRestrictionTable, Long> classPK =
 		createColumn("classPK", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
-	public final Column<CommerceAddressRestrictionTable, Long>
-		commerceCountryId = createColumn(
-			"commerceCountryId", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
+	public final Column<CommerceAddressRestrictionTable, Long> countryId =
+		createColumn(
+			"countryId", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
 
 	private CommerceAddressRestrictionTable() {
 		super(

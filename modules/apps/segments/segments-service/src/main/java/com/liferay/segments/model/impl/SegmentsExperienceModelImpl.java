@@ -33,26 +33,25 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.segments.model.SegmentsExperienceModel;
-import com.liferay.segments.model.SegmentsExperienceSoap;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.BiConsumer;
@@ -91,7 +90,7 @@ public class SegmentsExperienceModelImpl
 		{"segmentsExperienceKey", Types.VARCHAR}, {"classNameId", Types.BIGINT},
 		{"classPK", Types.BIGINT}, {"name", Types.VARCHAR},
 		{"priority", Types.INTEGER}, {"active_", Types.BOOLEAN},
-		{"lastPublishDate", Types.TIMESTAMP}
+		{"typeSettings", Types.VARCHAR}, {"lastPublishDate", Types.TIMESTAMP}
 	};
 
 	public static final Map<String, Integer> TABLE_COLUMNS_MAP =
@@ -115,11 +114,12 @@ public class SegmentsExperienceModelImpl
 		TABLE_COLUMNS_MAP.put("name", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("priority", Types.INTEGER);
 		TABLE_COLUMNS_MAP.put("active_", Types.BOOLEAN);
+		TABLE_COLUMNS_MAP.put("typeSettings", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("lastPublishDate", Types.TIMESTAMP);
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table SegmentsExperience (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,uuid_ VARCHAR(75) null,segmentsExperienceId LONG not null,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,segmentsEntryId LONG,segmentsExperienceKey VARCHAR(75) null,classNameId LONG,classPK LONG,name STRING null,priority INTEGER,active_ BOOLEAN,lastPublishDate DATE null,primary key (segmentsExperienceId, ctCollectionId))";
+		"create table SegmentsExperience (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,uuid_ VARCHAR(75) null,segmentsExperienceId LONG not null,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,segmentsEntryId LONG,segmentsExperienceKey VARCHAR(75) null,classNameId LONG,classPK LONG,name STRING null,priority INTEGER,active_ BOOLEAN,typeSettings VARCHAR(75) null,lastPublishDate DATE null,primary key (segmentsExperienceId, ctCollectionId))";
 
 	public static final String TABLE_SQL_DROP = "drop table SegmentsExperience";
 
@@ -136,55 +136,55 @@ public class SegmentsExperienceModelImpl
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long ACTIVE_COLUMN_BITMASK = 1L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long CLASSNAMEID_COLUMN_BITMASK = 2L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long CLASSPK_COLUMN_BITMASK = 4L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long COMPANYID_COLUMN_BITMASK = 8L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long GROUPID_COLUMN_BITMASK = 16L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long PRIORITY_COLUMN_BITMASK = 32L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long SEGMENTSENTRYID_COLUMN_BITMASK = 64L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long SEGMENTSEXPERIENCEKEY_COLUMN_BITMASK = 128L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long UUID_COLUMN_BITMASK = 256L;
@@ -201,68 +201,6 @@ public class SegmentsExperienceModelImpl
 	 */
 	@Deprecated
 	public static void setFinderCacheEnabled(boolean finderCacheEnabled) {
-	}
-
-	/**
-	 * Converts the soap model instance into a normal model instance.
-	 *
-	 * @param soapModel the soap model instance to convert
-	 * @return the normal model instance
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static SegmentsExperience toModel(SegmentsExperienceSoap soapModel) {
-		if (soapModel == null) {
-			return null;
-		}
-
-		SegmentsExperience model = new SegmentsExperienceImpl();
-
-		model.setMvccVersion(soapModel.getMvccVersion());
-		model.setCtCollectionId(soapModel.getCtCollectionId());
-		model.setUuid(soapModel.getUuid());
-		model.setSegmentsExperienceId(soapModel.getSegmentsExperienceId());
-		model.setGroupId(soapModel.getGroupId());
-		model.setCompanyId(soapModel.getCompanyId());
-		model.setUserId(soapModel.getUserId());
-		model.setUserName(soapModel.getUserName());
-		model.setCreateDate(soapModel.getCreateDate());
-		model.setModifiedDate(soapModel.getModifiedDate());
-		model.setSegmentsEntryId(soapModel.getSegmentsEntryId());
-		model.setSegmentsExperienceKey(soapModel.getSegmentsExperienceKey());
-		model.setClassNameId(soapModel.getClassNameId());
-		model.setClassPK(soapModel.getClassPK());
-		model.setName(soapModel.getName());
-		model.setPriority(soapModel.getPriority());
-		model.setActive(soapModel.isActive());
-		model.setLastPublishDate(soapModel.getLastPublishDate());
-
-		return model;
-	}
-
-	/**
-	 * Converts the soap model instances into normal model instances.
-	 *
-	 * @param soapModels the soap model instances to convert
-	 * @return the normal model instances
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static List<SegmentsExperience> toModels(
-		SegmentsExperienceSoap[] soapModels) {
-
-		if (soapModels == null) {
-			return null;
-		}
-
-		List<SegmentsExperience> models = new ArrayList<SegmentsExperience>(
-			soapModels.length);
-
-		for (SegmentsExperienceSoap soapModel : soapModels) {
-			models.add(toModel(soapModel));
-		}
-
-		return models;
 	}
 
 	public SegmentsExperienceModelImpl() {
@@ -348,34 +286,6 @@ public class SegmentsExperienceModelImpl
 		getAttributeSetterBiConsumers() {
 
 		return _attributeSetterBiConsumers;
-	}
-
-	private static Function<InvocationHandler, SegmentsExperience>
-		_getProxyProviderFunction() {
-
-		Class<?> proxyClass = ProxyUtil.getProxyClass(
-			SegmentsExperience.class.getClassLoader(), SegmentsExperience.class,
-			ModelWrapper.class);
-
-		try {
-			Constructor<SegmentsExperience> constructor =
-				(Constructor<SegmentsExperience>)proxyClass.getConstructor(
-					InvocationHandler.class);
-
-			return invocationHandler -> {
-				try {
-					return constructor.newInstance(invocationHandler);
-				}
-				catch (ReflectiveOperationException
-							reflectiveOperationException) {
-
-					throw new InternalError(reflectiveOperationException);
-				}
-			};
-		}
-		catch (NoSuchMethodException noSuchMethodException) {
-			throw new InternalError(noSuchMethodException);
-		}
 	}
 
 	private static final Map<String, Function<SegmentsExperience, Object>>
@@ -490,6 +400,12 @@ public class SegmentsExperienceModelImpl
 			"active",
 			(BiConsumer<SegmentsExperience, Boolean>)
 				SegmentsExperience::setActive);
+		attributeGetterFunctions.put(
+			"typeSettings", SegmentsExperience::getTypeSettings);
+		attributeSetterBiConsumers.put(
+			"typeSettings",
+			(BiConsumer<SegmentsExperience, String>)
+				SegmentsExperience::setTypeSettings);
 		attributeGetterFunctions.put(
 			"lastPublishDate", SegmentsExperience::getLastPublishDate);
 		attributeSetterBiConsumers.put(
@@ -1001,6 +917,26 @@ public class SegmentsExperienceModelImpl
 
 	@JSON
 	@Override
+	public String getTypeSettings() {
+		if (_typeSettings == null) {
+			return "";
+		}
+		else {
+			return _typeSettings;
+		}
+	}
+
+	@Override
+	public void setTypeSettings(String typeSettings) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_typeSettings = typeSettings;
+	}
+
+	@JSON
+	@Override
 	public Date getLastPublishDate() {
 		return _lastPublishDate;
 	}
@@ -1035,7 +971,9 @@ public class SegmentsExperienceModelImpl
 		for (Map.Entry<String, Object> entry :
 				_columnOriginalValues.entrySet()) {
 
-			if (entry.getValue() != getColumnValue(entry.getKey())) {
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
 				_columnBitmask |= _columnBitmasks.get(entry.getKey());
 			}
 		}
@@ -1162,9 +1100,57 @@ public class SegmentsExperienceModelImpl
 		segmentsExperienceImpl.setName(getName());
 		segmentsExperienceImpl.setPriority(getPriority());
 		segmentsExperienceImpl.setActive(isActive());
+		segmentsExperienceImpl.setTypeSettings(getTypeSettings());
 		segmentsExperienceImpl.setLastPublishDate(getLastPublishDate());
 
 		segmentsExperienceImpl.resetOriginalValues();
+
+		return segmentsExperienceImpl;
+	}
+
+	@Override
+	public SegmentsExperience cloneWithOriginalValues() {
+		SegmentsExperienceImpl segmentsExperienceImpl =
+			new SegmentsExperienceImpl();
+
+		segmentsExperienceImpl.setMvccVersion(
+			this.<Long>getColumnOriginalValue("mvccVersion"));
+		segmentsExperienceImpl.setCtCollectionId(
+			this.<Long>getColumnOriginalValue("ctCollectionId"));
+		segmentsExperienceImpl.setUuid(
+			this.<String>getColumnOriginalValue("uuid_"));
+		segmentsExperienceImpl.setSegmentsExperienceId(
+			this.<Long>getColumnOriginalValue("segmentsExperienceId"));
+		segmentsExperienceImpl.setGroupId(
+			this.<Long>getColumnOriginalValue("groupId"));
+		segmentsExperienceImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		segmentsExperienceImpl.setUserId(
+			this.<Long>getColumnOriginalValue("userId"));
+		segmentsExperienceImpl.setUserName(
+			this.<String>getColumnOriginalValue("userName"));
+		segmentsExperienceImpl.setCreateDate(
+			this.<Date>getColumnOriginalValue("createDate"));
+		segmentsExperienceImpl.setModifiedDate(
+			this.<Date>getColumnOriginalValue("modifiedDate"));
+		segmentsExperienceImpl.setSegmentsEntryId(
+			this.<Long>getColumnOriginalValue("segmentsEntryId"));
+		segmentsExperienceImpl.setSegmentsExperienceKey(
+			this.<String>getColumnOriginalValue("segmentsExperienceKey"));
+		segmentsExperienceImpl.setClassNameId(
+			this.<Long>getColumnOriginalValue("classNameId"));
+		segmentsExperienceImpl.setClassPK(
+			this.<Long>getColumnOriginalValue("classPK"));
+		segmentsExperienceImpl.setName(
+			this.<String>getColumnOriginalValue("name"));
+		segmentsExperienceImpl.setPriority(
+			this.<Integer>getColumnOriginalValue("priority"));
+		segmentsExperienceImpl.setActive(
+			this.<Boolean>getColumnOriginalValue("active_"));
+		segmentsExperienceImpl.setTypeSettings(
+			this.<String>getColumnOriginalValue("typeSettings"));
+		segmentsExperienceImpl.setLastPublishDate(
+			this.<Date>getColumnOriginalValue("lastPublishDate"));
 
 		return segmentsExperienceImpl;
 	}
@@ -1328,6 +1314,14 @@ public class SegmentsExperienceModelImpl
 
 		segmentsExperienceCacheModel.active = isActive();
 
+		segmentsExperienceCacheModel.typeSettings = getTypeSettings();
+
+		String typeSettings = segmentsExperienceCacheModel.typeSettings;
+
+		if ((typeSettings != null) && (typeSettings.length() == 0)) {
+			segmentsExperienceCacheModel.typeSettings = null;
+		}
+
 		Date lastPublishDate = getLastPublishDate();
 
 		if (lastPublishDate != null) {
@@ -1347,7 +1341,7 @@ public class SegmentsExperienceModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			(4 * attributeGetterFunctions.size()) + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -1358,9 +1352,27 @@ public class SegmentsExperienceModelImpl
 			Function<SegmentsExperience, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((SegmentsExperience)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply(
+				(SegmentsExperience)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -1407,7 +1419,9 @@ public class SegmentsExperienceModelImpl
 	private static class EscapedModelProxyProviderFunctionHolder {
 
 		private static final Function<InvocationHandler, SegmentsExperience>
-			_escapedModelProxyProviderFunction = _getProxyProviderFunction();
+			_escapedModelProxyProviderFunction =
+				ProxyUtil.getProxyProviderFunction(
+					SegmentsExperience.class, ModelWrapper.class);
 
 	}
 
@@ -1430,6 +1444,7 @@ public class SegmentsExperienceModelImpl
 	private String _nameCurrentLanguageId;
 	private int _priority;
 	private boolean _active;
+	private String _typeSettings;
 	private Date _lastPublishDate;
 
 	public <T> T getColumnValue(String columnName) {
@@ -1480,6 +1495,7 @@ public class SegmentsExperienceModelImpl
 		_columnOriginalValues.put("name", _name);
 		_columnOriginalValues.put("priority", _priority);
 		_columnOriginalValues.put("active_", _active);
+		_columnOriginalValues.put("typeSettings", _typeSettings);
 		_columnOriginalValues.put("lastPublishDate", _lastPublishDate);
 	}
 
@@ -1539,7 +1555,9 @@ public class SegmentsExperienceModelImpl
 
 		columnBitmasks.put("active_", 65536L);
 
-		columnBitmasks.put("lastPublishDate", 131072L);
+		columnBitmasks.put("typeSettings", 131072L);
+
+		columnBitmasks.put("lastPublishDate", 262144L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}

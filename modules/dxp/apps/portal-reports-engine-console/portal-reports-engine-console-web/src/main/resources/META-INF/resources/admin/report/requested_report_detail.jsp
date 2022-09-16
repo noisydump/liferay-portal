@@ -27,11 +27,12 @@ Definition definition = DefinitionLocalServiceUtil.getDefinition(entry.getDefini
 
 portletDisplay.setShowBackIcon(true);
 
-PortletURL searchRequestURL = reportsEngineDisplayContext.getPortletURL();
-
-searchRequestURL.setParameter("mvcPath", "/admin/view.jsp");
-
-portletDisplay.setURLBack(searchRequestURL.toString());
+portletDisplay.setURLBack(
+	PortletURLBuilder.create(
+		reportsEngineDisplayContext.getPortletURL()
+	).setMVCPath(
+		"/admin/view.jsp"
+	).buildString());
 
 renderResponse.setTitle(definition.getName(locale));
 %>
@@ -172,7 +173,6 @@ renderResponse.setTitle(definition.getName(locale));
 
 					</tbody>
 				</table>
-
 			</aui:fieldset>
 		</c:if>
 
@@ -188,11 +188,15 @@ renderResponse.setTitle(definition.getName(locale));
 
 			request.setAttribute("entry", entry);
 
-			PortletURL portletURL = renderResponse.createRenderURL();
-
-			portletURL.setParameter("mvcPath", "/admin/report/requested_report_detail.jsp");
-			portletURL.setParameter("entryId", String.valueOf(entryId));
-			portletURL.setWindowState(WindowState.NORMAL);
+			PortletURL portletURL = PortletURLBuilder.createRenderURL(
+				renderResponse
+			).setMVCPath(
+				"/admin/report/requested_report_detail.jsp"
+			).setParameter(
+				"entryId", entryId
+			).setWindowState(
+				WindowState.NORMAL
+			).buildPortletURL();
 			%>
 
 			<liferay-ui:search-container
@@ -202,7 +206,8 @@ renderResponse.setTitle(definition.getName(locale));
 				total="<%= attachmentsFiles.size() %>"
 			>
 				<liferay-ui:search-container-results
-					results="<%= ListUtil.subList(attachmentsFiles, searchContainer.getStart(), searchContainer.getEnd()) %>"
+					calculateStartAndEnd="<%= true %>"
+					results="<%= attachmentsFiles %>"
 				/>
 
 				<liferay-ui:search-container-row

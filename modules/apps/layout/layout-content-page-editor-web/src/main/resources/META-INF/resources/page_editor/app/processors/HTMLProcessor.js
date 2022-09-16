@@ -12,7 +12,10 @@
  * details.
  */
 
-import {openModal, openToast} from 'frontend-js-web';
+import {render} from '@liferay/frontend-js-react-web';
+
+import HTMLEditorModal from '../components/HTMLEditorModal';
+import isNullOrUndefined from '../utils/isNullOrUndefined';
 
 /**
  * @param {HTMLElement} element HTMLElement where the editor
@@ -25,67 +28,18 @@ import {openModal, openToast} from 'frontend-js-web';
  *  to be called if the editor is destroyed with destroyEditor function.
  */
 function createEditor(element, changeCallback, destroyCallback) {
-	let editor;
-
-	openModal({
-		bodyHTML: '<div class="editor-container" />',
-		buttons: [
-			{
-				displayType: 'secondary',
-				label: Liferay.Language.get('cancel'),
-				type: 'cancel',
+	render(
+		HTMLEditorModal,
+		{
+			initialContent: element.innerHTML,
+			onClose: destroyCallback,
+			onSave: (content) => {
+				changeCallback(content);
+				destroyCallback();
 			},
-			{
-				label: Liferay.Language.get('save'),
-				onClick: () => {
-					const annotations = editor._editor
-						.getSession()
-						.getAnnotations();
-
-					const errorAnnotations = annotations.filter(
-						(annotation) => annotation.type === 'error'
-					);
-
-					if (errorAnnotations.length) {
-						const errorMessage = errorAnnotations
-							.map((annotation) => annotation.text)
-							.join('\n');
-
-						openToast({
-							message: errorMessage,
-							type: 'danger',
-						});
-					}
-					else {
-						changeCallback(editor.get('value'));
-
-						Liferay.fire('closeModal');
-					}
-				},
-			},
-		],
-		onClose: () => destroyCallback(),
-		onOpen: () => {
-			Liferay.Util.getTop()
-				.AUI()
-				.use('liferay-fullscreen-source-editor', (A) => {
-					const editorContainer = document.querySelector(
-						'.liferay-modal .editor-container'
-					);
-
-					if (editorContainer) {
-						editor = new A.LiferayFullScreenSourceEditor({
-							boundingBox: editorContainer,
-							previewCssClass:
-								'alloy-editor alloy-editor-placeholder',
-							value: element.innerHTML,
-						}).render();
-					}
-				});
 		},
-		size: 'full-screen',
-		title: Liferay.Language.get('edit-content'),
-	});
+		document.createElement('div')
+	);
 }
 
 /**
@@ -97,12 +51,14 @@ function destroyEditor() {}
  *  given value.
  * @param {string} value Element content
  */
-function render(element, value) {
-	element.innerHTML = value;
+function renderFn(element, value) {
+	if (!isNullOrUndefined(value)) {
+		element.innerHTML = value;
+	}
 }
 
 export default {
 	createEditor,
 	destroyEditor,
-	render,
+	render: renderFn,
 };

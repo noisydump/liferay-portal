@@ -14,13 +14,19 @@
 
 package com.liferay.batch.engine.service.impl;
 
+import com.liferay.batch.engine.exception.BatchEngineImportTaskParametersException;
 import com.liferay.batch.engine.model.BatchEngineImportTask;
 import com.liferay.batch.engine.service.base.BatchEngineImportTaskLocalServiceBaseImpl;
+import com.liferay.batch.engine.service.persistence.BatchEngineImportTaskErrorPersistence;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.jdbc.OutputBlob;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
+import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.io.Serializable;
 
@@ -28,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Shuyang Zhou
@@ -42,17 +49,27 @@ public class BatchEngineImportTaskLocalServiceImpl
 	@Override
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public BatchEngineImportTask addBatchEngineImportTask(
-		long companyId, long userId, long batchSize, String callbackURL,
-		String className, byte[] content, String contentType,
-		String executeStatus, Map<String, String> fieldNameMappingMap,
-		String operation, Map<String, Serializable> parameters,
-		String taskItemDelegateName) {
+			String externalReferenceCode, long companyId, long userId,
+			long batchSize, String callbackURL, String className,
+			byte[] content, String contentType, String executeStatus,
+			Map<String, String> fieldNameMappingMap, int importStrategy,
+			String operation, Map<String, Serializable> parameters,
+			String taskItemDelegateName)
+		throws PortalException {
+
+		if ((parameters != null) && !parameters.isEmpty()) {
+			_validateDelimiter(
+				(String)parameters.getOrDefault("delimiter", null));
+			_validateEnclosingCharacter(
+				(String)parameters.getOrDefault("enclosingCharacter", null));
+		}
 
 		BatchEngineImportTask batchEngineImportTask =
 			batchEngineImportTaskPersistence.create(
 				counterLocalService.increment(
 					BatchEngineImportTask.class.getName()));
 
+		batchEngineImportTask.setExternalReferenceCode(externalReferenceCode);
 		batchEngineImportTask.setCompanyId(companyId);
 		batchEngineImportTask.setUserId(userId);
 		batchEngineImportTask.setBatchSize(batchSize);
@@ -68,15 +85,40 @@ public class BatchEngineImportTaskLocalServiceImpl
 			batchEngineImportTask.setFieldNameMapping((Map)fieldNameMappingMap);
 		}
 
+		batchEngineImportTask.setImportStrategy(importStrategy);
 		batchEngineImportTask.setOperation(operation);
-
-		if ((parameters != null) && !parameters.isEmpty()) {
-			batchEngineImportTask.setParameters(parameters);
-		}
-
+		batchEngineImportTask.setParameters(parameters);
 		batchEngineImportTask.setTaskItemDelegateName(taskItemDelegateName);
 
 		return batchEngineImportTaskPersistence.update(batchEngineImportTask);
+	}
+
+	@Override
+	public BatchEngineImportTask deleteBatchEngineImportTask(
+			long batchEngineImportTaskId)
+		throws PortalException {
+
+		_batchEngineImportTaskErrorPersistence.removeByBatchEngineImportTaskId(
+			batchEngineImportTaskId);
+
+		return batchEngineImportTaskPersistence.remove(batchEngineImportTaskId);
+	}
+
+	@Override
+	public List<BatchEngineImportTask> getBatchEngineImportTasks(
+		long companyId, int start, int end) {
+
+		return batchEngineImportTaskPersistence.findByCompanyId(
+			companyId, start, end);
+	}
+
+	@Override
+	public List<BatchEngineImportTask> getBatchEngineImportTasks(
+		long companyId, int start, int end,
+		OrderByComparator<BatchEngineImportTask> orderByComparator) {
+
+		return batchEngineImportTaskPersistence.findByCompanyId(
+			companyId, start, end, orderByComparator);
 	}
 
 	@Override
@@ -86,5 +128,43 @@ public class BatchEngineImportTaskLocalServiceImpl
 		return batchEngineImportTaskPersistence.findByExecuteStatus(
 			executeStatus);
 	}
+
+	@Override
+	public int getBatchEngineImportTasksCount(long companyId) {
+		return batchEngineImportTaskPersistence.countByCompanyId(companyId);
+	}
+
+	private void _validateDelimiter(String delimiter)
+		throws BatchEngineImportTaskParametersException {
+
+		if (Validator.isNull(delimiter)) {
+			return;
+		}
+
+		if (_INVALID_ENCLOSING_CHARACTERS.contains(delimiter)) {
+			throw new BatchEngineImportTaskParametersException(
+				"Illegal delimiter value " + delimiter);
+		}
+	}
+
+	private void _validateEnclosingCharacter(String enclosingCharacter)
+		throws BatchEngineImportTaskParametersException {
+
+		if (Validator.isNull(enclosingCharacter)) {
+			return;
+		}
+
+		if (!_INVALID_ENCLOSING_CHARACTERS.contains(enclosingCharacter)) {
+			throw new BatchEngineImportTaskParametersException(
+				"Illegal enclosing character value " + enclosingCharacter);
+		}
+	}
+
+	private static final String _INVALID_ENCLOSING_CHARACTERS =
+		StringPool.APOSTROPHE + StringPool.QUOTE;
+
+	@Reference
+	private BatchEngineImportTaskErrorPersistence
+		_batchEngineImportTaskErrorPersistence;
 
 }

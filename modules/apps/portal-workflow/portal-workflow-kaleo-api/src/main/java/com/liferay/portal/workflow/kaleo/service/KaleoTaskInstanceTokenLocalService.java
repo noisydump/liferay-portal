@@ -14,7 +14,9 @@
 
 package com.liferay.portal.workflow.kaleo.service;
 
+import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
@@ -28,6 +30,8 @@ import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalService;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.change.tracking.CTService;
+import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
@@ -54,13 +58,15 @@ import org.osgi.annotation.versioning.ProviderType;
  * @see KaleoTaskInstanceTokenLocalServiceUtil
  * @generated
  */
+@CTAware
 @ProviderType
 @Transactional(
 	isolation = Isolation.PORTAL,
 	rollbackFor = {PortalException.class, SystemException.class}
 )
 public interface KaleoTaskInstanceTokenLocalService
-	extends BaseLocalService, PersistedModelLocalService {
+	extends BaseLocalService, CTService<KaleoTaskInstanceToken>,
+			PersistedModelLocalService {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -173,6 +179,9 @@ public interface KaleoTaskInstanceTokenLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public <T> T dslQuery(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
@@ -472,8 +481,9 @@ public interface KaleoTaskInstanceTokenLocalService
 				Long[] assetPrimaryKeys, String assigneeClassName,
 				Long[] assigneeClassPKs, Date dueDateGT, Date dueDateLT,
 				Boolean completed, Long kaleoDefinitionId,
-				Long[] kaleoInstanceIds, Boolean searchByUserRoles,
-				boolean andOperator, int start, int end,
+				Long[] kaleoInstanceIds, boolean searchByActiveWorkflowHandlers,
+				Boolean searchByUserRoles, boolean andOperator, int start,
+				int end,
 				OrderByComparator<KaleoTaskInstanceToken> orderByComparator,
 				ServiceContext serviceContext)
 		throws PortalException;
@@ -496,5 +506,20 @@ public interface KaleoTaskInstanceTokenLocalService
 	@Indexable(type = IndexableType.REINDEX)
 	public KaleoTaskInstanceToken updateKaleoTaskInstanceToken(
 		KaleoTaskInstanceToken kaleoTaskInstanceToken);
+
+	@Override
+	@Transactional(enabled = false)
+	public CTPersistence<KaleoTaskInstanceToken> getCTPersistence();
+
+	@Override
+	@Transactional(enabled = false)
+	public Class<KaleoTaskInstanceToken> getModelClass();
+
+	@Override
+	@Transactional(rollbackFor = Throwable.class)
+	public <R, E extends Throwable> R updateWithUnsafeFunction(
+			UnsafeFunction<CTPersistence<KaleoTaskInstanceToken>, R, E>
+				updateUnsafeFunction)
+		throws E;
 
 }

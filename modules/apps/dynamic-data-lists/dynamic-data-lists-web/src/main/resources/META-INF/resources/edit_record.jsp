@@ -103,23 +103,19 @@ else {
 </portlet:actionURL>
 
 <c:if test="<%= record != null %>">
-	<clay:management-toolbar-v2
+	<clay:management-toolbar
 		infoPanelId="infoPanelId"
-		namespace="<%= liferayPortletResponse.getNamespace() %>"
 		selectable="<%= false %>"
 		showSearch="<%= false %>"
 	/>
 </c:if>
 
-<clay:container-fluid
-	cssClass="closed sidenav-container sidenav-right"
-	id='<%= liferayPortletResponse.getNamespace() + "infoPanelId" %>'
->
+<div class="closed sidenav-container sidenav-right" id="<portlet:namespace />infoPanelId">
 	<c:if test="<%= recordVersion != null %>">
 		<div class="sidenav-menu-slider">
 			<div class="sidebar sidebar-light sidenav-menu">
 				<div class="sidebar-header">
-					<aui:icon cssClass="d-inline-block d-sm-none icon-monospaced sidenav-close text-default" image="times" markupView="lexicon" url="javascript:;" />
+					<aui:icon cssClass="d-inline-block d-sm-none icon-monospaced sidenav-close text-default" image="times" markupView="lexicon" url="javascript:void(0);" />
 				</div>
 
 				<liferay-ui:tabs
@@ -169,7 +165,9 @@ else {
 		</div>
 	</c:if>
 
-	<div class="sidenav-content">
+	<clay:container-fluid
+		cssClass="container-form-lg sidenav-content"
+	>
 		<aui:form action="<%= (record == null) ? addRecordURL : updateRecordURL %>" cssClass="container-fluid container-fluid-max-xl" enctype="multipart/form-data" method="post" name="fm">
 			<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
 			<aui:input name="portletResource" type="hidden" value="<%= portletResource %>" />
@@ -185,7 +183,12 @@ else {
 				<liferay-ui:error exception="<%= DuplicateFileEntryException.class %>" message="a-file-with-that-name-already-exists" />
 
 				<liferay-ui:error exception="<%= FileSizeException.class %>">
-					<liferay-ui:message arguments="<%= LanguageUtil.formatStorageSize(DLValidatorUtil.getMaxAllowableSize(), locale) %>" key="please-enter-a-file-with-a-valid-file-size-no-larger-than-x" translateArguments="<%= false %>" />
+
+					<%
+					FileSizeException fileSizeException = (FileSizeException)errorException;
+					%>
+
+					<liferay-ui:message arguments="<%= LanguageUtil.formatStorageSize(fileSizeException.getMaxSize(), locale) %>" key="please-enter-a-file-with-a-valid-file-size-no-larger-than-x" translateArguments="<%= false %>" />
 				</liferay-ui:error>
 
 				<liferay-ui:error exception="<%= StorageFieldRequiredException.class %>" message="please-fill-out-all-required-fields" />
@@ -282,8 +285,8 @@ else {
 				</c:if>
 			</aui:button-row>
 		</aui:form>
-	</div>
-</clay:container-fluid>
+	</clay:container-fluid>
+</div>
 
 <aui:script>
 	function <portlet:namespace />setWorkflowAction(draft) {
@@ -297,12 +300,15 @@ else {
 </aui:script>
 
 <%
-PortletURL portletURL = renderResponse.createRenderURL();
-
-portletURL.setParameter("mvcPath", "/view_record_set.jsp");
-portletURL.setParameter("recordSetId", String.valueOf(recordSetId));
-
-PortalUtil.addPortletBreadcrumbEntry(request, recordSet.getName(locale), portletURL.toString());
+PortalUtil.addPortletBreadcrumbEntry(
+	request, recordSet.getName(locale),
+	PortletURLBuilder.createRenderURL(
+		renderResponse
+	).setMVCPath(
+		"/view_record_set.jsp"
+	).setParameter(
+		"recordSetId", recordSetId
+	).buildString());
 
 if (record != null) {
 	PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.format(request, "edit-x", ddmStructure.getName(locale), false), currentURL);

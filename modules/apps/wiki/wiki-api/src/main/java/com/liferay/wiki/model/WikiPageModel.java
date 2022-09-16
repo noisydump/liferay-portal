@@ -245,6 +245,21 @@ public interface WikiPageModel
 	public void setModifiedDate(Date modifiedDate);
 
 	/**
+	 * Returns the external reference code of this wiki page.
+	 *
+	 * @return the external reference code of this wiki page
+	 */
+	@AutoEscape
+	public String getExternalReferenceCode();
+
+	/**
+	 * Sets the external reference code of this wiki page.
+	 *
+	 * @param externalReferenceCode the external reference code of this wiki page
+	 */
+	public void setExternalReferenceCode(String externalReferenceCode);
+
+	/**
 	 * Returns the node ID of this wiki page.
 	 *
 	 * @return the node ID of this wiki page
@@ -519,16 +534,6 @@ public interface WikiPageModel
 	public long getTrashEntryClassPK();
 
 	/**
-	 * Returns the trash handler for this wiki page.
-	 *
-	 * @return the trash handler for this wiki page
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public com.liferay.portal.kernel.trash.TrashHandler getTrashHandler();
-
-	/**
 	 * Returns <code>true</code> if this wiki page is in the Recycle Bin.
 	 *
 	 * @return <code>true</code> if this wiki page is in the Recycle Bin; <code>false</code> otherwise
@@ -653,5 +658,8 @@ public interface WikiPageModel
 	 */
 	@Override
 	public void setParentContainerModelId(long parentContainerModelId);
+
+	@Override
+	public WikiPage cloneWithOriginalValues();
 
 }

@@ -18,10 +18,10 @@ import {usePost} from '../../shared/hooks/usePost.es';
 import {useProcessTitle} from '../../shared/hooks/useProcessTitle.es';
 import {useTimeRangeFetch} from '../filter/hooks/useTimeRangeFetch.es';
 import {getTimeRangeParams} from '../filter/util/timeRangeUtil.es';
-import {Body} from './PerformanceByAssigneePageBody.es';
-import {Header} from './PerformanceByAssigneePageHeader.es';
+import Body from './PerformanceByAssigneePageBody.es';
+import Header from './PerformanceByAssigneePageHeader.es';
 
-const PerformanceByAssigneePage = ({query, routeParams}) => {
+function PerformanceByAssigneePage({query, routeParams}) {
 	useTimeRangeFetch();
 
 	const {processId, ...paginationParams} = routeParams;
@@ -59,7 +59,9 @@ const PerformanceByAssigneePage = ({query, routeParams}) => {
 		}
 
 		return [new Promise((_, reject) => reject())];
-	}, [postData, timeRange.dateEnd, timeRange.dateStart]);
+
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [routeParams, timeRange.dateEnd, timeRange.dateStart]);
 
 	return (
 		<PromisesResolver promises={promises}>
@@ -67,16 +69,16 @@ const PerformanceByAssigneePage = ({query, routeParams}) => {
 				filterKeys={prefixedKeys}
 				routeParams={{...routeParams, search}}
 				selectedFilters={selectedFilters}
-				totalCount={data.totalCount}
+				totalCount={data?.totalCount}
 			/>
 
 			<PerformanceByAssigneePage.Body
 				{...data}
-				filtered={search || selectedFilters.length > 0}
+				filtered={search || !!selectedFilters.length}
 			/>
 		</PromisesResolver>
 	);
-};
+}
 
 PerformanceByAssigneePage.Body = Body;
 PerformanceByAssigneePage.Header = Header;

@@ -18,17 +18,25 @@ import com.liferay.portal.kernel.search.DocumentImpl;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.search.test.util.indexing.DocumentFixture;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.Date;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
  * @author André de Oliveira
  */
 public class DocumentImplTest {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Before
 	public void setUp() throws Exception {
@@ -44,24 +52,24 @@ public class DocumentImplTest {
 
 	@Test
 	public void testAddDate() throws Exception {
-		clearDateFormat();
+		_clearDateFormat();
 
 		documentImpl.addDate(RandomTestUtil.randomString(), new Date());
 	}
 
 	@Test
 	public void testAddDateSortable() throws Exception {
-		clearDateFormat();
+		_clearDateFormat();
 
 		documentImpl.addDateSortable(RandomTestUtil.randomString(), new Date());
 	}
 
-	protected void clearDateFormat() {
+	protected DocumentFixture documentFixture = new DocumentFixture();
+	protected DocumentImpl documentImpl;
+
+	private void _clearDateFormat() {
 		ReflectionTestUtil.setFieldValue(
 			DocumentImpl.class, "_dateFormat", null);
 	}
-
-	protected DocumentFixture documentFixture = new DocumentFixture();
-	protected DocumentImpl documentImpl;
 
 }

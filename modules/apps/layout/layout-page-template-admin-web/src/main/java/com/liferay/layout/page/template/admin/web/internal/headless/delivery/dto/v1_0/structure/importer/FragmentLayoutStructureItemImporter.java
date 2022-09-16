@@ -15,8 +15,10 @@
 package com.liferay.layout.page.template.admin.web.internal.headless.delivery.dto.v1_0.structure.importer;
 
 import com.liferay.document.library.util.DLURLHelperUtil;
+import com.liferay.fragment.constants.FragmentConstants;
 import com.liferay.fragment.constants.FragmentEntryLinkConstants;
 import com.liferay.fragment.contributor.FragmentCollectionContributorTracker;
+import com.liferay.fragment.entry.processor.constants.FragmentEntryProcessorConstants;
 import com.liferay.fragment.entry.processor.util.EditableFragmentEntryProcessorUtil;
 import com.liferay.fragment.model.FragmentCollection;
 import com.liferay.fragment.model.FragmentEntry;
@@ -30,11 +32,11 @@ import com.liferay.fragment.service.FragmentCollectionService;
 import com.liferay.fragment.service.FragmentEntryLinkLocalService;
 import com.liferay.fragment.service.FragmentEntryLocalService;
 import com.liferay.fragment.validator.FragmentEntryValidator;
-import com.liferay.headless.delivery.dto.v1_0.ContextReference;
 import com.liferay.headless.delivery.dto.v1_0.FragmentLink;
 import com.liferay.headless.delivery.dto.v1_0.PageElement;
-import com.liferay.layout.page.template.admin.web.internal.headless.delivery.dto.v1_0.structure.importer.util.PortletConfigurationImporterHelper;
-import com.liferay.layout.page.template.admin.web.internal.headless.delivery.dto.v1_0.structure.importer.util.PortletPermissionsImporterHelper;
+import com.liferay.layout.page.template.admin.web.internal.headless.delivery.dto.v1_0.structure.importer.helper.PortletConfigurationImporterHelper;
+import com.liferay.layout.page.template.admin.web.internal.headless.delivery.dto.v1_0.structure.importer.helper.PortletPermissionsImporterHelper;
+import com.liferay.layout.util.structure.FragmentStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.layout.util.structure.LayoutStructureItem;
 import com.liferay.petra.string.StringPool;
@@ -47,27 +49,31 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.portlet.PortletIdCodec;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepository;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.service.CompanyLocalService;
+import com.liferay.portal.kernel.service.PortletLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
-import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.segments.model.SegmentsExperience;
+import com.liferay.segments.service.SegmentsExperienceLocalService;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -85,39 +91,77 @@ public class FragmentLayoutStructureItemImporter
 
 	@Override
 	public LayoutStructureItem addLayoutStructureItem(
-			Layout layout, LayoutStructure layoutStructure,
-			PageElement pageElement, String parentItemId, int position,
-			Set<String> warningMessages)
+			LayoutStructure layoutStructure,
+			LayoutStructureItemImporterContext
+				layoutStructureItemImporterContext,
+			PageElement pageElement, Set<String> warningMessages)
 		throws Exception {
 
 		FragmentEntryLink fragmentEntryLink = _addFragmentEntryLink(
-			layout, pageElement, position, warningMessages);
+			layoutStructureItemImporterContext.getLayout(),
+			layoutStructureItemImporterContext, pageElement,
+			layoutStructureItemImporterContext.getPosition(), warningMessages);
 
 		if (fragmentEntryLink == null) {
 			return null;
 		}
 
-		LayoutStructureItem layoutStructureItem =
-			layoutStructure.addFragmentLayoutStructureItem(
-				fragmentEntryLink.getFragmentEntryLinkId(), parentItemId,
-				position);
+		FragmentStyledLayoutStructureItem fragmentStyledLayoutStructureItem =
+			(FragmentStyledLayoutStructureItem)
+				layoutStructure.addFragmentStyledLayoutStructureItem(
+					fragmentEntryLink.getFragmentEntryLinkId(),
+					layoutStructureItemImporterContext.getParentItemId(),
+					layoutStructureItemImporterContext.getPosition());
 
 		Map<String, Object> definitionMap = getDefinitionMap(
 			pageElement.getDefinition());
 
-		if (definitionMap != null) {
+		if (definitionMap == null) {
+			return fragmentStyledLayoutStructureItem;
+		}
+
+		if (definitionMap.containsKey("cssClasses")) {
+			List<String> cssClasses = (List<String>)definitionMap.get(
+				"cssClasses");
+
+			fragmentStyledLayoutStructureItem.setCssClasses(
+				new HashSet<>(cssClasses));
+		}
+
+		if (definitionMap.containsKey("customCSS")) {
+			fragmentStyledLayoutStructureItem.setCustomCSS(
+				String.valueOf(definitionMap.get("customCSS")));
+		}
+
+		if (definitionMap.containsKey("customCSSViewports")) {
+			List<Map<String, Object>> customCSSViewports =
+				(List<Map<String, Object>>)definitionMap.get(
+					"customCSSViewports");
+
+			for (Map<String, Object> customCSSViewport : customCSSViewports) {
+				fragmentStyledLayoutStructureItem.setCustomCSSViewport(
+					(String)customCSSViewport.get("id"),
+					(String)customCSSViewport.get("customCSS"));
+			}
+		}
+
+		Map<String, Object> fragmentStyleMap =
+			(Map<String, Object>)definitionMap.get("fragmentStyle");
+
+		int oldVersionCompareValue = Double.compare(
+			layoutStructureItemImporterContext.getPageDefinitionVersion(), 1.1);
+
+		if (oldVersionCompareValue < 0) {
 			Map<String, Object> fragmentConfigMap =
 				(Map<String, Object>)definitionMap.get("fragmentConfig");
-			Map<String, Object> fragmentStyleMap =
-				(Map<String, Object>)definitionMap.get("fragmentStyle");
 
 			if (MapUtil.isNotEmpty(fragmentConfigMap) ||
 				MapUtil.isNotEmpty(fragmentStyleMap)) {
 
 				JSONObject commonStylesJSONObject = toStylesJSONObject(
-					fragmentStyleMap);
+					layoutStructureItemImporterContext, fragmentStyleMap);
 				JSONObject configStylesJSONObject = toStylesJSONObject(
-					fragmentConfigMap);
+					layoutStructureItemImporterContext, fragmentConfigMap);
 
 				for (String key : commonStylesJSONObject.keySet()) {
 					if (Validator.isNull(
@@ -133,25 +177,43 @@ public class FragmentLayoutStructureItemImporter
 					JSONUtil.merge(
 						commonStylesJSONObject, configStylesJSONObject));
 
-				layoutStructureItem.updateItemConfig(jsonObject);
+				fragmentStyledLayoutStructureItem.updateItemConfig(jsonObject);
 			}
+		}
+		else if (fragmentStyleMap != null) {
+			JSONObject jsonObject = JSONUtil.put(
+				"styles",
+				toStylesJSONObject(
+					layoutStructureItemImporterContext, fragmentStyleMap));
 
-			if (definitionMap.containsKey("fragmentViewports")) {
-				List<Map<String, Object>> fragmentViewports =
-					(List<Map<String, Object>>)definitionMap.get(
-						"fragmentViewports");
+			fragmentStyledLayoutStructureItem.updateItemConfig(jsonObject);
+		}
 
-				for (Map<String, Object> fragmentViewport : fragmentViewports) {
-					JSONObject jsonObject = JSONUtil.put(
-						(String)fragmentViewport.get("id"),
-						toFragmentViewportStylesJSONObject(fragmentViewport));
+		if (definitionMap.containsKey("fragmentViewports")) {
+			List<Map<String, Object>> fragmentViewports =
+				(List<Map<String, Object>>)definitionMap.get(
+					"fragmentViewports");
 
-					layoutStructureItem.updateItemConfig(jsonObject);
-				}
+			for (Map<String, Object> fragmentViewport : fragmentViewports) {
+				JSONObject jsonObject = JSONUtil.put(
+					(String)fragmentViewport.get("id"),
+					toFragmentViewportStylesJSONObject(fragmentViewport));
+
+				fragmentStyledLayoutStructureItem.updateItemConfig(jsonObject);
 			}
 		}
 
-		return layoutStructureItem;
+		if (definitionMap.containsKey("indexed")) {
+			fragmentStyledLayoutStructureItem.setIndexed(
+				GetterUtil.getBoolean(definitionMap.get("indexed")));
+		}
+
+		if (definitionMap.containsKey("name")) {
+			fragmentStyledLayoutStructureItem.setName(
+				GetterUtil.getString(definitionMap.get("name")));
+		}
+
+		return fragmentStyledLayoutStructureItem;
 	}
 
 	@Override
@@ -160,8 +222,10 @@ public class FragmentLayoutStructureItemImporter
 	}
 
 	private FragmentEntryLink _addFragmentEntryLink(
-			Layout layout, PageElement pageElement, int position,
-			Set<String> warningMessages)
+			Layout layout,
+			LayoutStructureItemImporterContext
+				layoutStructureItemImporterContext,
+			PageElement pageElement, int position, Set<String> warningMessages)
 		throws Exception {
 
 		Map<String, Object> definitionMap = getDefinitionMap(
@@ -181,7 +245,7 @@ public class FragmentLayoutStructureItemImporter
 		}
 
 		FragmentEntry fragmentEntry = _getFragmentEntry(
-			fragmentKey, layout.getGroupId());
+			layout.getCompanyId(), layout.getGroupId(), fragmentKey);
 
 		FragmentRenderer fragmentRenderer =
 			_fragmentRendererTracker.getFragmentRenderer(fragmentKey);
@@ -194,20 +258,39 @@ public class FragmentLayoutStructureItemImporter
 		}
 
 		long fragmentEntryId = 0;
+
+		if (fragmentEntry != null) {
+			fragmentEntryId = fragmentEntry.getFragmentEntryId();
+		}
+
+		long segmentsExperienceId =
+			layoutStructureItemImporterContext.getSegmentsExperienceId();
+
+		SegmentsExperience segmentsExperience =
+			_segmentsExperienceLocalService.fetchSegmentsExperience(
+				segmentsExperienceId);
+
+		if (segmentsExperience == null) {
+			segmentsExperienceId =
+				_segmentsExperienceLocalService.
+					fetchDefaultSegmentsExperienceId(layout.getPlid());
+		}
+
 		String html = StringPool.BLANK;
 		String js = StringPool.BLANK;
 		String css = StringPool.BLANK;
 		String configuration = StringPool.BLANK;
+		int type = FragmentConstants.TYPE_COMPONENT;
 
 		JSONObject defaultEditableValuesJSONObject =
 			JSONFactoryUtil.createJSONObject();
 
 		if (fragmentEntry != null) {
-			fragmentEntryId = fragmentEntry.getFragmentEntryId();
 			html = fragmentEntry.getHtml();
 			js = fragmentEntry.getJs();
 			css = fragmentEntry.getCss();
 			configuration = fragmentEntry.getConfiguration();
+			type = fragmentEntry.getType();
 
 			FragmentCollection fragmentCollection =
 				_fragmentCollectionService.fetchFragmentCollection(
@@ -218,7 +301,7 @@ public class FragmentLayoutStructureItemImporter
 					getDefaultEditableValuesJSONObject(
 						_getProcessedHTML(
 							fragmentEntry.getCompanyId(), configuration,
-							fragmentCollection, html),
+							fragmentCollection, html, fragmentKey, type),
 						configuration);
 		}
 
@@ -226,29 +309,43 @@ public class FragmentLayoutStructureItemImporter
 			EditableFragmentEntryProcessorUtil.getEditableTypes(html);
 
 		JSONObject fragmentEntryProcessorValuesJSONObject = JSONUtil.put(
-			"com.liferay.fragment.entry.processor.background.image." +
-				"BackgroundImageFragmentEntryProcessor",
-			_toBackgroundImageFragmentEntryProcessorJSONObject(
-				(List<Object>)definitionMap.get("fragmentFields")));
+			FragmentEntryProcessorConstants.
+				KEY_BACKGROUND_IMAGE_FRAGMENT_ENTRY_PROCESSOR,
+			() -> {
+				JSONObject backgroundImageFragmentEntryProcessorJSONObject =
+					_toBackgroundImageFragmentEntryProcessorJSONObject(
+						layoutStructureItemImporterContext,
+						(List<Object>)definitionMap.get("fragmentFields"));
 
-		JSONObject editableFragmentEntryProcessorJSONObject =
-			_toEditableFragmentEntryProcessorJSONObject(
-				editableTypes,
-				(List<Object>)definitionMap.get("fragmentFields"));
+				if (backgroundImageFragmentEntryProcessorJSONObject.length() >
+						0) {
 
-		if (editableFragmentEntryProcessorJSONObject.length() > 0) {
-			fragmentEntryProcessorValuesJSONObject.put(
-				"com.liferay.fragment.entry.processor.editable." +
-					"EditableFragmentEntryProcessor",
-				editableFragmentEntryProcessorJSONObject);
-		}
+					return backgroundImageFragmentEntryProcessorJSONObject;
+				}
 
-		Map<String, String> configurationTypes = _getConfigurationTypes(
-			configuration);
+				return null;
+			}
+		).put(
+			FragmentEntryProcessorConstants.
+				KEY_EDITABLE_FRAGMENT_ENTRY_PROCESSOR,
+			() -> {
+				JSONObject editableFragmentEntryProcessorJSONObject =
+					_toEditableFragmentEntryProcessorJSONObject(
+						editableTypes,
+						(List<Object>)definitionMap.get("fragmentFields"),
+						layoutStructureItemImporterContext);
+
+				if (editableFragmentEntryProcessorJSONObject.length() > 0) {
+					return editableFragmentEntryProcessorJSONObject;
+				}
+
+				return null;
+			}
+		);
 
 		JSONObject freeMarkerFragmentEntryProcessorJSONObject =
 			_toFreeMarkerFragmentEntryProcessorJSONObject(
-				configurationTypes,
+				_getConfigurationTypes(configuration),
 				(Map<String, Object>)definitionMap.get("fragmentConfig"));
 
 		_fragmentEntryValidator.validateConfigurationValues(
@@ -256,8 +353,8 @@ public class FragmentLayoutStructureItemImporter
 
 		if (freeMarkerFragmentEntryProcessorJSONObject.length() > 0) {
 			fragmentEntryProcessorValuesJSONObject.put(
-				"com.liferay.fragment.entry.processor.freemarker." +
-					"FreeMarkerFragmentEntryProcessor",
+				FragmentEntryProcessorConstants.
+					KEY_FREEMARKER_FRAGMENT_ENTRY_PROCESSOR,
 				freeMarkerFragmentEntryProcessorJSONObject);
 		}
 
@@ -267,10 +364,11 @@ public class FragmentLayoutStructureItemImporter
 
 		FragmentEntryLink fragmentEntryLink =
 			_fragmentEntryLinkLocalService.addFragmentEntryLink(
-				layout.getUserId(), layout.getGroupId(), 0, fragmentEntryId, 0,
-				layout.getPlid(), css, html, js, configuration,
-				jsonObject.toString(), StringUtil.randomId(), position,
-				fragmentKey, ServiceContextThreadLocal.getServiceContext());
+				layout.getUserId(), layout.getGroupId(), 0, fragmentEntryId,
+				segmentsExperienceId, layout.getPlid(), css, html, js,
+				configuration, jsonObject.toString(), StringUtil.randomId(),
+				position, fragmentKey, type,
+				ServiceContextThreadLocal.getServiceContext());
 
 		List<Object> widgetInstances = (List<Object>)definitionMap.get(
 			"widgetInstances");
@@ -284,6 +382,7 @@ public class FragmentLayoutStructureItemImporter
 	}
 
 	private JSONObject _createBaseFragmentFieldJSONObject(
+		LayoutStructureItemImporterContext layoutStructureItemImporterContext,
 		Map<String, Object> map) {
 
 		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
@@ -292,15 +391,14 @@ public class FragmentLayoutStructureItemImporter
 			return jsonObject;
 		}
 
-		Map<String, Object> valueI18nMap = (Map<String, Object>)map.get(
-			"value_i18n");
+		Map<String, Object> valueMap = (Map<String, Object>)map.get("value");
 
-		if (valueI18nMap != null) {
-			for (Map.Entry<String, Object> entry : valueI18nMap.entrySet()) {
-				jsonObject.put(entry.getKey(), entry.getValue());
+		if (valueMap != null) {
+			String title = String.valueOf(valueMap.get("title"));
+
+			if (title != null) {
+				jsonObject.put("defaultValue", title);
 			}
-
-			return jsonObject;
 		}
 
 		Map<String, Object> defaultFragmentInlineValueMap =
@@ -316,7 +414,20 @@ public class FragmentLayoutStructureItemImporter
 				"defaultValue", defaultFragmentInlineValueMap.get("value"));
 		}
 
-		_processMapping(jsonObject, (Map<String, Object>)map.get("mapping"));
+		Map<String, Object> valueI18nMap = (Map<String, Object>)map.get(
+			"value_i18n");
+
+		if (valueI18nMap != null) {
+			for (Map.Entry<String, Object> entry : valueI18nMap.entrySet()) {
+				jsonObject.put(entry.getKey(), entry.getValue());
+			}
+
+			return jsonObject;
+		}
+
+		processMapping(
+			jsonObject, layoutStructureItemImporterContext,
+			(Map<String, Object>)map.get("mapping"));
 
 		return jsonObject;
 	}
@@ -366,7 +477,8 @@ public class FragmentLayoutStructureItemImporter
 	}
 
 	private JSONObject _createFragmentLinkConfigJSONObject(
-		Map<String, Object> fragmentLinkMap) {
+		Map<String, Object> fragmentLinkMap,
+		LayoutStructureItemImporterContext layoutStructureItemImporterContext) {
 
 		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
 
@@ -385,7 +497,8 @@ public class FragmentLayoutStructureItemImporter
 				jsonObject.put(
 					entry.getKey(),
 					_createFragmentLinkValueConfigJSONObject(
-						fragmentLinkValueMap));
+						fragmentLinkValueMap,
+						layoutStructureItemImporterContext));
 			}
 		}
 
@@ -396,16 +509,18 @@ public class FragmentLayoutStructureItemImporter
 			if (valueMap != null) {
 				jsonObject = JSONUtil.merge(
 					jsonObject,
-					_createFragmentLinkValueConfigJSONObject(valueMap));
+					_createFragmentLinkValueConfigJSONObject(
+						valueMap, layoutStructureItemImporterContext));
 			}
 
 			jsonObject = JSONUtil.merge(
 				jsonObject,
-				_createFragmentLinkValueConfigJSONObject(fragmentLinkMap));
+				_createFragmentLinkValueConfigJSONObject(
+					fragmentLinkMap, layoutStructureItemImporterContext));
 		}
 		catch (JSONException jsonException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(jsonException, jsonException);
+				_log.warn(jsonException);
 			}
 		}
 
@@ -415,7 +530,8 @@ public class FragmentLayoutStructureItemImporter
 	}
 
 	private JSONObject _createFragmentLinkValueConfigJSONObject(
-		Map<String, Object> fragmentLinkValueMap) {
+		Map<String, Object> fragmentLinkValueMap,
+		LayoutStructureItemImporterContext layoutStructureItemImporterContext) {
 
 		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
 
@@ -467,8 +583,18 @@ public class FragmentLayoutStructureItemImporter
 			jsonObject.put("href", value);
 		}
 
-		_processMapping(
-			jsonObject, (Map<String, Object>)hrefMap.get("mapping"));
+		Map<String, Object> valueI18nMap = (Map<String, Object>)hrefMap.get(
+			"value_i18n");
+
+		if (valueI18nMap != null) {
+			jsonObject.put("href", valueI18nMap);
+
+			return jsonObject;
+		}
+
+		processMapping(
+			jsonObject, layoutStructureItemImporterContext,
+			(Map<String, Object>)hrefMap.get("mapping"));
 
 		return jsonObject;
 	}
@@ -596,22 +722,34 @@ public class FragmentLayoutStructureItemImporter
 		return configurationTypes;
 	}
 
-	private FragmentEntry _getFragmentEntry(String fragmentKey, long groupId) {
+	private FragmentEntry _getFragmentEntry(
+			long companyId, long groupId, String fragmentKey)
+		throws Exception {
+
 		FragmentEntry fragmentEntry =
 			_fragmentEntryLocalService.fetchFragmentEntry(groupId, fragmentKey);
 
-		if (fragmentEntry == null) {
-			fragmentEntry =
-				_fragmentCollectionContributorTracker.getFragmentEntry(
-					fragmentKey);
+		if (fragmentEntry != null) {
+			return fragmentEntry;
 		}
 
-		return fragmentEntry;
+		Company company = _companyLocalService.getCompanyById(companyId);
+
+		fragmentEntry = _fragmentEntryLocalService.fetchFragmentEntry(
+			company.getGroupId(), fragmentKey);
+
+		if (fragmentEntry != null) {
+			return fragmentEntry;
+		}
+
+		return _fragmentCollectionContributorTracker.getFragmentEntry(
+			fragmentKey);
 	}
 
 	private String _getProcessedHTML(
 			long companyId, String configuration,
-			FragmentCollection fragmentCollection, String html)
+			FragmentCollection fragmentCollection, String html,
+			String rendererKey, int type)
 		throws Exception {
 
 		String processedHTML = _replaceResources(fragmentCollection, html);
@@ -622,6 +760,8 @@ public class FragmentLayoutStructureItemImporter
 		fragmentEntryLink.setCompanyId(companyId);
 		fragmentEntryLink.setHtml(processedHTML);
 		fragmentEntryLink.setConfiguration(configuration);
+		fragmentEntryLink.setRendererKey(rendererKey);
+		fragmentEntryLink.setType(type);
 
 		ServiceContext serviceContext =
 			ServiceContextThreadLocal.getServiceContext();
@@ -652,87 +792,12 @@ public class FragmentLayoutStructureItemImporter
 			locale = serviceContext.getLocale();
 		}
 		else {
-			locale = _portal.getSiteDefaultLocale(groupId);
+			locale = portal.getSiteDefaultLocale(groupId);
 		}
-
-		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
-			locale, getClass());
 
 		return _language.format(
-			resourceBundle,
-			"fragment-with-key-x-was-ignored-because-it-does-not-exist",
+			locale, "fragment-with-key-x-was-ignored-because-it-does-not-exist",
 			new String[] {fragmentKey});
-	}
-
-	private void _processMapping(
-		JSONObject jsonObject, Map<String, Object> map) {
-
-		if (map == null) {
-			return;
-		}
-
-		String fieldKey = (String)map.get("fieldKey");
-
-		if (Validator.isNull(fieldKey)) {
-			return;
-		}
-
-		Map<String, Object> itemReferenceMap = (Map<String, Object>)map.get(
-			"itemReference");
-
-		if (itemReferenceMap == null) {
-			return;
-		}
-
-		String contextSource = (String)itemReferenceMap.get("contextSource");
-
-		if (Objects.equals(
-				ContextReference.ContextSource.COLLECTION_ITEM.getValue(),
-				contextSource)) {
-
-			jsonObject.put("collectionFieldId", fieldKey);
-
-			return;
-		}
-
-		if (Objects.equals(
-				ContextReference.ContextSource.DISPLAY_PAGE_ITEM.getValue(),
-				contextSource)) {
-
-			jsonObject.put("mappedField", fieldKey);
-
-			return;
-		}
-
-		jsonObject.put("fieldId", fieldKey);
-
-		String classNameId = null;
-
-		String className = (String)itemReferenceMap.get("className");
-
-		try {
-			classNameId = String.valueOf(_portal.getClassNameId(className));
-		}
-		catch (Exception exception) {
-			if (_log.isWarnEnabled()) {
-				_log.warn(
-					"Unable to process mapping because class name ID could " +
-						"not be obtained for class name " + className,
-					exception);
-			}
-
-			return;
-		}
-
-		String classPK = String.valueOf(itemReferenceMap.get("classPK"));
-
-		if (Validator.isNotNull(classNameId) && Validator.isNotNull(classPK)) {
-			jsonObject.put(
-				"classNameId", classNameId
-			).put(
-				"classPK", classPK
-			);
-		}
 	}
 
 	private void _processWidgetInstances(
@@ -756,6 +821,14 @@ public class FragmentLayoutStructureItemImporter
 			if (widgetInstanceId != null) {
 				widgetInstanceId =
 					fragmentEntryLink.getNamespace() + widgetInstanceId;
+			}
+			else {
+				Portlet portlet = _portletLocalService.getPortletById(
+					widgetName);
+
+				if ((portlet != null) && portlet.isInstanceable()) {
+					widgetInstanceId = fragmentEntryLink.getNamespace();
+				}
 			}
 
 			Map<String, Object> widgetConfigDefinitionMap =
@@ -807,6 +880,7 @@ public class FragmentLayoutStructureItemImporter
 	}
 
 	private JSONObject _toBackgroundImageFragmentEntryProcessorJSONObject(
+		LayoutStructureItemImporterContext layoutStructureItemImporterContext,
 		List<Object> fragmentFields) {
 
 		JSONObject backgroundImageFragmentEntryProcessorValuesJSONObject =
@@ -837,7 +911,8 @@ public class FragmentLayoutStructureItemImporter
 				(Map<String, Object>)backgroundFragmentImageMap.get("url");
 
 			JSONObject fragmentFieldValueJSONObject =
-				_createBaseFragmentFieldJSONObject(urlMap);
+				_createBaseFragmentFieldJSONObject(
+					layoutStructureItemImporterContext, urlMap);
 
 			Map<String, Object> titleMap =
 				(Map<String, Object>)backgroundFragmentImageMap.get("title");
@@ -857,7 +932,8 @@ public class FragmentLayoutStructureItemImporter
 	}
 
 	private JSONObject _toEditableFragmentEntryProcessorJSONObject(
-		Map<String, String> editableTypes, List<Object> fragmentFields) {
+		Map<String, String> editableTypes, List<Object> fragmentFields,
+		LayoutStructureItemImporterContext layoutStructureItemImporterContext) {
 
 		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
 
@@ -887,15 +963,18 @@ public class FragmentLayoutStructureItemImporter
 
 			JSONObject editableFieldConfigJSONObject =
 				_createFragmentLinkConfigJSONObject(
-					(Map<String, Object>)valueMap.get("fragmentLink"));
+					(Map<String, Object>)valueMap.get("fragmentLink"),
+					layoutStructureItemImporterContext);
 
 			JSONObject baseFragmentFieldJSONObject =
 				_createBaseFragmentFieldJSONObject(
+					layoutStructureItemImporterContext,
 					(Map<String, Object>)valueMap.get("text"));
 
 			if (Objects.equals(editableTypes.get(fragmentFieldId), "html")) {
 				baseFragmentFieldJSONObject =
 					_createBaseFragmentFieldJSONObject(
+						layoutStructureItemImporterContext,
 						(Map<String, Object>)valueMap.get("html"));
 			}
 
@@ -910,6 +989,7 @@ public class FragmentLayoutStructureItemImporter
 					if (fragmentImageMap.containsKey("url")) {
 						baseFragmentFieldJSONObject =
 							_createBaseFragmentFieldJSONObject(
+								layoutStructureItemImporterContext,
 								(Map<String, Object>)fragmentImageMap.get(
 									"url"));
 					}
@@ -950,7 +1030,7 @@ public class FragmentLayoutStructureItemImporter
 						}
 						catch (JSONException jsonException) {
 							if (_log.isWarnEnabled()) {
-								_log.warn(jsonException, jsonException);
+								_log.warn(jsonException);
 							}
 						}
 					}
@@ -963,7 +1043,7 @@ public class FragmentLayoutStructureItemImporter
 				}
 				catch (JSONException jsonException) {
 					if (_log.isWarnEnabled()) {
-						_log.warn(jsonException, jsonException);
+						_log.warn(jsonException);
 					}
 				}
 			}
@@ -981,7 +1061,7 @@ public class FragmentLayoutStructureItemImporter
 			}
 			catch (JSONException jsonException) {
 				if (_log.isWarnEnabled()) {
-					_log.warn(jsonException, jsonException);
+					_log.warn(jsonException);
 				}
 			}
 		}
@@ -1000,7 +1080,16 @@ public class FragmentLayoutStructureItemImporter
 		}
 
 		for (Map.Entry<String, Object> entry : fragmentConfigMap.entrySet()) {
-			if (entry.getValue() instanceof String) {
+			if (entry.getValue() instanceof HashMap) {
+				Map<String, Object> childFragmentConfigMap =
+					(Map<String, Object>)entry.getValue();
+
+				jsonObject.put(
+					entry.getKey(),
+					_toFreeMarkerFragmentEntryProcessorJSONObject(
+						configurationTypes, childFragmentConfigMap));
+			}
+			else {
 				String type = configurationTypes.get(entry.getKey());
 
 				if (Objects.equals(type, "colorPalette")) {
@@ -1012,15 +1101,6 @@ public class FragmentLayoutStructureItemImporter
 					jsonObject.put(entry.getKey(), entry.getValue());
 				}
 			}
-			else if (entry.getValue() instanceof HashMap) {
-				Map<String, Object> childFragmentConfigMap =
-					(Map<String, Object>)entry.getValue();
-
-				jsonObject.put(
-					entry.getKey(),
-					_toFreeMarkerFragmentEntryProcessorJSONObject(
-						configurationTypes, childFragmentConfigMap));
-			}
 		}
 
 		return jsonObject;
@@ -1031,6 +1111,9 @@ public class FragmentLayoutStructureItemImporter
 
 	private static final Pattern _pattern = Pattern.compile(
 		"\\[resources:(.+?)\\]");
+
+	@Reference
+	private CompanyLocalService _companyLocalService;
 
 	@Reference
 	private FragmentCollectionContributorTracker
@@ -1058,9 +1141,6 @@ public class FragmentLayoutStructureItemImporter
 	private Language _language;
 
 	@Reference
-	private Portal _portal;
-
-	@Reference
 	private PortletConfigurationImporterHelper
 		_portletConfigurationImporterHelper;
 
@@ -1068,6 +1148,12 @@ public class FragmentLayoutStructureItemImporter
 	private PortletFileRepository _portletFileRepository;
 
 	@Reference
+	private PortletLocalService _portletLocalService;
+
+	@Reference
 	private PortletPermissionsImporterHelper _portletPermissionsImporterHelper;
+
+	@Reference
+	private SegmentsExperienceLocalService _segmentsExperienceLocalService;
 
 }

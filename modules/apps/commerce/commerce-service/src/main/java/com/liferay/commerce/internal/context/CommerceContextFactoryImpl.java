@@ -17,10 +17,13 @@ package com.liferay.commerce.internal.context;
 import com.liferay.commerce.account.service.CommerceAccountLocalService;
 import com.liferay.commerce.account.service.CommerceAccountService;
 import com.liferay.commerce.account.util.CommerceAccountHelper;
+import com.liferay.commerce.context.BaseCommerceContext;
+import com.liferay.commerce.context.BaseCommerceContextHttp;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.context.CommerceContextFactory;
 import com.liferay.commerce.currency.service.CommerceCurrencyLocalService;
 import com.liferay.commerce.order.CommerceOrderHttpHelper;
+import com.liferay.commerce.product.service.CommerceChannelAccountEntryRelLocalService;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.service.CommerceOrderService;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
@@ -39,23 +42,25 @@ public class CommerceContextFactoryImpl implements CommerceContextFactory {
 
 	@Override
 	public CommerceContext create(HttpServletRequest httpServletRequest) {
-		return new CommerceContextHttpImpl(
+		return new BaseCommerceContextHttp(
 			httpServletRequest, _commerceAccountHelper,
+			_commerceChannelAccountEntryRelLocalService,
 			_commerceChannelLocalService, _commerceCurrencyLocalService,
 			_commerceOrderHttpHelper, _configurationProvider, _portal);
 	}
 
 	@Override
 	public CommerceContext create(
-		long companyId, long channelGroupId, long userId, long orderId,
+		long companyId, long commerceChannelGroupId, long userId, long orderId,
 		long commerceAccountId) {
 
-		return new CommerceContextImpl(
-			companyId, channelGroupId, orderId, commerceAccountId,
+		return new BaseCommerceContext(
+			companyId, commerceChannelGroupId, orderId, commerceAccountId,
 			_commerceAccountHelper, _commerceAccountLocalService,
-			_commerceAccountService, _commerceChannelLocalService,
-			_commerceCurrencyLocalService, _commerceOrderService,
-			_configurationProvider);
+			_commerceAccountService,
+			_commerceChannelAccountEntryRelLocalService,
+			_commerceChannelLocalService, _commerceCurrencyLocalService,
+			_commerceOrderService, _configurationProvider);
 	}
 
 	@Reference
@@ -66,6 +71,10 @@ public class CommerceContextFactoryImpl implements CommerceContextFactory {
 
 	@Reference
 	private CommerceAccountService _commerceAccountService;
+
+	@Reference
+	private CommerceChannelAccountEntryRelLocalService
+		_commerceChannelAccountEntryRelLocalService;
 
 	@Reference
 	private CommerceChannelLocalService _commerceChannelLocalService;

@@ -54,8 +54,13 @@ public interface CTProcessService extends BaseService {
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<CTProcess> getCTProcesses(
-		long companyId, long userId, String keywords, int status, int start,
-		int end, OrderByComparator<CTProcess> orderByComparator);
+			long companyId, long userId, String keywords, int status, int start,
+			int end, OrderByComparator<CTProcess> orderByComparator)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getCTProcessesCount(
+		long companyId, long userId, String keywords, int status);
 
 	/**
 	 * Returns the OSGi service identifier.

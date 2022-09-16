@@ -15,19 +15,20 @@
 AUI.add(
 	'liferay-product-navigation-simulation-device',
 	(A) => {
-		var AObject = A.Object;
-		var Lang = A.Lang;
+		// eslint-disable-next-line @liferay/aui/no-object
+		const AObject = A.Object;
+		const Lang = A.Lang;
 
-		var BODY = A.getBody();
+		const BODY = document.body;
 
-		var CSS_SELECTED = 'selected';
+		const CSS_SELECTED = 'selected';
 
-		var DIALOG_ALIGN_POINTS = [
+		const DIALOG_ALIGN_POINTS = [
 			A.WidgetPositionAlign.CC,
 			A.WidgetPositionAlign.CC,
 		];
 
-		var DIALOG_DEFAULTS = {
+		const DIALOG_DEFAULTS = {
 			autoHeightRatio: 1,
 			autoWidthRatio: 1,
 			cssClass: 'lfr-device',
@@ -35,7 +36,7 @@ AUI.add(
 			resizable: false,
 		};
 
-		var DIALOG_IFRAME_DEFAULTS = {
+		const DIALOG_IFRAME_DEFAULTS = {
 			closeOnEscape: false,
 			gutter: {
 				bottom: 0,
@@ -45,40 +46,51 @@ AUI.add(
 			},
 		};
 
-		var SELECTOR_DEVICE_ITEM = '.lfr-device-item';
+		const SELECTOR_DEVICE_ITEM = '.lfr-device-item';
 
-		var STR_BOUNDING_BOX = 'boundingBox';
+		const STR_BOUNDING_BOX = 'boundingBox';
 
-		var STR_CLICK = 'click';
+		const STR_CLICK = 'click';
 
-		var STR_DEVICE = 'device';
+		const STR_DEVICE = 'device';
 
-		var STR_DEVICES = 'devices';
+		const STR_DEVICES = 'devices';
 
-		var STR_HIDE = 'hide';
+		const STR_HIDE = 'hide';
 
-		var STR_INPUT = 'input';
+		const STR_INPUT = 'input';
 
-		var STR_INPUT_HEIGHT = 'inputHeight';
+		const STR_INPUT_HEIGHT = 'inputHeight';
 
-		var STR_INPUT_WIDTH = 'inputWidth';
+		const STR_INPUT_WIDTH = 'inputWidth';
 
-		var STR_PREVENT_TRANSITION = 'preventTransition';
+		const STR_PREVENT_TRANSITION = 'preventTransition';
 
-		var STR_ROTATED = 'rotated';
+		const STR_ROTATED = 'rotated';
 
-		var TPL_DEVICE_SIZE_INFO = '{width} x {height}';
+		const TPL_DEVICE_SIZE_INFO = '{width} x {height}';
 
-		var TPL_DEVICE_SIZE_STATUS =
+		const TPL_DEVICE_SIZE_STATUS =
 			'<div class="lfr-device-size-status">' +
 			'<span class="lfr-device-size-status-content"></span>' +
 			'</div>';
 
-		var TPL_SIMULATION_DEVICE = '<div class="lfr-simulation-device" />';
+		const WIN = A.config.win;
 
-		var WIN = A.config.win;
+		const RESIZABLE_DEVICE_CSS_CLASS = 'resizable-device';
 
-		var SimulationDevice = A.Component.create({
+		const createIframeURL = () => {
+			const url = new URL(WIN.location.href);
+			const searchParams = new URLSearchParams(url.search);
+			if (searchParams.has('segmentsExperienceId')) {
+				searchParams.delete('segmentsExperienceId');
+			}
+			searchParams.append('p_l_mode', 'preview');
+
+			return `${url.origin}${url.pathname}?${searchParams.toString()}`;
+		};
+
+		const SimulationDevice = A.Component.create({
 			ATTRS: {
 				devices: {
 					validator: Lang.isObject,
@@ -101,9 +113,9 @@ AUI.add(
 
 			prototype: {
 				_bindUI() {
-					var instance = this;
+					const instance = this;
 
-					var eventHandles = instance._eventHandles;
+					const eventHandles = instance._eventHandles;
 
 					eventHandles.push(
 						Liferay.on(
@@ -122,7 +134,7 @@ AUI.add(
 						)
 					);
 
-					var inputWidth = instance.get(STR_INPUT_WIDTH);
+					const inputWidth = instance.get(STR_INPUT_WIDTH);
 
 					if (inputWidth) {
 						eventHandles.push(
@@ -134,7 +146,7 @@ AUI.add(
 						);
 					}
 
-					var inputHeight = instance.get(STR_INPUT_HEIGHT);
+					const inputHeight = instance.get(STR_INPUT_HEIGHT);
 
 					if (inputHeight) {
 						eventHandles.push(
@@ -148,13 +160,13 @@ AUI.add(
 				},
 
 				_normalizeDialogAttrs(device, rotation) {
-					var instance = this;
+					const instance = this;
 
-					var dialogAutoHeight = false;
-					var dialogAutoWidth = false;
+					let dialogAutoHeight = false;
+					let dialogAutoWidth = false;
 
-					var dialogHeight = device.height;
-					var dialogWidth = device.width;
+					let dialogHeight = device.height;
+					let dialogWidth = device.width;
 
 					if (rotation) {
 						dialogHeight = device.width;
@@ -162,26 +174,28 @@ AUI.add(
 					}
 
 					if (!Lang.isNumber(dialogWidth)) {
-						var widthNode = A.one(dialogWidth);
+						const widthNode = A.one(dialogWidth);
 
 						if (widthNode) {
 							dialogWidth = widthNode.val();
 						}
 						else {
-							dialogWidth = instance._simulationDeviceNode.width();
+							dialogWidth =
+								instance._simulationDeviceNode.offsetWidth;
 
 							dialogAutoWidth = true;
 						}
 					}
 
 					if (!Lang.isNumber(dialogHeight)) {
-						var heightNode = A.one(dialogHeight);
+						const heightNode = A.one(dialogHeight);
 
 						if (heightNode) {
 							dialogHeight = heightNode.val();
 						}
 						else {
-							dialogHeight = instance._simulationDeviceNode.height();
+							dialogHeight =
+								instance._simulationDeviceNode.offsetHeight;
 
 							dialogAutoHeight = true;
 						}
@@ -199,15 +213,15 @@ AUI.add(
 				},
 
 				_onDeviceClick(event) {
-					var instance = this;
+					const instance = this;
 
-					var deviceList = instance.get(STR_DEVICES);
+					const deviceList = instance.get(STR_DEVICES);
 
-					var deviceItem = event.currentTarget;
+					const deviceItem = event.currentTarget;
 
-					var deviceId = deviceItem.getData(STR_DEVICE);
+					const deviceId = deviceItem.getData(STR_DEVICE);
 
-					var device = deviceList[deviceId];
+					const device = deviceList[deviceId];
 
 					instance._selectedDevice = device;
 
@@ -218,13 +232,13 @@ AUI.add(
 						) {
 							deviceItem.toggleClass(STR_ROTATED);
 
-							var icon = deviceItem.one('.icon');
+							const icon = deviceItem.one('.icon');
 
 							if (icon) {
 								icon.toggleClass(STR_HIDE);
 							}
 
-							var iconRotate = deviceItem.one('.icon-rotate');
+							const iconRotate = deviceItem.one('.icon-rotate');
 
 							if (iconRotate) {
 								iconRotate.toggleClass(STR_HIDE);
@@ -243,26 +257,26 @@ AUI.add(
 				},
 
 				_onResize(event) {
-					var instance = this;
+					const instance = this;
 
-					var eventInfo = event.info;
+					const eventInfo = event.info;
 
-					var offsetHeight = eventInfo.offsetHeight;
-					var offsetWidth = eventInfo.offsetWidth;
+					const offsetHeight = eventInfo.offsetHeight;
+					const offsetWidth = eventInfo.offsetWidth;
 
-					var inputHeight = instance.get(STR_INPUT_HEIGHT);
+					const inputHeight = instance.get(STR_INPUT_HEIGHT);
 
 					if (inputHeight) {
 						inputHeight.val(offsetHeight);
 					}
 
-					var inputWidth = instance.get(STR_INPUT_WIDTH);
+					const inputWidth = instance.get(STR_INPUT_WIDTH);
 
 					if (inputWidth) {
 						inputWidth.val(offsetWidth);
 					}
 
-					var info = Lang.sub(TPL_DEVICE_SIZE_INFO, {
+					const info = Lang.sub(TPL_DEVICE_SIZE_INFO, {
 						height: offsetHeight,
 						width: offsetWidth,
 					});
@@ -271,19 +285,19 @@ AUI.add(
 				},
 
 				_onResizeEnd() {
-					var instance = this;
+					const instance = this;
 
 					instance._sizeStatus.hide();
 				},
 
 				_onResizeStart() {
-					var instance = this;
+					const instance = this;
 
-					var sizeStatus = instance._sizeStatus;
+					let sizeStatus = instance._sizeStatus;
 
-					var sizeStatusContent = instance._sizeStatusContent;
+					let sizeStatusContent = instance._sizeStatusContent;
 
-					var dialog = Liferay.Util.getWindow(instance._dialogId);
+					const dialog = Liferay.Util.getWindow(instance._dialogId);
 
 					if (!sizeStatus) {
 						sizeStatus = A.Node.create(TPL_DEVICE_SIZE_STATUS);
@@ -303,7 +317,7 @@ AUI.add(
 
 					sizeStatus.addClass(dialog.resize.get('activeHandle'));
 
-					var deviceSizeInfo = Lang.sub(TPL_DEVICE_SIZE_INFO, {
+					const deviceSizeInfo = Lang.sub(TPL_DEVICE_SIZE_INFO, {
 						height: dialog.get('height'),
 						width: dialog.get('width'),
 					});
@@ -314,13 +328,13 @@ AUI.add(
 				},
 
 				_onSizeInput() {
-					var instance = this;
+					const instance = this;
 
-					var inputHeight = instance.get(STR_INPUT_HEIGHT).val();
-					var inputWidth = instance.get(STR_INPUT_WIDTH).val();
+					const inputHeight = instance.get(STR_INPUT_HEIGHT).val();
+					const inputWidth = instance.get(STR_INPUT_WIDTH).val();
 
-					var height = Lang.toInt(inputHeight);
-					var width = Lang.toInt(inputWidth);
+					const height = Lang.toInt(inputHeight);
+					const width = Lang.toInt(inputWidth);
 
 					Liferay.Util.getWindow(instance._dialogId);
 
@@ -332,22 +346,22 @@ AUI.add(
 				},
 
 				_openDeviceDialog(device, rotation) {
-					var instance = this;
+					const instance = this;
 
-					var dialog = Liferay.Util.getWindow(instance._dialogId);
+					const dialog = Liferay.Util.getWindow(instance._dialogId);
 
-					var dialogAttrs = instance._normalizeDialogAttrs(
+					const dialogAttrs = instance._normalizeDialogAttrs(
 						device,
 						rotation
 					);
 
-					var simulationDeviceNode = instance._simulationDeviceNode;
+					const simulationDeviceNode = instance._simulationDeviceNode;
 
-					var height = dialogAttrs.size.height;
-					var width = dialogAttrs.size.width;
+					const height = dialogAttrs.size.height;
+					const width = dialogAttrs.size.width;
 
 					if (!dialog) {
-						var dialogConfig = {
+						const dialogConfig = {
 							align: {
 								node: simulationDeviceNode,
 								points: DIALOG_ALIGN_POINTS,
@@ -363,21 +377,25 @@ AUI.add(
 						Liferay.Util.openWindow(
 							{
 								cache: false,
-								dialog: A.merge(DIALOG_DEFAULTS, dialogConfig),
+								dialog: {
+									...DIALOG_DEFAULTS,
+									...dialogConfig,
+								},
 								dialogIframe: DIALOG_IFRAME_DEFAULTS,
 								id: instance._dialogId,
 								iframeId: 'simulationDeviceIframe',
 								title: Liferay.Language.get(
-									'simulation-peview'
+									'simulation-preview'
 								),
-								uri: Liferay.Util.addParams(
-									'p_l_mode=preview',
-									WIN.location.href
-								),
+								uri: createIframeURL(),
 							},
 							(dialogWindow) => {
-								var dialogBoundingBox = dialogWindow.get(
+								const dialogBoundingBox = dialogWindow.get(
 									STR_BOUNDING_BOX
+								);
+
+								dialogBoundingBox.removeClass(
+									RESIZABLE_DEVICE_CSS_CLASS
 								);
 
 								dialogWindow.align(
@@ -388,7 +406,7 @@ AUI.add(
 								dialogWindow.plug(A.Plugin.SizeAnim, {
 									after: {
 										end() {
-											var selectedDevice =
+											const selectedDevice =
 												instance._selectedDevice;
 
 											if (selectedDevice.skin) {
@@ -446,12 +464,21 @@ AUI.add(
 						);
 					}
 					else {
-						var dialogBoundingBox = dialog.get(STR_BOUNDING_BOX);
+						const dialogBoundingBox = dialog.get(STR_BOUNDING_BOX);
 
 						dialogBoundingBox.toggleClass(STR_ROTATED, rotation);
+						dialogBoundingBox.removeClass(
+							RESIZABLE_DEVICE_CSS_CLASS
+						);
 
 						if (!device.preventTransition) {
 							dialog.sizeanim.set(STR_PREVENT_TRANSITION, false);
+						}
+
+						if (device.resizable && !device.skin) {
+							dialogBoundingBox.addClass(
+								RESIZABLE_DEVICE_CSS_CLASS
+							);
 						}
 
 						dialog.setAttrs(dialogAttrs);
@@ -468,7 +495,7 @@ AUI.add(
 				},
 
 				destructor() {
-					var instance = this;
+					const instance = this;
 
 					new A.EventHandle(instance._eventHandles).detach();
 
@@ -476,30 +503,33 @@ AUI.add(
 				},
 
 				hideDeviceDialog() {
-					var instance = this;
+					const instance = this;
 
-					var dialog = Liferay.Util.getWindow(instance._dialogId);
+					const dialog = Liferay.Util.getWindow(instance._dialogId);
 
 					dialog.hide();
 				},
 
 				initializer() {
-					var instance = this;
+					const instance = this;
 
 					instance._eventHandles = [];
 
 					instance._dialogId = A.guid();
 
-					instance._simulationDeviceNode = A.Node.create(
-						Lang.sub(TPL_SIMULATION_DEVICE)
+					instance._simulationDeviceNode = document.createElement(
+						'div'
 					);
 
-					BODY.append(instance._simulationDeviceNode);
+					instance._simulationDeviceNode.className =
+						'lfr-simulation-device';
 
-					var devices = instance.get('devices');
+					BODY.appendChild(instance._simulationDeviceNode);
+
+					const devices = instance.get('devices');
 
 					AObject.some(devices, (item) => {
-						var selected = item.selected;
+						const selected = item.selected;
 
 						if (selected) {
 							instance._openDeviceDialog(item);
@@ -508,7 +538,7 @@ AUI.add(
 						return selected;
 					});
 
-					var simulationDeviceContainer = instance.byId(
+					const simulationDeviceContainer = instance.byId(
 						'simulationDeviceContainer'
 					);
 
@@ -522,13 +552,13 @@ AUI.add(
 				},
 
 				showDeviceDialog() {
-					var instance = this;
+					const instance = this;
 
 					instance._simulationDeviceNode.remove();
 
-					BODY.append(instance._simulationDeviceNode);
+					BODY.appendChild(instance._simulationDeviceNode);
 
-					var dialog = Liferay.Util.getWindow(instance._dialogId);
+					const dialog = Liferay.Util.getWindow(instance._dialogId);
 
 					dialog.show();
 				},

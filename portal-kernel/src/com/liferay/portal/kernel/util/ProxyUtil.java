@@ -25,8 +25,12 @@ import java.lang.ref.WeakReference;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 
@@ -148,6 +152,16 @@ public class ProxyUtil {
 		return _constructorReferences.containsKey(clazz);
 	}
 
+	public static <T> T newDelegateProxyInstance(
+		ClassLoader classLoader, Class<T> interfaceClass, Object delegateObject,
+		T defaultObject) {
+
+		return (T)newProxyInstance(
+			classLoader, new Class<?>[] {interfaceClass},
+			new DelegateInvocationHandler(
+				interfaceClass, delegateObject, defaultObject));
+	}
+
 	public static Object newProxyInstance(
 		ClassLoader classLoader, Class<?>[] interfaces,
 		InvocationHandler invocationHandler) {
@@ -212,6 +226,107 @@ public class ProxyUtil {
 		}
 
 		private volatile Reference<Constructor<?>> _reference;
+
+	}
+
+	private static class DelegateInvocationHandler
+		implements InvocationHandler {
+
+		@Override
+		public Object invoke(Object object, Method method, Object[] args)
+			throws Throwable {
+
+			Method delegateMethod = _delegateMethods.get(method);
+
+			if (delegateMethod != null) {
+				return delegateMethod.invoke(_delegateObject, args);
+			}
+
+			return method.invoke(_defaultObject, args);
+		}
+
+		private DelegateInvocationHandler(
+			Class<?> interfaceClass, Object delegateObject,
+			Object defaultObject) {
+
+			Map<Method, Method> delegateMethods = new HashMap<>();
+
+			Class<?> delegateClass = delegateObject.getClass();
+
+			for (Method delegateMethod : delegateClass.getDeclaredMethods()) {
+				int modifiers = delegateMethod.getModifiers();
+
+				if (!Modifier.isPublic(modifiers) ||
+					Modifier.isStatic(modifiers)) {
+
+					continue;
+				}
+
+				Method objectMethod = _toObjectMethod(delegateMethod);
+
+				if (objectMethod == null) {
+					try {
+						Method interfaceMethod = interfaceClass.getMethod(
+							delegateMethod.getName(),
+							delegateMethod.getParameterTypes());
+
+						delegateMethod.setAccessible(true);
+
+						delegateMethods.put(interfaceMethod, delegateMethod);
+					}
+					catch (NoSuchMethodException noSuchMethodException) {
+					}
+				}
+				else {
+					delegateMethods.put(objectMethod, delegateMethod);
+				}
+			}
+
+			_delegateMethods = delegateMethods;
+
+			_delegateObject = delegateObject;
+			_defaultObject = defaultObject;
+		}
+
+		private Method _toObjectMethod(Method method) {
+			String name = method.getName();
+			Class<?>[] parameterTypes = method.getParameterTypes();
+
+			if (name.equals("equals") && (parameterTypes.length == 1) &&
+				(parameterTypes[0] == Object.class)) {
+
+				return _equalsMethod;
+			}
+
+			if (name.equals("hashCode") && (parameterTypes.length == 0)) {
+				return _hashCodeMethod;
+			}
+
+			if (name.equals("toString") && (parameterTypes.length == 0)) {
+				return _toStringMethod;
+			}
+
+			return null;
+		}
+
+		private static final Method _equalsMethod;
+		private static final Method _hashCodeMethod;
+		private static final Method _toStringMethod;
+
+		static {
+			try {
+				_equalsMethod = Object.class.getMethod("equals", Object.class);
+				_hashCodeMethod = Object.class.getMethod("hashCode");
+				_toStringMethod = Object.class.getMethod("toString");
+			}
+			catch (NoSuchMethodException noSuchMethodException) {
+				throw new ExceptionInInitializerError(noSuchMethodException);
+			}
+		}
+
+		private final Object _defaultObject;
+		private final Map<Method, Method> _delegateMethods;
+		private final Object _delegateObject;
 
 	}
 

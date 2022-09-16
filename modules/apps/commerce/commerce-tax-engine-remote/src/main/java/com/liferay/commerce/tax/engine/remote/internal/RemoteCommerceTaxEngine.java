@@ -19,8 +19,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.liferay.commerce.exception.CommerceTaxEngineException;
 import com.liferay.commerce.model.CommerceAddress;
-import com.liferay.commerce.model.CommerceCountry;
-import com.liferay.commerce.model.CommerceRegion;
 import com.liferay.commerce.service.CommerceAddressService;
 import com.liferay.commerce.tax.CommerceTaxCalculateRequest;
 import com.liferay.commerce.tax.CommerceTaxEngine;
@@ -29,9 +27,11 @@ import com.liferay.commerce.tax.engine.remote.internal.configuration.RemoteComme
 import com.liferay.commerce.tax.model.CommerceTaxMethod;
 import com.liferay.commerce.tax.service.CommerceTaxMethodService;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Country;
+import com.liferay.portal.kernel.model.Region;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
@@ -103,13 +103,12 @@ public class RemoteCommerceTaxEngine implements CommerceTaxEngine {
 
 	@Override
 	public String getDescription(Locale locale) {
-		return LanguageUtil.get(
-			_getResourceBundle(locale), "remote-description");
+		return _language.get(_getResourceBundle(locale), "remote-description");
 	}
 
 	@Override
 	public String getName(Locale locale) {
-		return LanguageUtil.get(_getResourceBundle(locale), KEY);
+		return _language.get(_getResourceBundle(locale), KEY);
 	}
 
 	@Activate
@@ -164,14 +163,14 @@ public class RemoteCommerceTaxEngine implements CommerceTaxEngine {
 	}
 
 	protected RemoteCommerceTaxConfiguration getRemoteCommerceTaxConfiguration(
-			long channelGroupId)
+			long commerceChannelGroupId)
 		throws CommerceTaxEngineException {
 
 		try {
 			return _configurationProvider.getConfiguration(
 				RemoteCommerceTaxConfiguration.class,
 				new GroupServiceSettingsLocator(
-					channelGroupId,
+					commerceChannelGroupId,
 					RemoteCommerceTaxConfiguration.class.getName()));
 		}
 		catch (ConfigurationException configurationException) {
@@ -188,11 +187,10 @@ public class RemoteCommerceTaxEngine implements CommerceTaxEngine {
 		_addParameter(
 			prefix + "AddressCity", commerceAddress.getCity(), uriBuilder);
 
-		CommerceCountry commerceCountry = commerceAddress.getCommerceCountry();
+		Country country = commerceAddress.getCountry();
 
 		_addParameter(
-			prefix + "AddressCountryISOCode",
-			commerceCountry.getThreeLettersISOCode(), uriBuilder);
+			prefix + "AddressCountryISOCode", country.getA3(), uriBuilder);
 
 		_addParameter(
 			prefix + "AddressExternalReferenceCode",
@@ -210,10 +208,10 @@ public class RemoteCommerceTaxEngine implements CommerceTaxEngine {
 			prefix + "AddressPhoneNumber", commerceAddress.getPhoneNumber(),
 			uriBuilder);
 
-		CommerceRegion commerceRegion = commerceAddress.getCommerceRegion();
+		Region region = commerceAddress.getRegion();
 
 		_addParameter(
-			prefix + "AddressRegionISOCode", commerceRegion.getCode(),
+			prefix + "AddressRegionISOCode", region.getRegionCode(),
 			uriBuilder);
 
 		_addParameter(
@@ -260,7 +258,7 @@ public class RemoteCommerceTaxEngine implements CommerceTaxEngine {
 
 		RemoteCommerceTaxConfiguration remoteCommerceTaxConfiguration =
 			getRemoteCommerceTaxConfiguration(
-				commerceTaxCalculateRequest.getChannelGroupId());
+				commerceTaxCalculateRequest.getCommerceChannelGroupId());
 
 		URIBuilder uriBuilder = new URIBuilder(
 			remoteCommerceTaxConfiguration.taxValueEndpointURL());
@@ -330,6 +328,9 @@ public class RemoteCommerceTaxEngine implements CommerceTaxEngine {
 
 	@Reference
 	private ConfigurationProvider _configurationProvider;
+
+	@Reference
+	private Language _language;
 
 	private final ObjectMapper _objectMapper = new ObjectMapper();
 	private PoolingHttpClientConnectionManager

@@ -19,8 +19,8 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
-import com.liferay.segments.constants.SegmentsExperienceConstants;
 import com.liferay.segments.constants.SegmentsExperimentConstants;
 import com.liferay.segments.exception.LockedSegmentsExperimentException;
 import com.liferay.segments.exception.SegmentsExperimentRelNameException;
@@ -30,6 +30,7 @@ import com.liferay.segments.model.SegmentsExperiment;
 import com.liferay.segments.model.SegmentsExperimentRel;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 import com.liferay.segments.service.base.SegmentsExperimentRelLocalServiceBaseImpl;
+import com.liferay.segments.service.persistence.SegmentsExperimentPersistence;
 
 import java.util.Date;
 import java.util.List;
@@ -67,7 +68,7 @@ public class SegmentsExperimentRelLocalServiceImpl
 
 		_validateSegmentsExperimentStatus(segmentsExperimentId);
 
-		User user = userLocalService.getUser(serviceContext.getUserId());
+		User user = _userLocalService.getUser(serviceContext.getUserId());
 
 		long segmentsExperimentRelId = counterLocalService.increment();
 
@@ -124,10 +125,7 @@ public class SegmentsExperimentRelLocalServiceImpl
 
 		// Segments experience
 
-		if (!segmentsExperimentRel.isActive() &&
-			(segmentsExperimentRel.getSegmentsExperienceId() !=
-				SegmentsExperienceConstants.ID_DEFAULT)) {
-
+		if (!segmentsExperimentRel.isActive()) {
 			_segmentsExperienceLocalService.deleteSegmentsExperience(
 				segmentsExperimentRel.getSegmentsExperienceId());
 		}
@@ -255,7 +253,7 @@ public class SegmentsExperimentRelLocalServiceImpl
 		throws PortalException {
 
 		SegmentsExperiment segmentsExperiment =
-			segmentsExperimentPersistence.findByPrimaryKey(
+			_segmentsExperimentPersistence.findByPrimaryKey(
 				segmentsExperimentId);
 
 		SegmentsExperimentConstants.Status status =
@@ -269,5 +267,11 @@ public class SegmentsExperimentRelLocalServiceImpl
 
 	@Reference
 	private SegmentsExperienceLocalService _segmentsExperienceLocalService;
+
+	@Reference
+	private SegmentsExperimentPersistence _segmentsExperimentPersistence;
+
+	@Reference
+	private UserLocalService _userLocalService;
 
 }

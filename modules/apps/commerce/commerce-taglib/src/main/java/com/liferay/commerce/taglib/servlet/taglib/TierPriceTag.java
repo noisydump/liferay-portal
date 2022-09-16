@@ -36,7 +36,6 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.taglib.util.IncludeTag;
 
 import java.util.List;
-import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspException;
@@ -50,17 +49,16 @@ public class TierPriceTag extends IncludeTag {
 	@Override
 	public int doStartTag() throws JspException {
 		try {
+			HttpServletRequest httpServletRequest = getRequest();
+
 			CommerceContext commerceContext =
-				(CommerceContext)request.getAttribute(
+				(CommerceContext)httpServletRequest.getAttribute(
 					CommerceWebKeys.COMMERCE_CONTEXT);
 
-			Optional<CommercePriceList> commercePriceListOptional =
-				_getPriceList(_cpInstanceId, commerceContext);
+			CommercePriceList commercePriceList = _getPriceList(
+				_cpInstanceId, commerceContext);
 
-			if (commercePriceListOptional.isPresent()) {
-				CommercePriceList commercePriceList =
-					commercePriceListOptional.get();
-
+			if (commercePriceList != null) {
 				CommercePriceEntry commercePriceEntry =
 					CommercePriceEntryLocalServiceUtil.fetchCommercePriceEntry(
 						_cpInstanceId,
@@ -91,7 +89,7 @@ public class TierPriceTag extends IncludeTag {
 		}
 		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(portalException, portalException);
+				_log.debug(portalException);
 			}
 
 			return SKIP_BODY;
@@ -128,7 +126,7 @@ public class TierPriceTag extends IncludeTag {
 			ServletContextUtil.getCommercePriceListLocalService();
 
 		commercePriceFormatter = ServletContextUtil.getCommercePriceFormatter();
-		servletContext = ServletContextUtil.getServletContext();
+		setServletContext(ServletContextUtil.getServletContext());
 	}
 
 	public void setTaglibQuantityInputId(String taglibQuantityInputId) {
@@ -153,40 +151,41 @@ public class TierPriceTag extends IncludeTag {
 
 	@Override
 	protected void setAttributes(HttpServletRequest httpServletRequest) {
-		request.setAttribute(
+		httpServletRequest = getRequest();
+
+		httpServletRequest.setAttribute(
 			"liferay-commerce:tier-price:commerceCurrencyId",
 			_commerceCurrencyId);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-commerce:tier-price:commercePriceFormatter",
 			commercePriceFormatter);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-commerce:tier-price:commerceTierPriceEntries",
 			_commerceTierPriceEntries);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-commerce:tier-price:cpInstanceId", _cpInstanceId);
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			"liferay-commerce:tier-price:taglibQuantityInputId",
 			_taglibQuantityInputId);
 	}
 
 	protected CommercePriceFormatter commercePriceFormatter;
 
-	private Optional<CommercePriceList> _getPriceList(
+	private CommercePriceList _getPriceList(
 			long cpInstanceId, CommerceContext commerceContext)
 		throws PortalException {
 
 		CommerceAccount commerceAccount = commerceContext.getCommerceAccount();
 
 		if (commerceAccount == null) {
-			return Optional.empty();
+			return null;
 		}
 
 		CPInstance cpInstance = CPInstanceLocalServiceUtil.getCPInstance(
 			cpInstanceId);
 
 		return _commercePriceListLocalService.getCommercePriceList(
-			commerceAccount.getCompanyId(), cpInstance.getGroupId(),
-			commerceAccount.getCommerceAccountId(),
+			cpInstance.getGroupId(), commerceAccount.getCommerceAccountId(),
 			commerceContext.getCommerceAccountGroupIds());
 	}
 

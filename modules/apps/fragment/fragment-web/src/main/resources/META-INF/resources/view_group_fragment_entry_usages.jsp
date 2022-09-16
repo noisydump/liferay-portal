@@ -25,8 +25,6 @@ portletDisplay.setShowBackIcon(true);
 portletDisplay.setURLBack(groupFragmentEntryLinkDisplayContext.getRedirect());
 
 renderResponse.setTitle(LanguageUtil.format(request, "usages-and-propagation-x", fragmentEntry.getName()));
-
-GroupFragmentEntryUsageManagementToolbarDisplayContext groupFragmentEntryUsageManagementToolbarDisplayContext = new GroupFragmentEntryUsageManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, groupFragmentEntryLinkDisplayContext.getSearchContainer());
 %>
 
 <clay:container-fluid
@@ -37,8 +35,9 @@ GroupFragmentEntryUsageManagementToolbarDisplayContext groupFragmentEntryUsageMa
 			<clay:col
 				lg="12"
 			>
-				<clay:management-toolbar-v2
-					displayContext="<%= groupFragmentEntryUsageManagementToolbarDisplayContext %>"
+				<clay:management-toolbar
+					managementToolbarDisplayContext="<%= new GroupFragmentEntryUsageManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, groupFragmentEntryLinkDisplayContext.getSearchContainer()) %>"
+					propsTransformer="js/FragmentEntryUsagesManagementToolbarPropsTransformer"
 				/>
 
 				<portlet:actionURL name="/fragment/propagate_group_fragment_entry_changes" var="propagateGroupFragmentEntryChangesURL">
@@ -56,11 +55,13 @@ GroupFragmentEntryUsageManagementToolbarDisplayContext groupFragmentEntryUsageMa
 							modelVar="group"
 						>
 							<liferay-ui:search-container-column-text
+								cssClass="table-cell-expand table-cell-minw-200"
 								name="name"
 								value="<%= group.getDescriptiveName(locale) %>"
 							/>
 
 							<liferay-ui:search-container-column-text
+								cssClass="table-cell-expand-smallest table-cell-minw-100"
 								name="usages"
 								translate="<%= true %>"
 								value="<%= String.valueOf(groupFragmentEntryLinkDisplayContext.getFragmentGroupUsageCount(group)) %>"
@@ -79,8 +80,3 @@ GroupFragmentEntryUsageManagementToolbarDisplayContext groupFragmentEntryUsageMa
 		</clay:row>
 	</clay:sheet>
 </clay:container-fluid>
-
-<liferay-frontend:component
-	componentId="<%= groupFragmentEntryUsageManagementToolbarDisplayContext.getDefaultEventHandler() %>"
-	module="js/FragmentEntryUsageManagementToolbarDefaultEventHandler.es"
-/>

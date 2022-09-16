@@ -2,13 +2,17 @@
 <head>
 <title>LicenseManager</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">LicenseManager</td></tr>
 </thead>
+
 <tbody>
+
 <!--LICENSE_MANAGER-->
+
 <tr>
 	<td>LICENSE_IFRAME</td>
 	<td>//iframe[contains(@id,'LicenseManagerPortlet_iframe')]</td>
@@ -20,8 +24,8 @@
 	<td></td>
 </tr>
 <tr>
-	<td>LICENSE_FORM_H3</td>
-	<td>//form[contains(@class,'license-form')]//h3</td>
+	<td>LICENSE_FORM_H2</td>
+	<td>//form[contains(@class,'license-form')]//h2</td>
 	<td></td>
 </tr>
 <tr>

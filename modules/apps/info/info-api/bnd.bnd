@@ -1,7 +1,8 @@
 Bundle-Name: Liferay Info API
 Bundle-SymbolicName: com.liferay.info.api
-Bundle-Version: 6.0.0
+Bundle-Version: 18.1.1
 Export-Package:\
+	com.liferay.info.collection.provider,\
 	com.liferay.info.constants,\
 	com.liferay.info.display.contributor,\
 	com.liferay.info.display.contributor.field,\
@@ -11,22 +12,25 @@ Export-Package:\
 	com.liferay.info.exception,\
 	com.liferay.info.field,\
 	com.liferay.info.field.type,\
+	com.liferay.info.filter,\
 	com.liferay.info.form,\
 	com.liferay.info.formatter,\
 	com.liferay.info.item,\
 	com.liferay.info.item.capability,\
+	com.liferay.info.item.creator,\
 	com.liferay.info.item.field.reader,\
 	com.liferay.info.item.provider,\
 	com.liferay.info.item.provider.filter,\
 	com.liferay.info.item.renderer,\
 	com.liferay.info.item.renderer.template,\
 	com.liferay.info.item.selector,\
+	com.liferay.info.item.translator,\
 	com.liferay.info.item.updater,\
-	com.liferay.info.list.provider,\
 	com.liferay.info.list.renderer,\
 	com.liferay.info.localized,\
 	com.liferay.info.localized.bundle,\
 	com.liferay.info.pagination,\
+	com.liferay.info.search,\
 	com.liferay.info.sort,\
 	com.liferay.info.type,\
 	com.liferay.info.type.categorization

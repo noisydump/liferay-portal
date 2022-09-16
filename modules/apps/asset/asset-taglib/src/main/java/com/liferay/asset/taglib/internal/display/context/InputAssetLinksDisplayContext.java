@@ -57,7 +57,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.ResourceBundle;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletURL;
@@ -320,7 +319,7 @@ public class InputAssetLinksDisplayContext {
 	}
 
 	private PortletURL _getAssetEntryItemSelectorPortletURL(
-		AssetRendererFactory<?> rendererFactory, long subtypeSelectionId) {
+		AssetRendererFactory<?> assetRendererFactory, long subtypeSelectionId) {
 
 		AssetEntryItemSelectorCriterion assetEntryItemSelectorCriterion =
 			new AssetEntryItemSelectorCriterion();
@@ -336,7 +335,7 @@ public class InputAssetLinksDisplayContext {
 		assetEntryItemSelectorCriterion.setSubtypeSelectionId(
 			subtypeSelectionId);
 		assetEntryItemSelectorCriterion.setTypeSelection(
-			rendererFactory.getClassName());
+			assetRendererFactory.getClassName());
 
 		ItemSelector itemSelector = ItemSelectorUtil.getItemSelector();
 
@@ -395,22 +394,19 @@ public class InputAssetLinksDisplayContext {
 		Map<String, Object> selectorEntryData = new HashMap<>();
 
 		PortletURL assetBrowserPortletURL =
-			_getAssetEntryItemSelectorPortletURL(assetRendererFactory, 0);
+			_getAssetEntryItemSelectorPortletURL(assetRendererFactory, -1);
 
 		if (assetBrowserPortletURL != null) {
 			selectorEntryData.put("href", assetBrowserPortletURL.toString());
 		}
 
-		ResourceBundle resourceBundle = TagResourceBundleUtil.getResourceBundle(
-			_pageContext);
-
-		String typeName = assetRendererFactory.getTypeName(
-			_themeDisplay.getLocale());
-
 		selectorEntryData.put(
 			"title",
-			LanguageUtil.format(resourceBundle, "select-x", typeName, false));
-
+			LanguageUtil.format(
+				TagResourceBundleUtil.getResourceBundle(_pageContext),
+				"select-x",
+				assetRendererFactory.getTypeName(_themeDisplay.getLocale()),
+				false));
 		selectorEntryData.put("type", assetRendererFactory.getClassName());
 
 		return selectorEntryData;

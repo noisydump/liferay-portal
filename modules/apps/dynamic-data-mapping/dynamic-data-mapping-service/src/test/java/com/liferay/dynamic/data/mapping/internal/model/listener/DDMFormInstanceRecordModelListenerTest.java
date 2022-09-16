@@ -18,22 +18,24 @@ import com.liferay.dynamic.data.mapping.exception.NoSuchFormInstanceReportExcept
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecord;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceReportLocalService;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
-
-import org.powermock.api.mockito.PowerMockito;
 
 /**
  * @author Marcos Martins
  */
-@RunWith(MockitoJUnitRunner.class)
-public class DDMFormInstanceRecordModelListenerTest extends PowerMockito {
+public class DDMFormInstanceRecordModelListenerTest {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Before
 	public void setUp() {
@@ -45,17 +47,17 @@ public class DDMFormInstanceRecordModelListenerTest extends PowerMockito {
 
 	@Test
 	public void testOnBeforeRemove() throws PortalException {
-		when(
+		Mockito.when(
 			_ddmFormInstanceReportLocalService.
 				getFormInstanceReportByFormInstanceId(Mockito.anyLong())
 		).thenThrow(
 			new NoSuchFormInstanceReportException()
 		);
 
-		DDMFormInstanceRecord ddmFormInstanceRecord = mock(
+		DDMFormInstanceRecord ddmFormInstanceRecord = Mockito.mock(
 			DDMFormInstanceRecord.class);
 
-		when(
+		Mockito.when(
 			ddmFormInstanceRecord.getFormInstanceId()
 		).thenReturn(
 			0L
@@ -72,9 +74,8 @@ public class DDMFormInstanceRecordModelListenerTest extends PowerMockito {
 
 	private DDMFormInstanceRecordModelListener
 		_ddmFormInstanceRecordModelListener;
-
-	@Mock
-	private DDMFormInstanceReportLocalService
-		_ddmFormInstanceReportLocalService;
+	private final DDMFormInstanceReportLocalService
+		_ddmFormInstanceReportLocalService = Mockito.mock(
+			DDMFormInstanceReportLocalService.class);
 
 }

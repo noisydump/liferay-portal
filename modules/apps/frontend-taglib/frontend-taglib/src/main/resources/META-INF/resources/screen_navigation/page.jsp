@@ -89,14 +89,19 @@ LiferayPortletResponse finalLiferayPortletResponse = liferayPortletResponse;
 
 							<%
 							for (ScreenNavigationEntry<Object> screenNavigationEntry : screenNavigationEntries) {
-								PortletURL screenNavigationEntryURL = PortletURLUtil.clone(portletURL, liferayPortletResponse);
-
-								screenNavigationEntryURL.setParameter("screenNavigationCategoryKey", screenNavigationEntry.getCategoryKey());
-								screenNavigationEntryURL.setParameter("screenNavigationEntryKey", screenNavigationEntry.getEntryKey());
 							%>
 
 								<li class="nav-item">
-									<a class="nav-link <%= Objects.equals(selectedScreenNavigationEntry.getEntryKey(), screenNavigationEntry.getEntryKey()) ? "active" : StringPool.BLANK %>" href="<%= screenNavigationEntryURL %>"><%= screenNavigationEntry.getLabel(themeDisplay.getLocale()) %></a>
+									<a
+										class="nav-link <%= Objects.equals(selectedScreenNavigationEntry.getEntryKey(), screenNavigationEntry.getEntryKey()) ? "active" : StringPool.BLANK %>" href="<%=
+PortletURLBuilder.create(
+									PortletURLUtil.clone(portletURL, liferayPortletResponse)
+								).setParameter(
+									"screenNavigationCategoryKey", screenNavigationEntry.getCategoryKey()
+								).setParameter(
+									"screenNavigationEntryKey", screenNavigationEntry.getEntryKey()
+								).buildPortletURL() %>"><%= screenNavigationEntry.getLabel(themeDisplay.getLocale()) %></a
+									>
 								</li>
 
 							<%
@@ -112,7 +117,7 @@ LiferayPortletResponse finalLiferayPortletResponse = liferayPortletResponse;
 		<div class="<%= (screenNavigationEntries.size() > 1) ? containerCssClass : fullContainerCssClass %>">
 
 			<%
-			selectedScreenNavigationEntry.render(request, PipingServletResponse.createPipingServletResponse(pageContext));
+			selectedScreenNavigationEntry.render(request, PipingServletResponseFactory.createPipingServletResponse(pageContext));
 			%>
 
 		</div>

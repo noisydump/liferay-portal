@@ -16,7 +16,7 @@ package com.liferay.segments.experiment.web.internal.portlet.action;
 
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
@@ -85,7 +85,7 @@ public class EditSegmentsExperimentMVCActionCommand
 
 			jsonObject = JSONUtil.put(
 				"error",
-				LanguageUtil.get(
+				_language.get(
 					themeDisplay.getRequest(), "an-unexpected-error-occurred"));
 		}
 
@@ -98,21 +98,25 @@ public class EditSegmentsExperimentMVCActionCommand
 	private JSONObject _editSegmentsExperiment(ActionRequest actionRequest)
 		throws Exception {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
-		SegmentsExperiment segmentsExperiment =
-			_segmentsExperimentService.updateSegmentsExperiment(
-				ParamUtil.getLong(actionRequest, "segmentsExperimentId"),
-				ParamUtil.getString(actionRequest, "name"),
-				ParamUtil.getString(actionRequest, "description"),
-				ParamUtil.getString(actionRequest, "goal"),
-				ParamUtil.getString(actionRequest, "goalTarget"));
-
 		return JSONUtil.put(
 			"segmentsExperiment",
-			SegmentsExperimentUtil.toSegmentsExperimentJSONObject(
-				themeDisplay.getLocale(), segmentsExperiment));
+			() -> {
+				ThemeDisplay themeDisplay =
+					(ThemeDisplay)actionRequest.getAttribute(
+						WebKeys.THEME_DISPLAY);
+
+				SegmentsExperiment segmentsExperiment =
+					_segmentsExperimentService.updateSegmentsExperiment(
+						ParamUtil.getLong(
+							actionRequest, "segmentsExperimentId"),
+						ParamUtil.getString(actionRequest, "name"),
+						ParamUtil.getString(actionRequest, "description"),
+						ParamUtil.getString(actionRequest, "goal"),
+						ParamUtil.getString(actionRequest, "goalTarget"));
+
+				return SegmentsExperimentUtil.toSegmentsExperimentJSONObject(
+					themeDisplay.getLocale(), segmentsExperiment);
+			});
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -121,6 +125,9 @@ public class EditSegmentsExperimentMVCActionCommand
 	private static final TransactionConfig _transactionConfig =
 		TransactionConfig.Factory.create(
 			Propagation.REQUIRED, new Class<?>[] {Exception.class});
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private Portal _portal;

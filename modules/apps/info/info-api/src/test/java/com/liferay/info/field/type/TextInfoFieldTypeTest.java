@@ -15,10 +15,14 @@
 package com.liferay.info.field.type;
 
 import com.liferay.info.field.InfoField;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.Optional;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -26,11 +30,18 @@ import org.junit.Test;
  */
 public class TextInfoFieldTypeTest {
 
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
 	@Test
 	public void testMultilineAttributeCanBeSetToFalse() {
 		InfoField<TextInfoFieldType> infoField = InfoField.builder(
 		).infoFieldType(
 			TextInfoFieldType.INSTANCE
+		).namespace(
+			StringPool.BLANK
 		).name(
 			"test-field"
 		).attribute(
@@ -48,6 +59,8 @@ public class TextInfoFieldTypeTest {
 		InfoField<TextInfoFieldType> infoField = InfoField.builder(
 		).infoFieldType(
 			TextInfoFieldType.INSTANCE
+		).namespace(
+			StringPool.BLANK
 		).name(
 			"test-field"
 		).attribute(
@@ -65,6 +78,8 @@ public class TextInfoFieldTypeTest {
 		InfoField<TextInfoFieldType> infoField = InfoField.builder(
 		).infoFieldType(
 			TextInfoFieldType.INSTANCE
+		).namespace(
+			StringPool.BLANK
 		).name(
 			"test-field"
 		).build();

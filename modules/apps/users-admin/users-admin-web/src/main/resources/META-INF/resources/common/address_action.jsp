@@ -30,50 +30,62 @@ long addressId = ParamUtil.getLong(request, "addressId");
 	message="<%= StringPool.BLANK %>"
 	showWhenSingleIcon="<%= true %>"
 >
-
-	<%
-	PortletURL editURL = liferayPortletResponse.createRenderURL();
-
-	editURL.setParameter("mvcPath", "/common/edit_address.jsp");
-	editURL.setParameter("redirect", currentURL);
-	editURL.setParameter("className", className);
-	editURL.setParameter("classPK", String.valueOf(classPK));
-	editURL.setParameter("primaryKey", String.valueOf(addressId));
-	%>
-
 	<liferay-ui:icon
 		message="edit"
-		url="<%= editURL.toString() %>"
+		url='<%=
+			PortletURLBuilder.createRenderURL(
+				liferayPortletResponse
+			).setMVCPath(
+				"/common/edit_address.jsp"
+			).setRedirect(
+				currentURL
+			).setParameter(
+				"className", className
+			).setParameter(
+				"classPK", classPK
+			).setParameter(
+				"primaryKey", addressId
+			).buildString()
+		%>'
 	/>
 
 	<%
-	PortletURL portletURL = renderResponse.createActionURL();
-
-	portletURL.setParameter(ActionRequest.ACTION_NAME, "/users_admin/update_contact_information");
-	portletURL.setParameter("redirect", currentURL);
-	portletURL.setParameter("className", className);
-	portletURL.setParameter("classPK", String.valueOf(classPK));
-	portletURL.setParameter("listType", ListTypeConstants.ADDRESS);
-	portletURL.setParameter("primaryKey", String.valueOf(addressId));
-
-	PortletURL makePrimaryURL = PortletURLUtil.clone(portletURL, renderResponse);
-
-	makePrimaryURL.setParameter(Constants.CMD, "makePrimary");
+	PortletURL portletURL = PortletURLBuilder.createActionURL(
+		renderResponse
+	).setActionName(
+		"/users_admin/update_contact_information"
+	).setRedirect(
+		currentURL
+	).setParameter(
+		"className", className
+	).setParameter(
+		"classPK", classPK
+	).setParameter(
+		"listType", ListTypeConstants.ADDRESS
+	).setParameter(
+		"primaryKey", addressId
+	).buildPortletURL();
 	%>
 
 	<liferay-ui:icon
 		message="make-primary"
-		url="<%= makePrimaryURL.toString() %>"
+		url='<%=
+			PortletURLBuilder.create(
+				PortletURLUtil.clone(portletURL, renderResponse)
+			).setCMD(
+				"makePrimary"
+			).buildString()
+		%>'
 	/>
-
-	<%
-	PortletURL removeAddressURL = PortletURLUtil.clone(portletURL, renderResponse);
-
-	removeAddressURL.setParameter(Constants.CMD, Constants.DELETE);
-	%>
 
 	<liferay-ui:icon
 		message="remove"
-		url="<%= removeAddressURL.toString() %>"
+		url="<%=
+			PortletURLBuilder.create(
+				PortletURLUtil.clone(portletURL, renderResponse)
+			).setCMD(
+				Constants.DELETE
+			).buildString()
+		%>"
 	/>
 </liferay-ui:icon-menu>

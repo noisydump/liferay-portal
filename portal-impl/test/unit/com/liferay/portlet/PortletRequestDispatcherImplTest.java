@@ -23,13 +23,12 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.model.impl.PortletAppImpl;
 import com.liferay.portal.model.impl.PortletImpl;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.portal.util.PortalImpl;
 import com.liferay.portlet.internal.PortletContextImpl;
 import com.liferay.portlet.internal.PortletRequestDispatcherImpl;
 import com.liferay.portlet.internal.RenderRequestImpl;
 import com.liferay.portlet.internal.RenderResponseImpl;
-import com.liferay.registry.BasicRegistryImpl;
-import com.liferay.registry.RegistryUtil;
 
 import java.util.Collections;
 import java.util.Set;
@@ -46,6 +45,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -63,6 +64,11 @@ public class PortletRequestDispatcherImplTest {
 
 		portalUtil.setPortal(new PortalImpl());
 	}
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Test
 	public void testInclude() throws Exception {
@@ -131,10 +137,6 @@ public class PortletRequestDispatcherImplTest {
 				true, _portletContext, "/testPath|");
 
 		portletRequestDispatcherImpl.include(_portletRequest, _portletResponse);
-	}
-
-	static {
-		RegistryUtil.setRegistry(new BasicRegistryImpl());
 	}
 
 	private static final Portlet _portlet = new PortletImpl() {

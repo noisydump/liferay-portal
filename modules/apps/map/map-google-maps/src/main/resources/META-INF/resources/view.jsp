@@ -17,9 +17,7 @@
 <%@ include file="/init.jsp" %>
 
 <%
-String namespace = AUIUtil.getNamespace(liferayPortletRequest, liferayPortletResponse);
-
-String protocol = HttpUtil.getProtocol(request);
+String protocol = HttpComponentsUtil.getProtocol(request);
 
 String bootstrapRequire = (String)request.getAttribute("liferay-map:map:bootstrapRequire");
 boolean geolocation = GetterUtil.getBoolean(request.getAttribute("liferay-map:map:geolocation"));
@@ -28,7 +26,7 @@ double longitude = (Double)request.getAttribute("liferay-map:map:longitude");
 String name = (String)request.getAttribute("liferay-map:map:name");
 String points = (String)request.getAttribute("liferay-map:map:points");
 
-name = namespace + name;
+name = AUIUtil.getNamespace(liferayPortletRequest, liferayPortletResponse) + name;
 %>
 
 <liferay-util:html-top
@@ -40,17 +38,25 @@ name = namespace + name;
 
 			Liferay.fire('gmapsReady');
 		};
+
+		if (!Liferay.Maps.gmapsReady) {
+			var apiURL =
+				'<%= protocol %>' +
+				'://maps.googleapis.com/maps/api/js?v=3.exp&libraries=places&callback=Liferay.Maps.onGMapsReady';
+
+			<c:if test="<%= Validator.isNotNull(googleMapDisplayContext.getGoogleMapsAPIKey()) %>">
+				apiURL += '&key=' + '<%= googleMapDisplayContext.getGoogleMapsAPIKey() %>';
+			</c:if>
+
+			var script = document.createElement('script');
+
+			script.setAttribute('src', apiURL);
+
+			document.head.appendChild(script);
+
+			script = null;
+		}
 	</script>
-
-	<%
-	String apiURL = protocol + "://maps.googleapis.com/maps/api/js?v=3.exp&libraries=places&callback=Liferay.Maps.onGMapsReady";
-
-	if (Validator.isNotNull(googleMapDisplayContext.getGoogleMapsAPIKey())) {
-		apiURL += "&key=" + googleMapDisplayContext.getGoogleMapsAPIKey();
-	}
-	%>
-
-	<script src="<%= apiURL %>" type="text/javascript"></script>
 </liferay-util:html-top>
 
 <aui:script require="<%= bootstrapRequire %>">

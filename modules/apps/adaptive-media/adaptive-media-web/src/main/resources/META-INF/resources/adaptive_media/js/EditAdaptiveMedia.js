@@ -19,6 +19,7 @@ import ClayLayout from '@clayui/layout';
 import {useFormik} from 'formik';
 import {
 	fetch,
+	navigate,
 	normalizeFriendlyURL,
 	objectToFormData,
 	openToast,
@@ -85,10 +86,10 @@ const EditAdaptiveMedia = ({
 		const currentMaxWidth = properties['max-width'];
 		const currentMaxHeight = properties['max-height'];
 
-		if (currentMaxWidth != 0) {
+		if (Number(currentMaxWidth) !== 0) {
 			maxWidth = currentMaxWidth;
 		}
-		if (currentMaxHeight != 0) {
+		if (Number(currentMaxHeight) !== 0) {
 			maxHeight = currentMaxHeight;
 		}
 	}
@@ -121,7 +122,7 @@ const EditAdaptiveMedia = ({
 							type: 'success',
 						});
 
-						Liferay.Util.navigate(redirect);
+						navigate(redirect);
 					}
 					else {
 						setErrorMessage(message);
@@ -173,7 +174,7 @@ const EditAdaptiveMedia = ({
 
 	const onCancel = useCallback(() => {
 		if (redirect) {
-			Liferay.Util.navigate(redirect);
+			navigate(redirect);
 		}
 	}, [redirect]);
 
@@ -233,6 +234,7 @@ const EditAdaptiveMedia = ({
 			<div className="sheet-section">
 				<h3 className="sheet-subtitle">
 					{Liferay.Language.get('size')}
+
 					<RequiredMark />
 				</h3>
 
@@ -267,6 +269,7 @@ const EditAdaptiveMedia = ({
 							value={values[maxWidthId]}
 						/>
 					</ClayLayout.Col>
+
 					<ClayLayout.Col md="3">
 						<Input
 							disabled={!configurationEntryEditable}
@@ -312,8 +315,8 @@ const EditAdaptiveMedia = ({
 
 				<ClayRadioGroup
 					name={automaticRadioId}
-					onSelectedValueChange={setAutomaticId}
-					selectedValue={automaticId}
+					onChange={setAutomaticId}
+					value={automaticId}
 				>
 					<ClayRadio
 						disabled={!configurationEntryEditable}

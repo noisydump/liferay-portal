@@ -18,7 +18,7 @@ import aQute.bnd.osgi.Constants;
 
 import com.liferay.gradle.plugins.cache.WriteDigestTask;
 import com.liferay.gradle.plugins.defaults.LiferayThemeDefaultsPlugin;
-import com.liferay.gradle.plugins.defaults.tasks.WriteArtifactPublishCommandsTask;
+import com.liferay.gradle.plugins.defaults.task.WriteArtifactPublishCommandsTask;
 import com.liferay.gradle.util.Validator;
 
 import java.io.File;
@@ -101,6 +101,24 @@ public class LiferayRelengUtil {
 		return getRelengDir(project.getProjectDir());
 	}
 
+	public static String getUnpublishedDependencyName(Project project) {
+		List<File> artifactPropertiesFiles = _getArtifactPropertiesFiles(
+			project, false);
+
+		for (File artifactPropertiesFile : artifactPropertiesFiles) {
+			File artifactProjectDir = _getArtifactProjectDir(
+				artifactPropertiesFile);
+
+			if (hasUnpublishedCommits(
+					project, artifactProjectDir, artifactPropertiesFile)) {
+
+				return artifactProjectDir.getName();
+			}
+		}
+
+		return null;
+	}
+
 	public static boolean hasStaleParentTheme(Project project) {
 		WriteDigestTask writeDigestTask = (WriteDigestTask)GradleUtil.getTask(
 			project,
@@ -172,6 +190,52 @@ public class LiferayRelengUtil {
 		return false;
 	}
 
+	public static boolean hasStaleUnstyledTheme(
+		Project project, File artifactPropertiesFile) {
+
+		String projectName = project.getName();
+
+		if (!projectName.startsWith("frontend-theme") ||
+			!artifactPropertiesFile.exists()) {
+
+			return false;
+		}
+
+		Properties artifactProperties = GUtil.loadProperties(
+			artifactPropertiesFile);
+
+		String artifactGitId = artifactProperties.getProperty(
+			"artifact.git.id");
+
+		if (Validator.isNull(artifactGitId)) {
+			return false;
+		}
+
+		Project parentThemeUnstyledProject = GradleUtil.getProject(
+			project.getRootProject(),
+			GradlePluginsDefaultsUtil.PARENT_THEME_UNSTYLED_PROJECT_NAME);
+
+		if (parentThemeUnstyledProject == null) {
+			return false;
+		}
+
+		String result = GitUtil.getGitResult(
+			project, parentThemeUnstyledProject.getProjectDir(), "log",
+			"--format=%s", artifactGitId + "..HEAD", ":(exclude)test", ".");
+
+		for (String line : result.split("\\r?\\n")) {
+			if (Validator.isNull(line) ||
+				line.contains(_IGNORED_MESSAGE_PATTERN)) {
+
+				continue;
+			}
+
+			return true;
+		}
+
+		return false;
+	}
+
 	public static boolean hasUnpublishedCommits(
 		Project project, File artifactProjectDir, File artifactPropertiesFile) {
 
@@ -198,12 +262,8 @@ public class LiferayRelengUtil {
 
 		Project rootProject = project.getRootProject();
 
-		String gitId = GitUtil.getGitResult(
-			project, rootProject.getProjectDir(), "rev-parse", "--short",
-			"HEAD");
-
 		File gitResultsDir = new File(
-			rootProject.getBuildDir(), "releng/git-results/" + gitId);
+			rootProject.getBuildDir(), "releng/git-results");
 
 		StringBuilder sb = new StringBuilder();
 
@@ -226,7 +286,7 @@ public class LiferayRelengUtil {
 
 		String result = GitUtil.getGitResult(
 			project, artifactProjectDir, "log", "--format=%s",
-			artifactGitId + "..HEAD", ".");
+			artifactGitId + "..HEAD", ":(exclude)test", ".");
 
 		String[] lines = result.split("\\r?\\n");
 
@@ -235,11 +295,9 @@ public class LiferayRelengUtil {
 				logger.info("Git Commit: {}", line);
 			}
 
-			if (Validator.isNull(line)) {
-				continue;
-			}
+			if (Validator.isNull(line) ||
+				line.contains(_IGNORED_MESSAGE_PATTERN)) {
 
-			if (line.contains(_IGNORED_MESSAGE_PATTERN)) {
 				continue;
 			}
 
@@ -249,32 +307,6 @@ public class LiferayRelengUtil {
 		}
 
 		_createNewFile(new File(gitResultsDir, sb.toString() + "false"));
-
-		return false;
-	}
-
-	public static boolean hasUnpublishedDependencies(Project project) {
-		List<File> artifactPropertiesFiles = _getArtifactPropertiesFiles(
-			project, false);
-
-		for (File artifactPropertiesFile : artifactPropertiesFiles) {
-			File artifactProjectDir = _getArtifactProjectDir(
-				artifactPropertiesFile);
-
-			if (hasUnpublishedCommits(
-					project, artifactProjectDir, artifactPropertiesFile)) {
-
-				Logger logger = project.getLogger();
-
-				if (logger.isQuietEnabled()) {
-					logger.quiet(
-						"The project dependency '{}' has new commits.",
-						artifactProjectDir.getName());
-				}
-
-				return true;
-			}
-		}
 
 		return false;
 	}

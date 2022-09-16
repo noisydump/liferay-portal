@@ -55,11 +55,11 @@ public class DefaultUploadHandler implements UploadHandler {
 		throws PortalException {
 
 		try {
-			JSONObject responseJSONObject = _getResponseJSONObject(
-				uploadFileEntryHandler, uploadResponseHandler, portletRequest);
-
 			JSONPortletResponseUtil.writeJSON(
-				portletRequest, portletResponse, responseJSONObject);
+				portletRequest, portletResponse,
+				_getResponseJSONObject(
+					uploadFileEntryHandler, uploadResponseHandler,
+					portletRequest));
 		}
 		catch (IOException ioException) {
 			throw new SystemException(ioException);
@@ -92,9 +92,6 @@ public class DefaultUploadHandler implements UploadHandler {
 			PortletRequest portletRequest)
 		throws PortalException {
 
-		UploadPortletRequest uploadPortletRequest =
-			_portal.getUploadPortletRequest(portletRequest);
-
 		UploadException uploadException =
 			(UploadException)portletRequest.getAttribute(
 				WebKeys.UPLOAD_EXCEPTION);
@@ -117,7 +114,7 @@ public class DefaultUploadHandler implements UploadHandler {
 			throw new PortalException(throwable);
 		}
 
-		return uploadPortletRequest;
+		return _portal.getUploadPortletRequest(portletRequest);
 	}
 
 	@Reference

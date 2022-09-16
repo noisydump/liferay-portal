@@ -29,6 +29,8 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -43,14 +45,18 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.subscription.model.Subscription;
 import com.liferay.subscription.service.SubscriptionLocalService;
+import com.liferay.subscription.service.SubscriptionLocalServiceUtil;
 import com.liferay.subscription.service.persistence.SubscriptionPersistence;
 
 import java.io.Serializable;
+
+import java.lang.reflect.Field;
 
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -71,7 +77,7 @@ public abstract class SubscriptionLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>SubscriptionLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.subscription.service.SubscriptionLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>SubscriptionLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>SubscriptionLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -145,6 +151,13 @@ public abstract class SubscriptionLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return subscriptionPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -313,6 +326,11 @@ public abstract class SubscriptionLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement SubscriptionLocalServiceImpl#deleteSubscription(Subscription) to avoid orphaned data");
+		}
+
 		return subscriptionLocalService.deleteSubscription(
 			(Subscription)persistedModel);
 	}
@@ -374,6 +392,11 @@ public abstract class SubscriptionLocalServiceBaseImpl
 		return subscriptionPersistence.update(subscription);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -385,6 +408,8 @@ public abstract class SubscriptionLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		subscriptionLocalService = (SubscriptionLocalService)aopProxy;
+
+		_setLocalServiceUtilService(subscriptionLocalService);
 	}
 
 	/**
@@ -444,6 +469,22 @@ public abstract class SubscriptionLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		SubscriptionLocalService subscriptionLocalService) {
+
+		try {
+			Field field = SubscriptionLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, subscriptionLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected SubscriptionLocalService subscriptionLocalService;
 
 	@Reference
@@ -453,16 +494,7 @@ public abstract class SubscriptionLocalServiceBaseImpl
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@Reference
-	protected com.liferay.portal.kernel.service.ClassNameLocalService
-		classNameLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
-
-	@Reference
-	protected com.liferay.asset.kernel.service.AssetEntryLocalService
-		assetEntryLocalService;
+	private static final Log _log = LogFactoryUtil.getLog(
+		SubscriptionLocalServiceBaseImpl.class);
 
 }

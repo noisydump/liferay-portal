@@ -23,13 +23,18 @@ import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.SQLQuery;
 import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.exception.SystemException;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.util.List;
+
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Alessio Antonio Rendina
  */
+@Component(
+	enabled = false, service = CommerceShippingFixedOptionRelFinder.class
+)
 public class CommerceShippingFixedOptionRelFinderImpl
 	extends CommerceShippingFixedOptionRelFinderBaseImpl
 	implements CommerceShippingFixedOptionRelFinder {
@@ -40,13 +45,13 @@ public class CommerceShippingFixedOptionRelFinderImpl
 
 	@Override
 	public CommerceShippingFixedOptionRel fetchByC_C_C_Z_W_First(
-		long commerceShippingFixedOptionId, long commerceCountryId,
-		long commerceRegionId, String zip, double weight) {
+		long commerceShippingFixedOptionId, long countryId, long regionId,
+		String zip, double weight) {
 
 		List<CommerceShippingFixedOptionRel> commerceShippingFixedOptionRels =
 			findByC_C_C_Z_W(
-				commerceShippingFixedOptionId, commerceCountryId,
-				commerceRegionId, zip, weight);
+				commerceShippingFixedOptionId, countryId, regionId, zip,
+				weight);
 
 		if (!commerceShippingFixedOptionRels.isEmpty()) {
 			return commerceShippingFixedOptionRels.get(0);
@@ -57,18 +62,18 @@ public class CommerceShippingFixedOptionRelFinderImpl
 
 	@Override
 	public List<CommerceShippingFixedOptionRel> findByC_C_C_Z_W(
-		long commerceShippingFixedOptionId, long commerceCountryId,
-		long commerceRegionId, String zip, double weight) {
+		long commerceShippingFixedOptionId, long countryId, long regionId,
+		String zip, double weight) {
 
 		return findByC_C_C_Z_W(
-			commerceShippingFixedOptionId, commerceCountryId, commerceRegionId,
-			zip, weight, QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+			commerceShippingFixedOptionId, countryId, regionId, zip, weight,
+			QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 	}
 
 	@Override
 	public List<CommerceShippingFixedOptionRel> findByC_C_C_Z_W(
-		long commerceShippingFixedOptionId, long commerceCountryId,
-		long commerceRegionId, String zip, double weight, int start, int end) {
+		long commerceShippingFixedOptionId, long countryId, long regionId,
+		String zip, double weight, int start, int end) {
 
 		Session session = null;
 
@@ -86,8 +91,8 @@ public class CommerceShippingFixedOptionRelFinderImpl
 			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
 			queryPos.add(commerceShippingFixedOptionId);
-			queryPos.add(commerceCountryId);
-			queryPos.add(commerceRegionId);
+			queryPos.add(countryId);
+			queryPos.add(regionId);
 			queryPos.add(zip);
 			queryPos.add(weight);
 			queryPos.add(weight);
@@ -103,7 +108,7 @@ public class CommerceShippingFixedOptionRelFinderImpl
 		}
 	}
 
-	@ServiceReference(type = CustomSQL.class)
+	@Reference
 	private CustomSQL _customSQL;
 
 }

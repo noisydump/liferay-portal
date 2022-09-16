@@ -17,6 +17,7 @@ package com.liferay.analytics.settings.web.internal.display.context;
 import com.liferay.analytics.settings.web.internal.model.Channel;
 import com.liferay.analytics.settings.web.internal.search.ChannelSearch;
 import com.liferay.analytics.settings.web.internal.util.AnalyticsSettingsUtil;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -106,12 +107,11 @@ public class ChannelDisplayContext {
 						channelJSONObject.getString("name")));
 			}
 
-			channelSearch.setResults(channels);
-
 			JSONObject pageJSONObject = responseJSONObject.getJSONObject(
 				"page");
 
-			channelSearch.setTotal(pageJSONObject.getInt("totalElements"));
+			channelSearch.setResultsAndTotal(
+				() -> channels, pageJSONObject.getInt("totalElements"));
 
 			return channelSearch;
 		}
@@ -123,14 +123,13 @@ public class ChannelDisplayContext {
 	}
 
 	public PortletURL getPortletURL() {
-		PortletURL portletURL = _renderResponse.createRenderURL();
-
-		portletURL.setParameter(
-			"mvcRenderCommandName",
-			"/configuration_admin/view_configuration_screen");
-		portletURL.setParameter("configurationScreenKey", "1-synced-sites");
-
-		return portletURL;
+		return PortletURLBuilder.createRenderURL(
+			_renderResponse
+		).setMVCRenderCommandName(
+			"/configuration_admin/view_configuration_screen"
+		).setParameter(
+			"configurationScreenKey", "1-synced-sites"
+		).buildPortletURL();
 	}
 
 	private long _getCompanyId() {

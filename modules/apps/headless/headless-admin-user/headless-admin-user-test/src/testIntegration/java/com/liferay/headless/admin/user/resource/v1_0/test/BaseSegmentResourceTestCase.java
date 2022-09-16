@@ -33,7 +33,6 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
@@ -50,17 +49,19 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 import java.text.DateFormat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -68,7 +69,6 @@ import javax.annotation.Generated;
 
 import javax.ws.rs.core.MultivaluedHashMap;
 
-import org.apache.commons.beanutils.BeanUtilsBean;
 import org.apache.commons.lang.time.DateUtils;
 
 import org.junit.After;
@@ -198,15 +198,15 @@ public abstract class BaseSegmentResourceTestCase {
 
 	@Test
 	public void testGetSiteSegmentsPage() throws Exception {
-		Page<Segment> page = segmentResource.getSiteSegmentsPage(
-			testGetSiteSegmentsPage_getSiteId(), Pagination.of(1, 2));
-
-		Assert.assertEquals(0, page.getTotalCount());
-
 		Long siteId = testGetSiteSegmentsPage_getSiteId();
 		Long irrelevantSiteId = testGetSiteSegmentsPage_getIrrelevantSiteId();
 
-		if ((irrelevantSiteId != null)) {
+		Page<Segment> page = segmentResource.getSiteSegmentsPage(
+			siteId, Pagination.of(1, 10));
+
+		Assert.assertEquals(0, page.getTotalCount());
+
+		if (irrelevantSiteId != null) {
 			Segment irrelevantSegment = testGetSiteSegmentsPage_addSegment(
 				irrelevantSiteId, randomIrrelevantSegment());
 
@@ -227,7 +227,8 @@ public abstract class BaseSegmentResourceTestCase {
 		Segment segment2 = testGetSiteSegmentsPage_addSegment(
 			siteId, randomSegment());
 
-		page = segmentResource.getSiteSegmentsPage(siteId, Pagination.of(1, 2));
+		page = segmentResource.getSiteSegmentsPage(
+			siteId, Pagination.of(1, 10));
 
 		Assert.assertEquals(2, page.getTotalCount());
 
@@ -300,7 +301,7 @@ public abstract class BaseSegmentResourceTestCase {
 			new HashMap<String, Object>() {
 				{
 					put("page", 1);
-					put("pageSize", 2);
+					put("pageSize", 10);
 
 					put("siteKey", "\"" + siteId + "\"");
 				}
@@ -314,14 +315,14 @@ public abstract class BaseSegmentResourceTestCase {
 
 		Assert.assertEquals(0, segmentsJSONObject.get("totalCount"));
 
-		Segment segment1 = testGraphQLSegment_addSegment();
-		Segment segment2 = testGraphQLSegment_addSegment();
+		Segment segment1 = testGraphQLGetSiteSegmentsPage_addSegment();
+		Segment segment2 = testGraphQLGetSiteSegmentsPage_addSegment();
 
 		segmentsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/segments");
 
-		Assert.assertEquals(2, segmentsJSONObject.get("totalCount"));
+		Assert.assertEquals(2, segmentsJSONObject.getLong("totalCount"));
 
 		assertEqualsIgnoringOrder(
 			Arrays.asList(segment1, segment2),
@@ -329,14 +330,14 @@ public abstract class BaseSegmentResourceTestCase {
 				SegmentSerDes.toDTOs(segmentsJSONObject.getString("items"))));
 	}
 
+	protected Segment testGraphQLGetSiteSegmentsPage_addSegment()
+		throws Exception {
+
+		return testGraphQLSegment_addSegment();
+	}
+
 	@Test
 	public void testGetSiteUserAccountSegmentsPage() throws Exception {
-		Page<Segment> page = segmentResource.getSiteUserAccountSegmentsPage(
-			testGetSiteUserAccountSegmentsPage_getSiteId(),
-			testGetSiteUserAccountSegmentsPage_getUserAccountId());
-
-		Assert.assertEquals(0, page.getTotalCount());
-
 		Long siteId = testGetSiteUserAccountSegmentsPage_getSiteId();
 		Long irrelevantSiteId =
 			testGetSiteUserAccountSegmentsPage_getIrrelevantSiteId();
@@ -344,6 +345,11 @@ public abstract class BaseSegmentResourceTestCase {
 			testGetSiteUserAccountSegmentsPage_getUserAccountId();
 		Long irrelevantUserAccountId =
 			testGetSiteUserAccountSegmentsPage_getIrrelevantUserAccountId();
+
+		Page<Segment> page = segmentResource.getSiteUserAccountSegmentsPage(
+			siteId, userAccountId);
+
+		Assert.assertEquals(0, page.getTotalCount());
 
 		if ((irrelevantSiteId != null) && (irrelevantUserAccountId != null)) {
 			Segment irrelevantSegment =
@@ -415,6 +421,20 @@ public abstract class BaseSegmentResourceTestCase {
 	protected Segment testGraphQLSegment_addSegment() throws Exception {
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	protected void assertContains(Segment segment, List<Segment> segments) {
+		boolean contains = false;
+
+		for (Segment item : segments) {
+			if (equals(segment, item)) {
+				contains = true;
+
+				break;
+			}
+		}
+
+		Assert.assertTrue(segments + " does not contain " + segment, contains);
 	}
 
 	protected void assertHttpResponseStatusCode(
@@ -503,6 +523,14 @@ public abstract class BaseSegmentResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("criteriaValue", additionalAssertFieldName)) {
+				if (segment.getCriteriaValue() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("name", additionalAssertFieldName)) {
 				if (segment.getName() == null) {
 					valid = false;
@@ -553,8 +581,8 @@ public abstract class BaseSegmentResourceTestCase {
 
 		graphQLFields.add(new GraphQLField("siteId"));
 
-		for (Field field :
-				ReflectionUtil.getDeclaredFields(
+		for (java.lang.reflect.Field field :
+				getDeclaredFields(
 					com.liferay.headless.admin.user.dto.v1_0.Segment.class)) {
 
 			if (!ArrayUtil.contains(
@@ -569,12 +597,13 @@ public abstract class BaseSegmentResourceTestCase {
 		return graphQLFields;
 	}
 
-	protected List<GraphQLField> getGraphQLFields(Field... fields)
+	protected List<GraphQLField> getGraphQLFields(
+			java.lang.reflect.Field... fields)
 		throws Exception {
 
 		List<GraphQLField> graphQLFields = new ArrayList<>();
 
-		for (Field field : fields) {
+		for (java.lang.reflect.Field field : fields) {
 			com.liferay.portal.vulcan.graphql.annotation.GraphQLField
 				vulcanGraphQLField = field.getAnnotation(
 					com.liferay.portal.vulcan.graphql.annotation.GraphQLField.
@@ -588,7 +617,7 @@ public abstract class BaseSegmentResourceTestCase {
 				}
 
 				List<GraphQLField> childrenGraphQLFields = getGraphQLFields(
-					ReflectionUtil.getDeclaredFields(clazz));
+					getDeclaredFields(clazz));
 
 				graphQLFields.add(
 					new GraphQLField(field.getName(), childrenGraphQLFields));
@@ -627,6 +656,17 @@ public abstract class BaseSegmentResourceTestCase {
 			if (Objects.equals("criteria", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						segment1.getCriteria(), segment2.getCriteria())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("criteriaValue", additionalAssertFieldName)) {
+				if (!equals(
+						(Map)segment1.getCriteriaValue(),
+						(Map)segment2.getCriteriaValue())) {
 
 					return false;
 				}
@@ -717,6 +757,19 @@ public abstract class BaseSegmentResourceTestCase {
 		return false;
 	}
 
+	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
+		throws Exception {
+
+		Stream<java.lang.reflect.Field> stream = Stream.of(
+			ReflectionUtil.getDeclaredFields(clazz));
+
+		return stream.filter(
+			field -> !field.isSynthetic()
+		).toArray(
+			java.lang.reflect.Field[]::new
+		);
+	}
+
 	protected java.util.Collection<EntityField> getEntityFields()
 		throws Exception {
 
@@ -778,6 +831,11 @@ public abstract class BaseSegmentResourceTestCase {
 			sb.append("'");
 
 			return sb.toString();
+		}
+
+		if (entityFieldName.equals("criteriaValue")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
 		}
 
 		if (entityFieldName.equals("dateCreated")) {
@@ -942,6 +1000,115 @@ public abstract class BaseSegmentResourceTestCase {
 	protected Company testCompany;
 	protected Group testGroup;
 
+	protected static class BeanTestUtil {
+
+		public static void copyProperties(Object source, Object target)
+			throws Exception {
+
+			Class<?> sourceClass = _getSuperClass(source.getClass());
+
+			Class<?> targetClass = target.getClass();
+
+			for (java.lang.reflect.Field field :
+					sourceClass.getDeclaredFields()) {
+
+				if (field.isSynthetic()) {
+					continue;
+				}
+
+				Method getMethod = _getMethod(
+					sourceClass, field.getName(), "get");
+
+				Method setMethod = _getMethod(
+					targetClass, field.getName(), "set",
+					getMethod.getReturnType());
+
+				setMethod.invoke(target, getMethod.invoke(source));
+			}
+		}
+
+		public static boolean hasProperty(Object bean, String name) {
+			Method setMethod = _getMethod(
+				bean.getClass(), "set" + StringUtil.upperCaseFirstLetter(name));
+
+			if (setMethod != null) {
+				return true;
+			}
+
+			return false;
+		}
+
+		public static void setProperty(Object bean, String name, Object value)
+			throws Exception {
+
+			Class<?> clazz = bean.getClass();
+
+			Method setMethod = _getMethod(
+				clazz, "set" + StringUtil.upperCaseFirstLetter(name));
+
+			if (setMethod == null) {
+				throw new NoSuchMethodException();
+			}
+
+			Class<?>[] parameterTypes = setMethod.getParameterTypes();
+
+			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
+		}
+
+		private static Method _getMethod(Class<?> clazz, String name) {
+			for (Method method : clazz.getMethods()) {
+				if (name.equals(method.getName()) &&
+					(method.getParameterCount() == 1) &&
+					_parameterTypes.contains(method.getParameterTypes()[0])) {
+
+					return method;
+				}
+			}
+
+			return null;
+		}
+
+		private static Method _getMethod(
+				Class<?> clazz, String fieldName, String prefix,
+				Class<?>... parameterTypes)
+			throws Exception {
+
+			return clazz.getMethod(
+				prefix + StringUtil.upperCaseFirstLetter(fieldName),
+				parameterTypes);
+		}
+
+		private static Class<?> _getSuperClass(Class<?> clazz) {
+			Class<?> superClass = clazz.getSuperclass();
+
+			if ((superClass == null) || (superClass == Object.class)) {
+				return clazz;
+			}
+
+			return superClass;
+		}
+
+		private static Object _translateValue(
+			Class<?> parameterType, Object value) {
+
+			if ((value instanceof Integer) &&
+				parameterType.equals(Long.class)) {
+
+				Integer intValue = (Integer)value;
+
+				return intValue.longValue();
+			}
+
+			return value;
+		}
+
+		private static final Set<Class<?>> _parameterTypes = new HashSet<>(
+			Arrays.asList(
+				Boolean.class, Date.class, Double.class, Integer.class,
+				Long.class, Map.class, String.class));
+
+	}
+
 	protected class GraphQLField {
 
 		public GraphQLField(String key, GraphQLField... graphQLFields) {
@@ -981,12 +1148,12 @@ public abstract class BaseSegmentResourceTestCase {
 						_parameterMap.entrySet()) {
 
 					sb.append(entry.getKey());
-					sb.append(":");
+					sb.append(": ");
 					sb.append(entry.getValue());
-					sb.append(",");
+					sb.append(", ");
 				}
 
-				sb.setLength(sb.length() - 1);
+				sb.setLength(sb.length() - 2);
 
 				sb.append(")");
 			}
@@ -996,10 +1163,10 @@ public abstract class BaseSegmentResourceTestCase {
 
 				for (GraphQLField graphQLField : _graphQLFields) {
 					sb.append(graphQLField.toString());
-					sb.append(",");
+					sb.append(", ");
 				}
 
-				sb.setLength(sb.length() - 1);
+				sb.setLength(sb.length() - 2);
 
 				sb.append("}");
 			}
@@ -1013,21 +1180,9 @@ public abstract class BaseSegmentResourceTestCase {
 
 	}
 
-	private static final Log _log = LogFactoryUtil.getLog(
-		BaseSegmentResourceTestCase.class);
+	private static final com.liferay.portal.kernel.log.Log _log =
+		LogFactoryUtil.getLog(BaseSegmentResourceTestCase.class);
 
-	private static BeanUtilsBean _beanUtilsBean = new BeanUtilsBean() {
-
-		@Override
-		public void copyProperty(Object bean, String name, Object value)
-			throws IllegalAccessException, InvocationTargetException {
-
-			if (value != null) {
-				super.copyProperty(bean, name, value);
-			}
-		}
-
-	};
 	private static DateFormat _dateFormat;
 
 	@Inject

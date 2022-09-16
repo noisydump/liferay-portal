@@ -307,15 +307,10 @@ public class ManifestSummary implements Serializable {
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(5);
-
-		sb.append("{modelAdditionCounters=");
-		sb.append(MapUtil.toString(_modelAdditionCounters));
-		sb.append(", modelDeletionCounters=");
-		sb.append(MapUtil.toString(_modelDeletionCounters));
-		sb.append("}");
-
-		return sb.toString();
+		return StringBundler.concat(
+			"{modelAdditionCounters=", MapUtil.toString(_modelAdditionCounters),
+			", modelDeletionCounters=",
+			MapUtil.toString(_modelDeletionCounters), "}");
 	}
 
 	protected static String getManifestSummaryKey(
@@ -338,10 +333,8 @@ public class ManifestSummary implements Serializable {
 			 !referrerClassName.equals(
 				 StagedModelType.REFERRER_CLASS_NAME_ANY))) {
 
-			String manifestSummaryKey = getManifestSummaryKey(
-				className, referrerClassName);
-
-			return getModelAdditionCount(manifestSummaryKey);
+			return getModelAdditionCount(
+				getManifestSummaryKey(className, referrerClassName));
 		}
 
 		long modelAdditionCount = -1;
@@ -379,10 +372,8 @@ public class ManifestSummary implements Serializable {
 			 !referrerClassName.equals(
 				 StagedModelType.REFERRER_CLASS_NAME_ANY))) {
 
-			String manifestSummaryKey = getManifestSummaryKey(
-				className, referrerClassName);
-
-			return getModelDeletionCount(manifestSummaryKey);
+			return getModelDeletionCount(
+				getManifestSummaryKey(className, referrerClassName));
 		}
 
 		long modelDeletionCount = -1;

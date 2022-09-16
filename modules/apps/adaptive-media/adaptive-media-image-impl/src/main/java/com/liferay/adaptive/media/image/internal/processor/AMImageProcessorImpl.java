@@ -28,10 +28,13 @@ import com.liferay.adaptive.media.processor.AMProcessor;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
+import com.liferay.portal.kernel.repository.model.FileVersionWrapper;
+import com.liferay.portal.kernel.util.ContentTypes;
 
 import java.io.IOException;
 import java.io.InputStream;
 
+import java.util.Date;
 import java.util.Optional;
 
 import org.osgi.service.component.annotations.Component;
@@ -97,13 +100,11 @@ public final class AMImageProcessorImpl implements AMImageProcessor {
 			fileVersion.getFileVersionId());
 
 		try {
-			FileEntry fileEntry = fileVersion.getFileEntry();
-
-			if ((amImageEntry != null) && !fileEntry.isCheckedOut()) {
+			if (!_isUpdateImageEntry(amImageEntry, fileVersion)) {
 				return;
 			}
 
-			if ((amImageEntry != null) && fileEntry.isCheckedOut()) {
+			if (amImageEntry != null) {
 				_amImageEntryLocalService.deleteAMImageEntry(
 					amImageEntry.getAmImageEntryId());
 			}
@@ -123,7 +124,8 @@ public final class AMImageProcessorImpl implements AMImageProcessor {
 					amImageScaledImage.getInputStream()) {
 
 				_amImageEntryLocalService.addAMImageEntry(
-					amImageConfigurationEntry, fileVersion,
+					amImageConfigurationEntry,
+					_getScaledFileVersion(amImageScaledImage, fileVersion),
 					amImageScaledImage.getHeight(),
 					amImageScaledImage.getWidth(), inputStream,
 					amImageScaledImage.getSize());
@@ -132,6 +134,48 @@ public final class AMImageProcessorImpl implements AMImageProcessor {
 		catch (IOException ioException) {
 			throw new AMRuntimeException.IOException(ioException);
 		}
+	}
+
+	private FileVersion _getScaledFileVersion(
+		AMImageScaledImage amImageScaledImage, FileVersion fileVersion) {
+
+		String mimeType = amImageScaledImage.getMimeType();
+
+		if ((mimeType == null) || !mimeType.equals(fileVersion.getMimeType()) ||
+			mimeType.equals(ContentTypes.APPLICATION_OCTET_STREAM)) {
+
+			return fileVersion;
+		}
+
+		return new FileVersionWrapper(fileVersion) {
+
+			@Override
+			public String getMimeType() {
+				return mimeType;
+			}
+
+		};
+	}
+
+	private boolean _isUpdateImageEntry(
+			AMImageEntry amImageEntry, FileVersion fileVersion)
+		throws PortalException {
+
+		if (amImageEntry == null) {
+			return true;
+		}
+
+		FileEntry fileEntry = fileVersion.getFileEntry();
+
+		Date amImageEntryCreationDate = amImageEntry.getCreateDate();
+
+		if (fileEntry.isCheckedOut() ||
+			amImageEntryCreationDate.before(fileVersion.getModifiedDate())) {
+
+			return true;
+		}
+
+		return false;
 	}
 
 	@Reference

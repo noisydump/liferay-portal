@@ -15,8 +15,8 @@
 package com.liferay.document.library.google.docs.internal.display.context;
 
 import com.liferay.document.library.display.context.DLFilePicker;
-import com.liferay.document.library.google.docs.internal.util.GoogleDocsConfigurationHelper;
-import com.liferay.document.library.google.docs.internal.util.GoogleDocsMetadataHelper;
+import com.liferay.document.library.google.docs.internal.helper.GoogleDocsConfigurationHelper;
+import com.liferay.document.library.google.docs.internal.helper.GoogleDocsMetadataHelper;
 import com.liferay.document.library.google.docs.internal.util.constants.GoogleDocsConstants;
 import com.liferay.petra.io.unsync.UnsyncStringWriter;
 import com.liferay.petra.string.StringPool;
@@ -59,7 +59,8 @@ public class GoogleDocsDLFilePicker implements DLFilePicker {
 	@Override
 	public String getCurrentTitle() {
 		if (_googleDocsMetadataHelper != null) {
-			return _googleDocsMetadataHelper.getFieldValue(getTitleFieldName());
+			return _googleDocsMetadataHelper.getFieldValue(
+				getFileNameFieldName());
 		}
 
 		return StringPool.BLANK;

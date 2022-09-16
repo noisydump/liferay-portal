@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
@@ -42,7 +43,10 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @generated
  */
 @Generated("")
-@GraphQLName("FragmentImageConfiguration")
+@GraphQLName(
+	description = "Represents the Adaptive Media fragment image configuration for different viewports.",
+	value = "FragmentImageConfiguration"
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "FragmentImageConfiguration")
 public class FragmentImageConfiguration implements Serializable {
@@ -52,7 +56,14 @@ public class FragmentImageConfiguration implements Serializable {
 			FragmentImageConfiguration.class, json);
 	}
 
-	@Schema
+	public static FragmentImageConfiguration unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(
+			FragmentImageConfiguration.class, json);
+	}
+
+	@Schema(
+		description = "The landscape mobile configuration of the fragment image."
+	)
 	public String getLandscapeMobile() {
 		return landscapeMobile;
 	}
@@ -76,11 +87,15 @@ public class FragmentImageConfiguration implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "The landscape mobile configuration of the fragment image."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String landscapeMobile;
 
-	@Schema
+	@Schema(
+		description = "The portrait mobile configuration of the fragment image."
+	)
 	public String getPortraitMobile() {
 		return portraitMobile;
 	}
@@ -104,11 +119,13 @@ public class FragmentImageConfiguration implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "The portrait mobile configuration of the fragment image."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String portraitMobile;
 
-	@Schema
+	@Schema(description = "The tablet configuration of the fragment image.")
 	public String getTablet() {
 		return tablet;
 	}
@@ -132,7 +149,9 @@ public class FragmentImageConfiguration implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "The tablet configuration of the fragment image."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String tablet;
 
@@ -213,15 +232,16 @@ public class FragmentImageConfiguration implements Serializable {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.FragmentImageConfiguration",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
 	}
 
 	private static boolean _isArray(Object value) {
@@ -247,8 +267,8 @@ public class FragmentImageConfiguration implements Serializable {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -279,7 +299,7 @@ public class FragmentImageConfiguration implements Serializable {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -287,7 +307,7 @@ public class FragmentImageConfiguration implements Serializable {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -295,5 +315,10 @@ public class FragmentImageConfiguration implements Serializable {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

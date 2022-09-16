@@ -22,11 +22,11 @@ import com.liferay.adaptive.media.web.internal.constants.AMPortletKeys;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.FriendlyURLNormalizerUtil;
+import com.liferay.portal.kernel.util.FriendlyURLNormalizer;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HtmlUtil;
@@ -93,7 +93,7 @@ public class EditImageConfigurationEntryMVCActionCommand
 
 		if (automaticUuid) {
 			String normalizedName =
-				FriendlyURLNormalizerUtil.normalizeWithPeriodsAndSlashes(name);
+				_friendlyURLNormalizer.normalizeWithPeriodsAndSlashes(name);
 
 			newUuid = _getAutomaticUuid(
 				themeDisplay.getCompanyId(), normalizedName, uuid);
@@ -134,7 +134,7 @@ public class EditImageConfigurationEntryMVCActionCommand
 						newUuid, properties);
 
 				if (autoModifiedUuid) {
-					message = LanguageUtil.format(
+					message = _language.format(
 						resourceBundle,
 						"x-was-saved-successfully.-the-id-was-duplicated-and-" +
 							"renamed-to-x",
@@ -145,7 +145,7 @@ public class EditImageConfigurationEntryMVCActionCommand
 						});
 				}
 				else {
-					message = LanguageUtil.format(
+					message = _language.format(
 						resourceBundle, "x-was-saved-successfully",
 						amImageConfigurationEntry.getName());
 				}
@@ -166,7 +166,7 @@ public class EditImageConfigurationEntryMVCActionCommand
 								themeDisplay.getCompanyId(),
 								amImageConfigurationEntry);
 
-					message = LanguageUtil.format(
+					message = _language.format(
 						resourceBundle, "x-and-x-were-saved-successfully",
 						new String[] {
 							HtmlUtil.escape(
@@ -178,7 +178,7 @@ public class EditImageConfigurationEntryMVCActionCommand
 				}
 				else {
 					if (autoModifiedUuid) {
-						message = LanguageUtil.format(
+						message = _language.format(
 							resourceBundle,
 							"x-was-saved-successfully.-the-id-was-duplicated-" +
 								"and-renamed-to-x",
@@ -189,7 +189,7 @@ public class EditImageConfigurationEntryMVCActionCommand
 							});
 					}
 					else {
-						message = LanguageUtil.format(
+						message = _language.format(
 							resourceBundle, "x-was-saved-successfully",
 							amImageConfigurationEntry.getName());
 					}
@@ -205,7 +205,7 @@ public class EditImageConfigurationEntryMVCActionCommand
 		catch (AMImageConfigurationException amImageConfigurationException) {
 			jsonObject.put(
 				"message",
-				LanguageUtil.get(
+				_language.get(
 					resourceBundle,
 					_errorMessagesMap.get(
 						amImageConfigurationException.getClass()))
@@ -265,8 +265,7 @@ public class EditImageConfigurationEntryMVCActionCommand
 
 			String suffix = StringPool.DASH + i;
 
-			curUuid = FriendlyURLNormalizerUtil.normalize(
-				normalizedName + suffix);
+			curUuid = _friendlyURLNormalizer.normalize(normalizedName + suffix);
 		}
 
 		return curUuid;
@@ -318,5 +317,11 @@ public class EditImageConfigurationEntryMVCActionCommand
 
 	@Reference
 	private AMImageEntryLocalService _amImageEntryLocalService;
+
+	@Reference
+	private FriendlyURLNormalizer _friendlyURLNormalizer;
+
+	@Reference
+	private Language _language;
 
 }

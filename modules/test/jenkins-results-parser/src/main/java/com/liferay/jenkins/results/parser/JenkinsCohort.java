@@ -29,6 +29,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * @author Kenji Heigel
@@ -128,16 +130,18 @@ public class JenkinsCohort {
 		List<Callable<Void>> callables = new ArrayList<>();
 		final List<String> buildURLs = Collections.synchronizedList(
 			new ArrayList<String>());
+		final Map<String, JSONObject> queuedBuildURLs =
+			Collections.synchronizedMap(new HashMap<String, JSONObject>());
 
 		for (final JenkinsMaster jenkinsMaster : _jenkinsMastersMap.values()) {
 			Callable<Void> callable = new Callable<Void>() {
 
 				@Override
 				public Void call() {
-					jenkinsMaster.update();
+					jenkinsMaster.update(false);
 
 					buildURLs.addAll(jenkinsMaster.getBuildURLs());
-					buildURLs.addAll(jenkinsMaster.getQueuedBuildURLs());
+					queuedBuildURLs.putAll(jenkinsMaster.getQueuedBuildURLs());
 
 					return null;
 				}
@@ -159,13 +163,17 @@ public class JenkinsCohort {
 		for (String buildURL : buildURLs) {
 			_loadBuildURL(buildURL);
 		}
+
+		for (Map.Entry<String, JSONObject> entry : queuedBuildURLs.entrySet()) {
+			_loadQueuedBuildURL(entry);
+		}
 	}
 
 	public void writeDataJavaScriptFile(String filePath) throws IOException {
 		StringBuilder sb = new StringBuilder();
 
 		sb.append("var jenkinsDataGeneratedDate = new Date(");
-		sb.append(System.currentTimeMillis());
+		sb.append(JenkinsResultsParserUtil.getCurrentTimeMillis());
 		sb.append(");\nvar nodeData = ");
 
 		JSONArray nodeDataTableJSONArray = new JSONArray();
@@ -195,9 +203,6 @@ public class JenkinsCohort {
 		for (JenkinsCohortJob jenkinsCohortJob :
 				_jenkinsCohortJobsMap.values()) {
 
-			List<String> topLevelBuildURLs =
-				jenkinsCohortJob.getTopLevelBuildURLs();
-
 			buildLoadDataTableJSONArray.put(
 				Arrays.asList(
 					jenkinsCohortJob.getJobName(),
@@ -216,10 +221,105 @@ public class JenkinsCohort {
 						_formatBuildCountText(
 							jenkinsCohortJob.getQueuedBuildCount(),
 							jenkinsCohortJob.getQueuedBuildPercentage())),
-					topLevelBuildURLs.size()));
+					jenkinsCohortJob.getTopLevelBuildCount()));
 		}
 
 		sb.append(buildLoadDataTableJSONArray.toString());
+
+		sb.append(";\nvar pullRequestData = ");
+
+		JSONArray pullRequestDataTableJSONArray = new JSONArray();
+
+		pullRequestDataTableJSONArray.put(
+			Arrays.asList(
+				"Pull Request URL", "Sender Username", "Branch Name",
+				"Test Suite", "Status", "Queued Duration", "Duration"));
+
+		for (JenkinsCohortJob jenkinsCohortJob :
+				_jenkinsCohortJobsMap.values()) {
+
+			String jobName = jenkinsCohortJob.getJobName();
+
+			if (jobName.contains("test-portal-acceptance-pullrequest")) {
+				for (String buildURL :
+						jenkinsCohortJob.getTopLevelBuildURLs()) {
+
+					JSONObject jsonObject = JenkinsAPIUtil.getAPIJSONObject(
+						buildURL);
+
+					long queuedDuration = 0;
+
+					JSONArray actionsJSONArray = jsonObject.getJSONArray(
+						"actions");
+
+					for (int i = 0; i < actionsJSONArray.length(); i++) {
+						Object actions = actionsJSONArray.get(i);
+
+						if (actions == JSONObject.NULL) {
+							continue;
+						}
+
+						JSONObject actionJSONObject =
+							actionsJSONArray.getJSONObject(i);
+
+						if (actionJSONObject.has("_class")) {
+							String clazz = actionJSONObject.getString("_class");
+
+							if (clazz.equals(
+									"jenkins.metrics.impl.TimeInQueueAction")) {
+
+								queuedDuration = actionJSONObject.getLong(
+									"buildableDurationMillis");
+
+								break;
+							}
+						}
+					}
+
+					long duration =
+						JenkinsResultsParserUtil.getCurrentTimeMillis() -
+							jsonObject.getLong("timestamp");
+
+					pullRequestDataTableJSONArray.put(
+						_createpullRequestDataTableRow(
+							buildURL,
+							JenkinsAPIUtil.getBuildParameters(jsonObject),
+							queuedDuration, duration));
+				}
+
+				Map<String, JSONObject> queuedTopLevelBuildsJsonMap =
+					jenkinsCohortJob.getQueuedTopLevelBuildsJsonMap();
+
+				for (JSONObject jsonObject :
+						queuedTopLevelBuildsJsonMap.values()) {
+
+					try {
+						Map<String, String> buildParameters =
+							JenkinsAPIUtil.getBuildParameters(jsonObject);
+
+						JSONObject taskJSONObject = jsonObject.getJSONObject(
+							"task");
+
+						String jobURL = taskJSONObject.getString("url");
+
+						long queueDuration =
+							JenkinsResultsParserUtil.getCurrentTimeMillis() -
+								jsonObject.optLong("inQueueSince");
+
+						pullRequestDataTableJSONArray.put(
+							_createpullRequestDataTableRow(
+								jobURL, buildParameters, queueDuration, 0));
+					}
+					catch (JSONException jsonException) {
+						System.out.println(jsonObject.toString());
+
+						throw new RuntimeException(jsonException);
+					}
+				}
+			}
+		}
+
+		sb.append(pullRequestDataTableJSONArray.toString());
 
 		sb.append(";");
 
@@ -236,6 +336,57 @@ public class JenkinsCohort {
 		return jsonArray;
 	}
 
+	private List<Object> _createpullRequestDataTableRow(
+		String buildURL, Map<String, String> buildParameters,
+		long queueDuration, long duration) {
+
+		String githubReceiverUsername = buildParameters.get(
+			"GITHUB_RECEIVER_USERNAME");
+
+		String repositoryName = "liferay-portal";
+
+		String githubUpstreamBranchName = buildParameters.get(
+			"GITHUB_UPSTREAM_BRANCH_NAME");
+
+		if ((githubUpstreamBranchName != null) &&
+			!githubUpstreamBranchName.equals("master")) {
+
+			repositoryName = repositoryName + "-ee";
+		}
+
+		String githubPullRequestNumber = buildParameters.get(
+			"GITHUB_PULL_REQUEST_NUMBER");
+
+		String githubSenderUsername = buildParameters.get(
+			"GITHUB_SENDER_USERNAME");
+
+		String ciTestSuite = buildParameters.get("CI_TEST_SUITE");
+
+		Matcher matcher = _buildNumberPattern.matcher(buildURL);
+
+		String status = "Queued";
+
+		if (matcher.find()) {
+			status = "Running";
+		}
+
+		return Arrays.asList(
+			_createJSONArray(
+				JenkinsResultsParserUtil.combine(
+					repositoryName, "/", githubReceiverUsername, "#",
+					githubPullRequestNumber),
+				PullRequest.getURL(
+					githubReceiverUsername, repositoryName,
+					githubPullRequestNumber)),
+			githubSenderUsername, githubUpstreamBranchName, ciTestSuite,
+			_createJSONArray(status, buildURL),
+			_createJSONArray(
+				queueDuration,
+				JenkinsResultsParserUtil.toDurationString(queueDuration)),
+			_createJSONArray(
+				duration, JenkinsResultsParserUtil.toDurationString(duration)));
+	}
+
 	private String _formatBuildCountText(
 		int buildCount, String buildPercentage) {
 
@@ -249,12 +400,18 @@ public class JenkinsCohort {
 
 		String jobName = jobNameMatcher.group(1);
 
-		String batchJobName = null;
+		String downstreamJobName = null;
 
 		if (jobName.contains("-batch")) {
-			batchJobName = jobName;
+			downstreamJobName = jobName;
 
 			jobName = jobName.replace("-batch", "");
+		}
+
+		if (jobName.contains("-downstream")) {
+			downstreamJobName = jobName;
+
+			jobName = jobName.replace("-downstream", "");
 		}
 
 		if (!_jenkinsCohortJobsMap.containsKey(jobName)) {
@@ -263,17 +420,61 @@ public class JenkinsCohort {
 
 		JenkinsCohortJob jenkinsCohortJob = _jenkinsCohortJobsMap.get(jobName);
 
-		Matcher buildNumberMatcher = _buildNumberPattern.matcher(buildURL);
-
-		if (buildNumberMatcher.find()) {
-			jenkinsCohortJob.incrementRunningJobCount();
+		if (downstreamJobName == null) {
+			jenkinsCohortJob.addTopLevelBuildURL(buildURL);
 		}
 		else {
-			jenkinsCohortJob.incrementQueuedJobCount();
+			jenkinsCohortJob.addOtherBuildURL(buildURL);
 		}
+	}
 
-		if (batchJobName == null) {
-			jenkinsCohortJob.addTopLevelBuildURL(buildURL);
+	private void _loadQueuedBuildURL(
+		Map.Entry<String, JSONObject> queuedBuildURL) {
+
+		JSONObject jsonObject = queuedBuildURL.getValue();
+
+		if (jsonObject.has("task")) {
+			JSONObject taskJSONObject = jsonObject.getJSONObject("task");
+
+			if (taskJSONObject.has("url")) {
+				Matcher jobNameMatcher = _jobNamePattern.matcher(
+					taskJSONObject.getString("url"));
+
+				jobNameMatcher.find();
+
+				String jobName = jobNameMatcher.group(1);
+
+				String downstreamJobName = null;
+
+				if (jobName.contains("-batch")) {
+					downstreamJobName = jobName;
+
+					jobName = jobName.replace("-batch", "");
+				}
+
+				if (jobName.contains("-downstream")) {
+					downstreamJobName = jobName;
+
+					jobName = jobName.replace("-downstream", "");
+				}
+
+				if (!_jenkinsCohortJobsMap.containsKey(jobName)) {
+					_jenkinsCohortJobsMap.put(
+						jobName, new JenkinsCohortJob(jobName));
+				}
+
+				JenkinsCohortJob jenkinsCohortJob = _jenkinsCohortJobsMap.get(
+					jobName);
+
+				if (downstreamJobName == null) {
+					jenkinsCohortJob.addQueuedTopLevelBuildJsonMapEntry(
+						queuedBuildURL);
+				}
+				else {
+					jenkinsCohortJob.addQueuedOtherBuildJsonMapEntry(
+						queuedBuildURL);
+				}
+			}
 		}
 	}
 
@@ -294,6 +495,26 @@ public class JenkinsCohort {
 			_jenkinsCohortJobName = jenkinsCohortJobName;
 		}
 
+		public void addOtherBuildURL(String buildURL) {
+			_otherBuildURLs.add(buildURL);
+		}
+
+		public void addQueuedOtherBuildJsonMapEntry(
+			Map.Entry<String, JSONObject> queuedBuildsJsonMapEntry) {
+
+			_queuedOtherBuildsJsonMap.put(
+				queuedBuildsJsonMapEntry.getKey(),
+				queuedBuildsJsonMapEntry.getValue());
+		}
+
+		public void addQueuedTopLevelBuildJsonMapEntry(
+			Map.Entry<String, JSONObject> queuedTopLevelBuildMapEntry) {
+
+			_queuedTopLevelBuildsJsonMap.put(
+				queuedTopLevelBuildMapEntry.getKey(),
+				queuedTopLevelBuildMapEntry.getValue());
+		}
+
 		public void addTopLevelBuildURL(String topLevelBuildURL) {
 			_topLevelBuildURLs.add(topLevelBuildURL);
 		}
@@ -303,21 +524,33 @@ public class JenkinsCohort {
 		}
 
 		public int getQueuedBuildCount() {
-			return _queuedBuildCount;
+			return _queuedTopLevelBuildsJsonMap.size() +
+				_queuedOtherBuildsJsonMap.size();
 		}
 
 		public String getQueuedBuildPercentage() {
 			return CISystemStatusReportUtil.getPercentage(
-				_queuedBuildCount, JenkinsCohort.this.getQueuedBuildCount());
+				getQueuedBuildCount(),
+				JenkinsCohort.this.getQueuedBuildCount());
+		}
+
+		public Map<String, JSONObject> getQueuedTopLevelBuildsJsonMap() {
+			return _queuedTopLevelBuildsJsonMap;
 		}
 
 		public int getRunningBuildCount() {
-			return _runningBuildCount;
+			return _topLevelBuildURLs.size() + _otherBuildURLs.size();
 		}
 
 		public String getRunningBuildPercentage() {
 			return CISystemStatusReportUtil.getPercentage(
-				_runningBuildCount, JenkinsCohort.this.getRunningBuildCount());
+				getRunningBuildCount(),
+				JenkinsCohort.this.getRunningBuildCount());
+		}
+
+		public int getTopLevelBuildCount() {
+			return _topLevelBuildURLs.size() +
+				_queuedTopLevelBuildsJsonMap.size();
 		}
 
 		public List<String> getTopLevelBuildURLs() {
@@ -325,7 +558,7 @@ public class JenkinsCohort {
 		}
 
 		public int getTotalBuildCount() {
-			return _queuedBuildCount + _runningBuildCount;
+			return getQueuedBuildCount() + getRunningBuildCount();
 		}
 
 		public String getTotalBuildPercentage() {
@@ -335,17 +568,12 @@ public class JenkinsCohort {
 					JenkinsCohort.this.getQueuedBuildCount());
 		}
 
-		public void incrementQueuedJobCount() {
-			_queuedBuildCount = _queuedBuildCount + 1;
-		}
-
-		public void incrementRunningJobCount() {
-			_runningBuildCount = _runningBuildCount + 1;
-		}
-
 		private final String _jenkinsCohortJobName;
-		private int _queuedBuildCount;
-		private int _runningBuildCount;
+		private List<String> _otherBuildURLs = new ArrayList<>();
+		private Map<String, JSONObject> _queuedOtherBuildsJsonMap =
+			new HashMap<>();
+		private Map<String, JSONObject> _queuedTopLevelBuildsJsonMap =
+			new HashMap<>();
 		private List<String> _topLevelBuildURLs = new ArrayList<>();
 
 	}

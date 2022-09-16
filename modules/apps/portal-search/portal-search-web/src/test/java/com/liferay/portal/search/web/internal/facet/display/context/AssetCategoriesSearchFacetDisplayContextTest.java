@@ -27,8 +27,9 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.search.web.internal.facet.display.builder.AssetCategoriesSearchFacetDisplayBuilder;
-import com.liferay.portal.search.web.internal.facet.display.builder.AssetCategoryPermissionChecker;
+import com.liferay.portal.search.web.internal.facet.display.context.builder.AssetCategoriesSearchFacetDisplayContextBuilder;
+import com.liferay.portal.search.web.internal.facet.display.context.builder.AssetCategoryPermissionChecker;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.Collections;
 import java.util.List;
@@ -40,22 +41,24 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
-import org.mockito.Matchers;
-import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 
 /**
  * @author André de Oliveira
  */
 public class AssetCategoriesSearchFacetDisplayContextTest {
 
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
 	@Before
 	public void setUp() {
-		MockitoAnnotations.initMocks(this);
-
 		Mockito.doReturn(
 			_facetCollector
 		).when(
@@ -93,7 +96,7 @@ public class AssetCategoriesSearchFacetDisplayContextTest {
 	public void testEmptySearchResultsWithPreviousSelection() throws Exception {
 		long assetCategoryId = RandomTestUtil.randomLong();
 
-		setUpAssetCategory(assetCategoryId, 0);
+		_setUpAssetCategory(assetCategoryId, 0);
 
 		String facetParam = String.valueOf(assetCategoryId);
 
@@ -146,7 +149,7 @@ public class AssetCategoriesSearchFacetDisplayContextTest {
 
 		createGroup(groupId, stagingGroupId);
 
-		setUpAssetCategory(assetCategoryId, stagingGroupId);
+		_setUpAssetCategory(assetCategoryId, stagingGroupId);
 
 		_excludedGroupId = stagingGroupId;
 
@@ -176,7 +179,7 @@ public class AssetCategoriesSearchFacetDisplayContextTest {
 	public void testOneTerm() throws Exception {
 		long assetCategoryId = RandomTestUtil.randomLong();
 
-		setUpAssetCategory(assetCategoryId, 0);
+		_setUpAssetCategory(assetCategoryId, 0);
 
 		int frequency = RandomTestUtil.randomInt();
 
@@ -228,7 +231,7 @@ public class AssetCategoriesSearchFacetDisplayContextTest {
 	public void testOneTermWithPreviousSelection() throws Exception {
 		long assetCategoryId = RandomTestUtil.randomLong();
 
-		setUpAssetCategory(assetCategoryId, 0);
+		_setUpAssetCategory(assetCategoryId, 0);
 
 		int frequency = RandomTestUtil.randomInt();
 
@@ -279,7 +282,7 @@ public class AssetCategoriesSearchFacetDisplayContextTest {
 	public void testUnauthorized() throws Exception {
 		long assetCategoryId = RandomTestUtil.randomLong();
 
-		setUpAssetCategoryUnauthorized(assetCategoryId);
+		_setUpAssetCategoryUnauthorized(assetCategoryId);
 
 		int frequency = RandomTestUtil.randomInt();
 
@@ -313,7 +316,7 @@ public class AssetCategoriesSearchFacetDisplayContextTest {
 	public void testUnauthorizedWithPreviousSelection() throws Exception {
 		long assetCategoryId = RandomTestUtil.randomLong();
 
-		setUpAssetCategoryUnauthorized(assetCategoryId);
+		_setUpAssetCategoryUnauthorized(assetCategoryId);
 
 		String facetParam = String.valueOf(assetCategoryId);
 
@@ -339,7 +342,96 @@ public class AssetCategoriesSearchFacetDisplayContextTest {
 			assetCategoriesSearchFacetDisplayContext.isRenderNothing());
 	}
 
-	protected AssetCategory createAssetCategory(
+	protected AssetCategoriesSearchFacetDisplayContext createDisplayContext(
+		String parameterValue) {
+
+		RenderRequest renderRequest = Mockito.mock(RenderRequest.class);
+
+		AssetCategoriesSearchFacetDisplayContextBuilder
+			assetCategoriesSearchFacetDisplayContextBuilder =
+				new AssetCategoriesSearchFacetDisplayContextBuilder(
+					renderRequest);
+
+		assetCategoriesSearchFacetDisplayContextBuilder.
+			setAssetCategoryLocalService(_assetCategoryLocalService);
+		assetCategoriesSearchFacetDisplayContextBuilder.
+			setAssetCategoryPermissionChecker(_assetCategoryPermissionChecker);
+		assetCategoriesSearchFacetDisplayContextBuilder.setDisplayStyle(
+			"cloud");
+		assetCategoriesSearchFacetDisplayContextBuilder.setFacet(_facet);
+		assetCategoriesSearchFacetDisplayContextBuilder.setFrequenciesVisible(
+			true);
+		assetCategoriesSearchFacetDisplayContextBuilder.setFrequencyThreshold(
+			0);
+		assetCategoriesSearchFacetDisplayContextBuilder.setMaxTerms(0);
+		assetCategoriesSearchFacetDisplayContextBuilder.setParameterName(
+			_facet.getFieldId());
+		assetCategoriesSearchFacetDisplayContextBuilder.setParameterValue(
+			parameterValue);
+		assetCategoriesSearchFacetDisplayContextBuilder.setPortal(_getPortal());
+
+		if (_excludedGroupId > 0) {
+			assetCategoriesSearchFacetDisplayContextBuilder.setExcludedGroupId(
+				_excludedGroupId);
+		}
+
+		return assetCategoriesSearchFacetDisplayContextBuilder.build();
+	}
+
+	protected Group createGroup(long groupId, long stagingGroupId) {
+		Group group = Mockito.mock(Group.class);
+
+		Mockito.doReturn(
+			groupId
+		).when(
+			group
+		).getGroupId();
+
+		return group;
+	}
+
+	protected TermCollector createTermCollector(
+		long assetCategoryId, int frequency) {
+
+		TermCollector termCollector = Mockito.mock(TermCollector.class);
+
+		Mockito.doReturn(
+			frequency
+		).when(
+			termCollector
+		).getFrequency();
+
+		Mockito.doReturn(
+			String.valueOf(assetCategoryId)
+		).when(
+			termCollector
+		).getTerm();
+
+		return termCollector;
+	}
+
+	protected ThemeDisplay getThemeDisplay() {
+		ThemeDisplay themeDisplay = Mockito.mock(ThemeDisplay.class);
+
+		Mockito.doReturn(
+			Mockito.mock(PortletDisplay.class)
+		).when(
+			themeDisplay
+		).getPortletDisplay();
+
+		return themeDisplay;
+	}
+
+	protected void setUpOneTermCollector(long assetCategoryId, int frequency) {
+		Mockito.doReturn(
+			Collections.singletonList(
+				createTermCollector(assetCategoryId, frequency))
+		).when(
+			_facetCollector
+		).getTermCollectors();
+	}
+
+	private AssetCategory _createAssetCategory(
 		long assetCategoryId, long groupId) {
 
 		AssetCategory assetCategory = Mockito.mock(AssetCategory.class);
@@ -375,71 +467,7 @@ public class AssetCategoriesSearchFacetDisplayContextTest {
 		return assetCategory;
 	}
 
-	protected AssetCategoriesSearchFacetDisplayContext createDisplayContext(
-		String parameterValue) {
-
-		RenderRequest renderRequest = Mockito.mock(RenderRequest.class);
-
-		AssetCategoriesSearchFacetDisplayBuilder
-			assetCategoriesSearchFacetDisplayBuilder =
-				new AssetCategoriesSearchFacetDisplayBuilder(renderRequest);
-
-		assetCategoriesSearchFacetDisplayBuilder.setAssetCategoryLocalService(
-			_assetCategoryLocalService);
-		assetCategoriesSearchFacetDisplayBuilder.
-			setAssetCategoryPermissionChecker(_assetCategoryPermissionChecker);
-		assetCategoriesSearchFacetDisplayBuilder.setDisplayStyle("cloud");
-		assetCategoriesSearchFacetDisplayBuilder.setFacet(_facet);
-		assetCategoriesSearchFacetDisplayBuilder.setFrequenciesVisible(true);
-		assetCategoriesSearchFacetDisplayBuilder.setFrequencyThreshold(0);
-		assetCategoriesSearchFacetDisplayBuilder.setMaxTerms(0);
-		assetCategoriesSearchFacetDisplayBuilder.setParameterName(
-			_facet.getFieldId());
-		assetCategoriesSearchFacetDisplayBuilder.setParameterValue(
-			parameterValue);
-		assetCategoriesSearchFacetDisplayBuilder.setPortal(getPortal());
-
-		if (_excludedGroupId > 0) {
-			assetCategoriesSearchFacetDisplayBuilder.setExcludedGroupId(
-				_excludedGroupId);
-		}
-
-		return assetCategoriesSearchFacetDisplayBuilder.build();
-	}
-
-	protected Group createGroup(long groupId, long stagingGroupId) {
-		Group group = Mockito.mock(Group.class);
-
-		Mockito.doReturn(
-			groupId
-		).when(
-			group
-		).getGroupId();
-
-		return group;
-	}
-
-	protected TermCollector createTermCollector(
-		long assetCategoryId, int frequency) {
-
-		TermCollector termCollector = Mockito.mock(TermCollector.class);
-
-		Mockito.doReturn(
-			frequency
-		).when(
-			termCollector
-		).getFrequency();
-
-		Mockito.doReturn(
-			String.valueOf(assetCategoryId)
-		).when(
-			termCollector
-		).getTerm();
-
-		return termCollector;
-	}
-
-	protected HttpServletRequest getHttpServletRequest() {
+	private HttpServletRequest _getHttpServletRequest() {
 		HttpServletRequest httpServletRequest = Mockito.mock(
 			HttpServletRequest.class);
 
@@ -454,34 +482,22 @@ public class AssetCategoriesSearchFacetDisplayContextTest {
 		return httpServletRequest;
 	}
 
-	protected Portal getPortal() {
+	private Portal _getPortal() {
 		Portal portal = Mockito.mock(Portal.class);
 
 		Mockito.doReturn(
-			getHttpServletRequest()
+			_getHttpServletRequest()
 		).when(
 			portal
 		).getHttpServletRequest(
-			Matchers.any()
+			Mockito.any()
 		);
 
 		return portal;
 	}
 
-	protected ThemeDisplay getThemeDisplay() {
-		ThemeDisplay themeDisplay = Mockito.mock(ThemeDisplay.class);
-
-		Mockito.doReturn(
-			Mockito.mock(PortletDisplay.class)
-		).when(
-			themeDisplay
-		).getPortletDisplay();
-
-		return themeDisplay;
-	}
-
-	protected void setUpAssetCategory(long assetCategoryId, long groupId) {
-		AssetCategory assetCategory = createAssetCategory(
+	private void _setUpAssetCategory(long assetCategoryId, long groupId) {
+		AssetCategory assetCategory = _createAssetCategory(
 			assetCategoryId, groupId);
 
 		Mockito.doReturn(
@@ -493,8 +509,8 @@ public class AssetCategoriesSearchFacetDisplayContextTest {
 		);
 	}
 
-	protected void setUpAssetCategoryUnauthorized(long assetCategoryId) {
-		AssetCategory assetCategory = createAssetCategory(assetCategoryId, 0);
+	private void _setUpAssetCategoryUnauthorized(long assetCategoryId) {
+		AssetCategory assetCategory = _createAssetCategory(assetCategoryId, 0);
 
 		Mockito.doReturn(
 			false
@@ -505,30 +521,14 @@ public class AssetCategoriesSearchFacetDisplayContextTest {
 		);
 	}
 
-	protected void setUpOneTermCollector(long assetCategoryId, int frequency) {
-		Mockito.doReturn(
-			Collections.singletonList(
-				createTermCollector(assetCategoryId, frequency))
-		).when(
-			_facetCollector
-		).getTermCollectors();
-	}
-
-	@Mock
-	private AssetCategoryLocalService _assetCategoryLocalService;
-
-	@Mock
-	private AssetCategoryPermissionChecker _assetCategoryPermissionChecker;
-
+	private final AssetCategoryLocalService _assetCategoryLocalService =
+		Mockito.mock(AssetCategoryLocalService.class);
+	private final AssetCategoryPermissionChecker
+		_assetCategoryPermissionChecker = Mockito.mock(
+			AssetCategoryPermissionChecker.class);
 	private long _excludedGroupId;
-
-	@Mock
-	private Facet _facet;
-
-	@Mock
-	private FacetCollector _facetCollector;
-
-	@Mock
-	private Group _group;
+	private final Facet _facet = Mockito.mock(Facet.class);
+	private final FacetCollector _facetCollector = Mockito.mock(
+		FacetCollector.class);
 
 }

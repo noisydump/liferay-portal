@@ -14,10 +14,12 @@
 
 package com.liferay.portal.service.impl;
 
+import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.model.Plugin;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.service.PluginSettingLocalService;
 import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
 import com.liferay.portal.kernel.service.permission.PortalPermissionUtil;
 import com.liferay.portal.service.base.LayoutSetServiceBaseImpl;
@@ -31,6 +33,18 @@ import java.util.TreeMap;
  * @author Brian Wing Shun Chan
  */
 public class LayoutSetServiceImpl extends LayoutSetServiceBaseImpl {
+
+	@Override
+	public void updateFaviconFileEntryId(
+			long groupId, boolean privateLayout, long faviconFileEntryId)
+		throws PortalException {
+
+		GroupPermissionUtil.check(
+			getPermissionChecker(), groupId, ActionKeys.MANAGE_LAYOUTS);
+
+		layoutSetLocalService.updateFaviconFileEntryId(
+			groupId, privateLayout, faviconFileEntryId);
+	}
 
 	/**
 	 * Updates the state of the layout set prototype link.
@@ -129,7 +143,7 @@ public class LayoutSetServiceImpl extends LayoutSetServiceBaseImpl {
 		GroupPermissionUtil.check(
 			getPermissionChecker(), groupId, ActionKeys.MANAGE_LAYOUTS);
 
-		pluginSettingLocalService.checkPermission(
+		_pluginSettingLocalService.checkPermission(
 			getUserId(), themeId, Plugin.TYPE_THEME);
 
 		return layoutSetLocalService.updateLookAndFeel(
@@ -160,5 +174,8 @@ public class LayoutSetServiceImpl extends LayoutSetServiceBaseImpl {
 		return layoutSetLocalService.updateVirtualHosts(
 			groupId, privateLayout, virtualHostnames);
 	}
+
+	@BeanReference(type = PluginSettingLocalService.class)
+	private PluginSettingLocalService _pluginSettingLocalService;
 
 }

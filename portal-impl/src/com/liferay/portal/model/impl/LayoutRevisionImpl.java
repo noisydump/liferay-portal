@@ -16,6 +16,8 @@ package com.liferay.portal.model.impl;
 
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.ColorScheme;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutBranch;
@@ -37,6 +39,7 @@ import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
+import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
@@ -123,17 +126,16 @@ public class LayoutRevisionImpl extends LayoutRevisionBaseImpl {
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		String portalURL = PortalUtil.getPortalURL(httpServletRequest);
-
 		String url = PortalUtil.getLayoutURL(
 			LayoutLocalServiceUtil.getLayout(getPlid()), themeDisplay);
 
 		if (!CookieKeys.hasSessionId(httpServletRequest) &&
-			(url.startsWith(portalURL) || url.startsWith(StringPool.SLASH))) {
+			(url.startsWith(PortalUtil.getPortalURL(httpServletRequest)) ||
+			 url.startsWith(StringPool.SLASH))) {
 
-			HttpSession session = httpServletRequest.getSession();
+			HttpSession httpSession = httpServletRequest.getSession();
 
-			url = PortalUtil.getURLWithSessionId(url, session.getId());
+			url = PortalUtil.getURLWithSessionId(url, httpSession.getId());
 		}
 
 		return url;
@@ -178,6 +180,9 @@ public class LayoutRevisionImpl extends LayoutRevisionBaseImpl {
 				return theme.getSetting(key);
 			}
 			catch (Exception exception) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(exception);
+				}
 			}
 		}
 
@@ -187,6 +192,9 @@ public class LayoutRevisionImpl extends LayoutRevisionBaseImpl {
 			value = layoutSet.getThemeSetting(key, device);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return value;
@@ -204,9 +212,11 @@ public class LayoutRevisionImpl extends LayoutRevisionBaseImpl {
 	@Override
 	public UnicodeProperties getTypeSettingsProperties() {
 		if (_typeSettingsUnicodeProperties == null) {
-			_typeSettingsUnicodeProperties = new UnicodeProperties(true);
-
-			_typeSettingsUnicodeProperties.fastLoad(super.getTypeSettings());
+			_typeSettingsUnicodeProperties = UnicodePropertiesBuilder.create(
+				true
+			).fastLoad(
+				super.getTypeSettings()
+			).build();
 		}
 
 		return _typeSettingsUnicodeProperties;
@@ -308,6 +318,9 @@ public class LayoutRevisionImpl extends LayoutRevisionBaseImpl {
 
 		super.setTypeSettings(_typeSettingsUnicodeProperties.toString());
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		LayoutRevisionImpl.class);
 
 	private UnicodeProperties _typeSettingsUnicodeProperties;
 

@@ -170,8 +170,11 @@ renderResponse.setTitle(LanguageUtil.format(request, "session-id-x", sessionId, 
 							userSessionAlive = true;
 
 							HttpSession userSession = PortalSessionContext.get(sessionId);
+							%>
 
-							if (userSession != null) {
+							<c:if test="<%= userSession != null %>">
+
+								<%
 								try {
 									Set<String> sortedAttrNames = new TreeSet<String>();
 
@@ -184,23 +187,23 @@ renderResponse.setTitle(LanguageUtil.format(request, "session-id-x", sessionId, 
 									}
 
 									for (String attrName : sortedAttrNames) {
-							%>
+								%>
 
 										<dt class="h4">
 											<%= HtmlUtil.escape(attrName) %>
 										</dt>
 
-							<%
+								<%
 									}
 								}
 								catch (Exception e) {
 									userSessionAlive = false;
 
-									_log.error(e, e);
+									_log.error(e);
 								}
-							}
-							%>
+								%>
 
+							</c:if>
 						</dl>
 					</liferay-ui:panel>
 				</liferay-ui:panel-container>
@@ -216,5 +219,5 @@ renderResponse.setTitle(LanguageUtil.format(request, "session-id-x", sessionId, 
 </aui:form>
 
 <%!
-private static Log _log = LogFactoryUtil.getLog("com_liferay_monitoring_web.edit_session_jsp");
+private static final Log _log = LogFactoryUtil.getLog("com_liferay_monitoring_web.edit_session_jsp");
 %>

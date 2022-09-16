@@ -14,13 +14,13 @@
 
 package com.liferay.commerce.internal.upgrade.v2_1_0;
 
-import com.liferay.commerce.internal.upgrade.base.BaseCommerceServiceUpgradeProcess;
 import com.liferay.commerce.model.impl.CPDAvailabilityEstimateModelImpl;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.service.CPDefinitionLocalService;
 import com.liferay.portal.kernel.dao.db.IndexMetadata;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.util.ObjectValuePair;
 
 import java.sql.DatabaseMetaData;
@@ -34,8 +34,7 @@ import java.util.Objects;
 /**
  * @author Alec Sloan
  */
-public class CPDAvailabilityEstimateUpgradeProcess
-	extends BaseCommerceServiceUpgradeProcess {
+public class CPDAvailabilityEstimateUpgradeProcess extends UpgradeProcess {
 
 	public CPDAvailabilityEstimateUpgradeProcess(
 		CPDefinitionLocalService cpDefinitionLocalService) {
@@ -45,38 +44,31 @@ public class CPDAvailabilityEstimateUpgradeProcess
 
 	@Override
 	protected void doUpgrade() throws Exception {
-		addColumn(
-			CPDAvailabilityEstimateModelImpl.class,
-			CPDAvailabilityEstimateModelImpl.TABLE_NAME, "CProductId", "LONG");
+		alterTableAddColumn("CPDAvailabilityEstimate", "CProductId", "LONG");
 
 		_addIndexes(CPDAvailabilityEstimateModelImpl.TABLE_NAME);
 
-		try (PreparedStatement ps = connection.prepareStatement(
+		try (PreparedStatement preparedStatement = connection.prepareStatement(
 				"update CPDAvailabilityEstimate set CProductId = ? where " +
 					"CPDefinitionId = ?");
 			Statement s = connection.createStatement();
-			ResultSet rs = s.executeQuery(
+			ResultSet resultSet = s.executeQuery(
 				"select distinct CPDefinitionId from " +
 					"CPDAvailabilityEstimate")) {
 
-			while (rs.next()) {
-				long cpDefinitionId = rs.getLong("CPDefinitionId");
+			while (resultSet.next()) {
+				long cpDefinitionId = resultSet.getLong("CPDefinitionId");
 
 				CPDefinition cpDefinition =
 					_cpDefinitionLocalService.getCPDefinition(cpDefinitionId);
 
-				ps.setLong(1, cpDefinition.getCProductId());
+				preparedStatement.setLong(1, cpDefinition.getCProductId());
 
-				ps.setLong(2, cpDefinitionId);
+				preparedStatement.setLong(2, cpDefinitionId);
 
-				ps.execute();
+				preparedStatement.execute();
 			}
 		}
-
-		runSQL("drop index IX_86A2368F on CPDAvailabilityEstimate");
-
-		runSQL(
-			"alter table CPDAvailabilityEstimate drop column CPDefinitionId");
 	}
 
 	private void _addIndexes(String tableName) throws Exception {
@@ -112,11 +104,11 @@ public class CPDAvailabilityEstimateUpgradeProcess
 
 		DatabaseMetaData metadata = connection.getMetaData();
 
-		try (ResultSet rs = metadata.getIndexInfo(
+		try (ResultSet resultSet = metadata.getIndexInfo(
 				null, null, tableName, false, false)) {
 
-			while (rs.next()) {
-				String curIndexName = rs.getString("index_name");
+			while (resultSet.next()) {
+				String curIndexName = resultSet.getString("index_name");
 
 				if (Objects.equals(indexName, curIndexName)) {
 					return true;

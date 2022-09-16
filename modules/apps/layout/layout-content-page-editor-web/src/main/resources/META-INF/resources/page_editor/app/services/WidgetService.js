@@ -51,4 +51,29 @@ export default {
 			{requestGenerateDraft: true}
 		);
 	},
+
+	getWidgets() {
+		return serviceFetch(config.getPortletsURL, {}, () => {});
+	},
+
+	/**
+	 * Mark a widget as highlighted if it wasn't, and unmark it if it was
+	 * @param {object} options
+	 * @param {string} options.portletId
+	 * @param {boolean} options.highlighted
+	 * @param {function} options.onNetworkStatus
+	 */
+	toggleWidgetHighlighted({highlighted, onNetworkStatus, portletId}) {
+		return serviceFetch(
+			config.updatePortletsHighlightedConfigurationURL,
+			{
+				body: {
+					highlighted,
+					portletId,
+				},
+			},
+			onNetworkStatus,
+			{requestGenerateDraft: true}
+		);
+	},
 };

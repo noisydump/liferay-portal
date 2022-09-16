@@ -16,7 +16,6 @@ import ClayLink from '@clayui/link';
 import React from 'react';
 
 import {config} from '../../../app/config/index';
-import SidebarPanelContent from '../../../common/components/SidebarPanelContent';
 import SidebarPanelHeader from '../../../common/components/SidebarPanelHeader';
 
 export default function MappingSidebar() {
@@ -26,7 +25,7 @@ export default function MappingSidebar() {
 				{Liferay.Language.get('mapping')}
 			</SidebarPanelHeader>
 
-			<SidebarPanelContent>
+			<div className="p-3">
 				<p className="mb-4 small text-secondary">
 					{config.selectedMappingTypes.mappingDescription}
 				</p>
@@ -35,6 +34,7 @@ export default function MappingSidebar() {
 					<p className="list-group-title">
 						{config.selectedMappingTypes.type.groupTypeTitle}:
 					</p>
+
 					<p className="mb-0 small">
 						{config.selectedMappingTypes.type.label}
 					</p>
@@ -50,6 +50,7 @@ export default function MappingSidebar() {
 								}
 								:
 							</p>
+
 							<p className="mb-0 small">
 								{config.selectedMappingTypes.subtype.url ? (
 									<ClayLink
@@ -86,12 +87,13 @@ export default function MappingSidebar() {
 								}
 								:
 							</p>
+
 							<p className="small">
 								{config.selectedMappingTypes.itemType.label}
 							</p>
 						</div>
 					)}
-			</SidebarPanelContent>
+			</div>
 		</>
 	);
 }

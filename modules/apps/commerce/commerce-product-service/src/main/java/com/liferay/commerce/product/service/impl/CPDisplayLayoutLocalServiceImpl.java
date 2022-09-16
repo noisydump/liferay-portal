@@ -18,7 +18,9 @@ import com.liferay.commerce.product.exception.CPDisplayLayoutEntryException;
 import com.liferay.commerce.product.exception.CPDisplayLayoutLayoutUuidException;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPDisplayLayout;
+import com.liferay.commerce.product.service.CPDefinitionLocalService;
 import com.liferay.commerce.product.service.base.CPDisplayLayoutLocalServiceBaseImpl;
+import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.model.User;
@@ -34,17 +36,18 @@ import com.liferay.portal.kernel.search.QueryConfig;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.io.Serializable;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author Marco Leo
@@ -52,21 +55,6 @@ import java.util.Map;
  */
 public class CPDisplayLayoutLocalServiceImpl
 	extends CPDisplayLayoutLocalServiceBaseImpl {
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x)
-	 */
-	@Deprecated
-	@Override
-	public CPDisplayLayout addCPDisplayLayout(
-			Class<?> clazz, long classPK, String layoutUuid,
-			ServiceContext serviceContext)
-		throws PortalException {
-
-		return cpDisplayLayoutLocalService.addCPDisplayLayout(
-			serviceContext.getUserId(), serviceContext.getScopeGroupId(), clazz,
-			classPK, layoutUuid);
-	}
 
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
@@ -77,17 +65,18 @@ public class CPDisplayLayoutLocalServiceImpl
 
 		validate(classPK, layoutUuid);
 
-		long classNameId = classNameLocalService.getClassNameId(clazz);
+		long classNameId = _classNameLocalService.getClassNameId(clazz);
 
 		CPDisplayLayout oldCPDisplayLayout =
-			cpDisplayLayoutPersistence.fetchByC_C(classNameId, classPK);
+			cpDisplayLayoutPersistence.fetchByG_C_C(
+				groupId, classNameId, classPK);
 
 		if ((clazz == CPDefinition.class) &&
-			cpDefinitionLocalService.isVersionable(classPK)) {
+			_cpDefinitionLocalService.isVersionable(classPK)) {
 
 			try {
 				CPDefinition newCPDefinition =
-					cpDefinitionLocalService.copyCPDefinition(classPK);
+					_cpDefinitionLocalService.copyCPDefinition(classPK);
 
 				classPK = newCPDefinition.getCPDefinitionId();
 			}
@@ -95,8 +84,8 @@ public class CPDisplayLayoutLocalServiceImpl
 				throw new SystemException(portalException);
 			}
 
-			oldCPDisplayLayout = cpDisplayLayoutPersistence.fetchByC_C(
-				classNameId, classPK);
+			oldCPDisplayLayout = cpDisplayLayoutPersistence.fetchByG_C_C(
+				groupId, classNameId, classPK);
 		}
 
 		if (oldCPDisplayLayout != null) {
@@ -112,7 +101,7 @@ public class CPDisplayLayoutLocalServiceImpl
 
 		cpDisplayLayout.setGroupId(groupId);
 
-		User user = userLocalService.getUser(userId);
+		User user = _userLocalService.getUser(userId);
 
 		cpDisplayLayout.setCompanyId(user.getCompanyId());
 
@@ -126,48 +115,39 @@ public class CPDisplayLayoutLocalServiceImpl
 	@Indexable(type = IndexableType.DELETE)
 	@Override
 	public CPDisplayLayout deleteCPDisplayLayout(Class<?> clazz, long classPK) {
-		long classNameId = classNameLocalService.getClassNameId(clazz);
-
-		CPDisplayLayout cpDisplayLayout = cpDisplayLayoutPersistence.fetchByC_C(
-			classNameId, classPK);
-
-		if (cpDisplayLayout != null) {
+		try {
 			if ((clazz == CPDefinition.class) &&
-				cpDefinitionLocalService.isVersionable(classPK)) {
+				_cpDefinitionLocalService.isVersionable(classPK)) {
 
-				try {
-					CPDefinition newCPDefinition =
-						cpDefinitionLocalService.copyCPDefinition(classPK);
-
-					cpDisplayLayout = cpDisplayLayoutPersistence.findByC_C(
-						classNameId, newCPDefinition.getCPDefinitionId());
-				}
-				catch (PortalException portalException) {
-					throw new SystemException(portalException);
-				}
+				_cpDefinitionLocalService.copyCPDefinition(classPK);
 			}
-
-			return cpDisplayLayoutPersistence.remove(cpDisplayLayout);
 		}
+		catch (PortalException portalException) {
+			throw new SystemException(portalException);
+		}
+
+		cpDisplayLayoutLocalService.deleteCPDisplayLayouts(clazz, classPK);
 
 		return null;
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
 	@Override
-	public void deleteCPDisplayLayoutByGroupIdAndLayoutUuid(
-		long groupId, String layoutUuid) {
+	public void deleteCPDisplayLayouts(Class<?> clazz, long classPK) {
+		List<CPDisplayLayout> cpDisplayLayouts =
+			cpDisplayLayoutPersistence.findByC_C(
+				_classNameLocalService.getClassNameId(clazz), classPK);
 
-		cpDisplayLayoutPersistence.removeByG_L(groupId, layoutUuid);
+		for (CPDisplayLayout cpDisplayLayout : cpDisplayLayouts) {
+			cpDisplayLayoutLocalService.deleteCPDisplayLayout(cpDisplayLayout);
+		}
 	}
 
 	@Override
-	public CPDisplayLayout fetchCPDisplayLayout(Class<?> clazz, long classPK) {
-		return cpDisplayLayoutPersistence.fetchByC_C(
-			classNameLocalService.getClassNameId(clazz), classPK);
+	public CPDisplayLayout fetchCPDisplayLayout(
+		long groupId, Class<?> clazz, long classPK) {
+
+		return cpDisplayLayoutPersistence.fetchByG_C_C(
+			groupId, _classNameLocalService.getClassNameId(clazz), classPK);
 	}
 
 	@Override
@@ -200,7 +180,7 @@ public class CPDisplayLayoutLocalServiceImpl
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public CPDisplayLayout updateCPDisplayLayout(
-			long cpDisplayLayoutId, String layoutUuid)
+			long cpDisplayLayoutId, long classPK, String layoutUuid)
 		throws PortalException {
 
 		CPDisplayLayout cpDisplayLayout =
@@ -208,6 +188,7 @@ public class CPDisplayLayoutLocalServiceImpl
 
 		validate(cpDisplayLayout.getClassPK(), layoutUuid);
 
+		cpDisplayLayout.setClassPK(classPK);
 		cpDisplayLayout.setLayoutUuid(layoutUuid);
 
 		return cpDisplayLayoutPersistence.update(cpDisplayLayout);
@@ -219,7 +200,7 @@ public class CPDisplayLayoutLocalServiceImpl
 
 		SearchContext searchContext = new SearchContext();
 
-		Map<String, Serializable> attributes =
+		searchContext.setAttributes(
 			HashMapBuilder.<String, Serializable>put(
 				"entryModelClassName", className
 			).put(
@@ -229,10 +210,7 @@ public class CPDisplayLayoutLocalServiceImpl
 				).build()
 			).put(
 				"searchFilterEnabled", true
-			).build();
-
-		searchContext.setAttributes(attributes);
-
+			).build());
 		searchContext.setCompanyId(companyId);
 		searchContext.setEnd(end);
 		searchContext.setGroupIds(new long[] {groupId});
@@ -324,5 +302,14 @@ public class CPDisplayLayoutLocalServiceImpl
 	private static final String[] _SELECTED_FIELD_NAMES = {
 		Field.ENTRY_CLASS_PK, Field.COMPANY_ID, Field.GROUP_ID, Field.UID
 	};
+
+	@ServiceReference(type = ClassNameLocalService.class)
+	private ClassNameLocalService _classNameLocalService;
+
+	@BeanReference(type = CPDefinitionLocalService.class)
+	private CPDefinitionLocalService _cpDefinitionLocalService;
+
+	@ServiceReference(type = UserLocalService.class)
+	private UserLocalService _userLocalService;
 
 }

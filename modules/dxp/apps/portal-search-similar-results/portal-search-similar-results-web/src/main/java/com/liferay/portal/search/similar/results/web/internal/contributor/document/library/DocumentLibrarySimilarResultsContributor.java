@@ -24,8 +24,9 @@ import com.liferay.document.library.kernel.service.DLFolderLocalService;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.kernel.util.HttpComponentsUtil;
+import com.liferay.portal.search.similar.results.web.internal.helper.HttpHelper;
 import com.liferay.portal.search.similar.results.web.internal.util.SearchStringUtil;
-import com.liferay.portal.search.similar.results.web.internal.util.http.HttpHelper;
 import com.liferay.portal.search.similar.results.web.spi.contributor.SimilarResultsContributor;
 import com.liferay.portal.search.similar.results.web.spi.contributor.helper.CriteriaBuilder;
 import com.liferay.portal.search.similar.results.web.spi.contributor.helper.CriteriaHelper;
@@ -53,7 +54,7 @@ public class DocumentLibrarySimilarResultsContributor
 		RouteBuilder routeBuilder, RouteHelper routeHelper) {
 
 		String[] parameters = _httpHelper.getFriendlyURLParameters(
-			routeHelper.getURLString());
+			HttpComponentsUtil.decodePath(routeHelper.getURLString()));
 
 		SearchStringUtil.requireEquals("document_library", parameters[0]);
 
@@ -66,10 +67,10 @@ public class DocumentLibrarySimilarResultsContributor
 
 		Long id = (Long)criteriaHelper.getRouteParameter("id");
 
-		List<?> list = getDLFileEntryData(id);
+		List<?> list = _getDLFileEntryData(id);
 
 		if (list == null) {
-			list = getDLFolderData(id);
+			list = _getDLFolderData(id);
 		}
 
 		if (list == null) {
@@ -94,32 +95,6 @@ public class DocumentLibrarySimilarResultsContributor
 		);
 	}
 
-	@Reference(unbind = "-")
-	public void setAssetEntryLocalService(
-		AssetEntryLocalService assetEntryLocalService) {
-
-		_assetEntryLocalService = assetEntryLocalService;
-	}
-
-	@Reference(unbind = "-")
-	public void setDLFileEntryLocalService(
-		DLFileEntryLocalService dlFileEntryLocalService) {
-
-		_dlFileEntryLocalService = dlFileEntryLocalService;
-	}
-
-	@Reference(unbind = "-")
-	public void setDLFolderLocalService(
-		DLFolderLocalService dlFolderLocalService) {
-
-		_dlFolderLocalService = dlFolderLocalService;
-	}
-
-	@Reference(unbind = "-")
-	public void setHttpHelper(HttpHelper httpHelper) {
-		_httpHelper = httpHelper;
-	}
-
 	@Override
 	public void writeDestination(
 		DestinationBuilder destinationBuilder,
@@ -139,7 +114,7 @@ public class DocumentLibrarySimilarResultsContributor
 		destinationBuilder.replace(String.valueOf(id2), String.valueOf(id1));
 	}
 
-	protected List<?> getDLFileEntryData(Long id) {
+	private List<?> _getDLFileEntryData(Long id) {
 		DLFileEntry dlFileEntry = _dlFileEntryLocalService.fetchDLFileEntry(id);
 
 		if (dlFileEntry != null) {
@@ -150,7 +125,7 @@ public class DocumentLibrarySimilarResultsContributor
 		return null;
 	}
 
-	protected List<?> getDLFolderData(Long id) {
+	private List<?> _getDLFolderData(Long id) {
 		DLFolder dlFolder = _dlFolderLocalService.fetchDLFolder(id);
 
 		if (dlFolder != null) {
@@ -160,7 +135,7 @@ public class DocumentLibrarySimilarResultsContributor
 		return null;
 	}
 
-	protected long getFileEntryId(Object assetObject) {
+	private long _getFileEntryId(Object assetObject) {
 		if (assetObject instanceof FileEntry) {
 			FileEntry fileEntry = (FileEntry)assetObject;
 
@@ -172,7 +147,7 @@ public class DocumentLibrarySimilarResultsContributor
 		return dlFileEntry.getFileEntryId();
 	}
 
-	protected long getFolderId(Object assetObject) {
+	private long _getFolderId(Object assetObject) {
 		if (assetObject instanceof Folder) {
 			Folder folder = (Folder)assetObject;
 
@@ -186,19 +161,26 @@ public class DocumentLibrarySimilarResultsContributor
 
 	private Long _getId(String className, Object assetObject) {
 		if (className.equals(DLFileEntry.class.getName())) {
-			return getFileEntryId(assetObject);
+			return _getFileEntryId(assetObject);
 		}
 
 		if (className.equals(DLFolder.class.getName())) {
-			return getFolderId(assetObject);
+			return _getFolderId(assetObject);
 		}
 
 		return null;
 	}
 
+	@Reference
 	private AssetEntryLocalService _assetEntryLocalService;
+
+	@Reference
 	private DLFileEntryLocalService _dlFileEntryLocalService;
+
+	@Reference
 	private DLFolderLocalService _dlFolderLocalService;
+
+	@Reference
 	private HttpHelper _httpHelper;
 
 }

@@ -32,15 +32,19 @@ CommerceShipmentContentDisplayContext commerceShipmentContentDisplayContext = (C
 	>
 
 		<%
-		PortletURL rowURL = renderResponse.createRenderURL();
-
-		rowURL.setParameter("redirect", currentURL);
-		rowURL.setParameter("mvcRenderCommandName", "/commerce_shipment_content/view_commerce_shipment_items");
-		rowURL.setParameter("commerceShipmentId", String.valueOf(commerceShipment.getCommerceShipmentId()));
+		PortletURL rowURL = PortletURLBuilder.createRenderURL(
+			renderResponse
+		).setMVCRenderCommandName(
+			"/commerce_shipment_content/view_commerce_shipment_items"
+		).setRedirect(
+			currentURL
+		).setParameter(
+			"commerceShipmentId", commerceShipment.getCommerceShipmentId()
+		).buildPortletURL();
 		%>
 
 		<liferay-ui:search-container-column-text
-			cssClass="important table-list-title"
+			cssClass="font-weight-bold important table-list-title"
 			href="<%= rowURL %>"
 			name="shipment-number"
 			property="commerceShipmentId"
@@ -48,7 +52,7 @@ CommerceShipmentContentDisplayContext commerceShipmentContentDisplayContext = (C
 
 		<liferay-ui:search-container-column-text
 			name="customer-name"
-			value="<%= commerceShipmentContentDisplayContext.getCommerceShipmentAccountName(commerceShipment) %>"
+			value="<%= HtmlUtil.escape(commerceShipmentContentDisplayContext.getCommerceShipmentAccountName(commerceShipment)) %>"
 		/>
 
 		<liferay-ui:search-container-column-text

@@ -22,7 +22,7 @@ import com.liferay.portal.kernel.model.LayoutQueryStringComposite;
 import com.liferay.portal.kernel.model.VirtualLayoutConstants;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.spring.osgi.OSGiBeanProperties;
-import com.liferay.portal.kernel.util.HttpUtil;
+import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -76,13 +76,13 @@ public class VirtualLayoutFriendlyURLResolver implements FriendlyURLResolver {
 			return mainPath;
 		}
 
-		String actualURL = PortalUtil.getActualURL(
-			group.getGroupId(), privateLayout, mainPath, layoutFriendlyURL,
-			params, requestContext);
-
-		return HttpUtil.addParameter(
-			HttpUtil.removeParameter(actualURL, "p_v_l_s_g_id"), "p_v_l_s_g_id",
-			groupId);
+		return HttpComponentsUtil.addParameter(
+			HttpComponentsUtil.removeParameter(
+				PortalUtil.getActualURL(
+					group.getGroupId(), privateLayout, mainPath,
+					layoutFriendlyURL, params, requestContext),
+				"p_v_l_s_g_id"),
+			"p_v_l_s_g_id", groupId);
 	}
 
 	@Override
@@ -119,7 +119,7 @@ public class VirtualLayoutFriendlyURLResolver implements FriendlyURLResolver {
 				requestContext);
 
 		return new LayoutFriendlyURLComposite(
-			layoutQueryStringComposite.getLayout(), layoutFriendlyURL);
+			layoutQueryStringComposite.getLayout(), layoutFriendlyURL, false);
 	}
 
 	@Override

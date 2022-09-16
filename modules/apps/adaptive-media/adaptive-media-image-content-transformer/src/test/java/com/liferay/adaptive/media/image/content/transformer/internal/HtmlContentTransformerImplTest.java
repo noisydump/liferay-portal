@@ -24,22 +24,26 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
 
 /**
  * @author Alejandro Tardín
  * @author Sergio González
  */
-@RunWith(MockitoJUnitRunner.class)
 public class HtmlContentTransformerImplTest {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Before
 	public void setUp() throws PortalException {
@@ -183,15 +187,12 @@ public class HtmlContentTransformerImplTest {
 			"<whatever></whatever>"
 		);
 
-		StringBundler originalSB = new StringBundler(3);
-
-		originalSB.append("<img data-fileentryid=\"1989\" ");
-		originalSB.append(CharPool.NEW_LINE);
-		originalSB.append("src=\"adaptable\"/>");
-
 		Assert.assertEquals(
 			"<whatever></whatever>",
-			_htmlContentTransformerImpl.transform(originalSB.toString()));
+			_htmlContentTransformerImpl.transform(
+				StringBundler.concat(
+					"<img data-fileentryid=\"1989\" ", CharPool.NEW_LINE,
+					"src=\"adaptable\"/>")));
 	}
 
 	@Test
@@ -204,10 +205,6 @@ public class HtmlContentTransformerImplTest {
 			"<whatever></whatever>"
 		);
 
-		StringBundler expectedSB = new StringBundler(1);
-
-		expectedSB.append("<div><div><whatever></whatever></div></div><br/>");
-
 		StringBundler originalSB = new StringBundler(4);
 
 		originalSB.append("<div><div>");
@@ -216,7 +213,7 @@ public class HtmlContentTransformerImplTest {
 		originalSB.append("</div></div><br/>");
 
 		Assert.assertEquals(
-			expectedSB.toString(),
+			"<div><div><whatever></whatever></div></div><br/>",
 			_htmlContentTransformerImpl.transform(
 				StringUtil.toLowerCase(originalSB.toString())));
 	}
@@ -225,15 +222,11 @@ public class HtmlContentTransformerImplTest {
 		return text + StringPool.NEW_LINE + text;
 	}
 
-	@Mock
-	private AMImageHTMLTagFactory _amImageHTMLTagFactory;
-
-	@Mock
-	private DLAppLocalService _dlAppLocalService;
-
-	@Mock
-	private FileEntry _fileEntry;
-
+	private final AMImageHTMLTagFactory _amImageHTMLTagFactory = Mockito.mock(
+		AMImageHTMLTagFactory.class);
+	private final DLAppLocalService _dlAppLocalService = Mockito.mock(
+		DLAppLocalService.class);
+	private final FileEntry _fileEntry = Mockito.mock(FileEntry.class);
 	private final HtmlContentTransformerImpl _htmlContentTransformerImpl =
 		new HtmlContentTransformerImpl();
 

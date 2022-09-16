@@ -17,20 +17,21 @@ package com.liferay.site.teams.web.internal.display.context;
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.model.UserGroup;
+import com.liferay.portal.kernel.portlet.SearchDisplayStyleUtil;
+import com.liferay.portal.kernel.portlet.SearchOrderByUtil;
 import com.liferay.portal.kernel.service.UserGroupLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
-import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.service.persistence.constants.UserGroupFinderConstants;
 import com.liferay.portlet.usergroupsadmin.search.UserGroupDisplayTerms;
 import com.liferay.portlet.usergroupsadmin.search.UserGroupSearch;
+import com.liferay.site.teams.web.internal.constants.SiteTeamsPortletKeys;
 import com.liferay.users.admin.kernel.util.UsersAdminUtil;
 
 import java.util.LinkedHashMap;
-import java.util.List;
 
 import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
@@ -56,8 +57,9 @@ public class EditSiteTeamAssignmentsUserGroupsDisplayContext
 			return _displayStyle;
 		}
 
-		_displayStyle = ParamUtil.getString(
-			httpServletRequest, "displayStyle", "list");
+		_displayStyle = SearchDisplayStyleUtil.getDisplayStyle(
+			httpServletRequest, SiteTeamsPortletKeys.SITE_TEAMS,
+			"usergroup-display-style", "list");
 
 		return _displayStyle;
 	}
@@ -102,8 +104,9 @@ public class EditSiteTeamAssignmentsUserGroupsDisplayContext
 			return _orderByCol;
 		}
 
-		_orderByCol = ParamUtil.getString(
-			httpServletRequest, "orderByCol", "name");
+		_orderByCol = SearchOrderByUtil.getOrderByCol(
+			httpServletRequest, SiteTeamsPortletKeys.SITE_TEAMS,
+			"usergroup-order-by-col", "name");
 
 		return _orderByCol;
 	}
@@ -113,8 +116,9 @@ public class EditSiteTeamAssignmentsUserGroupsDisplayContext
 			return _orderByType;
 		}
 
-		_orderByType = ParamUtil.getString(
-			httpServletRequest, "orderByType", "asc");
+		_orderByType = SearchOrderByUtil.getOrderByType(
+			httpServletRequest, SiteTeamsPortletKeys.SITE_TEAMS,
+			"usergroup-order-by-type", "asc");
 
 		return _orderByType;
 	}
@@ -131,16 +135,11 @@ public class EditSiteTeamAssignmentsUserGroupsDisplayContext
 		SearchContainer<UserGroup> userGroupSearchContainer =
 			new UserGroupSearch(renderRequest, getEditTeamAssignmentsURL());
 
-		OrderByComparator<UserGroup> orderByComparator =
-			UsersAdminUtil.getUserGroupOrderByComparator(
-				getOrderByCol(), getOrderByType());
-
 		userGroupSearchContainer.setOrderByCol(getOrderByCol());
-		userGroupSearchContainer.setOrderByComparator(orderByComparator);
+		userGroupSearchContainer.setOrderByComparator(
+			UsersAdminUtil.getUserGroupOrderByComparator(
+				getOrderByCol(), getOrderByType()));
 		userGroupSearchContainer.setOrderByType(getOrderByType());
-
-		userGroupSearchContainer.setRowChecker(
-			new EmptyOnClickRowChecker(renderResponse));
 
 		UserGroupDisplayTerms searchTerms =
 			(UserGroupDisplayTerms)userGroupSearchContainer.getSearchTerms();
@@ -151,19 +150,18 @@ public class EditSiteTeamAssignmentsUserGroupsDisplayContext
 				getTeamId()
 			).build();
 
-		int userGroupsCount = UserGroupLocalServiceUtil.searchCount(
-			themeDisplay.getCompanyId(), searchTerms.getKeywords(),
-			userGroupParams);
+		userGroupSearchContainer.setResultsAndTotal(
+			() -> UserGroupLocalServiceUtil.search(
+				themeDisplay.getCompanyId(), searchTerms.getKeywords(),
+				userGroupParams, userGroupSearchContainer.getStart(),
+				userGroupSearchContainer.getEnd(),
+				userGroupSearchContainer.getOrderByComparator()),
+			UserGroupLocalServiceUtil.searchCount(
+				themeDisplay.getCompanyId(), searchTerms.getKeywords(),
+				userGroupParams));
 
-		userGroupSearchContainer.setTotal(userGroupsCount);
-
-		List<UserGroup> userGroups = UserGroupLocalServiceUtil.search(
-			themeDisplay.getCompanyId(), searchTerms.getKeywords(),
-			userGroupParams, userGroupSearchContainer.getStart(),
-			userGroupSearchContainer.getEnd(),
-			userGroupSearchContainer.getOrderByComparator());
-
-		userGroupSearchContainer.setResults(userGroups);
+		userGroupSearchContainer.setRowChecker(
+			new EmptyOnClickRowChecker(renderResponse));
 
 		_userGroupSearchContainer = userGroupSearchContainer;
 

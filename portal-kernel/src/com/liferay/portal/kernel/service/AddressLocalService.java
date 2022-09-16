@@ -80,23 +80,12 @@ public interface AddressLocalService
 	@Indexable(type = IndexableType.REINDEX)
 	public Address addAddress(Address address);
 
-	/**
-	 * @deprecated As of Cavanaugh (7.4.x)
-	 */
-	@Deprecated
-	public Address addAddress(
-			long userId, String className, long classPK, String street1,
-			String street2, String street3, String city, String zip,
-			long regionId, long countryId, long typeId, boolean mailing,
-			boolean primary, ServiceContext serviceContext)
-		throws PortalException;
-
 	@Indexable(type = IndexableType.REINDEX)
 	public Address addAddress(
 			String externalReferenceCode, long userId, String className,
 			long classPK, String name, String description, String street1,
 			String street2, String street3, String city, String zip,
-			long regionId, long countryId, long typeId, boolean mailing,
+			long regionId, long countryId, long listTypeId, boolean mailing,
 			boolean primary, String phoneNumber, ServiceContext serviceContext)
 		throws PortalException;
 
@@ -166,6 +155,9 @@ public interface AddressLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public <T> T dslQuery(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
@@ -244,6 +236,14 @@ public interface AddressLocalService
 	 * @return the matching address, or <code>null</code> if a matching address could not be found
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public Address fetchAddressByExternalReferenceCode(
+		long companyId, String externalReferenceCode);
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #fetchAddressByExternalReferenceCode(long, String)}
+	 */
+	@Deprecated
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public Address fetchAddressByReferenceCode(
 		long companyId, String externalReferenceCode);
 
@@ -269,6 +269,19 @@ public interface AddressLocalService
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public Address getAddress(long addressId) throws PortalException;
+
+	/**
+	 * Returns the address with the matching external reference code and company.
+	 *
+	 * @param companyId the primary key of the company
+	 * @param externalReferenceCode the address's external reference code
+	 * @return the matching address
+	 * @throws PortalException if a matching address could not be found
+	 */
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public Address getAddressByExternalReferenceCode(
+			long companyId, String externalReferenceCode)
+		throws PortalException;
 
 	/**
 	 * Returns the address with the matching UUID and company.
@@ -343,6 +356,15 @@ public interface AddressLocalService
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<Address> getTypeAddresses(
+		long companyId, String className, long classPK, long[] listTypeIds);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<Address> getTypeAddresses(
+		long companyId, String className, long classPK, long[] listTypeIds,
+		int start, int end, OrderByComparator<Address> orderByComparator);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public BaseModelSearchResult<Address> searchAddresses(
 			long companyId, String className, long classPK, String keywords,
 			LinkedHashMap<String, Object> params, int start, int end, Sort sort)
@@ -363,15 +385,15 @@ public interface AddressLocalService
 
 	public Address updateAddress(
 			long addressId, String street1, String street2, String street3,
-			String city, String zip, long regionId, long countryId, long typeId,
-			boolean mailing, boolean primary)
+			String city, String zip, long regionId, long countryId,
+			long listTypeId, boolean mailing, boolean primary)
 		throws PortalException;
 
 	@Indexable(type = IndexableType.REINDEX)
 	public Address updateAddress(
 			long addressId, String name, String description, String street1,
 			String street2, String street3, String city, String zip,
-			long regionId, long countryId, long typeId, boolean mailing,
+			long regionId, long countryId, long listTypeId, boolean mailing,
 			boolean primary, String phoneNumber)
 		throws PortalException;
 

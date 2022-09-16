@@ -14,6 +14,7 @@
 
 package com.liferay.portal.action;
 
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.audit.AuditMessage;
 import com.liferay.portal.kernel.audit.AuditRouterUtil;
@@ -34,7 +35,7 @@ import com.liferay.portal.kernel.service.PortletLocalServiceUtil;
 import com.liferay.portal.kernel.servlet.BufferCacheServletResponse;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ContentTypes;
-import com.liferay.portal.kernel.util.HttpUtil;
+import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -60,7 +61,6 @@ import java.util.Map;
 
 import javax.portlet.PortletMode;
 import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
 import javax.portlet.ResourceRequest;
 import javax.portlet.WindowState;
 
@@ -114,25 +114,26 @@ public class LayoutAction implements Action {
 				}
 
 				if (Validator.isNull(authLoginURL)) {
-					PortletURL loginURL = PortletURLFactoryUtil.create(
-						httpServletRequest, PortletKeys.LOGIN,
-						PortletRequest.RENDER_PHASE);
-
-					loginURL.setParameter(
-						"saveLastPath", Boolean.FALSE.toString());
-					loginURL.setParameter(
-						"mvcRenderCommandName", "/login/login");
-					loginURL.setPortletMode(PortletMode.VIEW);
-					loginURL.setWindowState(WindowState.MAXIMIZED);
-
-					authLoginURL = loginURL.toString();
+					authLoginURL = PortletURLBuilder.create(
+						PortletURLFactoryUtil.create(
+							httpServletRequest, PortletKeys.LOGIN,
+							PortletRequest.RENDER_PHASE)
+					).setMVCRenderCommandName(
+						"/login/login"
+					).setParameter(
+						"saveLastPath", false
+					).setPortletMode(
+						PortletMode.VIEW
+					).setWindowState(
+						WindowState.MAXIMIZED
+					).buildString();
 				}
 
-				authLoginURL = HttpUtil.setParameter(
+				authLoginURL = HttpComponentsUtil.setParameter(
 					authLoginURL, "p_p_id",
 					PropsValues.AUTH_LOGIN_PORTLET_NAME);
 
-				authLoginURL = HttpUtil.setParameter(
+				authLoginURL = HttpComponentsUtil.setParameter(
 					authLoginURL, redirectParam,
 					PortalUtil.getCurrentURL(httpServletRequest));
 
@@ -218,12 +219,12 @@ public class LayoutAction implements Action {
 		}
 
 		if (Validator.isNotNull(themeDisplay.getDoAsUserId())) {
-			forwardURL = HttpUtil.addParameter(
+			forwardURL = HttpComponentsUtil.addParameter(
 				forwardURL, "doAsUserId", themeDisplay.getDoAsUserId());
 		}
 
 		if (Validator.isNotNull(themeDisplay.getDoAsUserLanguageId())) {
-			forwardURL = HttpUtil.addParameter(
+			forwardURL = HttpComponentsUtil.addParameter(
 				forwardURL, "doAsUserLanguageId",
 				themeDisplay.getDoAsUserLanguageId());
 		}
@@ -277,7 +278,7 @@ public class LayoutAction implements Action {
 			HttpServletResponse httpServletResponse, long plid)
 		throws Exception {
 
-		HttpSession session = httpServletRequest.getSession();
+		HttpSession httpSession = httpServletRequest.getSession();
 
 		ThemeDisplay themeDisplay =
 			(ThemeDisplay)httpServletRequest.getAttribute(
@@ -294,13 +295,13 @@ public class LayoutAction implements Action {
 				return null;
 			}
 
-			Long previousLayoutPlid = (Long)session.getAttribute(
+			Long previousLayoutPlid = (Long)httpSession.getAttribute(
 				WebKeys.PREVIOUS_LAYOUT_PLID);
 
 			if ((previousLayoutPlid == null) ||
 				(layout.getPlid() != previousLayoutPlid.longValue())) {
 
-				session.setAttribute(
+				httpSession.setAttribute(
 					WebKeys.PREVIOUS_LAYOUT_PLID, layout.getPlid());
 
 				if (themeDisplay.isSignedIn() &&

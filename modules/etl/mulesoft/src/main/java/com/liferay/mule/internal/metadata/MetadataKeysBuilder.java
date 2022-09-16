@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
+ * Copyright (c) 2000-2021 Liferay, Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the Free
@@ -44,8 +44,71 @@ import org.slf4j.LoggerFactory;
  */
 public class MetadataKeysBuilder {
 
-	public Set<MetadataKey> buildMetadataKeys(
+	public Set<MetadataKey> buildClassNameMetadataKeys(
+			MetadataContext metadataContext)
+		throws ConnectionException, MetadataResolvingException {
+
+		Set<MetadataKey> metadataKeys = new HashSet<>();
+
+		JsonNode schemasJsonNode = jsonNodeReader.getDescendantJsonNode(
+			getOASJsonNode(metadataContext),
+			OASConstants.PATH_COMPONENTS_SCHEMAS);
+
+		Iterator<Map.Entry<String, JsonNode>> iterator =
+			schemasJsonNode.fields();
+
+		while (iterator.hasNext()) {
+			Map.Entry<String, JsonNode> entry = iterator.next();
+
+			JsonNode schemaJsonNode = entry.getValue();
+
+			JsonNode classNameJsonNode = jsonNodeReader.fetchDescendantJsonNode(
+				schemaJsonNode,
+				OASConstants.PATH_PROPERTIES_X_CLASS_NAME_DEFAULT);
+
+			if (!classNameJsonNode.isNull()) {
+				MetadataKeyBuilder metadataKeyBuilder =
+					MetadataKeyBuilder.newKey(classNameJsonNode.asText());
+
+				metadataKeys.add(metadataKeyBuilder.build());
+			}
+		}
+
+		return metadataKeys;
+	}
+
+	public Set<MetadataKey> buildEndpointMetadataKeys(
 			MetadataContext metadataContext, String operation)
+		throws ConnectionException, MetadataResolvingException {
+
+		Set<MetadataKey> metadataKeys = new HashSet<>();
+
+		JsonNode oasJsonNode = getOASJsonNode(metadataContext);
+
+		JsonNode pathsJsonNode = oasJsonNode.get(OASConstants.PATHS);
+
+		Iterator<Map.Entry<String, JsonNode>> pathsIterator =
+			pathsJsonNode.fields();
+
+		while (pathsIterator.hasNext()) {
+			Map.Entry<String, JsonNode> entry = pathsIterator.next();
+
+			JsonNode pathJsonNode = entry.getValue();
+
+			if (pathJsonNode.has(operation)) {
+				String path = entry.getKey();
+
+				MetadataKeyBuilder metadataKeyBuilder =
+					MetadataKeyBuilder.newKey(path);
+
+				metadataKeys.add(metadataKeyBuilder.build());
+			}
+		}
+
+		return metadataKeys;
+	}
+
+	protected JsonNode getOASJsonNode(MetadataContext metadataContext)
 		throws ConnectionException, MetadataResolvingException {
 
 		Optional<LiferayConnection> liferayConnectionOptional =
@@ -55,10 +118,8 @@ public class MetadataKeysBuilder {
 			LiferayConnection liferayConnection =
 				liferayConnectionOptional.get();
 
-			return getMetadataKeys(
-				jsonNodeReader.fromHttpResponse(
-					liferayConnection.getOpenAPISpecHttpResponse()),
-				operation);
+			return jsonNodeReader.fromHttpResponse(
+				liferayConnection.getOpenAPISpecHttpResponse());
 		}
 		catch (IOException ioException) {
 			logger.error(
@@ -78,34 +139,6 @@ public class MetadataKeysBuilder {
 				timeoutException.getMessage(), FailureCode.CONNECTION_FAILURE,
 				timeoutException);
 		}
-	}
-
-	protected Set<MetadataKey> getMetadataKeys(
-		JsonNode openAPISpecJsonNode, String operation) {
-
-		Set<MetadataKey> metadataKeys = new HashSet<>();
-
-		JsonNode pathsJsonNode = openAPISpecJsonNode.get(OASConstants.PATHS);
-
-		Iterator<Map.Entry<String, JsonNode>> pathsIterator =
-			pathsJsonNode.fields();
-
-		while (pathsIterator.hasNext()) {
-			Map.Entry<String, JsonNode> pathEntry = pathsIterator.next();
-
-			JsonNode pathJsonNode = pathEntry.getValue();
-
-			if (pathJsonNode.has(operation)) {
-				String path = pathEntry.getKey();
-
-				MetadataKeyBuilder metadataKeyBuilder =
-					MetadataKeyBuilder.newKey(path);
-
-				metadataKeys.add(metadataKeyBuilder.build());
-			}
-		}
-
-		return metadataKeys;
 	}
 
 	private static final Logger logger = LoggerFactory.getLogger(

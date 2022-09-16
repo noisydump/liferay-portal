@@ -34,6 +34,8 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.Validator;
+import com.liferay.template.info.item.provider.TemplateInfoItemFieldSetProvider;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -68,6 +70,9 @@ public class BlogsEntryInfoItemFieldValuesProvider
 			).infoFieldValues(
 				_infoItemFieldReaderFieldSetProvider.getInfoFieldValues(
 					BlogsEntry.class.getName(), blogsEntry)
+			).infoFieldValues(
+				_templateInfoItemFieldSetProvider.getInfoFieldValues(
+					BlogsEntry.class.getName(), blogsEntry)
 			).infoItemReference(
 				new InfoItemReference(
 					BlogsEntry.class.getName(), blogsEntry.getEntryId())
@@ -91,16 +96,22 @@ public class BlogsEntryInfoItemFieldValuesProvider
 				new InfoFieldValue<>(
 					BlogsEntryInfoItemFields.titleInfoField,
 					blogsEntry.getTitle()));
-
 			blogsEntryFieldValues.add(
 				new InfoFieldValue<>(
 					BlogsEntryInfoItemFields.subtitleInfoField,
 					blogsEntry.getSubtitle()));
-
 			blogsEntryFieldValues.add(
 				new InfoFieldValue<>(
 					BlogsEntryInfoItemFields.descriptionInfoField,
 					blogsEntry.getDescription()));
+			blogsEntryFieldValues.add(
+				new InfoFieldValue<>(
+					BlogsEntryInfoItemFields.createDateInfoField,
+					blogsEntry.getCreateDate()));
+			blogsEntryFieldValues.add(
+				new InfoFieldValue<>(
+					BlogsEntryInfoItemFields.modifiedDateInfoField,
+					blogsEntry.getModifiedDate()));
 
 			if (themeDisplay != null) {
 				WebImage smallWebImage = new WebImage(
@@ -117,8 +128,11 @@ public class BlogsEntryInfoItemFieldValuesProvider
 						BlogsEntryInfoItemFields.smallImageInfoField,
 						smallWebImage));
 
+				String coverImageURL = blogsEntry.getCoverImageURL(
+					themeDisplay);
+
 				WebImage coverWebImage = new WebImage(
-					blogsEntry.getCoverImageURL(themeDisplay),
+					coverImageURL,
 					new InfoItemReference(
 						FileEntry.class.getName(),
 						new ClassPKInfoItemIdentifier(
@@ -130,6 +144,19 @@ public class BlogsEntryInfoItemFieldValuesProvider
 					new InfoFieldValue<>(
 						BlogsEntryInfoItemFields.coverImageInfoField,
 						coverWebImage));
+
+				if (Validator.isNotNull(coverImageURL)) {
+					blogsEntryFieldValues.add(
+						new InfoFieldValue<>(
+							BlogsEntryInfoItemFields.previewImageInfoField,
+							coverWebImage));
+				}
+				else {
+					blogsEntryFieldValues.add(
+						new InfoFieldValue<>(
+							BlogsEntryInfoItemFields.previewImageInfoField,
+							smallWebImage));
+				}
 			}
 
 			blogsEntryFieldValues.add(
@@ -162,6 +189,10 @@ public class BlogsEntryInfoItemFieldValuesProvider
 			blogsEntryFieldValues.add(
 				new InfoFieldValue<>(
 					BlogsEntryInfoItemFields.displayDateInfoField,
+					blogsEntry.getDisplayDate()));
+			blogsEntryFieldValues.add(
+				new InfoFieldValue<>(
+					BlogsEntryInfoItemFields.publishDateInfoField,
 					blogsEntry.getDisplayDate()));
 
 			if (themeDisplay != null) {
@@ -216,6 +247,9 @@ public class BlogsEntryInfoItemFieldValuesProvider
 	@Reference
 	private InfoItemFieldReaderFieldSetProvider
 		_infoItemFieldReaderFieldSetProvider;
+
+	@Reference
+	private TemplateInfoItemFieldSetProvider _templateInfoItemFieldSetProvider;
 
 	@Reference
 	private UserLocalService _userLocalService;

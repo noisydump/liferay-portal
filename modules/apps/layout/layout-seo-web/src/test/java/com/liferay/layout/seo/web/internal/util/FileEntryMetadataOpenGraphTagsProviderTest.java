@@ -30,12 +30,15 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.Collections;
 import java.util.Locale;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 import org.mockito.Mockito;
@@ -44,6 +47,11 @@ import org.mockito.Mockito;
  * @author Adolfo Pérez
  */
 public class FileEntryMetadataOpenGraphTagsProviderTest {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Before
 	public void setUp() {
@@ -279,7 +287,7 @@ public class FileEntryMetadataOpenGraphTagsProviderTest {
 		Mockito.when(
 			_ddmStructureLocalService.getClassStructures(
 				Mockito.anyLong(), Mockito.anyLong(),
-				Mockito.any(OrderByComparator.class))
+				Mockito.nullable(OrderByComparator.class))
 		).thenReturn(
 			Collections.singletonList(Mockito.mock(DDMStructure.class))
 		);
@@ -314,7 +322,7 @@ public class FileEntryMetadataOpenGraphTagsProviderTest {
 		String expectedValue = StringUtil.randomString();
 
 		Mockito.when(
-			_value.getString(Mockito.any(Locale.class))
+			_value.getString(Mockito.nullable(Locale.class))
 		).thenReturn(
 			expectedValue
 		);

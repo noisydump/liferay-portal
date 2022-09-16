@@ -24,6 +24,8 @@ import com.liferay.portal.kernel.exception.GroupParentException;
 import com.liferay.portal.kernel.exception.LocaleException;
 import com.liferay.portal.kernel.exception.NoSuchResourcePermissionException;
 import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
@@ -60,10 +62,11 @@ import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.FriendlyURLNormalizer;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.HttpUtil;
+import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.test.rule.Inject;
@@ -175,6 +178,21 @@ public class GroupServiceTest {
 		Assert.assertEquals(
 			parentGroup.getGroupId(),
 			childGroupStagingGroup.getParentGroupId());
+	}
+
+	@Test
+	public void testChangeLocaleFromCurrentToAvailableAndBackAgain()
+		throws Exception {
+
+		_group = GroupTestUtil.addGroup(GroupConstants.DEFAULT_PARENT_GROUP_ID);
+
+		_testUpdateDisplaySettings(
+			_group.getGroupId(), Arrays.asList(LocaleUtil.SPAIN, LocaleUtil.US),
+			Arrays.asList(LocaleUtil.US), LocaleUtil.US, false);
+		_testUpdateDisplaySettings(
+			_group.getGroupId(), Arrays.asList(LocaleUtil.SPAIN, LocaleUtil.US),
+			Arrays.asList(LocaleUtil.SPAIN, LocaleUtil.US), LocaleUtil.US,
+			false);
 	}
 
 	@Test
@@ -509,6 +527,23 @@ public class GroupServiceTest {
 
 		_groupService.updateFriendlyURL(
 			_group.getGroupId(), "/" + _group.getGroupId());
+	}
+
+	@Test(expected = GroupFriendlyURLException.class)
+	public void testFriendlyURLSetToLanguageKey() throws Exception {
+		_group = GroupTestUtil.addGroup();
+
+		Locale locale = LocaleUtil.US;
+
+		String languageId = StringUtil.toLowerCase(
+			LocaleUtil.toLanguageId(locale));
+
+		String i18nPathLanguageId =
+			StringPool.SLASH +
+				PortalUtil.getI18nPathLanguageId(locale, languageId);
+
+		_groupService.updateFriendlyURL(
+			_group.getGroupId(), i18nPathLanguageId);
 	}
 
 	@Test(expected = GroupFriendlyURLException.class)
@@ -896,7 +931,7 @@ public class GroupServiceTest {
 		themeDisplay.setSiteGroupId(_group.getGroupId());
 
 		String groupFriendlyURL = _portal.getGroupFriendlyURL(
-			_group.getPublicLayoutSet(), themeDisplay);
+			_group.getPublicLayoutSet(), themeDisplay, false, false);
 
 		Assert.assertFalse(
 			groupFriendlyURL + " should not contain " +
@@ -928,15 +963,19 @@ public class GroupServiceTest {
 
 	@Test
 	public void testInvalidChangeAvailableLanguageIds() throws Exception {
+		_group = GroupTestUtil.addGroup(GroupConstants.DEFAULT_PARENT_GROUP_ID);
+
 		_testUpdateDisplaySettings(
-			Arrays.asList(LocaleUtil.SPAIN, LocaleUtil.US),
+			_group.getGroupId(), Arrays.asList(LocaleUtil.SPAIN, LocaleUtil.US),
 			Arrays.asList(LocaleUtil.GERMANY, LocaleUtil.US), null, true);
 	}
 
 	@Test
 	public void testInvalidChangeDefaultLanguageId() throws Exception {
+		_group = GroupTestUtil.addGroup(GroupConstants.DEFAULT_PARENT_GROUP_ID);
+
 		_testUpdateDisplaySettings(
-			Arrays.asList(LocaleUtil.SPAIN, LocaleUtil.US),
+			_group.getGroupId(), Arrays.asList(LocaleUtil.SPAIN, LocaleUtil.US),
 			Arrays.asList(LocaleUtil.SPAIN, LocaleUtil.US), LocaleUtil.GERMANY,
 			true);
 	}
@@ -1015,7 +1054,7 @@ public class GroupServiceTest {
 
 		_groups.addFirst(group);
 
-		Layout layout = LayoutTestUtil.addLayout(group);
+		Layout layout = LayoutTestUtil.addTypePortletLayout(group);
 
 		Assert.assertFalse(layout.hasScopeGroup());
 
@@ -1180,7 +1219,7 @@ public class GroupServiceTest {
 			_group.getGroupId(), friendlyURL);
 
 		Assert.assertEquals(
-			friendlyURL, HttpUtil.decodeURL(_group.getFriendlyURL()));
+			friendlyURL, HttpComponentsUtil.decodeURL(_group.getFriendlyURL()));
 	}
 
 	@Test
@@ -1226,21 +1265,27 @@ public class GroupServiceTest {
 
 	@Test
 	public void testValidChangeAvailableLanguageIds() throws Exception {
+		_group = GroupTestUtil.addGroup(GroupConstants.DEFAULT_PARENT_GROUP_ID);
+
 		_testUpdateDisplaySettings(
+			_group.getGroupId(),
 			Arrays.asList(LocaleUtil.GERMANY, LocaleUtil.SPAIN, LocaleUtil.US),
 			Arrays.asList(LocaleUtil.SPAIN, LocaleUtil.US), null, false);
 	}
 
 	@Test
 	public void testValidChangeDefaultLanguageId() throws Exception {
+		_group = GroupTestUtil.addGroup(GroupConstants.DEFAULT_PARENT_GROUP_ID);
+
 		_testUpdateDisplaySettings(
+			_group.getGroupId(),
 			Arrays.asList(LocaleUtil.GERMANY, LocaleUtil.SPAIN, LocaleUtil.US),
 			Arrays.asList(LocaleUtil.GERMANY, LocaleUtil.SPAIN, LocaleUtil.US),
 			LocaleUtil.GERMANY, false);
 	}
 
 	private Group _addScopeGroup(Group group) throws Exception {
-		Layout scopeLayout = LayoutTestUtil.addLayout(group);
+		Layout scopeLayout = LayoutTestUtil.addTypePortletLayout(group);
 
 		return _groupLocalService.addGroup(
 			TestPropsValues.getUserId(), GroupConstants.DEFAULT_PARENT_GROUP_ID,
@@ -1324,7 +1369,7 @@ public class GroupServiceTest {
 	}
 
 	private void _testUpdateDisplaySettings(
-			Collection<Locale> portalAvailableLocales,
+			long groupId, Collection<Locale> portalAvailableLocales,
 			Collection<Locale> groupAvailableLocales, Locale groupDefaultLocale,
 			boolean expectFailure)
 		throws Exception {
@@ -1335,15 +1380,17 @@ public class GroupServiceTest {
 			TestPropsValues.getCompanyId(), portalAvailableLocales,
 			LocaleUtil.getDefault());
 
-		_group = GroupTestUtil.addGroup(GroupConstants.DEFAULT_PARENT_GROUP_ID);
-
 		try {
 			GroupTestUtil.updateDisplaySettings(
-				_group.getGroupId(), groupAvailableLocales, groupDefaultLocale);
+				groupId, groupAvailableLocales, groupDefaultLocale);
 
 			Assert.assertFalse(expectFailure);
 		}
 		catch (LocaleException localeException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(localeException);
+			}
+
 			Assert.assertTrue(expectFailure);
 		}
 		finally {
@@ -1352,6 +1399,9 @@ public class GroupServiceTest {
 				LocaleUtil.getDefault());
 		}
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		GroupServiceTest.class);
 
 	@Inject
 	private AssetTagLocalService _assetTagLocalService;

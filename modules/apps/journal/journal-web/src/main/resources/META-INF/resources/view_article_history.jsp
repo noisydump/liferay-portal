@@ -18,6 +18,8 @@
 
 <%
 JournalArticle article = journalDisplayContext.getArticle();
+
+Map<String, Object> componentContext = journalDisplayContext.getComponentContext();
 %>
 
 <c:choose>
@@ -44,15 +46,12 @@ JournalArticle article = journalDisplayContext.getArticle();
 			navigationItems="<%= journalHistoryDisplayContext.getNavigationItems() %>"
 		/>
 
-		<clay:management-toolbar-v2
-			displayContext="<%= journalHistoryManagementToolbarDisplayContext %>"
+		<clay:management-toolbar
+			managementToolbarDisplayContext="<%= journalHistoryManagementToolbarDisplayContext %>"
+			propsTransformer="js/ArticleHistoryManagementToolbarPropsTransformer"
 		/>
 
-		<%
-		PortletURL portletURL = journalHistoryDisplayContext.getPortletURL();
-		%>
-
-		<aui:form action="<%= portletURL.toString() %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="fm">
+		<aui:form action="<%= journalHistoryDisplayContext.getPortletURL() %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="fm">
 			<aui:input name="referringPortletResource" type="hidden" value="<%= journalHistoryDisplayContext.getReferringPortletResource() %>" />
 			<aui:input name="groupId" type="hidden" value="<%= String.valueOf(article.getGroupId()) %>" />
 
@@ -78,7 +77,7 @@ JournalArticle article = journalDisplayContext.getArticle();
 						<c:when test='<%= Objects.equals(journalHistoryDisplayContext.getDisplayStyle(), "descriptive") %>'>
 							<liferay-ui:search-container-column-text>
 								<liferay-ui:user-portrait
-									userId="<%= articleVersion.getUserId() %>"
+									userId="<%= articleVersion.getStatusByUserId() %>"
 								/>
 							</liferay-ui:search-container-column-text>
 
@@ -93,7 +92,7 @@ JournalArticle article = journalDisplayContext.getArticle();
 								%>
 
 								<h6 class="text-default">
-									<liferay-ui:message arguments="<%= new String[] {HtmlUtil.escape(articleVersion.getUserName()), modifiedDateDescription} %>" key="x-modified-x-ago" />
+									<liferay-ui:message arguments="<%= new String[] {HtmlUtil.escape(articleVersion.getStatusByUserName()), modifiedDateDescription} %>" key="x-modified-x-ago" />
 								</h6>
 
 								<h5>
@@ -107,8 +106,13 @@ JournalArticle article = journalDisplayContext.getArticle();
 
 							<liferay-ui:search-container-column-text>
 								<clay:dropdown-actions
-									defaultEventHandler="<%= JournalWebConstants.JOURNAL_ELEMENTS_DEFAULT_EVENT_HANDLER %>"
+									additionalProps='<%=
+										HashMapBuilder.<String, Object>put(
+											"trashEnabled", componentContext.get("trashEnabled")
+										).build()
+									%>'
 									dropdownItems="<%= journalDisplayContext.getArticleHistoryActionDropdownItems(articleVersion) %>"
+									propsTransformer="js/ElementsDefaultPropsTransformer"
 								/>
 							</liferay-ui:search-container-column-text>
 						</c:when>
@@ -160,13 +164,18 @@ JournalArticle article = journalDisplayContext.getArticle();
 							<liferay-ui:search-container-column-text
 								cssClass="table-cell-expand-smallest table-cell-minw-100"
 								name="author"
-								value="<%= HtmlUtil.escape(PortalUtil.getUserName(articleVersion)) %>"
+								value="<%= HtmlUtil.escape(articleVersion.getStatusByUserName()) %>"
 							/>
 
 							<liferay-ui:search-container-column-text>
 								<clay:dropdown-actions
-									defaultEventHandler="<%= JournalWebConstants.JOURNAL_ELEMENTS_DEFAULT_EVENT_HANDLER %>"
+									additionalProps='<%=
+										HashMapBuilder.<String, Object>put(
+											"trashEnabled", componentContext.get("trashEnabled")
+										).build()
+									%>'
 									dropdownItems="<%= journalDisplayContext.getArticleHistoryActionDropdownItems(articleVersion) %>"
+									propsTransformer="js/ElementsDefaultPropsTransformer"
 								/>
 							</liferay-ui:search-container-column-text>
 						</c:when>
@@ -179,15 +188,5 @@ JournalArticle article = journalDisplayContext.getArticle();
 				/>
 			</liferay-ui:search-container>
 		</aui:form>
-
-		<liferay-frontend:component
-			componentId="<%= JournalWebConstants.JOURNAL_ELEMENTS_DEFAULT_EVENT_HANDLER %>"
-			module="js/ElementsDefaultEventHandler.es"
-		/>
-
-		<liferay-frontend:component
-			componentId="<%= journalHistoryManagementToolbarDisplayContext.getDefaultEventHandler() %>"
-			module="js/ArticleHistoryManagementToolbarDefaultEventHandler.es"
-		/>
 	</c:otherwise>
 </c:choose>

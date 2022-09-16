@@ -14,8 +14,8 @@
 
 package com.liferay.portal.search.internal.asset;
 
-import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
+import com.liferay.portal.kernel.search.SearchEngineHelper;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.search.asset.SearchableAssetClassNamesProvider;
 
@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Bryan Engler
@@ -36,20 +37,40 @@ public class SearchableAssetClassNamesProviderImpl
 		List<String> classNames = new ArrayList<>();
 
 		List<AssetRendererFactory<?>> assetRendererFactories =
-			AssetRendererFactoryRegistryUtil.getAssetRendererFactories(
-				companyId);
+			assetRendererFactoryRegistry.getAssetRendererFactories(companyId);
 
 		for (AssetRendererFactory<?> assetRendererFactory :
 				assetRendererFactories) {
 
-			if (!assetRendererFactory.isSearchable()) {
-				continue;
-			}
+			if (assetRendererFactory.isSearchable()) {
+				String className = assetRendererFactory.getClassName();
 
-			classNames.add(assetRendererFactory.getClassName());
+				if (ArrayUtil.contains(
+						searchEngineHelper.getEntryClassNames(), className,
+						false)) {
+
+					classNames.add(className);
+				}
+			}
 		}
 
-		return ArrayUtil.toStringArray(classNames);
+		for (String searchEngineHelperEntryClassName :
+				searchEngineHelper.getEntryClassNames()) {
+
+			if (searchEngineHelperEntryClassName.startsWith(
+					"com.liferay.object.model.ObjectDefinition#")) {
+
+				classNames.add(searchEngineHelperEntryClassName);
+			}
+		}
+
+		return classNames.toArray(new String[0]);
 	}
+
+	@Reference
+	protected AssetRendererFactoryRegistry assetRendererFactoryRegistry;
+
+	@Reference
+	protected SearchEngineHelper searchEngineHelper;
 
 }

@@ -36,8 +36,6 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
-import com.liferay.portal.kernel.test.rule.DataGuard;
-import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.CompanyTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
@@ -60,6 +58,7 @@ import org.frutilla.FrutillaRule;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -69,7 +68,6 @@ import org.junit.runner.RunWith;
  * @author Igor Beslic
  * @author Alessio Antonio Rendina
  */
-@DataGuard(scope = DataGuard.Scope.METHOD)
 @RunWith(Arquillian.class)
 public class CPInstanceHelperTest {
 
@@ -80,13 +78,16 @@ public class CPInstanceHelperTest {
 			new LiferayIntegrationTestRule(),
 			PermissionCheckerMethodTestRule.INSTANCE);
 
+	@BeforeClass
+	public static void setUpClass() throws Exception {
+		_company = CompanyTestUtil.addCompany();
+	}
+
 	@Before
 	public void setUp() throws Exception {
-		_company = CompanyTestUtil.addCompany();
-
 		_commerceCatalog = CommerceCatalogLocalServiceUtil.addCommerceCatalog(
-			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			LocaleUtil.US.getDisplayLanguage(), null,
+			null, RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+			LocaleUtil.US.getDisplayLanguage(),
 			ServiceContextTestUtil.getServiceContext(_company.getGroupId()));
 	}
 
@@ -337,28 +338,24 @@ public class CPInstanceHelperTest {
 				_commerceCatalog.getGroupId(), cpDefinition.getCPDefinitionId(),
 				cpOption.getCPOptionId());
 
-		Map<Long, List<Long>>
-			cpDefinitionOptionRelIdCPDefinitionOptionValueRelIds =
-				HashMapBuilder.<Long, List<Long>>put(
-					cpDefinitionOptionRel.getCPDefinitionOptionRelId(),
-					() -> {
-						List<CPDefinitionOptionValueRel>
-							cpDefinitionOptionValueRels =
-								cpDefinitionOptionRel.
-									getCPDefinitionOptionValueRels();
-
-						CPDefinitionOptionValueRel cpDefinitionOptionValueRel =
-							cpDefinitionOptionValueRels.get(0);
-
-						return Arrays.asList(
-							cpDefinitionOptionValueRel.
-								getCPDefinitionOptionValueRelId());
-					}
-				).build();
-
 		CPTestUtil.addCPDefinitionCPInstance(
 			cpDefinition.getCPDefinitionId(),
-			cpDefinitionOptionRelIdCPDefinitionOptionValueRelIds);
+			HashMapBuilder.<Long, List<Long>>put(
+				cpDefinitionOptionRel.getCPDefinitionOptionRelId(),
+				() -> {
+					List<CPDefinitionOptionValueRel>
+						cpDefinitionOptionValueRels =
+							cpDefinitionOptionRel.
+								getCPDefinitionOptionValueRels();
+
+					CPDefinitionOptionValueRel cpDefinitionOptionValueRel =
+						cpDefinitionOptionValueRels.get(0);
+
+					return Arrays.asList(
+						cpDefinitionOptionValueRel.
+							getCPDefinitionOptionValueRelId());
+				}
+			).build());
 
 		List<CPInstance> approvedCPDefinitionInstances =
 			_cpInstanceLocalService.getCPDefinitionInstances(
@@ -410,17 +407,17 @@ public class CPInstanceHelperTest {
 			cpDefinitionOptionRel2);
 
 		Map<CPDefinitionOptionRel, List<CPDefinitionOptionValueRel>>
-			cpDefinitionOptionRelsMap =
-				_cpInstanceHelper.getCPDefinitionOptionRelsMap(
+			cpDefinitionOptionValueRelsMap =
+				_cpInstanceHelper.getCPDefinitionOptionValueRelsMap(
 					cpDefinition.getCPDefinitionId(), true, true);
 
-		Assert.assertNotNull(cpDefinitionOptionRelsMap);
+		Assert.assertNotNull(cpDefinitionOptionValueRelsMap);
 		Assert.assertEquals(
-			cpDefinitionOptionRelsMap.toString(), 2,
-			cpDefinitionOptionRelsMap.size());
+			cpDefinitionOptionValueRelsMap.toString(), 2,
+			cpDefinitionOptionValueRelsMap.size());
 
 		List<CPDefinitionOptionRel> keys = new ArrayList<>(
-			cpDefinitionOptionRelsMap.keySet());
+			cpDefinitionOptionValueRelsMap.keySet());
 
 		CPDefinitionOptionRel orderedCPDefinitionOptionRel1 = keys.get(0);
 		CPDefinitionOptionRel orderedCPDefinitionOptionRel2 = keys.get(1);
@@ -467,17 +464,17 @@ public class CPInstanceHelperTest {
 			cpDefinitionOptionRel2);
 
 		Map<CPDefinitionOptionRel, List<CPDefinitionOptionValueRel>>
-			cpDefinitionOptionRelsMap =
-				_cpInstanceHelper.getCPDefinitionOptionRelsMap(
+			cpDefinitionOptionValueRelsMap =
+				_cpInstanceHelper.getCPDefinitionOptionValueRelsMap(
 					cpDefinition.getCPDefinitionId(), true, true);
 
-		Assert.assertNotNull(cpDefinitionOptionRelsMap);
+		Assert.assertNotNull(cpDefinitionOptionValueRelsMap);
 		Assert.assertEquals(
-			cpDefinitionOptionRelsMap.toString(), 2,
-			cpDefinitionOptionRelsMap.size());
+			cpDefinitionOptionValueRelsMap.toString(), 2,
+			cpDefinitionOptionValueRelsMap.size());
 
 		List<CPDefinitionOptionRel> keys = new ArrayList<>(
-			cpDefinitionOptionRelsMap.keySet());
+			cpDefinitionOptionValueRelsMap.keySet());
 
 		CPDefinitionOptionRel orderedCPDefinitionOptionRel1 = keys.get(0);
 		CPDefinitionOptionRel orderedCPDefinitionOptionRel2 = keys.get(1);
@@ -517,14 +514,10 @@ public class CPInstanceHelperTest {
 
 		while (iterator.hasNext()) {
 			String optionKey = iterator.next();
-			sb.append(StringPool.OPEN_CURLY_BRACE);
-			sb.append("\"key\":");
-			sb.append(StringPool.QUOTE);
+
+			sb.append("{\"key\":\"");
 			sb.append(optionKey);
-			sb.append(StringPool.QUOTE);
-			sb.append(StringPool.COMMA);
-			sb.append("\"value\":");
-			sb.append(StringPool.OPEN_BRACKET);
+			sb.append("\",\"value\":[");
 
 			List<String> optionValues =
 				cpDefinitionOptionRelKeysCPDefinitionOptionValueRelKeys.get(
@@ -557,13 +550,12 @@ public class CPInstanceHelperTest {
 		return sb.toString();
 	}
 
+	private static Company _company;
+
 	private CommerceCatalog _commerceCatalog;
 
 	@Inject
 	private CommerceCatalogLocalService _commerceCatalogLocalService;
-
-	@DeleteAfterTestRun
-	private Company _company;
 
 	@Inject
 	private CPDefinitionLocalService _cpDefinitionLocalService;

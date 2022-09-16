@@ -14,7 +14,7 @@
 
 package com.liferay.users.admin.web.internal.portlet.action;
 
-import com.liferay.petra.lang.SafeClosable;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.portal.kernel.exception.NoSuchOrganizationException;
 import com.liferay.portal.kernel.exception.RequiredOrganizationException;
 import com.liferay.portal.kernel.exception.RequiredUserException;
@@ -77,8 +77,8 @@ public class DeleteOrganizationsAndUsersMVCActionCommand
 		throws Exception {
 
 		try {
-			try (SafeClosable safeClosable =
-					ProxyModeThreadLocal.setWithSafeClosable(true)) {
+			try (SafeCloseable safeCloseable =
+					ProxyModeThreadLocal.setWithSafeCloseable(true)) {
 
 				deleteOrganizations(actionRequest);
 				deleteUsers(actionRequest);
@@ -110,23 +110,13 @@ public class DeleteOrganizationsAndUsersMVCActionCommand
 		}
 	}
 
-	@Reference(unbind = "-")
-	protected void setOrganizationService(
-		OrganizationService organizationService) {
-
-		_organizationService = organizationService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setUserService(UserService userService) {
-		_userService = userService;
-	}
-
+	@Reference
 	private OrganizationService _organizationService;
 
 	@Reference
 	private Portal _portal;
 
+	@Reference
 	private UserService _userService;
 
 }

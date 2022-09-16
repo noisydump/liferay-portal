@@ -31,8 +31,7 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.ProxyFactory;
 import com.liferay.portal.kernel.util.ProxyUtil;
-import com.liferay.registry.BasicRegistryImpl;
-import com.liferay.registry.RegistryUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.io.Serializable;
 
@@ -46,6 +45,8 @@ import java.util.Set;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 import org.osgi.framework.BundleContext;
@@ -55,6 +56,11 @@ import org.osgi.framework.Filter;
  * @author Preston Crary
  */
 public class FinderCacheImplTest {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@BeforeClass
 	public static void setUpClass() {
@@ -74,8 +80,6 @@ public class FinderCacheImplTest {
 		_notSerializedMultiVMPool = (MultiVMPool)ProxyUtil.newProxyInstance(
 			_classLoader, new Class<?>[] {MultiVMPool.class},
 			new MultiVMPoolInvocationHandler(_classLoader, false));
-
-		RegistryUtil.setRegistry(new BasicRegistryImpl());
 
 		CacheKeyGeneratorUtil cacheKeyGeneratorUtil =
 			new CacheKeyGeneratorUtil();
@@ -194,18 +198,14 @@ public class FinderCacheImplTest {
 
 		finderCache.putResult(_finderPath, _KEY1, values);
 
-		Object result = finderCache.getResult(_finderPath, _KEY1);
-
-		Assert.assertEquals(values, result);
+		Assert.assertEquals(values, finderCache.getResult(_finderPath, _KEY1));
 
 		map.put("c", new TestBaseModel("c"));
 
 		finderCache.putResult(
 			_finderPath, _KEY1, new ArrayList<>(map.values()));
 
-		result = finderCache.getResult(_finderPath, _KEY1);
-
-		Assert.assertNull(result);
+		Assert.assertNull(finderCache.getResult(_finderPath, _KEY1));
 	}
 
 	private FinderCacheImpl _activateFinderCache(MultiVMPool multiVMPool) {
@@ -266,6 +266,11 @@ public class FinderCacheImplTest {
 
 		@Override
 		public Object clone() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public TestBaseModel cloneWithOriginalValues() {
 			throw new UnsupportedOperationException();
 		}
 

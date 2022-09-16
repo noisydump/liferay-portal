@@ -1,0 +1,47 @@
+definition {
+
+	macro addAccountEntry {
+		Variables.assertDefined(parameterList = "${accountEntryName},${accountEntryType}");
+
+		if (!(isSet(creatorEmailAddress))) {
+			var creatorEmailAddress = "test@liferay.com";
+		}
+
+		if (!(isSet(creatorPassword))) {
+			var creatorPassword = "test";
+		}
+
+		if (!(isSet(accountEntryDescription))) {
+			var accountEntryDescription = "Account Entry Description";
+		}
+
+		var accountEntryStatus = JSONAccountEntrySetter.setStatus(accountEntryStatus = "${accountEntryStatus}");
+		var accountEntryType = JSONAccountEntrySetter.setType(accountEntryType = "${accountEntryType}");
+
+		JSONAccountEntryAPI._addAccountEntry(
+			accountEntryDescription = "${accountEntryDescription}",
+			accountEntryName = "${accountEntryName}",
+			accountEntryStatus = "${accountEntryStatus}",
+			accountEntryType = "${accountEntryType}",
+			creatorEmailAddress = "${creatorEmailAddress}",
+			creatorPassword = "${creatorPassword}");
+
+		if (isSet(externalReferenceCode)) {
+			JSONAccountEntryAPI._setAccountExternalReferenceCode(
+				accountEntryName = "${accountEntryName}",
+				externalReferenceCode = "${externalReferenceCode}");
+		}
+	}
+
+	macro addAccountEntryOrganization {
+		Variables.assertDefined(parameterList = "${accountEntryName},${organizationName}");
+
+		var accountEntryId = JSONAccountEntryAPI._getAccountEntryId(accountEntryName = "${accountEntryName}");
+		var organizationId = JSONOrganization.getOrganizationIdByName(organizationName = "${organizationName}");
+
+		JSONAccountEntryAPI._addAccountEntryOrganization(
+			accountEntryId = "${accountEntryId}",
+			organizationId = "${organizationId}");
+	}
+
+}

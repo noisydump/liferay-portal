@@ -17,6 +17,7 @@ package com.liferay.commerce.shipping.engine.fixed.model;
 import com.liferay.portal.kernel.bean.AutoEscape;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.GroupedModel;
+import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
 
 import java.math.BigDecimal;
@@ -38,7 +39,7 @@ import org.osgi.annotation.versioning.ProviderType;
  */
 @ProviderType
 public interface CommerceShippingFixedOptionRelModel
-	extends BaseModel<CommerceShippingFixedOptionRel>, GroupedModel,
+	extends BaseModel<CommerceShippingFixedOptionRel>, GroupedModel, MVCCModel,
 			ShardedModel {
 
 	/*
@@ -60,6 +61,22 @@ public interface CommerceShippingFixedOptionRelModel
 	 * @param primaryKey the primary key of this commerce shipping fixed option rel
 	 */
 	public void setPrimaryKey(long primaryKey);
+
+	/**
+	 * Returns the mvcc version of this commerce shipping fixed option rel.
+	 *
+	 * @return the mvcc version of this commerce shipping fixed option rel
+	 */
+	@Override
+	public long getMvccVersion();
+
+	/**
+	 * Sets the mvcc version of this commerce shipping fixed option rel.
+	 *
+	 * @param mvccVersion the mvcc version of this commerce shipping fixed option rel
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion);
 
 	/**
 	 * Returns the commerce shipping fixed option rel ID of this commerce shipping fixed option rel.
@@ -234,32 +251,32 @@ public interface CommerceShippingFixedOptionRelModel
 		long commerceInventoryWarehouseId);
 
 	/**
-	 * Returns the commerce country ID of this commerce shipping fixed option rel.
+	 * Returns the country ID of this commerce shipping fixed option rel.
 	 *
-	 * @return the commerce country ID of this commerce shipping fixed option rel
+	 * @return the country ID of this commerce shipping fixed option rel
 	 */
-	public long getCommerceCountryId();
+	public long getCountryId();
 
 	/**
-	 * Sets the commerce country ID of this commerce shipping fixed option rel.
+	 * Sets the country ID of this commerce shipping fixed option rel.
 	 *
-	 * @param commerceCountryId the commerce country ID of this commerce shipping fixed option rel
+	 * @param countryId the country ID of this commerce shipping fixed option rel
 	 */
-	public void setCommerceCountryId(long commerceCountryId);
+	public void setCountryId(long countryId);
 
 	/**
-	 * Returns the commerce region ID of this commerce shipping fixed option rel.
+	 * Returns the region ID of this commerce shipping fixed option rel.
 	 *
-	 * @return the commerce region ID of this commerce shipping fixed option rel
+	 * @return the region ID of this commerce shipping fixed option rel
 	 */
-	public long getCommerceRegionId();
+	public long getRegionId();
 
 	/**
-	 * Sets the commerce region ID of this commerce shipping fixed option rel.
+	 * Sets the region ID of this commerce shipping fixed option rel.
 	 *
-	 * @param commerceRegionId the commerce region ID of this commerce shipping fixed option rel
+	 * @param regionId the region ID of this commerce shipping fixed option rel
 	 */
-	public void setCommerceRegionId(long commerceRegionId);
+	public void setRegionId(long regionId);
 
 	/**
 	 * Returns the zip of this commerce shipping fixed option rel.
@@ -345,5 +362,8 @@ public interface CommerceShippingFixedOptionRelModel
 	 * @param ratePercentage the rate percentage of this commerce shipping fixed option rel
 	 */
 	public void setRatePercentage(double ratePercentage);
+
+	@Override
+	public CommerceShippingFixedOptionRel cloneWithOriginalValues();
 
 }

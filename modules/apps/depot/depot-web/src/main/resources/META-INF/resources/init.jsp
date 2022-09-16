@@ -33,6 +33,7 @@ page import="com.liferay.asset.auto.tagger.configuration.AssetAutoTaggerConfigur
 page import="com.liferay.depot.application.DepotApplication" %><%@
 page import="com.liferay.depot.exception.DepotEntryGroupRelToGroupException" %><%@
 page import="com.liferay.depot.exception.DepotEntryNameException" %><%@
+page import="com.liferay.depot.exception.DepotEntryStagedException" %><%@
 page import="com.liferay.depot.model.DepotEntry" %><%@
 page import="com.liferay.depot.model.DepotEntryGroupRel" %><%@
 page import="com.liferay.depot.web.internal.constants.DepotAdminWebKeys" %><%@
@@ -40,6 +41,7 @@ page import="com.liferay.depot.web.internal.constants.DepotEntryConstants" %><%@
 page import="com.liferay.depot.web.internal.constants.DepotPortletKeys" %><%@
 page import="com.liferay.depot.web.internal.constants.DepotScreenNavigationEntryConstants" %><%@
 page import="com.liferay.depot.web.internal.constants.SharingWebKeys" %><%@
+page import="com.liferay.depot.web.internal.display.context.DepotAdminDLDisplayContext" %><%@
 page import="com.liferay.depot.web.internal.display.context.DepotAdminDetailsDisplayContext" %><%@
 page import="com.liferay.depot.web.internal.display.context.DepotAdminDisplayContext" %><%@
 page import="com.liferay.depot.web.internal.display.context.DepotAdminManagementToolbarDisplayContext" %><%@
@@ -51,10 +53,13 @@ page import="com.liferay.depot.web.internal.display.context.DepotAdminSitesDispl
 page import="com.liferay.depot.web.internal.display.context.DepotAdminViewDepotDashboardDisplayContext" %><%@
 page import="com.liferay.depot.web.internal.display.context.DepotApplicationDisplayContext" %><%@
 page import="com.liferay.depot.web.internal.util.DepotLanguageUtil" %><%@
+page import="com.liferay.document.library.kernel.exception.RequiredFileEntryTypeException" %><%@
 page import="com.liferay.petra.string.StringPool" %><%@
+page import="com.liferay.portal.configuration.persistence.listener.ConfigurationModelListenerException" %><%@
 page import="com.liferay.portal.kernel.exception.DuplicateGroupException" %><%@
 page import="com.liferay.portal.kernel.exception.GroupKeyException" %><%@
 page import="com.liferay.portal.kernel.exception.LocaleException" %><%@
+page import="com.liferay.portal.kernel.frontend.icons.FrontendIconsUtil" %><%@
 page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
 page import="com.liferay.portal.kernel.model.Group" %><%@
 page import="com.liferay.portal.kernel.model.GroupConstants" %><%@
@@ -81,10 +86,15 @@ page import="com.liferay.sharing.configuration.SharingConfiguration" %>
 page import="java.util.Collections" %><%@
 page import="java.util.List" %>
 
-<%@ page import="javax.portlet.ActionRequest" %>
+<%@ page import="javax.portlet.ActionRequest" %><%@
+page import="javax.portlet.PortletURL" %>
 
 <liferay-frontend:defineObjects />
 
 <liferay-theme:defineObjects />
 
 <portlet:defineObjects />
+
+<%
+portletDisplay.setShowExportImportIcon(false);
+%>

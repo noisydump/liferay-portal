@@ -59,22 +59,26 @@ import ClayIcon from '@clayui/icon';
 import CodeMirror from 'codemirror';
 import React, {useEffect, useMemo, useRef} from 'react';
 
-const AUTOCOMPLETE_EXCLUDED_KEY_CODES = new Set(
-	Object.values({
-		ALT: 18,
-		ARROW_DOWN: 40,
-		ARROW_LEFT: 37,
-		ARROW_RIGHT: 39,
-		ARROW_UP: 38,
-		BACKSPACE: 8,
-		CONTROL: 17,
-		ESCAPE: 27,
-		META: 91,
-		RETURN: 13,
-		SHIFT: 16,
-		SPACE: 32,
-	})
-);
+const AUTOCOMPLETE_EXCLUDED_KEYS = new Set([
+	' ',
+	',',
+	';',
+	'Alt',
+	'AltGraph',
+	'AltRight',
+	'ArrowDown',
+	'ArrowLeft',
+	'ArrowRight',
+	'ArrowUp',
+	'Backspace',
+	'Control',
+	'Enter',
+	'Escape',
+	'Delete',
+	'Meta',
+	'Return',
+	'Shift',
+]);
 
 const MODES = {
 	css: {
@@ -237,8 +241,9 @@ const CodeMirrorEditor = ({
 	codeHeaderHelpText,
 	content = '',
 	readOnly,
+	showHeader = true,
 }) => {
-	const editor = useRef();
+	const editorRef = useRef();
 	const ref = useRef();
 
 	const customEntitiesSymbolsRegex = useMemo(() => {
@@ -262,7 +267,7 @@ const CodeMirrorEditor = ({
 				autoCloseTags: true,
 				autoRefresh: true,
 				extraKeys: {
-					'Ctrl-Space': 'autocomplete',
+					'Ctrl-Space': readOnly ? '' : 'autocomplete',
 				},
 				foldGutter: true,
 				gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter'],
@@ -280,7 +285,7 @@ const CodeMirrorEditor = ({
 				matchBrackets: true,
 				mode: {globalVars: true, name: MODES[mode].type},
 				readOnly,
-				showHint: true,
+				showHint: !readOnly,
 				tabSize: 2,
 				value: content,
 				viewportMargin: Infinity,
@@ -292,28 +297,29 @@ const CodeMirrorEditor = ({
 
 			codeMirror.on('keyup', (cm, event) => {
 				if (
+					!readOnly &&
 					!cm.state.completionActive &&
-					!AUTOCOMPLETE_EXCLUDED_KEY_CODES.has(event.keyCode)
+					!AUTOCOMPLETE_EXCLUDED_KEYS.has(event.key)
 				) {
 					codeMirror.showHint();
 				}
 			});
 
-			editor.current = codeMirror;
+			editorRef.current = codeMirror;
 		}
 	}, [ref]); // eslint-disable-line
 
 	useEffect(() => {
-		if (editor.current) {
-			editor.current.setOption('mode', {
+		if (editorRef.current) {
+			editorRef.current.setOption('mode', {
 				globalVars: true,
 				name: MODES[mode].type,
 			});
 
-			editor.current.setOption('readOnly', readOnly);
+			editorRef.current.setOption('readOnly', readOnly);
 
-			editor.current.setOption('hintOptions', {
-				...editor.current.getOption('hintOptions'),
+			editorRef.current.setOption('hintOptions', {
+				...editorRef.current.getOption('hintOptions'),
 				customEntities,
 				customEntitiesSymbolsRegex,
 				customTags,
@@ -328,20 +334,22 @@ const CodeMirrorEditor = ({
 	]);
 
 	useEffect(() => {
-		if (editor.current) {
-			editor.current.setValue(content);
+		if (editorRef.current) {
+			editorRef.current.setValue(content);
 		}
 	}, [content]);
 
 	return (
 		<>
-			<nav className="source-editor-toolbar tbar">
-				<ul className="tbar-nav">
-					<li className="source-editor-toolbar__syntax tbar-item tbar-item-expand text-center">
-						{MODES[mode].name}
-					</li>
-				</ul>
-			</nav>
+			{showHeader && (
+				<nav className="source-editor-toolbar tbar">
+					<ul className="tbar-nav">
+						<li className="source-editor-toolbar__syntax tbar-item tbar-item-expand text-center">
+							{MODES[mode].name}
+						</li>
+					</ul>
+				</nav>
+			)}
 
 			{(codeHeaderHelpText || codeHeaderText) && (
 				<FixedText

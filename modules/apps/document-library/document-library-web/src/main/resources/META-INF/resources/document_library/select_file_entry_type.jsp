@@ -22,10 +22,13 @@ String eventName = ParamUtil.getString(request, "eventName", liferayPortletRespo
 
 long[] groupIds = PortalUtil.getCurrentAndAncestorSiteGroupIds(scopeGroupId);
 
-PortletURL portletURL = renderResponse.createRenderURL();
-
-portletURL.setParameter("mvcPath", "/document_library/select_file_entry_type.jsp");
-portletURL.setParameter("eventName", eventName);
+PortletURL portletURL = PortletURLBuilder.createRenderURL(
+	renderResponse
+).setMVCPath(
+	"/document_library/select_file_entry_type.jsp"
+).setParameter(
+	"eventName", eventName
+).buildPortletURL();
 %>
 
 <clay:navigation-bar
@@ -42,7 +45,7 @@ portletURL.setParameter("eventName", eventName);
 	%>'
 />
 
-<aui:form action="<%= portletURL.toString() %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="selectFileEntryTypeFm">
+<aui:form action="<%= portletURL %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="selectFileEntryTypeFm">
 	<liferay-ui:search-container
 		iteratorURL="<%= portletURL %>"
 	>
@@ -74,7 +77,11 @@ portletURL.setParameter("eventName", eventName);
 			<liferay-ui:search-container-column-text
 				colspan="<%= 2 %>"
 			>
-				<h5><%= HtmlUtil.escape(fileEntryType.getName(locale)) %></h5>
+				<h5>
+					<aui:a href="#">
+						<%= HtmlUtil.escape(fileEntryType.getName(locale)) %>
+					</aui:a>
+				</h5>
 
 				<h6 class="text-default">
 					<span><%= fileEntryType.getDescription(locale) %></span>
@@ -94,7 +101,7 @@ portletURL.setParameter("eventName", eventName);
 
 	form.delegate(
 		'click',
-		function (event) {
+		(event) => {
 			event.preventDefault();
 
 			var currentTarget = event.currentTarget;

@@ -82,13 +82,10 @@ public class BlogsEntryStatusTransitionTest {
 
 		UserTestUtil.setUser(TestPropsValues.getUser());
 
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(
-				group.getGroupId(), user.getUserId());
-
 		entry = BlogsTestUtil.addEntryWithWorkflow(
 			user.getUserId(), RandomTestUtil.randomString(), false,
-			serviceContext);
+			ServiceContextTestUtil.getServiceContext(
+				group.getGroupId(), user.getUserId()));
 	}
 
 	@Test
@@ -411,15 +408,11 @@ public class BlogsEntryStatusTransitionTest {
 		serviceContext.setAttribute("trackbacks", trackbacks);
 
 		serviceContext.setCommand(Constants.UPDATE);
-
-		String portletId = PortletProviderUtil.getPortletId(
-			BlogsEntry.class.getName(), PortletProvider.Action.VIEW);
-
-		String layoutFullURL = PortalUtil.getLayoutFullURL(
-			entry.getGroupId(), portletId);
-
-		serviceContext.setLayoutFullURL(layoutFullURL);
-
+		serviceContext.setLayoutFullURL(
+			PortalUtil.getLayoutFullURL(
+				entry.getGroupId(),
+				PortletProviderUtil.getPortletId(
+					BlogsEntry.class.getName(), PortletProvider.Action.VIEW)));
 		serviceContext.setScopeGroupId(entry.getGroupId());
 
 		return serviceContext;

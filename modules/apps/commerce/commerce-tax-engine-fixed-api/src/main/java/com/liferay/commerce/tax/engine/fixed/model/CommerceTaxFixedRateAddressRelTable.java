@@ -34,6 +34,9 @@ public class CommerceTaxFixedRateAddressRelTable
 	public static final CommerceTaxFixedRateAddressRelTable INSTANCE =
 		new CommerceTaxFixedRateAddressRelTable();
 
+	public final Column<CommerceTaxFixedRateAddressRelTable, Long> mvccVersion =
+		createColumn(
+			"mvccVersion", Long.class, Types.BIGINT, Column.FLAG_NULLITY);
 	public final Column<CommerceTaxFixedRateAddressRelTable, Long>
 		commerceTaxFixedRateAddressRelId = createColumn(
 			"CTaxFixedRateAddressRelId", Long.class, Types.BIGINT,
@@ -61,12 +64,11 @@ public class CommerceTaxFixedRateAddressRelTable
 	public final Column<CommerceTaxFixedRateAddressRelTable, Long>
 		CPTaxCategoryId = createColumn(
 			"CPTaxCategoryId", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
-	public final Column<CommerceTaxFixedRateAddressRelTable, Long>
-		commerceCountryId = createColumn(
-			"commerceCountryId", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
-	public final Column<CommerceTaxFixedRateAddressRelTable, Long>
-		commerceRegionId = createColumn(
-			"commerceRegionId", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
+	public final Column<CommerceTaxFixedRateAddressRelTable, Long> countryId =
+		createColumn(
+			"countryId", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
+	public final Column<CommerceTaxFixedRateAddressRelTable, Long> regionId =
+		createColumn("regionId", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
 	public final Column<CommerceTaxFixedRateAddressRelTable, String> zip =
 		createColumn("zip", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
 	public final Column<CommerceTaxFixedRateAddressRelTable, Double> rate =

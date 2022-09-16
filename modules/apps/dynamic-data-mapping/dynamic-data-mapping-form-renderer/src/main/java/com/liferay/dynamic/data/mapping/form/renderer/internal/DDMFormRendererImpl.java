@@ -24,6 +24,7 @@ import com.liferay.dynamic.data.mapping.model.DDMFormLayout;
 import com.liferay.dynamic.data.mapping.util.DDM;
 import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolver;
 import com.liferay.petra.io.unsync.UnsyncStringWriter;
+import com.liferay.portal.kernel.frontend.icons.FrontendIconsUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.template.react.renderer.ComponentDescriptor;
@@ -65,11 +66,8 @@ public class DDMFormRendererImpl implements DDMFormRenderer {
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		String pathThemeImages = themeDisplay.getPathThemeImages();
-
-		String spriteMap = pathThemeImages.concat("/clay/icons.svg");
-
-		ddmFormTemplateContext.put("spritemap", spriteMap);
+		ddmFormTemplateContext.put(
+			"spritemap", FrontendIconsUtil.getSpritemap(themeDisplay));
 
 		return ddmFormTemplateContext;
 	}
@@ -81,7 +79,7 @@ public class DDMFormRendererImpl implements DDMFormRenderer {
 		throws DDMFormRenderingException {
 
 		try {
-			return doRender(ddmForm, ddmFormLayout, ddmFormRenderingContext);
+			return _render(ddmForm, ddmFormLayout, ddmFormRenderingContext);
 		}
 		catch (DDMFormRenderingException ddmFormRenderingException) {
 			throw ddmFormRenderingException;
@@ -97,7 +95,7 @@ public class DDMFormRendererImpl implements DDMFormRenderer {
 		throws DDMFormRenderingException {
 
 		try {
-			return doRender(
+			return _render(
 				ddmForm, _ddm.getDefaultDDMFormLayout(ddmForm),
 				ddmFormRenderingContext);
 		}
@@ -109,7 +107,7 @@ public class DDMFormRendererImpl implements DDMFormRenderer {
 		}
 	}
 
-	protected String doRender(
+	private String _render(
 			DDMForm ddmForm, DDMFormLayout ddmFormLayout,
 			DDMFormRenderingContext ddmFormRenderingContext)
 		throws Exception {
@@ -133,7 +131,7 @@ public class DDMFormRendererImpl implements DDMFormRenderer {
 	}
 
 	private static final String _MODULE_NAME =
-		"dynamic-data-mapping-form-renderer/js/containers/Form.es";
+		"data-engine-js-components-web/js/custom/form/FormView.es";
 
 	@Reference
 	private DDM _ddm;

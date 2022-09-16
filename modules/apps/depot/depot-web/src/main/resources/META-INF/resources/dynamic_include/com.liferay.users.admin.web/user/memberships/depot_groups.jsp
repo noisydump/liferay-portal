@@ -50,7 +50,7 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 					label="<%= true %>"
 					linkCssClass="btn btn-secondary btn-sm"
 					message="select"
-					url="javascript:;"
+					url="javascript:void(0);"
 				/>
 			</span>
 		</clay:content-col>
@@ -105,7 +105,7 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 
 		<c:if test="<%= depotAdminMembershipsDisplayContext.isDeletable() %>">
 			<liferay-ui:search-container-column-text>
-				<a class="modify-link" data-rowId="<%= group.getGroupId() %>" href="javascript:;"><%= removeDepotGroupIcon %></a>
+				<a class="modify-link" data-rowId="<%= group.getGroupId() %>" href="javascript:void(0);"><%= removeDepotGroupIcon %></a>
 			</liferay-ui:search-container-column-text>
 		</c:if>
 	</liferay-ui:search-container-row>
@@ -132,7 +132,7 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 			'<portlet:namespace />selectDepotGroupLink'
 		);
 
-		selectDepotGroupLink.addEventListener('click', function (event) {
+		selectDepotGroupLink.addEventListener('click', (event) => {
 			Liferay.Util.openSelectionModal({
 				onSelect: function (selectedItem) {
 					if (selectedItem) {
@@ -145,7 +145,7 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 						rowColumns.push(
 							'<a class="modify-link" data-rowId="' +
 								itemValue.classPK +
-								'" href="javascript:;"><%= UnicodeFormatter.toString(removeDepotGroupIcon) %></a>'
+								'" href="javascript:void(0);"><%= UnicodeFormatter.toString(removeDepotGroupIcon) %></a>'
 						);
 
 						var searchContainerData = searchContainer.getData();
@@ -180,7 +180,7 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 
 		var handleOnModifyLink = searchContainerContentBox.delegate(
 			'click',
-			function (event) {
+			(event) => {
 				var link = event.currentTarget;
 
 				var rowId = link.attr('data-rowId');

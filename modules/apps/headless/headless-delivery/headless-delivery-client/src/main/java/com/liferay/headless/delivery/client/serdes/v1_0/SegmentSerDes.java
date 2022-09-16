@@ -57,7 +57,7 @@ public class SegmentSerDes {
 		sb.append("{");
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+			"yyyy-MM-dd'T'HH:mm:ssXX");
 
 		if (segment.getActive() != null) {
 			if (sb.length() > 1) {
@@ -81,6 +81,16 @@ public class SegmentSerDes {
 			sb.append(_escape(segment.getCriteria()));
 
 			sb.append("\"");
+		}
+
+		if (segment.getCriteriaValue() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"criteriaValue\": ");
+
+			sb.append(_toJSON(segment.getCriteriaValue()));
 		}
 
 		if (segment.getDateCreated() != null) {
@@ -179,7 +189,7 @@ public class SegmentSerDes {
 		Map<String, String> map = new TreeMap<>();
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+			"yyyy-MM-dd'T'HH:mm:ssXX");
 
 		if (segment.getActive() == null) {
 			map.put("active", null);
@@ -193,6 +203,14 @@ public class SegmentSerDes {
 		}
 		else {
 			map.put("criteria", String.valueOf(segment.getCriteria()));
+		}
+
+		if (segment.getCriteriaValue() == null) {
+			map.put("criteriaValue", null);
+		}
+		else {
+			map.put(
+				"criteriaValue", String.valueOf(segment.getCriteriaValue()));
 		}
 
 		if (segment.getDateCreated() == null) {
@@ -271,6 +289,12 @@ public class SegmentSerDes {
 					segment.setCriteria((String)jsonParserFieldValue);
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "criteriaValue")) {
+				if (jsonParserFieldValue != null) {
+					segment.setCriteriaValue(
+						(Map)SegmentSerDes.toMap((String)jsonParserFieldValue));
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "dateCreated")) {
 				if (jsonParserFieldValue != null) {
 					segment.setDateCreated(
@@ -304,9 +328,6 @@ public class SegmentSerDes {
 					segment.setSource((String)jsonParserFieldValue);
 				}
 			}
-			else if (jsonParserFieldName.equals("status")) {
-				throw new IllegalArgumentException();
-			}
 		}
 
 	}
@@ -335,7 +356,7 @@ public class SegmentSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -371,7 +392,7 @@ public class SegmentSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

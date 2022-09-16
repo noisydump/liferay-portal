@@ -23,18 +23,15 @@ const unassigned = {
 	name: Liferay.Language.get('unassigned'),
 };
 
-const AssigneeFilter = ({
+export default function AssigneeFilter({
 	className,
 	filterKey = filterConstants.assignee.key,
 	options = {},
 	prefixKey = '',
 	processId,
 	staticData,
-}) => {
+}) {
 	options = {
-		hideControl: false,
-		multiple: true,
-		position: 'left',
 		withSelectionTitle: false,
 		withoutRouteParams: false,
 		withoutUnassigned: false,
@@ -52,7 +49,7 @@ const AssigneeFilter = ({
 		withoutRouteParams: options.withoutRouteParams,
 	});
 
-	const defaultItem = useMemo(() => (items ? items[0] : undefined), [items]);
+	const defaultItem = useMemo(() => items[0], [items]);
 
 	const filterName = useFilterName(
 		options.multiple,
@@ -72,6 +69,4 @@ const AssigneeFilter = ({
 			{...options}
 		/>
 	);
-};
-
-export default AssigneeFilter;
+}

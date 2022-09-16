@@ -25,17 +25,17 @@ import com.liferay.portal.kernel.webcache.WebCachePoolUtil;
 public class NetworkUtil {
 
 	public static DNSLookup getDNSLookup(String domain) {
-		WebCacheItem wci = new DNSLookupWebCacheItem(domain);
+		WebCacheItem webCacheItem = new DNSLookupWebCacheItem(domain);
 
 		return (DNSLookup)WebCachePoolUtil.get(
-			NetworkUtil.class.getName() + ".dnslookup." + domain, wci);
+			NetworkUtil.class.getName() + ".dnslookup." + domain, webCacheItem);
 	}
 
 	public static Whois getWhois(String domain) {
-		WebCacheItem wci = new WhoisWebCacheItem(domain);
+		WebCacheItem webCacheItem = new WhoisWebCacheItem(domain);
 
 		return (Whois)WebCachePoolUtil.get(
-			NetworkUtil.class.getName() + ".whois." + domain, wci);
+			NetworkUtil.class.getName() + ".whois." + domain, webCacheItem);
 	}
 
 }

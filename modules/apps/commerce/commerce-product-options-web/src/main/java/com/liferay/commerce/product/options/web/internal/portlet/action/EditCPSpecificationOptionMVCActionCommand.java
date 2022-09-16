@@ -28,7 +28,6 @@ import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.StringUtil;
 
 import java.util.Locale;
 import java.util.Map;
@@ -53,34 +52,6 @@ import org.osgi.service.component.annotations.Reference;
 public class EditCPSpecificationOptionMVCActionCommand
 	extends BaseMVCActionCommand {
 
-	protected void deleteCPSpecificationOptions(ActionRequest actionRequest)
-		throws Exception {
-
-		long[] deleteCPSpecificationOptionIds = null;
-
-		long cpSpecificationOptionId = ParamUtil.getLong(
-			actionRequest, "cpSpecificationOptionId");
-
-		if (cpSpecificationOptionId > 0) {
-			deleteCPSpecificationOptionIds = new long[] {
-				cpSpecificationOptionId
-			};
-		}
-		else {
-			deleteCPSpecificationOptionIds = StringUtil.split(
-				ParamUtil.getString(
-					actionRequest, "deleteCPSpecificationOptionIds"),
-				0L);
-		}
-
-		for (long deleteCPSpecificationOptionId :
-				deleteCPSpecificationOptionIds) {
-
-			_cpSpecificationOptionService.deleteCPSpecificationOption(
-				deleteCPSpecificationOptionId);
-		}
-	}
-
 	@Override
 	protected void doProcessAction(
 			ActionRequest actionRequest, ActionResponse actionResponse)
@@ -90,12 +61,12 @@ public class EditCPSpecificationOptionMVCActionCommand
 
 		try {
 			if (cmd.equals(Constants.DELETE)) {
-				deleteCPSpecificationOptions(actionRequest);
+				_deleteCPSpecificationOptions(actionRequest);
 			}
 			else if (cmd.equals(Constants.ADD) ||
 					 cmd.equals(Constants.UPDATE)) {
 
-				updateCPSpecificationOption(actionRequest);
+				_updateCPSpecificationOption(actionRequest);
 			}
 		}
 		catch (Exception exception) {
@@ -122,7 +93,33 @@ public class EditCPSpecificationOptionMVCActionCommand
 		}
 	}
 
-	protected CPSpecificationOption updateCPSpecificationOption(
+	private void _deleteCPSpecificationOptions(ActionRequest actionRequest)
+		throws Exception {
+
+		long[] deleteCPSpecificationOptionIds = null;
+
+		long cpSpecificationOptionId = ParamUtil.getLong(
+			actionRequest, "cpSpecificationOptionId");
+
+		if (cpSpecificationOptionId > 0) {
+			deleteCPSpecificationOptionIds = new long[] {
+				cpSpecificationOptionId
+			};
+		}
+		else {
+			deleteCPSpecificationOptionIds = ParamUtil.getLongValues(
+				actionRequest, "rowIds");
+		}
+
+		for (long deleteCPSpecificationOptionId :
+				deleteCPSpecificationOptionIds) {
+
+			_cpSpecificationOptionService.deleteCPSpecificationOption(
+				deleteCPSpecificationOptionId);
+		}
+	}
+
+	private CPSpecificationOption _updateCPSpecificationOption(
 			ActionRequest actionRequest)
 		throws Exception {
 

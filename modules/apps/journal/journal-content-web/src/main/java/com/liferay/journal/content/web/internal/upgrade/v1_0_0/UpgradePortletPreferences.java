@@ -17,7 +17,7 @@ package com.liferay.journal.content.web.internal.upgrade.v1_0_0;
 import com.liferay.journal.constants.JournalContentPortletKeys;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
-import com.liferay.portal.kernel.upgrade.BaseUpgradePortletPreferences;
+import com.liferay.portal.kernel.upgrade.BasePortletPreferencesUpgradeProcess;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -31,7 +31,8 @@ import javax.portlet.PortletPreferences;
 /**
  * @author Julio Camarero
  */
-public class UpgradePortletPreferences extends BaseUpgradePortletPreferences {
+public class UpgradePortletPreferences
+	extends BasePortletPreferencesUpgradeProcess {
 
 	@Override
 	protected String[] getPortletIds() {
@@ -41,7 +42,23 @@ public class UpgradePortletPreferences extends BaseUpgradePortletPreferences {
 		};
 	}
 
-	protected String[] upgradeBooleanAssetAddonEntry(
+	@Override
+	protected String upgradePreferences(
+			long companyId, long ownerId, int ownerType, long plid,
+			String portletId, String xml)
+		throws Exception {
+
+		PortletPreferences portletPreferences =
+			PortletPreferencesFactoryUtil.fromXML(
+				companyId, ownerId, ownerType, plid, portletId, xml);
+
+		_upgradeContentMetadataAssetAddonEntryKeys(portletPreferences);
+		_upgradeUserToolAssetAddonEntryKeys(portletPreferences);
+
+		return PortletPreferencesFactoryUtil.toXML(portletPreferences);
+	}
+
+	private String[] _upgradeBooleanAssetAddonEntry(
 			String[] assetAddonEntryKeys, PortletPreferences portletPreferences,
 			String preferenceKey)
 		throws Exception {
@@ -59,22 +76,22 @@ public class UpgradePortletPreferences extends BaseUpgradePortletPreferences {
 		return assetAddonEntryKeys;
 	}
 
-	protected void upgradeContentMetadataAssetAddonEntryKeys(
+	private void _upgradeContentMetadataAssetAddonEntryKeys(
 			PortletPreferences portletPreferences)
 		throws Exception {
 
 		String[] contentMetadataAssetAddonEntryKeys = new String[0];
 
-		contentMetadataAssetAddonEntryKeys = upgradeBooleanAssetAddonEntry(
+		contentMetadataAssetAddonEntryKeys = _upgradeBooleanAssetAddonEntry(
 			contentMetadataAssetAddonEntryKeys, portletPreferences,
 			"enableCommentRatings");
-		contentMetadataAssetAddonEntryKeys = upgradeBooleanAssetAddonEntry(
+		contentMetadataAssetAddonEntryKeys = _upgradeBooleanAssetAddonEntry(
 			contentMetadataAssetAddonEntryKeys, portletPreferences,
 			"enableComments");
-		contentMetadataAssetAddonEntryKeys = upgradeBooleanAssetAddonEntry(
+		contentMetadataAssetAddonEntryKeys = _upgradeBooleanAssetAddonEntry(
 			contentMetadataAssetAddonEntryKeys, portletPreferences,
 			"enableRatings");
-		contentMetadataAssetAddonEntryKeys = upgradeBooleanAssetAddonEntry(
+		contentMetadataAssetAddonEntryKeys = _upgradeBooleanAssetAddonEntry(
 			contentMetadataAssetAddonEntryKeys, portletPreferences,
 			"enableRelatedAssets");
 
@@ -83,7 +100,7 @@ public class UpgradePortletPreferences extends BaseUpgradePortletPreferences {
 			StringUtil.merge(contentMetadataAssetAddonEntryKeys));
 	}
 
-	protected String[] upgradeMultiValueAssetAddonEntryKeys(
+	private String[] _upgradeMultiValueAssetAddonEntryKeys(
 			String[] assetAddonEntryKeys, PortletPreferences portletPreferences,
 			String preferenceKey, Map<String, String> newPreferenceValues)
 		throws Exception {
@@ -108,32 +125,16 @@ public class UpgradePortletPreferences extends BaseUpgradePortletPreferences {
 		return assetAddonEntryKeys;
 	}
 
-	@Override
-	protected String upgradePreferences(
-			long companyId, long ownerId, int ownerType, long plid,
-			String portletId, String xml)
-		throws Exception {
-
-		PortletPreferences portletPreferences =
-			PortletPreferencesFactoryUtil.fromXML(
-				companyId, ownerId, ownerType, plid, portletId, xml);
-
-		upgradeContentMetadataAssetAddonEntryKeys(portletPreferences);
-		upgradeUserToolAssetAddonEntryKeys(portletPreferences);
-
-		return PortletPreferencesFactoryUtil.toXML(portletPreferences);
-	}
-
-	protected void upgradeUserToolAssetAddonEntryKeys(
+	private void _upgradeUserToolAssetAddonEntryKeys(
 			PortletPreferences portletPreferences)
 		throws Exception {
 
 		String[] userToolAssetAddonEntryKeys = new String[0];
 
-		userToolAssetAddonEntryKeys = upgradeBooleanAssetAddonEntry(
+		userToolAssetAddonEntryKeys = _upgradeBooleanAssetAddonEntry(
 			userToolAssetAddonEntryKeys, portletPreferences, "enablePrint");
 
-		userToolAssetAddonEntryKeys = upgradeMultiValueAssetAddonEntryKeys(
+		userToolAssetAddonEntryKeys = _upgradeMultiValueAssetAddonEntryKeys(
 			userToolAssetAddonEntryKeys, portletPreferences, "extensions",
 			HashMapBuilder.put(
 				"doc", "enableDOC"
@@ -145,7 +146,7 @@ public class UpgradePortletPreferences extends BaseUpgradePortletPreferences {
 				"txt", "enableTXT"
 			).build());
 
-		userToolAssetAddonEntryKeys = upgradeBooleanAssetAddonEntry(
+		userToolAssetAddonEntryKeys = _upgradeBooleanAssetAddonEntry(
 			userToolAssetAddonEntryKeys, portletPreferences,
 			"showAvailableLocales");
 

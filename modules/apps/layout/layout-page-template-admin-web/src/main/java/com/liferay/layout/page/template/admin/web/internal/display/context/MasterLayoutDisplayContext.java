@@ -14,16 +14,18 @@
 
 package com.liferay.layout.page.template.admin.web.internal.display.context;
 
+import com.liferay.layout.page.template.admin.constants.LayoutPageTemplateAdminPortletKeys;
 import com.liferay.layout.page.template.admin.web.internal.util.LayoutPageTemplatePortletUtil;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalServiceUtil;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryServiceUtil;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.portlet.SearchOrderByUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -89,64 +91,66 @@ public class MasterLayoutDisplayContext {
 				"there-are-no-master-pages");
 
 		masterLayoutsSearchContainer.setOrderByCol(getOrderByCol());
-
-		OrderByComparator<LayoutPageTemplateEntry> orderByComparator =
+		masterLayoutsSearchContainer.setOrderByComparator(
 			LayoutPageTemplatePortletUtil.
 				getLayoutPageTemplateEntryOrderByComparator(
-					getOrderByCol(), getOrderByType());
-
-		masterLayoutsSearchContainer.setOrderByComparator(orderByComparator);
-
+					getOrderByCol(), getOrderByType()));
 		masterLayoutsSearchContainer.setOrderByType(getOrderByType());
 
-		List<LayoutPageTemplateEntry> layoutPageTemplateEntries = null;
-		int layoutPageTemplateEntriesCount = 0;
-
 		if (isSearch()) {
-			layoutPageTemplateEntries =
-				LayoutPageTemplateEntryServiceUtil.getLayoutPageTemplateEntries(
-					_themeDisplay.getScopeGroupId(), getKeywords(),
-					LayoutPageTemplateEntryTypeConstants.TYPE_MASTER_LAYOUT,
-					masterLayoutsSearchContainer.getStart(),
-					masterLayoutsSearchContainer.getEnd(), orderByComparator);
-
-			layoutPageTemplateEntriesCount =
+			masterLayoutsSearchContainer.setResultsAndTotal(
+				() ->
+					LayoutPageTemplateEntryServiceUtil.
+						getLayoutPageTemplateEntries(
+							_themeDisplay.getScopeGroupId(), getKeywords(),
+							LayoutPageTemplateEntryTypeConstants.
+								TYPE_MASTER_LAYOUT,
+							masterLayoutsSearchContainer.getStart(),
+							masterLayoutsSearchContainer.getEnd(),
+							masterLayoutsSearchContainer.
+								getOrderByComparator()),
 				LayoutPageTemplateEntryServiceUtil.
 					getLayoutPageTemplateEntriesCount(
 						_themeDisplay.getScopeGroupId(), getKeywords(),
 						LayoutPageTemplateEntryTypeConstants.
-							TYPE_MASTER_LAYOUT);
+							TYPE_MASTER_LAYOUT));
 		}
 		else {
-			if (masterLayoutsSearchContainer.getStart() == 0) {
-				layoutPageTemplateEntries = new ArrayList<>();
+			List<LayoutPageTemplateEntry> layoutPageTemplateEntries =
+				new ArrayList<>();
 
+			int start = masterLayoutsSearchContainer.getStart();
+			int end = masterLayoutsSearchContainer.getEnd();
+
+			if (start == 0) {
+				end -= 1;
 				layoutPageTemplateEntries.add(_addBlankMasterLayout());
+			}
+			else {
+				start -= 1;
 			}
 
 			layoutPageTemplateEntries.addAll(
 				LayoutPageTemplateEntryServiceUtil.getLayoutPageTemplateEntries(
 					_themeDisplay.getScopeGroupId(),
 					LayoutPageTemplateEntryTypeConstants.TYPE_MASTER_LAYOUT,
-					masterLayoutsSearchContainer.getStart(),
-					masterLayoutsSearchContainer.getEnd(), orderByComparator));
+					start, end,
+					masterLayoutsSearchContainer.getOrderByComparator()));
 
-			layoutPageTemplateEntriesCount =
+			int layoutPageTemplateEntriesCount =
 				LayoutPageTemplateEntryServiceUtil.
 					getLayoutPageTemplateEntriesCount(
 						_themeDisplay.getScopeGroupId(),
 						LayoutPageTemplateEntryTypeConstants.
 							TYPE_MASTER_LAYOUT);
 
-			if (masterLayoutsSearchContainer.getStart() == 0) {
-				layoutPageTemplateEntriesCount++;
-			}
+			masterLayoutsSearchContainer.setResultsAndTotal(
+				() -> layoutPageTemplateEntries,
+				layoutPageTemplateEntriesCount + 1);
 		}
 
-		masterLayoutsSearchContainer.setResults(layoutPageTemplateEntries);
 		masterLayoutsSearchContainer.setRowChecker(
 			new EmptyOnClickRowChecker(_renderResponse));
-		masterLayoutsSearchContainer.setTotal(layoutPageTemplateEntriesCount);
 
 		_masterLayoutsSearchContainer = masterLayoutsSearchContainer;
 
@@ -158,8 +162,10 @@ public class MasterLayoutDisplayContext {
 			return _orderByCol;
 		}
 
-		_orderByCol = ParamUtil.getString(
-			_httpServletRequest, "orderByCol", "create-date");
+		_orderByCol = SearchOrderByUtil.getOrderByCol(
+			_httpServletRequest,
+			LayoutPageTemplateAdminPortletKeys.LAYOUT_PAGE_TEMPLATES,
+			"master-layout-order-by-col", "create-date");
 
 		return _orderByCol;
 	}
@@ -169,38 +175,56 @@ public class MasterLayoutDisplayContext {
 			return _orderByType;
 		}
 
-		_orderByType = ParamUtil.getString(
-			_httpServletRequest, "orderByType", "asc");
+		_orderByType = SearchOrderByUtil.getOrderByType(
+			_httpServletRequest,
+			LayoutPageTemplateAdminPortletKeys.LAYOUT_PAGE_TEMPLATES,
+			"master-layout-order-by-type", "asc");
 
 		return _orderByType;
 	}
 
 	public PortletURL getPortletURL() {
-		PortletURL portletURL = _renderResponse.createRenderURL();
+		return PortletURLBuilder.createRenderURL(
+			_renderResponse
+		).setMVCPath(
+			"/view_master_layouts.jsp"
+		).setRedirect(
+			_themeDisplay.getURLCurrent()
+		).setKeywords(
+			() -> {
+				String keywords = getKeywords();
 
-		portletURL.setParameter("mvcPath", "/view_master_layouts.jsp");
-		portletURL.setParameter("tabs1", "master-layouts");
-		portletURL.setParameter("redirect", _themeDisplay.getURLCurrent());
+				if (Validator.isNotNull(keywords)) {
+					return keywords;
+				}
 
-		String keywords = getKeywords();
+				return null;
+			}
+		).setTabs1(
+			"master-layouts"
+		).setParameter(
+			"orderByCol",
+			() -> {
+				String orderByCol = getOrderByCol();
 
-		if (Validator.isNotNull(keywords)) {
-			portletURL.setParameter("keywords", keywords);
-		}
+				if (Validator.isNotNull(orderByCol)) {
+					return orderByCol;
+				}
 
-		String orderByCol = getOrderByCol();
+				return null;
+			}
+		).setParameter(
+			"orderByType",
+			() -> {
+				String orderByType = getOrderByType();
 
-		if (Validator.isNotNull(orderByCol)) {
-			portletURL.setParameter("orderByCol", orderByCol);
-		}
+				if (Validator.isNotNull(orderByType)) {
+					return orderByType;
+				}
 
-		String orderByType = getOrderByType();
-
-		if (Validator.isNotNull(orderByType)) {
-			portletURL.setParameter("orderByType", orderByType);
-		}
-
-		return portletURL;
+				return null;
+			}
+		).buildPortletURL();
 	}
 
 	public boolean isSearch() {

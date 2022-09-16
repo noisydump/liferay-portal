@@ -54,6 +54,7 @@ import com.liferay.portal.kernel.xml.Element;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -124,18 +125,6 @@ public class DDMFormValuesExportImportContentProcessor
 		long groupId, DDMFormValues ddmFormValues) {
 	}
 
-	@Reference(unbind = "-")
-	protected void setDLAppLocalService(DLAppLocalService dlAppLocalService) {
-		_dlAppLocalService = dlAppLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setLayoutLocalService(
-		LayoutLocalService layoutLocalService) {
-
-		_layoutLocalService = layoutLocalService;
-	}
-
 	private boolean _hasNotExportableStatus(
 		StagedModel stagedModel, int status) {
 
@@ -150,11 +139,13 @@ public class DDMFormValuesExportImportContentProcessor
 	private static final Log _log = LogFactoryUtil.getLog(
 		DDMFormValuesExportImportContentProcessor.class);
 
+	@Reference
 	private DLAppLocalService _dlAppLocalService;
 
 	@Reference
 	private JournalArticleLocalService _journalArticleLocalService;
 
+	@Reference
 	private LayoutLocalService _layoutLocalService;
 
 	private class FileEntryExportDDMFormFieldValueTransformer
@@ -356,7 +347,7 @@ public class DDMFormValuesExportImportContentProcessor
 		}
 
 		protected String toJSON(FileEntry fileEntry, String type) {
-			JSONObject jsonObject = JSONUtil.put(
+			return JSONUtil.put(
 				"classPK", fileEntry.getFileEntryId()
 			).put(
 				"groupId", fileEntry.getGroupId()
@@ -366,9 +357,7 @@ public class DDMFormValuesExportImportContentProcessor
 				"type", type
 			).put(
 				"uuid", fileEntry.getUuid()
-			);
-
-			return jsonObject.toString();
+			).toString();
 		}
 
 		private final PortletDataContext _portletDataContext;
@@ -676,7 +665,7 @@ public class DDMFormValuesExportImportContentProcessor
 					_portletDataContext, jsonObject);
 
 				if (importedLayout != null) {
-					value.addString(locale, toJSON(importedLayout));
+					value.addString(locale, toJSON(importedLayout, locale));
 
 					continue;
 				}
@@ -691,6 +680,13 @@ public class DDMFormValuesExportImportContentProcessor
 
 					if (className.equals(Layout.class.getName())) {
 						String uuid = element.attributeValue("uuid");
+
+						if (jsonObject.has("id") &&
+							!Objects.equals(uuid, jsonObject.getString("id"))) {
+
+							continue;
+						}
+
 						String privateLayout = element.attributeValue(
 							"private-layout");
 
@@ -702,7 +698,7 @@ public class DDMFormValuesExportImportContentProcessor
 				}
 
 				if (importedLayout != null) {
-					value.addString(locale, toJSON(importedLayout));
+					value.addString(locale, toJSON(importedLayout, locale));
 				}
 			}
 		}
@@ -727,16 +723,22 @@ public class DDMFormValuesExportImportContentProcessor
 			return layout;
 		}
 
-		protected String toJSON(Layout layout) {
-			JSONObject jsonObject = JSONUtil.put(
+		protected String toJSON(Layout layout, Locale locale)
+			throws PortalException {
+
+			return JSONUtil.put(
 				"groupId", layout.getGroupId()
+			).put(
+				"id", layout.getUuid()
 			).put(
 				"layoutId", layout.getLayoutId()
 			).put(
+				"name", layout.getBreadcrumb(locale)
+			).put(
 				"privateLayout", layout.isPrivateLayout()
-			);
-
-			return jsonObject.toString();
+			).put(
+				"value", layout.getFriendlyURL(locale)
+			).toString();
 		}
 
 		private final PortletDataContext _portletDataContext;

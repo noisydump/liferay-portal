@@ -81,7 +81,7 @@ public class AssetCategoriesSummaryTag<R> extends IncludeTag {
 	public void setPageContext(PageContext pageContext) {
 		super.setPageContext(pageContext);
 
-		servletContext = ServletContextUtil.getServletContext();
+		setServletContext(ServletContextUtil.getServletContext());
 	}
 
 	public void setParamName(String paramName) {
@@ -129,7 +129,6 @@ public class AssetCategoriesSummaryTag<R> extends IncludeTag {
 		httpServletRequest.setAttribute(
 			"liferay-asset:asset-categories-summary:assetCategories",
 			assetCategories);
-
 		httpServletRequest.setAttribute(
 			"liferay-asset:asset-categories-summary:className", _className);
 		httpServletRequest.setAttribute(

@@ -170,7 +170,7 @@ public class ActionUtil {
 		PermissionChecker permissionChecker =
 			PermissionThreadLocal.getPermissionChecker();
 
-		if (modelResourcePermission == null) {
+		if ((modelResourcePermission == null) && (id != null)) {
 			List<String> modelResourceActions =
 				ResourceActionsUtil.getModelResourceActions(permissionName);
 
@@ -182,8 +182,9 @@ public class ActionUtil {
 				return null;
 			}
 		}
-		else if (!modelResourcePermission.contains(
-					permissionChecker, id, actionName)) {
+		else if ((id != null) &&
+				 !modelResourcePermission.contains(
+					 permissionChecker, id, actionName)) {
 
 			return null;
 		}
@@ -247,7 +248,7 @@ public class ActionUtil {
 				).path(
 					clazz.getSuperclass(), methodName
 				).resolveTemplates(
-					_getParameterMap(clazz, id, methodName, uriInfo)
+					_getParameterMap(clazz, id, methodName, siteId, uriInfo)
 				).toTemplate();
 			}
 		).put(
@@ -319,7 +320,8 @@ public class ActionUtil {
 	}
 
 	private static Map<String, Object> _getParameterMap(
-		Class<?> clazz, Long id, String methodName, UriInfo uriInfo) {
+		Class<?> clazz, Long id, String methodName, Long siteId,
+		UriInfo uriInfo) {
 
 		MultivaluedMap<String, String> pathParameters =
 			uriInfo.getPathParameters();
@@ -341,7 +343,14 @@ public class ActionUtil {
 		String firstParameterName = _getFirstParameterNameFromPath(
 			clazz.getSuperclass(), methodName);
 
-		if (Validator.isNotNull(firstParameterName)) {
+		if (Validator.isNull(firstParameterName)) {
+			return parameterMap;
+		}
+
+		if ((siteId != null) && Objects.equals(firstParameterName, "siteId")) {
+			parameterMap.put(firstParameterName, siteId);
+		}
+		else {
 			parameterMap.put(firstParameterName, id);
 		}
 

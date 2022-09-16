@@ -20,6 +20,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
@@ -44,7 +46,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @generated
  */
 @Generated("")
-@GraphQLName("CustomValue")
+@GraphQLName(description = "Represents a custom value.", value = "CustomValue")
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "CustomValue")
 public class CustomValue implements Serializable {
@@ -53,7 +55,11 @@ public class CustomValue implements Serializable {
 		return ObjectMapperUtil.readValue(CustomValue.class, json);
 	}
 
-	@Schema(description = "The field's content for simple types.")
+	public static CustomValue unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(CustomValue.class, json);
+	}
+
+	@Schema(description = "The field's content value for simple types.")
 	@Valid
 	public Object getData() {
 		return data;
@@ -76,11 +82,13 @@ public class CustomValue implements Serializable {
 		}
 	}
 
-	@GraphQLField(description = "The field's content for simple types.")
+	@GraphQLField(description = "The field's content value for simple types.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Object data;
 
-	@Schema
+	@Schema(
+		description = "The localized field's content values for simple types."
+	)
 	@Valid
 	public Map<String, String> getData_i18n() {
 		return data_i18n;
@@ -106,7 +114,9 @@ public class CustomValue implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "The localized field's content values for simple types."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Map<String, String> data_i18n;
 
@@ -171,7 +181,17 @@ public class CustomValue implements Serializable {
 
 			sb.append("\"data\": ");
 
-			sb.append(String.valueOf(data));
+			if (data instanceof Map) {
+				sb.append(JSONFactoryUtil.createJSONObject((Map<?, ?>)data));
+			}
+			else if (data instanceof String) {
+				sb.append("\"");
+				sb.append(_escape((String)data));
+				sb.append("\"");
+			}
+			else {
+				sb.append(data);
+			}
 		}
 
 		if (data_i18n != null) {
@@ -200,15 +220,16 @@ public class CustomValue implements Serializable {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.CustomValue",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
 	}
 
 	private static boolean _isArray(Object value) {
@@ -234,8 +255,8 @@ public class CustomValue implements Serializable {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -266,7 +287,7 @@ public class CustomValue implements Serializable {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -274,7 +295,7 @@ public class CustomValue implements Serializable {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -282,5 +303,10 @@ public class CustomValue implements Serializable {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

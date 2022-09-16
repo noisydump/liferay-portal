@@ -16,7 +16,13 @@ package com.liferay.account.service.base;
 
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.service.AccountEntryLocalService;
+import com.liferay.account.service.AccountEntryLocalServiceUtil;
 import com.liferay.account.service.persistence.AccountEntryPersistence;
+import com.liferay.exportimport.kernel.lar.ExportImportHelperUtil;
+import com.liferay.exportimport.kernel.lar.ManifestSummary;
+import com.liferay.exportimport.kernel.lar.PortletDataContext;
+import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
+import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
@@ -27,10 +33,13 @@ import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DefaultActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
+import com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -44,10 +53,13 @@ import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -68,7 +80,7 @@ public abstract class AccountEntryLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>AccountEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.account.service.AccountEntryLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>AccountEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>AccountEntryLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -142,6 +154,13 @@ public abstract class AccountEntryLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return accountEntryPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -237,6 +256,21 @@ public abstract class AccountEntryLocalServiceBaseImpl
 	}
 
 	/**
+	 * Returns the account entry with the matching UUID and company.
+	 *
+	 * @param uuid the account entry's UUID
+	 * @param companyId the primary key of the company
+	 * @return the matching account entry, or <code>null</code> if a matching account entry could not be found
+	 */
+	@Override
+	public AccountEntry fetchAccountEntryByUuidAndCompanyId(
+		String uuid, long companyId) {
+
+		return accountEntryPersistence.fetchByUuid_C_First(
+			uuid, companyId, null);
+	}
+
+	/**
 	 * Returns the account entry with the matching external reference code and company.
 	 *
 	 * @param companyId the primary key of the company
@@ -244,10 +278,39 @@ public abstract class AccountEntryLocalServiceBaseImpl
 	 * @return the matching account entry, or <code>null</code> if a matching account entry could not be found
 	 */
 	@Override
-	public AccountEntry fetchAccountEntryByReferenceCode(
+	public AccountEntry fetchAccountEntryByExternalReferenceCode(
 		long companyId, String externalReferenceCode) {
 
 		return accountEntryPersistence.fetchByC_ERC(
+			companyId, externalReferenceCode);
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #fetchAccountEntryByExternalReferenceCode(long, String)}
+	 */
+	@Deprecated
+	@Override
+	public AccountEntry fetchAccountEntryByReferenceCode(
+		long companyId, String externalReferenceCode) {
+
+		return fetchAccountEntryByExternalReferenceCode(
+			companyId, externalReferenceCode);
+	}
+
+	/**
+	 * Returns the account entry with the matching external reference code and company.
+	 *
+	 * @param companyId the primary key of the company
+	 * @param externalReferenceCode the account entry's external reference code
+	 * @return the matching account entry
+	 * @throws PortalException if a matching account entry could not be found
+	 */
+	@Override
+	public AccountEntry getAccountEntryByExternalReferenceCode(
+			long companyId, String externalReferenceCode)
+		throws PortalException {
+
+		return accountEntryPersistence.findByC_ERC(
 			companyId, externalReferenceCode);
 	}
 
@@ -307,6 +370,72 @@ public abstract class AccountEntryLocalServiceBaseImpl
 		actionableDynamicQuery.setPrimaryKeyPropertyName("accountEntryId");
 	}
 
+	@Override
+	public ExportActionableDynamicQuery getExportActionableDynamicQuery(
+		final PortletDataContext portletDataContext) {
+
+		final ExportActionableDynamicQuery exportActionableDynamicQuery =
+			new ExportActionableDynamicQuery() {
+
+				@Override
+				public long performCount() throws PortalException {
+					ManifestSummary manifestSummary =
+						portletDataContext.getManifestSummary();
+
+					StagedModelType stagedModelType = getStagedModelType();
+
+					long modelAdditionCount = super.performCount();
+
+					manifestSummary.addModelAdditionCount(
+						stagedModelType, modelAdditionCount);
+
+					long modelDeletionCount =
+						ExportImportHelperUtil.getModelDeletionCount(
+							portletDataContext, stagedModelType);
+
+					manifestSummary.addModelDeletionCount(
+						stagedModelType, modelDeletionCount);
+
+					return modelAdditionCount;
+				}
+
+			};
+
+		initActionableDynamicQuery(exportActionableDynamicQuery);
+
+		exportActionableDynamicQuery.setAddCriteriaMethod(
+			new ActionableDynamicQuery.AddCriteriaMethod() {
+
+				@Override
+				public void addCriteria(DynamicQuery dynamicQuery) {
+					portletDataContext.addDateRangeCriteria(
+						dynamicQuery, "modifiedDate");
+				}
+
+			});
+
+		exportActionableDynamicQuery.setCompanyId(
+			portletDataContext.getCompanyId());
+
+		exportActionableDynamicQuery.setPerformActionMethod(
+			new ActionableDynamicQuery.PerformActionMethod<AccountEntry>() {
+
+				@Override
+				public void performAction(AccountEntry accountEntry)
+					throws PortalException {
+
+					StagedModelDataHandlerUtil.exportStagedModel(
+						portletDataContext, accountEntry);
+				}
+
+			});
+		exportActionableDynamicQuery.setStagedModelType(
+			new StagedModelType(
+				PortalUtil.getClassNameId(AccountEntry.class.getName())));
+
+		return exportActionableDynamicQuery;
+	}
+
 	/**
 	 * @throws PortalException
 	 */
@@ -325,6 +454,11 @@ public abstract class AccountEntryLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement AccountEntryLocalServiceImpl#deleteAccountEntry(AccountEntry) to avoid orphaned data");
+		}
+
 		return accountEntryLocalService.deleteAccountEntry(
 			(AccountEntry)persistedModel);
 	}
@@ -342,6 +476,23 @@ public abstract class AccountEntryLocalServiceBaseImpl
 		throws PortalException {
 
 		return accountEntryPersistence.findByPrimaryKey(primaryKeyObj);
+	}
+
+	/**
+	 * Returns the account entry with the matching UUID and company.
+	 *
+	 * @param uuid the account entry's UUID
+	 * @param companyId the primary key of the company
+	 * @return the matching account entry
+	 * @throws PortalException if a matching account entry could not be found
+	 */
+	@Override
+	public AccountEntry getAccountEntryByUuidAndCompanyId(
+			String uuid, long companyId)
+		throws PortalException {
+
+		return accountEntryPersistence.findByUuid_C_First(
+			uuid, companyId, null);
 	}
 
 	/**
@@ -386,6 +537,11 @@ public abstract class AccountEntryLocalServiceBaseImpl
 		return accountEntryPersistence.update(accountEntry);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -397,6 +553,8 @@ public abstract class AccountEntryLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		accountEntryLocalService = (AccountEntryLocalService)aopProxy;
+
+		_setLocalServiceUtilService(accountEntryLocalService);
 	}
 
 	/**
@@ -441,6 +599,22 @@ public abstract class AccountEntryLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		AccountEntryLocalService accountEntryLocalService) {
+
+		try {
+			Field field = AccountEntryLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, accountEntryLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected AccountEntryLocalService accountEntryLocalService;
 
 	@Reference
@@ -450,28 +624,7 @@ public abstract class AccountEntryLocalServiceBaseImpl
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@Reference
-	protected com.liferay.portal.kernel.service.GroupLocalService
-		groupLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.OrganizationLocalService
-		organizationLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.ResourceLocalService
-		resourceLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
-
-	@Reference
-	protected com.liferay.asset.kernel.service.AssetEntryLocalService
-		assetEntryLocalService;
-
-	@Reference
-	protected com.liferay.expando.kernel.service.ExpandoRowLocalService
-		expandoRowLocalService;
+	private static final Log _log = LogFactoryUtil.getLog(
+		AccountEntryLocalServiceBaseImpl.class);
 
 }

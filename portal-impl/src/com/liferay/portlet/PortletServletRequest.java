@@ -19,15 +19,12 @@ import com.liferay.portal.kernel.servlet.HttpMethods;
 import com.liferay.portal.kernel.servlet.ServletInputStreamAdapter;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
-import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portlet.internal.PortletRequestDispatcherImpl;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-
-import java.lang.reflect.Constructor;
 
 import java.security.Principal;
 
@@ -424,13 +421,13 @@ public class PortletServletRequest extends HttpServletRequestWrapper {
 
 	@Override
 	public HttpSession getSession(boolean create) {
-		HttpSession session = _httpServletRequest.getSession(create);
+		HttpSession httpSession = _httpServletRequest.getSession(create);
 
-		if (session == null) {
+		if (httpSession == null) {
 			return null;
 		}
 
-		return new PortletServletSession(session, _liferayPortletRequest);
+		return new PortletServletSession(httpSession, _liferayPortletRequest);
 	}
 
 	@Override
@@ -484,28 +481,6 @@ public class PortletServletRequest extends HttpServletRequestWrapper {
 
 			clientDataRequest.setCharacterEncoding(encoding);
 		}
-	}
-
-	/**
-	 * @deprecated As of Mueller (7.2.x), with no direct replacement
-	 */
-	@Deprecated
-	protected HttpSession wrapJettySession(HttpSession session)
-		throws Exception {
-
-		// This must be called through reflection because Resin tries to load
-		// org/mortbay/jetty/servlet/AbstractSessionManager$SessionIf
-
-		ClassLoader classLoader = PortalClassLoaderUtil.getClassLoader();
-
-		Class<?> jettyHttpSessionWrapperClass = classLoader.loadClass(
-			"com.liferay.portal.servlet.JettyHttpSessionWrapper");
-
-		Constructor<?> constructor =
-			jettyHttpSessionWrapperClass.getConstructor(
-				new Class<?>[] {HttpSession.class});
-
-		return (HttpSession)constructor.newInstance(new Object[] {session});
 	}
 
 	private ClientDataRequest _getClientDataRequest() {

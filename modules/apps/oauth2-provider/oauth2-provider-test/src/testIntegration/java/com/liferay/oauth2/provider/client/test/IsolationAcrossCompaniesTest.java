@@ -19,21 +19,18 @@ import com.liferay.oauth2.provider.internal.test.TestAnnotatedApplication;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
-import com.liferay.portal.kernel.util.HashMapDictionary;
-import com.liferay.portal.test.log.CaptureAppender;
-import com.liferay.portal.test.log.Log4JLoggerTestUtil;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
+import com.liferay.portal.test.log.LogCapture;
+import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-
-import java.util.Dictionary;
 
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 
-import org.apache.log4j.Level;
-
 import org.junit.Assert;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,6 +40,7 @@ import org.osgi.framework.BundleActivator;
 /**
  * @author Carlos Sierra Andrés
  */
+@Ignore
 @RunWith(Arquillian.class)
 public class IsolationAcrossCompaniesTest extends BaseClientTestCase {
 
@@ -68,9 +66,8 @@ public class IsolationAcrossCompaniesTest extends BaseClientTestCase {
 
 		builder = builder.header("Host", "host2.xyz");
 
-		try (CaptureAppender captureAppender =
-				Log4JLoggerTestUtil.configureLog4JLogger(
-					"portal_web.docroot.errors.code_jsp", Level.WARN)) {
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				"portal_web.docroot.errors.code_jsp", LoggerTestUtil.WARN)) {
 
 			Response response = builder.get();
 
@@ -95,9 +92,8 @@ public class IsolationAcrossCompaniesTest extends BaseClientTestCase {
 
 		builder = builder.header("Host", "host2.xyz");
 
-		try (CaptureAppender captureAppender =
-				Log4JLoggerTestUtil.configureLog4JLogger(
-					"portal_web.docroot.errors.code_jsp", Level.WARN)) {
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				"portal_web.docroot.errors.code_jsp", LoggerTestUtil.WARN)) {
 
 			Response response = builder.get();
 
@@ -110,19 +106,17 @@ public class IsolationAcrossCompaniesTest extends BaseClientTestCase {
 
 		@Override
 		protected void prepareTest() throws Exception {
-			Dictionary<String, Object> properties = new HashMapDictionary<>();
-
-			properties.put("oauth2.scope.checker.type", "annotations");
+			registerJaxRsApplication(
+				new TestAnnotatedApplication(), "annotated",
+				HashMapDictionaryBuilder.<String, Object>put(
+					"oauth2.scope.checker.type", "annotations"
+				).build());
 
 			registerJaxRsApplication(
-				new TestAnnotatedApplication(), "annotated", properties);
-
-			properties = new HashMapDictionary<>();
-
-			properties.put("oauth2.scope.checker.type", "none");
-
-			registerJaxRsApplication(
-				new TestAnnotatedApplication(), "no-scopes", properties);
+				new TestAnnotatedApplication(), "no-scopes",
+				HashMapDictionaryBuilder.<String, Object>put(
+					"oauth2.scope.checker.type", "none"
+				).build());
 
 			Company company1 = createCompany("host1");
 

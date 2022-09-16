@@ -16,6 +16,7 @@ package com.liferay.change.tracking.service.base;
 
 import com.liferay.change.tracking.model.CTPreferences;
 import com.liferay.change.tracking.service.CTPreferencesLocalService;
+import com.liferay.change.tracking.service.CTPreferencesLocalServiceUtil;
 import com.liferay.change.tracking.service.persistence.CTPreferencesPersistence;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.aop.AopService;
@@ -31,6 +32,8 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -44,10 +47,13 @@ import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -68,7 +74,7 @@ public abstract class CTPreferencesLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>CTPreferencesLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.change.tracking.service.CTPreferencesLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>CTPreferencesLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>CTPreferencesLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -139,6 +145,13 @@ public abstract class CTPreferencesLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return ctPreferencesPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -307,6 +320,11 @@ public abstract class CTPreferencesLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement CTPreferencesLocalServiceImpl#deleteCTPreferences(CTPreferences) to avoid orphaned data");
+		}
+
 		return ctPreferencesLocalService.deleteCTPreferences(
 			(CTPreferences)persistedModel);
 	}
@@ -368,6 +386,11 @@ public abstract class CTPreferencesLocalServiceBaseImpl
 		return ctPreferencesPersistence.update(ctPreferences);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -379,6 +402,8 @@ public abstract class CTPreferencesLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		ctPreferencesLocalService = (CTPreferencesLocalService)aopProxy;
+
+		_setLocalServiceUtilService(ctPreferencesLocalService);
 	}
 
 	/**
@@ -423,6 +448,22 @@ public abstract class CTPreferencesLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		CTPreferencesLocalService ctPreferencesLocalService) {
+
+		try {
+			Field field = CTPreferencesLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, ctPreferencesLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected CTPreferencesLocalService ctPreferencesLocalService;
 
 	@Reference
@@ -431,5 +472,8 @@ public abstract class CTPreferencesLocalServiceBaseImpl
 	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		CTPreferencesLocalServiceBaseImpl.class);
 
 }

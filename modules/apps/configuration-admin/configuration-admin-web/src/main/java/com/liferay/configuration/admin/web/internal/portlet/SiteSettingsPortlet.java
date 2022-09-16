@@ -15,32 +15,30 @@
 package com.liferay.configuration.admin.web.internal.portlet;
 
 import com.liferay.configuration.admin.constants.ConfigurationAdminPortletKeys;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
-import com.liferay.portal.kernel.security.auth.PrincipalException;
-import com.liferay.portal.kernel.security.permission.PermissionChecker;
-import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.service.permission.GroupPermission;
+import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.io.IOException;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
 import javax.portlet.Portlet;
 import javax.portlet.PortletException;
-import javax.portlet.PortletRequest;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
-import javax.portlet.ResourceRequest;
-import javax.portlet.ResourceResponse;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Raymond Augé
  */
 @Component(
-	enabled = false, immediate = true,
+	immediate = true,
 	property = {
 		"com.liferay.portlet.css-class-wrapper=portlet-site-settings",
 		"com.liferay.portlet.display-category=category.hidden",
@@ -58,71 +56,28 @@ import org.osgi.service.component.annotations.Component;
 public class SiteSettingsPortlet extends MVCPortlet {
 
 	@Override
-	public void processAction(
-			ActionRequest actionRequest, ActionResponse actionResponse)
-		throws IOException, PortletException {
-
-		checkSiteAdmin(actionRequest);
-
-		super.processAction(actionRequest, actionResponse);
-	}
-
-	@Override
-	public void render(
+	protected void doDispatch(
 			RenderRequest renderRequest, RenderResponse renderResponse)
 		throws IOException, PortletException {
 
-		checkSiteAdmin(renderRequest);
-
-		super.render(renderRequest, renderResponse);
-	}
-
-	@Override
-	public void serveResource(
-			ResourceRequest resourceRequest, ResourceResponse resourceResponse)
-		throws IOException, PortletException {
-
-		checkSiteAdmin(resourceRequest);
-
-		super.serveResource(resourceRequest, resourceResponse);
-	}
-
-	@SuppressWarnings("serial")
-	public static class MustBeSiteAdmin extends PrincipalException {
-
-		public MustBeSiteAdmin(long userId) {
-			super(
-				String.format(
-					"User %s must be the site administrator to perform the " +
-						"action",
-					userId));
-
-			this.userId = userId;
-		}
-
-		public MustBeSiteAdmin(PermissionChecker permissionChecker) {
-			this(permissionChecker.getUserId());
-		}
-
-		public final long userId;
-
-	}
-
-	protected void checkSiteAdmin(PortletRequest portletRequest)
-		throws PortletException {
-
-		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
+		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		PermissionChecker permissionChecker =
-			PermissionThreadLocal.getPermissionChecker();
+		long groupId = ParamUtil.getLong(
+			renderRequest, "groupId", themeDisplay.getScopeGroupId());
 
-		if (!permissionChecker.isGroupAdmin(themeDisplay.getScopeGroupId())) {
-			PrincipalException principalException = new MustBeSiteAdmin(
-				permissionChecker.getUserId());
-
-			throw new PortletException(principalException);
+		try {
+			_groupPermission.check(
+				themeDisplay.getPermissionChecker(), groupId, ActionKeys.VIEW);
 		}
+		catch (PortalException portalException) {
+			SessionErrors.add(renderRequest, portalException.getClass());
+		}
+
+		super.doDispatch(renderRequest, renderResponse);
 	}
+
+	@Reference
+	private GroupPermission _groupPermission;
 
 }

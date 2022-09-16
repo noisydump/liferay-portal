@@ -1,3 +1,4 @@
+@import 'admin';
 @import 'atlas-variables';
 
 // ---------- Configuration ----------
@@ -317,10 +318,6 @@
 	.list-group-item h3 {
 		margin-top: 5px;
 	}
-}
-
-#wrapper .knowledge-base-portlet .card-horizontal.main-content-card {
-	min-height: 0;
 }
 
 // ---------- Skin ----------

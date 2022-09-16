@@ -12,45 +12,64 @@
  * details.
  */
 
-import {postForm} from 'frontend-js-web';
+import {
+	getCheckedCheckboxes,
+	openConfirmModal,
+	postForm,
+} from 'frontend-js-web';
 
 export default function propsTransformer({
 	additionalProps: {deleteEntriesCmd, deleteEntriesURL, trashEnabled},
 	portletNamespace,
 	...otherProps
 }) {
-	const deleteEntries = () => {
-		if (
-			trashEnabled ||
-			confirm(
-				Liferay.Language.get('are-you-sure-you-want-to-delete-this')
-			)
-		) {
-			const form = document.getElementById(`${portletNamespace}fm`);
-
-			const searchContainer = Liferay.SearchContainer.get(
-				`${portletNamespace}blogEntries`
-			);
-
-			postForm(form, {
-				data: {
-					cmd: deleteEntriesCmd,
-					deleteEntryIds: Liferay.Util.listCheckedExcept(
-						form,
-						`${portletNamespace}allRowIds`
-					),
-					selectAll: searchContainer.select?.get('bulkSelection'),
-				},
-				url: deleteEntriesURL,
-			});
-		}
-	};
-
 	return {
 		...otherProps,
 		onActionButtonClick: (event, {item}) => {
 			if (item?.data?.action === 'deleteEntries') {
-				deleteEntries();
+				const deleteAction = () => {
+					const form = document.getElementById(
+						`${portletNamespace}fm`
+					);
+
+					if (!form) {
+						return;
+					}
+
+					const searchContainer = Liferay.SearchContainer.get(
+						`${portletNamespace}blogEntries`
+					);
+
+					postForm(form, {
+						data: {
+							cmd: deleteEntriesCmd,
+							deleteEntryIds: getCheckedCheckboxes(
+								form,
+								`${portletNamespace}allRowIds`
+							),
+							selectAll: searchContainer.select?.get(
+								'bulkSelection'
+							),
+						},
+						url: deleteEntriesURL,
+					});
+				};
+
+				if (trashEnabled) {
+					deleteAction();
+				}
+				else {
+					openConfirmModal({
+						message: Liferay.Language.get(
+							'are-you-sure-you-want-to-delete-this'
+						),
+						onConfirm: (isConfimed) => {
+							if (isConfimed) {
+								deleteAction();
+							}
+						},
+					});
+				}
 			}
 		},
 	};

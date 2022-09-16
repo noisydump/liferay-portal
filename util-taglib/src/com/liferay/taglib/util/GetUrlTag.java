@@ -34,10 +34,11 @@ public class GetUrlTag extends TagSupport {
 	@Override
 	public int doEndTag() throws JspException {
 		try {
-			WebCacheItem wci = new GetUrlWebCacheItem(_url, _expires);
+			WebCacheItem webCacheItem = new GetUrlWebCacheItem(_url, _expires);
 
 			String content = (String)WebCachePoolUtil.get(
-				GetUrlTag.class.getName() + StringPool.PERIOD + _url, wci);
+				GetUrlTag.class.getName() + StringPool.POUND + _url,
+				webCacheItem);
 
 			if (Validator.isNotNull(_var)) {
 				pageContext.setAttribute(_var, content);

@@ -14,9 +14,17 @@
 
 package com.liferay.commerce.pricing.service;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.util.tracker.ServiceTracker;
+import com.liferay.commerce.pricing.model.CommercePricingClass;
+import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.portal.kernel.dao.orm.DynamicQuery;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.util.OrderByComparator;
+
+import java.io.Serializable;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * Provides the local service utility for CommercePricingClass. This utility wraps
@@ -48,36 +56,44 @@ public class CommercePricingClassLocalServiceUtil {
 	 * @param commercePricingClass the commerce pricing class
 	 * @return the commerce pricing class that was added
 	 */
-	public static com.liferay.commerce.pricing.model.CommercePricingClass
-		addCommercePricingClass(
-			com.liferay.commerce.pricing.model.CommercePricingClass
-				commercePricingClass) {
+	public static CommercePricingClass addCommercePricingClass(
+		CommercePricingClass commercePricingClass) {
 
 		return getService().addCommercePricingClass(commercePricingClass);
 	}
 
-	public static com.liferay.commerce.pricing.model.CommercePricingClass
-			addCommercePricingClass(
-				long userId, java.util.Map<java.util.Locale, String> titleMap,
-				java.util.Map<java.util.Locale, String> descriptionMap,
-				com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static CommercePricingClass addCommercePricingClass(
+			long userId, Map<java.util.Locale, String> titleMap,
+			Map<java.util.Locale, String> descriptionMap,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws PortalException {
 
 		return getService().addCommercePricingClass(
 			userId, titleMap, descriptionMap, serviceContext);
 	}
 
-	public static com.liferay.commerce.pricing.model.CommercePricingClass
-			addCommercePricingClass(
-				long userId, java.util.Map<java.util.Locale, String> titleMap,
-				java.util.Map<java.util.Locale, String> descriptionMap,
-				String externalReferenceCode,
-				com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static CommercePricingClass addCommercePricingClass(
+			String externalReferenceCode, long userId,
+			Map<java.util.Locale, String> titleMap,
+			Map<java.util.Locale, String> descriptionMap,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws PortalException {
 
 		return getService().addCommercePricingClass(
-			userId, titleMap, descriptionMap, externalReferenceCode,
+			externalReferenceCode, userId, titleMap, descriptionMap,
 			serviceContext);
+	}
+
+	public static CommercePricingClass addOrUpdateCommercePricingClass(
+			String externalReferenceCode, long commercePricingClassId,
+			long userId, Map<java.util.Locale, String> titleMap,
+			Map<java.util.Locale, String> descriptionMap,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws PortalException {
+
+		return getService().addOrUpdateCommercePricingClass(
+			externalReferenceCode, commercePricingClassId, userId, titleMap,
+			descriptionMap, serviceContext);
 	}
 
 	/**
@@ -86,8 +102,8 @@ public class CommercePricingClassLocalServiceUtil {
 	 * @param commercePricingClassId the primary key for the new commerce pricing class
 	 * @return the new commerce pricing class
 	 */
-	public static com.liferay.commerce.pricing.model.CommercePricingClass
-		createCommercePricingClass(long commercePricingClassId) {
+	public static CommercePricingClass createCommercePricingClass(
+		long commercePricingClassId) {
 
 		return getService().createCommercePricingClass(commercePricingClassId);
 	}
@@ -95,9 +111,9 @@ public class CommercePricingClassLocalServiceUtil {
 	/**
 	 * @throws PortalException
 	 */
-	public static com.liferay.portal.kernel.model.PersistedModel
-			createPersistedModel(java.io.Serializable primaryKeyObj)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static PersistedModel createPersistedModel(
+			Serializable primaryKeyObj)
+		throws PortalException {
 
 		return getService().createPersistedModel(primaryKeyObj);
 	}
@@ -113,11 +129,9 @@ public class CommercePricingClassLocalServiceUtil {
 	 * @return the commerce pricing class that was removed
 	 * @throws PortalException
 	 */
-	public static com.liferay.commerce.pricing.model.CommercePricingClass
-			deleteCommercePricingClass(
-				com.liferay.commerce.pricing.model.CommercePricingClass
-					commercePricingClass)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static CommercePricingClass deleteCommercePricingClass(
+			CommercePricingClass commercePricingClass)
+		throws PortalException {
 
 		return getService().deleteCommercePricingClass(commercePricingClass);
 	}
@@ -133,15 +147,15 @@ public class CommercePricingClassLocalServiceUtil {
 	 * @return the commerce pricing class that was removed
 	 * @throws PortalException if a commerce pricing class with the primary key could not be found
 	 */
-	public static com.liferay.commerce.pricing.model.CommercePricingClass
-			deleteCommercePricingClass(long commercePricingClassId)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static CommercePricingClass deleteCommercePricingClass(
+			long commercePricingClassId)
+		throws PortalException {
 
 		return getService().deleteCommercePricingClass(commercePricingClassId);
 	}
 
 	public static void deleteCommercePricingClasses(long companyId)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		getService().deleteCommercePricingClasses(companyId);
 	}
@@ -149,23 +163,22 @@ public class CommercePricingClassLocalServiceUtil {
 	/**
 	 * @throws PortalException
 	 */
-	public static com.liferay.portal.kernel.model.PersistedModel
-			deletePersistedModel(
-				com.liferay.portal.kernel.model.PersistedModel persistedModel)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static PersistedModel deletePersistedModel(
+			PersistedModel persistedModel)
+		throws PortalException {
 
 		return getService().deletePersistedModel(persistedModel);
 	}
 
-	public static <T> T dslQuery(
-		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
-
+	public static <T> T dslQuery(DSLQuery dslQuery) {
 		return getService().dslQuery(dslQuery);
 	}
 
-	public static com.liferay.portal.kernel.dao.orm.DynamicQuery
-		dynamicQuery() {
+	public static int dslQueryCount(DSLQuery dslQuery) {
+		return getService().dslQueryCount(dslQuery);
+	}
 
+	public static DynamicQuery dynamicQuery() {
 		return getService().dynamicQuery();
 	}
 
@@ -175,9 +188,7 @@ public class CommercePricingClassLocalServiceUtil {
 	 * @param dynamicQuery the dynamic query
 	 * @return the matching rows
 	 */
-	public static <T> java.util.List<T> dynamicQuery(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery) {
-
+	public static <T> List<T> dynamicQuery(DynamicQuery dynamicQuery) {
 		return getService().dynamicQuery(dynamicQuery);
 	}
 
@@ -193,9 +204,8 @@ public class CommercePricingClassLocalServiceUtil {
 	 * @param end the upper bound of the range of model instances (not inclusive)
 	 * @return the range of matching rows
 	 */
-	public static <T> java.util.List<T> dynamicQuery(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery, int start,
-		int end) {
+	public static <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end) {
 
 		return getService().dynamicQuery(dynamicQuery, start, end);
 	}
@@ -213,10 +223,9 @@ public class CommercePricingClassLocalServiceUtil {
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
 	 * @return the ordered range of matching rows
 	 */
-	public static <T> java.util.List<T> dynamicQuery(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery, int start,
-		int end,
-		com.liferay.portal.kernel.util.OrderByComparator<T> orderByComparator) {
+	public static <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end,
+		OrderByComparator<T> orderByComparator) {
 
 		return getService().dynamicQuery(
 			dynamicQuery, start, end, orderByComparator);
@@ -228,9 +237,7 @@ public class CommercePricingClassLocalServiceUtil {
 	 * @param dynamicQuery the dynamic query
 	 * @return the number of rows matching the dynamic query
 	 */
-	public static long dynamicQueryCount(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery) {
-
+	public static long dynamicQueryCount(DynamicQuery dynamicQuery) {
 		return getService().dynamicQueryCount(dynamicQuery);
 	}
 
@@ -242,22 +249,21 @@ public class CommercePricingClassLocalServiceUtil {
 	 * @return the number of rows matching the dynamic query
 	 */
 	public static long dynamicQueryCount(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery,
+		DynamicQuery dynamicQuery,
 		com.liferay.portal.kernel.dao.orm.Projection projection) {
 
 		return getService().dynamicQueryCount(dynamicQuery, projection);
 	}
 
-	public static com.liferay.commerce.pricing.model.CommercePricingClass
-		fetchByExternalReferenceCode(
-			long companyId, String externalReferenceCode) {
+	public static CommercePricingClass fetchByExternalReferenceCode(
+		String externalReferenceCode, long companyId) {
 
 		return getService().fetchByExternalReferenceCode(
-			companyId, externalReferenceCode);
+			externalReferenceCode, companyId);
 	}
 
-	public static com.liferay.commerce.pricing.model.CommercePricingClass
-		fetchCommercePricingClass(long commercePricingClassId) {
+	public static CommercePricingClass fetchCommercePricingClass(
+		long commercePricingClassId) {
 
 		return getService().fetchCommercePricingClass(commercePricingClassId);
 	}
@@ -269,9 +275,20 @@ public class CommercePricingClassLocalServiceUtil {
 	 * @param externalReferenceCode the commerce pricing class's external reference code
 	 * @return the matching commerce pricing class, or <code>null</code> if a matching commerce pricing class could not be found
 	 */
-	public static com.liferay.commerce.pricing.model.CommercePricingClass
-		fetchCommercePricingClassByReferenceCode(
+	public static CommercePricingClass
+		fetchCommercePricingClassByExternalReferenceCode(
 			long companyId, String externalReferenceCode) {
+
+		return getService().fetchCommercePricingClassByExternalReferenceCode(
+			companyId, externalReferenceCode);
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #fetchCommercePricingClassByExternalReferenceCode(long, String)}
+	 */
+	@Deprecated
+	public static CommercePricingClass fetchCommercePricingClassByReferenceCode(
+		long companyId, String externalReferenceCode) {
 
 		return getService().fetchCommercePricingClassByReferenceCode(
 			companyId, externalReferenceCode);
@@ -284,7 +301,7 @@ public class CommercePricingClassLocalServiceUtil {
 	 * @param companyId the primary key of the company
 	 * @return the matching commerce pricing class, or <code>null</code> if a matching commerce pricing class could not be found
 	 */
-	public static com.liferay.commerce.pricing.model.CommercePricingClass
+	public static CommercePricingClass
 		fetchCommercePricingClassByUuidAndCompanyId(
 			String uuid, long companyId) {
 
@@ -305,9 +322,9 @@ public class CommercePricingClassLocalServiceUtil {
 	 * @return the commerce pricing class
 	 * @throws PortalException if a commerce pricing class with the primary key could not be found
 	 */
-	public static com.liferay.commerce.pricing.model.CommercePricingClass
-			getCommercePricingClass(long commercePricingClassId)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static CommercePricingClass getCommercePricingClass(
+			long commercePricingClassId)
+		throws PortalException {
 
 		return getService().getCommercePricingClass(commercePricingClassId);
 	}
@@ -320,6 +337,23 @@ public class CommercePricingClassLocalServiceUtil {
 	}
 
 	/**
+	 * Returns the commerce pricing class with the matching external reference code and company.
+	 *
+	 * @param companyId the primary key of the company
+	 * @param externalReferenceCode the commerce pricing class's external reference code
+	 * @return the matching commerce pricing class
+	 * @throws PortalException if a matching commerce pricing class could not be found
+	 */
+	public static CommercePricingClass
+			getCommercePricingClassByExternalReferenceCode(
+				long companyId, String externalReferenceCode)
+		throws PortalException {
+
+		return getService().getCommercePricingClassByExternalReferenceCode(
+			companyId, externalReferenceCode);
+	}
+
+	/**
 	 * Returns the commerce pricing class with the matching UUID and company.
 	 *
 	 * @param uuid the commerce pricing class's UUID
@@ -327,10 +361,10 @@ public class CommercePricingClassLocalServiceUtil {
 	 * @return the matching commerce pricing class
 	 * @throws PortalException if a matching commerce pricing class could not be found
 	 */
-	public static com.liferay.commerce.pricing.model.CommercePricingClass
+	public static CommercePricingClass
 			getCommercePricingClassByUuidAndCompanyId(
 				String uuid, long companyId)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		return getService().getCommercePricingClassByUuidAndCompanyId(
 			uuid, companyId);
@@ -354,20 +388,15 @@ public class CommercePricingClassLocalServiceUtil {
 	 * @param end the upper bound of the range of commerce pricing classes (not inclusive)
 	 * @return the range of commerce pricing classes
 	 */
-	public static java.util.List
-		<com.liferay.commerce.pricing.model.CommercePricingClass>
-			getCommercePricingClasses(int start, int end) {
+	public static List<CommercePricingClass> getCommercePricingClasses(
+		int start, int end) {
 
 		return getService().getCommercePricingClasses(start, end);
 	}
 
-	public static java.util.List
-		<com.liferay.commerce.pricing.model.CommercePricingClass>
-			getCommercePricingClasses(
-				long companyId, int start, int end,
-				com.liferay.portal.kernel.util.OrderByComparator
-					<com.liferay.commerce.pricing.model.CommercePricingClass>
-						orderByComparator) {
+	public static List<CommercePricingClass> getCommercePricingClasses(
+		long companyId, int start, int end,
+		OrderByComparator<CommercePricingClass> orderByComparator) {
 
 		return getService().getCommercePricingClasses(
 			companyId, start, end, orderByComparator);
@@ -420,31 +449,27 @@ public class CommercePricingClassLocalServiceUtil {
 	/**
 	 * @throws PortalException
 	 */
-	public static com.liferay.portal.kernel.model.PersistedModel
-			getPersistedModel(java.io.Serializable primaryKeyObj)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static PersistedModel getPersistedModel(Serializable primaryKeyObj)
+		throws PortalException {
 
 		return getService().getPersistedModel(primaryKeyObj);
 	}
 
+	public static List<CommercePricingClass> searchByCPDefinitionId(
+		long cpDefinitionId, String title, int start, int end) {
+
+		return getService().searchByCPDefinitionId(
+			cpDefinitionId, title, start, end);
+	}
+
 	public static com.liferay.portal.kernel.search.BaseModelSearchResult
-		<com.liferay.commerce.pricing.model.CommercePricingClass>
-				searchCommercePricingClasses(
-					long companyId, String keywords, int start, int end,
-					com.liferay.portal.kernel.search.Sort sort)
-			throws com.liferay.portal.kernel.exception.PortalException {
+		<CommercePricingClass> searchCommercePricingClasses(
+				long companyId, String keywords, int start, int end,
+				com.liferay.portal.kernel.search.Sort sort)
+			throws PortalException {
 
 		return getService().searchCommercePricingClasses(
 			companyId, keywords, start, end, sort);
-	}
-
-	public static java.util.List
-		<com.liferay.commerce.pricing.model.CommercePricingClass>
-			searchCommercePricingClassesByCPDefinitionId(
-				long cpDefinitionId, String title, int start, int end) {
-
-		return getService().searchCommercePricingClassesByCPDefinitionId(
-			cpDefinitionId, title, start, end);
 	}
 
 	/**
@@ -457,74 +482,37 @@ public class CommercePricingClassLocalServiceUtil {
 	 * @param commercePricingClass the commerce pricing class
 	 * @return the commerce pricing class that was updated
 	 */
-	public static com.liferay.commerce.pricing.model.CommercePricingClass
-		updateCommercePricingClass(
-			com.liferay.commerce.pricing.model.CommercePricingClass
-				commercePricingClass) {
+	public static CommercePricingClass updateCommercePricingClass(
+		CommercePricingClass commercePricingClass) {
 
 		return getService().updateCommercePricingClass(commercePricingClass);
 	}
 
-	public static com.liferay.commerce.pricing.model.CommercePricingClass
-			updateCommercePricingClass(
-				long commercePricingClassId, long userId,
-				java.util.Map<java.util.Locale, String> titleMap,
-				java.util.Map<java.util.Locale, String> descriptionMap,
-				com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static CommercePricingClass updateCommercePricingClass(
+			long commercePricingClassId, long userId,
+			Map<java.util.Locale, String> titleMap,
+			Map<java.util.Locale, String> descriptionMap,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws PortalException {
 
 		return getService().updateCommercePricingClass(
 			commercePricingClassId, userId, titleMap, descriptionMap,
 			serviceContext);
 	}
 
-	public static com.liferay.commerce.pricing.model.CommercePricingClass
+	public static CommercePricingClass
 			updateCommercePricingClassExternalReferenceCode(
-				long commercePricingClassId, String externalReferenceCode)
-		throws com.liferay.portal.kernel.exception.PortalException {
+				String externalReferenceCode, long commercePricingClassId)
+		throws PortalException {
 
 		return getService().updateCommercePricingClassExternalReferenceCode(
-			commercePricingClassId, externalReferenceCode);
-	}
-
-	public static com.liferay.commerce.pricing.model.CommercePricingClass
-			upsertCommercePricingClass(
-				long commercePricingClassId, long userId,
-				java.util.Map<java.util.Locale, String> titleMap,
-				java.util.Map<java.util.Locale, String> descriptionMap,
-				String externalReferenceCode,
-				com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return getService().upsertCommercePricingClass(
-			commercePricingClassId, userId, titleMap, descriptionMap,
-			externalReferenceCode, serviceContext);
+			externalReferenceCode, commercePricingClassId);
 	}
 
 	public static CommercePricingClassLocalService getService() {
-		return _serviceTracker.getService();
+		return _service;
 	}
 
-	private static ServiceTracker
-		<CommercePricingClassLocalService, CommercePricingClassLocalService>
-			_serviceTracker;
-
-	static {
-		Bundle bundle = FrameworkUtil.getBundle(
-			CommercePricingClassLocalService.class);
-
-		ServiceTracker
-			<CommercePricingClassLocalService, CommercePricingClassLocalService>
-				serviceTracker =
-					new ServiceTracker
-						<CommercePricingClassLocalService,
-						 CommercePricingClassLocalService>(
-							 bundle.getBundleContext(),
-							 CommercePricingClassLocalService.class, null);
-
-		serviceTracker.open();
-
-		_serviceTracker = serviceTracker;
-	}
+	private static volatile CommercePricingClassLocalService _service;
 
 }

@@ -14,9 +14,9 @@
 
 package com.liferay.staging.bar.web.internal.template;
 
-import com.liferay.petra.string.StringPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -60,7 +60,7 @@ public class StagingBarTemplateContextContributor
 			if (_stagingBarControlMenuJSPDynamicInclude.isShow(
 					httpServletRequest)) {
 
-				StringBuilder sb = new StringBuilder();
+				StringBundler sb = new StringBundler(3);
 
 				sb.append(
 					GetterUtil.getString(contextObjects.get("bodyCssClass")));
@@ -72,57 +72,47 @@ public class StagingBarTemplateContextContributor
 						layout.getFriendlyURL(),
 						PropsValues.CONTROL_PANEL_LAYOUT_FRIENDLY_URL)) {
 
-					sb.append(StringPool.SPACE);
-					sb.append("has-staging-bar");
+					sb.append(" has-staging-bar");
 				}
 
 				Group group = themeDisplay.getScopeGroup();
 
 				if (group.isStagingGroup()) {
-					sb.append(StringPool.SPACE);
-					sb.append("staging local-staging");
+					sb.append(" staging local-staging");
 				}
 				else if (themeDisplay.isShowStagingIcon() &&
 						 group.hasStagingGroup()) {
 
-					sb.append(StringPool.SPACE);
-					sb.append("live-view");
+					sb.append(" live-view");
 				}
 				else if (themeDisplay.isShowStagingIcon() &&
 						 group.isStagedRemotely()) {
 
-					sb.append(StringPool.SPACE);
-					sb.append("staging remote-staging");
+					sb.append(" staging remote-staging");
 				}
 
 				contextObjects.put("bodyCssClass", sb.toString());
 			}
 		}
 		catch (PortalException portalException) {
-			_log.error(portalException, portalException);
+			_log.error(portalException);
 		}
 
 		contextObjects.put("show_staging", themeDisplay.isShowStagingIcon());
 
 		if (themeDisplay.isShowStagingIcon()) {
 			contextObjects.put(
-				"staging_text",
-				LanguageUtil.get(httpServletRequest, "staging"));
+				"staging_text", _language.get(httpServletRequest, "staging"));
 		}
-	}
-
-	@Reference(unbind = "-")
-	protected void setCustomizationSettingsControlMenuJSPDynamicInclude(
-		StagingBarControlMenuJSPDynamicInclude
-			stagingBarControlMenuJSPDynamicInclude) {
-
-		_stagingBarControlMenuJSPDynamicInclude =
-			stagingBarControlMenuJSPDynamicInclude;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		StagingBarTemplateContextContributor.class);
 
+	@Reference
+	private Language _language;
+
+	@Reference
 	private StagingBarControlMenuJSPDynamicInclude
 		_stagingBarControlMenuJSPDynamicInclude;
 

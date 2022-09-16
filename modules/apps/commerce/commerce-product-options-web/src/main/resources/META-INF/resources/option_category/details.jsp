@@ -29,18 +29,22 @@ CPOptionCategory cpOptionCategory = (CPOptionCategory)request.getAttribute(CPWeb
 
 <liferay-ui:error exception="<%= CPOptionCategoryKeyException.class %>" message="that-key-is-already-being-used" />
 
-<aui:fieldset>
-	<aui:input autoFocus="<%= true %>" name="title" />
+<commerce-ui:panel
+	elementClasses="mt-4"
+>
+	<aui:fieldset>
+		<aui:input autoFocus="<%= true %>" name="title" />
 
-	<aui:input name="description" />
+		<aui:input name="description" />
 
-	<aui:input name="priority" />
+		<aui:input name="priority" />
 
-	<aui:input helpMessage="key-help" name="key" />
-</aui:fieldset>
+		<aui:input helpMessage="key-help" name="key" />
+	</aui:fieldset>
+</commerce-ui:panel>
 
 <c:if test="<%= cpOptionCategory == null %>">
-	<aui:script require="commerce-frontend-js/utilities/debounce as debounce">
+	<aui:script require="frontend-js-web/liferay/debounce/debounce.es as debounce">
 		var form = document.getElementById('<portlet:namespace />fm');
 
 		var keyInput = form.querySelector('#<portlet:namespace />key');

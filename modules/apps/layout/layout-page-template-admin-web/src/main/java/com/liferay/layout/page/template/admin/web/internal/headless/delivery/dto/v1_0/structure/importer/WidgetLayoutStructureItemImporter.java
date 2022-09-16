@@ -14,28 +14,33 @@
 
 package com.liferay.layout.page.template.admin.web.internal.headless.delivery.dto.v1_0.structure.importer;
 
+import com.liferay.fragment.constants.FragmentConstants;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.processor.FragmentEntryProcessorRegistry;
 import com.liferay.fragment.service.FragmentEntryLinkLocalService;
 import com.liferay.headless.delivery.dto.v1_0.PageElement;
-import com.liferay.layout.page.template.admin.web.internal.headless.delivery.dto.v1_0.structure.importer.util.PortletConfigurationImporterHelper;
-import com.liferay.layout.page.template.admin.web.internal.headless.delivery.dto.v1_0.structure.importer.util.PortletPermissionsImporterHelper;
+import com.liferay.layout.page.template.admin.web.internal.headless.delivery.dto.v1_0.structure.importer.helper.PortletConfigurationImporterHelper;
+import com.liferay.layout.page.template.admin.web.internal.headless.delivery.dto.v1_0.structure.importer.helper.PortletPermissionsImporterHelper;
+import com.liferay.layout.util.structure.FragmentStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.layout.util.structure.LayoutStructureItem;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortletIdException;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.portlet.PortletIdCodec;
-import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.PortletLocalService;
 import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.segments.service.SegmentsExperienceLocalService;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -53,20 +58,91 @@ public class WidgetLayoutStructureItemImporter
 
 	@Override
 	public LayoutStructureItem addLayoutStructureItem(
-			Layout layout, LayoutStructure layoutStructure,
-			PageElement pageElement, String parentItemId, int position,
-			Set<String> warningMessages)
+			LayoutStructure layoutStructure,
+			LayoutStructureItemImporterContext
+				layoutStructureItemImporterContext,
+			PageElement pageElement, Set<String> warningMessages)
 		throws Exception {
 
 		FragmentEntryLink fragmentEntryLink = _addFragmentEntryLink(
-			layout, pageElement, warningMessages);
+			layoutStructureItemImporterContext.getLayout(), pageElement,
+			warningMessages);
 
 		if (fragmentEntryLink == null) {
 			return null;
 		}
 
-		return layoutStructure.addFragmentLayoutStructureItem(
-			fragmentEntryLink.getFragmentEntryLinkId(), parentItemId, position);
+		FragmentStyledLayoutStructureItem fragmentStyledLayoutStructureItem =
+			(FragmentStyledLayoutStructureItem)
+				layoutStructure.addFragmentStyledLayoutStructureItem(
+					fragmentEntryLink.getFragmentEntryLinkId(),
+					layoutStructureItemImporterContext.getParentItemId(),
+					layoutStructureItemImporterContext.getPosition());
+
+		Map<String, Object> definitionMap = getDefinitionMap(
+			pageElement.getDefinition());
+
+		if (definitionMap != null) {
+			return fragmentStyledLayoutStructureItem;
+		}
+
+		if (definitionMap.containsKey("cssClasses")) {
+			List<String> cssClasses = (List<String>)definitionMap.get(
+				"cssClasses");
+
+			fragmentStyledLayoutStructureItem.setCssClasses(
+				new HashSet<>(cssClasses));
+		}
+
+		if (definitionMap.containsKey("customCSS")) {
+			fragmentStyledLayoutStructureItem.setCustomCSS(
+				String.valueOf(definitionMap.get("customCSS")));
+		}
+
+		if (definitionMap.containsKey("customCSSViewports")) {
+			List<Map<String, Object>> customCSSViewports =
+				(List<Map<String, Object>>)definitionMap.get(
+					"customCSSViewports");
+
+			for (Map<String, Object> customCSSViewport : customCSSViewports) {
+				fragmentStyledLayoutStructureItem.setCustomCSSViewport(
+					(String)customCSSViewport.get("id"),
+					(String)customCSSViewport.get("customCSS"));
+			}
+		}
+
+		Map<String, Object> fragmentStyleMap =
+			(Map<String, Object>)definitionMap.get("fragmentStyle");
+
+		if (fragmentStyleMap != null) {
+			JSONObject jsonObject = JSONUtil.put(
+				"styles",
+				toStylesJSONObject(
+					layoutStructureItemImporterContext, fragmentStyleMap));
+
+			fragmentStyledLayoutStructureItem.updateItemConfig(jsonObject);
+		}
+
+		if (definitionMap.containsKey("fragmentViewports")) {
+			List<Map<String, Object>> fragmentViewports =
+				(List<Map<String, Object>>)definitionMap.get(
+					"fragmentViewports");
+
+			for (Map<String, Object> fragmentViewport : fragmentViewports) {
+				JSONObject jsonObject = JSONUtil.put(
+					(String)fragmentViewport.get("id"),
+					toFragmentViewportStylesJSONObject(fragmentViewport));
+
+				fragmentStyledLayoutStructureItem.updateItemConfig(jsonObject);
+			}
+		}
+
+		if (definitionMap.containsKey("name")) {
+			fragmentStyledLayoutStructureItem.setName(
+				GetterUtil.getString(definitionMap.get("name")));
+		}
+
+		return fragmentStyledLayoutStructureItem;
 	}
 
 	@Override
@@ -135,10 +211,13 @@ public class WidgetLayoutStructureItemImporter
 			warningMessages, widgetPermissionsMaps);
 
 		return _fragmentEntryLinkLocalService.addFragmentEntryLink(
-			layout.getUserId(), layout.getGroupId(), 0, 0, 0, layout.getPlid(),
-			StringPool.BLANK, StringPool.BLANK, StringPool.BLANK,
-			StringPool.BLANK, editableValueJSONObject.toString(),
-			widgetInstanceId, 0, null,
+			layout.getUserId(), layout.getGroupId(), 0, 0,
+			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
+				layout.getPlid()),
+			layout.getPlid(), StringPool.BLANK, StringPool.BLANK,
+			StringPool.BLANK, StringPool.BLANK,
+			editableValueJSONObject.toString(), widgetInstanceId, 0, null,
+			FragmentConstants.TYPE_PORTLET,
 			ServiceContextThreadLocal.getServiceContext());
 	}
 
@@ -175,9 +254,6 @@ public class WidgetLayoutStructureItemImporter
 	private FragmentEntryProcessorRegistry _fragmentEntryProcessorRegistry;
 
 	@Reference
-	private LayoutLocalService _layoutLocalService;
-
-	@Reference
 	private PortletConfigurationImporterHelper
 		_portletConfigurationImporterHelper;
 
@@ -189,5 +265,8 @@ public class WidgetLayoutStructureItemImporter
 
 	@Reference
 	private PortletPreferencesLocalService _portletPreferencesLocalService;
+
+	@Reference
+	private SegmentsExperienceLocalService _segmentsExperienceLocalService;
 
 }

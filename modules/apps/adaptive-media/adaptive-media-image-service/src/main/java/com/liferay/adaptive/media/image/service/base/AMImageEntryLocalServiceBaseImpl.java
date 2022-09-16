@@ -16,6 +16,7 @@ package com.liferay.adaptive.media.image.service.base;
 
 import com.liferay.adaptive.media.image.model.AMImageEntry;
 import com.liferay.adaptive.media.image.service.AMImageEntryLocalService;
+import com.liferay.adaptive.media.image.service.AMImageEntryLocalServiceUtil;
 import com.liferay.adaptive.media.image.service.persistence.AMImageEntryPersistence;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.aop.AopService;
@@ -31,6 +32,8 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -44,10 +47,13 @@ import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -68,7 +74,7 @@ public abstract class AMImageEntryLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>AMImageEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.adaptive.media.image.service.AMImageEntryLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>AMImageEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>AMImageEntryLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -139,6 +145,13 @@ public abstract class AMImageEntryLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return amImageEntryPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -321,6 +334,11 @@ public abstract class AMImageEntryLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement AMImageEntryLocalServiceImpl#deleteAMImageEntry(AMImageEntry) to avoid orphaned data");
+		}
+
 		return amImageEntryLocalService.deleteAMImageEntry(
 			(AMImageEntry)persistedModel);
 	}
@@ -431,6 +449,11 @@ public abstract class AMImageEntryLocalServiceBaseImpl
 		return amImageEntryPersistence.update(amImageEntry);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -442,6 +465,8 @@ public abstract class AMImageEntryLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		amImageEntryLocalService = (AMImageEntryLocalService)aopProxy;
+
+		_setLocalServiceUtilService(amImageEntryLocalService);
 	}
 
 	/**
@@ -486,6 +511,22 @@ public abstract class AMImageEntryLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		AMImageEntryLocalService amImageEntryLocalService) {
+
+		try {
+			Field field = AMImageEntryLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, amImageEntryLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected AMImageEntryLocalService amImageEntryLocalService;
 
 	@Reference
@@ -494,5 +535,8 @@ public abstract class AMImageEntryLocalServiceBaseImpl
 	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		AMImageEntryLocalServiceBaseImpl.class);
 
 }

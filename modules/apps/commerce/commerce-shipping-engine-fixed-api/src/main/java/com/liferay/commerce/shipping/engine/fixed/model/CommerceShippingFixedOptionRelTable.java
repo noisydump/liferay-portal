@@ -36,6 +36,9 @@ public class CommerceShippingFixedOptionRelTable
 	public static final CommerceShippingFixedOptionRelTable INSTANCE =
 		new CommerceShippingFixedOptionRelTable();
 
+	public final Column<CommerceShippingFixedOptionRelTable, Long> mvccVersion =
+		createColumn(
+			"mvccVersion", Long.class, Types.BIGINT, Column.FLAG_NULLITY);
 	public final Column<CommerceShippingFixedOptionRelTable, Long>
 		commerceShippingFixedOptionRelId = createColumn(
 			"CShippingFixedOptionRelId", Long.class, Types.BIGINT,
@@ -68,12 +71,11 @@ public class CommerceShippingFixedOptionRelTable
 		commerceInventoryWarehouseId = createColumn(
 			"commerceInventoryWarehouseId", Long.class, Types.BIGINT,
 			Column.FLAG_DEFAULT);
-	public final Column<CommerceShippingFixedOptionRelTable, Long>
-		commerceCountryId = createColumn(
-			"commerceCountryId", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
-	public final Column<CommerceShippingFixedOptionRelTable, Long>
-		commerceRegionId = createColumn(
-			"commerceRegionId", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
+	public final Column<CommerceShippingFixedOptionRelTable, Long> countryId =
+		createColumn(
+			"countryId", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
+	public final Column<CommerceShippingFixedOptionRelTable, Long> regionId =
+		createColumn("regionId", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
 	public final Column<CommerceShippingFixedOptionRelTable, String> zip =
 		createColumn("zip", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
 	public final Column<CommerceShippingFixedOptionRelTable, Double>

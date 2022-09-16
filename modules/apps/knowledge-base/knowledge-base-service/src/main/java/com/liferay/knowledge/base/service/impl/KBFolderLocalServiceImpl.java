@@ -14,28 +14,38 @@
 
 package com.liferay.knowledge.base.service.impl;
 
+import com.liferay.expando.kernel.service.ExpandoRowLocalService;
 import com.liferay.knowledge.base.constants.KBFolderConstants;
+import com.liferay.knowledge.base.exception.DuplicateKBFolderExternalReferenceCodeException;
 import com.liferay.knowledge.base.exception.DuplicateKBFolderNameException;
 import com.liferay.knowledge.base.exception.InvalidKBFolderNameException;
 import com.liferay.knowledge.base.exception.KBFolderParentException;
 import com.liferay.knowledge.base.exception.NoSuchFolderException;
+import com.liferay.knowledge.base.model.KBArticle;
 import com.liferay.knowledge.base.model.KBFolder;
 import com.liferay.knowledge.base.service.KBArticleLocalService;
 import com.liferay.knowledge.base.service.base.KBFolderLocalServiceBaseImpl;
 import com.liferay.knowledge.base.util.KnowledgeBaseUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.orm.QueryDefinition;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
+import com.liferay.portal.kernel.service.ResourceLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.service.permission.ModelPermissions;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
@@ -52,30 +62,33 @@ public class KBFolderLocalServiceImpl extends KBFolderLocalServiceBaseImpl {
 
 	@Override
 	public KBFolder addKBFolder(
-			long userId, long groupId, long parentResourceClassNameId,
-			long parentResourcePrimKey, String name, String description,
-			ServiceContext serviceContext)
+			String externalReferenceCode, long userId, long groupId,
+			long parentResourceClassNameId, long parentResourcePrimKey,
+			String name, String description, ServiceContext serviceContext)
 		throws PortalException {
 
 		// KB folder
 
-		User user = userLocalService.getUser(userId);
-		Date now = new Date();
+		User user = _userLocalService.getUser(userId);
+		Date date = new Date();
 
 		validateName(groupId, parentResourcePrimKey, name);
 		validateParent(parentResourceClassNameId, parentResourcePrimKey);
 
 		long kbFolderId = counterLocalService.increment();
 
+		_validateExternalReferenceCode(externalReferenceCode, groupId);
+
 		KBFolder kbFolder = kbFolderPersistence.create(kbFolderId);
 
 		kbFolder.setUuid(serviceContext.getUuid());
+		kbFolder.setExternalReferenceCode(externalReferenceCode);
 		kbFolder.setGroupId(groupId);
 		kbFolder.setCompanyId(user.getCompanyId());
 		kbFolder.setUserId(userId);
 		kbFolder.setUserName(user.getFullName());
-		kbFolder.setCreateDate(now);
-		kbFolder.setModifiedDate(now);
+		kbFolder.setCreateDate(date);
+		kbFolder.setModifiedDate(date);
 		kbFolder.setParentKBFolderId(parentResourcePrimKey);
 		kbFolder.setName(name);
 		kbFolder.setUrlTitle(
@@ -117,9 +130,11 @@ public class KBFolderLocalServiceImpl extends KBFolderLocalServiceBaseImpl {
 			deleteKBFolder(childKBFolder.getKbFolderId());
 		}
 
-		// Expando
+		_resourceLocalService.deleteResource(
+			kbFolder.getCompanyId(), KBFolder.class.getName(),
+			ResourceConstants.SCOPE_INDIVIDUAL, kbFolder.getKbFolderId());
 
-		expandoRowLocalService.deleteRows(kbFolder.getKbFolderId());
+		_expandoRowLocalService.deleteRows(kbFolder.getKbFolderId());
 
 		return kbFolderPersistence.remove(kbFolder);
 	}
@@ -235,7 +250,33 @@ public class KBFolderLocalServiceImpl extends KBFolderLocalServiceBaseImpl {
 
 		kbFolder.setParentKBFolderId(parentKBFolderId);
 
-		kbFolderPersistence.update(kbFolder);
+		kbFolder = kbFolderPersistence.update(kbFolder);
+
+		LinkedList<Object> kbFoldersAndArticles = new LinkedList<>(
+			kbFolderLocalService.getKBFoldersAndKBArticles(
+				kbFolder.getGroupId(), kbFolder.getKbFolderId(),
+				WorkflowConstants.STATUS_ANY, QueryUtil.ALL_POS,
+				QueryUtil.ALL_POS, null));
+
+		while (!kbFoldersAndArticles.isEmpty()) {
+			Object kbObject = kbFoldersAndArticles.pop();
+
+			if (kbObject instanceof KBArticle) {
+				KBArticle childKBArticle = (KBArticle)kbObject;
+
+				_kbArticleLocalService.updateKBArticle(childKBArticle);
+			}
+			else if (kbObject instanceof KBFolder) {
+				KBFolder childKBFolder = (KBFolder)kbObject;
+
+				kbFoldersAndArticles.addAll(
+					kbFolderLocalService.getKBFoldersAndKBArticles(
+						childKBFolder.getGroupId(),
+						childKBFolder.getKbFolderId(),
+						WorkflowConstants.STATUS_ANY, QueryUtil.ALL_POS,
+						QueryUtil.ALL_POS, null));
+			}
+		}
 	}
 
 	@Override
@@ -267,7 +308,7 @@ public class KBFolderLocalServiceImpl extends KBFolderLocalServiceBaseImpl {
 			boolean addGuestPermissions)
 		throws PortalException {
 
-		resourceLocalService.addResources(
+		_resourceLocalService.addResources(
 			kbFolder.getCompanyId(), kbFolder.getGroupId(),
 			kbFolder.getUserId(), KBFolder.class.getName(),
 			kbFolder.getKbFolderId(), false, addGroupPermissions,
@@ -278,7 +319,7 @@ public class KBFolderLocalServiceImpl extends KBFolderLocalServiceBaseImpl {
 			KBFolder kbFolder, ModelPermissions modelPermissions)
 		throws PortalException {
 
-		resourceLocalService.addModelResources(
+		_resourceLocalService.addModelResources(
 			kbFolder.getCompanyId(), kbFolder.getGroupId(),
 			kbFolder.getUserId(), KBFolder.class.getName(),
 			kbFolder.getKbFolderId(), modelPermissions);
@@ -346,7 +387,7 @@ public class KBFolderLocalServiceImpl extends KBFolderLocalServiceBaseImpl {
 			long parentResourceClassNameId, long parentResourcePrimKey)
 		throws PortalException {
 
-		long kbFolderClassNameId = classNameLocalService.getClassNameId(
+		long kbFolderClassNameId = _classNameLocalService.getClassNameId(
 			KBFolderConstants.getClassName());
 
 		KBFolder parentKBFolder = null;
@@ -370,7 +411,38 @@ public class KBFolderLocalServiceImpl extends KBFolderLocalServiceBaseImpl {
 		}
 	}
 
+	private void _validateExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		if (Validator.isNull(externalReferenceCode)) {
+			return;
+		}
+
+		KBFolder kbFolder = kbFolderPersistence.fetchByG_ERC(
+			groupId, externalReferenceCode);
+
+		if (kbFolder != null) {
+			throw new DuplicateKBFolderExternalReferenceCodeException(
+				StringBundler.concat(
+					"Duplicate knowledge base folder external reference code ",
+					externalReferenceCode, " in group ", groupId));
+		}
+	}
+
+	@Reference
+	private ClassNameLocalService _classNameLocalService;
+
+	@Reference
+	private ExpandoRowLocalService _expandoRowLocalService;
+
 	@Reference
 	private KBArticleLocalService _kbArticleLocalService;
+
+	@Reference
+	private ResourceLocalService _resourceLocalService;
+
+	@Reference
+	private UserLocalService _userLocalService;
 
 }

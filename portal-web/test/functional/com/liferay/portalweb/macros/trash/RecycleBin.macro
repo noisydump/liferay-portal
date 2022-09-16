@@ -1,11 +1,7 @@
 definition {
 
 	macro bulkRestoreCP {
-		var browserType = PropsUtil.get("browser.type");
-
-		if ("${browserType}" == "chrome") {
-			MetalComponent.waitForManagementBar();
-		}
+		WaitForPageLoad();
 
 		for (var assetName : list "${assetList}") {
 			LexiconTable.viewTableEntryTitle(tableEntry = "${assetName}");
@@ -27,29 +23,42 @@ definition {
 	}
 
 	macro deleteCP {
-		var key_assetName = "${assetName}";
-
 		LexiconTable.viewTableEntryTitle(tableEntry = "${assetName}");
 
 		LexiconTable.viewTableEntryText(
 			tableEntry = "${assetName}",
 			tableEntryText = "${assetType}");
 
-		LexiconTable.delete(tableEntry = "${assetName}");
+		LexiconTable.clickEllipsisItem(
+			item = "Delete",
+			tableEntry = "${assetName}");
+
+		AssertTextEquals(
+			locator1 = "Modal#BODY",
+			value1 = "Are you sure you want to delete this? It will be deleted immediately.");
+
+		Click(
+			key_text = "Delete",
+			locator1 = "Modal#MODAL_FOOTER_BUTTON");
 
 		Alert.viewSuccessMessage();
 
-		AssertTextEquals(
-			locator1 = "Message#EMPTY_INFO",
-			value1 = "The Recycle Bin is empty.");
+		if ("${multipleAssets}" == "true") {
+			AssertNotVisible(locator1 = "Message#EMPTY_INFO");
+		}
+		else {
+			AssertTextEquals(
+				locator1 = "Message#EMPTY_INFO",
+				value1 = "The Recycle Bin is empty.");
+		}
 
 		LexiconTable.viewTableEntryNotPresent(tableEntry = "${assetName}");
 	}
 
 	macro disableRecycleBinViaSiteSettings {
-		Navigator.gotoNavTab(navTab = "Advanced");
-
-		Panel.expandPanel(panel = "Recycle Bin");
+		Click(
+			key_itemName = "Recycle Bin",
+			locator1 = "ListGroupItem#ITEM_TEXT");
 
 		Uncheck.uncheckToggleSwitchNoErrorNoAssert(locator1 = "Checkbox#ENABLE_RECYCLE_BIN");
 
@@ -127,6 +136,30 @@ definition {
 			value1 = "The ${assetType2} ${documentName} was restored to ${assetRestoreLocation}.");
 	}
 
+	macro restoreContentWithoutOriginalFolder {
+		LexiconTable.viewTableEntryTitle(tableEntry = "${assetName}");
+
+		RecycleBin.clickEllipsisItem(
+			assetName = "${assetName}",
+			item = "Restore");
+
+		SelectFrame(locator1 = "RecycleBin#RECYCLE_BIN_FOLDER_WARNING_IFRAME");
+
+		AssertTextEquals(
+			locator1 = "Message#USER_BLOCKED",
+			value1 = "The original Folder does not exist anymore. Choose a different Folder to restore ${assetName}.");
+
+		AssertClick(
+			locator1 = "Button#CHOOSE_THIS_FOLDER",
+			value1 = "Choose This Folder");
+
+		SelectFrameTop();
+
+		AssertTextEquals.assertPartialText(
+			locator1 = "Message#RECYCLE_BIN_RESTORE_SUCCESS",
+			value1 = "The ${assetType} ${assetName} was restored to ${assetRestoreLocation}.");
+	}
+
 	macro restoreCP {
 		var key_assetName = "${assetName}";
 
@@ -173,6 +206,24 @@ definition {
 		Alert.viewErrorMessage(errorMessage = "An entry with name ${assetName} already exists.");
 
 		Click(locator1 = "RecycleBin#RECYCLE_BIN_WARNING_OVERWRITE_RADIO");
+
+		PortletEntry.save();
+	}
+
+	macro restoreRenameCP {
+		RecycleBin.clickEllipsisItem(
+			assetName = "${assetName}",
+			item = "Restore");
+
+		Alert.viewErrorMessage(errorMessage = "Error:An entry with name ${assetName} already exists.");
+
+		Check(locator1 = "RecycleBin#RECYCLE_BIN_WARNING_RENAME_RADIO");
+
+		if (isSet(newName)) {
+			Type(
+				locator1 = "TextInput#NEW_NAME",
+				value1 = "${newName}");
+		}
 
 		PortletEntry.save();
 	}

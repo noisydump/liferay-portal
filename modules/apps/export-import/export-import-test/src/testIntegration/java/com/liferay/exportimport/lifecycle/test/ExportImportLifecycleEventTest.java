@@ -19,7 +19,6 @@ import com.liferay.exportimport.kernel.configuration.ExportImportConfigurationPa
 import com.liferay.exportimport.kernel.configuration.ExportImportConfigurationSettingsMapFactoryUtil;
 import com.liferay.exportimport.kernel.configuration.constants.ExportImportConfigurationConstants;
 import com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleEvent;
-import com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleEventListenerRegistryUtil;
 import com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleListener;
 import com.liferay.exportimport.kernel.lifecycle.constants.ExportImportLifecycleConstants;
 import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
@@ -44,8 +43,9 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.TimeZoneUtil;
-import com.liferay.portal.test.log.CaptureAppender;
-import com.liferay.portal.test.log.Log4JLoggerTestUtil;
+import com.liferay.portal.test.log.LogCapture;
+import com.liferay.portal.test.log.LogEntry;
+import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
@@ -56,16 +56,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.spi.LoggingEvent;
-import org.apache.log4j.spi.ThrowableInformation;
-
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceRegistration;
 
 /**
  * @author Daniel Kocsis
@@ -88,14 +90,22 @@ public class ExportImportLifecycleEventTest {
 		_group = GroupTestUtil.addGroup();
 		_liveGroup = GroupTestUtil.addGroup();
 
-		ExportImportLifecycleEventListenerRegistryUtil.register(
-			new MockExportImportLifecycleListener());
+		Bundle bundle = FrameworkUtil.getBundle(getClass());
 
-		_firedExportImportLifecycleEventsMap = new HashMap<>();
+		BundleContext bundleContext = bundle.getBundleContext();
+
+		_serviceRegistration = bundleContext.registerService(
+			ExportImportLifecycleListener.class,
+			new MockExportImportLifecycleListener(), null);
 
 		_parameterMap =
 			ExportImportConfigurationParameterMapFactoryUtil.
 				buildParameterMap();
+	}
+
+	@After
+	public void tearDown() {
+		_serviceRegistration.unregister();
 	}
 
 	@Test
@@ -170,30 +180,31 @@ public class ExportImportLifecycleEventTest {
 
 	@Test
 	public void testFailedLayoutLocalPublishing() throws Exception {
-		try (CaptureAppender captureAppender =
-				Log4JLoggerTestUtil.configureLog4JLogger(
-					"com.liferay.portal.background.task.internal.messaging." +
-						"BackgroundTaskMessageListener",
-					Level.ERROR)) {
+		try (LogCapture logCapture1 = LoggerTestUtil.configureLog4JLogger(
+				"com.liferay.portal.background.task.internal.messaging." +
+					"BackgroundTaskMessageListener",
+				LoggerTestUtil.ERROR)) {
 
 			long targetGroupId = RandomTestUtil.nextLong();
 
-			StagingUtil.publishLayouts(
-				TestPropsValues.getUserId(), _group.getGroupId(), targetGroupId,
-				false, new long[0], _parameterMap);
+			try (LogCapture logCapture2 = LoggerTestUtil.configureLog4JLogger(
+					"com.liferay.exportimport.internal.lifecycle." +
+						"LoggerExportImportLifecycleListener",
+					LoggerTestUtil.ERROR)) {
 
-			List<LoggingEvent> loggingEvents =
-				captureAppender.getLoggingEvents();
+				StagingUtil.publishLayouts(
+					TestPropsValues.getUserId(), _group.getGroupId(),
+					targetGroupId, false, new long[0], _parameterMap);
+			}
 
-			LoggingEvent loggingEvent = loggingEvents.get(0);
+			List<LogEntry> logEntries = logCapture1.getLogEntries();
+
+			LogEntry logEntry = logEntries.get(0);
 
 			Assert.assertEquals(
-				"Unable to execute background task", loggingEvent.getMessage());
+				"Unable to execute background task", logEntry.getMessage());
 
-			ThrowableInformation throwableInformation =
-				loggingEvent.getThrowableInformation();
-
-			Throwable throwable = throwableInformation.getThrowable();
+			Throwable throwable = logEntry.getThrowable();
 
 			Assert.assertSame(NoSuchGroupException.class, throwable.getClass());
 		}
@@ -276,28 +287,30 @@ public class ExportImportLifecycleEventTest {
 	public void testFailedPortletLocalPublishing() throws Exception {
 		User user = TestPropsValues.getUser();
 
-		try (CaptureAppender captureAppender =
-				Log4JLoggerTestUtil.configureLog4JLogger(
-					"com.liferay.portal.background.task.internal.messaging." +
-						"BackgroundTaskMessageListener",
-					Level.ERROR)) {
+		try (LogCapture logCapture1 = LoggerTestUtil.configureLog4JLogger(
+				"com.liferay.portal.background.task.internal.messaging." +
+					"BackgroundTaskMessageListener",
+				LoggerTestUtil.ERROR)) {
 
-			StagingUtil.publishPortlet(
-				user.getUserId(), _group.getGroupId(), _liveGroup.getGroupId(),
-				0, 0, StringPool.BLANK, _parameterMap);
+			try (LogCapture logCapture2 = LoggerTestUtil.configureLog4JLogger(
+					"com.liferay.exportimport.internal.lifecycle." +
+						"LoggerExportImportLifecycleListener",
+					LoggerTestUtil.ERROR)) {
 
-			List<LoggingEvent> loggingEvents =
-				captureAppender.getLoggingEvents();
+				StagingUtil.publishPortlet(
+					user.getUserId(), _group.getGroupId(),
+					_liveGroup.getGroupId(), 0, 0, StringPool.BLANK,
+					_parameterMap);
+			}
 
-			LoggingEvent loggingEvent = loggingEvents.get(0);
+			List<LogEntry> logEntries = logCapture1.getLogEntries();
+
+			LogEntry logEntry = logEntries.get(0);
 
 			Assert.assertEquals(
-				"Unable to execute background task", loggingEvent.getMessage());
+				"Unable to execute background task", logEntry.getMessage());
 
-			ThrowableInformation throwableInformation =
-				loggingEvent.getThrowableInformation();
-
-			Throwable throwable = throwableInformation.getThrowable();
+			Throwable throwable = logEntry.getThrowable();
 
 			Assert.assertSame(
 				NoSuchLayoutException.class, throwable.getClass());
@@ -311,7 +324,7 @@ public class ExportImportLifecycleEventTest {
 
 	@Test
 	public void testSuccessfulLayoutLocalPublishing() throws Exception {
-		LayoutTestUtil.addLayout(_group, false);
+		LayoutTestUtil.addTypePortletLayout(_group, false);
 
 		JournalTestUtil.addArticle(
 			_group.getGroupId(),
@@ -371,8 +384,8 @@ public class ExportImportLifecycleEventTest {
 					EVENT_STAGED_MODEL_IMPORT_SUCCEEDED));
 	}
 
-	private Map<Integer, ExportImportLifecycleEvent>
-		_firedExportImportLifecycleEventsMap;
+	private final Map<Integer, ExportImportLifecycleEvent>
+		_firedExportImportLifecycleEventsMap = new HashMap<>();
 
 	@DeleteAfterTestRun
 	private Group _group;
@@ -381,6 +394,7 @@ public class ExportImportLifecycleEventTest {
 	private Group _liveGroup;
 
 	private Map<String, String[]> _parameterMap;
+	private ServiceRegistration<?> _serviceRegistration;
 
 	private class MockExportImportLifecycleListener
 		implements ExportImportLifecycleListener {

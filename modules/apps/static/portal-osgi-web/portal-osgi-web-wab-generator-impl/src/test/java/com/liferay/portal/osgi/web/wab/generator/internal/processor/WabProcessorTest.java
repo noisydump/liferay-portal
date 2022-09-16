@@ -27,18 +27,13 @@ import aQute.lib.filter.Filter;
 
 import com.liferay.portal.kernel.deploy.auto.context.AutoDeploymentContext;
 import com.liferay.portal.kernel.security.xml.SecureXMLFactoryProviderUtil;
-import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.HttpUtil;
-import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.Node;
 import com.liferay.portal.kernel.xml.SAXReaderUtil;
 import com.liferay.portal.kernel.xml.UnsecureSAXReaderUtil;
 import com.liferay.portal.security.xml.SecureXMLFactoryProviderImpl;
-import com.liferay.portal.util.FileImpl;
-import com.liferay.portal.util.HttpImpl;
-import com.liferay.portal.util.PropsImpl;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.portal.xml.SAXReaderImpl;
 
 import java.io.File;
@@ -64,6 +59,7 @@ import java.util.stream.Stream;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 /**
@@ -71,18 +67,12 @@ import org.junit.Test;
  */
 public class WabProcessorTest {
 
+	@ClassRule
+	public static LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
 	@BeforeClass
 	public static void setUpClass() {
-		PropsUtil.setProps(new PropsImpl());
-
-		FileUtil fileUtil = new FileUtil();
-
-		fileUtil.setFile(new FileImpl());
-
-		HttpUtil httpUtil = new HttpUtil();
-
-		httpUtil.setHttp(new HttpImpl());
-
 		SAXReaderUtil saxReaderUtil = new SAXReaderUtil();
 
 		SAXReaderImpl secureSAXReaderImpl = new SAXReaderImpl();
@@ -100,14 +90,12 @@ public class WabProcessorTest {
 		UnsecureSAXReaderUtil unsecureSAXReaderUtil =
 			new UnsecureSAXReaderUtil();
 
-		SAXReaderImpl unsecureSAXReaderImpl = new SAXReaderImpl();
-
-		unsecureSAXReaderUtil.setSAXReader(unsecureSAXReaderImpl);
+		unsecureSAXReaderUtil.setSAXReader(new SAXReaderImpl());
 	}
 
 	@Test
 	public void testClassicThemeWab() throws Exception {
-		File file = getFile("/classic-theme.autodeployed.war");
+		File file = getFile("dependencies/classic-theme.autodeployed.war");
 
 		try (Jar jar = new Jar(file)) {
 			Assert.assertNull(jar.getBsn());
@@ -204,9 +192,6 @@ public class WabProcessorTest {
 				importedPackages.containsKey("com.liferay.portlet"));
 			Assert.assertTrue(importedPackages.containsKey("com.sun.el"));
 			Assert.assertTrue(
-				importedPackages.containsKey(
-					"org.apache.commons.chain.generic"));
-			Assert.assertTrue(
 				importedPackages.containsKey("org.apache.naming.java"));
 
 			// Check if packages only referenced in web.xml are imported
@@ -222,7 +207,7 @@ public class WabProcessorTest {
 	@Test
 	public void testFatCDIWabOptsOutOfOSGiCDIIntegration() throws Exception {
 		WabProcessor wabProcessor = new TestWabProcessor(
-			getFile("/jsf.cdi.applicant.portlet.war"),
+			getFile("dependencies/jsf.cdi.applicant.portlet.war"),
 			Collections.singletonMap(
 				"Web-ContextPath",
 				new String[] {"/jsf-cdi-applicant-portlet"}));
@@ -307,7 +292,7 @@ public class WabProcessorTest {
 	@Test
 	public void testSkinnyCDIWabGainsOSGiCDIIntegration() throws Exception {
 		WabProcessor wabProcessor = new TestWabProcessor(
-			getFile("/PortletV3AnnotatedDemo.war"),
+			getFile("dependencies/PortletV3AnnotatedDemo.war"),
 			Collections.singletonMap(
 				"Web-ContextPath",
 				new String[] {"/portlet-V3-annotated-demo"}));
@@ -369,7 +354,7 @@ public class WabProcessorTest {
 
 			Parameters requirements = domain.getRequireCapability();
 
-			Map.Entry<String, Attrs> entry = findRequirement(
+			Map.Entry<String, Attrs> entry = _findRequirement(
 				requirements, "osgi.extender",
 				HashMapBuilder.<String, Object>put(
 					"osgi.extender", "osgi.cdi"
@@ -392,7 +377,7 @@ public class WabProcessorTest {
 			// The bean portlet extension
 
 			Assert.assertNotNull(
-				findRequirement(
+				_findRequirement(
 					requirements, "osgi.cdi.extension",
 					Collections.singletonMap(
 						"osgi.cdi.extension",
@@ -401,7 +386,7 @@ public class WabProcessorTest {
 			// The http extension
 
 			Assert.assertNotNull(
-				findRequirement(
+				_findRequirement(
 					requirements, "osgi.cdi.extension",
 					Collections.singletonMap(
 						"osgi.cdi.extension", "aries.cdi.http")));
@@ -409,7 +394,7 @@ public class WabProcessorTest {
 			// The EL extension
 
 			Assert.assertNotNull(
-				findRequirement(
+				_findRequirement(
 					requirements, "osgi.cdi.extension",
 					Collections.singletonMap(
 						"osgi.cdi.extension", "aries.cdi.el.jsp")));
@@ -419,7 +404,7 @@ public class WabProcessorTest {
 	@Test
 	public void testThatEmbeddedLibsAreHandledProperly() throws Exception {
 		WabProcessor wabProcessor = new TestWabProcessor(
-			getFile("/tck-V3URLTests.wab.war"),
+			getFile("dependencies/tck-V3URLTests.wab.war"),
 			Collections.singletonMap(
 				"Web-ContextPath",
 				new String[] {"/portlet-V3-annotated-demo"}));
@@ -462,7 +447,7 @@ public class WabProcessorTest {
 
 			Parameters requirements = domain.getRequireCapability();
 
-			Map.Entry<String, Attrs> entry = findRequirement(
+			Map.Entry<String, Attrs> entry = _findRequirement(
 				requirements, "osgi.extender",
 				HashMapBuilder.<String, Object>put(
 					"osgi.extender", "osgi.cdi"
@@ -494,7 +479,7 @@ public class WabProcessorTest {
 			// The bean portlet extension
 
 			Assert.assertNotNull(
-				findRequirement(
+				_findRequirement(
 					requirements, "osgi.cdi.extension",
 					Collections.singletonMap(
 						"osgi.cdi.extension",
@@ -503,7 +488,7 @@ public class WabProcessorTest {
 			// The http extension
 
 			Assert.assertNotNull(
-				findRequirement(
+				_findRequirement(
 					requirements, "osgi.cdi.extension",
 					Collections.singletonMap(
 						"osgi.cdi.extension", "aries.cdi.http")));
@@ -511,14 +496,25 @@ public class WabProcessorTest {
 			// The EL extension
 
 			Assert.assertNotNull(
-				findRequirement(
+				_findRequirement(
 					requirements, "osgi.cdi.extension",
 					Collections.singletonMap(
 						"osgi.cdi.extension", "aries.cdi.el.jsp")));
 		}
 	}
 
-	protected Map.Entry<String, Attrs> findRequirement(
+	protected File getFile(String fileName) throws URISyntaxException {
+		URL url = WabProcessor.class.getResource(fileName);
+
+		Assert.assertEquals(
+			url + "is not file protocol", "file", url.getProtocol());
+
+		Path path = Paths.get(url.toURI());
+
+		return path.toFile();
+	}
+
+	private Map.Entry<String, Attrs> _findRequirement(
 			Parameters requirements, String namespace,
 			Map<String, Object> arguments)
 		throws Exception {
@@ -546,17 +542,6 @@ public class WabProcessorTest {
 		}
 
 		return null;
-	}
-
-	protected File getFile(String fileName) throws URISyntaxException {
-		URL url = WabProcessor.class.getResource(fileName);
-
-		Assert.assertEquals(
-			url + "is not file protocol", "file", url.getProtocol());
-
-		Path path = Paths.get(url.toURI());
-
-		return path.toFile();
 	}
 
 	private static class TestWabProcessor extends WabProcessor {

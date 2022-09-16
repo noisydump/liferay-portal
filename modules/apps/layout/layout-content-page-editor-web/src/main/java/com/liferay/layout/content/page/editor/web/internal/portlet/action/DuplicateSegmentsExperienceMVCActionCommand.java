@@ -14,21 +14,16 @@
 
 package com.liferay.layout.content.page.editor.web.internal.portlet.action;
 
-import com.liferay.fragment.contributor.FragmentCollectionContributorTracker;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.processor.PortletRegistry;
-import com.liferay.fragment.renderer.FragmentRendererController;
-import com.liferay.fragment.renderer.FragmentRendererTracker;
 import com.liferay.fragment.service.FragmentEntryLinkLocalService;
-import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
-import com.liferay.item.selector.ItemSelector;
 import com.liferay.layout.content.page.editor.constants.ContentPageEditorPortletKeys;
 import com.liferay.layout.content.page.editor.web.internal.segments.SegmentsExperienceUtil;
-import com.liferay.layout.content.page.editor.web.internal.util.FragmentEntryLinkUtil;
+import com.liferay.layout.content.page.editor.web.internal.util.FragmentEntryLinkManager;
+import com.liferay.layout.content.page.editor.web.internal.util.layout.structure.LayoutStructureUtil;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalService;
-import com.liferay.petra.string.StringBundler;
-import com.liferay.petra.string.StringPool;
+import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.portal.kernel.comment.CommentManager;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -40,6 +35,8 @@ import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.segments.service.SegmentsExperienceService;
@@ -82,25 +79,23 @@ public class DuplicateSegmentsExperienceMVCActionCommand
 			_segmentsExperienceService.getSegmentsExperience(
 				segmentsExperienceId);
 
-		StringBundler sb = new StringBundler(5);
-
-		sb.append(segmentsExperience.getName(LocaleUtil.getSiteDefault()));
-		sb.append(StringPool.SPACE);
-		sb.append(StringPool.OPEN_PARENTHESIS);
-		sb.append(_language.get(themeDisplay.getLocale(), "copy"));
-		sb.append(StringPool.CLOSE_PARENTHESIS);
-
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			actionRequest);
 
 		SegmentsExperience duplicatedSegmentsExperience =
 			_segmentsExperienceService.addSegmentsExperience(
+				serviceContext.getScopeGroupId(),
 				segmentsExperience.getSegmentsEntryId(),
 				segmentsExperience.getClassNameId(),
 				segmentsExperience.getClassPK(),
 				Collections.singletonMap(
-					LocaleUtil.getSiteDefault(), sb.toString()),
-				segmentsExperience.isActive(), serviceContext);
+					LocaleUtil.getSiteDefault(),
+					_language.format(
+						themeDisplay.getLocale(), "copy-of-x",
+						segmentsExperience.getName(
+							LocaleUtil.getSiteDefault()))),
+				segmentsExperience.isActive(), new UnicodeProperties(true),
+				serviceContext);
 
 		SegmentsExperienceUtil.copySegmentsExperienceData(
 			themeDisplay.getPlid(), _commentManager,
@@ -129,7 +124,7 @@ public class DuplicateSegmentsExperienceMVCActionCommand
 
 	private JSONObject _getFragmentEntryLinksJSONObject(
 			ActionRequest actionRequest, ActionResponse actionResponse,
-			long plid, long groupId, long segmentExperienceId)
+			long plid, long groupId, long segmentsExperienceId)
 		throws Exception {
 
 		JSONObject fragmentEntryLinksJSONObject =
@@ -138,17 +133,20 @@ public class DuplicateSegmentsExperienceMVCActionCommand
 		List<FragmentEntryLink> fragmentEntryLinks =
 			_fragmentEntryLinkLocalService.
 				getFragmentEntryLinksBySegmentsExperienceId(
-					groupId, segmentExperienceId, plid);
+					groupId, segmentsExperienceId, plid);
+
+		LayoutStructure layoutStructure =
+			LayoutStructureUtil.getLayoutStructure(
+				groupId, plid, segmentsExperienceId);
 
 		for (FragmentEntryLink fragmentEntryLink : fragmentEntryLinks) {
 			fragmentEntryLinksJSONObject.put(
 				String.valueOf(fragmentEntryLink.getFragmentEntryLinkId()),
-				FragmentEntryLinkUtil.getFragmentEntryLinkJSONObject(
-					actionRequest, actionResponse,
-					_fragmentEntryConfigurationParser, fragmentEntryLink,
-					_fragmentCollectionContributorTracker,
-					_fragmentRendererController, _fragmentRendererTracker,
-					_itemSelector, StringPool.BLANK));
+				_fragmentEntryLinkManager.getFragmentEntryLinkJSONObject(
+					fragmentEntryLink,
+					_portal.getHttpServletRequest(actionRequest),
+					_portal.getHttpServletResponse(actionResponse),
+					layoutStructure));
 		}
 
 		return fragmentEntryLinksJSONObject;
@@ -170,23 +168,10 @@ public class DuplicateSegmentsExperienceMVCActionCommand
 	private CommentManager _commentManager;
 
 	@Reference
-	private FragmentCollectionContributorTracker
-		_fragmentCollectionContributorTracker;
-
-	@Reference
-	private FragmentEntryConfigurationParser _fragmentEntryConfigurationParser;
-
-	@Reference
 	private FragmentEntryLinkLocalService _fragmentEntryLinkLocalService;
 
 	@Reference
-	private FragmentRendererController _fragmentRendererController;
-
-	@Reference
-	private FragmentRendererTracker _fragmentRendererTracker;
-
-	@Reference
-	private ItemSelector _itemSelector;
+	private FragmentEntryLinkManager _fragmentEntryLinkManager;
 
 	@Reference
 	private Language _language;
@@ -194,6 +179,9 @@ public class DuplicateSegmentsExperienceMVCActionCommand
 	@Reference
 	private LayoutPageTemplateStructureLocalService
 		_layoutPageTemplateStructureLocalService;
+
+	@Reference
+	private Portal _portal;
 
 	@Reference
 	private PortletRegistry _portletRegistry;

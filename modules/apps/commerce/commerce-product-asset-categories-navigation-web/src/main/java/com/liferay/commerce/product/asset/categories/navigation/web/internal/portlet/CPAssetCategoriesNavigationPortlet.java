@@ -20,6 +20,7 @@ import com.liferay.commerce.media.CommerceMediaResolver;
 import com.liferay.commerce.product.asset.categories.navigation.web.internal.display.context.CPAssetCategoriesNavigationDisplayContext;
 import com.liferay.commerce.product.constants.CPPortletKeys;
 import com.liferay.commerce.product.service.CPAttachmentFileEntryService;
+import com.liferay.commerce.product.url.CPFriendlyURL;
 import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -46,6 +47,7 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.portlet.add-default-resource=true",
 		"com.liferay.portlet.css-class-wrapper=portlet-commerce-product-asset-category-navigation",
 		"com.liferay.portlet.display-category=commerce",
+		"com.liferay.portlet.header-portlet-css=/css/main.css",
 		"com.liferay.portlet.instanceable=true",
 		"com.liferay.portlet.layout-cacheable=true",
 		"com.liferay.portlet.preferences-owned-by-group=true",
@@ -59,7 +61,8 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + CPPortletKeys.CP_ASSET_CATEGORIES_NAVIGATION,
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=power-user,user"
+		"javax.portlet.security-role-ref=power-user,user",
+		"javax.portlet.version=3.0"
 	},
 	service = {CPAssetCategoriesNavigationPortlet.class, Portlet.class}
 )
@@ -77,14 +80,14 @@ public class CPAssetCategoriesNavigationPortlet extends MVCPortlet {
 						_portal.getHttpServletRequest(renderRequest),
 						_assetCategoryService, _assetVocabularyService,
 						_commerceMediaResolver, _cpAttachmentFileEntryService,
-						_friendlyURLEntryLocalService, _portal);
+						_cpFriendlyURL, _friendlyURLEntryLocalService, _portal);
 
 			renderRequest.setAttribute(
 				WebKeys.PORTLET_DISPLAY_CONTEXT,
 				cpAssetCategoryNavigationDisplayContext);
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 		}
 
 		super.render(renderRequest, renderResponse);
@@ -104,6 +107,9 @@ public class CPAssetCategoriesNavigationPortlet extends MVCPortlet {
 
 	@Reference
 	private CPAttachmentFileEntryService _cpAttachmentFileEntryService;
+
+	@Reference
+	private CPFriendlyURL _cpFriendlyURL;
 
 	@Reference
 	private FriendlyURLEntryLocalService _friendlyURLEntryLocalService;

@@ -20,6 +20,7 @@ import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.service.AssetCategoryServiceUtil;
 import com.liferay.asset.kernel.service.AssetVocabularyServiceUtil;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -33,14 +34,12 @@ import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.ResourceBundle;
 
 import javax.portlet.PortletException;
 import javax.portlet.PortletRequest;
@@ -75,8 +74,8 @@ public class SelectAssetCategoryTreeNodeDisplayContext {
 
 		List<AssetCategory> assetCategories = _getAssetCategories();
 
-		searchContainer.setResults(assetCategories);
-		searchContainer.setTotal(assetCategories.size());
+		searchContainer.setResultsAndTotal(
+			() -> assetCategories, assetCategories.size());
 
 		return searchContainer;
 	}
@@ -266,32 +265,29 @@ public class SelectAssetCategoryTreeNodeDisplayContext {
 			(PortletResponse)_httpServletRequest.getAttribute(
 				JavaConstants.JAVAX_PORTLET_RESPONSE);
 
-		PortletURL portletURL = PortletURLUtil.clone(
-			_portletURL, PortalUtil.getLiferayPortletResponse(portletResponse));
-
-		portletURL.setParameter(
-			"backURL",
+		return PortletURLBuilder.create(
+			PortletURLUtil.clone(
+				_portletURL,
+				PortalUtil.getLiferayPortletResponse(portletResponse))
+		).setBackURL(
 			ParamUtil.getString(
 				_httpServletRequest, "backURL",
-				PortalUtil.getCurrentURL(_httpServletRequest)));
-		portletURL.setParameter(
-			"assetCategoryTreeNodeId", String.valueOf(assetCategoryTreeNodeId));
-		portletURL.setParameter(
-			"assetCategoryTreeNodeType", assetCategoryTreeNodeType);
-
-		return portletURL.toString();
+				PortalUtil.getCurrentURL(_httpServletRequest))
+		).setParameter(
+			"assetCategoryTreeNodeId", assetCategoryTreeNodeId
+		).setParameter(
+			"assetCategoryTreeNodeType", assetCategoryTreeNodeType
+		).buildString();
 	}
 
 	private BreadcrumbEntry _getAssetVocabulariesBreadcrumbEntry() {
-		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
-			_themeDisplay.getLocale(), getClass());
-
 		String backURL = ParamUtil.getString(
 			_httpServletRequest, "backURL",
 			PortalUtil.getCurrentURL(_httpServletRequest));
 
 		return _createBreadcrumbEntry(
-			LanguageUtil.get(resourceBundle, "vocabularies"), backURL);
+			LanguageUtil.get(_themeDisplay.getLocale(), "vocabularies"),
+			backURL);
 	}
 
 	private BreadcrumbEntry _getAssetVocabularyBreadcrumbEntry()

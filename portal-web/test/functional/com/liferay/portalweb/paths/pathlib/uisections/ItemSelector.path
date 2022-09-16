@@ -2,11 +2,13 @@
 <head>
 <title>ItemSelector</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">ItemSelector</td></tr>
 </thead>
+
 <tbody>
 <tr>
 	<td>ITEM_SELECTOR_IFRAME</td>
@@ -24,11 +26,18 @@
 	<td></td>
 </tr>
 <tr>
+	<td>SEARCH_FIELD</td>
+	<td>//input[contains(@name,'ItemSelector')][contains(@name,'filterKeywords')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td></td>
 	<td></td>
 	<td></td>
 </tr>
+
 <!--LOCATION_INFO-->
+
 <tr>
 	<td>LOCATION_INFO_CARDS</td>
 	<td>//div[contains(@class,'card-row') and contains(.,'${key_title}')]//span[contains(.,'${key_locationName}')]</td>
@@ -45,11 +54,18 @@
 	<td></td>
 </tr>
 <tr>
+	<td>LOCATION_INFO_LIST_GENERIC</td>
+	<td>//div[contains(@data-qa-id,'rowItemContent') and contains(.,'${key_title}')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>LOCATION_INFO_TABLE</td>
 	<td>//tr[contains(@data-qa-id,'row') and contains(.,'${key_title}')]//td[contains(@class,'lfr-location-column') and contains(.,'${key_locationName}')]</td>
 	<td></td>
 </tr>
+
 <!--NAVIGATION-->
+
 <tr>
 	<td>NAVIGATION_GROUP_TAB</td>
 	<td>//div[contains(@class,'btn-group')]//a[contains(.,'${key_groupTab}')]</td>
@@ -62,7 +78,7 @@
 </tr>
 <tr>
 	<td>SITE_SELECTOR</td>
-	<td>//div[contains(@class,'card-horizontal')]//a[contains(@title,'${key_siteName}')]</td>
+	<td>//span[contains(@class,'card-body')]//span[normalize-space(text())='${key_siteName}']</td>
 	<td></td>
 </tr>
 <tr>
@@ -70,7 +86,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--SELECT_FILE-->
+
 <tr>
 	<td>SELECT_FILE_IMAGE_CARD</td>
 	<td>//div[contains(@class,'card')]//span[contains(@title,'${key_imageFileName}')]</td>
@@ -88,7 +106,7 @@
 </tr>
 <tr>
 	<td>SELECT_FILE_WEB_CONTENT</td>
-	<td>//li[@data-qa-id='row']/*[@data-qa-id='rowItemContent']/p[contains(.,'${key_contentName}')]</td>
+	<td>//*[@data-qa-id='row']/*[@data-qa-id='rowItemContent']/p[contains(.,'${key_contentName}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -96,7 +114,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--VIEWER-->
+
 <tr>
 	<td>FOOTER</td>
 	<td>//div[contains(@class,"item-selector-preview")]//div[@class="footer"]//span</td>
@@ -142,7 +162,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--SIDEBAR_FILE_INFO-->
+
 <tr>
 	<td>SIDEBAR_FILE_INFO_FORMAT</td>
 	<td>//div[contains(@class,'sidebar-body')]//dt[contains(.,'Format')]/following-sibling::dd[1]</td>
@@ -168,7 +190,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--SIDEBAR_VERSION-->
+
 <tr>
 	<td>SIDEBAR_VERSION_STATUS</td>
 	<td>//div[contains(@class,'sidebar-body')]//dt[contains(.,'Status')]/following-sibling::dd[1]</td>
@@ -184,7 +208,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--SELECT_IMAGE_PREVIEW-->
+
 <tr>
 	<td>SELECT_IMAGE_PREVIEW</td>
 	<td>//div[contains(@class,'item-selector-preview')]//img</td>
@@ -195,7 +221,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--URL-->
+
 <tr>
 	<td>URL_LABEL</td>
 	<td>//label[contains(.,'URL')]</td>

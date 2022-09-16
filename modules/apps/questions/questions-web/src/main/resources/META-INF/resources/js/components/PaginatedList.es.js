@@ -42,6 +42,10 @@ const PaginatedList = ({
 		setTotalItems(totalCount ? totalCount : data.totalCount);
 	}, [data.totalCount, totalCount]);
 
+	useEffect(() => {
+		scrollToTop(top);
+	}, [data]);
+
 	return (
 		<>
 			{emptyState && !data.totalCount && {...emptyState}}
@@ -62,15 +66,12 @@ const PaginatedList = ({
 							className="c-mt-4 w-100"
 							deltas={deltas}
 							ellipsisBuffer={3}
-							hrefConstructor={
-								hrefConstructor ? hrefConstructor : false
-							}
+							hrefConstructor={hrefConstructor}
 							onDeltaChange={changeDelta}
 							onPageChange={(page) => {
 								if (changePage) {
 									changePage(page);
 								}
-								scrollToTop(top);
 							}}
 							totalItems={totalItems}
 						/>

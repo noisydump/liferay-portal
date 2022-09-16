@@ -29,14 +29,17 @@ import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.security.permission.InlineSQLHelperUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.util.Iterator;
 import java.util.List;
 
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
 /**
  * @author Riccardo Alberti
  */
+@Component(enabled = false, service = CommerceDiscountAccountRelFinder.class)
 public class CommerceDiscountAccountRelFinderImpl
 	extends CommerceDiscountAccountRelFinderBaseImpl
 	implements CommerceDiscountAccountRelFinder {
@@ -77,14 +80,14 @@ public class CommerceDiscountAccountRelFinderImpl
 
 			if (Validator.isNotNull(name)) {
 				sql = _customSQL.replaceKeywords(
-					sql, "(LOWER(CommerceAccount.name)", StringPool.LIKE, true,
+					sql, "(LOWER(AccountEntry.name)", StringPool.LIKE, true,
 					keywords);
 				sql = _customSQL.replaceAndOperator(sql, false);
 			}
 			else {
 				sql = StringUtil.removeSubstring(
 					sql,
-					" AND (LOWER(CommerceAccount.name) LIKE ? " +
+					" AND (LOWER(AccountEntry.name) LIKE ? " +
 						"[$AND_OR_NULL_CHECK$])");
 			}
 
@@ -152,14 +155,14 @@ public class CommerceDiscountAccountRelFinderImpl
 
 			if (Validator.isNotNull(name)) {
 				sql = _customSQL.replaceKeywords(
-					sql, "(LOWER(CommerceAccount.name)", StringPool.LIKE, true,
+					sql, "(LOWER(AccountEntry.name)", StringPool.LIKE, true,
 					keywords);
 				sql = _customSQL.replaceAndOperator(sql, false);
 			}
 			else {
 				sql = StringUtil.removeSubstring(
 					sql,
-					" AND (LOWER(CommerceAccount.name) LIKE ? " +
+					" AND (LOWER(AccountEntry.name) LIKE ? " +
 						"[$AND_OR_NULL_CHECK$])");
 			}
 
@@ -188,7 +191,7 @@ public class CommerceDiscountAccountRelFinderImpl
 		}
 	}
 
-	@ServiceReference(type = CustomSQL.class)
+	@Reference
 	private CustomSQL _customSQL;
 
 }

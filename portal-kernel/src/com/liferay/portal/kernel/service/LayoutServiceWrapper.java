@@ -26,6 +26,10 @@ import com.liferay.portal.kernel.model.Layout;
 public class LayoutServiceWrapper
 	implements LayoutService, ServiceWrapper<LayoutService> {
 
+	public LayoutServiceWrapper() {
+		this(null);
+	}
+
 	public LayoutServiceWrapper(LayoutService layoutService) {
 		_layoutService = layoutService;
 	}
@@ -524,6 +528,19 @@ public class LayoutServiceWrapper
 	}
 
 	@Override
+	public java.util.List<Layout> getLayouts(
+			long groupId, boolean privateLayout, String keywords,
+			String[] types, int[] statuses, int start, int end,
+			com.liferay.portal.kernel.util.OrderByComparator<Layout>
+				orderByComparator)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _layoutService.getLayouts(
+			groupId, privateLayout, keywords, types, statuses, start, end,
+			orderByComparator);
+	}
+
+	@Override
 	public java.util.List<Layout> getLayouts(long groupId, String type) {
 		return _layoutService.getLayouts(groupId, type);
 	}
@@ -575,6 +592,16 @@ public class LayoutServiceWrapper
 	}
 
 	@Override
+	public int getLayoutsCount(
+			long groupId, boolean privateLayout, String keywords,
+			String[] types, int[] statuses)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _layoutService.getLayoutsCount(
+			groupId, privateLayout, keywords, types, statuses);
+	}
+
+	@Override
 	public int getLayoutsCount(long groupId, String type) {
 		return _layoutService.getLayoutsCount(groupId, type);
 	}
@@ -619,6 +646,11 @@ public class LayoutServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _layoutService.hasPortletId(plid, portletId);
+	}
+
+	@Override
+	public Layout publishLayout(long plid) throws Exception {
+		return _layoutService.publishLayout(plid);
 	}
 
 	/**
@@ -792,8 +824,9 @@ public class LayoutServiceWrapper
 	 String)}.
 	 * @param hasIconImage if the layout has a custom icon image
 	 * @param iconBytes the byte array of the layout's new icon image
-	 * @param masterLayoutPlid the primary key of the master layout
 	 * @param styleBookEntryId the primary key of the style book entry
+	 * @param faviconFileEntryId the file entry ID of the layout's new favicon
+	 * @param masterLayoutPlid the primary key of the master layout
 	 * @param serviceContext the service context to be applied. Can set the
 	 modification date and expando bridge attributes for the layout.
 	 * @return the updated layout
@@ -810,15 +843,16 @@ public class LayoutServiceWrapper
 			java.util.Map<java.util.Locale, String> robotsMap, String type,
 			boolean hidden,
 			java.util.Map<java.util.Locale, String> friendlyURLMap,
-			boolean hasIconImage, byte[] iconBytes, long masterLayoutPlid,
-			long styleBookEntryId, ServiceContext serviceContext)
+			boolean hasIconImage, byte[] iconBytes, long styleBookEntryId,
+			long faviconFileEntryId, long masterLayoutPlid,
+			ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _layoutService.updateLayout(
 			groupId, privateLayout, layoutId, parentLayoutId, localeNamesMap,
 			localeTitlesMap, descriptionMap, keywordsMap, robotsMap, type,
-			hidden, friendlyURLMap, hasIconImage, iconBytes, masterLayoutPlid,
-			styleBookEntryId, serviceContext);
+			hidden, friendlyURLMap, hasIconImage, iconBytes, styleBookEntryId,
+			faviconFileEntryId, masterLayoutPlid, serviceContext);
 	}
 
 	/**

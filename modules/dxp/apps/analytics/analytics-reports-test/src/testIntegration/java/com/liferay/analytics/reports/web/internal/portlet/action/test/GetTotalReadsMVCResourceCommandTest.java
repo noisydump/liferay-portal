@@ -14,15 +14,10 @@
 
 package com.liferay.analytics.reports.web.internal.portlet.action.test;
 
-import com.liferay.analytics.reports.test.MockObject;
 import com.liferay.analytics.reports.test.util.MockContextUtil;
 import com.liferay.analytics.reports.web.internal.portlet.action.test.util.MockHttpUtil;
 import com.liferay.analytics.reports.web.internal.portlet.action.test.util.MockThemeDisplayUtil;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
-import com.liferay.info.item.InfoItemReference;
-import com.liferay.layout.display.page.LayoutDisplayPageProvider;
-import com.liferay.layout.display.page.LayoutDisplayPageProviderTracker;
-import com.liferay.layout.display.page.constants.LayoutDisplayPageWebKeys;
 import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.portal.kernel.exception.NestableRuntimeException;
@@ -33,7 +28,6 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
-import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -46,6 +40,7 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Http;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.test.rule.Inject;
@@ -80,13 +75,11 @@ public class GetTotalReadsMVCResourceCommandTest {
 	public void setUp() throws Exception {
 		_group = GroupTestUtil.addGroup();
 
-		_layout = LayoutTestUtil.addLayout(_group);
+		_layout = LayoutTestUtil.addTypePortletLayout(_group);
 	}
 
 	@Test
 	public void testServeResponse() throws Exception {
-		LocalDate localDate = LocalDate.now();
-
 		ReflectionTestUtil.setFieldValue(
 			_mvcResourceCommand, "_http",
 			MockHttpUtil.geHttp(
@@ -94,25 +87,28 @@ public class GetTotalReadsMVCResourceCommandTest {
 					"/api/1.0/pages/read-count", () -> "12345"
 				).put(
 					"/api/1.0/pages/read-counts",
-					() -> JSONUtil.put(
-						"histogram",
-						JSONUtil.put(
+					() -> {
+						LocalDate localDate = LocalDate.now();
+
+						return () -> JSONUtil.put(
+							"histogram",
 							JSONUtil.put(
-								"key",
-								localDate.format(
-									DateTimeFormatter.ISO_LOCAL_DATE)
-							).put(
-								"value", 5
-							))
-					).put(
-						"value", 5
-					).toJSONString()
+								JSONUtil.put(
+									"key",
+									localDate.format(
+										DateTimeFormatter.ISO_LOCAL_DATE)
+								).put(
+									"value", 5
+								))
+						).put(
+							"value", 5
+						).toString();
+					}
 				).build()));
 
 		try {
 			MockContextUtil.testWithMockContext(
 				MockContextUtil.MockContext.builder(
-					_classNameLocalService
 				).build(),
 				() -> {
 					MockLiferayResourceRequest mockLiferayResourceRequest =
@@ -166,7 +162,6 @@ public class GetTotalReadsMVCResourceCommandTest {
 		try {
 			MockContextUtil.testWithMockContext(
 				MockContextUtil.MockContext.builder(
-					_classNameLocalService
 				).build(),
 				() -> {
 					MockLiferayResourceResponse mockLiferayResourceResponse =
@@ -200,16 +195,6 @@ public class GetTotalReadsMVCResourceCommandTest {
 			new MockLiferayResourceRequest();
 
 		try {
-			LayoutDisplayPageProvider<?> layoutDisplayPageProvider =
-				_layoutDisplayPageProviderTracker.
-					getLayoutDisplayPageProviderByClassName(
-						MockObject.class.getName());
-
-			mockLiferayResourceRequest.setAttribute(
-				LayoutDisplayPageWebKeys.LAYOUT_DISPLAY_PAGE_OBJECT_PROVIDER,
-				layoutDisplayPageProvider.getLayoutDisplayPageObjectProvider(
-					new InfoItemReference(MockObject.class.getName(), 0)));
-
 			mockLiferayResourceRequest.setAttribute(
 				WebKeys.THEME_DISPLAY,
 				MockThemeDisplayUtil.getThemeDisplay(
@@ -217,7 +202,8 @@ public class GetTotalReadsMVCResourceCommandTest {
 						TestPropsValues.getCompanyId()),
 					_group, _layout,
 					_layoutSetLocalService.getLayoutSet(
-						_group.getGroupId(), false)));
+						_group.getGroupId(), false),
+					LocaleUtil.US));
 
 			return mockLiferayResourceRequest;
 		}
@@ -225,9 +211,6 @@ public class GetTotalReadsMVCResourceCommandTest {
 			throw new AssertionError(portalException);
 		}
 	}
-
-	@Inject
-	private ClassNameLocalService _classNameLocalService;
 
 	@Inject
 	private CompanyLocalService _companyLocalService;
@@ -239,9 +222,6 @@ public class GetTotalReadsMVCResourceCommandTest {
 	private Http _http;
 
 	private Layout _layout;
-
-	@Inject
-	private LayoutDisplayPageProviderTracker _layoutDisplayPageProviderTracker;
 
 	@Inject
 	private LayoutSetLocalService _layoutSetLocalService;

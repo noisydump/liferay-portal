@@ -11,49 +11,75 @@
 
 import ClayIcon from '@clayui/icon';
 import ClayTable from '@clayui/table';
-import {ClayTooltipProvider} from '@clayui/tooltip';
-import React, {useContext} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 
 import {Autocomplete} from '../../../../../../shared/components/autocomplete/Autocomplete.es';
 import {ModalContext} from '../../../ModalProvider.es';
 
-const Item = ({
+function Item({
 	assetTitle,
 	assetType,
-	assignee,
+	assignee: currentAssignee,
 	data = {},
 	id,
 	instanceId,
 	label,
-}) => {
+}) {
 	const {bulkReassign, setBulkReassign} = useContext(ModalContext);
 	const {reassignedTasks, reassigning, useSameAssignee} = bulkReassign;
 
 	const {assigneeId} =
 		reassignedTasks.find(({workflowTaskId}) => workflowTaskId === id) || {};
-
 	const {workflowTaskAssignableUsers: users = []} = data;
+
 	const {assignableUsers = []} =
 		users.find(({workflowTaskId}) => workflowTaskId === id) || {};
 
 	const {name: assigneeName} =
 		assignableUsers.find((assignee) => assignee.id === assigneeId) || {};
 
-	const handleSelect = (newAssignee) => {
-		const filteredTasks = reassignedTasks.filter((task) => task.id !== id);
+	const [defaultValue, setDefaultValue] = useState(assigneeName);
 
-		if (newAssignee) {
-			filteredTasks.push({
+	const handleSelect = (newAssignee) => {
+		let workflowTasks = reassignedTasks;
+
+		const currentTask = workflowTasks.find(
+			({workflowTaskId}) => workflowTaskId === id
+		);
+
+		if (currentTask && !newAssignee) {
+			workflowTasks = workflowTasks.filter(
+				(task) => task.workflowTaskId !== currentTask.workflowTaskId
+			);
+			setDefaultValue('');
+		}
+		else if (!currentTask && newAssignee) {
+			workflowTasks.push({
 				assigneeId: newAssignee.id,
 				workflowTaskId: id,
 			});
+			setDefaultValue(newAssignee.name);
 		}
 
 		setBulkReassign((prevBulkReassign) => ({
 			...prevBulkReassign,
-			reassignedTasks: filteredTasks,
+			reassignedTasks: workflowTasks,
 		}));
 	};
+
+	useEffect(() => {
+		const {assigneeId} =
+			reassignedTasks.find(({workflowTaskId}) => workflowTaskId === id) ||
+			{};
+
+		const {name: assigneeName} =
+			assignableUsers.find((assignee) => assignee.id === assigneeId) ||
+			{};
+
+		setDefaultValue(assigneeName);
+
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [reassignedTasks]);
 
 	return (
 		<ClayTable.Row>
@@ -66,12 +92,14 @@ const Item = ({
 			<ClayTable.Cell>{label}</ClayTable.Cell>
 
 			<ClayTable.Cell>
-				{assignee ? assignee.name : Liferay.Language.get('unassigned')}
+				{currentAssignee
+					? currentAssignee.name
+					: Liferay.Language.get('unassigned')}
 			</ClayTable.Cell>
 
 			<ClayTable.Cell>
 				<Autocomplete
-					defaultValue={assigneeName}
+					defaultValue={defaultValue}
 					disabled={reassigning || useSameAssignee}
 					items={assignableUsers}
 					onSelect={handleSelect}
@@ -79,9 +107,9 @@ const Item = ({
 			</ClayTable.Cell>
 		</ClayTable.Row>
 	);
-};
+}
 
-const Table = ({data, items}) => {
+function Table({data, items}) {
 	return (
 		<ClayTable>
 			<ClayTable.Head>
@@ -136,31 +164,32 @@ const Table = ({data, items}) => {
 							width: '25%',
 						}}
 					>
-						{`${Liferay.Language.get('new-assignee')}`}{' '}
-						<ClayTooltipProvider>
-							<ClayIcon
-								data-tooltip-align="top"
-								style={{color: '#6B6C7E'}}
-								symbol="question-circle-full"
-								title={Liferay.Language.get(
-									'possible-assignees-must-have-permissions-to-be-assigned-to-the-corresponding-step'
-								)}
-							/>
-						</ClayTooltipProvider>
+						{`${Liferay.Language.get('new-assignee')}`}
+
+						<span
+							className="ml-1 workflow-tooltip"
+							data-tooltip-align="top"
+							data-tooltip-delay="0"
+							title={Liferay.Language.get(
+								'possible-assignees-must-have-permissions-to-be-assigned-to-the-corresponding-step'
+							)}
+						>
+							<ClayIcon symbol="question-circle-full" />
+						</span>
 					</ClayTable.Cell>
 				</ClayTable.Row>
 			</ClayTable.Head>
 
 			<ClayTable.Body>
 				{items &&
-					items.length > 0 &&
+					!!items.length &&
 					items.map((item) => (
 						<Table.Item data={data} {...item} key={item.id} />
 					))}
 			</ClayTable.Body>
 		</ClayTable>
 	);
-};
+}
 
 Table.Item = Item;
-export {Table};
+export default Table;

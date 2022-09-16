@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
@@ -58,6 +59,10 @@ public class AttachmentBase64 implements Serializable {
 		return ObjectMapperUtil.readValue(AttachmentBase64.class, json);
 	}
 
+	public static AttachmentBase64 unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(AttachmentBase64.class, json);
+	}
+
 	@Schema(description = "Base64 encoded file")
 	public String getAttachment() {
 		return attachment;
@@ -86,7 +91,64 @@ public class AttachmentBase64 implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String attachment;
 
+	@Schema(description = "Content type of attachment")
+	public String getContentType() {
+		return contentType;
+	}
+
+	public void setContentType(String contentType) {
+		this.contentType = contentType;
+	}
+
+	@JsonIgnore
+	public void setContentType(
+		UnsafeSupplier<String, Exception> contentTypeUnsafeSupplier) {
+
+		try {
+			contentType = contentTypeUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(description = "Content type of attachment")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String contentType;
+
 	@Schema
+	@Valid
+	public CustomField[] getCustomFields() {
+		return customFields;
+	}
+
+	public void setCustomFields(CustomField[] customFields) {
+		this.customFields = customFields;
+	}
+
+	@JsonIgnore
+	public void setCustomFields(
+		UnsafeSupplier<CustomField[], Exception> customFieldsUnsafeSupplier) {
+
+		try {
+			customFields = customFieldsUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected CustomField[] customFields;
+
+	@Schema(example = "2017-07-21")
 	public Date getDisplayDate() {
 		return displayDate;
 	}
@@ -114,7 +176,7 @@ public class AttachmentBase64 implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Date displayDate;
 
-	@Schema
+	@Schema(example = "2017-08-21")
 	public Date getExpirationDate() {
 		return expirationDate;
 	}
@@ -142,7 +204,7 @@ public class AttachmentBase64 implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Date expirationDate;
 
-	@Schema
+	@Schema(example = "AB-34098-789-N")
 	public String getExternalReferenceCode() {
 		return externalReferenceCode;
 	}
@@ -171,7 +233,7 @@ public class AttachmentBase64 implements Serializable {
 	protected String externalReferenceCode;
 
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "30130")
 	public Long getId() {
 		return id;
 	}
@@ -197,7 +259,7 @@ public class AttachmentBase64 implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Long id;
 
-	@Schema
+	@Schema(example = "true")
 	public Boolean getNeverExpire() {
 		return neverExpire;
 	}
@@ -225,7 +287,7 @@ public class AttachmentBase64 implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Boolean neverExpire;
 
-	@Schema
+	@Schema(example = "{color=yellow, optionKey=optionValueKey, size=xs}")
 	@Valid
 	public Map<String, String> getOptions() {
 		return options;
@@ -254,7 +316,7 @@ public class AttachmentBase64 implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Map<String, String> options;
 
-	@Schema
+	@Schema(example = "1.2")
 	public Double getPriority() {
 		return priority;
 	}
@@ -308,7 +370,9 @@ public class AttachmentBase64 implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String src;
 
-	@Schema
+	@Schema(
+		example = "{en_US=Hand Saw, hr_HR=Attachment Title HR, hu_HU=Attachment Title HU}"
+	)
 	@Valid
 	public Map<String, String> getTitle() {
 		return title;
@@ -405,6 +469,40 @@ public class AttachmentBase64 implements Serializable {
 			sb.append(_escape(attachment));
 
 			sb.append("\"");
+		}
+
+		if (contentType != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"contentType\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(contentType));
+
+			sb.append("\"");
+		}
+
+		if (customFields != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"customFields\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < customFields.length; i++) {
+				sb.append(String.valueOf(customFields[i]));
+
+				if ((i + 1) < customFields.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
 		}
 
 		if (displayDate != null) {
@@ -529,15 +627,16 @@ public class AttachmentBase64 implements Serializable {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.commerce.admin.catalog.dto.v1_0.AttachmentBase64",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
 	}
 
 	private static boolean _isArray(Object value) {
@@ -563,8 +662,8 @@ public class AttachmentBase64 implements Serializable {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -595,7 +694,7 @@ public class AttachmentBase64 implements Serializable {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -603,7 +702,7 @@ public class AttachmentBase64 implements Serializable {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -611,5 +710,10 @@ public class AttachmentBase64 implements Serializable {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

@@ -21,6 +21,7 @@ import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.message.boards.model.MBBan;
 import com.liferay.message.boards.service.MBBanLocalService;
+import com.liferay.message.boards.service.MBBanLocalServiceUtil;
 import com.liferay.message.boards.service.persistence.MBBanPersistence;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
@@ -38,6 +39,8 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -53,10 +56,13 @@ import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -77,7 +83,7 @@ public abstract class MBBanLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>MBBanLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.message.boards.service.MBBanLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>MBBanLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>MBBanLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -146,6 +152,13 @@ public abstract class MBBanLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return mbBanPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -386,6 +399,11 @@ public abstract class MBBanLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement MBBanLocalServiceImpl#deleteMBBan(MBBan) to avoid orphaned data");
+		}
+
 		return mbBanLocalService.deleteMBBan((MBBan)persistedModel);
 	}
 
@@ -494,6 +512,11 @@ public abstract class MBBanLocalServiceBaseImpl
 		return mbBanPersistence.update(mbBan);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -505,6 +528,8 @@ public abstract class MBBanLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		mbBanLocalService = (MBBanLocalService)aopProxy;
+
+		_setLocalServiceUtilService(mbBanLocalService);
 	}
 
 	/**
@@ -563,6 +588,22 @@ public abstract class MBBanLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		MBBanLocalService mbBanLocalService) {
+
+		try {
+			Field field = MBBanLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, mbBanLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected MBBanLocalService mbBanLocalService;
 
 	@Reference
@@ -571,5 +612,8 @@ public abstract class MBBanLocalServiceBaseImpl
 	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		MBBanLocalServiceBaseImpl.class);
 
 }

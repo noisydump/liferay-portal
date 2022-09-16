@@ -10,16 +10,16 @@
  */
 
 import ClayIcon from '@clayui/icon';
+import ClayPanel from '@clayui/panel';
 import React, {useContext} from 'react';
 
-import Panel from '../../../shared/components/Panel.es';
 import ContentView from '../../../shared/components/content-view/ContentView.es';
 import ReloadButton from '../../../shared/components/list/ReloadButton.es';
 import ChildLink from '../../../shared/components/router/ChildLink.es';
 import {AppContext} from '../../AppContext.es';
-import {Table} from './PerformanceByStepCardTable.es';
+import Table from './PerformanceByStepCardTable.es';
 
-const Body = ({items, totalCount}) => {
+function Body({items, totalCount}) {
 	const statesProps = {
 		emptyProps: {
 			className: 'mt-5 py-8',
@@ -39,30 +39,33 @@ const Body = ({items, totalCount}) => {
 	};
 
 	return (
-		<Panel.Body>
+		<ClayPanel.Body>
 			<ContentView {...statesProps}>
 				{totalCount > 0 && <Body.Table items={items} />}
 			</ContentView>
-		</Panel.Body>
+		</ClayPanel.Body>
 	);
-};
+}
 
-const Footer = ({processId, timeRange, totalCount}) => {
+function Footer({processId, processVersion, timeRange, totalCount}) {
 	const {defaultDelta} = useContext(AppContext);
 	const filters = {};
 
 	const {dateEnd, dateStart, key} = timeRange;
+
 	if (dateEnd && dateStart && key) {
 		filters.dateEnd = dateEnd;
 		filters.dateStart = dateStart;
 		filters.timeRange = [key];
 	}
 
+	filters.processVersion = processVersion;
+
 	const viewAllStepsQuery = {filters};
 	const viewAllStepsUrl = `/performance/step/${processId}/${defaultDelta}/1/breachedInstancePercentage:desc`;
 
 	return (
-		<Panel.Footer elementClasses="fixed-bottom">
+		<ClayPanel.Footer className="fixed-bottom">
 			<div className="mb-1 text-right">
 				<ChildLink
 					className="border-0 btn btn-secondary btn-sm"
@@ -78,9 +81,9 @@ const Footer = ({processId, timeRange, totalCount}) => {
 					<ClayIcon symbol="caret-right-l" />
 				</ChildLink>
 			</div>
-		</Panel.Footer>
+		</ClayPanel.Footer>
 	);
-};
+}
 
 Body.Table = Table;
 

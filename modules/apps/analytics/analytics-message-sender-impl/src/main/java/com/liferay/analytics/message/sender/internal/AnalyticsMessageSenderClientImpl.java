@@ -30,7 +30,7 @@ import com.liferay.portal.kernel.settings.Settings;
 import com.liferay.portal.kernel.settings.SettingsDescriptor;
 import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
-import com.liferay.portal.kernel.util.UnicodeProperties;
+import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.net.UnknownHostException;
@@ -99,18 +99,11 @@ public class AnalyticsMessageSenderClientImpl
 			analyticsConfiguration.
 				liferayAnalyticsFaroBackendSecuritySignature(),
 			HttpMethods.GET, analyticsConfiguration.liferayAnalyticsProjectId(),
-			analyticsConfiguration.liferayAnalyticsEndpointURL() +
+			analyticsConfiguration.liferayAnalyticsFaroBackendURL() +
 				"/api/1.0/data-sources/" +
 					analyticsConfiguration.liferayAnalyticsDataSourceId());
 
 		_execute(analyticsConfiguration, companyId, httpUriRequest);
-	}
-
-	@Reference(
-		target = "(&(release.bundle.symbolic.name=com.liferay.analytics.settings.web)(release.schema.version>=1.0.1))",
-		unbind = "-"
-	)
-	protected void setRelease(Release release) {
 	}
 
 	private HttpUriRequest _buildHttpUriRequest(
@@ -191,15 +184,16 @@ public class AnalyticsMessageSenderClientImpl
 				return;
 			}
 
-			UnicodeProperties unicodeProperties = new UnicodeProperties(true);
-
-			unicodeProperties.setProperty(
-				"liferayAnalyticsEndpointURL", liferayAnalyticsEndpointURL);
-			unicodeProperties.setProperty(
-				"liferayAnalyticsFaroBackendURL",
-				liferayAnalyticsFaroBackendURL);
-
-			companyLocalService.updatePreferences(companyId, unicodeProperties);
+			companyLocalService.updatePreferences(
+				companyId,
+				UnicodePropertiesBuilder.create(
+					true
+				).put(
+					"liferayAnalyticsEndpointURL", liferayAnalyticsEndpointURL
+				).put(
+					"liferayAnalyticsFaroBackendURL",
+					liferayAnalyticsFaroBackendURL
+				).build());
 
 			Dictionary<String, Object> configurationProperties =
 				_getConfigurationProperties(companyId);
@@ -289,6 +283,11 @@ public class AnalyticsMessageSenderClientImpl
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		AnalyticsMessageSenderClientImpl.class);
+
+	@Reference(
+		target = "(&(release.bundle.symbolic.name=com.liferay.analytics.settings.web)(release.schema.version>=1.0.1))"
+	)
+	private Release _release;
 
 	@Reference
 	private SettingsFactory _settingsFactory;

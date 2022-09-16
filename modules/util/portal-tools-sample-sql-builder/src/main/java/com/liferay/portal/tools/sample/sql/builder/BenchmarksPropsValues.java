@@ -14,8 +14,6 @@
 
 package com.liferay.portal.tools.sample.sql.builder;
 
-import com.liferay.petra.string.StringBundler;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.db.DBType;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -26,8 +24,6 @@ import java.io.Reader;
 
 import java.time.ZoneId;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Properties;
 import java.util.TimeZone;
 
@@ -36,8 +32,10 @@ import java.util.TimeZone;
  */
 public class BenchmarksPropsValues {
 
-	public static final String ACTUAL_PROPERTIES_CONTENT =
-		PropertiesHolder._ACTUAL_PROPERTIES_CONTENT;
+	public static final String[] COMMERCE_LAYOUT_EXCLUDED_PORTLETS =
+		StringUtil.split(
+			PropertiesHolder._get(
+				BenchmarksPropsKeys.COMMERCE_LAYOUT_EXCLUDED_PORTLETS));
 
 	public static final DBType DB_TYPE = DBType.valueOf(
 		StringUtil.toUpperCase(
@@ -75,6 +73,48 @@ public class BenchmarksPropsValues {
 	public static final int MAX_BLOGS_ENTRY_COUNT = GetterUtil.getInteger(
 		PropertiesHolder._get(BenchmarksPropsKeys.MAX_BLOGS_ENTRY_COUNT));
 
+	public static final int MAX_COMMERCE_ACCOUNT_ENTRY_COUNT =
+		GetterUtil.getInteger(
+			PropertiesHolder._get(
+				BenchmarksPropsKeys.MAX_COMMERCE_ACCOUNT_ENTRY_COUNT));
+
+	public static final int MAX_COMMERCE_CATALOG_COUNT = GetterUtil.getInteger(
+		PropertiesHolder._get(BenchmarksPropsKeys.MAX_COMMERCE_CATALOG_COUNT));
+
+	public static final int MAX_COMMERCE_GROUP_COUNT = GetterUtil.getInteger(
+		PropertiesHolder._get(BenchmarksPropsKeys.MAX_COMMERCE_GROUP_COUNT));
+
+	public static final int MAX_COMMERCE_INVENTORY_WAREHOUSE_COUNT =
+		GetterUtil.getInteger(
+			PropertiesHolder._get(
+				BenchmarksPropsKeys.MAX_COMMERCE_INVENTORY_WAREHOUSE_COUNT));
+
+	public static final int MAX_COMMERCE_INVENTORY_WAREHOUSE_ITEM_QUANTITY =
+		GetterUtil.getInteger(
+			PropertiesHolder._get(
+				BenchmarksPropsKeys.
+					MAX_COMMERCE_INVENTORY_WAREHOUSE_ITEM_QUANTITY));
+
+	public static final int MAX_COMMERCE_ORDER_STATUS_CANCELLED_COUNT =
+		GetterUtil.getInteger(
+			PropertiesHolder._get(
+				BenchmarksPropsKeys.MAX_COMMERCE_ORDER_STATUS_CANCELLED_COUNT));
+
+	public static final int MAX_COMMERCE_ORDER_STATUS_OPEN_COUNT =
+		GetterUtil.getInteger(
+			PropertiesHolder._get(
+				BenchmarksPropsKeys.MAX_COMMERCE_ORDER_STATUS_OPEN_COUNT));
+
+	public static final int MAX_COMMERCE_ORDER_STATUS_PENDING_COUNT =
+		GetterUtil.getInteger(
+			PropertiesHolder._get(
+				BenchmarksPropsKeys.MAX_COMMERCE_ORDER_STATUS_PENDING_COUNT));
+
+	public static final int MAX_COMMERCE_PRICE_LIST_COUNT =
+		GetterUtil.getInteger(
+			PropertiesHolder._get(
+				BenchmarksPropsKeys.MAX_COMMERCE_PRICE_LIST_COUNT));
+
 	public static final int MAX_COMMERCE_PRODUCT_COUNT = GetterUtil.getInteger(
 		PropertiesHolder._get(BenchmarksPropsKeys.MAX_COMMERCE_PRODUCT_COUNT));
 
@@ -88,8 +128,43 @@ public class BenchmarksPropsValues {
 			PropertiesHolder._get(
 				BenchmarksPropsKeys.MAX_COMMERCE_PRODUCT_INSTANCE_COUNT));
 
+	public static final int MAX_COMMERCE_PRODUCT_OPTION_CATEGORY_COUNT =
+		GetterUtil.getInteger(
+			PropertiesHolder._get(
+				BenchmarksPropsKeys.
+					MAX_COMMERCE_PRODUCT_OPTION_CATEGORY_COUNT));
+
+	public static final int MAX_COMPANY_COUNT = GetterUtil.getInteger(
+		PropertiesHolder._get(BenchmarksPropsKeys.MAX_COMPANY_COUNT));
+
+	public static final int MAX_COMPANY_USER_COUNT = GetterUtil.getInteger(
+		PropertiesHolder._get(BenchmarksPropsKeys.MAX_COMPANY_USER_COUNT));
+
 	public static final int MAX_CONTENT_LAYOUT_COUNT = GetterUtil.getInteger(
 		PropertiesHolder._get(BenchmarksPropsKeys.MAX_CONTENT_LAYOUT_COUNT));
+
+	public static final int MAX_CP_DEFINITION_ATTACHMENT_TYPE_IMAGE_COUNT =
+		GetterUtil.getInteger(
+			PropertiesHolder._get(
+				BenchmarksPropsKeys.
+					MAX_CP_DEFINITION_ATTACHMENT_TYPE_IMAGE_COUNT));
+
+	public static final int MAX_CP_DEFINITION_ATTACHMENT_TYPE_PDF_COUNT =
+		GetterUtil.getInteger(
+			PropertiesHolder._get(
+				BenchmarksPropsKeys.
+					MAX_CP_DEFINITION_ATTACHMENT_TYPE_PDF_COUNT));
+
+	public static final int MAX_CP_DEFINITION_SPECIFICATION_OPTION_VALUE_COUNT =
+		GetterUtil.getInteger(
+			PropertiesHolder._get(
+				BenchmarksPropsKeys.
+					MAX_CP_DEFINITION_SPECIFICATION_OPTION_VALUE_COUNT));
+
+	public static final int MAX_CP_SPECIFICATION_OPTION_COUNT =
+		GetterUtil.getInteger(
+			PropertiesHolder._get(
+				BenchmarksPropsKeys.MAX_CP_SPECIFICATION_OPTION_COUNT));
 
 	public static final int MAX_DDL_CUSTOM_FIELD_COUNT = GetterUtil.getInteger(
 		PropertiesHolder._get(BenchmarksPropsKeys.MAX_DDL_CUSTOM_FIELD_COUNT));
@@ -164,9 +239,6 @@ public class BenchmarksPropsValues {
 	public static final String[] OUTPUT_CSV_FILE_NAMES = StringUtil.split(
 		PropertiesHolder._get(BenchmarksPropsKeys.OUTPUT_CSV_FILE_NAMES));
 
-	public static final String OUTPUT_DIR = PropertiesHolder._get(
-		BenchmarksPropsKeys.OUTPUT_DIR);
-
 	public static final boolean OUTPUT_MERGE = GetterUtil.getBoolean(
 		PropertiesHolder._get(BenchmarksPropsKeys.OUTPUT_MERGE));
 
@@ -184,8 +256,6 @@ public class BenchmarksPropsValues {
 		private static String _get(String key) {
 			return _properties.getProperty(key);
 		}
-
-		private static final String _ACTUAL_PROPERTIES_CONTENT;
 
 		private static final Properties _properties;
 
@@ -214,26 +284,6 @@ public class BenchmarksPropsValues {
 			catch (Exception exception) {
 				throw new ExceptionInInitializerError(exception);
 			}
-
-			List<String> propertyNames = new ArrayList<>(
-				properties.stringPropertyNames());
-
-			propertyNames.sort(null);
-
-			StringBundler sb = new StringBundler(propertyNames.size() * 4);
-
-			for (String propertyName : propertyNames) {
-				if (!propertyName.startsWith("sample.sql")) {
-					continue;
-				}
-
-				sb.append(propertyName);
-				sb.append(StringPool.EQUAL);
-				sb.append(properties.getProperty(propertyName));
-				sb.append(StringPool.NEW_LINE);
-			}
-
-			_ACTUAL_PROPERTIES_CONTENT = sb.toString();
 
 			_properties = properties;
 		}

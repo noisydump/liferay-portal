@@ -14,7 +14,11 @@
 
 package com.liferay.wiki.web.internal.translator;
 
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
+
 import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -22,9 +26,10 @@ import org.junit.Test;
  */
 public class ClassicToCreoleTranslatorTest {
 
-	public ClassicToCreoleTranslatorTest() {
-		_classicToCreoleTranslator = new ClassicToCreoleTranslator();
-	}
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Test
 	public void testBold() throws Exception {
@@ -282,6 +287,7 @@ public class ClassicToCreoleTranslatorTest {
 		return _classicToCreoleTranslator.translate(content);
 	}
 
-	private final ClassicToCreoleTranslator _classicToCreoleTranslator;
+	private final ClassicToCreoleTranslator _classicToCreoleTranslator =
+		new ClassicToCreoleTranslator();
 
 }

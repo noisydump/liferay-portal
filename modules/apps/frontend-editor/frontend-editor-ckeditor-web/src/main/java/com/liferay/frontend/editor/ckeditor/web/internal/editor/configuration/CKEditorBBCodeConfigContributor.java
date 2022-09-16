@@ -18,7 +18,7 @@ import com.liferay.message.boards.constants.MBThreadConstants;
 import com.liferay.portal.kernel.editor.configuration.EditorConfigContributor;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.parsers.bbcode.BBCodeTranslatorUtil;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -27,6 +27,7 @@ import com.liferay.portal.kernel.util.HtmlUtil;
 import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Ambrín Chaudhary
@@ -54,7 +55,7 @@ public class CKEditorBBCodeConfigContributor
 			"enterMode", 2
 		).put(
 			"extraPlugins",
-			"a11yhelpbtn,bbcode,itemselector,sourcearea,wikilink"
+			"a11yhelpbtn,bbcode,filebrowser,itemselector,sourcearea"
 		).put(
 			"fontSize_defaultLabel", "14"
 		).put(
@@ -67,13 +68,13 @@ public class CKEditorBBCodeConfigContributor
 			HtmlUtil.escape(themeDisplay.getPathThemeImages()) +
 				"/message_boards/"
 		).put(
-			"lang", getLangJSONObject(inputEditorTaglibAttributes)
+			"lang", _getLangJSONObject(inputEditorTaglibAttributes)
 		).put(
 			"newThreadURL", MBThreadConstants.NEW_THREAD_URL
 		).put(
 			"removePlugins",
 			"bidi,codemirror,div,elementspath,forms,indentblock,keystrokes," +
-				"link,maximize,newpage,pagebreak,preview,print,save," +
+				"maximize,newpage,pagebreak,preview,print,save," +
 					"showblocks,templates,video"
 		).put(
 			"smiley_descriptions",
@@ -90,13 +91,16 @@ public class CKEditorBBCodeConfigContributor
 		);
 	}
 
-	protected JSONObject getLangJSONObject(
+	private JSONObject _getLangJSONObject(
 		Map<String, Object> inputEditorTaglibAttributes) {
 
 		return JSONUtil.put(
 			"code",
-			LanguageUtil.get(
+			_language.get(
 				getContentsLocale(inputEditorTaglibAttributes), "code"));
 	}
+
+	@Reference
+	private Language _language;
 
 }

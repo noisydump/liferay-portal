@@ -21,22 +21,16 @@ import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
-import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.Locale;
 import java.util.Map;
-import java.util.MissingResourceException;
-import java.util.ResourceBundle;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Sergio González
@@ -105,16 +99,14 @@ public class AlloyEditorCreoleConfigContributor
 
 		String removePlugins = jsonObject.getString("removePlugins");
 
-		StringBundler sb = new StringBundler(4);
-
-		sb.append("ae_dragresize,ae_tableresize,bidi,div,font,forms,");
-		sb.append("indentblock,justify,keystrokes,maximize,newpage,pagebreak,");
-		sb.append("preview,print,save,showblocks,smiley,stylescombo,");
-		sb.append("templates,video");
-
 		jsonObject.put(
 			"removePlugins",
-			StringBundler.concat(removePlugins, ",", sb.toString())
+			StringBundler.concat(
+				removePlugins,
+				",ae_dragresize,ae_tableresize,bidi,div,font,forms,",
+				"indentblock,justify,keystrokes,maximize,newpage,pagebreak,",
+				"preview,print,save,showblocks,smiley,stylescombo,templates,",
+				"video")
 		).put(
 			"toolbars", getToolbarsJSONObject(themeDisplay.getLocale())
 		);
@@ -123,74 +115,59 @@ public class AlloyEditorCreoleConfigContributor
 	protected JSONObject getStyleFormatJSONObject(
 		String styleFormatName, String element, int type) {
 
-		JSONObject jsonObject = JSONUtil.put("name", styleFormatName);
-
-		jsonObject.put(
+		return JSONUtil.put(
+			"name", styleFormatName
+		).put(
 			"style",
 			JSONUtil.put(
 				"element", element
 			).put(
 				"type", type
-			));
-
-		return jsonObject;
+			)
+		);
 	}
 
 	protected JSONArray getStyleFormatsJSONArray(Locale locale) {
-		ResourceBundle resourceBundle = null;
-
-		try {
-			resourceBundle = _resourceBundleLoader.loadResourceBundle(locale);
-		}
-		catch (MissingResourceException missingResourceException) {
-			resourceBundle = ResourceBundleUtil.EMPTY_RESOURCE_BUNDLE;
-		}
-
 		return JSONUtil.putAll(
 			getStyleFormatJSONObject(
-				LanguageUtil.get(resourceBundle, "normal"), "p",
+				_language.get(locale, "normal"), "p", _CKEDITOR_STYLE_BLOCK),
+			getStyleFormatJSONObject(
+				_language.format(locale, "heading-x", "1"), "h1",
 				_CKEDITOR_STYLE_BLOCK),
 			getStyleFormatJSONObject(
-				LanguageUtil.format(resourceBundle, "heading-x", "1"), "h1",
+				_language.format(locale, "heading-x", "2"), "h2",
 				_CKEDITOR_STYLE_BLOCK),
 			getStyleFormatJSONObject(
-				LanguageUtil.format(resourceBundle, "heading-x", "2"), "h2",
+				_language.format(locale, "heading-x", "3"), "h3",
 				_CKEDITOR_STYLE_BLOCK),
 			getStyleFormatJSONObject(
-				LanguageUtil.format(resourceBundle, "heading-x", "3"), "h3",
+				_language.format(locale, "heading-x", "4"), "h4",
 				_CKEDITOR_STYLE_BLOCK),
 			getStyleFormatJSONObject(
-				LanguageUtil.format(resourceBundle, "heading-x", "4"), "h4",
+				_language.format(locale, "heading-x", "5"), "h5",
 				_CKEDITOR_STYLE_BLOCK),
 			getStyleFormatJSONObject(
-				LanguageUtil.format(resourceBundle, "heading-x", "5"), "h5",
-				_CKEDITOR_STYLE_BLOCK),
-			getStyleFormatJSONObject(
-				LanguageUtil.format(resourceBundle, "heading-x", "6"), "h6",
+				_language.format(locale, "heading-x", "6"), "h6",
 				_CKEDITOR_STYLE_BLOCK));
 	}
 
 	protected JSONObject getStyleFormatsJSONObject(Locale locale) {
-		JSONObject stylesJSONObject = JSONUtil.put(
-			"styles", getStyleFormatsJSONArray(locale));
-
 		return JSONUtil.put(
-			"cfg", stylesJSONObject
+			"cfg", JSONUtil.put("styles", getStyleFormatsJSONArray(locale))
 		).put(
 			"name", "styles"
 		);
 	}
 
 	protected JSONObject getToolbarsAddJSONObject() {
-		JSONObject cfgJSONObject = JSONUtil.put(
-			"tableAttributes", JSONFactoryUtil.createJSONObject());
-
 		return JSONUtil.put(
 			"buttons",
 			JSONUtil.putAll(
 				"image",
 				JSONUtil.put(
-					"cfg", cfgJSONObject
+					"cfg",
+					JSONUtil.put(
+						"tableAttributes", JSONFactoryUtil.createJSONObject())
 				).put(
 					"name", "table"
 				),
@@ -216,21 +193,9 @@ public class AlloyEditorCreoleConfigContributor
 		);
 	}
 
-	protected JSONObject getToolbarsStylesSelectionsHeadingTextJSONObject(
-		Locale locale) {
-
-		return JSONUtil.put(
-			"buttons", JSONUtil.put(getStyleFormatsJSONObject(locale))
-		).put(
-			"name", "headertext"
-		).put(
-			"test", "AlloyEditor.SelectionTest.headingtext"
-		);
-	}
-
 	protected JSONArray getToolbarsStylesSelectionsJSONArray(Locale locale) {
 		return JSONUtil.putAll(
-			getToolbarsStylesSelectionsHeadingTextJSONObject(locale),
+			_getToolbarsStylesSelectionsHeadingTextJSONObject(locale),
 			getToolbarsStylesSelectionsLinkJSONObject(),
 			getToolbarsStylesSelectionsTextJSONObject(locale),
 			getToolbarsStylesSelectionsTableJSONObject());
@@ -290,13 +255,21 @@ public class AlloyEditorCreoleConfigContributor
 		);
 	}
 
+	private JSONObject _getToolbarsStylesSelectionsHeadingTextJSONObject(
+		Locale locale) {
+
+		return JSONUtil.put(
+			"buttons", JSONUtil.put(getStyleFormatsJSONObject(locale))
+		).put(
+			"name", "headertext"
+		).put(
+			"test", "AlloyEditor.SelectionTest.headingtext"
+		);
+	}
+
 	private static final int _CKEDITOR_STYLE_BLOCK = 1;
 
-	@Reference(
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY,
-		target = "(bundle.symbolic.name=com.liferay.frontend.editor.lang)"
-	)
-	private volatile ResourceBundleLoader _resourceBundleLoader;
+	@Reference
+	private Language _language;
 
 }

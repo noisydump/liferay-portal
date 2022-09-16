@@ -13,7 +13,15 @@
  */
 
 module.exports = {
-	check: [],
-	fix: [],
-	preset: '@liferay/npm-scripts/src/presets/standard',
+	build: {
+		bundler: {
+			exclude: {
+				'bootstrap': true,
+				'querystring': ['test/**/*'],
+				'xss-filters': ['dist/**/*', 'tests/**/*'],
+			},
+		},
+	},
+	check: false,
+	fix: false,
 };

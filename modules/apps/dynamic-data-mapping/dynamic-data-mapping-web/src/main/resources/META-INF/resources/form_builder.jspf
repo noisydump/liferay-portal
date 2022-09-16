@@ -40,7 +40,7 @@ if (Validator.isNotNull(script)) {
 }
 %>
 
-<div class="separator"><!-- --></div>
+<hr class="separator" />
 
 <div class="alert alert-danger hide lfr-message-response" id="<portlet:namespace />messageContainer"></div>
 
@@ -58,12 +58,12 @@ if (Validator.isNotNull(script)) {
 						<div class="tabbable-content">
 							<ul class="lfr-nav nav nav-underline">
 								<li class="nav-item">
-									<a class="active nav-link" href="javascript:;">
+									<a class="active nav-link" href="javascript:void(0);">
 										<liferay-ui:message key="fields" />
 									</a>
 								</li>
 								<li class="nav-item">
-									<a class="disabled nav-link" href="javascript:;">
+									<a class="disabled nav-link" href="javascript:void(0);">
 										<liferay-ui:message key="settings" />
 									</a>
 								</li>
@@ -296,7 +296,7 @@ for (Locale availableLocale : LanguageUtil.getAvailableLocales(themeDisplay.getS
 			var propertyList = formBuilder.propertyList;
 
 			if (propertyList) {
-				propertyList.get('data').each(function (model) {
+				propertyList.get('data').each((model) => {
 					var editor = model.get('editor');
 
 					if (editor) {
@@ -319,7 +319,7 @@ for (Locale availableLocale : LanguageUtil.getAvailableLocales(themeDisplay.getS
 		'<%= HtmlUtil.escapeJS(portletResourceNamespace) %>getContentValue'
 	] = getContentValue;
 
-	Liferay.on('<portlet:namespace />saveTemplate', function (event) {
+	Liferay.on('<portlet:namespace />saveTemplate', (event) => {
 		A.one('#<portlet:namespace />scriptContent').val(getContentValue());
 	});
 

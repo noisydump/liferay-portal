@@ -16,15 +16,11 @@ package com.liferay.portal.osgi.web.wab.generator.internal.connection;
 
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.FileUtil;
-import com.liferay.portal.kernel.util.HttpUtil;
+import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.StreamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.osgi.web.wab.generator.WabGenerator;
-import com.liferay.portal.util.FastDateFormatFactoryImpl;
-import com.liferay.portal.util.FileImpl;
-import com.liferay.portal.util.HttpImpl;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -51,8 +47,6 @@ public class WabURLConnection extends URLConnection {
 
 		_classLoader = classLoader;
 		_wabGenerator = wabGenerator;
-
-		wireSpringUtils();
 	}
 
 	@Override
@@ -63,7 +57,7 @@ public class WabURLConnection extends URLConnection {
 	public InputStream getInputStream() throws IOException {
 		URL url = getURL();
 
-		Map<String, String[]> parameters = HttpUtil.getParameterMap(
+		Map<String, String[]> parameters = HttpComponentsUtil.getParameterMap(
 			url.getQuery());
 
 		if (!parameters.containsKey("Web-ContextPath")) {
@@ -96,7 +90,8 @@ public class WabURLConnection extends URLConnection {
 			path = path.concat(StringUtil.merge(portalProfileNames));
 		}
 
-		final File file = transferToTempFile(new URL(protocols[0], null, path));
+		final File file = _transferToTempFile(
+			new URL(protocols[0], null, path));
 
 		File processedFile = _wabGenerator.generate(
 			_classLoader, file, parameters);
@@ -116,7 +111,7 @@ public class WabURLConnection extends URLConnection {
 		};
 	}
 
-	protected File transferToTempFile(URL url) throws IOException {
+	private File _transferToTempFile(URL url) throws IOException {
 		String path = url.getPath();
 
 		String fileName = path.substring(
@@ -127,27 +122,6 @@ public class WabURLConnection extends URLConnection {
 		StreamUtil.transfer(url.openStream(), new FileOutputStream(file));
 
 		return file;
-	}
-
-	protected void wireSpringUtils() {
-		if (FastDateFormatFactoryUtil.getFastDateFormatFactory() == null) {
-			FastDateFormatFactoryUtil instance =
-				new FastDateFormatFactoryUtil();
-
-			instance.setFastDateFormatFactory(new FastDateFormatFactoryImpl());
-		}
-
-		if (FileUtil.getFile() == null) {
-			FileUtil instance = new FileUtil();
-
-			instance.setFile(new FileImpl());
-		}
-
-		if (HttpUtil.getHttp() == null) {
-			HttpUtil instance = new HttpUtil();
-
-			instance.setHttp(new HttpImpl());
-		}
 	}
 
 	private final ClassLoader _classLoader;

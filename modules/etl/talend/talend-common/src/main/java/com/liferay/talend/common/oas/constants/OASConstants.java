@@ -26,6 +26,8 @@ public class OASConstants {
 
 	public static final String INFO = "info";
 
+	public static final String ITEMS = "items";
+
 	public static final String LOCATOR_COMPONENTS_SCHEMAS =
 		"components>schemas";
 
@@ -67,6 +69,8 @@ public class OASConstants {
 	public static final String OPERATION_PATCH = "patch";
 
 	public static final String OPERATION_POST = "post";
+
+	public static final String OPERATION_PUT = "put";
 
 	public static final String PATH_SCHEMA_REFERENCE = "#/components/schemas/";
 

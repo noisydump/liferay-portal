@@ -48,7 +48,7 @@ public class MultiLanguageNotificationRecipientEvaluator
 		throws PortalException {
 
 		String notificationRecipientEvaluatorKey =
-			getNotificationRecipientEvaluatorKey(
+			_getNotificationRecipientEvaluatorKey(
 				kaleoNotificationRecipient.getRecipientScriptLanguage(),
 				kaleoNotificationRecipient.getRecipientScript());
 
@@ -81,29 +81,12 @@ public class MultiLanguageNotificationRecipientEvaluator
 			notificationRecipientEvaluator, properties);
 
 		for (String scriptingLanguage : scriptingLanguages) {
-			String notificationRecipientEvaluatorKey =
-				getNotificationRecipientEvaluatorKey(
-					scriptingLanguage,
-					ClassUtil.getClassName(notificationRecipientEvaluator));
-
 			_notificationRecipientEvaluators.put(
-				notificationRecipientEvaluatorKey,
+				_getNotificationRecipientEvaluatorKey(
+					scriptingLanguage,
+					ClassUtil.getClassName(notificationRecipientEvaluator)),
 				notificationRecipientEvaluator);
 		}
-	}
-
-	protected String getNotificationRecipientEvaluatorKey(
-			String language, String notificationRecipientEvaluatorClassName)
-		throws KaleoDefinitionValidationException {
-
-		ScriptLanguage scriptLanguage = ScriptLanguage.parse(language);
-
-		if (scriptLanguage.equals(ScriptLanguage.JAVA)) {
-			return language + StringPool.COLON +
-				notificationRecipientEvaluatorClassName;
-		}
-
-		return language;
 	}
 
 	protected void removeNotificationRecipientEvaluator(
@@ -115,14 +98,25 @@ public class MultiLanguageNotificationRecipientEvaluator
 			notificationRecipientEvaluator, properties);
 
 		for (String scriptingLanguage : scriptingLanguages) {
-			String notificationRecipientEvaluatorKey =
-				getNotificationRecipientEvaluatorKey(
-					scriptingLanguage,
-					ClassUtil.getClassName(notificationRecipientEvaluator));
-
 			_notificationRecipientEvaluators.remove(
-				notificationRecipientEvaluatorKey);
+				_getNotificationRecipientEvaluatorKey(
+					scriptingLanguage,
+					ClassUtil.getClassName(notificationRecipientEvaluator)));
 		}
+	}
+
+	private String _getNotificationRecipientEvaluatorKey(
+			String language, String notificationRecipientEvaluatorClassName)
+		throws KaleoDefinitionValidationException {
+
+		ScriptLanguage scriptLanguage = ScriptLanguage.parse(language);
+
+		if (scriptLanguage.equals(ScriptLanguage.JAVA)) {
+			return language + StringPool.COLON +
+				notificationRecipientEvaluatorClassName;
+		}
+
+		return language;
 	}
 
 	private String[] _getScriptingLanguages(

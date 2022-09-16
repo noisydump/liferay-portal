@@ -22,7 +22,7 @@ import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -38,6 +38,7 @@ import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
+import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.util.Arrays;
@@ -112,13 +113,13 @@ public class AddChannelMVCActionCommand extends BaseAnalyticsMVCActionCommand {
 				"name", group.getDescriptiveName(themeDisplay.getLocale()));
 		}
 		catch (PortalException portalException) {
-			_log.error(portalException, portalException);
+			_log.error(portalException);
 
 			ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
 				"content.Language", themeDisplay.getLocale(), getClass());
 
 			return groupJSONObject.put(
-				"name", LanguageUtil.get(resourceBundle, "unknown"));
+				"name", _language.get(resourceBundle, "unknown"));
 		}
 	}
 
@@ -244,14 +245,14 @@ public class AddChannelMVCActionCommand extends BaseAnalyticsMVCActionCommand {
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		UnicodeProperties unicodeProperties = new UnicodeProperties(true);
-
-		unicodeProperties.setProperty(
-			"liferayAnalyticsGroupIds",
-			StringUtil.merge(liferayAnalyticsGroupIds, StringPool.COMMA));
-
 		_companyService.updatePreferences(
-			themeDisplay.getCompanyId(), unicodeProperties);
+			themeDisplay.getCompanyId(),
+			UnicodePropertiesBuilder.create(
+				true
+			).put(
+				"liferayAnalyticsGroupIds",
+				StringUtil.merge(liferayAnalyticsGroupIds, StringPool.COMMA)
+			).build());
 
 		return liferayAnalyticsGroupIds;
 	}
@@ -305,6 +306,9 @@ public class AddChannelMVCActionCommand extends BaseAnalyticsMVCActionCommand {
 
 	@Reference
 	private CompanyService _companyService;
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private Portal _portal;

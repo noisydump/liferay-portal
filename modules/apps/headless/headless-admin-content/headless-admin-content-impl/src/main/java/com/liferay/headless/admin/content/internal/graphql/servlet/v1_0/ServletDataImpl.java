@@ -18,6 +18,7 @@ import com.liferay.headless.admin.content.internal.graphql.mutation.v1_0.Mutatio
 import com.liferay.headless.admin.content.internal.graphql.query.v1_0.Query;
 import com.liferay.headless.admin.content.resource.v1_0.DisplayPageTemplateResource;
 import com.liferay.headless.admin.content.resource.v1_0.PageDefinitionResource;
+import com.liferay.headless.admin.content.resource.v1_0.StructuredContentResource;
 import com.liferay.portal.vulcan.graphql.servlet.ServletData;
 
 import javax.annotation.Generated;
@@ -41,9 +42,13 @@ public class ServletDataImpl implements ServletData {
 	public void activate(BundleContext bundleContext) {
 		Mutation.setPageDefinitionResourceComponentServiceObjects(
 			_pageDefinitionResourceComponentServiceObjects);
+		Mutation.setStructuredContentResourceComponentServiceObjects(
+			_structuredContentResourceComponentServiceObjects);
 
 		Query.setDisplayPageTemplateResourceComponentServiceObjects(
 			_displayPageTemplateResourceComponentServiceObjects);
+		Query.setStructuredContentResourceComponentServiceObjects(
+			_structuredContentResourceComponentServiceObjects);
 	}
 
 	@Override
@@ -69,6 +74,10 @@ public class ServletDataImpl implements ServletData {
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
 	private ComponentServiceObjects<PageDefinitionResource>
 		_pageDefinitionResourceComponentServiceObjects;
+
+	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
+	private ComponentServiceObjects<StructuredContentResource>
+		_structuredContentResourceComponentServiceObjects;
 
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
 	private ComponentServiceObjects<DisplayPageTemplateResource>

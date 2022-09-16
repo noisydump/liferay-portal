@@ -38,8 +38,8 @@ import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.HtmlParser;
 import com.liferay.portal.kernel.util.Http;
-import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
@@ -118,16 +118,6 @@ public class MessageListenerImpl implements MessageListener {
 
 			return false;
 		}
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #accept(String,
-	 *             List, Message)}
-	 */
-	@Deprecated
-	@Override
-	public boolean accept(String from, String recipient, Message message) {
-		return accept(from, ListUtil.toList(recipient), message);
 	}
 
 	@Override
@@ -221,29 +211,28 @@ public class MessageListenerImpl implements MessageListener {
 			ServiceContext serviceContext = new ServiceContext();
 
 			serviceContext.setAttribute("propagatePermissions", Boolean.TRUE);
-
-			String portletId = PortletProviderUtil.getPortletId(
-				MBMessage.class.getName(), PortletProvider.Action.VIEW);
-
 			serviceContext.setLayoutFullURL(
 				_portal.getLayoutFullURL(
-					groupId, portletId,
+					groupId,
+					PortletProviderUtil.getPortletId(
+						MBMessage.class.getName(), PortletProvider.Action.VIEW),
 					StringUtil.equalsIgnoreCase(
 						Http.HTTPS, PropsValues.WEB_SERVER_PROTOCOL)));
-
 			serviceContext.setScopeGroupId(groupId);
 
 			if (parentMessage == null) {
 				_mbMessageService.addMessage(
-					groupId, categoryId, subject, mbMailMessage.getBody(),
+					groupId, categoryId, subject,
+					mbMailMessage.getBody(_htmlParser),
 					MBMessageConstants.DEFAULT_FORMAT, inputStreamOVPs, false,
 					0.0, true, serviceContext);
 			}
 			else {
 				_mbMessageService.addMessage(
 					parentMessage.getMessageId(), subject,
-					mbMailMessage.getBody(), MBMessageConstants.DEFAULT_FORMAT,
-					inputStreamOVPs, false, 0.0, true, serviceContext);
+					mbMailMessage.getBody(_htmlParser),
+					MBMessageConstants.DEFAULT_FORMAT, inputStreamOVPs, false,
+					0.0, true, serviceContext);
 			}
 
 			if (_log.isDebugEnabled()) {
@@ -259,7 +248,7 @@ public class MessageListenerImpl implements MessageListener {
 			throw new MessageListenerException(principalException);
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 
 			throw new MessageListenerException(exception);
 		}
@@ -272,7 +261,7 @@ public class MessageListenerImpl implements MessageListener {
 					}
 					catch (IOException ioException) {
 						if (_log.isWarnEnabled()) {
-							_log.warn(ioException, ioException);
+							_log.warn(ioException);
 						}
 					}
 				}
@@ -280,18 +269,6 @@ public class MessageListenerImpl implements MessageListener {
 
 			PermissionCheckerUtil.setThreadValues(null);
 		}
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #deliver(String,
-	 *             List, Message)}
-	 */
-	@Deprecated
-	@Override
-	public void deliver(String from, String recipient, Message message)
-		throws MessageListenerException {
-
-		deliver(from, ListUtil.toList(recipient), message);
 	}
 
 	@Override
@@ -366,6 +343,9 @@ public class MessageListenerImpl implements MessageListener {
 
 	@Reference
 	private CompanyLocalService _companyLocalService;
+
+	@Reference
+	private HtmlParser _htmlParser;
 
 	@Reference
 	private MBCategoryLocalService _mbCategoryLocalService;

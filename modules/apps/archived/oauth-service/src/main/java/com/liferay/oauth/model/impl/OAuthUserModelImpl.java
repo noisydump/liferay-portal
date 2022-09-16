@@ -18,7 +18,6 @@ import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.expando.kernel.util.ExpandoBridgeFactoryUtil;
 import com.liferay.oauth.model.OAuthUser;
 import com.liferay.oauth.model.OAuthUserModel;
-import com.liferay.oauth.model.OAuthUserSoap;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.bean.AutoEscapeBeanHandler;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -31,21 +30,21 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -112,26 +111,26 @@ public class OAuthUserModelImpl
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long ACCESSTOKEN_COLUMN_BITMASK = 1L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long OAUTHAPPLICATIONID_COLUMN_BITMASK = 2L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long USERID_COLUMN_BITMASK = 4L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *		#getColumnBitmask(String)
+	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long OAUTHUSERID_COLUMN_BITMASK = 8L;
@@ -148,56 +147,6 @@ public class OAuthUserModelImpl
 	 */
 	@Deprecated
 	public static void setFinderCacheEnabled(boolean finderCacheEnabled) {
-	}
-
-	/**
-	 * Converts the soap model instance into a normal model instance.
-	 *
-	 * @param soapModel the soap model instance to convert
-	 * @return the normal model instance
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static OAuthUser toModel(OAuthUserSoap soapModel) {
-		if (soapModel == null) {
-			return null;
-		}
-
-		OAuthUser model = new OAuthUserImpl();
-
-		model.setOAuthUserId(soapModel.getOAuthUserId());
-		model.setCompanyId(soapModel.getCompanyId());
-		model.setUserId(soapModel.getUserId());
-		model.setUserName(soapModel.getUserName());
-		model.setCreateDate(soapModel.getCreateDate());
-		model.setModifiedDate(soapModel.getModifiedDate());
-		model.setOAuthApplicationId(soapModel.getOAuthApplicationId());
-		model.setAccessToken(soapModel.getAccessToken());
-		model.setAccessSecret(soapModel.getAccessSecret());
-
-		return model;
-	}
-
-	/**
-	 * Converts the soap model instances into normal model instances.
-	 *
-	 * @param soapModels the soap model instances to convert
-	 * @return the normal model instances
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static List<OAuthUser> toModels(OAuthUserSoap[] soapModels) {
-		if (soapModels == null) {
-			return null;
-		}
-
-		List<OAuthUser> models = new ArrayList<OAuthUser>(soapModels.length);
-
-		for (OAuthUserSoap soapModel : soapModels) {
-			models.add(toModel(soapModel));
-		}
-
-		return models;
 	}
 
 	public OAuthUserModelImpl() {
@@ -282,34 +231,6 @@ public class OAuthUserModelImpl
 		getAttributeSetterBiConsumers() {
 
 		return _attributeSetterBiConsumers;
-	}
-
-	private static Function<InvocationHandler, OAuthUser>
-		_getProxyProviderFunction() {
-
-		Class<?> proxyClass = ProxyUtil.getProxyClass(
-			OAuthUser.class.getClassLoader(), OAuthUser.class,
-			ModelWrapper.class);
-
-		try {
-			Constructor<OAuthUser> constructor =
-				(Constructor<OAuthUser>)proxyClass.getConstructor(
-					InvocationHandler.class);
-
-			return invocationHandler -> {
-				try {
-					return constructor.newInstance(invocationHandler);
-				}
-				catch (ReflectiveOperationException
-							reflectiveOperationException) {
-
-					throw new InternalError(reflectiveOperationException);
-				}
-			};
-		}
-		catch (NoSuchMethodException noSuchMethodException) {
-			throw new InternalError(noSuchMethodException);
-		}
 	}
 
 	private static final Map<String, Function<OAuthUser, Object>>
@@ -596,7 +517,9 @@ public class OAuthUserModelImpl
 		for (Map.Entry<String, Object> entry :
 				_columnOriginalValues.entrySet()) {
 
-			if (entry.getValue() != getColumnValue(entry.getKey())) {
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
 				_columnBitmask |= _columnBitmasks.get(entry.getKey());
 			}
 		}
@@ -647,6 +570,31 @@ public class OAuthUserModelImpl
 		oAuthUserImpl.setAccessSecret(getAccessSecret());
 
 		oAuthUserImpl.resetOriginalValues();
+
+		return oAuthUserImpl;
+	}
+
+	@Override
+	public OAuthUser cloneWithOriginalValues() {
+		OAuthUserImpl oAuthUserImpl = new OAuthUserImpl();
+
+		oAuthUserImpl.setOAuthUserId(
+			this.<Long>getColumnOriginalValue("oAuthUserId"));
+		oAuthUserImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		oAuthUserImpl.setUserId(this.<Long>getColumnOriginalValue("userId"));
+		oAuthUserImpl.setUserName(
+			this.<String>getColumnOriginalValue("userName"));
+		oAuthUserImpl.setCreateDate(
+			this.<Date>getColumnOriginalValue("createDate"));
+		oAuthUserImpl.setModifiedDate(
+			this.<Date>getColumnOriginalValue("modifiedDate"));
+		oAuthUserImpl.setOAuthApplicationId(
+			this.<Long>getColumnOriginalValue("oAuthApplicationId"));
+		oAuthUserImpl.setAccessToken(
+			this.<String>getColumnOriginalValue("accessToken"));
+		oAuthUserImpl.setAccessSecret(
+			this.<String>getColumnOriginalValue("accessSecret"));
 
 		return oAuthUserImpl;
 	}
@@ -783,7 +731,7 @@ public class OAuthUserModelImpl
 			getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			(4 * attributeGetterFunctions.size()) + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -794,9 +742,26 @@ public class OAuthUserModelImpl
 			Function<OAuthUser, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((OAuthUser)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply((OAuthUser)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -843,7 +808,9 @@ public class OAuthUserModelImpl
 	private static class EscapedModelProxyProviderFunctionHolder {
 
 		private static final Function<InvocationHandler, OAuthUser>
-			_escapedModelProxyProviderFunction = _getProxyProviderFunction();
+			_escapedModelProxyProviderFunction =
+				ProxyUtil.getProxyProviderFunction(
+					OAuthUser.class, ModelWrapper.class);
 
 	}
 

@@ -17,6 +17,7 @@ package com.liferay.commerce.machine.learning.forecast.alert.service.impl;
 import com.liferay.commerce.machine.learning.forecast.alert.constants.CommerceMLForecastAlertConstants;
 import com.liferay.commerce.machine.learning.forecast.alert.model.CommerceMLForecastAlertEntry;
 import com.liferay.commerce.machine.learning.forecast.alert.service.base.CommerceMLForecastAlertEntryLocalServiceBaseImpl;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.User;
@@ -26,11 +27,70 @@ import com.liferay.portal.kernel.search.IndexableType;
 import java.util.Date;
 import java.util.List;
 
+import org.osgi.service.component.annotations.Component;
+
 /**
  * @author Riccardo Ferrari
  */
+@Component(
+	enabled = false,
+	property = "model.class.name=com.liferay.commerce.machine.learning.forecast.alert.model.CommerceMLForecastAlertEntry",
+	service = AopService.class
+)
 public class CommerceMLForecastAlertEntryLocalServiceImpl
 	extends CommerceMLForecastAlertEntryLocalServiceBaseImpl {
+
+	@Indexable(type = IndexableType.REINDEX)
+	@Override
+	public CommerceMLForecastAlertEntry addOrUpdateCommerceMLForecastAlertEntry(
+			long companyId, long userId, long commerceAccountId, Date timestamp,
+			float actual, float forecast, float relativeChange)
+		throws PortalException {
+
+		CommerceMLForecastAlertEntry commerceMLForecastAlertEntry =
+			commerceMLForecastAlertEntryPersistence.findByC_C_T(
+				companyId, commerceAccountId, timestamp);
+
+		User user = userLocalService.getUser(userId);
+
+		if (commerceMLForecastAlertEntry == null) {
+			long commerceMLForecastAlertEntryId =
+				counterLocalService.increment();
+
+			commerceMLForecastAlertEntry =
+				commerceMLForecastAlertEntryPersistence.create(
+					commerceMLForecastAlertEntryId);
+
+			commerceMLForecastAlertEntry.setCompanyId(companyId);
+			commerceMLForecastAlertEntry.setUserId(userId);
+			commerceMLForecastAlertEntry.setUserName(user.getFullName());
+			commerceMLForecastAlertEntry.setCreateDate(new Date());
+			commerceMLForecastAlertEntry.setCommerceAccountId(
+				commerceAccountId);
+			commerceMLForecastAlertEntry.setTimestamp(timestamp);
+		}
+
+		commerceMLForecastAlertEntry.setModifiedDate(new Date());
+		commerceMLForecastAlertEntry.setActual(actual);
+		commerceMLForecastAlertEntry.setForecast(forecast);
+		commerceMLForecastAlertEntry.setRelativeChange(relativeChange);
+		commerceMLForecastAlertEntry.setStatus(
+			CommerceMLForecastAlertConstants.STATUS_NEW);
+
+		commerceMLForecastAlertEntry =
+			commerceMLForecastAlertEntryPersistence.update(
+				commerceMLForecastAlertEntry);
+
+		// Resources
+
+		resourceLocalService.addResources(
+			user.getCompanyId(), GroupConstants.DEFAULT_LIVE_GROUP_ID,
+			user.getUserId(), CommerceMLForecastAlertEntry.class.getName(),
+			commerceMLForecastAlertEntry.getCommerceAccountId(), false, false,
+			false);
+
+		return commerceMLForecastAlertEntry;
+	}
 
 	@Override
 	public List<CommerceMLForecastAlertEntry>
@@ -105,58 +165,6 @@ public class CommerceMLForecastAlertEntryLocalServiceImpl
 
 		return commerceMLForecastAlertEntryPersistence.update(
 			commerceMLForecastAlertEntry);
-	}
-
-	@Indexable(type = IndexableType.REINDEX)
-	@Override
-	public CommerceMLForecastAlertEntry upsertCommerceMLForecastAlertEntry(
-			long companyId, long userId, long commerceAccountId, Date timestamp,
-			float actual, float forecast, float relativeChange)
-		throws PortalException {
-
-		CommerceMLForecastAlertEntry commerceMLForecastAlertEntry =
-			commerceMLForecastAlertEntryPersistence.findByC_C_T(
-				companyId, commerceAccountId, timestamp);
-
-		User user = userLocalService.getUser(userId);
-
-		if (commerceMLForecastAlertEntry == null) {
-			long commerceMLForecastAlertEntryId =
-				counterLocalService.increment();
-
-			commerceMLForecastAlertEntry =
-				commerceMLForecastAlertEntryPersistence.create(
-					commerceMLForecastAlertEntryId);
-
-			commerceMLForecastAlertEntry.setCompanyId(companyId);
-			commerceMLForecastAlertEntry.setUserId(userId);
-			commerceMLForecastAlertEntry.setUserName(user.getFullName());
-			commerceMLForecastAlertEntry.setCreateDate(new Date());
-			commerceMLForecastAlertEntry.setCommerceAccountId(
-				commerceAccountId);
-			commerceMLForecastAlertEntry.setTimestamp(timestamp);
-		}
-
-		commerceMLForecastAlertEntry.setModifiedDate(new Date());
-		commerceMLForecastAlertEntry.setActual(actual);
-		commerceMLForecastAlertEntry.setForecast(forecast);
-		commerceMLForecastAlertEntry.setRelativeChange(relativeChange);
-		commerceMLForecastAlertEntry.setStatus(
-			CommerceMLForecastAlertConstants.STATUS_NEW);
-
-		commerceMLForecastAlertEntry =
-			commerceMLForecastAlertEntryPersistence.update(
-				commerceMLForecastAlertEntry);
-
-		// Resources
-
-		resourceLocalService.addResources(
-			user.getCompanyId(), GroupConstants.DEFAULT_LIVE_GROUP_ID,
-			user.getUserId(), CommerceMLForecastAlertEntry.class.getName(),
-			commerceMLForecastAlertEntry.getCommerceAccountId(), false, false,
-			false);
-
-		return commerceMLForecastAlertEntry;
 	}
 
 }

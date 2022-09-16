@@ -46,9 +46,7 @@ if (kbAttachmentItemSelectorViewDisplayContext.isSearch()) {
 
 	portletFileEntriesCount = hits.getLength();
 
-	Document[] docs = hits.getDocs();
-
-	for (Document doc : docs) {
+	for (Document doc : hits.getDocs()) {
 		long fileEntryId = GetterUtil.getLong(doc.get(Field.ENTRY_CLASS_PK));
 
 		FileEntry fileEntry = null;
@@ -86,5 +84,5 @@ else {
 />
 
 <%!
-private static Log _log = LogFactoryUtil.getLog("com_liferay_knowledge_base_item_selector_web.kb_article_attachments_jsp");
+private static final Log _log = LogFactoryUtil.getLog("com_liferay_knowledge_base_item_selector_web.kb_article_attachments_jsp");
 %>

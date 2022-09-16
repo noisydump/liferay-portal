@@ -16,12 +16,12 @@ package com.liferay.commerce.shipping.web.internal.portlet;
 
 import com.liferay.commerce.constants.CommercePortletKeys;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
-import com.liferay.commerce.service.CommerceCountryService;
 import com.liferay.commerce.service.CommerceShippingMethodService;
 import com.liferay.commerce.shipping.engine.fixed.service.CommerceShippingFixedOptionService;
 import com.liferay.commerce.shipping.web.internal.display.context.CommerceShippingMethodsDisplayContext;
 import com.liferay.commerce.util.CommerceShippingEngineRegistry;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
+import com.liferay.portal.kernel.service.CountryService;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 
@@ -52,10 +52,11 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.portlet.scopeable=true",
 		"javax.portlet.display-name=Payment Methods",
 		"javax.portlet.expiration-cache=0",
-		"javax.portlet.init-param.view-template=/edit_shipping_method.jsp",
+		"javax.portlet.init-param.view-template=/edit_commerce_shipping_method.jsp",
 		"javax.portlet.name=" + CommercePortletKeys.COMMERCE_SHIPPING_METHODS,
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=power-user,user"
+		"javax.portlet.security-role-ref=power-user,user",
+		"javax.portlet.version=3.0"
 	},
 	service = {CommerceShippingMethodPortlet.class, Portlet.class}
 )
@@ -69,10 +70,10 @@ public class CommerceShippingMethodPortlet extends MVCPortlet {
 		CommerceShippingMethodsDisplayContext
 			commerceShippingMethodsDisplayContext =
 				new CommerceShippingMethodsDisplayContext(
-					_commerceChannelLocalService, _commerceCountryService,
+					_commerceChannelLocalService,
 					_commerceShippingEngineRegistry,
 					_commerceShippingFixedOptionService,
-					_commerceShippingMethodService,
+					_commerceShippingMethodService, _countryService,
 					_portal.getHttpServletRequest(renderRequest));
 
 		renderRequest.setAttribute(
@@ -86,9 +87,6 @@ public class CommerceShippingMethodPortlet extends MVCPortlet {
 	private CommerceChannelLocalService _commerceChannelLocalService;
 
 	@Reference
-	private CommerceCountryService _commerceCountryService;
-
-	@Reference
 	private CommerceShippingEngineRegistry _commerceShippingEngineRegistry;
 
 	@Reference
@@ -97,6 +95,9 @@ public class CommerceShippingMethodPortlet extends MVCPortlet {
 
 	@Reference
 	private CommerceShippingMethodService _commerceShippingMethodService;
+
+	@Reference
+	private CountryService _countryService;
 
 	@Reference
 	private Portal _portal;

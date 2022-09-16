@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
@@ -42,7 +43,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @generated
  */
 @Generated("")
-@GraphQLName("ContentType")
+@GraphQLName(description = "The type of content.", value = "ContentType")
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "ContentType")
 public class ContentType implements Serializable {
@@ -51,7 +52,11 @@ public class ContentType implements Serializable {
 		return ObjectMapperUtil.readValue(ContentType.class, json);
 	}
 
-	@Schema
+	public static ContentType unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(ContentType.class, json);
+	}
+
+	@Schema(description = "The content type's class name.")
 	public String getClassName() {
 		return className;
 	}
@@ -75,7 +80,7 @@ public class ContentType implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The content type's class name.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String className;
 
@@ -126,15 +131,16 @@ public class ContentType implements Serializable {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.ContentType",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
 	}
 
 	private static boolean _isArray(Object value) {
@@ -160,8 +166,8 @@ public class ContentType implements Serializable {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -192,7 +198,7 @@ public class ContentType implements Serializable {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -200,7 +206,7 @@ public class ContentType implements Serializable {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -208,5 +214,10 @@ public class ContentType implements Serializable {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

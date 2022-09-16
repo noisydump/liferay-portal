@@ -18,6 +18,8 @@ import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.ItemSelectorCriterion;
 import com.liferay.item.selector.criteria.URLItemSelectorReturnType;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
@@ -25,7 +27,6 @@ import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
-import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.product.navigation.personal.menu.PersonalMenuEntry;
@@ -63,12 +64,9 @@ public class MySitesPersonalMenuEntry implements PersonalMenuEntry {
 	}
 
 	@Override
-	public String getLabel(Locale locale) {
-		return _language.get(locale, "my-sites");
-	}
+	public JSONObject getJSOnClickConfigJSONObject(
+		HttpServletRequest httpServletRequest) {
 
-	@Override
-	public String getPortletURL(HttpServletRequest httpServletRequest) {
 		String namespace = AUIUtil.getNamespace(httpServletRequest);
 
 		String eventName = namespace + "selectSite";
@@ -83,22 +81,23 @@ public class MySitesPersonalMenuEntry implements PersonalMenuEntry {
 			RequestBackedPortletURLFactoryUtil.create(httpServletRequest),
 			eventName, itemSelectorCriterion);
 
-		StringBuilder sb = new StringBuilder(12);
+		return JSONUtil.put(
+			"selectEventName", eventName
+		).put(
+			"title", _language.get(httpServletRequest, "select-site")
+		).put(
+			"url", itemSelectorURL.toString()
+		);
+	}
 
-		sb.append("javascript:Liferay.Util.openSelectionModal({");
-		sb.append("customSelectEvent: true, id: '");
-		sb.append(namespace);
-		sb.append("selectSite', onSelect: function(selectedItem) ");
-		sb.append("{Liferay.Util.navigate(selectedItem.url);}");
-		sb.append(", selectEventName: '");
-		sb.append(eventName);
-		sb.append("', title: '");
-		sb.append(_language.get(httpServletRequest, "select-site"));
-		sb.append("', url:'");
-		sb.append(HtmlUtil.escapeJS(itemSelectorURL.toString()));
-		sb.append("'});");
+	@Override
+	public String getLabel(Locale locale) {
+		return _language.get(locale, "my-sites");
+	}
 
-		return sb.toString();
+	@Override
+	public String getPortletURL(HttpServletRequest httpServletRequest) {
+		return null;
 	}
 
 	@Override

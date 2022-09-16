@@ -20,8 +20,8 @@
 DepotAdminSelectRoleDisplayContext depotAdminSelectRoleDisplayContext = (DepotAdminSelectRoleDisplayContext)request.getAttribute(DepotAdminWebKeys.DEPOT_ADMIN_SELECT_ROLE_DISPLAY_CONTEXT);
 %>
 
-<clay:management-toolbar-v2
-	displayContext="<%= (DepotAdminSelectRoleManagementToolbarDisplayContext)request.getAttribute(DepotAdminWebKeys.DEPOT_ADMIN_SELECT_ROLE_MANAGEMENT_TOOLBAL_DISPLAY_CONTEXT) %>"
+<clay:management-toolbar
+	managementToolbarDisplayContext="<%= (DepotAdminSelectRoleManagementToolbarDisplayContext)request.getAttribute(DepotAdminWebKeys.DEPOT_ADMIN_SELECT_ROLE_MANAGEMENT_TOOLBAL_DISPLAY_CONTEXT) %>"
 />
 
 <aui:form action="<%= depotAdminSelectRoleDisplayContext.getPortletURL() %>" cssClass="container-fluid container-fluid-max-xl container-form-lg" method="post" name="selectDepotRoleFm">
@@ -73,7 +73,7 @@ DepotAdminSelectRoleDisplayContext depotAdminSelectRoleDisplayContext = (DepotAd
 
 				var delegate = delegateModule.default;
 
-				delegate(form, 'click', '.group-selector-button', function (event) {
+				delegate(form, 'click', '.group-selector-button', (event) => {
 					Liferay.Util.postForm(form, {
 						data: {
 							groupId: event.delegateTarget.dataset.groupid,
@@ -120,24 +120,6 @@ DepotAdminSelectRoleDisplayContext depotAdminSelectRoleDisplayContext = (DepotAd
 					markupView="lexicon"
 				/>
 			</liferay-ui:search-container>
-
-			<aui:script use="aui-base">
-				var Util = Liferay.Util;
-
-				var openingLiferay = Util.getOpener().Liferay;
-
-				openingLiferay.fire(
-					'<%= HtmlUtil.escape(step2.getSyncEntitiesEventName()) %>',
-					{
-						selectors: A.all('.selector-button'),
-					}
-				);
-
-				Util.selectEntityHandler(
-					'#<portlet:namespace />selectDepotRoleFm',
-					'<%= HtmlUtil.escapeJS(step2.getEventName()) %>'
-				);
-			</aui:script>
 		</c:when>
 	</c:choose>
 </aui:form>

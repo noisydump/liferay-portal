@@ -53,6 +53,12 @@ public class IGPortletToolbarContributor extends BasePortletToolbarContributor {
 		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
+		if (!_dlPortletToolbarContributorHelper.isShowActionsEnabled(
+				themeDisplay, portletRequest)) {
+
+			return null;
+		}
+
 		Folder folder = _dlPortletToolbarContributorHelper.getFolder(
 			themeDisplay, portletRequest);
 
@@ -91,6 +97,7 @@ public class IGPortletToolbarContributor extends BasePortletToolbarContributor {
 	private DLPortletToolbarContributorHelper
 		_dlPortletToolbarContributorHelper;
 
-	private final MenuItemProvider _menuItemProvider = new MenuItemProvider();
+	@Reference
+	private MenuItemProvider _menuItemProvider;
 
 }

@@ -25,6 +25,10 @@ public class UserNotificationEventLocalServiceWrapper
 	implements ServiceWrapper<UserNotificationEventLocalService>,
 			   UserNotificationEventLocalService {
 
+	public UserNotificationEventLocalServiceWrapper() {
+		this(null);
+	}
+
 	public UserNotificationEventLocalServiceWrapper(
 		UserNotificationEventLocalService userNotificationEventLocalService) {
 
@@ -41,22 +45,6 @@ public class UserNotificationEventLocalServiceWrapper
 
 		return _userNotificationEventLocalService.addUserNotificationEvent(
 			userId, delivered, actionRequired, notificationEvent);
-	}
-
-	/**
-	 * @deprecated As of Mueller (7.2.x)
-	 */
-	@Deprecated
-	@Override
-	public com.liferay.portal.kernel.model.UserNotificationEvent
-			addUserNotificationEvent(
-				long userId, boolean actionRequired,
-				com.liferay.portal.kernel.notifications.NotificationEvent
-					notificationEvent)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return _userNotificationEventLocalService.addUserNotificationEvent(
-			userId, actionRequired, notificationEvent);
 	}
 
 	@Override
@@ -83,24 +71,6 @@ public class UserNotificationEventLocalServiceWrapper
 		return _userNotificationEventLocalService.addUserNotificationEvent(
 			userId, type, timestamp, deliveryType, deliverBy, delivered,
 			payload, actionRequired, archived, serviceContext);
-	}
-
-	/**
-	 * @deprecated As of Mueller (7.2.x)
-	 */
-	@Deprecated
-	@Override
-	public com.liferay.portal.kernel.model.UserNotificationEvent
-			addUserNotificationEvent(
-				long userId, java.lang.String type, long timestamp,
-				int deliveryType, long deliverBy, java.lang.String payload,
-				boolean actionRequired, boolean archived,
-				ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return _userNotificationEventLocalService.addUserNotificationEvent(
-			userId, type, timestamp, deliveryType, deliverBy, payload,
-			actionRequired, archived, serviceContext);
 	}
 
 	@Override
@@ -260,6 +230,13 @@ public class UserNotificationEventLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _userNotificationEventLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _userNotificationEventLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override

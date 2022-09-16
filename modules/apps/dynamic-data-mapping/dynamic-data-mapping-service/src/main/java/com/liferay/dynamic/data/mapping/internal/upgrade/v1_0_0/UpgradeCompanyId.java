@@ -14,21 +14,12 @@
 
 package com.liferay.dynamic.data.mapping.internal.upgrade.v1_0_0;
 
-import com.liferay.portal.kernel.upgrade.BaseUpgradeCompanyId;
+import com.liferay.portal.kernel.upgrade.BaseCompanyIdUpgradeProcess;
 
 /**
  * @author Brian Wing Shun Chan
  */
-public class UpgradeCompanyId extends BaseUpgradeCompanyId {
-
-	@Override
-	protected void doUpgrade() throws Exception {
-		super.doUpgrade();
-
-		runSQL(
-			"create index IX_DB81EB42 on DDMStorageLink " +
-				"(uuid_[$COLUMN_LENGTH:75$], companyId)");
-	}
+public class UpgradeCompanyId extends BaseCompanyIdUpgradeProcess {
 
 	@Override
 	protected TableUpdater[] getTableUpdaters() {

@@ -24,29 +24,32 @@ import com.liferay.dynamic.data.mapping.service.DDMStructureVersionLocalService;
 import com.liferay.dynamic.data.mapping.test.util.DDMFormTestUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.lang.reflect.Field;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-import org.mockito.Mock;
 import org.mockito.Mockito;
-
-import org.powermock.modules.junit4.PowerMockRunner;
 
 /**
  * @author Pedro Queiroz
  */
-@RunWith(PowerMockRunner.class)
 public class DDMFormTaglibUtilTest {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Before
 	public void setUp() throws Exception {
-		setUpDDMStructureLocalService();
-		setUpDDMStructureVersionLocalService();
+		_setUpDDMStructureLocalService();
+		_setUpDDMStructureVersionLocalService();
 	}
 
 	@Test
@@ -85,7 +88,7 @@ public class DDMFormTaglibUtilTest {
 		Assert.assertEquals(new DDMForm(), _ddmFormTaglibUtil.getDDMForm(0, 0));
 	}
 
-	protected DDMStructure createDDMStructure(DDMForm ddmForm) {
+	private DDMStructure _createDDMStructure(DDMForm ddmForm) {
 		DDMStructure ddmStructure = new DDMStructureImpl();
 
 		ddmStructure.setDDMForm(ddmForm);
@@ -95,7 +98,7 @@ public class DDMFormTaglibUtilTest {
 		return ddmStructure;
 	}
 
-	protected DDMStructureVersion createDDMStructureVersion(DDMForm ddmForm) {
+	private DDMStructureVersion _createDDMStructureVersion(DDMForm ddmForm) {
 		DDMStructureVersion ddmStructureVersion = new DDMStructureVersionImpl();
 
 		ddmStructureVersion.setDDMForm(ddmForm);
@@ -105,8 +108,8 @@ public class DDMFormTaglibUtilTest {
 		return ddmStructureVersion;
 	}
 
-	protected void setUpDDMStructureLocalService() throws Exception {
-		_ddmStructure = createDDMStructure(
+	private void _setUpDDMStructureLocalService() throws Exception {
+		_ddmStructure = _createDDMStructure(
 			DDMFormTestUtil.createDDMForm("Text"));
 
 		Field field = ReflectionUtil.getDeclaredField(
@@ -121,8 +124,8 @@ public class DDMFormTaglibUtilTest {
 		field.set(_ddmFormTaglibUtil, _ddmStructureLocalService);
 	}
 
-	protected void setUpDDMStructureVersionLocalService() throws Exception {
-		_ddmStructureVersion = createDDMStructureVersion(
+	private void _setUpDDMStructureVersionLocalService() throws Exception {
+		_ddmStructureVersion = _createDDMStructureVersion(
 			DDMFormTestUtil.createDDMForm("Text1", "Text2"));
 
 		Field field = ReflectionUtil.getDeclaredField(
@@ -141,13 +144,11 @@ public class DDMFormTaglibUtilTest {
 	private final DDMFormTaglibUtil _ddmFormTaglibUtil =
 		new DDMFormTaglibUtil();
 	private DDMStructure _ddmStructure;
-
-	@Mock
-	private DDMStructureLocalService _ddmStructureLocalService;
-
+	private final DDMStructureLocalService _ddmStructureLocalService =
+		Mockito.mock(DDMStructureLocalService.class);
 	private DDMStructureVersion _ddmStructureVersion;
-
-	@Mock
-	private DDMStructureVersionLocalService _ddmStructureVersionLocalService;
+	private final DDMStructureVersionLocalService
+		_ddmStructureVersionLocalService = Mockito.mock(
+			DDMStructureVersionLocalService.class);
 
 }

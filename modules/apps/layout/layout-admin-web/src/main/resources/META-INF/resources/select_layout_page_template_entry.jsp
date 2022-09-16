@@ -25,7 +25,7 @@ if (Validator.isNull(backURL)) {
 	backURL = portletURL.toString();
 }
 
-SelectLayoutPageTemplateEntryDisplayContext selectLayoutPageTemplateEntryDisplayContext = new SelectLayoutPageTemplateEntryDisplayContext(request);
+SelectLayoutPageTemplateEntryDisplayContext selectLayoutPageTemplateEntryDisplayContext = new SelectLayoutPageTemplateEntryDisplayContext(request, liferayPortletResponse);
 
 portletDisplay.setShowBackIcon(true);
 portletDisplay.setURLBack(backURL);
@@ -45,30 +45,10 @@ renderResponse.setTitle(LanguageUtil.get(request, "select-template"));
 				<ul class="nav nav-nested">
 					<li class="nav-item">
 						<p class="text-uppercase">
-							<strong><liferay-ui:message key="collections" /></strong>
+							<strong><liferay-ui:message key="page-template-sets" /></strong>
 						</p>
 
 						<ul class="nav nav-stacked">
-
-							<%
-							List<LayoutPageTemplateCollection> layoutPageTemplateCollections = LayoutPageTemplateCollectionServiceUtil.getLayoutPageTemplateCollections(scopeGroupId);
-
-							for (LayoutPageTemplateCollection layoutPageTemplateCollection : layoutPageTemplateCollections) {
-								int layoutPageTemplateEntriesCount = LayoutPageTemplateEntryServiceUtil.getLayoutPageTemplateEntriesCount(themeDisplay.getScopeGroupId(), layoutPageTemplateCollection.getLayoutPageTemplateCollectionId(), WorkflowConstants.STATUS_APPROVED);
-							%>
-
-								<c:if test="<%= layoutPageTemplateEntriesCount > 0 %>">
-									<li class="nav-item">
-										<a class="nav-link text-truncate <%= (selectLayoutPageTemplateEntryDisplayContext.getLayoutPageTemplateCollectionId() == layoutPageTemplateCollection.getLayoutPageTemplateCollectionId()) ? "active" : StringPool.BLANK %>" href="<%= layoutsAdminDisplayContext.getSelectLayoutPageTemplateEntryURL(layoutPageTemplateCollection.getLayoutPageTemplateCollectionId(), layoutsAdminDisplayContext.isPrivateLayout()) %>">
-											<%= HtmlUtil.escape(layoutPageTemplateCollection.getName()) %>
-										</a>
-									</li>
-								</c:if>
-
-							<%
-							}
-							%>
-
 							<li class="nav-item">
 								<a class="nav-link text-truncate <%= selectLayoutPageTemplateEntryDisplayContext.isBasicTemplates() ? "active" : StringPool.BLANK %>" href="<%= layoutsAdminDisplayContext.getSelectLayoutPageTemplateEntryURL(0, layoutsAdminDisplayContext.getSelPlid(), "basic-templates", layoutsAdminDisplayContext.isPrivateLayout()) %>">
 									<liferay-ui:message key="basic-templates" />
@@ -79,6 +59,24 @@ renderResponse.setTitle(LanguageUtil.get(request, "select-template"));
 									<liferay-ui:message key="global-templates" />
 								</a>
 							</li>
+
+							<%
+							for (LayoutPageTemplateCollection layoutPageTemplateCollection : LayoutPageTemplateCollectionServiceUtil.getLayoutPageTemplateCollections(scopeGroupId)) {
+								int layoutPageTemplateEntriesCount = LayoutPageTemplateEntryServiceUtil.getLayoutPageTemplateEntriesCount(themeDisplay.getScopeGroupId(), layoutPageTemplateCollection.getLayoutPageTemplateCollectionId(), WorkflowConstants.STATUS_APPROVED);
+							%>
+
+								<c:if test="<%= layoutPageTemplateEntriesCount > 0 %>">
+									<li class="nav-item">
+										<a class="nav-link text-truncate <%= (selectLayoutPageTemplateEntryDisplayContext.getLayoutPageTemplateCollectionId() == layoutPageTemplateCollection.getLayoutPageTemplateCollectionId()) ? "active" : StringPool.BLANK %>" href="<%= layoutsAdminDisplayContext.getSelectLayoutPageTemplateEntryURL(layoutPageTemplateCollection.getLayoutPageTemplateCollectionId(), layoutsAdminDisplayContext.getSelPlid(), layoutsAdminDisplayContext.isPrivateLayout()) %>">
+											<%= HtmlUtil.escape(layoutPageTemplateCollection.getName()) %>
+										</a>
+									</li>
+								</c:if>
+
+							<%
+							}
+							%>
+
 						</ul>
 					</li>
 				</ul>
@@ -173,8 +171,9 @@ renderResponse.setTitle(LanguageUtil.get(request, "select-template"));
 		layoutPageTemplateEntries,
 		'click',
 		'.add-layout-action-option',
-		function (event) {
+		(event) => {
 			Liferay.Util.openModal({
+				disableAutoClose: true,
 				height: '60vh',
 				id: '<portlet:namespace />addLayoutDialog',
 				size: 'md',
@@ -188,7 +187,7 @@ renderResponse.setTitle(LanguageUtil.get(request, "select-template"));
 		layoutPageTemplateEntries,
 		'keydown',
 		'.add-layout-action-option',
-		function (event) {
+		(event) => {
 			if (event.code === 'Space' || event.code === 'Enter') {
 				event.preventDefault();
 				event.delegateTarget.click();

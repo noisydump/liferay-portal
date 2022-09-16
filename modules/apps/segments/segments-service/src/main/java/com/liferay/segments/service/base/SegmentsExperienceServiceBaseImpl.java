@@ -20,21 +20,21 @@ import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.service.BaseServiceImpl;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.segments.service.SegmentsExperienceService;
-import com.liferay.segments.service.persistence.SegmentsEntryPersistence;
-import com.liferay.segments.service.persistence.SegmentsEntryRelPersistence;
-import com.liferay.segments.service.persistence.SegmentsEntryRolePersistence;
+import com.liferay.segments.service.SegmentsExperienceServiceUtil;
 import com.liferay.segments.service.persistence.SegmentsExperiencePersistence;
-import com.liferay.segments.service.persistence.SegmentsExperimentFinder;
-import com.liferay.segments.service.persistence.SegmentsExperimentPersistence;
-import com.liferay.segments.service.persistence.SegmentsExperimentRelPersistence;
+
+import java.lang.reflect.Field;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -55,8 +55,13 @@ public abstract class SegmentsExperienceServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>SegmentsExperienceService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.segments.service.SegmentsExperienceServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>SegmentsExperienceService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>SegmentsExperienceServiceUtil</code>.
 	 */
+	@Deactivate
+	protected void deactivate() {
+		_setServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -67,6 +72,8 @@ public abstract class SegmentsExperienceServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		segmentsExperienceService = (SegmentsExperienceService)aopProxy;
+
+		_setServiceUtilService(segmentsExperienceService);
 	}
 
 	/**
@@ -112,14 +119,21 @@ public abstract class SegmentsExperienceServiceBaseImpl
 		}
 	}
 
-	@Reference
-	protected SegmentsEntryPersistence segmentsEntryPersistence;
+	private void _setServiceUtilService(
+		SegmentsExperienceService segmentsExperienceService) {
 
-	@Reference
-	protected SegmentsEntryRelPersistence segmentsEntryRelPersistence;
+		try {
+			Field field = SegmentsExperienceServiceUtil.class.getDeclaredField(
+				"_service");
 
-	@Reference
-	protected SegmentsEntryRolePersistence segmentsEntryRolePersistence;
+			field.setAccessible(true);
+
+			field.set(null, segmentsExperienceService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
 
 	@Reference
 	protected com.liferay.segments.service.SegmentsExperienceLocalService
@@ -131,42 +145,10 @@ public abstract class SegmentsExperienceServiceBaseImpl
 	protected SegmentsExperiencePersistence segmentsExperiencePersistence;
 
 	@Reference
-	protected SegmentsExperimentPersistence segmentsExperimentPersistence;
-
-	@Reference
-	protected SegmentsExperimentFinder segmentsExperimentFinder;
-
-	@Reference
-	protected SegmentsExperimentRelPersistence segmentsExperimentRelPersistence;
-
-	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@Reference
-	protected com.liferay.portal.kernel.service.ClassNameLocalService
-		classNameLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.ClassNameService
-		classNameService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.LayoutLocalService
-		layoutLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.LayoutService layoutService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.ResourceLocalService
-		resourceLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserService userService;
+	private static final Log _log = LogFactoryUtil.getLog(
+		SegmentsExperienceServiceBaseImpl.class);
 
 }

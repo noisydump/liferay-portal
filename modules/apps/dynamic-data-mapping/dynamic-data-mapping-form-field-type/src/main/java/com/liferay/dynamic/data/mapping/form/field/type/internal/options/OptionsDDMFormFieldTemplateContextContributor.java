@@ -14,8 +14,10 @@
 
 package com.liferay.dynamic.data.mapping.form.field.type.internal.options;
 
+import com.liferay.dynamic.data.mapping.constants.DDMPortletKeys;
 import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldTemplateContextContributor;
 import com.liferay.dynamic.data.mapping.form.field.type.constants.DDMFormFieldTypeConstants;
+import com.liferay.dynamic.data.mapping.form.field.type.internal.options.helper.OptionsDDMFormFieldContextHelper;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.render.DDMFormFieldRenderingContext;
@@ -23,8 +25,10 @@ import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.Portal;
 
 import java.util.Map;
+import java.util.Objects;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -52,6 +56,19 @@ public class OptionsDDMFormFieldTemplateContextContributor
 			"allowEmptyOptions",
 			GetterUtil.getBoolean(ddmFormField.getProperty("allowEmptyOptions"))
 		).put(
+			"allowSpecialCharacters",
+			() -> {
+				if (Objects.equals(
+						ddmFormFieldRenderingContext.getPortletNamespace(),
+						_portal.getPortletNamespace(
+							DDMPortletKeys.DYNAMIC_DATA_MAPPING_FORM_ADMIN))) {
+
+					return false;
+				}
+
+				return true;
+			}
+		).put(
 			"defaultLanguageId",
 			() -> {
 				DDMForm ddmForm = ddmFormField.getDDMForm();
@@ -59,22 +76,25 @@ public class OptionsDDMFormFieldTemplateContextContributor
 				return LocaleUtil.toLanguageId(ddmForm.getDefaultLocale());
 			}
 		).put(
-			"value", getValue(ddmFormField, ddmFormFieldRenderingContext)
+			"value", _getValue(ddmFormField, ddmFormFieldRenderingContext)
 		).build();
 	}
 
-	protected Map<String, Object> getValue(
+	private Map<String, Object> _getValue(
 		DDMFormField ddmFormField,
 		DDMFormFieldRenderingContext ddmFormFieldRenderingContext) {
 
 		OptionsDDMFormFieldContextHelper optionsDDMFormFieldContextHelper =
 			new OptionsDDMFormFieldContextHelper(
-				jsonFactory, ddmFormField, ddmFormFieldRenderingContext);
+				_jsonFactory, ddmFormField, ddmFormFieldRenderingContext);
 
 		return optionsDDMFormFieldContextHelper.getValue();
 	}
 
 	@Reference
-	protected JSONFactory jsonFactory;
+	private JSONFactory _jsonFactory;
+
+	@Reference
+	private Portal _portal;
 
 }

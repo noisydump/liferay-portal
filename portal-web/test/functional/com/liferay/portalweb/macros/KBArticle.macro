@@ -57,6 +57,7 @@ definition {
 
 		if (isSet(kbArticleFriendlyURL)) {
 			var kbArticleTitleFormatted = StringUtil.lowerCase("${kbArticleFriendlyURL}");
+
 			var kbArticleTitleFormatted = StringUtil.replace("${kbArticleTitleFormatted}", " ", "-");
 
 			Type(
@@ -65,6 +66,7 @@ definition {
 		}
 		else {
 			var kbArticleTitleFormatted = StringUtil.lowerCase("${kbArticleTitle}");
+
 			var kbArticleTitleFormatted = StringUtil.replace("${kbArticleTitleFormatted}", " ", "-");
 
 			AssertTextEquals(
@@ -112,6 +114,7 @@ definition {
 
 		if (isSet(kbArticleFriendlyURL)) {
 			var kbArticleTitleFormatted = StringUtil.lowerCase("${kbArticleFriendlyURL}");
+
 			var kbArticleTitleFormatted = StringUtil.replace("${kbArticleTitleFormatted}", " ", "-");
 
 			Type(
@@ -120,6 +123,7 @@ definition {
 		}
 		else {
 			var kbArticleTitleFormatted = StringUtil.lowerCase("${kbArticleTitle}");
+
 			var kbArticleTitleFormatted = StringUtil.replace("${kbArticleTitleFormatted}", " ", "-");
 
 			AssertTextEquals(
@@ -140,7 +144,7 @@ definition {
 		if (isSet(embedVideo)) {
 			WaitForLiferayEvent.initializeLiferayEventLog();
 
-			Click.pauseClickAt(locator1 = "CKEditor#CONTENT_VIDEO_IMAGE");
+			Click(locator1 = "CKEditor#TOOLBAR_VIDEO_BUTTON");
 
 			if ("${navTab}" == "Documents and Media") {
 				ItemSelector.addVideoFromDM(
@@ -152,18 +156,8 @@ definition {
 				if (isSet(viewInternalVideoPreview)) {
 					SelectFrame.selectFrameNoLoading(locator1 = "CKEditor#BODY_FIELD_IFRAME");
 
-					Pause(locator1 = "5000");
-
 					DMDocument.viewInternalVideoPreview(videoName = "${videoName}");
 				}
-			}
-			else if (isSet(videoURL)) {
-				ItemSelector.addVideo(
-					extractedVideoShortcutTitle = "${extractedVideoShortcutTitle}",
-					videoShortcutDescription = "${videoShortcutDescription}",
-					videoShortcutPreview = "${videoShortcutPreview}",
-					videoShortcutTitle = "${videoShortcutTitle}",
-					videoURL = "${videoURL}");
 			}
 			else {
 				ItemSelector.addVideoFromURL(
@@ -260,7 +254,7 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "MessageBoardsThread#MESSAGE_ATTACHMENT_INVALID_SIZE_ERROR",
-			value1 = "Request is larger than ${maxFileSize}KB and could not be processed.");
+			value1 = "Please enter a file with a valid file size no larger than ${maxFileSize}KB.");
 
 		PortletEntry.publish();
 	}
@@ -335,6 +329,28 @@ definition {
 		CKEditor.addContent(content = "${kbArticleContent}");
 
 		Button.clickCancel();
+	}
+
+	macro closePageTreePanel {
+		if ("${section}" == "Folders and Articles") {
+			if (IsElementPresent(key_header = "${section}", locator1 = "KnowledgeBase#PAGE_TREE_PANEL_HEADER")) {
+				Click.javaScriptClick(locator1 = "KnowledgeBase#PAGE_TREE_FOLDERS_AND_ARTICLES");
+			}
+		}
+
+		if ("${section}" == "Templates") {
+			if (IsElementPresent(key_header = "${section}", locator1 = "KnowledgeBase#PAGE_TREE_PANEL_HEADER")) {
+				Click.javaScriptClick(locator1 = "KnowledgeBase#PAGE_TREE_TEMPLATES");
+			}
+		}
+
+		if ("${section}" == "Suggestions") {
+			if (IsElementPresent(key_header = "${section}", locator1 = "KnowledgeBase#PAGE_TREE_PANEL_HEADER")) {
+				Click.javaScriptClick(locator1 = "KnowledgeBase#PAGE_TREE_SUGGESTIONS");
+			}
+		}
+
+		WaitForVisible(locator1 = "KnowledgeBase#PAGE_TREE_PANEL_COLLAPSED");
 	}
 
 	macro configureEmailCP {
@@ -573,7 +589,7 @@ definition {
 
 		AssertConfirm(value1 = "Are you sure you want to delete this? It will be deleted immediately.");
 
-		if (isSet(deleteViaKBArticle)) {
+		if (isSet(deleteViaKbArticle)) {
 			AssertTextEquals.assertPartialText(
 				locator1 = "Message#INFO",
 				value1 = "Please configure this portlet to make it visible to all users.");
@@ -598,11 +614,13 @@ definition {
 	}
 
 	macro editCP {
-		Click(
-			key_rowEntry = "${kbArticleTitle}",
-			locator1 = "Icon#ROW_VERTICAL_ELLIPSIS");
+		if (!(isSet(skipNavigation))) {
+			Click(
+				key_rowEntry = "${kbArticleTitle}",
+				locator1 = "Icon#ROW_VERTICAL_ELLIPSIS");
 
-		MenuItem.click(menuItem = "Edit");
+			MenuItem.click(menuItem = "Edit");
+		}
 
 		AssertTextEquals(
 			locator1 = "Message#INFO",
@@ -614,7 +632,9 @@ definition {
 			locator1 = "TextInput#TITLE",
 			value1 = "${kbArticleTitleEdit}");
 
-		CKEditor.addContent(kbArticleContentEdit = "${kbArticleContentEdit}");
+		if (isSet(kbArticleContentEdit)) {
+			CKEditor.addContent(kbArticleContentEdit = "${kbArticleContentEdit}");
+		}
 
 		if (isSet(kbArticleAttachment)) {
 			KBArticle.selectAttachmentCP(kbArticleAttachment = "${kbArticleAttachment}");
@@ -626,6 +646,35 @@ definition {
 			Type(
 				locator1 = "TextInput#CUSTOM_FIELD",
 				value1 = "${customFieldTextEdit}");
+		}
+
+		if (isSet(dmImage)) {
+			Click(locator1 = "CKEditor#TOOLBAR_IMAGE_BUTTON");
+
+			if ("${navTab}" == "Documents and Media") {
+				if (isSet(depotName)) {
+					ItemSelector.selectRepositoryImage(
+						depotName = "${depotName}",
+						imageFileName = "${dmImage}",
+						navTab = "${navTab}");
+				}
+				else {
+					ItemSelector.selectDMImage(
+						imageFileName = "${dmImage}",
+						navTab = "${navTab}");
+				}
+			}
+		}
+
+		if (isSet(embedVideo)) {
+			Click.pauseClickAt(locator1 = "CKEditor#TOOLBAR_VIDEO_BUTTON");
+
+			if ("${navTab}" == "Documents and Media") {
+				ItemSelector.addVideoFromDM(
+					depotName = "${depotName}",
+					navTab = "${navTab}",
+					videoShortcutTitle = "${videoShortcutTitle}");
+			}
 		}
 
 		if ("${cancel}" == "true") {
@@ -805,15 +854,13 @@ definition {
 			locator1 = "KnowledgeBase#HIERARCHY_NAVIGATION_PARENT",
 			value1 = "${kbArticleTitle}");
 
-		Pause(locator1 = "3000");
+		WaitForElementPresent.waitForLastScript();
 	}
 
 	macro importCP {
 		LexiconEntry.gotoAddDropdownMenuItem(menuItem = "Import");
 
-		UploadCommonFile(
-			locator1 = "TextInput#UPLOAD_FILE",
-			value1 = "${kbZipFile}");
+		UploadDependencyFile.uploadArchiveFile(fileName = "${kbZipFile}");
 
 		if ("${applyNumericalPrefix}" == "true") {
 			Check(locator1 = "Checkbox#PRIORITIZATION_STRATEGY");
@@ -905,6 +952,112 @@ definition {
 			value1 = "Select");
 	}
 
+	macro openPageTreePanel {
+		if ("${section}" == "Folders and Articles") {
+			WaitForVisible(locator1 = "KnowledgeBase#PAGE_TREE_FOLDERS_AND_ARTICLES");
+
+			Click(locator1 = "KnowledgeBase#PAGE_TREE_FOLDERS_AND_ARTICLES");
+
+			if (IsElementNotPresent(key_header = "${section}", locator1 = "KnowledgeBase#PAGE_TREE_PANEL_HEADER")) {
+				Click.javaScriptClick(locator1 = "KnowledgeBase#PAGE_TREE_FOLDERS_AND_ARTICLES");
+			}
+		}
+
+		if ("${section}" == "Templates") {
+			WaitForVisible(locator1 = "KnowledgeBase#PAGE_TREE_TEMPLATES");
+
+			Click(locator1 = "KnowledgeBase#PAGE_TREE_TEMPLATES");
+
+			if (IsElementNotPresent(key_header = "${section}", locator1 = "KnowledgeBase#PAGE_TREE_PANEL_HEADER")) {
+				Click.javaScriptClick(locator1 = "KnowledgeBase#PAGE_TREE_TEMPLATES");
+			}
+		}
+
+		if ("${section}" == "Suggestions") {
+			WaitForVisible(locator1 = "KnowledgeBase#PAGE_TREE_SUGGESTIONS");
+
+			Click(locator1 = "KnowledgeBase#PAGE_TREE_SUGGESTIONS");
+
+			if (IsElementNotPresent(key_header = "${section}", locator1 = "KnowledgeBase#PAGE_TREE_PANEL_HEADER")) {
+				Click.javaScriptClick(locator1 = "KnowledgeBase#PAGE_TREE_SUGGESTIONS");
+			}
+		}
+
+		WaitForVisible(locator1 = "KnowledgeBase#PAGE_TREE_PANEL_OPENED");
+	}
+
+	macro openToAddKBArticle {
+
+		// You can use this navigation when you need to access the configuration quickly without checking the UI.
+
+		var baseURL = "${baseURL}";
+
+		if (!(isSet(baseURL))) {
+			var baseURL = PropsUtil.get("portal.url");
+		}
+
+		var groupId = JSONWebcontentSetter.setGroupId(
+			groupName = "${groupName}",
+			site = "${site}");
+		var parentResourceClassNameId = JSONClassname._getClassNameId(value = "com.liferay.knowledge.base.model.KBFolder");
+
+		if (!(isSet(parentResourcePrimKey))) {
+			var parentResourcePrimKey = "0";
+		}
+
+		// Articles accessed in admin will stay in admin after publishing.
+
+		Open(locator1 = "${baseURL}/group/${siteURLKey}/~/control_panel/manage?p_p_id=com_liferay_knowledge_base_web_portlet_AdminPortlet&_com_liferay_knowledge_base_web_portlet_AdminPortlet_mvcPath=%2Fadmin%2Fcommon%2Fedit_kb_article.jsp&_com_liferay_knowledge_base_web_portlet_AdminPortlet_redirect=%2Fgroup%2F${siteURLKey}%2F~%2Fcontrol_panel%2Fmanage%3Fp_p_id%3Dcom_liferay_knowledge_base_web_portlet_AdminPortlet%26p_p_lifecycle%3D0%26p_p_state%3Dmaximized%26p_v_l_s_g_id%3D${groupId}%26p_p_auth%3D6eOinWLB&_com_liferay_knowledge_base_web_portlet_AdminPortlet_parentResourceClassNameId=${parentResourceClassNameId}&_com_liferay_knowledge_base_web_portlet_AdminPortlet_parentResourcePrimKey=${parentResourcePrimKey}");
+	}
+
+	macro openToEditKBArticleInSite {
+
+		// You can use this navigation when you need to access the configuration quickly without checking the UI.
+
+		var baseURL = "${baseURL}";
+
+		if (!(isSet(baseURL))) {
+			var baseURL = PropsUtil.get("portal.url");
+		}
+
+		var portalInstanceName = JSONCompany.parsePortalInstanceURL(portalURL = "${baseURL}");
+		var resourcePrimKey = JSONKnowledgeBase._getKBResourcePrimKey(
+			groupName = "${groupName}",
+			kbArticleTitle = "${kbArticleTitle}",
+			site = "${site}");
+
+		Open(locator1 = "${baseURL}/group/${siteURLKey}/~/control_panel/manage?p_p_id=com_liferay_knowledge_base_web_portlet_AdminPortlet&_com_liferay_knowledge_base_web_portlet_AdminPortlet_redirect=http%3A%2F%2F${portalInstanceName}%3A8080%2Fgroup%2F${siteURLKey}%2F~%2Fcontrol_panel%2Fmanage%3Fp_p_id%3Dcom_liferay_knowledge_base_web_portlet_AdminPortlet%26p_p_lifecycle%3D0%26p_p_state%3Dmaximized%26p_p_mode%3Dview%26p_p_auth%3DkhoaN4dO&_com_liferay_knowledge_base_web_portlet_AdminPortlet_mvcPath=%2Fadmin%2Fcommon%2Fedit_kb_article.jsp&_com_liferay_knowledge_base_web_portlet_AdminPortlet_resourcePrimKey=${resourcePrimKey}");
+	}
+
+	macro openToKBArticleInSite {
+
+		// You can use this navigation when you need to access the configuration quickly without checking the UI.
+
+		var baseURL = "${baseURL}";
+
+		if (!(isSet(baseURL))) {
+			var baseURL = PropsUtil.get("portal.url");
+		}
+
+		if (isSet(folderName)) {
+			var resourcePrimKey = JSONKnowledgeBase._getKBResourcePrimKey(
+				folderName = "${folderName}",
+				groupName = "${groupName}",
+				kbArticleTitle = "${kbArticleTitle}",
+				site = "${site}");
+		}
+		else {
+			var resourcePrimKey = JSONKnowledgeBase._getKBResourcePrimKey(
+				groupName = "${groupName}",
+				kbArticleTitle = "${kbArticleTitle}",
+				site = "${site}");
+		}
+
+		var resourceClassNameId = JSONClassname._getClassNameId(value = "com.liferay.knowledge.base.model.KBArticle");
+
+		Open(locator1 = "${baseURL}/group/${siteURLKey}/~/control_panel/manage?p_p_id=com_liferay_knowledge_base_web_portlet_AdminPortlet&_com_liferay_knowledge_base_web_portlet_AdminPortlet_mvcRenderCommandName=%2Fknowledge_base%2Fview_article&_com_liferay_knowledge_base_web_portlet_AdminPortlet_resourceClassNameId=${resourceClassNameId}&_com_liferay_knowledge_base_web_portlet_AdminPortlet_resourcePrimKey=${resourcePrimKey}&_com_liferay_knowledge_base_web_portlet_AdminPortlet_redirect=com_liferay_knowledge_base_web_portlet_AdminPortlet");
+	}
+
 	macro selectAllCP {
 		PortletEntry.selectAll();
 
@@ -916,7 +1069,7 @@ definition {
 			key_kbArticleTitle = "${kbArticleTitle}",
 			locator1 = "KnowledgeBase#ARTICLE_DESCRIPTIVE_ARTICLE_CHECKBOX");
 
-		AssertElementPresent.pauseAssertVisible(locator1 = "Icon#DELETE");
+		AssertVisible(locator1 = "Icon#DELETE");
 	}
 
 	macro selectAttachmentCP {
@@ -929,6 +1082,21 @@ definition {
 		UploadCommonFile.uploadCommonFileHiddenNoMouseOver(
 			locator1 = "TextInput#FILE",
 			value1 = "${kbArticleAttachment}");
+	}
+
+	macro selectFolderThroughPageTreePanel {
+		if (isSet(kbChildFolderName)) {
+			Click(locator1 = "KnowledgeBase#PAGE_TREE_CHEVRON_ICON_RIGHT");
+
+			Click(
+				key_itemName = "${kbChildFolderName}",
+				locator1 = "KnowledgeBase#PAGE_TREE_ITEM_NAME");
+		}
+		else {
+			Click(
+				key_itemName = "${kbFolderName}",
+				locator1 = "KnowledgeBase#PAGE_TREE_ITEM_NAME");
+		}
 	}
 
 	macro selectParentArticleCP {
@@ -1008,7 +1176,7 @@ definition {
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
+			category = "Content & Data",
 			portlet = "Knowledge Base");
 
 		if (IsElementPresent(locator1 = "KnowledgeBase#ARTICLE_DESCRIPTIVE_ARTICLE_TITLE_GENERIC")) {
@@ -1054,10 +1222,36 @@ definition {
 				value1 = "${kbArticleContentAddedDiff}");
 		}
 
-		if ("${viewNoXMLInTitle}" == "true") {
+		if ("${viewNoXmlInTitle}" == "true") {
 			AssertTextNotPresent(
 				locator1 = "KnowledgeBaseArticle#TITLE",
 				value1 = "xml");
+		}
+	}
+
+	macro viewArticleThroughPageTreePanel {
+		if (isSet(kbChildArticleTitle)) {
+			Click(locator1 = "KnowledgeBase#PAGE_TREE_CHEVRON_ICON_RIGHT");
+
+			AssertVisible(
+				key_itemName = "${kbChildArticleTitle}",
+				locator1 = "KnowledgeBase#PAGE_TREE_ITEM_NAME");
+		}
+		else if (isSet(kbFolderName)) {
+			AssertVisible(
+				key_itemName = "${kbFolderName}",
+				locator1 = "KnowledgeBase#PAGE_TREE_ITEM_NAME");
+
+			Click(locator1 = "KnowledgeBase#PAGE_TREE_CHEVRON_ICON_RIGHT");
+
+			AssertVisible(
+				key_itemName = "${kbArticleTitle}",
+				locator1 = "KnowledgeBase#PAGE_TREE_ITEM_NAME");
+		}
+		else {
+			AssertVisible(
+				key_itemName = "${kbArticleTitle}",
+				locator1 = "KnowledgeBase#PAGE_TREE_ITEM_NAME");
 		}
 	}
 
@@ -1076,6 +1270,12 @@ definition {
 	}
 
 	macro viewBlogsEntryRelatedAsset {
+		var key_kbArticleRelatedAssetTitle = "${kbArticleRelatedAssetTitle}";
+
+		AssertClick.assertTextClickAt(
+			locator1 = "AssetRelatedAssets#KB_RELATED_ASSETS_LINKS",
+			value1 = "${kbArticleRelatedAssetTitle}");
+
 		AssertTextEquals(
 			locator1 = "BlogsEntry#CONTENT_GENERIC",
 			value1 = "Blogs Entry Content");
@@ -1086,7 +1286,14 @@ definition {
 	}
 
 	macro viewChildArticleCP {
-		KBArticle._gotoChildArticle(kbChildArticleTitle = "${kbChildArticleTitle}");
+		if (isSet(pageTreePanel)) {
+			Click(
+				key_itemName = "${kbChildArticleTitle}",
+				locator1 = "KnowledgeBase#PAGE_TREE_ITEM_NAME");
+		}
+		else {
+			KBArticle._gotoChildArticle(kbChildArticleTitle = "${kbChildArticleTitle}");
+		}
 
 		AssertTextEquals(
 			locator1 = "KnowledgeBaseArticle#TITLE",
@@ -1109,6 +1316,7 @@ definition {
 
 		while (IsElementPresent(locator1 = "KnowledgeBase#HIERARCHY_NAVIGATION_CHILD_GENERIC")) {
 			var childCount = ${childCount} + 1;
+
 			var kbChildArticleTitle = "${kbParentChild} ${childCount}";
 			var key_kbArticleTitle = "${kbArticleTitle}";
 
@@ -1141,25 +1349,32 @@ definition {
 	macro viewCP {
 		var key_kbArticleTitle = "${kbArticleTitle}";
 
-		AssertTextEquals(
-			locator1 = "KnowledgeBase#DESCRIPTIVE_VIEW_ARTICLE_TITLE",
-			value1 = "${kbArticleTitle}");
-
-		if ("${kbWorkflowStatus}" == "Pending") {
-			AssertTextEquals(
-				locator1 = "KnowledgeBase#ARTICLE_TABLE_ARTICLE_STATUS",
-				value1 = "Pending");
+		if (isSet(pageTreePanel)) {
+			Click(
+				key_itemName = "${kbArticleTitle}",
+				locator1 = "KnowledgeBase#PAGE_TREE_ITEM_NAME");
 		}
-
-		if ("${kbStatus}" == "Draft") {
+		else {
 			AssertTextEquals(
-				locator1 = "KnowledgeBase#ARTICLE_TABLE_ARTICLE_STATUS",
-				value1 = "Draft");
-		}
+				locator1 = "KnowledgeBase#DESCRIPTIVE_VIEW_ARTICLE_TITLE",
+				value1 = "${kbArticleTitle}");
 
-		AssertClick(
-			locator1 = "KnowledgeBase#DESCRIPTIVE_VIEW_ARTICLE_TITLE",
-			value1 = "${kbArticleTitle}");
+			if ("${kbWorkflowStatus}" == "Pending") {
+				AssertTextEquals(
+					locator1 = "KnowledgeBase#ARTICLE_TABLE_ARTICLE_STATUS",
+					value1 = "Pending");
+			}
+
+			if ("${kbStatus}" == "Draft") {
+				AssertTextEquals(
+					locator1 = "KnowledgeBase#ARTICLE_TABLE_ARTICLE_STATUS",
+					value1 = "Draft");
+			}
+
+			AssertClick(
+				locator1 = "KnowledgeBase#DESCRIPTIVE_VIEW_ARTICLE_TITLE",
+				value1 = "${kbArticleTitle}");
+		}
 
 		AssertTextEquals(
 			locator1 = "KnowledgeBaseArticle#TITLE",
@@ -1170,24 +1385,21 @@ definition {
 			value1 = "${kbArticleContent}");
 
 		if (isSet(embedVideo)) {
-			Pause(locator1 = "5000");
+			WaitForElementPresent.waitForLastScript();
 
 			if ("${service}" == "twitch") {
 				AssertVisible(
 					key_service = "${service}",
 					locator1 = "BlogsEntry#CONTENT_VIDEO");
 			}
-
 			else if ("${service}" == "facebook") {
 				AssertVisible(
 					key_service = "${service}",
 					locator1 = "BlogsEntry#CONTENT_VIDEO");
 			}
-
 			else if ("${internalVideo}" == "true") {
 				DMDocument.viewInternalVideoPreview(videoName = "${videoName}");
 			}
-
 			else {
 				AssertElementPresent(
 					key_service = "youtube",
@@ -1338,10 +1550,6 @@ definition {
 	}
 
 	macro viewKBDisplayPG {
-		if (isSet(kbArticleFriendlyURL)) {
-			AssertLocation(value1 = "http://localhost:8080/web/guest/knowledge-base-display/-/knowledge_base/${kbArticleFriendlyURL}");
-		}
-
 		if ("${sourceURL}" == "true") {
 			AssertClick(
 				locator1 = "KnowledgeBaseArticle#EDIT_ON_GITHUB",
@@ -1420,6 +1628,7 @@ definition {
 
 		while (IsElementPresent(locator1 = "KnowledgeBase#HIERARCHY_NAVIGATION_GENERIC")) {
 			var count = ${count} + 1;
+
 			var kbParentTitle = "${kbArticleTitle} ${count}";
 
 			if (IsElementPresent(locator1 = "xpath=//div[@class='kbarticle-navigation']/ul[${count}]")) {
@@ -1439,6 +1648,16 @@ definition {
 		AssertTextEquals(
 			locator1 = "KnowledgeBase#DISPLAY_CONTENT",
 			value1 = "${kbArticleContent}");
+
+		if (isSet(embedVideo)) {
+			AssertElementPresent(
+				key_service = "youtube",
+				locator1 = "BlogsEntry#CONTENT_VIDEO");
+
+			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#EMBEDDED_VIDEO_IFRAME");
+
+			AssertElementPresent(locator1 = "CKEditor#VIDEO_BUTTON_PLAY");
+		}
 
 		if (isSet(customFieldName)) {
 			AssertTextEquals(

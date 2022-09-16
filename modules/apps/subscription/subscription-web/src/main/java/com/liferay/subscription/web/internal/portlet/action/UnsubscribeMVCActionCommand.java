@@ -14,9 +14,10 @@
 
 package com.liferay.subscription.web.internal.portlet.action;
 
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.exception.NoSuchTicketException;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -71,15 +72,19 @@ public class UnsubscribeMVCActionCommand extends BaseMVCActionCommand {
 		String key = ParamUtil.getString(actionRequest, "key");
 		long userId = ParamUtil.getLong(actionRequest, "userId");
 
-		PortletURL portletURL = PortletURLFactoryUtil.create(
-			actionRequest, SubscriptionPortletKeys.UNSUBSCRIBE,
-			PortletRequest.RENDER_PHASE);
-
-		portletURL.setWindowState(WindowState.MAXIMIZED);
-
-		portletURL.setParameter("mvcPath", "/unsubscribe/unsubscribed.jsp");
-		portletURL.setParameter("key", key);
-		portletURL.setParameter("userId", String.valueOf(userId));
+		PortletURL portletURL = PortletURLBuilder.create(
+			PortletURLFactoryUtil.create(
+				actionRequest, SubscriptionPortletKeys.UNSUBSCRIBE,
+				PortletRequest.RENDER_PHASE)
+		).setMVCPath(
+			"/unsubscribe/unsubscribed.jsp"
+		).setParameter(
+			"key", key
+		).setParameter(
+			"userId", userId
+		).setWindowState(
+			WindowState.MAXIMIZED
+		).buildPortletURL();
 
 		try {
 			_checkUser(userId, actionRequest);
@@ -93,8 +98,7 @@ public class UnsubscribeMVCActionCommand extends BaseMVCActionCommand {
 			actionResponse.sendRedirect(portletURL.toString());
 		}
 		catch (NoSuchSubscriptionException noSuchSubscriptionException) {
-			_log.error(
-				noSuchSubscriptionException, noSuchSubscriptionException);
+			_log.error(noSuchSubscriptionException);
 
 			actionResponse.sendRedirect(portletURL.toString());
 		}
@@ -149,7 +153,7 @@ public class UnsubscribeMVCActionCommand extends BaseMVCActionCommand {
 		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
 			"content.Language", locale, getClass());
 
-		return LanguageUtil.format(
+		return _language.format(
 			resourceBundle, "blog-at-x", group.getDescriptiveName(locale));
 	}
 
@@ -181,6 +185,9 @@ public class UnsubscribeMVCActionCommand extends BaseMVCActionCommand {
 
 	@Reference
 	private GroupLocalService _groupLocalService;
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private Portal _portal;

@@ -34,6 +34,10 @@ public interface ManagementToolbarDisplayContext {
 		return null;
 	}
 
+	public default Map<String, Object> getAdditionalProps() {
+		return null;
+	}
+
 	public default String getClearResultsURL() {
 		return null;
 	}
@@ -83,6 +87,10 @@ public interface ManagementToolbarDisplayContext {
 	}
 
 	public default String getNamespace() {
+		return null;
+	}
+
+	public default List<DropdownItem> getOrderDropdownItems() {
 		return null;
 	}
 
@@ -136,6 +144,10 @@ public interface ManagementToolbarDisplayContext {
 
 	public default Boolean isDisabled() {
 		return false;
+	}
+
+	public default Boolean isSearchInputAutoFocus() {
+		return ManagementToolbarDefaults.isSearchInputAutoFocus();
 	}
 
 	public default Boolean isSelectable() {

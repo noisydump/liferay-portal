@@ -14,14 +14,15 @@
 
 package com.liferay.frontend.taglib.form.navigator.internal.configuration;
 
-import com.liferay.petra.string.StringBundler;
-import com.liferay.petra.string.StringPool;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.Iterator;
 import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -30,18 +31,19 @@ import org.junit.Test;
 public class RetrieverWhenNullCategoryIsRequestedTest
 	extends BaseFormNavigatorEntryConfigurationRetrieverTestCase {
 
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
 	@Before
 	@Override
 	public void setUp() throws Exception {
 		super.setUp();
 
-		StringBundler sb = new StringBundler(3);
-
-		sb.append("add");
-		sb.append(StringPool.EQUAL);
-		sb.append("formNavigatorEntryKey1,formNavigatorEntryKey2");
-
-		createConfiguration("form1", new String[] {sb.toString()});
+		createConfiguration(
+			"form1",
+			new String[] {"add=formNavigatorEntryKey1,formNavigatorEntryKey2"});
 	}
 
 	@Test

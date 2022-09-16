@@ -24,7 +24,6 @@ import com.liferay.portal.kernel.security.access.control.AccessControlled;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.service.BaseService;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.spring.osgi.OSGiBeanProperties;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
@@ -46,13 +45,6 @@ import org.osgi.annotation.versioning.ProviderType;
  */
 @AccessControlled
 @JSONWebService
-@OSGiBeanProperties(
-	property = {
-		"json.web.service.context.name=commerce",
-		"json.web.service.context.path=CommerceDiscount"
-	},
-	service = CommerceDiscountService.class
-)
 @ProviderType
 @Transactional(
 	isolation = Isolation.PORTAL,
@@ -66,7 +58,7 @@ public interface CommerceDiscountService extends BaseService {
 	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.commerce.discount.service.impl.CommerceDiscountServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the commerce discount remote service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link CommerceDiscountServiceUtil} if injection and service tracking are not available.
 	 */
 	public CommerceDiscount addCommerceDiscount(
-			long userId, String title, String target, boolean useCouponCode,
+			String title, String target, boolean useCouponCode,
 			String couponCode, boolean usePercentage,
 			BigDecimal maximumDiscountAmount, BigDecimal level1,
 			BigDecimal level2, BigDecimal level3, BigDecimal level4,
@@ -79,7 +71,7 @@ public interface CommerceDiscountService extends BaseService {
 		throws PortalException;
 
 	public CommerceDiscount addCommerceDiscount(
-			long userId, String title, String target, boolean useCouponCode,
+			String title, String target, boolean useCouponCode,
 			String couponCode, boolean usePercentage,
 			BigDecimal maximumDiscountAmount, String level, BigDecimal level1,
 			BigDecimal level2, BigDecimal level3, BigDecimal level4,
@@ -92,18 +84,9 @@ public interface CommerceDiscountService extends BaseService {
 			boolean neverExpire, ServiceContext serviceContext)
 		throws PortalException;
 
-	/**
-	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
-	 #addCommerceDiscount(String, long, String, String boolean,
-	 String, boolean, BigDecimal, String, BigDecimal, BigDecimal,
-	 BigDecimal, BigDecimal, BigDecimal, String, int, int,
-	 boolean, boolean, int, int, int, int, int, int, int, int,
-	 int, int, boolean, ServiceContext)}
-	 */
-	@Deprecated
 	public CommerceDiscount addCommerceDiscount(
-			long userId, String title, String target, boolean useCouponCode,
-			String couponCode, boolean usePercentage,
+			String externalReferenceCode, String title, String target,
+			boolean useCouponCode, String couponCode, boolean usePercentage,
 			BigDecimal maximumDiscountAmount, String level, BigDecimal level1,
 			BigDecimal level2, BigDecimal level3, BigDecimal level4,
 			String limitationType, int limitationTimes,
@@ -112,12 +95,40 @@ public interface CommerceDiscountService extends BaseService {
 			int displayDateYear, int displayDateHour, int displayDateMinute,
 			int expirationDateMonth, int expirationDateDay,
 			int expirationDateYear, int expirationDateHour,
-			int expirationDateMinute, String externalReferenceCode,
+			int expirationDateMinute, boolean neverExpire,
+			ServiceContext serviceContext)
+		throws PortalException;
+
+	public CommerceDiscount addOrUpdateCommerceDiscount(
+			String externalReferenceCode, long commerceDiscountId, String title,
+			String target, boolean useCouponCode, String couponCode,
+			boolean usePercentage, BigDecimal maximumDiscountAmount,
+			BigDecimal level1, BigDecimal level2, BigDecimal level3,
+			BigDecimal level4, String limitationType, int limitationTimes,
+			boolean active, int displayDateMonth, int displayDateDay,
+			int displayDateYear, int displayDateHour, int displayDateMinute,
+			int expirationDateMonth, int expirationDateDay,
+			int expirationDateYear, int expirationDateHour,
+			int expirationDateMinute, boolean neverExpire,
+			ServiceContext serviceContext)
+		throws PortalException;
+
+	public CommerceDiscount addOrUpdateCommerceDiscount(
+			String externalReferenceCode, long commerceDiscountId, String title,
+			String target, boolean useCouponCode, String couponCode,
+			boolean usePercentage, BigDecimal maximumDiscountAmount,
+			String level, BigDecimal level1, BigDecimal level2,
+			BigDecimal level3, BigDecimal level4, String limitationType,
+			int limitationTimes, boolean rulesConjunction, boolean active,
+			int displayDateMonth, int displayDateDay, int displayDateYear,
+			int displayDateHour, int displayDateMinute, int expirationDateMonth,
+			int expirationDateDay, int expirationDateYear,
+			int expirationDateHour, int expirationDateMinute,
 			boolean neverExpire, ServiceContext serviceContext)
 		throws PortalException;
 
-	public CommerceDiscount addCommerceDiscount(
-			String externalReferenceCode, long userId, String title,
+	public CommerceDiscount addOrUpdateCommerceDiscount(
+			String externalReferenceCode, long commerceDiscountId, String title,
 			String target, boolean useCouponCode, String couponCode,
 			boolean usePercentage, BigDecimal maximumDiscountAmount,
 			String level, BigDecimal level1, BigDecimal level2,
@@ -164,6 +175,11 @@ public interface CommerceDiscountService extends BaseService {
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<CommerceDiscount> getCommerceDiscounts(
 			long companyId, String couponCode)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<CommerceDiscount> getCommerceDiscounts(
+			long companyId, String level, boolean active, int status)
 		throws PortalException;
 
 	/**
@@ -250,122 +266,6 @@ public interface CommerceDiscountService extends BaseService {
 
 	public CommerceDiscount updateCommerceDiscountExternalReferenceCode(
 			String externalReferenceCode, long commerceDiscountId)
-		throws PortalException;
-
-	/**
-	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
-	 #upsertCommerceDiscount(String, long, long, String, String,
-	 boolean, String, boolean, BigDecimal, BigDecimal,
-	 BigDecimal, BigDecimal, BigDecimal, String, int, boolean,
-	 int, int, int, int, int, int, int, int, int, int, boolean,
-	 ServiceContext)}
-	 */
-	@Deprecated
-	public CommerceDiscount upsertCommerceDiscount(
-			long userId, long commerceDiscountId, String title, String target,
-			boolean useCouponCode, String couponCode, boolean usePercentage,
-			BigDecimal maximumDiscountAmount, BigDecimal level1,
-			BigDecimal level2, BigDecimal level3, BigDecimal level4,
-			String limitationType, int limitationTimes, boolean active,
-			int displayDateMonth, int displayDateDay, int displayDateYear,
-			int displayDateHour, int displayDateMinute, int expirationDateMonth,
-			int expirationDateDay, int expirationDateYear,
-			int expirationDateHour, int expirationDateMinute,
-			String externalReferenceCode, boolean neverExpire,
-			ServiceContext serviceContext)
-		throws PortalException;
-
-	/**
-	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
-	 #upsertCommerceDiscount(String, long, long, String, String,
-	 boolean, String, boolean, BigDecimal, String, BigDecimal,
-	 BigDecimal, BigDecimal, BigDecimal, String, int, boolean,
-	 boolean, int, int, int, int, int, int, int, int, int, int,
-	 boolean, ServiceContext)}
-	 */
-	@Deprecated
-	public CommerceDiscount upsertCommerceDiscount(
-			long userId, long commerceDiscountId, String title, String target,
-			boolean useCouponCode, String couponCode, boolean usePercentage,
-			BigDecimal maximumDiscountAmount, String level, BigDecimal level1,
-			BigDecimal level2, BigDecimal level3, BigDecimal level4,
-			String limitationType, int limitationTimes,
-			boolean rulesConjunction, boolean active, int displayDateMonth,
-			int displayDateDay, int displayDateYear, int displayDateHour,
-			int displayDateMinute, int expirationDateMonth,
-			int expirationDateDay, int expirationDateYear,
-			int expirationDateHour, int expirationDateMinute,
-			String externalReferenceCode, boolean neverExpire,
-			ServiceContext serviceContext)
-		throws PortalException;
-
-	/**
-	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
-	 #upsertCommerceDiscount(String, long, long, String, String,
-	 boolean, String, boolean, BigDecimal, String, BigDecimal,
-	 BigDecimal, BigDecimal, BigDecimal, String, int, int,
-	 boolean, boolean, int, int, int, int, int, int, int, int,
-	 int, int, boolean, ServiceContext)}
-	 */
-	@Deprecated
-	public CommerceDiscount upsertCommerceDiscount(
-			long userId, long commerceDiscountId, String title, String target,
-			boolean useCouponCode, String couponCode, boolean usePercentage,
-			BigDecimal maximumDiscountAmount, String level, BigDecimal level1,
-			BigDecimal level2, BigDecimal level3, BigDecimal level4,
-			String limitationType, int limitationTimes,
-			int limitationTimesPerAccount, boolean rulesConjunction,
-			boolean active, int displayDateMonth, int displayDateDay,
-			int displayDateYear, int displayDateHour, int displayDateMinute,
-			int expirationDateMonth, int expirationDateDay,
-			int expirationDateYear, int expirationDateHour,
-			int expirationDateMinute, String externalReferenceCode,
-			boolean neverExpire, ServiceContext serviceContext)
-		throws PortalException;
-
-	public CommerceDiscount upsertCommerceDiscount(
-			String externalReferenceCode, long userId, long commerceDiscountId,
-			String title, String target, boolean useCouponCode,
-			String couponCode, boolean usePercentage,
-			BigDecimal maximumDiscountAmount, BigDecimal level1,
-			BigDecimal level2, BigDecimal level3, BigDecimal level4,
-			String limitationType, int limitationTimes, boolean active,
-			int displayDateMonth, int displayDateDay, int displayDateYear,
-			int displayDateHour, int displayDateMinute, int expirationDateMonth,
-			int expirationDateDay, int expirationDateYear,
-			int expirationDateHour, int expirationDateMinute,
-			boolean neverExpire, ServiceContext serviceContext)
-		throws PortalException;
-
-	public CommerceDiscount upsertCommerceDiscount(
-			String externalReferenceCode, long userId, long commerceDiscountId,
-			String title, String target, boolean useCouponCode,
-			String couponCode, boolean usePercentage,
-			BigDecimal maximumDiscountAmount, String level, BigDecimal level1,
-			BigDecimal level2, BigDecimal level3, BigDecimal level4,
-			String limitationType, int limitationTimes,
-			boolean rulesConjunction, boolean active, int displayDateMonth,
-			int displayDateDay, int displayDateYear, int displayDateHour,
-			int displayDateMinute, int expirationDateMonth,
-			int expirationDateDay, int expirationDateYear,
-			int expirationDateHour, int expirationDateMinute,
-			boolean neverExpire, ServiceContext serviceContext)
-		throws PortalException;
-
-	public CommerceDiscount upsertCommerceDiscount(
-			String externalReferenceCode, long userId, long commerceDiscountId,
-			String title, String target, boolean useCouponCode,
-			String couponCode, boolean usePercentage,
-			BigDecimal maximumDiscountAmount, String level, BigDecimal level1,
-			BigDecimal level2, BigDecimal level3, BigDecimal level4,
-			String limitationType, int limitationTimes,
-			int limitationTimesPerAccount, boolean rulesConjunction,
-			boolean active, int displayDateMonth, int displayDateDay,
-			int displayDateYear, int displayDateHour, int displayDateMinute,
-			int expirationDateMonth, int expirationDateDay,
-			int expirationDateYear, int expirationDateHour,
-			int expirationDateMinute, boolean neverExpire,
-			ServiceContext serviceContext)
 		throws PortalException;
 
 }

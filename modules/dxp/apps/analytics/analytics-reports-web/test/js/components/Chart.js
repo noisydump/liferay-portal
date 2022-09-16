@@ -10,11 +10,12 @@
  */
 
 import '@testing-library/jest-dom/extend-expect';
-import {cleanup, render, wait} from '@testing-library/react';
+import {render, waitFor} from '@testing-library/react';
 import React from 'react';
 
 import Chart from '../../../src/main/resources/META-INF/resources/js/components/Chart';
 import {ChartStateContextProvider} from '../../../src/main/resources/META-INF/resources/js/context/ChartStateContext';
+import {StoreContextProvider} from '../../../src/main/resources/META-INF/resources/js/context/StoreContext';
 
 const mockReadsDataProvider = jest.fn(() =>
 	Promise.resolve({
@@ -122,6 +123,8 @@ const mockViewsDataProvider = jest.fn(() =>
 	})
 );
 
+const mockLanguageTag = 'en-US';
+
 const mockPublishDate = 'Thu Aug 10 08:17:57 GMT 2020';
 
 const mockTimeSpanOptions = [
@@ -142,90 +145,78 @@ const mockTimeSpanOptions = [
 describe('Chart', () => {
 	afterEach(() => {
 		jest.clearAllMocks();
-		cleanup();
 	});
 
 	it('displays total views and date range title for default time span', async () => {
 		const testProps = {
-			pagePublishDate: 'Thu Aug 10 08:17:57 GMT 2020',
-			timeRange: {endDate: '2020-01-27', startDate: '2020-02-02'},
+			pagePublishDate: 'Thu Aug 10 08:17:57 GMT 2019',
+			timeRange: {endDate: '2020-02-02', startDate: '2020-01-27'},
 			timeSpanKey: 'last-7-days',
 		};
 
-		const {getByText} = render(
-			<ChartStateContextProvider
-				publishDate={testProps.pagePublishDate}
-				timeRange={testProps.timeRange}
-				timeSpanKey={testProps.timeSpanKey}
-			>
-				<Chart
-					dataProviders={[mockViewsDataProvider]}
-					languageTag={'en-US'}
-					publishDate={mockPublishDate}
-					timeSpanOptions={mockTimeSpanOptions}
-				/>
-			</ChartStateContextProvider>
+		const {getByText, queryByText} = render(
+			<StoreContextProvider value={{languageTag: mockLanguageTag}}>
+				<ChartStateContextProvider
+					publishDate={testProps.pagePublishDate}
+					timeRange={testProps.timeRange}
+					timeSpanKey={testProps.timeSpanKey}
+				>
+					<Chart
+						dataProviders={[mockViewsDataProvider]}
+						publishDate={mockPublishDate}
+						timeSpanOptions={mockTimeSpanOptions}
+					/>
+				</ChartStateContextProvider>
+			</StoreContextProvider>
 		);
 
-		await wait(() =>
+		await waitFor(() =>
 			expect(mockViewsDataProvider).toHaveBeenCalledTimes(1)
 		);
 
-		expect(mockViewsDataProvider).toHaveBeenCalledWith({
-			timeSpanKey: 'last-7-days',
-			timeSpanOffset: 0,
-		});
-
 		expect(getByText('225')).toBeInTheDocument();
 
-		expect(getByText('Jan 27 - Feb 2, 2020')).toBeInTheDocument();
+		// TimeSpan selector is now in Main component, not in Chart
+
+		expect(queryByText('Jan 27 - Feb 2, 2020')).not.toBeInTheDocument();
 	});
 
 	it('displays total views and reads and date range title for default time span', async () => {
 		const testProps = {
-			pagePublishDate: 'Thu Aug 10 08:17:57 GMT 2020',
-			timeRange: {endDate: '2020-01-27', startDate: '2020-02-02'},
+			pagePublishDate: 'Thu Aug 10 08:17:57 GMT 2019',
+			timeRange: {endDate: '2020-02-02', startDate: '2020-01-27'},
 			timeSpanKey: 'last-7-days',
 		};
 
-		const {getByText} = render(
-			<ChartStateContextProvider
-				publishDate={testProps.pagePublishDate}
-				timeRange={testProps.timeRange}
-				timeSpanKey={testProps.timeSpanKey}
-			>
-				<Chart
-					dataProviders={[
-						mockViewsDataProvider,
-						mockReadsDataProvider,
-					]}
-					languageTag={'en-US'}
-					publishDate={mockPublishDate}
-					timeSpanOptions={mockTimeSpanOptions}
-				/>
-			</ChartStateContextProvider>
+		const {getByText, queryByText} = render(
+			<StoreContextProvider value={{languageTag: mockLanguageTag}}>
+				<ChartStateContextProvider
+					publishDate={testProps.pagePublishDate}
+					timeRange={testProps.timeRange}
+					timeSpanKey={testProps.timeSpanKey}
+				>
+					<Chart
+						dataProviders={[
+							mockViewsDataProvider,
+							mockReadsDataProvider,
+						]}
+						publishDate={mockPublishDate}
+						timeSpanOptions={mockTimeSpanOptions}
+					/>
+				</ChartStateContextProvider>
+			</StoreContextProvider>
 		);
 
-		await wait(() =>
-			expect(mockViewsDataProvider).toHaveBeenCalledTimes(1)
-		);
-		await wait(() =>
-			expect(mockReadsDataProvider).toHaveBeenCalledTimes(1)
-		);
-
-		expect(mockViewsDataProvider).toHaveBeenCalledWith({
-			timeSpanKey: 'last-7-days',
-			timeSpanOffset: 0,
-		});
-
-		expect(mockReadsDataProvider).toHaveBeenCalledWith({
-			timeSpanKey: 'last-7-days',
-			timeSpanOffset: 0,
+		await waitFor(() => {
+			expect(mockViewsDataProvider).toHaveBeenCalledTimes(1);
+			expect(mockReadsDataProvider).toHaveBeenCalledTimes(1);
 		});
 
 		expect(getByText('225')).toBeInTheDocument();
 		expect(getByText('226')).toBeInTheDocument();
 
-		expect(getByText('Jan 27 - Feb 2, 2020')).toBeInTheDocument();
+		// TimeSpan selector is now in Main component, not in Chart
+
+		expect(queryByText('Jan 27 - Feb 2, 2020')).not.toBeInTheDocument();
 	});
 });

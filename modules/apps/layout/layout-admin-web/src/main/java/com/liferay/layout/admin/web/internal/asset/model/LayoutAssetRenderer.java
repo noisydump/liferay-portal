@@ -18,15 +18,16 @@ import com.liferay.asset.kernel.model.BaseJSPAssetRenderer;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HtmlUtil;
-import com.liferay.portal.kernel.util.HttpUtil;
+import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.util.Locale;
 
@@ -57,7 +58,7 @@ public class LayoutAssetRenderer extends BaseJSPAssetRenderer<Layout> {
 
 	@Override
 	public long getClassPK() {
-		return _layout.getLayoutId();
+		return _layout.getPlid();
 	}
 
 	@Override
@@ -82,20 +83,17 @@ public class LayoutAssetRenderer extends BaseJSPAssetRenderer<Layout> {
 
 		Locale locale = getLocale(portletRequest);
 
-		StringBundler sb = new StringBundler(4);
-
-		sb.append("<strong>");
-		sb.append(LanguageUtil.get(locale, "page"));
-		sb.append(":</strong> ");
-		sb.append(_layout.getHTMLTitle(locale));
+		String summary = StringBundler.concat(
+			LanguageUtil.get(locale, "page"), ": ",
+			_layout.getHTMLTitle(locale));
 
 		if (_layout.isTypeContent() &&
-			(_layout.getStatus() == WorkflowConstants.STATUS_PENDING)) {
+			(_layout.isDenied() || _layout.isPending())) {
 
-			return HtmlUtil.stripHtml(sb.toString());
+			return HtmlUtil.stripHtml(summary);
 		}
 
-		return sb.toString();
+		return summary;
 	}
 
 	@Override
@@ -114,17 +112,21 @@ public class LayoutAssetRenderer extends BaseJSPAssetRenderer<Layout> {
 				WebKeys.THEME_DISPLAY);
 
 		try {
-			if (_layout.getStatus() != WorkflowConstants.STATUS_PENDING) {
+			if (!_layout.isDenied() && !_layout.isPending()) {
 				return PortalUtil.getLayoutFriendlyURL(_layout, themeDisplay);
 			}
 
 			String previewURL = PortalUtil.getLayoutFriendlyURL(
 				_layout.fetchDraftLayout(), themeDisplay);
 
-			return HttpUtil.addParameter(
+			return HttpComponentsUtil.addParameter(
 				previewURL, "p_l_back_url", themeDisplay.getURLCurrent());
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			return StringPool.BLANK;
 		}
 	}
@@ -163,6 +165,9 @@ public class LayoutAssetRenderer extends BaseJSPAssetRenderer<Layout> {
 
 		return super.isPreviewInContext();
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		LayoutAssetRenderer.class);
 
 	private final Layout _layout;
 

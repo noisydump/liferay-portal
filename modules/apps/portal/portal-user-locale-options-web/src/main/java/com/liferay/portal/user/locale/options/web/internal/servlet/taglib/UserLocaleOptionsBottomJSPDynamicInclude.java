@@ -45,6 +45,11 @@ public class UserLocaleOptionsBottomJSPDynamicInclude
 	extends BaseJSPDynamicInclude {
 
 	@Override
+	public ServletContext getServletContext() {
+		return _servletContext;
+	}
+
+	@Override
 	public void include(
 			HttpServletRequest httpServletRequest,
 			HttpServletResponse httpServletResponse, String key)
@@ -69,8 +74,8 @@ public class UserLocaleOptionsBottomJSPDynamicInclude
 		boolean ignoreUserLocaleOptions = GetterUtil.getBoolean(
 			SessionClicks.get(
 				httpServletRequest.getSession(),
-				"com.liferay.portal.user.locale.options.web_" +
-					"ignoreUserLocaleOptions",
+				"com.liferay.portal.user.locale.options." +
+					"web_ignoreUserLocaleOptions",
 				Boolean.FALSE.toString()));
 
 		if (ignoreUserLocaleOptions) {
@@ -104,19 +109,15 @@ public class UserLocaleOptionsBottomJSPDynamicInclude
 		return _log;
 	}
 
-	@Override
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.portal.user.locale.options.web)",
-		unbind = "-"
-	)
-	protected void setServletContext(ServletContext servletContext) {
-		super.setServletContext(servletContext);
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		UserLocaleOptionsBottomJSPDynamicInclude.class);
 
 	@Reference
 	private Portal _portal;
+
+	@Reference(
+		target = "(osgi.web.symbolicname=com.liferay.portal.user.locale.options.web)"
+	)
+	private ServletContext _servletContext;
 
 }

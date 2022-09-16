@@ -14,6 +14,7 @@
 
 package com.liferay.commerce.product.service.persistence.impl;
 
+import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.model.CommerceChannelRel;
 import com.liferay.commerce.product.model.impl.CommerceChannelRelImpl;
 import com.liferay.commerce.product.service.persistence.CommerceChannelRelFinder;
@@ -70,15 +71,15 @@ public class CommerceChannelRelFinderImpl
 
 			if (inlineSQLHelper) {
 				sql = InlineSQLHelperUtil.replacePermissionCheck(
-					sql, className, "CommerceChannel.commerceChannelId", null,
-					null, new long[] {0}, null);
+					sql, CommerceChannel.class.getName(),
+					"CommerceChannel.commerceChannelId");
 			}
 
 			String[] keywords = _customSQL.keywords(name, true);
 
 			if (Validator.isNotNull(name)) {
 				sql = _customSQL.replaceKeywords(
-					sql, "(LOWER(CommerceChannel.name)", StringPool.LIKE, true,
+					sql, "LOWER(CommerceChannel.name)", StringPool.LIKE, true,
 					keywords);
 				sql = _customSQL.replaceAndOperator(sql, false);
 			}
@@ -122,18 +123,6 @@ public class CommerceChannelRelFinderImpl
 		}
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public int countByC_C(
-		String className, long classPK, String classPKField, String name,
-		boolean inlineSQLHelper) {
-
-		throw new UnsupportedOperationException();
-	}
-
 	@Override
 	public List<CommerceChannelRel> findByC_C(
 		String className, long classPK, String name, int start, int end) {
@@ -161,13 +150,13 @@ public class CommerceChannelRelFinderImpl
 
 			if (inlineSQLHelper) {
 				sql = InlineSQLHelperUtil.replacePermissionCheck(
-					sql, className, "CommerceChannel.commerceChannelId", null,
-					null, new long[] {0}, null);
+					sql, CommerceChannel.class.getName(),
+					"CommerceChannel.commerceChannelId");
 			}
 
 			if (Validator.isNotNull(name)) {
 				sql = _customSQL.replaceKeywords(
-					sql, "(LOWER(CommerceChannel.name)", StringPool.LIKE, true,
+					sql, "LOWER(CommerceChannel.name)", StringPool.LIKE, true,
 					keywords);
 				sql = _customSQL.replaceAndOperator(sql, false);
 			}
@@ -202,18 +191,6 @@ public class CommerceChannelRelFinderImpl
 		finally {
 			closeSession(session);
 		}
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public List<CommerceChannelRel> findByC_C(
-		String className, long classPK, String classPKField, String name,
-		int start, int end, boolean inlineSQLHelper) {
-
-		throw new UnsupportedOperationException();
 	}
 
 	private List<Long> _findClassNameIds() {

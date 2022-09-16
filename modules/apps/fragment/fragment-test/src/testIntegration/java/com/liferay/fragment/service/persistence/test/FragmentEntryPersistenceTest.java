@@ -160,11 +160,15 @@ public class FragmentEntryPersistenceTest {
 
 		newFragmentEntry.setConfiguration(RandomTestUtil.randomString());
 
+		newFragmentEntry.setIcon(RandomTestUtil.randomString());
+
 		newFragmentEntry.setPreviewFileEntryId(RandomTestUtil.nextLong());
 
 		newFragmentEntry.setReadOnly(RandomTestUtil.randomBoolean());
 
 		newFragmentEntry.setType(RandomTestUtil.nextInt());
+
+		newFragmentEntry.setTypeOptions(RandomTestUtil.randomString());
 
 		newFragmentEntry.setLastPublishDate(RandomTestUtil.nextDate());
 
@@ -231,12 +235,17 @@ public class FragmentEntryPersistenceTest {
 			existingFragmentEntry.getConfiguration(),
 			newFragmentEntry.getConfiguration());
 		Assert.assertEquals(
+			existingFragmentEntry.getIcon(), newFragmentEntry.getIcon());
+		Assert.assertEquals(
 			existingFragmentEntry.getPreviewFileEntryId(),
 			newFragmentEntry.getPreviewFileEntryId());
 		Assert.assertEquals(
 			existingFragmentEntry.isReadOnly(), newFragmentEntry.isReadOnly());
 		Assert.assertEquals(
 			existingFragmentEntry.getType(), newFragmentEntry.getType());
+		Assert.assertEquals(
+			existingFragmentEntry.getTypeOptions(),
+			newFragmentEntry.getTypeOptions());
 		Assert.assertEquals(
 			Time.getShortTimestamp(existingFragmentEntry.getLastPublishDate()),
 			Time.getShortTimestamp(newFragmentEntry.getLastPublishDate()));
@@ -525,9 +534,9 @@ public class FragmentEntryPersistenceTest {
 			true, "companyId", true, "userId", true, "userName", true,
 			"createDate", true, "modifiedDate", true, "fragmentCollectionId",
 			true, "fragmentEntryKey", true, "name", true, "cacheable", true,
-			"previewFileEntryId", true, "readOnly", true, "type", true,
-			"lastPublishDate", true, "status", true, "statusByUserId", true,
-			"statusByUserName", true, "statusDate", true);
+			"icon", true, "previewFileEntryId", true, "readOnly", true, "type",
+			true, "lastPublishDate", true, "status", true, "statusByUserId",
+			true, "statusByUserName", true, "statusDate", true);
 	}
 
 	@Test
@@ -864,11 +873,15 @@ public class FragmentEntryPersistenceTest {
 
 		fragmentEntry.setConfiguration(RandomTestUtil.randomString());
 
+		fragmentEntry.setIcon(RandomTestUtil.randomString());
+
 		fragmentEntry.setPreviewFileEntryId(RandomTestUtil.nextLong());
 
 		fragmentEntry.setReadOnly(RandomTestUtil.randomBoolean());
 
 		fragmentEntry.setType(RandomTestUtil.nextInt());
+
+		fragmentEntry.setTypeOptions(RandomTestUtil.randomString());
 
 		fragmentEntry.setLastPublishDate(RandomTestUtil.nextDate());
 

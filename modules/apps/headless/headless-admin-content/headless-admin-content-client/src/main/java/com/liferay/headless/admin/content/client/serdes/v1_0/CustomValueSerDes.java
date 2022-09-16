@@ -15,7 +15,6 @@
 package com.liferay.headless.admin.content.client.serdes.v1_0;
 
 import com.liferay.headless.admin.content.client.dto.v1_0.CustomValue;
-import com.liferay.headless.admin.content.client.dto.v1_0.Geo;
 import com.liferay.headless.admin.content.client.json.BaseJSONParser;
 
 import java.util.Iterator;
@@ -63,11 +62,14 @@ public class CustomValueSerDes {
 
 			sb.append("\"data\": ");
 
-			sb.append("\"");
-
-			sb.append(_escape(customValue.getData()));
-
-			sb.append("\"");
+			if (customValue.getData() instanceof String) {
+				sb.append("\"");
+				sb.append((String)customValue.getData());
+				sb.append("\"");
+			}
+			else {
+				sb.append(customValue.getData());
+			}
 		}
 
 		if (customValue.getData_i18n() != null) {
@@ -165,11 +167,9 @@ public class CustomValueSerDes {
 			}
 			else if (Objects.equals(jsonParserFieldName, "geo")) {
 				if (jsonParserFieldValue != null) {
-					customValue.setGeo((Geo)jsonParserFieldValue);
+					customValue.setGeo(
+						GeoSerDes.toDTO((String)jsonParserFieldValue));
 				}
-			}
-			else if (jsonParserFieldName.equals("status")) {
-				throw new IllegalArgumentException();
 			}
 		}
 
@@ -199,7 +199,7 @@ public class CustomValueSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -235,7 +235,7 @@ public class CustomValueSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

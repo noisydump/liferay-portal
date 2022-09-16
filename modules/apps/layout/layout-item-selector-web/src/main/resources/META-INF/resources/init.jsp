@@ -14,15 +14,17 @@
  */
 --%>
 
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+
 <%@ taglib uri="http://java.sun.com/portlet_2_0" prefix="portlet" %>
 
 <%@ taglib uri="http://liferay.com/tld/frontend" prefix="liferay-frontend" %><%@
 taglib uri="http://liferay.com/tld/layout" prefix="liferay-layout" %><%@
+taglib uri="http://liferay.com/tld/site-navigation" prefix="liferay-site-navigation" %><%@
 taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %>
 
 <%@ page import="com.liferay.layout.item.selector.web.internal.constants.LayoutsItemSelectorWebKeys" %><%@
-page import="com.liferay.layout.item.selector.web.internal.display.context.LayoutItemSelectorViewDisplayContext" %><%@
-page import="com.liferay.portal.kernel.util.HtmlUtil" %>
+page import="com.liferay.layout.item.selector.web.internal.display.context.LayoutItemSelectorViewDisplayContext" %>
 
 <liferay-frontend:defineObjects />
 

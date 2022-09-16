@@ -19,9 +19,11 @@ import com.liferay.portal.kernel.aop.ChainableMethodAdvice;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
 import com.liferay.portal.spring.aop.AopInvocationHandler;
 import com.liferay.portal.spring.transaction.TransactionHandler;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -29,6 +31,7 @@ import java.lang.reflect.Method;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -37,8 +40,10 @@ import org.junit.Test;
 public class ServiceContextAdviceTest {
 
 	@ClassRule
-	public static final CodeCoverageAssertor codeCoverageAssertor =
-		CodeCoverageAssertor.INSTANCE;
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			CodeCoverageAssertor.INSTANCE, LiferayUnitTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
@@ -76,12 +81,10 @@ public class ServiceContextAdviceTest {
 
 	@Test
 	public void testWithNoArguments() {
-		Method method = ReflectionTestUtil.getMethod(
-			TestInterceptedClass.class, "method");
-
 		AopMethodInvocation aopMethodInvocation = ReflectionTestUtil.invoke(
 			_aopInvocationHandler, "_getAopMethodInvocation",
-			new Class<?>[] {Method.class}, method);
+			new Class<?>[] {Method.class},
+			ReflectionTestUtil.getMethod(TestInterceptedClass.class, "method"));
 
 		Assert.assertNull(
 			ReflectionTestUtil.getFieldValue(
@@ -94,11 +97,9 @@ public class ServiceContextAdviceTest {
 
 		ServiceContextThreadLocal.pushServiceContext(serviceContext);
 
-		Method method = ReflectionTestUtil.getMethod(
-			TestInterceptedClass.class, "method", ServiceContext.class);
-
 		AopMethodInvocation aopMethodInvocation = _createTestMethodInvocation(
-			method);
+			ReflectionTestUtil.getMethod(
+				TestInterceptedClass.class, "method", ServiceContext.class));
 
 		aopMethodInvocation.proceed(new Object[] {null});
 
@@ -110,12 +111,11 @@ public class ServiceContextAdviceTest {
 	public void testWithoutServiceContextParameter() {
 		ServiceContextThreadLocal.pushServiceContext(new ServiceContext());
 
-		Method method = ReflectionTestUtil.getMethod(
-			TestInterceptedClass.class, "method", Object.class);
-
 		AopMethodInvocation aopMethodInvocation = ReflectionTestUtil.invoke(
 			_aopInvocationHandler, "_getAopMethodInvocation",
-			new Class<?>[] {Method.class}, method);
+			new Class<?>[] {Method.class},
+			ReflectionTestUtil.getMethod(
+				TestInterceptedClass.class, "method", Object.class));
 
 		Assert.assertNull(
 			ReflectionTestUtil.getFieldValue(

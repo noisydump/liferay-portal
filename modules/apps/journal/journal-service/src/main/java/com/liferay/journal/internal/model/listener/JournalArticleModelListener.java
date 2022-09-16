@@ -44,7 +44,9 @@ public class JournalArticleModelListener
 	}
 
 	@Override
-	public void onAfterUpdate(JournalArticle journalArticle) {
+	public void onAfterUpdate(
+		JournalArticle originalJournalArticle, JournalArticle journalArticle) {
+
 		clearCache(journalArticle);
 	}
 
@@ -64,11 +66,7 @@ public class JournalArticleModelListener
 		CacheUtil.clearCache(journalArticle.getCompanyId());
 	}
 
-	@Reference(unbind = "-")
-	protected void setJournalContent(JournalContent journalContent) {
-		_journalContent = journalContent;
-	}
-
+	@Reference
 	private JournalContent _journalContent;
 
 	@Reference

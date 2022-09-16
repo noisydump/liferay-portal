@@ -12,7 +12,7 @@
  * details.
  */
 
-import {fetch} from 'frontend-js-web';
+import {fetch, openConfirmModal, openModal, sub} from 'frontend-js-web';
 
 const RECENTLY_REMOVED_ATTACHMENTS = {
 	multiple: Liferay.Language.get('x-recently-removed-attachments'),
@@ -74,7 +74,7 @@ class MBPortlet {
 
 	_attachEvents() {
 		const publishButton = this.rootNode.querySelector(
-			'.button-holder button[type="submit"]'
+			'.sheet-footer button[type="submit"]'
 		);
 
 		if (publishButton) {
@@ -125,7 +125,7 @@ class MBPortlet {
 
 		if (viewRemovedAttachmentsLink) {
 			this._addEventListener(viewRemovedAttachmentsLink, 'click', () => {
-				Liferay.Util.openModal({
+				openModal({
 					id: this._namespace + 'openRemovedPageAttachments',
 					onClose: this._updateRemovedAttachments.bind(this),
 					title: Liferay.Language.get('removed-attachments'),
@@ -198,14 +198,19 @@ class MBPortlet {
 			'img[data-random-id]'
 		);
 
-		if (tempImages.length > 0) {
-			if (confirm(this._strings.confirmDiscardImages)) {
-				tempImages.forEach((node) => {
-					node.parentElement.remove();
-				});
+		if (tempImages.length) {
+			openConfirmModal({
+				message: this._strings.confirmDiscardImages,
+				onConfirm: (isConfirmed) => {
+					if (isConfirmed) {
+						tempImages.forEach((node) => {
+							node.parentElement.remove();
+						});
 
-				this._submitMBForm();
-			}
+						this._submitMBForm();
+					}
+				},
+			});
 		}
 		else {
 			this._submitMBForm();
@@ -270,7 +275,9 @@ class MBPortlet {
 					const id = index;
 					const value = item.value;
 
-					return `<input id="${namespace}selectedFileName${id}" name="${namespace}selectedFileName" type="hidden" value="${value}" />`;
+					return `<input id="${namespace}selectedFileName${id}" name="${namespace}selectedFileName" type="hidden" value="${Liferay.Util.escapeHTML(
+						value
+					)}" />`;
 				})
 				.join('');
 
@@ -286,7 +293,7 @@ class MBPortlet {
 		fetch(this._getAttachmentsURL)
 			.then((res) => res.json())
 			.then((attachments) => {
-				if (attachments.active.length > 0) {
+				if (attachments.active.length) {
 					Liferay.componentReady(this.searchContainerId).then(
 						(searchContainer) => {
 							const searchContainerData = searchContainer.getData();
@@ -301,7 +308,7 @@ class MBPortlet {
 								if (
 									searchContainerData.indexOf(
 										attachment.id
-									) == -1
+									) === -1
 								) {
 									searchContainer.addRow(
 										[
@@ -311,8 +318,8 @@ class MBPortlet {
 												attachment.id
 											}" data-url="${
 												attachment.deleteURL
-											}" href="javascript:;">${Liferay.Language.get(
-												'move-to-recycle-bin'
+											}" href="javascript:void(0);">${Liferay.Language.get(
+												'delete'
 											)}</a>`,
 										],
 										attachment.id.toString()
@@ -329,10 +336,10 @@ class MBPortlet {
 					'view-removed-attachments-link'
 				);
 
-				if (attachments.deleted.length > 0) {
+				if (attachments.deleted.length) {
 					deletedAttachmentsElement.style.display = 'initial';
 					deletedAttachmentsElement.innerHTML =
-						Liferay.Util.sub(
+						sub(
 							attachments.deleted.length > 1
 								? RECENTLY_REMOVED_ATTACHMENTS.multiple
 								: RECENTLY_REMOVED_ATTACHMENTS.single,

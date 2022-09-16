@@ -31,11 +31,7 @@ definition {
 			locator1 = "Portlet#HEADER",
 			value1 = "Templates for Structure: ${ddlDataDefinitionName}");
 
-		var key_assetTitle = "Templates";
-
-		AssertElementPresent.assertVisible(
-			locator1 = "NavBar#ASSET_TITLE",
-			value1 = "Templates");
+		AssertElementPresent.assertVisible(locator1 = "NavBar#ASSET_TEMPLATE");
 
 		LexiconEntry.gotoAddMenuItem(menuItem = "Add Display Template");
 
@@ -49,9 +45,9 @@ definition {
 			locator1 = "DDMEditTemplate#DETAILS_LANGUAGE_SELECT",
 			value1 = "${ddlDisplayTemplateLanguage}");
 
-		Pause(locator1 = "5000");
-
 		if (isSet(ddlDisplayTemplateTextFieldScript)) {
+			DDLList.expandCollapsedIcon(className = "Data List Record Fields");
+
 			AssertClick(
 				locator1 = "DDMEditTemplate#DATA_LIST_RECORD_FIELDS_TEXT",
 				value1 = "${ddlDisplayTemplateTextFieldScript}");
@@ -64,12 +60,12 @@ definition {
 		}
 
 		if (isSet(ddlDisplayTemplateScriptFile)) {
-			UploadCommonFile(
-				locator1 = "DDMEditTemplate#SCRIPT_FILE_FIELD",
-				value1 = "${ddlDisplayTemplateScriptFile}");
-		}
+			var dependencyFilePath = TestCase.getDependenciesDirPath(fileName = "${ddlDisplayTemplateScriptFile}");
 
-		Pause(locator1 = "3000");
+			UploadFile(
+				locator1 = "DDMEditTemplate#SCRIPT_FILE_FIELD",
+				value1 = "${dependencyFilePath}");
+		}
 
 		SelectFrameTop();
 
@@ -90,8 +86,6 @@ definition {
 		Select(
 			locator1 = "DDMEditTemplate#DETAILS_LANGUAGE_SELECT",
 			value1 = "${ddlDisplayTemplateLanguage}");
-
-		Pause(locator1 = "5000");
 
 		Type.typeAceEditor(
 			locator1 = "DDMEditTemplate#SCRIPT_CONTENT_FIELD_TEXT_AREA",
@@ -115,11 +109,7 @@ definition {
 			locator1 = "Portlet#HEADER",
 			value1 = "Templates for Structure: Data Definition");
 
-		var key_assetTitle = "Templates";
-
-		AssertElementPresent.assertVisible(
-			locator1 = "NavBar#ASSET_TITLE",
-			value1 = "Templates");
+		AssertElementPresent.assertVisible(locator1 = "NavBar#ASSET_TEMPLATE");
 
 		LexiconEntry.gotoAdd();
 
@@ -174,7 +164,7 @@ definition {
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
+			category = "Content & Data",
 			portlet = "Dynamic Data Lists");
 
 		DDLNavigator.gotoManageDataDefinitions();
@@ -203,8 +193,6 @@ definition {
 
 		MenuItem.click(menuItem = "Edit");
 
-		Pause(locator1 = "1000");
-
 		PortletEntry.inputName(name = "${ddlDisplayTemplateNameEdit}");
 
 		DDLTemplate._showDetails();
@@ -212,6 +200,8 @@ definition {
 		Select(
 			locator1 = "DDMEditTemplate#DETAILS_LANGUAGE_SELECT",
 			value1 = "${ddlDisplayTemplateLanguage}");
+
+		DDLList.expandCollapsedIcon(className = "Data List Record Fields");
 
 		AssertClick(
 			locator1 = "DDMEditTemplate#DATA_LIST_RECORD_FIELDS_TEXT",
@@ -243,13 +233,9 @@ definition {
 			Click(locator1 = "DDMEditTemplate#DETAILS_TOGGLE");
 		}
 
-		Pause(locator1 = "3000");
-
 		Select(
 			locator1 = "DDMEditStructure#DETAILS_MODE_SELECT",
 			value1 = "${ddlFormTemplateMode}");
-
-		Pause(locator1 = "3000");
 	}
 
 	macro saveAndContinueFormTemplateCP {
@@ -312,7 +298,7 @@ definition {
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
+			category = "Content & Data",
 			portlet = "Dynamic Data Lists");
 
 		DDLNavigator.gotoManageDataDefinitions();

@@ -16,6 +16,7 @@ package com.liferay.mail.reader.service.base;
 
 import com.liferay.mail.reader.model.Attachment;
 import com.liferay.mail.reader.service.AttachmentLocalService;
+import com.liferay.mail.reader.service.AttachmentLocalServiceUtil;
 import com.liferay.mail.reader.service.persistence.AccountPersistence;
 import com.liferay.mail.reader.service.persistence.AttachmentPersistence;
 import com.liferay.mail.reader.service.persistence.FolderPersistence;
@@ -34,6 +35,8 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -47,10 +50,13 @@ import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -71,7 +77,7 @@ public abstract class AttachmentLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>AttachmentLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.mail.reader.service.AttachmentLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>AttachmentLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>AttachmentLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -142,6 +148,13 @@ public abstract class AttachmentLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return attachmentPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -307,6 +320,11 @@ public abstract class AttachmentLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement AttachmentLocalServiceImpl#deleteAttachment(Attachment) to avoid orphaned data");
+		}
+
 		return attachmentLocalService.deleteAttachment(
 			(Attachment)persistedModel);
 	}
@@ -368,6 +386,11 @@ public abstract class AttachmentLocalServiceBaseImpl
 		return attachmentPersistence.update(attachment);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -379,6 +402,8 @@ public abstract class AttachmentLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		attachmentLocalService = (AttachmentLocalService)aopProxy;
+
+		_setLocalServiceUtilService(attachmentLocalService);
 	}
 
 	/**
@@ -423,6 +448,22 @@ public abstract class AttachmentLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		AttachmentLocalService attachmentLocalService) {
+
+		try {
+			Field field = AttachmentLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, attachmentLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@Reference
 	protected AccountPersistence accountPersistence;
 
@@ -452,5 +493,8 @@ public abstract class AttachmentLocalServiceBaseImpl
 	@Reference
 	protected com.liferay.portal.kernel.service.UserLocalService
 		userLocalService;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		AttachmentLocalServiceBaseImpl.class);
 
 }

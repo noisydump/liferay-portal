@@ -22,6 +22,15 @@ export {default as AOP} from './liferay/aop/AOP.es';
 
 export {default as autoSize} from './liferay/autosize/autosize.es';
 
+// Cookie API
+
+export {
+	COOKIE_TYPES,
+	getCookie,
+	setCookie,
+	removeCookie,
+} from './liferay/util/cookie/cookie';
+
 // Debounce API
 
 export {cancelDebounce, debounce} from './liferay/debounce/debounce.es';
@@ -38,27 +47,31 @@ export {default as postForm} from './liferay/util/form/post_form.es';
 // Liferay API
 
 export {default as BREAKPOINTS} from './liferay/breakpoints';
-
-export {default as CompatibilityEventProxy} from './liferay/CompatibilityEventProxy.es';
+export {default as STATUS_CODE} from './liferay/status_code';
+export {default as zIndex} from './liferay/zIndex';
 
 export {default as DefaultEventHandler} from './liferay/DefaultEventHandler.es';
-export {default as ItemSelectorDialog} from './liferay/ItemSelectorDialog.es';
+export {default as Disposable} from './liferay/events/Disposable';
+export {default as EventEmitter} from './liferay/events/EventEmitter';
+export {default as EventHandler} from './liferay/events/EventHandler';
 export {default as PortletBase} from './liferay/PortletBase.es';
 
 // Modal API
 
-export {openModal, openSelectionModal} from './liferay/modal/Modal';
+export {
+	openModal,
+	openAlertModal,
+	openConfirmModal,
+	openSelectionModal,
+} from './liferay/modal/Modal';
 
 export {default as openSimpleInputModal} from './liferay/modal/commands/OpenSimpleInputModal.es';
 
 // PortletURL API
 
 export {default as createActionURL} from './liferay/util/portlet_url/create_action_url.es';
-
 export {default as createPortletURL} from './liferay/util/portlet_url/create_portlet_url.es';
-
 export {default as createRenderURL} from './liferay/util/portlet_url/create_render_url.es';
-
 export {default as createResourceURL} from './liferay/util/portlet_url/create_resource_url.es';
 
 // Align API
@@ -75,6 +88,11 @@ export {
 
 export {getSessionValue, setSessionValue} from './liferay/util/session.es';
 
+// Storage APIs
+
+export {default as localStorage} from './liferay/util/local_storage';
+export {default as sessionStorage} from './liferay/util/session_storage';
+
 // Toast API
 
 export {openToast} from './liferay/toast/commands/OpenToast.es';
@@ -90,11 +108,28 @@ export {default as buildFragment} from './liferay/util/build_fragment';
 export {default as fetch} from './liferay/util/fetch.es';
 export {default as focusFormField} from './liferay/util/focus_form_field';
 export {default as getPortletId} from './liferay/util/get_portlet_id';
+export {default as getOpener} from './liferay/util/get_opener';
+export {default as getTop} from './liferay/util/get_top';
+export {default as getWindow} from './liferay/util/get_window';
 export {default as inBrowserView} from './liferay/util/in_browser_view';
 export {default as isObject} from './liferay/util/is_object';
 export {default as isPhone} from './liferay/util/is_phone';
 export {default as isTablet} from './liferay/util/is_tablet';
+export {default as getSelectedOptionValues} from './liferay/util/get_selected_option_values';
 export {default as navigate} from './liferay/util/navigate.es';
 export {default as normalizeFriendlyURL} from './liferay/util/normalize_friendly_url';
+export {default as openWindow} from './liferay/util/open_window';
+export {default as removeEntitySelection} from './liferay/util/remove_entity_selection';
+export {default as showCapsLock} from './liferay/util/show_caps_lock';
 export {default as runScriptsInElement} from './liferay/util/run_scripts_in_element.es';
+export {default as selectFolder} from './liferay/util/select_folder';
+export {default as sub} from './liferay/util/sub';
+export {default as toggleBoxes} from './liferay/util/toggle_boxes';
+export {default as toggleControls} from './liferay/util/toggle_controls';
 export {default as toggleDisabled} from './liferay/util/toggle_disabled';
+export {default as toggleRadio} from './liferay/util/toggle_radio';
+export {default as toggleSelectBox} from './liferay/util/toggle_select_box';
+export {
+	getCheckedCheckboxes,
+	getUncheckedCheckboxes,
+} from './liferay/util/get_checkboxes';

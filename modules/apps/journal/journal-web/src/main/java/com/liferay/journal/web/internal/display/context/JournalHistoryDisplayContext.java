@@ -16,15 +16,21 @@ package com.liferay.journal.web.internal.display.context;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemListBuilder;
+import com.liferay.journal.constants.JournalPortletKeys;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.service.JournalArticleServiceUtil;
 import com.liferay.journal.web.internal.util.JournalPortletUtil;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.portlet.PortalPreferences;
+import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
+import com.liferay.portal.kernel.portlet.SearchDisplayStyleUtil;
+import com.liferay.portal.kernel.portlet.SearchOrderByUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.util.List;
 
@@ -48,38 +54,30 @@ public class JournalHistoryDisplayContext {
 		_article = article;
 
 		_httpServletRequest = PortalUtil.getHttpServletRequest(renderRequest);
+
+		_portalPreferences = PortletPreferencesFactoryUtil.getPortalPreferences(
+			_httpServletRequest);
 	}
 
 	public SearchContainer<JournalArticle> getArticleSearchContainer() {
 		SearchContainer<JournalArticle> articleSearchContainer =
 			new SearchContainer(_renderRequest, getPortletURL(), null, null);
 
-		articleSearchContainer.setRowChecker(
-			new EmptyOnClickRowChecker(_renderResponse));
-
 		articleSearchContainer.setOrderByCol(getOrderByCol());
-
-		OrderByComparator<JournalArticle> orderByComparator =
+		articleSearchContainer.setOrderByComparator(
 			JournalPortletUtil.getArticleOrderByComparator(
-				getOrderByCol(), getOrderByType());
-
-		articleSearchContainer.setOrderByComparator(orderByComparator);
-
+				getOrderByCol(), getOrderByType()));
 		articleSearchContainer.setOrderByType(getOrderByType());
-
-		int articleVersionsCount =
-			JournalArticleServiceUtil.getArticlesCountByArticleId(
-				_article.getGroupId(), _article.getArticleId());
-
-		articleSearchContainer.setTotal(articleVersionsCount);
-
-		List<JournalArticle> articleVersions =
-			JournalArticleServiceUtil.getArticlesByArticleId(
+		articleSearchContainer.setResultsAndTotal(
+			() -> JournalArticleServiceUtil.getArticlesByArticleId(
 				_article.getGroupId(), _article.getArticleId(),
 				articleSearchContainer.getStart(),
-				articleSearchContainer.getEnd(), orderByComparator);
-
-		articleSearchContainer.setResults(articleVersions);
+				articleSearchContainer.getEnd(),
+				articleSearchContainer.getOrderByComparator()),
+			JournalArticleServiceUtil.getArticlesCountByArticleId(
+				_article.getGroupId(), _article.getArticleId()));
+		articleSearchContainer.setRowChecker(
+			new EmptyOnClickRowChecker(_renderResponse));
 
 		return articleSearchContainer;
 	}
@@ -99,8 +97,9 @@ public class JournalHistoryDisplayContext {
 			return _displayStyle;
 		}
 
-		_displayStyle = ParamUtil.getString(
-			_renderRequest, "displayStyle", "list");
+		_displayStyle = SearchDisplayStyleUtil.getDisplayStyle(
+			_renderRequest, JournalPortletKeys.JOURNAL, "history-display-style",
+			"list");
 
 		return _displayStyle;
 	}
@@ -116,43 +115,51 @@ public class JournalHistoryDisplayContext {
 	}
 
 	public String getOrderByCol() {
-		if (_orderByCol != null) {
+		if (Validator.isNotNull(_orderByCol)) {
 			return _orderByCol;
 		}
 
-		_orderByCol = ParamUtil.getString(
-			_renderRequest, "orderByCol", "version");
+		_orderByCol = SearchOrderByUtil.getOrderByCol(
+			_httpServletRequest, JournalPortletKeys.JOURNAL,
+			"history-order-by-col", "version");
 
 		return _orderByCol;
 	}
 
 	public String getOrderByType() {
-		if (_orderByType != null) {
+		if (Validator.isNotNull(_orderByType)) {
 			return _orderByType;
 		}
 
-		_orderByType = ParamUtil.getString(
-			_renderRequest, "orderByType", "asc");
+		_orderByType = SearchOrderByUtil.getOrderByType(
+			_httpServletRequest, JournalPortletKeys.JOURNAL,
+			"history-order-by-type", "asc");
 
 		return _orderByType;
 	}
 
 	public PortletURL getPortletURL() {
-		PortletURL portletURL = _renderResponse.createRenderURL();
-
-		portletURL.setParameter("mvcPath", "/view_article_history.jsp");
-		portletURL.setParameter("redirect", _getRedirect());
-		portletURL.setParameter("backURL", getBackURL());
-		portletURL.setParameter(
-			"referringPortletResource", getReferringPortletResource());
-		portletURL.setParameter(
-			"groupId", String.valueOf(_article.getGroupId()));
-		portletURL.setParameter("articleId", _article.getArticleId());
-		portletURL.setParameter("displayStyle", getDisplayStyle());
-		portletURL.setParameter("orderByCol", getOrderByCol());
-		portletURL.setParameter("orderByType", getOrderByType());
-
-		return portletURL;
+		return PortletURLBuilder.createRenderURL(
+			_renderResponse
+		).setMVCPath(
+			"/view_article_history.jsp"
+		).setRedirect(
+			_getRedirect()
+		).setBackURL(
+			getBackURL()
+		).setParameter(
+			"articleId", _article.getArticleId()
+		).setParameter(
+			"displayStyle", getDisplayStyle()
+		).setParameter(
+			"groupId", _article.getGroupId()
+		).setParameter(
+			"orderByCol", getOrderByCol()
+		).setParameter(
+			"orderByType", getOrderByType()
+		).setParameter(
+			"referringPortletResource", getReferringPortletResource()
+		).buildPortletURL();
 	}
 
 	public String getReferringPortletResource() {
@@ -182,6 +189,7 @@ public class JournalHistoryDisplayContext {
 	private final HttpServletRequest _httpServletRequest;
 	private String _orderByCol;
 	private String _orderByType;
+	private final PortalPreferences _portalPreferences;
 	private String _redirect;
 	private String _referringPortletResource;
 	private final RenderRequest _renderRequest;

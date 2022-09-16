@@ -49,7 +49,6 @@ import java.lang.reflect.Modifier;
 
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -162,47 +161,6 @@ public class UserFinderTest {
 	}
 
 	@Test
-	public void testCountByGroups() throws Exception {
-		long groupId = _group.getGroupId();
-
-		Map<Long, Integer> counts = _userFinder.countByGroups(
-			TestPropsValues.getCompanyId(), WorkflowConstants.STATUS_APPROVED,
-			new long[] {groupId});
-
-		Assert.assertEquals(counts.toString(), 1, counts.size());
-		Assert.assertEquals(2, (int)counts.get(groupId));
-
-		_groupLocalService.addOrganizationGroup(
-			_organization1.getOrganizationId(), groupId);
-
-		counts = _userFinder.countByGroups(
-			TestPropsValues.getCompanyId(), WorkflowConstants.STATUS_APPROVED,
-			new long[] {groupId});
-
-		Assert.assertEquals(counts.toString(), 1, counts.size());
-		Assert.assertEquals(3, (int)counts.get(groupId));
-
-		_groupLocalService.addUserGroupGroup(
-			_userGroup.getUserGroupId(), groupId);
-
-		counts = _userFinder.countByGroups(
-			TestPropsValues.getCompanyId(), WorkflowConstants.STATUS_APPROVED,
-			new long[] {groupId});
-
-		Assert.assertEquals(counts.toString(), 1, counts.size());
-		Assert.assertEquals(4, (int)counts.get(groupId));
-
-		long organizationGroupId = _organization1.getGroupId();
-
-		counts = _userFinder.countByGroups(
-			TestPropsValues.getCompanyId(), WorkflowConstants.STATUS_APPROVED,
-			new long[] {groupId, organizationGroupId});
-
-		Assert.assertEquals(counts.toString(), 2, counts.size());
-		Assert.assertEquals(1, (int)counts.get(organizationGroupId));
-	}
-
-	@Test
 	public void testCountByKeywordsWithInheritedGroups() throws Exception {
 		int count = _userFinder.countByKeywords(
 			TestPropsValues.getCompanyId(), null,
@@ -245,6 +203,23 @@ public class UserFinderTest {
 			WorkflowConstants.STATUS_APPROVED, _inheritedUserRolesParams);
 
 		Assert.assertEquals(expectedCount + 2, count);
+	}
+
+	@Test
+	public void testFindByC_FN_MN_LN_SN_EA_S() throws Exception {
+		String[] firstNames = {null};
+		String[] middleNames = {null};
+		String[] lastNames = {null};
+		String[] screenNames = {null};
+		String[] emailAddresses = {null};
+
+		_userFinder.findByC_FN_MN_LN_SN_EA_S(
+			TestPropsValues.getCompanyId(), firstNames, middleNames, lastNames,
+			screenNames, emailAddresses, 0,
+			LinkedHashMapBuilder.<String, Object>put(
+				"announcementsDeliveryEmailOrSms", "general"
+			).build(),
+			true, 0, 1, null);
 	}
 
 	@Test

@@ -15,7 +15,7 @@
 package com.liferay.portal.workflow.web.internal.portlet.action;
 
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService;
 import com.liferay.portal.kernel.servlet.SessionMessages;
@@ -63,12 +63,12 @@ public class UpdateWorkflowDefinitionLinkMVCActionCommand
 		String successMessage = StringPool.BLANK;
 
 		if (Validator.isNull(workflowDefinition)) {
-			successMessage = LanguageUtil.format(
+			successMessage = _language.format(
 				getResourceBundle(actionRequest), "workflow-unassigned-from-x",
 				resource);
 		}
 		else {
-			successMessage = LanguageUtil.format(
+			successMessage = _language.format(
 				getResourceBundle(actionRequest), "workflow-assigned-to-x",
 				resource);
 		}
@@ -82,7 +82,7 @@ public class UpdateWorkflowDefinitionLinkMVCActionCommand
 		throws Exception {
 
 		String[] classNameAndWorkflowDefinition =
-			getClassNameAndWorkflowDefinition(actionRequest);
+			_getClassNameAndWorkflowDefinition(actionRequest);
 
 		String className = classNameAndWorkflowDefinition[0];
 		String workflowDefinition = classNameAndWorkflowDefinition[1];
@@ -114,7 +114,7 @@ public class UpdateWorkflowDefinitionLinkMVCActionCommand
 		sendRedirect(actionRequest, actionResponse);
 	}
 
-	protected String[] getClassNameAndWorkflowDefinition(
+	private String[] _getClassNameAndWorkflowDefinition(
 		ActionRequest actionRequest) {
 
 		String className = StringPool.BLANK;
@@ -138,16 +138,12 @@ public class UpdateWorkflowDefinitionLinkMVCActionCommand
 		return new String[] {className, workflowDefinition};
 	}
 
-	@Reference(unbind = "-")
-	protected void setWorkflowDefinitionLinkLocalService(
-		WorkflowDefinitionLinkLocalService workflowDefinitionLinkLocalService) {
-
-		_workflowDefinitionLinkLocalService =
-			workflowDefinitionLinkLocalService;
-	}
-
 	private static final String _PREFIX = "workflowDefinitionName@";
 
+	@Reference
+	private Language _language;
+
+	@Reference
 	private WorkflowDefinitionLinkLocalService
 		_workflowDefinitionLinkLocalService;
 

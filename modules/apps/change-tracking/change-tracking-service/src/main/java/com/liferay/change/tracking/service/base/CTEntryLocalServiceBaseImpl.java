@@ -16,7 +16,7 @@ package com.liferay.change.tracking.service.base;
 
 import com.liferay.change.tracking.model.CTEntry;
 import com.liferay.change.tracking.service.CTEntryLocalService;
-import com.liferay.change.tracking.service.persistence.CTCollectionPersistence;
+import com.liferay.change.tracking.service.CTEntryLocalServiceUtil;
 import com.liferay.change.tracking.service.persistence.CTEntryPersistence;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.aop.AopService;
@@ -32,6 +32,8 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -45,10 +47,13 @@ import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -69,7 +74,7 @@ public abstract class CTEntryLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>CTEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.change.tracking.service.CTEntryLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>CTEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>CTEntryLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -139,6 +144,13 @@ public abstract class CTEntryLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return ctEntryPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -303,6 +315,11 @@ public abstract class CTEntryLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement CTEntryLocalServiceImpl#deleteCTEntry(CTEntry) to avoid orphaned data");
+		}
+
 		return ctEntryLocalService.deleteCTEntry((CTEntry)persistedModel);
 	}
 
@@ -363,6 +380,11 @@ public abstract class CTEntryLocalServiceBaseImpl
 		return ctEntryPersistence.update(ctEntry);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -374,6 +396,8 @@ public abstract class CTEntryLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		ctEntryLocalService = (CTEntryLocalService)aopProxy;
+
+		_setLocalServiceUtilService(ctEntryLocalService);
 	}
 
 	/**
@@ -418,16 +442,32 @@ public abstract class CTEntryLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		CTEntryLocalService ctEntryLocalService) {
+
+		try {
+			Field field = CTEntryLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, ctEntryLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected CTEntryLocalService ctEntryLocalService;
 
 	@Reference
 	protected CTEntryPersistence ctEntryPersistence;
 
 	@Reference
-	protected CTCollectionPersistence ctCollectionPersistence;
-
-	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		CTEntryLocalServiceBaseImpl.class);
 
 }

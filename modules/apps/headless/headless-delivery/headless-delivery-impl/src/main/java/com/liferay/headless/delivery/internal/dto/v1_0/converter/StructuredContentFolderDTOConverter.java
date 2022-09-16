@@ -16,8 +16,8 @@ package com.liferay.headless.delivery.internal.dto.v1_0.converter;
 
 import com.liferay.document.library.kernel.model.DLFolder;
 import com.liferay.headless.delivery.dto.v1_0.StructuredContentFolder;
-import com.liferay.headless.delivery.internal.dto.v1_0.util.CreatorUtil;
-import com.liferay.headless.delivery.internal.dto.v1_0.util.CustomFieldsUtil;
+import com.liferay.headless.delivery.dto.v1_0.util.CreatorUtil;
+import com.liferay.headless.delivery.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.journal.model.JournalFolder;
 import com.liferay.journal.service.JournalArticleService;
 import com.liferay.journal.service.JournalFolderService;
@@ -75,6 +75,8 @@ public class StructuredContentFolderDTOConverter
 				dateCreated = journalFolder.getCreateDate();
 				dateModified = journalFolder.getModifiedDate();
 				description = journalFolder.getDescription();
+				externalReferenceCode =
+					journalFolder.getExternalReferenceCode();
 				id = journalFolder.getFolderId();
 				name = journalFolder.getName();
 				numberOfStructuredContentFolders =

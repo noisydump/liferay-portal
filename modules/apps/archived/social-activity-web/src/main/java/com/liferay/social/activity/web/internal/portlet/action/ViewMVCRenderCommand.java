@@ -26,7 +26,7 @@ import com.liferay.social.activity.web.internal.constants.SocialActivityWebKeys;
 import com.liferay.social.kernel.model.SocialActivityDefinition;
 import com.liferay.social.kernel.model.SocialActivitySetting;
 import com.liferay.social.kernel.service.SocialActivitySettingService;
-import com.liferay.social.kernel.util.SocialConfigurationUtil;
+import com.liferay.social.kernel.util.SocialConfiguration;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -65,7 +65,7 @@ public class ViewMVCRenderCommand implements MVCRenderCommand {
 		try {
 			renderRequest.setAttribute(
 				SocialActivityWebKeys.SOCIAL_ACTIVITY_SETTINGS_MAP,
-				getActivitySettingsMap(themeDisplay));
+				_getActivitySettingsMap(themeDisplay));
 		}
 		catch (Exception exception) {
 			if (exception instanceof PrincipalException) {
@@ -80,7 +80,14 @@ public class ViewMVCRenderCommand implements MVCRenderCommand {
 		return "/view.jsp";
 	}
 
-	protected Map<String, Boolean> getActivitySettingsMap(
+	@Reference(unbind = "-")
+	protected void setSocialActivitySettingService(
+		SocialActivitySettingService socialActivitySettingService) {
+
+		_socialActivitySettingService = socialActivitySettingService;
+	}
+
+	private Map<String, Boolean> _getActivitySettingsMap(
 			ThemeDisplay themeDisplay)
 		throws Exception {
 
@@ -90,7 +97,7 @@ public class ViewMVCRenderCommand implements MVCRenderCommand {
 			_socialActivitySettingService.getActivitySettings(
 				themeDisplay.getSiteGroupIdOrLiveGroupId());
 
-		String[] modelNames = SocialConfigurationUtil.getActivityModelNames();
+		String[] modelNames = _socialConfiguration.getActivityModelNames();
 
 		Comparator<String> comparator = new ModelResourceComparator(
 			themeDisplay.getLocale());
@@ -129,13 +136,9 @@ public class ViewMVCRenderCommand implements MVCRenderCommand {
 		return activitySettingsMap;
 	}
 
-	@Reference(unbind = "-")
-	protected void setSocialActivitySettingService(
-		SocialActivitySettingService socialActivitySettingService) {
-
-		_socialActivitySettingService = socialActivitySettingService;
-	}
-
 	private SocialActivitySettingService _socialActivitySettingService;
+
+	@Reference
+	private SocialConfiguration _socialConfiguration;
 
 }

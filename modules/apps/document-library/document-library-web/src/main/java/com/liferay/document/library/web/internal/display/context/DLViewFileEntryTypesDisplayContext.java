@@ -15,10 +15,12 @@
 package com.liferay.document.library.web.internal.display.context;
 
 import com.liferay.document.library.kernel.model.DLFileEntryType;
+import com.liferay.document.library.kernel.model.DLFileEntryTypeConstants;
 import com.liferay.document.library.kernel.service.DLFileEntryTypeServiceUtil;
 import com.liferay.document.library.web.internal.security.permission.resource.DLPermission;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.dao.search.DisplayTerms;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -27,6 +29,7 @@ import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import javax.portlet.PortletURL;
@@ -100,27 +103,26 @@ public class DLViewFileEntryTypesDisplayContext {
 			getPortletURL(), null,
 			LanguageUtil.get(_httpServletRequest, "there-are-no-results"));
 
-		DisplayTerms searchTerms = searchContainer.getSearchTerms();
+		DisplayTerms displayTerms = searchContainer.getSearchTerms();
 
 		boolean includeBasicFileEntryType = ParamUtil.getBoolean(
 			_renderRequest, "includeBasicFileEntryType");
 
-		int total = DLFileEntryTypeServiceUtil.searchCount(
-			themeDisplay.getCompanyId(),
-			PortalUtil.getCurrentAndAncestorSiteGroupIds(
-				themeDisplay.getScopeGroupId()),
-			searchTerms.getKeywords(), includeBasicFileEntryType);
-
-		searchContainer.setTotal(total);
-
-		searchContainer.setResults(
-			DLFileEntryTypeServiceUtil.search(
+		searchContainer.setResultsAndTotal(
+			() -> DLFileEntryTypeServiceUtil.search(
 				themeDisplay.getCompanyId(),
 				PortalUtil.getCurrentAndAncestorSiteGroupIds(
 					themeDisplay.getScopeGroupId()),
-				searchTerms.getKeywords(), includeBasicFileEntryType,
+				displayTerms.getKeywords(), includeBasicFileEntryType,
+				DLFileEntryTypeConstants.FILE_ENTRY_TYPE_SCOPE_DEFAULT,
 				searchContainer.getStart(), searchContainer.getEnd(),
-				searchContainer.getOrderByComparator()));
+				searchContainer.getOrderByComparator()),
+			DLFileEntryTypeServiceUtil.searchCount(
+				themeDisplay.getCompanyId(),
+				PortalUtil.getCurrentAndAncestorSiteGroupIds(
+					themeDisplay.getScopeGroupId()),
+				displayTerms.getKeywords(), includeBasicFileEntryType,
+				DLFileEntryTypeConstants.FILE_ENTRY_TYPE_SCOPE_DEFAULT));
 
 		_searchContainer = searchContainer;
 
@@ -133,12 +135,26 @@ public class DLViewFileEntryTypesDisplayContext {
 		return searchContainer.getTotal();
 	}
 
+	public boolean isSearchDisabled() throws PortalException {
+		SearchContainer<DLFileEntryType> searchContainer = getSearchContainer();
+
+		DisplayTerms displayTerms = searchContainer.getSearchTerms();
+
+		if ((searchContainer.getTotal() == 0) &&
+			Validator.isNull(displayTerms.getKeywords())) {
+
+			return true;
+		}
+
+		return false;
+	}
+
 	protected PortletURL getPortletURL() {
-		PortletURL portletURL = renderResponse.createRenderURL();
-
-		portletURL.setParameter("navigation", "file_entry_types");
-
-		return portletURL;
+		return PortletURLBuilder.createRenderURL(
+			renderResponse
+		).setNavigation(
+			"file_entry_types"
+		).buildPortletURL();
 	}
 
 	protected final RenderResponse renderResponse;

@@ -46,7 +46,7 @@ public class ActionExecutorManagerImpl implements ActionExecutorManager {
 			KaleoAction kaleoAction, ExecutionContext executionContext)
 		throws PortalException {
 
-		String actionExecutorKey = getActionExecutorKey(
+		String actionExecutorKey = _getActionExecutorKey(
 			kaleoAction.getScriptLanguage(),
 			StringUtil.trim(kaleoAction.getScript()));
 
@@ -58,19 +58,6 @@ public class ActionExecutorManagerImpl implements ActionExecutorManager {
 		}
 
 		actionExecutor.execute(kaleoAction, executionContext);
-	}
-
-	protected String getActionExecutorKey(
-			String language, String actionExecutorClassName)
-		throws KaleoDefinitionValidationException {
-
-		ScriptLanguage scriptLanguage = ScriptLanguage.parse(language);
-
-		if (scriptLanguage.equals(ScriptLanguage.JAVA)) {
-			return language + StringPool.COLON + actionExecutorClassName;
-		}
-
-		return language;
 	}
 
 	@Reference(
@@ -90,10 +77,10 @@ public class ActionExecutorManagerImpl implements ActionExecutorManager {
 			value, new String[] {String.valueOf(value)});
 
 		for (String language : languages) {
-			String actionExecutorKey = getActionExecutorKey(
-				language, ClassUtil.getClassName(actionExecutor));
-
-			_actionExecutors.put(actionExecutorKey, actionExecutor);
+			_actionExecutors.put(
+				_getActionExecutorKey(
+					language, ClassUtil.getClassName(actionExecutor)),
+				actionExecutor);
 		}
 	}
 
@@ -109,11 +96,23 @@ public class ActionExecutorManagerImpl implements ActionExecutorManager {
 			value, new String[] {String.valueOf(value)});
 
 		for (String language : languages) {
-			String actionExecutorKey = getActionExecutorKey(
-				language, ClassUtil.getClassName(actionExecutor));
-
-			_actionExecutors.remove(actionExecutorKey);
+			_actionExecutors.remove(
+				_getActionExecutorKey(
+					language, ClassUtil.getClassName(actionExecutor)));
 		}
+	}
+
+	private String _getActionExecutorKey(
+			String language, String actionExecutorClassName)
+		throws KaleoDefinitionValidationException {
+
+		ScriptLanguage scriptLanguage = ScriptLanguage.parse(language);
+
+		if (scriptLanguage.equals(ScriptLanguage.JAVA)) {
+			return language + StringPool.COLON + actionExecutorClassName;
+		}
+
+		return language;
 	}
 
 	private final Map<String, ActionExecutor> _actionExecutors =

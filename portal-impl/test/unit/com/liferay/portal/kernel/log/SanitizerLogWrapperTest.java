@@ -18,27 +18,32 @@ import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.log.Log4jLogFactoryImpl;
-import com.liferay.portal.test.log.CaptureAppender;
-import com.liferay.portal.test.log.Log4JLoggerTestUtil;
+import com.liferay.portal.test.log.LogCapture;
+import com.liferay.portal.test.log.LogEntry;
+import com.liferay.portal.test.log.LoggerTestUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.List;
 import java.util.Properties;
-
-import org.apache.log4j.Level;
-import org.apache.log4j.spi.LoggingEvent;
-import org.apache.log4j.spi.ThrowableInformation;
 
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
  * @author Tomas Polesovsky
  */
 public class SanitizerLogWrapperTest {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@BeforeClass
 	public static void setUpClass() {
@@ -102,8 +107,8 @@ public class SanitizerLogWrapperTest {
 	public void setUp() {
 		String loggerName = "test.logger";
 
-		_captureAppender = Log4JLoggerTestUtil.configureLog4JLogger(
-			loggerName, Level.ALL);
+		_logCapture = LoggerTestUtil.configureLog4JLogger(
+			loggerName, LoggerTestUtil.ALL);
 
 		LogFactory logFactory = LogFactoryUtil.getLogFactory();
 
@@ -112,7 +117,7 @@ public class SanitizerLogWrapperTest {
 
 	@After
 	public void tearDown() {
-		_captureAppender.close();
+		_logCapture.close();
 	}
 
 	@Test
@@ -143,13 +148,13 @@ public class SanitizerLogWrapperTest {
 		log.warn(_message);
 		log.warn(_message, exception);
 
-		List<LoggingEvent> loggingEvents = _captureAppender.getLoggingEvents();
+		List<LogEntry> logEntries = _logCapture.getLogEntries();
 
-		Assert.assertNotNull(loggingEvents);
-		Assert.assertEquals(loggingEvents.toString(), 12, loggingEvents.size());
+		Assert.assertNotNull(logEntries);
+		Assert.assertEquals(logEntries.toString(), 12, logEntries.size());
 
-		for (LoggingEvent loggingEvent : loggingEvents) {
-			String message = loggingEvent.getRenderedMessage();
+		for (LogEntry logEntry : logEntries) {
+			String message = logEntry.getMessage();
 
 			Assert.assertTrue(
 				message.startsWith(SanitizerLogWrapper.CRLF_WARNING));
@@ -167,7 +172,7 @@ public class SanitizerLogWrapperTest {
 				expectedMessageWithCRLFChars, messageWithCRLFChars);
 		}
 
-		loggingEvents.clear();
+		logEntries.clear();
 
 		_log.debug(_message);
 		_log.debug(_message, exception);
@@ -182,11 +187,11 @@ public class SanitizerLogWrapperTest {
 		_log.warn(_message);
 		_log.warn(_message, exception);
 
-		Assert.assertNotNull(loggingEvents);
-		Assert.assertEquals(loggingEvents.toString(), 12, loggingEvents.size());
+		Assert.assertNotNull(logEntries);
+		Assert.assertEquals(logEntries.toString(), 12, logEntries.size());
 
-		for (LoggingEvent loggingEvent : loggingEvents) {
-			String message = loggingEvent.getRenderedMessage();
+		for (LogEntry logEntry : logEntries) {
+			String message = logEntry.getMessage();
 
 			char[] messageChars = message.toCharArray();
 
@@ -203,37 +208,37 @@ public class SanitizerLogWrapperTest {
 			"java.lang.Exception: java.lang.RuntimeException: " +
 				"java.lang.NullPointerException: ";
 
-		_log.debug(exception, exception);
+		_log.debug(exception);
 		_log.debug(null, exception);
-		_log.error(exception, exception);
+		_log.error(exception);
 		_log.error(null, exception);
-		_log.fatal(exception, exception);
+		_log.fatal(exception);
 		_log.fatal(null, exception);
-		_log.info(exception, exception);
+		_log.info(exception);
 		_log.info(null, exception);
-		_log.trace(exception, exception);
+		_log.trace(exception);
 		_log.trace(null, exception);
-		_log.warn(exception, exception);
+		_log.warn(exception);
 		_log.warn(null, exception);
 
-		List<LoggingEvent> loggingEvents = _captureAppender.getLoggingEvents();
+		List<LogEntry> logEntries = _logCapture.getLogEntries();
 
-		Assert.assertNotNull(loggingEvents);
-		Assert.assertEquals(loggingEvents.toString(), 12, loggingEvents.size());
+		Assert.assertNotNull(logEntries);
+		Assert.assertEquals(logEntries.toString(), 12, logEntries.size());
 
-		for (LoggingEvent loggingEvent : loggingEvents) {
-			ThrowableInformation throwableInformation =
-				loggingEvent.getThrowableInformation();
+		for (LogEntry logEntry : logEntries) {
+			Throwable throwable = logEntry.getThrowable();
 
-			String line = throwableInformation.getThrowableStrRep()[0];
+			String throwableMessage = throwable.getMessage();
 
-			Assert.assertTrue(line.startsWith(exceptionPrefix));
+			Assert.assertTrue(throwableMessage.startsWith(exceptionPrefix));
 
 			char[] messageChars =
-				new char[line.length() - exceptionPrefix.length()];
+				new char[throwableMessage.length() - exceptionPrefix.length()];
 
-			line.getChars(
-				exceptionPrefix.length(), line.length(), messageChars, 0);
+			throwableMessage.getChars(
+				exceptionPrefix.length(), throwableMessage.length(),
+				messageChars, 0);
 
 			Assert.assertArrayEquals(_messageChars, messageChars);
 		}
@@ -256,13 +261,13 @@ public class SanitizerLogWrapperTest {
 		_log.warn(_message);
 		_log.warn(_message, exception);
 
-		List<LoggingEvent> loggingEvents = _captureAppender.getLoggingEvents();
+		List<LogEntry> logEntries = _logCapture.getLogEntries();
 
-		Assert.assertNotNull(loggingEvents);
-		Assert.assertEquals(loggingEvents.toString(), 12, loggingEvents.size());
+		Assert.assertNotNull(logEntries);
+		Assert.assertEquals(logEntries.toString(), 12, logEntries.size());
 
-		for (LoggingEvent loggingEvent : loggingEvents) {
-			String message = loggingEvent.getRenderedMessage();
+		for (LogEntry logEntry : logEntries) {
+			String message = logEntry.getMessage();
 
 			char[] messageChars = message.toCharArray();
 
@@ -276,6 +281,6 @@ public class SanitizerLogWrapperTest {
 	private static char[] _messageChars;
 	private static Properties _systemProperties;
 
-	private CaptureAppender _captureAppender;
+	private LogCapture _logCapture;
 
 }

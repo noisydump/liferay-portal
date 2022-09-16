@@ -14,7 +14,6 @@
 
 package com.liferay.gradle.plugins.source.formatter;
 
-import com.liferay.gradle.util.FileUtil;
 import com.liferay.gradle.util.GradleUtil;
 import com.liferay.source.formatter.SourceFormatterArgs;
 
@@ -56,6 +55,14 @@ public class FormatSourceTask extends JavaExec {
 
 	public String getBaseDirName() {
 		return _sourceFormatterArgs.getBaseDirName();
+	}
+
+	public List<String> getCheckCategoryNames() {
+		return _sourceFormatterArgs.getCheckCategoryNames();
+	}
+
+	public List<String> getCheckNames() {
+		return _sourceFormatterArgs.getCheckNames();
 	}
 
 	public List<String> getFileExtensions() {
@@ -126,14 +133,6 @@ public class FormatSourceTask extends JavaExec {
 		return _sourceFormatterArgs.isShowDebugInformation();
 	}
 
-	public boolean isShowDocumentation() {
-		return _sourceFormatterArgs.isShowDocumentation();
-	}
-
-	public boolean isShowStatusUpdates() {
-		return _sourceFormatterArgs.isShowStatusUpdates();
-	}
-
 	public boolean isValidateCommitMessages() {
 		return _sourceFormatterArgs.isValidateCommitMessages();
 	}
@@ -144,6 +143,24 @@ public class FormatSourceTask extends JavaExec {
 
 	public void setBaseDirName(String baseDirName) {
 		_sourceFormatterArgs.setBaseDirName(baseDirName);
+	}
+
+	public void setCheckCategoryNames(Iterable<String> checkCategoryNames) {
+		_sourceFormatterArgs.setCheckCategoryNames(
+			CollectionUtils.toList(checkCategoryNames));
+	}
+
+	public void setCheckCategoryNames(String... checkCategoryNames) {
+		_sourceFormatterArgs.setCheckCategoryNames(
+			CollectionUtils.toList(checkCategoryNames));
+	}
+
+	public void setCheckNames(Iterable<String> checkNames) {
+		_sourceFormatterArgs.setCheckNames(CollectionUtils.toList(checkNames));
+	}
+
+	public void setCheckNames(String... checkNames) {
+		_sourceFormatterArgs.setCheckNames(CollectionUtils.toList(checkNames));
 	}
 
 	public void setFailOnAutoFix(boolean failOnAutoFix) {
@@ -209,14 +226,6 @@ public class FormatSourceTask extends JavaExec {
 		_sourceFormatterArgs.setShowDebugInformation(showDebugInformation);
 	}
 
-	public void setShowDocumentation(boolean showDocumentation) {
-		_sourceFormatterArgs.setShowDocumentation(showDocumentation);
-	}
-
-	public void setShowStatusUpdates(boolean showStatusUpdates) {
-		_sourceFormatterArgs.setShowStatusUpdates(showStatusUpdates);
-	}
-
 	public void setValidateCommitMessages(boolean validateCommitMessages) {
 		_sourceFormatterArgs.setValidateCommitMessages(validateCommitMessages);
 	}
@@ -232,9 +241,12 @@ public class FormatSourceTask extends JavaExec {
 		args.add("max.line.length=" + getMaxLineLength());
 		args.add("processor.thread.count=" + getProcessorThreadCount());
 		args.add("show.debug.information=" + isShowDebugInformation());
-		args.add("show.documentation=" + isShowDocumentation());
-		args.add("show.status.updates=" + isShowStatusUpdates());
 		args.add("source.auto.fix=" + isAutoFix());
+		args.add(
+			"source.check.category.names=" +
+				CollectionUtils.join(",", getCheckCategoryNames()));
+		args.add(
+			"source.check.names=" + CollectionUtils.join(",", getCheckNames()));
 		args.add("source.fail.on.auto.fix=" + isFailOnAutoFix());
 		args.add("source.fail.on.has.warning=" + isFailOnHasWarning());
 		args.add(
@@ -246,18 +258,16 @@ public class FormatSourceTask extends JavaExec {
 		FileCollection fileCollection = getFiles();
 
 		if (fileCollection.isEmpty()) {
-			args.add(
-				"source.base.dir=" +
-					_relativizeDir(getBaseDir(), getWorkingDir()));
+			args.add("source.base.dir=" + _normalize(getBaseDir()));
 		}
 		else {
-			args.add("source.files=" + _merge(fileCollection, getWorkingDir()));
+			args.add("source.files=" + _merge(fileCollection));
 		}
 
 		return args;
 	}
 
-	private String _merge(Iterable<File> files, File startFile) {
+	private String _merge(Iterable<File> files) {
 		StringBuilder sb = new StringBuilder();
 
 		int i = 0;
@@ -267,7 +277,7 @@ public class FormatSourceTask extends JavaExec {
 				sb.append(',');
 			}
 
-			sb.append(FileUtil.relativize(file, startFile));
+			sb.append(_normalize(file));
 
 			i++;
 		}
@@ -275,20 +285,18 @@ public class FormatSourceTask extends JavaExec {
 		return sb.toString();
 	}
 
-	private String _relativizeDir(File dir, File startDir) {
-		String relativePath = FileUtil.relativize(dir, startDir);
+	private String _normalize(File file) {
+		String pathString = String.valueOf(file.toPath());
 
-		if (!relativePath.isEmpty()) {
-			if (File.separatorChar != '/') {
-				relativePath = relativePath.replace(File.separatorChar, '/');
-			}
-
-			if (relativePath.charAt(relativePath.length() - 1) != '/') {
-				relativePath += '/';
-			}
+		if (File.separatorChar != '/') {
+			pathString = pathString.replace(File.separatorChar, '/');
 		}
 
-		return relativePath;
+		if (pathString.charAt(pathString.length() - 1) != '/') {
+			pathString += '/';
+		}
+
+		return pathString;
 	}
 
 	private final SourceFormatterArgs _sourceFormatterArgs =

@@ -12,37 +12,47 @@
  * details.
  */
 
+import {useIsMounted} from '@liferay/frontend-js-react-web';
 import classNames from 'classnames';
-import {useIsMounted} from 'frontend-js-react-web';
 import PropTypes from 'prop-types';
 import React, {useCallback, useEffect, useState} from 'react';
 
-import setFragmentEditables from '../../actions/setFragmentEditables';
-import selectCanConfigureWidgets from '../../selectors/selectCanConfigureWidgets';
-import selectLanguageId from '../../selectors/selectLanguageId';
-import selectSegmentsExperienceId from '../../selectors/selectSegmentsExperienceId';
-import {useDispatch, useSelector, useSelectorCallback} from '../../store/index';
-import {getFrontendTokenValue} from '../../utils/getFrontendTokenValue';
-import {getResponsiveConfig} from '../../utils/getResponsiveConfig';
-import loadBackgroundImage from '../../utils/loadBackgroundImage';
+import {useId} from '../../../core/hooks/useId';
+import {TEXT_EDITABLE_TYPES} from '../../config/constants/textEditableTypes';
 import {
 	useGetContent,
 	useGetFieldValue,
 	useToControlsId,
-} from '../CollectionItemContext';
-import {useGlobalContext} from '../GlobalContext';
+} from '../../contexts/CollectionItemContext';
+import {useIsProcessorEnabled} from '../../contexts/EditableProcessorContext';
+import {useGlobalContext} from '../../contexts/GlobalContext';
+import {
+	useDispatch,
+	useSelector,
+	useSelectorCallback,
+} from '../../contexts/StoreContext';
+import selectCanConfigureWidgets from '../../selectors/selectCanConfigureWidgets';
+import selectLanguageId from '../../selectors/selectLanguageId';
+import selectSegmentsExperienceId from '../../selectors/selectSegmentsExperienceId';
+import resolveEditableConfig from '../../utils/editable-value/resolveEditableConfig';
+import resolveEditableValue from '../../utils/editable-value/resolveEditableValue';
+import getLayoutDataItemCssClasses from '../../utils/getLayoutDataItemCssClasses';
+import getLayoutDataItemUniqueClassName from '../../utils/getLayoutDataItemUniqueClassName';
+import {getResponsiveConfig} from '../../utils/getResponsiveConfig';
+import hasInnerCommonStyles from '../../utils/hasInnerCustomStyles';
+import useBackgroundImageValue from '../../utils/useBackgroundImageValue';
 import UnsafeHTML from '../UnsafeHTML';
-import {useIsProcessorEnabled} from './EditableProcessorContext';
+import FragmentContentInteractionsFilter from './FragmentContentInteractionsFilter';
+import FragmentContentProcessor from './FragmentContentProcessor';
 import getAllEditables from './getAllEditables';
-import resolveEditableValue from './resolveEditableValue';
 
 const FragmentContent = ({
 	className,
+	computeEditables,
 	elementRef,
 	fragmentEntryLinkId,
 	getPortals,
 	item,
-	withinTopper = false,
 }) => {
 	const dispatch = useDispatch();
 	const isMounted = useIsMounted();
@@ -53,6 +63,8 @@ const FragmentContent = ({
 
 	const canConfigureWidgets = useSelector(selectCanConfigureWidgets);
 
+	const [editables, setEditables] = useState([]);
+
 	/**
 	 * Updates editables array for the rendered fragment.
 	 * @param {HTMLElement} [nextFragmentElement] Fragment element
@@ -61,23 +73,28 @@ const FragmentContent = ({
 	 */
 	const onRender = useCallback(
 		(fragmentElement) => {
-			let updatedEditableValues = [];
-
-			if (isMounted()) {
-				updatedEditableValues = getAllEditables(fragmentElement);
+			if (!computeEditables) {
+				return;
 			}
 
-			dispatch(
-				setFragmentEditables(
-					fragmentEntryLinkId,
-					toControlsId(item.itemId),
-					updatedEditableValues
-				)
-			);
+			let nextEditables = [];
 
-			return updatedEditableValues;
+			if (isMounted()) {
+				nextEditables = getAllEditables(fragmentElement).map(
+					(editable) => ({
+						...editable,
+						fragmentEntryLinkId,
+						itemId: `${fragmentEntryLinkId}-${editable.editableId}`,
+						parentId: item.itemId,
+					})
+				);
+			}
+
+			setEditables(nextEditables);
+
+			return nextEditables;
 		},
-		[dispatch, fragmentEntryLinkId, isMounted, item, toControlsId]
+		[isMounted, fragmentEntryLinkId, item, computeEditables]
 	);
 
 	const fragmentEntryLink = useSelectorCallback(
@@ -105,11 +122,17 @@ const FragmentContent = ({
 
 	const fragmentEntryLinkError = fragmentEntryLink?.error;
 
+	const cssClasses = getLayoutDataItemCssClasses(item);
+
 	useEffect(() => {
 		if (fragmentEntryLinkError) {
 			throw new Error(fragmentEntryLinkError);
 		}
 	}, [fragmentEntryLinkError]);
+
+	const isBeingEdited = editables.some((editable) =>
+		isProcessorEnabled(toControlsId(editable.itemId))
+	);
 
 	/**
 	 * fragmentElement keeps a copy of the fragment real HTML,
@@ -123,18 +146,38 @@ const FragmentContent = ({
 	useEffect(() => {
 		let fragmentElement = document.createElement('div');
 
-		if (!isProcessorEnabled()) {
+		if (!isBeingEdited) {
 			fragmentElement.innerHTML = defaultContent;
 
+			if (hasInnerCommonStyles(fragmentEntryLink)) {
+				const stylesElement = fragmentElement.querySelector(
+					'[data-lfr-styles]'
+				);
+
+				if (stylesElement) {
+					stylesElement.className = `${stylesElement.className} ${cssClasses}`;
+				}
+			}
+
 			Promise.all(
-				getAllEditables(fragmentElement).map((editable) =>
-					resolveEditableValue(
-						editableValues,
-						editable.editableId,
-						editable.editableValueNamespace,
-						languageId,
-						getFieldValue
-					).then(([value, editableConfig]) => {
+				getAllEditables(fragmentElement).map((editable) => {
+					const editableValue =
+						editableValues[editable.editableValueNamespace][
+							editable.editableId
+						];
+
+					return Promise.all([
+						resolveEditableValue(
+							editableValue,
+							languageId,
+							getFieldValue
+						),
+						resolveEditableConfig(
+							editableValue?.config || {},
+							languageId,
+							getFieldValue
+						),
+					]).then(([value, editableConfig]) => {
 						editable.processor.render(
 							editable.element,
 							value,
@@ -143,8 +186,15 @@ const FragmentContent = ({
 						);
 
 						editable.element.classList.add('page-editor__editable');
-					})
-				)
+
+						if (TEXT_EDITABLE_TYPES.has(editable.type)) {
+							editable.element.setAttribute(
+								'data-tooltip-floating',
+								true
+							);
+						}
+					});
+				})
 			).then(() => {
 				if (isMounted() && fragmentElement) {
 					setContent(fragmentElement.innerHTML);
@@ -162,10 +212,13 @@ const FragmentContent = ({
 		fragmentEntryLink,
 		fragmentEntryLinkId,
 		getFieldValue,
+		isBeingEdited,
 		isMounted,
 		isProcessorEnabled,
 		languageId,
 		segmentsExperienceId,
+		toControlsId,
+		cssClasses,
 	]);
 
 	const responsiveConfig = getResponsiveConfig(
@@ -173,101 +226,69 @@ const FragmentContent = ({
 		selectedViewportSize
 	);
 
-	const {
-		backgroundColor,
+	const {backgroundImage} = responsiveConfig.styles;
+
+	const elementId = useId();
+	const backgroundImageValue = useBackgroundImageValue(
+		elementId,
 		backgroundImage,
-		borderColor,
-		borderRadius,
-		borderWidth,
-		fontFamily,
-		fontSize,
-		fontWeight,
-		height,
-		marginBottom,
-		marginLeft,
-		marginRight,
-		marginTop,
-		maxHeight,
-		maxWidth,
-		minHeight,
-		minWidth,
-		opacity,
-		overflow,
-		paddingBottom,
-		paddingLeft,
-		paddingRight,
-		paddingTop,
-		shadow,
-		textAlign,
-		textColor,
-		width,
-	} = responsiveConfig.styles;
-
-	const [backgroundImageValue, setBackgroundImageValue] = useState('');
-
-	useEffect(() => {
-		loadBackgroundImage(backgroundImage).then(setBackgroundImageValue);
-	}, [backgroundImage]);
+		getFieldValue
+	);
 
 	const style = {};
 
-	style.backgroundColor = getFrontendTokenValue(backgroundColor);
-	style.border = `solid ${borderWidth}px`;
-	style.borderColor = getFrontendTokenValue(borderColor);
-	style.borderRadius = getFrontendTokenValue(borderRadius);
-	style.color = getFrontendTokenValue(textColor);
-	style.fontFamily = getFrontendTokenValue(fontFamily);
-	style.fontSize = getFrontendTokenValue(fontSize);
-	style.fontWeight = getFrontendTokenValue(fontWeight);
-	style.height = height;
-	style.maxHeight = maxHeight;
-	style.minHeight = minHeight;
-	style.opacity = opacity ? opacity / 100 : null;
-	style.overflow = overflow;
+	if (backgroundImageValue.url) {
+		style[
+			`--lfr-background-image-${item.itemId}`
+		] = `url(${backgroundImageValue.url})`;
 
-	if (!withinTopper) {
-		style.boxShadow = getFrontendTokenValue(shadow);
-		style.maxWidth = maxWidth;
-		style.minWidth = minWidth;
-		style.width = width;
-	}
-
-	if (backgroundImageValue) {
-		style.backgroundImage = `url(${backgroundImageValue})`;
-		style.backgroundPosition = '50% 50%';
-		style.backgroundRepeat = 'no-repeat';
-		style.backgroundSize = 'cover';
+		if (backgroundImage?.fileEntryId) {
+			style['--background-image-file-entry-id'] =
+				backgroundImage.fileEntryId;
+		}
 	}
 
 	return (
-		<UnsafeHTML
-			className={classNames(
-				className,
-				`mb-${marginBottom || 0}`,
-				`mt-${marginTop || 0}`,
-				`pb-${paddingBottom || 0}`,
-				`pl-${paddingLeft || 0}`,
-				`pr-${paddingRight || 0}`,
-				`pt-${paddingTop || 0}`,
-				'page-editor__fragment-content',
-				{
-					'page-editor__fragment-content--portlet-topper-hidden': !canConfigureWidgets,
-					[`ml-${marginLeft || 0}`]: !withinTopper,
-					[`mr-${marginRight || 0}`]: !withinTopper,
-					[textAlign
-						? textAlign.startsWith('text-')
-							? textAlign
-							: `text-${textAlign}`
-						: '']: textAlign,
-				}
-			)}
-			contentRef={elementRef}
-			getPortals={getPortals}
-			globalContext={globalContext}
-			markup={content}
-			onRender={withinTopper ? onRender : () => {}}
-			style={style}
-		/>
+		<>
+			<FragmentContentInteractionsFilter
+				editables={editables}
+				fragmentEntryLinkId={fragmentEntryLinkId}
+				itemId={item.itemId}
+			>
+				<UnsafeHTML
+					className={classNames(
+						className,
+						`page-editor__fragment-content ${fragmentEntryLink?.cssClass}`,
+						{
+							[getLayoutDataItemCssClasses(
+								item
+							)]: !hasInnerCommonStyles(fragmentEntryLink),
+							[getLayoutDataItemUniqueClassName(
+								item.itemId
+							)]: !hasInnerCommonStyles(fragmentEntryLink),
+							'page-editor__fragment-content--portlet-topper-hidden': !canConfigureWidgets,
+						}
+					)}
+					contentRef={elementRef}
+					data={{fragmentEntryLinkId}}
+					getPortals={getPortals}
+					globalContext={globalContext}
+					id={elementId}
+					markup={content}
+					onRender={onRender}
+					style={style}
+				/>
+
+				{backgroundImageValue.mediaQueries ? (
+					<style>{backgroundImageValue.mediaQueries}</style>
+				) : null}
+			</FragmentContentInteractionsFilter>
+
+			<FragmentContentProcessor
+				editables={editables}
+				fragmentEntryLinkId={fragmentEntryLinkId}
+			/>
+		</>
 	);
 };
 
@@ -276,7 +297,6 @@ FragmentContent.propTypes = {
 	fragmentEntryLinkId: PropTypes.string.isRequired,
 	getPortals: PropTypes.func.isRequired,
 	item: PropTypes.object.isRequired,
-	withinTopper: PropTypes.bool,
 };
 
 export default React.memo(FragmentContent);

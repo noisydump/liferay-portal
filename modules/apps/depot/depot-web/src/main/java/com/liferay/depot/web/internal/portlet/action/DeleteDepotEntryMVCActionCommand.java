@@ -14,10 +14,17 @@
 
 package com.liferay.depot.web.internal.portlet.action;
 
+import com.liferay.depot.exception.DepotEntryStagedException;
 import com.liferay.depot.service.DepotEntryService;
 import com.liferay.depot.web.internal.constants.DepotPortletKeys;
+import com.liferay.document.library.kernel.exception.RequiredFileEntryTypeException;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
+import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.ParamUtil;
 
 import javax.portlet.ActionRequest;
@@ -43,6 +50,30 @@ public class DeleteDepotEntryMVCActionCommand extends BaseMVCActionCommand {
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
 
+		try {
+			_deleteDepotEntry(actionRequest);
+		}
+		catch (DepotEntryStagedException depotEntryStagedException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(depotEntryStagedException);
+			}
+
+			SessionErrors.add(actionRequest, DepotEntryStagedException.class);
+		}
+		catch (SystemException systemException) {
+			if (_isRequiredFileEntryTypeException(systemException)) {
+				SessionErrors.add(
+					actionRequest, RequiredFileEntryTypeException.class);
+			}
+			else {
+				throw systemException;
+			}
+		}
+	}
+
+	private void _deleteDepotEntry(ActionRequest actionRequest)
+		throws PortalException {
+
 		long depotEntryId = ParamUtil.getLong(actionRequest, "depotEntryId");
 
 		if (depotEntryId > 0) {
@@ -57,6 +88,25 @@ public class DeleteDepotEntryMVCActionCommand extends BaseMVCActionCommand {
 			}
 		}
 	}
+
+	private boolean _isRequiredFileEntryTypeException(Exception exception) {
+		Throwable throwable = exception.getCause();
+
+		while ((throwable != null) &&
+			   !(throwable instanceof RequiredFileEntryTypeException)) {
+
+			throwable = throwable.getCause();
+		}
+
+		if (throwable == null) {
+			return false;
+		}
+
+		return true;
+	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		DeleteDepotEntryMVCActionCommand.class);
 
 	@Reference
 	private DepotEntryService _depotEntryService;

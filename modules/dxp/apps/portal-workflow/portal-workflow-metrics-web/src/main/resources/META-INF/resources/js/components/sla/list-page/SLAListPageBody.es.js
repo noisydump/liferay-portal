@@ -9,14 +9,15 @@
  * distribution rights of the Software.
  */
 
+import ClayLayout from '@clayui/layout';
 import React from 'react';
 
 import ContentView from '../../../shared/components/content-view/ContentView.es';
 import ReloadButton from '../../../shared/components/list/ReloadButton.es';
 import PaginationBar from '../../../shared/components/pagination-bar/PaginationBar.es';
-import {Table} from './SLAListPageTable.es';
+import Table from './SLAListPageTable.es';
 
-const Body = ({items, page, pageSize, totalCount}) => {
+export default function Body({items, page, pageSize, totalCount}) {
 	const statesProps = {
 		emptyProps: {
 			hideAnimation: false,
@@ -35,20 +36,20 @@ const Body = ({items, page, pageSize, totalCount}) => {
 	};
 
 	return (
-		<ContentView {...statesProps}>
-			{totalCount > 0 && (
-				<>
-					<Table items={items} />
+		<ClayLayout.ContainerFluid className="mt-4">
+			<ContentView {...statesProps}>
+				{totalCount > 0 && (
+					<>
+						<Table items={items} />
 
-					<PaginationBar
-						page={page}
-						pageSize={pageSize}
-						totalCount={totalCount}
-					/>
-				</>
-			)}
-		</ContentView>
+						<PaginationBar
+							page={page}
+							pageSize={pageSize}
+							totalCount={totalCount}
+						/>
+					</>
+				)}
+			</ContentView>
+		</ClayLayout.ContainerFluid>
 	);
-};
-
-export {Body};
+}

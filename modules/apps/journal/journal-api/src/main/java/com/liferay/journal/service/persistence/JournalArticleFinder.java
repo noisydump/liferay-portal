@@ -27,8 +27,8 @@ public interface JournalArticleFinder {
 		long companyId, long groupId, java.util.List<Long> folderIds,
 		long classNameId, String keywords, Double version,
 		String ddmStructureKey, String ddmTemplateKey,
-		java.util.Date displayDateGT, java.util.Date displayDateLT, int status,
-		java.util.Date reviewDate);
+		java.util.Date displayDateGT, java.util.Date displayDateLT,
+		java.util.Date reviewDate, int status);
 
 	public int countByG_F(
 		long groupId, java.util.List<Long> folderIds,
@@ -84,8 +84,8 @@ public interface JournalArticleFinder {
 		long companyId, long groupId, java.util.List<Long> folderIds,
 		long classNameId, String keywords, Double version,
 		String ddmStructureKey, String ddmTemplateKey,
-		java.util.Date displayDateGT, java.util.Date displayDateLT, int status,
-		java.util.Date reviewDate);
+		java.util.Date displayDateGT, java.util.Date displayDateLT,
+		java.util.Date reviewDate, int status);
 
 	public int filterCountByG_F(
 		long groupId, java.util.List<Long> folderIds,
@@ -143,7 +143,7 @@ public interface JournalArticleFinder {
 			long classNameId, String keywords, Double version,
 			String ddmStructureKey, String ddmTemplateKey,
 			java.util.Date displayDateGT, java.util.Date displayDateLT,
-			int status, java.util.Date reviewDate, int start, int end,
+			java.util.Date reviewDate, int status, int start, int end,
 			com.liferay.portal.kernel.util.OrderByComparator
 				<com.liferay.journal.model.JournalArticle> orderByComparator);
 
@@ -250,7 +250,7 @@ public interface JournalArticleFinder {
 			long classNameId, String keywords, Double version,
 			String ddmStructureKey, String ddmTemplateKey,
 			java.util.Date displayDateGT, java.util.Date displayDateLT,
-			int status, java.util.Date reviewDate, int start, int end,
+			java.util.Date reviewDate, int status, int start, int end,
 			com.liferay.portal.kernel.util.OrderByComparator
 				<com.liferay.journal.model.JournalArticle> orderByComparator);
 

@@ -14,6 +14,7 @@
 
 package com.liferay.product.navigation.simulation.device.internal.application.list;
 
+import com.liferay.portal.kernel.frontend.source.map.FrontendSourceMapUtil;
 import com.liferay.portal.kernel.servlet.taglib.BaseDynamicInclude;
 import com.liferay.portal.kernel.servlet.taglib.DynamicInclude;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -40,7 +41,10 @@ public class SimulationDeviceDynamicInclude extends BaseDynamicInclude {
 
 		PrintWriter printWriter = httpServletResponse.getWriter();
 
-		printWriter.print(_TMPL_CONTENT);
+		printWriter.print(
+			"<script type=\"text/javascript\">" +
+				FrontendSourceMapUtil.stripJSSourceMapping(_TMPL_CONTENT) +
+					"</script>");
 	}
 
 	@Override
@@ -50,6 +54,6 @@ public class SimulationDeviceDynamicInclude extends BaseDynamicInclude {
 
 	private static final String _TMPL_CONTENT = StringUtil.read(
 		SimulationDeviceDynamicInclude.class,
-		"/META-INF/resources/simulation_device_dynamic_include.tmpl");
+		"/META-INF/resources/js/simulation_device_dynamic_include.js");
 
 }

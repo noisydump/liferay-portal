@@ -43,21 +43,22 @@ CPDefinition cpDefinition = cpDefinitionsDisplayContext.getCPDefinition();
 		var <portlet:namespace />defaultLanguageId = null;
 		var <portlet:namespace />product = {
 			active: true,
+			productStatus: <%= WorkflowConstants.STATUS_DRAFT %>,
 			productType: '<%= cpDefinition.getProductTypeName() %>',
 		};
 
 		Liferay.provide(
 			window,
 			'<portlet:namespace />apiSubmit',
-			function (form) {
+			(form) => {
 				var API_URL =
 					'/o/headless-commerce-admin-catalog/v1.0/products/<%= cpDefinition.getCProductId() %>/clone?catalogId=' +
 					<portlet:namespace />product.catalogId;
 
 				FormUtils.apiSubmit(form, API_URL)
-					.then(function (payload) {
+					.then((payload) => {
 						var headers = new Headers({
-							Accept: 'application/json',
+							'Accept': 'application/json',
 							'Content-Type': 'application/json',
 						});
 
@@ -72,36 +73,26 @@ CPDefinition cpDefinition = cpDefinitionsDisplayContext.getCPDefinition();
 							<portlet:namespace />defaultLanguageId
 						] = document.getElementById('<portlet:namespace />name').value;
 
-						Liferay.Util.fetch(
-							'/o/headless-commerce-admin-catalog/v1.0/products/' +
-								payload.productId,
-							{
-								body: JSON.stringify(formattedData),
-								headers: headers,
-								method: 'patch',
-							}
-						).then(function () {
-							var redirectURL = new Liferay.PortletURL.createURL(
-								'<%= editProductDefinitionURL %>'
-							);
+						var redirectURL = new Liferay.PortletURL.createURL(
+							'<%= editProductDefinitionURL %>'
+						);
 
-							redirectURL.setParameter('cpDefinitionId', payload.id);
-							redirectURL.setParameter(
-								'p_p_state',
-								'<%= LiferayWindowState.MAXIMIZED.toString() %>'
-							);
+						redirectURL.setParameter('cpDefinitionId', payload.id);
+						redirectURL.setParameter(
+							'p_p_state',
+							'<%= LiferayWindowState.MAXIMIZED.toString() %>'
+						);
 
-							window.parent.Liferay.fire(events.CLOSE_MODAL, {
-								redirectURL: redirectURL.toString(),
-								successNotification: {
-									showSuccessNotification: true,
-									message:
-										'<liferay-ui:message key="your-request-completed-successfully" />',
-								},
-							});
+						window.parent.Liferay.fire(events.CLOSE_MODAL, {
+							redirectURL: redirectURL.toString(),
+							successNotification: {
+								showSuccessNotification: true,
+								message:
+									'<liferay-ui:message key="your-request-completed-successfully" />',
+							},
 						});
 					})
-					.catch(function () {
+					.catch(() => {
 						window.parent.Liferay.fire(events.IS_LOADING_MODAL, {
 							isLoading: false,
 						});

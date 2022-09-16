@@ -16,7 +16,7 @@ package com.liferay.portal.search.web.internal.search.bar.portlet;
 
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.search.web.internal.display.context.SearchScopePreference;
-import com.liferay.portal.search.web.internal.util.PortletPreferencesHelper;
+import com.liferay.portal.search.web.internal.helper.PortletPreferencesHelper;
 
 import java.util.Optional;
 
@@ -36,14 +36,14 @@ public class SearchBarPortletPreferencesImpl
 	}
 
 	@Override
-	public Optional<String> getDestination() {
+	public Optional<String> getDestinationOptional() {
 		return _portletPreferencesHelper.getString(
 			SearchBarPortletPreferences.PREFERENCE_KEY_DESTINATION);
 	}
 
 	@Override
 	public String getDestinationString() {
-		Optional<String> valueOptional = getDestination();
+		Optional<String> valueOptional = getDestinationOptional();
 
 		return valueOptional.orElse(StringPool.BLANK);
 	}
@@ -104,6 +104,13 @@ public class SearchBarPortletPreferencesImpl
 		return _portletPreferencesHelper.getBoolean(
 			SearchBarPortletPreferences.PREFERENCE_KEY_SHOW_STAGED_RESULTS,
 			false);
+	}
+
+	@Override
+	public boolean isSuggestionsEnabled() {
+		return _portletPreferencesHelper.getBoolean(
+			SearchBarPortletPreferences.PREFERENCE_KEY_SUGGESTIONS_ENABLED,
+			true);
 	}
 
 	@Override

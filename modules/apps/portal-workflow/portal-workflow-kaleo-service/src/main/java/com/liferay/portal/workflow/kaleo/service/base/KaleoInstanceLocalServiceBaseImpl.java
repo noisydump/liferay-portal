@@ -14,6 +14,7 @@
 
 package com.liferay.portal.workflow.kaleo.service.base;
 
+import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
@@ -28,45 +29,34 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
+import com.liferay.portal.kernel.service.change.tracking.CTService;
 import com.liferay.portal.kernel.service.persistence.BasePersistence;
+import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.workflow.kaleo.model.KaleoInstance;
 import com.liferay.portal.workflow.kaleo.service.KaleoInstanceLocalService;
-import com.liferay.portal.workflow.kaleo.service.persistence.KaleoActionPersistence;
-import com.liferay.portal.workflow.kaleo.service.persistence.KaleoConditionPersistence;
-import com.liferay.portal.workflow.kaleo.service.persistence.KaleoDefinitionPersistence;
-import com.liferay.portal.workflow.kaleo.service.persistence.KaleoDefinitionVersionPersistence;
+import com.liferay.portal.workflow.kaleo.service.KaleoInstanceLocalServiceUtil;
 import com.liferay.portal.workflow.kaleo.service.persistence.KaleoInstancePersistence;
-import com.liferay.portal.workflow.kaleo.service.persistence.KaleoInstanceTokenPersistence;
-import com.liferay.portal.workflow.kaleo.service.persistence.KaleoLogPersistence;
-import com.liferay.portal.workflow.kaleo.service.persistence.KaleoNodePersistence;
-import com.liferay.portal.workflow.kaleo.service.persistence.KaleoNotificationPersistence;
-import com.liferay.portal.workflow.kaleo.service.persistence.KaleoNotificationRecipientPersistence;
-import com.liferay.portal.workflow.kaleo.service.persistence.KaleoTaskAssignmentInstancePersistence;
-import com.liferay.portal.workflow.kaleo.service.persistence.KaleoTaskAssignmentPersistence;
-import com.liferay.portal.workflow.kaleo.service.persistence.KaleoTaskFormInstancePersistence;
-import com.liferay.portal.workflow.kaleo.service.persistence.KaleoTaskFormPersistence;
-import com.liferay.portal.workflow.kaleo.service.persistence.KaleoTaskInstanceTokenFinder;
-import com.liferay.portal.workflow.kaleo.service.persistence.KaleoTaskInstanceTokenPersistence;
-import com.liferay.portal.workflow.kaleo.service.persistence.KaleoTaskPersistence;
-import com.liferay.portal.workflow.kaleo.service.persistence.KaleoTimerInstanceTokenPersistence;
-import com.liferay.portal.workflow.kaleo.service.persistence.KaleoTimerPersistence;
-import com.liferay.portal.workflow.kaleo.service.persistence.KaleoTransitionPersistence;
 
 import java.io.Serializable;
+
+import java.lang.reflect.Field;
 
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -87,7 +77,7 @@ public abstract class KaleoInstanceLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>KaleoInstanceLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.workflow.kaleo.service.KaleoInstanceLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>KaleoInstanceLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>KaleoInstanceLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -158,6 +148,13 @@ public abstract class KaleoInstanceLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return kaleoInstancePersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -326,6 +323,11 @@ public abstract class KaleoInstanceLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement KaleoInstanceLocalServiceImpl#deleteKaleoInstance(KaleoInstance) to avoid orphaned data");
+		}
+
 		return kaleoInstanceLocalService.deleteKaleoInstance(
 			(KaleoInstance)persistedModel);
 	}
@@ -387,17 +389,24 @@ public abstract class KaleoInstanceLocalServiceBaseImpl
 		return kaleoInstancePersistence.update(kaleoInstance);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
 			KaleoInstanceLocalService.class, IdentifiableOSGiService.class,
-			PersistedModelLocalService.class
+			CTService.class, PersistedModelLocalService.class
 		};
 	}
 
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		kaleoInstanceLocalService = (KaleoInstanceLocalService)aopProxy;
+
+		_setLocalServiceUtilService(kaleoInstanceLocalService);
 	}
 
 	/**
@@ -410,8 +419,23 @@ public abstract class KaleoInstanceLocalServiceBaseImpl
 		return KaleoInstanceLocalService.class.getName();
 	}
 
-	protected Class<?> getModelClass() {
+	@Override
+	public CTPersistence<KaleoInstance> getCTPersistence() {
+		return kaleoInstancePersistence;
+	}
+
+	@Override
+	public Class<KaleoInstance> getModelClass() {
 		return KaleoInstance.class;
+	}
+
+	@Override
+	public <R, E extends Throwable> R updateWithUnsafeFunction(
+			UnsafeFunction<CTPersistence<KaleoInstance>, R, E>
+				updateUnsafeFunction)
+		throws E {
+
+		return updateUnsafeFunction.apply(kaleoInstancePersistence);
 	}
 
 	protected String getModelClassName() {
@@ -442,18 +466,21 @@ public abstract class KaleoInstanceLocalServiceBaseImpl
 		}
 	}
 
-	@Reference
-	protected KaleoActionPersistence kaleoActionPersistence;
+	private void _setLocalServiceUtilService(
+		KaleoInstanceLocalService kaleoInstanceLocalService) {
 
-	@Reference
-	protected KaleoConditionPersistence kaleoConditionPersistence;
+		try {
+			Field field = KaleoInstanceLocalServiceUtil.class.getDeclaredField(
+				"_service");
 
-	@Reference
-	protected KaleoDefinitionPersistence kaleoDefinitionPersistence;
+			field.setAccessible(true);
 
-	@Reference
-	protected KaleoDefinitionVersionPersistence
-		kaleoDefinitionVersionPersistence;
+			field.set(null, kaleoInstanceLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
 
 	protected KaleoInstanceLocalService kaleoInstanceLocalService;
 
@@ -461,68 +488,10 @@ public abstract class KaleoInstanceLocalServiceBaseImpl
 	protected KaleoInstancePersistence kaleoInstancePersistence;
 
 	@Reference
-	protected KaleoInstanceTokenPersistence kaleoInstanceTokenPersistence;
-
-	@Reference
-	protected KaleoLogPersistence kaleoLogPersistence;
-
-	@Reference
-	protected KaleoNodePersistence kaleoNodePersistence;
-
-	@Reference
-	protected KaleoNotificationPersistence kaleoNotificationPersistence;
-
-	@Reference
-	protected KaleoNotificationRecipientPersistence
-		kaleoNotificationRecipientPersistence;
-
-	@Reference
-	protected KaleoTaskPersistence kaleoTaskPersistence;
-
-	@Reference
-	protected KaleoTaskAssignmentPersistence kaleoTaskAssignmentPersistence;
-
-	@Reference
-	protected KaleoTaskAssignmentInstancePersistence
-		kaleoTaskAssignmentInstancePersistence;
-
-	@Reference
-	protected KaleoTaskFormPersistence kaleoTaskFormPersistence;
-
-	@Reference
-	protected KaleoTaskFormInstancePersistence kaleoTaskFormInstancePersistence;
-
-	@Reference
-	protected KaleoTaskInstanceTokenPersistence
-		kaleoTaskInstanceTokenPersistence;
-
-	@Reference
-	protected KaleoTaskInstanceTokenFinder kaleoTaskInstanceTokenFinder;
-
-	@Reference
-	protected KaleoTimerPersistence kaleoTimerPersistence;
-
-	@Reference
-	protected KaleoTimerInstanceTokenPersistence
-		kaleoTimerInstanceTokenPersistence;
-
-	@Reference
-	protected KaleoTransitionPersistence kaleoTransitionPersistence;
-
-	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@Reference
-	protected com.liferay.portal.kernel.service.ClassNameLocalService
-		classNameLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.ResourceLocalService
-		resourceLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
+	private static final Log _log = LogFactoryUtil.getLog(
+		KaleoInstanceLocalServiceBaseImpl.class);
 
 }

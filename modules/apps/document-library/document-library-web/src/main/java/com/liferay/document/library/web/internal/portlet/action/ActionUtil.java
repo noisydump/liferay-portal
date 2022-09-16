@@ -22,6 +22,9 @@ import com.liferay.document.library.kernel.service.DLAppServiceUtil;
 import com.liferay.document.library.kernel.util.RawMetadataProcessorUtil;
 import com.liferay.document.library.service.DLFileVersionPreviewLocalServiceUtil;
 import com.liferay.document.library.web.internal.security.permission.resource.DLPermission;
+import com.liferay.document.library.web.internal.util.DLFolderUtil;
+import com.liferay.petra.lang.SafeCloseable;
+import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -74,8 +77,7 @@ public class ActionUtil {
 			}
 			catch (NoSuchFileEntryException noSuchFileEntryException) {
 				if (_log.isDebugEnabled()) {
-					_log.debug(
-						noSuchFileEntryException, noSuchFileEntryException);
+					_log.debug(noSuchFileEntryException);
 				}
 			}
 		}
@@ -153,9 +155,7 @@ public class ActionUtil {
 			}
 			catch (NoSuchFileShortcutException noSuchFileShortcutException) {
 				if (_log.isDebugEnabled()) {
-					_log.debug(
-						noSuchFileShortcutException,
-						noSuchFileShortcutException);
+					_log.debug(noSuchFileShortcutException);
 				}
 			}
 		}
@@ -226,12 +226,17 @@ public class ActionUtil {
 
 			String portletId = portletDisplay.getId();
 
-			PortletPreferences portletPreferences =
-				PortletPreferencesFactoryUtil.getPortletPreferences(
-					httpServletRequest, portletId);
+			try (SafeCloseable safeCloseable =
+					CTCollectionThreadLocal.
+						setProductionModeWithSafeCloseable()) {
 
-			folderId = GetterUtil.getLong(
-				portletPreferences.getValue("rootFolderId", null));
+				PortletPreferences portletPreferences =
+					PortletPreferencesFactoryUtil.getPortletPreferences(
+						httpServletRequest, portletId);
+
+				folderId = GetterUtil.getLong(
+					portletPreferences.getValue("rootFolderId", null));
+			}
 		}
 
 		if (folderId <= 0) {
@@ -243,6 +248,9 @@ public class ActionUtil {
 		}
 
 		Folder folder = DLAppServiceUtil.getFolder(folderId);
+
+		DLFolderUtil.validateDepotFolder(
+			folderId, folder.getGroupId(), themeDisplay.getScopeGroupId());
 
 		if (folder.isMountPoint()) {
 			com.liferay.portal.kernel.repository.Repository repository =
@@ -285,7 +293,7 @@ public class ActionUtil {
 			}
 			catch (NoSuchFolderException noSuchFolderException) {
 				if (_log.isDebugEnabled()) {
-					_log.debug(noSuchFolderException, noSuchFolderException);
+					_log.debug(noSuchFolderException);
 				}
 			}
 		}

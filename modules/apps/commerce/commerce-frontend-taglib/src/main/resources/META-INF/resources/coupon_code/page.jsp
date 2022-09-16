@@ -37,7 +37,7 @@ if (commerceOrder != null) {
 		<div class="coupon-code-body">
 			<h3 class="d-inline"><%= HtmlUtil.escape(couponCode) %></h3>
 
-			<a class="d-inline" href="javascript:;" id="<portlet:namespace />couponCodeIconRemove">
+			<a class="d-inline" href="javascript:void(0);" id="<portlet:namespace />couponCodeIconRemove">
 				<liferay-ui:icon
 					icon="times"
 					markupView="lexicon"
@@ -53,17 +53,17 @@ if (commerceOrder != null) {
 
 			couponCodeIconRemove.addEventListener(
 				'click',
-				function (event) {
+				(event) => {
 					var actionURL =
-						'<%= PortalUtil.getPortalURL(request) + "/o/commerce-ui/order/" + commerceOrder.getCommerceOrderId() + "/coupon-code" %>';
+						'<%= PortalUtil.getPortalURL(request) + PortalUtil.getPathContext() + "/o/commerce-ui/order/" + commerceOrder.getCommerceOrderId() + "/coupon-code" %>';
 
 					Liferay.Util.fetch(actionURL, {
 						method: 'post',
 					})
-						.then(function (res) {
+						.then((res) => {
 							return res.json();
 						})
-						.then(function (payload) {
+						.then((payload) => {
 							if (payload.success) {
 								window.location.reload();
 							}
@@ -102,9 +102,9 @@ if (commerceOrder != null) {
 
 			applyCouponCodeButton.addEventListener(
 				'click',
-				function (event) {
+				(event) => {
 					var actionURL =
-						'<%= PortalUtil.getPortalURL(request) + "/o/commerce-ui/order/" + commerceOrder.getCommerceOrderId() + "/coupon-code/" %>';
+						'<%= PortalUtil.getPortalURL(request) + PortalUtil.getPathContext() + "/o/commerce-ui/order/" + commerceOrder.getCommerceOrderId() + "/coupon-code/" %>';
 
 					actionURL =
 						actionURL +
@@ -114,10 +114,10 @@ if (commerceOrder != null) {
 					Liferay.Util.fetch(actionURL, {
 						method: 'post',
 					})
-						.then(function (res) {
+						.then((res) => {
 							return res.json();
 						})
-						.then(function (payload) {
+						.then((payload) => {
 							if (payload.success) {
 								window.location.reload();
 							}

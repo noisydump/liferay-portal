@@ -14,7 +14,6 @@
 
 package com.liferay.portal.deploy.hot;
 
-import com.liferay.petra.log4j.Log4JUtil;
 import com.liferay.portal.kernel.configuration.Configuration;
 import com.liferay.portal.kernel.configuration.ConfigurationFactoryUtil;
 import com.liferay.portal.kernel.deploy.hot.BaseHotDeployListener;
@@ -29,12 +28,11 @@ import com.liferay.portal.kernel.service.configuration.servlet.ServletServiceCon
 import com.liferay.portal.kernel.servlet.ServletContextPool;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.log4j.Log4JUtil;
 import com.liferay.portal.plugin.PluginPackageUtil;
 import com.liferay.util.portlet.PortletProps;
 
 import java.lang.reflect.Method;
-
-import java.net.URL;
 
 import java.util.Properties;
 
@@ -161,23 +159,6 @@ public class PluginPackageHotDeployListener extends BaseHotDeployListener {
 				"Plugin package " + pluginPackage.getModuleId() +
 					" unregistered successfully");
 		}
-	}
-
-	/**
-	 * @deprecated As of Mueller (7.2.x), with no direct replacement
-	 */
-	@Deprecated
-	protected URL getPortalCacheConfigurationURL(
-		Configuration configuration, ClassLoader classLoader,
-		String configLocation) {
-
-		String cacheConfigurationLocation = configuration.get(configLocation);
-
-		if (Validator.isNull(cacheConfigurationLocation)) {
-			return null;
-		}
-
-		return classLoader.getResource(cacheConfigurationLocation);
 	}
 
 	protected void initLogger(ClassLoader classLoader) {

@@ -1,26 +1,36 @@
 @component-name = "portal-upgrades"
 definition {
 
+	property custom.properties = "feature.flag.LPS-155692=true";
 	property database.types = "db2,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Upgrades User and System Management";
 
 	setUp {
-		User.loginPG(
-			authenticationMethod = "By Screen Name",
-			userScreenName = "test");
-
 		var portalURL = PropsUtil.get("portal.url");
+
+		Navigator.openSpecificURL(url = "${portalURL}/web/test/home");
+
+		if (IsElementNotPresent(locator1 = "TextInput#SCREEN_NAME")) {
+			AssertClick(
+				locator1 = "UserBar#USER_SIGN_IN",
+				value1 = "Sign In");
+		}
+
+		Type(
+			locator1 = "TextInput#SCREEN_NAME",
+			value1 = "test");
+
+		Type.typePause(
+			locator1 = "TextInput#PASSWORD",
+			value1 = "test");
+
+		Button.click(button = "Sign In");
 
 		AssertLocation(value1 = "${portalURL}/web/test/home");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Configuration",
-			panel = "Control Panel",
-			portlet = "Search");
-
-		SearchAdministration.executeSearchActions(actionsDescription = "Reindex all search indexes.");
+		SearchAdministration.executeReindex();
 	}
 
 	@priority = "5"

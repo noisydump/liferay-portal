@@ -29,7 +29,7 @@ definition {
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "FragmentEditor#HTML_EDITOR_CONTENT",
-			value1 = "${fragmentHTML}");
+			value1 = "${fragmentHtml}");
 	}
 
 	macro gotoCodeTab {
@@ -57,8 +57,9 @@ definition {
 	}
 
 	macro typeFileContent {
-		var content = TestCase.getFileContent(fileName = "${fileName}");
+		var dependencyFilePath = TestCase.getDependenciesDirPath(fileName = "${fileName}");
 
+		var content = FileUtil.read("${dependencyFilePath}");
 		var fileExtension = File.getFileExtension(fileName = "${fileName}");
 
 		if ("${fileExtension}" == "html") {
@@ -91,11 +92,9 @@ definition {
 	}
 
 	macro waitForAutoSave {
-		Pause(locator1 = "1000");
+		WaitForElementNotPresent(locator1 = "FragmentEditor#SAVING_CHANGES_MESSAGE");
 
-		AssertTextEquals(
-			locator1 = "FragmentEditor#AUTOSAVE_MESSAGE",
-			value1 = "Changes Saved");
+		WaitForVisible(locator1 = "FragmentEditor#CHANGES_SAVED_MESSAGE");
 	}
 
 }

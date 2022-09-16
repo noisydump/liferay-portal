@@ -32,6 +32,7 @@ import com.liferay.message.boards.util.comparator.ThreadTitleComparator;
 import com.liferay.message.boards.web.internal.security.permission.MBCategoryPermission;
 import com.liferay.message.boards.web.internal.security.permission.MBMessagePermission;
 import com.liferay.message.boards.web.internal.util.MBUtil;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -40,9 +41,12 @@ import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.PortalPreferences;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
+import com.liferay.portal.kernel.portlet.SearchOrderByUtil;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.Constants;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -51,6 +55,7 @@ import com.liferay.trash.TrashHelper;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import javax.portlet.PortletException;
@@ -85,25 +90,9 @@ public class MBEntriesManagementToolbarDisplayContext {
 		return DropdownItemListBuilder.add(
 			dropdownItem -> {
 				dropdownItem.putData("action", "deleteEntries");
-
-				ThemeDisplay themeDisplay =
-					(ThemeDisplay)_httpServletRequest.getAttribute(
-						WebKeys.THEME_DISPLAY);
-
-				boolean trashEnabled = _trashHelper.isTrashEnabled(
-					themeDisplay.getScopeGroupId());
-
-				dropdownItem.setIcon(trashEnabled ? "trash" : "times-circle");
-
-				String label = "delete";
-
-				if (trashEnabled) {
-					label = "move-to-recycle-bin";
-				}
-
+				dropdownItem.setIcon("trash");
 				dropdownItem.setLabel(
-					LanguageUtil.get(_httpServletRequest, label));
-
+					LanguageUtil.get(_httpServletRequest, "delete"));
 				dropdownItem.setQuickAction(true);
 			}
 		).add(
@@ -112,7 +101,6 @@ public class MBEntriesManagementToolbarDisplayContext {
 				dropdownItem.setIcon("lock");
 				dropdownItem.setLabel(
 					LanguageUtil.get(_httpServletRequest, "lock"));
-
 				dropdownItem.setQuickAction(true);
 			}
 		).add(
@@ -123,6 +111,35 @@ public class MBEntriesManagementToolbarDisplayContext {
 					LanguageUtil.get(_httpServletRequest, "unlock"));
 				dropdownItem.setQuickAction(true);
 			}
+		).build();
+	}
+
+	public Map<String, Object> getAdditionalProps() {
+		return HashMapBuilder.<String, Object>put(
+			"deleteEntriesCmd",
+			() -> {
+				if (_trashHelper.isTrashEnabled(
+						_themeDisplay.getScopeGroupId())) {
+
+					return Constants.MOVE_TO_TRASH;
+				}
+
+				return Constants.DELETE;
+			}
+		).put(
+			"editEntryURL",
+			() -> PortletURLBuilder.createActionURL(
+				_liferayPortletResponse
+			).setActionName(
+				"/message_boards/edit_entry"
+			).buildString()
+		).put(
+			"lockCmd", Constants.LOCK
+		).put(
+			"trashEnabled",
+			() -> _trashHelper.isTrashEnabled(_themeDisplay.getScopeGroupId())
+		).put(
+			"unlockCmd", Constants.UNLOCK
 		).build();
 	}
 
@@ -175,10 +192,10 @@ public class MBEntriesManagementToolbarDisplayContext {
 	public CreationMenu getCreationMenu() throws PortalException {
 		CreationMenu creationMenu = null;
 
-		MBCategory category = (MBCategory)_httpServletRequest.getAttribute(
-			WebKeys.MESSAGE_BOARDS_CATEGORY);
-
-		long categoryId = MBUtil.getCategoryId(_httpServletRequest, category);
+		long categoryId = MBUtil.getCategoryId(
+			_httpServletRequest,
+			(MBCategory)_httpServletRequest.getAttribute(
+				WebKeys.MESSAGE_BOARDS_CATEGORY));
 
 		ThemeDisplay themeDisplay =
 			(ThemeDisplay)_httpServletRequest.getAttribute(
@@ -258,12 +275,14 @@ public class MBEntriesManagementToolbarDisplayContext {
 				entriesNavigation.equals("threads") ||
 				entriesNavigation.equals("categories"),
 			labelItem -> {
-				PortletURL removeLabelURL = PortletURLUtil.clone(
-					_currentURLObj, _liferayPortletResponse);
-
-				removeLabelURL.setParameter("entriesNavigation", (String)null);
-
-				labelItem.putData("removeLabelURL", removeLabelURL.toString());
+				labelItem.putData(
+					"removeLabelURL",
+					PortletURLBuilder.create(
+						PortletURLUtil.clone(
+							_currentURLObj, _liferayPortletResponse)
+					).setParameter(
+						"entriesNavigation", (String)null
+					).buildString());
 
 				labelItem.setCloseable(true);
 				labelItem.setLabel(
@@ -273,56 +292,33 @@ public class MBEntriesManagementToolbarDisplayContext {
 	}
 
 	public String getOrderByCol() {
-		if (_orderByCol != null) {
+		if (Validator.isNotNull(_orderByCol)) {
 			return _orderByCol;
 		}
 
-		String orderByCol = ParamUtil.getString(
-			_httpServletRequest, "orderByCol");
-
-		if (Validator.isNotNull(orderByCol)) {
-			_portalPreferences.setValue(
-				MBPortletKeys.MESSAGE_BOARDS_ADMIN, "order-by-col", orderByCol);
-		}
-		else {
-			orderByCol = _portalPreferences.getValue(
-				MBPortletKeys.MESSAGE_BOARDS_ADMIN, "order-by-col",
-				"modified-date");
-		}
-
-		_orderByCol = orderByCol;
+		_orderByCol = SearchOrderByUtil.getOrderByCol(
+			_httpServletRequest, MBPortletKeys.MESSAGE_BOARDS_ADMIN,
+			"modified-date");
 
 		return _orderByCol;
 	}
 
 	public String getOrderByType() {
-		if (_orderByType != null) {
+		if (Validator.isNotNull(_orderByType)) {
 			return _orderByType;
 		}
 
-		String orderByType = ParamUtil.getString(
-			_httpServletRequest, "orderByType");
-
-		if (Validator.isNotNull(orderByType)) {
-			_portalPreferences.setValue(
-				MBPortletKeys.MESSAGE_BOARDS_ADMIN, "order-by-type",
-				orderByType);
-		}
-		else {
-			orderByType = _portalPreferences.getValue(
-				MBPortletKeys.MESSAGE_BOARDS_ADMIN, "order-by-type", "asc");
-		}
-
-		_orderByType = orderByType;
+		_orderByType = SearchOrderByUtil.getOrderByType(
+			_httpServletRequest, MBPortletKeys.MESSAGE_BOARDS_ADMIN, "asc");
 
 		return _orderByType;
 	}
 
 	public PortletURL getPortletURL() {
-		MBCategory category = (MBCategory)_httpServletRequest.getAttribute(
-			WebKeys.MESSAGE_BOARDS_CATEGORY);
-
-		long categoryId = MBUtil.getCategoryId(_httpServletRequest, category);
+		long categoryId = MBUtil.getCategoryId(
+			_httpServletRequest,
+			(MBCategory)_httpServletRequest.getAttribute(
+				WebKeys.MESSAGE_BOARDS_CATEGORY));
 
 		PortletURL portletURL = _liferayPortletResponse.createRenderURL();
 
@@ -358,32 +354,31 @@ public class MBEntriesManagementToolbarDisplayContext {
 	}
 
 	public String getSearchActionURL() {
-		PortletURL searchURL = _liferayPortletResponse.createRenderURL();
+		long categoryId = MBUtil.getCategoryId(
+			_httpServletRequest,
+			(MBCategory)_httpServletRequest.getAttribute(
+				WebKeys.MESSAGE_BOARDS_CATEGORY));
 
-		searchURL.setParameter(
-			"mvcRenderCommandName", "/message_boards_admin/search");
-		searchURL.setParameter("redirect", _currentURLObj.toString());
-
-		MBCategory category = (MBCategory)_httpServletRequest.getAttribute(
-			WebKeys.MESSAGE_BOARDS_CATEGORY);
-
-		long categoryId = MBUtil.getCategoryId(_httpServletRequest, category);
-
-		searchURL.setParameter(
-			"breadcrumbsCategoryId", String.valueOf(categoryId));
-		searchURL.setParameter("searchCategoryId", String.valueOf(categoryId));
-
-		return searchURL.toString();
+		return PortletURLBuilder.createRenderURL(
+			_liferayPortletResponse
+		).setMVCRenderCommandName(
+			"/message_boards_admin/search"
+		).setRedirect(
+			_currentURLObj
+		).setParameter(
+			"breadcrumbsCategoryId", categoryId
+		).setParameter(
+			"searchCategoryId", categoryId
+		).buildString();
 	}
 
 	public PortletURL getSortingURL() throws PortletException {
-		PortletURL sortingURL = _getCurrentSortingURL();
-
-		sortingURL.setParameter(
+		return PortletURLBuilder.create(
+			_getCurrentSortingURL()
+		).setParameter(
 			"orderByType",
-			Objects.equals(getOrderByType(), "asc") ? "desc" : "asc");
-
-		return sortingURL;
+			Objects.equals(getOrderByType(), "asc") ? "desc" : "asc"
+		).buildPortletURL();
 	}
 
 	public void populateOrder(SearchContainer searchContainer) {
@@ -391,11 +386,11 @@ public class MBEntriesManagementToolbarDisplayContext {
 
 		String orderByCol = getOrderByCol();
 
+		searchContainer.setOrderByCol(orderByCol);
+
 		boolean orderByAsc = false;
 
-		String orderByType = getOrderByType();
-
-		if (orderByType.equals("asc")) {
+		if (Objects.equals(getOrderByType(), "asc")) {
 			orderByAsc = true;
 		}
 
@@ -423,19 +418,18 @@ public class MBEntriesManagementToolbarDisplayContext {
 			}
 		}
 
-		searchContainer.setOrderByCol(orderByCol);
 		searchContainer.setOrderByComparator(orderByComparator);
-		searchContainer.setOrderByType(orderByType);
+		searchContainer.setOrderByType(getOrderByType());
 	}
 
 	private PortletURL _getCurrentSortingURL() throws PortletException {
 		PortletURL sortingURL = PortletURLUtil.clone(
 			_currentURLObj, _liferayPortletResponse);
 
-		MBCategory category = (MBCategory)_httpServletRequest.getAttribute(
-			WebKeys.MESSAGE_BOARDS_CATEGORY);
-
-		long categoryId = MBUtil.getCategoryId(_httpServletRequest, category);
+		long categoryId = MBUtil.getCategoryId(
+			_httpServletRequest,
+			(MBCategory)_httpServletRequest.getAttribute(
+				WebKeys.MESSAGE_BOARDS_CATEGORY));
 
 		if (categoryId == MBCategoryConstants.DEFAULT_PARENT_CATEGORY_ID) {
 			sortingURL.setParameter(

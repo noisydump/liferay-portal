@@ -16,6 +16,7 @@ package com.liferay.portal.search.elasticsearch7.internal.search.engine.adapter.
 
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.search.elasticsearch7.internal.connection.ElasticsearchFixture;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.io.IOException;
 
@@ -38,12 +39,17 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 /**
  * @author Adam Brandizzi
  */
 public class UpdateRequestTest {
+
+	@ClassRule
+	public static LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
@@ -75,11 +81,11 @@ public class UpdateRequestTest {
 
 	@Test
 	public void testUnsetValueWithArrayWithNull() throws IOException {
-		String id = indexAndGetId();
+		String id = _indexAndGetId();
 
-		updateField(id, "field2", new Object[] {null});
+		_updateField(id, "field2", new Object[] {null});
 
-		Map<String, Object> fields = getFields(id);
+		Map<String, Object> fields = _getFields(id);
 
 		Assert.assertEquals("an example", fields.get("field1"));
 
@@ -92,11 +98,11 @@ public class UpdateRequestTest {
 
 	@Test
 	public void testUnsetValueWithEmptyArray() throws IOException {
-		String id = indexAndGetId();
+		String id = _indexAndGetId();
 
-		updateField(id, "field2", new Object[0]);
+		_updateField(id, "field2", new Object[0]);
 
-		Map<String, Object> fields = getFields(id);
+		Map<String, Object> fields = _getFields(id);
 
 		Assert.assertEquals("an example", fields.get("field1"));
 
@@ -108,11 +114,11 @@ public class UpdateRequestTest {
 
 	@Test
 	public void testUnsetValueWithNull() throws IOException {
-		String id = indexAndGetId();
+		String id = _indexAndGetId();
 
-		updateField(id, "field2", null);
+		_updateField(id, "field2", null);
 
-		Map<String, Object> fields = getFields(id);
+		Map<String, Object> fields = _getFields(id);
 
 		Assert.assertEquals("an example", fields.get("field1"));
 		Assert.assertNull(fields.get("field2"));
@@ -120,17 +126,17 @@ public class UpdateRequestTest {
 
 	@Test
 	public void testUpdateRequestWithMap() throws IOException {
-		String id = indexAndGetId();
+		String id = _indexAndGetId();
 
-		updateField(id, "field2", "UPDATED FIELD");
+		_updateField(id, "field2", "UPDATED FIELD");
 
-		Map<String, Object> fields = getFields(id);
+		Map<String, Object> fields = _getFields(id);
 
 		Assert.assertEquals("an example", fields.get("field1"));
 		Assert.assertEquals("UPDATED FIELD", fields.get("field2"));
 	}
 
-	protected Map<String, Object> getFields(String id) throws IOException {
+	private Map<String, Object> _getFields(String id) throws IOException {
 		GetRequest getRequest = new GetRequest(_INDEX_NAME, id);
 
 		GetResponse getResponse = _restHighLevelClient.get(
@@ -139,7 +145,7 @@ public class UpdateRequestTest {
 		return getResponse.getSource();
 	}
 
-	protected String indexAndGetId() throws IOException {
+	private String _indexAndGetId() throws IOException {
 		IndexRequest indexRequest = new IndexRequest(_INDEX_NAME);
 
 		indexRequest.source(
@@ -155,7 +161,7 @@ public class UpdateRequestTest {
 		return indexResponse.getId();
 	}
 
-	protected void updateField(String id, String fieldName, Object fieldValue)
+	private void _updateField(String id, String fieldName, Object fieldValue)
 		throws IOException {
 
 		UpdateRequest updateRequest = new UpdateRequest(_INDEX_NAME, id);

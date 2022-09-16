@@ -444,6 +444,7 @@
 			<type>boolean</type>
 		</attribute>
 		<attribute>
+			<description>Deprecated as of 7.4.0, with no direct replacement.</description>
 			<name>markupView</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
@@ -657,6 +658,12 @@
 			<type>boolean</type>
 		</attribute>
 		<attribute>
+			<description>A CSS class for styling the dropdown.</description>
+			<name>dropdownCssClass</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
 			<description>Whether to extend the icon menu trigger by wrapping it in a button. The default value is <![CDATA[<code>true</code>]]>.</description>
 			<name>extended</name>
 			<required>false</required>
@@ -683,6 +690,7 @@
 			<type>boolean</type>
 		</attribute>
 		<attribute>
+			<description>Deprecated as of 7.4.0, with no direct replacement.</description>
 			<name>markupView</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
@@ -766,6 +774,11 @@
 		<tag-class>com.liferay.taglib.ui.InputCheckBoxTag</tag-class>
 		<body-content>JSP</body-content>
 		<attribute>
+			<name>autoComplete</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
 			<description>A CSS class for styling the component.</description>
 			<name>cssClass</name>
 			<required>false</required>
@@ -815,6 +828,11 @@
 		<name>input-date</name>
 		<tag-class>com.liferay.taglib.ui.InputDateTag</tag-class>
 		<body-content>JSP</body-content>
+		<attribute>
+			<name>autoComplete</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
 		<attribute>
 			<description>Whether the date field gets focus by default. The default value is <![CDATA[<code>false</code>]]>.</description>
 			<name>autoFocus</name>
@@ -1112,6 +1130,16 @@
 		<tag-class>com.liferay.taglib.ui.InputFieldTag</tag-class>
 		<body-content>JSP</body-content>
 		<attribute>
+			<name>activeLanguageIds</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>adminMode</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
 			<name>autoComplete</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
@@ -1208,6 +1236,16 @@
 		<tag-class>com.liferay.taglib.ui.InputLocalizedTag</tag-class>
 		<body-content>JSP</body-content>
 		<attribute>
+			<name>activeLanguageIds</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>adminMode</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
 			<name>autoFocus</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
@@ -1289,6 +1327,11 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
+			<name>languagesDropdownDirection</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
 			<name>maxLength</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
@@ -1337,7 +1380,7 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
-			<description>Sets the maximum number of items on the left box. The default value is <![CDATA[<code>null</code>]]> that represents unlimited items.</description>
+			<description>Sets the maximum number of items for the left box. The default value <![CDATA[<code>null</code>]]> represents an unlimited number of items.</description>
 			<name>leftBoxMaxItems</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
@@ -1376,7 +1419,7 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
-			<description>Sets the maximum number of items on the right box. The default value is <![CDATA[<code>null</code>]]> that represents unlimited items.</description>
+			<description>Sets the maximum number of items for the right box. The default value <![CDATA[<code>null</code>]]> represents an unlimited number of items.</description>
 			<name>rightBoxMaxItems</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
@@ -1519,6 +1562,7 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
+			<description>Deprecated as of 7.4.0, with no direct replacement.</description>
 			<name>markupView</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
@@ -1573,6 +1617,11 @@
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 			<type>int</type>
+		</attribute>
+		<attribute>
+			<name>autoComplete</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
 			<description>A CSS class for styling the component.</description>
@@ -1818,6 +1867,7 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
+			<description>Deprecated as of 7.4.0, with no direct replacement.</description>
 			<name>maxFileSize</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
@@ -1984,6 +2034,7 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
+			<description>Deprecated as of 7.4.0, with no direct replacement.</description>
 			<name>markupView</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
@@ -2070,6 +2121,7 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
+			<description>Deprecated as of 7.4.0, with no direct replacement.</description>
 			<name>markupView</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
@@ -2132,6 +2184,7 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
+			<description>Deprecated as of 7.4.0, with no direct replacement.</description>
 			<name>markupView</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
@@ -2862,6 +2915,12 @@
 		<tei-class>com.liferay.taglib.ui.SearchContainerResultsTei</tei-class>
 		<body-content>JSP</body-content>
 		<attribute>
+			<name>calculateStartAndEnd</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+			<type>boolean</type>
+		</attribute>
+		<attribute>
 			<description>A list of objects to display in the search container.</description>
 			<name>results</name>
 			<required>false</required>
@@ -3012,6 +3071,7 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
+			<description>Deprecated as of 7.4.0, with no direct replacement.</description>
 			<name>markupView</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
@@ -3059,6 +3119,7 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
+			<description>Deprecated as of 7.4.0, with no direct replacement.</description>
 			<name>markupView</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
@@ -3107,6 +3168,7 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
+			<description>Deprecated as of 7.4.0, with no direct replacement.</description>
 			<name>markupView</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
@@ -3258,6 +3320,7 @@
 		</attribute>
 	</tag>
 	<tag>
+		<description>Deprecated as of 7.4.0, with no direct replacement.</description>
 		<name>toggle-value</name>
 		<tag-class>com.liferay.taglib.ui.ToggleValueTag</tag-class>
 		<body-content>JSP</body-content>
@@ -3335,6 +3398,7 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
+			<description>Deprecated as of 7.4.0, with no direct replacement.</description>
 			<name>markupView</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>

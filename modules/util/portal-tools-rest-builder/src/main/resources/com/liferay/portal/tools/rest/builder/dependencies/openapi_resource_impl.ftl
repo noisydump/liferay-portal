@@ -28,14 +28,16 @@ import org.osgi.service.component.annotations.Reference;
  * @generated
  */
 @Component(
+	<#if configYAML.liferayEnterpriseApp>enabled = false,</#if>
 	properties = "OSGI-INF/liferay/rest/${escapedVersion}/openapi.properties",
 	service = OpenAPIResourceImpl.class
 )
 @Generated("")
 @OpenAPIDefinition(
 	info = @Info(
-		description = "${openAPIYAML.info.description}",
-
+		<#if openAPIYAML.info?? && openAPIYAML.info.description??>
+			description = "${openAPIYAML.info.description}",
+		</#if>
 		<#if configYAML.licenseName?? && configYAML.licenseURL??>
 			license = @License(name = "${configYAML.licenseName}", url = "${configYAML.licenseURL}"),
 		</#if>
@@ -44,7 +46,9 @@ import org.osgi.service.component.annotations.Reference;
 		version = "${openAPIYAML.info.version}"
 	)
 )
-@Path("/${openAPIYAML.info.version}")
+<#if configYAML.application??>
+	@Path("/${openAPIYAML.info.version}")
+</#if>
 public class OpenAPIResourceImpl {
 
 	@GET
@@ -71,7 +75,7 @@ public class OpenAPIResourceImpl {
 
 	private final Set<Class<?>> _resourceClasses = new HashSet<Class<?>>() {
 		{
-			<#list freeMarkerTool.getAllSchemas(openAPIYAML, freeMarkerTool.getSchemas(openAPIYAML))?keys as schemaName>
+			<#list freeMarkerTool.getAllSchemas(null, openAPIYAML, freeMarkerTool.getSchemas(openAPIYAML))?keys as schemaName>
 				<#assign javaMethodSignatures = freeMarkerTool.getResourceJavaMethodSignatures(configYAML, openAPIYAML, schemaName) />
 
 				<#if javaMethodSignatures?has_content>

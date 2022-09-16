@@ -60,6 +60,7 @@ public class DefaultLayoutTypeAccessPolicyImpl
 		throws PortalException {
 
 		String checkAccessAllowedToPortletCacheKey = StringBundler.concat(
+			"LIFERAY_SHARED_",
 			DefaultLayoutTypeAccessPolicyImpl.class.getName(), "#",
 			layout.getPlid(), "#", portlet.getPortletId());
 
@@ -79,9 +80,6 @@ public class DefaultLayoutTypeAccessPolicyImpl
 				0, ActionKeys.ACCESS);
 		}
 
-		PermissionChecker permissionChecker =
-			PermissionThreadLocal.getPermissionChecker();
-
 		ThemeDisplay themeDisplay =
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
@@ -92,7 +90,8 @@ public class DefaultLayoutTypeAccessPolicyImpl
 			layoutFriendlyURL.equals(
 				PropsUtil.get(PropsKeys.CONTROL_PANEL_LAYOUT_FRIENDLY_URL)) &&
 			PortletPermissionUtil.hasControlPanelAccessPermission(
-				permissionChecker, themeDisplay.getScopeGroupId(), portlet)) {
+				PermissionThreadLocal.getPermissionChecker(),
+				themeDisplay.getScopeGroupId(), portlet)) {
 
 			httpServletRequest.setAttribute(
 				checkAccessAllowedToPortletCacheKey, Boolean.TRUE);
@@ -174,9 +173,6 @@ public class DefaultLayoutTypeAccessPolicyImpl
 			Portlet portlet)
 		throws PortalException {
 
-		PermissionChecker permissionChecker =
-			PermissionThreadLocal.getPermissionChecker();
-
 		ThemeDisplay themeDisplay =
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
@@ -192,22 +188,16 @@ public class DefaultLayoutTypeAccessPolicyImpl
 		}
 
 		return PortletPermissionUtil.hasAccessPermission(
-			permissionChecker, themeDisplay.getScopeGroupId(), layout, portlet,
-			portletMode);
+			PermissionThreadLocal.getPermissionChecker(),
+			themeDisplay.getScopeGroupId(), layout, portlet, portletMode);
 	}
 
 	protected boolean isAccessAllowedToLayoutPortlet(
 		HttpServletRequest httpServletRequest, Layout layout, Portlet portlet) {
 
-		if (isAccessGrantedByRuntimePortlet(httpServletRequest)) {
-			return true;
-		}
-
-		if (isAccessGrantedByPortletOnPage(layout, portlet)) {
-			return true;
-		}
-
-		if (isAccessGrantedByPortletAuthenticationToken(
+		if (isAccessGrantedByRuntimePortlet(httpServletRequest) ||
+			isAccessGrantedByPortletOnPage(layout, portlet) ||
+			isAccessGrantedByPortletAuthenticationToken(
 				httpServletRequest, layout, portlet)) {
 
 			return true;
@@ -223,11 +213,8 @@ public class DefaultLayoutTypeAccessPolicyImpl
 			return false;
 		}
 
-		if (!_PORTLET_ADD_DEFAULT_RESOURCE_CHECK_ENABLED) {
-			return true;
-		}
-
-		if (AuthTokenUtil.isValidPortletInvocationToken(
+		if (!_PORTLET_ADD_DEFAULT_RESOURCE_CHECK_ENABLED ||
+			AuthTokenUtil.isValidPortletInvocationToken(
 				httpServletRequest, layout, portlet)) {
 
 			return true;

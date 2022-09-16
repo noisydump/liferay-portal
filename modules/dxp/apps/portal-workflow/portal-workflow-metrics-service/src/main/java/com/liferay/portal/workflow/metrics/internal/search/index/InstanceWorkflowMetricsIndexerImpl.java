@@ -14,8 +14,6 @@
 
 package com.liferay.portal.workflow.metrics.internal.search.index;
 
-import com.liferay.petra.string.StringBundler;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.search.document.Document;
@@ -51,7 +49,9 @@ public class InstanceWorkflowMetricsIndexerImpl
 
 		DocumentBuilder documentBuilder = documentBuilderFactory.builder();
 
-		documentBuilder.setString(
+		documentBuilder.setValue(
+			"active", true
+		).setString(
 			"className", className
 		).setLong(
 			"classPK", classPK
@@ -65,9 +65,7 @@ public class InstanceWorkflowMetricsIndexerImpl
 			documentBuilder.setDate(
 				"completionDate", getDate(completionDate)
 			).setValue(
-				Field.getSortableFieldName(
-					StringBundler.concat(
-						"completionDate", StringPool.UNDERLINE, "Number")),
+				Field.getSortableFieldName("completionDate_Number"),
 				completionDate.getTime()
 			);
 		}
@@ -75,9 +73,7 @@ public class InstanceWorkflowMetricsIndexerImpl
 		documentBuilder.setDate(
 			"createDate", getDate(createDate)
 		).setValue(
-			Field.getSortableFieldName(
-				StringBundler.concat(
-					"createDate", StringPool.UNDERLINE, "Number")),
+			Field.getSortableFieldName("createDate_Number"),
 			createDate.getTime()
 		).setValue(
 			"deleted", Boolean.FALSE
@@ -130,9 +126,7 @@ public class InstanceWorkflowMetricsIndexerImpl
 		).setDate(
 			"completionDate", getDate(completionDate)
 		).setValue(
-			Field.getSortableFieldName(
-				StringBundler.concat(
-					"completionDate", StringPool.UNDERLINE, "Number")),
+			Field.getSortableFieldName("completionDate_Number"),
 			completionDate.getTime()
 		).setLong(
 			"duration", duration
@@ -150,43 +144,14 @@ public class InstanceWorkflowMetricsIndexerImpl
 			() -> {
 				updateDocument(document);
 
-				BooleanQuery booleanQuery = queries.booleanQuery();
-
-				booleanQuery.addMustQueryClauses(
-					queries.term("companyId", companyId),
-					queries.term("instanceId", instanceId));
-
-				_slaInstanceResultWorkflowMetricsIndexer.updateDocuments(
+				_updateDocuments(
 					companyId,
 					HashMapBuilder.<String, Object>put(
 						"completionDate", document.getDate("completionDate")
 					).put(
 						"instanceCompleted", Boolean.TRUE
 					).build(),
-					booleanQuery);
-
-				_slaTaskResultWorkflowMetricsIndexer.updateDocuments(
-					companyId,
-					HashMapBuilder.<String, Object>put(
-						"instanceCompleted", Boolean.TRUE
-					).put(
-						"instanceCompletionDate",
-						document.getDate("completionDate")
-					).build(),
-					booleanQuery);
-
-				BaseWorkflowMetricsIndexer baseWorkflowMetricsIndexer =
-					(BaseWorkflowMetricsIndexer)_taskWorkflowMetricsIndexer;
-
-				baseWorkflowMetricsIndexer.updateDocuments(
-					companyId,
-					HashMapBuilder.<String, Object>put(
-						"instanceCompleted", Boolean.TRUE
-					).put(
-						"instanceCompletionDate",
-						document.getDate("completionDate")
-					).build(),
-					booleanQuery);
+					instanceId);
 			});
 
 		return document;
@@ -228,12 +193,15 @@ public class InstanceWorkflowMetricsIndexerImpl
 
 	@Override
 	public Document updateInstance(
-		Map<Locale, String> assetTitleMap, Map<Locale, String> assetTypeMap,
-		long companyId, long instanceId, Date modifiedDate) {
+		boolean active, Map<Locale, String> assetTitleMap,
+		Map<Locale, String> assetTypeMap, long companyId, long instanceId,
+		Date modifiedDate) {
 
 		DocumentBuilder documentBuilder = documentBuilderFactory.builder();
 
-		documentBuilder.setLong(
+		documentBuilder.setValue(
+			"active", active
+		).setLong(
 			"companyId", companyId
 		).setDate(
 			"modifiedDate", getDate(modifiedDate)
@@ -246,7 +214,17 @@ public class InstanceWorkflowMetricsIndexerImpl
 
 		Document document = documentBuilder.build();
 
-		workflowMetricsPortalExecutor.execute(() -> updateDocument(document));
+		workflowMetricsPortalExecutor.execute(
+			() -> {
+				updateDocument(document);
+
+				_updateDocuments(
+					companyId,
+					HashMapBuilder.<String, Object>put(
+						"active", active
+					).build(),
+					instanceId);
+			});
 
 		return document;
 	}
@@ -256,6 +234,28 @@ public class InstanceWorkflowMetricsIndexerImpl
 			createDate.toInstant(), completionDate.toInstant());
 
 		return duration.toMillis();
+	}
+
+	private void _updateDocuments(
+		long companyId, Map<String, Object> fieldsMap, long instanceId) {
+
+		BooleanQuery booleanQuery = queries.booleanQuery();
+
+		booleanQuery.addMustQueryClauses(
+			queries.term("companyId", companyId),
+			queries.term("instanceId", instanceId));
+
+		_slaInstanceResultWorkflowMetricsIndexer.updateDocuments(
+			companyId, fieldsMap, booleanQuery);
+
+		_slaTaskResultWorkflowMetricsIndexer.updateDocuments(
+			companyId, fieldsMap, booleanQuery);
+
+		BaseWorkflowMetricsIndexer baseWorkflowMetricsIndexer =
+			(BaseWorkflowMetricsIndexer)_taskWorkflowMetricsIndexer;
+
+		baseWorkflowMetricsIndexer.updateDocuments(
+			companyId, fieldsMap, booleanQuery);
 	}
 
 	@Reference(target = "(workflow.metrics.index.entity.name=instance)")

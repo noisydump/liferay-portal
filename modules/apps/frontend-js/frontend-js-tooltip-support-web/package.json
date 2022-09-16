@@ -1,10 +1,8 @@
 {
 	"dependencies": {
-		"@clayui/tooltip": "3.4.4",
-		"frontend-js-react-web": "*",
-		"metal-position": "2.1.2",
-		"react": "16.12.0"
+		"@liferay/frontend-js-react-web": "*"
 	},
+	"main": "index.js",
 	"name": "frontend-js-tooltip-support-web",
 	"private": true,
 	"scripts": {
@@ -12,5 +10,5 @@
 		"checkFormat": "liferay-npm-scripts check",
 		"format": "liferay-npm-scripts fix"
 	},
-	"version": "4.0.0"
+	"version": "4.0.17"
 }

@@ -19,8 +19,8 @@ import com.liferay.commerce.payment.service.CommercePaymentMethodGroupRelService
 import com.liferay.commerce.payment.web.internal.display.context.CommercePaymentMethodGroupRelsDisplayContext;
 import com.liferay.commerce.product.constants.CPPortletKeys;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
-import com.liferay.commerce.service.CommerceCountryService;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
+import com.liferay.portal.kernel.service.CountryService;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 
@@ -51,10 +51,11 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.portlet.scopeable=true",
 		"javax.portlet.display-name=Payment Methods",
 		"javax.portlet.expiration-cache=0",
-		"javax.portlet.init-param.view-template=/edit_payment_method.jsp",
+		"javax.portlet.init-param.view-template=/edit_commerce_payment_method.jsp",
 		"javax.portlet.name=" + CPPortletKeys.COMMERCE_PAYMENT_METHODS,
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=power-user,user"
+		"javax.portlet.security-role-ref=power-user,user",
+		"javax.portlet.version=3.0"
 	},
 	service = {CommercePaymentMethodPortlet.class, Portlet.class}
 )
@@ -68,9 +69,9 @@ public class CommercePaymentMethodPortlet extends MVCPortlet {
 		CommercePaymentMethodGroupRelsDisplayContext
 			commercePaymentMethodGroupRelsDisplayContext =
 				new CommercePaymentMethodGroupRelsDisplayContext(
-					_commerceChannelLocalService, _commerceCountryService,
+					_commerceChannelLocalService,
 					_commercePaymentMethodGroupRelService,
-					_commercePaymentMethodRegistry,
+					_commercePaymentMethodRegistry, _countryService,
 					_portal.getHttpServletRequest(renderRequest));
 
 		renderRequest.setAttribute(
@@ -84,14 +85,14 @@ public class CommercePaymentMethodPortlet extends MVCPortlet {
 	private CommerceChannelLocalService _commerceChannelLocalService;
 
 	@Reference
-	private CommerceCountryService _commerceCountryService;
-
-	@Reference
 	private CommercePaymentMethodGroupRelService
 		_commercePaymentMethodGroupRelService;
 
 	@Reference
 	private CommercePaymentMethodRegistry _commercePaymentMethodRegistry;
+
+	@Reference
+	private CountryService _countryService;
 
 	@Reference
 	private Portal _portal;

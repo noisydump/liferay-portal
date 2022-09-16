@@ -16,6 +16,7 @@ package com.liferay.account.service.base;
 
 import com.liferay.account.model.AccountGroupRel;
 import com.liferay.account.service.AccountGroupRelLocalService;
+import com.liferay.account.service.AccountGroupRelLocalServiceUtil;
 import com.liferay.account.service.persistence.AccountGroupRelPersistence;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.aop.AopService;
@@ -31,6 +32,8 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -44,10 +47,13 @@ import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -69,7 +75,7 @@ public abstract class AccountGroupRelLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>AccountGroupRelLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.account.service.AccountGroupRelLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>AccountGroupRelLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>AccountGroupRelLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -93,13 +99,13 @@ public abstract class AccountGroupRelLocalServiceBaseImpl
 	/**
 	 * Creates a new account group rel with the primary key. Does not add the account group rel to the database.
 	 *
-	 * @param AccountGroupRelId the primary key for the new account group rel
+	 * @param accountGroupRelId the primary key for the new account group rel
 	 * @return the new account group rel
 	 */
 	@Override
 	@Transactional(enabled = false)
-	public AccountGroupRel createAccountGroupRel(long AccountGroupRelId) {
-		return accountGroupRelPersistence.create(AccountGroupRelId);
+	public AccountGroupRel createAccountGroupRel(long accountGroupRelId) {
+		return accountGroupRelPersistence.create(accountGroupRelId);
 	}
 
 	/**
@@ -109,16 +115,16 @@ public abstract class AccountGroupRelLocalServiceBaseImpl
 	 * <strong>Important:</strong> Inspect AccountGroupRelLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
 	 * </p>
 	 *
-	 * @param AccountGroupRelId the primary key of the account group rel
+	 * @param accountGroupRelId the primary key of the account group rel
 	 * @return the account group rel that was removed
 	 * @throws PortalException if a account group rel with the primary key could not be found
 	 */
 	@Indexable(type = IndexableType.DELETE)
 	@Override
-	public AccountGroupRel deleteAccountGroupRel(long AccountGroupRelId)
+	public AccountGroupRel deleteAccountGroupRel(long accountGroupRelId)
 		throws PortalException {
 
-		return accountGroupRelPersistence.remove(AccountGroupRelId);
+		return accountGroupRelPersistence.remove(accountGroupRelId);
 	}
 
 	/**
@@ -142,6 +148,13 @@ public abstract class AccountGroupRelLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return accountGroupRelPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -232,22 +245,22 @@ public abstract class AccountGroupRelLocalServiceBaseImpl
 	}
 
 	@Override
-	public AccountGroupRel fetchAccountGroupRel(long AccountGroupRelId) {
-		return accountGroupRelPersistence.fetchByPrimaryKey(AccountGroupRelId);
+	public AccountGroupRel fetchAccountGroupRel(long accountGroupRelId) {
+		return accountGroupRelPersistence.fetchByPrimaryKey(accountGroupRelId);
 	}
 
 	/**
 	 * Returns the account group rel with the primary key.
 	 *
-	 * @param AccountGroupRelId the primary key of the account group rel
+	 * @param accountGroupRelId the primary key of the account group rel
 	 * @return the account group rel
 	 * @throws PortalException if a account group rel with the primary key could not be found
 	 */
 	@Override
-	public AccountGroupRel getAccountGroupRel(long AccountGroupRelId)
+	public AccountGroupRel getAccountGroupRel(long accountGroupRelId)
 		throws PortalException {
 
-		return accountGroupRelPersistence.findByPrimaryKey(AccountGroupRelId);
+		return accountGroupRelPersistence.findByPrimaryKey(accountGroupRelId);
 	}
 
 	@Override
@@ -259,7 +272,7 @@ public abstract class AccountGroupRelLocalServiceBaseImpl
 		actionableDynamicQuery.setClassLoader(getClassLoader());
 		actionableDynamicQuery.setModelClass(AccountGroupRel.class);
 
-		actionableDynamicQuery.setPrimaryKeyPropertyName("AccountGroupRelId");
+		actionableDynamicQuery.setPrimaryKeyPropertyName("accountGroupRelId");
 
 		return actionableDynamicQuery;
 	}
@@ -277,7 +290,7 @@ public abstract class AccountGroupRelLocalServiceBaseImpl
 		indexableActionableDynamicQuery.setModelClass(AccountGroupRel.class);
 
 		indexableActionableDynamicQuery.setPrimaryKeyPropertyName(
-			"AccountGroupRelId");
+			"accountGroupRelId");
 
 		return indexableActionableDynamicQuery;
 	}
@@ -289,7 +302,7 @@ public abstract class AccountGroupRelLocalServiceBaseImpl
 		actionableDynamicQuery.setClassLoader(getClassLoader());
 		actionableDynamicQuery.setModelClass(AccountGroupRel.class);
 
-		actionableDynamicQuery.setPrimaryKeyPropertyName("AccountGroupRelId");
+		actionableDynamicQuery.setPrimaryKeyPropertyName("accountGroupRelId");
 	}
 
 	/**
@@ -309,6 +322,11 @@ public abstract class AccountGroupRelLocalServiceBaseImpl
 	@Override
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
+
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement AccountGroupRelLocalServiceImpl#deleteAccountGroupRel(AccountGroupRel) to avoid orphaned data");
+		}
 
 		return accountGroupRelLocalService.deleteAccountGroupRel(
 			(AccountGroupRel)persistedModel);
@@ -373,6 +391,11 @@ public abstract class AccountGroupRelLocalServiceBaseImpl
 		return accountGroupRelPersistence.update(accountGroupRel);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -384,6 +407,8 @@ public abstract class AccountGroupRelLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		accountGroupRelLocalService = (AccountGroupRelLocalService)aopProxy;
+
+		_setLocalServiceUtilService(accountGroupRelLocalService);
 	}
 
 	/**
@@ -428,6 +453,23 @@ public abstract class AccountGroupRelLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		AccountGroupRelLocalService accountGroupRelLocalService) {
+
+		try {
+			Field field =
+				AccountGroupRelLocalServiceUtil.class.getDeclaredField(
+					"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, accountGroupRelLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected AccountGroupRelLocalService accountGroupRelLocalService;
 
 	@Reference
@@ -436,5 +478,8 @@ public abstract class AccountGroupRelLocalServiceBaseImpl
 	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		AccountGroupRelLocalServiceBaseImpl.class);
 
 }

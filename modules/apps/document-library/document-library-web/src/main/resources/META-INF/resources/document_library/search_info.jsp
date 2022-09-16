@@ -36,17 +36,19 @@ List<Folder> mountFolders = DLAppServiceUtil.getMountFolders(scopeGroupId, DLFol
 			<liferay-ui:message key="search-colon" />
 
 			<%
-			PortletURL searchEverywhereURL = liferayPortletResponse.createRenderURL();
-
-			searchEverywhereURL.setParameter("mvcRenderCommandName", "/document_library/search");
-
 			long repositoryId = ParamUtil.getLong(request, "repositoryId");
 
 			if (repositoryId == 0) {
 				repositoryId = scopeGroupId;
 			}
 
-			searchEverywhereURL.setParameter("repositoryId", String.valueOf(repositoryId));
+			PortletURL searchEverywhereURL = PortletURLBuilder.createRenderURL(
+				liferayPortletResponse
+			).setMVCRenderCommandName(
+				"/document_library/search"
+			).setParameter(
+				"repositoryId", repositoryId
+			).buildPortletURL();
 
 			long searchRepositoryId = ParamUtil.getLong(request, "searchRepositoryId");
 
@@ -58,7 +60,7 @@ List<Folder> mountFolders = DLAppServiceUtil.getMountFolders(scopeGroupId, DLFol
 
 			searchEverywhereURL.setParameter("folderId", String.valueOf(folderId));
 
-			searchEverywhereURL.setParameter("searchFolderId", String.valueOf(DLFolderConstants.DEFAULT_PARENT_FOLDER_ID));
+			searchEverywhereURL.setParameter("searchFolderId", String.valueOf(dlAdminDisplayContext.getRootFolderId()));
 
 			String keywords = ParamUtil.getString(request, "keywords");
 
@@ -66,11 +68,15 @@ List<Folder> mountFolders = DLAppServiceUtil.getMountFolders(scopeGroupId, DLFol
 
 			searchEverywhereURL.setParameter("showSearchInfo", Boolean.TRUE.toString());
 
-			PortletURL searchFolderURL = PortletURLUtil.clone(searchEverywhereURL, liferayPortletResponse);
-
-			searchFolderURL.setParameter("searchRepositoryId", String.valueOf(scopeGroupId));
-			searchFolderURL.setParameter("folderId", String.valueOf(folderId));
-			searchFolderURL.setParameter("searchFolderId", String.valueOf(folderId));
+			PortletURL searchFolderURL = PortletURLBuilder.create(
+				PortletURLUtil.clone(searchEverywhereURL, liferayPortletResponse)
+			).setParameter(
+				"folderId", folderId
+			).setParameter(
+				"searchFolderId", folderId
+			).setParameter(
+				"searchRepositoryId", scopeGroupId
+			).buildPortletURL();
 
 			long searchFolderId = ParamUtil.getLong(request, "searchFolderId");
 			%>
@@ -103,10 +109,13 @@ List<Folder> mountFolders = DLAppServiceUtil.getMountFolders(scopeGroupId, DLFol
 			<c:if test="<%= !mountFolders.isEmpty() %>">
 
 				<%
-				PortletURL searchRepositoryURL = PortletURLUtil.clone(searchEverywhereURL, liferayPortletResponse);
-
-				searchRepositoryURL.setParameter("repositoryId", String.valueOf(scopeGroupId));
-				searchRepositoryURL.setParameter("searchRepositoryId", String.valueOf(scopeGroupId));
+				PortletURL searchRepositoryURL = PortletURLBuilder.create(
+					PortletURLUtil.clone(searchEverywhereURL, liferayPortletResponse)
+				).setParameter(
+					"repositoryId", scopeGroupId
+				).setParameter(
+					"searchRepositoryId", scopeGroupId
+				).buildPortletURL();
 				%>
 
 				<clay:link
@@ -150,7 +159,7 @@ List<Folder> mountFolders = DLAppServiceUtil.getMountFolders(scopeGroupId, DLFol
 <c:if test="<%= windowState.equals(WindowState.MAXIMIZED) %>">
 	<aui:script>
 		Liferay.componentReady('<portlet:namespace />entriesManagementToolbar').then(
-			function () {
+			() => {
 				Liferay.Util.focusFormField(
 					document.getElementsByName('<portlet:namespace />keywords')[0]
 				);

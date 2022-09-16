@@ -12,38 +12,34 @@
  * details.
  */
 
-import {PortletBase} from 'frontend-js-web';
-import {Config} from 'metal-state';
+import {PortletBase, openWindow, sub} from 'frontend-js-web';
 
 class AccountUserEmailDomainValidator extends PortletBase {
+	created(props) {
+		this.accountEntryNames = props.accountEntryNames;
+		this.blockedDomains = props.blockedDomains;
+		this.validDomains = props.validDomains;
+		this.viewValidDomainsURL = props.viewValidDomainsURL;
+	}
 	attached() {
-		Liferay.once(
-			this.ns('formReady'),
-			(event) => {
-				const form = Liferay.Form.get(event.formName);
+		const form = this.getForm_(this.ns('fm'));
 
-				const field = form.formValidator.getField(
-					this.ns('emailAddress')
-				);
+		if (form) {
+			this.decorateEmailAddressField_(form);
+		}
+		else {
+			Liferay.once(
+				this.ns('formReady'),
+				(event) => {
+					const form = this.getForm_(event.formName);
 
-				if (field) {
-					if (this.viewValidDomainsURL) {
-						this.addFieldMessage_(field);
+					if (form) {
+						this.decorateEmailAddressField_(form);
 					}
-
-					const emailDomainFieldRule = this.getEmailDomainFieldRule_();
-
-					this.addFormFieldRules_(form, [emailDomainFieldRule]);
-
-					this.setWarningValidationStyle_(
-						form,
-						field,
-						emailDomainFieldRule.validatorName
-					);
-				}
-			},
-			this
-		);
+				},
+				this
+			);
+		}
 	}
 
 	addFieldMessage_(field) {
@@ -71,6 +67,24 @@ class AccountUserEmailDomainValidator extends PortletBase {
 		form.set('fieldRules', oldFieldRules.concat(fieldRules));
 	}
 
+	decorateEmailAddressField_(form) {
+		const field = form.formValidator.getField(this.ns('emailAddress'));
+
+		if (this.viewValidDomainsURL) {
+			this.addFieldMessage_(field);
+		}
+
+		const emailDomainFieldRule = this.getEmailDomainFieldRule_();
+
+		this.addFormFieldRules_(form, [emailDomainFieldRule]);
+
+		this.setWarningValidationStyle_(
+			form,
+			field,
+			emailDomainFieldRule.validatorName
+		);
+	}
+
 	getEmailDomainFieldRule_() {
 		const accountEntryNames = this.accountEntryNames;
 		const blockedDomains = this.blockedDomains
@@ -84,13 +98,13 @@ class AccountUserEmailDomainValidator extends PortletBase {
 		return {
 			body(val, field) {
 				const emailDomain = val.substr(val.indexOf('@') + 1);
-				var errorMessage;
-				var hasError = false;
+				let errorMessage;
+				let hasError = false;
 
 				if (!!blockedDomains && blockedDomains.includes(emailDomain)) {
 					hasError = true;
 
-					errorMessage = Liferay.Util.sub(
+					errorMessage = sub(
 						Liferay.Language.get('x-is-a-blocked-domain'),
 						emailDomain
 					);
@@ -101,7 +115,7 @@ class AccountUserEmailDomainValidator extends PortletBase {
 				) {
 					hasError = true;
 
-					errorMessage = Liferay.Util.sub(
+					errorMessage = sub(
 						Liferay.Language.get(
 							'x-is-not-a-valid-domain-for-the-following-accounts-x'
 						),
@@ -132,6 +146,10 @@ class AccountUserEmailDomainValidator extends PortletBase {
 		};
 	}
 
+	getForm_(formName) {
+		return Liferay.Form?.get(formName);
+	}
+
 	onSubmitError_(event, form, field, validatorName) {
 		event.preventDefault();
 
@@ -139,7 +157,7 @@ class AccountUserEmailDomainValidator extends PortletBase {
 
 		const fieldErrors = errors[field.get('name')];
 
-		if (fieldErrors.length == 1 && fieldErrors[0] == validatorName) {
+		if (fieldErrors.length === 1 && fieldErrors[0] === validatorName) {
 			submitForm(form);
 
 			event.halt();
@@ -147,10 +165,12 @@ class AccountUserEmailDomainValidator extends PortletBase {
 	}
 
 	openDialog_(url) {
-		Liferay.Util.openWindow({
+		openWindow({
 			dialog: {
+				destroyOnHide: true,
 				height: 400,
 				modal: true,
+				resizable: false,
 				width: 600,
 			},
 			title: Liferay.Language.get('valid-domains'),
@@ -163,8 +183,8 @@ class AccountUserEmailDomainValidator extends PortletBase {
 
 		formValidator.after('errorField', (event) => {
 			if (
-				event.validator.field == formField &&
-				event.validator.errors[0] == validatorName
+				event.validator.field === formField &&
+				event.validator.errors[0] === validatorName
 			) {
 				const fieldContainer = formValidator.findFieldContainer(
 					formField
@@ -181,11 +201,11 @@ class AccountUserEmailDomainValidator extends PortletBase {
 		formValidator.resetFieldCss = function (field) {
 			resetFieldCss.apply(formValidator, [field]);
 
-			if (field != formField) {
+			if (field !== formField) {
 				return;
 			}
 
-			var fieldContainer = formValidator.findFieldContainer(field);
+			const fieldContainer = formValidator.findFieldContainer(field);
 
 			if (fieldContainer) {
 				fieldContainer.removeClass('has-warning');
@@ -201,12 +221,5 @@ class AccountUserEmailDomainValidator extends PortletBase {
 		);
 	}
 }
-
-AccountUserEmailDomainValidator.STATE = {
-	accountEntryNames: Config.string,
-	blockedDomains: Config.string,
-	validDomains: Config.string,
-	viewValidDomainsURL: Config.string,
-};
 
 export default AccountUserEmailDomainValidator;

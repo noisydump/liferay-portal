@@ -18,9 +18,13 @@ import {ClayInput} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import ClayProgressBar from '@clayui/progress-bar';
 import axios from 'axios';
-import {PagesVisitor, usePage} from 'dynamic-data-mapping-form-renderer';
-import {convertToFormData} from 'dynamic-data-mapping-form-renderer/js/util/fetch.es';
-import {ItemSelectorDialog} from 'frontend-js-web';
+import {
+	PagesVisitor,
+	convertToFormData,
+	useConfig,
+	useFormState,
+} from 'data-engine-js-components-web';
+import {openSelectionModal} from 'frontend-js-web';
 import React, {useEffect, useMemo, useState} from 'react';
 
 import {FieldBase} from '../FieldBase/ReactFieldBase.es';
@@ -68,7 +72,7 @@ function transformFileEntryProperties({fileEntryTitle, fileEntryURL, value}) {
 				fileEntryURL = fileEntry.url;
 			}
 		}
-		catch (e) {
+		catch (error) {
 			console.warn('Unable to parse JSON', value);
 		}
 	}
@@ -77,9 +81,11 @@ function transformFileEntryProperties({fileEntryTitle, fileEntryURL, value}) {
 }
 
 const DocumentLibrary = ({
+	editingLanguageId,
 	fileEntryTitle = '',
 	fileEntryURL = '',
 	id,
+	message,
 	name,
 	onClearButtonClicked,
 	onSelectButtonClicked,
@@ -110,8 +116,10 @@ const DocumentLibrary = ({
 						<ClayInput
 							aria-label={Liferay.Language.get('file')}
 							className="bg-light field"
+							dir={Liferay.Language.direction[editingLanguageId]}
 							disabled={readOnly}
 							id={`${name}inputFile`}
+							lang={editingLanguageId}
 							onClick={onSelectButtonClicked}
 							value={transformedFileEntryTitle || ''}
 						/>
@@ -147,13 +155,15 @@ const DocumentLibrary = ({
 				</ClayInput.Group>
 			)}
 
-			<ClayInput
+			<input
 				id={id}
 				name={name}
 				placeholder={placeholder}
 				type="hidden"
 				value={getValue(value)}
 			/>
+
+			{message && <div className="form-feedback-item">{message}</div>}
 		</div>
 	);
 };
@@ -162,6 +172,7 @@ const GuestUploadFile = ({
 	fileEntryTitle = '',
 	fileEntryURL = '',
 	id,
+	message,
 	name,
 	onClearButtonClicked,
 	onUploadSelectButtonClicked,
@@ -192,6 +203,7 @@ const GuestUploadFile = ({
 						value={transformedFileEntryTitle || ''}
 					/>
 				</ClayInput.GroupItem>
+
 				<ClayInput.GroupItem append shrink>
 					<label
 						className={
@@ -205,6 +217,7 @@ const GuestUploadFile = ({
 					>
 						{Liferay.Language.get('select')}
 					</label>
+
 					<input
 						className="input-file"
 						disabled={readOnly}
@@ -213,6 +226,7 @@ const GuestUploadFile = ({
 						type="file"
 					/>
 				</ClayInput.GroupItem>
+
 				{transformedFileEntryTitle && (
 					<ClayInput.GroupItem shrink>
 						<ClayButton
@@ -227,7 +241,7 @@ const GuestUploadFile = ({
 				)}
 			</ClayInput.Group>
 
-			<ClayInput
+			<input
 				id={id}
 				name={name}
 				placeholder={placeholder}
@@ -236,13 +250,18 @@ const GuestUploadFile = ({
 			/>
 
 			{progress !== 0 && <ClayProgressBar value={progress} />}
+
+			{message && <div className="form-feedback-item">{message}</div>}
 		</div>
 	);
 };
 
 const Main = ({
+	_onBlur,
+	_onFocus,
 	allowGuestUsers,
 	displayErrors: initialDisplayErrors,
+	editingLanguageId,
 	errorMessage: initialErrorMessage,
 	fieldName,
 	fileEntryTitle,
@@ -252,27 +271,33 @@ const Main = ({
 	itemSelectorURL,
 	maximumRepetitions,
 	maximumSubmissionLimitReached,
+	message,
 	name,
 	onBlur,
 	onChange,
 	onFocus,
 	placeholder,
 	readOnly,
+	showUploadPermissionMessage,
 	valid: initialValid,
 	value = '{}',
 	...otherProps
 }) => {
-	const {pages, portletNamespace} = usePage();
+	const {portletNamespace} = useConfig();
+	const {pages} = useFormState();
+
 	const [currentValue, setCurrentValue] = useState(value);
 	const [errorMessage, setErrorMessage] = useState(initialErrorMessage);
 	const [displayErrors, setDisplayErrors] = useState(initialDisplayErrors);
 	const [valid, setValid] = useState(initialValid);
 	const [progress, setProgress] = useState(0);
 
+	const isSignedIn = Liferay.ThemeDisplay.isSignedIn();
+
 	const getErrorMessages = (errorMessage, isSignedIn) => {
 		const errorMessages = [errorMessage];
 
-		if (!isSignedIn && !allowGuestUsers) {
+		if (!allowGuestUsers && !isSignedIn) {
 			errorMessages.push(
 				Liferay.Language.get(
 					'you-need-to-be-signed-in-to-edit-this-field'
@@ -286,19 +311,37 @@ const Main = ({
 				)
 			);
 		}
+		else if (showUploadPermissionMessage) {
+			errorMessages.push(
+				Liferay.Language.get(
+					'you-need-to-be-assigned-to-the-same-site-where-the-form-was-created-to-use-this-field'
+				)
+			);
+		}
 
 		return errorMessages.join(' ');
 	};
 
-	const isSignedIn = Liferay.ThemeDisplay.isSignedIn();
+	useEffect(() => {
+		if ((!allowGuestUsers && !isSignedIn) || showUploadPermissionMessage) {
+			const ddmFormUploadPermissionMessage = document.querySelector(
+				`.ddm-form-upload-permission-message`
+			);
+
+			if (ddmFormUploadPermissionMessage) {
+				ddmFormUploadPermissionMessage.classList.remove('hide');
+			}
+		}
+	}, [allowGuestUsers, isSignedIn, showUploadPermissionMessage]);
 
 	useEffect(() => {
+		setCurrentValue(value);
 		setDisplayErrors(initialDisplayErrors);
 		setErrorMessage(getErrorMessages(initialErrorMessage, isSignedIn));
 		setValid(initialValid);
 
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [initialDisplayErrors, initialErrorMessage, initialValid]);
+	}, [initialDisplayErrors, initialErrorMessage, initialValid, value]);
 
 	const checkMaximumRepetitions = () => {
 		const visitor = new PagesVisitor(pages);
@@ -318,38 +361,27 @@ const Main = ({
 		return repetitionsCounter === maximumRepetitions;
 	};
 
-	const handleVisibleChange = (event) => {
-		if (event.selectedItem) {
-			onFocus({}, event);
-		}
-		else {
-			onBlur({}, event);
-		}
-	};
+	const handleFieldChanged = (selectedItem) => {
+		if (selectedItem?.value) {
+			setCurrentValue(selectedItem.value);
 
-	const handleFieldChanged = (event) => {
-		const selectedItem = event.selectedItem;
-
-		if (selectedItem) {
-			const {value} = selectedItem;
-
-			setCurrentValue(value);
-
-			onChange(event, value);
+			onChange(selectedItem, selectedItem.value);
 		}
 	};
 
-	const handleSelectButtonClicked = ({portletNamespace}) => {
-		const itemSelectorDialog = new ItemSelectorDialog({
-			eventName: `${portletNamespace}selectDocumentLibrary`,
-			singleSelect: true,
+	const handleSelectButtonClicked = ({portletNamespace}, event) => {
+		onFocus(event);
+
+		openSelectionModal({
+			onClose: () => onBlur(event),
+			onSelect: handleFieldChanged,
+			selectEventName: `${portletNamespace}selectDocumentLibrary`,
+			title: Liferay.Util.sub(
+				Liferay.Language.get('select-x'),
+				Liferay.Language.get('document')
+			),
 			url: itemSelectorURL,
 		});
-
-		itemSelectorDialog.on('selectedItemChange', handleFieldChanged);
-		itemSelectorDialog.on('visibleChange', handleVisibleChange);
-
-		itemSelectorDialog.open();
 	};
 
 	const configureErrorMessage = (message) => {
@@ -362,7 +394,11 @@ const Main = ({
 	};
 
 	const disableSubmitButton = (disable = true) => {
-		document.getElementById('ddm-form-submit').disabled = disable;
+		const ddmFormSubmitButton = document.getElementById('ddm-form-submit');
+
+		if (ddmFormSubmitButton) {
+			ddmFormSubmitButton.disabled = disable;
+		}
 	};
 
 	const handleGuestUploadFileChanged = (errorMessage, event, value) => {
@@ -394,9 +430,13 @@ const Main = ({
 	};
 
 	const handleUploadSelectButtonClicked = (event) => {
+		onFocus(event);
+
 		const file = event.target.files[0];
 
 		if (isExceededUploadRequestSizeLimit(file.size)) {
+			onBlur(event);
+
 			return;
 		}
 
@@ -440,11 +480,16 @@ const Main = ({
 				disableSubmitButton(false);
 
 				setProgress(0);
+			})
+			.finally(() => {
+				onBlur(event);
 			});
 	};
 
 	const hasCustomError =
-		(!isSignedIn && !allowGuestUsers) || maximumSubmissionLimitReached;
+		(!isSignedIn && !allowGuestUsers) ||
+		maximumSubmissionLimitReached ||
+		showUploadPermissionMessage;
 
 	return (
 		<FieldBase
@@ -464,12 +509,27 @@ const Main = ({
 					fileEntryTitle={fileEntryTitle}
 					fileEntryURL={fileEntryURL}
 					id={id}
+					message={message}
 					name={name}
+					onBlur={onBlur}
 					onClearButtonClicked={(event) => {
+						onFocus(event);
+
 						setCurrentValue(null);
 
 						onChange(event, '{}');
+
+						const guestUploadInput = document.getElementById(
+							`${name}inputFileGuestUpload`
+						);
+
+						if (guestUploadInput) {
+							guestUploadInput.value = '';
+						}
+
+						onBlur(event);
 					}}
+					onFocus={onFocus}
 					onUploadSelectButtonClicked={(event) =>
 						handleUploadSelectButtonClicked(event)
 					}
@@ -480,20 +540,25 @@ const Main = ({
 				/>
 			) : (
 				<DocumentLibrary
+					editingLanguageId={editingLanguageId}
 					fileEntryTitle={fileEntryTitle}
 					fileEntryURL={fileEntryURL}
 					id={id}
+					message={message}
 					name={name}
 					onClearButtonClicked={(event) => {
 						setCurrentValue(null);
 
 						onChange(event, '{}');
 					}}
-					onSelectButtonClicked={() =>
-						handleSelectButtonClicked({
-							itemSelectorURL,
-							portletNamespace,
-						})
+					onSelectButtonClicked={(event) =>
+						handleSelectButtonClicked(
+							{
+								itemSelectorURL,
+								portletNamespace,
+							},
+							event
+						)
 					}
 					placeholder={placeholder}
 					readOnly={hasCustomError ? true : readOnly}

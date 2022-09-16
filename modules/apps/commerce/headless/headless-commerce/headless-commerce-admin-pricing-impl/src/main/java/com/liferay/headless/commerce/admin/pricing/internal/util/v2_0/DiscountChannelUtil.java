@@ -52,12 +52,12 @@ public class DiscountChannelUtil {
 		else {
 			commerceChannel =
 				commerceChannelService.fetchByExternalReferenceCode(
-					serviceContext.getCompanyId(),
-					discountChannel.getChannelExternalReferenceCode());
+					discountChannel.getChannelExternalReferenceCode(),
+					serviceContext.getCompanyId());
 
 			if (commerceChannel == null) {
 				throw new NoSuchChannelException(
-					"Unable to find Channel with externalReferenceCode: " +
+					"Unable to find channel with external reference code " +
 						discountChannel.getChannelExternalReferenceCode());
 			}
 		}

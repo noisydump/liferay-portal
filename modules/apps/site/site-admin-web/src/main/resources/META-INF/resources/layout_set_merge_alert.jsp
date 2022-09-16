@@ -42,13 +42,13 @@ int mergeFailCount = SitesUtil.getMergeFailCount(layoutSetPrototype);
 		var resetButton = document.getElementById('<%= randomNamespace %>resetButton');
 
 		if (resetButton) {
-			resetButton.addEventListener('click', function (event) {
-				<portlet:actionURL name="/site_admin/reset_merge_fail_count_and_merge" var="portletURL">
+			resetButton.addEventListener('click', (event) => {
+				<liferay-portlet:actionURL name="/site_admin/reset_merge_fail_count_and_merge" portletName="<%= SiteAdminPortletKeys.SITE_ADMIN %>" var="portletURL">
 					<portlet:param name="redirect" value="<%= redirect %>" />
 					<portlet:param name="layoutSetPrototypeId" value="<%= String.valueOf(layoutSetPrototype.getLayoutSetPrototypeId()) %>" />
 					<portlet:param name="groupId" value="<%= String.valueOf(groupId) %>" />
 					<portlet:param name="privateLayoutSet" value="<%= String.valueOf(layoutSet.isPrivateLayout()) %>" />
-				</portlet:actionURL>
+				</liferay-portlet:actionURL>
 
 				submitForm(document.hrefFm, '<%= portletURL.toString() %>');
 			});
@@ -69,11 +69,15 @@ List<Layout> mergeFailFriendlyURLLayouts = SitesUtil.getMergeFailFriendlyURLLayo
 		<ul>
 
 			<%
-			PortletURL editLayoutsURL = PortletProviderUtil.getPortletURL(request, Layout.class.getName(), PortletProvider.Action.VIEW);
-
-			editLayoutsURL.setParameter("tabs1", layoutSet.isPrivateLayout() ? "private-pages" : "public-pages");
-			editLayoutsURL.setParameter("redirect", redirect);
-			editLayoutsURL.setParameter("groupId", String.valueOf(groupId));
+			PortletURL editLayoutsURL = PortletURLBuilder.create(
+				PortletProviderUtil.getPortletURL(request, Layout.class.getName(), PortletProvider.Action.VIEW)
+			).setRedirect(
+				redirect
+			).setTabs1(
+				layoutSet.isPrivateLayout() ? "private-pages" : "public-pages"
+			).setParameter(
+				"groupId", groupId
+			).buildPortletURL();
 
 			for (Layout mergeFailFriendlyURLLayout : mergeFailFriendlyURLLayouts) {
 				editLayoutsURL.setParameter("selPlid", String.valueOf(mergeFailFriendlyURLLayout.getPlid()));

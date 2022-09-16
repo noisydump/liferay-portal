@@ -17,6 +17,7 @@ package com.liferay.frontend.taglib.clay.servlet.taglib;
 import com.liferay.frontend.taglib.clay.internal.servlet.taglib.BaseContainerTag;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.MultiselectItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.MultiselectLocator;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ListUtil;
@@ -246,7 +247,7 @@ public class MultiselectTag extends BaseContainerTag {
 		List<MultiselectItem> selectedMultiselectItems =
 			getSelectedMultiselectItems();
 
-		if (!ListUtil.isEmpty(selectedMultiselectItems)) {
+		if (ListUtil.isNotEmpty(selectedMultiselectItems)) {
 			MultiselectLocator multiselectLocator = getMultiselectLocator();
 
 			for (MultiselectItem selectedItem : selectedMultiselectItems) {
@@ -311,7 +312,8 @@ public class MultiselectTag extends BaseContainerTag {
 					TagResourceBundleUtil.getResourceBundle(pageContext),
 					_clearAllTitle);
 
-				buttonTag.setTitle(HtmlUtil.escape(clearAllTitle));
+				buttonTag.setDynamicAttribute(
+					StringPool.BLANK, "title", HtmlUtil.escape(clearAllTitle));
 			}
 
 			buttonTag.doTag(pageContext);

@@ -19,10 +19,13 @@
 <%
 String tabs3 = ParamUtil.getString(request, "tabs3", "new-export-process");
 
-PortletURL portletURL = renderResponse.createRenderURL();
-
-portletURL.setParameter("mvcRenderCommandName", "/export_import/export_import");
-portletURL.setParameter("portletResource", portletResource);
+PortletURL portletURL = PortletURLBuilder.createRenderURL(
+	renderResponse
+).setMVCRenderCommandName(
+	"/export_import/export_import"
+).setPortletResource(
+	portletResource
+).buildPortletURL();
 %>
 
 <clay:navigation-bar
@@ -145,7 +148,7 @@ portletURL.setParameter("portletResource", portletResource);
 																	"portletid", selPortlet.getRootPortletId()
 																).build()
 															%>'
-															href="javascript:;"
+															href="javascript:void(0);"
 															label="change"
 															method="get"
 														/>
@@ -208,7 +211,7 @@ portletURL.setParameter("portletResource", portletResource);
 															markupView="lexicon"
 														/>
 
-														<aui:a cssClass="modify-link" href="javascript:;" id="rangeLink" method="get">
+														<aui:a cssClass="modify-link" href="javascript:void(0);" id="rangeLink" method="get">
 															<liferay-ui:message key="refresh-counts" />
 														</aui:a>
 													</div>
@@ -332,10 +335,9 @@ portletURL.setParameter("portletResource", portletResource);
 														<%
 														PortletDataHandlerControl[] exportControls = portletDataHandler.getExportControls();
 														PortletDataHandlerControl[] metadataControls = portletDataHandler.getExportMetadataControls();
-
-														if (ArrayUtil.isNotEmpty(exportControls) || ArrayUtil.isNotEmpty(metadataControls)) {
 														%>
 
+														<c:if test="<%= ArrayUtil.isNotEmpty(exportControls) || ArrayUtil.isNotEmpty(metadataControls) %>">
 															<div class="hide" id="<portlet:namespace />content_<%= selPortlet.getRootPortletId() %>">
 																<ul class="lfr-tree list-unstyled">
 																	<li class="tree-item">
@@ -365,19 +367,22 @@ portletURL.setParameter("portletResource", portletResource);
 																					PortletDataHandlerBoolean control = (PortletDataHandlerBoolean)metadataControl;
 
 																					PortletDataHandlerControl[] childrenControls = control.getChildren();
-
-																					if (ArrayUtil.isNotEmpty(childrenControls)) {
-																						request.setAttribute("render_controls.jsp-controls", childrenControls);
 																				%>
+
+																					<c:if test="<%= ArrayUtil.isNotEmpty(childrenControls) %>">
+
+																						<%
+																						request.setAttribute("render_controls.jsp-controls", childrenControls);
+																						%>
 
 																						<aui:field-wrapper label="content-metadata">
 																							<ul class="lfr-tree list-unstyled">
 																								<liferay-util:include page="/render_controls.jsp" servletContext="<%= application %>" />
 																							</ul>
 																						</aui:field-wrapper>
+																					</c:if>
 
 																				<%
-																					}
 																				}
 																				%>
 
@@ -398,7 +403,7 @@ portletURL.setParameter("portletResource", portletResource);
 																				"portletid", selPortlet.getRootPortletId()
 																			).build()
 																		%>'
-																		href="javascript:;"
+																		href="javascript:void(0);"
 																		id='<%= "contentLink_" + selPortlet.getRootPortletId() %>'
 																		label="change"
 																		method="get"
@@ -412,11 +417,7 @@ portletURL.setParameter("portletResource", portletResource);
 																	'<portlet:namespace />showChangeContent<%= StringPool.UNDERLINE + selPortlet.getRootPortletId() %>'
 																);
 															</aui:script>
-
-														<%
-														}
-														%>
-
+														</c:if>
 													</li>
 												</ul>
 
@@ -424,7 +425,7 @@ portletURL.setParameter("portletResource", portletResource);
 													<aui:fieldset cssClass="content-options" label="for-each-of-the-selected-content-types,-export-their">
 														<span class="selected-labels" id="<portlet:namespace />selectedContentOptions"></span>
 
-														<aui:a cssClass="modify-link" href="javascript:;" id="contentOptionsLink" label="change" method="get" />
+														<aui:a cssClass="modify-link" href="javascript:void(0);" id="contentOptionsLink" label="change" method="get" />
 
 														<div class="hide" id="<portlet:namespace />contentOptions">
 															<ul class="lfr-tree list-unstyled">
@@ -465,7 +466,7 @@ portletURL.setParameter("portletResource", portletResource);
 			<aui:button-row>
 				<aui:button type="submit" value="export" />
 
-				<aui:button href="<%= currentURL %>" type="cancel" />
+				<aui:button type="cancel" />
 			</aui:button-row>
 		</aui:form>
 
@@ -474,7 +475,7 @@ portletURL.setParameter("portletResource", portletResource);
 
 			var form = liferayForm.formNode;
 
-			form.on('submit', function (event) {
+			form.on('submit', (event) => {
 				event.halt();
 
 				var exportImport = Liferay.component(
@@ -567,7 +568,7 @@ portletURL.setParameter("portletResource", portletResource);
 
 	Liferay.component('<portlet:namespace />ExportImportComponent', exportImport);
 
-	Liferay.once('destroyPortlet', function () {
+	Liferay.once('destroyPortlet', () => {
 		exportImport.destroy();
 	});
 </aui:script>

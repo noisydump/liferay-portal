@@ -12,11 +12,12 @@
  * details.
  */
 
-class CookieUtils {
+class CommerceCookie {
 	constructor(scope = null) {
 		if (!scope) {
 			throw new Error('Scope must be defined');
 		}
+
 		this.scope = scope;
 	}
 
@@ -27,8 +28,8 @@ class CookieUtils {
 	}
 
 	setValue(key, value, expires, path = '/') {
-		const cookieValue = `${this.scope}${key}=${value};`,
-			cookiePath = `path=${path};`;
+		const cookieValue = `${this.scope}${key}=${value};`;
+		const cookiePath = `path=${path};`;
 
 		let cookieExp = '';
 
@@ -42,4 +43,5 @@ class CookieUtils {
 		document.cookie = `${cookieValue}${cookieExp}${cookiePath}`;
 	}
 }
-export default CookieUtils;
+
+export default CommerceCookie;

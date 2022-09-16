@@ -18,19 +18,21 @@ import React, {useState} from 'react';
 
 import useSetRef from '../../../core/hooks/useSetRef';
 import {getLayoutDataItemPropTypes} from '../../../prop-types/index';
+import {ResizeContextProvider} from '../../contexts/ResizeContext';
+import {useSelector} from '../../contexts/StoreContext';
 import selectCanUpdateItemConfiguration from '../../selectors/selectCanUpdateItemConfiguration';
-import {useSelector} from '../../store/index';
+import getLayoutDataItemTopperUniqueClassName from '../../utils/getLayoutDataItemTopperUniqueClassName';
 import {getResponsiveColumnSize} from '../../utils/getResponsiveColumnSize';
 import {getResponsiveConfig} from '../../utils/getResponsiveConfig';
-import {ResizeContextProvider} from '../ResizeContext';
-import Topper from '../Topper';
+import isItemEmpty from '../../utils/isItemEmpty';
+import Topper from '../topper/Topper';
 import Row from './Row';
 
 const ROW_SIZE = 12;
 
 const RowWithControls = React.forwardRef(({children, item}, ref) => {
 	const [resizing, setResizing] = useState(false);
-	const [updatedLayoutData, setUpdatedLayoutData] = useState(null);
+	const [nextColumnSizes, setNextColumnSizes] = useState(null);
 
 	const canUpdateItemConfiguration = useSelector(
 		selectCanUpdateItemConfiguration
@@ -50,23 +52,19 @@ const RowWithControls = React.forwardRef(({children, item}, ref) => {
 	const [setRef, itemElement] = useSetRef(ref);
 	const {verticalAlignment} = rowResponsiveConfig;
 
-	const {height, maxWidth, minWidth, width} = item.config.styles;
+	const {height} = rowResponsiveConfig.styles;
 
 	return (
 		<Topper
+			className={getLayoutDataItemTopperUniqueClassName(item.itemId)}
 			item={item}
 			itemElement={itemElement}
-			style={{
-				maxWidth,
-				minWidth,
-				width,
-			}}
 		>
 			<Row
 				className={classNames({
 					'align-bottom': verticalAlignment === 'bottom',
 					'align-middle': verticalAlignment === 'middle',
-					empty:
+					'empty':
 						isSomeRowEmpty(
 							item,
 							layoutData,
@@ -80,10 +78,10 @@ const RowWithControls = React.forwardRef(({children, item}, ref) => {
 			>
 				<ResizeContextProvider
 					value={{
+						nextColumnSizes,
 						resizing,
+						setNextColumnSizes,
 						setResizing,
-						setUpdatedLayoutData,
-						updatedLayoutData,
 					}}
 				>
 					{children}
@@ -99,7 +97,11 @@ const RowWithControls = React.forwardRef(({children, item}, ref) => {
 function isSomeRowEmpty(item, layoutData, selectedViewportSize) {
 	const rows = groupItemsByRow(item, layoutData, selectedViewportSize);
 
-	return rows.some((row) => row.every((item) => item.children.length === 0));
+	return rows.some((row) =>
+		row.every((column) =>
+			isItemEmpty(column, layoutData, selectedViewportSize)
+		)
+	);
 }
 
 function groupItemsByRow(item, layoutData, selectedViewportSize) {

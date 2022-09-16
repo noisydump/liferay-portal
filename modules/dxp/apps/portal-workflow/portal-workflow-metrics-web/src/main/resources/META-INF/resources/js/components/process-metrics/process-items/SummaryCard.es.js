@@ -10,7 +10,7 @@
  */
 
 import ClayIcon from '@clayui/icon';
-import React, {useContext, useMemo, useState} from 'react';
+import React, {useContext, useState} from 'react';
 
 import filterConstants from '../../../shared/components/filter/util/filterConstants.es';
 import ChildLink from '../../../shared/components/router/ChildLink.es';
@@ -34,56 +34,40 @@ const SummaryCard = ({
 	const [hovered, setHovered] = useState(false);
 	const {defaultDelta} = useContext(AppContext);
 	const disabled = !total && value === undefined;
+	const formattedPercentage = !total
+		? formatNumber(getPercentage(value, totalValue), '0[.]00%')
+		: null;
+	const formattedValue = formatNumber(value, '0[,0][.]0a');
 
-	const title = useMemo(() => getTitle(completed), [completed, getTitle]);
+	const filterParams = {
+		[filterConstants.processStatus.key]: [
+			completed
+				? processStatusConstants.completed
+				: processStatusConstants.pending,
+		],
+		[filterConstants.slaStatus.key]: [slaStatusFilter],
+	};
 
-	const formattedPercentage = useMemo(() => {
-		if (!total) {
-			const percentage = getPercentage(value, totalValue);
+	if (timeRange) {
+		const {dateEnd, dateStart, key} = timeRange;
 
-			return formatNumber(percentage, '0[.]00%');
-		}
-
-		return null;
-	}, [total, totalValue, value]);
-
-	const formattedValue = useMemo(() => formatNumber(value, '0[,0][.]0a'), [
-		value,
-	]);
-
-	const filtersQuery = useMemo(() => {
-		const filterParams = {
-			[filterConstants.processStatus.key]: [
-				completed
-					? processStatusConstants.completed
-					: processStatusConstants.pending,
-			],
-			[filterConstants.slaStatus.key]: [slaStatusFilter],
-		};
-
-		if (timeRange) {
-			const {dateEnd, dateStart, key} = timeRange;
-
-			filterParams.dateEnd = dateEnd;
-			filterParams.dateStart = dateStart;
-			filterParams.timeRange = [key];
-		}
-
-		return filterParams;
-	}, [completed, slaStatusFilter, timeRange]);
+		filterParams.dateEnd = dateEnd;
+		filterParams.dateStart = dateStart;
+		filterParams.timeRange = [key];
+	}
 
 	return (
 		<ChildLink
 			className={`${
 				disabled ? 'disabled' : ''
-			} process-dashboard-summary-card`}
+			} process-tabs-summary-card`}
 			onMouseOut={() => setHovered(false)}
 			onMouseOver={() => setHovered(true)}
-			query={{filters: filtersQuery}}
-			to={`/instance/${processId}/${defaultDelta}/1`}
+			query={{filters: filterParams}}
+			to={`/instance/${processId}/${defaultDelta}/1/dateOverdue:asc`}
 		>
 			<div>
-				<div className={'header'}>
+				<div className="header">
 					{iconName && (
 						<span
 							className={`bg-${iconColor}-light mr-3 sticker sticker-circle`}
@@ -97,7 +81,7 @@ const SummaryCard = ({
 						</span>
 					)}
 
-					<span>{title}</span>
+					<span>{getTitle(completed)}</span>
 				</div>
 
 				{!disabled && (

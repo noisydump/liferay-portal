@@ -23,24 +23,24 @@ if (Validator.isNull(fieldParam)) {
 	fieldParam = String.valueOf(searchScopeGroupId);
 }
 
-ScopeSearchFacetDisplayBuilder scopeSearchFacetDisplayBuilder = new ScopeSearchFacetDisplayBuilder(renderRequest);
+ScopeSearchFacetDisplayContextBuilder scopeSearchFacetDisplayContextBuilder = new ScopeSearchFacetDisplayContextBuilder(renderRequest);
 
-scopeSearchFacetDisplayBuilder.setFacet(facet);
+scopeSearchFacetDisplayContextBuilder.setFacet(facet);
 
 if (searchScopeGroupId != 0) {
-	scopeSearchFacetDisplayBuilder.setFilteredGroupIds(new long[] {searchScopeGroupId});
+	scopeSearchFacetDisplayContextBuilder.setFilteredGroupIds(new long[] {searchScopeGroupId});
 }
 
-scopeSearchFacetDisplayBuilder.setFrequenciesVisible(dataJSONObject.getBoolean("showAssetCount", true));
-scopeSearchFacetDisplayBuilder.setFrequencyThreshold(dataJSONObject.getInt("frequencyThreshold"));
-scopeSearchFacetDisplayBuilder.setGroupLocalService(GroupLocalServiceUtil.getService());
-scopeSearchFacetDisplayBuilder.setLanguage(LanguageUtil.getLanguage());
-scopeSearchFacetDisplayBuilder.setLocale(locale);
-scopeSearchFacetDisplayBuilder.setMaxTerms(dataJSONObject.getInt("maxTerms"));
-scopeSearchFacetDisplayBuilder.setParameterName(facet.getFieldId());
-scopeSearchFacetDisplayBuilder.setParameterValue(fieldParam);
+scopeSearchFacetDisplayContextBuilder.setFrequenciesVisible(dataJSONObject.getBoolean("showAssetCount", true));
+scopeSearchFacetDisplayContextBuilder.setFrequencyThreshold(dataJSONObject.getInt("frequencyThreshold"));
+scopeSearchFacetDisplayContextBuilder.setGroupLocalService(GroupLocalServiceUtil.getService());
+scopeSearchFacetDisplayContextBuilder.setLanguage(LanguageUtil.getLanguage());
+scopeSearchFacetDisplayContextBuilder.setLocale(locale);
+scopeSearchFacetDisplayContextBuilder.setMaxTerms(dataJSONObject.getInt("maxTerms"));
+scopeSearchFacetDisplayContextBuilder.setParameterName(facet.getFieldId());
+scopeSearchFacetDisplayContextBuilder.setParameterValue(fieldParam);
 
-ScopeSearchFacetDisplayContext scopeSearchFacetDisplayContext = scopeSearchFacetDisplayBuilder.build();
+ScopeSearchFacetDisplayContext scopeSearchFacetDisplayContext = scopeSearchFacetDisplayContextBuilder.build();
 %>
 
 <c:choose>
@@ -61,7 +61,7 @@ ScopeSearchFacetDisplayContext scopeSearchFacetDisplayContext = scopeSearchFacet
 
 					<ul class="list-unstyled scopes">
 						<li class="default facet-value">
-							<a class="<%= scopeSearchFacetDisplayContext.isNothingSelected() ? "facet-term-selected" : "facet-term-unselected" %>" data-value="0" href="javascript:;"><liferay-ui:message key="<%= HtmlUtil.escape(facetConfiguration.getLabel()) %>" /></a>
+							<a class="<%= scopeSearchFacetDisplayContext.isNothingSelected() ? "facet-term-selected" : "facet-term-unselected" %>" data-value="0" href="javascript:void(0);"><liferay-ui:message key="<%= HtmlUtil.escape(facetConfiguration.getLabel()) %>" /></a>
 						</li>
 
 						<%
@@ -71,7 +71,7 @@ ScopeSearchFacetDisplayContext scopeSearchFacetDisplayContext = scopeSearchFacet
 						%>
 
 							<li class="facet-value">
-								<a class="<%= scopeSearchFacetTermDisplayContext.isSelected() ? "facet-term-selected" : "facet-term-unselected" %>" data-value="<%= scopeSearchFacetTermDisplayContext.getGroupId() %>" href="javascript:;">
+								<a class="<%= scopeSearchFacetTermDisplayContext.isSelected() ? "facet-term-selected" : "facet-term-unselected" %>" data-value="<%= scopeSearchFacetTermDisplayContext.getGroupId() %>" href="javascript:void(0);">
 									<%= HtmlUtil.escape(scopeSearchFacetTermDisplayContext.getDescriptiveName()) %>
 
 									<c:if test="<%= scopeSearchFacetTermDisplayContext.isShowCount() %>">

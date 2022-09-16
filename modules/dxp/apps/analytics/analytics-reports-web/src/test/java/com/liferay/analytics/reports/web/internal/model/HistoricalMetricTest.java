@@ -14,11 +14,10 @@
 
 package com.liferay.analytics.reports.web.internal.model;
 
-import com.liferay.portal.json.JSONFactoryImpl;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -30,7 +29,8 @@ import java.util.Collections;
 import java.util.Date;
 
 import org.junit.Assert;
-import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -38,12 +38,10 @@ import org.junit.Test;
  */
 public class HistoricalMetricTest {
 
-	@BeforeClass
-	public static void setUpClass() {
-		JSONFactoryUtil jsonFactoryUtil = new JSONFactoryUtil();
-
-		jsonFactoryUtil.setJSONFactory(new JSONFactoryImpl());
-	}
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Test
 	public void testNewHistoricalMetric() {
@@ -82,8 +80,8 @@ public class HistoricalMetricTest {
 					))
 			).put(
 				"value", historicalMetric.getValue()
-			).toJSONString(),
-			jsonObject.toJSONString());
+			).toString(),
+			jsonObject.toString());
 	}
 
 	private String _formatDate(Date date) {

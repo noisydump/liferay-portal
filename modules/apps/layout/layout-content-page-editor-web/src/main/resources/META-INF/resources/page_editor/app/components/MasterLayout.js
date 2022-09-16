@@ -12,6 +12,7 @@
  * details.
  */
 
+import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import React, {useCallback, useEffect, useRef} from 'react';
 
@@ -20,17 +21,24 @@ import {
 	getLayoutDataItemPropTypes,
 } from '../../prop-types/index';
 import {LAYOUT_DATA_ITEM_TYPES} from '../config/constants/layoutDataItemTypes';
-import {useSelector} from '../store/index';
-import {useSelectItem} from './Controls';
+import {useSelectItem} from '../contexts/ControlsContext';
+import {useSelector} from '../contexts/StoreContext';
 import Layout from './Layout';
 import FragmentContent from './fragment-content/FragmentContent';
-import {Collection, Column, Container, Row} from './layout-data-items/index';
+import {
+	Collection,
+	Column,
+	Container,
+	Form,
+	Row,
+} from './layout-data-items/index';
 
 const LAYOUT_DATA_ITEMS = {
 	[LAYOUT_DATA_ITEM_TYPES.collection]: Collection,
 	[LAYOUT_DATA_ITEM_TYPES.collectionItem]: CollectionItem,
-	[LAYOUT_DATA_ITEM_TYPES.column]: Column,
+	[LAYOUT_DATA_ITEM_TYPES.column]: MasterColumn,
 	[LAYOUT_DATA_ITEM_TYPES.container]: Container,
+	[LAYOUT_DATA_ITEM_TYPES.form]: Form,
 	[LAYOUT_DATA_ITEM_TYPES.dropZone]: DropZoneContainer,
 	[LAYOUT_DATA_ITEM_TYPES.fragment]: Fragment,
 	[LAYOUT_DATA_ITEM_TYPES.fragmentDropZone]: Root,
@@ -103,7 +111,6 @@ function Root({children}) {
 function CollectionItem({children}) {
 	return <div>{children}</div>;
 }
-
 function Fragment({item}) {
 	const ref = useRef(null);
 	const selectItem = useSelectItem();
@@ -185,3 +192,14 @@ Fragment.propTypes = {
 		}),
 	}).isRequired,
 };
+
+function MasterColumn({children, className, ...otherProps}) {
+	return (
+		<Column
+			{...otherProps}
+			className={classNames(className, 'page-editor__col--master')}
+		>
+			{children}
+		</Column>
+	);
+}

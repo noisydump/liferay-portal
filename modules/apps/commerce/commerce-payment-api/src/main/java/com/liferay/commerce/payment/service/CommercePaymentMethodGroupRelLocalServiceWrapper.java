@@ -27,6 +27,10 @@ public class CommercePaymentMethodGroupRelLocalServiceWrapper
 	implements CommercePaymentMethodGroupRelLocalService,
 			   ServiceWrapper<CommercePaymentMethodGroupRelLocalService> {
 
+	public CommercePaymentMethodGroupRelLocalServiceWrapper() {
+		this(null);
+	}
+
 	public CommercePaymentMethodGroupRelLocalServiceWrapper(
 		CommercePaymentMethodGroupRelLocalService
 			commercePaymentMethodGroupRelLocalService) {
@@ -39,13 +43,12 @@ public class CommercePaymentMethodGroupRelLocalServiceWrapper
 	public com.liferay.commerce.model.CommerceAddressRestriction
 			addCommerceAddressRestriction(
 				long userId, long groupId, long commercePaymentMethodGroupRelId,
-				long commerceCountryId)
+				long countryId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _commercePaymentMethodGroupRelLocalService.
 			addCommerceAddressRestriction(
-				userId, groupId, commercePaymentMethodGroupRelId,
-				commerceCountryId);
+				userId, groupId, commercePaymentMethodGroupRelId, countryId);
 	}
 
 	/**
@@ -55,14 +58,13 @@ public class CommercePaymentMethodGroupRelLocalServiceWrapper
 	@Override
 	public com.liferay.commerce.model.CommerceAddressRestriction
 			addCommerceAddressRestriction(
-				long commercePaymentMethodGroupRelId, long commerceCountryId,
+				long commercePaymentMethodGroupRelId, long countryId,
 				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _commercePaymentMethodGroupRelLocalService.
 			addCommerceAddressRestriction(
-				commercePaymentMethodGroupRelId, commerceCountryId,
-				serviceContext);
+				commercePaymentMethodGroupRelId, countryId, serviceContext);
 	}
 
 	/**
@@ -205,6 +207,14 @@ public class CommercePaymentMethodGroupRelLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _commercePaymentMethodGroupRelLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _commercePaymentMethodGroupRelLocalService.dslQueryCount(
+			dslQuery);
 	}
 
 	@Override
@@ -454,11 +464,10 @@ public class CommercePaymentMethodGroupRelLocalServiceWrapper
 	public java.util.List
 		<com.liferay.commerce.payment.model.CommercePaymentMethodGroupRel>
 			getCommercePaymentMethodGroupRels(
-				long groupId, long commerceCountryId, boolean active) {
+				long groupId, long countryId, boolean active) {
 
 		return _commercePaymentMethodGroupRelLocalService.
-			getCommercePaymentMethodGroupRels(
-				groupId, commerceCountryId, active);
+			getCommercePaymentMethodGroupRels(groupId, countryId, active);
 	}
 
 	/**

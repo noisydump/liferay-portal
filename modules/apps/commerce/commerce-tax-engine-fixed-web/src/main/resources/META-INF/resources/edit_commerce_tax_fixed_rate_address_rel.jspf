@@ -53,21 +53,21 @@ if (commerceTaxFixedRateAddressRel != null) {
 	<div class="col-md-6">
 		<aui:input label='<%= commerceTaxMethod.isPercentage() ? "rate" : "amount" %>' name="rate" suffix="<%= commerceTaxMethod.isPercentage() ? StringPool.PERCENT : commerceTaxFixedRateAddressRelsDisplayContext.getCommerceCurrencyCode() %>" value="<%= commerceTaxFixedRateAddressRelsDisplayContext.getLocalizedRate(commerceTaxMethod.isPercentage(), (commerceTaxFixedRateAddressRel == null) ? 0 : commerceTaxFixedRateAddressRel.getRate(), locale) %>">
 			<aui:validator name="min">0</aui:validator>
+			<aui:validator name="number" />
+			<aui:validator name="required" />
 		</aui:input>
 	</div>
 </div>
 
 <div class="row">
 	<div class="col-md-4">
-		<aui:select label="country" name="commerceCountryId" showEmptyOption="<%= true %>">
+		<aui:select label="country" name="countryId" showEmptyOption="<%= true %>">
 
 			<%
-			List<CommerceCountry> commerceCountries = commerceTaxFixedRateAddressRelsDisplayContext.getCommerceCountries();
-
-			for (CommerceCountry commerceCountry : commerceCountries) {
+			for (Country country : commerceTaxFixedRateAddressRelsDisplayContext.getCountries()) {
 			%>
 
-				<aui:option label="<%= commerceCountry.getName(languageId) %>" selected="<%= (commerceTaxFixedRateAddressRel != null) && (commerceTaxFixedRateAddressRel.getCommerceCountryId() == commerceCountry.getCommerceCountryId()) %>" value="<%= commerceCountry.getCommerceCountryId() %>" />
+				<aui:option label="<%= country.getTitle(languageId) %>" selected="<%= (commerceTaxFixedRateAddressRel != null) && (commerceTaxFixedRateAddressRel.getCountryId() == country.getCountryId()) %>" value="<%= country.getCountryId() %>" />
 
 			<%
 			}
@@ -77,15 +77,13 @@ if (commerceTaxFixedRateAddressRel != null) {
 	</div>
 
 	<div class="col-md-4">
-		<aui:select label="region" name="commerceRegionId" showEmptyOption="<%= true %>">
+		<aui:select label="region" name="regionId" showEmptyOption="<%= true %>">
 
 			<%
-			List<CommerceRegion> commerceRegions = commerceTaxFixedRateAddressRelsDisplayContext.getCommerceRegions();
-
-			for (CommerceRegion commerceRegion : commerceRegions) {
+			for (Region region : commerceTaxFixedRateAddressRelsDisplayContext.getRegions()) {
 			%>
 
-				<aui:option label="<%= commerceRegion.getName() %>" selected="<%= (commerceTaxFixedRateAddressRel != null) && (commerceTaxFixedRateAddressRel.getCommerceRegionId() == commerceRegion.getCommerceRegionId()) %>" value="<%= commerceRegion.getCommerceRegionId() %>" />
+				<aui:option label="<%= region.getName() %>" selected="<%= (commerceTaxFixedRateAddressRel != null) && (commerceTaxFixedRateAddressRel.getRegionId() == region.getRegionId()) %>" value="<%= region.getRegionId() %>" />
 
 			<%
 			}

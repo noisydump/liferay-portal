@@ -47,7 +47,7 @@ BackgroundTask lastCompletedInitialPublicationBackgroundTask = BackgroundTaskMan
 		<%@ include file="/staging_configuration_exceptions.jspf" %>
 
 		<clay:container-fluid
-			cssClass="main-content-body"
+			cssClass="main-content-body mt-4"
 		>
 			<liferay-ui:breadcrumb
 				showLayout="<%= false %>"
@@ -122,7 +122,7 @@ BackgroundTask lastCompletedInitialPublicationBackgroundTask = BackgroundTaskMan
 							) {
 								var delegate = delegateModule.default;
 
-								delegate(stagingTypes, 'click', 'input', function (event) {
+								delegate(stagingTypes, 'click', 'input', (event) => {
 									var value = event.target.closest('input').value;
 
 									if (value != '<%= StagingConstants.TYPE_LOCAL_STAGING %>') {
@@ -174,6 +174,17 @@ BackgroundTask lastCompletedInitialPublicationBackgroundTask = BackgroundTaskMan
 		var form = document.<portlet:namespace />fm;
 		var ok = true;
 
+		function doSubmit() {
+			if (forceDisable) {
+				form.elements['<portlet:namespace />forceDisable'].value = true;
+				form.elements[
+					'<portlet:namespace />stagingType'
+				].value = <%= StagingConstants.TYPE_NOT_STAGED %>;
+			}
+
+			submitForm(form);
+		}
+
 		<c:if test="<%= liveGroup != null %>">
 			var oldValue;
 
@@ -193,42 +204,54 @@ BackgroundTask lastCompletedInitialPublicationBackgroundTask = BackgroundTaskMan
 				'input[name=<portlet:namespace />stagingType]:checked'
 			);
 
-			if (selectedStagingTypeInput) {
+			if (forceDisable || selectedStagingTypeInput) {
 				var currentValue = selectedStagingTypeInput.value;
 
-				if (currentValue != oldValue) {
-					ok = false;
+				if (forceDisable) {
+					currentValue = <%= StagingConstants.TYPE_NOT_STAGED %>;
+				}
 
+				if (currentValue != oldValue) {
 					if (currentValue == <%= StagingConstants.TYPE_NOT_STAGED %>) {
-						ok = confirm(
-							'<%= UnicodeLanguageUtil.format(request, "are-you-sure-you-want-to-deactivate-staging-for-x", liveGroup.getDescriptiveName(locale), false) %>'
-						);
+						Liferay.Util.openConfirmModal({
+							message:
+								'<%= UnicodeLanguageUtil.format(request, "are-you-sure-you-want-to-deactivate-staging-for-x", liveGroup.getDescriptiveName(locale), false) %>',
+							onConfirm: (isConfirmed) => {
+								if (isConfirmed) {
+									doSubmit();
+								}
+							},
+						});
 					}
 					else if (
 						currentValue == <%= StagingConstants.TYPE_LOCAL_STAGING %>
 					) {
-						ok = confirm(
-							'<%= UnicodeLanguageUtil.format(request, "are-you-sure-you-want-to-activate-local-staging-for-x", liveGroup.getDescriptiveName(locale), false) %>'
-						);
+						Liferay.Util.openConfirmModal({
+							message:
+								'<%= UnicodeLanguageUtil.format(request, "are-you-sure-you-want-to-activate-local-staging-for-x", liveGroup.getDescriptiveName(locale), false) %>',
+							onConfirm: (isConfirmed) => {
+								if (isConfirmed) {
+									doSubmit();
+								}
+							},
+						});
 					}
 					else if (
 						currentValue == <%= StagingConstants.TYPE_REMOTE_STAGING %>
 					) {
-						ok = confirm(
-							'<%= UnicodeLanguageUtil.format(request, "are-you-sure-you-want-to-activate-remote-staging-for-x", liveGroup.getDescriptiveName(locale), false) %>'
-						);
+						Liferay.Util.openConfirmModal({
+							message:
+								'<%= UnicodeLanguageUtil.format(request, "are-you-sure-you-want-to-activate-remote-staging-for-x", liveGroup.getDescriptiveName(locale), false) %>',
+							onConfirm: (isConfirmed) => {
+								if (isConfirmed) {
+									doSubmit();
+								}
+							},
+						});
 					}
 				}
 			}
 		</c:if>
-
-		if (ok) {
-			if (forceDisable) {
-				form.elements['<portlet:namespace />forceDisable'].value = true;
-			}
-
-			submitForm(form);
-		}
 	}
 
 	(function () {
@@ -240,8 +263,8 @@ BackgroundTask lastCompletedInitialPublicationBackgroundTask = BackgroundTaskMan
 		);
 
 		if (selectAllCheckbox) {
-			selectAllCheckbox.addEventListener('change', function () {
-				Array.prototype.forEach.call(allCheckboxes, function (checkbox) {
+			selectAllCheckbox.addEventListener('change', () => {
+				Array.prototype.forEach.call(allCheckboxes, (checkbox) => {
 					checkbox.checked = selectAllCheckbox.checked;
 				});
 			});

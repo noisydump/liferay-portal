@@ -32,9 +32,9 @@ String sectionName = "password-changed-notification";
 
 <aui:field-wrapper label="email-without-password">
 	<liferay-frontend:email-notification-settings
-		emailBody='<%= LocalizationUtil.getLocalizationXmlFromPreferences(companyPortletPreferences, renderRequest, "adminEmailPasswordChangedBody", "settings", ContentUtil.get(PortalClassLoaderUtil.getClassLoader(), PropsValues.ADMIN_EMAIL_PASSWORD_CHANGED_BODY)) %>'
+		emailBody='<%= LocalizationUtil.getLocalizationXmlFromPreferences(companyPortletPreferences, renderRequest, "adminEmailPasswordChangedBody", "settings", StringUtil.read(PortalClassLoaderUtil.getClassLoader(), PropsValues.ADMIN_EMAIL_PASSWORD_CHANGED_BODY)) %>'
 		emailParam="adminEmailPasswordChanged"
-		emailSubject='<%= LocalizationUtil.getLocalizationXmlFromPreferences(companyPortletPreferences, renderRequest, "adminEmailPasswordChangedSubject", "settings", ContentUtil.get(PortalClassLoaderUtil.getClassLoader(), PropsValues.ADMIN_EMAIL_PASSWORD_CHANGED_SUBJECT)) %>'
+		emailSubject='<%= LocalizationUtil.getLocalizationXmlFromPreferences(companyPortletPreferences, renderRequest, "adminEmailPasswordChangedSubject", "settings", StringUtil.read(PortalClassLoaderUtil.getClassLoader(), PropsValues.ADMIN_EMAIL_PASSWORD_CHANGED_SUBJECT)) %>'
 		fieldPrefix="settings"
 		showEmailEnabled="<%= false %>"
 	/>
@@ -45,8 +45,8 @@ String sectionName = "password-changed-notification";
 </aui:fieldset>
 
 <%
-String adminEmailPasswordSentSubject = LocalizationUtil.getLocalizationXmlFromPreferences(companyPortletPreferences, renderRequest, "adminEmailPasswordSentSubject", "preferences", StringPool.BLANK);
 String adminEmailPasswordSentBody = LocalizationUtil.getLocalizationXmlFromPreferences(companyPortletPreferences, renderRequest, "adminEmailPasswordSentBody", "preferences", StringPool.BLANK);
+String adminEmailPasswordSentSubject = LocalizationUtil.getLocalizationXmlFromPreferences(companyPortletPreferences, renderRequest, "adminEmailPasswordSentSubject", "preferences", StringPool.BLANK);
 %>
 
 <c:if test="<%= Validator.isNotNull(adminEmailPasswordSentSubject) || Validator.isNotNull(adminEmailPasswordSentBody) %>">

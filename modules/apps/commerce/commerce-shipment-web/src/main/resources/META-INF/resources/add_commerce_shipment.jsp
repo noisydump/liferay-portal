@@ -75,19 +75,19 @@ CommerceShipmentDisplayContext commerceShipmentDisplayContext = (CommerceShipmen
 					'/accountAddresses/',
 				{
 					headers: new Headers({
-						Accept: 'application/json',
+						'Accept': 'application/json',
 						'Content-Type': 'application/json',
 					}),
 					method: 'GET',
 				}
 			)
-				.then(function (response) {
+				.then((response) => {
 					return response.json();
 				})
-				.then(function (response) {
+				.then((response) => {
 					var select = A.one('#<portlet:namespace />commerceAddressId');
 
-					response.items.forEach(function (item) {
+					response.items.forEach((item) => {
 						var option = A.Node.create(
 							'<option id="<portlet:namespace />commerceAddressId-' +
 								item.id +
@@ -113,7 +113,7 @@ CommerceShipmentDisplayContext commerceShipmentDisplayContext = (CommerceShipmen
 	);
 
 	if (commerceAccount) {
-		commerceAccount.addEventListener('change', function () {
+		commerceAccount.addEventListener('change', () => {
 			if (commerceAccount.value) {
 				<portlet:namespace />updateAddressField(commerceAccount.value);
 			}

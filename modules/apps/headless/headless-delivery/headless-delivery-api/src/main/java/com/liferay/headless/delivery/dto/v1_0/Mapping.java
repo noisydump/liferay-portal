@@ -20,6 +20,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
@@ -44,7 +46,9 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @generated
  */
 @Generated("")
-@GraphQLName("Mapping")
+@GraphQLName(
+	description = "The mapping of the fragment mapped value.", value = "Mapping"
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "Mapping")
 public class Mapping implements Serializable {
@@ -53,7 +57,11 @@ public class Mapping implements Serializable {
 		return ObjectMapperUtil.readValue(Mapping.class, json);
 	}
 
-	@Schema
+	public static Mapping unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(Mapping.class, json);
+	}
+
+	@Schema(description = "The mapping's field key.")
 	public String getFieldKey() {
 		return fieldKey;
 	}
@@ -77,11 +85,11 @@ public class Mapping implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The mapping's field key.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String fieldKey;
 
-	@Schema
+	@Schema(description = "The mapping's item reference.")
 	@Valid
 	public Object getItemReference() {
 		return itemReference;
@@ -106,7 +114,7 @@ public class Mapping implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The mapping's item reference.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Object itemReference;
 
@@ -158,7 +166,18 @@ public class Mapping implements Serializable {
 
 			sb.append("\"itemReference\": ");
 
-			sb.append(String.valueOf(itemReference));
+			if (itemReference instanceof Map) {
+				sb.append(
+					JSONFactoryUtil.createJSONObject((Map<?, ?>)itemReference));
+			}
+			else if (itemReference instanceof String) {
+				sb.append("\"");
+				sb.append(_escape((String)itemReference));
+				sb.append("\"");
+			}
+			else {
+				sb.append(itemReference);
+			}
 		}
 
 		sb.append("}");
@@ -167,15 +186,16 @@ public class Mapping implements Serializable {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.Mapping",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
 	}
 
 	private static boolean _isArray(Object value) {
@@ -201,8 +221,8 @@ public class Mapping implements Serializable {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -233,7 +253,7 @@ public class Mapping implements Serializable {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -241,7 +261,7 @@ public class Mapping implements Serializable {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -249,5 +269,10 @@ public class Mapping implements Serializable {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

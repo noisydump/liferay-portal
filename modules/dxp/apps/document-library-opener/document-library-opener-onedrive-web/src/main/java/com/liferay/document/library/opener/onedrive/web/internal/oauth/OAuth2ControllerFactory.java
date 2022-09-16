@@ -16,6 +16,7 @@ package com.liferay.document.library.opener.onedrive.web.internal.oauth;
 
 import com.liferay.document.library.opener.oauth.OAuth2State;
 import com.liferay.petra.function.UnsafeFunction;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -26,7 +27,6 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletURL;
 import com.liferay.portal.kernel.portlet.PortletURLFactory;
-import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PwdGenerator;
@@ -37,12 +37,10 @@ import java.io.IOException;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.ResourceBundle;
 import java.util.function.Function;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
-import javax.portlet.PortletURL;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -107,24 +105,19 @@ public class OAuth2ControllerFactory {
 	}
 
 	private String _getRenderURL(PortletRequest portletRequest) {
-		PortletURL portletURL = _portletURLFactory.create(
-			portletRequest, _portal.getPortletId(portletRequest),
-			PortletRequest.RENDER_PHASE);
-
-		portletURL.setParameter(
-			"repositoryId",
-			ParamUtil.getString(portletRequest, "repositoryId"));
-		portletURL.setParameter(
-			"folderId", ParamUtil.getString(portletRequest, "folderId"));
-
-		return portletURL.toString();
+		return PortletURLBuilder.create(
+			_portletURLFactory.create(
+				portletRequest, _portal.getPortletId(portletRequest),
+				PortletRequest.RENDER_PHASE)
+		).setParameter(
+			"folderId", ParamUtil.getString(portletRequest, "folderId")
+		).setParameter(
+			"repositoryId", ParamUtil.getString(portletRequest, "repositoryId")
+		).buildString();
 	}
 
 	private String _translate(Locale locale, String key) {
-		ResourceBundle resourceBundle =
-			_resourceBundleLoader.loadResourceBundle(locale);
-
-		return _language.get(resourceBundle, key);
+		return _language.get(locale, key);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -141,11 +134,6 @@ public class OAuth2ControllerFactory {
 
 	@Reference
 	private PortletURLFactory _portletURLFactory;
-
-	@Reference(
-		target = "(bundle.symbolic.name=com.liferay.document.library.opener.onedrive.web)"
-	)
-	private ResourceBundleLoader _resourceBundleLoader;
 
 	private static class OAuth2Result {
 
@@ -217,7 +205,7 @@ public class OAuth2ControllerFactory {
 					oAuth2Result.getPortalException();
 
 				if (Objects.nonNull(portalException)) {
-					_log.error(portalException, portalException);
+					_log.error(portalException);
 
 					JSONPortletResponseUtil.writeJSON(
 						portletRequest, portletResponse,
@@ -262,7 +250,7 @@ public class OAuth2ControllerFactory {
 			PortalException portalException = oAuth2Result.getPortalException();
 
 			if (Objects.nonNull(portalException)) {
-				_log.error(portalException, portalException);
+				_log.error(portalException);
 
 				throw portalException;
 			}

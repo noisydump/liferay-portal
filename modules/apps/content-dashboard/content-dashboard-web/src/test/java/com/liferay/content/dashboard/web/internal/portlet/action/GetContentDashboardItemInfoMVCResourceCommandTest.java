@@ -16,36 +16,46 @@ package com.liferay.content.dashboard.web.internal.portlet.action;
 
 import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetTag;
+import com.liferay.asset.kernel.model.AssetVocabulary;
+import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
 import com.liferay.content.dashboard.item.action.ContentDashboardItemAction;
+import com.liferay.content.dashboard.item.type.ContentDashboardItemSubtype;
+import com.liferay.content.dashboard.item.type.ContentDashboardItemSubtypeFactory;
 import com.liferay.content.dashboard.web.internal.item.ContentDashboardItem;
 import com.liferay.content.dashboard.web.internal.item.ContentDashboardItemFactory;
 import com.liferay.content.dashboard.web.internal.item.ContentDashboardItemFactoryTracker;
-import com.liferay.content.dashboard.web.internal.item.type.ContentDashboardItemType;
 import com.liferay.info.item.InfoItemReference;
-import com.liferay.info.type.WebImage;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.json.JSONFactoryImpl;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.servlet.BrowserSnifferUtil;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.portlet.MockLiferayResourceRequest;
 import com.liferay.portal.kernel.test.portlet.MockLiferayResourceResponse;
-import com.liferay.portal.kernel.test.util.PropsTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
-import com.liferay.portal.kernel.util.HtmlUtil;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.language.LanguageImpl;
 import com.liferay.portal.servlet.BrowserSnifferImpl;
-import com.liferay.portal.util.HtmlImpl;
-import com.liferay.portal.util.HttpImpl;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.portal.util.PortalImpl;
 
 import java.io.ByteArrayOutputStream;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -53,11 +63,14 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletRequest;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import org.mockito.Mockito;
@@ -67,47 +80,127 @@ import org.mockito.Mockito;
  */
 public class GetContentDashboardItemInfoMVCResourceCommandTest {
 
+	@ClassRule
+	public static LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
 	@BeforeClass
 	public static void setUpClass() {
 		BrowserSnifferUtil browserSnifferUtil = new BrowserSnifferUtil();
 
 		browserSnifferUtil.setBrowserSniffer(new BrowserSnifferImpl());
 
-		HtmlUtil htmlUtil = new HtmlUtil();
-
-		htmlUtil.setHtml(new HtmlImpl());
-
 		JSONFactoryUtil jsonFactoryUtil = new JSONFactoryUtil();
 
 		jsonFactoryUtil.setJSONFactory(new JSONFactoryImpl());
 
+		LanguageUtil languageUtil = new LanguageUtil();
+
+		languageUtil.setLanguage(new LanguageImpl());
+
 		PortalUtil portalUtil = new PortalUtil();
 
 		portalUtil.setPortal(new PortalImpl());
-
-		PropsTestUtil.setProps(Collections.emptyMap());
 	}
 
 	@Test
 	public void testServeResource() throws Exception {
-		ContentDashboardItem contentDashboardItem = _getContentDashboardItem(
-			"assetCategory", "assetTag", "className", 12345L);
+		User user = Mockito.mock(User.class);
+
+		Mockito.when(
+			user.getPortraitId()
+		).thenReturn(
+			12345L
+		);
+
+		Mockito.when(
+			user.getPortraitURL(Mockito.any(ThemeDisplay.class))
+		).thenReturn(
+			"portraitURL"
+		);
+
+		ContentDashboardItem<?> contentDashboardItem =
+			new ContentDashboardItemBuilder(
+				"className", 12345L
+			).withContentDashboardItemAction(
+				new ContentDashboardItemAction() {
+
+					@Override
+					public String getIcon() {
+						return "sharing";
+					}
+
+					@Override
+					public String getLabel(Locale locale) {
+						return "sharing";
+					}
+
+					@Override
+					public String getName() {
+						return "sharing";
+					}
+
+					@Override
+					public Type getType() {
+						return Type.SHARING_BUTTON;
+					}
+
+					@Override
+					public String getURL() {
+						return "http://sharing_button";
+					}
+
+					@Override
+					public String getURL(Locale locale) {
+						return getURL();
+					}
+
+				}
+			).withContentDashboardItemAction(
+				new ContentDashboardItemAction() {
+
+					@Override
+					public String getIcon() {
+						return "collaborators";
+					}
+
+					@Override
+					public String getLabel(Locale locale) {
+						return "collaborators";
+					}
+
+					@Override
+					public String getName() {
+						return "collaborators";
+					}
+
+					@Override
+					public Type getType() {
+						return Type.SHARING_COLLABORATORS;
+					}
+
+					@Override
+					public String getURL() {
+						return "http://sharing_collaborators";
+					}
+
+					@Override
+					public String getURL(Locale locale) {
+						return getURL();
+					}
+
+				}
+			).withSubtype(
+				"subType"
+			).withUser(
+				user
+			).build();
 
 		_initGetContentDashboardItemInfoMVCResourceCommand(
-			contentDashboardItem);
+			contentDashboardItem, user);
 
 		MockLiferayResourceRequest mockLiferayResourceRequest =
-			new MockLiferayResourceRequest();
-
-		mockLiferayResourceRequest.setAttribute(WebKeys.LOCALE, LocaleUtil.US);
-
-		InfoItemReference infoItemReference =
-			contentDashboardItem.getInfoItemReference();
-
-		mockLiferayResourceRequest.addParameter(
-			"className", infoItemReference.getClassName());
-		mockLiferayResourceRequest.addParameter(
-			"classPK", String.valueOf(infoItemReference.getClassPK()));
+			_getMockLiferayResourceRequest(contentDashboardItem);
 
 		MockLiferayResourceResponse mockLiferayResourceResponse =
 			new MockLiferayResourceResponse();
@@ -122,13 +215,29 @@ public class GetContentDashboardItemInfoMVCResourceCommandTest {
 		JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
 			new String(byteArrayOutputStream.toByteArray()));
 
-		JSONArray categoriesJSONArray = jsonObject.getJSONArray("categories");
+		JSONObject vocabulariesJSONObject = jsonObject.getJSONObject(
+			"vocabularies");
 
-		Assert.assertEquals(
-			JSONUtil.put(
-				"assetCategory"
-			).toString(),
-			categoriesJSONArray.toString());
+		List<AssetCategory> assetCategories =
+			contentDashboardItem.getAssetCategories();
+
+		for (AssetCategory assetCategory : assetCategories) {
+			JSONObject vocabularyDataJSONObject =
+				vocabulariesJSONObject.getJSONObject(
+					String.valueOf(assetCategory.getVocabularyId()));
+
+			JSONArray categoriesJSONArray =
+				vocabularyDataJSONObject.getJSONArray("categories");
+
+			Assert.assertEquals(1, categoriesJSONArray.length());
+
+			Assert.assertEquals(
+				assetCategory.getTitle(LocaleUtil.getSiteDefault()),
+				categoriesJSONArray.getString(0));
+		}
+
+		InfoItemReference infoItemReference =
+			contentDashboardItem.getInfoItemReference();
 
 		Assert.assertEquals(
 			infoItemReference.getClassName(),
@@ -136,11 +245,28 @@ public class GetContentDashboardItemInfoMVCResourceCommandTest {
 		Assert.assertEquals(
 			infoItemReference.getClassPK(), jsonObject.getLong("classPK"), 0);
 
+		Assert.assertEquals(
+			contentDashboardItem.getDescription(LocaleUtil.US),
+			jsonObject.getString("description"));
+		Assert.assertNotNull(jsonObject.getString("fetchSharingButtonURL"));
+		Assert.assertNotNull(
+			jsonObject.getString("fetchSharingCollaboratorsURL"));
+
 		JSONArray tagsJSONArray = jsonObject.getJSONArray("tags");
 
+		List<AssetTag> assetTags = contentDashboardItem.getAssetTags();
+
+		Stream<AssetTag> stream = assetTags.stream();
+
 		Assert.assertEquals(
-			JSONUtil.put(
-				"assetTag"
+			JSONUtil.putAll(
+				stream.map(
+					AssetTag::getName
+				).collect(
+					Collectors.toList()
+				).toArray(
+					new String[0]
+				)
 			).toString(),
 			tagsJSONArray.toString());
 
@@ -148,188 +274,270 @@ public class GetContentDashboardItemInfoMVCResourceCommandTest {
 			contentDashboardItem.getTitle(LocaleUtil.US),
 			jsonObject.getString("title"));
 
-		ContentDashboardItemType contentDashboardItemType =
-			contentDashboardItem.getContentDashboardItemType();
+		ContentDashboardItemSubtype contentDashboardItemSubtype =
+			contentDashboardItem.getContentDashboardItemSubtype();
 
 		Assert.assertEquals(
-			contentDashboardItemType.getLabel(LocaleUtil.US),
+			contentDashboardItemSubtype.getLabel(LocaleUtil.US),
 			jsonObject.getString("subType"));
 
+		Map<String, Object> specificInformation =
+			contentDashboardItem.getSpecificInformation(LocaleUtil.US);
+
+		Assert.assertEquals(
+			String.valueOf(specificInformation), 2, specificInformation.size());
+
+		JSONObject specificFieldsJSONObject = jsonObject.getJSONObject(
+			"specificFields");
+
+		for (Map.Entry<String, Object> entry : specificInformation.entrySet()) {
+			JSONObject specificFieldJSONObject =
+				specificFieldsJSONObject.getJSONObject(entry.getKey());
+
+			Assert.assertEquals(
+				specificFieldJSONObject.getString("title"), entry.getKey());
+			Assert.assertEquals(
+				specificFieldJSONObject.getString("value"), entry.getValue());
+		}
+
+		JSONObject userJSONObject = jsonObject.getJSONObject("user");
+
+		Assert.assertEquals(
+			contentDashboardItem.getUserName(),
+			userJSONObject.getString("name"));
+		Assert.assertEquals(
+			contentDashboardItem.getUserId(), userJSONObject.getLong("userId"));
+		Assert.assertEquals("portraitURL", userJSONObject.getString("url"));
+
+		_assertContentDashboardItemLatestVersions(
+			contentDashboardItem, jsonObject);
+
+		_assertContentDashboardItemAllVersions(
+			contentDashboardItem, jsonObject);
+	}
+
+	@Test
+	public void testServeResourceWithoutSharingButtonAction() throws Exception {
+		ContentDashboardItem<?> contentDashboardItem =
+			new ContentDashboardItemBuilder(
+				"className", 12345L
+			).build();
+
+		_initGetContentDashboardItemInfoMVCResourceCommand(
+			contentDashboardItem, null);
+
+		MockLiferayResourceResponse mockLiferayResourceResponse =
+			new MockLiferayResourceResponse();
+
+		_getContentDashboardItemInfoMVCResourceCommand.serveResource(
+			_getMockLiferayResourceRequest(contentDashboardItem),
+			mockLiferayResourceResponse);
+
+		ByteArrayOutputStream byteArrayOutputStream =
+			(ByteArrayOutputStream)
+				mockLiferayResourceResponse.getPortletOutputStream();
+
+		JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
+			new String(byteArrayOutputStream.toByteArray()));
+
+		Assert.assertEquals(
+			StringPool.BLANK, jsonObject.getString("fetchSharingButtonURL"));
+	}
+
+	@Test
+	public void testServeResourceWithoutSharingCollaboratorsAction()
+		throws Exception {
+
+		ContentDashboardItem<?> contentDashboardItem =
+			new ContentDashboardItemBuilder(
+				"className", 12345L
+			).build();
+
+		_initGetContentDashboardItemInfoMVCResourceCommand(
+			contentDashboardItem, null);
+
+		MockLiferayResourceResponse mockLiferayResourceResponse =
+			new MockLiferayResourceResponse();
+
+		_getContentDashboardItemInfoMVCResourceCommand.serveResource(
+			_getMockLiferayResourceRequest(contentDashboardItem),
+			mockLiferayResourceResponse);
+
+		ByteArrayOutputStream byteArrayOutputStream =
+			(ByteArrayOutputStream)
+				mockLiferayResourceResponse.getPortletOutputStream();
+
+		JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
+			new String(byteArrayOutputStream.toByteArray()));
+
+		Assert.assertEquals(
+			StringPool.BLANK,
+			jsonObject.getString("fetchSharingCollaboratorsURL"));
+	}
+
+	@Test
+	public void testServeResourceWithoutSubtype() throws Exception {
+		ContentDashboardItem<?> contentDashboardItem =
+			new ContentDashboardItemBuilder(
+				"className", 12345L
+			).build();
+
+		_initGetContentDashboardItemInfoMVCResourceCommand(
+			contentDashboardItem, null);
+
+		MockLiferayResourceResponse mockLiferayResourceResponse =
+			new MockLiferayResourceResponse();
+
+		_getContentDashboardItemInfoMVCResourceCommand.serveResource(
+			_getMockLiferayResourceRequest(contentDashboardItem),
+			mockLiferayResourceResponse);
+
+		ByteArrayOutputStream byteArrayOutputStream =
+			(ByteArrayOutputStream)
+				mockLiferayResourceResponse.getPortletOutputStream();
+
+		JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
+			new String(byteArrayOutputStream.toByteArray()));
+
+		Assert.assertEquals(StringPool.BLANK, jsonObject.getString("subType"));
+	}
+
+	@Test
+	public void testServeResourceWithoutUser() throws Exception {
+		ContentDashboardItem<?> contentDashboardItem =
+			new ContentDashboardItemBuilder(
+				"className", 12345L
+			).build();
+
+		_initGetContentDashboardItemInfoMVCResourceCommand(
+			contentDashboardItem, null);
+
+		MockLiferayResourceResponse mockLiferayResourceResponse =
+			new MockLiferayResourceResponse();
+
+		_getContentDashboardItemInfoMVCResourceCommand.serveResource(
+			_getMockLiferayResourceRequest(contentDashboardItem),
+			mockLiferayResourceResponse);
+
+		ByteArrayOutputStream byteArrayOutputStream =
+			(ByteArrayOutputStream)
+				mockLiferayResourceResponse.getPortletOutputStream();
+
+		JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
+			new String(byteArrayOutputStream.toByteArray()));
+
+		JSONObject userJSONObject = jsonObject.getJSONObject("user");
+
+		Assert.assertEquals(
+			contentDashboardItem.getUserName(),
+			userJSONObject.getString("name"));
+		Assert.assertEquals(
+			contentDashboardItem.getUserId(), userJSONObject.getLong("userId"));
+		Assert.assertEquals(StringPool.BLANK, userJSONObject.getString("url"));
+	}
+
+	private void _assertContentDashboardItemAllVersions(
+		ContentDashboardItem<?> contentDashboardItem, JSONObject jsonObject) {
+
 		List<ContentDashboardItem.Version> versions =
-			contentDashboardItem.getVersions(LocaleUtil.US);
+			contentDashboardItem.getAllVersions(new ThemeDisplay());
+
+		JSONArray expectedJSONArray = JSONFactoryUtil.createJSONArray();
+
+		for (ContentDashboardItem.Version version : versions) {
+			expectedJSONArray.put(version.toJSONObject());
+		}
+
+		JSONArray actualJSONArray = jsonObject.getJSONArray("allVersions");
+
+		Assert.assertEquals(
+			expectedJSONArray.toString(), actualJSONArray.toString());
+	}
+
+	private void _assertContentDashboardItemLatestVersions(
+		ContentDashboardItem<?> contentDashboardItem, JSONObject jsonObject) {
+
+		List<ContentDashboardItem.Version> versions =
+			contentDashboardItem.getLatestVersions(LocaleUtil.US);
 
 		ContentDashboardItem.Version version = versions.get(0);
 
-		JSONObject expectedVersionJSONObject = version.toJSONObject();
+		JSONObject expectedJSONObject = version.toJSONObject();
 
-		JSONArray versionsJSONArray = jsonObject.getJSONArray("versions");
+		JSONArray actualJSONArray = jsonObject.getJSONArray("latestVersions");
 
-		JSONObject actualVersionJSONObject = versionsJSONArray.getJSONObject(0);
+		JSONObject actualJSONObject = actualJSONArray.getJSONObject(0);
 
 		Assert.assertEquals(
-			expectedVersionJSONObject.toString(),
-			actualVersionJSONObject.toString());
+			expectedJSONObject.toString(), actualJSONObject.toString());
 	}
 
-	private ContentDashboardItem _getContentDashboardItem(
-		String assetCategoryTitle, String assetTagName, String className,
-		long classPK) {
+	private MockLiferayResourceRequest _getMockLiferayResourceRequest(
+		ContentDashboardItem<?> contentDashboardItem) {
 
-		return new ContentDashboardItem() {
+		MockLiferayResourceRequest mockLiferayResourceRequest =
+			new MockLiferayResourceRequest();
 
-			@Override
-			public List<AssetCategory> getAssetCategories() {
-				AssetCategory assetCategory = Mockito.mock(AssetCategory.class);
+		mockLiferayResourceRequest.setAttribute(WebKeys.LOCALE, LocaleUtil.US);
 
-				Mockito.when(
-					assetCategory.getTitle(Mockito.any(Locale.class))
-				).thenReturn(
-					assetCategoryTitle
-				);
+		InfoItemReference infoItemReference =
+			contentDashboardItem.getInfoItemReference();
 
-				return Collections.singletonList(assetCategory);
-			}
+		mockLiferayResourceRequest.addParameter(
+			"className", infoItemReference.getClassName());
+		mockLiferayResourceRequest.addParameter(
+			"classPK", String.valueOf(infoItemReference.getClassPK()));
 
-			@Override
-			public List<AssetCategory> getAssetCategories(long vocabularyId) {
-				return Collections.emptyList();
-			}
+		mockLiferayResourceRequest.setAttribute(
+			WebKeys.THEME_DISPLAY, new ThemeDisplay());
 
-			@Override
-			public List<AssetTag> getAssetTags() {
-				AssetTag assetCategory = Mockito.mock(AssetTag.class);
-
-				Mockito.when(
-					assetCategory.getName()
-				).thenReturn(
-					assetTagName
-				);
-
-				return Collections.singletonList(assetCategory);
-			}
-
-			@Override
-			public List<Locale> getAvailableLocales() {
-				return Collections.singletonList(LocaleUtil.US);
-			}
-
-			@Override
-			public List<ContentDashboardItemAction>
-				getContentDashboardItemActions(
-					HttpServletRequest httpServletRequest,
-					ContentDashboardItemAction.Type... types) {
-
-				return Collections.emptyList();
-			}
-
-			@Override
-			public ContentDashboardItemType getContentDashboardItemType() {
-				ContentDashboardItemType contentDashboardItemType =
-					Mockito.mock(ContentDashboardItemType.class);
-
-				Mockito.when(
-					contentDashboardItemType.getLabel(Mockito.any(Locale.class))
-				).thenReturn(
-					"subType"
-				);
-
-				return contentDashboardItemType;
-			}
-
-			@Override
-			public Date getCreateDate() {
-				return new Date();
-			}
-
-			@Override
-			public Map<String, Object> getData(Locale locale) {
-				return Collections.emptyMap();
-			}
-
-			@Override
-			public ContentDashboardItemAction
-				getDefaultContentDashboardItemAction(
-					HttpServletRequest httpServletRequest) {
-
-				return null;
-			}
-
-			@Override
-			public Locale getDefaultLocale() {
-				return LocaleUtil.US;
-			}
-
-			@Override
-			public Object getDisplayFieldValue(
-				String fieldName, Locale locale) {
-
-				if (Objects.equals(fieldName, "authorProfileImage")) {
-					return new WebImage("url");
-				}
-
-				return null;
-			}
-
-			@Override
-			public InfoItemReference getInfoItemReference() {
-				return new InfoItemReference(className, classPK);
-			}
-
-			@Override
-			public Date getModifiedDate() {
-				return new Date();
-			}
-
-			@Override
-			public String getScopeName(Locale locale) {
-				return RandomTestUtil.randomString();
-			}
-
-			@Override
-			public String getTitle(Locale locale) {
-				return "title";
-			}
-
-			@Override
-			public long getUserId() {
-				return 0;
-			}
-
-			@Override
-			public String getUserName() {
-				return RandomTestUtil.randomString();
-			}
-
-			@Override
-			public List<Version> getVersions(Locale locale) {
-				return Collections.singletonList(
-					new Version("version", "style", 0.1));
-			}
-
-			@Override
-			public boolean isViewable(HttpServletRequest httpServletRequest) {
-				return true;
-			}
-
-		};
+		return mockLiferayResourceRequest;
 	}
 
 	private void _initGetContentDashboardItemInfoMVCResourceCommand(
-		ContentDashboardItem contentDashboardItem) {
+		ContentDashboardItem<?> contentDashboardItem, User user) {
 
 		_getContentDashboardItemInfoMVCResourceCommand =
 			new GetContentDashboardItemInfoMVCResourceCommand();
 
+		AssetVocabularyLocalService assetVocabularyLocalService = Mockito.mock(
+			AssetVocabularyLocalService.class);
+
+		for (AssetCategory assetCategory :
+				contentDashboardItem.getAssetCategories()) {
+
+			AssetVocabulary assetVocabulary = Mockito.mock(
+				AssetVocabulary.class);
+
+			Mockito.when(
+				assetVocabulary.getTitle(Mockito.any(Locale.class))
+			).thenReturn(
+				RandomTestUtil.randomString()
+			);
+
+			Mockito.when(
+				assetVocabularyLocalService.fetchAssetVocabulary(
+					assetCategory.getVocabularyId())
+			).thenReturn(
+				assetVocabulary
+			);
+		}
+
+		ReflectionTestUtil.setFieldValue(
+			_getContentDashboardItemInfoMVCResourceCommand,
+			"_assetVocabularyLocalService", assetVocabularyLocalService);
 		ReflectionTestUtil.setFieldValue(
 			_getContentDashboardItemInfoMVCResourceCommand,
 			"_contentDashboardItemFactoryTracker",
 			new ContentDashboardItemFactoryTracker() {
 
-				public Optional<ContentDashboardItemFactory<?>>
-					getContentDashboardItemFactoryOptional(String className) {
+				public ContentDashboardItemFactory<?>
+					getContentDashboardItemFactory(String className) {
 
-					return Optional.ofNullable(
-						classPK -> {
+					return new ContentDashboardItemFactory() {
+
+						@Override
+						public ContentDashboardItem create(long classPK) {
 							InfoItemReference infoItemReference =
 								contentDashboardItem.getInfoItemReference();
 
@@ -343,25 +551,311 @@ public class GetContentDashboardItemInfoMVCResourceCommandTest {
 							}
 
 							return null;
-						});
+						}
+
+						@Override
+						public Optional<ContentDashboardItemSubtypeFactory>
+							getContentDashboardItemSubtypeFactoryOptional() {
+
+							return Optional.empty();
+						}
+
+					};
 				}
 
 			});
-
 		ReflectionTestUtil.setFieldValue(
-			_getContentDashboardItemInfoMVCResourceCommand, "_http",
-			new HttpImpl());
-
+			_getContentDashboardItemInfoMVCResourceCommand,
+			"_groupLocalService", Mockito.mock(GroupLocalService.class));
+		ReflectionTestUtil.setFieldValue(
+			_getContentDashboardItemInfoMVCResourceCommand, "_language",
+			new LanguageImpl());
 		ReflectionTestUtil.setFieldValue(
 			_getContentDashboardItemInfoMVCResourceCommand, "_portal",
 			new PortalImpl());
 
+		UserLocalService userLocalService = Mockito.mock(
+			UserLocalService.class);
+
+		Mockito.when(
+			userLocalService.fetchUser(contentDashboardItem.getUserId())
+		).thenReturn(
+			user
+		);
+
 		ReflectionTestUtil.setFieldValue(
 			_getContentDashboardItemInfoMVCResourceCommand, "_userLocalService",
-			Mockito.mock(UserLocalService.class));
+			userLocalService);
 	}
 
 	private GetContentDashboardItemInfoMVCResourceCommand
 		_getContentDashboardItemInfoMVCResourceCommand;
+
+	private static class ContentDashboardItemBuilder {
+
+		public ContentDashboardItemBuilder(String className, long classPK) {
+			_className = className;
+			_classPK = classPK;
+		}
+
+		public ContentDashboardItem build() {
+			String userName = Optional.ofNullable(
+				_user
+			).map(
+				user -> user.getFirstName()
+			).orElseGet(
+				RandomTestUtil::randomString
+			);
+
+			long userId = Optional.ofNullable(
+				_user
+			).map(
+				user -> user.getUserId()
+			).orElseGet(
+				RandomTestUtil::randomLong
+			);
+
+			AssetCategory assetCategory1 = Mockito.mock(AssetCategory.class);
+
+			Mockito.when(
+				assetCategory1.getName()
+			).thenReturn(
+				RandomTestUtil.randomString()
+			);
+
+			Mockito.when(
+				assetCategory1.getTitle(Mockito.any(Locale.class))
+			).thenReturn(
+				RandomTestUtil.randomString()
+			);
+
+			Mockito.when(
+				assetCategory1.getVocabularyId()
+			).thenReturn(
+				RandomTestUtil.randomLong()
+			);
+
+			AssetCategory assetCategory2 = Mockito.mock(AssetCategory.class);
+
+			Mockito.when(
+				assetCategory2.getName()
+			).thenReturn(
+				RandomTestUtil.randomString()
+			);
+
+			Mockito.when(
+				assetCategory2.getTitle(Mockito.any(Locale.class))
+			).thenReturn(
+				RandomTestUtil.randomString()
+			);
+
+			Mockito.when(
+				assetCategory2.getVocabularyId()
+			).thenReturn(
+				RandomTestUtil.randomLong()
+			);
+
+			AssetTag assetTag = Mockito.mock(AssetTag.class);
+
+			Mockito.when(
+				assetTag.getName()
+			).thenReturn(
+				RandomTestUtil.randomString()
+			);
+
+			return new ContentDashboardItem() {
+
+				@Override
+				public List<Version> getAllVersions(ThemeDisplay themeDisplay) {
+					return ListUtil.fromArray(
+						new Version(
+							"version", "style", "0.1", null, "user", null),
+						new Version(
+							"version", "style", "0.2", null, "user", null));
+				}
+
+				@Override
+				public List<AssetCategory> getAssetCategories() {
+					return Arrays.asList(assetCategory1, assetCategory2);
+				}
+
+				@Override
+				public List<AssetCategory> getAssetCategories(
+					long vocabularyId) {
+
+					return Collections.emptyList();
+				}
+
+				@Override
+				public List<AssetTag> getAssetTags() {
+					return Collections.singletonList(assetTag);
+				}
+
+				@Override
+				public List<Locale> getAvailableLocales() {
+					return Collections.singletonList(LocaleUtil.US);
+				}
+
+				@Override
+				public Clipboard getClipboard() {
+					return new Clipboard(
+						"name", "www.previewURL.url.com/previewURL");
+				}
+
+				@Override
+				public List<ContentDashboardItemAction>
+					getContentDashboardItemActions(
+						HttpServletRequest httpServletRequest,
+						ContentDashboardItemAction.Type... types) {
+
+					Stream<ContentDashboardItemAction> stream =
+						_contentDashboardItemActions.stream();
+
+					return stream.filter(
+						contentDashboardItemAction -> ArrayUtil.contains(
+							types, contentDashboardItemAction.getType())
+					).collect(
+						Collectors.toList()
+					);
+				}
+
+				@Override
+				public ContentDashboardItemSubtype
+					getContentDashboardItemSubtype() {
+
+					ContentDashboardItemSubtype contentDashboardItemSubtype =
+						Mockito.mock(ContentDashboardItemSubtype.class);
+
+					Mockito.when(
+						contentDashboardItemSubtype.getLabel(
+							Mockito.any(Locale.class))
+					).thenReturn(
+						_subtype
+					);
+
+					return contentDashboardItemSubtype;
+				}
+
+				@Override
+				public Date getCreateDate() {
+					return new Date();
+				}
+
+				@Override
+				public ContentDashboardItemAction
+					getDefaultContentDashboardItemAction(
+						HttpServletRequest httpServletRequest) {
+
+					return null;
+				}
+
+				@Override
+				public Locale getDefaultLocale() {
+					return LocaleUtil.US;
+				}
+
+				@Override
+				public String getDescription(Locale locale) {
+					return "My very important description";
+				}
+
+				@Override
+				public InfoItemReference getInfoItemReference() {
+					return new InfoItemReference(_className, _classPK);
+				}
+
+				@Override
+				public List<Version> getLatestVersions(Locale locale) {
+					return Collections.singletonList(
+						new Version(
+							"version", "style", "0.1", null, "user", null));
+				}
+
+				@Override
+				public Date getModifiedDate() {
+					return new Date();
+				}
+
+				@Override
+				public Preview getPreview() {
+					return new Preview(
+						"www.preview.com/imageURL",
+						"www.viewURL.url.com/viewURL");
+				}
+
+				@Override
+				public String getScopeName(Locale locale) {
+					return RandomTestUtil.randomString();
+				}
+
+				@Override
+				public Map<String, Object> getSpecificInformation(
+					Locale locale) {
+
+					return HashMapBuilder.<String, Object>put(
+						"extension", ".pdf"
+					).put(
+						"size", "5"
+					).build();
+				}
+
+				@Override
+				public String getTitle(Locale locale) {
+					return "title";
+				}
+
+				@Override
+				public String getTypeLabel(Locale locale) {
+					return "Web Content";
+				}
+
+				@Override
+				public long getUserId() {
+					return userId;
+				}
+
+				@Override
+				public String getUserName() {
+					return userName;
+				}
+
+				@Override
+				public boolean isViewable(
+					HttpServletRequest httpServletRequest) {
+
+					return true;
+				}
+
+			};
+		}
+
+		public ContentDashboardItemBuilder withContentDashboardItemAction(
+			ContentDashboardItemAction contentDashboardAction) {
+
+			_contentDashboardItemActions.add(contentDashboardAction);
+
+			return this;
+		}
+
+		public ContentDashboardItemBuilder withSubtype(String subtype) {
+			_subtype = subtype;
+
+			return this;
+		}
+
+		public ContentDashboardItemBuilder withUser(User user) {
+			_user = user;
+
+			return this;
+		}
+
+		private final String _className;
+		private final long _classPK;
+		private List<ContentDashboardItemAction> _contentDashboardItemActions =
+			new ArrayList<>();
+		private String _subtype;
+		private User _user;
+
+	}
 
 }

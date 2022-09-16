@@ -57,7 +57,8 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + ProductNavigationUserPersonalBarPortletKeys.PRODUCT_NAVIGATION_USER_PERSONAL_BAR,
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=power-user,user"
+		"javax.portlet.security-role-ref=power-user,user",
+		"javax.portlet.version=3.0"
 	},
 	service = Portlet.class
 )
@@ -76,7 +77,7 @@ public class ProductNavigationUserPersonalBarPortlet extends MVCPortlet {
 		if (!user.isDefaultUser()) {
 			renderRequest.setAttribute(
 				ProductNavigationUserPersonalBarWebKeys.NOTIFICATIONS_COUNT,
-				getNotificationsCount(themeDisplay));
+				_getNotificationsCount(themeDisplay));
 		}
 
 		_recentGroupManager.addRecentGroup(
@@ -86,7 +87,7 @@ public class ProductNavigationUserPersonalBarPortlet extends MVCPortlet {
 		super.doDispatch(renderRequest, renderResponse);
 	}
 
-	protected int getNotificationsCount(ThemeDisplay themeDisplay) {
+	private int _getNotificationsCount(ThemeDisplay themeDisplay) {
 		if (_userNotificationEventLocalService == null) {
 			return 0;
 		}
@@ -97,19 +98,10 @@ public class ProductNavigationUserPersonalBarPortlet extends MVCPortlet {
 				UserNotificationDeliveryConstants.TYPE_WEBSITE, true, false);
 	}
 
-	@Reference(unbind = "-")
-	protected void setPanelAppRegistry(PanelAppRegistry panelAppRegistry) {
-		_panelAppRegistry = panelAppRegistry;
-	}
-
-	@Reference(unbind = "-")
-	protected void setPanelCategoryRegistry(
-		PanelCategoryRegistry panelCategoryRegistry) {
-
-		_panelCategoryRegistry = panelCategoryRegistry;
-	}
-
+	@Reference
 	private PanelAppRegistry _panelAppRegistry;
+
+	@Reference
 	private PanelCategoryRegistry _panelCategoryRegistry;
 
 	@Reference

@@ -86,8 +86,9 @@ public interface AssetListEntryUsageLocalService
 		AssetListEntryUsage assetListEntryUsage);
 
 	public AssetListEntryUsage addAssetListEntryUsage(
-			long userId, long groupId, long assetListEntryId, long classNameId,
-			long classPK, String portletId, ServiceContext serviceContext)
+			long userId, long groupId, long classNameId, String containerKey,
+			long containerType, String key, long plid,
+			ServiceContext serviceContext)
 		throws PortalException;
 
 	/**
@@ -136,6 +137,9 @@ public interface AssetListEntryUsageLocalService
 			long assetListEntryUsageId)
 		throws PortalException;
 
+	public void deleteAssetListEntryUsages(
+		String containerKey, long containerType, long plid);
+
 	/**
 	 * @throws PortalException
 	 */
@@ -145,6 +149,9 @@ public interface AssetListEntryUsageLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public <T> T dslQuery(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
@@ -218,7 +225,8 @@ public interface AssetListEntryUsageLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public AssetListEntryUsage fetchAssetListEntryUsage(
-		long classNameId, long classPK, String portletId);
+		long groupId, long classNameId, String containerKey, long containerType,
+		String key, long plid);
 
 	/**
 	 * Returns the asset list entry usage matching the UUID and group.
@@ -233,6 +241,9 @@ public interface AssetListEntryUsageLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ActionableDynamicQuery getActionableDynamicQuery();
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<AssetListEntryUsage> getAssetEntryListUsagesByPlid(long plid);
 
 	/**
 	 * Returns the asset list entry usage with the primary key.
@@ -276,21 +287,25 @@ public interface AssetListEntryUsageLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<AssetListEntryUsage> getAssetListEntryUsages(
-		long assetListEntryId);
+		long groupId, long classNameId, String key);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<AssetListEntryUsage> getAssetListEntryUsages(
-		long assetListEntryId, int start, int end,
+		long groupId, long classNameId, String key, int type);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<AssetListEntryUsage> getAssetListEntryUsages(
+		long groupId, long classNameId, String key, int type, int start,
+		int end, OrderByComparator<AssetListEntryUsage> orderByComparator);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<AssetListEntryUsage> getAssetListEntryUsages(
+		long groupId, long classNameId, String key, int start, int end,
 		OrderByComparator<AssetListEntryUsage> orderByComparator);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<AssetListEntryUsage> getAssetListEntryUsages(
-		long assetListEntryId, long classNameId);
-
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<AssetListEntryUsage> getAssetListEntryUsages(
-		long assetListEntryId, long classNameId, int start, int end,
-		OrderByComparator<AssetListEntryUsage> orderByComparator);
+		String containerKey, long containerType, long plid);
 
 	/**
 	 * Returns all the asset list entry usages matching the UUID and company.
@@ -327,11 +342,12 @@ public interface AssetListEntryUsageLocalService
 	public int getAssetListEntryUsagesCount();
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public int getAssetListEntryUsagesCount(long assetListEntryId);
+	public int getAssetListEntryUsagesCount(
+		long groupId, long classNameId, String key);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getAssetListEntryUsagesCount(
-		long assetListEntryId, long classNameId);
+		long groupId, long classNameId, String key, int type);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ExportActionableDynamicQuery getExportActionableDynamicQuery(

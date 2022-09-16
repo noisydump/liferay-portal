@@ -15,24 +15,40 @@
 import ClayColorPicker from '@clayui/color-picker';
 import React, {useState} from 'react';
 
-function normalizeColor(color) {
-	return color.startsWith('#') ? color.substring(1) : color;
-}
+const HEX_COLOR_REGEX = /^#?[0-9A-F]{3}(?:[0-9A-F]{3})?$/i;
 
 const ColorPicker = ({color, label, name}) => {
-	const [colorValue, setColorValue] = useState(normalizeColor(color));
+	const [colorValue, setColorValue] = useState(color);
+	const [customColors, setCustomColors] = useState([]);
+
+	const noHashColorValue = colorValue.replace('#', '');
 
 	return (
 		<div className="form-group">
-			<input name={name} type="hidden" value={`#${colorValue}`} />
+			<input
+				name={name}
+				type="hidden"
+				value={
+					colorValue
+						? `${
+								HEX_COLOR_REGEX.test(noHashColorValue)
+									? '#'
+									: ''
+						  }${noHashColorValue}`
+						: ''
+				}
+			/>
 
 			<ClayColorPicker
+				colors={customColors}
 				label={label}
 				name={`${name}ColorPicker`}
+				onColorsChange={setCustomColors}
 				onValueChange={setColorValue}
 				showHex={true}
+				showPredefinedColorsWithCustom
 				title={label}
-				value={colorValue}
+				value={noHashColorValue}
 			/>
 		</div>
 	);

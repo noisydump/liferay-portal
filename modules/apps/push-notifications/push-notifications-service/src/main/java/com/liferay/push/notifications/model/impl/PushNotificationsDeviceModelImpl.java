@@ -28,24 +28,23 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.push.notifications.model.PushNotificationsDevice;
 import com.liferay.push.notifications.model.PushNotificationsDeviceModel;
-import com.liferay.push.notifications.model.PushNotificationsDeviceSoap;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -110,26 +109,26 @@ public class PushNotificationsDeviceModelImpl
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long PLATFORM_COLUMN_BITMASK = 1L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long TOKEN_COLUMN_BITMASK = 2L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long USERID_COLUMN_BITMASK = 4L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *		#getColumnBitmask(String)
+	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long PUSHNOTIFICATIONSDEVICEID_COLUMN_BITMASK = 8L;
@@ -146,59 +145,6 @@ public class PushNotificationsDeviceModelImpl
 	 */
 	@Deprecated
 	public static void setFinderCacheEnabled(boolean finderCacheEnabled) {
-	}
-
-	/**
-	 * Converts the soap model instance into a normal model instance.
-	 *
-	 * @param soapModel the soap model instance to convert
-	 * @return the normal model instance
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static PushNotificationsDevice toModel(
-		PushNotificationsDeviceSoap soapModel) {
-
-		if (soapModel == null) {
-			return null;
-		}
-
-		PushNotificationsDevice model = new PushNotificationsDeviceImpl();
-
-		model.setPushNotificationsDeviceId(
-			soapModel.getPushNotificationsDeviceId());
-		model.setCompanyId(soapModel.getCompanyId());
-		model.setUserId(soapModel.getUserId());
-		model.setCreateDate(soapModel.getCreateDate());
-		model.setPlatform(soapModel.getPlatform());
-		model.setToken(soapModel.getToken());
-
-		return model;
-	}
-
-	/**
-	 * Converts the soap model instances into normal model instances.
-	 *
-	 * @param soapModels the soap model instances to convert
-	 * @return the normal model instances
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static List<PushNotificationsDevice> toModels(
-		PushNotificationsDeviceSoap[] soapModels) {
-
-		if (soapModels == null) {
-			return null;
-		}
-
-		List<PushNotificationsDevice> models =
-			new ArrayList<PushNotificationsDevice>(soapModels.length);
-
-		for (PushNotificationsDeviceSoap soapModel : soapModels) {
-			models.add(toModel(soapModel));
-		}
-
-		return models;
 	}
 
 	public PushNotificationsDeviceModelImpl() {
@@ -285,34 +231,6 @@ public class PushNotificationsDeviceModelImpl
 		getAttributeSetterBiConsumers() {
 
 		return _attributeSetterBiConsumers;
-	}
-
-	private static Function<InvocationHandler, PushNotificationsDevice>
-		_getProxyProviderFunction() {
-
-		Class<?> proxyClass = ProxyUtil.getProxyClass(
-			PushNotificationsDevice.class.getClassLoader(),
-			PushNotificationsDevice.class, ModelWrapper.class);
-
-		try {
-			Constructor<PushNotificationsDevice> constructor =
-				(Constructor<PushNotificationsDevice>)proxyClass.getConstructor(
-					InvocationHandler.class);
-
-			return invocationHandler -> {
-				try {
-					return constructor.newInstance(invocationHandler);
-				}
-				catch (ReflectiveOperationException
-							reflectiveOperationException) {
-
-					throw new InternalError(reflectiveOperationException);
-				}
-			};
-		}
-		catch (NoSuchMethodException noSuchMethodException) {
-			throw new InternalError(noSuchMethodException);
-		}
 	}
 
 	private static final Map<String, Function<PushNotificationsDevice, Object>>
@@ -532,7 +450,9 @@ public class PushNotificationsDeviceModelImpl
 		for (Map.Entry<String, Object> entry :
 				_columnOriginalValues.entrySet()) {
 
-			if (entry.getValue() != getColumnValue(entry.getKey())) {
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
 				_columnBitmask |= _columnBitmasks.get(entry.getKey());
 			}
 		}
@@ -583,6 +503,27 @@ public class PushNotificationsDeviceModelImpl
 		pushNotificationsDeviceImpl.setToken(getToken());
 
 		pushNotificationsDeviceImpl.resetOriginalValues();
+
+		return pushNotificationsDeviceImpl;
+	}
+
+	@Override
+	public PushNotificationsDevice cloneWithOriginalValues() {
+		PushNotificationsDeviceImpl pushNotificationsDeviceImpl =
+			new PushNotificationsDeviceImpl();
+
+		pushNotificationsDeviceImpl.setPushNotificationsDeviceId(
+			this.<Long>getColumnOriginalValue("pushNotificationsDeviceId"));
+		pushNotificationsDeviceImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		pushNotificationsDeviceImpl.setUserId(
+			this.<Long>getColumnOriginalValue("userId"));
+		pushNotificationsDeviceImpl.setCreateDate(
+			this.<Date>getColumnOriginalValue("createDate"));
+		pushNotificationsDeviceImpl.setPlatform(
+			this.<String>getColumnOriginalValue("platform"));
+		pushNotificationsDeviceImpl.setToken(
+			this.<String>getColumnOriginalValue("token"));
 
 		return pushNotificationsDeviceImpl;
 	}
@@ -701,7 +642,7 @@ public class PushNotificationsDeviceModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			(4 * attributeGetterFunctions.size()) + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -712,10 +653,27 @@ public class PushNotificationsDeviceModelImpl
 			Function<PushNotificationsDevice, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(
-				attributeGetterFunction.apply((PushNotificationsDevice)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply(
+				(PushNotificationsDevice)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -765,7 +723,8 @@ public class PushNotificationsDeviceModelImpl
 		private static final Function
 			<InvocationHandler, PushNotificationsDevice>
 				_escapedModelProxyProviderFunction =
-					_getProxyProviderFunction();
+					ProxyUtil.getProxyProviderFunction(
+						PushNotificationsDevice.class, ModelWrapper.class);
 
 	}
 

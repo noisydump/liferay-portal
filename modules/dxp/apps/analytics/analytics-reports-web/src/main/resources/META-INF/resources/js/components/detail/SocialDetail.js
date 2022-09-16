@@ -10,19 +10,22 @@
  */
 
 import ClayList from '@clayui/list';
+import ClayLoadingIndicator from '@clayui/loading-indicator';
 import className from 'classnames';
-import {ALIGN_POSITIONS} from 'frontend-js-web';
 import PropTypes from 'prop-types';
-import React, {useMemo, useState} from 'react';
+import React, {useContext, useEffect, useMemo, useRef, useState} from 'react';
 
 import {
-	useChangeTimeSpanKey,
-	useChartState,
+	ChartDispatchContext,
+	ChartStateContext,
 	useDateTitle,
 	useIsPreviousPeriodButtonDisabled,
-	useNextTimeSpan,
-	usePreviousTimeSpan,
 } from '../../context/ChartStateContext';
+import ConnectionContext from '../../context/ConnectionContext';
+import {
+	StoreDispatchContext,
+	StoreStateContext,
+} from '../../context/StoreContext';
 import {generateDateFormatters as dateFormat} from '../../utils/dateFormat';
 import {numberFormat} from '../../utils/numberFormat';
 import TimeSpanSelector from '../TimeSpanSelector';
@@ -42,11 +45,14 @@ const SOCIAL_MEDIA_COLORS = {
 
 export default function SocialDetail({
 	currentPage,
-	languageTag,
+	handleDetailPeriodChange,
 	timeSpanOptions,
 	trafficShareDataProvider,
+	trafficSourcesDataProvider,
 	trafficVolumeDataProvider,
 }) {
+	const {languageTag} = useContext(StoreStateContext);
+
 	const {referringSocialMedia} = currentPage.data;
 
 	const dateFormatters = useMemo(() => dateFormat(languageTag), [
@@ -57,21 +63,17 @@ export default function SocialDetail({
 
 	const title = dateFormatters.formatChartTitle([firstDate, lastDate]);
 
-	const chartState = useChartState();
+	const dispatch = useContext(StoreDispatchContext);
+
+	const chartDispatch = useContext(ChartDispatchContext);
+
+	const {pieChartLoading, timeSpanKey, timeSpanOffset} = useContext(
+		ChartStateContext
+	);
+
+	const {validAnalyticsConnection} = useContext(ConnectionContext);
 
 	const isPreviousPeriodButtonDisabled = useIsPreviousPeriodButtonDisabled();
-
-	const changeTimeSpanKey = useChangeTimeSpanKey();
-
-	const previousTimeSpan = usePreviousTimeSpan();
-
-	const nextTimeSpan = useNextTimeSpan();
-
-	const handleTimeSpanChange = (event) => {
-		const {value} = event.target;
-
-		changeTimeSpanKey({key: value});
-	};
 
 	const keyToHexColor = (name) => {
 		return SOCIAL_MEDIA_COLORS[name] ?? '#666666';
@@ -90,6 +92,15 @@ export default function SocialDetail({
 
 	const [highlighted, setHighlighted] = useState(null);
 
+	const firstUpdateRef = useRef(true);
+
+	const trafficSourceDetailClasses = className(
+		'c-p-3 traffic-source-detail',
+		{
+			'traffic-source-detail--loading': pieChartLoading,
+		}
+	);
+
 	function handleLegendMouseEnter(name) {
 		setHighlighted(name);
 	}
@@ -98,18 +109,63 @@ export default function SocialDetail({
 		setHighlighted(null);
 	}
 
+	useEffect(() => {
+		if (firstUpdateRef.current) {
+			firstUpdateRef.current = false;
+
+			return;
+		}
+
+		if (validAnalyticsConnection) {
+			chartDispatch({
+				payload: {
+					loading: true,
+				},
+				type: 'SET_PIE_CHART_LOADING',
+			});
+
+			trafficSourcesDataProvider()
+				.then((trafficSources) => {
+					handleDetailPeriodChange(trafficSources, 'social', true);
+				})
+				.catch(() => {
+					dispatch({type: 'ADD_WARNING'});
+				})
+				.finally(() => {
+					chartDispatch({
+						payload: {
+							loading: false,
+						},
+						type: 'SET_PIE_CHART_LOADING',
+					});
+				});
+		}
+	}, [
+		chartDispatch,
+		dispatch,
+		handleDetailPeriodChange,
+		timeSpanKey,
+		timeSpanOffset,
+		trafficSourcesDataProvider,
+		validAnalyticsConnection,
+	]);
+
 	return (
-		<div className="c-p-3 traffic-source-detail">
+		<div className={trafficSourceDetailClasses}>
+			{pieChartLoading && (
+				<ClayLoadingIndicator
+					className="chart-loading-indicator"
+					small
+				/>
+			)}
+
 			<div className="c-mb-3 c-mt-2">
 				<TimeSpanSelector
-					disabledNextTimeSpan={chartState.timeSpanOffset === 0}
+					disabledNextTimeSpan={timeSpanOffset === 0}
 					disabledPreviousPeriodButton={
 						isPreviousPeriodButtonDisabled
 					}
-					onNextTimeSpanClick={nextTimeSpan}
-					onPreviousTimeSpanClick={previousTimeSpan}
-					onTimeSpanChange={handleTimeSpanChange}
-					timeSpanKey={chartState.timeSpanKey}
+					timeSpanKey={timeSpanKey}
 					timeSpanOptions={timeSpanOptions}
 				/>
 			</div>
@@ -120,8 +176,6 @@ export default function SocialDetail({
 				className="c-mb-2"
 				dataProvider={trafficVolumeDataProvider}
 				label={Liferay.Util.sub(Liferay.Language.get('traffic-volume'))}
-				languageTag={languageTag}
-				popoverAlign={ALIGN_POSITIONS.Bottom}
 				popoverHeader={Liferay.Language.get('traffic-volume')}
 				popoverMessage={Liferay.Language.get(
 					'traffic-volume-is-the-number-of-page-views-coming-from-one-channel'
@@ -151,12 +205,14 @@ export default function SocialDetail({
 							</span>
 						</ClayList.ItemTitle>
 					</ClayList.ItemField>
+
 					<ClayList.ItemField>
 						<ClayList.ItemTitle>
 							<span>{Liferay.Language.get('traffic')}</span>
 						</ClayList.ItemTitle>
 					</ClayList.ItemField>
 				</ClayList.Item>
+
 				{referringSocialMedia.map(
 					({name, title, trafficAmount}, index) => {
 						const listItemClasses = className({
@@ -178,6 +234,7 @@ export default function SocialDetail({
 										</span>
 									</ClayList.ItemText>
 								</ClayList.ItemField>
+
 								<ClayList.ItemField
 									className="align-self-center"
 									expand
@@ -192,6 +249,7 @@ export default function SocialDetail({
 										}}
 									/>
 								</ClayList.ItemField>
+
 								<ClayList.ItemField className="align-self-center">
 									<span className="align-self-end c-ml-2 font-weight-semi-bold text-dark">
 										{numberFormat(
@@ -211,7 +269,7 @@ export default function SocialDetail({
 
 SocialDetail.propTypes = {
 	currentPage: PropTypes.object.isRequired,
-	languageTag: PropTypes.string.isRequired,
+	handleDetailPeriodChange: PropTypes.func.isRequired,
 	timeSpanOptions: PropTypes.arrayOf(
 		PropTypes.shape({
 			key: PropTypes.string,
@@ -219,5 +277,6 @@ SocialDetail.propTypes = {
 		})
 	).isRequired,
 	trafficShareDataProvider: PropTypes.func.isRequired,
+	trafficSourcesDataProvider: PropTypes.func.isRequired,
 	trafficVolumeDataProvider: PropTypes.func.isRequired,
 };

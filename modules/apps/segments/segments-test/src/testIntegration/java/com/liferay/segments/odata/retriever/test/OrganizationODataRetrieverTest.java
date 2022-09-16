@@ -20,12 +20,18 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.asset.kernel.model.AssetTag;
 import com.liferay.asset.test.util.AssetTestUtil;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Country;
 import com.liferay.portal.kernel.model.ListTypeConstants;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.OrganizationConstants;
 import com.liferay.portal.kernel.model.Region;
+import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.role.RoleConstants;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.CountryService;
 import com.liferay.portal.kernel.service.OrganizationLocalService;
@@ -36,7 +42,9 @@ import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.OrganizationTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -162,7 +170,8 @@ public class OrganizationODataRetrieverTest {
 
 		String filterString = String.format(
 			"(country eq '%s') and (region eq '%s')",
-			country.getNameCurrentValue(), region.getName());
+			StringUtil.toLowerCase(country.getName()),
+			StringUtil.toLowerCase(region.getName()));
 
 		int count = _oDataRetriever.getResultsCount(
 			TestPropsValues.getCompanyId(), filterString,
@@ -175,6 +184,58 @@ public class OrganizationODataRetrieverTest {
 			LocaleUtil.getDefault(), 0, 2);
 
 		Assert.assertEquals(organization1, organizations.get(0));
+	}
+
+	@Test
+	public void testGetOrganizationsFilterByCountryForOrganizationUser()
+		throws Exception {
+
+		Country country = _countryService.getCountryByName(
+			TestPropsValues.getCompanyId(), "brazil");
+
+		List<Region> regions = _regionService.getRegions(
+			country.getCountryId());
+
+		Region region = regions.get(0);
+
+		Organization organization = _organizationLocalService.addOrganization(
+			TestPropsValues.getUserId(),
+			OrganizationConstants.DEFAULT_PARENT_ORGANIZATION_ID,
+			RandomTestUtil.randomString(),
+			OrganizationConstants.TYPE_ORGANIZATION, region.getRegionId(),
+			country.getCountryId(),
+			ListTypeConstants.ORGANIZATION_STATUS_DEFAULT, StringPool.BLANK,
+			true, new ServiceContext());
+
+		String filterString = String.format(
+			"(country eq '%s')", StringUtil.toLowerCase(country.getName()));
+
+		PermissionChecker originalPermissionChecker =
+			PermissionThreadLocal.getPermissionChecker();
+
+		try {
+			User user = UserTestUtil.addOrganizationUser(
+				organization, RoleConstants.ORGANIZATION_USER);
+
+			PermissionThreadLocal.setPermissionChecker(
+				PermissionCheckerFactoryUtil.create(user));
+
+			int count = _oDataRetriever.getResultsCount(
+				TestPropsValues.getCompanyId(), filterString,
+				LocaleUtil.getDefault());
+
+			Assert.assertEquals(1, count);
+
+			List<Organization> organizations = _oDataRetriever.getResults(
+				TestPropsValues.getCompanyId(), filterString,
+				LocaleUtil.getDefault(), QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+
+			Assert.assertEquals(organization, organizations.get(0));
+		}
+		finally {
+			PermissionThreadLocal.setPermissionChecker(
+				originalPermissionChecker);
+		}
 	}
 
 	@Test

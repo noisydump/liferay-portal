@@ -16,6 +16,9 @@ package com.liferay.jenkins.results.parser;
 
 import com.google.common.collect.Lists;
 
+import com.liferay.jenkins.results.parser.job.property.JobProperty;
+import com.liferay.jenkins.results.parser.job.property.JobPropertyFactory;
+
 import java.io.File;
 import java.io.IOException;
 
@@ -33,9 +36,8 @@ import org.dom4j.Element;
 /**
  * @author Michael Hashimoto
  */
-public abstract class TopLevelBuildRunner
-	<T extends TopLevelBuildData, S extends Workspace>
-		extends BaseBuildRunner<T, S> {
+public abstract class TopLevelBuildRunner<T extends TopLevelBuildData>
+	extends BaseBuildRunner<T> {
 
 	@Override
 	public void run() {
@@ -52,6 +54,8 @@ public abstract class TopLevelBuildRunner
 		propagateBuildDatabaseToDistNodes();
 
 		invokeDownstreamBuilds();
+
+		propagateBuildDatabaseToUserContent();
 
 		waitForDownstreamBuildsToComplete();
 
@@ -113,10 +117,11 @@ public abstract class TopLevelBuildRunner
 		return _topLevelBuild.getJenkinsReportElement();
 	}
 
-	protected String getJobProperty(String key) {
-		Job job = getJob();
+	protected String getJobPropertyValue(String key) {
+		JobProperty jobProperty = JobPropertyFactory.newJobProperty(
+			key, getJob());
 
-		return job.getJobProperty(key);
+		return jobProperty.getValue();
 	}
 
 	protected TopLevelBuild getTopLevelBuild() {
@@ -138,12 +143,15 @@ public abstract class TopLevelBuildRunner
 
 		TopLevelBuildData topLevelBuildData = getBuildData();
 
-		File workspaceDir = topLevelBuildData.getWorkspaceDir();
+		BuildDatabase buildDatabase = BuildDatabaseUtil.getBuildDatabase();
+
+		File buildDatabaseFile = buildDatabase.getBuildDatabaseFile();
 
 		FilePropagator filePropagator = new FilePropagator(
-			new String[] {BuildDatabase.FILE_NAME_BUILD_DATABASE},
+			new String[] {buildDatabaseFile.getName()},
 			JenkinsResultsParserUtil.combine(
-				topLevelBuildData.getHostname(), ":", workspaceDir.toString()),
+				topLevelBuildData.getHostname(), ":",
+				buildDatabaseFile.getParent()),
 			topLevelBuildData.getDistPath(), topLevelBuildData.getDistNodes());
 
 		filePropagator.setCleanUpCommand(_COMMAND_FILE_PROPAGATOR_CLEAN_UP);
@@ -156,6 +164,16 @@ public abstract class TopLevelBuildRunner
 		distNodes.removeAll(filePropagator.getErrorSlaves());
 
 		topLevelBuildData.setDistNodes(distNodes);
+	}
+
+	protected void propagateBuildDatabaseToUserContent() {
+		if (!JenkinsResultsParserUtil.isCINode()) {
+			return;
+		}
+
+		BuildDatabase buildDatabase = BuildDatabaseUtil.getBuildDatabase();
+
+		publishToUserContentDir(buildDatabase.getBuildDatabaseFile());
 	}
 
 	protected void publishJenkinsReport() {
@@ -180,6 +198,15 @@ public abstract class TopLevelBuildRunner
 		}
 	}
 
+	@Override
+	protected void setUpWorkspace() {
+		Workspace workspace = getWorkspace();
+
+		workspace.setUp();
+
+		workspace.synchronizeToGitHubDev();
+	}
+
 	protected void updateJenkinsReport() {
 		if (!_allBuildsAreRunning()) {
 			_lastGeneratedReportTime = -1;
@@ -187,10 +214,11 @@ public abstract class TopLevelBuildRunner
 			return;
 		}
 
-		long currentTimeMillis = System.currentTimeMillis();
+		long currentTimeMillis =
+			JenkinsResultsParserUtil.getCurrentTimeMillis();
 
 		if (_lastGeneratedReportTime == -1) {
-			_lastGeneratedReportTime = System.currentTimeMillis();
+			_lastGeneratedReportTime = currentTimeMillis;
 
 			publishJenkinsReport();
 
@@ -203,7 +231,7 @@ public abstract class TopLevelBuildRunner
 			return;
 		}
 
-		_lastGeneratedReportTime = System.currentTimeMillis();
+		_lastGeneratedReportTime = currentTimeMillis;
 
 		publishJenkinsReport();
 	}
@@ -326,7 +354,8 @@ public abstract class TopLevelBuildRunner
 		invocationParameters.put(
 			"TOP_LEVEL_RUN_ID", topLevelBuildData.getRunID());
 
-		buildData.setInvocationTime(System.currentTimeMillis());
+		buildData.setInvocationTime(
+			JenkinsResultsParserUtil.getCurrentTimeMillis());
 
 		_invokeBuild(
 			topLevelBuildData.getCohortName(), buildData.getJobName(),
@@ -337,7 +366,8 @@ public abstract class TopLevelBuildRunner
 		TopLevelBuildData topLevelBuildData = getBuildData();
 
 		topLevelBuildData.setBuildDuration(
-			System.currentTimeMillis() - topLevelBuildData.getStartTime());
+			JenkinsResultsParserUtil.getCurrentTimeMillis() -
+				topLevelBuildData.getStartTime());
 		topLevelBuildData.setBuildResult(_topLevelBuild.getResult());
 		topLevelBuildData.setBuildStatus(_topLevelBuild.getStatus());
 

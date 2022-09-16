@@ -2,11 +2,13 @@
 <head>
 <title>TestLocalized</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">TestLocalized</td></tr>
 </thead>
+
 <tbody>
 <tr>
 	<td>CHINESE_LOCALIZATION</td>
@@ -33,7 +35,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--LOCALIZATION-->
+
 <tr>
 	<td>LOCALIZATION_TEST_1</td>
 	<td>//table[@class='table table-bordered table-hover table-striped']/tbody/tr[1]/td[5]</td>

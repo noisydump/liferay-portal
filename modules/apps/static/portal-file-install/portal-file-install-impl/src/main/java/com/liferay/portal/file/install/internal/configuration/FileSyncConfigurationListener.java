@@ -14,22 +14,20 @@
 
 package com.liferay.portal.file.install.internal.configuration;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.file.install.internal.DirectoryWatcher;
-import com.liferay.portal.file.install.internal.FileInstallImplBundleActivator;
-import com.liferay.portal.file.install.internal.properties.TypedProperties;
+import com.liferay.portal.file.install.constants.FileInstallConstants;
+import com.liferay.portal.file.install.internal.activator.FileInstallImplBundleActivator;
+import com.liferay.portal.file.install.properties.ConfigurationProperties;
+import com.liferay.portal.file.install.properties.ConfigurationPropertiesFactory;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.Reader;
 import java.io.Writer;
 
 import java.net.URI;
@@ -75,7 +73,7 @@ public class FileSyncConfigurationListener implements ConfigurationListener {
 
 					if (dictionary != null) {
 						fileName = (String)dictionary.get(
-							DirectoryWatcher.FILENAME);
+							FileInstallConstants.FELIX_FILE_INSTALL_FILENAME);
 					}
 
 					if (fileName != null) {
@@ -108,7 +106,7 @@ public class FileSyncConfigurationListener implements ConfigurationListener {
 
 				if (dictionary != null) {
 					fileName = (String)dictionary.get(
-						DirectoryWatcher.FILENAME);
+						FileInstallConstants.FELIX_FILE_INSTALL_FILENAME);
 				}
 
 				File file = null;
@@ -118,24 +116,36 @@ public class FileSyncConfigurationListener implements ConfigurationListener {
 				}
 
 				if ((file != null) && file.isFile()) {
-					_pidToFile.put(configuration.getPid(), fileName);
-					TypedProperties typedProperties = new TypedProperties();
+					if (!file.canWrite()) {
+						if (_log.isInfoEnabled()) {
+							_log.info(
+								StringBundler.concat(
+									"Unable to save configuration because the ",
+									"file ", file.getAbsolutePath(),
+									" is not writable"));
+						}
 
-					try (InputStream inputStream = new FileInputStream(file);
-						Reader reader = new InputStreamReader(
-							inputStream, _encoding)) {
+						_pidToFile.remove(configuration.getPid(), fileName);
 
-						typedProperties.load(reader);
+						return;
 					}
+
+					_pidToFile.put(configuration.getPid(), fileName);
+
+					ConfigurationProperties configurationProperties =
+						ConfigurationPropertiesFactory.create(file, _encoding);
 
 					List<String> toRemovePropertyKeys = new ArrayList<>();
 
-					for (String key : typedProperties.keySet()) {
+					for (String key : configurationProperties.keySet()) {
 						if ((dictionary.get(key) == null) &&
 							!Objects.equals(Constants.SERVICE_PID, key) &&
 							!Objects.equals(
 								ConfigurationAdmin.SERVICE_FACTORYPID, key) &&
-							!Objects.equals(DirectoryWatcher.FILENAME, key)) {
+							!Objects.equals(
+								FileInstallConstants.
+									FELIX_FILE_INSTALL_FILENAME,
+								key)) {
 
 							toRemovePropertyKeys.add(key);
 						}
@@ -149,23 +159,26 @@ public class FileSyncConfigurationListener implements ConfigurationListener {
 						if (!Objects.equals(Constants.SERVICE_PID, key) &&
 							!Objects.equals(
 								ConfigurationAdmin.SERVICE_FACTORYPID, key) &&
-							!Objects.equals(DirectoryWatcher.FILENAME, key)) {
+							!Objects.equals(
+								FileInstallConstants.
+									FELIX_FILE_INSTALL_FILENAME,
+								key)) {
 
 							Object value = dictionary.get(key);
 
-							typedProperties.put(key, value);
+							configurationProperties.put(key, value);
 						}
 					}
 
 					for (String key : toRemovePropertyKeys) {
-						typedProperties.remove(key);
+						configurationProperties.remove(key);
 					}
 
 					try (OutputStream outputStream = new FileOutputStream(file);
 						Writer writer = new OutputStreamWriter(
 							outputStream, _encoding)) {
 
-						typedProperties.save(writer);
+						configurationProperties.save(writer);
 					}
 
 					_fileInstallImplBundleActivator.updateChecksum(file);

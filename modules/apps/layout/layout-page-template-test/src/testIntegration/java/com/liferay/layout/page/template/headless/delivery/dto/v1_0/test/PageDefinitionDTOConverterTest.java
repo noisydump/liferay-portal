@@ -32,6 +32,7 @@ import com.liferay.headless.delivery.dto.v1_0.FragmentImage;
 import com.liferay.headless.delivery.dto.v1_0.FragmentInlineValue;
 import com.liferay.headless.delivery.dto.v1_0.FragmentLink;
 import com.liferay.headless.delivery.dto.v1_0.FragmentLinkValue;
+import com.liferay.headless.delivery.dto.v1_0.FragmentStyle;
 import com.liferay.headless.delivery.dto.v1_0.PageColumnDefinition;
 import com.liferay.headless.delivery.dto.v1_0.PageDefinition;
 import com.liferay.headless.delivery.dto.v1_0.PageDropZoneDefinition;
@@ -73,6 +74,7 @@ import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
+import com.liferay.segments.service.SegmentsExperienceLocalService;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -148,14 +150,11 @@ public class PageDefinitionDTOConverterTest {
 	public void testToPageDefinitionDropZoneAllowedFragments()
 		throws Exception {
 
-		LayoutStructure layoutStructure = _getLayoutStructure(
-			"layout_data_drop_zone_allowed_fragments.json", new HashMap<>());
-
-		Layout layout = _layoutLocalService.fetchLayout(
-			_layoutPageTemplateEntry.getPlid());
-
 		PageDefinition pageDefinition = _getPageDefinition(
-			layout, layoutStructure);
+			_layoutLocalService.fetchLayout(_layoutPageTemplateEntry.getPlid()),
+			_getLayoutStructure(
+				"layout_data_drop_zone_allowed_fragments.json",
+				new HashMap<>()));
 
 		PageElement rootPageElement = pageDefinition.getPageElement();
 
@@ -198,14 +197,11 @@ public class PageDefinitionDTOConverterTest {
 	public void testToPageDefinitionDropZoneUnallowedFragments()
 		throws Exception {
 
-		LayoutStructure layoutStructure = _getLayoutStructure(
-			"layout_data_drop_zone_unallowed_fragments.json", new HashMap<>());
-
-		Layout layout = _layoutLocalService.fetchLayout(
-			_layoutPageTemplateEntry.getPlid());
-
 		PageDefinition pageDefinition = _getPageDefinition(
-			layout, layoutStructure);
+			_layoutLocalService.fetchLayout(_layoutPageTemplateEntry.getPlid()),
+			_getLayoutStructure(
+				"layout_data_drop_zone_unallowed_fragments.json",
+				new HashMap<>()));
 
 		PageElement rootPageElement = pageDefinition.getPageElement();
 
@@ -456,14 +452,9 @@ public class PageDefinitionDTOConverterTest {
 
 	@Test
 	public void testToPageDefinitionRow() throws Exception {
-		LayoutStructure layoutStructure = _getLayoutStructure(
-			"layout_data_row.json", new HashMap<>());
-
-		Layout layout = _layoutLocalService.fetchLayout(
-			_layoutPageTemplateEntry.getPlid());
-
 		PageDefinition pageDefinition = _getPageDefinition(
-			layout, layoutStructure);
+			_layoutLocalService.fetchLayout(_layoutPageTemplateEntry.getPlid()),
+			_getLayoutStructure("layout_data_row.json", new HashMap<>()));
 
 		PageElement rootPageElement = pageDefinition.getPageElement();
 
@@ -512,14 +503,9 @@ public class PageDefinitionDTOConverterTest {
 
 	@Test
 	public void testToPageDefinitionSection() throws Exception {
-		LayoutStructure layoutStructure = _getLayoutStructure(
-			"layout_data_section.json", new HashMap<>());
-
-		Layout layout = _layoutLocalService.fetchLayout(
-			_layoutPageTemplateEntry.getPlid());
-
 		PageDefinition pageDefinition = _getPageDefinition(
-			layout, layoutStructure);
+			_layoutLocalService.fetchLayout(_layoutPageTemplateEntry.getPlid()),
+			_getLayoutStructure("layout_data_section.json", new HashMap<>()));
 
 		PageElement rootPageElement = pageDefinition.getPageElement();
 
@@ -538,8 +524,11 @@ public class PageDefinitionDTOConverterTest {
 		PageSectionDefinition pageSectionDefinition1 =
 			(PageSectionDefinition)sectionPageElement1.getDefinition();
 
+		FragmentStyle fragmentStyle1 =
+			pageSectionDefinition1.getFragmentStyle();
+
 		FragmentImage fragmentImage1 =
-			pageSectionDefinition1.getBackgroundFragmentImage();
+			fragmentStyle1.getBackgroundFragmentImage();
 
 		FragmentInlineValue titleFragmentInlineValue =
 			(FragmentInlineValue)fragmentImage1.getTitle();
@@ -574,8 +563,11 @@ public class PageDefinitionDTOConverterTest {
 		PageSectionDefinition pageSectionDefinition2 =
 			(PageSectionDefinition)sectionPageElement2.getDefinition();
 
+		FragmentStyle fragmentStyle2 =
+			pageSectionDefinition2.getFragmentStyle();
+
 		FragmentImage fragmentImage2 =
-			pageSectionDefinition2.getBackgroundFragmentImage();
+			fragmentStyle2.getBackgroundFragmentImage();
 
 		Assert.assertNull(fragmentImage2.getTitle());
 
@@ -621,15 +613,19 @@ public class PageDefinitionDTOConverterTest {
 			String fileName, Map<String, String> valuesMap)
 		throws Exception {
 
+		long defaultSegmentsExperienceId =
+			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
+				_layoutPageTemplateEntry.getPlid());
+
 		LayoutPageTemplateStructure layoutPageTemplateStructure =
 			_layoutPageTemplateStructureLocalService.
-				addLayoutPageTemplateStructure(
-					TestPropsValues.getUserId(), _group.getGroupId(),
-					_layoutPageTemplateEntry.getPlid(),
-					StringUtil.replace(_read(fileName), "${", "}", valuesMap),
-					_serviceContext);
+				updateLayoutPageTemplateStructureData(
+					_group.getGroupId(), _layoutPageTemplateEntry.getPlid(),
+					defaultSegmentsExperienceId,
+					StringUtil.replace(_read(fileName), "${", "}", valuesMap));
 
-		return LayoutStructure.of(layoutPageTemplateStructure.getData(0L));
+		return LayoutStructure.of(
+			layoutPageTemplateStructure.getData(defaultSegmentsExperienceId));
 	}
 
 	private PageDefinition _getPageDefinition(
@@ -665,27 +661,29 @@ public class PageDefinitionDTOConverterTest {
 			_fragmentEntryLocalService.addFragmentEntry(
 				TestPropsValues.getUserId(), _group.getGroupId(),
 				_fragmentCollection.getFragmentCollectionId(), fragmentEntryKey,
-				fragmentName, StringPool.BLANK, html, StringPool.BLANK,
-				configuration, 0, FragmentConstants.TYPE_COMPONENT,
+				fragmentName, StringPool.BLANK, html, StringPool.BLANK, false,
+				configuration, null, 0, FragmentConstants.TYPE_COMPONENT, null,
 				WorkflowConstants.STATUS_APPROVED, _serviceContext);
 
 		FragmentEntryLink fragmentEntryLink =
 			_fragmentEntryLinkLocalService.addFragmentEntryLink(
 				TestPropsValues.getUserId(), _group.getGroupId(), 0,
-				fragmentEntry.getFragmentEntryId(), 0, layout.getPlid(),
-				StringPool.BLANK, html, StringPool.BLANK, configuration,
-				_read(editableValuesFileName), StringPool.BLANK, 0, null,
-				_serviceContext);
-
-		LayoutStructure layoutStructure = _getLayoutStructure(
-			"layout_data_fragment.json",
-			HashMapBuilder.put(
-				"FRAGMENT_ENTRY_LINK_ID",
-				String.valueOf(fragmentEntryLink.getFragmentEntryLinkId())
-			).build());
+				fragmentEntry.getFragmentEntryId(),
+				_segmentsExperienceLocalService.
+					fetchDefaultSegmentsExperienceId(
+						_layoutPageTemplateEntry.getPlid()),
+				layout.getPlid(), StringPool.BLANK, html, StringPool.BLANK,
+				configuration, _read(editableValuesFileName), StringPool.BLANK,
+				0, null, fragmentEntry.getType(), _serviceContext);
 
 		PageDefinition pageDefinition = _getPageDefinition(
-			layout, layoutStructure);
+			layout,
+			_getLayoutStructure(
+				"layout_data_fragment.json",
+				HashMapBuilder.put(
+					"FRAGMENT_ENTRY_LINK_ID",
+					String.valueOf(fragmentEntryLink.getFragmentEntryLinkId())
+				).build()));
 
 		PageElement rootPageElement = pageDefinition.getPageElement();
 
@@ -871,6 +869,9 @@ public class PageDefinitionDTOConverterTest {
 	@Inject
 	private LayoutPageTemplateStructureLocalService
 		_layoutPageTemplateStructureLocalService;
+
+	@Inject
+	private SegmentsExperienceLocalService _segmentsExperienceLocalService;
 
 	private ServiceContext _serviceContext;
 

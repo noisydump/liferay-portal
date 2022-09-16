@@ -22,6 +22,8 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Address;
 import com.liferay.portal.kernel.model.Contact;
 import com.liferay.portal.kernel.model.Country;
@@ -90,6 +92,9 @@ public class ContactsUtil {
 			return (String[])field.get((Object)null);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return null;
@@ -105,11 +110,11 @@ public class ContactsUtil {
 	public static JSONObject getUserJSONObject(long userId, User user)
 		throws PortalException {
 
-		boolean block = SocialRelationLocalServiceUtil.hasRelation(
-			userId, user.getUserId(), SocialRelationConstants.TYPE_UNI_ENEMY);
-
 		JSONObject jsonObject = JSONUtil.put(
-			"block", block
+			"block",
+			SocialRelationLocalServiceUtil.hasRelation(
+				userId, user.getUserId(),
+				SocialRelationConstants.TYPE_UNI_ENEMY)
 		).put(
 			"contactId", String.valueOf(user.getContactId())
 		).put(
@@ -431,5 +436,7 @@ public class ContactsUtil {
 
 		return sb.toString();
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(ContactsUtil.class);
 
 }

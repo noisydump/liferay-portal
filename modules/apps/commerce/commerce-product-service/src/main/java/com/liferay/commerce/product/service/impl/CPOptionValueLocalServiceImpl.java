@@ -18,6 +18,7 @@ import com.liferay.commerce.product.exception.CPOptionValueKeyException;
 import com.liferay.commerce.product.model.CPOption;
 import com.liferay.commerce.product.model.CPOptionValue;
 import com.liferay.commerce.product.service.base.CPOptionValueLocalServiceBaseImpl;
+import com.liferay.expando.kernel.service.ExpandoRowLocalService;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -37,13 +38,15 @@ import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
-import com.liferay.portal.kernel.util.FriendlyURLNormalizerUtil;
+import com.liferay.portal.kernel.util.FriendlyURLNormalizer;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.io.Serializable;
 
@@ -65,28 +68,28 @@ public class CPOptionValueLocalServiceImpl
 			String key, ServiceContext serviceContext)
 		throws PortalException {
 
-		return addCPOptionValue(
-			cpOptionId, nameMap, priority, key, StringPool.BLANK,
+		return cpOptionValueLocalService.addCPOptionValue(
+			StringPool.BLANK, cpOptionId, nameMap, priority, key,
 			serviceContext);
 	}
 
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public CPOptionValue addCPOptionValue(
-			long cpOptionId, Map<Locale, String> nameMap, double priority,
-			String key, String externalReferenceCode,
+			String externalReferenceCode, long cpOptionId,
+			Map<Locale, String> nameMap, double priority, String key,
 			ServiceContext serviceContext)
 		throws PortalException {
 
 		// Commerce product option value
 
-		User user = userLocalService.getUser(serviceContext.getUserId());
+		User user = _userLocalService.getUser(serviceContext.getUserId());
 
 		if (Validator.isBlank(externalReferenceCode)) {
 			externalReferenceCode = null;
 		}
 
-		key = FriendlyURLNormalizerUtil.normalize(key);
+		key = _friendlyURLNormalizer.normalize(key);
 
 		validate(0, cpOptionId, key);
 
@@ -95,6 +98,7 @@ public class CPOptionValueLocalServiceImpl
 		CPOptionValue cpOptionValue = cpOptionValuePersistence.create(
 			cpOptionValueId);
 
+		cpOptionValue.setExternalReferenceCode(externalReferenceCode);
 		cpOptionValue.setCompanyId(user.getCompanyId());
 		cpOptionValue.setUserId(user.getUserId());
 		cpOptionValue.setUserName(user.getFullName());
@@ -103,13 +107,38 @@ public class CPOptionValueLocalServiceImpl
 		cpOptionValue.setPriority(priority);
 		cpOptionValue.setKey(key);
 		cpOptionValue.setExpandoBridgeAttributes(serviceContext);
-		cpOptionValue.setExternalReferenceCode(externalReferenceCode);
 
 		cpOptionValue = cpOptionValuePersistence.update(cpOptionValue);
 
 		reindexCPOption(cpOptionId);
 
 		return cpOptionValue;
+	}
+
+	@Override
+	public CPOptionValue addOrUpdateCPOptionValue(
+			String externalReferenceCode, long cpOptionId,
+			Map<Locale, String> nameMap, double priority, String key,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		if (Validator.isBlank(externalReferenceCode)) {
+			externalReferenceCode = null;
+		}
+		else {
+			CPOptionValue cpOptionValue = cpOptionValuePersistence.fetchByC_ERC(
+				serviceContext.getCompanyId(), externalReferenceCode);
+
+			if (cpOptionValue != null) {
+				return cpOptionValueLocalService.updateCPOptionValue(
+					cpOptionValue.getCPOptionValueId(), nameMap, priority, key,
+					serviceContext);
+			}
+		}
+
+		return cpOptionValueLocalService.addCPOptionValue(
+			externalReferenceCode, cpOptionId, nameMap, priority, key,
+			serviceContext);
 	}
 
 	@Indexable(type = IndexableType.DELETE)
@@ -124,7 +153,7 @@ public class CPOptionValueLocalServiceImpl
 
 		// Expando
 
-		expandoRowLocalService.deleteRows(cpOptionValue.getCPOptionValueId());
+		_expandoRowLocalService.deleteRows(cpOptionValue.getCPOptionValueId());
 
 		reindexCPOption(cpOptionValue.getCPOptionId());
 
@@ -154,7 +183,7 @@ public class CPOptionValueLocalServiceImpl
 
 	@Override
 	public CPOptionValue fetchByExternalReferenceCode(
-		long companyId, String externalReferenceCode) {
+		String externalReferenceCode, long companyId) {
 
 		if (Validator.isBlank(externalReferenceCode)) {
 			return null;
@@ -208,14 +237,26 @@ public class CPOptionValueLocalServiceImpl
 
 	@Override
 	public BaseModelSearchResult<CPOptionValue> searchCPOptionValues(
-			long companyId, long groupId, long cpOptionId, String keywords,
-			int start, int end, Sort sort)
+			long companyId, long cpOptionId, String keywords, int start,
+			int end, Sort[] sorts)
 		throws PortalException {
 
 		SearchContext searchContext = buildSearchContext(
-			companyId, groupId, cpOptionId, keywords, start, end, sort);
+			companyId, cpOptionId, keywords, start, end, sorts);
 
-		return searchCPOptions(searchContext);
+		return searchCPOptionValues(searchContext);
+	}
+
+	@Override
+	public int searchCPOptionValuesCount(
+			long companyId, long cpOptionId, String keywords)
+		throws PortalException {
+
+		SearchContext searchContext = buildSearchContext(
+			companyId, cpOptionId, keywords, QueryUtil.ALL_POS,
+			QueryUtil.ALL_POS, null);
+
+		return searchCPOptionValuesCount(searchContext);
 	}
 
 	@Indexable(type = IndexableType.REINDEX)
@@ -230,7 +271,7 @@ public class CPOptionValueLocalServiceImpl
 		CPOptionValue cpOptionValue = cpOptionValuePersistence.findByPrimaryKey(
 			cpOptionValueId);
 
-		key = FriendlyURLNormalizerUtil.normalize(key);
+		key = _friendlyURLNormalizer.normalize(key);
 
 		validate(
 			cpOptionValue.getCPOptionValueId(), cpOptionValue.getCPOptionId(),
@@ -248,39 +289,13 @@ public class CPOptionValueLocalServiceImpl
 		return cpOptionValue;
 	}
 
-	@Override
-	public CPOptionValue upsertCPOptionValue(
-			long cpOptionId, Map<Locale, String> nameMap, double priority,
-			String key, String externalReferenceCode,
-			ServiceContext serviceContext)
-		throws PortalException {
-
-		if (Validator.isBlank(externalReferenceCode)) {
-			externalReferenceCode = null;
-		}
-		else {
-			CPOptionValue cpOptionValue = cpOptionValuePersistence.fetchByC_ERC(
-				serviceContext.getCompanyId(), externalReferenceCode);
-
-			if (cpOptionValue != null) {
-				return updateCPOptionValue(
-					cpOptionValue.getCPOptionValueId(), nameMap, priority, key,
-					serviceContext);
-			}
-		}
-
-		return addCPOptionValue(
-			cpOptionId, nameMap, priority, key, externalReferenceCode,
-			serviceContext);
-	}
-
 	protected SearchContext buildSearchContext(
-		long companyId, long groupId, long cpOptionId, String keywords,
-		int start, int end, Sort sort) {
+		long companyId, long cpOptionId, String keywords, int start, int end,
+		Sort[] sorts) {
 
 		SearchContext searchContext = new SearchContext();
 
-		Map<String, Serializable> attributes =
+		searchContext.setAttributes(
 			HashMapBuilder.<String, Serializable>put(
 				_FIELD_KEY, keywords
 			).put(
@@ -296,20 +311,16 @@ public class CPOptionValueLocalServiceImpl
 				LinkedHashMapBuilder.<String, Object>put(
 					"keywords", keywords
 				).build()
-			).build();
-
-		searchContext.setAttributes(attributes);
-
+			).build());
 		searchContext.setCompanyId(companyId);
 		searchContext.setEnd(end);
-		searchContext.setGroupIds(new long[] {groupId});
 
 		if (Validator.isNotNull(keywords)) {
 			searchContext.setKeywords(keywords);
 		}
 
-		if (sort != null) {
-			searchContext.setSorts(sort);
+		if (sorts != null) {
+			searchContext.setSorts(sorts);
 		}
 
 		searchContext.setStart(start);
@@ -361,7 +372,7 @@ public class CPOptionValueLocalServiceImpl
 		indexer.reindex(CPOption.class.getName(), cpOptionId);
 	}
 
-	protected BaseModelSearchResult<CPOptionValue> searchCPOptions(
+	protected BaseModelSearchResult<CPOptionValue> searchCPOptionValues(
 			SearchContext searchContext)
 		throws PortalException {
 
@@ -383,6 +394,15 @@ public class CPOptionValueLocalServiceImpl
 			"Unable to fix the search index after 10 attempts");
 	}
 
+	protected int searchCPOptionValuesCount(SearchContext searchContext)
+		throws PortalException {
+
+		Indexer<CPOptionValue> indexer = IndexerRegistryUtil.nullSafeGetIndexer(
+			CPOptionValue.class);
+
+		return GetterUtil.getInteger(indexer.searchCount(searchContext));
+	}
+
 	protected void validate(long cpOptionValueId, long cpOptionId, String key)
 		throws PortalException {
 
@@ -401,5 +421,14 @@ public class CPOptionValueLocalServiceImpl
 	private static final String[] _SELECTED_FIELD_NAMES = {
 		Field.ENTRY_CLASS_PK, Field.COMPANY_ID, Field.GROUP_ID, Field.UID
 	};
+
+	@ServiceReference(type = ExpandoRowLocalService.class)
+	private ExpandoRowLocalService _expandoRowLocalService;
+
+	@ServiceReference(type = FriendlyURLNormalizer.class)
+	private FriendlyURLNormalizer _friendlyURLNormalizer;
+
+	@ServiceReference(type = UserLocalService.class)
+	private UserLocalService _userLocalService;
 
 }

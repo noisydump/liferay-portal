@@ -17,6 +17,8 @@ package com.liferay.source.formatter.util;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 
@@ -67,6 +69,7 @@ public class JIRAUtil {
 
 			throw new Exception(
 				StringBundler.concat(
+					"Found formatting issues:\n",
 					"At least one commit message is missing a reference to a ",
 					"required JIRA project: ",
 					StringUtil.merge(projectNames, StringPool.COMMA_AND_SPACE),
@@ -105,6 +108,10 @@ public class JIRAUtil {
 					responseCodeMap.put(jiraTicketId, jiraTicketResponseCode);
 				}
 				catch (IOException ioException) {
+					if (_log.isDebugEnabled()) {
+						_log.debug(ioException);
+					}
+
 					return;
 				}
 			}
@@ -157,11 +164,16 @@ public class JIRAUtil {
 
 					throw new Exception(
 						StringBundler.concat(
+							"Found formatting issues:\n",
 							"Commit message is pointing to non-existing JIRA ",
 							"issue: ", jiraTicketId));
 				}
 			}
 			catch (IOException ioException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(ioException);
+				}
+
 				return;
 			}
 		}
@@ -301,6 +313,8 @@ public class JIRAUtil {
 
 		System.out.println();
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(JIRAUtil.class);
 
 	private static final Pattern _jiraTicketIdPattern = Pattern.compile(
 		"^[A-Z0-9]+-[0-9]+");

@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
@@ -56,8 +57,12 @@ public class RelatedProduct implements Serializable {
 		return ObjectMapperUtil.readValue(RelatedProduct.class, json);
 	}
 
+	public static RelatedProduct unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(RelatedProduct.class, json);
+	}
+
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "30130")
 	public Long getId() {
 		return id;
 	}
@@ -83,7 +88,7 @@ public class RelatedProduct implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Long id;
 
-	@Schema
+	@Schema(example = "1.2")
 	public Double getPriority() {
 		return priority;
 	}
@@ -111,7 +116,7 @@ public class RelatedProduct implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Double priority;
 
-	@Schema
+	@Schema(example = "AB-34098-789-N")
 	public String getProductExternalReferenceCode() {
 		return productExternalReferenceCode;
 	}
@@ -144,7 +149,7 @@ public class RelatedProduct implements Serializable {
 	protected String productExternalReferenceCode;
 
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "30129")
 	public Long getProductId() {
 		return productId;
 	}
@@ -173,7 +178,7 @@ public class RelatedProduct implements Serializable {
 	@NotNull
 	protected Long productId;
 
-	@Schema
+	@Schema(example = "cross-sell")
 	public String getType() {
 		return type;
 	}
@@ -291,15 +296,16 @@ public class RelatedProduct implements Serializable {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.commerce.admin.catalog.dto.v1_0.RelatedProduct",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
 	}
 
 	private static boolean _isArray(Object value) {
@@ -325,8 +331,8 @@ public class RelatedProduct implements Serializable {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -357,7 +363,7 @@ public class RelatedProduct implements Serializable {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -365,7 +371,7 @@ public class RelatedProduct implements Serializable {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -373,5 +379,10 @@ public class RelatedProduct implements Serializable {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

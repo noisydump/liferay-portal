@@ -31,21 +31,24 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.LayoutTypePortlet;
+import com.liferay.portal.kernel.model.Theme;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactory;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutService;
+import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.UnicodeProperties;
 
 import java.util.List;
 import java.util.Locale;
@@ -107,6 +110,20 @@ public class CommerceGuestCheckoutAuthenticationCommerceHealthStatus
 			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID, name, name, null,
 			LayoutConstants.TYPE_PORTLET, true, friendlyURL, serviceContext);
 
+		UnicodeProperties typeSettingsUnicodeProperties =
+			layout.getTypeSettingsProperties();
+
+		typeSettingsUnicodeProperties.put(
+			"lfr-theme:regular:show-mini-cart", "false");
+
+		layout.setTypeSettingsProperties(typeSettingsUnicodeProperties);
+
+		Theme theme = layout.getTheme();
+
+		_layoutSetLocalService.updateLookAndFeel(
+			serviceContext.getScopeGroupId(), privateLayout, theme.getThemeId(),
+			StringPool.BLANK, StringPool.BLANK);
+
 		LayoutTypePortlet layoutTypePortlet =
 			(LayoutTypePortlet)layout.getLayoutType();
 
@@ -132,11 +149,11 @@ public class CommerceGuestCheckoutAuthenticationCommerceHealthStatus
 			"com/liferay/commerce/order/content/web/internal/dependencies/";
 
 		try {
-			String journalArticleJsonStirng = StringUtil.read(
+			String journalArticleJsonString = StringUtil.read(
 				classLoader, dependenciesFilePath + "journal-articles.json");
 
 			JSONArray jsonArray = _jsonFactory.createJSONArray(
-				journalArticleJsonStirng);
+				journalArticleJsonString);
 
 			_cpFileImporter.createJournalArticles(
 				jsonArray, classLoader,
@@ -149,15 +166,19 @@ public class CommerceGuestCheckoutAuthenticationCommerceHealthStatus
 
 			JournalArticle journalArticle = journalArticles.get(0);
 
-			AssetEntry assetEntry = _assetEntryLocalService.fetchEntry(
-				JournalArticle.class.getName(),
-				journalArticle.getResourcePrimKey());
-
 			Map<String, String[]> parameterMap = HashMapBuilder.put(
 				"articleId", new String[] {journalArticle.getArticleId()}
 			).put(
 				"assetEntryId",
-				new String[] {String.valueOf(assetEntry.getEntryId())}
+				() -> {
+					AssetEntry assetEntry = _assetEntryLocalService.fetchEntry(
+						JournalArticle.class.getName(),
+						journalArticle.getResourcePrimKey());
+
+					return new String[] {
+						String.valueOf(assetEntry.getEntryId())
+					};
+				}
 			).put(
 				"groupId",
 				new String[] {String.valueOf(journalArticle.getGroupId())}
@@ -185,7 +206,7 @@ public class CommerceGuestCheckoutAuthenticationCommerceHealthStatus
 		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
 			"content.Language", locale, getClass());
 
-		return LanguageUtil.get(
+		return _language.get(
 			resourceBundle,
 			CommerceHealthStatusConstants.
 				COMMERCE_GUEST_CHECKOUT_AUTHENTICATION_COMMERCE_HEALTH_STATUS_DESCRIPTION);
@@ -202,7 +223,7 @@ public class CommerceGuestCheckoutAuthenticationCommerceHealthStatus
 		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
 			"content.Language", locale, getClass());
 
-		return LanguageUtil.get(
+		return _language.get(
 			resourceBundle,
 			CommerceHealthStatusConstants.
 				COMMERCE_GUEST_CHECKOUT_AUTHENTICATION_COMMERCE_HEALTH_STATUS_KEY);
@@ -228,7 +249,7 @@ public class CommerceGuestCheckoutAuthenticationCommerceHealthStatus
 				CommerceOrderCheckoutConfiguration.class,
 				new GroupServiceSettingsLocator(
 					commerceChannel.getGroupId(),
-					CommerceConstants.SERVICE_NAME_ORDER));
+					CommerceConstants.SERVICE_NAME_COMMERCE_ORDER));
 
 		if (!commerceOrderCheckoutConfiguration.guestCheckoutEnabled()) {
 			return true;
@@ -277,10 +298,16 @@ public class CommerceGuestCheckoutAuthenticationCommerceHealthStatus
 	private JSONFactory _jsonFactory;
 
 	@Reference
+	private Language _language;
+
+	@Reference
 	private LayoutLocalService _layoutLocalService;
 
 	@Reference
 	private LayoutService _layoutService;
+
+	@Reference
+	private LayoutSetLocalService _layoutSetLocalService;
 
 	@Reference
 	private PortletPreferencesFactory _portletPreferencesFactory;

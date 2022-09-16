@@ -16,7 +16,6 @@ package com.liferay.portal.messaging.internal;
 
 import com.liferay.portal.kernel.cluster.ClusterInvokeThreadLocal;
 import com.liferay.portal.kernel.messaging.Message;
-import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
@@ -106,8 +105,8 @@ public class MessageBusThreadLocalUtil {
 			GroupThreadLocal.setGroupId(groupId);
 		}
 
-		PermissionChecker permissionChecker = (PermissionChecker)message.get(
-			"permissionChecker");
+		PermissionChecker permissionChecker = _getPermissionChecker(
+			message.get("permissionChecker"));
 
 		String principalName = message.getString("principalName");
 
@@ -117,10 +116,9 @@ public class MessageBusThreadLocalUtil {
 
 		if ((permissionChecker == null) && Validator.isNotNull(principalName)) {
 			try {
-				User user = userLocalService.fetchUser(
-					PrincipalThreadLocal.getUserId());
-
-				permissionChecker = permissionCheckerFactory.create(user);
+				permissionChecker = permissionCheckerFactory.create(
+					userLocalService.fetchUser(
+						PrincipalThreadLocal.getUserId()));
 			}
 			catch (Exception exception) {
 				throw new RuntimeException(exception);
@@ -148,6 +146,17 @@ public class MessageBusThreadLocalUtil {
 		if (themeDisplayLocale != null) {
 			LocaleThreadLocal.setThemeDisplayLocale(themeDisplayLocale);
 		}
+	}
+
+	private static PermissionChecker _getPermissionChecker(Object object) {
+
+		// LPS-139811
+
+		if (object instanceof PermissionChecker) {
+			return (PermissionChecker)object;
+		}
+
+		return null;
 	}
 
 }

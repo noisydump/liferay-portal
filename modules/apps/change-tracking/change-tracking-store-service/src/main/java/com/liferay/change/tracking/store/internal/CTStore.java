@@ -21,7 +21,7 @@ import com.liferay.change.tracking.store.model.CTSContent;
 import com.liferay.change.tracking.store.service.CTSContentLocalService;
 import com.liferay.document.library.kernel.store.Store;
 import com.liferay.document.library.kernel.util.DLUtil;
-import com.liferay.petra.lang.SafeClosable;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
@@ -196,9 +196,8 @@ public class CTStore implements Store {
 				});
 		}
 
-		try (SafeClosable safeClosable =
-				CTCollectionThreadLocal.setCTCollectionId(
-					CTConstants.CT_COLLECTION_ID_PRODUCTION)) {
+		try (SafeCloseable safeCloseable =
+				CTCollectionThreadLocal.setProductionModeWithSafeCloseable()) {
 
 			for (CTSContent ctsContent :
 					_ctsContentLocalService.getCTSContentsByDirectory(
@@ -269,9 +268,9 @@ public class CTStore implements Store {
 			CTCollectionThreadLocal.getCTCollectionId());
 
 		if (deletedCTSContentIds != null) {
-			try (SafeClosable safeClosable =
-					CTCollectionThreadLocal.setCTCollectionId(
-						CTConstants.CT_COLLECTION_ID_PRODUCTION)) {
+			try (SafeCloseable safeCloseable =
+					CTCollectionThreadLocal.
+						setProductionModeWithSafeCloseable()) {
 
 				for (CTSContent ctsContent :
 						_ctsContentLocalService.getCTSContents(
@@ -302,9 +301,9 @@ public class CTStore implements Store {
 				return true;
 			}
 
-			try (SafeClosable safeCloseable =
-					CTCollectionThreadLocal.setCTCollectionId(
-						CTConstants.CT_COLLECTION_ID_PRODUCTION)) {
+			try (SafeCloseable safeCloseable =
+					CTCollectionThreadLocal.
+						setProductionModeWithSafeCloseable()) {
 
 				if (_ctsContentLocalService.hasCTSContent(
 						companyId, repositoryId, fileName, versionLabel,
@@ -363,9 +362,8 @@ public class CTStore implements Store {
 			return true;
 		}
 
-		try (SafeClosable safeCloseable =
-				CTCollectionThreadLocal.setCTCollectionId(
-					CTConstants.CT_COLLECTION_ID_PRODUCTION)) {
+		try (SafeCloseable safeCloseable =
+				CTCollectionThreadLocal.setProductionModeWithSafeCloseable()) {
 
 			return _ctsContentLocalService.hasCTSContent(
 				companyId, repositoryId, fileName, versionLabel, _storeType);
@@ -378,9 +376,8 @@ public class CTStore implements Store {
 
 		try (InputStream inputStream = _store.getFileAsStream(
 				companyId, repositoryId, fileName, versionLabel);
-			SafeClosable safeCloseable =
-				CTCollectionThreadLocal.setCTCollectionId(
-					CTConstants.CT_COLLECTION_ID_PRODUCTION)) {
+			SafeCloseable safeCloseable =
+				CTCollectionThreadLocal.setProductionModeWithSafeCloseable()) {
 
 			_ctsContentLocalService.addCTSContent(
 				companyId, repositoryId, fileName, versionLabel, _storeType,

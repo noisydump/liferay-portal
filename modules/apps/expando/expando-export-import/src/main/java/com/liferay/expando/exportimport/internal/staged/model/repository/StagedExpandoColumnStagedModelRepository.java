@@ -15,9 +15,11 @@
 package com.liferay.expando.exportimport.internal.staged.model.repository;
 
 import com.liferay.expando.kernel.model.ExpandoColumn;
+import com.liferay.expando.kernel.model.ExpandoTable;
 import com.liferay.expando.kernel.model.adapter.StagedExpandoColumn;
 import com.liferay.expando.kernel.model.adapter.StagedExpandoTable;
 import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
+import com.liferay.expando.kernel.service.ExpandoTableLocalService;
 import com.liferay.exportimport.kernel.lar.ExportImportHelper;
 import com.liferay.exportimport.kernel.lar.ManifestSummary;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
@@ -34,7 +36,11 @@ import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.ClassName;
 import com.liferay.portal.kernel.model.adapter.ModelAdapterUtil;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.util.ListUtil;
 
 import java.util.Collections;
@@ -60,10 +66,16 @@ public class StagedExpandoColumnStagedModelRepository
 			StagedExpandoColumn stagedExpandoColumn)
 		throws PortalException {
 
+		long columnId = stagedExpandoColumn.getColumnId();
+
+		stagedExpandoColumn.setColumnId(0);
+
 		ExpandoColumn expandoColumn = _expandoColumnLocalService.addColumn(
 			stagedExpandoColumn.getTableId(), stagedExpandoColumn.getName(),
 			stagedExpandoColumn.getType(),
 			stagedExpandoColumn.getDefaultValue());
+
+		stagedExpandoColumn.setColumnId(columnId);
 
 		expandoColumn = _expandoColumnLocalService.updateTypeSettings(
 			expandoColumn.getColumnId(), stagedExpandoColumn.getTypeSettings());
@@ -174,7 +186,7 @@ public class StagedExpandoColumnStagedModelRepository
 	public ExportActionableDynamicQuery getExportActionableDynamicQuery(
 		final PortletDataContext portletDataContext) {
 
-		final ExportActionableDynamicQuery exportActionableDynamicQuery =
+		ExportActionableDynamicQuery exportActionableDynamicQuery =
 			new ExportActionableDynamicQuery() {
 
 				@Override
@@ -216,6 +228,27 @@ public class StagedExpandoColumnStagedModelRepository
 		exportActionableDynamicQuery.setModelClass(ExpandoColumn.class);
 		exportActionableDynamicQuery.setPerformActionMethod(
 			(ExpandoColumn expandoColumn) -> {
+				ExpandoTable expandoTable =
+					_expandoTableLocalService.fetchExpandoTable(
+						expandoColumn.getTableId());
+
+				if (expandoTable == null) {
+					return;
+				}
+
+				ClassName className = _classNameLocalService.fetchClassName(
+					expandoTable.getClassNameId());
+
+				if (className == null) {
+					if (_log.isWarnEnabled()) {
+						_log.warn(
+							"No class name exists for class name ID " +
+								expandoTable.getClassNameId());
+					}
+
+					return;
+				}
+
 				StagedExpandoColumn stagedExpandoColumn =
 					ModelAdapterUtil.adapt(
 						expandoColumn, ExpandoColumn.class,
@@ -270,18 +303,6 @@ public class StagedExpandoColumnStagedModelRepository
 			expandoColumn, ExpandoColumn.class, StagedExpandoColumn.class);
 	}
 
-	@Reference(
-		target = "(model.class.name=com.liferay.expando.kernel.model.adapter.StagedExpandoTable)",
-		unbind = "-"
-	)
-	protected void setStagedExpandoTableStagedModelRepository(
-		StagedModelRepository<StagedExpandoTable>
-			stagedExpandoTableStagedModelRepository) {
-
-		_stagedExpandoTableStagedModelRepository =
-			stagedExpandoTableStagedModelRepository;
-	}
-
 	private String _parseExpandoColumnName(String uuid) {
 		return uuid.substring(uuid.lastIndexOf(StringPool.POUND) + 1);
 	}
@@ -290,12 +311,24 @@ public class StagedExpandoColumnStagedModelRepository
 		return uuid.substring(0, uuid.lastIndexOf(StringPool.POUND));
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		StagedExpandoColumnStagedModelRepository.class);
+
+	@Reference
+	private ClassNameLocalService _classNameLocalService;
+
 	@Reference
 	private ExpandoColumnLocalService _expandoColumnLocalService;
 
 	@Reference
+	private ExpandoTableLocalService _expandoTableLocalService;
+
+	@Reference
 	private ExportImportHelper _exportImportHelper;
 
+	@Reference(
+		target = "(model.class.name=com.liferay.expando.kernel.model.adapter.StagedExpandoTable)"
+	)
 	private StagedModelRepository<StagedExpandoTable>
 		_stagedExpandoTableStagedModelRepository;
 

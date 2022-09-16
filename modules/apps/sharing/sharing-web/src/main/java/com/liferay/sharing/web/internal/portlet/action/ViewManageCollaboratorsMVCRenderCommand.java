@@ -14,13 +14,13 @@
 
 package com.liferay.sharing.web.internal.portlet.action;
 
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
-import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
 import com.liferay.portal.kernel.service.UserLocalService;
@@ -28,7 +28,6 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.sharing.model.SharingEntry;
 import com.liferay.sharing.service.SharingEntryLocalService;
@@ -44,9 +43,7 @@ import java.text.Format;
 import java.util.Date;
 import java.util.List;
 
-import javax.portlet.ActionRequest;
 import javax.portlet.PortletException;
-import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 
@@ -98,12 +95,11 @@ public class ViewManageCollaboratorsMVCRenderCommand
 	}
 
 	private String _getActionURL(RenderResponse renderResponse) {
-		PortletURL editCollaboratorsURL = renderResponse.createActionURL();
-
-		editCollaboratorsURL.setParameter(
-			ActionRequest.ACTION_NAME, "/sharing/edit_collaborators");
-
-		return editCollaboratorsURL.toString();
+		return PortletURLBuilder.createActionURL(
+			renderResponse
+		).setActionName(
+			"/sharing/edit_collaborators"
+		).buildString();
 	}
 
 	private JSONArray _getCollaboratorsJSONArray(
@@ -140,14 +136,6 @@ public class ViewManageCollaboratorsMVCRenderCommand
 						themeDisplay);
 				}
 
-				JSONObject collaboratorJSONObject = JSONUtil.put(
-					"fullName", sharingEntryToUser.getFullName()
-				).put(
-					"portraitURL", portraitURL
-				).put(
-					"sharingEntryId", sharingEntry.getSharingEntryId()
-				);
-
 				String expirationDateAsText = null;
 				String expirationDateTooltip = null;
 
@@ -164,18 +152,10 @@ public class ViewManageCollaboratorsMVCRenderCommand
 					Format expirationDateTooltipDateFormat =
 						DateFormatFactoryUtil.getDate(themeDisplay.getLocale());
 
-					expirationDateTooltip = LanguageUtil.format(
-						ResourceBundleUtil.getBundle(
-							themeDisplay.getLocale(), getClass()),
-						"until-x",
+					expirationDateTooltip = _language.format(
+						themeDisplay.getLocale(), "until-x",
 						expirationDateTooltipDateFormat.format(expirationDate));
 				}
-
-				collaboratorJSONObject.put(
-					"sharingEntryExpirationDate", expirationDateAsText
-				).put(
-					"sharingEntryExpirationDateTooltip", expirationDateTooltip
-				);
 
 				SharingEntryPermissionDisplayAction
 					userSharingEntryPermissionDisplayActionKey =
@@ -183,20 +163,30 @@ public class ViewManageCollaboratorsMVCRenderCommand
 							getSharingEntryPermissionDisplayActionKey(
 								sharingEntry);
 
-				collaboratorJSONObject.put(
-					"sharingEntryPermissionActionId",
-					userSharingEntryPermissionDisplayActionKey.getActionId()
-				).put(
-					"sharingEntryPermissionDisplaySelectOptions",
-					_getSharingEntryPermissionDisplaySelectOptionsJSONArray(
-						renderRequest)
-				).put(
-					"sharingEntryShareable", sharingEntry.isShareable()
-				).put(
-					"userId", Long.valueOf(sharingEntryToUser.getUserId())
-				);
-
-				collaboratorsJSONArray.put(collaboratorJSONObject);
+				collaboratorsJSONArray.put(
+					JSONUtil.put(
+						"fullName", sharingEntryToUser.getFullName()
+					).put(
+						"portraitURL", portraitURL
+					).put(
+						"sharingEntryExpirationDate", expirationDateAsText
+					).put(
+						"sharingEntryExpirationDateTooltip",
+						expirationDateTooltip
+					).put(
+						"sharingEntryId", sharingEntry.getSharingEntryId()
+					).put(
+						"sharingEntryPermissionActionId",
+						userSharingEntryPermissionDisplayActionKey.getActionId()
+					).put(
+						"sharingEntryPermissionDisplaySelectOptions",
+						_getSharingEntryPermissionDisplaySelectOptionsJSONArray(
+							renderRequest)
+					).put(
+						"sharingEntryShareable", sharingEntry.isShareable()
+					).put(
+						"userId", Long.valueOf(sharingEntryToUser.getUserId())
+					));
 			}
 
 			return collaboratorsJSONArray;
@@ -238,6 +228,9 @@ public class ViewManageCollaboratorsMVCRenderCommand
 
 		return sharingEntryPermissionDisplaySelectOptionsJSONArray;
 	}
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private SharingEntryLocalService _sharingEntryLocalService;

@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!DOCTYPE resource-action-mapping PUBLIC "-//Liferay//DTD Resource Action Mapping 7.0.0//EN" "http://www.liferay.com/dtd/liferay-resource-action-mapping_7_0_0.dtd">
+<!DOCTYPE resource-action-mapping PUBLIC "-//Liferay//DTD Resource Action Mapping 7.4.0//EN" "http://www.liferay.com/dtd/liferay-resource-action-mapping_7_4_0.dtd">
 
 <resource-action-mapping>
 	<model-resource>
@@ -32,10 +32,12 @@
 				<action-key>ASSIGN_MEMBERS</action-key>
 				<action-key>ASSIGN_USER_ROLES</action-key>
 				<action-key>DELETE</action-key>
+				<action-key>PUBLISH_STAGING</action-key>
 				<action-key>UPDATE</action-key>
 				<action-key>VIEW</action-key>
 				<action-key>VIEW_MEMBERS</action-key>
 				<action-key>VIEW_SITE_ADMINISTRATION</action-key>
+				<action-key>VIEW_STAGING</action-key>
 			</supports>
 		</permissions>
 	</model-resource>

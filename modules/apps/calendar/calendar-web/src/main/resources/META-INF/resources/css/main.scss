@@ -183,6 +183,7 @@
 			display: block;
 			left: unset;
 			padding: 10px 0;
+			position: relative !important;
 
 			.btn {
 				margin-left: 0;
@@ -198,7 +199,23 @@
 		text-transform: capitalize;
 	}
 
+	.header-title {
+		margin-top: 1rem;
+	}
+
+	.popover.scheduler-event-recorder-popover {
+		max-width: none;
+		padding: 10px 15px 0;
+
+		.popover-content .close {
+			position: absolute;
+			right: 10px;
+			top: 5px;
+		}
+	}
+
 	.scheduler-event-content,
+	.scheduler-event-name,
 	.scheduler-event-title {
 		font-family: inherit;
 		font-size: inherit;
@@ -433,6 +450,10 @@
 	}
 }
 
+.col-md-4 .calendar-portlet .popover.scheduler-event-recorder-popover {
+	max-width: 232px;
+}
+
 .portal-popup .calendar-portlet .fieldset {
 	margin-bottom: 2em;
 }
@@ -632,7 +653,7 @@
 
 // ---------- YUI calendar ----------
 
-.yui3-skin-sam .calendar-portlet {
+.yui3-skin-sam .calendar-portlet-mini-calendar {
 	.yui3-calendar-day,
 	.yui3-calendar-header-label,
 	.yui3-calendar-weekday {
@@ -647,7 +668,7 @@
 	}
 
 	.yui3-calendar-weekday {
-		color: #4599e2;
+		color: $primary-d2;
 	}
 
 	.yui3-calendar-day {
@@ -872,6 +893,12 @@
 			max-width: 60%;
 			width: 60%;
 
+			&.col-md-12 {
+				flex-basis: 100%;
+				max-width: 100%;
+				width: 100%;
+			}
+
 			.scheduler-base-content .scheduler-base-hd {
 				.scheduler-base-controls {
 					width: 100%;
@@ -935,6 +962,12 @@
 			flex: 0 0 65%;
 			max-width: 65%;
 			width: 65%;
+
+			&.col-md-12 {
+				flex-basis: 100%;
+				max-width: 100%;
+				width: 100%;
+			}
 
 			.scheduler-base-content .scheduler-base-hd {
 				.scheduler-base-controls {
@@ -1018,5 +1051,36 @@
 	.scheduler-base-views {
 		margin-bottom: 20px;
 		margin-top: 20px;
+	}
+}
+
+@media (min-width: 767px) {
+	.portal-popup .calendar-portlet .dialog-footer {
+		position: relative;
+	}
+}
+
+.definition-of-terms {
+	dt {
+		color: $dark;
+		font-weight: normal;
+		margin-bottom: 2em;
+		width: 25em;
+		word-break: break-word;
+	}
+
+	@include media-breakpoint-up(sm) {
+		dt {
+			float: left;
+			width: auto;
+		}
+
+		dd:after {
+			clear: both;
+			content: '';
+			display: block;
+			height: 0;
+			visibility: hidden;
+		}
 	}
 }

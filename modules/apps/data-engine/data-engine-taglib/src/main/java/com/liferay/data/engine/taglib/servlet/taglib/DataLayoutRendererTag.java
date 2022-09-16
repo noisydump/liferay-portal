@@ -20,6 +20,7 @@ import com.liferay.data.engine.rest.dto.v2_0.DataLayout;
 import com.liferay.data.engine.taglib.internal.servlet.taglib.util.DataLayoutTaglibUtil;
 import com.liferay.data.engine.taglib.servlet.taglib.base.BaseDataLayoutRendererTag;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
@@ -66,13 +67,32 @@ public class DataLayoutRendererTag extends BaseDataLayoutRendererTag {
 					getDataRecordValues());
 			}
 
+			if (Validator.isNotNull(getDefaultLanguageId())) {
+				dataLayoutRendererContext.setDefaultLanguageId(
+					getDefaultLanguageId());
+			}
+
 			dataLayoutRendererContext.setHttpServletRequest(httpServletRequest);
 			dataLayoutRendererContext.setHttpServletResponse(
 				PortalUtil.getHttpServletResponse(
 					(PortletResponse)httpServletRequest.getAttribute(
 						JavaConstants.JAVAX_PORTLET_RESPONSE)));
+
+			if (Validator.isNotNull(getLanguageId())) {
+				dataLayoutRendererContext.setLanguageId(getLanguageId());
+			}
+			else {
+				dataLayoutRendererContext.setLanguageId(
+					LanguageUtil.getLanguageId(
+						PortalUtil.getLocale(httpServletRequest)));
+			}
+
+			dataLayoutRendererContext.setPersistDefaultValues(
+				getPersistDefaultValues());
+			dataLayoutRendererContext.setPersisted(getPersisted());
 			dataLayoutRendererContext.setPortletNamespace(getNamespace());
 			dataLayoutRendererContext.setReadOnly(getReadOnly());
+			dataLayoutRendererContext.setSubmittable(getSubmittable());
 
 			if (Validator.isNotNull(getDataLayoutId())) {
 				content = DataLayoutTaglibUtil.renderDataLayout(
@@ -93,7 +113,7 @@ public class DataLayoutRendererTag extends BaseDataLayoutRendererTag {
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(exception, exception);
+				_log.debug(exception);
 			}
 		}
 

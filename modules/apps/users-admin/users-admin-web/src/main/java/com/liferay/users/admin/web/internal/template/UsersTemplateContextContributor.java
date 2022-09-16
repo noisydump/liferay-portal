@@ -66,7 +66,7 @@ public class UsersTemplateContextContributor
 			contextObjects.put("user_birthday", contact.getBirthday());
 		}
 		catch (PortalException portalException) {
-			_log.error(portalException, portalException);
+			_log.error(portalException);
 		}
 
 		contextObjects.put("is_setup_complete", user1.isSetupComplete());
@@ -94,7 +94,7 @@ public class UsersTemplateContextContributor
 				contextObjects.put("user2", user2);
 			}
 			catch (PortalException portalException) {
-				_log.error(portalException, portalException);
+				_log.error(portalException);
 			}
 		}
 
@@ -103,14 +103,10 @@ public class UsersTemplateContextContributor
 			LocaleUtil.toW3cLanguageId(themeDisplay.getLanguageId()));
 	}
 
-	@Reference(unbind = "-")
-	protected void setUserLocalService(UserLocalService userLocalService) {
-		_userLocalService = userLocalService;
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		UsersTemplateContextContributor.class);
 
+	@Reference
 	private UserLocalService _userLocalService;
 
 }

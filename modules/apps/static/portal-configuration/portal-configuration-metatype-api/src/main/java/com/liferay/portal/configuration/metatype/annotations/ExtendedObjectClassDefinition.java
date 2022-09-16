@@ -48,17 +48,43 @@ public @interface ExtendedObjectClassDefinition {
 
 	public boolean generateUI() default true;
 
+	public String liferayLearnMessageKey() default "";
+
+	public String liferayLearnMessageResource() default "";
+
 	public String[] nameArguments() default {};
 
 	public Scope scope() default Scope.SYSTEM;
 
 	public String settingsId() default "";
 
+	/**
+	 * Whether or not the configuration's visibility will be limited to the
+	 * declared scope.
+	 *
+	 * If true, the configuration will only be visible at the declared scope.
+	 *
+	 * If false, the configuration will be visible at the declared scope and all
+	 * broader scopes, unless otherwise restricted by a
+	 * ConfigurationVisibilityController.
+	 *
+	 * The default value is false.
+	 *
+	 * @review
+	 */
+	public boolean strictScope() default false;
+
 	public enum Scope {
 
-		COMPANY("companyId", "company"), GROUP("groupId", "group"),
-		PORTLET_INSTANCE("portletInstanceId", "portlet-instance"),
-		SYSTEM(null, "system");
+		COMPANY("companyWebId", "companyId", "company"),
+		GROUP("groupKey", "groupId", "group"),
+		PORTLET_INSTANCE(
+			"portletInstanceKey", "portletInstanceId", "portlet-instance"),
+		SYSTEM(null, null, "system");
+
+		public boolean equals(Scope scope) {
+			return equals(scope.getValue());
+		}
 
 		public boolean equals(String value) {
 			return _value.equals(value);
@@ -66,6 +92,10 @@ public @interface ExtendedObjectClassDefinition {
 
 		public String getDelimiterString() {
 			return StringBundler.concat(_SEPARATOR, name(), _SEPARATOR);
+		}
+
+		public String getPortablePropertyKey() {
+			return _portablePropertyKey;
 		}
 
 		public String getPropertyKey() {
@@ -81,13 +111,17 @@ public @interface ExtendedObjectClassDefinition {
 			return _value;
 		}
 
-		private Scope(String propertyKey, String value) {
+		private Scope(
+			String portablePropertyKey, String propertyKey, String value) {
+
+			_portablePropertyKey = portablePropertyKey;
 			_propertyKey = propertyKey;
 			_value = value;
 		}
 
 		private static final String _SEPARATOR = StringPool.DOUBLE_UNDERLINE;
 
+		private final String _portablePropertyKey;
 		private final String _propertyKey;
 		private final String _value;
 

@@ -17,23 +17,27 @@ package com.liferay.portal.search.elasticsearch7.internal.search.engine.adapter.
 import com.liferay.portal.search.engine.adapter.index.GetFieldMappingIndexRequest;
 import com.liferay.portal.search.engine.adapter.index.GetMappingIndexRequest;
 import com.liferay.portal.search.engine.adapter.index.PutMappingIndexRequest;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
-import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 
 /**
  * @author Dylan Rebelak
  */
 public class ElasticsearchIndexRequestExecutorTest {
 
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
 	@Before
 	public void setUp() throws Exception {
-		MockitoAnnotations.initMocks(this);
-
 		_elasticsearchIndexRequestExecutor =
 			new ElasticsearchIndexRequestExecutor() {
 				{
@@ -94,15 +98,14 @@ public class ElasticsearchIndexRequestExecutorTest {
 
 	private ElasticsearchIndexRequestExecutor
 		_elasticsearchIndexRequestExecutor;
-
-	@Mock
-	private GetFieldMappingIndexRequestExecutor
-		_getFieldMappingIndexRequestExecutor;
-
-	@Mock
-	private GetMappingIndexRequestExecutor _getMappingIndexRequestExecutor;
-
-	@Mock
-	private PutMappingIndexRequestExecutor _putMappingIndexRequestExecutor;
+	private final GetFieldMappingIndexRequestExecutor
+		_getFieldMappingIndexRequestExecutor = Mockito.mock(
+			GetFieldMappingIndexRequestExecutor.class);
+	private final GetMappingIndexRequestExecutor
+		_getMappingIndexRequestExecutor = Mockito.mock(
+			GetMappingIndexRequestExecutor.class);
+	private final PutMappingIndexRequestExecutor
+		_putMappingIndexRequestExecutor = Mockito.mock(
+			PutMappingIndexRequestExecutor.class);
 
 }

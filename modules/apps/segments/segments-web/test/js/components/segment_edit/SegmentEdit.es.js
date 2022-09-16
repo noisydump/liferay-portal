@@ -13,13 +13,11 @@
  */
 
 import '@testing-library/jest-dom/extend-expect';
-import {cleanup, fireEvent, render, wait} from '@testing-library/react';
+import {fireEvent, render, waitFor} from '@testing-library/react';
+import {navigate} from 'frontend-js-web';
 import React from 'react';
 
 import SegmentEdit from '../../../../src/main/resources/META-INF/resources/js/components/segment_edit/SegmentEdit.es';
-import {SOURCES} from '../../../../src/main/resources/META-INF/resources/js/utils/constants.es';
-
-const SOURCE_ICON_TESTID = 'source-icon';
 
 const PROPERTY_GROUPS_BASIC = [
 	{
@@ -44,11 +42,26 @@ const CONTRIBUTORS = [
 	{
 		conjunctionId: 'and',
 		conjunctionInputId: 'conjunction-input-1',
-		initialQuery: "(value eq 'value')",
+		initialQuery: {
+			conjunctionName: 'and',
+			groupId: 'group_01',
+			items: [
+				{
+					operatorName: 'eq',
+					propertyName: 'value',
+					value: 'value',
+				},
+			],
+		},
 		inputId: 'input-id-for-backend-form',
 		propertyKey: 'first-test-values-group',
 	},
 ];
+
+jest.mock('frontend-js-web', () => ({
+	...jest.requireActual('frontend-js-web'),
+	navigate: jest.fn(),
+}));
 
 function _renderSegmentEditComponent({
 	source = undefined,
@@ -56,6 +69,7 @@ function _renderSegmentEditComponent({
 	hasUpdatePermission = undefined,
 	contributors = undefined,
 	showInEditMode = undefined,
+	isSegmentationEnabled = true,
 } = {}) {
 	return render(
 		<SegmentEdit
@@ -68,6 +82,7 @@ function _renderSegmentEditComponent({
 			initialSegmentName={{
 				en_US: 'Segment title',
 			}}
+			isSegmentationEnabled={isSegmentationEnabled}
 			locale="en_US"
 			redirect={redirect}
 			showInEditMode={showInEditMode}
@@ -77,36 +92,21 @@ function _renderSegmentEditComponent({
 }
 
 describe('SegmentEdit', () => {
-	afterEach(cleanup);
+	beforeAll(() => {
+		window.Liferay = {
+			...Liferay,
+			FeatureFlags: {},
+		};
+	});
+
+	afterEach(() => {
+		jest.clearAllMocks();
+	});
 
 	it('renders', () => {
 		const {asFragment} = _renderSegmentEditComponent();
 
 		expect(asFragment()).toMatchSnapshot();
-	});
-
-	it('renders with an analytics cloud icon', () => {
-		const {icon, name} = SOURCES.ASAH_FARO_BACKEND;
-
-		const {getByTestId} = _renderSegmentEditComponent({
-			source: name,
-		});
-
-		const image = getByTestId(SOURCE_ICON_TESTID);
-
-		expect(image).toHaveAttribute('src', icon);
-	});
-
-	it('renders with a dxp icon', () => {
-		const {icon, name} = SOURCES.DEFAULT;
-
-		const {getByTestId} = _renderSegmentEditComponent({
-			source: name,
-		});
-
-		const image = getByTestId(SOURCE_ICON_TESTID);
-
-		expect(image).toHaveAttribute('src', icon);
 	});
 
 	it('renders with edit buttons if the user has update permissions', () => {
@@ -151,7 +151,7 @@ describe('SegmentEdit', () => {
 		);
 
 		expect(getByTestId(CONTRIBUTORS[0].inputId).value).toBe(
-			CONTRIBUTORS[0].initialQuery
+			"(value eq 'value')"
 		);
 
 		expect(asFragment()).toMatchSnapshot();
@@ -159,8 +159,7 @@ describe('SegmentEdit', () => {
 
 	it('redirects when cancelling without any edition', () => {
 		const mockConfirm = jest.fn();
-		const mockNavigate = jest.fn();
-		window.Liferay.Util.navigate = mockNavigate;
+
 		window.confirm = mockConfirm;
 
 		const hasUpdatePermission = true;
@@ -177,15 +176,14 @@ describe('SegmentEdit', () => {
 
 		fireEvent.click(cancelButton);
 
-		expect(mockNavigate).toHaveBeenCalledTimes(1);
-		expect(mockNavigate).toHaveBeenCalledWith(DEFAULT_REDIRECT);
+		expect(navigate).toHaveBeenCalledTimes(1);
+		expect(navigate).toHaveBeenCalledWith(DEFAULT_REDIRECT);
 		expect(mockConfirm).toHaveBeenCalledTimes(0);
 	});
 
 	it('redirects when cancelling after title edition', (done) => {
 		const mockConfirm = jest.fn();
-		const mockNavigate = jest.fn();
-		window.Liferay.Util.navigate = mockNavigate;
+
 		window.confirm = mockConfirm;
 
 		const hasUpdatePermission = true;
@@ -201,18 +199,72 @@ describe('SegmentEdit', () => {
 
 		fireEvent.change(localizedInput, {target: {value: 'A'}});
 
-		wait(() => expect(localizedInput.value).toBe('A')).then(() => {
+		waitFor(() => expect(localizedInput.value).toBe('A')).then(() => {
 			expect(cancelButton).not.toBe(null);
 
 			fireEvent.click(cancelButton);
 
-			expect(mockNavigate).toHaveBeenCalledTimes(0);
-
+			expect(navigate).toHaveBeenCalledTimes(0);
 			expect(mockConfirm).toHaveBeenCalledTimes(1);
 			expect(mockConfirm).toHaveBeenCalledWith(
 				'criteria-cancel-confirmation-message'
 			);
 			done();
 		});
+	});
+
+	it('renders a dissmisible alert if Segmentation service is disabled', () => {
+		const isSegmentationEnabled = false;
+
+		const {container, getByText} = _renderSegmentEditComponent({
+			isSegmentationEnabled,
+		});
+
+		expect(getByText('segmentation-is-disabled')).toBeInTheDocument();
+
+		expect(
+			container.getElementsByClassName(
+				'segment-edit-page-root--with-warning'
+			).length
+		).toBe(1);
+
+		expect(
+			container.querySelectorAll(
+				'.alert-dismissible .lexicon-icon.lexicon-icon-times'
+			).length
+		).toBe(1);
+	});
+
+	it('renders a dismissible alert which is effectively dismissible', async () => {
+		const isSegmentationEnabled = false;
+
+		const {
+			container,
+			getByLabelText,
+			getByText,
+			queryByText,
+		} = _renderSegmentEditComponent({
+			isSegmentationEnabled,
+		});
+
+		expect(getByText('segmentation-is-disabled')).toBeInTheDocument();
+
+		const dismissButton = getByLabelText('Close', {selector: 'button'});
+
+		fireEvent.click(dismissButton);
+
+		expect(queryByText('segmentation-is-disabled')).not.toBeInTheDocument();
+
+		expect(
+			container.querySelectorAll(
+				'.alert-dismissible .lexicon-icon.lexicon-icon-times'
+			).length
+		).toBe(0);
+
+		expect(
+			container.getElementsByClassName(
+				'segment-edit-page-root--with-warning'
+			).length
+		).toBe(0);
 	});
 });

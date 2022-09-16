@@ -62,15 +62,20 @@ exports[`Field LocalizableText adds a new translation for an untranslated item 1
           <div>
             <div
               class="dropdown-menu"
+              role="presentation"
               style="left: -999px; top: -995px;"
             >
               <ul
                 class="list-unstyled"
+                role="menu"
               >
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownen_US"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -112,10 +117,13 @@ exports[`Field LocalizableText adds a new translation for an untranslated item 1
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownar_SA"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -157,10 +165,13 @@ exports[`Field LocalizableText adds a new translation for an untranslated item 1
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownca_ES"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -202,10 +213,13 @@ exports[`Field LocalizableText adds a new translation for an untranslated item 1
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownzh_CN"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -247,10 +261,13 @@ exports[`Field LocalizableText adds a new translation for an untranslated item 1
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownnl_NL"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -292,10 +309,13 @@ exports[`Field LocalizableText adds a new translation for an untranslated item 1
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownfi_FI"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -337,10 +357,13 @@ exports[`Field LocalizableText adds a new translation for an untranslated item 1
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownfr_FR"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -382,10 +405,13 @@ exports[`Field LocalizableText adds a new translation for an untranslated item 1
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownde_DE"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -427,10 +453,13 @@ exports[`Field LocalizableText adds a new translation for an untranslated item 1
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownhu_HU"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -472,10 +501,13 @@ exports[`Field LocalizableText adds a new translation for an untranslated item 1
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownja_JP"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -505,22 +537,25 @@ exports[`Field LocalizableText adds a new translation for an untranslated item 1
                         class="autofit-col"
                       >
                         <span
-                          class="label label-warning"
+                          class="label label-success"
                         >
                           <span
                             class="label-item label-item-expand"
                           >
-                            not-translated
+                            translated
                           </span>
                         </span>
                       </span>
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownpt_BR"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -562,10 +597,13 @@ exports[`Field LocalizableText adds a new translation for an untranslated item 1
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownes_ES"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -607,10 +645,13 @@ exports[`Field LocalizableText adds a new translation for an untranslated item 1
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownsv_SE"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -658,6 +699,11 @@ exports[`Field LocalizableText adds a new translation for an untranslated item 1
         </div>
       </div>
     </div>
+    <input
+      name="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_US_edited"
+      type="hidden"
+      value="false"
+    />
     
   </div>
 </div>
@@ -700,6 +746,7 @@ exports[`Field LocalizableText emits field edit event on field change 1`] = `
             aria-haspopup="true"
             class="dropdown-toggle btn btn-monospaced btn-secondary"
             data-testid="triggerButton"
+            style=""
             type="button"
           >
             <span
@@ -724,14 +771,20 @@ exports[`Field LocalizableText emits field edit event on field change 1`] = `
           <div>
             <div
               class="dropdown-menu"
+              role="presentation"
+              style="left: -999px; top: -995px;"
             >
               <ul
                 class="list-unstyled"
+                role="menu"
               >
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownen_US"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -773,10 +826,13 @@ exports[`Field LocalizableText emits field edit event on field change 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownar_SA"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -818,10 +874,13 @@ exports[`Field LocalizableText emits field edit event on field change 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownca_ES"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -863,10 +922,13 @@ exports[`Field LocalizableText emits field edit event on field change 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownzh_CN"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -908,10 +970,13 @@ exports[`Field LocalizableText emits field edit event on field change 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownnl_NL"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -953,10 +1018,13 @@ exports[`Field LocalizableText emits field edit event on field change 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownfi_FI"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -998,10 +1066,13 @@ exports[`Field LocalizableText emits field edit event on field change 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownfr_FR"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -1043,10 +1114,13 @@ exports[`Field LocalizableText emits field edit event on field change 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownde_DE"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -1088,10 +1162,13 @@ exports[`Field LocalizableText emits field edit event on field change 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownhu_HU"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -1133,10 +1210,13 @@ exports[`Field LocalizableText emits field edit event on field change 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownja_JP"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -1178,10 +1258,13 @@ exports[`Field LocalizableText emits field edit event on field change 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownpt_BR"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -1223,10 +1306,13 @@ exports[`Field LocalizableText emits field edit event on field change 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownes_ES"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -1268,10 +1354,13 @@ exports[`Field LocalizableText emits field edit event on field change 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownsv_SE"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -1319,6 +1408,11 @@ exports[`Field LocalizableText emits field edit event on field change 1`] = `
         </div>
       </div>
     </div>
+    <input
+      name="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_US_edited"
+      type="hidden"
+      value="false"
+    />
     
   </div>
 </div>
@@ -1386,15 +1480,20 @@ exports[`Field LocalizableText fills with the default language value when the se
           <div>
             <div
               class="dropdown-menu"
+              role="presentation"
               style="left: -999px; top: -995px;"
             >
               <ul
                 class="list-unstyled"
+                role="menu"
               >
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownen_US"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -1436,10 +1535,13 @@ exports[`Field LocalizableText fills with the default language value when the se
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownar_SA"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -1481,10 +1583,13 @@ exports[`Field LocalizableText fills with the default language value when the se
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownca_ES"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -1526,10 +1631,13 @@ exports[`Field LocalizableText fills with the default language value when the se
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownzh_CN"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -1571,10 +1679,13 @@ exports[`Field LocalizableText fills with the default language value when the se
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownnl_NL"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -1616,10 +1727,13 @@ exports[`Field LocalizableText fills with the default language value when the se
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownfi_FI"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -1661,10 +1775,13 @@ exports[`Field LocalizableText fills with the default language value when the se
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownfr_FR"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -1706,10 +1823,13 @@ exports[`Field LocalizableText fills with the default language value when the se
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownde_DE"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -1751,10 +1871,13 @@ exports[`Field LocalizableText fills with the default language value when the se
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownhu_HU"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -1796,10 +1919,13 @@ exports[`Field LocalizableText fills with the default language value when the se
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownja_JP"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -1841,10 +1967,13 @@ exports[`Field LocalizableText fills with the default language value when the se
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownpt_BR"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -1886,10 +2015,13 @@ exports[`Field LocalizableText fills with the default language value when the se
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownes_ES"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -1931,10 +2063,13 @@ exports[`Field LocalizableText fills with the default language value when the se
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownsv_SE"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -1982,6 +2117,11 @@ exports[`Field LocalizableText fills with the default language value when the se
         </div>
       </div>
     </div>
+    <input
+      name="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_US_edited"
+      type="hidden"
+      value="false"
+    />
     
   </div>
 </div>
@@ -2049,15 +2189,20 @@ exports[`Field LocalizableText fills with the selected language value when the s
           <div>
             <div
               class="dropdown-menu"
+              role="presentation"
               style="left: -999px; top: -995px;"
             >
               <ul
                 class="list-unstyled"
+                role="menu"
               >
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownen_US"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -2099,10 +2244,13 @@ exports[`Field LocalizableText fills with the selected language value when the s
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownar_SA"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -2144,10 +2292,13 @@ exports[`Field LocalizableText fills with the selected language value when the s
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownca_ES"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -2189,10 +2340,13 @@ exports[`Field LocalizableText fills with the selected language value when the s
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownzh_CN"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -2234,10 +2388,13 @@ exports[`Field LocalizableText fills with the selected language value when the s
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownnl_NL"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -2279,10 +2436,13 @@ exports[`Field LocalizableText fills with the selected language value when the s
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownfi_FI"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -2324,10 +2484,13 @@ exports[`Field LocalizableText fills with the selected language value when the s
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownfr_FR"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -2369,10 +2532,13 @@ exports[`Field LocalizableText fills with the selected language value when the s
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownde_DE"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -2414,10 +2580,13 @@ exports[`Field LocalizableText fills with the selected language value when the s
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownhu_HU"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -2459,10 +2628,13 @@ exports[`Field LocalizableText fills with the selected language value when the s
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownja_JP"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -2504,10 +2676,13 @@ exports[`Field LocalizableText fills with the selected language value when the s
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownpt_BR"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -2549,10 +2724,13 @@ exports[`Field LocalizableText fills with the selected language value when the s
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownes_ES"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -2594,10 +2772,13 @@ exports[`Field LocalizableText fills with the selected language value when the s
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownsv_SE"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -2645,6 +2826,11 @@ exports[`Field LocalizableText fills with the selected language value when the s
         </div>
       </div>
     </div>
+    <input
+      name="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_US_edited"
+      type="hidden"
+      value="false"
+    />
     
   </div>
 </div>
@@ -2657,7 +2843,7 @@ exports[`Field LocalizableText has a label 1`] = `
     data-field-name="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_US"
   >
     <label
-      aria-describedby="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_US_fieldDetails"
+      aria-labelledby="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_US_fieldDetails"
       class="ddm-label"
       tabindex="0"
     >
@@ -2692,6 +2878,7 @@ exports[`Field LocalizableText has a label 1`] = `
             aria-haspopup="true"
             class="dropdown-toggle btn btn-monospaced btn-secondary"
             data-testid="triggerButton"
+            style=""
             type="button"
           >
             <span
@@ -2716,14 +2903,20 @@ exports[`Field LocalizableText has a label 1`] = `
           <div>
             <div
               class="dropdown-menu"
+              role="presentation"
+              style="left: -999px; top: -995px;"
             >
               <ul
                 class="list-unstyled"
+                role="menu"
               >
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownen_US"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -2765,10 +2958,13 @@ exports[`Field LocalizableText has a label 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownar_SA"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -2810,10 +3006,13 @@ exports[`Field LocalizableText has a label 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownca_ES"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -2855,10 +3054,13 @@ exports[`Field LocalizableText has a label 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownzh_CN"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -2900,10 +3102,13 @@ exports[`Field LocalizableText has a label 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownnl_NL"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -2945,10 +3150,13 @@ exports[`Field LocalizableText has a label 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownfi_FI"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -2990,10 +3198,13 @@ exports[`Field LocalizableText has a label 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownfr_FR"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -3035,10 +3246,13 @@ exports[`Field LocalizableText has a label 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownde_DE"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -3080,10 +3294,13 @@ exports[`Field LocalizableText has a label 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownhu_HU"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -3125,10 +3342,13 @@ exports[`Field LocalizableText has a label 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownja_JP"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -3170,10 +3390,13 @@ exports[`Field LocalizableText has a label 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownpt_BR"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -3215,10 +3438,13 @@ exports[`Field LocalizableText has a label 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownes_ES"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -3260,10 +3486,13 @@ exports[`Field LocalizableText has a label 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownsv_SE"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -3311,12 +3540,16 @@ exports[`Field LocalizableText has a label 1`] = `
         </div>
       </div>
     </div>
+    <input
+      name="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_US_edited"
+      type="hidden"
+      value="false"
+    />
     <span
       class="sr-only"
       id="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_US_fieldDetails"
     >
       label
-      <br />
     </span>
   </div>
 </div>
@@ -3359,6 +3592,7 @@ exports[`Field LocalizableText has a placeholder 1`] = `
             aria-haspopup="true"
             class="dropdown-toggle btn btn-monospaced btn-secondary"
             data-testid="triggerButton"
+            style=""
             type="button"
           >
             <span
@@ -3383,14 +3617,20 @@ exports[`Field LocalizableText has a placeholder 1`] = `
           <div>
             <div
               class="dropdown-menu"
+              role="presentation"
+              style="left: -999px; top: -995px;"
             >
               <ul
                 class="list-unstyled"
+                role="menu"
               >
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownen_US"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -3432,10 +3672,13 @@ exports[`Field LocalizableText has a placeholder 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownar_SA"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -3477,10 +3720,13 @@ exports[`Field LocalizableText has a placeholder 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownca_ES"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -3522,10 +3768,13 @@ exports[`Field LocalizableText has a placeholder 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownzh_CN"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -3567,10 +3816,13 @@ exports[`Field LocalizableText has a placeholder 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownnl_NL"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -3612,10 +3864,13 @@ exports[`Field LocalizableText has a placeholder 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownfi_FI"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -3657,10 +3912,13 @@ exports[`Field LocalizableText has a placeholder 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownfr_FR"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -3702,10 +3960,13 @@ exports[`Field LocalizableText has a placeholder 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownde_DE"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -3747,10 +4008,13 @@ exports[`Field LocalizableText has a placeholder 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownhu_HU"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -3792,10 +4056,13 @@ exports[`Field LocalizableText has a placeholder 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownja_JP"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -3837,10 +4104,13 @@ exports[`Field LocalizableText has a placeholder 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownpt_BR"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -3882,10 +4152,13 @@ exports[`Field LocalizableText has a placeholder 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownes_ES"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -3927,10 +4200,13 @@ exports[`Field LocalizableText has a placeholder 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownsv_SE"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -3978,6 +4254,11 @@ exports[`Field LocalizableText has a placeholder 1`] = `
         </div>
       </div>
     </div>
+    <input
+      name="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_US_edited"
+      type="hidden"
+      value="false"
+    />
     
   </div>
 </div>
@@ -4020,6 +4301,7 @@ exports[`Field LocalizableText is not readOnly 1`] = `
             aria-haspopup="true"
             class="dropdown-toggle btn btn-monospaced btn-secondary"
             data-testid="triggerButton"
+            style=""
             type="button"
           >
             <span
@@ -4044,14 +4326,20 @@ exports[`Field LocalizableText is not readOnly 1`] = `
           <div>
             <div
               class="dropdown-menu"
+              role="presentation"
+              style="left: -999px; top: -995px;"
             >
               <ul
                 class="list-unstyled"
+                role="menu"
               >
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownen_US"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -4093,10 +4381,13 @@ exports[`Field LocalizableText is not readOnly 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownar_SA"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -4138,10 +4429,13 @@ exports[`Field LocalizableText is not readOnly 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownca_ES"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -4183,10 +4477,13 @@ exports[`Field LocalizableText is not readOnly 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownzh_CN"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -4228,10 +4525,13 @@ exports[`Field LocalizableText is not readOnly 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownnl_NL"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -4273,10 +4573,13 @@ exports[`Field LocalizableText is not readOnly 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownfi_FI"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -4318,10 +4621,13 @@ exports[`Field LocalizableText is not readOnly 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownfr_FR"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -4363,10 +4669,13 @@ exports[`Field LocalizableText is not readOnly 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownde_DE"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -4408,10 +4717,13 @@ exports[`Field LocalizableText is not readOnly 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownhu_HU"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -4453,10 +4765,13 @@ exports[`Field LocalizableText is not readOnly 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownja_JP"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -4498,10 +4813,13 @@ exports[`Field LocalizableText is not readOnly 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownpt_BR"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -4543,10 +4861,13 @@ exports[`Field LocalizableText is not readOnly 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownes_ES"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -4588,10 +4909,13 @@ exports[`Field LocalizableText is not readOnly 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownsv_SE"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -4639,6 +4963,11 @@ exports[`Field LocalizableText is not readOnly 1`] = `
         </div>
       </div>
     </div>
+    <input
+      name="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_US_edited"
+      type="hidden"
+      value="false"
+    />
     
   </div>
 </div>
@@ -4681,6 +5010,7 @@ exports[`Field LocalizableText is not required 1`] = `
             aria-haspopup="true"
             class="dropdown-toggle btn btn-monospaced btn-secondary"
             data-testid="triggerButton"
+            style=""
             type="button"
           >
             <span
@@ -4705,14 +5035,20 @@ exports[`Field LocalizableText is not required 1`] = `
           <div>
             <div
               class="dropdown-menu"
+              role="presentation"
+              style="left: -999px; top: -995px;"
             >
               <ul
                 class="list-unstyled"
+                role="menu"
               >
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownen_US"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -4754,10 +5090,13 @@ exports[`Field LocalizableText is not required 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownar_SA"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -4799,10 +5138,13 @@ exports[`Field LocalizableText is not required 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownca_ES"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -4844,10 +5186,13 @@ exports[`Field LocalizableText is not required 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownzh_CN"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -4889,10 +5234,13 @@ exports[`Field LocalizableText is not required 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownnl_NL"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -4934,10 +5282,13 @@ exports[`Field LocalizableText is not required 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownfi_FI"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -4979,10 +5330,13 @@ exports[`Field LocalizableText is not required 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownfr_FR"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -5024,10 +5378,13 @@ exports[`Field LocalizableText is not required 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownde_DE"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -5069,10 +5426,13 @@ exports[`Field LocalizableText is not required 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownhu_HU"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -5114,10 +5474,13 @@ exports[`Field LocalizableText is not required 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownja_JP"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -5159,10 +5522,13 @@ exports[`Field LocalizableText is not required 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownpt_BR"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -5204,10 +5570,13 @@ exports[`Field LocalizableText is not required 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownes_ES"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -5249,10 +5618,13 @@ exports[`Field LocalizableText is not required 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownsv_SE"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -5300,6 +5672,11 @@ exports[`Field LocalizableText is not required 1`] = `
         </div>
       </div>
     </div>
+    <input
+      name="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_US_edited"
+      type="hidden"
+      value="false"
+    />
     
   </div>
 </div>
@@ -5367,15 +5744,20 @@ exports[`Field LocalizableText removes the translation of an item already transl
           <div>
             <div
               class="dropdown-menu"
+              role="presentation"
               style="left: -999px; top: -995px;"
             >
               <ul
                 class="list-unstyled"
+                role="menu"
               >
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownen_US"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -5417,10 +5799,13 @@ exports[`Field LocalizableText removes the translation of an item already transl
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownar_SA"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -5462,10 +5847,13 @@ exports[`Field LocalizableText removes the translation of an item already transl
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownca_ES"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -5507,10 +5895,13 @@ exports[`Field LocalizableText removes the translation of an item already transl
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownzh_CN"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -5552,10 +5943,13 @@ exports[`Field LocalizableText removes the translation of an item already transl
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownnl_NL"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -5597,10 +5991,13 @@ exports[`Field LocalizableText removes the translation of an item already transl
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownfi_FI"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -5642,10 +6039,13 @@ exports[`Field LocalizableText removes the translation of an item already transl
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownfr_FR"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -5687,10 +6087,13 @@ exports[`Field LocalizableText removes the translation of an item already transl
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownde_DE"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -5732,10 +6135,13 @@ exports[`Field LocalizableText removes the translation of an item already transl
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownhu_HU"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -5777,10 +6183,13 @@ exports[`Field LocalizableText removes the translation of an item already transl
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownja_JP"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -5822,10 +6231,13 @@ exports[`Field LocalizableText removes the translation of an item already transl
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownpt_BR"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -5855,22 +6267,25 @@ exports[`Field LocalizableText removes the translation of an item already transl
                         class="autofit-col"
                       >
                         <span
-                          class="label label-success"
+                          class="label label-warning"
                         >
                           <span
                             class="label-item label-item-expand"
                           >
-                            translated
+                            not-translated
                           </span>
                         </span>
                       </span>
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownes_ES"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -5912,10 +6327,13 @@ exports[`Field LocalizableText removes the translation of an item already transl
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownsv_SE"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -5963,6 +6381,11 @@ exports[`Field LocalizableText removes the translation of an item already transl
         </div>
       </div>
     </div>
+    <input
+      name="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_US_edited"
+      type="hidden"
+      value="false"
+    />
     
   </div>
 </div>
@@ -6005,6 +6428,7 @@ exports[`Field LocalizableText renders no values when values come empty 1`] = `
             aria-haspopup="true"
             class="dropdown-toggle btn btn-monospaced btn-secondary"
             data-testid="triggerButton"
+            style=""
             type="button"
           >
             <span
@@ -6029,14 +6453,20 @@ exports[`Field LocalizableText renders no values when values come empty 1`] = `
           <div>
             <div
               class="dropdown-menu"
+              role="presentation"
+              style="left: -999px; top: -995px;"
             >
               <ul
                 class="list-unstyled"
+                role="menu"
               >
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownen_US"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -6078,10 +6508,13 @@ exports[`Field LocalizableText renders no values when values come empty 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownar_SA"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -6123,10 +6556,13 @@ exports[`Field LocalizableText renders no values when values come empty 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownca_ES"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -6168,10 +6604,13 @@ exports[`Field LocalizableText renders no values when values come empty 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownzh_CN"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -6213,10 +6652,13 @@ exports[`Field LocalizableText renders no values when values come empty 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownnl_NL"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -6258,10 +6700,13 @@ exports[`Field LocalizableText renders no values when values come empty 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownfi_FI"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -6303,10 +6748,13 @@ exports[`Field LocalizableText renders no values when values come empty 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownfr_FR"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -6348,10 +6796,13 @@ exports[`Field LocalizableText renders no values when values come empty 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownde_DE"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -6393,10 +6844,13 @@ exports[`Field LocalizableText renders no values when values come empty 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownhu_HU"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -6438,10 +6892,13 @@ exports[`Field LocalizableText renders no values when values come empty 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownja_JP"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -6483,10 +6940,13 @@ exports[`Field LocalizableText renders no values when values come empty 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownpt_BR"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -6528,10 +6988,13 @@ exports[`Field LocalizableText renders no values when values come empty 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownes_ES"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -6573,10 +7036,13 @@ exports[`Field LocalizableText renders no values when values come empty 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownsv_SE"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -6624,6 +7090,11 @@ exports[`Field LocalizableText renders no values when values come empty 1`] = `
         </div>
       </div>
     </div>
+    <input
+      name="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_US_edited"
+      type="hidden"
+      value="false"
+    />
     
   </div>
 </div>
@@ -6666,6 +7137,7 @@ exports[`Field LocalizableText renders values 1`] = `
             aria-haspopup="true"
             class="dropdown-toggle btn btn-monospaced btn-secondary"
             data-testid="triggerButton"
+            style=""
             type="button"
           >
             <span
@@ -6690,14 +7162,20 @@ exports[`Field LocalizableText renders values 1`] = `
           <div>
             <div
               class="dropdown-menu"
+              role="presentation"
+              style="left: -999px; top: -995px;"
             >
               <ul
                 class="list-unstyled"
+                role="menu"
               >
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownen_US"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -6739,10 +7217,13 @@ exports[`Field LocalizableText renders values 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownar_SA"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -6784,10 +7265,13 @@ exports[`Field LocalizableText renders values 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownca_ES"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -6829,10 +7313,13 @@ exports[`Field LocalizableText renders values 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownzh_CN"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -6874,10 +7361,13 @@ exports[`Field LocalizableText renders values 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownnl_NL"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -6919,10 +7409,13 @@ exports[`Field LocalizableText renders values 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownfi_FI"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -6964,10 +7457,13 @@ exports[`Field LocalizableText renders values 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownfr_FR"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -7009,10 +7505,13 @@ exports[`Field LocalizableText renders values 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownde_DE"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -7054,10 +7553,13 @@ exports[`Field LocalizableText renders values 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownhu_HU"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -7099,10 +7601,13 @@ exports[`Field LocalizableText renders values 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownja_JP"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -7144,10 +7649,13 @@ exports[`Field LocalizableText renders values 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownpt_BR"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -7189,10 +7697,13 @@ exports[`Field LocalizableText renders values 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownes_ES"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -7234,10 +7745,13 @@ exports[`Field LocalizableText renders values 1`] = `
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownsv_SE"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -7285,6 +7799,11 @@ exports[`Field LocalizableText renders values 1`] = `
         </div>
       </div>
     </div>
+    <input
+      name="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_US_edited"
+      type="hidden"
+      value="false"
+    />
     
   </div>
 </div>
@@ -7327,6 +7846,7 @@ exports[`Field LocalizableText shows default language value when no other langua
             aria-haspopup="true"
             class="dropdown-toggle btn btn-monospaced btn-secondary"
             data-testid="triggerButton"
+            style=""
             type="button"
           >
             <span
@@ -7351,14 +7871,20 @@ exports[`Field LocalizableText shows default language value when no other langua
           <div>
             <div
               class="dropdown-menu"
+              role="presentation"
+              style="left: -999px; top: -995px;"
             >
               <ul
                 class="list-unstyled"
+                role="menu"
               >
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownen_US"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -7400,10 +7926,13 @@ exports[`Field LocalizableText shows default language value when no other langua
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownar_SA"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -7445,10 +7974,13 @@ exports[`Field LocalizableText shows default language value when no other langua
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownca_ES"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -7490,10 +8022,13 @@ exports[`Field LocalizableText shows default language value when no other langua
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownzh_CN"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -7535,10 +8070,13 @@ exports[`Field LocalizableText shows default language value when no other langua
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownnl_NL"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -7580,10 +8118,13 @@ exports[`Field LocalizableText shows default language value when no other langua
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownfi_FI"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -7625,10 +8166,13 @@ exports[`Field LocalizableText shows default language value when no other langua
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownfr_FR"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -7670,10 +8214,13 @@ exports[`Field LocalizableText shows default language value when no other langua
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownde_DE"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -7715,10 +8262,13 @@ exports[`Field LocalizableText shows default language value when no other langua
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownhu_HU"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -7760,10 +8310,13 @@ exports[`Field LocalizableText shows default language value when no other langua
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownja_JP"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -7805,10 +8358,13 @@ exports[`Field LocalizableText shows default language value when no other langua
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownpt_BR"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -7850,10 +8406,13 @@ exports[`Field LocalizableText shows default language value when no other langua
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownes_ES"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -7895,10 +8454,13 @@ exports[`Field LocalizableText shows default language value when no other langua
                     </span>
                   </button>
                 </li>
-                <li>
+                <li
+                  role="presentation"
+                >
                   <button
                     class="dropdown-item custom-dropdown-item-row"
                     data-testid="availableLocalesDropdownsv_SE"
+                    role="menuitem"
                   >
                     <span
                       class="autofit-row"
@@ -7946,6 +8508,11 @@ exports[`Field LocalizableText shows default language value when no other langua
         </div>
       </div>
     </div>
+    <input
+      name="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_US_edited"
+      type="hidden"
+      value="false"
+    />
     
   </div>
 </div>

@@ -98,6 +98,21 @@ public interface WikiNodeModel
 	public void setUuid(String uuid);
 
 	/**
+	 * Returns the external reference code of this wiki node.
+	 *
+	 * @return the external reference code of this wiki node
+	 */
+	@AutoEscape
+	public String getExternalReferenceCode();
+
+	/**
+	 * Sets the external reference code of this wiki node.
+	 *
+	 * @param externalReferenceCode the external reference code of this wiki node
+	 */
+	public void setExternalReferenceCode(String externalReferenceCode);
+
+	/**
 	 * Returns the node ID of this wiki node.
 	 *
 	 * @return the node ID of this wiki node
@@ -383,16 +398,6 @@ public interface WikiNodeModel
 	public long getTrashEntryClassPK();
 
 	/**
-	 * Returns the trash handler for this wiki node.
-	 *
-	 * @return the trash handler for this wiki node
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public com.liferay.portal.kernel.trash.TrashHandler getTrashHandler();
-
-	/**
 	 * Returns <code>true</code> if this wiki node is in the Recycle Bin.
 	 *
 	 * @return <code>true</code> if this wiki node is in the Recycle Bin; <code>false</code> otherwise
@@ -517,5 +522,8 @@ public interface WikiNodeModel
 	 */
 	@Override
 	public void setParentContainerModelId(long parentContainerModelId);
+
+	@Override
+	public WikiNode cloneWithOriginalValues();
 
 }

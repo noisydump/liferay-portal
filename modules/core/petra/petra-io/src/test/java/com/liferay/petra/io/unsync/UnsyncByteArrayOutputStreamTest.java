@@ -15,7 +15,9 @@
 package com.liferay.petra.io.unsync;
 
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -23,16 +25,16 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 
 import java.nio.ByteBuffer;
 
 import java.util.Arrays;
 import java.util.List;
 
-import javassist.Modifier;
-
 import org.junit.Assert;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -41,15 +43,18 @@ import org.junit.Test;
 public class UnsyncByteArrayOutputStreamTest extends BaseOutputStreamTestCase {
 
 	@ClassRule
-	public static final CodeCoverageAssertor codeCoverageAssertor =
-		new CodeCoverageAssertor() {
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new CodeCoverageAssertor() {
 
-			@Override
-			public void appendAssertClasses(List<Class<?>> assertClasses) {
-				assertClasses.add(BoundaryCheckerUtil.class);
-			}
+				@Override
+				public void appendAssertClasses(List<Class<?>> assertClasses) {
+					assertClasses.add(BoundaryCheckerUtil.class);
+				}
 
-		};
+			},
+			LiferayUnitTestRule.INSTANCE);
 
 	@Test
 	public void testBlockWrite() {
@@ -67,8 +72,7 @@ public class UnsyncByteArrayOutputStreamTest extends BaseOutputStreamTestCase {
 	public void testConstructor() {
 		new BoundaryCheckerUtil();
 
-		Assert.assertTrue(
-			Modifier.isPackage(BoundaryCheckerUtil.class.getModifiers()));
+		Assert.assertTrue(_isPackage(BoundaryCheckerUtil.class.getModifiers()));
 
 		UnsyncByteArrayOutputStream unsyncByteArrayOutputStream =
 			new UnsyncByteArrayOutputStream();
@@ -211,6 +215,16 @@ public class UnsyncByteArrayOutputStreamTest extends BaseOutputStreamTestCase {
 	@Override
 	protected OutputStream getOutputStream() {
 		return new UnsyncByteArrayOutputStream();
+	}
+
+	private boolean _isPackage(int mod) {
+		if (Modifier.isPublic(mod) || Modifier.isPrivate(mod) ||
+			Modifier.isProtected(mod)) {
+
+			return false;
+		}
+
+		return true;
 	}
 
 	private static final byte[] _BUFFER =

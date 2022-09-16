@@ -47,6 +47,7 @@ public class CommerceShippingFixedOptionRelWrapper
 	public Map<String, Object> getModelAttributes() {
 		Map<String, Object> attributes = new HashMap<String, Object>();
 
+		attributes.put("mvccVersion", getMvccVersion());
 		attributes.put(
 			"commerceShippingFixedOptionRelId",
 			getCommerceShippingFixedOptionRelId());
@@ -63,8 +64,8 @@ public class CommerceShippingFixedOptionRelWrapper
 			getCommerceShippingFixedOptionId());
 		attributes.put(
 			"commerceInventoryWarehouseId", getCommerceInventoryWarehouseId());
-		attributes.put("commerceCountryId", getCommerceCountryId());
-		attributes.put("commerceRegionId", getCommerceRegionId());
+		attributes.put("countryId", getCountryId());
+		attributes.put("regionId", getRegionId());
 		attributes.put("zip", getZip());
 		attributes.put("weightFrom", getWeightFrom());
 		attributes.put("weightTo", getWeightTo());
@@ -77,6 +78,12 @@ public class CommerceShippingFixedOptionRelWrapper
 
 	@Override
 	public void setModelAttributes(Map<String, Object> attributes) {
+		Long mvccVersion = (Long)attributes.get("mvccVersion");
+
+		if (mvccVersion != null) {
+			setMvccVersion(mvccVersion);
+		}
+
 		Long commerceShippingFixedOptionRelId = (Long)attributes.get(
 			"commerceShippingFixedOptionRelId");
 
@@ -142,16 +149,16 @@ public class CommerceShippingFixedOptionRelWrapper
 			setCommerceInventoryWarehouseId(commerceInventoryWarehouseId);
 		}
 
-		Long commerceCountryId = (Long)attributes.get("commerceCountryId");
+		Long countryId = (Long)attributes.get("countryId");
 
-		if (commerceCountryId != null) {
-			setCommerceCountryId(commerceCountryId);
+		if (countryId != null) {
+			setCountryId(countryId);
 		}
 
-		Long commerceRegionId = (Long)attributes.get("commerceRegionId");
+		Long regionId = (Long)attributes.get("regionId");
 
-		if (commerceRegionId != null) {
-			setCommerceRegionId(commerceRegionId);
+		if (regionId != null) {
+			setRegionId(regionId);
 		}
 
 		String zip = (String)attributes.get("zip");
@@ -193,20 +200,8 @@ public class CommerceShippingFixedOptionRelWrapper
 	}
 
 	@Override
-	public com.liferay.commerce.model.CommerceCountry getCommerceCountry()
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return model.getCommerceCountry();
-	}
-
-	/**
-	 * Returns the commerce country ID of this commerce shipping fixed option rel.
-	 *
-	 * @return the commerce country ID of this commerce shipping fixed option rel
-	 */
-	@Override
-	public long getCommerceCountryId() {
-		return model.getCommerceCountryId();
+	public CommerceShippingFixedOptionRel cloneWithOriginalValues() {
+		return wrap(model.cloneWithOriginalValues());
 	}
 
 	@Override
@@ -225,23 +220,6 @@ public class CommerceShippingFixedOptionRelWrapper
 	@Override
 	public long getCommerceInventoryWarehouseId() {
 		return model.getCommerceInventoryWarehouseId();
-	}
-
-	@Override
-	public com.liferay.commerce.model.CommerceRegion getCommerceRegion()
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return model.getCommerceRegion();
-	}
-
-	/**
-	 * Returns the commerce region ID of this commerce shipping fixed option rel.
-	 *
-	 * @return the commerce region ID of this commerce shipping fixed option rel
-	 */
-	@Override
-	public long getCommerceRegionId() {
-		return model.getCommerceRegionId();
 	}
 
 	@Override
@@ -299,6 +277,23 @@ public class CommerceShippingFixedOptionRelWrapper
 		return model.getCompanyId();
 	}
 
+	@Override
+	public com.liferay.portal.kernel.model.Country getCountry()
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return model.getCountry();
+	}
+
+	/**
+	 * Returns the country ID of this commerce shipping fixed option rel.
+	 *
+	 * @return the country ID of this commerce shipping fixed option rel
+	 */
+	@Override
+	public long getCountryId() {
+		return model.getCountryId();
+	}
+
 	/**
 	 * Returns the create date of this commerce shipping fixed option rel.
 	 *
@@ -340,6 +335,16 @@ public class CommerceShippingFixedOptionRelWrapper
 	}
 
 	/**
+	 * Returns the mvcc version of this commerce shipping fixed option rel.
+	 *
+	 * @return the mvcc version of this commerce shipping fixed option rel
+	 */
+	@Override
+	public long getMvccVersion() {
+		return model.getMvccVersion();
+	}
+
+	/**
 	 * Returns the primary key of this commerce shipping fixed option rel.
 	 *
 	 * @return the primary key of this commerce shipping fixed option rel
@@ -367,6 +372,23 @@ public class CommerceShippingFixedOptionRelWrapper
 	@Override
 	public BigDecimal getRateUnitWeightPrice() {
 		return model.getRateUnitWeightPrice();
+	}
+
+	@Override
+	public com.liferay.portal.kernel.model.Region getRegion()
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return model.getRegion();
+	}
+
+	/**
+	 * Returns the region ID of this commerce shipping fixed option rel.
+	 *
+	 * @return the region ID of this commerce shipping fixed option rel
+	 */
+	@Override
+	public long getRegionId() {
+		return model.getRegionId();
 	}
 
 	/**
@@ -435,16 +457,6 @@ public class CommerceShippingFixedOptionRelWrapper
 	}
 
 	/**
-	 * Sets the commerce country ID of this commerce shipping fixed option rel.
-	 *
-	 * @param commerceCountryId the commerce country ID of this commerce shipping fixed option rel
-	 */
-	@Override
-	public void setCommerceCountryId(long commerceCountryId) {
-		model.setCommerceCountryId(commerceCountryId);
-	}
-
-	/**
 	 * Sets the commerce inventory warehouse ID of this commerce shipping fixed option rel.
 	 *
 	 * @param commerceInventoryWarehouseId the commerce inventory warehouse ID of this commerce shipping fixed option rel
@@ -454,16 +466,6 @@ public class CommerceShippingFixedOptionRelWrapper
 		long commerceInventoryWarehouseId) {
 
 		model.setCommerceInventoryWarehouseId(commerceInventoryWarehouseId);
-	}
-
-	/**
-	 * Sets the commerce region ID of this commerce shipping fixed option rel.
-	 *
-	 * @param commerceRegionId the commerce region ID of this commerce shipping fixed option rel
-	 */
-	@Override
-	public void setCommerceRegionId(long commerceRegionId) {
-		model.setCommerceRegionId(commerceRegionId);
 	}
 
 	/**
@@ -512,6 +514,16 @@ public class CommerceShippingFixedOptionRelWrapper
 	}
 
 	/**
+	 * Sets the country ID of this commerce shipping fixed option rel.
+	 *
+	 * @param countryId the country ID of this commerce shipping fixed option rel
+	 */
+	@Override
+	public void setCountryId(long countryId) {
+		model.setCountryId(countryId);
+	}
+
+	/**
 	 * Sets the create date of this commerce shipping fixed option rel.
 	 *
 	 * @param createDate the create date of this commerce shipping fixed option rel
@@ -552,6 +564,16 @@ public class CommerceShippingFixedOptionRelWrapper
 	}
 
 	/**
+	 * Sets the mvcc version of this commerce shipping fixed option rel.
+	 *
+	 * @param mvccVersion the mvcc version of this commerce shipping fixed option rel
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		model.setMvccVersion(mvccVersion);
+	}
+
+	/**
 	 * Sets the primary key of this commerce shipping fixed option rel.
 	 *
 	 * @param primaryKey the primary key of this commerce shipping fixed option rel
@@ -579,6 +601,16 @@ public class CommerceShippingFixedOptionRelWrapper
 	@Override
 	public void setRateUnitWeightPrice(BigDecimal rateUnitWeightPrice) {
 		model.setRateUnitWeightPrice(rateUnitWeightPrice);
+	}
+
+	/**
+	 * Sets the region ID of this commerce shipping fixed option rel.
+	 *
+	 * @param regionId the region ID of this commerce shipping fixed option rel
+	 */
+	@Override
+	public void setRegionId(long regionId) {
+		model.setRegionId(regionId);
 	}
 
 	/**

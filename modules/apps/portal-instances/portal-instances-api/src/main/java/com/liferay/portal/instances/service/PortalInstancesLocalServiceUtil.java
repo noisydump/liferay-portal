@@ -14,9 +14,7 @@
 
 package com.liferay.portal.instances.service;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.util.tracker.ServiceTracker;
+import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * Provides the local service utility for PortalInstances. This utility wraps
@@ -73,9 +71,12 @@ public class PortalInstancesLocalServiceUtil {
 	}
 
 	public static void initializePortalInstance(
-		javax.servlet.ServletContext servletContext, String webId) {
+			long companyId, String siteInitializerKey,
+			javax.servlet.ServletContext servletContext)
+		throws PortalException {
 
-		getService().initializePortalInstance(servletContext, webId);
+		getService().initializePortalInstance(
+			companyId, siteInitializerKey, servletContext);
 	}
 
 	public static boolean isAutoLoginIgnoreHost(String host) {
@@ -111,27 +112,9 @@ public class PortalInstancesLocalServiceUtil {
 	}
 
 	public static PortalInstancesLocalService getService() {
-		return _serviceTracker.getService();
+		return _service;
 	}
 
-	private static ServiceTracker
-		<PortalInstancesLocalService, PortalInstancesLocalService>
-			_serviceTracker;
-
-	static {
-		Bundle bundle = FrameworkUtil.getBundle(
-			PortalInstancesLocalService.class);
-
-		ServiceTracker<PortalInstancesLocalService, PortalInstancesLocalService>
-			serviceTracker =
-				new ServiceTracker
-					<PortalInstancesLocalService, PortalInstancesLocalService>(
-						bundle.getBundleContext(),
-						PortalInstancesLocalService.class, null);
-
-		serviceTracker.open();
-
-		_serviceTracker = serviceTracker;
-	}
+	private static volatile PortalInstancesLocalService _service;
 
 }

@@ -3,7 +3,7 @@ definition {
 	macro addAssociatedAssetType {
 		Panel.expandPanel(panel = "Associated Asset Types");
 
-		if (contains("${rowNumber}", "{rowNumber}")) {
+		if (!(isSet(rowNumber))) {
 			var rowNumber = "1";
 		}
 
@@ -131,6 +131,18 @@ definition {
 			value1 = "${vocabularyName}");
 	}
 
+	macro assertVocabularyVisibilityNonEditable {
+		Navigator.gotoNavNested(navNested = "${vocabularyName}");
+
+		LexiconEntry.gotoEllipsisMenuItem(menuItem = "Edit");
+
+		AssertElementPresent(
+			key_visibilityType = "${visibilityType}",
+			locator1 = "Categories#VOCABULARY_VISIBILITY_DISABLED");
+
+		Button.clickCancel();
+	}
+
 	macro deleteAssociatedAssetTypeViaVocabularyCP {
 		Navigator.gotoNavNested(navNested = "${vocabularyName}");
 
@@ -161,11 +173,17 @@ definition {
 
 		SelectFrame(value1 = "relative=top");
 
-		ClickNoError(
+		Click(
 			key_text = "Delete",
-			locator1 = "Button#ANY");
+			locator1 = "Modal#MODAL_FOOTER_BUTTON");
 
-		AssertConfirm(value1 = "Are you sure you want to delete the selected entries? They will be deleted immediately.");
+		AssertTextEquals(
+			locator1 = "Modal#BODY",
+			value1 = "Are you sure you want to delete this? It will be deleted immediately.");
+
+		Click(
+			key_text = "Delete",
+			locator1 = "Modal#MODAL_FOOTER_BUTTON");
 
 		Alert.viewSuccessMessage();
 
@@ -190,11 +208,17 @@ definition {
 
 		SelectFrame(value1 = "relative=top");
 
-		ClickNoError(
+		Click(
 			key_text = "Delete",
-			locator1 = "Button#ANY");
+			locator1 = "Modal#MODAL_FOOTER_BUTTON");
 
-		AssertConfirm(value1 = "Are you sure you want to delete the selected entries? They will be deleted immediately.");
+		AssertTextEquals(
+			locator1 = "Modal#BODY",
+			value1 = "Are you sure you want to delete this? It will be deleted immediately.");
+
+		Click(
+			key_text = "Delete",
+			locator1 = "Modal#MODAL_FOOTER_BUTTON");
 
 		Alert.viewSuccessMessage();
 
@@ -240,6 +264,14 @@ definition {
 		}
 	}
 
+	macro goToVocabulary {
+		Navigator.gotoNavNested(navNested = "${vocabularyName}");
+
+		AssertElementPresent(
+			key_title = "${vocabularyName}",
+			locator1 = "Header#H2_TITLE");
+	}
+
 	macro tearDownCP {
 		Navigator.openURL();
 
@@ -259,11 +291,17 @@ definition {
 
 		SelectFrame(value1 = "relative=top");
 
-		ClickNoError(
+		Click(
 			key_text = "Delete",
 			locator1 = "Button#ANY");
 
-		AssertConfirm(value1 = "Are you sure you want to delete the selected entries? They will be deleted immediately.");
+		AssertTextEquals(
+			locator1 = "Modal#BODY",
+			value1 = "Are you sure you want to delete this? It will be deleted immediately.");
+
+		Click(
+			key_text = "Delete",
+			locator1 = "Modal#MODAL_FOOTER_BUTTON");
 	}
 
 	macro viewCP {
@@ -279,6 +317,28 @@ definition {
 
 			AssertNotChecked.assertNotCheckedNotVisible(locator1 = "CategoriesEditVocabulary#ALLOW_MULTIPLE_CATEGORIES_TOGGLE_SWITCH");
 		}
+	}
+
+	macro viewVocabularyAllowMultipleCAtegories {
+		Navigator.gotoNavNested(navNested = "${vocabularyName}");
+
+		LexiconEntry.gotoEllipsisMenuItem(menuItem = "Edit");
+
+		AssertChecked.assertCheckedNotVisible(locator1 = "Categories#VOCABULARY_EDIT_CHECKBOX");
+
+		Button.clickCancel();
+	}
+
+	macro viewVocabularyAssociatedAssetTypesRequirement {
+		Navigator.gotoNavNested(navNested = "${vocabularyName}");
+
+		LexiconEntry.gotoEllipsisMenuItem(menuItem = "Edit");
+
+		Panel.expandPanel(panel = "Associated Asset Types");
+
+		AssertNotChecked.assertNotCheckedNotVisible(locator1 = "Categories#VOCABULARY_EDIT_CHECKBOX");
+
+		Button.clickCancel();
 	}
 
 	macro viewVocabularyPermissionsCP {
@@ -301,6 +361,16 @@ definition {
 		}
 
 		SelectFrameTop(value1 = "relative=top");
+	}
+
+	macro viewVocabularyVisibilityEdit {
+		Navigator.gotoNavNested(navNested = "${vocabularyName}");
+
+		LexiconEntry.gotoEllipsisMenuItem(menuItem = "Edit");
+
+		AssertChecked.assertCheckedNotVisible(locator1 = "Categories#VOCABULARY_EDIT_CHECKBOX");
+
+		Button.clickCancel();
 	}
 
 	macro viewWithAssociatedAssetTypeCP {

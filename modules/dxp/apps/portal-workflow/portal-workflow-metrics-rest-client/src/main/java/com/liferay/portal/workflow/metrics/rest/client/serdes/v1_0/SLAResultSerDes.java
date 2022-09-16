@@ -57,7 +57,22 @@ public class SLAResultSerDes {
 		sb.append("{");
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+			"yyyy-MM-dd'T'HH:mm:ssXX");
+
+		if (slaResult.getDateModified() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"dateModified\": ");
+
+			sb.append("\"");
+
+			sb.append(
+				liferayToJSONDateFormat.format(slaResult.getDateModified()));
+
+			sb.append("\"");
+		}
 
 		if (slaResult.getDateOverdue() != null) {
 			if (sb.length() > 1) {
@@ -151,7 +166,16 @@ public class SLAResultSerDes {
 		Map<String, String> map = new TreeMap<>();
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+			"yyyy-MM-dd'T'HH:mm:ssXX");
+
+		if (slaResult.getDateModified() == null) {
+			map.put("dateModified", null);
+		}
+		else {
+			map.put(
+				"dateModified",
+				liferayToJSONDateFormat.format(slaResult.getDateModified()));
+		}
 
 		if (slaResult.getDateOverdue() == null) {
 			map.put("dateOverdue", null);
@@ -218,7 +242,13 @@ public class SLAResultSerDes {
 			SLAResult slaResult, String jsonParserFieldName,
 			Object jsonParserFieldValue) {
 
-			if (Objects.equals(jsonParserFieldName, "dateOverdue")) {
+			if (Objects.equals(jsonParserFieldName, "dateModified")) {
+				if (jsonParserFieldValue != null) {
+					slaResult.setDateModified(
+						toDate((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "dateOverdue")) {
 				if (jsonParserFieldValue != null) {
 					slaResult.setDateOverdue(
 						toDate((String)jsonParserFieldValue));
@@ -251,9 +281,6 @@ public class SLAResultSerDes {
 						SLAResult.Status.create((String)jsonParserFieldValue));
 				}
 			}
-			else if (jsonParserFieldName.equals("status")) {
-				throw new IllegalArgumentException();
-			}
 		}
 
 	}
@@ -282,7 +309,7 @@ public class SLAResultSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -318,7 +345,7 @@ public class SLAResultSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

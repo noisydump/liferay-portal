@@ -84,14 +84,13 @@ definition {
 
 		User.acceptEndUserLicenseAgreement();
 
-		User.resetPassword(
-			resetPassword = "${resetPassword}",
-			setupWizardEnabled = "${setupWizardEnabled}",
-			syntaxCheckingEnabled = "${syntaxCheckingEnabled}");
+		User.resetPassword(newPassword = "${newPassword}");
 
 		User.answerPasswordReminder();
 
 		AssertElementPresent(locator1 = "UserBar#USER_AVATAR_IMAGE");
+
+		Click(locator1 = "Button#DONE");
 
 		User.viewLoggedInPG();
 	}
@@ -136,19 +135,24 @@ definition {
 			Navigator.openSpecificURL(url = "${virtualHostsURL}");
 		}
 		else {
-			Navigator.openURL();
+			var baseURL = PropsUtil.get("portal.url");
+
+			Open.openNoError(locator1 = "${baseURL}/web/guest/home");
 		}
 
 		User.acceptEndUserLicenseAgreement();
 
-		User.resetPassword(
-			resetPassword = "${resetPassword}",
-			setupWizardEnabled = "${setupWizardEnabled}",
-			syntaxCheckingEnabled = "${syntaxCheckingEnabled}");
+		User.resetPassword(newPassword = "${newPassword}");
 
 		User.answerPasswordReminder();
 
 		AssertElementPresent(locator1 = "UserBar#USER_AVATAR_IMAGE");
+
+		var testRunEnvironment = PropsUtil.get("test.run.environment");
+
+		if (IsElementPresent(locator1 = "Button#DONE")) {
+			Click(locator1 = "Button#DONE");
+		}
 
 		User.viewLoggedInPG();
 	}
@@ -182,7 +186,7 @@ definition {
 	}
 
 	macro viewConfigurationSavedPG {
-		if ((isSet(localization)) && ("${localization}" == "ES")) {
+		if (isSet(localization) && ("${localization}" == "ES")) {
 			Alert.viewSuccessMessageText(successMessage = "La configuración fue guardada con éxito.");
 
 			AssertTextEquals.assertPartialText(
@@ -218,16 +222,16 @@ definition {
 			AssertConsoleTextPresent(value1 = "Using dialect com.liferay.portal.dao.orm.hibernate.HSQLDialect for HSQL Database Engine");
 		}
 		else if ("${databaseType}" == "MariaDB") {
-			AssertConsoleTextPresent(value1 = "Using dialect com.liferay.portal.dao.orm.hibernate.MariaDBDialect for MySQL");
+			AssertConsoleTextPresent(value1 = "Using dialect com.liferay.portal.dao.orm.hibernate.MariaDBDialect for MariaDB");
 		}
 		else if ("${databaseType}" == "MySQL") {
-			AssertConsoleTextPresent(value1 = "Using dialect org.hibernate.dialect.MySQLDialect for MySQL");
+			AssertConsoleTextPresent(value1 = "Using dialect org.hibernate.dialect.MySQL57Dialect for MySQL");
 		}
 		else if ("${databaseType}" == "Oracle") {
 			AssertConsoleTextPresent(value1 = "Using dialect org.hibernate.dialect.Oracle10gDialect for Oracle");
 		}
 		else if ("${databaseType}" == "PostgreSQL") {
-			AssertConsoleTextPresent(value1 = "Using dialect org.hibernate.dialect.PostgreSQLDialect for PostgreSQL");
+			AssertConsoleTextPresent(value1 = "Using dialect org.hibernate.dialect.PostgreSQL10Dialect for PostgreSQL");
 		}
 		else if ("${databaseType}" == "Sybase") {
 			AssertConsoleTextPresent(value1 = "Using dialect com.liferay.portal.dao.orm.hibernate.SybaseASE157Dialect for Adaptive Server Enterprise");
@@ -313,14 +317,11 @@ definition {
 	}
 
 	macro viewPopulatedSampleData {
+		var testRunEnvironment = PropsUtil.get("test.run.environment");
+
 		AssertConsoleTextPresent(value1 = "Finished adding data");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Configuration",
-			panel = "Control Panel",
-			portlet = "Search");
-
-		SearchAdministration.executeSearchActions(actionsDescription = "Reindex all search indexes.");
+		SearchAdministration.executeReindex();
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Users",
@@ -339,45 +340,85 @@ definition {
 
 		UsersAndOrganizationsNavigator.gotoOrganizations();
 
-		Organization.viewCP(
-			orgName = "Liferay, Inc.",
-			orgType = "Organization");
+		if ("${testRunEnvironment}" == "EE") {
+			Organization.viewCP(
+				orgName = "Liferay DXP, Inc.",
+				orgType = "Organization");
 
-		Navigator.gotoBack();
+			Navigator.gotoBack();
 
-		Organization.gotoCP(
-			orgName = "Liferay, Inc.",
-			searchToken = "Liferay, Inc.");
+			Organization.gotoCP(
+				orgName = "Liferay DXP, Inc.",
+				searchToken = "Liferay DXP, Inc.");
 
-		User.searchCP(searchTerm = "Test DLC 1");
+			User.searchCP(searchTerm = "Test DLC 1");
 
-		Organization.viewAssignMemberCP(userName = "Test DLC 1");
+			Organization.viewAssignMemberCP(userName = "Test DLC 1");
 
-		Search.searchCP(searchTerm = "LiferayChicago");
+			Search.searchCP(searchTerm = "Liferay DXPChicago");
 
-		var key_suborgName = "LiferayChicago";
+			var key_suborgName = "Liferay DXPChicago";
 
-		AssertTextEquals(
-			locator1 = "UsersAndOrganizationsOrganization#SUBORGANIZATION_TABLE_NAME",
-			value1 = "LiferayChicago");
+			AssertTextEquals(
+				locator1 = "UsersAndOrganizationsOrganization#SUBORGANIZATION_TABLE_NAME",
+				value1 = "Liferay DXPChicago");
 
-		AssertTextEquals(
-			locator1 = "UsersAndOrganizationsOrganization#SUBORGANIZATION_TABLE_TYPE",
-			value1 = "Organization");
+			AssertTextEquals(
+				locator1 = "UsersAndOrganizationsOrganization#SUBORGANIZATION_TABLE_TYPE",
+				value1 = "Organization");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Sites",
-			panel = "Control Panel",
-			portlet = "Sites");
+			ApplicationsMenu.gotoPortlet(
+				category = "Sites",
+				panel = "Control Panel",
+				portlet = "Sites");
 
-		AssertTextEquals.assertPartialText(
-			key_siteName = "Liferay, Inc.",
-			locator1 = "Sites#SITE_TABLE_NAME",
-			value1 = "Liferay, Inc.");
+			AssertTextEquals.assertPartialText(
+				key_siteName = "Liferay DXP, Inc.",
+				locator1 = "Sites#SITE_TABLE_NAME",
+				value1 = "Liferay DXP, Inc.");
+		}
+		else {
+			Organization.viewCP(
+				orgName = "Liferay, Inc.",
+				orgType = "Organization");
+
+			Navigator.gotoBack();
+
+			Organization.gotoCP(
+				orgName = "Liferay, Inc.",
+				searchToken = "Liferay, Inc.");
+
+			User.searchCP(searchTerm = "Test DLC 1");
+
+			Organization.viewAssignMemberCP(userName = "Test DLC 1");
+
+			Search.searchCP(searchTerm = "LiferayChicago");
+
+			var key_suborgName = "LiferayChicago";
+
+			AssertTextEquals(
+				locator1 = "UsersAndOrganizationsOrganization#SUBORGANIZATION_TABLE_NAME",
+				value1 = "LiferayChicago");
+
+			AssertTextEquals(
+				locator1 = "UsersAndOrganizationsOrganization#SUBORGANIZATION_TABLE_TYPE",
+				value1 = "Organization");
+
+			ApplicationsMenu.gotoPortlet(
+				category = "Sites",
+				panel = "Control Panel",
+				portlet = "Sites");
+
+			AssertTextEquals.assertPartialText(
+				key_siteName = "Liferay, Inc.",
+				locator1 = "Sites#SITE_TABLE_NAME",
+				value1 = "Liferay, Inc.");
+		}
 	}
 
 	macro viewSampleDataEnabledInPropertiesFile {
 		var liferayHome = PropsUtil.get("liferay.home.dir.name");
+
 		var fileContent = FileUtil.read("${liferayHome}/portal-setup-wizard.properties");
 
 		if (contains("${fileContent}", "setup.wizard.add.sample.data=on")) {

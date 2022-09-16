@@ -25,11 +25,13 @@ import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldTypeServices
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.dynamic.data.mapping.render.DDMFormFieldValueRendererRegistry;
-import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.dynamic.data.mapping.storage.StorageEngine;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HtmlParser;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.io.ByteArrayOutputStream;
@@ -66,7 +68,90 @@ public class DDLXLSExporter extends BaseDDLExporter {
 		return "xls";
 	}
 
-	protected CellStyle createCellStyle(
+	@Override
+	protected byte[] doExport(
+			long recordSetId, int status, int start, int end,
+			OrderByComparator<DDLRecord> orderByComparator)
+		throws Exception {
+
+		DDLRecordSet recordSet = _ddlRecordSetService.getRecordSet(recordSetId);
+
+		Map<String, DDMFormField> ddmFormFields = getDistinctFields(
+			recordSetId);
+
+		DateTimeFormatter dateTimeFormatter = getDateTimeFormatter();
+
+		try (ByteArrayOutputStream byteArrayOutputStream =
+				new ByteArrayOutputStream();
+			Workbook workbook = new HSSFWorkbook()) {
+
+			Sheet sheet = workbook.createSheet();
+
+			_createHeaderRow(ddmFormFields.values(), sheet, workbook);
+
+			List<DDLRecord> records = _ddlRecordLocalService.getRecords(
+				recordSetId, status, start, end, orderByComparator);
+
+			Iterator<DDLRecord> iterator = records.iterator();
+
+			int rowIndex = 1;
+
+			CellStyle cellStyle = _createCellStyle(
+				workbook, false, "Courier New", (short)12);
+
+			while (iterator.hasNext()) {
+				DDLRecord record = iterator.next();
+
+				DDLRecordVersion recordVersion = record.getRecordVersion();
+
+				Map<String, DDMFormFieldRenderedValue> values =
+					getRenderedValues(
+						recordSet.getScope(), ddmFormFields.values(),
+						_storageEngine.getDDMFormValues(
+							recordVersion.getDDMStorageId()),
+						_htmlParser);
+
+				_createDataRow(
+					rowIndex++, sheet, dateTimeFormatter,
+					recordVersion.getUserName(),
+					getStatusMessage(recordVersion.getStatus()),
+					recordVersion.getStatusDate(), cellStyle, ddmFormFields,
+					values);
+			}
+
+			workbook.write(byteArrayOutputStream);
+
+			return byteArrayOutputStream.toByteArray();
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
+			return new byte[0];
+		}
+	}
+
+	@Override
+	protected DDLRecordSetVersionService getDDLRecordSetVersionService() {
+		return _ddlRecordSetVersionService;
+	}
+
+	@Override
+	protected DDMFormFieldTypeServicesTracker
+		getDDMFormFieldTypeServicesTracker() {
+
+		return _ddmFormFieldTypeServicesTracker;
+	}
+
+	@Override
+	protected DDMFormFieldValueRendererRegistry
+		getDDMFormFieldValueRendererRegistry() {
+
+		return _ddmFormFieldValueRendererRegistry;
+	}
+
+	private CellStyle _createCellStyle(
 		Workbook workbook, boolean bold, String fontName,
 		short heightInPoints) {
 
@@ -83,7 +168,7 @@ public class DDLXLSExporter extends BaseDDLExporter {
 		return style;
 	}
 
-	protected void createDataRow(
+	private void _createDataRow(
 		int rowIndex, Sheet sheet, DateTimeFormatter dateTimeFormatter,
 		String author, String status, Date statusDate, CellStyle style,
 		Map<String, DDMFormField> ddmFormFields,
@@ -93,7 +178,7 @@ public class DDLXLSExporter extends BaseDDLExporter {
 
 		int cellIndex = 0;
 
-		Cell cell = null;
+		Cell cell;
 
 		for (Map.Entry<String, DDMFormField> entry : ddmFormFields.entrySet()) {
 			cell = row.createCell(cellIndex++, CellType.STRING);
@@ -128,18 +213,18 @@ public class DDLXLSExporter extends BaseDDLExporter {
 		cell.setCellValue(author);
 	}
 
-	protected void createHeaderRow(
+	private void _createHeaderRow(
 		Collection<DDMFormField> ddmFormFields, Sheet sheet,
 		Workbook workbook) {
 
 		Row row = sheet.createRow(0);
 
-		CellStyle cellStyle = createCellStyle(
+		CellStyle cellStyle = _createCellStyle(
 			workbook, true, "Courier New", (short)14);
 
 		int cellIndex = 0;
 
-		Cell cell = null;
+		Cell cell;
 
 		Locale locale = getLocale();
 
@@ -155,145 +240,44 @@ public class DDLXLSExporter extends BaseDDLExporter {
 		cell = row.createCell(cellIndex++, CellType.STRING);
 
 		cell.setCellStyle(cellStyle);
-		cell.setCellValue(LanguageUtil.get(locale, "status"));
+		cell.setCellValue(_language.get(locale, "status"));
 
 		cell = row.createCell(cellIndex++, CellType.STRING);
 
 		cell.setCellStyle(cellStyle);
-		cell.setCellValue(LanguageUtil.get(locale, "modified-date"));
+		cell.setCellValue(_language.get(locale, "modified-date"));
 
 		cell = row.createCell(cellIndex++, CellType.STRING);
 
 		cell.setCellStyle(cellStyle);
-		cell.setCellValue(LanguageUtil.get(locale, "author"));
+		cell.setCellValue(_language.get(locale, "author"));
 	}
 
-	@Override
-	protected byte[] doExport(
-			long recordSetId, int status, int start, int end,
-			OrderByComparator<DDLRecord> orderByComparator)
-		throws Exception {
+	private static final Log _log = LogFactoryUtil.getLog(DDLXLSExporter.class);
 
-		DDLRecordSet recordSet = _ddlRecordSetService.getRecordSet(recordSetId);
-
-		Map<String, DDMFormField> ddmFormFields = getDistinctFields(
-			recordSetId);
-
-		DateTimeFormatter dateTimeFormatter = getDateTimeFormatter();
-
-		try (ByteArrayOutputStream byteArrayOutputStream =
-				new ByteArrayOutputStream();
-			Workbook workbook = new HSSFWorkbook()) {
-
-			Sheet sheet = workbook.createSheet();
-
-			createHeaderRow(ddmFormFields.values(), sheet, workbook);
-
-			List<DDLRecord> records = _ddlRecordLocalService.getRecords(
-				recordSetId, status, start, end, orderByComparator);
-
-			Iterator<DDLRecord> iterator = records.iterator();
-
-			int rowIndex = 1;
-
-			CellStyle cellStyle = createCellStyle(
-				workbook, false, "Courier New", (short)12);
-
-			while (iterator.hasNext()) {
-				DDLRecord record = iterator.next();
-
-				DDLRecordVersion recordVersion = record.getRecordVersion();
-
-				DDMFormValues ddmFormValues = _storageEngine.getDDMFormValues(
-					recordVersion.getDDMStorageId());
-
-				Map<String, DDMFormFieldRenderedValue> values =
-					getRenderedValues(
-						recordSet.getScope(), ddmFormFields.values(),
-						ddmFormValues);
-
-				createDataRow(
-					rowIndex++, sheet, dateTimeFormatter,
-					recordVersion.getUserName(),
-					getStatusMessage(recordVersion.getStatus()),
-					recordVersion.getStatusDate(), cellStyle, ddmFormFields,
-					values);
-			}
-
-			workbook.write(byteArrayOutputStream);
-
-			return byteArrayOutputStream.toByteArray();
-		}
-		catch (Exception exception) {
-			return new byte[0];
-		}
-	}
-
-	@Override
-	protected DDLRecordSetVersionService getDDLRecordSetVersionService() {
-		return _ddlRecordSetVersionService;
-	}
-
-	@Override
-	protected DDMFormFieldTypeServicesTracker
-		getDDMFormFieldTypeServicesTracker() {
-
-		return _ddmFormFieldTypeServicesTracker;
-	}
-
-	@Override
-	protected DDMFormFieldValueRendererRegistry
-		getDDMFormFieldValueRendererRegistry() {
-
-		return _ddmFormFieldValueRendererRegistry;
-	}
-
-	@Reference(unbind = "-")
-	protected void setDDLRecordLocalService(
-		DDLRecordLocalService ddlRecordLocalService) {
-
-		_ddlRecordLocalService = ddlRecordLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setDDLRecordSetService(
-		DDLRecordSetService ddlRecordSetService) {
-
-		_ddlRecordSetService = ddlRecordSetService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setDDLRecordSetVersionService(
-		DDLRecordSetVersionService ddlRecordSetVersionService) {
-
-		_ddlRecordSetVersionService = ddlRecordSetVersionService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setDDMFormFieldTypeServicesTracker(
-		DDMFormFieldTypeServicesTracker ddmFormFieldTypeServicesTracker) {
-
-		_ddmFormFieldTypeServicesTracker = ddmFormFieldTypeServicesTracker;
-	}
-
-	@Reference(unbind = "-")
-	protected void setDDMFormFieldValueRendererRegistry(
-		DDMFormFieldValueRendererRegistry ddmFormFieldValueRendererRegistry) {
-
-		_ddmFormFieldValueRendererRegistry = ddmFormFieldValueRendererRegistry;
-	}
-
-	@Reference(unbind = "-")
-	protected void setStorageEngine(StorageEngine storageEngine) {
-		_storageEngine = storageEngine;
-	}
-
+	@Reference
 	private DDLRecordLocalService _ddlRecordLocalService;
+
+	@Reference
 	private DDLRecordSetService _ddlRecordSetService;
+
+	@Reference
 	private DDLRecordSetVersionService _ddlRecordSetVersionService;
+
+	@Reference
 	private DDMFormFieldTypeServicesTracker _ddmFormFieldTypeServicesTracker;
+
+	@Reference
 	private DDMFormFieldValueRendererRegistry
 		_ddmFormFieldValueRendererRegistry;
+
+	@Reference
+	private HtmlParser _htmlParser;
+
+	@Reference
+	private Language _language;
+
+	@Reference
 	private StorageEngine _storageEngine;
 
 }

@@ -84,16 +84,6 @@ exports[`SegmentEdit renders 1`] = `
               />
             </div>
           </div>
-          <div
-            class="align-self-center"
-          >
-            <img
-              class="lfr-portal-tooltip source-icon"
-              data-testid="source-icon"
-              src="/dxp-icon.svg"
-              title="source.dxp"
-            />
-          </div>
         </div>
       </div>
     </div>
@@ -188,16 +178,6 @@ exports[`SegmentEdit renders with edit buttons if the user has update permission
               />
             </div>
           </div>
-          <div
-            class="align-self-center"
-          >
-            <img
-              class="lfr-portal-tooltip source-icon"
-              data-testid="source-icon"
-              src="/dxp-icon.svg"
-              title="source.dxp"
-            />
-          </div>
         </div>
         <div
           class="form-header-section-right"
@@ -291,7 +271,7 @@ exports[`SegmentEdit renders with edit buttons if the user has update permission
 exports[`SegmentEdit renders with given values 1`] = `
 <DocumentFragment>
   <div
-    class="segment-edit-page-root"
+    class="segment-edit-page-root segment-edit-page-root--with-warning"
   >
     <input
       name="active"
@@ -370,16 +350,6 @@ exports[`SegmentEdit renders with given values 1`] = `
                 value="Segment title"
               />
             </div>
-          </div>
-          <div
-            class="align-self-center"
-          >
-            <img
-              class="lfr-portal-tooltip source-icon"
-              data-testid="source-icon"
-              src="/dxp-icon.svg"
-              title="source.dxp"
-            />
           </div>
         </div>
         <div
@@ -468,10 +438,71 @@ exports[`SegmentEdit renders with given values 1`] = `
       class="form-body"
     >
       <div
+        class="mx-0 alert alert-dismissible alert-fluid alert-warning"
+        role="alert"
+      >
+        <div
+          class="container"
+        >
+          <div
+            class="alert-autofit-row autofit-row"
+          >
+            <div
+              class="autofit-col"
+            >
+              <div
+                class="autofit-section"
+              >
+                <span
+                  class="alert-indicator"
+                >
+                  <svg
+                    class="lexicon-icon lexicon-icon-warning-full"
+                    role="presentation"
+                  >
+                    <use
+                      xlink:href="#warning-full"
+                    />
+                  </svg>
+                </span>
+              </div>
+            </div>
+            <div
+              class="autofit-col autofit-col-expand"
+            >
+              <div
+                class="autofit-section"
+              >
+                <strong
+                  class="lead"
+                >
+                  segmentation-is-disabled
+                </strong>
+                contact-your-system-administrator-to-enable-it
+              </div>
+            </div>
+          </div>
+          <button
+            aria-label="Close"
+            class="close"
+            type="button"
+          >
+            <svg
+              class="lexicon-icon lexicon-icon-times"
+              role="presentation"
+            >
+              <use
+                xlink:href="#times"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div
         class="contributor-builder-root editing"
       >
         <div
-          class="criteria-builder-section-sidebar"
+          class="criteria-builder-section-sidebar criteria-builder-section-sidebar--with-warning"
         >
           <div
             class="criteria-sidebar-root"
@@ -542,44 +573,53 @@ exports[`SegmentEdit renders with given values 1`] = `
                       </svg>
                     </span>
                   </a>
-                  <ul
-                    class="properties-list"
+                  <div
+                    class="flex-grow-1 sidebar-collapse-body"
                   >
-                    <li
-                      class="criteria-sidebar-item-root color--first-test-values-group"
-                      draggable="true"
+                    <p
+                      class="pt-3 px-4 text-secondary"
                     >
-                      <span
-                        class="inline-item"
-                      >
-                        <svg
-                          class="lexicon-icon lexicon-icon-drag"
-                          role="presentation"
-                        >
-                          <use
-                            xlink:href="#drag"
-                          />
-                        </svg>
-                      </span>
-                      <span
-                        class="criteria-sidebar-item-type sticker sticker-light"
+                      inherited-attributes-are-not-taken-into-account-to-include-members-in-segments
+                    </p>
+                    <ul
+                      class="pl-0"
+                    >
+                      <li
+                        class="criteria-sidebar-item-root color--first-test-values-group"
+                        draggable="true"
                       >
                         <span
                           class="inline-item"
                         >
                           <svg
-                            class="lexicon-icon lexicon-icon-text"
+                            class="lexicon-icon lexicon-icon-drag"
                             role="presentation"
                           >
                             <use
-                              xlink:href="#text"
+                              xlink:href="#drag"
                             />
                           </svg>
                         </span>
-                      </span>
-                      Value
-                    </li>
-                  </ul>
+                        <span
+                          class="criteria-sidebar-item-type sticker sticker-dark"
+                        >
+                          <span
+                            class="inline-item"
+                          >
+                            <svg
+                              class="lexicon-icon lexicon-icon-text"
+                              role="presentation"
+                            >
+                              <use
+                                xlink:href="#text"
+                              />
+                            </svg>
+                          </span>
+                        </span>
+                        Value
+                      </li>
+                    </ul>
+                  </div>
                 </li>
               </ul>
             </div>
@@ -862,16 +902,6 @@ exports[`SegmentEdit renders without edit buttons if the user does not have upda
                 value="Segment title"
               />
             </div>
-          </div>
-          <div
-            class="align-self-center"
-          >
-            <img
-              class="lfr-portal-tooltip source-icon"
-              data-testid="source-icon"
-              src="/dxp-icon.svg"
-              title="source.dxp"
-            />
           </div>
         </div>
       </div>

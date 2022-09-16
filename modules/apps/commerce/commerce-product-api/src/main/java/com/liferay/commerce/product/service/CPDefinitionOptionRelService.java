@@ -15,6 +15,7 @@
 package com.liferay.commerce.product.service;
 
 import com.liferay.commerce.product.model.CPDefinitionOptionRel;
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.jsonwebservice.JSONWebService;
@@ -45,6 +46,7 @@ import org.osgi.annotation.versioning.ProviderType;
  * @generated
  */
 @AccessControlled
+@CTAware
 @JSONWebService
 @OSGiBeanProperties(
 	property = {
@@ -151,7 +153,12 @@ public interface CPDefinitionOptionRelService extends BaseService {
 	public BaseModelSearchResult<CPDefinitionOptionRel>
 			searchCPDefinitionOptionRels(
 				long companyId, long groupId, long cpDefinitionId,
-				String keywords, int start, int end, Sort sort)
+				String keywords, int start, int end, Sort[] sorts)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int searchCPDefinitionOptionRelsCount(
+			long companyId, long groupId, long cpDefinitionId, String keywords)
 		throws PortalException;
 
 	public CPDefinitionOptionRel updateCPDefinitionOptionRel(

@@ -22,6 +22,7 @@ import com.liferay.document.library.kernel.util.DLUtil;
 import com.liferay.item.selector.ItemSelectorReturnTypeResolver;
 import com.liferay.item.selector.ItemSelectorReturnTypeResolverHandler;
 import com.liferay.item.selector.taglib.servlet.taglib.util.RepositoryEntryBrowserTagUtil;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
@@ -33,9 +34,10 @@ import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortletKeys;
 
+import java.util.Collections;
 import java.util.Locale;
+import java.util.Set;
 
-import javax.portlet.ActionRequest;
 import javax.portlet.PortletException;
 import javax.portlet.PortletURL;
 
@@ -73,6 +75,20 @@ public class BlogsItemSelectorViewDisplayContext {
 		return _blogsEntryLocalService.fetchAttachmentsFolder(userId, groupId);
 	}
 
+	public Set<String> getAllowedCreationMenuUIItemKeys() {
+		return Collections.emptySet();
+	}
+
+	public PortletURL getEditImageURL(
+		LiferayPortletResponse liferayPortletResponse) {
+
+		return PortletURLBuilder.createActionURL(
+			liferayPortletResponse, PortletKeys.BLOGS
+		).setActionName(
+			"/blogs/image_editor"
+		).buildPortletURL();
+	}
+
 	public String[] getImageExtensions() throws ConfigurationException {
 		return _getBlogsFileUploadsConfiguration().imageExtensions();
 	}
@@ -94,6 +110,10 @@ public class BlogsItemSelectorViewDisplayContext {
 				FileEntry.class);
 	}
 
+	public String getMimeTypeRestriction() {
+		return _blogsItemSelectorCriterion.getMimeTypeRestriction();
+	}
+
 	public OrderByComparator<FileEntry> getOrderByComparator() {
 		return DLUtil.getRepositoryModelOrderByComparator(
 			RepositoryEntryBrowserTagUtil.getOrderByCol(
@@ -107,14 +127,11 @@ public class BlogsItemSelectorViewDisplayContext {
 			LiferayPortletResponse liferayPortletResponse)
 		throws PortletException {
 
-		PortletURL portletURL = PortletURLUtil.clone(
-			_portletURL, liferayPortletResponse);
-
-		portletURL.setParameter(
-			"selectedTab",
-			String.valueOf(getTitle(httpServletRequest.getLocale())));
-
-		return portletURL;
+		return PortletURLBuilder.create(
+			PortletURLUtil.clone(_portletURL, liferayPortletResponse)
+		).setParameter(
+			"selectedTab", getTitle(httpServletRequest.getLocale())
+		).buildPortletURL();
 	}
 
 	public String getTitle(Locale locale) {
@@ -124,13 +141,11 @@ public class BlogsItemSelectorViewDisplayContext {
 	public PortletURL getUploadURL(
 		LiferayPortletResponse liferayPortletResponse) {
 
-		PortletURL portletURL = liferayPortletResponse.createActionURL(
-			PortletKeys.BLOGS);
-
-		portletURL.setParameter(
-			ActionRequest.ACTION_NAME, "/blogs/upload_image");
-
-		return portletURL;
+		return PortletURLBuilder.createActionURL(
+			liferayPortletResponse, PortletKeys.BLOGS
+		).setActionName(
+			"/blogs/upload_image"
+		).buildPortletURL();
 	}
 
 	public boolean isSearch() {

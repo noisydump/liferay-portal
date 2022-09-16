@@ -23,6 +23,7 @@ if (GetterUtil.getBoolean((String)request.getAttribute("liferay-ui:input-date:di
 	namespace = StringPool.BLANK;
 }
 
+String autoComplete = GetterUtil.getString((String)request.getAttribute("liferay-ui:input-date:autoComplete"));
 String cssClass = GetterUtil.getString((String)request.getAttribute("liferay-ui:input-date:cssClass"));
 String dateTogglerCheckboxLabel = GetterUtil.getString((String)request.getAttribute("liferay-ui:input-date:dateTogglerCheckboxLabel"), "disable");
 boolean disabled = GetterUtil.getBoolean((String)request.getAttribute("liferay-ui:input-date:disabled"));
@@ -115,16 +116,29 @@ else {
 <span class="lfr-input-date" id="<%= randomNamespace %>displayDate">
 	<c:choose>
 		<c:when test="<%= BrowserSnifferUtil.isMobile(request) %>">
-			<input class="form-control <%= cssClass %>" <%= disabled ? "disabled=\"disabled\"" : "" %> id="<%= nameId %>" name="<%= namespace + HtmlUtil.escapeAttribute(name) %>" type="date" value="<%= dateString %>" />
+			<input <%= Validator.isNotNull(autoComplete) ? "autocomplete=\"" + autoComplete + "\"" : StringPool.BLANK %> class="form-control <%= cssClass %>" <%= disabled ? "disabled=\"disabled\"" : "" %> id="<%= nameId %>" name="<%= namespace + HtmlUtil.escapeAttribute(name) %>" type="date" value="<%= dateString %>" />
 		</c:when>
 		<c:otherwise>
-			<aui:input cssClass="<%= cssClass %>" disabled="<%= disabled %>" id="<%= HtmlUtil.getAUICompatibleId(name) %>" label="" name="<%= name %>" placeholder="<%= StringUtil.toLowerCase(placeholderValue) %>" required="<%= required %>" title="" type="text" value="<%= dateString %>" wrappedField="<%= true %>">
-				<aui:validator errorMessage="please-enter-a-valid-date" name="custom">
-					function(val) {
-						return AUI().use('aui-datatype-date-parse').Parsers.date('<%= mask %>', val);
-					}
-				</aui:validator>
-			</aui:input>
+			<c:choose>
+				<c:when test="<%= Validator.isNotNull(autoComplete) %>">
+					<aui:input autocomplete="<%= autoComplete %>" cssClass="<%= cssClass %>" disabled="<%= disabled %>" id="<%= HtmlUtil.getAUICompatibleId(name) %>" label="" name="<%= name %>" placeholder="<%= StringUtil.toLowerCase(placeholderValue) %>" required="<%= required %>" title="" type="text" useNamespace="<%= !StringPool.BLANK.equals(namespace) %>" value="<%= dateString %>" wrappedField="<%= true %>">
+						<aui:validator errorMessage="please-enter-a-valid-date" name="custom">
+							function(val) {
+								return AUI().use('aui-datatype-date-parse').Parsers.date('<%= mask %>', val);
+							}
+						</aui:validator>
+					</aui:input>
+				</c:when>
+				<c:otherwise>
+					<aui:input cssClass="<%= cssClass %>" disabled="<%= disabled %>" id="<%= HtmlUtil.getAUICompatibleId(name) %>" label="" name="<%= name %>" placeholder="<%= StringUtil.toLowerCase(placeholderValue) %>" required="<%= required %>" title="" type="text" useNamespace="<%= !StringPool.BLANK.equals(namespace) %>" value="<%= dateString %>" wrappedField="<%= true %>">
+						<aui:validator errorMessage="please-enter-a-valid-date" name="custom">
+							function(val) {
+								return AUI().use('aui-datatype-date-parse').Parsers.date('<%= mask %>', val);
+							}
+						</aui:validator>
+					</aui:input>
+				</c:otherwise>
+			</c:choose>
 		</c:otherwise>
 	</c:choose>
 
@@ -150,7 +164,7 @@ else {
 			if (checkbox) {
 				checkbox.addEventListener(
 					'click',
-					function(event) {
+					function() {
 						var checked = checkbox.checked;
 
 						if (!form) {
@@ -207,10 +221,35 @@ else {
 	Liferay.component(
 		'<%= nameId %>DatePicker',
 		function() {
+			var keysPressed = {};
+
+			var onKeyDown = function (domEvent) {
+				if (domEvent.keyCode === 16) {
+					keysPressed[domEvent.keyCode] = true;
+				}
+			};
+
+			var onKeyUp = function (domEvent) {
+				if (domEvent.keyCode === 16) {
+					delete keysPressed[domEvent.keyCode];
+				}
+			};
+
+			var closePopoverOnKeyboardNavigation = function (instance) {
+				instance.hide();
+
+				keysPressed = {};
+
+				var trigger = A.one('#<%= nameId %>');
+
+				if (trigger) {
+					Liferay.Util.focusFormField(trigger);
+				}
+			}
+
 			var datePicker = new A.DatePicker<%= BrowserSnifferUtil.isMobile(request) ? "Native" : StringPool.BLANK %>(
 				{
 					calendar: {
-
 						<%
 						String calendarOptions = String.format("headerRenderer: '%s'", LanguageUtil.get(resourceBundle, "b-y"));
 
@@ -232,6 +271,10 @@ else {
 					container: '#<%= randomNamespace %>displayDate',
 					mask: '<%= mask %>',
 					on: {
+						destroy: function () {
+							document.removeEventListener('keydown', onKeyDown);
+							document.removeEventListener('keyup', onKeyUp);
+						},
 						disabledChange: function(event) {
 							var instance = this;
 
@@ -244,7 +287,7 @@ else {
 							container.one('#<%= nameId %>').attr('disabled', newVal);
 							container.one('#<%= yearParamId %>').attr('disabled', newVal);
 						},
-						enterKey: function(event) {
+						enterKey: function() {
 							var instance = this;
 
 							var inputVal = instance.get('activeInput').val();
@@ -257,6 +300,25 @@ else {
 							else if (<%= nullable %> && !date) {
 								datePicker.updateValue('');
 							}
+
+							var countInterval = 0;
+
+							var intervalId = setInterval(function () {
+								var trigger = A.one('.datepicker-popover:not(.popover-hidden) .yui3-calendarnav-prevmonth');
+
+								if (trigger) {
+									Liferay.Util.focusFormField(trigger);
+									clearInterval(intervalId);
+								} else if (countInterval > 10) {
+									clearInterval(intervalId);
+								}
+
+								countInterval++;
+							}, 100);
+						},
+						init: function () {
+							document.addEventListener('keydown', onKeyDown);
+							document.addEventListener('keyup', onKeyUp);
 						},
 						selectionChange: function(event) {
 							var newSelection = event.newSelection[0];
@@ -286,15 +348,41 @@ else {
 
 								var domEvent = event.domEvent;
 
-								if (domEvent.keyCode == 9 && domEvent.target.hasClass('yui3-calendar-grid')) {
-									instance.hide();
+								keysPressed[domEvent.keyCode] = true;
 
-									var trigger = A.one('#<%= nameId %>');
+								var isTabPressed = domEvent.keyCode === 9 || keysPressed[9];
 
-									if (trigger) {
-										Liferay.Util.focusFormField(trigger);
-									}
+								var isShiftPressed = domEvent.keyCode === 16 || keysPressed[16];
+
+								var isForwardNavigation = isTabPressed && !isShiftPressed;
+
+								var isEscapePressed = domEvent.keyCode === 27 || keysPressed[27];
+
+								var hasClassName = domEvent.target.hasClass('yui3-calendar-grid') ||
+								domEvent.target.hasClass('yui3-calendar-day');
+
+								if ((isForwardNavigation && hasClassName) || isEscapePressed) {
+									closePopoverOnKeyboardNavigation(instance);
 								}
+							},
+							keyup: function(event) {
+								var instance = this;
+
+								var domEvent = event.domEvent;
+
+								var isTabPressed = domEvent.keyCode === 9 || keysPressed[9];
+
+								var isShiftPressed = domEvent.keyCode === 16 || keysPressed[16];
+
+								var isBackwardNavigation = isTabPressed && isShiftPressed;
+
+								var hasClassName = domEvent.target.hasClass('yui3-calendar-focused');
+
+								if (isBackwardNavigation && hasClassName) {
+									closePopoverOnKeyboardNavigation(instance);
+								}
+
+								delete keysPressed[domEvent.keyCode];
 							}
 						},
 						zIndex: Liferay.zIndex.POPOVER
@@ -333,7 +421,7 @@ else {
 
 			datePicker.after(
 				'selectionChange',
-				function(event) {
+				function() {
 					var input = A.one('#<%= nameId %>');
 
 					if (input) {

@@ -14,6 +14,8 @@
 
 package com.liferay.layout.admin.web.internal.display.context;
 
+import com.liferay.layout.admin.constants.LayoutAdminPortletKeys;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -24,6 +26,8 @@ import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.model.PortletPreferences;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
+import com.liferay.portal.kernel.portlet.SearchDisplayStyleUtil;
+import com.liferay.portal.kernel.portlet.SearchOrderByUtil;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.service.PortletLocalServiceUtil;
 import com.liferay.portal.kernel.service.PortletPreferencesLocalServiceUtil;
@@ -75,8 +79,9 @@ public class OrphanPortletsDisplayContext {
 			return _displayStyle;
 		}
 
-		_displayStyle = ParamUtil.getString(
-			_liferayPortletRequest, "displayStyle", "list");
+		_displayStyle = SearchDisplayStyleUtil.getDisplayStyle(
+			_liferayPortletRequest, LayoutAdminPortletKeys.GROUP_PAGES,
+			"orphan-display-style", "list");
 
 		return _displayStyle;
 	}
@@ -86,8 +91,9 @@ public class OrphanPortletsDisplayContext {
 			return _orderByType;
 		}
 
-		_orderByType = ParamUtil.getString(
-			_liferayPortletRequest, "orderByType", "asc");
+		_orderByType = SearchOrderByUtil.getOrderByType(
+			_httpServletRequest, LayoutAdminPortletKeys.GROUP_PAGES,
+			"orphan-order-by-type", "asc");
 
 		return _orderByType;
 	}
@@ -131,11 +137,9 @@ public class OrphanPortletsDisplayContext {
 			Portlet portlet = PortletLocalServiceUtil.getPortletById(
 				themeDisplay.getCompanyId(), portletId);
 
-			if (portlet.isSystem()) {
-				continue;
-			}
+			if (portlet.isSystem() ||
+				explicitlyAddedPortletIds.contains(portletId)) {
 
-			if (explicitlyAddedPortletIds.contains(portletId)) {
 				continue;
 			}
 
@@ -151,12 +155,11 @@ public class OrphanPortletsDisplayContext {
 			orderByAsc = true;
 		}
 
-		PortletTitleComparator portletTitleComparator =
+		return ListUtil.sort(
+			orphanPortlets,
 			new PortletTitleComparator(
 				httpServletRequest.getServletContext(),
-				themeDisplay.getLocale(), orderByAsc);
-
-		return ListUtil.sort(orphanPortlets, portletTitleComparator);
+				themeDisplay.getLocale(), orderByAsc));
 	}
 
 	public SearchContainer<Portlet> getOrphanPortletsSearchContainer() {
@@ -172,6 +175,7 @@ public class OrphanPortletsDisplayContext {
 		orphanPortletsSearchContainer.setId("portlets");
 		orphanPortletsSearchContainer.setOrderByCol("name");
 		orphanPortletsSearchContainer.setOrderByType(getOrderByType());
+		orphanPortletsSearchContainer.setResultsAndTotal(getOrphanPortlets());
 
 		Layout selLayout = getSelLayout();
 
@@ -180,25 +184,21 @@ public class OrphanPortletsDisplayContext {
 				new EmptyOnClickRowChecker(_liferayPortletResponse));
 		}
 
-		List<Portlet> portlets = getOrphanPortlets();
-
-		orphanPortletsSearchContainer.setResults(portlets);
-
-		orphanPortletsSearchContainer.setTotal(portlets.size());
-
 		_orphanPortletsSearchContainer = orphanPortletsSearchContainer;
 
 		return _orphanPortletsSearchContainer;
 	}
 
 	public PortletURL getPortletURL() {
-		PortletURL portletURL = _liferayPortletResponse.createRenderURL();
-
-		portletURL.setParameter("mvcPath", "/orphan_portlets.jsp");
-		portletURL.setParameter("backURL", getBackURL());
-		portletURL.setParameter("displayStyle", getDisplayStyle());
-
-		return portletURL;
+		return PortletURLBuilder.createRenderURL(
+			_liferayPortletResponse
+		).setMVCPath(
+			"/orphan_portlets.jsp"
+		).setBackURL(
+			getBackURL()
+		).setParameter(
+			"displayStyle", getDisplayStyle()
+		).buildPortletURL();
 	}
 
 	public Layout getSelLayout() {

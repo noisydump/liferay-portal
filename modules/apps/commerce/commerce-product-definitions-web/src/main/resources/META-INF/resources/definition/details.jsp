@@ -27,7 +27,7 @@ String defaultLanguageId = cpDefinitionsDisplayContext.getCatalogDefaultLanguage
 
 String productTypeName = BeanParamUtil.getString(cpDefinition, request, "productTypeName");
 
-String friendlyURLBase = themeDisplay.getPortalURL() + CPConstants.SEPARATOR_PRODUCT_URL;
+String friendlyURLBase = themeDisplay.getPortalURL() + cpDefinitionsDisplayContext.getProductURLSeparator();
 
 boolean neverExpire = ParamUtil.getBoolean(request, "neverExpire", true);
 
@@ -73,7 +73,7 @@ if ((cpDefinition != null) && (cpDefinition.getExpirationDate() != null)) {
 							for (CommerceCatalog curCommerceCatalog : commerceCatalogs) {
 							%>
 
-								<aui:option data-languageId="<%= curCommerceCatalog.getCatalogDefaultLanguageId() %>" label="<%= curCommerceCatalog.getName() %>" selected="<%= (cpDefinition == null) ? (commerceCatalogs.size() == 1) : cpDefinitionsDisplayContext.isSelectedCatalog(curCommerceCatalog) %>" value="<%= curCommerceCatalog.getGroupId() %>" />
+								<aui:option data-languageId="<%= curCommerceCatalog.getCatalogDefaultLanguageId() %>" label="<%= HtmlUtil.escape(curCommerceCatalog.getName()) %>" selected="<%= (cpDefinition == null) ? (commerceCatalogs.size() == 1) : cpDefinitionsDisplayContext.isSelectedCatalog(curCommerceCatalog) %>" value="<%= curCommerceCatalog.getGroupId() %>" />
 
 							<%
 							}
@@ -129,7 +129,9 @@ if ((cpDefinition != null) && (cpDefinition.getExpirationDate() != null)) {
 						defaultLanguageId="<%= defaultLanguageId %>"
 						inputAddon="<%= StringUtil.shorten(friendlyURLBase, 40) %>"
 						name="urlTitleMapAsXML"
-						xml="<%= HttpUtil.decodeURL(cpDefinitionsDisplayContext.getUrlTitleMapAsXML()) %>"
+						xml="<%=
+							HttpComponentsUtil.decodeURL(cpDefinitionsDisplayContext.getUrlTitleMapAsXML())
+						%>"
 					/>
 				</div>
 
@@ -154,6 +156,7 @@ if ((cpDefinition != null) && (cpDefinition.getExpirationDate() != null)) {
 						className="<%= CPDefinition.class.getName() %>"
 						classPK="<%= cpDefinitionId %>"
 						groupIds="<%= new long[] {company.getGroupId()} %>"
+						visibilityTypes="<%= AssetVocabularyConstants.VISIBILITY_TYPES %>"
 					/>
 				</aui:field-wrapper>
 
@@ -226,10 +229,10 @@ if ((cpDefinition != null) && (cpDefinition.getExpirationDate() != null)) {
 								headers: headers,
 								method: 'POST',
 							}
-						).then(function () {
+						).then(() => {
 							Liferay.fire(events.UPDATE_DATASET_DISPLAY, {
 								id:
-									'<%= CommerceProductDataSetConstants.COMMERCE_DATA_SET_KEY_PRODUCT_DEFINITION_SPECIFICATIONS %>',
+									'<%= CommerceProductFDSNames.PRODUCT_DEFINITION_SPECIFICATIONS %>',
 							});
 							return null;
 						});
@@ -255,12 +258,12 @@ if ((cpDefinition != null) && (cpDefinition.getExpirationDate() != null)) {
 								method: 'POST',
 							}
 						)
-							.then(function (response) {
+							.then((response) => {
 								if (response.ok) {
 									return response.json();
 								}
 
-								return response.json().then(function (data) {
+								return response.json().then((data) => {
 									return Promise.reject(data.errorDescription);
 								});
 							})
@@ -282,7 +285,7 @@ if ((cpDefinition != null) && (cpDefinition.getExpirationDate() != null)) {
 							'<%= LanguageUtil.get(request, "specification-selected") %>',
 						itemsKey: 'id',
 						linkedDatasetsId: [
-							'<%= CommerceProductDataSetConstants.COMMERCE_DATA_SET_KEY_PRODUCT_DEFINITION_SPECIFICATIONS %>',
+							'<%= CommerceProductFDSNames.PRODUCT_DEFINITION_SPECIFICATIONS %>',
 						],
 						multiSelectableEntries: true,
 						itemsKey: 'id',
@@ -299,7 +302,7 @@ if ((cpDefinition != null) && (cpDefinition.getExpirationDate() != null)) {
 								fieldName: 'key',
 							},
 						],
-						spritemap: '<%= themeDisplay.getPathThemeImages() %>/lexicon/icons.svg',
+						spritemap: '<%= FrontendIconsUtil.getSpritemap(themeDisplay) %>',
 						titleLabel:
 							'<%= LanguageUtil.get(request, "add-existing-specification") %>',
 					});
@@ -311,19 +314,17 @@ if ((cpDefinition != null) && (cpDefinition.getExpirationDate() != null)) {
 					bodyClasses="p-0"
 					title='<%= LanguageUtil.get(request, "specifications") %>'
 				>
-					<clay:data-set-display
+					<frontend-data-set:classic-display
 						contextParams='<%=
 							HashMapBuilder.<String, String>put(
 								"cpDefinitionId", String.valueOf(cpDefinitionId)
 							).build()
 						%>'
-						dataProviderKey="<%= CommerceProductDataSetConstants.COMMERCE_DATA_SET_KEY_PRODUCT_DEFINITION_SPECIFICATIONS %>"
-						formId="fm"
-						id="<%= CommerceProductDataSetConstants.COMMERCE_DATA_SET_KEY_PRODUCT_DEFINITION_SPECIFICATIONS %>"
+						dataProviderKey="<%= CommerceProductFDSNames.PRODUCT_DEFINITION_SPECIFICATIONS %>"
+						formName="fm"
+						id="<%= CommerceProductFDSNames.PRODUCT_DEFINITION_SPECIFICATIONS %>"
 						itemsPerPage="<%= 10 %>"
-						namespace="<%= liferayPortletResponse.getNamespace() %>"
-						pageNumber="<%= 1 %>"
-						portletURL="<%= currentURLObj %>"
+						selectedItemsKey="cpdefinitionSpecificationOptionValueId"
 						showManagementBar="<%= false %>"
 					/>
 				</commerce-ui:panel>
@@ -333,7 +334,7 @@ if ((cpDefinition != null) && (cpDefinition.getExpirationDate() != null)) {
 </aui:form>
 
 <c:if test="<%= cpDefinition == null %>">
-	<aui:script require="commerce-frontend-js/utilities/debounce as debounce, commerce-frontend-js/utilities/slugify as slugify">
+	<aui:script require="frontend-js-web/liferay/debounce/debounce.es as debounce, commerce-frontend-js/utilities/slugify as slugify">
 		var form = document.getElementById('<portlet:namespace />fm');
 
 		var nameInput = form.querySelector('#<portlet:namespace />nameMapAsXML');
@@ -355,7 +356,7 @@ if ((cpDefinition != null) && (cpDefinition.getExpirationDate() != null)) {
 	<aui:script>
 		document
 			.getElementById('<portlet:namespace />commerceCatalogGroupId')
-			.addEventListener('change', function (event) {
+			.addEventListener('change', (event) => {
 				var languageId = event.target.querySelector(
 					'[value="' + event.target.value + '"]'
 				).dataset.languageid;

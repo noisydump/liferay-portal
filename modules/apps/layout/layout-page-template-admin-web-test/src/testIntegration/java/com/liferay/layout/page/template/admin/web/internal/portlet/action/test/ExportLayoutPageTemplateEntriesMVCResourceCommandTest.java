@@ -47,6 +47,7 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+import com.liferay.segments.service.SegmentsExperienceLocalService;
 
 import java.io.File;
 
@@ -290,10 +291,13 @@ public class ExportLayoutPageTemplateEntriesMVCResourceCommandTest {
 				LayoutPageTemplateEntryTypeConstants.TYPE_BASIC, 0, status,
 				_serviceContext);
 
-		_layoutPageTemplateStructureLocalService.addLayoutPageTemplateStructure(
-			TestPropsValues.getUserId(), _group.getGroupId(),
-			layoutPageTemplateEntry.getPlid(), _read("layout_data.json"),
-			_serviceContext);
+		_layoutPageTemplateStructureLocalService.
+			updateLayoutPageTemplateStructureData(
+				_group.getGroupId(), layoutPageTemplateEntry.getPlid(),
+				_segmentsExperienceLocalService.
+					fetchDefaultSegmentsExperienceId(
+						layoutPageTemplateEntry.getPlid()),
+				_read("layout_data.json"));
 
 		Repository repository = PortletFileRepositoryUtil.addPortletRepository(
 			_group.getGroupId(), RandomTestUtil.randomString(),
@@ -302,7 +306,7 @@ public class ExportLayoutPageTemplateEntriesMVCResourceCommandTest {
 		Class<?> clazz = getClass();
 
 		FileEntry fileEntry = PortletFileRepositoryUtil.addPortletFileEntry(
-			_group.getGroupId(), TestPropsValues.getUserId(),
+			null, _group.getGroupId(), TestPropsValues.getUserId(),
 			LayoutPageTemplateEntry.class.getName(),
 			layoutPageTemplateEntry.getLayoutPageTemplateEntryId(),
 			RandomTestUtil.randomString(), repository.getDlFolderId(),
@@ -395,7 +399,7 @@ public class ExportLayoutPageTemplateEntriesMVCResourceCommandTest {
 			_read(expectedFileName));
 
 		Assert.assertEquals(
-			expectedJSONObject.toJSONString(), jsonObject.toJSONString());
+			expectedJSONObject.toString(), jsonObject.toString());
 	}
 
 	private void _validateContent(
@@ -408,16 +412,15 @@ public class ExportLayoutPageTemplateEntriesMVCResourceCommandTest {
 		boolean equals = false;
 
 		for (String expectedPageTemplateName : expectedPageTemplateNames) {
-			JSONObject expectedJSONObject = JSONFactoryUtil.createJSONObject(
-				StringUtil.replace(
-					_read(expectedFileName), "${", "}",
-					HashMapBuilder.put(
-						"PAGE_TEMPLATE_NAME", expectedPageTemplateName
-					).build()));
+			String expectedJSON = String.valueOf(
+				JSONFactoryUtil.createJSONObject(
+					StringUtil.replace(
+						_read(expectedFileName), "${", "}",
+						HashMapBuilder.put(
+							"PAGE_TEMPLATE_NAME", expectedPageTemplateName
+						).build())));
 
-			String expectedJSON1 = expectedJSONObject.toJSONString();
-
-			equals = expectedJSON1.equals(jsonObject.toJSONString());
+			equals = expectedJSON.equals(jsonObject.toString());
 
 			if (equals) {
 				break;
@@ -476,6 +479,9 @@ public class ExportLayoutPageTemplateEntriesMVCResourceCommandTest {
 		filter = "mvc.command.name=/layout_page_template_admin/export_layout_page_template_entries"
 	)
 	private MVCResourceCommand _mvcResourceCommand;
+
+	@Inject
+	private SegmentsExperienceLocalService _segmentsExperienceLocalService;
 
 	private ServiceContext _serviceContext;
 

@@ -60,7 +60,7 @@ import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.kernel.xml.SAXReaderUtil;
 import com.liferay.site.internal.exportimport.staged.model.repository.StagedGroupStagedModelRepository;
 import com.liferay.site.model.adapter.StagedGroup;
-import com.liferay.sites.kernel.util.SitesUtil;
+import com.liferay.sites.kernel.util.Sites;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -140,59 +140,6 @@ public class StagedGroupStagedModelDataHandler
 		return true;
 	}
 
-	protected Set<String> checkDataSiteLevelPortlets(
-			PortletDataContext portletDataContext, Group group)
-		throws Exception {
-
-		List<Portlet> dataSiteLevelPortlets =
-			_exportImportHelper.getDataSiteLevelPortlets(
-				portletDataContext.getCompanyId());
-
-		Group liveGroup = group;
-
-		if (liveGroup.isStagingGroup()) {
-			liveGroup = liveGroup.getLiveGroup();
-		}
-
-		Set<String> portletIds = new LinkedHashSet<>();
-
-		for (Portlet portlet : dataSiteLevelPortlets) {
-			String portletId = portlet.getRootPortletId();
-
-			if (ExportImportThreadLocal.isStagingInProcess() &&
-				!liveGroup.isStagedPortlet(portletId)) {
-
-				continue;
-			}
-
-			// Calculate the amount of exported data
-
-			if (BackgroundTaskThreadLocal.hasBackgroundTask()) {
-				Map<String, Boolean> exportPortletControlsMap =
-					_exportImportHelper.getExportPortletControlsMap(
-						portletDataContext.getCompanyId(), portletId,
-						portletDataContext.getParameterMap(),
-						portletDataContext.getType());
-
-				if (exportPortletControlsMap.get(
-						PortletDataHandlerKeys.PORTLET_DATA)) {
-
-					PortletDataHandler portletDataHandler =
-						portlet.getPortletDataHandlerInstance();
-
-					portletDataHandler.prepareManifestSummary(
-						portletDataContext);
-				}
-			}
-
-			// Add portlet ID to exportable portlets list
-
-			portletIds.add(portletId);
-		}
-
-		return portletIds;
-	}
-
 	@Override
 	protected void doExportStagedModel(
 			PortletDataContext portletDataContext, StagedGroup stagedGroup)
@@ -202,7 +149,7 @@ public class StagedGroupStagedModelDataHandler
 
 		Group group = stagedGroup.getGroup();
 
-		Set<String> dataSiteLevelPortletIds = checkDataSiteLevelPortlets(
+		Set<String> dataSiteLevelPortletIds = _checkDataSiteLevelPortlets(
 			portletDataContext, group);
 
 		if (BackgroundTaskThreadLocal.hasBackgroundTask()) {
@@ -228,7 +175,7 @@ public class StagedGroupStagedModelDataHandler
 		long previousScopeGroupId = portletDataContext.getScopeGroupId();
 
 		try {
-			exportSitePortlets(
+			_exportSitePortlets(
 				portletDataContext, stagedGroup, dataSiteLevelPortletIds,
 				layoutIds);
 		}
@@ -324,7 +271,7 @@ public class StagedGroupStagedModelDataHandler
 			_log.debug("Importing portlets");
 		}
 
-		importSitePortlets(portletDataContext, sitePortletElements);
+		_importSitePortlets(portletDataContext, sitePortletElements);
 
 		// Import services
 
@@ -337,7 +284,7 @@ public class StagedGroupStagedModelDataHandler
 			_log.debug("Importing services");
 		}
 
-		importSiteServices(portletDataContext, siteServiceElements);
+		_importSiteServices(portletDataContext, siteServiceElements);
 
 		// Import layout set
 
@@ -350,7 +297,71 @@ public class StagedGroupStagedModelDataHandler
 		}
 	}
 
-	protected void exportPortlet(
+	@Override
+	protected StagedModelRepository<StagedGroup> getStagedModelRepository() {
+		return _stagedGroupStagedModelRepository;
+	}
+
+	@Override
+	protected void importReferenceStagedModels(
+			PortletDataContext portletDataContext, StagedGroup stagedModel)
+		throws PortletDataException {
+	}
+
+	private Set<String> _checkDataSiteLevelPortlets(
+			PortletDataContext portletDataContext, Group group)
+		throws Exception {
+
+		List<Portlet> dataSiteLevelPortlets =
+			_exportImportHelper.getDataSiteLevelPortlets(
+				portletDataContext.getCompanyId());
+
+		Group liveGroup = group;
+
+		if (liveGroup.isStagingGroup()) {
+			liveGroup = liveGroup.getLiveGroup();
+		}
+
+		Set<String> portletIds = new LinkedHashSet<>();
+
+		for (Portlet portlet : dataSiteLevelPortlets) {
+			String portletId = portlet.getRootPortletId();
+
+			if (ExportImportThreadLocal.isStagingInProcess() &&
+				!liveGroup.isStagedPortlet(portletId)) {
+
+				continue;
+			}
+
+			// Calculate the amount of exported data
+
+			if (BackgroundTaskThreadLocal.hasBackgroundTask()) {
+				Map<String, Boolean> exportPortletControlsMap =
+					_exportImportHelper.getExportPortletControlsMap(
+						portletDataContext.getCompanyId(), portletId,
+						portletDataContext.getParameterMap(),
+						portletDataContext.getType());
+
+				if (exportPortletControlsMap.get(
+						PortletDataHandlerKeys.PORTLET_DATA)) {
+
+					PortletDataHandler portletDataHandler =
+						portlet.getPortletDataHandlerInstance();
+
+					portletDataHandler.prepareManifestSummary(
+						portletDataContext);
+				}
+			}
+
+			// Add portlet ID to exportable portlets list
+
+			portletIds.add(portletId);
+		}
+
+		return portletIds;
+	}
+
+	private void _exportPortlet(
 			PortletDataContext portletDataContext, String portletId, long plid,
 			long scopeGroupId, String scopeType, String scopeLayoutUuid,
 			String type, Element portletsElement, Element servicesElement,
@@ -408,7 +419,7 @@ public class StagedGroupStagedModelDataHandler
 		}
 	}
 
-	protected void exportSitePortlets(
+	private void _exportSitePortlets(
 			PortletDataContext portletDataContext, StagedGroup stagedGroup,
 			Set<String> portletIds, long[] layoutIds)
 		throws Exception {
@@ -437,7 +448,7 @@ public class StagedGroupStagedModelDataHandler
 
 			// Default scope
 
-			exportPortlet(
+			_exportPortlet(
 				portletDataContext, portletId, LayoutConstants.DEFAULT_PLID,
 				portletDataContext.getGroupId(), StringPool.BLANK,
 				StringPool.BLANK, type, portletsElement, servicesElement,
@@ -468,7 +479,7 @@ public class StagedGroupStagedModelDataHandler
 
 				Group scopeGroup = layout.getScopeGroup();
 
-				exportPortlet(
+				_exportPortlet(
 					portletDataContext, portletId, layout.getPlid(),
 					scopeGroup.getGroupId(), StringPool.BLANK, layout.getUuid(),
 					type, portletsElement, servicesElement, permissions);
@@ -476,18 +487,7 @@ public class StagedGroupStagedModelDataHandler
 		}
 	}
 
-	@Override
-	protected StagedModelRepository<StagedGroup> getStagedModelRepository() {
-		return _stagedGroupStagedModelRepository;
-	}
-
-	@Override
-	protected void importReferenceStagedModels(
-			PortletDataContext portletDataContext, StagedGroup stagedModel)
-		throws PortletDataException {
-	}
-
-	protected void importSitePortlets(
+	private void _importSitePortlets(
 			PortletDataContext portletDataContext,
 			List<Element> sitePortletElements)
 		throws Exception {
@@ -523,7 +523,7 @@ public class StagedGroupStagedModelDataHandler
 			long plid = LayoutConstants.DEFAULT_PLID;
 
 			if (layout != null) {
-				if (SitesUtil.isLayoutModifiedSinceLastMerge(layout)) {
+				if (_sites.isLayoutModifiedSinceLastMerge(layout)) {
 					continue;
 				}
 
@@ -649,7 +649,7 @@ public class StagedGroupStagedModelDataHandler
 		}
 	}
 
-	protected void importSiteServices(
+	private void _importSiteServices(
 			PortletDataContext portletDataContext,
 			List<Element> siteServiceElements)
 		throws Exception {
@@ -709,6 +709,9 @@ public class StagedGroupStagedModelDataHandler
 
 	@Reference
 	private PortletLocalService _portletLocalService;
+
+	@Reference
+	private Sites _sites;
 
 	@Reference
 	private StagedGroupStagedModelRepository _stagedGroupStagedModelRepository;

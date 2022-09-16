@@ -19,6 +19,8 @@ import com.liferay.project.templates.BaseProjectTemplatesTestCase;
 import com.liferay.project.templates.extensions.util.Validator;
 import com.liferay.project.templates.util.FileTestUtil;
 
+import java.io.File;
+
 import java.net.URI;
 
 import java.util.Arrays;
@@ -46,7 +48,9 @@ public class ProjectTemplatesWarMVCPortletCustomPackageTest
 	@Parameterized.Parameters(name = "Testcase-{index}: testing {0}")
 	public static Iterable<Object[]> data() {
 		return Arrays.asList(
-			new Object[][] {{"7.0.6"}, {"7.1.3"}, {"7.2.1"}, {"7.3.5"}});
+			new Object[][] {
+				{"7.0.6-2"}, {"7.1.3-1"}, {"7.2.1-1"}, {"7.3.7"}, {"7.4.1-1"}
+			});
 	}
 
 	@BeforeClass
@@ -73,9 +77,11 @@ public class ProjectTemplatesWarMVCPortletCustomPackageTest
 
 	@Test
 	public void testBuildTemplateWarMvcPortlet() throws Exception {
-		testBuildTemplatePortlet(
+		File gradleProjectDir = testBuildTemplatePortlet(
 			temporaryFolder, "war-mvc-portlet", "foo", "com.liferay.test",
 			_liferayVersion, mavenExecutor, _gradleDistribution);
+
+		testTemplateWarPortletDTD(gradleProjectDir, _liferayVersion);
 	}
 
 	@Rule

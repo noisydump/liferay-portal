@@ -19,7 +19,9 @@ import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
 import com.liferay.portal.kernel.util.ListUtil;
@@ -76,7 +78,7 @@ public class ValidateRankingMVCResourceCommand implements MVCResourceCommand {
 			return false;
 		}
 		catch (RuntimeException runtimeException) {
-			runtimeException.printStackTrace();
+			_log.error(runtimeException);
 
 			throw runtimeException;
 		}
@@ -95,7 +97,7 @@ public class ValidateRankingMVCResourceCommand implements MVCResourceCommand {
 			!validateRankingMVCResourceRequest.getInactive()) {
 
 			jsonArray.put(
-				LanguageUtil.format(
+				_language.format(
 					portal.getHttpServletRequest(resourceRequest),
 					"active-search-queries-and-aliases-must-be-unique-across-" +
 						"all-rankings.-the-following-ones-already-exist-x",
@@ -185,7 +187,7 @@ public class ValidateRankingMVCResourceCommand implements MVCResourceCommand {
 				queryStrings
 			).rankingIndexName(
 				_getRankingIndexName(resourceRequest)
-			).unlessRankingId(
+			).unlessRankingDocumentId(
 				validateRankingMVCResourceRequest.getResultsRankingUid()
 			).build());
 	}
@@ -206,6 +208,12 @@ public class ValidateRankingMVCResourceCommand implements MVCResourceCommand {
 	}
 
 	private static final String _UPDATE_SPECIAL = StringPool.GREATER_THAN;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		ValidateRankingMVCResourceCommand.class);
+
+	@Reference
+	private Language _language;
 
 	private class ValidateRankingMVCResourceRequest {
 

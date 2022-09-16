@@ -20,6 +20,7 @@ import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -66,36 +67,14 @@ public class SitesThatIAdministerItemSelectorViewDisplayContext
 		GroupSearchTerms groupSearchTerms =
 			(GroupSearchTerms)groupSearch.getSearchTerms();
 
-		List<Group> groups = GroupLocalServiceUtil.search(
-			themeDisplay.getCompanyId(), _CLASS_NAME_IDS,
-			groupSearchTerms.getKeywords(), _getGroupParams(),
-			QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-			groupSearch.getOrderByComparator());
-
-		groups = _filterGroups(groups, themeDisplay.getPermissionChecker());
-
-		groupSearch.setTotal(groups.size());
-
-		groups = groups.subList(
-			groupSearch.getStart(), groupSearch.getResultEnd());
-
-		groupSearch.setResults(groups);
+		groupSearch.setResultsAndTotal(
+			GroupLocalServiceUtil.search(
+				themeDisplay.getCompanyId(), _CLASS_NAME_IDS,
+				groupSearchTerms.getKeywords(), _getGroupParams(),
+				QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+				groupSearch.getOrderByComparator()));
 
 		return groupSearch;
-	}
-
-	private List<Group> _filterGroups(
-		List<Group> groups, PermissionChecker permissionChecker) {
-
-		List<Group> filteredGroups = new ArrayList<>();
-
-		for (Group group : groups) {
-			if (permissionChecker.isGroupAdmin(group.getGroupId())) {
-				filteredGroups.add(group);
-			}
-		}
-
-		return filteredGroups;
 	}
 
 	private LinkedHashMap<String, Object> _getGroupParams() throws Exception {
@@ -123,6 +102,7 @@ public class SitesThatIAdministerItemSelectorViewDisplayContext
 		if (filterManageableGroups) {
 			User user = themeDisplay.getUser();
 
+			_groupParams.put("actionId", ActionKeys.UPDATE);
 			_groupParams.put("usersGroups", user.getUserId());
 		}
 

@@ -2,12 +2,19 @@
 <head>
 <title>CommerceNavigation</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">CommerceNavigation</td></tr>
 </thead>
+
 <tbody>
+<tr>
+	<td>BACK</td>
+	<td>//li[contains(@class,'control-menu-nav-item')]//a[span//*[name()='svg'][contains(@class,'icon-angle-left')]]</td>
+	<td></td>
+</tr>
 <tr>
 	<td>CPOPTIONS_STATUS</td>
 	<td>//table[contains (@data-searchcontainerid,'cpOptions')]/tbody//td[contains (@class,'${key_cpOption}') and contains (.,'${key_cpOptionStatus}')] | //table[contains (@data-searchcontainerid,'cpInstances')]/tbody//td[contains (@class,'${key_cpOption}') and contains (.,'${key_cpOptionStatus}')]</td>
@@ -20,7 +27,7 @@
 </tr>
 <tr>
 	<td>EMPTY_SEARCH_CONTAINER</td>
-	<td>//div[contains (@class,'empty-result-message-header')]</td>
+	<td>//div[contains (@class,'empty-result-message-header')] | //div[contains(@class,'empty-state-text')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -30,27 +37,27 @@
 </tr>
 <tr>
 	<td>ENTRY_NAME</td>
-	<td>//div[@class='data-set-display-wrapper' or @class='searchcontainer-content']//a[text()='${key_entryName}']</td>
+	<td>//div[@class='data-set-wrapper' or @class='searchcontainer-content']//a[text()='${key_entryName}']</td>
 	<td></td>
 </tr>
 <tr>
 	<td>ENTRY_NAME_N</td>
-	<td>xpath=(//div[@class='data-set-display-wrapper' or @class='searchcontainer-content']//a)[${key_rowNumber}]</td>
+	<td>xpath=(//div[@class='data-set-wrapper' or @class='searchcontainer-content']//a)[${key_rowNumber}]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>OPTIONS_ENTRY_NAME</td>
-	<td>//div[@class='form-container']//td[contains(.,'${key_OptionEntryName}')]</td>
+	<td>//div[@class='form-container']//td[contains(.,'${key_optionEntryName}')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>SEARCH_FIELD</td>
-	<td>//input[contains(@aria-label,'Search')]</td>
+	<td>//input[contains(@aria-label,'Search')] | //input[contains(@name,'Keywords') or contains(@name,'keywords')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>SELECT_ALL_CHECKBOX</td>
-	<td>//input[contains (@id,'allRowIds') and (@type='checkbox')]</td>
+	<td>//input[contains (@id,'allRowIds') and (@type='checkbox')] | //input[contains (@name,'table-head-selector') and (@type='checkbox')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -61,6 +68,11 @@
 <tr>
 	<td>SELECTABLE_CHECKBOX</td>
 	<td>//tr[@data-selectable="true"]//..//input[@type='checkbox']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SORT_FIELD</td>
+	<td>//button[@class='btn-sorting inline-item text-nowrap text-truncate-inline btn btn-sm btn-unstyled' and contains(text(), '${key_sortFieldName}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -81,6 +93,41 @@
 <tr>
 	<td>ANY_ENTRY_NAME</td>
 	<td>//a[contains(.,'${key_entry}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ANY_ENTRY_NAME_WITHOUT_CONTAINS</td>
+	<td>//a[(text()='${key_entry}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>DATA_SET_ENTRY_NAME</td>
+	<td>//div[@class='data-set-content-wrapper']//a[text()='${key_entryName}']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SEARCH_CONTAINER_WRAPPER</td>
+	<td>//div[contains(@class,'search-container-wrapper')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PAGINATION_ANY_PAGE</td>
+	<td>//ul[contains(@class,'pagination')]//li[contains(@class,'page-item')]//*[(contains(@class,'page-link')) and (contains(.,'${key_pageNumber}'))]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>TD_ANY_ENTRY_NAME</td>
+	<td>//td//div[contains(.,'${key_entry}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>VALIDATE_CONVERT_TO_DRAFT_MODAL_MESSAGE</td>
+	<td>//div[@class='liferay-modal-body'][contains(text(),'Converting the product status to draft will remove the product from the product catalog. Do you wish to proceed?')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>VALIDATE_SAVE_AS_DRAFT_MODAL_MESSAGE_WITH_VALIDATION</td>
+	<td>//div[@class='liferay-modal-body'][contains(text(),'There is already a draft version of this product. Continuing will replace that draft version with this draft version. Do you wish to proceed?')]</td>
 	<td></td>
 </tr>
 </tbody>

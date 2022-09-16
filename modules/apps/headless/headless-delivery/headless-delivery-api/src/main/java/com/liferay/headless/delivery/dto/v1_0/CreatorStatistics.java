@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
@@ -46,7 +47,9 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @generated
  */
 @Generated("")
-@GraphQLName("CreatorStatistics")
+@GraphQLName(
+	description = "Detailed info of the creator.", value = "CreatorStatistics"
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "CreatorStatistics")
 public class CreatorStatistics implements Serializable {
@@ -55,7 +58,11 @@ public class CreatorStatistics implements Serializable {
 		return ObjectMapperUtil.readValue(CreatorStatistics.class, json);
 	}
 
-	@Schema(description = "Join date of the author")
+	public static CreatorStatistics unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(CreatorStatistics.class, json);
+	}
+
+	@Schema(description = "Join date of the author.")
 	public Date getJoinDate() {
 		return joinDate;
 	}
@@ -79,11 +86,11 @@ public class CreatorStatistics implements Serializable {
 		}
 	}
 
-	@GraphQLField(description = "Join date of the author")
+	@GraphQLField(description = "Join date of the author.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Date joinDate;
 
-	@Schema(description = "Last post created by the author")
+	@Schema(description = "Last post created by the author.")
 	public Date getLastPostDate() {
 		return lastPostDate;
 	}
@@ -107,7 +114,7 @@ public class CreatorStatistics implements Serializable {
 		}
 	}
 
-	@GraphQLField(description = "Last post created by the author")
+	@GraphQLField(description = "Last post created by the author.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Date lastPostDate;
 
@@ -253,15 +260,16 @@ public class CreatorStatistics implements Serializable {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.CreatorStatistics",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
 	}
 
 	private static boolean _isArray(Object value) {
@@ -287,8 +295,8 @@ public class CreatorStatistics implements Serializable {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -319,7 +327,7 @@ public class CreatorStatistics implements Serializable {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -327,7 +335,7 @@ public class CreatorStatistics implements Serializable {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -335,5 +343,10 @@ public class CreatorStatistics implements Serializable {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

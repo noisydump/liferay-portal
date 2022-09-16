@@ -136,10 +136,10 @@ try {
 	ue.printStackTrace();
 }*/
 catch (PortletException pe) {
-	_log.error(pe, pe);
+	_log.error(pe);
 }
 catch (RuntimeException re) {
-	_log.error(re, re);
+	_log.error(re);
 }
 
 LiferayRenderRequest liferayRenderRequest = RenderRequestFactory.create(request, portlet, invokerPortlet, portletCtx, windowState, portletMode, portletPreferences, plid);
@@ -481,7 +481,8 @@ if (urlConfiguration != null) {
 	StringBundler urlConfigurationJSSB = new StringBundler(PropsValues.PORTLET_CONFIG_SHOW_PORTLET_ID ? 14 : 12);
 
 	urlConfigurationJSSB.append("Liferay.Portlet.openModal({");
-	urlConfigurationJSSB.append("namespace: '");
+	urlConfigurationJSSB.append("iframeBodyCssClass: '");
+	urlConfigurationJSSB.append("', namespace: '");
 	urlConfigurationJSSB.append(portletDisplay.getNamespace());
 	urlConfigurationJSSB.append("', portletSelector: '#p_p_id_");
 	urlConfigurationJSSB.append(portletDisplay.getId());
@@ -741,7 +742,7 @@ portletDisplay.setURLPrint(urlPrint.toString());
 
 // URL refresh
 
-String urlRefresh = "javascript:;";
+String urlRefresh = "javascript:void(0);";
 
 portletDisplay.setURLRefresh(urlRefresh);
 
@@ -985,17 +986,21 @@ else {
 	</div>
 </c:if>
 
-<%
-if (themeDisplay.isStatePopUp()) {
-	String refreshPortletId = null;
+<c:if test="<%= themeDisplay.isStatePopUp() %>">
 
-	if ((refreshPortletId = (String)SessionMessages.get(liferayRenderRequest, portletId + SessionMessages.KEY_SUFFIX_REFRESH_PORTLET)) != null) {
+	<%
+	String refreshPortletId = null;
+	%>
+
+	<c:if test="<%= (refreshPortletId = (String)SessionMessages.get(liferayRenderRequest, portletId + SessionMessages.KEY_SUFFIX_REFRESH_PORTLET)) != null %>">
+
+		<%
 		if (Validator.isNull(refreshPortletId) && (portletResourcePortlet != null)) {
 			refreshPortletId = portletResourcePortlet.getPortletId();
 		}
 
 		Map<String, String> refreshPortletData = (Map<String, String>)SessionMessages.get(liferayRenderRequest, portletId + SessionMessages.KEY_SUFFIX_REFRESH_PORTLET_DATA);
-%>
+		%>
 
 		<aui:script position="inline" use="aui-base">
 			if (window.parent) {
@@ -1020,15 +1025,13 @@ if (themeDisplay.isStatePopUp()) {
 				Liferay.Util.getOpener().Liferay.Portlet.refresh('#p_p_id_<%= HtmlUtil.escapeJS(refreshPortletId) %>_', data);
 			}
 		</aui:script>
+	</c:if>
 
 	<%
-	}
-
 	String closeRedirect = null;
-
-	if ((closeRedirect = (String)SessionMessages.get(liferayRenderRequest, portletId + SessionMessages.KEY_SUFFIX_CLOSE_REDIRECT)) != null) {
 	%>
 
+	<c:if test="<%= (closeRedirect = (String)SessionMessages.get(liferayRenderRequest, portletId + SessionMessages.KEY_SUFFIX_CLOSE_REDIRECT)) != null %>">
 		<aui:script use="aui-base">
 			var dialog = Liferay.Util.getWindow();
 
@@ -1065,15 +1068,17 @@ if (themeDisplay.isStatePopUp()) {
 				);
 			}
 		</aui:script>
+	</c:if>
 
 	<%
-	}
-
 	String closeRefreshPortletId = null;
-
-	if ((closeRefreshPortletId = (String)SessionMessages.get(liferayRenderRequest, portletId + SessionMessages.KEY_SUFFIX_CLOSE_REFRESH_PORTLET)) != null) {
-		Map<String, String> refreshPortletData = (Map<String, String>)SessionMessages.get(liferayRenderRequest, portletId + SessionMessages.KEY_SUFFIX_REFRESH_PORTLET_DATA);
 	%>
+
+	<c:if test="<%= (closeRefreshPortletId = (String)SessionMessages.get(liferayRenderRequest, portletId + SessionMessages.KEY_SUFFIX_CLOSE_REFRESH_PORTLET)) != null %>">
+
+		<%
+		Map<String, String> refreshPortletData = (Map<String, String>)SessionMessages.get(liferayRenderRequest, portletId + SessionMessages.KEY_SUFFIX_REFRESH_PORTLET_DATA);
+		%>
 
 		<aui:script use="aui-base">
 			var dialog = Liferay.Util.getWindow();
@@ -1116,11 +1121,10 @@ if (themeDisplay.isStatePopUp()) {
 				}
 			);
 		</aui:script>
+	</c:if>
+</c:if>
 
 <%
-	}
-}
-
 if (showPortletCssIcon) {
 	themeDisplay.setIncludePortletCssJs(true);
 }
@@ -1132,5 +1136,5 @@ liferayRenderRequest.cleanUp();
 %>
 
 <%!
-private static Log _log = LogFactoryUtil.getLog("portal_web.docroot.html.portal.render_portlet_jsp");
+private static final Log _log = LogFactoryUtil.getLog("portal_web.docroot.html.portal.render_portlet_jsp");
 %>

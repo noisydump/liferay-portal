@@ -17,11 +17,11 @@
 <%@ include file="/init.jsp" %>
 
 <%
+User selectedUser = PortalUtil.getSelectedUser(request);
+
 String mfaTimeBasedOTPAlgorithm = GetterUtil.getString(request.getAttribute(MFATimeBasedOTPWebKeys.MFA_TIME_BASED_OTP_ALGORITHM));
 String mfaTimeBasedOTPCompanyName = GetterUtil.getString(request.getAttribute(MFATimeBasedOTPWebKeys.MFA_TIME_BASED_OTP_COMPANY_NAME));
-int mfaTimeBasedOTPDigits = GetterUtil.getInteger(request.getAttribute(MFATimeBasedOTPWebKeys.MFA_TIME_BASED_OTP_DIGITS));
 String mfaTimeBasedOTPSharedSecret = GetterUtil.getString(request.getAttribute(MFATimeBasedOTPWebKeys.MFA_TIME_BASED_OTP_SHARED_SECRET));
-int mfaTimeBasedOTPTimeCounter = GetterUtil.getInteger(request.getAttribute(MFATimeBasedOTPWebKeys.MFA_TIME_BASED_OTP_TIME_COUNTER));
 %>
 
 <div class="sheet-section">
@@ -41,10 +41,12 @@ int mfaTimeBasedOTPTimeCounter = GetterUtil.getInteger(request.getAttribute(MFAT
 </div>
 
 <aui:script require='<%= npmResolvedPackageName + "/qrcode/generateQRCode as generateQRCode" %>'>
-	var account = '<%= HtmlUtil.escapeJS(user.getEmailAddress()) %>';
+	var account = '<%= HtmlUtil.escapeJS(selectedUser.getEmailAddress()) %>';
 	var algorithm = '<%= HtmlUtil.escapeJS(mfaTimeBasedOTPAlgorithm) %>';
-	var counter = '<%= mfaTimeBasedOTPTimeCounter %>';
-	var digits = '<%= mfaTimeBasedOTPDigits %>';
+	var counter =
+		'<%= GetterUtil.getInteger(request.getAttribute(MFATimeBasedOTPWebKeys.MFA_TIME_BASED_OTP_TIME_COUNTER)) %>';
+	var digits =
+		'<%= GetterUtil.getInteger(request.getAttribute(MFATimeBasedOTPWebKeys.MFA_TIME_BASED_OTP_DIGITS)) %>';
 	var issuer = '<%= HtmlUtil.escapeJS(mfaTimeBasedOTPCompanyName) %>';
 	var secret = '<%= HtmlUtil.escapeJS(mfaTimeBasedOTPSharedSecret) %>';
 

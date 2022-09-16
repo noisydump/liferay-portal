@@ -14,6 +14,7 @@
 
 package com.liferay.commerce.product.service.impl;
 
+import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.model.CommerceChannelRel;
 import com.liferay.commerce.product.service.base.CommerceChannelRelServiceBaseImpl;
@@ -119,37 +120,21 @@ public class CommerceChannelRelServiceImpl
 			commerceChannelId, start, end, orderByComparator);
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x)
-	 */
-	@Deprecated
 	@Override
 	public List<CommerceChannelRel> getCommerceChannelRels(
-		String className, long classPK, int start, int end,
-		OrderByComparator<CommerceChannelRel> orderByComparator) {
+			String className, long classPK, String name, int start, int end)
+		throws PortalException {
 
-		return commerceChannelRelService.getCommerceChannelRels(
-			className, classPK, null, start, end);
-	}
+		if (className.equals(CPDefinition.class.getName())) {
+			_cpDefinitionModelResourcePermission.check(
+				getPermissionChecker(), classPK, ActionKeys.VIEW);
 
-	@Override
-	public List<CommerceChannelRel> getCommerceChannelRels(
-		String className, long classPK, String name, int start, int end) {
+			return commerceChannelRelFinder.findByC_C(
+				className, classPK, name, start, end);
+		}
 
 		return commerceChannelRelFinder.findByC_C(
 			className, classPK, name, start, end, true);
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x)
-	 */
-	@Deprecated
-	@Override
-	public List<CommerceChannelRel> getCommerceChannelRels(
-		String className, long classPK, String classPKField, String name,
-		int start, int end) {
-
-		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -164,35 +149,40 @@ public class CommerceChannelRelServiceImpl
 	}
 
 	@Override
-	public int getCommerceChannelRelsCount(String className, long classPK) {
+	public int getCommerceChannelRelsCount(String className, long classPK)
+		throws PortalException {
+
 		return commerceChannelRelService.getCommerceChannelRelsCount(
 			className, classPK, StringPool.BLANK);
 	}
 
 	@Override
 	public int getCommerceChannelRelsCount(
-		String className, long classPK, String name) {
+			String className, long classPK, String name)
+		throws PortalException {
+
+		if (className.equals(CPDefinition.class.getName())) {
+			_cpDefinitionModelResourcePermission.check(
+				getPermissionChecker(), classPK, ActionKeys.VIEW);
+
+			return commerceChannelRelFinder.countByC_C(
+				className, classPK, name);
+		}
 
 		return commerceChannelRelFinder.countByC_C(
 			className, classPK, name, true);
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x)
-	 */
-	@Deprecated
-	@Override
-	public int getCommerceChannelRelsCount(
-		String className, long classPK, String classPKField, String name) {
-
-		throw new UnsupportedOperationException();
-	}
-
 	private static volatile ModelResourcePermission<CommerceChannel>
 		_commerceChannelModelResourcePermission =
 			ModelResourcePermissionFactory.getInstance(
-				CommerceChannelServiceImpl.class,
+				CommerceChannelRelServiceImpl.class,
 				"_commerceChannelModelResourcePermission",
 				CommerceChannel.class);
+	private static volatile ModelResourcePermission<CPDefinition>
+		_cpDefinitionModelResourcePermission =
+			ModelResourcePermissionFactory.getInstance(
+				CommerceChannelRelServiceImpl.class,
+				"_cpDefinitionModelResourcePermission", CPDefinition.class);
 
 }

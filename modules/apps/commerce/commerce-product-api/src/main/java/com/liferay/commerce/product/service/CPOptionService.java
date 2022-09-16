@@ -15,6 +15,7 @@
 package com.liferay.commerce.product.service;
 
 import com.liferay.commerce.product.model.CPOption;
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.jsonwebservice.JSONWebService;
@@ -45,6 +46,7 @@ import org.osgi.annotation.versioning.ProviderType;
  * @generated
  */
 @AccessControlled
+@CTAware
 @JSONWebService
 @OSGiBeanProperties(
 	property = {
@@ -71,11 +73,18 @@ public interface CPOptionService extends BaseService {
 			boolean skuContributor, String key, ServiceContext serviceContext)
 		throws PortalException;
 
+	public CPOption addOrUpdateCPOption(
+			String externalReferenceCode, Map<Locale, String> nameMap,
+			Map<Locale, String> descriptionMap, String ddmFormFieldTypeName,
+			boolean facetable, boolean required, boolean skuContributor,
+			String key, ServiceContext serviceContext)
+		throws PortalException;
+
 	public void deleteCPOption(long cpOptionId) throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public CPOption fetchByExternalReferenceCode(
-			long companyId, String externalReferenceCode)
+			String externalReferenceCode, long companyId)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
@@ -113,14 +122,7 @@ public interface CPOptionService extends BaseService {
 		throws PortalException;
 
 	public CPOption updateCPOptionExternalReferenceCode(
-			long cpOptionId, String externalReferenceCode)
-		throws PortalException;
-
-	public CPOption upsertCPOption(
-			Map<Locale, String> nameMap, Map<Locale, String> descriptionMap,
-			String ddmFormFieldTypeName, boolean facetable, boolean required,
-			boolean skuContributor, String key, String externalReferenceCode,
-			ServiceContext serviceContext)
+			String externalReferenceCode, long cpOptionId)
 		throws PortalException;
 
 }

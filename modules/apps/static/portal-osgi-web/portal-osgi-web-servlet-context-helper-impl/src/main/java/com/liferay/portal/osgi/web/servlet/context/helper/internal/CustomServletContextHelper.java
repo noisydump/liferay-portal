@@ -22,6 +22,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.servlet.ServletContextClassLoaderPool;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.MimeTypesUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.osgi.web.servlet.context.helper.definition.WebResourceCollectionDefinition;
@@ -93,6 +94,11 @@ public class CustomServletContextHelper
 		ServletContextClassLoaderPool.register(
 			_servletContext.getServletContextName(),
 			bundleWiring.getClassLoader());
+	}
+
+	@Override
+	public String getMimeType(String name) {
+		return MimeTypesUtil.getContentType(name);
 	}
 
 	@Override
@@ -198,7 +204,7 @@ public class CustomServletContextHelper
 		if (path.startsWith("/META-INF/") || path.startsWith("/OSGI-INF/") ||
 			path.startsWith("/OSGI-OPT/") || path.startsWith("/WEB-INF/")) {
 
-			return sendErrorForbidden(
+			return _sendErrorForbidden(
 				httpServletRequest, httpServletResponse, path);
 		}
 
@@ -293,7 +299,7 @@ public class CustomServletContextHelper
 			}
 
 			if (forbidden) {
-				return sendErrorForbidden(
+				return _sendErrorForbidden(
 					httpServletRequest, httpServletResponse, path);
 			}
 		}
@@ -306,7 +312,7 @@ public class CustomServletContextHelper
 		return _string;
 	}
 
-	protected boolean sendErrorForbidden(
+	private boolean _sendErrorForbidden(
 		HttpServletRequest httpServletRequest,
 		HttpServletResponse httpServletResponse, String path) {
 
@@ -324,7 +330,7 @@ public class CustomServletContextHelper
 		}
 		catch (IOException ioException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(ioException, ioException);
+				_log.debug(ioException);
 			}
 
 			httpServletResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);

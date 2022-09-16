@@ -15,24 +15,24 @@
 package com.liferay.roles.item.selector.web.internal.display.context;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.display.context.SearchContainerManagementToolbarDisplayContext;
+import com.liferay.item.selector.ItemSelectorCriterion;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
-
-import javax.portlet.PortletURL;
 
 import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Alessio Antonio Rendina
  */
-public class RoleItemSelectorViewDisplayContext
+public class RoleItemSelectorViewDisplayContext<T extends ItemSelectorCriterion>
 	extends SearchContainerManagementToolbarDisplayContext {
 
 	public RoleItemSelectorViewDisplayContext(
-		HttpServletRequest httpServletRequest, String itemSelectedEventName,
-		SearchContainer<Role> searchContainer,
+		HttpServletRequest httpServletRequest, T itemSelectorCriterion,
+		String itemSelectedEventName, SearchContainer<Role> searchContainer,
 		LiferayPortletRequest liferayPortletRequest,
 		LiferayPortletResponse liferayPortletResponse) {
 
@@ -40,27 +40,30 @@ public class RoleItemSelectorViewDisplayContext
 			httpServletRequest, liferayPortletRequest, liferayPortletResponse,
 			searchContainer);
 
+		_itemSelectorCriterion = itemSelectorCriterion;
 		_itemSelectedEventName = itemSelectedEventName;
 	}
 
 	@Override
 	public String getClearResultsURL() {
-		PortletURL clearResultsURL = getPortletURL();
-
-		clearResultsURL.setParameter("keywords", (String)null);
-
-		return clearResultsURL.toString();
+		return PortletURLBuilder.create(
+			getPortletURL()
+		).setKeywords(
+			(String)null
+		).buildString();
 	}
 
 	public String getItemSelectedEventName() {
 		return _itemSelectedEventName;
 	}
 
+	public T getItemSelectorCriterion() {
+		return _itemSelectorCriterion;
+	}
+
 	@Override
 	public String getSearchActionURL() {
-		PortletURL portletURL = getPortletURL();
-
-		return portletURL.toString();
+		return String.valueOf(getPortletURL());
 	}
 
 	public SearchContainer<?> getSearchContainer() {
@@ -73,5 +76,6 @@ public class RoleItemSelectorViewDisplayContext
 	}
 
 	private final String _itemSelectedEventName;
+	private final T _itemSelectorCriterion;
 
 }

@@ -16,8 +16,6 @@ package com.liferay.commerce.order.engine.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.commerce.account.model.CommerceAccount;
-import com.liferay.commerce.account.service.CommerceAccountLocalService;
-import com.liferay.commerce.account.service.CommerceAccountUserRelLocalService;
 import com.liferay.commerce.account.test.util.CommerceAccountTestUtil;
 import com.liferay.commerce.constants.CommerceOrderConstants;
 import com.liferay.commerce.constants.CommerceShipmentConstants;
@@ -49,21 +47,23 @@ import com.liferay.commerce.service.CommerceOrderLocalService;
 import com.liferay.commerce.service.CommerceShipmentItemLocalService;
 import com.liferay.commerce.service.CommerceShipmentLocalService;
 import com.liferay.commerce.test.util.CommerceTestUtil;
-import com.liferay.commerce.test.util.TestCommerceContext;
+import com.liferay.commerce.test.util.context.TestCommerceContext;
+import com.liferay.commerce.test.util.order.status.Test1CommerceOrderStatusImpl;
+import com.liferay.commerce.test.util.order.status.Test2CommerceOrderStatusImpl;
+import com.liferay.commerce.test.util.order.status.Test3CommerceOrderStatusImpl;
+import com.liferay.petra.lang.CentralizedThreadLocal;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.security.RandomUtil;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
-import com.liferay.portal.kernel.test.rule.DataGuard;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.rule.Sync;
-import com.liferay.portal.kernel.test.util.CompanyTestUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
@@ -74,6 +74,7 @@ import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
 import java.math.BigDecimal;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -88,10 +89,14 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.service.component.runtime.ServiceComponentRuntime;
+import org.osgi.service.component.runtime.dto.ComponentDescriptionDTO;
+import org.osgi.util.promise.Promise;
+
 /**
  * @author Alec Sloan
  */
-@DataGuard(scope = DataGuard.Scope.METHOD)
 @RunWith(Arquillian.class)
 @Sync
 public class CommerceOrderEngineTest {
@@ -104,12 +109,9 @@ public class CommerceOrderEngineTest {
 
 	@Before
 	public void setUp() throws Exception {
-		_company = CompanyTestUtil.addCompany();
+		_group = GroupTestUtil.addGroup();
 
-		_user = UserTestUtil.addUser(_company);
-
-		_group = GroupTestUtil.addGroup(
-			_company.getCompanyId(), _user.getUserId(), 0);
+		_user = UserTestUtil.addUser();
 
 		PrincipalThreadLocal.setName(_user.getUserId());
 
@@ -123,9 +125,9 @@ public class CommerceOrderEngineTest {
 			_group.getGroupId());
 
 		_commerceChannel = CommerceChannelLocalServiceUtil.addCommerceChannel(
-			_group.getGroupId(), "Test Channel",
+			null, _group.getGroupId(), "Test Channel",
 			CommerceChannelConstants.CHANNEL_TYPE_SITE, null,
-			_commerceCurrency.getCode(), null, _serviceContext);
+			_commerceCurrency.getCode(), _serviceContext);
 
 		_commerceAccount = CommerceAccountTestUtil.addBusinessCommerceAccount(
 			_user.getUserId(), RandomTestUtil.randomString(),
@@ -138,7 +140,7 @@ public class CommerceOrderEngineTest {
 			_commerceAccount.getCommerceAccountId(),
 			_commerceCurrency.getCommerceCurrencyId());
 
-		_commerceOrder = CommerceTestUtil.addCheckoutDetailsToUserOrder(
+		_commerceOrder = CommerceTestUtil.addCheckoutDetailsToCommerceOrder(
 			_commerceOrder, _user.getUserId(), false);
 
 		_commerceShipment1 = _commerceShipmentLocalService.addCommerceShipment(
@@ -159,7 +161,7 @@ public class CommerceOrderEngineTest {
 	@Test
 	public void testAutomaticallyTransitionOrderToCompleted() throws Exception {
 		frutillaRule.scenario(
-			"Use the Order Engine to checkout an Order, transition it to" +
+			"Use the Order Engine to checkout an Order, transition it to " +
 				"processing then create a shipment with all of the order " +
 					"items and mark that shipment as delivered"
 		).given(
@@ -201,10 +203,10 @@ public class CommerceOrderEngineTest {
 			commerceInventoryWarehouses.get(0);
 
 		_commerceShipmentItemLocalService.addCommerceShipmentItem(
-			_commerceShipment1.getCommerceShipmentId(),
+			null, _commerceShipment1.getCommerceShipmentId(),
 			commerceOrderItem.getCommerceOrderItemId(),
 			commerceInventoryWarehouse.getCommerceInventoryWarehouseId(),
-			commerceOrderItem.getQuantity(), _serviceContext);
+			commerceOrderItem.getQuantity(), true, _serviceContext);
 
 		_commerceShipment1 = _commerceShipmentLocalService.updateStatus(
 			_commerceShipment1.getCommerceShipmentId(),
@@ -235,7 +237,7 @@ public class CommerceOrderEngineTest {
 		throws Exception {
 
 		frutillaRule.scenario(
-			"Use the Order Engine to checkout an Order, transition it to" +
+			"Use the Order Engine to checkout an Order, transition it to " +
 				"processing then create a shipment with one but not all of " +
 					"the order items"
 		).given(
@@ -280,10 +282,10 @@ public class CommerceOrderEngineTest {
 			commerceInventoryWarehouses.get(0);
 
 		_commerceShipmentItemLocalService.addCommerceShipmentItem(
-			_commerceShipment1.getCommerceShipmentId(),
+			null, _commerceShipment1.getCommerceShipmentId(),
 			commerceOrderItem.getCommerceOrderItemId(),
 			commerceInventoryWarehouse.getCommerceInventoryWarehouseId(),
-			commerceOrderItem.getQuantity() / 2, _serviceContext);
+			commerceOrderItem.getQuantity() / 2, true, _serviceContext);
 
 		_commerceShipment1 = _commerceShipmentLocalService.updateStatus(
 			_commerceShipment1.getCommerceShipmentId(),
@@ -345,10 +347,10 @@ public class CommerceOrderEngineTest {
 			commerceInventoryWarehouses.get(0);
 
 		_commerceShipmentItemLocalService.addCommerceShipmentItem(
-			_commerceShipment1.getCommerceShipmentId(),
+			null, _commerceShipment1.getCommerceShipmentId(),
 			commerceOrderItem.getCommerceOrderItemId(),
 			commerceInventoryWarehouse.getCommerceInventoryWarehouseId(),
-			commerceOrderItem.getQuantity(), _serviceContext);
+			commerceOrderItem.getQuantity(), true, _serviceContext);
 
 		_commerceShipment1 = _commerceShipmentLocalService.updateStatus(
 			_commerceShipment1.getCommerceShipmentId(),
@@ -375,8 +377,8 @@ public class CommerceOrderEngineTest {
 		).when(
 			"We checkout the order and cancel it"
 		).then(
-			"The order status should be cancelled and the order should not be" +
-				"able to be transitioned to anything else."
+			"The order status should be cancelled and the order should not " +
+				"be able to be transitioned to anything else."
 		);
 
 		try {
@@ -660,9 +662,13 @@ public class CommerceOrderEngineTest {
 				_commerceOrder.getOrderStatus(),
 				OpenCommerceOrderStatusImpl.KEY);
 
-			_commerceOrder = _commerceOrderLocalService.updateShippingMethod(
-				_commerceOrder.getCommerceOrderId(), 0, null, BigDecimal.ZERO,
-				_commerceContext);
+			_commerceOrder =
+				_commerceOrderLocalService.updateCommerceShippingMethod(
+					_commerceOrder.getCommerceOrderId(), 0, null,
+					BigDecimal.ZERO, _commerceContext);
+
+			_commerceOrder = _commerceOrderLocalService.recalculatePrice(
+				_commerceOrder.getCommerceOrderId(), _commerceContext);
 
 			_commerceOrderEngine.checkoutCommerceOrder(
 				_commerceOrder, _user.getUserId());
@@ -673,6 +679,195 @@ public class CommerceOrderEngineTest {
 			Assert.assertSame(
 				CommerceOrderShippingMethodException.class,
 				throwable.getClass());
+		}
+	}
+
+	@Test
+	public void testCustomOrderStatusOrderFlow() throws Exception {
+		frutillaRule.scenario(
+			"Use the Order Engine to transition an Order to one of two " +
+				"custom order statuses with equivalent priorities, then to a " +
+					"third custom order status."
+		).given(
+			"An Open Order that has an order item"
+		).and(
+			"A user who has checkout permissions"
+		).when(
+			"We transition that order to one of two custom order statuses " +
+				"with equivalent priorites"
+		).then(
+			"The order should be able to transition to an order status that " +
+				"has a higher priority than those two"
+		);
+
+		Collection<ComponentDescriptionDTO> componentDescriptionDTOs =
+			_serviceComponentRuntime.getComponentDescriptionDTOs(
+				FrameworkUtil.getBundle(Test1CommerceOrderStatusImpl.class),
+				FrameworkUtil.getBundle(Test2CommerceOrderStatusImpl.class),
+				FrameworkUtil.getBundle(Test3CommerceOrderStatusImpl.class));
+
+		for (ComponentDescriptionDTO componentDescriptionDTO :
+				componentDescriptionDTOs) {
+
+			Promise<Void> voidPromise =
+				_serviceComponentRuntime.enableComponent(
+					componentDescriptionDTO);
+
+			voidPromise.getValue();
+		}
+
+		Assert.assertEquals(
+			_commerceOrder.getOrderStatus(), OpenCommerceOrderStatusImpl.KEY);
+
+		_commerceOrder = _commerceOrderEngine.checkoutCommerceOrder(
+			_commerceOrder, _user.getUserId());
+
+		_commerceOrder = _commerceOrderEngine.transitionCommerceOrder(
+			_commerceOrder, CommerceOrderConstants.ORDER_STATUS_PROCESSING,
+			_user.getUserId());
+
+		Assert.assertEquals(
+			_commerceOrder.getOrderStatus(),
+			ProcessingCommerceOrderStatusImpl.KEY);
+
+		List<CommerceOrderStatus> nextCommerceOrderStatuses =
+			_commerceOrderEngine.getNextCommerceOrderStatuses(_commerceOrder);
+
+		nextCommerceOrderStatuses.removeIf(
+			commerceOrderStatus -> commerceOrderStatus.getPriority() == -1);
+
+		Assert.assertEquals(
+			nextCommerceOrderStatuses.toString(), 2,
+			nextCommerceOrderStatuses.size());
+
+		CommerceOrderStatus test1CommerceOrderStatus =
+			nextCommerceOrderStatuses.get(0);
+
+		Assert.assertEquals(53, test1CommerceOrderStatus.getPriority());
+
+		CommerceOrderStatus test2CommerceOrderStatus =
+			nextCommerceOrderStatuses.get(1);
+
+		Assert.assertEquals(53, test2CommerceOrderStatus.getPriority());
+
+		CommerceOrderStatus randomCommerceOrderStatus =
+			nextCommerceOrderStatuses.get(RandomUtil.nextInt(2));
+
+		_commerceOrder = _commerceOrderEngine.transitionCommerceOrder(
+			_commerceOrder, randomCommerceOrderStatus.getKey(),
+			_user.getUserId());
+
+		Assert.assertEquals(
+			randomCommerceOrderStatus.getKey(),
+			_commerceOrder.getOrderStatus());
+
+		nextCommerceOrderStatuses =
+			_commerceOrderEngine.getNextCommerceOrderStatuses(_commerceOrder);
+
+		nextCommerceOrderStatuses.removeIf(
+			commerceOrderStatus -> commerceOrderStatus.getPriority() == -1);
+
+		Assert.assertEquals(
+			nextCommerceOrderStatuses.toString(), 1,
+			nextCommerceOrderStatuses.size());
+
+		CommerceOrderStatus test3CommerceOrderStatus =
+			nextCommerceOrderStatuses.get(0);
+
+		Assert.assertEquals(
+			Test3CommerceOrderStatusImpl.KEY,
+			test3CommerceOrderStatus.getKey());
+
+		_commerceOrder = _commerceOrderEngine.transitionCommerceOrder(
+			_commerceOrder, test3CommerceOrderStatus.getKey(),
+			_user.getUserId());
+
+		Assert.assertEquals(
+			Test3CommerceOrderStatusImpl.KEY, _commerceOrder.getOrderStatus());
+
+		List<CommerceOrderItem> commerceOrderItems =
+			_commerceOrder.getCommerceOrderItems();
+
+		Assert.assertEquals(
+			commerceOrderItems.toString(), 1, commerceOrderItems.size());
+
+		CommerceOrderItem commerceOrderItem = commerceOrderItems.get(0);
+
+		List<CommerceInventoryWarehouse> commerceInventoryWarehouses =
+			_commerceInventoryWarehouseLocalService.
+				getCommerceInventoryWarehouses(
+					_commerceChannel.getGroupId(), commerceOrderItem.getSku());
+
+		Assert.assertFalse(commerceInventoryWarehouses.isEmpty());
+
+		CommerceInventoryWarehouse commerceInventoryWarehouse =
+			commerceInventoryWarehouses.get(0);
+
+		_commerceShipmentItemLocalService.addCommerceShipmentItem(
+			null, _commerceShipment1.getCommerceShipmentId(),
+			commerceOrderItem.getCommerceOrderItemId(),
+			commerceInventoryWarehouse.getCommerceInventoryWarehouseId(),
+			commerceOrderItem.getQuantity() / 2, true, _serviceContext);
+
+		_commerceShipment1 = _commerceShipmentLocalService.updateStatus(
+			_commerceShipment1.getCommerceShipmentId(),
+			CommerceShipmentConstants.SHIPMENT_STATUS_DELIVERED);
+
+		_commerceOrder = _commerceOrderLocalService.fetchCommerceOrder(
+			_commerceOrder.getCommerceOrderId());
+
+		Assert.assertEquals(
+			CommerceOrderConstants.ORDER_STATUS_PARTIALLY_SHIPPED,
+			_commerceOrder.getOrderStatus());
+
+		int remainingQuantity =
+			commerceOrderItem.getQuantity() -
+				commerceOrderItem.getShippedQuantity();
+
+		_commerceShipmentItemLocalService.addCommerceShipmentItem(
+			null, _commerceShipment2.getCommerceShipmentId(),
+			commerceOrderItem.getCommerceOrderItemId(),
+			commerceInventoryWarehouse.getCommerceInventoryWarehouseId(),
+			remainingQuantity, true, _serviceContext);
+
+		_commerceShipment2 = _commerceShipmentLocalService.updateStatus(
+			_commerceShipment2.getCommerceShipmentId(),
+			CommerceShipmentConstants.SHIPMENT_STATUS_SHIPPED);
+
+		_commerceOrder = _commerceOrderLocalService.fetchCommerceOrder(
+			_commerceOrder.getCommerceOrderId());
+
+		Assert.assertEquals(
+			CommerceShipmentConstants.SHIPMENT_STATUS_SHIPPED,
+			_commerceShipment2.getStatus());
+		Assert.assertEquals(
+			CommerceOrderConstants.ORDER_STATUS_SHIPPED,
+			_commerceOrder.getOrderStatus());
+
+		_commerceShipment2 = _commerceShipmentLocalService.updateStatus(
+			_commerceShipment2.getCommerceShipmentId(),
+			CommerceShipmentConstants.SHIPMENT_STATUS_DELIVERED);
+
+		_commerceOrder = _commerceOrderLocalService.fetchCommerceOrder(
+			_commerceOrder.getCommerceOrderId());
+
+		Assert.assertEquals(
+			CommerceShipmentConstants.SHIPMENT_STATUS_DELIVERED,
+			_commerceShipment2.getStatus());
+		Assert.assertEquals(
+			CommerceOrderConstants.ORDER_STATUS_COMPLETED,
+			_commerceOrder.getOrderStatus());
+
+		CentralizedThreadLocal.clearShortLivedThreadLocals();
+
+		for (ComponentDescriptionDTO componentDescriptionDTO :
+				componentDescriptionDTOs) {
+
+			Promise<Void> voidPromise =
+				_serviceComponentRuntime.disableComponent(
+					componentDescriptionDTO);
+
+			voidPromise.getValue();
 		}
 	}
 
@@ -721,10 +916,10 @@ public class CommerceOrderEngineTest {
 			commerceInventoryWarehouses.get(0);
 
 		_commerceShipmentItemLocalService.addCommerceShipmentItem(
-			_commerceShipment1.getCommerceShipmentId(),
+			null, _commerceShipment1.getCommerceShipmentId(),
 			commerceOrderItem.getCommerceOrderItemId(),
 			commerceInventoryWarehouse.getCommerceInventoryWarehouseId(),
-			commerceOrderItem.getQuantity() / 2, _serviceContext);
+			commerceOrderItem.getQuantity() / 2, true, _serviceContext);
 
 		_commerceShipment1 = _commerceShipmentLocalService.updateStatus(
 			_commerceShipment1.getCommerceShipmentId(),
@@ -742,10 +937,10 @@ public class CommerceOrderEngineTest {
 				commerceOrderItem.getShippedQuantity();
 
 		_commerceShipmentItemLocalService.addCommerceShipmentItem(
-			_commerceShipment2.getCommerceShipmentId(),
+			null, _commerceShipment2.getCommerceShipmentId(),
 			commerceOrderItem.getCommerceOrderItemId(),
 			commerceInventoryWarehouse.getCommerceInventoryWarehouseId(),
-			remainingQuantity, _serviceContext);
+			remainingQuantity, true, _serviceContext);
 
 		_commerceShipment2 = _commerceShipmentLocalService.updateStatus(
 			_commerceShipment2.getCommerceShipmentId(),
@@ -779,7 +974,7 @@ public class CommerceOrderEngineTest {
 	@Test
 	public void testGetNextOrderStatusesWhileOrderNotOpen() throws Exception {
 		frutillaRule.scenario(
-			"When an order is not open, next order statuses should contain" +
+			"When an order is not open, next order statuses should contain " +
 				"CommerceOrderStatuses that contain a -1 priority"
 		).given(
 			"An Open Order"
@@ -828,7 +1023,7 @@ public class CommerceOrderEngineTest {
 	@Test
 	public void testGetNextOrderStatusesWhileOrderOpen() throws Exception {
 		frutillaRule.scenario(
-			"When an order is open, next order statuses should never contain" +
+			"When an order is open, next order statuses should never contain " +
 				"CommerceOrderStatuses that contain a -1 priority"
 		).given(
 			"An Open Order"
@@ -880,6 +1075,9 @@ public class CommerceOrderEngineTest {
 				"should be processing"
 		);
 
+		_commerceOrder = _commerceOrderEngine.checkoutCommerceOrder(
+			_commerceOrder, _user.getUserId());
+
 		_commerceOrder = _commerceOrderEngine.transitionCommerceOrder(
 			_commerceOrder, CommerceOrderConstants.ORDER_STATUS_ON_HOLD,
 			_user.getUserId());
@@ -899,14 +1097,9 @@ public class CommerceOrderEngineTest {
 	@Rule
 	public FrutillaRule frutillaRule = new FrutillaRule();
 
+	private static User _user;
+
 	private CommerceAccount _commerceAccount;
-
-	@Inject
-	private CommerceAccountLocalService _commerceAccountLocalService;
-
-	@Inject
-	private CommerceAccountUserRelLocalService
-		_commerceAccountUserRelLocalService;
 
 	@DeleteAfterTestRun
 	private CommerceChannel _commerceChannel;
@@ -940,13 +1133,11 @@ public class CommerceOrderEngineTest {
 	@Inject
 	private CommerceShipmentLocalService _commerceShipmentLocalService;
 
-	@DeleteAfterTestRun
-	private Company _company;
-
 	private Group _group;
-	private ServiceContext _serviceContext;
 
-	@DeleteAfterTestRun
-	private User _user;
+	@Inject
+	private ServiceComponentRuntime _serviceComponentRuntime;
+
+	private ServiceContext _serviceContext;
 
 }

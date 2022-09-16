@@ -44,17 +44,31 @@ public class ProjectTemplatesNpmReactPortletTest
 	public static final MavenExecutor mavenExecutor = new MavenExecutor();
 
 	@Parameterized.Parameters(
-		name = "Testcase-{index}: testing {0}, {1}, {2}, {3}"
+		name = "Testcase-{index}: testing {0}, {1}, {2}, {3}, {4}"
 	)
 	public static Iterable<Object[]> data() {
 		return Arrays.asList(
 			new Object[][] {
-				{"foo", "foo", "Foo", "7.0.6"}, {"foo", "foo", "Foo", "7.1.3"},
-				{"foo", "foo", "Foo", "7.2.1"}, {"foo", "foo", "Foo", "7.3.5"},
-				{"foo-bar", "foo.bar", "FooBar", "7.0.6"},
-				{"foo-bar", "foo.bar", "FooBar", "7.1.3"},
-				{"foo-bar", "foo.bar", "FooBar", "7.2.1"},
-				{"foo-bar", "foo.bar", "FooBar", "7.3.5"}
+				{"foo", "foo", "Foo", "7.0.6-2", "yarn"},
+				{"foo", "foo", "Foo", "7.1.3-1", "yarn"},
+				{"foo", "foo", "Foo", "7.2.1-1", "yarn"},
+				{"foo", "foo", "Foo", "7.3.7", "yarn"},
+				{"foo", "foo", "Foo", "7.4.3.36", "yarn"},
+				{"foo-bar", "foo.bar", "FooBar", "7.0.6-2", "yarn"},
+				{"foo-bar", "foo.bar", "FooBar", "7.1.3-1", "yarn"},
+				{"foo-bar", "foo.bar", "FooBar", "7.2.1-1", "yarn"},
+				{"foo-bar", "foo.bar", "FooBar", "7.3.7", "yarn"},
+				{"foo-bar", "foo.bar", "FooBar", "7.4.3.36", "yarn"},
+				{"foo", "foo", "Foo", "7.0.6-2", "npm"},
+				{"foo", "foo", "Foo", "7.1.3-1", "npm"},
+				{"foo", "foo", "Foo", "7.2.1-1", "npm"},
+				{"foo", "foo", "Foo", "7.3.7", "npm"},
+				{"foo", "foo", "Foo", "7.4.3.36", "npm"},
+				{"foo-bar", "foo.bar", "FooBar", "7.0.6-2", "npm"},
+				{"foo-bar", "foo.bar", "FooBar", "7.1.3-1", "npm"},
+				{"foo-bar", "foo.bar", "FooBar", "7.2.1-1", "npm"},
+				{"foo-bar", "foo.bar", "FooBar", "7.3.7", "npm"},
+				{"foo-bar", "foo.bar", "FooBar", "7.4.3.36", "npm"}
 			});
 	}
 
@@ -76,12 +90,13 @@ public class ProjectTemplatesNpmReactPortletTest
 
 	public ProjectTemplatesNpmReactPortletTest(
 		String name, String packageName, String className,
-		String liferayVersion) {
+		String liferayVersion, String nodePackageManager) {
 
 		_name = name;
 		_packageName = packageName;
 		_className = className;
 		_liferayVersion = liferayVersion;
+		_nodePackageManager = nodePackageManager;
 	}
 
 	@Test
@@ -90,7 +105,8 @@ public class ProjectTemplatesNpmReactPortletTest
 
 		testBuildTemplateNpm(
 			temporaryFolder, mavenExecutor, template, _name, _packageName,
-			_className, _liferayVersion, _gradleDistribution);
+			_className, _liferayVersion, _nodePackageManager,
+			_gradleDistribution);
 	}
 
 	@Rule
@@ -101,6 +117,7 @@ public class ProjectTemplatesNpmReactPortletTest
 	private final String _className;
 	private final String _liferayVersion;
 	private final String _name;
+	private final String _nodePackageManager;
 	private final String _packageName;
 
 }

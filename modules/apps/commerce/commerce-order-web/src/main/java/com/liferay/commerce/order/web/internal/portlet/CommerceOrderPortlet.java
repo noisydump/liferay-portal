@@ -59,7 +59,8 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + CommercePortletKeys.COMMERCE_ORDER,
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=power-user,user"
+		"javax.portlet.security-role-ref=power-user,user",
+		"javax.portlet.version=3.0"
 	},
 	service = {CommerceOrderPortlet.class, Portlet.class}
 )
@@ -73,7 +74,7 @@ public class CommerceOrderPortlet extends MVCPortlet {
 		try (ProxyModeThreadLocalCloseable proxyModeThreadLocalCloseable =
 				new ProxyModeThreadLocalCloseable()) {
 
-			ProxyModeThreadLocal.setForceSync(true);
+			ProxyModeThreadLocal.setWithSafeCloseable(true);
 
 			super.processAction(actionRequest, actionResponse);
 		}

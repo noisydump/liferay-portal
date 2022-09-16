@@ -14,8 +14,10 @@
 
 package com.liferay.headless.commerce.admin.inventory.internal.graphql.mutation.v1_0;
 
+import com.liferay.headless.commerce.admin.inventory.dto.v1_0.ReplenishmentItem;
 import com.liferay.headless.commerce.admin.inventory.dto.v1_0.Warehouse;
 import com.liferay.headless.commerce.admin.inventory.dto.v1_0.WarehouseItem;
+import com.liferay.headless.commerce.admin.inventory.resource.v1_0.ReplenishmentItemResource;
 import com.liferay.headless.commerce.admin.inventory.resource.v1_0.WarehouseItemResource;
 import com.liferay.headless.commerce.admin.inventory.resource.v1_0.WarehouseResource;
 import com.liferay.petra.function.UnsafeConsumer;
@@ -24,6 +26,7 @@ import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
+import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 
@@ -46,6 +49,14 @@ import org.osgi.service.component.ComponentServiceObjects;
 @Generated("")
 public class Mutation {
 
+	public static void setReplenishmentItemResourceComponentServiceObjects(
+		ComponentServiceObjects<ReplenishmentItemResource>
+			replenishmentItemResourceComponentServiceObjects) {
+
+		_replenishmentItemResourceComponentServiceObjects =
+			replenishmentItemResourceComponentServiceObjects;
+	}
+
 	public static void setWarehouseResourceComponentServiceObjects(
 		ComponentServiceObjects<WarehouseResource>
 			warehouseResourceComponentServiceObjects) {
@@ -60,6 +71,114 @@ public class Mutation {
 
 		_warehouseItemResourceComponentServiceObjects =
 			warehouseItemResourceComponentServiceObjects;
+	}
+
+	@GraphQLField
+	public boolean deleteReplenishmentItemByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_replenishmentItemResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			replenishmentItemResource ->
+				replenishmentItemResource.
+					deleteReplenishmentItemByExternalReferenceCode(
+						externalReferenceCode));
+
+		return true;
+	}
+
+	@GraphQLField
+	public ReplenishmentItem patchReplenishmentItemByExternalReferenceCode(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("replenishmentItem") ReplenishmentItem
+				replenishmentItem)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_replenishmentItemResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			replenishmentItemResource ->
+				replenishmentItemResource.
+					patchReplenishmentItemByExternalReferenceCode(
+						externalReferenceCode, replenishmentItem));
+	}
+
+	@GraphQLField
+	public boolean deleteReplenishmentItem(
+			@GraphQLName("replenishmentItemId") Long replenishmentItemId)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_replenishmentItemResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			replenishmentItemResource ->
+				replenishmentItemResource.deleteReplenishmentItem(
+					replenishmentItemId));
+
+		return true;
+	}
+
+	@GraphQLField
+	public Response deleteReplenishmentItemBatch(
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_replenishmentItemResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			replenishmentItemResource ->
+				replenishmentItemResource.deleteReplenishmentItemBatch(
+					callbackURL, object));
+	}
+
+	@GraphQLField
+	public ReplenishmentItem patchReplenishmentItem(
+			@GraphQLName("replenishmentItemId") Long replenishmentItemId,
+			@GraphQLName("replenishmentItem") ReplenishmentItem
+				replenishmentItem)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_replenishmentItemResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			replenishmentItemResource ->
+				replenishmentItemResource.patchReplenishmentItem(
+					replenishmentItemId, replenishmentItem));
+	}
+
+	@GraphQLField
+	public ReplenishmentItem createReplenishmentItem(
+			@GraphQLName("warehouseId") Long warehouseId,
+			@GraphQLName("sku") String sku,
+			@GraphQLName("replenishmentItem") ReplenishmentItem
+				replenishmentItem)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_replenishmentItemResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			replenishmentItemResource ->
+				replenishmentItemResource.postReplenishmentItem(
+					warehouseId, sku, replenishmentItem));
+	}
+
+	@GraphQLField
+	public Response createReplenishmentItemBatch(
+			@GraphQLName("warehouseId") Long warehouseId,
+			@GraphQLName("sku") String sku,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_replenishmentItemResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			replenishmentItemResource ->
+				replenishmentItemResource.postReplenishmentItemBatch(
+					warehouseId, sku, callbackURL, object));
 	}
 
 	@GraphQLField
@@ -271,6 +390,25 @@ public class Mutation {
 		}
 	}
 
+	private void _populateResourceContext(
+			ReplenishmentItemResource replenishmentItemResource)
+		throws Exception {
+
+		replenishmentItemResource.setContextAcceptLanguage(_acceptLanguage);
+		replenishmentItemResource.setContextCompany(_company);
+		replenishmentItemResource.setContextHttpServletRequest(
+			_httpServletRequest);
+		replenishmentItemResource.setContextHttpServletResponse(
+			_httpServletResponse);
+		replenishmentItemResource.setContextUriInfo(_uriInfo);
+		replenishmentItemResource.setContextUser(_user);
+		replenishmentItemResource.setGroupLocalService(_groupLocalService);
+		replenishmentItemResource.setRoleLocalService(_roleLocalService);
+
+		replenishmentItemResource.setVulcanBatchEngineImportTaskResource(
+			_vulcanBatchEngineImportTaskResource);
+	}
+
 	private void _populateResourceContext(WarehouseResource warehouseResource)
 		throws Exception {
 
@@ -282,6 +420,9 @@ public class Mutation {
 		warehouseResource.setContextUser(_user);
 		warehouseResource.setGroupLocalService(_groupLocalService);
 		warehouseResource.setRoleLocalService(_roleLocalService);
+
+		warehouseResource.setVulcanBatchEngineImportTaskResource(
+			_vulcanBatchEngineImportTaskResource);
 	}
 
 	private void _populateResourceContext(
@@ -297,8 +438,13 @@ public class Mutation {
 		warehouseItemResource.setContextUser(_user);
 		warehouseItemResource.setGroupLocalService(_groupLocalService);
 		warehouseItemResource.setRoleLocalService(_roleLocalService);
+
+		warehouseItemResource.setVulcanBatchEngineImportTaskResource(
+			_vulcanBatchEngineImportTaskResource);
 	}
 
+	private static ComponentServiceObjects<ReplenishmentItemResource>
+		_replenishmentItemResourceComponentServiceObjects;
 	private static ComponentServiceObjects<WarehouseResource>
 		_warehouseResourceComponentServiceObjects;
 	private static ComponentServiceObjects<WarehouseItemResource>
@@ -313,5 +459,7 @@ public class Mutation {
 	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
 	private UriInfo _uriInfo;
 	private com.liferay.portal.kernel.model.User _user;
+	private VulcanBatchEngineImportTaskResource
+		_vulcanBatchEngineImportTaskResource;
 
 }

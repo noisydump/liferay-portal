@@ -45,7 +45,7 @@ renderResponse.setTitle((fileEntryType == null) ? LanguageUtil.get(request, "new
 	<portlet:param name="mvcRenderCommandName" value="/document_library/edit_file_entry_type" />
 </portlet:actionURL>
 
-<aui:form action="<%= editFileEntryTypeURL %>" cssClass="edit-metadata-type-form" method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "saveStructure();" %>'>
+<aui:form action="<%= editFileEntryTypeURL %>" cssClass="edit-metadata-type-form" method="post" name="fm" onSubmit="event.preventDefault(); ">
 	<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= (fileEntryType == null) ? Constants.ADD : Constants.UPDATE %>" />
 	<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
 	<aui:input name="fileEntryTypeId" type="hidden" value="<%= fileEntryTypeId %>" />
@@ -69,12 +69,11 @@ renderResponse.setTitle((fileEntryType == null) ? LanguageUtil.get(request, "new
 				<li class="tbar-item tbar-item-expand">
 					<aui:input cssClass="form-control-inline" defaultLanguageId="<%= LocaleUtil.toLanguageId(LocaleUtil.getSiteDefault()) %>" label="" name="name" placeholder='<%= LanguageUtil.format(request, "untitled", "structure") %>' wrapperCssClass="article-content-title mb-0" />
 				</li>
-				<li class="tbar-item tbar-item-expand"></li>
 				<li class="tbar-item">
 					<div class="metadata-type-button-row tbar-section text-right">
-						<aui:button cssClass="btn-secondary btn-sm mr-3" href="<%= redirect %>" type="cancel" />
+						<aui:button cssClass="btn-sm mr-3" href="<%= redirect %>" type="cancel" />
 
-						<aui:button cssClass="btn-sm mr-3" type="submit" />
+						<aui:button cssClass="btn-sm mr-3" id="submitButton" type="submit" />
 					</div>
 				</li>
 			</ul>
@@ -98,6 +97,8 @@ renderResponse.setTitle((fileEntryType == null) ? LanguageUtil.get(request, "new
 				dataLayoutInputId="dataLayout"
 				groupId="<%= scopeGroupId %>"
 				namespace="<%= liferayPortletResponse.getNamespace() %>"
+				scopes='<%= SetUtil.fromCollection(Arrays.asList("document-library")) %>'
+				submitButtonId='<%= liferayPortletResponse.getNamespace() + "submitButton" %>'
 			/>
 		</clay:container-fluid>
 	</div>
@@ -116,55 +117,17 @@ renderResponse.setTitle((fileEntryType == null) ? LanguageUtil.get(request, "new
 	servletContext="<%= application %>"
 />
 
-<aui:script>
-	function <portlet:namespace />getInputLocalizedValues(field) {
-		var inputLocalized = Liferay.component('<portlet:namespace />' + field);
-		var localizedValues = {};
-
-		if (inputLocalized) {
-			var translatedLanguages = inputLocalized
-				.get('translatedLanguages')
-				.values();
-
-			translatedLanguages.forEach(function (languageId) {
-				localizedValues[languageId] = inputLocalized.getValue(languageId);
-			});
-		}
-
-		return localizedValues;
-	}
-
-	function <portlet:namespace />saveStructure() {
-		Liferay.componentReady('<portlet:namespace />dataLayoutBuilder').then(
-			function (dataLayoutBuilder) {
-				var name = <portlet:namespace />getInputLocalizedValues('name');
-
-				var description = <portlet:namespace />getInputLocalizedValues(
-					'description'
-				);
-
-				var formData = dataLayoutBuilder.getFormData();
-
-				var dataDefinition = formData.definition;
-
-				dataDefinition.description = description;
-				dataDefinition.name = name;
-
-				var dataLayout = formData.layout;
-
-				dataLayout.description = description;
-				dataLayout.name = name;
-
-				Liferay.Util.postForm(document.<portlet:namespace />fm, {
-					data: {
-						dataDefinition: JSON.stringify(dataDefinition),
-						dataLayout: JSON.stringify(dataLayout),
-					},
-				});
-			}
-		);
-	}
-</aui:script>
+<liferay-frontend:component
+	context='<%=
+		HashMapBuilder.<String, Object>put(
+			"contentTitle", "name"
+		).put(
+			"defaultLanguageId", defaultLanguageId
+		).build()
+	%>'
+	module="document_library/js/data-engine/DataEngineLayoutBuilderHandler.es"
+	servletContext="<%= application %>"
+/>
 
 <%
 if (fileEntryType == null) {

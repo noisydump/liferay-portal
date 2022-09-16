@@ -13,12 +13,12 @@
  */
 
 import {ClayButtonWithIcon} from '@clayui/button';
-import classNames from 'classnames';
 import {
 	useEventListener,
 	useIsMounted,
 	usePrevious,
-} from 'frontend-js-react-web';
+} from '@liferay/frontend-js-react-web';
+import classNames from 'classnames';
 import {cancelDebounce, debounce, fetch} from 'frontend-js-web';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 
@@ -26,7 +26,7 @@ import React, {useCallback, useEffect, useRef, useState} from 'react';
  * Defined ratios for preview sizing.
  */
 const SIZE_RATIOS = {
-	desktop: {
+	'desktop': {
 		height: 9,
 		width: 16,
 	},

@@ -16,6 +16,7 @@ package com.liferay.asset.categories.admin.web.internal.util;
 
 import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetVocabulary;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.servlet.taglib.ui.BreadcrumbEntry;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -55,22 +56,27 @@ public class AssetCategoryUtil {
 
 		BreadcrumbEntry vocabularyBreadcrumbEntry = new BreadcrumbEntry();
 
-		PortletURL portletURL = renderResponse.createRenderURL();
-
-		portletURL.setParameter("mvcPath", "/view.jsp");
-
-		String navigation = ParamUtil.getString(
-			httpServletRequest, "navigation");
-
-		if (Validator.isNotNull(navigation)) {
-			portletURL.setParameter("navigation", navigation);
-		}
-
 		vocabularyBreadcrumbEntry.setTitle(
 			vocabulary.getTitle(themeDisplay.getLocale()));
 
-		portletURL.setParameter(
-			"vocabularyId", String.valueOf(vocabulary.getVocabularyId()));
+		PortletURL portletURL = PortletURLBuilder.createRenderURL(
+			renderResponse
+		).setMVCPath(
+			"/view.jsp"
+		).setNavigation(
+			() -> {
+				String navigation = ParamUtil.getString(
+					httpServletRequest, "navigation");
+
+				if (Validator.isNotNull(navigation)) {
+					return navigation;
+				}
+
+				return null;
+			}
+		).setParameter(
+			"vocabularyId", vocabulary.getVocabularyId()
+		).buildPortletURL();
 
 		vocabularyBreadcrumbEntry.setURL(portletURL.toString());
 

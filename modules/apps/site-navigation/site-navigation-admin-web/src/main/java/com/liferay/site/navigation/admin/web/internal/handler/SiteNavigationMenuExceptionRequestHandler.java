@@ -17,7 +17,7 @@ package com.liferay.site.navigation.admin.web.internal.handler;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
@@ -30,6 +30,7 @@ import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Jürgen Kappler
@@ -45,7 +46,7 @@ public class SiteNavigationMenuExceptionRequestHandler {
 		throws Exception {
 
 		if (_log.isDebugEnabled()) {
-			_log.debug(portalException, portalException);
+			_log.debug(portalException);
 		}
 
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
@@ -60,11 +61,11 @@ public class SiteNavigationMenuExceptionRequestHandler {
 			errorMessage = "please-enter-a-valid-name";
 		}
 		else {
-			_log.error(portalException.getMessage());
+			_log.error(portalException);
 		}
 
 		JSONObject jsonObject = JSONUtil.put(
-			"error", LanguageUtil.get(themeDisplay.getLocale(), errorMessage));
+			"error", _language.get(themeDisplay.getLocale(), errorMessage));
 
 		JSONPortletResponseUtil.writeJSON(
 			actionRequest, actionResponse, jsonObject);
@@ -72,5 +73,8 @@ public class SiteNavigationMenuExceptionRequestHandler {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		SiteNavigationMenuExceptionRequestHandler.class);
+
+	@Reference
+	private Language _language;
 
 }

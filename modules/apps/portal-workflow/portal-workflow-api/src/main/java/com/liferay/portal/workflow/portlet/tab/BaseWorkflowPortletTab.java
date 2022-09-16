@@ -14,6 +14,7 @@
 
 package com.liferay.portal.workflow.portlet.tab;
 
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.servlet.taglib.BaseJSPDynamicInclude;
@@ -30,8 +31,6 @@ import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 
-import javax.servlet.ServletContext;
-
 /**
  * @author Adam Brandizzi
  */
@@ -42,23 +41,22 @@ public abstract class BaseWorkflowPortletTab
 	public PortletURL getSearchURL(
 		RenderRequest renderRequest, RenderResponse renderResponse) {
 
-		PortletURL searchURL = renderResponse.createRenderURL();
+		return PortletURLBuilder.createRenderURL(
+			renderResponse
+		).setMVCPath(
+			"/view.jsp"
+		).setParameter(
+			"groupId",
+			() -> {
+				ThemeDisplay themeDisplay =
+					(ThemeDisplay)renderRequest.getAttribute(
+						WebKeys.THEME_DISPLAY);
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
-		searchURL.setParameter(
-			"groupId", String.valueOf(themeDisplay.getScopeGroupId()));
-
-		searchURL.setParameter("mvcPath", "/view.jsp");
-		searchURL.setParameter("tab", getName());
-
-		return searchURL;
-	}
-
-	@Override
-	public ServletContext getServletContext() {
-		return _servletContext;
+				return themeDisplay.getScopeGroupId();
+			}
+		).setParameter(
+			"tab", getName()
+		).buildPortletURL();
 	}
 
 	@Override
@@ -90,15 +88,7 @@ public abstract class BaseWorkflowPortletTab
 		return _logs.get(clazz);
 	}
 
-	@Override
-	protected void setServletContext(ServletContext servletContext) {
-		_servletContext = servletContext;
-		super.setServletContext(servletContext);
-	}
-
 	private static final Map<Class<? extends BaseWorkflowPortletTab>, Log>
 		_logs = new HashMap<>();
-
-	private ServletContext _servletContext;
 
 }

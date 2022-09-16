@@ -16,6 +16,7 @@ package com.liferay.microblogs.service.base;
 
 import com.liferay.microblogs.model.MicroblogsEntry;
 import com.liferay.microblogs.service.MicroblogsEntryService;
+import com.liferay.microblogs.service.MicroblogsEntryServiceUtil;
 import com.liferay.microblogs.service.persistence.MicroblogsEntryFinder;
 import com.liferay.microblogs.service.persistence.MicroblogsEntryPersistence;
 import com.liferay.portal.aop.AopService;
@@ -24,12 +25,17 @@ import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.service.BaseServiceImpl;
 import com.liferay.portal.kernel.util.PortalUtil;
 
+import java.lang.reflect.Field;
+
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -50,8 +56,13 @@ public abstract class MicroblogsEntryServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>MicroblogsEntryService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.microblogs.service.MicroblogsEntryServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>MicroblogsEntryService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>MicroblogsEntryServiceUtil</code>.
 	 */
+	@Deactivate
+	protected void deactivate() {
+		_setServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -62,6 +73,8 @@ public abstract class MicroblogsEntryServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		microblogsEntryService = (MicroblogsEntryService)aopProxy;
+
+		_setServiceUtilService(microblogsEntryService);
 	}
 
 	/**
@@ -106,6 +119,22 @@ public abstract class MicroblogsEntryServiceBaseImpl
 		}
 	}
 
+	private void _setServiceUtilService(
+		MicroblogsEntryService microblogsEntryService) {
+
+		try {
+			Field field = MicroblogsEntryServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, microblogsEntryService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@Reference
 	protected com.liferay.microblogs.service.MicroblogsEntryLocalService
 		microblogsEntryLocalService;
@@ -122,51 +151,7 @@ public abstract class MicroblogsEntryServiceBaseImpl
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@Reference
-	protected com.liferay.portal.kernel.service.ClassNameLocalService
-		classNameLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.ClassNameService
-		classNameService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.GroupLocalService
-		groupLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.GroupService groupService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.ResourceLocalService
-		resourceLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserService userService;
-
-	@Reference
-	protected
-		com.liferay.portal.kernel.service.UserNotificationEventLocalService
-			userNotificationEventLocalService;
-
-	@Reference
-	protected com.liferay.asset.kernel.service.AssetEntryLocalService
-		assetEntryLocalService;
-
-	@Reference
-	protected com.liferay.asset.kernel.service.AssetEntryService
-		assetEntryService;
-
-	@Reference
-	protected com.liferay.social.kernel.service.SocialActivityLocalService
-		socialActivityLocalService;
-
-	@Reference
-	protected com.liferay.social.kernel.service.SocialActivityService
-		socialActivityService;
+	private static final Log _log = LogFactoryUtil.getLog(
+		MicroblogsEntryServiceBaseImpl.class);
 
 }

@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
@@ -44,7 +45,10 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @generated
  */
 @Generated("")
-@GraphQLName("ContentField")
+@GraphQLName(
+	description = "Represents the value of each field in structured content. Fields can contain different information types (e.g., documents, geolocation, etc.).",
+	value = "ContentField"
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "ContentField")
 public class ContentField implements Serializable {
@@ -53,7 +57,11 @@ public class ContentField implements Serializable {
 		return ObjectMapperUtil.readValue(ContentField.class, json);
 	}
 
-	@Schema
+	public static ContentField unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(ContentField.class, json);
+	}
+
+	@Schema(description = "The field's value.")
 	@Valid
 	public ContentFieldValue getContentFieldValue() {
 		return contentFieldValue;
@@ -79,11 +87,11 @@ public class ContentField implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The field's value.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected ContentFieldValue contentFieldValue;
 
-	@Schema
+	@Schema(description = "The localized field's values.")
 	@Valid
 	public Map<String, ContentFieldValue> getContentFieldValue_i18n() {
 		return contentFieldValue_i18n;
@@ -111,7 +119,7 @@ public class ContentField implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The localized field's values.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Map<String, ContentFieldValue> contentFieldValue_i18n;
 
@@ -203,7 +211,7 @@ public class ContentField implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected String label;
 
-	@Schema
+	@Schema(description = "The localized field's labels.")
 	@Valid
 	public Map<String, String> getLabel_i18n() {
 		return label_i18n;
@@ -229,7 +237,7 @@ public class ContentField implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The localized field's labels.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Map<String, String> label_i18n;
 
@@ -478,15 +486,16 @@ public class ContentField implements Serializable {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.ContentField",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
 	}
 
 	private static boolean _isArray(Object value) {
@@ -512,8 +521,8 @@ public class ContentField implements Serializable {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -544,7 +553,7 @@ public class ContentField implements Serializable {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -552,7 +561,7 @@ public class ContentField implements Serializable {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -560,5 +569,10 @@ public class ContentField implements Serializable {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

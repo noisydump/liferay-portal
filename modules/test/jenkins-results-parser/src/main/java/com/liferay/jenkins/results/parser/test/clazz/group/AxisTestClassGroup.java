@@ -16,13 +16,33 @@ package com.liferay.jenkins.results.parser.test.clazz.group;
 
 import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
 import com.liferay.jenkins.results.parser.Job;
+import com.liferay.jenkins.results.parser.test.clazz.TestClass;
+import com.liferay.jenkins.results.parser.test.clazz.TestClassFactory;
+
+import java.io.File;
 
 import java.util.List;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 /**
  * @author Michael Hashimoto
  */
 public class AxisTestClassGroup extends BaseTestClassGroup {
+
+	public long getAverageDuration() {
+		BatchTestClassGroup batchTestClassGroup = getBatchTestClassGroup();
+
+		long averageDuration = batchTestClassGroup.getAverageOverheadDuration();
+
+		for (TestClass testClass : getTestClasses()) {
+			averageDuration += testClass.getAverageDuration();
+			averageDuration += testClass.getAverageOverheadDuration();
+		}
+
+		return averageDuration;
+	}
 
 	public String getAxisName() {
 		if (_segmentTestClassGroup != null) {
@@ -54,9 +74,35 @@ public class AxisTestClassGroup extends BaseTestClassGroup {
 		return _batchTestClassGroup;
 	}
 
+	public String getDownstreamJobName() {
+		return _batchTestClassGroup.getDownstreamJobName();
+	}
+
 	@Override
 	public Job getJob() {
 		return _batchTestClassGroup.getJob();
+	}
+
+	public JSONObject getJSONObject() {
+		JSONObject jsonObject = new JSONObject();
+
+		jsonObject.put("average_duration", getAverageDuration());
+		jsonObject.put("axis_name", getAxisName());
+
+		JSONArray testClassesJSONArray = new JSONArray();
+
+		jsonObject.put("test_classes", testClassesJSONArray);
+
+		for (TestClass testClass : getTestClasses()) {
+			if (testClass == null) {
+				throw new RuntimeException(
+					"Unable to not find test class in " + getAxisName());
+			}
+
+			testClassesJSONArray.put(testClass.getJSONObject());
+		}
+
+		return jsonObject;
 	}
 
 	public Integer getMinimumSlaveRAM() {
@@ -79,8 +125,51 @@ public class AxisTestClassGroup extends BaseTestClassGroup {
 		return _segmentTestClassGroup;
 	}
 
+	public String getSlaveLabel() {
+		if (_segmentTestClassGroup != null) {
+			return _segmentTestClassGroup.getSlaveLabel();
+		}
+
+		return _batchTestClassGroup.getSlaveLabel();
+	}
+
+	public File getTestBaseDir() {
+		return null;
+	}
+
 	protected AxisTestClassGroup(BatchTestClassGroup batchTestClassGroup) {
 		setBatchTestClassGroup(batchTestClassGroup);
+	}
+
+	protected AxisTestClassGroup(
+		JSONObject jsonObject, SegmentTestClassGroup segmentTestClassGroup) {
+
+		BatchTestClassGroup batchTestClassGroup =
+			segmentTestClassGroup.getBatchTestClassGroup();
+
+		setBatchTestClassGroup(batchTestClassGroup);
+
+		setSegmentTestClassGroup(segmentTestClassGroup);
+
+		JSONArray testClassesJSONArray = jsonObject.getJSONArray(
+			"test_classes");
+
+		if ((testClassesJSONArray == null) || testClassesJSONArray.isEmpty()) {
+			return;
+		}
+
+		for (int i = 0; i < testClassesJSONArray.length(); i++) {
+			JSONObject testClassJSONObject = testClassesJSONArray.getJSONObject(
+				i);
+
+			if (testClassJSONObject == null) {
+				continue;
+			}
+
+			testClasses.add(
+				TestClassFactory.newTestClass(
+					batchTestClassGroup, testClassJSONObject));
+		}
 	}
 
 	protected void setBatchTestClassGroup(

@@ -91,10 +91,11 @@ definition {
 				return false;
 			}
 		''';
-
 		var message = '''Event "${eventName}" with attribute "${attributeName}" and value "${attributeValue}" not fired.''';
 
-		selenium.waitForJavaScript("${javascript}", "${message}", "");
+		selenium.waitForJavaScriptNoError("${javascript}", "${message}", "");
+
+		selenium.verifyJavaScript("${javascript}", "${message}", "");
 	}
 
 }

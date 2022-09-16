@@ -19,34 +19,44 @@ import com.liferay.mail.kernel.model.Filter;
 import com.liferay.mail.kernel.model.MailMessage;
 import com.liferay.mail.kernel.service.MailService;
 import com.liferay.mail.kernel.util.Hook;
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.cluster.Clusterable;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.messaging.DestinationNames;
 import com.liferay.portal.kernel.messaging.MessageBusUtil;
+import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.transaction.TransactionCommitCallbackUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.InfrastructureUtil;
 import com.liferay.portal.kernel.util.MethodHandler;
 import com.liferay.portal.kernel.util.MethodKey;
 import com.liferay.portal.kernel.util.PropertiesUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.util.PrefsPropsUtil;
-import com.liferay.portal.util.PropsValues;
 
 import java.io.IOException;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
 import javax.mail.Authenticator;
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 
+import javax.portlet.PortletPreferences;
+
 /**
  * @author Brian Wing Shun Chan
  */
+@CTAware
 public class MailServiceImpl implements IdentifiableOSGiService, MailService {
 
 	@Override
@@ -54,15 +64,21 @@ public class MailServiceImpl implements IdentifiableOSGiService, MailService {
 		long companyId, long userId, List<Filter> filters,
 		List<String> emailAddresses, boolean leaveCopy) {
 
-		if (_log.isDebugEnabled()) {
-			_log.debug("addForward");
-		}
+		TransactionCommitCallbackUtil.registerCallback(
+			() -> {
+				if (_log.isDebugEnabled()) {
+					_log.debug("addForward");
+				}
 
-		MethodHandler methodHandler = new MethodHandler(
-			_addForwardMethodKey, companyId, userId, filters, emailAddresses,
-			leaveCopy);
+				MethodHandler methodHandler = new MethodHandler(
+					_addForwardMethodKey, companyId, userId, filters,
+					emailAddresses, leaveCopy);
 
-		MessageBusUtil.sendMessage(DestinationNames.MAIL, methodHandler);
+				MessageBusUtil.sendMessage(
+					DestinationNames.MAIL, methodHandler);
+
+				return null;
+			});
 	}
 
 	@Override
@@ -70,15 +86,21 @@ public class MailServiceImpl implements IdentifiableOSGiService, MailService {
 		long companyId, long userId, String password, String firstName,
 		String middleName, String lastName, String emailAddress) {
 
-		if (_log.isDebugEnabled()) {
-			_log.debug("addUser");
-		}
+		TransactionCommitCallbackUtil.registerCallback(
+			() -> {
+				if (_log.isDebugEnabled()) {
+					_log.debug("addUser");
+				}
 
-		MethodHandler methodHandler = new MethodHandler(
-			_addUserMethodKey, companyId, userId, password, firstName,
-			middleName, lastName, emailAddress);
+				MethodHandler methodHandler = new MethodHandler(
+					_addUserMethodKey, companyId, userId, password, firstName,
+					middleName, lastName, emailAddress);
 
-		MessageBusUtil.sendMessage(DestinationNames.MAIL, methodHandler);
+				MessageBusUtil.sendMessage(
+					DestinationNames.MAIL, methodHandler);
+
+				return null;
+			});
 	}
 
 	@Override
@@ -86,45 +108,73 @@ public class MailServiceImpl implements IdentifiableOSGiService, MailService {
 		long companyId, long userId, String emailAddress,
 		String vacationMessage) {
 
-		if (_log.isDebugEnabled()) {
-			_log.debug("addVacationMessage");
-		}
+		TransactionCommitCallbackUtil.registerCallback(
+			() -> {
+				if (_log.isDebugEnabled()) {
+					_log.debug("addVacationMessage");
+				}
 
-		MethodHandler methodHandler = new MethodHandler(
-			_addVacationMessageMethodKey, companyId, userId, emailAddress,
-			vacationMessage);
+				MethodHandler methodHandler = new MethodHandler(
+					_addVacationMessageMethodKey, companyId, userId,
+					emailAddress, vacationMessage);
 
-		MessageBusUtil.sendMessage(DestinationNames.MAIL, methodHandler);
+				MessageBusUtil.sendMessage(
+					DestinationNames.MAIL, methodHandler);
+
+				return null;
+			});
 	}
 
 	@Clusterable
 	@Override
 	public void clearSession() {
-		_session = null;
+		clearSession(CompanyConstants.SYSTEM);
+	}
+
+	@Clusterable
+	@Override
+	public void clearSession(long companyId) {
+		if (companyId == CompanyConstants.SYSTEM) {
+			_sessions.clear();
+		}
+
+		_sessions.remove(companyId);
 	}
 
 	@Override
 	public void deleteEmailAddress(long companyId, long userId) {
-		if (_log.isDebugEnabled()) {
-			_log.debug("deleteEmailAddress");
-		}
+		TransactionCommitCallbackUtil.registerCallback(
+			() -> {
+				if (_log.isDebugEnabled()) {
+					_log.debug("deleteEmailAddress");
+				}
 
-		MethodHandler methodHandler = new MethodHandler(
-			_deleteEmailAddressMethodKey, companyId, userId);
+				MethodHandler methodHandler = new MethodHandler(
+					_deleteEmailAddressMethodKey, companyId, userId);
 
-		MessageBusUtil.sendMessage(DestinationNames.MAIL, methodHandler);
+				MessageBusUtil.sendMessage(
+					DestinationNames.MAIL, methodHandler);
+
+				return null;
+			});
 	}
 
 	@Override
 	public void deleteUser(long companyId, long userId) {
-		if (_log.isDebugEnabled()) {
-			_log.debug("deleteUser");
-		}
+		TransactionCommitCallbackUtil.registerCallback(
+			() -> {
+				if (_log.isDebugEnabled()) {
+					_log.debug("deleteUser");
+				}
 
-		MethodHandler methodHandler = new MethodHandler(
-			_deleteUserMethodKey, companyId, userId);
+				MethodHandler methodHandler = new MethodHandler(
+					_deleteUserMethodKey, companyId, userId);
 
-		MessageBusUtil.sendMessage(DestinationNames.MAIL, methodHandler);
+				MessageBusUtil.sendMessage(
+					DestinationNames.MAIL, methodHandler);
+
+				return null;
+			});
 	}
 
 	@Override
@@ -134,56 +184,54 @@ public class MailServiceImpl implements IdentifiableOSGiService, MailService {
 
 	@Override
 	public Session getSession() {
-		if (_session != null) {
-			return _session;
+		long companyId = CompanyThreadLocal.getCompanyId();
+
+		Session session = _sessions.get(companyId);
+
+		if (session != null) {
+			return session;
 		}
 
-		Session session = InfrastructureUtil.getMailSession();
+		session = InfrastructureUtil.getMailSession();
 
-		if (!PrefsPropsUtil.getBoolean(
-				PropsKeys.MAIL_SESSION_MAIL, PropsValues.MAIL_SESSION_MAIL)) {
+		PortletPreferences companyPortletPreferences =
+			PrefsPropsUtil.getPreferences(companyId);
+		PortletPreferences systemPortletPreferences =
+			PrefsPropsUtil.getPreferences();
 
-			_session = session;
+		Function<String, String> function =
+			(String key) -> companyPortletPreferences.getValue(
+				key,
+				systemPortletPreferences.getValue(key, PropsUtil.get(key)));
 
-			return _session;
+		if (!GetterUtil.getBoolean(
+				function.apply(PropsKeys.MAIL_SESSION_MAIL))) {
+
+			_sessions.put(companyId, session);
+
+			return session;
 		}
 
-		String advancedPropertiesString = PrefsPropsUtil.getString(
-			PropsKeys.MAIL_SESSION_MAIL_ADVANCED_PROPERTIES,
-			PropsValues.MAIL_SESSION_MAIL_ADVANCED_PROPERTIES);
-		String pop3Host = PrefsPropsUtil.getString(
-			PropsKeys.MAIL_SESSION_MAIL_POP3_HOST,
-			PropsValues.MAIL_SESSION_MAIL_POP3_HOST);
-		String pop3Password = PrefsPropsUtil.getString(
-			PropsKeys.MAIL_SESSION_MAIL_POP3_PASSWORD,
-			PropsValues.MAIL_SESSION_MAIL_POP3_PASSWORD);
-		int pop3Port = PrefsPropsUtil.getInteger(
-			PropsKeys.MAIL_SESSION_MAIL_POP3_PORT,
-			PropsValues.MAIL_SESSION_MAIL_POP3_PORT);
-		String pop3User = PrefsPropsUtil.getString(
-			PropsKeys.MAIL_SESSION_MAIL_POP3_USER,
-			PropsValues.MAIL_SESSION_MAIL_POP3_USER);
-		String smtpHost = PrefsPropsUtil.getString(
-			PropsKeys.MAIL_SESSION_MAIL_SMTP_HOST,
-			PropsValues.MAIL_SESSION_MAIL_SMTP_HOST);
-		String smtpPassword = PrefsPropsUtil.getString(
-			PropsKeys.MAIL_SESSION_MAIL_SMTP_PASSWORD,
-			PropsValues.MAIL_SESSION_MAIL_SMTP_PASSWORD);
-		int smtpPort = PrefsPropsUtil.getInteger(
-			PropsKeys.MAIL_SESSION_MAIL_SMTP_PORT,
-			PropsValues.MAIL_SESSION_MAIL_SMTP_PORT);
-		boolean smtpStartTLSEnable = PrefsPropsUtil.getBoolean(
-			PropsKeys.MAIL_SESSION_MAIL_SMTP_STARTTLS_ENABLE,
-			PropsValues.MAIL_SESSION_MAIL_SMTP_STARTTLS_ENABLE);
-		String smtpUser = PrefsPropsUtil.getString(
-			PropsKeys.MAIL_SESSION_MAIL_SMTP_USER,
-			PropsValues.MAIL_SESSION_MAIL_SMTP_USER);
-		String storeProtocol = PrefsPropsUtil.getString(
-			PropsKeys.MAIL_SESSION_MAIL_STORE_PROTOCOL,
-			PropsValues.MAIL_SESSION_MAIL_STORE_PROTOCOL);
-		String transportProtocol = PrefsPropsUtil.getString(
-			PropsKeys.MAIL_SESSION_MAIL_TRANSPORT_PROTOCOL,
-			PropsValues.MAIL_SESSION_MAIL_TRANSPORT_PROTOCOL);
+		String advancedPropertiesString = function.apply(
+			PropsKeys.MAIL_SESSION_MAIL_ADVANCED_PROPERTIES);
+		String pop3Host = function.apply(PropsKeys.MAIL_SESSION_MAIL_POP3_HOST);
+		String pop3Password = function.apply(
+			PropsKeys.MAIL_SESSION_MAIL_POP3_PASSWORD);
+		int pop3Port = GetterUtil.getInteger(
+			function.apply(PropsKeys.MAIL_SESSION_MAIL_POP3_PORT));
+		String pop3User = function.apply(PropsKeys.MAIL_SESSION_MAIL_POP3_USER);
+		String smtpHost = function.apply(PropsKeys.MAIL_SESSION_MAIL_SMTP_HOST);
+		String smtpPassword = function.apply(
+			PropsKeys.MAIL_SESSION_MAIL_SMTP_PASSWORD);
+		int smtpPort = GetterUtil.getInteger(
+			function.apply(PropsKeys.MAIL_SESSION_MAIL_SMTP_PORT));
+		boolean smtpStartTLSEnable = GetterUtil.getBoolean(
+			function.apply(PropsKeys.MAIL_SESSION_MAIL_SMTP_STARTTLS_ENABLE));
+		String smtpUser = function.apply(PropsKeys.MAIL_SESSION_MAIL_SMTP_USER);
+		String storeProtocol = function.apply(
+			PropsKeys.MAIL_SESSION_MAIL_STORE_PROTOCOL);
+		String transportProtocol = function.apply(
+			PropsKeys.MAIL_SESSION_MAIL_TRANSPORT_PROTOCOL);
 
 		Properties properties = session.getProperties();
 
@@ -250,12 +298,12 @@ public class MailServiceImpl implements IdentifiableOSGiService, MailService {
 		}
 		catch (IOException ioException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(ioException, ioException);
+				_log.warn(ioException);
 			}
 		}
 
 		if (smtpAuth) {
-			_session = Session.getInstance(
+			session = Session.getInstance(
 				properties,
 				new Authenticator() {
 
@@ -269,59 +317,137 @@ public class MailServiceImpl implements IdentifiableOSGiService, MailService {
 				});
 		}
 		else {
-			_session = Session.getInstance(properties);
+			session = Session.getInstance(properties);
 		}
 
-		return _session;
+		if (_log.isDebugEnabled()) {
+			session.setDebug(true);
+
+			properties.list(System.out);
+		}
+
+		_sessions.put(companyId, session);
+
+		return session;
+	}
+
+	public Session getSession(Account account) {
+		Session session = Session.getInstance(_getProperties(account));
+
+		if (_log.isDebugEnabled()) {
+			session.setDebug(true);
+
+			Properties sessionProperties = session.getProperties();
+
+			sessionProperties.list(System.out);
+		}
+
+		return session;
 	}
 
 	@Override
 	public void sendEmail(MailMessage mailMessage) {
-		if (_log.isDebugEnabled()) {
-			_log.debug("sendEmail");
-		}
+		TransactionCommitCallbackUtil.registerCallback(
+			() -> {
+				if (_log.isDebugEnabled()) {
+					_log.debug("sendEmail");
+				}
 
-		MessageBusUtil.sendMessage(DestinationNames.MAIL, mailMessage);
+				MessageBusUtil.sendMessage(DestinationNames.MAIL, mailMessage);
+
+				return null;
+			});
 	}
 
 	@Override
 	public void updateBlocked(
 		long companyId, long userId, List<String> blocked) {
 
-		if (_log.isDebugEnabled()) {
-			_log.debug("updateBlocked");
-		}
+		TransactionCommitCallbackUtil.registerCallback(
+			() -> {
+				if (_log.isDebugEnabled()) {
+					_log.debug("updateBlocked");
+				}
 
-		MethodHandler methodHandler = new MethodHandler(
-			_updateBlockedMethodKey, companyId, userId, blocked);
+				MethodHandler methodHandler = new MethodHandler(
+					_updateBlockedMethodKey, companyId, userId, blocked);
 
-		MessageBusUtil.sendMessage(DestinationNames.MAIL, methodHandler);
+				MessageBusUtil.sendMessage(
+					DestinationNames.MAIL, methodHandler);
+
+				return null;
+			});
 	}
 
 	@Override
 	public void updateEmailAddress(
 		long companyId, long userId, String emailAddress) {
 
-		if (_log.isDebugEnabled()) {
-			_log.debug("updateEmailAddress");
-		}
+		TransactionCommitCallbackUtil.registerCallback(
+			() -> {
+				if (_log.isDebugEnabled()) {
+					_log.debug("updateEmailAddress");
+				}
 
-		MethodHandler methodHandler = new MethodHandler(
-			_updateEmailAddressMethodKey, companyId, userId, emailAddress);
+				MethodHandler methodHandler = new MethodHandler(
+					_updateEmailAddressMethodKey, companyId, userId,
+					emailAddress);
 
-		MessageBusUtil.sendMessage(DestinationNames.MAIL, methodHandler);
+				MessageBusUtil.sendMessage(
+					DestinationNames.MAIL, methodHandler);
+
+				return null;
+			});
 	}
 
 	@Override
 	public void updatePassword(long companyId, long userId, String password) {
-		if (_log.isDebugEnabled()) {
-			_log.debug("updatePassword");
+		TransactionCommitCallbackUtil.registerCallback(
+			() -> {
+				if (_log.isDebugEnabled()) {
+					_log.debug("updatePassword");
+				}
+
+				MethodHandler methodHandler = new MethodHandler(
+					_updatePasswordMethodKey, companyId, userId, password);
+
+				MessageBusUtil.sendMessage(
+					DestinationNames.MAIL, methodHandler);
+
+				return null;
+			});
+	}
+
+	private Properties _getProperties(Account account) {
+		Properties properties = new Properties();
+
+		String protocol = account.getProtocol();
+
+		properties.setProperty("mail.transport.protocol", protocol);
+		properties.setProperty("mail." + protocol + ".host", account.getHost());
+		properties.setProperty(
+			"mail." + protocol + ".port", String.valueOf(account.getPort()));
+
+		if (account.isRequiresAuthentication()) {
+			properties.setProperty("mail." + protocol + ".auth", "true");
+			properties.setProperty(
+				"mail." + protocol + ".user", account.getUser());
+			properties.setProperty(
+				"mail." + protocol + ".password", account.getPassword());
 		}
 
-		MethodHandler methodHandler = new MethodHandler(
-			_updatePasswordMethodKey, companyId, userId, password);
+		if (account.isSecure()) {
+			properties.setProperty(
+				"mail." + protocol + ".socketFactory.class",
+				"javax.net.ssl.SSLSocketFactory");
+			properties.setProperty(
+				"mail." + protocol + ".socketFactory.fallback", "false");
+			properties.setProperty(
+				"mail." + protocol + ".socketFactory.port",
+				String.valueOf(account.getPort()));
+		}
 
-		MessageBusUtil.sendMessage(DestinationNames.MAIL, methodHandler);
+		return properties;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -347,6 +473,6 @@ public class MailServiceImpl implements IdentifiableOSGiService, MailService {
 	private static final MethodKey _updatePasswordMethodKey = new MethodKey(
 		Hook.class, "updatePassword", long.class, long.class, String.class);
 
-	private Session _session;
+	private final Map<Long, Session> _sessions = new ConcurrentHashMap<>();
 
 }

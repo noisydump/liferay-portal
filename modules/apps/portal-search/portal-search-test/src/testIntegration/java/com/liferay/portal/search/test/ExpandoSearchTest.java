@@ -34,9 +34,6 @@ import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistry;
 import com.liferay.portal.kernel.search.QueryConfig;
 import com.liferay.portal.kernel.search.SearchContext;
-import com.liferay.portal.kernel.security.permission.PermissionChecker;
-import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
-import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
@@ -53,6 +50,7 @@ import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portlet.documentlibrary.util.DLSearcher;
 import com.liferay.portlet.expando.util.test.ExpandoTestUtil;
 
@@ -84,17 +82,13 @@ public class ExpandoSearchTest {
 	@ClassRule
 	@Rule
 	public static final AggregateTestRule aggregateTestRule =
-		new LiferayIntegrationTestRule();
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(),
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
 		_indexer = _indexerRegistry.getIndexer(User.class);
-
-		_originalPermissionChecker =
-			PermissionThreadLocal.getPermissionChecker();
-
-		PermissionThreadLocal.setPermissionChecker(
-			PermissionCheckerFactoryUtil.create(TestPropsValues.getUser()));
 	}
 
 	@After
@@ -104,8 +98,6 @@ public class ExpandoSearchTest {
 		}
 
 		_fileEntries.clear();
-
-		PermissionThreadLocal.setPermissionChecker(_originalPermissionChecker);
 	}
 
 	@Test
@@ -305,13 +297,10 @@ public class ExpandoSearchTest {
 	protected FileEntry addDLFileEntry(String columnName, String columnValue)
 		throws Exception {
 
-		ServiceContext serviceContext = getServiceContext(
-			columnName, columnValue);
-
 		FileEntry fileEntry = DLAppTestUtil.addFileEntryWithWorkflow(
 			TestPropsValues.getUserId(), TestPropsValues.getGroupId(), 0,
 			StringPool.BLANK, RandomTestUtil.randomString(), true,
-			serviceContext);
+			getServiceContext(columnName, columnValue));
 
 		_fileEntries.add(fileEntry);
 
@@ -395,10 +384,7 @@ public class ExpandoSearchTest {
 	protected User addUser(String columnName, String columnValue)
 		throws Exception {
 
-		ServiceContext serviceContext = getServiceContext(
-			columnName, columnValue);
-
-		return addUser(serviceContext);
+		return addUser(getServiceContext(columnName, columnValue));
 	}
 
 	protected void assertNoHits(String keywords) throws Exception {
@@ -502,7 +488,6 @@ public class ExpandoSearchTest {
 	private final List<FileEntry> _fileEntries = new ArrayList<>();
 
 	private Indexer<User> _indexer;
-	private PermissionChecker _originalPermissionChecker;
 
 	@DeleteAfterTestRun
 	private final List<User> _users = new ArrayList<>();

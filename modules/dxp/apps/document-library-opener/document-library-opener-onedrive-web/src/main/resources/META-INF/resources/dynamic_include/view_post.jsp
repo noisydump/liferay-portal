@@ -27,7 +27,7 @@
 		dialogTitle
 	) {
 		Liferay.componentReady('<portlet:namespace />DocumentLibraryOpener').then(
-			function (openerOnedrive) {
+			(openerOnedrive) => {
 				openerOnedrive.createWithName({
 					dialogTitle: dialogTitle,
 					formSubmitURL: formSubmitURL,
@@ -36,12 +36,9 @@
 		);
 	};
 
-	window.<portlet:namespace />editOfficeDocument = function (
-		formSubmitURL,
-		dialogTitle
-	) {
+	window.<portlet:namespace />editOfficeDocument = function (formSubmitURL) {
 		Liferay.componentReady('<portlet:namespace />DocumentLibraryOpener').then(
-			function (openerOnedrive) {
+			(openerOnedrive) => {
 				openerOnedrive.edit({
 					formSubmitURL: formSubmitURL,
 				});
@@ -50,15 +47,15 @@
 	};
 
 	<%
-	String dialogMessage = (String)request.getAttribute("dialogMessage");
 	String oneDriveBackgroundTaskStatusURL = (String)request.getAttribute("oneDriveBackgroundTaskStatusURL");
 	%>
 
 	<c:if test="<%= oneDriveBackgroundTaskStatusURL != null %>">
 		Liferay.componentReady('<portlet:namespace />DocumentLibraryOpener').then(
-			function (openerOnedrive) {
+			(openerOnedrive) => {
 				openerOnedrive.open({
-					dialogMessage: '<%= dialogMessage %>',
+					dialogMessage:
+						'<%= (String)request.getAttribute("dialogMessage") %>',
 					statusURL: '<%= oneDriveBackgroundTaskStatusURL %>',
 				});
 			}

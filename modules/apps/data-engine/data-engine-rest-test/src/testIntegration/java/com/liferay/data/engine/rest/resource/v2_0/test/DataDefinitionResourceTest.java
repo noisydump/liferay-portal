@@ -23,31 +23,30 @@ import com.liferay.data.engine.rest.client.pagination.Page;
 import com.liferay.data.engine.rest.client.pagination.Pagination;
 import com.liferay.data.engine.rest.client.permission.Permission;
 import com.liferay.data.engine.rest.client.problem.Problem;
+import com.liferay.data.engine.rest.resource.exception.DataLayoutValidationException;
+import com.liferay.data.engine.rest.resource.v2_0.DataDefinitionResource;
 import com.liferay.data.engine.rest.resource.v2_0.test.util.DataDefinitionTestUtil;
 import com.liferay.data.engine.rest.resource.v2_0.test.util.DataLayoutTestUtil;
+import com.liferay.data.engine.rest.resource.v2_0.test.util.content.type.TestDataDefinitionContentType;
+import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.test.rule.DataGuard;
+import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.junit.Assert;
 import org.junit.Rule;
@@ -228,8 +227,7 @@ public class DataDefinitionResourceTest
 						).put(
 							"siteKey",
 							StringBundler.concat(
-								StringPool.QUOTE,
-								String.valueOf(dataDefinition.getSiteId()),
+								StringPool.QUOTE, dataDefinition.getSiteId(),
 								StringPool.QUOTE)
 						).build(),
 						getGraphQLFields())),
@@ -250,7 +248,7 @@ public class DataDefinitionResourceTest
 					new GraphQLField(
 						"dataDefinitionByContentTypeByDataDefinitionKey",
 						HashMapBuilder.<String, Object>put(
-							"contentType", "\"native-object\""
+							"contentType", "\"" + _CONTENT_TYPE + "\""
 						).put(
 							"dataDefinitionKey",
 							"\"" + RandomTestUtil.randomString() + "\""
@@ -268,31 +266,11 @@ public class DataDefinitionResourceTest
 	public void testPostDataDefinitionByContentType() throws Exception {
 		super.testPostDataDefinitionByContentType();
 
-		// Allow invalid field languages for app builder
-
-		DataDefinition fieldsetDataDefinition =
-			dataDefinitionResource.postSiteDataDefinitionByContentType(
-				testGroup.getGroupId(), _CONTENT_TYPE,
-				DataDefinition.toDTO(
-					DataDefinitionTestUtil.read("data-definition-basic.json")));
-
-		DataDefinition dataDefinition = DataDefinition.toDTO(
-			DataDefinitionTestUtil.read(
-				"data-definition-with-invalid-field-languages.json"));
-
-		for (DataDefinitionField dataDefinitionField :
-				dataDefinition.getDataDefinitionFields()) {
-
-			Map<String, Object> customProperties =
-				dataDefinitionField.getCustomProperties();
-
-			customProperties.put(
-				"ddmStructureId", fieldsetDataDefinition.getId());
-		}
+		// Allow invalid field languages
 
 		assertValid(
-			dataDefinitionResource.postSiteDataDefinitionByContentType(
-				testGroup.getGroupId(), "app-builder", dataDefinition));
+			DataDefinitionTestUtil.addDataDefinitionWithFieldset(
+				testGroup.getGroupId()));
 
 		// MustNotDuplicateFieldName
 
@@ -308,7 +286,7 @@ public class DataDefinitionResourceTest
 		catch (Problem.ProblemException problemException) {
 			Problem problem = problemException.getProblem();
 
-			Assert.assertEquals("text2", problem.getDetail());
+			Assert.assertNull(problem.getDetail());
 			Assert.assertEquals("BAD_REQUEST", problem.getStatus());
 			Assert.assertEquals("MustNotDuplicateFieldName", problem.getType());
 		}
@@ -346,7 +324,7 @@ public class DataDefinitionResourceTest
 		catch (Problem.ProblemException problemException) {
 			Problem problem = problemException.getProblem();
 
-			Assert.assertEquals("es_ES", problem.getDetail());
+			Assert.assertNull(problem.getDetail());
 			Assert.assertEquals("BAD_REQUEST", problem.getStatus());
 			Assert.assertEquals(
 				"MustSetDefaultLocaleAsAvailableLocale", problem.getType());
@@ -354,9 +332,11 @@ public class DataDefinitionResourceTest
 
 		// MustSetFields
 
+		_testDataDefinitionContentType.setAllowEmptyDataDefinition(false);
+
 		try {
 			dataDefinitionResource.postDataDefinitionByContentType(
-				"journal",
+				"test",
 				DataDefinition.toDTO(
 					DataDefinitionTestUtil.read(
 						"data-definition-must-set-fields.json")));
@@ -370,8 +350,10 @@ public class DataDefinitionResourceTest
 			Assert.assertEquals("MustSetFields", problem.getType());
 		}
 
+		_testDataDefinitionContentType.setAllowEmptyDataDefinition(true);
+
 		dataDefinitionResource.postDataDefinitionByContentType(
-			"app-builder",
+			"test",
 			DataDefinition.toDTO(
 				DataDefinitionTestUtil.read(
 					"data-definition-must-set-fields.json")));
@@ -390,7 +372,7 @@ public class DataDefinitionResourceTest
 		catch (Problem.ProblemException problemException) {
 			Problem problem = problemException.getProblem();
 
-			Assert.assertEquals("text1", problem.getDetail());
+			Assert.assertNull(problem.getDetail());
 			Assert.assertEquals("BAD_REQUEST", problem.getStatus());
 			Assert.assertEquals("MustSetFieldType", problem.getType());
 		}
@@ -410,36 +392,9 @@ public class DataDefinitionResourceTest
 		catch (Problem.ProblemException problemException) {
 			Problem problem = problemException.getProblem();
 
-			Assert.assertEquals("select1", problem.getDetail());
+			Assert.assertNull(problem.getDetail());
 			Assert.assertEquals("BAD_REQUEST", problem.getStatus());
 			Assert.assertEquals("MustSetOptionsForField", problem.getType());
-		}
-
-		// MustSetValidAvailableLocalesForProperty
-
-		try {
-			dataDefinitionResource.postDataDefinitionByContentType(
-				_CONTENT_TYPE,
-				DataDefinition.toDTO(
-					DataDefinitionTestUtil.read(
-						"data-definition-must-set-valid-available-locales-" +
-							"for-property.json")));
-
-			Assert.fail("An exception must be thrown");
-		}
-		catch (Problem.ProblemException problemException) {
-			Problem problem = problemException.getProblem();
-
-			Assert.assertEquals(
-				JSONUtil.put(
-					"fieldName", "select1"
-				).put(
-					"property", "options"
-				).toJSONString(),
-				problem.getDetail());
-			Assert.assertEquals("BAD_REQUEST", problem.getStatus());
-			Assert.assertEquals(
-				"MustSetValidAvailableLocalesForProperty", problem.getType());
 		}
 
 		// MustSetValidCharactersForFieldName
@@ -457,7 +412,7 @@ public class DataDefinitionResourceTest
 		catch (Problem.ProblemException problemException) {
 			Problem problem = problemException.getProblem();
 
-			Assert.assertEquals("#name*", problem.getDetail());
+			Assert.assertNull(problem.getDetail());
 			Assert.assertEquals("BAD_REQUEST", problem.getStatus());
 			Assert.assertEquals(
 				"MustSetValidCharactersForFieldName", problem.getType());
@@ -478,7 +433,7 @@ public class DataDefinitionResourceTest
 		catch (Problem.ProblemException problemException) {
 			Problem problem = problemException.getProblem();
 
-			Assert.assertEquals("text$#", problem.getDetail());
+			Assert.assertNull(problem.getDetail());
 			Assert.assertEquals("BAD_REQUEST", problem.getStatus());
 			Assert.assertEquals(
 				"MustSetValidCharactersForFieldType", problem.getType());
@@ -497,7 +452,7 @@ public class DataDefinitionResourceTest
 		catch (Problem.ProblemException problemException) {
 			Problem problem = problemException.getProblem();
 
-			Assert.assertEquals("INVALID", problem.getDetail());
+			Assert.assertNull(problem.getDetail());
 			Assert.assertEquals("BAD_REQUEST", problem.getStatus());
 			Assert.assertEquals("MustSetValidContentType", problem.getType());
 		}
@@ -534,14 +489,14 @@ public class DataDefinitionResourceTest
 		catch (Problem.ProblemException problemException) {
 			Problem problem = problemException.getProblem();
 
+			Assert.assertNull(problem.getDetail());
 			Assert.assertEquals("BAD_REQUEST", problem.getStatus());
 			Assert.assertEquals("MustSetValidType", problem.getType());
-			Assert.assertEquals("string", problem.getDetail());
 		}
 
 		// Provide default layout name when none is informed
 
-		dataDefinition =
+		DataDefinition dataDefinition =
 			dataDefinitionResource.postSiteDataDefinitionByContentType(
 				testGroup.getGroupId(), _CONTENT_TYPE,
 				DataDefinition.toDTO(
@@ -551,6 +506,42 @@ public class DataDefinitionResourceTest
 		DataLayout dataLayout = dataDefinition.getDefaultDataLayout();
 
 		Assert.assertEquals(dataDefinition.getName(), dataLayout.getName());
+	}
+
+	@Override
+	@Test
+	public void testPostSiteDataDefinitionByContentType() throws Exception {
+		super.testPostSiteDataDefinitionByContentType();
+
+		Group group = GroupTestUtil.addGroup();
+
+		DataDefinitionResource.Builder dataDefinitionResourcedBuilder =
+			DataDefinitionResource.builder();
+
+		DataDefinitionResource dataDefinitionResource =
+			dataDefinitionResourcedBuilder.user(
+				TestPropsValues.getUser()
+			).build();
+
+		try {
+			dataDefinitionResource.postSiteDataDefinitionByContentType(
+				group.getGroupId(), _CONTENT_TYPE,
+				com.liferay.data.engine.rest.dto.v2_0.DataDefinition.toDTO(
+					DataDefinitionTestUtil.read(
+						"data-definition-invalid-row-size.json")));
+
+			Assert.fail("An exception must be thrown");
+		}
+		catch (DataLayoutValidationException.InvalidRowSize
+					dataLayoutValidationException) {
+
+			Assert.assertEquals(
+				0,
+				_ddmStructureLocalService.getStructuresCount(
+					group.getGroupId(),
+					_portal.getClassNameId(
+						TestDataDefinitionContentType.class)));
+		}
 	}
 
 	@Override
@@ -579,39 +570,6 @@ public class DataDefinitionResourceTest
 
 		assertEquals(randomDataDefinition, getDataDefinition);
 		assertValid(getDataDefinition);
-
-		// MustNotRemoveNativeFields
-
-		try {
-			DataDefinition userDataDefinition = _getUserDataDefinition();
-
-			List<DataDefinitionField> dataDefinitionFields = ListUtil.fromArray(
-				userDataDefinition.getDataDefinitionFields());
-
-			Stream<DataDefinitionField> stream = dataDefinitionFields.stream();
-
-			userDataDefinition.setDataDefinitionFields(
-				stream.filter(
-					dataDefinitionField -> !StringUtil.equals(
-						dataDefinitionField.getName(), "emailAddress")
-				).collect(
-					Collectors.toList()
-				).toArray(
-					new DataDefinitionField[0]
-				));
-
-			dataDefinitionResource.putDataDefinition(
-				userDataDefinition.getId(), userDataDefinition);
-
-			Assert.fail("An exception must be thrown");
-		}
-		catch (Problem.ProblemException problemException) {
-			Problem problem = problemException.getProblem();
-
-			Assert.assertEquals("emailAddress", problem.getDetail());
-			Assert.assertEquals("BAD_REQUEST", problem.getStatus());
-			Assert.assertEquals("MustNotRemoveNativeField", problem.getType());
-		}
 	}
 
 	@Rule
@@ -742,6 +700,14 @@ public class DataDefinitionResourceTest
 	}
 
 	@Override
+	protected DataDefinition testPatchDataDefinition_addDataDefinition()
+		throws Exception {
+
+		return dataDefinitionResource.postSiteDataDefinitionByContentType(
+			testGroup.getGroupId(), _CONTENT_TYPE, randomDataDefinition());
+	}
+
+	@Override
 	protected DataDefinition
 			testPostDataDefinitionByContentType_addDataDefinition(
 				DataDefinition dataDefinition)
@@ -770,7 +736,8 @@ public class DataDefinitionResourceTest
 	}
 
 	@Override
-	protected DataDefinition testPutDataDefinitionPermission_addDataDefinition()
+	protected DataDefinition
+			testPutDataDefinitionPermissionsPage_addDataDefinition()
 		throws Exception {
 
 		return dataDefinitionResource.postSiteDataDefinitionByContentType(
@@ -782,7 +749,8 @@ public class DataDefinitionResourceTest
 		throws Exception {
 
 		DataDefinition dataDefinition = DataDefinition.toDTO(
-			DataDefinitionTestUtil.read("data-definition.json"));
+			DataDefinitionTestUtil.read(
+				"data-definition-with-fields-group.json"));
 
 		dataDefinition.setDescription(
 			HashMapBuilder.<String, Object>put(
@@ -799,25 +767,6 @@ public class DataDefinitionResourceTest
 		dataDefinition.setSiteId(testGroup.getGroupId());
 
 		return dataDefinition;
-	}
-
-	private DataDefinition _getUserDataDefinition() throws Exception {
-		Page<DataDefinition> dataDefinitionPage =
-			dataDefinitionResource.
-				getDataDefinitionByContentTypeContentTypePage(
-					"native-object", null, Pagination.of(1, 2), null);
-
-		Collection<DataDefinition> dataDefinitions =
-			dataDefinitionPage.getItems();
-
-		Stream<DataDefinition> stream = dataDefinitions.stream();
-
-		Optional<DataDefinition> dataDefinitionOptional = stream.filter(
-			dataDefinition -> StringUtil.equalsIgnoreCase(
-				dataDefinition.getDataDefinitionKey(), User.class.getName())
-		).findFirst();
-
-		return dataDefinitionOptional.get();
 	}
 
 	private void _testGetSiteDataDefinitionsPage(
@@ -850,12 +799,18 @@ public class DataDefinitionResourceTest
 		dataDefinitionResource.deleteDataDefinition(dataDefinition.getId());
 	}
 
-	private static final String _CONTENT_TYPE = "app-builder-fieldset";
+	private static final String _CONTENT_TYPE = "test";
 
 	@Inject(type = DataEngineNativeObjectTracker.class)
 	private DataEngineNativeObjectTracker _dataEngineNativeObjectTracker;
 
+	@Inject
+	private DDMStructureLocalService _ddmStructureLocalService;
+
 	@Inject(type = Portal.class)
 	private Portal _portal;
+
+	@Inject
+	private TestDataDefinitionContentType _testDataDefinitionContentType;
 
 }

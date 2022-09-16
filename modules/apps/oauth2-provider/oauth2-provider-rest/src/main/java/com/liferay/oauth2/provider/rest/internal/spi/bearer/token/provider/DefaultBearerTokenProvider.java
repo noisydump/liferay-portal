@@ -33,8 +33,7 @@ import org.osgi.service.component.annotations.ConfigurationPolicy;
 @Component(
 	configurationPid = "com.liferay.oauth2.provider.rest.internal.spi.bearer.token.provider.configuration.DefaultBearerTokenProviderConfiguration",
 	configurationPolicy = ConfigurationPolicy.OPTIONAL, immediate = true,
-	property = {"name=default", "token.format=opaque"},
-	service = BearerTokenProvider.class
+	property = "name=default", service = BearerTokenProvider.class
 )
 public class DefaultBearerTokenProvider implements BearerTokenProvider {
 
@@ -50,24 +49,22 @@ public class DefaultBearerTokenProvider implements BearerTokenProvider {
 
 	@Override
 	public void onBeforeCreate(AccessToken accessToken) {
-		String tokenKey = generateTokenKey(
-			_defaultBearerTokenProviderConfiguration.accessTokenKeyByteSize());
-
-		accessToken.setTokenKey(tokenKey);
-
 		accessToken.setExpiresIn(
 			_defaultBearerTokenProviderConfiguration.accessTokenExpiresIn());
+		accessToken.setTokenKey(
+			generateTokenKey(
+				_defaultBearerTokenProviderConfiguration.
+					accessTokenKeyByteSize()));
 	}
 
 	@Override
 	public void onBeforeCreate(RefreshToken refreshToken) {
-		String tokenKey = generateTokenKey(
-			_defaultBearerTokenProviderConfiguration.refreshTokenKeyByteSize());
-
-		refreshToken.setTokenKey(tokenKey);
-
 		refreshToken.setExpiresIn(
 			_defaultBearerTokenProviderConfiguration.refreshTokenExpiresIn());
+		refreshToken.setTokenKey(
+			generateTokenKey(
+				_defaultBearerTokenProviderConfiguration.
+					refreshTokenKeyByteSize()));
 	}
 
 	@Activate
@@ -108,11 +105,9 @@ public class DefaultBearerTokenProvider implements BearerTokenProvider {
 
 		long issuedAtMillis = issuedAt * 1000;
 
-		if (issuedAtMillis > System.currentTimeMillis()) {
-			return false;
-		}
+		if ((issuedAtMillis > System.currentTimeMillis()) ||
+			((issuedAtMillis + expiresInMillis) < System.currentTimeMillis())) {
 
-		if ((issuedAtMillis + expiresInMillis) < System.currentTimeMillis()) {
 			return false;
 		}
 

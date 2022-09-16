@@ -19,7 +19,7 @@
 <liferay-ui:icon
 	id="viewResourcesButton"
 	message="view-source"
-	url="javascript:;"
+	url="javascript:void(0);"
 />
 
 <%
@@ -32,7 +32,7 @@ JournalArticle article = (JournalArticle)request.getAttribute(WebKeys.JOURNAL_AR
 	);
 
 	if (viewResourcesButton) {
-		viewResourcesButton.addEventListener('click', function (event) {
+		viewResourcesButton.addEventListener('click', (event) => {
 			Liferay.Util.openModal({
 				title:
 					'<%= HtmlUtil.escapeJS(HtmlUtil.escape(article.getTitle(themeDisplay.getLocale()))) %>',

@@ -21,30 +21,28 @@ String catalogNavigationItem = ParamUtil.getString(request, "catalogNavigationIt
 
 CPDefinitionsDisplayContext cpDefinitionsDisplayContext = (CPDefinitionsDisplayContext)request.getAttribute(WebKeys.PORTLET_DISPLAY_CONTEXT);
 
-PortletURL portletURL = cpDefinitionsDisplayContext.getPortletURL();
-
-request.setAttribute("view.jsp-portletURL", portletURL);
+request.setAttribute("view.jsp-portletURL", cpDefinitionsDisplayContext.getPortletURL());
 %>
 
 <%@ include file="/navbar_definitions.jspf" %>
 
-<div class="pt-4" id="<portlet:namespace />productDefinitionsContainer">
-	<aui:form action="<%= portletURL.toString() %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="fm">
-		<aui:input name="<%= Constants.CMD %>" type="hidden" />
-		<aui:input name="redirect" type="hidden" value="<%= portletURL.toString() %>" />
+<div id="<portlet:namespace />productDefinitionsContainer">
+	<aui:form action="<%= cpDefinitionsDisplayContext.getPortletURL() %>" method="post" name="fm">
+		<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.DELETE %>" />
+		<aui:input name="redirect" type="hidden" value="<%= String.valueOf(cpDefinitionsDisplayContext.getPortletURL()) %>" />
 		<aui:input name="deleteCPDefinitionIds" type="hidden" />
 
-		<clay:headless-data-set-display
+		<frontend-data-set:headless-display
 			apiURL="/o/headless-commerce-admin-catalog/v1.0/products?nestedFields=skus,catalog"
-			clayDataSetActionDropdownItems="<%= cpDefinitionsDisplayContext.getClayDataSetActionDropdownItems() %>"
+			bulkActionDropdownItems="<%= cpDefinitionsDisplayContext.getBulkActionDropdownItems() %>"
 			creationMenu="<%= cpDefinitionsDisplayContext.getCreationMenu() %>"
-			formId="fm"
-			id="<%= CommerceProductDataSetConstants.COMMERCE_DATA_SET_KEY_PRODUCT_DEFINITIONS %>"
+			fdsActionDropdownItems="<%= cpDefinitionsDisplayContext.getFDSActionDropdownItems() %>"
+			formName="fm"
+			id="<%= CommerceProductFDSNames.PRODUCT_DEFINITIONS %>"
 			itemsPerPage="<%= 10 %>"
-			namespace="<%= liferayPortletResponse.getNamespace() %>"
-			pageNumber="<%= 1 %>"
-			portletURL="<%= portletURL %>"
-			style="stacked"
+			selectedItemsKey="id"
+			selectionType="multiple"
+			style="fluid"
 		/>
 	</aui:form>
 </div>

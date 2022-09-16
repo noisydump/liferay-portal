@@ -67,16 +67,15 @@ CPPriceRangeFacetsDisplayContext cpPriceRangeFacetsDisplayContext = (CPPriceRang
 						FacetCollector facetCollector = facet.getFacetCollector();
 
 						List<TermCollector> termCollectors = facetCollector.getTermCollectors();
-
-						if (!termCollectors.isEmpty()) {
 						%>
 
+						<c:if test="<%= !termCollectors.isEmpty() %>">
 							<aui:form method="post" name='<%= "assetEntriesFacetForm_" + facet.getFieldName() %>'>
 								<aui:input cssClass="facet-parameter-name" name="facet-parameter-name" type="hidden" value="<%= facet.getFieldName() %>" />
 								<aui:input cssClass="start-parameter-name" name="start-parameter-name" type="hidden" value="<%= cpPriceRangeFacetsDisplayContext.getPaginationStartParameterName() %>" />
 
 								<aui:fieldset>
-									<ul class="asset-type list-unstyled">
+									<ul class="list-unstyled">
 
 									<%
 									int i = 0;
@@ -86,25 +85,27 @@ CPPriceRangeFacetsDisplayContext cpPriceRangeFacetsDisplayContext = (CPPriceRang
 									%>
 
 									<li class="facet-value">
-										<label class="facet-checkbox-label" for="<portlet:namespace />term_<%= facet.getFieldName() + i %>">
-											<input
-												class="facet-term"
-												data-term-id="<%= termCollector.getTerm() %>"
-												id="<portlet:namespace />term_<%= facet.getFieldName() + i %>"
-												name="<portlet:namespace />term_<%= facet.getFieldName() + i %>"
-												onChange="Liferay.Search.FacetUtil.changeSelection(event);"
-												type="checkbox"
-												<%= cpPriceRangeFacetsDisplayContext.isCPPriceRangeValueSelected(facet.getFieldName(), termCollector.getTerm()) ? "checked" : "" %>
-											/>
+										<div class="custom-checkbox custom-control">
+											<label class="facet-checkbox-label" for="<portlet:namespace />term_<%= facet.getFieldName() + i %>">
+												<input
+													class="custom-control-input facet-term"
+													data-term-id="<%= HtmlUtil.escapeAttribute(termCollector.getTerm()) %>"
+													id="<portlet:namespace />term_<%= facet.getFieldName() + i %>"
+													name="<portlet:namespace />term_<%= facet.getFieldName() + i %>"
+													onChange="Liferay.Search.FacetUtil.changeSelection(event);"
+													type="checkbox"
+													<%= cpPriceRangeFacetsDisplayContext.isCPPriceRangeValueSelected(facet.getFieldName(), termCollector.getTerm()) ? "checked" : "" %>
+												/>
 
-											<span class="term-name">
-												<%= cpPriceRangeFacetsDisplayContext.getPriceRangeLabel(termCollector.getTerm()) %>
-											</span>
+												<span class="custom-control-label term-name <%= cpPriceRangeFacetsDisplayContext.isCPPriceRangeValueSelected(facet.getFieldName(), termCollector.getTerm()) ? "facet-term-selected" : "facet-term-unselected" %>">
+													<span class="custom-control-label-text"><%= cpPriceRangeFacetsDisplayContext.getPriceRangeLabel(termCollector.getTerm()) %></span>
+												</span>
 
-											<small class="term-count">
-												(<%= termCollector.getFrequency() %>)
-											</small>
-										</label>
+												<small class="term-count">
+													(<%= termCollector.getFrequency() %>)
+												</small>
+											</label>
+										</div>
 									</li>
 
 									<%
@@ -113,11 +114,7 @@ CPPriceRangeFacetsDisplayContext cpPriceRangeFacetsDisplayContext = (CPPriceRang
 
 								</aui:fieldset>
 							</aui:form>
-
-						<%
-						}
-						%>
-
+						</c:if>
 					</c:when>
 					<c:otherwise>
 						<div class="alert alert-info">
@@ -128,56 +125,27 @@ CPPriceRangeFacetsDisplayContext cpPriceRangeFacetsDisplayContext = (CPPriceRang
 
 				<c:if test="<%= cpPriceRangeFacetsDisplayContext.showInputRange() %>">
 					<div class="mt-3 row">
-						<aui:input cssClass="price-range-input" label="<%= StringPool.BLANK %>" min="0" name="minimum" prefix="<%= cpPriceRangeFacetsDisplayContext.getCurrentCommerceCurrencySymbol() %>" type="number" value="<%= min %>" wrapperCssClass="col-md-5 price-range-input-wrapper" />
+						<aui:input cssClass="price-range-input" label="<%= StringPool.BLANK %>" min="0" name="minimum" prefix="<%= HtmlUtil.escape(cpPriceRangeFacetsDisplayContext.getCurrentCommerceCurrencySymbol()) %>" type="number" value="<%= min %>" wrapperCssClass="col-md-5 price-range-input-wrapper" />
 
 						<span class="mt-auto price-range-seperator text-center">-</span>
 
-						<aui:input cssClass="price-range-input" label="<%= StringPool.BLANK %>" name="maximum" prefix="<%= cpPriceRangeFacetsDisplayContext.getCurrentCommerceCurrencySymbol() %>" type="number" value="<%= max %>" wrapperCssClass="col-md-5 price-range-input-wrapper" />
+						<aui:input cssClass="price-range-input" label="<%= StringPool.BLANK %>" name="maximum" prefix="<%= HtmlUtil.escape(cpPriceRangeFacetsDisplayContext.getCurrentCommerceCurrencySymbol()) %>" type="number" value="<%= max %>" wrapperCssClass="col-md-5 price-range-input-wrapper" />
 
 						<div class="col-md-3 ml-2 p-0">
-							<button class="btn btn-secondary price-range-btn" onclick="<%= liferayPortletResponse.getNamespace() + "submitPriceRange();" %>"><liferay-ui:message key="go" /></button>
+							<button class="btn btn-secondary price-range-btn" id="<portlet:namespace />priceRangeButton"><liferay-ui:message key="go" /></button>
 						</div>
 					</div>
-
-					<aui:script>
-						Liferay.provide(window, '<portlet:namespace />submitPriceRange', function () {
-							var max = document.getElementById('<portlet:namespace />maximum').value;
-
-							if (max == '') {
-								max = <%= Double.MAX_VALUE %>;
-							}
-
-							var min = document.getElementById('<portlet:namespace />minimum').value;
-
-							if (min == '' || min < 0) {
-								min = 0;
-							}
-
-							if (Number(min) > Number(max)) {
-								var tempMin = max;
-								max = min;
-								min = tempMin;
-							}
-
-							var url = new URL(window.location.href);
-
-							var queryString = url.search;
-
-							var searchParams = new URLSearchParams(queryString);
-
-							searchParams.set('basePrice', '[ ' + min + ' TO ' + max + ' ]');
-							searchParams.set('max', max);
-							searchParams.set('min', min);
-
-							url.search = searchParams;
-
-							window.location.href = url.toString();
-						});
-					</aui:script>
 				</c:if>
 			</liferay-ui:panel>
 		</liferay-ui:panel-container>
-
-		<aui:script use="liferay-search-facet-util"></aui:script>
 	</c:otherwise>
 </c:choose>
+
+<liferay-frontend:component
+	context='<%=
+		HashMapBuilder.<String, Object>put(
+			"maxValue", Double.MAX_VALUE
+		).build()
+	%>'
+	module="js/price_range_facets/view"
+/>

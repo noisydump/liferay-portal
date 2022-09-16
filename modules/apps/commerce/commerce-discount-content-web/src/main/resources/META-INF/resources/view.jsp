@@ -38,16 +38,11 @@ if (commerceOrder != null) {
 
 		<%
 		CommerceDiscountValidatorException commerceDiscountValidatorException = (CommerceDiscountValidatorException)errorException;
-
-		if (commerceDiscountValidatorException != null) {
 		%>
 
+		<c:if test="<%= commerceDiscountValidatorException != null %>">
 			<liferay-ui:message key="<%= commerceDiscountValidatorException.getLocalizedMessage() %>" />
-
-		<%
-		}
-		%>
-
+		</c:if>
 	</liferay-ui:error>
 
 	<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
@@ -65,7 +60,7 @@ if (commerceOrder != null) {
 			<div class="coupon-code-body">
 				<h3 class="d-inline"><%= HtmlUtil.escape(couponCode) %></h3>
 
-				<a class="d-inline" href="javascript:;" id="<portlet:namespace />couponCodeIconRemove">
+				<a class="d-inline" href="javascript:void(0);" id="<portlet:namespace />couponCodeIconRemove">
 					<liferay-ui:icon
 						icon="times"
 						markupView="lexicon"
@@ -75,9 +70,7 @@ if (commerceOrder != null) {
 			</div>
 
 			<aui:script use="aui-base">
-				A.one('#<portlet:namespace />couponCodeIconRemove').on('click', function (
-					event
-				) {
+				A.one('#<portlet:namespace />couponCodeIconRemove').on('click', (event) => {
 					event.preventDefault();
 
 					submitForm(document.<portlet:namespace />fm);

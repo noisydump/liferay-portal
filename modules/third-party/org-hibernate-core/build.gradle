@@ -10,6 +10,7 @@ sourceCompatibility = "1.6"
 targetCompatibility = "1.6"
 
 dependencies {
+	compile group: "org.hibernate", name: "hibernate-commons-annotations", version: "3.2.0.Final"
 	compile group: "org.hibernate", name: "hibernate-core", optional, version: "3.6.10.Final"
 }
 
@@ -38,12 +39,20 @@ patch {
 	fileNames "org/hibernate/cache/UpdateTimestampsCache.java"
 	fileNames "org/hibernate/cfg/Configuration.java"
 	fileNames "org/hibernate/cfg/SettingsFactory.java"
+	fileNames "org/hibernate/dialect/Dialect.java"
 	fileNames "org/hibernate/engine/jdbc/BlobProxy.java"
 	fileNames "org/hibernate/engine/jdbc/ClobProxy.java"
 	fileNames "org/hibernate/engine/jdbc/NClobProxy.java"
 	fileNames "org/hibernate/engine/jdbc/SerializableBlobProxy.java"
 	fileNames "org/hibernate/engine/jdbc/SerializableClobProxy.java"
 	fileNames "org/hibernate/intercept/FieldInterceptionHelper.java"
+	fileNames "org/hibernate/sql/Delete.java"
+	fileNames "org/hibernate/sql/Insert.java"
+	fileNames "org/hibernate/sql/InsertSelect.java"
+	fileNames "org/hibernate/sql/QuerySelect.java"
+	fileNames "org/hibernate/sql/Select.java"
+	fileNames "org/hibernate/sql/SimpleSelect.java"
+	fileNames "org/hibernate/sql/Update.java"
 	fileNames "org/hibernate/util/ReflectHelper.java"
 
 	originalLibModuleName = "hibernate-core"

@@ -15,8 +15,11 @@
 package com.liferay.notifications.web.internal.portlet.configuration.icon;
 
 import com.liferay.notifications.web.internal.constants.NotificationsPortletKeys;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringBundler;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.configuration.icon.BasePortletConfigurationIcon;
@@ -32,6 +35,7 @@ import javax.portlet.PortletURL;
 import javax.portlet.WindowStateException;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Sergio González
@@ -46,7 +50,7 @@ public class DeliveryPortletConfigurationIcon
 
 	@Override
 	public String getMessage(PortletRequest portletRequest) {
-		return LanguageUtil.get(
+		return _language.get(
 			getResourceBundle(getLocale(portletRequest)), "configuration");
 	}
 
@@ -75,13 +79,10 @@ public class DeliveryPortletConfigurationIcon
 		sb.append("_', portletId: '");
 		sb.append(portletDisplay.getId());
 		sb.append("', title: '");
-		sb.append(LanguageUtil.get(themeDisplay.getLocale(), "configuration"));
+		sb.append(_language.get(themeDisplay.getLocale(), "configuration"));
 		sb.append("', url: '");
-
-		PortletURL deliveryURL = getDeliveryURL(portletRequest);
-
-		sb.append(HtmlUtil.escapeJS(deliveryURL.toString()));
-
+		sb.append(
+			HtmlUtil.escapeJS(String.valueOf(_getDeliveryURL(portletRequest))));
 		sb.append("'}); return false;");
 
 		return sb.toString();
@@ -91,9 +92,7 @@ public class DeliveryPortletConfigurationIcon
 	public String getURL(
 		PortletRequest portletRequest, PortletResponse portletResponse) {
 
-		PortletURL deliveryURL = getDeliveryURL(portletRequest);
-
-		return deliveryURL.toString();
+		return String.valueOf(_getDeliveryURL(portletRequest));
 	}
 
 	@Override
@@ -111,20 +110,31 @@ public class DeliveryPortletConfigurationIcon
 		return false;
 	}
 
-	protected PortletURL getDeliveryURL(PortletRequest portletRequest) {
-		PortletURL portletURL = PortletURLFactoryUtil.create(
-			portletRequest, NotificationsPortletKeys.NOTIFICATIONS,
-			PortletRequest.RENDER_PHASE);
-
-		portletURL.setParameter("mvcPath", "/notifications/configuration.jsp");
+	private PortletURL _getDeliveryURL(PortletRequest portletRequest) {
+		PortletURL portletURL = PortletURLBuilder.create(
+			PortletURLFactoryUtil.create(
+				portletRequest, NotificationsPortletKeys.NOTIFICATIONS,
+				PortletRequest.RENDER_PHASE)
+		).setMVCPath(
+			"/notifications/configuration.jsp"
+		).buildPortletURL();
 
 		try {
 			portletURL.setWindowState(LiferayWindowState.POP_UP);
 		}
 		catch (WindowStateException windowStateException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(windowStateException);
+			}
 		}
 
 		return portletURL;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		DeliveryPortletConfigurationIcon.class);
+
+	@Reference
+	private Language _language;
 
 }

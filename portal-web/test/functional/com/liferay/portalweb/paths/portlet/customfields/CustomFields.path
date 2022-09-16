@@ -2,13 +2,17 @@
 <head>
 <title>CustomFields</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">CustomFields</td></tr>
 </thead>
+
 <tbody>
+
 <!--RESOURCE_TABLE-->
+
 <tr>
 	<td>RESOURCE_TABLE_RESOURCE_LINK</td>
 	<td>//tr[contains(.,'${key_resourceName}')]/td[1]//a</td>
@@ -27,6 +31,21 @@
 <tr>
 	<td>CUSTOM_INPUT_FIELD_DATA_TYPE</td>
 	<td>//select[contains(@id,'dataType')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>CUSTOM_BOOLEAN_DEFAULT_VALUE</td>
+	<td>//select[contains(@id,'defaultValue')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>CUSTOM_FIELDS_ADVANCED_PROPERTIES</td>
+	<td>//fieldset[contains(@id,'advanced-properties')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>CUSTOM_FIELDS_FIELD_NAME_LOCALIZATION</td>
+	<td>//fieldset[contains(@id,'advanced-properties')]</td>
 	<td></td>
 </tr>
 </tbody>

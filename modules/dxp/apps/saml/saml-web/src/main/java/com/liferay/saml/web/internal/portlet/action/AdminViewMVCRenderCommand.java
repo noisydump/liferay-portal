@@ -23,8 +23,6 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.saml.constants.SamlPortletKeys;
 import com.liferay.saml.constants.SamlWebKeys;
-import com.liferay.saml.persistence.model.SamlIdpSpConnection;
-import com.liferay.saml.persistence.model.SamlSpIdpConnection;
 import com.liferay.saml.persistence.service.SamlIdpSpConnectionLocalService;
 import com.liferay.saml.persistence.service.SamlSpIdpConnectionLocalService;
 import com.liferay.saml.runtime.certificate.CertificateTool;
@@ -33,7 +31,6 @@ import com.liferay.saml.runtime.configuration.SamlProviderConfigurationHelper;
 import com.liferay.saml.runtime.metadata.LocalEntityManager;
 import com.liferay.saml.web.internal.display.context.GeneralTabDefaultViewDisplayContext;
 
-import java.util.List;
 import java.util.Map;
 
 import javax.portlet.PortletURL;
@@ -77,14 +74,14 @@ public class AdminViewMVCRenderCommand implements MVCRenderCommand {
 			httpServletRequest, "tabs1", "general");
 
 		if (tabs1.equals("general")) {
-			renderGeneralTab(renderRequest, renderResponse);
+			_renderGeneralTab(renderRequest);
 		}
 		else if (tabs1.equals("identity-provider-connections")) {
-			renderViewIdentityProviderConnections(
+			_renderViewIdentityProviderConnections(
 				httpServletRequest, renderRequest, renderResponse);
 		}
 		else if (tabs1.equals("service-provider-connections")) {
-			renderViewServiceProviderConnections(
+			_renderViewServiceProviderConnections(
 				httpServletRequest, renderRequest, renderResponse);
 		}
 
@@ -97,9 +94,7 @@ public class AdminViewMVCRenderCommand implements MVCRenderCommand {
 			SamlConfiguration.class, properties);
 	}
 
-	protected void renderGeneralTab(
-		RenderRequest renderRequest, RenderResponse renderResponse) {
-
+	private void _renderGeneralTab(RenderRequest renderRequest) {
 		String entityId = _localEntityManager.getLocalEntityId();
 
 		renderRequest.setAttribute(SamlWebKeys.SAML_ENTITY_ID, entityId);
@@ -123,7 +118,7 @@ public class AdminViewMVCRenderCommand implements MVCRenderCommand {
 			SamlWebKeys.SAML_CERTIFICATE_TOOL, _certificateTool);
 	}
 
-	protected void renderViewIdentityProviderConnections(
+	private void _renderViewIdentityProviderConnections(
 		HttpServletRequest httpServletRequest, RenderRequest renderRequest,
 		RenderResponse renderResponse) {
 
@@ -136,24 +131,19 @@ public class AdminViewMVCRenderCommand implements MVCRenderCommand {
 			SearchContainer.DEFAULT_DELTA, renderResponse.createRenderURL(),
 			null, null);
 
-		List<SamlSpIdpConnection> samlSpIdpConnections =
+		renderRequest.setAttribute(
+			SamlWebKeys.SAML_SP_IDP_CONNECTIONS,
 			_samlSpIdpConnectionLocalService.getSamlSpIdpConnections(
 				themeDisplay.getCompanyId(), searchContainer.getStart(),
-				searchContainer.getEnd());
-
-		renderRequest.setAttribute(
-			SamlWebKeys.SAML_SP_IDP_CONNECTIONS, samlSpIdpConnections);
-
-		int samlSpIdpConnectionsCount =
-			_samlSpIdpConnectionLocalService.getSamlSpIdpConnectionsCount(
-				themeDisplay.getCompanyId());
+				searchContainer.getEnd()));
 
 		renderRequest.setAttribute(
 			SamlWebKeys.SAML_SP_IDP_CONNECTIONS_COUNT,
-			samlSpIdpConnectionsCount);
+			_samlSpIdpConnectionLocalService.getSamlSpIdpConnectionsCount(
+				themeDisplay.getCompanyId()));
 	}
 
-	protected void renderViewServiceProviderConnections(
+	private void _renderViewServiceProviderConnections(
 		HttpServletRequest httpServletRequest, RenderRequest renderRequest,
 		RenderResponse renderResponse) {
 
@@ -171,13 +161,11 @@ public class AdminViewMVCRenderCommand implements MVCRenderCommand {
 			renderRequest, null, null, SearchContainer.DEFAULT_CUR_PARAM, 0,
 			SearchContainer.DEFAULT_DELTA, portletURL, null, null);
 
-		List<SamlIdpSpConnection> samlIdpSpConnections =
+		renderRequest.setAttribute(
+			SamlWebKeys.SAML_IDP_SP_CONNECTIONS,
 			_samlIdpSpConnectionLocalService.getSamlIdpSpConnections(
 				themeDisplay.getCompanyId(), searchContainer.getStart(),
-				searchContainer.getEnd());
-
-		renderRequest.setAttribute(
-			SamlWebKeys.SAML_IDP_SP_CONNECTIONS, samlIdpSpConnections);
+				searchContainer.getEnd()));
 
 		renderRequest.setAttribute(
 			SamlWebKeys.SAML_IDP_SP_CONNECTIONS_COUNT,

@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
@@ -42,7 +43,10 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @generated
  */
 @Generated("")
-@GraphQLName("RowViewportDefinition")
+@GraphQLName(
+	description = "The definition of the row viewport.",
+	value = "RowViewportDefinition"
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "RowViewportDefinition")
 public class RowViewportDefinition implements Serializable {
@@ -51,7 +55,12 @@ public class RowViewportDefinition implements Serializable {
 		return ObjectMapperUtil.readValue(RowViewportDefinition.class, json);
 	}
 
-	@Schema
+	public static RowViewportDefinition unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(
+			RowViewportDefinition.class, json);
+	}
+
+	@Schema(description = "The number of modules per row.")
 	public Integer getModulesPerRow() {
 		return modulesPerRow;
 	}
@@ -75,11 +84,13 @@ public class RowViewportDefinition implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The number of modules per row.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Integer modulesPerRow;
 
-	@Schema
+	@Schema(
+		description = "A flag that indicates whether the row viewport has reverse order."
+	)
 	public Boolean getReverseOrder() {
 		return reverseOrder;
 	}
@@ -103,11 +114,13 @@ public class RowViewportDefinition implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "A flag that indicates whether the row viewport has reverse order."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Boolean reverseOrder;
 
-	@Schema
+	@Schema(description = "The vertical aligment property of the row viewport.")
 	public String getVerticalAlignment() {
 		return verticalAlignment;
 	}
@@ -131,7 +144,9 @@ public class RowViewportDefinition implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "The vertical aligment property of the row viewport."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String verticalAlignment;
 
@@ -203,15 +218,16 @@ public class RowViewportDefinition implements Serializable {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.RowViewportDefinition",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
 	}
 
 	private static boolean _isArray(Object value) {
@@ -237,8 +253,8 @@ public class RowViewportDefinition implements Serializable {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -269,7 +285,7 @@ public class RowViewportDefinition implements Serializable {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -277,7 +293,7 @@ public class RowViewportDefinition implements Serializable {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -285,5 +301,10 @@ public class RowViewportDefinition implements Serializable {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

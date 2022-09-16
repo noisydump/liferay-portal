@@ -16,6 +16,7 @@ package com.liferay.layout.page.template.service.base;
 
 import com.liferay.layout.page.template.model.LayoutPageTemplateCollection;
 import com.liferay.layout.page.template.service.LayoutPageTemplateCollectionService;
+import com.liferay.layout.page.template.service.LayoutPageTemplateCollectionServiceUtil;
 import com.liferay.layout.page.template.service.persistence.LayoutPageTemplateCollectionPersistence;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
@@ -23,12 +24,17 @@ import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.service.BaseServiceImpl;
 import com.liferay.portal.kernel.util.PortalUtil;
 
+import java.lang.reflect.Field;
+
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -50,8 +56,13 @@ public abstract class LayoutPageTemplateCollectionServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>LayoutPageTemplateCollectionService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.layout.page.template.service.LayoutPageTemplateCollectionServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>LayoutPageTemplateCollectionService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>LayoutPageTemplateCollectionServiceUtil</code>.
 	 */
+	@Deactivate
+	protected void deactivate() {
+		_setServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -64,6 +75,8 @@ public abstract class LayoutPageTemplateCollectionServiceBaseImpl
 	public void setAopProxy(Object aopProxy) {
 		layoutPageTemplateCollectionService =
 			(LayoutPageTemplateCollectionService)aopProxy;
+
+		_setServiceUtilService(layoutPageTemplateCollectionService);
 	}
 
 	/**
@@ -109,6 +122,24 @@ public abstract class LayoutPageTemplateCollectionServiceBaseImpl
 		}
 	}
 
+	private void _setServiceUtilService(
+		LayoutPageTemplateCollectionService
+			layoutPageTemplateCollectionService) {
+
+		try {
+			Field field =
+				LayoutPageTemplateCollectionServiceUtil.class.getDeclaredField(
+					"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, layoutPageTemplateCollectionService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@Reference
 	protected com.liferay.layout.page.template.service.
 		LayoutPageTemplateCollectionLocalService
@@ -125,15 +156,7 @@ public abstract class LayoutPageTemplateCollectionServiceBaseImpl
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@Reference
-	protected com.liferay.portal.kernel.service.ResourceLocalService
-		resourceLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserService userService;
+	private static final Log _log = LogFactoryUtil.getLog(
+		LayoutPageTemplateCollectionServiceBaseImpl.class);
 
 }

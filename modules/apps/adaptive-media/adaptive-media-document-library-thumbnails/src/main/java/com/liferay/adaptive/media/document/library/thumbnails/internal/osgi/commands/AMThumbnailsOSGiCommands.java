@@ -23,10 +23,11 @@ import com.liferay.adaptive.media.image.service.AMImageEntryLocalService;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.document.library.kernel.store.DLStoreUtil;
 import com.liferay.document.library.kernel.util.DLPreviewableProcessor;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.image.ImageBag;
-import com.liferay.portal.kernel.image.ImageToolUtil;
+import com.liferay.portal.kernel.image.ImageTool;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -34,6 +35,7 @@ import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -44,11 +46,9 @@ import java.io.IOException;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -70,149 +70,101 @@ public class AMThumbnailsOSGiCommands {
 		System.out.println("Company ID\t# of thumbnails pending migration");
 		System.out.println("-------------------------------------------------");
 
-		int total = 0;
+		AtomicInteger count = new AtomicInteger();
 
-		for (long companyId : _getCompanyIds(companyIds)) {
-			try {
-				String[] fileNames = DLStoreUtil.getFileNames(
-					companyId, DLPreviewableProcessor.REPOSITORY_ID,
-					DLPreviewableProcessor.THUMBNAIL_PATH);
+		_companyLocalService.forEachCompanyId(
+			companyId -> _countPendingThumbnails(companyId, count));
 
-				int companyTotal = 0;
-
-				for (String fileName : fileNames) {
-
-					// See LPS-70788
-
-					String actualFileName = StringUtil.replace(
-						fileName, StringPool.DOUBLE_SLASH, StringPool.SLASH);
-
-					for (ThumbnailConfiguration thumbnailConfiguration :
-							_getThumbnailConfigurations()) {
-
-						FileVersion fileVersion = _getFileVersion(
-							thumbnailConfiguration.getFileVersionId(
-								actualFileName));
-
-						if (fileVersion != null) {
-							companyTotal += 1;
-						}
-					}
-				}
-
-				System.out.printf("%d\t\t%d%n", companyId, companyTotal);
-
-				total += companyTotal;
-			}
-			catch (Exception exception) {
-				_log.error(exception, exception);
-			}
-		}
-
-		System.out.printf("%nTOTAL: %d%n", total);
+		System.out.printf("%nTOTAL: %d%n", count.get());
 	}
 
 	public void cleanUp(String... companyIds) {
-		for (long companyId : _getCompanyIds(companyIds)) {
-			try {
-				String[] fileNames = DLStoreUtil.getFileNames(
-					companyId, DLPreviewableProcessor.REPOSITORY_ID,
-					DLPreviewableProcessor.THUMBNAIL_PATH);
-
-				for (String fileName : fileNames) {
-
-					// See LPS-70788
-
-					String actualFileName = StringUtil.replace(
-						fileName, "//", StringPool.SLASH);
-
-					for (ThumbnailConfiguration thumbnailConfiguration :
-							_getThumbnailConfigurations()) {
-
-						FileVersion fileVersion = _getFileVersion(
-							thumbnailConfiguration.getFileVersionId(
-								actualFileName));
-
-						if (fileVersion != null) {
-							DLStoreUtil.deleteFile(
-								companyId, DLPreviewableProcessor.REPOSITORY_ID,
-								actualFileName);
-						}
-					}
-				}
-			}
-			catch (Exception exception) {
-				_log.error(exception, exception);
-			}
-		}
+		_companyLocalService.forEachCompanyId(
+			companyId -> _cleanUp(companyId), _getCompanyIds(companyIds));
 	}
 
 	public void migrate(String... companyIds) throws PortalException {
-		for (long companyId : _getCompanyIds(companyIds)) {
-			Collection<AMImageConfigurationEntry> amImageConfigurationEntries =
-				_amImageConfigurationHelper.getAMImageConfigurationEntries(
-					companyId);
+		_companyLocalService.forEachCompanyId(
+			companyId -> _migrate(companyId), _getCompanyIds(companyIds));
+	}
 
-			if (!_isValidConfigurationEntries(amImageConfigurationEntries)) {
-				throw new PortalException(
-					"No valid Adaptive Media configuration found. Please " +
-						"refer to the upgrade documentation for the details.");
-			}
+	private void _cleanUp(long companyId) {
+		try {
+			String[] fileNames = DLStoreUtil.getFileNames(
+				companyId, DLPreviewableProcessor.REPOSITORY_ID,
+				DLPreviewableProcessor.THUMBNAIL_PATH);
 
-			try {
-				String[] fileNames = DLStoreUtil.getFileNames(
-					companyId, DLPreviewableProcessor.REPOSITORY_ID,
-					DLPreviewableProcessor.THUMBNAIL_PATH);
+			for (String fileName : fileNames) {
 
-				for (String fileName : fileNames) {
+				// See LPS-70788
 
-					// See LPS-70788
+				String actualFileName = StringUtil.replace(
+					fileName, "//", StringPool.SLASH);
 
-					String actualFileName = StringUtil.replace(
-						fileName, "//", StringPool.SLASH);
+				for (ThumbnailConfiguration thumbnailConfiguration :
+						_getThumbnailConfigurations()) {
 
-					for (ThumbnailConfiguration thumbnailConfiguration :
-							_getThumbnailConfigurations()) {
+					FileVersion fileVersion = _getFileVersion(
+						thumbnailConfiguration.getFileVersionId(
+							actualFileName));
 
-						Optional<AMImageConfigurationEntry>
-							amImageConfigurationEntryOptional =
-								thumbnailConfiguration.
-									selectMatchingConfigurationEntry(
-										amImageConfigurationEntries);
-
-						amImageConfigurationEntryOptional.ifPresent(
-							amImageConfigurationEntry -> _migrate(
-								actualFileName, amImageConfigurationEntry,
-								thumbnailConfiguration));
+					if (fileVersion != null) {
+						DLStoreUtil.deleteFile(
+							companyId, DLPreviewableProcessor.REPOSITORY_ID,
+							actualFileName);
 					}
 				}
 			}
-			catch (PortalException portalException) {
-				_log.error(portalException, portalException);
-			}
+		}
+		catch (PortalException portalException) {
+			_processException(companyId, portalException);
 		}
 	}
 
-	private Iterable<Long> _getCompanyIds(String... companyIds) {
+	private void _countPendingThumbnails(Long companyId, AtomicInteger count) {
+		try {
+			String[] fileNames = DLStoreUtil.getFileNames(
+				companyId, DLPreviewableProcessor.REPOSITORY_ID,
+				DLPreviewableProcessor.THUMBNAIL_PATH);
+
+			int companyTotal = 0;
+
+			for (String fileName : fileNames) {
+
+				// See LPS-70788
+
+				String actualFileName = StringUtil.replace(
+					fileName, StringPool.DOUBLE_SLASH, StringPool.SLASH);
+
+				for (ThumbnailConfiguration thumbnailConfiguration :
+						_getThumbnailConfigurations()) {
+
+					FileVersion fileVersion = _getFileVersion(
+						thumbnailConfiguration.getFileVersionId(
+							actualFileName));
+
+					if (fileVersion != null) {
+						companyTotal = +1;
+					}
+				}
+			}
+
+			System.out.printf("%d\t\t%d%n", companyId, companyTotal);
+
+			count.addAndGet(companyTotal);
+		}
+		catch (PortalException portalException) {
+			_processException(companyId, portalException);
+		}
+	}
+
+	private long[] _getCompanyIds(String... companyIds) {
 		if (companyIds.length == 0) {
-			List<Company> companies = _companyLocalService.getCompanies();
-
-			Stream<Company> companyStream = companies.stream();
-
-			return companyStream.map(
-				Company::getCompanyId
-			).collect(
-				Collectors.toList()
-			);
+			return ListUtil.toLongArray(
+				_companyLocalService.getCompanies(), Company::getCompanyId);
 		}
 
-		Stream<String> companyIdStream = Arrays.stream(companyIds);
-
-		return companyIdStream.map(
-			Long::parseLong
-		).collect(
-			Collectors.toList()
-		);
+		return ListUtil.toLongArray(Arrays.asList(companyIds), Long::parseLong);
 	}
 
 	private FileVersion _getFileVersion(long fileVersionId) {
@@ -231,7 +183,7 @@ public class AMThumbnailsOSGiCommands {
 			return fileVersion;
 		}
 		catch (PortalException portalException) {
-			_log.error(portalException, portalException);
+			_log.error(portalException);
 
 			return null;
 		}
@@ -275,18 +227,63 @@ public class AMThumbnailsOSGiCommands {
 	private boolean _isValidConfigurationEntries(
 		Collection<AMImageConfigurationEntry> amImageConfigurationEntries) {
 
-		Stream<ThumbnailConfiguration> thumbnailConfigurationStream =
-			Arrays.stream(_getThumbnailConfigurations());
+		for (ThumbnailConfiguration thumbnailConfiguration :
+				_getThumbnailConfigurations()) {
 
-		return thumbnailConfigurationStream.anyMatch(
-			thumbnailConfiguration -> {
-				Stream<AMImageConfigurationEntry>
-					amImageConfigurationEntryStream =
-						amImageConfigurationEntries.stream();
+			for (AMImageConfigurationEntry amImageConfigurationEntry :
+					amImageConfigurationEntries) {
 
-				return amImageConfigurationEntryStream.anyMatch(
-					thumbnailConfiguration::matches);
-			});
+				if (thumbnailConfiguration.matches(amImageConfigurationEntry)) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	private void _migrate(Long companyId) throws PortalException {
+		Collection<AMImageConfigurationEntry> amImageConfigurationEntries =
+			_amImageConfigurationHelper.getAMImageConfigurationEntries(
+				companyId);
+
+		if (!_isValidConfigurationEntries(amImageConfigurationEntries)) {
+			throw new PortalException(
+				"No valid Adaptive Media configuration found. Please refer " +
+					"to the upgrade documentation for the details.");
+		}
+
+		try {
+			String[] fileNames = DLStoreUtil.getFileNames(
+				companyId, DLPreviewableProcessor.REPOSITORY_ID,
+				DLPreviewableProcessor.THUMBNAIL_PATH);
+
+			for (String fileName : fileNames) {
+
+				// See LPS-70788
+
+				String actualFileName = StringUtil.replace(
+					fileName, "//", StringPool.SLASH);
+
+				for (ThumbnailConfiguration thumbnailConfiguration :
+						_getThumbnailConfigurations()) {
+
+					Optional<AMImageConfigurationEntry>
+						amImageConfigurationEntryOptional =
+							thumbnailConfiguration.
+								selectMatchingConfigurationEntry(
+									amImageConfigurationEntries);
+
+					amImageConfigurationEntryOptional.ifPresent(
+						amImageConfigurationEntry -> _migrate(
+							actualFileName, amImageConfigurationEntry,
+							thumbnailConfiguration));
+				}
+			}
+		}
+		catch (PortalException portalException) {
+			_processException(companyId, portalException);
+		}
 	}
 
 	private void _migrate(
@@ -314,7 +311,7 @@ public class AMThumbnailsOSGiCommands {
 				fileVersion.getCompanyId(),
 				DLPreviewableProcessor.REPOSITORY_ID, fileName);
 
-			ImageBag imageBag = ImageToolUtil.read(bytes);
+			ImageBag imageBag = _imageTool.read(bytes);
 
 			RenderedImage renderedImage = imageBag.getRenderedImage();
 
@@ -324,8 +321,18 @@ public class AMThumbnailsOSGiCommands {
 				new UnsyncByteArrayInputStream(bytes), bytes.length);
 		}
 		catch (IOException | PortalException exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 		}
+	}
+
+	private void _processException(
+		Long companyId, PortalException portalException) {
+
+		_log.error(
+			StringBundler.concat(
+				"Processing company ", companyId, " failed with: ",
+				portalException.getMessage()),
+			portalException);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -345,5 +352,8 @@ public class AMThumbnailsOSGiCommands {
 
 	@Reference
 	private DLAppLocalService _dlAppLocalService;
+
+	@Reference
+	private ImageTool _imageTool;
 
 }

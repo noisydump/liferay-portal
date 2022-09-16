@@ -36,11 +36,12 @@ public class AmazonRankingsUtil {
 
 		isbn = isbn.replaceAll(StringPool.DASH, StringPool.BLANK);
 
-		WebCacheItem wci = new AmazonRankingsWebCacheItem(
+		WebCacheItem webCacheItem = new AmazonRankingsWebCacheItem(
 			amazonRankingsConfiguration, isbn);
 
 		return (AmazonRankings)WebCachePoolUtil.get(
-			AmazonRankingsUtil.class.getName() + StringPool.PERIOD + isbn, wci);
+			AmazonRankingsUtil.class.getName() + StringPool.PERIOD + isbn,
+			webCacheItem);
 	}
 
 	public static String getTimestamp() {

@@ -77,10 +77,6 @@ public class JSBundleConfigServlet extends HttpServlet {
 		_componentContext = componentContext;
 	}
 
-	protected JSBundleConfigTracker getJSBundleConfigTracker() {
-		return _jsBundleConfigTracker;
-	}
-
 	@Override
 	protected void service(
 			HttpServletRequest httpServletRequest,
@@ -132,17 +128,12 @@ public class JSBundleConfigServlet extends HttpServlet {
 		printWriter.close();
 	}
 
-	@Reference(unbind = "-")
-	protected void setJSBundleConfigTracker(
-		JSBundleConfigTracker jsBundleConfigTracker) {
-
-		_jsBundleConfigTracker = jsBundleConfigTracker;
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		JSBundleConfigServlet.class);
 
-	private ComponentContext _componentContext;
+	private volatile ComponentContext _componentContext;
+
+	@Reference
 	private JSBundleConfigTracker _jsBundleConfigTracker;
 
 	@Reference

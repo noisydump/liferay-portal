@@ -15,19 +15,25 @@
 package com.liferay.external.reference.service.base;
 
 import com.liferay.external.reference.service.ERUserLocalService;
+import com.liferay.external.reference.service.ERUserLocalServiceUtil;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
 import com.liferay.portal.kernel.util.InfrastructureUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 
+import java.lang.reflect.Field;
+
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -48,8 +54,13 @@ public abstract class ERUserLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>ERUserLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.external.reference.service.ERUserLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>ERUserLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>ERUserLocalServiceUtil</code>.
 	 */
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -60,6 +71,8 @@ public abstract class ERUserLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		erUserLocalService = (ERUserLocalService)aopProxy;
+
+		_setLocalServiceUtilService(erUserLocalService);
 	}
 
 	/**
@@ -96,14 +109,29 @@ public abstract class ERUserLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		ERUserLocalService erUserLocalService) {
+
+		try {
+			Field field = ERUserLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, erUserLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected ERUserLocalService erUserLocalService;
 
 	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
+	private static final Log _log = LogFactoryUtil.getLog(
+		ERUserLocalServiceBaseImpl.class);
 
 }

@@ -20,23 +20,25 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Account;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Contact;
+import com.liferay.portal.kernel.model.Country;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.ListTypeConstants;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.OrganizationConstants;
+import com.liferay.portal.kernel.model.Region;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.auth.FullNameGenerator;
 import com.liferay.portal.kernel.security.auth.FullNameGeneratorFactory;
 import com.liferay.portal.kernel.security.auth.ScreenNameGenerator;
-import com.liferay.portal.kernel.service.AccountLocalServiceUtil;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
+import com.liferay.portal.kernel.service.CountryServiceUtil;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.service.OrganizationLocalServiceUtil;
+import com.liferay.portal.kernel.service.RegionServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.CalendarFactoryUtil;
@@ -94,13 +96,11 @@ public class SetupWizardSampleDataUtil {
 			adminUserEmailAddress, adminUserFirstName, adminUserLastName,
 			resetPassword);
 
-		Account account = company.getAccount();
-
 		Organization organization =
 			OrganizationLocalServiceUtil.addOrganization(
 				defaultUser.getUserId(),
 				OrganizationConstants.DEFAULT_PARENT_ORGANIZATION_ID,
-				account.getLegalName(), true);
+				company.getLegalName(), true);
 
 		GroupLocalServiceUtil.updateFriendlyURL(
 			organization.getGroupId(), "/main");
@@ -108,7 +108,7 @@ public class SetupWizardSampleDataUtil {
 		Layout extranetLayout = LayoutLocalServiceUtil.addLayout(
 			defaultUser.getUserId(), organization.getGroupId(), false,
 			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID,
-			account.getLegalName() + " Extranet", null, null,
+			company.getLegalName() + " Extranet", null, null,
 			LayoutConstants.TYPE_PORTLET, false, "/extranet",
 			new ServiceContext());
 
@@ -119,7 +119,7 @@ public class SetupWizardSampleDataUtil {
 		Layout intranetLayout = LayoutLocalServiceUtil.addLayout(
 			defaultUser.getUserId(), organization.getGroupId(), true,
 			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID,
-			account.getLegalName() + " Intranet", null, null,
+			company.getLegalName() + " Intranet", null, null,
 			LayoutConstants.TYPE_PORTLET, false, "/intranet",
 			new ServiceContext());
 
@@ -154,7 +154,7 @@ public class SetupWizardSampleDataUtil {
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(exception, exception);
+				_log.debug(exception);
 			}
 		}
 
@@ -165,11 +165,10 @@ public class SetupWizardSampleDataUtil {
 			FullNameGenerator fullNameGenerator =
 				FullNameGeneratorFactory.getInstance();
 
-			String fullName = fullNameGenerator.getFullName(
-				firstName, null, lastName);
-
 			String greeting = LanguageUtil.format(
-				locale, "welcome-x", fullName, false);
+				locale, "welcome-x",
+				fullNameGenerator.getFullName(firstName, null, lastName),
+				false);
 
 			Contact contact = adminUser.getContact();
 
@@ -185,8 +184,7 @@ public class SetupWizardSampleDataUtil {
 				adminUser.getUserId(), StringPool.BLANK, StringPool.BLANK,
 				StringPool.BLANK, false, adminUser.getReminderQueryQuestion(),
 				adminUser.getReminderQueryAnswer(), screenName, emailAddress,
-				adminUser.getFacebookId(), adminUser.getOpenId(), false, null,
-				languageId, adminUser.getTimeZoneId(), greeting,
+				false, null, languageId, adminUser.getTimeZoneId(), greeting,
 				adminUser.getComments(), firstName, adminUser.getMiddleName(),
 				lastName, contact.getPrefixId(), contact.getSuffixId(),
 				contact.isMale(), birthdayMonth, birthdayDay, birthdayYear,
@@ -228,12 +226,10 @@ public class SetupWizardSampleDataUtil {
 			String timeZoneId)
 		throws Exception {
 
-		Account account = company.getAccount();
+		company.setName(companyName);
+		company.setLegalName(companyName + ", Inc.");
 
-		account.setName(companyName);
-		account.setLegalName(companyName + ", Inc.");
-
-		AccountLocalServiceUtil.updateAccount(account);
+		company = CompanyLocalServiceUtil.updateCompany(company);
 
 		CompanyLocalServiceUtil.updateDisplay(
 			company.getCompanyId(), languageId, timeZoneId);
@@ -248,8 +244,22 @@ public class SetupWizardSampleDataUtil {
 
 		for (Object[] organizationArray : _ORGANIZATION_ARRAYS) {
 			String name = companyName + organizationArray[0];
-			long regionId = (Long)organizationArray[1];
-			long countryId = (Long)organizationArray[2];
+			String a3 = (String)organizationArray[1];
+			String regionCode = (String)organizationArray[2];
+
+			Country country = CountryServiceUtil.getCountryByA3(a3);
+
+			long countryId = country.getCountryId();
+
+			long regionId = 0;
+
+			if (regionCode != null) {
+				Region region = RegionServiceUtil.getRegion(
+					countryId, regionCode);
+
+				regionId = region.getRegionId();
+			}
+
 			String type = (String)organizationArray[3];
 
 			Organization organization =
@@ -302,9 +312,9 @@ public class SetupWizardSampleDataUtil {
 
 				User user = UserLocalServiceUtil.addUser(
 					0, defaultUser.getCompanyId(), false, "test", "test", false,
-					screenName, emailAddress, 0, null, LocaleUtil.getDefault(),
-					"Test", null, lastName, 0, 0, true, Calendar.JANUARY, 1,
-					1970, null, groupIds, organizationIds, null, null, false,
+					screenName, emailAddress, LocaleUtil.getDefault(), "Test",
+					null, lastName, 0, 0, true, Calendar.JANUARY, 1, 1970, null,
+					groupIds, organizationIds, null, null, false,
 					new ServiceContext());
 
 				user.setPasswordReset(false);
@@ -317,38 +327,44 @@ public class SetupWizardSampleDataUtil {
 
 	private static final Object[][] _ORGANIZATION_ARRAYS = {
 		{
-			"Chicago", 19014L, 19L, OrganizationConstants.TYPE_ORGANIZATION,
+			"Chicago", "USA", "IL", OrganizationConstants.TYPE_ORGANIZATION,
 			"ORD"
 		},
-		{"Consulting", 19005L, 19L, OrganizationConstants.TYPE_ORGANIZATION},
-		{"Dalian", 0L, 2L, OrganizationConstants.TYPE_ORGANIZATION, "DLC"},
-		{"Engineering", 19005L, 19L, OrganizationConstants.TYPE_ORGANIZATION},
-		{"Frankfurt", 0L, 4L, OrganizationConstants.TYPE_ORGANIZATION, "FRA"},
-		{"Hong Kong", 0L, 2L, OrganizationConstants.TYPE_ORGANIZATION, "HKG"},
+		{"Consulting", "USA", "CA", OrganizationConstants.TYPE_ORGANIZATION},
+		{"Dalian", "CHN", null, OrganizationConstants.TYPE_ORGANIZATION, "DLC"},
+		{"Engineering", "USA", "CA", OrganizationConstants.TYPE_ORGANIZATION},
 		{
-			"Kuala Lumpur", 0L, 135L, OrganizationConstants.TYPE_ORGANIZATION,
-			"KUL"
+			"Frankfurt", "DEU", null, OrganizationConstants.TYPE_ORGANIZATION,
+			"FRA"
 		},
 		{
-			"Los Angeles", 19005L, 19L, OrganizationConstants.TYPE_ORGANIZATION,
+			"Hong Kong", "CHN", null, OrganizationConstants.TYPE_ORGANIZATION,
+			"HKG"
+		},
+		{
+			"Kuala Lumpur", "MYS", null,
+			OrganizationConstants.TYPE_ORGANIZATION, "KUL"
+		},
+		{
+			"Los Angeles", "USA", "CA", OrganizationConstants.TYPE_ORGANIZATION,
 			"LAX"
 		},
-		{"Madrid", 0L, 15L, OrganizationConstants.TYPE_ORGANIZATION, "MAD"},
-		{"Marketing", 19005L, 19L, OrganizationConstants.TYPE_ORGANIZATION},
+		{"Madrid", "ESP", null, OrganizationConstants.TYPE_ORGANIZATION, "MAD"},
+		{"Marketing", "USA", "CA", OrganizationConstants.TYPE_ORGANIZATION},
 		{
-			"New York", 19033L, 19L, OrganizationConstants.TYPE_ORGANIZATION,
+			"New York", "USA", "NY", OrganizationConstants.TYPE_ORGANIZATION,
 			"NYC"
 		},
 		{
-			"Saint Paulo", 0L, 48L, OrganizationConstants.TYPE_ORGANIZATION,
+			"Saint Paulo", "BRA", null, OrganizationConstants.TYPE_ORGANIZATION,
 			"GRU"
 		},
-		{"Sales", 19005L, 19L, OrganizationConstants.TYPE_ORGANIZATION},
+		{"Sales", "USA", "CA", OrganizationConstants.TYPE_ORGANIZATION},
 		{
-			"San Francisco", 19005L, 19L,
+			"San Francisco", "USA", "CA",
 			OrganizationConstants.TYPE_ORGANIZATION, "SFO"
 		},
-		{"Support", 19005L, 19L, OrganizationConstants.TYPE_ORGANIZATION}
+		{"Support", "USA", "CA", OrganizationConstants.TYPE_ORGANIZATION}
 	};
 
 	private static final Log _log = LogFactoryUtil.getLog(

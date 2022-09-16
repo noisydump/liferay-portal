@@ -28,13 +28,13 @@ import com.liferay.headless.commerce.admin.order.client.pagination.Page;
 import com.liferay.headless.commerce.admin.order.client.pagination.Pagination;
 import com.liferay.headless.commerce.admin.order.client.resource.v1_0.OrderItemResource;
 import com.liferay.headless.commerce.admin.order.client.serdes.v1_0.OrderItemSerDes;
+import com.liferay.petra.function.UnsafeTriConsumer;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
@@ -43,27 +43,30 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
-import com.liferay.portal.test.log.CaptureAppender;
-import com.liferay.portal.test.log.Log4JLoggerTestUtil;
+import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 import java.text.DateFormat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -71,9 +74,7 @@ import javax.annotation.Generated;
 
 import javax.ws.rs.core.MultivaluedHashMap;
 
-import org.apache.commons.beanutils.BeanUtilsBean;
 import org.apache.commons.lang.time.DateUtils;
-import org.apache.log4j.Level;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -187,10 +188,13 @@ public abstract class BaseOrderItemResourceTestCase {
 
 		orderItem.setDeliveryGroup(regex);
 		orderItem.setExternalReferenceCode(regex);
+		orderItem.setFormattedQuantity(regex);
+		orderItem.setOptions(regex);
 		orderItem.setOrderExternalReferenceCode(regex);
 		orderItem.setPrintedNote(regex);
 		orderItem.setSku(regex);
 		orderItem.setSkuExternalReferenceCode(regex);
+		orderItem.setUnitOfMeasure(regex);
 
 		String json = OrderItemSerDes.toJSON(orderItem);
 
@@ -200,10 +204,341 @@ public abstract class BaseOrderItemResourceTestCase {
 
 		Assert.assertEquals(regex, orderItem.getDeliveryGroup());
 		Assert.assertEquals(regex, orderItem.getExternalReferenceCode());
+		Assert.assertEquals(regex, orderItem.getFormattedQuantity());
+		Assert.assertEquals(regex, orderItem.getOptions());
 		Assert.assertEquals(regex, orderItem.getOrderExternalReferenceCode());
 		Assert.assertEquals(regex, orderItem.getPrintedNote());
 		Assert.assertEquals(regex, orderItem.getSku());
 		Assert.assertEquals(regex, orderItem.getSkuExternalReferenceCode());
+		Assert.assertEquals(regex, orderItem.getUnitOfMeasure());
+	}
+
+	@Test
+	public void testGetOrderItemsPage() throws Exception {
+		Page<OrderItem> page = orderItemResource.getOrderItemsPage(
+			null, null, Pagination.of(1, 10), null);
+
+		long totalCount = page.getTotalCount();
+
+		OrderItem orderItem1 = testGetOrderItemsPage_addOrderItem(
+			randomOrderItem());
+
+		OrderItem orderItem2 = testGetOrderItemsPage_addOrderItem(
+			randomOrderItem());
+
+		page = orderItemResource.getOrderItemsPage(
+			null, null, Pagination.of(1, 10), null);
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(orderItem1, (List<OrderItem>)page.getItems());
+		assertContains(orderItem2, (List<OrderItem>)page.getItems());
+		assertValid(page);
+
+		orderItemResource.deleteOrderItem(orderItem1.getId());
+
+		orderItemResource.deleteOrderItem(orderItem2.getId());
+	}
+
+	@Test
+	public void testGetOrderItemsPageWithFilterDateTimeEquals()
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(
+			EntityField.Type.DATE_TIME);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		OrderItem orderItem1 = randomOrderItem();
+
+		orderItem1 = testGetOrderItemsPage_addOrderItem(orderItem1);
+
+		for (EntityField entityField : entityFields) {
+			Page<OrderItem> page = orderItemResource.getOrderItemsPage(
+				null, getFilterString(entityField, "between", orderItem1),
+				Pagination.of(1, 2), null);
+
+			assertEquals(
+				Collections.singletonList(orderItem1),
+				(List<OrderItem>)page.getItems());
+		}
+	}
+
+	@Test
+	public void testGetOrderItemsPageWithFilterDoubleEquals() throws Exception {
+		List<EntityField> entityFields = getEntityFields(
+			EntityField.Type.DOUBLE);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		OrderItem orderItem1 = testGetOrderItemsPage_addOrderItem(
+			randomOrderItem());
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		OrderItem orderItem2 = testGetOrderItemsPage_addOrderItem(
+			randomOrderItem());
+
+		for (EntityField entityField : entityFields) {
+			Page<OrderItem> page = orderItemResource.getOrderItemsPage(
+				null, getFilterString(entityField, "eq", orderItem1),
+				Pagination.of(1, 2), null);
+
+			assertEquals(
+				Collections.singletonList(orderItem1),
+				(List<OrderItem>)page.getItems());
+		}
+	}
+
+	@Test
+	public void testGetOrderItemsPageWithFilterStringEquals() throws Exception {
+		List<EntityField> entityFields = getEntityFields(
+			EntityField.Type.STRING);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		OrderItem orderItem1 = testGetOrderItemsPage_addOrderItem(
+			randomOrderItem());
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		OrderItem orderItem2 = testGetOrderItemsPage_addOrderItem(
+			randomOrderItem());
+
+		for (EntityField entityField : entityFields) {
+			Page<OrderItem> page = orderItemResource.getOrderItemsPage(
+				null, getFilterString(entityField, "eq", orderItem1),
+				Pagination.of(1, 2), null);
+
+			assertEquals(
+				Collections.singletonList(orderItem1),
+				(List<OrderItem>)page.getItems());
+		}
+	}
+
+	@Test
+	public void testGetOrderItemsPageWithPagination() throws Exception {
+		Page<OrderItem> totalPage = orderItemResource.getOrderItemsPage(
+			null, null, null, null);
+
+		int totalCount = GetterUtil.getInteger(totalPage.getTotalCount());
+
+		OrderItem orderItem1 = testGetOrderItemsPage_addOrderItem(
+			randomOrderItem());
+
+		OrderItem orderItem2 = testGetOrderItemsPage_addOrderItem(
+			randomOrderItem());
+
+		OrderItem orderItem3 = testGetOrderItemsPage_addOrderItem(
+			randomOrderItem());
+
+		Page<OrderItem> page1 = orderItemResource.getOrderItemsPage(
+			null, null, Pagination.of(1, totalCount + 2), null);
+
+		List<OrderItem> orderItems1 = (List<OrderItem>)page1.getItems();
+
+		Assert.assertEquals(
+			orderItems1.toString(), totalCount + 2, orderItems1.size());
+
+		Page<OrderItem> page2 = orderItemResource.getOrderItemsPage(
+			null, null, Pagination.of(2, totalCount + 2), null);
+
+		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+		List<OrderItem> orderItems2 = (List<OrderItem>)page2.getItems();
+
+		Assert.assertEquals(orderItems2.toString(), 1, orderItems2.size());
+
+		Page<OrderItem> page3 = orderItemResource.getOrderItemsPage(
+			null, null, Pagination.of(1, totalCount + 3), null);
+
+		assertContains(orderItem1, (List<OrderItem>)page3.getItems());
+		assertContains(orderItem2, (List<OrderItem>)page3.getItems());
+		assertContains(orderItem3, (List<OrderItem>)page3.getItems());
+	}
+
+	@Test
+	public void testGetOrderItemsPageWithSortDateTime() throws Exception {
+		testGetOrderItemsPageWithSort(
+			EntityField.Type.DATE_TIME,
+			(entityField, orderItem1, orderItem2) -> {
+				BeanTestUtil.setProperty(
+					orderItem1, entityField.getName(),
+					DateUtils.addMinutes(new Date(), -2));
+			});
+	}
+
+	@Test
+	public void testGetOrderItemsPageWithSortDouble() throws Exception {
+		testGetOrderItemsPageWithSort(
+			EntityField.Type.DOUBLE,
+			(entityField, orderItem1, orderItem2) -> {
+				BeanTestUtil.setProperty(
+					orderItem1, entityField.getName(), 0.1);
+				BeanTestUtil.setProperty(
+					orderItem2, entityField.getName(), 0.5);
+			});
+	}
+
+	@Test
+	public void testGetOrderItemsPageWithSortInteger() throws Exception {
+		testGetOrderItemsPageWithSort(
+			EntityField.Type.INTEGER,
+			(entityField, orderItem1, orderItem2) -> {
+				BeanTestUtil.setProperty(orderItem1, entityField.getName(), 0);
+				BeanTestUtil.setProperty(orderItem2, entityField.getName(), 1);
+			});
+	}
+
+	@Test
+	public void testGetOrderItemsPageWithSortString() throws Exception {
+		testGetOrderItemsPageWithSort(
+			EntityField.Type.STRING,
+			(entityField, orderItem1, orderItem2) -> {
+				Class<?> clazz = orderItem1.getClass();
+
+				String entityFieldName = entityField.getName();
+
+				Method method = clazz.getMethod(
+					"get" + StringUtil.upperCaseFirstLetter(entityFieldName));
+
+				Class<?> returnType = method.getReturnType();
+
+				if (returnType.isAssignableFrom(Map.class)) {
+					BeanTestUtil.setProperty(
+						orderItem1, entityFieldName,
+						Collections.singletonMap("Aaa", "Aaa"));
+					BeanTestUtil.setProperty(
+						orderItem2, entityFieldName,
+						Collections.singletonMap("Bbb", "Bbb"));
+				}
+				else if (entityFieldName.contains("email")) {
+					BeanTestUtil.setProperty(
+						orderItem1, entityFieldName,
+						"aaa" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()) +
+									"@liferay.com");
+					BeanTestUtil.setProperty(
+						orderItem2, entityFieldName,
+						"bbb" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()) +
+									"@liferay.com");
+				}
+				else {
+					BeanTestUtil.setProperty(
+						orderItem1, entityFieldName,
+						"aaa" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()));
+					BeanTestUtil.setProperty(
+						orderItem2, entityFieldName,
+						"bbb" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()));
+				}
+			});
+	}
+
+	protected void testGetOrderItemsPageWithSort(
+			EntityField.Type type,
+			UnsafeTriConsumer<EntityField, OrderItem, OrderItem, Exception>
+				unsafeTriConsumer)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		OrderItem orderItem1 = randomOrderItem();
+		OrderItem orderItem2 = randomOrderItem();
+
+		for (EntityField entityField : entityFields) {
+			unsafeTriConsumer.accept(entityField, orderItem1, orderItem2);
+		}
+
+		orderItem1 = testGetOrderItemsPage_addOrderItem(orderItem1);
+
+		orderItem2 = testGetOrderItemsPage_addOrderItem(orderItem2);
+
+		for (EntityField entityField : entityFields) {
+			Page<OrderItem> ascPage = orderItemResource.getOrderItemsPage(
+				null, null, Pagination.of(1, 2),
+				entityField.getName() + ":asc");
+
+			assertEquals(
+				Arrays.asList(orderItem1, orderItem2),
+				(List<OrderItem>)ascPage.getItems());
+
+			Page<OrderItem> descPage = orderItemResource.getOrderItemsPage(
+				null, null, Pagination.of(1, 2),
+				entityField.getName() + ":desc");
+
+			assertEquals(
+				Arrays.asList(orderItem2, orderItem1),
+				(List<OrderItem>)descPage.getItems());
+		}
+	}
+
+	protected OrderItem testGetOrderItemsPage_addOrderItem(OrderItem orderItem)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetOrderItemsPage() throws Exception {
+		GraphQLField graphQLField = new GraphQLField(
+			"orderItems",
+			new HashMap<String, Object>() {
+				{
+					put("page", 1);
+					put("pageSize", 10);
+				}
+			},
+			new GraphQLField("items", getGraphQLFields()),
+			new GraphQLField("page"), new GraphQLField("totalCount"));
+
+		JSONObject orderItemsJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/orderItems");
+
+		long totalCount = orderItemsJSONObject.getLong("totalCount");
+
+		OrderItem orderItem1 = testGraphQLGetOrderItemsPage_addOrderItem();
+		OrderItem orderItem2 = testGraphQLGetOrderItemsPage_addOrderItem();
+
+		orderItemsJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/orderItems");
+
+		Assert.assertEquals(
+			totalCount + 2, orderItemsJSONObject.getLong("totalCount"));
+
+		assertContains(
+			orderItem1,
+			Arrays.asList(
+				OrderItemSerDes.toDTOs(
+					orderItemsJSONObject.getString("items"))));
+		assertContains(
+			orderItem2,
+			Arrays.asList(
+				OrderItemSerDes.toDTOs(
+					orderItemsJSONObject.getString("items"))));
+	}
+
+	protected OrderItem testGraphQLGetOrderItemsPage_addOrderItem()
+		throws Exception {
+
+		return testGraphQLOrderItem_addOrderItem();
 	}
 
 	@Test
@@ -261,7 +596,8 @@ public abstract class BaseOrderItemResourceTestCase {
 	public void testGraphQLGetOrderItemByExternalReferenceCode()
 		throws Exception {
 
-		OrderItem orderItem = testGraphQLOrderItem_addOrderItem();
+		OrderItem orderItem =
+			testGraphQLGetOrderItemByExternalReferenceCode_addOrderItem();
 
 		Assert.assertTrue(
 			equals(
@@ -311,9 +647,70 @@ public abstract class BaseOrderItemResourceTestCase {
 				"Object/code"));
 	}
 
+	protected OrderItem
+			testGraphQLGetOrderItemByExternalReferenceCode_addOrderItem()
+		throws Exception {
+
+		return testGraphQLOrderItem_addOrderItem();
+	}
+
 	@Test
 	public void testPatchOrderItemByExternalReferenceCode() throws Exception {
 		Assert.assertTrue(false);
+	}
+
+	@Test
+	public void testPutOrderItemByExternalReferenceCode() throws Exception {
+		OrderItem postOrderItem =
+			testPutOrderItemByExternalReferenceCode_addOrderItem();
+
+		OrderItem randomOrderItem = randomOrderItem();
+
+		OrderItem putOrderItem =
+			orderItemResource.putOrderItemByExternalReferenceCode(
+				postOrderItem.getExternalReferenceCode(), randomOrderItem);
+
+		assertEquals(randomOrderItem, putOrderItem);
+		assertValid(putOrderItem);
+
+		OrderItem getOrderItem =
+			orderItemResource.getOrderItemByExternalReferenceCode(
+				putOrderItem.getExternalReferenceCode());
+
+		assertEquals(randomOrderItem, getOrderItem);
+		assertValid(getOrderItem);
+
+		OrderItem newOrderItem =
+			testPutOrderItemByExternalReferenceCode_createOrderItem();
+
+		putOrderItem = orderItemResource.putOrderItemByExternalReferenceCode(
+			newOrderItem.getExternalReferenceCode(), newOrderItem);
+
+		assertEquals(newOrderItem, putOrderItem);
+		assertValid(putOrderItem);
+
+		getOrderItem = orderItemResource.getOrderItemByExternalReferenceCode(
+			putOrderItem.getExternalReferenceCode());
+
+		assertEquals(newOrderItem, getOrderItem);
+
+		Assert.assertEquals(
+			newOrderItem.getExternalReferenceCode(),
+			putOrderItem.getExternalReferenceCode());
+	}
+
+	protected OrderItem
+			testPutOrderItemByExternalReferenceCode_createOrderItem()
+		throws Exception {
+
+		return randomOrderItem();
+	}
+
+	protected OrderItem testPutOrderItemByExternalReferenceCode_addOrderItem()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
@@ -339,7 +736,7 @@ public abstract class BaseOrderItemResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteOrderItem() throws Exception {
-		OrderItem orderItem = testGraphQLOrderItem_addOrderItem();
+		OrderItem orderItem = testGraphQLDeleteOrderItem_addOrderItem();
 
 		Assert.assertTrue(
 			JSONUtil.getValueAsBoolean(
@@ -352,26 +749,25 @@ public abstract class BaseOrderItemResourceTestCase {
 							}
 						})),
 				"JSONObject/data", "Object/deleteOrderItem"));
+		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"orderItem",
+					new HashMap<String, Object>() {
+						{
+							put("id", orderItem.getId());
+						}
+					},
+					new GraphQLField("id"))),
+			"JSONArray/errors");
 
-		try (CaptureAppender captureAppender =
-				Log4JLoggerTestUtil.configureLog4JLogger(
-					"graphql.execution.SimpleDataFetcherExceptionHandler",
-					Level.WARN)) {
+		Assert.assertTrue(errorsJSONArray.length() > 0);
+	}
 
-			JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"orderItem",
-						new HashMap<String, Object>() {
-							{
-								put("id", orderItem.getId());
-							}
-						},
-						new GraphQLField("id"))),
-				"JSONArray/errors");
+	protected OrderItem testGraphQLDeleteOrderItem_addOrderItem()
+		throws Exception {
 
-			Assert.assertTrue(errorsJSONArray.length() > 0);
-		}
+		return testGraphQLOrderItem_addOrderItem();
 	}
 
 	@Test
@@ -392,7 +788,7 @@ public abstract class BaseOrderItemResourceTestCase {
 
 	@Test
 	public void testGraphQLGetOrderItem() throws Exception {
-		OrderItem orderItem = testGraphQLOrderItem_addOrderItem();
+		OrderItem orderItem = testGraphQLGetOrderItem_addOrderItem();
 
 		Assert.assertTrue(
 			equals(
@@ -431,28 +827,57 @@ public abstract class BaseOrderItemResourceTestCase {
 				"Object/code"));
 	}
 
+	protected OrderItem testGraphQLGetOrderItem_addOrderItem()
+		throws Exception {
+
+		return testGraphQLOrderItem_addOrderItem();
+	}
+
 	@Test
 	public void testPatchOrderItem() throws Exception {
 		Assert.assertTrue(false);
 	}
 
 	@Test
+	public void testPutOrderItem() throws Exception {
+		OrderItem postOrderItem = testPutOrderItem_addOrderItem();
+
+		OrderItem randomOrderItem = randomOrderItem();
+
+		OrderItem putOrderItem = orderItemResource.putOrderItem(
+			postOrderItem.getId(), randomOrderItem);
+
+		assertEquals(randomOrderItem, putOrderItem);
+		assertValid(putOrderItem);
+
+		OrderItem getOrderItem = orderItemResource.getOrderItem(
+			putOrderItem.getId());
+
+		assertEquals(randomOrderItem, getOrderItem);
+		assertValid(getOrderItem);
+	}
+
+	protected OrderItem testPutOrderItem_addOrderItem() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testGetOrderByExternalReferenceCodeOrderItemsPage()
 		throws Exception {
-
-		Page<OrderItem> page =
-			orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
-				testGetOrderByExternalReferenceCodeOrderItemsPage_getExternalReferenceCode(),
-				Pagination.of(1, 2));
-
-		Assert.assertEquals(0, page.getTotalCount());
 
 		String externalReferenceCode =
 			testGetOrderByExternalReferenceCodeOrderItemsPage_getExternalReferenceCode();
 		String irrelevantExternalReferenceCode =
 			testGetOrderByExternalReferenceCodeOrderItemsPage_getIrrelevantExternalReferenceCode();
 
-		if ((irrelevantExternalReferenceCode != null)) {
+		Page<OrderItem> page =
+			orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
+				externalReferenceCode, Pagination.of(1, 10));
+
+		Assert.assertEquals(0, page.getTotalCount());
+
+		if (irrelevantExternalReferenceCode != null) {
 			OrderItem irrelevantOrderItem =
 				testGetOrderByExternalReferenceCodeOrderItemsPage_addOrderItem(
 					irrelevantExternalReferenceCode,
@@ -479,7 +904,7 @@ public abstract class BaseOrderItemResourceTestCase {
 				externalReferenceCode, randomOrderItem());
 
 		page = orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
-			externalReferenceCode, Pagination.of(1, 2));
+			externalReferenceCode, Pagination.of(1, 10));
 
 		Assert.assertEquals(2, page.getTotalCount());
 
@@ -575,21 +1000,6 @@ public abstract class BaseOrderItemResourceTestCase {
 
 		assertEquals(randomOrderItem, postOrderItem);
 		assertValid(postOrderItem);
-
-		randomOrderItem = randomOrderItem();
-
-		assertHttpResponseStatusCode(
-			404,
-			orderItemResource.getOrderItemByExternalReferenceCodeHttpResponse(
-				randomOrderItem.getExternalReferenceCode()));
-
-		testPostOrderByExternalReferenceCodeOrderItem_addOrderItem(
-			randomOrderItem);
-
-		assertHttpResponseStatusCode(
-			200,
-			orderItemResource.getOrderItemByExternalReferenceCodeHttpResponse(
-				randomOrderItem.getExternalReferenceCode()));
 	}
 
 	protected OrderItem
@@ -603,15 +1013,15 @@ public abstract class BaseOrderItemResourceTestCase {
 
 	@Test
 	public void testGetOrderIdOrderItemsPage() throws Exception {
-		Page<OrderItem> page = orderItemResource.getOrderIdOrderItemsPage(
-			testGetOrderIdOrderItemsPage_getId(), Pagination.of(1, 2));
-
-		Assert.assertEquals(0, page.getTotalCount());
-
 		Long id = testGetOrderIdOrderItemsPage_getId();
 		Long irrelevantId = testGetOrderIdOrderItemsPage_getIrrelevantId();
 
-		if ((irrelevantId != null)) {
+		Page<OrderItem> page = orderItemResource.getOrderIdOrderItemsPage(
+			id, Pagination.of(1, 10));
+
+		Assert.assertEquals(0, page.getTotalCount());
+
+		if (irrelevantId != null) {
 			OrderItem irrelevantOrderItem =
 				testGetOrderIdOrderItemsPage_addOrderItem(
 					irrelevantId, randomIrrelevantOrderItem());
@@ -634,7 +1044,7 @@ public abstract class BaseOrderItemResourceTestCase {
 			id, randomOrderItem());
 
 		page = orderItemResource.getOrderIdOrderItemsPage(
-			id, Pagination.of(1, 2));
+			id, Pagination.of(1, 10));
 
 		Assert.assertEquals(2, page.getTotalCount());
 
@@ -713,20 +1123,6 @@ public abstract class BaseOrderItemResourceTestCase {
 
 		assertEquals(randomOrderItem, postOrderItem);
 		assertValid(postOrderItem);
-
-		randomOrderItem = randomOrderItem();
-
-		assertHttpResponseStatusCode(
-			404,
-			orderItemResource.getOrderItemByExternalReferenceCodeHttpResponse(
-				randomOrderItem.getExternalReferenceCode()));
-
-		testPostOrderIdOrderItem_addOrderItem(randomOrderItem);
-
-		assertHttpResponseStatusCode(
-			200,
-			orderItemResource.getOrderItemByExternalReferenceCodeHttpResponse(
-				randomOrderItem.getExternalReferenceCode()));
 	}
 
 	protected OrderItem testPostOrderIdOrderItem_addOrderItem(
@@ -737,9 +1133,29 @@ public abstract class BaseOrderItemResourceTestCase {
 			"This method needs to be implemented");
 	}
 
+	@Rule
+	public SearchTestRule searchTestRule = new SearchTestRule();
+
 	protected OrderItem testGraphQLOrderItem_addOrderItem() throws Exception {
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	protected void assertContains(
+		OrderItem orderItem, List<OrderItem> orderItems) {
+
+		boolean contains = false;
+
+		for (OrderItem item : orderItems) {
+			if (equals(orderItem, item)) {
+				contains = true;
+
+				break;
+			}
+		}
+
+		Assert.assertTrue(
+			orderItems + " does not contain " + orderItem, contains);
 	}
 
 	protected void assertHttpResponseStatusCode(
@@ -816,6 +1232,14 @@ public abstract class BaseOrderItemResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("decimalQuantity", additionalAssertFieldName)) {
+				if (orderItem.getDecimalQuantity() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("deliveryGroup", additionalAssertFieldName)) {
 				if (orderItem.getDeliveryGroup() == null) {
 					valid = false;
@@ -826,6 +1250,16 @@ public abstract class BaseOrderItemResourceTestCase {
 
 			if (Objects.equals("discountAmount", additionalAssertFieldName)) {
 				if (orderItem.getDiscountAmount() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"discountManuallyAdjusted", additionalAssertFieldName)) {
+
+				if (orderItem.getDiscountManuallyAdjusted() == null) {
 					valid = false;
 				}
 
@@ -962,8 +1396,26 @@ public abstract class BaseOrderItemResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"formattedQuantity", additionalAssertFieldName)) {
+
+				if (orderItem.getFormattedQuantity() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("name", additionalAssertFieldName)) {
 				if (orderItem.getName() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("options", additionalAssertFieldName)) {
+				if (orderItem.getOptions() == null) {
 					valid = false;
 				}
 
@@ -982,6 +1434,16 @@ public abstract class BaseOrderItemResourceTestCase {
 
 			if (Objects.equals("orderId", additionalAssertFieldName)) {
 				if (orderItem.getOrderId() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"priceManuallyAdjusted", additionalAssertFieldName)) {
+
+				if (orderItem.getPriceManuallyAdjusted() == null) {
 					valid = false;
 				}
 
@@ -1092,6 +1554,14 @@ public abstract class BaseOrderItemResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("unitOfMeasure", additionalAssertFieldName)) {
+				if (orderItem.getUnitOfMeasure() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("unitPrice", additionalAssertFieldName)) {
 				if (orderItem.getUnitPrice() == null) {
 					valid = false;
@@ -1142,8 +1612,8 @@ public abstract class BaseOrderItemResourceTestCase {
 	protected List<GraphQLField> getGraphQLFields() throws Exception {
 		List<GraphQLField> graphQLFields = new ArrayList<>();
 
-		for (Field field :
-				ReflectionUtil.getDeclaredFields(
+		for (java.lang.reflect.Field field :
+				getDeclaredFields(
 					com.liferay.headless.commerce.admin.order.dto.v1_0.
 						OrderItem.class)) {
 
@@ -1159,12 +1629,13 @@ public abstract class BaseOrderItemResourceTestCase {
 		return graphQLFields;
 	}
 
-	protected List<GraphQLField> getGraphQLFields(Field... fields)
+	protected List<GraphQLField> getGraphQLFields(
+			java.lang.reflect.Field... fields)
 		throws Exception {
 
 		List<GraphQLField> graphQLFields = new ArrayList<>();
 
-		for (Field field : fields) {
+		for (java.lang.reflect.Field field : fields) {
 			com.liferay.portal.vulcan.graphql.annotation.GraphQLField
 				vulcanGraphQLField = field.getAnnotation(
 					com.liferay.portal.vulcan.graphql.annotation.GraphQLField.
@@ -1178,7 +1649,7 @@ public abstract class BaseOrderItemResourceTestCase {
 				}
 
 				List<GraphQLField> childrenGraphQLFields = getGraphQLFields(
-					ReflectionUtil.getDeclaredFields(clazz));
+					getDeclaredFields(clazz));
 
 				graphQLFields.add(
 					new GraphQLField(field.getName(), childrenGraphQLFields));
@@ -1212,9 +1683,20 @@ public abstract class BaseOrderItemResourceTestCase {
 			}
 
 			if (Objects.equals("customFields", additionalAssertFieldName)) {
-				if (!equals(
-						(Map)orderItem1.getCustomFields(),
-						(Map)orderItem2.getCustomFields())) {
+				if (!Objects.deepEquals(
+						orderItem1.getCustomFields(),
+						orderItem2.getCustomFields())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("decimalQuantity", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						orderItem1.getDecimalQuantity(),
+						orderItem2.getDecimalQuantity())) {
 
 					return false;
 				}
@@ -1237,6 +1719,19 @@ public abstract class BaseOrderItemResourceTestCase {
 				if (!Objects.deepEquals(
 						orderItem1.getDiscountAmount(),
 						orderItem2.getDiscountAmount())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"discountManuallyAdjusted", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						orderItem1.getDiscountManuallyAdjusted(),
+						orderItem2.getDiscountManuallyAdjusted())) {
 
 					return false;
 				}
@@ -1406,6 +1901,19 @@ public abstract class BaseOrderItemResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"formattedQuantity", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						orderItem1.getFormattedQuantity(),
+						orderItem2.getFormattedQuantity())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("id", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						orderItem1.getId(), orderItem2.getId())) {
@@ -1419,6 +1927,16 @@ public abstract class BaseOrderItemResourceTestCase {
 			if (Objects.equals("name", additionalAssertFieldName)) {
 				if (!equals(
 						(Map)orderItem1.getName(), (Map)orderItem2.getName())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("options", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						orderItem1.getOptions(), orderItem2.getOptions())) {
 
 					return false;
 				}
@@ -1442,6 +1960,19 @@ public abstract class BaseOrderItemResourceTestCase {
 			if (Objects.equals("orderId", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						orderItem1.getOrderId(), orderItem2.getOrderId())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"priceManuallyAdjusted", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						orderItem1.getPriceManuallyAdjusted(),
+						orderItem2.getPriceManuallyAdjusted())) {
 
 					return false;
 				}
@@ -1586,6 +2117,17 @@ public abstract class BaseOrderItemResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("unitOfMeasure", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						orderItem1.getUnitOfMeasure(),
+						orderItem2.getUnitOfMeasure())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("unitPrice", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						orderItem1.getUnitPrice(), orderItem2.getUnitPrice())) {
@@ -1641,6 +2183,19 @@ public abstract class BaseOrderItemResourceTestCase {
 		}
 
 		return false;
+	}
+
+	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
+		throws Exception {
+
+		Stream<java.lang.reflect.Field> stream = Stream.of(
+			ReflectionUtil.getDeclaredFields(clazz));
+
+		return stream.filter(
+			field -> !field.isSynthetic()
+		).toArray(
+			java.lang.reflect.Field[]::new
+		);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -1703,6 +2258,11 @@ public abstract class BaseOrderItemResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
+		if (entityFieldName.equals("decimalQuantity")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		if (entityFieldName.equals("deliveryGroup")) {
 			sb.append("'");
 			sb.append(String.valueOf(orderItem.getDeliveryGroup()));
@@ -1712,6 +2272,11 @@ public abstract class BaseOrderItemResourceTestCase {
 		}
 
 		if (entityFieldName.equals("discountAmount")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("discountManuallyAdjusted")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
 		}
@@ -1779,6 +2344,14 @@ public abstract class BaseOrderItemResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
+		if (entityFieldName.equals("formattedQuantity")) {
+			sb.append("'");
+			sb.append(String.valueOf(orderItem.getFormattedQuantity()));
+			sb.append("'");
+
+			return sb.toString();
+		}
+
 		if (entityFieldName.equals("id")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
@@ -1787,6 +2360,14 @@ public abstract class BaseOrderItemResourceTestCase {
 		if (entityFieldName.equals("name")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("options")) {
+			sb.append("'");
+			sb.append(String.valueOf(orderItem.getOptions()));
+			sb.append("'");
+
+			return sb.toString();
 		}
 
 		if (entityFieldName.equals("orderExternalReferenceCode")) {
@@ -1799,6 +2380,11 @@ public abstract class BaseOrderItemResourceTestCase {
 		}
 
 		if (entityFieldName.equals("orderId")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("priceManuallyAdjusted")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
 		}
@@ -1822,8 +2408,9 @@ public abstract class BaseOrderItemResourceTestCase {
 		}
 
 		if (entityFieldName.equals("quantity")) {
-			throw new IllegalArgumentException(
-				"Invalid entity field " + entityFieldName);
+			sb.append(String.valueOf(orderItem.getQuantity()));
+
+			return sb.toString();
 		}
 
 		if (entityFieldName.equals("requestedDeliveryDate")) {
@@ -1861,8 +2448,9 @@ public abstract class BaseOrderItemResourceTestCase {
 		}
 
 		if (entityFieldName.equals("shippedQuantity")) {
-			throw new IllegalArgumentException(
-				"Invalid entity field " + entityFieldName);
+			sb.append(String.valueOf(orderItem.getShippedQuantity()));
+
+			return sb.toString();
 		}
 
 		if (entityFieldName.equals("shippingAddress")) {
@@ -1899,6 +2487,14 @@ public abstract class BaseOrderItemResourceTestCase {
 		if (entityFieldName.equals("subscription")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("unitOfMeasure")) {
+			sb.append("'");
+			sb.append(String.valueOf(orderItem.getUnitOfMeasure()));
+			sb.append("'");
+
+			return sb.toString();
 		}
 
 		if (entityFieldName.equals("unitPrice")) {
@@ -1958,12 +2554,17 @@ public abstract class BaseOrderItemResourceTestCase {
 				bookedQuantityId = RandomTestUtil.randomLong();
 				deliveryGroup = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
+				discountManuallyAdjusted = RandomTestUtil.randomBoolean();
 				externalReferenceCode = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
+				formattedQuantity = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
 				id = RandomTestUtil.randomLong();
+				options = StringUtil.toLowerCase(RandomTestUtil.randomString());
 				orderExternalReferenceCode = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				orderId = RandomTestUtil.randomLong();
+				priceManuallyAdjusted = RandomTestUtil.randomBoolean();
 				printedNote = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				quantity = RandomTestUtil.randomInt();
@@ -1975,6 +2576,8 @@ public abstract class BaseOrderItemResourceTestCase {
 					RandomTestUtil.randomString());
 				skuId = RandomTestUtil.randomLong();
 				subscription = RandomTestUtil.randomBoolean();
+				unitOfMeasure = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
 			}
 		};
 	}
@@ -1993,6 +2596,115 @@ public abstract class BaseOrderItemResourceTestCase {
 	protected Group irrelevantGroup;
 	protected Company testCompany;
 	protected Group testGroup;
+
+	protected static class BeanTestUtil {
+
+		public static void copyProperties(Object source, Object target)
+			throws Exception {
+
+			Class<?> sourceClass = _getSuperClass(source.getClass());
+
+			Class<?> targetClass = target.getClass();
+
+			for (java.lang.reflect.Field field :
+					sourceClass.getDeclaredFields()) {
+
+				if (field.isSynthetic()) {
+					continue;
+				}
+
+				Method getMethod = _getMethod(
+					sourceClass, field.getName(), "get");
+
+				Method setMethod = _getMethod(
+					targetClass, field.getName(), "set",
+					getMethod.getReturnType());
+
+				setMethod.invoke(target, getMethod.invoke(source));
+			}
+		}
+
+		public static boolean hasProperty(Object bean, String name) {
+			Method setMethod = _getMethod(
+				bean.getClass(), "set" + StringUtil.upperCaseFirstLetter(name));
+
+			if (setMethod != null) {
+				return true;
+			}
+
+			return false;
+		}
+
+		public static void setProperty(Object bean, String name, Object value)
+			throws Exception {
+
+			Class<?> clazz = bean.getClass();
+
+			Method setMethod = _getMethod(
+				clazz, "set" + StringUtil.upperCaseFirstLetter(name));
+
+			if (setMethod == null) {
+				throw new NoSuchMethodException();
+			}
+
+			Class<?>[] parameterTypes = setMethod.getParameterTypes();
+
+			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
+		}
+
+		private static Method _getMethod(Class<?> clazz, String name) {
+			for (Method method : clazz.getMethods()) {
+				if (name.equals(method.getName()) &&
+					(method.getParameterCount() == 1) &&
+					_parameterTypes.contains(method.getParameterTypes()[0])) {
+
+					return method;
+				}
+			}
+
+			return null;
+		}
+
+		private static Method _getMethod(
+				Class<?> clazz, String fieldName, String prefix,
+				Class<?>... parameterTypes)
+			throws Exception {
+
+			return clazz.getMethod(
+				prefix + StringUtil.upperCaseFirstLetter(fieldName),
+				parameterTypes);
+		}
+
+		private static Class<?> _getSuperClass(Class<?> clazz) {
+			Class<?> superClass = clazz.getSuperclass();
+
+			if ((superClass == null) || (superClass == Object.class)) {
+				return clazz;
+			}
+
+			return superClass;
+		}
+
+		private static Object _translateValue(
+			Class<?> parameterType, Object value) {
+
+			if ((value instanceof Integer) &&
+				parameterType.equals(Long.class)) {
+
+				Integer intValue = (Integer)value;
+
+				return intValue.longValue();
+			}
+
+			return value;
+		}
+
+		private static final Set<Class<?>> _parameterTypes = new HashSet<>(
+			Arrays.asList(
+				Boolean.class, Date.class, Double.class, Integer.class,
+				Long.class, Map.class, String.class));
+
+	}
 
 	protected class GraphQLField {
 
@@ -2033,12 +2745,12 @@ public abstract class BaseOrderItemResourceTestCase {
 						_parameterMap.entrySet()) {
 
 					sb.append(entry.getKey());
-					sb.append(":");
+					sb.append(": ");
 					sb.append(entry.getValue());
-					sb.append(",");
+					sb.append(", ");
 				}
 
-				sb.setLength(sb.length() - 1);
+				sb.setLength(sb.length() - 2);
 
 				sb.append(")");
 			}
@@ -2048,10 +2760,10 @@ public abstract class BaseOrderItemResourceTestCase {
 
 				for (GraphQLField graphQLField : _graphQLFields) {
 					sb.append(graphQLField.toString());
-					sb.append(",");
+					sb.append(", ");
 				}
 
-				sb.setLength(sb.length() - 1);
+				sb.setLength(sb.length() - 2);
 
 				sb.append("}");
 			}
@@ -2065,21 +2777,9 @@ public abstract class BaseOrderItemResourceTestCase {
 
 	}
 
-	private static final Log _log = LogFactoryUtil.getLog(
-		BaseOrderItemResourceTestCase.class);
+	private static final com.liferay.portal.kernel.log.Log _log =
+		LogFactoryUtil.getLog(BaseOrderItemResourceTestCase.class);
 
-	private static BeanUtilsBean _beanUtilsBean = new BeanUtilsBean() {
-
-		@Override
-		public void copyProperty(Object bean, String name, Object value)
-			throws IllegalAccessException, InvocationTargetException {
-
-			if (value != null) {
-				super.copyProperty(bean, name, value);
-			}
-		}
-
-	};
 	private static DateFormat _dateFormat;
 
 	@Inject

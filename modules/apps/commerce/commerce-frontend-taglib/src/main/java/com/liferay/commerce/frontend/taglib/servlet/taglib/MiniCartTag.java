@@ -16,26 +16,34 @@ package com.liferay.commerce.frontend.taglib.servlet.taglib;
 
 import com.liferay.commerce.configuration.CommercePriceConfiguration;
 import com.liferay.commerce.constants.CommerceConstants;
+import com.liferay.commerce.constants.CommercePortletKeys;
 import com.liferay.commerce.constants.CommerceWebKeys;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.frontend.taglib.internal.servlet.ServletContextUtil;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.model.CommerceOrderItem;
 import com.liferay.commerce.order.CommerceOrderHttpHelper;
+import com.liferay.commerce.product.url.CPFriendlyURL;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
+import com.liferay.portal.kernel.portlet.PortletProvider;
+import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.settings.SystemSettingsLocator;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.taglib.util.IncludeTag;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.portlet.PortletURL;
 
@@ -50,47 +58,70 @@ public class MiniCartTag extends IncludeTag {
 
 	@Override
 	public int doStartTag() throws JspException {
-		CommerceContext commerceContext = (CommerceContext)request.getAttribute(
-			CommerceWebKeys.COMMERCE_CONTEXT);
+		HttpServletRequest httpServletRequest = getRequest();
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		CommerceContext commerceContext =
+			(CommerceContext)httpServletRequest.getAttribute(
+				CommerceWebKeys.COMMERCE_CONTEXT);
 
-		if (Validator.isNull(_spritemap)) {
-			_spritemap = themeDisplay.getPathThemeImages() + "/clay/icons.svg";
-		}
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		CPFriendlyURL cpFriendlyURL = ServletContextUtil.getCPFriendlyURL();
+
+		_productURLSeparator = cpFriendlyURL.getProductURLSeparator(
+			themeDisplay.getCompanyId());
+
+		_siteDefaultURL = _getSiteDefaultURL(themeDisplay);
 
 		try {
 			CommerceOrder commerceOrder = commerceContext.getCommerceOrder();
 
 			if (commerceOrder != null) {
-				_itemsQuantity = _getItemsQuantity(commerceOrder, request);
+				_itemsQuantity = _getItemsQuantity(
+					commerceOrder, httpServletRequest);
 				_orderId = commerceOrder.getCommerceOrderId();
 
 				PortletURL commerceCartPortletURL =
 					_commerceOrderHttpHelper.getCommerceCartPortletURL(
-						request, commerceOrder);
+						httpServletRequest, commerceOrder);
 
 				if (commerceCartPortletURL != null) {
 					_orderDetailURL = String.valueOf(commerceCartPortletURL);
 				}
 			}
 			else {
-				_orderDetailURL = StringPool.BLANK;
+				PortletURL commerceCartPortletURL =
+					_commerceOrderHttpHelper.getCommerceCartPortletURL(
+						httpServletRequest, null);
+
+				if (commerceCartPortletURL != null) {
+					_orderDetailURL = String.valueOf(commerceCartPortletURL);
+				}
+				else {
+					_orderDetailURL = StringPool.BLANK;
+				}
+
 				_orderId = 0;
 			}
 
 			_checkoutURL = StringPool.BLANK;
 
-			PortletURL commerceCheckoutPortletURL =
-				_commerceOrderHttpHelper.getCommerceCheckoutPortletURL(request);
+			PortletURL portletURL = PortletProviderUtil.getPortletURL(
+				httpServletRequest, CommercePortletKeys.COMMERCE_CHECKOUT,
+				PortletProvider.Action.VIEW);
 
-			if (commerceCheckoutPortletURL != null) {
-				_checkoutURL = String.valueOf(commerceCheckoutPortletURL);
+			if (portletURL != null) {
+				_checkoutURL = PortletURLBuilder.create(
+					portletURL
+				).setMVCRenderCommandName(
+					"/commerce_checkout/checkout_redirect"
+				).buildString();
 			}
 		}
 		catch (PortalException portalException) {
-			_log.error(portalException, portalException);
+			_log.error(portalException);
 
 			_checkoutURL = StringPool.BLANK;
 			_itemsQuantity = 0;
@@ -101,15 +132,11 @@ public class MiniCartTag extends IncludeTag {
 		return super.doStartTag();
 	}
 
-	public HashMap<String, String> getLabels() {
+	public Map<String, String> getLabels() {
 		return _labels;
 	}
 
-	public String getSpritemap() {
-		return _spritemap;
-	}
-
-	public HashMap<String, String> getViews() {
+	public Map<String, String> getViews() {
 		return _views;
 	}
 
@@ -127,7 +154,7 @@ public class MiniCartTag extends IncludeTag {
 		_displayTotalItemsQuantity = displayTotalItemsQuantity;
 	}
 
-	public void setLabels(HashMap<String, String> labels) {
+	public void setLabels(Map<String, String> labels) {
 		_labels = labels;
 	}
 
@@ -135,21 +162,18 @@ public class MiniCartTag extends IncludeTag {
 	public void setPageContext(PageContext pageContext) {
 		super.setPageContext(pageContext);
 
+		setServletContext(ServletContextUtil.getServletContext());
+
 		_configurationProvider = ServletContextUtil.getConfigurationProvider();
 		_commerceOrderHttpHelper =
 			ServletContextUtil.getCommerceOrderHttpHelper();
-		servletContext = ServletContextUtil.getServletContext();
-	}
-
-	public void setSpritemap(String spritemap) {
-		_spritemap = spritemap;
 	}
 
 	public void setToggleable(boolean toggleable) {
 		_toggleable = toggleable;
 	}
 
-	public void setViews(HashMap<String, String> views) {
+	public void setViews(Map<String, String> views) {
 		_views = views;
 	}
 
@@ -165,7 +189,8 @@ public class MiniCartTag extends IncludeTag {
 		_labels = new HashMap<>();
 		_orderDetailURL = null;
 		_orderId = 0;
-		_spritemap = null;
+		_productURLSeparator = StringPool.BLANK;
+		_siteDefaultURL = StringPool.BLANK;
 		_toggleable = true;
 		_views = new HashMap<>();
 	}
@@ -196,7 +221,9 @@ public class MiniCartTag extends IncludeTag {
 		httpServletRequest.setAttribute(
 			"liferay-commerce:cart:orderId", _orderId);
 		httpServletRequest.setAttribute(
-			"liferay-commerce:cart:spritemap", _spritemap);
+			"liferay-commerce:cart:productURLSeparator", _productURLSeparator);
+		httpServletRequest.setAttribute(
+			"liferay-commerce:cart:siteDefaultURL", _siteDefaultURL);
 		httpServletRequest.setAttribute(
 			"liferay-commerce:cart:toggleable", _toggleable);
 	}
@@ -216,18 +243,27 @@ public class MiniCartTag extends IncludeTag {
 		return commerceOrderItems.size();
 	}
 
+	private String _getSiteDefaultURL(ThemeDisplay themeDisplay) {
+		Layout layout = themeDisplay.getLayout();
+
+		Group group = layout.getGroup();
+
+		return HtmlUtil.escape(
+			group.getDisplayURL(themeDisplay, layout.isPrivateLayout()));
+	}
+
 	private boolean _isDisplayDiscountLevels() {
 		try {
 			CommercePriceConfiguration commercePriceConfiguration =
 				_configurationProvider.getConfiguration(
 					CommercePriceConfiguration.class,
 					new SystemSettingsLocator(
-						CommerceConstants.SERVICE_NAME_PRICE));
+						CommerceConstants.SERVICE_NAME_COMMERCE_PRICE));
 
 			return commercePriceConfiguration.displayDiscountLevels();
 		}
 		catch (ConfigurationException configurationException) {
-			_log.error(configurationException, configurationException);
+			_log.error(configurationException);
 
 			return false;
 		}
@@ -242,11 +278,12 @@ public class MiniCartTag extends IncludeTag {
 	private ConfigurationProvider _configurationProvider;
 	private boolean _displayTotalItemsQuantity;
 	private int _itemsQuantity;
-	private HashMap<String, String> _labels = new HashMap<>();
+	private Map<String, String> _labels = new HashMap<>();
 	private String _orderDetailURL;
 	private long _orderId;
-	private String _spritemap;
+	private String _productURLSeparator = StringPool.BLANK;
+	private String _siteDefaultURL = StringPool.BLANK;
 	private boolean _toggleable = true;
-	private HashMap<String, String> _views = new HashMap<>();
+	private Map<String, String> _views = new HashMap<>();
 
 }

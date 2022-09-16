@@ -16,10 +16,9 @@ package com.liferay.portlet.asset.service.base;
 
 import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
+import com.liferay.asset.kernel.service.AssetCategoryLocalServiceUtil;
 import com.liferay.asset.kernel.service.persistence.AssetCategoryFinder;
 import com.liferay.asset.kernel.service.persistence.AssetCategoryPersistence;
-import com.liferay.asset.kernel.service.persistence.AssetVocabularyFinder;
-import com.liferay.asset.kernel.service.persistence.AssetVocabularyPersistence;
 import com.liferay.exportimport.kernel.lar.ExportImportHelperUtil;
 import com.liferay.exportimport.kernel.lar.ManifestSummary;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
@@ -41,6 +40,8 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -48,15 +49,14 @@ import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
 import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistry;
 import com.liferay.portal.kernel.service.persistence.BasePersistence;
-import com.liferay.portal.kernel.service.persistence.ClassNamePersistence;
-import com.liferay.portal.kernel.service.persistence.UserFinder;
-import com.liferay.portal.kernel.service.persistence.UserPersistence;
 import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
+
+import java.lang.reflect.Field;
 
 import java.util.List;
 
@@ -80,7 +80,7 @@ public abstract class AssetCategoryLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>AssetCategoryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.asset.kernel.service.AssetCategoryLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>AssetCategoryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>AssetCategoryLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -151,6 +151,13 @@ public abstract class AssetCategoryLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return assetCategoryPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -260,18 +267,47 @@ public abstract class AssetCategoryLocalServiceBaseImpl
 	}
 
 	/**
-	 * Returns the asset category with the matching external reference code and company.
+	 * Returns the asset category with the matching external reference code and group.
 	 *
-	 * @param companyId the primary key of the company
+	 * @param groupId the primary key of the group
 	 * @param externalReferenceCode the asset category's external reference code
 	 * @return the matching asset category, or <code>null</code> if a matching asset category could not be found
 	 */
 	@Override
-	public AssetCategory fetchAssetCategoryByReferenceCode(
-		long companyId, String externalReferenceCode) {
+	public AssetCategory fetchAssetCategoryByExternalReferenceCode(
+		long groupId, String externalReferenceCode) {
 
-		return assetCategoryPersistence.fetchByC_ERC(
-			companyId, externalReferenceCode);
+		return assetCategoryPersistence.fetchByG_ERC(
+			groupId, externalReferenceCode);
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #fetchAssetCategoryByExternalReferenceCode(long, String)}
+	 */
+	@Deprecated
+	@Override
+	public AssetCategory fetchAssetCategoryByReferenceCode(
+		long groupId, String externalReferenceCode) {
+
+		return fetchAssetCategoryByExternalReferenceCode(
+			groupId, externalReferenceCode);
+	}
+
+	/**
+	 * Returns the asset category with the matching external reference code and group.
+	 *
+	 * @param groupId the primary key of the group
+	 * @param externalReferenceCode the asset category's external reference code
+	 * @return the matching asset category
+	 * @throws PortalException if a matching asset category could not be found
+	 */
+	@Override
+	public AssetCategory getAssetCategoryByExternalReferenceCode(
+			long groupId, String externalReferenceCode)
+		throws PortalException {
+
+		return assetCategoryPersistence.findByG_ERC(
+			groupId, externalReferenceCode);
 	}
 
 	/**
@@ -415,6 +451,11 @@ public abstract class AssetCategoryLocalServiceBaseImpl
 	@Override
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
+
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement AssetCategoryLocalServiceImpl#deleteAssetCategory(AssetCategory) to avoid orphaned data");
+		}
 
 		return assetCategoryLocalService.deleteAssetCategory(
 			(AssetCategory)persistedModel);
@@ -609,202 +650,19 @@ public abstract class AssetCategoryLocalServiceBaseImpl
 		this.counterLocalService = counterLocalService;
 	}
 
-	/**
-	 * Returns the class name local service.
-	 *
-	 * @return the class name local service
-	 */
-	public com.liferay.portal.kernel.service.ClassNameLocalService
-		getClassNameLocalService() {
-
-		return classNameLocalService;
-	}
-
-	/**
-	 * Sets the class name local service.
-	 *
-	 * @param classNameLocalService the class name local service
-	 */
-	public void setClassNameLocalService(
-		com.liferay.portal.kernel.service.ClassNameLocalService
-			classNameLocalService) {
-
-		this.classNameLocalService = classNameLocalService;
-	}
-
-	/**
-	 * Returns the class name persistence.
-	 *
-	 * @return the class name persistence
-	 */
-	public ClassNamePersistence getClassNamePersistence() {
-		return classNamePersistence;
-	}
-
-	/**
-	 * Sets the class name persistence.
-	 *
-	 * @param classNamePersistence the class name persistence
-	 */
-	public void setClassNamePersistence(
-		ClassNamePersistence classNamePersistence) {
-
-		this.classNamePersistence = classNamePersistence;
-	}
-
-	/**
-	 * Returns the resource local service.
-	 *
-	 * @return the resource local service
-	 */
-	public com.liferay.portal.kernel.service.ResourceLocalService
-		getResourceLocalService() {
-
-		return resourceLocalService;
-	}
-
-	/**
-	 * Sets the resource local service.
-	 *
-	 * @param resourceLocalService the resource local service
-	 */
-	public void setResourceLocalService(
-		com.liferay.portal.kernel.service.ResourceLocalService
-			resourceLocalService) {
-
-		this.resourceLocalService = resourceLocalService;
-	}
-
-	/**
-	 * Returns the user local service.
-	 *
-	 * @return the user local service
-	 */
-	public com.liferay.portal.kernel.service.UserLocalService
-		getUserLocalService() {
-
-		return userLocalService;
-	}
-
-	/**
-	 * Sets the user local service.
-	 *
-	 * @param userLocalService the user local service
-	 */
-	public void setUserLocalService(
-		com.liferay.portal.kernel.service.UserLocalService userLocalService) {
-
-		this.userLocalService = userLocalService;
-	}
-
-	/**
-	 * Returns the user persistence.
-	 *
-	 * @return the user persistence
-	 */
-	public UserPersistence getUserPersistence() {
-		return userPersistence;
-	}
-
-	/**
-	 * Sets the user persistence.
-	 *
-	 * @param userPersistence the user persistence
-	 */
-	public void setUserPersistence(UserPersistence userPersistence) {
-		this.userPersistence = userPersistence;
-	}
-
-	/**
-	 * Returns the user finder.
-	 *
-	 * @return the user finder
-	 */
-	public UserFinder getUserFinder() {
-		return userFinder;
-	}
-
-	/**
-	 * Sets the user finder.
-	 *
-	 * @param userFinder the user finder
-	 */
-	public void setUserFinder(UserFinder userFinder) {
-		this.userFinder = userFinder;
-	}
-
-	/**
-	 * Returns the asset vocabulary local service.
-	 *
-	 * @return the asset vocabulary local service
-	 */
-	public com.liferay.asset.kernel.service.AssetVocabularyLocalService
-		getAssetVocabularyLocalService() {
-
-		return assetVocabularyLocalService;
-	}
-
-	/**
-	 * Sets the asset vocabulary local service.
-	 *
-	 * @param assetVocabularyLocalService the asset vocabulary local service
-	 */
-	public void setAssetVocabularyLocalService(
-		com.liferay.asset.kernel.service.AssetVocabularyLocalService
-			assetVocabularyLocalService) {
-
-		this.assetVocabularyLocalService = assetVocabularyLocalService;
-	}
-
-	/**
-	 * Returns the asset vocabulary persistence.
-	 *
-	 * @return the asset vocabulary persistence
-	 */
-	public AssetVocabularyPersistence getAssetVocabularyPersistence() {
-		return assetVocabularyPersistence;
-	}
-
-	/**
-	 * Sets the asset vocabulary persistence.
-	 *
-	 * @param assetVocabularyPersistence the asset vocabulary persistence
-	 */
-	public void setAssetVocabularyPersistence(
-		AssetVocabularyPersistence assetVocabularyPersistence) {
-
-		this.assetVocabularyPersistence = assetVocabularyPersistence;
-	}
-
-	/**
-	 * Returns the asset vocabulary finder.
-	 *
-	 * @return the asset vocabulary finder
-	 */
-	public AssetVocabularyFinder getAssetVocabularyFinder() {
-		return assetVocabularyFinder;
-	}
-
-	/**
-	 * Sets the asset vocabulary finder.
-	 *
-	 * @param assetVocabularyFinder the asset vocabulary finder
-	 */
-	public void setAssetVocabularyFinder(
-		AssetVocabularyFinder assetVocabularyFinder) {
-
-		this.assetVocabularyFinder = assetVocabularyFinder;
-	}
-
 	public void afterPropertiesSet() {
 		persistedModelLocalServiceRegistry.register(
 			"com.liferay.asset.kernel.model.AssetCategory",
 			assetCategoryLocalService);
+
+		_setLocalServiceUtilService(assetCategoryLocalService);
 	}
 
 	public void destroy() {
 		persistedModelLocalServiceRegistry.unregister(
 			"com.liferay.asset.kernel.model.AssetCategory");
+
+		_setLocalServiceUtilService(null);
 	}
 
 	/**
@@ -864,6 +722,22 @@ public abstract class AssetCategoryLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		AssetCategoryLocalService assetCategoryLocalService) {
+
+		try {
+			Field field = AssetCategoryLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, assetCategoryLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@BeanReference(type = AssetCategoryLocalService.class)
 	protected AssetCategoryLocalService assetCategoryLocalService;
 
@@ -879,44 +753,8 @@ public abstract class AssetCategoryLocalServiceBaseImpl
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@BeanReference(
-		type = com.liferay.portal.kernel.service.ClassNameLocalService.class
-	)
-	protected com.liferay.portal.kernel.service.ClassNameLocalService
-		classNameLocalService;
-
-	@BeanReference(type = ClassNamePersistence.class)
-	protected ClassNamePersistence classNamePersistence;
-
-	@BeanReference(
-		type = com.liferay.portal.kernel.service.ResourceLocalService.class
-	)
-	protected com.liferay.portal.kernel.service.ResourceLocalService
-		resourceLocalService;
-
-	@BeanReference(
-		type = com.liferay.portal.kernel.service.UserLocalService.class
-	)
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
-
-	@BeanReference(type = UserPersistence.class)
-	protected UserPersistence userPersistence;
-
-	@BeanReference(type = UserFinder.class)
-	protected UserFinder userFinder;
-
-	@BeanReference(
-		type = com.liferay.asset.kernel.service.AssetVocabularyLocalService.class
-	)
-	protected com.liferay.asset.kernel.service.AssetVocabularyLocalService
-		assetVocabularyLocalService;
-
-	@BeanReference(type = AssetVocabularyPersistence.class)
-	protected AssetVocabularyPersistence assetVocabularyPersistence;
-
-	@BeanReference(type = AssetVocabularyFinder.class)
-	protected AssetVocabularyFinder assetVocabularyFinder;
+	private static final Log _log = LogFactoryUtil.getLog(
+		AssetCategoryLocalServiceBaseImpl.class);
 
 	@BeanReference(type = PersistedModelLocalServiceRegistry.class)
 	protected PersistedModelLocalServiceRegistry

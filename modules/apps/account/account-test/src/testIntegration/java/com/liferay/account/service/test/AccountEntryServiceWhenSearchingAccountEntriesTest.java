@@ -20,8 +20,10 @@ import com.liferay.account.model.AccountEntry;
 import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.account.service.AccountEntryOrganizationRelLocalService;
 import com.liferay.account.service.AccountEntryService;
+import com.liferay.account.service.AccountEntryUserRelLocalService;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
-import com.liferay.portal.kernel.model.Company;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.OrganizationConstants;
 import com.liferay.portal.kernel.model.ResourceConstants;
@@ -38,10 +40,10 @@ import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.UserGroupRoleLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.rule.DataGuard;
-import com.liferay.portal.kernel.test.util.CompanyTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.RoleTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -50,7 +52,6 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -78,12 +79,8 @@ public class AccountEntryServiceWhenSearchingAccountEntriesTest {
 
 	@Before
 	public void setUp() throws Exception {
-		Company company = CompanyTestUtil.addCompany();
-
-		_companyAdminUser = UserTestUtil.addCompanyAdminUser(company);
-
 		_rootOrganization = _organizationLocalService.addOrganization(
-			_companyAdminUser.getUserId(),
+			TestPropsValues.getUserId(),
 			OrganizationConstants.DEFAULT_PARENT_ORGANIZATION_ID,
 			RandomTestUtil.randomString(), false);
 
@@ -92,22 +89,21 @@ public class AccountEntryServiceWhenSearchingAccountEntriesTest {
 			_addAccountEntryWithOrganization(_rootOrganization));
 
 		_organization = _organizationLocalService.addOrganization(
-			_companyAdminUser.getUserId(),
-			_rootOrganization.getOrganizationId(),
+			TestPropsValues.getUserId(), _rootOrganization.getOrganizationId(),
 			RandomTestUtil.randomString(), false);
 
 		_organizationAccountEntries.put(
 			_organization, _addAccountEntryWithOrganization(_organization));
 
 		_suborganization = _organizationLocalService.addOrganization(
-			_companyAdminUser.getUserId(), _organization.getOrganizationId(),
+			TestPropsValues.getUserId(), _organization.getOrganizationId(),
 			RandomTestUtil.randomString(), false);
 
 		_organizationAccountEntries.put(
 			_suborganization,
 			_addAccountEntryWithOrganization(_suborganization));
 
-		_user = UserTestUtil.addUser(company);
+		_user = UserTestUtil.addUser();
 
 		_originalPermissionChecker =
 			PermissionThreadLocal.getPermissionChecker();
@@ -130,8 +126,60 @@ public class AccountEntryServiceWhenSearchingAccountEntriesTest {
 
 		_userLocalService.addRoleUser(role.getRoleId(), _user);
 
+		_assertSearch(_getAllAccountEntries());
+	}
+
+	@Test
+	public void testShouldReturnAllAccountEntriesWithCompanyViewPermission()
+		throws Exception {
+
+		_assertSearch();
+
+		Role role = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
+
+		RoleTestUtil.addResourcePermission(
+			role, AccountEntry.class.getName(), ResourceConstants.SCOPE_COMPANY,
+			String.valueOf(TestPropsValues.getCompanyId()), ActionKeys.VIEW);
+
+		_userLocalService.addRoleUser(role.getRoleId(), _user.getUserId());
+
+		_assertSearch(_getAllAccountEntries());
+	}
+
+	@Test
+	public void testShouldReturnDirectMembershipAccountEntries()
+		throws Exception {
+
+		_assertSearch();
+
+		AccountEntry accountEntry = _organizationAccountEntries.get(
+			_rootOrganization);
+
+		_accountEntryUserRelLocalService.addAccountEntryUserRel(
+			accountEntry.getAccountEntryId(), _user.getUserId());
+
+		_assertSearch(accountEntry);
+	}
+
+	@Test
+	public void testShouldReturnManagedAccountEntriesWithManageAvailableAccountsPermission()
+		throws Exception {
+
+		Role role = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
+
+		RoleTestUtil.addResourcePermission(
+			role, Organization.class.getName(), ResourceConstants.SCOPE_COMPANY,
+			String.valueOf(TestPropsValues.getCompanyId()),
+			AccountActionKeys.MANAGE_AVAILABLE_ACCOUNTS);
+
+		_userLocalService.addRoleUser(role.getRoleId(), _user);
+
+		_userLocalService.addOrganizationUser(
+			_organization.getOrganizationId(), _user);
+
 		_assertSearch(
-			ListUtil.fromCollection(_organizationAccountEntries.values()));
+			_organizationAccountEntries.get(_organization),
+			_organizationAccountEntries.get(_suborganization));
 	}
 
 	@Test
@@ -143,7 +191,7 @@ public class AccountEntryServiceWhenSearchingAccountEntriesTest {
 				organization.getOrganizationId(), _user);
 		}
 
-		_assertSearch(Collections.emptyList());
+		_assertSearch();
 	}
 
 	@Test
@@ -164,9 +212,31 @@ public class AccountEntryServiceWhenSearchingAccountEntriesTest {
 			_user.getUserId(), _rootOrganization.getGroupId(),
 			role.getRoleId());
 
+		_assertSearch(_organizationAccountEntries.get(_rootOrganization));
+	}
+
+	@Test
+	public void testShouldReturnSuborganizationAccountEntriesWithManageSuborganizationAccountsPermission()
+		throws Exception {
+
+		Role role = RoleTestUtil.addRole(RoleConstants.TYPE_ORGANIZATION);
+
+		RoleTestUtil.addResourcePermission(
+			role, Organization.class.getName(),
+			ResourceConstants.SCOPE_GROUP_TEMPLATE,
+			String.valueOf(GroupConstants.DEFAULT_PARENT_GROUP_ID),
+			AccountActionKeys.MANAGE_SUBORGANIZATIONS_ACCOUNTS);
+
+		_userLocalService.addOrganizationUser(
+			_rootOrganization.getOrganizationId(), _user);
+
+		_userGroupRoleLocalService.addUserGroupRole(
+			_user.getUserId(), _rootOrganization.getGroupId(),
+			role.getRoleId());
+
 		_assertSearch(
-			ListUtil.toList(
-				_organizationAccountEntries.get(_rootOrganization)));
+			_organizationAccountEntries.get(_organization),
+			_organizationAccountEntries.get(_suborganization));
 	}
 
 	@Test
@@ -189,7 +259,7 @@ public class AccountEntryServiceWhenSearchingAccountEntriesTest {
 		AccountEntry accountEntry = _organizationAccountEntries.get(
 			_organization);
 
-		_assertSearch(ListUtil.toList(accountEntry));
+		_assertSearch(accountEntry);
 
 		RoleTestUtil.addResourcePermission(
 			role, Organization.class.getName(),
@@ -199,7 +269,7 @@ public class AccountEntryServiceWhenSearchingAccountEntriesTest {
 		AccountEntry suborgAccountEntry = _organizationAccountEntries.get(
 			_suborganization);
 
-		_assertSearch(Arrays.asList(accountEntry, suborgAccountEntry));
+		_assertSearch(accountEntry, suborgAccountEntry);
 
 		PermissionChecker permissionChecker =
 			PermissionCheckerFactoryUtil.create(_user);
@@ -229,10 +299,11 @@ public class AccountEntryServiceWhenSearchingAccountEntriesTest {
 		throws Exception {
 
 		AccountEntry accountEntry = _accountEntryLocalService.addAccountEntry(
-			_companyAdminUser.getUserId(),
+			TestPropsValues.getUserId(),
 			AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT,
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(), null,
-			null, WorkflowConstants.STATUS_APPROVED,
+			null, null, null, AccountConstants.ACCOUNT_ENTRY_TYPE_BUSINESS,
+			WorkflowConstants.STATUS_APPROVED,
 			ServiceContextTestUtil.getServiceContext());
 
 		_accountEntryOrganizationRelLocalService.addAccountEntryOrganizationRel(
@@ -243,9 +314,14 @@ public class AccountEntryServiceWhenSearchingAccountEntriesTest {
 
 	private Role _addOrganizationRole() throws Exception {
 		return _roleLocalService.addRole(
-			_companyAdminUser.getUserId(), null, 0,
-			RandomTestUtil.randomString(), null, null,
-			RoleConstants.TYPE_ORGANIZATION, null, null);
+			TestPropsValues.getUserId(), null, 0, RandomTestUtil.randomString(),
+			null, null, RoleConstants.TYPE_ORGANIZATION, null, null);
+	}
+
+	private void _assertSearch(AccountEntry... expectedAccountEntries)
+		throws Exception {
+
+		_assertSearch(Arrays.asList(expectedAccountEntries));
 	}
 
 	private void _assertSearch(List<AccountEntry> expectedAccountEntries)
@@ -263,6 +339,12 @@ public class AccountEntryServiceWhenSearchingAccountEntriesTest {
 				Comparator.comparing(
 					AccountEntry::getName, String::compareToIgnoreCase)),
 			baseModelSearchResult.getBaseModels());
+	}
+
+	private List<AccountEntry> _getAllAccountEntries() throws Exception {
+		return _accountEntryLocalService.getAccountEntries(
+			TestPropsValues.getCompanyId(), WorkflowConstants.STATUS_APPROVED,
+			QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 	}
 
 	private boolean _hasPermission(
@@ -292,7 +374,9 @@ public class AccountEntryServiceWhenSearchingAccountEntriesTest {
 	@Inject
 	private AccountEntryService _accountEntryService;
 
-	private User _companyAdminUser;
+	@Inject
+	private AccountEntryUserRelLocalService _accountEntryUserRelLocalService;
+
 	private Organization _organization;
 	private final Map<Organization, AccountEntry> _organizationAccountEntries =
 		new LinkedHashMap<>();

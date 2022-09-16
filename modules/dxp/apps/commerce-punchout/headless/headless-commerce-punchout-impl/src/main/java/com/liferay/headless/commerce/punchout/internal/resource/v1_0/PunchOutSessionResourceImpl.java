@@ -53,6 +53,7 @@ import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.Base64;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -60,11 +61,8 @@ import com.liferay.portal.kernel.util.Validator;
 import java.net.URLEncoder;
 
 import java.util.Calendar;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-
-import javax.validation.constraints.NotNull;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.ForbiddenException;
@@ -87,7 +85,7 @@ public class PunchOutSessionResourceImpl
 
 	@Override
 	public PunchOutSession postPunchOutSessionRequest(
-			@NotNull PunchOutSession punchOutSession)
+			PunchOutSession punchOutSession)
 		throws Exception {
 
 		com.liferay.portal.kernel.model.Group buyerGroup = _fetchGroup(
@@ -186,18 +184,16 @@ public class PunchOutSessionResourceImpl
 			businessCommerceAccount, buyerGroup, buyerLiferayUser,
 			commerceChannel, editCartCommerceOrder, punchOutSession);
 
-		HashMap<String, Object> punchOutSessionAttributes =
-			_punchOutSessionContributor.getPunchOutSessionAttributes(
-				punchOutContext);
-
 		PunchOutAccessToken punchOutAccessToken =
 			_punchOutAccessTokenProvider.generatePunchOutAccessToken(
 				buyerGroup.getGroupId(),
 				businessCommerceAccount.getCommerceAccountId(),
 				cart.getCurrencyCode(), buyerLiferayUser.getEmailAddress(),
-				commerceOrderUuid, punchOutSessionAttributes);
+				commerceOrderUuid,
+				_punchOutSessionContributor.getPunchOutSessionAttributes(
+					punchOutContext));
 
-		String tokenString = new String(punchOutAccessToken.getToken());
+		String tokenString = Base64.encodeToURL(punchOutAccessToken.getToken());
 
 		punchOutStartURL +=
 			StringPool.QUESTION + _PUNCH_OUT_ACCESS_TOKEN_PARAMETER +
@@ -239,7 +235,6 @@ public class PunchOutSessionResourceImpl
 		String password2 = StringPool.BLANK;
 		boolean autoScreenName = true;
 		String screenName = StringPool.BLANK;
-		String openId = StringPool.BLANK;
 		Locale locale = LocaleUtil.getDefault();
 		long prefixId = 0;
 		long suffixId = 0;
@@ -254,10 +249,10 @@ public class PunchOutSessionResourceImpl
 
 		com.liferay.portal.kernel.model.User user = _userLocalService.addUser(
 			creatorUserId, companyId, autoPassword, password1, password2,
-			autoScreenName, screenName, email, 0, openId, locale, firstName,
-			middleName, lastName, prefixId, suffixId, false, birthdayMonth,
-			birthdayDay, birthdayYear, jobTitle, new long[] {groupId},
-			organizationIds, roleIds, userGroupIds, sendEmail,
+			autoScreenName, screenName, email, locale, firstName, middleName,
+			lastName, prefixId, suffixId, false, birthdayMonth, birthdayDay,
+			birthdayYear, jobTitle, new long[] {groupId}, organizationIds,
+			roleIds, userGroupIds, sendEmail,
 			_serviceContextHelper.getServiceContext(groupId));
 
 		user = _userLocalService.updateLastLogin(
@@ -311,7 +306,7 @@ public class PunchOutSessionResourceImpl
 	private CommerceAccount _fetchBusinessCommerceAccount(
 		String externalReferenceCode) {
 
-		return _commerceAccountLocalService.fetchCommerceAccountByReferenceCode(
+		return _commerceAccountLocalService.fetchByExternalReferenceCode(
 			contextCompany.getCompanyId(), externalReferenceCode);
 	}
 

@@ -25,6 +25,10 @@ public class LayoutSetPrototypeServiceWrapper
 	implements LayoutSetPrototypeService,
 			   ServiceWrapper<LayoutSetPrototypeService> {
 
+	public LayoutSetPrototypeServiceWrapper() {
+		this(null);
+	}
+
 	public LayoutSetPrototypeServiceWrapper(
 		LayoutSetPrototypeService layoutSetPrototypeService) {
 
@@ -61,11 +65,32 @@ public class LayoutSetPrototypeServiceWrapper
 	}
 
 	@Override
+	public com.liferay.portal.kernel.model.LayoutSetPrototype
+			addLayoutSetPrototype(
+				java.lang.String name, java.lang.String description,
+				boolean active, boolean layoutsUpdateable,
+				boolean readyForPropagation, ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _layoutSetPrototypeService.addLayoutSetPrototype(
+			name, description, active, layoutsUpdateable, readyForPropagation,
+			serviceContext);
+	}
+
+	@Override
 	public void deleteLayoutSetPrototype(long layoutSetPrototypeId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		_layoutSetPrototypeService.deleteLayoutSetPrototype(
 			layoutSetPrototypeId);
+	}
+
+	@Override
+	public void deleteNondefaultLayoutSetPrototypes(long companyId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_layoutSetPrototypeService.deleteNondefaultLayoutSetPrototypes(
+			companyId);
 	}
 
 	@Override
@@ -84,6 +109,14 @@ public class LayoutSetPrototypeServiceWrapper
 
 		return _layoutSetPrototypeService.getLayoutSetPrototype(
 			layoutSetPrototypeId);
+	}
+
+	@Override
+	public java.util.List<com.liferay.portal.kernel.model.LayoutSetPrototype>
+			getLayoutSetPrototypes(long companyId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _layoutSetPrototypeService.getLayoutSetPrototypes(companyId);
 	}
 
 	/**

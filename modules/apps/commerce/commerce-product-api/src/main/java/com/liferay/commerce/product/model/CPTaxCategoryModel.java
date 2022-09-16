@@ -16,10 +16,12 @@ package com.liferay.commerce.product.model;
 
 import com.liferay.portal.kernel.bean.AutoEscape;
 import com.liferay.portal.kernel.exception.LocaleException;
-import com.liferay.portal.kernel.model.AuditedModel;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.LocalizedModel;
+import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
+import com.liferay.portal.kernel.model.StagedAuditedModel;
+import com.liferay.portal.kernel.model.change.tracking.CTModel;
 
 import java.util.Date;
 import java.util.Locale;
@@ -40,8 +42,8 @@ import org.osgi.annotation.versioning.ProviderType;
  */
 @ProviderType
 public interface CPTaxCategoryModel
-	extends AuditedModel, BaseModel<CPTaxCategory>, LocalizedModel,
-			ShardedModel {
+	extends BaseModel<CPTaxCategory>, CTModel<CPTaxCategory>, LocalizedModel,
+			MVCCModel, ShardedModel, StagedAuditedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -54,6 +56,7 @@ public interface CPTaxCategoryModel
 	 *
 	 * @return the primary key of this cp tax category
 	 */
+	@Override
 	public long getPrimaryKey();
 
 	/**
@@ -61,7 +64,57 @@ public interface CPTaxCategoryModel
 	 *
 	 * @param primaryKey the primary key of this cp tax category
 	 */
+	@Override
 	public void setPrimaryKey(long primaryKey);
+
+	/**
+	 * Returns the mvcc version of this cp tax category.
+	 *
+	 * @return the mvcc version of this cp tax category
+	 */
+	@Override
+	public long getMvccVersion();
+
+	/**
+	 * Sets the mvcc version of this cp tax category.
+	 *
+	 * @param mvccVersion the mvcc version of this cp tax category
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion);
+
+	/**
+	 * Returns the ct collection ID of this cp tax category.
+	 *
+	 * @return the ct collection ID of this cp tax category
+	 */
+	@Override
+	public long getCtCollectionId();
+
+	/**
+	 * Sets the ct collection ID of this cp tax category.
+	 *
+	 * @param ctCollectionId the ct collection ID of this cp tax category
+	 */
+	@Override
+	public void setCtCollectionId(long ctCollectionId);
+
+	/**
+	 * Returns the uuid of this cp tax category.
+	 *
+	 * @return the uuid of this cp tax category
+	 */
+	@AutoEscape
+	@Override
+	public String getUuid();
+
+	/**
+	 * Sets the uuid of this cp tax category.
+	 *
+	 * @param uuid the uuid of this cp tax category
+	 */
+	@Override
+	public void setUuid(String uuid);
 
 	/**
 	 * Returns the external reference code of this cp tax category.
@@ -401,5 +454,8 @@ public interface CPTaxCategoryModel
 	@Override
 	public void prepareLocalizedFieldsForImport(Locale defaultImportLocale)
 		throws LocaleException;
+
+	@Override
+	public CPTaxCategory cloneWithOriginalValues();
 
 }

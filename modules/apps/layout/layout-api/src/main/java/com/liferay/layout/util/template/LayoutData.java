@@ -46,7 +46,7 @@ public class LayoutData {
 
 		ContainerStyledLayoutStructureItem containerStyledLayoutStructureItem =
 			(ContainerStyledLayoutStructureItem)
-				layoutStructure.addContainerLayoutStructureItem(
+				layoutStructure.addContainerStyledLayoutStructureItem(
 					rootLayoutStructureItem.getItemId(), 0);
 
 		boolean wrapWidgetPageContent = GetterUtil.getBoolean(
@@ -61,8 +61,8 @@ public class LayoutData {
 		for (LayoutRow layoutRow : _layoutRows) {
 			List<LayoutColumn> layoutColumns = layoutRow.getLayoutColumns();
 
-			LayoutStructureItem rowLayoutStructureItem =
-				layoutStructure.addRowLayoutStructureItem(
+			LayoutStructureItem rowStyledLayoutStructureItem =
+				layoutStructure.addRowStyledLayoutStructureItem(
 					containerStyledLayoutStructureItem.getItemId(), i++,
 					layoutColumns.size());
 
@@ -72,7 +72,7 @@ public class LayoutData {
 				ColumnLayoutStructureItem columnLayoutStructureItem =
 					(ColumnLayoutStructureItem)
 						layoutStructure.addColumnLayoutStructureItem(
-							rowLayoutStructureItem.getItemId(), j++);
+							rowStyledLayoutStructureItem.getItemId(), j++);
 
 				columnLayoutStructureItem.setSize(layoutColumn.getSize());
 
@@ -81,7 +81,7 @@ public class LayoutData {
 				for (long fragmentEntryLinkId :
 						layoutColumn.getFragmentEntryLinkIds()) {
 
-					layoutStructure.addFragmentLayoutStructureItem(
+					layoutStructure.addFragmentStyledLayoutStructureItem(
 						fragmentEntryLinkId,
 						columnLayoutStructureItem.getItemId(), k++);
 				}

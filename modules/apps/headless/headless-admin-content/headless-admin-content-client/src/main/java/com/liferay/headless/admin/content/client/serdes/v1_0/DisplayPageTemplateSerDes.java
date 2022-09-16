@@ -14,10 +14,8 @@
 
 package com.liferay.headless.admin.content.client.serdes.v1_0;
 
-import com.liferay.headless.admin.content.client.dto.v1_0.Creator;
 import com.liferay.headless.admin.content.client.dto.v1_0.CustomField;
 import com.liferay.headless.admin.content.client.dto.v1_0.DisplayPageTemplate;
-import com.liferay.headless.admin.content.client.dto.v1_0.PageDefinition;
 import com.liferay.headless.admin.content.client.json.BaseJSONParser;
 
 import java.text.DateFormat;
@@ -28,6 +26,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -62,7 +61,7 @@ public class DisplayPageTemplateSerDes {
 		sb.append("{");
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+			"yyyy-MM-dd'T'HH:mm:ssXX");
 
 		if (displayPageTemplate.getActions() != null) {
 			if (sb.length() > 1) {
@@ -273,7 +272,7 @@ public class DisplayPageTemplateSerDes {
 		Map<String, String> map = new TreeMap<>();
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+			"yyyy-MM-dd'T'HH:mm:ssXX");
 
 		if (displayPageTemplate.getActions() == null) {
 			map.put("actions", null);
@@ -427,13 +426,19 @@ public class DisplayPageTemplateSerDes {
 			else if (Objects.equals(jsonParserFieldName, "creator")) {
 				if (jsonParserFieldValue != null) {
 					displayPageTemplate.setCreator(
-						(Creator)jsonParserFieldValue);
+						CreatorSerDes.toDTO((String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "customFields")) {
 				if (jsonParserFieldValue != null) {
 					displayPageTemplate.setCustomFields(
-						(CustomField[])jsonParserFieldValue);
+						Stream.of(
+							toStrings((Object[])jsonParserFieldValue)
+						).map(
+							object -> CustomFieldSerDes.toDTO((String)object)
+						).toArray(
+							size -> new CustomField[size]
+						));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "dateCreated")) {
@@ -474,7 +479,8 @@ public class DisplayPageTemplateSerDes {
 			else if (Objects.equals(jsonParserFieldName, "pageDefinition")) {
 				if (jsonParserFieldValue != null) {
 					displayPageTemplate.setPageDefinition(
-						(PageDefinition)jsonParserFieldValue);
+						PageDefinitionSerDes.toDTO(
+							(String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "siteId")) {
@@ -492,9 +498,6 @@ public class DisplayPageTemplateSerDes {
 				if (jsonParserFieldValue != null) {
 					displayPageTemplate.setUuid((String)jsonParserFieldValue);
 				}
-			}
-			else if (jsonParserFieldName.equals("status")) {
-				throw new IllegalArgumentException();
 			}
 		}
 
@@ -524,7 +527,7 @@ public class DisplayPageTemplateSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -560,7 +563,7 @@ public class DisplayPageTemplateSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

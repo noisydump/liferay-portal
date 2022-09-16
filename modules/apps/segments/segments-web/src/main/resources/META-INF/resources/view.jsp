@@ -24,14 +24,14 @@ String eventName = liferayPortletResponse.getNamespace() + "assignSiteRoles";
 request.setAttribute("view.jsp-eventName", eventName);
 %>
 
-<clay:management-toolbar-v2
+<clay:management-toolbar
 	actionDropdownItems="<%= segmentsDisplayContext.getActionDropdownItems() %>"
 	clearResultsURL="<%= segmentsDisplayContext.getClearResultsURL() %>"
-	componentId="segmentsEntriesManagementToolbar"
 	creationMenu="<%= segmentsDisplayContext.getCreationMenu() %>"
 	disabled="<%= segmentsDisplayContext.isDisabledManagementBar() %>"
 	filterDropdownItems="<%= segmentsDisplayContext.getFilterItemsDropdownItems() %>"
 	itemsTotal="<%= segmentsDisplayContext.getTotalItems() %>"
+	propsTransformer="js/SegmentsManagementToolbarPropsTransformer"
 	searchActionURL="<%= segmentsDisplayContext.getSearchActionURL() %>"
 	searchContainerId="segmentsEntries"
 	searchFormName="searchFm"
@@ -40,6 +40,36 @@ request.setAttribute("view.jsp-eventName", eventName);
 	sortingOrder="<%= segmentsDisplayContext.getOrderByType() %>"
 	sortingURL="<%= segmentsDisplayContext.getSortingURL() %>"
 />
+
+<c:if test="<%= !segmentsDisplayContext.isSegmentationEnabled(themeDisplay.getCompanyId()) %>">
+	<clay:stripe
+		defaultTitleDisabled="<%= true %>"
+		dismissible="<%= true %>"
+		displayType="warning"
+	>
+		<strong><%= LanguageUtil.get(request, "segmentation-is-disabled") %></strong>
+
+		<%
+		String segmentsConfigurationURL = segmentsDisplayContext.getSegmentsCompanyConfigurationURL(request);
+		%>
+
+		<c:choose>
+			<c:when test="<%= segmentsConfigurationURL != null %>">
+				<clay:link
+					href="<%= segmentsConfigurationURL %>"
+					label='<%=
+						LanguageUtil.get(request, "to-enable,-go-to-instance-settings")
+%>'
+				/>
+			</c:when>
+			<c:otherwise>
+				<span><%=
+				LanguageUtil.get(
+					request, "contact-your-system-administrator-to-enable-it") %></span>
+			</c:otherwise>
+		</c:choose>
+	</clay:stripe>
+</c:if>
 
 <portlet:actionURL name="/segments/delete_segments_entry" var="deleteSegmentsEntryURL">
 	<portlet:param name="redirect" value="<%= currentURL %>" />
@@ -80,20 +110,17 @@ request.setAttribute("view.jsp-eventName", eventName);
 					cssClass="table-cell-expand-smallest table-cell-minw-150"
 					name="source"
 				>
-					<c:choose>
-						<c:when test="<%= Objects.equals(segmentsEntry.getSource(), SegmentsEntryConstants.SOURCE_ASAH_FARO_BACKEND) %>">
-							<liferay-ui:icon
-								message="source.analytics-cloud"
-								src='<%= PortalUtil.getPathContext(request) + "/assets/ac-icon.svg" %>'
-							/>
-						</c:when>
-						<c:otherwise>
-							<liferay-ui:icon
-								message="source.dxp"
-								src='<%= PortalUtil.getPathContext(request) + "/assets/dxp-icon.svg" %>'
-							/>
-						</c:otherwise>
-					</c:choose>
+
+					<%
+					SegmentsSourceDetailsProvider segmentsSourceDetailsProvider = SegmentsSourceDetailsProviderUtil.getSegmentsSourceDetailsProvider(segmentsEntry);
+					%>
+
+					<c:if test="<%= segmentsSourceDetailsProvider != null %>">
+						<liferay-ui:icon
+							message="<%= segmentsSourceDetailsProvider.getLabel(locale) %>"
+							src="<%= segmentsSourceDetailsProvider.getIconSrc() %>"
+						/>
+					</c:if>
 				</liferay-ui:search-container-column-text>
 			</c:if>
 
@@ -132,36 +159,6 @@ request.setAttribute("view.jsp-eventName", eventName);
 	</liferay-ui:search-container>
 </aui:form>
 
-<aui:script sandbox="<%= true %>">
-	var deleteSegmentsEntries = function () {
-		if (
-			confirm(
-				'<%= UnicodeLanguageUtil.get(request, "are-you-sure-you-want-to-delete-this") %>'
-			)
-		) {
-			submitForm(
-				document.querySelector('#<portlet:namespace />fmSegmentsEntries')
-			);
-		}
-	};
-
-	var ACTIONS = {
-		deleteSegmentsEntries: deleteSegmentsEntries,
-	};
-
-	Liferay.componentReady('segmentsEntriesManagementToolbar').then(function (
-		managementToolbar
-	) {
-		managementToolbar.on('actionItemClicked', function (event) {
-			var itemData = event.data.item.data;
-
-			if (itemData && itemData.action && ACTIONS[itemData.action]) {
-				ACTIONS[itemData.action]();
-			}
-		});
-	});
-</aui:script>
-
 <portlet:actionURL name="/segments/update_segments_entry_site_roles" var="updateSegmentsEntrySiteRolesURL">
 	<portlet:param name="redirect" value="<%= currentURL %>" />
 </portlet:actionURL>
@@ -178,27 +175,40 @@ request.setAttribute("view.jsp-eventName", eventName);
 
 	var delegate = delegateModule.default;
 
-	delegate(document, 'click', '.assign-site-roles-link', function (event) {
-		var link = event.target.closest('.assign-site-roles-link');
+	var delegateHandler = delegate(
+		document,
+		'click',
+		'.assign-site-roles-link',
+		(event) => {
+			var link = event.target.closest('.assign-site-roles-link');
 
-		var itemSelectorURL = link.dataset.itemselectorurl;
-		var segmentsEntryId = link.dataset.segmentsentryid;
+			var itemSelectorURL = link.dataset.itemselectorurl;
+			var segmentsEntryId = link.dataset.segmentsentryid;
 
-		Liferay.Util.openSelectionModal({
-			eventName: '<%= eventName %>',
-			multiple: true,
-			onSelect: function (selectedItem) {
-				if (selectedItem) {
-					var data = {
-						segmentsEntryId: segmentsEntryId,
-						siteRoleIds: selectedItem.value,
-					};
+			Liferay.Util.openSelectionModal({
+				eventName: '<%= eventName %>',
+				multiple: true,
+				onSelect: function (selectedItems) {
+					if (selectedItems) {
+						var data = {
+							segmentsEntryId: segmentsEntryId,
+							siteRoleIds: selectedItems.map((item) => item.value),
+						};
 
-					Liferay.Util.postForm(form, {data: data});
-				}
-			},
-			title: '<liferay-ui:message key="assign-site-roles" />',
-			url: itemSelectorURL,
-		});
-	});
+						Liferay.Util.postForm(form, {data: data});
+					}
+				},
+				title: '<liferay-ui:message key="assign-site-roles" />',
+				url: itemSelectorURL,
+			});
+		}
+	);
+
+	var onDestroyPortlet = function () {
+		delegateHandler.dispose();
+
+		Liferay.detach('destroyPortlet', onDestroyPortlet);
+	};
+
+	Liferay.on('destroyPortlet', onDestroyPortlet);
 </aui:script>

@@ -14,7 +14,14 @@
 
 package com.liferay.layout.content.page.editor.web.internal.portlet.action;
 
+import com.liferay.info.constants.InfoDisplayWebKeys;
+import com.liferay.info.item.ClassPKInfoItemIdentifier;
+import com.liferay.info.item.InfoItemServiceTracker;
+import com.liferay.info.item.provider.InfoItemDetailsProvider;
+import com.liferay.info.item.provider.InfoItemFieldValuesProvider;
+import com.liferay.info.item.provider.InfoItemObjectProvider;
 import com.liferay.layout.content.page.editor.constants.ContentPageEditorPortletKeys;
+import com.liferay.layout.display.page.LayoutDisplayPageProviderTracker;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Layout;
@@ -23,20 +30,21 @@ import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCResourceCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
+import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
+import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.service.permission.LayoutPermissionUtil;
 import com.liferay.portal.kernel.servlet.ServletContextPool;
 import com.liferay.portal.kernel.servlet.ServletResponseUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.theme.ThemeUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.segments.constants.SegmentsExperienceConstants;
 import com.liferay.segments.constants.SegmentsWebKeys;
-import com.liferay.taglib.util.ThemeUtil;
-
-import java.util.Locale;
 
 import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceResponse;
@@ -70,18 +78,41 @@ public class GetPagePreviewMVCResourceCommand extends BaseMVCResourceCommand {
 			ResourceRequest resourceRequest, ResourceResponse resourceResponse)
 		throws Exception {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)resourceRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay currentThemeDisplay =
+			(ThemeDisplay)resourceRequest.getAttribute(WebKeys.THEME_DISPLAY);
 
-		Locale currentLocale = themeDisplay.getLocale();
+		ThemeDisplay themeDisplay = (ThemeDisplay)currentThemeDisplay.clone();
+
+		long selPlid = ParamUtil.getLong(resourceRequest, "selPlid");
+
+		if (selPlid > 0) {
+			Layout layout = _layoutLocalService.fetchLayout(selPlid);
+
+			themeDisplay.setLayout(layout);
+
+			LayoutSet layoutSet = layout.getLayoutSet();
+
+			themeDisplay.setLayoutSet(layoutSet);
+			themeDisplay.setLookAndFeel(
+				layoutSet.getTheme(), layoutSet.getColorScheme());
+
+			themeDisplay.setPlid(layout.getPlid());
+		}
+
+		if (!LayoutPermissionUtil.containsLayoutUpdatePermission(
+				PermissionCheckerFactoryUtil.create(themeDisplay.getRealUser()),
+				themeDisplay.getLayout())) {
+
+			resourceResponse.setStatus(HttpServletResponse.SC_NOT_FOUND);
+
+			return;
+		}
 
 		long[] currentSegmentsExperienceIds = GetterUtil.getLongValues(
 			resourceRequest.getAttribute(
-				SegmentsWebKeys.SEGMENTS_EXPERIENCE_IDS),
-			new long[] {SegmentsExperienceConstants.ID_DEFAULT});
+				SegmentsWebKeys.SEGMENTS_EXPERIENCE_IDS));
 		boolean currentPortletDecorate = GetterUtil.getBoolean(
 			resourceRequest.getAttribute(WebKeys.PORTLET_DECORATE));
-		User currentUser = (User)resourceRequest.getAttribute(WebKeys.USER);
 
 		try {
 			long segmentsExperienceId = ParamUtil.getLong(
@@ -111,12 +142,26 @@ public class GetPagePreviewMVCResourceCommand extends BaseMVCResourceCommand {
 
 			layout.setClassNameId(0);
 
-			if (layout.isTypeAssetDisplay()) {
+			String className = ParamUtil.getString(
+				resourceRequest, "className");
+			long classPK = ParamUtil.getLong(resourceRequest, "classPK");
+
+			if (layout.isTypeAssetDisplay() &&
+				(Validator.isNull(className) || (classPK <= 0))) {
+
 				layout.setType(LayoutConstants.TYPE_CONTENT);
 			}
 
 			HttpServletRequest httpServletRequest =
 				_portal.getHttpServletRequest(resourceRequest);
+
+			httpServletRequest.setAttribute(
+				WebKeys.THEME_DISPLAY, themeDisplay);
+
+			if (Validator.isNotNull(className) && (classPK > 0)) {
+				_includeInfoItemObjects(className, classPK, httpServletRequest);
+			}
+
 			HttpServletResponse httpServletResponse =
 				_portal.getHttpServletResponse(resourceResponse);
 
@@ -147,12 +192,47 @@ public class GetPagePreviewMVCResourceCommand extends BaseMVCResourceCommand {
 				currentSegmentsExperienceIds);
 			resourceRequest.setAttribute(
 				WebKeys.PORTLET_DECORATE, currentPortletDecorate);
-
-			themeDisplay.setLocale(currentLocale);
-			themeDisplay.setSignedIn(true);
-			themeDisplay.setUser(currentUser);
+			resourceRequest.setAttribute(
+				WebKeys.THEME_DISPLAY, currentThemeDisplay);
 		}
 	}
+
+	private void _includeInfoItemObjects(
+			String className, long classPK,
+			HttpServletRequest httpServletRequest)
+		throws Exception {
+
+		InfoItemObjectProvider<?> infoItemObjectProvider =
+			_infoItemServiceTracker.getFirstInfoItemService(
+				InfoItemObjectProvider.class, className);
+
+		Object infoItem = infoItemObjectProvider.getInfoItem(
+			new ClassPKInfoItemIdentifier(classPK));
+
+		httpServletRequest.setAttribute(InfoDisplayWebKeys.INFO_ITEM, infoItem);
+
+		InfoItemDetailsProvider infoItemDetailsProvider =
+			_infoItemServiceTracker.getFirstInfoItemService(
+				InfoItemDetailsProvider.class, className);
+
+		httpServletRequest.setAttribute(
+			InfoDisplayWebKeys.INFO_ITEM_DETAILS,
+			infoItemDetailsProvider.getInfoItemDetails(infoItem));
+
+		httpServletRequest.setAttribute(
+			InfoDisplayWebKeys.INFO_ITEM_FIELD_VALUES_PROVIDER,
+			_infoItemServiceTracker.getFirstInfoItemService(
+				InfoItemFieldValuesProvider.class, className));
+	}
+
+	@Reference
+	private InfoItemServiceTracker _infoItemServiceTracker;
+
+	@Reference
+	private LayoutDisplayPageProviderTracker _layoutDisplayPageProviderTracker;
+
+	@Reference
+	private LayoutLocalService _layoutLocalService;
 
 	@Reference
 	private Portal _portal;

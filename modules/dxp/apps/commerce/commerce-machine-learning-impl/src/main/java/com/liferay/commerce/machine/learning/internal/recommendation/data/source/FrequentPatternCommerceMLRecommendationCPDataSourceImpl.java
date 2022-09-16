@@ -21,8 +21,9 @@ import com.liferay.commerce.product.catalog.CPCatalogEntry;
 import com.liferay.commerce.product.constants.CPWebKeys;
 import com.liferay.commerce.product.data.source.CPDataSource;
 import com.liferay.commerce.product.data.source.CPDataSourceResult;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ListUtil;
@@ -53,7 +54,7 @@ public class FrequentPatternCommerceMLRecommendationCPDataSourceImpl
 
 	@Override
 	public String getLabel(Locale locale) {
-		return LanguageUtil.get(
+		return _language.get(
 			getResourceBundle(locale), "frequent-pattern-recommendations");
 	}
 
@@ -108,14 +109,11 @@ public class FrequentPatternCommerceMLRecommendationCPDataSourceImpl
 					getRecommendedEntryClassPK();
 
 			if (_log.isTraceEnabled()) {
-				StringBuilder sb = new StringBuilder();
-
-				sb.append("Recommended entry ");
-				sb.append(recommendedEntryClassPK);
-				sb.append(" has score ");
-				sb.append(frequentPatternCommerceMLRecommendation.getScore());
-
-				_log.trace(sb.toString());
+				_log.trace(
+					StringBundler.concat(
+						"Recommended entry ", recommendedEntryClassPK,
+						" has score ",
+						frequentPatternCommerceMLRecommendation.getScore()));
 			}
 
 			try {
@@ -131,7 +129,7 @@ public class FrequentPatternCommerceMLRecommendationCPDataSourceImpl
 			}
 			catch (PortalException portalException) {
 				if (_log.isDebugEnabled()) {
-					_log.debug(portalException, portalException);
+					_log.debug(portalException);
 				}
 			}
 		}
@@ -146,5 +144,8 @@ public class FrequentPatternCommerceMLRecommendationCPDataSourceImpl
 	@Reference(unbind = "-")
 	private FrequentPatternCommerceMLRecommendationManager
 		_frequentPatternCommerceMLRecommendationManager;
+
+	@Reference
+	private Language _language;
 
 }

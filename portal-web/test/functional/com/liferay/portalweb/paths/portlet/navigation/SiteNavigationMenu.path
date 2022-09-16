@@ -2,11 +2,13 @@
 <head>
 <title>SiteNavigationMenu</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">SiteNavigationMenu</td></tr>
 </thead>
+
 <tbody>
 <tr>
 	<td>ITEM_ENTRY</td>
@@ -34,13 +36,18 @@
 	<td></td>
 </tr>
 <tr>
+	<td>ITEM_ENTRY_STATUS</td>
+	<td>xpath=(//div[contains(@class,'MenuItem')]//p[contains(@class,'card-title')][normalize-space()='${key_itemName}']/..//span[@class='label-item label-item-expand'])[${index}]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>USE_CUSTOM_NAME_CHECKBOX</td>
 	<td>//label[contains(.,'Use Custom Name')]/input[@type='checkbox']</td>
 	<td></td>
 </tr>
 <tr>
-	<td>SIDEBAR</td>
-	<td>//div[contains(@class,'sidebar')]</td>
+	<td>SIDEBAR_OPEN</td>
+	<td>//div[contains(@class,'AppLayout-sidebar--visible')]</td>
 	<td></td>
 </tr>
 <tr>

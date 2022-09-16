@@ -22,10 +22,11 @@ import com.liferay.commerce.order.status.CommerceOrderStatus;
 import com.liferay.commerce.service.CommerceOrderService;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.workflow.WorkflowHandlerRegistryUtil;
@@ -95,7 +96,7 @@ public class InProgressCommerceOrderStatusImpl implements CommerceOrderStatus {
 
 	@Override
 	public String getLabel(Locale locale) {
-		return LanguageUtil.get(
+		return _language.get(
 			locale, CommerceOrderConstants.getOrderStatusLabel(KEY));
 	}
 
@@ -118,7 +119,8 @@ public class InProgressCommerceOrderStatusImpl implements CommerceOrderStatus {
 		throws PortalException {
 
 		if (!commerceOrder.isPending() &&
-			_commerceOrderValidatorRegistry.isValid(null, commerceOrder) &&
+			_commerceOrderValidatorRegistry.isValid(
+				LocaleUtil.getSiteDefault(), commerceOrder) &&
 			_commerceOrderModelResourcePermission.contains(
 				PermissionThreadLocal.getPermissionChecker(), commerceOrder,
 				CommerceOrderActionKeys.CHECKOUT_COMMERCE_ORDER)) {
@@ -147,6 +149,9 @@ public class InProgressCommerceOrderStatusImpl implements CommerceOrderStatus {
 
 	@Reference
 	private CommerceOrderValidatorRegistry _commerceOrderValidatorRegistry;
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private Portal _portal;

@@ -21,7 +21,6 @@ CPDefinitionLinkDisplayContext cpDefinitionLinkDisplayContext = (CPDefinitionLin
 
 CPDefinition cpDefinition = cpDefinitionLinkDisplayContext.getCPDefinition();
 long cpDefinitionId = cpDefinitionLinkDisplayContext.getCPDefinitionId();
-PortletURL portletURL = cpDefinitionLinkDisplayContext.getPortletURL();
 %>
 
 <c:if test="<%= CommerceCatalogPermission.contains(permissionChecker, cpDefinition, ActionKeys.VIEW) %>">
@@ -36,74 +35,92 @@ PortletURL portletURL = cpDefinitionLinkDisplayContext.getPortletURL();
 	</aui:form>
 
 	<div class="pt-4" id="<portlet:namespace />productDefinitionLinksContainer">
-		<aui:form action="<%= portletURL.toString() %>" method="post" name="fm">
+		<portlet:actionURL name="/cp_definitions/edit_cp_definition" var="editProductDefinitionLinksActionURL" />
+
+		<aui:form action="<%= editProductDefinitionLinksActionURL %>" method="post" name="fm">
 			<aui:input name="<%= Constants.CMD %>" type="hidden" />
 			<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
+			<aui:input name="cpDefinitionId" type="hidden" value="<%= cpDefinitionId %>" />
+			<aui:input name="workflowAction" type="hidden" value="<%= WorkflowConstants.ACTION_SAVE_DRAFT %>" />
 
-			<clay:data-set-display
+			<frontend-data-set:classic-display
 				contextParams='<%=
 					HashMapBuilder.<String, String>put(
 						"cpDefinitionId", String.valueOf(cpDefinitionLinkDisplayContext.getCPDefinitionId())
 					).build()
 				%>'
 				creationMenu="<%= cpDefinitionLinkDisplayContext.getCreationMenu() %>"
-				dataProviderKey="<%= CommerceProductDataSetConstants.COMMERCE_DATA_SET_KEY_PRODUCT_LINKS %>"
-				formId="fm"
-				id="<%= CommerceProductDataSetConstants.COMMERCE_DATA_SET_KEY_PRODUCT_LINKS %>"
+				dataProviderKey="<%= CommerceProductFDSNames.PRODUCT_LINKS %>"
+				formName="fm"
+				id="<%= CommerceProductFDSNames.PRODUCT_LINKS %>"
 				itemsPerPage="<%= 10 %>"
-				namespace="<%= liferayPortletResponse.getNamespace() %>"
-				pageNumber="<%= 1 %>"
-				portletURL="<%= portletURL %>"
 				style="stacked"
 			/>
 		</aui:form>
 	</div>
 
-	<aui:script use="liferay-item-selector-dialog">
+	<aui:script sandbox="<%= true %>">
+		const eventHandlers = [];
+		let eventHandler;
 
 		<%
 		for (String type : cpDefinitionLinkDisplayContext.getCPDefinitionLinkTypes()) {
 		%>
 
-			Liferay.on(
+			eventHandler = Liferay.on(
 				'<portlet:namespace />addCommerceProductDefinitionLink<%= type %>',
-				function () {
-					var itemSelectorDialog = new A.LiferayItemSelectorDialog({
-						eventName: 'productDefinitionsSelectItem',
-						on: {
-							selectedItemChange: function (event) {
-								var selectedItems = event.newVal;
+				() => {
+					Liferay.Util.openSelectionModal({
+						multiple: true,
+						onSelect: (selectedItems) => {
+							if (!selectedItems || !selectedItems.length) {
+								return;
+							}
 
-								if (selectedItems) {
-									window.document.querySelector(
-										'#<portlet:namespace />cpDefinitionIds'
-									).value = selectedItems;
+							const cpDefinitionIdsInput = document.getElementById(
+								'<portlet:namespace />cpDefinitionIds'
+							);
 
-									window.document.querySelector(
-										'#<portlet:namespace />type'
-									).value = '<%= type %>';
+							if (cpDefinitionIdsInput) {
+								const values = selectedItems.map((item) => item.value);
 
-									var addCPDefinitionLinkFm = window.document.querySelector(
-										'#<portlet:namespace />addCPDefinitionLinkFm'
-									);
+								cpDefinitionIdsInput.value = values.join(',');
+							}
 
-									submitForm(addCPDefinitionLinkFm);
-								}
-							},
+							const typeInput = document.getElementById(
+								'<portlet:namespace />type'
+							);
+
+							if (typeInput) {
+								typeInput.value = '<%= type %>';
+							}
+
+							const form = document.getElementById(
+								'<portlet:namespace />addCPDefinitionLinkFm'
+							);
+
+							if (form) {
+								submitForm(form);
+							}
 						},
 						title:
-							'<liferay-ui:message arguments="<%= cpDefinition.getName(languageId) %>" key="add-new-product-to-x" />',
+							'<liferay-ui:message arguments="<%= HtmlUtil.escapeJS(cpDefinition.getName(languageId)) %>" key="add-new-product-to-x" />',
 						url:
 							'<%= cpDefinitionLinkDisplayContext.getItemSelectorUrl(type) %>',
 					});
-
-					itemSelectorDialog.open();
 				}
 			);
+
+			eventHandlers.push(eventHandler);
 
 		<%
 		}
 		%>
 
+		Liferay.on('destroyPortlet', () => {
+			eventHandlers.forEach((eventHandler) => {
+				eventHandler.detach();
+			});
+		});
 	</aui:script>
 </c:if>

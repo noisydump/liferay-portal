@@ -2,11 +2,13 @@
 <head>
 <title>DocumentsAndMediaEditDocument</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">DocumentsAndMediaEditDocument</td></tr>
 </thead>
+
 <tbody>
 <tr>
 	<td>UNIQUE_DOCUMENT_ERROR_MESSAGE</td>
@@ -18,7 +20,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--INFO_BAR-->
+
 <tr>
 	<td>FOLDER</td>
 	<td>//input[contains(@id,'folderName')]</td>
@@ -29,7 +33,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--REVISION_BUTTON-->
+
 <tr>
 	<td>MAJOR_REVISION_BUTTON</td>
 	<td>//label[contains(.,'Major Revision')]/input</td>

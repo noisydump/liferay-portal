@@ -16,10 +16,10 @@ import {parse} from '../../shared/components/router/queryString.es';
 import {useFilter} from '../../shared/hooks/useFilter.es';
 import {usePost} from '../../shared/hooks/usePost.es';
 import {useProcessTitle} from '../../shared/hooks/useProcessTitle.es';
-import {Body} from './WorkloadByAssigneePageBody.es';
-import {Header} from './WorkloadByAssigneePageHeader.es';
+import Body from './WorkloadByAssigneePageBody.es';
+import Header from './WorkloadByAssigneePageHeader.es';
 
-const WorkloadByAssigneePage = ({query, routeParams}) => {
+function WorkloadByAssigneePage({query, routeParams}) {
 	const {processId, ...paginationParams} = routeParams;
 
 	const {search = null} = parse(query);
@@ -43,7 +43,12 @@ const WorkloadByAssigneePage = ({query, routeParams}) => {
 		url: `/processes/${processId}/assignees/metrics`,
 	});
 
-	const promises = useMemo(() => [postData()], [postData]);
+	const promises = useMemo(
+		() => [postData()],
+
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[routeParams]
+	);
 
 	return (
 		<PromisesResolver promises={promises}>
@@ -51,18 +56,18 @@ const WorkloadByAssigneePage = ({query, routeParams}) => {
 				filterKeys={prefixedKeys}
 				routeParams={{...routeParams, search}}
 				selectedFilters={selectedFilters}
-				totalCount={data.totalCount}
+				totalCount={data?.totalCount}
 			/>
 
 			<WorkloadByAssigneePage.Body
 				{...data}
-				filtered={search || selectedFilters.length > 0}
+				filtered={search || !!selectedFilters.length}
 				processId={processId}
 				taskNames={taskNames}
 			/>
 		</PromisesResolver>
 	);
-};
+}
 
 WorkloadByAssigneePage.Body = Body;
 WorkloadByAssigneePage.Header = Header;

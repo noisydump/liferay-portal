@@ -25,10 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.util.tracker.ServiceTracker;
-
 /**
  * The persistence utility for the asset list entry usage service. This utility wraps <code>com.liferay.asset.list.service.persistence.impl.AssetListEntryUsagePersistenceImpl</code> and provides direct access to the database for CRUD operations. This utility should only be used by the service layer, as it must operate within a transaction. Never access this utility in a JSP, controller, model, or other front-end class.
  *
@@ -718,6 +714,170 @@ public class AssetListEntryUsageUtil {
 	}
 
 	/**
+	 * Returns all the asset list entry usages where plid = &#63;.
+	 *
+	 * @param plid the plid
+	 * @return the matching asset list entry usages
+	 */
+	public static List<AssetListEntryUsage> findByPlid(long plid) {
+		return getPersistence().findByPlid(plid);
+	}
+
+	/**
+	 * Returns a range of all the asset list entry usages where plid = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetListEntryUsageModelImpl</code>.
+	 * </p>
+	 *
+	 * @param plid the plid
+	 * @param start the lower bound of the range of asset list entry usages
+	 * @param end the upper bound of the range of asset list entry usages (not inclusive)
+	 * @return the range of matching asset list entry usages
+	 */
+	public static List<AssetListEntryUsage> findByPlid(
+		long plid, int start, int end) {
+
+		return getPersistence().findByPlid(plid, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the asset list entry usages where plid = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetListEntryUsageModelImpl</code>.
+	 * </p>
+	 *
+	 * @param plid the plid
+	 * @param start the lower bound of the range of asset list entry usages
+	 * @param end the upper bound of the range of asset list entry usages (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching asset list entry usages
+	 */
+	public static List<AssetListEntryUsage> findByPlid(
+		long plid, int start, int end,
+		OrderByComparator<AssetListEntryUsage> orderByComparator) {
+
+		return getPersistence().findByPlid(plid, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns an ordered range of all the asset list entry usages where plid = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetListEntryUsageModelImpl</code>.
+	 * </p>
+	 *
+	 * @param plid the plid
+	 * @param start the lower bound of the range of asset list entry usages
+	 * @param end the upper bound of the range of asset list entry usages (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching asset list entry usages
+	 */
+	public static List<AssetListEntryUsage> findByPlid(
+		long plid, int start, int end,
+		OrderByComparator<AssetListEntryUsage> orderByComparator,
+		boolean useFinderCache) {
+
+		return getPersistence().findByPlid(
+			plid, start, end, orderByComparator, useFinderCache);
+	}
+
+	/**
+	 * Returns the first asset list entry usage in the ordered set where plid = &#63;.
+	 *
+	 * @param plid the plid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching asset list entry usage
+	 * @throws NoSuchEntryUsageException if a matching asset list entry usage could not be found
+	 */
+	public static AssetListEntryUsage findByPlid_First(
+			long plid, OrderByComparator<AssetListEntryUsage> orderByComparator)
+		throws com.liferay.asset.list.exception.NoSuchEntryUsageException {
+
+		return getPersistence().findByPlid_First(plid, orderByComparator);
+	}
+
+	/**
+	 * Returns the first asset list entry usage in the ordered set where plid = &#63;.
+	 *
+	 * @param plid the plid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching asset list entry usage, or <code>null</code> if a matching asset list entry usage could not be found
+	 */
+	public static AssetListEntryUsage fetchByPlid_First(
+		long plid, OrderByComparator<AssetListEntryUsage> orderByComparator) {
+
+		return getPersistence().fetchByPlid_First(plid, orderByComparator);
+	}
+
+	/**
+	 * Returns the last asset list entry usage in the ordered set where plid = &#63;.
+	 *
+	 * @param plid the plid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching asset list entry usage
+	 * @throws NoSuchEntryUsageException if a matching asset list entry usage could not be found
+	 */
+	public static AssetListEntryUsage findByPlid_Last(
+			long plid, OrderByComparator<AssetListEntryUsage> orderByComparator)
+		throws com.liferay.asset.list.exception.NoSuchEntryUsageException {
+
+		return getPersistence().findByPlid_Last(plid, orderByComparator);
+	}
+
+	/**
+	 * Returns the last asset list entry usage in the ordered set where plid = &#63;.
+	 *
+	 * @param plid the plid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching asset list entry usage, or <code>null</code> if a matching asset list entry usage could not be found
+	 */
+	public static AssetListEntryUsage fetchByPlid_Last(
+		long plid, OrderByComparator<AssetListEntryUsage> orderByComparator) {
+
+		return getPersistence().fetchByPlid_Last(plid, orderByComparator);
+	}
+
+	/**
+	 * Returns the asset list entry usages before and after the current asset list entry usage in the ordered set where plid = &#63;.
+	 *
+	 * @param assetListEntryUsageId the primary key of the current asset list entry usage
+	 * @param plid the plid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next asset list entry usage
+	 * @throws NoSuchEntryUsageException if a asset list entry usage with the primary key could not be found
+	 */
+	public static AssetListEntryUsage[] findByPlid_PrevAndNext(
+			long assetListEntryUsageId, long plid,
+			OrderByComparator<AssetListEntryUsage> orderByComparator)
+		throws com.liferay.asset.list.exception.NoSuchEntryUsageException {
+
+		return getPersistence().findByPlid_PrevAndNext(
+			assetListEntryUsageId, plid, orderByComparator);
+	}
+
+	/**
+	 * Removes all the asset list entry usages where plid = &#63; from the database.
+	 *
+	 * @param plid the plid
+	 */
+	public static void removeByPlid(long plid) {
+		getPersistence().removeByPlid(plid);
+	}
+
+	/**
+	 * Returns the number of asset list entry usages where plid = &#63;.
+	 *
+	 * @param plid the plid
+	 * @return the number of matching asset list entry usages
+	 */
+	public static int countByPlid(long plid) {
+		return getPersistence().countByPlid(plid);
+	}
+
+	/**
 	 * Returns all the asset list entry usages where assetListEntryId = &#63; and classNameId = &#63;.
 	 *
 	 * @param assetListEntryId the asset list entry ID
@@ -907,79 +1067,730 @@ public class AssetListEntryUsageUtil {
 	}
 
 	/**
-	 * Returns the asset list entry usage where classNameId = &#63; and classPK = &#63; and portletId = &#63; or throws a <code>NoSuchEntryUsageException</code> if it could not be found.
+	 * Returns all the asset list entry usages where groupId = &#63; and classNameId = &#63; and key = &#63;.
 	 *
+	 * @param groupId the group ID
 	 * @param classNameId the class name ID
-	 * @param classPK the class pk
-	 * @param portletId the portlet ID
+	 * @param key the key
+	 * @return the matching asset list entry usages
+	 */
+	public static List<AssetListEntryUsage> findByG_C_K(
+		long groupId, long classNameId, String key) {
+
+		return getPersistence().findByG_C_K(groupId, classNameId, key);
+	}
+
+	/**
+	 * Returns a range of all the asset list entry usages where groupId = &#63; and classNameId = &#63; and key = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetListEntryUsageModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param key the key
+	 * @param start the lower bound of the range of asset list entry usages
+	 * @param end the upper bound of the range of asset list entry usages (not inclusive)
+	 * @return the range of matching asset list entry usages
+	 */
+	public static List<AssetListEntryUsage> findByG_C_K(
+		long groupId, long classNameId, String key, int start, int end) {
+
+		return getPersistence().findByG_C_K(
+			groupId, classNameId, key, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the asset list entry usages where groupId = &#63; and classNameId = &#63; and key = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetListEntryUsageModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param key the key
+	 * @param start the lower bound of the range of asset list entry usages
+	 * @param end the upper bound of the range of asset list entry usages (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching asset list entry usages
+	 */
+	public static List<AssetListEntryUsage> findByG_C_K(
+		long groupId, long classNameId, String key, int start, int end,
+		OrderByComparator<AssetListEntryUsage> orderByComparator) {
+
+		return getPersistence().findByG_C_K(
+			groupId, classNameId, key, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns an ordered range of all the asset list entry usages where groupId = &#63; and classNameId = &#63; and key = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetListEntryUsageModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param key the key
+	 * @param start the lower bound of the range of asset list entry usages
+	 * @param end the upper bound of the range of asset list entry usages (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching asset list entry usages
+	 */
+	public static List<AssetListEntryUsage> findByG_C_K(
+		long groupId, long classNameId, String key, int start, int end,
+		OrderByComparator<AssetListEntryUsage> orderByComparator,
+		boolean useFinderCache) {
+
+		return getPersistence().findByG_C_K(
+			groupId, classNameId, key, start, end, orderByComparator,
+			useFinderCache);
+	}
+
+	/**
+	 * Returns the first asset list entry usage in the ordered set where groupId = &#63; and classNameId = &#63; and key = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param key the key
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching asset list entry usage
+	 * @throws NoSuchEntryUsageException if a matching asset list entry usage could not be found
+	 */
+	public static AssetListEntryUsage findByG_C_K_First(
+			long groupId, long classNameId, String key,
+			OrderByComparator<AssetListEntryUsage> orderByComparator)
+		throws com.liferay.asset.list.exception.NoSuchEntryUsageException {
+
+		return getPersistence().findByG_C_K_First(
+			groupId, classNameId, key, orderByComparator);
+	}
+
+	/**
+	 * Returns the first asset list entry usage in the ordered set where groupId = &#63; and classNameId = &#63; and key = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param key the key
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching asset list entry usage, or <code>null</code> if a matching asset list entry usage could not be found
+	 */
+	public static AssetListEntryUsage fetchByG_C_K_First(
+		long groupId, long classNameId, String key,
+		OrderByComparator<AssetListEntryUsage> orderByComparator) {
+
+		return getPersistence().fetchByG_C_K_First(
+			groupId, classNameId, key, orderByComparator);
+	}
+
+	/**
+	 * Returns the last asset list entry usage in the ordered set where groupId = &#63; and classNameId = &#63; and key = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param key the key
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching asset list entry usage
+	 * @throws NoSuchEntryUsageException if a matching asset list entry usage could not be found
+	 */
+	public static AssetListEntryUsage findByG_C_K_Last(
+			long groupId, long classNameId, String key,
+			OrderByComparator<AssetListEntryUsage> orderByComparator)
+		throws com.liferay.asset.list.exception.NoSuchEntryUsageException {
+
+		return getPersistence().findByG_C_K_Last(
+			groupId, classNameId, key, orderByComparator);
+	}
+
+	/**
+	 * Returns the last asset list entry usage in the ordered set where groupId = &#63; and classNameId = &#63; and key = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param key the key
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching asset list entry usage, or <code>null</code> if a matching asset list entry usage could not be found
+	 */
+	public static AssetListEntryUsage fetchByG_C_K_Last(
+		long groupId, long classNameId, String key,
+		OrderByComparator<AssetListEntryUsage> orderByComparator) {
+
+		return getPersistence().fetchByG_C_K_Last(
+			groupId, classNameId, key, orderByComparator);
+	}
+
+	/**
+	 * Returns the asset list entry usages before and after the current asset list entry usage in the ordered set where groupId = &#63; and classNameId = &#63; and key = &#63;.
+	 *
+	 * @param assetListEntryUsageId the primary key of the current asset list entry usage
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param key the key
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next asset list entry usage
+	 * @throws NoSuchEntryUsageException if a asset list entry usage with the primary key could not be found
+	 */
+	public static AssetListEntryUsage[] findByG_C_K_PrevAndNext(
+			long assetListEntryUsageId, long groupId, long classNameId,
+			String key,
+			OrderByComparator<AssetListEntryUsage> orderByComparator)
+		throws com.liferay.asset.list.exception.NoSuchEntryUsageException {
+
+		return getPersistence().findByG_C_K_PrevAndNext(
+			assetListEntryUsageId, groupId, classNameId, key,
+			orderByComparator);
+	}
+
+	/**
+	 * Removes all the asset list entry usages where groupId = &#63; and classNameId = &#63; and key = &#63; from the database.
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param key the key
+	 */
+	public static void removeByG_C_K(
+		long groupId, long classNameId, String key) {
+
+		getPersistence().removeByG_C_K(groupId, classNameId, key);
+	}
+
+	/**
+	 * Returns the number of asset list entry usages where groupId = &#63; and classNameId = &#63; and key = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param key the key
+	 * @return the number of matching asset list entry usages
+	 */
+	public static int countByG_C_K(long groupId, long classNameId, String key) {
+		return getPersistence().countByG_C_K(groupId, classNameId, key);
+	}
+
+	/**
+	 * Returns all the asset list entry usages where containerKey = &#63; and containerType = &#63; and plid = &#63;.
+	 *
+	 * @param containerKey the container key
+	 * @param containerType the container type
+	 * @param plid the plid
+	 * @return the matching asset list entry usages
+	 */
+	public static List<AssetListEntryUsage> findByCK_CT_P(
+		String containerKey, long containerType, long plid) {
+
+		return getPersistence().findByCK_CT_P(
+			containerKey, containerType, plid);
+	}
+
+	/**
+	 * Returns a range of all the asset list entry usages where containerKey = &#63; and containerType = &#63; and plid = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetListEntryUsageModelImpl</code>.
+	 * </p>
+	 *
+	 * @param containerKey the container key
+	 * @param containerType the container type
+	 * @param plid the plid
+	 * @param start the lower bound of the range of asset list entry usages
+	 * @param end the upper bound of the range of asset list entry usages (not inclusive)
+	 * @return the range of matching asset list entry usages
+	 */
+	public static List<AssetListEntryUsage> findByCK_CT_P(
+		String containerKey, long containerType, long plid, int start,
+		int end) {
+
+		return getPersistence().findByCK_CT_P(
+			containerKey, containerType, plid, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the asset list entry usages where containerKey = &#63; and containerType = &#63; and plid = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetListEntryUsageModelImpl</code>.
+	 * </p>
+	 *
+	 * @param containerKey the container key
+	 * @param containerType the container type
+	 * @param plid the plid
+	 * @param start the lower bound of the range of asset list entry usages
+	 * @param end the upper bound of the range of asset list entry usages (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching asset list entry usages
+	 */
+	public static List<AssetListEntryUsage> findByCK_CT_P(
+		String containerKey, long containerType, long plid, int start, int end,
+		OrderByComparator<AssetListEntryUsage> orderByComparator) {
+
+		return getPersistence().findByCK_CT_P(
+			containerKey, containerType, plid, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns an ordered range of all the asset list entry usages where containerKey = &#63; and containerType = &#63; and plid = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetListEntryUsageModelImpl</code>.
+	 * </p>
+	 *
+	 * @param containerKey the container key
+	 * @param containerType the container type
+	 * @param plid the plid
+	 * @param start the lower bound of the range of asset list entry usages
+	 * @param end the upper bound of the range of asset list entry usages (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching asset list entry usages
+	 */
+	public static List<AssetListEntryUsage> findByCK_CT_P(
+		String containerKey, long containerType, long plid, int start, int end,
+		OrderByComparator<AssetListEntryUsage> orderByComparator,
+		boolean useFinderCache) {
+
+		return getPersistence().findByCK_CT_P(
+			containerKey, containerType, plid, start, end, orderByComparator,
+			useFinderCache);
+	}
+
+	/**
+	 * Returns the first asset list entry usage in the ordered set where containerKey = &#63; and containerType = &#63; and plid = &#63;.
+	 *
+	 * @param containerKey the container key
+	 * @param containerType the container type
+	 * @param plid the plid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching asset list entry usage
+	 * @throws NoSuchEntryUsageException if a matching asset list entry usage could not be found
+	 */
+	public static AssetListEntryUsage findByCK_CT_P_First(
+			String containerKey, long containerType, long plid,
+			OrderByComparator<AssetListEntryUsage> orderByComparator)
+		throws com.liferay.asset.list.exception.NoSuchEntryUsageException {
+
+		return getPersistence().findByCK_CT_P_First(
+			containerKey, containerType, plid, orderByComparator);
+	}
+
+	/**
+	 * Returns the first asset list entry usage in the ordered set where containerKey = &#63; and containerType = &#63; and plid = &#63;.
+	 *
+	 * @param containerKey the container key
+	 * @param containerType the container type
+	 * @param plid the plid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching asset list entry usage, or <code>null</code> if a matching asset list entry usage could not be found
+	 */
+	public static AssetListEntryUsage fetchByCK_CT_P_First(
+		String containerKey, long containerType, long plid,
+		OrderByComparator<AssetListEntryUsage> orderByComparator) {
+
+		return getPersistence().fetchByCK_CT_P_First(
+			containerKey, containerType, plid, orderByComparator);
+	}
+
+	/**
+	 * Returns the last asset list entry usage in the ordered set where containerKey = &#63; and containerType = &#63; and plid = &#63;.
+	 *
+	 * @param containerKey the container key
+	 * @param containerType the container type
+	 * @param plid the plid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching asset list entry usage
+	 * @throws NoSuchEntryUsageException if a matching asset list entry usage could not be found
+	 */
+	public static AssetListEntryUsage findByCK_CT_P_Last(
+			String containerKey, long containerType, long plid,
+			OrderByComparator<AssetListEntryUsage> orderByComparator)
+		throws com.liferay.asset.list.exception.NoSuchEntryUsageException {
+
+		return getPersistence().findByCK_CT_P_Last(
+			containerKey, containerType, plid, orderByComparator);
+	}
+
+	/**
+	 * Returns the last asset list entry usage in the ordered set where containerKey = &#63; and containerType = &#63; and plid = &#63;.
+	 *
+	 * @param containerKey the container key
+	 * @param containerType the container type
+	 * @param plid the plid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching asset list entry usage, or <code>null</code> if a matching asset list entry usage could not be found
+	 */
+	public static AssetListEntryUsage fetchByCK_CT_P_Last(
+		String containerKey, long containerType, long plid,
+		OrderByComparator<AssetListEntryUsage> orderByComparator) {
+
+		return getPersistence().fetchByCK_CT_P_Last(
+			containerKey, containerType, plid, orderByComparator);
+	}
+
+	/**
+	 * Returns the asset list entry usages before and after the current asset list entry usage in the ordered set where containerKey = &#63; and containerType = &#63; and plid = &#63;.
+	 *
+	 * @param assetListEntryUsageId the primary key of the current asset list entry usage
+	 * @param containerKey the container key
+	 * @param containerType the container type
+	 * @param plid the plid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next asset list entry usage
+	 * @throws NoSuchEntryUsageException if a asset list entry usage with the primary key could not be found
+	 */
+	public static AssetListEntryUsage[] findByCK_CT_P_PrevAndNext(
+			long assetListEntryUsageId, String containerKey, long containerType,
+			long plid, OrderByComparator<AssetListEntryUsage> orderByComparator)
+		throws com.liferay.asset.list.exception.NoSuchEntryUsageException {
+
+		return getPersistence().findByCK_CT_P_PrevAndNext(
+			assetListEntryUsageId, containerKey, containerType, plid,
+			orderByComparator);
+	}
+
+	/**
+	 * Removes all the asset list entry usages where containerKey = &#63; and containerType = &#63; and plid = &#63; from the database.
+	 *
+	 * @param containerKey the container key
+	 * @param containerType the container type
+	 * @param plid the plid
+	 */
+	public static void removeByCK_CT_P(
+		String containerKey, long containerType, long plid) {
+
+		getPersistence().removeByCK_CT_P(containerKey, containerType, plid);
+	}
+
+	/**
+	 * Returns the number of asset list entry usages where containerKey = &#63; and containerType = &#63; and plid = &#63;.
+	 *
+	 * @param containerKey the container key
+	 * @param containerType the container type
+	 * @param plid the plid
+	 * @return the number of matching asset list entry usages
+	 */
+	public static int countByCK_CT_P(
+		String containerKey, long containerType, long plid) {
+
+		return getPersistence().countByCK_CT_P(
+			containerKey, containerType, plid);
+	}
+
+	/**
+	 * Returns all the asset list entry usages where groupId = &#63; and classNameId = &#63; and key = &#63; and type = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param key the key
+	 * @param type the type
+	 * @return the matching asset list entry usages
+	 */
+	public static List<AssetListEntryUsage> findByG_C_K_T(
+		long groupId, long classNameId, String key, int type) {
+
+		return getPersistence().findByG_C_K_T(groupId, classNameId, key, type);
+	}
+
+	/**
+	 * Returns a range of all the asset list entry usages where groupId = &#63; and classNameId = &#63; and key = &#63; and type = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetListEntryUsageModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param key the key
+	 * @param type the type
+	 * @param start the lower bound of the range of asset list entry usages
+	 * @param end the upper bound of the range of asset list entry usages (not inclusive)
+	 * @return the range of matching asset list entry usages
+	 */
+	public static List<AssetListEntryUsage> findByG_C_K_T(
+		long groupId, long classNameId, String key, int type, int start,
+		int end) {
+
+		return getPersistence().findByG_C_K_T(
+			groupId, classNameId, key, type, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the asset list entry usages where groupId = &#63; and classNameId = &#63; and key = &#63; and type = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetListEntryUsageModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param key the key
+	 * @param type the type
+	 * @param start the lower bound of the range of asset list entry usages
+	 * @param end the upper bound of the range of asset list entry usages (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching asset list entry usages
+	 */
+	public static List<AssetListEntryUsage> findByG_C_K_T(
+		long groupId, long classNameId, String key, int type, int start,
+		int end, OrderByComparator<AssetListEntryUsage> orderByComparator) {
+
+		return getPersistence().findByG_C_K_T(
+			groupId, classNameId, key, type, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns an ordered range of all the asset list entry usages where groupId = &#63; and classNameId = &#63; and key = &#63; and type = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetListEntryUsageModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param key the key
+	 * @param type the type
+	 * @param start the lower bound of the range of asset list entry usages
+	 * @param end the upper bound of the range of asset list entry usages (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching asset list entry usages
+	 */
+	public static List<AssetListEntryUsage> findByG_C_K_T(
+		long groupId, long classNameId, String key, int type, int start,
+		int end, OrderByComparator<AssetListEntryUsage> orderByComparator,
+		boolean useFinderCache) {
+
+		return getPersistence().findByG_C_K_T(
+			groupId, classNameId, key, type, start, end, orderByComparator,
+			useFinderCache);
+	}
+
+	/**
+	 * Returns the first asset list entry usage in the ordered set where groupId = &#63; and classNameId = &#63; and key = &#63; and type = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param key the key
+	 * @param type the type
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching asset list entry usage
+	 * @throws NoSuchEntryUsageException if a matching asset list entry usage could not be found
+	 */
+	public static AssetListEntryUsage findByG_C_K_T_First(
+			long groupId, long classNameId, String key, int type,
+			OrderByComparator<AssetListEntryUsage> orderByComparator)
+		throws com.liferay.asset.list.exception.NoSuchEntryUsageException {
+
+		return getPersistence().findByG_C_K_T_First(
+			groupId, classNameId, key, type, orderByComparator);
+	}
+
+	/**
+	 * Returns the first asset list entry usage in the ordered set where groupId = &#63; and classNameId = &#63; and key = &#63; and type = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param key the key
+	 * @param type the type
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching asset list entry usage, or <code>null</code> if a matching asset list entry usage could not be found
+	 */
+	public static AssetListEntryUsage fetchByG_C_K_T_First(
+		long groupId, long classNameId, String key, int type,
+		OrderByComparator<AssetListEntryUsage> orderByComparator) {
+
+		return getPersistence().fetchByG_C_K_T_First(
+			groupId, classNameId, key, type, orderByComparator);
+	}
+
+	/**
+	 * Returns the last asset list entry usage in the ordered set where groupId = &#63; and classNameId = &#63; and key = &#63; and type = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param key the key
+	 * @param type the type
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching asset list entry usage
+	 * @throws NoSuchEntryUsageException if a matching asset list entry usage could not be found
+	 */
+	public static AssetListEntryUsage findByG_C_K_T_Last(
+			long groupId, long classNameId, String key, int type,
+			OrderByComparator<AssetListEntryUsage> orderByComparator)
+		throws com.liferay.asset.list.exception.NoSuchEntryUsageException {
+
+		return getPersistence().findByG_C_K_T_Last(
+			groupId, classNameId, key, type, orderByComparator);
+	}
+
+	/**
+	 * Returns the last asset list entry usage in the ordered set where groupId = &#63; and classNameId = &#63; and key = &#63; and type = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param key the key
+	 * @param type the type
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching asset list entry usage, or <code>null</code> if a matching asset list entry usage could not be found
+	 */
+	public static AssetListEntryUsage fetchByG_C_K_T_Last(
+		long groupId, long classNameId, String key, int type,
+		OrderByComparator<AssetListEntryUsage> orderByComparator) {
+
+		return getPersistence().fetchByG_C_K_T_Last(
+			groupId, classNameId, key, type, orderByComparator);
+	}
+
+	/**
+	 * Returns the asset list entry usages before and after the current asset list entry usage in the ordered set where groupId = &#63; and classNameId = &#63; and key = &#63; and type = &#63;.
+	 *
+	 * @param assetListEntryUsageId the primary key of the current asset list entry usage
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param key the key
+	 * @param type the type
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next asset list entry usage
+	 * @throws NoSuchEntryUsageException if a asset list entry usage with the primary key could not be found
+	 */
+	public static AssetListEntryUsage[] findByG_C_K_T_PrevAndNext(
+			long assetListEntryUsageId, long groupId, long classNameId,
+			String key, int type,
+			OrderByComparator<AssetListEntryUsage> orderByComparator)
+		throws com.liferay.asset.list.exception.NoSuchEntryUsageException {
+
+		return getPersistence().findByG_C_K_T_PrevAndNext(
+			assetListEntryUsageId, groupId, classNameId, key, type,
+			orderByComparator);
+	}
+
+	/**
+	 * Removes all the asset list entry usages where groupId = &#63; and classNameId = &#63; and key = &#63; and type = &#63; from the database.
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param key the key
+	 * @param type the type
+	 */
+	public static void removeByG_C_K_T(
+		long groupId, long classNameId, String key, int type) {
+
+		getPersistence().removeByG_C_K_T(groupId, classNameId, key, type);
+	}
+
+	/**
+	 * Returns the number of asset list entry usages where groupId = &#63; and classNameId = &#63; and key = &#63; and type = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param key the key
+	 * @param type the type
+	 * @return the number of matching asset list entry usages
+	 */
+	public static int countByG_C_K_T(
+		long groupId, long classNameId, String key, int type) {
+
+		return getPersistence().countByG_C_K_T(groupId, classNameId, key, type);
+	}
+
+	/**
+	 * Returns the asset list entry usage where groupId = &#63; and classNameId = &#63; and containerKey = &#63; and containerType = &#63; and key = &#63; and plid = &#63; or throws a <code>NoSuchEntryUsageException</code> if it could not be found.
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param containerKey the container key
+	 * @param containerType the container type
+	 * @param key the key
+	 * @param plid the plid
 	 * @return the matching asset list entry usage
 	 * @throws NoSuchEntryUsageException if a matching asset list entry usage could not be found
 	 */
-	public static AssetListEntryUsage findByC_C_P(
-			long classNameId, long classPK, String portletId)
+	public static AssetListEntryUsage findByG_C_CK_CT_K_P(
+			long groupId, long classNameId, String containerKey,
+			long containerType, String key, long plid)
 		throws com.liferay.asset.list.exception.NoSuchEntryUsageException {
 
-		return getPersistence().findByC_C_P(classNameId, classPK, portletId);
+		return getPersistence().findByG_C_CK_CT_K_P(
+			groupId, classNameId, containerKey, containerType, key, plid);
 	}
 
 	/**
-	 * Returns the asset list entry usage where classNameId = &#63; and classPK = &#63; and portletId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 * Returns the asset list entry usage where groupId = &#63; and classNameId = &#63; and containerKey = &#63; and containerType = &#63; and key = &#63; and plid = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
 	 *
+	 * @param groupId the group ID
 	 * @param classNameId the class name ID
-	 * @param classPK the class pk
-	 * @param portletId the portlet ID
+	 * @param containerKey the container key
+	 * @param containerType the container type
+	 * @param key the key
+	 * @param plid the plid
 	 * @return the matching asset list entry usage, or <code>null</code> if a matching asset list entry usage could not be found
 	 */
-	public static AssetListEntryUsage fetchByC_C_P(
-		long classNameId, long classPK, String portletId) {
+	public static AssetListEntryUsage fetchByG_C_CK_CT_K_P(
+		long groupId, long classNameId, String containerKey, long containerType,
+		String key, long plid) {
 
-		return getPersistence().fetchByC_C_P(classNameId, classPK, portletId);
+		return getPersistence().fetchByG_C_CK_CT_K_P(
+			groupId, classNameId, containerKey, containerType, key, plid);
 	}
 
 	/**
-	 * Returns the asset list entry usage where classNameId = &#63; and classPK = &#63; and portletId = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	 * Returns the asset list entry usage where groupId = &#63; and classNameId = &#63; and containerKey = &#63; and containerType = &#63; and key = &#63; and plid = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
 	 *
+	 * @param groupId the group ID
 	 * @param classNameId the class name ID
-	 * @param classPK the class pk
-	 * @param portletId the portlet ID
+	 * @param containerKey the container key
+	 * @param containerType the container type
+	 * @param key the key
+	 * @param plid the plid
 	 * @param useFinderCache whether to use the finder cache
 	 * @return the matching asset list entry usage, or <code>null</code> if a matching asset list entry usage could not be found
 	 */
-	public static AssetListEntryUsage fetchByC_C_P(
-		long classNameId, long classPK, String portletId,
-		boolean useFinderCache) {
+	public static AssetListEntryUsage fetchByG_C_CK_CT_K_P(
+		long groupId, long classNameId, String containerKey, long containerType,
+		String key, long plid, boolean useFinderCache) {
 
-		return getPersistence().fetchByC_C_P(
-			classNameId, classPK, portletId, useFinderCache);
+		return getPersistence().fetchByG_C_CK_CT_K_P(
+			groupId, classNameId, containerKey, containerType, key, plid,
+			useFinderCache);
 	}
 
 	/**
-	 * Removes the asset list entry usage where classNameId = &#63; and classPK = &#63; and portletId = &#63; from the database.
+	 * Removes the asset list entry usage where groupId = &#63; and classNameId = &#63; and containerKey = &#63; and containerType = &#63; and key = &#63; and plid = &#63; from the database.
 	 *
+	 * @param groupId the group ID
 	 * @param classNameId the class name ID
-	 * @param classPK the class pk
-	 * @param portletId the portlet ID
+	 * @param containerKey the container key
+	 * @param containerType the container type
+	 * @param key the key
+	 * @param plid the plid
 	 * @return the asset list entry usage that was removed
 	 */
-	public static AssetListEntryUsage removeByC_C_P(
-			long classNameId, long classPK, String portletId)
+	public static AssetListEntryUsage removeByG_C_CK_CT_K_P(
+			long groupId, long classNameId, String containerKey,
+			long containerType, String key, long plid)
 		throws com.liferay.asset.list.exception.NoSuchEntryUsageException {
 
-		return getPersistence().removeByC_C_P(classNameId, classPK, portletId);
+		return getPersistence().removeByG_C_CK_CT_K_P(
+			groupId, classNameId, containerKey, containerType, key, plid);
 	}
 
 	/**
-	 * Returns the number of asset list entry usages where classNameId = &#63; and classPK = &#63; and portletId = &#63;.
+	 * Returns the number of asset list entry usages where groupId = &#63; and classNameId = &#63; and containerKey = &#63; and containerType = &#63; and key = &#63; and plid = &#63;.
 	 *
+	 * @param groupId the group ID
 	 * @param classNameId the class name ID
-	 * @param classPK the class pk
-	 * @param portletId the portlet ID
+	 * @param containerKey the container key
+	 * @param containerType the container type
+	 * @param key the key
+	 * @param plid the plid
 	 * @return the number of matching asset list entry usages
 	 */
-	public static int countByC_C_P(
-		long classNameId, long classPK, String portletId) {
+	public static int countByG_C_CK_CT_K_P(
+		long groupId, long classNameId, String containerKey, long containerType,
+		String key, long plid) {
 
-		return getPersistence().countByC_C_P(classNameId, classPK, portletId);
+		return getPersistence().countByG_C_CK_CT_K_P(
+			groupId, classNameId, containerKey, containerType, key, plid);
 	}
 
 	/**
@@ -1139,29 +1950,9 @@ public class AssetListEntryUsageUtil {
 	}
 
 	public static AssetListEntryUsagePersistence getPersistence() {
-		return _serviceTracker.getService();
+		return _persistence;
 	}
 
-	private static ServiceTracker
-		<AssetListEntryUsagePersistence, AssetListEntryUsagePersistence>
-			_serviceTracker;
-
-	static {
-		Bundle bundle = FrameworkUtil.getBundle(
-			AssetListEntryUsagePersistence.class);
-
-		ServiceTracker
-			<AssetListEntryUsagePersistence, AssetListEntryUsagePersistence>
-				serviceTracker =
-					new ServiceTracker
-						<AssetListEntryUsagePersistence,
-						 AssetListEntryUsagePersistence>(
-							 bundle.getBundleContext(),
-							 AssetListEntryUsagePersistence.class, null);
-
-		serviceTracker.open();
-
-		_serviceTracker = serviceTracker;
-	}
+	private static volatile AssetListEntryUsagePersistence _persistence;
 
 }

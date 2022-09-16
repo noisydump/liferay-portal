@@ -39,19 +39,13 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-import java.util.ArrayDeque;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Queue;
-import java.util.ResourceBundle;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
 import javax.portlet.GenericPortlet;
 import javax.portlet.MimeResponse;
-import javax.portlet.PortletContext;
 import javax.portlet.PortletException;
 import javax.portlet.PortletMode;
 import javax.portlet.PortletRequest;
@@ -85,11 +79,9 @@ public class LiferayPortlet extends GenericPortlet {
 		throws IOException, PortletException {
 
 		try {
-			if (!callActionMethod(actionRequest, actionResponse)) {
-				return;
-			}
+			if (!callActionMethod(actionRequest, actionResponse) ||
+				!SessionErrors.isEmpty(actionRequest)) {
 
-			if (!SessionErrors.isEmpty(actionRequest)) {
 				return;
 			}
 
@@ -120,10 +112,18 @@ public class LiferayPortlet extends GenericPortlet {
 					throwable.getClass(), throwable);
 			}
 			else if (isSessionErrorException(throwable)) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(throwable, throwable);
+				}
+
 				SessionErrors.add(
 					actionRequest, throwable.getClass(), throwable);
 			}
 			else {
+				if (_log.isDebugEnabled()) {
+					_log.debug(portletException);
+				}
+
 				throw portletException;
 			}
 		}
@@ -134,15 +134,10 @@ public class LiferayPortlet extends GenericPortlet {
 			ResourceRequest resourceRequest, ResourceResponse resourceResponse)
 		throws IOException, PortletException {
 
-		if (!callResourceMethod(resourceRequest, resourceResponse)) {
-			return;
-		}
+		if (!callResourceMethod(resourceRequest, resourceResponse) ||
+			!SessionErrors.isEmpty(resourceRequest) ||
+			!SessionMessages.isEmpty(resourceRequest)) {
 
-		if (!SessionErrors.isEmpty(resourceRequest)) {
-			return;
-		}
-
-		if (!SessionMessages.isEmpty(resourceRequest)) {
 			return;
 		}
 
@@ -185,7 +180,7 @@ public class LiferayPortlet extends GenericPortlet {
 		}
 		catch (NoSuchMethodException noSuchMethodException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(noSuchMethodException, noSuchMethodException);
+				_log.debug(noSuchMethodException);
 			}
 
 			try {
@@ -234,7 +229,7 @@ public class LiferayPortlet extends GenericPortlet {
 		}
 		catch (NoSuchMethodException noSuchMethodException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(noSuchMethodException, noSuchMethodException);
+				_log.debug(noSuchMethodException);
 			}
 
 			try {
@@ -257,17 +252,6 @@ public class LiferayPortlet extends GenericPortlet {
 		}
 		catch (Exception exception) {
 			throw new PortletException(exception);
-		}
-	}
-
-	/**
-	 * @deprecated As of Mueller (7.2.x), with no direct replacement
-	 */
-	@Deprecated
-	protected void checkPath(String path) throws PortletException {
-		if (Validator.isNotNull(path)) {
-			throw new PortletException(
-				"Path " + path + " is not accessible by this portlet");
 		}
 	}
 
@@ -377,39 +361,6 @@ public class LiferayPortlet extends GenericPortlet {
 		return method;
 	}
 
-	/**
-	 * @deprecated As of Mueller (7.2.x), with no direct replacement
-	 */
-	@Deprecated
-	protected Set<String> getPaths(String path, String extension) {
-		Set<String> paths = new HashSet<>();
-
-		PortletContext portletContext = getPortletContext();
-
-		Queue<String> queue = new ArrayDeque<>();
-
-		queue.add(path);
-
-		while ((path = queue.poll()) != null) {
-			Set<String> childPaths = portletContext.getResourcePaths(path);
-
-			if (childPaths != null) {
-				for (String childPath : childPaths) {
-					if (childPath.charAt(childPath.length() - 1) ==
-							CharPool.SLASH) {
-
-						queue.add(childPath);
-					}
-					else if (childPath.endsWith(extension)) {
-						paths.add(childPath);
-					}
-				}
-			}
-		}
-
-		return paths;
-	}
-
 	protected String getRedirect(
 		ActionRequest actionRequest, ActionResponse actionResponse) {
 
@@ -463,18 +414,11 @@ public class LiferayPortlet extends GenericPortlet {
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(exception, exception);
+				_log.debug(exception);
 			}
 
 			return super.getTitle(renderRequest);
 		}
-	}
-
-	/**
-	 * @deprecated As of Mueller (7.2.x), with no direct replacement
-	 */
-	@Deprecated
-	protected void initValidPaths(String rootPath, String extension) {
 	}
 
 	protected boolean isAddSuccessMessage(ActionRequest actionRequest) {
@@ -541,57 +485,11 @@ public class LiferayPortlet extends GenericPortlet {
 		return false;
 	}
 
-	/**
-	 * @deprecated As of Mueller (7.2.x), with no direct replacement
-	 */
-	@Deprecated
-	protected boolean isProcessActionRequest(ActionRequest actionRequest) {
-		return isProcessPortletRequest(actionRequest);
-	}
-
-	/**
-	 * @deprecated As of Mueller (7.2.x), with no direct replacement
-	 */
-	@Deprecated
-	protected boolean isProcessPortletRequest(PortletRequest portletRequest) {
-		return _PROCESS_PORTLET_REQUEST;
-	}
-
-	/**
-	 * @deprecated As of Mueller (7.2.x), with no direct replacement
-	 */
-	@Deprecated
-	protected boolean isProcessRenderRequest(RenderRequest renderRequest) {
-		return isProcessPortletRequest(renderRequest);
-	}
-
-	/**
-	 * @deprecated As of Mueller (7.2.x), with no direct replacement
-	 */
-	@Deprecated
-	protected boolean isProcessResourceRequest(
-		ResourceRequest resourceRequest) {
-
-		return isProcessPortletRequest(resourceRequest);
-	}
-
 	protected boolean isSessionErrorException(Throwable throwable) {
-		if (_log.isDebugEnabled()) {
-			_log.debug(throwable, throwable);
-		}
-
 		if (throwable instanceof PortalException) {
 			return true;
 		}
 
-		return false;
-	}
-
-	/**
-	 * @deprecated As of Mueller (7.2.x), with no direct replacement
-	 */
-	@Deprecated
-	protected boolean isValidPath(String path) {
 		return false;
 	}
 
@@ -610,10 +508,8 @@ public class LiferayPortlet extends GenericPortlet {
 		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		ResourceBundle resourceBundle = getResourceBundle(
-			themeDisplay.getLocale());
-
-		return LanguageUtil.get(resourceBundle, key);
+		return LanguageUtil.get(
+			getResourceBundle(themeDisplay.getLocale()), key);
 	}
 
 	protected String translate(
@@ -622,10 +518,8 @@ public class LiferayPortlet extends GenericPortlet {
 		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		ResourceBundle resourceBundle = getResourceBundle(
-			themeDisplay.getLocale());
-
-		return LanguageUtil.format(resourceBundle, key, arguments);
+		return LanguageUtil.format(
+			getResourceBundle(themeDisplay.getLocale()), key, arguments);
 	}
 
 	protected void writeJSON(
@@ -660,12 +554,6 @@ public class LiferayPortlet extends GenericPortlet {
 	protected boolean addProcessActionSuccessMessage;
 	protected boolean alwaysSendRedirect;
 
-	/**
-	 * @deprecated As of Mueller (7.2.x), with no direct replacement
-	 */
-	@Deprecated
-	protected Set<String> validPaths;
-
 	private String _toXSSSafeJSON(String json) {
 		return StringUtil.replace(json, CharPool.LESS_THAN, "\\u003c");
 	}
@@ -677,8 +565,6 @@ public class LiferayPortlet extends GenericPortlet {
 		SessionMessages.KEY_SUFFIX_HIDE_DEFAULT_SUCCESS_MESSAGE,
 		SessionMessages.KEY_SUFFIX_REFRESH_PORTLET
 	};
-
-	private static final boolean _PROCESS_PORTLET_REQUEST = true;
 
 	private static final Log _log = LogFactoryUtil.getLog(LiferayPortlet.class);
 

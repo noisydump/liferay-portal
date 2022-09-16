@@ -18,6 +18,7 @@ import com.liferay.commerce.frontend.taglib.internal.servlet.ServletContextUtil;
 import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolver;
 import com.liferay.frontend.taglib.soy.servlet.taglib.ComponentRendererTag;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.frontend.icons.FrontendIconsUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -26,6 +27,8 @@ import com.liferay.portal.kernel.util.WebKeys;
 
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
+
 /**
  * @author Marco Leo
  */
@@ -33,18 +36,21 @@ public class SearchBarTag extends ComponentRendererTag {
 
 	@Override
 	public int doStartTag() {
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		HttpServletRequest httpServletRequest = getRequest();
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		putValue(
 			"placeholder",
 			LanguageUtil.get(themeDisplay.getLocale(), "search"));
 
-		String query = ParamUtil.getString(request, "q");
+		String query = ParamUtil.getString(httpServletRequest, "q");
 
 		putValue("query", query);
 
-		putValue("spritemap", themeDisplay.getPathThemeImages() + "/icons.svg");
+		putValue("spritemap", FrontendIconsUtil.getSpritemap(themeDisplay));
 
 		Map<String, Object> context = getContext();
 

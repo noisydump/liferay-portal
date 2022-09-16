@@ -13,15 +13,22 @@
  */
 
 import ClayForm, {ClaySelectWithOption} from '@clayui/form';
+import {useIsMounted} from '@liferay/frontend-js-react-web';
 import PropTypes from 'prop-types';
 import React, {useEffect, useState} from 'react';
 
-import {useGlobalContext} from '../../app/components/GlobalContext';
+import {useGetFieldValue} from '../../app/contexts/CollectionItemContext';
+import {useGlobalContext} from '../../app/contexts/GlobalContext';
+import {useSelector} from '../../app/contexts/StoreContext';
+import selectLanguageId from '../../app/selectors/selectLanguageId';
 import ImageService from '../../app/services/ImageService';
-import {useSelector} from '../../app/store/index';
-import {useId} from '../../app/utils/useId';
+import isMapped from '../../app/utils/editable-value/isMapped';
+import resolveEditableValue from '../../app/utils/editable-value/resolveEditableValue';
+import {useId} from '../../core/hooks/useId';
 
 export const DEFAULT_IMAGE_SIZE_ID = 'auto';
+
+const DEFAULT_GET_EDITABLE_ELEMENT = () => null;
 
 const DEFAULT_IMAGE_SIZE = {
 	size: null,
@@ -29,20 +36,40 @@ const DEFAULT_IMAGE_SIZE = {
 	width: null,
 };
 
-export const ImageSelectorSize = ({
-	editableElement = null,
-	fileEntryId = DEFAULT_IMAGE_SIZE_ID,
+export function ImageSelectorSize({
+	fieldValue,
+	getEditableElement = DEFAULT_GET_EDITABLE_ELEMENT,
 	imageSizeId,
 	onImageSizeIdChanged = null,
-}) => {
+}) {
+	const [fileEntryId, setFileEntryId] = useState(
+		fieldValue.fileEntryId || ''
+	);
+	const getFieldValue = useGetFieldValue();
+	const globalContext = useGlobalContext();
 	const imageSizeSelectId = useId();
 	const [imageSize, setImageSize] = useState(DEFAULT_IMAGE_SIZE);
 	const [imageSizes, setImageSizes] = useState([]);
+	const isMounted = useIsMounted();
+	const languageId = useSelector(selectLanguageId);
 	const selectedViewportSize = useSelector(
 		(state) => state.selectedViewportSize
 	);
 
-	const globalContext = useGlobalContext();
+	useEffect(() => {
+		if (fieldValue.fileEntryId) {
+			setFileEntryId(fieldValue.fileEntryId);
+		}
+		else if (isMapped(fieldValue)) {
+			resolveEditableValue(fieldValue, languageId, getFieldValue).then(
+				(value) => {
+					if (isMounted()) {
+						setFileEntryId(value?.fileEntryId || '');
+					}
+				}
+			);
+		}
+	}, [fieldValue, getFieldValue, isMounted, languageId]);
 
 	useEffect(() => {
 		const computedImageSize =
@@ -54,6 +81,8 @@ export const ImageSelectorSize = ({
 		// HTMLElement.
 
 		if (computedImageSize.value === DEFAULT_IMAGE_SIZE_ID) {
+			const editableElement = getEditableElement();
+
 			const setAutoSize = () => {
 				editableElement?.removeEventListener('load', setAutoSize);
 
@@ -72,12 +101,14 @@ export const ImageSelectorSize = ({
 
 				setImageSize({
 					...autoSize,
-					width:
+					width: parseInt(
 						autoSize.width ||
-						editableElement?.naturalWidth ||
-						editableElement?.getBoundingClientRect().width ||
-						globalContext.document.body.getBoundingClientRect()
-							.width,
+							editableElement?.naturalWidth ||
+							editableElement?.getBoundingClientRect().width ||
+							globalContext.document.body.getBoundingClientRect()
+								.width,
+						10
+					),
 				});
 			};
 
@@ -100,7 +131,7 @@ export const ImageSelectorSize = ({
 			setImageSize(computedImageSize);
 		}
 	}, [
-		editableElement,
+		getEditableElement,
 		globalContext,
 		imageSizeId,
 		imageSizes,
@@ -108,6 +139,12 @@ export const ImageSelectorSize = ({
 	]);
 
 	useEffect(() => {
+		if (!fileEntryId) {
+			setImageSizes([]);
+
+			return;
+		}
+
 		ImageService.getAvailableImageConfigurations({
 			fileEntryId,
 			onNetworkStatus: () => {},
@@ -128,8 +165,9 @@ export const ImageSelectorSize = ({
 					<label htmlFor={imageSizeSelectId}>
 						{Liferay.Language.get('resolution')}
 					</label>
+
 					<ClaySelectWithOption
-						className={'form-control form-control-sm'}
+						className="form-control form-control-sm"
 						id={imageSizeSelectId}
 						name={imageSizeSelectId}
 						onChange={(event) =>
@@ -147,6 +185,7 @@ export const ImageSelectorSize = ({
 			{!!imageSize.width && (
 				<div className="small text-secondary">
 					<b>{Liferay.Language.get('width')}:</b>
+
 					<span className="ml-1">{imageSize.width}px</span>
 				</div>
 			)}
@@ -154,6 +193,7 @@ export const ImageSelectorSize = ({
 			{!!imageSize.size && (
 				<div className="small text-secondary">
 					<b>{Liferay.Language.get('file-size')}:</b>
+
 					<span className="ml-1">
 						{Number(imageSize.size).toFixed(2)}kB
 					</span>
@@ -161,11 +201,23 @@ export const ImageSelectorSize = ({
 			)}
 		</ClayForm.Group>
 	);
-};
+}
 
 ImageSelectorSize.propTypes = {
-	editableElement: PropTypes.object,
-	fileEntryId: PropTypes.number.isRequired,
+	fieldValue: PropTypes.oneOfType([
+		PropTypes.shape({
+			fileEntryId: PropTypes.string.isRequired,
+		}),
+		PropTypes.shape({
+			classNameId: PropTypes.string.isRequired,
+			classPK: PropTypes.string.isRequired,
+			fieldId: PropTypes.string.isRequired,
+		}),
+		PropTypes.shape({
+			collectionFieldId: PropTypes.string.isRequired,
+		}),
+	]).isRequired,
+	getEditableElement: PropTypes.func,
 	imageSizeId: PropTypes.string,
 	onImageSizeIdChanged: PropTypes.func,
 };

@@ -19,6 +19,7 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -34,7 +35,6 @@ import com.liferay.site.navigation.model.SiteNavigationMenu;
 
 import java.util.List;
 
-import javax.portlet.ActionRequest;
 import javax.portlet.PortletURL;
 
 import javax.servlet.http.HttpServletRequest;
@@ -64,7 +64,7 @@ public class SiteNavigationAdminManagementToolbarDisplayContext
 			dropdownItem -> {
 				dropdownItem.putData(
 					"action", "deleteSelectedSiteNavigationMenus");
-				dropdownItem.setIcon("times-circle");
+				dropdownItem.setIcon("trash");
 				dropdownItem.setLabel(
 					LanguageUtil.get(httpServletRequest, "delete"));
 				dropdownItem.setQuickAction(true);
@@ -91,16 +91,11 @@ public class SiteNavigationAdminManagementToolbarDisplayContext
 
 	@Override
 	public String getClearResultsURL() {
-		PortletURL clearResultsURL = getPortletURL();
-
-		clearResultsURL.setParameter("keywords", StringPool.BLANK);
-
-		return clearResultsURL.toString();
-	}
-
-	@Override
-	public String getComponentId() {
-		return "siteNavigationMenuWebManagementToolbar";
+		return PortletURLBuilder.create(
+			getPortletURL()
+		).setKeywords(
+			StringPool.BLANK
+		).buildString();
 	}
 
 	@Override
@@ -109,32 +104,24 @@ public class SiteNavigationAdminManagementToolbarDisplayContext
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		PortletURL addSiteNavigationMenuURL =
-			liferayPortletResponse.createActionURL();
-
-		addSiteNavigationMenuURL.setParameter(
-			ActionRequest.ACTION_NAME,
-			"/site_navigation_admin/add_site_navigation_menu");
-		addSiteNavigationMenuURL.setParameter(
-			"mvcPath", "/edit_site_navigation_menu.jsp");
-		addSiteNavigationMenuURL.setParameter(
-			"redirect", themeDisplay.getURLCurrent());
-
 		return CreationMenuBuilder.addDropdownItem(
 			dropdownItem -> {
 				dropdownItem.putData("action", "addSiteNavigationMenu");
 				dropdownItem.putData(
 					"addSiteNavigationMenuURL",
-					addSiteNavigationMenuURL.toString());
+					PortletURLBuilder.createActionURL(
+						liferayPortletResponse
+					).setActionName(
+						"/site_navigation_admin/add_site_navigation_menu"
+					).setMVCPath(
+						"/edit_site_navigation_menu.jsp"
+					).setRedirect(
+						themeDisplay.getURLCurrent()
+					).buildString());
 				dropdownItem.setLabel(
 					LanguageUtil.get(httpServletRequest, "add"));
 			}
 		).build();
-	}
-
-	@Override
-	public String getDefaultEventHandler() {
-		return "siteNavigationAdminManagementToolbarDefaultEventHandler";
 	}
 
 	@Override
@@ -168,6 +155,11 @@ public class SiteNavigationAdminManagementToolbarDisplayContext
 		}
 
 		return false;
+	}
+
+	@Override
+	protected String getDisplayStyle() {
+		return _siteNavigationAdminDisplayContext.getDisplayStyle();
 	}
 
 	@Override

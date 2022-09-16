@@ -25,8 +25,11 @@ import com.liferay.expando.kernel.service.ExpandoTableLocalServiceUtil;
 import com.liferay.expando.kernel.service.ExpandoValueLocalServiceUtil;
 import com.liferay.expando.kernel.service.ExpandoValueServiceUtil;
 import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
+import com.liferay.exportimport.kernel.staging.MergeLayoutPrototypesThreadLocal;
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
@@ -76,7 +79,10 @@ public class ExpandoBridgeImpl implements ExpandoBridge {
 		boolean secure =
 			PropsValues.PERMISSIONS_CUSTOM_ATTRIBUTE_WRITE_CHECK_BY_DEFAULT;
 
-		if (ExportImportThreadLocal.isImportInProcess()) {
+		if (CopyLayoutThreadLocal.isCopyLayout() ||
+			ExportImportThreadLocal.isImportInProcess() ||
+			MergeLayoutPrototypesThreadLocal.isInProgress()) {
+
 			secure = false;
 		}
 
@@ -95,7 +101,10 @@ public class ExpandoBridgeImpl implements ExpandoBridge {
 		boolean secure =
 			PropsValues.PERMISSIONS_CUSTOM_ATTRIBUTE_WRITE_CHECK_BY_DEFAULT;
 
-		if (ExportImportThreadLocal.isImportInProcess()) {
+		if (CopyLayoutThreadLocal.isCopyLayout() ||
+			ExportImportThreadLocal.isImportInProcess() ||
+			MergeLayoutPrototypesThreadLocal.isInProgress()) {
+
 			secure = false;
 		}
 
@@ -116,7 +125,10 @@ public class ExpandoBridgeImpl implements ExpandoBridge {
 		boolean secure =
 			PropsValues.PERMISSIONS_CUSTOM_ATTRIBUTE_WRITE_CHECK_BY_DEFAULT;
 
-		if (ExportImportThreadLocal.isImportInProcess()) {
+		if (CopyLayoutThreadLocal.isCopyLayout() ||
+			ExportImportThreadLocal.isImportInProcess() ||
+			MergeLayoutPrototypesThreadLocal.isInProgress()) {
+
 			secure = false;
 		}
 
@@ -171,6 +183,10 @@ public class ExpandoBridgeImpl implements ExpandoBridge {
 			}
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			return false;
 		}
 
@@ -192,7 +208,10 @@ public class ExpandoBridgeImpl implements ExpandoBridge {
 		boolean secure =
 			PropsValues.PERMISSIONS_CUSTOM_ATTRIBUTE_READ_CHECK_BY_DEFAULT;
 
-		if (ExportImportThreadLocal.isExportInProcess()) {
+		if (CopyLayoutThreadLocal.isCopyLayout() ||
+			ExportImportThreadLocal.isExportInProcess() ||
+			MergeLayoutPrototypesThreadLocal.isInProgress()) {
+
 			secure = false;
 		}
 
@@ -266,7 +285,10 @@ public class ExpandoBridgeImpl implements ExpandoBridge {
 		boolean secure =
 			PropsValues.PERMISSIONS_CUSTOM_ATTRIBUTE_READ_CHECK_BY_DEFAULT;
 
-		if (ExportImportThreadLocal.isExportInProcess()) {
+		if (CopyLayoutThreadLocal.isCopyLayout() ||
+			ExportImportThreadLocal.isExportInProcess() ||
+			MergeLayoutPrototypesThreadLocal.isInProgress()) {
+
 			secure = false;
 		}
 
@@ -290,7 +312,10 @@ public class ExpandoBridgeImpl implements ExpandoBridge {
 		boolean secure =
 			PropsValues.PERMISSIONS_CUSTOM_ATTRIBUTE_READ_CHECK_BY_DEFAULT;
 
-		if (ExportImportThreadLocal.isExportInProcess()) {
+		if (CopyLayoutThreadLocal.isCopyLayout() ||
+			ExportImportThreadLocal.isExportInProcess() ||
+			MergeLayoutPrototypesThreadLocal.isInProgress()) {
+
 			secure = false;
 		}
 
@@ -378,6 +403,9 @@ public class ExpandoBridgeImpl implements ExpandoBridge {
 			hash = HashUtil.hash(0, getTable());
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return HashUtil.hash(hash, getAttributeColumns());
@@ -412,11 +440,10 @@ public class ExpandoBridgeImpl implements ExpandoBridge {
 		boolean secure =
 			PropsValues.PERMISSIONS_CUSTOM_ATTRIBUTE_WRITE_CHECK_BY_DEFAULT;
 
-		if (CopyLayoutThreadLocal.isCopyLayout()) {
-			secure = false;
-		}
+		if (CopyLayoutThreadLocal.isCopyLayout() ||
+			ExportImportThreadLocal.isImportInProcess() ||
+			MergeLayoutPrototypesThreadLocal.isInProgress()) {
 
-		if (ExportImportThreadLocal.isImportInProcess()) {
 			secure = false;
 		}
 
@@ -472,7 +499,10 @@ public class ExpandoBridgeImpl implements ExpandoBridge {
 		boolean secure =
 			PropsValues.PERMISSIONS_CUSTOM_ATTRIBUTE_WRITE_CHECK_BY_DEFAULT;
 
-		if (ExportImportThreadLocal.isImportInProcess()) {
+		if (CopyLayoutThreadLocal.isCopyLayout() ||
+			ExportImportThreadLocal.isImportInProcess() ||
+			MergeLayoutPrototypesThreadLocal.isInProgress()) {
+
 			secure = false;
 		}
 
@@ -507,7 +537,10 @@ public class ExpandoBridgeImpl implements ExpandoBridge {
 		boolean secure =
 			PropsValues.PERMISSIONS_CUSTOM_ATTRIBUTE_WRITE_CHECK_BY_DEFAULT;
 
-		if (ExportImportThreadLocal.isImportInProcess()) {
+		if (CopyLayoutThreadLocal.isCopyLayout() ||
+			ExportImportThreadLocal.isImportInProcess() ||
+			MergeLayoutPrototypesThreadLocal.isInProgress()) {
+
 			secure = false;
 		}
 
@@ -551,7 +584,10 @@ public class ExpandoBridgeImpl implements ExpandoBridge {
 		boolean secure =
 			PropsValues.PERMISSIONS_CUSTOM_ATTRIBUTE_WRITE_CHECK_BY_DEFAULT;
 
-		if (ExportImportThreadLocal.isImportInProcess()) {
+		if (CopyLayoutThreadLocal.isCopyLayout() ||
+			ExportImportThreadLocal.isImportInProcess() ||
+			MergeLayoutPrototypesThreadLocal.isInProgress()) {
+
 			secure = false;
 		}
 
@@ -673,6 +709,9 @@ public class ExpandoBridgeImpl implements ExpandoBridge {
 
 		return table;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		ExpandoBridgeImpl.class);
 
 	private String _className;
 	private long _classPK;

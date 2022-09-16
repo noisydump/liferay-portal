@@ -25,15 +25,19 @@ import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.util.PrefsProps;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.io.InputStream;
 
 import java.util.Optional;
+import java.util.Random;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 import org.mockito.Mockito;
@@ -43,8 +47,15 @@ import org.mockito.Mockito;
  */
 public class AMImageEntryProcessorTest {
 
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
 	@Before
 	public void setUp() {
+		_amImageEntryProcessor = new AMImageEntryProcessor();
+
 		Mockito.doReturn(
 			_amAsyncProcessor
 		).when(
@@ -55,22 +66,17 @@ public class AMImageEntryProcessorTest {
 
 		ReflectionTestUtil.setFieldValue(
 			_amImageEntryProcessor, "_amImageFinder", _amImageFinder);
-
 		ReflectionTestUtil.setFieldValue(
 			_amImageEntryProcessor, "_amImageMimeTypeProvider",
 			_amImageMimeTypeProvider);
-
 		ReflectionTestUtil.setFieldValue(
 			_amImageEntryProcessor, "_amSystemImagesConfiguration",
 			_amSystemImagesConfiguration);
-
 		ReflectionTestUtil.setFieldValue(
 			_amImageEntryProcessor, "_amImageValidator", _amImageValidator);
-
 		ReflectionTestUtil.setFieldValue(
 			_amImageEntryProcessor, "_amAsyncProcessorLocator",
 			_amAsyncProcessorLocator);
-
 		ReflectionTestUtil.setFieldValue(
 			PrefsPropsUtil.class, "_prefsProps", _prefsProps);
 	}
@@ -295,6 +301,43 @@ public class AMImageEntryProcessorTest {
 		).triggerProcess(
 			Mockito.any(FileVersion.class), Mockito.anyString()
 		);
+	}
+
+	@Test
+	public void testGetPreviewFileSizeReturnsTheOriginalSizeWhenNoAMImageExists()
+		throws Exception {
+
+		Mockito.when(
+			_amImageFinder.getAdaptiveMediaStream(Mockito.any(Function.class))
+		).thenAnswer(
+			invocation -> Stream.empty()
+		);
+
+		Mockito.when(
+			_amImageMimeTypeProvider.isMimeTypeSupported(Mockito.anyString())
+		).thenReturn(
+			true
+		);
+
+		Mockito.when(
+			_amImageValidator.isValid(_fileVersion)
+		).thenReturn(
+			true
+		);
+
+		Random random = new Random();
+
+		long originalSize = random.nextLong();
+
+		Mockito.when(
+			_fileVersion.getSize()
+		).thenReturn(
+			originalSize
+		);
+
+		Assert.assertEquals(
+			originalSize,
+			_amImageEntryProcessor.getPreviewFileSize(_fileVersion));
 	}
 
 	@Test
@@ -658,8 +701,7 @@ public class AMImageEntryProcessorTest {
 		Mockito.mock(AMAsyncProcessor.class);
 	private final AMAsyncProcessorLocator _amAsyncProcessorLocator =
 		Mockito.mock(AMAsyncProcessorLocator.class);
-	private final AMImageEntryProcessor _amImageEntryProcessor =
-		new AMImageEntryProcessor();
+	private AMImageEntryProcessor _amImageEntryProcessor;
 	private final AMImageFinder _amImageFinder = Mockito.mock(
 		AMImageFinder.class);
 	private final AMImageMimeTypeProvider _amImageMimeTypeProvider =

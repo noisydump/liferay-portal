@@ -18,7 +18,7 @@ import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
 import com.liferay.portal.search.engine.adapter.document.DeleteDocumentRequest;
 import com.liferay.portal.search.engine.adapter.document.IndexDocumentRequest;
 import com.liferay.portal.search.engine.adapter.document.IndexDocumentResponse;
-import com.liferay.portal.search.tuning.synonyms.web.internal.index.name.SynonymSetIndexName;
+import com.liferay.portal.search.tuning.synonyms.index.name.SynonymSetIndexName;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -60,7 +60,8 @@ public class SynonymSetIndexWriterImpl implements SynonymSetIndexWriter {
 		SynonymSetIndexName synonymSetIndexName, SynonymSet synonymSet) {
 
 		IndexDocumentRequest indexDocumentRequest = new IndexDocumentRequest(
-			synonymSetIndexName.getIndexName(), synonymSet.getId(),
+			synonymSetIndexName.getIndexName(),
+			synonymSet.getSynonymSetDocumentId(),
 			_synonymSetToDocumentTranslator.translate(synonymSet));
 
 		indexDocumentRequest.setRefresh(true);

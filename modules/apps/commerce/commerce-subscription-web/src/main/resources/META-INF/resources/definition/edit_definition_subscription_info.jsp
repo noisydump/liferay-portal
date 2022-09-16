@@ -80,6 +80,7 @@ if (deliveryMaxSubscriptionCycles > 0) {
 	<aui:input name="<%= Constants.CMD %>" type="hidden" value="updateSubscriptionInfo" />
 	<aui:input name="redirect" type="hidden" value="<%= String.valueOf(cpDefinitionSubscriptionInfoDisplayContext.getPortletURL()) %>" />
 	<aui:input name="cpDefinitionId" type="hidden" value="<%= cpDefinitionId %>" />
+	<aui:input name="workflowAction" type="hidden" value="<%= WorkflowConstants.ACTION_SAVE_DRAFT %>" />
 
 	<aui:model-context bean="<%= cpDefinition %>" model="<%= CPDefinition.class %>" />
 
@@ -105,14 +106,29 @@ if (deliveryMaxSubscriptionCycles > 0) {
 
 		<%
 		if (cpSubscriptionTypeJSPContributor != null) {
-			cpSubscriptionTypeJSPContributor.render(cpDefinition, request, PipingServletResponse.createPipingServletResponse(pageContext));
+			cpSubscriptionTypeJSPContributor.render(cpDefinition, request, PipingServletResponseFactory.createPipingServletResponse(pageContext));
 		}
 		%>
 
 		<div id="<portlet:namespace />cycleLengthContainer">
 			<aui:input name="subscriptionLength" suffix="<%= defaultCPSubscriptionTypeLabel %>" value="<%= String.valueOf(subscriptionLength) %>">
 				<aui:validator name="digits" />
-				<aui:validator name="min">1</aui:validator>
+
+				<aui:validator errorMessage='<%= LanguageUtil.format(request, "please-enter-a-value-greater-than-or-equal-to-x", 1) %>' name="custom">
+					function(val) {
+						var subscriptionEnabled = window.document.querySelector('#<portlet:namespace />subscriptionEnabled');
+
+						if (!subscriptionEnabled.checked) {
+							return true;
+						}
+
+						if (subscriptionEnabled.checked && parseInt(val, 10) > 0) {
+							return true;
+						}
+
+						return false;
+					}
+				</aui:validator>
 			</aui:input>
 		</div>
 
@@ -167,14 +183,29 @@ if (deliveryMaxSubscriptionCycles > 0) {
 
 		<%
 		if (deliveryCPSubscriptionTypeJSPContributor != null) {
-			deliveryCPSubscriptionTypeJSPContributor.render(cpDefinition, request, PipingServletResponse.createPipingServletResponse(pageContext), false);
+			deliveryCPSubscriptionTypeJSPContributor.render(cpDefinition, request, PipingServletResponseFactory.createPipingServletResponse(pageContext), false);
 		}
 		%>
 
 		<div id="<portlet:namespace />deliveryCycleLengthContainer">
 			<aui:input label="subscription-length" name="deliverySubscriptionLength" suffix="<%= defaultDeliveryCPSubscriptionTypeLabel %>" value="<%= String.valueOf(deliverySubscriptionLength) %>">
 				<aui:validator name="digits" />
-				<aui:validator name="min">1</aui:validator>
+
+				<aui:validator errorMessage='<%= LanguageUtil.format(request, "please-enter-a-value-greater-than-or-equal-to-x", 1) %>' name="custom">
+					function(val) {
+						var deliverySubscriptionEnabled = window.document.querySelector('#<portlet:namespace />deliverySubscriptionEnabled');
+
+						if (!deliverySubscriptionEnabled.checked) {
+							return true;
+						}
+
+						if (deliverySubscriptionEnabled.checked && parseInt(val, 10) > 0) {
+							return true;
+						}
+
+						return false;
+					}
+				</aui:validator>
 			</aui:input>
 		</div>
 
@@ -212,7 +243,7 @@ if (deliveryMaxSubscriptionCycles > 0) {
 	Liferay.provide(
 		window,
 		'<portlet:namespace />selectSubscriptionType',
-		function () {
+		() => {
 			var A = AUI();
 
 			var deliverySubscriptionEnabled = A.one(
@@ -252,7 +283,7 @@ if (deliveryMaxSubscriptionCycles > 0) {
 	Liferay.provide(
 		window,
 		'<portlet:namespace />selectDeliverySubscriptionType',
-		function () {
+		() => {
 			var A = AUI();
 
 			var subscriptionEnabled = A.one(
@@ -300,14 +331,14 @@ if (deliveryMaxSubscriptionCycles > 0) {
 </aui:script>
 
 <aui:script use="liferay-form">
-	A.one('#<portlet:namespace />neverEnds').on('change', function (event) {
+	A.one('#<portlet:namespace />neverEnds').on('change', (event) => {
 		var formValidator = Liferay.Form.get('<portlet:namespace />fm')
 			.formValidator;
 
 		formValidator.validateField('<portlet:namespace />maxSubscriptionCycles');
 	});
 
-	A.one('#<portlet:namespace />deliveryNeverEnds').on('change', function (event) {
+	A.one('#<portlet:namespace />deliveryNeverEnds').on('change', (event) => {
 		var formValidator = Liferay.Form.get('<portlet:namespace />fm')
 			.formValidator;
 

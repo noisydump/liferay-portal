@@ -27,6 +27,7 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.trash.TrashHandler;
+import com.liferay.portal.kernel.trash.TrashHandlerRegistryUtil;
 import com.liferay.portal.kernel.trash.TrashRenderer;
 import com.liferay.trash.kernel.model.TrashEntry;
 
@@ -108,7 +109,8 @@ public class TrashedModelDocumentContributor
 			}
 		}
 
-		TrashHandler trashHandler = trashedModel.getTrashHandler();
+		TrashHandler trashHandler = TrashHandlerRegistryUtil.getTrashHandler(
+			baseModel.getModelClassName());
 
 		try {
 			TrashRenderer trashRenderer = null;
@@ -132,14 +134,10 @@ public class TrashedModelDocumentContributor
 		}
 	}
 
-	@Reference(unbind = "-")
-	protected void setUserLocalService(UserLocalService userLocalService) {
-		_userLocalService = userLocalService;
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		TrashedModelDocumentContributor.class);
 
+	@Reference
 	private UserLocalService _userLocalService;
 
 }

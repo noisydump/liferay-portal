@@ -35,9 +35,14 @@ import com.liferay.portal.spring.transaction.DefaultTransactionExecutor;
 import com.liferay.portal.spring.transaction.TransactionAttributeAdapter;
 import com.liferay.portal.spring.transaction.TransactionInterceptor;
 import com.liferay.portal.spring.transaction.TransactionStatusAdapter;
+import com.liferay.portal.test.log.LogCapture;
+import com.liferay.portal.test.log.LoggerTestUtil;
+import com.liferay.portal.test.rule.ExpectedDBType;
+import com.liferay.portal.test.rule.ExpectedLog;
+import com.liferay.portal.test.rule.ExpectedLogs;
+import com.liferay.portal.test.rule.ExpectedType;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portlet.PortalPreferencesWrapperCacheUtil;
 
 import java.lang.reflect.Method;
 
@@ -45,6 +50,9 @@ import java.util.ConcurrentModificationException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.FutureTask;
+
+import org.hibernate.engine.jdbc.batch.internal.BatchingBatch;
+import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -73,8 +81,8 @@ public class PortalPreferencesImplTest {
 	public static void setUpClass() throws NoSuchMethodException {
 		_updatePreferencesMethod =
 			PortalPreferencesLocalService.class.getMethod(
-				"updatePortalPreferences",
-				com.liferay.portal.kernel.model.PortalPreferences.class);
+				"updatePreferences", long.class, int.class,
+				PortalPreferences.class);
 
 		_aopInvocationHandler = ProxyUtil.fetchInvocationHandler(
 			_portalPreferencesLocalService, AopInvocationHandler.class);
@@ -125,11 +133,18 @@ public class PortalPreferencesImplTest {
 
 				return null;
 			});
-
-		PortalPreferencesWrapperCacheUtil.remove(
-			_testOwnerId, PortletKeys.PREFS_OWNER_TYPE_USER);
 	}
 
+	@ExpectedLogs(
+		expectedLogs = {
+			@ExpectedLog(
+				expectedDBType = ExpectedDBType.NONE,
+				expectedLog = "HHH000315: Exception executing batch [org.hibernate.StaleStateException",
+				expectedType = ExpectedType.PREFIX
+			)
+		},
+		level = "ERROR", loggerClass = BatchingBatch.class
+	)
 	@Test
 	public void testReset() {
 		Callable<Void> callable = () -> {
@@ -156,6 +171,16 @@ public class PortalPreferencesImplTest {
 		}
 	}
 
+	@ExpectedLogs(
+		expectedLogs = {
+			@ExpectedLog(
+				expectedDBType = ExpectedDBType.NONE,
+				expectedLog = "HHH000315: Exception executing batch [java.sql.BatchUpdateException",
+				expectedType = ExpectedType.PREFIX
+			)
+		},
+		level = "ERROR", loggerClass = BatchingBatch.class
+	)
 	@Test
 	public void testSetSameKeyDifferentValues() {
 		FutureTask<Void> futureTask1 = new FutureTask<>(
@@ -181,7 +206,9 @@ public class PortalPreferencesImplTest {
 				return null;
 			});
 
-		try {
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				SqlExceptionHelper.class.getName(), LoggerTestUtil.OFF)) {
+
 			updateSynchronously(futureTask1, futureTask2);
 
 			Assert.fail();
@@ -229,6 +256,16 @@ public class PortalPreferencesImplTest {
 			_VALUE_1, portalPreferences.getValue(_NAMESPACE, _KEY_2));
 	}
 
+	@ExpectedLogs(
+		expectedLogs = {
+			@ExpectedLog(
+				expectedDBType = ExpectedDBType.NONE,
+				expectedLog = "HHH000315: Exception executing batch [java.sql.BatchUpdateException",
+				expectedType = ExpectedType.PREFIX
+			)
+		},
+		level = "ERROR", loggerClass = BatchingBatch.class
+	)
 	@Test
 	public void testSetValueSameKey() {
 		FutureTask<Void> futureTask1 = new FutureTask<>(
@@ -253,7 +290,9 @@ public class PortalPreferencesImplTest {
 				return null;
 			});
 
-		try {
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				SqlExceptionHelper.class.getName(), LoggerTestUtil.OFF)) {
+
 			updateSynchronously(futureTask1, futureTask2);
 
 			Assert.fail();
@@ -301,6 +340,16 @@ public class PortalPreferencesImplTest {
 			_VALUES_1, portalPreferences.getValues(_NAMESPACE, _KEY_2));
 	}
 
+	@ExpectedLogs(
+		expectedLogs = {
+			@ExpectedLog(
+				expectedDBType = ExpectedDBType.NONE,
+				expectedLog = "HHH000315: Exception executing batch [java.sql.BatchUpdateException",
+				expectedType = ExpectedType.PREFIX
+			)
+		},
+		level = "ERROR", loggerClass = BatchingBatch.class
+	)
 	@Test
 	public void testSetValuesSameKey() {
 		FutureTask<Void> futureTask1 = new FutureTask<>(
@@ -325,7 +374,9 @@ public class PortalPreferencesImplTest {
 				return null;
 			});
 
-		try {
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				SqlExceptionHelper.class.getName(), LoggerTestUtil.OFF)) {
+
 			updateSynchronously(futureTask1, futureTask2);
 
 			Assert.fail();
@@ -402,10 +453,6 @@ public class PortalPreferencesImplTest {
 			}
 			catch (Throwable throwable) {
 				ReflectionUtil.throwException(throwable);
-			}
-			finally {
-				PortalPreferencesWrapperCacheUtil.remove(
-					_testOwnerId, PortletKeys.PREFS_OWNER_TYPE_USER);
 			}
 		}
 

@@ -39,8 +39,8 @@ JournalViewMoreMenuItemsDisplayContext journalViewMoreMenuItemsDisplayContext = 
 	navigationItems="<%= journalViewMoreMenuItemsDisplayContext.getNavigationItems() %>"
 />
 
-<clay:management-toolbar-v2
-	displayContext="<%= new JournalViewMoreMenuItemsManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, journalViewMoreMenuItemsDisplayContext) %>"
+<clay:management-toolbar
+	managementToolbarDisplayContext="<%= new JournalViewMoreMenuItemsManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, journalViewMoreMenuItemsDisplayContext) %>"
 />
 
 <aui:form cssClass="container-fluid container-fluid-max-xl" name="addMenuItemFm">
@@ -62,7 +62,7 @@ JournalViewMoreMenuItemsDisplayContext journalViewMoreMenuItemsDisplayContext = 
 							"ddmStructureKey", ddmStructure.getStructureKey()
 						).build()
 					%>'
-					href="javascript:;"
+					href="javascript:void(0);"
 				>
 					<%= ddmStructure.getUnambiguousName(journalViewMoreMenuItemsDisplayContext.getDDMStructures(), themeDisplay.getScopeGroupId(), locale) %>
 				</aui:a>
@@ -96,24 +96,3 @@ JournalViewMoreMenuItemsDisplayContext journalViewMoreMenuItemsDisplayContext = 
 		/>
 	</liferay-ui:search-container>
 </aui:form>
-
-<aui:script require="frontend-js-web/liferay/delegate/delegate.es as delegateModule">
-	var Util = Liferay.Util;
-
-	var addMenuItemFm = document.getElementById(
-		'<portlet:namespace />addMenuItemFm'
-	);
-
-	var delegate = delegateModule.default;
-
-	delegate(addMenuItemFm, 'click', '.selector-button', function (event) {
-		Util.getOpener().Liferay.fire(
-			'<%= HtmlUtil.escapeJS(journalViewMoreMenuItemsDisplayContext.getEventName()) %>',
-			{
-				ddmStructureKey: event.delegateTarget.getAttribute(
-					'data-ddmStructureKey'
-				),
-			}
-		);
-	});
-</aui:script>

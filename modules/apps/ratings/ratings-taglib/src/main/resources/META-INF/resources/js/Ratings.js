@@ -25,6 +25,7 @@ import {errorToast} from './utils/toast';
 const Ratings = ({
 	className,
 	classPK,
+	contentTitle,
 	enabled = false,
 	inTrash = false,
 	signedIn,
@@ -49,9 +50,18 @@ const Ratings = ({
 
 	const sendVoteRequest = useCallback(
 		(score) => {
+			if (Liferay?.Session?.get('sessionState') === 'expired') {
+				errorToast(
+					`${Liferay.Language.get('you-must-be-signed-in-to-rate')}`
+				);
+
+				return Promise.resolve();
+			}
+
 			Liferay.fire('ratings:vote', {
 				className,
 				classPK,
+				contentTitle: contentTitle || '',
 				ratingType: type,
 				score,
 			});
@@ -73,7 +83,7 @@ const Ratings = ({
 					errorToast();
 				});
 		},
-		[className, classPK, type, url]
+		[className, classPK, contentTitle, type, url]
 	);
 
 	const RatingsTypes = {

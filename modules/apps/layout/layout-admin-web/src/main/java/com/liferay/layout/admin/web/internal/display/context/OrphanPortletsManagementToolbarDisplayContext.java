@@ -40,6 +40,8 @@ public class OrphanPortletsManagementToolbarDisplayContext
 		super(
 			httpServletRequest, liferayPortletRequest, liferayPortletResponse,
 			orphanPortletsDisplayContext.getOrphanPortletsSearchContainer());
+
+		_orphanPortletsDisplayContext = orphanPortletsDisplayContext;
 	}
 
 	@Override
@@ -47,7 +49,7 @@ public class OrphanPortletsManagementToolbarDisplayContext
 		return DropdownItemListBuilder.add(
 			dropdownItem -> {
 				dropdownItem.putData("action", "deleteOrphanPortlets");
-				dropdownItem.setIcon("times-circle");
+				dropdownItem.setIcon("trash");
 				dropdownItem.setLabel(
 					LanguageUtil.get(httpServletRequest, "delete"));
 				dropdownItem.setQuickAction(true);
@@ -61,8 +63,8 @@ public class OrphanPortletsManagementToolbarDisplayContext
 	}
 
 	@Override
-	public String getDefaultEventHandler() {
-		return "ORPHAN_PORTLETS_MANAGEMENT_TOOLBAR_DEFAULT_EVENT_HANDLER";
+	protected String getDisplayStyle() {
+		return _orphanPortletsDisplayContext.getDisplayStyle();
 	}
 
 	@Override
@@ -79,5 +81,7 @@ public class OrphanPortletsManagementToolbarDisplayContext
 	protected String[] getOrderByKeys() {
 		return new String[] {"name"};
 	}
+
+	private final OrphanPortletsDisplayContext _orphanPortletsDisplayContext;
 
 }

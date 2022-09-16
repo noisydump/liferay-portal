@@ -17,6 +17,7 @@ package com.liferay.layout.page.template.internal.model.listener.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructureRel;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureRelLocalService;
+import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
@@ -30,6 +31,7 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.segments.model.SegmentsExperience;
@@ -60,6 +62,8 @@ public class SegmentsExperienceModelListenerTest {
 		UserTestUtil.setUser(TestPropsValues.getUser());
 
 		_group = GroupTestUtil.addGroup();
+
+		_layout = LayoutTestUtil.addTypeContentLayout(_group);
 	}
 
 	@Test
@@ -69,10 +73,11 @@ public class SegmentsExperienceModelListenerTest {
 
 		SegmentsExperience segmentsExperience =
 			_segmentsExperienceLocalService.addSegmentsExperience(
+				TestPropsValues.getUserId(), _group.getGroupId(),
 				RandomTestUtil.randomLong(),
 				_classNameLocalService.getClassNameId(Layout.class),
-				RandomTestUtil.randomLong(),
-				RandomTestUtil.randomLocaleStringMap(), true, serviceContext);
+				_layout.getPlid(), RandomTestUtil.randomLocaleStringMap(), true,
+				new UnicodeProperties(true), serviceContext);
 
 		int count = 5;
 
@@ -112,6 +117,8 @@ public class SegmentsExperienceModelListenerTest {
 
 	@DeleteAfterTestRun
 	private Group _group;
+
+	private Layout _layout;
 
 	@Inject
 	private LayoutLocalService _layoutLocalService;

@@ -20,16 +20,17 @@ import com.liferay.document.library.opener.google.drive.constants.DLOpenerGoogle
 import com.liferay.document.library.opener.google.drive.web.internal.constants.DLOpenerGoogleDriveConstants;
 import com.liferay.document.library.opener.model.DLOpenerFileEntryReference;
 import com.liferay.document.library.opener.service.DLOpenerFileEntryReferenceLocalService;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskStatus;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskStatusRegistry;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
-import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCResourceCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
+import com.liferay.portal.kernel.portlet.constants.FriendlyURLResolverConstants;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.MapUtil;
@@ -39,7 +40,6 @@ import com.liferay.portal.kernel.util.Validator;
 
 import java.util.Map;
 
-import javax.portlet.PortletURL;
 import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceResponse;
 
@@ -111,30 +111,27 @@ public class GoogleDriveBackgroundTaskStatusMVCResourceCommand
 		if (complete && (dlOpenerFileEntryReference != null) &&
 			Validator.isNotNull(dlOpenerFileEntryReference.getReferenceKey())) {
 
-			LiferayPortletResponse liferayPortletResponse =
-				_portal.getLiferayPortletResponse(resourceResponse);
-
-			PortletURL portletURL = liferayPortletResponse.createRenderURL(
-				_portal.getPortletId(resourceRequest));
-
-			portletURL.setWindowState(LiferayWindowState.EXCLUSIVE);
-
-			portletURL.setParameter(
-				"mvcRenderCommandName", "/document_library/open_google_docs");
-			portletURL.setParameter("fileEntryId", String.valueOf(fileEntryId));
-
-			String googleDocsEditURL = _getGoogleDocsEditURL(
-				dlOpenerFileEntryReference.getReferenceKey(),
-				DLOpenerGoogleDriveMimeTypes.getGoogleDocsMimeType(
-					fileEntry.getMimeType()));
-
-			portletURL.setParameter("googleDocsEditURL", googleDocsEditURL);
-
-			portletURL.setParameter(
-				"googleDocsRedirect",
-				ParamUtil.getString(resourceRequest, "googleDocsRedirect"));
-
-			jsonObject.put("googleDocsEditURL", portletURL.toString());
+			jsonObject.put(
+				"googleDocsEditURL",
+				PortletURLBuilder.createRenderURL(
+					_portal.getLiferayPortletResponse(resourceResponse),
+					_portal.getPortletId(resourceRequest)
+				).setMVCRenderCommandName(
+					"/document_library/open_google_docs"
+				).setParameter(
+					"fileEntryId", fileEntryId
+				).setParameter(
+					"googleDocsEditURL",
+					_getGoogleDocsEditURL(
+						dlOpenerFileEntryReference.getReferenceKey(),
+						DLOpenerGoogleDriveMimeTypes.getGoogleDocsMimeType(
+							fileEntry.getMimeType()))
+				).setParameter(
+					"googleDocsRedirect",
+					ParamUtil.getString(resourceRequest, "googleDocsRedirect")
+				).setWindowState(
+					LiferayWindowState.EXCLUSIVE
+				).buildString());
 		}
 
 		JSONPortletResponseUtil.writeJSON(
@@ -145,7 +142,9 @@ public class GoogleDriveBackgroundTaskStatusMVCResourceCommand
 		String googleDriveFileId, String mimeType) {
 
 		return StringBundler.concat(
-			_paths.get(mimeType), "/d/", googleDriveFileId, "/edit");
+			_paths.get(mimeType),
+			FriendlyURLResolverConstants.URL_SEPARATOR_FILE_ENTRY,
+			googleDriveFileId, "/edit");
 	}
 
 	private static final Map<String, String> _paths = MapUtil.fromArray(

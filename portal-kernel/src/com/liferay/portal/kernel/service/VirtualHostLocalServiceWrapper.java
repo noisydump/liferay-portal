@@ -29,6 +29,10 @@ public class VirtualHostLocalServiceWrapper
 	implements ServiceWrapper<VirtualHostLocalService>,
 			   VirtualHostLocalService {
 
+	public VirtualHostLocalServiceWrapper() {
+		this(null);
+	}
+
 	public VirtualHostLocalServiceWrapper(
 		VirtualHostLocalService virtualHostLocalService) {
 
@@ -119,6 +123,13 @@ public class VirtualHostLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _virtualHostLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _virtualHostLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -317,9 +328,13 @@ public class VirtualHostLocalServiceWrapper
 	}
 
 	@Override
+	public java.util.List<VirtualHost> getVirtualHosts(long companyId) {
+		return _virtualHostLocalService.getVirtualHosts(companyId);
+	}
+
+	@Override
 	public java.util.List<VirtualHost> getVirtualHosts(
-			long companyId, long layoutSetId)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		long companyId, long layoutSetId) {
 
 		return _virtualHostLocalService.getVirtualHosts(companyId, layoutSetId);
 	}
@@ -332,6 +347,14 @@ public class VirtualHostLocalServiceWrapper
 	@Override
 	public int getVirtualHostsCount() {
 		return _virtualHostLocalService.getVirtualHostsCount();
+	}
+
+	@Override
+	public long getVirtualHostsCount(
+		long excludedLayoutSetId, String[] virtualHostNames) {
+
+		return _virtualHostLocalService.getVirtualHostsCount(
+			excludedLayoutSetId, virtualHostNames);
 	}
 
 	/**

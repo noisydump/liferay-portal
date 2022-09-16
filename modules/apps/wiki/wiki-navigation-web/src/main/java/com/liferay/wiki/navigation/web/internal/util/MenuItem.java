@@ -15,6 +15,8 @@
 package com.liferay.wiki.navigation.web.internal.util;
 
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.wiki.model.WikiNode;
@@ -47,6 +49,10 @@ public class MenuItem implements Serializable {
 				nodeId, WikiNavigationConstants.MAX_PAGES);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			return new LinkedList<>();
 		}
 
@@ -57,10 +63,6 @@ public class MenuItem implements Serializable {
 		WikiPage wikiPage, PortletURL portletURL) {
 
 		return _fromWikiPage(wikiPage, portletURL);
-	}
-
-	public MenuItem() {
-		_children = new LinkedList<>();
 	}
 
 	public void addChild(MenuItem child) {
@@ -220,10 +222,12 @@ public class MenuItem implements Serializable {
 		return menuItems;
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(MenuItem.class);
+
 	private static final Pattern _pattern = Pattern.compile(
 		"(?:(?:==\\s(.*?)\\s==)*(?:\\Q[[\\E(.*?)\\Q]]\\E)*)*");
 
-	private List<MenuItem> _children;
+	private List<MenuItem> _children = new LinkedList<>();
 	private boolean _externalURL;
 	private String _icon;
 	private String _id;

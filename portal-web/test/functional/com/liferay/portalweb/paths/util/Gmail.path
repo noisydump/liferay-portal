@@ -2,11 +2,13 @@
 <head>
 <title>Gmail</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">Gmail</td></tr>
 </thead>
+
 <tbody>
 <tr>
 	<td>PAGE_TITLE</td>
@@ -23,7 +25,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--LOGIN-->
+
 <tr>
 	<td>LOGIN_EMAIL_FIELD</td>
 	<td>//input[contains(@type,'email')]</td>
@@ -99,7 +103,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--GMAIL_NORMAL_MODE-->
+
 <tr>
 	<td>GMAIL_NORMAL_MODE_USER_SCREENNAME</td>
 	<td>//div/a[contains(@title,'${key_userEmailAddress}')]</td>
@@ -110,7 +116,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--GMAIL_HTML_MODE-->
+
 <tr>
 	<td>GMAIL_HTML_MODE_CONFIRMATION</td>
 	<td>//input[@value="I'd like to use HTML Gmail"]</td>
@@ -156,7 +164,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--GMAIL_HTML_MODE_MAIL_TABLE-->
+
 <tr>
 	<td>GMAIL_HTML_MODE_MAIL_TABLE_DELETE_BUTTON</td>
 	<td>//form[@method='POST']//input[@type='submit' and @value='Delete']</td>
@@ -212,7 +222,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--GMAIL_HTML_MODE_MESSAGE-->
+
 <tr>
 	<td>GMAIL_HTML_MODE_MESSAGE_SHOW_QUOTED_TEXT_LINK</td>
 	<td>//a[contains(.,'- Show quoted text -')]</td>
@@ -250,7 +262,7 @@
 </tr>
 <tr>
 	<td>GMAIL_HTML_MODE_MESSAGE_BODY_ARTICLE_DATE</td>
-	<td>//tr//td//div[contains(.,'${gmailKBArticleDate}')]</td>
+	<td>//tr//td//div[contains(.,'${gmailKbArticleDate}')]</td>
 	<td></td>
 </tr>
 <tr>

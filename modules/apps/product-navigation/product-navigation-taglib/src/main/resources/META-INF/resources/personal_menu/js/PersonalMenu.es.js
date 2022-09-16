@@ -16,9 +16,39 @@ import ClayButton from '@clayui/button';
 import {ClayDropDownWithItems} from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
 import ClaySticker from '@clayui/sticker';
-import {fetch} from 'frontend-js-web';
+import {fetch, navigate, openSelectionModal} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useRef, useState} from 'react';
+
+function mapItemsOnClick(items) {
+	return items.map((item) => {
+		const {items: nestedItems, jsOnClickConfig, ...otherKeys} = item;
+
+		const newVal = {...otherKeys};
+
+		if (nestedItems) {
+			newVal.items = mapItemsOnClick(nestedItems);
+		}
+
+		if (jsOnClickConfig) {
+			newVal.onClick = () => {
+				const {selectEventName, title, url} = jsOnClickConfig;
+
+				openSelectionModal({
+					id: selectEventName,
+					onSelect(selectedItem) {
+						navigate(selectedItem.url);
+					},
+					selectEventName,
+					title,
+					url,
+				});
+			};
+		}
+
+		return newVal;
+	});
+}
 
 function PersonalMenu({
 	color,
@@ -29,13 +59,15 @@ function PersonalMenu({
 	userPortraitURL,
 }) {
 	const [items, setItems] = useState([]);
-	const preloadPromise = useRef();
+	const preloadPromiseRef = useRef();
 
 	function preloadItems() {
-		if (!preloadPromise.current) {
-			preloadPromise.current = fetch(itemsURL)
+		if (!preloadPromiseRef.current) {
+			preloadPromiseRef.current = fetch(itemsURL)
 				.then((response) => response.json())
-				.then((items) => setItems(items));
+				.then((responseItems) =>
+					setItems(mapItemsOnClick(responseItems))
+				);
 		}
 	}
 
@@ -53,11 +85,14 @@ function PersonalMenu({
 				) : (
 					<ClayButton
 						aria-label={Liferay.Language.get('personal-menu')}
+						className="rounded-circle"
 						displayType="unstyled"
 						onFocus={preloadItems}
 						onMouseOver={preloadItems}
 					>
-						<span className={`sticker sticker-${size}`}>
+						<span
+							className={`sticker sticker-user-icon sticker-${size}`}
+						>
 							<ClaySticker
 								className={`user-icon-color-${color}`}
 								shape="circle"
@@ -65,6 +100,7 @@ function PersonalMenu({
 							>
 								{userPortraitURL ? (
 									<img
+										alt=""
 										className="sticker-img"
 										src={userPortraitURL}
 									/>

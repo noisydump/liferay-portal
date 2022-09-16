@@ -30,6 +30,7 @@ import java.util.Properties;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -61,7 +62,7 @@ public class ProjectTemplatesRESTBuilderTest
 
 	@Test
 	public void testBuildTemplateRESTBuilder() throws Exception {
-		String liferayVersion = getDefaultLiferayVersion();
+		String liferayVersion = "7.4.3.4";
 		String name = "guestbook";
 		String packageName = "com.liferay.docs.guestbook";
 		String template = "rest-builder";
@@ -98,9 +99,10 @@ public class ProjectTemplatesRESTBuilderTest
 		testExists(mavenProjectDir, name + "-test/pom.xml");
 	}
 
+	@Ignore
 	@Test
 	public void testBuildTemplateRESTBuilderCheckExports() throws Exception {
-		String liferayVersion = getDefaultLiferayVersion();
+		String liferayVersion = "7.4.3.4";
 		String name = "guestbook";
 		String packageName = "com.liferay.docs.guestbook";
 		String template = "rest-builder";
@@ -144,7 +146,7 @@ public class ProjectTemplatesRESTBuilderTest
 	public void testBuildTemplateRESTBuilderWorkspaceRelativePath()
 		throws Exception {
 
-		String liferayVersion = getDefaultLiferayVersion();
+		String liferayVersion = "7.4.3.4";
 		String name = "sample";
 
 		File gradleWorkspaceDir = buildWorkspace(

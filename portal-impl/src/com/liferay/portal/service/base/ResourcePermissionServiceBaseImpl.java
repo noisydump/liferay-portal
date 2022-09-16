@@ -20,16 +20,18 @@ import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.ResourcePermission;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.service.BaseServiceImpl;
 import com.liferay.portal.kernel.service.ResourcePermissionService;
-import com.liferay.portal.kernel.service.persistence.ResourceActionPersistence;
+import com.liferay.portal.kernel.service.ResourcePermissionServiceUtil;
 import com.liferay.portal.kernel.service.persistence.ResourcePermissionFinder;
 import com.liferay.portal.kernel.service.persistence.ResourcePermissionPersistence;
-import com.liferay.portal.kernel.service.persistence.RoleFinder;
-import com.liferay.portal.kernel.service.persistence.RolePersistence;
 import com.liferay.portal.kernel.util.PortalUtil;
+
+import java.lang.reflect.Field;
 
 import javax.sql.DataSource;
 
@@ -51,7 +53,7 @@ public abstract class ResourcePermissionServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>ResourcePermissionService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.kernel.service.ResourcePermissionServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>ResourcePermissionService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>ResourcePermissionServiceUtil</code>.
 	 */
 
 	/**
@@ -160,153 +162,12 @@ public abstract class ResourcePermissionServiceBaseImpl
 		this.counterLocalService = counterLocalService;
 	}
 
-	/**
-	 * Returns the permission remote service.
-	 *
-	 * @return the permission remote service
-	 */
-	public com.liferay.portal.kernel.service.PermissionService
-		getPermissionService() {
-
-		return permissionService;
-	}
-
-	/**
-	 * Sets the permission remote service.
-	 *
-	 * @param permissionService the permission remote service
-	 */
-	public void setPermissionService(
-		com.liferay.portal.kernel.service.PermissionService permissionService) {
-
-		this.permissionService = permissionService;
-	}
-
-	/**
-	 * Returns the resource action local service.
-	 *
-	 * @return the resource action local service
-	 */
-	public com.liferay.portal.kernel.service.ResourceActionLocalService
-		getResourceActionLocalService() {
-
-		return resourceActionLocalService;
-	}
-
-	/**
-	 * Sets the resource action local service.
-	 *
-	 * @param resourceActionLocalService the resource action local service
-	 */
-	public void setResourceActionLocalService(
-		com.liferay.portal.kernel.service.ResourceActionLocalService
-			resourceActionLocalService) {
-
-		this.resourceActionLocalService = resourceActionLocalService;
-	}
-
-	/**
-	 * Returns the resource action persistence.
-	 *
-	 * @return the resource action persistence
-	 */
-	public ResourceActionPersistence getResourceActionPersistence() {
-		return resourceActionPersistence;
-	}
-
-	/**
-	 * Sets the resource action persistence.
-	 *
-	 * @param resourceActionPersistence the resource action persistence
-	 */
-	public void setResourceActionPersistence(
-		ResourceActionPersistence resourceActionPersistence) {
-
-		this.resourceActionPersistence = resourceActionPersistence;
-	}
-
-	/**
-	 * Returns the role local service.
-	 *
-	 * @return the role local service
-	 */
-	public com.liferay.portal.kernel.service.RoleLocalService
-		getRoleLocalService() {
-
-		return roleLocalService;
-	}
-
-	/**
-	 * Sets the role local service.
-	 *
-	 * @param roleLocalService the role local service
-	 */
-	public void setRoleLocalService(
-		com.liferay.portal.kernel.service.RoleLocalService roleLocalService) {
-
-		this.roleLocalService = roleLocalService;
-	}
-
-	/**
-	 * Returns the role remote service.
-	 *
-	 * @return the role remote service
-	 */
-	public com.liferay.portal.kernel.service.RoleService getRoleService() {
-		return roleService;
-	}
-
-	/**
-	 * Sets the role remote service.
-	 *
-	 * @param roleService the role remote service
-	 */
-	public void setRoleService(
-		com.liferay.portal.kernel.service.RoleService roleService) {
-
-		this.roleService = roleService;
-	}
-
-	/**
-	 * Returns the role persistence.
-	 *
-	 * @return the role persistence
-	 */
-	public RolePersistence getRolePersistence() {
-		return rolePersistence;
-	}
-
-	/**
-	 * Sets the role persistence.
-	 *
-	 * @param rolePersistence the role persistence
-	 */
-	public void setRolePersistence(RolePersistence rolePersistence) {
-		this.rolePersistence = rolePersistence;
-	}
-
-	/**
-	 * Returns the role finder.
-	 *
-	 * @return the role finder
-	 */
-	public RoleFinder getRoleFinder() {
-		return roleFinder;
-	}
-
-	/**
-	 * Sets the role finder.
-	 *
-	 * @param roleFinder the role finder
-	 */
-	public void setRoleFinder(RoleFinder roleFinder) {
-		this.roleFinder = roleFinder;
-	}
-
 	public void afterPropertiesSet() {
+		_setServiceUtilService(resourcePermissionService);
 	}
 
 	public void destroy() {
+		_setServiceUtilService(null);
 	}
 
 	/**
@@ -352,6 +213,22 @@ public abstract class ResourcePermissionServiceBaseImpl
 		}
 	}
 
+	private void _setServiceUtilService(
+		ResourcePermissionService resourcePermissionService) {
+
+		try {
+			Field field = ResourcePermissionServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, resourcePermissionService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@BeanReference(
 		type = com.liferay.portal.kernel.service.ResourcePermissionLocalService.class
 	)
@@ -373,34 +250,7 @@ public abstract class ResourcePermissionServiceBaseImpl
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@BeanReference(
-		type = com.liferay.portal.kernel.service.PermissionService.class
-	)
-	protected com.liferay.portal.kernel.service.PermissionService
-		permissionService;
-
-	@BeanReference(
-		type = com.liferay.portal.kernel.service.ResourceActionLocalService.class
-	)
-	protected com.liferay.portal.kernel.service.ResourceActionLocalService
-		resourceActionLocalService;
-
-	@BeanReference(type = ResourceActionPersistence.class)
-	protected ResourceActionPersistence resourceActionPersistence;
-
-	@BeanReference(
-		type = com.liferay.portal.kernel.service.RoleLocalService.class
-	)
-	protected com.liferay.portal.kernel.service.RoleLocalService
-		roleLocalService;
-
-	@BeanReference(type = com.liferay.portal.kernel.service.RoleService.class)
-	protected com.liferay.portal.kernel.service.RoleService roleService;
-
-	@BeanReference(type = RolePersistence.class)
-	protected RolePersistence rolePersistence;
-
-	@BeanReference(type = RoleFinder.class)
-	protected RoleFinder roleFinder;
+	private static final Log _log = LogFactoryUtil.getLog(
+		ResourcePermissionServiceBaseImpl.class);
 
 }

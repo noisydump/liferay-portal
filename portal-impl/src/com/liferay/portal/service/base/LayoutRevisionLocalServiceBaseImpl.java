@@ -28,6 +28,8 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.LayoutRevision;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
@@ -35,24 +37,17 @@ import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
 import com.liferay.portal.kernel.service.LayoutRevisionLocalService;
+import com.liferay.portal.kernel.service.LayoutRevisionLocalServiceUtil;
 import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistry;
 import com.liferay.portal.kernel.service.persistence.BasePersistence;
-import com.liferay.portal.kernel.service.persistence.LayoutFinder;
-import com.liferay.portal.kernel.service.persistence.LayoutPersistence;
 import com.liferay.portal.kernel.service.persistence.LayoutRevisionPersistence;
-import com.liferay.portal.kernel.service.persistence.LayoutSetBranchPersistence;
-import com.liferay.portal.kernel.service.persistence.PortletPreferenceValuePersistence;
-import com.liferay.portal.kernel.service.persistence.PortletPreferencesFinder;
-import com.liferay.portal.kernel.service.persistence.PortletPreferencesPersistence;
-import com.liferay.portal.kernel.service.persistence.RecentLayoutRevisionPersistence;
-import com.liferay.portal.kernel.service.persistence.UserFinder;
-import com.liferay.portal.kernel.service.persistence.UserPersistence;
-import com.liferay.portal.kernel.service.persistence.WorkflowInstanceLinkPersistence;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
+
+import java.lang.reflect.Field;
 
 import java.util.List;
 
@@ -76,7 +71,7 @@ public abstract class LayoutRevisionLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>LayoutRevisionLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.kernel.service.LayoutRevisionLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>LayoutRevisionLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>LayoutRevisionLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -150,6 +145,13 @@ public abstract class LayoutRevisionLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return layoutRevisionPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -318,6 +320,11 @@ public abstract class LayoutRevisionLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement LayoutRevisionLocalServiceImpl#deleteLayoutRevision(LayoutRevision) to avoid orphaned data");
+		}
+
 		return layoutRevisionLocalService.deleteLayoutRevision(
 			(LayoutRevision)persistedModel);
 	}
@@ -442,377 +449,19 @@ public abstract class LayoutRevisionLocalServiceBaseImpl
 		this.counterLocalService = counterLocalService;
 	}
 
-	/**
-	 * Returns the layout local service.
-	 *
-	 * @return the layout local service
-	 */
-	public com.liferay.portal.kernel.service.LayoutLocalService
-		getLayoutLocalService() {
-
-		return layoutLocalService;
-	}
-
-	/**
-	 * Sets the layout local service.
-	 *
-	 * @param layoutLocalService the layout local service
-	 */
-	public void setLayoutLocalService(
-		com.liferay.portal.kernel.service.LayoutLocalService
-			layoutLocalService) {
-
-		this.layoutLocalService = layoutLocalService;
-	}
-
-	/**
-	 * Returns the layout persistence.
-	 *
-	 * @return the layout persistence
-	 */
-	public LayoutPersistence getLayoutPersistence() {
-		return layoutPersistence;
-	}
-
-	/**
-	 * Sets the layout persistence.
-	 *
-	 * @param layoutPersistence the layout persistence
-	 */
-	public void setLayoutPersistence(LayoutPersistence layoutPersistence) {
-		this.layoutPersistence = layoutPersistence;
-	}
-
-	/**
-	 * Returns the layout finder.
-	 *
-	 * @return the layout finder
-	 */
-	public LayoutFinder getLayoutFinder() {
-		return layoutFinder;
-	}
-
-	/**
-	 * Sets the layout finder.
-	 *
-	 * @param layoutFinder the layout finder
-	 */
-	public void setLayoutFinder(LayoutFinder layoutFinder) {
-		this.layoutFinder = layoutFinder;
-	}
-
-	/**
-	 * Returns the layout set branch local service.
-	 *
-	 * @return the layout set branch local service
-	 */
-	public com.liferay.portal.kernel.service.LayoutSetBranchLocalService
-		getLayoutSetBranchLocalService() {
-
-		return layoutSetBranchLocalService;
-	}
-
-	/**
-	 * Sets the layout set branch local service.
-	 *
-	 * @param layoutSetBranchLocalService the layout set branch local service
-	 */
-	public void setLayoutSetBranchLocalService(
-		com.liferay.portal.kernel.service.LayoutSetBranchLocalService
-			layoutSetBranchLocalService) {
-
-		this.layoutSetBranchLocalService = layoutSetBranchLocalService;
-	}
-
-	/**
-	 * Returns the layout set branch persistence.
-	 *
-	 * @return the layout set branch persistence
-	 */
-	public LayoutSetBranchPersistence getLayoutSetBranchPersistence() {
-		return layoutSetBranchPersistence;
-	}
-
-	/**
-	 * Sets the layout set branch persistence.
-	 *
-	 * @param layoutSetBranchPersistence the layout set branch persistence
-	 */
-	public void setLayoutSetBranchPersistence(
-		LayoutSetBranchPersistence layoutSetBranchPersistence) {
-
-		this.layoutSetBranchPersistence = layoutSetBranchPersistence;
-	}
-
-	/**
-	 * Returns the portlet preference value local service.
-	 *
-	 * @return the portlet preference value local service
-	 */
-	public com.liferay.portal.kernel.service.PortletPreferenceValueLocalService
-		getPortletPreferenceValueLocalService() {
-
-		return portletPreferenceValueLocalService;
-	}
-
-	/**
-	 * Sets the portlet preference value local service.
-	 *
-	 * @param portletPreferenceValueLocalService the portlet preference value local service
-	 */
-	public void setPortletPreferenceValueLocalService(
-		com.liferay.portal.kernel.service.PortletPreferenceValueLocalService
-			portletPreferenceValueLocalService) {
-
-		this.portletPreferenceValueLocalService =
-			portletPreferenceValueLocalService;
-	}
-
-	/**
-	 * Returns the portlet preference value persistence.
-	 *
-	 * @return the portlet preference value persistence
-	 */
-	public PortletPreferenceValuePersistence
-		getPortletPreferenceValuePersistence() {
-
-		return portletPreferenceValuePersistence;
-	}
-
-	/**
-	 * Sets the portlet preference value persistence.
-	 *
-	 * @param portletPreferenceValuePersistence the portlet preference value persistence
-	 */
-	public void setPortletPreferenceValuePersistence(
-		PortletPreferenceValuePersistence portletPreferenceValuePersistence) {
-
-		this.portletPreferenceValuePersistence =
-			portletPreferenceValuePersistence;
-	}
-
-	/**
-	 * Returns the portlet preferences local service.
-	 *
-	 * @return the portlet preferences local service
-	 */
-	public com.liferay.portal.kernel.service.PortletPreferencesLocalService
-		getPortletPreferencesLocalService() {
-
-		return portletPreferencesLocalService;
-	}
-
-	/**
-	 * Sets the portlet preferences local service.
-	 *
-	 * @param portletPreferencesLocalService the portlet preferences local service
-	 */
-	public void setPortletPreferencesLocalService(
-		com.liferay.portal.kernel.service.PortletPreferencesLocalService
-			portletPreferencesLocalService) {
-
-		this.portletPreferencesLocalService = portletPreferencesLocalService;
-	}
-
-	/**
-	 * Returns the portlet preferences persistence.
-	 *
-	 * @return the portlet preferences persistence
-	 */
-	public PortletPreferencesPersistence getPortletPreferencesPersistence() {
-		return portletPreferencesPersistence;
-	}
-
-	/**
-	 * Sets the portlet preferences persistence.
-	 *
-	 * @param portletPreferencesPersistence the portlet preferences persistence
-	 */
-	public void setPortletPreferencesPersistence(
-		PortletPreferencesPersistence portletPreferencesPersistence) {
-
-		this.portletPreferencesPersistence = portletPreferencesPersistence;
-	}
-
-	/**
-	 * Returns the portlet preferences finder.
-	 *
-	 * @return the portlet preferences finder
-	 */
-	public PortletPreferencesFinder getPortletPreferencesFinder() {
-		return portletPreferencesFinder;
-	}
-
-	/**
-	 * Sets the portlet preferences finder.
-	 *
-	 * @param portletPreferencesFinder the portlet preferences finder
-	 */
-	public void setPortletPreferencesFinder(
-		PortletPreferencesFinder portletPreferencesFinder) {
-
-		this.portletPreferencesFinder = portletPreferencesFinder;
-	}
-
-	/**
-	 * Returns the recent layout revision local service.
-	 *
-	 * @return the recent layout revision local service
-	 */
-	public com.liferay.portal.kernel.service.RecentLayoutRevisionLocalService
-		getRecentLayoutRevisionLocalService() {
-
-		return recentLayoutRevisionLocalService;
-	}
-
-	/**
-	 * Sets the recent layout revision local service.
-	 *
-	 * @param recentLayoutRevisionLocalService the recent layout revision local service
-	 */
-	public void setRecentLayoutRevisionLocalService(
-		com.liferay.portal.kernel.service.RecentLayoutRevisionLocalService
-			recentLayoutRevisionLocalService) {
-
-		this.recentLayoutRevisionLocalService =
-			recentLayoutRevisionLocalService;
-	}
-
-	/**
-	 * Returns the recent layout revision persistence.
-	 *
-	 * @return the recent layout revision persistence
-	 */
-	public RecentLayoutRevisionPersistence
-		getRecentLayoutRevisionPersistence() {
-
-		return recentLayoutRevisionPersistence;
-	}
-
-	/**
-	 * Sets the recent layout revision persistence.
-	 *
-	 * @param recentLayoutRevisionPersistence the recent layout revision persistence
-	 */
-	public void setRecentLayoutRevisionPersistence(
-		RecentLayoutRevisionPersistence recentLayoutRevisionPersistence) {
-
-		this.recentLayoutRevisionPersistence = recentLayoutRevisionPersistence;
-	}
-
-	/**
-	 * Returns the user local service.
-	 *
-	 * @return the user local service
-	 */
-	public com.liferay.portal.kernel.service.UserLocalService
-		getUserLocalService() {
-
-		return userLocalService;
-	}
-
-	/**
-	 * Sets the user local service.
-	 *
-	 * @param userLocalService the user local service
-	 */
-	public void setUserLocalService(
-		com.liferay.portal.kernel.service.UserLocalService userLocalService) {
-
-		this.userLocalService = userLocalService;
-	}
-
-	/**
-	 * Returns the user persistence.
-	 *
-	 * @return the user persistence
-	 */
-	public UserPersistence getUserPersistence() {
-		return userPersistence;
-	}
-
-	/**
-	 * Sets the user persistence.
-	 *
-	 * @param userPersistence the user persistence
-	 */
-	public void setUserPersistence(UserPersistence userPersistence) {
-		this.userPersistence = userPersistence;
-	}
-
-	/**
-	 * Returns the user finder.
-	 *
-	 * @return the user finder
-	 */
-	public UserFinder getUserFinder() {
-		return userFinder;
-	}
-
-	/**
-	 * Sets the user finder.
-	 *
-	 * @param userFinder the user finder
-	 */
-	public void setUserFinder(UserFinder userFinder) {
-		this.userFinder = userFinder;
-	}
-
-	/**
-	 * Returns the workflow instance link local service.
-	 *
-	 * @return the workflow instance link local service
-	 */
-	public com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService
-		getWorkflowInstanceLinkLocalService() {
-
-		return workflowInstanceLinkLocalService;
-	}
-
-	/**
-	 * Sets the workflow instance link local service.
-	 *
-	 * @param workflowInstanceLinkLocalService the workflow instance link local service
-	 */
-	public void setWorkflowInstanceLinkLocalService(
-		com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService
-			workflowInstanceLinkLocalService) {
-
-		this.workflowInstanceLinkLocalService =
-			workflowInstanceLinkLocalService;
-	}
-
-	/**
-	 * Returns the workflow instance link persistence.
-	 *
-	 * @return the workflow instance link persistence
-	 */
-	public WorkflowInstanceLinkPersistence
-		getWorkflowInstanceLinkPersistence() {
-
-		return workflowInstanceLinkPersistence;
-	}
-
-	/**
-	 * Sets the workflow instance link persistence.
-	 *
-	 * @param workflowInstanceLinkPersistence the workflow instance link persistence
-	 */
-	public void setWorkflowInstanceLinkPersistence(
-		WorkflowInstanceLinkPersistence workflowInstanceLinkPersistence) {
-
-		this.workflowInstanceLinkPersistence = workflowInstanceLinkPersistence;
-	}
-
 	public void afterPropertiesSet() {
 		persistedModelLocalServiceRegistry.register(
 			"com.liferay.portal.kernel.model.LayoutRevision",
 			layoutRevisionLocalService);
+
+		_setLocalServiceUtilService(layoutRevisionLocalService);
 	}
 
 	public void destroy() {
 		persistedModelLocalServiceRegistry.unregister(
 			"com.liferay.portal.kernel.model.LayoutRevision");
+
+		_setLocalServiceUtilService(null);
 	}
 
 	/**
@@ -857,6 +506,22 @@ public abstract class LayoutRevisionLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		LayoutRevisionLocalService layoutRevisionLocalService) {
+
+		try {
+			Field field = LayoutRevisionLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, layoutRevisionLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@BeanReference(type = LayoutRevisionLocalService.class)
 	protected LayoutRevisionLocalService layoutRevisionLocalService;
 
@@ -869,79 +534,8 @@ public abstract class LayoutRevisionLocalServiceBaseImpl
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@BeanReference(
-		type = com.liferay.portal.kernel.service.LayoutLocalService.class
-	)
-	protected com.liferay.portal.kernel.service.LayoutLocalService
-		layoutLocalService;
-
-	@BeanReference(type = LayoutPersistence.class)
-	protected LayoutPersistence layoutPersistence;
-
-	@BeanReference(type = LayoutFinder.class)
-	protected LayoutFinder layoutFinder;
-
-	@BeanReference(
-		type = com.liferay.portal.kernel.service.LayoutSetBranchLocalService.class
-	)
-	protected com.liferay.portal.kernel.service.LayoutSetBranchLocalService
-		layoutSetBranchLocalService;
-
-	@BeanReference(type = LayoutSetBranchPersistence.class)
-	protected LayoutSetBranchPersistence layoutSetBranchPersistence;
-
-	@BeanReference(
-		type = com.liferay.portal.kernel.service.PortletPreferenceValueLocalService.class
-	)
-	protected
-		com.liferay.portal.kernel.service.PortletPreferenceValueLocalService
-			portletPreferenceValueLocalService;
-
-	@BeanReference(type = PortletPreferenceValuePersistence.class)
-	protected PortletPreferenceValuePersistence
-		portletPreferenceValuePersistence;
-
-	@BeanReference(
-		type = com.liferay.portal.kernel.service.PortletPreferencesLocalService.class
-	)
-	protected com.liferay.portal.kernel.service.PortletPreferencesLocalService
-		portletPreferencesLocalService;
-
-	@BeanReference(type = PortletPreferencesPersistence.class)
-	protected PortletPreferencesPersistence portletPreferencesPersistence;
-
-	@BeanReference(type = PortletPreferencesFinder.class)
-	protected PortletPreferencesFinder portletPreferencesFinder;
-
-	@BeanReference(
-		type = com.liferay.portal.kernel.service.RecentLayoutRevisionLocalService.class
-	)
-	protected com.liferay.portal.kernel.service.RecentLayoutRevisionLocalService
-		recentLayoutRevisionLocalService;
-
-	@BeanReference(type = RecentLayoutRevisionPersistence.class)
-	protected RecentLayoutRevisionPersistence recentLayoutRevisionPersistence;
-
-	@BeanReference(
-		type = com.liferay.portal.kernel.service.UserLocalService.class
-	)
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
-
-	@BeanReference(type = UserPersistence.class)
-	protected UserPersistence userPersistence;
-
-	@BeanReference(type = UserFinder.class)
-	protected UserFinder userFinder;
-
-	@BeanReference(
-		type = com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService.class
-	)
-	protected com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService
-		workflowInstanceLinkLocalService;
-
-	@BeanReference(type = WorkflowInstanceLinkPersistence.class)
-	protected WorkflowInstanceLinkPersistence workflowInstanceLinkPersistence;
+	private static final Log _log = LogFactoryUtil.getLog(
+		LayoutRevisionLocalServiceBaseImpl.class);
 
 	@BeanReference(type = PersistedModelLocalServiceRegistry.class)
 	protected PersistedModelLocalServiceRegistry

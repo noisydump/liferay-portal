@@ -30,6 +30,13 @@ definition {
 				value1 = "${dmServerVersion}");
 		}
 
+		if (isSet(dmRepositoryLibraryPath)) {
+			Type(
+				key_fieldLabel = "Library Path",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = "${dmRepositoryLibraryPath}");
+		}
+
 		if (isSet(dmRepositorySiteAbsoluteURL)) {
 			Type(
 				key_fieldLabel = "Site Absolute URL",
@@ -54,7 +61,7 @@ definition {
 		if (isSet(permissionDefinitionKey)) {
 			Panel.expandPanel(panel = "Permissions");
 
-			if (IsNotVisible(key_text = "Hide Options",locator1 = "Button#ANY")) {
+			if (IsNotVisible(key_text = "Hide Options", locator1 = "Button#ANY")) {
 				AssertClick(
 					key_text = "More Options",
 					locator1 = "Button#ANY",
@@ -98,7 +105,9 @@ definition {
 	macro gotoCP {
 		var key_dmRepositoryName = "${dmRepositoryName}";
 
-		AssertClick.assertTextClickAtAndPause(
+		AssertElementPresent.assertVisible(locator1 = "DocumentsAndMedia#REPOSITORY_FOLDER_NAME_DESCRIPTIVE_VIEW");
+
+		AssertClick.assertTextClickAt(
 			locator1 = "DocumentsAndMedia#REPOSITORY_FOLDER_NAME_DESCRIPTIVE_VIEW",
 			value1 = "${dmRepositoryName}");
 
@@ -115,22 +124,18 @@ definition {
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
+			category = "Content & Data",
 			portlet = "Documents and Media");
 
 		while (IsElementPresent(locator1 = "DocumentsAndMedia#FILTER_REPOSITORY_GENERIC")) {
 			Click(locator1 = "DocumentsAndMedia#FILTER_REPOSITORY_GENERIC");
 
-			Pause(locator1 = "1000");
-
 			if (IsElementPresent(locator1 = "DocumentsAndMedia#ICON_DOCUMENT_GENERIC")) {
-				Check(locator1 = "DocumentsAndMedia#TOOLBAR_SELECT_ALL_CHECKBOX");
+				Click.clickNoMouseOverNoWaitForVisible(locator1 = "DocumentsAndMedia#TOOLBAR_SELECT_ALL_CHECKBOX");
 
-				Pause(locator1 = "1000");
+				AssertElementPresent.assertVisible(locator1 = "DocumentsAndMedia#TOOLBAR_ACTIONS");
 
-				AssertClick.waitForDMHomeAssertTextEqualsClick(
-					locator1 = "DocumentsAndMedia#TOOLBAR_ACTIONS",
-					value1 = "Actions");
+				Click(locator1 = "DocumentsAndMedia#TOOLBAR_ACTIONS");
 
 				MenuItem.clickNoError(menuItem = "Delete");
 
@@ -155,6 +160,14 @@ definition {
 		AssertTextEquals(
 			locator1 = "DocumentsAndMedia#BREADCRUMB_FOLDER_NAME",
 			value1 = "${dmRepositoryName}");
+	}
+
+	macro viewNoDownloadItem {
+		Click(
+			key_dmFolderName = "${dmRepositoryName}",
+			locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_VERTICAL_ELLIPSIS");
+
+		AssertElementNotPresent(locator1 = "MenuItem#DOWNLOAD");
 	}
 
 }

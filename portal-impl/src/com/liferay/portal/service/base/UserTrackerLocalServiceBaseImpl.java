@@ -28,6 +28,8 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.model.UserTracker;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
@@ -36,14 +38,16 @@ import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
 import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistry;
 import com.liferay.portal.kernel.service.UserTrackerLocalService;
+import com.liferay.portal.kernel.service.UserTrackerLocalServiceUtil;
 import com.liferay.portal.kernel.service.persistence.BasePersistence;
-import com.liferay.portal.kernel.service.persistence.UserTrackerPathPersistence;
 import com.liferay.portal.kernel.service.persistence.UserTrackerPersistence;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
+
+import java.lang.reflect.Field;
 
 import java.util.List;
 
@@ -67,7 +71,7 @@ public abstract class UserTrackerLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>UserTrackerLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.kernel.service.UserTrackerLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>UserTrackerLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>UserTrackerLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -138,6 +142,13 @@ public abstract class UserTrackerLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return userTrackerPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -305,6 +316,11 @@ public abstract class UserTrackerLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement UserTrackerLocalServiceImpl#deleteUserTracker(UserTracker) to avoid orphaned data");
+		}
+
 		return userTrackerLocalService.deleteUserTracker(
 			(UserTracker)persistedModel);
 	}
@@ -429,58 +445,19 @@ public abstract class UserTrackerLocalServiceBaseImpl
 		this.counterLocalService = counterLocalService;
 	}
 
-	/**
-	 * Returns the user tracker path local service.
-	 *
-	 * @return the user tracker path local service
-	 */
-	public com.liferay.portal.kernel.service.UserTrackerPathLocalService
-		getUserTrackerPathLocalService() {
-
-		return userTrackerPathLocalService;
-	}
-
-	/**
-	 * Sets the user tracker path local service.
-	 *
-	 * @param userTrackerPathLocalService the user tracker path local service
-	 */
-	public void setUserTrackerPathLocalService(
-		com.liferay.portal.kernel.service.UserTrackerPathLocalService
-			userTrackerPathLocalService) {
-
-		this.userTrackerPathLocalService = userTrackerPathLocalService;
-	}
-
-	/**
-	 * Returns the user tracker path persistence.
-	 *
-	 * @return the user tracker path persistence
-	 */
-	public UserTrackerPathPersistence getUserTrackerPathPersistence() {
-		return userTrackerPathPersistence;
-	}
-
-	/**
-	 * Sets the user tracker path persistence.
-	 *
-	 * @param userTrackerPathPersistence the user tracker path persistence
-	 */
-	public void setUserTrackerPathPersistence(
-		UserTrackerPathPersistence userTrackerPathPersistence) {
-
-		this.userTrackerPathPersistence = userTrackerPathPersistence;
-	}
-
 	public void afterPropertiesSet() {
 		persistedModelLocalServiceRegistry.register(
 			"com.liferay.portal.kernel.model.UserTracker",
 			userTrackerLocalService);
+
+		_setLocalServiceUtilService(userTrackerLocalService);
 	}
 
 	public void destroy() {
 		persistedModelLocalServiceRegistry.unregister(
 			"com.liferay.portal.kernel.model.UserTracker");
+
+		_setLocalServiceUtilService(null);
 	}
 
 	/**
@@ -525,6 +502,22 @@ public abstract class UserTrackerLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		UserTrackerLocalService userTrackerLocalService) {
+
+		try {
+			Field field = UserTrackerLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, userTrackerLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@BeanReference(type = UserTrackerLocalService.class)
 	protected UserTrackerLocalService userTrackerLocalService;
 
@@ -537,14 +530,8 @@ public abstract class UserTrackerLocalServiceBaseImpl
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@BeanReference(
-		type = com.liferay.portal.kernel.service.UserTrackerPathLocalService.class
-	)
-	protected com.liferay.portal.kernel.service.UserTrackerPathLocalService
-		userTrackerPathLocalService;
-
-	@BeanReference(type = UserTrackerPathPersistence.class)
-	protected UserTrackerPathPersistence userTrackerPathPersistence;
+	private static final Log _log = LogFactoryUtil.getLog(
+		UserTrackerLocalServiceBaseImpl.class);
 
 	@BeanReference(type = PersistedModelLocalServiceRegistry.class)
 	protected PersistedModelLocalServiceRegistry

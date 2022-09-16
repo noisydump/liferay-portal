@@ -22,9 +22,11 @@ import com.liferay.commerce.product.constants.CPWebKeys;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CommerceCatalog;
 import com.liferay.commerce.product.util.CPDefinitionHelper;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
@@ -137,20 +139,16 @@ public class CPDefinitionAssetRenderer
 			LiferayPortletResponse liferayPortletResponse)
 		throws Exception {
 
-		Group group = GroupLocalServiceUtil.fetchGroup(
-			_cpDefinition.getGroupId());
-
-		PortletURL portletURL = PortalUtil.getControlPanelPortletURL(
-			liferayPortletRequest, group, CPPortletKeys.CP_DEFINITIONS, 0, 0,
-			PortletRequest.RENDER_PHASE);
-
-		portletURL.setParameter(
-			"mvcRenderCommandName", "/cp_definitions/edit_cp_definition");
-		portletURL.setParameter(
-			"cpDefinitionId",
-			String.valueOf(_cpDefinition.getCPDefinitionId()));
-
-		return portletURL;
+		return PortletURLBuilder.create(
+			PortalUtil.getControlPanelPortletURL(
+				liferayPortletRequest,
+				GroupLocalServiceUtil.fetchGroup(_cpDefinition.getGroupId()),
+				CPPortletKeys.CP_DEFINITIONS, 0, 0, PortletRequest.RENDER_PHASE)
+		).setMVCRenderCommandName(
+			"/cp_definitions/edit_cp_definition"
+		).setParameter(
+			"cpDefinitionId", _cpDefinition.getCPDefinitionId()
+		).buildPortletURL();
 	}
 
 	@Override
@@ -162,16 +160,15 @@ public class CPDefinitionAssetRenderer
 		AssetRendererFactory<CPDefinition> assetRendererFactory =
 			getAssetRendererFactory();
 
-		PortletURL portletURL = assetRendererFactory.getURLView(
-			liferayPortletResponse, windowState);
-
-		portletURL.setParameter("mvcPath", "/view.jsp");
-		portletURL.setParameter(
-			"cpDefinitionId",
-			String.valueOf(_cpDefinition.getCPDefinitionId()));
-		portletURL.setWindowState(windowState);
-
-		return portletURL.toString();
+		return PortletURLBuilder.create(
+			assetRendererFactory.getURLView(liferayPortletResponse, windowState)
+		).setMVCPath(
+			"/view.jsp"
+		).setParameter(
+			"cpDefinitionId", _cpDefinition.getCPDefinitionId()
+		).setWindowState(
+			windowState
+		).buildString();
 	}
 
 	@Override
@@ -181,6 +178,10 @@ public class CPDefinitionAssetRenderer
 		String noSuchEntryRedirect) {
 
 		try {
+			if (!_cpDefinition.isApproved() || !_cpDefinition.isPublished()) {
+				return null;
+			}
+
 			ThemeDisplay themeDisplay =
 				(ThemeDisplay)liferayPortletRequest.getAttribute(
 					WebKeys.THEME_DISPLAY);
@@ -189,6 +190,10 @@ public class CPDefinitionAssetRenderer
 				_cpDefinition.getCPDefinitionId(), themeDisplay);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			return noSuchEntryRedirect;
 		}
 	}
@@ -241,6 +246,9 @@ public class CPDefinitionAssetRenderer
 	public boolean isPrintable() {
 		return true;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		CPDefinitionAssetRenderer.class);
 
 	private final CPDefinition _cpDefinition;
 	private final CPDefinitionHelper _cpDefinitionHelper;

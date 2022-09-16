@@ -18,7 +18,6 @@ import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.expando.kernel.util.ExpandoBridgeFactoryUtil;
 import com.liferay.microblogs.model.MicroblogsEntry;
 import com.liferay.microblogs.model.MicroblogsEntryModel;
-import com.liferay.microblogs.model.MicroblogsEntrySoap;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.bean.AutoEscapeBeanHandler;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -32,21 +31,21 @@ import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -118,49 +117,49 @@ public class MicroblogsEntryModelImpl
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long COMPANYID_COLUMN_BITMASK = 1L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long CREATEDATE_COLUMN_BITMASK = 2L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long CREATORCLASSNAMEID_COLUMN_BITMASK = 4L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long CREATORCLASSPK_COLUMN_BITMASK = 8L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long PARENTMICROBLOGSENTRYID_COLUMN_BITMASK = 16L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long SOCIALRELATIONTYPE_COLUMN_BITMASK = 32L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long TYPE_COLUMN_BITMASK = 64L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long USERID_COLUMN_BITMASK = 128L;
@@ -177,63 +176,6 @@ public class MicroblogsEntryModelImpl
 	 */
 	@Deprecated
 	public static void setFinderCacheEnabled(boolean finderCacheEnabled) {
-	}
-
-	/**
-	 * Converts the soap model instance into a normal model instance.
-	 *
-	 * @param soapModel the soap model instance to convert
-	 * @return the normal model instance
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static MicroblogsEntry toModel(MicroblogsEntrySoap soapModel) {
-		if (soapModel == null) {
-			return null;
-		}
-
-		MicroblogsEntry model = new MicroblogsEntryImpl();
-
-		model.setMicroblogsEntryId(soapModel.getMicroblogsEntryId());
-		model.setCompanyId(soapModel.getCompanyId());
-		model.setUserId(soapModel.getUserId());
-		model.setUserName(soapModel.getUserName());
-		model.setCreateDate(soapModel.getCreateDate());
-		model.setModifiedDate(soapModel.getModifiedDate());
-		model.setCreatorClassNameId(soapModel.getCreatorClassNameId());
-		model.setCreatorClassPK(soapModel.getCreatorClassPK());
-		model.setContent(soapModel.getContent());
-		model.setType(soapModel.getType());
-		model.setParentMicroblogsEntryId(
-			soapModel.getParentMicroblogsEntryId());
-		model.setSocialRelationType(soapModel.getSocialRelationType());
-
-		return model;
-	}
-
-	/**
-	 * Converts the soap model instances into normal model instances.
-	 *
-	 * @param soapModels the soap model instances to convert
-	 * @return the normal model instances
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static List<MicroblogsEntry> toModels(
-		MicroblogsEntrySoap[] soapModels) {
-
-		if (soapModels == null) {
-			return null;
-		}
-
-		List<MicroblogsEntry> models = new ArrayList<MicroblogsEntry>(
-			soapModels.length);
-
-		for (MicroblogsEntrySoap soapModel : soapModels) {
-			models.add(toModel(soapModel));
-		}
-
-		return models;
 	}
 
 	public MicroblogsEntryModelImpl() {
@@ -319,34 +261,6 @@ public class MicroblogsEntryModelImpl
 		getAttributeSetterBiConsumers() {
 
 		return _attributeSetterBiConsumers;
-	}
-
-	private static Function<InvocationHandler, MicroblogsEntry>
-		_getProxyProviderFunction() {
-
-		Class<?> proxyClass = ProxyUtil.getProxyClass(
-			MicroblogsEntry.class.getClassLoader(), MicroblogsEntry.class,
-			ModelWrapper.class);
-
-		try {
-			Constructor<MicroblogsEntry> constructor =
-				(Constructor<MicroblogsEntry>)proxyClass.getConstructor(
-					InvocationHandler.class);
-
-			return invocationHandler -> {
-				try {
-					return constructor.newInstance(invocationHandler);
-				}
-				catch (ReflectiveOperationException
-							reflectiveOperationException) {
-
-					throw new InternalError(reflectiveOperationException);
-				}
-			};
-		}
-		catch (NoSuchMethodException noSuchMethodException) {
-			throw new InternalError(noSuchMethodException);
-		}
 	}
 
 	private static final Map<String, Function<MicroblogsEntry, Object>>
@@ -735,7 +649,9 @@ public class MicroblogsEntryModelImpl
 		for (Map.Entry<String, Object> entry :
 				_columnOriginalValues.entrySet()) {
 
-			if (entry.getValue() != getColumnValue(entry.getKey())) {
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
 				_columnBitmask |= _columnBitmasks.get(entry.getKey());
 			}
 		}
@@ -790,6 +706,38 @@ public class MicroblogsEntryModelImpl
 		microblogsEntryImpl.setSocialRelationType(getSocialRelationType());
 
 		microblogsEntryImpl.resetOriginalValues();
+
+		return microblogsEntryImpl;
+	}
+
+	@Override
+	public MicroblogsEntry cloneWithOriginalValues() {
+		MicroblogsEntryImpl microblogsEntryImpl = new MicroblogsEntryImpl();
+
+		microblogsEntryImpl.setMicroblogsEntryId(
+			this.<Long>getColumnOriginalValue("microblogsEntryId"));
+		microblogsEntryImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		microblogsEntryImpl.setUserId(
+			this.<Long>getColumnOriginalValue("userId"));
+		microblogsEntryImpl.setUserName(
+			this.<String>getColumnOriginalValue("userName"));
+		microblogsEntryImpl.setCreateDate(
+			this.<Date>getColumnOriginalValue("createDate"));
+		microblogsEntryImpl.setModifiedDate(
+			this.<Date>getColumnOriginalValue("modifiedDate"));
+		microblogsEntryImpl.setCreatorClassNameId(
+			this.<Long>getColumnOriginalValue("creatorClassNameId"));
+		microblogsEntryImpl.setCreatorClassPK(
+			this.<Long>getColumnOriginalValue("creatorClassPK"));
+		microblogsEntryImpl.setContent(
+			this.<String>getColumnOriginalValue("content"));
+		microblogsEntryImpl.setType(
+			this.<Integer>getColumnOriginalValue("type_"));
+		microblogsEntryImpl.setParentMicroblogsEntryId(
+			this.<Long>getColumnOriginalValue("parentMicroblogsEntryId"));
+		microblogsEntryImpl.setSocialRelationType(
+			this.<Integer>getColumnOriginalValue("socialRelationType"));
 
 		return microblogsEntryImpl;
 	}
@@ -929,7 +877,7 @@ public class MicroblogsEntryModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			(4 * attributeGetterFunctions.size()) + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -940,9 +888,26 @@ public class MicroblogsEntryModelImpl
 			Function<MicroblogsEntry, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((MicroblogsEntry)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply((MicroblogsEntry)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -989,7 +954,9 @@ public class MicroblogsEntryModelImpl
 	private static class EscapedModelProxyProviderFunctionHolder {
 
 		private static final Function<InvocationHandler, MicroblogsEntry>
-			_escapedModelProxyProviderFunction = _getProxyProviderFunction();
+			_escapedModelProxyProviderFunction =
+				ProxyUtil.getProxyProviderFunction(
+					MicroblogsEntry.class, ModelWrapper.class);
 
 	}
 

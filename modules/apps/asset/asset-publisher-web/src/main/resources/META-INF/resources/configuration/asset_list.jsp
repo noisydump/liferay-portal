@@ -21,11 +21,15 @@ AssetListEntry assetListEntry = assetPublisherDisplayContext.fetchAssetListEntry
 %>
 
 <aui:input id="assetListEntryId" name="preferences--assetListEntryId--" type="hidden" value="<%= (assetListEntry != null) ? assetListEntry.getAssetListEntryId() : StringPool.BLANK %>" />
+<aui:input id="infoListProviderKey" name="preferences--infoListProviderKey--" type="hidden" value="<%= assetPublisherDisplayContext.getInfoListProviderKey() %>" />
 
-<div class="form-group input-text-wrapper text-default" id="<portlet:namespace />assetListTitle">
+<div class="form-group input-text-wrapper text-default" id="<portlet:namespace />title">
 	<c:choose>
 		<c:when test="<%= assetListEntry != null %>">
 			<%= HtmlUtil.escape(assetListEntry.getTitle()) %>
+		</c:when>
+		<c:when test="<%= Validator.isNotNull(assetPublisherDisplayContext.getInfoListProviderKey()) %>">
+			<%= assetPublisherDisplayContext.getInfoListProviderLabel() %>
 		</c:when>
 		<c:otherwise>
 			<span class="text-muted"><liferay-ui:message key="none" /></span>
@@ -43,24 +47,44 @@ AssetListEntry assetListEntry = assetPublisherDisplayContext.fetchAssetListEntry
 	var assetListEntryId = document.getElementById(
 		'<portlet:namespace />assetListEntryId'
 	);
-	var assetListTitle = document.getElementById(
-		'<portlet:namespace />assetListTitle'
+	var infoListProviderKey = document.getElementById(
+		'<portlet:namespace />infoListProviderKey'
 	);
+	var title = document.getElementById('<portlet:namespace />title');
 
 	var selectAssetListButton = document.getElementById(
 		'<portlet:namespace />selectAssetListButton'
 	);
 
 	if (selectAssetListButton) {
-		selectAssetListButton.addEventListener('click', function () {
+		selectAssetListButton.addEventListener('click', () => {
 			Liferay.Util.openSelectionModal({
 				onSelect: function (selectedItem) {
 					if (selectedItem) {
-						var itemValue = JSON.parse(selectedItem.value);
+						if (
+							selectedItem.returnType ===
+							'<%= InfoListItemSelectorReturnType.class.getName() %>'
+						) {
+							var itemValue = JSON.parse(selectedItem.value);
 
-						assetListEntryId.value = itemValue.classPK;
+							assetListEntryId.value = itemValue.classPK;
 
-						assetListTitle.innerHTML = itemValue.title;
+							title.innerHTML = itemValue.title;
+
+							infoListProviderKey.value = '';
+						}
+						else if (
+							selectedItem.returnType ===
+							'<%= InfoListProviderItemSelectorReturnType.class.getName() %>'
+						) {
+							var itemValue = JSON.parse(selectedItem.value);
+
+							title.innerHTML = itemValue.title;
+
+							infoListProviderKey.value = itemValue.key;
+
+							assetListEntryId.value = '';
+						}
 					}
 				},
 				selectEventName:
@@ -77,10 +101,11 @@ AssetListEntry assetListEntry = assetPublisherDisplayContext.fetchAssetListEntry
 	);
 
 	if (clearAssetListButton) {
-		clearAssetListButton.addEventListener('click', function (event) {
-			assetListTitle.innerHTML = '<liferay-ui:message key="none" />';
+		clearAssetListButton.addEventListener('click', (event) => {
+			title.innerHTML = '<liferay-ui:message key="none" />';
 
 			assetListEntryId.value = '';
+			infoListProviderKey.value = '';
 		});
 	}
 </aui:script>

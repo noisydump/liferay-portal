@@ -22,6 +22,7 @@ import com.liferay.dispatch.executor.DispatchTaskClusterMode;
 import com.liferay.dispatch.internal.helper.DispatchTriggerHelper;
 import com.liferay.dispatch.model.DispatchTrigger;
 import com.liferay.dispatch.service.base.DispatchTriggerLocalServiceBaseImpl;
+import com.liferay.dispatch.service.persistence.DispatchLogPersistence;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -32,6 +33,9 @@ import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.scheduler.SchedulerException;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.service.ResourceLocalService;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalRunMode;
@@ -40,6 +44,7 @@ import com.liferay.portal.kernel.util.Validator;
 
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -57,18 +62,20 @@ public class DispatchTriggerLocalServiceImpl
 
 	@Override
 	public DispatchTrigger addDispatchTrigger(
-			long userId, String dispatchTaskExecutorType,
+			String externalReferenceCode, long userId,
+			String dispatchTaskExecutorType,
 			UnicodeProperties dispatchTaskSettingsUnicodeProperties,
 			String name, boolean system)
 		throws PortalException {
 
-		User user = userLocalService.getUser(userId);
+		User user = _userLocalService.getUser(userId);
 
 		validate(0, user.getCompanyId(), name);
 
 		DispatchTrigger dispatchTrigger = dispatchTriggerPersistence.create(
 			counterLocalService.increment());
 
+		dispatchTrigger.setExternalReferenceCode(externalReferenceCode);
 		dispatchTrigger.setCompanyId(user.getCompanyId());
 		dispatchTrigger.setUserId(user.getUserId());
 		dispatchTrigger.setUserName(user.getFullName());
@@ -80,7 +87,7 @@ public class DispatchTriggerLocalServiceImpl
 
 		dispatchTrigger = dispatchTriggerPersistence.update(dispatchTrigger);
 
-		resourceLocalService.addResources(
+		_resourceLocalService.addResources(
 			user.getCompanyId(), GroupConstants.DEFAULT_LIVE_GROUP_ID,
 			user.getUserId(), DispatchTrigger.class.getName(),
 			dispatchTrigger.getDispatchTriggerId(), false, true, true);
@@ -94,16 +101,19 @@ public class DispatchTriggerLocalServiceImpl
 			DispatchTrigger dispatchTrigger)
 		throws PortalException {
 
-		if (dispatchTrigger.isSystem() && !PortalRunMode.isTestMode()) {
+		if (dispatchTrigger.isSystem() &&
+			!CompanyThreadLocal.isDeleteInProcess() &&
+			!PortalRunMode.isTestMode()) {
+
 			return dispatchTrigger;
 		}
 
-		dispatchLogPersistence.removeByDispatchTriggerId(
+		_dispatchLogPersistence.removeByDispatchTriggerId(
 			dispatchTrigger.getDispatchTriggerId());
 
 		dispatchTriggerPersistence.remove(dispatchTrigger);
 
-		resourceLocalService.deleteResource(
+		_resourceLocalService.deleteResource(
 			dispatchTrigger, ResourceConstants.SCOPE_INDIVIDUAL);
 
 		DispatchTaskClusterMode dispatchTaskClusterMode =
@@ -131,6 +141,21 @@ public class DispatchTriggerLocalServiceImpl
 	}
 
 	@Override
+	public Date fetchNextFireDate(long dispatchTriggerId) {
+		try {
+			return getNextFireDate(dispatchTriggerId);
+		}
+		catch (PortalException portalException) {
+			_log.error(
+				"Unable to resolve next fire date for dispatch trigger ID " +
+					dispatchTriggerId,
+				portalException);
+		}
+
+		return null;
+	}
+
+	@Override
 	public Date fetchPreviousFireDate(long dispatchTriggerId) {
 		DispatchTrigger dispatchTrigger =
 			dispatchTriggerPersistence.fetchByPrimaryKey(dispatchTriggerId);
@@ -154,13 +179,11 @@ public class DispatchTriggerLocalServiceImpl
 		}
 		catch (SchedulerException schedulerException) {
 			if (_log.isWarnEnabled()) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append("Unable to fetch previous fire date for dispatch ");
-				sb.append("trigger ID ");
-				sb.append(dispatchTriggerId);
-
-				_log.warn(sb.toString(), schedulerException);
+				_log.warn(
+					StringBundler.concat(
+						"Unable to fetch previous fire date for dispatch ",
+						"trigger ID ", dispatchTriggerId),
+					schedulerException);
 			}
 		}
 
@@ -204,15 +227,8 @@ public class DispatchTriggerLocalServiceImpl
 			DispatchTaskClusterMode.valueOf(
 				dispatchTrigger.getDispatchTaskClusterMode());
 
-		try {
-			return _dispatchTriggerHelper.getNextFireDate(
-				dispatchTriggerId, dispatchTaskClusterMode.getStorageType());
-		}
-		catch (SchedulerException schedulerException) {
-			_log.error(schedulerException, schedulerException);
-		}
-
-		return null;
+		return _dispatchTriggerHelper.getNextFireDate(
+			dispatchTriggerId, dispatchTaskClusterMode.getStorageType());
 	}
 
 	@Override
@@ -250,7 +266,7 @@ public class DispatchTriggerLocalServiceImpl
 			int endDateDay, int endDateYear, int endDateHour, int endDateMinute,
 			boolean neverEnd, boolean overlapAllowed, int startDateMonth,
 			int startDateDay, int startDateYear, int startDateHour,
-			int startDateMinute)
+			int startDateMinute, String timeZoneId)
 		throws PortalException {
 
 		DispatchTrigger dispatchTrigger =
@@ -264,20 +280,24 @@ public class DispatchTriggerLocalServiceImpl
 		}
 		else {
 			dispatchTrigger.setEndDate(
-				_portal.getDate(
-					endDateMonth, endDateDay, endDateYear, endDateHour,
-					endDateMinute, DispatchTriggerEndDateException.class));
+				_getUTCDate(
+					_portal.getDate(
+						endDateMonth, endDateDay, endDateYear, endDateHour,
+						endDateMinute, DispatchTriggerEndDateException.class),
+					timeZoneId));
 		}
-
-		dispatchTrigger.setOverlapAllowed(overlapAllowed);
-
-		dispatchTrigger.setStartDate(
-			_portal.getDate(
-				startDateMonth, startDateDay, startDateYear, startDateHour,
-				startDateMinute, DispatchTriggerStartDateException.class));
 
 		dispatchTrigger.setDispatchTaskClusterMode(
 			dispatchTaskClusterMode.getMode());
+		dispatchTrigger.setOverlapAllowed(overlapAllowed);
+		dispatchTrigger.setStartDate(
+			_getUTCDate(
+				_portal.getDate(
+					startDateMonth, startDateDay, startDateYear, startDateHour,
+					startDateMinute, DispatchTriggerStartDateException.class),
+				timeZoneId));
+
+		dispatchTrigger.setTimeZoneId(timeZoneId);
 
 		dispatchTrigger = dispatchTriggerPersistence.update(dispatchTrigger);
 
@@ -288,7 +308,7 @@ public class DispatchTriggerLocalServiceImpl
 			_dispatchTriggerHelper.addSchedulerJob(
 				dispatchTriggerId, cronExpression,
 				dispatchTrigger.getStartDate(), dispatchTrigger.getEndDate(),
-				dispatchTaskClusterMode.getStorageType());
+				dispatchTaskClusterMode.getStorageType(), timeZoneId);
 		}
 
 		return dispatchTrigger;
@@ -317,18 +337,15 @@ public class DispatchTriggerLocalServiceImpl
 
 		if (Validator.isNull(name)) {
 			throw new DispatchTriggerNameException(
-				"Dispatch trigger name is null for company ID " + companyId);
+				"Dispatch trigger name is null for company " + companyId);
 		}
 
 		DispatchTrigger dispatchTrigger = dispatchTriggerPersistence.fetchByC_N(
 			companyId, name);
 
-		if (dispatchTrigger == null) {
-			return;
-		}
-
-		if ((dispatchTriggerId > 0) &&
-			(dispatchTrigger.getDispatchTriggerId() == dispatchTriggerId)) {
+		if ((dispatchTrigger == null) ||
+			((dispatchTriggerId > 0) &&
+			 (dispatchTrigger.getDispatchTriggerId() == dispatchTriggerId))) {
 
 			return;
 		}
@@ -336,16 +353,31 @@ public class DispatchTriggerLocalServiceImpl
 		throw new DuplicateDispatchTriggerException(
 			StringBundler.concat(
 				"Dispatch trigger name \"", name,
-				"\" already exists for company ID ", companyId));
+				"\" already exists for company ", companyId));
+	}
+
+	private Date _getUTCDate(Date date, String timeZoneId) {
+		TimeZone timeZone = TimeZone.getTimeZone(timeZoneId);
+
+		return new Date(date.getTime() - timeZone.getOffset(date.getTime()));
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		DispatchTriggerLocalServiceImpl.class);
 
 	@Reference
+	private DispatchLogPersistence _dispatchLogPersistence;
+
+	@Reference
 	private DispatchTriggerHelper _dispatchTriggerHelper;
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private ResourceLocalService _resourceLocalService;
+
+	@Reference
+	private UserLocalService _userLocalService;
 
 }

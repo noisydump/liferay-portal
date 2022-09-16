@@ -17,16 +17,16 @@
 <%@ include file="/facets/init.jsp" %>
 
 <%
-UserSearchFacetDisplayBuilder userSearchFacetDisplayBuilder = new UserSearchFacetDisplayBuilder(renderRequest);
+UserSearchFacetDisplayContextBuilder userSearchFacetDisplayContextBuilder = new UserSearchFacetDisplayContextBuilder(renderRequest);
 
-userSearchFacetDisplayBuilder.setFacet(facet);
-userSearchFacetDisplayBuilder.setFrequenciesVisible(dataJSONObject.getBoolean("showAssetCount", true));
-userSearchFacetDisplayBuilder.setFrequencyThreshold(dataJSONObject.getInt("frequencyThreshold"));
-userSearchFacetDisplayBuilder.setMaxTerms(dataJSONObject.getInt("maxTerms", 10));
-userSearchFacetDisplayBuilder.setParamName(facet.getFieldId());
-userSearchFacetDisplayBuilder.setParamValue(fieldParam);
+userSearchFacetDisplayContextBuilder.setFacet(facet);
+userSearchFacetDisplayContextBuilder.setFrequenciesVisible(dataJSONObject.getBoolean("showAssetCount", true));
+userSearchFacetDisplayContextBuilder.setFrequencyThreshold(dataJSONObject.getInt("frequencyThreshold"));
+userSearchFacetDisplayContextBuilder.setMaxTerms(dataJSONObject.getInt("maxTerms", 10));
+userSearchFacetDisplayContextBuilder.setParamName(facet.getFieldId());
+userSearchFacetDisplayContextBuilder.setParamValue(fieldParam);
 
-UserSearchFacetDisplayContext userSearchFacetDisplayContext = userSearchFacetDisplayBuilder.build();
+UserSearchFacetDisplayContext userSearchFacetDisplayContext = userSearchFacetDisplayContextBuilder.build();
 %>
 
 <c:choose>
@@ -47,7 +47,7 @@ UserSearchFacetDisplayContext userSearchFacetDisplayContext = userSearchFacetDis
 
 					<ul class="list-unstyled users">
 						<li class="default facet-value">
-							<a class="<%= userSearchFacetDisplayContext.isNothingSelected() ? "facet-term-selected" : "facet-term-unselected" %>" data-value="" href="javascript:;"><liferay-ui:message key="<%= HtmlUtil.escape(facetConfiguration.getLabel()) %>" /></a>
+							<a class="<%= userSearchFacetDisplayContext.isNothingSelected() ? "facet-term-selected" : "facet-term-unselected" %>" data-value="" href="javascript:void(0);"><liferay-ui:message key="<%= HtmlUtil.escape(facetConfiguration.getLabel()) %>" /></a>
 						</li>
 
 						<%
@@ -57,7 +57,7 @@ UserSearchFacetDisplayContext userSearchFacetDisplayContext = userSearchFacetDis
 						%>
 
 							<li class="facet-value">
-								<a class="<%= userSearchFacetTermDisplayContext.isSelected() ? "facet-term-selected" : "facet-term-unselected" %>" data-value="<%= HtmlUtil.escapeAttribute(userSearchFacetTermDisplayContext.getUserName()) %>" href="javascript:;">
+								<a class="<%= userSearchFacetTermDisplayContext.isSelected() ? "facet-term-selected" : "facet-term-unselected" %>" data-value="<%= HtmlUtil.escapeAttribute(userSearchFacetTermDisplayContext.getUserName()) %>" href="javascript:void(0);">
 									<%= HtmlUtil.escape(userSearchFacetTermDisplayContext.getUserName()) %>
 
 									<c:if test="<%= userSearchFacetTermDisplayContext.isFrequencyVisible() %>">

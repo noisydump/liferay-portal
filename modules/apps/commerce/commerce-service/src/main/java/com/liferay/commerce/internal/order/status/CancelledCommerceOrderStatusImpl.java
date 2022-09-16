@@ -17,9 +17,10 @@ package com.liferay.commerce.internal.order.status;
 import com.liferay.commerce.constants.CommerceOrderConstants;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.order.status.CommerceOrderStatus;
+import com.liferay.commerce.order.status.CommerceOrderStatusRegistry;
 import com.liferay.commerce.service.CommerceOrderService;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 
 import java.util.Locale;
 
@@ -61,7 +62,7 @@ public class CancelledCommerceOrderStatusImpl implements CommerceOrderStatus {
 
 	@Override
 	public String getLabel(Locale locale) {
-		return LanguageUtil.get(
+		return _language.get(
 			locale, CommerceOrderConstants.getOrderStatusLabel(KEY));
 	}
 
@@ -70,10 +71,37 @@ public class CancelledCommerceOrderStatusImpl implements CommerceOrderStatus {
 		return PRIORITY;
 	}
 
+	@Override
+	public boolean isTransitionCriteriaMet(CommerceOrder commerceOrder)
+		throws PortalException {
+
+		CommerceOrderStatus currentCommerceOrderStatus =
+			_commerceOrderStatusRegistry.getCommerceOrderStatus(
+				commerceOrder.getOrderStatus());
+
+		if ((currentCommerceOrderStatus.getKey() !=
+				CommerceOrderConstants.ORDER_STATUS_CANCELLED) &&
+			(currentCommerceOrderStatus.getKey() !=
+				CommerceOrderConstants.ORDER_STATUS_COMPLETED) &&
+			(currentCommerceOrderStatus.getKey() !=
+				CommerceOrderConstants.ORDER_STATUS_OPEN)) {
+
+			return true;
+		}
+
+		return false;
+	}
+
 	@Reference(
 		policy = ReferencePolicy.DYNAMIC,
 		policyOption = ReferencePolicyOption.GREEDY
 	)
 	private volatile CommerceOrderService _commerceOrderService;
+
+	@Reference
+	private CommerceOrderStatusRegistry _commerceOrderStatusRegistry;
+
+	@Reference
+	private Language _language;
 
 }

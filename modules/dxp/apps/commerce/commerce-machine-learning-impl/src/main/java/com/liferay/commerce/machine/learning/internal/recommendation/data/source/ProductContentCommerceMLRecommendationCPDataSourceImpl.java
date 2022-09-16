@@ -21,8 +21,9 @@ import com.liferay.commerce.product.catalog.CPCatalogEntry;
 import com.liferay.commerce.product.constants.CPWebKeys;
 import com.liferay.commerce.product.data.source.CPDataSource;
 import com.liferay.commerce.product.data.source.CPDataSourceResult;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ListUtil;
@@ -53,7 +54,7 @@ public class ProductContentCommerceMLRecommendationCPDataSourceImpl
 
 	@Override
 	public String getLabel(Locale locale) {
-		return LanguageUtil.get(
+		return _language.get(
 			getResourceBundle(locale), "product-content-based-recommendations");
 	}
 
@@ -110,16 +111,13 @@ public class ProductContentCommerceMLRecommendationCPDataSourceImpl
 					getRecommendedEntryClassPK();
 
 			if (_log.isTraceEnabled()) {
-				StringBuilder sb = new StringBuilder();
-
-				sb.append("Recommended item: ");
-				sb.append(recommendedEntryClassPK);
-				sb.append(" rank: ");
-				sb.append(productContentCommerceMLRecommendation.getRank());
-				sb.append(" score: ");
-				sb.append(productContentCommerceMLRecommendation.getScore());
-
-				_log.trace(sb.toString());
+				_log.trace(
+					StringBundler.concat(
+						"Recommended item: ", recommendedEntryClassPK,
+						" rank: ",
+						productContentCommerceMLRecommendation.getRank(),
+						" score: ",
+						productContentCommerceMLRecommendation.getScore()));
 			}
 
 			try {
@@ -133,7 +131,7 @@ public class ProductContentCommerceMLRecommendationCPDataSourceImpl
 			}
 			catch (PortalException portalException) {
 				if (_log.isDebugEnabled()) {
-					_log.debug(portalException, portalException);
+					_log.debug(portalException);
 				}
 			}
 		}
@@ -144,6 +142,9 @@ public class ProductContentCommerceMLRecommendationCPDataSourceImpl
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		ProductContentCommerceMLRecommendationCPDataSourceImpl.class);
+
+	@Reference
+	private Language _language;
 
 	@Reference(unbind = "-")
 	private ProductContentCommerceMLRecommendationManager

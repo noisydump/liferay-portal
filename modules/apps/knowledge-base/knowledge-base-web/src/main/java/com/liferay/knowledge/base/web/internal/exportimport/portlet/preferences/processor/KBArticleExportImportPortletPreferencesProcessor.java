@@ -107,32 +107,22 @@ public class KBArticleExportImportPortletPreferencesProcessor
 				"resourcePrimKey", String.valueOf(resourcePrimKey));
 		}
 		catch (ReadOnlyException readOnlyException) {
-			StringBundler sb = new StringBundler(7);
-
-			sb.append("Unable to save converted portlet preference ");
-			sb.append("resourcePrimKey=");
-			sb.append(resourcePrimKey);
-			sb.append(" (the root article) while importing KB Article ");
-			sb.append("portlet. (portletId=");
-			sb.append(portletDataContext.getPortletId());
-			sb.append(")");
-
-			throw new PortletDataException(sb.toString(), readOnlyException);
+			throw new PortletDataException(
+				StringBundler.concat(
+					"Unable to save converted portlet preference ",
+					"resourcePrimKey=", resourcePrimKey,
+					" (the root article) while importing KB Article portlet. ",
+					"(portletId=", portletDataContext.getPortletId(), ")"),
+				readOnlyException);
 		}
 
 		return portletPreferences;
 	}
 
-	@Reference(unbind = "-")
-	protected void seKBArticleLocalService(
-		KBArticleLocalService kbArticleLocalService) {
-
-		_kbArticleLocalService = kbArticleLocalService;
-	}
-
 	@Reference(target = "(name=ReferencedStagedModelImporter)")
 	private Capability _capability;
 
+	@Reference
 	private KBArticleLocalService _kbArticleLocalService;
 
 }

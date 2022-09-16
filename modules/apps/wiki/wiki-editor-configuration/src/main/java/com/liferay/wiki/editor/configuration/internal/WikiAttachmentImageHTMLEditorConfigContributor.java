@@ -26,8 +26,6 @@ import com.liferay.wiki.constants.WikiPortletKeys;
 
 import java.util.Map;
 
-import javax.portlet.PortletURL;
-
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Modified;
@@ -68,11 +66,10 @@ public class WikiAttachmentImageHTMLEditorConfigContributor
 				new FileEntryItemSelectorReturnType());
 
 		if (wikiPageResourcePrimKey == 0) {
-			PortletURL itemSelectorURL = _itemSelector.getItemSelectorURL(
-				requestBackedPortletURLFactory, itemSelectedEventName,
-				imageItemSelectorCriterion, getURLItemSelectorCriterion());
-
-			return itemSelectorURL.toString();
+			return String.valueOf(
+				_itemSelector.getItemSelectorURL(
+					requestBackedPortletURLFactory, itemSelectedEventName,
+					imageItemSelectorCriterion, getURLItemSelectorCriterion()));
 		}
 
 		ItemSelectorCriterion attachmentItemSelectorCriterion =
@@ -84,22 +81,16 @@ public class WikiAttachmentImageHTMLEditorConfigContributor
 				wikiPageResourcePrimKey, themeDisplay,
 				requestBackedPortletURLFactory);
 
-		PortletURL itemSelectorURL = _itemSelector.getItemSelectorURL(
-			requestBackedPortletURLFactory, itemSelectedEventName,
-			attachmentItemSelectorCriterion, imageItemSelectorCriterion,
-			getURLItemSelectorCriterion(), uploadItemSelectorCriterion);
-
-		return itemSelectorURL.toString();
+		return String.valueOf(
+			_itemSelector.getItemSelectorURL(
+				requestBackedPortletURLFactory, itemSelectedEventName,
+				attachmentItemSelectorCriterion, imageItemSelectorCriterion,
+				getURLItemSelectorCriterion(), uploadItemSelectorCriterion));
 	}
 
 	@Override
 	protected WikiFileUploadConfiguration getWikiFileUploadConfiguration() {
 		return _wikiFileUploadConfiguration;
-	}
-
-	@Reference(unbind = "-")
-	protected void setItemSelector(ItemSelector itemSelector) {
-		_itemSelector = itemSelector;
 	}
 
 	protected void setWikiFileUploadConfiguration(
@@ -108,7 +99,9 @@ public class WikiAttachmentImageHTMLEditorConfigContributor
 		_wikiFileUploadConfiguration = wikiFileUploadConfiguration;
 	}
 
+	@Reference
 	private ItemSelector _itemSelector;
-	private WikiFileUploadConfiguration _wikiFileUploadConfiguration;
+
+	private volatile WikiFileUploadConfiguration _wikiFileUploadConfiguration;
 
 }

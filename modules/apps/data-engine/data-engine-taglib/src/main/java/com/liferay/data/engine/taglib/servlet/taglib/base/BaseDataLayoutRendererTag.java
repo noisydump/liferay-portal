@@ -54,12 +54,32 @@ public abstract class BaseDataLayoutRendererTag extends com.liferay.taglib.util.
 		return _dataRecordValues;
 	}
 
+	public java.lang.String getDefaultLanguageId() {
+		return _defaultLanguageId;
+	}
+
+	public java.lang.String getLanguageId() {
+		return _languageId;
+	}
+
 	public java.lang.String getNamespace() {
 		return _namespace;
 	}
 
+	public boolean getPersistDefaultValues() {
+		return _persistDefaultValues;
+	}
+
+	public boolean getPersisted() {
+		return _persisted;
+	}
+
 	public boolean getReadOnly() {
 		return _readOnly;
+	}
+
+	public boolean getSubmittable() {
+		return _submittable;
 	}
 
 	public void setContainerId(java.lang.String containerId) {
@@ -82,12 +102,32 @@ public abstract class BaseDataLayoutRendererTag extends com.liferay.taglib.util.
 		_dataRecordValues = dataRecordValues;
 	}
 
+	public void setDefaultLanguageId(java.lang.String defaultLanguageId) {
+		_defaultLanguageId = defaultLanguageId;
+	}
+
+	public void setLanguageId(java.lang.String languageId) {
+		_languageId = languageId;
+	}
+
 	public void setNamespace(java.lang.String namespace) {
 		_namespace = namespace;
 	}
 
+	public void setPersistDefaultValues(boolean persistDefaultValues) {
+		_persistDefaultValues = persistDefaultValues;
+	}
+
+	public void setPersisted(boolean persisted) {
+		_persisted = persisted;
+	}
+
 	public void setReadOnly(boolean readOnly) {
 		_readOnly = readOnly;
+	}
+
+	public void setSubmittable(boolean submittable) {
+		_submittable = submittable;
 	}
 
 	@Override
@@ -106,8 +146,13 @@ public abstract class BaseDataLayoutRendererTag extends com.liferay.taglib.util.
 		_dataLayoutId = null;
 		_dataRecordId = null;
 		_dataRecordValues = null;
+		_defaultLanguageId = null;
+		_languageId = null;
 		_namespace = null;
+		_persistDefaultValues = false;
+		_persisted = false;
 		_readOnly = false;
+		_submittable = true;
 	}
 
 	@Override
@@ -122,8 +167,13 @@ public abstract class BaseDataLayoutRendererTag extends com.liferay.taglib.util.
 		setNamespacedAttribute(request, "dataLayoutId", _dataLayoutId);
 		setNamespacedAttribute(request, "dataRecordId", _dataRecordId);
 		setNamespacedAttribute(request, "dataRecordValues", _dataRecordValues);
+		setNamespacedAttribute(request, "defaultLanguageId", _defaultLanguageId);
+		setNamespacedAttribute(request, "languageId", _languageId);
 		setNamespacedAttribute(request, "namespace", _namespace);
+		setNamespacedAttribute(request, "persistDefaultValues", _persistDefaultValues);
+		setNamespacedAttribute(request, "persisted", _persisted);
 		setNamespacedAttribute(request, "readOnly", _readOnly);
+		setNamespacedAttribute(request, "submittable", _submittable);
 	}
 
 	protected static final String _ATTRIBUTE_NAMESPACE = "liferay-data-engine:data-layout-renderer:";
@@ -136,7 +186,12 @@ public abstract class BaseDataLayoutRendererTag extends com.liferay.taglib.util.
 	private java.lang.Long _dataLayoutId = null;
 	private java.lang.Long _dataRecordId = null;
 	private java.util.Map<java.lang.String, java.lang.Object> _dataRecordValues = null;
+	private java.lang.String _defaultLanguageId = null;
+	private java.lang.String _languageId = null;
 	private java.lang.String _namespace = null;
+	private boolean _persistDefaultValues = false;
+	private boolean _persisted = false;
 	private boolean _readOnly = false;
+	private boolean _submittable = true;
 
 }

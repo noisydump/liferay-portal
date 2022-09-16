@@ -15,7 +15,6 @@
 package com.liferay.portal.workflow.metrics.rest.internal.odata.entity.v1_0;
 
 import com.liferay.petra.string.CharPool;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.EntityField;
@@ -24,9 +23,6 @@ import com.liferay.portal.odata.entity.IntegerEntityField;
 import com.liferay.portal.odata.entity.StringEntityField;
 
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author Inácio Nery
@@ -34,7 +30,7 @@ import java.util.stream.Stream;
 public class ProcessMetricEntityModel implements EntityModel {
 
 	public ProcessMetricEntityModel() {
-		_entityFieldsMap = Stream.of(
+		_entityFieldsMap = EntityModel.toEntityFieldsMap(
 			new IntegerEntityField("instanceCount", locale -> "instanceCount"),
 			new IntegerEntityField(
 				"onTimeInstanceCount", locale -> "onTimeInstanceCount"),
@@ -43,11 +39,7 @@ public class ProcessMetricEntityModel implements EntityModel {
 			new StringEntityField(
 				"title",
 				locale ->
-					Field.getLocalizedName(locale, "title") +
-						StringPool.PERIOD + "keyword")
-		).collect(
-			Collectors.toMap(EntityField::getName, Function.identity())
-		);
+					Field.getLocalizedName(locale, "title") + ".keyword"));
 	}
 
 	@Override

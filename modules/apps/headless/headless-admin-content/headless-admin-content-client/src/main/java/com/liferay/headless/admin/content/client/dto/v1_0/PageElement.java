@@ -137,13 +137,15 @@ public class PageElement implements Cloneable, Serializable {
 	public static enum Type {
 
 		COLLECTION("Collection"), COLLECTION_ITEM("CollectionItem"),
-		COLUMN("Column"), DROP_ZONE("DropZone"), FRAGMENT("Fragment"),
-		FRAGMENT_DROP_ZONE("FragmentDropZone"), ROOT("Root"), ROW("Row"),
-		SECTION("Section"), WIDGET("Widget");
+		COLUMN("Column"), DROP_ZONE("DropZone"), FORM("Form"),
+		FRAGMENT("Fragment"), FRAGMENT_DROP_ZONE("FragmentDropZone"),
+		ROOT("Root"), ROW("Row"), SECTION("Section"), WIDGET("Widget");
 
 		public static Type create(String value) {
 			for (Type type : values()) {
-				if (Objects.equals(type.getValue(), value)) {
+				if (Objects.equals(type.getValue(), value) ||
+					Objects.equals(type.name(), value)) {
+
 					return type;
 				}
 			}

@@ -20,8 +20,10 @@ import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandler;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.staged.model.repository.StagedModelRepository;
+import com.liferay.fragment.service.FragmentEntryLinkLocalService;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructureRel;
+import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalService;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureRelLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.MapUtil;
@@ -95,6 +97,14 @@ public class LayoutPageTemplateStructureStagedModelDataHandler
 			_stagedModelRepository.fetchStagedModelByUuidAndGroupId(
 				layoutPageTemplateStructure.getUuid(),
 				portletDataContext.getScopeGroupId());
+
+		if (existingLayoutPageTemplateStructure == null) {
+			existingLayoutPageTemplateStructure =
+				_layoutPageTemplateStructureLocalService.
+					fetchLayoutPageTemplateStructure(
+						portletDataContext.getScopeGroupId(),
+						importedLayoutPageTemplateStructure.getClassPK());
+		}
 
 		if ((existingLayoutPageTemplateStructure == null) ||
 			!portletDataContext.isDataStrategyMirror()) {
@@ -174,6 +184,15 @@ public class LayoutPageTemplateStructureStagedModelDataHandler
 			deleteLayoutPageTemplateStructureRels(
 				layoutPageTemplateStructureId);
 
+		LayoutPageTemplateStructure referrerLayoutPageTemplateStructure =
+			_layoutPageTemplateStructureLocalService.
+				fetchLayoutPageTemplateStructure(layoutPageTemplateStructureId);
+
+		_fragmentEntryLinkLocalService.
+			deleteLayoutPageTemplateEntryFragmentEntryLinks(
+				portletDataContext.getScopeGroupId(),
+				referrerLayoutPageTemplateStructure.getPlid());
+
 		List<Element> layoutPageTemplateStructureRelElements =
 			portletDataContext.getReferenceDataElements(
 				layoutPageTemplateStructure,
@@ -187,6 +206,13 @@ public class LayoutPageTemplateStructureStagedModelDataHandler
 				portletDataContext, layoutPageTemplateStructureRelElement);
 		}
 	}
+
+	@Reference
+	private FragmentEntryLinkLocalService _fragmentEntryLinkLocalService;
+
+	@Reference
+	private LayoutPageTemplateStructureLocalService
+		_layoutPageTemplateStructureLocalService;
 
 	@Reference
 	private LayoutPageTemplateStructureRelLocalService

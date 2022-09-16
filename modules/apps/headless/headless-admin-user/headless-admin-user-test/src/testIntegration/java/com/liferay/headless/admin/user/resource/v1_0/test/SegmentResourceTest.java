@@ -19,7 +19,6 @@ import com.liferay.headless.admin.user.client.dto.v1_0.Segment;
 import com.liferay.headless.admin.user.client.pagination.Page;
 import com.liferay.headless.admin.user.client.pagination.Pagination;
 import com.liferay.headless.admin.user.client.resource.v1_0.SegmentResource;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.Role;
@@ -28,7 +27,6 @@ import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalServiceUtil;
 import com.liferay.portal.kernel.service.RoleLocalServiceUtil;
-import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserGroupRoleLocalServiceUtil;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
@@ -74,7 +72,7 @@ public class SegmentResourceTest extends BaseSegmentResourceTestCase {
 		_user = UserTestUtil.addUser(
 			TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
 			RandomTestUtil.randomString(),
-			RandomTestUtil.randomString() + StringPool.AT + "liferay.com",
+			RandomTestUtil.randomString() + "@liferay.com",
 			RandomTestUtil.randomString(), LocaleUtil.getDefault(),
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(), null,
 			ServiceContextTestUtil.getServiceContext());
@@ -218,15 +216,13 @@ public class SegmentResourceTest extends BaseSegmentResourceTestCase {
 	}
 
 	private Segment _addSegment(Long siteId, Segment segment) throws Exception {
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(
-				siteId, _adminUser.getUserId());
-
 		return _toSegment(
 			SegmentsTestUtil.addSegmentsEntry(
 				segment.getName(), segment.getName(), null,
 				segment.getCriteria(), segment.getSource(),
-				User.class.getName(), serviceContext));
+				User.class.getName(),
+				ServiceContextTestUtil.getServiceContext(
+					siteId, _adminUser.getUserId())));
 	}
 
 	private Segment _toSegment(SegmentsEntry segmentsEntry) {

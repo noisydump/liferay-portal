@@ -62,11 +62,14 @@ public class FragmentLinkSerDes {
 
 			sb.append("\"href\": ");
 
-			sb.append("\"");
-
-			sb.append(_escape(fragmentLink.getHref()));
-
-			sb.append("\"");
+			if (fragmentLink.getHref() instanceof String) {
+				sb.append("\"");
+				sb.append((String)fragmentLink.getHref());
+				sb.append("\"");
+			}
+			else {
+				sb.append(fragmentLink.getHref());
+			}
 		}
 
 		if (fragmentLink.getTarget() != null) {
@@ -197,9 +200,6 @@ public class FragmentLinkSerDes {
 							(String)jsonParserFieldValue));
 				}
 			}
-			else if (jsonParserFieldName.equals("status")) {
-				throw new IllegalArgumentException();
-			}
 		}
 
 	}
@@ -228,7 +228,7 @@ public class FragmentLinkSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -264,7 +264,7 @@ public class FragmentLinkSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

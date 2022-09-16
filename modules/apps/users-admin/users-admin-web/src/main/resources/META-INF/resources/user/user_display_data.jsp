@@ -146,32 +146,39 @@ User selUser = (User)request.getAttribute(UsersAdminWebKeys.SELECTED_USER);
 		md="5"
 	>
 		<div align="middle">
-			<c:if test="<%= selUser != null %>">
-				<c:choose>
-					<c:when test='<%= UsersAdminUtil.hasUpdateFieldPermission(permissionChecker, user, selUser, "portrait") %>'>
+			<c:choose>
+				<c:when test="<%= selUser != null %>">
+					<c:choose>
+						<c:when test='<%= UsersAdminUtil.hasUpdateFieldPermission(permissionChecker, user, selUser, "portrait") %>'>
+							<label class="control-label"></label>
 
-						<%
-						UserFileUploadsConfiguration userFileUploadsConfiguration = ConfigurationProviderUtil.getSystemConfiguration(UserFileUploadsConfiguration.class);
-						%>
-
-						<label class="control-label"></label>
-
-						<liferay-ui:logo-selector
-							aspectRatio="<%= 1 %>"
-							currentLogoURL="<%= selUser.getPortraitURL(themeDisplay) %>"
-							defaultLogo="<%= selUser.getPortraitId() == 0 %>"
-							defaultLogoURL="<%= UserConstants.getPortraitURL(themeDisplay.getPathImage(), selUser.isMale(), 0, null) %>"
-							logoDisplaySelector=".user-logo"
-							maxFileSize="<%= userFileUploadsConfiguration.imageMaxSize() %>"
-							preserveRatio="<%= true %>"
-							tempImageFileName="<%= String.valueOf(selUser.getUserId()) %>"
-						/>
-					</c:when>
-					<c:otherwise>
-						<img alt="<liferay-ui:message escapeAttribute="<%= true %>" key="portrait" />" src="<%= selUser.getPortraitURL(themeDisplay) %>" />
-					</c:otherwise>
-				</c:choose>
-			</c:if>
+							<liferay-ui:logo-selector
+								aspectRatio="<%= 1 %>"
+								currentLogoURL="<%= selUser.getPortraitURL(themeDisplay) %>"
+								defaultLogo="<%= selUser.getPortraitId() == 0 %>"
+								defaultLogoURL="<%= UserConstants.getPortraitURL(themeDisplay.getPathImage(), selUser.isMale(), 0, null) %>"
+								logoDisplaySelector=".user-logo"
+								preserveRatio="<%= true %>"
+								tempImageFileName="<%= String.valueOf(selUser.getUserId()) %>"
+							/>
+						</c:when>
+						<c:otherwise>
+							<img alt="<liferay-ui:message escapeAttribute="<%= true %>" key="portrait" />" src="<%= selUser.getPortraitURL(themeDisplay) %>" />
+						</c:otherwise>
+					</c:choose>
+				</c:when>
+				<c:otherwise>
+					<liferay-ui:logo-selector
+						aspectRatio="<%= 1 %>"
+						currentLogoURL='<%= themeDisplay.getPathImage() + "/user_portrait?img_id=0" %>'
+						defaultLogo="<%= true %>"
+						defaultLogoURL='<%= themeDisplay.getPathImage() + "/user_portrait?img_id=0" %>'
+						logoDisplaySelector=".user-logo"
+						preserveRatio="<%= true %>"
+						tempImageFileName="0"
+					/>
+				</c:otherwise>
+			</c:choose>
 		</div>
 	</clay:col>
 </clay:row>
@@ -180,12 +187,12 @@ User selUser = (User)request.getAttribute(UsersAdminWebKeys.SELECTED_USER);
 	<portlet:param name="mvcPath" value="/user/password_verification.jsp" />
 </portlet:renderURL>
 
-<c:if test="<%= selUser != null %>">
+<c:if test="<%= (selUser != null) && company.isUpdatePasswordRequired() %>">
 	<aui:script use="liferay-form">
-		Liferay.once('<portlet:namespace />formReady', function () {
+		Liferay.once('<portlet:namespace />formReady', () => {
 			var form = Liferay.Form.get('<portlet:namespace />fm');
 
-			form.set('onSubmit', function (event) {
+			form.set('onSubmit', (event) => {
 				event.preventDefault();
 
 				var emailAddressInput = document.getElementById(
@@ -196,8 +203,10 @@ User selUser = (User)request.getAttribute(UsersAdminWebKeys.SELECTED_USER);
 				);
 
 				if (
-					emailAddressInput.value != '<%= selUser.getEmailAddress() %>' ||
-					screenNameInput.value != '<%= selUser.getScreenName() %>'
+					emailAddressInput.value !=
+						'<%= HtmlUtil.escapeJS(selUser.getEmailAddress()) %>' ||
+					screenNameInput.value !=
+						'<%= HtmlUtil.escapeJS(selUser.getScreenName()) %>'
 				) {
 					Liferay.Util.openModal({
 						customEvents: [

@@ -22,12 +22,15 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
+import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.segments.model.SegmentsEntry;
 import com.liferay.segments.model.SegmentsEntryRole;
 import com.liferay.segments.service.base.SegmentsEntryRoleLocalServiceBaseImpl;
+import com.liferay.segments.service.persistence.SegmentsEntryPersistence;
 
 import java.util.Date;
 import java.util.HashSet;
@@ -38,6 +41,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Eduardo García
@@ -56,10 +60,10 @@ public class SegmentsEntryRoleLocalServiceImpl
 
 		// Segments entry role
 
-		roleLocalService.getRole(roleId);
-		segmentsEntryPersistence.findByPrimaryKey(segmentsEntryId);
+		_roleLocalService.getRole(roleId);
+		_segmentsEntryPersistence.findByPrimaryKey(segmentsEntryId);
 
-		User user = userLocalService.getUser(serviceContext.getUserId());
+		User user = _userLocalService.getUser(serviceContext.getUserId());
 
 		long segmentsEntryRoleId = counterLocalService.increment();
 
@@ -206,11 +210,11 @@ public class SegmentsEntryRoleLocalServiceImpl
 		List<SegmentsEntryRole> segmentsEntryRoles = getSegmentsEntryRoles(
 			segmentsEntryId);
 
-		Stream<SegmentsEntryRole> segmentsEntryRoleStream =
+		Stream<SegmentsEntryRole> segmentsEntryRolesStream =
 			segmentsEntryRoles.stream();
 
-		return segmentsEntryRoleStream.map(
-			segmentsEntryRole -> roleLocalService.fetchRole(
+		return segmentsEntryRolesStream.map(
+			segmentsEntryRole -> _roleLocalService.fetchRole(
 				segmentsEntryRole.getRoleId())
 		).filter(
 			role -> Objects.equals(role.getType(), RoleConstants.TYPE_SITE)
@@ -223,7 +227,7 @@ public class SegmentsEntryRoleLocalServiceImpl
 
 	private void _reindex(long segmentsEntryId) throws PortalException {
 		SegmentsEntry segmentsEntry =
-			segmentsEntryPersistence.fetchByPrimaryKey(segmentsEntryId);
+			_segmentsEntryPersistence.fetchByPrimaryKey(segmentsEntryId);
 
 		if (segmentsEntry == null) {
 			return;
@@ -244,5 +248,14 @@ public class SegmentsEntryRoleLocalServiceImpl
 				segmentsEntryId, siteRoleId);
 		}
 	}
+
+	@Reference
+	private RoleLocalService _roleLocalService;
+
+	@Reference
+	private SegmentsEntryPersistence _segmentsEntryPersistence;
+
+	@Reference
+	private UserLocalService _userLocalService;
 
 }

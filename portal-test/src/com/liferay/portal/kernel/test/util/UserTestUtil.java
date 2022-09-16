@@ -18,6 +18,7 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
@@ -27,6 +28,7 @@ import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
+import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.RoleLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserGroupRoleLocalServiceUtil;
@@ -145,8 +147,7 @@ public class UserTestUtil {
 		String password2 = StringPool.BLANK;
 		boolean autoScreenName = true;
 		String screenName = StringPool.BLANK;
-		long facebookId = 0;
-		String openId = StringPool.BLANK;
+
 		Locale locale = LocaleUtil.getDefault();
 		String firstName = "UserServiceTest";
 		String middleName = StringPool.BLANK;
@@ -172,11 +173,11 @@ public class UserTestUtil {
 
 			return UserServiceUtil.addUser(
 				TestPropsValues.getCompanyId(), autoPassword, password1,
-				password2, autoScreenName, screenName, emailAddress, facebookId,
-				openId, locale, firstName, middleName, lastName, prefixId,
-				suffixId, male, birthdayMonth, birthdayDay, birthdayYear,
-				jobTitle, groupIds, organizationIds, roleIds, userGroupIds,
-				sendMail, serviceContext);
+				password2, autoScreenName, screenName, emailAddress, locale,
+				firstName, middleName, lastName, prefixId, suffixId, male,
+				birthdayMonth, birthdayDay, birthdayYear, jobTitle, groupIds,
+				organizationIds, roleIds, userGroupIds, sendMail,
+				serviceContext);
 		}
 
 		String emailAddress =
@@ -185,21 +186,25 @@ public class UserTestUtil {
 		return UserLocalServiceUtil.addUser(
 			TestPropsValues.getUserId(), TestPropsValues.getCompanyId(),
 			autoPassword, password1, password2, autoScreenName, screenName,
-			emailAddress, facebookId, openId, locale, firstName, middleName,
-			lastName, prefixId, suffixId, male, birthdayMonth, birthdayDay,
-			birthdayYear, jobTitle, groupIds, organizationIds, roleIds,
-			userGroupIds, sendMail, serviceContext);
+			emailAddress, locale, firstName, middleName, lastName, prefixId,
+			suffixId, male, birthdayMonth, birthdayDay, birthdayYear, jobTitle,
+			groupIds, organizationIds, roleIds, userGroupIds, sendMail,
+			serviceContext);
 	}
 
 	public static User addUser(Company company) throws Exception {
+		User user = getAdminUser(company.getCompanyId());
+
+		Group group = GroupLocalServiceUtil.getGroup(
+			company.getCompanyId(), GroupConstants.GUEST);
+
 		return addUser(
-			company.getCompanyId(), TestPropsValues.getUserId(),
+			company.getCompanyId(), user.getUserId(),
 			RandomTestUtil.randomString(
 				NumericStringRandomizerBumper.INSTANCE,
 				UniqueStringRandomizerBumper.INSTANCE),
 			LocaleUtil.getDefault(), RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(),
-			new long[] {TestPropsValues.getGroupId()},
+			RandomTestUtil.randomString(), new long[] {group.getGroupId()},
 			ServiceContextTestUtil.getServiceContext());
 	}
 
@@ -261,8 +266,6 @@ public class UserTestUtil {
 
 		String password1 = password;
 		String password2 = password;
-		long facebookId = 0;
-		String openId = StringPool.BLANK;
 		String middleName = StringPool.BLANK;
 		long prefixId = 0;
 		long suffixId = 0;
@@ -278,9 +281,9 @@ public class UserTestUtil {
 
 		return UserLocalServiceUtil.addUser(
 			userId, companyId, autoPassword, password1, password2,
-			Validator.isNull(screenName), screenName, emailAddress, facebookId,
-			openId, locale, firstName, middleName, lastName, prefixId, suffixId,
-			male, birthdayMonth, birthdayDay, birthdayYear, jobTitle, groupIds,
+			Validator.isNull(screenName), screenName, emailAddress, locale,
+			firstName, middleName, lastName, prefixId, suffixId, male,
+			birthdayMonth, birthdayDay, birthdayYear, jobTitle, groupIds,
 			organizationIds, roleIds, userGroupIds, sendMail, serviceContext);
 	}
 
@@ -342,9 +345,7 @@ public class UserTestUtil {
 	}
 
 	public static User updateUser(User user) throws Exception {
-		ServiceContext serviceContext = new ServiceContext();
-
-		return updateUser(user, serviceContext);
+		return updateUser(user, new ServiceContext());
 	}
 
 	public static User updateUser(User user, ServiceContext serviceContext)

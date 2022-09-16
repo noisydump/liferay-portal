@@ -66,10 +66,12 @@ public class FragmentEntryLinkWrapper
 		attributes.put("html", getHtml());
 		attributes.put("js", getJs());
 		attributes.put("configuration", getConfiguration());
+		attributes.put("deleted", isDeleted());
 		attributes.put("editableValues", getEditableValues());
 		attributes.put("namespace", getNamespace());
 		attributes.put("position", getPosition());
 		attributes.put("rendererKey", getRendererKey());
+		attributes.put("type", getType());
 		attributes.put("lastPropagationDate", getLastPropagationDate());
 		attributes.put("lastPublishDate", getLastPublishDate());
 
@@ -200,6 +202,12 @@ public class FragmentEntryLinkWrapper
 			setConfiguration(configuration);
 		}
 
+		Boolean deleted = (Boolean)attributes.get("deleted");
+
+		if (deleted != null) {
+			setDeleted(deleted);
+		}
+
 		String editableValues = (String)attributes.get("editableValues");
 
 		if (editableValues != null) {
@@ -224,6 +232,12 @@ public class FragmentEntryLinkWrapper
 			setRendererKey(rendererKey);
 		}
 
+		Integer type = (Integer)attributes.get("type");
+
+		if (type != null) {
+			setType(type);
+		}
+
 		Date lastPropagationDate = (Date)attributes.get("lastPropagationDate");
 
 		if (lastPropagationDate != null) {
@@ -235,6 +249,11 @@ public class FragmentEntryLinkWrapper
 		if (lastPublishDate != null) {
 			setLastPublishDate(lastPublishDate);
 		}
+	}
+
+	@Override
+	public FragmentEntryLink cloneWithOriginalValues() {
+		return wrap(model.cloneWithOriginalValues());
 	}
 
 	/**
@@ -315,6 +334,16 @@ public class FragmentEntryLinkWrapper
 	@Override
 	public long getCtCollectionId() {
 		return model.getCtCollectionId();
+	}
+
+	/**
+	 * Returns the deleted of this fragment entry link.
+	 *
+	 * @return the deleted of this fragment entry link
+	 */
+	@Override
+	public boolean getDeleted() {
+		return model.getDeleted();
 	}
 
 	/**
@@ -488,6 +517,16 @@ public class FragmentEntryLinkWrapper
 	}
 
 	/**
+	 * Returns the type of this fragment entry link.
+	 *
+	 * @return the type of this fragment entry link
+	 */
+	@Override
+	public int getType() {
+		return model.getType();
+	}
+
+	/**
 	 * Returns the user ID of this fragment entry link.
 	 *
 	 * @return the user ID of this fragment entry link
@@ -532,6 +571,16 @@ public class FragmentEntryLinkWrapper
 		return model.isCacheable();
 	}
 
+	/**
+	 * Returns <code>true</code> if this fragment entry link is deleted.
+	 *
+	 * @return <code>true</code> if this fragment entry link is deleted; <code>false</code> otherwise
+	 */
+	@Override
+	public boolean isDeleted() {
+		return model.isDeleted();
+	}
+
 	@Override
 	public boolean isLatestVersion()
 		throws com.liferay.portal.kernel.exception.PortalException {
@@ -544,6 +593,31 @@ public class FragmentEntryLinkWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return model.isSystem();
+	}
+
+	@Override
+	public boolean isTypeComponent() {
+		return model.isTypeComponent();
+	}
+
+	@Override
+	public boolean isTypeInput() {
+		return model.isTypeInput();
+	}
+
+	@Override
+	public boolean isTypePortlet() {
+		return model.isTypePortlet();
+	}
+
+	@Override
+	public boolean isTypeReact() {
+		return model.isTypeReact();
+	}
+
+	@Override
+	public boolean isTypeSection() {
+		return model.isTypeSection();
 	}
 
 	@Override
@@ -624,6 +698,16 @@ public class FragmentEntryLinkWrapper
 	@Override
 	public void setCtCollectionId(long ctCollectionId) {
 		model.setCtCollectionId(ctCollectionId);
+	}
+
+	/**
+	 * Sets whether this fragment entry link is deleted.
+	 *
+	 * @param deleted the deleted of this fragment entry link
+	 */
+	@Override
+	public void setDeleted(boolean deleted) {
+		model.setDeleted(deleted);
 	}
 
 	/**
@@ -796,6 +880,16 @@ public class FragmentEntryLinkWrapper
 	@Override
 	public void setSegmentsExperienceId(long segmentsExperienceId) {
 		model.setSegmentsExperienceId(segmentsExperienceId);
+	}
+
+	/**
+	 * Sets the type of this fragment entry link.
+	 *
+	 * @param type the type of this fragment entry link
+	 */
+	@Override
+	public void setType(int type) {
+		model.setType(type);
 	}
 
 	/**

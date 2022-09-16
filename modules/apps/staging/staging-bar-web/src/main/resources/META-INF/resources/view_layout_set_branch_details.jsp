@@ -34,10 +34,10 @@ List<LayoutSetBranch> layoutSetBranches = (List<LayoutSetBranch>)request.getAttr
 	</div>
 
 	<div class="dropdown">
-		<a class="dropdown-toggle layout-set-branch-selector staging-variation-selector" data-toggle="liferay-dropdown" href="#1">
-			<liferay-ui:message key="<%= HtmlUtil.escape(layoutSetBranchDisplayContext.getLayoutSetBranchDisplayName(layoutSetBranch)) %>" localizeKey="<%= false %>" />
-
-			<aui:icon image="caret-double-l" markupView="lexicon" />
+		<a class="dropdown-toggle form-control form-control-select form-control-sm layout-set-branch-selector staging-variation-selector" data-toggle="liferay-dropdown" href="#1">
+			<span class="c-inner" tabindex="-1">
+				<liferay-ui:message key="<%= HtmlUtil.escape(layoutSetBranchDisplayContext.getLayoutSetBranchDisplayName(layoutSetBranch)) %>" localizeKey="<%= false %>" />
+			</span>
 		</a>
 
 		<ul class="dropdown-menu">
@@ -55,7 +55,7 @@ List<LayoutSetBranch> layoutSetBranches = (List<LayoutSetBranch>)request.getAttr
 				</portlet:actionURL>
 
 				<li>
-					<a class="<%= selected ? "disabled" : StringPool.BLANK %> dropdown-item" href="<%= selected ? "javascript:;" : "javascript:submitForm(document.hrefFm, '" + HtmlUtil.escapeJS(curLayoutSetBranchURL) + "');" %>">
+					<a class="<%= selected ? "disabled" : StringPool.BLANK %> dropdown-item" href="<%= selected ? "javascript:void(0);" : "javascript:submitForm(document.hrefFm, '" + HtmlUtil.escapeJS(curLayoutSetBranchURL) + "');" %>">
 						<liferay-ui:message key="<%= HtmlUtil.escape(layoutSetBranchDisplayContext.getLayoutSetBranchDisplayName(curLayoutSetBranch)) %>" localizeKey="<%= false %>" />
 					</a>
 				</li>

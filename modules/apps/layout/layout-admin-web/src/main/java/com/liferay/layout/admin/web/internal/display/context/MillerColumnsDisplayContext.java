@@ -15,12 +15,15 @@
 package com.liferay.layout.admin.web.internal.display.context;
 
 import com.liferay.exportimport.kernel.staging.LayoutStagingUtil;
+import com.liferay.layout.admin.web.internal.servlet.taglib.util.LayoutActionDropdownItemsProvider;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.LayoutRevision;
@@ -34,27 +37,18 @@ import com.liferay.portal.kernel.service.LayoutServiceUtil;
 import com.liferay.portal.kernel.service.LayoutSetBranchLocalServiceUtil;
 import com.liferay.portal.kernel.servlet.taglib.ui.BreadcrumbEntry;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.util.LayoutTypeControllerTracker;
+import com.liferay.translation.exporter.TranslationInfoItemFieldValuesExporterTracker;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import java.util.ResourceBundle;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.PortletURL;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -64,12 +58,18 @@ import javax.servlet.http.HttpServletRequest;
 public class MillerColumnsDisplayContext {
 
 	public MillerColumnsDisplayContext(
+		LayoutActionDropdownItemsProvider layoutActionDropdownItemsProvider,
 		LayoutsAdminDisplayContext layoutsAdminDisplayContext,
 		LiferayPortletRequest liferayPortletRequest,
-		LiferayPortletResponse liferayPortletResponse) {
+		LiferayPortletResponse liferayPortletResponse,
+		TranslationInfoItemFieldValuesExporterTracker
+			translationInfoItemFieldValuesExporterTracker) {
 
+		_layoutActionDropdownItemsProvider = layoutActionDropdownItemsProvider;
 		_layoutsAdminDisplayContext = layoutsAdminDisplayContext;
 		_liferayPortletResponse = liferayPortletResponse;
+		_translationInfoItemFieldValuesExporterTracker =
+			translationInfoItemFieldValuesExporterTracker;
 
 		_httpServletRequest = PortalUtil.getHttpServletRequest(
 			liferayPortletRequest);
@@ -78,20 +78,23 @@ public class MillerColumnsDisplayContext {
 	}
 
 	public String getLayoutChildrenURL() {
-		PortletURL itemChildrenURL = _liferayPortletResponse.createActionURL();
-
-		itemChildrenURL.setParameter(
-			ActionRequest.ACTION_NAME, "/layout_admin/get_layout_children");
-
-		return itemChildrenURL.toString();
+		return PortletURLBuilder.createActionURL(
+			_liferayPortletResponse
+		).setActionName(
+			"/layout_admin/get_layout_children"
+		).buildString();
 	}
 
 	public JSONArray getLayoutColumnsJSONArray() throws Exception {
-		JSONArray layoutColumnsJSONArray = JSONUtil.put(
-			_getFirstLayoutColumnJSONArray());
+		JSONArray layoutColumnsJSONArray = JSONFactoryUtil.createJSONArray();
 
-		if (_layoutsAdminDisplayContext.isFirstColumn()) {
-			return layoutColumnsJSONArray;
+		if (_layoutsAdminDisplayContext.isPrivateLayoutsEnabled()) {
+			layoutColumnsJSONArray = JSONUtil.put(
+				_getFirstLayoutColumnJSONArray());
+
+			if (_layoutsAdminDisplayContext.isFirstColumn()) {
+				return layoutColumnsJSONArray;
+			}
 		}
 
 		JSONArray layoutSetBranchesJSONArray = _getLayoutSetBranchesJSONArray();
@@ -141,7 +144,12 @@ public class MillerColumnsDisplayContext {
 			).put(
 				"getItemChildrenURL", getLayoutChildrenURL()
 			).put(
-				"languageDirection", _getLanguageDirection()
+				"isPrivateLayoutsEnabled",
+				() -> {
+					Group group = _themeDisplay.getScopeGroup();
+
+					return group.isPrivateLayoutsEnabled();
+				}
 			).put(
 				"languageId", _themeDisplay.getLanguageId()
 			).put(
@@ -175,29 +183,27 @@ public class MillerColumnsDisplayContext {
 				}
 			}
 
+			LayoutTypeController layoutTypeController =
+				LayoutTypeControllerTracker.getLayoutTypeController(
+					layout.getType());
+
 			JSONObject layoutJSONObject = JSONUtil.put(
-				"actions", _getLayoutActionsJSONArray(layout)
+				"actions",
+				_layoutActionDropdownItemsProvider.getActionDropdownItems(
+					layout, false)
 			).put(
 				"active", _layoutsAdminDisplayContext.isActive(layout.getPlid())
 			).put(
 				"bulkActions",
 				StringUtil.merge(
 					_layoutsAdminDisplayContext.getAvailableActions(layout))
-			);
-
-			LayoutTypeController layoutTypeController =
-				LayoutTypeControllerTracker.getLayoutTypeController(
-					layout.getType());
-
-			ResourceBundle layoutTypeResourceBundle =
-				ResourceBundleUtil.getBundle(
-					"content.Language", _themeDisplay.getLocale(),
-					layoutTypeController.getClass());
-
-			layoutJSONObject.put(
+			).put(
 				"description",
 				LanguageUtil.get(
-					_httpServletRequest, layoutTypeResourceBundle,
+					_httpServletRequest,
+					ResourceBundleUtil.getBundle(
+						"content.Language", _themeDisplay.getLocale(),
+						layoutTypeController.getClass()),
 					"layout.types." + layout.getType())
 			).put(
 				"draggable", true
@@ -210,6 +216,8 @@ public class MillerColumnsDisplayContext {
 			layoutJSONObject.put(
 				"hasChild", childLayoutsCount > 0
 			).put(
+				"hasScopeGroup", _hasScopeGroup(layout)
+			).put(
 				"id", layout.getPlid()
 			).put(
 				"key", String.valueOf(layout.getPlid())
@@ -220,31 +228,29 @@ public class MillerColumnsDisplayContext {
 			layoutJSONObject.put(
 				"parentable", layoutType.isParentable()
 			).put(
+				"quickActions", _getQuickActionsJSONArray(layout)
+			).put(
 				"selectable", true
 			).put(
 				"states", _getLayoutStatesJSONArray(layout)
 			).put(
 				"title", layout.getName(_themeDisplay.getLocale())
+			).put(
+				"url",
+				PortletURLBuilder.create(
+					_layoutsAdminDisplayContext.getPortletURL()
+				).setParameter(
+					"layoutSetBranchId",
+					_layoutsAdminDisplayContext.getActiveLayoutSetBranchId()
+				).setParameter(
+					"privateLayout", layout.isPrivateLayout()
+				).setParameter(
+					"selPlid", layout.getPlid()
+				).buildString()
+			).put(
+				"viewUrl",
+				_layoutsAdminDisplayContext.getEditOrViewLayoutURL(layout)
 			);
-
-			PortletURL portletURL = _layoutsAdminDisplayContext.getPortletURL();
-
-			portletURL.setParameter(
-				"selPlid", String.valueOf(layout.getPlid()));
-			portletURL.setParameter(
-				"layoutSetBranchId",
-				String.valueOf(
-					_layoutsAdminDisplayContext.getActiveLayoutSetBranchId()));
-			portletURL.setParameter(
-				"privateLayout", String.valueOf(layout.isPrivateLayout()));
-
-			layoutJSONObject.put("url", portletURL.toString());
-
-			if (_layoutsAdminDisplayContext.isShowViewLayoutAction(layout)) {
-				layoutJSONObject.put(
-					"viewUrl",
-					_layoutsAdminDisplayContext.getViewLayoutURL(layout));
-			}
 
 			layoutsJSONArray.put(layoutJSONObject);
 		}
@@ -266,9 +272,7 @@ public class MillerColumnsDisplayContext {
 		).put(
 			"url",
 			_layoutsAdminDisplayContext.getSelectLayoutPageTemplateEntryURL(
-				_layoutsAdminDisplayContext.
-					getFirstLayoutPageTemplateCollectionId(),
-				layout.getPlid(), layout.isPrivateLayout())
+				0, layout.getPlid(), layout.isPrivateLayout())
 		);
 	}
 
@@ -326,41 +330,6 @@ public class MillerColumnsDisplayContext {
 		return breadcrumbEntriesJSONArray;
 	}
 
-	private JSONArray _getFirstLayoutColumnActionsJSONArray(
-			boolean privatePages)
-		throws Exception {
-
-		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
-
-		if (_layoutsAdminDisplayContext.isShowAddRootLayoutButton()) {
-			jsonArray.put(
-				_getAddRootLayoutActionJSONObject(privatePages, "layoutAction")
-			).put(
-				_getAddLayoutCollectionActionJSONObject(
-					LayoutConstants.DEFAULT_PLID, privatePages)
-			);
-		}
-
-		if (_layoutsAdminDisplayContext.isShowFirstColumnConfigureAction()) {
-			jsonArray.put(
-				JSONUtil.put(
-					"icon", "cog"
-				).put(
-					"id", "configure"
-				).put(
-					"label", LanguageUtil.get(_httpServletRequest, "configure")
-				).put(
-					"quickAction", true
-				).put(
-					"url",
-					_layoutsAdminDisplayContext.
-						getFirstColumnConfigureLayoutURL(privatePages)
-				));
-		}
-
-		return jsonArray;
-	}
-
 	private JSONArray _getFirstLayoutColumnJSONArray() throws Exception {
 		JSONArray firstColumnJSONArray = JSONFactoryUtil.createJSONArray();
 
@@ -368,7 +337,7 @@ public class MillerColumnsDisplayContext {
 
 		if (LayoutLocalServiceUtil.hasLayouts(
 				_layoutsAdminDisplayContext.getSelGroup(), false) &&
-			_layoutsAdminDisplayContext.isShowPublicPages()) {
+			_layoutsAdminDisplayContext.isShowPublicLayouts()) {
 
 			boolean active = !_layoutsAdminDisplayContext.isPrivateLayout();
 
@@ -414,140 +383,49 @@ public class MillerColumnsDisplayContext {
 			key = "private-pages";
 		}
 
-		JSONObject pagesJSONObject = JSONUtil.put(
-			"actions", _getFirstLayoutColumnActionsJSONArray(privatePages)
-		).put(
+		return JSONUtil.put(
 			"active", active
 		).put(
 			"hasChild", true
+		).put(
+			"hasScopeGroup", true
 		).put(
 			"id", LayoutConstants.DEFAULT_PLID
 		).put(
 			"key", key
 		).put(
+			"quickActions",
+			_getFirstLayoutColumnQuickActionsJSONArray(privatePages)
+		).put(
 			"title", _layoutsAdminDisplayContext.getTitle(privatePages)
+		).put(
+			"url",
+			PortletURLBuilder.create(
+				_layoutsAdminDisplayContext.getPortletURL()
+			).setParameter(
+				"privateLayout", privatePages
+			).setParameter(
+				"selPlid", LayoutConstants.DEFAULT_PLID
+			).buildString()
 		);
-
-		PortletURL pagesURL = _layoutsAdminDisplayContext.getPortletURL();
-
-		pagesURL.setParameter(
-			"selPlid", String.valueOf(LayoutConstants.DEFAULT_PLID));
-		pagesURL.setParameter("privateLayout", String.valueOf(privatePages));
-
-		pagesJSONObject.put("url", pagesURL.toString());
-
-		return pagesJSONObject;
 	}
 
-	private Map<String, String> _getLanguageDirection() {
-		Map<String, String> languageDirection = new HashMap<>();
-
-		for (Locale curLocale :
-				LanguageUtil.getAvailableLocales(
-					_themeDisplay.getScopeGroupId())) {
-
-			languageDirection.put(
-				LocaleUtil.toLanguageId(curLocale),
-				LanguageUtil.get(curLocale, "lang.dir"));
-		}
-
-		return languageDirection;
-	}
-
-	private JSONArray _getLayoutActionsJSONArray(Layout layout)
+	private JSONArray _getFirstLayoutColumnQuickActionsJSONArray(
+			boolean privatePages)
 		throws Exception {
 
 		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
 
-		if (_layoutsAdminDisplayContext.isShowAddChildPageAction(layout)) {
+		if (_layoutsAdminDisplayContext.isShowAddRootLayoutButton()) {
 			jsonArray.put(
-				_getAddChildPageActionJSONObject(layout, "layoutAction")
+				_getAddRootLayoutActionJSONObject(privatePages, "layoutAction")
 			).put(
 				_getAddLayoutCollectionActionJSONObject(
-					layout.getPlid(), layout.isPrivateLayout())
+					LayoutConstants.DEFAULT_PLID, privatePages)
 			);
 		}
 
-		Layout draftLayout = layout.fetchDraftLayout();
-
-		if (layout.isDenied() || layout.isPending()) {
-			jsonArray.put(
-				JSONUtil.put(
-					"id", "previewLayout"
-				).put(
-					"label", LanguageUtil.get(_httpServletRequest, "preview")
-				).put(
-					"url", _layoutsAdminDisplayContext.getViewLayoutURL(layout)
-				));
-		}
-		else {
-			boolean published = true;
-
-			if (draftLayout != null) {
-				published = GetterUtil.getBoolean(
-					draftLayout.getTypeSettingsProperty("published"));
-			}
-
-			if (!layout.isTypeContent() || published) {
-				jsonArray.put(
-					JSONUtil.put(
-						"id", "viewLayout"
-					).put(
-						"label", LanguageUtil.get(_httpServletRequest, "view")
-					).put(
-						"url",
-						_layoutsAdminDisplayContext.getViewLayoutURL(layout)
-					));
-			}
-			else {
-				jsonArray.put(
-					JSONUtil.put(
-						"id", "viewLayout"
-					).put(
-						"label", LanguageUtil.get(_httpServletRequest, "view")
-					));
-			}
-		}
-
-		if (_layoutsAdminDisplayContext.isConversionDraft(layout) &&
-			_layoutsAdminDisplayContext.isShowConfigureAction(layout)) {
-
-			jsonArray.put(
-				JSONUtil.put(
-					"id", "editConversionLayout"
-				).put(
-					"label",
-					LanguageUtil.get(
-						_httpServletRequest, "edit-conversion-draft")
-				).put(
-					"url", _layoutsAdminDisplayContext.getEditLayoutURL(layout)
-				));
-		}
-		else if (_layoutsAdminDisplayContext.isShowConfigureAction(layout)) {
-			String editLayoutURL = _layoutsAdminDisplayContext.getEditLayoutURL(
-				layout);
-
-			if (Validator.isNotNull(editLayoutURL)) {
-				jsonArray.put(
-					JSONUtil.put(
-						"id", "editLayout"
-					).put(
-						"label", LanguageUtil.get(_httpServletRequest, "edit")
-					).put(
-						"url", editLayoutURL
-					));
-			}
-			else if (layout.isTypeContent()) {
-				jsonArray.put(
-					JSONUtil.put(
-						"id", "editLayout"
-					).put(
-						"label", LanguageUtil.get(_httpServletRequest, "edit")
-					));
-			}
-		}
-
-		if (_layoutsAdminDisplayContext.isShowConfigureAction(layout)) {
+		if (_layoutsAdminDisplayContext.isShowFirstColumnConfigureAction()) {
 			jsonArray.put(
 				JSONUtil.put(
 					"icon", "cog"
@@ -556,128 +434,11 @@ public class MillerColumnsDisplayContext {
 				).put(
 					"label", LanguageUtil.get(_httpServletRequest, "configure")
 				).put(
-					"url",
-					_layoutsAdminDisplayContext.getConfigureLayoutURL(layout)
-				));
-		}
-
-		if (_layoutsAdminDisplayContext.isShowConvertLayoutAction(layout)) {
-			if (draftLayout == null) {
-				jsonArray.put(
-					JSONUtil.put(
-						"id", "layoutConversionPreview"
-					).put(
-						"label",
-						LanguageUtil.get(
-							_httpServletRequest, "convert-to-content-page...")
-					).put(
-						"url",
-						_layoutsAdminDisplayContext.
-							getLayoutConversionPreviewURL(layout)
-					));
-			}
-			else {
-				jsonArray.put(
-					JSONUtil.put(
-						"id", "deleteLayoutConversionPreview"
-					).put(
-						"label",
-						LanguageUtil.get(
-							_httpServletRequest, "discard-conversion-draft")
-					).put(
-						"url",
-						_layoutsAdminDisplayContext.getDeleteLayoutURL(
-							draftLayout)
-					));
-			}
-		}
-
-		if (_layoutsAdminDisplayContext.isShowCopyLayoutAction(layout)) {
-			jsonArray.put(
-				JSONUtil.put(
-					"id", "copyLayout"
-				).put(
-					"label", LanguageUtil.get(_httpServletRequest, "copy-page")
+					"quickAction", true
 				).put(
 					"url",
-					_layoutsAdminDisplayContext.getCopyLayoutRenderURL(layout)
-				));
-		}
-		else {
-			jsonArray.put(
-				JSONUtil.put(
-					"id", "copyLayout"
-				).put(
-					"label", LanguageUtil.get(_httpServletRequest, "copy-page")
-				));
-		}
-
-		if (_layoutsAdminDisplayContext.isShowOrphanPortletsAction(layout)) {
-			jsonArray.put(
-				JSONUtil.put(
-					"id", "orphanPortlets"
-				).put(
-					"label",
-					LanguageUtil.get(_httpServletRequest, "orphan-widgets")
-				).put(
-					"url",
-					_layoutsAdminDisplayContext.getOrphanPortletsURL(layout)
-				));
-		}
-
-		if (_layoutsAdminDisplayContext.isShowPermissionsAction(layout)) {
-			jsonArray.put(
-				JSONUtil.put(
-					"id", "permissions"
-				).put(
-					"label",
-					LanguageUtil.get(_httpServletRequest, "permissions")
-				).put(
-					"url", _layoutsAdminDisplayContext.getPermissionsURL(layout)
-				));
-		}
-
-		if (_layoutsAdminDisplayContext.isShowDiscardDraftAction(layout)) {
-			jsonArray.put(
-				JSONUtil.put(
-					"id", "discardDraft"
-				).put(
-					"label",
-					LanguageUtil.get(_httpServletRequest, "discard-draft")
-				).put(
-					"url",
-					_layoutsAdminDisplayContext.getDiscardDraftURL(layout)
-				));
-		}
-
-		if (_layoutsAdminDisplayContext.isShowDeleteAction(layout)) {
-			jsonArray.put(
-				JSONUtil.put(
-					"hasChildren", layout.hasChildren()
-				).put(
-					"id", "delete"
-				).put(
-					"label", LanguageUtil.get(_httpServletRequest, "delete")
-				).put(
-					"url",
-					_layoutsAdminDisplayContext.getDeleteLayoutURL(layout)
-				));
-		}
-
-		if (_layoutsAdminDisplayContext.isShowViewCollectionItemsAction(
-				layout)) {
-
-			jsonArray.put(
-				JSONUtil.put(
-					"id", "viewCollectionItems"
-				).put(
-					"label",
-					LanguageUtil.get(
-						_httpServletRequest, "view-collection-items")
-				).put(
-					"url",
-					_layoutsAdminDisplayContext.getViewCollectionItemsURL(
-						layout)
+					_layoutsAdminDisplayContext.
+						getFirstColumnConfigureLayoutURL(privatePages)
 				));
 		}
 
@@ -693,35 +454,50 @@ public class MillerColumnsDisplayContext {
 				_layoutsAdminDisplayContext.isPrivateLayout());
 
 		for (LayoutSetBranch layoutSetBranch : layoutSetBranches) {
-			JSONObject jsonObject = JSONUtil.put(
-				"active",
-				layoutSetBranch.getLayoutSetBranchId() ==
-					_layoutsAdminDisplayContext.getActiveLayoutSetBranchId()
-			).put(
-				"hasChild", true
-			).put(
-				"id", LayoutConstants.DEFAULT_PLID
-			).put(
-				"key", String.valueOf(layoutSetBranch.getLayoutSetBranchId())
-			).put(
-				"plid", LayoutConstants.DEFAULT_PLID
-			).put(
-				"title",
-				LanguageUtil.get(_httpServletRequest, layoutSetBranch.getName())
-			);
-
-			PortletURL portletURL = _layoutsAdminDisplayContext.getPortletURL();
-
-			portletURL.setParameter(
-				"layoutSetBranchId",
-				String.valueOf(layoutSetBranch.getLayoutSetBranchId()));
-			portletURL.setParameter(
-				"privateLayout",
-				String.valueOf(layoutSetBranch.isPrivateLayout()));
-
-			jsonObject.put("url", portletURL.toString());
-
-			jsonArray.put(jsonObject);
+			jsonArray.put(
+				JSONUtil.put(
+					"active",
+					layoutSetBranch.getLayoutSetBranchId() ==
+						_layoutsAdminDisplayContext.getActiveLayoutSetBranchId()
+				).put(
+					"hasChild", true
+				).put(
+					"hasScopeGroup", true
+				).put(
+					"id", LayoutConstants.DEFAULT_PLID
+				).put(
+					"key",
+					String.valueOf(layoutSetBranch.getLayoutSetBranchId())
+				).put(
+					"plid", LayoutConstants.DEFAULT_PLID
+				).put(
+					"title",
+					LanguageUtil.get(
+						_httpServletRequest, layoutSetBranch.getName())
+				).put(
+					"url",
+					PortletURLBuilder.createActionURL(
+						_liferayPortletResponse
+					).setActionName(
+						"/layout_admin/select_layout_set_branch"
+					).setRedirect(
+						PortletURLBuilder.create(
+							_layoutsAdminDisplayContext.getPortletURL()
+						).setParameter(
+							"layoutSetBranchId",
+							layoutSetBranch.getLayoutSetBranchId()
+						).setParameter(
+							"privateLayout", layoutSetBranch.isPrivateLayout()
+						).buildString()
+					).setParameter(
+						"groupId", layoutSetBranch.getGroupId()
+					).setParameter(
+						"layoutSetBranchId",
+						layoutSetBranch.getLayoutSetBranchId()
+					).setParameter(
+						"privateLayout", layoutSetBranch.isPrivateLayout()
+					).buildString()
+				));
 		}
 
 		return jsonArray;
@@ -733,12 +509,7 @@ public class MillerColumnsDisplayContext {
 		Layout draftLayout = layout.fetchDraftLayout();
 
 		if (layout.isTypeContent()) {
-			boolean published = GetterUtil.getBoolean(
-				draftLayout.getTypeSettingsProperty("published"));
-
-			if ((draftLayout.getStatus() == WorkflowConstants.STATUS_DRAFT) ||
-				!published) {
-
+			if (draftLayout.isDraft() || !layout.isPublished()) {
 				jsonArray.put(
 					JSONUtil.put(
 						"id", "draft"
@@ -772,9 +543,44 @@ public class MillerColumnsDisplayContext {
 		return jsonArray;
 	}
 
+	private JSONArray _getQuickActionsJSONArray(Layout layout)
+		throws Exception {
+
+		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
+
+		if (_layoutsAdminDisplayContext.isShowAddChildPageAction(layout)) {
+			jsonArray.put(
+				_getAddChildPageActionJSONObject(layout, "layoutAction")
+			).put(
+				_getAddLayoutCollectionActionJSONObject(
+					layout.getPlid(), layout.isPrivateLayout())
+			);
+		}
+
+		return jsonArray;
+	}
+
+	private boolean _hasScopeGroup(Layout layout) throws Exception {
+		if (layout.hasScopeGroup()) {
+			return true;
+		}
+
+		Layout draftLayout = layout.fetchDraftLayout();
+
+		if (draftLayout == null) {
+			return false;
+		}
+
+		return draftLayout.hasScopeGroup();
+	}
+
 	private final HttpServletRequest _httpServletRequest;
+	private final LayoutActionDropdownItemsProvider
+		_layoutActionDropdownItemsProvider;
 	private final LayoutsAdminDisplayContext _layoutsAdminDisplayContext;
 	private final LiferayPortletResponse _liferayPortletResponse;
 	private final ThemeDisplay _themeDisplay;
+	private final TranslationInfoItemFieldValuesExporterTracker
+		_translationInfoItemFieldValuesExporterTracker;
 
 }

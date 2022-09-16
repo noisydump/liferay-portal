@@ -39,10 +39,12 @@ import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.service.UserService;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.servlet.SessionMessages;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.liveusers.LiveUsers;
 import com.liferay.site.memberships.constants.SiteMembershipsPortletKeys;
 import com.liferay.site.memberships.web.internal.display.context.SiteMembershipsDisplayContext;
@@ -88,7 +90,8 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + SiteMembershipsPortletKeys.SITE_MEMBERSHIPS_ADMIN,
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=administrator"
+		"javax.portlet.security-role-ref=administrator",
+		"javax.portlet.version=3.0"
 	},
 	service = Portlet.class
 )
@@ -248,13 +251,21 @@ public class SiteMembershipsPortlet extends MVCPortlet {
 			return;
 		}
 
+		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
 		Group group = _getGroup(actionRequest, actionResponse);
 
+		long[] availableRoleIds = ParamUtil.getLongValues(
+			actionRequest, "availableRowIds");
 		long[] roleIds = ParamUtil.getLongValues(actionRequest, "rowIds");
 
 		List<UserGroupRole> userGroupRoles =
 			_userGroupRoleLocalService.getUserGroupRoles(
 				user.getUserId(), group.getGroupId());
+
+		userGroupRoles = _usersAdmin.filterUserGroupRoles(
+			themeDisplay.getPermissionChecker(), userGroupRoles);
 
 		List<Long> curRoleIds = ListUtil.toList(
 			userGroupRoles, UsersAdmin.USER_GROUP_ROLE_ID_ACCESSOR);
@@ -262,7 +273,9 @@ public class SiteMembershipsPortlet extends MVCPortlet {
 		List<Long> removeRoleIds = new ArrayList<>();
 
 		for (long roleId : curRoleIds) {
-			if (!ArrayUtil.contains(roleIds, roleId)) {
+			if (!ArrayUtil.contains(roleIds, roleId) &&
+				ArrayUtil.contains(availableRoleIds, roleId)) {
+
 				removeRoleIds.add(roleId);
 			}
 		}
@@ -471,6 +484,9 @@ public class SiteMembershipsPortlet extends MVCPortlet {
 
 	@Reference
 	private UserLocalService _userLocalService;
+
+	@Reference
+	private UsersAdmin _usersAdmin;
 
 	@Reference
 	private UserService _userService;

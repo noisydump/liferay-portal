@@ -81,6 +81,34 @@ public class TransitionSerDes {
 			sb.append("\"");
 		}
 
+		if (transition.getSourceNodeName() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"sourceNodeName\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(transition.getSourceNodeName()));
+
+			sb.append("\"");
+		}
+
+		if (transition.getTargetNodeName() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"targetNodeName\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(transition.getTargetNodeName()));
+
+			sb.append("\"");
+		}
+
 		sb.append("}");
 
 		return sb.toString();
@@ -111,6 +139,24 @@ public class TransitionSerDes {
 		}
 		else {
 			map.put("name", String.valueOf(transition.getName()));
+		}
+
+		if (transition.getSourceNodeName() == null) {
+			map.put("sourceNodeName", null);
+		}
+		else {
+			map.put(
+				"sourceNodeName",
+				String.valueOf(transition.getSourceNodeName()));
+		}
+
+		if (transition.getTargetNodeName() == null) {
+			map.put("targetNodeName", null);
+		}
+		else {
+			map.put(
+				"targetNodeName",
+				String.valueOf(transition.getTargetNodeName()));
 		}
 
 		return map;
@@ -144,8 +190,15 @@ public class TransitionSerDes {
 					transition.setName((String)jsonParserFieldValue);
 				}
 			}
-			else if (jsonParserFieldName.equals("status")) {
-				throw new IllegalArgumentException();
+			else if (Objects.equals(jsonParserFieldName, "sourceNodeName")) {
+				if (jsonParserFieldValue != null) {
+					transition.setSourceNodeName((String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "targetNodeName")) {
+				if (jsonParserFieldValue != null) {
+					transition.setTargetNodeName((String)jsonParserFieldValue);
+				}
 			}
 		}
 
@@ -175,7 +228,7 @@ public class TransitionSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -211,7 +264,7 @@ public class TransitionSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

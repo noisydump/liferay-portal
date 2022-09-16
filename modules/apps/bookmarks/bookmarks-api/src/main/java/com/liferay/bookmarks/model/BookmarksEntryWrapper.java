@@ -197,6 +197,11 @@ public class BookmarksEntryWrapper
 		return model.buildTreePath();
 	}
 
+	@Override
+	public BookmarksEntry cloneWithOriginalValues() {
+		return wrap(model.cloneWithOriginalValues());
+	}
+
 	/**
 	 * Returns the company ID of this bookmarks entry.
 	 *
@@ -394,18 +399,6 @@ public class BookmarksEntryWrapper
 	@Override
 	public long getTrashEntryClassPK() {
 		return model.getTrashEntryClassPK();
-	}
-
-	/**
-	 * Returns the trash handler for this bookmarks entry.
-	 *
-	 * @return the trash handler for this bookmarks entry
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public com.liferay.portal.kernel.trash.TrashHandler getTrashHandler() {
-		return model.getTrashHandler();
 	}
 
 	/**

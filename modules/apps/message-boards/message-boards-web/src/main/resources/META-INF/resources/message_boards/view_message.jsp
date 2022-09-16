@@ -27,6 +27,8 @@ AssetEntry layoutAssetEntry = AssetEntryLocalServiceUtil.getEntry(MBMessage.clas
 
 request.setAttribute(WebKeys.LAYOUT_ASSET_ENTRY, layoutAssetEntry);
 
+LinkedAssetEntryIdsUtil.addLinkedAssetEntryId(request, layoutAssetEntry.getEntryId());
+
 AssetEntryServiceUtil.incrementViewCounter(layoutAssetEntry);
 
 boolean portletTitleBasedNavigation = GetterUtil.getBoolean(portletConfig.getInitParameter("portlet-title-based-navigation"));
@@ -48,7 +50,7 @@ MBBreadcrumbUtil.addPortletBreadcrumbEntries(message, request, renderResponse);
 		<%@ include file="/message_boards/nav.jspf" %>
 	</c:if>
 
-	<div <%= !portletTitleBasedNavigation ? "class=\"main-content-body\"" : StringPool.BLANK %>>
+	<div <%= !portletTitleBasedNavigation ? "class=\"main-content-body mt-4\"" : StringPool.BLANK %>>
 		<c:if test="<%= !portletTitleBasedNavigation %>">
 			<liferay-ui:breadcrumb
 				showCurrentGroup="<%= false %>"
@@ -95,10 +97,10 @@ MBBreadcrumbUtil.addPortletBreadcrumbEntries(message, request, renderResponse);
 			addQuickReplyLoadingMask.classList.remove('hide');
 
 			Liferay.Util.fetch(editMessageQuickURL)
-				.then(function (response) {
+				.then((response) => {
 					return response.text();
 				})
-				.then(function (response) {
+				.then((response) => {
 					addQuickReplyContainer.innerHTML = response;
 
 					runScriptsInElement.default(addQuickReplyContainer);
@@ -117,11 +119,11 @@ MBBreadcrumbUtil.addPortletBreadcrumbEntries(message, request, renderResponse);
 					var editorName =
 						'<portlet:namespace />replyMessageBody' + messageId;
 
-					Liferay.componentReady(editorName).then(function (editor) {
+					Liferay.componentReady(editorName).then((editor) => {
 						editor.focus();
 					});
 
-					if (addQuickReplyContainer && AUI().UA.mobile) {
+					if (addQuickReplyContainer) {
 						addQuickReplyContainer.scrollIntoView(true);
 					}
 

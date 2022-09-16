@@ -75,12 +75,12 @@
 		md="2"
 	>
 		<div class="aspect-ratio">
-			<img class="aspect-ratio-item-fluid" src="https://claycss.com/images/thumbnail_hot_air_ballon.jpg" />
+			<img class="aspect-ratio-item-fluid" src="https://clayui.com/images/thumbnail_hot_air_ballon.jpg" />
 
 			<clay:sticker
+				displayType="danger"
 				label="PDF"
 				position="top-left"
-				style="danger"
 			/>
 		</div>
 	</clay:col>
@@ -89,26 +89,12 @@
 		md="2"
 	>
 		<div class="aspect-ratio">
-			<img class="aspect-ratio-item-fluid" src="https://claycss.com/images/thumbnail_hot_air_ballon.jpg" />
+			<img class="aspect-ratio-item-fluid" src="https://clayui.com/images/thumbnail_hot_air_ballon.jpg" />
 
 			<clay:sticker
+				displayType="danger"
 				label="PDF"
 				position="bottom-left"
-				style="danger"
-			/>
-		</clay:col>
-	</div>
-
-	<clay:col
-		md="2"
-	>
-		<div class="aspect-ratio">
-			<img class="aspect-ratio-item-fluid" src="https://claycss.com/images/thumbnail_hot_air_ballon.jpg" />
-
-			<clay:sticker
-				label="PDF"
-				position="top-right"
-				style="danger"
 			/>
 		</div>
 	</clay:col>
@@ -117,12 +103,26 @@
 		md="2"
 	>
 		<div class="aspect-ratio">
-			<img class="aspect-ratio-item-fluid" src="https://claycss.com/images/thumbnail_hot_air_ballon.jpg" />
+			<img class="aspect-ratio-item-fluid" src="https://clayui.com/images/thumbnail_hot_air_ballon.jpg" />
 
 			<clay:sticker
+				displayType="danger"
+				label="PDF"
+				position="top-right"
+			/>
+		</div>
+	</clay:col>
+
+	<clay:col
+		md="2"
+	>
+		<div class="aspect-ratio">
+			<img class="aspect-ratio-item-fluid" src="https://clayui.com/images/thumbnail_hot_air_ballon.jpg" />
+
+			<clay:sticker
+				displayType="danger"
 				label="PDF"
 				position="bottom-right"
-				style="danger"
 			/>
 		</div>
 	</clay:col>

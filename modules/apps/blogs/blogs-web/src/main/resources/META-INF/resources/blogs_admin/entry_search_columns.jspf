@@ -56,19 +56,24 @@
 		<liferay-ui:search-container-column-text>
 
 			<%
-			BlogsEntryActionDropdownItemsProvider blogsEntryActionDropdownItemsProvider = new BlogsEntryActionDropdownItemsProvider(entry, renderRequest, renderResponse, permissionChecker, resourceBundle, trashHelper);
+			BlogsEntryActionDropdownItemsProvider blogsEntryActionDropdownItemsProvider = new BlogsEntryActionDropdownItemsProvider(renderRequest, renderResponse, permissionChecker, resourceBundle, trashHelper);
 			%>
 
 			<clay:dropdown-actions
-				defaultEventHandler="<%= BlogsWebConstants.BLOGS_ELEMENTS_DEFAULT_EVENT_HANDLER %>"
-				dropdownItems="<%= blogsEntryActionDropdownItemsProvider.getActionDropdownItems() %>"
+				additionalProps='<%=
+					HashMapBuilder.<String, Object>put(
+						"trashEnabled", trashHelper.isTrashEnabled(themeDisplay.getScopeGroupId())
+					).build()
+				%>'
+				dropdownItems="<%= blogsEntryActionDropdownItemsProvider.getActionDropdownItems(entry) %>"
+				propsTransformer="blogs_admin/js/ElementsPropsTransformer"
 			/>
 		</liferay-ui:search-container-column-text>
 	</c:when>
 	<c:when test='<%= displayStyle.equals("icon") %>'>
 		<liferay-ui:search-container-column-text>
 			<clay:vertical-card
-				verticalCard="<%= new BlogsEntryVerticalCard(entry, renderRequest, renderResponse, searchContainer.getRowChecker(), trashHelper, rowURL.toString(), permissionChecker, resourceBundle) %>"
+				verticalCard="<%= blogEntriesDisplayContext.getBlogsEntryVerticalCard(entry, searchContainer.getRowChecker(), rowURL.toString(), resourceBundle) %>"
 			/>
 		</liferay-ui:search-container-column-text>
 	</c:when>
@@ -120,12 +125,17 @@
 		<liferay-ui:search-container-column-text>
 
 			<%
-			BlogsEntryActionDropdownItemsProvider blogsEntryActionDropdownItemsProvider = new BlogsEntryActionDropdownItemsProvider(entry, renderRequest, renderResponse, permissionChecker, resourceBundle, trashHelper);
+			BlogsEntryActionDropdownItemsProvider blogsEntryActionDropdownItemsProvider = new BlogsEntryActionDropdownItemsProvider(renderRequest, renderResponse, permissionChecker, resourceBundle, trashHelper);
 			%>
 
 			<clay:dropdown-actions
-				defaultEventHandler="<%= BlogsWebConstants.BLOGS_ELEMENTS_DEFAULT_EVENT_HANDLER %>"
-				dropdownItems="<%= blogsEntryActionDropdownItemsProvider.getActionDropdownItems() %>"
+				additionalProps='<%=
+					HashMapBuilder.<String, Object>put(
+						"trashEnabled", trashHelper.isTrashEnabled(themeDisplay.getScopeGroupId())
+					).build()
+				%>'
+				dropdownItems="<%= blogsEntryActionDropdownItemsProvider.getActionDropdownItems(entry) %>"
+				propsTransformer="blogs_admin/js/ElementsPropsTransformer"
 			/>
 		</liferay-ui:search-container-column-text>
 	</c:otherwise>

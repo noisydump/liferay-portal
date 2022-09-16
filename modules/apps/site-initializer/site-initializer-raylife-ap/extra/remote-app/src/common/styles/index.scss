@@ -1,0 +1,27 @@
+*,
+*:after,
+*:before {
+	box-sizing: border-box;
+	font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+	margin: 0;
+	padding: 0;
+}
+
+.portlet {
+	margin-bottom: 0;
+}
+
+// stylelint-disable selector-type-no-unknown
+liferay-remote-app-raylife-ap {
+	@import 'variables';
+
+	@import 'apps/application/edit-applications';
+	@import 'apps/dashboard/product-performance/index';
+	@import 'apps/dashboard/recent-applications/index';
+	@import 'components/header';
+	@import 'components/product-list';
+	@import 'components/table';
+}
+
+@import 'apps/applications/modal';
+@import 'apps/dashboard/whats-new-modal/index';

@@ -75,7 +75,7 @@
 							String linkCssClass = "dropdown-item palette-item";
 
 							Locale curLocale = LocaleUtil.fromLanguageId(curLanguageId);
-							%>
+						%>
 
 							<c:if test="<%= showLanguageSelector %>">
 								<liferay-ui:icon
@@ -95,7 +95,7 @@
 									markupView="lexicon"
 									message="<%= StringUtil.replace(curLanguageId, '_', '-') %>"
 									onClick="event.preventDefault(); fireLocaleChanged(event);"
-									url="javascript:;"
+									url="javascript:void(0);"
 								>
 								</liferay-ui:icon>
 							</c:if>
@@ -143,6 +143,8 @@
 
 			<%
 			}
+
+			Group group = themeDisplay.getScopeGroup();
 			%>
 
 			var liferayDDMForm = Liferay.component(
@@ -158,6 +160,7 @@
 					doAsGroupId: <%= scopeGroupId %>,
 					fieldsNamespace: '<%= HtmlUtil.escapeJS(fieldsNamespace) %>',
 					imageSelectorURL: '<%= imageSelectorURL %>',
+					isPrivateLayoutsEnabled: <%= group.isPrivateLayoutsEnabled() %>,
 					mode: '<%= HtmlUtil.escapeJS(mode) %>',
 					p_l_id: <%= themeDisplay.getPlid() %>,
 					portletNamespace: '<portlet:namespace />',

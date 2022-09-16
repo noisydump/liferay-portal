@@ -2,12 +2,19 @@
 <head>
 <title>Ratings</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">Ratings</td></tr>
 </thead>
+
 <tbody>
+<tr>
+	<td>ANY_DISABLED</td>
+	<td>//button[@disabled='']//span[*[name()='svg'][contains(@class,'lexicon-icon-${key_text}')]]</td>
+	<td></td>
+</tr>
 <tr>
 	<td>LIKE</td>
 	<td>//div[contains(@class,'ratings-like')]//button[contains(@title,'Like This') or contains(@data-title,'Like This')]</td>
@@ -15,17 +22,12 @@
 </tr>
 <tr>
 	<td>THUMB</td>
-	<td>//div[contains(@class,'ratings-thumbs')]//button[contains(@title,'${key_ratingResult}') or contains(@data-title,'${key_ratingResult}')]</td>
+	<td>//div[contains(@class,'ratings-thumbs')]//button[contains(@title,'${key_ratingResult}') or contains(@data-restore-title,'${key_ratingResult}')]</td>
 	<td></td>
 </tr>
 <tr>
-	<td>THUMB_UP_OFF</td>
-	<td>//div[contains(@class,'ratings-thumbs')]//button[contains(@disabled,'')]//span[*[name()='svg'][contains(@class,'thumbs-up')]]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>THUMB_DOWN_OFF</td>
-	<td>//div[contains(@class,'ratings-thumbs')]//button[contains(@disabled,'')]//span[*[name()='svg'][contains(@class,'thumbs-down')]]</td>
+	<td>RATED_TOOLTIP_MESSAGE</td>
+	<td>//div[contains(@class,'entry-ratings')]//button[contains(@data-restore-title,'${key_message}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -33,7 +35,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--COMMENT_RATING-->
+
 <tr>
 	<td>COMMENT_RATING_THUMB</td>
 	<td>//div[contains(@class,'comment')]//div[contains(@class,'ratings')]//button[contains(@title,'${key_ratingResult}')]</td>
@@ -49,7 +53,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--YOUR_RATING-->
+
 <tr>
 	<td>YOUR_RATING_LIKE_COUNT</td>
 	<td>//div[contains(@class,'ratings-like')]//button[contains(@title,'Unlike This')]//span[contains(@class,'current')]</td>
@@ -72,7 +78,7 @@
 </tr>
 <tr>
 	<td>YOUR_RATING_STACKED_STAR_COUNT</td>
-	<td>//div[contains(@class,'stacked-stars')]//label[contains(@for,'zqmy_column1_0_star${key_ratingStarCount}')]</td>
+	<td>//div[contains(@class,'stacked-stars')]//label[contains(@for,'star${key_ratingStarCount}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -107,7 +113,7 @@
 </tr>
 <tr>
 	<td>YOUR_RATING_STACKED_STAR_RESULT</td>
-	<td>//div[contains(@class,'stacked-stars')]//label[contains(@class,'ratings-stars-star-full') and contains(@for,'zqmy_column1_0_star${key_ratingStarCount}')]</td>
+	<td>//div[contains(@class,'stacked-stars')]//label[contains(@class,'ratings-stars-star-full') and contains(@for,'star${key_ratingStarCount}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -135,7 +141,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--AVERAGE-->
+
 <tr>
 	<td>AVERAGE_STAR</td>
 	<td>//div[contains(@class,'ratings-stars')]//*[name()='svg'][contains(@class,'ratings-stars-average-icon')]</td>

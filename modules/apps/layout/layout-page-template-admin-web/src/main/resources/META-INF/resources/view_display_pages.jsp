@@ -25,14 +25,15 @@ DisplayPageDisplayContext displayPageDisplayContext = new DisplayPageDisplayCont
 	navigationItems="<%= layoutPageTemplatesAdminDisplayContext.getNavigationItems() %>"
 />
 
-<liferay-ui:success key="displayPagePublished" message="the-display-page-template-was-published-succesfully" />
+<liferay-ui:success key="displayPagePublished" message="the-display-page-template-was-published-successfully" />
 
 <%
 DisplayPageManagementToolbarDisplayContext displayPageManagementToolbarDisplayContext = new DisplayPageManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, displayPageDisplayContext);
 %>
 
-<clay:management-toolbar-v2
-	displayContext="<%= displayPageManagementToolbarDisplayContext %>"
+<clay:management-toolbar
+	managementToolbarDisplayContext="<%= displayPageManagementToolbarDisplayContext %>"
+	propsTransformer="js/propsTransformers/DisplayPageManagementToolbarPropsTransformer"
 />
 
 <portlet:actionURL name="/layout_page_template_admin/delete_layout_page_template_entry" var="deleteDisplayPageURL">
@@ -84,8 +85,3 @@ DisplayPageManagementToolbarDisplayContext displayPageManagementToolbarDisplayCo
 	<aui:input name="layoutPageTemplateEntryId" type="hidden" />
 	<aui:input name="fileEntryId" type="hidden" />
 </aui:form>
-
-<liferay-frontend:component
-	componentId="<%= displayPageManagementToolbarDisplayContext.getDefaultEventHandler() %>"
-	module="js/DisplayPageManagementToolbarDefaultEventHandler.es"
-/>

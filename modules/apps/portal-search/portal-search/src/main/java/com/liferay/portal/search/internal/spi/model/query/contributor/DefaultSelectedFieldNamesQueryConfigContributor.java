@@ -14,7 +14,7 @@
 
 package com.liferay.portal.search.internal.spi.model.query.contributor;
 
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.QueryConfig;
 import com.liferay.portal.kernel.search.SearchContext;
@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Michael C. Han
@@ -79,13 +80,12 @@ public class DefaultSelectedFieldNamesQueryConfigContributor
 			}
 
 			if (queryConfigContributorHelper.isSelectAllLocales()) {
-				addSelectedLocalizedFieldNames(
+				_addSelectedLocalizedFieldNames(
 					queryConfigContributorHelper, selectedFieldNames,
-					LocaleUtil.toLanguageIds(
-						LanguageUtil.getAvailableLocales()));
+					LocaleUtil.toLanguageIds(_language.getAvailableLocales()));
 			}
 			else {
-				addSelectedLocalizedFieldNames(
+				_addSelectedLocalizedFieldNames(
 					queryConfigContributorHelper, selectedFieldNames,
 					LocaleUtil.toLanguageId(queryConfig.getLocale()));
 			}
@@ -97,7 +97,7 @@ public class DefaultSelectedFieldNamesQueryConfigContributor
 		}
 	}
 
-	protected void addSelectedLocalizedFieldNames(
+	private void _addSelectedLocalizedFieldNames(
 		QueryConfigContributorHelper queryConfigContributorHelper,
 		Set<String> selectedFieldNames, String... languageIds) {
 
@@ -115,5 +115,8 @@ public class DefaultSelectedFieldNamesQueryConfigContributor
 			}
 		}
 	}
+
+	@Reference
+	private Language _language;
 
 }

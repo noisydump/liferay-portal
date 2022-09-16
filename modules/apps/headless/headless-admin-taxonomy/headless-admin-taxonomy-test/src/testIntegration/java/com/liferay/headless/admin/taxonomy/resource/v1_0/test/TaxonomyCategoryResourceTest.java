@@ -53,24 +53,33 @@ public class TaxonomyCategoryResourceTest
 	}
 
 	@Override
-	protected TaxonomyCategory testDeleteTaxonomyCategory_addTaxonomyCategory()
-		throws Exception {
+	protected TaxonomyCategory randomTaxonomyCategory() throws Exception {
+		TaxonomyCategory taxonomyCategory = super.randomTaxonomyCategory();
 
-		return taxonomyCategoryResource.postTaxonomyVocabularyTaxonomyCategory(
-			_assetVocabulary.getVocabularyId(), randomTaxonomyCategory());
+		taxonomyCategory.setTaxonomyVocabularyId(
+			_assetVocabulary.getVocabularyId());
+
+		return taxonomyCategory;
 	}
 
 	@Override
-	protected TaxonomyCategory testGetTaxonomyCategory_addTaxonomyCategory()
+	protected TaxonomyCategory testDeleteTaxonomyCategory_addTaxonomyCategory()
 		throws Exception {
 
-		return taxonomyCategoryResource.postTaxonomyVocabularyTaxonomyCategory(
-			_assetVocabulary.getVocabularyId(), randomTaxonomyCategory());
+		return testGetTaxonomyCategory_addTaxonomyCategory();
 	}
 
 	@Override
 	protected TaxonomyCategory
-			testGetTaxonomyCategoryRankedPage_addTaxonomyCategory(
+			testDeleteTaxonomyVocabularyTaxonomyCategoryByExternalReferenceCode_addTaxonomyCategory()
+		throws Exception {
+
+		return testGetTaxonomyCategory_addTaxonomyCategory();
+	}
+
+	@Override
+	protected TaxonomyCategory
+			testGetTaxonomyCategoriesRankedPage_addTaxonomyCategory(
 				TaxonomyCategory taxonomyCategory)
 		throws Exception {
 
@@ -87,6 +96,14 @@ public class TaxonomyCategoryResourceTest
 				GetterUtil.getLong(taxonomyCategory.getId()));
 
 		return taxonomyCategory;
+	}
+
+	@Override
+	protected TaxonomyCategory testGetTaxonomyCategory_addTaxonomyCategory()
+		throws Exception {
+
+		return taxonomyCategoryResource.postTaxonomyVocabularyTaxonomyCategory(
+			_assetVocabulary.getVocabularyId(), randomTaxonomyCategory());
 	}
 
 	@Override
@@ -109,6 +126,14 @@ public class TaxonomyCategoryResourceTest
 	}
 
 	@Override
+	protected TaxonomyCategory
+			testGetTaxonomyVocabularyTaxonomyCategoryByExternalReferenceCode_addTaxonomyCategory()
+		throws Exception {
+
+		return testGetTaxonomyCategory_addTaxonomyCategory();
+	}
+
+	@Override
 	protected TaxonomyCategory testGraphQLTaxonomyCategory_addTaxonomyCategory()
 		throws Exception {
 
@@ -120,8 +145,7 @@ public class TaxonomyCategoryResourceTest
 	protected TaxonomyCategory testPatchTaxonomyCategory_addTaxonomyCategory()
 		throws Exception {
 
-		return taxonomyCategoryResource.postTaxonomyVocabularyTaxonomyCategory(
-			_assetVocabulary.getVocabularyId(), randomTaxonomyCategory());
+		return testGetTaxonomyCategory_addTaxonomyCategory();
 	}
 
 	@Override
@@ -140,16 +164,31 @@ public class TaxonomyCategoryResourceTest
 				TaxonomyCategory taxonomyCategory)
 		throws Exception {
 
-		return taxonomyCategoryResource.postTaxonomyVocabularyTaxonomyCategory(
-			_assetVocabulary.getVocabularyId(), taxonomyCategory);
+		return testPostTaxonomyCategoryTaxonomyCategory_addTaxonomyCategory(
+			taxonomyCategory);
 	}
 
 	@Override
 	protected TaxonomyCategory testPutTaxonomyCategory_addTaxonomyCategory()
 		throws Exception {
 
-		return taxonomyCategoryResource.postTaxonomyVocabularyTaxonomyCategory(
-			_assetVocabulary.getVocabularyId(), randomTaxonomyCategory());
+		return testGetTaxonomyCategory_addTaxonomyCategory();
+	}
+
+	@Override
+	protected TaxonomyCategory
+			testPutTaxonomyCategoryPermissionsPage_addTaxonomyCategory()
+		throws Exception {
+
+		return testGetTaxonomyCategory_addTaxonomyCategory();
+	}
+
+	@Override
+	protected TaxonomyCategory
+			testPutTaxonomyVocabularyTaxonomyCategoryByExternalReferenceCode_addTaxonomyCategory()
+		throws Exception {
+
+		return testGetTaxonomyCategory_addTaxonomyCategory();
 	}
 
 	private AssetVocabulary _assetVocabulary;

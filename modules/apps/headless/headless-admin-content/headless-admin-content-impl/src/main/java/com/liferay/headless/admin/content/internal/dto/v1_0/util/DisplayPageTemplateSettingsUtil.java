@@ -28,9 +28,7 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
-import java.util.Collection;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * @author Jürgen Kappler
@@ -77,7 +75,7 @@ public class DisplayPageTemplateSettingsUtil {
 		InfoItemServiceTracker infoItemServiceTracker,
 		LayoutPageTemplateEntry layoutPageTemplateEntry) {
 
-		InfoItemFormVariationsProvider infoItemFormVariationsProvider =
+		InfoItemFormVariationsProvider<?> infoItemFormVariationsProvider =
 			infoItemServiceTracker.getFirstInfoItemService(
 				InfoItemFormVariationsProvider.class,
 				layoutPageTemplateEntry.getClassName());
@@ -86,20 +84,14 @@ public class DisplayPageTemplateSettingsUtil {
 			return null;
 		}
 
-		Collection<InfoItemFormVariation> infoItemFormVariations =
-			infoItemFormVariationsProvider.getInfoItemFormVariations(
-				layoutPageTemplateEntry.getGroupId());
+		InfoItemFormVariation infoItemFormVariation =
+			infoItemFormVariationsProvider.getInfoItemFormVariation(
+				layoutPageTemplateEntry.getGroupId(),
+				String.valueOf(layoutPageTemplateEntry.getClassTypeId()));
 
-		for (InfoItemFormVariation infoItemFormVariation :
-				infoItemFormVariations) {
-
-			if (Objects.equals(
-					infoItemFormVariation.getKey(),
-					String.valueOf(layoutPageTemplateEntry.getClassTypeId()))) {
-
-				return infoItemFormVariation.getLabel(
-					dtoConverterContext.getLocale());
-			}
+		if (infoItemFormVariation != null) {
+			return infoItemFormVariation.getLabel(
+				dtoConverterContext.getLocale());
 		}
 
 		return null;
@@ -110,13 +102,13 @@ public class DisplayPageTemplateSettingsUtil {
 
 		return new OpenGraphSettingsMapping() {
 			{
-				descriptionMappingField = layout.getTypeSettingsProperty(
+				descriptionMappingFieldKey = layout.getTypeSettingsProperty(
 					"mapped-openGraphDescription", "description");
-				imageAltMappingField = layout.getTypeSettingsProperty(
+				imageAltMappingFieldKey = layout.getTypeSettingsProperty(
 					"mapped-openGraphImageAlt", null);
-				imageMappingField = layout.getTypeSettingsProperty(
+				imageMappingFieldKey = layout.getTypeSettingsProperty(
 					"mapped-openGraphImage", null);
-				titleMappingField = layout.getTypeSettingsProperty(
+				titleMappingFieldKey = layout.getTypeSettingsProperty(
 					"mapped-openGraphTitle", "title");
 			}
 		};
@@ -127,9 +119,9 @@ public class DisplayPageTemplateSettingsUtil {
 
 		return new SEOSettingsMapping() {
 			{
-				descriptionMappingField = layout.getTypeSettingsProperty(
+				descriptionMappingFieldKey = layout.getTypeSettingsProperty(
 					"mapped-description", "description");
-				htmlTitleMappingField = layout.getTypeSettingsProperty(
+				htmlTitleMappingFieldKey = layout.getTypeSettingsProperty(
 					"mapped-title", "title");
 				robots = layout.getRobots(dtoConverterContext.getLocale());
 				robots_i18n = LocalizedMapUtil.getI18nMap(

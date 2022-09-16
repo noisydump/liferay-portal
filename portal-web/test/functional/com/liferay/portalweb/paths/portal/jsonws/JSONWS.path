@@ -2,13 +2,17 @@
 <head>
 <title>JSONWS</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">JSONWS</td></tr>
 </thead>
+
 <tbody>
+
 <!--ADDRESS-->
+
 <tr>
 	<td>ADDRESS_ADD_ADDRESS</td>
 	<td>//div[@id='apiServiceAddressServiceImplPanelContent']/div/ul/li/a[contains(.,'add-address')]</td>
@@ -19,7 +23,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--COMPANY-->
+
 <tr>
 	<td>COMPANY_COMPANYID_FIELD</td>
 	<td>//textarea[@name='companyId']</td>
@@ -30,7 +36,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--USER-->
+
 <tr>
 	<td>USER_ANYSPAN_FALSE</td>
 	<td>//span[contains(.,'${key_span}')]/following-sibling::label//input[contains(@id,'False') and @type='radio']</td>
@@ -48,7 +56,7 @@
 </tr>
 <tr>
 	<td>USER_UPDATE_USER</td>
-	<td>//div[@id='apiServiceUserServiceImplPanelContent']/div/ul/li/a[contains(.,'update-user')]</td>
+	<td>//div[@id='apiServiceUserServiceImplPanelContent']/div/ul/li/a[normalize-space(text())='update-user']</td>
 	<td></td>
 </tr>
 <tr>
@@ -56,7 +64,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--SECURITY-->
+
 <tr>
 	<td>SECURITY_EMPTY_PAGE</td>
 	<td>//body[not(*)]</td>

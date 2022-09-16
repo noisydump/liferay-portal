@@ -71,7 +71,7 @@ PortalUtil.addPortletBreadcrumbEntry(request, editContactInformationDisplayConte
 
 				<liferay-ui:error key="<%= NoSuchListTypeException.class.getName() + editContactInformationDisplayContext.getClassName() + ListTypeConstants.ADDRESS %>" message="please-select-a-type" />
 
-				<aui:select label="type" listType="<%= editContactInformationDisplayContext.getClassName() + ListTypeConstants.ADDRESS %>" name="addressTypeId" />
+				<aui:select label="type" listType="<%= editContactInformationDisplayContext.getClassName() + ListTypeConstants.ADDRESS %>" name="addressListTypeId" />
 
 				<liferay-ui:error exception="<%= AddressStreetException.class %>" message="please-enter-a-valid-street" />
 
@@ -102,7 +102,7 @@ PortalUtil.addPortletBreadcrumbEntry(request, editContactInformationDisplayConte
 						<span hidden id="<portlet:namespace />addressZipRequiredWrapper">
 							<aui:icon cssClass="reference-mark text-warning" image="asterisk" markupView="lexicon" />
 
-							<span class="hide-accessible"><liferay-ui:message key="required" /></span>
+							<span class="hide-accessible sr-only"><liferay-ui:message key="required" /></span>
 						</span>
 					</label>
 
@@ -120,25 +120,21 @@ PortalUtil.addPortletBreadcrumbEntry(request, editContactInformationDisplayConte
 		</clay:sheet>
 	</clay:container-fluid>
 
-	<script>
-		new Liferay.DynamicSelect([
-			{
-				select: '<portlet:namespace />addressCountryId',
-				selectData: Liferay.Address.getCountries,
-				selectDesc: 'nameCurrentValue',
-				selectId: 'countryId',
-				selectSort: '<%= true %>',
-				selectVal: '<%= countryId %>',
-			},
-			{
-				select: '<portlet:namespace />addressRegionId',
-				selectData: Liferay.Address.getRegions,
-				selectDesc: 'name',
-				selectId: 'regionId',
-				selectVal: '<%= regionId %>',
-			},
-		]);
-	</script>
+	<liferay-frontend:component
+		componentId="CountryRegionDynamicSelect"
+		context='<%=
+			HashMapBuilder.<String, Object>put(
+				"countrySelect", portletDisplay.getNamespace() + "addressCountryId"
+			).put(
+				"countrySelectVal", countryId
+			).put(
+				"regionSelect", portletDisplay.getNamespace() + "addressRegionId"
+			).put(
+				"regionSelectVal", regionId
+			).build()
+		%>'
+		module="js/CountryRegionDynamicSelect"
+	/>
 </aui:form>
 
 <aui:script use="liferay-form">
@@ -152,7 +148,7 @@ PortalUtil.addPortletBreadcrumbEntry(request, editContactInformationDisplayConte
 			{
 				countryId: countryId,
 			},
-			function (response, err) {
+			(response, err) => {
 				if (err) {
 					console.error(err);
 				}

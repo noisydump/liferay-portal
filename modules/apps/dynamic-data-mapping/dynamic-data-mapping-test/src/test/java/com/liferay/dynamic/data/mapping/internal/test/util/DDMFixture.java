@@ -22,17 +22,15 @@ import com.liferay.portal.kernel.bean.BeanProperties;
 import com.liferay.portal.kernel.bean.BeanPropertiesUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
+import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoaderUtil;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
-import com.liferay.portal.kernel.util.ResourceBundleUtil;
 
 import java.util.ResourceBundle;
 
-import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-
-import org.powermock.api.mockito.PowerMockito;
 
 /**
  * @author André de Oliveira
@@ -40,22 +38,21 @@ import org.powermock.api.mockito.PowerMockito;
 public class DDMFixture {
 
 	public void setUp() throws Exception {
-		MockitoAnnotations.initMocks(this);
-
-		setUpBeanPropertiesUtil();
-		setUpDDMStructureLocalServiceUtil();
-		setUpLanguageUtil();
+		_setUpBeanPropertiesUtil();
+		_setUpDDMStructureLocalServiceUtil();
+		_setUpLanguageUtil();
 
 		ClassLoader classLoader = Mockito.mock(ClassLoader.class);
 
-		setUpPortalClassLoaderUtil(classLoader);
-		setUpResourceBundleUtil(classLoader);
+		_setUpPortalClassLoaderUtil(classLoader);
+
+		_setUpResourceBundleUtil();
 	}
 
 	public void tearDown() {
-		tearDownBeanPropertiesUtil();
-		tearDownLanguage();
-		tearDownPortalClassLoaderUtil();
+		_tearDownBeanPropertiesUtil();
+		_tearDownLanguage();
+		_tearDownPortalClassLoaderUtil();
 	}
 
 	public void whenDDMStructureLocalServiceFetchStructure(
@@ -70,7 +67,7 @@ public class DDMFixture {
 		);
 	}
 
-	protected void setUpBeanPropertiesUtil() {
+	private void _setUpBeanPropertiesUtil() {
 		_beanProperties = BeanPropertiesUtil.getBeanProperties();
 
 		BeanPropertiesUtil beanPropertiesUtil = new BeanPropertiesUtil();
@@ -78,17 +75,13 @@ public class DDMFixture {
 		beanPropertiesUtil.setBeanProperties(new BeanPropertiesImpl());
 	}
 
-	protected void setUpDDMStructureLocalServiceUtil() throws Exception {
-		PowerMockito.spy(DDMStructureLocalServiceUtil.class);
-
-		PowerMockito.doReturn(
-			_ddmStructureLocalService
-		).when(
-			DDMStructureLocalServiceUtil.class, "getService"
-		);
+	private void _setUpDDMStructureLocalServiceUtil() {
+		ReflectionTestUtil.setFieldValue(
+			DDMStructureLocalServiceUtil.class, "_service",
+			_ddmStructureLocalService);
 	}
 
-	protected void setUpLanguageUtil() {
+	private void _setUpLanguageUtil() {
 		_language = LanguageUtil.getLanguage();
 
 		LanguageUtil languageUtil = new LanguageUtil();
@@ -96,54 +89,54 @@ public class DDMFixture {
 		languageUtil.setLanguage(Mockito.mock(Language.class));
 	}
 
-	protected void setUpPortalClassLoaderUtil(ClassLoader classLoader) {
+	private void _setUpPortalClassLoaderUtil(ClassLoader classLoader) {
 		_classLoader = PortalClassLoaderUtil.getClassLoader();
 
 		PortalClassLoaderUtil.setClassLoader(classLoader);
 	}
 
-	protected void setUpResourceBundleUtil(ClassLoader classLoader) {
-		PowerMockito.mockStatic(ResourceBundleUtil.class);
-
+	private void _setUpResourceBundleUtil() {
 		ResourceBundle resourceBundle = Mockito.mock(ResourceBundle.class);
 
-		PowerMockito.when(
-			ResourceBundleUtil.getBundle(
-				"content.Language", LocaleUtil.BRAZIL, classLoader)
+		ResourceBundleLoader resourceBundleLoader = Mockito.mock(
+			ResourceBundleLoader.class);
+
+		ResourceBundleLoaderUtil.setPortalResourceBundleLoader(
+			resourceBundleLoader);
+
+		Mockito.when(
+			resourceBundleLoader.loadResourceBundle(LocaleUtil.BRAZIL)
 		).thenReturn(
 			resourceBundle
 		);
 
-		PowerMockito.when(
-			ResourceBundleUtil.getBundle(
-				"content.Language", LocaleUtil.US, classLoader)
+		Mockito.when(
+			resourceBundleLoader.loadResourceBundle(LocaleUtil.US)
 		).thenReturn(
 			resourceBundle
 		);
 	}
 
-	protected void tearDownBeanPropertiesUtil() {
+	private void _tearDownBeanPropertiesUtil() {
 		BeanPropertiesUtil beanPropertiesUtil = new BeanPropertiesUtil();
 
 		beanPropertiesUtil.setBeanProperties(_beanProperties);
 	}
 
-	protected void tearDownLanguage() {
+	private void _tearDownLanguage() {
 		LanguageUtil languageUtil = new LanguageUtil();
 
 		languageUtil.setLanguage(_language);
 	}
 
-	protected void tearDownPortalClassLoaderUtil() {
+	private void _tearDownPortalClassLoaderUtil() {
 		PortalClassLoaderUtil.setClassLoader(_classLoader);
 	}
 
 	private BeanProperties _beanProperties;
 	private ClassLoader _classLoader;
-
-	@Mock
-	private DDMStructureLocalService _ddmStructureLocalService;
-
+	private final DDMStructureLocalService _ddmStructureLocalService =
+		Mockito.mock(DDMStructureLocalService.class);
 	private Language _language;
 
 }

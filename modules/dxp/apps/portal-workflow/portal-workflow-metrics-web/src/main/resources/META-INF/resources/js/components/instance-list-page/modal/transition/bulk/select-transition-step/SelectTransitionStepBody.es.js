@@ -16,9 +16,9 @@ import React, {useMemo} from 'react';
 import ContentView from '../../../../../../shared/components/content-view/ContentView.es';
 import RetryButton from '../../../../../../shared/components/list/RetryButton.es';
 import {capitalize} from '../../../../../../shared/util/util.es';
-import {Card} from './SelectTransitionStepCard.es';
+import Card from './SelectTransitionStepCard.es';
 
-const Body = ({data, setRetry, tasks}) => {
+function Body({data, setRetry, tasks}) {
 	const {workflowTaskTransitions = []} = data;
 
 	const taskSteps = useMemo(() => {
@@ -26,16 +26,16 @@ const Body = ({data, setRetry, tasks}) => {
 
 		tasks.forEach((task) => {
 			if (
-				versions[task.workflowDefinitionVersion] &&
-				versions[task.workflowDefinitionVersion][task.name]
+				versions[task.processVersion] &&
+				versions[task.processVersion][task.name]
 			) {
-				versions[task.workflowDefinitionVersion][task.name].push(task);
+				versions[task.processVersion][task.name].push(task);
 			}
-			else if (versions[task.workflowDefinitionVersion]) {
-				versions[task.workflowDefinitionVersion][task.name] = [task];
+			else if (versions[task.processVersion]) {
+				versions[task.processVersion][task.name] = [task];
 			}
 			else {
-				versions[task.workflowDefinitionVersion] = {
+				versions[task.processVersion] = {
 					[task.name]: [task],
 				};
 			}
@@ -73,27 +73,22 @@ const Body = ({data, setRetry, tasks}) => {
 		return Object.entries(taskTransitions).map((array) => array[1]);
 	}, [workflowTaskTransitions]);
 
-	const statesProps = useMemo(
-		() => ({
-			errorProps: {
-				actionButton: (
-					<RetryButton
-						onClick={() => setRetry((retry) => retry + 1)}
-					/>
-				),
-				className: 'pb-7 pt-8',
-				hideAnimation: true,
-				message: Liferay.Language.get('failed-to-retrieve-tasks'),
-				messageClassName: 'small',
-			},
-			loadingProps: {
-				className: 'mb-4 mt-6 py-8',
-				message: Liferay.Language.get('retrieving-all-transitions'),
-				messageClassName: 'small',
-			},
-		}),
-		[setRetry]
-	);
+	const statesProps = {
+		errorProps: {
+			actionButton: (
+				<RetryButton onClick={() => setRetry((retry) => retry + 1)} />
+			),
+			className: 'pb-7 pt-8',
+			hideAnimation: true,
+			message: Liferay.Language.get('failed-to-retrieve-tasks'),
+			messageClassName: 'small',
+		},
+		loadingProps: {
+			className: 'mb-4 mt-6 py-8',
+			message: Liferay.Language.get('retrieving-all-transitions'),
+			messageClassName: 'small',
+		},
+	};
 
 	return (
 		<ClayModal.Body>
@@ -124,8 +119,8 @@ const Body = ({data, setRetry, tasks}) => {
 			</ContentView>
 		</ClayModal.Body>
 	);
-};
+}
 
 Body.Card = Card;
 
-export {Body};
+export default Body;

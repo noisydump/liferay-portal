@@ -14,9 +14,8 @@
 
 package com.liferay.account.service;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.util.tracker.ServiceTracker;
+import com.liferay.account.model.AccountEntryOrganizationRel;
+import com.liferay.portal.kernel.exception.PortalException;
 
 /**
  * Provides the remote service utility for AccountEntryOrganizationRel. This utility wraps
@@ -37,6 +36,37 @@ public class AccountEntryOrganizationRelServiceUtil {
 	 *
 	 * Never modify this class directly. Add custom service methods to <code>com.liferay.account.service.impl.AccountEntryOrganizationRelServiceImpl</code> and rerun ServiceBuilder to regenerate this class.
 	 */
+	public static AccountEntryOrganizationRel addAccountEntryOrganizationRel(
+			long accountEntryId, long organizationId)
+		throws PortalException {
+
+		return getService().addAccountEntryOrganizationRel(
+			accountEntryId, organizationId);
+	}
+
+	public static void addAccountEntryOrganizationRels(
+			long accountEntryId, long[] organizationIds)
+		throws PortalException {
+
+		getService().addAccountEntryOrganizationRels(
+			accountEntryId, organizationIds);
+	}
+
+	public static void deleteAccountEntryOrganizationRel(
+			long accountEntryId, long organizationId)
+		throws PortalException {
+
+		getService().deleteAccountEntryOrganizationRel(
+			accountEntryId, organizationId);
+	}
+
+	public static void deleteAccountEntryOrganizationRels(
+			long accountEntryId, long[] organizationIds)
+		throws PortalException {
+
+		getService().deleteAccountEntryOrganizationRels(
+			accountEntryId, organizationIds);
+	}
 
 	/**
 	 * Returns the OSGi service identifier.
@@ -48,29 +78,9 @@ public class AccountEntryOrganizationRelServiceUtil {
 	}
 
 	public static AccountEntryOrganizationRelService getService() {
-		return _serviceTracker.getService();
+		return _service;
 	}
 
-	private static ServiceTracker
-		<AccountEntryOrganizationRelService, AccountEntryOrganizationRelService>
-			_serviceTracker;
-
-	static {
-		Bundle bundle = FrameworkUtil.getBundle(
-			AccountEntryOrganizationRelService.class);
-
-		ServiceTracker
-			<AccountEntryOrganizationRelService,
-			 AccountEntryOrganizationRelService> serviceTracker =
-				new ServiceTracker
-					<AccountEntryOrganizationRelService,
-					 AccountEntryOrganizationRelService>(
-						 bundle.getBundleContext(),
-						 AccountEntryOrganizationRelService.class, null);
-
-		serviceTracker.open();
-
-		_serviceTracker = serviceTracker;
-	}
+	private static volatile AccountEntryOrganizationRelService _service;
 
 }

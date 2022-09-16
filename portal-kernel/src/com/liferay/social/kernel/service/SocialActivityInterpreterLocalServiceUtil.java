@@ -14,7 +14,10 @@
 
 package com.liferay.social.kernel.service;
 
-import com.liferay.portal.kernel.bean.PortalBeanLocatorUtil;
+import com.liferay.portal.kernel.exception.PortalException;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * Provides the local service utility for SocialActivityInterpreter. This utility wraps
@@ -35,41 +38,15 @@ public class SocialActivityInterpreterLocalServiceUtil {
 	 *
 	 * Never modify this class directly. Add custom service methods to <code>com.liferay.portlet.social.service.impl.SocialActivityInterpreterLocalServiceImpl</code> and rerun ServiceBuilder to regenerate this class.
 	 */
-
-	/**
-	 * Adds the activity interpreter to the list of available interpreters.
-	 *
-	 * @param activityInterpreter the activity interpreter
-	 */
-	public static void addActivityInterpreter(
-		com.liferay.social.kernel.model.SocialActivityInterpreter
-			activityInterpreter) {
-
-		getService().addActivityInterpreter(activityInterpreter);
-	}
-
-	/**
-	 * Removes the activity interpreter from the list of available interpreters.
-	 *
-	 * @param activityInterpreter the activity interpreter
-	 */
-	public static void deleteActivityInterpreter(
-		com.liferay.social.kernel.model.SocialActivityInterpreter
-			activityInterpreter) {
-
-		getService().deleteActivityInterpreter(activityInterpreter);
-	}
-
-	public static java.util.Map
+	public static Map
 		<String,
-		 java.util.List
-			 <com.liferay.social.kernel.model.SocialActivityInterpreter>>
-				getActivityInterpreters() {
+		 List<com.liferay.social.kernel.model.SocialActivityInterpreter>>
+			getActivityInterpreters() {
 
 		return getService().getActivityInterpreters();
 	}
 
-	public static java.util.List
+	public static List
 		<com.liferay.social.kernel.model.SocialActivityInterpreter>
 			getActivityInterpreters(String selector) {
 
@@ -121,22 +98,15 @@ public class SocialActivityInterpreterLocalServiceUtil {
 	}
 
 	public static void updateActivitySet(long activityId)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		getService().updateActivitySet(activityId);
 	}
 
 	public static SocialActivityInterpreterLocalService getService() {
-		if (_service == null) {
-			_service =
-				(SocialActivityInterpreterLocalService)
-					PortalBeanLocatorUtil.locate(
-						SocialActivityInterpreterLocalService.class.getName());
-		}
-
 		return _service;
 	}
 
-	private static SocialActivityInterpreterLocalService _service;
+	private static volatile SocialActivityInterpreterLocalService _service;
 
 }

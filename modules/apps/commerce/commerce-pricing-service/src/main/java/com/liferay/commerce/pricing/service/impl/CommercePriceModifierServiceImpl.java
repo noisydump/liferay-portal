@@ -17,12 +17,12 @@ package com.liferay.commerce.pricing.service.impl;
 import com.liferay.commerce.price.list.model.CommercePriceList;
 import com.liferay.commerce.pricing.model.CommercePriceModifier;
 import com.liferay.commerce.pricing.service.base.CommercePriceModifierServiceBaseImpl;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
-import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionFactory;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
@@ -30,23 +30,33 @@ import java.math.BigDecimal;
 
 import java.util.List;
 
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
 /**
  * @author Riccardo Alberti
- * @see CommercePriceModifierServiceBaseImpl
  */
+@Component(
+	enabled = false,
+	property = {
+		"json.web.service.context.name=commerce",
+		"json.web.service.context.path=CommercePriceModifier"
+	},
+	service = AopService.class
+)
 public class CommercePriceModifierServiceImpl
 	extends CommercePriceModifierServiceBaseImpl {
 
 	@Override
 	public CommercePriceModifier addCommercePriceModifier(
-			long userId, long groupId, String title, String target,
-			long commercePriceListId, String modifierType,
-			BigDecimal modifierAmount, double priority, boolean active,
-			int displayDateMonth, int displayDateDay, int displayDateYear,
-			int displayDateHour, int displayDateMinute, int expirationDateMonth,
-			int expirationDateDay, int expirationDateYear,
-			int expirationDateHour, int expirationDateMinute,
-			boolean neverExpire, ServiceContext serviceContext)
+			long groupId, String title, String target, long commercePriceListId,
+			String modifierType, BigDecimal modifierAmount, double priority,
+			boolean active, int displayDateMonth, int displayDateDay,
+			int displayDateYear, int displayDateHour, int displayDateMinute,
+			int expirationDateMonth, int expirationDateDay,
+			int expirationDateYear, int expirationDateHour,
+			int expirationDateMinute, boolean neverExpire,
+			ServiceContext serviceContext)
 		throws PortalException {
 
 		_commercePriceListModelResourcePermission.check(
@@ -59,6 +69,33 @@ public class CommercePriceModifierServiceImpl
 			expirationDateMonth, expirationDateDay, expirationDateYear,
 			expirationDateHour, expirationDateMinute, neverExpire,
 			serviceContext);
+	}
+
+	@Override
+	public CommercePriceModifier addOrUpdateCommercePriceModifier(
+			String externalReferenceCode, long commercePriceModifierId,
+			long groupId, String title, String target, long commercePriceListId,
+			String modifierType, BigDecimal modifierAmount, double priority,
+			boolean active, int displayDateMonth, int displayDateDay,
+			int displayDateYear, int displayDateHour, int displayDateMinute,
+			int expirationDateMonth, int expirationDateDay,
+			int expirationDateYear, int expirationDateHour,
+			int expirationDateMinute, boolean neverExpire,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		_commercePriceListModelResourcePermission.check(
+			getPermissionChecker(), commercePriceListId, ActionKeys.UPDATE);
+
+		return commercePriceModifierLocalService.
+			addOrUpdateCommercePriceModifier(
+				externalReferenceCode, getUserId(), commercePriceModifierId,
+				groupId, title, target, commercePriceListId, modifierType,
+				modifierAmount, priority, active, displayDateMonth,
+				displayDateDay, displayDateYear, displayDateHour,
+				displayDateMinute, expirationDateMonth, expirationDateDay,
+				expirationDateYear, expirationDateHour, expirationDateMinute,
+				neverExpire, serviceContext);
 	}
 
 	@Override
@@ -80,12 +117,12 @@ public class CommercePriceModifierServiceImpl
 
 	@Override
 	public CommercePriceModifier fetchByExternalReferenceCode(
-			long companyId, String externalReferenceCode)
+			String externalReferenceCode, long companyId)
 		throws PortalException {
 
 		CommercePriceModifier commercePriceModifier =
 			commercePriceModifierLocalService.fetchByExternalReferenceCode(
-				companyId, externalReferenceCode);
+				externalReferenceCode, companyId);
 
 		if (commercePriceModifier != null) {
 			_commercePriceListModelResourcePermission.check(
@@ -215,36 +252,10 @@ public class CommercePriceModifierServiceImpl
 			neverExpire, serviceContext);
 	}
 
-	@Override
-	public CommercePriceModifier upsertCommercePriceModifier(
-			long userId, long commercePriceModifierId, long groupId,
-			String title, String target, long commercePriceListId,
-			String modifierType, BigDecimal modifierAmount, double priority,
-			boolean active, int displayDateMonth, int displayDateDay,
-			int displayDateYear, int displayDateHour, int displayDateMinute,
-			int expirationDateMonth, int expirationDateDay,
-			int expirationDateYear, int expirationDateHour,
-			int expirationDateMinute, String externalReferenceCode,
-			boolean neverExpire, ServiceContext serviceContext)
-		throws PortalException {
-
-		_commercePriceListModelResourcePermission.check(
-			getPermissionChecker(), commercePriceListId, ActionKeys.UPDATE);
-
-		return commercePriceModifierLocalService.upsertCommercePriceModifier(
-			userId, commercePriceModifierId, groupId, title, target,
-			commercePriceListId, modifierType, modifierAmount, priority, active,
-			displayDateMonth, displayDateDay, displayDateYear, displayDateHour,
-			displayDateMinute, expirationDateMonth, expirationDateDay,
-			expirationDateYear, expirationDateHour, expirationDateMinute,
-			externalReferenceCode, neverExpire, serviceContext);
-	}
-
-	private static volatile ModelResourcePermission<CommercePriceList>
-		_commercePriceListModelResourcePermission =
-			ModelResourcePermissionFactory.getInstance(
-				CommercePriceModifierServiceImpl.class,
-				"_commercePriceListModelResourcePermission",
-				CommercePriceList.class);
+	@Reference(
+		target = "(model.class.name=com.liferay.commerce.price.list.model.CommercePriceList)"
+	)
+	private ModelResourcePermission<CommercePriceList>
+		_commercePriceListModelResourcePermission;
 
 }

@@ -14,6 +14,7 @@
 
 package com.liferay.analytics.settings.internal.configuration;
 
+import com.liferay.analytics.batch.exportimport.AnalyticsDXPEntityBatchExporter;
 import com.liferay.analytics.message.sender.constants.AnalyticsMessagesDestinationNames;
 import com.liferay.analytics.message.sender.constants.AnalyticsMessagesProcessorCommand;
 import com.liferay.analytics.message.sender.model.AnalyticsMessage;
@@ -22,7 +23,6 @@ import com.liferay.analytics.message.storage.service.AnalyticsMessageLocalServic
 import com.liferay.analytics.settings.configuration.AnalyticsConfiguration;
 import com.liferay.analytics.settings.configuration.AnalyticsConfigurationTracker;
 import com.liferay.analytics.settings.internal.model.AnalyticsUserImpl;
-import com.liferay.analytics.settings.internal.security.auth.verifier.AnalyticsSecurityAuthVerifier;
 import com.liferay.analytics.settings.internal.util.EntityModelListenerTracker;
 import com.liferay.analytics.settings.security.constants.AnalyticsSecurityConstants;
 import com.liferay.expando.kernel.model.ExpandoColumn;
@@ -52,6 +52,7 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.security.service.access.policy.model.SAPEntry;
 import com.liferay.portal.security.service.access.policy.service.SAPEntryLocalService;
@@ -76,7 +77,6 @@ import org.osgi.framework.Constants;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ManagedServiceFactory;
-import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Modified;
@@ -111,7 +111,7 @@ public class AnalyticsConfigurationTrackerImpl
 
 	@Override
 	public AnalyticsConfiguration getAnalyticsConfiguration(String pid) {
-		Long companyId = _pidCompanyIdMapping.get(pid);
+		Long companyId = _companyIds.get(pid);
 
 		if (companyId == null) {
 			return _systemAnalyticsConfiguration;
@@ -128,7 +128,7 @@ public class AnalyticsConfigurationTrackerImpl
 			return null;
 		}
 
-		Set<Map.Entry<String, Long>> entries = _pidCompanyIdMapping.entrySet();
+		Set<Map.Entry<String, Long>> entries = _companyIds.entrySet();
 
 		Stream<Map.Entry<String, Long>> stream = entries.stream();
 
@@ -169,7 +169,7 @@ public class AnalyticsConfigurationTrackerImpl
 
 	@Override
 	public long getCompanyId(String pid) {
-		return _pidCompanyIdMapping.getOrDefault(pid, CompanyConstants.SYSTEM);
+		return _companyIds.getOrDefault(pid, CompanyConstants.SYSTEM);
 	}
 
 	@Override
@@ -198,12 +198,11 @@ public class AnalyticsConfigurationTrackerImpl
 			dictionary.get("companyId"), CompanyConstants.SYSTEM);
 
 		if (companyId != CompanyConstants.SYSTEM) {
-			_pidCompanyIdMapping.put(pid, companyId);
-
 			_analyticsConfigurations.put(
 				companyId,
 				ConfigurableUtil.createConfigurable(
 					AnalyticsConfiguration.class, dictionary));
+			_companyIds.put(pid, companyId);
 		}
 
 		if (!_initializedCompanyIds.contains(companyId)) {
@@ -230,26 +229,9 @@ public class AnalyticsConfigurationTrackerImpl
 
 	@Activate
 	@Modified
-	protected void activate(
-		ComponentContext componentContext, Map<String, Object> properties) {
-
-		_componentContext = componentContext;
-
+	protected void activate(Map<String, Object> properties) {
 		_systemAnalyticsConfiguration = ConfigurableUtil.createConfigurable(
 			AnalyticsConfiguration.class, properties);
-	}
-
-	private void _activate() {
-		if (!_active) {
-			_active = true;
-		}
-
-		if (!_authVerifierEnabled) {
-			_componentContext.enableComponent(
-				AnalyticsSecurityAuthVerifier.class.getName());
-
-			_authVerifierEnabled = true;
-		}
 	}
 
 	private void _addAnalyticsAdmin(long companyId) throws Exception {
@@ -352,7 +334,7 @@ public class AnalyticsConfigurationTrackerImpl
 						entityModelListener.getModelClassName(), membershipIds);
 				}
 				catch (Exception exception) {
-					_log.error(exception, exception);
+					_log.error(exception);
 				}
 			}
 
@@ -368,19 +350,6 @@ public class AnalyticsConfigurationTrackerImpl
 		_addAnalyticsMessages("update", analyticsUsers);
 
 		_addAnalyticsMessages("update", contacts);
-	}
-
-	private void _deactivate() {
-		if (_active && !_hasConfiguration()) {
-			_active = false;
-		}
-
-		if (_authVerifierEnabled && !_hasConfiguration()) {
-			_componentContext.disableComponent(
-				AnalyticsSecurityAuthVerifier.class.getName());
-
-			_authVerifierEnabled = false;
-		}
 	}
 
 	private void _deleteAnalyticsAdmin(long companyId) throws Exception {
@@ -404,28 +373,39 @@ public class AnalyticsConfigurationTrackerImpl
 	private void _disable(long companyId) {
 		try {
 			if (companyId != CompanyConstants.SYSTEM) {
-				_analyticsMessageLocalService.deleteAnalyticsMessages(
-					companyId);
+				if (GetterUtil.getBoolean(
+						PropsUtil.get("feature.flag.LRAC-10632"))) {
+
+					_analyticsDXPEntityBatchExporter.unscheduleExportTriggers(
+						companyId);
+				}
+				else {
+					_analyticsMessageLocalService.deleteAnalyticsMessages(
+						companyId);
+				}
 
 				_deleteAnalyticsAdmin(companyId);
 				_deleteSAPEntry(companyId);
 			}
 
-			_deactivate();
+			if (_active && !_hasConfiguration()) {
+				_active = false;
+			}
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 		}
 	}
 
 	private void _enable(long companyId) {
 		try {
-			_activate();
+			_active = true;
+
 			_addAnalyticsAdmin(companyId);
 			_addSAPEntry(companyId);
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 		}
 	}
 
@@ -460,87 +440,119 @@ public class AnalyticsConfigurationTrackerImpl
 	}
 
 	private void _sync(Dictionary<String, ?> dictionary) {
-		if (Validator.isNotNull(dictionary.get("token")) &&
-			Validator.isNull(dictionary.get("previousToken"))) {
+		try {
+			if (Validator.isNotNull(dictionary.get("token")) &&
+				Validator.isNull(dictionary.get("previousToken"))) {
 
-			Collection<EntityModelListener<?>> entityModelListeners =
-				_entityModelListenerTracker.getEntityModelListeners();
+				if (GetterUtil.getBoolean(
+						PropsUtil.get("feature.flag.LRAC-10632"))) {
 
-			for (EntityModelListener<?> entityModelListener :
-					entityModelListeners) {
-
-				try {
-					entityModelListener.syncAll(
+					_analyticsDXPEntityBatchExporter.scheduleExportTriggers(
 						(Long)dictionary.get("companyId"));
 				}
-				catch (Exception exception) {
-					_log.error(exception, exception);
+				else {
+					Collection<EntityModelListener<?>> entityModelListeners =
+						_entityModelListenerTracker.getEntityModelListeners();
+
+					for (EntityModelListener<?> entityModelListener :
+							entityModelListeners) {
+
+						entityModelListener.syncAll(
+							(Long)dictionary.get("companyId"));
+					}
 				}
 			}
-		}
 
-		String[] previousSyncedContactFieldNames = GetterUtil.getStringValues(
-			dictionary.get("previousSyncedContactFieldNames"));
-		String[] previousSyncedUserFieldNames = GetterUtil.getStringValues(
-			dictionary.get("previousSyncedUserFieldNames"));
-		String[] syncedContactFieldNames = GetterUtil.getStringValues(
-			dictionary.get("syncedContactFieldNames"));
-		String[] syncedUserFieldNames = GetterUtil.getStringValues(
-			dictionary.get("syncedUserFieldNames"));
+			String[] previousSyncedContactFieldNames =
+				GetterUtil.getStringValues(
+					dictionary.get("previousSyncedContactFieldNames"));
+			String[] previousSyncedUserFieldNames = GetterUtil.getStringValues(
+				dictionary.get("previousSyncedUserFieldNames"));
+			String[] syncedContactFieldNames = GetterUtil.getStringValues(
+				dictionary.get("syncedContactFieldNames"));
+			String[] syncedUserFieldNames = GetterUtil.getStringValues(
+				dictionary.get("syncedUserFieldNames"));
 
-		Arrays.sort(previousSyncedContactFieldNames);
-		Arrays.sort(previousSyncedUserFieldNames);
-		Arrays.sort(syncedContactFieldNames);
-		Arrays.sort(syncedUserFieldNames);
+			Arrays.sort(previousSyncedContactFieldNames);
+			Arrays.sort(previousSyncedUserFieldNames);
+			Arrays.sort(syncedContactFieldNames);
+			Arrays.sort(syncedUserFieldNames);
 
-		if (!Arrays.equals(
-				previousSyncedUserFieldNames, syncedUserFieldNames)) {
+			if (GetterUtil.getBoolean(
+					PropsUtil.get("feature.flag.LRAC-10632"))) {
 
-			_syncUserCustomFields(
-				(Long)dictionary.get("companyId"), syncedUserFieldNames);
-		}
+				if (!Arrays.equals(
+						previousSyncedUserFieldNames, syncedUserFieldNames) ||
+					!Arrays.equals(
+						previousSyncedContactFieldNames,
+						syncedContactFieldNames) ||
+					!Arrays.equals(
+						previousSyncedUserFieldNames, syncedUserFieldNames)) {
 
-		if (!Arrays.equals(
-				previousSyncedContactFieldNames, syncedContactFieldNames) ||
-			!Arrays.equals(
-				previousSyncedUserFieldNames, syncedUserFieldNames)) {
+					_analyticsDXPEntityBatchExporter.refreshExportTrigger(
+						(Long)dictionary.get("companyId"),
+						"export-user-analytics-dxp-entities");
+				}
 
-			_syncDefaultFields(
-				(Long)dictionary.get("companyId"), syncedContactFieldNames,
-				syncedUserFieldNames);
-		}
+				_analyticsDXPEntityBatchExporter.export(
+					(Long)dictionary.get("companyId"));
 
-		if (GetterUtil.getBoolean(dictionary.get("syncAllContacts"))) {
-			if (!GetterUtil.getBoolean(
-					dictionary.get("previousSyncAllContacts"))) {
-
-				_syncContacts((Long)dictionary.get("companyId"));
+				return;
 			}
+
+			if (!Arrays.equals(
+					previousSyncedUserFieldNames, syncedUserFieldNames)) {
+
+				_syncUserCustomFields(
+					(Long)dictionary.get("companyId"), syncedUserFieldNames);
+			}
+
+			if (!Arrays.equals(
+					previousSyncedContactFieldNames, syncedContactFieldNames) ||
+				!Arrays.equals(
+					previousSyncedUserFieldNames, syncedUserFieldNames)) {
+
+				_syncDefaultFields(
+					(Long)dictionary.get("companyId"), syncedContactFieldNames,
+					syncedUserFieldNames);
+			}
+
+			if (GetterUtil.getBoolean(dictionary.get("syncAllContacts"))) {
+				if (!GetterUtil.getBoolean(
+						dictionary.get("previousSyncAllContacts"))) {
+
+					_syncContacts((Long)dictionary.get("companyId"));
+				}
+			}
+			else {
+				_syncOrganizationUsers(
+					(String[])dictionary.get("syncedOrganizationIds"));
+				_syncUserGroupUsers(
+					(String[])dictionary.get("syncedUserGroupIds"));
+			}
+
+			Message message = new Message();
+
+			message.put("command", AnalyticsMessagesProcessorCommand.SEND);
+			message.put("companyId", dictionary.get("companyId"));
+
+			if (_log.isInfoEnabled()) {
+				_log.info("Queueing send analytics messages message");
+			}
+
+			TransactionCommitCallbackUtil.registerCallback(
+				() -> {
+					_messageBus.sendMessage(
+						AnalyticsMessagesDestinationNames.
+							ANALYTICS_MESSAGES_PROCESSOR,
+						message);
+
+					return null;
+				});
 		}
-		else {
-			_syncOrganizationUsers(
-				(String[])dictionary.get("syncedOrganizationIds"));
-			_syncUserGroupUsers((String[])dictionary.get("syncedUserGroupIds"));
+		catch (Exception exception) {
+			_log.error(exception);
 		}
-
-		Message message = new Message();
-
-		message.put("command", AnalyticsMessagesProcessorCommand.SEND);
-		message.put("companyId", dictionary.get("companyId"));
-
-		if (_log.isInfoEnabled()) {
-			_log.info("Queueing send analytics messages message");
-		}
-
-		TransactionCommitCallbackUtil.registerCallback(
-			() -> {
-				_messageBus.sendMessage(
-					AnalyticsMessagesDestinationNames.
-						ANALYTICS_MESSAGES_PROCESSOR,
-					message);
-
-				return null;
-			});
 	}
 
 	private void _syncContacts(long companyId) {
@@ -693,7 +705,7 @@ public class AnalyticsConfigurationTrackerImpl
 	}
 
 	private void _unmapPid(String pid) {
-		Long companyId = _pidCompanyIdMapping.remove(pid);
+		Long companyId = _companyIds.remove(pid);
 
 		if (companyId != null) {
 			_analyticsConfigurations.remove(companyId);
@@ -718,8 +730,6 @@ public class AnalyticsConfigurationTrackerImpl
 
 	private static final Map<String, String> _defaultFieldNames =
 		HashMapBuilder.put(
-			"accountId", "Integer"
-		).put(
 			"agreedToTermsOfUse", "boolean"
 		).put(
 			"birthday", "date"
@@ -812,17 +822,18 @@ public class AnalyticsConfigurationTrackerImpl
 		new ConcurrentHashMap<>();
 
 	@Reference
-	private AnalyticsMessageLocalService _analyticsMessageLocalService;
+	private AnalyticsDXPEntityBatchExporter _analyticsDXPEntityBatchExporter;
 
-	private boolean _authVerifierEnabled;
+	@Reference
+	private AnalyticsMessageLocalService _analyticsMessageLocalService;
 
 	@Reference
 	private ClassNameLocalService _classNameLocalService;
 
+	private final Map<String, Long> _companyIds = new ConcurrentHashMap<>();
+
 	@Reference
 	private CompanyLocalService _companyLocalService;
-
-	private ComponentContext _componentContext;
 
 	@Reference
 	private ConfigurationAdmin _configurationAdmin;
@@ -837,9 +848,6 @@ public class AnalyticsConfigurationTrackerImpl
 
 	@Reference
 	private MessageBus _messageBus;
-
-	private final Map<String, Long> _pidCompanyIdMapping =
-		new ConcurrentHashMap<>();
 
 	@Reference
 	private RoleLocalService _roleLocalService;

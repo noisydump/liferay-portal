@@ -15,21 +15,21 @@
 AUI.add(
 	'liferay-document-library',
 	(A) => {
-		var Lang = A.Lang;
+		const Lang = A.Lang;
 
-		var WIN = A.config.win;
+		const WIN = A.config.win;
 
-		var HTML5_UPLOAD =
+		const HTML5_UPLOAD =
 			WIN && WIN.File && WIN.FormData && WIN.XMLHttpRequest;
 
-		var TPL_MOVE_FORM =
+		const TPL_MOVE_FORM =
 			'<form action="{actionUrl}" class="hide" method="POST"><input name="{namespace}cmd" value="move"/>' +
 			'<input name="{namespace}newFolderId" value="{newFolderId}"/>' +
 			'<input name="{namespace}{parameterName}" value="{parameterValue}"/>' +
 			'<input name="{namespace}redirect" value="{redirectUrl}"/>' +
 			'</form>';
 
-		var DocumentLibrary = A.Component.create({
+		const DocumentLibrary = A.Component.create({
 			ATTRS: {
 				downloadEntryUrl: {
 					validator: Lang.isString,
@@ -80,9 +80,9 @@ AUI.add(
 
 			prototype: {
 				_handleSearchContainerRowToggled(event) {
-					var instance = this;
+					const instance = this;
 
-					var selectedElements = event.elements.allSelectedElements;
+					const selectedElements = event.elements.allSelectedElements;
 
 					if (selectedElements.size() > 0) {
 						instance._selectedFileEntries = selectedElements.get(
@@ -93,21 +93,21 @@ AUI.add(
 						instance._selectedFileEntries = [];
 					}
 
-					var bulkSelection =
+					const bulkSelection =
 						instance._searchContainer.select &&
 						instance._searchContainer.select.get('bulkSelection');
 
-					var form = instance.get('form').node;
+					const form = instance.get('form').node;
 
 					form.get(instance.NS + 'selectAll').val(bulkSelection);
 				},
 
 				_moveCurrentSelection(newFolderId) {
-					var instance = this;
+					const instance = this;
 
-					var form = instance.get('form').node;
+					const form = instance.get('form').node;
 
-					var actionUrl = instance.get('editEntryUrl');
+					const actionUrl = instance.get('editEntryUrl');
 
 					form.attr('action', actionUrl);
 					form.attr('method', 'POST');
@@ -120,16 +120,16 @@ AUI.add(
 				},
 
 				_moveSingleElement(newFolderId, parameterName, parameterValue) {
-					var instance = this;
+					const instance = this;
 
-					var actionUrl = instance.get('editEntryUrl');
-					var namespace = instance.NS;
-					var originalForm = instance.get('form').node;
-					var redirectUrl = originalForm
+					const actionUrl = instance.get('editEntryUrl');
+					const namespace = instance.NS;
+					const originalForm = instance.get('form').node;
+					const redirectUrl = originalForm
 						.get(namespace + 'redirect')
 						.val();
 
-					var formNode = A.Node.create(
+					const formNode = A.Node.create(
 						A.Lang.sub(TPL_MOVE_FORM, {
 							actionUrl,
 							namespace,
@@ -145,14 +145,14 @@ AUI.add(
 					submitForm(formNode, actionUrl, false);
 				},
 
-				_moveToFolder(obj) {
-					var instance = this;
+				_moveToFolder(object) {
+					const instance = this;
 
-					var dropTarget = obj.targetItem;
+					const dropTarget = object.targetItem;
 
-					var selectedItems = obj.selectedItems;
+					const selectedItems = object.selectedItems;
 
-					var folderId = dropTarget.attr('data-folder-id');
+					const folderId = dropTarget.attr('data-folder-id');
 
 					if (folderId) {
 						if (
@@ -167,7 +167,7 @@ AUI.add(
 				},
 
 				_moveToTrash() {
-					var instance = this;
+					const instance = this;
 
 					instance._processAction(
 						'move_to_trash',
@@ -176,20 +176,20 @@ AUI.add(
 				},
 
 				_openDocument(event) {
-					var instance = this;
+					const instance = this;
 
 					Liferay.Util.openDocument(
 						event.webDavUrl,
 						null,
 						(exception) => {
-							var errorMessage = Lang.sub(
+							const errorMessage = Lang.sub(
 								Liferay.Language.get(
 									'cannot-open-the-requested-document-due-to-the-following-reason'
 								),
 								[exception.message]
 							);
 
-							var openMSOfficeError = instance.ns(
+							const openMSOfficeError = instance.ns(
 								'openMSOfficeError'
 							);
 
@@ -202,69 +202,15 @@ AUI.add(
 					);
 				},
 
-				_openModalCategories() {
-					var instance = this;
-
-					Liferay.componentReady(
-						instance.NS + 'EditCategoriesComponent'
-					).then((editCategoriesComponent) => {
-						var bulkSelection =
-							instance._searchContainer.select &&
-							instance._searchContainer.select.get(
-								'bulkSelection'
-							);
-
-						editCategoriesComponent.open(
-							instance._selectedFileEntries,
-							bulkSelection,
-							instance.getFolderId()
-						);
-					});
-				},
-
-				_openModalMove() {
-					var instance = this;
-
-					var selectedItems = 0;
-
-					if (instance._searchContainer.select) {
-						selectedItems = instance._searchContainer.select
-							.getAllSelectedElements()
-							.filter(':enabled')
-							.size();
-					}
-
-					this.showFolderDialog(selectedItems);
-				},
-
-				_openModalTags() {
-					var instance = this;
-
-					Liferay.componentReady(
-						instance.NS + 'EditTagsComponent'
-					).then((editTagsComponent) => {
-						var bulkSelection =
-							instance._searchContainer.select &&
-							instance._searchContainer.select.get(
-								'bulkSelection'
-							);
-
-						editTagsComponent.open(
-							instance._selectedFileEntries,
-							bulkSelection,
-							instance.getFolderId()
-						);
-					});
-				},
-
 				_plugUpload(event, config) {
-					var instance = this;
+					const instance = this;
 
 					instance.plug(Liferay.DocumentLibraryUpload, {
 						appViewEntryTemplates: config.appViewEntryTemplates,
 						columnNames: config.columnNames,
 						dimensions: config.folders.dimensions,
 						displayStyle: config.displayStyle,
+						documentLibraryNamespace: instance.NS,
 						entriesContainer: instance._entriesContainer,
 						folderId: instance._folderId,
 						maxFileSize: config.maxFileSize,
@@ -276,11 +222,11 @@ AUI.add(
 				},
 
 				_processAction(action, url, redirectUrl) {
-					var instance = this;
+					const instance = this;
 
-					var namespace = instance.NS;
+					const namespace = instance.NS;
 
-					var form = instance.get('form').node;
+					const form = instance.get('form').node;
 
 					redirectUrl = redirectUrl || location.href;
 
@@ -301,7 +247,7 @@ AUI.add(
 				},
 
 				destructor() {
-					var instance = this;
+					const instance = this;
 
 					A.Array.invoke(instance._eventHandles, 'detach');
 
@@ -309,128 +255,17 @@ AUI.add(
 				},
 
 				getFolderId() {
-					var instance = this;
+					const instance = this;
 
 					return instance._folderId;
 				},
 
-				handleActionItemClicked(event) {
-					var instance = this;
-
-					var action = event.data.item.data.action;
-
-					var namespace = instance.NS;
-
-					var url = instance.get('editEntryUrl');
-
-					if (action === 'editTags') {
-						instance._openModalTags();
-
-						action = null;
-					}
-					else if (action === 'editCategories') {
-						instance._openModalCategories();
-
-						action = null;
-					}
-					else if (action === 'move' || action === 'moveEntries') {
-						instance._openModalMove();
-
-						action = null;
-					}
-					else if (action === 'download') {
-						url = instance.get('downloadEntryUrl');
-					}
-					else if (action === 'deleteEntries') {
-						if (instance.get('trashEnabled')) {
-							action = 'move_to_trash';
-						}
-						else if (
-							confirm(
-								Liferay.Language.get(
-									'are-you-sure-you-want-to-delete-the-selected-entries'
-								)
-							)
-						) {
-							action = 'delete';
-						}
-						else {
-							action = null;
-						}
-					}
-					else if (action === 'checkin') {
-						Liferay.componentReady(
-							instance.ns('DocumentLibraryCheckinModal')
-						).then((documentLibraryCheckinModal) => {
-							documentLibraryCheckinModal.open(
-								(versionIncrease, changeLog) => {
-									var form = instance.get('form').node;
-
-									form.get(namespace + 'changeLog').val(
-										changeLog
-									);
-									form.get(namespace + 'versionIncrease').val(
-										versionIncrease
-									);
-
-									instance._processAction('checkin', url);
-								}
-							);
-						});
-						action = null;
-					}
-
-					if (action) {
-						instance._processAction(action, url);
-					}
-				},
-
-				handleCreationMenuMoreButtonClicked(event) {
-					var instance = this;
-
-					event.preventDefault();
-
-					Liferay.Util.openModal({
-						title: Liferay.Language.get('more'),
-						url: instance.get('openViewMoreFileEntryTypesURL'),
-					});
-				},
-
-				handleFilterItemClicked(event) {
-					var instance = this;
-
-					var itemData = event.data.item.data;
-
-					if (itemData.action === 'openDocumentTypesSelector') {
-						Liferay.Util.openSelectionModal({
-							onSelect: (selectedItem) => {
-								if (selectedItem) {
-									var uri = instance.get(
-										'viewFileEntryTypeURL'
-									);
-
-									uri = Liferay.Util.addParams(
-										instance.ns('fileEntryTypeId=') +
-											selectedItem.value,
-										uri
-									);
-
-									Liferay.Util.navigate(uri);
-								}
-							},
-							selectEventName: instance.ns('selectFileEntryType'),
-							title: Liferay.Language.get('select-document-type'),
-							url: instance.get('selectFileEntryTypeURL'),
-						});
-					}
-				},
-
 				initializer(config) {
-					var instance = this;
+					const instance = this;
 
-					var eventHandles = [];
+					const eventHandles = [];
 
-					var documentLibraryContainer = instance.byId(
+					const documentLibraryContainer = instance.byId(
 						'documentLibraryContainer'
 					);
 
@@ -441,9 +276,9 @@ AUI.add(
 						'entriesContainer'
 					);
 
-					var namespace = instance.NS;
+					const namespace = instance.NS;
 
-					var searchContainer = Liferay.SearchContainer.get(
+					const searchContainer = Liferay.SearchContainer.get(
 						namespace + instance.get('searchContainerId')
 					);
 
@@ -455,6 +290,7 @@ AUI.add(
 						'move-to-trash',
 						A.bind('_moveToTrash', instance)
 					);
+
 					eventHandles.push(
 						searchContainer.on(
 							'rowToggled',
@@ -465,7 +301,7 @@ AUI.add(
 
 					instance._searchContainer = searchContainer;
 
-					var foldersConfig = config.folders;
+					const foldersConfig = config.folders;
 
 					instance._folderId = foldersConfig.defaultParentFolderId;
 
@@ -495,13 +331,13 @@ AUI.add(
 				},
 
 				showFolderDialog(selectedItems, parameterName, parameterValue) {
-					var instance = this;
+					const instance = this;
 
-					var namespace = instance.NS;
+					const namespace = instance.NS;
 
-					var dialogTitle = '';
+					let dialogTitle = '';
 
-					if (selectedItems == 1) {
+					if (Number(selectedItems) === 1) {
 						dialogTitle = Liferay.Language.get(
 							'select-destination-folder-for-x-item'
 						);

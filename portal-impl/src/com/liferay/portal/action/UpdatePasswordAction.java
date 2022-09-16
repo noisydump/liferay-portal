@@ -18,6 +18,8 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.NoSuchUserException;
 import com.liferay.portal.kernel.exception.UserLockoutException;
 import com.liferay.portal.kernel.exception.UserPasswordException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.model.Ticket;
@@ -168,6 +170,9 @@ public class UpdatePasswordAction implements Action {
 			TicketLocalServiceUtil.deleteTicket(ticket);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return null;
@@ -176,9 +181,9 @@ public class UpdatePasswordAction implements Action {
 	protected boolean isValidatePassword(
 		HttpServletRequest httpServletRequest) {
 
-		HttpSession session = httpServletRequest.getSession();
+		HttpSession httpSession = httpServletRequest.getSession();
 
-		Boolean setupWizardPasswordUpdated = (Boolean)session.getAttribute(
+		Boolean setupWizardPasswordUpdated = (Boolean)httpSession.getAttribute(
 			WebKeys.SETUP_WIZARD_PASSWORD_UPDATED);
 
 		if ((setupWizardPasswordUpdated != null) &&
@@ -205,11 +210,12 @@ public class UpdatePasswordAction implements Action {
 		Map<String, String[]> parameterMap =
 			httpServletRequest.getParameterMap();
 
-		StringBundler sb = new StringBundler(7 + (parameterMap.size() * 5));
+		StringBundler sb = new StringBundler(8 + (parameterMap.size() * 5));
 
 		sb.append("<html><body onload=\"document.fm.submit();\">");
 		sb.append("<form action=\"");
 		sb.append(PortalUtil.getPortalURL(httpServletRequest));
+		sb.append(PortalUtil.getPathContext());
 		sb.append("/c/portal/update_password\" method=\"post\" name=\"fm\">");
 
 		for (String name : parameterMap.keySet()) {
@@ -267,16 +273,20 @@ public class UpdatePasswordAction implements Action {
 			PwdToolkitUtilThreadLocal.setValidate(previousValidate);
 		}
 
-		if (ticket != null) {
-			TicketLocalServiceUtil.deleteTicket(ticket);
-
-			UserLocalServiceUtil.updatePasswordReset(userId, false);
-		}
-
 		User user = UserLocalServiceUtil.getUser(userId);
 
 		Company company = CompanyLocalServiceUtil.getCompanyById(
 			user.getCompanyId());
+
+		if (ticket != null) {
+			TicketLocalServiceUtil.deleteTicket(ticket);
+
+			UserLocalServiceUtil.updatePasswordReset(userId, false);
+
+			if (company.isStrangersVerify()) {
+				UserLocalServiceUtil.updateEmailAddressVerified(userId, true);
+			}
+		}
 
 		String login = null;
 
@@ -296,5 +306,8 @@ public class UpdatePasswordAction implements Action {
 			httpServletRequest, httpServletResponse, login, password1, false,
 			null);
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		UpdatePasswordAction.class);
 
 }

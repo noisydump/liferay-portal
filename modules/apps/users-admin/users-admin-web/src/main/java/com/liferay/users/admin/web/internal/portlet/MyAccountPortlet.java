@@ -14,11 +14,24 @@
 
 package com.liferay.users.admin.web.internal.portlet;
 
+import com.liferay.petra.lang.SafeCloseable;
+import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
+import com.liferay.portal.kernel.security.auth.PrincipalException;
+import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.users.admin.constants.UsersAdminPortletKeys;
 
+import java.io.IOException;
+
+import java.util.Objects;
+
+import javax.portlet.ActionRequest;
+import javax.portlet.ActionResponse;
 import javax.portlet.Portlet;
+import javax.portlet.PortletException;
+import javax.portlet.RenderRequest;
+import javax.portlet.RenderResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -46,17 +59,46 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.init-param.template-path=/META-INF/resources/",
 		"javax.portlet.name=" + UsersAdminPortletKeys.MY_ACCOUNT,
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=administrator"
+		"javax.portlet.security-role-ref=administrator",
+		"javax.portlet.version=3.0"
 	},
 	service = Portlet.class
 )
 public class MyAccountPortlet extends MVCPortlet {
 
-	@Reference(
-		target = "(&(release.bundle.symbolic.name=com.liferay.users.admin.web)(&(release.schema.version>=1.0.0)(!(release.schema.version>=2.0.0))))",
-		unbind = "-"
-	)
-	protected void setRelease(Release release) {
+	@Override
+	public void render(
+			RenderRequest renderRequest, RenderResponse renderResponse)
+		throws IOException, PortletException {
+
+		if (Objects.equals(
+				getPath(renderRequest, renderResponse), "/view.jsp")) {
+
+			SessionErrors.add(renderRequest, PrincipalException.class);
+
+			include("/error.jsp", renderRequest, renderResponse);
+
+			return;
+		}
+
+		super.render(renderRequest, renderResponse);
 	}
+
+	@Override
+	protected boolean callActionMethod(
+			ActionRequest actionRequest, ActionResponse actionResponse)
+		throws PortletException {
+
+		try (SafeCloseable safeCloseable =
+				CTCollectionThreadLocal.setProductionModeWithSafeCloseable()) {
+
+			return super.callActionMethod(actionRequest, actionResponse);
+		}
+	}
+
+	@Reference(
+		target = "(&(release.bundle.symbolic.name=com.liferay.users.admin.web)(&(release.schema.version>=1.0.0)(!(release.schema.version>=2.0.0))))"
+	)
+	private Release _release;
 
 }

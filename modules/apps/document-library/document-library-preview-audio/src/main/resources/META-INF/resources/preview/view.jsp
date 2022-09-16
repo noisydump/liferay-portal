@@ -23,7 +23,7 @@ List<String> previewFileURLs = (List<String>)request.getAttribute(DLPreviewAudio
 <liferay-util:html-top
 	outputKey="document_library_preview_audio_css"
 >
-	<link href="<%= PortalUtil.getStaticResourceURL(request, application.getContextPath() + "/preview/css/main.css") %>" rel="stylesheet" type="text/css" />
+	<link href="<%= PortalUtil.getStaticResourceURL(request, PortalUtil.getPathModule() + "/document-library-preview-css/css/main.css") %>" rel="stylesheet" />
 </liferay-util:html-top>
 
 <div class="preview-file">
@@ -47,14 +47,13 @@ List<String> previewFileURLs = (List<String>)request.getAttribute(DLPreviewAudio
 						type = "audio/ogg";
 					}
 				}
-
-				if (type != null) {
 			%>
 
+				<c:if test="<%= type != null %>">
 					<source src="<%= previewFileURL %>" type="<%= type %>" />
+				</c:if>
 
 			<%
-				}
 			}
 			%>
 

@@ -25,9 +25,11 @@ String navigation = ParamUtil.getString(request, "navigation", "all-pages");
 long categoryId = ParamUtil.getLong(request, "categoryId");
 String tagName = ParamUtil.getString(request, "tag");
 
-PortletURL portletURL = renderResponse.createRenderURL();
-
-portletURL.setParameter("nodeName", node.getName());
+PortletURL portletURL = PortletURLBuilder.createRenderURL(
+	renderResponse
+).setParameter(
+	"nodeName", node.getName()
+).buildPortletURL();
 
 if (wikiPage != null) {
 	portletURL.setParameter("title", wikiPage.getTitle());
@@ -48,17 +50,19 @@ else if (navigation.equals("draft-pages")) {
 	PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(request, "draft-pages"), portletURL.toString());
 }
 else if (navigation.equals("history")) {
-	PortletURL viewPageHistoryURL = PortletURLUtil.clone(portletURL, renderResponse);
-
 	if (wikiPage != null) {
 		portletURL.setParameter("mvcRenderCommandName", "/wiki/view");
 
 		PortalUtil.addPortletBreadcrumbEntry(request, wikiPage.getTitle(), portletURL.toString());
 	}
 
-	viewPageHistoryURL.setParameter("mvcRenderCommandName", "/wiki/view_page_activities");
-
-	PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(request, "history"), viewPageHistoryURL.toString());
+	PortalUtil.addPortletBreadcrumbEntry(
+		request, LanguageUtil.get(request, "history"),
+		PortletURLBuilder.create(
+			PortletURLUtil.clone(portletURL, renderResponse)
+		).setMVCRenderCommandName(
+			"/wiki/view_page_activities"
+		).buildString());
 }
 else if (navigation.equals("incoming-links")) {
 	if (wikiPage != null) {
@@ -263,6 +267,7 @@ for (int i = 0; i < pages.size(); i++) {
 />
 
 <liferay-ui:search-iterator
+	markupView="deprecated"
 	paginate='<%= navigation.equals("history") ? false : true %>'
 	searchContainer="<%= searchContainer %>"
 />
@@ -274,7 +279,7 @@ for (int i = 0; i < pages.size(); i++) {
 				'input[name=<portlet:namespace />rowIds]'
 			);
 
-			Array.prototype.forEach.call(rowIdsNodes, function (rowIdsNode, index) {
+			Array.prototype.forEach.call(rowIdsNodes, (rowIdsNode, index) => {
 				if (index > 1) {
 					rowIdsNode.checked = false;
 				}
@@ -305,7 +310,7 @@ for (int i = 0; i < pages.size(); i++) {
 
 			var compareButton = document.getElementById('<portlet:namespace />compare');
 
-			compareButton.addEventListener('click', function (event) {
+			compareButton.addEventListener('click', (event) => {
 				<portlet:renderURL var="compareVersionURL">
 					<portlet:param name="mvcRenderCommandName" value="/wiki/compare_versions" />
 					<portlet:param name="backURL" value="<%= currentURL %>" />
@@ -365,7 +370,7 @@ for (int i = 0; i < pages.size(); i++) {
 				searchContainer,
 				'click',
 				'input[name=<portlet:namespace />rowIds]',
-				function (event) {
+				(event) => {
 					<portlet:namespace />updateRowsChecked(event.delegateTarget);
 				}
 			);

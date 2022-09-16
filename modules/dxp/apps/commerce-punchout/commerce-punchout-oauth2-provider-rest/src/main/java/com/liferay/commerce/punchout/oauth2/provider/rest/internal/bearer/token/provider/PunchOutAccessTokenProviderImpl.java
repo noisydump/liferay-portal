@@ -22,6 +22,7 @@ import com.liferay.portal.kernel.cluster.ClusterMasterExecutor;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.security.SecureRandomUtil;
+import com.liferay.portal.kernel.util.Base64;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.MethodHandler;
 import com.liferay.portal.kernel.util.MethodKey;
@@ -166,7 +167,8 @@ public class PunchOutAccessTokenProviderImpl
 				PunchOutAccessToken punchOutAccessToken =
 					punchOutAccessTokenDelayed.getPunchOutAccessToken();
 
-				String tokenString = new String(punchOutAccessToken.getToken());
+				String tokenString = Base64.encodeToURL(
+					punchOutAccessToken.getToken());
 
 				if (token.equals(tokenString)) {
 					punchOutAccessTokenAtomicReference.compareAndSet(
@@ -189,11 +191,8 @@ public class PunchOutAccessTokenProviderImpl
 		PunchOutAccessToken punchOutAccessToken = new PunchOutAccessToken();
 
 		punchOutAccessToken.setGroupId(groupId);
-
 		punchOutAccessToken.setCommerceAccountId(commerceAccountId);
-
 		punchOutAccessToken.setCurrencyCode(currencyCode);
-
 		punchOutAccessToken.setIssuedAt(System.currentTimeMillis());
 
 		int expiresInSeconds =
@@ -204,15 +203,12 @@ public class PunchOutAccessTokenProviderImpl
 
 		punchOutAccessToken.setExpiresIn(expiresInMilliseconds);
 
-		byte[] token = _generateSecureRandomBytes(
-			_punchOutAccessTokenProviderConfiguration.accessTokenKeyByteSize());
-
-		punchOutAccessToken.setToken(token);
-
+		punchOutAccessToken.setToken(
+			_generateSecureRandomBytes(
+				_punchOutAccessTokenProviderConfiguration.
+					accessTokenKeyByteSize()));
 		punchOutAccessToken.setUserEmailAddress(userEmailAddress);
-
 		punchOutAccessToken.setCommerceOrderUuid(commerceOrderUuid);
-
 		punchOutAccessToken.setPunchOutSessionAttributes(
 			punchOutSessionAttributes);
 
@@ -238,7 +234,8 @@ public class PunchOutAccessTokenProviderImpl
 			PunchOutAccessToken punchOutAccessToken =
 				punchOutAccessTokenDelayed.getPunchOutAccessToken();
 
-			String tokenString = new String(punchOutAccessToken.getToken());
+			String tokenString = Base64.encodeToURL(
+				punchOutAccessToken.getToken());
 
 			if (token.equals(tokenString)) {
 				return punchOutAccessToken;

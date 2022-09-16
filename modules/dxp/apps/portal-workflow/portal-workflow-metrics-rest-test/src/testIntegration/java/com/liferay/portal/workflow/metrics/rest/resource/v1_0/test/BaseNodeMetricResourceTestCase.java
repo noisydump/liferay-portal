@@ -28,7 +28,6 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
@@ -51,8 +50,6 @@ import com.liferay.portal.workflow.metrics.rest.client.pagination.Pagination;
 import com.liferay.portal.workflow.metrics.rest.client.resource.v1_0.NodeMetricResource;
 import com.liferay.portal.workflow.metrics.rest.client.serdes.v1_0.NodeMetricSerDes;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import java.text.DateFormat;
@@ -62,9 +59,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -72,8 +71,6 @@ import javax.annotation.Generated;
 
 import javax.ws.rs.core.MultivaluedHashMap;
 
-import org.apache.commons.beanutils.BeanUtils;
-import org.apache.commons.beanutils.BeanUtilsBean;
 import org.apache.commons.lang.time.DateUtils;
 
 import org.junit.After;
@@ -195,24 +192,24 @@ public abstract class BaseNodeMetricResourceTestCase {
 
 	@Test
 	public void testGetProcessNodeMetricsPage() throws Exception {
-		Page<NodeMetric> page = nodeMetricResource.getProcessNodeMetricsPage(
-			testGetProcessNodeMetricsPage_getProcessId(), null,
-			RandomTestUtil.nextDate(), RandomTestUtil.nextDate(),
-			RandomTestUtil.randomString(), Pagination.of(1, 2), null);
-
-		Assert.assertEquals(0, page.getTotalCount());
-
 		Long processId = testGetProcessNodeMetricsPage_getProcessId();
 		Long irrelevantProcessId =
 			testGetProcessNodeMetricsPage_getIrrelevantProcessId();
 
-		if ((irrelevantProcessId != null)) {
+		Page<NodeMetric> page = nodeMetricResource.getProcessNodeMetricsPage(
+			processId, null, RandomTestUtil.nextDate(),
+			RandomTestUtil.nextDate(), RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(), Pagination.of(1, 10), null);
+
+		Assert.assertEquals(0, page.getTotalCount());
+
+		if (irrelevantProcessId != null) {
 			NodeMetric irrelevantNodeMetric =
 				testGetProcessNodeMetricsPage_addNodeMetric(
 					irrelevantProcessId, randomIrrelevantNodeMetric());
 
 			page = nodeMetricResource.getProcessNodeMetricsPage(
-				irrelevantProcessId, null, null, null, null,
+				irrelevantProcessId, null, null, null, null, null,
 				Pagination.of(1, 2), null);
 
 			Assert.assertEquals(1, page.getTotalCount());
@@ -230,7 +227,8 @@ public abstract class BaseNodeMetricResourceTestCase {
 			processId, randomNodeMetric());
 
 		page = nodeMetricResource.getProcessNodeMetricsPage(
-			processId, null, null, null, null, Pagination.of(1, 2), null);
+			processId, null, null, null, null, null, Pagination.of(1, 10),
+			null);
 
 		Assert.assertEquals(2, page.getTotalCount());
 
@@ -254,14 +252,14 @@ public abstract class BaseNodeMetricResourceTestCase {
 			processId, randomNodeMetric());
 
 		Page<NodeMetric> page1 = nodeMetricResource.getProcessNodeMetricsPage(
-			processId, null, null, null, null, Pagination.of(1, 2), null);
+			processId, null, null, null, null, null, Pagination.of(1, 2), null);
 
 		List<NodeMetric> nodeMetrics1 = (List<NodeMetric>)page1.getItems();
 
 		Assert.assertEquals(nodeMetrics1.toString(), 2, nodeMetrics1.size());
 
 		Page<NodeMetric> page2 = nodeMetricResource.getProcessNodeMetricsPage(
-			processId, null, null, null, null, Pagination.of(2, 2), null);
+			processId, null, null, null, null, null, Pagination.of(2, 2), null);
 
 		Assert.assertEquals(3, page2.getTotalCount());
 
@@ -270,7 +268,7 @@ public abstract class BaseNodeMetricResourceTestCase {
 		Assert.assertEquals(nodeMetrics2.toString(), 1, nodeMetrics2.size());
 
 		Page<NodeMetric> page3 = nodeMetricResource.getProcessNodeMetricsPage(
-			processId, null, null, null, null, Pagination.of(1, 3), null);
+			processId, null, null, null, null, null, Pagination.of(1, 3), null);
 
 		assertEqualsIgnoringOrder(
 			Arrays.asList(nodeMetric1, nodeMetric2, nodeMetric3),
@@ -284,9 +282,21 @@ public abstract class BaseNodeMetricResourceTestCase {
 		testGetProcessNodeMetricsPageWithSort(
 			EntityField.Type.DATE_TIME,
 			(entityField, nodeMetric1, nodeMetric2) -> {
-				BeanUtils.setProperty(
+				BeanTestUtil.setProperty(
 					nodeMetric1, entityField.getName(),
 					DateUtils.addMinutes(new Date(), -2));
+			});
+	}
+
+	@Test
+	public void testGetProcessNodeMetricsPageWithSortDouble() throws Exception {
+		testGetProcessNodeMetricsPageWithSort(
+			EntityField.Type.DOUBLE,
+			(entityField, nodeMetric1, nodeMetric2) -> {
+				BeanTestUtil.setProperty(
+					nodeMetric1, entityField.getName(), 0.1);
+				BeanTestUtil.setProperty(
+					nodeMetric2, entityField.getName(), 0.5);
 			});
 	}
 
@@ -297,8 +307,8 @@ public abstract class BaseNodeMetricResourceTestCase {
 		testGetProcessNodeMetricsPageWithSort(
 			EntityField.Type.INTEGER,
 			(entityField, nodeMetric1, nodeMetric2) -> {
-				BeanUtils.setProperty(nodeMetric1, entityField.getName(), 0);
-				BeanUtils.setProperty(nodeMetric2, entityField.getName(), 1);
+				BeanTestUtil.setProperty(nodeMetric1, entityField.getName(), 0);
+				BeanTestUtil.setProperty(nodeMetric2, entityField.getName(), 1);
 			});
 	}
 
@@ -317,21 +327,21 @@ public abstract class BaseNodeMetricResourceTestCase {
 				Class<?> returnType = method.getReturnType();
 
 				if (returnType.isAssignableFrom(Map.class)) {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						nodeMetric1, entityFieldName,
 						Collections.singletonMap("Aaa", "Aaa"));
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						nodeMetric2, entityFieldName,
 						Collections.singletonMap("Bbb", "Bbb"));
 				}
 				else if (entityFieldName.contains("email")) {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						nodeMetric1, entityFieldName,
 						"aaa" +
 							StringUtil.toLowerCase(
 								RandomTestUtil.randomString()) +
 									"@liferay.com");
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						nodeMetric2, entityFieldName,
 						"bbb" +
 							StringUtil.toLowerCase(
@@ -339,12 +349,12 @@ public abstract class BaseNodeMetricResourceTestCase {
 									"@liferay.com");
 				}
 				else {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						nodeMetric1, entityFieldName,
 						"aaa" +
 							StringUtil.toLowerCase(
 								RandomTestUtil.randomString()));
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						nodeMetric2, entityFieldName,
 						"bbb" +
 							StringUtil.toLowerCase(
@@ -383,8 +393,8 @@ public abstract class BaseNodeMetricResourceTestCase {
 		for (EntityField entityField : entityFields) {
 			Page<NodeMetric> ascPage =
 				nodeMetricResource.getProcessNodeMetricsPage(
-					processId, null, null, null, null, Pagination.of(1, 2),
-					entityField.getName() + ":asc");
+					processId, null, null, null, null, null,
+					Pagination.of(1, 2), entityField.getName() + ":asc");
 
 			assertEquals(
 				Arrays.asList(nodeMetric1, nodeMetric2),
@@ -392,8 +402,8 @@ public abstract class BaseNodeMetricResourceTestCase {
 
 			Page<NodeMetric> descPage =
 				nodeMetricResource.getProcessNodeMetricsPage(
-					processId, null, null, null, null, Pagination.of(1, 2),
-					entityField.getName() + ":desc");
+					processId, null, null, null, null, null,
+					Pagination.of(1, 2), entityField.getName() + ":desc");
 
 			assertEquals(
 				Arrays.asList(nodeMetric2, nodeMetric1),
@@ -420,6 +430,23 @@ public abstract class BaseNodeMetricResourceTestCase {
 		throws Exception {
 
 		return null;
+	}
+
+	protected void assertContains(
+		NodeMetric nodeMetric, List<NodeMetric> nodeMetrics) {
+
+		boolean contains = false;
+
+		for (NodeMetric item : nodeMetrics) {
+			if (equals(nodeMetric, item)) {
+				contains = true;
+
+				break;
+			}
+		}
+
+		Assert.assertTrue(
+			nodeMetrics + " does not contain " + nodeMetric, contains);
 	}
 
 	protected void assertHttpResponseStatusCode(
@@ -574,8 +601,8 @@ public abstract class BaseNodeMetricResourceTestCase {
 	protected List<GraphQLField> getGraphQLFields() throws Exception {
 		List<GraphQLField> graphQLFields = new ArrayList<>();
 
-		for (Field field :
-				ReflectionUtil.getDeclaredFields(
+		for (java.lang.reflect.Field field :
+				getDeclaredFields(
 					com.liferay.portal.workflow.metrics.rest.dto.v1_0.
 						NodeMetric.class)) {
 
@@ -591,12 +618,13 @@ public abstract class BaseNodeMetricResourceTestCase {
 		return graphQLFields;
 	}
 
-	protected List<GraphQLField> getGraphQLFields(Field... fields)
+	protected List<GraphQLField> getGraphQLFields(
+			java.lang.reflect.Field... fields)
 		throws Exception {
 
 		List<GraphQLField> graphQLFields = new ArrayList<>();
 
-		for (Field field : fields) {
+		for (java.lang.reflect.Field field : fields) {
 			com.liferay.portal.vulcan.graphql.annotation.GraphQLField
 				vulcanGraphQLField = field.getAnnotation(
 					com.liferay.portal.vulcan.graphql.annotation.GraphQLField.
@@ -610,7 +638,7 @@ public abstract class BaseNodeMetricResourceTestCase {
 				}
 
 				List<GraphQLField> childrenGraphQLFields = getGraphQLFields(
-					ReflectionUtil.getDeclaredFields(clazz));
+					getDeclaredFields(clazz));
 
 				graphQLFields.add(
 					new GraphQLField(field.getName(), childrenGraphQLFields));
@@ -750,6 +778,19 @@ public abstract class BaseNodeMetricResourceTestCase {
 		return false;
 	}
 
+	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
+		throws Exception {
+
+		Stream<java.lang.reflect.Field> stream = Stream.of(
+			ReflectionUtil.getDeclaredFields(clazz));
+
+		return stream.filter(
+			field -> !field.isSynthetic()
+		).toArray(
+			java.lang.reflect.Field[]::new
+		);
+	}
+
 	protected java.util.Collection<EntityField> getEntityFields()
 		throws Exception {
 
@@ -806,8 +847,10 @@ public abstract class BaseNodeMetricResourceTestCase {
 		}
 
 		if (entityFieldName.equals("breachedInstancePercentage")) {
-			throw new IllegalArgumentException(
-				"Invalid entity field " + entityFieldName);
+			sb.append(
+				String.valueOf(nodeMetric.getBreachedInstancePercentage()));
+
+			return sb.toString();
 		}
 
 		if (entityFieldName.equals("durationAvg")) {
@@ -904,6 +947,115 @@ public abstract class BaseNodeMetricResourceTestCase {
 	protected Company testCompany;
 	protected Group testGroup;
 
+	protected static class BeanTestUtil {
+
+		public static void copyProperties(Object source, Object target)
+			throws Exception {
+
+			Class<?> sourceClass = _getSuperClass(source.getClass());
+
+			Class<?> targetClass = target.getClass();
+
+			for (java.lang.reflect.Field field :
+					sourceClass.getDeclaredFields()) {
+
+				if (field.isSynthetic()) {
+					continue;
+				}
+
+				Method getMethod = _getMethod(
+					sourceClass, field.getName(), "get");
+
+				Method setMethod = _getMethod(
+					targetClass, field.getName(), "set",
+					getMethod.getReturnType());
+
+				setMethod.invoke(target, getMethod.invoke(source));
+			}
+		}
+
+		public static boolean hasProperty(Object bean, String name) {
+			Method setMethod = _getMethod(
+				bean.getClass(), "set" + StringUtil.upperCaseFirstLetter(name));
+
+			if (setMethod != null) {
+				return true;
+			}
+
+			return false;
+		}
+
+		public static void setProperty(Object bean, String name, Object value)
+			throws Exception {
+
+			Class<?> clazz = bean.getClass();
+
+			Method setMethod = _getMethod(
+				clazz, "set" + StringUtil.upperCaseFirstLetter(name));
+
+			if (setMethod == null) {
+				throw new NoSuchMethodException();
+			}
+
+			Class<?>[] parameterTypes = setMethod.getParameterTypes();
+
+			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
+		}
+
+		private static Method _getMethod(Class<?> clazz, String name) {
+			for (Method method : clazz.getMethods()) {
+				if (name.equals(method.getName()) &&
+					(method.getParameterCount() == 1) &&
+					_parameterTypes.contains(method.getParameterTypes()[0])) {
+
+					return method;
+				}
+			}
+
+			return null;
+		}
+
+		private static Method _getMethod(
+				Class<?> clazz, String fieldName, String prefix,
+				Class<?>... parameterTypes)
+			throws Exception {
+
+			return clazz.getMethod(
+				prefix + StringUtil.upperCaseFirstLetter(fieldName),
+				parameterTypes);
+		}
+
+		private static Class<?> _getSuperClass(Class<?> clazz) {
+			Class<?> superClass = clazz.getSuperclass();
+
+			if ((superClass == null) || (superClass == Object.class)) {
+				return clazz;
+			}
+
+			return superClass;
+		}
+
+		private static Object _translateValue(
+			Class<?> parameterType, Object value) {
+
+			if ((value instanceof Integer) &&
+				parameterType.equals(Long.class)) {
+
+				Integer intValue = (Integer)value;
+
+				return intValue.longValue();
+			}
+
+			return value;
+		}
+
+		private static final Set<Class<?>> _parameterTypes = new HashSet<>(
+			Arrays.asList(
+				Boolean.class, Date.class, Double.class, Integer.class,
+				Long.class, Map.class, String.class));
+
+	}
+
 	protected class GraphQLField {
 
 		public GraphQLField(String key, GraphQLField... graphQLFields) {
@@ -943,12 +1095,12 @@ public abstract class BaseNodeMetricResourceTestCase {
 						_parameterMap.entrySet()) {
 
 					sb.append(entry.getKey());
-					sb.append(":");
+					sb.append(": ");
 					sb.append(entry.getValue());
-					sb.append(",");
+					sb.append(", ");
 				}
 
-				sb.setLength(sb.length() - 1);
+				sb.setLength(sb.length() - 2);
 
 				sb.append(")");
 			}
@@ -958,10 +1110,10 @@ public abstract class BaseNodeMetricResourceTestCase {
 
 				for (GraphQLField graphQLField : _graphQLFields) {
 					sb.append(graphQLField.toString());
-					sb.append(",");
+					sb.append(", ");
 				}
 
-				sb.setLength(sb.length() - 1);
+				sb.setLength(sb.length() - 2);
 
 				sb.append("}");
 			}
@@ -975,21 +1127,9 @@ public abstract class BaseNodeMetricResourceTestCase {
 
 	}
 
-	private static final Log _log = LogFactoryUtil.getLog(
-		BaseNodeMetricResourceTestCase.class);
+	private static final com.liferay.portal.kernel.log.Log _log =
+		LogFactoryUtil.getLog(BaseNodeMetricResourceTestCase.class);
 
-	private static BeanUtilsBean _beanUtilsBean = new BeanUtilsBean() {
-
-		@Override
-		public void copyProperty(Object bean, String name, Object value)
-			throws IllegalAccessException, InvocationTargetException {
-
-			if (value != null) {
-				super.copyProperty(bean, name, value);
-			}
-		}
-
-	};
 	private static DateFormat _dateFormat;
 
 	@Inject

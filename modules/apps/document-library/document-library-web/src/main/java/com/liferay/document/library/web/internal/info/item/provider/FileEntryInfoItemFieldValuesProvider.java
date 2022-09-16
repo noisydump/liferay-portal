@@ -18,10 +18,16 @@ import com.liferay.asset.display.page.portlet.AssetDisplayPageFriendlyURLProvide
 import com.liferay.asset.info.item.provider.AssetEntryInfoItemFieldSetProvider;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFileEntryConstants;
+import com.liferay.document.library.kernel.model.DLFileEntryMetadata;
+import com.liferay.document.library.kernel.model.DLFileEntryType;
 import com.liferay.document.library.kernel.model.DLFileVersion;
+import com.liferay.document.library.kernel.service.DLFileEntryMetadataLocalService;
+import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService;
 import com.liferay.document.library.util.DLURLHelper;
 import com.liferay.document.library.web.internal.info.item.FileEntryInfoItemFields;
 import com.liferay.dynamic.data.mapping.info.item.provider.DDMFormValuesInfoFieldValuesProvider;
+import com.liferay.dynamic.data.mapping.kernel.DDMStructure;
+import com.liferay.dynamic.data.mapping.kernel.StorageEngineManagerUtil;
 import com.liferay.expando.info.item.provider.ExpandoInfoItemFieldSetProvider;
 import com.liferay.info.exception.NoSuchInfoItemException;
 import com.liferay.info.field.InfoFieldValue;
@@ -35,12 +41,13 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portlet.documentlibrary.asset.DLFileEntryDDMFormValuesReader;
+import com.liferay.template.info.item.provider.TemplateInfoItemFieldSetProvider;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -76,6 +83,10 @@ public class FileEntryInfoItemFieldValuesProvider
 			).infoFieldValues(
 				_infoItemFieldReaderFieldSetProvider.getInfoFieldValues(
 					FileEntry.class.getName(), fileEntry)
+			).infoFieldValues(
+				_templateInfoItemFieldSetProvider.getInfoFieldValues(
+					FileEntry.class.getName(),
+					_getInfoItemFormVariationKey(fileEntry), fileEntry)
 			).infoItemReference(
 				new InfoItemReference(
 					FileEntry.class.getName(), fileEntry.getFileEntryId())
@@ -106,13 +117,39 @@ public class FileEntryInfoItemFieldValuesProvider
 
 		if (fileEntry.getModel() instanceof DLFileEntry) {
 			try {
-				DLFileEntryDDMFormValuesReader dlFileEntryDDMFormValuesReader =
-					new DLFileEntryDDMFormValuesReader(
-						fileEntry, fileEntry.getFileVersion());
+				List<InfoFieldValue<Object>> infoFieldValues =
+					new ArrayList<>();
 
-				return _ddmFormValuesInfoFieldValuesProvider.getInfoFieldValues(
-					fileEntry,
-					dlFileEntryDDMFormValuesReader.getDDMFormValues());
+				DLFileEntry dlFileEntry = (DLFileEntry)fileEntry.getModel();
+
+				DLFileEntryType dlFileEntryType =
+					_dlFileEntryTypeLocalService.getFileEntryType(
+						dlFileEntry.getFileEntryTypeId());
+
+				List<DDMStructure> ddmStructures =
+					dlFileEntryType.getDDMStructures();
+
+				for (DDMStructure ddmStructure : ddmStructures) {
+					FileVersion fileVersion = fileEntry.getFileVersion();
+
+					DLFileEntryMetadata dlFileEntryMetadata =
+						_dlFileEntryMetadataLocalService.fetchFileEntryMetadata(
+							ddmStructure.getStructureId(),
+							fileVersion.getFileVersionId());
+
+					if (dlFileEntryMetadata == null) {
+						continue;
+					}
+
+					infoFieldValues.addAll(
+						_ddmFormValuesInfoFieldValuesProvider.
+							getInfoFieldValues(
+								fileEntry,
+								StorageEngineManagerUtil.getDDMFormValues(
+									dlFileEntryMetadata.getDDMStorageId())));
+				}
+
+				return infoFieldValues;
 			}
 			catch (PortalException portalException) {
 				throw new RuntimeException(portalException);
@@ -159,13 +196,14 @@ public class FileEntryInfoItemFieldValuesProvider
 
 			fileEntryFieldValues.add(
 				new InfoFieldValue<>(
-					FileEntryInfoItemFields.fileName, fileEntry.getFileName()));
+					FileEntryInfoItemFields.fileNameInfoField,
+					fileEntry.getFileName()));
 
 			String mimeType = fileEntry.getMimeType();
 
 			fileEntryFieldValues.add(
 				new InfoFieldValue<>(
-					FileEntryInfoItemFields.mimeType, mimeType));
+					FileEntryInfoItemFields.mimeTypeInfoField, mimeType));
 
 			if (mimeType.startsWith("image")) {
 				WebImage fileURLWebImage = new WebImage(
@@ -177,11 +215,12 @@ public class FileEntryInfoItemFieldValuesProvider
 						new ClassPKInfoItemIdentifier(
 							fileEntry.getFileEntryId())));
 
-				fileURLWebImage.setAlt(fileEntry.getTitle());
+				fileURLWebImage.setAlt(fileEntry.getDescription());
 
 				fileEntryFieldValues.add(
 					new InfoFieldValue<>(
-						FileEntryInfoItemFields.fileURL, fileURLWebImage));
+						FileEntryInfoItemFields.fileURLInfoField,
+						fileURLWebImage));
 			}
 
 			fileEntryFieldValues.add(
@@ -198,7 +237,16 @@ public class FileEntryInfoItemFieldValuesProvider
 					fileEntry.getVersion()));
 			fileEntryFieldValues.add(
 				new InfoFieldValue<>(
-					FileEntryInfoItemFields.size, fileEntry.getSize()));
+					FileEntryInfoItemFields.sizeInfoField,
+					fileEntry.getSize()));
+			fileEntryFieldValues.add(
+				new InfoFieldValue<>(
+					FileEntryInfoItemFields.createDateInfoField,
+					fileEntry.getCreateDate()));
+			fileEntryFieldValues.add(
+				new InfoFieldValue<>(
+					FileEntryInfoItemFields.modifiedDateInfoField,
+					fileEntry.getModifiedDate()));
 
 			User user = _userLocalService.fetchUser(fileEntry.getUserId());
 
@@ -224,7 +272,7 @@ public class FileEntryInfoItemFieldValuesProvider
 			fileEntryFieldValues.add(
 				new InfoFieldValue<>(
 					FileEntryInfoItemFields.publishDateInfoField,
-					fileEntry.getLastPublishDate()));
+					fileEntry.getModifiedDate()));
 
 			String downloadURL = _dlURLHelper.getDownloadURL(
 				fileEntry, fileEntry.getFileVersion(), null, StringPool.BLANK);
@@ -232,7 +280,19 @@ public class FileEntryInfoItemFieldValuesProvider
 			if (Validator.isNotNull(downloadURL)) {
 				fileEntryFieldValues.add(
 					new InfoFieldValue<>(
-						FileEntryInfoItemFields.downloadURL, downloadURL));
+						FileEntryInfoItemFields.downloadURLInfoField,
+						downloadURL));
+			}
+
+			String previewURL = _dlURLHelper.getPreviewURL(
+				fileEntry, fileEntry.getFileVersion(), themeDisplay,
+				StringPool.BLANK, false, true);
+
+			if (Validator.isNotNull(previewURL)) {
+				fileEntryFieldValues.add(
+					new InfoFieldValue<>(
+						FileEntryInfoItemFields.previewURLInfoField,
+						previewURL));
 			}
 
 			WebImage imagePreviewURLWebImage = new WebImage(
@@ -241,11 +301,11 @@ public class FileEntryInfoItemFieldValuesProvider
 					FileEntry.class.getName(),
 					new ClassPKInfoItemIdentifier(fileEntry.getFileEntryId())));
 
-			imagePreviewURLWebImage.setAlt(fileEntry.getTitle());
+			imagePreviewURLWebImage.setAlt(fileEntry.getDescription());
 
 			fileEntryFieldValues.add(
 				new InfoFieldValue<>(
-					FileEntryInfoItemFields.previewImage,
+					FileEntryInfoItemFields.previewImageInfoField,
 					imagePreviewURLWebImage));
 
 			if (themeDisplay != null) {
@@ -260,6 +320,16 @@ public class FileEntryInfoItemFieldValuesProvider
 		catch (Exception exception) {
 			throw new RuntimeException(exception);
 		}
+	}
+
+	private String _getInfoItemFormVariationKey(FileEntry fileEntry) {
+		if (fileEntry.getModel() instanceof DLFileEntry) {
+			DLFileEntry dlFileEntry = (DLFileEntry)fileEntry.getModel();
+
+			return String.valueOf(dlFileEntry.getFileEntryTypeId());
+		}
+
+		return StringPool.BLANK;
 	}
 
 	private ThemeDisplay _getThemeDisplay() {
@@ -286,6 +356,12 @@ public class FileEntryInfoItemFieldValuesProvider
 		_ddmFormValuesInfoFieldValuesProvider;
 
 	@Reference
+	private DLFileEntryMetadataLocalService _dlFileEntryMetadataLocalService;
+
+	@Reference
+	private DLFileEntryTypeLocalService _dlFileEntryTypeLocalService;
+
+	@Reference
 	private DLURLHelper _dlURLHelper;
 
 	@Reference
@@ -294,6 +370,9 @@ public class FileEntryInfoItemFieldValuesProvider
 	@Reference
 	private InfoItemFieldReaderFieldSetProvider
 		_infoItemFieldReaderFieldSetProvider;
+
+	@Reference
+	private TemplateInfoItemFieldSetProvider _templateInfoItemFieldSetProvider;
 
 	@Reference
 	private UserLocalService _userLocalService;

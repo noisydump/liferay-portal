@@ -129,7 +129,7 @@ public class TrafficSource {
 
 		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
 
-		if (!ListUtil.isEmpty(_countrySearchKeywordsList)) {
+		if (ListUtil.isNotEmpty(_countrySearchKeywordsList)) {
 			jsonObject.put(
 				"countryKeywords", _getCountryKeywordsJSONArray(locale));
 		}
@@ -158,7 +158,7 @@ public class TrafficSource {
 		JSONObject jsonObject = toJSONObject(
 			null, LocaleUtil.getDefault(), _name);
 
-		return jsonObject.toJSONString();
+		return jsonObject.toString();
 	}
 
 	private JSONArray _getCountryKeywordsJSONArray(Locale locale) {

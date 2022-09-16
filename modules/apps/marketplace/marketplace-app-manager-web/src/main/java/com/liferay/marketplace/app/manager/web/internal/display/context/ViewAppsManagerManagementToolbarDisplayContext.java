@@ -19,10 +19,10 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuil
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItemListBuilder;
 import com.liferay.marketplace.app.manager.web.internal.constants.BundleStateConstants;
-import com.liferay.marketplace.app.manager.web.internal.util.AppDisplay;
 import com.liferay.marketplace.app.manager.web.internal.util.AppDisplayFactoryUtil;
 import com.liferay.marketplace.app.manager.web.internal.util.BundleManagerUtil;
 import com.liferay.marketplace.app.manager.web.internal.util.comparator.AppDisplayComparator;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -56,12 +56,13 @@ public class ViewAppsManagerManagementToolbarDisplayContext
 
 	@Override
 	public String getClearResultsURL() {
-		PortletURL removeLabelURL = getPortletURL();
-
-		removeLabelURL.setParameter("category", (String)null);
-		removeLabelURL.setParameter("state", (String)null);
-
-		return removeLabelURL.toString();
+		return PortletURLBuilder.create(
+			getPortletURL()
+		).setParameter(
+			"category", (String)null
+		).setParameter(
+			"state", (String)null
+		).buildString();
 	}
 
 	@Override
@@ -95,36 +96,37 @@ public class ViewAppsManagerManagementToolbarDisplayContext
 		return LabelItemListBuilder.add(
 			() -> !category.equals("all-categories"),
 			labelItem -> {
-				PortletURL removeLabelURL = getPortletURL();
-
-				removeLabelURL.setParameter("category", (String)null);
-
-				labelItem.putData("removeLabelURL", removeLabelURL.toString());
+				labelItem.putData(
+					"removeLabelURL",
+					PortletURLBuilder.create(
+						getPortletURL()
+					).setParameter(
+						"category", (String)null
+					).buildString());
 
 				labelItem.setCloseable(true);
-
-				String label = String.format(
-					"%s: %s", LanguageUtil.get(httpServletRequest, "category"),
-					LanguageUtil.get(httpServletRequest, category));
-
-				labelItem.setLabel(label);
+				labelItem.setLabel(
+					String.format(
+						"%s: %s",
+						LanguageUtil.get(httpServletRequest, "category"),
+						LanguageUtil.get(httpServletRequest, category)));
 			}
 		).add(
 			() -> !state.equals("all-statuses"),
 			labelItem -> {
-				PortletURL removeLabelURL = getPortletURL();
-
-				removeLabelURL.setParameter("state", (String)null);
-
-				labelItem.putData("removeLabelURL", removeLabelURL.toString());
+				labelItem.putData(
+					"removeLabelURL",
+					PortletURLBuilder.create(
+						getPortletURL()
+					).setParameter(
+						"state", (String)null
+					).buildString());
 
 				labelItem.setCloseable(true);
-
-				String label = String.format(
-					"%s: %s", LanguageUtil.get(httpServletRequest, "state"),
-					LanguageUtil.get(httpServletRequest, state));
-
-				labelItem.setLabel(label);
+				labelItem.setLabel(
+					String.format(
+						"%s: %s", LanguageUtil.get(httpServletRequest, "state"),
+						LanguageUtil.get(httpServletRequest, state)));
 			}
 		).build();
 	}
@@ -136,11 +138,15 @@ public class ViewAppsManagerManagementToolbarDisplayContext
 
 	@Override
 	public PortletURL getPortletURL() {
-		PortletURL portletURL = liferayPortletResponse.createRenderURL();
-
-		portletURL.setParameter("category", getCategory());
-		portletURL.setParameter("state", getState());
-		portletURL.setParameter("orderByType", getOrderByType());
+		PortletURL portletURL = PortletURLBuilder.createRenderURL(
+			liferayPortletResponse
+		).setParameter(
+			"category", getCategory()
+		).setParameter(
+			"orderByType", getOrderByType()
+		).setParameter(
+			"state", getState()
+		).buildPortletURL();
 
 		if (_searchContainer != null) {
 			portletURL.setParameter(
@@ -174,26 +180,14 @@ public class ViewAppsManagerManagementToolbarDisplayContext
 			category = StringPool.BLANK;
 		}
 
-		List<AppDisplay> appDisplays = AppDisplayFactoryUtil.getAppDisplays(
-			BundleManagerUtil.getBundles(), category,
-			BundleStateConstants.getState(getState()),
-			liferayPortletRequest.getLocale());
-
-		appDisplays = ListUtil.sort(
-			appDisplays, new AppDisplayComparator(getOrderByType()));
-
-		int end = searchContainer.getEnd();
-
-		if (end > appDisplays.size()) {
-			end = appDisplays.size();
-		}
-
-		List<Object> results = new ArrayList<>(appDisplays);
-
-		searchContainer.setResults(
-			results.subList(searchContainer.getStart(), end));
-
-		searchContainer.setTotal(appDisplays.size());
+		searchContainer.setResultsAndTotal(
+			new ArrayList<>(
+				ListUtil.sort(
+					AppDisplayFactoryUtil.getAppDisplays(
+						BundleManagerUtil.getBundles(), category,
+						BundleStateConstants.getState(getState()),
+						liferayPortletRequest.getLocale()),
+					new AppDisplayComparator(getOrderByType()))));
 
 		return searchContainer;
 	}

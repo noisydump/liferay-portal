@@ -17,38 +17,51 @@ package com.liferay.headless.delivery.internal.resource.v1_0;
 import com.liferay.dynamic.data.mapping.util.DDMIndexer;
 import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
 import com.liferay.expando.kernel.service.ExpandoTableLocalService;
+import com.liferay.headless.common.spi.odata.entity.EntityFieldsUtil;
 import com.liferay.headless.common.spi.resource.SPIRatingResource;
 import com.liferay.headless.common.spi.service.context.ServiceContextRequestUtil;
 import com.liferay.headless.delivery.dto.v1_0.MessageBoardMessage;
 import com.liferay.headless.delivery.dto.v1_0.Rating;
+import com.liferay.headless.delivery.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.headless.delivery.internal.dto.v1_0.converter.MessageBoardMessageDTOConverter;
-import com.liferay.headless.delivery.internal.dto.v1_0.util.CustomFieldsUtil;
-import com.liferay.headless.delivery.internal.dto.v1_0.util.EntityFieldsUtil;
 import com.liferay.headless.delivery.internal.dto.v1_0.util.RatingUtil;
 import com.liferay.headless.delivery.internal.odata.entity.v1_0.MessageBoardMessageEntityModel;
-import com.liferay.headless.delivery.internal.search.aggregation.AggregationUtil;
-import com.liferay.headless.delivery.internal.search.filter.FilterUtil;
-import com.liferay.headless.delivery.internal.search.sort.SortUtil;
 import com.liferay.headless.delivery.resource.v1_0.MessageBoardMessageResource;
+import com.liferay.headless.delivery.search.aggregation.AggregationUtil;
+import com.liferay.headless.delivery.search.filter.FilterUtil;
+import com.liferay.headless.delivery.search.sort.SortUtil;
+import com.liferay.message.boards.constants.MBConstants;
 import com.liferay.message.boards.constants.MBMessageConstants;
 import com.liferay.message.boards.exception.NoSuchMessageException;
 import com.liferay.message.boards.model.MBMessage;
 import com.liferay.message.boards.model.MBThread;
+import com.liferay.message.boards.service.MBMessageLocalService;
 import com.liferay.message.boards.service.MBMessageService;
 import com.liferay.message.boards.service.MBThreadLocalService;
+import com.liferay.message.boards.util.comparator.MessageCreateDateComparator;
+import com.liferay.message.boards.util.comparator.MessageModifiedDateComparator;
+import com.liferay.message.boards.util.comparator.MessageSubjectComparator;
+import com.liferay.message.boards.util.comparator.MessageURLSubjectComparator;
+import com.liferay.portal.kernel.dao.orm.QueryDefinition;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.BooleanFilter;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.search.filter.TermFilter;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.search.aggregation.Aggregations;
+import com.liferay.portal.search.expando.ExpandoBridgeIndexer;
 import com.liferay.portal.search.legacy.searcher.SearchRequestBuilderFactory;
 import com.liferay.portal.search.query.Queries;
 import com.liferay.portal.search.searcher.SearchRequestBuilder;
@@ -58,8 +71,8 @@ import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
-import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.SearchUtil;
+import com.liferay.portal.vulcan.util.TransformUtil;
 import com.liferay.portal.vulcan.util.UriInfoUtil;
 import com.liferay.ratings.kernel.service.RatingsEntryLocalService;
 
@@ -67,6 +80,8 @@ import java.io.Serializable;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.MultivaluedMap;
@@ -84,7 +99,7 @@ import org.osgi.service.component.annotations.ServiceScope;
 	scope = ServiceScope.PROTOTYPE, service = MessageBoardMessageResource.class
 )
 public class MessageBoardMessageResourceImpl
-	extends BaseMessageBoardMessageResourceImpl implements EntityModelResource {
+	extends BaseMessageBoardMessageResourceImpl {
 
 	@Override
 	public void deleteMessageBoardMessage(Long messageBoardMessageId)
@@ -103,12 +118,24 @@ public class MessageBoardMessageResourceImpl
 	}
 
 	@Override
+	public void deleteSiteMessageBoardMessageByExternalReferenceCode(
+			Long siteId, String externalReferenceCode)
+		throws Exception {
+
+		MBMessage mbMessage =
+			_mbMessageLocalService.getMBMessageByExternalReferenceCode(
+				siteId, externalReferenceCode);
+
+		_mbMessageService.deleteMessage(mbMessage.getMessageId());
+	}
+
+	@Override
 	public EntityModel getEntityModel(MultivaluedMap multivaluedMap) {
 		return new MessageBoardMessageEntityModel(
 			EntityFieldsUtil.getEntityFields(
 				_portal.getClassNameId(MBMessage.class.getName()),
-				contextCompany.getCompanyId(), _expandoColumnLocalService,
-				_expandoTableLocalService));
+				contextCompany.getCompanyId(), _expandoBridgeIndexer,
+				_expandoColumnLocalService, _expandoTableLocalService));
 	}
 
 	@Override
@@ -131,24 +158,70 @@ public class MessageBoardMessageResourceImpl
 		MBMessage mbMessage = _mbMessageService.getMessage(
 			parentMessageBoardMessageId);
 
-		return _getMessageBoardMessagesPage(
-			HashMapBuilder.put(
+		Map<String, Map<String, String>> actions =
+			HashMapBuilder.<String, Map<String, String>>put(
 				"get-child-messages",
 				addAction(
-					"VIEW", mbMessage.getMessageId(),
+					ActionKeys.VIEW, mbMessage.getMessageId(),
 					"getMessageBoardMessageMessageBoardMessagesPage",
-					mbMessage.getUserId(), "com.liferay.message.boards",
+					mbMessage.getUserId(), MBConstants.RESOURCE_NAME,
 					mbMessage.getGroupId())
 			).put(
 				"reply-to-message",
 				addAction(
-					"REPLY_TO_MESSAGE", mbMessage.getMessageId(),
+					ActionKeys.REPLY_TO_MESSAGE, mbMessage.getMessageId(),
 					"postMessageBoardMessageMessageBoardMessage",
-					mbMessage.getUserId(), "com.liferay.message.boards",
+					mbMessage.getUserId(), MBConstants.RESOURCE_NAME,
 					mbMessage.getGroupId())
-			).build(),
-			parentMessageBoardMessageId, null, flatten, search, aggregation,
-			filter, pagination, sorts);
+			).build();
+
+		if ((search == null) && (filter == null)) {
+			OrderByComparator<MBMessage> orderByComparator =
+				_getMBMessageOrderByComparator(sorts);
+
+			int status = WorkflowConstants.STATUS_APPROVED;
+
+			PermissionChecker permissionChecker =
+				PermissionThreadLocal.getPermissionChecker();
+
+			if (permissionChecker.isContentReviewer(
+					contextCompany.getCompanyId(), mbMessage.getGroupId())) {
+
+				status = WorkflowConstants.STATUS_ANY;
+			}
+
+			return Page.of(
+				actions,
+				TransformUtil.transform(
+					_mbMessageService.getChildMessages(
+						mbMessage.getMessageId(),
+						Optional.ofNullable(
+							flatten
+						).orElse(
+							false
+						),
+						new QueryDefinition<>(
+							status, contextUser.getUserId(), true,
+							pagination.getStartPosition(),
+							pagination.getEndPosition(), orderByComparator)),
+					this::_toMessageBoardMessage),
+				pagination,
+				_mbMessageService.getChildMessagesCount(
+					mbMessage.getMessageId(),
+					Optional.ofNullable(
+						flatten
+					).orElse(
+						false
+					),
+					new QueryDefinition<>(
+						status, contextUser.getUserId(), true,
+						pagination.getStartPosition(),
+						pagination.getEndPosition(), orderByComparator)));
+		}
+
+		return _getMessageBoardMessagesPage(
+			actions, parentMessageBoardMessageId, null, flatten, search,
+			aggregation, filter, pagination, sorts);
 	}
 
 	@Override
@@ -171,24 +244,71 @@ public class MessageBoardMessageResourceImpl
 		MBThread mbThread = _mbThreadLocalService.getMBThread(
 			messageBoardThreadId);
 
-		return _getMessageBoardMessagesPage(
-			HashMapBuilder.put(
+		Map<String, Map<String, String>> actions =
+			HashMapBuilder.<String, Map<String, String>>put(
 				"create",
 				addAction(
-					"ADD_MESSAGE", mbThread.getThreadId(),
+					ActionKeys.ADD_MESSAGE, mbThread.getThreadId(),
 					"postMessageBoardThreadMessageBoardMessage",
-					mbThread.getUserId(), "com.liferay.message.boards",
+					mbThread.getUserId(), MBConstants.RESOURCE_NAME,
 					mbThread.getGroupId())
 			).put(
 				"get",
 				addAction(
-					"VIEW", mbThread.getThreadId(),
+					ActionKeys.VIEW, mbThread.getThreadId(),
 					"getMessageBoardThreadMessageBoardMessagesPage",
-					mbThread.getUserId(), "com.liferay.message.boards",
+					mbThread.getUserId(), MBConstants.RESOURCE_NAME,
 					mbThread.getGroupId())
-			).build(),
-			mbThread.getRootMessageId(), null, false, search, aggregation,
-			filter, pagination, sorts);
+			).build();
+
+		if ((search == null) && (filter == null)) {
+			OrderByComparator<MBMessage> orderByComparator =
+				_getMBMessageOrderByComparator(sorts);
+
+			int status = WorkflowConstants.STATUS_APPROVED;
+
+			PermissionChecker permissionChecker =
+				PermissionThreadLocal.getPermissionChecker();
+
+			if (permissionChecker.isContentReviewer(
+					contextCompany.getCompanyId(), mbThread.getGroupId())) {
+
+				status = WorkflowConstants.STATUS_ANY;
+			}
+
+			return Page.of(
+				actions,
+				TransformUtil.transform(
+					_mbMessageService.getChildMessages(
+						mbThread.getRootMessageId(), false,
+						new QueryDefinition<>(
+							status, contextUser.getUserId(), true,
+							pagination.getStartPosition(),
+							pagination.getEndPosition(), orderByComparator)),
+					this::_toMessageBoardMessage),
+				pagination,
+				_mbMessageService.getChildMessagesCount(
+					mbThread.getRootMessageId(), false,
+					new QueryDefinition<>(
+						status, contextUser.getUserId(), true,
+						pagination.getStartPosition(),
+						pagination.getEndPosition(), orderByComparator)));
+		}
+
+		return _getMessageBoardMessagesPage(
+			actions, mbThread.getRootMessageId(), null, false, search,
+			aggregation, filter, pagination, sorts);
+	}
+
+	@Override
+	public MessageBoardMessage
+			getSiteMessageBoardMessageByExternalReferenceCode(
+				Long siteId, String externalReferenceCode)
+		throws Exception {
+
+		return _toMessageBoardMessage(
+			_mbMessageLocalService.getMBMessageByExternalReferenceCode(
+				siteId, externalReferenceCode));
 	}
 
 	@Override
@@ -216,10 +336,20 @@ public class MessageBoardMessageResourceImpl
 
 		return _getMessageBoardMessagesPage(
 			HashMapBuilder.put(
+				"deleteBatch",
+				addAction(
+					ActionKeys.DELETE, "deleteMessageBoardMessageBatch",
+					MBConstants.RESOURCE_NAME, null)
+			).put(
 				"get",
 				addAction(
-					"VIEW", "getSiteMessageBoardMessagesPage",
-					"com.liferay.message.boards", siteId)
+					ActionKeys.VIEW, "getSiteMessageBoardMessagesPage",
+					MBConstants.RESOURCE_NAME, siteId)
+			).put(
+				"updateBatch",
+				addAction(
+					ActionKeys.UPDATE, "putMessageBoardMessageBatch",
+					MBConstants.RESOURCE_NAME, null)
 			).build(),
 			null, siteId, flatten, search, aggregation, filter, pagination,
 			sorts);
@@ -231,8 +361,13 @@ public class MessageBoardMessageResourceImpl
 			MessageBoardMessage messageBoardMessage)
 		throws Exception {
 
-		return _addMessageBoardThread(
-			parentMessageBoardMessageId, messageBoardMessage);
+		MBMessage mbMessage = _mbMessageLocalService.getMBMessage(
+			parentMessageBoardMessageId);
+
+		return _addMessageBoardMessage(
+			messageBoardMessage.getExternalReferenceCode(),
+			mbMessage.getGroupId(), mbMessage.getMessageId(),
+			messageBoardMessage);
 	}
 
 	@Override
@@ -254,8 +389,10 @@ public class MessageBoardMessageResourceImpl
 		MBThread mbThread = _mbThreadLocalService.getMBThread(
 			messageBoardThreadId);
 
-		return _addMessageBoardThread(
-			mbThread.getRootMessageId(), messageBoardMessage);
+		return _addMessageBoardMessage(
+			messageBoardMessage.getExternalReferenceCode(),
+			mbThread.getGroupId(), mbThread.getRootMessageId(),
+			messageBoardMessage);
 	}
 
 	@Override
@@ -263,38 +400,10 @@ public class MessageBoardMessageResourceImpl
 			Long messageBoardMessageId, MessageBoardMessage messageBoardMessage)
 		throws Exception {
 
-		if ((messageBoardMessage.getArticleBody() == null) &&
-			(messageBoardMessage.getHeadline() == null)) {
-
-			throw new BadRequestException(
-				"Headline and article body are both null");
-		}
-
 		MBMessage mbMessage = _mbMessageService.getMessage(
 			messageBoardMessageId);
 
-		String headline = messageBoardMessage.getHeadline();
-
-		if (headline == null) {
-			MBMessage parentMBMessage = _mbMessageService.getMessage(
-				mbMessage.getParentMessageId());
-
-			headline =
-				MBMessageConstants.MESSAGE_SUBJECT_PREFIX_RE +
-					parentMBMessage.getSubject();
-		}
-
-		mbMessage = _mbMessageService.updateDiscussionMessage(
-			mbMessage.getClassName(), mbMessage.getClassPK(),
-			messageBoardMessageId, headline,
-			messageBoardMessage.getArticleBody(),
-			_getServiceContext(messageBoardMessage, mbMessage.getGroupId()));
-
-		if (messageBoardMessage.getShowAsAnswer() != mbMessage.isAnswer()) {
-			_updateAnswer(mbMessage, messageBoardMessage);
-		}
-
-		return _toMessageBoardMessage(mbMessage);
+		return _updateMessageBoardMessage(mbMessage, messageBoardMessage);
 	}
 
 	@Override
@@ -322,16 +431,59 @@ public class MessageBoardMessageResourceImpl
 		_mbMessageService.unsubscribeMessage(messageBoardMessageId);
 	}
 
-	private MessageBoardMessage _addMessageBoardThread(
-			Long messageBoardMessageId, MessageBoardMessage messageBoardMessage)
+	@Override
+	public MessageBoardMessage
+			putSiteMessageBoardMessageByExternalReferenceCode(
+				Long siteId, String externalReferenceCode,
+				MessageBoardMessage messageBoardMessage)
 		throws Exception {
 
-		MBMessage parentMBMessage = _mbMessageService.getMessage(
-			messageBoardMessageId);
+		MBMessage mbMessage =
+			_mbMessageLocalService.fetchMBMessageByExternalReferenceCode(
+				siteId, externalReferenceCode);
+
+		if (mbMessage != null) {
+			return _updateMessageBoardMessage(mbMessage, messageBoardMessage);
+		}
+
+		return _addMessageBoardMessage(
+			externalReferenceCode, siteId,
+			messageBoardMessage.getParentMessageBoardMessageId(),
+			messageBoardMessage);
+	}
+
+	@Override
+	protected Long getPermissionCheckerGroupId(Object id) throws Exception {
+		MBMessage mbMessage = _mbMessageService.getMessage((Long)id);
+
+		return mbMessage.getGroupId();
+	}
+
+	@Override
+	protected String getPermissionCheckerPortletName(Object id) {
+		return MBConstants.RESOURCE_NAME;
+	}
+
+	@Override
+	protected String getPermissionCheckerResourceName(Object id) {
+		return MBMessage.class.getName();
+	}
+
+	private MessageBoardMessage _addMessageBoardMessage(
+			String externalReferenceCode, Long groupId, Long parentMessageId,
+			MessageBoardMessage messageBoardMessage)
+		throws Exception {
+
+		if (parentMessageId == null) {
+			throw new BadRequestException("Parent message board ID is null");
+		}
 
 		String headline = messageBoardMessage.getHeadline();
 
 		if (headline == null) {
+			MBMessage parentMBMessage = _mbMessageService.getMessage(
+				parentMessageId);
+
 			headline =
 				MBMessageConstants.MESSAGE_SUBJECT_PREFIX_RE +
 					parentMBMessage.getSubject();
@@ -344,17 +496,48 @@ public class MessageBoardMessageResourceImpl
 		}
 
 		MBMessage mbMessage = _mbMessageService.addMessage(
-			messageBoardMessageId, headline,
+			externalReferenceCode, parentMessageId, headline,
 			messageBoardMessage.getArticleBody(), encodingFormat,
 			Collections.emptyList(),
 			GetterUtil.getBoolean(messageBoardMessage.getAnonymous()), 0.0,
-			false,
-			_getServiceContext(
-				messageBoardMessage, parentMBMessage.getGroupId()));
+			false, _createServiceContext(groupId, messageBoardMessage));
 
 		_updateAnswer(mbMessage, messageBoardMessage);
 
 		return _toMessageBoardMessage(mbMessage);
+	}
+
+	private ServiceContext _createServiceContext(
+		long groupId, MessageBoardMessage messageBoardMessage) {
+
+		ServiceContext serviceContext =
+			ServiceContextRequestUtil.createServiceContext(
+				_getExpandoBridgeAttributes(messageBoardMessage), groupId,
+				contextHttpServletRequest,
+				messageBoardMessage.getViewableByAsString());
+
+		String link = contextHttpServletRequest.getHeader("Link");
+
+		if (link == null) {
+			UriBuilder uriBuilder = UriInfoUtil.getBaseUriBuilder(
+				contextUriInfo);
+
+			link = String.valueOf(
+				uriBuilder.replacePath(
+					"/"
+				).build());
+		}
+
+		serviceContext.setAttribute("entryURL", link);
+
+		if (messageBoardMessage.getId() == null) {
+			serviceContext.setCommand("add");
+		}
+		else {
+			serviceContext.setCommand("update");
+		}
+
+		return serviceContext;
 	}
 
 	private Map<String, Serializable> _getExpandoBridgeAttributes(
@@ -364,6 +547,37 @@ public class MessageBoardMessageResourceImpl
 			MBMessage.class.getName(), contextCompany.getCompanyId(),
 			messageBoardMessage.getCustomFields(),
 			contextAcceptLanguage.getPreferredLocale());
+	}
+
+	private OrderByComparator<MBMessage> _getMBMessageOrderByComparator(
+		Sort[] sorts) {
+
+		OrderByComparator<MBMessage> orderByComparator = null;
+
+		if ((sorts != null) && (sorts.length == 1)) {
+			Sort sort = sorts[0];
+
+			String fieldName = sort.getFieldName();
+
+			if (Objects.equals(fieldName, "createDate_sortable")) {
+				orderByComparator = new MessageCreateDateComparator(
+					!sort.isReverse());
+			}
+			else if (Objects.equals(fieldName, "modified_sortable")) {
+				orderByComparator = new MessageModifiedDateComparator(
+					!sort.isReverse());
+			}
+			else if (fieldName.contains("title")) {
+				orderByComparator = new MessageSubjectComparator(
+					!sort.isReverse());
+			}
+			else if (fieldName.contains("urlSubject")) {
+				orderByComparator = new MessageURLSubjectComparator(
+					!sort.isReverse());
+			}
+		}
+
+		return orderByComparator;
 	}
 
 	private Page<MessageBoardMessage> _getMessageBoardMessagesPage(
@@ -398,7 +612,7 @@ public class MessageBoardMessageResourceImpl
 					String field = "parentMessageId";
 
 					if (GetterUtil.getBoolean(flatten)) {
-						field = "treePath";
+						field = Field.TREE_PATH;
 					}
 
 					booleanFilter.add(
@@ -409,7 +623,7 @@ public class MessageBoardMessageResourceImpl
 				else {
 					if (!GetterUtil.getBoolean(flatten)) {
 						booleanFilter.add(
-							new TermFilter("categoryId", "0"),
+							new TermFilter(Field.CATEGORY_ID, "0"),
 							BooleanClauseOccur.MUST);
 					}
 
@@ -420,8 +634,8 @@ public class MessageBoardMessageResourceImpl
 						BooleanClauseOccur.MUST);
 				}
 			},
-			FilterUtil.processFilter(_ddmIndexer, filter), MBMessage.class,
-			keywords, pagination,
+			FilterUtil.processFilter(_ddmIndexer, filter),
+			MBMessage.class.getName(), keywords, pagination,
 			queryConfig -> queryConfig.setSelectedFieldNames(
 				Field.ENTRY_CLASS_PK),
 			searchContext -> {
@@ -445,39 +659,6 @@ public class MessageBoardMessageResourceImpl
 					GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK)))));
 	}
 
-	private ServiceContext _getServiceContext(
-		MessageBoardMessage messageBoardMessage, long siteId) {
-
-		ServiceContext serviceContext =
-			ServiceContextRequestUtil.createServiceContext(
-				_getExpandoBridgeAttributes(messageBoardMessage), siteId,
-				contextHttpServletRequest,
-				messageBoardMessage.getViewableByAsString());
-
-		String link = contextHttpServletRequest.getHeader("Link");
-
-		if (link == null) {
-			UriBuilder uriBuilder = UriInfoUtil.getBaseUriBuilder(
-				contextUriInfo);
-
-			link = String.valueOf(
-				uriBuilder.replacePath(
-					"/"
-				).build());
-		}
-
-		serviceContext.setAttribute("entryURL", link);
-
-		if (messageBoardMessage.getId() == null) {
-			serviceContext.setCommand("add");
-		}
-		else {
-			serviceContext.setCommand("update");
-		}
-
-		return serviceContext;
-	}
-
 	private SPIRatingResource<Rating> _getSPIRatingResource() {
 		return new SPIRatingResource<>(
 			MBMessage.class.getName(), _ratingsEntryLocalService,
@@ -489,21 +670,23 @@ public class MessageBoardMessageResourceImpl
 					HashMapBuilder.put(
 						"create",
 						addAction(
-							"VIEW", mbMessage,
+							ActionKeys.VIEW, mbMessage,
 							"postMessageBoardMessageMyRating")
 					).put(
 						"delete",
 						addAction(
-							"VIEW", mbMessage,
+							ActionKeys.VIEW, mbMessage,
 							"deleteMessageBoardMessageMyRating")
 					).put(
 						"get",
 						addAction(
-							"VIEW", mbMessage, "getMessageBoardMessageMyRating")
+							ActionKeys.VIEW, mbMessage,
+							"getMessageBoardMessageMyRating")
 					).put(
 						"replace",
 						addAction(
-							"VIEW", mbMessage, "putMessageBoardMessageMyRating")
+							ActionKeys.VIEW, mbMessage,
+							"putMessageBoardMessageMyRating")
 					).build(),
 					_portal, ratingsEntry, _userLocalService);
 			},
@@ -518,33 +701,39 @@ public class MessageBoardMessageResourceImpl
 				false,
 				HashMapBuilder.put(
 					"delete",
-					addAction("DELETE", mbMessage, "deleteMessageBoardMessage")
+					addAction(
+						ActionKeys.DELETE, mbMessage,
+						"deleteMessageBoardMessage")
 				).put(
 					"get",
-					addAction("VIEW", mbMessage, "getMessageBoardMessage")
+					addAction(
+						ActionKeys.VIEW, mbMessage, "getMessageBoardMessage")
 				).put(
 					"replace",
-					addAction("UPDATE", mbMessage, "putMessageBoardMessage")
+					addAction(
+						ActionKeys.UPDATE, mbMessage, "putMessageBoardMessage")
 				).put(
 					"reply-to-message",
 					addAction(
-						"REPLY_TO_MESSAGE", mbMessage.getMessageId(),
+						ActionKeys.REPLY_TO_MESSAGE, mbMessage.getMessageId(),
 						"postMessageBoardMessageMessageBoardMessage",
-						mbMessage.getUserId(), "com.liferay.message.boards",
+						mbMessage.getUserId(), MBConstants.RESOURCE_NAME,
 						mbMessage.getGroupId())
 				).put(
 					"subscribe",
 					addAction(
-						"SUBSCRIBE", mbMessage,
+						ActionKeys.SUBSCRIBE, mbMessage,
 						"putMessageBoardMessageSubscribe")
 				).put(
 					"unsubscribe",
 					addAction(
-						"SUBSCRIBE", mbMessage,
+						ActionKeys.SUBSCRIBE, mbMessage,
 						"putMessageBoardMessageSubscribe")
 				).put(
 					"update",
-					addAction("UPDATE", mbMessage, "patchMessageBoardMessage")
+					addAction(
+						ActionKeys.UPDATE, mbMessage,
+						"patchMessageBoardMessage")
 				).build(),
 				_dtoConverterRegistry, mbMessage.getPrimaryKey(),
 				contextAcceptLanguage.getPreferredLocale(), contextUriInfo,
@@ -557,12 +746,45 @@ public class MessageBoardMessageResourceImpl
 
 		Boolean showAsAnswer = messageBoardMessage.getShowAsAnswer();
 
-		if (showAsAnswer != null) {
+		if ((showAsAnswer != null) && (showAsAnswer != mbMessage.isAnswer())) {
 			_mbMessageService.updateAnswer(
 				mbMessage.getMessageId(), showAsAnswer, false);
 
 			mbMessage.setAnswer(showAsAnswer);
 		}
+	}
+
+	private MessageBoardMessage _updateMessageBoardMessage(
+			MBMessage mbMessage, MessageBoardMessage messageBoardMessage)
+		throws Exception {
+
+		if ((messageBoardMessage.getArticleBody() == null) &&
+			(messageBoardMessage.getHeadline() == null)) {
+
+			throw new BadRequestException(
+				"Article body and headline are both null");
+		}
+
+		String headline = messageBoardMessage.getHeadline();
+
+		if (headline == null) {
+			MBMessage parentMBMessage = _mbMessageService.getMessage(
+				mbMessage.getParentMessageId());
+
+			headline =
+				MBMessageConstants.MESSAGE_SUBJECT_PREFIX_RE +
+					parentMBMessage.getSubject();
+		}
+
+		mbMessage = _mbMessageService.updateDiscussionMessage(
+			mbMessage.getClassName(), mbMessage.getClassPK(),
+			mbMessage.getMessageId(), headline,
+			messageBoardMessage.getArticleBody(),
+			_createServiceContext(mbMessage.getGroupId(), messageBoardMessage));
+
+		_updateAnswer(mbMessage, messageBoardMessage);
+
+		return _toMessageBoardMessage(mbMessage);
 	}
 
 	@Reference
@@ -575,10 +797,16 @@ public class MessageBoardMessageResourceImpl
 	private DTOConverterRegistry _dtoConverterRegistry;
 
 	@Reference
+	private ExpandoBridgeIndexer _expandoBridgeIndexer;
+
+	@Reference
 	private ExpandoColumnLocalService _expandoColumnLocalService;
 
 	@Reference
 	private ExpandoTableLocalService _expandoTableLocalService;
+
+	@Reference
+	private MBMessageLocalService _mbMessageLocalService;
 
 	@Reference
 	private MBMessageService _mbMessageService;

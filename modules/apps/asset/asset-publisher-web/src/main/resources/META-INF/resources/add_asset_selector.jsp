@@ -51,7 +51,7 @@ String redirect = PortalUtil.getLayoutFullURL(layout, themeDisplay);
 			%>
 
 				<div class="asset-entry-type <%= (groupId == scopeGroupId) ? StringPool.BLANK : "hide" %>" id="<%= liferayPortletResponse.getNamespace() + groupId %>">
-					<aui:select cssClass="asset-entry-type-select" label="asset-entry-type" name="selectAssetEntryType">
+					<aui:select cssClass="asset-entry-type-select" label="asset-type" name="selectAssetEntryType">
 
 						<%
 						for (AssetPublisherAddItemHolder assetPublisherAddItemHolder : assetPublisherAddItemHolders) {
@@ -65,9 +65,11 @@ String redirect = PortalUtil.getLayoutFullURL(layout, themeDisplay);
 								curGroupId = group.getLiveGroupId();
 							}
 
-							PortletURL portletURL = assetPublisherAddItemHolder.getPortletURL();
-
-							portletURL.setParameter("redirect", redirect);
+							PortletURL portletURL = PortletURLBuilder.create(
+								assetPublisherAddItemHolder.getPortletURL()
+							).setRedirect(
+								redirect
+							).buildPortletURL();
 						%>
 
 							<aui:option

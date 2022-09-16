@@ -14,7 +14,7 @@
 
 package com.liferay.portal.search.tuning.synonyms.web.internal.index;
 
-import com.liferay.portal.search.tuning.synonyms.web.internal.index.name.SynonymSetIndexName;
+import com.liferay.portal.search.tuning.synonyms.index.name.SynonymSetIndexName;
 
 /**
  * @author Adam Brandizzi
@@ -24,7 +24,8 @@ public interface SynonymSetIndexWriter {
 	public String create(
 		SynonymSetIndexName synonymSetIndexName, SynonymSet synonymSet);
 
-	public void remove(SynonymSetIndexName synonymSetIndexName, String uid);
+	public void remove(
+		SynonymSetIndexName synonymSetIndexName, String synonymSetDocumentId);
 
 	public void update(
 		SynonymSetIndexName synonymSetIndexName, SynonymSet synonymSet);

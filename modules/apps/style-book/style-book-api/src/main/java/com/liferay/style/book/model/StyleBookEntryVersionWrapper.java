@@ -20,6 +20,8 @@ import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 /**
  * <p>
@@ -44,6 +46,8 @@ public class StyleBookEntryVersionWrapper
 	public Map<String, Object> getModelAttributes() {
 		Map<String, Object> attributes = new HashMap<String, Object>();
 
+		attributes.put("mvccVersion", getMvccVersion());
+		attributes.put("ctCollectionId", getCtCollectionId());
 		attributes.put("styleBookEntryVersionId", getStyleBookEntryVersionId());
 		attributes.put("version", getVersion());
 		attributes.put("uuid", getUuid());
@@ -65,6 +69,18 @@ public class StyleBookEntryVersionWrapper
 
 	@Override
 	public void setModelAttributes(Map<String, Object> attributes) {
+		Long mvccVersion = (Long)attributes.get("mvccVersion");
+
+		if (mvccVersion != null) {
+			setMvccVersion(mvccVersion);
+		}
+
+		Long ctCollectionId = (Long)attributes.get("ctCollectionId");
+
+		if (ctCollectionId != null) {
+			setCtCollectionId(ctCollectionId);
+		}
+
 		Long styleBookEntryVersionId = (Long)attributes.get(
 			"styleBookEntryVersionId");
 
@@ -159,6 +175,11 @@ public class StyleBookEntryVersionWrapper
 		}
 	}
 
+	@Override
+	public StyleBookEntryVersion cloneWithOriginalValues() {
+		return wrap(model.cloneWithOriginalValues());
+	}
+
 	/**
 	 * Returns the company ID of this style book entry version.
 	 *
@@ -177,6 +198,16 @@ public class StyleBookEntryVersionWrapper
 	@Override
 	public Date getCreateDate() {
 		return model.getCreateDate();
+	}
+
+	/**
+	 * Returns the ct collection ID of this style book entry version.
+	 *
+	 * @return the ct collection ID of this style book entry version
+	 */
+	@Override
+	public long getCtCollectionId() {
+		return model.getCtCollectionId();
 	}
 
 	/**
@@ -217,6 +248,16 @@ public class StyleBookEntryVersionWrapper
 	@Override
 	public Date getModifiedDate() {
 		return model.getModifiedDate();
+	}
+
+	/**
+	 * Returns the mvcc version of this style book entry version.
+	 *
+	 * @return the mvcc version of this style book entry version
+	 */
+	@Override
+	public long getMvccVersion() {
+		return model.getMvccVersion();
 	}
 
 	/**
@@ -360,6 +401,16 @@ public class StyleBookEntryVersionWrapper
 	}
 
 	/**
+	 * Sets the ct collection ID of this style book entry version.
+	 *
+	 * @param ctCollectionId the ct collection ID of this style book entry version
+	 */
+	@Override
+	public void setCtCollectionId(long ctCollectionId) {
+		model.setCtCollectionId(ctCollectionId);
+	}
+
+	/**
 	 * Sets whether this style book entry version is default style book entry.
 	 *
 	 * @param defaultStyleBookEntry the default style book entry of this style book entry version
@@ -397,6 +448,16 @@ public class StyleBookEntryVersionWrapper
 	@Override
 	public void setModifiedDate(Date modifiedDate) {
 		model.setModifiedDate(modifiedDate);
+	}
+
+	/**
+	 * Sets the mvcc version of this style book entry version.
+	 *
+	 * @param mvccVersion the mvcc version of this style book entry version
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		model.setMvccVersion(mvccVersion);
 	}
 
 	/**
@@ -507,6 +568,20 @@ public class StyleBookEntryVersionWrapper
 	@Override
 	public void setVersion(int version) {
 		model.setVersion(version);
+	}
+
+	@Override
+	public Map<String, Function<StyleBookEntryVersion, Object>>
+		getAttributeGetterFunctions() {
+
+		return model.getAttributeGetterFunctions();
+	}
+
+	@Override
+	public Map<String, BiConsumer<StyleBookEntryVersion, Object>>
+		getAttributeSetterBiConsumers() {
+
+		return model.getAttributeSetterBiConsumers();
 	}
 
 	@Override

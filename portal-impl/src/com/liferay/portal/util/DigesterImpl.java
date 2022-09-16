@@ -21,6 +21,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.Base64;
 import com.liferay.portal.kernel.util.Digester;
 import com.liferay.portal.kernel.util.StreamUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,8 +31,6 @@ import java.nio.ByteBuffer;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-
-import org.apache.commons.codec.binary.Hex;
 
 /**
  * @author Brian Wing Shun Chan
@@ -137,21 +136,21 @@ public class DigesterImpl implements Digester {
 	public String digestHex(String algorithm, ByteBuffer byteBuffer) {
 		byte[] bytes = digestRaw(algorithm, byteBuffer);
 
-		return Hex.encodeHexString(bytes);
+		return StringUtil.bytesToHexString(bytes);
 	}
 
 	@Override
 	public String digestHex(String algorithm, InputStream inputStream) {
 		byte[] bytes = digestRaw(algorithm, inputStream);
 
-		return Hex.encodeHexString(bytes);
+		return StringUtil.bytesToHexString(bytes);
 	}
 
 	@Override
 	public String digestHex(String algorithm, String... text) {
 		byte[] bytes = digestRaw(algorithm, text);
 
-		return Hex.encodeHexString(bytes);
+		return StringUtil.bytesToHexString(bytes);
 	}
 
 	@Override
@@ -174,34 +173,34 @@ public class DigesterImpl implements Digester {
 			messageDigest.update(byteBuffer);
 		}
 		catch (NoSuchAlgorithmException noSuchAlgorithmException) {
-			_log.error(noSuchAlgorithmException, noSuchAlgorithmException);
+			_log.error(noSuchAlgorithmException);
 		}
 
 		return messageDigest.digest();
 	}
 
 	@Override
-	public byte[] digestRaw(String algorithm, InputStream inputStream) {
+	public byte[] digestRaw(String algorithm, InputStream inputStream1) {
 		MessageDigest messageDigest = null;
 
-		try (InputStream is = inputStream) {
+		try (InputStream inputStream2 = inputStream1) {
 			messageDigest = MessageDigest.getInstance(algorithm);
 
 			byte[] buffer = new byte[StreamUtil.BUFFER_SIZE];
 
 			int read = 0;
 
-			while ((read = is.read(buffer)) != -1) {
+			while ((read = inputStream2.read(buffer)) != -1) {
 				if (read > 0) {
 					messageDigest.update(buffer, 0, read);
 				}
 			}
 		}
 		catch (IOException ioException) {
-			_log.error(ioException, ioException);
+			_log.error(ioException);
 		}
 		catch (NoSuchAlgorithmException noSuchAlgorithmException) {
-			_log.error(noSuchAlgorithmException, noSuchAlgorithmException);
+			_log.error(noSuchAlgorithmException);
 		}
 
 		return messageDigest.digest();
@@ -229,11 +228,10 @@ public class DigesterImpl implements Digester {
 			messageDigest.update(s.getBytes(Digester.ENCODING));
 		}
 		catch (NoSuchAlgorithmException noSuchAlgorithmException) {
-			_log.error(noSuchAlgorithmException, noSuchAlgorithmException);
+			_log.error(noSuchAlgorithmException);
 		}
 		catch (UnsupportedEncodingException unsupportedEncodingException) {
-			_log.error(
-				unsupportedEncodingException, unsupportedEncodingException);
+			_log.error(unsupportedEncodingException);
 		}
 
 		return messageDigest.digest();

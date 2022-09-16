@@ -14,14 +14,18 @@
 
 package com.liferay.layout.type.controller.content.internal.product.navigation.control.menu;
 
+import com.liferay.exportimport.kernel.staging.LayoutStaging;
 import com.liferay.layout.content.page.editor.constants.ContentPageEditorWebKeys;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.security.permission.resource.LayoutContentModelResourcePermission;
 import com.liferay.layout.util.LayoutCopyHelper;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.model.LayoutRevision;
 import com.liferay.portal.kernel.model.LayoutTypeController;
 import com.liferay.portal.kernel.model.LayoutTypePortlet;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
@@ -31,7 +35,7 @@ import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.service.permission.LayoutPermission;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
-import com.liferay.portal.kernel.util.Http;
+import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.UnicodeProperties;
@@ -40,14 +44,12 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.product.navigation.control.menu.BaseProductNavigationControlMenuEntry;
 import com.liferay.product.navigation.control.menu.ProductNavigationControlMenuEntry;
 import com.liferay.product.navigation.control.menu.constants.ProductNavigationControlMenuCategoryKeys;
+import com.liferay.sites.kernel.util.Sites;
+import com.liferay.staging.StagingGroupHelper;
 
 import java.util.Collections;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -81,7 +83,7 @@ public class EditLayoutModeProductNavigationControlMenuEntry
 
 	@Override
 	public String getLabel(Locale locale) {
-		return LanguageUtil.get(locale, "edit");
+		return _language.get(locale, "edit");
 	}
 
 	@Override
@@ -91,63 +93,53 @@ public class EditLayoutModeProductNavigationControlMenuEntry
 				WebKeys.THEME_DISPLAY);
 
 		try {
-			String redirect = themeDisplay.getURLCurrent();
-
 			Layout layout = themeDisplay.getLayout();
 
-			if ((layout.getClassPK() > 0) &&
-				(_portal.getClassNameId(Layout.class) ==
-					layout.getClassNameId())) {
-
-				redirect = _portal.getLayoutFullURL(
-					_layoutLocalService.getLayout(layout.getClassPK()),
-					themeDisplay);
-			}
-			else {
-				Layout draftLayout = layout.fetchDraftLayout();
-
-				if (draftLayout == null) {
-					UnicodeProperties unicodeProperties =
-						layout.getTypeSettingsProperties();
-
-					unicodeProperties.put("published", "true");
-
-					ServiceContext serviceContext =
-						ServiceContextFactory.getInstance(httpServletRequest);
-
-					draftLayout = _layoutLocalService.addLayout(
-						layout.getUserId(), layout.getGroupId(),
-						layout.isPrivateLayout(), layout.getParentLayoutId(),
-						_portal.getClassNameId(Layout.class), layout.getPlid(),
-						layout.getNameMap(), layout.getTitleMap(),
-						layout.getDescriptionMap(), layout.getKeywordsMap(),
-						layout.getRobotsMap(), layout.getType(),
-						unicodeProperties.toString(), true, true,
-						Collections.emptyMap(), layout.getMasterLayoutPlid(),
-						serviceContext);
-
-					draftLayout = _layoutCopyHelper.copyLayout(
-						layout, draftLayout);
-
-					_layoutLocalService.updateStatus(
-						draftLayout.getUserId(), draftLayout.getPlid(),
-						WorkflowConstants.STATUS_APPROVED, serviceContext);
-				}
-
-				redirect = _portal.getLayoutFullURL(draftLayout, themeDisplay);
+			if (layout.isDraftLayout()) {
+				return _getRedirect(
+					httpServletRequest,
+					_portal.getLayoutFullURL(
+						_layoutLocalService.getLayout(layout.getClassPK()),
+						themeDisplay),
+					layout, themeDisplay);
 			}
 
-			redirect = _removeAssetCategoryParameters(
-				httpServletRequest, redirect);
+			Layout draftLayout = layout.fetchDraftLayout();
 
-			redirect = _http.setParameter(
-				redirect, "p_l_back_url",
-				_removeAssetCategoryParameters(
-					httpServletRequest, themeDisplay.getURLCurrent()));
+			if (draftLayout == null) {
+				UnicodeProperties unicodeProperties =
+					layout.getTypeSettingsProperties();
 
-			return _http.setParameter(redirect, "p_l_mode", Constants.EDIT);
+				ServiceContext serviceContext =
+					ServiceContextFactory.getInstance(httpServletRequest);
+
+				draftLayout = _layoutLocalService.addLayout(
+					layout.getUserId(), layout.getGroupId(),
+					layout.isPrivateLayout(), layout.getParentLayoutId(),
+					_portal.getClassNameId(Layout.class), layout.getPlid(),
+					layout.getNameMap(), layout.getTitleMap(),
+					layout.getDescriptionMap(), layout.getKeywordsMap(),
+					layout.getRobotsMap(), layout.getType(),
+					unicodeProperties.toString(), true, true,
+					Collections.emptyMap(), layout.getMasterLayoutPlid(),
+					serviceContext);
+
+				draftLayout = _layoutCopyHelper.copyLayout(layout, draftLayout);
+
+				_layoutLocalService.updateStatus(
+					draftLayout.getUserId(), draftLayout.getPlid(),
+					WorkflowConstants.STATUS_APPROVED, serviceContext);
+			}
+
+			return _getRedirect(
+				httpServletRequest,
+				_portal.getLayoutFullURL(draftLayout, themeDisplay), layout,
+				themeDisplay);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return StringPool.BLANK;
@@ -168,6 +160,23 @@ public class EditLayoutModeProductNavigationControlMenuEntry
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
+		long scopeGroupId = themeDisplay.getScopeGroupId();
+
+		if (_stagingGroupHelper.isLocalLiveGroup(scopeGroupId) ||
+			_stagingGroupHelper.isRemoteLiveGroup(scopeGroupId)) {
+
+			return false;
+		}
+
+		Layout layout = themeDisplay.getLayout();
+
+		LayoutRevision layoutRevision = _layoutStaging.getLayoutRevision(
+			layout);
+
+		if ((layoutRevision != null) && layoutRevision.isIncomplete()) {
+			return false;
+		}
+
 		LayoutTypePortlet layoutTypePortlet =
 			themeDisplay.getLayoutTypePortlet();
 
@@ -182,14 +191,9 @@ public class EditLayoutModeProductNavigationControlMenuEntry
 			ContentPageEditorWebKeys.CLASS_NAME);
 
 		if (Objects.equals(
-				className, LayoutPageTemplateEntry.class.getName())) {
+				className, LayoutPageTemplateEntry.class.getName()) ||
+			!layout.isTypeContent() || !_sites.isLayoutUpdateable(layout)) {
 
-			return false;
-		}
-
-		Layout layout = themeDisplay.getLayout();
-
-		if (!layout.isTypeContent()) {
 			return false;
 		}
 
@@ -197,12 +201,8 @@ public class EditLayoutModeProductNavigationControlMenuEntry
 			layout = _layoutLocalService.getLayout(layout.getClassPK());
 		}
 
-		if (_layoutPermission.contains(
-				themeDisplay.getPermissionChecker(), layout,
-				ActionKeys.UPDATE) ||
-			_layoutPermission.contains(
-				themeDisplay.getPermissionChecker(), layout,
-				ActionKeys.UPDATE_LAYOUT_CONTENT) ||
+		if (_layoutPermission.containsLayoutUpdatePermission(
+				themeDisplay.getPermissionChecker(), layout) ||
 			_modelResourcePermission.contains(
 				themeDisplay.getPermissionChecker(), layout.getPlid(),
 				ActionKeys.UPDATE)) {
@@ -213,31 +213,34 @@ public class EditLayoutModeProductNavigationControlMenuEntry
 		return false;
 	}
 
-	private String _removeAssetCategoryParameters(
-		HttpServletRequest httpServletRequest, String url) {
+	private String _getRedirect(
+			HttpServletRequest httpServletRequest, String fullLayoutURL,
+			Layout layout, ThemeDisplay themeDisplay)
+		throws PortalException {
 
-		Map<String, String[]> parameterMap =
-			httpServletRequest.getParameterMap();
+		String redirect = HttpComponentsUtil.setParameter(
+			fullLayoutURL, "p_l_back_url",
+			_portal.getLayoutFullURL(layout, themeDisplay));
 
-		Set<String> parameterNames = parameterMap.keySet();
+		redirect = HttpComponentsUtil.setParameter(
+			redirect, "p_l_mode", Constants.EDIT);
 
-		Stream<String> parameterNameStream = parameterNames.stream();
+		long segmentsExperienceId = ParamUtil.getLong(
+			httpServletRequest, "segmentsExperienceId", -1);
 
-		Set<String> categoryIdParameterNames = parameterNameStream.filter(
-			parameterName -> parameterName.startsWith("categoryId_")
-		).collect(
-			Collectors.toSet()
-		);
-
-		for (String categoryIdParameterName : categoryIdParameterNames) {
-			url = _http.removeParameter(url, categoryIdParameterName);
+		if (segmentsExperienceId != -1) {
+			redirect = HttpComponentsUtil.setParameter(
+				redirect, "segmentsExperienceId", segmentsExperienceId);
 		}
 
-		return url;
+		return redirect;
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		EditLayoutModeProductNavigationControlMenuEntry.class);
+
 	@Reference
-	private Http _http;
+	private Language _language;
 
 	@Reference
 	private LayoutCopyHelper _layoutCopyHelper;
@@ -249,9 +252,18 @@ public class EditLayoutModeProductNavigationControlMenuEntry
 	private LayoutPermission _layoutPermission;
 
 	@Reference
+	private LayoutStaging _layoutStaging;
+
+	@Reference
 	private LayoutContentModelResourcePermission _modelResourcePermission;
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private Sites _sites;
+
+	@Reference
+	private StagingGroupHelper _stagingGroupHelper;
 
 }

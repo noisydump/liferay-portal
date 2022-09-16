@@ -28,7 +28,7 @@ import org.osgi.service.component.annotations.Reference;
 @Component(immediate = true)
 public class ServletContextUtil {
 
-	public static final ServletContext getServletContext() {
+	public static ServletContext getServletContext() {
 		return _servletContext;
 	}
 

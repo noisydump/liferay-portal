@@ -19,7 +19,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 
-import java.util.Map;
+import java.util.Date;
 import java.util.Properties;
 
 import org.apache.commons.lang.StringUtils;
@@ -42,7 +42,7 @@ public class JUnitTestResult extends BaseTestResult {
 	@Override
 	public String getDisplayName() {
 		return JenkinsResultsParserUtil.combine(
-			getSimpleClassName(), ".", getTestName());
+			getClassName(), ".", getTestName());
 	}
 
 	@Override
@@ -138,34 +138,20 @@ public class JUnitTestResult extends BaseTestResult {
 
 		Build build = getBuild();
 
-		Map<String, String> propertiesMap = null;
+		TopLevelBuild topLevelBuild = build.getTopLevelBuild();
 
-		try {
-			propertiesMap = build.getStartPropertiesTempMap();
-		}
-		catch (RuntimeException runtimeException) {
-			String message = runtimeException.getMessage();
+		if (topLevelBuild != null) {
+			String topLevelStartDateString =
+				JenkinsResultsParserUtil.toDateString(
+					new Date(topLevelBuild.getStartTime()), "yyyy-MM",
+					"America/Los_Angeles");
 
-			if (!message.contains(
-					"Unable to find properties for start.properties")) {
+			JenkinsMaster jenkinsMaster = topLevelBuild.getJenkinsMaster();
 
-				throw runtimeException;
-			}
-
-			try {
-				propertiesMap = build.getInjectedEnvironmentVariablesMap();
-			}
-			catch (IOException ioException) {
-				System.out.println("Unable to generate Testray log URL");
-			}
-		}
-
-		if (propertiesMap != null) {
 			return JenkinsResultsParserUtil.combine(
-				logBaseURL, "/", propertiesMap.get("TOP_LEVEL_MASTER_HOSTNAME"),
-				"/", propertiesMap.get("TOP_LEVEL_START_TIME"), "/",
-				propertiesMap.get("TOP_LEVEL_JOB_NAME"), "/",
-				propertiesMap.get("TOP_LEVEL_BUILD_NUMBER"), "/",
+				logBaseURL, "/", topLevelStartDateString, "/",
+				jenkinsMaster.getName(), "/", topLevelBuild.getJobName(), "/",
+				String.valueOf(topLevelBuild.getBuildNumber()), "/",
 				build.getJobVariant(), "/", getAxisNumber());
 		}
 
@@ -206,7 +192,7 @@ public class JUnitTestResult extends BaseTestResult {
 		super(build);
 
 		_className = caseJSONObject.getString("className");
-		_duration = (long)(caseJSONObject.getDouble("duration") * 1000D);
+		_duration = (long)(caseJSONObject.getDouble("duration") * 1000);
 		_status = caseJSONObject.getString("status");
 		_testName = caseJSONObject.getString("name");
 

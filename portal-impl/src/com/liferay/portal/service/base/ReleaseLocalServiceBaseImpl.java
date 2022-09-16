@@ -28,6 +28,8 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
@@ -36,6 +38,7 @@ import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
 import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistry;
 import com.liferay.portal.kernel.service.ReleaseLocalService;
+import com.liferay.portal.kernel.service.ReleaseLocalServiceUtil;
 import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.ReleasePersistence;
 import com.liferay.portal.kernel.transaction.Transactional;
@@ -43,6 +46,8 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
+
+import java.lang.reflect.Field;
 
 import java.util.List;
 
@@ -66,7 +71,7 @@ public abstract class ReleaseLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>ReleaseLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.kernel.service.ReleaseLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>ReleaseLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>ReleaseLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -135,6 +140,13 @@ public abstract class ReleaseLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return releasePersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -299,6 +311,11 @@ public abstract class ReleaseLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement ReleaseLocalServiceImpl#deleteRelease(Release) to avoid orphaned data");
+		}
+
 		return releaseLocalService.deleteRelease((Release)persistedModel);
 	}
 
@@ -423,11 +440,15 @@ public abstract class ReleaseLocalServiceBaseImpl
 	public void afterPropertiesSet() {
 		persistedModelLocalServiceRegistry.register(
 			"com.liferay.portal.kernel.model.Release", releaseLocalService);
+
+		_setLocalServiceUtilService(releaseLocalService);
 	}
 
 	public void destroy() {
 		persistedModelLocalServiceRegistry.unregister(
 			"com.liferay.portal.kernel.model.Release");
+
+		_setLocalServiceUtilService(null);
 	}
 
 	/**
@@ -472,6 +493,22 @@ public abstract class ReleaseLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		ReleaseLocalService releaseLocalService) {
+
+		try {
+			Field field = ReleaseLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, releaseLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@BeanReference(type = ReleaseLocalService.class)
 	protected ReleaseLocalService releaseLocalService;
 
@@ -483,6 +520,9 @@ public abstract class ReleaseLocalServiceBaseImpl
 	)
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		ReleaseLocalServiceBaseImpl.class);
 
 	@BeanReference(type = PersistedModelLocalServiceRegistry.class)
 	protected PersistedModelLocalServiceRegistry

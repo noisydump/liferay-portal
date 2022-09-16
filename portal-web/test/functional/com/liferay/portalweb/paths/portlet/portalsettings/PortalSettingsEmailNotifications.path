@@ -2,11 +2,13 @@
 <head>
 <title>PortalSettingsEmailNotifications</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">PortalSettingsEmailNotifications</td></tr>
 </thead>
+
 <tbody>
 <tr>
 	<td>NAVIGATION_EMAIL_VERIFICATION_NOTIFICATION_BODY</td>
@@ -18,7 +20,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--EMAIL_NOTIFICATIONS_SENDER-->
+
 <tr>
 	<td>EMAIL_NOTIFICATIONS_SENDER_NAME_HEADER</td>
 	<td>//label[contains(@for,'admin-email-from-name')]</td>
@@ -44,7 +48,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--EMAIL_NOTIFICATIONS_ACCOUNT_CREATED_NOTIFICATION-->
+
 <tr>
 	<td>EMAIL_NOTIFICATIONS_ACCOUNT_CREATED_NOTIFICATION_ENABLED_CHECKBOX</td>
 	<td>//input[contains(@id,'admin-email-user-added-enabled')]</td>
@@ -85,7 +91,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--EMAIL_NOTIFICATIONS_PASSWORD_CHANGED_NOTIFICATION-->
+
 <tr>
 	<td>EMAIL_NOTIFICATIONS_PASSWORD_CHANGED_NOTIFICATION_SUBJECT_HEADER</td>
 	<td>//input[contains(@id,'adminEmailPasswordChangedSubject')]/ancestor::div/preceding-sibling::span[contains(.,'Subject')]</td>

@@ -18,15 +18,18 @@
 
 <%
 AccountEntryDisplay accountEntryDisplay = (AccountEntryDisplay)request.getAttribute(AccountWebKeys.ACCOUNT_ENTRY_DISPLAY);
-
-PortletURL portletURL = renderResponse.createRenderURL();
-
-portletURL.setParameter("mvcRenderCommandName", "/account_admin/edit_account_entry");
-portletURL.setParameter("accountEntryId", String.valueOf(accountEntryDisplay.getAccountEntryId()));
 %>
 
 <liferay-frontend:screen-navigation
-	context="<%= accountEntryDisplay %>"
+	context="<%= accountEntryDisplay.getAccountEntry() %>"
 	key="<%= AccountScreenNavigationEntryConstants.SCREEN_NAVIGATION_KEY_ACCOUNT_ENTRY %>"
-	portletURL="<%= portletURL %>"
+	portletURL='<%=
+		PortletURLBuilder.createRenderURL(
+			renderResponse
+		).setMVCRenderCommandName(
+			"/account_admin/edit_account_entry"
+		).setParameter(
+			"accountEntryId", accountEntryDisplay.getAccountEntryId()
+		).buildPortletURL()
+	%>'
 />

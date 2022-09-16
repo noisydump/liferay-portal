@@ -20,18 +20,24 @@ import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.service.BaseServiceImpl;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.sync.model.SyncDevice;
 import com.liferay.sync.service.SyncDeviceService;
+import com.liferay.sync.service.SyncDeviceServiceUtil;
 import com.liferay.sync.service.persistence.SyncDLFileVersionDiffPersistence;
 import com.liferay.sync.service.persistence.SyncDLObjectFinder;
 import com.liferay.sync.service.persistence.SyncDLObjectPersistence;
 import com.liferay.sync.service.persistence.SyncDevicePersistence;
 
+import java.lang.reflect.Field;
+
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -52,8 +58,13 @@ public abstract class SyncDeviceServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>SyncDeviceService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.sync.service.SyncDeviceServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>SyncDeviceService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>SyncDeviceServiceUtil</code>.
 	 */
+	@Deactivate
+	protected void deactivate() {
+		_setServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -64,6 +75,8 @@ public abstract class SyncDeviceServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		syncDeviceService = (SyncDeviceService)aopProxy;
+
+		_setServiceUtilService(syncDeviceService);
 	}
 
 	/**
@@ -108,6 +121,20 @@ public abstract class SyncDeviceServiceBaseImpl
 		}
 	}
 
+	private void _setServiceUtilService(SyncDeviceService syncDeviceService) {
+		try {
+			Field field = SyncDeviceServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, syncDeviceService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@Reference
 	protected com.liferay.sync.service.SyncDeviceLocalService
 		syncDeviceLocalService;
@@ -148,5 +175,8 @@ public abstract class SyncDeviceServiceBaseImpl
 
 	@Reference
 	protected com.liferay.portal.kernel.service.UserService userService;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		SyncDeviceServiceBaseImpl.class);
 
 }

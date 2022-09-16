@@ -26,8 +26,11 @@ import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.Validator;
@@ -72,18 +75,16 @@ public class KaleoDefinitionVersionLocalServiceImpl
 
 		Date createDate = serviceContext.getCreateDate(new Date());
 		Date modifiedDate = serviceContext.getModifiedDate(new Date());
-		User user = userLocalService.getUser(serviceContext.getGuestOrUserId());
+		User user = _userLocalService.getUser(
+			serviceContext.getGuestOrUserId());
 
 		long kaleoDefinitionVersionId = counterLocalService.increment();
 
 		KaleoDefinitionVersion kaleoDefinitionVersion =
 			kaleoDefinitionVersionPersistence.create(kaleoDefinitionVersionId);
 
-		long groupId = _staging.getLiveGroupId(
-			serviceContext.getScopeGroupId());
-
-		kaleoDefinitionVersion.setGroupId(groupId);
-
+		kaleoDefinitionVersion.setGroupId(
+			_staging.getLiveGroupId(serviceContext.getScopeGroupId()));
 		kaleoDefinitionVersion.setCompanyId(user.getCompanyId());
 		kaleoDefinitionVersion.setUserId(user.getUserId());
 		kaleoDefinitionVersion.setUserName(user.getFullName());
@@ -95,13 +96,10 @@ public class KaleoDefinitionVersionLocalServiceImpl
 		kaleoDefinitionVersion.setDescription(description);
 		kaleoDefinitionVersion.setContent(content);
 		kaleoDefinitionVersion.setVersion(version);
-
-		int status = GetterUtil.getInteger(
-			serviceContext.getAttribute("status"),
-			WorkflowConstants.STATUS_APPROVED);
-
-		kaleoDefinitionVersion.setStatus(status);
-
+		kaleoDefinitionVersion.setStatus(
+			GetterUtil.getInteger(
+				serviceContext.getAttribute("status"),
+				WorkflowConstants.STATUS_APPROVED));
 		kaleoDefinitionVersion.setStatusByUserId(user.getUserId());
 		kaleoDefinitionVersion.setStatusByUserName(user.getFullName());
 		kaleoDefinitionVersion.setStatusDate(modifiedDate);
@@ -110,6 +108,7 @@ public class KaleoDefinitionVersionLocalServiceImpl
 	}
 
 	@Override
+	@SystemEvent(type = SystemEventConstants.TYPE_DELETE)
 	public KaleoDefinitionVersion deleteKaleoDefinitionVersion(
 			KaleoDefinitionVersion kaleoDefinitionVersion)
 		throws PortalException {
@@ -362,6 +361,7 @@ public class KaleoDefinitionVersionLocalServiceImpl
 		Junction junction = RestrictionsFactoryUtil.disjunction();
 
 		for (String keyword : _customSQL.keywords(keywords)) {
+			junction.add(RestrictionsFactoryUtil.ilike("description", keyword));
 			junction.add(RestrictionsFactoryUtil.ilike("name", keyword));
 			junction.add(RestrictionsFactoryUtil.ilike("title", keyword));
 		}
@@ -432,5 +432,8 @@ public class KaleoDefinitionVersionLocalServiceImpl
 
 	@Reference
 	private Staging _staging;
+
+	@Reference
+	private UserLocalService _userLocalService;
 
 }

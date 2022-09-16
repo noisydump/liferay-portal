@@ -17,7 +17,7 @@ package com.liferay.dynamic.data.mapping.internal.search.spi.model.result.contri
 import com.liferay.dynamic.data.mapping.model.DDMFormInstance;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceLocalService;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
@@ -58,42 +58,45 @@ public class DDMFormInstanceRecordModelSummaryContributor
 			locale, prefix + Field.DESCRIPTION, Field.DESCRIPTION);
 
 		Summary summary = new Summary(
-			getTitle(ddmFormInstanceId, locale), description);
+			_getTitle(ddmFormInstanceId, locale), description);
 
 		summary.setMaxContentLength(200);
 
 		return summary;
 	}
 
-	protected ResourceBundle getResourceBundle(Locale defaultLocale) {
+	@Reference
+	protected DDMFormInstanceLocalService ddmFormInstanceLocalService;
+
+	private ResourceBundle _getResourceBundle(Locale defaultLocale) {
 		ResourceBundleLoader portalResourceBundleLoader =
 			ResourceBundleLoaderUtil.getPortalResourceBundleLoader();
 
 		return portalResourceBundleLoader.loadResourceBundle(defaultLocale);
 	}
 
-	protected String getTitle(long ddmFormInstanceId, Locale locale) {
+	private String _getTitle(long ddmFormInstanceId, Locale locale) {
 		try {
 			DDMFormInstance ddmFormInstance =
 				ddmFormInstanceLocalService.getFormInstance(ddmFormInstanceId);
 
 			String ddmFormInstanceName = ddmFormInstance.getName(locale);
 
-			return LanguageUtil.format(
-				getResourceBundle(locale), "form-record-for-form-x",
+			return _language.format(
+				_getResourceBundle(locale), "form-record-for-form-x",
 				ddmFormInstanceName, false);
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 		}
 
 		return StringPool.BLANK;
 	}
 
-	@Reference
-	protected DDMFormInstanceLocalService ddmFormInstanceLocalService;
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		DDMFormInstanceRecordModelSummaryContributor.class);
+
+	@Reference
+	private Language _language;
 
 }

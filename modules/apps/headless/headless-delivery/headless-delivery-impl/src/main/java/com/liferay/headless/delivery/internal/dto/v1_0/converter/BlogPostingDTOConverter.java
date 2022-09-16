@@ -26,21 +26,34 @@ import com.liferay.document.library.util.DLURLHelper;
 import com.liferay.headless.delivery.dto.v1_0.BlogPosting;
 import com.liferay.headless.delivery.dto.v1_0.Image;
 import com.liferay.headless.delivery.dto.v1_0.TaxonomyCategoryBrief;
+import com.liferay.headless.delivery.dto.v1_0.util.ContentValueUtil;
+import com.liferay.headless.delivery.dto.v1_0.util.CreatorUtil;
+import com.liferay.headless.delivery.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.headless.delivery.internal.dto.v1_0.util.AggregateRatingUtil;
-import com.liferay.headless.delivery.internal.dto.v1_0.util.ContentValueUtil;
-import com.liferay.headless.delivery.internal.dto.v1_0.util.CreatorUtil;
-import com.liferay.headless.delivery.internal.dto.v1_0.util.CustomFieldsUtil;
+import com.liferay.headless.delivery.internal.dto.v1_0.util.DisplayPageRendererUtil;
 import com.liferay.headless.delivery.internal.dto.v1_0.util.RelatedContentUtil;
 import com.liferay.headless.delivery.internal.dto.v1_0.util.TaxonomyCategoryBriefUtil;
+import com.liferay.headless.delivery.internal.resource.v1_0.BaseBlogPostingResourceImpl;
+import com.liferay.info.item.InfoItemServiceTracker;
+import com.liferay.layout.display.page.LayoutDisplayPageProviderTracker;
+import com.liferay.layout.page.template.service.LayoutPageTemplateEntryService;
 import com.liferay.portal.kernel.comment.CommentManager;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
+import com.liferay.portal.vulcan.util.JaxRsLinkUtil;
 import com.liferay.portal.vulcan.util.TransformUtil;
 import com.liferay.ratings.kernel.service.RatingsStatsLocalService;
+
+import javax.ws.rs.core.UriInfo;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -58,6 +71,13 @@ public class BlogPostingDTOConverter
 	@Override
 	public String getContentType() {
 		return BlogPosting.class.getSimpleName();
+	}
+
+	@Override
+	public String getJaxRsLink(long classPK, UriInfo uriInfo) {
+		return JaxRsLinkUtil.getJaxRsLink(
+			"headless-delivery", BaseBlogPostingResourceImpl.class,
+			"getBlogPosting", uriInfo, classPK);
 	}
 
 	@Override
@@ -85,8 +105,8 @@ public class BlogPostingDTOConverter
 				dateCreated = blogsEntry.getCreateDate();
 				dateModified = blogsEntry.getModifiedDate();
 				datePublished = blogsEntry.getDisplayDate();
-				description = blogsEntry.getDescription();
 				encodingFormat = "text/html";
+				externalReferenceCode = blogsEntry.getExternalReferenceCode();
 				friendlyUrlPath = blogsEntry.getUrlTitle();
 				headline = blogsEntry.getTitle();
 				id = blogsEntry.getEntryId();
@@ -110,6 +130,31 @@ public class BlogPostingDTOConverter
 						TaxonomyCategoryBriefUtil.toTaxonomyCategoryBrief(
 							assetCategory, dtoConverterContext),
 					TaxonomyCategoryBrief.class);
+
+				setDescription(
+					() -> {
+						String description = blogsEntry.getDescription();
+
+						if (Validator.isNotNull(description)) {
+							return description;
+						}
+
+						return HtmlUtil.stripHtml(
+							StringUtil.shorten(
+								blogsEntry.getContent(),
+								PropsValues.BLOGS_PAGE_ABSTRACT_LENGTH));
+					});
+				setRenderedContents(
+					() -> DisplayPageRendererUtil.getRenderedContent(
+						BaseBlogPostingResourceImpl.class,
+						BlogsEntry.class.getName(), blogsEntry.getEntryId(), 0,
+						dtoConverterContext, blogsEntry.getGroupId(),
+						blogsEntry, _infoItemServiceTracker,
+						_layoutDisplayPageProviderTracker, _layoutLocalService,
+						_layoutPageTemplateEntryService,
+						"getBlogPostingRenderedContentByDisplayPageDisplay" +
+							"PageKey"));
+				viewableBy = ViewableBy.ANYONE;
 			}
 		};
 	}
@@ -163,6 +208,18 @@ public class BlogPostingDTOConverter
 
 	@Reference
 	private DLURLHelper _dlURLHelper;
+
+	@Reference
+	private InfoItemServiceTracker _infoItemServiceTracker;
+
+	@Reference
+	private LayoutDisplayPageProviderTracker _layoutDisplayPageProviderTracker;
+
+	@Reference
+	private LayoutLocalService _layoutLocalService;
+
+	@Reference
+	private LayoutPageTemplateEntryService _layoutPageTemplateEntryService;
 
 	@Reference
 	private Portal _portal;

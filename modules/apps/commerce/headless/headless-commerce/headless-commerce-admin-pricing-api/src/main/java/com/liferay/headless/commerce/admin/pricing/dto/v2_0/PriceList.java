@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
@@ -63,6 +64,10 @@ public class PriceList implements Serializable {
 		return ObjectMapperUtil.readValue(PriceList.class, json);
 	}
 
+	public static PriceList unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(PriceList.class, json);
+	}
+
 	@Schema
 	@Valid
 	public Map<String, Map<String, String>> getActions() {
@@ -93,7 +98,7 @@ public class PriceList implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Map<String, Map<String, String>> actions;
 
-	@Schema
+	@Schema(example = "true")
 	public Boolean getActive() {
 		return active;
 	}
@@ -121,7 +126,7 @@ public class PriceList implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Boolean active;
 
-	@Schema
+	@Schema(example = "admin")
 	public String getAuthor() {
 		return author;
 	}
@@ -149,7 +154,7 @@ public class PriceList implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String author;
 
-	@Schema
+	@Schema(example = "true")
 	public Boolean getCatalogBasePriceList() {
 		return catalogBasePriceList;
 	}
@@ -178,7 +183,7 @@ public class PriceList implements Serializable {
 	protected Boolean catalogBasePriceList;
 
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "23130")
 	public Long getCatalogId() {
 		return catalogId;
 	}
@@ -207,7 +212,7 @@ public class PriceList implements Serializable {
 	@NotNull
 	protected Long catalogId;
 
-	@Schema
+	@Schema(example = "catalog")
 	public String getCatalogName() {
 		return catalogName;
 	}
@@ -235,7 +240,7 @@ public class PriceList implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String catalogName;
 
-	@Schema
+	@Schema(example = "2017-07-21")
 	public Date getCreateDate() {
 		return createDate;
 	}
@@ -263,7 +268,7 @@ public class PriceList implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Date createDate;
 
-	@Schema
+	@Schema(example = "EUR")
 	public String getCurrencyCode() {
 		return currencyCode;
 	}
@@ -321,7 +326,7 @@ public class PriceList implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Map<String, ?> customFields;
 
-	@Schema
+	@Schema(example = "2017-07-21")
 	public Date getDisplayDate() {
 		return displayDate;
 	}
@@ -349,7 +354,7 @@ public class PriceList implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Date displayDate;
 
-	@Schema
+	@Schema(example = "2017-08-21")
 	public Date getExpirationDate() {
 		return expirationDate;
 	}
@@ -377,7 +382,7 @@ public class PriceList implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Date expirationDate;
 
-	@Schema
+	@Schema(example = "AB-34098-789-N")
 	public String getExternalReferenceCode() {
 		return externalReferenceCode;
 	}
@@ -406,7 +411,7 @@ public class PriceList implements Serializable {
 	protected String externalReferenceCode;
 
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "30130")
 	public Long getId() {
 		return id;
 	}
@@ -432,7 +437,7 @@ public class PriceList implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Long id;
 
-	@Schema
+	@Schema(example = "Laptops, Beverages")
 	public String getName() {
 		return name;
 	}
@@ -459,7 +464,7 @@ public class PriceList implements Serializable {
 	@NotEmpty
 	protected String name;
 
-	@Schema
+	@Schema(example = "true")
 	public Boolean getNetPrice() {
 		return netPrice;
 	}
@@ -487,7 +492,7 @@ public class PriceList implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Boolean netPrice;
 
-	@Schema
+	@Schema(example = "true")
 	public Boolean getNeverExpire() {
 		return neverExpire;
 	}
@@ -516,7 +521,7 @@ public class PriceList implements Serializable {
 	protected Boolean neverExpire;
 
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "30130")
 	public Long getParentPriceListId() {
 		return parentPriceListId;
 	}
@@ -697,6 +702,38 @@ public class PriceList implements Serializable {
 
 	@Schema
 	@Valid
+	public PriceListOrderType[] getPriceListOrderTypes() {
+		return priceListOrderTypes;
+	}
+
+	public void setPriceListOrderTypes(
+		PriceListOrderType[] priceListOrderTypes) {
+
+		this.priceListOrderTypes = priceListOrderTypes;
+	}
+
+	@JsonIgnore
+	public void setPriceListOrderTypes(
+		UnsafeSupplier<PriceListOrderType[], Exception>
+			priceListOrderTypesUnsafeSupplier) {
+
+		try {
+			priceListOrderTypes = priceListOrderTypesUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected PriceListOrderType[] priceListOrderTypes;
+
+	@Schema
+	@Valid
 	public PriceModifier[] getPriceModifiers() {
 		return priceModifiers;
 	}
@@ -725,7 +762,7 @@ public class PriceList implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected PriceModifier[] priceModifiers;
 
-	@Schema
+	@Schema(example = "1.2")
 	public Double getPriority() {
 		return priority;
 	}
@@ -753,7 +790,7 @@ public class PriceList implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Double priority;
 
-	@Schema
+	@Schema(example = "price-list, promotion, contract")
 	@Valid
 	public Type getType() {
 		return type;
@@ -1151,6 +1188,26 @@ public class PriceList implements Serializable {
 			sb.append("]");
 		}
 
+		if (priceListOrderTypes != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"priceListOrderTypes\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < priceListOrderTypes.length; i++) {
+				sb.append(String.valueOf(priceListOrderTypes[i]));
+
+				if ((i + 1) < priceListOrderTypes.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
 		if (priceModifiers != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -1211,6 +1268,7 @@ public class PriceList implements Serializable {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.commerce.admin.pricing.dto.v2_0.PriceList",
 		name = "x-class-name"
 	)
@@ -1223,13 +1281,17 @@ public class PriceList implements Serializable {
 
 		@JsonCreator
 		public static Type create(String value) {
+			if ((value == null) || value.equals("")) {
+				return null;
+			}
+
 			for (Type type : values()) {
 				if (Objects.equals(type.getValue(), value)) {
 					return type;
 				}
 			}
 
-			return null;
+			throw new IllegalArgumentException("Invalid enum value: " + value);
 		}
 
 		@JsonValue
@@ -1251,9 +1313,9 @@ public class PriceList implements Serializable {
 	}
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
 	}
 
 	private static boolean _isArray(Object value) {
@@ -1279,8 +1341,8 @@ public class PriceList implements Serializable {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -1311,7 +1373,7 @@ public class PriceList implements Serializable {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -1319,7 +1381,7 @@ public class PriceList implements Serializable {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -1327,5 +1389,10 @@ public class PriceList implements Serializable {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

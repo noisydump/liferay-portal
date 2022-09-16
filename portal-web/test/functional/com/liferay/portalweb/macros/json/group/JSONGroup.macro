@@ -1,34 +1,16 @@
 definition {
 
-	@summary = "Add a child site to a valid site."
-	macro addChildSite {
+	@summary = "Add a child group based on Blank"
+	macro addChildGroup {
 		Variables.assertDefined(parameterList = "${groupName},${parentGroupName}");
 
-		var groupDescriptionMap = JSONGroupSetter.setGroupDescriptionMap(
-			groupDescription = "${groupDescription}");
-
-		var groupNameMap = JSONGroupSetter.setGroupNameMap(
-			groupName = "${groupName}");
-
-		var parentGroupId = JSONGroupSetter.setParentGroupId(parentGroupName = "${parentGroupName}", grandParentGroupName = "${grandParentGroupName}");
-
-		JSONGroupAPI._addGroup(
-			groupDescriptionMap = "${groupDescriptionMap}",
-			groupNameMap = "${groupNameMap}",
-			parentGroupId = "${parentGroupId}");
-	}
-
-	@summary = "Add a basic site"
-	macro addGroup {
-		Variables.assertDefined(parameterList = "${groupName}");
-
-		var groupDescriptionMap = JSONGroupSetter.setGroupDescriptionMap(
-			groupDescription = "${groupDescription}");
-
-		var groupNameMap = JSONGroupSetter.setGroupNameMap(
-			groupName = "${groupName}");
-
-		var parentGroupId = JSONGroupSetter.setParentGroupId(groupName = "${parentGroupName}");
+		var groupDescriptionMap = JSONGroupSetter.setGroupDescriptionMap(groupDescription = "${groupDescription}");
+		var groupNameMap = JSONGroupSetter.setGroupNameMap(groupName = "${groupName}");
+		var parentGroupId = JSONGroupSetter.setParentGroupId(
+			grandParentGroupName = "${grandParentGroupName}",
+			parentGroupName = "${parentGroupName}");
+		var type = JSONGroupSetter.setMembershipType(membershipType = "${membershipType}");
+		var manualMembership = JSONGroupSetter.setAllowManualMembershipManagement(allowManualMembershipManagement = "${allowManualMembershipManagement}");
 
 		JSONGroupAPI._addGroup(
 			groupDescriptionMap = "${groupDescriptionMap}",
@@ -38,13 +20,32 @@ definition {
 			type = "${type}");
 	}
 
+	@summary = "Add a group based on Blank"
+	macro addGroup {
+		Variables.assertDefined(parameterList = "${groupName}");
+
+		var groupDescriptionMap = JSONGroupSetter.setGroupDescriptionMap(groupDescription = "${groupDescription}");
+		var groupNameMap = JSONGroupSetter.setGroupNameMap(groupName = "${groupName}");
+		var parentGroupId = JSONGroupSetter.setParentGroupId(groupName = "${parentGroupName}");
+		var type = JSONGroupSetter.setMembershipType(membershipType = "${membershipType}");
+		var manualMembership = JSONGroupSetter.setAllowManualMembershipManagement(allowManualMembershipManagement = "${allowManualMembershipManagement}");
+
+		JSONGroupAPI._addGroup(
+			groupDescriptionMap = "${groupDescriptionMap}",
+			groupNameMap = "${groupNameMap}",
+			manualMembership = "${manualMembership}",
+			parentGroupId = "${parentGroupId}",
+			portalURL = "${portalURL}",
+			type = "${type}");
+	}
+
 	macro assignGroupRoleToUser {
 		Variables.assertDefined(parameterList = "${groupName},${roleTitle},${userEmailAddress}");
 
-		var groupId = JSONGroupSetter.setGroupId(groupName = "${groupName}");
-
+		var groupId = JSONGroupSetter.setGroupId(
+			groupName = "${groupName}",
+			parentGroupName = "${parentGroupName}");
 		var roleId = JSONRoleAPI._getRoleIdByName(name = "${roleTitle}");
-
 		var userId = JSONUserAPI._getUserIdByEmailAddress(userEmailAddress = "${userEmailAddress}");
 
 		JSONGroupAPI._assignGroupRoleToUser(
@@ -57,7 +58,6 @@ definition {
 		Variables.assertDefined(parameterList = "${groupName},${userGroupName}");
 
 		var groupId = JSONGroupSetter.setGroupId(groupName = "${groupName}");
-
 		var userGroupId = JSONUserGroupAPI._getUserGroupIdByName(userGroupName = "${userGroupName}");
 
 		JSONGroupAPI._assignUserGroupToGroup(
@@ -68,8 +68,9 @@ definition {
 	macro assignUserToGroup {
 		Variables.assertDefined(parameterList = "${groupName},${userEmailAddress}");
 
-		var groupId = JSONGroupSetter.setGroupId(groupName = "${groupName}");
-
+		var groupId = JSONGroupSetter.setGroupId(
+			groupName = "${groupName}",
+			parentGroupName = "${parentGroupName}");
 		var userId = JSONUserAPI._getUserIdByEmailAddress(userEmailAddress = "${userEmailAddress}");
 
 		JSONGroupAPI._assignUserToGroup(
@@ -81,9 +82,13 @@ definition {
 	macro deleteGroupByName {
 		Variables.assertDefined(parameterList = "${groupName}");
 
-		var groupId = JSONGroupSetter.setGroupId(groupName = "${groupName}");
+		var groupId = JSONGroupSetter.setGroupId(
+			groupName = "${groupName}",
+			portalURL = "${portalURL}");
 
-		JSONGroupAPI._deleteGroup(groupId = "${groupId}");
+		JSONGroupAPI._deleteGroup(
+			groupId = "${groupId}",
+			portalURL = "${portalURL}");
 	}
 
 }

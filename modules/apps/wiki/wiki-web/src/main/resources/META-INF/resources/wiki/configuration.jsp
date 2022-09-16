@@ -48,7 +48,7 @@
 				<aui:input name="preferences--enableHighlighting--" type="checkbox" value="<%= wikiPortletInstanceSettingsHelper.isEnableHighlighting() %>" />
 
 				<div class="display-template">
-					<liferay-ddm:template-selector
+					<liferay-template:template-selector
 						className="<%= WikiPage.class.getName() %>"
 						displayStyle="<%= wikiPortletInstanceSettingsHelper.getDisplayStyle() %>"
 						displayStyleGroupId="<%= wikiPortletInstanceSettingsHelper.getDisplayStyleGroupId() %>"
@@ -141,8 +141,12 @@
 		if (availableVisibleNodes && currentVisibleNodes) {
 			Liferay.Util.postForm(form, {
 				data: {
-					hiddenNodes: Liferay.Util.listSelect(availableVisibleNodes),
-					visibleNodes: Liferay.Util.listSelect(currentVisibleNodes),
+					hiddenNodes: Liferay.Util.getSelectedOptionValues(
+						availableVisibleNodes
+					),
+					visibleNodes: Liferay.Util.getSelectedOptionValues(
+						currentVisibleNodes
+					),
 				},
 			});
 		}

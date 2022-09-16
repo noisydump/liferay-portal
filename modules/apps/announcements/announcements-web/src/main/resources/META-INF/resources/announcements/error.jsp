@@ -25,11 +25,11 @@ if (portletTitleBasedNavigation) {
 	String backURL = request.getHeader(HttpHeaders.REFERER);
 
 	if (Validator.isNull(backURL)) {
-		PortletURL backURLObj = liferayPortletResponse.createRenderURL();
-
-		backURLObj.setParameter("mvcRenderCommandName", "/announcements/view");
-
-		backURL = backURLObj.toString();
+		backURL = PortletURLBuilder.createRenderURL(
+			liferayPortletResponse
+		).setMVCRenderCommandName(
+			"/announcements/view"
+		).buildString();
 	}
 
 	portletDisplay.setURLBack(backURL);

@@ -32,7 +32,7 @@ try {
 }
 catch (Exception exception) {
 	if (_log.isDebugEnabled()) {
-		_log.debug(exception, exception);
+		_log.debug(exception);
 	}
 }
 %>
@@ -86,7 +86,7 @@ catch (Exception exception) {
 	);
 
 	if (selectRootTopicButton) {
-		selectRootTopicButton.addEventListener('click', function (event) {
+		selectRootTopicButton.addEventListener('click', (event) => {
 			Liferay.Util.openSelectionModal({
 				onSelect: function (event) {
 					var form = document.<portlet:namespace />fm;
@@ -108,11 +108,15 @@ catch (Exception exception) {
 				title: '<liferay-ui:message arguments="category" key="select-x" />',
 
 				<%
-				PortletURL selectMBCategoryURL = PortletProviderUtil.getPortletURL(request, MBCategory.class.getName(), PortletProvider.Action.EDIT);
-
-				selectMBCategoryURL.setParameter("mvcRenderCommandName", "/message_boards/select_category");
-				selectMBCategoryURL.setParameter("mbCategoryId", String.valueOf(rootTopicId));
-				selectMBCategoryURL.setWindowState(LiferayWindowState.POP_UP);
+				PortletURL selectMBCategoryURL = PortletURLBuilder.create(
+					PortletProviderUtil.getPortletURL(request, MBCategory.class.getName(), PortletProvider.Action.EDIT)
+				).setMVCRenderCommandName(
+					"/message_boards/select_category"
+				).setParameter(
+					"mbCategoryId", rootTopicId
+				).setWindowState(
+					LiferayWindowState.POP_UP
+				).buildPortletURL();
 				%>
 
 				url: '<%= selectMBCategoryURL.toString() %>',
@@ -122,5 +126,5 @@ catch (Exception exception) {
 </script>
 
 <%!
-private static Log _log = LogFactoryUtil.getLog("com_liferay_questions_web.configuarion_jsp");
+private static final Log _log = LogFactoryUtil.getLog("com_liferay_questions_web.configuarion_jsp");
 %>

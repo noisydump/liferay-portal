@@ -12,20 +12,21 @@
  * details.
  */
 
+import ClayIcon from '@clayui/icon';
 import ClayModal, {useModal} from '@clayui/modal';
 import {ClayPaginationBarWithBasicItems} from '@clayui/pagination-bar';
+import ClaySticker from '@clayui/sticker';
 import ClayTable from '@clayui/table';
-import {ClayTooltipProvider} from '@clayui/tooltip';
 import React, {useState} from 'react';
 
 import ChangeTrackingRenderView from './ChangeTrackingRenderView';
 
-const ChangeTrackingDiscardView = ({
+export default function ChangeTrackingDiscardView({
 	ctEntriesJSONArray,
 	spritemap,
 	typeNames,
 	userInfo,
-}) => {
+}) {
 	const [delta, setDelta] = useState(20);
 	const [page, setPage] = useState(1);
 	const [viewEntry, setViewEntry] = useState(null);
@@ -42,19 +43,17 @@ const ChangeTrackingDiscardView = ({
 
 		const entryUserInfo = userInfo[entry.userId.toString()];
 
+		entry.portraitURL = entryUserInfo.portraitURL;
 		entry.userName = entryUserInfo.userName;
-		entry.userPortraitHTML = {
-			__html: entryUserInfo.userPortraitHTML,
-		};
 
 		entry.typeName = typeNames[entry.modelClassNameId.toString()];
 	}
 
 	ctEntries.sort((a, b) => {
-		const titleA = a.title;
-		const titleB = b.title;
-		const typeNameA = a.typeName.toUpperCase();
-		const typeNameB = b.typeName.toUpperCase();
+		const titleA = a.title.toLowerCase();
+		const titleB = b.title.toLowerCase();
+		const typeNameA = a.typeName.toLowerCase();
+		const typeNameB = b.typeName.toLowerCase();
 
 		if (typeNameA < typeNameB) {
 			return -1;
@@ -111,14 +110,31 @@ const ChangeTrackingDiscardView = ({
 					onClick={() => setViewEntry(entry)}
 				>
 					<ClayTable.Cell>
-						<div
-							dangerouslySetInnerHTML={entry.userPortraitHTML}
+						<ClaySticker
+							className={`sticker-user-icon ${
+								entry.portraitURL
+									? ''
+									: 'user-icon-color-' + (entry.userId % 10)
+							}`}
 							data-tooltip-align="top"
 							title={entry.userName}
-						/>
+						>
+							{entry.portraitURL ? (
+								<div className="sticker-overlay">
+									<img
+										className="sticker-img"
+										src={entry.portraitURL}
+									/>
+								</div>
+							) : (
+								<ClayIcon symbol="user" />
+							)}
+						</ClaySticker>
 					</ClayTable.Cell>
+
 					<ClayTable.Cell>
 						<div className="publication-name">{entry.title}</div>
+
 						<div className="publication-description">
 							{entry.description}
 						</div>
@@ -168,25 +184,43 @@ const ChangeTrackingDiscardView = ({
 				<ClayModal.Header>
 					<div className="autofit-row">
 						<div className="autofit-col publications-discard-user-portrait">
-							<div
-								dangerouslySetInnerHTML={
-									viewEntry.userPortraitHTML
-								}
+							<ClaySticker
+								className={`sticker-user-icon ${
+									viewEntry.portraitURL
+										? ''
+										: 'user-icon-color-' +
+										  (viewEntry.userId % 10)
+								}`}
 								data-tooltip-align="top"
 								title={viewEntry.userName}
-							/>
+							>
+								{viewEntry.portraitURL ? (
+									<div className="sticker-overlay">
+										<img
+											className="sticker-img"
+											src={viewEntry.portraitURL}
+										/>
+									</div>
+								) : (
+									<ClayIcon symbol="user" />
+								)}
+							</ClaySticker>
 						</div>
+
 						<div className="autofit-col">
 							<div className="modal-title">{viewEntry.title}</div>
+
 							<div className="modal-description">
 								{viewEntry.description}
 							</div>
 						</div>
 					</div>
 				</ClayModal.Header>
+
 				<div className="publications-modal-body">
 					<ChangeTrackingRenderView
 						dataURL={viewEntry.dataURL}
+						showHeader={false}
 						spritemap={spritemap}
 					/>
 				</div>
@@ -198,28 +232,23 @@ const ChangeTrackingDiscardView = ({
 		<>
 			{renderViewModal()}
 
-			<ClayTooltipProvider>
-				<ClayTable className="publications-table" hover>
-					<ClayTable.Head>
-						<ClayTable.Row>
-							<ClayTable.Cell headingCell style={{width: '5%'}}>
-								{Liferay.Language.get('user')}
-							</ClayTable.Cell>
+			<ClayTable className="publications-table" hover>
+				<ClayTable.Head>
+					<ClayTable.Row>
+						<ClayTable.Cell headingCell style={{width: '5%'}}>
+							{Liferay.Language.get('user')}
+						</ClayTable.Cell>
 
-							<ClayTable.Cell headingCell style={{width: '95%'}}>
-								{Liferay.Language.get('change')}
-							</ClayTable.Cell>
-						</ClayTable.Row>
-					</ClayTable.Head>
-					<ClayTable.Body>{getTableRows()}</ClayTable.Body>
-				</ClayTable>
-			</ClayTooltipProvider>
+						<ClayTable.Cell headingCell style={{width: '95%'}}>
+							{Liferay.Language.get('change')}
+						</ClayTable.Cell>
+					</ClayTable.Row>
+				</ClayTable.Head>
+
+				<ClayTable.Body>{getTableRows()}</ClayTable.Body>
+			</ClayTable>
 
 			{renderPagination()}
 		</>
 	);
-};
-
-export default function (props) {
-	return <ChangeTrackingDiscardView {...props} />;
 }

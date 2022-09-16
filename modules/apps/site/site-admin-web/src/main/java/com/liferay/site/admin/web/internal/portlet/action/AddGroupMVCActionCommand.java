@@ -14,27 +14,23 @@
 
 package com.liferay.site.admin.web.internal.portlet.action;
 
+import com.liferay.configuration.admin.constants.ConfigurationAdminPortletKeys;
 import com.liferay.layout.seo.service.LayoutSEOSiteLocalService;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.change.tracking.CTTransactionException;
 import com.liferay.portal.kernel.exception.LocaleException;
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
-import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
-import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.GroupService;
 import com.liferay.portal.kernel.service.LayoutSetService;
-import com.liferay.portal.kernel.service.MembershipRequestLocalService;
-import com.liferay.portal.kernel.service.MembershipRequestService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
@@ -64,7 +60,6 @@ import com.liferay.site.admin.web.internal.handler.GroupExceptionRequestHandler;
 import com.liferay.site.initializer.SiteInitializer;
 import com.liferay.site.initializer.SiteInitializerRegistry;
 import com.liferay.sites.kernel.util.Sites;
-import com.liferay.sites.kernel.util.SitesUtil;
 
 import java.util.Locale;
 import java.util.Map;
@@ -112,7 +107,8 @@ public class AddGroupMVCActionCommand extends BaseMVCActionCommand {
 
 				MultiSessionMessages.add(
 					actionRequest,
-					SiteAdminPortletKeys.SITE_SETTINGS + "requestProcessed");
+					ConfigurationAdminPortletKeys.SITE_SETTINGS +
+						"requestProcessed");
 			}
 
 			PortletURL siteAdministrationURL = _getSiteAdministrationURL(
@@ -130,21 +126,27 @@ public class AddGroupMVCActionCommand extends BaseMVCActionCommand {
 				actionRequest, actionResponse, jsonObject);
 		}
 		catch (CTTransactionException ctTransactionException) {
-			PortletURL redirectURL = _portal.getControlPanelPortletURL(
-				actionRequest, SiteAdminPortletKeys.SITE_ADMIN,
-				PortletRequest.RENDER_PHASE);
-
 			JSONPortletResponseUtil.writeJSON(
 				actionRequest, actionResponse,
-				JSONUtil.put("redirectURL", redirectURL.toString()));
+				JSONUtil.put(
+					"redirectURL",
+					() -> {
+						PortletURL redirectURL =
+							_portal.getControlPanelPortletURL(
+								actionRequest, SiteAdminPortletKeys.SITE_ADMIN,
+								PortletRequest.RENDER_PHASE);
+
+						return redirectURL.toString();
+					}));
 
 			throw ctTransactionException;
 		}
-		catch (PortalException portalException) {
+		catch (Exception exception) {
+			hideDefaultErrorMessage(actionRequest);
 			hideDefaultSuccessMessage(actionRequest);
 
 			_groupExceptionRequestHandler.handlePortalException(
-				actionRequest, actionResponse, portalException);
+				actionRequest, actionResponse, exception);
 		}
 		catch (Throwable throwable) {
 			throw new Exception(throwable);
@@ -159,7 +161,7 @@ public class AddGroupMVCActionCommand extends BaseMVCActionCommand {
 		long liveGroupId = ParamUtil.getLong(actionRequest, "liveGroupId");
 
 		if (liveGroupId <= 0) {
-			portletId = SiteAdminPortletKeys.SITE_SETTINGS;
+			portletId = ConfigurationAdminPortletKeys.SITE_SETTINGS;
 		}
 
 		return _portal.getControlPanelPortletURL(
@@ -361,8 +363,7 @@ public class AddGroupMVCActionCommand extends BaseMVCActionCommand {
 			formTypeSettingsUnicodeProperties.setProperty(
 				PropsKeys.LOCALES,
 				StringUtil.merge(
-					LocaleUtil.toLanguageIds(
-						LanguageUtil.getAvailableLocales())));
+					LocaleUtil.toLanguageIds(_language.getAvailableLocales())));
 
 			User user = themeDisplay.getDefaultUser();
 
@@ -408,17 +409,13 @@ public class AddGroupMVCActionCommand extends BaseMVCActionCommand {
 
 		// Virtual hosts
 
-		LayoutSet publicLayoutSet = liveGroup.getPublicLayoutSet();
-
-		Set<Locale> availableLocales = LanguageUtil.getAvailableLocales(
+		Set<Locale> availableLocales = _language.getAvailableLocales(
 			liveGroup.getGroupId());
 
 		_layoutSetService.updateVirtualHosts(
 			liveGroup.getGroupId(), false,
 			ActionUtil.toTreeMap(
 				actionRequest, "publicVirtualHost", availableLocales));
-
-		LayoutSet privateLayoutSet = liveGroup.getPrivateLayoutSet();
 
 		_layoutSetService.updateVirtualHosts(
 			liveGroup.getGroupId(), true,
@@ -470,63 +467,7 @@ public class AddGroupMVCActionCommand extends BaseMVCActionCommand {
 			creationType.equals(
 				SiteAdminConstants.CREATION_TYPE_SITE_TEMPLATE)) {
 
-			long privateLayoutSetPrototypeId = ParamUtil.getLong(
-				actionRequest, "privateLayoutSetPrototypeId");
-			long publicLayoutSetPrototypeId = ParamUtil.getLong(
-				actionRequest, "publicLayoutSetPrototypeId");
-
-			boolean privateLayoutSetPrototypeLinkEnabled = ParamUtil.getBoolean(
-				actionRequest, "privateLayoutSetPrototypeLinkEnabled",
-				privateLayoutSet.isLayoutSetPrototypeLinkEnabled());
-			boolean publicLayoutSetPrototypeLinkEnabled = ParamUtil.getBoolean(
-				actionRequest, "publicLayoutSetPrototypeLinkEnabled",
-				publicLayoutSet.isLayoutSetPrototypeLinkEnabled());
-
-			if ((privateLayoutSetPrototypeId == 0) &&
-				(publicLayoutSetPrototypeId == 0) &&
-				!privateLayoutSetPrototypeLinkEnabled &&
-				!publicLayoutSetPrototypeLinkEnabled) {
-
-				long layoutSetPrototypeId = ParamUtil.getLong(
-					actionRequest, "layoutSetPrototypeId");
-				int layoutSetVisibility = ParamUtil.getInteger(
-					actionRequest, "layoutSetVisibility");
-				boolean layoutSetPrototypeLinkEnabled = ParamUtil.getBoolean(
-					actionRequest, "layoutSetPrototypeLinkEnabled",
-					layoutSetPrototypeId > 0);
-				boolean layoutSetVisibilityPrivate = ParamUtil.getBoolean(
-					actionRequest, "layoutSetVisibilityPrivate");
-
-				if ((layoutSetVisibility == _LAYOUT_SET_VISIBILITY_PRIVATE) ||
-					layoutSetVisibilityPrivate) {
-
-					privateLayoutSetPrototypeId = layoutSetPrototypeId;
-
-					privateLayoutSetPrototypeLinkEnabled =
-						layoutSetPrototypeLinkEnabled;
-				}
-				else {
-					publicLayoutSetPrototypeId = layoutSetPrototypeId;
-
-					publicLayoutSetPrototypeLinkEnabled =
-						layoutSetPrototypeLinkEnabled;
-				}
-			}
-
-			if (!liveGroup.isStaged() || liveGroup.isStagedRemotely()) {
-				SitesUtil.updateLayoutSetPrototypesLinks(
-					liveGroup, publicLayoutSetPrototypeId,
-					privateLayoutSetPrototypeId,
-					publicLayoutSetPrototypeLinkEnabled,
-					privateLayoutSetPrototypeLinkEnabled);
-			}
-			else {
-				SitesUtil.updateLayoutSetPrototypesLinks(
-					liveGroup.getStagingGroup(), publicLayoutSetPrototypeId,
-					privateLayoutSetPrototypeId,
-					publicLayoutSetPrototypeLinkEnabled,
-					privateLayoutSetPrototypeLinkEnabled);
-			}
+			_updateGroupFromSiteTemplate(actionRequest, liveGroup);
 		}
 		else if (creationType.equals(
 					SiteAdminConstants.CREATION_TYPE_INITIALIZER)) {
@@ -552,7 +493,14 @@ public class AddGroupMVCActionCommand extends BaseMVCActionCommand {
 		return liveGroup;
 	}
 
-	private static final int _LAYOUT_SET_VISIBILITY_PRIVATE = 1;
+	private void _updateGroupFromSiteTemplate(
+			ActionRequest actionRequest, Group group)
+		throws Exception {
+
+		ActionUtil.updateLayoutSetPrototypesLinks(actionRequest, group);
+
+		ActionUtil.updateWorkflowDefinitionLinks(actionRequest, group);
+	}
 
 	private static final TransactionConfig _transactionConfig =
 		TransactionConfig.Factory.create(
@@ -562,22 +510,16 @@ public class AddGroupMVCActionCommand extends BaseMVCActionCommand {
 	private GroupExceptionRequestHandler _groupExceptionRequestHandler;
 
 	@Reference
-	private GroupLocalService _groupLocalService;
+	private GroupService _groupService;
 
 	@Reference
-	private GroupService _groupService;
+	private Language _language;
 
 	@Reference
 	private LayoutSEOSiteLocalService _layoutSEOSiteLocalService;
 
 	@Reference
 	private LayoutSetService _layoutSetService;
-
-	@Reference
-	private MembershipRequestLocalService _membershipRequestLocalService;
-
-	@Reference
-	private MembershipRequestService _membershipRequestService;
 
 	@Reference
 	private Portal _portal;

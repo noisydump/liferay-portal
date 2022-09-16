@@ -13,11 +13,14 @@
  */
 
 import ClayAlert from '@clayui/alert';
-import {render} from 'frontend-js-react-web';
+import {render} from '@liferay/frontend-js-react-web';
+import classNames from 'classnames';
 import React from 'react';
 import {unmountComponentAtNode} from 'react-dom';
 
 import buildFragment from '../../util/build_fragment';
+
+import '../../../css/notification.scss';
 
 const DEFAULT_ALERT_CONTAINER_ID = 'ToastAlertContainer';
 
@@ -35,7 +38,7 @@ const DEFAULT_TOAST_TYPE_TITLES = {
 const TOAST_AUTO_CLOSE_INTERVAL = 5000;
 
 const TPL_ALERT_CONTAINER = `
-	<div class="alert-container container">
+	<div class="alert-container cadmin container">
 		<div class="alert-notifications alert-notifications-fixed" id=${DEFAULT_ALERT_CONTAINER_ID}></div>
 	</div>
 `;
@@ -66,7 +69,6 @@ const getRootElement = ({container, containerId}) => {
 	// Creates a fragment to prevent React from unmounting the alert container
 
 	container = document.createElement('div');
-	container.className = 'mb-3';
 
 	const fragmentContainer = document.querySelector(
 		`.alert-notifications.alert-notifications-fixed`
@@ -144,6 +146,7 @@ function openToast({
 			onClose={onCloseFn}
 			variant={variant}
 			{...toastProps}
+			className={classNames('mb-3', toastProps?.className)}
 		>
 			<div
 				dangerouslySetInnerHTML={{

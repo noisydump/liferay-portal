@@ -17,7 +17,7 @@
 <%@ include file="/init.jsp" %>
 
 <%
-ViewFlatUsersDisplayContext viewFlatUsersDisplayContext = ViewFlatUsersDisplayContextFactory.create(renderRequest, renderResponse);
+ViewFlatUsersDisplayContext viewFlatUsersDisplayContext = ViewFlatUsersDisplayContextFactory.create(request, renderRequest, renderResponse);
 
 if (!ParamUtil.getBoolean(renderRequest, "advancedSearch")) {
 	currentURLObj.setParameter("status", String.valueOf(viewFlatUsersDisplayContext.getStatus()));
@@ -28,8 +28,8 @@ request.setAttribute(UsersAdminWebKeys.STATUS, viewFlatUsersDisplayContext.getSt
 String displayStyle = viewFlatUsersDisplayContext.getDisplayStyle();
 %>
 
-<clay:management-toolbar-v2
-	displayContext="<%= viewFlatUsersDisplayContext.getManagementToolbarDisplayContext() %>"
+<clay:management-toolbar
+	managementToolbarDisplayContext="<%= viewFlatUsersDisplayContext.getManagementToolbarDisplayContext() %>"
 />
 
 <aui:form action="<%= currentURLObj.toString() %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "search();" %>'>
@@ -58,7 +58,7 @@ String displayStyle = viewFlatUsersDisplayContext.getDisplayStyle();
 			escapedModel="<%= true %>"
 			keyProperty="userId"
 			modelVar="user2"
-			rowIdProperty="screenName"
+			rowIdProperty="userId"
 		>
 			<liferay-portlet:renderURL varImpl="rowURL">
 				<portlet:param name="p_u_i_d" value="<%= String.valueOf(user2.getUserId()) %>" />

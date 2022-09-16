@@ -19,12 +19,23 @@ import com.liferay.taglib.util.IncludeTag;
 
 import java.text.Format;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Brian Wing Shun Chan
  */
 public class InputFieldTag extends IncludeTag {
+
+	public List<String> getActiveLanguageIds() {
+		return _activeLanguageIds;
+	}
+
+	public String getAutoComplete() {
+		return _autoComplete;
+	}
 
 	public Object getBean() {
 		return _bean;
@@ -70,6 +81,10 @@ public class InputFieldTag extends IncludeTag {
 		return _languageId;
 	}
 
+	public String getLanguagesDropdownDirection() {
+		return _languagesDropdownDirection;
+	}
+
 	public Class<?> getModel() {
 		return _model;
 	}
@@ -78,8 +93,8 @@ public class InputFieldTag extends IncludeTag {
 		return _placeholder;
 	}
 
-	public boolean isAutoComplete() {
-		return _autoComplete;
+	public boolean isAdminMode() {
+		return _adminMode;
 	}
 
 	public boolean isAutoFocus() {
@@ -98,7 +113,15 @@ public class InputFieldTag extends IncludeTag {
 		return _ignoreRequestValue;
 	}
 
-	public void setAutoComplete(boolean autoComplete) {
+	public void setActiveLanguageIds(List<String> activeLanguageIds) {
+		_activeLanguageIds = activeLanguageIds;
+	}
+
+	public void setAdminMode(boolean adminMode) {
+		_adminMode = adminMode;
+	}
+
+	public void setAutoComplete(String autoComplete) {
 		_autoComplete = autoComplete;
 	}
 
@@ -162,6 +185,12 @@ public class InputFieldTag extends IncludeTag {
 		_languageId = languageId;
 	}
 
+	public void setLanguagesDropdownDirection(
+		String languagesDropdownDirection) {
+
+		_languagesDropdownDirection = languagesDropdownDirection;
+	}
+
 	public void setModel(Class<?> model) {
 		_model = model;
 	}
@@ -174,7 +203,9 @@ public class InputFieldTag extends IncludeTag {
 	protected void cleanUp() {
 		super.cleanUp();
 
-		_autoComplete = true;
+		_activeLanguageIds = new ArrayList<>();
+		_adminMode = false;
+		_autoComplete = null;
 		_autoFocus = false;
 		_autoSize = false;
 		_bean = null;
@@ -190,6 +221,7 @@ public class InputFieldTag extends IncludeTag {
 		_id = null;
 		_ignoreRequestValue = false;
 		_languageId = null;
+		_languagesDropdownDirection = null;
 		_model = null;
 		_placeholder = null;
 	}
@@ -214,8 +246,11 @@ public class InputFieldTag extends IncludeTag {
 		}
 
 		httpServletRequest.setAttribute(
-			"liferay-ui:input-field:autoComplete",
-			String.valueOf(_autoComplete));
+			"liferay-ui:input-field:activeLanguageIds", _activeLanguageIds);
+		httpServletRequest.setAttribute(
+			"liferay-ui:input-field:adminMode", _adminMode);
+		httpServletRequest.setAttribute(
+			"liferay-ui:input-field:autoComplete", _autoComplete);
 		httpServletRequest.setAttribute(
 			"liferay-ui:input-field:autoFocus", String.valueOf(_autoFocus));
 		httpServletRequest.setAttribute(
@@ -248,6 +283,9 @@ public class InputFieldTag extends IncludeTag {
 		httpServletRequest.setAttribute(
 			"liferay-ui:input-field:languageId", _languageId);
 		httpServletRequest.setAttribute(
+			"liferay-ui:input-field:languagesDropdownDirection",
+			_languagesDropdownDirection);
+		httpServletRequest.setAttribute(
 			"liferay-ui:input-field:model", _model.getName());
 		httpServletRequest.setAttribute(
 			"liferay-ui:input-field:placeholder", _placeholder);
@@ -255,7 +293,9 @@ public class InputFieldTag extends IncludeTag {
 
 	private static final String _PAGE = "/html/taglib/ui/input_field/page.jsp";
 
-	private boolean _autoComplete = true;
+	private List<String> _activeLanguageIds = new ArrayList<>();
+	private boolean _adminMode;
+	private String _autoComplete;
 	private boolean _autoFocus;
 	private boolean _autoSize;
 	private Object _bean;
@@ -271,6 +311,7 @@ public class InputFieldTag extends IncludeTag {
 	private String _id;
 	private boolean _ignoreRequestValue;
 	private String _languageId;
+	private String _languagesDropdownDirection;
 	private Class<?> _model;
 	private String _placeholder;
 

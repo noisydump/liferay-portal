@@ -16,7 +16,6 @@ package com.liferay.commerce.shipping.web.internal.frontend.taglib.servlet.tagli
 
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
-import com.liferay.commerce.service.CommerceCountryService;
 import com.liferay.commerce.service.CommerceShippingMethodService;
 import com.liferay.commerce.shipping.engine.fixed.service.CommerceShippingFixedOptionService;
 import com.liferay.commerce.shipping.web.internal.display.context.CommerceShippingMethodsDisplayContext;
@@ -24,7 +23,8 @@ import com.liferay.commerce.util.CommerceShippingEngineRegistry;
 import com.liferay.frontend.taglib.servlet.taglib.ScreenNavigationCategory;
 import com.liferay.frontend.taglib.servlet.taglib.ScreenNavigationEntry;
 import com.liferay.frontend.taglib.servlet.taglib.util.JSPRenderer;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.service.CountryService;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
@@ -70,7 +70,7 @@ public class CommerceChannelShippingRestrictionsScreenNavigationCategory
 		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
 			"content.Language", locale, getClass());
 
-		return LanguageUtil.get(resourceBundle, getCategoryKey());
+		return _language.get(resourceBundle, getCategoryKey());
 	}
 
 	@Override
@@ -87,10 +87,11 @@ public class CommerceChannelShippingRestrictionsScreenNavigationCategory
 		CommerceShippingMethodsDisplayContext
 			commerceShippingMethodsDisplayContext =
 				new CommerceShippingMethodsDisplayContext(
-					_commerceChannelLocalService, _commerceCountryService,
+					_commerceChannelLocalService,
 					_commerceShippingEngineRegistry,
 					_commerceShippingFixedOptionService,
-					_commerceShippingMethodService, httpServletRequest);
+					_commerceShippingMethodService, _countryService,
+					httpServletRequest);
 
 		httpServletRequest.setAttribute(
 			WebKeys.PORTLET_DISPLAY_CONTEXT,
@@ -98,14 +99,11 @@ public class CommerceChannelShippingRestrictionsScreenNavigationCategory
 
 		_jspRenderer.renderJSP(
 			_servletContext, httpServletRequest, httpServletResponse,
-			"/shipping_method/restrictions.jsp");
+			"/commerce_shipping_method/restrictions.jsp");
 	}
 
 	@Reference
 	private CommerceChannelLocalService _commerceChannelLocalService;
-
-	@Reference
-	private CommerceCountryService _commerceCountryService;
 
 	@Reference
 	private CommerceShippingEngineRegistry _commerceShippingEngineRegistry;
@@ -118,7 +116,13 @@ public class CommerceChannelShippingRestrictionsScreenNavigationCategory
 	private CommerceShippingMethodService _commerceShippingMethodService;
 
 	@Reference
+	private CountryService _countryService;
+
+	@Reference
 	private JSPRenderer _jspRenderer;
+
+	@Reference
+	private Language _language;
 
 	@Reference(
 		target = "(osgi.web.symbolicname=com.liferay.commerce.shipping.web)"

@@ -20,7 +20,6 @@ import com.liferay.frontend.editor.embed.EditorEmbedProvider;
 import com.liferay.frontend.editor.embed.constants.EditorEmbedProviderTypeConstants;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerListFactory;
-import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.util.regex.Matcher;
@@ -32,7 +31,6 @@ import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Alejandro Tardín
@@ -53,21 +51,6 @@ public class EditorEmbedProviderDLVideoExternalShortcutProvider
 
 				if (matcher.matches()) {
 					return new DLVideoExternalShortcut() {
-
-						@Override
-						public String getDescription() {
-							return null;
-						}
-
-						@Override
-						public String getThumbnailURL() {
-							return null;
-						}
-
-						@Override
-						public String getTitle() {
-							return null;
-						}
 
 						@Override
 						public String getURL() {
@@ -103,10 +86,6 @@ public class EditorEmbedProviderDLVideoExternalShortcutProvider
 		_videoEditorEmbedProviders.close();
 	}
 
-	@Reference
-	private Http _http;
-
-	private ServiceTrackerList<EditorEmbedProvider, EditorEmbedProvider>
-		_videoEditorEmbedProviders;
+	private ServiceTrackerList<EditorEmbedProvider> _videoEditorEmbedProviders;
 
 }

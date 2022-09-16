@@ -24,14 +24,13 @@ import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.upgrade.UpgradeStep;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
 import com.liferay.portal.workflow.kaleo.forms.model.KaleoProcess;
 import com.liferay.portal.workflow.kaleo.forms.model.KaleoProcessLink;
 import com.liferay.portal.workflow.kaleo.forms.service.KaleoProcessLocalServiceUtil;
 import com.liferay.portal.workflow.kaleo.forms.test.util.KaleoProcessTestUtil;
-import com.liferay.registry.Registry;
-import com.liferay.registry.RegistryUtil;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -53,7 +52,7 @@ public class UpgradeKaleoProcessTest {
 
 	@Before
 	public void setUp() throws Exception {
-		setUpUpgradeKaleoProcess();
+		_setUpUpgradeKaleoProcess();
 	}
 
 	@Test
@@ -61,7 +60,7 @@ public class UpgradeKaleoProcessTest {
 		KaleoProcess kaleoProcess = KaleoProcessTestUtil.addKaleoProcess(
 			_CLASS_NAME_DDL_RECORD_SET);
 
-		_upgradeKaleoProcess.upgrade();
+		_kaleoProcessUpgradeProcess.upgrade();
 
 		EntityCacheUtil.clearCache();
 
@@ -94,15 +93,8 @@ public class UpgradeKaleoProcessTest {
 		}
 	}
 
-	protected void setUpUpgradeKaleoProcess() {
-		Registry registry = RegistryUtil.getRegistry();
-
-		UpgradeStepRegistrator upgradeStepRegistror = registry.getService(
-			registry.getServiceReference(
-				"com.liferay.portal.workflow.kaleo.forms.internal.upgrade." +
-					"KaleoFormsServiceUpgrade"));
-
-		upgradeStepRegistror.register(
+	private void _setUpUpgradeKaleoProcess() {
+		_upgradeStepRegistrator.register(
 			new UpgradeStepRegistrator.Registry() {
 
 				@Override
@@ -115,10 +107,18 @@ public class UpgradeKaleoProcessTest {
 
 						String className = clazz.getName();
 
-						if (className.contains(".v1_1_0.UpgradeKaleoProcess")) {
-							_upgradeKaleoProcess = (UpgradeProcess)upgradeStep;
+						if (className.contains(
+								".v1_1_0.KaleoProcessUpgradeProcess")) {
+
+							_kaleoProcessUpgradeProcess =
+								(UpgradeProcess)upgradeStep;
 						}
 					}
+				}
+
+				@Override
+				public void registerInitialDeploymentUpgradeSteps(
+					UpgradeStep... upgradeSteps) {
 				}
 
 			});
@@ -127,6 +127,11 @@ public class UpgradeKaleoProcessTest {
 	private static final String _CLASS_NAME_DDL_RECORD_SET =
 		DDLRecordSet.class.getName();
 
-	private UpgradeProcess _upgradeKaleoProcess;
+	private UpgradeProcess _kaleoProcessUpgradeProcess;
+
+	@Inject(
+		filter = "component.name=com.liferay.portal.workflow.kaleo.forms.internal.upgrade.registry.KaleoFormsServiceUpgradeStepRegistrator"
+	)
+	private UpgradeStepRegistrator _upgradeStepRegistrator;
 
 }

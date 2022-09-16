@@ -19,6 +19,8 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
@@ -170,6 +172,10 @@ public class DDMFormField implements Serializable {
 						jsonArray.get(0), _DATA_SOURCE_TYPE_MANUAL);
 				}
 				catch (JSONException jsonException) {
+					if (_log.isDebugEnabled()) {
+						_log.debug(jsonException);
+					}
+
 					return dataSourceType;
 				}
 			}
@@ -323,6 +329,10 @@ public class DDMFormField implements Serializable {
 		return _properties.get(name);
 	}
 
+	public LocalizedValue getRequiredErrorMessage() {
+		return (LocalizedValue)_properties.get("requiredErrorMessage");
+	}
+
 	public LocalizedValue getStyle() {
 		return (LocalizedValue)_properties.get("style");
 	}
@@ -344,6 +354,14 @@ public class DDMFormField implements Serializable {
 		int hash = HashUtil.hash(0, _properties);
 
 		return HashUtil.hash(hash, _nestedDDMFormFields);
+	}
+
+	public boolean hasProperty(String propertyKey) {
+		if (_properties.containsKey(propertyKey)) {
+			return true;
+		}
+
+		return false;
 	}
 
 	public boolean isLocalizable() {
@@ -370,12 +388,29 @@ public class DDMFormField implements Serializable {
 		return MapUtil.getBoolean(_properties, "showLabel", true);
 	}
 
+	/**
+	 * This method returns <code>true</code> if the DDMFormField is not supposed
+	 * to hold value/data, i.e. its "dataType" property is blank or
+	 * <code>null</code>. Transient fields can be considered structural fields
+	 * like Liferay's native separator or fieldset fields.
+	 *
+	 * @return boolean
+	 * @review
+	 */
 	public boolean isTransient() {
 		if (Validator.isNull(getDataType())) {
 			return true;
 		}
 
 		return false;
+	}
+
+	public boolean isVisualProperty() {
+		return MapUtil.getBoolean(_properties, "visualProperty");
+	}
+
+	public void removeProperty(String propertyKey) {
+		_properties.remove(propertyKey);
 	}
 
 	public void setDataType(String dataType) {
@@ -458,6 +493,10 @@ public class DDMFormField implements Serializable {
 		_properties.put("required", required);
 	}
 
+	public void setRequiredErrorMessage(LocalizedValue requiredErrorMessage) {
+		_properties.put("requiredErrorMessage", requiredErrorMessage);
+	}
+
 	public void setShowLabel(boolean showLabel) {
 		_properties.put("showLabel", showLabel);
 	}
@@ -478,7 +517,13 @@ public class DDMFormField implements Serializable {
 		_properties.put("visibilityExpression", visibilityExpression);
 	}
 
+	public void setVisualProperty(boolean visualProperty) {
+		_properties.put("visualProperty", visualProperty);
+	}
+
 	private static final String _DATA_SOURCE_TYPE_MANUAL = "manual";
+
+	private static final Log _log = LogFactoryUtil.getLog(DDMFormField.class);
 
 	private DDMForm _ddmForm;
 	private final List<DDMFormFieldRule> _ddmFormFieldRules;

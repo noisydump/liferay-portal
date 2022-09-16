@@ -19,26 +19,29 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.model.Address;
 import com.liferay.portal.kernel.model.Contact;
+import com.liferay.portal.kernel.model.Country;
 import com.liferay.portal.kernel.model.ListType;
 import com.liferay.portal.kernel.model.ListTypeConstants;
 import com.liferay.portal.kernel.model.Phone;
+import com.liferay.portal.kernel.model.Region;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.SortFactoryUtil;
 import com.liferay.portal.kernel.service.AddressLocalService;
-import com.liferay.portal.kernel.service.CountryService;
+import com.liferay.portal.kernel.service.CountryLocalService;
 import com.liferay.portal.kernel.service.ListTypeLocalService;
 import com.liferay.portal.kernel.service.PhoneLocalService;
-import com.liferay.portal.kernel.service.RegionService;
+import com.liferay.portal.kernel.service.RegionLocalService;
 import com.liferay.portal.kernel.test.rule.DataGuard;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.test.log.CaptureAppender;
-import com.liferay.portal.test.log.Log4JLoggerTestUtil;
+import com.liferay.portal.test.log.LogCapture;
+import com.liferay.portal.test.log.LogEntry;
+import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
@@ -47,9 +50,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
-
-import org.apache.log4j.Level;
-import org.apache.log4j.spi.LoggingEvent;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
@@ -139,9 +139,8 @@ public class AddressLocalServiceTest {
 		Address address = _addAddress(
 			RandomTestUtil.randomString(), businessType.getListTypeId(), null);
 
-		try (CaptureAppender captureAppender =
-				Log4JLoggerTestUtil.configureLog4JLogger(
-					_LOG_NAME, Level.DEBUG)) {
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				_LOG_NAME, LoggerTestUtil.DEBUG)) {
 
 			String typeName = RandomTestUtil.randomString();
 
@@ -154,18 +153,53 @@ public class AddressLocalServiceTest {
 					"typeNames",
 					new String[] {businessType.getName(), typeName}));
 
-			List<LoggingEvent> loggingEvents =
-				captureAppender.getLoggingEvents();
+			List<LogEntry> logEntries = logCapture.getLogEntries();
 
-			LoggingEvent loggingEvent = loggingEvents.get(0);
+			LogEntry logEntry = logEntries.get(0);
 
 			Assert.assertEquals(
 				StringBundler.concat(
 					"No list type found for ",
 					ListTypeConstants.CONTACT_ADDRESS, " with the name: ",
 					typeName),
-				loggingEvent.getMessage());
+				logEntry.getMessage());
 		}
+	}
+
+	@Test
+	public void testSearchAddressesWithKeywords() throws Exception {
+		Address address = _addAddress("1234567890");
+
+		String name = RandomTestUtil.randomString();
+		String description = RandomTestUtil.randomString();
+		String street1 = RandomTestUtil.randomString();
+		String city = RandomTestUtil.randomString();
+		String zip = RandomTestUtil.randomString();
+
+		Country country = _countryLocalService.fetchCountryByA2(
+			TestPropsValues.getCompanyId(), "US");
+
+		Region region = _regionLocalService.addRegion(
+			country.getCountryId(), RandomTestUtil.randomBoolean(),
+			RandomTestUtil.randomString(), RandomTestUtil.randomDouble(),
+			RandomTestUtil.randomString(),
+			ServiceContextTestUtil.getServiceContext());
+
+		_addressLocalService.updateAddress(
+			address.getAddressId(), name, description, street1, null, null,
+			city, zip, region.getRegionId(), country.getCountryId(),
+			address.getListTypeId(), address.isMailing(), address.isPrimary(),
+			address.getPhoneNumber());
+
+		List<Address> expectedAddresses = Arrays.asList(address);
+
+		_assertSearchAddress(expectedAddresses, name, null);
+		_assertSearchAddress(expectedAddresses, description, null);
+		_assertSearchAddress(expectedAddresses, street1, null);
+		_assertSearchAddress(expectedAddresses, city, null);
+		_assertSearchAddress(expectedAddresses, zip, null);
+		_assertSearchAddress(expectedAddresses, region.getName(), null);
+		_assertSearchAddress(expectedAddresses, country.getName(), null);
 	}
 
 	@Test
@@ -185,11 +219,11 @@ public class AddressLocalServiceTest {
 		_assertSearchAddress(
 			Arrays.asList(businessAddress), null,
 			_getLinkedHashMap(
-				"typeIds", new long[] {businessType.getListTypeId()}));
+				"listTypeIds", new long[] {businessType.getListTypeId()}));
 		_assertSearchAddress(
 			Arrays.asList(businessAddress, personalAddress), null,
 			_getLinkedHashMap(
-				"typeIds",
+				"listTypeIds",
 				new long[] {
 					businessType.getListTypeId(), personalType.getListTypeId()
 				}));
@@ -206,14 +240,16 @@ public class AddressLocalServiceTest {
 
 	@Test
 	public void testUpdateAddress() throws Exception {
-		Address address = _addAddress("1234567890");
+		Address address = _addAddress(RandomTestUtil.randomString());
+
+		String phoneNumber = RandomTestUtil.randomString();
 
 		Address updatedAddress = _addressLocalService.updateAddress(
 			address.getAddressId(), address.getName(), address.getDescription(),
 			address.getStreet1(), address.getStreet2(), address.getStreet3(),
 			address.getCity(), address.getZip(), address.getRegionId(),
-			address.getCountryId(), address.getTypeId(), address.isMailing(),
-			address.isPrimary(), "1112223333");
+			address.getCountryId(), address.getListTypeId(),
+			address.isMailing(), address.isPrimary(), phoneNumber);
 
 		List<Phone> phones = _phoneLocalService.getPhones(
 			address.getCompanyId(), Address.class.getName(),
@@ -221,32 +257,31 @@ public class AddressLocalServiceTest {
 
 		Assert.assertEquals(phones.toString(), 1, phones.size());
 
-		Phone phone = phones.get(0);
-
-		Assert.assertEquals(updatedAddress.getPhoneNumber(), phone.getNumber());
+		Assert.assertEquals(updatedAddress.getPhoneNumber(), phoneNumber);
 	}
 
 	private Address _addAddress(String phoneNumber) throws Exception {
 		return _addAddress(RandomTestUtil.randomString(), -1, phoneNumber);
 	}
 
-	private Address _addAddress(String name, long typeId, String phoneNumber)
+	private Address _addAddress(
+			String name, long listTypeId, String phoneNumber)
 		throws Exception {
 
 		User user = TestPropsValues.getUser();
 
-		if (typeId < 0) {
+		if (listTypeId < 0) {
 			ListType listType = _listTypeLocalService.getListType(
 				"personal", ListTypeConstants.CONTACT_ADDRESS);
 
-			typeId = listType.getListTypeId();
+			listTypeId = listType.getListTypeId();
 		}
 
 		return _addressLocalService.addAddress(
 			null, user.getUserId(), Contact.class.getName(),
 			user.getContactId(), name, RandomTestUtil.randomString(),
 			RandomTestUtil.randomString(), null, null,
-			RandomTestUtil.randomString(), null, 0, 0, typeId, false, false,
+			RandomTestUtil.randomString(), null, 0, 0, listTypeId, false, false,
 			phoneNumber, ServiceContextTestUtil.getServiceContext());
 	}
 
@@ -311,7 +346,7 @@ public class AddressLocalServiceTest {
 	private static AddressLocalService _addressLocalService;
 
 	@Inject
-	private static CountryService _countryService;
+	private static CountryLocalService _countryLocalService;
 
 	@Inject
 	private static ListTypeLocalService _listTypeLocalService;
@@ -320,6 +355,6 @@ public class AddressLocalServiceTest {
 	private static PhoneLocalService _phoneLocalService;
 
 	@Inject
-	private static RegionService _regionService;
+	private static RegionLocalService _regionLocalService;
 
 }

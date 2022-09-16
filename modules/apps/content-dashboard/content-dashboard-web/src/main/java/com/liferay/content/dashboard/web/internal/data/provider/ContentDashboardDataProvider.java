@@ -168,7 +168,10 @@ public class ContentDashboardDataProvider {
 		TermsAggregation termsAggregation = _getTermsAggregation(
 			assetVocabulary, assetCategoryTitlesMap.keySet(), "categories");
 
-		termsAggregation.addChildAggregation(childTermsAggregation);
+		termsAggregation.addChildAggregation(
+			_getTermsAggregation(
+				childAssetVocabulary, childAssetCategoryTitlesMap.keySet(), 0,
+				"childCategories"));
 
 		SearchResponse searchResponse = _searcher.search(
 			_searchRequestBuilder.addAggregation(
@@ -189,20 +192,38 @@ public class ContentDashboardDataProvider {
 
 		Collection<Bucket> buckets = termsAggregationResult.getBuckets();
 
-		if (buckets.isEmpty()) {
-			termsAggregationResult =
-				(TermsAggregationResult)searchResponse.getAggregationResult(
-					"childCategories");
+		TermsAggregationResult childTermsAggregationResult =
+			(TermsAggregationResult)searchResponse.getAggregationResult(
+				"childCategories");
 
-			return _toAssetVocabularyMetric(
+		AssetVocabularyMetric childAssetVocabularyMetric =
+			_toAssetVocabularyMetric(
 				childAssetCategoryTitlesMap, childAssetVocabulary,
-				termsAggregationResult.getBuckets());
+				childTermsAggregationResult.getBuckets());
+
+		if (buckets.isEmpty()) {
+			return childAssetVocabularyMetric;
 		}
+
+		List<AssetCategoryMetric> childAssetCategoryMetrics =
+			childAssetVocabularyMetric.getAssetCategoryMetrics();
+
+		if (childAssetCategoryMetrics.isEmpty()) {
+			return _toAssetVocabularyMetric(
+				assetCategoryTitlesMap, assetVocabulary, buckets);
+		}
+
+		Stream<AssetCategoryMetric> stream = childAssetCategoryMetrics.stream();
 
 		List<AssetCategoryMetric> assetCategoryMetrics =
 			_toAssetCategoryMetrics(
-				assetCategoryTitlesMap, buckets, childAssetCategoryTitlesMap,
-				childAssetVocabulary,
+				assetCategoryTitlesMap, buckets,
+				stream.map(
+					AssetCategoryMetric::getKey
+				).collect(
+					Collectors.toSet()
+				),
+				childAssetCategoryTitlesMap, childAssetVocabulary,
 				_getChildNoneAssetCategoryMetricCounts(
 					(FilterAggregationResult)
 						searchResponse.getAggregationResult(
@@ -312,6 +333,18 @@ public class ContentDashboardDataProvider {
 
 	private TermsAggregation _getTermsAggregation(
 		AssetVocabulary assetVocabulary, Set<String> assetCategoryIds,
+		int minDocCount, String termsAggregationName) {
+
+		TermsAggregation termsAggregation = _getTermsAggregation(
+			assetVocabulary, assetCategoryIds, termsAggregationName);
+
+		termsAggregation.setMinDocCount(minDocCount);
+
+		return termsAggregation;
+	}
+
+	private TermsAggregation _getTermsAggregation(
+		AssetVocabulary assetVocabulary, Set<String> assetCategoryIds,
 		String termsAggregationName) {
 
 		TermsAggregation termsAggregation = _aggregations.terms(
@@ -328,6 +361,7 @@ public class ContentDashboardDataProvider {
 
 	private List<AssetCategoryMetric> _toAssetCategoryMetrics(
 		Map<String, String> assetCategoryTitlesMap, Collection<Bucket> buckets,
+		Set<String> childAssetCategoryMetricKeys,
 		Map<String, String> childAssetCategoryTitlesMap,
 		AssetVocabulary childAssetVocabulary,
 		Map<String, Long> childNoneAssetCategoryMetricCounts,
@@ -345,6 +379,7 @@ public class ContentDashboardDataProvider {
 					_toAssetVocabularyMetric(
 						childAssetCategoryTitlesMap, childAssetVocabulary,
 						termsAggregationResult.getBuckets(),
+						childAssetCategoryMetricKeys,
 						childNoneAssetCategoryMetricCounts.get(
 							bucket.getKey())),
 					bucket.getKey(),
@@ -378,11 +413,14 @@ public class ContentDashboardDataProvider {
 	private AssetVocabularyMetric _toAssetVocabularyMetric(
 		Map<String, String> assetCategoryTitlesMap,
 		AssetVocabulary assetVocabulary, Collection<Bucket> buckets,
+		Set<String> childAssetCategoryMetricKeys,
 		Long noneAssetCategoryMetricCount) {
 
 		Stream<Bucket> stream = buckets.stream();
 
-		List<AssetCategoryMetric> assetCategoryMetrics = stream.map(
+		List<AssetCategoryMetric> assetCategoryMetrics = stream.filter(
+			bucket -> childAssetCategoryMetricKeys.contains(bucket.getKey())
+		).map(
 			bucket -> new AssetCategoryMetric(
 				bucket.getKey(), assetCategoryTitlesMap.get(bucket.getKey()),
 				bucket.getDocCount())

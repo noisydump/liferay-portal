@@ -14,6 +14,8 @@
 
 package com.liferay.portal.osgi.web.wab.extender.internal.adapter;
 
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ServerDetector;
 
 import javax.servlet.ServletContext;
@@ -59,6 +61,9 @@ public class ServletContextListenerExceptionAdapter
 				thread.join();
 			}
 			catch (Exception exception) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(exception);
+				}
 			}
 		}
 		else {
@@ -67,9 +72,7 @@ public class ServletContextListenerExceptionAdapter
 	}
 
 	@Override
-	public void contextInitialized(
-		final ServletContextEvent servletContextEvent) {
-
+	public void contextInitialized(ServletContextEvent servletContextEvent) {
 		if (ServerDetector.isJBoss() || ServerDetector.isWildfly()) {
 			ServletContext servletContext =
 				servletContextEvent.getServletContext();
@@ -93,6 +96,9 @@ public class ServletContextListenerExceptionAdapter
 				thread.join();
 			}
 			catch (Exception exception) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(exception);
+				}
 			}
 		}
 		else {
@@ -123,6 +129,9 @@ public class ServletContextListenerExceptionAdapter
 			_exception = exception;
 		}
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		ServletContextListenerExceptionAdapter.class);
 
 	private Exception _exception;
 	private final ServletContext _servletContext;

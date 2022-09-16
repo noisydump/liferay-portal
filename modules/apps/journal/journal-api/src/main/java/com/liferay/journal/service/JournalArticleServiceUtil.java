@@ -14,9 +14,12 @@
 
 package com.liferay.journal.service;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.util.tracker.ServiceTracker;
+import com.liferay.journal.model.JournalArticle;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.util.OrderByComparator;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * Provides the remote service utility for JournalArticle. This utility wraps
@@ -39,10 +42,145 @@ public class JournalArticleServiceUtil {
 	 */
 
 	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #addArticle(String, long, long, long, long, String, boolean,
+	 Map, Map, Map, String, String, String, String, int, int, int,
+	 int, int, int, int, int, int, int, boolean, int, int, int,
+	 int, int, boolean, boolean, boolean, String, File, Map,
+	 String, ServiceContext)}
+	 */
+	@Deprecated
+	public static JournalArticle addArticle(
+			long groupId, long folderId, long classNameId, long classPK,
+			String articleId, boolean autoArticleId,
+			Map<java.util.Locale, String> titleMap,
+			Map<java.util.Locale, String> descriptionMap,
+			Map<java.util.Locale, String> friendlyURLMap, String content,
+			String ddmStructureKey, String ddmTemplateKey, String layoutUuid,
+			int displayDateMonth, int displayDateDay, int displayDateYear,
+			int displayDateHour, int displayDateMinute, int expirationDateMonth,
+			int expirationDateDay, int expirationDateYear,
+			int expirationDateHour, int expirationDateMinute,
+			boolean neverExpire, int reviewDateMonth, int reviewDateDay,
+			int reviewDateYear, int reviewDateHour, int reviewDateMinute,
+			boolean neverReview, boolean indexable, boolean smallImage,
+			String smallImageURL, java.io.File smallFile,
+			Map<String, byte[]> images, String articleURL,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws PortalException {
+
+		return getService().addArticle(
+			groupId, folderId, classNameId, classPK, articleId, autoArticleId,
+			titleMap, descriptionMap, friendlyURLMap, content, ddmStructureKey,
+			ddmTemplateKey, layoutUuid, displayDateMonth, displayDateDay,
+			displayDateYear, displayDateHour, displayDateMinute,
+			expirationDateMonth, expirationDateDay, expirationDateYear,
+			expirationDateHour, expirationDateMinute, neverExpire,
+			reviewDateMonth, reviewDateDay, reviewDateYear, reviewDateHour,
+			reviewDateMinute, neverReview, indexable, smallImage, smallImageURL,
+			smallFile, images, articleURL, serviceContext);
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #addArticle(String, long, long, long, long, String, boolean,
+	 Map, Map, Map, String, String, String, String, int, int, int,
+	 int, int, int, int, int, int, int, boolean, int, int, int,
+	 int, int, boolean, boolean, boolean, String, File, Map,
+	 String, ServiceContext)}
+	 */
+	@Deprecated
+	public static JournalArticle addArticle(
+			long groupId, long folderId, long classNameId, long classPK,
+			String articleId, boolean autoArticleId,
+			Map<java.util.Locale, String> titleMap,
+			Map<java.util.Locale, String> descriptionMap, String content,
+			String ddmStructureKey, String ddmTemplateKey, String layoutUuid,
+			int displayDateMonth, int displayDateDay, int displayDateYear,
+			int displayDateHour, int displayDateMinute, int expirationDateMonth,
+			int expirationDateDay, int expirationDateYear,
+			int expirationDateHour, int expirationDateMinute,
+			boolean neverExpire, int reviewDateMonth, int reviewDateDay,
+			int reviewDateYear, int reviewDateHour, int reviewDateMinute,
+			boolean neverReview, boolean indexable, boolean smallImage,
+			String smallImageURL, java.io.File smallFile,
+			Map<String, byte[]> images, String articleURL,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws PortalException {
+
+		return getService().addArticle(
+			groupId, folderId, classNameId, classPK, articleId, autoArticleId,
+			titleMap, descriptionMap, content, ddmStructureKey, ddmTemplateKey,
+			layoutUuid, displayDateMonth, displayDateDay, displayDateYear,
+			displayDateHour, displayDateMinute, expirationDateMonth,
+			expirationDateDay, expirationDateYear, expirationDateHour,
+			expirationDateMinute, neverExpire, reviewDateMonth, reviewDateDay,
+			reviewDateYear, reviewDateHour, reviewDateMinute, neverReview,
+			indexable, smallImage, smallImageURL, smallFile, images, articleURL,
+			serviceContext);
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #addArticle(String, long, long, long, long, String, boolean,
+	 Map, Map, Map, String, String, String, String, int, int, int,
+	 int, int, int, int, int, int, int, boolean, int, int, int,
+	 int, int, boolean, boolean, boolean, String, File, Map,
+	 String, ServiceContext)}
+	 */
+	@Deprecated
+	public static JournalArticle addArticle(
+			long groupId, long folderId, long classNameId, long classPK,
+			String articleId, boolean autoArticleId,
+			Map<java.util.Locale, String> titleMap,
+			Map<java.util.Locale, String> descriptionMap, String content,
+			String ddmStructureKey, String ddmTemplateKey, String layoutUuid,
+			int displayDateMonth, int displayDateDay, int displayDateYear,
+			int displayDateHour, int displayDateMinute, int expirationDateMonth,
+			int expirationDateDay, int expirationDateYear,
+			int expirationDateHour, int expirationDateMinute,
+			boolean neverExpire, int reviewDateMonth, int reviewDateDay,
+			int reviewDateYear, int reviewDateHour, int reviewDateMinute,
+			boolean neverReview, boolean indexable, String articleURL,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws PortalException {
+
+		return getService().addArticle(
+			groupId, folderId, classNameId, classPK, articleId, autoArticleId,
+			titleMap, descriptionMap, content, ddmStructureKey, ddmTemplateKey,
+			layoutUuid, displayDateMonth, displayDateDay, displayDateYear,
+			displayDateHour, displayDateMinute, expirationDateMonth,
+			expirationDateDay, expirationDateYear, expirationDateHour,
+			expirationDateMinute, neverExpire, reviewDateMonth, reviewDateDay,
+			reviewDateYear, reviewDateHour, reviewDateMinute, neverReview,
+			indexable, articleURL, serviceContext);
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #addArticle(String, long, long, Map, Map, String, String,
+	 String, ServiceContext)}
+	 */
+	@Deprecated
+	public static JournalArticle addArticle(
+			long groupId, long folderId, Map<java.util.Locale, String> titleMap,
+			Map<java.util.Locale, String> descriptionMap, String content,
+			String ddmStructureKey, String ddmTemplateKey,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws PortalException {
+
+		return getService().addArticle(
+			groupId, folderId, titleMap, descriptionMap, content,
+			ddmStructureKey, ddmTemplateKey, serviceContext);
+	}
+
+	/**
 	 * Adds a web content article with additional parameters. All scheduling
 	 * parameters (display date, expiration date, and review date) use the
 	 * current user's timezone.
 	 *
+	 * @param externalReferenceCode the external reference code of the web
+	 content article
 	 * @param groupId the primary key of the web content article's group
 	 * @param folderId the primary key of the web content article folder
 	 * @param classNameId the primary key of the DDMStructure class if the web
@@ -118,248 +256,43 @@ public class JournalArticleServiceUtil {
 	 * @return the web content article
 	 * @throws PortalException if a portal exception occurred
 	 */
-	public static com.liferay.journal.model.JournalArticle addArticle(
-			long groupId, long folderId, long classNameId, long classPK,
-			String articleId, boolean autoArticleId,
-			java.util.Map<java.util.Locale, String> titleMap,
-			java.util.Map<java.util.Locale, String> descriptionMap,
-			java.util.Map<java.util.Locale, String> friendlyURLMap,
-			String content, String ddmStructureKey, String ddmTemplateKey,
-			String layoutUuid, int displayDateMonth, int displayDateDay,
-			int displayDateYear, int displayDateHour, int displayDateMinute,
-			int expirationDateMonth, int expirationDateDay,
-			int expirationDateYear, int expirationDateHour,
-			int expirationDateMinute, boolean neverExpire, int reviewDateMonth,
-			int reviewDateDay, int reviewDateYear, int reviewDateHour,
-			int reviewDateMinute, boolean neverReview, boolean indexable,
-			boolean smallImage, String smallImageURL, java.io.File smallFile,
-			java.util.Map<String, byte[]> images, String articleURL,
+	public static JournalArticle addArticle(
+			String externalReferenceCode, long groupId, long folderId,
+			long classNameId, long classPK, String articleId,
+			boolean autoArticleId, Map<java.util.Locale, String> titleMap,
+			Map<java.util.Locale, String> descriptionMap,
+			Map<java.util.Locale, String> friendlyURLMap, String content,
+			String ddmStructureKey, String ddmTemplateKey, String layoutUuid,
+			int displayDateMonth, int displayDateDay, int displayDateYear,
+			int displayDateHour, int displayDateMinute, int expirationDateMonth,
+			int expirationDateDay, int expirationDateYear,
+			int expirationDateHour, int expirationDateMinute,
+			boolean neverExpire, int reviewDateMonth, int reviewDateDay,
+			int reviewDateYear, int reviewDateHour, int reviewDateMinute,
+			boolean neverReview, boolean indexable, boolean smallImage,
+			String smallImageURL, java.io.File smallFile,
+			Map<String, byte[]> images, String articleURL,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		return getService().addArticle(
-			groupId, folderId, classNameId, classPK, articleId, autoArticleId,
-			titleMap, descriptionMap, friendlyURLMap, content, ddmStructureKey,
-			ddmTemplateKey, layoutUuid, displayDateMonth, displayDateDay,
-			displayDateYear, displayDateHour, displayDateMinute,
-			expirationDateMonth, expirationDateDay, expirationDateYear,
-			expirationDateHour, expirationDateMinute, neverExpire,
-			reviewDateMonth, reviewDateDay, reviewDateYear, reviewDateHour,
-			reviewDateMinute, neverReview, indexable, smallImage, smallImageURL,
-			smallFile, images, articleURL, serviceContext);
-	}
-
-	/**
-	 * Adds a web content article with additional parameters. All scheduling
-	 * parameters (display date, expiration date, and review date) use the
-	 * current user's timezone.
-	 *
-	 * @param groupId the primary key of the web content article's group
-	 * @param folderId the primary key of the web content article folder
-	 * @param classNameId the primary key of the DDMStructure class if the web
-	 content article is related to a DDM structure, the primary key of
-	 the class name associated with the article, or
-	 JournalArticleConstants.CLASS_NAME_ID_DEFAULT in the journal-api
-	 module otherwise
-	 * @param classPK the primary key of the DDM structure, if the primary key
-	 of the DDMStructure class is given as the
-	 <code>classNameId</code> parameter, the primary key of the class
-	 associated with the web content article, or <code>0</code>
-	 otherwise
-	 * @param articleId the primary key of the web content article
-	 * @param autoArticleId whether to auto generate the web content article ID
-	 * @param titleMap the web content article's locales and localized titles
-	 * @param descriptionMap the web content article's locales and localized
-	 descriptions
-	 * @param content the HTML content wrapped in XML. For more information,
-	 see the content example in the {@link #updateArticle(long, long,
-	 String, double, String, ServiceContext)} description.
-	 * @param ddmStructureKey the primary key of the web content article's DDM
-	 structure, if the article is related to a DDM structure, or
-	 <code>null</code> otherwise
-	 * @param ddmTemplateKey the primary key of the web content article's DDM
-	 template
-	 * @param layoutUuid the unique string identifying the web content
-	 article's display page
-	 * @param displayDateMonth the month the web content article is set to
-	 display
-	 * @param displayDateDay the calendar day the web content article is set to
-	 display
-	 * @param displayDateYear the year the web content article is set to
-	 display
-	 * @param displayDateHour the hour the web content article is set to
-	 display
-	 * @param displayDateMinute the minute the web content article is set to
-	 display
-	 * @param expirationDateMonth the month the web content article is set to
-	 expire
-	 * @param expirationDateDay the calendar day the web content article is set
-	 to expire
-	 * @param expirationDateYear the year the web content article is set to
-	 expire
-	 * @param expirationDateHour the hour the web content article is set to
-	 expire
-	 * @param expirationDateMinute the minute the web content article is set to
-	 expire
-	 * @param neverExpire whether the web content article is not set to auto
-	 expire
-	 * @param reviewDateMonth the month the web content article is set for
-	 review
-	 * @param reviewDateDay the calendar day the web content article is set for
-	 review
-	 * @param reviewDateYear the year the web content article is set for review
-	 * @param reviewDateHour the hour the web content article is set for review
-	 * @param reviewDateMinute the minute the web content article is set for
-	 review
-	 * @param neverReview whether the web content article is not set for review
-	 * @param indexable whether the web content article is searchable
-	 * @param smallImage whether the web content article has a small image
-	 * @param smallImageURL the web content article's small image URL
-	 * @param smallFile the web content article's small image file
-	 * @param images the web content's images
-	 * @param articleURL the web content article's accessible URL
-	 * @param serviceContext the service context to be applied. Can set the
-	 UUID, creation date, modification date, expando bridge
-	 attributes, guest permissions, group permissions, asset category
-	 IDs, asset tag names, asset link entry IDs, asset priority, URL
-	 title, and workflow actions for the web content article. Can also
-	 set whether to add the default guest and group permissions.
-	 * @return the web content article
-	 * @throws PortalException if a portal exception occurred
-	 */
-	public static com.liferay.journal.model.JournalArticle addArticle(
-			long groupId, long folderId, long classNameId, long classPK,
-			String articleId, boolean autoArticleId,
-			java.util.Map<java.util.Locale, String> titleMap,
-			java.util.Map<java.util.Locale, String> descriptionMap,
-			String content, String ddmStructureKey, String ddmTemplateKey,
-			String layoutUuid, int displayDateMonth, int displayDateDay,
-			int displayDateYear, int displayDateHour, int displayDateMinute,
-			int expirationDateMonth, int expirationDateDay,
-			int expirationDateYear, int expirationDateHour,
-			int expirationDateMinute, boolean neverExpire, int reviewDateMonth,
-			int reviewDateDay, int reviewDateYear, int reviewDateHour,
-			int reviewDateMinute, boolean neverReview, boolean indexable,
-			boolean smallImage, String smallImageURL, java.io.File smallFile,
-			java.util.Map<String, byte[]> images, String articleURL,
-			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return getService().addArticle(
-			groupId, folderId, classNameId, classPK, articleId, autoArticleId,
-			titleMap, descriptionMap, content, ddmStructureKey, ddmTemplateKey,
-			layoutUuid, displayDateMonth, displayDateDay, displayDateYear,
-			displayDateHour, displayDateMinute, expirationDateMonth,
-			expirationDateDay, expirationDateYear, expirationDateHour,
-			expirationDateMinute, neverExpire, reviewDateMonth, reviewDateDay,
-			reviewDateYear, reviewDateHour, reviewDateMinute, neverReview,
-			indexable, smallImage, smallImageURL, smallFile, images, articleURL,
+			externalReferenceCode, groupId, folderId, classNameId, classPK,
+			articleId, autoArticleId, titleMap, descriptionMap, friendlyURLMap,
+			content, ddmStructureKey, ddmTemplateKey, layoutUuid,
+			displayDateMonth, displayDateDay, displayDateYear, displayDateHour,
+			displayDateMinute, expirationDateMonth, expirationDateDay,
+			expirationDateYear, expirationDateHour, expirationDateMinute,
+			neverExpire, reviewDateMonth, reviewDateDay, reviewDateYear,
+			reviewDateHour, reviewDateMinute, neverReview, indexable,
+			smallImage, smallImageURL, smallFile, images, articleURL,
 			serviceContext);
-	}
-
-	/**
-	 * Adds a web content article without any images. All scheduling parameters
-	 * (display date, expiration date, and review date) use the current user's
-	 * timezone.
-	 *
-	 * @param groupId the primary key of the web content article's group
-	 * @param folderId the primary key of the web content article folder
-	 * @param classNameId the primary key of the DDMStructure class if the web
-	 content article is related to a DDM structure, the primary key of
-	 the class name associated with the article, or
-	 JournalArticleConstants.CLASS_NAME_ID_DEFAULT in the journal-api
-	 module otherwise
-	 * @param classPK the primary key of the DDM structure, if the primary key
-	 of the DDMStructure class is given as the
-	 <code>classNameId</code> parameter, the primary key of the class
-	 associated with the web content article, or <code>0</code>
-	 otherwise
-	 * @param articleId the primary key of the web content article
-	 * @param autoArticleId whether to auto generate the web content article ID
-	 * @param titleMap the web content article's locales and localized titles
-	 * @param descriptionMap the web content article's locales and localized
-	 descriptions
-	 * @param content the HTML content wrapped in XML
-	 * @param ddmStructureKey the primary key of the web content article's DDM
-	 structure, if the article is related to a DDM structure, or
-	 <code>null</code> otherwise
-	 * @param ddmTemplateKey the primary key of the web content article's DDM
-	 template
-	 * @param layoutUuid the unique string identifying the web content
-	 article's display page
-	 * @param displayDateMonth the month the web content article is set to
-	 display
-	 * @param displayDateDay the calendar day the web content article is set to
-	 display
-	 * @param displayDateYear the year the web content article is set to
-	 display
-	 * @param displayDateHour the hour the web content article is set to
-	 display
-	 * @param displayDateMinute the minute the web content article is set to
-	 display
-	 * @param expirationDateMonth the month the web content article is set to
-	 expire
-	 * @param expirationDateDay the calendar day the web content article is set
-	 to expire
-	 * @param expirationDateYear the year the web content article is set to
-	 expire
-	 * @param expirationDateHour the hour the web content article is set to
-	 expire
-	 * @param expirationDateMinute the minute the web content article is set to
-	 expire
-	 * @param neverExpire whether the web content article is not set to auto
-	 expire
-	 * @param reviewDateMonth the month the web content article is set for
-	 review
-	 * @param reviewDateDay the calendar day the web content article is set for
-	 review
-	 * @param reviewDateYear the year the web content article is set for review
-	 * @param reviewDateHour the hour the web content article is set for review
-	 * @param reviewDateMinute the minute the web content article is set for
-	 review
-	 * @param neverReview whether the web content article is not set for review
-	 * @param indexable whether the web content article is searchable
-	 * @param articleURL the web content article's accessible URL
-	 * @param serviceContext the service context to be applied. Can set the
-	 UUID, creation date, modification date, expando bridge
-	 attributes, guest permissions, group permissions, asset category
-	 IDs, asset tag names, asset link entry IDs, asset priority, URL
-	 title, and workflow actions for the web content article. Can also
-	 set whether to add the default guest and group permissions.
-	 * @return the web content article
-	 * @throws PortalException if a portal exception occurred
-	 */
-	public static com.liferay.journal.model.JournalArticle addArticle(
-			long groupId, long folderId, long classNameId, long classPK,
-			String articleId, boolean autoArticleId,
-			java.util.Map<java.util.Locale, String> titleMap,
-			java.util.Map<java.util.Locale, String> descriptionMap,
-			String content, String ddmStructureKey, String ddmTemplateKey,
-			String layoutUuid, int displayDateMonth, int displayDateDay,
-			int displayDateYear, int displayDateHour, int displayDateMinute,
-			int expirationDateMonth, int expirationDateDay,
-			int expirationDateYear, int expirationDateHour,
-			int expirationDateMinute, boolean neverExpire, int reviewDateMonth,
-			int reviewDateDay, int reviewDateYear, int reviewDateHour,
-			int reviewDateMinute, boolean neverReview, boolean indexable,
-			String articleURL,
-			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return getService().addArticle(
-			groupId, folderId, classNameId, classPK, articleId, autoArticleId,
-			titleMap, descriptionMap, content, ddmStructureKey, ddmTemplateKey,
-			layoutUuid, displayDateMonth, displayDateDay, displayDateYear,
-			displayDateHour, displayDateMinute, expirationDateMonth,
-			expirationDateDay, expirationDateYear, expirationDateHour,
-			expirationDateMinute, neverExpire, reviewDateMonth, reviewDateDay,
-			reviewDateYear, reviewDateHour, reviewDateMinute, neverReview,
-			indexable, articleURL, serviceContext);
 	}
 
 	/**
 	 * Adds a web content article.
 	 *
+	 * @param externalReferenceCode the external reference code of the web
+	 content article
 	 * @param groupId the primary key of the web content article's group
 	 * @param folderId the primary key of the web content article folder
 	 * @param titleMap the web content article's locales and localized titles
@@ -382,34 +315,44 @@ public class JournalArticleServiceUtil {
 	 * @return the web content article
 	 * @throws PortalException if a portal exception occurred
 	 */
-	public static com.liferay.journal.model.JournalArticle addArticle(
-			long groupId, long folderId,
-			java.util.Map<java.util.Locale, String> titleMap,
-			java.util.Map<java.util.Locale, String> descriptionMap,
-			String content, String ddmStructureKey, String ddmTemplateKey,
+	public static JournalArticle addArticle(
+			String externalReferenceCode, long groupId, long folderId,
+			Map<java.util.Locale, String> titleMap,
+			Map<java.util.Locale, String> descriptionMap, String content,
+			String ddmStructureKey, String ddmTemplateKey,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		return getService().addArticle(
-			groupId, folderId, titleMap, descriptionMap, content,
-			ddmStructureKey, ddmTemplateKey, serviceContext);
+			externalReferenceCode, groupId, folderId, titleMap, descriptionMap,
+			content, ddmStructureKey, ddmTemplateKey, serviceContext);
 	}
 
-	public static com.liferay.journal.model.JournalArticle
-			addArticleDefaultValues(
-				long groupId, long classNameId, long classPK,
-				java.util.Map<java.util.Locale, String> titleMap,
-				java.util.Map<java.util.Locale, String> descriptionMap,
-				String content, String ddmStructureKey, String ddmTemplateKey,
-				String layoutUuid, boolean indexable, boolean smallImage,
-				String smallImageURL, java.io.File smallImageFile,
-				com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static JournalArticle addArticleDefaultValues(
+			long groupId, long classNameId, long classPK,
+			Map<java.util.Locale, String> titleMap,
+			Map<java.util.Locale, String> descriptionMap, String content,
+			String ddmStructureKey, String ddmTemplateKey, String layoutUuid,
+			int displayDateMonth, int displayDateDay, int displayDateYear,
+			int displayDateHour, int displayDateMinute, int expirationDateMonth,
+			int expirationDateDay, int expirationDateYear,
+			int expirationDateHour, int expirationDateMinute,
+			boolean neverExpire, int reviewDateMonth, int reviewDateDay,
+			int reviewDateYear, int reviewDateHour, int reviewDateMinute,
+			boolean neverReview, boolean indexable, boolean smallImage,
+			String smallImageURL, java.io.File smallImageFile,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws PortalException {
 
 		return getService().addArticleDefaultValues(
 			groupId, classNameId, classPK, titleMap, descriptionMap, content,
-			ddmStructureKey, ddmTemplateKey, layoutUuid, indexable, smallImage,
-			smallImageURL, smallImageFile, serviceContext);
+			ddmStructureKey, ddmTemplateKey, layoutUuid, displayDateMonth,
+			displayDateDay, displayDateYear, displayDateHour, displayDateMinute,
+			expirationDateMonth, expirationDateDay, expirationDateYear,
+			expirationDateHour, expirationDateMinute, neverExpire,
+			reviewDateMonth, reviewDateDay, reviewDateYear, reviewDateHour,
+			reviewDateMinute, neverReview, indexable, smallImage, smallImageURL,
+			smallImageFile, serviceContext);
 	}
 
 	/**
@@ -425,10 +368,10 @@ public class JournalArticleServiceUtil {
 	 * @return the new web content article
 	 * @throws PortalException if a portal exception occurred
 	 */
-	public static com.liferay.journal.model.JournalArticle copyArticle(
+	public static JournalArticle copyArticle(
 			long groupId, String oldArticleId, String newArticleId,
 			boolean autoArticleId, double version)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		return getService().copyArticle(
 			groupId, oldArticleId, newArticleId, autoArticleId, version);
@@ -451,7 +394,7 @@ public class JournalArticleServiceUtil {
 	public static void deleteArticle(
 			long groupId, String articleId, double version, String articleURL,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		getService().deleteArticle(
 			groupId, articleId, version, articleURL, serviceContext);
@@ -473,7 +416,7 @@ public class JournalArticleServiceUtil {
 	public static void deleteArticle(
 			long groupId, String articleId, String articleURL,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		getService().deleteArticle(
 			groupId, articleId, articleURL, serviceContext);
@@ -481,7 +424,7 @@ public class JournalArticleServiceUtil {
 
 	public static void deleteArticleDefaultValues(
 			long groupId, String articleId, String ddmStructureKey)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		getService().deleteArticleDefaultValues(
 			groupId, articleId, ddmStructureKey);
@@ -506,10 +449,10 @@ public class JournalArticleServiceUtil {
 	 * @return the web content article
 	 * @throws PortalException if a portal exception occurred
 	 */
-	public static com.liferay.journal.model.JournalArticle expireArticle(
+	public static JournalArticle expireArticle(
 			long groupId, String articleId, double version, String articleURL,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		return getService().expireArticle(
 			groupId, articleId, version, articleURL, serviceContext);
@@ -537,17 +480,34 @@ public class JournalArticleServiceUtil {
 	public static void expireArticle(
 			long groupId, String articleId, String articleURL,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		getService().expireArticle(
 			groupId, articleId, articleURL, serviceContext);
 	}
 
-	public static com.liferay.journal.model.JournalArticle fetchArticle(
-			long groupId, String articleId)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static JournalArticle fetchArticle(long groupId, String articleId)
+		throws PortalException {
 
 		return getService().fetchArticle(groupId, articleId);
+	}
+
+	/**
+	 * Returns the latest web content article matching the group and the
+	 * external reference code.
+	 *
+	 * @param groupId the primary key of the web content article's group
+	 * @param externalReferenceCode the external reference code of the web
+	 content article
+	 * @return the latest matching web content article, or <code>null</code> if
+	 no matching web content article could be found
+	 */
+	public static JournalArticle fetchLatestArticleByExternalReferenceCode(
+			long groupId, String externalReferenceCode)
+		throws PortalException {
+
+		return getService().fetchLatestArticleByExternalReferenceCode(
+			groupId, externalReferenceCode);
 	}
 
 	/**
@@ -557,9 +517,7 @@ public class JournalArticleServiceUtil {
 	 * @return the web content article with the ID
 	 * @throws PortalException if a portal exception occurred
 	 */
-	public static com.liferay.journal.model.JournalArticle getArticle(long id)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
+	public static JournalArticle getArticle(long id) throws PortalException {
 		return getService().getArticle(id);
 	}
 
@@ -573,9 +531,8 @@ public class JournalArticleServiceUtil {
 	 * @return the matching web content article
 	 * @throws PortalException if a portal exception occurred
 	 */
-	public static com.liferay.journal.model.JournalArticle getArticle(
-			long groupId, String articleId)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static JournalArticle getArticle(long groupId, String articleId)
+		throws PortalException {
 
 		return getService().getArticle(groupId, articleId);
 	}
@@ -590,9 +547,9 @@ public class JournalArticleServiceUtil {
 	 * @return the matching web content article
 	 * @throws PortalException if a portal exception occurred
 	 */
-	public static com.liferay.journal.model.JournalArticle getArticle(
+	public static JournalArticle getArticle(
 			long groupId, String articleId, double version)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		return getService().getArticle(groupId, articleId, version);
 	}
@@ -614,9 +571,9 @@ public class JournalArticleServiceUtil {
 	 * @return the matching web content article
 	 * @throws PortalException if a portal exception occurred
 	 */
-	public static com.liferay.journal.model.JournalArticle getArticle(
+	public static JournalArticle getArticle(
 			long groupId, String className, long classPK)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		return getService().getArticle(groupId, className, classPK);
 	}
@@ -631,9 +588,9 @@ public class JournalArticleServiceUtil {
 	 * @return the matching web content article
 	 * @throws PortalException if a portal exception occurred
 	 */
-	public static com.liferay.journal.model.JournalArticle getArticleByUrlTitle(
+	public static JournalArticle getArticleByUrlTitle(
 			long groupId, String urlTitle)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		return getService().getArticleByUrlTitle(groupId, urlTitle);
 	}
@@ -656,7 +613,7 @@ public class JournalArticleServiceUtil {
 			com.liferay.portal.kernel.portlet.PortletRequestModel
 				portletRequestModel,
 			com.liferay.portal.kernel.theme.ThemeDisplay themeDisplay)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		return getService().getArticleContent(
 			groupId, articleId, version, languageId, portletRequestModel,
@@ -680,27 +637,32 @@ public class JournalArticleServiceUtil {
 			com.liferay.portal.kernel.portlet.PortletRequestModel
 				portletRequestModel,
 			com.liferay.portal.kernel.theme.ThemeDisplay themeDisplay)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		return getService().getArticleContent(
 			groupId, articleId, languageId, portletRequestModel, themeDisplay);
 	}
 
-	public static java.util.List<com.liferay.journal.model.JournalArticle>
-		getArticles(long groupId, long folderId, java.util.Locale locale) {
+	public static List<JournalArticle> getArticles(
+		long groupId, long folderId, java.util.Locale locale) {
 
 		return getService().getArticles(groupId, folderId, locale);
 	}
 
-	public static java.util.List<com.liferay.journal.model.JournalArticle>
-		getArticles(
-			long groupId, long folderId, java.util.Locale locale, int start,
-			int end,
-			com.liferay.portal.kernel.util.OrderByComparator
-				<com.liferay.journal.model.JournalArticle> orderByComparator) {
+	public static List<JournalArticle> getArticles(
+		long groupId, long folderId, java.util.Locale locale, int start,
+		int end, OrderByComparator<JournalArticle> orderByComparator) {
 
 		return getService().getArticles(
 			groupId, folderId, locale, start, end, orderByComparator);
+	}
+
+	public static List<JournalArticle> getArticlesByArticleId(
+		long groupId, String articleId, int status, int start, int end,
+		OrderByComparator<JournalArticle> orderByComparator) {
+
+		return getService().getArticlesByArticleId(
+			groupId, articleId, status, start, end, orderByComparator);
 	}
 
 	/**
@@ -728,11 +690,9 @@ public class JournalArticleServiceUtil {
 	 * @return the range of matching web content articles ordered by the
 	 comparator
 	 */
-	public static java.util.List<com.liferay.journal.model.JournalArticle>
-		getArticlesByArticleId(
-			long groupId, String articleId, int start, int end,
-			com.liferay.portal.kernel.util.OrderByComparator
-				<com.liferay.journal.model.JournalArticle> orderByComparator) {
+	public static List<JournalArticle> getArticlesByArticleId(
+		long groupId, String articleId, int start, int end,
+		OrderByComparator<JournalArticle> orderByComparator) {
 
 		return getService().getArticlesByArticleId(
 			groupId, articleId, start, end, orderByComparator);
@@ -746,8 +706,8 @@ public class JournalArticleServiceUtil {
 	 article's display page
 	 * @return the matching web content articles
 	 */
-	public static java.util.List<com.liferay.journal.model.JournalArticle>
-		getArticlesByLayoutUuid(long groupId, String layoutUuid) {
+	public static List<JournalArticle> getArticlesByLayoutUuid(
+		long groupId, String layoutUuid) {
 
 		return getService().getArticlesByLayoutUuid(groupId, layoutUuid);
 	}
@@ -775,9 +735,8 @@ public class JournalArticleServiceUtil {
 	 return (not inclusive)
 	 * @return the range of matching web content articles
 	 */
-	public static java.util.List<com.liferay.journal.model.JournalArticle>
-		getArticlesByLayoutUuid(
-			long groupId, String layoutUuid, int start, int end) {
+	public static List<JournalArticle> getArticlesByLayoutUuid(
+		long groupId, String layoutUuid, int start, int end) {
 
 		return getService().getArticlesByLayoutUuid(
 			groupId, layoutUuid, start, end);
@@ -832,12 +791,10 @@ public class JournalArticleServiceUtil {
 	 * @return the range of matching web content articles ordered by the
 	 comparator
 	 */
-	public static java.util.List<com.liferay.journal.model.JournalArticle>
-		getArticlesByStructureId(
-			long groupId, long classNameId, String ddmStructureKey, int status,
-			int start, int end,
-			com.liferay.portal.kernel.util.OrderByComparator
-				<com.liferay.journal.model.JournalArticle> orderByComparator) {
+	public static List<JournalArticle> getArticlesByStructureId(
+		long groupId, long classNameId, String ddmStructureKey, int status,
+		int start, int end,
+		OrderByComparator<JournalArticle> orderByComparator) {
 
 		return getService().getArticlesByStructureId(
 			groupId, classNameId, ddmStructureKey, status, start, end,
@@ -878,12 +835,10 @@ public class JournalArticleServiceUtil {
 	 * @return the range of matching web content articles ordered by the
 	 comparator
 	 */
-	public static java.util.List<com.liferay.journal.model.JournalArticle>
-		getArticlesByStructureId(
-			long groupId, long classNameId, String ddmStructureKey,
-			java.util.Locale locale, int status, int start, int end,
-			com.liferay.portal.kernel.util.OrderByComparator
-				<com.liferay.journal.model.JournalArticle> orderByComparator) {
+	public static List<JournalArticle> getArticlesByStructureId(
+		long groupId, long classNameId, String ddmStructureKey,
+		java.util.Locale locale, int status, int start, int end,
+		OrderByComparator<JournalArticle> orderByComparator) {
 
 		return getService().getArticlesByStructureId(
 			groupId, classNameId, ddmStructureKey, locale, status, start, end,
@@ -919,12 +874,9 @@ public class JournalArticleServiceUtil {
 	 * @return the range of matching web content articles ordered by the
 	 comparator
 	 */
-	public static java.util.List<com.liferay.journal.model.JournalArticle>
-		getArticlesByStructureId(
-			long groupId, String ddmStructureKey, int status, int start,
-			int end,
-			com.liferay.portal.kernel.util.OrderByComparator
-				<com.liferay.journal.model.JournalArticle> orderByComparator) {
+	public static List<JournalArticle> getArticlesByStructureId(
+		long groupId, String ddmStructureKey, int status, int start, int end,
+		OrderByComparator<JournalArticle> orderByComparator) {
 
 		return getService().getArticlesByStructureId(
 			groupId, ddmStructureKey, status, start, end, orderByComparator);
@@ -956,11 +908,9 @@ public class JournalArticleServiceUtil {
 	 * @return the range of matching web content articles ordered by the
 	 comparator
 	 */
-	public static java.util.List<com.liferay.journal.model.JournalArticle>
-		getArticlesByStructureId(
-			long groupId, String ddmStructureKey, int start, int end,
-			com.liferay.portal.kernel.util.OrderByComparator
-				<com.liferay.journal.model.JournalArticle> orderByComparator) {
+	public static List<JournalArticle> getArticlesByStructureId(
+		long groupId, String ddmStructureKey, int start, int end,
+		OrderByComparator<JournalArticle> orderByComparator) {
 
 		return getService().getArticlesByStructureId(
 			groupId, ddmStructureKey, start, end, orderByComparator);
@@ -996,12 +946,10 @@ public class JournalArticleServiceUtil {
 	 * @return the range of matching web content articles ordered by the
 	 comparator
 	 */
-	public static java.util.List<com.liferay.journal.model.JournalArticle>
-		getArticlesByStructureId(
-			long groupId, String ddmStructureKey, java.util.Locale locale,
-			int status, int start, int end,
-			com.liferay.portal.kernel.util.OrderByComparator
-				<com.liferay.journal.model.JournalArticle> orderByComparator) {
+	public static List<JournalArticle> getArticlesByStructureId(
+		long groupId, String ddmStructureKey, java.util.Locale locale,
+		int status, int start, int end,
+		OrderByComparator<JournalArticle> orderByComparator) {
 
 		return getService().getArticlesByStructureId(
 			groupId, ddmStructureKey, locale, status, start, end,
@@ -1048,6 +996,13 @@ public class JournalArticleServiceUtil {
 		long groupId, String articleId) {
 
 		return getService().getArticlesCountByArticleId(groupId, articleId);
+	}
+
+	public static int getArticlesCountByArticleId(
+		long groupId, String articleId, int status) {
+
+		return getService().getArticlesCountByArticleId(
+			groupId, articleId, status);
 	}
 
 	/**
@@ -1120,9 +1075,9 @@ public class JournalArticleServiceUtil {
 	 article is currently displayed
 	 * @throws PortalException if a portal exception occurred
 	 */
-	public static com.liferay.journal.model.JournalArticle
-			getDisplayArticleByUrlTitle(long groupId, String urlTitle)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static JournalArticle getDisplayArticleByUrlTitle(
+			long groupId, String urlTitle)
+		throws PortalException {
 
 		return getService().getDisplayArticleByUrlTitle(groupId, urlTitle);
 	}
@@ -1137,7 +1092,7 @@ public class JournalArticleServiceUtil {
 	 * @return the number of matching folders containing web content articles
 	 */
 	public static int getFoldersAndArticlesCount(
-		long groupId, java.util.List<Long> folderIds) {
+		long groupId, List<Long> folderIds) {
 
 		return getService().getFoldersAndArticlesCount(groupId, folderIds);
 	}
@@ -1164,14 +1119,11 @@ public class JournalArticleServiceUtil {
 	 comparator
 	 * @throws PortalException if a portal exception occurred
 	 */
-	public static java.util.List<com.liferay.journal.model.JournalArticle>
-			getGroupArticles(
-				long groupId, long userId, long rootFolderId, int status,
-				boolean includeOwner, int start, int end,
-				com.liferay.portal.kernel.util.OrderByComparator
-					<com.liferay.journal.model.JournalArticle>
-						orderByComparator)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static List<JournalArticle> getGroupArticles(
+			long groupId, long userId, long rootFolderId, int status,
+			boolean includeOwner, int start, int end,
+			OrderByComparator<JournalArticle> orderByComparator)
+		throws PortalException {
 
 		return getService().getGroupArticles(
 			groupId, userId, rootFolderId, status, includeOwner, start, end,
@@ -1201,15 +1153,11 @@ public class JournalArticleServiceUtil {
 	 comparator
 	 * @throws PortalException if a portal exception occurred
 	 */
-	public static java.util.List<com.liferay.journal.model.JournalArticle>
-			getGroupArticles(
-				long groupId, long userId, long rootFolderId, int status,
-				boolean includeOwner, java.util.Locale locale, int start,
-				int end,
-				com.liferay.portal.kernel.util.OrderByComparator
-					<com.liferay.journal.model.JournalArticle>
-						orderByComparator)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static List<JournalArticle> getGroupArticles(
+			long groupId, long userId, long rootFolderId, int status,
+			boolean includeOwner, java.util.Locale locale, int start, int end,
+			OrderByComparator<JournalArticle> orderByComparator)
+		throws PortalException {
 
 		return getService().getGroupArticles(
 			groupId, userId, rootFolderId, status, includeOwner, locale, start,
@@ -1247,14 +1195,10 @@ public class JournalArticleServiceUtil {
 	 comparator
 	 * @throws PortalException if a portal exception occurred
 	 */
-	public static java.util.List<com.liferay.journal.model.JournalArticle>
-			getGroupArticles(
-				long groupId, long userId, long rootFolderId, int status,
-				int start, int end,
-				com.liferay.portal.kernel.util.OrderByComparator
-					<com.liferay.journal.model.JournalArticle>
-						orderByComparator)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static List<JournalArticle> getGroupArticles(
+			long groupId, long userId, long rootFolderId, int status, int start,
+			int end, OrderByComparator<JournalArticle> orderByComparator)
+		throws PortalException {
 
 		return getService().getGroupArticles(
 			groupId, userId, rootFolderId, status, start, end,
@@ -1289,14 +1233,10 @@ public class JournalArticleServiceUtil {
 	 comparator
 	 * @throws PortalException if a portal exception occurred
 	 */
-	public static java.util.List<com.liferay.journal.model.JournalArticle>
-			getGroupArticles(
-				long groupId, long userId, long rootFolderId, int start,
-				int end,
-				com.liferay.portal.kernel.util.OrderByComparator
-					<com.liferay.journal.model.JournalArticle>
-						orderByComparator)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static List<JournalArticle> getGroupArticles(
+			long groupId, long userId, long rootFolderId, int start, int end,
+			OrderByComparator<JournalArticle> orderByComparator)
+		throws PortalException {
 
 		return getService().getGroupArticles(
 			groupId, userId, rootFolderId, start, end, orderByComparator);
@@ -1315,7 +1255,7 @@ public class JournalArticleServiceUtil {
 	 */
 	public static int getGroupArticlesCount(
 			long groupId, long userId, long rootFolderId)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		return getService().getGroupArticlesCount(
 			groupId, userId, rootFolderId);
@@ -1337,7 +1277,7 @@ public class JournalArticleServiceUtil {
 	 */
 	public static int getGroupArticlesCount(
 			long groupId, long userId, long rootFolderId, int status)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		return getService().getGroupArticlesCount(
 			groupId, userId, rootFolderId, status);
@@ -1362,7 +1302,7 @@ public class JournalArticleServiceUtil {
 	public static int getGroupArticlesCount(
 			long groupId, long userId, long rootFolderId, int status,
 			boolean includeOwner)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		return getService().getGroupArticlesCount(
 			groupId, userId, rootFolderId, status, includeOwner);
@@ -1377,9 +1317,8 @@ public class JournalArticleServiceUtil {
 	 preferring articles with approved workflow status
 	 * @throws PortalException if a portal exception occurred
 	 */
-	public static com.liferay.journal.model.JournalArticle getLatestArticle(
-			long resourcePrimKey)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static JournalArticle getLatestArticle(long resourcePrimKey)
+		throws PortalException {
 
 		return getService().getLatestArticle(resourcePrimKey);
 	}
@@ -1396,9 +1335,9 @@ public class JournalArticleServiceUtil {
 	 * @return the latest matching web content article
 	 * @throws PortalException if a portal exception occurred
 	 */
-	public static com.liferay.journal.model.JournalArticle getLatestArticle(
+	public static JournalArticle getLatestArticle(
 			long groupId, String articleId, int status)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		return getService().getLatestArticle(groupId, articleId, status);
 	}
@@ -1419,18 +1358,34 @@ public class JournalArticleServiceUtil {
 	 * @return the latest matching web content article
 	 * @throws PortalException if a portal exception occurred
 	 */
-	public static com.liferay.journal.model.JournalArticle getLatestArticle(
+	public static JournalArticle getLatestArticle(
 			long groupId, String className, long classPK)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		return getService().getLatestArticle(groupId, className, classPK);
 	}
 
-	public static java.util.List<com.liferay.journal.model.JournalArticle>
-		getLatestArticles(
-			long groupId, int status, int start, int end,
-			com.liferay.portal.kernel.util.OrderByComparator
-				<com.liferay.journal.model.JournalArticle> orderByComparator) {
+	/**
+	 * Returns the latest web content article matching the group and the
+	 * external reference code.
+	 *
+	 * @param groupId the primary key of the web content article's group
+	 * @param externalReferenceCode the external reference code of the web
+	 content article
+	 * @return the latest matching web content article
+	 * @throws PortalException if a portal exception occurred
+	 */
+	public static JournalArticle getLatestArticleByExternalReferenceCode(
+			long groupId, String externalReferenceCode)
+		throws PortalException {
+
+		return getService().getLatestArticleByExternalReferenceCode(
+			groupId, externalReferenceCode);
+	}
+
+	public static List<JournalArticle> getLatestArticles(
+		long groupId, int status, int start, int end,
+		OrderByComparator<JournalArticle> orderByComparator) {
 
 		return getService().getLatestArticles(
 			groupId, status, start, end, orderByComparator);
@@ -1447,9 +1402,7 @@ public class JournalArticleServiceUtil {
 	 * @param groupId the primary key of the web content article's group
 	 * @return The matching web content articles
 	 */
-	public static java.util.List<com.liferay.journal.model.JournalArticle>
-		getLayoutArticles(long groupId) {
-
+	public static List<JournalArticle> getLayoutArticles(long groupId) {
 		return getService().getLayoutArticles(groupId);
 	}
 
@@ -1474,8 +1427,8 @@ public class JournalArticleServiceUtil {
 	 return (not inclusive)
 	 * @return the range of matching web content articles
 	 */
-	public static java.util.List<com.liferay.journal.model.JournalArticle>
-		getLayoutArticles(long groupId, int start, int end) {
+	public static List<JournalArticle> getLayoutArticles(
+		long groupId, int start, int end) {
 
 		return getService().getLayoutArticles(groupId, start, end);
 	}
@@ -1521,7 +1474,7 @@ public class JournalArticleServiceUtil {
 	public static void moveArticle(
 			long groupId, String articleId, long newFolderId,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		getService().moveArticle(
 			groupId, articleId, newFolderId, serviceContext);
@@ -1546,10 +1499,10 @@ public class JournalArticleServiceUtil {
 	 Bin to the folder
 	 * @throws PortalException if a portal exception occurred
 	 */
-	public static com.liferay.journal.model.JournalArticle moveArticleFromTrash(
+	public static JournalArticle moveArticleFromTrash(
 			long groupId, long resourcePrimKey, long newFolderId,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		return getService().moveArticleFromTrash(
 			groupId, resourcePrimKey, newFolderId, serviceContext);
@@ -1574,10 +1527,10 @@ public class JournalArticleServiceUtil {
 	 Bin to the folder
 	 * @throws PortalException if a portal exception occurred
 	 */
-	public static com.liferay.journal.model.JournalArticle moveArticleFromTrash(
+	public static JournalArticle moveArticleFromTrash(
 			long groupId, String articleId, long newFolderId,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		return getService().moveArticleFromTrash(
 			groupId, articleId, newFolderId, serviceContext);
@@ -1593,9 +1546,9 @@ public class JournalArticleServiceUtil {
 	 article was found
 	 * @throws PortalException if a portal exception occurred
 	 */
-	public static com.liferay.journal.model.JournalArticle moveArticleToTrash(
+	public static JournalArticle moveArticleToTrash(
 			long groupId, String articleId)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		return getService().moveArticleToTrash(groupId, articleId);
 	}
@@ -1609,7 +1562,7 @@ public class JournalArticleServiceUtil {
 	 * @throws PortalException if a portal exception occurred
 	 */
 	public static void removeArticleLocale(long companyId, String languageId)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		getService().removeArticleLocale(companyId, languageId);
 	}
@@ -1625,9 +1578,9 @@ public class JournalArticleServiceUtil {
 	 * @return the updated web content article with the locale removed
 	 * @throws PortalException if a portal exception occurred
 	 */
-	public static com.liferay.journal.model.JournalArticle removeArticleLocale(
+	public static JournalArticle removeArticleLocale(
 			long groupId, String articleId, double version, String languageId)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		return getService().removeArticleLocale(
 			groupId, articleId, version, languageId);
@@ -1641,7 +1594,7 @@ public class JournalArticleServiceUtil {
 	 * @throws PortalException if a portal exception occurred
 	 */
 	public static void restoreArticleFromTrash(long resourcePrimKey)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		getService().restoreArticleFromTrash(resourcePrimKey);
 	}
@@ -1654,7 +1607,7 @@ public class JournalArticleServiceUtil {
 	 * @throws PortalException if a portal exception occurred
 	 */
 	public static void restoreArticleFromTrash(long groupId, String articleId)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		getService().restoreArticleFromTrash(groupId, articleId);
 	}
@@ -1690,7 +1643,7 @@ public class JournalArticleServiceUtil {
 	 */
 	public static com.liferay.portal.kernel.search.Hits search(
 			long groupId, long creatorUserId, int status, int start, int end)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		return getService().search(groupId, creatorUserId, status, start, end);
 	}
@@ -1738,11 +1691,11 @@ public class JournalArticleServiceUtil {
 	 * @param displayDateLT the date before which a matching web content
 	 article's display date must be before (optionally
 	 <code>null</code>)
+	 * @param reviewDate the web content article's scheduled review date
+	 (optionally <code>null</code>)
 	 * @param status the web content article's workflow status. For more
 	 information see {@link WorkflowConstants} for constants starting
 	 with the "STATUS_" prefix.
-	 * @param reviewDate the web content article's scheduled review date
-	 (optionally <code>null</code>)
 	 * @param start the lower bound of the range of web content articles to
 	 return
 	 * @param end the upper bound of the range of web content articles to
@@ -1752,20 +1705,18 @@ public class JournalArticleServiceUtil {
 	 * @return the range of matching web content articles ordered by the
 	 comparator
 	 */
-	public static java.util.List<com.liferay.journal.model.JournalArticle>
-		search(
-			long companyId, long groupId, java.util.List<Long> folderIds,
-			long classNameId, String keywords, Double version,
-			String ddmStructureKey, String ddmTemplateKey,
-			java.util.Date displayDateGT, java.util.Date displayDateLT,
-			int status, java.util.Date reviewDate, int start, int end,
-			com.liferay.portal.kernel.util.OrderByComparator
-				<com.liferay.journal.model.JournalArticle> orderByComparator) {
+	public static List<JournalArticle> search(
+		long companyId, long groupId, List<Long> folderIds, long classNameId,
+		String keywords, Double version, String ddmStructureKey,
+		String ddmTemplateKey, java.util.Date displayDateGT,
+		java.util.Date displayDateLT, java.util.Date reviewDate, int status,
+		int start, int end,
+		OrderByComparator<JournalArticle> orderByComparator) {
 
 		return getService().search(
 			companyId, groupId, folderIds, classNameId, keywords, version,
 			ddmStructureKey, ddmTemplateKey, displayDateGT, displayDateLT,
-			status, reviewDate, start, end, orderByComparator);
+			reviewDate, status, start, end, orderByComparator);
 	}
 
 	/**
@@ -1814,11 +1765,11 @@ public class JournalArticleServiceUtil {
 	 * @param displayDateLT the date before which a matching web content
 	 article's display date must be before (optionally
 	 <code>null</code>)
+	 * @param reviewDate the web content article's scheduled review date
+	 (optionally <code>null</code>)
 	 * @param status the web content article's workflow status. For more
 	 information see {@link WorkflowConstants} for constants starting
 	 with the "STATUS_" prefix.
-	 * @param reviewDate the web content article's scheduled review date
-	 (optionally <code>null</code>)
 	 * @param andOperator whether every field must match its value or keywords,
 	 or just one field must match. Company, group, folder IDs, class
 	 name ID, and status must all match their values.
@@ -1831,21 +1782,18 @@ public class JournalArticleServiceUtil {
 	 * @return the range of matching web content articles ordered by the
 	 comparator
 	 */
-	public static java.util.List<com.liferay.journal.model.JournalArticle>
-		search(
-			long companyId, long groupId, java.util.List<Long> folderIds,
-			long classNameId, String articleId, Double version, String title,
-			String description, String content, String ddmStructureKey,
-			String ddmTemplateKey, java.util.Date displayDateGT,
-			java.util.Date displayDateLT, int status, java.util.Date reviewDate,
-			boolean andOperator, int start, int end,
-			com.liferay.portal.kernel.util.OrderByComparator
-				<com.liferay.journal.model.JournalArticle> orderByComparator) {
+	public static List<JournalArticle> search(
+		long companyId, long groupId, List<Long> folderIds, long classNameId,
+		String articleId, Double version, String title, String description,
+		String content, String ddmStructureKey, String ddmTemplateKey,
+		java.util.Date displayDateGT, java.util.Date displayDateLT,
+		java.util.Date reviewDate, int status, boolean andOperator, int start,
+		int end, OrderByComparator<JournalArticle> orderByComparator) {
 
 		return getService().search(
 			companyId, groupId, folderIds, classNameId, articleId, version,
 			title, description, content, ddmStructureKey, ddmTemplateKey,
-			displayDateGT, displayDateLT, status, reviewDate, andOperator,
+			displayDateGT, displayDateLT, reviewDate, status, andOperator,
 			start, end, orderByComparator);
 	}
 
@@ -1897,11 +1845,11 @@ public class JournalArticleServiceUtil {
 	 * @param displayDateLT the date before which a matching web content
 	 article's display date must be before (optionally
 	 <code>null</code>)
+	 * @param reviewDate the web content article's scheduled review date
+	 (optionally <code>null</code>)
 	 * @param status the web content article's workflow status. For more
 	 information see {@link WorkflowConstants} for constants starting
 	 with the "STATUS_" prefix.
-	 * @param reviewDate the web content article's scheduled review date
-	 (optionally <code>null</code>)
 	 * @param andOperator whether every field must match its value or keywords,
 	 or just one field must match.  Company, group, folder IDs, class
 	 name ID, and status must all match their values.
@@ -1914,21 +1862,18 @@ public class JournalArticleServiceUtil {
 	 * @return the range of matching web content articles ordered by the
 	 comparator
 	 */
-	public static java.util.List<com.liferay.journal.model.JournalArticle>
-		search(
-			long companyId, long groupId, java.util.List<Long> folderIds,
-			long classNameId, String articleId, Double version, String title,
-			String description, String content, String[] ddmStructureKeys,
-			String[] ddmTemplateKeys, java.util.Date displayDateGT,
-			java.util.Date displayDateLT, int status, java.util.Date reviewDate,
-			boolean andOperator, int start, int end,
-			com.liferay.portal.kernel.util.OrderByComparator
-				<com.liferay.journal.model.JournalArticle> orderByComparator) {
+	public static List<JournalArticle> search(
+		long companyId, long groupId, List<Long> folderIds, long classNameId,
+		String articleId, Double version, String title, String description,
+		String content, String[] ddmStructureKeys, String[] ddmTemplateKeys,
+		java.util.Date displayDateGT, java.util.Date displayDateLT,
+		java.util.Date reviewDate, int status, boolean andOperator, int start,
+		int end, OrderByComparator<JournalArticle> orderByComparator) {
 
 		return getService().search(
 			companyId, groupId, folderIds, classNameId, articleId, version,
 			title, description, content, ddmStructureKeys, ddmTemplateKeys,
-			displayDateGT, displayDateLT, status, reviewDate, andOperator,
+			displayDateGT, displayDateLT, reviewDate, status, andOperator,
 			start, end, orderByComparator);
 	}
 
@@ -1965,24 +1910,23 @@ public class JournalArticleServiceUtil {
 	 * @param displayDateLT the date before which a matching web content
 	 article's display date must be before (optionally
 	 <code>null</code>)
+	 * @param reviewDate the web content article's scheduled review date
+	 (optionally <code>null</code>)
 	 * @param status the web content article's workflow status. For more
 	 information see {@link WorkflowConstants} for constants starting
 	 with the "STATUS_" prefix.
-	 * @param reviewDate the web content article's scheduled review date
-	 (optionally <code>null</code>)
 	 * @return the number of matching web content articles
 	 */
 	public static int searchCount(
-		long companyId, long groupId, java.util.List<Long> folderIds,
-		long classNameId, String keywords, Double version,
-		String ddmStructureKey, String ddmTemplateKey,
-		java.util.Date displayDateGT, java.util.Date displayDateLT, int status,
-		java.util.Date reviewDate) {
+		long companyId, long groupId, List<Long> folderIds, long classNameId,
+		String keywords, Double version, String ddmStructureKey,
+		String ddmTemplateKey, java.util.Date displayDateGT,
+		java.util.Date displayDateLT, java.util.Date reviewDate, int status) {
 
 		return getService().searchCount(
 			companyId, groupId, folderIds, classNameId, keywords, version,
 			ddmStructureKey, ddmTemplateKey, displayDateGT, displayDateLT,
-			status, reviewDate);
+			reviewDate, status);
 	}
 
 	/**
@@ -2021,28 +1965,27 @@ public class JournalArticleServiceUtil {
 	 * @param displayDateLT the date before which a matching web content
 	 article's display date must be before (optionally
 	 <code>null</code>)
+	 * @param reviewDate the web content article's scheduled review date
+	 (optionally <code>null</code>)
 	 * @param status the web content article's workflow status. For more
 	 information see {@link WorkflowConstants} for constants starting
 	 with the "STATUS_" prefix.
-	 * @param reviewDate the web content article's scheduled review date
-	 (optionally <code>null</code>)
 	 * @param andOperator whether every field must match its value or keywords,
 	 or just one field must match. Group, folder IDs, class name ID,
 	 and status must all match their values.
 	 * @return the number of matching web content articles
 	 */
 	public static int searchCount(
-		long companyId, long groupId, java.util.List<Long> folderIds,
-		long classNameId, String articleId, Double version, String title,
-		String description, String content, String ddmStructureKey,
-		String ddmTemplateKey, java.util.Date displayDateGT,
-		java.util.Date displayDateLT, int status, java.util.Date reviewDate,
-		boolean andOperator) {
+		long companyId, long groupId, List<Long> folderIds, long classNameId,
+		String articleId, Double version, String title, String description,
+		String content, String ddmStructureKey, String ddmTemplateKey,
+		java.util.Date displayDateGT, java.util.Date displayDateLT,
+		java.util.Date reviewDate, int status, boolean andOperator) {
 
 		return getService().searchCount(
 			companyId, groupId, folderIds, classNameId, articleId, version,
 			title, description, content, ddmStructureKey, ddmTemplateKey,
-			displayDateGT, displayDateLT, status, reviewDate, andOperator);
+			displayDateGT, displayDateLT, reviewDate, status, andOperator);
 	}
 
 	/**
@@ -2083,32 +2026,31 @@ public class JournalArticleServiceUtil {
 	 * @param displayDateLT the date before which a matching web content
 	 article's display date must be before (optionally
 	 <code>null</code>)
+	 * @param reviewDate the web content article's scheduled review date
+	 (optionally <code>null</code>)
 	 * @param status the web content article's workflow status. For more
 	 information see {@link WorkflowConstants} for constants starting
 	 with the "STATUS_" prefix.
-	 * @param reviewDate the web content article's scheduled review date
-	 (optionally <code>null</code>)
 	 * @param andOperator whether every field must match its value or keywords,
 	 or just one field must match.  Group, folder IDs, class name ID,
 	 and status must all match their values.
 	 * @return the number of matching web content articles
 	 */
 	public static int searchCount(
-		long companyId, long groupId, java.util.List<Long> folderIds,
-		long classNameId, String articleId, Double version, String title,
-		String description, String content, String[] ddmStructureKeys,
-		String[] ddmTemplateKeys, java.util.Date displayDateGT,
-		java.util.Date displayDateLT, int status, java.util.Date reviewDate,
-		boolean andOperator) {
+		long companyId, long groupId, List<Long> folderIds, long classNameId,
+		String articleId, Double version, String title, String description,
+		String content, String[] ddmStructureKeys, String[] ddmTemplateKeys,
+		java.util.Date displayDateGT, java.util.Date displayDateLT,
+		java.util.Date reviewDate, int status, boolean andOperator) {
 
 		return getService().searchCount(
 			companyId, groupId, folderIds, classNameId, articleId, version,
 			title, description, content, ddmStructureKeys, ddmTemplateKeys,
-			displayDateGT, displayDateLT, status, reviewDate, andOperator);
+			displayDateGT, displayDateLT, reviewDate, status, andOperator);
 	}
 
 	public static void subscribe(long groupId, long articleId)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		getService().subscribe(groupId, articleId);
 	}
@@ -2124,13 +2066,13 @@ public class JournalArticleServiceUtil {
 	 */
 	public static void subscribeStructure(
 			long groupId, long userId, long ddmStructureId)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		getService().subscribeStructure(groupId, userId, ddmStructureId);
 	}
 
 	public static void unsubscribe(long groupId, long articleId)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		getService().unsubscribe(groupId, articleId);
 	}
@@ -2146,7 +2088,7 @@ public class JournalArticleServiceUtil {
 	 */
 	public static void unsubscribeStructure(
 			long groupId, long userId, long ddmStructureId)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		getService().unsubscribeStructure(groupId, userId, ddmStructureId);
 	}
@@ -2181,13 +2123,13 @@ public class JournalArticleServiceUtil {
 	 * @return the updated web content article
 	 * @throws PortalException if a portal exception occurred
 	 */
-	public static com.liferay.journal.model.JournalArticle updateArticle(
+	public static JournalArticle updateArticle(
 			long userId, long groupId, long folderId, String articleId,
-			double version, java.util.Map<java.util.Locale, String> titleMap,
-			java.util.Map<java.util.Locale, String> descriptionMap,
-			String content, String layoutUuid,
+			double version, Map<java.util.Locale, String> titleMap,
+			Map<java.util.Locale, String> descriptionMap, String content,
+			String layoutUuid,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		return getService().updateArticle(
 			userId, groupId, folderId, articleId, version, titleMap,
@@ -2274,23 +2216,23 @@ public class JournalArticleServiceUtil {
 	 * @return the updated web content article
 	 * @throws PortalException if a portal exception occurred
 	 */
-	public static com.liferay.journal.model.JournalArticle updateArticle(
+	public static JournalArticle updateArticle(
 			long groupId, long folderId, String articleId, double version,
-			java.util.Map<java.util.Locale, String> titleMap,
-			java.util.Map<java.util.Locale, String> descriptionMap,
-			java.util.Map<java.util.Locale, String> friendlyURLMap,
-			String content, String ddmStructureKey, String ddmTemplateKey,
-			String layoutUuid, int displayDateMonth, int displayDateDay,
-			int displayDateYear, int displayDateHour, int displayDateMinute,
-			int expirationDateMonth, int expirationDateDay,
-			int expirationDateYear, int expirationDateHour,
-			int expirationDateMinute, boolean neverExpire, int reviewDateMonth,
-			int reviewDateDay, int reviewDateYear, int reviewDateHour,
-			int reviewDateMinute, boolean neverReview, boolean indexable,
-			boolean smallImage, String smallImageURL, java.io.File smallFile,
-			java.util.Map<String, byte[]> images, String articleURL,
+			Map<java.util.Locale, String> titleMap,
+			Map<java.util.Locale, String> descriptionMap,
+			Map<java.util.Locale, String> friendlyURLMap, String content,
+			String ddmStructureKey, String ddmTemplateKey, String layoutUuid,
+			int displayDateMonth, int displayDateDay, int displayDateYear,
+			int displayDateHour, int displayDateMinute, int expirationDateMonth,
+			int expirationDateDay, int expirationDateYear,
+			int expirationDateHour, int expirationDateMinute,
+			boolean neverExpire, int reviewDateMonth, int reviewDateDay,
+			int reviewDateYear, int reviewDateHour, int reviewDateMinute,
+			boolean neverReview, boolean indexable, boolean smallImage,
+			String smallImageURL, java.io.File smallFile,
+			Map<String, byte[]> images, String articleURL,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		return getService().updateArticle(
 			groupId, folderId, articleId, version, titleMap, descriptionMap,
@@ -2382,22 +2324,22 @@ public class JournalArticleServiceUtil {
 	 * @return the updated web content article
 	 * @throws PortalException if a portal exception occurred
 	 */
-	public static com.liferay.journal.model.JournalArticle updateArticle(
+	public static JournalArticle updateArticle(
 			long groupId, long folderId, String articleId, double version,
-			java.util.Map<java.util.Locale, String> titleMap,
-			java.util.Map<java.util.Locale, String> descriptionMap,
-			String content, String ddmStructureKey, String ddmTemplateKey,
-			String layoutUuid, int displayDateMonth, int displayDateDay,
-			int displayDateYear, int displayDateHour, int displayDateMinute,
-			int expirationDateMonth, int expirationDateDay,
-			int expirationDateYear, int expirationDateHour,
-			int expirationDateMinute, boolean neverExpire, int reviewDateMonth,
-			int reviewDateDay, int reviewDateYear, int reviewDateHour,
-			int reviewDateMinute, boolean neverReview, boolean indexable,
-			boolean smallImage, String smallImageURL, java.io.File smallFile,
-			java.util.Map<String, byte[]> images, String articleURL,
+			Map<java.util.Locale, String> titleMap,
+			Map<java.util.Locale, String> descriptionMap, String content,
+			String ddmStructureKey, String ddmTemplateKey, String layoutUuid,
+			int displayDateMonth, int displayDateDay, int displayDateYear,
+			int displayDateHour, int displayDateMinute, int expirationDateMonth,
+			int expirationDateDay, int expirationDateYear,
+			int expirationDateHour, int expirationDateMinute,
+			boolean neverExpire, int reviewDateMonth, int reviewDateDay,
+			int reviewDateYear, int reviewDateHour, int reviewDateMinute,
+			boolean neverReview, boolean indexable, boolean smallImage,
+			String smallImageURL, java.io.File smallFile,
+			Map<String, byte[]> images, String articleURL,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		return getService().updateArticle(
 			groupId, folderId, articleId, version, titleMap, descriptionMap,
@@ -2450,31 +2392,41 @@ public class JournalArticleServiceUtil {
 	 * @return the updated web content article
 	 * @throws PortalException if a portal exception occurred
 	 */
-	public static com.liferay.journal.model.JournalArticle updateArticle(
+	public static JournalArticle updateArticle(
 			long groupId, long folderId, String articleId, double version,
 			String content,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		return getService().updateArticle(
 			groupId, folderId, articleId, version, content, serviceContext);
 	}
 
-	public static com.liferay.journal.model.JournalArticle
-			updateArticleDefaultValues(
-				long groupId, String articleId,
-				java.util.Map<java.util.Locale, String> titleMap,
-				java.util.Map<java.util.Locale, String> descriptionMap,
-				String content, String ddmStructureKey, String ddmTemplateKey,
-				String layoutUuid, boolean indexable, boolean smallImage,
-				String smallImageURL, java.io.File smallImageFile,
-				com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static JournalArticle updateArticleDefaultValues(
+			long groupId, String articleId,
+			Map<java.util.Locale, String> titleMap,
+			Map<java.util.Locale, String> descriptionMap, String content,
+			String ddmStructureKey, String ddmTemplateKey, String layoutUuid,
+			int displayDateMonth, int displayDateDay, int displayDateYear,
+			int displayDateHour, int displayDateMinute, int expirationDateMonth,
+			int expirationDateDay, int expirationDateYear,
+			int expirationDateHour, int expirationDateMinute,
+			boolean neverExpire, int reviewDateMonth, int reviewDateDay,
+			int reviewDateYear, int reviewDateHour, int reviewDateMinute,
+			boolean neverReview, boolean indexable, boolean smallImage,
+			String smallImageURL, java.io.File smallImageFile,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws PortalException {
 
 		return getService().updateArticleDefaultValues(
 			groupId, articleId, titleMap, descriptionMap, content,
-			ddmStructureKey, ddmTemplateKey, layoutUuid, indexable, smallImage,
-			smallImageURL, smallImageFile, serviceContext);
+			ddmStructureKey, ddmTemplateKey, layoutUuid, displayDateMonth,
+			displayDateDay, displayDateYear, displayDateHour, displayDateMinute,
+			expirationDateMonth, expirationDateDay, expirationDateYear,
+			expirationDateHour, expirationDateMinute, neverExpire,
+			reviewDateMonth, reviewDateDay, reviewDateYear, reviewDateHour,
+			reviewDateMinute, neverReview, indexable, smallImage, smallImageURL,
+			smallImageFile, serviceContext);
 	}
 
 	/**
@@ -2495,37 +2447,16 @@ public class JournalArticleServiceUtil {
 	 * @return the updated web content article
 	 * @throws PortalException if a portal exception occurred
 	 */
-	public static com.liferay.journal.model.JournalArticle
-			updateArticleTranslation(
-				long groupId, String articleId, double version,
-				java.util.Locale locale, String title, String description,
-				String content, java.util.Map<String, byte[]> images,
-				com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static JournalArticle updateArticleTranslation(
+			long groupId, String articleId, double version,
+			java.util.Locale locale, String title, String description,
+			String content, Map<String, byte[]> images,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws PortalException {
 
 		return getService().updateArticleTranslation(
 			groupId, articleId, version, locale, title, description, content,
 			images, serviceContext);
-	}
-
-	/**
-	 * Updates the web content article matching the group, article ID, and
-	 * version, replacing its content.
-	 *
-	 * @param groupId the primary key of the web content article's group
-	 * @param articleId the primary key of the web content article
-	 * @param version the web content article's version
-	 * @param content the HTML content wrapped in XML. For more information,
-	 see the content example in the {@link #updateArticle(long, long,
-	 String, double, String, ServiceContext)} description.
-	 * @return the updated web content article
-	 * @throws PortalException if a portal exception occurred
-	 */
-	public static com.liferay.journal.model.JournalArticle updateContent(
-			long groupId, String articleId, double version, String content)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return getService().updateContent(groupId, articleId, version, content);
 	}
 
 	/**
@@ -2545,36 +2476,20 @@ public class JournalArticleServiceUtil {
 	 * @return the updated web content article
 	 * @throws PortalException if a portal exception occurred
 	 */
-	public static com.liferay.journal.model.JournalArticle updateStatus(
+	public static JournalArticle updateStatus(
 			long groupId, String articleId, double version, int status,
 			String articleURL,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		return getService().updateStatus(
 			groupId, articleId, version, status, articleURL, serviceContext);
 	}
 
 	public static JournalArticleService getService() {
-		return _serviceTracker.getService();
+		return _service;
 	}
 
-	private static ServiceTracker<JournalArticleService, JournalArticleService>
-		_serviceTracker;
-
-	static {
-		Bundle bundle = FrameworkUtil.getBundle(JournalArticleService.class);
-
-		ServiceTracker<JournalArticleService, JournalArticleService>
-			serviceTracker =
-				new ServiceTracker
-					<JournalArticleService, JournalArticleService>(
-						bundle.getBundleContext(), JournalArticleService.class,
-						null);
-
-		serviceTracker.open();
-
-		_serviceTracker = serviceTracker;
-	}
+	private static volatile JournalArticleService _service;
 
 }

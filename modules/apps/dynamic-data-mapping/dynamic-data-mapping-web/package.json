@@ -1,9 +1,11 @@
 {
+	"dependencies": {
+	},
 	"name": "dynamic-data-mapping-web",
 	"scripts": {
 		"build": "liferay-npm-scripts build",
 		"checkFormat": "liferay-npm-scripts check",
 		"format": "liferay-npm-scripts fix"
 	},
-	"version": "5.0.0"
+	"version": "5.0.58"
 }

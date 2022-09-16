@@ -86,6 +86,8 @@ public class FragmentEntryLinkTable extends BaseTable<FragmentEntryLinkTable> {
 	public final Column<FragmentEntryLinkTable, Clob> configuration =
 		createColumn(
 			"configuration", Clob.class, Types.CLOB, Column.FLAG_DEFAULT);
+	public final Column<FragmentEntryLinkTable, Boolean> deleted = createColumn(
+		"deleted", Boolean.class, Types.BOOLEAN, Column.FLAG_DEFAULT);
 	public final Column<FragmentEntryLinkTable, Clob> editableValues =
 		createColumn(
 			"editableValues", Clob.class, Types.CLOB, Column.FLAG_DEFAULT);
@@ -98,6 +100,8 @@ public class FragmentEntryLinkTable extends BaseTable<FragmentEntryLinkTable> {
 	public final Column<FragmentEntryLinkTable, String> rendererKey =
 		createColumn(
 			"rendererKey", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
+	public final Column<FragmentEntryLinkTable, Integer> type = createColumn(
+		"type_", Integer.class, Types.INTEGER, Column.FLAG_DEFAULT);
 	public final Column<FragmentEntryLinkTable, Date> lastPropagationDate =
 		createColumn(
 			"lastPropagationDate", Date.class, Types.TIMESTAMP,

@@ -14,11 +14,11 @@
 
 package com.liferay.adaptive.media.web.internal.servlet;
 
-import com.liferay.adaptive.media.exception.AMException;
 import com.liferay.adaptive.media.handler.AMRequestHandler;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.Optional;
 
@@ -27,6 +27,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 import org.mockito.Mockito;
@@ -35,6 +37,11 @@ import org.mockito.Mockito;
  * @author Adolfo Pérez
  */
 public class AMServletTest {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Before
 	public void setUp() {
@@ -68,7 +75,8 @@ public class AMServletTest {
 		Mockito.verify(
 			_httpServletResponse
 		).sendError(
-			Mockito.eq(HttpServletResponse.SC_BAD_REQUEST), Mockito.anyString()
+			Mockito.eq(HttpServletResponse.SC_BAD_REQUEST),
+			Mockito.nullable(String.class)
 		);
 	}
 
@@ -98,7 +106,8 @@ public class AMServletTest {
 		Mockito.verify(
 			_httpServletResponse
 		).sendError(
-			Mockito.eq(HttpServletResponse.SC_NOT_FOUND), Mockito.anyString()
+			Mockito.eq(HttpServletResponse.SC_NOT_FOUND),
+			Mockito.nullable(String.class)
 		);
 	}
 
@@ -119,8 +128,8 @@ public class AMServletTest {
 
 		Mockito.when(
 			_amRequestHandler.handleRequest(_httpServletRequest)
-		).thenThrow(
-			AMException.AMNotFound.class
+		).thenReturn(
+			Optional.empty()
 		);
 
 		_amServlet.doGet(_httpServletRequest, _httpServletResponse);
@@ -128,7 +137,8 @@ public class AMServletTest {
 		Mockito.verify(
 			_httpServletResponse
 		).sendError(
-			Mockito.eq(HttpServletResponse.SC_NOT_FOUND), Mockito.anyString()
+			Mockito.eq(HttpServletResponse.SC_NOT_FOUND),
+			Mockito.nullable(String.class)
 		);
 	}
 
@@ -158,7 +168,8 @@ public class AMServletTest {
 		Mockito.verify(
 			_httpServletResponse
 		).sendError(
-			Mockito.eq(HttpServletResponse.SC_FORBIDDEN), Mockito.anyString()
+			Mockito.eq(HttpServletResponse.SC_FORBIDDEN),
+			Mockito.nullable(String.class)
 		);
 	}
 
@@ -181,7 +192,8 @@ public class AMServletTest {
 		Mockito.verify(
 			_httpServletResponse
 		).sendError(
-			Mockito.eq(HttpServletResponse.SC_NOT_FOUND), Mockito.anyString()
+			Mockito.eq(HttpServletResponse.SC_NOT_FOUND),
+			Mockito.nullable(String.class)
 		);
 	}
 

@@ -22,16 +22,22 @@ ResultRow row = (ResultRow)request.getAttribute(WebKeys.SEARCH_CONTAINER_RESULT_
 BookmarksFolder folder = (BookmarksFolder)row.getObject();
 
 folder = folder.toEscapedModel();
-
-PortletURL rowURL = liferayPortletResponse.createRenderURL();
-
-rowURL.setParameter("mvcRenderCommandName", "/bookmarks/view_folder");
-rowURL.setParameter("redirect", currentURL);
-rowURL.setParameter("folderId", String.valueOf(folder.getFolderId()));
 %>
 
 <h4>
-	<aui:a href="<%= rowURL.toString() %>">
+	<aui:a
+		href='<%=
+			PortletURLBuilder.createRenderURL(
+				liferayPortletResponse
+			).setMVCRenderCommandName(
+				"/bookmarks/view_folder"
+			).setRedirect(
+				currentURL
+			).setParameter(
+				"folderId", folder.getFolderId()
+			).buildString()
+		%>'
+	>
 		<%= folder.getName() %>
 	</aui:a>
 </h4>
@@ -41,8 +47,8 @@ rowURL.setParameter("folderId", String.valueOf(folder.getFolderId()));
 </h5>
 
 <%
-int foldersCount = BookmarksFolderServiceUtil.getFoldersCount(scopeGroupId, folder.getFolderId());
 int entriesCount = BookmarksEntryServiceUtil.getEntriesCount(scopeGroupId, folder.getFolderId());
+int foldersCount = BookmarksFolderServiceUtil.getFoldersCount(scopeGroupId, folder.getFolderId());
 %>
 
 <span class="h6">

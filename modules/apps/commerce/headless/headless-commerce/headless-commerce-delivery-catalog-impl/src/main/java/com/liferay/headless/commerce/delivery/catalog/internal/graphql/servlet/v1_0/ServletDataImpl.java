@@ -18,6 +18,9 @@ import com.liferay.headless.commerce.delivery.catalog.internal.graphql.mutation.
 import com.liferay.headless.commerce.delivery.catalog.internal.graphql.query.v1_0.Query;
 import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.AttachmentResource;
 import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.CategoryResource;
+import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.ChannelResource;
+import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.MappedProductResource;
+import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.PinResource;
 import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.ProductOptionResource;
 import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.ProductResource;
 import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.ProductSpecificationResource;
@@ -38,7 +41,7 @@ import org.osgi.service.component.annotations.ReferenceScope;
  * @author Andrea Sbarra
  * @generated
  */
-@Component(immediate = true, service = ServletData.class)
+@Component(enabled = false, immediate = true, service = ServletData.class)
 @Generated("")
 public class ServletDataImpl implements ServletData {
 
@@ -48,6 +51,12 @@ public class ServletDataImpl implements ServletData {
 			_attachmentResourceComponentServiceObjects);
 		Query.setCategoryResourceComponentServiceObjects(
 			_categoryResourceComponentServiceObjects);
+		Query.setChannelResourceComponentServiceObjects(
+			_channelResourceComponentServiceObjects);
+		Query.setMappedProductResourceComponentServiceObjects(
+			_mappedProductResourceComponentServiceObjects);
+		Query.setPinResourceComponentServiceObjects(
+			_pinResourceComponentServiceObjects);
 		Query.setProductResourceComponentServiceObjects(
 			_productResourceComponentServiceObjects);
 		Query.setProductOptionResourceComponentServiceObjects(
@@ -82,6 +91,18 @@ public class ServletDataImpl implements ServletData {
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
 	private ComponentServiceObjects<CategoryResource>
 		_categoryResourceComponentServiceObjects;
+
+	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
+	private ComponentServiceObjects<ChannelResource>
+		_channelResourceComponentServiceObjects;
+
+	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
+	private ComponentServiceObjects<MappedProductResource>
+		_mappedProductResourceComponentServiceObjects;
+
+	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
+	private ComponentServiceObjects<PinResource>
+		_pinResourceComponentServiceObjects;
 
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
 	private ComponentServiceObjects<ProductResource>

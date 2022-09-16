@@ -15,7 +15,6 @@
 package com.liferay.headless.admin.content.client.serdes.v1_0;
 
 import com.liferay.headless.admin.content.client.dto.v1_0.CustomField;
-import com.liferay.headless.admin.content.client.dto.v1_0.CustomValue;
 import com.liferay.headless.admin.content.client.json.BaseJSONParser;
 
 import java.util.Iterator;
@@ -159,7 +158,7 @@ public class CustomFieldSerDes {
 			if (Objects.equals(jsonParserFieldName, "customValue")) {
 				if (jsonParserFieldValue != null) {
 					customField.setCustomValue(
-						(CustomValue)jsonParserFieldValue);
+						CustomValueSerDes.toDTO((String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "dataType")) {
@@ -171,9 +170,6 @@ public class CustomFieldSerDes {
 				if (jsonParserFieldValue != null) {
 					customField.setName((String)jsonParserFieldValue);
 				}
-			}
-			else if (jsonParserFieldName.equals("status")) {
-				throw new IllegalArgumentException();
 			}
 		}
 
@@ -203,7 +199,7 @@ public class CustomFieldSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -239,7 +235,7 @@ public class CustomFieldSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

@@ -26,6 +26,10 @@ import com.liferay.portal.kernel.model.LayoutSet;
 public class LayoutSetServiceWrapper
 	implements LayoutSetService, ServiceWrapper<LayoutSetService> {
 
+	public LayoutSetServiceWrapper() {
+		this(null);
+	}
+
 	public LayoutSetServiceWrapper(LayoutSetService layoutSetService) {
 		_layoutSetService = layoutSetService;
 	}
@@ -38,6 +42,15 @@ public class LayoutSetServiceWrapper
 	@Override
 	public String getOSGiServiceIdentifier() {
 		return _layoutSetService.getOSGiServiceIdentifier();
+	}
+
+	@Override
+	public void updateFaviconFileEntryId(
+			long groupId, boolean privateLayout, long faviconFileEntryId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_layoutSetService.updateFaviconFileEntryId(
+			groupId, privateLayout, faviconFileEntryId);
 	}
 
 	/**

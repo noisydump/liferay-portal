@@ -14,9 +14,7 @@
 
 package com.liferay.layout.content.page.editor.web.internal.util.layout.structure;
 
-import com.liferay.fragment.processor.PortletRegistry;
-import com.liferay.layout.content.page.editor.listener.ContentPageEditorListenerTracker;
-import com.liferay.layout.content.page.editor.web.internal.util.FragmentEntryLinkUtil;
+import com.liferay.layout.content.page.editor.web.internal.util.FragmentEntryLinkManager;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructureRel;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalServiceUtil;
@@ -40,9 +38,8 @@ import java.util.List;
 public class LayoutStructureUtil {
 
 	public static void deleteMarkedForDeletionItems(
-			long companyId,
-			ContentPageEditorListenerTracker contentPageEditorListenerTracker,
-			long groupId, long plid, PortletRegistry portletRegistry)
+			FragmentEntryLinkManager fragmentEntryLinkManager, long groupId,
+			long plid)
 		throws PortalException {
 
 		LayoutPageTemplateStructure layoutPageTemplateStructure =
@@ -75,9 +72,8 @@ public class LayoutStructureUtil {
 				for (long fragmentEntryLinkId :
 						getFragmentEntryLinkIds(deletedLayoutStructureItems)) {
 
-					FragmentEntryLinkUtil.deleteFragmentEntryLink(
-						companyId, contentPageEditorListenerTracker,
-						fragmentEntryLinkId, plid, portletRegistry);
+					fragmentEntryLinkManager.deleteFragmentEntryLink(
+						fragmentEntryLinkId, plid);
 				}
 			}
 
@@ -130,26 +126,16 @@ public class LayoutStructureUtil {
 			layoutPageTemplateStructure.getData(segmentsExperienceId));
 	}
 
-	public static boolean isPortletMarkedForDeletion(
-			long groupId, long plid, String portletId,
-			long segmentsExperienceId)
+	public static LayoutStructure getLayoutStructure(
+			long groupId, long plid, String segmentsExperienceKey)
 		throws PortalException {
 
-		LayoutStructure layoutStructure = getLayoutStructure(
-			groupId, plid, segmentsExperienceId);
+		LayoutPageTemplateStructure layoutPageTemplateStructure =
+			LayoutPageTemplateStructureLocalServiceUtil.
+				fetchLayoutPageTemplateStructure(groupId, plid, true);
 
-		List<DeletedLayoutStructureItem> deletedLayoutStructureItems =
-			layoutStructure.getDeletedLayoutStructureItems();
-
-		for (DeletedLayoutStructureItem deletedLayoutStructureItem :
-				deletedLayoutStructureItems) {
-
-			if (deletedLayoutStructureItem.contains(portletId)) {
-				return true;
-			}
-		}
-
-		return false;
+		return LayoutStructure.of(
+			layoutPageTemplateStructure.getData(segmentsExperienceKey));
 	}
 
 	public static JSONObject updateLayoutPageTemplateData(

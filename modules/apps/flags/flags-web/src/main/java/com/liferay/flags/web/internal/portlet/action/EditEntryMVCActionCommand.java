@@ -21,7 +21,7 @@ import com.liferay.portal.kernel.captcha.CaptchaException;
 import com.liferay.portal.kernel.captcha.CaptchaTextException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
@@ -87,29 +87,24 @@ public class EditEntryMVCActionCommand extends BaseMVCActionCommand {
 
 			jsonObject.put(
 				"error",
-				LanguageUtil.get(
+				_language.get(
 					themeDisplay.getRequest(),
 					_getCaptchaExceptionErrorMessageKey(captchaException)));
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 
 			ThemeDisplay themeDisplay =
 				(ThemeDisplay)actionRequest.getAttribute(WebKeys.THEME_DISPLAY);
 
 			jsonObject.put(
 				"error",
-				LanguageUtil.get(
+				_language.get(
 					themeDisplay.getRequest(), "an-unexpected-error-occurred"));
 		}
 
 		JSONPortletResponseUtil.writeJSON(
 			actionRequest, actionResponse, jsonObject);
-	}
-
-	@Reference(unbind = "-")
-	protected void setFlagsEntryService(FlagsEntryService flagsEntryService) {
-		_flagsEntryService = flagsEntryService;
 	}
 
 	private String _getCaptchaExceptionErrorMessageKey(
@@ -125,6 +120,10 @@ public class EditEntryMVCActionCommand extends BaseMVCActionCommand {
 	private static final Log _log = LogFactoryUtil.getLog(
 		EditEntryMVCActionCommand.class);
 
+	@Reference
 	private FlagsEntryService _flagsEntryService;
+
+	@Reference
+	private Language _language;
 
 }

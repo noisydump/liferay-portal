@@ -14,6 +14,7 @@
 
 package com.liferay.commerce.model;
 
+import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
@@ -44,6 +45,8 @@ public class CommerceOrderItemWrapper
 	public Map<String, Object> getModelAttributes() {
 		Map<String, Object> attributes = new HashMap<String, Object>();
 
+		attributes.put("mvccVersion", getMvccVersion());
+		attributes.put("uuid", getUuid());
 		attributes.put("externalReferenceCode", getExternalReferenceCode());
 		attributes.put("commerceOrderItemId", getCommerceOrderItemId());
 		attributes.put("groupId", getGroupId());
@@ -56,10 +59,12 @@ public class CommerceOrderItemWrapper
 		attributes.put("commerceOrderId", getCommerceOrderId());
 		attributes.put("commercePriceListId", getCommercePriceListId());
 		attributes.put("CPInstanceId", getCPInstanceId());
+		attributes.put("CPMeasurementUnitId", getCPMeasurementUnitId());
 		attributes.put("CProductId", getCProductId());
 		attributes.put(
 			"parentCommerceOrderItemId", getParentCommerceOrderItemId());
 		attributes.put("shippingAddressId", getShippingAddressId());
+		attributes.put("decimalQuantity", getDecimalQuantity());
 		attributes.put("deliveryGroup", getDeliveryGroup());
 		attributes.put(
 			"deliveryMaxSubscriptionCycles",
@@ -73,6 +78,8 @@ public class CommerceOrderItemWrapper
 			getDeliverySubscriptionTypeSettings());
 		attributes.put("depth", getDepth());
 		attributes.put("discountAmount", getDiscountAmount());
+		attributes.put(
+			"discountManuallyAdjusted", isDiscountManuallyAdjusted());
 		attributes.put(
 			"discountPercentageLevel1", getDiscountPercentageLevel1());
 		attributes.put(
@@ -102,6 +109,7 @@ public class CommerceOrderItemWrapper
 		attributes.put("manuallyAdjusted", isManuallyAdjusted());
 		attributes.put("maxSubscriptionCycles", getMaxSubscriptionCycles());
 		attributes.put("name", getName());
+		attributes.put("priceManuallyAdjusted", isPriceManuallyAdjusted());
 		attributes.put("printedNote", getPrintedNote());
 		attributes.put("promoPrice", getPromoPrice());
 		attributes.put("promoPriceWithTaxAmount", getPromoPriceWithTaxAmount());
@@ -127,6 +135,18 @@ public class CommerceOrderItemWrapper
 
 	@Override
 	public void setModelAttributes(Map<String, Object> attributes) {
+		Long mvccVersion = (Long)attributes.get("mvccVersion");
+
+		if (mvccVersion != null) {
+			setMvccVersion(mvccVersion);
+		}
+
+		String uuid = (String)attributes.get("uuid");
+
+		if (uuid != null) {
+			setUuid(uuid);
+		}
+
 		String externalReferenceCode = (String)attributes.get(
 			"externalReferenceCode");
 
@@ -200,6 +220,12 @@ public class CommerceOrderItemWrapper
 			setCPInstanceId(CPInstanceId);
 		}
 
+		Long CPMeasurementUnitId = (Long)attributes.get("CPMeasurementUnitId");
+
+		if (CPMeasurementUnitId != null) {
+			setCPMeasurementUnitId(CPMeasurementUnitId);
+		}
+
 		Long CProductId = (Long)attributes.get("CProductId");
 
 		if (CProductId != null) {
@@ -217,6 +243,13 @@ public class CommerceOrderItemWrapper
 
 		if (shippingAddressId != null) {
 			setShippingAddressId(shippingAddressId);
+		}
+
+		BigDecimal decimalQuantity = (BigDecimal)attributes.get(
+			"decimalQuantity");
+
+		if (decimalQuantity != null) {
+			setDecimalQuantity(decimalQuantity);
 		}
 
 		String deliveryGroup = (String)attributes.get("deliveryGroup");
@@ -265,6 +298,13 @@ public class CommerceOrderItemWrapper
 
 		if (discountAmount != null) {
 			setDiscountAmount(discountAmount);
+		}
+
+		Boolean discountManuallyAdjusted = (Boolean)attributes.get(
+			"discountManuallyAdjusted");
+
+		if (discountManuallyAdjusted != null) {
+			setDiscountManuallyAdjusted(discountManuallyAdjusted);
 		}
 
 		BigDecimal discountPercentageLevel1 = (BigDecimal)attributes.get(
@@ -384,6 +424,13 @@ public class CommerceOrderItemWrapper
 			setName(name);
 		}
 
+		Boolean priceManuallyAdjusted = (Boolean)attributes.get(
+			"priceManuallyAdjusted");
+
+		if (priceManuallyAdjusted != null) {
+			setPriceManuallyAdjusted(priceManuallyAdjusted);
+		}
+
 		String printedNote = (String)attributes.get("printedNote");
 
 		if (printedNote != null) {
@@ -500,8 +547,20 @@ public class CommerceOrderItemWrapper
 	}
 
 	@Override
+	public CommerceOrderItem cloneWithOriginalValues() {
+		return wrap(model.cloneWithOriginalValues());
+	}
+
+	@Override
 	public com.liferay.commerce.product.model.CPInstance fetchCPInstance() {
 		return model.fetchCPInstance();
+	}
+
+	@Override
+	public com.liferay.commerce.product.model.CPMeasurementUnit
+		fetchCPMeasurementUnit() {
+
+		return model.fetchCPMeasurementUnit();
 	}
 
 	@Override
@@ -610,6 +669,16 @@ public class CommerceOrderItemWrapper
 	}
 
 	/**
+	 * Returns the cp measurement unit ID of this commerce order item.
+	 *
+	 * @return the cp measurement unit ID of this commerce order item
+	 */
+	@Override
+	public long getCPMeasurementUnitId() {
+		return model.getCPMeasurementUnitId();
+	}
+
+	/**
 	 * @deprecated As of Athanasius (7.3.x)
 	 */
 	@Deprecated
@@ -638,6 +707,16 @@ public class CommerceOrderItemWrapper
 	@Override
 	public Date getCreateDate() {
 		return model.getCreateDate();
+	}
+
+	/**
+	 * Returns the decimal quantity of this commerce order item.
+	 *
+	 * @return the decimal quantity of this commerce order item
+	 */
+	@Override
+	public BigDecimal getDecimalQuantity() {
+		return model.getDecimalQuantity();
 	}
 
 	@Override
@@ -721,6 +800,16 @@ public class CommerceOrderItemWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return model.getDiscountAmountMoney();
+	}
+
+	/**
+	 * Returns the discount manually adjusted of this commerce order item.
+	 *
+	 * @return the discount manually adjusted of this commerce order item
+	 */
+	@Override
+	public boolean getDiscountManuallyAdjusted() {
+		return model.getDiscountManuallyAdjusted();
 	}
 
 	/**
@@ -938,6 +1027,16 @@ public class CommerceOrderItemWrapper
 	}
 
 	/**
+	 * Returns the mvcc version of this commerce order item.
+	 *
+	 * @return the mvcc version of this commerce order item
+	 */
+	@Override
+	public long getMvccVersion() {
+		return model.getMvccVersion();
+	}
+
+	/**
 	 * Returns the name of this commerce order item.
 	 *
 	 * @return the name of this commerce order item
@@ -1026,6 +1125,16 @@ public class CommerceOrderItemWrapper
 	@Override
 	public long getParentCommerceOrderItemId() {
 		return model.getParentCommerceOrderItemId();
+	}
+
+	/**
+	 * Returns the price manually adjusted of this commerce order item.
+	 *
+	 * @return the price manually adjusted of this commerce order item
+	 */
+	@Override
+	public boolean getPriceManuallyAdjusted() {
+		return model.getPriceManuallyAdjusted();
 	}
 
 	/**
@@ -1270,6 +1379,16 @@ public class CommerceOrderItemWrapper
 	}
 
 	/**
+	 * Returns the uuid of this commerce order item.
+	 *
+	 * @return the uuid of this commerce order item
+	 */
+	@Override
+	public String getUuid() {
+		return model.getUuid();
+	}
+
+	/**
 	 * Returns the weight of this commerce order item.
 	 *
 	 * @return the weight of this commerce order item
@@ -1295,6 +1414,16 @@ public class CommerceOrderItemWrapper
 	}
 
 	/**
+	 * Returns <code>true</code> if this commerce order item is discount manually adjusted.
+	 *
+	 * @return <code>true</code> if this commerce order item is discount manually adjusted; <code>false</code> otherwise
+	 */
+	@Override
+	public boolean isDiscountManuallyAdjusted() {
+		return model.isDiscountManuallyAdjusted();
+	}
+
+	/**
 	 * Returns <code>true</code> if this commerce order item is free shipping.
 	 *
 	 * @return <code>true</code> if this commerce order item is free shipping; <code>false</code> otherwise
@@ -1312,6 +1441,16 @@ public class CommerceOrderItemWrapper
 	@Override
 	public boolean isManuallyAdjusted() {
 		return model.isManuallyAdjusted();
+	}
+
+	/**
+	 * Returns <code>true</code> if this commerce order item is price manually adjusted.
+	 *
+	 * @return <code>true</code> if this commerce order item is price manually adjusted; <code>false</code> otherwise
+	 */
+	@Override
+	public boolean isPriceManuallyAdjusted() {
+		return model.isPriceManuallyAdjusted();
 	}
 
 	/**
@@ -1425,6 +1564,16 @@ public class CommerceOrderItemWrapper
 	}
 
 	/**
+	 * Sets the cp measurement unit ID of this commerce order item.
+	 *
+	 * @param CPMeasurementUnitId the cp measurement unit ID of this commerce order item
+	 */
+	@Override
+	public void setCPMeasurementUnitId(long CPMeasurementUnitId) {
+		model.setCPMeasurementUnitId(CPMeasurementUnitId);
+	}
+
+	/**
 	 * Sets the c product ID of this commerce order item.
 	 *
 	 * @param CProductId the c product ID of this commerce order item
@@ -1442,6 +1591,16 @@ public class CommerceOrderItemWrapper
 	@Override
 	public void setCreateDate(Date createDate) {
 		model.setCreateDate(createDate);
+	}
+
+	/**
+	 * Sets the decimal quantity of this commerce order item.
+	 *
+	 * @param decimalQuantity the decimal quantity of this commerce order item
+	 */
+	@Override
+	public void setDecimalQuantity(BigDecimal decimalQuantity) {
+		model.setDecimalQuantity(decimalQuantity);
 	}
 
 	/**
@@ -1517,6 +1676,16 @@ public class CommerceOrderItemWrapper
 	@Override
 	public void setDiscountAmount(BigDecimal discountAmount) {
 		model.setDiscountAmount(discountAmount);
+	}
+
+	/**
+	 * Sets whether this commerce order item is discount manually adjusted.
+	 *
+	 * @param discountManuallyAdjusted the discount manually adjusted of this commerce order item
+	 */
+	@Override
+	public void setDiscountManuallyAdjusted(boolean discountManuallyAdjusted) {
+		model.setDiscountManuallyAdjusted(discountManuallyAdjusted);
 	}
 
 	/**
@@ -1730,6 +1899,16 @@ public class CommerceOrderItemWrapper
 	}
 
 	/**
+	 * Sets the mvcc version of this commerce order item.
+	 *
+	 * @param mvccVersion the mvcc version of this commerce order item
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		model.setMvccVersion(mvccVersion);
+	}
+
+	/**
 	 * Sets the name of this commerce order item.
 	 *
 	 * @param name the name of this commerce order item
@@ -1800,6 +1979,16 @@ public class CommerceOrderItemWrapper
 	@Override
 	public void setParentCommerceOrderItemId(long parentCommerceOrderItemId) {
 		model.setParentCommerceOrderItemId(parentCommerceOrderItemId);
+	}
+
+	/**
+	 * Sets whether this commerce order item is price manually adjusted.
+	 *
+	 * @param priceManuallyAdjusted the price manually adjusted of this commerce order item
+	 */
+	@Override
+	public void setPriceManuallyAdjusted(boolean priceManuallyAdjusted) {
+		model.setPriceManuallyAdjusted(priceManuallyAdjusted);
 	}
 
 	/**
@@ -2013,6 +2202,16 @@ public class CommerceOrderItemWrapper
 	}
 
 	/**
+	 * Sets the uuid of this commerce order item.
+	 *
+	 * @param uuid the uuid of this commerce order item
+	 */
+	@Override
+	public void setUuid(String uuid) {
+		model.setUuid(uuid);
+	}
+
+	/**
 	 * Sets the weight of this commerce order item.
 	 *
 	 * @param weight the weight of this commerce order item
@@ -2030,6 +2229,11 @@ public class CommerceOrderItemWrapper
 	@Override
 	public void setWidth(double width) {
 		model.setWidth(width);
+	}
+
+	@Override
+	public StagedModelType getStagedModelType() {
+		return model.getStagedModelType();
 	}
 
 	@Override

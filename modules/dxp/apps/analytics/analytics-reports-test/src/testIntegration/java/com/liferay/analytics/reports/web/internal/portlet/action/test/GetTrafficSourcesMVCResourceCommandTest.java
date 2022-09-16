@@ -14,15 +14,10 @@
 
 package com.liferay.analytics.reports.web.internal.portlet.action.test;
 
-import com.liferay.analytics.reports.test.MockObject;
 import com.liferay.analytics.reports.test.util.MockContextUtil;
 import com.liferay.analytics.reports.web.internal.portlet.action.test.util.MockHttpUtil;
 import com.liferay.analytics.reports.web.internal.portlet.action.test.util.MockThemeDisplayUtil;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
-import com.liferay.info.item.InfoItemReference;
-import com.liferay.layout.display.page.LayoutDisplayPageProvider;
-import com.liferay.layout.display.page.LayoutDisplayPageProviderTracker;
-import com.liferay.layout.display.page.constants.LayoutDisplayPageWebKeys;
 import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
@@ -36,7 +31,6 @@ import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
-import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -49,7 +43,6 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -63,7 +56,6 @@ import com.liferay.portal.util.PrefsPropsImpl;
 
 import java.io.ByteArrayOutputStream;
 
-import java.util.Dictionary;
 import java.util.Objects;
 import java.util.ResourceBundle;
 
@@ -89,7 +81,7 @@ public class GetTrafficSourcesMVCResourceCommandTest {
 	public void setUp() throws Exception {
 		_group = GroupTestUtil.addGroup();
 
-		_layout = LayoutTestUtil.addLayout(_group);
+		_layout = LayoutTestUtil.addTypePortletLayout(_group);
 	}
 
 	@Test
@@ -102,61 +94,34 @@ public class GetTrafficSourcesMVCResourceCommandTest {
 		ReflectionTestUtil.setFieldValue(
 			PrefsPropsUtil.class, "_prefsProps", validPrefsPropsWrapper);
 
-		String dataSourceId = validPrefsPropsWrapper.getString(
-			RandomTestUtil.nextLong(), "liferayAnalyticsDataSourceId");
-
 		ReflectionTestUtil.setFieldValue(
 			_mvcResourceCommand, "_http",
 			MockHttpUtil.geHttp(
 				HashMapBuilder.<String, UnsafeSupplier<String, Exception>>put(
-					"/api/1.0/data-sources/" + dataSourceId,
+					() -> {
+						String dataSourceId = validPrefsPropsWrapper.getString(
+							RandomTestUtil.nextLong(),
+							"liferayAnalyticsDataSourceId");
+
+						return "/api/1.0/data-sources/" + dataSourceId;
+					},
 					() -> StringPool.BLANK
 				).put(
 					"/api/1.0/pages/acquisition-channels",
 					() -> JSONUtil.put(
 						"organic", 3192L
-					).toString()
-				).put(
-					"/api/seo/1.0/traffic-sources",
-					() -> JSONUtil.put(
-						JSONUtil.put(
-							"countryKeywords",
-							JSONUtil.put(
-								JSONUtil.put(
-									"countryCode", "us"
-								).put(
-									"countryName", "United States"
-								).put(
-									"keywords",
-									JSONUtil.put(
-										JSONUtil.put(
-											"keyword", "liferay"
-										).put(
-											"position", 1
-										).put(
-											"searchVolume", 3600
-										).put(
-											"traffic", 2880L
-										))
-								))
-						).put(
-							"name", "organic"
-						).put(
-							"trafficAmount", 3L
-						).put(
-							"trafficShare", 93.93D
-						)
+					).put(
+						"paid", 1L
+					).put(
+						"referral", 2L
+					).put(
+						"social", 385L
 					).toString()
 				).build()));
-
-		Dictionary<String, Object> properties = new HashMapDictionary<>();
-
-		properties.put("trafficSourcesEnabled", true);
 
 		try {
 			MockContextUtil.testWithMockContext(
 				MockContextUtil.MockContext.builder(
-					_classNameLocalService
 				).build(),
 				() -> {
 					MockLiferayResourceRequest mockLiferayResourceRequest =
@@ -182,72 +147,49 @@ public class GetTrafficSourcesMVCResourceCommandTest {
 							mockLiferayResourceResponse.
 								getPortletOutputStream();
 
-					JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
+					JSONObject jsonObject1 = JSONFactoryUtil.createJSONObject(
 						new String(byteArrayOutputStream.toByteArray()));
 
-					JSONArray jsonArray = jsonObject.getJSONArray(
+					JSONArray jsonArray = jsonObject1.getJSONArray(
 						"trafficSources");
 
 					Assert.assertEquals(5, jsonArray.length());
 
-					JSONObject jsonObject1 = jsonArray.getJSONObject(0);
+					JSONObject jsonObject2 = jsonArray.getJSONObject(0);
 
-					Assert.assertEquals("organic", jsonObject1.get("name"));
+					Assert.assertEquals("organic", jsonObject2.get("name"));
+					Assert.assertEquals(
+						String.format("%.1f", 89.20D),
+						jsonObject2.getString("share"));
+
+					Assert.assertEquals(3192, jsonObject2.get("value"));
+
+					JSONObject jsonObject3 = jsonArray.getJSONObject(1);
 
 					Assert.assertEquals(
-						100.00D, Double.valueOf(jsonObject1.getString("share")),
-						0.0);
-
-					Assert.assertEquals(3192, jsonObject1.get("value"));
-
-					JSONArray countryKeywordsJSONArray =
-						(JSONArray)jsonObject1.get("countryKeywords");
-
-					Assert.assertEquals(
-						JSONUtil.put(
-							JSONUtil.put(
-								"countryCode", "us"
-							).put(
-								"countryName", "United States"
-							).put(
-								"keywords",
-								JSONUtil.put(
-									JSONUtil.put(
-										"keyword", "liferay"
-									).put(
-										"position", 1
-									).put(
-										"searchVolume", 3600
-									).put(
-										"traffic", 2880
-									))
-							)
-						).toString(),
-						countryKeywordsJSONArray.toString());
-
-					JSONObject jsonObject2 = jsonArray.getJSONObject(1);
-
-					Assert.assertEquals("referral", jsonObject2.get("name"));
-
-					Assert.assertEquals(0, jsonObject2.getInt("value"));
-
-					JSONObject jsonObject3 = jsonArray.getJSONObject(2);
-
+						"http//localhost/test?",
+						jsonObject3.getString("endpointURL"));
 					Assert.assertEquals("social", jsonObject3.get("name"));
+					Assert.assertEquals(385, jsonObject3.getInt("value"));
 
-					Assert.assertEquals(0, jsonObject3.getInt("value"));
+					JSONObject jsonObject4 = jsonArray.getJSONObject(2);
 
-					JSONObject jsonObject4 = jsonArray.getJSONObject(3);
+					Assert.assertEquals(
+						"http//localhost/test?",
+						jsonObject4.getString("endpointURL"));
+					Assert.assertEquals("referral", jsonObject4.get("name"));
+					Assert.assertEquals(2L, jsonObject4.getInt("value"));
 
-					Assert.assertEquals("paid", jsonObject4.get("name"));
+					JSONObject jsonObject5 = jsonArray.getJSONObject(3);
 
-					Assert.assertEquals(0, jsonObject4.getInt("value"));
+					Assert.assertEquals("paid", jsonObject5.get("name"));
+					Assert.assertEquals(1L, jsonObject5.getInt("value"));
 
-					JSONObject jsonObject5 = jsonArray.getJSONObject(4);
+					JSONObject jsonObject6 = jsonArray.getJSONObject(4);
 
-					Assert.assertEquals("direct", jsonObject5.get("name"));
-
-					Assert.assertEquals(0, jsonObject5.getInt("value"));
+					Assert.assertEquals("direct", jsonObject6.get("name"));
+					Assert.assertEquals(0, jsonObject6.getInt("value"));
+					Assert.assertNull(jsonObject6.get("endpointURL"));
 				});
 		}
 		finally {
@@ -272,7 +214,6 @@ public class GetTrafficSourcesMVCResourceCommandTest {
 		try {
 			MockContextUtil.testWithMockContext(
 				MockContextUtil.MockContext.builder(
-					_classNameLocalService
 				).build(),
 				() -> {
 					MockLiferayResourceRequest mockLiferayResourceRequest =
@@ -315,75 +256,15 @@ public class GetTrafficSourcesMVCResourceCommandTest {
 								"helpMessage",
 								ResourceBundleUtil.getString(
 									resourceBundle,
-									StringBundler.concat(
-										"this-is-the-number-of-page-views-",
-										"generated-by-people-coming-to-your-",
-										"page-from-other-sites-which-are-not-",
-										"search-engine-pages-or-social-sites"))
-							).put(
-								"name", "referral"
-							).put(
-								"share", String.format("%.1f", 0.0)
-							).put(
-								"title",
-								ResourceBundleUtil.getString(
-									resourceBundle, "referral")
-							).put(
-								"value", 0
-							),
-							JSONUtil.put(
-								"helpMessage",
-								ResourceBundleUtil.getString(
-									resourceBundle,
-									"this-is-the-number-of-page-views-" +
-										"generated-by-people-coming-to-your-" +
-											"page-from-social-sites")
-							).put(
-								"name", "social"
-							).put(
-								"share", String.format("%.1f", 0.0)
-							).put(
-								"title",
-								ResourceBundleUtil.getString(
-									resourceBundle, "social")
-							).put(
-								"value", 0
-							),
-							JSONUtil.put(
-								"helpMessage",
-								ResourceBundleUtil.getString(
-									resourceBundle,
 									"this-is-the-number-of-page-views-" +
 										"generated-by-people-arriving-" +
 											"directly-to-your-page")
 							).put(
 								"name", "direct"
 							).put(
-								"share", String.format("%.1f", 0.0)
-							).put(
 								"title",
 								ResourceBundleUtil.getString(
 									resourceBundle, "direct")
-							).put(
-								"value", 0
-							),
-							JSONUtil.put(
-								"helpMessage",
-								ResourceBundleUtil.getString(
-									resourceBundle,
-									"this-is-the-number-of-page-views-" +
-										"generated-by-people-that-find-your-" +
-											"page-through-google-adwords")
-							).put(
-								"name", "paid"
-							).put(
-								"share", String.format("%.1f", 0.0)
-							).put(
-								"title",
-								ResourceBundleUtil.getString(
-									resourceBundle, "paid")
-							).put(
-								"value", 0
 							),
 							JSONUtil.put(
 								"helpMessage",
@@ -395,16 +276,60 @@ public class GetTrafficSourcesMVCResourceCommandTest {
 							).put(
 								"name", "organic"
 							).put(
-								"share", String.format("%.1f", 0.0)
-							).put(
 								"title",
 								ResourceBundleUtil.getString(
 									resourceBundle, "organic")
+							),
+							JSONUtil.put(
+								"helpMessage",
+								ResourceBundleUtil.getString(
+									resourceBundle,
+									"this-is-the-number-of-page-views-" +
+										"generated-by-people-that-find-your-" +
+											"page-through-google-adwords")
 							).put(
-								"value", 0
+								"name", "paid"
+							).put(
+								"title",
+								ResourceBundleUtil.getString(
+									resourceBundle, "paid")
+							),
+							JSONUtil.put(
+								"endpointURL", "http//localhost/test?"
+							).put(
+								"helpMessage",
+								ResourceBundleUtil.getString(
+									resourceBundle,
+									StringBundler.concat(
+										"this-is-the-number-of-page-views-",
+										"generated-by-people-coming-to-your-",
+										"page-from-other-sites-which-are-not-",
+										"search-engine-pages-or-social-sites"))
+							).put(
+								"name", "referral"
+							).put(
+								"title",
+								ResourceBundleUtil.getString(
+									resourceBundle, "referral")
+							),
+							JSONUtil.put(
+								"endpointURL", "http//localhost/test?"
+							).put(
+								"helpMessage",
+								ResourceBundleUtil.getString(
+									resourceBundle,
+									"this-is-the-number-of-page-views-" +
+										"generated-by-people-coming-to-your-" +
+											"page-from-social-sites")
+							).put(
+								"name", "social"
+							).put(
+								"title",
+								ResourceBundleUtil.getString(
+									resourceBundle, "social")
 							)
-						).toJSONString(),
-						jsonArray.toJSONString());
+						).toString(),
+						jsonArray.toString());
 				});
 		}
 		finally {
@@ -421,16 +346,6 @@ public class GetTrafficSourcesMVCResourceCommandTest {
 			new MockLiferayResourceRequest();
 
 		try {
-			LayoutDisplayPageProvider<?> layoutDisplayPageProvider =
-				_layoutDisplayPageProviderTracker.
-					getLayoutDisplayPageProviderByClassName(
-						MockObject.class.getName());
-
-			mockLiferayResourceRequest.setAttribute(
-				LayoutDisplayPageWebKeys.LAYOUT_DISPLAY_PAGE_OBJECT_PROVIDER,
-				layoutDisplayPageProvider.getLayoutDisplayPageObjectProvider(
-					new InfoItemReference(MockObject.class.getName(), 0)));
-
 			mockLiferayResourceRequest.setAttribute(
 				WebKeys.THEME_DISPLAY,
 				MockThemeDisplayUtil.getThemeDisplay(
@@ -438,7 +353,8 @@ public class GetTrafficSourcesMVCResourceCommandTest {
 						TestPropsValues.getCompanyId()),
 					_group, _layout,
 					_layoutSetLocalService.getLayoutSet(
-						_group.getGroupId(), false)));
+						_group.getGroupId(), false),
+					LocaleUtil.US));
 
 			return mockLiferayResourceRequest;
 		}
@@ -446,9 +362,6 @@ public class GetTrafficSourcesMVCResourceCommandTest {
 			throw new AssertionError(portalException);
 		}
 	}
-
-	@Inject
-	private ClassNameLocalService _classNameLocalService;
 
 	@Inject
 	private CompanyLocalService _companyLocalService;
@@ -463,9 +376,6 @@ public class GetTrafficSourcesMVCResourceCommandTest {
 	private Language _language;
 
 	private Layout _layout;
-
-	@Inject
-	private LayoutDisplayPageProviderTracker _layoutDisplayPageProviderTracker;
 
 	@Inject
 	private LayoutSetLocalService _layoutSetLocalService;

@@ -10,6 +10,7 @@
  */
 
 import ClayAutocomplete from '@clayui/autocomplete';
+import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
 import ClayLayout from '@clayui/layout';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
@@ -198,20 +199,20 @@ const AutocompleteMultiSelect = ({
 	);
 };
 
-const Item = ({key, name, onRemove}) => {
+const Item = ({name, onRemove}) => {
 	return (
-		<span className="label label-dismissible label-secondary" key={key}>
+		<span className="label label-dismissible label-secondary">
 			<span className="label-item label-item-expand">{name}</span>
 
 			<span className="label-item label-item-after">
-				<button
+				<ClayButton
 					aria-label="Close"
 					className="close"
+					displayType="unstyled"
 					onClick={onRemove}
-					type="button"
 				>
 					<ClayIcon symbol="times" />
-				</button>
+				</ClayButton>
 			</span>
 		</span>
 	);

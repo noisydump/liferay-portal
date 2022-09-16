@@ -16,6 +16,7 @@ package com.liferay.multi.factor.authentication.email.otp.service.base;
 
 import com.liferay.multi.factor.authentication.email.otp.model.MFAEmailOTPEntry;
 import com.liferay.multi.factor.authentication.email.otp.service.MFAEmailOTPEntryLocalService;
+import com.liferay.multi.factor.authentication.email.otp.service.MFAEmailOTPEntryLocalServiceUtil;
 import com.liferay.multi.factor.authentication.email.otp.service.persistence.MFAEmailOTPEntryPersistence;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.aop.AopService;
@@ -31,6 +32,8 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -44,10 +47,13 @@ import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -69,7 +75,7 @@ public abstract class MFAEmailOTPEntryLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>MFAEmailOTPEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.multi.factor.authentication.email.otp.service.MFAEmailOTPEntryLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>MFAEmailOTPEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>MFAEmailOTPEntryLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -144,6 +150,13 @@ public abstract class MFAEmailOTPEntryLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return mfaEmailOTPEntryPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -315,6 +328,11 @@ public abstract class MFAEmailOTPEntryLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement MFAEmailOTPEntryLocalServiceImpl#deleteMFAEmailOTPEntry(MFAEmailOTPEntry) to avoid orphaned data");
+		}
+
 		return mfaEmailOTPEntryLocalService.deleteMFAEmailOTPEntry(
 			(MFAEmailOTPEntry)persistedModel);
 	}
@@ -378,6 +396,11 @@ public abstract class MFAEmailOTPEntryLocalServiceBaseImpl
 		return mfaEmailOTPEntryPersistence.update(mfaEmailOTPEntry);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -389,6 +412,8 @@ public abstract class MFAEmailOTPEntryLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		mfaEmailOTPEntryLocalService = (MFAEmailOTPEntryLocalService)aopProxy;
+
+		_setLocalServiceUtilService(mfaEmailOTPEntryLocalService);
 	}
 
 	/**
@@ -433,6 +458,23 @@ public abstract class MFAEmailOTPEntryLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		MFAEmailOTPEntryLocalService mfaEmailOTPEntryLocalService) {
+
+		try {
+			Field field =
+				MFAEmailOTPEntryLocalServiceUtil.class.getDeclaredField(
+					"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, mfaEmailOTPEntryLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected MFAEmailOTPEntryLocalService mfaEmailOTPEntryLocalService;
 
 	@Reference
@@ -442,8 +484,7 @@ public abstract class MFAEmailOTPEntryLocalServiceBaseImpl
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
+	private static final Log _log = LogFactoryUtil.getLog(
+		MFAEmailOTPEntryLocalServiceBaseImpl.class);
 
 }

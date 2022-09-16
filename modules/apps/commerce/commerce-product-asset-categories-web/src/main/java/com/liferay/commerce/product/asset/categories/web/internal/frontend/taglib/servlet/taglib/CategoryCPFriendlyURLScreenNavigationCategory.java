@@ -16,13 +16,14 @@ package com.liferay.commerce.product.asset.categories.web.internal.frontend.tagl
 
 import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.service.AssetCategoryService;
+import com.liferay.commerce.product.url.CPFriendlyURL;
 import com.liferay.friendly.url.model.FriendlyURLEntry;
 import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
 import com.liferay.frontend.taglib.servlet.taglib.ScreenNavigationCategory;
 import com.liferay.frontend.taglib.servlet.taglib.ScreenNavigationEntry;
 import com.liferay.frontend.taglib.servlet.taglib.util.JSPRenderer;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
@@ -71,7 +72,7 @@ public class CategoryCPFriendlyURLScreenNavigationCategory
 		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
 			"content.Language", locale, getClass());
 
-		return LanguageUtil.get(resourceBundle, "friendly-url");
+		return _language.get(resourceBundle, "friendly-url");
 	}
 
 	@Override
@@ -113,10 +114,14 @@ public class CategoryCPFriendlyURLScreenNavigationCategory
 			}
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 		}
 
 		httpServletRequest.setAttribute("assetCategory", assetCategory);
+		httpServletRequest.setAttribute(
+			"assetCategoryURLSeparator",
+			_cpFriendlyURL.getAssetCategoryURLSeparator(
+				_portal.getCompanyId(httpServletRequest)));
 		httpServletRequest.setAttribute("titleMapAsXML", titleMapAsXML);
 
 		_jspRenderer.renderJSP(
@@ -131,10 +136,16 @@ public class CategoryCPFriendlyURLScreenNavigationCategory
 	private AssetCategoryService _assetCategoryService;
 
 	@Reference
+	private CPFriendlyURL _cpFriendlyURL;
+
+	@Reference
 	private FriendlyURLEntryLocalService _friendlyURLEntryLocalService;
 
 	@Reference
 	private JSPRenderer _jspRenderer;
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private Portal _portal;

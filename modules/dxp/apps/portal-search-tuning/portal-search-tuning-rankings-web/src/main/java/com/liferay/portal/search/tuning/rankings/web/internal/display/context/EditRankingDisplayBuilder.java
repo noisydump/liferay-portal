@@ -15,6 +15,7 @@
 package com.liferay.portal.search.tuning.rankings.web.internal.display.context;
 
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.frontend.icons.FrontendIconsUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -88,7 +89,7 @@ public class EditRankingDisplayBuilder {
 		).put(
 			"namespace", _renderResponse.getNamespace()
 		).put(
-			"spritemap", _themeDisplay.getPathThemeImages() + "/clay/icons.svg"
+			"spritemap", FrontendIconsUtil.getSpritemap(_themeDisplay)
 		).build();
 	}
 
@@ -106,10 +107,6 @@ public class EditRankingDisplayBuilder {
 		resourceURL.setResourceID("/result_rankings/get_results");
 
 		return resourceURL.toString();
-	}
-
-	private boolean _getInactive() {
-		return ParamUtil.getBoolean(_httpServletRequest, "inactive");
 	}
 
 	private String _getKeywords() {
@@ -130,7 +127,7 @@ public class EditRankingDisplayBuilder {
 		).put(
 			"initialAliases", _getAliases()
 		).put(
-			"initialInactive", _getInactive()
+			"initialInactive", _isInactive()
 		).put(
 			"resultsRankingUid", _getResultsRankingUid()
 		).put(
@@ -185,13 +182,16 @@ public class EditRankingDisplayBuilder {
 		return resourceURL.toString();
 	}
 
+	private boolean _isInactive() {
+		return ParamUtil.getBoolean(_httpServletRequest, "inactive");
+	}
+
 	private void _setBackURL(
 		EditRankingDisplayContext editRankingDisplayContext) {
 
-		String backURL = ParamUtil.getString(
-			_httpServletRequest, "backURL", _getRedirect());
-
-		editRankingDisplayContext.setBackURL(backURL);
+		editRankingDisplayContext.setBackURL(
+			ParamUtil.getString(
+				_httpServletRequest, "backURL", _getRedirect()));
 	}
 
 	private void _setCompanyId(
@@ -218,7 +218,7 @@ public class EditRankingDisplayBuilder {
 	private void _setInactive(
 		EditRankingDisplayContext editRankingDisplayContext) {
 
-		editRankingDisplayContext.setInactive(_getInactive());
+		editRankingDisplayContext.setInactive(_isInactive());
 	}
 
 	private void _setKeywords(

@@ -28,10 +28,13 @@ if (Validator.isNull(redirect)) {
 	redirect = String.valueOf(renderResponse.createRenderURL());
 }
 
-PortletURL searchURL = renderResponse.createRenderURL();
-
-searchURL.setParameter("mvcRenderCommandName", "/configuration_admin/search_results");
-searchURL.setParameter("redirect", redirect);
+PortletURL searchURL = PortletURLBuilder.createRenderURL(
+	renderResponse
+).setMVCRenderCommandName(
+	"/configuration_admin/search_results"
+).setRedirect(
+	redirect
+).buildPortletURL();
 
 portletDisplay.setShowBackIcon(true);
 portletDisplay.setURLBack(redirect);
@@ -39,13 +42,15 @@ portletDisplay.setURLBack(redirect);
 renderResponse.setTitle(LanguageUtil.get(request, "search-results"));
 %>
 
-<clay:management-toolbar-v2
-	clearResultsURL="<%= redirect %>"
-	itemsTotal="<%= configurationEntryIterator.getTotal() %>"
-	searchActionURL="<%= searchURL.toString() %>"
-	selectable="<%= false %>"
-	showSearch="<%= true %>"
-/>
+<div class="sticky-top" style="top: 56px; z-index: 999;">
+	<clay:management-toolbar
+		clearResultsURL="<%= redirect %>"
+		itemsTotal="<%= configurationEntryIterator.getTotal() %>"
+		searchActionURL="<%= searchURL.toString() %>"
+		selectable="<%= false %>"
+		showSearch="<%= true %>"
+	/>
+</div>
 
 <clay:container-fluid
 	cssClass="container-view"

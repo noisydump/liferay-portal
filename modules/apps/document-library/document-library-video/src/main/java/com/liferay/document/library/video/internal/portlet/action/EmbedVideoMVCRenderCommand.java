@@ -15,10 +15,7 @@
 package com.liferay.document.library.video.internal.portlet.action;
 
 import com.liferay.document.library.constants.DLFileVersionPreviewConstants;
-import com.liferay.document.library.kernel.model.DLProcessorConstants;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
-import com.liferay.document.library.kernel.util.DLProcessor;
-import com.liferay.document.library.kernel.util.DLProcessorRegistryUtil;
 import com.liferay.document.library.kernel.util.VideoProcessor;
 import com.liferay.document.library.preview.exception.DLFileEntryPreviewGenerationException;
 import com.liferay.document.library.service.DLFileVersionPreviewLocalService;
@@ -71,13 +68,7 @@ public class EmbedVideoMVCRenderCommand implements MVCRenderCommand {
 				renderRequest.setAttribute(
 					FileVersion.class.getName(), fileVersion);
 
-				if (_isPreviewFailure(fileVersion)) {
-					return "/embed/error.jsp";
-				}
-				else if (!_videoProcessor.hasVideo(fileVersion)) {
-					return "/embed/generating.jsp";
-				}
-				else {
+				if (_videoProcessor.hasVideo(fileVersion)) {
 					String videoPosterURL = _getVideoPosterURL(
 						fileVersion,
 						(ThemeDisplay)renderRequest.getAttribute(
@@ -87,28 +78,24 @@ public class EmbedVideoMVCRenderCommand implements MVCRenderCommand {
 						DLVideoWebKeys.PREVIEW_FILE_URLS,
 						_getPreviewFileURLs(
 							fileVersion, videoPosterURL, renderRequest));
-
 					renderRequest.setAttribute(
 						DLVideoWebKeys.VIDEO_POSTER_URL, videoPosterURL);
 
 					return "/embed/video.jsp";
 				}
+				else if (_isPreviewFailure(fileVersion)) {
+					return "/embed/error.jsp";
+				}
+				else {
+					return "/embed/generating.jsp";
+				}
 			}
 		}
 		catch (PortalException portalException) {
-			_log.error(portalException, portalException);
+			_log.error(portalException);
 		}
 
 		return "/embed/error.jsp";
-	}
-
-	@Reference(
-		policyOption = ReferencePolicyOption.GREEDY,
-		target = "(type=" + DLProcessorConstants.VIDEO_PROCESSOR + ")",
-		unbind = "-"
-	)
-	protected void setDLProcessor(DLProcessor dlProcessor) {
-		_videoProcessor = (VideoProcessor)dlProcessor;
 	}
 
 	private List<String> _getPreviewFileURLs(
@@ -176,12 +163,9 @@ public class EmbedVideoMVCRenderCommand implements MVCRenderCommand {
 	private boolean _isPreviewFailure(FileVersion fileVersion) {
 		if (_dlFileVersionPreviewLocalService.hasDLFileVersionPreview(
 				fileVersion.getFileEntryId(), fileVersion.getFileVersionId(),
-				DLFileVersionPreviewConstants.STATUS_FAILURE)) {
+				DLFileVersionPreviewConstants.STATUS_FAILURE) ||
+			!_videoProcessor.isVideoSupported(fileVersion)) {
 
-			return true;
-		}
-
-		if (!DLProcessorRegistryUtil.isPreviewableSize(fileVersion)) {
 			return true;
 		}
 
@@ -200,6 +184,7 @@ public class EmbedVideoMVCRenderCommand implements MVCRenderCommand {
 	@Reference
 	private DLURLHelper _dlURLHelper;
 
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
 	private VideoProcessor _videoProcessor;
 
 }

@@ -14,9 +14,16 @@
 
 package com.liferay.asset.list.service;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.util.tracker.ServiceTracker;
+import com.liferay.asset.list.model.AssetListEntryUsage;
+import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.portal.kernel.dao.orm.DynamicQuery;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.util.OrderByComparator;
+
+import java.io.Serializable;
+
+import java.util.List;
 
 /**
  * Provides the local service utility for AssetListEntryUsage. This utility wraps
@@ -48,24 +55,21 @@ public class AssetListEntryUsageLocalServiceUtil {
 	 * @param assetListEntryUsage the asset list entry usage
 	 * @return the asset list entry usage that was added
 	 */
-	public static com.liferay.asset.list.model.AssetListEntryUsage
-		addAssetListEntryUsage(
-			com.liferay.asset.list.model.AssetListEntryUsage
-				assetListEntryUsage) {
+	public static AssetListEntryUsage addAssetListEntryUsage(
+		AssetListEntryUsage assetListEntryUsage) {
 
 		return getService().addAssetListEntryUsage(assetListEntryUsage);
 	}
 
-	public static com.liferay.asset.list.model.AssetListEntryUsage
-			addAssetListEntryUsage(
-				long userId, long groupId, long assetListEntryId,
-				long classNameId, long classPK, String portletId,
-				com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static AssetListEntryUsage addAssetListEntryUsage(
+			long userId, long groupId, long classNameId, String containerKey,
+			long containerType, String key, long plid,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws PortalException {
 
 		return getService().addAssetListEntryUsage(
-			userId, groupId, assetListEntryId, classNameId, classPK, portletId,
-			serviceContext);
+			userId, groupId, classNameId, containerKey, containerType, key,
+			plid, serviceContext);
 	}
 
 	/**
@@ -74,8 +78,8 @@ public class AssetListEntryUsageLocalServiceUtil {
 	 * @param assetListEntryUsageId the primary key for the new asset list entry usage
 	 * @return the new asset list entry usage
 	 */
-	public static com.liferay.asset.list.model.AssetListEntryUsage
-		createAssetListEntryUsage(long assetListEntryUsageId) {
+	public static AssetListEntryUsage createAssetListEntryUsage(
+		long assetListEntryUsageId) {
 
 		return getService().createAssetListEntryUsage(assetListEntryUsageId);
 	}
@@ -83,9 +87,9 @@ public class AssetListEntryUsageLocalServiceUtil {
 	/**
 	 * @throws PortalException
 	 */
-	public static com.liferay.portal.kernel.model.PersistedModel
-			createPersistedModel(java.io.Serializable primaryKeyObj)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static PersistedModel createPersistedModel(
+			Serializable primaryKeyObj)
+		throws PortalException {
 
 		return getService().createPersistedModel(primaryKeyObj);
 	}
@@ -100,10 +104,8 @@ public class AssetListEntryUsageLocalServiceUtil {
 	 * @param assetListEntryUsage the asset list entry usage
 	 * @return the asset list entry usage that was removed
 	 */
-	public static com.liferay.asset.list.model.AssetListEntryUsage
-		deleteAssetListEntryUsage(
-			com.liferay.asset.list.model.AssetListEntryUsage
-				assetListEntryUsage) {
+	public static AssetListEntryUsage deleteAssetListEntryUsage(
+		AssetListEntryUsage assetListEntryUsage) {
 
 		return getService().deleteAssetListEntryUsage(assetListEntryUsage);
 	}
@@ -119,33 +121,39 @@ public class AssetListEntryUsageLocalServiceUtil {
 	 * @return the asset list entry usage that was removed
 	 * @throws PortalException if a asset list entry usage with the primary key could not be found
 	 */
-	public static com.liferay.asset.list.model.AssetListEntryUsage
-			deleteAssetListEntryUsage(long assetListEntryUsageId)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static AssetListEntryUsage deleteAssetListEntryUsage(
+			long assetListEntryUsageId)
+		throws PortalException {
 
 		return getService().deleteAssetListEntryUsage(assetListEntryUsageId);
+	}
+
+	public static void deleteAssetListEntryUsages(
+		String containerKey, long containerType, long plid) {
+
+		getService().deleteAssetListEntryUsages(
+			containerKey, containerType, plid);
 	}
 
 	/**
 	 * @throws PortalException
 	 */
-	public static com.liferay.portal.kernel.model.PersistedModel
-			deletePersistedModel(
-				com.liferay.portal.kernel.model.PersistedModel persistedModel)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static PersistedModel deletePersistedModel(
+			PersistedModel persistedModel)
+		throws PortalException {
 
 		return getService().deletePersistedModel(persistedModel);
 	}
 
-	public static <T> T dslQuery(
-		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
-
+	public static <T> T dslQuery(DSLQuery dslQuery) {
 		return getService().dslQuery(dslQuery);
 	}
 
-	public static com.liferay.portal.kernel.dao.orm.DynamicQuery
-		dynamicQuery() {
+	public static int dslQueryCount(DSLQuery dslQuery) {
+		return getService().dslQueryCount(dslQuery);
+	}
 
+	public static DynamicQuery dynamicQuery() {
 		return getService().dynamicQuery();
 	}
 
@@ -155,9 +163,7 @@ public class AssetListEntryUsageLocalServiceUtil {
 	 * @param dynamicQuery the dynamic query
 	 * @return the matching rows
 	 */
-	public static <T> java.util.List<T> dynamicQuery(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery) {
-
+	public static <T> List<T> dynamicQuery(DynamicQuery dynamicQuery) {
 		return getService().dynamicQuery(dynamicQuery);
 	}
 
@@ -173,9 +179,8 @@ public class AssetListEntryUsageLocalServiceUtil {
 	 * @param end the upper bound of the range of model instances (not inclusive)
 	 * @return the range of matching rows
 	 */
-	public static <T> java.util.List<T> dynamicQuery(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery, int start,
-		int end) {
+	public static <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end) {
 
 		return getService().dynamicQuery(dynamicQuery, start, end);
 	}
@@ -193,10 +198,9 @@ public class AssetListEntryUsageLocalServiceUtil {
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
 	 * @return the ordered range of matching rows
 	 */
-	public static <T> java.util.List<T> dynamicQuery(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery, int start,
-		int end,
-		com.liferay.portal.kernel.util.OrderByComparator<T> orderByComparator) {
+	public static <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end,
+		OrderByComparator<T> orderByComparator) {
 
 		return getService().dynamicQuery(
 			dynamicQuery, start, end, orderByComparator);
@@ -208,9 +212,7 @@ public class AssetListEntryUsageLocalServiceUtil {
 	 * @param dynamicQuery the dynamic query
 	 * @return the number of rows matching the dynamic query
 	 */
-	public static long dynamicQueryCount(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery) {
-
+	public static long dynamicQueryCount(DynamicQuery dynamicQuery) {
 		return getService().dynamicQueryCount(dynamicQuery);
 	}
 
@@ -222,24 +224,24 @@ public class AssetListEntryUsageLocalServiceUtil {
 	 * @return the number of rows matching the dynamic query
 	 */
 	public static long dynamicQueryCount(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery,
+		DynamicQuery dynamicQuery,
 		com.liferay.portal.kernel.dao.orm.Projection projection) {
 
 		return getService().dynamicQueryCount(dynamicQuery, projection);
 	}
 
-	public static com.liferay.asset.list.model.AssetListEntryUsage
-		fetchAssetListEntryUsage(long assetListEntryUsageId) {
+	public static AssetListEntryUsage fetchAssetListEntryUsage(
+		long assetListEntryUsageId) {
 
 		return getService().fetchAssetListEntryUsage(assetListEntryUsageId);
 	}
 
-	public static com.liferay.asset.list.model.AssetListEntryUsage
-		fetchAssetListEntryUsage(
-			long classNameId, long classPK, String portletId) {
+	public static AssetListEntryUsage fetchAssetListEntryUsage(
+		long groupId, long classNameId, String containerKey, long containerType,
+		String key, long plid) {
 
 		return getService().fetchAssetListEntryUsage(
-			classNameId, classPK, portletId);
+			groupId, classNameId, containerKey, containerType, key, plid);
 	}
 
 	/**
@@ -249,8 +251,8 @@ public class AssetListEntryUsageLocalServiceUtil {
 	 * @param groupId the primary key of the group
 	 * @return the matching asset list entry usage, or <code>null</code> if a matching asset list entry usage could not be found
 	 */
-	public static com.liferay.asset.list.model.AssetListEntryUsage
-		fetchAssetListEntryUsageByUuidAndGroupId(String uuid, long groupId) {
+	public static AssetListEntryUsage fetchAssetListEntryUsageByUuidAndGroupId(
+		String uuid, long groupId) {
 
 		return getService().fetchAssetListEntryUsageByUuidAndGroupId(
 			uuid, groupId);
@@ -262,6 +264,12 @@ public class AssetListEntryUsageLocalServiceUtil {
 		return getService().getActionableDynamicQuery();
 	}
 
+	public static List<AssetListEntryUsage> getAssetEntryListUsagesByPlid(
+		long plid) {
+
+		return getService().getAssetEntryListUsagesByPlid(plid);
+	}
+
 	/**
 	 * Returns the asset list entry usage with the primary key.
 	 *
@@ -269,9 +277,9 @@ public class AssetListEntryUsageLocalServiceUtil {
 	 * @return the asset list entry usage
 	 * @throws PortalException if a asset list entry usage with the primary key could not be found
 	 */
-	public static com.liferay.asset.list.model.AssetListEntryUsage
-			getAssetListEntryUsage(long assetListEntryUsageId)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static AssetListEntryUsage getAssetListEntryUsage(
+			long assetListEntryUsageId)
+		throws PortalException {
 
 		return getService().getAssetListEntryUsage(assetListEntryUsageId);
 	}
@@ -284,9 +292,9 @@ public class AssetListEntryUsageLocalServiceUtil {
 	 * @return the matching asset list entry usage
 	 * @throws PortalException if a matching asset list entry usage could not be found
 	 */
-	public static com.liferay.asset.list.model.AssetListEntryUsage
-			getAssetListEntryUsageByUuidAndGroupId(String uuid, long groupId)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static AssetListEntryUsage getAssetListEntryUsageByUuidAndGroupId(
+			String uuid, long groupId)
+		throws PortalException {
 
 		return getService().getAssetListEntryUsageByUuidAndGroupId(
 			uuid, groupId);
@@ -303,50 +311,46 @@ public class AssetListEntryUsageLocalServiceUtil {
 	 * @param end the upper bound of the range of asset list entry usages (not inclusive)
 	 * @return the range of asset list entry usages
 	 */
-	public static java.util.List
-		<com.liferay.asset.list.model.AssetListEntryUsage>
-			getAssetListEntryUsages(int start, int end) {
+	public static List<AssetListEntryUsage> getAssetListEntryUsages(
+		int start, int end) {
 
 		return getService().getAssetListEntryUsages(start, end);
 	}
 
-	public static java.util.List
-		<com.liferay.asset.list.model.AssetListEntryUsage>
-			getAssetListEntryUsages(long assetListEntryId) {
+	public static List<AssetListEntryUsage> getAssetListEntryUsages(
+		long groupId, long classNameId, String key) {
 
-		return getService().getAssetListEntryUsages(assetListEntryId);
+		return getService().getAssetListEntryUsages(groupId, classNameId, key);
 	}
 
-	public static java.util.List
-		<com.liferay.asset.list.model.AssetListEntryUsage>
-			getAssetListEntryUsages(
-				long assetListEntryId, int start, int end,
-				com.liferay.portal.kernel.util.OrderByComparator
-					<com.liferay.asset.list.model.AssetListEntryUsage>
-						orderByComparator) {
+	public static List<AssetListEntryUsage> getAssetListEntryUsages(
+		long groupId, long classNameId, String key, int type) {
 
 		return getService().getAssetListEntryUsages(
-			assetListEntryId, start, end, orderByComparator);
+			groupId, classNameId, key, type);
 	}
 
-	public static java.util.List
-		<com.liferay.asset.list.model.AssetListEntryUsage>
-			getAssetListEntryUsages(long assetListEntryId, long classNameId) {
+	public static List<AssetListEntryUsage> getAssetListEntryUsages(
+		long groupId, long classNameId, String key, int type, int start,
+		int end, OrderByComparator<AssetListEntryUsage> orderByComparator) {
 
 		return getService().getAssetListEntryUsages(
-			assetListEntryId, classNameId);
+			groupId, classNameId, key, type, start, end, orderByComparator);
 	}
 
-	public static java.util.List
-		<com.liferay.asset.list.model.AssetListEntryUsage>
-			getAssetListEntryUsages(
-				long assetListEntryId, long classNameId, int start, int end,
-				com.liferay.portal.kernel.util.OrderByComparator
-					<com.liferay.asset.list.model.AssetListEntryUsage>
-						orderByComparator) {
+	public static List<AssetListEntryUsage> getAssetListEntryUsages(
+		long groupId, long classNameId, String key, int start, int end,
+		OrderByComparator<AssetListEntryUsage> orderByComparator) {
 
 		return getService().getAssetListEntryUsages(
-			assetListEntryId, classNameId, start, end, orderByComparator);
+			groupId, classNameId, key, start, end, orderByComparator);
+	}
+
+	public static List<AssetListEntryUsage> getAssetListEntryUsages(
+		String containerKey, long containerType, long plid) {
+
+		return getService().getAssetListEntryUsages(
+			containerKey, containerType, plid);
 	}
 
 	/**
@@ -356,10 +360,8 @@ public class AssetListEntryUsageLocalServiceUtil {
 	 * @param companyId the primary key of the company
 	 * @return the matching asset list entry usages, or an empty list if no matches were found
 	 */
-	public static java.util.List
-		<com.liferay.asset.list.model.AssetListEntryUsage>
-			getAssetListEntryUsagesByUuidAndCompanyId(
-				String uuid, long companyId) {
+	public static List<AssetListEntryUsage>
+		getAssetListEntryUsagesByUuidAndCompanyId(String uuid, long companyId) {
 
 		return getService().getAssetListEntryUsagesByUuidAndCompanyId(
 			uuid, companyId);
@@ -375,13 +377,10 @@ public class AssetListEntryUsageLocalServiceUtil {
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
 	 * @return the range of matching asset list entry usages, or an empty list if no matches were found
 	 */
-	public static java.util.List
-		<com.liferay.asset.list.model.AssetListEntryUsage>
-			getAssetListEntryUsagesByUuidAndCompanyId(
-				String uuid, long companyId, int start, int end,
-				com.liferay.portal.kernel.util.OrderByComparator
-					<com.liferay.asset.list.model.AssetListEntryUsage>
-						orderByComparator) {
+	public static List<AssetListEntryUsage>
+		getAssetListEntryUsagesByUuidAndCompanyId(
+			String uuid, long companyId, int start, int end,
+			OrderByComparator<AssetListEntryUsage> orderByComparator) {
 
 		return getService().getAssetListEntryUsagesByUuidAndCompanyId(
 			uuid, companyId, start, end, orderByComparator);
@@ -396,15 +395,18 @@ public class AssetListEntryUsageLocalServiceUtil {
 		return getService().getAssetListEntryUsagesCount();
 	}
 
-	public static int getAssetListEntryUsagesCount(long assetListEntryId) {
-		return getService().getAssetListEntryUsagesCount(assetListEntryId);
+	public static int getAssetListEntryUsagesCount(
+		long groupId, long classNameId, String key) {
+
+		return getService().getAssetListEntryUsagesCount(
+			groupId, classNameId, key);
 	}
 
 	public static int getAssetListEntryUsagesCount(
-		long assetListEntryId, long classNameId) {
+		long groupId, long classNameId, String key, int type) {
 
 		return getService().getAssetListEntryUsagesCount(
-			assetListEntryId, classNameId);
+			groupId, classNameId, key, type);
 	}
 
 	public static com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery
@@ -434,9 +436,8 @@ public class AssetListEntryUsageLocalServiceUtil {
 	/**
 	 * @throws PortalException
 	 */
-	public static com.liferay.portal.kernel.model.PersistedModel
-			getPersistedModel(java.io.Serializable primaryKeyObj)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static PersistedModel getPersistedModel(Serializable primaryKeyObj)
+		throws PortalException {
 
 		return getService().getPersistedModel(primaryKeyObj);
 	}
@@ -451,38 +452,16 @@ public class AssetListEntryUsageLocalServiceUtil {
 	 * @param assetListEntryUsage the asset list entry usage
 	 * @return the asset list entry usage that was updated
 	 */
-	public static com.liferay.asset.list.model.AssetListEntryUsage
-		updateAssetListEntryUsage(
-			com.liferay.asset.list.model.AssetListEntryUsage
-				assetListEntryUsage) {
+	public static AssetListEntryUsage updateAssetListEntryUsage(
+		AssetListEntryUsage assetListEntryUsage) {
 
 		return getService().updateAssetListEntryUsage(assetListEntryUsage);
 	}
 
 	public static AssetListEntryUsageLocalService getService() {
-		return _serviceTracker.getService();
+		return _service;
 	}
 
-	private static ServiceTracker
-		<AssetListEntryUsageLocalService, AssetListEntryUsageLocalService>
-			_serviceTracker;
-
-	static {
-		Bundle bundle = FrameworkUtil.getBundle(
-			AssetListEntryUsageLocalService.class);
-
-		ServiceTracker
-			<AssetListEntryUsageLocalService, AssetListEntryUsageLocalService>
-				serviceTracker =
-					new ServiceTracker
-						<AssetListEntryUsageLocalService,
-						 AssetListEntryUsageLocalService>(
-							 bundle.getBundleContext(),
-							 AssetListEntryUsageLocalService.class, null);
-
-		serviceTracker.open();
-
-		_serviceTracker = serviceTracker;
-	}
+	private static volatile AssetListEntryUsageLocalService _service;
 
 }

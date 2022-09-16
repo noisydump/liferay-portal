@@ -68,7 +68,7 @@ public class DDMDataProviderInstancesServlet extends BaseDDMFormBuilderServlet {
 		throws IOException, ServletException {
 
 		JSONArray dataProviderInstancesJSONArray =
-			getDataProviderInstancesJSONArray(httpServletRequest);
+			_getDataProviderInstancesJSONArray(httpServletRequest);
 
 		if (dataProviderInstancesJSONArray == null) {
 			httpServletResponse.sendError(HttpServletResponse.SC_BAD_REQUEST);
@@ -80,10 +80,10 @@ public class DDMDataProviderInstancesServlet extends BaseDDMFormBuilderServlet {
 		httpServletResponse.setStatus(HttpServletResponse.SC_OK);
 
 		ServletResponseUtil.write(
-			httpServletResponse, dataProviderInstancesJSONArray.toJSONString());
+			httpServletResponse, dataProviderInstancesJSONArray.toString());
 	}
 
-	protected JSONArray getDataProviderInstancesJSONArray(
+	private JSONArray _getDataProviderInstancesJSONArray(
 		HttpServletRequest httpServletRequest) {
 
 		try {
@@ -148,7 +148,7 @@ public class DDMDataProviderInstancesServlet extends BaseDDMFormBuilderServlet {
 		}
 		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(portalException, portalException);
+				_log.debug(portalException);
 			}
 		}
 

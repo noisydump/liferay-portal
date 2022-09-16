@@ -14,8 +14,10 @@
 
 package com.liferay.commerce.frontend.js.internal.servlet.taglib;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.servlet.taglib.BaseDynamicInclude;
 import com.liferay.portal.kernel.servlet.taglib.DynamicInclude;
+import com.liferay.portal.kernel.util.Portal;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -24,6 +26,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Fabio Mastrorilli
@@ -44,8 +47,11 @@ public class CommerceFrontendJsDynamicInclude extends BaseDynamicInclude {
 		PrintWriter printWriter = httpServletResponse.getWriter();
 
 		printWriter.print(
-			"<link href=\"/o/commerce-frontend-js/styles/main.css\" " +
-				"rel=\"stylesheet\" type=\"text/css\" />");
+			StringBundler.concat(
+				"<link href=\"",
+				_portal.getPathProxy() + httpServletRequest.getContextPath(),
+				"/o/commerce-frontend-js/styles/main.css\" rel=\"stylesheet\"",
+				"type=\"text/css\" />"));
 	}
 
 	@Override
@@ -53,5 +59,8 @@ public class CommerceFrontendJsDynamicInclude extends BaseDynamicInclude {
 		dynamicIncludeRegistry.register(
 			"/html/common/themes/top_head.jsp#post");
 	}
+
+	@Reference
+	private Portal _portal;
 
 }

@@ -59,7 +59,7 @@ public class TierPriceSerDes {
 		sb.append("{");
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+			"yyyy-MM-dd'T'HH:mm:ssXX");
 
 		if (tierPrice.getActions() != null) {
 			if (sb.length() > 1) {
@@ -282,7 +282,7 @@ public class TierPriceSerDes {
 		Map<String, String> map = new TreeMap<>();
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+			"yyyy-MM-dd'T'HH:mm:ssXX");
 
 		if (tierPrice.getActions() == null) {
 			map.put("actions", null);
@@ -482,25 +482,25 @@ public class TierPriceSerDes {
 			else if (Objects.equals(jsonParserFieldName, "discountLevel1")) {
 				if (jsonParserFieldValue != null) {
 					tierPrice.setDiscountLevel1(
-						(BigDecimal)jsonParserFieldValue);
+						new BigDecimal((String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "discountLevel2")) {
 				if (jsonParserFieldValue != null) {
 					tierPrice.setDiscountLevel2(
-						(BigDecimal)jsonParserFieldValue);
+						new BigDecimal((String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "discountLevel3")) {
 				if (jsonParserFieldValue != null) {
 					tierPrice.setDiscountLevel3(
-						(BigDecimal)jsonParserFieldValue);
+						new BigDecimal((String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "discountLevel4")) {
 				if (jsonParserFieldValue != null) {
 					tierPrice.setDiscountLevel4(
-						(BigDecimal)jsonParserFieldValue);
+						new BigDecimal((String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "displayDate")) {
@@ -565,9 +565,6 @@ public class TierPriceSerDes {
 					tierPrice.setPriceFormatted((String)jsonParserFieldValue);
 				}
 			}
-			else if (jsonParserFieldName.equals("status")) {
-				throw new IllegalArgumentException();
-			}
 		}
 
 	}
@@ -596,7 +593,7 @@ public class TierPriceSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -632,7 +629,7 @@ public class TierPriceSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

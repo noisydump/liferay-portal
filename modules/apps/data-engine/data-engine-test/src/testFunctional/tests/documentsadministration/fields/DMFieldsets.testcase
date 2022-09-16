@@ -1,9 +1,9 @@
-@component-name = "portal-document-management"
+@component-name = "data-engine"
 definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Documents Management";
+	property testray.main.component.name = "Data Engine";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -27,26 +27,8 @@ definition {
 	@description = "This is a test for LPS-107630. As an App Adm, I want to use an existing fieldset"
 	@ignore = "true"
 	@priority = "4"
-	test AddFieldsetOnOtherFieldsetAlreadyOnBuilder {
-		property portal.acceptance = "false";
-
-		// TODO LPS-107630 AddFieldsetOnOtherFieldsetAlreadyOnBuilder pending implementation
-
-	}
-
-	@description = "This is a test for LPS-107630. As an App Adm, I want to use an existing fieldset"
-	@ignore = "true"
-	@priority = "4"
-	test EditFieldsetPropertiesFromSideBar {
-		property portal.acceptance = "false";
-
-		// TODO LPS-107630 EditFieldsetPropertiesFromSideBar pending implementation
-	}
-
-	@description = "This is a test for LPS-107630. As an App Adm, I want to use an existing fieldset"
-	@priority = "4"
 	test FieldsetSetAsCollapsible {
-		property portal.acceptance = "false";
+		property portal.upstream = "quarantine";
 
 		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
 
@@ -68,9 +50,7 @@ definition {
 
 		PortletEntry.inputName(name = "CollapsibleTest1");
 
-		DataEngine.addFieldsets(
-			fieldsetsLabel = "CollapsibleTest",
-			fieldsetsName = "CollapsibleTest");
+		DataEngine.addFieldsetToBuilder(fieldsetName = "CollapsibleTest");
 
 		DataEngine.editFieldsetsCollapsible(fieldsetLabel = "CollapsibleTest");
 
@@ -86,9 +66,10 @@ definition {
 	}
 
 	@description = "This is a test for LPS-107630. As an App Adm, I want to use an existing fieldset"
+	@ignore = "true"
 	@priority = "4"
 	test FieldsetSetAsRepeatable {
-		property portal.acceptance = "false";
+		property portal.upstream = "quarantine";
 
 		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
 
@@ -110,11 +91,9 @@ definition {
 
 		PortletEntry.inputName(name = "RepeatableTest1");
 
-		DataEngine.addFieldsets(
-			fieldsetsLabel = "RepeatableTest",
-			fieldsetsName = "RepeatableTest");
+		DataEngine.addFieldsetToBuilder(fieldsetName = "RepeatableTest");
 
-		DataEngine.editFieldsetsRepeatable(fieldsetLabel = "RepeatableTest");
+		DataEngine.toggleFieldRepeatable(fieldsetLabel = "RepeatableTest");
 
 		DDLDataDefinition.save();
 
@@ -128,6 +107,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-107630. As an App Adm, I want to use an existing fieldset"
+	@ignore = "true"
 	@priority = "4"
 	test RepeatFieldsetWithoutDuplicatingContent {
 		property portal.acceptance = "false";
@@ -155,11 +135,11 @@ definition {
 			dmDocumentTypeFieldNames = "${fieldName}",
 			dmDocumentTypeName = "${documentType}");
 
-		DataEngine.editFieldRepeatable(fieldFieldLabel = "${fieldName}");
+		DataEngine.toggleFieldRepeatable(fieldFieldLabel = "${fieldName}");
 
 		Button.clickSave();
 
-		Navigator.gotoNavItem(navItem = "Documents and Media");
+		Navigator.gotoNavItem(navItem = "Files");
 
 		DMNavigator.gotoAddDocumentTypeCP(dmDocumentTypeName = "${documentType}");
 
@@ -171,7 +151,7 @@ definition {
 			imageFileName = "${documentName}",
 			navTab = "Documents and Media");
 
-		DataEngine.addRepeatableField(fieldName = "${fieldName}");
+		DataEngine.addRepeatableField(fieldLabel = "${fieldName}");
 
 		AssertTextNotPresent(
 			locator1 = "FormFields#TEXT_FIELD_NULL",
@@ -181,9 +161,10 @@ definition {
 	}
 
 	@description = "This is a test for LPS-107630. As an App Adm, I want to use an existing fieldset"
+	@ignore = "true"
 	@priority = "4"
 	test ShowAndHideFieldsetLabel {
-		property portal.acceptance = "false";
+		property portal.upstream = "quarantine";
 
 		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
 
@@ -205,13 +186,9 @@ definition {
 
 		PortletEntry.inputName(name = "ShowAndHideTest1");
 
-		DataEngine.addFieldsets(
-			fieldsetsLabel = "ShowAndHideTest",
-			fieldsetsName = "ShowAndHideTest");
+		DataEngine.addFieldsetToBuilder(fieldsetName = "ShowAndHideTest");
 
-		DataEngine.configureFieldsetsShowOrHideLabel(
-			fieldFieldLabel = "Text",
-			status = "Hide");
+		DataEngine.toggleShowLabel(fieldLabel = "Text");
 
 		DDLDataDefinition.save();
 
@@ -223,9 +200,7 @@ definition {
 			key_fieldsetLabel = "ShowAndHideTest",
 			locator1 = "DDMEditStructure#FORM_FIELD_SETS_CONTAINER_LABEL");
 
-		DataEngine.configureFieldsetsShowOrHideLabel(
-			fieldFieldLabel = "Text",
-			status = "Show");
+		DataEngine.toggleShowLabel(hiddenFieldLabel = "Text");
 
 		AssertElementPresent(
 			key_fieldsetLabel = "ShowAndHideTest",

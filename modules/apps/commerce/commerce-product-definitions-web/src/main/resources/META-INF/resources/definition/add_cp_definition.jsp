@@ -35,6 +35,7 @@
 		var <portlet:namespace />defaultLanguageId = null;
 		var <portlet:namespace />productData = {
 			active: true,
+			productStatus: <%= WorkflowConstants.STATUS_DRAFT %>,
 			productType: '<%= ParamUtil.getString(request, "productTypeName") %>',
 		};
 
@@ -43,7 +44,7 @@
 		Liferay.provide(
 			window,
 			'<portlet:namespace />apiSubmit',
-			function () {
+			() => {
 				ModalUtils.isSubmitting();
 
 				var formattedData = Object.assign(
@@ -60,7 +61,7 @@
 				] = document.getElementById('<portlet:namespace />name').value;
 
 				AdminCatalogResource.createProduct(formattedData)
-					.then(function (cpDefinition) {
+					.then((cpDefinition) => {
 						var redirectURL = new Liferay.PortletURL.createURL(
 							'<%= editProductDefinitionURL %>'
 						);

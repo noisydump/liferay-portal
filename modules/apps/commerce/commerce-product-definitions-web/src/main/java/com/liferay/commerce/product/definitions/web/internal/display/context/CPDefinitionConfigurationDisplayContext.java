@@ -32,6 +32,7 @@ import com.liferay.commerce.product.service.CPTaxCategoryService;
 import com.liferay.commerce.product.service.CommerceCatalogService;
 import com.liferay.commerce.product.service.CommerceChannelRelService;
 import com.liferay.commerce.product.servlet.taglib.ui.constants.CPDefinitionScreenNavigationConstants;
+import com.liferay.commerce.product.url.CPFriendlyURL;
 import com.liferay.commerce.service.CPDAvailabilityEstimateService;
 import com.liferay.commerce.service.CPDefinitionInventoryService;
 import com.liferay.commerce.service.CommerceAvailabilityEstimateService;
@@ -42,6 +43,7 @@ import com.liferay.item.selector.ItemSelector;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -66,17 +68,20 @@ public class CPDefinitionConfigurationDisplayContext
 		CommerceChannelRelService commerceChannelRelService,
 		CommerceCurrencyLocalService commerceCurrencyLocalService,
 		CommerceLowStockActivityRegistry commerceLowStockActivityRegistry,
+		ConfigurationProvider configurationProvider,
 		CPDAvailabilityEstimateService cpdAvailabilityEstimateService,
 		CPDefinitionInventoryEngineRegistry cpDefinitionInventoryEngineRegistry,
 		CPDefinitionInventoryService cpDefinitionInventoryService,
 		CPDefinitionService cpDefinitionService,
 		CPMeasurementUnitLocalService cpMeasurementUnitLocalService,
-		CPTaxCategoryService cpTaxCategoryService, ItemSelector itemSelector) {
+		CPTaxCategoryService cpTaxCategoryService, CPFriendlyURL cpFriendlyURL,
+		ItemSelector itemSelector) {
 
 		super(
 			actionHelper, httpServletRequest, commerceAccountGroupRelService,
 			commerceCatalogService, commerceChannelRelService,
-			cpDefinitionService, itemSelector);
+			configurationProvider, cpDefinitionService, cpFriendlyURL,
+			itemSelector);
 
 		_commerceAvailabilityEstimateService =
 			commerceAvailabilityEstimateService;

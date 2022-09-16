@@ -54,7 +54,8 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
 
-import org.hibernate.util.JDBCExceptionReporter;
+import org.hibernate.engine.jdbc.batch.internal.BatchingBatch;
+import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 
 import org.junit.Assert;
 import org.junit.Assume;
@@ -80,8 +81,6 @@ public class ResourcePermissionLocalServiceConcurrentTest {
 	@Before
 	public void setUp() throws NoSuchMethodException {
 		Assume.assumeTrue(PropsValues.RETRY_ADVICE_MAX_RETRIES != 0);
-
-		_threadCount = ServiceTestConstants.THREAD_COUNT;
 
 		if ((PropsValues.RETRY_ADVICE_MAX_RETRIES > 0) &&
 			(_threadCount > PropsValues.RETRY_ADVICE_MAX_RETRIES)) {
@@ -208,7 +207,17 @@ public class ResourcePermissionLocalServiceConcurrentTest {
 						expectedType = ExpectedType.CONTAINS
 					)
 				},
-				level = "ERROR", loggerClass = JDBCExceptionReporter.class
+				level = "ERROR", loggerClass = SqlExceptionHelper.class
+			),
+			@ExpectedLogs(
+				expectedLogs = {
+					@ExpectedLog(
+						expectedDBType = ExpectedDBType.NONE,
+						expectedLog = "HHH000315: Exception executing batch [java.sql.BatchUpdateException",
+						expectedType = ExpectedType.PREFIX
+					)
+				},
+				level = "ERROR", loggerClass = BatchingBatch.class
 			)
 		}
 	)
@@ -217,7 +226,7 @@ public class ResourcePermissionLocalServiceConcurrentTest {
 		SynchronousInvocationHandler.enable();
 
 		try {
-			final String primKey = RandomTestUtil.randomString(
+			String primKey = RandomTestUtil.randomString(
 				UniqueStringRandomizerBumper.INSTANCE);
 
 			Callable<ResourcePermission> callable = () -> {
@@ -294,6 +303,6 @@ public class ResourcePermissionLocalServiceConcurrentTest {
 	@Inject
 	private RoleLocalService _roleLocalService;
 
-	private int _threadCount;
+	private int _threadCount = ServiceTestConstants.THREAD_COUNT;
 
 }

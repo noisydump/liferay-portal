@@ -27,7 +27,7 @@ List<LayoutPageTemplateCollection> layoutPageTemplateCollections = layoutPageTem
 	navigationItems="<%= layoutPageTemplatesAdminDisplayContext.getNavigationItems() %>"
 />
 
-<liferay-ui:success key="layoutPageTemplatePublished" message="the-page-template-was-published-succesfully" />
+<liferay-ui:success key="layoutPageTemplatePublished" message="the-page-template-was-published-successfully" />
 
 <clay:container-fluid
 	cssClass="container-view"
@@ -53,7 +53,7 @@ List<LayoutPageTemplateCollection> layoutPageTemplateCollections = layoutPageTem
 										expand="<%= true %>"
 									>
 										<strong class="text-uppercase">
-											<liferay-ui:message key="collections" />
+											<liferay-ui:message key="page-template-sets" />
 										</strong>
 									</clay:content-col>
 
@@ -109,15 +109,18 @@ List<LayoutPageTemplateCollection> layoutPageTemplateCollections = layoutPageTem
 									%>
 
 										<li class="nav-item">
-
-											<%
-											PortletURL layoutPageTemplateCollectionURL = renderResponse.createRenderURL();
-
-											layoutPageTemplateCollectionURL.setParameter("layoutPageTemplateCollectionId", String.valueOf(layoutPageTemplateCollection.getLayoutPageTemplateCollectionId()));
-											layoutPageTemplateCollectionURL.setParameter("tabs1", "page-templates");
-											%>
-
-											<a class="nav-link text-truncate <%= (layoutPageTemplateCollection.getLayoutPageTemplateCollectionId() == layoutPageTemplateDisplayContext.getLayoutPageTemplateCollectionId()) ? "active" : StringPool.BLANK %>" href="<%= layoutPageTemplateCollectionURL.toString() %>">
+											<a
+												class="nav-link text-truncate <%= (layoutPageTemplateCollection.getLayoutPageTemplateCollectionId() == layoutPageTemplateDisplayContext.getLayoutPageTemplateCollectionId()) ? "active" : StringPool.BLANK %>"
+												href="<%=
+													PortletURLBuilder.createRenderURL(
+														renderResponse
+													).setTabs1(
+														"page-templates"
+													).setParameter(
+														"layoutPageTemplateCollectionId", layoutPageTemplateCollection.getLayoutPageTemplateCollectionId()
+													).buildString()
+												%>"
+											>
 												<%= HtmlUtil.escape(layoutPageTemplateCollection.getName()) %>
 											</a>
 										</li>
@@ -130,14 +133,14 @@ List<LayoutPageTemplateCollection> layoutPageTemplateCollections = layoutPageTem
 							</c:when>
 							<c:otherwise>
 								<p class="text-uppercase">
-									<strong><liferay-ui:message key="collections" /></strong>
+									<strong><liferay-ui:message key="page-template-sets" /></strong>
 								</p>
 
 								<liferay-frontend:empty-result-message
 									actionDropdownItems="<%= layoutPageTemplateDisplayContext.isShowAddButton(LayoutPageTemplateActionKeys.ADD_LAYOUT_PAGE_TEMPLATE_COLLECTION) ? layoutPageTemplateDisplayContext.getActionDropdownItems() : null %>"
 									animationType="<%= EmptyResultMessageKeys.AnimationType.NONE %>"
-									description='<%= LanguageUtil.get(request, "collections-are-needed-to-create-page-templates") %>'
-									elementType='<%= LanguageUtil.get(request, "collections") %>'
+									description='<%= LanguageUtil.get(request, "page-template-sets-are-needed-to-create-page-templates") %>'
+									elementType='<%= LanguageUtil.get(request, "page-template-sets") %>'
 								/>
 							</c:otherwise>
 						</c:choose>
@@ -174,7 +177,15 @@ List<LayoutPageTemplateCollection> layoutPageTemplateCollections = layoutPageTem
 								cssClass="inline-item-after"
 								verticalAlign="end"
 							>
-								<liferay-util:include page="/layout_page_template_collection_action.jsp" servletContext="<%= application %>" />
+
+								<%
+								LayoutPageTemplateCollectionActionDropdownItem layoutPageTemplateCollectionActionDropdownItem = new LayoutPageTemplateCollectionActionDropdownItem(request, renderResponse);
+								%>
+
+								<clay:dropdown-actions
+									dropdownItems="<%= layoutPageTemplateCollectionActionDropdownItem.getActionDropdownItems(layoutPageTemplateCollection) %>"
+									propsTransformer="js/propsTransformers/LayoutPageTemplateCollectionPropsTransformer"
+								/>
 							</clay:content-col>
 						</clay:content-row>
 					</h2>

@@ -29,6 +29,8 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -43,15 +45,18 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.trash.model.TrashEntry;
 import com.liferay.trash.service.TrashEntryLocalService;
+import com.liferay.trash.service.TrashEntryLocalServiceUtil;
 import com.liferay.trash.service.persistence.TrashEntryPersistence;
-import com.liferay.trash.service.persistence.TrashVersionPersistence;
 
 import java.io.Serializable;
+
+import java.lang.reflect.Field;
 
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -72,7 +77,7 @@ public abstract class TrashEntryLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>TrashEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.trash.service.TrashEntryLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>TrashEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>TrashEntryLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -141,6 +146,13 @@ public abstract class TrashEntryLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return trashEntryPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -305,6 +317,11 @@ public abstract class TrashEntryLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement TrashEntryLocalServiceImpl#deleteTrashEntry(TrashEntry) to avoid orphaned data");
+		}
+
 		return trashEntryLocalService.deleteTrashEntry(
 			(TrashEntry)persistedModel);
 	}
@@ -366,6 +383,11 @@ public abstract class TrashEntryLocalServiceBaseImpl
 		return trashEntryPersistence.update(trashEntry);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -377,6 +399,8 @@ public abstract class TrashEntryLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		trashEntryLocalService = (TrashEntryLocalService)aopProxy;
+
+		_setLocalServiceUtilService(trashEntryLocalService);
 	}
 
 	/**
@@ -436,6 +460,22 @@ public abstract class TrashEntryLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		TrashEntryLocalService trashEntryLocalService) {
+
+		try {
+			Field field = TrashEntryLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, trashEntryLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected TrashEntryLocalService trashEntryLocalService;
 
 	@Reference
@@ -445,23 +485,7 @@ public abstract class TrashEntryLocalServiceBaseImpl
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@Reference
-	protected com.liferay.portal.kernel.service.ClassNameLocalService
-		classNameLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.GroupLocalService
-		groupLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.SystemEventLocalService
-		systemEventLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
-
-	@Reference
-	protected TrashVersionPersistence trashVersionPersistence;
+	private static final Log _log = LogFactoryUtil.getLog(
+		TrashEntryLocalServiceBaseImpl.class);
 
 }

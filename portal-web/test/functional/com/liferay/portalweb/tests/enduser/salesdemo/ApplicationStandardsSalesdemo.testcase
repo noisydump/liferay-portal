@@ -19,24 +19,24 @@ definition {
 			PortalInstances.tearDownCP();
 		}
 		else {
-			Page.tearDownCP();
+			PagesAdmin.tearDownCP();
 		}
 	}
 
 	@priority = "4"
+	@refactorneeded
 	test WebProxyDemo {
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
 			portlet = "Pages");
 
-		SitePages.addPublicPage(
+		PagesAdmin.addPage(
 			columnName = "1 Column",
 			pageName = "Web Proxy Page");
 
-		SitePages.configurePage(
+		PagesAdmin.configurePage(
 			columnName = "1 Column",
-			pageName = "Web Proxy Page",
-			privacy = "Public Pages");
+			pageName = "Web Proxy Page");
 
 		Navigator.gotoPage(pageName = "Web Proxy Page");
 
@@ -54,7 +54,7 @@ definition {
 
 		takeScreenshot();
 
-		SikuliAssertElementPresent(locator1 = "WebProxy#SCREENSHOTS_GOOGLE_IMAGES_PNG");
+		AssertElementPresent(locator1 = "WebProxy#SCREENSHOTS_GOOGLE_IMAGES_PNG");
 	}
 
 }

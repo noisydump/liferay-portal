@@ -18,6 +18,7 @@ import com.liferay.commerce.model.CommerceShippingMethod;
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.model.CacheModel;
+import com.liferay.portal.kernel.model.MVCCModel;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -33,7 +34,7 @@ import java.util.Date;
  * @generated
  */
 public class CommerceShippingMethodCacheModel
-	implements CacheModel<CommerceShippingMethod>, Externalizable {
+	implements CacheModel<CommerceShippingMethod>, Externalizable, MVCCModel {
 
 	@Override
 	public boolean equals(Object object) {
@@ -48,8 +49,9 @@ public class CommerceShippingMethodCacheModel
 		CommerceShippingMethodCacheModel commerceShippingMethodCacheModel =
 			(CommerceShippingMethodCacheModel)object;
 
-		if (commerceShippingMethodId ==
-				commerceShippingMethodCacheModel.commerceShippingMethodId) {
+		if ((commerceShippingMethodId ==
+				commerceShippingMethodCacheModel.commerceShippingMethodId) &&
+			(mvccVersion == commerceShippingMethodCacheModel.mvccVersion)) {
 
 			return true;
 		}
@@ -59,14 +61,28 @@ public class CommerceShippingMethodCacheModel
 
 	@Override
 	public int hashCode() {
-		return HashUtil.hash(0, commerceShippingMethodId);
+		int hashCode = HashUtil.hash(0, commerceShippingMethodId);
+
+		return HashUtil.hash(hashCode, mvccVersion);
+	}
+
+	@Override
+	public long getMvccVersion() {
+		return mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		this.mvccVersion = mvccVersion;
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(27);
+		StringBundler sb = new StringBundler(31);
 
-		sb.append("{commerceShippingMethodId=");
+		sb.append("{mvccVersion=");
+		sb.append(mvccVersion);
+		sb.append(", commerceShippingMethodId=");
 		sb.append(commerceShippingMethodId);
 		sb.append(", groupId=");
 		sb.append(groupId);
@@ -84,14 +100,16 @@ public class CommerceShippingMethodCacheModel
 		sb.append(name);
 		sb.append(", description=");
 		sb.append(description);
-		sb.append(", imageId=");
-		sb.append(imageId);
-		sb.append(", engineKey=");
-		sb.append(engineKey);
-		sb.append(", priority=");
-		sb.append(priority);
 		sb.append(", active=");
 		sb.append(active);
+		sb.append(", engineKey=");
+		sb.append(engineKey);
+		sb.append(", imageId=");
+		sb.append(imageId);
+		sb.append(", priority=");
+		sb.append(priority);
+		sb.append(", trackingURL=");
+		sb.append(trackingURL);
 		sb.append("}");
 
 		return sb.toString();
@@ -102,6 +120,7 @@ public class CommerceShippingMethodCacheModel
 		CommerceShippingMethodImpl commerceShippingMethodImpl =
 			new CommerceShippingMethodImpl();
 
+		commerceShippingMethodImpl.setMvccVersion(mvccVersion);
 		commerceShippingMethodImpl.setCommerceShippingMethodId(
 			commerceShippingMethodId);
 		commerceShippingMethodImpl.setGroupId(groupId);
@@ -143,7 +162,7 @@ public class CommerceShippingMethodCacheModel
 			commerceShippingMethodImpl.setDescription(description);
 		}
 
-		commerceShippingMethodImpl.setImageId(imageId);
+		commerceShippingMethodImpl.setActive(active);
 
 		if (engineKey == null) {
 			commerceShippingMethodImpl.setEngineKey("");
@@ -152,8 +171,15 @@ public class CommerceShippingMethodCacheModel
 			commerceShippingMethodImpl.setEngineKey(engineKey);
 		}
 
+		commerceShippingMethodImpl.setImageId(imageId);
 		commerceShippingMethodImpl.setPriority(priority);
-		commerceShippingMethodImpl.setActive(active);
+
+		if (trackingURL == null) {
+			commerceShippingMethodImpl.setTrackingURL("");
+		}
+		else {
+			commerceShippingMethodImpl.setTrackingURL(trackingURL);
+		}
 
 		commerceShippingMethodImpl.resetOriginalValues();
 
@@ -162,6 +188,8 @@ public class CommerceShippingMethodCacheModel
 
 	@Override
 	public void readExternal(ObjectInput objectInput) throws IOException {
+		mvccVersion = objectInput.readLong();
+
 		commerceShippingMethodId = objectInput.readLong();
 
 		groupId = objectInput.readLong();
@@ -175,16 +203,19 @@ public class CommerceShippingMethodCacheModel
 		name = objectInput.readUTF();
 		description = objectInput.readUTF();
 
-		imageId = objectInput.readLong();
+		active = objectInput.readBoolean();
 		engineKey = objectInput.readUTF();
 
-		priority = objectInput.readDouble();
+		imageId = objectInput.readLong();
 
-		active = objectInput.readBoolean();
+		priority = objectInput.readDouble();
+		trackingURL = objectInput.readUTF();
 	}
 
 	@Override
 	public void writeExternal(ObjectOutput objectOutput) throws IOException {
+		objectOutput.writeLong(mvccVersion);
+
 		objectOutput.writeLong(commerceShippingMethodId);
 
 		objectOutput.writeLong(groupId);
@@ -217,7 +248,7 @@ public class CommerceShippingMethodCacheModel
 			objectOutput.writeUTF(description);
 		}
 
-		objectOutput.writeLong(imageId);
+		objectOutput.writeBoolean(active);
 
 		if (engineKey == null) {
 			objectOutput.writeUTF("");
@@ -226,11 +257,19 @@ public class CommerceShippingMethodCacheModel
 			objectOutput.writeUTF(engineKey);
 		}
 
+		objectOutput.writeLong(imageId);
+
 		objectOutput.writeDouble(priority);
 
-		objectOutput.writeBoolean(active);
+		if (trackingURL == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(trackingURL);
+		}
 	}
 
+	public long mvccVersion;
 	public long commerceShippingMethodId;
 	public long groupId;
 	public long companyId;
@@ -240,9 +279,10 @@ public class CommerceShippingMethodCacheModel
 	public long modifiedDate;
 	public String name;
 	public String description;
-	public long imageId;
-	public String engineKey;
-	public double priority;
 	public boolean active;
+	public String engineKey;
+	public long imageId;
+	public double priority;
+	public String trackingURL;
 
 }

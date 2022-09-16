@@ -12,6 +12,24 @@
  * details.
  */
 
+// AC Version
+
+export const ANALYTICS_CLIENT_VERSION = '1.0.8';
+
+// Application ID
+
+export const BLOG = 'Blog';
+export const CUSTOM = 'Custom';
+export const CUSTOM_EVENT = 'CustomEvent';
+export const DOCUMENT = 'Document';
+export const FORM = 'Form';
+export const PAGE = 'Page';
+export const WEB_CONTENT = 'WebContent';
+
+export const DXP_APPLICATION_IDS = [BLOG, CUSTOM, DOCUMENT, FORM, WEB_CONTENT];
+
+// Default Config
+
 export const DEBOUNCE = 1500;
 
 export const FLUSH_INTERVAL = 2000;
@@ -38,6 +56,9 @@ export const STORAGE_KEY_EVENTS = 'ac_client_batch';
 
 export const STORAGE_KEY_IDENTITY = 'ac_client_identity';
 
+export const STORAGE_KEY_IDENTITY_LAST_UPDATED_DATE =
+	'ac_client_identity_last_updated_date';
+
 export const STORAGE_KEY_MESSAGES = 'ac_message_queue';
 
 export const STORAGE_KEY_MESSAGE_IDENTITY = 'ac_message_queue_identity';
@@ -62,6 +83,20 @@ export const MARK_PAGE_LOAD_TIME = 'pageLoadTimeSPA';
 
 export const MARK_VIEW_DURATION = 'viewDurationSPA';
 
+// Params Constants
+
+export const PARAM_PORTLET_ID_KEY = 'p_p_id';
+
+export const PARAM_CONFIGURATION_PORTLET_NAME =
+	'com_liferay_portlet_configuration_web_portlet_PortletConfigurationPortlet';
+
+export const PARAM_MODE_KEY = 'p_l_mode';
+
+export const PARAM_PAGE_EDITOR_PORTLET_NAME =
+	'com_liferay_layout_content_page_editor_web_internal_portlet_ContentPageEditorPortlet';
+
+export const PARAM_VIEW_MODE = 'view';
+
 // Read metrics Constants
 
 export const READ_CHARS_PER_MIN = 500;
@@ -73,3 +108,19 @@ export const READ_MINIMUM_SCROLL_DEPTH = 75;
 export const READ_TIME_FACTOR = 0.75;
 
 export const READ_WORDS_PER_MIN = 265;
+
+// Track method
+
+export const TRACK_DEFAULT_OPTIONS = {
+	applicationId: CUSTOM_EVENT,
+};
+
+// Validation
+
+export const VALIDATION_CONTEXT_VALUE_MAXIMUM_LENGTH = 2048;
+
+export const VALIDATION_PROPERTIES_MAXIMUM_LENGTH = 25;
+
+export const VALIDATION_PROPERTY_NAME_MAXIMUM_LENGTH = 255;
+
+export const VALIDATION_PROPERTY_VALUE_MAXIMUM_LENGTH = 1024;

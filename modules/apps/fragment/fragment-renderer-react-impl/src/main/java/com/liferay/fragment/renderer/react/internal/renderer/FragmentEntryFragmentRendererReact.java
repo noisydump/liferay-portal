@@ -20,6 +20,7 @@ import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.renderer.FragmentRenderer;
 import com.liferay.fragment.renderer.FragmentRendererContext;
 import com.liferay.fragment.renderer.constants.FragmentRendererConstants;
+import com.liferay.fragment.renderer.react.internal.util.FragmentEntryFragmentRendererReactUtil;
 import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
 import com.liferay.frontend.js.loader.modules.extender.npm.JSPackage;
 import com.liferay.frontend.js.loader.modules.extender.npm.ModuleNameUtil;
@@ -31,6 +32,7 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.servlet.taglib.util.OutputData;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.template.react.renderer.ComponentDescriptor;
@@ -107,16 +109,18 @@ public class FragmentEntryFragmentRendererReact implements FragmentRenderer {
 					_fragmentEntryConfigurationParser.
 						getConfigurationJSONObject(
 							fragmentEntryLink.getConfiguration(),
-							fragmentEntryLink.getEditableValues());
+							fragmentEntryLink.getEditableValues(),
+							LocaleUtil.getMostRelevantLocale());
 			}
-
-			Map<String, Object> data = HashMapBuilder.<String, Object>put(
-				"configuration", configurationJSONObject
-			).build();
 
 			printWriter.write(
 				_renderFragmentEntry(
-					fragmentEntryLink, data, httpServletRequest));
+					fragmentEntryLink,
+					fragmentRendererContext.getFragmentElementId(),
+					HashMapBuilder.<String, Object>put(
+						"configuration", configurationJSONObject
+					).build(),
+					httpServletRequest));
 		}
 		catch (PortalException portalException) {
 			throw new IOException(portalException);
@@ -151,29 +155,21 @@ public class FragmentEntryFragmentRendererReact implements FragmentRenderer {
 			fragmentEntryLink.setCss(fragmentEntry.getCss());
 			fragmentEntryLink.setHtml(fragmentEntry.getHtml());
 			fragmentEntryLink.setJs(fragmentEntry.getJs());
+			fragmentEntryLink.setType(fragmentEntry.getType());
 		}
 
 		return fragmentEntryLink;
 	}
 
 	private String _renderFragmentEntry(
-			FragmentEntryLink fragmentEntryLink, Map<String, Object> data,
-			HttpServletRequest httpServletRequest)
+			FragmentEntryLink fragmentEntryLink, String fragmentElementId,
+			Map<String, Object> data, HttpServletRequest httpServletRequest)
 		throws IOException {
 
 		StringBundler sb = new StringBundler(9);
 
 		sb.append("<div id=\"");
-
-		StringBundler fragmentIdSB = new StringBundler(4);
-
-		fragmentIdSB.append("fragment-");
-		fragmentIdSB.append(fragmentEntryLink.getFragmentEntryId());
-		fragmentIdSB.append("-");
-		fragmentIdSB.append(fragmentEntryLink.getNamespace());
-
-		sb.append(fragmentIdSB.toString());
-
+		sb.append(fragmentElementId);
 		sb.append("\" >");
 		sb.append(fragmentEntryLink.getHtml());
 
@@ -183,8 +179,8 @@ public class FragmentEntryFragmentRendererReact implements FragmentRenderer {
 			new ComponentDescriptor(
 				ModuleNameUtil.getModuleResolvedId(
 					_jsPackage,
-					"fragmentEntryLink/" +
-						fragmentEntryLink.getFragmentEntryLinkId()),
+					FragmentEntryFragmentRendererReactUtil.getModuleName(
+						fragmentEntryLink)),
 				"fragment" + fragmentEntryLink.getFragmentEntryLinkId(),
 				Collections.emptyList(), true),
 			data, httpServletRequest, writer);

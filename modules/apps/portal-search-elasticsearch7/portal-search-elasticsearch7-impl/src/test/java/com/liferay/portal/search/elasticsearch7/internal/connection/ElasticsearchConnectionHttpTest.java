@@ -17,6 +17,7 @@ package com.liferay.portal.search.elasticsearch7.internal.connection;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.io.InputStream;
 
@@ -34,16 +35,18 @@ import org.hamcrest.CoreMatchers;
 
 import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
-
-import org.mockito.MockitoAnnotations;
 
 /**
  * @author André de Oliveira
  */
 public class ElasticsearchConnectionHttpTest {
+
+	@ClassRule
+	public static LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@BeforeClass
 	public static void setUpClass() {
@@ -70,11 +73,6 @@ public class ElasticsearchConnectionHttpTest {
 	@AfterClass
 	public static void tearDownClass() {
 		_elasticsearchConnectionFixture.destroyNode();
-	}
-
-	@Before
-	public void setUp() {
-		MockitoAnnotations.initMocks(this);
 	}
 
 	@Test

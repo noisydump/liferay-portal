@@ -27,13 +27,14 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
 import java.util.Collections;
@@ -41,6 +42,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -122,20 +124,20 @@ public class WebDAVPropsModelImpl
 	public static final boolean COLUMN_BITMASK_ENABLED = true;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long CLASSNAMEID_COLUMN_BITMASK = 1L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long CLASSPK_COLUMN_BITMASK = 2L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *		#getColumnBitmask(String)
+	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long WEBDAVPROPSID_COLUMN_BITMASK = 4L;
@@ -227,34 +229,6 @@ public class WebDAVPropsModelImpl
 		getAttributeSetterBiConsumers() {
 
 		return _attributeSetterBiConsumers;
-	}
-
-	private static Function<InvocationHandler, WebDAVProps>
-		_getProxyProviderFunction() {
-
-		Class<?> proxyClass = ProxyUtil.getProxyClass(
-			WebDAVProps.class.getClassLoader(), WebDAVProps.class,
-			ModelWrapper.class);
-
-		try {
-			Constructor<WebDAVProps> constructor =
-				(Constructor<WebDAVProps>)proxyClass.getConstructor(
-					InvocationHandler.class);
-
-			return invocationHandler -> {
-				try {
-					return constructor.newInstance(invocationHandler);
-				}
-				catch (ReflectiveOperationException
-							reflectiveOperationException) {
-
-					throw new InternalError(reflectiveOperationException);
-				}
-			};
-		}
-		catch (NoSuchMethodException noSuchMethodException) {
-			throw new InternalError(noSuchMethodException);
-		}
 	}
 
 	private static final Map<String, Function<WebDAVProps, Object>>
@@ -485,7 +459,9 @@ public class WebDAVPropsModelImpl
 		for (Map.Entry<String, Object> entry :
 				_columnOriginalValues.entrySet()) {
 
-			if (entry.getValue() != getColumnValue(entry.getKey())) {
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
 				_columnBitmask |= _columnBitmasks.get(entry.getKey());
 			}
 		}
@@ -535,6 +511,29 @@ public class WebDAVPropsModelImpl
 		webDAVPropsImpl.setProps(getProps());
 
 		webDAVPropsImpl.resetOriginalValues();
+
+		return webDAVPropsImpl;
+	}
+
+	@Override
+	public WebDAVProps cloneWithOriginalValues() {
+		WebDAVPropsImpl webDAVPropsImpl = new WebDAVPropsImpl();
+
+		webDAVPropsImpl.setMvccVersion(
+			this.<Long>getColumnOriginalValue("mvccVersion"));
+		webDAVPropsImpl.setWebDavPropsId(
+			this.<Long>getColumnOriginalValue("webDavPropsId"));
+		webDAVPropsImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		webDAVPropsImpl.setCreateDate(
+			this.<Date>getColumnOriginalValue("createDate"));
+		webDAVPropsImpl.setModifiedDate(
+			this.<Date>getColumnOriginalValue("modifiedDate"));
+		webDAVPropsImpl.setClassNameId(
+			this.<Long>getColumnOriginalValue("classNameId"));
+		webDAVPropsImpl.setClassPK(
+			this.<Long>getColumnOriginalValue("classPK"));
+		webDAVPropsImpl.setProps(this.<String>getColumnOriginalValue("props"));
 
 		return webDAVPropsImpl;
 	}
@@ -658,7 +657,7 @@ public class WebDAVPropsModelImpl
 			getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			(4 * attributeGetterFunctions.size()) + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -669,9 +668,26 @@ public class WebDAVPropsModelImpl
 			Function<WebDAVProps, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((WebDAVProps)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply((WebDAVProps)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -718,7 +734,9 @@ public class WebDAVPropsModelImpl
 	private static class EscapedModelProxyProviderFunctionHolder {
 
 		private static final Function<InvocationHandler, WebDAVProps>
-			_escapedModelProxyProviderFunction = _getProxyProviderFunction();
+			_escapedModelProxyProviderFunction =
+				ProxyUtil.getProxyProviderFunction(
+					WebDAVProps.class, ModelWrapper.class);
 
 	}
 

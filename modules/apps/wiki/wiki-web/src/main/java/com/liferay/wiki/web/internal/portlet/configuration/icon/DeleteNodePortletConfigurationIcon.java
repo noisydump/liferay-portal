@@ -14,8 +14,11 @@
 
 package com.liferay.wiki.web.internal.portlet.configuration.icon;
 
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.configuration.icon.BasePortletConfigurationIcon;
 import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfigurationIcon;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
@@ -30,10 +33,8 @@ import com.liferay.wiki.model.WikiNode;
 import com.liferay.wiki.service.WikiNodeService;
 import com.liferay.wiki.web.internal.portlet.action.ActionUtil;
 
-import javax.portlet.ActionRequest;
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
-import javax.portlet.PortletURL;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -54,17 +55,8 @@ public class DeleteNodePortletConfigurationIcon
 
 	@Override
 	public String getMessage(PortletRequest portletRequest) {
-		String key = "delete";
-
-		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
-		if (isTrashEnabled(themeDisplay.getScopeGroupId())) {
-			key = "move-to-recycle-bin";
-		}
-
-		return LanguageUtil.get(
-			getResourceBundle(getLocale(portletRequest)), key);
+		return _language.get(
+			getResourceBundle(getLocale(portletRequest)), "delete");
 	}
 
 	@Override
@@ -75,36 +67,41 @@ public class DeleteNodePortletConfigurationIcon
 			WebKeys.THEME_DISPLAY);
 
 		try {
-			WikiNode node = ActionUtil.getNode(portletRequest);
+			return PortletURLBuilder.create(
+				_portal.getControlPanelPortletURL(
+					portletRequest, WikiPortletKeys.WIKI_ADMIN,
+					PortletRequest.ACTION_PHASE)
+			).setActionName(
+				"/wiki/edit_node"
+			).setCMD(
+				() -> {
+					if (isTrashEnabled(themeDisplay.getScopeGroupId())) {
+						return Constants.MOVE_TO_TRASH;
+					}
 
-			PortletURL portletURL = _portal.getControlPanelPortletURL(
-				portletRequest, WikiPortletKeys.WIKI_ADMIN,
-				PortletRequest.ACTION_PHASE);
+					return Constants.DELETE;
+				}
+			).setRedirect(
+				PortletURLBuilder.create(
+					_portal.getControlPanelPortletURL(
+						portletRequest, WikiPortletKeys.WIKI_ADMIN,
+						PortletRequest.RENDER_PHASE)
+				).setMVCRenderCommandName(
+					"/wiki_admin/view"
+				).buildString()
+			).setParameter(
+				"nodeId",
+				() -> {
+					WikiNode node = ActionUtil.getNode(portletRequest);
 
-			portletURL.setParameter(
-				ActionRequest.ACTION_NAME, "/wiki/edit_node");
-
-			if (isTrashEnabled(themeDisplay.getScopeGroupId())) {
-				portletURL.setParameter(Constants.CMD, Constants.MOVE_TO_TRASH);
-			}
-			else {
-				portletURL.setParameter(Constants.CMD, Constants.DELETE);
-			}
-
-			PortletURL viewNodesURL = _portal.getControlPanelPortletURL(
-				portletRequest, WikiPortletKeys.WIKI_ADMIN,
-				PortletRequest.RENDER_PHASE);
-
-			viewNodesURL.setParameter(
-				"mvcRenderCommandName", "/wiki_admin/view");
-
-			portletURL.setParameter("redirect", viewNodesURL.toString());
-
-			portletURL.setParameter("nodeId", String.valueOf(node.getNodeId()));
-
-			return portletURL.toString();
+					return node.getNodeId();
+				}
+			).buildString();
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return StringPool.BLANK;
@@ -134,6 +131,9 @@ public class DeleteNodePortletConfigurationIcon
 			}
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return false;
@@ -146,15 +146,19 @@ public class DeleteNodePortletConfigurationIcon
 			}
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return false;
 	}
 
-	@Reference(unbind = "-")
-	protected void setWikiNodeService(WikiNodeService wikiNodeService) {
-		_wikiNodeService = wikiNodeService;
-	}
+	private static final Log _log = LogFactoryUtil.getLog(
+		DeleteNodePortletConfigurationIcon.class);
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private Portal _portal;
@@ -165,6 +169,7 @@ public class DeleteNodePortletConfigurationIcon
 	@Reference(target = "(model.class.name=com.liferay.wiki.model.WikiNode)")
 	private ModelResourcePermission<WikiNode> _wikiNodeModelResourcePermission;
 
+	@Reference
 	private WikiNodeService _wikiNodeService;
 
 }

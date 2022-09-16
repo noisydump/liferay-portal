@@ -23,13 +23,12 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.display.context.SearchCon
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
@@ -40,7 +39,6 @@ import com.liferay.portal.kernel.util.WebKeys;
 
 import java.util.List;
 
-import javax.portlet.ActionRequest;
 import javax.portlet.PortletURL;
 
 import javax.servlet.http.HttpServletRequest;
@@ -69,40 +67,33 @@ public class ViewAccountOrganizationsManagementToolbarDisplayContext
 		}
 
 		return DropdownItemList.of(
-			() -> {
-				DropdownItem dropdownItem = new DropdownItem();
-
-				dropdownItem.putData("action", "removeOrganizations");
-
-				PortletURL removeOrganizationsURL =
-					liferayPortletResponse.createActionURL();
-
-				removeOrganizationsURL.setParameter(
-					ActionRequest.ACTION_NAME,
-					"/account_admin/remove_account_organizations");
-				removeOrganizationsURL.setParameter(
-					"redirect", currentURLObj.toString());
-
-				dropdownItem.putData(
-					"removeOrganizationsURL",
-					removeOrganizationsURL.toString());
-
-				dropdownItem.setIcon("times-circle");
-				dropdownItem.setLabel(
-					LanguageUtil.get(httpServletRequest, "remove"));
-				dropdownItem.setQuickAction(true);
-
-				return dropdownItem;
-			});
+			DropdownItemBuilder.putData(
+				"action", "removeOrganizations"
+			).putData(
+				"removeOrganizationsURL",
+				PortletURLBuilder.createActionURL(
+					liferayPortletResponse
+				).setActionName(
+					"/account_admin/remove_account_organizations"
+				).setRedirect(
+					currentURLObj
+				).buildString()
+			).setIcon(
+				"times-circle"
+			).setLabel(
+				LanguageUtil.get(httpServletRequest, "remove")
+			).setQuickAction(
+				true
+			).build());
 	}
 
 	@Override
 	public String getClearResultsURL() {
-		PortletURL clearResultsURL = getPortletURL();
-
-		clearResultsURL.setParameter("keywords", StringPool.BLANK);
-
-		return clearResultsURL.toString();
+		return PortletURLBuilder.create(
+			getPortletURL()
+		).setKeywords(
+			StringPool.BLANK
+		).buildString();
 	}
 
 	@Override
@@ -120,45 +111,34 @@ public class ViewAccountOrganizationsManagementToolbarDisplayContext
 						"accountEntryName", accountEntry.getName());
 				}
 
-				PortletURL assignAccountOrganizationsURL =
-					liferayPortletResponse.createActionURL();
-
-				assignAccountOrganizationsURL.setParameter(
-					ActionRequest.ACTION_NAME,
-					"/account_admin/assign_account_organizations");
-				assignAccountOrganizationsURL.setParameter(
-					"redirect", currentURLObj.toString());
-
 				dropdownItem.putData(
 					"assignAccountOrganizationsURL",
-					assignAccountOrganizationsURL.toString());
-
-				PortletURL selectAccountOrganizationsURL =
-					liferayPortletResponse.createRenderURL();
-
-				selectAccountOrganizationsURL.setParameter(
-					"mvcPath",
-					"/account_entries_admin/select_account_organizations.jsp");
-				selectAccountOrganizationsURL.setParameter(
-					"accountEntryId",
-					String.valueOf(accountEntry.getAccountEntryId()));
-				selectAccountOrganizationsURL.setWindowState(
-					LiferayWindowState.POP_UP);
+					PortletURLBuilder.createActionURL(
+						liferayPortletResponse
+					).setActionName(
+						"/account_admin/assign_account_organizations"
+					).setRedirect(
+						currentURLObj
+					).buildString());
 
 				dropdownItem.putData(
 					"selectAccountOrganizationsURL",
-					selectAccountOrganizationsURL.toString());
+					PortletURLBuilder.createRenderURL(
+						liferayPortletResponse
+					).setMVCPath(
+						"/account_entries_admin" +
+							"/select_account_organizations.jsp"
+					).setParameter(
+						"accountEntryId", accountEntry.getAccountEntryId()
+					).setWindowState(
+						LiferayWindowState.POP_UP
+					).buildString());
 
 				dropdownItem.setLabel(
 					LanguageUtil.get(
 						httpServletRequest, "assign-organizations"));
 			}
 		).build();
-	}
-
-	@Override
-	public String getDefaultEventHandler() {
-		return "ACCOUNT_ORGANIZATIONS_MANAGEMENT_TOOLBAR_DEFAULT_EVENT_HANDLER";
 	}
 
 	@Override
@@ -211,24 +191,9 @@ public class ViewAccountOrganizationsManagementToolbarDisplayContext
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		try {
-			if (AccountEntryPermission.contains(
-					themeDisplay.getPermissionChecker(), _getAccountEntryId(),
-					AccountActionKeys.MANAGE_ORGANIZATIONS)) {
-
-				return true;
-			}
-		}
-		catch (PortalException portalException) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(portalException, portalException);
-			}
-		}
-
-		return false;
+		return AccountEntryPermission.contains(
+			themeDisplay.getPermissionChecker(), _getAccountEntryId(),
+			AccountActionKeys.MANAGE_ORGANIZATIONS);
 	}
-
-	private static final Log _log = LogFactoryUtil.getLog(
-		ViewAccountOrganizationsManagementToolbarDisplayContext.class);
 
 }

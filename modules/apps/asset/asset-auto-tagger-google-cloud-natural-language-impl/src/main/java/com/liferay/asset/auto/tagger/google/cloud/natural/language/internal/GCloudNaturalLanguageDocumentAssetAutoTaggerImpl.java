@@ -127,14 +127,10 @@ public class GCloudNaturalLanguageDocumentAssetAutoTaggerImpl
 		throws Exception {
 
 		if (!gCloudNaturalLanguageAssetAutoTaggerCompanyConfiguration.
-				classificationEndpointEnabled()) {
-
-			return Collections.emptySet();
-		}
-
-		if (Objects.nonNull(locale) &&
-			!Objects.equals(
-				locale.getLanguage(), LocaleUtil.ENGLISH.getLanguage())) {
+				classificationEndpointEnabled() ||
+			(Objects.nonNull(locale) &&
+			 !Objects.equals(
+				 locale.getLanguage(), LocaleUtil.ENGLISH.getLanguage()))) {
 
 			return Collections.emptySet();
 		}
@@ -175,13 +171,9 @@ public class GCloudNaturalLanguageDocumentAssetAutoTaggerImpl
 		throws Exception {
 
 		if (!gCloudNaturalLanguageAssetAutoTaggerCompanyConfiguration.
-				entityEndpointEnabled()) {
-
-			return Collections.emptySet();
-		}
-
-		if (Objects.nonNull(locale) &&
-			!_supportedEntityLanguages.contains(locale.getLanguage())) {
+				entityEndpointEnabled() ||
+			(Objects.nonNull(locale) &&
+			 !_supportedEntityLanguages.contains(locale.getLanguage()))) {
 
 			return Collections.emptySet();
 		}
@@ -213,8 +205,8 @@ public class GCloudNaturalLanguageDocumentAssetAutoTaggerImpl
 	private JSONObject _post(String serviceURL, String body) throws Exception {
 		Http.Options options = new Http.Options();
 
-		options.setBody(body, ContentTypes.APPLICATION_JSON, StringPool.UTF8);
 		options.addHeader("Content-Type", ContentTypes.APPLICATION_JSON);
+		options.setBody(body, ContentTypes.APPLICATION_JSON, StringPool.UTF8);
 		options.setLocation(serviceURL);
 		options.setPost(true);
 

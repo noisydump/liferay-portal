@@ -12,6 +12,8 @@
  * details.
  */
 
+import './Sidebar.scss';
+
 import ClayLayout from '@clayui/layout';
 import classNames from 'classnames';
 import React, {useState} from 'react';
@@ -64,6 +66,7 @@ const SidebarSearchInput = ({children, onSearch, searchText}) => (
 
 const SidebarTabs = ({
 	initialSelectedTab = 0,
+	searchTerm,
 	setKeywords = () => {},
 	tabs,
 }) => {
@@ -80,7 +83,9 @@ const SidebarTabs = ({
 				tabs={tabs}
 			/>
 
-			<SidebarTabContent>{tabs[selectedTab].render()}</SidebarTabContent>
+			<SidebarTabContent>
+				{tabs[selectedTab].render({searchTerm})}
+			</SidebarTabContent>
 		</>
 	);
 };
@@ -126,8 +131,8 @@ const SidebarTabContent = ({children}) => {
 	);
 };
 
-const SidebarTitle = ({title}) => (
-	<ClayLayout.ContentRow className="mb-3 sidebar-section">
+const SidebarTitle = ({className, title}) => (
+	<ClayLayout.ContentRow className={classNames('sidebar-section', className)}>
 		<ClayLayout.ContentCol expand>
 			<div className="component-title">
 				<span className="text-truncate-inline">{title}</span>

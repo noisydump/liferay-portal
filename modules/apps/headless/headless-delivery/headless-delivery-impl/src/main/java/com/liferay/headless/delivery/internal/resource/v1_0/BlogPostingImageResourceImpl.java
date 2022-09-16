@@ -20,7 +20,7 @@ import com.liferay.document.library.kernel.service.DLAppService;
 import com.liferay.document.library.util.DLURLHelper;
 import com.liferay.headless.common.spi.service.context.ServiceContextRequestUtil;
 import com.liferay.headless.delivery.dto.v1_0.BlogPostingImage;
-import com.liferay.headless.delivery.internal.dto.v1_0.util.ContentValueUtil;
+import com.liferay.headless.delivery.dto.v1_0.util.ContentValueUtil;
 import com.liferay.headless.delivery.internal.odata.entity.v1_0.BlogPostingImageEntityModel;
 import com.liferay.headless.delivery.resource.v1_0.BlogPostingImageResource;
 import com.liferay.portal.kernel.repository.model.FileEntry;
@@ -35,13 +35,10 @@ import com.liferay.portal.vulcan.multipart.BinaryFile;
 import com.liferay.portal.vulcan.multipart.MultipartBody;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
-import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
 import java.util.Collections;
 import java.util.Optional;
-
-import javax.validation.constraints.NotNull;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.MultivaluedMap;
@@ -58,7 +55,7 @@ import org.osgi.service.component.annotations.ServiceScope;
 	scope = ServiceScope.PROTOTYPE, service = BlogPostingImageResource.class
 )
 public class BlogPostingImageResourceImpl
-	extends BaseBlogPostingImageResourceImpl implements EntityModelResource {
+	extends BaseBlogPostingImageResourceImpl {
 
 	@Override
 	public void deleteBlogPostingImage(Long blogPostingImageId)
@@ -83,8 +80,8 @@ public class BlogPostingImageResourceImpl
 
 	@Override
 	public Page<BlogPostingImage> getSiteBlogPostingImagesPage(
-			@NotNull Long siteId, String search, Aggregation aggregation,
-			Filter filter, Pagination pagination, Sort[] sorts)
+			Long siteId, String search, Aggregation aggregation, Filter filter,
+			Pagination pagination, Sort[] sorts)
 		throws Exception {
 
 		Folder folder = _blogsEntryService.addAttachmentsFolder(siteId);
@@ -93,7 +90,7 @@ public class BlogPostingImageResourceImpl
 			Collections.emptyMap(),
 			booleanQuery -> {
 			},
-			filter, DLFileEntry.class, search, pagination,
+			filter, DLFileEntry.class.getName(), search, pagination,
 			queryConfig -> queryConfig.setSelectedFieldNames(
 				Field.ENTRY_CLASS_PK),
 			searchContext -> {
@@ -125,14 +122,15 @@ public class BlogPostingImageResourceImpl
 				"blogPostingImage", BlogPostingImage.class);
 
 		FileEntry fileEntry = _dlAppService.addFileEntry(
-			siteId, folder.getFolderId(), binaryFile.getFileName(),
+			null, siteId, folder.getFolderId(), binaryFile.getFileName(),
 			binaryFile.getContentType(),
 			blogPostingImageOptional.map(
 				BlogPostingImage::getTitle
 			).orElse(
 				binaryFile.getFileName()
 			),
-			null, null, binaryFile.getInputStream(), binaryFile.getSize(),
+			null, null, null, binaryFile.getInputStream(), binaryFile.getSize(),
+			null, null,
 			ServiceContextRequestUtil.createServiceContext(
 				siteId, contextHttpServletRequest,
 				blogPostingImageOptional.map(

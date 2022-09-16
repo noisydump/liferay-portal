@@ -27,17 +27,12 @@ import org.json.JSONObject;
 /**
  * @author Michael Hashimoto
  */
-public abstract class BaseBuildRunner<T extends BuildData, S extends Workspace>
-	implements BuildRunner<T, S> {
+public abstract class BaseBuildRunner<T extends BuildData>
+	implements BuildRunner<T> {
 
 	@Override
 	public T getBuildData() {
 		return _buildData;
-	}
-
-	@Override
-	public S getWorkspace() {
-		return _workspace;
 	}
 
 	@Override
@@ -62,8 +57,6 @@ public abstract class BaseBuildRunner<T extends BuildData, S extends Workspace>
 		_buildData = buildData;
 
 		_job = JobFactory.newJob(_buildData);
-
-		_job.readJobProperties();
 	}
 
 	protected void cleanUpHostServices() {
@@ -108,8 +101,6 @@ public abstract class BaseBuildRunner<T extends BuildData, S extends Workspace>
 		return _previousBuildJSONObjects;
 	}
 
-	protected abstract void initWorkspace();
-
 	protected void keepJenkinsBuild(boolean keepLogs) {
 		JenkinsResultsParserUtil.keepJenkinsBuild(
 			keepLogs, _buildData.getBuildNumber(), _buildData.getJobName(),
@@ -148,7 +139,7 @@ public abstract class BaseBuildRunner<T extends BuildData, S extends Workspace>
 				retries++;
 
 				String command = JenkinsResultsParserUtil.combine(
-					"time rsync -Ipqrs --chmod=go=rx --timeout=1200 ",
+					"time timeout 1200 rsync -Ipqrs --chmod=go=rx ",
 					JenkinsResultsParserUtil.getCanonicalPath(file), " ",
 					_buildData.getTopLevelMasterHostname(), "::usercontent/",
 					userContentRelativePath);
@@ -187,7 +178,7 @@ public abstract class BaseBuildRunner<T extends BuildData, S extends Workspace>
 		}
 
 		long allowedBuildStartTime =
-			System.currentTimeMillis() - allowedBuildAge;
+			JenkinsResultsParserUtil.getCurrentTimeMillis() - allowedBuildAge;
 
 		for (JSONObject previousBuildJSONObject :
 				getPreviousBuildJSONObjects()) {
@@ -222,27 +213,15 @@ public abstract class BaseBuildRunner<T extends BuildData, S extends Workspace>
 	}
 
 	protected void setUpWorkspace() {
-		if (_workspace == null) {
-			initWorkspace();
-		}
+		Workspace workspace = getWorkspace();
 
-		_workspace.setBuildData(getBuildData());
-
-		_workspace.setJob(getJob());
-
-		_workspace.setUp();
-	}
-
-	protected void setWorkspace(S workspace) {
-		_workspace = workspace;
+		workspace.setUp();
 	}
 
 	protected void tearDownWorkspace() {
-		if (_workspace == null) {
-			initWorkspace();
-		}
+		Workspace workspace = getWorkspace();
 
-		_workspace.tearDown();
+		workspace.tearDown();
 	}
 
 	protected void updateBuildDescription() {
@@ -256,6 +235,5 @@ public abstract class BaseBuildRunner<T extends BuildData, S extends Workspace>
 	private final T _buildData;
 	private final Job _job;
 	private List<JSONObject> _previousBuildJSONObjects;
-	private S _workspace;
 
 }

@@ -15,18 +15,18 @@
 (function (w) {
 	'use strict';
 
-	var KEYDOWN_EVENT = 'keydown';
-	var TAB_KEYCODE = 9;
-	var ACCESSIBILITY_CLASS = 'is-accessible';
-	var TIMEOUT = 5000;
+	const KEYDOWN_EVENT = 'keydown';
+	const TAB_KEYCODE = 9;
+	const ACCESSIBILITY_CLASS = 'is-accessible';
+	const TIMEOUT = 5000;
 
 	const removeAfter = setTimeout(() => {
 		w.removeEventListener(KEYDOWN_EVENT, needsAccessibility);
 		clearTimeout(removeAfter);
 	}, TIMEOUT);
 
-	function needsAccessibility(e) {
-		const isTabbing = e.which === TAB_KEYCODE;
+	function needsAccessibility(event) {
+		const isTabbing = event.which === TAB_KEYCODE;
 
 		if (isTabbing) {
 			w.document.body.classList.add(ACCESSIBILITY_CLASS);

@@ -168,12 +168,9 @@ public class QueryConfig implements Serializable {
 	public boolean isAllFieldsSelected() {
 		String[] selectedFieldNames = getSelectedFieldNames();
 
-		if (ArrayUtil.isEmpty(selectedFieldNames)) {
-			return true;
-		}
-
-		if ((selectedFieldNames.length == 1) &&
-			selectedFieldNames[0].equals(Field.ANY)) {
+		if (ArrayUtil.isEmpty(selectedFieldNames) ||
+			((selectedFieldNames.length == 1) &&
+			 selectedFieldNames[0].equals(Field.ANY))) {
 
 			return true;
 		}
@@ -324,15 +321,6 @@ public class QueryConfig implements Serializable {
 		_attributes.put(
 			PropsKeys.INDEX_SEARCH_QUERY_SUGGESTION_SCORES_THRESHOLD,
 			querySuggestionScoresThreshold);
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *             #setQuerySuggestionMax(String)}
-	 */
-	@Deprecated
-	public void setQuerySuggestionsMax(int querySuggestionMax) {
-		setQuerySuggestionMax(querySuggestionMax);
 	}
 
 	public void setScoreEnabled(boolean scoreEnabled) {

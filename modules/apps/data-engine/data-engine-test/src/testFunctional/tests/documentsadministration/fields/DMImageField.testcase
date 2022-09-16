@@ -1,9 +1,9 @@
-@component-name = "portal-document-management"
+@component-name = "data-engine"
 definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Documents Management";
+	property testray.main.component.name = "Data Engine";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -26,11 +26,9 @@ definition {
 		}
 	}
 
-	@description = "This is a test for LPS-98073. As a Developer, I want to Implement the image field type"
+	@description = "Verify if user can clear the uploaded image from form by clicking on Clear button"
 	@priority = "4"
 	test ClearUploadedImage {
-		property portal.acceptance = "false";
-
 		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
 
 		DMNavigator.gotoDocumentType();
@@ -74,20 +72,10 @@ definition {
 			locator1 = "DocumentsAndMediaDocument#CUSTOM_FIELD_IMAGE_PREVIEW");
 	}
 
-	@description = "This is a test for LPS-98073. As a Developer, I want to Implement the image field type"
+	@description = "Verify if user can drag and drop image field into form builder"
 	@priority = "5"
 	test DragAndDropImageFieldToBuilder {
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		DMNavigator.gotoDocumentType();
-
-		LexiconEntry.gotoAdd();
-
-		PortletEntry.inputName(name = "DM Document Type Name");
-
-		DataEngine.addField(
-			fieldFieldLabel = "Image",
-			fieldName = "Image");
+		DMDocument.addImageField();
 
 		DDLDataDefinition.save();
 
@@ -100,22 +88,10 @@ definition {
 			fieldName = "Image");
 	}
 
-	@description = "This is a test for LPS-98073. As a Developer, I want to Implement the image field type"
+	@description = "Verify if user can duplicate the image field"
 	@priority = "4"
 	test DuplicateImageField {
-		property portal.acceptance = "false";
-
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		DMNavigator.gotoDocumentType();
-
-		LexiconEntry.gotoAdd();
-
-		PortletEntry.inputName(name = "DM Document Type Name");
-
-		DataEngine.addField(
-			fieldFieldLabel = "Image",
-			fieldName = "Image");
+		DMDocument.addImageField();
 
 		DataEngine.duplicate(fieldFieldLabel = "Image");
 
@@ -132,11 +108,9 @@ definition {
 		}
 	}
 
-	@description = "This is a test for LPS-98073. As a Developer, I want to Implement the image field type"
+	@description = "Verify if label and field name of image field can be translated"
 	@priority = "5"
 	test LocalizationOfImageFieldtPersists {
-		property portal.acceptance = "false";
-
 		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
 
 		DMNavigator.gotoDocumentType();
@@ -173,8 +147,9 @@ definition {
 			value1 = "Imagen");
 
 		AssertTextEquals(
-			key_text = "Imagen",
-			locator1 = "Button#ANY",
+			index = "1",
+			key_fieldName = "Imagen",
+			locator1 = "DataEngineBuilder#FIELD_NAME_INDEXED",
 			value1 = "Imagen");
 
 		AssertTextEquals(
@@ -183,11 +158,9 @@ definition {
 			value1 = "Imagen");
 	}
 
-	@description = "This is a test for LPS-98073. As a Developer, I want to Implement the image field type"
+	@description = "Verify if user is required to define a description for an uploaded image"
 	@priority = "3"
 	test SaveUploadedImageWithoutDescription {
-		property portal.acceptance = "false";
-
 		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
 
 		DMNavigator.gotoDocumentType();
@@ -222,22 +195,10 @@ definition {
 			value1 = "");
 	}
 
-	@description = "This is a test for LPS-98073. As a Developer, I want to Implement the image field type"
+	@description = "Verify if user can define a field Reference"
 	@priority = "4"
 	test SetFieldReferenceOfImageField {
-		property portal.acceptance = "false";
-
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		DMNavigator.gotoDocumentType();
-
-		LexiconEntry.gotoAdd();
-
-		PortletEntry.inputName(name = "DM Document Type Name");
-
-		DataEngine.addField(
-			fieldFieldLabel = "Image",
-			fieldName = "Image");
+		DMDocument.addImageField();
 
 		DDLDataDefinition.save();
 
@@ -246,8 +207,6 @@ definition {
 		MenuItem.click(menuItem = "Edit");
 
 		DMDocumentType.gotoEditField(fieldName = "Image");
-
-		DMDocumentType.gotoTab(tabName = "Builder");
 
 		Navigator.gotoNavTab(navTab = "Advanced");
 
@@ -258,22 +217,10 @@ definition {
 			value1 = "Image");
 	}
 
-	@description = "This is a test for LPS-98073. As a Developer, I want to Implement the image field type"
+	@description = "Verify if user can define a help text"
 	@priority = "4"
 	test SetHelpTextOfImageField {
-		property portal.acceptance = "false";
-
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		DMNavigator.gotoDocumentType();
-
-		LexiconEntry.gotoAdd();
-
-		PortletEntry.inputName(name = "DM Document Type Name");
-
-		DataEngine.addField(
-			fieldFieldLabel = "Image",
-			fieldName = "Image");
+		DMDocument.addImageField();
 
 		DataEngine.editFieldTip(
 			fieldFieldLabel = "Image",
@@ -291,11 +238,9 @@ definition {
 			fieldName = "Image");
 	}
 
-	@description = "This is a test for LPS-98073. As a Developer, I want to Implement the image field type"
+	@description = "Verify if user can define a description for the uploaded image"
 	@priority = "4"
 	test SetImageDescriptionOnDM {
-		property portal.acceptance = "false";
-
 		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
 
 		DMNavigator.gotoDocumentType();
@@ -331,36 +276,42 @@ definition {
 			value1 = "This is an image.");
 	}
 
-	@description = "This is a test for LPS-98073. As a Developer, I want to Implement the image field type"
-	@ignore = "true"
+	@description = "Verify if user can set the image field as repeatable"
 	@priority = "4"
 	test SetImageFieldAsRepeatable {
-		property portal.acceptance = "false";
+		DMDocument.addImageField();
 
-		// TODO LPS-98073 SetImageFieldAsRepeatable pending implementation (blocker by LPS-127049)
+		DataEngine.toggleFieldRepeatable(fieldFieldLabel = "Image");
 
-	}
-
-	@description = "This is a test for LPS-98073. As a Developer, I want to Implement the image field type"
-	@priority = "5"
-	test SetLabelOfImageField {
-		property portal.acceptance = "false";
+		DDLDataDefinition.save();
 
 		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
 
-		DMNavigator.gotoDocumentType();
+		DMNavigator.gotoAddDocumentTypeCP(dmDocumentTypeName = "DM Document Type Name");
 
-		LexiconEntry.gotoAdd();
+		Click(locator1 = "FormFields#FIELD_ADD_DUPLICATE");
 
-		PortletEntry.inputName(name = "DM Document Type Name");
+		AssertVisible(
+			key_fieldName = "Image",
+			key_repeatableFieldNumber = "2",
+			locator1 = "FormFields#FIELD_ADD_SPECIFIC");
 
-		DataEngine.addField(
-			fieldFieldLabel = "Image",
-			fieldName = "Image");
+		Click(locator1 = "FormFields#FIELD_ADD_REMOVE");
+
+		AssertElementNotPresent(
+			key_fieldName = "Image",
+			key_repeatableFieldNumber = "2",
+			locator1 = "FormFields#FIELD_ADD_SPECIFIC");
+	}
+
+	@description = "Verify if user can add a field label"
+	@priority = "5"
+	test SetLabelOfImageField {
+		DMDocument.addImageField();
 
 		FormViewBuilder.editFieldLabel(
 			fieldLabel = "Image",
-			label = "New Image Lable");
+			label = "New Image");
 
 		DDLDataDefinition.save();
 
@@ -369,30 +320,16 @@ definition {
 		MenuItem.click(menuItem = "Edit");
 
 		DataEngine.viewField(
-			fieldFieldLabel = "New Image Lable",
+			fieldFieldLabel = "New Image",
 			fieldName = "Image");
 	}
 
-	@description = "This is a test for LPS-98073. As a Developer, I want to Implement the image field type"
+	@description = "Verify if user can show/hide label"
 	@priority = "4"
 	test ShowAndHideImageFieldLabel {
-		property portal.acceptance = "false";
+		DMDocument.addImageField();
 
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		DMNavigator.gotoDocumentType();
-
-		LexiconEntry.gotoAdd();
-
-		PortletEntry.inputName(name = "DM Document Type Name");
-
-		DataEngine.addField(
-			fieldFieldLabel = "Image",
-			fieldName = "Image");
-
-		DataEngine.editShowOrHideLabel(
-			fieldFieldLabel = "Image",
-			showLabel = "false");
+		DataEngine.toggleShowLabel(fieldLabel = "Image");
 
 		DDLDataDefinition.save();
 
@@ -405,28 +342,16 @@ definition {
 			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL");
 	}
 
-	@description = "This is a test for LPS-98073. As a Developer, I want to Implement the image field type"
+	@description = "Verify if user can upload an image from Liferay Documents and Media"
 	@priority = "5"
 	test UploadImageFromDocumentsAndMedia {
-		property portal.acceptance = "false";
-
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentTitle = "Document_1.jpg",
 			groupName = "Guest",
 			mimeType = "image/jpeg",
 			sourceFileName = "Document_1.jpg");
 
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		DMNavigator.gotoDocumentType();
-
-		LexiconEntry.gotoAdd();
-
-		PortletEntry.inputName(name = "DM Document Type Name");
-
-		DataEngine.addField(
-			fieldFieldLabel = "Image",
-			fieldName = "Image");
+		DMDocument.addImageField();
 
 		DDLDataDefinition.save();
 
@@ -445,22 +370,10 @@ definition {
 		DMDocument.viewDocumentTypePG(imageName = "Document_1.jpg");
 	}
 
-	@description = "This is a test for LPS-98073. As a Developer, I want to Implement the image field type"
+	@description = "Verify if user can upload an image from local storage"
 	@priority = "5"
 	test UploadImageFromLocalStorage {
-		property portal.acceptance = "false";
-
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		DMNavigator.gotoDocumentType();
-
-		LexiconEntry.gotoAdd();
-
-		PortletEntry.inputName(name = "DM Document Type Name");
-
-		DataEngine.addField(
-			fieldFieldLabel = "Image",
-			fieldName = "Image");
+		DMDocument.addImageField();
 
 		DDLDataDefinition.save();
 
@@ -479,22 +392,10 @@ definition {
 		DMDocument.viewDocumentTypePG(imageName = "Document_1.jpg");
 	}
 
-	@description = "This is a test for LPS-98073. As a Developer, I want to Implement the image field type"
+	@description = "Verify if user is not allowed to upload a file that is not an image"
 	@priority = "4"
 	test UploadInvalidFile {
-		property portal.acceptance = "false";
-
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		DMNavigator.gotoDocumentType();
-
-		LexiconEntry.gotoAdd();
-
-		PortletEntry.inputName(name = "DM Document Type Name");
-
-		DataEngine.addField(
-			fieldFieldLabel = "Image",
-			fieldName = "Image");
+		DMDocument.addImageField();
 
 		DDLDataDefinition.save();
 
@@ -517,22 +418,10 @@ definition {
 			locator1 = "DocumentsAndMediaDocument#METADATA_PANEL_IMAGE");
 	}
 
-	@description = "This is a test for LPS-98073. As a Developer, I want to Implement the image field type"
+	@description = "Verify if user can set the field as required or not"
 	@priority = "4"
 	test VerifyRequiredPropertyOfImageField {
-		property portal.acceptance = "false";
-
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		DMNavigator.gotoDocumentType();
-
-		LexiconEntry.gotoAdd();
-
-		PortletEntry.inputName(name = "DM Document Type Name");
-
-		DataEngine.addField(
-			fieldFieldLabel = "Image",
-			fieldName = "Image");
+		DMDocument.addImageField();
 
 		DataEngine.editFieldRequired(fieldFieldLabel = "Image");
 

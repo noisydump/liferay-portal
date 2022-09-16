@@ -15,9 +15,12 @@
 package com.liferay.portlet.configuration.web.internal.display.context;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.model.Portlet;
+import com.liferay.portal.kernel.portlet.SearchDisplayStyleUtil;
+import com.liferay.portal.kernel.portlet.SearchOrderByUtil;
 import com.liferay.portal.kernel.service.PortletLocalServiceUtil;
 import com.liferay.portal.kernel.settings.ArchivedSettings;
 import com.liferay.portal.kernel.settings.SettingsFactoryUtil;
@@ -27,6 +30,7 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portlet.configuration.web.internal.constants.PortletConfigurationPortletKeys;
 import com.liferay.portlet.configuration.web.internal.constants.PortletConfigurationWebKeys;
 import com.liferay.portlet.configuration.web.internal.servlet.taglib.util.ArchivedSettingsActionDropdownItemsProvider;
 import com.liferay.portlet.configuration.web.internal.util.comparator.ArchivedSettingsModifiedDateComparator;
@@ -87,17 +91,7 @@ public class PortletConfigurationTemplatesDisplayContext {
 				SearchContainer.DEFAULT_DELTA, getPortletURL(), null,
 				"there-are-no-configuration-templates");
 
-		archivedSettingsSearch.setRowChecker(
-			new EmptyOnClickRowChecker(_renderResponse));
-
 		archivedSettingsSearch.setOrderByCol(getOrderByCol());
-
-		Portlet selPortlet = PortletLocalServiceUtil.getPortletById(
-			themeDisplay.getCompanyId(), getPortletResource());
-
-		List<ArchivedSettings> archivedSettingsList =
-			SettingsFactoryUtil.getPortletInstanceArchivedSettingsList(
-				themeDisplay.getScopeGroupId(), selPortlet.getRootPortletId());
 
 		boolean orderByAsc = false;
 
@@ -116,21 +110,20 @@ public class PortletConfigurationTemplatesDisplayContext {
 		}
 
 		archivedSettingsSearch.setOrderByComparator(orderByComparator);
-
-		archivedSettingsList = ListUtil.sort(
-			archivedSettingsList, orderByComparator);
-
 		archivedSettingsSearch.setOrderByType(getOrderByType());
 
-		int archivedSettingsCount = archivedSettingsList.size();
+		Portlet selPortlet = PortletLocalServiceUtil.getPortletById(
+			themeDisplay.getCompanyId(), getPortletResource());
 
-		archivedSettingsSearch.setTotal(archivedSettingsCount);
+		archivedSettingsSearch.setResultsAndTotal(
+			ListUtil.sort(
+				SettingsFactoryUtil.getPortletInstanceArchivedSettingsList(
+					themeDisplay.getScopeGroupId(),
+					selPortlet.getRootPortletId()),
+				archivedSettingsSearch.getOrderByComparator()));
 
-		archivedSettingsList = ListUtil.subList(
-			archivedSettingsList, archivedSettingsSearch.getStart(),
-			archivedSettingsSearch.getEnd());
-
-		archivedSettingsSearch.setResults(archivedSettingsList);
+		archivedSettingsSearch.setRowChecker(
+			new EmptyOnClickRowChecker(_renderResponse));
 
 		_archivedSettingsSearch = archivedSettingsSearch;
 
@@ -142,8 +135,9 @@ public class PortletConfigurationTemplatesDisplayContext {
 			return _displayStyle;
 		}
 
-		_displayStyle = ParamUtil.getString(
-			_httpServletRequest, "displayStyle", "list");
+		_displayStyle = SearchDisplayStyleUtil.getDisplayStyle(
+			_httpServletRequest,
+			PortletConfigurationPortletKeys.PORTLET_CONFIGURATION, "list");
 
 		return _displayStyle;
 	}
@@ -157,8 +151,9 @@ public class PortletConfigurationTemplatesDisplayContext {
 			return _orderByCol;
 		}
 
-		_orderByCol = ParamUtil.getString(
-			_httpServletRequest, "orderByCol", "name");
+		_orderByCol = SearchOrderByUtil.getOrderByCol(
+			_httpServletRequest,
+			PortletConfigurationPortletKeys.PORTLET_CONFIGURATION, "name");
 
 		return _orderByCol;
 	}
@@ -168,8 +163,9 @@ public class PortletConfigurationTemplatesDisplayContext {
 			return _orderByType;
 		}
 
-		_orderByType = ParamUtil.getString(
-			_httpServletRequest, "orderByType", "asc");
+		_orderByType = SearchOrderByUtil.getOrderByType(
+			_httpServletRequest,
+			PortletConfigurationPortletKeys.PORTLET_CONFIGURATION, "asc");
 
 		return _orderByType;
 	}
@@ -186,33 +182,50 @@ public class PortletConfigurationTemplatesDisplayContext {
 	}
 
 	public PortletURL getPortletURL() {
-		PortletURL portletURL = _renderResponse.createRenderURL();
+		return PortletURLBuilder.createRenderURL(
+			_renderResponse
+		).setMVCPath(
+			"/edit_configuration_templates.jsp"
+		).setRedirect(
+			getRedirect()
+		).setPortletResource(
+			getPortletResource()
+		).setParameter(
+			"displayStyle",
+			() -> {
+				String displayStyle = getDisplayStyle();
 
-		portletURL.setParameter("mvcPath", "/edit_configuration_templates.jsp");
-		portletURL.setParameter("redirect", getRedirect());
-		portletURL.setParameter(
-			"returnToFullPageURL", getReturnToFullPageURL());
-		portletURL.setParameter("portletResource", getPortletResource());
+				if (Validator.isNotNull(displayStyle)) {
+					return displayStyle;
+				}
 
-		String displayStyle = getDisplayStyle();
+				return null;
+			}
+		).setParameter(
+			"orderByCol",
+			() -> {
+				String orderByCol = getOrderByCol();
 
-		if (Validator.isNotNull(displayStyle)) {
-			portletURL.setParameter("displayStyle", displayStyle);
-		}
+				if (Validator.isNotNull(orderByCol)) {
+					return orderByCol;
+				}
 
-		String orderByCol = getOrderByCol();
+				return null;
+			}
+		).setParameter(
+			"orderByType",
+			() -> {
+				String orderByType = getOrderByType();
 
-		if (Validator.isNotNull(orderByCol)) {
-			portletURL.setParameter("orderByCol", orderByCol);
-		}
+				if (Validator.isNotNull(orderByType)) {
+					return orderByType;
+				}
 
-		String orderByType = getOrderByType();
-
-		if (Validator.isNotNull(orderByType)) {
-			portletURL.setParameter("orderByType", orderByType);
-		}
-
-		return portletURL;
+				return null;
+			}
+		).setParameter(
+			"returnToFullPageURL", getReturnToFullPageURL()
+		).buildPortletURL();
 	}
 
 	public String getRedirect() {

@@ -36,9 +36,7 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.search.filter.ComplexQueryPartBuilderFactory;
 import com.liferay.portal.search.query.Queries;
-import com.liferay.portal.search.query.Query;
 import com.liferay.portal.search.rescore.Rescore;
-import com.liferay.portal.search.rescore.RescoreBuilder;
 import com.liferay.portal.search.rescore.RescoreBuilderFactory;
 import com.liferay.portal.search.searcher.SearchRequestBuilder;
 import com.liferay.portal.search.searcher.SearchRequestBuilderFactory;
@@ -64,6 +62,7 @@ import java.util.Objects;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
@@ -203,6 +202,7 @@ public class SearchRequestBuilderTest {
 			"[alpha delta, omega delta]", "userName", searchRequestBuilder);
 	}
 
+	@Ignore
 	@Test
 	public void testAddRescore() throws Exception {
 		_addUser("alpha", "delta", "AlphaDelta");
@@ -442,13 +442,8 @@ public class SearchRequestBuilderTest {
 	}
 
 	private Rescore _buildRescore(String fieldName, String value) {
-		RescoreBuilder rescoreBuilder =
-			_rescoreBuilderFactory.getRescoreBuilder();
-
-		Query rescoreQuery = _queries.match(fieldName, value);
-
-		return rescoreBuilder.query(
-			rescoreQuery
+		return _rescoreBuilderFactory.builder(
+			_queries.match(fieldName, value)
 		).windowSize(
 			100
 		).build();

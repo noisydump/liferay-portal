@@ -14,15 +14,13 @@
 
 package com.liferay.portal.layoutconfiguration.util.velocity;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.petra.xml.XMLUtil;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
-import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutTypePortlet;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.portlet.PortletContainerUtil;
-import com.liferay.portal.kernel.portlet.PortletJSONUtil;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.portlet.PortletProvider;
 import com.liferay.portal.kernel.portlet.PortletProviderUtil;
@@ -37,7 +35,6 @@ import com.liferay.portal.kernel.util.ClassUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.layoutconfiguration.util.PortletRenderer;
@@ -269,35 +266,9 @@ public class TemplateProcessor implements ColumnProcessor {
 			}
 		}
 
-		_httpServletRequest.setAttribute(
-			WebKeys.RENDER_PORTLET_RESOURCE, Boolean.TRUE);
+		StringBundler sb = _renderPortlet(portlet, null, null, null);
 
-		BufferCacheServletResponse bufferCacheServletResponse =
-			new BufferCacheServletResponse(_httpServletResponse);
-
-		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
-
-		PortletJSONUtil.populatePortletJSONObject(
-			_httpServletRequest, StringPool.BLANK, portlet, jsonObject);
-
-		try {
-			PortletJSONUtil.writeHeaderPaths(_httpServletResponse, jsonObject);
-
-			HttpServletRequest httpServletRequest =
-				PortletContainerUtil.setupOptionalRenderParameters(
-					_httpServletRequest, null, null, null, null);
-
-			PortletContainerUtil.render(
-				httpServletRequest, bufferCacheServletResponse, portlet);
-
-			PortletJSONUtil.writeFooterPaths(_httpServletResponse, jsonObject);
-
-			return bufferCacheServletResponse.getString();
-		}
-		finally {
-			_httpServletRequest.removeAttribute(
-				WebKeys.RENDER_PORTLET_RESOURCE);
-		}
+		return sb.toString();
 	}
 
 	@Override
@@ -306,10 +277,9 @@ public class TemplateProcessor implements ColumnProcessor {
 			PortletProvider.Action portletProviderAction)
 		throws Exception {
 
-		String portletId = PortletProviderUtil.getPortletId(
-			portletProviderClassName, portletProviderAction);
-
-		return processPortlet(portletId);
+		return processPortlet(
+			PortletProviderUtil.getPortletId(
+				portletProviderClassName, portletProviderAction));
 	}
 
 	private String _processColumn(
@@ -334,7 +304,7 @@ public class TemplateProcessor implements ColumnProcessor {
 		if (layoutTypePortlet.isColumnDisabled(columnId) &&
 			layoutTypePortlet.isCustomizable()) {
 
-			sb.append("portlet-dropzone-disabled");
+			sb.append("portlet-dropzone-disabled ");
 		}
 
 		if (Validator.isNotNull(classNames)) {
@@ -351,38 +321,48 @@ public class TemplateProcessor implements ColumnProcessor {
 			Integer columnCount = Integer.valueOf(portlets.size());
 			Integer columnPos = Integer.valueOf(i);
 
-			PortletRenderer portletRenderer = new PortletRenderer(
-				portlet, columnId, columnCount, columnPos);
-
-			if (_portletAjaxRender && (portlet.getRenderWeight() < 1)) {
-				StringBundler renderResultSB = portletRenderer.renderAjax(
-					_httpServletRequest, _httpServletResponse);
-
-				sb.append(renderResultSB);
-			}
-			else {
-				Integer renderWeight = portlet.getRenderWeight();
-
-				List<PortletRenderer> portletRenderers = _portletRenderers.get(
-					renderWeight);
-
-				if (portletRenderers == null) {
-					portletRenderers = new ArrayList<>();
-
-					_portletRenderers.put(renderWeight, portletRenderers);
-				}
-
-				portletRenderers.add(portletRenderer);
-
-				sb.append("[$TEMPLATE_PORTLET_");
-				sb.append(portlet.getPortletId());
-				sb.append("$]");
-			}
+			sb.append(
+				_renderPortlet(portlet, columnId, columnCount, columnPos));
 		}
 
 		sb.append("</div>");
 
 		return sb.toString();
+	}
+
+	private StringBundler _renderPortlet(
+			Portlet portlet, String columnId, Integer columnCount,
+			Integer columnPos)
+		throws Exception {
+
+		PortletRenderer portletRenderer = new PortletRenderer(
+			portlet, columnId, columnCount, columnPos);
+
+		if (_portletAjaxRender && (portlet.getRenderWeight() < 1)) {
+			return portletRenderer.renderAjax(
+				_httpServletRequest, _httpServletResponse);
+		}
+
+		Integer renderWeight = portlet.getRenderWeight();
+
+		List<PortletRenderer> portletRenderers = _portletRenderers.get(
+			renderWeight);
+
+		if (portletRenderers == null) {
+			portletRenderers = new ArrayList<>();
+
+			_portletRenderers.put(renderWeight, portletRenderers);
+		}
+
+		portletRenderers.add(portletRenderer);
+
+		StringBundler sb = new StringBundler(3);
+
+		sb.append("[$TEMPLATE_PORTLET_");
+		sb.append(portlet.getPortletId());
+		sb.append("$]");
+
+		return sb;
 	}
 
 	private static final RenderWeightComparator _renderWeightComparator =

@@ -16,7 +16,6 @@ package com.liferay.commerce.product.type.virtual.model.impl;
 
 import com.liferay.commerce.product.type.virtual.model.CPDefinitionVirtualSetting;
 import com.liferay.commerce.product.type.virtual.model.CPDefinitionVirtualSettingModel;
-import com.liferay.commerce.product.type.virtual.model.CPDefinitionVirtualSettingSoap;
 import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.expando.kernel.util.ExpandoBridgeFactoryUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
@@ -36,23 +35,23 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.BiConsumer;
@@ -82,7 +81,7 @@ public class CPDefinitionVirtualSettingModelImpl
 	public static final String TABLE_NAME = "CPDefinitionVirtualSetting";
 
 	public static final Object[][] TABLE_COLUMNS = {
-		{"uuid_", Types.VARCHAR},
+		{"mvccVersion", Types.BIGINT}, {"uuid_", Types.VARCHAR},
 		{"CPDefinitionVirtualSettingId", Types.BIGINT},
 		{"groupId", Types.BIGINT}, {"companyId", Types.BIGINT},
 		{"userId", Types.BIGINT}, {"userName", Types.VARCHAR},
@@ -102,6 +101,7 @@ public class CPDefinitionVirtualSettingModelImpl
 		new HashMap<String, Integer>();
 
 	static {
+		TABLE_COLUMNS_MAP.put("mvccVersion", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("uuid_", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("CPDefinitionVirtualSettingId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("groupId", Types.BIGINT);
@@ -128,7 +128,7 @@ public class CPDefinitionVirtualSettingModelImpl
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table CPDefinitionVirtualSetting (uuid_ VARCHAR(75) null,CPDefinitionVirtualSettingId LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,classNameId LONG,classPK LONG,fileEntryId LONG,url VARCHAR(255) null,activationStatus INTEGER,duration LONG,maxUsages INTEGER,useSample BOOLEAN,sampleFileEntryId LONG,sampleUrl VARCHAR(255) null,termsOfUseRequired BOOLEAN,termsOfUseContent STRING null,termsOfUseArticleResourcePK LONG,override BOOLEAN,lastPublishDate DATE null)";
+		"create table CPDefinitionVirtualSetting (mvccVersion LONG default 0 not null,uuid_ VARCHAR(75) null,CPDefinitionVirtualSettingId LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,classNameId LONG,classPK LONG,fileEntryId LONG,url VARCHAR(255) null,activationStatus INTEGER,duration LONG,maxUsages INTEGER,useSample BOOLEAN,sampleFileEntryId LONG,sampleUrl VARCHAR(255) null,termsOfUseRequired BOOLEAN,termsOfUseContent STRING null,termsOfUseArticleResourcePK LONG,override BOOLEAN,lastPublishDate DATE null)";
 
 	public static final String TABLE_SQL_DROP =
 		"drop table CPDefinitionVirtualSetting";
@@ -146,134 +146,55 @@ public class CPDefinitionVirtualSettingModelImpl
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static final boolean ENTITY_CACHE_ENABLED = true;
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static final boolean FINDER_CACHE_ENABLED = true;
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static final boolean COLUMN_BITMASK_ENABLED = true;
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long CLASSNAMEID_COLUMN_BITMASK = 1L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long CLASSPK_COLUMN_BITMASK = 2L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long COMPANYID_COLUMN_BITMASK = 4L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long GROUPID_COLUMN_BITMASK = 8L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long UUID_COLUMN_BITMASK = 16L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *		#getColumnBitmask(String)
+	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long CPDEFINITIONVIRTUALSETTINGID_COLUMN_BITMASK = 32L;
 
 	/**
-	 * Converts the soap model instance into a normal model instance.
-	 *
-	 * @param soapModel the soap model instance to convert
-	 * @return the normal model instance
 	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
 	 */
 	@Deprecated
-	public static CPDefinitionVirtualSetting toModel(
-		CPDefinitionVirtualSettingSoap soapModel) {
-
-		if (soapModel == null) {
-			return null;
-		}
-
-		CPDefinitionVirtualSetting model = new CPDefinitionVirtualSettingImpl();
-
-		model.setUuid(soapModel.getUuid());
-		model.setCPDefinitionVirtualSettingId(
-			soapModel.getCPDefinitionVirtualSettingId());
-		model.setGroupId(soapModel.getGroupId());
-		model.setCompanyId(soapModel.getCompanyId());
-		model.setUserId(soapModel.getUserId());
-		model.setUserName(soapModel.getUserName());
-		model.setCreateDate(soapModel.getCreateDate());
-		model.setModifiedDate(soapModel.getModifiedDate());
-		model.setClassNameId(soapModel.getClassNameId());
-		model.setClassPK(soapModel.getClassPK());
-		model.setFileEntryId(soapModel.getFileEntryId());
-		model.setUrl(soapModel.getUrl());
-		model.setActivationStatus(soapModel.getActivationStatus());
-		model.setDuration(soapModel.getDuration());
-		model.setMaxUsages(soapModel.getMaxUsages());
-		model.setUseSample(soapModel.isUseSample());
-		model.setSampleFileEntryId(soapModel.getSampleFileEntryId());
-		model.setSampleUrl(soapModel.getSampleUrl());
-		model.setTermsOfUseRequired(soapModel.isTermsOfUseRequired());
-		model.setTermsOfUseContent(soapModel.getTermsOfUseContent());
-		model.setTermsOfUseJournalArticleResourcePrimKey(
-			soapModel.getTermsOfUseJournalArticleResourcePrimKey());
-		model.setOverride(soapModel.isOverride());
-		model.setLastPublishDate(soapModel.getLastPublishDate());
-
-		return model;
+	public static void setEntityCacheEnabled(boolean entityCacheEnabled) {
 	}
 
 	/**
-	 * Converts the soap model instances into normal model instances.
-	 *
-	 * @param soapModels the soap model instances to convert
-	 * @return the normal model instances
 	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
 	 */
 	@Deprecated
-	public static List<CPDefinitionVirtualSetting> toModels(
-		CPDefinitionVirtualSettingSoap[] soapModels) {
-
-		if (soapModels == null) {
-			return null;
-		}
-
-		List<CPDefinitionVirtualSetting> models =
-			new ArrayList<CPDefinitionVirtualSetting>(soapModels.length);
-
-		for (CPDefinitionVirtualSettingSoap soapModel : soapModels) {
-			models.add(toModel(soapModel));
-		}
-
-		return models;
+	public static void setFinderCacheEnabled(boolean finderCacheEnabled) {
 	}
-
-	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(
-		com.liferay.commerce.product.type.virtual.service.util.ServiceProps.get(
-			"lock.expiration.time.com.liferay.commerce.product.type.virtual.model.CPDefinitionVirtualSetting"));
 
 	public CPDefinitionVirtualSettingModelImpl() {
 	}
@@ -362,34 +283,6 @@ public class CPDefinitionVirtualSettingModelImpl
 		return _attributeSetterBiConsumers;
 	}
 
-	private static Function<InvocationHandler, CPDefinitionVirtualSetting>
-		_getProxyProviderFunction() {
-
-		Class<?> proxyClass = ProxyUtil.getProxyClass(
-			CPDefinitionVirtualSetting.class.getClassLoader(),
-			CPDefinitionVirtualSetting.class, ModelWrapper.class);
-
-		try {
-			Constructor<CPDefinitionVirtualSetting> constructor =
-				(Constructor<CPDefinitionVirtualSetting>)
-					proxyClass.getConstructor(InvocationHandler.class);
-
-			return invocationHandler -> {
-				try {
-					return constructor.newInstance(invocationHandler);
-				}
-				catch (ReflectiveOperationException
-							reflectiveOperationException) {
-
-					throw new InternalError(reflectiveOperationException);
-				}
-			};
-		}
-		catch (NoSuchMethodException noSuchMethodException) {
-			throw new InternalError(noSuchMethodException);
-		}
-	}
-
 	private static final Map
 		<String, Function<CPDefinitionVirtualSetting, Object>>
 			_attributeGetterFunctions;
@@ -407,6 +300,12 @@ public class CPDefinitionVirtualSettingModelImpl
 				new LinkedHashMap
 					<String, BiConsumer<CPDefinitionVirtualSetting, ?>>();
 
+		attributeGetterFunctions.put(
+			"mvccVersion", CPDefinitionVirtualSetting::getMvccVersion);
+		attributeSetterBiConsumers.put(
+			"mvccVersion",
+			(BiConsumer<CPDefinitionVirtualSetting, Long>)
+				CPDefinitionVirtualSetting::setMvccVersion);
 		attributeGetterFunctions.put(
 			"uuid", CPDefinitionVirtualSetting::getUuid);
 		attributeSetterBiConsumers.put(
@@ -557,6 +456,21 @@ public class CPDefinitionVirtualSettingModelImpl
 			attributeGetterFunctions);
 		_attributeSetterBiConsumers = Collections.unmodifiableMap(
 			(Map)attributeSetterBiConsumers);
+	}
+
+	@JSON
+	@Override
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_mvccVersion = mvccVersion;
 	}
 
 	@JSON
@@ -1160,7 +1074,9 @@ public class CPDefinitionVirtualSettingModelImpl
 		for (Map.Entry<String, Object> entry :
 				_columnOriginalValues.entrySet()) {
 
-			if (entry.getValue() != getColumnValue(entry.getKey())) {
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
 				_columnBitmask |= _columnBitmasks.get(entry.getKey());
 			}
 		}
@@ -1273,6 +1189,7 @@ public class CPDefinitionVirtualSettingModelImpl
 		CPDefinitionVirtualSettingImpl cpDefinitionVirtualSettingImpl =
 			new CPDefinitionVirtualSettingImpl();
 
+		cpDefinitionVirtualSettingImpl.setMvccVersion(getMvccVersion());
 		cpDefinitionVirtualSettingImpl.setUuid(getUuid());
 		cpDefinitionVirtualSettingImpl.setCPDefinitionVirtualSettingId(
 			getCPDefinitionVirtualSettingId());
@@ -1305,6 +1222,65 @@ public class CPDefinitionVirtualSettingModelImpl
 		cpDefinitionVirtualSettingImpl.setLastPublishDate(getLastPublishDate());
 
 		cpDefinitionVirtualSettingImpl.resetOriginalValues();
+
+		return cpDefinitionVirtualSettingImpl;
+	}
+
+	@Override
+	public CPDefinitionVirtualSetting cloneWithOriginalValues() {
+		CPDefinitionVirtualSettingImpl cpDefinitionVirtualSettingImpl =
+			new CPDefinitionVirtualSettingImpl();
+
+		cpDefinitionVirtualSettingImpl.setMvccVersion(
+			this.<Long>getColumnOriginalValue("mvccVersion"));
+		cpDefinitionVirtualSettingImpl.setUuid(
+			this.<String>getColumnOriginalValue("uuid_"));
+		cpDefinitionVirtualSettingImpl.setCPDefinitionVirtualSettingId(
+			this.<Long>getColumnOriginalValue("CPDefinitionVirtualSettingId"));
+		cpDefinitionVirtualSettingImpl.setGroupId(
+			this.<Long>getColumnOriginalValue("groupId"));
+		cpDefinitionVirtualSettingImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		cpDefinitionVirtualSettingImpl.setUserId(
+			this.<Long>getColumnOriginalValue("userId"));
+		cpDefinitionVirtualSettingImpl.setUserName(
+			this.<String>getColumnOriginalValue("userName"));
+		cpDefinitionVirtualSettingImpl.setCreateDate(
+			this.<Date>getColumnOriginalValue("createDate"));
+		cpDefinitionVirtualSettingImpl.setModifiedDate(
+			this.<Date>getColumnOriginalValue("modifiedDate"));
+		cpDefinitionVirtualSettingImpl.setClassNameId(
+			this.<Long>getColumnOriginalValue("classNameId"));
+		cpDefinitionVirtualSettingImpl.setClassPK(
+			this.<Long>getColumnOriginalValue("classPK"));
+		cpDefinitionVirtualSettingImpl.setFileEntryId(
+			this.<Long>getColumnOriginalValue("fileEntryId"));
+		cpDefinitionVirtualSettingImpl.setUrl(
+			this.<String>getColumnOriginalValue("url"));
+		cpDefinitionVirtualSettingImpl.setActivationStatus(
+			this.<Integer>getColumnOriginalValue("activationStatus"));
+		cpDefinitionVirtualSettingImpl.setDuration(
+			this.<Long>getColumnOriginalValue("duration"));
+		cpDefinitionVirtualSettingImpl.setMaxUsages(
+			this.<Integer>getColumnOriginalValue("maxUsages"));
+		cpDefinitionVirtualSettingImpl.setUseSample(
+			this.<Boolean>getColumnOriginalValue("useSample"));
+		cpDefinitionVirtualSettingImpl.setSampleFileEntryId(
+			this.<Long>getColumnOriginalValue("sampleFileEntryId"));
+		cpDefinitionVirtualSettingImpl.setSampleUrl(
+			this.<String>getColumnOriginalValue("sampleUrl"));
+		cpDefinitionVirtualSettingImpl.setTermsOfUseRequired(
+			this.<Boolean>getColumnOriginalValue("termsOfUseRequired"));
+		cpDefinitionVirtualSettingImpl.setTermsOfUseContent(
+			this.<String>getColumnOriginalValue("termsOfUseContent"));
+		cpDefinitionVirtualSettingImpl.
+			setTermsOfUseJournalArticleResourcePrimKey(
+				this.<Long>getColumnOriginalValue(
+					"termsOfUseArticleResourcePK"));
+		cpDefinitionVirtualSettingImpl.setOverride(
+			this.<Boolean>getColumnOriginalValue("override"));
+		cpDefinitionVirtualSettingImpl.setLastPublishDate(
+			this.<Date>getColumnOriginalValue("lastPublishDate"));
 
 		return cpDefinitionVirtualSettingImpl;
 	}
@@ -1360,7 +1336,7 @@ public class CPDefinitionVirtualSettingModelImpl
 	@Deprecated
 	@Override
 	public boolean isEntityCacheEnabled() {
-		return ENTITY_CACHE_ENABLED;
+		return true;
 	}
 
 	/**
@@ -1369,7 +1345,7 @@ public class CPDefinitionVirtualSettingModelImpl
 	@Deprecated
 	@Override
 	public boolean isFinderCacheEnabled() {
-		return FINDER_CACHE_ENABLED;
+		return true;
 	}
 
 	@Override
@@ -1386,6 +1362,8 @@ public class CPDefinitionVirtualSettingModelImpl
 		CPDefinitionVirtualSettingCacheModel
 			cpDefinitionVirtualSettingCacheModel =
 				new CPDefinitionVirtualSettingCacheModel();
+
+		cpDefinitionVirtualSettingCacheModel.mvccVersion = getMvccVersion();
 
 		cpDefinitionVirtualSettingCacheModel.uuid = getUuid();
 
@@ -1505,7 +1483,7 @@ public class CPDefinitionVirtualSettingModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			(4 * attributeGetterFunctions.size()) + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -1516,11 +1494,27 @@ public class CPDefinitionVirtualSettingModelImpl
 			Function<CPDefinitionVirtualSetting, Object>
 				attributeGetterFunction = entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(
-				attributeGetterFunction.apply(
-					(CPDefinitionVirtualSetting)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply(
+				(CPDefinitionVirtualSetting)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -1571,10 +1565,12 @@ public class CPDefinitionVirtualSettingModelImpl
 		private static final Function
 			<InvocationHandler, CPDefinitionVirtualSetting>
 				_escapedModelProxyProviderFunction =
-					_getProxyProviderFunction();
+					ProxyUtil.getProxyProviderFunction(
+						CPDefinitionVirtualSetting.class, ModelWrapper.class);
 
 	}
 
+	private long _mvccVersion;
 	private String _uuid;
 	private long _CPDefinitionVirtualSettingId;
 	private long _groupId;
@@ -1630,6 +1626,7 @@ public class CPDefinitionVirtualSettingModelImpl
 	private void _setColumnOriginalValues() {
 		_columnOriginalValues = new HashMap<String, Object>();
 
+		_columnOriginalValues.put("mvccVersion", _mvccVersion);
 		_columnOriginalValues.put("uuid_", _uuid);
 		_columnOriginalValues.put(
 			"CPDefinitionVirtualSettingId", _CPDefinitionVirtualSettingId);
@@ -1682,51 +1679,53 @@ public class CPDefinitionVirtualSettingModelImpl
 	static {
 		Map<String, Long> columnBitmasks = new HashMap<>();
 
-		columnBitmasks.put("uuid_", 1L);
+		columnBitmasks.put("mvccVersion", 1L);
 
-		columnBitmasks.put("CPDefinitionVirtualSettingId", 2L);
+		columnBitmasks.put("uuid_", 2L);
 
-		columnBitmasks.put("groupId", 4L);
+		columnBitmasks.put("CPDefinitionVirtualSettingId", 4L);
 
-		columnBitmasks.put("companyId", 8L);
+		columnBitmasks.put("groupId", 8L);
 
-		columnBitmasks.put("userId", 16L);
+		columnBitmasks.put("companyId", 16L);
 
-		columnBitmasks.put("userName", 32L);
+		columnBitmasks.put("userId", 32L);
 
-		columnBitmasks.put("createDate", 64L);
+		columnBitmasks.put("userName", 64L);
 
-		columnBitmasks.put("modifiedDate", 128L);
+		columnBitmasks.put("createDate", 128L);
 
-		columnBitmasks.put("classNameId", 256L);
+		columnBitmasks.put("modifiedDate", 256L);
 
-		columnBitmasks.put("classPK", 512L);
+		columnBitmasks.put("classNameId", 512L);
 
-		columnBitmasks.put("fileEntryId", 1024L);
+		columnBitmasks.put("classPK", 1024L);
 
-		columnBitmasks.put("url", 2048L);
+		columnBitmasks.put("fileEntryId", 2048L);
 
-		columnBitmasks.put("activationStatus", 4096L);
+		columnBitmasks.put("url", 4096L);
 
-		columnBitmasks.put("duration", 8192L);
+		columnBitmasks.put("activationStatus", 8192L);
 
-		columnBitmasks.put("maxUsages", 16384L);
+		columnBitmasks.put("duration", 16384L);
 
-		columnBitmasks.put("useSample", 32768L);
+		columnBitmasks.put("maxUsages", 32768L);
 
-		columnBitmasks.put("sampleFileEntryId", 65536L);
+		columnBitmasks.put("useSample", 65536L);
 
-		columnBitmasks.put("sampleUrl", 131072L);
+		columnBitmasks.put("sampleFileEntryId", 131072L);
 
-		columnBitmasks.put("termsOfUseRequired", 262144L);
+		columnBitmasks.put("sampleUrl", 262144L);
 
-		columnBitmasks.put("termsOfUseContent", 524288L);
+		columnBitmasks.put("termsOfUseRequired", 524288L);
 
-		columnBitmasks.put("termsOfUseArticleResourcePK", 1048576L);
+		columnBitmasks.put("termsOfUseContent", 1048576L);
 
-		columnBitmasks.put("override", 2097152L);
+		columnBitmasks.put("termsOfUseArticleResourcePK", 2097152L);
 
-		columnBitmasks.put("lastPublishDate", 4194304L);
+		columnBitmasks.put("override", 4194304L);
+
+		columnBitmasks.put("lastPublishDate", 8388608L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}

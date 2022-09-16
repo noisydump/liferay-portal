@@ -135,9 +135,6 @@ public class I18nFilter extends BasePortalFilter {
 			requestURI = requestURI.substring(contextPath.length());
 		}
 
-		requestURI = StringUtil.replace(
-			requestURI, StringPool.DOUBLE_SLASH, StringPool.SLASH);
-
 		String i18nLanguageId = prependI18nLanguageId(
 			httpServletRequest, PropsValues.LOCALE_PREPEND_FRIENDLY_URL_STYLE);
 
@@ -151,10 +148,11 @@ public class I18nFilter extends BasePortalFilter {
 			return null;
 		}
 
-		String i18nPathLanguageId = PortalUtil.getI18nPathLanguageId(
-			locale, i18nLanguageId);
+		requestURI = StringUtil.replace(
+			requestURI, StringPool.DOUBLE_SLASH, StringPool.SLASH);
 
-		String i18nPath = StringPool.SLASH.concat(i18nPathLanguageId);
+		String i18nPath = StringPool.SLASH.concat(
+			PortalUtil.getI18nPathLanguageId(locale, i18nLanguageId));
 
 		if (requestURI.contains(i18nPath.concat(StringPool.SLASH))) {
 			return null;
@@ -220,9 +218,9 @@ public class I18nFilter extends BasePortalFilter {
 	protected String getRequestedLanguageId(
 		HttpServletRequest httpServletRequest, String userLanguageId) {
 
-		HttpSession session = httpServletRequest.getSession();
+		HttpSession httpSession = httpServletRequest.getSession();
 
-		Locale locale = (Locale)session.getAttribute(WebKeys.LOCALE);
+		Locale locale = (Locale)httpSession.getAttribute(WebKeys.LOCALE);
 
 		String requestedLanguageId = null;
 
@@ -253,14 +251,12 @@ public class I18nFilter extends BasePortalFilter {
 			Group group = GroupLocalServiceUtil.getFriendlyURLGroup(
 				companyId, friendlyURL);
 
-			Locale siteDefaultLocale = PortalUtil.getSiteDefaultLocale(
-				group.getGroupId());
-
-			return LocaleUtil.toLanguageId(siteDefaultLocale);
+			return LocaleUtil.toLanguageId(
+				PortalUtil.getSiteDefaultLocale(group.getGroupId()));
 		}
 		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(portalException.getMessage(), portalException);
+				_log.debug(portalException);
 			}
 
 			return StringPool.BLANK;

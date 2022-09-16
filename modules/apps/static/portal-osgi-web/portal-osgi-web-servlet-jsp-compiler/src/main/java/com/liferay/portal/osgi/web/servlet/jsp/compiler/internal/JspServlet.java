@@ -16,6 +16,8 @@ package com.liferay.portal.osgi.web.servlet.jsp.compiler.internal;
 
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.util.PropsValues;
@@ -30,7 +32,6 @@ import java.net.URL;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.EventListener;
 import java.util.HashSet;
@@ -49,13 +50,9 @@ import javax.servlet.RequestDispatcher;
 import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
-import javax.servlet.ServletContextAttributeListener;
-import javax.servlet.ServletContextListener;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRegistration;
 import javax.servlet.ServletRequest;
-import javax.servlet.ServletRequestAttributeListener;
-import javax.servlet.ServletRequestListener;
 import javax.servlet.ServletResponse;
 import javax.servlet.SessionCookieConfig;
 import javax.servlet.SessionTrackingMode;
@@ -63,29 +60,28 @@ import javax.servlet.descriptor.JspConfigDescriptor;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSessionAttributeListener;
-import javax.servlet.http.HttpSessionListener;
 import javax.servlet.jsp.JspFactory;
 
 import org.apache.jasper.runtime.JspFactoryImpl;
 import org.apache.jasper.runtime.TagHandlerPool;
 
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleReference;
-import org.osgi.framework.Constants;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleWire;
 import org.osgi.framework.wiring.BundleWiring;
-import org.osgi.util.tracker.BundleTracker;
 
 /**
  * @author Raymond Augé
  */
 public class JspServlet extends HttpServlet {
+
+	public JspServlet(Set<String> fragmentHosts) {
+		_fragmentHosts = fragmentHosts;
+	}
 
 	@Override
 	public void destroy() {
@@ -184,7 +180,7 @@ public class JspServlet extends HttpServlet {
 
 		bundles.add(_utilTaglibBundle);
 
-		collectTaglibProviderBundles(bundles);
+		_collectTaglibProviderBundles(bundles);
 
 		_allParticipatingBundles = bundles.toArray(new Bundle[0]);
 
@@ -220,45 +216,9 @@ public class JspServlet extends HttpServlet {
 			"saveBytecode", "true"
 		).build();
 
-		String symbolicName = _bundle.getSymbolicName();
-
-		BundleTracker<Bundle> bundleTracker = new BundleTracker(
-			_bundle.getBundleContext(), ~Bundle.UNINSTALLED, null) {
-
-			@Override
-			public Bundle addingBundle(Bundle bundle, BundleEvent bundleEvent) {
-				Dictionary<String, String> dictionary = bundle.getHeaders(
-					StringPool.BLANK);
-
-				String fragmentHost = dictionary.get(Constants.FRAGMENT_HOST);
-
-				if (fragmentHost != null) {
-					int index = fragmentHost.indexOf(StringPool.SEMICOLON);
-
-					if (index != -1) {
-						fragmentHost = fragmentHost.substring(0, index);
-					}
-
-					if (fragmentHost.equals(symbolicName)) {
-						Enumeration<URL> enumeration = bundle.findEntries(
-							"META-INF/resources", "*.jsp*", true);
-
-						if (enumeration != null) {
-							defaults.put("hasFragment", "true");
-
-							close();
-						}
-					}
-				}
-
-				return bundle;
-			}
-
-		};
-
-		bundleTracker.open();
-
-		bundleTracker.close();
+		if (_fragmentHosts.contains(_bundle.getSymbolicName())) {
+			defaults.put("hasFragment", "true");
+		}
 
 		defaults.put(
 			TagHandlerPool.OPTION_TAGPOOL, JspTagHandlerPool.class.getName());
@@ -387,7 +347,7 @@ public class JspServlet extends HttpServlet {
 		return _jspServlet.toString();
 	}
 
-	protected void collectTaglibProviderBundles(List<Bundle> bundles) {
+	private void _collectTaglibProviderBundles(List<Bundle> bundles) {
 		BundleWiring bundleWiring = _bundle.adapt(BundleWiring.class);
 
 		for (BundleWire bundleWire :
@@ -411,48 +371,14 @@ public class JspServlet extends HttpServlet {
 		}
 	}
 
-	protected String[] getListenerClassNames(Class<?> clazz) {
-		List<String> classNames = new ArrayList<>();
-
-		if (ServletContextListener.class.isAssignableFrom(clazz)) {
-			classNames.add(ServletContextListener.class.getName());
-		}
-
-		if (ServletContextAttributeListener.class.isAssignableFrom(clazz)) {
-			classNames.add(ServletContextAttributeListener.class.getName());
-		}
-
-		if (ServletRequestListener.class.isAssignableFrom(clazz)) {
-			classNames.add(ServletRequestListener.class.getName());
-		}
-
-		if (ServletRequestAttributeListener.class.isAssignableFrom(clazz)) {
-			classNames.add(ServletRequestAttributeListener.class.getName());
-		}
-
-		if (HttpSessionListener.class.isAssignableFrom(clazz)) {
-			classNames.add(HttpSessionListener.class.getName());
-		}
-
-		if (HttpSessionAttributeListener.class.isAssignableFrom(clazz)) {
-			classNames.add(HttpSessionAttributeListener.class.getName());
-		}
-
-		if (classNames.isEmpty()) {
-			throw new IllegalArgumentException(
-				clazz.getName() + " does not implement one of the supported " +
-					"servlet listener interfaces");
-		}
-
-		return classNames.toArray(new String[0]);
-	}
-
 	private static final String _DIR_NAME_RESOURCES = "/META-INF/resources";
 
 	private static final String _INIT_PARAMETER_NAME_SCRATCH_DIR = "scratchdir";
 
 	private static final String _WORK_DIR = StringBundler.concat(
 		PropsValues.LIFERAY_HOME, File.separator, "work", File.separator);
+
+	private static final Log _log = LogFactoryUtil.getLog(JspServlet.class);
 
 	private static final Properties _initParams = PropsUtil.getProperties(
 		"jsp.servlet.init.param.", true);
@@ -465,6 +391,7 @@ public class JspServlet extends HttpServlet {
 
 	private Bundle[] _allParticipatingBundles;
 	private Bundle _bundle;
+	private final Set<String> _fragmentHosts;
 	private JspBundleClassloader _jspBundleClassloader;
 	private final HttpServlet _jspServlet =
 		new org.apache.jasper.servlet.JspServlet();
@@ -728,6 +655,9 @@ public class JspServlet extends HttpServlet {
 				return _jspBundle.getResource(path);
 			}
 			catch (MalformedURLException malformedURLException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(malformedURLException);
+				}
 			}
 
 			return null;
@@ -745,6 +675,10 @@ public class JspServlet extends HttpServlet {
 				return url.openStream();
 			}
 			catch (IOException ioException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(ioException);
+				}
+
 				return null;
 			}
 		}

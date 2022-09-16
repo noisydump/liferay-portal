@@ -15,37 +15,39 @@
 package com.liferay.dynamic.data.mapping.form.evaluator.internal.function;
 
 import com.liferay.dynamic.data.mapping.expression.UpdateFieldPropertyRequest;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.Map;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
-import org.powermock.api.mockito.PowerMockito;
-
 /**
  * @author Leonardo Barros
  */
-public class SetPropertyFunctionTest extends PowerMockito {
+public class SetPropertyFunctionTest {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Test
 	public void testApply() {
-		SetPropertyFunction<Boolean> setPropertyFunction =
-			new SetMultipleFunction();
+		SetMultipleFunction setMultipleFunction = new SetMultipleFunction();
 
-		DefaultDDMExpressionObserver defaultDDMExpressionObserver =
-			new DefaultDDMExpressionObserver();
+		DefaultDDMExpressionObserver spyDefaultDDMExpressionObserver =
+			Mockito.spy(new DefaultDDMExpressionObserver());
 
-		DefaultDDMExpressionObserver spyDefaultDDMExpressionObserver = spy(
-			defaultDDMExpressionObserver);
-
-		setPropertyFunction.setDDMExpressionObserver(
+		setMultipleFunction.setDDMExpressionObserver(
 			spyDefaultDDMExpressionObserver);
 
-		Boolean result = setPropertyFunction.apply("field", true);
+		Boolean result = setMultipleFunction.apply("field", true);
 
 		ArgumentCaptor<UpdateFieldPropertyRequest> argumentCaptor =
 			ArgumentCaptor.forClass(UpdateFieldPropertyRequest.class);
@@ -72,10 +74,9 @@ public class SetPropertyFunctionTest extends PowerMockito {
 
 	@Test
 	public void testNullObserver() {
-		SetPropertyFunction<Boolean> setPropertyFunction =
-			new SetEnabledFunction();
+		SetEnabledFunction setEnabledFunction = new SetEnabledFunction();
 
-		Assert.assertFalse(setPropertyFunction.apply("field", true));
+		Assert.assertFalse(setEnabledFunction.apply("field", true));
 	}
 
 }

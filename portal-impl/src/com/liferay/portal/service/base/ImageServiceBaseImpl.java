@@ -20,12 +20,17 @@ import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Image;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.service.BaseServiceImpl;
 import com.liferay.portal.kernel.service.ImageService;
+import com.liferay.portal.kernel.service.ImageServiceUtil;
 import com.liferay.portal.kernel.service.persistence.ImagePersistence;
 import com.liferay.portal.kernel.util.PortalUtil;
+
+import java.lang.reflect.Field;
 
 import javax.sql.DataSource;
 
@@ -46,7 +51,7 @@ public abstract class ImageServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>ImageService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.kernel.service.ImageServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>ImageService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>ImageServiceUtil</code>.
 	 */
 
 	/**
@@ -131,9 +136,11 @@ public abstract class ImageServiceBaseImpl
 	}
 
 	public void afterPropertiesSet() {
+		_setServiceUtilService(imageService);
 	}
 
 	public void destroy() {
+		_setServiceUtilService(null);
 	}
 
 	/**
@@ -178,6 +185,19 @@ public abstract class ImageServiceBaseImpl
 		}
 	}
 
+	private void _setServiceUtilService(ImageService imageService) {
+		try {
+			Field field = ImageServiceUtil.class.getDeclaredField("_service");
+
+			field.setAccessible(true);
+
+			field.set(null, imageService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@BeanReference(
 		type = com.liferay.portal.kernel.service.ImageLocalService.class
 	)
@@ -195,5 +215,8 @@ public abstract class ImageServiceBaseImpl
 	)
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		ImageServiceBaseImpl.class);
 
 }

@@ -200,9 +200,8 @@ public class FreeMarkerTemplate extends BaseTemplate {
 
 	private class CachableDefaultMapAdapter
 		extends WrappingTemplateModel
-		implements TemplateHashModelEx, AdapterTemplateModel,
-				   WrapperTemplateModel, TemplateModelWithAPISupport,
-				   Serializable {
+		implements AdapterTemplateModel, Serializable, TemplateHashModelEx,
+				   TemplateModelWithAPISupport, WrapperTemplateModel {
 
 		@Override
 		public TemplateModel get(String key) throws TemplateModelException {
@@ -277,13 +276,12 @@ public class FreeMarkerTemplate extends BaseTemplate {
 
 			_map = map;
 			_objectWrapper = objectWrapper;
-
-			_wrappedValueMap = new HashMap<>();
 		}
 
 		private final Map<String, Object> _map;
 		private final ObjectWrapper _objectWrapper;
-		private final Map<String, TemplateModel> _wrappedValueMap;
+		private final Map<String, TemplateModel> _wrappedValueMap =
+			new HashMap<>();
 
 	}
 

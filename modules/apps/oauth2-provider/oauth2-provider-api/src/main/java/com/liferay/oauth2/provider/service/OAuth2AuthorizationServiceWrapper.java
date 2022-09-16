@@ -27,6 +27,10 @@ public class OAuth2AuthorizationServiceWrapper
 	implements OAuth2AuthorizationService,
 			   ServiceWrapper<OAuth2AuthorizationService> {
 
+	public OAuth2AuthorizationServiceWrapper() {
+		this(null);
+	}
+
 	public OAuth2AuthorizationServiceWrapper(
 		OAuth2AuthorizationService oAuth2AuthorizationService) {
 
@@ -82,6 +86,14 @@ public class OAuth2AuthorizationServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _oAuth2AuthorizationService.getUserOAuth2AuthorizationsCount();
+	}
+
+	@Override
+	public void revokeAllOAuth2Authorizations(long oAuth2ApplicationId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_oAuth2AuthorizationService.revokeAllOAuth2Authorizations(
+			oAuth2ApplicationId);
 	}
 
 	@Override

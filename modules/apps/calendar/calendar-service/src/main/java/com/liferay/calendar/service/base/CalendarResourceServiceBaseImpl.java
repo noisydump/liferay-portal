@@ -16,11 +16,7 @@ package com.liferay.calendar.service.base;
 
 import com.liferay.calendar.model.CalendarResource;
 import com.liferay.calendar.service.CalendarResourceService;
-import com.liferay.calendar.service.persistence.CalendarBookingFinder;
-import com.liferay.calendar.service.persistence.CalendarBookingPersistence;
-import com.liferay.calendar.service.persistence.CalendarFinder;
-import com.liferay.calendar.service.persistence.CalendarNotificationTemplatePersistence;
-import com.liferay.calendar.service.persistence.CalendarPersistence;
+import com.liferay.calendar.service.CalendarResourceServiceUtil;
 import com.liferay.calendar.service.persistence.CalendarResourceFinder;
 import com.liferay.calendar.service.persistence.CalendarResourcePersistence;
 import com.liferay.portal.aop.AopService;
@@ -29,12 +25,17 @@ import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.service.BaseServiceImpl;
 import com.liferay.portal.kernel.util.PortalUtil;
 
+import java.lang.reflect.Field;
+
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -55,8 +56,13 @@ public abstract class CalendarResourceServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>CalendarResourceService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.calendar.service.CalendarResourceServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>CalendarResourceService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>CalendarResourceServiceUtil</code>.
 	 */
+	@Deactivate
+	protected void deactivate() {
+		_setServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -67,6 +73,8 @@ public abstract class CalendarResourceServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		calendarResourceService = (CalendarResourceService)aopProxy;
+
+		_setServiceUtilService(calendarResourceService);
 	}
 
 	/**
@@ -111,21 +119,21 @@ public abstract class CalendarResourceServiceBaseImpl
 		}
 	}
 
-	@Reference
-	protected CalendarPersistence calendarPersistence;
+	private void _setServiceUtilService(
+		CalendarResourceService calendarResourceService) {
 
-	@Reference
-	protected CalendarFinder calendarFinder;
+		try {
+			Field field = CalendarResourceServiceUtil.class.getDeclaredField(
+				"_service");
 
-	@Reference
-	protected CalendarBookingPersistence calendarBookingPersistence;
+			field.setAccessible(true);
 
-	@Reference
-	protected CalendarBookingFinder calendarBookingFinder;
-
-	@Reference
-	protected CalendarNotificationTemplatePersistence
-		calendarNotificationTemplatePersistence;
+			field.set(null, calendarResourceService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
 
 	@Reference
 	protected com.liferay.calendar.service.CalendarResourceLocalService
@@ -143,31 +151,7 @@ public abstract class CalendarResourceServiceBaseImpl
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@Reference
-	protected com.liferay.portal.kernel.service.ClassNameLocalService
-		classNameLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.ClassNameService
-		classNameService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.ResourceLocalService
-		resourceLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserService userService;
-
-	@Reference
-	protected com.liferay.asset.kernel.service.AssetEntryLocalService
-		assetEntryLocalService;
-
-	@Reference
-	protected com.liferay.asset.kernel.service.AssetEntryService
-		assetEntryService;
+	private static final Log _log = LogFactoryUtil.getLog(
+		CalendarResourceServiceBaseImpl.class);
 
 }

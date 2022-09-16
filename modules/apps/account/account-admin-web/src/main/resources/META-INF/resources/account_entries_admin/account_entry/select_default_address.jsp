@@ -33,12 +33,24 @@ else if (Objects.equals("shipping", type)) {
 SearchContainer<AddressDisplay> accountEntryAddressDisplaySearchContainer = AccountEntryAddressDisplaySearchContainerFactory.create(liferayPortletRequest, liferayPortletResponse);
 
 accountEntryAddressDisplaySearchContainer.setRowChecker(null);
-
-SelectAccountEntryAddressManagementToolbarDisplayContext selectAccountEntryAddressManagementToolbarDisplayContext = new SelectAccountEntryAddressManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, accountEntryAddressDisplaySearchContainer);
 %>
 
-<clay:management-toolbar-v2
-	displayContext="<%= selectAccountEntryAddressManagementToolbarDisplayContext %>"
+<portlet:renderURL var="addAccountEntryDefaultAddressURL">
+	<portlet:param name="mvcRenderCommandName" value="/account_admin/edit_account_entry_address" />
+	<portlet:param name="backURL" value='<%= ParamUtil.getString(request, "redirect") %>' />
+	<portlet:param name="accountEntryId" value='<%= ParamUtil.getString(request, "accountEntryId") %>' />
+	<portlet:param name="defaultType" value="<%= type %>" />
+</portlet:renderURL>
+
+<clay:management-toolbar
+	additionalProps='<%=
+		HashMapBuilder.<String, Object>put(
+			"addAccountEntryDefaultAddressURL", addAccountEntryDefaultAddressURL.toString()
+		).build()
+	%>'
+	managementToolbarDisplayContext="<%= new SelectAccountEntryAddressManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, accountEntryAddressDisplaySearchContainer) %>"
+	propsTransformer="account_entries_admin/js/SelectAccountDefaultAddressManagementToolbarPropsTransformer"
+	showCreationMenu="<%= true %>"
 />
 
 <clay:container-fluid
@@ -106,15 +118,3 @@ SelectAccountEntryAddressManagementToolbarDisplayContext selectAccountEntryAddre
 		/>
 	</liferay-ui:search-container>
 </clay:container-fluid>
-
-<script>
-	Liferay.Util.selectEntityHandler(
-		'#<portlet:namespace />selectDefaultAddress',
-		'<%= HtmlUtil.escapeJS(liferayPortletResponse.getNamespace() + "selectDefaultAddress") %>'
-	);
-</script>
-
-<liferay-frontend:component
-	componentId="<%= selectAccountEntryAddressManagementToolbarDisplayContext.getDefaultEventHandler() %>"
-	module="account_entries_admin/js/AccountEntryAddressesManagementToolbarDefaultEventHandler.es"
-/>

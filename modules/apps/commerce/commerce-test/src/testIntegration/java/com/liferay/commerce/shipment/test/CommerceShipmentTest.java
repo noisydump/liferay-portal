@@ -26,6 +26,7 @@ import com.liferay.commerce.discount.CommerceDiscountValue;
 import com.liferay.commerce.exception.CommerceOrderShippingAddressException;
 import com.liferay.commerce.exception.CommerceShipmentInactiveWarehouseException;
 import com.liferay.commerce.exception.CommerceShipmentItemQuantityException;
+import com.liferay.commerce.exception.DuplicateCommerceShipmentException;
 import com.liferay.commerce.exception.NoSuchOrderException;
 import com.liferay.commerce.exception.NoSuchShipmentItemException;
 import com.liferay.commerce.inventory.model.CommerceInventoryWarehouse;
@@ -37,43 +38,37 @@ import com.liferay.commerce.model.CommerceShippingMethod;
 import com.liferay.commerce.order.engine.CommerceOrderEngine;
 import com.liferay.commerce.price.CommerceOrderPrice;
 import com.liferay.commerce.price.CommerceOrderPriceCalculation;
-import com.liferay.commerce.price.list.service.CommercePriceListLocalService;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CPDefinitionLocalService;
 import com.liferay.commerce.product.service.CPInstanceLocalService;
-import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.product.service.CommerceChannelRelLocalService;
 import com.liferay.commerce.product.test.util.CPTestUtil;
 import com.liferay.commerce.service.CommerceOrderItemLocalService;
 import com.liferay.commerce.service.CommerceOrderLocalService;
 import com.liferay.commerce.service.CommerceShipmentItemLocalService;
+import com.liferay.commerce.service.CommerceShipmentLocalService;
 import com.liferay.commerce.shipment.test.util.CommerceShipmentTestUtil;
 import com.liferay.commerce.tax.model.CommerceTaxMethod;
 import com.liferay.commerce.test.util.CommerceInventoryTestUtil;
 import com.liferay.commerce.test.util.CommerceTaxTestUtil;
 import com.liferay.commerce.test.util.CommerceTestUtil;
-import com.liferay.commerce.test.util.TestCommerceContext;
+import com.liferay.commerce.test.util.context.TestCommerceContext;
 import com.liferay.commerce.util.CommerceShippingHelper;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
-import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
 import com.liferay.portal.kernel.settings.ModifiableSettings;
 import com.liferay.portal.kernel.settings.Settings;
 import com.liferay.portal.kernel.settings.SettingsFactoryUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
-import com.liferay.portal.kernel.test.rule.DataGuard;
-import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
-import com.liferay.portal.kernel.test.util.CompanyTestUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
@@ -100,7 +95,6 @@ import org.junit.runner.RunWith;
 /**
  * @author Riccardo Alberti
  */
-@DataGuard(scope = DataGuard.Scope.METHOD)
 @RunWith(Arquillian.class)
 public class CommerceShipmentTest {
 
@@ -112,25 +106,20 @@ public class CommerceShipmentTest {
 
 	@Before
 	public void setUp() throws Exception {
-		_company = CompanyTestUtil.addCompany();
+		_group = GroupTestUtil.addGroup();
 
-		_user = UserTestUtil.addUser(_company);
+		_user = UserTestUtil.addUser();
 
 		PermissionThreadLocal.setPermissionChecker(
 			PermissionCheckerFactoryUtil.create(_user));
 
 		PrincipalThreadLocal.setName(_user.getUserId());
 
-		_group = GroupTestUtil.addGroup(
-			_company.getCompanyId(), _user.getUserId(), 0);
-
 		_commerceCurrency = CommerceCurrencyTestUtil.addCommerceCurrency(
-			_company.getCompanyId());
+			_group.getCompanyId());
 
 		_commerceChannel = CommerceTestUtil.addCommerceChannel(
 			_group.getGroupId(), _commerceCurrency.getCode());
-
-		_commerceOrders = new ArrayList<>();
 	}
 
 	@After
@@ -307,15 +296,12 @@ public class CommerceShipmentTest {
 		Assert.assertEquals(
 			commerceOrder.getCommerceAccount(),
 			commerceShipment.getCommerceAccount());
-
 		Assert.assertEquals(
 			commerceOrder.getGroupId(), commerceShipment.getGroupId());
-
-		int commerceShipmentItemsCount =
+		Assert.assertEquals(
+			orderedQuantity,
 			_commerceShipmentItemLocalService.getCommerceShipmentItemsCount(
-				commerceShipment.getCommerceShipmentId());
-
-		Assert.assertEquals(orderedQuantity, commerceShipmentItemsCount);
+				commerceShipment.getCommerceShipmentId()));
 
 		List<CommerceShipmentItem> commerceShipmentItems =
 			_commerceShipmentItemLocalService.getCommerceShipmentItems(
@@ -328,7 +314,6 @@ public class CommerceShipmentTest {
 		Assert.assertEquals(
 			commerceOrderItem.getCommerceOrderItemId(),
 			commerceShipmentItem.getCommerceOrderItemId());
-
 		Assert.assertEquals(
 			commerceShipment, commerceShipmentItem.getCommerceShipment());
 	}
@@ -534,19 +519,19 @@ public class CommerceShipmentTest {
 
 		CommerceShipmentItem commerceShipmentItem1 =
 			_commerceShipmentItemLocalService.addCommerceShipmentItem(
-				commerceShipment1.getCommerceShipmentId(),
+				null, commerceShipment1.getCommerceShipmentId(),
 				commerceOrderItem1.getCommerceOrderItemId(),
 				commerceInventoryWarehouse.getCommerceInventoryWarehouseId(),
-				commerceOrderItem1.getQuantity(),
+				commerceOrderItem1.getQuantity(), true,
 				ServiceContextTestUtil.getServiceContext(
 					commerceOrder.getGroupId()));
 
 		CommerceShipmentItem commerceShipmentItem2 =
 			_commerceShipmentItemLocalService.addCommerceShipmentItem(
-				commerceShipment2.getCommerceShipmentId(),
+				null, commerceShipment2.getCommerceShipmentId(),
 				commerceOrderItem2.getCommerceOrderItemId(),
 				commerceInventoryWarehouse.getCommerceInventoryWarehouseId(),
-				commerceOrderItem2.getQuantity(),
+				commerceOrderItem2.getQuantity(), true,
 				ServiceContextTestUtil.getServiceContext(
 					commerceOrder.getGroupId()));
 
@@ -612,8 +597,7 @@ public class CommerceShipmentTest {
 			commerceOrder.getGroupId(), commerceOrder.getCommerceOrderId(),
 			commerceInventoryWarehouse.getCommerceInventoryWarehouseId());
 
-		Assert.assertEquals(
-			false, _commerceShippingHelper.isShippable(commerceOrder));
+		Assert.assertFalse(_commerceShippingHelper.isShippable(commerceOrder));
 	}
 
 	@Test
@@ -742,10 +726,10 @@ public class CommerceShipmentTest {
 				commerceOrder.getGroupId(), commerceOrder.getCommerceOrderId());
 
 		_commerceShipmentItemLocalService.addCommerceShipmentItem(
-			commerceShipment.getCommerceShipmentId(),
+			null, commerceShipment.getCommerceShipmentId(),
 			commerceOrderItem.getCommerceOrderItemId(),
 			commerceInventoryWarehouse.getCommerceInventoryWarehouseId(),
-			orderedQuantity,
+			orderedQuantity, true,
 			ServiceContextTestUtil.getServiceContext(
 				commerceOrder.getGroupId()));
 	}
@@ -798,7 +782,7 @@ public class CommerceShipmentTest {
 		Settings settings = SettingsFactoryUtil.getSettings(
 			new GroupServiceSettingsLocator(
 				_commerceChannel.getGroupId(),
-				CommerceConstants.SERVICE_NAME_TAX));
+				CommerceConstants.SERVICE_NAME_COMMERCE_TAX));
 
 		ModifiableSettings modifiableSettings =
 			settings.getModifiableSettings();
@@ -868,6 +852,69 @@ public class CommerceShipmentTest {
 		modifiableSettings.store();
 	}
 
+	@Test(expected = DuplicateCommerceShipmentException.class)
+	public void testUpdateOrderShipment() throws Exception {
+		frutillaRule.scenario(
+			"It should not be possible to update the ERC field with a value " +
+				"that already exists"
+		).given(
+			"An order with an order item associated with an active warehouse"
+		).when(
+			"I update the ERC field"
+		).then(
+			"An exception shall be raised"
+		);
+
+		CPInstance cpInstance = _createCPInstance();
+
+		BigDecimal value = BigDecimal.valueOf(RandomTestUtil.nextDouble());
+
+		CommerceOrder commerceOrder =
+			CommerceTestUtil.createCommerceOrderForShipping(
+				_user.getUserId(), _commerceChannel.getGroupId(),
+				_commerceCurrency.getCommerceCurrencyId(), value);
+
+		_commerceOrders.add(commerceOrder);
+
+		CommerceContext commerceContext = new TestCommerceContext(
+			commerceOrder.getCommerceCurrency(), _commerceChannel, null, null,
+			null, commerceOrder);
+
+		CommerceInventoryWarehouse commerceInventoryWarehouse =
+			_createCommerceInventoryWarehouse(
+				_commerceChannel.getCommerceChannelId(), true);
+
+		CommerceInventoryTestUtil.addCommerceInventoryWarehouseItem(
+			_user.getUserId(), commerceInventoryWarehouse, cpInstance.getSku(),
+			5);
+
+		CommerceTestUtil.addCommerceOrderItem(
+			commerceOrder.getCommerceOrderId(), cpInstance.getCPInstanceId(), 1,
+			commerceContext);
+
+		CommerceShipment commerceShipment =
+			CommerceShipmentTestUtil.createOrderShipment(
+				commerceOrder.getGroupId(), commerceOrder.getCommerceOrderId(),
+				commerceInventoryWarehouse.getCommerceInventoryWarehouseId());
+
+		String externalReferenceCode = "externalReferenceCode";
+
+		_commerceShipmentLocalService.updateExternalReferenceCode(
+			commerceShipment.getCommerceShipmentId(), externalReferenceCode);
+
+		CommerceShipment newCommerceShipment =
+			CommerceShipmentTestUtil.createOrderShipment(
+				commerceOrder.getGroupId(), commerceOrder.getCommerceOrderId(),
+				commerceInventoryWarehouse.getCommerceInventoryWarehouseId());
+
+		_commerceShipmentLocalService.updateExternalReferenceCode(
+			newCommerceShipment.getCommerceShipmentId(), externalReferenceCode);
+
+		_commerceShipmentLocalService.deleteCommerceShipment(commerceShipment);
+		_commerceShipmentLocalService.deleteCommerceShipment(
+			newCommerceShipment);
+	}
+
 	@Test(expected = CommerceShipmentItemQuantityException.class)
 	public void testUpdateShippingItemQuantity() throws Exception {
 		frutillaRule.scenario(
@@ -930,7 +977,8 @@ public class CommerceShipmentTest {
 
 		_commerceShipmentItemLocalService.updateCommerceShipmentItem(
 			commerceShipmentItem.getCommerceShipmentItemId(),
-			newOrderedQuantity);
+			commerceInventoryWarehouse.getCommerceInventoryWarehouseId(),
+			newOrderedQuantity, true);
 	}
 
 	@Test(expected = NoSuchShipmentItemException.class)
@@ -980,7 +1028,8 @@ public class CommerceShipmentTest {
 			orderedQuantity, commerceContext);
 
 		_commerceShipmentItemLocalService.updateCommerceShipmentItem(
-			0, orderedQuantity);
+			0, commerceInventoryWarehouse.getCommerceInventoryWarehouseId(),
+			orderedQuantity, true);
 	}
 
 	@Rule
@@ -1017,10 +1066,9 @@ public class CommerceShipmentTest {
 		return CPTestUtil.addCPInstanceWithRandomSku(groupId);
 	}
 
-	private CommerceChannel _commerceChannel;
+	private static User _user;
 
-	@Inject
-	private CommerceChannelLocalService _commerceChannelLocalService;
+	private CommerceChannel _commerceChannel;
 
 	@Inject
 	private CommerceChannelRelLocalService _commerceChannelRelLocalService;
@@ -1042,22 +1090,16 @@ public class CommerceShipmentTest {
 	@Inject
 	private CommerceOrderPriceCalculation _commerceOrderPriceCalculation;
 
-	private List<CommerceOrder> _commerceOrders;
-
-	@Inject
-	private CommercePriceListLocalService _commercePriceListLocalService;
+	private final List<CommerceOrder> _commerceOrders = new ArrayList<>();
 
 	@Inject
 	private CommerceShipmentItemLocalService _commerceShipmentItemLocalService;
 
 	@Inject
-	private CommerceShippingHelper _commerceShippingHelper;
-
-	@DeleteAfterTestRun
-	private Company _company;
+	private CommerceShipmentLocalService _commerceShipmentLocalService;
 
 	@Inject
-	private CompanyLocalService _companyLocalService;
+	private CommerceShippingHelper _commerceShippingHelper;
 
 	@Inject
 	private CPDefinitionLocalService _cpDefinitionLocalService;
@@ -1066,9 +1108,6 @@ public class CommerceShipmentTest {
 	private CPInstanceLocalService _cpInstanceLocalService;
 
 	private Group _group;
-
-	@DeleteAfterTestRun
-	private User _user;
 
 	@Inject
 	private UserLocalService _userLocalService;

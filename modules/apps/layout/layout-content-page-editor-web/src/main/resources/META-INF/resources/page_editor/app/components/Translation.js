@@ -29,6 +29,7 @@ const getEditableValues = (fragmentEntryLinks) =>
 		.filter(
 			(fragmentEntryLink) =>
 				!fragmentEntryLink.masterLayout &&
+				!fragmentEntryLink.removed &&
 				fragmentEntryLink.editableValues
 		)
 		.map((fragmentEntryLink) => [
@@ -104,6 +105,7 @@ const TranslationItem = ({
 			) : (
 				<span>{languageLabel}</span>
 			)}
+
 			<span className="dropdown-item-indicator-end page-editor__translation__label-wrapper">
 				<div
 					className={classNames(
@@ -112,6 +114,7 @@ const TranslationItem = ({
 					)}
 				>
 					{TRANSLATION_STATUS_LANGUAGE[status]}
+
 					{TRANSLATION_STATUS_TYPE[status] ===
 						TRANSLATION_STATUS_TYPE.translating &&
 						` ${translatedValuesLength}/${editableValuesLength}`}
@@ -148,11 +151,11 @@ export default function Translation({
 			.filter(
 				(languageId) =>
 					showNotTranslated ||
-					editableValues.filter(
+					!!editableValues.filter(
 						(editableValue) =>
 							isTranslated(editableValue, languageId) ||
 							languageId === defaultLanguageId
-					).length > 0
+					).length
 			)
 			.map((languageId) => ({
 				languageId,
@@ -176,6 +179,9 @@ export default function Translation({
 			hasRightSymbols
 			menuElementAttrs={{
 				className: 'page-editor__translation',
+				containerProps: {
+					className: 'cadmin',
+				},
 			}}
 			onActiveChange={setActive}
 			trigger={
@@ -186,6 +192,7 @@ export default function Translation({
 					small
 				>
 					<ClayIcon symbol={languageIcon} />
+
 					<span className="sr-only">{languageLabel}</span>
 				</ClayButton>
 			}
@@ -203,7 +210,7 @@ export default function Translation({
 						languageId={languageId}
 						languageLabel={
 							availableLanguages[language.languageId]
-								.languageLabel
+								.w3cLanguageId
 						}
 						onClick={() => {
 							dispatch(
@@ -225,7 +232,7 @@ Translation.propTypes = {
 	availableLanguages: PropTypes.objectOf(
 		PropTypes.shape({
 			languageIcon: PropTypes.string.isRequired,
-			languageLabel: PropTypes.string.isRequired,
+			w3cLanguageId: PropTypes.string.isRequired,
 		})
 	).isRequired,
 	defaultLanguageId: PropTypes.string.isRequired,

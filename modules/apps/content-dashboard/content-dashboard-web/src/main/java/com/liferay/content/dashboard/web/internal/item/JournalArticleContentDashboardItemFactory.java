@@ -16,15 +16,16 @@ package com.liferay.content.dashboard.web.internal.item;
 
 import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
+import com.liferay.content.dashboard.item.type.ContentDashboardItemSubtypeFactory;
 import com.liferay.content.dashboard.web.internal.item.action.ContentDashboardItemActionProviderTracker;
-import com.liferay.content.dashboard.web.internal.item.type.ContentDashboardItemTypeFactory;
-import com.liferay.content.dashboard.web.internal.item.type.ContentDashboardItemTypeFactoryTracker;
+import com.liferay.content.dashboard.web.internal.item.type.ContentDashboardItemSubtypeFactoryTracker;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.info.item.InfoItemServiceTracker;
 import com.liferay.info.item.provider.InfoItemFieldValuesProvider;
 import com.liferay.journal.constants.JournalArticleConstants;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.service.JournalArticleLocalService;
+import com.liferay.journal.service.JournalArticleService;
 import com.liferay.portal.kernel.exception.NoSuchModelException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
@@ -55,7 +56,7 @@ public class JournalArticleContentDashboardItemFactory
 
 		AssetEntry assetEntry = null;
 
-		if (!journalArticle.isApproved() &&
+		if (!journalArticle.isApproved() && !journalArticle.isExpired() &&
 			(journalArticle.getVersion() !=
 				JournalArticleConstants.VERSION_DEFAULT)) {
 
@@ -68,14 +69,18 @@ public class JournalArticleContentDashboardItemFactory
 				journalArticle.getResourcePrimKey());
 		}
 
-		Optional<ContentDashboardItemTypeFactory>
-			contentDashboardItemTypeFactoryOptional =
-				_contentDashboardItemTypeFactoryTracker.
-					getContentDashboardItemTypeFactoryOptional(
-						DDMStructure.class.getName());
+		if (assetEntry == null) {
+			throw new NoSuchModelException(
+				"Unable to find an asset entry for journal article " +
+					journalArticle.getPrimaryKey());
+		}
 
-		ContentDashboardItemTypeFactory contentDashboardItemTypeFactory =
-			contentDashboardItemTypeFactoryOptional.orElseThrow(
+		Optional<ContentDashboardItemSubtypeFactory>
+			contentDashboardItemSubtypeFactoryOptional =
+				getContentDashboardItemSubtypeFactoryOptional();
+
+		ContentDashboardItemSubtypeFactory contentDashboardItemSubtypeFactory =
+			contentDashboardItemSubtypeFactoryOptional.orElseThrow(
 				NoSuchModelException::new);
 
 		DDMStructure ddmStructure = journalArticle.getDDMStructure();
@@ -93,11 +98,21 @@ public class JournalArticleContentDashboardItemFactory
 		return new JournalArticleContentDashboardItem(
 			assetEntry.getCategories(), assetEntry.getTags(),
 			_contentDashboardItemActionProviderTracker,
-			contentDashboardItemTypeFactory.create(
-				ddmStructure.getStructureId()),
+			contentDashboardItemSubtypeFactory.create(
+				ddmStructure.getStructureId(),
+				journalArticle.getResourcePrimKey()),
 			_groupLocalService.fetchGroup(journalArticle.getGroupId()),
-			infoItemFieldValuesProvider, journalArticle, _language,
-			latestApprovedJournalArticle, _portal);
+			infoItemFieldValuesProvider, journalArticle, _journalArticleService,
+			_language, latestApprovedJournalArticle, _portal);
+	}
+
+	@Override
+	public Optional<ContentDashboardItemSubtypeFactory>
+		getContentDashboardItemSubtypeFactoryOptional() {
+
+		return _contentDashboardItemSubtypeFactoryTracker.
+			getContentDashboardItemSubtypeFactoryOptional(
+				DDMStructure.class.getName());
 	}
 
 	@Reference
@@ -111,14 +126,17 @@ public class JournalArticleContentDashboardItemFactory
 		_contentDashboardItemActionProviderTracker;
 
 	@Reference
-	private ContentDashboardItemTypeFactoryTracker
-		_contentDashboardItemTypeFactoryTracker;
+	private ContentDashboardItemSubtypeFactoryTracker
+		_contentDashboardItemSubtypeFactoryTracker;
 
 	@Reference
 	private GroupLocalService _groupLocalService;
 
 	@Reference
 	private JournalArticleLocalService _journalArticleLocalService;
+
+	@Reference
+	private JournalArticleService _journalArticleService;
 
 	@Reference
 	private Language _language;

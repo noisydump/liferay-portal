@@ -24,7 +24,6 @@ import com.liferay.dynamic.data.mapping.form.renderer.DDMFormRenderingContext;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMFormLayout;
-import com.liferay.dynamic.data.mapping.render.DDMFormFieldRenderingContext;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLayoutLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
@@ -35,13 +34,16 @@ import com.liferay.portal.json.JSONFactoryImpl;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.language.constants.LanguageConstants;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.template.TemplateResource;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.HtmlParser;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -52,11 +54,11 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
-import org.mockito.Matchers;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 
 /**
@@ -64,9 +66,14 @@ import org.mockito.Mockito;
  */
 public class DDMFormFieldTemplateContextFactoryTest {
 
-	@Before
-	public void setUp() {
-		setUpDDMFormTemplateContextFactoryUtil();
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
+	@BeforeClass
+	public static void setUpClass() {
+		_setUpDDMFormTemplateContextFactoryUtil();
 		setUpLanguageUtil();
 	}
 
@@ -116,10 +123,10 @@ public class DDMFormFieldTemplateContextFactoryTest {
 		ddmFormFieldValues.add(ddmFormFieldValue);
 
 		DDMFormFieldTemplateContextFactory ddmFormFieldTemplateContextFactory =
-			createDDMFormFieldTemplateContextFactory(
+			_createDDMFormFieldTemplateContextFactory(
 				ddmForm, ddmFormField.getName(), ddmFormFieldsPropertyChanges,
-				ddmFormFieldValues, true, getTextDDMFormFieldRenderer(),
-				getTextDDMFormFieldTemplateContextContributor());
+				ddmFormFieldValues, true, _getTextDDMFormFieldRenderer(),
+				_getTextDDMFormFieldTemplateContextContributor());
 
 		List<Object> fields = ddmFormFieldTemplateContextFactory.create();
 
@@ -128,8 +135,7 @@ public class DDMFormFieldTemplateContextFactoryTest {
 		Map<String, Object> fieldTemplateContext =
 			(Map<String, Object>)fields.get(0);
 
-		Assert.assertEquals(
-			true, MapUtil.getBoolean(fieldTemplateContext, "readOnly"));
+		Assert.assertTrue(MapUtil.getBoolean(fieldTemplateContext, "readOnly"));
 	}
 
 	@Test
@@ -178,10 +184,10 @@ public class DDMFormFieldTemplateContextFactoryTest {
 		ddmFormFieldValues.add(ddmFormFieldValue);
 
 		DDMFormFieldTemplateContextFactory ddmFormFieldTemplateContextFactory =
-			createDDMFormFieldTemplateContextFactory(
+			_createDDMFormFieldTemplateContextFactory(
 				ddmForm, ddmFormField.getName(), ddmFormFieldsPropertyChanges,
-				ddmFormFieldValues, false, getTextDDMFormFieldRenderer(),
-				getTextDDMFormFieldTemplateContextContributor());
+				ddmFormFieldValues, false, _getTextDDMFormFieldRenderer(),
+				_getTextDDMFormFieldTemplateContextContributor());
 
 		List<Object> fields = ddmFormFieldTemplateContextFactory.create();
 
@@ -190,8 +196,7 @@ public class DDMFormFieldTemplateContextFactoryTest {
 		Map<String, Object> fieldTemplateContext =
 			(Map<String, Object>)fields.get(0);
 
-		Assert.assertEquals(
-			true, MapUtil.getBoolean(fieldTemplateContext, "readOnly"));
+		Assert.assertTrue(MapUtil.getBoolean(fieldTemplateContext, "readOnly"));
 	}
 
 	@Test
@@ -212,8 +217,10 @@ public class DDMFormFieldTemplateContextFactoryTest {
 		ddmFormField.setTip(
 			DDMFormValuesTestUtil.createLocalizedValue(
 				"This is a tip.", _LOCALE));
-
 		ddmFormField.setProperty("displayStyle", "singleline");
+		ddmFormField.setRequiredErrorMessage(
+			DDMFormValuesTestUtil.createLocalizedValue(
+				"Custom required error message.", _LOCALE));
 
 		ddmForm.addDDMFormField(ddmFormField);
 
@@ -249,10 +256,10 @@ public class DDMFormFieldTemplateContextFactoryTest {
 		ddmFormFieldValues.add(ddmFormFieldValue);
 
 		DDMFormFieldTemplateContextFactory ddmFormFieldTemplateContextFactory =
-			createDDMFormFieldTemplateContextFactory(
+			_createDDMFormFieldTemplateContextFactory(
 				ddmForm, ddmFormField.getName(), ddmFormFieldsPropertyChanges,
-				ddmFormFieldValues, false, getTextDDMFormFieldRenderer(),
-				getTextDDMFormFieldTemplateContextContributor());
+				ddmFormFieldValues, false, _getTextDDMFormFieldRenderer(),
+				_getTextDDMFormFieldTemplateContextContributor());
 
 		List<Object> fields = ddmFormFieldTemplateContextFactory.create();
 
@@ -266,23 +273,23 @@ public class DDMFormFieldTemplateContextFactoryTest {
 			MapUtil.getString(fieldTemplateContext, "displayStyle"));
 		Assert.assertEquals(
 			"Field 1", MapUtil.getString(fieldTemplateContext, "label"));
+		Assert.assertFalse(
+			MapUtil.getBoolean(fieldTemplateContext, "readOnly"));
+		Assert.assertFalse(
+			MapUtil.getBoolean(fieldTemplateContext, "repeatable"));
+		Assert.assertTrue(MapUtil.getBoolean(fieldTemplateContext, "required"));
 		Assert.assertEquals(
-			false, MapUtil.getBoolean(fieldTemplateContext, "readOnly"));
-		Assert.assertEquals(
-			false, MapUtil.getBoolean(fieldTemplateContext, "repeatable"));
-		Assert.assertEquals(
-			true, MapUtil.getBoolean(fieldTemplateContext, "required"));
+			"Custom required error message.",
+			MapUtil.getString(fieldTemplateContext, "requiredErrorMessage"));
 		Assert.assertEquals(
 			"This is a tip.", MapUtil.getString(fieldTemplateContext, "tip"));
-		Assert.assertEquals(
-			true, MapUtil.getBoolean(fieldTemplateContext, "valid"));
+		Assert.assertTrue(MapUtil.getBoolean(fieldTemplateContext, "valid"));
 		Assert.assertEquals(
 			StringPool.BLANK,
 			MapUtil.getString(fieldTemplateContext, "validationErrorMessage"));
 		Assert.assertEquals(
 			"Value 1", MapUtil.getString(fieldTemplateContext, "value"));
-		Assert.assertEquals(
-			true, MapUtil.getBoolean(fieldTemplateContext, "visible"));
+		Assert.assertTrue(MapUtil.getBoolean(fieldTemplateContext, "visible"));
 
 		String expectedName = String.format(
 			_FIELD_NAME_FORMAT, "Field1", instanceId, 0, _LOCALE.toString());
@@ -291,8 +298,70 @@ public class DDMFormFieldTemplateContextFactoryTest {
 			expectedName, MapUtil.getString(fieldTemplateContext, "name"));
 	}
 
-	protected DDMFormFieldTemplateContextFactory
-		createDDMFormFieldTemplateContextFactory(
+	protected static void setUpLanguageUtil() {
+		Language language = Mockito.mock(Language.class);
+
+		whenLanguageGet(
+			language, LocaleUtil.US, LanguageConstants.KEY_DIR, "ltr");
+
+		LanguageUtil languageUtil = new LanguageUtil();
+
+		languageUtil.setLanguage(language);
+	}
+
+	protected static void whenLanguageGet(
+		Language language, Locale locale, String key, String returnValue) {
+
+		Mockito.when(
+			language.get(Mockito.eq(locale), Mockito.eq(key))
+		).thenReturn(
+			returnValue
+		);
+	}
+
+	protected DDMFormFieldTypeServicesTracker
+		mockDDMFormFieldTypeServicesTracker(
+			DDMFormFieldRenderer ddmFormFieldRenderer,
+			DDMFormFieldTemplateContextContributor
+				ddmFormFieldTemplateContextContributor) {
+
+		DDMFormFieldTypeServicesTracker ddmFormFieldTypeServicesTracker =
+			Mockito.mock(DDMFormFieldTypeServicesTracker.class);
+
+		Mockito.when(
+			ddmFormFieldTypeServicesTracker.getDDMFormFieldRenderer(
+				Mockito.anyString())
+		).thenReturn(
+			ddmFormFieldRenderer
+		);
+
+		Mockito.when(
+			ddmFormFieldTypeServicesTracker.
+				getDDMFormFieldTemplateContextContributor(Mockito.anyString())
+		).thenReturn(
+			ddmFormFieldTemplateContextContributor
+		);
+
+		return ddmFormFieldTypeServicesTracker;
+	}
+
+	private static void _setUpDDMFormTemplateContextFactoryUtil() {
+		_httpServletRequest = Mockito.mock(HttpServletRequest.class);
+
+		ThemeDisplay themeDisplay = new ThemeDisplay();
+
+		themeDisplay.setPathThemeImages(StringPool.BLANK);
+
+		Mockito.when(
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY)
+		).thenReturn(
+			themeDisplay
+		);
+	}
+
+	private DDMFormFieldTemplateContextFactory
+		_createDDMFormFieldTemplateContextFactory(
 			DDMForm ddmForm, String ddmFormFieldName,
 			Map<DDMFormEvaluatorFieldContextKey, Map<String, Object>>
 				ddmFormFieldsPropertyChanges,
@@ -315,19 +384,17 @@ public class DDMFormFieldTemplateContextFactoryTest {
 				ddmForm.getDDMFormFieldsMap(true), ddmFormFieldsPropertyChanges,
 				ddmFormFieldValues, ddmFormRenderingContext,
 				_ddmStructureLayoutLocalService, _ddmStructureLocalService,
-				new JSONFactoryImpl(), true, new DDMFormLayout());
-
-		DDMFormFieldTypeServicesTracker ddmFormFieldTypeServicesTracker =
-			mockDDMFormFieldTypeServicesTracker(
-				ddmFormFieldRenderer, ddmFormFieldTemplateContextContributor);
+				_groupLocalService, _htmlParser, new JSONFactoryImpl(), true,
+				new DDMFormLayout());
 
 		ddmFormFieldTemplateContextFactory.setDDMFormFieldTypeServicesTracker(
-			ddmFormFieldTypeServicesTracker);
+			mockDDMFormFieldTypeServicesTracker(
+				ddmFormFieldRenderer, ddmFormFieldTemplateContextContributor));
 
 		return ddmFormFieldTemplateContextFactory;
 	}
 
-	protected DDMFormFieldRenderer getTextDDMFormFieldRenderer() {
+	private DDMFormFieldRenderer _getTextDDMFormFieldRenderer() {
 		return new BaseDDMFormFieldRenderer() {
 
 			public String getTemplateLanguage() {
@@ -345,86 +412,17 @@ public class DDMFormFieldTemplateContextFactoryTest {
 		};
 	}
 
-	protected DDMFormFieldTemplateContextContributor
-		getTextDDMFormFieldTemplateContextContributor() {
+	private DDMFormFieldTemplateContextContributor
+		_getTextDDMFormFieldTemplateContextContributor() {
 
-		return new DDMFormFieldTemplateContextContributor() {
+		return (ddmFormField, ddmFormFieldRenderingContext) -> {
+			Map<String, Object> parameters = new HashMap<>();
 
-			public Map<String, Object> getParameters(
-				DDMFormField ddmFormField,
-				DDMFormFieldRenderingContext ddmFormFieldRenderingContext) {
+			parameters.put(
+				"displayStyle", ddmFormField.getProperty("displayStyle"));
 
-				Map<String, Object> parameters = new HashMap<>();
-
-				parameters.put(
-					"displayStyle", ddmFormField.getProperty("displayStyle"));
-
-				return parameters;
-			}
-
+			return parameters;
 		};
-	}
-
-	protected DDMFormFieldTypeServicesTracker
-		mockDDMFormFieldTypeServicesTracker(
-			DDMFormFieldRenderer ddmFormFieldRenderer,
-			DDMFormFieldTemplateContextContributor
-				ddmFormFieldTemplateContextContributor) {
-
-		DDMFormFieldTypeServicesTracker ddmFormFieldTypeServicesTracker =
-			Mockito.mock(DDMFormFieldTypeServicesTracker.class);
-
-		Mockito.when(
-			ddmFormFieldTypeServicesTracker.getDDMFormFieldRenderer(
-				Matchers.anyString())
-		).thenReturn(
-			ddmFormFieldRenderer
-		);
-
-		Mockito.when(
-			ddmFormFieldTypeServicesTracker.
-				getDDMFormFieldTemplateContextContributor(Matchers.anyString())
-		).thenReturn(
-			ddmFormFieldTemplateContextContributor
-		);
-
-		return ddmFormFieldTypeServicesTracker;
-	}
-
-	protected void setUpDDMFormTemplateContextFactoryUtil() {
-		_httpServletRequest = Mockito.mock(HttpServletRequest.class);
-
-		ThemeDisplay themeDisplay = new ThemeDisplay();
-
-		themeDisplay.setPathThemeImages(StringPool.BLANK);
-
-		Mockito.when(
-			(ThemeDisplay)_httpServletRequest.getAttribute(
-				WebKeys.THEME_DISPLAY)
-		).thenReturn(
-			themeDisplay
-		);
-	}
-
-	protected void setUpLanguageUtil() {
-		Language language = Mockito.mock(Language.class);
-
-		whenLanguageGet(
-			language, LocaleUtil.US, LanguageConstants.KEY_DIR, "ltr");
-
-		LanguageUtil languageUtil = new LanguageUtil();
-
-		languageUtil.setLanguage(language);
-	}
-
-	protected void whenLanguageGet(
-		Language language, Locale locale, String key, String returnValue) {
-
-		Mockito.when(
-			language.get(Matchers.eq(locale), Matchers.eq(key))
-		).thenReturn(
-			returnValue
-		);
 	}
 
 	private static final String _FIELD_NAME_FORMAT =
@@ -434,15 +432,17 @@ public class DDMFormFieldTemplateContextFactoryTest {
 
 	private static final String _PORTLET_NAMESPACE = "_PORTLET_NAMESPACE_";
 
-	@Mock
-	private DDMFormEvaluator _ddmFormEvaluator;
+	private static HttpServletRequest _httpServletRequest;
 
-	@Mock
-	private DDMStructureLayoutLocalService _ddmStructureLayoutLocalService;
-
-	@Mock
-	private DDMStructureLocalService _ddmStructureLocalService;
-
-	private HttpServletRequest _httpServletRequest;
+	private final DDMFormEvaluator _ddmFormEvaluator = Mockito.mock(
+		DDMFormEvaluator.class);
+	private final DDMStructureLayoutLocalService
+		_ddmStructureLayoutLocalService = Mockito.mock(
+			DDMStructureLayoutLocalService.class);
+	private final DDMStructureLocalService _ddmStructureLocalService =
+		Mockito.mock(DDMStructureLocalService.class);
+	private final GroupLocalService _groupLocalService = Mockito.mock(
+		GroupLocalService.class);
+	private final HtmlParser _htmlParser = Mockito.mock(HtmlParser.class);
 
 }

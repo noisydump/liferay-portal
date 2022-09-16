@@ -14,15 +14,14 @@
 
 package com.liferay.document.library.layout.set.prototype.internal.upgrade.v1_0_0;
 
-import com.liferay.portal.kernel.upgrade.BaseUpgradeLocalizedColumn;
+import com.liferay.portal.kernel.upgrade.BaseLocalizedColumnUpgradeProcess;
 import com.liferay.portal.language.LanguageResources;
-import com.liferay.portal.upgrade.v7_1_x.util.LayoutSetPrototypeTable;
 import com.liferay.portal.util.PortalInstances;
 
 /**
  * @author Leon Chi
  */
-public class UpgradeLocalizedColumn extends BaseUpgradeLocalizedColumn {
+public class UpgradeLocalizedColumn extends BaseLocalizedColumnUpgradeProcess {
 
 	@Override
 	protected void doUpgrade() throws Exception {
@@ -30,12 +29,12 @@ public class UpgradeLocalizedColumn extends BaseUpgradeLocalizedColumn {
 
 		upgradeLocalizedColumn(
 			LanguageResources.PORTAL_RESOURCE_BUNDLE_LOADER,
-			LayoutSetPrototypeTable.class, "name", _NAME,
+			"LayoutSetPrototype", "name", _NAME,
 			"layout-set-prototype-intranet-site-title", "Name", companyIds);
 
 		upgradeLocalizedColumn(
 			LanguageResources.PORTAL_RESOURCE_BUNDLE_LOADER,
-			LayoutSetPrototypeTable.class, "description", _DESCRIPTION,
+			"LayoutSetPrototype", "description", _DESCRIPTION,
 			"layout-set-prototype-intranet-site-description", "Description",
 			companyIds);
 	}

@@ -25,10 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.util.tracker.ServiceTracker;
-
 /**
  * The persistence utility for the message boards category service. This utility wraps <code>com.liferay.message.boards.service.persistence.impl.MBCategoryPersistenceImpl</code> and provides direct access to the database for CRUD operations. This utility should only be used by the service layer, as it must operate within a transaction. Never access this utility in a JSP, controller, model, or other front-end class.
  *
@@ -1307,7 +1303,7 @@ public class MBCategoryUtil {
 	 * </p>
 	 *
 	 * @param groupId the group ID
-	 * @param parentCategoryId the parent category ID
+	 * @param parentCategoryIds the parent category IDs
 	 * @param start the lower bound of the range of message boards categories
 	 * @param end the upper bound of the range of message boards categories (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
@@ -2181,9 +2177,9 @@ public class MBCategoryUtil {
 	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>MBCategoryModelImpl</code>.
 	 * </p>
 	 *
-	 * @param categoryId the category ID
+	 * @param categoryIds the category IDs
 	 * @param groupId the group ID
-	 * @param parentCategoryId the parent category ID
+	 * @param parentCategoryIds the parent category IDs
 	 * @param start the lower bound of the range of message boards categories
 	 * @param end the upper bound of the range of message boards categories (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
@@ -2660,7 +2656,7 @@ public class MBCategoryUtil {
 	 * </p>
 	 *
 	 * @param groupId the group ID
-	 * @param parentCategoryId the parent category ID
+	 * @param parentCategoryIds the parent category IDs
 	 * @param status the status
 	 * @param start the lower bound of the range of message boards categories
 	 * @param end the upper bound of the range of message boards categories (not inclusive)
@@ -3138,7 +3134,7 @@ public class MBCategoryUtil {
 	 * </p>
 	 *
 	 * @param groupId the group ID
-	 * @param parentCategoryId the parent category ID
+	 * @param parentCategoryIds the parent category IDs
 	 * @param status the status
 	 * @param start the lower bound of the range of message boards categories
 	 * @param end the upper bound of the range of message boards categories (not inclusive)
@@ -3601,9 +3597,9 @@ public class MBCategoryUtil {
 	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>MBCategoryModelImpl</code>.
 	 * </p>
 	 *
-	 * @param categoryId the category ID
+	 * @param categoryIds the category IDs
 	 * @param groupId the group ID
-	 * @param parentCategoryId the parent category ID
+	 * @param parentCategoryIds the parent category IDs
 	 * @param status the status
 	 * @param start the lower bound of the range of message boards categories
 	 * @param end the upper bound of the range of message boards categories (not inclusive)
@@ -3850,25 +3846,9 @@ public class MBCategoryUtil {
 	}
 
 	public static MBCategoryPersistence getPersistence() {
-		return _serviceTracker.getService();
+		return _persistence;
 	}
 
-	private static ServiceTracker<MBCategoryPersistence, MBCategoryPersistence>
-		_serviceTracker;
-
-	static {
-		Bundle bundle = FrameworkUtil.getBundle(MBCategoryPersistence.class);
-
-		ServiceTracker<MBCategoryPersistence, MBCategoryPersistence>
-			serviceTracker =
-				new ServiceTracker
-					<MBCategoryPersistence, MBCategoryPersistence>(
-						bundle.getBundleContext(), MBCategoryPersistence.class,
-						null);
-
-		serviceTracker.open();
-
-		_serviceTracker = serviceTracker;
-	}
+	private static volatile MBCategoryPersistence _persistence;
 
 }

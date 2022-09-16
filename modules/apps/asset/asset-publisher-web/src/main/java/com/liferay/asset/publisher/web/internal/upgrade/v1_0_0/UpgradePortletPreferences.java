@@ -25,7 +25,7 @@ import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
-import com.liferay.portal.kernel.upgrade.BaseUpgradePortletPreferences;
+import com.liferay.portal.kernel.upgrade.BasePortletPreferencesUpgradeProcess;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -54,7 +54,8 @@ import javax.portlet.PortletPreferences;
 /**
  * @author Sam Ziemer
  */
-public class UpgradePortletPreferences extends BaseUpgradePortletPreferences {
+public class UpgradePortletPreferences
+	extends BasePortletPreferencesUpgradeProcess {
 
 	public UpgradePortletPreferences(
 		DDMStructureLocalService ddmStructureLocalService,
@@ -71,7 +72,65 @@ public class UpgradePortletPreferences extends BaseUpgradePortletPreferences {
 			"yyyyMMddHHmmss");
 	}
 
-	protected DDMForm getDDMForm(long structureId) throws Exception {
+	@Override
+	protected String[] getPortletIds() {
+		return new String[] {
+			AssetPublisherPortletKeys.ASSET_PUBLISHER + "_INSTANCE_%"
+		};
+	}
+
+	@Override
+	protected String upgradePreferences(
+			long companyId, long ownerId, int ownerType, long plid,
+			String portletId, String xml)
+		throws Exception {
+
+		PortletPreferences portletPreferences =
+			PortletPreferencesFactoryUtil.fromXML(
+				companyId, ownerId, ownerType, plid, portletId, xml);
+
+		portletPreferences = upgradePreferences(portletPreferences);
+
+		return PortletPreferencesFactoryUtil.toXML(portletPreferences);
+	}
+
+	protected PortletPreferences upgradePreferences(
+			PortletPreferences portletPreferences)
+		throws Exception {
+
+		String[] assetEntryXmls = portletPreferences.getValues(
+			"asset-entry-xml", new String[0]);
+
+		if (ArrayUtil.isNotEmpty(assetEntryXmls)) {
+			_upgradeUuids(assetEntryXmls);
+
+			portletPreferences.setValues("assetEntryXml", assetEntryXmls);
+		}
+
+		boolean subtypeFieldsFilterEnabled = GetterUtil.getBoolean(
+			portletPreferences.getValue(
+				"subtypeFieldsFilterEnabled", Boolean.FALSE.toString()));
+
+		if (subtypeFieldsFilterEnabled) {
+			boolean dlFilterByFieldEnable = _isFilterByFieldEnable(
+				portletPreferences, _DL_FILTER_BY_FIELD_ENABLED_KEY);
+			boolean journalFilterByFieldEnable = _isFilterByFieldEnable(
+				portletPreferences, _JOURNAL_FILTER_BY_FIELD_ENABLED_KEY);
+
+			if (dlFilterByFieldEnable) {
+				_upgradeDLDateFieldsValues(portletPreferences);
+			}
+			else if (journalFilterByFieldEnable) {
+				_upgradeJournalDateFieldValue(portletPreferences);
+			}
+		}
+
+		_upgradeOrderByColumns(portletPreferences);
+
+		return portletPreferences;
+	}
+
+	private DDMForm _getDDMForm(long structureId) throws Exception {
 		DDMForm ddmForm = _ddmSructureDDMForms.get(structureId);
 
 		if (ddmForm != null) {
@@ -88,32 +147,29 @@ public class UpgradePortletPreferences extends BaseUpgradePortletPreferences {
 		return ddmForm;
 	}
 
-	protected DDMFormField getDDMFormField(DDMForm ddmForm, String fieldName) {
+	private DDMFormField _getDDMFormField(DDMForm ddmForm, String fieldName) {
 		Map<String, DDMFormField> ddmFormFieldsMap =
 			ddmForm.getDDMFormFieldsMap(false);
 
 		return ddmFormFieldsMap.get(fieldName);
 	}
 
-	protected String getJournalArticleResourceUuid(String journalArticleUuid)
+	private String _getJournalArticleResourceUuid(String journalArticleUuid)
 		throws Exception {
 
-		StringBundler sb = new StringBundler(5);
+		try (PreparedStatement preparedStatement = connection.prepareStatement(
+				StringBundler.concat(
+					"select JournalArticleResource.uuid_ from ",
+					"JournalArticleResource inner join JournalArticle on ",
+					"JournalArticle.resourcePrimKey = ",
+					"JournalArticleResource.resourcePrimKey where ",
+					"JournalArticle.uuid_ = ?"))) {
 
-		sb.append("select JournalArticleResource.uuid_ from ");
-		sb.append("JournalArticleResource inner join JournalArticle on ");
-		sb.append("JournalArticle.resourcePrimKey = ");
-		sb.append("JournalArticleResource.resourcePrimKey where ");
-		sb.append("JournalArticle.uuid_ = ?");
+			preparedStatement.setString(1, journalArticleUuid);
 
-		try (PreparedStatement ps = connection.prepareStatement(
-				sb.toString())) {
-
-			ps.setString(1, journalArticleUuid);
-
-			try (ResultSet rs = ps.executeQuery()) {
-				if (rs.next()) {
-					return rs.getString("uuid_");
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				if (resultSet.next()) {
+					return resultSet.getString("uuid_");
 				}
 
 				return null;
@@ -121,35 +177,30 @@ public class UpgradePortletPreferences extends BaseUpgradePortletPreferences {
 		}
 	}
 
-	@Override
-	protected String[] getPortletIds() {
-		return new String[] {
-			AssetPublisherPortletKeys.ASSET_PUBLISHER + "_INSTANCE_%"
-		};
-	}
-
-	protected boolean isDateField(DDMForm ddmForm, String fieldName) {
-		DDMFormField ddmFormField = getDDMFormField(ddmForm, fieldName);
+	private boolean _isDateField(DDMForm ddmForm, String fieldName) {
+		DDMFormField ddmFormField = _getDDMFormField(ddmForm, fieldName);
 
 		if (ddmFormField == null) {
 			return false;
 		}
 
-		if (Objects.equals("ddm-date", ddmFormField.getType())) {
+		if (Objects.equals("date", ddmFormField.getType()) ||
+			Objects.equals("ddm-date", ddmFormField.getType())) {
+
 			return true;
 		}
 
 		return false;
 	}
 
-	protected boolean isFilterByFieldEnable(
+	private boolean _isFilterByFieldEnable(
 		PortletPreferences portletPreferences, String key) {
 
 		return GetterUtil.getBoolean(
 			portletPreferences.getValue(key, Boolean.FALSE.toString()));
 	}
 
-	protected boolean isOldDDMPreferenceValueFormat(String value) {
+	private boolean _isOldDDMPreferenceValueFormat(String value) {
 		if (value.startsWith(_DDM_FIELD_OLD_PREFIX)) {
 			return true;
 		}
@@ -157,8 +208,7 @@ public class UpgradePortletPreferences extends BaseUpgradePortletPreferences {
 		return false;
 	}
 
-	protected void transformDateFieldValue(
-			PortletPreferences portletPreferences)
+	private void _transformDateFieldValue(PortletPreferences portletPreferences)
 		throws Exception {
 
 		String value = GetterUtil.getString(
@@ -172,7 +222,7 @@ public class UpgradePortletPreferences extends BaseUpgradePortletPreferences {
 		}
 	}
 
-	protected void upgradeDLDateFieldsValues(
+	private void _upgradeDLDateFieldsValues(
 			PortletPreferences portletPreferences)
 		throws Exception {
 
@@ -191,11 +241,11 @@ public class UpgradePortletPreferences extends BaseUpgradePortletPreferences {
 				portletPreferences.getValue(_DDM_STRUCTURE_FIELD_NAME, null));
 
 			for (DDMStructureLink ddmStructureLink : ddmStructureLinks) {
-				if (isDateField(
-						getDDMForm(ddmStructureLink.getStructureId()),
+				if (_isDateField(
+						_getDDMForm(ddmStructureLink.getStructureId()),
 						selectedFieldName)) {
 
-					transformDateFieldValue(portletPreferences);
+					_transformDateFieldValue(portletPreferences);
 
 					break;
 				}
@@ -203,7 +253,7 @@ public class UpgradePortletPreferences extends BaseUpgradePortletPreferences {
 		}
 	}
 
-	protected void upgradeJournalDateFieldValue(
+	private void _upgradeJournalDateFieldValue(
 			PortletPreferences portletPreferences)
 		throws Exception {
 
@@ -214,13 +264,13 @@ public class UpgradePortletPreferences extends BaseUpgradePortletPreferences {
 			String selectedFieldName = GetterUtil.getString(
 				portletPreferences.getValue(_DDM_STRUCTURE_FIELD_NAME, null));
 
-			if (isDateField(getDDMForm(structureId), selectedFieldName)) {
-				transformDateFieldValue(portletPreferences);
+			if (_isDateField(_getDDMForm(structureId), selectedFieldName)) {
+				_transformDateFieldValue(portletPreferences);
 			}
 		}
 	}
 
-	protected void upgradeOrderByColumn(
+	private void _upgradeOrderByColumn(
 			PortletPreferences portletPreferences, String column)
 		throws Exception {
 
@@ -236,8 +286,8 @@ public class UpgradePortletPreferences extends BaseUpgradePortletPreferences {
 
 			String[] values = new String[0];
 
-			boolean oldDDMPreferenceValueFormat = isOldDDMPreferenceValueFormat(
-				value);
+			boolean oldDDMPreferenceValueFormat =
+				_isOldDDMPreferenceValueFormat(value);
 
 			if (oldDDMPreferenceValueFormat) {
 				values = StringUtil.split(value, _DDM_FIELD_OLD_SEPARATOR);
@@ -259,23 +309,16 @@ public class UpgradePortletPreferences extends BaseUpgradePortletPreferences {
 						_INVALID_FIELD_NAME_CHARS_REGEX, StringPool.BLANK);
 				}
 
-				DDMFormField ddmFormField = getDDMFormField(
-					getDDMForm(structureId), fieldName);
+				DDMFormField ddmFormField = _getDDMFormField(
+					_getDDMForm(structureId), fieldName);
 
 				if ((ddmFormField != null) &&
 					Validator.isNotNull(ddmFormField.getIndexType())) {
 
-					StringBundler sb = new StringBundler(7);
-
-					sb.append(values[0]);
-					sb.append(_DDM_FIELD_SEPARATOR);
-					sb.append(ddmFormField.getIndexType());
-					sb.append(_DDM_FIELD_SEPARATOR);
-					sb.append(values[1]);
-					sb.append(_DDM_FIELD_SEPARATOR);
-					sb.append(fieldName);
-
-					value = sb.toString();
+					value = StringBundler.concat(
+						values[0], _DDM_FIELD_SEPARATOR,
+						ddmFormField.getIndexType(), _DDM_FIELD_SEPARATOR,
+						values[1], _DDM_FIELD_SEPARATOR, fieldName);
 				}
 			}
 			else if ((values.length == 4) && oldDDMPreferenceValueFormat) {
@@ -287,56 +330,14 @@ public class UpgradePortletPreferences extends BaseUpgradePortletPreferences {
 		}
 	}
 
-	protected void upgradeOrderByColumns(PortletPreferences portletPreferences)
+	private void _upgradeOrderByColumns(PortletPreferences portletPreferences)
 		throws Exception {
 
-		upgradeOrderByColumn(portletPreferences, _ORDER_BY_COLUMN_1);
-		upgradeOrderByColumn(portletPreferences, _ORDER_BY_COLUMN_2);
+		_upgradeOrderByColumn(portletPreferences, _ORDER_BY_COLUMN_1);
+		_upgradeOrderByColumn(portletPreferences, _ORDER_BY_COLUMN_2);
 	}
 
-	@Override
-	protected String upgradePreferences(
-			long companyId, long ownerId, int ownerType, long plid,
-			String portletId, String xml)
-		throws Exception {
-
-		PortletPreferences portletPreferences =
-			PortletPreferencesFactoryUtil.fromXML(
-				companyId, ownerId, ownerType, plid, portletId, xml);
-
-		String[] assetEntryXmls = portletPreferences.getValues(
-			"asset-entry-xml", new String[0]);
-
-		if (ArrayUtil.isNotEmpty(assetEntryXmls)) {
-			upgradeUuids(assetEntryXmls);
-
-			portletPreferences.setValues("assetEntryXml", assetEntryXmls);
-		}
-
-		boolean subtypeFieldsFilterEnabled = GetterUtil.getBoolean(
-			portletPreferences.getValue(
-				"subtypeFieldsFilterEnabled", Boolean.FALSE.toString()));
-
-		if (subtypeFieldsFilterEnabled) {
-			boolean dlFilterByFieldEnable = isFilterByFieldEnable(
-				portletPreferences, _DL_FILTER_BY_FIELD_ENABLED_KEY);
-			boolean journalFilterByFieldEnable = isFilterByFieldEnable(
-				portletPreferences, _JOURNAL_FILTER_BY_FIELD_ENABLED_KEY);
-
-			if (dlFilterByFieldEnable) {
-				upgradeDLDateFieldsValues(portletPreferences);
-			}
-			else if (journalFilterByFieldEnable) {
-				upgradeJournalDateFieldValue(portletPreferences);
-			}
-		}
-
-		upgradeOrderByColumns(portletPreferences);
-
-		return PortletPreferencesFactoryUtil.toXML(portletPreferences);
-	}
-
-	protected void upgradeUuids(String[] assetEntryXmls) throws Exception {
+	private void _upgradeUuids(String[] assetEntryXmls) throws Exception {
 		for (int i = 0; i < assetEntryXmls.length; i++) {
 			String assetEntry = assetEntryXmls[i];
 
@@ -351,7 +352,7 @@ public class UpgradePortletPreferences extends BaseUpgradePortletPreferences {
 				continue;
 			}
 
-			String journalArticleResourceUuid = getJournalArticleResourceUuid(
+			String journalArticleResourceUuid = _getJournalArticleResourceUuid(
 				assetTypeElementUuid.getStringValue());
 
 			if (journalArticleResourceUuid == null) {

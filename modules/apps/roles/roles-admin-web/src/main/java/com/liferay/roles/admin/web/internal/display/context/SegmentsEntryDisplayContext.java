@@ -14,34 +14,33 @@
 
 package com.liferay.roles.admin.web.internal.display.context;
 
-import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.vulcan.util.TransformUtil;
-import com.liferay.segments.configuration.SegmentsConfiguration;
+import com.liferay.segments.configuration.provider.SegmentsConfigurationProvider;
 import com.liferay.segments.model.SegmentsEntry;
 import com.liferay.segments.provider.SegmentsEntryProviderRegistry;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
-import org.osgi.framework.BundleContext;
-import org.osgi.service.component.annotations.Activate;
+import javax.servlet.http.HttpServletRequest;
+
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Pei-Jung Lan
  */
-@Component(
-	configurationPid = "com.liferay.segments.configuration.SegmentsConfiguration",
-	service = {}
-)
+@Component(service = {})
 public class SegmentsEntryDisplayContext {
 
 	public static String getGroupDescriptiveName(
@@ -51,6 +50,20 @@ public class SegmentsEntryDisplayContext {
 		Group group = _groupLocalService.fetchGroup(segmentsEntry.getGroupId());
 
 		return group.getDescriptiveName(locale);
+	}
+
+	public static String getSegmentsCompanyConfigurationURL(
+		HttpServletRequest httpServletRequest) {
+
+		try {
+			return _segmentsConfigurationProvider.getCompanyConfigurationURL(
+				httpServletRequest);
+		}
+		catch (PortalException portalException) {
+			_log.error(portalException);
+		}
+
+		return StringPool.BLANK;
 	}
 
 	public static List<User> getSegmentsEntryUsers(
@@ -71,30 +84,28 @@ public class SegmentsEntryDisplayContext {
 			segmentsEntryId);
 	}
 
-	public static boolean isRoleSegmentationEnabled() {
-		return _roleSegmentationEnabled;
-	}
+	public static boolean isRoleSegmentationEnabled(long companyId) {
+		try {
+			return _segmentsConfigurationProvider.isRoleSegmentationEnabled(
+				companyId);
+		}
+		catch (ConfigurationException configurationException) {
+			_log.error(configurationException);
+		}
 
-	@Activate
-	protected void activate(
-		BundleContext bundleContext, Map<String, Object> properties) {
-
-		SegmentsConfiguration segmentsConfiguration =
-			ConfigurableUtil.createConfigurable(
-				SegmentsConfiguration.class, properties);
-
-		_roleSegmentationEnabled =
-			segmentsConfiguration.roleSegmentationEnabled();
-	}
-
-	@Deactivate
-	protected void deactivate() {
-		_roleSegmentationEnabled = false;
+		return false;
 	}
 
 	@Reference(unbind = "-")
 	protected void setGroupLocalService(GroupLocalService groupLocalService) {
 		_groupLocalService = groupLocalService;
+	}
+
+	@Reference(unbind = "-")
+	protected void setSegmentsConfigurationProvider(
+		SegmentsConfigurationProvider segmentsConfigurationProvider) {
+
+		_segmentsConfigurationProvider = segmentsConfigurationProvider;
 	}
 
 	@Reference(unbind = "-")
@@ -109,8 +120,11 @@ public class SegmentsEntryDisplayContext {
 		_userLocalService = userLocalService;
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		SegmentsEntryDisplayContext.class);
+
 	private static GroupLocalService _groupLocalService;
-	private static boolean _roleSegmentationEnabled;
+	private static SegmentsConfigurationProvider _segmentsConfigurationProvider;
 	private static SegmentsEntryProviderRegistry _segmentsEntryProviderRegistry;
 	private static UserLocalService _userLocalService;
 

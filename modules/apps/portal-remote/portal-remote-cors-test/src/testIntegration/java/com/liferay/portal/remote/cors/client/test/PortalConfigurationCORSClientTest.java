@@ -88,7 +88,17 @@ public class PortalConfigurationCORSClientTest extends BaseCORSClientTestCase {
 		Cookie authenticatedCookie = _getAuthenticatedCookie(
 			"test@liferay.com", "test");
 
-		Invocation.Builder invocationBuilder = _getJsonWebTarget(
+		Invocation.Builder invocationBuilder = _getWebTarget(
+			"web", "guest"
+		).request();
+
+		invocationBuilder = invocationBuilder.cookie(authenticatedCookie);
+
+		Response response = invocationBuilder.get();
+
+		_pAuth = _parsePAuthToken(response);
+
+		invocationBuilder = _getJsonWebTarget(
 			"user", "get-current-user"
 		).request();
 
@@ -97,7 +107,7 @@ public class PortalConfigurationCORSClientTest extends BaseCORSClientTestCase {
 		invocationBuilder = invocationBuilder.header(
 			"Origin", "http://test-cors.com");
 
-		Response response = invocationBuilder.get();
+		response = invocationBuilder.get();
 
 		String corsHeaderString = response.getHeaderString(
 			"Access-Control-Allow-Origin");
@@ -114,15 +124,18 @@ public class PortalConfigurationCORSClientTest extends BaseCORSClientTestCase {
 
 		_pAuth = _parsePAuthToken(response);
 
-		Map<String, NewCookie> cookies = response.getCookies();
+		Map<String, NewCookie> newCookies = response.getCookies();
 
-		NewCookie newCookie = cookies.get(CookieKeys.JSESSIONID);
+		NewCookie cookieSupportNewCookie = newCookies.get(
+			CookieKeys.COOKIE_SUPPORT);
+		NewCookie jSessionIdNewCookie = newCookies.get(CookieKeys.JSESSIONID);
 
 		invocationBuilder = _getWebTarget(
 			"c", "portal", "login"
 		).request();
 
-		invocationBuilder = invocationBuilder.cookie(newCookie);
+		invocationBuilder = invocationBuilder.cookie(cookieSupportNewCookie);
+		invocationBuilder = invocationBuilder.cookie(jSessionIdNewCookie);
 
 		MultivaluedMap<String, String> formData = new MultivaluedHashMap<>();
 
@@ -132,15 +145,15 @@ public class PortalConfigurationCORSClientTest extends BaseCORSClientTestCase {
 
 		response = invocationBuilder.post(Entity.form(formData));
 
-		cookies = response.getCookies();
+		newCookies = response.getCookies();
 
-		newCookie = cookies.get(CookieKeys.JSESSIONID);
+		jSessionIdNewCookie = newCookies.get(CookieKeys.JSESSIONID);
 
-		if (newCookie == null) {
+		if (jSessionIdNewCookie == null) {
 			return null;
 		}
 
-		return newCookie.toCookie();
+		return jSessionIdNewCookie.toCookie();
 	}
 
 	private WebTarget _getJsonWebTarget(String... paths) {

@@ -34,8 +34,9 @@ renderResponse.setTitle(LanguageUtil.get(request, "select-collection"));
 />
 
 <c:if test="<%= selectLayoutCollectionDisplayContext.isCollections() %>">
-	<clay:management-toolbar-v2
-		displayContext="<%= selectCollectionManagementToolbarDisplayContext %>"
+	<clay:management-toolbar
+		managementToolbarDisplayContext="<%= selectCollectionManagementToolbarDisplayContext %>"
+		propsTransformer="js/SelectLayoutCollectionManagementToolbarPropsTransformer"
 	/>
 </c:if>
 
@@ -52,13 +53,6 @@ renderResponse.setTitle(LanguageUtil.get(request, "select-collection"));
 	</c:choose>
 </clay:container-fluid>
 
-<c:if test="<%= selectLayoutCollectionDisplayContext.isCollections() %>">
-	<liferay-frontend:component
-		componentId="<%= selectCollectionManagementToolbarDisplayContext.getDefaultEventHandler() %>"
-		module="js/SelectCollectionManagementToolbarDefaultEventHandler.es"
-	/>
-</c:if>
-
 <aui:script require="frontend-js-web/liferay/delegate/delegate.es as delegateModule">
 	var collections = document.getElementById('<portlet:namespace />collections');
 
@@ -68,7 +62,7 @@ renderResponse.setTitle(LanguageUtil.get(request, "select-collection"));
 		collections,
 		'click',
 		'.select-collection-action-option',
-		function (event) {
+		(event) => {
 			Liferay.Util.navigate(
 				event.delegateTarget.dataset.selectLayoutMasterLayoutUrl
 			);

@@ -22,6 +22,7 @@ import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMTemplateLocalService;
 import com.liferay.dynamic.data.mapping.webdav.DDMWebDAV;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.webdav.BaseWebDAVStorageImpl;
 import com.liferay.portal.kernel.webdav.Resource;
@@ -75,16 +76,16 @@ public class DDLWebDAVStorageImpl extends BaseWebDAVStorageImpl {
 			String[] pathArray = webDAVRequest.getPathArray();
 
 			if (pathArray.length == 2) {
-				return getFolders(webDAVRequest);
+				return _getFolders(webDAVRequest);
 			}
 			else if (pathArray.length == 3) {
 				String type = pathArray[2];
 
 				if (type.equals(DDMWebDAV.TYPE_STRUCTURES)) {
-					return getStructures(webDAVRequest);
+					return _getStructures(webDAVRequest);
 				}
 				else if (type.equals(DDMWebDAV.TYPE_TEMPLATES)) {
-					return getTemplates(webDAVRequest);
+					return _getTemplates(webDAVRequest);
 				}
 			}
 
@@ -102,22 +103,17 @@ public class DDLWebDAVStorageImpl extends BaseWebDAVStorageImpl {
 			_portal.getClassNameId(DDLRecordSet.class));
 	}
 
-	protected List<Resource> getFolders(WebDAVRequest webDAVRequest)
+	private List<Resource> _getFolders(WebDAVRequest webDAVRequest)
 		throws Exception {
 
-		List<Resource> resources = new ArrayList<>();
-
-		resources.add(
+		return ListUtil.fromArray(
 			_ddmWebDAV.toResource(
-				webDAVRequest, DDMWebDAV.TYPE_STRUCTURES, getRootPath(), true));
-		resources.add(
+				webDAVRequest, DDMWebDAV.TYPE_STRUCTURES, getRootPath(), true),
 			_ddmWebDAV.toResource(
 				webDAVRequest, DDMWebDAV.TYPE_TEMPLATES, getRootPath(), true));
-
-		return resources;
 	}
 
-	protected List<Resource> getStructures(WebDAVRequest webDAVRequest)
+	private List<Resource> _getStructures(WebDAVRequest webDAVRequest)
 		throws Exception {
 
 		List<Resource> resources = new ArrayList<>();
@@ -137,7 +133,7 @@ public class DDLWebDAVStorageImpl extends BaseWebDAVStorageImpl {
 		return resources;
 	}
 
-	protected List<Resource> getTemplates(WebDAVRequest webDAVRequest)
+	private List<Resource> _getTemplates(WebDAVRequest webDAVRequest)
 		throws Exception {
 
 		List<Resource> resources = new ArrayList<>();
@@ -159,27 +155,13 @@ public class DDLWebDAVStorageImpl extends BaseWebDAVStorageImpl {
 		return resources;
 	}
 
-	@Reference(unbind = "-")
-	protected void setDDMStructureLocalService(
-		DDMStructureLocalService ddmStructureLocalService) {
-
-		_ddmStructureLocalService = ddmStructureLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setDDMTemplateLocalService(
-		DDMTemplateLocalService ddmTemplateLocalService) {
-
-		_ddmTemplateLocalService = ddmTemplateLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setDDMWebDav(DDMWebDAV ddmWebDAV) {
-		_ddmWebDAV = ddmWebDAV;
-	}
-
+	@Reference
 	private DDMStructureLocalService _ddmStructureLocalService;
+
+	@Reference
 	private DDMTemplateLocalService _ddmTemplateLocalService;
+
+	@Reference
 	private DDMWebDAV _ddmWebDAV;
 
 	@Reference

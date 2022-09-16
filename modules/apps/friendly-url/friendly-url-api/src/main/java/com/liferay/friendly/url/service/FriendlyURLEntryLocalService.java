@@ -15,6 +15,7 @@
 package com.liferay.friendly.url.service;
 
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
+import com.liferay.friendly.url.exception.NoSuchFriendlyURLEntryLocalizationException;
 import com.liferay.friendly.url.model.FriendlyURLEntry;
 import com.liferay.friendly.url.model.FriendlyURLEntryLocalization;
 import com.liferay.petra.function.UnsafeFunction;
@@ -175,6 +176,9 @@ public interface FriendlyURLEntryLocalService
 	public <T> T dslQuery(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
 
 	/**
@@ -271,6 +275,10 @@ public interface FriendlyURLEntryLocalService
 		long friendlyURLEntryId, String languageId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public FriendlyURLEntry fetchMainFriendlyURLEntry(
+		long classNameId, long classPK);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ActionableDynamicQuery getActionableDynamicQuery();
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
@@ -355,6 +363,11 @@ public interface FriendlyURLEntryLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public FriendlyURLEntryLocalization getFriendlyURLEntryLocalization(
+			long groupId, long classNameId, String urlTitle)
+		throws NoSuchFriendlyURLEntryLocalizationException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public FriendlyURLEntryLocalization getFriendlyURLEntryLocalization(
 			long friendlyURLEntryId, String languageId)
 		throws PortalException;
 
@@ -396,9 +409,19 @@ public interface FriendlyURLEntryLocalService
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)
 		throws PortalException;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 #getUniqueUrlTitle(long, long, long, String, String)}
+	 */
+	@Deprecated
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public String getUniqueUrlTitle(
 		long groupId, long classNameId, long classPK, String urlTitle);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public String getUniqueUrlTitle(
+		long groupId, long classNameId, long classPK, String urlTitle,
+		String languageId);
 
 	public void setMainFriendlyURLEntry(FriendlyURLEntry friendlyURLEntry);
 

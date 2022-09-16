@@ -15,12 +15,17 @@
 package com.liferay.portal.workflow.kaleo.model;
 
 import com.liferay.portal.kernel.bean.AutoEscape;
+import com.liferay.portal.kernel.exception.LocaleException;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.GroupedModel;
+import com.liferay.portal.kernel.model.LocalizedModel;
 import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
+import com.liferay.portal.kernel.model.change.tracking.CTModel;
 
 import java.util.Date;
+import java.util.Locale;
+import java.util.Map;
 
 import org.osgi.annotation.versioning.ProviderType;
 
@@ -37,7 +42,8 @@ import org.osgi.annotation.versioning.ProviderType;
  */
 @ProviderType
 public interface KaleoNodeModel
-	extends BaseModel<KaleoNode>, GroupedModel, MVCCModel, ShardedModel {
+	extends BaseModel<KaleoNode>, CTModel<KaleoNode>, GroupedModel,
+			LocalizedModel, MVCCModel, ShardedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -50,6 +56,7 @@ public interface KaleoNodeModel
 	 *
 	 * @return the primary key of this kaleo node
 	 */
+	@Override
 	public long getPrimaryKey();
 
 	/**
@@ -57,6 +64,7 @@ public interface KaleoNodeModel
 	 *
 	 * @param primaryKey the primary key of this kaleo node
 	 */
+	@Override
 	public void setPrimaryKey(long primaryKey);
 
 	/**
@@ -74,6 +82,22 @@ public interface KaleoNodeModel
 	 */
 	@Override
 	public void setMvccVersion(long mvccVersion);
+
+	/**
+	 * Returns the ct collection ID of this kaleo node.
+	 *
+	 * @return the ct collection ID of this kaleo node
+	 */
+	@Override
+	public long getCtCollectionId();
+
+	/**
+	 * Sets the ct collection ID of this kaleo node.
+	 *
+	 * @param ctCollectionId the ct collection ID of this kaleo node
+	 */
+	@Override
+	public void setCtCollectionId(long ctCollectionId);
 
 	/**
 	 * Returns the kaleo node ID of this kaleo node.
@@ -246,6 +270,105 @@ public interface KaleoNodeModel
 	public void setName(String name);
 
 	/**
+	 * Returns the label of this kaleo node.
+	 *
+	 * @return the label of this kaleo node
+	 */
+	public String getLabel();
+
+	/**
+	 * Returns the localized label of this kaleo node in the language. Uses the default language if no localization exists for the requested language.
+	 *
+	 * @param locale the locale of the language
+	 * @return the localized label of this kaleo node
+	 */
+	@AutoEscape
+	public String getLabel(Locale locale);
+
+	/**
+	 * Returns the localized label of this kaleo node in the language, optionally using the default language if no localization exists for the requested language.
+	 *
+	 * @param locale the local of the language
+	 * @param useDefault whether to use the default language if no localization exists for the requested language
+	 * @return the localized label of this kaleo node. If <code>useDefault</code> is <code>false</code> and no localization exists for the requested language, an empty string will be returned.
+	 */
+	@AutoEscape
+	public String getLabel(Locale locale, boolean useDefault);
+
+	/**
+	 * Returns the localized label of this kaleo node in the language. Uses the default language if no localization exists for the requested language.
+	 *
+	 * @param languageId the ID of the language
+	 * @return the localized label of this kaleo node
+	 */
+	@AutoEscape
+	public String getLabel(String languageId);
+
+	/**
+	 * Returns the localized label of this kaleo node in the language, optionally using the default language if no localization exists for the requested language.
+	 *
+	 * @param languageId the ID of the language
+	 * @param useDefault whether to use the default language if no localization exists for the requested language
+	 * @return the localized label of this kaleo node
+	 */
+	@AutoEscape
+	public String getLabel(String languageId, boolean useDefault);
+
+	@AutoEscape
+	public String getLabelCurrentLanguageId();
+
+	@AutoEscape
+	public String getLabelCurrentValue();
+
+	/**
+	 * Returns a map of the locales and localized labels of this kaleo node.
+	 *
+	 * @return the locales and localized labels of this kaleo node
+	 */
+	public Map<Locale, String> getLabelMap();
+
+	/**
+	 * Sets the label of this kaleo node.
+	 *
+	 * @param label the label of this kaleo node
+	 */
+	public void setLabel(String label);
+
+	/**
+	 * Sets the localized label of this kaleo node in the language.
+	 *
+	 * @param label the localized label of this kaleo node
+	 * @param locale the locale of the language
+	 */
+	public void setLabel(String label, Locale locale);
+
+	/**
+	 * Sets the localized label of this kaleo node in the language, and sets the default locale.
+	 *
+	 * @param label the localized label of this kaleo node
+	 * @param locale the locale of the language
+	 * @param defaultLocale the default locale
+	 */
+	public void setLabel(String label, Locale locale, Locale defaultLocale);
+
+	public void setLabelCurrentLanguageId(String languageId);
+
+	/**
+	 * Sets the localized labels of this kaleo node from the map of locales and localized labels.
+	 *
+	 * @param labelMap the locales and localized labels of this kaleo node
+	 */
+	public void setLabelMap(Map<Locale, String> labelMap);
+
+	/**
+	 * Sets the localized labels of this kaleo node from the map of locales and localized labels, and sets the default locale.
+	 *
+	 * @param labelMap the locales and localized labels of this kaleo node
+	 * @param defaultLocale the default locale
+	 */
+	public void setLabelMap(Map<Locale, String> labelMap, Locale defaultLocale);
+
+	/**
 	 * Returns the metadata of this kaleo node.
 	 *
 	 * @return the metadata of this kaleo node
@@ -331,5 +454,21 @@ public interface KaleoNodeModel
 	 * @param terminal the terminal of this kaleo node
 	 */
 	public void setTerminal(boolean terminal);
+
+	@Override
+	public String[] getAvailableLanguageIds();
+
+	@Override
+	public String getDefaultLanguageId();
+
+	@Override
+	public void prepareLocalizedFieldsForImport() throws LocaleException;
+
+	@Override
+	public void prepareLocalizedFieldsForImport(Locale defaultImportLocale)
+		throws LocaleException;
+
+	@Override
+	public KaleoNode cloneWithOriginalValues();
 
 }

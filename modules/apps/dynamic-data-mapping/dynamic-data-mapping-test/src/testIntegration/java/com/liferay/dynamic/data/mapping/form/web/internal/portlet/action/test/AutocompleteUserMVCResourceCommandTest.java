@@ -64,8 +64,6 @@ public class AutocompleteUserMVCResourceCommandTest {
 
 	@Before
 	public void setUp() throws Exception {
-		_users = new ArrayList<>();
-
 		_setUpAutocompleteUserMVCResourceCommand();
 	}
 
@@ -100,11 +98,9 @@ public class AutocompleteUserMVCResourceCommandTest {
 		MockLiferayResourceResponse mockLiferayResourceResponse =
 			new MockLiferayResourceResponse();
 
-		ThemeDisplay themeDisplay = _getThemeDisplay(
-			TestPropsValues.getUser(), true);
-
 		_mvcResourceCommand.serveResource(
-			_getMockLiferayResourceRequest(themeDisplay),
+			_getMockLiferayResourceRequest(
+				_getThemeDisplay(TestPropsValues.getUser(), true)),
 			mockLiferayResourceResponse);
 
 		JSONArray jsonArray = _getUsersJSONArray(mockLiferayResourceResponse);
@@ -136,11 +132,9 @@ public class AutocompleteUserMVCResourceCommandTest {
 
 	@Test(expected = PortletException.class)
 	public void testServeResponseWithError() throws Exception {
-		ThemeDisplay themeDisplay = _getThemeDisplay(
-			TestPropsValues.getUser(), false);
-
 		_mvcResourceCommand.serveResource(
-			_getMockLiferayResourceRequest(themeDisplay),
+			_getMockLiferayResourceRequest(
+				_getThemeDisplay(TestPropsValues.getUser(), false)),
 			new MockLiferayResourceResponse());
 	}
 
@@ -227,6 +221,6 @@ public class AutocompleteUserMVCResourceCommandTest {
 	private Portal _portal;
 
 	@DeleteAfterTestRun
-	private List<User> _users;
+	private List<User> _users = new ArrayList<>();
 
 }

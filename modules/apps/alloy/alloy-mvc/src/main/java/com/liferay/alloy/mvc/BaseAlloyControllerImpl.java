@@ -16,16 +16,18 @@ package com.liferay.alloy.mvc;
 
 import com.liferay.alloy.mvc.internal.json.web.service.AlloyControllerInvokerManager;
 import com.liferay.alloy.mvc.internal.json.web.service.AlloyMockUtil;
+import com.liferay.alloy.mvc.internal.util.ConstantsBeanFactoryUtil;
 import com.liferay.counter.kernel.service.CounterLocalServiceUtil;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.BeanPropertiesUtil;
-import com.liferay.portal.kernel.bean.ConstantsBeanFactoryUtil;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONSerializable;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -49,8 +51,6 @@ import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiServic
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiServiceUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletConfig;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
-import com.liferay.portal.kernel.portlet.PortletBag;
-import com.liferay.portal.kernel.portlet.PortletBagPool;
 import com.liferay.portal.kernel.portlet.PortletConfigFactoryUtil;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.scheduler.SchedulerEngineHelperUtil;
@@ -99,7 +99,6 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -474,30 +473,33 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 		String responseContent = StringPool.BLANK;
 
 		if (isRespondingTo("json")) {
-			JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
+			responseContent = JSONUtil.put(
+				"data",
+				() -> {
+					if (data instanceof Exception) {
+						return getStackTrace((Exception)data);
+					}
 
-			if (data instanceof Exception) {
-				jsonObject.put("data", getStackTrace((Exception)data));
-			}
-			else if (data instanceof JSONArray) {
-				jsonObject.put("data", (JSONArray)data);
-			}
-			else if (data instanceof JSONObject) {
-				jsonObject.put("data", (JSONObject)data);
-			}
-			else if (data != null) {
-				jsonObject.put(
-					"data",
-					JSONFactoryUtil.createJSONObject(String.valueOf(data)));
-			}
+					if (data instanceof JSONArray) {
+						return (JSONArray)data;
+					}
 
-			jsonObject.put(
+					if (data instanceof JSONObject) {
+						return (JSONObject)data;
+					}
+
+					if (data != null) {
+						return JSONFactoryUtil.createJSONObject(
+							String.valueOf(data));
+					}
+
+					return null;
+				}
+			).put(
 				"message", message
 			).put(
 				"status", status
-			);
-
-			responseContent = jsonObject.toString();
+			).toString();
 		}
 
 		return responseContent;
@@ -671,14 +673,19 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 			String lifecycle, WindowState windowState, Object... parameters)
 		throws Exception {
 
-		PortletURL portletURL = PortletURLFactoryUtil.create(
-			httpServletRequest, portlet, themeDisplay.getLayout(), lifecycle);
-
-		portletURL.setParameter("action", action);
-		portletURL.setParameter("controller", controller);
-
-		portletURL.setPortletMode(portletMode);
-		portletURL.setWindowState(windowState);
+		PortletURL portletURL = PortletURLBuilder.create(
+			PortletURLFactoryUtil.create(
+				httpServletRequest, portlet, themeDisplay.getLayout(),
+				lifecycle)
+		).setParameter(
+			"action", action
+		).setParameter(
+			"controller", controller
+		).setPortletMode(
+			portletMode
+		).setWindowState(
+			windowState
+		).buildPortletURL();
 
 		if (parameters == null) {
 			return portletURL;
@@ -731,11 +738,11 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 			Object... attributes)
 		throws Exception {
 
-		Map<String, Serializable> attributesMap = new HashMap<>();
-
 		if ((attributes.length == 0) || ((attributes.length % 2) != 0)) {
 			throw new Exception("Arguments length is not an even number");
 		}
+
+		Map<String, Serializable> attributesMap = new HashMap<>();
 
 		for (int i = 0; i < attributes.length; i += 2) {
 			String name = String.valueOf(attributes[i]);
@@ -819,19 +826,20 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 		baseAlloyIndexer.setAlloyServiceInvoker(alloyServiceInvoker);
 		baseAlloyIndexer.setClassName(portlet.getModelClassName());
 
-		PortletBag portletBag = PortletBagPool.get(portlet.getPortletId());
-
-		List<Indexer<?>> indexerInstances = portletBag.getIndexerInstances();
-
 		if (existingIndexer != null) {
 			IndexerRegistryUtil.unregister(existingIndexer);
-
-			indexerInstances.remove(existingIndexer);
 		}
 
 		IndexerRegistryUtil.register(indexer);
 
-		indexerInstances.add(indexer);
+		Bundle bundle = FrameworkUtil.getBundle(getClass());
+
+		BundleContext bundleContext = bundle.getBundleContext();
+
+		bundleContext.registerService(
+			Indexer.class, indexer,
+			MapUtil.singletonDictionary(
+				"javax.portlet.name", portlet.getPortletName()));
 	}
 
 	protected void initMessageListener(
@@ -949,10 +957,9 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 		Method[] methods = clazz.getMethods();
 
 		for (Method method : methods) {
-			String methodKey = getMethodKey(
-				method.getName(), method.getParameterTypes());
-
-			methodsMap.put(methodKey, method);
+			methodsMap.put(
+				getMethodKey(method.getName(), method.getParameterTypes()),
+				method);
 		}
 	}
 
@@ -1006,10 +1013,13 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 		}
 
 		if (mimeResponse != null) {
-			portletURL = mimeResponse.createRenderURL();
-
-			portletURL.setParameter("action", actionPath);
-			portletURL.setParameter("controller", controllerPath);
+			portletURL = PortletURLBuilder.createRenderURL(
+				mimeResponse
+			).setParameter(
+				"action", actionPath
+			).setParameter(
+				"controller", controllerPath
+			).buildPortletURL();
 
 			if (Validator.isNotNull(format)) {
 				portletURL.setParameter("format", format);
@@ -1163,10 +1173,8 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 		}
 
 		portletRequest.setAttribute("arguments", arguments);
-
 		portletRequest.setAttribute(
 			"data", getStackTrace((Exception)rootCauseThrowable));
-
 		portletRequest.setAttribute("pattern", pattern);
 		portletRequest.setAttribute("status", status);
 
@@ -1522,30 +1530,37 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 		Map<String, Object> modelAttributes = baseModel.getModelAttributes();
 
 		for (Map.Entry<String, Object> entry : modelAttributes.entrySet()) {
-			String key = entry.getKey();
-			Object value = entry.getValue();
+			jsonObject.put(
+				String.valueOf(entry.getKey()),
+				() -> {
+					Object value = entry.getValue();
 
-			if (value instanceof Boolean) {
-				jsonObject.put(String.valueOf(key), (Boolean)value);
-			}
-			else if (value instanceof Date) {
-				jsonObject.put(String.valueOf(key), (Date)value);
-			}
-			else if (value instanceof Double) {
-				jsonObject.put(String.valueOf(key), (Double)value);
-			}
-			else if (value instanceof Integer) {
-				jsonObject.put(String.valueOf(key), (Integer)value);
-			}
-			else if (value instanceof Long) {
-				jsonObject.put(String.valueOf(key), (Long)value);
-			}
-			else if (value instanceof Short) {
-				jsonObject.put(String.valueOf(key), (Short)value);
-			}
-			else {
-				jsonObject.put(String.valueOf(key), String.valueOf(value));
-			}
+					if (value instanceof Boolean) {
+						return (Boolean)value;
+					}
+
+					if (value instanceof Date) {
+						return (Date)value;
+					}
+
+					if (value instanceof Double) {
+						return (Double)value;
+					}
+
+					if (value instanceof Integer) {
+						return (Integer)value;
+					}
+
+					if (value instanceof Long) {
+						return (Long)value;
+					}
+
+					if (value instanceof Short) {
+						return (Short)value;
+					}
+
+					return String.valueOf(value);
+				});
 		}
 
 		return jsonObject;

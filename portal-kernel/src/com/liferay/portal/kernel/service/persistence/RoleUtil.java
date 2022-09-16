@@ -14,7 +14,6 @@
 
 package com.liferay.portal.kernel.service.persistence;
 
-import com.liferay.portal.kernel.bean.PortalBeanLocatorUtil;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -1976,7 +1975,7 @@ public class RoleUtil {
 	 * </p>
 	 *
 	 * @param companyId the company ID
-	 * @param type the type
+	 * @param types the types
 	 * @param start the lower bound of the range of roles
 	 * @param end the upper bound of the range of roles (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
@@ -2377,7 +2376,7 @@ public class RoleUtil {
 	 *
 	 * @param companyId the company ID
 	 * @param classNameId the class name ID
-	 * @param classPK the class pk
+	 * @param classPKs the class pks
 	 * @param start the lower bound of the range of roles
 	 * @param end the upper bound of the range of roles (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
@@ -2590,7 +2589,7 @@ public class RoleUtil {
 	 *
 	 * @param companyId the company ID
 	 * @param classNameId the class name ID
-	 * @param classPK the class pk
+	 * @param classPKs the class pks
 	 * @param type the type
 	 * @param start the lower bound of the range of roles
 	 * @param end the upper bound of the range of roles (not inclusive)
@@ -3309,14 +3308,9 @@ public class RoleUtil {
 	}
 
 	public static RolePersistence getPersistence() {
-		if (_persistence == null) {
-			_persistence = (RolePersistence)PortalBeanLocatorUtil.locate(
-				RolePersistence.class.getName());
-		}
-
 		return _persistence;
 	}
 
-	private static RolePersistence _persistence;
+	private static volatile RolePersistence _persistence;
 
 }

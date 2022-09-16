@@ -52,6 +52,7 @@
 		<field name="createDate" type="Date" />
 		<field name="modifiedDate" type="Date" />
 		<field name="assetListEntryId" type="long" />
+		<field name="priority" type="int" />
 		<field name="segmentsEntryId" type="long" />
 		<field name="typeSettings" type="String">
 			<hint-collection name="CLOB" />
@@ -72,9 +73,18 @@
 		<field name="assetListEntryId" type="long" />
 		<field name="classNameId" type="long" />
 		<field name="classPK" type="long" />
+		<field name="containerKey" type="String">
+			<hint name="max-length">255</hint>
+		</field>
+		<field name="containerType" type="long" />
+		<field name="key" type="String">
+			<hint name="max-length">255</hint>
+		</field>
+		<field name="plid" type="long" />
 		<field name="portletId" type="String">
 			<hint name="max-length">200</hint>
 		</field>
+		<field name="type" type="int" />
 		<field name="lastPublishDate" type="Date" />
 	</model>
 </model-hints>

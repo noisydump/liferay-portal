@@ -17,11 +17,11 @@ import React from 'react';
 import lang from '../utils/lang.es';
 import {slugToText} from '../utils/utils.es';
 
-export default ({
+export default function ResultsMessage({
 	maxNumberOfSearchResults = 0,
 	searchCriteria,
 	totalCount = 0,
-}) => {
+}) {
 	return (
 		<>
 			{!!totalCount && (
@@ -46,7 +46,11 @@ export default ({
 						<span
 							dangerouslySetInnerHTML={{
 								__html: lang.sub(
-									Liferay.Language.get('x-results-for-x'),
+									totalCount === 1
+										? Liferay.Language.get('x-result-for-x')
+										: Liferay.Language.get(
+												'x-results-for-x'
+										  ),
 									[
 										totalCount,
 										`<strong>"${slugToText(
@@ -57,6 +61,7 @@ export default ({
 							}}
 						/>
 					)}
+
 					{totalCount > maxNumberOfSearchResults && (
 						<div className="text-secondary">
 							{Liferay.Language.get(
@@ -68,4 +73,4 @@ export default ({
 			)}
 		</>
 	);
-};
+}

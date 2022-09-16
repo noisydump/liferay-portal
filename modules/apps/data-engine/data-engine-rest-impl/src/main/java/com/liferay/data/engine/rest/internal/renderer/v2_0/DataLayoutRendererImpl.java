@@ -26,7 +26,6 @@ import com.liferay.dynamic.data.mapping.model.DDMStructureLayout;
 import com.liferay.dynamic.data.mapping.model.DDMStructureVersion;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLayoutLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMStructureVersionLocalService;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.security.auth.GuestOrUserUtil;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
@@ -83,6 +82,19 @@ public class DataLayoutRendererImpl implements DataLayoutRenderer {
 		DDMFormRenderingContext ddmFormRenderingContext =
 			new DDMFormRenderingContext();
 
+		if (Validator.isNotNull(
+				dataLayoutRendererContext.getDefaultLanguageId())) {
+
+			ddmFormRenderingContext.addProperty(
+				"defaultLanguageId",
+				dataLayoutRendererContext.getDefaultLanguageId());
+		}
+
+		ddmFormRenderingContext.addProperty(
+			"persistDefaultValues",
+			dataLayoutRendererContext.isPersistDefaultValues());
+		ddmFormRenderingContext.addProperty(
+			"persisted", dataLayoutRendererContext.isPersisted());
 		ddmFormRenderingContext.setContainerId(
 			dataLayoutRendererContext.getContainerId());
 		ddmFormRenderingContext.setDDMFormValues(
@@ -91,6 +103,7 @@ public class DataLayoutRendererImpl implements DataLayoutRenderer {
 				null));
 		ddmFormRenderingContext.setDDMStructureLayoutId(dataLayoutId);
 		ddmFormRenderingContext.setGroupId(groupId);
+		ddmFormRenderingContext.setEditOnlyInDefaultLanguage(true);
 		ddmFormRenderingContext.setHttpServletRequest(
 			dataLayoutRendererContext.getHttpServletRequest());
 		ddmFormRenderingContext.setHttpServletResponse(
@@ -100,7 +113,7 @@ public class DataLayoutRendererImpl implements DataLayoutRenderer {
 
 		String languageId = ParamUtil.get(
 			dataLayoutRendererContext.getHttpServletRequest(), "languageId",
-			StringPool.BLANK);
+			dataLayoutRendererContext.getLanguageId());
 
 		if (Validator.isNull(languageId)) {
 			locale = ddmForm.getDefaultLocale();
@@ -110,12 +123,13 @@ public class DataLayoutRendererImpl implements DataLayoutRenderer {
 		}
 
 		ddmFormRenderingContext.setLocale(locale);
-
 		ddmFormRenderingContext.setPortletNamespace(
 			dataLayoutRendererContext.getPortletNamespace());
 		ddmFormRenderingContext.setReadOnly(
 			dataLayoutRendererContext.isReadOnly());
 		ddmFormRenderingContext.setShowSubmitButton(false);
+		ddmFormRenderingContext.setSubmittable(
+			dataLayoutRendererContext.isSubmittable());
 		ddmFormRenderingContext.setViewMode(true);
 
 		return ddmFormRenderingContext;

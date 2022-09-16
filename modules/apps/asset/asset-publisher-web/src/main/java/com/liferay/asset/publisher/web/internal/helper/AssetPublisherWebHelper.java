@@ -24,13 +24,15 @@ import com.liferay.asset.kernel.service.persistence.AssetEntryQuery;
 import com.liferay.asset.publisher.constants.AssetPublisherPortletKeys;
 import com.liferay.asset.publisher.util.AssetPublisherHelper;
 import com.liferay.asset.publisher.web.internal.configuration.AssetPublisherPortletInstanceConfiguration;
+import com.liferay.asset.publisher.web.internal.configuration.AssetPublisherSelectionStyleConfigurationUtil;
+import com.liferay.asset.publisher.web.internal.constants.AssetPublisherSelectionStyleConstants;
 import com.liferay.asset.util.AssetEntryQueryProcessor;
 import com.liferay.asset.util.AssetRendererFactoryClassProvider;
 import com.liferay.dynamic.data.mapping.util.DDMIndexer;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
@@ -47,7 +49,7 @@ import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
-import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
+import com.liferay.portal.kernel.service.permission.GroupPermission;
 import com.liferay.portal.kernel.service.permission.PortletPermissionUtil;
 import com.liferay.portal.kernel.settings.LocalizedValuesMap;
 import com.liferay.portal.kernel.theme.PortletDisplay;
@@ -70,7 +72,7 @@ import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.kernel.xml.SAXReaderUtil;
 import com.liferay.portlet.StrictPortletPreferencesImpl;
-import com.liferay.sites.kernel.util.SitesUtil;
+import com.liferay.sites.kernel.util.Sites;
 import com.liferay.subscription.service.SubscriptionLocalService;
 
 import java.io.IOException;
@@ -117,20 +119,23 @@ public class AssetPublisherWebHelper {
 		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		Layout layout = _layoutLocalService.fetchLayout(themeDisplay.getPlid());
-
 		PortletPreferences portletPreferences =
 			PortletPreferencesFactoryUtil.getStrictPortletSetup(
-				layout, portletId);
+				_layoutLocalService.fetchLayout(themeDisplay.getPlid()),
+				portletId);
 
 		if (portletPreferences instanceof StrictPortletPreferencesImpl) {
 			return;
 		}
 
 		String selectionStyle = portletPreferences.getValue(
-			"selectionStyle", "dynamic");
+			"selectionStyle",
+			AssetPublisherSelectionStyleConfigurationUtil.
+				defaultSelectionStyle());
 
-		if (selectionStyle.equals("dynamic")) {
+		if (selectionStyle.equals(
+				AssetPublisherSelectionStyleConstants.TYPE_DYNAMIC)) {
+
 			return;
 		}
 
@@ -194,9 +199,9 @@ public class AssetPublisherWebHelper {
 	}
 
 	public String encodeName(
-		long ddmStructureId, String fieldName, Locale locale) {
+		long ddmStructureId, String fieldReference, Locale locale) {
 
-		return _ddmIndexer.encodeName(ddmStructureId, fieldName, locale);
+		return _ddmIndexer.encodeName(ddmStructureId, fieldReference, locale);
 	}
 
 	public String[] filterAssetTagNames(long groupId, String[] assetTagNames) {
@@ -322,20 +327,20 @@ public class AssetPublisherWebHelper {
 
 		return LinkedHashMapBuilder.put(
 			"[$ASSET_ENTRIES$]",
-			LanguageUtil.get(themeDisplay.getLocale(), "the-list-of-assets")
+			_language.get(themeDisplay.getLocale(), "the-list-of-assets")
 		).put(
 			"[$COMPANY_ID$]",
-			LanguageUtil.get(
+			_language.get(
 				themeDisplay.getLocale(),
 				"the-company-id-associated-with-the-assets")
 		).put(
 			"[$COMPANY_MX$]",
-			LanguageUtil.get(
+			_language.get(
 				themeDisplay.getLocale(),
 				"the-company-mx-associated-with-the-assets")
 		).put(
 			"[$COMPANY_NAME$]",
-			LanguageUtil.get(
+			_language.get(
 				themeDisplay.getLocale(),
 				"the-company-name-associated-with-the-assets")
 		).put(
@@ -365,16 +370,16 @@ public class AssetPublisherWebHelper {
 			}
 		).put(
 			"[$SITE_NAME$]",
-			LanguageUtil.get(
+			_language.get(
 				themeDisplay.getLocale(),
 				"the-site-name-associated-with-the-assets")
 		).put(
 			"[$TO_ADDRESS$]",
-			LanguageUtil.get(
+			_language.get(
 				themeDisplay.getLocale(), "the-address-of-the-email-recipient")
 		).put(
 			"[$TO_NAME$]",
-			LanguageUtil.get(
+			_language.get(
 				themeDisplay.getLocale(), "the-name-of-the-email-recipient")
 		).build();
 	}
@@ -471,7 +476,7 @@ public class AssetPublisherWebHelper {
 
 			Group group = _groupLocalService.getGroup(groupId);
 
-			if (SitesUtil.isContentSharingWithChildrenEnabled(group)) {
+			if (_sites.isContentSharingWithChildrenEnabled(group)) {
 				return true;
 			}
 
@@ -484,12 +489,12 @@ public class AssetPublisherWebHelper {
 			}
 
 			if (checkPermission) {
-				return GroupPermissionUtil.contains(
+				return _groupPermission.contains(
 					permissionChecker, group, ActionKeys.UPDATE);
 			}
 		}
 		else if ((groupId != companyGroupId) && checkPermission) {
-			return GroupPermissionUtil.contains(
+			return _groupPermission.contains(
 				permissionChecker, groupId, ActionKeys.UPDATE);
 		}
 
@@ -524,11 +529,9 @@ public class AssetPublisherWebHelper {
 			String portletId)
 		throws PortalException {
 
-		Layout layout = _layoutLocalService.fetchLayout(plid);
-
 		PortletPermissionUtil.check(
-			permissionChecker, 0, layout, portletId, ActionKeys.SUBSCRIBE,
-			false, false);
+			permissionChecker, 0, _layoutLocalService.fetchLayout(plid),
+			portletId, ActionKeys.SUBSCRIBE, false, false);
 
 		_subscriptionLocalService.addSubscription(
 			permissionChecker.getUserId(), groupId,
@@ -540,11 +543,9 @@ public class AssetPublisherWebHelper {
 			PermissionChecker permissionChecker, long plid, String portletId)
 		throws PortalException {
 
-		Layout layout = _layoutLocalService.fetchLayout(plid);
-
 		PortletPermissionUtil.check(
-			permissionChecker, 0, layout, portletId, ActionKeys.SUBSCRIBE,
-			false, false);
+			permissionChecker, 0, _layoutLocalService.fetchLayout(plid),
+			portletId, ActionKeys.SUBSCRIBE, false, false);
 
 		_subscriptionLocalService.deleteSubscription(
 			permissionChecker.getUserId(),
@@ -603,7 +604,7 @@ public class AssetPublisherWebHelper {
 		}
 		catch (IOException ioException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(ioException, ioException);
+				_log.warn(ioException);
 			}
 		}
 
@@ -653,7 +654,7 @@ public class AssetPublisherWebHelper {
 	@Reference
 	private AssetPublisherHelper _assetPublisherHelper;
 
-	private AssetPublisherPortletInstanceConfiguration
+	private volatile AssetPublisherPortletInstanceConfiguration
 		_assetPublisherPortletInstanceConfiguration;
 
 	@Reference
@@ -673,6 +674,12 @@ public class AssetPublisherWebHelper {
 	private GroupLocalService _groupLocalService;
 
 	@Reference
+	private GroupPermission _groupPermission;
+
+	@Reference
+	private Language _language;
+
+	@Reference
 	private LayoutLocalService _layoutLocalService;
 
 	@Reference
@@ -680,6 +687,9 @@ public class AssetPublisherWebHelper {
 
 	@Reference
 	private PortletPreferencesLocalService _portletPreferencesLocalService;
+
+	@Reference
+	private Sites _sites;
 
 	@Reference
 	private SubscriptionLocalService _subscriptionLocalService;

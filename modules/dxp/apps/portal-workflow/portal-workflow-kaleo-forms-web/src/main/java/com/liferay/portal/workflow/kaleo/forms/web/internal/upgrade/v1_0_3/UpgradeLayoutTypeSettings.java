@@ -24,7 +24,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutTypePortletConstants;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
-import com.liferay.portal.kernel.upgrade.BaseUpgradePortletId;
+import com.liferay.portal.kernel.upgrade.BasePortletIdUpgradeProcess;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
@@ -33,9 +33,14 @@ import com.liferay.portal.kernel.util.Validator;
 /**
  * @author Inácio Nery
  */
-public class UpgradeLayoutTypeSettings extends BaseUpgradePortletId {
+public class UpgradeLayoutTypeSettings extends BasePortletIdUpgradeProcess {
 
-	protected void deleteLayoutTypeSettingsColumnKeyWithoutValue()
+	@Override
+	protected void doUpgrade() throws Exception {
+		_deleteLayoutTypeSettingsColumnKeyWithoutValue();
+	}
+
+	private void _deleteLayoutTypeSettingsColumnKeyWithoutValue()
 		throws Exception {
 
 		IndexableActionableDynamicQuery indexableActionableDynamicQuery =
@@ -66,7 +71,7 @@ public class UpgradeLayoutTypeSettings extends BaseUpgradePortletId {
 					UnicodeProperties oldtypeSettingsUnicodeProperties =
 						layout.getTypeSettingsProperties();
 					UnicodeProperties newTypeSettingsUnicodeProperties =
-						getNewTypeSettingsUnicodeProperties(
+						_getNewTypeSettingsUnicodeProperties(
 							layout.getTypeSettingsProperties());
 
 					if (!oldtypeSettingsUnicodeProperties.equals(
@@ -89,12 +94,7 @@ public class UpgradeLayoutTypeSettings extends BaseUpgradePortletId {
 		indexableActionableDynamicQuery.performActions();
 	}
 
-	@Override
-	protected void doUpgrade() throws Exception {
-		deleteLayoutTypeSettingsColumnKeyWithoutValue();
-	}
-
-	protected UnicodeProperties getNewTypeSettingsUnicodeProperties(
+	private UnicodeProperties _getNewTypeSettingsUnicodeProperties(
 		UnicodeProperties oldtypeSettingsUnicodeProperties) {
 
 		UnicodeProperties newtypeSettingsUnicodeProperties =

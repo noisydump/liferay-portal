@@ -27,8 +27,7 @@ import com.liferay.portal.kernel.license.util.LicenseManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.framework.ThrowableCollector;
-import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.HashMapDictionary;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.Element;
@@ -56,7 +55,6 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -272,15 +270,13 @@ public class DefaultLPKGDeployer implements LPKGDeployer {
 		_wabBundleTracker.close();
 	}
 
-	private void _activate(final BundleContext bundleContext) throws Exception {
-		Dictionary<String, Object> properties = new HashMapDictionary<>();
-
-		properties.put(
-			URLConstants.URL_HANDLER_PROTOCOL, new String[] {"lpkg"});
-
+	private void _activate(BundleContext bundleContext) throws Exception {
 		bundleContext.registerService(
 			URLStreamHandlerService.class.getName(),
-			new LPKGURLStreamHandlerService(_urls), properties);
+			new LPKGURLStreamHandlerService(_urls),
+			HashMapDictionaryBuilder.<String, Object>put(
+				URLConstants.URL_HANDLER_PROTOCOL, new String[] {"lpkg"}
+			).build());
 
 		_wabBundleTracker = new BundleTracker<>(
 			bundleContext, ~Bundle.UNINSTALLED,
@@ -290,7 +286,7 @@ public class DefaultLPKGDeployer implements LPKGDeployer {
 
 		Set<Bundle> removalPendingBundles = new HashSet<>();
 
-		_deploymentDirPath = _getDeploymentDirPath(bundleContext);
+		_deploymentDirPath = _getDeploymentDirPath();
 
 		Path overrideDirPath = _deploymentDirPath.resolve("override");
 
@@ -405,7 +401,7 @@ public class DefaultLPKGDeployer implements LPKGDeployer {
 				}
 				catch (Exception exception) {
 					if (_log.isDebugEnabled()) {
-						_log.debug(exception, exception);
+						_log.debug(exception);
 					}
 				}
 			}
@@ -415,21 +411,15 @@ public class DefaultLPKGDeployer implements LPKGDeployer {
 		}
 	}
 
-	private Path _getDeploymentDirPath(BundleContext bundleContext)
-		throws Exception {
-
+	private Path _getDeploymentDirPath() throws Exception {
 		File deploymentDir = new File(
-			GetterUtil.getString(
-				bundleContext.getProperty("lpkg.deployer.dir"),
-				PropsValues.MODULE_FRAMEWORK_MARKETPLACE_DIR));
+			PropsValues.MODULE_FRAMEWORK_MARKETPLACE_DIR);
 
 		deploymentDir = deploymentDir.getCanonicalFile();
 
-		Path deploymentDirPath = deploymentDir.toPath();
+		deploymentDir.mkdirs();
 
-		Files.createDirectories(deploymentDirPath);
-
-		return deploymentDirPath;
+		return deploymentDir.toPath();
 	}
 
 	private void _installLPKGs(

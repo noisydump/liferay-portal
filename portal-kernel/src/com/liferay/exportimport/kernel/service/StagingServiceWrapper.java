@@ -26,6 +26,10 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
 public class StagingServiceWrapper
 	implements ServiceWrapper<StagingService>, StagingService {
 
+	public StagingServiceWrapper() {
+		this(null);
+	}
+
 	public StagingServiceWrapper(StagingService stagingService) {
 		_stagingService = stagingService;
 	}
@@ -42,6 +46,30 @@ public class StagingServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _stagingService.createStagingRequest(groupId, checksum);
+	}
+
+	@Override
+	public void enableLocalStaging(
+			long groupId, boolean branchingPublic, boolean branchingPrivate,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_stagingService.enableLocalStaging(
+			groupId, branchingPublic, branchingPrivate, serviceContext);
+	}
+
+	@Override
+	public void enableRemoteStaging(
+			long groupId, boolean branchingPublic, boolean branchingPrivate,
+			String remoteAddress, int remotePort, String remotePathContext,
+			boolean secureConnection, long remoteGroupId,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_stagingService.enableRemoteStaging(
+			groupId, branchingPublic, branchingPrivate, remoteAddress,
+			remotePort, remotePathContext, secureConnection, remoteGroupId,
+			serviceContext);
 	}
 
 	/**

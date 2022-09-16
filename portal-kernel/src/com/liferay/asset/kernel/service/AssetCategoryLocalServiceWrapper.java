@@ -30,6 +30,10 @@ public class AssetCategoryLocalServiceWrapper
 	implements AssetCategoryLocalService,
 			   ServiceWrapper<AssetCategoryLocalService> {
 
+	public AssetCategoryLocalServiceWrapper() {
+		this(null);
+	}
+
 	public AssetCategoryLocalServiceWrapper(
 		AssetCategoryLocalService assetCategoryLocalService) {
 
@@ -53,7 +57,18 @@ public class AssetCategoryLocalServiceWrapper
 
 	@Override
 	public AssetCategory addCategory(
-			long userId, long groupId, long parentCategoryId,
+			long userId, long groupId, String title, long vocabularyId,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _assetCategoryLocalService.addCategory(
+			userId, groupId, title, vocabularyId, serviceContext);
+	}
+
+	@Override
+	public AssetCategory addCategory(
+			String externalReferenceCode, long userId, long groupId,
+			long parentCategoryId,
 			java.util.Map<java.util.Locale, String> titleMap,
 			java.util.Map<java.util.Locale, String> descriptionMap,
 			long vocabularyId, String[] categoryProperties,
@@ -61,18 +76,8 @@ public class AssetCategoryLocalServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _assetCategoryLocalService.addCategory(
-			userId, groupId, parentCategoryId, titleMap, descriptionMap,
-			vocabularyId, categoryProperties, serviceContext);
-	}
-
-	@Override
-	public AssetCategory addCategory(
-			long userId, long groupId, String title, long vocabularyId,
-			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return _assetCategoryLocalService.addCategory(
-			userId, groupId, title, vocabularyId, serviceContext);
+			externalReferenceCode, userId, groupId, parentCategoryId, titleMap,
+			descriptionMap, vocabularyId, categoryProperties, serviceContext);
 	}
 
 	@Override
@@ -212,6 +217,13 @@ public class AssetCategoryLocalServiceWrapper
 	}
 
 	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _assetCategoryLocalService.dslQueryCount(dslQuery);
+	}
+
+	@Override
 	public com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery() {
 		return _assetCategoryLocalService.dynamicQuery();
 	}
@@ -308,18 +320,31 @@ public class AssetCategoryLocalServiceWrapper
 	}
 
 	/**
-	 * Returns the asset category with the matching external reference code and company.
+	 * Returns the asset category with the matching external reference code and group.
 	 *
-	 * @param companyId the primary key of the company
+	 * @param groupId the primary key of the group
 	 * @param externalReferenceCode the asset category's external reference code
 	 * @return the matching asset category, or <code>null</code> if a matching asset category could not be found
 	 */
 	@Override
+	public AssetCategory fetchAssetCategoryByExternalReferenceCode(
+		long groupId, String externalReferenceCode) {
+
+		return _assetCategoryLocalService.
+			fetchAssetCategoryByExternalReferenceCode(
+				groupId, externalReferenceCode);
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #fetchAssetCategoryByExternalReferenceCode(long, String)}
+	 */
+	@Deprecated
+	@Override
 	public AssetCategory fetchAssetCategoryByReferenceCode(
-		long companyId, String externalReferenceCode) {
+		long groupId, String externalReferenceCode) {
 
 		return _assetCategoryLocalService.fetchAssetCategoryByReferenceCode(
-			companyId, externalReferenceCode);
+			groupId, externalReferenceCode);
 	}
 
 	/**
@@ -432,6 +457,24 @@ public class AssetCategoryLocalServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _assetCategoryLocalService.getAssetCategory(categoryId);
+	}
+
+	/**
+	 * Returns the asset category with the matching external reference code and group.
+	 *
+	 * @param groupId the primary key of the group
+	 * @param externalReferenceCode the asset category's external reference code
+	 * @return the matching asset category
+	 * @throws PortalException if a matching asset category could not be found
+	 */
+	@Override
+	public AssetCategory getAssetCategoryByExternalReferenceCode(
+			long groupId, String externalReferenceCode)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _assetCategoryLocalService.
+			getAssetCategoryByExternalReferenceCode(
+				groupId, externalReferenceCode);
 	}
 
 	/**

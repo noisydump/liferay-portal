@@ -38,17 +38,15 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
-import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
-import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.DefaultSingletonBeanRegistry;
-import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.orm.hibernate3.HibernateTransactionManager;
+import org.springframework.orm.hibernate5.HibernateTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
@@ -174,17 +172,6 @@ public class AopConfigurableApplicationContextConfigurator
 		private PlatformTransactionManager _getPlatformTransactionManager(
 			ConfigurableListableBeanFactory configurableListableBeanFactory) {
 
-			BeanDefinitionRegistry beanDefinitionRegistry =
-				(BeanDefinitionRegistry)configurableListableBeanFactory;
-
-			GenericBeanDefinition genericBeanDefinition =
-				new GenericBeanDefinition();
-
-			genericBeanDefinition.setAbstract(true);
-
-			beanDefinitionRegistry.registerBeanDefinition(
-				"basePersistence", genericBeanDefinition);
-
 			DataSource liferayDataSource =
 				configurableListableBeanFactory.getBean(
 					"liferayDataSource", DataSource.class);
@@ -206,9 +193,11 @@ public class AopConfigurableApplicationContextConfigurator
 						_classLoader, liferayDataSource);
 
 				try {
+					portletHibernateConfiguration.afterPropertiesSet();
+
 					liferayHibernateSessionFactory =
 						(SessionFactoryImplementor)
-							portletHibernateConfiguration.buildSessionFactory();
+							portletHibernateConfiguration.getObject();
 				}
 				catch (Exception exception) {
 					return ReflectionUtil.throwException(exception);

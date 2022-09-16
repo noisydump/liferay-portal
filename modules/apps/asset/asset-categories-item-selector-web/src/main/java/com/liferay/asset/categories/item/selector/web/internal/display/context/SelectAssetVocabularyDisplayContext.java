@@ -18,6 +18,7 @@ import com.liferay.asset.categories.item.selector.web.internal.constants.AssetCa
 import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.model.AssetVocabularyConstants;
 import com.liferay.asset.kernel.service.AssetVocabularyServiceUtil;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
@@ -27,11 +28,9 @@ import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.util.List;
-import java.util.ResourceBundle;
 
 import javax.portlet.PortletException;
 import javax.portlet.PortletRequest;
@@ -76,8 +75,8 @@ public class SelectAssetVocabularyDisplayContext {
 
 		List<AssetVocabulary> assetVocabularies = _getAssetVocabularies();
 
-		searchContainer.setResults(assetVocabularies);
-		searchContainer.setTotal(assetVocabularies.size());
+		searchContainer.setResultsAndTotal(
+			() -> assetVocabularies, assetVocabularies.size());
 
 		return searchContainer;
 	}
@@ -120,15 +119,13 @@ public class SelectAssetVocabularyDisplayContext {
 	}
 
 	private BreadcrumbEntry _getAssetVocabulariesBreadcrumbEntry() {
-		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
-			_themeDisplay.getLocale(), getClass());
-
 		String backURL = ParamUtil.getString(
 			_httpServletRequest, "backURL",
 			PortalUtil.getCurrentURL(_httpServletRequest));
 
 		return _createBreadcrumbEntry(
-			LanguageUtil.get(resourceBundle, "vocabularies"), backURL);
+			LanguageUtil.get(_themeDisplay.getLocale(), "vocabularies"),
+			backURL);
 	}
 
 	private String _getAssetVocabularyURL(long assetVocabularyId)
@@ -138,21 +135,20 @@ public class SelectAssetVocabularyDisplayContext {
 			(PortletResponse)_httpServletRequest.getAttribute(
 				JavaConstants.JAVAX_PORTLET_RESPONSE);
 
-		PortletURL portletURL = PortletURLUtil.clone(
-			_portletURL, PortalUtil.getLiferayPortletResponse(portletResponse));
-
-		portletURL.setParameter(
-			"backURL",
+		return PortletURLBuilder.create(
+			PortletURLUtil.clone(
+				_portletURL,
+				PortalUtil.getLiferayPortletResponse(portletResponse))
+		).setBackURL(
 			ParamUtil.getString(
 				_httpServletRequest, "backURL",
-				PortalUtil.getCurrentURL(_httpServletRequest)));
-		portletURL.setParameter(
-			"assetCategoryTreeNodeId", String.valueOf(assetVocabularyId));
-		portletURL.setParameter(
+				PortalUtil.getCurrentURL(_httpServletRequest))
+		).setParameter(
+			"assetCategoryTreeNodeId", assetVocabularyId
+		).setParameter(
 			"assetCategoryTreeNodeType",
-			AssetCategoryTreeNodeConstants.TYPE_ASSET_VOCABULARY);
-
-		return portletURL.toString();
+			AssetCategoryTreeNodeConstants.TYPE_ASSET_VOCABULARY
+		).buildString();
 	}
 
 	private PortletRequest _getPortletRequest() {

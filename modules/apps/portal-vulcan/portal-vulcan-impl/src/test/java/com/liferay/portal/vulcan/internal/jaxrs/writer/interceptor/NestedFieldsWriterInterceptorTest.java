@@ -15,6 +15,7 @@
 package com.liferay.portal.vulcan.internal.jaxrs.writer.interceptor;
 
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.portal.vulcan.fields.NestedField;
 import com.liferay.portal.vulcan.fields.NestedFieldId;
 import com.liferay.portal.vulcan.fields.NestedFieldsContext;
@@ -55,6 +56,8 @@ import org.apache.cxf.message.MessageImpl;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 import org.mockito.Mockito;
@@ -69,6 +72,11 @@ import org.osgi.framework.ServiceReference;
  * @author Ivica Cardic
  */
 public class NestedFieldsWriterInterceptorTest {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Before
 	public void setUp() throws Exception {
@@ -247,7 +255,7 @@ public class NestedFieldsWriterInterceptorTest {
 			new NestedFieldsContext(
 				Arrays.asList(
 					"productOptions", "productOptions.productOptionValues"),
-				new MessageImpl(), new MultivaluedHashMap<>(), "v1.0",
+				new MessageImpl(), _getPathParameters(), "v1.0",
 				new MultivaluedHashMap<>()));
 
 		_nestedFieldsWriterInterceptor.aroundWriteTo(_writerInterceptorContext);
@@ -336,9 +344,7 @@ public class NestedFieldsWriterInterceptorTest {
 
 		_nestedFieldsWriterInterceptor.aroundWriteTo(_writerInterceptorContext);
 
-		Sku[] skus = product.getSkus();
-
-		Assert.assertNull(skus);
+		Assert.assertNull(product.getSkus());
 
 		NestedFieldsContextThreadLocal.setNestedFieldsContext(
 			new NestedFieldsContext(
@@ -347,9 +353,7 @@ public class NestedFieldsWriterInterceptorTest {
 
 		_nestedFieldsWriterInterceptor.aroundWriteTo(_writerInterceptorContext);
 
-		skus = product.getSkus();
-
-		Assert.assertNull(skus);
+		Assert.assertNull(product.getSkus());
 	}
 
 	@Test
@@ -709,8 +713,8 @@ public class NestedFieldsWriterInterceptorTest {
 		@Path("/products/{productExternalCode}/categories")
 		@Produces("application/*")
 		public List<Category> getCategories(
-			@NotNull @PathParam("productExternalCode")
-				String productExternalCode) {
+			@NotNull @PathParam("productExternalCode") String
+				productExternalCode) {
 
 			return Collections.emptyList();
 		}
@@ -915,14 +919,14 @@ public class NestedFieldsWriterInterceptorTest {
 			}
 
 			List<ProductOption> productOptions = Arrays.asList(
-				_toProductOption(1L, "test1"), _toProductOption(2L, "test2"),
-				_toProductOption(3L, "test3"));
+				_toProductOption(10L, "test1"), _toProductOption(20L, "test2"),
+				_toProductOption(30L, "test3"));
 
 			if (name != null) {
-				Stream<ProductOption> productOptionStream =
+				Stream<ProductOption> productOptionsStream =
 					productOptions.stream();
 
-				productOptions = productOptionStream.filter(
+				productOptions = productOptionsStream.filter(
 					productOption -> Objects.equals(
 						productOption.getName(), name)
 				).collect(
@@ -935,14 +939,14 @@ public class NestedFieldsWriterInterceptorTest {
 
 		@NestedField("productOptionValues")
 		public List<ProductOptionValue> getProductOptionValues(Long id) {
-			if (id == 1) {
+			if (id == 10) {
 				return Arrays.asList(
-					_toProductOptionValue(1L), _toProductOptionValue(2L),
-					_toProductOptionValue(3L));
+					_toProductOptionValue(100L), _toProductOptionValue(200L),
+					_toProductOptionValue(300L));
 			}
-			else if (id == 2) {
+			else if (id == 20) {
 				return Arrays.asList(
-					_toProductOptionValue(4L), _toProductOptionValue(5L));
+					_toProductOptionValue(400L), _toProductOptionValue(500L));
 			}
 			else {
 				return Collections.emptyList();
@@ -1029,10 +1033,10 @@ public class NestedFieldsWriterInterceptorTest {
 				_toProductOption(3L, "test3"));
 
 			if (name != null) {
-				Stream<ProductOption> productOptionStream =
+				Stream<ProductOption> productOptionsStream =
 					productOptions.stream();
 
-				productOptions = productOptionStream.filter(
+				productOptions = productOptionsStream.filter(
 					productOption -> Objects.equals(
 						productOption.getName(), name)
 				).collect(

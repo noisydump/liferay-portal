@@ -14,8 +14,7 @@
 
 package com.liferay.layout.taglib.servlet.taglib;
 
-import com.liferay.fragment.constants.FragmentActionKeys;
-import com.liferay.layout.content.page.editor.constants.ContentPageEditorWebKeys;
+import com.liferay.fragment.helper.FragmentEntryLinkHelper;
 import com.liferay.layout.taglib.internal.servlet.ServletContextUtil;
 import com.liferay.layout.taglib.internal.servlet.taglib.util.LayoutClassedModelUsagesTaglibUtil;
 import com.liferay.taglib.util.IncludeTag;
@@ -34,12 +33,11 @@ public class LayoutClassedModelUsagesAdminTag extends IncludeTag {
 		LayoutClassedModelUsagesTaglibUtil.recordLayoutClassedModelUsage(
 			getClassName(), getClassPK());
 
-		request.setAttribute(
-			ContentPageEditorWebKeys.FRAGMENT_COLLECTION_CONTRIBUTOR_TRACKER,
-			ServletContextUtil.getFragmentCollectionContributorTracker());
-		request.setAttribute(
-			FragmentActionKeys.FRAGMENT_RENDERER_TRACKER,
-			ServletContextUtil.getFragmentRendererTracker());
+		HttpServletRequest httpServletRequest = getRequest();
+
+		httpServletRequest.setAttribute(
+			FragmentEntryLinkHelper.class.getName(),
+			ServletContextUtil.getFragmentEntryLinkHelper());
 
 		return super.doStartTag();
 	}
@@ -64,7 +62,7 @@ public class LayoutClassedModelUsagesAdminTag extends IncludeTag {
 	public void setPageContext(PageContext pageContext) {
 		super.setPageContext(pageContext);
 
-		servletContext = ServletContextUtil.getServletContext();
+		setServletContext(ServletContextUtil.getServletContext());
 	}
 
 	@Override

@@ -16,15 +16,15 @@ package com.liferay.commerce.address.content.web.internal.portlet;
 
 import com.liferay.commerce.account.util.CommerceAccountHelper;
 import com.liferay.commerce.address.content.web.internal.display.context.CommerceAddressDisplayContext;
-import com.liferay.commerce.address.content.web.internal.portlet.action.ActionHelper;
+import com.liferay.commerce.address.content.web.internal.portlet.action.helper.ActionHelper;
 import com.liferay.commerce.constants.CommercePortletKeys;
 import com.liferay.commerce.service.CommerceAddressService;
-import com.liferay.commerce.service.CommerceCountryService;
-import com.liferay.commerce.service.CommerceRegionService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
+import com.liferay.portal.kernel.service.CountryService;
+import com.liferay.portal.kernel.service.RegionService;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 
@@ -49,7 +49,6 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.portlet.display-category=commerce",
 		"com.liferay.portlet.layout-cacheable=true",
 		"com.liferay.portlet.preferences-owned-by-group=true",
-		"com.liferay.portlet.preferences-unique-per-layout=false",
 		"com.liferay.portlet.private-request-attributes=false",
 		"com.liferay.portlet.private-session-attributes=false",
 		"com.liferay.portlet.render-weight=50",
@@ -59,7 +58,8 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + CommercePortletKeys.COMMERCE_ADDRESS_CONTENT,
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=power-user,user"
+		"javax.portlet.security-role-ref=power-user,user",
+		"javax.portlet.version=3.0"
 	},
 	service = {CommerceAddressContentPortlet.class, Portlet.class}
 )
@@ -74,15 +74,15 @@ public class CommerceAddressContentPortlet extends MVCPortlet {
 			CommerceAddressDisplayContext commerceAddressDisplayContext =
 				new CommerceAddressDisplayContext(
 					_actionHelper, _commerceAccountHelper,
-					_commerceAddressService, _commerceCountryService,
-					_commerceRegionService,
-					_portal.getHttpServletRequest(renderRequest));
+					_commerceAddressService, _countryService,
+					_portal.getHttpServletRequest(renderRequest),
+					_regionService);
 
 			renderRequest.setAttribute(
 				WebKeys.PORTLET_DISPLAY_CONTEXT, commerceAddressDisplayContext);
 		}
 		catch (PortalException portalException) {
-			_log.error(portalException, portalException);
+			_log.error(portalException);
 		}
 
 		super.render(renderRequest, renderResponse);
@@ -101,12 +101,12 @@ public class CommerceAddressContentPortlet extends MVCPortlet {
 	private CommerceAddressService _commerceAddressService;
 
 	@Reference
-	private CommerceCountryService _commerceCountryService;
-
-	@Reference
-	private CommerceRegionService _commerceRegionService;
+	private CountryService _countryService;
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private RegionService _regionService;
 
 }

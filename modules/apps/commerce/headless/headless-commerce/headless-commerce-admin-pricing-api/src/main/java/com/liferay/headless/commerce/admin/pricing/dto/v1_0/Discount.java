@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
@@ -62,7 +63,11 @@ public class Discount implements Serializable {
 		return ObjectMapperUtil.readValue(Discount.class, json);
 	}
 
-	@Schema
+	public static Discount unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(Discount.class, json);
+	}
+
+	@Schema(example = "true")
 	public Boolean getActive() {
 		return active;
 	}
@@ -90,7 +95,7 @@ public class Discount implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Boolean active;
 
-	@Schema
+	@Schema(example = "SAVE20")
 	public String getCouponCode() {
 		return couponCode;
 	}
@@ -324,7 +329,7 @@ public class Discount implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Date expirationDate;
 
-	@Schema
+	@Schema(example = "AB-34098-789-N")
 	public String getExternalReferenceCode() {
 		return externalReferenceCode;
 	}
@@ -353,7 +358,7 @@ public class Discount implements Serializable {
 	protected String externalReferenceCode;
 
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "30130")
 	public Long getId() {
 		return id;
 	}
@@ -380,7 +385,7 @@ public class Discount implements Serializable {
 	protected Long id;
 
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "0")
 	public Integer getLimitationTimes() {
 		return limitationTimes;
 	}
@@ -408,7 +413,7 @@ public class Discount implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Integer limitationTimes;
 
-	@Schema
+	@Schema(example = "unlimited")
 	public String getLimitationType() {
 		return limitationType;
 	}
@@ -438,7 +443,7 @@ public class Discount implements Serializable {
 	protected String limitationType;
 
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "25")
 	@Valid
 	public BigDecimal getMaximumDiscountAmount() {
 		return maximumDiscountAmount;
@@ -468,7 +473,7 @@ public class Discount implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected BigDecimal maximumDiscountAmount;
 
-	@Schema
+	@Schema(example = "true")
 	public Boolean getNeverExpire() {
 		return neverExpire;
 	}
@@ -497,7 +502,7 @@ public class Discount implements Serializable {
 	protected Boolean neverExpire;
 
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "5")
 	public Integer getNumberOfUse() {
 		return numberOfUse;
 	}
@@ -526,7 +531,7 @@ public class Discount implements Serializable {
 	protected Integer numberOfUse;
 
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "20")
 	@Valid
 	public BigDecimal getPercentageLevel1() {
 		return percentageLevel1;
@@ -556,7 +561,7 @@ public class Discount implements Serializable {
 	protected BigDecimal percentageLevel1;
 
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "0")
 	@Valid
 	public BigDecimal getPercentageLevel2() {
 		return percentageLevel2;
@@ -586,7 +591,7 @@ public class Discount implements Serializable {
 	protected BigDecimal percentageLevel2;
 
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "0")
 	@Valid
 	public BigDecimal getPercentageLevel3() {
 		return percentageLevel3;
@@ -616,7 +621,7 @@ public class Discount implements Serializable {
 	protected BigDecimal percentageLevel3;
 
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "0")
 	@Valid
 	public BigDecimal getPercentageLevel4() {
 		return percentageLevel4;
@@ -645,7 +650,7 @@ public class Discount implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected BigDecimal percentageLevel4;
 
-	@Schema
+	@Schema(example = "subtotal")
 	public String getTarget() {
 		return target;
 	}
@@ -674,7 +679,7 @@ public class Discount implements Serializable {
 	@NotEmpty
 	protected String target;
 
-	@Schema
+	@Schema(example = "20% Off")
 	public String getTitle() {
 		return title;
 	}
@@ -703,7 +708,7 @@ public class Discount implements Serializable {
 	@NotEmpty
 	protected String title;
 
-	@Schema
+	@Schema(example = "true")
 	public Boolean getUseCouponCode() {
 		return useCouponCode;
 	}
@@ -731,7 +736,7 @@ public class Discount implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Boolean useCouponCode;
 
-	@Schema
+	@Schema(example = "true")
 	public Boolean getUsePercentage() {
 		return usePercentage;
 	}
@@ -1103,15 +1108,16 @@ public class Discount implements Serializable {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.commerce.admin.pricing.dto.v1_0.Discount",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
 	}
 
 	private static boolean _isArray(Object value) {
@@ -1137,8 +1143,8 @@ public class Discount implements Serializable {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -1169,7 +1175,7 @@ public class Discount implements Serializable {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -1177,7 +1183,7 @@ public class Discount implements Serializable {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -1185,5 +1191,10 @@ public class Discount implements Serializable {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

@@ -22,7 +22,6 @@ MBCategory category = (MBCategory)request.getAttribute(WebKeys.MESSAGE_BOARDS_CA
 long categoryId = MBUtil.getCategoryId(request, category);
 
 long excludedCategoryId = ParamUtil.getLong(request, "excludedMBCategoryId");
-String eventName = ParamUtil.getString(request, "eventName", liferayPortletResponse.getNamespace() + "selectCategory");
 
 MBCategoryDisplay categoryDisplay = new MBCategoryDisplay(scopeGroupId, categoryId);
 
@@ -46,16 +45,17 @@ else {
 			showParentGroups="<%= false %>"
 		/>
 
-		<%
-		PortletURL portletURL = renderResponse.createRenderURL();
-
-		portletURL.setParameter("mvcRenderCommandName", "/message_boards/select_category");
-		portletURL.setParameter("mbCategoryId", String.valueOf(categoryId));
-		%>
-
 		<liferay-ui:search-container
 			headerNames="category[message-board],categories,threads,posts,"
-			iteratorURL="<%= portletURL %>"
+			iteratorURL='<%=
+				PortletURLBuilder.createRenderURL(
+					renderResponse
+				).setMVCRenderCommandName(
+					"/message_boards/select_category"
+				).setParameter(
+					"mbCategoryId", categoryId
+				).buildPortletURL()
+			%>'
 			total="<%= MBCategoryServiceUtil.getCategoriesCount(scopeGroupId, excludedCategoryId, categoryId, WorkflowConstants.STATUS_APPROVED) %>"
 		>
 			<liferay-ui:search-container-results
@@ -143,10 +143,3 @@ else {
 		</liferay-ui:search-container>
 	</aui:form>
 </clay:container-fluid>
-
-<aui:script>
-	Liferay.Util.selectEntityHandler(
-		'#<portlet:namespace />selectCategoryFm',
-		'<%= HtmlUtil.escapeJS(eventName) %>'
-	);
-</aui:script>

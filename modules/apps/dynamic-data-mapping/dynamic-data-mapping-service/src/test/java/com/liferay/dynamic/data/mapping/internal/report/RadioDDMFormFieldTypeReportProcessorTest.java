@@ -15,52 +15,50 @@
 package com.liferay.dynamic.data.mapping.internal.report;
 
 import com.liferay.dynamic.data.mapping.constants.DDMFormInstanceReportConstants;
-import com.liferay.dynamic.data.mapping.model.DDMFormFieldType;
+import com.liferay.dynamic.data.mapping.form.field.type.constants.DDMFormFieldTypeConstants;
 import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.dynamic.data.mapping.model.Value;
 import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
-import com.liferay.portal.json.JSONFactoryImpl;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-import org.mockito.runners.MockitoJUnitRunner;
-
-import org.powermock.api.mockito.PowerMockito;
+import org.mockito.Mockito;
 
 /**
  * @author Marcos Martins
  */
-@RunWith(MockitoJUnitRunner.class)
-public class RadioDDMFormFieldTypeReportProcessorTest extends PowerMockito {
+public class RadioDDMFormFieldTypeReportProcessorTest {
 
-	@Before
-	public void setUp() {
-		_setUpJSONFactoryUtil();
-	}
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Test
 	public void testProcessDDMFormInstanceReportOnDeleteEvent()
 		throws Exception {
 
-		DDMFormFieldValue ddmFormFieldValue = mock(DDMFormFieldValue.class);
+		DDMFormFieldValue ddmFormFieldValue = Mockito.mock(
+			DDMFormFieldValue.class);
 
-		when(
+		Mockito.when(
 			ddmFormFieldValue.getName()
 		).thenReturn(
 			"field1"
 		);
 
-		when(
+		Mockito.when(
 			ddmFormFieldValue.getType()
 		).thenReturn(
-			DDMFormFieldType.RADIO
+			DDMFormFieldTypeConstants.RADIO
 		);
 
 		Value value = new LocalizedValue();
@@ -68,7 +66,7 @@ public class RadioDDMFormFieldTypeReportProcessorTest extends PowerMockito {
 		value.addString(value.getDefaultLocale(), "option1");
 		value.setDefaultLocale(LocaleUtil.US);
 
-		when(
+		Mockito.when(
 			ddmFormFieldValue.getValue()
 		).thenReturn(
 			value
@@ -78,7 +76,7 @@ public class RadioDDMFormFieldTypeReportProcessorTest extends PowerMockito {
 			_radioDDMFormFieldTypeReportProcessor.process(
 				ddmFormFieldValue,
 				JSONUtil.put(
-					"type", DDMFormFieldType.RADIO
+					"type", DDMFormFieldTypeConstants.RADIO
 				).put(
 					"values", JSONFactoryUtil.createJSONObject("{option1 : 1}")
 				),
@@ -94,18 +92,19 @@ public class RadioDDMFormFieldTypeReportProcessorTest extends PowerMockito {
 	public void testProcessDDMFormInstanceReportWithEmptyData()
 		throws Exception {
 
-		DDMFormFieldValue ddmFormFieldValue = mock(DDMFormFieldValue.class);
+		DDMFormFieldValue ddmFormFieldValue = Mockito.mock(
+			DDMFormFieldValue.class);
 
-		when(
+		Mockito.when(
 			ddmFormFieldValue.getName()
 		).thenReturn(
 			"field1"
 		);
 
-		when(
+		Mockito.when(
 			ddmFormFieldValue.getType()
 		).thenReturn(
-			DDMFormFieldType.RADIO
+			DDMFormFieldTypeConstants.RADIO
 		);
 
 		Value value = new LocalizedValue();
@@ -113,7 +112,7 @@ public class RadioDDMFormFieldTypeReportProcessorTest extends PowerMockito {
 		value.addString(value.getDefaultLocale(), "option1");
 		value.setDefaultLocale(LocaleUtil.US);
 
-		when(
+		Mockito.when(
 			ddmFormFieldValue.getValue()
 		).thenReturn(
 			value
@@ -123,14 +122,15 @@ public class RadioDDMFormFieldTypeReportProcessorTest extends PowerMockito {
 			_radioDDMFormFieldTypeReportProcessor.process(
 				ddmFormFieldValue,
 				JSONUtil.put(
-					"type", DDMFormFieldType.RADIO
+					"type", DDMFormFieldTypeConstants.RADIO
 				).put(
 					"values", JSONFactoryUtil.createJSONObject()
 				),
 				0, DDMFormInstanceReportConstants.EVENT_ADD_RECORD_VERSION);
 
 		Assert.assertEquals(
-			DDMFormFieldType.RADIO, processedFieldJSONObject.getString("type"));
+			DDMFormFieldTypeConstants.RADIO,
+			processedFieldJSONObject.getString("type"));
 
 		JSONObject valuesJSONObject = processedFieldJSONObject.getJSONObject(
 			"values");
@@ -142,18 +142,19 @@ public class RadioDDMFormFieldTypeReportProcessorTest extends PowerMockito {
 	public void testProcessDDMFormInstanceReportWithEmptyField()
 		throws Exception {
 
-		DDMFormFieldValue ddmFormFieldValue = mock(DDMFormFieldValue.class);
+		DDMFormFieldValue ddmFormFieldValue = Mockito.mock(
+			DDMFormFieldValue.class);
 
-		when(
+		Mockito.when(
 			ddmFormFieldValue.getName()
 		).thenReturn(
 			"field1"
 		);
 
-		when(
+		Mockito.when(
 			ddmFormFieldValue.getType()
 		).thenReturn(
-			DDMFormFieldType.RADIO
+			DDMFormFieldTypeConstants.RADIO
 		);
 
 		Value value = new LocalizedValue();
@@ -161,7 +162,7 @@ public class RadioDDMFormFieldTypeReportProcessorTest extends PowerMockito {
 		value.addString(value.getDefaultLocale(), "");
 		value.setDefaultLocale(LocaleUtil.US);
 
-		when(
+		Mockito.when(
 			ddmFormFieldValue.getValue()
 		).thenReturn(
 			value
@@ -171,14 +172,15 @@ public class RadioDDMFormFieldTypeReportProcessorTest extends PowerMockito {
 			_radioDDMFormFieldTypeReportProcessor.process(
 				ddmFormFieldValue,
 				JSONUtil.put(
-					"type", DDMFormFieldType.RADIO
+					"type", DDMFormFieldTypeConstants.RADIO
 				).put(
 					"values", JSONFactoryUtil.createJSONObject()
 				),
 				0, DDMFormInstanceReportConstants.EVENT_ADD_RECORD_VERSION);
 
 		Assert.assertEquals(
-			DDMFormFieldType.RADIO, processedFieldJSONObject.getString("type"));
+			DDMFormFieldTypeConstants.RADIO,
+			processedFieldJSONObject.getString("type"));
 
 		JSONObject valuesJSONObject = processedFieldJSONObject.getJSONObject(
 			"values");
@@ -190,18 +192,19 @@ public class RadioDDMFormFieldTypeReportProcessorTest extends PowerMockito {
 	public void testProcessDDMFormInstanceReportWithExistingData()
 		throws Exception {
 
-		DDMFormFieldValue ddmFormFieldValue = mock(DDMFormFieldValue.class);
+		DDMFormFieldValue ddmFormFieldValue = Mockito.mock(
+			DDMFormFieldValue.class);
 
-		when(
+		Mockito.when(
 			ddmFormFieldValue.getName()
 		).thenReturn(
 			"field1"
 		);
 
-		when(
+		Mockito.when(
 			ddmFormFieldValue.getType()
 		).thenReturn(
-			DDMFormFieldType.RADIO
+			DDMFormFieldTypeConstants.RADIO
 		);
 
 		Value value = new LocalizedValue();
@@ -209,7 +212,7 @@ public class RadioDDMFormFieldTypeReportProcessorTest extends PowerMockito {
 		value.addString(value.getDefaultLocale(), "option1");
 		value.setDefaultLocale(LocaleUtil.US);
 
-		when(
+		Mockito.when(
 			ddmFormFieldValue.getValue()
 		).thenReturn(
 			value
@@ -219,7 +222,7 @@ public class RadioDDMFormFieldTypeReportProcessorTest extends PowerMockito {
 			_radioDDMFormFieldTypeReportProcessor.process(
 				ddmFormFieldValue,
 				JSONUtil.put(
-					"type", DDMFormFieldType.RADIO
+					"type", DDMFormFieldTypeConstants.RADIO
 				).put(
 					"values", JSONFactoryUtil.createJSONObject("{option1 : 1}")
 				),
@@ -229,12 +232,6 @@ public class RadioDDMFormFieldTypeReportProcessorTest extends PowerMockito {
 			"values");
 
 		Assert.assertEquals(2, valuesJSONObject.getLong("option1"));
-	}
-
-	private void _setUpJSONFactoryUtil() {
-		JSONFactoryUtil jsonFactoryUtil = new JSONFactoryUtil();
-
-		jsonFactoryUtil.setJSONFactory(new JSONFactoryImpl());
 	}
 
 	private final RadioDDMFormFieldTypeReportProcessor

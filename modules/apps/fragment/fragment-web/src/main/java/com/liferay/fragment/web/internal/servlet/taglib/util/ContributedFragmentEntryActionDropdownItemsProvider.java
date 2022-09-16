@@ -20,6 +20,7 @@ import com.liferay.fragment.web.internal.security.permission.resource.FragmentPe
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.petra.function.UnsafeConsumer;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -28,8 +29,6 @@ import com.liferay.portal.kernel.util.WebKeys;
 
 import java.util.List;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 
@@ -67,34 +66,31 @@ public class ContributedFragmentEntryActionDropdownItemsProvider {
 			_getCopyToFragmentEntryActionUnsafeConsumer()
 		throws Exception {
 
-		PortletURL selectFragmentCollectionURL =
-			_renderResponse.createRenderURL();
-
-		selectFragmentCollectionURL.setParameter(
-			"mvcRenderCommandName", "/fragment/select_fragment_collection");
-
-		selectFragmentCollectionURL.setWindowState(LiferayWindowState.POP_UP);
-
-		PortletURL copyContributedFragmentEntryURL =
-			_renderResponse.createActionURL();
-
-		copyContributedFragmentEntryURL.setParameter(
-			ActionRequest.ACTION_NAME,
-			"/fragment/copy_contributed_fragment_entry");
-		copyContributedFragmentEntryURL.setParameter(
-			"redirect", _themeDisplay.getURLCurrent());
-
 		return dropdownItem -> {
-			dropdownItem.putData("action", "copyToContributedFragmentEntry");
 			dropdownItem.putData(
-				"copyContributedFragmentEntryURL",
-				copyContributedFragmentEntryURL.toString());
+				"action", "copyContributedEntryToFragmentCollection");
 			dropdownItem.putData(
-				"fragmentEntryKey",
+				"contributedEntryKey",
 				String.valueOf(_fragmentEntry.getFragmentEntryKey()));
 			dropdownItem.putData(
+				"copyContributedEntryURL",
+				PortletURLBuilder.createActionURL(
+					_renderResponse
+				).setActionName(
+					"/fragment/copy_contributed_entry"
+				).setRedirect(
+					_themeDisplay.getURLCurrent()
+				).buildString());
+			dropdownItem.putData(
 				"selectFragmentCollectionURL",
-				selectFragmentCollectionURL.toString());
+				PortletURLBuilder.createRenderURL(
+					_renderResponse
+				).setMVCRenderCommandName(
+					"/fragment/select_fragment_collection"
+				).setWindowState(
+					LiferayWindowState.POP_UP
+				).buildString());
+			dropdownItem.setIcon("copy");
 			dropdownItem.setLabel(
 				LanguageUtil.get(_httpServletRequest, "copy-to"));
 		};

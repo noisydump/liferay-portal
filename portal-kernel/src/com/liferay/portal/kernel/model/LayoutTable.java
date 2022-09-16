@@ -67,8 +67,8 @@ public class LayoutTable extends BaseTable<LayoutTable> {
 		"classPK", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
 	public final Column<LayoutTable, String> name = createColumn(
 		"name", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
-	public final Column<LayoutTable, String> title = createColumn(
-		"title", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
+	public final Column<LayoutTable, Clob> title = createColumn(
+		"title", Clob.class, Types.CLOB, Column.FLAG_DEFAULT);
 	public final Column<LayoutTable, Clob> description = createColumn(
 		"description", Clob.class, Types.CLOB, Column.FLAG_DEFAULT);
 	public final Column<LayoutTable, String> keywords = createColumn(
@@ -97,6 +97,8 @@ public class LayoutTable extends BaseTable<LayoutTable> {
 		"css", Clob.class, Types.CLOB, Column.FLAG_DEFAULT);
 	public final Column<LayoutTable, Integer> priority = createColumn(
 		"priority", Integer.class, Types.INTEGER, Column.FLAG_DEFAULT);
+	public final Column<LayoutTable, Long> faviconFileEntryId = createColumn(
+		"faviconFileEntryId", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
 	public final Column<LayoutTable, Long> masterLayoutPlid = createColumn(
 		"masterLayoutPlid", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
 	public final Column<LayoutTable, String> layoutPrototypeUuid = createColumn(

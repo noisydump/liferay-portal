@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
@@ -48,13 +49,20 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @generated
  */
 @Generated("")
-@GraphQLName("WorkflowInstance")
+@GraphQLName(
+	description = "Represents an instance to be executed in a workflow.",
+	value = "WorkflowInstance"
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "WorkflowInstance")
 public class WorkflowInstance implements Serializable {
 
 	public static WorkflowInstance toDTO(String json) {
 		return ObjectMapperUtil.readValue(WorkflowInstance.class, json);
+	}
+
+	public static WorkflowInstance unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(WorkflowInstance.class, json);
 	}
 
 	@Schema(
@@ -88,6 +96,34 @@ public class WorkflowInstance implements Serializable {
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Boolean completed;
+
+	@Schema(description = "The instance's current node names.")
+	public String[] getCurrentNodeNames() {
+		return currentNodeNames;
+	}
+
+	public void setCurrentNodeNames(String[] currentNodeNames) {
+		this.currentNodeNames = currentNodeNames;
+	}
+
+	@JsonIgnore
+	public void setCurrentNodeNames(
+		UnsafeSupplier<String[], Exception> currentNodeNamesUnsafeSupplier) {
+
+		try {
+			currentNodeNames = currentNodeNamesUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(description = "The instance's current node names.")
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String[] currentNodeNames;
 
 	@Schema(description = "The instance's completion date.")
 	public Date getDateCompletion() {
@@ -205,34 +241,6 @@ public class WorkflowInstance implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected ObjectReviewed objectReviewed;
 
-	@Schema(description = "The instance's current state.")
-	public String getState() {
-		return state;
-	}
-
-	public void setState(String state) {
-		this.state = state;
-	}
-
-	@JsonIgnore
-	public void setState(
-		UnsafeSupplier<String, Exception> stateUnsafeSupplier) {
-
-		try {
-			state = stateUnsafeSupplier.get();
-		}
-		catch (RuntimeException re) {
-			throw re;
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	@GraphQLField(description = "The instance's current state.")
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
-	protected String state;
-
 	@Schema(description = "The name of the instance's workflow definition.")
 	public String getWorkflowDefinitionName() {
 		return workflowDefinitionName;
@@ -334,6 +342,30 @@ public class WorkflowInstance implements Serializable {
 			sb.append(completed);
 		}
 
+		if (currentNodeNames != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"currentNodeNames\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < currentNodeNames.length; i++) {
+				sb.append("\"");
+
+				sb.append(_escape(currentNodeNames[i]));
+
+				sb.append("\"");
+
+				if ((i + 1) < currentNodeNames.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
 		if (dateCompletion != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -382,20 +414,6 @@ public class WorkflowInstance implements Serializable {
 			sb.append(String.valueOf(objectReviewed));
 		}
 
-		if (state != null) {
-			if (sb.length() > 1) {
-				sb.append(", ");
-			}
-
-			sb.append("\"state\": ");
-
-			sb.append("\"");
-
-			sb.append(_escape(state));
-
-			sb.append("\"");
-		}
-
 		if (workflowDefinitionName != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -430,15 +448,16 @@ public class WorkflowInstance implements Serializable {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.admin.workflow.dto.v1_0.WorkflowInstance",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
 	}
 
 	private static boolean _isArray(Object value) {
@@ -464,8 +483,8 @@ public class WorkflowInstance implements Serializable {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -496,7 +515,7 @@ public class WorkflowInstance implements Serializable {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -504,7 +523,7 @@ public class WorkflowInstance implements Serializable {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -512,5 +531,10 @@ public class WorkflowInstance implements Serializable {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

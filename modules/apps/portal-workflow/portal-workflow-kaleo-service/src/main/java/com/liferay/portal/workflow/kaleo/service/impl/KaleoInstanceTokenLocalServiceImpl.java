@@ -29,6 +29,7 @@ import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.workflow.kaleo.constants.KaleoInstanceTokenConstants;
@@ -37,6 +38,7 @@ import com.liferay.portal.workflow.kaleo.model.KaleoInstanceToken;
 import com.liferay.portal.workflow.kaleo.model.KaleoNode;
 import com.liferay.portal.workflow.kaleo.service.KaleoNodeLocalService;
 import com.liferay.portal.workflow.kaleo.service.base.KaleoInstanceTokenLocalServiceBaseImpl;
+import com.liferay.portal.workflow.kaleo.service.persistence.KaleoInstancePersistence;
 import com.liferay.portal.workflow.kaleo.service.persistence.KaleoInstanceTokenQuery;
 
 import java.io.Serializable;
@@ -68,24 +70,22 @@ public class KaleoInstanceTokenLocalServiceImpl
 			ServiceContext serviceContext)
 		throws PortalException {
 
-		User user = userLocalService.getUser(serviceContext.getGuestOrUserId());
-		Date now = new Date();
+		User user = _userLocalService.getUser(
+			serviceContext.getGuestOrUserId());
+		Date date = new Date();
 
 		long kaleoInstanceTokenId = counterLocalService.increment();
 
 		KaleoInstanceToken kaleoInstanceToken =
 			kaleoInstanceTokenPersistence.create(kaleoInstanceTokenId);
 
-		long groupId = _staging.getLiveGroupId(
-			serviceContext.getScopeGroupId());
-
-		kaleoInstanceToken.setGroupId(groupId);
-
+		kaleoInstanceToken.setGroupId(
+			_staging.getLiveGroupId(serviceContext.getScopeGroupId()));
 		kaleoInstanceToken.setCompanyId(user.getCompanyId());
 		kaleoInstanceToken.setUserId(user.getUserId());
 		kaleoInstanceToken.setUserName(user.getFullName());
-		kaleoInstanceToken.setCreateDate(now);
-		kaleoInstanceToken.setModifiedDate(now);
+		kaleoInstanceToken.setCreateDate(date);
+		kaleoInstanceToken.setModifiedDate(date);
 		kaleoInstanceToken.setKaleoDefinitionId(kaleoDefinitionId);
 		kaleoInstanceToken.setKaleoDefinitionVersionId(
 			kaleoDefinitionVersionId);
@@ -187,6 +187,14 @@ public class KaleoInstanceTokenLocalServiceImpl
 
 	@Override
 	public List<KaleoInstanceToken> getKaleoInstanceTokens(
+		long kaleoInstanceId) {
+
+		return kaleoInstanceTokenPersistence.findByKaleoInstanceId(
+			kaleoInstanceId);
+	}
+
+	@Override
+	public List<KaleoInstanceToken> getKaleoInstanceTokens(
 		long parentKaleoInstanceTokenId, Date completionDate,
 		ServiceContext serviceContext) {
 
@@ -227,8 +235,8 @@ public class KaleoInstanceTokenLocalServiceImpl
 			ServiceContext serviceContext)
 		throws PortalException {
 
-		KaleoInstance kaleoInstance = kaleoInstancePersistence.findByPrimaryKey(
-			kaleoInstanceId);
+		KaleoInstance kaleoInstance =
+			_kaleoInstancePersistence.findByPrimaryKey(kaleoInstanceId);
 
 		long rootKaleoInstanceTokenId =
 			kaleoInstance.getRootKaleoInstanceTokenId();
@@ -254,7 +262,7 @@ public class KaleoInstanceTokenLocalServiceImpl
 		kaleoInstance.setRootKaleoInstanceTokenId(
 			kaleoInstanceToken.getKaleoInstanceTokenId());
 
-		kaleoInstancePersistence.update(kaleoInstance);
+		_kaleoInstancePersistence.update(kaleoInstance);
 
 		return kaleoInstanceToken;
 	}
@@ -263,7 +271,8 @@ public class KaleoInstanceTokenLocalServiceImpl
 	public Hits search(
 		Long userId, String assetClassName, String assetTitle,
 		String assetDescription, String currentKaleoNodeName,
-		String kaleoDefinitionName, Boolean completed, int start, int end,
+		String kaleoDefinitionName, Boolean completed,
+		boolean searchByActiveWorkflowHandlers, int start, int end,
 		Sort[] sorts, ServiceContext serviceContext) {
 
 		try {
@@ -277,6 +286,8 @@ public class KaleoInstanceTokenLocalServiceImpl
 			kaleoInstanceTokenQuery.setCurrentKaleoNodeName(
 				currentKaleoNodeName);
 			kaleoInstanceTokenQuery.setKaleoDefinitionName(kaleoDefinitionName);
+			kaleoInstanceTokenQuery.setSearchByActiveWorkflowHandlers(
+				searchByActiveWorkflowHandlers);
 			kaleoInstanceTokenQuery.setUserId(userId);
 
 			Indexer<KaleoInstanceToken> indexer =
@@ -298,7 +309,7 @@ public class KaleoInstanceTokenLocalServiceImpl
 		Long userId, String assetClassName, String assetTitle,
 		String assetDescription, String currentKaleoNodeName,
 		String kaleoDefinitionName, Boolean completed,
-		ServiceContext serviceContext) {
+		boolean searchByActiveWorkflowHandlers, ServiceContext serviceContext) {
 
 		KaleoInstanceTokenQuery kaleoInstanceTokenQuery =
 			new KaleoInstanceTokenQuery(serviceContext);
@@ -309,6 +320,8 @@ public class KaleoInstanceTokenLocalServiceImpl
 		kaleoInstanceTokenQuery.setCurrentKaleoNodeName(currentKaleoNodeName);
 		kaleoInstanceTokenQuery.setCompleted(completed);
 		kaleoInstanceTokenQuery.setKaleoDefinitionName(kaleoDefinitionName);
+		kaleoInstanceTokenQuery.setSearchByActiveWorkflowHandlers(
+			searchByActiveWorkflowHandlers);
 		kaleoInstanceTokenQuery.setUserId(userId);
 
 		try {
@@ -377,9 +390,15 @@ public class KaleoInstanceTokenLocalServiceImpl
 	}
 
 	@Reference
+	private KaleoInstancePersistence _kaleoInstancePersistence;
+
+	@Reference
 	private KaleoNodeLocalService _kaleoNodeLocalService;
 
 	@Reference
 	private Staging _staging;
+
+	@Reference
+	private UserLocalService _userLocalService;
 
 }

@@ -52,14 +52,14 @@
 
 		<div>
 			<react:component
-				module="auto_field/index"
+				module="js/components/AssetFilterBuilder/index"
 				props='<%=
 					HashMapBuilder.<String, Object>put(
 						"categorySelectorURL", editAssetListDisplayContext.getCategorySelectorURL()
 					).put(
 						"disabled", editAssetListDisplayContext.isLiveGroup()
 					).put(
-						"groupIds", ListUtil.toList(editAssetListDisplayContext.getReferencedModelsGroupIds())
+						"groupIds", ListUtil.fromArray(editAssetListDisplayContext.getReferencedModelsGroupIds())
 					).put(
 						"namespace", liferayPortletResponse.getNamespace()
 					).put(

@@ -20,6 +20,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.asset.display.page.constants.AssetDisplayPageConstants;
 import com.liferay.asset.display.page.service.AssetDisplayPageEntryLocalService;
+import com.liferay.asset.list.constants.AssetListEntryTypeConstants;
+import com.liferay.asset.list.model.AssetListEntry;
+import com.liferay.asset.list.service.AssetListEntryLocalService;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.fragment.constants.FragmentConstants;
 import com.liferay.fragment.model.FragmentCollection;
@@ -35,15 +38,19 @@ import com.liferay.layout.page.template.importer.LayoutPageTemplatesImporterResu
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalService;
+import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.json.JSONFactoryImpl;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
+import com.liferay.portal.kernel.portlet.constants.FriendlyURLResolverConstants;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
@@ -67,6 +74,7 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.zip.ZipWriter;
 import com.liferay.portal.kernel.zip.ZipWriterFactoryUtil;
+import com.liferay.portal.props.test.util.PropsTemporarySwapper;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -114,9 +122,10 @@ public class ImportExportLayoutPageTemplateEntriesTest {
 	public void setUp() throws Exception {
 		_bundle = FrameworkUtil.getBundle(getClass());
 
-		_group = GroupTestUtil.addGroup();
+		_group1 = GroupTestUtil.addGroup();
+		_group2 = GroupTestUtil.addGroup();
 
-		_company = _companyLocalService.getCompany(_group.getCompanyId());
+		_company = _companyLocalService.getCompany(_group1.getCompanyId());
 
 		JSONFactoryUtil jsonFactoryUtil = new JSONFactoryUtil();
 
@@ -130,23 +139,114 @@ public class ImportExportLayoutPageTemplateEntriesTest {
 	}
 
 	@Test
+	public void testImportExportLayoutPageTemplateEntryCollectionDisplayBeforePaginationImprovements()
+		throws Exception {
+
+		Map<String, String> numberValuesMap = HashMapBuilder.put(
+			"CLASS_PK",
+			() -> {
+				AssetListEntry assetListEntry = _addAssetListEntry(
+					_group1.getGroupId());
+
+				return String.valueOf(assetListEntry.getAssetListEntryId());
+			}
+		).build();
+
+		File expectedFile = _generateZipFile(
+			"collection_display/before_pagination_improvements/expected",
+			numberValuesMap, null);
+		File inputFile = _generateZipFile(
+			"collection_display/before_pagination_improvements/input",
+			numberValuesMap, null);
+
+		_validateImportExport(expectedFile, inputFile);
+	}
+
+	@Test
+	public void testImportExportLayoutPageTemplateEntryCollectionDisplayComplete()
+		throws Exception {
+
+		Map<String, String> numberValuesMap = HashMapBuilder.put(
+			"CLASS_PK",
+			() -> {
+				AssetListEntry assetListEntry = _addAssetListEntry(
+					_group1.getGroupId());
+
+				return String.valueOf(assetListEntry.getAssetListEntryId());
+			}
+		).build();
+
+		File expectedFile = _generateZipFile(
+			"collection_display/complete/expected", numberValuesMap, null);
+		File inputFile = _generateZipFile(
+			"collection_display/complete/input", numberValuesMap, null);
+
+		_validateImportExport(expectedFile, inputFile);
+	}
+
+	@Test
+	public void testImportExportLayoutPageTemplateEntryCollectionDisplayDefault()
+		throws Exception {
+
+		Map<String, String> numberValuesMap = HashMapBuilder.put(
+			"CLASS_PK",
+			() -> {
+				AssetListEntry assetListEntry = _addAssetListEntry(
+					_group1.getGroupId());
+
+				return String.valueOf(assetListEntry.getAssetListEntryId());
+			}
+		).build();
+
+		File expectedFile = _generateZipFile(
+			"collection_display/default/expected", numberValuesMap, null);
+		File inputFile = _generateZipFile(
+			"collection_display/default/input", numberValuesMap, null);
+
+		_validateImportExport(expectedFile, inputFile);
+	}
+
+	@Test
+	public void testImportExportLayoutPageTemplateEntryCollectionDisplayName()
+		throws Exception {
+
+		Map<String, String> numberValuesMap = HashMapBuilder.put(
+			"CLASS_PK",
+			() -> {
+				AssetListEntry assetListEntry = _addAssetListEntry(
+					_group1.getGroupId());
+
+				return String.valueOf(assetListEntry.getAssetListEntryId());
+			}
+		).build();
+
+		File expectedFile = _generateZipFile(
+			"collection_display/name/expected", numberValuesMap, null);
+		File inputFile = _generateZipFile(
+			"collection_display/name/input", numberValuesMap, null);
+
+		_validateImportExport(expectedFile, inputFile);
+	}
+
+	@Test
 	public void testImportExportLayoutPageTemplateEntryContainerBackgroundFragmentImage()
 		throws Exception {
 
-		Map<String, String> valuesMap = HashMapBuilder.put(
+		Map<String, String> numberValuesMap = HashMapBuilder.put(
 			"CLASS_PK",
 			() -> {
 				JournalArticle journalArticle = _addJournalArticle(
-					_group.getGroupId());
+					_group1.getGroupId());
 
 				return String.valueOf(journalArticle.getResourcePrimKey());
 			}
 		).build();
 
 		File expectedFile = _generateZipFile(
-			"container/background_fragment_image/expected", valuesMap);
+			"container/background_fragment_image/expected", numberValuesMap,
+			null);
 		File inputFile = _generateZipFile(
-			"container/background_fragment_image/input", valuesMap);
+			"container/background_fragment_image/input", numberValuesMap, null);
 
 		_validateImportExport(expectedFile, inputFile);
 	}
@@ -155,20 +255,72 @@ public class ImportExportLayoutPageTemplateEntriesTest {
 	public void testImportExportLayoutPageTemplateEntryContainerBackgroundImage()
 		throws Exception {
 
-		Map<String, String> valuesMap = HashMapBuilder.put(
+		Map<String, String> numberValuesMap = HashMapBuilder.put(
 			"CLASS_PK",
 			() -> {
 				JournalArticle journalArticle = _addJournalArticle(
-					_group.getGroupId());
+					_group1.getGroupId());
 
 				return String.valueOf(journalArticle.getResourcePrimKey());
 			}
 		).build();
 
 		File expectedFile = _generateZipFile(
-			"container/background_image/expected", valuesMap);
+			"container/background_image/expected", numberValuesMap, null);
 		File inputFile = _generateZipFile(
-			"container/background_image/input", valuesMap);
+			"container/background_image/input", numberValuesMap, null);
+
+		_validateImportExport(expectedFile, inputFile);
+	}
+
+	@Test
+	public void testImportExportLayoutPageTemplateEntryContainerComplete()
+		throws Exception {
+
+		File expectedFile = _generateZipFile(
+			"container/complete/expected", null, null);
+		File inputFile = _generateZipFile(
+			"container/complete/input", null, null);
+
+		_validateImportExport(expectedFile, inputFile);
+	}
+
+	@Test
+	public void testImportExportLayoutPageTemplateEntryContainerContentVisibility()
+		throws Exception {
+
+		File expectedFile = _generateZipFile(
+			"container/content_visibility/expected", null, null);
+		File inputFile = _generateZipFile(
+			"container/content_visibility/input", null, null);
+
+		_validateImportExport(expectedFile, inputFile);
+	}
+
+	@Test
+	public void testImportExportLayoutPageTemplateEntryContainerCssClasses()
+		throws Exception {
+
+		_addTextFragmentEntry();
+
+		File expectedFile = _generateZipFile(
+			"container/css_classes/expected", null, null);
+		File inputFile = _generateZipFile(
+			"container/css_classes/input", null, null);
+
+		_validateImportExport(expectedFile, inputFile);
+	}
+
+	@Test
+	public void testImportExportLayoutPageTemplateEntryContainerCustomCSS()
+		throws Exception {
+
+		_addTextFragmentEntry();
+
+		File expectedFile = _generateZipFile(
+			"container/custom_css/expected", null, null);
+		File inputFile = _generateZipFile(
+			"container/custom_css/input", null, null);
 
 		_validateImportExport(expectedFile, inputFile);
 	}
@@ -178,8 +330,9 @@ public class ImportExportLayoutPageTemplateEntriesTest {
 		throws Exception {
 
 		File expectedFile = _generateZipFile(
-			"container/default/expected", null);
-		File inputFile = _generateZipFile("container/default/input", null);
+			"container/default/expected", null, null);
+		File inputFile = _generateZipFile(
+			"container/default/input", null, null);
 
 		_validateImportExport(expectedFile, inputFile);
 	}
@@ -188,8 +341,9 @@ public class ImportExportLayoutPageTemplateEntriesTest {
 	public void testImportExportLayoutPageTemplateEntryContainerEmpty()
 		throws Exception {
 
-		File expectedFile = _generateZipFile("container/empty/expected", null);
-		File inputFile = _generateZipFile("container/empty/input", null);
+		File expectedFile = _generateZipFile(
+			"container/empty/expected", null, null);
+		File inputFile = _generateZipFile("container/empty/input", null, null);
 
 		_validateImportExport(expectedFile, inputFile);
 	}
@@ -198,8 +352,9 @@ public class ImportExportLayoutPageTemplateEntriesTest {
 	public void testImportExportLayoutPageTemplateEntryContainerLayout()
 		throws Exception {
 
-		File expectedFile = _generateZipFile("container/layout/expected", null);
-		File inputFile = _generateZipFile("container/layout/input", null);
+		File expectedFile = _generateZipFile(
+			"container/layout/expected", null, null);
+		File inputFile = _generateZipFile("container/layout/input", null, null);
 
 		_validateImportExport(expectedFile, inputFile);
 	}
@@ -208,8 +363,9 @@ public class ImportExportLayoutPageTemplateEntriesTest {
 	public void testImportExportLayoutPageTemplateEntryContainerLink()
 		throws Exception {
 
-		File expectedFile = _generateZipFile("container/link/expected", null);
-		File inputFile = _generateZipFile("container/link/input", null);
+		File expectedFile = _generateZipFile(
+			"container/link/expected", null, null);
+		File inputFile = _generateZipFile("container/link/input", null, null);
 
 		_validateImportExport(expectedFile, inputFile);
 	}
@@ -218,25 +374,320 @@ public class ImportExportLayoutPageTemplateEntriesTest {
 	public void testImportExportLayoutPageTemplateEntryContainerLinkMappedToJournalArticleDisplayPageURL()
 		throws Exception {
 
-		JournalArticle journalArticle = _addJournalArticle(_group.getGroupId());
+		JournalArticle journalArticle = _addJournalArticle(
+			_group1.getGroupId());
 
 		_addDisplayPageTemplate(journalArticle);
 
-		Map<String, String> valuesMap = HashMapBuilder.put(
+		Map<String, String> numberValuesMap = HashMapBuilder.put(
 			"CLASS_PK", String.valueOf(journalArticle.getResourcePrimKey())
 		).put(
 			"DISPLAY_PAGE_URL",
 			StringBundler.concat(
-				"\"http://localhost:8080/web", _group.getFriendlyURL(), "/-/",
+				"\"http://localhost:8080/web", _group1.getFriendlyURL(),
+				FriendlyURLResolverConstants.URL_SEPARATOR_JOURNAL_ARTICLE,
 				journalArticle.getUrlTitle(), "\"")
 		).build();
 
 		File expectedFile = _generateZipFile(
 			"container/link_mapped_journal_article_display_page_url/expected",
-			valuesMap);
+			numberValuesMap, null);
 		File inputFile = _generateZipFile(
 			"container/link_mapped_journal_article_display_page_url/input",
-			valuesMap);
+			numberValuesMap, null);
+
+		_validateImportExport(expectedFile, inputFile);
+	}
+
+	@Test
+	public void testImportExportLayoutPageTemplateEntryContainerLinkMappedToLayoutWithFriendlyURL()
+		throws Exception {
+
+		Layout layout = LayoutTestUtil.addTypeContentLayout(_group1);
+
+		Map<String, String> stringValuesMap = HashMapBuilder.put(
+			"FRIENDLY_URL", layout.getFriendlyURL()
+		).put(
+			"SITE_KEY", String.valueOf(_group1.getGroupKey())
+		).build();
+
+		File expectedFile = _generateZipFile(
+			"container/link_mapped_layout/friendly_url/expected", null,
+			stringValuesMap);
+		File inputFile = _generateZipFile(
+			"container/link_mapped_layout/friendly_url/input", null,
+			stringValuesMap);
+
+		_validateImportExport(expectedFile, inputFile);
+	}
+
+	@Test
+	public void testImportExportLayoutPageTemplateEntryContainerLinkMappedToLayoutWithFriendlyURLSiteKeyDifferentGroup()
+		throws Exception {
+
+		Layout layout = LayoutTestUtil.addTypeContentLayout(_group1);
+
+		Map<String, String> stringValuesMap = HashMapBuilder.put(
+			"FRIENDLY_URL", layout.getFriendlyURL()
+		).put(
+			"SITE_KEY", String.valueOf(_group1.getGroupKey())
+		).build();
+
+		File expectedFile = _generateZipFile(
+			"container/link_mapped_layout/friendly_url_site_key/expected", null,
+			stringValuesMap);
+		File inputFile = _generateZipFile(
+			"container/link_mapped_layout/friendly_url_site_key/input", null,
+			stringValuesMap);
+
+		_validateImportExport(
+			expectedFile, inputFile, _group1.getGroupId(),
+			_group2.getGroupId());
+	}
+
+	@Test
+	public void testImportExportLayoutPageTemplateEntryContainerLinkMappedToLayoutWithPlid()
+		throws Exception {
+
+		Layout layout = LayoutTestUtil.addTypeContentLayout(_group1);
+
+		Map<String, String> stringValuesMap = HashMapBuilder.put(
+			"FRIENDLY_URL", layout.getFriendlyURL()
+		).put(
+			"PLID", String.valueOf(layout.getPlid())
+		).put(
+			"SITE_KEY", String.valueOf(_group1.getGroupKey())
+		).build();
+
+		File expectedFile = _generateZipFile(
+			"container/link_mapped_layout/plid/expected", null,
+			stringValuesMap);
+		File inputFile = _generateZipFile(
+			"container/link_mapped_layout/plid/input", null, stringValuesMap);
+
+		_validateImportExport(expectedFile, inputFile);
+	}
+
+	@Test
+	public void testImportExportLayoutPageTemplateEntryContainerName()
+		throws Exception {
+
+		File expectedFile = _generateZipFile(
+			"container/name/expected", null, null);
+		File inputFile = _generateZipFile("container/name/input", null, null);
+
+		_validateImportExport(expectedFile, inputFile);
+	}
+
+	@Test
+	public void testImportExportLayoutPageTemplateEntryFormContainerName()
+		throws Exception {
+
+		File expectedFile = _generateZipFile("form/name/expected", null, null);
+		File inputFile = _generateZipFile("form/name/input", null, null);
+
+		_validateImportExport(expectedFile, inputFile);
+	}
+
+	@Test
+	public void testImportExportLayoutPageTemplateEntryFormContainerWithEmbeddedSuccessMessage()
+		throws Exception {
+
+		try (PropsTemporarySwapper propsTemporarySwapper =
+				new PropsTemporarySwapper(
+					"feature.flag.LPS-149720", Boolean.TRUE.toString())) {
+
+			File expectedFile = _generateZipFile(
+				"form/success_message_embedded/expected", null, null);
+			File inputFile = _generateZipFile(
+				"form/success_message_embedded/input", null, null);
+
+			_validateImportExport(expectedFile, inputFile);
+		}
+	}
+
+	@Test
+	public void testImportExportLayoutPageTemplateEntryFormContainerWithLayoutSuccessMessage()
+		throws Exception {
+
+		try (PropsTemporarySwapper propsTemporarySwapper =
+				new PropsTemporarySwapper(
+					"feature.flag.LPS-149720", Boolean.TRUE.toString())) {
+
+			Layout layout = LayoutTestUtil.addTypeContentLayout(_group1);
+
+			Map<String, String> stringValuesMap = HashMapBuilder.put(
+				"FRIENDLY_URL", layout.getFriendlyURL()
+			).put(
+				"SITE_KEY", String.valueOf(_group1.getGroupKey())
+			).build();
+
+			File expectedFile = _generateZipFile(
+				"form/success_message_layout/expected", null, stringValuesMap);
+			File inputFile = _generateZipFile(
+				"form/success_message_layout/input", null, stringValuesMap);
+
+			_validateImportExport(expectedFile, inputFile);
+		}
+	}
+
+	@Test
+	public void testImportExportLayoutPageTemplateEntryFormContainerWithURLSuccessMessage()
+		throws Exception {
+
+		try (PropsTemporarySwapper propsTemporarySwapper =
+				new PropsTemporarySwapper(
+					"feature.flag.LPS-149720", Boolean.TRUE.toString())) {
+
+			File expectedFile = _generateZipFile(
+				"form/success_message_url/expected", null, null);
+			File inputFile = _generateZipFile(
+				"form/success_message_url/input", null, null);
+
+			_validateImportExport(expectedFile, inputFile);
+		}
+	}
+
+	@Test
+	public void testImportExportLayoutPageTemplateEntryFragmentCssClasses()
+		throws Exception {
+
+		_addTextFragmentEntry();
+
+		File expectedFile = _generateZipFile(
+			"fragment/css_classes/expected", null, null);
+		File inputFile = _generateZipFile(
+			"fragment/css_classes/input", null, null);
+
+		_validateImportExport(expectedFile, inputFile);
+	}
+
+	@Test
+	public void testImportExportLayoutPageTemplateEntryFragmentCustomCSS()
+		throws Exception {
+
+		_addTextFragmentEntry();
+
+		File expectedFile = _generateZipFile(
+			"fragment/custom_css/expected", null, null);
+		File inputFile = _generateZipFile(
+			"fragment/custom_css/input", null, null);
+
+		_validateImportExport(expectedFile, inputFile);
+	}
+
+	@Test
+	public void testImportExportLayoutPageTemplateEntryFragmentHidden()
+		throws Exception {
+
+		_addTextFragmentEntry();
+
+		File expectedFile = _generateZipFile(
+			"fragment/hidden/expected", null, null);
+		File inputFile = _generateZipFile("fragment/hidden/input", null, null);
+
+		_validateImportExport(expectedFile, inputFile);
+	}
+
+	@Test
+	public void testImportExportLayoutPageTemplateEntryFragmentImageFieldImageMappedAndLinkMapped()
+		throws Exception {
+
+		_addImageFragmentEntry();
+
+		Map<String, String> numberValuesMap = HashMapBuilder.put(
+			"CLASS_PK",
+			() -> {
+				JournalArticle journalArticle = _addJournalArticle(
+					_group1.getGroupId());
+
+				return String.valueOf(journalArticle.getResourcePrimKey());
+			}
+		).build();
+
+		File expectedFile = _generateZipFile(
+			"fragment/image_field/image_mapped_and_link_mapped/expected",
+			numberValuesMap, null);
+		File inputFile = _generateZipFile(
+			"fragment/image_field/image_mapped_and_link_mapped/input",
+			numberValuesMap, null);
+
+		_validateImportExport(expectedFile, inputFile);
+	}
+
+	@Test
+	public void testImportExportLayoutPageTemplateEntryFragmentImageFieldImageMappedAndLinkPage()
+		throws Exception {
+
+		_addImageFragmentEntry();
+
+		Map<String, String> numberValuesMap = HashMapBuilder.put(
+			"CLASS_PK",
+			() -> {
+				JournalArticle journalArticle = _addJournalArticle(
+					_group1.getGroupId());
+
+				return String.valueOf(journalArticle.getResourcePrimKey());
+			}
+		).build();
+		Map<String, String> stringValuesMap = HashMapBuilder.put(
+			"FRIENDLY_URL",
+			() -> {
+				Layout layout = LayoutTestUtil.addTypeContentLayout(_group1);
+
+				return layout.getFriendlyURL();
+			}
+		).put(
+			"SITE_KEY", String.valueOf(_group1.getGroupKey())
+		).build();
+
+		File expectedFile = _generateZipFile(
+			"fragment/image_field/image_mapped_and_link_page/expected",
+			numberValuesMap, stringValuesMap);
+		File inputFile = _generateZipFile(
+			"fragment/image_field/image_mapped_and_link_page/input",
+			numberValuesMap, stringValuesMap);
+
+		_validateImportExport(expectedFile, inputFile);
+	}
+
+	@Test
+	public void testImportExportLayoutPageTemplateEntryFragmentImageFieldImageURLAndLinkURL()
+		throws Exception {
+
+		_addImageFragmentEntry();
+
+		File expectedFile = _generateZipFile(
+			"fragment/image_field/image_url_and_link_url/expected", null, null);
+		File inputFile = _generateZipFile(
+			"fragment/image_field/image_url_and_link_url/input", null, null);
+
+		_validateImportExport(expectedFile, inputFile);
+	}
+
+	@Test
+	public void testImportExportLayoutPageTemplateEntryFragmentName()
+		throws Exception {
+
+		_addTextFragmentEntry();
+
+		File expectedFile = _generateZipFile(
+			"fragment/name/expected", null, null);
+		File inputFile = _generateZipFile("fragment/name/input", null, null);
+
+		_validateImportExport(expectedFile, inputFile);
+	}
+
+	@Test
+	public void testImportExportLayoutPageTemplateEntryFragmentResponsiveStyles()
+		throws Exception {
+
+		_addTextFragmentEntry();
+
+		File expectedFile = _generateZipFile(
+			"fragment/responsive/expected", null, null);
+		File inputFile = _generateZipFile(
+			"fragment/responsive/input", null, null);
 
 		_validateImportExport(expectedFile, inputFile);
 	}
@@ -247,11 +698,11 @@ public class ImportExportLayoutPageTemplateEntriesTest {
 
 		_addTextFragmentEntry();
 
-		Map<String, String> valuesMap = HashMapBuilder.put(
+		Map<String, String> numberValuesMap = HashMapBuilder.put(
 			"CLASS_PK",
 			() -> {
 				JournalArticle journalArticle = _addJournalArticle(
-					_group.getGroupId());
+					_group1.getGroupId());
 
 				return String.valueOf(journalArticle.getResourcePrimKey());
 			}
@@ -260,10 +711,10 @@ public class ImportExportLayoutPageTemplateEntriesTest {
 		File expectedFile = _generateZipFile(
 			"fragment/text_field/mapped_value/class_pk_reference/expected" +
 				"/fragment_available",
-			valuesMap);
+			numberValuesMap, null);
 		File inputFile = _generateZipFile(
 			"fragment/text_field/mapped_value/class_pk_reference/input",
-			valuesMap);
+			numberValuesMap, null);
 
 		_validateImportExport(expectedFile, inputFile);
 	}
@@ -274,11 +725,11 @@ public class ImportExportLayoutPageTemplateEntriesTest {
 
 		_addTextFragmentEntry();
 
-		Map<String, String> valuesMap = HashMapBuilder.put(
+		Map<String, String> numberValuesMap = HashMapBuilder.put(
 			"CLASS_PK",
 			() -> {
 				JournalArticle journalArticle = _addJournalArticle(
-					_group.getGroupId());
+					_group1.getGroupId());
 
 				return String.valueOf(journalArticle.getResourcePrimKey());
 			}
@@ -287,10 +738,10 @@ public class ImportExportLayoutPageTemplateEntriesTest {
 		File expectedFile = _generateZipFile(
 			"fragment/text_field/mapped_value/class_pk_reference/expected" +
 				"/fragment_available",
-			valuesMap);
+			numberValuesMap, null);
 		File inputFile = _generateZipFile(
 			"fragment/text_field/mapped_value/class_pk_reference/input",
-			valuesMap);
+			numberValuesMap, null);
 
 		_validateImportExport(expectedFile, inputFile);
 	}
@@ -301,11 +752,11 @@ public class ImportExportLayoutPageTemplateEntriesTest {
 
 		_addTextFragmentEntry();
 
-		Map<String, String> valuesMap1 = HashMapBuilder.put(
+		Map<String, String> numberValuesMap1 = HashMapBuilder.put(
 			"CLASS_PK",
 			() -> {
 				JournalArticle journalArticle = _addJournalArticle(
-					_group.getGroupId());
+					_group1.getGroupId());
 
 				return String.valueOf(journalArticle.getResourcePrimKey());
 			}
@@ -314,14 +765,14 @@ public class ImportExportLayoutPageTemplateEntriesTest {
 		File expectedFile = _generateZipFile(
 			"fragment/text_field/mapped_value/class_pk_reference/expected" +
 				"/fragment_available",
-			valuesMap1);
+			numberValuesMap1, null);
 
 		File inputFile1 = _generateZipFile(
 			"fragment/text_field/mapped_value/class_pk_reference/input",
-			valuesMap1);
+			numberValuesMap1, null);
 
 		_getImportLayoutPageTemplateEntry(
-			inputFile1, _group.getGroupId(), false,
+			inputFile1, _group1.getGroupId(), false,
 			LayoutPageTemplatesImporterResultEntry.Status.IMPORTED);
 
 		File inputFile2 = _generateZipFile(
@@ -331,14 +782,15 @@ public class ImportExportLayoutPageTemplateEntriesTest {
 				"CLASS_PK",
 				() -> {
 					JournalArticle journalArticle = _addJournalArticle(
-						_group.getGroupId());
+						_group1.getGroupId());
 
 					return String.valueOf(journalArticle.getResourcePrimKey());
 				}
-			).build());
+			).build(),
+			null);
 
 		File outputFile = _importExportLayoutPageTemplateEntry(
-			inputFile2, _group.getGroupId(), false,
+			inputFile2, _group1.getGroupId(), false,
 			LayoutPageTemplatesImporterResultEntry.Status.IGNORED);
 
 		_validateFile(expectedFile, outputFile);
@@ -350,11 +802,11 @@ public class ImportExportLayoutPageTemplateEntriesTest {
 
 		_addTextFragmentEntry();
 
-		Map<String, String> valuesMap = HashMapBuilder.put(
+		Map<String, String> numberValuesMap = HashMapBuilder.put(
 			"CLASS_PK",
 			() -> {
 				JournalArticle journalArticle = _addJournalArticle(
-					_group.getGroupId());
+					_group1.getGroupId());
 
 				return String.valueOf(journalArticle.getResourcePrimKey());
 			}
@@ -363,14 +815,14 @@ public class ImportExportLayoutPageTemplateEntriesTest {
 		File expectedFile = _generateZipFile(
 			"fragment/text_field/mapped_value/class_pk_reference/expected" +
 				"/fragment_available",
-			valuesMap);
+			numberValuesMap, null);
 
 		File inputFile = _generateZipFile(
 			"fragment/text_field/mapped_value/class_pk_reference/input",
-			valuesMap);
+			numberValuesMap, null);
 
 		File outputFile = _importExportLayoutPageTemplateEntry(
-			inputFile, _group.getGroupId(), true,
+			inputFile, _group1.getGroupId(), true,
 			LayoutPageTemplatesImporterResultEntry.Status.IMPORTED);
 
 		_validateFile(expectedFile, outputFile);
@@ -388,21 +840,22 @@ public class ImportExportLayoutPageTemplateEntriesTest {
 				"CLASS_PK",
 				() -> {
 					JournalArticle journalArticle = _addJournalArticle(
-						_group.getGroupId());
+						_group1.getGroupId());
 
 					return String.valueOf(journalArticle.getResourcePrimKey());
 				}
-			).build());
+			).build(),
+			null);
 
 		_getImportLayoutPageTemplateEntry(
-			inputFile1, _group.getGroupId(), false,
+			inputFile1, _group1.getGroupId(), false,
 			LayoutPageTemplatesImporterResultEntry.Status.IMPORTED);
 
-		Map<String, String> valuesMap = HashMapBuilder.put(
+		Map<String, String> numberValuesMap = HashMapBuilder.put(
 			"CLASS_PK",
 			() -> {
 				JournalArticle journalArticle = _addJournalArticle(
-					_group.getGroupId());
+					_group1.getGroupId());
 
 				return String.valueOf(journalArticle.getResourcePrimKey());
 			}
@@ -411,14 +864,14 @@ public class ImportExportLayoutPageTemplateEntriesTest {
 		File expectedFile = _generateZipFile(
 			"fragment/text_field/mapped_value/class_pk_reference/expected" +
 				"/fragment_available",
-			valuesMap);
+			numberValuesMap, null);
 
 		File inputFile2 = _generateZipFile(
 			"fragment/text_field/mapped_value/class_pk_reference/input",
-			valuesMap);
+			numberValuesMap, null);
 
 		File outputFile = _importExportLayoutPageTemplateEntry(
-			inputFile2, _group.getGroupId(), true,
+			inputFile2, _group1.getGroupId(), true,
 			LayoutPageTemplatesImporterResultEntry.Status.IMPORTED);
 
 		_validateFile(expectedFile, outputFile);
@@ -430,17 +883,17 @@ public class ImportExportLayoutPageTemplateEntriesTest {
 
 		_addTextFragmentEntry();
 
-		Map<String, String> valuesMap = HashMapBuilder.put(
+		Map<String, String> numberValuesMap = HashMapBuilder.put(
 			"CLASS_PK", String.valueOf(RandomTestUtil.randomLong())
 		).build();
 
 		File expectedFile = _generateZipFile(
 			"fragment/text_field/mapped_value/class_pk_reference/expected" +
 				"/fragment_available",
-			valuesMap);
+			numberValuesMap, null);
 		File inputFile = _generateZipFile(
 			"fragment/text_field/mapped_value/class_pk_reference/input",
-			valuesMap);
+			numberValuesMap, null);
 
 		_validateImportExport(expectedFile, inputFile);
 	}
@@ -449,11 +902,11 @@ public class ImportExportLayoutPageTemplateEntriesTest {
 	public void testImportExportLayoutPageTemplateEntryFragmentTextFieldFragmentNotAvailable()
 		throws Exception {
 
-		Map<String, String> valuesMap = HashMapBuilder.put(
+		Map<String, String> numberValuesMap = HashMapBuilder.put(
 			"CLASS_PK",
 			() -> {
 				JournalArticle journalArticle = _addJournalArticle(
-					_group.getGroupId());
+					_group1.getGroupId());
 
 				return String.valueOf(journalArticle.getResourcePrimKey());
 			}
@@ -462,10 +915,10 @@ public class ImportExportLayoutPageTemplateEntriesTest {
 		File expectedFile = _generateZipFile(
 			"fragment/text_field/mapped_value/class_pk_reference/expected" +
 				"/fragment_not_available",
-			valuesMap);
+			numberValuesMap, null);
 		File inputFile = _generateZipFile(
 			"fragment/text_field/mapped_value/class_pk_reference/input",
-			valuesMap);
+			numberValuesMap, null);
 
 		_validateImportExport(expectedFile, inputFile);
 	}
@@ -474,10 +927,55 @@ public class ImportExportLayoutPageTemplateEntriesTest {
 	public void testImportExportLayoutPageTemplateEntryRowContainer()
 		throws Exception {
 
-		File expectedFile = _generateZipFile("row/container/expected", null);
-		File inputFile = _generateZipFile("row/container/input", null);
+		File expectedFile = _generateZipFile(
+			"row/container/expected", null, null);
+		File inputFile = _generateZipFile("row/container/input", null, null);
 
 		_validateImportExport(expectedFile, inputFile);
+	}
+
+	@Test
+	public void testImportExportLayoutPageTemplateEntryRowCssClasses()
+		throws Exception {
+
+		_addTextFragmentEntry();
+
+		File expectedFile = _generateZipFile(
+			"container/css_classes/expected", null, null);
+		File inputFile = _generateZipFile(
+			"container/css_classes/input", null, null);
+
+		_validateImportExport(expectedFile, inputFile);
+	}
+
+	@Test
+	public void testImportExportLayoutPageTemplateEntryRowCustomCSS()
+		throws Exception {
+
+		File expectedFile = _generateZipFile(
+			"row/custom_css/expected", null, null);
+		File inputFile = _generateZipFile("row/custom_css/input", null, null);
+
+		_validateImportExport(expectedFile, inputFile);
+	}
+
+	@Test
+	public void testImportExportLayoutPageTemplateEntryRowName()
+		throws Exception {
+
+		File expectedFile = _generateZipFile("row/name/expected", null, null);
+		File inputFile = _generateZipFile("row/name/input", null, null);
+
+		_validateImportExport(expectedFile, inputFile);
+	}
+
+	private AssetListEntry _addAssetListEntry(long groupId)
+		throws PortalException {
+
+		return _assetListEntryLocalService.addAssetListEntry(
+			TestPropsValues.getUserId(), groupId, RandomTestUtil.randomString(),
+			AssetListEntryTypeConstants.TYPE_MANUAL,
+			ServiceContextTestUtil.getServiceContext(groupId));
 	}
 
 	private void _addDisplayPageTemplate(JournalArticle journalArticle)
@@ -487,20 +985,20 @@ public class ImportExportLayoutPageTemplateEntriesTest {
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-				_group.getCreatorUserId(), _group.getGroupId(), 0,
+				_group1.getCreatorUserId(), _group1.getGroupId(), 0,
 				_portal.getClassNameId(JournalArticle.class.getName()),
 				ddmStructure.getStructureId(), RandomTestUtil.randomString(),
 				LayoutPageTemplateEntryTypeConstants.TYPE_DISPLAY_PAGE, 0, true,
 				0, 0, 0, 0,
-				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+				ServiceContextTestUtil.getServiceContext(_group1.getGroupId()));
 
 		_assetDisplayPageEntryLocalService.addAssetDisplayPageEntry(
-			TestPropsValues.getUserId(), _group.getGroupId(),
+			TestPropsValues.getUserId(), _group1.getGroupId(),
 			_portal.getClassNameId(JournalArticle.class.getName()),
 			journalArticle.getResourcePrimKey(),
 			layoutPageTemplateEntry.getLayoutPageTemplateEntryId(),
 			AssetDisplayPageConstants.TYPE_SPECIFIC,
-			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+			ServiceContextTestUtil.getServiceContext(_group1.getGroupId()));
 
 		_layoutPageTemplateEntryLocalService.updateLayoutPageTemplateEntry(
 			layoutPageTemplateEntry.getLayoutPageTemplateEntryId(), true);
@@ -521,9 +1019,20 @@ public class ImportExportLayoutPageTemplateEntriesTest {
 		return _fragmentEntryLocalService.addFragmentEntry(
 			TestPropsValues.getUserId(), groupId,
 			fragmentCollection.getFragmentCollectionId(), key, name,
-			StringPool.BLANK, html, StringPool.BLANK, StringPool.BLANK, 0,
-			FragmentConstants.TYPE_COMPONENT, WorkflowConstants.STATUS_APPROVED,
-			serviceContext);
+			StringPool.BLANK, html, StringPool.BLANK, false, StringPool.BLANK,
+			null, 0, FragmentConstants.TYPE_COMPONENT, null,
+			WorkflowConstants.STATUS_APPROVED, serviceContext);
+	}
+
+	private void _addImageFragmentEntry() throws Exception {
+		String html =
+			"<img data-lfr-editable-id=\"image-id\" " +
+				"data-lfr-editable-type=\"image\" " +
+					"src=\"https://example.com/image.jpeg\"/>";
+
+		_addFragmentEntry(
+			_group1.getGroupId(), "test-image-fragment", "Test Image Fragment",
+			html);
 	}
 
 	private JournalArticle _addJournalArticle(long groupId) throws Exception {
@@ -544,12 +1053,13 @@ public class ImportExportLayoutPageTemplateEntriesTest {
 				"Fragment</lfr-editable>";
 
 		_addFragmentEntry(
-			_group.getGroupId(), "test-text-fragment", "Test Text Fragment",
+			_group1.getGroupId(), "test-text-fragment", "Test Text Fragment",
 			html);
 	}
 
 	private void _addZipWriterEntry(
-			ZipWriter zipWriter, URL url, Map<String, String> valuesMap)
+			ZipWriter zipWriter, URL url, Map<String, String> numberValuesMap,
+			Map<String, String> stringValuesMap)
 		throws IOException {
 
 		String entryPath = url.getPath();
@@ -559,24 +1069,24 @@ public class ImportExportLayoutPageTemplateEntriesTest {
 
 		String content = StringUtil.read(url.openStream());
 
-		zipWriter.addEntry(
-			zipPath, StringUtil.replace(content, "\"${", "}\"", valuesMap));
+		content = StringUtil.replace(content, "\"${", "}\"", numberValuesMap);
+		content = StringUtil.replace(content, "£{", "}", stringValuesMap);
+
+		zipWriter.addEntry(zipPath, content);
 	}
 
 	private File _generateZipFile(
-			String testPath, Map<String, String> valuesMap)
+			String testPath, Map<String, String> numberValuesMap,
+			Map<String, String> stringValuesMap)
 		throws Exception {
 
 		ZipWriter zipWriter = ZipWriterFactoryUtil.getZipWriter();
 
-		StringBuilder sb = new StringBuilder(3);
-
-		sb.append(_LAYOUT_PATE_TEMPLATES_PATH + testPath);
-		sb.append(StringPool.FORWARD_SLASH + _ROOT_FOLDER);
-		sb.append(StringPool.FORWARD_SLASH);
-
 		Enumeration<URL> enumeration = _bundle.findEntries(
-			sb.toString(),
+			StringBundler.concat(
+				_LAYOUT_PATE_TEMPLATES_PATH + testPath,
+				StringPool.FORWARD_SLASH + _ROOT_FOLDER,
+				StringPool.FORWARD_SLASH),
 			LayoutPageTemplateExportImportConstants.
 				FILE_NAME_PAGE_TEMPLATE_COLLECTION,
 			true);
@@ -585,7 +1095,8 @@ public class ImportExportLayoutPageTemplateEntriesTest {
 			while (enumeration.hasMoreElements()) {
 				URL url = enumeration.nextElement();
 
-				_populateZipWriter(zipWriter, url, valuesMap);
+				_populateZipWriter(
+					zipWriter, url, numberValuesMap, stringValuesMap);
 			}
 
 			return zipWriter.getFile();
@@ -603,10 +1114,8 @@ public class ImportExportLayoutPageTemplateEntriesTest {
 		List<LayoutPageTemplatesImporterResultEntry>
 			layoutPageTemplatesImporterResultEntries = null;
 
-		ServiceContext serviceContext = _getServiceContext(
-			_group, TestPropsValues.getUserId());
-
-		ServiceContextThreadLocal.pushServiceContext(serviceContext);
+		ServiceContextThreadLocal.pushServiceContext(
+			_getServiceContext(_group1, TestPropsValues.getUserId()));
 
 		try {
 			layoutPageTemplatesImporterResultEntries =
@@ -653,7 +1162,7 @@ public class ImportExportLayoutPageTemplateEntriesTest {
 			new MockLiferayPortletActionResponse());
 
 		httpServletRequest.setAttribute(
-			WebKeys.THEME_DISPLAY, _getThemeDisplay());
+			WebKeys.THEME_DISPLAY, _getThemeDisplay(httpServletRequest));
 
 		ServiceContext serviceContext =
 			ServiceContextTestUtil.getServiceContext(group, userId);
@@ -663,14 +1172,16 @@ public class ImportExportLayoutPageTemplateEntriesTest {
 		return serviceContext;
 	}
 
-	private ThemeDisplay _getThemeDisplay() throws Exception {
+	private ThemeDisplay _getThemeDisplay(HttpServletRequest httpServletRequest)
+		throws Exception {
+
 		ThemeDisplay themeDisplay = new ThemeDisplay();
 
 		themeDisplay.setCompany(_company);
 		themeDisplay.setLayout(
 			_layoutLocalService.getLayout(TestPropsValues.getPlid()));
 
-		LayoutSet layoutSet = _group.getPublicLayoutSet();
+		LayoutSet layoutSet = _group1.getPublicLayoutSet();
 
 		themeDisplay.setLookAndFeel(layoutSet.getTheme(), null);
 
@@ -678,8 +1189,9 @@ public class ImportExportLayoutPageTemplateEntriesTest {
 			PermissionThreadLocal.getPermissionChecker());
 		themeDisplay.setPortalURL("http://localhost:8080");
 		themeDisplay.setRealUser(TestPropsValues.getUser());
-		themeDisplay.setScopeGroupId(_group.getGroupId());
-		themeDisplay.setSiteGroupId(_group.getGroupId());
+		themeDisplay.setRequest(httpServletRequest);
+		themeDisplay.setScopeGroupId(_group1.getGroupId());
+		themeDisplay.setSiteGroupId(_group1.getGroupId());
 		themeDisplay.setUser(TestPropsValues.getUser());
 
 		return themeDisplay;
@@ -701,7 +1213,8 @@ public class ImportExportLayoutPageTemplateEntriesTest {
 	}
 
 	private void _populateZipWriter(
-			ZipWriter zipWriter, URL url, Map<String, String> valuesMap)
+			ZipWriter zipWriter, URL url, Map<String, String> numberValuesMap,
+			Map<String, String> stringValuesMap)
 		throws IOException {
 
 		String zipPath = StringUtil.removeSubstring(
@@ -719,7 +1232,8 @@ public class ImportExportLayoutPageTemplateEntriesTest {
 		while (enumeration.hasMoreElements()) {
 			URL elementURL = enumeration.nextElement();
 
-			_addZipWriterEntry(zipWriter, elementURL, valuesMap);
+			_addZipWriterEntry(
+				zipWriter, elementURL, numberValuesMap, stringValuesMap);
 		}
 
 		enumeration = _bundle.findEntries(
@@ -730,7 +1244,8 @@ public class ImportExportLayoutPageTemplateEntriesTest {
 		while (enumeration.hasMoreElements()) {
 			URL elementURL = enumeration.nextElement();
 
-			_addZipWriterEntry(zipWriter, elementURL, valuesMap);
+			_addZipWriterEntry(
+				zipWriter, elementURL, numberValuesMap, stringValuesMap);
 		}
 
 		enumeration = _bundle.findEntries(path, "thumbnail.png", true);
@@ -742,7 +1257,8 @@ public class ImportExportLayoutPageTemplateEntriesTest {
 		while (enumeration.hasMoreElements()) {
 			URL elementURL = enumeration.nextElement();
 
-			_addZipWriterEntry(zipWriter, elementURL, valuesMap);
+			_addZipWriterEntry(
+				zipWriter, elementURL, numberValuesMap, stringValuesMap);
 		}
 	}
 
@@ -808,14 +1324,23 @@ public class ImportExportLayoutPageTemplateEntriesTest {
 	private void _validateImportExport(File expectedFile, File inputFile)
 		throws Exception {
 
+		_validateImportExport(
+			expectedFile, inputFile, _group1.getGroupId(),
+			_group1.getGroupId());
+	}
+
+	private void _validateImportExport(
+			File expectedFile, File inputFile, long groupId1, long groupId2)
+		throws Exception {
+
 		File outputFile1 = _importExportLayoutPageTemplateEntry(
-			inputFile, _group.getGroupId(), false,
+			inputFile, groupId1, false,
 			LayoutPageTemplatesImporterResultEntry.Status.IMPORTED);
 
 		_validateFile(expectedFile, outputFile1);
 
 		File outputFile2 = _importExportLayoutPageTemplateEntry(
-			outputFile1, _group.getGroupId(), true,
+			outputFile1, groupId2, true,
 			LayoutPageTemplatesImporterResultEntry.Status.IMPORTED);
 
 		_validateFile(expectedFile, outputFile2);
@@ -831,6 +1356,9 @@ public class ImportExportLayoutPageTemplateEntriesTest {
 	private AssetDisplayPageEntryLocalService
 		_assetDisplayPageEntryLocalService;
 
+	@Inject
+	private AssetListEntryLocalService _assetListEntryLocalService;
+
 	private Bundle _bundle;
 	private Company _company;
 
@@ -844,7 +1372,10 @@ public class ImportExportLayoutPageTemplateEntriesTest {
 	private FragmentEntryLocalService _fragmentEntryLocalService;
 
 	@DeleteAfterTestRun
-	private Group _group;
+	private Group _group1;
+
+	@DeleteAfterTestRun
+	private Group _group2;
 
 	@Inject
 	private LayoutLocalService _layoutLocalService;

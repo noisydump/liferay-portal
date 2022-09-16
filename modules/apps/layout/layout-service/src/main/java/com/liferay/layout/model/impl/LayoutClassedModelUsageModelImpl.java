@@ -28,13 +28,14 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
 import java.util.Collections;
@@ -42,6 +43,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -118,62 +120,62 @@ public class LayoutClassedModelUsageModelImpl
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long CLASSNAMEID_COLUMN_BITMASK = 1L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long CLASSPK_COLUMN_BITMASK = 2L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long COMPANYID_COLUMN_BITMASK = 4L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long CONTAINERKEY_COLUMN_BITMASK = 8L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long CONTAINERTYPE_COLUMN_BITMASK = 16L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long GROUPID_COLUMN_BITMASK = 32L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long PLID_COLUMN_BITMASK = 64L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long TYPE_COLUMN_BITMASK = 128L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long UUID_COLUMN_BITMASK = 256L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *		#getColumnBitmask(String)
+	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long LAYOUTCLASSEDMODELUSAGEID_COLUMN_BITMASK = 512L;
@@ -276,34 +278,6 @@ public class LayoutClassedModelUsageModelImpl
 		getAttributeSetterBiConsumers() {
 
 		return _attributeSetterBiConsumers;
-	}
-
-	private static Function<InvocationHandler, LayoutClassedModelUsage>
-		_getProxyProviderFunction() {
-
-		Class<?> proxyClass = ProxyUtil.getProxyClass(
-			LayoutClassedModelUsage.class.getClassLoader(),
-			LayoutClassedModelUsage.class, ModelWrapper.class);
-
-		try {
-			Constructor<LayoutClassedModelUsage> constructor =
-				(Constructor<LayoutClassedModelUsage>)proxyClass.getConstructor(
-					InvocationHandler.class);
-
-			return invocationHandler -> {
-				try {
-					return constructor.newInstance(invocationHandler);
-				}
-				catch (ReflectiveOperationException
-							reflectiveOperationException) {
-
-					throw new InternalError(reflectiveOperationException);
-				}
-			};
-		}
-		catch (NoSuchMethodException noSuchMethodException) {
-			throw new InternalError(noSuchMethodException);
-		}
 	}
 
 	private static final Map<String, Function<LayoutClassedModelUsage, Object>>
@@ -769,7 +743,9 @@ public class LayoutClassedModelUsageModelImpl
 		for (Map.Entry<String, Object> entry :
 				_columnOriginalValues.entrySet()) {
 
-			if (entry.getValue() != getColumnValue(entry.getKey())) {
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
 				_columnBitmask |= _columnBitmasks.get(entry.getKey());
 			}
 		}
@@ -829,6 +805,45 @@ public class LayoutClassedModelUsageModelImpl
 		layoutClassedModelUsageImpl.setLastPublishDate(getLastPublishDate());
 
 		layoutClassedModelUsageImpl.resetOriginalValues();
+
+		return layoutClassedModelUsageImpl;
+	}
+
+	@Override
+	public LayoutClassedModelUsage cloneWithOriginalValues() {
+		LayoutClassedModelUsageImpl layoutClassedModelUsageImpl =
+			new LayoutClassedModelUsageImpl();
+
+		layoutClassedModelUsageImpl.setMvccVersion(
+			this.<Long>getColumnOriginalValue("mvccVersion"));
+		layoutClassedModelUsageImpl.setCtCollectionId(
+			this.<Long>getColumnOriginalValue("ctCollectionId"));
+		layoutClassedModelUsageImpl.setUuid(
+			this.<String>getColumnOriginalValue("uuid_"));
+		layoutClassedModelUsageImpl.setLayoutClassedModelUsageId(
+			this.<Long>getColumnOriginalValue("layoutClassedModelUsageId"));
+		layoutClassedModelUsageImpl.setGroupId(
+			this.<Long>getColumnOriginalValue("groupId"));
+		layoutClassedModelUsageImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		layoutClassedModelUsageImpl.setCreateDate(
+			this.<Date>getColumnOriginalValue("createDate"));
+		layoutClassedModelUsageImpl.setModifiedDate(
+			this.<Date>getColumnOriginalValue("modifiedDate"));
+		layoutClassedModelUsageImpl.setClassNameId(
+			this.<Long>getColumnOriginalValue("classNameId"));
+		layoutClassedModelUsageImpl.setClassPK(
+			this.<Long>getColumnOriginalValue("classPK"));
+		layoutClassedModelUsageImpl.setContainerKey(
+			this.<String>getColumnOriginalValue("containerKey"));
+		layoutClassedModelUsageImpl.setContainerType(
+			this.<Long>getColumnOriginalValue("containerType"));
+		layoutClassedModelUsageImpl.setPlid(
+			this.<Long>getColumnOriginalValue("plid"));
+		layoutClassedModelUsageImpl.setType(
+			this.<Integer>getColumnOriginalValue("type_"));
+		layoutClassedModelUsageImpl.setLastPublishDate(
+			this.<Date>getColumnOriginalValue("lastPublishDate"));
 
 		return layoutClassedModelUsageImpl;
 	}
@@ -983,7 +998,7 @@ public class LayoutClassedModelUsageModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			(4 * attributeGetterFunctions.size()) + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -994,10 +1009,27 @@ public class LayoutClassedModelUsageModelImpl
 			Function<LayoutClassedModelUsage, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(
-				attributeGetterFunction.apply((LayoutClassedModelUsage)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply(
+				(LayoutClassedModelUsage)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -1047,7 +1079,8 @@ public class LayoutClassedModelUsageModelImpl
 		private static final Function
 			<InvocationHandler, LayoutClassedModelUsage>
 				_escapedModelProxyProviderFunction =
-					_getProxyProviderFunction();
+					ProxyUtil.getProxyProviderFunction(
+						LayoutClassedModelUsage.class, ModelWrapper.class);
 
 	}
 

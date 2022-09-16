@@ -60,16 +60,27 @@ public class RolesServlet extends BaseDDMFormBuilderServlet {
 			HttpServletResponse httpServletResponse)
 		throws IOException, ServletException {
 
-		JSONArray jsonArray = getRolesJSONArray();
+		JSONArray jsonArray = _getRolesJSONArray();
 
 		httpServletResponse.setContentType(ContentTypes.APPLICATION_JSON);
 		httpServletResponse.setStatus(HttpServletResponse.SC_OK);
 
-		ServletResponseUtil.write(
-			httpServletResponse, jsonArray.toJSONString());
+		ServletResponseUtil.write(httpServletResponse, jsonArray.toString());
 	}
 
-	protected JSONArray getRolesJSONArray() {
+	protected JSONObject toJSONObject(Role role) {
+		JSONObject jsonObject = _jsonFactory.createJSONObject();
+
+		jsonObject.put(
+			"id", role.getRoleId()
+		).put(
+			"name", role.getName()
+		);
+
+		return jsonObject;
+	}
+
+	private JSONArray _getRolesJSONArray() {
 		JSONArray jsonArray = _jsonFactory.createJSONArray();
 
 		try {
@@ -88,23 +99,11 @@ public class RolesServlet extends BaseDDMFormBuilderServlet {
 		}
 		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(portalException, portalException);
+				_log.debug(portalException);
 			}
 		}
 
 		return jsonArray;
-	}
-
-	protected JSONObject toJSONObject(Role role) {
-		JSONObject jsonObject = _jsonFactory.createJSONObject();
-
-		jsonObject.put(
-			"id", role.getRoleId()
-		).put(
-			"name", role.getName()
-		);
-
-		return jsonObject;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(RolesServlet.class);

@@ -15,7 +15,6 @@
 package com.liferay.portal.search.elasticsearch7.internal.search.engine.adapter;
 
 import com.liferay.petra.string.StringBundler;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.DocumentImpl;
@@ -46,6 +45,7 @@ import com.liferay.portal.search.internal.script.ScriptsImpl;
 import com.liferay.portal.search.script.Script;
 import com.liferay.portal.search.script.Scripts;
 import com.liferay.portal.search.test.util.indexing.DocumentFixture;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.io.IOException;
 
@@ -61,20 +61,25 @@ import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.client.IndicesClient;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.rest.RestStatus;
+import org.elasticsearch.xcontent.XContentType;
 
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 /**
  * @author Dylan Rebelak
  */
 public class ElasticsearchSearchEngineAdapterDocumentRequestTest {
+
+	@ClassRule
+	public static LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
@@ -378,10 +383,8 @@ public class ElasticsearchSearchEngineAdapterDocumentRequestTest {
 
 	@Test
 	public void testExecuteIndexDocumentRequestNoUid() {
-		Document document = new DocumentImpl();
-
 		IndexDocumentResponse indexDocumentResponse = _indexDocumentWithAdapter(
-			null, document);
+			null, new DocumentImpl());
 
 		Assert.assertEquals(
 			RestStatus.CREATED.getStatus(), indexDocumentResponse.getStatus());
@@ -424,10 +427,8 @@ public class ElasticsearchSearchEngineAdapterDocumentRequestTest {
 
 	@Test
 	public void testExecuteIndexDocumentRequestUidInRequest() {
-		Document document = new DocumentImpl();
-
 		IndexDocumentResponse indexDocumentResponse = _indexDocumentWithAdapter(
-			"1", document);
+			"1", new DocumentImpl());
 
 		Assert.assertEquals(
 			RestStatus.CREATED.getStatus(), indexDocumentResponse.getStatus());
@@ -565,8 +566,7 @@ public class ElasticsearchSearchEngineAdapterDocumentRequestTest {
 				id,
 				_scripts.script(
 					StringBundler.concat(
-						"ctx._source.", _FIELD_NAME, StringPool.EQUAL,
-						"\"false\" ")),
+						"ctx._source.", _FIELD_NAME, "=\"false\" ")),
 				false);
 
 		Assert.assertEquals(
@@ -587,8 +587,7 @@ public class ElasticsearchSearchEngineAdapterDocumentRequestTest {
 			id,
 			_scripts.script(
 				StringBundler.concat(
-					"ctx._source.", _FIELD_NAME, StringPool.EQUAL,
-					"\"true\" ")),
+					"ctx._source.", _FIELD_NAME, "=\"true\" ")),
 			true);
 
 		GetResponse getResponse = _getDocument(id);
@@ -598,7 +597,23 @@ public class ElasticsearchSearchEngineAdapterDocumentRequestTest {
 		Assert.assertEquals(Boolean.TRUE.toString(), map.get(_FIELD_NAME));
 	}
 
-	protected static DocumentRequestExecutor createDocumentRequestExecutor(
+	protected static SearchEngineAdapter createSearchEngineAdapter(
+		ElasticsearchClientResolver elasticsearchClientResolver) {
+
+		ElasticsearchDocumentFactory elasticsearchDocumentFactory =
+			new DefaultElasticsearchDocumentFactory();
+
+		return new ElasticsearchSearchEngineAdapterImpl() {
+			{
+				setDocumentRequestExecutor(
+					_createDocumentRequestExecutor(
+						elasticsearchClientResolver,
+						elasticsearchDocumentFactory));
+			}
+		};
+	}
+
+	private static DocumentRequestExecutor _createDocumentRequestExecutor(
 		ElasticsearchClientResolver elasticsearchClientResolver,
 		ElasticsearchDocumentFactory elasticsearchDocumentFactory) {
 
@@ -614,22 +629,6 @@ public class ElasticsearchSearchEngineAdapterDocumentRequestTest {
 		documentRequestExecutorFixture.setUp();
 
 		return documentRequestExecutorFixture.getDocumentRequestExecutor();
-	}
-
-	protected static SearchEngineAdapter createSearchEngineAdapter(
-		ElasticsearchClientResolver elasticsearchClientResolver) {
-
-		ElasticsearchDocumentFactory elasticsearchDocumentFactory =
-			new DefaultElasticsearchDocumentFactory();
-
-		return new ElasticsearchSearchEngineAdapterImpl() {
-			{
-				setDocumentRequestExecutor(
-					createDocumentRequestExecutor(
-						elasticsearchClientResolver,
-						elasticsearchDocumentFactory));
-			}
-		};
 	}
 
 	private void _createIndex() {

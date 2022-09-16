@@ -12,15 +12,14 @@
  * details.
  */
 
-import ClayLoadingIndicator from '@clayui/loading-indicator';
-import React, {useEffect, useState} from 'react';
+import React from 'react';
 
 export function getLiferayJsModule(moduleUrl) {
 	return new Promise((resolve, reject) => {
 		Liferay.Loader.require(
 			moduleUrl,
 			(jsModule) => resolve(jsModule.default || jsModule),
-			(err) => reject(err)
+			(error) => reject(error)
 		);
 	});
 }
@@ -63,23 +62,4 @@ export function getComponentByModuleUrl(url) {
 			})
 			.catch(reject);
 	});
-}
-
-export function useLiferayModule(
-	moduleUrl,
-	LoadingComponent = ClayLoadingIndicator
-) {
-	const [Component, updateComponent] = useState(
-		moduleUrl ? LoadingComponent : null
-	);
-
-	useEffect(() => {
-		if (moduleUrl) {
-			getComponentByModuleUrl(moduleUrl).then((module) => {
-				updateComponent(() => module);
-			});
-		}
-	}, [moduleUrl]);
-
-	return Component;
 }

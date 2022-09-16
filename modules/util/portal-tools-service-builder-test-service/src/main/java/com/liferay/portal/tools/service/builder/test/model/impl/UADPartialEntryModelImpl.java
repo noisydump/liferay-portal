@@ -19,7 +19,6 @@ import com.liferay.expando.kernel.util.ExpandoBridgeFactoryUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.bean.AutoEscapeBeanHandler;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.json.JSON;
 import com.liferay.portal.kernel.model.CacheModel;
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.User;
@@ -28,23 +27,23 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.tools.service.builder.test.model.UADPartialEntry;
 import com.liferay.portal.tools.service.builder.test.model.UADPartialEntryModel;
-import com.liferay.portal.tools.service.builder.test.model.UADPartialEntrySoap;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
-import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -59,7 +58,6 @@ import java.util.function.Function;
  * @see UADPartialEntryImpl
  * @generated
  */
-@JSON(strict = true)
 public class UADPartialEntryModelImpl
 	extends BaseModelImpl<UADPartialEntry> implements UADPartialEntryModel {
 
@@ -122,58 +120,10 @@ public class UADPartialEntryModelImpl
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *		#getColumnBitmask(String)
+	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long UADPARTIALENTRYID_COLUMN_BITMASK = 1L;
-
-	/**
-	 * Converts the soap model instance into a normal model instance.
-	 *
-	 * @param soapModel the soap model instance to convert
-	 * @return the normal model instance
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static UADPartialEntry toModel(UADPartialEntrySoap soapModel) {
-		if (soapModel == null) {
-			return null;
-		}
-
-		UADPartialEntry model = new UADPartialEntryImpl();
-
-		model.setUadPartialEntryId(soapModel.getUadPartialEntryId());
-		model.setUserId(soapModel.getUserId());
-		model.setUserName(soapModel.getUserName());
-		model.setMessage(soapModel.getMessage());
-
-		return model;
-	}
-
-	/**
-	 * Converts the soap model instances into normal model instances.
-	 *
-	 * @param soapModels the soap model instances to convert
-	 * @return the normal model instances
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static List<UADPartialEntry> toModels(
-		UADPartialEntrySoap[] soapModels) {
-
-		if (soapModels == null) {
-			return null;
-		}
-
-		List<UADPartialEntry> models = new ArrayList<UADPartialEntry>(
-			soapModels.length);
-
-		for (UADPartialEntrySoap soapModel : soapModels) {
-			models.add(toModel(soapModel));
-		}
-
-		return models;
-	}
 
 	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(
 		com.liferay.portal.tools.service.builder.test.service.util.ServiceProps.
@@ -265,34 +215,6 @@ public class UADPartialEntryModelImpl
 		return _attributeSetterBiConsumers;
 	}
 
-	private static Function<InvocationHandler, UADPartialEntry>
-		_getProxyProviderFunction() {
-
-		Class<?> proxyClass = ProxyUtil.getProxyClass(
-			UADPartialEntry.class.getClassLoader(), UADPartialEntry.class,
-			ModelWrapper.class);
-
-		try {
-			Constructor<UADPartialEntry> constructor =
-				(Constructor<UADPartialEntry>)proxyClass.getConstructor(
-					InvocationHandler.class);
-
-			return invocationHandler -> {
-				try {
-					return constructor.newInstance(invocationHandler);
-				}
-				catch (ReflectiveOperationException
-							reflectiveOperationException) {
-
-					throw new InternalError(reflectiveOperationException);
-				}
-			};
-		}
-		catch (NoSuchMethodException noSuchMethodException) {
-			throw new InternalError(noSuchMethodException);
-		}
-	}
-
 	private static final Map<String, Function<UADPartialEntry, Object>>
 		_attributeGetterFunctions;
 	private static final Map<String, BiConsumer<UADPartialEntry, Object>>
@@ -330,7 +252,6 @@ public class UADPartialEntryModelImpl
 			(Map)attributeSetterBiConsumers);
 	}
 
-	@JSON
 	@Override
 	public long getUadPartialEntryId() {
 		return _uadPartialEntryId;
@@ -345,7 +266,6 @@ public class UADPartialEntryModelImpl
 		_uadPartialEntryId = uadPartialEntryId;
 	}
 
-	@JSON
 	@Override
 	public long getUserId() {
 		return _userId;
@@ -376,7 +296,6 @@ public class UADPartialEntryModelImpl
 	public void setUserUuid(String userUuid) {
 	}
 
-	@JSON
 	@Override
 	public String getUserName() {
 		if (_userName == null) {
@@ -396,7 +315,6 @@ public class UADPartialEntryModelImpl
 		_userName = userName;
 	}
 
-	@JSON
 	@Override
 	public String getMessage() {
 		if (_message == null) {
@@ -430,7 +348,9 @@ public class UADPartialEntryModelImpl
 		for (Map.Entry<String, Object> entry :
 				_columnOriginalValues.entrySet()) {
 
-			if (entry.getValue() != getColumnValue(entry.getKey())) {
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
 				_columnBitmask |= _columnBitmasks.get(entry.getKey());
 			}
 		}
@@ -476,6 +396,22 @@ public class UADPartialEntryModelImpl
 		uadPartialEntryImpl.setMessage(getMessage());
 
 		uadPartialEntryImpl.resetOriginalValues();
+
+		return uadPartialEntryImpl;
+	}
+
+	@Override
+	public UADPartialEntry cloneWithOriginalValues() {
+		UADPartialEntryImpl uadPartialEntryImpl = new UADPartialEntryImpl();
+
+		uadPartialEntryImpl.setUadPartialEntryId(
+			this.<Long>getColumnOriginalValue("uadPartialEntryId"));
+		uadPartialEntryImpl.setUserId(
+			this.<Long>getColumnOriginalValue("userId"));
+		uadPartialEntryImpl.setUserName(
+			this.<String>getColumnOriginalValue("userName"));
+		uadPartialEntryImpl.setMessage(
+			this.<String>getColumnOriginalValue("message"));
 
 		return uadPartialEntryImpl;
 	}
@@ -581,7 +517,7 @@ public class UADPartialEntryModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			(4 * attributeGetterFunctions.size()) + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -592,9 +528,26 @@ public class UADPartialEntryModelImpl
 			Function<UADPartialEntry, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((UADPartialEntry)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply((UADPartialEntry)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -641,7 +594,9 @@ public class UADPartialEntryModelImpl
 	private static class EscapedModelProxyProviderFunctionHolder {
 
 		private static final Function<InvocationHandler, UADPartialEntry>
-			_escapedModelProxyProviderFunction = _getProxyProviderFunction();
+			_escapedModelProxyProviderFunction =
+				ProxyUtil.getProxyProviderFunction(
+					UADPartialEntry.class, ModelWrapper.class);
 
 	}
 

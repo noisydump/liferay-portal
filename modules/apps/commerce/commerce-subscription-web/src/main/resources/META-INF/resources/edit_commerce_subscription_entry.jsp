@@ -33,7 +33,7 @@ CommerceSubscriptionEntry commerceSubscriptionEntry = commerceSubscriptionEntryD
 
 <div id="<portlet:namespace />editSubscriptionEntryContainer">
 	<liferay-frontend:screen-navigation
-		fullContainerCssClass="col-12 pt-4"
+		containerWrapperCssClass="container"
 		key="<%= CommerceSubscriptionEntryScreenNavigationConstants.SCREEN_NAVIGATION_KEY_COMMERCE_SUBSCRIPTION_ENTRY %>"
 		modelBean="<%= commerceSubscriptionEntry %>"
 		portletURL="<%= currentURLObj %>"

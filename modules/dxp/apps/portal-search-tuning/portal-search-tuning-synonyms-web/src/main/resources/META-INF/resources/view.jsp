@@ -34,12 +34,12 @@ page import="com.liferay.portal.search.tuning.synonyms.web.internal.display.cont
 SynonymsDisplayContext synonymsDisplayContext = (SynonymsDisplayContext)request.getAttribute(SynonymsPortletKeys.SYNONYMS_DISPLAY_CONTEXT);
 %>
 
-<clay:management-toolbar-v2
+<clay:management-toolbar
 	actionDropdownItems="<%= synonymsDisplayContext.getActionDropdownMultipleItems() %>"
-	componentId="synonymSetsEntriesManagementToolbar"
 	creationMenu="<%= synonymsDisplayContext.getCreationMenu() %>"
 	disabled="<%= synonymsDisplayContext.isDisabledManagementBar() %>"
 	itemsTotal="<%= synonymsDisplayContext.getItemsTotal() %>"
+	propsTransformer="js/SynonymsManagementToolbarPropsTransformer"
 	searchContainerId="synonymSetsEntries"
 	selectable="<%= true %>"
 	showCreationMenu="<%= true %>"
@@ -50,7 +50,7 @@ SynonymsDisplayContext synonymsDisplayContext = (SynonymsDisplayContext)request.
 	<portlet:param name="redirect" value="<%= currentURL %>" />
 </portlet:actionURL>
 
-<aui:form action="<%= deleteSynonymSetActionURL %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="SynonymSetsEntriesFm">
+<aui:form action="<%= deleteSynonymSetActionURL %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="fm">
 	<aui:input name="deletedSynonymSetsString" type="hidden" value="" />
 
 	<liferay-ui:search-container
@@ -73,24 +73,14 @@ SynonymsDisplayContext synonymsDisplayContext = (SynonymsDisplayContext)request.
 
 			<liferay-ui:search-container-column-text>
 				<clay:dropdown-actions
-					defaultEventHandler="SynonymSetsDropdownDefaultEventHandler"
 					dropdownItems="<%= synonymSetDisplayContext.getDropdownItems() %>"
+					propsTransformer="js/SynonymSetsDropdownDefaultPropsTransformer"
 				/>
 			</liferay-ui:search-container-column-text>
 		</liferay-ui:search-container-row>
 
 		<liferay-ui:search-iterator
 			markupView="lexicon"
-			paginate="<%= false %>"
 		/>
 	</liferay-ui:search-container>
 </aui:form>
-
-<aui:script require='<%= npmResolvedPackageName + "/js/MultipleCheckboxAction.es as MultipleCheckboxAction" %>'>
-	new MultipleCheckboxAction.default('<portlet:namespace />');
-</aui:script>
-
-<liferay-frontend:component
-	componentId="SynonymSetsDropdownDefaultEventHandler"
-	module="js/SynonymSetsDropdownDefaultEventHandler.es"
-/>

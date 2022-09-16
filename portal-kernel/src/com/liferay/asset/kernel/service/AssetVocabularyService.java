@@ -81,6 +81,13 @@ public interface AssetVocabularyService extends BaseService {
 			String settings, ServiceContext serviceContext)
 		throws PortalException;
 
+	public AssetVocabulary addVocabulary(
+			String externalReferenceCode, long groupId, String name,
+			String title, Map<Locale, String> titleMap,
+			Map<Locale, String> descriptionMap, String settings,
+			int visibilityType, ServiceContext serviceContext)
+		throws PortalException;
+
 	public List<AssetVocabulary> deleteVocabularies(
 			long[] vocabularyIds, ServiceContext serviceContext)
 		throws PortalException;
@@ -89,6 +96,11 @@ public interface AssetVocabularyService extends BaseService {
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public AssetVocabulary fetchVocabulary(long vocabularyId)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public AssetVocabulary getAssetVocabularyByExternalReferenceCode(
+			long groupId, String externalReferenceCode)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
@@ -198,12 +210,6 @@ public interface AssetVocabularyService extends BaseService {
 			long vocabularyId, String title, Map<Locale, String> titleMap,
 			Map<Locale, String> descriptionMap, String settings,
 			ServiceContext serviceContext)
-		throws PortalException;
-
-	public AssetVocabulary updateVocabulary(
-			long vocabularyId, String name, String title,
-			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
-			String settings, ServiceContext serviceContext)
 		throws PortalException;
 
 }

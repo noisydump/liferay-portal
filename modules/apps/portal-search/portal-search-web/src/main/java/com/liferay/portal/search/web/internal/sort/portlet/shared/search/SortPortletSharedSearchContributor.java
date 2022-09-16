@@ -14,6 +14,7 @@
 
 package com.liferay.portal.search.web.internal.sort.portlet.shared.search;
 
+import com.liferay.dynamic.data.mapping.util.DDMIndexer;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -64,39 +65,52 @@ public class SortPortletSharedSearchContributor
 		SearchRequestBuilder searchRequestBuilder =
 			portletSharedSearchSettings.getSearchRequestBuilder();
 
-		Stream<Sort> stream = buildSorts(
+		Stream<Sort> stream = _buildSorts(
 			portletSharedSearchSettings, sortPortletPreferences);
 
 		searchRequestBuilder.sorts(stream.toArray(Sort[]::new));
 	}
 
-	protected Sort buildSort(String fieldValue, Locale locale) {
-		SortBuilder sortBuilder = _sortBuilderFactory.getSortBuilder();
+	@Reference
+	protected DDMIndexer ddmIndexer;
+
+	private Sort _buildSort(String fieldValue, Locale locale) {
+		SortOrder sortOrder = SortOrder.ASC;
 
 		if (fieldValue.endsWith("+")) {
-			sortBuilder.field(fieldValue.substring(0, fieldValue.length() - 1));
+			fieldValue = fieldValue.substring(0, fieldValue.length() - 1);
 		}
 		else if (fieldValue.endsWith("-")) {
-			sortBuilder.field(
-				fieldValue.substring(0, fieldValue.length() - 1)
-			).sortOrder(
-				SortOrder.DESC
-			);
-		}
-		else {
-			sortBuilder.field(fieldValue);
+			fieldValue = fieldValue.substring(0, fieldValue.length() - 1);
+			sortOrder = SortOrder.DESC;
 		}
 
-		return sortBuilder.locale(
+		if (fieldValue.startsWith(DDMIndexer.DDM_FIELD_PREFIX)) {
+			try {
+				return ddmIndexer.createDDMStructureFieldSort(
+					fieldValue, locale, sortOrder);
+			}
+			catch (PortalException portalException) {
+				throw new RuntimeException(portalException);
+			}
+		}
+
+		SortBuilder sortBuilder = _sortBuilderFactory.getSortBuilder();
+
+		return sortBuilder.field(
+			fieldValue
+		).locale(
 			locale
+		).sortOrder(
+			sortOrder
 		).build();
 	}
 
-	protected Stream<Sort> buildSorts(
+	private Stream<Sort> _buildSorts(
 		PortletSharedSearchSettings portletSharedSearchSettings,
 		SortPortletPreferences sortPortletPreferences) {
 
-		List<String> fieldValues = getFieldValues(
+		List<String> fieldValues = _getFieldValues(
 			sortPortletPreferences.getParameterName(),
 			portletSharedSearchSettings);
 
@@ -108,11 +122,11 @@ public class SortPortletSharedSearchContributor
 		return stream.filter(
 			fieldValue -> !fieldValue.isEmpty()
 		).map(
-			fieldValue -> buildSort(fieldValue, themeDisplay.getLocale())
+			fieldValue -> _buildSort(fieldValue, themeDisplay.getLocale())
 		);
 	}
 
-	protected List<String> getFieldValues(
+	private List<String> _getFieldValues(
 		String parameterName,
 		PortletSharedSearchSettings portletSharedSearchSettings) {
 

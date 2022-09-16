@@ -71,12 +71,24 @@ public interface AssetCategoryService extends BaseService {
 			ServiceContext serviceContext)
 		throws PortalException;
 
+	public AssetCategory addCategory(
+			String externalReferenceCode, long groupId, long parentCategoryId,
+			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
+			long vocabularyId, String[] categoryProperties,
+			ServiceContext serviceContext)
+		throws PortalException;
+
 	public void deleteCategories(long[] categoryIds) throws PortalException;
 
 	public void deleteCategory(long categoryId) throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public AssetCategory fetchCategory(long categoryId) throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public AssetCategory getAssetCategoryByExternalReferenceCode(
+			long groupId, String externalReferenceCode)
+		throws PortalException;
 
 	/**
 	 * Returns a range of assetCategories related to an AssetEntry with the

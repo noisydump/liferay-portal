@@ -15,7 +15,7 @@
 package com.liferay.layout.admin.web.internal.product.navigation.control.menu;
 
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutTypePortlet;
@@ -40,6 +40,7 @@ import java.util.ResourceBundle;
 import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Julio Camarero
@@ -90,7 +91,7 @@ public class ToggleControlsProductNavigationControlMenuEntry
 		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
 			"content.Language", locale, getClass());
 
-		return LanguageUtil.get(resourceBundle, "toggle-controls");
+		return _language.get(resourceBundle, "toggle-controls");
 	}
 
 	@Override
@@ -100,7 +101,7 @@ public class ToggleControlsProductNavigationControlMenuEntry
 
 	@Override
 	public String getURL(HttpServletRequest httpServletRequest) {
-		return "javascript:;";
+		return "javascript:void(0);";
 	}
 
 	@Override
@@ -128,8 +129,8 @@ public class ToggleControlsProductNavigationControlMenuEntry
 		}
 
 		if (!(hasUpdateLayoutPermission(themeDisplay) ||
-			  hasCustomizePermission(themeDisplay) ||
-			  hasPortletConfigurationPermission(themeDisplay))) {
+			  _hasCustomizePermission(themeDisplay) ||
+			  _hasPortletConfigurationPermission(themeDisplay))) {
 
 			return false;
 		}
@@ -137,18 +138,23 @@ public class ToggleControlsProductNavigationControlMenuEntry
 		return super.isShow(httpServletRequest);
 	}
 
-	protected boolean hasCustomizePermission(ThemeDisplay themeDisplay)
+	protected boolean hasUpdateLayoutPermission(ThemeDisplay themeDisplay)
+		throws PortalException {
+
+		return LayoutPermissionUtil.contains(
+			themeDisplay.getPermissionChecker(), themeDisplay.getLayout(),
+			ActionKeys.UPDATE);
+	}
+
+	private boolean _hasCustomizePermission(ThemeDisplay themeDisplay)
 		throws PortalException {
 
 		Layout layout = themeDisplay.getLayout();
 		LayoutTypePortlet layoutTypePortlet =
 			themeDisplay.getLayoutTypePortlet();
 
-		if (!layout.isTypePortlet() || (layoutTypePortlet == null)) {
-			return false;
-		}
-
-		if (!layoutTypePortlet.isCustomizable() ||
+		if (!layout.isTypePortlet() || (layoutTypePortlet == null) ||
+			!layoutTypePortlet.isCustomizable() ||
 			!layoutTypePortlet.isCustomizedView()) {
 
 			return false;
@@ -164,7 +170,7 @@ public class ToggleControlsProductNavigationControlMenuEntry
 		return false;
 	}
 
-	protected boolean hasPortletConfigurationPermission(
+	private boolean _hasPortletConfigurationPermission(
 			ThemeDisplay themeDisplay)
 		throws PortalException {
 
@@ -173,15 +179,10 @@ public class ToggleControlsProductNavigationControlMenuEntry
 			themeDisplay.getLayout(), ActionKeys.CONFIGURATION);
 	}
 
-	protected boolean hasUpdateLayoutPermission(ThemeDisplay themeDisplay)
-		throws PortalException {
-
-		return LayoutPermissionUtil.contains(
-			themeDisplay.getPermissionChecker(), themeDisplay.getLayout(),
-			ActionKeys.UPDATE);
-	}
-
 	private static final Map<String, Object> _data =
 		Collections.<String, Object>singletonMap("qa-id", "showControls");
+
+	@Reference
+	private Language _language;
 
 }

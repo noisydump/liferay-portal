@@ -15,16 +15,17 @@
 package com.liferay.analytics.reports.test.util;
 
 import com.liferay.analytics.reports.info.item.AnalyticsReportsInfoItem;
+import com.liferay.analytics.reports.info.item.provider.AnalyticsReportsInfoItemObjectProvider;
 import com.liferay.analytics.reports.test.MockObject;
-import com.liferay.analytics.reports.test.analytics.reports.info.item.MockAnalyticsReportsInfoItem;
-import com.liferay.analytics.reports.test.info.item.provider.MockInfoItemFieldValuesProvider;
-import com.liferay.analytics.reports.test.layout.display.page.MockLayoutDisplayPageProvider;
-import com.liferay.info.item.provider.InfoItemFieldValuesProvider;
-import com.liferay.layout.display.page.LayoutDisplayPageProvider;
+import com.liferay.analytics.reports.test.MockSuperClassObject;
+import com.liferay.analytics.reports.test.analytics.reports.info.item.MockObjectAnalyticsReportsInfoItem;
+import com.liferay.analytics.reports.test.analytics.reports.info.item.MockSuperClassObjectAnalyticsReportsInfoItem;
+import com.liferay.info.item.InfoItemReference;
 import com.liferay.petra.function.UnsafeRunnable;
-import com.liferay.portal.kernel.model.ClassName;
-import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.util.HashMapDictionary;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -40,184 +41,161 @@ public class MockContextUtil {
 			MockContext mockContext, UnsafeRunnable<Exception> unsafeRunnable)
 		throws Exception {
 
-		ClassNameLocalService classNameLocalService =
-			mockContext.getClassNameLocalService();
-
-		ClassName className = classNameLocalService.addClassName(
-			MockObject.class.getName());
-
 		Bundle bundle = FrameworkUtil.getBundle(MockContextUtil.class);
 
 		BundleContext bundleContext = bundle.getBundleContext();
 
-		ServiceRegistration<AnalyticsReportsInfoItem<MockObject>>
-			analyticsReportsInfoItemServiceRegistration = null;
-		ServiceRegistration<InfoItemFieldValuesProvider<MockObject>>
-			infoItemFieldValuesProviderServiceRegistration = null;
-		ServiceRegistration<LayoutDisplayPageProvider<MockObject>>
-			layoutDisplayPageProviderServiceRegistration = null;
+		List<ServiceRegistration<?>> serviceRegistrations = new ArrayList<>();
 
 		try {
-			analyticsReportsInfoItemServiceRegistration =
+			serviceRegistrations.add(
+				bundleContext.registerService(
+					AnalyticsReportsInfoItemObjectProvider.class,
+					new AnalyticsReportsInfoItemObjectProvider<MockObject>() {
+
+						@Override
+						public MockObject getAnalyticsReportsInfoItemObject(
+							InfoItemReference infoItemReference) {
+
+							return new MockObject();
+						}
+
+						@Override
+						public String getClassName() {
+							return MockObject.class.getName();
+						}
+
+					},
+					new HashMapDictionary<>()));
+			serviceRegistrations.add(
 				bundleContext.registerService(
 					(Class<AnalyticsReportsInfoItem<MockObject>>)
 						(Class<?>)AnalyticsReportsInfoItem.class,
-					mockContext.getAnalyticsReportsInfoItem(),
-					new HashMapDictionary<>());
-			infoItemFieldValuesProviderServiceRegistration =
+					mockContext.getMockObjectAnalyticsReportsInfoItem(),
+					new HashMapDictionary<>()));
+			serviceRegistrations.add(
 				bundleContext.registerService(
-					(Class<InfoItemFieldValuesProvider<MockObject>>)
-						(Class<?>)InfoItemFieldValuesProvider.class,
-					mockContext.getInfoItemFieldValuesProvider(),
-					new HashMapDictionary<>());
-			layoutDisplayPageProviderServiceRegistration =
-				bundleContext.registerService(
-					(Class<LayoutDisplayPageProvider<MockObject>>)
-						(Class<?>)LayoutDisplayPageProvider.class,
-					mockContext.getLayoutDisplayPageProvider(),
-					new HashMapDictionary<>());
+					AnalyticsReportsInfoItemObjectProvider.class,
+					new AnalyticsReportsInfoItemObjectProvider
+						<MockSuperClassObject>() {
 
+						@Override
+						public MockSuperClassObject
+							getAnalyticsReportsInfoItemObject(
+								InfoItemReference infoItemReference) {
+
+							return new MockSuperClassObject();
+						}
+
+						@Override
+						public String getClassName() {
+							return MockSuperClassObject.class.getName();
+						}
+
+					},
+					new HashMapDictionary<>()));
+			serviceRegistrations.add(
+				bundleContext.registerService(
+					(Class<AnalyticsReportsInfoItem<MockSuperClassObject>>)
+						(Class<?>)AnalyticsReportsInfoItem.class,
+					mockContext.
+						getMockSuperClassObjectAnalyticsReportsInfoItem(),
+					new HashMapDictionary<>()));
 			unsafeRunnable.run();
 		}
 		finally {
-			if (analyticsReportsInfoItemServiceRegistration != null) {
-				analyticsReportsInfoItemServiceRegistration.unregister();
-			}
+			for (ServiceRegistration<?> serviceRegistration :
+					serviceRegistrations) {
 
-			if (infoItemFieldValuesProviderServiceRegistration != null) {
-				infoItemFieldValuesProviderServiceRegistration.unregister();
+				serviceRegistration.unregister();
 			}
-
-			if (layoutDisplayPageProviderServiceRegistration != null) {
-				layoutDisplayPageProviderServiceRegistration.unregister();
-			}
-
-			classNameLocalService.deleteClassName(className);
 		}
 	}
 
 	public static class MockContext {
 
-		public static Builder builder(
-			ClassNameLocalService classNameLocalService) {
-
-			return new Builder(classNameLocalService);
+		public static Builder builder() {
+			return new Builder();
 		}
 
 		public AnalyticsReportsInfoItem<MockObject>
-			getAnalyticsReportsInfoItem() {
+			getMockObjectAnalyticsReportsInfoItem() {
 
-			return _analyticsReportsInfoItem;
+			return _mockObjectAnalyticsReportsInfoItem;
 		}
 
-		public ClassNameLocalService getClassNameLocalService() {
-			return _classNameLocalService;
-		}
+		public AnalyticsReportsInfoItem<MockSuperClassObject>
+			getMockSuperClassObjectAnalyticsReportsInfoItem() {
 
-		public InfoItemFieldValuesProvider<MockObject>
-			getInfoItemFieldValuesProvider() {
-
-			return _infoItemFieldValuesProvider;
-		}
-
-		public LayoutDisplayPageProvider<MockObject>
-			getLayoutDisplayPageProvider() {
-
-			return _layoutDisplayPageProvider;
+			return _mockSuperClassObjectAnalyticsReportsInfoItem;
 		}
 
 		public static class Builder {
 
-			public Builder(ClassNameLocalService classNameLocalService) {
-				_classNameLocalService = classNameLocalService;
-			}
-
-			public Builder analyticsReportsInfoItem(
-				AnalyticsReportsInfoItem<MockObject> analyticsReportsInfoItem) {
-
-				_analyticsReportsInfoItem = analyticsReportsInfoItem;
-
-				return this;
-			}
-
 			public MockContext build() {
 				return new MockContext(
-					_analyticsReportsInfoItem, _classNameLocalService,
-					_infoItemFieldValuesProvider, _layoutDisplayPageProvider);
+					_mockObjectAnalyticsReportsInfoItem,
+					_mockSuperClassObjectAnalyticsReportsInfoItem);
 			}
 
-			public Builder infoItemFieldValuesProvider(
-				InfoItemFieldValuesProvider<MockObject>
-					infoItemFieldValuesProvider) {
+			public Builder mockObjectAnalyticsReportsInfoItem(
+				AnalyticsReportsInfoItem<MockObject>
+					mockObjectAnalyticsReportsInfoItem) {
 
-				_infoItemFieldValuesProvider = infoItemFieldValuesProvider;
+				_mockObjectAnalyticsReportsInfoItem =
+					mockObjectAnalyticsReportsInfoItem;
 
 				return this;
 			}
 
-			public Builder layoutDisplayPageProvider(
-				LayoutDisplayPageProvider<MockObject>
-					layoutDisplayPageProvider) {
+			public Builder mockSuperClassObjectAnalyticsReportsInfoItem(
+				AnalyticsReportsInfoItem<MockSuperClassObject>
+					mockSuperClassObjectAnalyticsReportsInfoItem) {
 
-				_layoutDisplayPageProvider = layoutDisplayPageProvider;
+				_mockSuperClassObjectAnalyticsReportsInfoItem =
+					mockSuperClassObjectAnalyticsReportsInfoItem;
 
 				return this;
 			}
 
 			private AnalyticsReportsInfoItem<MockObject>
-				_analyticsReportsInfoItem;
-			private final ClassNameLocalService _classNameLocalService;
-			private InfoItemFieldValuesProvider<MockObject>
-				_infoItemFieldValuesProvider;
-			private LayoutDisplayPageProvider<MockObject>
-				_layoutDisplayPageProvider;
+				_mockObjectAnalyticsReportsInfoItem;
+			private AnalyticsReportsInfoItem<MockSuperClassObject>
+				_mockSuperClassObjectAnalyticsReportsInfoItem;
 
 		}
 
 		private MockContext(
-			AnalyticsReportsInfoItem<MockObject> analyticsReportsInfoItem,
-			ClassNameLocalService classNameLocalService,
-			InfoItemFieldValuesProvider<MockObject> infoItemFieldValuesProvider,
-			LayoutDisplayPageProvider<MockObject> layoutDisplayPageProvider) {
+			AnalyticsReportsInfoItem<MockObject>
+				mockObjectAnalyticsReportsInfoItem,
+			AnalyticsReportsInfoItem<MockSuperClassObject>
+				mockSuperClassObjectAnalyticsReportsInfoItem) {
 
-			if (analyticsReportsInfoItem == null) {
-				_analyticsReportsInfoItem =
-					MockAnalyticsReportsInfoItem.builder(
+			if (mockObjectAnalyticsReportsInfoItem == null) {
+				_mockObjectAnalyticsReportsInfoItem =
+					MockObjectAnalyticsReportsInfoItem.builder(
 					).build();
 			}
 			else {
-				_analyticsReportsInfoItem = analyticsReportsInfoItem;
+				_mockObjectAnalyticsReportsInfoItem =
+					mockObjectAnalyticsReportsInfoItem;
 			}
 
-			_classNameLocalService = classNameLocalService;
-
-			if (infoItemFieldValuesProvider == null) {
-				_infoItemFieldValuesProvider =
-					MockInfoItemFieldValuesProvider.builder(
+			if (mockSuperClassObjectAnalyticsReportsInfoItem == null) {
+				_mockSuperClassObjectAnalyticsReportsInfoItem =
+					MockSuperClassObjectAnalyticsReportsInfoItem.builder(
 					).build();
 			}
 			else {
-				_infoItemFieldValuesProvider = infoItemFieldValuesProvider;
-			}
-
-			if (layoutDisplayPageProvider == null) {
-				_layoutDisplayPageProvider =
-					MockLayoutDisplayPageProvider.builder(
-						_classNameLocalService
-					).build();
-			}
-			else {
-				_layoutDisplayPageProvider = layoutDisplayPageProvider;
+				_mockSuperClassObjectAnalyticsReportsInfoItem =
+					mockSuperClassObjectAnalyticsReportsInfoItem;
 			}
 		}
 
 		private final AnalyticsReportsInfoItem<MockObject>
-			_analyticsReportsInfoItem;
-		private final ClassNameLocalService _classNameLocalService;
-		private final InfoItemFieldValuesProvider<MockObject>
-			_infoItemFieldValuesProvider;
-		private final LayoutDisplayPageProvider<MockObject>
-			_layoutDisplayPageProvider;
+			_mockObjectAnalyticsReportsInfoItem;
+		private final AnalyticsReportsInfoItem<MockSuperClassObject>
+			_mockSuperClassObjectAnalyticsReportsInfoItem;
 
 	}
 

@@ -15,53 +15,50 @@
 package com.liferay.dynamic.data.mapping.internal.report;
 
 import com.liferay.dynamic.data.mapping.constants.DDMFormInstanceReportConstants;
-import com.liferay.dynamic.data.mapping.model.DDMFormFieldType;
+import com.liferay.dynamic.data.mapping.form.field.type.constants.DDMFormFieldTypeConstants;
 import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.dynamic.data.mapping.model.Value;
 import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
-import com.liferay.portal.json.JSONFactoryImpl;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-import org.mockito.runners.MockitoJUnitRunner;
-
-import org.powermock.api.mockito.PowerMockito;
+import org.mockito.Mockito;
 
 /**
  * @author Marcos Martins
  */
-@RunWith(MockitoJUnitRunner.class)
-public class CheckboxMultipleDDMFormFieldTypeReportProcessorTest
-	extends PowerMockito {
+public class CheckboxMultipleDDMFormFieldTypeReportProcessorTest {
 
-	@Before
-	public void setUp() {
-		_setUpJSONFactoryUtil();
-	}
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Test
 	public void testProcessDDMFormInstanceReportOnDeleteEvent()
 		throws Exception {
 
-		DDMFormFieldValue ddmFormFieldValue = mock(DDMFormFieldValue.class);
+		DDMFormFieldValue ddmFormFieldValue = Mockito.mock(
+			DDMFormFieldValue.class);
 
-		when(
+		Mockito.when(
 			ddmFormFieldValue.getName()
 		).thenReturn(
 			"field1"
 		);
 
-		when(
+		Mockito.when(
 			ddmFormFieldValue.getType()
 		).thenReturn(
-			DDMFormFieldType.CHECKBOX_MULTIPLE
+			DDMFormFieldTypeConstants.CHECKBOX_MULTIPLE
 		);
 
 		Value value = new LocalizedValue();
@@ -73,7 +70,7 @@ public class CheckboxMultipleDDMFormFieldTypeReportProcessorTest
 			).toString());
 		value.setDefaultLocale(LocaleUtil.US);
 
-		when(
+		Mockito.when(
 			ddmFormFieldValue.getValue()
 		).thenReturn(
 			value
@@ -85,7 +82,7 @@ public class CheckboxMultipleDDMFormFieldTypeReportProcessorTest
 				JSONUtil.put(
 					"totalEntries", 1
 				).put(
-					"type", DDMFormFieldType.CHECKBOX_MULTIPLE
+					"type", DDMFormFieldTypeConstants.CHECKBOX_MULTIPLE
 				).put(
 					"values", JSONUtil.put("option1", 1)
 				),
@@ -103,18 +100,19 @@ public class CheckboxMultipleDDMFormFieldTypeReportProcessorTest
 	public void testProcessDDMFormInstanceReportWithEmptyData()
 		throws Exception {
 
-		DDMFormFieldValue ddmFormFieldValue = mock(DDMFormFieldValue.class);
+		DDMFormFieldValue ddmFormFieldValue = Mockito.mock(
+			DDMFormFieldValue.class);
 
-		when(
+		Mockito.when(
 			ddmFormFieldValue.getName()
 		).thenReturn(
 			"field1"
 		);
 
-		when(
+		Mockito.when(
 			ddmFormFieldValue.getType()
 		).thenReturn(
-			DDMFormFieldType.CHECKBOX_MULTIPLE
+			DDMFormFieldTypeConstants.CHECKBOX_MULTIPLE
 		);
 
 		Value value = new LocalizedValue();
@@ -126,7 +124,7 @@ public class CheckboxMultipleDDMFormFieldTypeReportProcessorTest
 			).toString());
 		value.setDefaultLocale(LocaleUtil.US);
 
-		when(
+		Mockito.when(
 			ddmFormFieldValue.getValue()
 		).thenReturn(
 			value
@@ -138,7 +136,7 @@ public class CheckboxMultipleDDMFormFieldTypeReportProcessorTest
 				JSONUtil.put(
 					"totalEntries", 0
 				).put(
-					"type", DDMFormFieldType.CHECKBOX_MULTIPLE
+					"type", DDMFormFieldTypeConstants.CHECKBOX_MULTIPLE
 				).put(
 					"values", JSONFactoryUtil.createJSONObject()
 				),
@@ -147,7 +145,7 @@ public class CheckboxMultipleDDMFormFieldTypeReportProcessorTest
 		Assert.assertEquals(1, processedFieldJSONObject.getInt("totalEntries"));
 
 		Assert.assertEquals(
-			DDMFormFieldType.CHECKBOX_MULTIPLE,
+			DDMFormFieldTypeConstants.CHECKBOX_MULTIPLE,
 			processedFieldJSONObject.getString("type"));
 
 		JSONObject valuesJSONObject = processedFieldJSONObject.getJSONObject(
@@ -160,18 +158,19 @@ public class CheckboxMultipleDDMFormFieldTypeReportProcessorTest
 	public void testProcessDDMFormInstanceReportWithExistingData()
 		throws Exception {
 
-		DDMFormFieldValue ddmFormFieldValue = mock(DDMFormFieldValue.class);
+		DDMFormFieldValue ddmFormFieldValue = Mockito.mock(
+			DDMFormFieldValue.class);
 
-		when(
+		Mockito.when(
 			ddmFormFieldValue.getName()
 		).thenReturn(
 			"field1"
 		);
 
-		when(
+		Mockito.when(
 			ddmFormFieldValue.getType()
 		).thenReturn(
-			DDMFormFieldType.CHECKBOX_MULTIPLE
+			DDMFormFieldTypeConstants.CHECKBOX_MULTIPLE
 		);
 
 		Value value = new LocalizedValue();
@@ -183,7 +182,7 @@ public class CheckboxMultipleDDMFormFieldTypeReportProcessorTest
 			).toString());
 		value.setDefaultLocale(LocaleUtil.US);
 
-		when(
+		Mockito.when(
 			ddmFormFieldValue.getValue()
 		).thenReturn(
 			value
@@ -195,7 +194,7 @@ public class CheckboxMultipleDDMFormFieldTypeReportProcessorTest
 				JSONUtil.put(
 					"totalEntries", 1
 				).put(
-					"type", DDMFormFieldType.CHECKBOX_MULTIPLE
+					"type", DDMFormFieldTypeConstants.CHECKBOX_MULTIPLE
 				).put(
 					"values", JSONUtil.put("option1", 1)
 				),
@@ -208,12 +207,6 @@ public class CheckboxMultipleDDMFormFieldTypeReportProcessorTest
 
 		Assert.assertEquals(2, valuesJSONObject.getLong("option1"));
 		Assert.assertEquals(1, valuesJSONObject.getLong("option2"));
-	}
-
-	private void _setUpJSONFactoryUtil() {
-		JSONFactoryUtil jsonFactoryUtil = new JSONFactoryUtil();
-
-		jsonFactoryUtil.setJSONFactory(new JSONFactoryImpl());
 	}
 
 	private final CheckboxMultipleDDMFormFieldTypeReportProcessor

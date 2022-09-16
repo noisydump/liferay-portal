@@ -23,7 +23,7 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.CookieKeys;
 import com.liferay.portal.kernel.util.Digester;
 import com.liferay.portal.kernel.util.DigesterUtil;
-import com.liferay.portal.kernel.util.HttpUtil;
+import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -100,10 +100,60 @@ public abstract class BaseClientTestCase {
 		_bundleActivator.stop(_bundleContext);
 	}
 
+	protected static Invocation.Builder getInvocationBuilder(
+		String hostname, WebTarget webTarget,
+		Function<Invocation.Builder, Invocation.Builder>
+			invocationBuilderFunction) {
+
+		Invocation.Builder invocationBuilder = webTarget.request();
+
+		if (hostname != null) {
+			invocationBuilder = invocationBuilder.header("Host", hostname);
+		}
+
+		return invocationBuilderFunction.apply(invocationBuilder);
+	}
+
+	protected static WebTarget getOAuth2WebTarget() {
+		WebTarget webTarget = getWebTarget();
+
+		webTarget = webTarget.path("o");
+		webTarget = webTarget.path("oauth2");
+
+		return webTarget;
+	}
+
+	protected static WebTarget getTokenWebTarget() {
+		WebTarget webTarget = getOAuth2WebTarget();
+
+		return webTarget.path("token");
+	}
+
+	protected static WebTarget getWebTarget() {
+		ClientBuilder clientBuilder = new ClientBuilderImpl();
+
+		Client client = clientBuilder.build();
+
+		RuntimeDelegate runtimeDelegate = new RuntimeDelegateImpl();
+
+		UriBuilder uriBuilder = runtimeDelegate.createUriBuilder();
+
+		return client.target(uriBuilder.uri("http://localhost:8080"));
+	}
+
 	protected Invocation.Builder authorize(
 		Invocation.Builder invocationBuilder, String token) {
 
 		return invocationBuilder.header("Authorization", "Bearer " + token);
+	}
+
+	protected String generateCodeChallenge(String codeVerifier) {
+		return StringUtil.removeChar(
+			StringUtil.replace(
+				DigesterUtil.digestBase64(Digester.SHA_256, codeVerifier),
+				new char[] {CharPool.PLUS, CharPool.SLASH},
+				new char[] {CharPool.MINUS, CharPool.UNDERLINE}),
+			CharPool.EQUAL);
 	}
 
 	protected Cookie getAuthenticatedCookie(
@@ -116,13 +166,16 @@ public abstract class BaseClientTestCase {
 
 		String pAuthToken = parsePAuthToken(response);
 
-		Map<String, NewCookie> cookies = response.getCookies();
+		Map<String, NewCookie> newCookies = response.getCookies();
 
-		NewCookie newCookie = cookies.get(CookieKeys.JSESSIONID);
+		NewCookie cookieSupportNewCookie = newCookies.get(
+			CookieKeys.COOKIE_SUPPORT);
+		NewCookie jSessionIdNewCookie = newCookies.get(CookieKeys.JSESSIONID);
 
 		invocationBuilder = getInvocationBuilder(hostname, getLoginWebTarget());
 
-		invocationBuilder.cookie(newCookie);
+		invocationBuilder.cookie(cookieSupportNewCookie);
+		invocationBuilder.cookie(jSessionIdNewCookie);
 
 		MultivaluedMap<String, String> formData = new MultivaluedHashMap<>();
 
@@ -132,27 +185,37 @@ public abstract class BaseClientTestCase {
 
 		response = invocationBuilder.post(Entity.form(formData));
 
-		cookies = response.getCookies();
+		newCookies = response.getCookies();
 
-		newCookie = cookies.get(CookieKeys.JSESSIONID);
+		jSessionIdNewCookie = newCookies.get(CookieKeys.JSESSIONID);
 
-		if (newCookie == null) {
+		if (jSessionIdNewCookie == null) {
 			return null;
 		}
 
-		return newCookie.toCookie();
+		return jSessionIdNewCookie.toCookie();
 	}
 
 	protected Function<WebTarget, Invocation.Builder>
 		getAuthenticatedInvocationBuilderFunction(
 			String login, String password, String hostname) {
 
+		return getAuthenticatedInvocationBuilderFunction(
+			login, password, hostname, Function.identity());
+	}
+
+	protected Function<WebTarget, Invocation.Builder>
+		getAuthenticatedInvocationBuilderFunction(
+			String login, String password, String hostname,
+			Function<Invocation.Builder, Invocation.Builder>
+				invocationBuilderFunction) {
+
 		Cookie authenticatedCookie = getAuthenticatedCookie(
 			login, password, hostname);
 
 		return webtarget -> {
 			Invocation.Builder invocationBuilder = getInvocationBuilder(
-				hostname, webtarget);
+				hostname, webtarget, invocationBuilderFunction);
 
 			return invocationBuilder.accept(
 				"text/html"
@@ -204,17 +267,7 @@ public abstract class BaseClientTestCase {
 		return (clientId, invocationBuilder) -> {
 			String codeVerifier = RandomTestUtil.randomString();
 
-			String base64Digest = DigesterUtil.digestBase64(
-				Digester.SHA_256, codeVerifier);
-
-			String base64UrlDigest = StringUtil.replace(
-				base64Digest, new char[] {CharPool.PLUS, CharPool.SLASH},
-				new char[] {CharPool.MINUS, CharPool.UNDERLINE});
-
-			base64UrlDigest = StringUtil.removeChar(
-				base64UrlDigest, CharPool.EQUAL);
-
-			final String codeChallenge = base64UrlDigest;
+			String codeChallenge = generateCodeChallenge(codeVerifier);
 
 			String authorizationCode = parseAuthorizationCodeString(
 				getCodeResponse(
@@ -284,6 +337,24 @@ public abstract class BaseClientTestCase {
 		getCodeFunction(
 			Function<WebTarget, WebTarget> authorizeRequestFunction) {
 
+		return getCodeFunction(authorizeRequestFunction, null, false);
+	}
+
+	protected Function<Function<WebTarget, Invocation.Builder>, Response>
+		getCodeFunction(
+			Function<WebTarget, WebTarget> authorizeRequestFunction,
+			boolean skipAuthorization) {
+
+		return getCodeFunction(
+			authorizeRequestFunction, null, skipAuthorization);
+	}
+
+	protected Function<Function<WebTarget, Invocation.Builder>, Response>
+		getCodeFunction(
+			Function<WebTarget, WebTarget> authorizeRequestFunction,
+			MultivaluedMap<String, String> extraParameters,
+			boolean skipAuthorization) {
+
 		return invocationBuilderFunction -> {
 			Invocation.Builder invocationBuilder =
 				invocationBuilderFunction.apply(
@@ -297,10 +368,10 @@ public abstract class BaseClientTestCase {
 				return response;
 			}
 
-			Map<String, String[]> parameterMap = HttpUtil.getParameterMap(
-				uri.getQuery());
+			Map<String, String[]> parameterMap =
+				HttpComponentsUtil.getParameterMap(uri.getQuery());
 
-			if (parameterMap.containsKey("error")) {
+			if (parameterMap.containsKey("error") || skipAuthorization) {
 				return response;
 			}
 
@@ -320,6 +391,10 @@ public abstract class BaseClientTestCase {
 					key.substring("oauth2_".length()), entry.getValue()[0]);
 			}
 
+			if (extraParameters != null) {
+				formData.putAll(extraParameters);
+			}
+
 			invocationBuilder = invocationBuilderFunction.apply(
 				getAuthorizeDecisionWebTarget());
 
@@ -332,9 +407,21 @@ public abstract class BaseClientTestCase {
 		Function<Function<WebTarget, Invocation.Builder>, Response>
 			authorizationResponseFunction) {
 
+		return getCodeResponse(
+			login, password, hostname, authorizationResponseFunction,
+			Function.identity());
+	}
+
+	protected Response getCodeResponse(
+		String login, String password, String hostname,
+		Function<Function<WebTarget, Invocation.Builder>, Response>
+			authorizationResponseFunction,
+		Function<Invocation.Builder, Invocation.Builder>
+			invocationBuilderFunction) {
+
 		return authorizationResponseFunction.apply(
 			getAuthenticatedInvocationBuilderFunction(
-				login, password, hostname));
+				login, password, hostname, invocationBuilderFunction));
 	}
 
 	protected BiFunction<String, Invocation.Builder, Response>
@@ -382,13 +469,7 @@ public abstract class BaseClientTestCase {
 	protected Invocation.Builder getInvocationBuilder(
 		String hostname, WebTarget webTarget) {
 
-		Invocation.Builder invocationBuilder = webTarget.request();
-
-		if (hostname != null) {
-			invocationBuilder = invocationBuilder.header("Host", hostname);
-		}
-
-		return invocationBuilder;
+		return getInvocationBuilder(hostname, webTarget, Function.identity());
 	}
 
 	protected WebTarget getJsonWebTarget(String... paths) {
@@ -410,15 +491,6 @@ public abstract class BaseClientTestCase {
 		webTarget = webTarget.path("c");
 		webTarget = webTarget.path("portal");
 		webTarget = webTarget.path("login");
-
-		return webTarget;
-	}
-
-	protected WebTarget getOAuth2WebTarget() {
-		WebTarget webTarget = getWebTarget();
-
-		webTarget = webTarget.path("o");
-		webTarget = webTarget.path("oauth2");
 
 		return webTarget;
 	}
@@ -492,24 +564,6 @@ public abstract class BaseClientTestCase {
 		return getInvocationBuilder(hostname, getTokenWebTarget());
 	}
 
-	protected WebTarget getTokenWebTarget() {
-		WebTarget webTarget = getOAuth2WebTarget();
-
-		return webTarget.path("token");
-	}
-
-	protected WebTarget getWebTarget() {
-		ClientBuilder clientBuilder = new ClientBuilderImpl();
-
-		Client client = clientBuilder.build();
-
-		RuntimeDelegate runtimeDelegate = new RuntimeDelegateImpl();
-
-		UriBuilder uriBuilder = runtimeDelegate.createUriBuilder();
-
-		return client.target(uriBuilder.uri("http://localhost:8080"));
-	}
-
 	protected WebTarget getWebTarget(String... paths) {
 		WebTarget target = getWebTarget();
 
@@ -532,7 +586,7 @@ public abstract class BaseClientTestCase {
 					"from which code is extracted");
 		}
 
-		Map<String, String[]> parameterMap = HttpUtil.getParameterMap(
+		Map<String, String[]> parameterMap = HttpComponentsUtil.getParameterMap(
 			uri.getQuery());
 
 		if (!parameterMap.containsKey("code")) {
@@ -555,7 +609,7 @@ public abstract class BaseClientTestCase {
 					"from which error is extracted");
 		}
 
-		Map<String, String[]> parameterMap = HttpUtil.getParameterMap(
+		Map<String, String[]> parameterMap = HttpComponentsUtil.getParameterMap(
 			uri.getQuery());
 
 		if (!parameterMap.containsKey("error")) {

@@ -38,10 +38,6 @@ notificationsSearchContainer.setId(searchContainerId);
 NotificationsManagementToolbarDisplayContext notificationsManagementToolbarDisplayContext = new NotificationsManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, currentURLObj);
 
 NotificationsUtil.populateResults(themeDisplay.getUserId(), actionRequired, navigation, notificationsManagementToolbarDisplayContext.getOrderByType(), notificationsSearchContainer);
-
-PortletURL navigationURL = PortletURLUtil.clone(currentURLObj, renderResponse);
-
-navigationURL.setParameter(SearchContainer.DEFAULT_CUR_PARAM, "0");
 %>
 
 <clay:navigation-bar
@@ -67,14 +63,35 @@ navigationURL.setParameter(SearchContainer.DEFAULT_CUR_PARAM, "0");
 	%>'
 />
 
-<clay:management-toolbar-v2
+<portlet:actionURL name="deleteNotifications" var="deleteNotificationsURL">
+	<portlet:param name="redirect" value="<%= currentURL %>" />
+</portlet:actionURL>
+
+<portlet:actionURL name="markNotificationsAsRead" var="markNotificationsAsReadURL">
+	<portlet:param name="redirect" value="<%= currentURL %>" />
+</portlet:actionURL>
+
+<portlet:actionURL name="markNotificationsAsUnread" var="markNotificationsAsUnreadURL">
+	<portlet:param name="redirect" value="<%= currentURL %>" />
+</portlet:actionURL>
+
+<clay:management-toolbar
 	actionDropdownItems="<%= notificationsManagementToolbarDisplayContext.getActionDropdownItems() %>"
+	additionalProps='<%=
+		HashMapBuilder.<String, Object>put(
+			"deleteNotificationsURL", deleteNotificationsURL.toString()
+		).put(
+			"markNotificationsAsReadURL", markNotificationsAsReadURL.toString()
+		).put(
+			"markNotificationsAsUnreadURL", markNotificationsAsUnreadURL.toString()
+		).build()
+	%>'
 	clearResultsURL="<%= notificationsManagementToolbarDisplayContext.getClearResultsURL() %>"
-	componentId="notificationsManagementToolbar"
 	disabled="<%= NotificationsUtil.getAllNotificationsCount(themeDisplay.getUserId(), actionRequired) == 0 %>"
 	filterDropdownItems="<%= notificationsManagementToolbarDisplayContext.getFilterDropdownItems() %>"
 	filterLabelItems="<%= notificationsManagementToolbarDisplayContext.getFilterLabelItems() %>"
 	itemsTotal="<%= notificationsSearchContainer.getTotal() %>"
+	propsTransformer="notifications/js/NotificationsManagementToolbarPropsTransformer"
 	searchContainerId="<%= searchContainerId %>"
 	selectable="<%= actionRequired ? false : true %>"
 	showCreationMenu="<%= false %>"
@@ -120,65 +137,12 @@ navigationURL.setParameter(SearchContainer.DEFAULT_CUR_PARAM, "0");
 	</aui:form>
 </clay:container-fluid>
 
-<aui:script sandbox="<%= true %>">
-	var deleteNotifications = function () {
-		var form = document.getElementById('<portlet:namespace />fm');
-
-		form.setAttribute('method', 'post');
-
-		submitForm(
-			form,
-			'<portlet:actionURL name="deleteNotifications"><portlet:param name="redirect" value="<%= currentURL %>" /></portlet:actionURL>'
-		);
-	};
-
-	var markNotificationsAsRead = function () {
-		var form = document.getElementById('<portlet:namespace />fm');
-
-		form.setAttribute('method', 'post');
-
-		submitForm(
-			form,
-			'<portlet:actionURL name="markNotificationsAsRead"><portlet:param name="redirect" value="<%= currentURL %>" /></portlet:actionURL>'
-		);
-	};
-
-	var markNotificationsAsUnread = function () {
-		var form = document.getElementById('<portlet:namespace />fm');
-
-		form.setAttribute('method', 'post');
-
-		submitForm(
-			form,
-			'<portlet:actionURL name="markNotificationsAsUnread"><portlet:param name="redirect" value="<%= currentURL %>" /></portlet:actionURL>'
-		);
-	};
-
-	var ACTIONS = {
-		deleteNotifications: deleteNotifications,
-		markNotificationsAsRead: markNotificationsAsRead,
-		markNotificationsAsUnread: markNotificationsAsUnread,
-	};
-
-	Liferay.componentReady('notificationsManagementToolbar').then(function (
-		managementToolbar
-	) {
-		managementToolbar.on('actionItemClicked', function (event) {
-			var itemData = event.data.item.data;
-
-			if (itemData && itemData.action && ACTIONS[itemData.action]) {
-				ACTIONS[itemData.action]();
-			}
-		});
-	});
-</aui:script>
-
 <aui:script use="aui-base">
 	var form = A.one('#<portlet:namespace />fm');
 
 	form.delegate(
 		'click',
-		function (event) {
+		(event) => {
 			event.preventDefault();
 
 			var currentTarget = event.currentTarget;
@@ -186,10 +150,10 @@ navigationURL.setParameter(SearchContainer.DEFAULT_CUR_PARAM, "0");
 			Liferay.Util.fetch(currentTarget.attr('href'), {
 				method: 'POST',
 			})
-				.then(function (response) {
+				.then((response) => {
 					return response.json();
 				})
-				.then(function (response) {
+				.then((response) => {
 					if (response.success) {
 						var notificationContainer = currentTarget.ancestor(
 							'li.list-group-item'

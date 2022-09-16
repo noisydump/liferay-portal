@@ -31,13 +31,20 @@ import org.osgi.annotation.versioning.ProviderType;
 	rules = {
 		@DDMFormRule(
 			actions = {
+				"setEnabled('expirationDate', equals(getValue('neverExpire'), FALSE))",
 				"setVisible('emailFromAddress', getValue('sendEmailNotification'))",
 				"setVisible('emailFromName', getValue('sendEmailNotification'))",
 				"setVisible('emailSubject', getValue('sendEmailNotification'))",
 				"setVisible('emailToAddress', getValue('sendEmailNotification'))",
-				"setVisible('published', FALSE)"
+				"setVisible('objectDefinitionId', contains(getValue('storageType'), \"object\"))",
+				"setVisible('published', FALSE)",
+				"setVisible('workflowDefinition', not(contains(getValue('storageType'), \"object\")))"
 			},
 			condition = "TRUE"
+		),
+		@DDMFormRule(
+			actions = "setValue('expirationDate', '')",
+			condition = "equals(getValue('neverExpire'), TRUE)"
 		)
 	}
 )
@@ -45,7 +52,7 @@ import org.osgi.annotation.versioning.ProviderType;
 	paginationMode = com.liferay.dynamic.data.mapping.model.DDMFormLayout.TABBED_MODE,
 	value = {
 		@DDMFormLayoutPage(
-			title = "%form-options",
+			title = "%general",
 			value = {
 				@DDMFormLayoutRow(
 					{
@@ -53,8 +60,8 @@ import org.osgi.annotation.versioning.ProviderType;
 							size = 12,
 							value = {
 								"requireAuthentication", "requireCaptcha",
-								"autosaveEnabled", "redirectURL", "storageType",
-								"workflowDefinition", "submitLabel"
+								"autosaveEnabled", "storageType",
+								"objectDefinitionId", "workflowDefinition"
 							}
 						)
 					}
@@ -62,7 +69,19 @@ import org.osgi.annotation.versioning.ProviderType;
 			}
 		),
 		@DDMFormLayoutPage(
-			title = "%email-notifications",
+			title = "%personalization",
+			value = {
+				@DDMFormLayoutRow(
+					{
+						@DDMFormLayoutColumn(
+							size = 12, value = {"redirectURL", "submitLabel"}
+						)
+					}
+				)
+			}
+		),
+		@DDMFormLayoutPage(
+			title = "%notifications",
 			value = {
 				@DDMFormLayoutRow(
 					{
@@ -72,6 +91,23 @@ import org.osgi.annotation.versioning.ProviderType;
 								"sendEmailNotification", "emailFromName",
 								"emailFromAddress", "emailToAddress",
 								"emailSubject", "published"
+							}
+						)
+					}
+				)
+			}
+		),
+		@DDMFormLayoutPage(
+			title = "%submissions",
+			value = {
+				@DDMFormLayoutRow(
+					{
+						@DDMFormLayoutColumn(
+							size = 12,
+							value = {
+								"showPartialResultsToRespondents",
+								"limitToOneSubmissionPerUser", "expirationDate",
+								"neverExpire"
 							}
 						)
 					}
@@ -88,6 +124,9 @@ public interface DDMFormInstanceSettings {
 		properties = "showAsSwitcher=true"
 	)
 	public boolean autosaveEnabled();
+
+	@DDMFormField
+	public boolean convertedFromPolls();
 
 	@DDMFormField(
 		label = "%from-address",
@@ -108,6 +147,35 @@ public interface DDMFormInstanceSettings {
 		validationExpression = "isEmailAddress(emailToAddress)"
 	)
 	public String emailToAddress();
+
+	@DDMFormField(
+		label = "%expiration-date", type = "date",
+		validationErrorMessage = "%please-enter-a-valid-expiration-date-only-future-dates-are-accepted",
+		validationExpression = "futureDates(expirationDate, \"{parameter}\")",
+		validationExpressionName = "futureDates",
+		validationParameter = "{\"startsFrom\": {\"date\": \"responseDate\", \"quantity\": 1, \"type\": \"customDate\", \"unit\": \"days\"}}"
+	)
+	public String expirationDate();
+
+	@DDMFormField(
+		label = "%limit-to-one-submission-per-user",
+		tip = "%respondents-will-be-required-to-sign-in", type = "checkbox"
+	)
+	public boolean limitToOneSubmissionPerUser();
+
+	@DDMFormField(
+		label = "%never-expire", predefinedValue = "true", type = "checkbox"
+	)
+	public boolean neverExpire();
+
+	@DDMFormField(
+		label = "%select-object",
+		properties = {
+			"dataSourceType=data-provider", "ddmDataProviderInstanceId=objects"
+		},
+		type = "select"
+	)
+	public String objectDefinitionId();
 
 	@DDMFormField
 	public boolean published();
@@ -137,6 +205,13 @@ public interface DDMFormInstanceSettings {
 		properties = "showAsSwitcher=true", type = "checkbox"
 	)
 	public boolean sendEmailNotification();
+
+	@DDMFormField(
+		label = "%show-forms-report-data-to-respondents",
+		tip = "%allow-respondents-to-see-the-current-forms-report-data",
+		type = "checkbox"
+	)
+	public boolean showPartialResultsToRespondents();
 
 	@DDMFormField(
 		label = "%select-a-storage-type", predefinedValue = "[\"default\"]",

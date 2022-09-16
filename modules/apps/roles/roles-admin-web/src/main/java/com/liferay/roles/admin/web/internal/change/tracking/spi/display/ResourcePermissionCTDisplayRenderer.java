@@ -18,7 +18,7 @@ import com.liferay.change.tracking.spi.display.BaseCTDisplayRenderer;
 import com.liferay.change.tracking.spi.display.CTDisplayRenderer;
 import com.liferay.petra.string.CharPool;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -38,13 +38,11 @@ import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.ResourceBundleUtil;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.ResourceBundle;
 import java.util.TreeMap;
 
 import org.osgi.service.component.annotations.Component;
@@ -115,7 +113,7 @@ public class ResourcePermissionCTDisplayRenderer
 
 			if (scope == ResourceConstants.SCOPE_COMPANY) {
 				arguments.add(
-					LanguageUtil.get(locale, "all-sites-and-asset-libraries"));
+					_language.get(locale, "all-sites-and-asset-libraries"));
 			}
 			else if (scope == ResourceConstants.SCOPE_GROUP) {
 				try {
@@ -126,33 +124,30 @@ public class ResourcePermissionCTDisplayRenderer
 				}
 				catch (PortalException portalException) {
 					if (_log.isWarnEnabled()) {
-						_log.warn(portalException, portalException);
+						_log.warn(portalException);
 					}
 				}
 			}
 		}
 
-		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
-			locale, ResourcePermissionCTDisplayRenderer.class);
-
 		if (arguments.size() == 1) {
-			return LanguageUtil.format(
-				resourceBundle, "x-permissions",
-				arguments.toArray(new String[0]), false);
+			return _language.format(
+				locale, "x-permissions", arguments.toArray(new String[0]),
+				false);
 		}
 		else if (arguments.size() == 2) {
-			return LanguageUtil.format(
-				resourceBundle, "x-permissions-for-x",
-				arguments.toArray(new String[0]), false);
+			return _language.format(
+				locale, "x-permissions-for-x", arguments.toArray(new String[0]),
+				false);
 		}
 		else if (arguments.size() == 3) {
-			return LanguageUtil.format(
-				resourceBundle, "x-permissions-for-x-x",
+			return _language.format(
+				locale, "x-permissions-for-x-x",
 				arguments.toArray(new String[0]), false);
 		}
 		else {
-			return LanguageUtil.format(
-				resourceBundle, "x-permissions-for-x-x-x",
+			return _language.format(
+				locale, "x-permissions-for-x-x-x",
 				arguments.toArray(new String[0]), false);
 		}
 	}
@@ -180,12 +175,9 @@ public class ResourcePermissionCTDisplayRenderer
 			resourceActionMap.put(actionLabel, resourceAction);
 		}
 
-		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
-			displayBuilder.getLocale(),
-			ResourcePermissionCTDisplayRenderer.class);
-
-		String granted = LanguageUtil.get(resourceBundle, "granted");
-		String notGranted = LanguageUtil.get(resourceBundle, "not-granted");
+		String granted = _language.get(displayBuilder.getLocale(), "granted");
+		String notGranted = _language.get(
+			displayBuilder.getLocale(), "not-granted");
 
 		for (Map.Entry<String, ResourceAction> entry :
 				resourceActionMap.entrySet()) {
@@ -207,6 +199,9 @@ public class ResourcePermissionCTDisplayRenderer
 
 	@Reference
 	private GroupLocalService _groupLocalService;
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private LayoutLocalService _layoutLocalService;

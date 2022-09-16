@@ -16,6 +16,8 @@ package com.liferay.portlet;
 
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.language.LanguageResources;
@@ -87,6 +89,10 @@ public class StrutsResourceBundle extends ResourceBundle {
 				return parent.getObject(key);
 			}
 			catch (MissingResourceException missingResourceException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(missingResourceException);
+				}
+
 				return null;
 			}
 		}
@@ -98,14 +104,15 @@ public class StrutsResourceBundle extends ResourceBundle {
 		return StringBundler.concat(key, StringPool.PERIOD, _portletName);
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		StrutsResourceBundle.class);
+
 	private static final Set<String> _keys = SetUtil.fromArray(
-		new String[] {
-			JavaConstants.JAVAX_PORTLET_DESCRIPTION,
-			JavaConstants.JAVAX_PORTLET_KEYWORDS,
-			JavaConstants.JAVAX_PORTLET_LONG_TITLE,
-			JavaConstants.JAVAX_PORTLET_SHORT_TITLE,
-			JavaConstants.JAVAX_PORTLET_TITLE
-		});
+		JavaConstants.JAVAX_PORTLET_DESCRIPTION,
+		JavaConstants.JAVAX_PORTLET_KEYWORDS,
+		JavaConstants.JAVAX_PORTLET_LONG_TITLE,
+		JavaConstants.JAVAX_PORTLET_SHORT_TITLE,
+		JavaConstants.JAVAX_PORTLET_TITLE);
 
 	private final Locale _locale;
 	private final String _portletName;

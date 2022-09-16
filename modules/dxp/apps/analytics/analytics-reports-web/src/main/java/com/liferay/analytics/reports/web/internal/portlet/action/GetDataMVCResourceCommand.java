@@ -16,21 +16,23 @@ package com.liferay.analytics.reports.web.internal.portlet.action;
 
 import com.liferay.analytics.reports.info.item.AnalyticsReportsInfoItem;
 import com.liferay.analytics.reports.info.item.AnalyticsReportsInfoItemTracker;
+import com.liferay.analytics.reports.info.item.ClassNameClassPKInfoItemIdentifier;
+import com.liferay.analytics.reports.info.item.provider.AnalyticsReportsInfoItemObjectProvider;
 import com.liferay.analytics.reports.web.internal.constants.AnalyticsReportsPortletKeys;
 import com.liferay.analytics.reports.web.internal.data.provider.AnalyticsReportsDataProvider;
-import com.liferay.analytics.reports.web.internal.info.display.contributor.util.LayoutDisplayPageProviderUtil;
-import com.liferay.analytics.reports.web.internal.layout.seo.CanonicalURLProvider;
+import com.liferay.analytics.reports.web.internal.info.item.provider.AnalyticsReportsInfoItemObjectProviderTracker;
 import com.liferay.analytics.reports.web.internal.model.TimeRange;
 import com.liferay.analytics.reports.web.internal.model.TimeSpan;
-import com.liferay.info.field.InfoFieldValue;
-import com.liferay.info.item.InfoItemFieldValues;
+import com.liferay.analytics.reports.web.internal.util.AnalyticsReportsUtil;
+import com.liferay.info.item.ClassPKInfoItemIdentifier;
+import com.liferay.info.item.InfoItemReference;
 import com.liferay.info.item.InfoItemServiceTracker;
-import com.liferay.info.item.provider.InfoItemFieldValuesProvider;
-import com.liferay.info.type.WebImage;
-import com.liferay.layout.display.page.LayoutDisplayPageObjectProvider;
-import com.liferay.layout.display.page.LayoutDisplayPageProviderTracker;
-import com.liferay.layout.seo.kernel.LayoutSEOLinkManager;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.exception.NoSuchModelException;
 import com.liferay.portal.kernel.json.JSONArray;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
@@ -38,15 +40,20 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
+import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCResourceCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.Http;
+import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -58,14 +65,19 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.stream.Stream;
 
+import javax.portlet.MimeResponse;
+import javax.portlet.PortletRequest;
 import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceResponse;
 import javax.portlet.ResourceURL;
@@ -96,41 +108,30 @@ public class GetDataMVCResourceCommand extends BaseMVCResourceCommand {
 		HttpServletRequest httpServletRequest = _portal.getHttpServletRequest(
 			resourceRequest);
 
-		LayoutDisplayPageObjectProvider<Object>
-			layoutDisplayPageObjectProvider =
-				(LayoutDisplayPageObjectProvider<Object>)
-					LayoutDisplayPageProviderUtil.
-						getLayoutDisplayPageObjectProvider(
-							httpServletRequest,
-							_layoutDisplayPageProviderTracker, _portal);
-
-		if (layoutDisplayPageObjectProvider == null) {
-			JSONPortletResponseUtil.writeJSON(
-				resourceRequest, resourceResponse,
-				JSONUtil.put(
-					"error",
-					_language.get(
-						httpServletRequest, "an-unexpected-error-occurred")));
-
-			return;
-		}
-
 		try {
+			InfoItemReference infoItemReference = _getInfoItemReference(
+				httpServletRequest);
+
+			Object analyticsReportsInfoItemObject = Optional.ofNullable(
+				_analyticsReportsInfoItemObjectProviderTracker.
+					getAnalyticsReportsInfoItemObjectProvider(
+						infoItemReference.getClassName())
+			).map(
+				analyticsReportsInfoItemObjectProvider ->
+					analyticsReportsInfoItemObjectProvider.
+						getAnalyticsReportsInfoItemObject(infoItemReference)
+			).orElseThrow(
+				() -> new NoSuchModelException(
+					"No analytics reports info item object provider found " +
+						"for " + infoItemReference)
+			);
+
 			AnalyticsReportsInfoItem<Object> analyticsReportsInfoItem =
 				(AnalyticsReportsInfoItem<Object>)
 					_analyticsReportsInfoItemTracker.
 						getAnalyticsReportsInfoItem(
-							_portal.getClassName(
-								layoutDisplayPageObjectProvider.
-									getClassNameId()));
-			CanonicalURLProvider canonicalURLProvider =
-				new CanonicalURLProvider(
-					httpServletRequest, _layoutSEOLinkManager, _portal);
-			InfoItemFieldValuesProvider<Object> infoItemFieldValuesProvider =
-				_infoItemServiceTracker.getFirstInfoItemService(
-					InfoItemFieldValuesProvider.class,
-					_portal.getClassName(
-						layoutDisplayPageObjectProvider.getClassNameId()));
+							infoItemReference.getClassName());
+
 			ThemeDisplay themeDisplay =
 				(ThemeDisplay)resourceRequest.getAttribute(
 					WebKeys.THEME_DISPLAY);
@@ -140,19 +141,18 @@ public class GetDataMVCResourceCommand extends BaseMVCResourceCommand {
 				JSONUtil.put(
 					"context",
 					_getJSONObject(
-						analyticsReportsInfoItem,
-						canonicalURLProvider.getCanonicalURL(),
-						themeDisplay.getCompanyId(),
-						infoItemFieldValuesProvider,
-						layoutDisplayPageObjectProvider,
-						themeDisplay.getLayout(), themeDisplay.getLocale(),
+						analyticsReportsInfoItem, infoItemReference,
+						themeDisplay.getLayout(),
+						themeDisplay.getLayoutFriendlyURL(
+							themeDisplay.getLayout()),
+						themeDisplay.getLocale(),
 						_getLocale(
 							httpServletRequest, themeDisplay.getLanguageId()),
-						layoutDisplayPageObjectProvider.getDisplayObject(),
+						analyticsReportsInfoItemObject, resourceRequest,
 						resourceResponse, _getTimeRange(resourceRequest))));
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 
 			JSONPortletResponseUtil.writeJSON(
 				resourceRequest, resourceResponse,
@@ -163,95 +163,179 @@ public class GetDataMVCResourceCommand extends BaseMVCResourceCommand {
 		}
 	}
 
+	private JSONObject _getAnalyticsDataJSONObject(Layout layout) {
+		return JSONUtil.put(
+			"cloudTrialURL", AnalyticsReportsUtil.ANALYTICS_CLOUD_TRIAL_URL
+		).put(
+			"hasValidConnection",
+			() -> {
+				AnalyticsReportsDataProvider analyticsReportsDataProvider =
+					new AnalyticsReportsDataProvider(_http);
+
+				return analyticsReportsDataProvider.isValidAnalyticsConnection(
+					layout.getCompanyId());
+			}
+		).put(
+			"isSynced",
+			() -> AnalyticsReportsUtil.isAnalyticsSynced(
+				layout.getCompanyId(), layout.getGroupId())
+		).put(
+			"url",
+			() -> PrefsPropsUtil.getString(
+				layout.getCompanyId(), "liferayAnalyticsURL")
+		);
+	}
+
 	private JSONObject _getAuthorJSONObject(
 		AnalyticsReportsInfoItem<Object> analyticsReportsInfoItem,
-		InfoItemFieldValuesProvider<Object> infoItemFieldValuesProvider,
 		Locale locale, Object object) {
 
-		String authorProfileImage = null;
+		return Optional.ofNullable(
+			analyticsReportsInfoItem.getAuthorWebImage(object, locale)
+		).filter(
+			webImage -> Validator.isNotNull(webImage.getUrl())
+		).map(
+			webImage -> {
+				long portraitId = GetterUtil.getLong(
+					HttpComponentsUtil.getParameter(
+						HtmlUtil.escape(webImage.getUrl()), "img_id"));
 
-		InfoItemFieldValues infoItemFieldValues =
-			infoItemFieldValuesProvider.getInfoItemFieldValues(object);
+				if (portraitId > 0) {
+					return JSONUtil.put(
+						"authorId",
+						analyticsReportsInfoItem.getAuthorUserId(object)
+					).put(
+						"name", analyticsReportsInfoItem.getAuthorName(object)
+					).put(
+						"url", webImage.getUrl()
+					);
+				}
 
-		InfoFieldValue<Object> authorProfileImageInfoFieldValue =
-			infoItemFieldValues.getInfoFieldValue("authorProfileImage");
+				return JSONUtil.put(
+					"authorId", analyticsReportsInfoItem.getAuthorUserId(object)
+				).put(
+					"name", analyticsReportsInfoItem.getAuthorName(object)
+				);
+			}
+		).orElse(
+			null
+		);
+	}
 
-		WebImage webImage = (WebImage)authorProfileImageInfoFieldValue.getValue(
-			locale);
+	private String _getClassName(HttpServletRequest httpServletRequest) {
+		String className = ParamUtil.getString(httpServletRequest, "className");
 
-		long portraitId = GetterUtil.getLong(
-			_http.getParameter(HtmlUtil.escape(webImage.getUrl()), "img_id"));
-
-		if (portraitId > 0) {
-			authorProfileImage = webImage.getUrl();
+		if (Validator.isNull(className)) {
+			return Layout.class.getName();
 		}
 
-		return JSONUtil.put(
-			"authorId", analyticsReportsInfoItem.getAuthorUserId(object)
-		).put(
-			"name", webImage.getAlt()
-		).put(
-			"url", authorProfileImage
+		return className;
+	}
+
+	private long _getClassPK(HttpServletRequest httpServletRequest) {
+		long classPK = ParamUtil.getLong(httpServletRequest, "classPK");
+
+		if (classPK == 0) {
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)httpServletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
+
+			return themeDisplay.getPlid();
+		}
+
+		return classPK;
+	}
+
+	private String _getClassTypeName(HttpServletRequest httpServletRequest) {
+		return ParamUtil.getString(httpServletRequest, "classTypeName");
+	}
+
+	private JSONObject _getEndpointsJSONObject(
+		AnalyticsReportsInfoItem<Object> analyticsReportsInfoItem,
+		String canonicalURL, Locale locale, ResourceRequest resourceRequest,
+		ResourceResponse resourceResponse) {
+
+		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
+
+		Optional.ofNullable(
+			analyticsReportsInfoItem.getActions()
+		).orElseGet(
+			Collections::emptyList
+		).stream(
+		).map(
+			_objectValuePairs::get
+		).forEach(
+			objectValuePair -> jsonObject.put(
+				objectValuePair.getKey(),
+				_getResourceURL(
+					canonicalURL, locale, resourceRequest, resourceResponse,
+					objectValuePair.getValue()))
+		);
+
+		return jsonObject;
+	}
+
+	private InfoItemReference _getInfoItemReference(
+		HttpServletRequest httpServletRequest) {
+
+		return Optional.ofNullable(
+			_getClassTypeName(httpServletRequest)
+		).filter(
+			Validator::isNotNull
+		).map(
+			classTypeName -> new InfoItemReference(
+				_getClassName(httpServletRequest),
+				new ClassNameClassPKInfoItemIdentifier(
+					classTypeName, _getClassPK(httpServletRequest)))
+		).orElseGet(
+			() -> new InfoItemReference(
+				_getClassName(httpServletRequest),
+				_getClassPK(httpServletRequest))
 		);
 	}
 
 	private JSONObject _getJSONObject(
 		AnalyticsReportsInfoItem<Object> analyticsReportsInfoItem,
-		String canonicalURL, long companyId,
-		InfoItemFieldValuesProvider<Object> infoItemFieldValuesProvider,
-		LayoutDisplayPageObjectProvider<Object> layoutDisplayPageObjectProvider,
-		Layout layout, Locale locale, Locale urlLocale, Object object,
+		InfoItemReference infoItemReference, Layout layout,
+		String layoutFriendlyURL, Locale locale, Locale urlLocale,
+		Object object, ResourceRequest resourceRequest,
 		ResourceResponse resourceResponse, TimeRange timeRange) {
 
-		AnalyticsReportsDataProvider analyticsReportsDataProvider =
-			new AnalyticsReportsDataProvider(_http);
-
+		String canonicalURL = analyticsReportsInfoItem.getCanonicalURL(
+			object, urlLocale);
 		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
 			locale, getClass());
 
 		return JSONUtil.put(
+			"analyticsData", _getAnalyticsDataJSONObject(layout)
+		).put(
 			"author",
-			_getAuthorJSONObject(
-				analyticsReportsInfoItem, infoItemFieldValuesProvider, locale,
-				object)
+			_getAuthorJSONObject(analyticsReportsInfoItem, locale, object)
 		).put(
 			"canonicalURL", canonicalURL
 		).put(
 			"endpoints",
-			JSONUtil.put(
-				"analyticsReportsHistoricalReadsURL",
-				String.valueOf(
-					_getResourceURL(
-						layoutDisplayPageObjectProvider, urlLocale,
-						resourceResponse,
-						"/analytics_reports/get_historical_reads"))
-			).put(
-				"analyticsReportsHistoricalViewsURL",
-				String.valueOf(
-					_getResourceURL(
-						layoutDisplayPageObjectProvider, urlLocale,
-						resourceResponse,
-						"/analytics_reports/get_historical_views"))
-			).put(
-				"analyticsReportsTotalReadsURL",
-				String.valueOf(
-					_getResourceURL(
-						layoutDisplayPageObjectProvider, urlLocale,
-						resourceResponse, "/analytics_reports/get_total_reads"))
-			).put(
-				"analyticsReportsTotalViewsURL",
-				String.valueOf(
-					_getResourceURL(
-						layoutDisplayPageObjectProvider, urlLocale,
-						resourceResponse, "/analytics_reports/get_total_views"))
-			).put(
-				"analyticsReportsTrafficSourcesURL",
-				String.valueOf(
-					_getResourceURL(
-						layoutDisplayPageObjectProvider, urlLocale,
-						resourceResponse,
-						"/analytics_reports/get_traffic_sources"))
-			)
+			_getEndpointsJSONObject(
+				analyticsReportsInfoItem, canonicalURL, urlLocale,
+				resourceRequest, resourceResponse)
+		).put(
+			"hideAnalyticsReportsPanelURL",
+			PortletURLBuilder.createActionURL(
+				resourceResponse
+			).setActionName(
+				"/analytics_reports/hide_panel"
+			).setRedirect(
+				() -> {
+					String redirect = ParamUtil.getString(
+						resourceRequest, "redirect");
+
+					if (Validator.isNotNull(redirect)) {
+						return redirect;
+					}
+
+					return layoutFriendlyURL;
+				}
+			).buildString()
 		).put(
 			"languageTag", locale.toLanguageTag()
 		).put(
@@ -260,6 +344,8 @@ public class GetDataMVCResourceCommand extends BaseMVCResourceCommand {
 				AnalyticsReportsPortletKeys.ANALYTICS_REPORTS)
 		).put(
 			"page", JSONUtil.put("plid", layout.getPlid())
+		).put(
+			"pathToAssets", _portal.getPathContext(resourceRequest)
 		).put(
 			"publishDate",
 			DateTimeFormatter.ISO_DATE.format(
@@ -278,15 +364,12 @@ public class GetDataMVCResourceCommand extends BaseMVCResourceCommand {
 		).put(
 			"timeSpans", _getTimeSpansJSONArray(resourceBundle)
 		).put(
-			"title", layoutDisplayPageObjectProvider.getTitle(urlLocale)
-		).put(
-			"validAnalyticsConnection",
-			analyticsReportsDataProvider.isValidAnalyticsConnection(companyId)
+			"title", analyticsReportsInfoItem.getTitle(object, urlLocale)
 		).put(
 			"viewURLs",
 			_getViewURLsJSONArray(
-				analyticsReportsInfoItem, layoutDisplayPageObjectProvider,
-				object, resourceResponse, urlLocale)
+				analyticsReportsInfoItem, infoItemReference, locale, object,
+				resourceRequest, resourceResponse, urlLocale)
 		);
 	}
 
@@ -298,18 +381,77 @@ public class GetDataMVCResourceCommand extends BaseMVCResourceCommand {
 	}
 
 	private ResourceURL _getResourceURL(
-		LayoutDisplayPageObjectProvider<Object> layoutDisplayPageObjectProvider,
-		Locale locale, ResourceResponse resourceResponse, String resourceID) {
+		InfoItemReference infoItemReference, Locale locale,
+		ResourceRequest resourceRequest, ResourceResponse resourceResponse,
+		String resourceID) {
 
-		ResourceURL resourceURL = resourceResponse.createResourceURL();
+		LiferayPortletRequest liferayPortletRequest =
+			_portal.getLiferayPortletRequest(resourceRequest);
 
-		resourceURL.setParameter(
-			"classNameId",
-			String.valueOf(layoutDisplayPageObjectProvider.getClassNameId()));
-		resourceURL.setParameter(
-			"classPK",
-			String.valueOf(layoutDisplayPageObjectProvider.getClassPK()));
-		resourceURL.setParameter("languageId", LocaleUtil.toLanguageId(locale));
+		ResourceURL resourceURL =
+			(ResourceURL)PortletURLBuilder.createLiferayPortletURL(
+				_portal.getLiferayPortletResponse(resourceResponse),
+				liferayPortletRequest.getPlid(),
+				liferayPortletRequest.getPortletName(),
+				PortletRequest.RESOURCE_PHASE, MimeResponse.Copy.PUBLIC
+			).setParameter(
+				"className", infoItemReference.getClassName()
+			).setParameter(
+				"languageId", LocaleUtil.toLanguageId(locale)
+			).buildPortletURL();
+
+		if (infoItemReference.getInfoItemIdentifier() instanceof
+				ClassNameClassPKInfoItemIdentifier) {
+
+			ClassNameClassPKInfoItemIdentifier
+				classNameClassPKInfoItemIdentifier =
+					(ClassNameClassPKInfoItemIdentifier)
+						infoItemReference.getInfoItemIdentifier();
+
+			resourceURL.setParameter(
+				"classPK",
+				String.valueOf(
+					classNameClassPKInfoItemIdentifier.getClassPK()));
+			resourceURL.setParameter(
+				"classTypeName",
+				classNameClassPKInfoItemIdentifier.getClassName());
+		}
+		else if (infoItemReference.getInfoItemIdentifier() instanceof
+					ClassPKInfoItemIdentifier) {
+
+			ClassPKInfoItemIdentifier classPKInfoItemIdentifier =
+				(ClassPKInfoItemIdentifier)
+					infoItemReference.getInfoItemIdentifier();
+
+			resourceURL.setParameter(
+				"classPK",
+				String.valueOf(classPKInfoItemIdentifier.getClassPK()));
+		}
+
+		resourceURL.setResourceID(resourceID);
+
+		return resourceURL;
+	}
+
+	private ResourceURL _getResourceURL(
+		String canonicalURL, Locale locale, ResourceRequest resourceRequest,
+		ResourceResponse resourceResponse, String resourceID) {
+
+		LiferayPortletRequest liferayPortletRequest =
+			_portal.getLiferayPortletRequest(resourceRequest);
+
+		ResourceURL resourceURL =
+			(ResourceURL)PortletURLBuilder.createLiferayPortletURL(
+				_portal.getLiferayPortletResponse(resourceResponse),
+				liferayPortletRequest.getPlid(),
+				liferayPortletRequest.getPortletName(),
+				PortletRequest.RESOURCE_PHASE, MimeResponse.Copy.PUBLIC
+			).setParameter(
+				"canonicalURL", canonicalURL
+			).setParameter(
+				"languageId", LocaleUtil.toLanguageId(locale)
+			).buildPortletURL();
+
 		resourceURL.setResourceID(resourceID);
 
 		return resourceURL;
@@ -361,8 +503,9 @@ public class GetDataMVCResourceCommand extends BaseMVCResourceCommand {
 
 	private JSONArray _getViewURLsJSONArray(
 		AnalyticsReportsInfoItem<Object> analyticsReportsInfoItem,
-		LayoutDisplayPageObjectProvider<Object> layoutDisplayPageObjectProvider,
-		Object object, ResourceResponse resourceResponse, Locale urlLocale) {
+		InfoItemReference infoItemReference, Locale locale, Object object,
+		ResourceRequest resourceRequest, ResourceResponse resourceResponse,
+		Locale urlLocale) {
 
 		List<Locale> locales = analyticsReportsInfoItem.getAvailableLocales(
 			object);
@@ -370,20 +513,53 @@ public class GetDataMVCResourceCommand extends BaseMVCResourceCommand {
 		Stream<Locale> stream = locales.stream();
 
 		return JSONUtil.putAll(
-			stream.map(
-				locale -> JSONUtil.put(
+			stream.sorted(
+				(locale1, locale2) -> {
+					if (Objects.equals(
+							locale1,
+							analyticsReportsInfoItem.getDefaultLocale(
+								object))) {
+
+						return -1;
+					}
+
+					if (Objects.equals(
+							locale2,
+							analyticsReportsInfoItem.getDefaultLocale(
+								object))) {
+
+						return 1;
+					}
+
+					String displayLanguage1 = locale1.getDisplayLanguage(
+						locale);
+					String displayLanguage2 = locale2.getDisplayLanguage(
+						locale);
+
+					return displayLanguage1.compareToIgnoreCase(
+						displayLanguage2);
+				}
+			).map(
+				currentLocale -> JSONUtil.put(
 					"default",
 					Objects.equals(
-						locale,
+						currentLocale,
 						analyticsReportsInfoItem.getDefaultLocale(object))
 				).put(
-					"languageId", LocaleUtil.toBCP47LanguageId(locale)
+					"languageId", LocaleUtil.toW3cLanguageId(currentLocale)
 				).put(
-					"selected", Objects.equals(locale, urlLocale)
+					"languageLabel",
+					StringBundler.concat(
+						currentLocale.getDisplayLanguage(locale),
+						StringPool.SPACE, StringPool.OPEN_PARENTHESIS,
+						currentLocale.getDisplayCountry(locale),
+						StringPool.CLOSE_PARENTHESIS)
+				).put(
+					"selected", Objects.equals(currentLocale, urlLocale)
 				).put(
 					"viewURL",
 					_getResourceURL(
-						layoutDisplayPageObjectProvider, locale,
+						infoItemReference, currentLocale, resourceRequest,
 						resourceResponse, "/analytics_reports/get_data")
 				)
 			).toArray());
@@ -400,6 +576,46 @@ public class GetDataMVCResourceCommand extends BaseMVCResourceCommand {
 	private static final Log _log = LogFactoryUtil.getLog(
 		GetDataMVCResourceCommand.class);
 
+	private static final Map
+		<AnalyticsReportsInfoItem.Action, ObjectValuePair<String, String>>
+			_objectValuePairs =
+				HashMapBuilder.
+					<AnalyticsReportsInfoItem.Action,
+					 ObjectValuePair<String, String>>put(
+						AnalyticsReportsInfoItem.Action.HISTORICAL_READS,
+						new ObjectValuePair<>(
+							"analyticsReportsHistoricalReadsURL",
+							"/analytics_reports/get_historical_reads")
+					).put(
+						AnalyticsReportsInfoItem.Action.HISTORICAL_VIEWS,
+						new ObjectValuePair<>(
+							"analyticsReportsHistoricalViewsURL",
+							"/analytics_reports/get_historical_views")
+					).put(
+						AnalyticsReportsInfoItem.Action.TOTAL_READS,
+						new ObjectValuePair<>(
+							"analyticsReportsTotalReadsURL",
+							"/analytics_reports/get_total_reads")
+					).put(
+						AnalyticsReportsInfoItem.Action.TOTAL_VIEWS,
+						new ObjectValuePair<>(
+							"analyticsReportsTotalViewsURL",
+							"/analytics_reports/get_total_views")
+					).put(
+						AnalyticsReportsInfoItem.Action.TRAFFIC_CHANNELS,
+						new ObjectValuePair<>(
+							"analyticsReportsTrafficSourcesURL",
+							"/analytics_reports/get_traffic_sources")
+					).build();
+
+	@Reference
+	private AnalyticsReportsInfoItemObjectProvider
+		_analyticsReportsInfoItemObjectProvider;
+
+	@Reference
+	private AnalyticsReportsInfoItemObjectProviderTracker
+		_analyticsReportsInfoItemObjectProviderTracker;
+
 	@Reference
 	private AnalyticsReportsInfoItemTracker _analyticsReportsInfoItemTracker;
 
@@ -411,12 +627,6 @@ public class GetDataMVCResourceCommand extends BaseMVCResourceCommand {
 
 	@Reference
 	private Language _language;
-
-	@Reference
-	private LayoutDisplayPageProviderTracker _layoutDisplayPageProviderTracker;
-
-	@Reference
-	private LayoutSEOLinkManager _layoutSEOLinkManager;
 
 	@Reference
 	private Portal _portal;

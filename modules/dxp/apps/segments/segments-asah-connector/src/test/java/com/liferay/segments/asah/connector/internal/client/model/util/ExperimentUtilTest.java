@@ -19,13 +19,12 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.segments.asah.connector.internal.client.model.Experiment;
 import com.liferay.segments.asah.connector.internal.client.model.ExperimentStatus;
 import com.liferay.segments.asah.connector.internal.client.model.ExperimentType;
 import com.liferay.segments.asah.connector.internal.client.model.Goal;
 import com.liferay.segments.asah.connector.internal.client.model.GoalMetric;
-import com.liferay.segments.constants.SegmentsEntryConstants;
-import com.liferay.segments.constants.SegmentsExperienceConstants;
 import com.liferay.segments.constants.SegmentsExperimentConstants;
 import com.liferay.segments.model.SegmentsEntry;
 import com.liferay.segments.model.SegmentsExperience;
@@ -36,90 +35,24 @@ import com.liferay.segments.service.SegmentsExperienceLocalService;
 import java.util.Locale;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
 
 /**
  * @author David Arques
  */
-@RunWith(MockitoJUnitRunner.class)
 public class ExperimentUtilTest {
 
-	@Test
-	public void testToExperimentWithSegmentsExperimentWithDefaultExperience()
-		throws PortalException {
-
-		Locale locale = LocaleUtil.ENGLISH;
-
-		Layout layout = _createLayout(locale);
-
-		SegmentsExperiment segmentsExperiment = _createSegmentsExperiment(
-			SegmentsExperienceConstants.ID_DEFAULT,
-			SegmentsExperimentConstants.Goal.BOUNCE_RATE.getLabel(),
-			SegmentsExperimentConstants.STATUS_DRAFT);
-
-		String channelId = RandomTestUtil.randomString();
-		String dataSourceId = RandomTestUtil.randomString();
-		String defaultSegmentsEntryName = RandomTestUtil.randomString();
-		String defaultSegmentsExperienceName = RandomTestUtil.randomString();
-		String pageURL = RandomTestUtil.randomString();
-
-		Experiment experiment = ExperimentUtil.toExperiment(
-			channelId, dataSourceId, defaultSegmentsEntryName,
-			defaultSegmentsExperienceName, layout, locale, pageURL,
-			_segmentsEntryLocalService, _segmentsExperienceLocalService,
-			segmentsExperiment);
-
-		Assert.assertEquals(channelId, experiment.getChannelId());
-		Assert.assertEquals(
-			segmentsExperiment.getCreateDate(), experiment.getCreateDate());
-		Assert.assertEquals(dataSourceId, experiment.getDataSourceId());
-		Assert.assertEquals(
-			segmentsExperiment.getDescription(), experiment.getDescription());
-		Assert.assertEquals(
-			SegmentsExperienceConstants.KEY_DEFAULT,
-			experiment.getDXPExperienceId());
-		Assert.assertEquals(
-			defaultSegmentsExperienceName, experiment.getDXPExperienceName());
-		Assert.assertEquals(
-			(Long)layout.getGroupId(), experiment.getDXPGroupId());
-		Assert.assertEquals(layout.getUuid(), experiment.getDXPLayoutId());
-		Assert.assertEquals(
-			SegmentsEntryConstants.KEY_DEFAULT, experiment.getDXPSegmentId());
-		Assert.assertEquals(
-			defaultSegmentsEntryName, experiment.getDXPSegmentName());
-		Assert.assertEquals(
-			ExperimentStatus.DRAFT, experiment.getExperimentStatus());
-		Assert.assertEquals(ExperimentType.AB, experiment.getExperimentType());
-
-		Goal goal = experiment.getGoal();
-
-		GoalMetric goalMetric = goal.getGoalMetric();
-
-		Assert.assertEquals(
-			SegmentsExperimentConstants.Goal.BOUNCE_RATE.name(),
-			goalMetric.name());
-
-		Assert.assertEquals(
-			segmentsExperiment.getSegmentsExperimentKey(), experiment.getId());
-		Assert.assertEquals(
-			segmentsExperiment.getModifiedDate(), experiment.getModifiedDate());
-		Assert.assertEquals(segmentsExperiment.getName(), experiment.getName());
-		Assert.assertEquals(
-			layout.getFriendlyURL(), experiment.getPageRelativePath());
-		Assert.assertEquals(layout.getTitle(locale), experiment.getPageTitle());
-		Assert.assertEquals(pageURL, experiment.getPageURL());
-		Assert.assertNull(experiment.getPublishedDXPVariantId());
-	}
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Test
-	public void testToExperimentWithSegmentsExperimentWithNondefaultExperience()
-		throws PortalException {
-
+	public void testToExperiment() throws PortalException {
 		Locale locale = LocaleUtil.ENGLISH;
 
 		Layout layout = _createLayout(locale);
@@ -156,10 +89,9 @@ public class ExperimentUtilTest {
 		String pageURL = RandomTestUtil.randomString();
 
 		Experiment experiment = ExperimentUtil.toExperiment(
-			channelId, dataSourceId, RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), layout, LocaleUtil.ENGLISH, pageURL,
-			_segmentsEntryLocalService, _segmentsExperienceLocalService,
-			segmentsExperiment);
+			channelId, dataSourceId, RandomTestUtil.randomString(), layout,
+			LocaleUtil.ENGLISH, pageURL, _segmentsEntryLocalService,
+			_segmentsExperienceLocalService, segmentsExperiment);
 
 		Assert.assertEquals(channelId, experiment.getChannelId());
 		Assert.assertEquals(
@@ -244,10 +176,9 @@ public class ExperimentUtilTest {
 		String pageURL = RandomTestUtil.randomString();
 
 		Experiment experiment = ExperimentUtil.toExperiment(
-			channelId, dataSourceId, RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), layout, LocaleUtil.ENGLISH, pageURL,
-			_segmentsEntryLocalService, _segmentsExperienceLocalService,
-			segmentsExperiment);
+			channelId, dataSourceId, RandomTestUtil.randomString(), layout,
+			LocaleUtil.ENGLISH, pageURL, _segmentsEntryLocalService,
+			_segmentsExperienceLocalService, segmentsExperiment);
 
 		Assert.assertEquals(channelId, experiment.getChannelId());
 		Assert.assertEquals(
@@ -450,10 +381,10 @@ public class ExperimentUtilTest {
 		return segmentsExperiment;
 	}
 
-	@Mock
-	private SegmentsEntryLocalService _segmentsEntryLocalService;
-
-	@Mock
-	private SegmentsExperienceLocalService _segmentsExperienceLocalService;
+	private final SegmentsEntryLocalService _segmentsEntryLocalService =
+		Mockito.mock(SegmentsEntryLocalService.class);
+	private final SegmentsExperienceLocalService
+		_segmentsExperienceLocalService = Mockito.mock(
+			SegmentsExperienceLocalService.class);
 
 }

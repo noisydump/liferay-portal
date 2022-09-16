@@ -53,12 +53,12 @@ public class DDMFormInstanceRecordJSONWriter
 		Stream<Map<String, String>> stream = ddmFormFieldsValueList.stream();
 
 		stream.map(
-			this::createJSONObject
+			this::_createJSONObject
 		).forEach(
 			jsonArray::put
 		);
 
-		String json = jsonArray.toJSONString();
+		String json = jsonArray.toString();
 
 		DDMFormInstanceRecordWriterResponse.Builder builder =
 			DDMFormInstanceRecordWriterResponse.Builder.newBuilder(
@@ -67,7 +67,10 @@ public class DDMFormInstanceRecordJSONWriter
 		return builder.build();
 	}
 
-	protected JSONObject createJSONObject(
+	@Reference
+	protected JSONFactory jsonFactory;
+
+	private JSONObject _createJSONObject(
 		Map<String, String> ddmFormFieldsValue) {
 
 		Set<Map.Entry<String, String>> entrySet = ddmFormFieldsValue.entrySet();
@@ -81,8 +84,5 @@ public class DDMFormInstanceRecordJSONWriter
 
 		return jsonObject;
 	}
-
-	@Reference
-	protected JSONFactory jsonFactory;
 
 }

@@ -94,16 +94,13 @@ public class MetaTagsTag extends IncludeTag {
 
 		String metaRobots = layout.getRobots(
 			themeDisplay.getLanguageId(), false);
-		String metaRobotsLanguageId = w3cCurrentLanguageId;
 
 		if (Validator.isNull(metaRobots)) {
 			metaRobots = layout.getRobots(defaultLanguageId);
-			metaRobotsLanguageId = w3cDefaultLanguageId;
 		}
 
 		if (Validator.isNotNull(metaRobots)) {
-			_writeMeta(
-				HtmlUtil.escape(metaRobots), metaRobotsLanguageId, "robots");
+			_writeMeta(HtmlUtil.escape(metaRobots), StringPool.BLANK, "robots");
 		}
 
 		String metaDescription = layout.getDescription(
@@ -121,16 +118,10 @@ public class MetaTagsTag extends IncludeTag {
 
 		if (pageDescriptionListMergeable != null) {
 			if (Validator.isNotNull(metaDescription)) {
-				StringBundler sb = new StringBundler(4);
-
-				sb.append(
+				metaDescription = StringBundler.concat(
 					pageDescriptionListMergeable.mergeToString(
-						StringPool.SPACE));
-				sb.append(StringPool.PERIOD);
-				sb.append(StringPool.SPACE);
-				sb.append(metaDescription);
-
-				metaDescription = sb.toString();
+						StringPool.SPACE),
+					StringPool.PERIOD, StringPool.SPACE, metaDescription);
 			}
 			else {
 				metaDescription = pageDescriptionListMergeable.mergeToString(
@@ -164,14 +155,9 @@ public class MetaTagsTag extends IncludeTag {
 			if (Validator.isNotNull(pageKeywords) &&
 				Validator.isNotNull(metaKeywords)) {
 
-				StringBundler sb = new StringBundler(4);
-
-				sb.append(pageKeywords);
-				sb.append(StringPool.COMMA);
-				sb.append(StringPool.SPACE);
-				sb.append(metaKeywords);
-
-				metaKeywords = sb.toString();
+				metaKeywords = StringBundler.concat(
+					pageKeywords, StringPool.COMMA, StringPool.SPACE,
+					metaKeywords);
 			}
 			else if (Validator.isNull(metaKeywords)) {
 				metaKeywords = pageKeywords;
@@ -194,8 +180,12 @@ public class MetaTagsTag extends IncludeTag {
 
 		jspWriter.write("<meta content=\"");
 		jspWriter.write(content);
-		jspWriter.write("\" lang=\"");
-		jspWriter.write(lang);
+
+		if (!lang.equals("")) {
+			jspWriter.write("\" lang=\"");
+			jspWriter.write(lang);
+		}
+
 		jspWriter.write("\" name=\"");
 		jspWriter.write(name);
 		jspWriter.write("\" />");

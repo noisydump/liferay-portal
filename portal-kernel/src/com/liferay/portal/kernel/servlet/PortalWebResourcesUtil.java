@@ -14,17 +14,22 @@
 
 package com.liferay.portal.kernel.servlet;
 
+import com.liferay.osgi.service.tracker.collections.map.ServiceReferenceMapperFactory;
+import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
+import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.registry.collections.ServiceReferenceMapperFactory;
-import com.liferay.registry.collections.ServiceTrackerCollections;
-import com.liferay.registry.collections.ServiceTrackerMap;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 
 import javax.servlet.ServletContext;
+
+import org.osgi.framework.BundleContext;
 
 /**
  * @author Peter Fellwock
@@ -128,6 +133,9 @@ public class PortalWebResourcesUtil {
 			}
 		}
 		catch (MalformedURLException malformedURLException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(malformedURLException);
+			}
 		}
 
 		return null;
@@ -182,18 +190,25 @@ public class PortalWebResourcesUtil {
 		return path;
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		PortalWebResourcesUtil.class);
+
+	private static final BundleContext _bundleContext =
+		SystemBundleUtil.getBundleContext();
 	private static final ServiceTrackerMap<String, PortalWebResources>
 		_contextPathServiceTrackerMap =
-			ServiceTrackerCollections.openSingleValueMap(
-				PortalWebResources.class, null,
+			ServiceTrackerMapFactory.openSingleValueMap(
+				_bundleContext, PortalWebResources.class, null,
 				ServiceReferenceMapperFactory.create(
+					_bundleContext,
 					(portalWebResources, emitter) -> emitter.emit(
 						portalWebResources.getContextPath())));
 	private static final ServiceTrackerMap<String, PortalWebResources>
 		_resourceTypeServiceTrackerMap =
-			ServiceTrackerCollections.openSingleValueMap(
-				PortalWebResources.class, null,
+			ServiceTrackerMapFactory.openSingleValueMap(
+				_bundleContext, PortalWebResources.class, null,
 				ServiceReferenceMapperFactory.create(
+					_bundleContext,
 					(portalWebResources, emitter) -> emitter.emit(
 						portalWebResources.getResourceType())));
 

@@ -18,29 +18,27 @@ import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.expando.kernel.util.ExpandoBridgeFactoryUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.bean.AutoEscapeBeanHandler;
-import com.liferay.portal.kernel.json.JSON;
 import com.liferay.portal.kernel.model.CacheModel;
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.impl.BaseModelImpl;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.tools.service.builder.test.model.ManyColumnsEntry;
 import com.liferay.portal.tools.service.builder.test.model.ManyColumnsEntryModel;
-import com.liferay.portal.tools.service.builder.test.model.ManyColumnsEntrySoap;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
-import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -56,7 +54,6 @@ import java.util.function.Function;
  * @see ManyColumnsEntryImpl
  * @generated
  */
-@JSON(strict = true)
 public class ManyColumnsEntryModelImpl
 	extends BaseModelImpl<ManyColumnsEntry> implements ManyColumnsEntryModel {
 
@@ -209,115 +206,6 @@ public class ManyColumnsEntryModelImpl
 	@Deprecated
 	public static final boolean COLUMN_BITMASK_ENABLED = false;
 
-	/**
-	 * Converts the soap model instance into a normal model instance.
-	 *
-	 * @param soapModel the soap model instance to convert
-	 * @return the normal model instance
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static ManyColumnsEntry toModel(ManyColumnsEntrySoap soapModel) {
-		if (soapModel == null) {
-			return null;
-		}
-
-		ManyColumnsEntry model = new ManyColumnsEntryImpl();
-
-		model.setManyColumnsEntryId(soapModel.getManyColumnsEntryId());
-		model.setColumn1(soapModel.getColumn1());
-		model.setColumn2(soapModel.getColumn2());
-		model.setColumn3(soapModel.getColumn3());
-		model.setColumn4(soapModel.getColumn4());
-		model.setColumn5(soapModel.getColumn5());
-		model.setColumn6(soapModel.getColumn6());
-		model.setColumn7(soapModel.getColumn7());
-		model.setColumn8(soapModel.getColumn8());
-		model.setColumn9(soapModel.getColumn9());
-		model.setColumn10(soapModel.getColumn10());
-		model.setColumn11(soapModel.getColumn11());
-		model.setColumn12(soapModel.getColumn12());
-		model.setColumn13(soapModel.getColumn13());
-		model.setColumn14(soapModel.getColumn14());
-		model.setColumn15(soapModel.getColumn15());
-		model.setColumn16(soapModel.getColumn16());
-		model.setColumn17(soapModel.getColumn17());
-		model.setColumn18(soapModel.getColumn18());
-		model.setColumn19(soapModel.getColumn19());
-		model.setColumn20(soapModel.getColumn20());
-		model.setColumn21(soapModel.getColumn21());
-		model.setColumn22(soapModel.getColumn22());
-		model.setColumn23(soapModel.getColumn23());
-		model.setColumn24(soapModel.getColumn24());
-		model.setColumn25(soapModel.getColumn25());
-		model.setColumn26(soapModel.getColumn26());
-		model.setColumn27(soapModel.getColumn27());
-		model.setColumn28(soapModel.getColumn28());
-		model.setColumn29(soapModel.getColumn29());
-		model.setColumn30(soapModel.getColumn30());
-		model.setColumn31(soapModel.getColumn31());
-		model.setColumn32(soapModel.getColumn32());
-		model.setColumn33(soapModel.getColumn33());
-		model.setColumn34(soapModel.getColumn34());
-		model.setColumn35(soapModel.getColumn35());
-		model.setColumn36(soapModel.getColumn36());
-		model.setColumn37(soapModel.getColumn37());
-		model.setColumn38(soapModel.getColumn38());
-		model.setColumn39(soapModel.getColumn39());
-		model.setColumn40(soapModel.getColumn40());
-		model.setColumn41(soapModel.getColumn41());
-		model.setColumn42(soapModel.getColumn42());
-		model.setColumn43(soapModel.getColumn43());
-		model.setColumn44(soapModel.getColumn44());
-		model.setColumn45(soapModel.getColumn45());
-		model.setColumn46(soapModel.getColumn46());
-		model.setColumn47(soapModel.getColumn47());
-		model.setColumn48(soapModel.getColumn48());
-		model.setColumn49(soapModel.getColumn49());
-		model.setColumn50(soapModel.getColumn50());
-		model.setColumn51(soapModel.getColumn51());
-		model.setColumn52(soapModel.getColumn52());
-		model.setColumn53(soapModel.getColumn53());
-		model.setColumn54(soapModel.getColumn54());
-		model.setColumn55(soapModel.getColumn55());
-		model.setColumn56(soapModel.getColumn56());
-		model.setColumn57(soapModel.getColumn57());
-		model.setColumn58(soapModel.getColumn58());
-		model.setColumn59(soapModel.getColumn59());
-		model.setColumn60(soapModel.getColumn60());
-		model.setColumn61(soapModel.getColumn61());
-		model.setColumn62(soapModel.getColumn62());
-		model.setColumn63(soapModel.getColumn63());
-		model.setColumn64(soapModel.getColumn64());
-
-		return model;
-	}
-
-	/**
-	 * Converts the soap model instances into normal model instances.
-	 *
-	 * @param soapModels the soap model instances to convert
-	 * @return the normal model instances
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static List<ManyColumnsEntry> toModels(
-		ManyColumnsEntrySoap[] soapModels) {
-
-		if (soapModels == null) {
-			return null;
-		}
-
-		List<ManyColumnsEntry> models = new ArrayList<ManyColumnsEntry>(
-			soapModels.length);
-
-		for (ManyColumnsEntrySoap soapModel : soapModels) {
-			models.add(toModel(soapModel));
-		}
-
-		return models;
-	}
-
 	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(
 		com.liferay.portal.tools.service.builder.test.service.util.ServiceProps.
 			get(
@@ -406,34 +294,6 @@ public class ManyColumnsEntryModelImpl
 		getAttributeSetterBiConsumers() {
 
 		return _attributeSetterBiConsumers;
-	}
-
-	private static Function<InvocationHandler, ManyColumnsEntry>
-		_getProxyProviderFunction() {
-
-		Class<?> proxyClass = ProxyUtil.getProxyClass(
-			ManyColumnsEntry.class.getClassLoader(), ManyColumnsEntry.class,
-			ModelWrapper.class);
-
-		try {
-			Constructor<ManyColumnsEntry> constructor =
-				(Constructor<ManyColumnsEntry>)proxyClass.getConstructor(
-					InvocationHandler.class);
-
-			return invocationHandler -> {
-				try {
-					return constructor.newInstance(invocationHandler);
-				}
-				catch (ReflectiveOperationException
-							reflectiveOperationException) {
-
-					throw new InternalError(reflectiveOperationException);
-				}
-			};
-		}
-		catch (NoSuchMethodException noSuchMethodException) {
-			throw new InternalError(noSuchMethodException);
-		}
 	}
 
 	private static final Map<String, Function<ManyColumnsEntry, Object>>
@@ -782,7 +642,6 @@ public class ManyColumnsEntryModelImpl
 			(Map)attributeSetterBiConsumers);
 	}
 
-	@JSON
 	@Override
 	public long getManyColumnsEntryId() {
 		return _manyColumnsEntryId;
@@ -797,7 +656,6 @@ public class ManyColumnsEntryModelImpl
 		_manyColumnsEntryId = manyColumnsEntryId;
 	}
 
-	@JSON
 	@Override
 	public int getColumn1() {
 		return _column1;
@@ -812,7 +670,6 @@ public class ManyColumnsEntryModelImpl
 		_column1 = column1;
 	}
 
-	@JSON
 	@Override
 	public int getColumn2() {
 		return _column2;
@@ -827,7 +684,6 @@ public class ManyColumnsEntryModelImpl
 		_column2 = column2;
 	}
 
-	@JSON
 	@Override
 	public int getColumn3() {
 		return _column3;
@@ -842,7 +698,6 @@ public class ManyColumnsEntryModelImpl
 		_column3 = column3;
 	}
 
-	@JSON
 	@Override
 	public int getColumn4() {
 		return _column4;
@@ -857,7 +712,6 @@ public class ManyColumnsEntryModelImpl
 		_column4 = column4;
 	}
 
-	@JSON
 	@Override
 	public int getColumn5() {
 		return _column5;
@@ -872,7 +726,6 @@ public class ManyColumnsEntryModelImpl
 		_column5 = column5;
 	}
 
-	@JSON
 	@Override
 	public int getColumn6() {
 		return _column6;
@@ -887,7 +740,6 @@ public class ManyColumnsEntryModelImpl
 		_column6 = column6;
 	}
 
-	@JSON
 	@Override
 	public int getColumn7() {
 		return _column7;
@@ -902,7 +754,6 @@ public class ManyColumnsEntryModelImpl
 		_column7 = column7;
 	}
 
-	@JSON
 	@Override
 	public int getColumn8() {
 		return _column8;
@@ -917,7 +768,6 @@ public class ManyColumnsEntryModelImpl
 		_column8 = column8;
 	}
 
-	@JSON
 	@Override
 	public int getColumn9() {
 		return _column9;
@@ -932,7 +782,6 @@ public class ManyColumnsEntryModelImpl
 		_column9 = column9;
 	}
 
-	@JSON
 	@Override
 	public int getColumn10() {
 		return _column10;
@@ -947,7 +796,6 @@ public class ManyColumnsEntryModelImpl
 		_column10 = column10;
 	}
 
-	@JSON
 	@Override
 	public int getColumn11() {
 		return _column11;
@@ -962,7 +810,6 @@ public class ManyColumnsEntryModelImpl
 		_column11 = column11;
 	}
 
-	@JSON
 	@Override
 	public int getColumn12() {
 		return _column12;
@@ -977,7 +824,6 @@ public class ManyColumnsEntryModelImpl
 		_column12 = column12;
 	}
 
-	@JSON
 	@Override
 	public int getColumn13() {
 		return _column13;
@@ -992,7 +838,6 @@ public class ManyColumnsEntryModelImpl
 		_column13 = column13;
 	}
 
-	@JSON
 	@Override
 	public int getColumn14() {
 		return _column14;
@@ -1007,7 +852,6 @@ public class ManyColumnsEntryModelImpl
 		_column14 = column14;
 	}
 
-	@JSON
 	@Override
 	public int getColumn15() {
 		return _column15;
@@ -1022,7 +866,6 @@ public class ManyColumnsEntryModelImpl
 		_column15 = column15;
 	}
 
-	@JSON
 	@Override
 	public int getColumn16() {
 		return _column16;
@@ -1037,7 +880,6 @@ public class ManyColumnsEntryModelImpl
 		_column16 = column16;
 	}
 
-	@JSON
 	@Override
 	public int getColumn17() {
 		return _column17;
@@ -1052,7 +894,6 @@ public class ManyColumnsEntryModelImpl
 		_column17 = column17;
 	}
 
-	@JSON
 	@Override
 	public int getColumn18() {
 		return _column18;
@@ -1067,7 +908,6 @@ public class ManyColumnsEntryModelImpl
 		_column18 = column18;
 	}
 
-	@JSON
 	@Override
 	public int getColumn19() {
 		return _column19;
@@ -1082,7 +922,6 @@ public class ManyColumnsEntryModelImpl
 		_column19 = column19;
 	}
 
-	@JSON
 	@Override
 	public int getColumn20() {
 		return _column20;
@@ -1097,7 +936,6 @@ public class ManyColumnsEntryModelImpl
 		_column20 = column20;
 	}
 
-	@JSON
 	@Override
 	public int getColumn21() {
 		return _column21;
@@ -1112,7 +950,6 @@ public class ManyColumnsEntryModelImpl
 		_column21 = column21;
 	}
 
-	@JSON
 	@Override
 	public int getColumn22() {
 		return _column22;
@@ -1127,7 +964,6 @@ public class ManyColumnsEntryModelImpl
 		_column22 = column22;
 	}
 
-	@JSON
 	@Override
 	public int getColumn23() {
 		return _column23;
@@ -1142,7 +978,6 @@ public class ManyColumnsEntryModelImpl
 		_column23 = column23;
 	}
 
-	@JSON
 	@Override
 	public int getColumn24() {
 		return _column24;
@@ -1157,7 +992,6 @@ public class ManyColumnsEntryModelImpl
 		_column24 = column24;
 	}
 
-	@JSON
 	@Override
 	public int getColumn25() {
 		return _column25;
@@ -1172,7 +1006,6 @@ public class ManyColumnsEntryModelImpl
 		_column25 = column25;
 	}
 
-	@JSON
 	@Override
 	public int getColumn26() {
 		return _column26;
@@ -1187,7 +1020,6 @@ public class ManyColumnsEntryModelImpl
 		_column26 = column26;
 	}
 
-	@JSON
 	@Override
 	public int getColumn27() {
 		return _column27;
@@ -1202,7 +1034,6 @@ public class ManyColumnsEntryModelImpl
 		_column27 = column27;
 	}
 
-	@JSON
 	@Override
 	public int getColumn28() {
 		return _column28;
@@ -1217,7 +1048,6 @@ public class ManyColumnsEntryModelImpl
 		_column28 = column28;
 	}
 
-	@JSON
 	@Override
 	public int getColumn29() {
 		return _column29;
@@ -1232,7 +1062,6 @@ public class ManyColumnsEntryModelImpl
 		_column29 = column29;
 	}
 
-	@JSON
 	@Override
 	public int getColumn30() {
 		return _column30;
@@ -1247,7 +1076,6 @@ public class ManyColumnsEntryModelImpl
 		_column30 = column30;
 	}
 
-	@JSON
 	@Override
 	public int getColumn31() {
 		return _column31;
@@ -1262,7 +1090,6 @@ public class ManyColumnsEntryModelImpl
 		_column31 = column31;
 	}
 
-	@JSON
 	@Override
 	public int getColumn32() {
 		return _column32;
@@ -1277,7 +1104,6 @@ public class ManyColumnsEntryModelImpl
 		_column32 = column32;
 	}
 
-	@JSON
 	@Override
 	public int getColumn33() {
 		return _column33;
@@ -1292,7 +1118,6 @@ public class ManyColumnsEntryModelImpl
 		_column33 = column33;
 	}
 
-	@JSON
 	@Override
 	public int getColumn34() {
 		return _column34;
@@ -1307,7 +1132,6 @@ public class ManyColumnsEntryModelImpl
 		_column34 = column34;
 	}
 
-	@JSON
 	@Override
 	public int getColumn35() {
 		return _column35;
@@ -1322,7 +1146,6 @@ public class ManyColumnsEntryModelImpl
 		_column35 = column35;
 	}
 
-	@JSON
 	@Override
 	public int getColumn36() {
 		return _column36;
@@ -1337,7 +1160,6 @@ public class ManyColumnsEntryModelImpl
 		_column36 = column36;
 	}
 
-	@JSON
 	@Override
 	public int getColumn37() {
 		return _column37;
@@ -1352,7 +1174,6 @@ public class ManyColumnsEntryModelImpl
 		_column37 = column37;
 	}
 
-	@JSON
 	@Override
 	public int getColumn38() {
 		return _column38;
@@ -1367,7 +1188,6 @@ public class ManyColumnsEntryModelImpl
 		_column38 = column38;
 	}
 
-	@JSON
 	@Override
 	public int getColumn39() {
 		return _column39;
@@ -1382,7 +1202,6 @@ public class ManyColumnsEntryModelImpl
 		_column39 = column39;
 	}
 
-	@JSON
 	@Override
 	public int getColumn40() {
 		return _column40;
@@ -1397,7 +1216,6 @@ public class ManyColumnsEntryModelImpl
 		_column40 = column40;
 	}
 
-	@JSON
 	@Override
 	public int getColumn41() {
 		return _column41;
@@ -1412,7 +1230,6 @@ public class ManyColumnsEntryModelImpl
 		_column41 = column41;
 	}
 
-	@JSON
 	@Override
 	public int getColumn42() {
 		return _column42;
@@ -1427,7 +1244,6 @@ public class ManyColumnsEntryModelImpl
 		_column42 = column42;
 	}
 
-	@JSON
 	@Override
 	public int getColumn43() {
 		return _column43;
@@ -1442,7 +1258,6 @@ public class ManyColumnsEntryModelImpl
 		_column43 = column43;
 	}
 
-	@JSON
 	@Override
 	public int getColumn44() {
 		return _column44;
@@ -1457,7 +1272,6 @@ public class ManyColumnsEntryModelImpl
 		_column44 = column44;
 	}
 
-	@JSON
 	@Override
 	public int getColumn45() {
 		return _column45;
@@ -1472,7 +1286,6 @@ public class ManyColumnsEntryModelImpl
 		_column45 = column45;
 	}
 
-	@JSON
 	@Override
 	public int getColumn46() {
 		return _column46;
@@ -1487,7 +1300,6 @@ public class ManyColumnsEntryModelImpl
 		_column46 = column46;
 	}
 
-	@JSON
 	@Override
 	public int getColumn47() {
 		return _column47;
@@ -1502,7 +1314,6 @@ public class ManyColumnsEntryModelImpl
 		_column47 = column47;
 	}
 
-	@JSON
 	@Override
 	public int getColumn48() {
 		return _column48;
@@ -1517,7 +1328,6 @@ public class ManyColumnsEntryModelImpl
 		_column48 = column48;
 	}
 
-	@JSON
 	@Override
 	public int getColumn49() {
 		return _column49;
@@ -1532,7 +1342,6 @@ public class ManyColumnsEntryModelImpl
 		_column49 = column49;
 	}
 
-	@JSON
 	@Override
 	public int getColumn50() {
 		return _column50;
@@ -1547,7 +1356,6 @@ public class ManyColumnsEntryModelImpl
 		_column50 = column50;
 	}
 
-	@JSON
 	@Override
 	public int getColumn51() {
 		return _column51;
@@ -1562,7 +1370,6 @@ public class ManyColumnsEntryModelImpl
 		_column51 = column51;
 	}
 
-	@JSON
 	@Override
 	public int getColumn52() {
 		return _column52;
@@ -1577,7 +1384,6 @@ public class ManyColumnsEntryModelImpl
 		_column52 = column52;
 	}
 
-	@JSON
 	@Override
 	public int getColumn53() {
 		return _column53;
@@ -1592,7 +1398,6 @@ public class ManyColumnsEntryModelImpl
 		_column53 = column53;
 	}
 
-	@JSON
 	@Override
 	public int getColumn54() {
 		return _column54;
@@ -1607,7 +1412,6 @@ public class ManyColumnsEntryModelImpl
 		_column54 = column54;
 	}
 
-	@JSON
 	@Override
 	public int getColumn55() {
 		return _column55;
@@ -1622,7 +1426,6 @@ public class ManyColumnsEntryModelImpl
 		_column55 = column55;
 	}
 
-	@JSON
 	@Override
 	public int getColumn56() {
 		return _column56;
@@ -1637,7 +1440,6 @@ public class ManyColumnsEntryModelImpl
 		_column56 = column56;
 	}
 
-	@JSON
 	@Override
 	public int getColumn57() {
 		return _column57;
@@ -1652,7 +1454,6 @@ public class ManyColumnsEntryModelImpl
 		_column57 = column57;
 	}
 
-	@JSON
 	@Override
 	public int getColumn58() {
 		return _column58;
@@ -1667,7 +1468,6 @@ public class ManyColumnsEntryModelImpl
 		_column58 = column58;
 	}
 
-	@JSON
 	@Override
 	public int getColumn59() {
 		return _column59;
@@ -1682,7 +1482,6 @@ public class ManyColumnsEntryModelImpl
 		_column59 = column59;
 	}
 
-	@JSON
 	@Override
 	public int getColumn60() {
 		return _column60;
@@ -1697,7 +1496,6 @@ public class ManyColumnsEntryModelImpl
 		_column60 = column60;
 	}
 
-	@JSON
 	@Override
 	public int getColumn61() {
 		return _column61;
@@ -1712,7 +1510,6 @@ public class ManyColumnsEntryModelImpl
 		_column61 = column61;
 	}
 
-	@JSON
 	@Override
 	public int getColumn62() {
 		return _column62;
@@ -1727,7 +1524,6 @@ public class ManyColumnsEntryModelImpl
 		_column62 = column62;
 	}
 
-	@JSON
 	@Override
 	public int getColumn63() {
 		return _column63;
@@ -1742,7 +1538,6 @@ public class ManyColumnsEntryModelImpl
 		_column63 = column63;
 	}
 
-	@JSON
 	@Override
 	public int getColumn64() {
 		return _column64;
@@ -1856,6 +1651,144 @@ public class ManyColumnsEntryModelImpl
 		manyColumnsEntryImpl.setColumn64(getColumn64());
 
 		manyColumnsEntryImpl.resetOriginalValues();
+
+		return manyColumnsEntryImpl;
+	}
+
+	@Override
+	public ManyColumnsEntry cloneWithOriginalValues() {
+		ManyColumnsEntryImpl manyColumnsEntryImpl = new ManyColumnsEntryImpl();
+
+		manyColumnsEntryImpl.setManyColumnsEntryId(
+			this.<Long>getColumnOriginalValue("manyColumnsEntryId"));
+		manyColumnsEntryImpl.setColumn1(
+			this.<Integer>getColumnOriginalValue("column1"));
+		manyColumnsEntryImpl.setColumn2(
+			this.<Integer>getColumnOriginalValue("column2"));
+		manyColumnsEntryImpl.setColumn3(
+			this.<Integer>getColumnOriginalValue("column3"));
+		manyColumnsEntryImpl.setColumn4(
+			this.<Integer>getColumnOriginalValue("column4"));
+		manyColumnsEntryImpl.setColumn5(
+			this.<Integer>getColumnOriginalValue("column5"));
+		manyColumnsEntryImpl.setColumn6(
+			this.<Integer>getColumnOriginalValue("column6"));
+		manyColumnsEntryImpl.setColumn7(
+			this.<Integer>getColumnOriginalValue("column7"));
+		manyColumnsEntryImpl.setColumn8(
+			this.<Integer>getColumnOriginalValue("column8"));
+		manyColumnsEntryImpl.setColumn9(
+			this.<Integer>getColumnOriginalValue("column9"));
+		manyColumnsEntryImpl.setColumn10(
+			this.<Integer>getColumnOriginalValue("column10"));
+		manyColumnsEntryImpl.setColumn11(
+			this.<Integer>getColumnOriginalValue("column11"));
+		manyColumnsEntryImpl.setColumn12(
+			this.<Integer>getColumnOriginalValue("column12"));
+		manyColumnsEntryImpl.setColumn13(
+			this.<Integer>getColumnOriginalValue("column13"));
+		manyColumnsEntryImpl.setColumn14(
+			this.<Integer>getColumnOriginalValue("column14"));
+		manyColumnsEntryImpl.setColumn15(
+			this.<Integer>getColumnOriginalValue("column15"));
+		manyColumnsEntryImpl.setColumn16(
+			this.<Integer>getColumnOriginalValue("column16"));
+		manyColumnsEntryImpl.setColumn17(
+			this.<Integer>getColumnOriginalValue("column17"));
+		manyColumnsEntryImpl.setColumn18(
+			this.<Integer>getColumnOriginalValue("column18"));
+		manyColumnsEntryImpl.setColumn19(
+			this.<Integer>getColumnOriginalValue("column19"));
+		manyColumnsEntryImpl.setColumn20(
+			this.<Integer>getColumnOriginalValue("column20"));
+		manyColumnsEntryImpl.setColumn21(
+			this.<Integer>getColumnOriginalValue("column21"));
+		manyColumnsEntryImpl.setColumn22(
+			this.<Integer>getColumnOriginalValue("column22"));
+		manyColumnsEntryImpl.setColumn23(
+			this.<Integer>getColumnOriginalValue("column23"));
+		manyColumnsEntryImpl.setColumn24(
+			this.<Integer>getColumnOriginalValue("column24"));
+		manyColumnsEntryImpl.setColumn25(
+			this.<Integer>getColumnOriginalValue("column25"));
+		manyColumnsEntryImpl.setColumn26(
+			this.<Integer>getColumnOriginalValue("column26"));
+		manyColumnsEntryImpl.setColumn27(
+			this.<Integer>getColumnOriginalValue("column27"));
+		manyColumnsEntryImpl.setColumn28(
+			this.<Integer>getColumnOriginalValue("column28"));
+		manyColumnsEntryImpl.setColumn29(
+			this.<Integer>getColumnOriginalValue("column29"));
+		manyColumnsEntryImpl.setColumn30(
+			this.<Integer>getColumnOriginalValue("column30"));
+		manyColumnsEntryImpl.setColumn31(
+			this.<Integer>getColumnOriginalValue("column31"));
+		manyColumnsEntryImpl.setColumn32(
+			this.<Integer>getColumnOriginalValue("column32"));
+		manyColumnsEntryImpl.setColumn33(
+			this.<Integer>getColumnOriginalValue("column33"));
+		manyColumnsEntryImpl.setColumn34(
+			this.<Integer>getColumnOriginalValue("column34"));
+		manyColumnsEntryImpl.setColumn35(
+			this.<Integer>getColumnOriginalValue("column35"));
+		manyColumnsEntryImpl.setColumn36(
+			this.<Integer>getColumnOriginalValue("column36"));
+		manyColumnsEntryImpl.setColumn37(
+			this.<Integer>getColumnOriginalValue("column37"));
+		manyColumnsEntryImpl.setColumn38(
+			this.<Integer>getColumnOriginalValue("column38"));
+		manyColumnsEntryImpl.setColumn39(
+			this.<Integer>getColumnOriginalValue("column39"));
+		manyColumnsEntryImpl.setColumn40(
+			this.<Integer>getColumnOriginalValue("column40"));
+		manyColumnsEntryImpl.setColumn41(
+			this.<Integer>getColumnOriginalValue("column41"));
+		manyColumnsEntryImpl.setColumn42(
+			this.<Integer>getColumnOriginalValue("column42"));
+		manyColumnsEntryImpl.setColumn43(
+			this.<Integer>getColumnOriginalValue("column43"));
+		manyColumnsEntryImpl.setColumn44(
+			this.<Integer>getColumnOriginalValue("column44"));
+		manyColumnsEntryImpl.setColumn45(
+			this.<Integer>getColumnOriginalValue("column45"));
+		manyColumnsEntryImpl.setColumn46(
+			this.<Integer>getColumnOriginalValue("column46"));
+		manyColumnsEntryImpl.setColumn47(
+			this.<Integer>getColumnOriginalValue("column47"));
+		manyColumnsEntryImpl.setColumn48(
+			this.<Integer>getColumnOriginalValue("column48"));
+		manyColumnsEntryImpl.setColumn49(
+			this.<Integer>getColumnOriginalValue("column49"));
+		manyColumnsEntryImpl.setColumn50(
+			this.<Integer>getColumnOriginalValue("column50"));
+		manyColumnsEntryImpl.setColumn51(
+			this.<Integer>getColumnOriginalValue("column51"));
+		manyColumnsEntryImpl.setColumn52(
+			this.<Integer>getColumnOriginalValue("column52"));
+		manyColumnsEntryImpl.setColumn53(
+			this.<Integer>getColumnOriginalValue("column53"));
+		manyColumnsEntryImpl.setColumn54(
+			this.<Integer>getColumnOriginalValue("column54"));
+		manyColumnsEntryImpl.setColumn55(
+			this.<Integer>getColumnOriginalValue("column55"));
+		manyColumnsEntryImpl.setColumn56(
+			this.<Integer>getColumnOriginalValue("column56"));
+		manyColumnsEntryImpl.setColumn57(
+			this.<Integer>getColumnOriginalValue("column57"));
+		manyColumnsEntryImpl.setColumn58(
+			this.<Integer>getColumnOriginalValue("column58"));
+		manyColumnsEntryImpl.setColumn59(
+			this.<Integer>getColumnOriginalValue("column59"));
+		manyColumnsEntryImpl.setColumn60(
+			this.<Integer>getColumnOriginalValue("column60"));
+		manyColumnsEntryImpl.setColumn61(
+			this.<Integer>getColumnOriginalValue("column61"));
+		manyColumnsEntryImpl.setColumn62(
+			this.<Integer>getColumnOriginalValue("column62"));
+		manyColumnsEntryImpl.setColumn63(
+			this.<Integer>getColumnOriginalValue("column63"));
+		manyColumnsEntryImpl.setColumn64(
+			this.<Integer>getColumnOriginalValue("column64"));
 
 		return manyColumnsEntryImpl;
 	}
@@ -2069,7 +2002,7 @@ public class ManyColumnsEntryModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			(4 * attributeGetterFunctions.size()) + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -2080,9 +2013,27 @@ public class ManyColumnsEntryModelImpl
 			Function<ManyColumnsEntry, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((ManyColumnsEntry)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply(
+				(ManyColumnsEntry)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -2129,7 +2080,9 @@ public class ManyColumnsEntryModelImpl
 	private static class EscapedModelProxyProviderFunctionHolder {
 
 		private static final Function<InvocationHandler, ManyColumnsEntry>
-			_escapedModelProxyProviderFunction = _getProxyProviderFunction();
+			_escapedModelProxyProviderFunction =
+				ProxyUtil.getProxyProviderFunction(
+					ManyColumnsEntry.class, ModelWrapper.class);
 
 	}
 

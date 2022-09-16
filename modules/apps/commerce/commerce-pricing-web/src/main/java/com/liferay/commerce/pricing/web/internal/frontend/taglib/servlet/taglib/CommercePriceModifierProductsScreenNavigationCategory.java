@@ -21,13 +21,13 @@ import com.liferay.commerce.pricing.constants.CommercePriceModifierConstants;
 import com.liferay.commerce.pricing.model.CommercePriceModifier;
 import com.liferay.commerce.pricing.service.CommercePriceModifierService;
 import com.liferay.commerce.pricing.type.CommercePriceModifierTypeRegistry;
+import com.liferay.commerce.pricing.web.internal.constants.CommercePriceListScreenNavigationConstants;
 import com.liferay.commerce.pricing.web.internal.display.context.CommercePriceListDisplayContext;
-import com.liferay.commerce.pricing.web.internal.servlet.taglib.ui.constants.CommercePriceListScreenNavigationConstants;
 import com.liferay.commerce.product.service.CommerceCatalogService;
 import com.liferay.frontend.taglib.servlet.taglib.ScreenNavigationCategory;
 import com.liferay.frontend.taglib.servlet.taglib.ScreenNavigationEntry;
 import com.liferay.frontend.taglib.servlet.taglib.util.JSPRenderer;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
@@ -74,7 +74,7 @@ public class CommercePriceModifierProductsScreenNavigationCategory
 
 	@Override
 	public String getLabel(Locale locale) {
-		return LanguageUtil.get(
+		return _language.get(
 			locale,
 			CommercePriceListScreenNavigationConstants.CATEGORY_KEY_PRODUCTS);
 	}
@@ -89,11 +89,8 @@ public class CommercePriceModifierProductsScreenNavigationCategory
 	public boolean isVisible(
 		User user, CommercePriceModifier commercePriceModifier) {
 
-		if (commercePriceModifier == null) {
-			return false;
-		}
-
-		if (!CommercePriceModifierConstants.TARGET_PRODUCTS.equals(
+		if ((commercePriceModifier == null) ||
+			!CommercePriceModifierConstants.TARGET_PRODUCTS.equals(
 				commercePriceModifier.getTarget())) {
 
 			return false;
@@ -109,7 +106,7 @@ public class CommercePriceModifierProductsScreenNavigationCategory
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(exception, exception);
+				_log.debug(exception);
 			}
 		}
 
@@ -135,12 +132,12 @@ public class CommercePriceModifierProductsScreenNavigationCategory
 				commercePriceListDisplayContext);
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 		}
 
 		_jspRenderer.renderJSP(
 			_setServletContext, httpServletRequest, httpServletResponse,
-			"/price_lists/price_modifier/products.jsp");
+			"/commerce_price_lists/commerce_price_modifier/products.jsp");
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -170,6 +167,9 @@ public class CommercePriceModifierProductsScreenNavigationCategory
 
 	@Reference
 	private JSPRenderer _jspRenderer;
+
+	@Reference
+	private Language _language;
 
 	@Reference(
 		target = "(osgi.web.symbolicname=com.liferay.commerce.pricing.web)"

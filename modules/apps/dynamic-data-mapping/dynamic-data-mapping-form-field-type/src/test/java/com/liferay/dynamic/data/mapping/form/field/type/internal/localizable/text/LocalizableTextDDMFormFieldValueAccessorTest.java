@@ -14,31 +14,36 @@
 
 package com.liferay.dynamic.data.mapping.form.field.type.internal.localizable.text;
 
+import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.dynamic.data.mapping.model.UnlocalizedValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.dynamic.data.mapping.test.util.DDMFormValuesTestUtil;
-import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.json.JSONFactoryImpl;
-import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.modules.junit4.PowerMockRunner;
 
 /**
  * @author Gabriel Ibson
  */
-@RunWith(PowerMockRunner.class)
-public class LocalizableTextDDMFormFieldValueAccessorTest extends PowerMockito {
+public class LocalizableTextDDMFormFieldValueAccessorTest {
 
-	@Before
-	public void setUp() throws Exception {
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
+	@BeforeClass
+	public static void setUpClass() {
 		_setUpLocalizableTextDDMFormFieldValueAccessor();
 	}
 
@@ -48,6 +53,22 @@ public class LocalizableTextDDMFormFieldValueAccessorTest extends PowerMockito {
 			_localizableTextDDMFormFieldValueAccessor.isEmpty(
 				DDMFormValuesTestUtil.createDDMFormFieldValue(
 					"localizableText", new UnlocalizedValue("{}")),
+				LocaleUtil.US));
+
+		LocalizedValue localizedValue = new LocalizedValue();
+
+		localizedValue.addString(
+			LocaleUtil.US,
+			JSONUtil.put(
+				"en_US", StringPool.BLANK
+			).put(
+				"pt_BR", StringPool.BLANK
+			).toString());
+
+		Assert.assertTrue(
+			_localizableTextDDMFormFieldValueAccessor.isEmpty(
+				DDMFormValuesTestUtil.createDDMFormFieldValue(
+					"localizableText", localizedValue),
 				LocaleUtil.US));
 	}
 
@@ -66,35 +87,28 @@ public class LocalizableTextDDMFormFieldValueAccessorTest extends PowerMockito {
 
 	@Test
 	public void testNotEmpty() {
-		StringBundler sb = new StringBundler(2);
-
-		sb.append("{\"title\":\"Welcome to Liferay Forms!\",");
-		sb.append("\"type\":\"document\"}");
-
 		DDMFormFieldValue ddmFormFieldValue =
 			DDMFormValuesTestUtil.createDDMFormFieldValue(
-				"localizableText", new UnlocalizedValue(sb.toString()));
+				"localizableText",
+				new UnlocalizedValue(
+					"{\"title\":\"Welcome to Liferay Forms!\"," +
+						"\"type\":\"document\"}"));
 
 		Assert.assertFalse(
 			_localizableTextDDMFormFieldValueAccessor.isEmpty(
 				ddmFormFieldValue, LocaleUtil.US));
 	}
 
-	private void _setUpLocalizableTextDDMFormFieldValueAccessor()
-		throws Exception {
-
+	private static void _setUpLocalizableTextDDMFormFieldValueAccessor() {
 		_localizableTextDDMFormFieldValueAccessor =
 			new LocalizableTextDDMFormFieldValueAccessor();
 
-		field(
-			LocalizableTextDDMFormFieldValueAccessor.class, "jsonFactory"
-		).set(
-			_localizableTextDDMFormFieldValueAccessor, _jsonFactory
-		);
+		ReflectionTestUtil.setFieldValue(
+			_localizableTextDDMFormFieldValueAccessor, "jsonFactory",
+			new JSONFactoryImpl());
 	}
 
-	private final JSONFactory _jsonFactory = new JSONFactoryImpl();
-	private LocalizableTextDDMFormFieldValueAccessor
+	private static LocalizableTextDDMFormFieldValueAccessor
 		_localizableTextDDMFormFieldValueAccessor;
 
 }

@@ -15,13 +15,12 @@
 package com.liferay.portal.kernel.settings;
 
 import com.liferay.portal.json.JSONFactoryImpl;
-import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
-import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.portal.util.LocalizationImpl;
 
 import java.util.Arrays;
@@ -29,12 +28,19 @@ import java.util.List;
 import java.util.Locale;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
  * @author Iván Zaera
  */
 public class TypedSettingsTest {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Test
 	public void testGetLocalizedValue() {
@@ -77,20 +83,18 @@ public class TypedSettingsTest {
 
 		ModifiableSettings modifiableSettings = new MemorySettings();
 
-		JSONFactory jsonFactory = new JSONFactoryImpl();
-
 		ReflectionTestUtil.setFieldValue(
-			JSONFactoryUtil.class, "_jsonFactory", jsonFactory);
+			JSONFactoryUtil.class, "_jsonFactory", new JSONFactoryImpl());
 
-		JSONObject jsonObject = JSONUtil.put(
-			"en_GB", "value_en_GB"
-		).put(
-			"en_US", "value_en_US"
-		).put(
-			"es_ES", "value_es_ES"
-		);
-
-		modifiableSettings.setValue(_KEY, jsonObject.toJSONString());
+		modifiableSettings.setValue(
+			_KEY,
+			JSONUtil.put(
+				"en_GB", "value_en_GB"
+			).put(
+				"en_US", "value_en_US"
+			).put(
+				"es_ES", "value_es_ES"
+			).toString());
 
 		_typedSettings = new TypedSettings(
 			modifiableSettings, _availableLocales);

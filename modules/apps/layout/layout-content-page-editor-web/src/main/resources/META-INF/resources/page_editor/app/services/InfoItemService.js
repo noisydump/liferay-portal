@@ -18,33 +18,6 @@ import serviceFetch from './serviceFetch';
 export default {
 
 	/**
-	 * Get available info item mapping fields
-	 * @param {object} options
-	 * @param {string} options.classNameId Asset's className
-	 * @param {string} options.classPK Asset's classPK
-	 * @param {string} options.fieldType Type of field to which we are mapping
-	 * @param {function} options.onNetworkStatus
-	 */
-	getAvailableInfoItemMappingFields({
-		classNameId,
-		classPK,
-		fieldType,
-		onNetworkStatus,
-	}) {
-		return serviceFetch(
-			config.getInfoItemMappingFieldsURL,
-			{
-				body: {
-					classNameId,
-					classPK,
-					fieldType,
-				},
-			},
-			onNetworkStatus
-		);
-	},
-
-	/**
 	 * Get available list item renderers for the list style
 	 * @param {object} options
 	 * @param {string} options.itemSubtype itemSubtype
@@ -94,25 +67,17 @@ export default {
 	 * @param {object} options
 	 * @param {string} options.classNameId Asset's className
 	 * @param {string} options.classTypeId Asset's classTypeId
-	 * @param {string} options.fieldType Type of field to which we are mapping
-	 * @param {function} options.onNetworkStatus
 	 */
-	getAvailableStructureMappingFields({
-		classNameId,
-		classTypeId,
-		fieldType,
-		onNetworkStatus,
-	}) {
+	getAvailableStructureMappingFields({classNameId, classTypeId}) {
 		return serviceFetch(
 			config.mappingFieldsURL,
 			{
 				body: {
 					classNameId,
 					classTypeId,
-					fieldType,
 				},
 			},
-			onNetworkStatus
+			() => {}
 		);
 	},
 
@@ -171,7 +136,15 @@ export default {
 	 * @param {object} options
 	 * @param {function} options.onNetworkStatus
 	 */
-	getPageContents({onNetworkStatus}) {
-		return serviceFetch(config.getPageContentsURL, {}, onNetworkStatus);
+	getPageContents({onNetworkStatus, segmentsExperienceId}) {
+		return serviceFetch(
+			config.getPageContentsURL,
+			{
+				body: {
+					segmentsExperienceId,
+				},
+			},
+			onNetworkStatus
+		);
 	},
 };

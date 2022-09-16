@@ -19,6 +19,7 @@ import com.liferay.layout.page.template.admin.constants.LayoutPageTemplateAdminP
 import com.liferay.layout.page.template.admin.web.internal.handler.LayoutPageTemplateEntryExceptionRequestHandler;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryService;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.exception.NoSuchClassNameException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -37,7 +38,7 @@ import com.liferay.portal.kernel.servlet.MultiSessionMessages;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
-import com.liferay.portal.kernel.util.Http;
+import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
@@ -49,7 +50,6 @@ import java.util.ResourceBundle;
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
 import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -103,17 +103,19 @@ public class AddDisplayPageMVCActionCommand extends BaseMVCActionCommand {
 		String layoutFullURL = _portal.getLayoutFullURL(
 			draftLayout, themeDisplay);
 
-		PortletURL portletURL = PortletURLFactoryUtil.create(
-			actionRequest,
-			LayoutPageTemplateAdminPortletKeys.LAYOUT_PAGE_TEMPLATES,
-			PortletRequest.RENDER_PHASE);
+		layoutFullURL = HttpComponentsUtil.setParameter(
+			layoutFullURL, "p_l_back_url",
+			PortletURLBuilder.create(
+				PortletURLFactoryUtil.create(
+					actionRequest,
+					LayoutPageTemplateAdminPortletKeys.LAYOUT_PAGE_TEMPLATES,
+					PortletRequest.RENDER_PHASE)
+			).setTabs1(
+				"display-page-templates"
+			).buildString());
 
-		portletURL.setParameter("tabs1", "display-page-templates");
-
-		layoutFullURL = _http.setParameter(
-			layoutFullURL, "p_l_back_url", portletURL.toString());
-
-		return _http.setParameter(layoutFullURL, "p_l_mode", Constants.EDIT);
+		return HttpComponentsUtil.setParameter(
+			layoutFullURL, "p_l_mode", Constants.EDIT);
 	}
 
 	private JSONObject _addDisplayPage(
@@ -159,19 +161,21 @@ public class AddDisplayPageMVCActionCommand extends BaseMVCActionCommand {
 						resourceBundle, "invalid-subtype"));
 			}
 			else {
-				JSONObject jsonObject =
-					_layoutPageTemplateEntryExceptionRequestHandler.
-						createErrorJSONObject(actionRequest, portalException);
+				errorJSONObject = JSONUtil.put(
+					"name",
+					() -> {
+						JSONObject jsonObject =
+							_layoutPageTemplateEntryExceptionRequestHandler.
+								createErrorJSONObject(
+									actionRequest, portalException);
 
-				errorJSONObject = JSONUtil.put("name", jsonObject.get("error"));
+						return jsonObject.get("error");
+					});
 			}
 		}
 
 		return JSONUtil.put("error", errorJSONObject);
 	}
-
-	@Reference
-	private Http _http;
 
 	@Reference
 	private LayoutLocalService _layoutLocalService;

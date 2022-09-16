@@ -14,9 +14,11 @@
 
 package com.liferay.commerce.account.service;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.util.tracker.ServiceTracker;
+import com.liferay.commerce.account.model.CommerceAccountGroup;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.util.OrderByComparator;
+
+import java.util.List;
 
 /**
  * Provides the remote service utility for CommerceAccountGroup. This utility wraps
@@ -37,54 +39,64 @@ public class CommerceAccountGroupServiceUtil {
 	 *
 	 * Never modify this class directly. Add custom service methods to <code>com.liferay.commerce.account.service.impl.CommerceAccountGroupServiceImpl</code> and rerun ServiceBuilder to regenerate this class.
 	 */
-	public static com.liferay.commerce.account.model.CommerceAccountGroup
-			addCommerceAccountGroup(
-				long companyId, String name, int type,
-				String externalReferenceCode,
-				com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static CommerceAccountGroup addCommerceAccountGroup(
+			long companyId, String name, int type, String externalReferenceCode,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws PortalException {
 
 		return getService().addCommerceAccountGroup(
 			companyId, name, type, externalReferenceCode, serviceContext);
 	}
 
 	public static void deleteCommerceAccountGroup(long commerceAccountGroupId)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		getService().deleteCommerceAccountGroup(commerceAccountGroupId);
 	}
 
-	public static com.liferay.commerce.account.model.CommerceAccountGroup
-			fetchByExternalReferenceCode(
-				long companyId, String externalReferenceCode)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static CommerceAccountGroup fetchByExternalReferenceCode(
+			long companyId, String externalReferenceCode)
+		throws PortalException {
 
 		return getService().fetchByExternalReferenceCode(
 			companyId, externalReferenceCode);
 	}
 
-	public static com.liferay.commerce.account.model.CommerceAccountGroup
-			getCommerceAccountGroup(long commerceAccountGroupId)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static CommerceAccountGroup getCommerceAccountGroup(
+			long commerceAccountGroupId)
+		throws PortalException {
 
 		return getService().getCommerceAccountGroup(commerceAccountGroupId);
 	}
 
-	public static java.util.List
-		<com.liferay.commerce.account.model.CommerceAccountGroup>
-				getCommerceAccountGroups(
-					long companyId, int start, int end,
-					com.liferay.portal.kernel.util.OrderByComparator
-						<com.liferay.commerce.account.model.
-							CommerceAccountGroup> orderByComparator)
-			throws com.liferay.portal.kernel.exception.PortalException {
+	public static List<CommerceAccountGroup> getCommerceAccountGroups(
+			long companyId, int start, int end,
+			OrderByComparator<CommerceAccountGroup> orderByComparator)
+		throws PortalException {
 
 		return getService().getCommerceAccountGroups(
 			companyId, start, end, orderByComparator);
 	}
 
+	public static List<CommerceAccountGroup>
+			getCommerceAccountGroupsByCommerceAccountId(
+				long commerceAccountId, int start, int end)
+		throws PortalException {
+
+		return getService().getCommerceAccountGroupsByCommerceAccountId(
+			commerceAccountId, start, end);
+	}
+
+	public static int getCommerceAccountGroupsByCommerceAccountIdCount(
+			long commerceAccountId)
+		throws PortalException {
+
+		return getService().getCommerceAccountGroupsByCommerceAccountIdCount(
+			commerceAccountId);
+	}
+
 	public static int getCommerceAccountGroupsCount(long companyId)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		return getService().getCommerceAccountGroupsCount(companyId);
 	}
@@ -98,57 +110,35 @@ public class CommerceAccountGroupServiceUtil {
 		return getService().getOSGiServiceIdentifier();
 	}
 
-	public static java.util.List
-		<com.liferay.commerce.account.model.CommerceAccountGroup>
-				searchCommerceAccountGroups(
-					long companyId, String keywords, int start, int end,
-					com.liferay.portal.kernel.search.Sort sort)
-			throws com.liferay.portal.kernel.exception.PortalException {
+	public static List<CommerceAccountGroup> search(
+			long companyId, String keywords, int start, int end,
+			com.liferay.portal.kernel.search.Sort sort)
+		throws PortalException {
 
-		return getService().searchCommerceAccountGroups(
-			companyId, keywords, start, end, sort);
+		return getService().search(companyId, keywords, start, end, sort);
 	}
 
 	public static int searchCommerceAccountsGroupCount(
 			long companyId, String keywords)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		return getService().searchCommerceAccountsGroupCount(
 			companyId, keywords);
 	}
 
-	public static com.liferay.commerce.account.model.CommerceAccountGroup
-			updateCommerceAccountGroup(
-				long commerceAccountGroupId, String name,
-				com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static CommerceAccountGroup updateCommerceAccountGroup(
+			long commerceAccountGroupId, String name,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws PortalException {
 
 		return getService().updateCommerceAccountGroup(
 			commerceAccountGroupId, name, serviceContext);
 	}
 
 	public static CommerceAccountGroupService getService() {
-		return _serviceTracker.getService();
+		return _service;
 	}
 
-	private static ServiceTracker
-		<CommerceAccountGroupService, CommerceAccountGroupService>
-			_serviceTracker;
-
-	static {
-		Bundle bundle = FrameworkUtil.getBundle(
-			CommerceAccountGroupService.class);
-
-		ServiceTracker<CommerceAccountGroupService, CommerceAccountGroupService>
-			serviceTracker =
-				new ServiceTracker
-					<CommerceAccountGroupService, CommerceAccountGroupService>(
-						bundle.getBundleContext(),
-						CommerceAccountGroupService.class, null);
-
-		serviceTracker.open();
-
-		_serviceTracker = serviceTracker;
-	}
+	private static volatile CommerceAccountGroupService _service;
 
 }

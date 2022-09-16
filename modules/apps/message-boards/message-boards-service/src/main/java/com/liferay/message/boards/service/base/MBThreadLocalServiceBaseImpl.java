@@ -23,8 +23,7 @@ import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.message.boards.model.MBThread;
 import com.liferay.message.boards.service.MBThreadLocalService;
-import com.liferay.message.boards.service.persistence.MBMessageFinder;
-import com.liferay.message.boards.service.persistence.MBMessagePersistence;
+import com.liferay.message.boards.service.MBThreadLocalServiceUtil;
 import com.liferay.message.boards.service.persistence.MBThreadFinder;
 import com.liferay.message.boards.service.persistence.MBThreadPersistence;
 import com.liferay.petra.function.UnsafeFunction;
@@ -49,6 +48,8 @@ import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -65,10 +66,13 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -89,7 +93,7 @@ public abstract class MBThreadLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>MBThreadLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.message.boards.service.MBThreadLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>MBThreadLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>MBThreadLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -158,6 +162,13 @@ public abstract class MBThreadLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return mbThreadPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -461,6 +472,11 @@ public abstract class MBThreadLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement MBThreadLocalServiceImpl#deleteMBThread(MBThread) to avoid orphaned data");
+		}
+
 		return mbThreadLocalService.deleteMBThread((MBThread)persistedModel);
 	}
 
@@ -569,6 +585,11 @@ public abstract class MBThreadLocalServiceBaseImpl
 		return mbThreadPersistence.update(mbThread);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -580,6 +601,8 @@ public abstract class MBThreadLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		mbThreadLocalService = (MBThreadLocalService)aopProxy;
+
+		_setLocalServiceUtilService(mbThreadLocalService);
 	}
 
 	/**
@@ -638,6 +661,22 @@ public abstract class MBThreadLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		MBThreadLocalService mbThreadLocalService) {
+
+		try {
+			Field field = MBThreadLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, mbThreadLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected MBThreadLocalService mbThreadLocalService;
 
 	@Reference
@@ -650,34 +689,7 @@ public abstract class MBThreadLocalServiceBaseImpl
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@Reference
-	protected MBMessagePersistence mbMessagePersistence;
-
-	@Reference
-	protected MBMessageFinder mbMessageFinder;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.GroupLocalService
-		groupLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.ResourceLocalService
-		resourceLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService
-		workflowInstanceLinkLocalService;
-
-	@Reference
-	protected com.liferay.asset.kernel.service.AssetEntryLocalService
-		assetEntryLocalService;
-
-	@Reference
-	protected com.liferay.ratings.kernel.service.RatingsStatsLocalService
-		ratingsStatsLocalService;
+	private static final Log _log = LogFactoryUtil.getLog(
+		MBThreadLocalServiceBaseImpl.class);
 
 }

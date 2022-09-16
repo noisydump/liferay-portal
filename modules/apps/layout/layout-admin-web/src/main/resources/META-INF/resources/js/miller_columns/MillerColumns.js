@@ -12,7 +12,7 @@
  * details.
  */
 
-import {usePrevious} from 'frontend-js-react-web';
+import {usePrevious} from '@liferay/frontend-js-react-web';
 import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {DndProvider} from 'react-dnd';
 import {HTML5Backend} from 'react-dnd-html5-backend';
@@ -23,11 +23,13 @@ import MillerColumnsColumn from './MillerColumnsColumn';
 const getItemsMap = (columns, oldItems = new Map()) => {
 	const map = new Map();
 
-	let parentId, parentKey;
+	let parentId;
+	let parentKey;
 
 	columns.forEach((column, columnIndex) => {
 		let childrenCount = 0;
-		let newParentId, newParentKey;
+		let newParentId;
+		let newParentKey;
 
 		column.forEach((item) => {
 			childrenCount++;
@@ -67,8 +69,8 @@ const getItemsMap = (columns, oldItems = new Map()) => {
 const noop = () => {};
 
 const MillerColumns = ({
-	actionHandlers,
 	initialColumns = [],
+	isPrivateLayoutsEnabled,
 	namespace,
 	onColumnsChange = noop,
 	onItemMove = noop,
@@ -260,12 +262,13 @@ const MillerColumns = ({
 	return (
 		<DndProvider backend={HTML5Backend}>
 			<DragPreview rtl={rtl} />
+
 			<div className="bg-white miller-columns-row" ref={ref}>
 				{columns.map((column, index) => (
 					<MillerColumnsColumn
-						actionHandlers={actionHandlers}
 						columnItems={column.items}
 						columnsContainer={ref}
+						isPrivateLayoutsEnabled={isPrivateLayoutsEnabled}
 						items={items}
 						key={index}
 						namespace={namespace}

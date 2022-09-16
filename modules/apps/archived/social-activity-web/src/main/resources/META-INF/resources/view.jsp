@@ -51,7 +51,7 @@
 								<div class="social-activity-item-content">
 									<aui:input disabled="<%= !SocialActivityPermissionUtil.contains(permissionChecker, themeDisplay.getSiteGroupId(), ActionKeys.CONFIGURATION) %>" inlineField="<%= true %>" label="" name='<%= className + ".enabled" %>' title="enabled" type="checkbox" value="<%= entry.getValue() %>" />
 
-									<a class="settings-label" href="javascript:;"><%= localizedClassName %></a>
+									<a class="settings-label" href="javascript:void(0);"><%= localizedClassName %></a>
 								</div>
 							</h4>
 
@@ -68,9 +68,7 @@
 				List<String> activityDefinitionLanguageKeys = new ArrayList<String>();
 
 				for (String modelName : activitySettingsMap.keySet()) {
-					List<SocialActivityDefinition> activityDefinitions = SocialConfigurationUtil.getActivityDefinitions(modelName);
-
-					for (SocialActivityDefinition activityDefinition : activityDefinitions) {
+					for (SocialActivityDefinition activityDefinition : SocialConfigurationUtil.getActivityDefinitions(modelName)) {
 						activityDefinitionLanguageKeys.add("'" + modelName + "." + activityDefinition.getLanguageKey() + "': \"" + activityDefinition.getName(locale) + "\"");
 					}
 				}

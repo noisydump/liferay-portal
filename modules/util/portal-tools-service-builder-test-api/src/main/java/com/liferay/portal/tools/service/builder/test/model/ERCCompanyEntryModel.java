@@ -56,6 +56,21 @@ public interface ERCCompanyEntryModel
 	public void setPrimaryKey(long primaryKey);
 
 	/**
+	 * Returns the uuid of this erc company entry.
+	 *
+	 * @return the uuid of this erc company entry
+	 */
+	@AutoEscape
+	public String getUuid();
+
+	/**
+	 * Sets the uuid of this erc company entry.
+	 *
+	 * @param uuid the uuid of this erc company entry
+	 */
+	public void setUuid(String uuid);
+
+	/**
 	 * Returns the external reference code of this erc company entry.
 	 *
 	 * @return the external reference code of this erc company entry
@@ -99,5 +114,8 @@ public interface ERCCompanyEntryModel
 	 */
 	@Override
 	public void setCompanyId(long companyId);
+
+	@Override
+	public ERCCompanyEntry cloneWithOriginalValues();
 
 }

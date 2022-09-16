@@ -20,9 +20,9 @@ import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.workflow.WorkflowException;
-import com.liferay.portal.workflow.constants.WorkflowDefinitionConstants;
 import com.liferay.portal.workflow.kaleo.model.KaleoDefinition;
 import com.liferay.portal.workflow.kaleo.model.KaleoDefinitionVersion;
 import com.liferay.portal.workflow.kaleo.service.KaleoConditionLocalService;
@@ -32,6 +32,7 @@ import com.liferay.portal.workflow.kaleo.service.KaleoNodeLocalService;
 import com.liferay.portal.workflow.kaleo.service.KaleoTaskLocalService;
 import com.liferay.portal.workflow.kaleo.service.KaleoTransitionLocalService;
 import com.liferay.portal.workflow.kaleo.service.base.KaleoDefinitionLocalServiceBaseImpl;
+import com.liferay.portal.workflow.kaleo.service.persistence.KaleoDefinitionVersionPersistence;
 
 import java.util.Date;
 import java.util.List;
@@ -68,13 +69,13 @@ public class KaleoDefinitionLocalServiceImpl
 		// Kaleo definition version
 
 		KaleoDefinitionVersion kaleoDefinitionVersion =
-			kaleoDefinitionVersionPersistence.findByPrimaryKey(
+			_kaleoDefinitionVersionPersistence.findByPrimaryKey(
 				kaleoDefinitionVersionId);
 
 		kaleoDefinitionVersion.setModifiedDate(new Date());
 		kaleoDefinitionVersion.setStartKaleoNodeId(startKaleoNodeId);
 
-		kaleoDefinitionVersionPersistence.update(kaleoDefinitionVersion);
+		_kaleoDefinitionVersionPersistence.update(kaleoDefinitionVersion);
 	}
 
 	@Override
@@ -110,23 +111,6 @@ public class KaleoDefinitionLocalServiceImpl
 		kaleoDefinitionPersistence.update(kaleoDefinition);
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *             #addKaleoDefinition(String, String, String, String, String,
-	 *             int, ServiceContext)}
-	 */
-	@Deprecated
-	@Override
-	public KaleoDefinition addKaleoDefinition(
-			String name, String title, String description, String content,
-			int version, ServiceContext serviceContext)
-		throws PortalException {
-
-		return kaleoDefinitionLocalService.addKaleoDefinition(
-			name, title, description, content,
-			WorkflowDefinitionConstants.SCOPE_ALL, version, serviceContext);
-	}
-
 	@Override
 	public KaleoDefinition addKaleoDefinition(
 			String name, String title, String description, String content,
@@ -135,24 +119,22 @@ public class KaleoDefinitionLocalServiceImpl
 
 		// Kaleo definition
 
-		User user = userLocalService.getUser(serviceContext.getGuestOrUserId());
-		Date now = new Date();
+		User user = _userLocalService.getUser(
+			serviceContext.getGuestOrUserId());
+		Date date = new Date();
 
 		long kaleoDefinitionId = counterLocalService.increment();
 
 		KaleoDefinition kaleoDefinition = kaleoDefinitionPersistence.create(
 			kaleoDefinitionId);
 
-		long groupId = _staging.getLiveGroupId(
-			serviceContext.getScopeGroupId());
-
-		kaleoDefinition.setGroupId(groupId);
-
+		kaleoDefinition.setGroupId(
+			_staging.getLiveGroupId(serviceContext.getScopeGroupId()));
 		kaleoDefinition.setCompanyId(user.getCompanyId());
 		kaleoDefinition.setUserId(user.getUserId());
 		kaleoDefinition.setUserName(user.getFullName());
-		kaleoDefinition.setCreateDate(now);
-		kaleoDefinition.setModifiedDate(now);
+		kaleoDefinition.setCreateDate(date);
+		kaleoDefinition.setModifiedDate(date);
 		kaleoDefinition.setName(name);
 		kaleoDefinition.setTitle(title);
 		kaleoDefinition.setDescription(description);
@@ -196,7 +178,7 @@ public class KaleoDefinitionLocalServiceImpl
 
 		// Kaleo definition version
 
-		kaleoDefinitionVersionPersistence.removeByCompanyId(companyId);
+		_kaleoDefinitionVersionPersistence.removeByCompanyId(companyId);
 
 		// Kaleo condition
 
@@ -357,21 +339,19 @@ public class KaleoDefinitionLocalServiceImpl
 
 		// Kaleo definition
 
-		User user = userLocalService.getUser(serviceContext.getGuestOrUserId());
-		Date now = new Date();
+		User user = _userLocalService.getUser(
+			serviceContext.getGuestOrUserId());
+		Date date = new Date();
 
 		KaleoDefinition kaleoDefinition =
 			kaleoDefinitionPersistence.findByPrimaryKey(kaleoDefinitionId);
 
-		long groupId = _staging.getLiveGroupId(
-			serviceContext.getScopeGroupId());
-
-		kaleoDefinition.setGroupId(groupId);
-
+		kaleoDefinition.setGroupId(
+			_staging.getLiveGroupId(serviceContext.getScopeGroupId()));
 		kaleoDefinition.setUserId(user.getUserId());
 		kaleoDefinition.setUserName(user.getFullName());
-		kaleoDefinition.setCreateDate(now);
-		kaleoDefinition.setModifiedDate(now);
+		kaleoDefinition.setCreateDate(date);
+		kaleoDefinition.setModifiedDate(date);
 		kaleoDefinition.setTitle(title);
 		kaleoDefinition.setDescription(description);
 		kaleoDefinition.setContent(content);
@@ -405,6 +385,10 @@ public class KaleoDefinitionLocalServiceImpl
 		_kaleoDefinitionVersionLocalService;
 
 	@Reference
+	private KaleoDefinitionVersionPersistence
+		_kaleoDefinitionVersionPersistence;
+
+	@Reference
 	private KaleoInstanceLocalService _kaleoInstanceLocalService;
 
 	@Reference
@@ -418,5 +402,8 @@ public class KaleoDefinitionLocalServiceImpl
 
 	@Reference
 	private Staging _staging;
+
+	@Reference
+	private UserLocalService _userLocalService;
 
 }

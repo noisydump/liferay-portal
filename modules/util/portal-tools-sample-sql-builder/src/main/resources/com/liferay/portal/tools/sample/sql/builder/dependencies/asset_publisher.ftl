@@ -1,4 +1,19 @@
-<#assign pageCounts = dataFactory.getSequence(dataFactory.maxAssetPublisherPageCount) />
+<#assign
+	assetVocabularyModels = dataFactory.newAssetVocabularyModels(groupId)
+	pageCounts = dataFactory.getSequence(dataFactory.maxAssetPublisherPageCount)
+/>
+
+<#list assetVocabularyModels as assetVocabularyModel>
+	${dataFactory.toInsertSQL(assetVocabularyModel)}
+</#list>
+
+<#list dataFactory.newAssetCategoryModels(groupId, assetVocabularyModels) as assetCategoryModel>
+	${dataFactory.toInsertSQL(assetCategoryModel)}
+</#list>
+
+<#list dataFactory.newAssetTagModels(groupId) as assetTagModel>
+	${dataFactory.toInsertSQL(assetTagModel)}
+</#list>
 
 <#list pageCounts as pageCount>
 	<#assign
@@ -7,7 +22,7 @@
 		layoutModel = dataFactory.newLayoutModel(groupId, groupId + "_asset_publisher_" + pageCount, "", portletId)
 	/>
 
-	${csvFileWriter.write("assetPublisher", layoutModel.friendlyURL + "\n")}
+	${csvFileWriter.write("assetPublisher", virtualHostModel.hostname + "," + layoutModel.friendlyURL + "\n")}
 
 	<@insertLayout _layoutModel=layoutModel />
 

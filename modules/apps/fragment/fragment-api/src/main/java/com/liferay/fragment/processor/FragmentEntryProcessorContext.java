@@ -14,8 +14,9 @@
 
 package com.liferay.fragment.processor;
 
+import com.liferay.info.form.InfoForm;
+
 import java.util.Locale;
-import java.util.Map;
 import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
@@ -31,11 +32,13 @@ public interface FragmentEntryProcessorContext {
 
 	public Optional<Object> getDisplayObjectOptional();
 
-	public Optional<Map<String, Object>> getFieldValuesOptional();
+	public String getFragmentElementId();
 
 	public HttpServletRequest getHttpServletRequest();
 
 	public HttpServletResponse getHttpServletResponse();
+
+	public Optional<InfoForm> getInfoFormOptional();
 
 	public Locale getLocale();
 
@@ -49,6 +52,6 @@ public interface FragmentEntryProcessorContext {
 
 	public String getPreviewVersion();
 
-	public long[] getSegmentsExperienceIds();
+	public long[] getSegmentsEntryIds();
 
 }

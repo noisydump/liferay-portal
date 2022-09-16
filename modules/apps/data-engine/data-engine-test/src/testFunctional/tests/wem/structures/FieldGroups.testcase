@@ -1,9 +1,9 @@
-@component-name = "portal-wcm"
+@component-name = "data-engine"
 definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Web Content Administration";
+	property testray.main.component.name = "Data Engine";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -11,6 +11,12 @@ definition {
 		User.firstLoginPG();
 
 		JSONGroup.addGroup(groupName = "Test Site Name");
+
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+		NavItem.gotoStructures();
+
+		WebContentStructures.addCP(structureName = "WC Structure Name");
 	}
 
 	tearDown {
@@ -21,27 +27,15 @@ definition {
 		}
 		else {
 			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
+
+			User.logoutPG();
 		}
 	}
 
-	@description = "This is a test for LPS-98077. As a Developer, I want to the ability to nest fields"
-	@ignore = "true"
-	@priority = "5"
-	test ChangeFieldGroupPositionOnForm {
-		property portal.acceptance = "false";
-
-		// TODO LPS-98077 ChangeFieldGroupPositionOnForm pending implementation
-
-	}
-
-	@description = "This is a test for LPS-98077. As a Developer, I want to the ability to nest fields"
+	@description = "This is a test for LPS-98077. Make sure data inserted on a Group Field persists"
 	@priority = "3"
 	test CheckIfFieldGroupDataPersists {
-		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
-
-		NavItem.gotoStructures();
-
-		WebContentStructures.addCP(structureName = "WC Structure Name");
+		property portal.acceptance = "true";
 
 		DataEngine.addField(
 			fieldFieldLabel = "Text",
@@ -71,24 +65,210 @@ definition {
 			webContentTitle = "WC Web Content Title");
 	}
 
-	@description = "This is a test for LPS-98077. As a Developer, I want to the ability to nest fields"
-	@ignore = "true"
-	@priority = "3"
-	test CheckWebContentUponDeletingFieldGroup {
-		property portal.acceptance = "false";
-
-		// TODO LPS-98077 CheckWebContentUponDeletingFieldGroup pending implementation
-	}
-
-	@description = "This is a test for LPS-98077. As a Developer, I want to the ability to nest fields"
+	@description = "This is a test for LRQA-66584. This test validates the fields creation into a field group up to 3 levels, field groups edition, and field groups deletion"
 	@priority = "5"
-	test CreateFieldGroup {
-		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+	test CreateEditAndDeleteFieldGroups {
+		property portal.acceptance = "true";
+
+		DataEngine.addField(
+			fieldFieldLabel = "Text",
+			fieldName = "Text");
+
+		DataEngine.addFieldNested(
+			fieldFieldLabel = "Numeric",
+			fieldName = "Numeric",
+			targetFieldLabel = "Text");
+
+		DataEngine.editFieldsGroupLabel(
+			fieldsGroupLabel = "Fields Group",
+			fieldsGroupLabelEdit = "Fields Group 1");
+
+		DataEngine.addFieldNested(
+			fieldFieldLabel = "Date",
+			fieldName = "Date",
+			targetFieldLabel = "Numeric");
+
+		DataEngine.editFieldsGroupLabel(
+			fieldsGroupLabel = "Fields Group",
+			fieldsGroupLabelEdit = "Fields Group 2");
+
+		DataEngine.addFieldNested(
+			fieldFieldLabel = "Color",
+			fieldName = "Color",
+			targetFieldLabel = "Date");
+
+		DataEngine.editFieldsGroupLabel(
+			fieldsGroupLabel = "Fields Group",
+			fieldsGroupLabelEdit = "Fields Group 3");
+
+		WebContentStructures.saveCP();
+
+		WebContentNavigator.gotoEditStructure(structureName = "WC Structure Name");
+
+		DEBuilder.assertFieldsGroup(
+			fieldGroupDepth = "1",
+			fieldGroupLabel = "Fields Group 1",
+			fieldsLabelList = "Text,Fields Group 2");
+
+		DEBuilder.assertFieldsGroup(
+			fieldGroupDepth = "2",
+			fieldGroupLabel = "Fields Group 2",
+			fieldsLabelList = "Numeric,Fields Group 3");
+
+		DEBuilder.assertFieldsGroup(
+			fieldGroupDepth = "3",
+			fieldGroupLabel = "Fields Group 3",
+			fieldsLabelList = "Date,Color");
+
+		for (var fieldFieldLabel : list "Text,Numeric,Date,Color") {
+			DataEngine.editFieldLabel(
+				fieldFieldLabel = "${fieldFieldLabel}",
+				fieldFieldLabelEdit = "Edited ${fieldFieldLabel}");
+		}
+
+		WebContentStructures.saveCP();
+
+		WebContentNavigator.gotoEditStructure(structureName = "WC Structure Name");
+
+		DEBuilder.assertFieldsGroup(
+			fieldGroupDepth = "1",
+			fieldGroupLabel = "Fields Group 1",
+			fieldsLabelList = "Edited Text,Fields Group 2");
+
+		DEBuilder.assertFieldsGroup(
+			fieldGroupDepth = "2",
+			fieldGroupLabel = "Fields Group 2",
+			fieldsLabelList = "Edited Numeric,Fields Group 3");
+
+		DEBuilder.assertFieldsGroup(
+			fieldGroupDepth = "3",
+			fieldGroupLabel = "Fields Group 3",
+			fieldsLabelList = "Edited Date,Edited Color");
+
+		Navigator.gotoBack();
+
+		NavItem.gotoWebContent();
+
+		WebContentNavigator.gotoAddWithStructureCP(structureName = "WC Structure Name");
+
+		WebContent.addWithStructureCP(
+			webContentColor = "FF0D0D",
+			webContentColorFieldLabel = "Edited Color",
+			webContentDate = "01/04/2021",
+			webContentDateFieldLabel = "Edited Date",
+			webContentNumeric = "12",
+			webContentNumericFieldLabel = "Edited Numeric",
+			webContentText = "This is a Text field",
+			webContentTextFieldLabel = "Edited Text",
+			webContentTitle = "Web Content Title");
+
+		PortletEntry.publish();
+
+		WebContent.viewWithStructureCP(
+			webContentColor = "FF0D0D",
+			webContentColorFieldLabel = "Edited Color",
+			webContentDate = "01/04/2021",
+			webContentDateFieldLabel = "Edited Date",
+			webContentNumeric = "12",
+			webContentNumericFieldLabel = "Edited Numeric",
+			webContentText = "This is a Text field",
+			webContentTextFieldLabel = "Edited Text",
+			webContentTitle = "Web Content Title");
+
+		WebContent.addWithStructureCP(
+			webContentColor = "7F26FF",
+			webContentColorFieldLabel = "Edited Color",
+			webContentDate = "04/20/2021",
+			webContentDateFieldLabel = "Edited Date",
+			webContentNumeric = "50",
+			webContentNumericFieldLabel = "Edited Numeric",
+			webContentText = "This is a Text field - edited",
+			webContentTextFieldLabel = "Edited Text");
+
+		PortletEntry.publish();
+
+		WebContent.viewWithStructureCP(
+			webContentColor = "7F26FF",
+			webContentColorFieldLabel = "Edited Color",
+			webContentDate = "04/20/2021",
+			webContentDateFieldLabel = "Edited Date",
+			webContentNumeric = "50",
+			webContentNumericFieldLabel = "Edited Numeric",
+			webContentText = "This is a Text field - edited",
+			webContentTextFieldLabel = "Edited Text",
+			webContentTitle = "Web Content Title");
+
+		Navigator.gotoBack();
 
 		NavItem.gotoStructures();
 
-		WebContentStructures.addCP(structureName = "WC Structure Name");
+		WebContentNavigator.gotoEditStructure(structureName = "WC Structure Name");
 
+		DataEngine.delete(fieldsGroupLabel = "Fields Group 3");
+
+		WebContentStructures.saveCP();
+
+		WebContentNavigator.gotoEditStructure(structureName = "WC Structure Name");
+
+		DataEngine.assertFieldNotPresent(fieldsGroupLabel = "Fields Group 3");
+
+		Navigator.gotoBack();
+
+		NavItem.gotoWebContent();
+
+		WebContent.viewWithStructureCP(
+			webContentNumeric = "50",
+			webContentNumericFieldLabel = "Edited Numeric",
+			webContentText = "This is a Text field - edited",
+			webContentTextFieldLabel = "Edited Text",
+			webContentTitle = "Web Content Title");
+
+		DataEngine.assertFieldNotPresent(fieldsGroupLabel = "Fields Group 3");
+
+		Navigator.gotoBack();
+
+		NavItem.gotoStructures();
+
+		WebContentNavigator.gotoEditStructure(structureName = "WC Structure Name");
+
+		for (var fieldFieldLabel : list "Edited Text,Edited Numeric") {
+			DataEngine.delete(fieldFieldLabel = "${fieldFieldLabel}");
+		}
+
+		DataEngine.addField(
+			fieldFieldLabel = "Text",
+			fieldName = "Text");
+
+		WebContentStructures.saveCP();
+
+		WebContentNavigator.gotoEditStructure(structureName = "WC Structure Name");
+
+		DataEngine.viewField(
+			fieldFieldLabel = "Text",
+			fieldName = "Text");
+
+		for (var fieldFieldLabel : list "Edited Text,Edited Numeric,Edited Date,Edited Color") {
+			DataEngine.assertFieldNotPresent(fieldFieldLabel = "${fieldFieldLabel}");
+		}
+
+		Navigator.gotoBack();
+
+		NavItem.gotoWebContent();
+
+		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
+
+		WebContent.assertFieldOnWebContent(
+			fieldFieldLabel = "Text",
+			fieldName = "Text");
+
+		for (var fieldFieldLabel : list "Edited Text,Edited Numeric,Edited Date,Edited Color") {
+			DataEngine.assertFieldNotPresent(fieldFieldLabel = "${fieldFieldLabel}");
+		}
+	}
+
+	@description = "This is a test for LPS-98077. Group two or more fields into a FieldGroup"
+	@priority = "5"
+	test CreateFieldGroup {
 		DataEngine.addField(
 			fieldFieldLabel = "Text",
 			fieldName = "Text");
@@ -103,44 +283,26 @@ definition {
 			fieldName = "Date",
 			fieldsGroupLabel = "Fields Group");
 
-		AssertVisible(
-			key_fieldFieldLabel = "Fields Group",
-			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL");
-
-		for (var fieldFieldLabel : list "Text,Numeric,Date") {
-			AssertVisible(
-				key_fieldFieldLabel = "${fieldFieldLabel}",
-				key_fieldsGroupLabel = "Fields Group",
-				locator1 = "DataEngineBuilder#FORM_FIELD_NESTED");
-		}
+		FormFields.assertFieldsVisibleInFieldGroup(
+			fieldGroupLabel = "Fields Group",
+			fieldGroupLabelList = "Text,Numeric,Date");
 
 		WebContentStructures.saveCP();
 
 		WebContentNavigator.gotoEditStructure(structureName = "WC Structure Name");
 
-		AssertVisible(
+		AssertElementPresent(
 			key_fieldFieldLabel = "Fields Group",
 			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL");
 
-		for (var fieldFieldLabel : list "Text,Numeric,Date") {
-			AssertVisible(
-				key_fieldFieldLabel = "${fieldFieldLabel}",
-				key_fieldsGroupLabel = "Fields Group",
-				locator1 = "DataEngineBuilder#FORM_FIELD_NESTED");
-		}
+		FormFields.assertFieldsVisibleInFieldGroup(
+			fieldGroupLabel = "Fields Group",
+			fieldGroupLabelList = "Text,Numeric,Date");
 	}
 
-	@description = "This is a test for LPS-98077. As a Developer, I want to the ability to nest fields"
+	@description = "This is a test for LPS-98077. Delete a field from a FieldGroup then save and reopen the Structure"
 	@priority = "4"
 	test DeleteAFieldFromAFieldGroup {
-		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
-
-		NavItem.gotoStructures();
-
-		WebContentStructures.addCP(
-			structureDescription = "WC Structure Description",
-			structureName = "WC Structure Name");
-
 		DataEngine.addField(
 			fieldFieldLabel = "Text",
 			fieldName = "Text");
@@ -157,7 +319,7 @@ definition {
 		WebContentNavigator.gotoEditStructure(structureName = "WC Structure Name");
 
 		for (var label : list "Fields Group,Text") {
-			AssertVisible(
+			AssertElementPresent(
 				key_fieldFieldLabel = "${label}",
 				locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL");
 		}
@@ -167,54 +329,16 @@ definition {
 			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL");
 	}
 
-	@description = "This is a test for LPS-98077. As a Developer, I want to the ability to nest fields"
+	@description = "This is a test for LPS-98077. Delete a FieldGroup (remove from form view only - via kebab menu)"
 	@priority = "5"
 	test DeleteFieldGroupOnStructure {
-		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
-
-		NavItem.gotoStructures();
-
-		WebContentStructures.addCP(
-			structureDescription = "WC Structure Description",
-			structureName = "WC Structure Name");
-
 		DataEngine.addField(
 			fieldFieldLabel = "Text",
 			fieldName = "Text");
 
-		DataEngine.addFieldNested(
-			fieldFieldLabel = "Numeric",
-			fieldName = "Numeric",
-			targetFieldLabel = "Text");
-
-		DataEngine.delete(fieldsGroupLabel = "Fields Group");
-
-		for (var label : list "Fields Group,Text,Numeric") {
-			AssertElementNotPresent(
-				key_fieldFieldLabel = "${label}",
-				locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL");
-		}
-	}
-
-	@description = "This is a test for LPS-98077. As a Developer, I want to the ability to nest fields"
-	@priority = "5"
-	test DeleteNestedFieldGroupOnStructure {
-		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
-
-		NavItem.gotoStructures();
-
-		WebContentStructures.addCP(
-			structureDescription = "WC Structure Description",
-			structureName = "WC Structure Name");
-
 		DataEngine.addField(
-			fieldFieldLabel = "Text",
-			fieldName = "Text");
-
-		DataEngine.addFieldNested(
 			fieldFieldLabel = "Numeric",
-			fieldName = "Numeric",
-			targetFieldLabel = "Text");
+			fieldName = "Numeric");
 
 		DataEngine.addFieldNested(
 			fieldFieldLabel = "Date",
@@ -223,22 +347,50 @@ definition {
 
 		DataEngine.delete(fieldsGroupLabel = "Fields Group");
 
-		for (var label : list "Fields Group,Text,Numeric,Date") {
+		WebContentStructures.saveCP();
+
+		WebContentNavigator.gotoEditStructure(structureName = "WC Structure Name");
+
+		for (var label : list "Fields Group,Numeric,Date") {
 			AssertElementNotPresent(
 				key_fieldFieldLabel = "${label}",
 				locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL");
 		}
 	}
 
-	@description = "This is a test for LPS-98077. As a Developer, I want to the ability to nest fields"
+	@description = "This is a test for LPS-98077. Delete a nested FieldGroup (a FieldGroup that is placed inside another section)"
+	@priority = "5"
+	test DeleteNestedFieldGroupOnStructure {
+		DataEngine.addField(
+			fieldFieldLabel = "Text",
+			fieldName = "Text");
+
+		DataEngine.addFieldNested(
+			fieldFieldLabel = "Numeric",
+			fieldName = "Numeric",
+			targetFieldLabel = "Text");
+
+		DataEngine.editFieldsGroupLabel(
+			fieldsGroupLabel = "Fields Group",
+			fieldsGroupLabelEdit = "Fields Group Edit");
+
+		DataEngine.addFieldNested(
+			fieldFieldLabel = "Date",
+			fieldName = "Date",
+			targetFieldLabel = "Numeric");
+
+		DataEngine.delete(fieldsGroupLabel = "Fields Group");
+
+		for (var label : list "Fields Group,Numeric,Date") {
+			AssertElementNotPresent(
+				key_fieldFieldLabel = "${label}",
+				locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL");
+		}
+	}
+
+	@description = "This is a test for LPS-98077. Duplicate a Field Group"
 	@priority = "5"
 	test DuplicateAFieldGroup {
-		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
-
-		NavItem.gotoStructures();
-
-		WebContentStructures.addCP(structureName = "WC Structure Name");
-
 		DataEngine.addField(
 			fieldFieldLabel = "Text",
 			fieldName = "Text");
@@ -253,70 +405,20 @@ definition {
 			fieldName = "Date",
 			fieldsGroupLabel = "Fields Group");
 
-		AssertVisible(
-			key_fieldFieldLabel = "Fields Group",
-			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL");
-
-		for (var fieldFieldLabel : list "Text,Numeric,Date") {
-			AssertVisible(
-				key_fieldFieldLabel = "${fieldFieldLabel}",
-				key_fieldsGroupLabel = "Fields Group",
-				locator1 = "DataEngineBuilder#FORM_FIELD_NESTED");
-		}
-
 		DataEngine.duplicate(fieldsGroupLabel = "Fields Group");
 
-		AssertVisible(
-			key_fieldFieldLabel = "Copy of Fields Group",
-			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL");
+		FormFields.assertFieldsVisibleInFieldGroup(
+			fieldGroupLabel = "Fields Group",
+			fieldGroupLabelList = "Text,Numeric,Date");
 
-		for (var fieldFieldLabel : list "Copy of Text,Copy of Numeric,Copy of Date") {
-			AssertVisible(
-				key_fieldFieldLabel = "${fieldFieldLabel}",
-				key_fieldsGroupLabel = "Fields Group",
-				locator1 = "DataEngineBuilder#FORM_FIELD_NESTED");
-		}
-
-		WebContentStructures.saveCP();
-
-		WebContentNavigator.gotoEditStructure(structureName = "WC Structure Name");
-
-		AssertVisible(
-			key_fieldFieldLabel = "Fields Group",
-			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL");
-
-		for (var fieldFieldLabel : list "Text,Numeric,Date") {
-			AssertVisible(
-				key_fieldFieldLabel = "${fieldFieldLabel}",
-				key_fieldsGroupLabel = "Fields Group",
-				locator1 = "DataEngineBuilder#FORM_FIELD_NESTED");
-		}
-
-		AssertVisible(
-			key_fieldFieldLabel = "Copy of Fields Group",
-			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL");
-
-		for (var fieldFieldLabel : list "Copy of Text,Copy of Numeric,Copy of Date") {
-			AssertVisible(
-				key_fieldFieldLabel = "${fieldFieldLabel}",
-				key_fieldsGroupLabel = "Fields Group",
-				locator1 = "DataEngineBuilder#FORM_FIELD_NESTED");
-		}
+		FormFields.assertFieldsVisibleInFieldGroup(
+			fieldGroupLabel = "Copy of Fields Group",
+			fieldGroupLabelList = "Copy of Text,Copy of Numeric,Copy of Date");
 	}
 
-	@description = "This is a test for LPS-98077. As a Developer, I want to the ability to nest fields"
+	@description = "This is a test for LPS-98077. Duplicate a nested Field Group (a Field Group that is placed inside another Field Group)"
 	@priority = "5"
 	test DuplicateANestedFieldGroup {
-		property portal.acceptance = "false";
-
-		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
-
-		NavItem.gotoStructures();
-
-		WebContentStructures.addCP(
-			structureDescription = "WC Structure Description",
-			structureName = "WC Structure Name");
-
 		DataEngine.addField(
 			fieldFieldLabel = "Text",
 			fieldName = "Text");
@@ -326,44 +428,212 @@ definition {
 			fieldName = "Numeric",
 			targetFieldLabel = "Text");
 
+		DataEngine.editFieldsGroupLabel(
+			fieldsGroupLabel = "Fields Group",
+			fieldsGroupLabelEdit = "Fields Group Edit");
+
 		DataEngine.addFieldNested(
 			fieldFieldLabel = "Date",
 			fieldName = "Date",
 			targetFieldLabel = "Numeric");
 
-		Click(locator1 = "DataEngineBuilder#FORM_FIELDS_GROUP");
+		DataEngine.duplicate(fieldsGroupLabel = "Fields Group");
 
-		Click(locator1 = "DataEngineBuilder#FORM_FIELDS_GROUP_VERTICAL_ELLIPSIS");
+		WebContentStructures.saveCP();
 
-		MenuItem.clickNoError(menuItem = "Duplicate");
+		WebContentNavigator.gotoEditStructure(structureName = "WC Structure Name");
 
-		AssertTextEquals(
-			locator1 = "DataEngineBuilder#DUPLICATED_FORM_FIELDS_GROUP_LABEL",
-			value1 = "Copy of Fields Group");
+		FormFields.assertFieldsVisibleInFieldGroup(
+			fieldGroupLabel = "Fields Group",
+			fieldGroupLabelList = "Numeric,Date");
 
-		WebContentStructures.saveCP(structureName = "WC Structure Name");
+		FormFields.assertFieldsVisibleInFieldGroup(
+			fieldGroupLabel = "Copy of Fields Group",
+			fieldGroupLabelList = "Copy of Numeric,Copy of Date");
 	}
 
-	@description = "This is a test for LPS-98077. As a Developer, I want to the ability to nest fields"
-	@ignore = "true"
+	@description = "This is a test for LRQA-66584. This test validates the duplication of field groups up to 2 levels"
 	@priority = "5"
-	test DuplicateFieldGroupOnStructure {
-		property portal.acceptance = "false";
+	test DuplicateTwoLevelFieldGroups {
+		property portal.acceptance = "quarantine";
+		property portal.upstream = "quarantine";
 
-		// TODO LPS-98077 DuplicateFieldGroupOnStructure pending implementation
-	}
+		DataEngine.addField(
+			fieldFieldLabel = "Text 1",
+			fieldName = "Text");
 
-	@description = "This is a test for LPS-98077. As a Developer, I want to the ability to nest fields"
-	@priority = "4"
-	test EditFieldGroupLabel {
-		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+		DataEngine.addFieldNested(
+			fieldFieldLabel = "Text 2",
+			fieldName = "Text",
+			targetFieldLabel = "Text 1");
+
+		DataEngine.editFieldsGroupLabel(
+			fieldsGroupLabel = "Fields Group",
+			fieldsGroupLabelEdit = "Fields Group 1");
+
+		DataEngine.addFieldNested(
+			fieldFieldLabel = "Text 3",
+			fieldName = "Text",
+			targetFieldLabel = "Text 2");
+
+		DataEngine.editFieldsGroupLabel(
+			fieldsGroupLabel = "Fields Group",
+			fieldsGroupLabelEdit = "Fields Group 2");
+
+		DataEngine.toggleFieldRepeatable(fieldsGroupLabel = "Fields Group 2");
+
+		WebContentStructures.saveCP();
+
+		NavItem.gotoWebContent();
+
+		WebContentNavigator.gotoAddWithStructureCP(structureName = "WC Structure Name");
+
+		DataEngine.addRepeatableField(fieldLabel = "Fields Group 2");
+
+		WebContent.addWithStructureCP(
+			webContentText = "This is a Text field - 1",
+			webContentTextFieldLabel = "Text 1",
+			webContentTitle = "Web Content Title");
+
+		for (var index : list "1,2") {
+			for (var labelCount : list "2,3") {
+				WebContent.editFieldValue(
+					fieldFieldLabel = "Text ${labelCount}",
+					index = "${index}",
+					value = "This is a Text field - ${labelCount}");
+			}
+		}
+
+		PortletEntry.publish();
+
+		WebContent.viewWithStructureCP(
+			webContentText = "This is a Text field - 1",
+			webContentTextFieldLabel = "Text 1",
+			webContentTitle = "Web Content Title");
+
+		for (var index : list "1,2") {
+			for (var labelCount : list "2,3") {
+				AssertTextEquals.assertValue(
+					index = "${index}",
+					key_fieldFieldLabel = "Text ${labelCount}",
+					locator1 = "WCEditWebContent#ANY_TEXT_INPUT",
+					value1 = "This is a Text field - ${labelCount}");
+			}
+		}
+
+		for (var index : list "1,2") {
+			for (var labelCount : list "2,3") {
+				WebContent.editFieldValue(
+					fieldFieldLabel = "Text ${labelCount}",
+					index = "${index}",
+					value = "This is a Text field - ${labelCount} edited");
+			}
+		}
+
+		PortletEntry.publish();
+
+		WebContent.viewWithStructureCP(
+			webContentText = "This is a Text field - 1",
+			webContentTextFieldLabel = "Text 1",
+			webContentTitle = "Web Content Title");
+
+		for (var index : list "1,2") {
+			for (var labelCount : list "2,3") {
+				AssertTextEquals.assertValue(
+					index = "${index}",
+					key_fieldFieldLabel = "Text ${labelCount}",
+					locator1 = "WCEditWebContent#ANY_TEXT_INPUT",
+					value1 = "This is a Text field - ${labelCount} edited");
+			}
+		}
+
+		WebContent.removeDuplicatedFieldsGroup(index = "3");
+
+		PortletEntry.publish();
+
+		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
+
+		for (var labelCount : list "2,3") {
+			AssertElementNotPresent(
+				key_fieldFieldLabel = "Text ${labelCount}",
+				key_index = "2",
+				locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL_ANY");
+		}
+
+		Navigator.gotoBack();
 
 		NavItem.gotoStructures();
 
-		WebContentStructures.addCP(
-			structureDescription = "WC Structure Description",
-			structureName = "WC Structure Name");
+		WebContentNavigator.gotoEditStructure(structureName = "WC Structure Name");
 
+		DataEngine.toggleFieldRepeatable(fieldsGroupLabel = "Fields Group 1");
+
+		WebContentStructures.saveCP();
+
+		NavItem.gotoWebContent();
+
+		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
+
+		DataEngine.addRepeatableField(fieldLabel = "Fields Group 1");
+
+		for (var labelCount : list "1,2,3") {
+			WebContent.editFieldValue(
+				fieldFieldLabel = "Text ${labelCount}",
+				index = "2",
+				value = "This is a Text field - ${labelCount}");
+		}
+
+		PortletEntry.publish();
+
+		WebContent.viewWithStructureCP(
+			webContentText = "This is a Text field - 1",
+			webContentTextFieldLabel = "Text 1",
+			webContentTitle = "Web Content Title");
+
+		for (var labelCount : list "2,3") {
+			AssertTextEquals.assertValue(
+				index = "1",
+				key_fieldFieldLabel = "Text ${labelCount}",
+				locator1 = "WCEditWebContent#ANY_TEXT_INPUT",
+				value1 = "This is a Text field - ${labelCount} edited");
+		}
+
+		for (var labelCount : list "1,2,3") {
+			AssertTextEquals.assertValue(
+				index = "2",
+				key_fieldFieldLabel = "Text ${labelCount}",
+				locator1 = "WCEditWebContent#ANY_TEXT_INPUT",
+				value1 = "This is a Text field - ${labelCount}");
+		}
+
+		WebContent.removeDuplicatedFieldsGroup(index = "3");
+
+		PortletEntry.publish();
+
+		WebContent.viewWithStructureCP(
+			webContentText = "This is a Text field - 1",
+			webContentTextFieldLabel = "Text 1",
+			webContentTitle = "Web Content Title");
+
+		for (var labelCount : list "2,3") {
+			AssertTextEquals.assertValue(
+				index = "1",
+				key_fieldFieldLabel = "Text ${labelCount}",
+				locator1 = "WCEditWebContent#ANY_TEXT_INPUT",
+				value1 = "This is a Text field - ${labelCount} edited");
+		}
+
+		for (var labelCount : list "1,2,3") {
+			AssertElementNotPresent(
+				key_fieldFieldLabel = "Text ${labelCount}",
+				key_index = "2",
+				locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL_ANY");
+		}
+	}
+
+	@description = "This is a test for LPS-98077. Edit the label of the FieldGroup"
+	@priority = "4"
+	test EditFieldGroupLabel {
 		DataEngine.addField(
 			fieldFieldLabel = "Text",
 			fieldName = "Text");
@@ -386,17 +656,9 @@ definition {
 			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL");
 	}
 
-	@description = "This is a test for LPS-98077. As a Developer, I want to the ability to nest fields"
+	@description = "This is a test for LPS-98077. Edit a field placed in a duplicated FieldGroup"
 	@priority = "3"
 	test EditFieldOnDuplicatedFieldGroup {
-		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
-
-		NavItem.gotoStructures();
-
-		WebContentStructures.addCP(
-			structureDescription = "WC Structure Description",
-			structureName = "WC Structure Name");
-
 		DataEngine.addField(
 			fieldFieldLabel = "Text",
 			fieldName = "Text");
@@ -406,14 +668,9 @@ definition {
 			fieldName = "Numeric",
 			targetFieldLabel = "Text");
 
-		DataEngine.addFieldNested(
-			fieldFieldLabel = "Date",
-			fieldName = "Date",
-			targetFieldLabel = "Numeric");
-
 		DataEngine.duplicate(fieldsGroupLabel = "Fields Group");
 
-		for (var fieldName : list "Text,Numeric,Date") {
+		for (var fieldName : list "Text,Numeric") {
 			DataEngine.editFieldLabel(
 				fieldFieldLabel = "Copy of ${fieldName}",
 				fieldFieldLabelEdit = "Duplicated ${fieldName}");
@@ -423,24 +680,14 @@ definition {
 
 		WebContentNavigator.gotoEditStructure(structureName = "WC Structure Name");
 
-		for (var fieldName : list "Text,Numeric,Date") {
-			DataEngine.viewField(
-				fieldFieldLabel = "Duplicated ${fieldName}",
-				fieldName = "${fieldName}");
-		}
+		FormFields.assertFieldsVisibleInFieldGroup(
+			fieldGroupLabel = "Copy of Fields Group",
+			fieldGroupLabelList = "Duplicated Text,Duplicated Numeric");
 	}
 
-	@description = "This is a test for LPS-98077. As a Developer, I want to the ability to nest fields"
+	@description = "This is a test for LPS-98077. FieldGroup empty (remove all the fields from a section)"
 	@priority = "4"
 	test EmptyAFieldGroup {
-		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
-
-		NavItem.gotoStructures();
-
-		WebContentStructures.addCP(
-			structureDescription = "WC Structure Description",
-			structureName = "WC Structure Name");
-
 		DataEngine.addField(
 			fieldFieldLabel = "Text",
 			fieldName = "Text");
@@ -450,15 +697,23 @@ definition {
 			fieldName = "Numeric",
 			targetFieldLabel = "Text");
 
+		WebContentStructures.saveCP();
+
+		WebContentNavigator.gotoEditStructure(structureName = "WC Structure Name");
+
 		DataEngine.delete(fieldFieldLabel = "Text");
 
 		DataEngine.delete(fieldFieldLabel = "Numeric");
+
+		DataEngine.addField(
+			fieldFieldLabel = "Date",
+			fieldName = "Date");
 
 		WebContentStructures.saveCP();
 
 		WebContentNavigator.gotoEditStructure(structureName = "WC Structure Name");
 
-		AssertVisible(
+		AssertElementNotPresent(
 			key_fieldFieldLabel = "Fields Group",
 			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL");
 
@@ -469,17 +724,9 @@ definition {
 		}
 	}
 
-	@description = "This is a test for LPS-98077. As a Developer, I want to the ability to nest fields"
+	@description = "This is a test for LPS-98077. Add a section inside of another section (nesting)"
 	@priority = "3"
 	test NestAFieldGroupOnAnotherFieldGroup {
-		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
-
-		NavItem.gotoStructures();
-
-		WebContentStructures.addCP(
-			structureDescription = "WC Structure Description",
-			structureName = "WC Structure Name");
-
 		DataEngine.addField(
 			fieldFieldLabel = "Text",
 			fieldName = "Text");
@@ -488,59 +735,28 @@ definition {
 			fieldFieldLabel = "Numeric",
 			fieldName = "Numeric",
 			targetFieldLabel = "Text");
+
+		DataEngine.editFieldsGroupLabel(
+			fieldsGroupLabel = "Fields Group",
+			fieldsGroupLabelEdit = "Fields Group Edit");
 
 		DataEngine.addFieldNested(
 			fieldFieldLabel = "Date",
 			fieldName = "Date",
 			targetFieldLabel = "Numeric");
 
-		AssertVisible(
-			key_fieldFieldLabel = "Fields Group",
-			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL");
-
-		for (var fieldFieldLabel : list "Text,Numeric,Date") {
-			AssertVisible(
-				key_fieldFieldLabel = "${fieldFieldLabel}",
-				key_fieldsGroupLabel = "Fields Group",
-				locator1 = "DataEngineBuilder#FORM_FIELD_NESTED");
-		}
-
 		WebContentStructures.saveCP();
 
 		WebContentNavigator.gotoEditStructure(structureName = "WC Structure Name");
 
-		AssertVisible(
-			key_fieldFieldLabel = "Fields Group",
-			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL");
-
-		for (var fieldFieldLabel : list "Text,Numeric,Date") {
-			AssertVisible(
-				key_fieldFieldLabel = "${fieldFieldLabel}",
-				key_fieldsGroupLabel = "Fields Group",
-				locator1 = "DataEngineBuilder#FORM_FIELD_NESTED");
-		}
+		FormFields.assertFieldsVisibleInFieldGroup(
+			fieldGroupLabel = "Fields Group",
+			fieldGroupLabelList = "Numeric,Date");
 	}
 
-	@description = "This is a test for LPS-98077. As a Developer, I want to the ability to nest fields"
-	@ignore = "true"
+	@description = "This is a test for LPS-98077. Set a FieldGroup as collapsible and perform this action in a WebContent"
 	@priority = "4"
 	test SetFieldGroupAsCollapsibleAndExecuteOnAWebContent {
-		property portal.acceptance = "false";
-
-		// TODO LPS-98077 SetFieldGroupAsCollapsibleAndExecuteOnAWebContent pending implementation
-	}
-
-	@description = "This is a test for LPS-98077. As a Developer, I want to the ability to nest fields"
-	@priority = "4"
-	test SetFieldGroupAsRepeatableAndExecuteOnAWebContent {
-		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
-
-		NavItem.gotoStructures();
-
-		WebContentStructures.addCP(
-			structureDescription = "WC Structure Description",
-			structureName = "WC Structure Name");
-
 		DataEngine.addField(
 			fieldFieldLabel = "Text",
 			fieldName = "Text");
@@ -550,7 +766,42 @@ definition {
 			fieldName = "Numeric",
 			targetFieldLabel = "Text");
 
-		DataEngine.editFieldsGroupRepeatable();
+		DataEngine.editCollapsible(
+			collapsible = "true",
+			fieldsGroupLabel = "Fields Group");
+
+		WebContentStructures.saveCP();
+
+		Navigator.gotoNavTab(navTab = "Web Content");
+
+		WebContentNavigator.gotoAddWithStructureCP(structureName = "WC Structure Name");
+
+		WebContent.addCP();
+
+		FormFields.assertFieldsVisibleInFieldGroup(
+			fieldGroupLabel = "Fields Group",
+			fieldGroupLabelList = "Text,Numeric");
+
+		Button.clickCollapse(label = "Fields Group");
+
+		FormFields.assertFieldsNotVisibleInFieldGroup(
+			fieldGroupLabel = "Fields Group",
+			fieldGroupLabelList = "Text,Numeric");
+	}
+
+	@description = "This is a test for LPS-98077. Set a FieldGroup as repeatable and perform this action in a WebContent"
+	@priority = "4"
+	test SetFieldGroupAsRepeatableAndExecuteOnAWebContent {
+		DataEngine.addField(
+			fieldFieldLabel = "Text",
+			fieldName = "Text");
+
+		DataEngine.addFieldNested(
+			fieldFieldLabel = "Numeric",
+			fieldName = "Numeric",
+			targetFieldLabel = "Text");
+
+		DataEngine.toggleFieldRepeatable(fieldsGroupLabel = "Fields Group");
 
 		WebContentStructures.saveCP();
 
@@ -560,7 +811,7 @@ definition {
 
 		WebContent.addWithStructureCP(webContentTitle = "WC WebContent Title");
 
-		DataEngine.addRepeatableFieldsGroup(fieldsGroupLabel = "Fields Group");
+		DataEngine.addRepeatableField(fieldLabel = "Fields Group");
 
 		PortletEntry.publish();
 
@@ -570,9 +821,7 @@ definition {
 			DataEngine.assertFieldRepeated(
 				fieldName = "${fieldName}",
 				index = "1");
-		}
 
-		for (var fieldName : list "Text,Numeric") {
 			DataEngine.assertFieldRepeated(
 				fieldName = "${fieldName}",
 				index = "2");

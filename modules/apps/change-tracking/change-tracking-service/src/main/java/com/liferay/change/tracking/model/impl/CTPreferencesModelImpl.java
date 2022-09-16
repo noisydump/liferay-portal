@@ -21,6 +21,7 @@ import com.liferay.expando.kernel.util.ExpandoBridgeFactoryUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.bean.AutoEscapeBeanHandler;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSON;
 import com.liferay.portal.kernel.model.CacheModel;
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.User;
@@ -29,18 +30,21 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -55,6 +59,7 @@ import java.util.function.Function;
  * @see CTPreferencesImpl
  * @generated
  */
+@JSON(strict = true)
 public class CTPreferencesModelImpl
 	extends BaseModelImpl<CTPreferences> implements CTPreferencesModel {
 
@@ -104,32 +109,32 @@ public class CTPreferencesModelImpl
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long COMPANYID_COLUMN_BITMASK = 1L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long CTCOLLECTIONID_COLUMN_BITMASK = 2L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long PREVIOUSCTCOLLECTIONID_COLUMN_BITMASK = 4L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long USERID_COLUMN_BITMASK = 8L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *		#getColumnBitmask(String)
+	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long CTPREFERENCESID_COLUMN_BITMASK = 16L;
@@ -233,34 +238,6 @@ public class CTPreferencesModelImpl
 		return _attributeSetterBiConsumers;
 	}
 
-	private static Function<InvocationHandler, CTPreferences>
-		_getProxyProviderFunction() {
-
-		Class<?> proxyClass = ProxyUtil.getProxyClass(
-			CTPreferences.class.getClassLoader(), CTPreferences.class,
-			ModelWrapper.class);
-
-		try {
-			Constructor<CTPreferences> constructor =
-				(Constructor<CTPreferences>)proxyClass.getConstructor(
-					InvocationHandler.class);
-
-			return invocationHandler -> {
-				try {
-					return constructor.newInstance(invocationHandler);
-				}
-				catch (ReflectiveOperationException
-							reflectiveOperationException) {
-
-					throw new InternalError(reflectiveOperationException);
-				}
-			};
-		}
-		catch (NoSuchMethodException noSuchMethodException) {
-			throw new InternalError(noSuchMethodException);
-		}
-	}
-
 	private static final Map<String, Function<CTPreferences, Object>>
 		_attributeGetterFunctions;
 	private static final Map<String, BiConsumer<CTPreferences, Object>>
@@ -314,6 +291,7 @@ public class CTPreferencesModelImpl
 			(Map)attributeSetterBiConsumers);
 	}
 
+	@JSON
 	@Override
 	public long getMvccVersion() {
 		return _mvccVersion;
@@ -328,6 +306,7 @@ public class CTPreferencesModelImpl
 		_mvccVersion = mvccVersion;
 	}
 
+	@JSON
 	@Override
 	public long getCtPreferencesId() {
 		return _ctPreferencesId;
@@ -342,6 +321,7 @@ public class CTPreferencesModelImpl
 		_ctPreferencesId = ctPreferencesId;
 	}
 
+	@JSON
 	@Override
 	public long getCompanyId() {
 		return _companyId;
@@ -366,6 +346,7 @@ public class CTPreferencesModelImpl
 			this.<Long>getColumnOriginalValue("companyId"));
 	}
 
+	@JSON
 	@Override
 	public long getUserId() {
 		return _userId;
@@ -405,6 +386,7 @@ public class CTPreferencesModelImpl
 		return GetterUtil.getLong(this.<Long>getColumnOriginalValue("userId"));
 	}
 
+	@JSON
 	@Override
 	public long getCtCollectionId() {
 		return _ctCollectionId;
@@ -429,6 +411,7 @@ public class CTPreferencesModelImpl
 			this.<Long>getColumnOriginalValue("ctCollectionId"));
 	}
 
+	@JSON
 	@Override
 	public long getPreviousCtCollectionId() {
 		return _previousCtCollectionId;
@@ -453,11 +436,13 @@ public class CTPreferencesModelImpl
 			this.<Long>getColumnOriginalValue("previousCtCollectionId"));
 	}
 
+	@JSON
 	@Override
 	public boolean getConfirmationEnabled() {
 		return _confirmationEnabled;
 	}
 
+	@JSON
 	@Override
 	public boolean isConfirmationEnabled() {
 		return _confirmationEnabled;
@@ -486,7 +471,9 @@ public class CTPreferencesModelImpl
 		for (Map.Entry<String, Object> entry :
 				_columnOriginalValues.entrySet()) {
 
-			if (entry.getValue() != getColumnValue(entry.getKey())) {
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
 				_columnBitmask |= _columnBitmasks.get(entry.getKey());
 			}
 		}
@@ -536,6 +523,28 @@ public class CTPreferencesModelImpl
 		ctPreferencesImpl.setConfirmationEnabled(isConfirmationEnabled());
 
 		ctPreferencesImpl.resetOriginalValues();
+
+		return ctPreferencesImpl;
+	}
+
+	@Override
+	public CTPreferences cloneWithOriginalValues() {
+		CTPreferencesImpl ctPreferencesImpl = new CTPreferencesImpl();
+
+		ctPreferencesImpl.setMvccVersion(
+			this.<Long>getColumnOriginalValue("mvccVersion"));
+		ctPreferencesImpl.setCtPreferencesId(
+			this.<Long>getColumnOriginalValue("ctPreferencesId"));
+		ctPreferencesImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		ctPreferencesImpl.setUserId(
+			this.<Long>getColumnOriginalValue("userId"));
+		ctPreferencesImpl.setCtCollectionId(
+			this.<Long>getColumnOriginalValue("ctCollectionId"));
+		ctPreferencesImpl.setPreviousCtCollectionId(
+			this.<Long>getColumnOriginalValue("previousCtCollectionId"));
+		ctPreferencesImpl.setConfirmationEnabled(
+			this.<Boolean>getColumnOriginalValue("confirmationEnabled"));
 
 		return ctPreferencesImpl;
 	}
@@ -636,7 +645,7 @@ public class CTPreferencesModelImpl
 			getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			(4 * attributeGetterFunctions.size()) + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -647,9 +656,26 @@ public class CTPreferencesModelImpl
 			Function<CTPreferences, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((CTPreferences)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply((CTPreferences)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -696,7 +722,9 @@ public class CTPreferencesModelImpl
 	private static class EscapedModelProxyProviderFunctionHolder {
 
 		private static final Function<InvocationHandler, CTPreferences>
-			_escapedModelProxyProviderFunction = _getProxyProviderFunction();
+			_escapedModelProxyProviderFunction =
+				ProxyUtil.getProxyProviderFunction(
+					CTPreferences.class, ModelWrapper.class);
 
 	}
 

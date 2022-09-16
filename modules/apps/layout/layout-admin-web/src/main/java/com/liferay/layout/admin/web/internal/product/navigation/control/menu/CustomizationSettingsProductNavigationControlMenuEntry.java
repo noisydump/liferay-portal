@@ -86,15 +86,11 @@ public class CustomizationSettingsProductNavigationControlMenuEntry
 	}
 
 	@Override
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.layout.admin.web)",
-		unbind = "-"
-	)
-	public void setServletContext(ServletContext servletContext) {
-		super.setServletContext(servletContext);
+	protected ServletContext getServletContext() {
+		return _servletContext;
 	}
 
-	protected boolean isCustomizableLayout(ThemeDisplay themeDisplay)
+	private boolean _isCustomizableLayout(ThemeDisplay themeDisplay)
 		throws PortalException {
 
 		Layout layout = themeDisplay.getLayout();
@@ -120,11 +116,8 @@ public class CustomizationSettingsProductNavigationControlMenuEntry
 			return true;
 		}
 
-		if (!layoutTypePortlet.isCustomizable()) {
-			return false;
-		}
-
-		if (!LayoutPermissionUtil.containsWithoutViewableGroup(
+		if (!layoutTypePortlet.isCustomizable() ||
+			!LayoutPermissionUtil.containsWithoutViewableGroup(
 				themeDisplay.getPermissionChecker(), layout, false,
 				ActionKeys.CUSTOMIZE)) {
 
@@ -143,15 +136,9 @@ public class CustomizationSettingsProductNavigationControlMenuEntry
 
 		Layout layout = themeDisplay.getLayout();
 
-		if (layout.isTypeControlPanel()) {
-			return false;
-		}
+		if (layout.isTypeControlPanel() || layout.isTypeContent() ||
+			!_isCustomizableLayout(themeDisplay)) {
 
-		if (layout.isTypeContent()) {
-			return false;
-		}
-
-		if (!isCustomizableLayout(themeDisplay)) {
 			return false;
 		}
 
@@ -160,5 +147,8 @@ public class CustomizationSettingsProductNavigationControlMenuEntry
 
 	private static final String _SHOW =
 		CustomizationSettingsProductNavigationControlMenuEntry.class + "#_SHOW";
+
+	@Reference(target = "(osgi.web.symbolicname=com.liferay.layout.admin.web)")
+	private ServletContext _servletContext;
 
 }

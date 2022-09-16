@@ -14,9 +14,16 @@
 
 package com.liferay.portal.tools.service.builder.test.service;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.util.tracker.ServiceTracker;
+import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.portal.kernel.dao.orm.DynamicQuery;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.tools.service.builder.test.model.ERCGroupEntry;
+
+import java.io.Serializable;
+
+import java.util.List;
 
 /**
  * Provides the local service utility for ERCGroupEntry. This utility wraps
@@ -48,12 +55,7 @@ public class ERCGroupEntryLocalServiceUtil {
 	 * @param ercGroupEntry the erc group entry
 	 * @return the erc group entry that was added
 	 */
-	public static
-		com.liferay.portal.tools.service.builder.test.model.ERCGroupEntry
-			addERCGroupEntry(
-				com.liferay.portal.tools.service.builder.test.model.
-					ERCGroupEntry ercGroupEntry) {
-
+	public static ERCGroupEntry addERCGroupEntry(ERCGroupEntry ercGroupEntry) {
 		return getService().addERCGroupEntry(ercGroupEntry);
 	}
 
@@ -63,19 +65,16 @@ public class ERCGroupEntryLocalServiceUtil {
 	 * @param ercGroupEntryId the primary key for the new erc group entry
 	 * @return the new erc group entry
 	 */
-	public static
-		com.liferay.portal.tools.service.builder.test.model.ERCGroupEntry
-			createERCGroupEntry(long ercGroupEntryId) {
-
+	public static ERCGroupEntry createERCGroupEntry(long ercGroupEntryId) {
 		return getService().createERCGroupEntry(ercGroupEntryId);
 	}
 
 	/**
 	 * @throws PortalException
 	 */
-	public static com.liferay.portal.kernel.model.PersistedModel
-			createPersistedModel(java.io.Serializable primaryKeyObj)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static PersistedModel createPersistedModel(
+			Serializable primaryKeyObj)
+		throws PortalException {
 
 		return getService().createPersistedModel(primaryKeyObj);
 	}
@@ -90,11 +89,8 @@ public class ERCGroupEntryLocalServiceUtil {
 	 * @param ercGroupEntry the erc group entry
 	 * @return the erc group entry that was removed
 	 */
-	public static
-		com.liferay.portal.tools.service.builder.test.model.ERCGroupEntry
-			deleteERCGroupEntry(
-				com.liferay.portal.tools.service.builder.test.model.
-					ERCGroupEntry ercGroupEntry) {
+	public static ERCGroupEntry deleteERCGroupEntry(
+		ERCGroupEntry ercGroupEntry) {
 
 		return getService().deleteERCGroupEntry(ercGroupEntry);
 	}
@@ -110,10 +106,8 @@ public class ERCGroupEntryLocalServiceUtil {
 	 * @return the erc group entry that was removed
 	 * @throws PortalException if a erc group entry with the primary key could not be found
 	 */
-	public static
-		com.liferay.portal.tools.service.builder.test.model.ERCGroupEntry
-				deleteERCGroupEntry(long ercGroupEntryId)
-			throws com.liferay.portal.kernel.exception.PortalException {
+	public static ERCGroupEntry deleteERCGroupEntry(long ercGroupEntryId)
+		throws PortalException {
 
 		return getService().deleteERCGroupEntry(ercGroupEntryId);
 	}
@@ -121,23 +115,22 @@ public class ERCGroupEntryLocalServiceUtil {
 	/**
 	 * @throws PortalException
 	 */
-	public static com.liferay.portal.kernel.model.PersistedModel
-			deletePersistedModel(
-				com.liferay.portal.kernel.model.PersistedModel persistedModel)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static PersistedModel deletePersistedModel(
+			PersistedModel persistedModel)
+		throws PortalException {
 
 		return getService().deletePersistedModel(persistedModel);
 	}
 
-	public static <T> T dslQuery(
-		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
-
+	public static <T> T dslQuery(DSLQuery dslQuery) {
 		return getService().dslQuery(dslQuery);
 	}
 
-	public static com.liferay.portal.kernel.dao.orm.DynamicQuery
-		dynamicQuery() {
+	public static int dslQueryCount(DSLQuery dslQuery) {
+		return getService().dslQueryCount(dslQuery);
+	}
 
+	public static DynamicQuery dynamicQuery() {
 		return getService().dynamicQuery();
 	}
 
@@ -147,9 +140,7 @@ public class ERCGroupEntryLocalServiceUtil {
 	 * @param dynamicQuery the dynamic query
 	 * @return the matching rows
 	 */
-	public static <T> java.util.List<T> dynamicQuery(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery) {
-
+	public static <T> List<T> dynamicQuery(DynamicQuery dynamicQuery) {
 		return getService().dynamicQuery(dynamicQuery);
 	}
 
@@ -165,9 +156,8 @@ public class ERCGroupEntryLocalServiceUtil {
 	 * @param end the upper bound of the range of model instances (not inclusive)
 	 * @return the range of matching rows
 	 */
-	public static <T> java.util.List<T> dynamicQuery(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery, int start,
-		int end) {
+	public static <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end) {
 
 		return getService().dynamicQuery(dynamicQuery, start, end);
 	}
@@ -185,10 +175,9 @@ public class ERCGroupEntryLocalServiceUtil {
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
 	 * @return the ordered range of matching rows
 	 */
-	public static <T> java.util.List<T> dynamicQuery(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery, int start,
-		int end,
-		com.liferay.portal.kernel.util.OrderByComparator<T> orderByComparator) {
+	public static <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end,
+		OrderByComparator<T> orderByComparator) {
 
 		return getService().dynamicQuery(
 			dynamicQuery, start, end, orderByComparator);
@@ -200,9 +189,7 @@ public class ERCGroupEntryLocalServiceUtil {
 	 * @param dynamicQuery the dynamic query
 	 * @return the number of rows matching the dynamic query
 	 */
-	public static long dynamicQueryCount(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery) {
-
+	public static long dynamicQueryCount(DynamicQuery dynamicQuery) {
 		return getService().dynamicQueryCount(dynamicQuery);
 	}
 
@@ -214,16 +201,13 @@ public class ERCGroupEntryLocalServiceUtil {
 	 * @return the number of rows matching the dynamic query
 	 */
 	public static long dynamicQueryCount(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery,
+		DynamicQuery dynamicQuery,
 		com.liferay.portal.kernel.dao.orm.Projection projection) {
 
 		return getService().dynamicQueryCount(dynamicQuery, projection);
 	}
 
-	public static
-		com.liferay.portal.tools.service.builder.test.model.ERCGroupEntry
-			fetchERCGroupEntry(long ercGroupEntryId) {
-
+	public static ERCGroupEntry fetchERCGroupEntry(long ercGroupEntryId) {
 		return getService().fetchERCGroupEntry(ercGroupEntryId);
 	}
 
@@ -234,13 +218,35 @@ public class ERCGroupEntryLocalServiceUtil {
 	 * @param externalReferenceCode the erc group entry's external reference code
 	 * @return the matching erc group entry, or <code>null</code> if a matching erc group entry could not be found
 	 */
-	public static
-		com.liferay.portal.tools.service.builder.test.model.ERCGroupEntry
-			fetchERCGroupEntryByReferenceCode(
-				long groupId, String externalReferenceCode) {
+	public static ERCGroupEntry fetchERCGroupEntryByExternalReferenceCode(
+		long groupId, String externalReferenceCode) {
+
+		return getService().fetchERCGroupEntryByExternalReferenceCode(
+			groupId, externalReferenceCode);
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #fetchERCGroupEntryByExternalReferenceCode(long, String)}
+	 */
+	@Deprecated
+	public static ERCGroupEntry fetchERCGroupEntryByReferenceCode(
+		long groupId, String externalReferenceCode) {
 
 		return getService().fetchERCGroupEntryByReferenceCode(
 			groupId, externalReferenceCode);
+	}
+
+	/**
+	 * Returns the erc group entry matching the UUID and group.
+	 *
+	 * @param uuid the erc group entry's UUID
+	 * @param groupId the primary key of the group
+	 * @return the matching erc group entry, or <code>null</code> if a matching erc group entry could not be found
+	 */
+	public static ERCGroupEntry fetchERCGroupEntryByUuidAndGroupId(
+		String uuid, long groupId) {
+
+		return getService().fetchERCGroupEntryByUuidAndGroupId(uuid, groupId);
 	}
 
 	public static com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery
@@ -260,11 +266,40 @@ public class ERCGroupEntryLocalServiceUtil {
 	 * @param end the upper bound of the range of erc group entries (not inclusive)
 	 * @return the range of erc group entries
 	 */
-	public static java.util.List
-		<com.liferay.portal.tools.service.builder.test.model.ERCGroupEntry>
-			getERCGroupEntries(int start, int end) {
-
+	public static List<ERCGroupEntry> getERCGroupEntries(int start, int end) {
 		return getService().getERCGroupEntries(start, end);
+	}
+
+	/**
+	 * Returns all the erc group entries matching the UUID and company.
+	 *
+	 * @param uuid the UUID of the erc group entries
+	 * @param companyId the primary key of the company
+	 * @return the matching erc group entries, or an empty list if no matches were found
+	 */
+	public static List<ERCGroupEntry> getERCGroupEntriesByUuidAndCompanyId(
+		String uuid, long companyId) {
+
+		return getService().getERCGroupEntriesByUuidAndCompanyId(
+			uuid, companyId);
+	}
+
+	/**
+	 * Returns a range of erc group entries matching the UUID and company.
+	 *
+	 * @param uuid the UUID of the erc group entries
+	 * @param companyId the primary key of the company
+	 * @param start the lower bound of the range of erc group entries
+	 * @param end the upper bound of the range of erc group entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the range of matching erc group entries, or an empty list if no matches were found
+	 */
+	public static List<ERCGroupEntry> getERCGroupEntriesByUuidAndCompanyId(
+		String uuid, long companyId, int start, int end,
+		OrderByComparator<ERCGroupEntry> orderByComparator) {
+
+		return getService().getERCGroupEntriesByUuidAndCompanyId(
+			uuid, companyId, start, end, orderByComparator);
 	}
 
 	/**
@@ -283,12 +318,41 @@ public class ERCGroupEntryLocalServiceUtil {
 	 * @return the erc group entry
 	 * @throws PortalException if a erc group entry with the primary key could not be found
 	 */
-	public static
-		com.liferay.portal.tools.service.builder.test.model.ERCGroupEntry
-				getERCGroupEntry(long ercGroupEntryId)
-			throws com.liferay.portal.kernel.exception.PortalException {
+	public static ERCGroupEntry getERCGroupEntry(long ercGroupEntryId)
+		throws PortalException {
 
 		return getService().getERCGroupEntry(ercGroupEntryId);
+	}
+
+	/**
+	 * Returns the erc group entry with the matching external reference code and group.
+	 *
+	 * @param groupId the primary key of the group
+	 * @param externalReferenceCode the erc group entry's external reference code
+	 * @return the matching erc group entry
+	 * @throws PortalException if a matching erc group entry could not be found
+	 */
+	public static ERCGroupEntry getERCGroupEntryByExternalReferenceCode(
+			long groupId, String externalReferenceCode)
+		throws PortalException {
+
+		return getService().getERCGroupEntryByExternalReferenceCode(
+			groupId, externalReferenceCode);
+	}
+
+	/**
+	 * Returns the erc group entry matching the UUID and group.
+	 *
+	 * @param uuid the erc group entry's UUID
+	 * @param groupId the primary key of the group
+	 * @return the matching erc group entry
+	 * @throws PortalException if a matching erc group entry could not be found
+	 */
+	public static ERCGroupEntry getERCGroupEntryByUuidAndGroupId(
+			String uuid, long groupId)
+		throws PortalException {
+
+		return getService().getERCGroupEntryByUuidAndGroupId(uuid, groupId);
 	}
 
 	public static
@@ -310,9 +374,8 @@ public class ERCGroupEntryLocalServiceUtil {
 	/**
 	 * @throws PortalException
 	 */
-	public static com.liferay.portal.kernel.model.PersistedModel
-			getPersistedModel(java.io.Serializable primaryKeyObj)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static PersistedModel getPersistedModel(Serializable primaryKeyObj)
+		throws PortalException {
 
 		return getService().getPersistedModel(primaryKeyObj);
 	}
@@ -327,36 +390,16 @@ public class ERCGroupEntryLocalServiceUtil {
 	 * @param ercGroupEntry the erc group entry
 	 * @return the erc group entry that was updated
 	 */
-	public static
-		com.liferay.portal.tools.service.builder.test.model.ERCGroupEntry
-			updateERCGroupEntry(
-				com.liferay.portal.tools.service.builder.test.model.
-					ERCGroupEntry ercGroupEntry) {
+	public static ERCGroupEntry updateERCGroupEntry(
+		ERCGroupEntry ercGroupEntry) {
 
 		return getService().updateERCGroupEntry(ercGroupEntry);
 	}
 
 	public static ERCGroupEntryLocalService getService() {
-		return _serviceTracker.getService();
+		return _service;
 	}
 
-	private static ServiceTracker
-		<ERCGroupEntryLocalService, ERCGroupEntryLocalService> _serviceTracker;
-
-	static {
-		Bundle bundle = FrameworkUtil.getBundle(
-			ERCGroupEntryLocalService.class);
-
-		ServiceTracker<ERCGroupEntryLocalService, ERCGroupEntryLocalService>
-			serviceTracker =
-				new ServiceTracker
-					<ERCGroupEntryLocalService, ERCGroupEntryLocalService>(
-						bundle.getBundleContext(),
-						ERCGroupEntryLocalService.class, null);
-
-		serviceTracker.open();
-
-		_serviceTracker = serviceTracker;
-	}
+	private static volatile ERCGroupEntryLocalService _service;
 
 }

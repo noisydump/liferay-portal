@@ -412,6 +412,11 @@ public class ArrayUtil_IW {
 		return ArrayUtil.isNotEmpty(array);
 	}
 
+	public <T> void isNotEmptyForEach(T[] array,
+		java.util.function.Consumer<T> consumer) {
+		ArrayUtil.isNotEmptyForEach(array, consumer);
+	}
+
 	public boolean[] remove(boolean[] array, boolean value) {
 		return ArrayUtil.remove(array, value);
 	}
@@ -623,14 +628,6 @@ public class ArrayUtil_IW {
 		return ArrayUtil.toArray(array);
 	}
 
-	/**
-	 * @deprecated
-	 */
-	@Deprecated
-	public java.lang.String[] toArray(java.lang.String[] array) {
-		return ArrayUtil.toArray(array);
-	}
-
 	public <T, A> A[] toArray(T[] list,
 		com.liferay.portal.kernel.util.Accessor<T, A> accessor) {
 		return ArrayUtil.toArray(list, accessor);
@@ -716,8 +713,7 @@ public class ArrayUtil_IW {
 		return ArrayUtil.toStringArray(array);
 	}
 
-	public java.lang.String[] toStringArray(
-		java.util.Collection<java.lang.String> collection) {
+	public java.lang.String[] toStringArray(java.util.Collection<?> collection) {
 		return ArrayUtil.toStringArray(collection);
 	}
 
@@ -739,8 +735,8 @@ public class ArrayUtil_IW {
 	}
 
 	public java.lang.String[] toStringArray(
-		com.liferay.portal.kernel.json.JSONArray array) {
-		return ArrayUtil.toStringArray(array);
+		com.liferay.portal.kernel.json.JSONArray jsonArray) {
+		return ArrayUtil.toStringArray(jsonArray);
 	}
 
 	public java.lang.String[] toStringArray(long[] array) {

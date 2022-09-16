@@ -29,9 +29,11 @@ import java.util.concurrent.Future;
 public class ParallelExecutor<T> {
 
 	public ParallelExecutor(
-		Collection<Callable<T>> callables, ExecutorService executorService) {
+		Collection<Callable<T>> callables, boolean excludeNulls,
+		ExecutorService executorService) {
 
 		_callables = callables;
+		_excludeNulls = excludeNulls;
 
 		_executorService = executorService;
 
@@ -44,19 +46,47 @@ public class ParallelExecutor<T> {
 		}
 	}
 
+	public ParallelExecutor(
+		Collection<Callable<T>> callables, ExecutorService executorService) {
+
+		this(callables, false, executorService);
+	}
+
 	public List<T> execute() {
+		start();
+
+		return waitFor();
+	}
+
+	public synchronized void start() {
+		if (_futures != null) {
+			return;
+		}
+
+		_futures = new ArrayList<>(_callables.size());
+
+		for (Callable<T> callable : _callables) {
+			_futures.add(_executorService.submit(callable));
+		}
+	}
+
+	public List<T> waitFor() {
+		if (_futures == null) {
+			start();
+		}
+
 		try {
-			ArrayList<Future<T>> futures = new ArrayList<>(_callables.size());
-
-			for (Callable<T> callable : _callables) {
-				futures.add(_executorService.submit(callable));
-			}
-
 			List<T> results = new ArrayList<>(_callables.size());
 
-			for (Future<T> future : futures) {
+			for (Future<T> future : _futures) {
 				try {
-					results.add(future.get());
+					T result = future.get();
+
+					if ((result == null) && _excludeNulls) {
+						continue;
+					}
+
+					results.add(result);
 				}
 				catch (ExecutionException | InterruptedException exception) {
 					throw new RuntimeException(exception);
@@ -80,6 +110,8 @@ public class ParallelExecutor<T> {
 
 	private final Collection<Callable<T>> _callables;
 	private final boolean _disposeExecutor;
+	private boolean _excludeNulls;
 	private ExecutorService _executorService;
+	private ArrayList<Future<T>> _futures;
 
 }

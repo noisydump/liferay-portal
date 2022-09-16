@@ -11,9 +11,7 @@ definition {
 			locator1 = "ReportsAdminEditReportDefinition#DATA_SOURCE_NAME_SELECT",
 			value1 = "${dataSource}");
 
-		UploadCommonFile(
-			locator1 = "ReportsAdminEditReportDefinition#TEMPLATE_FILE_UPLOAD",
-			value1 = "${templateFile}");
+		UploadDependencyFile.uploadFile(fileName = "${templateFile}");
 
 		PortletEntry.save();
 	}
@@ -48,8 +46,6 @@ definition {
 			value1 = "Generate");
 
 		Alert.viewSuccessMessage();
-
-		Pause(locator1 = "5000");
 	}
 
 	macro addScheduleEntry {
@@ -62,6 +58,7 @@ definition {
 		AssertElementPresent(locator1 = "ReportsAdminEditScheduleEntry#START_DATE_TIME_FIELD");
 
 		var time = selenium.getElementValue("//span[contains(@class,'lfr-input-time')]/input");
+
 		var ampm = RegexUtil.replace("${time}", "([0-9]*):([0-9]*) ([A-Z]*)", "3");
 		var hours = RegexUtil.replace("${time}", "([0-9]*):([0-9]*) ([A-Z]*)", "1");
 		var minutes = RegexUtil.replace("${time}", "([0-9]*):([0-9]*) ([A-Z]*)", "2");
@@ -105,8 +102,6 @@ definition {
 			value1 = "Schedule");
 
 		Alert.viewSuccessMessage();
-
-		Pause(locator1 = "5000");
 	}
 
 	macro addSource {
@@ -133,6 +128,14 @@ definition {
 				locator1 = "ReportsAdminEditSource#JDBC_PASSWORD_FIELD",
 				value1 = "${reportsDataSourcePassword}");
 		}
+	}
+
+	macro assertReportEntryPresent {
+		var key_reportsDefinitionName = "${reportsDefinitionName}";
+
+		AssertElementPresent(
+			locator1 = "ReportsAdmin#REPORTS_ENTRY_TABLE_DEFINITION_NAME",
+			value1 = "${reportsDefinitionName}");
 	}
 
 	macro configureDeliveryEmail {
@@ -250,18 +253,7 @@ definition {
 			locator1 = "ReportsAdminViewReportEntry#ENTRY_FILE_MENULIST_DOWNLOAD",
 			value1 = "Download");
 
-		Pause(locator1 = "2000");
-
 		takeScreenshot();
-
-		if ("${reportFormat}" == "pdf") {
-			if ("${reportsFileName}" == "reports_admin_template_source_sample_list_type.pdf") {
-				SikuliAssertElementPresent(locator1 = "ReportsAdmin#REPORT_PDF_LIST_TYPE_PNG");
-			}
-			else {
-				SikuliAssertElementPresent(locator1 = "ReportsAdmin#REPORT_PDF_CLASS_NAME_PNG");
-			}
-		}
 	}
 
 	macro gotoConfiguration {
@@ -384,7 +376,7 @@ Sincerely,<br />
 		}
 
 		AssertTextEquals(
-			locator1 = "Message#INFO",
+			locator1 = "ReportsAdmin#EMPTY_TABLE",
 			value1 = "There are no definitions.");
 	}
 
@@ -409,8 +401,8 @@ Sincerely,<br />
 		}
 
 		AssertTextEquals(
-			locator1 = "Message#INFO",
-			value1 = "There are no entries.");
+			locator1 = "ReportsAdmin#EMPTY_TABLE",
+			value1 = "There are no reports.");
 	}
 
 	macro tearDownSources {
@@ -433,7 +425,7 @@ Sincerely,<br />
 		}
 
 		AssertTextEquals(
-			locator1 = "Message#INFO",
+			locator1 = "ReportsAdmin#EMPTY_TABLE",
 			value1 = "There are no sources.");
 	}
 

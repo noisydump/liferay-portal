@@ -18,6 +18,7 @@ import com.liferay.headless.delivery.client.dto.v1_0.AdaptedImage;
 import com.liferay.headless.delivery.client.dto.v1_0.CustomField;
 import com.liferay.headless.delivery.client.dto.v1_0.Document;
 import com.liferay.headless.delivery.client.dto.v1_0.RelatedContent;
+import com.liferay.headless.delivery.client.dto.v1_0.RenderedContent;
 import com.liferay.headless.delivery.client.dto.v1_0.TaxonomyCategoryBrief;
 import com.liferay.headless.delivery.client.json.BaseJSONParser;
 
@@ -62,7 +63,7 @@ public class DocumentSerDes {
 		sb.append("{");
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+			"yyyy-MM-dd'T'HH:mm:ssXX");
 
 		if (document.getActions() != null) {
 			if (sb.length() > 1) {
@@ -254,6 +255,20 @@ public class DocumentSerDes {
 			sb.append("\"");
 		}
 
+		if (document.getExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"externalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(document.getExternalReferenceCode()));
+
+			sb.append("\"");
+		}
+
 		if (document.getFileExtension() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -325,6 +340,26 @@ public class DocumentSerDes {
 				sb.append(String.valueOf(document.getRelatedContents()[i]));
 
 				if ((i + 1) < document.getRelatedContents().length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
+		if (document.getRenderedContents() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"renderedContents\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < document.getRenderedContents().length; i++) {
+				sb.append(String.valueOf(document.getRenderedContents()[i]));
+
+				if ((i + 1) < document.getRenderedContents().length) {
 					sb.append(", ");
 				}
 			}
@@ -442,7 +477,7 @@ public class DocumentSerDes {
 		Map<String, String> map = new TreeMap<>();
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+			"yyyy-MM-dd'T'HH:mm:ssXX");
 
 		if (document.getActions() == null) {
 			map.put("actions", null);
@@ -554,6 +589,15 @@ public class DocumentSerDes {
 				"encodingFormat", String.valueOf(document.getEncodingFormat()));
 		}
 
+		if (document.getExternalReferenceCode() == null) {
+			map.put("externalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"externalReferenceCode",
+				String.valueOf(document.getExternalReferenceCode()));
+		}
+
 		if (document.getFileExtension() == null) {
 			map.put("fileExtension", null);
 		}
@@ -592,6 +636,15 @@ public class DocumentSerDes {
 			map.put(
 				"relatedContents",
 				String.valueOf(document.getRelatedContents()));
+		}
+
+		if (document.getRenderedContents() == null) {
+			map.put("renderedContents", null);
+		}
+		else {
+			map.put(
+				"renderedContents",
+				String.valueOf(document.getRenderedContents()));
 		}
 
 		if (document.getSiteId() == null) {
@@ -753,6 +806,14 @@ public class DocumentSerDes {
 					document.setEncodingFormat((String)jsonParserFieldValue);
 				}
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "externalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					document.setExternalReferenceCode(
+						(String)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "fileExtension")) {
 				if (jsonParserFieldValue != null) {
 					document.setFileExtension((String)jsonParserFieldValue);
@@ -784,6 +845,19 @@ public class DocumentSerDes {
 							object -> RelatedContentSerDes.toDTO((String)object)
 						).toArray(
 							size -> new RelatedContent[size]
+						));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "renderedContents")) {
+				if (jsonParserFieldValue != null) {
+					document.setRenderedContents(
+						Stream.of(
+							toStrings((Object[])jsonParserFieldValue)
+						).map(
+							object -> RenderedContentSerDes.toDTO(
+								(String)object)
+						).toArray(
+							size -> new RenderedContent[size]
 						));
 				}
 			}
@@ -834,9 +908,6 @@ public class DocumentSerDes {
 							(String)jsonParserFieldValue));
 				}
 			}
-			else if (jsonParserFieldName.equals("status")) {
-				throw new IllegalArgumentException();
-			}
 		}
 
 	}
@@ -865,7 +936,7 @@ public class DocumentSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -901,7 +972,7 @@ public class DocumentSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

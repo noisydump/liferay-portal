@@ -19,6 +19,7 @@ import com.liferay.asset.kernel.model.BaseJSPAssetRenderer;
 import com.liferay.dynamic.data.lists.constants.DDLWebKeys;
 import com.liferay.dynamic.data.lists.model.DDLRecord;
 import com.liferay.dynamic.data.lists.model.DDLRecordVersion;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
@@ -123,7 +124,7 @@ public class KaleoProcessAssetRenderer
 		}
 		catch (PortalException portalException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(portalException, portalException);
+				_log.warn(portalException);
 			}
 		}
 
@@ -136,18 +137,17 @@ public class KaleoProcessAssetRenderer
 			LiferayPortletResponse liferayPortletResponse)
 		throws Exception {
 
-		PortletURL portletURL = PortalUtil.getControlPanelPortletURL(
-			liferayPortletRequest, KaleoFormsPortletKeys.KALEO_FORMS_ADMIN,
-			PortletRequest.RENDER_PHASE);
-
-		portletURL.setParameter("mvcPath", "/admin/edit_record.jsp");
-		portletURL.setParameter(
-			"kaleoProcessId",
-			String.valueOf(_kaleoProcess.getKaleoProcessId()));
-		portletURL.setParameter(
-			"ddlRecordId", String.valueOf(_ddlRecord.getRecordId()));
-
-		return portletURL;
+		return PortletURLBuilder.create(
+			PortalUtil.getControlPanelPortletURL(
+				liferayPortletRequest, KaleoFormsPortletKeys.KALEO_FORMS_ADMIN,
+				PortletRequest.RENDER_PHASE)
+		).setMVCPath(
+			"/admin/edit_record.jsp"
+		).setParameter(
+			"ddlRecordId", _ddlRecord.getRecordId()
+		).setParameter(
+			"kaleoProcessId", _kaleoProcess.getKaleoProcessId()
+		).buildPortletURL();
 	}
 
 	@Override
@@ -192,7 +192,7 @@ public class KaleoProcessAssetRenderer
 		httpServletRequest.setAttribute(
 			KaleoFormsWebKeys.KALEO_PROCESS, _kaleoProcess);
 
-		KaleoProcessLink kaleoProcessLink = fetchKaleoProcessLink(
+		KaleoProcessLink kaleoProcessLink = _fetchKaleoProcessLink(
 			httpServletRequest);
 
 		httpServletRequest.setAttribute(
@@ -201,13 +201,19 @@ public class KaleoProcessAssetRenderer
 		return super.include(httpServletRequest, httpServletResponse, template);
 	}
 
-	protected KaleoProcessLink fetchKaleoProcessLink(
+	protected void setKaleoProcessLinkLocalService(
+		KaleoProcessLinkLocalService kaleoProcessLinkLocalService) {
+
+		_kaKaleoProcessLinkLocalService = kaleoProcessLinkLocalService;
+	}
+
+	private KaleoProcessLink _fetchKaleoProcessLink(
 			HttpServletRequest httpServletRequest)
 		throws Exception {
 
 		KaleoProcessLink kaleoProcessLink = null;
 
-		WorkflowTask workflowTask = getWorkflowTask(httpServletRequest);
+		WorkflowTask workflowTask = _getWorkflowTask(httpServletRequest);
 
 		if (workflowTask != null) {
 			kaleoProcessLink =
@@ -218,8 +224,7 @@ public class KaleoProcessAssetRenderer
 		return kaleoProcessLink;
 	}
 
-	protected WorkflowTask getWorkflowTask(
-			HttpServletRequest httpServletRequest)
+	private WorkflowTask _getWorkflowTask(HttpServletRequest httpServletRequest)
 		throws Exception {
 
 		WorkflowTask workflowTask = null;
@@ -237,12 +242,6 @@ public class KaleoProcessAssetRenderer
 		}
 
 		return workflowTask;
-	}
-
-	protected void setKaleoProcessLinkLocalService(
-		KaleoProcessLinkLocalService kaleoProcessLinkLocalService) {
-
-		_kaKaleoProcessLinkLocalService = kaleoProcessLinkLocalService;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

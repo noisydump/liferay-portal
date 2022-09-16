@@ -98,7 +98,7 @@ public class DiscountResourceImpl extends BaseDiscountResourceImpl {
 
 		if (commerceDiscount == null) {
 			throw new NoSuchDiscountException(
-				"Unable to find Discount with externalReferenceCode: " +
+				"Unable to find discount with external reference code " +
 					externalReferenceCode);
 		}
 
@@ -126,7 +126,7 @@ public class DiscountResourceImpl extends BaseDiscountResourceImpl {
 
 		if (commerceDiscount == null) {
 			throw new NoSuchDiscountException(
-				"Unable to find Discount with externalReferenceCode: " +
+				"Unable to find discount with external reference code " +
 					externalReferenceCode);
 		}
 
@@ -171,7 +171,7 @@ public class DiscountResourceImpl extends BaseDiscountResourceImpl {
 
 		if (commerceDiscount == null) {
 			throw new NoSuchDiscountException(
-				"Unable to find Discount with externalReferenceCode: " +
+				"Unable to find discount with external reference code " +
 					externalReferenceCode);
 		}
 
@@ -184,9 +184,67 @@ public class DiscountResourceImpl extends BaseDiscountResourceImpl {
 
 	@Override
 	public Discount postDiscount(Discount discount) throws Exception {
-		CommerceDiscount commerceDiscount = _upsertCommerceDiscount(discount);
+		CommerceDiscount commerceDiscount = _addOrUpdateCommerceDiscount(
+			discount);
 
 		return _toDiscount(commerceDiscount.getCommerceDiscountId());
+	}
+
+	private CommerceDiscount _addOrUpdateCommerceDiscount(Discount discount)
+		throws Exception {
+
+		ServiceContext serviceContext =
+			_serviceContextHelper.getServiceContext();
+
+		Calendar displayCalendar = CalendarFactoryUtil.getCalendar(
+			serviceContext.getTimeZone());
+
+		DateConfig displayDateConfig = new DateConfig(displayCalendar);
+
+		Calendar expirationCalendar = CalendarFactoryUtil.getCalendar(
+			serviceContext.getTimeZone());
+
+		expirationCalendar.add(Calendar.MONTH, 1);
+
+		DateConfig expirationDateConfig = new DateConfig(expirationCalendar);
+
+		CommerceDiscount commerceDiscount =
+			_commerceDiscountService.addOrUpdateCommerceDiscount(
+				discount.getExternalReferenceCode(),
+				GetterUtil.getLong(discount.getId()), discount.getTitle(),
+				discount.getTarget(),
+				GetterUtil.getBoolean(discount.getUseCouponCode()),
+				discount.getCouponCode(),
+				GetterUtil.getBoolean(discount.getUsePercentage()),
+				discount.getMaximumDiscountAmount(),
+				discount.getPercentageLevel1(), discount.getPercentageLevel2(),
+				discount.getPercentageLevel3(), discount.getPercentageLevel4(),
+				discount.getLimitationType(),
+				GetterUtil.getInteger(discount.getLimitationTimes()),
+				GetterUtil.getBoolean(discount.getActive()),
+				displayDateConfig.getMonth(), displayDateConfig.getDay(),
+				displayDateConfig.getYear(), displayDateConfig.getHour(),
+				displayDateConfig.getMinute(), expirationDateConfig.getMonth(),
+				expirationDateConfig.getDay(), expirationDateConfig.getYear(),
+				expirationDateConfig.getHour(),
+				expirationDateConfig.getMinute(),
+				GetterUtil.getBoolean(discount.getNeverExpire(), true),
+				serviceContext);
+
+		// Expando
+
+		Map<String, ?> customFields = discount.getCustomFields();
+
+		if ((customFields != null) && !customFields.isEmpty()) {
+			ExpandoUtil.updateExpando(
+				serviceContext.getCompanyId(), CommerceDiscount.class,
+				commerceDiscount.getPrimaryKey(), customFields);
+		}
+
+		// Update nested resources
+
+		return _updateNestedResources(
+			discount, commerceDiscount, serviceContext);
 	}
 
 	private Discount _toDiscount(Long commerceDiscountId) throws Exception {
@@ -330,8 +388,9 @@ public class DiscountResourceImpl extends BaseDiscountResourceImpl {
 				}
 
 				DiscountCategoryUtil.addCommerceDiscountRel(
-					_assetCategoryLocalService, _commerceDiscountRelService,
-					discountCategory, commerceDiscount, serviceContext);
+					contextCompany.getGroupId(), _assetCategoryLocalService,
+					_commerceDiscountRelService, discountCategory,
+					commerceDiscount, serviceContext);
 			}
 		}
 
@@ -346,14 +405,16 @@ public class DiscountResourceImpl extends BaseDiscountResourceImpl {
 
 				if (cProduct == null) {
 					cProduct =
-						_cProductLocalService.fetchCProductByReferenceCode(
-							contextCompany.getCompanyId(),
-							discountProduct.getProductExternalReferenceCode());
+						_cProductLocalService.
+							fetchCProductByExternalReferenceCode(
+								contextCompany.getCompanyId(),
+								discountProduct.
+									getProductExternalReferenceCode());
 				}
 
 				if (cProduct == null) {
 					throw new NoSuchCProductException(
-						"Unable to find Product with externalReferenceCode: " +
+						"Unable to find product with external reference code " +
 							discountProduct.getProductExternalReferenceCode());
 				}
 
@@ -393,63 +454,6 @@ public class DiscountResourceImpl extends BaseDiscountResourceImpl {
 		}
 
 		return commerceDiscount;
-	}
-
-	private CommerceDiscount _upsertCommerceDiscount(Discount discount)
-		throws Exception {
-
-		ServiceContext serviceContext =
-			_serviceContextHelper.getServiceContext();
-
-		Calendar displayCalendar = CalendarFactoryUtil.getCalendar(
-			serviceContext.getTimeZone());
-
-		DateConfig displayDateConfig = new DateConfig(displayCalendar);
-
-		Calendar expirationCalendar = CalendarFactoryUtil.getCalendar(
-			serviceContext.getTimeZone());
-
-		expirationCalendar.add(Calendar.MONTH, 1);
-
-		DateConfig expirationDateConfig = new DateConfig(expirationCalendar);
-
-		CommerceDiscount commerceDiscount =
-			_commerceDiscountService.upsertCommerceDiscount(
-				discount.getExternalReferenceCode(), contextUser.getUserId(),
-				GetterUtil.getLong(discount.getId()), discount.getTitle(),
-				discount.getTarget(),
-				GetterUtil.getBoolean(discount.getUseCouponCode()),
-				discount.getCouponCode(),
-				GetterUtil.getBoolean(discount.getUsePercentage()),
-				discount.getMaximumDiscountAmount(),
-				discount.getPercentageLevel1(), discount.getPercentageLevel2(),
-				discount.getPercentageLevel3(), discount.getPercentageLevel4(),
-				discount.getLimitationType(),
-				GetterUtil.getInteger(discount.getLimitationTimes()),
-				GetterUtil.getBoolean(discount.getActive()),
-				displayDateConfig.getMonth(), displayDateConfig.getDay(),
-				displayDateConfig.getYear(), displayDateConfig.getHour(),
-				displayDateConfig.getMinute(), expirationDateConfig.getMonth(),
-				expirationDateConfig.getDay(), expirationDateConfig.getYear(),
-				expirationDateConfig.getHour(),
-				expirationDateConfig.getMinute(),
-				GetterUtil.getBoolean(discount.getNeverExpire(), true),
-				serviceContext);
-
-		// Expando
-
-		Map<String, ?> customFields = discount.getCustomFields();
-
-		if ((customFields != null) && !customFields.isEmpty()) {
-			ExpandoUtil.updateExpando(
-				serviceContext.getCompanyId(), CommerceDiscount.class,
-				commerceDiscount.getPrimaryKey(), customFields);
-		}
-
-		// Update nested resources
-
-		return _updateNestedResources(
-			discount, commerceDiscount, serviceContext);
 	}
 
 	@Reference

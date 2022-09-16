@@ -19,12 +19,15 @@ import com.liferay.fragment.constants.FragmentPortletKeys;
 import com.liferay.fragment.model.FragmentEntry;
 import com.liferay.fragment.service.FragmentEntryService;
 import com.liferay.fragment.web.internal.handler.FragmentEntryExceptionRequestHandler;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONArray;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
-import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -36,7 +39,6 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
-import javax.portlet.PortletURL;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -66,6 +68,20 @@ public class AddFragmentEntryMVCActionCommand extends BaseMVCActionCommand {
 		int type = ParamUtil.getInteger(
 			actionRequest, "type", FragmentConstants.TYPE_SECTION);
 
+		String typeOptions = null;
+
+		if (type == FragmentConstants.TYPE_INPUT) {
+			String[] fieldTypes = ParamUtil.getStringValues(
+				actionRequest, "fieldTypes");
+
+			JSONArray fieldTypesJSONArray = JSONFactoryUtil.createJSONArray(
+				fieldTypes);
+
+			typeOptions = JSONUtil.put(
+				"fieldTypes", fieldTypesJSONArray
+			).toString();
+		}
+
 		try {
 			ServiceContext serviceContext = ServiceContextFactory.getInstance(
 				actionRequest);
@@ -73,7 +89,9 @@ public class AddFragmentEntryMVCActionCommand extends BaseMVCActionCommand {
 			FragmentEntry fragmentEntry =
 				_fragmentEntryService.addFragmentEntry(
 					serviceContext.getScopeGroupId(), fragmentCollectionId,
-					null, name, 0, type, WorkflowConstants.STATUS_DRAFT,
+					null, name, StringPool.BLANK, StringPool.BLANK,
+					StringPool.BLANK, false, StringPool.BLANK, null, 0, type,
+					typeOptions, WorkflowConstants.STATUS_DRAFT,
 					serviceContext);
 
 			fragmentEntry.setCss(
@@ -109,21 +127,15 @@ public class AddFragmentEntryMVCActionCommand extends BaseMVCActionCommand {
 	protected String getRedirectURL(
 		ActionResponse actionResponse, FragmentEntry fragmentEntry) {
 
-		LiferayPortletResponse liferayPortletResponse =
-			_portal.getLiferayPortletResponse(actionResponse);
-
-		PortletURL portletURL = liferayPortletResponse.createRenderURL();
-
-		portletURL.setParameter(
-			"mvcRenderCommandName", "/fragment/edit_fragment_entry");
-		portletURL.setParameter(
-			"fragmentCollectionId",
-			String.valueOf(fragmentEntry.getFragmentCollectionId()));
-		portletURL.setParameter(
-			"fragmentEntryId",
-			String.valueOf(fragmentEntry.getFragmentEntryId()));
-
-		return portletURL.toString();
+		return PortletURLBuilder.createRenderURL(
+			_portal.getLiferayPortletResponse(actionResponse)
+		).setMVCRenderCommandName(
+			"/fragment/edit_fragment_entry"
+		).setParameter(
+			"fragmentCollectionId", fragmentEntry.getFragmentCollectionId()
+		).setParameter(
+			"fragmentEntryId", fragmentEntry.getFragmentEntryId()
+		).buildString();
 	}
 
 	@Reference

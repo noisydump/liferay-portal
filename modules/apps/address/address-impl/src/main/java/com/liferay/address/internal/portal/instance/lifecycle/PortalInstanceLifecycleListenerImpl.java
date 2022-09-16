@@ -14,20 +14,11 @@
 
 package com.liferay.address.internal.portal.instance.lifecycle;
 
-import com.liferay.petra.string.StringBundler;
+import com.liferay.address.internal.osgi.commands.PortalAddressOSGiCommands;
 import com.liferay.portal.instance.lifecycle.BasePortalInstanceLifecycleListener;
 import com.liferay.portal.instance.lifecycle.PortalInstanceLifecycleListener;
-import com.liferay.portal.kernel.json.JSONArray;
-import com.liferay.portal.kernel.json.JSONFactory;
-import com.liferay.portal.kernel.json.JSONObject;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Release;
-import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.CountryLocalService;
-import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.util.StringUtil;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -48,58 +39,8 @@ public class PortalInstanceLifecycleListenerImpl
 
 	@Override
 	public void portalInstanceRegistered(Company company) throws Exception {
-		int count = _countryLocalService.getCompanyCountriesCount(
+		_portalAddressOSGiCommands.populateCompanyCountries(
 			company.getCompanyId());
-
-		if (count > 0) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(
-					StringBundler.concat(
-						"Skipping country initialization. Countries are ",
-						"already initialized for company ",
-						company.getCompanyId(), "."));
-			}
-
-			return;
-		}
-
-		if (_log.isDebugEnabled()) {
-			_log.debug(
-				"Initializing countries for company " + company.getCompanyId());
-		}
-
-		JSONArray countriesJSONArray = _getJSONArray(
-			"com/liferay/address/dependencies/countries.json");
-
-		for (int i = 0; i < countriesJSONArray.length(); i++) {
-			JSONObject countryJSONObject = countriesJSONArray.getJSONObject(i);
-
-			try {
-				String name = countryJSONObject.getString("name");
-
-				ServiceContext serviceContext = new ServiceContext();
-
-				serviceContext.setCompanyId(company.getCompanyId());
-
-				User defaultUser = company.getDefaultUser();
-
-				serviceContext.setUserId(defaultUser.getUserId());
-
-				_countryLocalService.addCountry(
-					countryJSONObject.getString("a2"),
-					countryJSONObject.getString("a3"),
-					countryJSONObject.getBoolean("active"), true,
-					countryJSONObject.getString("idd"), name,
-					countryJSONObject.getString("number"), 0, true, false,
-					countryJSONObject.getBoolean("zipRequired"),
-					serviceContext);
-			}
-			catch (Exception exception) {
-				if (_log.isDebugEnabled()) {
-					_log.debug(exception.getMessage());
-				}
-			}
-		}
 	}
 
 	@Override
@@ -107,24 +48,10 @@ public class PortalInstanceLifecycleListenerImpl
 		super.portalInstanceUnregistered(company);
 	}
 
-	private JSONArray _getJSONArray(String filePath) throws Exception {
-		String regionsJSON = StringUtil.read(getClassLoader(), filePath, false);
-
-		return _jsonFactory.createJSONArray(regionsJSON);
-	}
-
-	private static final Log _log = LogFactoryUtil.getLog(
-		PortalInstanceLifecycleListenerImpl.class);
-
 	@Reference
 	private CountryLocalService _countryLocalService;
 
 	@Reference
-	private JSONFactory _jsonFactory;
-
-	@Reference(
-		target = "(&(release.bundle.symbolic.name=portal)(release.schema.version>=9.2.0))"
-	)
-	private Release _release;
+	private PortalAddressOSGiCommands _portalAddressOSGiCommands;
 
 }

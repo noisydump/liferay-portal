@@ -18,6 +18,7 @@ import com.liferay.portal.kernel.bean.AutoEscape;
 import com.liferay.portal.kernel.model.AttachedModel;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.GroupedModel;
+import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
 
 import java.util.Date;
@@ -37,7 +38,7 @@ import org.osgi.annotation.versioning.ProviderType;
  */
 @ProviderType
 public interface CommerceAddressModel
-	extends AttachedModel, BaseModel<CommerceAddress>, GroupedModel,
+	extends AttachedModel, BaseModel<CommerceAddress>, GroupedModel, MVCCModel,
 			ShardedModel {
 
 	/*
@@ -59,6 +60,22 @@ public interface CommerceAddressModel
 	 * @param primaryKey the primary key of this commerce address
 	 */
 	public void setPrimaryKey(long primaryKey);
+
+	/**
+	 * Returns the mvcc version of this commerce address.
+	 *
+	 * @return the mvcc version of this commerce address
+	 */
+	@Override
+	public long getMvccVersion();
+
+	/**
+	 * Sets the mvcc version of this commerce address.
+	 *
+	 * @param mvccVersion the mvcc version of this commerce address
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion);
 
 	/**
 	 * Returns the external reference code of this commerce address.
@@ -350,32 +367,32 @@ public interface CommerceAddressModel
 	public void setZip(String zip);
 
 	/**
-	 * Returns the commerce region ID of this commerce address.
+	 * Returns the region ID of this commerce address.
 	 *
-	 * @return the commerce region ID of this commerce address
+	 * @return the region ID of this commerce address
 	 */
-	public long getCommerceRegionId();
+	public long getRegionId();
 
 	/**
-	 * Sets the commerce region ID of this commerce address.
+	 * Sets the region ID of this commerce address.
 	 *
-	 * @param commerceRegionId the commerce region ID of this commerce address
+	 * @param regionId the region ID of this commerce address
 	 */
-	public void setCommerceRegionId(long commerceRegionId);
+	public void setRegionId(long regionId);
 
 	/**
-	 * Returns the commerce country ID of this commerce address.
+	 * Returns the country ID of this commerce address.
 	 *
-	 * @return the commerce country ID of this commerce address
+	 * @return the country ID of this commerce address
 	 */
-	public long getCommerceCountryId();
+	public long getCountryId();
 
 	/**
-	 * Sets the commerce country ID of this commerce address.
+	 * Sets the country ID of this commerce address.
 	 *
-	 * @param commerceCountryId the commerce country ID of this commerce address
+	 * @param countryId the country ID of this commerce address
 	 */
-	public void setCommerceCountryId(long commerceCountryId);
+	public void setCountryId(long countryId);
 
 	/**
 	 * Returns the latitude of this commerce address.
@@ -475,5 +492,8 @@ public interface CommerceAddressModel
 	 * @param type the type of this commerce address
 	 */
 	public void setType(int type);
+
+	@Override
+	public CommerceAddress cloneWithOriginalValues();
 
 }

@@ -3,7 +3,10 @@ definition {
 	macro setClassNameId {
 		Variables.assertDefined(parameterList = "${contentType}");
 
-		if ("${contentType}" == "Web Content Article") {
+		if ("${contentType}" == "Commerce Product") {
+			var value = "com.liferay.commerce.product.model.CPDefinition";
+		}
+		else if ("${contentType}" == "Web Content Article") {
 			var value = "com.liferay.journal.model.JournalArticle";
 		}
 		else if ("${contentType}" == "Document") {
@@ -11,6 +14,9 @@ definition {
 		}
 		else if ("${contentType}" == "Blogs Entry") {
 			var value = "com.liferay.blogs.model.BlogsEntry";
+		}
+		else if ("${contentType}" == "Category") {
+			var value = "com.liferay.asset.kernel.model.AssetCategory";
 		}
 		else {
 			fail("'value' is either invalid or not yet set.");
@@ -50,7 +56,11 @@ definition {
 			var site = "true";
 		}
 
-		var groupId = JSONGroupAPI._getGroupIdByGroupKey(groupKey = "${groupKey}", parentGroupName = "${parentGroupName}", grandParentGroupName = "${grandParentGroupName}", site = "${site}");
+		var groupId = JSONGroupAPI._getGroupIdByGroupKey(
+			grandParentGroupName = "${grandParentGroupName}",
+			groupKey = "${groupKey}",
+			parentGroupName = "${parentGroupName}",
+			site = "${site}");
 
 		return "${groupId}";
 	}
@@ -117,6 +127,20 @@ definition {
 		}
 
 		return "${serviceContext}";
+	}
+
+	macro setStatus {
+		Variables.assertDefined(parameterList = "${statusKey}");
+
+		if ("${statusKey}" == "APPROVED") {
+			var status = "0";
+		}
+
+		if ("${statusKey}" == "DRAFT") {
+			var status = "2";
+		}
+
+		return "${status}";
 	}
 
 }

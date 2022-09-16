@@ -14,11 +14,7 @@
 
 import './FieldSet.scss';
 
-import {
-	Layout,
-	getRepeatedIndex,
-	usePage,
-} from 'dynamic-data-mapping-form-renderer';
+import {Layout, getRepeatedIndex, usePage} from 'data-engine-js-components-web';
 import React, {useMemo} from 'react';
 
 import {FieldBase} from '../FieldBase/ReactFieldBase.es';
@@ -29,7 +25,7 @@ const getRowsArray = (rows) => {
 		try {
 			return JSON.parse(rows);
 		}
-		catch (e) {
+		catch (error) {
 			return [];
 		}
 	}
@@ -70,7 +66,7 @@ const FieldSet = ({
 	let fieldInsidePage = null;
 
 	const isFieldsGroup = type === 'fieldset' && !ddmStructureId;
-	const {page} = usePage();
+	const {editable, page} = usePage();
 	const repeatedIndex = useMemo(() => getRepeatedIndex(name), [name]);
 
 	const findFieldInsidePage = (fields) =>
@@ -111,7 +107,7 @@ const FieldSet = ({
 					<>
 						<label className="text-uppercase">{label}</label>
 						<div className="ddm-field-types-fieldset__nested-separator">
-							<div className="mt-1 separator" />
+							<hr className="mt-1 separator" />
 						</div>
 					</>
 				)}
@@ -128,13 +124,21 @@ const FieldSet = ({
 						title={label}
 					>
 						<Layout
-							editable={isFieldsGroup && !belongsToFieldSet}
+							editable={
+								editable
+									? isFieldsGroup && !belongsToFieldSet
+									: editable
+							}
 							rows={getRows(rows, nestedFields)}
 						/>
 					</Panel>
 				) : (
 					<Layout
-						editable={isFieldsGroup && !belongsToFieldSet}
+						editable={
+							editable
+								? isFieldsGroup && !belongsToFieldSet
+								: editable
+						}
 						rows={getRows(rows, nestedFields)}
 					/>
 				)}

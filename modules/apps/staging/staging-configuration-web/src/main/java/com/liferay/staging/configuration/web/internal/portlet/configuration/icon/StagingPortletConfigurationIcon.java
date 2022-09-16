@@ -18,7 +18,7 @@ import com.liferay.exportimport.constants.ExportImportPortletKeys;
 import com.liferay.exportimport.kernel.lar.PortletDataHandler;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -27,7 +27,7 @@ import com.liferay.portal.kernel.portlet.configuration.icon.BasePortletConfigura
 import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfigurationIcon;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.PortletLocalService;
-import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
+import com.liferay.portal.kernel.service.permission.GroupPermission;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HtmlUtil;
@@ -56,7 +56,7 @@ public class StagingPortletConfigurationIcon
 
 	@Override
 	public String getMessage(PortletRequest portletRequest) {
-		return LanguageUtil.get(
+		return _language.get(
 			getResourceBundle(getLocale(portletRequest)), "staging");
 	}
 
@@ -85,7 +85,7 @@ public class StagingPortletConfigurationIcon
 		sb.append("_', portletId: '");
 		sb.append(portletDisplay.getId());
 		sb.append("', title: '");
-		sb.append(LanguageUtil.get(themeDisplay.getLocale(), "staging"));
+		sb.append(_language.get(themeDisplay.getLocale(), "staging"));
 		sb.append("', url: '");
 		sb.append(HtmlUtil.escapeJS(portletDisplay.getURLStaging()));
 		sb.append("'}); return false;");
@@ -133,12 +133,9 @@ public class StagingPortletConfigurationIcon
 			rootPortletId.equals(
 				StagingConfigurationPortletKeys.STAGING_CONFIGURATION) ||
 			rootPortletId.equals(
-				StagingProcessesPortletKeys.STAGING_PROCESSES)) {
+				StagingProcessesPortletKeys.STAGING_PROCESSES) ||
+			!portletDisplay.isShowStagingIcon()) {
 
-			return false;
-		}
-
-		if (!portletDisplay.isShowStagingIcon()) {
 			return false;
 		}
 
@@ -155,7 +152,7 @@ public class StagingPortletConfigurationIcon
 		}
 
 		try {
-			return GroupPermissionUtil.contains(
+			return _groupPermission.contains(
 				themeDisplay.getPermissionChecker(),
 				themeDisplay.getScopeGroup(), ActionKeys.PUBLISH_PORTLET_INFO);
 		}
@@ -164,7 +161,7 @@ public class StagingPortletConfigurationIcon
 			// LPS-52675
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(portalException, portalException);
+				_log.debug(portalException);
 			}
 
 			return false;
@@ -178,6 +175,12 @@ public class StagingPortletConfigurationIcon
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		StagingPortletConfigurationIcon.class);
+
+	@Reference
+	private GroupPermission _groupPermission;
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private PortletLocalService _portletLocalService;

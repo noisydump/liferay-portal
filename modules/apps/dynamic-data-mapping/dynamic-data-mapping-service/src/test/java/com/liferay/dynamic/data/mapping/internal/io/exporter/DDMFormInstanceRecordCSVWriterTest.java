@@ -19,18 +19,26 @@ import com.liferay.dynamic.data.mapping.io.exporter.DDMFormInstanceRecordWriterR
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
  * @author Leonardo Barros
  */
 public class DDMFormInstanceRecordCSVWriterTest {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Test
 	public void testWrite() throws Exception {
@@ -82,13 +90,9 @@ public class DDMFormInstanceRecordCSVWriterTest {
 			ddmFormInstanceRecordWriterResponse =
 				ddmFormInstanceRecordCSVWriter.write(builder.build());
 
-		StringBundler sb = new StringBundler(3);
-
-		sb.append("Field 1,Field 2,Field 3,Field 4\n");
-		sb.append("2,esta é uma 'string',false,11.7\n");
-		sb.append("1,esta é uma 'string',,10");
-
-		String expected = sb.toString();
+		String expected = StringBundler.concat(
+			"Field 1,Field 2,Field 3,Field 4\n",
+			"2,esta é uma 'string',false,11.7\n", "1,esta é uma 'string',,10");
 
 		Assert.assertArrayEquals(
 			expected.getBytes(),
@@ -139,13 +143,9 @@ public class DDMFormInstanceRecordCSVWriterTest {
 			ddmFormInstanceRecordWriterResponse =
 				ddmFormInstanceRecordCSVWriter.write(builder.build());
 
-		StringBundler sb = new StringBundler(3);
-
-		sb.append("Field 1 (field1),Field 1 (field1AfterChangeName),Field 2\n");
-		sb.append("1,,esta é uma 'string'\n");
-		sb.append(",2,esta é uma 'string'");
-
-		String expected = sb.toString();
+		String expected = StringBundler.concat(
+			"Field 1 (field1),Field 1 (field1AfterChangeName),Field 2\n",
+			"1,,esta é uma 'string'\n", ",2,esta é uma 'string'");
 
 		Assert.assertArrayEquals(
 			expected.getBytes(),
@@ -180,15 +180,10 @@ public class DDMFormInstanceRecordCSVWriterTest {
 				}
 			};
 
-		StringBundler sb = new StringBundler(2);
-
-		sb.append("value1,false,134.5\n");
-		sb.append(",true,45");
-
 		String actual = ddmFormInstanceRecordCSVWriter.writeRecords(
 			ddmFormFieldValues);
 
-		Assert.assertEquals(sb.toString(), actual);
+		Assert.assertEquals("value1,false,134.5\n,true,45", actual);
 	}
 
 	@Test

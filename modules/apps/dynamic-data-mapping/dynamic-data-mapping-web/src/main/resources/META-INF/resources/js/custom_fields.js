@@ -15,40 +15,45 @@
 AUI.add(
 	'liferay-portlet-dynamic-data-mapping-custom-fields',
 	(A) => {
-		var AArray = A.Array;
+		const AArray = A.Array;
 
-		var AEscape = A.Escape;
+		const AEscape = A.Escape;
 
-		var FormBuilderTextField = A.FormBuilderTextField;
-		var FormBuilderTypes = A.FormBuilderField.types;
+		const FormBuilderTextField = A.FormBuilderTextField;
+		const FormBuilderTypes = A.FormBuilderField.types;
 
-		var LiferayFormBuilderUtil = Liferay.FormBuilder.Util;
+		const LiferayFormBuilderUtil = Liferay.FormBuilder.Util;
 
-		var Lang = A.Lang;
+		const Lang = A.Lang;
 
-		var booleanParse = A.DataType.Boolean.parse;
-		var camelize = Lang.String.camelize;
+		const booleanOptions = {
+			false: Liferay.Language.get('no'),
+			true: Liferay.Language.get('yes'),
+		};
 
-		var editorLocalizedStrings = {
+		const booleanParse = A.DataType.Boolean.parse;
+		const camelize = Lang.String.camelize;
+
+		const editorLocalizedStrings = {
 			cancel: Liferay.Language.get('cancel'),
 			edit: Liferay.Language.get('edit'),
 			save: Liferay.Language.get('save'),
 		};
 
-		var instanceOf = A.instanceOf;
-		var isNull = Lang.isNull;
-		var isObject = Lang.isObject;
-		var isUndefined = Lang.isUndefined;
-		var isValue = Lang.isValue;
+		const instanceOf = A.instanceOf;
+		const isNull = Lang.isNull;
+		const isObject = Lang.isObject;
+		const isUndefined = Lang.isUndefined;
+		const isValue = Lang.isValue;
 
-		var structureFieldIndexEnable = function () {
-			for (var i = 0; i < Liferay.Portlet.list.length; i++) {
-				var indexableNode = A.one(
+		const structureFieldIndexEnable = function () {
+			for (let i = 0; i < Liferay.Portlet.list.length; i++) {
+				const indexableNode = A.one(
 					'#_' + Liferay.Portlet.list[i] + '_indexable'
 				);
 
 				if (indexableNode) {
-					var indexable = indexableNode.getAttribute('value');
+					const indexable = indexableNode.getAttribute('value');
 
 					if (indexable === 'false') {
 						return false;
@@ -59,34 +64,34 @@ AUI.add(
 			return true;
 		};
 
-		var CSS_FIELD = A.getClassName('field');
+		const CSS_FIELD = A.getClassName('field');
 
-		var CSS_FIELD_CHOICE = A.getClassName('field', 'choice');
+		const CSS_FIELD_CHOICE = A.getClassName('field', 'choice');
 
-		var CSS_FIELD_RADIO = A.getClassName('field', 'radio');
+		const CSS_FIELD_RADIO = A.getClassName('field', 'radio');
 
-		var CSS_FORM_BUILDER_FIELD_NODE = A.getClassName(
+		const CSS_FORM_BUILDER_FIELD_NODE = A.getClassName(
 			'form-builder-field',
 			'node'
 		);
 
-		var CSS_RADIO = A.getClassName('radio');
+		const CSS_RADIO = A.getClassName('radio');
 
-		var DEFAULTS_FORM_VALIDATOR = A.config.FormValidator;
+		const DEFAULTS_FORM_VALIDATOR = A.config.FormValidator;
 
-		var LOCALIZABLE_FIELD_ATTRS =
+		const LOCALIZABLE_FIELD_ATTRS =
 			Liferay.FormBuilder.LOCALIZABLE_FIELD_ATTRS;
 
-		var RESTRICTED_NAME = 'submit';
+		const RESTRICTED_NAME = 'submit';
 
-		var STR_BLANK = '';
+		const STR_BLANK = '';
 
-		var TPL_COLOR =
+		const TPL_COLOR =
 			'<input class="field form-control" type="text" value="' +
 			A.Escape.html(Liferay.Language.get('color')) +
 			'" readonly="readonly">';
 
-		var TPL_GEOLOCATION =
+		const TPL_GEOLOCATION =
 			'<div class="field-labels-inline">' +
 			'<img src="' +
 			themeDisplay.getPathThemeImages() +
@@ -95,7 +100,7 @@ AUI.add(
 			'" />' +
 			'<div>';
 
-		var TPL_INPUT_BUTTON =
+		const TPL_INPUT_BUTTON =
 			'<div class="form-group">' +
 			'<input class="field form-control" type="text" value="" readonly="readonly">' +
 			'<div class="button-holder">' +
@@ -107,9 +112,9 @@ AUI.add(
 			'</div>' +
 			'</div>';
 
-		var TPL_PARAGRAPH = '<p></p>';
+		const TPL_PARAGRAPH = '<p></p>';
 
-		var TPL_RADIO =
+		const TPL_RADIO =
 			'<div class="' +
 			CSS_RADIO +
 			'">' +
@@ -126,12 +131,12 @@ AUI.add(
 			'</label>' +
 			'</div>';
 
-		var TPL_SEPARATOR = '<div class="separator"></div>';
+		const TPL_SEPARATOR = '<hr class="separator" />';
 
-		var TPL_TEXT_HTML =
+		const TPL_TEXT_HTML =
 			'<textarea class="form-builder-field-node lfr-ddm-text-html"></textarea>';
 
-		var TPL_WCM_IMAGE =
+		const TPL_WCM_IMAGE =
 			'<div class="form-group">' +
 			'<input class="field form-control" type="text" value="" readonly="readonly">' +
 			'<div class="button-holder">' +
@@ -148,9 +153,10 @@ AUI.add(
 			'<input class="field form-control" type="text" value="" disabled>' +
 			'</div>';
 
-		var UNIQUE_FIELD_NAMES_MAP = Liferay.FormBuilder.UNIQUE_FIELD_NAMES_MAP;
+		const UNIQUE_FIELD_NAMES_MAP =
+			Liferay.FormBuilder.UNIQUE_FIELD_NAMES_MAP;
 
-		var UNLOCALIZABLE_FIELD_ATTRS =
+		const UNLOCALIZABLE_FIELD_ATTRS =
 			Liferay.FormBuilder.UNLOCALIZABLE_FIELD_ATTRS;
 
 		DEFAULTS_FORM_VALIDATOR.STRINGS.structureDuplicateFieldName = Liferay.Language.get(
@@ -161,11 +167,11 @@ AUI.add(
 			value,
 			editorNode
 		) {
-			var instance = this;
+			const instance = this;
 
-			var editingField = UNIQUE_FIELD_NAMES_MAP.getValue(value);
+			const editingField = UNIQUE_FIELD_NAMES_MAP.getValue(value);
 
-			var duplicate = editingField && !editingField.get('selected');
+			const duplicate = editingField && !editingField.get('selected');
 
 			if (duplicate) {
 				editorNode.selectText(0, value.length);
@@ -195,35 +201,35 @@ AUI.add(
 			return RESTRICTED_NAME !== value;
 		};
 
-		var applyStyles = function (node, styleContent) {
-			var styles = styleContent.replace(/\n/g, STR_BLANK).split(';');
+		const applyStyles = function (node, styleContent) {
+			const styles = styleContent.replace(/\n/g, STR_BLANK).split(';');
 
 			node.setStyle(STR_BLANK);
 
 			styles.forEach((item) => {
-				var rule = item.split(':');
+				const rule = item.split(':');
 
-				if (rule.length == 2) {
-					var key = camelize(rule[0]);
-					var value = rule[1].trim();
+				if (rule.length === 2) {
+					const key = camelize(rule[0]);
+					const value = rule[1].trim();
 
 					node.setStyle(key, value);
 				}
 			});
 		};
 
-		var ColorCellEditor = A.Component.create({
+		const ColorCellEditor = A.Component.create({
 			EXTENDS: A.BaseCellEditor,
 
 			NAME: 'color-cell-editor',
 
 			prototype: {
 				_defSaveFn() {
-					var instance = this;
+					const instance = this;
 
-					var colorPicker = instance.get('colorPicker');
+					const colorPicker = instance.get('colorPicker');
 
-					var input = instance.get('boundingBox').one('input');
+					const input = instance.get('boundingBox').one('input');
 
 					if (/#[A-F\d]{6}/.test(input.val())) {
 						ColorCellEditor.superclass._defSaveFn.apply(
@@ -237,9 +243,9 @@ AUI.add(
 				},
 
 				_uiSetValue(val) {
-					var instance = this;
+					const instance = this;
 
-					var input = instance.get('boundingBox').one('input');
+					const input = instance.get('boundingBox').one('input');
 
 					input.setStyle('color', val);
 					input.val(val);
@@ -250,16 +256,16 @@ AUI.add(
 				ELEMENT_TEMPLATE: '<input type="text" />',
 
 				getElementsValue() {
-					var instance = this;
+					const instance = this;
 
-					var retVal;
+					let retVal;
 
-					var input = instance.get('boundingBox').one('input');
+					const input = instance.get('boundingBox').one('input');
 
 					if (input) {
-						var val = input.val();
+						const val = input.val();
 
-						if (/#[A-F\d]{6}/.test(val)) {
+						if (/#[A-F\d]{6}/.test(val) || val === '') {
 							retVal = val;
 						}
 					}
@@ -268,16 +274,16 @@ AUI.add(
 				},
 
 				renderUI() {
-					var instance = this;
+					const instance = this;
 
 					ColorCellEditor.superclass.renderUI.apply(
 						instance,
 						arguments
 					);
 
-					var input = instance.get('boundingBox').one('input');
+					const input = instance.get('boundingBox').one('input');
 
-					var colorPicker = new A.ColorPickerPopover({
+					const colorPicker = new A.ColorPickerPopover({
 						trigger: input,
 						zIndex: 65535,
 					}).render();
@@ -297,14 +303,14 @@ AUI.add(
 			},
 		});
 
-		var DLFileEntryCellEditor = A.Component.create({
+		const DLFileEntryCellEditor = A.Component.create({
 			EXTENDS: A.BaseCellEditor,
 
 			NAME: 'document-library-file-entry-cell-editor',
 
 			prototype: {
 				_defInitToolbarFn() {
-					var instance = this;
+					const instance = this;
 
 					DLFileEntryCellEditor.superclass._defInitToolbarFn.apply(
 						instance,
@@ -333,35 +339,35 @@ AUI.add(
 				},
 
 				_getDocumentLibrarySelectorURL() {
-					var instance = this;
+					const instance = this;
 
-					var portletNamespace = instance.get('portletNamespace');
+					const portletNamespace = instance.get('portletNamespace');
 
-					var criterionJSON = {
+					const criterionJSON = {
 						desiredItemSelectorReturnTypes:
 							'com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType',
 					};
 
-					var uploadCriterionJSON = {
+					const uploadCriterionJSON = {
 						URL: instance._getUploadURL(),
 						desiredItemSelectorReturnTypes:
 							'com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType',
 					};
 
-					var documentLibrarySelectorParameters = {
+					const documentLibrarySelectorParameters = {
 						'0_json': JSON.stringify(criterionJSON),
 						'1_json': JSON.stringify(criterionJSON),
 						'2_json': JSON.stringify(uploadCriterionJSON),
-						criteria:
+						'criteria':
 							'com.liferay.item.selector.criteria.file.criterion.FileItemSelectorCriterion',
-						itemSelectedEventName:
+						'itemSelectedEventName':
 							portletNamespace + 'selectDocumentLibrary',
-						p_p_id: Liferay.PortletKeys.ITEM_SELECTOR,
-						p_p_mode: 'view',
-						p_p_state: 'pop_up',
+						'p_p_id': Liferay.PortletKeys.ITEM_SELECTOR,
+						'p_p_mode': 'view',
+						'p_p_state': 'pop_up',
 					};
 
-					var documentLibrarySelectorURL = Liferay.Util.PortletURL.createPortletURL(
+					const documentLibrarySelectorURL = Liferay.Util.PortletURL.createPortletURL(
 						themeDisplay.getLayoutRelativeControlPanelURL(),
 						documentLibrarySelectorParameters
 					);
@@ -370,15 +376,15 @@ AUI.add(
 				},
 
 				_getUploadURL() {
-					var uploadParameters = {
-						cmd: 'add_temp',
+					const uploadParameters = {
+						'cmd': 'add_temp',
 						'javax.portlet.action':
 							'/document_library/upload_file_entry',
-						p_auth: Liferay.authToken,
-						p_p_id: Liferay.PortletKeys.DOCUMENT_LIBRARY,
+						'p_auth': Liferay.authToken,
+						'p_p_id': Liferay.PortletKeys.DOCUMENT_LIBRARY,
 					};
 
-					var uploadURL = Liferay.Util.PortletURL.createActionURL(
+					const uploadURL = Liferay.Util.PortletURL.createActionURL(
 						themeDisplay.getLayoutRelativeControlPanelURL(),
 						uploadParameters
 					);
@@ -387,9 +393,9 @@ AUI.add(
 				},
 
 				_isDocumentLibraryDialogOpen() {
-					var instance = this;
+					const instance = this;
 
-					var portletNamespace = instance.get('portletNamespace');
+					const portletNamespace = instance.get('portletNamespace');
 
 					return !!Liferay.Util.getWindow(
 						portletNamespace + 'selectDocumentLibrary'
@@ -397,14 +403,16 @@ AUI.add(
 				},
 
 				_onClickChoose() {
-					var instance = this;
+					const instance = this;
 
-					var portletNamespace = instance.get('portletNamespace');
+					const portletNamespace = instance.get('portletNamespace');
 
 					Liferay.Util.openSelectionModal({
 						onSelect: (selectedItem) => {
 							if (selectedItem) {
-								var itemValue = JSON.parse(selectedItem.value);
+								const itemValue = JSON.parse(
+									selectedItem.value
+								);
 
 								instance._selectFileEntry(
 									itemValue.groupId,
@@ -421,17 +429,17 @@ AUI.add(
 				},
 
 				_onClickClear() {
-					var instance = this;
+					const instance = this;
 
 					instance.set('value', STR_BLANK);
 				},
 
 				_onDocMouseDownExt(event) {
-					var instance = this;
+					const instance = this;
 
-					var boundingBox = instance.get('boundingBox');
+					const boundingBox = instance.get('boundingBox');
 
-					var documentLibraryDialogOpen = instance._isDocumentLibraryDialogOpen();
+					const documentLibraryDialogOpen = instance._isDocumentLibraryDialogOpen();
 
 					if (
 						!documentLibraryDialogOpen &&
@@ -442,7 +450,7 @@ AUI.add(
 				},
 
 				_selectFileEntry(groupId, title, uuid) {
-					var instance = this;
+					const instance = this;
 
 					instance.set(
 						'value',
@@ -455,11 +463,11 @@ AUI.add(
 				},
 
 				_syncElementsFocus() {
-					var instance = this;
+					const instance = this;
 
-					var boundingBox = instance.toolbar.get('boundingBox');
+					const boundingBox = instance.toolbar.get('boundingBox');
 
-					var button = boundingBox.one('button');
+					const button = boundingBox.one('button');
 
 					if (button) {
 						button.focus();
@@ -473,11 +481,11 @@ AUI.add(
 				},
 
 				_syncFileLabel(title, url) {
-					var instance = this;
+					const instance = this;
 
-					var contentBox = instance.get('contentBox');
+					const contentBox = instance.get('contentBox');
 
-					var linkNode = contentBox.one('a');
+					let linkNode = contentBox.one('a');
 
 					if (!linkNode) {
 						linkNode = A.Node.create('<a></a>');
@@ -490,13 +498,13 @@ AUI.add(
 				},
 
 				_uiSetValue(val) {
-					var instance = this;
+					const instance = this;
 
 					if (val) {
 						LiferayFormBuilderUtil.getFileEntry(
 							val,
 							(fileEntry) => {
-								var url = LiferayFormBuilderUtil.getFileEntryURL(
+								const url = LiferayFormBuilderUtil.getFileEntryURL(
 									fileEntry
 								);
 
@@ -516,219 +524,22 @@ AUI.add(
 				ELEMENT_TEMPLATE: '<input type="hidden" />',
 
 				getElementsValue() {
-					var instance = this;
+					const instance = this;
 
 					return instance.get('value');
-				},
-			},
-		});
-
-		var JournalArticleCellEditor = A.Component.create({
-			EXTENDS: A.BaseCellEditor,
-
-			NAME: 'journal-article-cell-editor',
-
-			prototype: {
-				_defInitToolbarFn() {
-					var instance = this;
-
-					JournalArticleCellEditor.superclass._defInitToolbarFn.apply(
-						instance,
-						arguments
-					);
-
-					instance.toolbar.add(
-						{
-							label: Liferay.Language.get('select'),
-							on: {
-								click: A.bind('_onClickChoose', instance),
-							},
-						},
-						1
-					);
-
-					instance.toolbar.add(
-						{
-							label: Liferay.Language.get('clear'),
-							on: {
-								click: A.bind('_onClickClear', instance),
-							},
-						},
-						2
-					);
-				},
-
-				_getWebContentSelectorURL() {
-					var instance = this;
-
-					var portletNamespace = instance.get('portletNamespace');
-
-					var criterionJSON = {
-						desiredItemSelectorReturnTypes:
-							'com.liferay.item.selector.criteria.JournalArticleItemSelectorReturnType',
-					};
-
-					var webContentSelectorParameters = {
-						'0_json': JSON.stringify(criterionJSON),
-						criteria:
-							'com.liferay.item.selector.criteria.info.item.criterion.InfoItemItemSelectorCriterion',
-						itemSelectedEventName:
-							portletNamespace + 'selectDocumentLibrary',
-						p_auth: Liferay.authToken,
-						p_p_id: Liferay.PortletKeys.ITEM_SELECTOR,
-						p_p_mode: 'view',
-						p_p_state: 'pop_up',
-					};
-
-					var webContentSelectorURL = Liferay.Util.PortletURL.createRenderURL(
-						themeDisplay.getLayoutRelativeControlPanelURL(),
-						webContentSelectorParameters
-					);
-
-					return webContentSelectorURL.toString();
-				},
-
-				_handleCancelEvent() {
-					var instance = this;
-
-					instance.get('boundingBox').hide();
-				},
-
-				_handleSaveEvent() {
-					var instance = this;
-
-					JournalArticleCellEditor.superclass._handleSaveEvent.apply(
-						instance,
-						arguments
-					);
-
-					instance.get('boundingBox').hide();
-				},
-
-				_onClickChoose() {
-					var instance = this;
-
-					var portletNamespace = instance.get('portletNamespace');
-
-					Liferay.Util.openSelectionModal({
-						onSelect: (selectedItem) => {
-							if (selectedItem) {
-								var itemValue = JSON.parse(selectedItem.value);
-
-								instance.setValue({
-									className: itemValue.className,
-									classPK: itemValue.classPK,
-									title: itemValue.title,
-								});
-							}
-						},
-						selectEventName:
-							portletNamespace + 'selectDocumentLibrary',
-						title: Liferay.Language.get('journal-article'),
-						url: instance._getWebContentSelectorURL(),
-					});
-				},
-
-				_onClickClear() {
-					var instance = this;
-
-					instance.set('value', STR_BLANK);
-				},
-
-				_onDocMouseDownExt(event) {
-					var instance = this;
-
-					var boundingBox = instance.get('boundingBox');
-
-					if (!boundingBox.contains(event.target)) {
-						instance._handleCancelEvent(event);
-					}
-				},
-
-				_syncJournalArticleLabel(title) {
-					var instance = this;
-
-					var contentBox = instance.get('contentBox');
-
-					var linkNode = contentBox.one('span');
-
-					if (!linkNode) {
-						linkNode = A.Node.create('<span></span>');
-
-						contentBox.prepend(linkNode);
-					}
-
-					linkNode.setContent(Liferay.Util.escapeHTML(title));
-				},
-
-				_uiSetValue(val) {
-					var instance = this;
-
-					if (val) {
-						val = JSON.parse(val);
-						var title =
-							Liferay.Language.get('journal-article') +
-							': ' +
-							val.classPK;
-
-						instance._syncJournalArticleLabel(title);
-					}
-					else {
-						instance._syncJournalArticleLabel(STR_BLANK);
-					}
-				},
-
-				ELEMENT_TEMPLATE: '<input type="hidden" />',
-
-				getElementsValue() {
-					var instance = this;
-
-					return instance.get('value');
-				},
-
-				getParsedValue(value) {
-					if (Lang.isString(value)) {
-						if (value !== '') {
-							value = JSON.parse(value);
-						}
-						else {
-							value = {};
-						}
-					}
-
-					return value;
-				},
-
-				setValue(value) {
-					var instance = this;
-
-					var parsedValue = instance.getParsedValue(value);
-
-					if (!parsedValue.className && !parsedValue.classPK) {
-						value = '';
-					}
-					else {
-						value = JSON.stringify(parsedValue);
-					}
-
-					instance.set('value', value);
 				},
 			},
 		});
 
 		Liferay.FormBuilder.CUSTOM_CELL_EDITORS = {};
 
-		var customCellEditors = [
-			ColorCellEditor,
-			DLFileEntryCellEditor,
-			JournalArticleCellEditor,
-		];
+		const customCellEditors = [ColorCellEditor, DLFileEntryCellEditor];
 
 		customCellEditors.forEach((item) => {
 			Liferay.FormBuilder.CUSTOM_CELL_EDITORS[item.NAME] = item;
 		});
 
-		var LiferayFieldSupport = function () {};
+		const LiferayFieldSupport = function () {};
 
 		LiferayFieldSupport.ATTRS = {
 			autoGeneratedName: {
@@ -753,15 +564,15 @@ AUI.add(
 					return !UNIQUE_FIELD_NAMES_MAP.has(val);
 				},
 				valueFn() {
-					var instance = this;
+					const instance = this;
 
-					var label = LiferayFormBuilderUtil.normalizeKey(
+					let label = LiferayFormBuilderUtil.normalizeKey(
 						instance.get('label')
 					);
 
 					label = label.replace(/[^a-z0-9]/gi, '');
 
-					var name = label + instance._randomString(4);
+					let name = label + instance._randomString(4);
 
 					while (UNIQUE_FIELD_NAMES_MAP.has(name)) {
 						name = A.FormBuilderField.buildFieldName(name);
@@ -778,24 +589,24 @@ AUI.add(
 		};
 
 		LiferayFieldSupport.prototype.initializer = function () {
-			var instance = this;
+			const instance = this;
 
 			instance.after('nameChange', instance._afterNameChange);
 		};
 
 		LiferayFieldSupport.prototype._afterNameChange = function (event) {
-			var instance = this;
+			const instance = this;
 
 			UNIQUE_FIELD_NAMES_MAP.remove(event.prevVal);
 			UNIQUE_FIELD_NAMES_MAP.put(event.newVal, instance);
 		};
 
 		LiferayFieldSupport.prototype._handleDeleteEvent = function (event) {
-			var instance = this;
+			const instance = this;
 
-			var strings = instance.getStrings();
+			const strings = instance.getStrings();
 
-			var deleteModal = Liferay.Util.Window.getWindow({
+			const deleteModal = Liferay.Util.Window.getWindow({
 				dialog: {
 					bodyContent: strings.deleteFieldsMessage,
 					destroyOnHide: true,
@@ -835,14 +646,14 @@ AUI.add(
 		};
 
 		LiferayFieldSupport.prototype._randomString = function (length) {
-			var randomString = Math.ceil(
+			const randomString = Math.ceil(
 				Math.random() * Number.MAX_SAFE_INTEGER
 			).toString(36);
 
 			return randomString.substring(0, length);
 		};
 
-		var LocalizableFieldSupport = function () {};
+		const LocalizableFieldSupport = function () {};
 
 		LocalizableFieldSupport.ATTRS = {
 			localizationMap: {
@@ -856,9 +667,9 @@ AUI.add(
 		};
 
 		LocalizableFieldSupport.prototype.initializer = function () {
-			var instance = this;
+			const instance = this;
 
-			var builder = instance.get('builder');
+			const builder = instance.get('builder');
 
 			instance.after('render', instance._afterLocalizableFieldRender);
 
@@ -879,7 +690,7 @@ AUI.add(
 		LocalizableFieldSupport.prototype._afterEditingLocaleChange = function (
 			event
 		) {
-			var instance = this;
+			const instance = this;
 
 			instance._syncLocaleUI(event.newVal);
 		};
@@ -887,13 +698,13 @@ AUI.add(
 		LocalizableFieldSupport.prototype._afterLocalizableFieldChange = function (
 			event
 		) {
-			var instance = this;
+			const instance = this;
 
-			var builder = instance.get('builder');
+			const builder = instance.get('builder');
 
-			var translationManager = builder.translationManager;
+			const translationManager = builder.translationManager;
 
-			var editingLocale = translationManager.get('editingLocale');
+			const editingLocale = translationManager.get('editingLocale');
 
 			instance._updateLocalizationMapAttribute(
 				editingLocale,
@@ -902,13 +713,13 @@ AUI.add(
 		};
 
 		LocalizableFieldSupport.prototype._afterLocalizableFieldRender = function () {
-			var instance = this;
+			const instance = this;
 
-			var builder = instance.get('builder');
+			const builder = instance.get('builder');
 
-			var translationManager = builder.translationManager;
+			const translationManager = builder.translationManager;
 
-			var editingLocale = translationManager.get('editingLocale');
+			const editingLocale = translationManager.get('editingLocale');
 
 			instance._updateLocalizationMap(editingLocale);
 		};
@@ -916,14 +727,14 @@ AUI.add(
 		LocalizableFieldSupport.prototype._getReadOnlyAttributes = function (
 			val
 		) {
-			var instance = this;
+			const instance = this;
 
-			var builder = instance.get('builder');
+			const builder = instance.get('builder');
 
-			var translationManager = builder.translationManager;
+			const translationManager = builder.translationManager;
 
-			var defaultLocale = translationManager.get('defaultLocale');
-			var editingLocale = translationManager.get('editingLocale');
+			const defaultLocale = translationManager.get('defaultLocale');
+			const editingLocale = translationManager.get('editingLocale');
 
 			if (defaultLocale !== editingLocale) {
 				val = UNLOCALIZABLE_FIELD_ATTRS.concat(val);
@@ -933,27 +744,27 @@ AUI.add(
 		};
 
 		LocalizableFieldSupport.prototype._syncLocaleUI = function (locale) {
-			var instance = this;
+			const instance = this;
 
-			var builder = instance.get('builder');
+			const builder = instance.get('builder');
 
-			var localizationMap = instance.get('localizationMap');
+			const localizationMap = instance.get('localizationMap');
 
-			var translationManager = builder.translationManager;
+			const translationManager = builder.translationManager;
 
-			var defaultLocale = themeDisplay.getDefaultLanguageId();
+			let defaultLocale = themeDisplay.getDefaultLanguageId();
 
 			if (translationManager) {
 				defaultLocale = translationManager.get('defaultLocale');
 			}
 
-			var localeMap =
+			const localeMap =
 				localizationMap[locale] || localizationMap[defaultLocale];
 
 			if (isObject(localeMap)) {
 				LOCALIZABLE_FIELD_ATTRS.forEach((item) => {
 					if (item !== 'options') {
-						var localizedItem = localeMap[item];
+						const localizedItem = localeMap[item];
 
 						if (
 							!isUndefined(localizedItem) &&
@@ -979,15 +790,15 @@ AUI.add(
 		LocalizableFieldSupport.prototype._syncOptionsLocaleUI = function (
 			locale
 		) {
-			var instance = this;
+			const instance = this;
 
-			var options = instance.get('options');
+			const options = instance.get('options');
 
 			options.forEach((item) => {
-				var localizationMap = item.localizationMap;
+				const localizationMap = item.localizationMap;
 
 				if (isObject(localizationMap)) {
-					var localeMap = localizationMap[locale];
+					const localeMap = localizationMap[locale];
 
 					if (isObject(localeMap)) {
 						item.label = localeMap.label;
@@ -1001,7 +812,7 @@ AUI.add(
 		LocalizableFieldSupport.prototype._updateLocalizationMap = function (
 			locale
 		) {
-			var instance = this;
+			const instance = this;
 
 			LOCALIZABLE_FIELD_ATTRS.forEach((item) => {
 				instance._updateLocalizationMapAttribute(locale, item);
@@ -1012,15 +823,15 @@ AUI.add(
 			locale,
 			attributeName
 		) {
-			var instance = this;
+			const instance = this;
 
 			if (attributeName === 'options') {
 				instance._updateLocalizationMapOptions(locale);
 			}
 			else {
-				var localizationMap = instance.get('localizationMap');
+				const localizationMap = instance.get('localizationMap');
 
-				var localeMap = localizationMap[locale] || {};
+				const localeMap = localizationMap[locale] || {};
 
 				localeMap[attributeName] = instance.get(attributeName);
 
@@ -1033,13 +844,13 @@ AUI.add(
 		LocalizableFieldSupport.prototype._updateLocalizationMapOptions = function (
 			locale
 		) {
-			var instance = this;
+			const instance = this;
 
-			var options = instance.get('options');
+			const options = instance.get('options');
 
 			if (options) {
 				options.forEach((item) => {
-					var localizationMap = item.localizationMap;
+					let localizationMap = item.localizationMap;
 
 					if (!isObject(localizationMap)) {
 						localizationMap = {};
@@ -1054,12 +865,12 @@ AUI.add(
 			}
 		};
 
-		var SerializableFieldSupport = function () {};
+		const SerializableFieldSupport = function () {};
 
 		SerializableFieldSupport.prototype._addDefinitionFieldLocalizedAttributes = function (
 			fieldJSON
 		) {
-			var instance = this;
+			const instance = this;
 
 			LOCALIZABLE_FIELD_ATTRS.forEach((attr) => {
 				if (attr === 'options') {
@@ -1078,7 +889,7 @@ AUI.add(
 		SerializableFieldSupport.prototype._addDefinitionFieldUnlocalizedAttributes = function (
 			fieldJSON
 		) {
-			var instance = this;
+			const instance = this;
 
 			UNLOCALIZABLE_FIELD_ATTRS.forEach((attr) => {
 				fieldJSON[attr] = instance.get(attr);
@@ -1088,31 +899,31 @@ AUI.add(
 		SerializableFieldSupport.prototype._addDefinitionFieldOptions = function (
 			fieldJSON
 		) {
-			var instance = this;
+			const instance = this;
 
-			var options = instance.get('options');
+			const options = instance.get('options');
 
-			var fieldOptions = [];
+			const fieldOptions = [];
 
 			if (options) {
-				var builder = instance.get('builder');
+				const builder = instance.get('builder');
 
-				var translationManager = builder.translationManager;
+				const translationManager = builder.translationManager;
 
-				var availableLocales = translationManager.get(
+				const availableLocales = translationManager.get(
 					'availableLocales'
 				);
 
 				options.forEach((option) => {
-					var fieldOption = {};
+					const fieldOption = {};
 
-					var localizationMap = option.localizationMap;
+					const localizationMap = option.localizationMap;
 
 					fieldOption.value = option.value;
 					fieldOption.label = {};
 
 					availableLocales.forEach((locale) => {
-						var label = instance._getValue(
+						const label = instance._getValue(
 							'label',
 							locale,
 							localizationMap
@@ -1133,15 +944,15 @@ AUI.add(
 		SerializableFieldSupport.prototype._addDefinitionFieldNestedFields = function (
 			fieldJSON
 		) {
-			var instance = this;
+			const instance = this;
 
-			var nestedFields = [];
+			const nestedFields = [];
 
 			instance.get('fields').each((childField) => {
 				nestedFields.push(childField.serialize());
 			});
 
-			if (nestedFields.length > 0) {
+			if (nestedFields.length) {
 				fieldJSON.nestedFields = nestedFields;
 			}
 		};
@@ -1149,15 +960,15 @@ AUI.add(
 		SerializableFieldSupport.prototype._getLocalizedValue = function (
 			attribute
 		) {
-			var instance = this;
+			const instance = this;
 
-			var builder = instance.get('builder');
+			const builder = instance.get('builder');
 
-			var localizationMap = instance.get('localizationMap');
+			const localizationMap = instance.get('localizationMap');
 
-			var localizedValue = {};
+			const localizedValue = {};
 
-			var translationManager = builder.translationManager;
+			const translationManager = builder.translationManager;
 
 			translationManager.get('availableLocales').forEach((locale) => {
 				localizedValue[locale] = LiferayFormBuilderUtil.normalizeValue(
@@ -1173,20 +984,22 @@ AUI.add(
 			locale,
 			localizationMap
 		) {
-			var instance = this;
+			const instance = this;
 
-			var builder = instance.get('builder');
+			const builder = instance.get('builder');
 
-			var translationManager = builder.translationManager;
+			const translationManager = builder.translationManager;
 
-			var defaultLocale = translationManager.get('defaultLocale');
+			const defaultLocale = translationManager.get('defaultLocale');
 
-			var value = A.Object.getValue(localizationMap, [locale, attribute]);
+			// eslint-disable-next-line @liferay/aui/no-object
+			let value = A.Object.getValue(localizationMap, [locale, attribute]);
 
 			if (isValue(value)) {
 				return value;
 			}
 
+			// eslint-disable-next-line @liferay/aui/no-object
 			value = A.Object.getValue(localizationMap, [
 				defaultLocale,
 				attribute,
@@ -1196,7 +1009,8 @@ AUI.add(
 				return value;
 			}
 
-			for (var localizationMapLocale in localizationMap) {
+			for (const localizationMapLocale in localizationMap) {
+				// eslint-disable-next-line @liferay/aui/no-object
 				value = A.Object.getValue(localizationMap, [
 					localizationMapLocale,
 					attribute,
@@ -1211,9 +1025,9 @@ AUI.add(
 		};
 
 		SerializableFieldSupport.prototype.serialize = function () {
-			var instance = this;
+			const instance = this;
 
-			var fieldJSON = {};
+			const fieldJSON = {};
 
 			instance._addDefinitionFieldLocalizedAttributes(fieldJSON);
 			instance._addDefinitionFieldUnlocalizedAttributes(fieldJSON);
@@ -1228,44 +1042,41 @@ AUI.add(
 			SerializableFieldSupport,
 		]);
 
-		var FormBuilderProto = A.FormBuilderField.prototype;
+		const FormBuilderProto = A.FormBuilderField.prototype;
 
-		var originalGetPropertyModel = FormBuilderProto.getPropertyModel;
+		const originalGetPropertyModel = FormBuilderProto.getPropertyModel;
 
 		FormBuilderProto.getPropertyModel = function () {
-			var instance = this;
+			const instance = this;
 
-			var model = originalGetPropertyModel.call(instance);
+			const model = originalGetPropertyModel.call(instance);
 
-			var type = instance.get('type');
+			const type = instance.get('type');
 
-			var booleanOptions = {
-				false: Liferay.Language.get('no'),
-				true: Liferay.Language.get('yes'),
-			};
-
-			var indexTypeOptions = {
+			let indexTypeOptions = {
 				'': Liferay.Language.get('no'),
-				keyword: Liferay.Language.get('yes'),
+				'keyword': Liferay.Language.get('yes'),
 			};
 
-			if (type == 'ddm-image' || type == 'text') {
+			if (type === 'ddm-image' || type === 'text') {
 				indexTypeOptions = {
 					'': Liferay.Language.get('not-indexable'),
-					keyword: Liferay.Language.get('indexable-keyword'),
-					text: Liferay.Language.get('indexable-text'),
+					'keyword': Liferay.Language.get('indexable-keyword'),
+					'text': Liferay.Language.get('indexable-text'),
 				};
 			}
 
-			if (type == 'ddm-text-html' || type == 'textarea') {
+			if (type === 'ddm-text-html' || type === 'textarea') {
 				indexTypeOptions = {
 					'': Liferay.Language.get('not-indexable'),
-					text: Liferay.Language.get('indexable-text'),
+					'text': Liferay.Language.get('indexable-text'),
 				};
 			}
+
+			const newModel = [];
 
 			model.forEach((item) => {
-				if (item.attributeName == 'name') {
+				if (item.attributeName === 'name') {
 					item.editor = new A.TextCellEditor({
 						validator: {
 							rules: {
@@ -1283,9 +1094,21 @@ AUI.add(
 				if (item.editor) {
 					item.editor.set('strings', editorLocalizedStrings);
 				}
+
+				newModel.push(item);
+
+				if (item.attributeName === 'required') {
+					item.id = 'required';
+
+					if (type === 'ddm-image') {
+						newModel.push(
+							instance.getRequiredDescriptionPropertyModel()
+						);
+					}
+				}
 			});
 
-			return model.concat([
+			return newModel.concat([
 				{
 					attributeName: 'indexType',
 					editor: new A.RadioCellEditor({
@@ -1322,7 +1145,7 @@ AUI.add(
 			]);
 		};
 
-		var DDMColorField = A.Component.create({
+		const DDMColorField = A.Component.create({
 			ATTRS: {
 				dataType: {
 					value: 'color',
@@ -1347,15 +1170,15 @@ AUI.add(
 				},
 
 				getPropertyModel() {
-					var instance = this;
+					const instance = this;
 
-					var model = DDMColorField.superclass.getPropertyModel.apply(
+					const model = DDMColorField.superclass.getPropertyModel.apply(
 						instance,
 						arguments
 					);
 
 					model.forEach((item, index, collection) => {
-						var attributeName = item.attributeName;
+						const attributeName = item.attributeName;
 
 						if (attributeName === 'predefinedValue') {
 							collection[index] = {
@@ -1373,7 +1196,7 @@ AUI.add(
 			},
 		});
 
-		var DDMDateField = A.Component.create({
+		const DDMDateField = A.Component.create({
 			ATTRS: {
 				dataType: {
 					value: 'date',
@@ -1390,15 +1213,15 @@ AUI.add(
 
 			prototype: {
 				getPropertyModel() {
-					var instance = this;
+					const instance = this;
 
-					var model = DDMDateField.superclass.getPropertyModel.apply(
+					const model = DDMDateField.superclass.getPropertyModel.apply(
 						instance,
 						arguments
 					);
 
 					model.forEach((item, index, collection) => {
-						var attributeName = item.attributeName;
+						const attributeName = item.attributeName;
 
 						if (attributeName === 'predefinedValue') {
 							collection[index] = {
@@ -1406,9 +1229,9 @@ AUI.add(
 								editor: new A.DateCellEditor({
 									dateFormat: '%m/%d/%Y',
 									inputFormatter(val) {
-										var instance = this;
+										const instance = this;
 
-										var value = val;
+										let value = val;
 
 										if (Array.isArray(val)) {
 											value = instance.formatDate(val[0]);
@@ -1418,12 +1241,12 @@ AUI.add(
 									},
 
 									outputFormatter(val) {
-										var instance = this;
+										const instance = this;
 
-										var retVal = val;
+										let retVal = val;
 
 										if (Array.isArray(val)) {
-											var formattedValue = A.DataType.Date.parse(
+											const formattedValue = A.DataType.Date.parse(
 												instance.get('dateFormat'),
 												val[0]
 											);
@@ -1444,11 +1267,37 @@ AUI.add(
 				},
 
 				renderUI() {
-					var instance = this;
+					const instance = this;
 
 					DDMDateField.superclass.renderUI.apply(instance, arguments);
 
-					var trigger = instance.get('templateNode').one('input');
+					let keysPressed = {};
+
+					const onKeyDown = function (domEvent) {
+						if (domEvent.keyCode === 16) {
+							keysPressed[domEvent.keyCode] = true;
+						}
+					};
+
+					const onKeyUp = function (domEvent) {
+						if (domEvent.keyCode === 16) {
+							delete keysPressed[domEvent.keyCode];
+						}
+					};
+
+					const trigger = instance.get('templateNode').one('input');
+
+					const closePopoverOnKeyboardNavigation = function (
+						instance
+					) {
+						instance.hide();
+
+						keysPressed = {};
+
+						if (trigger) {
+							Liferay.Util.focusFormField(trigger);
+						}
+					};
 
 					if (trigger) {
 						instance.datePicker = new A.DatePickerDeprecated({
@@ -1456,8 +1305,45 @@ AUI.add(
 								locale: Liferay.ThemeDisplay.getLanguageId(),
 							},
 							on: {
+								destroy() {
+									document.removeEventListener(
+										'keydown',
+										onKeyDown
+									);
+									document.removeEventListener(
+										'keyup',
+										onKeyUp
+									);
+								},
+								enterKey() {
+									let countInterval = 0;
+
+									const intervalId = setInterval(() => {
+										const trigger = A.one(
+											'.datepicker-popover:not(.popover-hidden) .yui3-calendarnav-prevmonth'
+										);
+
+										if (trigger) {
+											Liferay.Util.focusFormField(
+												trigger
+											);
+											clearInterval(intervalId);
+										}
+										else if (countInterval > 10) {
+											clearInterval(intervalId);
+										}
+										countInterval++;
+									}, 100);
+								},
+								init() {
+									document.addEventListener(
+										'keydown',
+										onKeyDown
+									);
+									document.addEventListener('keyup', onKeyUp);
+								},
 								selectionChange(event) {
-									var date = event.newSelection;
+									const date = event.newSelection;
 
 									instance.setValue(A.Date.format(date));
 								},
@@ -1465,22 +1351,75 @@ AUI.add(
 							popover: {
 								on: {
 									keydown(event) {
-										var instance = this;
+										const instance = this;
 
-										var domEvent = event.domEvent;
+										const domEvent = event.domEvent;
 
-										if (
-											domEvent.keyCode == 9 &&
+										keysPressed[domEvent.keyCode] = true;
+
+										const isTabPressed =
+											domEvent.keyCode === 9 ||
+											keysPressed[9];
+
+										const isShiftPressed =
+											domEvent.keyCode === 16 ||
+											keysPressed[16];
+
+										const isForwardNavigation =
+											isTabPressed && !isShiftPressed;
+
+										const isEscapePressed =
+											domEvent.keyCode === 27 ||
+											keysPressed[27];
+
+										const hasClassName =
 											domEvent.target.hasClass(
 												'yui3-calendar-grid'
-											)
-										) {
-											instance.hide();
+											) ||
+											domEvent.target.hasClass(
+												'yui3-calendar-day'
+											);
 
-											Liferay.Util.focusFormField(
-												trigger
+										if (
+											(isForwardNavigation &&
+												hasClassName) ||
+											isEscapePressed
+										) {
+											closePopoverOnKeyboardNavigation(
+												instance
 											);
 										}
+									},
+									keyup(event) {
+										const instance = this;
+
+										const domEvent = event.domEvent;
+
+										const isTabPressed =
+											domEvent.keyCode === 9 ||
+											keysPressed[9];
+
+										const isShiftPressed =
+											domEvent.keyCode === 16 ||
+											keysPressed[16];
+
+										const isBackwardNavigation =
+											isTabPressed && isShiftPressed;
+
+										const hasClassName = domEvent.target.hasClass(
+											'yui3-calendar-focused'
+										);
+
+										if (
+											isBackwardNavigation &&
+											hasClassName
+										) {
+											closePopoverOnKeyboardNavigation(
+												instance
+											);
+										}
+
+										delete keysPressed[domEvent.keyCode];
 									},
 								},
 							},
@@ -1498,10 +1437,10 @@ AUI.add(
 			},
 		});
 
-		var DDMDecimalField = A.Component.create({
+		const DDMDecimalField = A.Component.create({
 			ATTRS: {
 				dataType: {
-					value: 'double',
+					value: 'decimal',
 				},
 
 				fieldNamespace: {
@@ -1514,7 +1453,7 @@ AUI.add(
 			NAME: 'ddm-decimal',
 		});
 
-		var DDMDocumentLibraryField = A.Component.create({
+		const DDMDocumentLibraryField = A.Component.create({
 			ATTRS: {
 				dataType: {
 					value: 'document-library',
@@ -1543,27 +1482,27 @@ AUI.add(
 				},
 
 				getPropertyModel() {
-					var instance = this;
+					const instance = this;
 
-					var model = DDMDocumentLibraryField.superclass.getPropertyModel.apply(
+					const model = DDMDocumentLibraryField.superclass.getPropertyModel.apply(
 						instance,
 						arguments
 					);
 
 					model.forEach((item) => {
-						var attributeName = item.attributeName;
+						const attributeName = item.attributeName;
 
 						if (attributeName === 'predefinedValue') {
 							item.editor = new DLFileEntryCellEditor({
 								strings: editorLocalizedStrings,
 							});
 
-							item.formatter = function (obj) {
-								var data = obj.data;
+							item.formatter = function (object) {
+								const data = object.data;
 
-								var label = STR_BLANK;
+								let label = STR_BLANK;
 
-								var value = data.value;
+								const value = data.value;
 
 								if (value !== STR_BLANK) {
 									label =
@@ -1585,7 +1524,7 @@ AUI.add(
 			},
 		});
 
-		var DDMGeolocationField = A.Component.create({
+		const DDMGeolocationField = A.Component.create({
 			ATTRS: {
 				dataType: {
 					value: 'geolocation',
@@ -1611,7 +1550,7 @@ AUI.add(
 				},
 
 				getPropertyModel() {
-					var instance = this;
+					const instance = this;
 
 					return DDMGeolocationField.superclass.getPropertyModel
 						.apply(instance, arguments)
@@ -1622,7 +1561,7 @@ AUI.add(
 			},
 		});
 
-		var DDMImageField = A.Component.create({
+		const DDMImageField = A.Component.create({
 			ATTRS: {
 				dataType: {
 					value: 'image',
@@ -1637,6 +1576,11 @@ AUI.add(
 						return structureFieldIndexEnable() ? 'text' : '';
 					},
 				},
+
+				requiredDescription: {
+					setter: booleanParse,
+					value: true,
+				},
 			},
 
 			EXTENDS: A.FormBuilderField,
@@ -1647,10 +1591,25 @@ AUI.add(
 				getHTML() {
 					return TPL_WCM_IMAGE;
 				},
+
+				getRequiredDescriptionPropertyModel() {
+					return {
+						attributeName: 'requiredDescription',
+						editor: new A.RadioCellEditor({
+							options: booleanOptions,
+							strings: editorLocalizedStrings,
+						}),
+						formatter(val) {
+							return booleanOptions[val.data.value];
+						},
+						id: 'requiredDescription',
+						name: Liferay.Language.get('required-description'),
+					};
+				},
 			},
 		});
 
-		var DDMIntegerField = A.Component.create({
+		const DDMIntegerField = A.Component.create({
 			ATTRS: {
 				dataType: {
 					value: 'integer',
@@ -1666,7 +1625,7 @@ AUI.add(
 			NAME: 'ddm-integer',
 		});
 
-		var DDMNumberField = A.Component.create({
+		const DDMNumberField = A.Component.create({
 			ATTRS: {
 				dataType: {
 					value: 'number',
@@ -1682,7 +1641,7 @@ AUI.add(
 			NAME: 'ddm-number',
 		});
 
-		var DDMParagraphField = A.Component.create({
+		const DDMParagraphField = A.Component.create({
 			ATTRS: {
 				dataType: {
 					value: undefined,
@@ -1710,15 +1669,15 @@ AUI.add(
 
 			prototype: {
 				_uiSetLabel(val) {
-					var instance = this;
+					const instance = this;
 
 					instance.get('templateNode').setContent(val);
 				},
 
 				_uiSetStyle(val) {
-					var instance = this;
+					const instance = this;
 
-					var templateNode = instance.get('templateNode');
+					const templateNode = instance.get('templateNode');
 
 					applyStyles(templateNode, val);
 				},
@@ -1753,7 +1712,7 @@ AUI.add(
 			},
 		});
 
-		var DDMRadioField = A.Component.create({
+		const DDMRadioField = A.Component.create({
 			ATTRS: {
 				dataType: {
 					value: 'radio',
@@ -1774,16 +1733,16 @@ AUI.add(
 
 			prototype: {
 				_uiSetOptions(val) {
-					var instance = this;
+					const instance = this;
 
-					var buffer = [];
-					var counter = 0;
+					const buffer = [];
+					let counter = 0;
 
-					var predefinedValue = instance.get('predefinedValue');
-					var templateNode = instance.get('templateNode');
+					const predefinedValue = instance.get('predefinedValue');
+					const templateNode = instance.get('templateNode');
 
 					A.each(val, (item) => {
-						var checked = predefinedValue === item.value;
+						const checked = predefinedValue === item.value;
 
 						buffer.push(
 							Lang.sub(TPL_RADIO, {
@@ -1807,9 +1766,9 @@ AUI.add(
 				},
 
 				_uiSetPredefinedValue(val) {
-					var instance = this;
+					const instance = this;
 
-					var optionNodes = instance.optionNodes;
+					const optionNodes = instance.optionNodes;
 
 					if (!optionNodes) {
 						return;
@@ -1824,7 +1783,7 @@ AUI.add(
 			},
 		});
 
-		var DDMSeparatorField = A.Component.create({
+		const DDMSeparatorField = A.Component.create({
 			ATTRS: {
 				dataType: {
 					value: undefined,
@@ -1851,9 +1810,9 @@ AUI.add(
 
 			prototype: {
 				_uiSetStyle(val) {
-					var instance = this;
+					const instance = this;
 
-					var templateNode = instance.get('templateNode');
+					const templateNode = instance.get('templateNode');
 
 					applyStyles(templateNode, val);
 				},
@@ -1863,9 +1822,9 @@ AUI.add(
 				},
 
 				getPropertyModel() {
-					var instance = this;
+					const instance = this;
 
-					var model = DDMSeparatorField.superclass.getPropertyModel.apply(
+					const model = DDMSeparatorField.superclass.getPropertyModel.apply(
 						instance,
 						arguments
 					);
@@ -1883,7 +1842,7 @@ AUI.add(
 			},
 		});
 
-		var DDMHTMLTextField = A.Component.create({
+		const DDMHTMLTextField = A.Component.create({
 			ATTRS: {
 				dataType: {
 					value: 'html',
@@ -1911,77 +1870,7 @@ AUI.add(
 			},
 		});
 
-		var DDMJournalArticleField = A.Component.create({
-			ATTRS: {
-				dataType: {
-					value: 'journal-article',
-				},
-
-				fieldNamespace: {
-					value: 'ddm',
-				},
-			},
-
-			EXTENDS: A.FormBuilderField,
-
-			NAME: 'ddm-journal-article',
-
-			prototype: {
-				getHTML() {
-					return TPL_INPUT_BUTTON;
-				},
-
-				getPropertyModel() {
-					var instance = this;
-
-					var model = DDMJournalArticleField.superclass.getPropertyModel.apply(
-						instance,
-						arguments
-					);
-
-					model.push({
-						attributeName: 'style',
-						editor: new A.TextAreaCellEditor({
-							strings: editorLocalizedStrings,
-						}),
-						name: Liferay.Language.get('style'),
-					});
-
-					model.forEach((item) => {
-						var attributeName = item.attributeName;
-
-						if (attributeName === 'predefinedValue') {
-							item.editor = new JournalArticleCellEditor({
-								strings: editorLocalizedStrings,
-							});
-
-							item.formatter = function (obj) {
-								var data = obj.data;
-
-								var label = STR_BLANK;
-
-								var value = data.value;
-
-								if (value !== STR_BLANK) {
-									label =
-										'(' +
-										Liferay.Language.get(
-											'journal-article'
-										) +
-										')';
-								}
-
-								return label;
-							};
-						}
-					});
-
-					return model;
-				},
-			},
-		});
-
-		var DDMLinkToPageField = A.Component.create({
+		const DDMLinkToPageField = A.Component.create({
 			ATTRS: {
 				dataType: {
 					value: 'link-to-page',
@@ -2003,7 +1892,7 @@ AUI.add(
 			},
 		});
 
-		var DDMTextAreaField = A.Component.create({
+		const DDMTextAreaField = A.Component.create({
 			ATTRS: {
 				indexType: {
 					valueFn() {
@@ -2017,7 +1906,7 @@ AUI.add(
 			NAME: 'textarea',
 		});
 
-		var plugins = [
+		const plugins = [
 			DDMColorField,
 			DDMDateField,
 			DDMDecimalField,
@@ -2025,7 +1914,6 @@ AUI.add(
 			DDMGeolocationField,
 			DDMImageField,
 			DDMIntegerField,
-			DDMJournalArticleField,
 			DDMLinkToPageField,
 			DDMNumberField,
 			DDMParagraphField,

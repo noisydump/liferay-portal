@@ -14,52 +14,31 @@
 
 package com.liferay.change.tracking.web.internal.portlet.action;
 
-import com.liferay.change.tracking.model.CTCollection;
-import com.liferay.change.tracking.model.CTPreferences;
-import com.liferay.change.tracking.model.CTPreferencesTable;
-import com.liferay.change.tracking.service.CTCollectionLocalService;
-import com.liferay.change.tracking.service.CTPreferencesLocalService;
-import com.liferay.change.tracking.web.internal.constants.CTPortletKeys;
-import com.liferay.change.tracking.web.internal.scheduler.PublishScheduler;
-import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
-import com.liferay.portal.aop.AopService;
-import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.change.tracking.configuration.CTSettingsConfiguration;
+import com.liferay.change.tracking.constants.CTPortletKeys;
+import com.liferay.change.tracking.exception.CTStagingEnabledException;
+import com.liferay.change.tracking.web.internal.configuration.helper.CTSettingsConfigurationHelper;
 import com.liferay.portal.kernel.language.Language;
-import com.liferay.portal.kernel.model.Group;
-import com.liferay.portal.kernel.model.GroupConstants;
-import com.liferay.portal.kernel.model.GroupTable;
+import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
-import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.permission.PortletPermission;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.servlet.SessionMessages;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.transaction.Propagation;
-import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.util.PropsValues;
-
-import java.util.List;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
-import javax.portlet.PortletException;
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletURL;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Samuel Trong Tran
@@ -67,24 +46,13 @@ import org.osgi.service.component.annotations.ReferencePolicyOption;
 @Component(
 	immediate = true,
 	property = {
-		"javax.portlet.name=" + CTPortletKeys.PUBLICATIONS_CONFIGURATION,
+		"javax.portlet.name=" + CTPortletKeys.PUBLICATIONS,
 		"mvc.command.name=/change_tracking/update_global_publications_configuration"
 	},
-	service = AopService.class
+	service = MVCActionCommand.class
 )
 public class UpdateGlobalPublicationsConfigurationMVCActionCommand
-	extends BaseMVCActionCommand implements AopService, MVCActionCommand {
-
-	@Override
-	@Transactional(
-		propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class
-	)
-	public boolean processAction(
-			ActionRequest actionRequest, ActionResponse actionResponse)
-		throws PortletException {
-
-		return super.processAction(actionRequest, actionResponse);
-	}
+	extends BaseMVCActionCommand {
 
 	@Override
 	protected void doProcessAction(
@@ -94,109 +62,66 @@ public class UpdateGlobalPublicationsConfigurationMVCActionCommand
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		_portletPermission.check(
-			themeDisplay.getPermissionChecker(),
-			CTPortletKeys.PUBLICATIONS_CONFIGURATION, ActionKeys.CONFIGURATION);
+		PortletURL redirectURL = PortletURLFactoryUtil.create(
+			actionRequest, CTPortletKeys.PUBLICATIONS,
+			PortletRequest.RENDER_PHASE);
+
+		long companyId = themeDisplay.getCompanyId();
+
+		CTSettingsConfiguration ctSettingsConfiguration =
+			_ctSettingsConfigurationHelper.getCTSettingsConfiguration(
+				companyId);
+
+		if (ctSettingsConfiguration.enabled()) {
+			redirectURL.setParameter(
+				"mvcRenderCommandName", "/change_tracking/view_settings");
+		}
 
 		boolean enablePublications = ParamUtil.getBoolean(
-			actionRequest, "enablePublications");
+			actionRequest, "enablePublications",
+			ctSettingsConfiguration.enabled());
+		boolean enableSandboxOnly = ParamUtil.getBoolean(
+			actionRequest, "enableSandboxOnly",
+			ctSettingsConfiguration.sandboxEnabled());
 
-		if (enablePublications) {
-			List<Group> groups = _groupLocalService.dslQuery(
-				DSLQueryFactoryUtil.select(
-					GroupTable.INSTANCE
-				).from(
-					GroupTable.INSTANCE
-				).where(
-					GroupTable.INSTANCE.companyId.eq(
-						themeDisplay.getCompanyId()
-					).and(
-						GroupTable.INSTANCE.liveGroupId.neq(
-							GroupConstants.DEFAULT_LIVE_GROUP_ID
-						).or(
-							GroupTable.INSTANCE.typeSettings.like(
-								"%staged=true%")
-						).withParentheses()
-					)
-				));
+		try {
+			_portletPermission.check(
+				themeDisplay.getPermissionChecker(), CTPortletKeys.PUBLICATIONS,
+				ActionKeys.CONFIGURATION);
 
-			for (Group group : groups) {
-				if (group.isStaged() || group.isStagingGroup()) {
-					SessionErrors.add(actionRequest, "stagingEnabled");
-
-					return;
-				}
-			}
-
-			_ctPreferencesLocalService.getCTPreferences(
-				themeDisplay.getCompanyId(), 0);
+			_ctSettingsConfigurationHelper.save(
+				companyId, enablePublications, enableSandboxOnly);
 		}
-		else {
-			if (PropsValues.SCHEDULER_ENABLED) {
-				List<CTCollection> ctCollections =
-					_ctCollectionLocalService.getCTCollections(
-						themeDisplay.getCompanyId(),
-						WorkflowConstants.STATUS_SCHEDULED, QueryUtil.ALL_POS,
-						QueryUtil.ALL_POS, null);
+		catch (ConfigurationException configurationException) {
+			Throwable throwable = configurationException.getCause();
 
-				for (CTCollection ctCollection : ctCollections) {
-					_publishScheduler.unschedulePublish(
-						ctCollection.getCtCollectionId());
-				}
+			if (throwable.getCause() instanceof CTStagingEnabledException) {
+				SessionErrors.add(actionRequest, "stagingEnabled");
+			}
+			else {
+				SessionErrors.add(actionRequest, throwable.getClass());
 			}
 
-			List<CTPreferences> ctPreferencesList =
-				_ctPreferencesLocalService.dslQuery(
-					DSLQueryFactoryUtil.select(
-						CTPreferencesTable.INSTANCE
-					).from(
-						CTPreferencesTable.INSTANCE
-					).where(
-						CTPreferencesTable.INSTANCE.companyId.eq(
-							themeDisplay.getCompanyId())
-					));
-
-			for (CTPreferences ctPreferences : ctPreferencesList) {
-				_ctPreferencesLocalService.deleteCTPreferences(ctPreferences);
-			}
-		}
-
-		HttpServletRequest httpServletRequest = _portal.getHttpServletRequest(
-			actionRequest);
-
-		boolean redirectToOverview = ParamUtil.getBoolean(
-			actionRequest, "redirectToOverview");
-
-		if (redirectToOverview) {
-			hideDefaultSuccessMessage(actionRequest);
-
-			SessionMessages.add(
-				httpServletRequest, "requestProcessed",
-				_language.get(
-					httpServletRequest, "the-configuration-has-been-saved"));
-
-			PortletURL redirectURL = PortletURLFactoryUtil.create(
-				actionRequest, CTPortletKeys.PUBLICATIONS,
-				PortletRequest.RENDER_PHASE);
+			redirectURL.setParameter(
+				"mvcRenderCommandName", "/change_tracking/view_settings");
 
 			sendRedirect(actionRequest, actionResponse, redirectURL.toString());
+
+			return;
 		}
-		else {
-			SessionMessages.add(
-				actionRequest, "requestProcessed",
-				_language.get(
-					httpServletRequest, "the-configuration-has-been-saved"));
-		}
+
+		hideDefaultSuccessMessage(actionRequest);
+
+		SessionMessages.add(
+			_portal.getHttpServletRequest(actionRequest), "requestProcessed",
+			_language.get(
+				themeDisplay.getLocale(), "the-configuration-has-been-saved"));
+
+		sendRedirect(actionRequest, actionResponse, redirectURL.toString());
 	}
 
 	@Reference
-	private CTCollectionLocalService _ctCollectionLocalService;
-
-	@Reference
-	private CTPreferencesLocalService _ctPreferencesLocalService;
-
-	@Reference
-	private GroupLocalService _groupLocalService;
+	private CTSettingsConfigurationHelper _ctSettingsConfigurationHelper;
 
 	@Reference
 	private Language _language;
@@ -206,12 +131,5 @@ public class UpdateGlobalPublicationsConfigurationMVCActionCommand
 
 	@Reference
 	private PortletPermission _portletPermission;
-
-	@Reference(
-		cardinality = ReferenceCardinality.OPTIONAL,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY
-	)
-	private volatile PublishScheduler _publishScheduler;
 
 }

@@ -18,23 +18,32 @@ definition {
 		if ("${testPortalInstance}" == "true") {
 			PortalInstances.tearDownCP();
 		}
+		else {
+			PagesAdmin.tearDownCP();
+		}
 	}
 
+	@description = "Verify custom look and feel Settings can be applied to page"
 	@priority = "5"
-	test ConfigureLookAndFeelSettingsSinglePage {
+	@refactordone
+	test CanConfigureLookAndFeelSettingsOnSinglePage {
+		property osgi.modules.includes = "frontend-taglib-clay-sample-web";
 		property portal.acceptance = "true";
 
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Classic Theme Page");
+
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Guest",
+			layoutName = "Classic Theme Page",
+			widgetName = "Clay Sample");
+
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
 			portlet = "Pages");
 
-		SitePages.addPublicPage(pageName = "Classic Theme Page");
-
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
-
-		SitePages.gotoPageMenuItem(
+		PagesAdmin.gotoPageEllipsisMenuItem(
 			menuItem = "Configure",
 			pageName = "Classic Theme Page");
 
@@ -46,23 +55,13 @@ definition {
 
 		Theme.configureLookAndFeelShowMaxMinAppLinks(showMaxMinAppLinks = "true");
 
-		Theme.configureLookAndFeelCustomCSS(cssText = '''body{background-color:#42f4c5}''');
+		Theme.configureLookAndFeelCustomCSS(cssText = '''body, #wrapper{background-color: #42f4c5;}''');
 
 		PortletEntry.save();
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
-
-		SitePages.gotoPageMenuItem(
-			menuItem = "Configure",
-			pageName = "Classic Theme Page");
-
-		Navigator.gotoNavTab(navTab = "Look and Feel");
-
 		Navigator.gotoPage(pageName = "Classic Theme Page");
 
-		var htmlSourceText = '''body{background-color:#42f4c5}''';
+		var htmlSourceText = '''body, #wrapper{background-color: #42f4c5;}''';
 
 		AssertHTMLSourceTextPresent(value1 = "${htmlSourceText}");
 
@@ -70,27 +69,23 @@ definition {
 
 		AssertElementNotPresent(locator1 = "Search#EMBEDDED_SEARCH_BAR");
 
-		Portlet.addPG(portletName = "Hello World");
-
-		Portlet.gotoPortletOptions(portletName = "Hello World");
+		Portlet.gotoPortletOptions(portletName = "Clay Sample");
 
 		Theme.viewMaxPortletOption();
 
 		Theme.viewMinPortlet();
 
 		AssertTextEquals(
-			locator1 = "HelloWorld#PORTLET_TITLE",
-			value1 = "Hello World");
+			locator1 = "Portlet#H2_HEADER",
+			value1 = "Clay Sample");
 
-		AssertTextNotPresent(
-			locator1 = "HelloWorld#PORTLET_CONTENT",
-			value1 = "Welcome to Liferay");
+		AssertNotVisible(
+			key_portletName = "Clay Sample",
+			locator1 = "Portlet#BODY");
 
-		Portlet.gotoPortletOptions(portletName = "Hello World");
+		Portlet.gotoPortletOptions(portletName = "Clay Sample");
 
 		Theme.viewRestorePortlet();
-
-		Smoke.viewWelcomePage();
 	}
 
 }

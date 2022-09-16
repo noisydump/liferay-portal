@@ -12,23 +12,39 @@
  * details.
  */
 
+import classNames from 'classnames';
 import React, {useContext} from 'react';
 
-import {CollectionItemContext} from '../CollectionItemContext';
-import TopperEmpty from '../TopperEmpty';
+import {CollectionItemContext} from '../../contexts/CollectionItemContext';
+import TopperEmpty from '../topper/TopperEmpty';
 
 const CollectionItemWithControls = React.forwardRef(({children, item}, ref) => {
 	const {collectionItem} = useContext(CollectionItemContext);
+	const title =
+		collectionItem.title ||
+		collectionItem.name ||
+		collectionItem.defaultTitle;
 
 	return (
-		<div className="page-editor__collection__block">
+		<div
+			className={classNames('page-editor__collection__block', {
+				empty: !title,
+			})}
+		>
 			<TopperEmpty item={item}>
 				{React.Children.count(children) === 0 ? (
-					<div className="page-editor__collection-item" ref={ref}>
+					<div
+						className={classNames('page-editor__collection-item', {
+							empty: !children.length,
+						})}
+						ref={ref}
+					>
 						<div className="page-editor__collection-item__border">
 							<p className="page-editor__collection-item__title">
-								{collectionItem.title ||
-									collectionItem.defaultTitle}
+								{title ||
+									Liferay.Language.get(
+										'sample-collection-item'
+									)}
 							</p>
 						</div>
 					</div>

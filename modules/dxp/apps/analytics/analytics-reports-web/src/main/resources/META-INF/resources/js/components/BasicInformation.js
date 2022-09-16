@@ -12,10 +12,12 @@
 import ClayIcon from '@clayui/icon';
 import ClayLayout from '@clayui/layout';
 import ClaySticker from '@clayui/sticker';
-import {ClayTooltipProvider} from '@clayui/tooltip';
 import classnames from 'classnames';
 import PropTypes from 'prop-types';
-import React from 'react';
+import React, {useContext} from 'react';
+
+import {StoreStateContext} from '../context/StoreContext';
+import Translation from './Translation';
 
 function Author({author: {authorId, name, url}}) {
 	return (
@@ -33,6 +35,7 @@ function Author({author: {authorId, name, url}}) {
 					<ClayIcon symbol="user" />
 				)}
 			</ClaySticker>
+
 			{Liferay.Util.sub(Liferay.Language.get('authored-by-x'), name)}
 		</div>
 	);
@@ -41,10 +44,13 @@ function Author({author: {authorId, name, url}}) {
 function BasicInformation({
 	author,
 	canonicalURL,
-	languageTag,
+	onSelectedLanguageClick,
 	publishDate,
 	title,
+	viewURLs,
 }) {
+	const {languageTag} = useContext(StoreStateContext);
+
 	const formattedPublishDate = Intl.DateTimeFormat(languageTag, {
 		day: 'numeric',
 		month: 'long',
@@ -53,52 +59,65 @@ function BasicInformation({
 
 	return (
 		<div className="sidebar-section">
-			<ClayLayout.ContentRow>
-				<ClayLayout.ContentCol expand>
-					<ClayTooltipProvider>
-						<span
-							className="component-title text-truncate-inline"
-							data-tooltip-align="top"
-							title={title}
-						>
-							<span className="text-truncate">{title}</span>
-						</span>
-					</ClayTooltipProvider>
+			<ClayLayout.ContentRow className="mb-2" verticalAlign="center">
+				<ClayLayout.ContentCol>
+					<div className="inline-item-before">
+						<ClayLayout.ContentRow>
+							<ClayLayout.ContentCol>
+								<Translation
+									onSelectedLanguageClick={
+										onSelectedLanguageClick
+									}
+									viewURLs={viewURLs}
+								/>
+							</ClayLayout.ContentCol>
+						</ClayLayout.ContentRow>
+					</div>
 				</ClayLayout.ContentCol>
-			</ClayLayout.ContentRow>
 
-			<ClayLayout.ContentRow>
 				<ClayLayout.ContentCol expand>
-					<ClayTooltipProvider>
-						<span
-							className="text-truncate-inline"
-							data-tooltip-align="top"
-							title={canonicalURL}
-						>
-							<span className="c-mb-2 c-mt-1 text-secondary text-truncate text-truncate-reverse">
-								{canonicalURL}
+					<ClayLayout.ContentRow>
+						<span className="font-weight-semi-bold text-truncate-inline">
+							<span
+								className="text-truncate"
+								data-tooltip-align="bottom"
+								title={title}
+							>
+								{title}
 							</span>
 						</span>
-					</ClayTooltipProvider>
+					</ClayLayout.ContentRow>
+
+					<ClayLayout.ContentRow>
+						<span
+							className="text-truncate text-truncate-reverse"
+							data-tooltip-align="bottom"
+							title={canonicalURL}
+						>
+							<bdi className="text-secondary">{canonicalURL}</bdi>
+						</span>
+					</ClayLayout.ContentRow>
 				</ClayLayout.ContentCol>
 			</ClayLayout.ContentRow>
 
-			<ClayLayout.ContentRow>
+			<ClayLayout.ContentRow className="mb-2">
 				<ClayLayout.ContentCol expand>
-					<p className="text-secondary">
+					<span className="text-secondary">
 						{Liferay.Util.sub(
 							Liferay.Language.get('published-on-x'),
 							formattedPublishDate
 						)}
-					</p>
+					</span>
 				</ClayLayout.ContentCol>
 			</ClayLayout.ContentRow>
 
-			<ClayLayout.ContentRow>
-				<ClayLayout.ContentCol expand>
-					<Author author={author} />
-				</ClayLayout.ContentCol>
-			</ClayLayout.ContentRow>
+			{author && (
+				<ClayLayout.ContentRow>
+					<ClayLayout.ContentCol expand>
+						<Author author={author} />
+					</ClayLayout.ContentCol>
+				</ClayLayout.ContentRow>
+			)}
 		</div>
 	);
 }
@@ -108,11 +127,19 @@ Author.propTypes = {
 };
 
 BasicInformation.propTypes = {
-	author: PropTypes.object.isRequired,
+	author: PropTypes.object,
 	canonicalURL: PropTypes.string.isRequired,
-	languageTag: PropTypes.string.isRequired,
+	onSelectedLanguageClick: PropTypes.func.isRequired,
 	publishDate: PropTypes.string.isRequired,
 	title: PropTypes.string.isRequired,
+	viewURLs: PropTypes.arrayOf(
+		PropTypes.shape({
+			default: PropTypes.bool.isRequired,
+			languageId: PropTypes.string.isRequired,
+			selected: PropTypes.bool.isRequired,
+			viewURL: PropTypes.string.isRequired,
+		})
+	).isRequired,
 };
 
 export default BasicInformation;

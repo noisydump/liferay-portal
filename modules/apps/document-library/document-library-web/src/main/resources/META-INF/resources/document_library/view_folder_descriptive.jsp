@@ -23,15 +23,25 @@ Folder folder = (Folder)row.getObject();
 
 folder = folder.toEscapedModel();
 
-FolderActionDisplayContext folderActionDisplayContext = new FolderActionDisplayContext(dlTrashHelper, request, liferayPortletResponse);
-
-Date modifiedDate = folder.getLastPostDate();
+Date modifiedDate = folder.getModifiedDate();
 
 String modifiedDateDescription = LanguageUtil.getTimeDescription(request, System.currentTimeMillis() - modifiedDate.getTime(), true);
 %>
 
 <h2 class="h5">
-	<aui:a href="<%= folderActionDisplayContext.getRowURL(folder) %>">
+	<aui:a
+		href='<%=
+			PortletURLBuilder.createRenderURL(
+				liferayPortletResponse
+			).setMVCRenderCommandName(
+				"/document_library/view_folder"
+			).setRedirect(
+				currentURL
+			).setParameter(
+				"folderId", folder.getFolderId()
+			).buildString()
+		%>'
+	>
 		<%= folder.getName() %>
 	</aui:a>
 </h2>

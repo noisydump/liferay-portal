@@ -17,6 +17,7 @@ package com.liferay.commerce.tax.engine.fixed.model;
 import com.liferay.portal.kernel.bean.AutoEscape;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.GroupedModel;
+import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
 
 import java.util.Date;
@@ -36,7 +37,7 @@ import org.osgi.annotation.versioning.ProviderType;
  */
 @ProviderType
 public interface CommerceTaxFixedRateAddressRelModel
-	extends BaseModel<CommerceTaxFixedRateAddressRel>, GroupedModel,
+	extends BaseModel<CommerceTaxFixedRateAddressRel>, GroupedModel, MVCCModel,
 			ShardedModel {
 
 	/*
@@ -58,6 +59,22 @@ public interface CommerceTaxFixedRateAddressRelModel
 	 * @param primaryKey the primary key of this commerce tax fixed rate address rel
 	 */
 	public void setPrimaryKey(long primaryKey);
+
+	/**
+	 * Returns the mvcc version of this commerce tax fixed rate address rel.
+	 *
+	 * @return the mvcc version of this commerce tax fixed rate address rel
+	 */
+	@Override
+	public long getMvccVersion();
+
+	/**
+	 * Sets the mvcc version of this commerce tax fixed rate address rel.
+	 *
+	 * @param mvccVersion the mvcc version of this commerce tax fixed rate address rel
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion);
 
 	/**
 	 * Returns the commerce tax fixed rate address rel ID of this commerce tax fixed rate address rel.
@@ -216,32 +233,32 @@ public interface CommerceTaxFixedRateAddressRelModel
 	public void setCPTaxCategoryId(long CPTaxCategoryId);
 
 	/**
-	 * Returns the commerce country ID of this commerce tax fixed rate address rel.
+	 * Returns the country ID of this commerce tax fixed rate address rel.
 	 *
-	 * @return the commerce country ID of this commerce tax fixed rate address rel
+	 * @return the country ID of this commerce tax fixed rate address rel
 	 */
-	public long getCommerceCountryId();
+	public long getCountryId();
 
 	/**
-	 * Sets the commerce country ID of this commerce tax fixed rate address rel.
+	 * Sets the country ID of this commerce tax fixed rate address rel.
 	 *
-	 * @param commerceCountryId the commerce country ID of this commerce tax fixed rate address rel
+	 * @param countryId the country ID of this commerce tax fixed rate address rel
 	 */
-	public void setCommerceCountryId(long commerceCountryId);
+	public void setCountryId(long countryId);
 
 	/**
-	 * Returns the commerce region ID of this commerce tax fixed rate address rel.
+	 * Returns the region ID of this commerce tax fixed rate address rel.
 	 *
-	 * @return the commerce region ID of this commerce tax fixed rate address rel
+	 * @return the region ID of this commerce tax fixed rate address rel
 	 */
-	public long getCommerceRegionId();
+	public long getRegionId();
 
 	/**
-	 * Sets the commerce region ID of this commerce tax fixed rate address rel.
+	 * Sets the region ID of this commerce tax fixed rate address rel.
 	 *
-	 * @param commerceRegionId the commerce region ID of this commerce tax fixed rate address rel
+	 * @param regionId the region ID of this commerce tax fixed rate address rel
 	 */
-	public void setCommerceRegionId(long commerceRegionId);
+	public void setRegionId(long regionId);
 
 	/**
 	 * Returns the zip of this commerce tax fixed rate address rel.
@@ -271,5 +288,8 @@ public interface CommerceTaxFixedRateAddressRelModel
 	 * @param rate the rate of this commerce tax fixed rate address rel
 	 */
 	public void setRate(double rate);
+
+	@Override
+	public CommerceTaxFixedRateAddressRel cloneWithOriginalValues();
 
 }

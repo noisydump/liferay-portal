@@ -17,6 +17,7 @@ package com.liferay.portal.background.task.service.base;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.background.task.model.BackgroundTask;
 import com.liferay.portal.background.task.service.BackgroundTaskService;
+import com.liferay.portal.background.task.service.BackgroundTaskServiceUtil;
 import com.liferay.portal.background.task.service.persistence.BackgroundTaskFinder;
 import com.liferay.portal.background.task.service.persistence.BackgroundTaskPersistence;
 import com.liferay.portal.kernel.dao.db.DB;
@@ -24,12 +25,17 @@ import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.service.BaseServiceImpl;
 import com.liferay.portal.kernel.util.PortalUtil;
 
+import java.lang.reflect.Field;
+
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -50,8 +56,13 @@ public abstract class BackgroundTaskServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>BackgroundTaskService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.background.task.service.BackgroundTaskServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>BackgroundTaskService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>BackgroundTaskServiceUtil</code>.
 	 */
+	@Deactivate
+	protected void deactivate() {
+		_setServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -62,6 +73,8 @@ public abstract class BackgroundTaskServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		backgroundTaskService = (BackgroundTaskService)aopProxy;
+
+		_setServiceUtilService(backgroundTaskService);
 	}
 
 	/**
@@ -106,6 +119,22 @@ public abstract class BackgroundTaskServiceBaseImpl
 		}
 	}
 
+	private void _setServiceUtilService(
+		BackgroundTaskService backgroundTaskService) {
+
+		try {
+			Field field = BackgroundTaskServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, backgroundTaskService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@Reference
 	protected
 		com.liferay.portal.background.task.service.BackgroundTaskLocalService
@@ -123,11 +152,7 @@ public abstract class BackgroundTaskServiceBaseImpl
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserService userService;
+	private static final Log _log = LogFactoryUtil.getLog(
+		BackgroundTaskServiceBaseImpl.class);
 
 }

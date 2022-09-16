@@ -2,15 +2,17 @@
 <head>
 <title>NavBar</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">NavBar</td></tr>
 </thead>
+
 <tbody>
 <tr>
 	<td>ACTIVE_NAV_ITEM_LINK</td>
-	<td>//div[contains(@class,'navbar')]//a[contains(@class,'active') and normalize-space()='${key_navItem}']</td>
+	<td>//div[contains(@class,'navbar')]//a[contains(@class,'active') and normalize-space()='${key_navItem}'] | //nav[contains(@role,'navigation')]//li[contains(@class,'active')][normalize-space()='${key_navItem}']</td>
 	<td></td>
 </tr>
 <tr>
@@ -36,6 +38,11 @@
 <tr>
 	<td>ASSET_TITLE</td>
 	<td>//*[contains(@class,'nav-link') and contains(text(),'${key_assetTitle}')] | //a[.='${key_assetTitle}']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ASSET_TEMPLATE</td>
+	<td>//button[contains(@class,'nav-link')]//span[contains(text(),'Templates')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -75,7 +82,7 @@
 </tr>
 <tr>
 	<td>NAV_ITEM_LINK</td>
-	<td>//div[contains(@class,'navbar')]//a[normalize-space()='${key_navItem}']</td>
+	<td>//div[contains(@class,'navbar')]//a[normalize-space()='${key_navItem}'] | //nav[contains(@role,'navigation')]//li[normalize-space()='${key_navItem}']</td>
 	<td></td>
 </tr>
 <tr>
@@ -100,7 +107,7 @@
 </tr>
 <tr>
 	<td>TOGGLE_NAVIGATION</td>
-	<td>//div[contains(@class,'navbar')]//button[contains(@aria-label,'Toggle navigation')]</td>
+	<td>//*[contains(@class,'navbar')]//button[contains(@aria-label,'Toggle navigation')]</td>
 	<td></td>
 </tr>
 <tr>

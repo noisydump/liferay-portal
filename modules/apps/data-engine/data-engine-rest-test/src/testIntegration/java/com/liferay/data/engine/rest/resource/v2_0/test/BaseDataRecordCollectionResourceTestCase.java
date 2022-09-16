@@ -35,45 +35,43 @@ import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.RoleTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
-import com.liferay.portal.test.log.CaptureAppender;
-import com.liferay.portal.test.log.Log4JLoggerTestUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 import java.text.DateFormat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
 import javax.ws.rs.core.MultivaluedHashMap;
-
-import org.apache.commons.beanutils.BeanUtilsBean;
-import org.apache.log4j.Level;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -228,7 +226,7 @@ public abstract class BaseDataRecordCollectionResourceTestCase {
 		throws Exception {
 
 		DataRecordCollection dataRecordCollection =
-			testGraphQLDataRecordCollection_addDataRecordCollection();
+			testGraphQLGetDataDefinitionDataRecordCollection_addDataRecordCollection();
 
 		Assert.assertTrue(
 			equals(
@@ -275,24 +273,31 @@ public abstract class BaseDataRecordCollectionResourceTestCase {
 				"Object/code"));
 	}
 
+	protected DataRecordCollection
+			testGraphQLGetDataDefinitionDataRecordCollection_addDataRecordCollection()
+		throws Exception {
+
+		return testGraphQLDataRecordCollection_addDataRecordCollection();
+	}
+
 	@Test
 	public void testGetDataDefinitionDataRecordCollectionsPage()
 		throws Exception {
-
-		Page<DataRecordCollection> page =
-			dataRecordCollectionResource.
-				getDataDefinitionDataRecordCollectionsPage(
-					testGetDataDefinitionDataRecordCollectionsPage_getDataDefinitionId(),
-					RandomTestUtil.randomString(), Pagination.of(1, 2));
-
-		Assert.assertEquals(0, page.getTotalCount());
 
 		Long dataDefinitionId =
 			testGetDataDefinitionDataRecordCollectionsPage_getDataDefinitionId();
 		Long irrelevantDataDefinitionId =
 			testGetDataDefinitionDataRecordCollectionsPage_getIrrelevantDataDefinitionId();
 
-		if ((irrelevantDataDefinitionId != null)) {
+		Page<DataRecordCollection> page =
+			dataRecordCollectionResource.
+				getDataDefinitionDataRecordCollectionsPage(
+					dataDefinitionId, RandomTestUtil.randomString(),
+					Pagination.of(1, 10));
+
+		Assert.assertEquals(0, page.getTotalCount());
+
+		if (irrelevantDataDefinitionId != null) {
 			DataRecordCollection irrelevantDataRecordCollection =
 				testGetDataDefinitionDataRecordCollectionsPage_addDataRecordCollection(
 					irrelevantDataDefinitionId,
@@ -322,7 +327,7 @@ public abstract class BaseDataRecordCollectionResourceTestCase {
 		page =
 			dataRecordCollectionResource.
 				getDataDefinitionDataRecordCollectionsPage(
-					dataDefinitionId, null, Pagination.of(1, 2));
+					dataDefinitionId, null, Pagination.of(1, 10));
 
 		Assert.assertEquals(2, page.getTotalCount());
 
@@ -478,7 +483,7 @@ public abstract class BaseDataRecordCollectionResourceTestCase {
 	@Test
 	public void testGraphQLDeleteDataRecordCollection() throws Exception {
 		DataRecordCollection dataRecordCollection =
-			testGraphQLDataRecordCollection_addDataRecordCollection();
+			testGraphQLDeleteDataRecordCollection_addDataRecordCollection();
 
 		Assert.assertTrue(
 			JSONUtil.getValueAsBoolean(
@@ -493,28 +498,28 @@ public abstract class BaseDataRecordCollectionResourceTestCase {
 							}
 						})),
 				"JSONObject/data", "Object/deleteDataRecordCollection"));
+		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"dataRecordCollection",
+					new HashMap<String, Object>() {
+						{
+							put(
+								"dataRecordCollectionId",
+								dataRecordCollection.getId());
+						}
+					},
+					new GraphQLField("id"))),
+			"JSONArray/errors");
 
-		try (CaptureAppender captureAppender =
-				Log4JLoggerTestUtil.configureLog4JLogger(
-					"graphql.execution.SimpleDataFetcherExceptionHandler",
-					Level.WARN)) {
+		Assert.assertTrue(errorsJSONArray.length() > 0);
+	}
 
-			JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"dataRecordCollection",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"dataRecordCollectionId",
-									dataRecordCollection.getId());
-							}
-						},
-						new GraphQLField("id"))),
-				"JSONArray/errors");
+	protected DataRecordCollection
+			testGraphQLDeleteDataRecordCollection_addDataRecordCollection()
+		throws Exception {
 
-			Assert.assertTrue(errorsJSONArray.length() > 0);
-		}
+		return testGraphQLDataRecordCollection_addDataRecordCollection();
 	}
 
 	@Test
@@ -541,7 +546,7 @@ public abstract class BaseDataRecordCollectionResourceTestCase {
 	@Test
 	public void testGraphQLGetDataRecordCollection() throws Exception {
 		DataRecordCollection dataRecordCollection =
-			testGraphQLDataRecordCollection_addDataRecordCollection();
+			testGraphQLGetDataRecordCollection_addDataRecordCollection();
 
 		Assert.assertTrue(
 			equals(
@@ -584,6 +589,13 @@ public abstract class BaseDataRecordCollectionResourceTestCase {
 				"Object/code"));
 	}
 
+	protected DataRecordCollection
+			testGraphQLGetDataRecordCollection_addDataRecordCollection()
+		throws Exception {
+
+		return testGraphQLDataRecordCollection_addDataRecordCollection();
+	}
+
 	@Test
 	public void testPutDataRecordCollection() throws Exception {
 		DataRecordCollection postDataRecordCollection =
@@ -617,25 +629,44 @@ public abstract class BaseDataRecordCollectionResourceTestCase {
 
 	@Test
 	public void testGetDataRecordCollectionPermissionsPage() throws Exception {
-		Assert.assertTrue(false);
+		DataRecordCollection postDataRecordCollection =
+			testGetDataRecordCollectionPermissionsPage_addDataRecordCollection();
+
+		Page<Permission> page =
+			dataRecordCollectionResource.getDataRecordCollectionPermissionsPage(
+				postDataRecordCollection.getId(), RoleConstants.GUEST);
+
+		Assert.assertNotNull(page);
+	}
+
+	protected DataRecordCollection
+			testGetDataRecordCollectionPermissionsPage_addDataRecordCollection()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
-	public void testPutDataRecordCollectionPermission() throws Exception {
+	public void testPutDataRecordCollectionPermissionsPage() throws Exception {
 		@SuppressWarnings("PMD.UnusedLocalVariable")
 		DataRecordCollection dataRecordCollection =
-			testPutDataRecordCollectionPermission_addDataRecordCollection();
+			testPutDataRecordCollectionPermissionsPage_addDataRecordCollection();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		com.liferay.portal.kernel.model.Role role = RoleTestUtil.addRole(
+			RoleConstants.TYPE_REGULAR);
 
 		assertHttpResponseStatusCode(
-			204,
+			200,
 			dataRecordCollectionResource.
-				putDataRecordCollectionPermissionHttpResponse(
+				putDataRecordCollectionPermissionsPageHttpResponse(
 					dataRecordCollection.getId(),
 					new Permission[] {
 						new Permission() {
 							{
 								setActionIds(new String[] {"VIEW"});
-								setRoleName("Guest");
+								setRoleName(role.getName());
 							}
 						}
 					}));
@@ -643,7 +674,7 @@ public abstract class BaseDataRecordCollectionResourceTestCase {
 		assertHttpResponseStatusCode(
 			404,
 			dataRecordCollectionResource.
-				putDataRecordCollectionPermissionHttpResponse(
+				putDataRecordCollectionPermissionsPageHttpResponse(
 					0L,
 					new Permission[] {
 						new Permission() {
@@ -656,7 +687,7 @@ public abstract class BaseDataRecordCollectionResourceTestCase {
 	}
 
 	protected DataRecordCollection
-			testPutDataRecordCollectionPermission_addDataRecordCollection()
+			testPutDataRecordCollectionPermissionsPage_addDataRecordCollection()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -700,7 +731,7 @@ public abstract class BaseDataRecordCollectionResourceTestCase {
 		throws Exception {
 
 		DataRecordCollection dataRecordCollection =
-			testGraphQLDataRecordCollection_addDataRecordCollection();
+			testGraphQLGetSiteDataRecordCollectionByDataRecordCollectionKey_addDataRecordCollection();
 
 		Assert.assertTrue(
 			equals(
@@ -759,11 +790,37 @@ public abstract class BaseDataRecordCollectionResourceTestCase {
 	}
 
 	protected DataRecordCollection
+			testGraphQLGetSiteDataRecordCollectionByDataRecordCollectionKey_addDataRecordCollection()
+		throws Exception {
+
+		return testGraphQLDataRecordCollection_addDataRecordCollection();
+	}
+
+	protected DataRecordCollection
 			testGraphQLDataRecordCollection_addDataRecordCollection()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	protected void assertContains(
+		DataRecordCollection dataRecordCollection,
+		List<DataRecordCollection> dataRecordCollections) {
+
+		boolean contains = false;
+
+		for (DataRecordCollection item : dataRecordCollections) {
+			if (equals(dataRecordCollection, item)) {
+				contains = true;
+
+				break;
+			}
+		}
+
+		Assert.assertTrue(
+			dataRecordCollections + " does not contain " + dataRecordCollection,
+			contains);
 	}
 
 	protected void assertHttpResponseStatusCode(
@@ -916,8 +973,8 @@ public abstract class BaseDataRecordCollectionResourceTestCase {
 
 		graphQLFields.add(new GraphQLField("siteId"));
 
-		for (Field field :
-				ReflectionUtil.getDeclaredFields(
+		for (java.lang.reflect.Field field :
+				getDeclaredFields(
 					com.liferay.data.engine.rest.dto.v2_0.DataRecordCollection.
 						class)) {
 
@@ -933,12 +990,13 @@ public abstract class BaseDataRecordCollectionResourceTestCase {
 		return graphQLFields;
 	}
 
-	protected List<GraphQLField> getGraphQLFields(Field... fields)
+	protected List<GraphQLField> getGraphQLFields(
+			java.lang.reflect.Field... fields)
 		throws Exception {
 
 		List<GraphQLField> graphQLFields = new ArrayList<>();
 
-		for (Field field : fields) {
+		for (java.lang.reflect.Field field : fields) {
 			com.liferay.portal.vulcan.graphql.annotation.GraphQLField
 				vulcanGraphQLField = field.getAnnotation(
 					com.liferay.portal.vulcan.graphql.annotation.GraphQLField.
@@ -952,7 +1010,7 @@ public abstract class BaseDataRecordCollectionResourceTestCase {
 				}
 
 				List<GraphQLField> childrenGraphQLFields = getGraphQLFields(
-					ReflectionUtil.getDeclaredFields(clazz));
+					getDeclaredFields(clazz));
 
 				graphQLFields.add(
 					new GraphQLField(field.getName(), childrenGraphQLFields));
@@ -1073,6 +1131,19 @@ public abstract class BaseDataRecordCollectionResourceTestCase {
 		}
 
 		return false;
+	}
+
+	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
+		throws Exception {
+
+		Stream<java.lang.reflect.Field> stream = Stream.of(
+			ReflectionUtil.getDeclaredFields(clazz));
+
+		return stream.filter(
+			field -> !field.isSynthetic()
+		).toArray(
+			java.lang.reflect.Field[]::new
+		);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -1239,6 +1310,115 @@ public abstract class BaseDataRecordCollectionResourceTestCase {
 	protected Company testCompany;
 	protected Group testGroup;
 
+	protected static class BeanTestUtil {
+
+		public static void copyProperties(Object source, Object target)
+			throws Exception {
+
+			Class<?> sourceClass = _getSuperClass(source.getClass());
+
+			Class<?> targetClass = target.getClass();
+
+			for (java.lang.reflect.Field field :
+					sourceClass.getDeclaredFields()) {
+
+				if (field.isSynthetic()) {
+					continue;
+				}
+
+				Method getMethod = _getMethod(
+					sourceClass, field.getName(), "get");
+
+				Method setMethod = _getMethod(
+					targetClass, field.getName(), "set",
+					getMethod.getReturnType());
+
+				setMethod.invoke(target, getMethod.invoke(source));
+			}
+		}
+
+		public static boolean hasProperty(Object bean, String name) {
+			Method setMethod = _getMethod(
+				bean.getClass(), "set" + StringUtil.upperCaseFirstLetter(name));
+
+			if (setMethod != null) {
+				return true;
+			}
+
+			return false;
+		}
+
+		public static void setProperty(Object bean, String name, Object value)
+			throws Exception {
+
+			Class<?> clazz = bean.getClass();
+
+			Method setMethod = _getMethod(
+				clazz, "set" + StringUtil.upperCaseFirstLetter(name));
+
+			if (setMethod == null) {
+				throw new NoSuchMethodException();
+			}
+
+			Class<?>[] parameterTypes = setMethod.getParameterTypes();
+
+			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
+		}
+
+		private static Method _getMethod(Class<?> clazz, String name) {
+			for (Method method : clazz.getMethods()) {
+				if (name.equals(method.getName()) &&
+					(method.getParameterCount() == 1) &&
+					_parameterTypes.contains(method.getParameterTypes()[0])) {
+
+					return method;
+				}
+			}
+
+			return null;
+		}
+
+		private static Method _getMethod(
+				Class<?> clazz, String fieldName, String prefix,
+				Class<?>... parameterTypes)
+			throws Exception {
+
+			return clazz.getMethod(
+				prefix + StringUtil.upperCaseFirstLetter(fieldName),
+				parameterTypes);
+		}
+
+		private static Class<?> _getSuperClass(Class<?> clazz) {
+			Class<?> superClass = clazz.getSuperclass();
+
+			if ((superClass == null) || (superClass == Object.class)) {
+				return clazz;
+			}
+
+			return superClass;
+		}
+
+		private static Object _translateValue(
+			Class<?> parameterType, Object value) {
+
+			if ((value instanceof Integer) &&
+				parameterType.equals(Long.class)) {
+
+				Integer intValue = (Integer)value;
+
+				return intValue.longValue();
+			}
+
+			return value;
+		}
+
+		private static final Set<Class<?>> _parameterTypes = new HashSet<>(
+			Arrays.asList(
+				Boolean.class, Date.class, Double.class, Integer.class,
+				Long.class, Map.class, String.class));
+
+	}
+
 	protected class GraphQLField {
 
 		public GraphQLField(String key, GraphQLField... graphQLFields) {
@@ -1278,12 +1458,12 @@ public abstract class BaseDataRecordCollectionResourceTestCase {
 						_parameterMap.entrySet()) {
 
 					sb.append(entry.getKey());
-					sb.append(":");
+					sb.append(": ");
 					sb.append(entry.getValue());
-					sb.append(",");
+					sb.append(", ");
 				}
 
-				sb.setLength(sb.length() - 1);
+				sb.setLength(sb.length() - 2);
 
 				sb.append(")");
 			}
@@ -1293,10 +1473,10 @@ public abstract class BaseDataRecordCollectionResourceTestCase {
 
 				for (GraphQLField graphQLField : _graphQLFields) {
 					sb.append(graphQLField.toString());
-					sb.append(",");
+					sb.append(", ");
 				}
 
-				sb.setLength(sb.length() - 1);
+				sb.setLength(sb.length() - 2);
 
 				sb.append("}");
 			}
@@ -1310,21 +1490,9 @@ public abstract class BaseDataRecordCollectionResourceTestCase {
 
 	}
 
-	private static final Log _log = LogFactoryUtil.getLog(
-		BaseDataRecordCollectionResourceTestCase.class);
+	private static final com.liferay.portal.kernel.log.Log _log =
+		LogFactoryUtil.getLog(BaseDataRecordCollectionResourceTestCase.class);
 
-	private static BeanUtilsBean _beanUtilsBean = new BeanUtilsBean() {
-
-		@Override
-		public void copyProperty(Object bean, String name, Object value)
-			throws IllegalAccessException, InvocationTargetException {
-
-			if (value != null) {
-				super.copyProperty(bean, name, value);
-			}
-		}
-
-	};
 	private static DateFormat _dateFormat;
 
 	@Inject

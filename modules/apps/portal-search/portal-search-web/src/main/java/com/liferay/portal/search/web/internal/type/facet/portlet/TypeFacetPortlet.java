@@ -14,16 +14,18 @@
 
 package com.liferay.portal.search.web.internal.type.facet.portlet;
 
+import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.search.facet.Facet;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.search.asset.SearchableAssetClassNamesProvider;
 import com.liferay.portal.search.searcher.SearchRequest;
 import com.liferay.portal.search.searcher.SearchResponse;
-import com.liferay.portal.search.web.internal.facet.display.builder.AssetEntriesSearchFacetDisplayBuilder;
 import com.liferay.portal.search.web.internal.facet.display.context.AssetEntriesSearchFacetDisplayContext;
+import com.liferay.portal.search.web.internal.facet.display.context.builder.AssetEntriesSearchFacetDisplayContextBuilder;
 import com.liferay.portal.search.web.internal.type.facet.constants.TypeFacetPortletKeys;
 import com.liferay.portal.search.web.internal.util.SearchOptionalUtil;
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchRequest;
@@ -66,7 +68,8 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.init-param.view-template=/type/facet/view.jsp",
 		"javax.portlet.name=" + TypeFacetPortletKeys.TYPE_FACET,
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=guest,power-user,user"
+		"javax.portlet.security-role-ref=guest,power-user,user",
+		"javax.portlet.version=3.0"
 	},
 	service = Portlet.class
 )
@@ -81,7 +84,7 @@ public class TypeFacetPortlet extends MVCPortlet {
 			portletSharedSearchRequest.search(renderRequest);
 
 		AssetEntriesSearchFacetDisplayContext
-			assetEntriesSearchFacetDisplayContext = buildDisplayContext(
+			assetEntriesSearchFacetDisplayContext = _buildDisplayContext(
 				portletSharedSearchResponse, renderRequest);
 
 		renderRequest.setAttribute(
@@ -96,12 +99,25 @@ public class TypeFacetPortlet extends MVCPortlet {
 		super.render(renderRequest, renderResponse);
 	}
 
-	protected AssetEntriesSearchFacetDisplayContext buildDisplayContext(
+	@Reference
+	protected ObjectDefinitionLocalService objectDefinitionLocalService;
+
+	@Reference
+	protected Portal portal;
+
+	@Reference
+	protected PortletSharedSearchRequest portletSharedSearchRequest;
+
+	@Reference
+	protected SearchableAssetClassNamesProvider
+		searchableAssetClassNamesProvider;
+
+	private AssetEntriesSearchFacetDisplayContext _buildDisplayContext(
 		PortletSharedSearchResponse portletSharedSearchResponse,
 		RenderRequest renderRequest) {
 
 		Facet facet = portletSharedSearchResponse.getFacet(
-			getAggregationName(renderRequest));
+			_getAggregationName(renderRequest));
 
 		AssetEntriesFacetConfiguration assetEntriesFacetConfiguration =
 			new AssetEntriesFacetConfigurationImpl(
@@ -109,58 +125,65 @@ public class TypeFacetPortlet extends MVCPortlet {
 
 		TypeFacetPortletPreferences typeFacetPortletPreferences =
 			new TypeFacetPortletPreferencesImpl(
+				objectDefinitionLocalService,
 				portletSharedSearchResponse.getPortletPreferences(
-					renderRequest));
+					renderRequest),
+				searchableAssetClassNamesProvider);
 
-		AssetEntriesSearchFacetDisplayBuilder
-			assetEntriesSearchFacetDisplayBuilder =
-				createAssetEntriesSearchFacetDisplayBuilder(renderRequest);
+		AssetEntriesSearchFacetDisplayContextBuilder
+			assetEntriesSearchFacetDisplayContextBuilder =
+				_createAssetEntriesSearchFacetDisplayContextBuilder(
+					renderRequest);
 
 		ThemeDisplay themeDisplay = portletSharedSearchResponse.getThemeDisplay(
 			renderRequest);
 
-		assetEntriesSearchFacetDisplayBuilder.setClassNames(
-			getAssetTypesClassNames(typeFacetPortletPreferences, themeDisplay));
+		assetEntriesSearchFacetDisplayContextBuilder.setClassNames(
+			_getAssetTypesClassNames(
+				typeFacetPortletPreferences, themeDisplay));
 
-		assetEntriesSearchFacetDisplayBuilder.setFacet(facet);
-		assetEntriesSearchFacetDisplayBuilder.setFrequencyThreshold(
+		assetEntriesSearchFacetDisplayContextBuilder.setFacet(facet);
+		assetEntriesSearchFacetDisplayContextBuilder.setFrequencyThreshold(
 			assetEntriesFacetConfiguration.getFrequencyThreshold());
-		assetEntriesSearchFacetDisplayBuilder.setFrequenciesVisible(
+		assetEntriesSearchFacetDisplayContextBuilder.setFrequenciesVisible(
 			typeFacetPortletPreferences.isFrequenciesVisible());
-		assetEntriesSearchFacetDisplayBuilder.setLocale(
+		assetEntriesSearchFacetDisplayContextBuilder.setLocale(
 			themeDisplay.getLocale());
-		assetEntriesSearchFacetDisplayBuilder.setPaginationStartParameterName(
-			getPaginationStartParameterName(portletSharedSearchResponse));
+		assetEntriesSearchFacetDisplayContextBuilder.
+			setPaginationStartParameterName(
+				_getPaginationStartParameterName(portletSharedSearchResponse));
 
 		String parameterName = typeFacetPortletPreferences.getParameterName();
 
-		assetEntriesSearchFacetDisplayBuilder.setParameterName(parameterName);
+		assetEntriesSearchFacetDisplayContextBuilder.setParameterName(
+			parameterName);
 
 		SearchOptionalUtil.copy(
-			() -> getParameterValuesOptional(
+			() -> _getParameterValuesOptional(
 				parameterName, portletSharedSearchResponse, renderRequest),
-			assetEntriesSearchFacetDisplayBuilder::setParameterValues);
+			assetEntriesSearchFacetDisplayContextBuilder::setParameterValues);
 
-		return assetEntriesSearchFacetDisplayBuilder.build();
+		return assetEntriesSearchFacetDisplayContextBuilder.build();
 	}
 
-	protected AssetEntriesSearchFacetDisplayBuilder
-		createAssetEntriesSearchFacetDisplayBuilder(
+	private AssetEntriesSearchFacetDisplayContextBuilder
+		_createAssetEntriesSearchFacetDisplayContextBuilder(
 			RenderRequest renderRequest) {
 
 		try {
-			return new AssetEntriesSearchFacetDisplayBuilder(renderRequest);
+			return new AssetEntriesSearchFacetDisplayContextBuilder(
+				renderRequest);
 		}
 		catch (ConfigurationException configurationException) {
 			throw new RuntimeException(configurationException);
 		}
 	}
 
-	protected String getAggregationName(RenderRequest renderRequest) {
+	private String _getAggregationName(RenderRequest renderRequest) {
 		return portal.getPortletId(renderRequest);
 	}
 
-	protected String[] getAssetTypesClassNames(
+	private String[] _getAssetTypesClassNames(
 		TypeFacetPortletPreferences typeFacetPortletPreferences,
 		ThemeDisplay themeDisplay) {
 
@@ -168,7 +191,7 @@ public class TypeFacetPortlet extends MVCPortlet {
 			themeDisplay.getCompanyId());
 	}
 
-	protected String getPaginationStartParameterName(
+	private String _getPaginationStartParameterName(
 		PortletSharedSearchResponse portletSharedSearchResponse) {
 
 		SearchResponse searchResponse =
@@ -179,7 +202,7 @@ public class TypeFacetPortlet extends MVCPortlet {
 		return searchRequest.getPaginationStartParameterName();
 	}
 
-	protected Optional<List<String>> getParameterValuesOptional(
+	private Optional<List<String>> _getParameterValuesOptional(
 		String parameterName,
 		PortletSharedSearchResponse portletSharedSearchResponse,
 		RenderRequest renderRequest) {
@@ -190,11 +213,5 @@ public class TypeFacetPortlet extends MVCPortlet {
 
 		return optional.map(Arrays::asList);
 	}
-
-	@Reference
-	protected Portal portal;
-
-	@Reference
-	protected PortletSharedSearchRequest portletSharedSearchRequest;
 
 }

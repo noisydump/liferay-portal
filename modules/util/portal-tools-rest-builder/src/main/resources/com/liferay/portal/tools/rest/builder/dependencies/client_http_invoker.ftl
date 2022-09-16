@@ -1,6 +1,6 @@
 package ${configYAML.apiPackagePath}.client.http;
 
-import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -66,7 +66,11 @@ public class HttpInvoker {
 
 		HttpURLConnection httpURLConnection = _openHttpURLConnection();
 
-		httpResponse.setContent(_readResponse(httpURLConnection));
+		byte[] binaryContent = _readResponse(httpURLConnection);
+
+		httpResponse.setBinaryContent(binaryContent);
+		httpResponse.setContent(new String(binaryContent));
+
 		httpResponse.setMessage(httpURLConnection.getResponseMessage());
 		httpResponse.setStatusCode(httpURLConnection.getResponseCode());
 
@@ -146,6 +150,10 @@ public class HttpInvoker {
 
 	public class HttpResponse {
 
+		public byte[] getBinaryContent() {
+			return _binaryContent;
+		}
+
 		public String getContent() {
 			return _content;
 		}
@@ -156,6 +164,10 @@ public class HttpInvoker {
 
 		public int getStatusCode() {
 			return _statusCode;
+		}
+
+		public void setBinaryContent(byte[] binaryContent) {
+			_binaryContent = binaryContent;
 		}
 
 		public void setContent(String content) {
@@ -170,6 +182,7 @@ public class HttpInvoker {
 			_statusCode = statusCode;
 		}
 
+		private byte[] _binaryContent;
 		private String _content;
 		private String _message;
 		private int _statusCode;
@@ -200,7 +213,7 @@ public class HttpInvoker {
 
 			methodsField.set(null, methodsFieldValue.toArray(new String[0]));
 		}
-		catch (IllegalAccessException | NoSuchFieldException e) {
+		catch (IllegalAccessException | NoSuchFieldException exception) {
 			_logger.warning("Unable to update HttpURLConnection class");
 		}
 	}
@@ -320,14 +333,14 @@ public class HttpInvoker {
 		return httpURLConnection;
 	}
 
-	private String _readResponse(HttpURLConnection httpURLConnection)
+	private byte[] _readResponse(HttpURLConnection httpURLConnection)
 		throws IOException {
 
-		StringBuilder sb = new StringBuilder();
-
-		int responseCode = httpURLConnection.getResponseCode();
+		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
 		InputStream inputStream = null;
+
+		int responseCode = httpURLConnection.getResponseCode();
 
 		if (responseCode > 299) {
 			inputStream = httpURLConnection.getErrorStream();
@@ -336,22 +349,21 @@ public class HttpInvoker {
 			inputStream = httpURLConnection.getInputStream();
 		}
 
-		BufferedReader bufferedReader = new BufferedReader(
-			new InputStreamReader(inputStream));
+		byte[] bytes = new byte[8192];
 
 		while (true) {
-			String line = bufferedReader.readLine();
+			int read = inputStream.read(bytes, 0, bytes.length);
 
-			if (line == null) {
+			if (read == -1) {
 				break;
 			}
 
-			sb.append(line);
+			byteArrayOutputStream.write(bytes, 0, read);
 		}
 
-		bufferedReader.close();
+		byteArrayOutputStream.flush();
 
-		return sb.toString();
+		return byteArrayOutputStream.toByteArray();
 	}
 
 	private void _writeBody(HttpURLConnection httpURLConnection)
@@ -359,13 +371,6 @@ public class HttpInvoker {
 
 		if ((_body == null) && _files.isEmpty() && _parts.isEmpty()) {
 			return;
-		}
-
-		if ((_httpMethod == HttpMethod.DELETE) ||
-			(_httpMethod == HttpMethod.GET)) {
-
-			throw new IllegalArgumentException(
-				"HTTP method " + _httpMethod + " must not contain a body");
 		}
 
 		httpURLConnection.setDoOutput(true);
@@ -403,12 +408,12 @@ public class HttpInvoker {
 	private String _body;
 	private String _contentType;
 	private String _encodedUserNameAndPassword;
-	private Map<String, File> _files = new LinkedHashMap<>();
-	private Map<String, String> _headers = new LinkedHashMap<>();
+	private final Map<String, File> _files = new LinkedHashMap<>();
+	private final Map<String, String> _headers = new LinkedHashMap<>();
 	private HttpMethod _httpMethod = HttpMethod.GET;
 	private String _multipartBoundary;
-	private Map<String, String[]> _parameters = new LinkedHashMap<>();
-	private Map<String, String> _parts = new LinkedHashMap<>();
+	private final Map<String, String[]> _parameters = new LinkedHashMap<>();
+	private final Map<String, String> _parts = new LinkedHashMap<>();
 	private String _path;
 
 }

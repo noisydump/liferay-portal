@@ -25,12 +25,14 @@ import com.liferay.commerce.product.portlet.action.ActionHelper;
 import com.liferay.commerce.product.service.CPDefinitionOptionRelService;
 import com.liferay.commerce.product.service.CPMeasurementUnitLocalService;
 import com.liferay.commerce.product.servlet.taglib.ui.constants.CPDefinitionScreenNavigationConstants;
+import com.liferay.commerce.product.type.CPType;
+import com.liferay.commerce.product.type.CPTypeServicesTracker;
 import com.liferay.commerce.product.util.CPInstanceHelper;
 import com.liferay.frontend.taglib.servlet.taglib.ScreenNavigationCategory;
 import com.liferay.frontend.taglib.servlet.taglib.ScreenNavigationEntry;
 import com.liferay.frontend.taglib.servlet.taglib.util.JSPRenderer;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
@@ -77,7 +79,7 @@ public class CPDefinitionInstancesScreenNavigationCategory
 
 	@Override
 	public String getLabel(Locale locale) {
-		return LanguageUtil.get(
+		return _language.get(
 			locale, CPDefinitionScreenNavigationConstants.CATEGORY_KEY_SKUS);
 	}
 
@@ -96,13 +98,20 @@ public class CPDefinitionInstancesScreenNavigationCategory
 		PermissionChecker permissionChecker =
 			PermissionThreadLocal.getPermissionChecker();
 
+		CPType cpType = _cpTypeServicesTracker.getCPType(
+			cpDefinition.getProductTypeName());
+
 		try {
-			return _commerceCatalogModelResourcePermission.contains(
-				permissionChecker, cpDefinition.getCommerceCatalog(),
-				ActionKeys.VIEW);
+			if (_commerceCatalogModelResourcePermission.contains(
+					permissionChecker, cpDefinition.getCommerceCatalog(),
+					ActionKeys.VIEW) &&
+				cpType.isSkusEnabled()) {
+
+				return true;
+			}
 		}
 		catch (PortalException portalException) {
-			_log.error(portalException, portalException);
+			_log.error(portalException);
 		}
 
 		return false;
@@ -160,10 +169,16 @@ public class CPDefinitionInstancesScreenNavigationCategory
 	private CPMeasurementUnitLocalService _cpMeasurementUnitLocalService;
 
 	@Reference
+	private CPTypeServicesTracker _cpTypeServicesTracker;
+
+	@Reference
 	private DDMHelper _ddmHelper;
 
 	@Reference
 	private JSPRenderer _jspRenderer;
+
+	@Reference
+	private Language _language;
 
 	@Reference(
 		target = "(osgi.web.symbolicname=com.liferay.commerce.product.definitions.web)"

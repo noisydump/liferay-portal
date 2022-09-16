@@ -20,11 +20,13 @@ import com.liferay.portal.search.elasticsearch7.internal.connection.HealthExpect
 import com.liferay.portal.search.elasticsearch7.internal.connection.Index;
 import com.liferay.portal.search.elasticsearch7.internal.connection.IndexCreator;
 import com.liferay.portal.search.elasticsearch7.internal.connection.IndexName;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.cluster.health.ClusterHealthStatus;
 
 import org.junit.After;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
@@ -33,6 +35,10 @@ import org.junit.rules.TestName;
  * @author André de Oliveira
  */
 public class ClusterUnicastTest {
+
+	@ClassRule
+	public static LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	public static void assert2ReplicaShards(
 			ElasticsearchClientResolver elasticsearchClientResolver)
@@ -84,8 +90,8 @@ public class ClusterUnicastTest {
 
 		_testCluster.destroyNode(1);
 
-		assert1ReplicaAnd1UnassignedShard(elasticsearchConnectionFixture2);
-		assert1ReplicaAnd1UnassignedShard(elasticsearchConnectionFixture3);
+		_assert1ReplicaAnd1UnassignedShard(elasticsearchConnectionFixture2);
+		_assert1ReplicaAnd1UnassignedShard(elasticsearchConnectionFixture3);
 
 		updateNumberOfReplicas(1, index2, elasticsearchConnectionFixture2);
 
@@ -96,69 +102,15 @@ public class ClusterUnicastTest {
 
 		_testCluster.destroyNode(2);
 
-		assert1PrimaryAnd1UnassignedShard(elasticsearchConnectionFixture3);
+		_assert1PrimaryAnd1UnassignedShard(elasticsearchConnectionFixture3);
 
 		updateNumberOfReplicas(0, index3, elasticsearchConnectionFixture3);
 
-		assert1PrimaryShardOnly(elasticsearchConnectionFixture3);
+		_assert1PrimaryShardOnly(elasticsearchConnectionFixture3);
 	}
 
 	@Rule
 	public TestName testName = new TestName();
-
-	protected static void assert1PrimaryAnd1UnassignedShard(
-			ElasticsearchClientResolver elasticsearchClientResolver)
-		throws Exception {
-
-		ClusterAssert.assertHealth(
-			elasticsearchClientResolver,
-			new HealthExpectations() {
-				{
-					setActivePrimaryShards(1);
-					setActiveShards(1);
-					setNumberOfDataNodes(3);
-					setNumberOfNodes(3);
-					setStatus(ClusterHealthStatus.YELLOW);
-					setUnassignedShards(1);
-				}
-			});
-	}
-
-	protected static void assert1PrimaryShardOnly(
-			ElasticsearchClientResolver elasticsearchClientResolver)
-		throws Exception {
-
-		ClusterAssert.assertHealth(
-			elasticsearchClientResolver,
-			new HealthExpectations() {
-				{
-					setActivePrimaryShards(1);
-					setActiveShards(1);
-					setNumberOfDataNodes(3);
-					setNumberOfNodes(3);
-					setStatus(ClusterHealthStatus.GREEN);
-					setUnassignedShards(0);
-				}
-			});
-	}
-
-	protected static void assert1ReplicaAnd1UnassignedShard(
-			ElasticsearchClientResolver elasticsearchClientResolver)
-		throws Exception {
-
-		ClusterAssert.assertHealth(
-			elasticsearchClientResolver,
-			new HealthExpectations() {
-				{
-					setActivePrimaryShards(1);
-					setActiveShards(2);
-					setNumberOfDataNodes(3);
-					setNumberOfNodes(3);
-					setStatus(ClusterHealthStatus.YELLOW);
-					setUnassignedShards(1);
-				}
-			});
-	}
 
 	protected static void assert1ReplicaShard(
 			ElasticsearchClientResolver elasticsearchClientResolver)
@@ -203,6 +155,60 @@ public class ClusterUnicastTest {
 
 		replicasManager.updateNumberOfReplicas(
 			numberOfReplicas, index.getName());
+	}
+
+	private void _assert1PrimaryAnd1UnassignedShard(
+			ElasticsearchClientResolver elasticsearchClientResolver)
+		throws Exception {
+
+		ClusterAssert.assertHealth(
+			elasticsearchClientResolver,
+			new HealthExpectations() {
+				{
+					setActivePrimaryShards(1);
+					setActiveShards(1);
+					setNumberOfDataNodes(3);
+					setNumberOfNodes(3);
+					setStatus(ClusterHealthStatus.YELLOW);
+					setUnassignedShards(1);
+				}
+			});
+	}
+
+	private void _assert1PrimaryShardOnly(
+			ElasticsearchClientResolver elasticsearchClientResolver)
+		throws Exception {
+
+		ClusterAssert.assertHealth(
+			elasticsearchClientResolver,
+			new HealthExpectations() {
+				{
+					setActivePrimaryShards(1);
+					setActiveShards(1);
+					setNumberOfDataNodes(3);
+					setNumberOfNodes(3);
+					setStatus(ClusterHealthStatus.GREEN);
+					setUnassignedShards(0);
+				}
+			});
+	}
+
+	private void _assert1ReplicaAnd1UnassignedShard(
+			ElasticsearchClientResolver elasticsearchClientResolver)
+		throws Exception {
+
+		ClusterAssert.assertHealth(
+			elasticsearchClientResolver,
+			new HealthExpectations() {
+				{
+					setActivePrimaryShards(1);
+					setActiveShards(2);
+					setNumberOfDataNodes(3);
+					setNumberOfNodes(3);
+					setStatus(ClusterHealthStatus.YELLOW);
+					setUnassignedShards(1);
+				}
+			});
 	}
 
 	private final TestCluster _testCluster = new TestCluster(5, this);

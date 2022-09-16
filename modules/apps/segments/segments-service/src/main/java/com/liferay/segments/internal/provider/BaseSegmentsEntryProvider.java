@@ -21,6 +21,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
@@ -130,13 +131,14 @@ public abstract class BaseSegmentsEntryProvider
 			long groupId, String className, long classPK, Context context)
 		throws PortalException {
 
-		return getSegmentsEntryIds(groupId, className, classPK, context, null);
+		return getSegmentsEntryIds(
+			groupId, className, classPK, context, new long[0], new long[0]);
 	}
 
 	@Override
 	public long[] getSegmentsEntryIds(
 		long groupId, String className, long classPK, Context context,
-		long[] segmentsEntryIds) {
+		long[] filterSegmentsEntryIds, long[] segmentsEntryIds) {
 
 		List<SegmentsEntry> segmentsEntries =
 			segmentsEntryLocalService.getSegmentsEntries(
@@ -150,6 +152,11 @@ public abstract class BaseSegmentsEntryProvider
 		Stream<SegmentsEntry> stream = segmentsEntries.stream();
 
 		return stream.filter(
+			segmentsEntry ->
+				ArrayUtil.isEmpty(filterSegmentsEntryIds) ||
+				ArrayUtil.contains(
+					filterSegmentsEntryIds, segmentsEntry.getSegmentsEntryId())
+		).filter(
 			segmentsEntry -> isMember(
 				className, classPK, context, segmentsEntry, segmentsEntryIds)
 		).mapToLong(
@@ -227,8 +234,19 @@ public abstract class BaseSegmentsEntryProvider
 
 		Criteria.Conjunction contextConjunction = getConjunction(
 			segmentsEntry, Criteria.Type.CONTEXT);
+		String modelFilterString = getFilterString(
+			segmentsEntry, Criteria.Type.MODEL);
 
 		if (context != null) {
+			boolean defaultUser = !GetterUtil.getBoolean(
+				context.get(Context.SIGNED_IN), true);
+
+			if (contextConjunction.equals(Criteria.Conjunction.AND) &&
+				defaultUser && Validator.isNotNull(modelFilterString)) {
+
+				return false;
+			}
+
 			boolean matchesContext = false;
 
 			if (Validator.isNotNull(contextFilterString)) {
@@ -237,7 +255,9 @@ public abstract class BaseSegmentsEntryProvider
 						contextFilterString, context);
 				}
 				catch (PortalException portalException) {
-					_log.error(portalException, portalException);
+					if (_log.isWarnEnabled()) {
+						_log.warn(portalException);
+					}
 				}
 
 				if (matchesContext &&
@@ -253,36 +273,25 @@ public abstract class BaseSegmentsEntryProvider
 				}
 			}
 
-			if (context.containsKey(Context.SIGNED_IN) &&
-				!GetterUtil.getBoolean(context.get(Context.SIGNED_IN))) {
-
+			if (defaultUser) {
 				return matchesContext;
 			}
 		}
 
-		Criteria.Conjunction modelConjunction = getConjunction(
-			segmentsEntry, Criteria.Type.MODEL);
 		ODataRetriever<BaseModel<?>> oDataRetriever =
 			serviceTrackerMap.getService(className);
-		String modelFilterString = getFilterString(
-			segmentsEntry, Criteria.Type.MODEL);
 
 		if (Validator.isNotNull(modelFilterString) &&
 			(oDataRetriever != null)) {
-
-			StringBundler sb = new StringBundler(5);
-
-			sb.append("(");
-			sb.append(modelFilterString);
-			sb.append(") and (classPK eq '");
-			sb.append(classPK);
-			sb.append("')");
 
 			boolean matchesModel = false;
 
 			try {
 				int count = oDataRetriever.getResultsCount(
-					segmentsEntry.getCompanyId(), sb.toString(),
+					segmentsEntry.getCompanyId(),
+					StringBundler.concat(
+						"(", modelFilterString, ") and (classPK eq '", classPK,
+						"')"),
 					LocaleUtil.getDefault());
 
 				if (count > 0) {
@@ -290,8 +299,11 @@ public abstract class BaseSegmentsEntryProvider
 				}
 			}
 			catch (PortalException portalException) {
-				_log.error(portalException, portalException);
+				_log.error(portalException);
 			}
+
+			Criteria.Conjunction modelConjunction = getConjunction(
+				segmentsEntry, Criteria.Type.MODEL);
 
 			if (matchesModel &&
 				modelConjunction.equals(Criteria.Conjunction.OR)) {

@@ -25,11 +25,11 @@ import org.osgi.service.component.annotations.Reference;
 @Component(service = {})
 public class ServletContextUtil {
 
-	public static final String getContextPath() {
+	public static String getContextPath() {
 		return _servletContext.getContextPath();
 	}
 
-	public static final ServletContext getServletContext() {
+	public static ServletContext getServletContext() {
 		return _servletContext;
 	}
 

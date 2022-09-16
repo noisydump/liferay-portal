@@ -19,21 +19,26 @@ import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.PrefsProps;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.segments.asah.connector.internal.client.model.ExperimentSettings;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
 
 /**
  * @author Sarai Díaz
  */
-@RunWith(MockitoJUnitRunner.class)
 public class AsahFaroBackendClientImplTest {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Before
 	public void setUp() {
@@ -53,9 +58,9 @@ public class AsahFaroBackendClientImplTest {
 
 		Mockito.when(
 			_jsonWebServiceClient.doPost(
-				Mockito.eq(String.class), Mockito.anyString(),
-				Mockito.anyString(), Mockito.any(ExperimentSettings.class),
-				Mockito.anyMapOf(String.class, String.class))
+				Mockito.eq(String.class), Mockito.nullable(String.class),
+				Mockito.nullable(String.class),
+				Mockito.any(ExperimentSettings.class), Mockito.anyMap())
 		).thenReturn(
 			days
 		);
@@ -73,7 +78,7 @@ public class AsahFaroBackendClientImplTest {
 			_jsonWebServiceClient.doPost(
 				Mockito.eq(String.class), Mockito.anyString(),
 				Mockito.anyString(), Mockito.any(ExperimentSettings.class),
-				Mockito.anyMapOf(String.class, String.class))
+				Mockito.anyMap())
 		).thenReturn(
 			StringPool.BLANK
 		);
@@ -90,7 +95,7 @@ public class AsahFaroBackendClientImplTest {
 			_jsonWebServiceClient.doPost(
 				Mockito.eq(String.class), Mockito.anyString(),
 				Mockito.anyString(), Mockito.any(ExperimentSettings.class),
-				Mockito.anyMapOf(String.class, String.class))
+				Mockito.anyMap())
 		).thenReturn(
 			RandomTestUtil.randomString()
 		);

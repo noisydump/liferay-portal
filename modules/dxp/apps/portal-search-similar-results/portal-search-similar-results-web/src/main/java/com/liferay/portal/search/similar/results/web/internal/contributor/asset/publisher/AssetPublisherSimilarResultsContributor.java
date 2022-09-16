@@ -23,10 +23,11 @@ import com.liferay.blogs.service.BlogsEntryLocalService;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.portal.kernel.model.ClassedModel;
 import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.search.model.uid.UIDFactory;
 import com.liferay.portal.search.similar.results.web.internal.builder.AssetTypeUtil;
+import com.liferay.portal.search.similar.results.web.internal.helper.HttpHelper;
 import com.liferay.portal.search.similar.results.web.internal.util.SearchStringUtil;
-import com.liferay.portal.search.similar.results.web.internal.util.http.HttpHelper;
 import com.liferay.portal.search.similar.results.web.spi.contributor.SimilarResultsContributor;
 import com.liferay.portal.search.similar.results.web.spi.contributor.helper.CriteriaBuilder;
 import com.liferay.portal.search.similar.results.web.spi.contributor.helper.CriteriaHelper;
@@ -54,19 +55,20 @@ public class AssetPublisherSimilarResultsContributor
 	public void detectRoute(
 		RouteBuilder routeBuilder, RouteHelper routeHelper) {
 
-		String urlString = routeHelper.getURLString();
+		String urlString = HttpComponentsUtil.decodePath(
+			routeHelper.getURLString());
 
 		String[] parameters = _httpHelper.getFriendlyURLParameters(urlString);
 
 		SearchStringUtil.requireEquals("asset_publisher", parameters[0]);
 
-		putAttribute(parameters[2], "type", routeBuilder);
+		_putAttribute(parameters[2], "type", routeBuilder);
 
 		String assetEntryId = _httpHelper.getPortletIdParameter(
 			urlString, "assetEntryId",
 			_getAssetPublisherPortletId(parameters[1]));
 
-		putAttribute(Long.valueOf(assetEntryId), "entryId", routeBuilder);
+		_putAttribute(Long.valueOf(assetEntryId), "entryId", routeBuilder);
 	}
 
 	@Override
@@ -107,43 +109,6 @@ public class AssetPublisherSimilarResultsContributor
 		).replace(
 			String.valueOf(entryId), String.valueOf(assetEntry.getEntryId())
 		);
-	}
-
-	protected void putAttribute(
-		Object value, String name, RouteBuilder routeBuilder) {
-
-		routeBuilder.addAttribute(name, value);
-	}
-
-	@Reference(unbind = "-")
-	protected void setAssetEntryLocalService(
-		AssetEntryLocalService assetEntryLocalService) {
-
-		_assetEntryLocalService = assetEntryLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setBlogsEntryLocalService(
-		BlogsEntryLocalService blogsEntryLocalService) {
-
-		_blogsEntryLocalService = blogsEntryLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setHttpHelper(HttpHelper httpHelper) {
-		_httpHelper = httpHelper;
-	}
-
-	@Reference(unbind = "-")
-	protected void setUIDFactory(UIDFactory uidFactory) {
-		_uidFactory = uidFactory;
-	}
-
-	@Reference(unbind = "-")
-	protected void setWikiPageLocalService(
-		WikiPageLocalService wikiPageLocalService) {
-
-		_wikiPageLocalService = wikiPageLocalService;
 	}
 
 	private String _getAssetPublisherPortletId(String instanceId) {
@@ -187,10 +152,25 @@ public class AssetPublisherSimilarResultsContributor
 			assetEntry.getClassName(), String.valueOf(assetEntry.getClassPK()));
 	}
 
+	private void _putAttribute(
+		Object value, String name, RouteBuilder routeBuilder) {
+
+		routeBuilder.addAttribute(name, value);
+	}
+
+	@Reference
 	private AssetEntryLocalService _assetEntryLocalService;
+
+	@Reference
 	private BlogsEntryLocalService _blogsEntryLocalService;
+
+	@Reference
 	private HttpHelper _httpHelper;
+
+	@Reference
 	private UIDFactory _uidFactory;
+
+	@Reference
 	private WikiPageLocalService _wikiPageLocalService;
 
 }

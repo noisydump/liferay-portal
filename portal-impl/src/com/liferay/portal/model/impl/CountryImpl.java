@@ -17,6 +17,7 @@ package com.liferay.portal.model.impl;
 import com.liferay.portal.kernel.json.JSON;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.CountryConstants;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.util.Locale;
 
@@ -48,6 +49,22 @@ public class CountryImpl extends CountryBaseImpl {
 	@Override
 	public String getNameCurrentValue() {
 		return getName(getLocale(_nameCurrentLanguageId));
+	}
+
+	@Override
+	public String getTitle(Locale locale) {
+		return getTitle(LanguageUtil.getLanguageId(locale));
+	}
+
+	@Override
+	public String getTitle(String languageId, boolean useDefault) {
+		String title = super.getTitle(languageId, useDefault);
+
+		if (Validator.isNotNull(title)) {
+			return title;
+		}
+
+		return getName(getLocale(languageId));
 	}
 
 	@Override

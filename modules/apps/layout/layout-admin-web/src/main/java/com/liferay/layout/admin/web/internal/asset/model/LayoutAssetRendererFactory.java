@@ -75,7 +75,7 @@ public class LayoutAssetRendererFactory
 		assetEntry.setCreateDate(layout.getCreateDate());
 		assetEntry.setClassNameId(
 			_portal.getClassNameId(Layout.class.getName()));
-		assetEntry.setClassPK(layout.getLayoutId());
+		assetEntry.setClassPK(layout.getPlid());
 		assetEntry.setTitle(layout.getHTMLTitle(LocaleUtil.getSiteDefault()));
 
 		return assetEntry;
@@ -97,6 +97,11 @@ public class LayoutAssetRendererFactory
 	@Override
 	public String getClassName() {
 		return Layout.class.getName();
+	}
+
+	@Override
+	public String getIconCssClass() {
+		return "page";
 	}
 
 	@Override

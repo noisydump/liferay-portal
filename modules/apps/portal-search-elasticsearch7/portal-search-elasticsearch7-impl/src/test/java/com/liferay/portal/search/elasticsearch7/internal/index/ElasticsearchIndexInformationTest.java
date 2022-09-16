@@ -22,6 +22,7 @@ import com.liferay.portal.search.elasticsearch7.internal.connection.Elasticsearc
 import com.liferay.portal.search.elasticsearch7.internal.connection.ElasticsearchConnectionFixture;
 import com.liferay.portal.search.elasticsearch7.internal.util.ResourceUtil;
 import com.liferay.portal.search.test.util.AssertUtils;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.Arrays;
 
@@ -29,6 +30,7 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
@@ -37,6 +39,10 @@ import org.junit.rules.TestName;
  * @author Adam Brandizzi
  */
 public class ElasticsearchIndexInformationTest {
+
+	@ClassRule
+	public static LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
@@ -58,10 +64,10 @@ public class ElasticsearchIndexInformationTest {
 
 	@Before
 	public void setUp() throws Exception {
-		_companyIndexFactoryFixture = createCompanyIndexFactoryFixture(
+		_companyIndexFactoryFixture = _createCompanyIndexFactoryFixture(
 			_elasticsearchConnectionFixture);
 
-		_elasticsearchIndexInformation = createElasticsearchIndexInformation(
+		_elasticsearchIndexInformation = _createElasticsearchIndexInformation(
 			_elasticsearchConnectionFixture);
 	}
 
@@ -72,7 +78,7 @@ public class ElasticsearchIndexInformationTest {
 		long companyId = RandomTestUtil.randomLong();
 
 		Assert.assertEquals(
-			getIndexNameBuilder(companyId),
+			_getIndexNameBuilder(companyId),
 			_elasticsearchIndexInformation.getCompanyIndexName(companyId));
 	}
 
@@ -80,12 +86,11 @@ public class ElasticsearchIndexInformationTest {
 	public void testGetFieldMappings() throws Exception {
 		_companyIndexFactoryFixture.createIndices();
 
-		String fieldMappings = _elasticsearchIndexInformation.getFieldMappings(
-			_companyIndexFactoryFixture.getIndexName());
-
 		AssertUtils.assertEquals(
-			"", loadJSONObject(testName.getMethodName()),
-			_jsonFactory.createJSONObject(fieldMappings));
+			"", _loadJSONObject(testName.getMethodName()),
+			_jsonFactory.createJSONObject(
+				_elasticsearchIndexInformation.getFieldMappings(
+					_companyIndexFactoryFixture.getIndexName())));
 	}
 
 	@Test
@@ -100,31 +105,30 @@ public class ElasticsearchIndexInformationTest {
 	@Rule
 	public TestName testName = new TestName();
 
-	protected static ElasticsearchIndexInformation
-		createElasticsearchIndexInformation(
-			ElasticsearchClientResolver elasticsearchClientResolver) {
-
-		return new ElasticsearchIndexInformation() {
-			{
-				setElasticsearchClientResolver(elasticsearchClientResolver);
-				setIndexNameBuilder(
-					ElasticsearchIndexInformationTest::getIndexNameBuilder);
-			}
-		};
-	}
-
-	protected static String getIndexNameBuilder(long companyId) {
+	private static String _getIndexNameBuilder(long companyId) {
 		return "test-" + companyId;
 	}
 
-	protected CompanyIndexFactoryFixture createCompanyIndexFactoryFixture(
+	private CompanyIndexFactoryFixture _createCompanyIndexFactoryFixture(
 		ElasticsearchClientResolver elasticsearchClientResolver) {
 
 		return new CompanyIndexFactoryFixture(
 			elasticsearchClientResolver, testName.getMethodName());
 	}
 
-	protected JSONObject loadJSONObject(String suffix) throws Exception {
+	private ElasticsearchIndexInformation _createElasticsearchIndexInformation(
+		ElasticsearchClientResolver elasticsearchClientResolver) {
+
+		return new ElasticsearchIndexInformation() {
+			{
+				setElasticsearchClientResolver(elasticsearchClientResolver);
+				setIndexNameBuilder(
+					ElasticsearchIndexInformationTest::_getIndexNameBuilder);
+			}
+		};
+	}
+
+	private JSONObject _loadJSONObject(String suffix) throws Exception {
 		String json = ResourceUtil.getResourceAsString(
 			getClass(),
 			"ElasticsearchIndexInformationTest-" + suffix + ".json");

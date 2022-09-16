@@ -17,6 +17,7 @@ package com.liferay.batch.engine.internal.writer;
 import com.liferay.batch.engine.BatchEngineTaskContentType;
 
 import java.io.OutputStream;
+import java.io.Serializable;
 
 import java.lang.reflect.Field;
 
@@ -28,47 +29,41 @@ import java.util.Map;
  */
 public class BatchEngineExportTaskItemWriterFactory {
 
-	public BatchEngineExportTaskItemWriterFactory(
-		String csvFileColumnDelimiter) {
-
-		_csvFileColumnDelimiter = csvFileColumnDelimiter;
-	}
-
 	public BatchEngineExportTaskItemWriter create(
 			BatchEngineTaskContentType batchEngineTaskContentType,
-			List<String> fieldNames, Class<?> itemClass,
-			OutputStream outputStream)
+			String csvFileColumnDelimiter, List<String> fieldNames,
+			Class<?> itemClass, OutputStream outputStream,
+			Map<String, Serializable> parameters)
 		throws Exception {
 
-		Map<String, Field> fieldMap = ItemClassIndexUtil.index(itemClass);
+		Map<String, Field> fieldsMap = ItemClassIndexUtil.index(itemClass);
 
 		if (batchEngineTaskContentType == BatchEngineTaskContentType.CSV) {
-			return new CSVBatchEngineExportTaskItemWriter(
-				_csvFileColumnDelimiter, fieldMap, fieldNames, outputStream);
+			return new CSVBatchEngineExportTaskItemWriterImpl(
+				csvFileColumnDelimiter, fieldsMap, fieldNames, outputStream,
+				parameters);
 		}
 
 		if (batchEngineTaskContentType == BatchEngineTaskContentType.JSON) {
-			return new JSONBatchEngineExportTaskItemWriter(
-				fieldMap.keySet(), fieldNames, outputStream);
+			return new JSONBatchEngineExportTaskItemWriterImpl(
+				fieldsMap.keySet(), fieldNames, outputStream);
 		}
 
 		if (batchEngineTaskContentType == BatchEngineTaskContentType.JSONL) {
-			return new JSONLBatchEngineExportTaskItemWriter(
-				fieldMap.keySet(), fieldNames, outputStream);
+			return new JSONLBatchEngineExportTaskItemWriterImpl(
+				fieldsMap.keySet(), fieldNames, outputStream);
 		}
 
 		if ((batchEngineTaskContentType == BatchEngineTaskContentType.XLS) ||
 			(batchEngineTaskContentType == BatchEngineTaskContentType.XLSX)) {
 
-			return new XLSBatchEngineExportTaskItemWriter(
-				fieldMap, fieldNames, outputStream);
+			return new XLSBatchEngineExportTaskItemWriterImpl(
+				fieldsMap, fieldNames, outputStream);
 		}
 
 		throw new IllegalArgumentException(
 			"Unknown batch engine task content type " +
 				batchEngineTaskContentType);
 	}
-
-	private final String _csvFileColumnDelimiter;
 
 }

@@ -18,8 +18,8 @@ import com.liferay.dynamic.data.mapping.constants.DDMTemplateConstants;
 import com.liferay.dynamic.data.mapping.model.DDMTemplate;
 import com.liferay.dynamic.data.mapping.service.DDMTemplateService;
 import com.liferay.journal.constants.JournalPortletKeys;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -39,7 +39,6 @@ import java.util.Objects;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
-import javax.portlet.PortletURL;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -74,8 +73,6 @@ public class UpdateDDMTemplateMVCActionCommand extends BaseMVCActionCommand {
 		Map<Locale, String> descriptionMap =
 			LocalizationUtil.getLocalizationMap(
 				uploadPortletRequest, "description");
-		String language = ParamUtil.getString(
-			uploadPortletRequest, "language", TemplateConstants.LANG_TYPE_VM);
 		String script = ActionUtil.getScript(uploadPortletRequest);
 		boolean cacheable = ParamUtil.getBoolean(
 			uploadPortletRequest, "cacheable");
@@ -102,27 +99,24 @@ public class UpdateDDMTemplateMVCActionCommand extends BaseMVCActionCommand {
 		DDMTemplate ddmTemplate = _ddmTemplateService.updateTemplate(
 			ddmTemplateId, classPK, nameMap, descriptionMap,
 			DDMTemplateConstants.TEMPLATE_TYPE_DISPLAY, StringPool.BLANK,
-			language, script, cacheable, smallImage, smallImageURL,
-			smallImageFile, serviceContext);
+			TemplateConstants.LANG_TYPE_FTL, script, cacheable, smallImage,
+			smallImageURL, smallImageFile, serviceContext);
 
 		boolean saveAndContinue = ParamUtil.getBoolean(
 			uploadPortletRequest, "saveAndContinue");
 
 		if (saveAndContinue) {
-			String redirect = ParamUtil.getString(
-				uploadPortletRequest, "redirect");
-
-			LiferayPortletResponse liferayPortletResponse =
-				_portal.getLiferayPortletResponse(actionResponse);
-
-			PortletURL portletURL = liferayPortletResponse.createRenderURL();
-
-			portletURL.setParameter("mvcPath", "/edit_ddm_template.jsp");
-			portletURL.setParameter("redirect", redirect);
-			portletURL.setParameter(
-				"ddmTemplateId", String.valueOf(ddmTemplate.getTemplateId()));
-
-			actionRequest.setAttribute(WebKeys.REDIRECT, portletURL.toString());
+			actionRequest.setAttribute(
+				WebKeys.REDIRECT,
+				PortletURLBuilder.createRenderURL(
+					_portal.getLiferayPortletResponse(actionResponse)
+				).setMVCPath(
+					"/edit_ddm_template.jsp"
+				).setRedirect(
+					ParamUtil.getString(uploadPortletRequest, "redirect")
+				).setParameter(
+					"ddmTemplateId", ddmTemplate.getTemplateId()
+				).buildString());
 		}
 	}
 

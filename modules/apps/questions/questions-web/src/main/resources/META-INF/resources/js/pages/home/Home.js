@@ -17,18 +17,27 @@ import ClayCard from '@clayui/card';
 import ClayEmptyState from '@clayui/empty-state';
 import ClayIcon from '@clayui/icon';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
+import classNames from 'classnames';
+import {useManualQuery} from 'graphql-hooks';
 import React, {useContext, useEffect, useState} from 'react';
+import {Helmet} from 'react-helmet';
 import {Redirect, withRouter} from 'react-router-dom';
 
 import {AppContext} from '../../AppContext.es';
 import Alert from '../../components/Alert.es';
 import Link from '../../components/Link.es';
 import NewTopicModal from '../../components/NewTopicModal.es';
-import {getSectionsByRootSection} from '../../utils/client.es';
+import {
+	getSectionBySectionTitleQuery,
+	getSectionsQuery,
+} from '../../utils/client.es';
 import lang from '../../utils/lang.es';
-import {historyPushWithSlug} from '../../utils/utils.es';
+import {
+	getBasePathWithHistoryRouter,
+	historyPushWithSlug,
+} from '../../utils/utils.es';
 
-export default withRouter(({history}) => {
+export default withRouter(({history, isHomePath}) => {
 	const context = useContext(AppContext);
 	const historyPushParser = historyPushWithSlug(history.push);
 	const [topicModalVisibility, setTopicModalVisibility] = useState(false);
@@ -38,7 +47,35 @@ export default withRouter(({history}) => {
 	const [sections, setSections] = useState({});
 
 	useEffect(() => {
-		getSectionsByRootSection(context.siteKey, context.rootTopicId)
+		document.title = 'Questions';
+	}, []);
+
+	const [getSections] = useManualQuery(getSectionsQuery, {
+		variables: {siteKey: context.siteKey},
+	});
+	const [getSectionBySectionTitle] = useManualQuery(
+		getSectionBySectionTitleQuery,
+		{
+			variables: {
+				filter: `title eq '${context.rootTopicId}' or id eq '${context.rootTopicId}'`,
+				siteKey: context.siteKey,
+			},
+		}
+	);
+
+	useEffect(() => {
+		const fn =
+			!context.rootTopicId || context.rootTopicId === '0'
+				? getSections()
+				: getSectionBySectionTitle().then((result) => ({
+						...result,
+						data: result.data.messageBoardSections.items[0],
+				  }));
+
+		fn.then((result) => ({
+			...result,
+			data: result.data.messageBoardSections,
+		}))
 			.then(({data, loading}) => {
 				setSections(data || []);
 				setLoading(loading);
@@ -50,10 +87,15 @@ export default withRouter(({history}) => {
 				setLoading(false);
 				setError({message: 'Loading Topics', title: 'Error'});
 			});
-	}, [context.rootTopicId, context.siteKey]);
+	}, [
+		context.rootTopicId,
+		context.siteKey,
+		getSectionBySectionTitle,
+		getSections,
+	]);
 
 	function descriptionTruncate(description) {
-		return description.length > 150
+		return description?.length > 150
 			? description.substring(0, 150) + '...'
 			: description;
 	}
@@ -64,13 +106,28 @@ export default withRouter(({history}) => {
 				<Redirect to={'/questions/' + context.rootTopicId} />
 			)}
 
+			<div className="d-flex justify-content-end pb-3">
+				<ClayButton
+					className={classNames('font-weight-bold', {
+						'text-white': isHomePath,
+					})}
+					displayType="unstyled"
+					onClick={() => history.push('/questions/all')}
+				>
+					{Liferay.Language.get('all-questions')}
+
+					<ClayIcon symbol="caret-right" />
+				</ClayButton>
+			</div>
+
 			<div className="questions-container row">
 				{!loading && (
 					<>
 						{sections &&
 							sections.actions &&
-							sections.actions.create &&
-							sections.items.length > 0 && (
+							!!sections.actions.create &&
+							sections.items &&
+							!!sections.items.length && (
 								<div className="c-mb-4 col-lg-4 col-md-6 col-xl-3">
 									<div className="questions-card text-decoration-none text-secondary">
 										<ClayCard
@@ -89,6 +146,7 @@ export default withRouter(({history}) => {
 													title=""
 												>
 													<ClayIcon symbol="plus" />
+
 													<span className="c-ml-3 text-truncate">
 														{Liferay.Language.get(
 															'new-topic'
@@ -101,7 +159,8 @@ export default withRouter(({history}) => {
 								</div>
 							)}
 
-						{(sections.items.length > 0 &&
+						{(sections.items &&
+							!!sections.items.length &&
 							sections.items.map((section) => (
 								<div
 									className="c-mb-4 col-lg-4 col-md-6 col-xl-3"
@@ -149,6 +208,7 @@ export default withRouter(({history}) => {
 															]
 														)}
 													</span>
+
 													<button className="btn btn-link btn-sm d-xl-none float-right font-weight-bold p-0">
 														View Topic
 													</button>
@@ -170,16 +230,18 @@ export default withRouter(({history}) => {
 									'this-page-has-no-topics'
 								)}
 							>
-								{sections && sections.actions.create && (
-									<ClayButton
-										displayType="primary"
-										onClick={() =>
-											setTopicModalVisibility(true)
-										}
-									>
-										{Liferay.Language.get('new-topic')}
-									</ClayButton>
-								)}
+								{sections &&
+									sections.actions &&
+									!!sections.actions.create && (
+										<ClayButton
+											displayType="primary"
+											onClick={() =>
+												setTopicModalVisibility(true)
+											}
+										>
+											{Liferay.Language.get('new-topic')}
+										</ClayButton>
+									)}
 							</ClayEmptyState>
 						)}
 					</>
@@ -196,9 +258,23 @@ export default withRouter(({history}) => {
 					visible={topicModalVisibility}
 				/>
 			</div>
+
 			{loading && <ClayLoadingIndicator />}
 
 			<Alert info={error} />
+
+			{context.historyRouterBasePath && (
+				<Helmet>
+					<title>Questions</title>
+
+					<link
+						href={getBasePathWithHistoryRouter(
+							context.historyRouterBasePath
+						)}
+						rel="canonical"
+					/>
+				</Helmet>
+			)}
 		</section>
 	);
 });

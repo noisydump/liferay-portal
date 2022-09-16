@@ -16,17 +16,23 @@ package com.liferay.portal.search.internal.batch;
 
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.Arrays;
 import java.util.Collections;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 /**
  * @author André de Oliveira
  */
 public class BatchIndexingHelperImplBulkSizesTest {
+
+	@ClassRule
+	public static LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Test
 	public void testConfiguration() {
@@ -35,26 +41,26 @@ public class BatchIndexingHelperImplBulkSizesTest {
 
 		activate(entryClassName1 + "=200", entryClassName2 + "=500");
 
-		assertBulkSize(200, entryClassName1);
-		assertBulkSize(500, entryClassName2);
+		_assertBulkSize(200, entryClassName1);
+		_assertBulkSize(500, entryClassName2);
 	}
 
 	@Test
 	public void testDefault() {
-		activateWithoutConfiguration();
+		_activateWithoutConfiguration();
 
-		assertBulkSize(10000, "com.liferay.journal.model.JournalArticle");
+		_assertBulkSize(10000, "com.liferay.journal.model.JournalArticle");
 
-		assertBulkSize(10000, RandomTestUtil.randomString());
+		_assertBulkSize(10000, RandomTestUtil.randomString());
 	}
 
 	@Test
 	public void testDefaultWithConfiguration() {
 		activate("com.liferay.journal.model.JournalArticle=200");
 
-		assertBulkSize(200, "com.liferay.journal.model.JournalArticle");
+		_assertBulkSize(200, "com.liferay.journal.model.JournalArticle");
 
-		assertBulkSize(10000, RandomTestUtil.randomString());
+		_assertBulkSize(10000, RandomTestUtil.randomString());
 	}
 
 	@Test
@@ -65,8 +71,8 @@ public class BatchIndexingHelperImplBulkSizesTest {
 		activate(
 			entryClassName1 + "= ", StringPool.SPACE, entryClassName2 + "?200");
 
-		assertBulkSize(10000, entryClassName1);
-		assertBulkSize(10000, entryClassName2);
+		_assertBulkSize(10000, entryClassName1);
+		_assertBulkSize(10000, entryClassName2);
 	}
 
 	protected void activate(String... indexingBatchSizes) {
@@ -75,11 +81,11 @@ public class BatchIndexingHelperImplBulkSizesTest {
 				"indexingBatchSizes", Arrays.asList(indexingBatchSizes)));
 	}
 
-	protected void activateWithoutConfiguration() {
+	private void _activateWithoutConfiguration() {
 		_batchIndexingHelperImpl.activate(Collections.emptyMap());
 	}
 
-	protected void assertBulkSize(int bulkSize, String entryClassName) {
+	private void _assertBulkSize(int bulkSize, String entryClassName) {
 		Assert.assertEquals(
 			bulkSize, _batchIndexingHelperImpl.getBulkSize(entryClassName));
 	}

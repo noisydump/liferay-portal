@@ -18,7 +18,7 @@ import com.liferay.layout.page.template.admin.constants.LayoutPageTemplateAdminP
 import com.liferay.layout.page.template.admin.web.internal.handler.LayoutPageTemplateEntryExceptionRequestHandler;
 import com.liferay.layout.page.template.exception.LayoutPageTemplateEntryNameException;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.LayoutPrototype;
@@ -78,11 +78,11 @@ public class UpdateLayoutPrototypeMVCActionCommand
 				layoutPrototypeId, nameMap, new HashMap<>(), true,
 				serviceContext);
 
-			String redirect = ParamUtil.getString(actionRequest, "redirect");
-
 			JSONPortletResponseUtil.writeJSON(
 				actionRequest, actionResponse,
-				JSONUtil.put("redirectURL", redirect));
+				JSONUtil.put(
+					"redirectURL",
+					ParamUtil.getString(actionRequest, "redirect")));
 		}
 		catch (Throwable throwable) {
 			if (_log.isDebugEnabled()) {
@@ -100,23 +100,28 @@ public class UpdateLayoutPrototypeMVCActionCommand
 						layoutPageTemplateEntryNameException);
 			}
 			else {
-				ThemeDisplay themeDisplay =
-					(ThemeDisplay)actionRequest.getAttribute(
-						WebKeys.THEME_DISPLAY);
-
 				JSONPortletResponseUtil.writeJSON(
 					actionRequest, actionResponse,
 					JSONUtil.put(
 						"error",
-						LanguageUtil.get(
-							themeDisplay.getRequest(),
-							"an-unexpected-error-occurred")));
+						() -> {
+							ThemeDisplay themeDisplay =
+								(ThemeDisplay)actionRequest.getAttribute(
+									WebKeys.THEME_DISPLAY);
+
+							return _language.get(
+								themeDisplay.getRequest(),
+								"an-unexpected-error-occurred");
+						}));
 			}
 		}
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		UpdateLayoutPrototypeMVCActionCommand.class);
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private LayoutPageTemplateEntryExceptionRequestHandler

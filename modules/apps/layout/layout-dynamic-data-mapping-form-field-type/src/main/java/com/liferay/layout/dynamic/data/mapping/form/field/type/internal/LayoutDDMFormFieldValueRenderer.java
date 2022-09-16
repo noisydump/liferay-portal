@@ -21,7 +21,9 @@ import com.liferay.layout.dynamic.data.mapping.form.field.type.constants.LayoutD
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.service.LayoutService;
 import com.liferay.portal.kernel.util.Validator;
@@ -66,13 +68,23 @@ public class LayoutDDMFormFieldValueRenderer
 			return layout.getName(locale);
 		}
 		catch (Exception exception) {
-			return LanguageUtil.format(
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
+			return _language.format(
 				locale, "is-temporarily-unavailable", "page");
 		}
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		LayoutDDMFormFieldValueRenderer.class);
+
 	@Reference
 	private JSONFactory _jsonFactory;
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private LayoutService _layoutService;

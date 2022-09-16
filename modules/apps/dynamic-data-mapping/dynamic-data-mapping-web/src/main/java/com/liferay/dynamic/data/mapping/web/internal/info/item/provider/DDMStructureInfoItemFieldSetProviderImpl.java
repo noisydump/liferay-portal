@@ -64,7 +64,7 @@ public class DDMStructureInfoItemFieldSetProviderImpl
 
 			return InfoFieldSet.builder(
 			).infoFieldSetEntry(
-				consumer -> {
+				unsafeConsumer -> {
 					for (DDMFormField ddmFormField :
 							ddmStructure.getDDMFormFields(false)) {
 
@@ -72,7 +72,7 @@ public class DDMStructureInfoItemFieldSetProviderImpl
 								_SELECTABLE_DDM_STRUCTURE_FIELDS,
 								ddmFormField.getType())) {
 
-							consumer.accept(
+							unsafeConsumer.accept(
 								_ddmFormFieldInfoFieldConverter.convert(
 									ddmFormField));
 						}
@@ -98,7 +98,8 @@ public class DDMStructureInfoItemFieldSetProviderImpl
 		DDMFormFieldTypeConstants.CHECKBOX_MULTIPLE,
 		DDMFormFieldTypeConstants.DATE, DDMFormFieldTypeConstants.NUMERIC,
 		DDMFormFieldTypeConstants.IMAGE, DDMFormFieldTypeConstants.TEXT,
-		DDMFormFieldTypeConstants.RICH_TEXT, DDMFormFieldTypeConstants.SELECT
+		DDMFormFieldTypeConstants.RADIO, DDMFormFieldTypeConstants.RICH_TEXT,
+		DDMFormFieldTypeConstants.SELECT
 	};
 
 	@Reference

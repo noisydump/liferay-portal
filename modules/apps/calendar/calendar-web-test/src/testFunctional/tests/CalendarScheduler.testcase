@@ -18,14 +18,13 @@ definition {
 			category = "Site Builder",
 			portlet = "Pages");
 
-		SitePages.addPublicPage(
+		PagesAdmin.addPage(
 			pageName = "Calendar Page",
 			sitePageType = "Widget Page");
 
-		SitePages.configurePage(
+		PagesAdmin.configurePage(
 			columnName = "1 Column",
 			pageName = "Calendar Page",
-			privacy = "Public Pages",
 			sitePageType = "Widget Page");
 
 		Navigator.gotoPage(pageName = "Calendar Page");
@@ -52,7 +51,7 @@ definition {
 
 			CalendarConfiguration.tearDown();
 
-			Page.tearDownCP();
+			PagesAdmin.tearDownCP();
 		}
 	}
 
@@ -117,6 +116,7 @@ definition {
 	@description = "This is a use case for LPS-59251."
 	@priority = "3"
 	test ViewDisplayedSiteCalendarEventsAsGuest {
+		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "CalendarScheduler#ViewDisplayedSiteCalendarEventsAsGuest";
 
 		var siteName = TestCase.getSiteName(siteName = "${siteName}");

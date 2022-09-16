@@ -16,7 +16,7 @@ package com.liferay.password.policies.admin.web.internal.portlet.configuration.i
 
 import com.liferay.password.policies.admin.constants.PasswordPoliciesAdminPortletKeys;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PasswordPolicy;
@@ -24,7 +24,7 @@ import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.configuration.icon.BasePortletConfigurationIcon;
 import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfigurationIcon;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
-import com.liferay.portal.kernel.service.permission.PasswordPolicyPermissionUtil;
+import com.liferay.portal.kernel.service.permission.PasswordPolicyPermission;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -54,7 +54,7 @@ public class PermissionsPortletConfigurationIcon
 
 	@Override
 	public String getMessage(PortletRequest portletRequest) {
-		return LanguageUtil.get(
+		return _language.get(
 			getResourceBundle(getLocale(portletRequest)), "permissions");
 	}
 
@@ -74,7 +74,7 @@ public class PermissionsPortletConfigurationIcon
 				themeDisplay.getRequest());
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 		}
 
 		return StringPool.BLANK;
@@ -94,7 +94,7 @@ public class PermissionsPortletConfigurationIcon
 		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		if (PasswordPolicyPermissionUtil.contains(
+		if (_passwordPolicyPermission.contains(
 				themeDisplay.getPermissionChecker(),
 				_getPasswordPolicyId(portletRequest), ActionKeys.PERMISSIONS)) {
 
@@ -116,6 +116,12 @@ public class PermissionsPortletConfigurationIcon
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		PermissionsPortletConfigurationIcon.class);
+
+	@Reference
+	private Language _language;
+
+	@Reference
+	private PasswordPolicyPermission _passwordPolicyPermission;
 
 	@Reference
 	private Portal _portal;

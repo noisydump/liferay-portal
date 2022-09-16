@@ -15,8 +15,8 @@
 package com.liferay.portal.events;
 
 import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalServiceUtil;
-import com.liferay.portal.fabric.server.FabricServerUtil;
-import com.liferay.portal.jericho.CachedLoggerProvider;
+import com.liferay.petra.io.StreamUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.db.DBType;
@@ -25,23 +25,27 @@ import com.liferay.portal.kernel.events.SimpleAction;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.framework.ModuleServiceLifecycle;
-import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
+import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.util.BasePortalLifecycle;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.PortalLifecycle;
 import com.liferay.portal.kernel.util.PortalLifecycleUtil;
 import com.liferay.portal.kernel.util.ReleaseInfo;
+import com.liferay.portal.kernel.util.ServerDetector;
 import com.liferay.portal.tools.DBUpgrader;
 import com.liferay.portal.util.PropsValues;
-import com.liferay.registry.Registry;
-import com.liferay.registry.RegistryUtil;
-import com.liferay.registry.ServiceRegistration;
-import com.liferay.taglib.servlet.JspFactorySwapper;
 
+import java.io.File;
 import java.io.InputStream;
 
-import org.apache.commons.io.IOUtils;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+import java.util.Arrays;
+
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
 /**
  * @author Brian Wing Shun Chan
@@ -65,6 +69,32 @@ public class StartupAction extends SimpleAction {
 
 	protected void doRun(String[] ids) throws Exception {
 
+		// Check Tomcat's lib/ext directory
+
+		if (ServerDetector.isTomcat()) {
+			Path libPath = Paths.get(
+				System.getProperty("catalina.base"), "lib");
+
+			Path extPath = libPath.resolve("ext");
+
+			File extDir = extPath.toFile();
+
+			if (extDir.exists()) {
+				File[] extJarFiles = extDir.listFiles();
+
+				if (extJarFiles.length != 0) {
+					_log.error(
+						StringBundler.concat(
+							"Files ", Arrays.toString(extJarFiles), " in ",
+							extDir, " are no longer read. Move them to ",
+							libPath, " or ",
+							PropsValues.
+								LIFERAY_SHIELDED_CONTAINER_LIB_PORTAL_DIR,
+							"."));
+				}
+			}
+		}
+
 		// Print release information
 
 		Class<?> clazz = getClass();
@@ -74,16 +104,12 @@ public class StartupAction extends SimpleAction {
 		try (InputStream inputStream = classLoader.getResourceAsStream(
 				"com/liferay/portal/events/dependencies/startup.txt")) {
 
-			System.out.println(IOUtils.toString(inputStream));
+			System.out.println(StreamUtil.toString(inputStream));
 		}
 
 		System.out.println("Starting " + ReleaseInfo.getReleaseInfo() + "\n");
 
 		StartupHelperUtil.printPatchLevel();
-
-		if (PropsValues.PORTAL_FABRIC_ENABLED) {
-			FabricServerUtil.start();
-		}
 
 		// MySQL version
 
@@ -105,15 +131,15 @@ public class StartupAction extends SimpleAction {
 
 		DBUpgrader.checkReleaseState();
 
-		Registry registry = RegistryUtil.getRegistry();
+		BundleContext bundleContext = SystemBundleUtil.getBundleContext();
 
 		final ServiceRegistration<ModuleServiceLifecycle>
 			moduleServiceLifecycleServiceRegistration =
-				registry.registerService(
+				bundleContext.registerService(
 					ModuleServiceLifecycle.class,
 					new ModuleServiceLifecycle() {
 					},
-					HashMapBuilder.<String, Object>put(
+					HashMapDictionaryBuilder.<String, Object>put(
 						"module.service.lifecycle", "database.initialized"
 					).put(
 						"service.vendor", ReleaseInfo.getVendor()
@@ -136,14 +162,6 @@ public class StartupAction extends SimpleAction {
 			},
 			PortalLifecycle.METHOD_DESTROY);
 
-		// Check class names
-
-		if (_log.isDebugEnabled()) {
-			_log.debug("Check class names");
-		}
-
-		ClassNameLocalServiceUtil.checkClassNames();
-
 		// Check resource actions
 
 		if (_log.isDebugEnabled()) {
@@ -153,22 +171,12 @@ public class StartupAction extends SimpleAction {
 		StartupHelperUtil.initResourceActions();
 
 		if (StartupHelperUtil.isDBNew()) {
-			DBUpgrader.verify();
-
 			DLFileEntryTypeLocalServiceUtil.getBasicDocumentDLFileEntryType();
 		}
 
 		if (PropsValues.DATABASE_INDEXES_UPDATE_ON_STARTUP) {
 			StartupHelperUtil.updateIndexes(true);
 		}
-
-		// Liferay JspFactory
-
-		JspFactorySwapper.swap();
-
-		// Jericho
-
-		CachedLoggerProvider.install();
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(StartupAction.class);

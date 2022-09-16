@@ -242,17 +242,18 @@ export default {
 	/**
 	 * Render the content of a fragmentEntryLink
 	 * @param {object} options
-	 * @param {string} options.collectionItemClassName Class name id of the collection item
-	 * @param {string} options.collectionItemClassPK Class PK of the collection item
+	 * @param {string} options.collectionItemIndex Index of the collection item
+	 * @param {string} options.itemClassName Class name id of the collection item
+	 * @param {string} options.itemClassPK Class PK of the collection item
 	 * @param {string} options.fragmentEntryLinkId Id of the fragmentEntryLink
 	 * @param {string} options.languageId Language id
 	 * @param {function} options.onNetworkStatus
 	 * @param {string} options.segmentsExperienceId Experience id
 	 */
 	renderFragmentEntryLinkContent({
-		collectionItemClassName,
-		collectionItemClassPK,
 		fragmentEntryLinkId,
+		itemClassName,
+		itemClassPK,
 		languageId,
 		onNetworkStatus,
 		segmentsExperienceId,
@@ -261,9 +262,9 @@ export default {
 			config.renderFragmentEntryURL,
 			{
 				body: {
-					collectionItemClassName,
-					collectionItemClassPK,
 					fragmentEntryLinkId,
+					itemClassName,
+					itemClassPK,
 					languageId,
 					segmentsExperienceId,
 				},
@@ -273,15 +274,42 @@ export default {
 	},
 
 	/**
+	 * Mark a fragment as highlighted if it wasn't, and unmark it if it was
+	 * @param {object} options
+	 * @param {string} options.fragmentEntryKey
+	 * @param {boolean} options.highlighted
+	 * @param {function} options.onNetworkStatus
+	 */
+	toggleFragmentHighlighted({
+		fragmentEntryKey,
+		groupId = '0',
+		highlighted,
+		onNetworkStatus,
+	}) {
+		return serviceFetch(
+			config.updateFragmentsHighlightedConfigurationURL,
+			{
+				body: {
+					fragmentEntryKey,
+					groupId,
+					highlighted,
+				},
+			},
+			onNetworkStatus,
+			{requestGenerateDraft: true}
+		);
+	},
+
+	/**
 	 * Update configurationValues of the fragmentEntryLink with the given fragmentEntryLinkId
 	 * @param {object} options
-	 * @param {string} options.configurationValues New configurationValues
+	 * @param {string} options.editableValues
 	 * @param {string} options.fragmentEntryLinkId Id of the fragmentEntryLink
 	 * @param {string} options.languageId Language id
 	 * @param {function} options.onNetworkStatus
 	 */
 	updateConfigurationValues({
-		configurationValues,
+		editableValues,
 		fragmentEntryLinkId,
 		languageId,
 		onNetworkStatus,
@@ -290,7 +318,7 @@ export default {
 			config.updateConfigurationValuesURL,
 			{
 				body: {
-					editableValues: JSON.stringify(configurationValues),
+					editableValues: JSON.stringify(editableValues),
 					fragmentEntryLinkId,
 					languageId,
 				},
@@ -320,6 +348,33 @@ export default {
 					editableValues: JSON.stringify(editableValues),
 					fragmentEntryLinkId,
 					languageId,
+				},
+			},
+			onNetworkStatus,
+			{requestGenerateDraft: true}
+		);
+	},
+
+	/**
+	 * Update fragment and widgets sets sorting them according to user criteria
+	 * @param {object} options
+	 * @param {array} options.fragmentCollectionKeys
+	 * @param {array} options.portletCategoryKeys
+	 * @param {function} options.onNetworkStatus
+	 */
+	updateSetsOrder({
+		fragmentCollectionKeys,
+		onNetworkStatus,
+		portletCategoryKeys,
+	}) {
+		return serviceFetch(
+			config.updateFragmentPortletSetsSortURL,
+			{
+				body: {
+					fragmentCollectionKeys:
+						JSON.stringify(fragmentCollectionKeys) || null,
+					portletCategoryKeys:
+						JSON.stringify(portletCategoryKeys) || null,
 				},
 			},
 			onNetworkStatus,

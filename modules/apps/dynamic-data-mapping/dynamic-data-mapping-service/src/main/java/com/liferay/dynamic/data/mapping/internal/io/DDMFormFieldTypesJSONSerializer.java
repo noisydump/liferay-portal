@@ -25,7 +25,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.LocaleThreadLocal;
@@ -69,27 +69,15 @@ public class DDMFormFieldTypesJSONSerializer
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(exception, exception);
+				_log.warn(exception);
 			}
 		}
 
 		DDMFormFieldTypesSerializerSerializeResponse.Builder builder =
 			DDMFormFieldTypesSerializerSerializeResponse.Builder.newBuilder(
-				jsonArray.toJSONString());
+				jsonArray.toString());
 
 		return builder.build();
-	}
-
-	@Reference(unbind = "-")
-	protected void setDDMFormFieldTypeServicesTracker(
-		DDMFormFieldTypeServicesTracker ddmFormFieldTypeServicesTracker) {
-
-		_ddmFormFieldTypeServicesTracker = ddmFormFieldTypeServicesTracker;
-	}
-
-	@Reference(unbind = "-")
-	protected void setJSONFactory(JSONFactory jsonFactory) {
-		_jsonFactory = jsonFactory;
 	}
 
 	protected JSONObject toJSONObject(DDMFormFieldType ddmFormFieldType)
@@ -136,18 +124,16 @@ public class DDMFormFieldTypesJSONSerializer
 
 			if (Validator.isNotNull(description)) {
 				jsonObject.put(
-					"description",
-					LanguageUtil.get(resourceBundle, description));
+					"description", _language.get(resourceBundle, description));
 			}
 
 			if (Validator.isNotNull(label)) {
-				jsonObject.put(
-					"label", LanguageUtil.get(resourceBundle, label));
+				jsonObject.put("label", _language.get(resourceBundle, label));
 			}
 		}
 		catch (MissingResourceException missingResourceException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(missingResourceException, missingResourceException);
+				_log.warn(missingResourceException);
 			}
 		}
 
@@ -178,7 +164,13 @@ public class DDMFormFieldTypesJSONSerializer
 	private static final Log _log = LogFactoryUtil.getLog(
 		DDMFormFieldTypesJSONSerializer.class);
 
+	@Reference
 	private DDMFormFieldTypeServicesTracker _ddmFormFieldTypeServicesTracker;
+
+	@Reference
 	private JSONFactory _jsonFactory;
+
+	@Reference
+	private Language _language;
 
 }

@@ -37,6 +37,8 @@ import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -51,20 +53,19 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.segments.model.SegmentsExperiment;
 import com.liferay.segments.service.SegmentsExperimentLocalService;
-import com.liferay.segments.service.persistence.SegmentsEntryPersistence;
-import com.liferay.segments.service.persistence.SegmentsEntryRelPersistence;
-import com.liferay.segments.service.persistence.SegmentsEntryRolePersistence;
-import com.liferay.segments.service.persistence.SegmentsExperiencePersistence;
+import com.liferay.segments.service.SegmentsExperimentLocalServiceUtil;
 import com.liferay.segments.service.persistence.SegmentsExperimentFinder;
 import com.liferay.segments.service.persistence.SegmentsExperimentPersistence;
-import com.liferay.segments.service.persistence.SegmentsExperimentRelPersistence;
 
 import java.io.Serializable;
+
+import java.lang.reflect.Field;
 
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -86,7 +87,7 @@ public abstract class SegmentsExperimentLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>SegmentsExperimentLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.segments.service.SegmentsExperimentLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>SegmentsExperimentLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>SegmentsExperimentLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -166,6 +167,13 @@ public abstract class SegmentsExperimentLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return segmentsExperimentPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -449,6 +457,11 @@ public abstract class SegmentsExperimentLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement SegmentsExperimentLocalServiceImpl#deleteSegmentsExperiment(SegmentsExperiment) to avoid orphaned data");
+		}
+
 		return segmentsExperimentLocalService.deleteSegmentsExperiment(
 			(SegmentsExperiment)persistedModel);
 	}
@@ -561,6 +574,11 @@ public abstract class SegmentsExperimentLocalServiceBaseImpl
 		return segmentsExperimentPersistence.update(segmentsExperiment);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -573,6 +591,8 @@ public abstract class SegmentsExperimentLocalServiceBaseImpl
 	public void setAopProxy(Object aopProxy) {
 		segmentsExperimentLocalService =
 			(SegmentsExperimentLocalService)aopProxy;
+
+		_setLocalServiceUtilService(segmentsExperimentLocalService);
 	}
 
 	/**
@@ -633,17 +653,22 @@ public abstract class SegmentsExperimentLocalServiceBaseImpl
 		}
 	}
 
-	@Reference
-	protected SegmentsEntryPersistence segmentsEntryPersistence;
+	private void _setLocalServiceUtilService(
+		SegmentsExperimentLocalService segmentsExperimentLocalService) {
 
-	@Reference
-	protected SegmentsEntryRelPersistence segmentsEntryRelPersistence;
+		try {
+			Field field =
+				SegmentsExperimentLocalServiceUtil.class.getDeclaredField(
+					"_service");
 
-	@Reference
-	protected SegmentsEntryRolePersistence segmentsEntryRolePersistence;
+			field.setAccessible(true);
 
-	@Reference
-	protected SegmentsExperiencePersistence segmentsExperiencePersistence;
+			field.set(null, segmentsExperimentLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
 
 	protected SegmentsExperimentLocalService segmentsExperimentLocalService;
 
@@ -654,27 +679,10 @@ public abstract class SegmentsExperimentLocalServiceBaseImpl
 	protected SegmentsExperimentFinder segmentsExperimentFinder;
 
 	@Reference
-	protected SegmentsExperimentRelPersistence segmentsExperimentRelPersistence;
-
-	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@Reference
-	protected com.liferay.portal.kernel.service.ClassNameLocalService
-		classNameLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.ResourceLocalService
-		resourceLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
-
-	@Reference
-	protected
-		com.liferay.portal.kernel.service.UserNotificationEventLocalService
-			userNotificationEventLocalService;
+	private static final Log _log = LogFactoryUtil.getLog(
+		SegmentsExperimentLocalServiceBaseImpl.class);
 
 }

@@ -20,8 +20,8 @@
 UserRolesDisplayContext userRolesDisplayContext = new UserRolesDisplayContext(request, renderRequest, renderResponse);
 %>
 
-<clay:management-toolbar-v2
-	displayContext="<%= new UserRolesManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, userRolesDisplayContext) %>"
+<clay:management-toolbar
+	managementToolbarDisplayContext="<%= new UserRolesManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, userRolesDisplayContext) %>"
 />
 
 <aui:form cssClass="container-fluid container-fluid-max-xl portlet-site-memberships-assign-roles" name="fm">
@@ -50,18 +50,3 @@ UserRolesDisplayContext userRolesDisplayContext = new UserRolesDisplayContext(re
 		/>
 	</liferay-ui:search-container>
 </aui:form>
-
-<aui:script use="liferay-search-container">
-	var searchContainer = Liferay.SearchContainer.get(
-		'<portlet:namespace />userGroupRoleRole'
-	);
-
-	searchContainer.on('rowToggled', function (event) {
-		Liferay.Util.getOpener().Liferay.fire(
-			'<%= HtmlUtil.escapeJS(userRolesDisplayContext.getEventName()) %>',
-			{
-				data: event.elements.allSelectedElements.getDOMNodes(),
-			}
-		);
-	});
-</aui:script>

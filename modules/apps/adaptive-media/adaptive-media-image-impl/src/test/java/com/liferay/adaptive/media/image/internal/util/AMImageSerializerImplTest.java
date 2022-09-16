@@ -23,12 +23,12 @@ import com.liferay.adaptive.media.image.processor.AMImageAttribute;
 import com.liferay.adaptive.media.image.processor.AMImageProcessor;
 import com.liferay.adaptive.media.image.util.AMImageSerializer;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.json.JSONFactoryImpl;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.io.InputStream;
 
@@ -39,7 +39,8 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 import org.mockito.Mockito;
@@ -49,24 +50,23 @@ import org.mockito.Mockito;
  */
 public class AMImageSerializerImplTest {
 
-	@Before
-	public void setUp() {
-		JSONFactoryUtil jsonFactoryUtil = new JSONFactoryUtil();
-
-		jsonFactoryUtil.setJSONFactory(new JSONFactoryImpl());
-	}
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Test
 	public void testDeserialize() throws Exception {
-		JSONObject jsonObject = JSONUtil.put("uri", "http://localhost");
-
-		jsonObject.put(
+		JSONObject jsonObject = JSONUtil.put(
 			"attributes",
 			JSONUtil.put(
 				AMImageAttribute.AM_IMAGE_ATTRIBUTE_HEIGHT.getName(), "200"
 			).put(
 				AMImageAttribute.AM_IMAGE_ATTRIBUTE_WIDTH.getName(), "300"
-			));
+			)
+		).put(
+			"uri", "http://localhost"
+		);
 
 		AMImageSerializer amImageSerializer = new AMImageSerializerImpl();
 
@@ -103,11 +103,11 @@ public class AMImageSerializerImplTest {
 
 	@Test
 	public void testDeserializeWithEmptyAttributes() throws Exception {
-		JSONObject jsonObject = JSONUtil.put("uri", "http://localhost");
-
-		JSONObject attributesJSONObject = JSONFactoryUtil.createJSONObject();
-
-		jsonObject.put("attributes", attributesJSONObject);
+		JSONObject jsonObject = JSONUtil.put(
+			"attributes", JSONFactoryUtil.createJSONObject()
+		).put(
+			"uri", "http://localhost"
+		);
 
 		AMImageSerializer amImageSerializer = new AMImageSerializerImpl();
 

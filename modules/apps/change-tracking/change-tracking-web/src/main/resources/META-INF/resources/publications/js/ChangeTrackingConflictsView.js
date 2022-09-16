@@ -13,7 +13,7 @@
  */
 
 import ClayAlert from '@clayui/alert';
-import {ClayButtonWithIcon} from '@clayui/button';
+import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
 import ClayDatePicker from '@clayui/date-picker';
 import {Align, ClayDropDownWithItems} from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
@@ -22,7 +22,7 @@ import ClayModal, {useModal} from '@clayui/modal';
 import {ClayPaginationBarWithBasicItems} from '@clayui/pagination-bar';
 import ClayPanel from '@clayui/panel';
 import ClayTimePicker from '@clayui/time-picker';
-import {ClayTooltipProvider} from '@clayui/tooltip';
+import {navigate, openConfirmModal} from 'frontend-js-web';
 import React, {useState} from 'react';
 
 import ChangeTrackingBaseScheduleView from './ChangeTrackingBaseScheduleView';
@@ -33,21 +33,25 @@ class ChangeTrackingConflictsView extends ChangeTrackingBaseScheduleView {
 		super(props);
 
 		const {
+			learnLink,
 			publishURL,
 			redirect,
 			resolvedConflicts,
 			schedule,
 			scheduleURL,
+			showPageOverwriteWarning,
 			spritemap,
 			timeZone,
 			unresolvedConflicts,
 		} = props;
 
+		this.learnLink = learnLink;
 		this.publishURL = publishURL;
 		this.redirect = redirect;
 		this.resolvedConflicts = resolvedConflicts;
 		this.schedule = schedule;
 		this.scheduleURL = scheduleURL;
+		this.showPageOverwriteWarning = showPageOverwriteWarning;
 		this.spritemap = spritemap;
 		this.timeZone = timeZone;
 		this.unresolvedConflicts = unresolvedConflicts;
@@ -83,17 +87,24 @@ class ChangeTrackingConflictsView extends ChangeTrackingBaseScheduleView {
 						{Liferay.Language.get('conflicting-changes')}
 					</h2>
 
-					{this.unresolvedConflicts.length > 0 && (
+					{!!this.unresolvedConflicts.length && (
 						<ClayAlert
 							displayType="warning"
 							spritemap={this.spritemap}
-							title={Liferay.Language.get(
-								'this-publication-contains-conflicting-changes-that-must-be-manually-resolved-before-publishing'
-							)}
-						/>
+						>
+							<span>
+								{Liferay.Language.get(
+									'this-publication-contains-conflicting-changes-that-must-be-manually-resolved-before-publishing'
+								) + ' '}
+							</span>
+
+							<a href={this.learnLink.url}>
+								{this.learnLink.message}
+							</a>
+						</ClayAlert>
 					)}
 
-					{this.unresolvedConflicts.length == 0 && (
+					{!this.unresolvedConflicts.length && (
 						<ClayAlert
 							displayType="success"
 							spritemap={this.spritemap}
@@ -102,10 +113,20 @@ class ChangeTrackingConflictsView extends ChangeTrackingBaseScheduleView {
 							)}
 						/>
 					)}
+
+					{this.showPageOverwriteWarning && (
+						<ClayAlert
+							displayType="info"
+							spritemap={this.spritemap}
+							title={Liferay.Language.get(
+								"this-publication-contains-changes-to-a-content-page.-publishing-these-changes-will-fully-overwrite-the-page's-content-and-layout-in-production"
+							)}
+						/>
+					)}
 				</div>
 
 				<div className="sheet-section">
-					{this.unresolvedConflicts.length > 0 && (
+					{!!this.unresolvedConflicts.length && (
 						<ClayPanel
 							collapsable
 							defaultExpanded
@@ -117,7 +138,7 @@ class ChangeTrackingConflictsView extends ChangeTrackingBaseScheduleView {
 								this.unresolvedConflicts.length +
 								')'
 							}
-							showCollapseIcon={true}
+							showCollapseIcon
 							spritemap={this.spritemap}
 						>
 							<ClayPanel.Body>
@@ -129,8 +150,9 @@ class ChangeTrackingConflictsView extends ChangeTrackingBaseScheduleView {
 						</ClayPanel>
 					)}
 				</div>
+
 				<div className="sheet-section">
-					{this.resolvedConflicts.length > 0 && (
+					{!!this.resolvedConflicts.length && (
 						<ClayPanel
 							collapsable
 							displayTitle={
@@ -159,12 +181,13 @@ class ChangeTrackingConflictsView extends ChangeTrackingBaseScheduleView {
 						</div>
 
 						<label>{Liferay.Language.get('date-and-time')}</label>
+
 						<div className="input-group">
 							<div className={this.getDateClassName()}>
 								<div>
 									<ClayDatePicker
 										disabled={
-											this.unresolvedConflicts.length > 0
+											!!this.unresolvedConflicts.length
 										}
 										onValueChange={this.handleDateChange}
 										placeholder="YYYY-MM-DD"
@@ -180,16 +203,17 @@ class ChangeTrackingConflictsView extends ChangeTrackingBaseScheduleView {
 									{this.getDateHelpText()}
 								</div>
 							</div>
+
 							<div className={this.getTimeClassName()}>
 								<div>
 									<ClayTimePicker
 										disabled={
-											this.unresolvedConflicts.length > 0
+											!!this.unresolvedConflicts.length
 										}
-										onInputChange={this.handleTimeChange}
+										onChange={this.handleTimeChange}
 										spritemap={this.spritemap}
 										timezone={this.timeZone}
-										values={this.state.time}
+										value={this.state.time}
 									/>
 
 									{this.getTimeHelpText()}
@@ -212,7 +236,7 @@ class ChangeTrackingConflictsView extends ChangeTrackingBaseScheduleView {
 						<div className="btn-group-item">
 							<button
 								className={
-									this.unresolvedConflicts.length > 0
+									this.unresolvedConflicts.length
 										? 'btn btn-primary disabled'
 										: 'btn btn-primary'
 								}
@@ -224,12 +248,11 @@ class ChangeTrackingConflictsView extends ChangeTrackingBaseScheduleView {
 									: Liferay.Language.get('publish')}
 							</button>
 						</div>
+
 						<div className="btn-group-item">
 							<button
 								className="btn btn-secondary"
-								onClick={() =>
-									Liferay.Util.navigate(this.redirect)
-								}
+								onClick={() => navigate(this.redirect)}
 								type="button"
 							>
 								{Liferay.Language.get('cancel')}
@@ -255,7 +278,7 @@ const ConflictsTable = ({conflicts, spritemap}) => {
 	const getAlertFooter = (conflict) => {
 		if (
 			!conflict.dismissURL &&
-			(!conflict.actions || conflict.actions.length === 0)
+			(!conflict.actions || !conflict.actions.length)
 		) {
 			return '';
 		}
@@ -266,18 +289,50 @@ const ConflictsTable = ({conflicts, spritemap}) => {
 			for (let i = 0; i < conflict.actions.length; i++) {
 				const action = conflict.actions[i];
 
-				buttons.push(
-					<a className="btn btn-secondary btn-sm" href={action.href}>
-						<span className="inline-item inline-item-before">
-							<ClayIcon
-								spritemap={spritemap}
-								symbol={action.symbol}
-							/>
-						</span>
+				if (action.confirmationMessage) {
+					buttons.push(
+						<ClayButton
+							displayType="secondary"
+							onClick={() =>
+								openConfirmModal({
+									message: action.confirmationMessage,
+									onConfirm: (isConfirmed) =>
+										isConfirmed &&
+										submitForm(
+											document.hrefFm,
+											action.href
+										),
+								})
+							}
+						>
+							<span className="inline-item inline-item-before">
+								<ClayIcon
+									spritemap={spritemap}
+									symbol={action.symbol}
+								/>
+							</span>
 
-						{action.label}
-					</a>
-				);
+							{action.label}
+						</ClayButton>
+					);
+				}
+				else {
+					buttons.push(
+						<a
+							className="btn btn-secondary btn-sm"
+							href={action.href}
+						>
+							<span className="inline-item inline-item-before">
+								<ClayIcon
+									spritemap={spritemap}
+									symbol={action.symbol}
+								/>
+							</span>
+
+							{action.label}
+						</a>
+					);
+				}
 			}
 		}
 
@@ -319,65 +374,144 @@ const ConflictsTable = ({conflicts, spritemap}) => {
 	};
 
 	const getDropdownMenu = (conflict) => {
-		if (!conflict.actions) {
+		if (!conflict.actions || !conflict.actions.length) {
 			return '';
 		}
 
-		const items = [];
+		const firstAction = conflict.actions[0];
 
-		for (let i = 0; i < conflict.actions.length; i++) {
-			const action = conflict.actions[i];
-
-			items.push({
-				href: action.href,
-				label: action.label,
-				symbolLeft: action.symbol,
-			});
-		}
-
-		return (
-			<ClayList.ItemField>
-				<ClayDropDownWithItems
-					alignmentPosition={Align.BottomLeft}
-					items={items}
-					spritemap={spritemap}
-					trigger={
-						<ClayButtonWithIcon
-							displayType="unstyled"
+		if (conflict.actions.length === 1) {
+			return (
+				<ClayList.ItemField>
+					{firstAction.confirmationMessage ? (
+						<ClayButton
+							displayType="secondary"
+							onClick={() =>
+								openConfirmModal({
+									message: firstAction.confirmationMessage,
+									onConfirm: (isConfirmed) =>
+										isConfirmed &&
+										submitForm(
+											document.hrefFm,
+											firstAction.href
+										),
+								})
+							}
 							small
-							spritemap={spritemap}
-							symbol="ellipsis-v"
-						/>
-					}
-				/>
-			</ClayList.ItemField>
-		);
-	};
+						>
+							<span className="inline-item inline-item-before">
+								<ClayIcon
+									spritemap={spritemap}
+									symbol={firstAction.symbol}
+								/>
+							</span>
 
-	const getQuickActionMenu = (conflict) => {
-		if (!conflict.actions) {
-			return '';
-		}
+							{firstAction.label}
+						</ClayButton>
+					) : (
+						<a
+							className="btn btn-secondary btn-sm"
+							href={firstAction.href}
+						>
+							<span className="inline-item inline-item-before">
+								<ClayIcon
+									spritemap={spritemap}
+									symbol={firstAction.symbol}
+								/>
+							</span>
 
-		const items = [];
-
-		for (let i = 0; i < conflict.actions.length; i++) {
-			const action = conflict.actions[i];
-
-			items.push(
-				<ClayList.QuickActionMenu.Item
-					data-tooltip-align="top"
-					href={action.href}
-					spritemap={spritemap}
-					symbol={action.symbol}
-					title={action.label}
-				/>
+							{firstAction.label}
+						</a>
+					)}
+				</ClayList.ItemField>
 			);
 		}
 
+		const items = [];
+
+		for (let i = 0; i < conflict.actions.length; i++) {
+			const action = conflict.actions[i];
+
+			if (action.confirmationMessage) {
+				items.push({
+					label: action.label,
+					onClick: () =>
+						openConfirmModal({
+							message: action.confirmationMessage,
+							onConfirm: (isConfirmed) =>
+								isConfirmed &&
+								submitForm(document.hrefFm, action.href),
+						}),
+					symbolLeft: action.symbol,
+				});
+			}
+			else {
+				items.push({
+					href: action.href,
+					label: action.label,
+					symbolLeft: action.symbol,
+				});
+			}
+		}
+
 		return (
 			<ClayList.ItemField>
-				<ClayList.QuickActionMenu>{items}</ClayList.QuickActionMenu>
+				<ClayButton.Group className="dropdown">
+					{firstAction.confirmationMessage ? (
+						<ClayButton
+							displayType="secondary"
+							onClick={() =>
+								openConfirmModal({
+									message: firstAction.confirmationMessage,
+									onConfirm: (isConfirmed) =>
+										isConfirmed &&
+										submitForm(
+											document.hrefFm,
+											firstAction.href
+										),
+								})
+							}
+							small
+						>
+							<span className="inline-item inline-item-before">
+								<ClayIcon
+									spritemap={spritemap}
+									symbol={firstAction.symbol}
+								/>
+							</span>
+
+							{firstAction.label}
+						</ClayButton>
+					) : (
+						<a
+							className="btn btn-secondary btn-sm"
+							href={firstAction.href}
+						>
+							<span className="inline-item inline-item-before">
+								<ClayIcon
+									spritemap={spritemap}
+									symbol={firstAction.symbol}
+								/>
+							</span>
+
+							{firstAction.label}
+						</a>
+					)}
+
+					<ClayDropDownWithItems
+						alignmentPosition={Align.BottomLeft}
+						items={items}
+						spritemap={spritemap}
+						trigger={
+							<ClayButtonWithIcon
+								displayType="secondary"
+								small
+								spritemap={spritemap}
+								symbol="caret-bottom"
+							/>
+						}
+					/>
+				</ClayButton.Group>
 			</ClayList.ItemField>
 		);
 	};
@@ -407,9 +541,11 @@ const ConflictsTable = ({conflicts, spritemap}) => {
 							>
 								{conflict.description}
 							</ClayList.ItemText>
+
 							<ClayList.ItemTitle>
 								{conflict.title}
 							</ClayList.ItemTitle>
+
 							<ClayList.ItemText
 								className={
 									'conflicts-' + conflict.alertType + '-text'
@@ -418,14 +554,13 @@ const ConflictsTable = ({conflicts, spritemap}) => {
 								<strong>
 									{conflict.conflictDescription + ': '}
 								</strong>
+
 								{conflict.conflictResolution}
 							</ClayList.ItemText>
 						</a>
 					</ClayList.ItemField>
 
 					{getDismissAction(conflict)}
-
-					{getQuickActionMenu(conflict)}
 
 					{getDropdownMenu(conflict)}
 				</ClayList.Item>
@@ -478,12 +613,14 @@ const ConflictsTable = ({conflicts, spritemap}) => {
 							<div className="modal-title">
 								{viewConflict.title}
 							</div>
+
 							<div className="modal-description">
 								{viewConflict.description}
 							</div>
 						</div>
 					</div>
 				</ClayModal.Header>
+
 				<ClayModal.Header
 					className="publications-conflicts-header"
 					withTitle={false}
@@ -498,9 +635,11 @@ const ConflictsTable = ({conflicts, spritemap}) => {
 						{getAlertFooter(viewConflict)}
 					</ClayAlert>
 				</ClayModal.Header>
+
 				<div className="publications-modal-body">
 					<ChangeTrackingRenderView
 						dataURL={viewConflict.dataURL}
+						showHeader={false}
 						spritemap={spritemap}
 					/>
 				</div>
@@ -512,9 +651,7 @@ const ConflictsTable = ({conflicts, spritemap}) => {
 		<>
 			{renderViewModal()}
 
-			<ClayTooltipProvider>
-				<ClayList showQuickActionsOnHover>{getListItems()}</ClayList>
-			</ClayTooltipProvider>
+			<ClayList showQuickActionsOnHover>{getListItems()}</ClayList>
 
 			{renderPagination()}
 		</>

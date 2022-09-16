@@ -8,11 +8,12 @@ definition {
 				key_fieldName = "${fieldName}",
 				locator1 = "Button#LOCALIZATION");
 		}
-
 		else if (isSet(friendlyURLHistory)) {
 			Click.clickNoMouseOver(locator1 = "Icon#FRIENDLY_URL_HISTORY_LOCALIZATION");
 		}
-
+		else if (isSet(modal)) {
+			Click(locator1 = "Modal#LOCALIZATION_DROPDOWN_TOGGLE");
+		}
 		else {
 			Click.clickNoMouseOver(locator1 = "Button#LOCALIZATION_GENERIC");
 		}
@@ -20,12 +21,30 @@ definition {
 		if (isSet(localizedFriendlyURL)) {
 			Click.clickNoMouseOver(locator1 = "Icon#FRIENDLY_URL_HISTORY_SPANISH_LOCALIZATION");
 		}
-
+		else if (isSet(modal)) {
+			Click(
+				key_locale = "${locale}",
+				locator1 = "Translation#DROPDOWN_MENU_ITEM");
+		}
 		else {
 			Click(
-				key_locale = StringUtil.replace("${locale}", "-", "_"),
+				key_locale = "${locale}",
 				locator1 = "Translation#LOCALIZATION_NAME");
 		}
+	}
+
+	macro changeLocaleSummary {
+		Click.clickNoMouseOver(locator1 = "Button#LOCALIZATION_SUMMARY");
+
+		Click(
+			key_locale = "${locale}",
+			locator1 = "Translation#LOCALIZATION_NAME");
+	}
+
+	macro checkOut {
+		Button.clickCheckOut();
+
+		Alert.viewSuccessMessage();
 	}
 
 	macro clickEditFromEllipsis {
@@ -35,7 +54,13 @@ definition {
 	}
 
 	macro clickMoveToRecycleBin {
-		MenuItem.click(menuItem = "Move to Recycle Bin");
+		MenuItem.click(menuItem = "Delete");
+	}
+
+	macro create {
+		Button.clickCreate();
+
+		Alert.viewSuccessMessage();
 	}
 
 	macro deleteViaMenuItem {
@@ -65,16 +90,12 @@ definition {
 	}
 
 	macro inputDescription {
-		Click(locator1 = "TextArea#DESCRIPTION");
-
 		Type(
 			locator1 = "TextArea#DESCRIPTION",
 			value1 = "${description}");
 	}
 
 	macro inputDescriptionTextInput {
-		Click(locator1 = "TextInput#DESCRIPTION");
-
 		Type(
 			locator1 = "TextInput#DESCRIPTION",
 			value1 = "${description}");
@@ -89,26 +110,18 @@ definition {
 	}
 
 	macro inputName {
-		Click(locator1 = "TextInput#NAME");
-
 		Type(
 			locator1 = "TextInput#NAME",
 			value1 = "${name}");
 	}
 
 	macro inputStructureKeyTextInput {
-		Click(locator1 = "TextInput#STRUCTURE_KEY_FIELD");
-
 		Type(
 			locator1 = "TextInput#STRUCTURE_KEY_FIELD",
 			value1 = "${structureKey}");
 	}
 
 	macro inputText {
-		Click(
-			key_fieldLabel = "${fieldLabel}",
-			locator1 = "TextInput#GENERIC_TEXT_INPUT");
-
 		Type(
 			key_fieldLabel = "${fieldLabel}",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
@@ -116,10 +129,6 @@ definition {
 	}
 
 	macro inputTextArea {
-		Click(
-			key_text = "${fieldId}",
-			locator1 = "TextArea#ANY");
-
 		Type(
 			key_text = "${fieldId}",
 			locator1 = "TextArea#ANY",
@@ -127,8 +136,6 @@ definition {
 	}
 
 	macro inputTitle {
-		Click(locator1 = "TextInput#TITLE");
-
 		Type(
 			locator1 = "TextInput#TITLE",
 			value1 = "${title}");
@@ -149,7 +156,9 @@ definition {
 	}
 
 	macro save {
-		Button.clickSave();
+		Click(
+			key_text = "Save",
+			locator1 = "Button#ANY");
 
 		Alert.viewSuccessMessage();
 
@@ -171,6 +180,18 @@ definition {
 		}
 
 		AssertChecked.assertCheckedNotVisible(locator1 = "Checkbox#LEXICON_SELECT_ALL_INPUT");
+	}
+
+	macro SelectAllOnSpecificWidget {
+		if (IsNotChecked.isNotCheckedNotVisible(key_position = "${widgetPosition}", locator1 = "Checkbox#LEXICON_SELECT_ALL_INPUT_SPECIFIC")) {
+			Click(
+				key_position = "${widgetPosition}",
+				locator1 = "Checkbox#LEXICON_SELECT_ALL_CONTAINER_SPECIFIC");
+		}
+
+		AssertChecked.assertCheckedNotVisible(
+			key_position = "${widgetPosition}",
+			locator1 = "Checkbox#LEXICON_SELECT_ALL_INPUT_SPECIFIC");
 	}
 
 	macro submitForPublication {

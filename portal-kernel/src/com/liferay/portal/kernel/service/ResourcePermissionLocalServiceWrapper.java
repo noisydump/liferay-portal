@@ -29,6 +29,10 @@ public class ResourcePermissionLocalServiceWrapper
 	implements ResourcePermissionLocalService,
 			   ServiceWrapper<ResourcePermissionLocalService> {
 
+	public ResourcePermissionLocalServiceWrapper() {
+		this(null);
+	}
+
 	public ResourcePermissionLocalServiceWrapper(
 		ResourcePermissionLocalService resourcePermissionLocalService) {
 
@@ -162,19 +166,17 @@ public class ResourcePermissionLocalServiceWrapper
 	 optionally an empty string if no instance exists
 	 * @param portletActions whether to associate portlet actions with the
 	 resource
-	 * @param addGroupPermissions whether to add group permissions
-	 * @param addGuestPermissions whether to add guest permissions
 	 */
 	@Override
 	public void addResourcePermissions(
 			long companyId, long groupId, long userId, String name,
-			String primKey, boolean portletActions, boolean addGroupPermissions,
-			boolean addGuestPermissions)
+			String primKey, boolean portletActions,
+			ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		_resourcePermissionLocalService.addResourcePermissions(
 			companyId, groupId, userId, name, primKey, portletActions,
-			addGroupPermissions, addGuestPermissions);
+			serviceContext);
 	}
 
 	/**
@@ -351,6 +353,13 @@ public class ResourcePermissionLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _resourcePermissionLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _resourcePermissionLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -612,6 +621,13 @@ public class ResourcePermissionLocalServiceWrapper
 
 		return _resourcePermissionLocalService.getResourcePermissions(
 			companyId, name, scope, primKey);
+	}
+
+	@Override
+	public java.util.List<ResourcePermission> getResourcePermissions(
+		String name) {
+
+		return _resourcePermissionLocalService.getResourcePermissions(name);
 	}
 
 	/**

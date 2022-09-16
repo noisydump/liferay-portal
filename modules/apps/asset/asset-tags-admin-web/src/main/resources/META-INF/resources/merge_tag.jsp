@@ -123,17 +123,25 @@ renderResponse.setTitle(LanguageUtil.get(request, "merge-tags"));
 	);
 
 	if (form && mergeTagNamesInputs && targetTagNameSelect) {
-		form.addEventListener('submit', function (event) {
-			var mergeTagNames = Array.from(mergeTagNamesInputs).map(function (
-				mergeTagNamesInput
-			) {
-				return mergeTagNamesInput.value;
-			});
+		form.addEventListener('submit', (event) => {
+			var mergeTagNames = Array.from(mergeTagNamesInputs).map(
+				(mergeTagNamesInput) => {
+					return mergeTagNamesInput.value;
+				}
+			);
 
 			if (mergeTagNames.length < 2) {
-				alert(
-					'<liferay-ui:message arguments="2" key="please-choose-at-least-x-tags" />'
-				);
+				if (Liferay.FeatureFlags['LPS-148659']) {
+					Liferay.Util.openAlertModal({
+						message:
+							'<liferay-ui:message arguments="2" key="please-choose-at-least-x-tags" />',
+					});
+				}
+				else {
+					alert(
+						'<liferay-ui:message arguments="2" key="please-choose-at-least-x-tags" />'
+					);
+				}
 
 				return;
 			}
@@ -144,9 +152,14 @@ renderResponse.setTitle(LanguageUtil.get(request, "merge-tags"));
 				targetTagNameSelect.value
 			);
 
-			if (confirm(mergeText)) {
-				submitForm(form);
-			}
+			Liferay.Util.openConfirmModal({
+				message: mergeText,
+				onConfirm: (isConfirmed) => {
+					if (isConfirmed) {
+						submitForm(form);
+					}
+				},
+			});
 		});
 	}
 </aui:script>

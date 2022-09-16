@@ -116,7 +116,7 @@ public class TokenLogoutAction extends Action {
 			}
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 		}
 	}
 
@@ -131,17 +131,12 @@ public class TokenLogoutAction extends Action {
 		_logoutProcessors.close();
 	}
 
-	@Reference(unbind = "-")
-	protected void setConfigurationProvider(
-		ConfigurationProvider configurationProvider) {
-
-		_configurationProvider = configurationProvider;
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		TokenLogoutAction.class);
 
+	@Reference
 	private ConfigurationProvider _configurationProvider;
+
 	private ServiceTrackerMap<String, LogoutProcessor> _logoutProcessors;
 
 	@Reference

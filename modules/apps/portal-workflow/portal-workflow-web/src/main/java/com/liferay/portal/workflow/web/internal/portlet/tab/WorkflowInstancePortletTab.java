@@ -34,7 +34,7 @@ import com.liferay.portal.workflow.portlet.tab.WorkflowPortletTab;
 import com.liferay.portal.workflow.web.internal.configuration.WorkflowInstanceWebConfiguration;
 import com.liferay.portal.workflow.web.internal.display.context.MyWorkflowInstanceViewDisplayContext;
 import com.liferay.portal.workflow.web.internal.display.context.WorkflowInstanceViewDisplayContext;
-import com.liferay.portal.workflow.web.internal.request.prepocessor.WorkflowPreprocessorHelper;
+import com.liferay.portal.workflow.web.internal.request.preprocessor.helper.WorkflowPreprocessorHelper;
 
 import java.util.Map;
 import java.util.Objects;
@@ -75,6 +75,11 @@ public class WorkflowInstancePortletTab extends BaseWorkflowPortletTab {
 	}
 
 	@Override
+	public ServletContext getServletContext() {
+		return servletContext;
+	}
+
+	@Override
 	public void prepareDispatch(
 			RenderRequest renderRequest, RenderResponse renderResponse)
 		throws PortletException {
@@ -103,14 +108,14 @@ public class WorkflowInstancePortletTab extends BaseWorkflowPortletTab {
 		throws PortletException {
 
 		try {
-			setWorkflowInstanceDisplayContextRenderRequestAttribute(
+			_setWorkflowInstanceDisplayContextRenderRequestAttribute(
 				renderRequest, renderResponse);
-			setWorkflowInstanceRenderRequestAttribute(renderRequest);
+			_setWorkflowInstanceRenderRequestAttribute(renderRequest);
 		}
 		catch (Exception exception) {
 			if (workflowPreprocessorHelper.isSessionErrorException(exception)) {
 				if (_log.isWarnEnabled()) {
-					_log.warn(exception, exception);
+					_log.warn(exception);
 				}
 
 				workflowPreprocessorHelper.hideDefaultErrorMessage(
@@ -136,16 +141,21 @@ public class WorkflowInstancePortletTab extends BaseWorkflowPortletTab {
 		return "/instance/view.jsp";
 	}
 
-	@Override
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.portal.workflow.web)",
-		unbind = "-"
-	)
-	protected void setServletContext(ServletContext servletContext) {
-		super.setServletContext(servletContext);
-	}
+	@Reference
+	protected Portal portal;
 
-	protected void setWorkflowInstanceDisplayContextRenderRequestAttribute(
+	@Reference(
+		target = "(osgi.web.symbolicname=com.liferay.portal.workflow.web)"
+	)
+	protected ServletContext servletContext;
+
+	protected volatile WorkflowInstanceWebConfiguration
+		workflowInstanceWebConfiguration;
+
+	@Reference
+	protected WorkflowPreprocessorHelper workflowPreprocessorHelper;
+
+	private void _setWorkflowInstanceDisplayContextRenderRequestAttribute(
 			RenderRequest renderRequest, RenderResponse renderResponse)
 		throws PortalException {
 
@@ -173,7 +183,7 @@ public class WorkflowInstancePortletTab extends BaseWorkflowPortletTab {
 		}
 	}
 
-	protected void setWorkflowInstanceRenderRequestAttribute(
+	private void _setWorkflowInstanceRenderRequestAttribute(
 			RenderRequest renderRequest)
 		throws PortalException {
 
@@ -192,15 +202,6 @@ public class WorkflowInstancePortletTab extends BaseWorkflowPortletTab {
 
 		renderRequest.setAttribute(WebKeys.WORKFLOW_INSTANCE, workflowInstance);
 	}
-
-	@Reference
-	protected Portal portal;
-
-	protected volatile WorkflowInstanceWebConfiguration
-		workflowInstanceWebConfiguration;
-
-	@Reference
-	protected WorkflowPreprocessorHelper workflowPreprocessorHelper;
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		WorkflowInstancePortletTab.class);

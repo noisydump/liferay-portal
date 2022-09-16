@@ -30,8 +30,8 @@ CommerceAddressDisplayContext commerceAddressDisplayContext = (CommerceAddressDi
 CommerceAddress commerceAddress = commerceAddressDisplayContext.getCommerceAddress();
 
 long commerceAddressId = commerceAddressDisplayContext.getCommerceAddressId();
-long commerceCountryId = commerceAddressDisplayContext.getCommerceCountryId();
-long commerceRegionId = commerceAddressDisplayContext.getCommerceRegionId();
+long countryId = commerceAddressDisplayContext.getCountryId();
+long regionId = commerceAddressDisplayContext.getRegionId();
 
 CommerceAccount commerceAccount = commerceAddressDisplayContext.getCommerceAccount();
 %>
@@ -71,15 +71,13 @@ CommerceAccount commerceAccount = commerceAddressDisplayContext.getCommerceAccou
 
 				<aui:input label="postal-code" name="zip" />
 
-				<aui:select label="country" name="commerceCountryId" showEmptyOption="<%= true %>">
+				<aui:select label="country" name="countryId" showEmptyOption="<%= true %>">
 
 					<%
-					List<CommerceCountry> commerceCountries = commerceAddressDisplayContext.getCommerceCountries();
-
-					for (CommerceCountry commerceCountry : commerceCountries) {
+					for (Country country : commerceAddressDisplayContext.getCountries()) {
 					%>
 
-						<aui:option label="<%= commerceCountry.getName(languageId) %>" selected="<%= (commerceAddress != null) && (commerceAddress.getCommerceCountryId() == commerceCountry.getCommerceCountryId()) %>" value="<%= commerceCountry.getCommerceCountryId() %>" />
+						<aui:option label="<%= country.getTitle(languageId) %>" selected="<%= (commerceAddress != null) && (commerceAddress.getCountryId() == country.getCountryId()) %>" value="<%= country.getCountryId() %>" />
 
 					<%
 					}
@@ -87,15 +85,13 @@ CommerceAccount commerceAccount = commerceAddressDisplayContext.getCommerceAccou
 
 				</aui:select>
 
-				<aui:select label="region" name="commerceRegionId" showEmptyOption="<%= true %>">
+				<aui:select label="region" name="regionId" showEmptyOption="<%= true %>">
 
 					<%
-					List<CommerceRegion> commerceRegions = commerceAddressDisplayContext.getCommerceRegions();
-
-					for (CommerceRegion commerceRegion : commerceRegions) {
+					for (Region region : commerceAddressDisplayContext.getRegions()) {
 					%>
 
-						<aui:option label="<%= commerceRegion.getName() %>" selected="<%= (commerceAddress != null) && (commerceAddress.getCommerceRegionId() == commerceRegion.getCommerceRegionId()) %>" value="<%= commerceRegion.getCommerceRegionId() %>" />
+						<aui:option label="<%= region.getName() %>" selected="<%= (commerceAddress != null) && (commerceAddress.getRegionId() == region.getRegionId()) %>" value="<%= region.getRegionId() %>" />
 
 					<%
 					}
@@ -105,9 +101,9 @@ CommerceAccount commerceAccount = commerceAddressDisplayContext.getCommerceAccou
 
 				<aui:input name="phoneNumber" />
 
-				<aui:input name="defaultBilling" />
+				<aui:input checked="<%= (commerceAddress != null) && ((commerceAddress.getType() == CommerceAddressConstants.ADDRESS_TYPE_BILLING) || (commerceAddress.getType() == CommerceAddressConstants.ADDRESS_TYPE_BILLING_AND_SHIPPING)) %>" name="defaultBilling" type="checkbox" />
 
-				<aui:input name="defaultShipping" />
+				<aui:input checked="<%= (commerceAddress != null) && ((commerceAddress.getType() == CommerceAddressConstants.ADDRESS_TYPE_BILLING_AND_SHIPPING) || (commerceAddress.getType() == CommerceAddressConstants.ADDRESS_TYPE_SHIPPING)) %>" name="defaultShipping" type="checkbox" />
 			</div>
 		</aui:fieldset>
 
@@ -122,12 +118,12 @@ CommerceAccount commerceAccount = commerceAddressDisplayContext.getCommerceAccou
 <aui:script use="aui-base,liferay-dynamic-select">
 	new Liferay.DynamicSelect([
 		{
-			select: '<portlet:namespace />commerceCountryId',
+			select: '<portlet:namespace />countryId',
 			selectData: function (callback) {
 				Liferay.Service(
-					'/commerce.commercecountry/get-billing-commerce-countries-by-channel-id',
+					'/commerce.commercecountrymanagerimpl/get-billing-countries-by-channel-id',
 					{
-						commerceChannelId: <%= commerceContext.getCommerceChannelId() %>,
+						channelId: <%= commerceContext.getCommerceChannelId() %>,
 						end: -1,
 						start: -1,
 					},
@@ -135,25 +131,25 @@ CommerceAccount commerceAccount = commerceAddressDisplayContext.getCommerceAccou
 				);
 			},
 			selectDesc: 'nameCurrentValue',
-			selectId: 'commerceCountryId',
+			selectId: 'countryId',
 			selectSort: '<%= true %>',
-			selectVal: '<%= commerceCountryId %>',
+			selectVal: '<%= countryId %>',
 		},
 		{
-			select: '<portlet:namespace />commerceRegionId',
+			select: '<portlet:namespace />regionId',
 			selectData: function (callback, selectKey) {
 				Liferay.Service(
-					'/commerce.commerceregion/get-commerce-regions',
+					'/region/get-regions',
 					{
 						active: true,
-						commerceCountryId: Number(selectKey),
+						countryId: Number(selectKey),
 					},
 					callback
 				);
 			},
 			selectDesc: 'name',
-			selectId: 'commerceRegionId',
-			selectVal: '<%= commerceRegionId %>',
+			selectId: 'regionId',
+			selectVal: '<%= regionId %>',
 		},
 	]);
 </aui:script>

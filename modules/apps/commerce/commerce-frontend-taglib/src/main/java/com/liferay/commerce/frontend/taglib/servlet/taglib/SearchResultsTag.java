@@ -22,11 +22,14 @@ import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolver;
 import com.liferay.frontend.taglib.soy.servlet.taglib.ComponentRendererTag;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.frontend.icons.FrontendIconsUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Marco Leo
@@ -37,8 +40,11 @@ public class SearchResultsTag extends ComponentRendererTag {
 	public int doStartTag() {
 		putValue("queryString", StringPool.BLANK);
 
-		CommerceContext commerceContext = (CommerceContext)request.getAttribute(
-			CommerceWebKeys.COMMERCE_CONTEXT);
+		HttpServletRequest httpServletRequest = getRequest();
+
+		CommerceContext commerceContext =
+			(CommerceContext)httpServletRequest.getAttribute(
+				CommerceWebKeys.COMMERCE_CONTEXT);
 
 		try {
 			CommerceAccount commerceAccount =
@@ -51,17 +57,19 @@ public class SearchResultsTag extends ComponentRendererTag {
 			}
 		}
 		catch (PortalException portalException) {
-			_log.error(portalException, portalException);
+			_log.error(portalException);
 		}
 
 		putValue(
 			"searchAPI",
-			PortalUtil.getPortalURL(request) + "/o/commerce-ui/search/");
+			PortalUtil.getPortalURL(httpServletRequest) +
+				PortalUtil.getPathContext() + "/o/commerce-ui/search/");
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
-		putValue("spritemap", themeDisplay.getPathThemeImages() + "/icons.svg");
+		putValue("spritemap", FrontendIconsUtil.getSpritemap(themeDisplay));
 
 		putValue("visible", false);
 

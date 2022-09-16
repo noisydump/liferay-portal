@@ -14,7 +14,8 @@
 
 package com.liferay.site.navigation.menu.web.internal.portlet.contributor;
 
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -41,7 +42,6 @@ import java.util.List;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
-import javax.portlet.PortletURL;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -119,26 +119,28 @@ public class SiteNavigationMenuEditPortletToolbarContributor
 		URLMenuItem urlMenuItem = new URLMenuItem();
 
 		urlMenuItem.setLabel(
-			LanguageUtil.get(
+			_language.get(
 				_portal.getHttpServletRequest(portletRequest), "edit"));
 
 		SiteNavigationMenu siteNavigationMenu =
 			_siteNavigationMenuLocalService.getSiteNavigationMenu(
 				siteNavigationMenuId);
 
-		Group group = _groupLocalService.getGroup(
-			siteNavigationMenu.getGroupId());
-
-		PortletURL portletURL = PortletProviderUtil.getPortletURL(
-			portletRequest, group, SiteNavigationMenu.class.getName(),
-			PortletProvider.Action.EDIT);
-
-		portletURL.setParameter("mvcPath", "/edit_site_navigation_menu.jsp");
-		portletURL.setParameter("redirect", themeDisplay.getURLCurrent());
-		portletURL.setParameter(
-			"siteNavigationMenuId", String.valueOf(siteNavigationMenuId));
-
-		urlMenuItem.setURL(portletURL.toString());
+		urlMenuItem.setURL(
+			PortletURLBuilder.create(
+				PortletProviderUtil.getPortletURL(
+					portletRequest,
+					_groupLocalService.getGroup(
+						siteNavigationMenu.getGroupId()),
+					SiteNavigationMenu.class.getName(),
+					PortletProvider.Action.EDIT)
+			).setMVCPath(
+				"/edit_site_navigation_menu.jsp"
+			).setRedirect(
+				themeDisplay.getURLCurrent()
+			).setParameter(
+				"siteNavigationMenuId", siteNavigationMenuId
+			).buildString());
 
 		return urlMenuItem;
 	}
@@ -179,6 +181,9 @@ public class SiteNavigationMenuEditPortletToolbarContributor
 
 	@Reference
 	private GroupLocalService _groupLocalService;
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private Portal _portal;

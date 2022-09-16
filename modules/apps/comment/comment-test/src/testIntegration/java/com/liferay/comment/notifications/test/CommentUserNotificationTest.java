@@ -36,7 +36,7 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.Constants;
-import com.liferay.portal.kernel.util.HashMapDictionary;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.notifications.test.util.BaseUserNotificationTestCase;
 import com.liferay.portal.test.mail.MailServiceTestUtil;
@@ -71,13 +71,11 @@ public class CommentUserNotificationTest extends BaseUserNotificationTestCase {
 	public void setUp() throws Exception {
 		super.setUp();
 
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(
-				group.getGroupId(), TestPropsValues.getUserId());
-
 		_entry = BlogsEntryLocalServiceUtil.addEntry(
 			TestPropsValues.getUserId(), RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), serviceContext);
+			RandomTestUtil.randomString(),
+			ServiceContextTestUtil.getServiceContext(
+				group.getGroupId(), TestPropsValues.getUserId()));
 	}
 
 	@Test
@@ -169,7 +167,7 @@ public class CommentUserNotificationTest extends BaseUserNotificationTestCase {
 			serviceContext, Constants.ADD);
 
 		return MBMessageLocalServiceUtil.addDiscussionMessage(
-			TestPropsValues.getUserId(), RandomTestUtil.randomString(),
+			null, TestPropsValues.getUserId(), RandomTestUtil.randomString(),
 			group.getGroupId(), BlogsEntry.class.getName(), _entry.getEntryId(),
 			thread.getThreadId(), MBMessageConstants.DEFAULT_PARENT_MESSAGE_ID,
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(50),
@@ -234,9 +232,10 @@ public class CommentUserNotificationTest extends BaseUserNotificationTestCase {
 			UnsafeRunnable<Exception> unsafeRunnable)
 		throws Exception {
 
-		Dictionary<String, Object> dictionary = new HashMapDictionary<>();
-
-		dictionary.put("discussionEmailCommentsAddedEnabled", false);
+		Dictionary<String, Object> dictionary =
+			HashMapDictionaryBuilder.<String, Object>put(
+				"discussionEmailCommentsAddedEnabled", false
+			).build();
 
 		try (ConfigurationTemporarySwapper configurationTemporarySwapper =
 				new ConfigurationTemporarySwapper(

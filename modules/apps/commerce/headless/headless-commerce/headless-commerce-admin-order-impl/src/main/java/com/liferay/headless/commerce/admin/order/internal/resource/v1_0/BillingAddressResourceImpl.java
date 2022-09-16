@@ -54,11 +54,11 @@ public class BillingAddressResourceImpl
 
 		CommerceOrder commerceOrder =
 			_commerceOrderService.fetchByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceOrder == null) {
 			throw new NoSuchOrderException(
-				"Unable to find Order with externalReferenceCode: " +
+				"Unable to find order with external reference code " +
 					externalReferenceCode);
 		}
 
@@ -99,15 +99,15 @@ public class BillingAddressResourceImpl
 
 		CommerceOrder commerceOrder =
 			_commerceOrderService.fetchByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceOrder == null) {
 			throw new NoSuchOrderException(
-				"Unable to find Order with externalReferenceCode: " +
+				"Unable to find order with external reference code " +
 					externalReferenceCode);
 		}
 
-		BillingAddressUtil.upsertBillingAddress(
+		BillingAddressUtil.addOrUpdateBillingAddress(
 			_commerceAddressService, _commerceOrderService, commerceOrder,
 			billingAddress, _serviceContextHelper.getServiceContext());
 
@@ -121,7 +121,7 @@ public class BillingAddressResourceImpl
 			Long id, BillingAddress billingAddress)
 		throws Exception {
 
-		BillingAddressUtil.upsertBillingAddress(
+		BillingAddressUtil.addOrUpdateBillingAddress(
 			_commerceAddressService, _commerceOrderService,
 			_commerceOrderService.getCommerceOrder(id), billingAddress,
 			_serviceContextHelper.getServiceContext());

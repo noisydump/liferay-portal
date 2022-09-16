@@ -17,6 +17,20 @@
 <%@ include file="/html/portal/init.jsp" %>
 
 <%
+String requestedSessionId = request.getRequestedSessionId();
+
+if (Validator.isNotNull(requestedSessionId) && !StringUtil.equals(requestedSessionId, session.getId())) {
+	response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+
+	if (_log.isWarnEnabled()) {
+		_log.warn("Unable to extend the HTTP session.");
+	}
+
+	if (_log.isDebugEnabled()) {
+		_log.debug("The requested session " + requestedSessionId + " is not the same as session " + session.getId());
+	}
+}
+
 for (String servletContextName : ServletContextPool.keySet()) {
 	ServletContext servletContext = ServletContextPool.get(servletContextName);
 
@@ -26,9 +40,7 @@ for (String servletContextName : ServletContextPool.keySet()) {
 
 	PortletApp portletApp = PortletLocalServiceUtil.getPortletApp(servletContextName);
 
-	List<Portlet> portlets = portletApp.getPortlets();
-
-	for (Portlet portlet : portlets) {
+	for (Portlet portlet : portletApp.getPortlets()) {
 		PortletConfig portletConfig = PortletConfigFactoryUtil.create(portlet, servletContext);
 
 		String invokerPortletName = portletConfig.getInitParameter(InvokerPortlet.INIT_INVOKER_PORTLET_NAME);
@@ -60,5 +72,5 @@ for (String servletContextName : ServletContextPool.keySet()) {
 %>
 
 <%!
-private static Log _log = LogFactoryUtil.getLog("portal_web.docroot.html.portal.extend_session_jsp");
+private static final Log _log = LogFactoryUtil.getLog("portal_web.docroot.html.portal.extend_session_jsp");
 %>

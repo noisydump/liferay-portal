@@ -15,7 +15,6 @@
 package com.liferay.depot.web.internal.display.context;
 
 import com.liferay.item.selector.ItemSelector;
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
@@ -26,12 +25,15 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.Collections;
 import java.util.List;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 import org.mockito.Mockito;
@@ -40,6 +42,11 @@ import org.mockito.Mockito;
  * @author Cristina González
  */
 public class DepotAdminMembershipsDisplayContextTest {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
@@ -63,7 +70,7 @@ public class DepotAdminMembershipsDisplayContextTest {
 
 	@Test
 	public void testGetDepotGroupsWithDepotAndCompanyAdmin() throws Exception {
-		Group group = getDepotGroup();
+		Group group = _getDepotGroup();
 
 		Mockito.when(
 			_user.getGroups()
@@ -77,7 +84,7 @@ public class DepotAdminMembershipsDisplayContextTest {
 					Mockito.mock(ItemSelector.class),
 					_getLiferayPortletRequest(
 						new ThemeDisplayBuilder().withPermissionChecker(
-							getPermissionCheckerWithCompanyAdmin()
+							_getPermissionCheckerWithCompanyAdmin()
 						).build()),
 					null);
 
@@ -91,7 +98,7 @@ public class DepotAdminMembershipsDisplayContextTest {
 	public void testGetDepotGroupsWithDepotAndNoCompanyAdminAndAssignMember()
 		throws Exception {
 
-		Group group = getDepotGroup();
+		Group group = _getDepotGroup();
 
 		Mockito.when(
 			_user.getGroups()
@@ -105,7 +112,7 @@ public class DepotAdminMembershipsDisplayContextTest {
 					Mockito.mock(ItemSelector.class),
 					_getLiferayPortletRequest(
 						new ThemeDisplayBuilder().withPermissionChecker(
-							getPermissionCheckerWithNoCompanyAdminAndAssignMember()
+							_getPermissionCheckerWithNoCompanyAdminAndAssignMember()
 						).build()),
 					null);
 
@@ -119,7 +126,7 @@ public class DepotAdminMembershipsDisplayContextTest {
 	public void testGetDepotGroupsWithDepotAndNoCompanyAdminAndNoAssignMember()
 		throws Exception {
 
-		Group group = getDepotGroup();
+		Group group = _getDepotGroup();
 
 		Mockito.when(
 			_user.getGroups()
@@ -133,7 +140,7 @@ public class DepotAdminMembershipsDisplayContextTest {
 					Mockito.mock(ItemSelector.class),
 					_getLiferayPortletRequest(
 						new ThemeDisplayBuilder().withPermissionChecker(
-							getPermissionCheckerWithNoCompanyAdminAndNoAssignMember()
+							_getPermissionCheckerWithNoCompanyAdminAndNoAssignMember()
 						).build()),
 					null);
 
@@ -145,7 +152,7 @@ public class DepotAdminMembershipsDisplayContextTest {
 
 	@Test
 	public void testGetDepotGroupsWithSite() throws Exception {
-		Group group = getSiteGroup();
+		Group group = _getSiteGroup();
 
 		Mockito.when(
 			_user.getGroups()
@@ -171,7 +178,7 @@ public class DepotAdminMembershipsDisplayContextTest {
 	public void testGetDepotsGroupCountWithDepotAndCompanyAdmin()
 		throws Exception {
 
-		Group group = getDepotGroup();
+		Group group = _getDepotGroup();
 
 		Mockito.when(
 			_user.getGroups()
@@ -185,7 +192,7 @@ public class DepotAdminMembershipsDisplayContextTest {
 					Mockito.mock(ItemSelector.class),
 					_getLiferayPortletRequest(
 						new ThemeDisplayBuilder().withPermissionChecker(
-							getPermissionCheckerWithCompanyAdmin()
+							_getPermissionCheckerWithCompanyAdmin()
 						).build()),
 					null);
 
@@ -207,7 +214,7 @@ public class DepotAdminMembershipsDisplayContextTest {
 					Mockito.mock(ItemSelector.class),
 					_getLiferayPortletRequest(
 						new ThemeDisplayBuilder().withPermissionChecker(
-							getPermissionCheckerWithCompanyAdmin()
+							_getPermissionCheckerWithCompanyAdmin()
 						).build()),
 					null);
 
@@ -215,7 +222,7 @@ public class DepotAdminMembershipsDisplayContextTest {
 			0, depotAdminMembershipsDisplayContext.getDepotGroupsCount());
 	}
 
-	protected Group getDepotGroup() {
+	private Group _getDepotGroup() {
 		Group group = Mockito.mock(Group.class);
 
 		Mockito.when(
@@ -226,79 +233,6 @@ public class DepotAdminMembershipsDisplayContextTest {
 
 		Mockito.when(
 			group.isDepot()
-		).thenReturn(
-			true
-		);
-
-		return group;
-	}
-
-	protected PermissionChecker getPermissionCheckerWithCompanyAdmin() {
-		PermissionChecker permissionChecker = Mockito.mock(
-			PermissionChecker.class);
-
-		Mockito.when(
-			permissionChecker.isCompanyAdmin()
-		).thenReturn(
-			true
-		);
-
-		return permissionChecker;
-	}
-
-	protected PermissionChecker
-			getPermissionCheckerWithNoCompanyAdminAndAssignMember()
-		throws PortalException {
-
-		PermissionChecker permissionChecker = Mockito.mock(
-			PermissionChecker.class);
-
-		Mockito.when(
-			permissionChecker.isCompanyAdmin()
-		).thenReturn(
-			false
-		);
-
-		Mockito.when(
-			GroupPermissionUtil.contains(
-				Mockito.any(PermissionChecker.class), Mockito.any(Group.class),
-				Mockito.anyString())
-		).thenReturn(
-			true
-		);
-
-		return permissionChecker;
-	}
-
-	protected PermissionChecker
-			getPermissionCheckerWithNoCompanyAdminAndNoAssignMember()
-		throws PortalException {
-
-		PermissionChecker permissionChecker = Mockito.mock(
-			PermissionChecker.class);
-
-		Mockito.when(
-			permissionChecker.isCompanyAdmin()
-		).thenReturn(
-			false
-		);
-
-		Mockito.when(
-			GroupPermissionUtil.contains(
-				Mockito.any(PermissionChecker.class), Mockito.any(Group.class),
-				Mockito.anyString())
-		).thenReturn(
-			false
-		);
-
-		return permissionChecker;
-	}
-
-	protected Group getSiteGroup() {
-		Group group = Mockito.mock(Group.class);
-
-		Mockito.when(
-			group.isSite()
 		).thenReturn(
 			true
 		);
@@ -321,13 +255,82 @@ public class DepotAdminMembershipsDisplayContextTest {
 		return liferayPortletRequest;
 	}
 
+	private PermissionChecker _getPermissionCheckerWithCompanyAdmin() {
+		PermissionChecker permissionChecker = Mockito.mock(
+			PermissionChecker.class);
+
+		Mockito.when(
+			permissionChecker.isCompanyAdmin()
+		).thenReturn(
+			true
+		);
+
+		return permissionChecker;
+	}
+
+	private PermissionChecker
+			_getPermissionCheckerWithNoCompanyAdminAndAssignMember()
+		throws Exception {
+
+		PermissionChecker permissionChecker = Mockito.mock(
+			PermissionChecker.class);
+
+		Mockito.when(
+			permissionChecker.isCompanyAdmin()
+		).thenReturn(
+			false
+		);
+
+		Mockito.when(
+			GroupPermissionUtil.contains(
+				Mockito.any(PermissionChecker.class), Mockito.any(Group.class),
+				Mockito.anyString())
+		).thenReturn(
+			true
+		);
+
+		return permissionChecker;
+	}
+
+	private PermissionChecker
+			_getPermissionCheckerWithNoCompanyAdminAndNoAssignMember()
+		throws Exception {
+
+		PermissionChecker permissionChecker = Mockito.mock(
+			PermissionChecker.class);
+
+		Mockito.when(
+			permissionChecker.isCompanyAdmin()
+		).thenReturn(
+			false
+		);
+
+		Mockito.when(
+			GroupPermissionUtil.contains(
+				Mockito.any(PermissionChecker.class), Mockito.any(Group.class),
+				Mockito.anyString())
+		).thenReturn(
+			false
+		);
+
+		return permissionChecker;
+	}
+
+	private Group _getSiteGroup() {
+		Group group = Mockito.mock(Group.class);
+
+		Mockito.when(
+			group.isSite()
+		).thenReturn(
+			true
+		);
+
+		return group;
+	}
+
 	private static User _user;
 
 	private static class ThemeDisplayBuilder {
-
-		public ThemeDisplayBuilder() {
-			_themeDisplay = new ThemeDisplay();
-		}
 
 		public ThemeDisplay build() {
 			return _themeDisplay;
@@ -341,7 +344,7 @@ public class DepotAdminMembershipsDisplayContextTest {
 			return this;
 		}
 
-		private final ThemeDisplay _themeDisplay;
+		private final ThemeDisplay _themeDisplay = new ThemeDisplay();
 
 	}
 

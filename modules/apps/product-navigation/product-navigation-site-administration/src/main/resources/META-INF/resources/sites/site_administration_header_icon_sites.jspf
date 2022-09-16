@@ -22,7 +22,7 @@
 		linkCssClass="icon-monospaced"
 		markupView="lexicon"
 		message="go-to-other-site-or-library"
-		url="javascript:;"
+		url="javascript:void(0);"
 	/>
 </div>
 
@@ -45,9 +45,11 @@ PortletURL itemSelectorURL = itemSelector.getItemSelectorURL(RequestBackedPortle
 		);
 
 		if (manageSitesLink) {
-			manageSitesLink.addEventListener('click', function (event) {
+			manageSitesLink.addEventListener('click', (event) => {
 				Liferay.Util.openSelectionModal({
-					customSelectEvent: true,
+					containerProps: {
+						className: 'cadmin',
+					},
 					id: '<portlet:namespace />selectSite',
 					onSelect: function (selectedItem) {
 						Liferay.Util.navigate(selectedItem.url);

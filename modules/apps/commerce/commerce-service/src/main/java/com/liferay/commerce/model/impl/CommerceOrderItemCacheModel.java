@@ -18,6 +18,7 @@ import com.liferay.commerce.model.CommerceOrderItem;
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.model.CacheModel;
+import com.liferay.portal.kernel.model.MVCCModel;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -35,7 +36,7 @@ import java.util.Date;
  * @generated
  */
 public class CommerceOrderItemCacheModel
-	implements CacheModel<CommerceOrderItem>, Externalizable {
+	implements CacheModel<CommerceOrderItem>, Externalizable, MVCCModel {
 
 	@Override
 	public boolean equals(Object object) {
@@ -50,8 +51,9 @@ public class CommerceOrderItemCacheModel
 		CommerceOrderItemCacheModel commerceOrderItemCacheModel =
 			(CommerceOrderItemCacheModel)object;
 
-		if (commerceOrderItemId ==
-				commerceOrderItemCacheModel.commerceOrderItemId) {
+		if ((commerceOrderItemId ==
+				commerceOrderItemCacheModel.commerceOrderItemId) &&
+			(mvccVersion == commerceOrderItemCacheModel.mvccVersion)) {
 
 			return true;
 		}
@@ -61,14 +63,30 @@ public class CommerceOrderItemCacheModel
 
 	@Override
 	public int hashCode() {
-		return HashUtil.hash(0, commerceOrderItemId);
+		int hashCode = HashUtil.hash(0, commerceOrderItemId);
+
+		return HashUtil.hash(hashCode, mvccVersion);
+	}
+
+	@Override
+	public long getMvccVersion() {
+		return mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		this.mvccVersion = mvccVersion;
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(115);
+		StringBundler sb = new StringBundler(127);
 
-		sb.append("{externalReferenceCode=");
+		sb.append("{mvccVersion=");
+		sb.append(mvccVersion);
+		sb.append(", uuid=");
+		sb.append(uuid);
+		sb.append(", externalReferenceCode=");
 		sb.append(externalReferenceCode);
 		sb.append(", commerceOrderItemId=");
 		sb.append(commerceOrderItemId);
@@ -92,12 +110,16 @@ public class CommerceOrderItemCacheModel
 		sb.append(commercePriceListId);
 		sb.append(", CPInstanceId=");
 		sb.append(CPInstanceId);
+		sb.append(", CPMeasurementUnitId=");
+		sb.append(CPMeasurementUnitId);
 		sb.append(", CProductId=");
 		sb.append(CProductId);
 		sb.append(", parentCommerceOrderItemId=");
 		sb.append(parentCommerceOrderItemId);
 		sb.append(", shippingAddressId=");
 		sb.append(shippingAddressId);
+		sb.append(", decimalQuantity=");
+		sb.append(decimalQuantity);
 		sb.append(", deliveryGroup=");
 		sb.append(deliveryGroup);
 		sb.append(", deliveryMaxSubscriptionCycles=");
@@ -112,6 +134,8 @@ public class CommerceOrderItemCacheModel
 		sb.append(depth);
 		sb.append(", discountAmount=");
 		sb.append(discountAmount);
+		sb.append(", discountManuallyAdjusted=");
+		sb.append(discountManuallyAdjusted);
 		sb.append(", discountPercentageLevel1=");
 		sb.append(discountPercentageLevel1);
 		sb.append(", discountPercentageLevel2=");
@@ -146,6 +170,8 @@ public class CommerceOrderItemCacheModel
 		sb.append(maxSubscriptionCycles);
 		sb.append(", name=");
 		sb.append(name);
+		sb.append(", priceManuallyAdjusted=");
+		sb.append(priceManuallyAdjusted);
 		sb.append(", printedNote=");
 		sb.append(printedNote);
 		sb.append(", promoPrice=");
@@ -192,6 +218,15 @@ public class CommerceOrderItemCacheModel
 		CommerceOrderItemImpl commerceOrderItemImpl =
 			new CommerceOrderItemImpl();
 
+		commerceOrderItemImpl.setMvccVersion(mvccVersion);
+
+		if (uuid == null) {
+			commerceOrderItemImpl.setUuid("");
+		}
+		else {
+			commerceOrderItemImpl.setUuid(uuid);
+		}
+
 		if (externalReferenceCode == null) {
 			commerceOrderItemImpl.setExternalReferenceCode("");
 		}
@@ -230,10 +265,12 @@ public class CommerceOrderItemCacheModel
 		commerceOrderItemImpl.setCommerceOrderId(commerceOrderId);
 		commerceOrderItemImpl.setCommercePriceListId(commercePriceListId);
 		commerceOrderItemImpl.setCPInstanceId(CPInstanceId);
+		commerceOrderItemImpl.setCPMeasurementUnitId(CPMeasurementUnitId);
 		commerceOrderItemImpl.setCProductId(CProductId);
 		commerceOrderItemImpl.setParentCommerceOrderItemId(
 			parentCommerceOrderItemId);
 		commerceOrderItemImpl.setShippingAddressId(shippingAddressId);
+		commerceOrderItemImpl.setDecimalQuantity(decimalQuantity);
 
 		if (deliveryGroup == null) {
 			commerceOrderItemImpl.setDeliveryGroup("");
@@ -265,6 +302,8 @@ public class CommerceOrderItemCacheModel
 
 		commerceOrderItemImpl.setDepth(depth);
 		commerceOrderItemImpl.setDiscountAmount(discountAmount);
+		commerceOrderItemImpl.setDiscountManuallyAdjusted(
+			discountManuallyAdjusted);
 		commerceOrderItemImpl.setDiscountPercentageLevel1(
 			discountPercentageLevel1);
 		commerceOrderItemImpl.setDiscountPercentageLevel2(
@@ -304,6 +343,8 @@ public class CommerceOrderItemCacheModel
 		else {
 			commerceOrderItemImpl.setName(name);
 		}
+
+		commerceOrderItemImpl.setPriceManuallyAdjusted(priceManuallyAdjusted);
 
 		if (printedNote == null) {
 			commerceOrderItemImpl.setPrintedNote("");
@@ -369,6 +410,8 @@ public class CommerceOrderItemCacheModel
 	public void readExternal(ObjectInput objectInput)
 		throws ClassNotFoundException, IOException {
 
+		mvccVersion = objectInput.readLong();
+		uuid = objectInput.readUTF();
 		externalReferenceCode = objectInput.readUTF();
 
 		commerceOrderItemId = objectInput.readLong();
@@ -390,11 +433,14 @@ public class CommerceOrderItemCacheModel
 
 		CPInstanceId = objectInput.readLong();
 
+		CPMeasurementUnitId = objectInput.readLong();
+
 		CProductId = objectInput.readLong();
 
 		parentCommerceOrderItemId = objectInput.readLong();
 
 		shippingAddressId = objectInput.readLong();
+		decimalQuantity = (BigDecimal)objectInput.readObject();
 		deliveryGroup = objectInput.readUTF();
 
 		deliveryMaxSubscriptionCycles = objectInput.readLong();
@@ -405,6 +451,8 @@ public class CommerceOrderItemCacheModel
 
 		depth = objectInput.readDouble();
 		discountAmount = (BigDecimal)objectInput.readObject();
+
+		discountManuallyAdjusted = objectInput.readBoolean();
 		discountPercentageLevel1 = (BigDecimal)objectInput.readObject();
 		discountPercentageLevel2 = (BigDecimal)objectInput.readObject();
 		discountPercentageLevel3 = (BigDecimal)objectInput.readObject();
@@ -430,6 +478,8 @@ public class CommerceOrderItemCacheModel
 
 		maxSubscriptionCycles = objectInput.readLong();
 		name = objectInput.readUTF();
+
+		priceManuallyAdjusted = objectInput.readBoolean();
 		printedNote = objectInput.readUTF();
 		promoPrice = (BigDecimal)objectInput.readObject();
 		promoPriceWithTaxAmount = (BigDecimal)objectInput.readObject();
@@ -461,6 +511,15 @@ public class CommerceOrderItemCacheModel
 
 	@Override
 	public void writeExternal(ObjectOutput objectOutput) throws IOException {
+		objectOutput.writeLong(mvccVersion);
+
+		if (uuid == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(uuid);
+		}
+
 		if (externalReferenceCode == null) {
 			objectOutput.writeUTF("");
 		}
@@ -494,11 +553,14 @@ public class CommerceOrderItemCacheModel
 
 		objectOutput.writeLong(CPInstanceId);
 
+		objectOutput.writeLong(CPMeasurementUnitId);
+
 		objectOutput.writeLong(CProductId);
 
 		objectOutput.writeLong(parentCommerceOrderItemId);
 
 		objectOutput.writeLong(shippingAddressId);
+		objectOutput.writeObject(decimalQuantity);
 
 		if (deliveryGroup == null) {
 			objectOutput.writeUTF("");
@@ -527,6 +589,8 @@ public class CommerceOrderItemCacheModel
 
 		objectOutput.writeDouble(depth);
 		objectOutput.writeObject(discountAmount);
+
+		objectOutput.writeBoolean(discountManuallyAdjusted);
 		objectOutput.writeObject(discountPercentageLevel1);
 		objectOutput.writeObject(discountPercentageLevel2);
 		objectOutput.writeObject(discountPercentageLevel3);
@@ -560,6 +624,8 @@ public class CommerceOrderItemCacheModel
 		else {
 			objectOutput.writeUTF(name);
 		}
+
+		objectOutput.writeBoolean(priceManuallyAdjusted);
 
 		if (printedNote == null) {
 			objectOutput.writeUTF("");
@@ -615,6 +681,8 @@ public class CommerceOrderItemCacheModel
 		objectOutput.writeDouble(width);
 	}
 
+	public long mvccVersion;
+	public String uuid;
 	public String externalReferenceCode;
 	public long commerceOrderItemId;
 	public long groupId;
@@ -627,9 +695,11 @@ public class CommerceOrderItemCacheModel
 	public long commerceOrderId;
 	public long commercePriceListId;
 	public long CPInstanceId;
+	public long CPMeasurementUnitId;
 	public long CProductId;
 	public long parentCommerceOrderItemId;
 	public long shippingAddressId;
+	public BigDecimal decimalQuantity;
 	public String deliveryGroup;
 	public long deliveryMaxSubscriptionCycles;
 	public int deliverySubscriptionLength;
@@ -637,6 +707,7 @@ public class CommerceOrderItemCacheModel
 	public String deliverySubscriptionTypeSettings;
 	public double depth;
 	public BigDecimal discountAmount;
+	public boolean discountManuallyAdjusted;
 	public BigDecimal discountPercentageLevel1;
 	public BigDecimal discountPercentageLevel2;
 	public BigDecimal discountPercentageLevel3;
@@ -654,6 +725,7 @@ public class CommerceOrderItemCacheModel
 	public boolean manuallyAdjusted;
 	public long maxSubscriptionCycles;
 	public String name;
+	public boolean priceManuallyAdjusted;
 	public String printedNote;
 	public BigDecimal promoPrice;
 	public BigDecimal promoPriceWithTaxAmount;

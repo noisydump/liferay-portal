@@ -21,11 +21,17 @@ import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.Role;
+import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.service.ResourceLocalService;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
@@ -49,6 +55,7 @@ import java.util.TreeSet;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Modified;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Brian Wing Shun Chan
@@ -69,7 +76,7 @@ public class SAPEntryLocalServiceImpl extends SAPEntryLocalServiceBaseImpl {
 
 		// Service access policy entry
 
-		User user = userLocalService.getUser(userId);
+		User user = _userLocalService.getUser(userId);
 		allowedServiceSignatures = normalizeServiceSignatures(
 			allowedServiceSignatures);
 
@@ -99,7 +106,7 @@ public class SAPEntryLocalServiceImpl extends SAPEntryLocalServiceBaseImpl {
 
 		// Resources
 
-		resourceLocalService.addResources(
+		_resourceLocalService.addResources(
 			sapEntry.getCompanyId(), 0, userId, SAPEntry.class.getName(),
 			sapEntry.getSapEntryId(), false, false, false);
 
@@ -119,8 +126,8 @@ public class SAPEntryLocalServiceImpl extends SAPEntryLocalServiceBaseImpl {
 			return;
 		}
 
-		long defaultUserId = userLocalService.getDefaultUserId(companyId);
-		Role guestRole = roleLocalService.getRole(
+		long defaultUserId = _userLocalService.getDefaultUserId(companyId);
+		Role guestRole = _roleLocalService.getRole(
 			companyId, RoleConstants.GUEST);
 
 		if (systemDefaultSAPEntry == null) {
@@ -135,7 +142,7 @@ public class SAPEntryLocalServiceImpl extends SAPEntryLocalServiceBaseImpl {
 				true, true, _sapConfiguration.systemDefaultSAPEntryName(),
 				titleMap, new ServiceContext());
 
-			resourcePermissionLocalService.setResourcePermissions(
+			_resourcePermissionLocalService.setResourcePermissions(
 				systemDefaultSAPEntry.getCompanyId(), SAPEntry.class.getName(),
 				ResourceConstants.SCOPE_INDIVIDUAL,
 				String.valueOf(systemDefaultSAPEntry.getSapEntryId()),
@@ -154,7 +161,7 @@ public class SAPEntryLocalServiceImpl extends SAPEntryLocalServiceBaseImpl {
 				false, true, _sapConfiguration.systemUserPasswordSAPEntryName(),
 				titleMap, new ServiceContext());
 
-			resourcePermissionLocalService.setResourcePermissions(
+			_resourcePermissionLocalService.setResourcePermissions(
 				systemUserPasswordSAPEntry.getCompanyId(),
 				SAPEntry.class.getName(), ResourceConstants.SCOPE_INDIVIDUAL,
 				String.valueOf(systemUserPasswordSAPEntry.getSapEntryId()),
@@ -170,6 +177,7 @@ public class SAPEntryLocalServiceImpl extends SAPEntryLocalServiceBaseImpl {
 	}
 
 	@Override
+	@SystemEvent(type = SystemEventConstants.TYPE_DELETE)
 	public SAPEntry deleteSAPEntry(SAPEntry sapEntry) throws PortalException {
 		if (sapEntry.isSystem() && !CompanyThreadLocal.isDeleteInProcess()) {
 			throw new RequiredSAPEntryException();
@@ -177,7 +185,7 @@ public class SAPEntryLocalServiceImpl extends SAPEntryLocalServiceBaseImpl {
 
 		sapEntry = super.deleteSAPEntry(sapEntry);
 
-		resourceLocalService.deleteResource(
+		_resourceLocalService.deleteResource(
 			sapEntry.getCompanyId(), SAPEntry.class.getName(),
 			ResourceConstants.SCOPE_INDIVIDUAL, sapEntry.getSapEntryId());
 
@@ -351,6 +359,18 @@ public class SAPEntryLocalServiceImpl extends SAPEntryLocalServiceBaseImpl {
 		}
 	}
 
+	@Reference
+	private ResourceLocalService _resourceLocalService;
+
+	@Reference
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
+
+	@Reference
+	private RoleLocalService _roleLocalService;
+
 	private volatile SAPConfiguration _sapConfiguration;
+
+	@Reference
+	private UserLocalService _userLocalService;
 
 }

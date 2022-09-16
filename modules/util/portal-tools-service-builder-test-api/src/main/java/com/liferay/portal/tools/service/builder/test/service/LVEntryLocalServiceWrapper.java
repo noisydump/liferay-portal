@@ -26,6 +26,10 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
 public class LVEntryLocalServiceWrapper
 	implements LVEntryLocalService, ServiceWrapper<LVEntryLocalService> {
 
+	public LVEntryLocalServiceWrapper() {
+		this(null);
+	}
+
 	public LVEntryLocalServiceWrapper(LVEntryLocalService lvEntryLocalService) {
 		_lvEntryLocalService = lvEntryLocalService;
 	}
@@ -240,6 +244,13 @@ public class LVEntryLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _lvEntryLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _lvEntryLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -669,7 +680,7 @@ public class LVEntryLocalServiceWrapper
 	 * <strong>Important:</strong> Inspect LVEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
 	 * </p>
 	 *
-	 * @param lvEntry the lv entry
+	 * @param draftLVEntry the lv entry
 	 * @return the lv entry that was updated
 	 */
 	@Override

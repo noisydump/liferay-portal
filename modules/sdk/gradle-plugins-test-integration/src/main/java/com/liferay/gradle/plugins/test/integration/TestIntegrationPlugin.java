@@ -16,14 +16,14 @@ package com.liferay.gradle.plugins.test.integration;
 
 import com.liferay.gradle.plugins.test.integration.internal.util.GradleUtil;
 import com.liferay.gradle.plugins.test.integration.internal.util.StringUtil;
-import com.liferay.gradle.plugins.test.integration.tasks.BaseAppServerTask;
-import com.liferay.gradle.plugins.test.integration.tasks.JmxRemotePortSpec;
-import com.liferay.gradle.plugins.test.integration.tasks.ManagerSpec;
-import com.liferay.gradle.plugins.test.integration.tasks.ModuleFrameworkBaseDirSpec;
-import com.liferay.gradle.plugins.test.integration.tasks.SetUpArquillianTask;
-import com.liferay.gradle.plugins.test.integration.tasks.SetUpTestableTomcatTask;
-import com.liferay.gradle.plugins.test.integration.tasks.StartTestableTomcatTask;
-import com.liferay.gradle.plugins.test.integration.tasks.StopTestableTomcatTask;
+import com.liferay.gradle.plugins.test.integration.task.BaseAppServerTask;
+import com.liferay.gradle.plugins.test.integration.task.JmxRemotePortSpec;
+import com.liferay.gradle.plugins.test.integration.task.ManagerSpec;
+import com.liferay.gradle.plugins.test.integration.task.ModuleFrameworkBaseDirSpec;
+import com.liferay.gradle.plugins.test.integration.task.SetUpArquillianTask;
+import com.liferay.gradle.plugins.test.integration.task.SetUpTestableTomcatTask;
+import com.liferay.gradle.plugins.test.integration.task.StartTestableTomcatTask;
+import com.liferay.gradle.plugins.test.integration.task.StopTestableTomcatTask;
 import com.liferay.gradle.util.FileUtil;
 import com.liferay.gradle.util.OSDetector;
 import com.liferay.gradle.util.copy.RenameDependencyClosure;
@@ -250,7 +250,7 @@ public class TestIntegrationPlugin implements Plugin<Project> {
 	}
 
 	private SetUpArquillianTask _addTaskSetUpArquillian(
-		final Project project, final SourceSet testIntegrationSourceSet,
+		Project project, final SourceSet testIntegrationSourceSet,
 		TestIntegrationTomcatExtension testIntegrationTomcatExtension) {
 
 		SetUpArquillianTask setUpArquillianTask = GradleUtil.addTask(
@@ -706,9 +706,7 @@ public class TestIntegrationPlugin implements Plugin<Project> {
 
 		test.dependsOn(closure);
 
-		test.jvmArgs(
-			"-Djava.net.preferIPv4Stack=true", "-Dliferay.mode=test",
-			"-Duser.timezone=GMT");
+		test.jvmArgs("-Djava.net.preferIPv4Stack=true", "-Duser.timezone=GMT");
 
 		Properties systemProperties = System.getProperties();
 

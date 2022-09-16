@@ -32,11 +32,12 @@ import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
@@ -52,7 +53,6 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
-import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
 import java.util.Arrays;
@@ -79,8 +79,20 @@ import org.osgi.service.component.annotations.ServiceScope;
 	properties = "OSGI-INF/liferay/rest/v2_0/data-list-view.properties",
 	scope = ServiceScope.PROTOTYPE, service = DataListViewResource.class
 )
-public class DataListViewResourceImpl
-	extends BaseDataListViewResourceImpl implements EntityModelResource {
+@CTAware
+public class DataListViewResourceImpl extends BaseDataListViewResourceImpl {
+
+	@Override
+	public void deleteDataDefinitionDataListView(Long dataDefinitionId)
+		throws Exception {
+
+		for (DEDataListView deDataListView :
+				_deDataListViewLocalService.getDEDataListViews(
+					dataDefinitionId)) {
+
+			_deleteDataListView(deDataListView.getDeDataListViewId());
+		}
+	}
 
 	@Override
 	public void deleteDataListView(Long dataListViewId) throws Exception {
@@ -94,18 +106,6 @@ public class DataListViewResourceImpl
 	}
 
 	@Override
-	public void deleteDataListViewsDataDefinition(Long dataDefinitionId)
-		throws Exception {
-
-		for (DEDataListView deDataListView :
-				_deDataListViewLocalService.getDEDataListViews(
-					dataDefinitionId)) {
-
-			_deleteDataListView(deDataListView.getDeDataListViewId());
-		}
-	}
-
-	@Override
 	public Page<DataListView> getDataDefinitionDataListViewsPage(
 			Long dataDefinitionId, String keywords, Pagination pagination,
 			Sort[] sorts)
@@ -113,7 +113,7 @@ public class DataListViewResourceImpl
 
 		if (pagination.getPageSize() > 250) {
 			throw new BadRequestException(
-				LanguageUtil.format(
+				_language.format(
 					contextAcceptLanguage.getPreferredLocale(),
 					"page-size-is-greater-than-x", 250));
 		}
@@ -151,7 +151,7 @@ public class DataListViewResourceImpl
 			Collections.emptyMap(),
 			booleanQuery -> {
 			},
-			null, DEDataListView.class, keywords, pagination,
+			null, DEDataListView.class.getName(), keywords, pagination,
 			queryConfig -> queryConfig.setSelectedFieldNames(
 				Field.ENTRY_CLASS_PK),
 			searchContext -> {
@@ -435,6 +435,9 @@ public class DataListViewResourceImpl
 
 	@Reference
 	private JSONFactory _jsonFactory;
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private Portal _portal;

@@ -14,8 +14,11 @@
 
 package com.liferay.trash.web.internal.portlet.configuration.icon;
 
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.configuration.icon.BasePortletConfigurationIcon;
 import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfigurationIcon;
 import com.liferay.portal.kernel.trash.TrashHandler;
@@ -24,10 +27,8 @@ import com.liferay.trash.constants.TrashPortletKeys;
 import com.liferay.trash.model.TrashEntry;
 import com.liferay.trash.web.internal.display.context.TrashDisplayContext;
 
-import javax.portlet.ActionRequest;
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
-import javax.portlet.PortletURL;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -46,8 +47,13 @@ public class DeleteTrashPortletConfigurationIcon
 	extends BasePortletConfigurationIcon {
 
 	@Override
+	public String getIconCssClass() {
+		return "trash";
+	}
+
+	@Override
 	public String getMessage(PortletRequest portletRequest) {
-		return LanguageUtil.get(
+		return _language.get(
 			getResourceBundle(getLocale(portletRequest)), "delete");
 	}
 
@@ -61,22 +67,24 @@ public class DeleteTrashPortletConfigurationIcon
 				_portal.getLiferayPortletRequest(portletRequest),
 				_portal.getLiferayPortletResponse(portletResponse));
 
-			PortletURL deleteURL = _portal.getControlPanelPortletURL(
-				portletRequest, TrashPortletKeys.TRASH,
-				PortletRequest.ACTION_PHASE);
-
-			deleteURL.setParameter(ActionRequest.ACTION_NAME, "deleteEntries");
-
-			deleteURL.setParameter(
-				"redirect", trashDisplayContext.getViewContentRedirectURL());
-			deleteURL.setParameter(
-				"className", trashDisplayContext.getClassName());
-			deleteURL.setParameter(
-				"classPK", String.valueOf(trashDisplayContext.getClassPK()));
-
-			return deleteURL.toString();
+			return PortletURLBuilder.create(
+				_portal.getControlPanelPortletURL(
+					portletRequest, TrashPortletKeys.TRASH,
+					PortletRequest.ACTION_PHASE)
+			).setActionName(
+				"deleteEntries"
+			).setRedirect(
+				trashDisplayContext.getViewContentRedirectURL()
+			).setParameter(
+				"className", trashDisplayContext.getClassName()
+			).setParameter(
+				"classPK", trashDisplayContext.getClassPK()
+			).buildString();
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return StringPool.BLANK;
@@ -94,11 +102,7 @@ public class DeleteTrashPortletConfigurationIcon
 
 		TrashHandler trashHandler = trashDisplayContext.getTrashHandler();
 
-		if (trashHandler == null) {
-			return false;
-		}
-
-		if (trashHandler.isContainerModel()) {
+		if ((trashHandler == null) || trashHandler.isContainerModel()) {
 			return false;
 		}
 
@@ -110,11 +114,21 @@ public class DeleteTrashPortletConfigurationIcon
 			}
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			return false;
 		}
 
 		return true;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		DeleteTrashPortletConfigurationIcon.class);
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private Portal _portal;

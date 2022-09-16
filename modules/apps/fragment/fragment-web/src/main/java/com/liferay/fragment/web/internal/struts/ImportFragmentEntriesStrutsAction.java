@@ -22,7 +22,7 @@ import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.servlet.ServletResponseUtil;
 import com.liferay.portal.kernel.struts.StrutsAction;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -69,7 +69,7 @@ public class ImportFragmentEntriesStrutsAction implements StrutsAction {
 		if (file == null) {
 			jsonObject.put(
 				"error",
-				LanguageUtil.get(
+				_language.get(
 					httpServletRequest,
 					"the-selected-file-is-not-a-valid-zip-file"));
 		}
@@ -88,9 +88,6 @@ public class ImportFragmentEntriesStrutsAction implements StrutsAction {
 			for (FragmentsImporterResultEntry fragmentsImporterResultEntry :
 					fragmentsImporterResultEntries) {
 
-				FragmentsImporterResultEntry.Status status =
-					fragmentsImporterResultEntry.getStatus();
-
 				fragmentEntriesImportResultJSONArray.put(
 					JSONUtil.put(
 						"errorMessage",
@@ -98,7 +95,13 @@ public class ImportFragmentEntriesStrutsAction implements StrutsAction {
 					).put(
 						"name", fragmentsImporterResultEntry.getName()
 					).put(
-						"status", status.getLabel()
+						"status",
+						() -> {
+							FragmentsImporterResultEntry.Status status =
+								fragmentsImporterResultEntry.getStatus();
+
+							return status.getLabel();
+						}
 					));
 			}
 
@@ -118,9 +121,6 @@ public class ImportFragmentEntriesStrutsAction implements StrutsAction {
 					layoutPageTemplatesImporterResultEntry :
 						layoutPageTemplatesImporterResultEntries) {
 
-				LayoutPageTemplatesImporterResultEntry.Status status =
-					layoutPageTemplatesImporterResultEntry.getStatus();
-
 				pageTemplatesImportResultJSONArray.put(
 					JSONUtil.put(
 						"errorMessage",
@@ -128,7 +128,15 @@ public class ImportFragmentEntriesStrutsAction implements StrutsAction {
 					).put(
 						"name", layoutPageTemplatesImporterResultEntry.getName()
 					).put(
-						"status", status.getLabel()
+						"status",
+						() -> {
+							LayoutPageTemplatesImporterResultEntry.Status
+								status =
+									layoutPageTemplatesImporterResultEntry.
+										getStatus();
+
+							return status.getLabel();
+						}
 					));
 			}
 
@@ -144,6 +152,9 @@ public class ImportFragmentEntriesStrutsAction implements StrutsAction {
 
 	@Reference
 	private FragmentsImporter _fragmentsImporter;
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private LayoutPageTemplatesImporter _layoutPageTemplatesImporter;

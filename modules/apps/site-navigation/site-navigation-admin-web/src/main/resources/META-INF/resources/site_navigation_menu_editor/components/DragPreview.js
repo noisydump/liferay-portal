@@ -12,6 +12,7 @@
  * details.
  */
 
+import {sub} from 'frontend-js-web';
 import React, {useEffect, useRef, useState} from 'react';
 import {useDragLayer} from 'react-dnd';
 
@@ -45,9 +46,9 @@ const getItemStyles = (currentOffset, ref, rtl) => {
 export default function DragPreview() {
 	const ref = useRef();
 
-	const {languageDirection, languageId} = useConstants();
+	const {languageId} = useConstants();
 	const items = useItems();
-	const rtl = languageDirection[languageId] === 'rtl';
+	const rtl = Liferay.Language.direction[languageId] === 'rtl';
 
 	const {currentOffset, isDragging, itemId} = useDragLayer((monitor) => ({
 		currentOffset: monitor.getClientOffset(),
@@ -67,7 +68,7 @@ export default function DragPreview() {
 
 			setLabel(
 				descendantsCount
-					? Liferay.Util.sub(
+					? sub(
 							Liferay.Language.get('x-elements'),
 							descendantsCount + 1
 					  )

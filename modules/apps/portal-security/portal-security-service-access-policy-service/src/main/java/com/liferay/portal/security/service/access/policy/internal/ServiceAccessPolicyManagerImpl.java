@@ -42,7 +42,7 @@ public class ServiceAccessPolicyManagerImpl
 
 	@Override
 	public String getDefaultApplicationServiceAccessPolicyName(long companyId) {
-		SAPConfiguration sapConfiguration = getSAPConfiguration(companyId);
+		SAPConfiguration sapConfiguration = _getSAPConfiguration(companyId);
 
 		if (sapConfiguration != null) {
 			return sapConfiguration.systemDefaultSAPEntryName();
@@ -53,7 +53,7 @@ public class ServiceAccessPolicyManagerImpl
 
 	@Override
 	public String getDefaultUserServiceAccessPolicyName(long companyId) {
-		SAPConfiguration sapConfiguration = getSAPConfiguration(companyId);
+		SAPConfiguration sapConfiguration = _getSAPConfiguration(companyId);
 
 		if (sapConfiguration != null) {
 			return sapConfiguration.systemUserPasswordSAPEntryName();
@@ -66,7 +66,7 @@ public class ServiceAccessPolicyManagerImpl
 	public List<ServiceAccessPolicy> getServiceAccessPolicies(
 		long companyId, int start, int end) {
 
-		return toServiceAccessPolicies(
+		return _toServiceAccessPolicies(
 			_sapEntryService.getCompanySAPEntries(companyId, start, end));
 	}
 
@@ -80,7 +80,7 @@ public class ServiceAccessPolicyManagerImpl
 		long companyId, String name) {
 
 		try {
-			return toServiceAccessPolicy(
+			return _toServiceAccessPolicy(
 				_sapEntryService.getSAPEntry(companyId, name));
 		}
 		catch (PortalException portalException) {
@@ -88,14 +88,14 @@ public class ServiceAccessPolicyManagerImpl
 			// LPS-52675
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(portalException, portalException);
+				_log.debug(portalException);
 			}
 
 			return null;
 		}
 	}
 
-	protected SAPConfiguration getSAPConfiguration(long companyId) {
+	private SAPConfiguration _getSAPConfiguration(long companyId) {
 		try {
 			return _configurationProvider.getConfiguration(
 				SAPConfiguration.class,
@@ -112,19 +112,7 @@ public class ServiceAccessPolicyManagerImpl
 		}
 	}
 
-	@Reference(unbind = "-")
-	protected void setConfigurationProvider(
-		ConfigurationProvider configurationProvider) {
-
-		_configurationProvider = configurationProvider;
-	}
-
-	@Reference(unbind = "-")
-	protected void setSAPEntryService(SAPEntryService sapEntryService) {
-		_sapEntryService = sapEntryService;
-	}
-
-	protected List<ServiceAccessPolicy> toServiceAccessPolicies(
+	private List<ServiceAccessPolicy> _toServiceAccessPolicies(
 		List<SAPEntry> sapEntries) {
 
 		if (sapEntries == null) {
@@ -135,7 +123,7 @@ public class ServiceAccessPolicyManagerImpl
 			sapEntries.size());
 
 		for (SAPEntry sapEntry : sapEntries) {
-			ServiceAccessPolicy serviceAccessPolicy = toServiceAccessPolicy(
+			ServiceAccessPolicy serviceAccessPolicy = _toServiceAccessPolicy(
 				sapEntry);
 
 			serviceAccessPolicies.add(serviceAccessPolicy);
@@ -144,7 +132,7 @@ public class ServiceAccessPolicyManagerImpl
 		return serviceAccessPolicies;
 	}
 
-	protected ServiceAccessPolicy toServiceAccessPolicy(SAPEntry sapEntry) {
+	private ServiceAccessPolicy _toServiceAccessPolicy(SAPEntry sapEntry) {
 		if (sapEntry != null) {
 			return new ServiceAccessPolicyImpl(sapEntry);
 		}
@@ -155,7 +143,10 @@ public class ServiceAccessPolicyManagerImpl
 	private static final Log _log = LogFactoryUtil.getLog(
 		ServiceAccessPolicyManagerImpl.class);
 
+	@Reference
 	private ConfigurationProvider _configurationProvider;
+
+	@Reference
 	private SAPEntryService _sapEntryService;
 
 }

@@ -15,20 +15,20 @@
 package com.liferay.portal.kernel.dao.orm;
 
 import com.liferay.petra.executor.PortalExecutorManager;
+import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.IndexWriterHelper;
-import com.liferay.registry.BasicRegistryImpl;
-import com.liferay.registry.Registry;
-import com.liferay.registry.RegistryUtil;
 
 import java.util.Arrays;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
+
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
 /**
  * @author André de Oliveira
@@ -37,13 +37,20 @@ public class IndexableActionableDynamicQueryTest {
 
 	@Before
 	public void setUp() {
-		MockitoAnnotations.initMocks(this);
+		BundleContext bundleContext = SystemBundleUtil.getBundleContext();
 
-		RegistryUtil.setRegistry(createRegistry());
+		_serviceRegistration = bundleContext.registerService(
+			PortalExecutorManager.class,
+			Mockito.mock(PortalExecutorManager.class), null);
 
 		indexableActionableDynamicQuery = new IndexableActionableDynamicQuery();
 
 		indexableActionableDynamicQuery.setIndexWriterHelper(indexWriterHelper);
+	}
+
+	@After
+	public void tearDown() {
+		_serviceRegistration.unregister();
 	}
 
 	@Test
@@ -68,16 +75,6 @@ public class IndexableActionableDynamicQueryTest {
 		verifyDocumentsUpdated(document1, document2, document3);
 	}
 
-	protected Registry createRegistry() {
-		Registry registry = new BasicRegistryImpl();
-
-		registry.registerService(
-			PortalExecutorManager.class,
-			Mockito.mock(PortalExecutorManager.class));
-
-		return registry;
-	}
-
 	protected void verifyDocumentsUpdated(Document... documents)
 		throws Exception {
 
@@ -89,21 +86,16 @@ public class IndexableActionableDynamicQueryTest {
 	}
 
 	protected void verifyNoDocumentsUpdated() {
-		Mockito.verifyZeroInteractions(indexWriterHelper);
+		Mockito.verifyNoInteractions(indexWriterHelper);
 	}
 
-	@Mock
-	protected Document document1;
-
-	@Mock
-	protected Document document2;
-
-	@Mock
-	protected Document document3;
-
+	protected Document document1 = Mockito.mock(Document.class);
+	protected Document document2 = Mockito.mock(Document.class);
+	protected Document document3 = Mockito.mock(Document.class);
 	protected IndexableActionableDynamicQuery indexableActionableDynamicQuery;
+	protected IndexWriterHelper indexWriterHelper = Mockito.mock(
+		IndexWriterHelper.class);
 
-	@Mock
-	protected IndexWriterHelper indexWriterHelper;
+	private ServiceRegistration<?> _serviceRegistration;
 
 }

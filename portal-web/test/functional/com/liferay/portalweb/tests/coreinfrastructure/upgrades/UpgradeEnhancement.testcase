@@ -1,11 +1,11 @@
-@component-name = "portal-upgrades"
+@component-name = "portal-database-upgrade-framework"
 definition {
 
 	property app.server.types = "tomcat";
 	property database.types = "mysql";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Upgrades Core Infrastructure";
+	property testray.main.component.name = "Database Upgrade Framework";
 
 	@priority = "4"
 	test DecrementCoreSchemaMajorVersion {
@@ -145,14 +145,15 @@ definition {
 
 	@ignore = "true"
 	@priority = "4"
+	@refactorneeded
 	test DirectUpgradeFromArchive6012 {
 		property data.archive.type = "data-archive-portal";
 		property portal.upgrades = "false";
 		property portal.version = "6.0.12";
-		property skip.start-app-server = "true";
 		property test.assert.warning.exceptions = "true";
 
 		var liferayHome = PropsUtil.get("liferay.home.dir.name");
+
 		var fileContent = FileUtil.read("${liferayHome}/tools/portal-tools-db-upgrade-client/logs/upgrade.log");
 
 		if (contains("${fileContent}", "You must first upgrade to Liferay Portal 6200")) {
@@ -163,15 +164,17 @@ definition {
 		}
 	}
 
+	@ignore = "true"
 	@priority = "4"
+	@refactorneeded
 	test DirectUpgradeFromArchive6130 {
 		property data.archive.type = "data-archive-portal";
 		property portal.upgrades = "false";
 		property portal.version = "6.1.30";
-		property skip.start-app-server = "true";
 		property test.assert.warning.exceptions = "true";
 
 		var liferayHome = PropsUtil.get("liferay.home.dir.name");
+
 		var fileContent = FileUtil.read("${liferayHome}/tools/portal-tools-db-upgrade-client/logs/upgrade.log");
 
 		if (contains("${fileContent}", "You must first upgrade to Liferay Portal 6200")) {
@@ -254,7 +257,6 @@ definition {
 
 			out.println("Schema Version is " + version.toString());
 		''';
-
 		var decrementSchemaVersionScript = '''
 			import com.liferay.portal.kernel.service.ReleaseLocalServiceUtil;
 			import com.liferay.portal.kernel.model.*;
@@ -291,7 +293,9 @@ definition {
 			script = "${printSchemaVersionScript}");
 
 		var originalSchemaVersion = selenium.getText("ServerAdministrationScript#OUTPUT_FIELD");
+
 		var originalSchemaVersion = StringUtil.extractLast("${originalSchemaVersion}", "Schema Version is");
+
 		var originalSchemaVersion = StringUtil.trim("${originalSchemaVersion}");
 
 		ServerAdministration.openServerAdmin();
@@ -310,6 +314,7 @@ definition {
 				value1 = "upgrade-legacy-database");
 
 			var liferayHome = PropsUtil.get("liferay.home.dir.name");
+
 			var fileContent = FileUtil.read("${liferayHome}/tools/portal-tools-db-upgrade-client/logs/upgrade.log");
 
 			if (!(contains("${fileContent}", "Completed upgrade process com.liferay.portal.upgrade.PortalUpgradeProcess"))) {

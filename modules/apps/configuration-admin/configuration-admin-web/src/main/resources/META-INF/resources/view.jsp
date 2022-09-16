@@ -29,11 +29,17 @@ ConfigurationScopeDisplayContext configurationScopeDisplayContext = Configuratio
 	<portlet:param name="redirect" value="<%= redirectURL %>" />
 </portlet:renderURL>
 
-<clay:management-toolbar-v2
-	searchActionURL="<%= searchURL %>"
-	selectable="<%= false %>"
-	showSearch="<%= true %>"
-/>
+<div class="sticky-top" style="top: 56px; z-index: 999;">
+	<clay:management-toolbar
+		searchActionURL="<%= searchURL %>"
+		selectable="<%= false %>"
+		showSearch="<%= true %>"
+	/>
+</div>
+
+<liferay-ui:success key='<%= ConfigurationAdminPortletKeys.SITE_SETTINGS + "requestProcessed" %>'>
+	<liferay-ui:message key="site-was-successfully-added" />
+</liferay-ui:success>
 
 <clay:container-fluid
 	cssClass="container-view"
@@ -51,9 +57,9 @@ ConfigurationScopeDisplayContext configurationScopeDisplayContext = Configuratio
 		%>
 
 			<li class="list-group-header">
-				<h3 class="list-group-header-title text-uppercase">
+				<p class="list-group-header-title text-uppercase">
 					<%= HtmlUtil.escape(configurationCategorySectionDisplay.getConfigurationCategorySectionLabel(locale)) %>
-				</h3>
+				</p>
 			</li>
 			<li class="list-group-card">
 				<ul class="list-group">

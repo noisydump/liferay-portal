@@ -27,26 +27,27 @@ import com.liferay.portal.search.query.Queries;
 import com.liferay.portal.search.query.Query;
 import com.liferay.portal.search.query.RangeTermQuery;
 import com.liferay.portal.search.script.Scripts;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.Mockito;
 
 /**
  * @author Wade Cao
  */
 public class ComplexQueryBuilderImplTest {
 
-	@Before
-	public void setUp() {
-		MockitoAnnotations.initMocks(this);
-	}
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Test
 	public void testFilterDateRangeTermQuery() {
@@ -199,8 +200,6 @@ public class ComplexQueryBuilderImplTest {
 		_complexQueryPartBuilderFactory =
 			new ComplexQueryPartBuilderFactoryImpl();
 	private final Queries _queries = new QueriesImpl();
-
-	@Mock
-	private Scripts _scripts;
+	private final Scripts _scripts = Mockito.mock(Scripts.class);
 
 }

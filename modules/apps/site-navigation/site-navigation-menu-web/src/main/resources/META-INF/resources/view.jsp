@@ -79,14 +79,14 @@
 			</c:when>
 			<c:otherwise>
 				<div class="alert alert-warning">
-					<liferay-ui:message arguments="<%= siteNavigationMenuDisplayContext.getSiteNavigationMenuTypeLabel() %>" key="there-is-no-x-available-for-the-current-site" />
+					<liferay-ui:message arguments="<%= siteNavigationMenuDisplayContext.getSelectSiteNavigationMenuTypeLabel() %>" key="there-is-no-x-available-for-the-current-site" />
 				</div>
 			</c:otherwise>
 		</c:choose>
 	</c:when>
 	<c:otherwise>
 		<div class="alert alert-info text-center">
-			<aui:a href="javascript:;" onClick="<%= portletDisplay.getURLConfigurationJS() %>"><liferay-ui:message key="configure" /></aui:a>
+			<aui:a href="javascript:void(0);" onClick="<%= portletDisplay.getURLConfigurationJS() %>"><liferay-ui:message key="configure" /></aui:a>
 		</div>
 	</c:otherwise>
 </c:choose>

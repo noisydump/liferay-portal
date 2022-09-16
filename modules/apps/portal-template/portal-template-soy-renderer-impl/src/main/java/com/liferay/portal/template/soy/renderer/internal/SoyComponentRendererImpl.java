@@ -14,11 +14,13 @@
 
 package com.liferay.portal.template.soy.renderer.internal;
 
+import com.liferay.frontend.js.module.launcher.JSModuleLauncher;
 import com.liferay.portal.kernel.template.TemplateException;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.template.soy.renderer.ComponentDescriptor;
 import com.liferay.portal.template.soy.renderer.SoyComponentRenderer;
 import com.liferay.portal.template.soy.renderer.SoyRenderer;
+import com.liferay.portal.template.soy.renderer.internal.helper.SoyComponentRendererHelper;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -57,11 +59,14 @@ public class SoyComponentRendererImpl implements SoyComponentRenderer {
 
 		SoyComponentRendererHelper soyComponentRendererHelper =
 			new SoyComponentRendererHelper(
-				httpServletRequest, componentDescriptor, context, _portal,
-				_soyRenderer);
+				httpServletRequest, componentDescriptor, context,
+				_jsModuleLauncher, _portal, _soyRenderer);
 
 		soyComponentRendererHelper.renderSoyComponent(writer);
 	}
+
+	@Reference
+	private JSModuleLauncher _jsModuleLauncher;
 
 	@Reference
 	private Portal _portal;

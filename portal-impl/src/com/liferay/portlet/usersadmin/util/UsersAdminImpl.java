@@ -14,6 +14,7 @@
 
 package com.liferay.portlet.usersadmin.util;
 
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.configuration.Filter;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -120,11 +121,15 @@ public class UsersAdminImpl implements UsersAdmin {
 			RenderResponse renderResponse)
 		throws Exception {
 
-		PortletURL portletURL = renderResponse.createRenderURL();
-
-		portletURL.setParameter("mvcRenderCommandName", "/users_admin/view");
-		portletURL.setParameter("toolbarItem", "view-all-organizations");
-		portletURL.setParameter("usersListView", "tree");
+		PortletURL portletURL = PortletURLBuilder.createRenderURL(
+			renderResponse
+		).setMVCRenderCommandName(
+			"/users_admin/view"
+		).setParameter(
+			"toolbarItem", "view-all-organizations"
+		).setParameter(
+			"usersListView", "tree"
+		).buildPortletURL();
 
 		List<Organization> ancestorOrganizations = organization.getAncestors();
 
@@ -478,30 +483,33 @@ public class UsersAdminImpl implements UsersAdmin {
 			actionRequest, "addressPrimary");
 
 		for (int addressesIndex : addressesIndexes) {
+			long countryId = ParamUtil.getLong(
+				actionRequest, "addressCountryId" + addressesIndex);
+			String city = ParamUtil.getString(
+				actionRequest, "addressCity" + addressesIndex);
 			String street1 = ParamUtil.getString(
 				actionRequest, "addressStreet1_" + addressesIndex);
 			String street2 = ParamUtil.getString(
 				actionRequest, "addressStreet2_" + addressesIndex);
 			String street3 = ParamUtil.getString(
 				actionRequest, "addressStreet3_" + addressesIndex);
-			String city = ParamUtil.getString(
-				actionRequest, "addressCity" + addressesIndex);
 			String zip = ParamUtil.getString(
 				actionRequest, "addressZip" + addressesIndex);
-			long countryId = ParamUtil.getLong(
-				actionRequest, "addressCountryId" + addressesIndex);
 
-			if (Validator.isNull(street1) && Validator.isNull(street2) &&
-				Validator.isNull(street3) && Validator.isNull(city) &&
-				Validator.isNull(zip) && (countryId == 0)) {
+			if ((countryId == 0) && Validator.isNull(city) &&
+				Validator.isNull(street1) && Validator.isNull(street2) &&
+				Validator.isNull(street3) && Validator.isNull(zip)) {
 
 				continue;
 			}
 
+			long addressId = ParamUtil.getLong(
+				actionRequest, "addressId" + addressesIndex);
+
+			long listTypeId = ParamUtil.getLong(
+				actionRequest, "addressListTypeId" + addressesIndex);
 			long regionId = ParamUtil.getLong(
 				actionRequest, "addressRegionId" + addressesIndex);
-			long typeId = ParamUtil.getLong(
-				actionRequest, "addressTypeId" + addressesIndex);
 			boolean mailing = ParamUtil.getBoolean(
 				actionRequest, "addressMailing" + addressesIndex);
 
@@ -511,21 +519,18 @@ public class UsersAdminImpl implements UsersAdmin {
 				primary = true;
 			}
 
-			long addressId = ParamUtil.getLong(
-				actionRequest, "addressId" + addressesIndex);
-
 			Address address = AddressLocalServiceUtil.createAddress(addressId);
 
+			address.setCountryId(countryId);
+			address.setListTypeId(listTypeId);
+			address.setRegionId(regionId);
+			address.setCity(city);
+			address.setMailing(mailing);
+			address.setPrimary(primary);
 			address.setStreet1(street1);
 			address.setStreet2(street2);
 			address.setStreet3(street3);
-			address.setCity(city);
 			address.setZip(zip);
-			address.setRegionId(regionId);
-			address.setCountryId(countryId);
-			address.setTypeId(typeId);
-			address.setMailing(mailing);
-			address.setPrimary(primary);
 
 			addresses.add(address);
 		}
@@ -634,7 +639,7 @@ public class UsersAdminImpl implements UsersAdmin {
 
 	@Override
 	public Long[] getOrganizationIds(List<Organization> organizations) {
-		if ((organizations == null) || organizations.isEmpty()) {
+		if (ListUtil.isEmpty(organizations)) {
 			return new Long[0];
 		}
 
@@ -1243,14 +1248,14 @@ public class UsersAdminImpl implements UsersAdmin {
 			String zip = address.getZip();
 			long regionId = address.getRegionId();
 			long countryId = address.getCountryId();
-			long typeId = address.getTypeId();
+			long listTypeId = address.getListTypeId();
 			boolean mailing = address.isMailing();
 			boolean primary = address.isPrimary();
 
 			if (addressId <= 0) {
 				address = AddressServiceUtil.addAddress(
 					className, classPK, street1, street2, street3, city, zip,
-					regionId, countryId, typeId, mailing, primary,
+					regionId, countryId, listTypeId, mailing, primary,
 					new ServiceContext());
 
 				addressId = address.getAddressId();
@@ -1258,7 +1263,7 @@ public class UsersAdminImpl implements UsersAdmin {
 			else {
 				AddressServiceUtil.updateAddress(
 					addressId, street1, street2, street3, city, zip, regionId,
-					countryId, typeId, mailing, primary);
+					countryId, listTypeId, mailing, primary);
 			}
 
 			addressIds.add(addressId);

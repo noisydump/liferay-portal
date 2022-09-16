@@ -14,28 +14,25 @@
 
 package com.liferay.commerce.item.selector.web.internal.display.context;
 
+import com.liferay.commerce.country.CommerceCountryManager;
 import com.liferay.commerce.inventory.model.CommerceInventoryWarehouse;
 import com.liferay.commerce.inventory.service.CommerceInventoryWarehouseService;
 import com.liferay.commerce.item.selector.web.internal.search.CommerceInventoryWarehouseChecker;
-import com.liferay.commerce.model.CommerceCountry;
-import com.liferay.commerce.service.CommerceCountryService;
 import com.liferay.commerce.util.CommerceUtil;
-import com.liferay.frontend.taglib.servlet.taglib.ManagementBarFilterItem;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.portlet.PortletURLUtil;
-import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.model.Country;
+import com.liferay.portal.kernel.service.CountryService;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
-import javax.portlet.PortletException;
 import javax.portlet.PortletURL;
 
 import javax.servlet.http.HttpServletRequest;
@@ -49,54 +46,46 @@ public class CommerceInventoryWarehouseItemSelectorViewDisplayContext
 		<CommerceInventoryWarehouse> {
 
 	public CommerceInventoryWarehouseItemSelectorViewDisplayContext(
-		CommerceCountryService commerceCountryService,
+		CommerceCountryManager commerceCountryManager,
 		CommerceInventoryWarehouseService commerceInventoryWarehouseService,
-		HttpServletRequest httpServletRequest, PortletURL portletURL,
-		String itemSelectedEventName, boolean search) {
+		CountryService countryService, HttpServletRequest httpServletRequest,
+		PortletURL portletURL, String itemSelectedEventName, boolean search) {
 
 		super(httpServletRequest, portletURL, itemSelectedEventName);
 
-		_commerceCountryService = commerceCountryService;
+		_commerceCountryManager = commerceCountryManager;
 		_commerceInventoryWarehouseService = commerceInventoryWarehouseService;
+		_countryService = countryService;
 		_search = search;
 	}
 
-	public long getCommerceCountryId() {
-		return ParamUtil.getLong(
-			cpRequestHelper.getRenderRequest(), "commerceCountryId", -1);
+	public List<Country> getCountries() {
+		return _commerceCountryManager.getWarehouseCountries(
+			cpRequestHelper.getCompanyId(), false);
 	}
 
-	public List<ManagementBarFilterItem> getManagementBarFilterItems()
-		throws PortalException, PortletException {
+	public long getCountryId() {
+		return ParamUtil.getLong(
+			cpRequestHelper.getRenderRequest(), "countryId", -1);
+	}
 
-		List<CommerceCountry> commerceCountries =
-			_commerceCountryService.getWarehouseCommerceCountries(
-				cpRequestHelper.getCompanyId(), false);
+	public String getCountryName() {
+		Country country = _countryService.fetchCountry(getCountryId());
 
-		List<ManagementBarFilterItem> managementBarFilterItems =
-			new ArrayList<>(commerceCountries.size() + 2);
-
-		managementBarFilterItems.add(getManagementBarFilterItem(-1, "all"));
-		managementBarFilterItems.add(getManagementBarFilterItem(0, "none"));
-
-		for (CommerceCountry commerceCountry : commerceCountries) {
-			managementBarFilterItems.add(
-				getManagementBarFilterItem(
-					commerceCountry.getCommerceCountryId(),
-					commerceCountry.getName(cpRequestHelper.getLocale())));
+		if (country == null) {
+			return StringPool.BLANK;
 		}
 
-		return managementBarFilterItems;
+		return country.getName(cpRequestHelper.getLocale());
 	}
 
 	@Override
 	public PortletURL getPortletURL() {
-		PortletURL portletURL = super.getPortletURL();
-
-		portletURL.setParameter(
-			"commerceCountryId", String.valueOf(getCommerceCountryId()));
-
-		return portletURL;
+		return PortletURLBuilder.create(
+			super.getPortletURL()
+		).setParameter(
+			"countryId", getCountryId()
+		).buildPortletURL();
 	}
 
 	@Override
@@ -107,7 +96,7 @@ public class CommerceInventoryWarehouseItemSelectorViewDisplayContext
 			return searchContainer;
 		}
 
-		long commerceCountryId = getCommerceCountryId();
+		long countryId = getCountryId();
 
 		String emptyResultsMessage = "there-are-no-warehouses";
 
@@ -115,13 +104,12 @@ public class CommerceInventoryWarehouseItemSelectorViewDisplayContext
 			emptyResultsMessage = "no-warehouses-were-found";
 		}
 
-		CommerceCountry commerceCountry = null;
+		Country country = null;
 
-		if (commerceCountryId > 0) {
+		if (countryId > 0) {
 			emptyResultsMessage += "-in-x";
 
-			commerceCountry = _commerceCountryService.getCommerceCountry(
-				commerceCountryId);
+			country = _countryService.getCountry(countryId);
 
 			Locale locale = cpRequestHelper.getLocale();
 
@@ -129,108 +117,75 @@ public class CommerceInventoryWarehouseItemSelectorViewDisplayContext
 				"content.Language", locale, getClass());
 
 			emptyResultsMessage = LanguageUtil.format(
-				resourceBundle, emptyResultsMessage,
-				commerceCountry.getName(locale), false);
+				resourceBundle, emptyResultsMessage, country.getName(locale),
+				false);
 		}
 
 		searchContainer = new SearchContainer<>(
 			cpRequestHelper.getRenderRequest(), getPortletURL(), null,
 			emptyResultsMessage);
 
-		String orderByCol = getOrderByCol();
-		String orderByType = getOrderByType();
-
-		OrderByComparator<CommerceInventoryWarehouse> orderByComparator =
+		searchContainer.setOrderByCol(getOrderByCol());
+		searchContainer.setOrderByComparator(
 			CommerceUtil.getCommerceInventoryWarehouseOrderByComparator(
-				orderByCol, orderByType);
+				getOrderByCol(), getOrderByType()));
+		searchContainer.setOrderByType(getOrderByType());
 
-		searchContainer.setOrderByCol(orderByCol);
-		searchContainer.setOrderByComparator(orderByComparator);
-		searchContainer.setOrderByType(orderByType);
+		String a2 = country.getA2();
+
+		if (_search && (country != null)) {
+			searchContainer.setResultsAndTotal(
+				() -> _commerceInventoryWarehouseService.search(
+					cpRequestHelper.getCompanyId(), true, a2, getKeywords(),
+					searchContainer.getStart(), searchContainer.getEnd(),
+					CommerceUtil.getCommerceInventoryWarehouseSort(
+						searchContainer.getOrderByCol(),
+						searchContainer.getOrderByType())),
+				_commerceInventoryWarehouseService.
+					searchCommerceInventoryWarehousesCount(
+						cpRequestHelper.getCompanyId(), true, a2,
+						getKeywords()));
+		}
+		else if (country != null) {
+			searchContainer.setResultsAndTotal(
+				() ->
+					_commerceInventoryWarehouseService.
+						getCommerceInventoryWarehouses(
+							cpRequestHelper.getCompanyId(), true, a2,
+							searchContainer.getStart(),
+							searchContainer.getEnd(),
+							searchContainer.getOrderByComparator()),
+				_commerceInventoryWarehouseService.
+					getCommerceInventoryWarehousesCount(
+						cpRequestHelper.getCompanyId(), true, a2));
+		}
+
 		searchContainer.setRowChecker(
 			new CommerceInventoryWarehouseChecker(
 				cpRequestHelper.getRenderResponse(),
-				getCheckedCommerceInventoryWarehouseIds(),
-				getDisabledCommerceInventoryWarehouseIds()));
+				_getCheckedCommerceInventoryWarehouseIds(),
+				_getDisabledCommerceInventoryWarehouseIds()));
 		searchContainer.setSearch(_search);
-
-		int total = 0;
-		List<CommerceInventoryWarehouse> results = Collections.emptyList();
-
-		if (searchContainer.isSearch() && (commerceCountry != null)) {
-			total =
-				_commerceInventoryWarehouseService.
-					searchCommerceInventoryWarehousesCount(
-						cpRequestHelper.getCompanyId(), true,
-						commerceCountry.getTwoLettersISOCode(), getKeywords());
-
-			results =
-				_commerceInventoryWarehouseService.
-					searchCommerceInventoryWarehouses(
-						cpRequestHelper.getCompanyId(), true,
-						commerceCountry.getTwoLettersISOCode(), getKeywords(),
-						searchContainer.getStart(), searchContainer.getEnd(),
-						CommerceUtil.getCommerceInventoryWarehouseSort(
-							orderByCol, orderByType));
-		}
-		else if (commerceCountry != null) {
-			total =
-				_commerceInventoryWarehouseService.
-					getCommerceInventoryWarehousesCount(
-						cpRequestHelper.getCompanyId(), true,
-						commerceCountry.getTwoLettersISOCode());
-
-			results =
-				_commerceInventoryWarehouseService.
-					getCommerceInventoryWarehouses(
-						cpRequestHelper.getCompanyId(), true,
-						commerceCountry.getTwoLettersISOCode(),
-						searchContainer.getStart(), searchContainer.getEnd(),
-						orderByComparator);
-		}
-
-		searchContainer.setTotal(total);
-		searchContainer.setResults(results);
 
 		return searchContainer;
 	}
 
-	protected long[] getCheckedCommerceInventoryWarehouseIds() {
+	private long[] _getCheckedCommerceInventoryWarehouseIds() {
 		return ParamUtil.getLongValues(
 			cpRequestHelper.getRenderRequest(),
 			"checkedCommerceInventoryWarehouseIds");
 	}
 
-	protected long[] getDisabledCommerceInventoryWarehouseIds() {
+	private long[] _getDisabledCommerceInventoryWarehouseIds() {
 		return ParamUtil.getLongValues(
 			cpRequestHelper.getRenderRequest(),
 			"disabledCommerceInventoryWarehouseIds");
 	}
 
-	protected ManagementBarFilterItem getManagementBarFilterItem(
-			long commerceCountryId, String label)
-		throws PortletException {
-
-		boolean active = false;
-
-		if (getCommerceCountryId() == commerceCountryId) {
-			active = true;
-		}
-
-		PortletURL portletURL = PortletURLUtil.clone(
-			getPortletURL(), cpRequestHelper.getRenderResponse());
-
-		portletURL.setParameter(
-			"commerceCountryId", String.valueOf(commerceCountryId));
-
-		return new ManagementBarFilterItem(
-			active, String.valueOf(commerceCountryId), label,
-			portletURL.toString());
-	}
-
-	private final CommerceCountryService _commerceCountryService;
+	private final CommerceCountryManager _commerceCountryManager;
 	private final CommerceInventoryWarehouseService
 		_commerceInventoryWarehouseService;
+	private final CountryService _countryService;
 	private final boolean _search;
 
 }

@@ -25,8 +25,10 @@ import org.osgi.service.component.annotations.Deactivate;
 
 /**
  * @author Alessio Antonio Rendina
+ * @deprecated As of Mueller (7.2.x), , with no direct replacement
  */
 @Component(service = ItemSelectorCriterionHandler.class)
+@Deprecated
 public class RoleItemSelectorCriterionHandler
 	extends BaseItemSelectorCriterionHandler<RoleItemSelectorCriterion> {
 

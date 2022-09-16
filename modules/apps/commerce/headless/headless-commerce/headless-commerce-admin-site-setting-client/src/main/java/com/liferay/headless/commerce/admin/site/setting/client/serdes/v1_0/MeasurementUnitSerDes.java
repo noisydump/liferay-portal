@@ -55,14 +55,28 @@ public class MeasurementUnitSerDes {
 
 		sb.append("{");
 
-		if (measurementUnit.getGroupId() != null) {
+		if (measurementUnit.getCompanyId() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"groupId\": ");
+			sb.append("\"companyId\": ");
 
-			sb.append(measurementUnit.getGroupId());
+			sb.append(measurementUnit.getCompanyId());
+		}
+
+		if (measurementUnit.getExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"externalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(measurementUnit.getExternalReferenceCode()));
+
+			sb.append("\"");
 		}
 
 		if (measurementUnit.getId() != null) {
@@ -136,7 +150,11 @@ public class MeasurementUnitSerDes {
 
 			sb.append("\"type\": ");
 
-			sb.append(measurementUnit.getType());
+			sb.append("\"");
+
+			sb.append(_escape(measurementUnit.getType()));
+
+			sb.append("\"");
 		}
 
 		sb.append("}");
@@ -158,11 +176,21 @@ public class MeasurementUnitSerDes {
 
 		Map<String, String> map = new TreeMap<>();
 
-		if (measurementUnit.getGroupId() == null) {
-			map.put("groupId", null);
+		if (measurementUnit.getCompanyId() == null) {
+			map.put("companyId", null);
 		}
 		else {
-			map.put("groupId", String.valueOf(measurementUnit.getGroupId()));
+			map.put(
+				"companyId", String.valueOf(measurementUnit.getCompanyId()));
+		}
+
+		if (measurementUnit.getExternalReferenceCode() == null) {
+			map.put("externalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"externalReferenceCode",
+				String.valueOf(measurementUnit.getExternalReferenceCode()));
 		}
 
 		if (measurementUnit.getId() == null) {
@@ -235,10 +263,18 @@ public class MeasurementUnitSerDes {
 			MeasurementUnit measurementUnit, String jsonParserFieldName,
 			Object jsonParserFieldValue) {
 
-			if (Objects.equals(jsonParserFieldName, "groupId")) {
+			if (Objects.equals(jsonParserFieldName, "companyId")) {
 				if (jsonParserFieldValue != null) {
-					measurementUnit.setGroupId(
+					measurementUnit.setCompanyId(
 						Long.valueOf((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "externalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					measurementUnit.setExternalReferenceCode(
+						(String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "id")) {
@@ -278,12 +314,8 @@ public class MeasurementUnitSerDes {
 			}
 			else if (Objects.equals(jsonParserFieldName, "type")) {
 				if (jsonParserFieldValue != null) {
-					measurementUnit.setType(
-						Integer.valueOf((String)jsonParserFieldValue));
+					measurementUnit.setType((String)jsonParserFieldValue);
 				}
-			}
-			else if (jsonParserFieldName.equals("status")) {
-				throw new IllegalArgumentException();
 			}
 		}
 
@@ -313,7 +345,7 @@ public class MeasurementUnitSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -349,7 +381,7 @@ public class MeasurementUnitSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

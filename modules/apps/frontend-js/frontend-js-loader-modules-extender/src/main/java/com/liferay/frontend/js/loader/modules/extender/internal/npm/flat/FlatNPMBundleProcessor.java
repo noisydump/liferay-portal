@@ -20,27 +20,28 @@ import com.liferay.frontend.js.loader.modules.extender.npm.JSModuleAlias;
 import com.liferay.frontend.js.loader.modules.extender.npm.JSPackageDependency;
 import com.liferay.frontend.js.loader.modules.extender.npm.ModuleNameUtil;
 import com.liferay.petra.executor.PortalExecutorManager;
+import com.liferay.petra.io.Deserializer;
+import com.liferay.petra.io.Serializer;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.io.Deserializer;
-import com.liferay.portal.kernel.io.Serializer;
 import com.liferay.portal.kernel.json.JSONFactory;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
 import java.net.URL;
 
 import java.nio.ByteBuffer;
-import java.nio.file.Files;
-import java.nio.file.Path;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -225,15 +226,24 @@ public class FlatNPMBundleProcessor implements JSBundleProcessor {
 
 		File cacheFile = bundleContext.getDataFile("cache_json_objects");
 
-		Path cacheFilePath = cacheFile.toPath();
-
-		if (Files.exists(cacheFilePath)) {
+		if (cacheFile.exists()) {
 			try {
 				Deserializer deserializer = new Deserializer(
-					ByteBuffer.wrap(Files.readAllBytes(cacheFilePath)));
+					ByteBuffer.wrap(FileUtil.getBytes(cacheFile)));
 
 				if (deserializer.readLong() == bundle.getLastModified()) {
-					return deserializer.readObject();
+					Map<URL, JSONObject> jsonObjects = new HashMap<>();
+
+					int size = deserializer.readInt();
+
+					for (int i = 0; i < size; i++) {
+						jsonObjects.put(
+							new URL(deserializer.readString()),
+							JSONFactoryUtil.createJSONObject(
+								deserializer.readString()));
+					}
+
+					return jsonObjects;
 				}
 			}
 			catch (Exception exception) {
@@ -283,10 +293,14 @@ public class FlatNPMBundleProcessor implements JSBundleProcessor {
 			try {
 				Map.Entry<URL, JSONObject> entry = future.get();
 
-				jsonObjects.put(entry.getKey(), entry.getValue());
+				JSONObject jsonObject = entry.getValue();
+
+				if (jsonObject != null) {
+					jsonObjects.put(entry.getKey(), jsonObject);
+				}
 			}
 			catch (Exception exception) {
-				_log.error(exception, exception);
+				_log.error(exception);
 			}
 		}
 
@@ -294,9 +308,19 @@ public class FlatNPMBundleProcessor implements JSBundleProcessor {
 
 		serializer.writeLong(bundle.getLastModified());
 
-		try (OutputStream outputStream = Files.newOutputStream(cacheFilePath)) {
-			serializer.writeObject(jsonObjects);
+		serializer.writeInt(jsonObjects.size());
 
+		for (Map.Entry<URL, JSONObject> entry : jsonObjects.entrySet()) {
+			URL url = entry.getKey();
+
+			serializer.writeString(url.toExternalForm());
+
+			JSONObject jsonObject = entry.getValue();
+
+			serializer.writeString(jsonObject.toString());
+		}
+
+		try (OutputStream outputStream = new FileOutputStream(cacheFile)) {
 			serializer.writeTo(outputStream);
 		}
 		catch (Exception exception) {
@@ -315,15 +339,25 @@ public class FlatNPMBundleProcessor implements JSBundleProcessor {
 
 		File cacheFile = bundleContext.getDataFile("cache_model_dependencies");
 
-		Path cacheFilePath = cacheFile.toPath();
-
-		if (Files.exists(cacheFilePath)) {
+		if (cacheFile.exists()) {
 			try {
 				Deserializer deserializer = new Deserializer(
-					ByteBuffer.wrap(Files.readAllBytes(cacheFilePath)));
+					ByteBuffer.wrap(FileUtil.getBytes(cacheFile)));
 
 				if (deserializer.readLong() == bundle.getLastModified()) {
-					return deserializer.readObject();
+					Map<URL, Collection<String>> moduleDependenciesMap =
+						new HashMap<>();
+
+					int size = deserializer.readInt();
+
+					for (int i = 0; i < size; i++) {
+						moduleDependenciesMap.put(
+							new URL(deserializer.readString()),
+							Arrays.asList(
+								StringUtil.split(deserializer.readString())));
+					}
+
+					return moduleDependenciesMap;
 				}
 			}
 			catch (Exception exception) {
@@ -363,7 +397,7 @@ public class FlatNPMBundleProcessor implements JSBundleProcessor {
 					moduleDependenciesMap.put(entry.getKey(), entry.getValue());
 				}
 				catch (Exception exception) {
-					_log.error(exception, exception);
+					_log.error(exception);
 				}
 			}
 		}
@@ -372,9 +406,19 @@ public class FlatNPMBundleProcessor implements JSBundleProcessor {
 
 		serializer.writeLong(bundle.getLastModified());
 
-		try (OutputStream outputStream = Files.newOutputStream(cacheFilePath)) {
-			serializer.writeObject(moduleDependenciesMap);
+		serializer.writeInt(moduleDependenciesMap.size());
 
+		for (Map.Entry<URL, Collection<String>> entry :
+				moduleDependenciesMap.entrySet()) {
+
+			URL url = entry.getKey();
+
+			serializer.writeString(url.toExternalForm());
+
+			serializer.writeString(StringUtil.merge(entry.getValue()));
+		}
+
+		try (OutputStream outputStream = new FileOutputStream(cacheFile)) {
 			serializer.writeTo(outputStream);
 		}
 		catch (Exception exception) {

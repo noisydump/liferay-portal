@@ -17,6 +17,7 @@ package com.liferay.batch.engine.service.base;
 import com.liferay.batch.engine.model.BatchEngineImportTask;
 import com.liferay.batch.engine.model.BatchEngineImportTaskContentBlobModel;
 import com.liferay.batch.engine.service.BatchEngineImportTaskLocalService;
+import com.liferay.batch.engine.service.BatchEngineImportTaskLocalServiceUtil;
 import com.liferay.batch.engine.service.persistence.BatchEngineImportTaskPersistence;
 import com.liferay.exportimport.kernel.lar.ExportImportHelperUtil;
 import com.liferay.exportimport.kernel.lar.ManifestSummary;
@@ -42,6 +43,8 @@ import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -57,6 +60,8 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import java.io.InputStream;
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.sql.Blob;
 
 import java.util.List;
@@ -64,6 +69,7 @@ import java.util.List;
 import javax.sql.DataSource;
 
 import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -85,7 +91,7 @@ public abstract class BatchEngineImportTaskLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>BatchEngineImportTaskLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.batch.engine.service.BatchEngineImportTaskLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>BatchEngineImportTaskLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>BatchEngineImportTaskLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -163,6 +169,13 @@ public abstract class BatchEngineImportTaskLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return batchEngineImportTaskPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -275,6 +288,52 @@ public abstract class BatchEngineImportTaskLocalServiceBaseImpl
 
 		return batchEngineImportTaskPersistence.fetchByUuid_C_First(
 			uuid, companyId, null);
+	}
+
+	/**
+	 * Returns the batch engine import task with the matching external reference code and company.
+	 *
+	 * @param companyId the primary key of the company
+	 * @param externalReferenceCode the batch engine import task's external reference code
+	 * @return the matching batch engine import task, or <code>null</code> if a matching batch engine import task could not be found
+	 */
+	@Override
+	public BatchEngineImportTask
+		fetchBatchEngineImportTaskByExternalReferenceCode(
+			long companyId, String externalReferenceCode) {
+
+		return batchEngineImportTaskPersistence.fetchByC_ERC(
+			companyId, externalReferenceCode);
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #fetchBatchEngineImportTaskByExternalReferenceCode(long, String)}
+	 */
+	@Deprecated
+	@Override
+	public BatchEngineImportTask fetchBatchEngineImportTaskByReferenceCode(
+		long companyId, String externalReferenceCode) {
+
+		return fetchBatchEngineImportTaskByExternalReferenceCode(
+			companyId, externalReferenceCode);
+	}
+
+	/**
+	 * Returns the batch engine import task with the matching external reference code and company.
+	 *
+	 * @param companyId the primary key of the company
+	 * @param externalReferenceCode the batch engine import task's external reference code
+	 * @return the matching batch engine import task
+	 * @throws PortalException if a matching batch engine import task could not be found
+	 */
+	@Override
+	public BatchEngineImportTask
+			getBatchEngineImportTaskByExternalReferenceCode(
+				long companyId, String externalReferenceCode)
+		throws PortalException {
+
+		return batchEngineImportTaskPersistence.findByC_ERC(
+			companyId, externalReferenceCode);
 	}
 
 	/**
@@ -427,6 +486,11 @@ public abstract class BatchEngineImportTaskLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement BatchEngineImportTaskLocalServiceImpl#deleteBatchEngineImportTask(BatchEngineImportTask) to avoid orphaned data");
+		}
+
 		return batchEngineImportTaskLocalService.deleteBatchEngineImportTask(
 			(BatchEngineImportTask)persistedModel);
 	}
@@ -570,6 +634,11 @@ public abstract class BatchEngineImportTaskLocalServiceBaseImpl
 		}
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -582,6 +651,8 @@ public abstract class BatchEngineImportTaskLocalServiceBaseImpl
 	public void setAopProxy(Object aopProxy) {
 		batchEngineImportTaskLocalService =
 			(BatchEngineImportTaskLocalService)aopProxy;
+
+		_setLocalServiceUtilService(batchEngineImportTaskLocalService);
 	}
 
 	/**
@@ -627,6 +698,23 @@ public abstract class BatchEngineImportTaskLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		BatchEngineImportTaskLocalService batchEngineImportTaskLocalService) {
+
+		try {
+			Field field =
+				BatchEngineImportTaskLocalServiceUtil.class.getDeclaredField(
+					"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, batchEngineImportTaskLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected BatchEngineImportTaskLocalService
 		batchEngineImportTaskLocalService;
 
@@ -636,6 +724,9 @@ public abstract class BatchEngineImportTaskLocalServiceBaseImpl
 	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		BatchEngineImportTaskLocalServiceBaseImpl.class);
 
 	@Reference
 	protected File _file;

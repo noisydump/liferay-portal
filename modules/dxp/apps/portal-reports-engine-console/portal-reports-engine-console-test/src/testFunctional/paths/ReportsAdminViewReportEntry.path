@@ -2,11 +2,13 @@
 <head>
 <title>ReportsAdminViewReportEntry</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">ReportsAdminViewReportEntry</td></tr>
 </thead>
+
 <tbody>
 <tr>
 	<td>INFO_MESSAGE</td>
@@ -43,7 +45,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--ENTRY_FILE_TABLE-->
+
 <tr>
 	<td>ENTRY_FILE_TABLE_FILE</td>
 	<td>//tr[contains(.,'${key_reportsFileName}')]/td</td>
@@ -54,7 +58,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--ENTRY_FILE_MENULIST-->
+
 <tr>
 	<td>ENTRY_FILE_MENULIST_DELIVER_REPORT</td>
 	<td>//a[@role='menuitem' and contains(.,'Deliver Report')]</td>

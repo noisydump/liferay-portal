@@ -21,6 +21,7 @@ import com.liferay.portal.search.internal.query.MoreLikeThisQueryImpl;
 import com.liferay.portal.search.internal.query.TermQueryImpl;
 import com.liferay.portal.search.internal.query.WildcardQueryImpl;
 import com.liferay.portal.search.query.Query;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.Collections;
 
@@ -28,12 +29,19 @@ import org.elasticsearch.index.query.QueryBuilder;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
  * @author Bryan Engler
  */
 public class ElasticsearchQueryTranslatorTest {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Before
 	public void setUp() throws Exception {
@@ -48,35 +56,36 @@ public class ElasticsearchQueryTranslatorTest {
 
 	@Test
 	public void testTranslateBoostCommonTermsQuery() {
-		assertBoost(new CommonTermsQueryImpl("test", "test"));
+		_assertBoost(new CommonTermsQueryImpl("test", "test"));
 	}
 
 	@Test
 	public void testTranslateBoostFuzzyQuery() {
-		assertBoost(new FuzzyQueryImpl("test", "test"));
+		_assertBoost(new FuzzyQueryImpl("test", "test"));
 	}
 
 	@Test
 	public void testTranslateBoostMatchAllQuery() {
-		assertBoost(new MatchAllQueryImpl());
+		_assertBoost(new MatchAllQueryImpl());
 	}
 
 	@Test
 	public void testTranslateBoostMoreLikeThisQueryStringQuery() {
-		assertBoost(new MoreLikeThisQueryImpl(Collections.emptyList(), "test"));
+		_assertBoost(
+			new MoreLikeThisQueryImpl(Collections.emptyList(), "test"));
 	}
 
 	@Test
 	public void testTranslateBoostTermQuery() {
-		assertBoost(new TermQueryImpl("test", "test"));
+		_assertBoost(new TermQueryImpl("test", "test"));
 	}
 
 	@Test
 	public void testTranslateBoostWildcardQuery() {
-		assertBoost(new WildcardQueryImpl("test", "test"));
+		_assertBoost(new WildcardQueryImpl("test", "test"));
 	}
 
-	protected void assertBoost(Query query) {
+	private void _assertBoost(Query query) {
 		query.setBoost(_BOOST);
 
 		QueryBuilder queryBuilder = _elasticsearchQueryTranslator.translate(

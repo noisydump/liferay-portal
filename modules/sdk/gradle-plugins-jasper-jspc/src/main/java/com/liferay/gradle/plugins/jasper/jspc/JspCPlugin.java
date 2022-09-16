@@ -18,12 +18,14 @@ import com.liferay.gradle.util.GradleUtil;
 
 import java.io.File;
 
+import java.util.Collections;
 import java.util.concurrent.Callable;
 
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.ModuleDependency;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.plugins.JavaBasePlugin;
@@ -54,7 +56,7 @@ public class JspCPlugin implements Plugin<Project> {
 
 		Configuration jspCConfiguration = _addConfigurationJspC(project);
 
-		final CompileJSPTask generateJSPJavaTask = _addTaskGenerateJSPJava(
+		CompileJSPTask generateJSPJavaTask = _addTaskGenerateJSPJava(
 			project, jspCConfiguration);
 
 		final JavaCompile compileJSPTask = _addTaskCompileJSP(
@@ -84,9 +86,13 @@ public class JspCPlugin implements Plugin<Project> {
 	}
 
 	private void _addDependenciesJspC(Project project) {
-		GradleUtil.addDependency(
-			project, CONFIGURATION_NAME, "com.liferay",
-			"com.liferay.portal.servlet.jsp.compiler", "latest.release");
+		ModuleDependency moduleDependency =
+			(ModuleDependency)GradleUtil.addDependency(
+				project, CONFIGURATION_NAME, "com.liferay",
+				"com.liferay.portal.servlet.jsp.compiler", "latest.release");
+
+		moduleDependency.exclude(
+			Collections.singletonMap("group", "com.liferay.portal"));
 
 		DependencyHandler dependencyHandler = project.getDependencies();
 

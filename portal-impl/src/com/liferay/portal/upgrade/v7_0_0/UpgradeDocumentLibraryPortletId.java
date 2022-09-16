@@ -17,7 +17,7 @@ package com.liferay.portal.upgrade.v7_0_0;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.upgrade.BaseUpgradePortletId;
+import com.liferay.portal.kernel.upgrade.BasePortletIdUpgradeProcess;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -26,46 +26,54 @@ import java.sql.SQLException;
 /**
  * @author Cristina González
  */
-public class UpgradeDocumentLibraryPortletId extends BaseUpgradePortletId {
+public class UpgradeDocumentLibraryPortletId
+	extends BasePortletIdUpgradeProcess {
 
 	protected void deleteDuplicateResourceActions() throws SQLException {
-		try (PreparedStatement ps1 = connection.prepareStatement(
+		try (PreparedStatement preparedStatement1 = connection.prepareStatement(
 				"select actionId from ResourceAction where name = '" +
 					_PORTLET_ID_DOCUMENT_LIBRARY + "'");
-			ResultSet rs = ps1.executeQuery()) {
+			ResultSet resultSet = preparedStatement1.executeQuery()) {
 
-			while (rs.next()) {
-				try (PreparedStatement ps2 = connection.prepareStatement(
-						"delete from ResourceAction where name = ? and " +
-							"actionId = ?")) {
+			while (resultSet.next()) {
+				try (PreparedStatement preparedStatement2 =
+						connection.prepareStatement(
+							"delete from ResourceAction where name = ? and " +
+								"actionId = ?")) {
 
-					ps2.setString(1, _PORTLET_ID_DL_DISPLAY);
-					ps2.setString(2, rs.getString("actionId"));
+					preparedStatement2.setString(1, _PORTLET_ID_DL_DISPLAY);
+					preparedStatement2.setString(
+						2, resultSet.getString("actionId"));
 
-					ps2.execute();
+					preparedStatement2.execute();
 				}
 			}
 		}
 	}
 
 	protected void deleteDuplicateResourcePermissions() throws SQLException {
-		try (PreparedStatement ps1 = connection.prepareStatement(
+		try (PreparedStatement preparedStatement1 = connection.prepareStatement(
 				StringBundler.concat(
 					"select companyId, scope, primKey from ResourcePermission ",
 					"where name = '", _PORTLET_ID_DOCUMENT_LIBRARY, "'"));
-			ResultSet rs = ps1.executeQuery()) {
+			ResultSet resultSet = preparedStatement1.executeQuery()) {
 
-			while (rs.next()) {
-				try (PreparedStatement ps2 = connection.prepareStatement(
-						"delete from ResourcePermission where companyId = ? " +
-							"and name = ? and scope = ? and primKey = ?")) {
+			while (resultSet.next()) {
+				try (PreparedStatement preparedStatement2 =
+						connection.prepareStatement(
+							StringBundler.concat(
+								"delete from ResourcePermission where ",
+								"companyId = ? and name = ? and scope = ? and ",
+								"primKey = ?"))) {
 
-					ps2.setLong(1, rs.getLong("companyId"));
-					ps2.setString(2, _PORTLET_ID_DL_DISPLAY);
-					ps2.setInt(3, rs.getInt("scope"));
-					ps2.setString(4, rs.getString("primKey"));
+					preparedStatement2.setLong(
+						1, resultSet.getLong("companyId"));
+					preparedStatement2.setString(2, _PORTLET_ID_DL_DISPLAY);
+					preparedStatement2.setInt(3, resultSet.getInt("scope"));
+					preparedStatement2.setString(
+						4, resultSet.getString("primKey"));
 
-					ps2.execute();
+					preparedStatement2.execute();
 				}
 			}
 		}
@@ -93,7 +101,7 @@ public class UpgradeDocumentLibraryPortletId extends BaseUpgradePortletId {
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(exception, exception);
+				_log.warn(exception);
 			}
 		}
 

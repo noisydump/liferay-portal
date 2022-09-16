@@ -18,27 +18,37 @@ import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.tax.model.CommerceTaxMethod;
 import com.liferay.commerce.tax.service.base.CommerceTaxMethodServiceBaseImpl;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
-import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionFactory;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
 /**
  * @author Marco Leo
  * @author Alessio Antonio Rendina
  */
+@Component(
+	enabled = false,
+	property = {
+		"json.web.service.context.name=commerce",
+		"json.web.service.context.path=CommerceTaxMethod"
+	},
+	service = AopService.class
+)
 public class CommerceTaxMethodServiceImpl
 	extends CommerceTaxMethodServiceBaseImpl {
 
 	@Override
 	public CommerceTaxMethod addCommerceTaxMethod(
-			long userId, long groupId, Map<Locale, String> nameMap,
+			long groupId, Map<Locale, String> nameMap,
 			Map<Locale, String> descriptionMap, String engineKey,
 			boolean percentage, boolean active)
 		throws PortalException {
@@ -46,8 +56,8 @@ public class CommerceTaxMethodServiceImpl
 		_checkCommerceChannel(groupId);
 
 		return commerceTaxMethodLocalService.addCommerceTaxMethod(
-			userId, groupId, nameMap, descriptionMap, engineKey, percentage,
-			active);
+			getUserId(), groupId, nameMap, descriptionMap, engineKey,
+			percentage, active);
 	}
 
 	/**
@@ -62,8 +72,8 @@ public class CommerceTaxMethodServiceImpl
 		throws PortalException {
 
 		return commerceTaxMethodService.addCommerceTaxMethod(
-			serviceContext.getUserId(), serviceContext.getScopeGroupId(),
-			nameMap, descriptionMap, engineKey, percentage, active);
+			serviceContext.getScopeGroupId(), nameMap, descriptionMap,
+			engineKey, percentage, active);
 	}
 
 	@Override
@@ -178,14 +188,13 @@ public class CommerceTaxMethodServiceImpl
 			getPermissionChecker(), commerceChannel, ActionKeys.UPDATE);
 	}
 
-	private static volatile ModelResourcePermission<CommerceChannel>
-		_commerceChannelModelResourcePermission =
-			ModelResourcePermissionFactory.getInstance(
-				CommerceTaxMethodServiceImpl.class,
-				"_commerceChannelModelResourcePermission",
-				CommerceChannel.class);
-
-	@ServiceReference(type = CommerceChannelLocalService.class)
+	@Reference
 	private CommerceChannelLocalService _commerceChannelLocalService;
+
+	@Reference(
+		target = "(model.class.name=com.liferay.commerce.product.model.CommerceChannel)"
+	)
+	private ModelResourcePermission<CommerceChannel>
+		_commerceChannelModelResourcePermission;
 
 }

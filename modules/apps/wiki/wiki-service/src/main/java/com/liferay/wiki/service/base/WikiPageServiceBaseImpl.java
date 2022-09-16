@@ -20,18 +20,22 @@ import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.service.BaseServiceImpl;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.wiki.model.WikiPage;
 import com.liferay.wiki.service.WikiPageService;
-import com.liferay.wiki.service.persistence.WikiNodePersistence;
+import com.liferay.wiki.service.WikiPageServiceUtil;
 import com.liferay.wiki.service.persistence.WikiPageFinder;
 import com.liferay.wiki.service.persistence.WikiPagePersistence;
-import com.liferay.wiki.service.persistence.WikiPageResourcePersistence;
+
+import java.lang.reflect.Field;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -52,8 +56,13 @@ public abstract class WikiPageServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>WikiPageService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.wiki.service.WikiPageServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>WikiPageService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>WikiPageServiceUtil</code>.
 	 */
+	@Deactivate
+	protected void deactivate() {
+		_setServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -64,6 +73,8 @@ public abstract class WikiPageServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		wikiPageService = (WikiPageService)aopProxy;
+
+		_setServiceUtilService(wikiPageService);
 	}
 
 	/**
@@ -108,6 +119,20 @@ public abstract class WikiPageServiceBaseImpl
 		}
 	}
 
+	private void _setServiceUtilService(WikiPageService wikiPageService) {
+		try {
+			Field field = WikiPageServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, wikiPageService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@Reference
 	protected com.liferay.wiki.service.WikiPageLocalService
 		wikiPageLocalService;
@@ -124,64 +149,7 @@ public abstract class WikiPageServiceBaseImpl
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@Reference
-	protected com.liferay.portal.kernel.service.ResourceLocalService
-		resourceLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.SystemEventLocalService
-		systemEventLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserService userService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService
-		workflowInstanceLinkLocalService;
-
-	@Reference
-	protected com.liferay.asset.kernel.service.AssetCategoryLocalService
-		assetCategoryLocalService;
-
-	@Reference
-	protected com.liferay.asset.kernel.service.AssetCategoryService
-		assetCategoryService;
-
-	@Reference
-	protected com.liferay.asset.kernel.service.AssetEntryLocalService
-		assetEntryLocalService;
-
-	@Reference
-	protected com.liferay.asset.kernel.service.AssetEntryService
-		assetEntryService;
-
-	@Reference
-	protected com.liferay.asset.kernel.service.AssetLinkLocalService
-		assetLinkLocalService;
-
-	@Reference
-	protected com.liferay.asset.kernel.service.AssetTagLocalService
-		assetTagLocalService;
-
-	@Reference
-	protected com.liferay.asset.kernel.service.AssetTagService assetTagService;
-
-	@Reference
-	protected com.liferay.expando.kernel.service.ExpandoRowLocalService
-		expandoRowLocalService;
-
-	@Reference
-	protected com.liferay.ratings.kernel.service.RatingsStatsLocalService
-		ratingsStatsLocalService;
-
-	@Reference
-	protected WikiNodePersistence wikiNodePersistence;
-
-	@Reference
-	protected WikiPageResourcePersistence wikiPageResourcePersistence;
+	private static final Log _log = LogFactoryUtil.getLog(
+		WikiPageServiceBaseImpl.class);
 
 }

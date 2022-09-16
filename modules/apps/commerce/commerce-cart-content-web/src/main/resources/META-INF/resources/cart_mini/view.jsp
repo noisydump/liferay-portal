@@ -51,9 +51,11 @@ if (commerceOrderPrice != null) {
 
 SearchContainer<CommerceOrderItem> commerceOrderItemSearchContainer = commerceCartContentMiniDisplayContext.getSearchContainer();
 
-PortletURL portletURL = commerceCartContentMiniDisplayContext.getPortletURL();
-
-portletURL.setParameter("searchContainerId", "commerceOrderItems");
+PortletURL portletURL = PortletURLBuilder.create(
+	commerceCartContentMiniDisplayContext.getPortletURL()
+).setParameter(
+	"searchContainerId", "commerceOrderItems"
+).buildPortletURL();
 
 request.setAttribute("view.jsp-portletURL", portletURL);
 %>
@@ -105,10 +107,18 @@ request.setAttribute("view.jsp-portletURL", portletURL);
 				CPDefinition cpDefinition = commerceOrderItem.getCPDefinition();
 				%>
 
-				<liferay-ui:search-container-column-image
-					cssClass="thumbnail-section"
-					src="<%= commerceCartContentMiniDisplayContext.getCommerceOrderItemThumbnailSrc(commerceOrderItem) %>"
-				/>
+				<liferay-ui:search-container-column-text
+					cssClass="col-1 thumbnail-section"
+				>
+					<span class="sticker sticker-xl">
+						<span class="sticker-overlay">
+							<liferay-adaptive-media:img
+								class="sticker-img"
+								fileVersion="<%= commerceCartContentMiniDisplayContext.getCPInstanceImageFileVersion(commerceOrderItem) %>"
+							/>
+						</span>
+					</span>
+				</liferay-ui:search-container-column-text>
 
 				<liferay-ui:search-container-column-text
 					cssClass="autofit-col-expand"
@@ -121,11 +131,9 @@ request.setAttribute("view.jsp-portletURL", portletURL);
 						</div>
 
 						<%
-						List<KeyValuePair> keyValuePairs = commerceCartContentMiniDisplayContext.getKeyValuePairs(commerceOrderItem.getCPDefinitionId(), commerceOrderItem.getJson(), locale);
-
 						StringJoiner stringJoiner = new StringJoiner(StringPool.COMMA);
 
-						for (KeyValuePair keyValuePair : keyValuePairs) {
+						for (KeyValuePair keyValuePair : commerceCartContentMiniDisplayContext.getKeyValuePairs(commerceOrderItem.getCPDefinitionId(), commerceOrderItem.getJson(), locale)) {
 							stringJoiner.add(keyValuePair.getValue());
 						}
 						%>
@@ -270,24 +278,8 @@ request.setAttribute("view.jsp-portletURL", portletURL);
 	</ul>
 
 	<%@ include file="/cart_mini/transition.jspf" %>
-
-	<aui:script use="aui-base">
-		var orderTransition = A.one('#<portlet:namespace />orderTransition');
-
-		if (orderTransition) {
-			orderTransition.delegate(
-				'click',
-				function (event) {
-					<portlet:namespace />transition(event);
-				},
-				'.transition-link'
-			);
-		}
-	</aui:script>
-
-	<aui:script>
-		Liferay.after('current-order-updated', function (event) {
-			Liferay.Portlet.refresh('#p_p_id<portlet:namespace />');
-		});
-	</aui:script>
 </liferay-ddm:template-renderer>
+
+<liferay-frontend:component
+	module="js/cart_mini/view"
+/>

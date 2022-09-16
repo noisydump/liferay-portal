@@ -24,8 +24,8 @@
 				<liferay.bom.version>7.1.3-1</liferay.bom.version>
 #elseif (${liferayVersion.startsWith("7.2")})
 				<liferay.bom.version>7.2.1-1</liferay.bom.version>
-#elseif (${liferayVersion.startsWith("7.3")})
-				<liferay.bom.version>7.3.5</liferay.bom.version>
+#else
+				<liferay.bom.version>${liferayVersion}</liferay.bom.version>
 #end
 			</properties>
 			<dependencyManagement>
@@ -55,8 +55,12 @@
 			</dependencyManagement>
 			<repositories>
 				<repository>
-					<id>liferay-public</id>
+					<id>liferay-public-cdn</id>
 					<url>https://repository-cdn.liferay.com/nexus/content/groups/public/</url>
+				</repository>
+				<repository>
+					<id>liferay-public</id>
+					<url>https://repository.liferay.com/nexus/content/groups/public/</url>
 				</repository>
 			</repositories>
 		</profile>

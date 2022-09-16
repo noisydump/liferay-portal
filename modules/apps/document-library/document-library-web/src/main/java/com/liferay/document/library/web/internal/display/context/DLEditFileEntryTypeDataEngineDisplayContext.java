@@ -15,6 +15,7 @@
 package com.liferay.document.library.web.internal.display.context;
 
 import com.liferay.document.library.kernel.model.DLFileEntryType;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
@@ -27,8 +28,6 @@ import com.liferay.portal.kernel.util.WebKeys;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import javax.portlet.PortletURL;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -61,27 +60,21 @@ public class DLEditFileEntryTypeDataEngineDisplayContext {
 			).put(
 				"pluginEntryPoint",
 				npmResolvedPackageName +
-					"/document_library/js/ddm/panels/index.es"
+					"/document_library/js/data-engine/panels/index.es"
 			).put(
 				"sidebarPanelId", "details"
 			).put(
 				"url",
-				() -> {
-					PortletURL editBasicInfoURL =
-						_liferayPortletResponse.createRenderURL();
-
-					editBasicInfoURL.setParameter(
-						"mvcPath", "/document_library/ddm/details.jsp");
-					editBasicInfoURL.setParameter(
-						"fileEntryTypeId",
-						String.valueOf(
-							ParamUtil.getLong(
-								_liferayPortletRequest, "fileEntryTypeId")));
-					editBasicInfoURL.setWindowState(
-						LiferayWindowState.EXCLUSIVE);
-
-					return editBasicInfoURL.toString();
-				}
+				() -> PortletURLBuilder.createRenderURL(
+					_liferayPortletResponse
+				).setMVCPath(
+					"/document_library/ddm/details.jsp"
+				).setParameter(
+					"fileEntryTypeId",
+					ParamUtil.getLong(_liferayPortletRequest, "fileEntryTypeId")
+				).setWindowState(
+					LiferayWindowState.EXCLUSIVE
+				).buildString()
 			).build());
 
 		additionalPanels.add(
@@ -94,28 +87,21 @@ public class DLEditFileEntryTypeDataEngineDisplayContext {
 			).put(
 				"pluginEntryPoint",
 				npmResolvedPackageName +
-					"/document_library/js/ddm/panels/index.es"
+					"/document_library/js/data-engine/panels/index.es"
 			).put(
 				"sidebarPanelId", "additionalMetadataFields"
 			).put(
 				"url",
-				() -> {
-					PortletURL editAdditionalMetadataFieldsURL =
-						_liferayPortletResponse.createRenderURL();
-
-					editAdditionalMetadataFieldsURL.setParameter(
-						"mvcPath",
-						"/document_library/ddm/additional_metadata_fields.jsp");
-					editAdditionalMetadataFieldsURL.setParameter(
-						"fileEntryTypeId",
-						String.valueOf(
-							ParamUtil.getLong(
-								_liferayPortletRequest, "fileEntryTypeId")));
-					editAdditionalMetadataFieldsURL.setWindowState(
-						LiferayWindowState.EXCLUSIVE);
-
-					return editAdditionalMetadataFieldsURL.toString();
-				}
+				() -> PortletURLBuilder.createRenderURL(
+					_liferayPortletResponse
+				).setMVCPath(
+					"/document_library/ddm/additional_metadata_fields.jsp"
+				).setParameter(
+					"fileEntryTypeId",
+					ParamUtil.getLong(_liferayPortletRequest, "fileEntryTypeId")
+				).setWindowState(
+					LiferayWindowState.EXCLUSIVE
+				).buildString()
 			).build());
 
 		DLFileEntryType fileEntryType =
@@ -132,22 +118,18 @@ public class DLEditFileEntryTypeDataEngineDisplayContext {
 				).put(
 					"pluginEntryPoint",
 					npmResolvedPackageName +
-						"/document_library/js/ddm/panels/index.es"
+						"/document_library/js/data-engine/panels/index.es"
 				).put(
 					"sidebarPanelId", "permissions"
 				).put(
 					"url",
-					() -> {
-						PortletURL editPermissionsURL =
-							_liferayPortletResponse.createRenderURL();
-
-						editPermissionsURL.setParameter(
-							"mvcPath", "/document_library/ddm/permissions.jsp");
-						editPermissionsURL.setWindowState(
-							LiferayWindowState.EXCLUSIVE);
-
-						return editPermissionsURL.toString();
-					}
+					() -> PortletURLBuilder.createRenderURL(
+						_liferayPortletResponse
+					).setMVCPath(
+						"/document_library/ddm/permissions.jsp"
+					).setWindowState(
+						LiferayWindowState.EXCLUSIVE
+					).buildString()
 				).build());
 		}
 

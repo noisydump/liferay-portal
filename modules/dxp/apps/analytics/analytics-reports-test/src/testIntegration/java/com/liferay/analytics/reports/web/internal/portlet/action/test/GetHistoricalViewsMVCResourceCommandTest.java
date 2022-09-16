@@ -14,15 +14,10 @@
 
 package com.liferay.analytics.reports.web.internal.portlet.action.test;
 
-import com.liferay.analytics.reports.test.MockObject;
 import com.liferay.analytics.reports.test.util.MockContextUtil;
 import com.liferay.analytics.reports.web.internal.portlet.action.test.util.MockHttpUtil;
 import com.liferay.analytics.reports.web.internal.portlet.action.test.util.MockThemeDisplayUtil;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
-import com.liferay.info.item.InfoItemReference;
-import com.liferay.layout.display.page.LayoutDisplayPageProvider;
-import com.liferay.layout.display.page.LayoutDisplayPageProviderTracker;
-import com.liferay.layout.display.page.constants.LayoutDisplayPageWebKeys;
 import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -31,7 +26,6 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
-import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -43,6 +37,7 @@ import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.Http;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.test.rule.Inject;
@@ -77,13 +72,11 @@ public class GetHistoricalViewsMVCResourceCommandTest {
 	public void setUp() throws Exception {
 		_group = GroupTestUtil.addGroup();
 
-		_layout = LayoutTestUtil.addLayout(_group);
+		_layout = LayoutTestUtil.addTypePortletLayout(_group);
 	}
 
 	@Test
 	public void testServeResponse() throws Exception {
-		LocalDate localDate = LocalDate.now();
-
 		ReflectionTestUtil.setFieldValue(
 			_mvcResourceCommand, "_http",
 			MockHttpUtil.geHttp(
@@ -94,19 +87,22 @@ public class GetHistoricalViewsMVCResourceCommandTest {
 						JSONUtil.put(
 							JSONUtil.put(
 								"key",
-								localDate.format(
-									DateTimeFormatter.ISO_LOCAL_DATE)
+								() -> {
+									LocalDate localDate = LocalDate.now();
+
+									return localDate.format(
+										DateTimeFormatter.ISO_LOCAL_DATE);
+								}
 							).put(
 								"value", 5
 							))
 					).put(
 						"value", 5
-					).toJSONString())));
+					).toString())));
 
 		try {
 			MockContextUtil.testWithMockContext(
 				MockContextUtil.MockContext.builder(
-					_classNameLocalService
 				).build(),
 				() -> {
 					MockLiferayResourceRequest mockLiferayResourceRequest =
@@ -156,16 +152,6 @@ public class GetHistoricalViewsMVCResourceCommandTest {
 			new MockLiferayResourceRequest();
 
 		try {
-			LayoutDisplayPageProvider<?> layoutDisplayPageProvider =
-				_layoutDisplayPageProviderTracker.
-					getLayoutDisplayPageProviderByClassName(
-						MockObject.class.getName());
-
-			mockLiferayResourceRequest.setAttribute(
-				LayoutDisplayPageWebKeys.LAYOUT_DISPLAY_PAGE_OBJECT_PROVIDER,
-				layoutDisplayPageProvider.getLayoutDisplayPageObjectProvider(
-					new InfoItemReference(MockObject.class.getName(), 0)));
-
 			mockLiferayResourceRequest.setAttribute(
 				WebKeys.THEME_DISPLAY,
 				MockThemeDisplayUtil.getThemeDisplay(
@@ -173,7 +159,8 @@ public class GetHistoricalViewsMVCResourceCommandTest {
 						TestPropsValues.getCompanyId()),
 					_group, _layout,
 					_layoutSetLocalService.getLayoutSet(
-						_group.getGroupId(), false)));
+						_group.getGroupId(), false),
+					LocaleUtil.US));
 
 			return mockLiferayResourceRequest;
 		}
@@ -181,9 +168,6 @@ public class GetHistoricalViewsMVCResourceCommandTest {
 			throw new AssertionError(portalException);
 		}
 	}
-
-	@Inject
-	private ClassNameLocalService _classNameLocalService;
 
 	@Inject
 	private CompanyLocalService _companyLocalService;
@@ -195,9 +179,6 @@ public class GetHistoricalViewsMVCResourceCommandTest {
 	private Http _http;
 
 	private Layout _layout;
-
-	@Inject
-	private LayoutDisplayPageProviderTracker _layoutDisplayPageProviderTracker;
 
 	@Inject
 	private LayoutSetLocalService _layoutSetLocalService;

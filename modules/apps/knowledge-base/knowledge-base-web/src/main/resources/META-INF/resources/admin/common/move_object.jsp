@@ -67,11 +67,11 @@ if (portletTitleBasedNavigation) {
 	/>
 </c:if>
 
-<div <%= portletTitleBasedNavigation ? "class=\"container-fluid container-fluid-max-xl\"" : StringPool.BLANK %>>
-	<liferay-portlet:actionURL name="moveKBObject" var="moveKBObjectURL" />
+<div <%= portletTitleBasedNavigation ? "class=\"container-fluid container-fluid-max-xl container-form-lg\"" : StringPool.BLANK %>>
+	<liferay-portlet:actionURL name="/knowledge_base/move_kb_object" var="moveKBObjectURL" />
 
 	<aui:form action="<%= moveKBObjectURL %>" method="post" name="fm">
-		<aui:input name="mvcPath" type="hidden" value='<%= templatePath + "move_object.jsp" %>' />
+		<aui:input name="mvcPath" type="hidden" value="/admin/common/move_object.jsp" />
 		<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
 		<aui:input name="resourceClassNameId" type="hidden" value="<%= String.valueOf(resourceClassNameId) %>" />
 		<aui:input name="resourcePrimKey" type="hidden" value="<%= String.valueOf(resourcePrimKey) %>" />
@@ -99,13 +99,13 @@ if (portletTitleBasedNavigation) {
 					<aui:button name="selectKBObjectButton" value="select" />
 				</aui:field-wrapper>
 			</aui:fieldset>
+
+			<div class="sheet-footer">
+				<aui:button type="submit" value="move" />
+
+				<aui:button href="<%= redirect %>" type="cancel" />
+			</div>
 		</aui:fieldset-group>
-
-		<aui:button-row>
-			<aui:button type="submit" value="move" />
-
-			<aui:button href="<%= redirect %>" type="cancel" />
-		</aui:button-row>
 	</aui:form>
 </div>
 
@@ -115,7 +115,7 @@ if (portletTitleBasedNavigation) {
 	);
 
 	if (selectKBObjectButton) {
-		selectKBObjectButton.addEventListener('click', function (event) {
+		selectKBObjectButton.addEventListener('click', (event) => {
 			Liferay.Util.openSelectionModal({
 				onSelect: function (event) {
 					Liferay.Util.setFormValues(document.<portlet:namespace />fm, {
@@ -136,7 +136,7 @@ if (portletTitleBasedNavigation) {
 				title: '<liferay-ui:message key="select-parent" />',
 
 				<liferay-portlet:renderURL var="selectKBObjectURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
-					<portlet:param name="mvcPath" value='<%= templatePath + "select_parent.jsp" %>' />
+					<portlet:param name="mvcPath" value="/admin/common/select_parent.jsp" />
 					<portlet:param name="resourceClassNameId" value="<%= String.valueOf(resourceClassNameId) %>" />
 					<portlet:param name="resourcePrimKey" value="<%= String.valueOf(resourcePrimKey) %>" />
 					<portlet:param name="parentResourceClassNameId" value="<%= String.valueOf(parentResourceClassNameId) %>" />

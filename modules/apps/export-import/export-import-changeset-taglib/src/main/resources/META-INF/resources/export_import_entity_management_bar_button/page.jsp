@@ -26,20 +26,29 @@ scopeGroup = themeDisplay.getScopeGroup();
 	String taglibURL = "javascript:Liferay.fire('" + liferayPortletResponse.getNamespace() + cmd + "'); void(0);";
 	%>
 
-	<liferay-frontend:management-bar-button
-		href="<%= taglibURL %>"
+	<liferay-ui:icon
 		icon="import-export"
-		label="<%= cmd %>"
+		label="<%= false %>"
+		linkCssClass="btn btn-monospaced btn-outline-secondary"
+		markupView="lexicon"
+		message="<%= cmd %>"
+		url="<%= taglibURL %>"
 	/>
 
 	<%
-	PortletURL portletURL = PortletURLFactoryUtil.create(request, ChangesetPortletKeys.CHANGESET, PortletRequest.ACTION_PHASE);
-
-	portletURL.setParameter(ActionRequest.ACTION_NAME, "exportImportEntity");
-	portletURL.setParameter("mvcRenderCommandName", "exportImportEntity");
-	portletURL.setParameter("cmd", cmd);
-	portletURL.setParameter("backURL", themeDisplay.getURLCurrent());
-	portletURL.setParameter("portletId", portletDisplay.getId());
+	PortletURL portletURL = PortletURLBuilder.create(
+		PortletURLFactoryUtil.create(request, ChangesetPortletKeys.CHANGESET, PortletRequest.ACTION_PHASE)
+	).setActionName(
+		"exportImportEntity"
+	).setMVCRenderCommandName(
+		"exportImportEntity"
+	).setCMD(
+		cmd
+	).setBackURL(
+		themeDisplay.getURLCurrent()
+	).setParameter(
+		"portletId", portletDisplay.getId()
+	).buildPortletURL();
 	%>
 
 	<aui:script use="liferay-export-import-management-bar-button">

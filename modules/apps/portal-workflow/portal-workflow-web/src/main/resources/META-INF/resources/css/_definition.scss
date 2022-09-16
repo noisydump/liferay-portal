@@ -2,10 +2,6 @@
 	margin: 0 !important;
 }
 
-#wrapper .main-content-card {
-	margin: 0 !important;
-}
-
 .portal.popup {
 	background: #fff;
 }
@@ -26,6 +22,16 @@
 	pointer-events: none;
 }
 
+.info-bar-container .management-bar-header-right {
+	float: right;
+	margin-right: 0;
+	position: relative;
+
+	> a {
+		padding: 0;
+	}
+}
+
 .info-content {
 	font-size: 0.875rem;
 	font-weight: 100;
@@ -39,9 +45,10 @@
 .sidenav-container {
 	padding-bottom: 75px;
 
-	.sidenav-content {
-		padding-top: 20px;
+	.sidenav-content .container-form-lg {
+		padding-top: 2rem;
 	}
+
 	.sidenav-menu-slider {
 		z-index: 101;
 	}
@@ -74,6 +81,7 @@
 .lfr-sidebar-list-group-workflow {
 	&.sidebar-list-group {
 		margin-top: 0;
+		padding-top: 0;
 	}
 
 	.list-group-item {
@@ -85,6 +93,16 @@
 			border-top: 0;
 		}
 	}
+}
+
+.modal-footer .btn-toolbar .btn-secondary {
+	margin-right: 10px;
+}
+
+.modal-open .modal {
+	min-height: 325px;
+	min-width: 500px;
+	overflow-y: hidden !important;
 }
 
 .workflow-definition-container {

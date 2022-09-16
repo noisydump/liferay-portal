@@ -18,11 +18,11 @@ import com.liferay.commerce.payment.method.CommercePaymentMethod;
 import com.liferay.commerce.payment.method.CommercePaymentMethodRegistry;
 import com.liferay.commerce.payment.model.CommercePaymentMethodGroupRel;
 import com.liferay.commerce.payment.service.CommercePaymentMethodGroupRelService;
-import com.liferay.commerce.payment.web.internal.display.context.util.CommercePaymentMethodRequestHelper;
+import com.liferay.commerce.payment.web.internal.display.context.helper.CommercePaymentMethodRequestHelper;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
-import com.liferay.commerce.service.CommerceCountryService;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.service.CountryService;
 import com.liferay.portal.kernel.util.ParamUtil;
 
 import java.util.Locale;
@@ -36,19 +36,18 @@ public class CommercePaymentMethodGroupRelsDisplayContext {
 
 	public CommercePaymentMethodGroupRelsDisplayContext(
 		CommerceChannelLocalService commerceChannelLocalService,
-		CommerceCountryService commerceCountryService,
 		CommercePaymentMethodGroupRelService
 			commercePaymentMethodGroupRelService,
 		CommercePaymentMethodRegistry commercePaymentMethodRegistry,
-		HttpServletRequest httpServletRequest) {
+		CountryService countryService, HttpServletRequest httpServletRequest) {
 
 		_commerceChannelLocalService = commerceChannelLocalService;
-		_commerceCountryService = commerceCountryService;
 		_commercePaymentMethodGroupRelService =
 			commercePaymentMethodGroupRelService;
 		_commercePaymentMethodRegistry = commercePaymentMethodRegistry;
+		_countryService = countryService;
 
-		_commercePaymentMethodRequestHelper =
+		commercePaymentMethodRequestHelper =
 			new CommercePaymentMethodRequestHelper(httpServletRequest);
 	}
 
@@ -62,13 +61,8 @@ public class CommercePaymentMethodGroupRelsDisplayContext {
 		}
 
 		return ParamUtil.getLong(
-			_commercePaymentMethodRequestHelper.getRequest(),
+			commercePaymentMethodRequestHelper.getRequest(),
 			"commerceChannelId");
-	}
-
-	public int getCommerceCountriesCount() throws PortalException {
-		return _commerceCountryService.getCommerceCountriesCount(
-			_commercePaymentMethodRequestHelper.getCompanyId());
 	}
 
 	public String getCommercePaymentMethodEngineDescription(Locale locale) {
@@ -85,7 +79,7 @@ public class CommercePaymentMethodGroupRelsDisplayContext {
 		}
 
 		return ParamUtil.getString(
-			_commercePaymentMethodRequestHelper.getRequest(),
+			commercePaymentMethodRequestHelper.getRequest(),
 			"commercePaymentMethodEngineKey");
 	}
 
@@ -126,13 +120,19 @@ public class CommercePaymentMethodGroupRelsDisplayContext {
 		return 0;
 	}
 
+	public int getCountriesCount() throws PortalException {
+		return _countryService.getCompanyCountriesCount(
+			commercePaymentMethodRequestHelper.getCompanyId());
+	}
+
+	protected final CommercePaymentMethodRequestHelper
+		commercePaymentMethodRequestHelper;
+
 	private final CommerceChannelLocalService _commerceChannelLocalService;
-	private final CommerceCountryService _commerceCountryService;
 	private CommercePaymentMethodGroupRel _commercePaymentMethodGroupRel;
 	private final CommercePaymentMethodGroupRelService
 		_commercePaymentMethodGroupRelService;
 	private final CommercePaymentMethodRegistry _commercePaymentMethodRegistry;
-	private final CommercePaymentMethodRequestHelper
-		_commercePaymentMethodRequestHelper;
+	private final CountryService _countryService;
 
 }

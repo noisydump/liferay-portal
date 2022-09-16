@@ -29,12 +29,13 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
 import java.util.Collections;
@@ -42,6 +43,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -112,20 +114,20 @@ public class DLOpenerFileEntryReferenceModelImpl
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long FILEENTRYID_COLUMN_BITMASK = 1L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long REFERENCETYPE_COLUMN_BITMASK = 2L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *		#getColumnBitmask(String)
+	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long DLOPENERFILEENTRYREFERENCEID_COLUMN_BITMASK = 4L;
@@ -229,34 +231,6 @@ public class DLOpenerFileEntryReferenceModelImpl
 		getAttributeSetterBiConsumers() {
 
 		return _attributeSetterBiConsumers;
-	}
-
-	private static Function<InvocationHandler, DLOpenerFileEntryReference>
-		_getProxyProviderFunction() {
-
-		Class<?> proxyClass = ProxyUtil.getProxyClass(
-			DLOpenerFileEntryReference.class.getClassLoader(),
-			DLOpenerFileEntryReference.class, ModelWrapper.class);
-
-		try {
-			Constructor<DLOpenerFileEntryReference> constructor =
-				(Constructor<DLOpenerFileEntryReference>)
-					proxyClass.getConstructor(InvocationHandler.class);
-
-			return invocationHandler -> {
-				try {
-					return constructor.newInstance(invocationHandler);
-				}
-				catch (ReflectiveOperationException
-							reflectiveOperationException) {
-
-					throw new InternalError(reflectiveOperationException);
-				}
-			};
-		}
-		catch (NoSuchMethodException noSuchMethodException) {
-			throw new InternalError(noSuchMethodException);
-		}
 	}
 
 	private static final Map
@@ -576,7 +550,9 @@ public class DLOpenerFileEntryReferenceModelImpl
 		for (Map.Entry<String, Object> entry :
 				_columnOriginalValues.entrySet()) {
 
-			if (entry.getValue() != getColumnValue(entry.getKey())) {
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
 				_columnBitmask |= _columnBitmasks.get(entry.getKey());
 			}
 		}
@@ -632,6 +608,37 @@ public class DLOpenerFileEntryReferenceModelImpl
 		dlOpenerFileEntryReferenceImpl.setType(getType());
 
 		dlOpenerFileEntryReferenceImpl.resetOriginalValues();
+
+		return dlOpenerFileEntryReferenceImpl;
+	}
+
+	@Override
+	public DLOpenerFileEntryReference cloneWithOriginalValues() {
+		DLOpenerFileEntryReferenceImpl dlOpenerFileEntryReferenceImpl =
+			new DLOpenerFileEntryReferenceImpl();
+
+		dlOpenerFileEntryReferenceImpl.setDlOpenerFileEntryReferenceId(
+			this.<Long>getColumnOriginalValue("dlOpenerFileEntryReferenceId"));
+		dlOpenerFileEntryReferenceImpl.setGroupId(
+			this.<Long>getColumnOriginalValue("groupId"));
+		dlOpenerFileEntryReferenceImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		dlOpenerFileEntryReferenceImpl.setUserId(
+			this.<Long>getColumnOriginalValue("userId"));
+		dlOpenerFileEntryReferenceImpl.setUserName(
+			this.<String>getColumnOriginalValue("userName"));
+		dlOpenerFileEntryReferenceImpl.setCreateDate(
+			this.<Date>getColumnOriginalValue("createDate"));
+		dlOpenerFileEntryReferenceImpl.setModifiedDate(
+			this.<Date>getColumnOriginalValue("modifiedDate"));
+		dlOpenerFileEntryReferenceImpl.setReferenceKey(
+			this.<String>getColumnOriginalValue("referenceKey"));
+		dlOpenerFileEntryReferenceImpl.setReferenceType(
+			this.<String>getColumnOriginalValue("referenceType"));
+		dlOpenerFileEntryReferenceImpl.setFileEntryId(
+			this.<Long>getColumnOriginalValue("fileEntryId"));
+		dlOpenerFileEntryReferenceImpl.setType(
+			this.<Integer>getColumnOriginalValue("type_"));
 
 		return dlOpenerFileEntryReferenceImpl;
 	}
@@ -781,7 +788,7 @@ public class DLOpenerFileEntryReferenceModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			(4 * attributeGetterFunctions.size()) + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -792,11 +799,27 @@ public class DLOpenerFileEntryReferenceModelImpl
 			Function<DLOpenerFileEntryReference, Object>
 				attributeGetterFunction = entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(
-				attributeGetterFunction.apply(
-					(DLOpenerFileEntryReference)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply(
+				(DLOpenerFileEntryReference)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -847,7 +870,8 @@ public class DLOpenerFileEntryReferenceModelImpl
 		private static final Function
 			<InvocationHandler, DLOpenerFileEntryReference>
 				_escapedModelProxyProviderFunction =
-					_getProxyProviderFunction();
+					ProxyUtil.getProxyProviderFunction(
+						DLOpenerFileEntryReference.class, ModelWrapper.class);
 
 	}
 

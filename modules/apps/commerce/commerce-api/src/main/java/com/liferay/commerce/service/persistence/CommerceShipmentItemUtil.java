@@ -25,10 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.util.tracker.ServiceTracker;
-
 /**
  * The persistence utility for the commerce shipment item service. This utility wraps <code>com.liferay.commerce.service.persistence.impl.CommerceShipmentItemPersistenceImpl</code> and provides direct access to the database for CRUD operations. This utility should only be used by the service layer, as it must operate within a transaction. Never access this utility in a JSP, controller, model, or other front-end class.
  *
@@ -124,6 +120,425 @@ public class CommerceShipmentItemUtil {
 		ServiceContext serviceContext) {
 
 		return getPersistence().update(commerceShipmentItem, serviceContext);
+	}
+
+	/**
+	 * Returns all the commerce shipment items where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @return the matching commerce shipment items
+	 */
+	public static List<CommerceShipmentItem> findByUuid(String uuid) {
+		return getPersistence().findByUuid(uuid);
+	}
+
+	/**
+	 * Returns a range of all the commerce shipment items where uuid = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommerceShipmentItemModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param start the lower bound of the range of commerce shipment items
+	 * @param end the upper bound of the range of commerce shipment items (not inclusive)
+	 * @return the range of matching commerce shipment items
+	 */
+	public static List<CommerceShipmentItem> findByUuid(
+		String uuid, int start, int end) {
+
+		return getPersistence().findByUuid(uuid, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the commerce shipment items where uuid = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommerceShipmentItemModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param start the lower bound of the range of commerce shipment items
+	 * @param end the upper bound of the range of commerce shipment items (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching commerce shipment items
+	 */
+	public static List<CommerceShipmentItem> findByUuid(
+		String uuid, int start, int end,
+		OrderByComparator<CommerceShipmentItem> orderByComparator) {
+
+		return getPersistence().findByUuid(uuid, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns an ordered range of all the commerce shipment items where uuid = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommerceShipmentItemModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param start the lower bound of the range of commerce shipment items
+	 * @param end the upper bound of the range of commerce shipment items (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching commerce shipment items
+	 */
+	public static List<CommerceShipmentItem> findByUuid(
+		String uuid, int start, int end,
+		OrderByComparator<CommerceShipmentItem> orderByComparator,
+		boolean useFinderCache) {
+
+		return getPersistence().findByUuid(
+			uuid, start, end, orderByComparator, useFinderCache);
+	}
+
+	/**
+	 * Returns the first commerce shipment item in the ordered set where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching commerce shipment item
+	 * @throws NoSuchShipmentItemException if a matching commerce shipment item could not be found
+	 */
+	public static CommerceShipmentItem findByUuid_First(
+			String uuid,
+			OrderByComparator<CommerceShipmentItem> orderByComparator)
+		throws com.liferay.commerce.exception.NoSuchShipmentItemException {
+
+		return getPersistence().findByUuid_First(uuid, orderByComparator);
+	}
+
+	/**
+	 * Returns the first commerce shipment item in the ordered set where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching commerce shipment item, or <code>null</code> if a matching commerce shipment item could not be found
+	 */
+	public static CommerceShipmentItem fetchByUuid_First(
+		String uuid,
+		OrderByComparator<CommerceShipmentItem> orderByComparator) {
+
+		return getPersistence().fetchByUuid_First(uuid, orderByComparator);
+	}
+
+	/**
+	 * Returns the last commerce shipment item in the ordered set where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching commerce shipment item
+	 * @throws NoSuchShipmentItemException if a matching commerce shipment item could not be found
+	 */
+	public static CommerceShipmentItem findByUuid_Last(
+			String uuid,
+			OrderByComparator<CommerceShipmentItem> orderByComparator)
+		throws com.liferay.commerce.exception.NoSuchShipmentItemException {
+
+		return getPersistence().findByUuid_Last(uuid, orderByComparator);
+	}
+
+	/**
+	 * Returns the last commerce shipment item in the ordered set where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching commerce shipment item, or <code>null</code> if a matching commerce shipment item could not be found
+	 */
+	public static CommerceShipmentItem fetchByUuid_Last(
+		String uuid,
+		OrderByComparator<CommerceShipmentItem> orderByComparator) {
+
+		return getPersistence().fetchByUuid_Last(uuid, orderByComparator);
+	}
+
+	/**
+	 * Returns the commerce shipment items before and after the current commerce shipment item in the ordered set where uuid = &#63;.
+	 *
+	 * @param commerceShipmentItemId the primary key of the current commerce shipment item
+	 * @param uuid the uuid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next commerce shipment item
+	 * @throws NoSuchShipmentItemException if a commerce shipment item with the primary key could not be found
+	 */
+	public static CommerceShipmentItem[] findByUuid_PrevAndNext(
+			long commerceShipmentItemId, String uuid,
+			OrderByComparator<CommerceShipmentItem> orderByComparator)
+		throws com.liferay.commerce.exception.NoSuchShipmentItemException {
+
+		return getPersistence().findByUuid_PrevAndNext(
+			commerceShipmentItemId, uuid, orderByComparator);
+	}
+
+	/**
+	 * Removes all the commerce shipment items where uuid = &#63; from the database.
+	 *
+	 * @param uuid the uuid
+	 */
+	public static void removeByUuid(String uuid) {
+		getPersistence().removeByUuid(uuid);
+	}
+
+	/**
+	 * Returns the number of commerce shipment items where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @return the number of matching commerce shipment items
+	 */
+	public static int countByUuid(String uuid) {
+		return getPersistence().countByUuid(uuid);
+	}
+
+	/**
+	 * Returns the commerce shipment item where uuid = &#63; and groupId = &#63; or throws a <code>NoSuchShipmentItemException</code> if it could not be found.
+	 *
+	 * @param uuid the uuid
+	 * @param groupId the group ID
+	 * @return the matching commerce shipment item
+	 * @throws NoSuchShipmentItemException if a matching commerce shipment item could not be found
+	 */
+	public static CommerceShipmentItem findByUUID_G(String uuid, long groupId)
+		throws com.liferay.commerce.exception.NoSuchShipmentItemException {
+
+		return getPersistence().findByUUID_G(uuid, groupId);
+	}
+
+	/**
+	 * Returns the commerce shipment item where uuid = &#63; and groupId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param uuid the uuid
+	 * @param groupId the group ID
+	 * @return the matching commerce shipment item, or <code>null</code> if a matching commerce shipment item could not be found
+	 */
+	public static CommerceShipmentItem fetchByUUID_G(
+		String uuid, long groupId) {
+
+		return getPersistence().fetchByUUID_G(uuid, groupId);
+	}
+
+	/**
+	 * Returns the commerce shipment item where uuid = &#63; and groupId = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	 *
+	 * @param uuid the uuid
+	 * @param groupId the group ID
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the matching commerce shipment item, or <code>null</code> if a matching commerce shipment item could not be found
+	 */
+	public static CommerceShipmentItem fetchByUUID_G(
+		String uuid, long groupId, boolean useFinderCache) {
+
+		return getPersistence().fetchByUUID_G(uuid, groupId, useFinderCache);
+	}
+
+	/**
+	 * Removes the commerce shipment item where uuid = &#63; and groupId = &#63; from the database.
+	 *
+	 * @param uuid the uuid
+	 * @param groupId the group ID
+	 * @return the commerce shipment item that was removed
+	 */
+	public static CommerceShipmentItem removeByUUID_G(String uuid, long groupId)
+		throws com.liferay.commerce.exception.NoSuchShipmentItemException {
+
+		return getPersistence().removeByUUID_G(uuid, groupId);
+	}
+
+	/**
+	 * Returns the number of commerce shipment items where uuid = &#63; and groupId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param groupId the group ID
+	 * @return the number of matching commerce shipment items
+	 */
+	public static int countByUUID_G(String uuid, long groupId) {
+		return getPersistence().countByUUID_G(uuid, groupId);
+	}
+
+	/**
+	 * Returns all the commerce shipment items where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @return the matching commerce shipment items
+	 */
+	public static List<CommerceShipmentItem> findByUuid_C(
+		String uuid, long companyId) {
+
+		return getPersistence().findByUuid_C(uuid, companyId);
+	}
+
+	/**
+	 * Returns a range of all the commerce shipment items where uuid = &#63; and companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommerceShipmentItemModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of commerce shipment items
+	 * @param end the upper bound of the range of commerce shipment items (not inclusive)
+	 * @return the range of matching commerce shipment items
+	 */
+	public static List<CommerceShipmentItem> findByUuid_C(
+		String uuid, long companyId, int start, int end) {
+
+		return getPersistence().findByUuid_C(uuid, companyId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the commerce shipment items where uuid = &#63; and companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommerceShipmentItemModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of commerce shipment items
+	 * @param end the upper bound of the range of commerce shipment items (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching commerce shipment items
+	 */
+	public static List<CommerceShipmentItem> findByUuid_C(
+		String uuid, long companyId, int start, int end,
+		OrderByComparator<CommerceShipmentItem> orderByComparator) {
+
+		return getPersistence().findByUuid_C(
+			uuid, companyId, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns an ordered range of all the commerce shipment items where uuid = &#63; and companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CommerceShipmentItemModelImpl</code>.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of commerce shipment items
+	 * @param end the upper bound of the range of commerce shipment items (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching commerce shipment items
+	 */
+	public static List<CommerceShipmentItem> findByUuid_C(
+		String uuid, long companyId, int start, int end,
+		OrderByComparator<CommerceShipmentItem> orderByComparator,
+		boolean useFinderCache) {
+
+		return getPersistence().findByUuid_C(
+			uuid, companyId, start, end, orderByComparator, useFinderCache);
+	}
+
+	/**
+	 * Returns the first commerce shipment item in the ordered set where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching commerce shipment item
+	 * @throws NoSuchShipmentItemException if a matching commerce shipment item could not be found
+	 */
+	public static CommerceShipmentItem findByUuid_C_First(
+			String uuid, long companyId,
+			OrderByComparator<CommerceShipmentItem> orderByComparator)
+		throws com.liferay.commerce.exception.NoSuchShipmentItemException {
+
+		return getPersistence().findByUuid_C_First(
+			uuid, companyId, orderByComparator);
+	}
+
+	/**
+	 * Returns the first commerce shipment item in the ordered set where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching commerce shipment item, or <code>null</code> if a matching commerce shipment item could not be found
+	 */
+	public static CommerceShipmentItem fetchByUuid_C_First(
+		String uuid, long companyId,
+		OrderByComparator<CommerceShipmentItem> orderByComparator) {
+
+		return getPersistence().fetchByUuid_C_First(
+			uuid, companyId, orderByComparator);
+	}
+
+	/**
+	 * Returns the last commerce shipment item in the ordered set where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching commerce shipment item
+	 * @throws NoSuchShipmentItemException if a matching commerce shipment item could not be found
+	 */
+	public static CommerceShipmentItem findByUuid_C_Last(
+			String uuid, long companyId,
+			OrderByComparator<CommerceShipmentItem> orderByComparator)
+		throws com.liferay.commerce.exception.NoSuchShipmentItemException {
+
+		return getPersistence().findByUuid_C_Last(
+			uuid, companyId, orderByComparator);
+	}
+
+	/**
+	 * Returns the last commerce shipment item in the ordered set where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching commerce shipment item, or <code>null</code> if a matching commerce shipment item could not be found
+	 */
+	public static CommerceShipmentItem fetchByUuid_C_Last(
+		String uuid, long companyId,
+		OrderByComparator<CommerceShipmentItem> orderByComparator) {
+
+		return getPersistence().fetchByUuid_C_Last(
+			uuid, companyId, orderByComparator);
+	}
+
+	/**
+	 * Returns the commerce shipment items before and after the current commerce shipment item in the ordered set where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param commerceShipmentItemId the primary key of the current commerce shipment item
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next commerce shipment item
+	 * @throws NoSuchShipmentItemException if a commerce shipment item with the primary key could not be found
+	 */
+	public static CommerceShipmentItem[] findByUuid_C_PrevAndNext(
+			long commerceShipmentItemId, String uuid, long companyId,
+			OrderByComparator<CommerceShipmentItem> orderByComparator)
+		throws com.liferay.commerce.exception.NoSuchShipmentItemException {
+
+		return getPersistence().findByUuid_C_PrevAndNext(
+			commerceShipmentItemId, uuid, companyId, orderByComparator);
+	}
+
+	/**
+	 * Removes all the commerce shipment items where uuid = &#63; and companyId = &#63; from the database.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 */
+	public static void removeByUuid_C(String uuid, long companyId) {
+		getPersistence().removeByUuid_C(uuid, companyId);
+	}
+
+	/**
+	 * Returns the number of commerce shipment items where uuid = &#63; and companyId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param companyId the company ID
+	 * @return the number of matching commerce shipment items
+	 */
+	public static int countByUuid_C(String uuid, long companyId) {
+		return getPersistence().countByUuid_C(uuid, companyId);
 	}
 
 	/**
@@ -302,10 +717,10 @@ public class CommerceShipmentItemUtil {
 	 * @param commerceShipmentId the commerce shipment ID
 	 * @return the matching commerce shipment items
 	 */
-	public static List<CommerceShipmentItem> findByCommerceShipment(
+	public static List<CommerceShipmentItem> findByCommerceShipmentId(
 		long commerceShipmentId) {
 
-		return getPersistence().findByCommerceShipment(commerceShipmentId);
+		return getPersistence().findByCommerceShipmentId(commerceShipmentId);
 	}
 
 	/**
@@ -320,10 +735,10 @@ public class CommerceShipmentItemUtil {
 	 * @param end the upper bound of the range of commerce shipment items (not inclusive)
 	 * @return the range of matching commerce shipment items
 	 */
-	public static List<CommerceShipmentItem> findByCommerceShipment(
+	public static List<CommerceShipmentItem> findByCommerceShipmentId(
 		long commerceShipmentId, int start, int end) {
 
-		return getPersistence().findByCommerceShipment(
+		return getPersistence().findByCommerceShipmentId(
 			commerceShipmentId, start, end);
 	}
 
@@ -340,11 +755,11 @@ public class CommerceShipmentItemUtil {
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
 	 * @return the ordered range of matching commerce shipment items
 	 */
-	public static List<CommerceShipmentItem> findByCommerceShipment(
+	public static List<CommerceShipmentItem> findByCommerceShipmentId(
 		long commerceShipmentId, int start, int end,
 		OrderByComparator<CommerceShipmentItem> orderByComparator) {
 
-		return getPersistence().findByCommerceShipment(
+		return getPersistence().findByCommerceShipmentId(
 			commerceShipmentId, start, end, orderByComparator);
 	}
 
@@ -362,12 +777,12 @@ public class CommerceShipmentItemUtil {
 	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching commerce shipment items
 	 */
-	public static List<CommerceShipmentItem> findByCommerceShipment(
+	public static List<CommerceShipmentItem> findByCommerceShipmentId(
 		long commerceShipmentId, int start, int end,
 		OrderByComparator<CommerceShipmentItem> orderByComparator,
 		boolean useFinderCache) {
 
-		return getPersistence().findByCommerceShipment(
+		return getPersistence().findByCommerceShipmentId(
 			commerceShipmentId, start, end, orderByComparator, useFinderCache);
 	}
 
@@ -379,12 +794,12 @@ public class CommerceShipmentItemUtil {
 	 * @return the first matching commerce shipment item
 	 * @throws NoSuchShipmentItemException if a matching commerce shipment item could not be found
 	 */
-	public static CommerceShipmentItem findByCommerceShipment_First(
+	public static CommerceShipmentItem findByCommerceShipmentId_First(
 			long commerceShipmentId,
 			OrderByComparator<CommerceShipmentItem> orderByComparator)
 		throws com.liferay.commerce.exception.NoSuchShipmentItemException {
 
-		return getPersistence().findByCommerceShipment_First(
+		return getPersistence().findByCommerceShipmentId_First(
 			commerceShipmentId, orderByComparator);
 	}
 
@@ -395,11 +810,11 @@ public class CommerceShipmentItemUtil {
 	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
 	 * @return the first matching commerce shipment item, or <code>null</code> if a matching commerce shipment item could not be found
 	 */
-	public static CommerceShipmentItem fetchByCommerceShipment_First(
+	public static CommerceShipmentItem fetchByCommerceShipmentId_First(
 		long commerceShipmentId,
 		OrderByComparator<CommerceShipmentItem> orderByComparator) {
 
-		return getPersistence().fetchByCommerceShipment_First(
+		return getPersistence().fetchByCommerceShipmentId_First(
 			commerceShipmentId, orderByComparator);
 	}
 
@@ -411,12 +826,12 @@ public class CommerceShipmentItemUtil {
 	 * @return the last matching commerce shipment item
 	 * @throws NoSuchShipmentItemException if a matching commerce shipment item could not be found
 	 */
-	public static CommerceShipmentItem findByCommerceShipment_Last(
+	public static CommerceShipmentItem findByCommerceShipmentId_Last(
 			long commerceShipmentId,
 			OrderByComparator<CommerceShipmentItem> orderByComparator)
 		throws com.liferay.commerce.exception.NoSuchShipmentItemException {
 
-		return getPersistence().findByCommerceShipment_Last(
+		return getPersistence().findByCommerceShipmentId_Last(
 			commerceShipmentId, orderByComparator);
 	}
 
@@ -427,11 +842,11 @@ public class CommerceShipmentItemUtil {
 	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
 	 * @return the last matching commerce shipment item, or <code>null</code> if a matching commerce shipment item could not be found
 	 */
-	public static CommerceShipmentItem fetchByCommerceShipment_Last(
+	public static CommerceShipmentItem fetchByCommerceShipmentId_Last(
 		long commerceShipmentId,
 		OrderByComparator<CommerceShipmentItem> orderByComparator) {
 
-		return getPersistence().fetchByCommerceShipment_Last(
+		return getPersistence().fetchByCommerceShipmentId_Last(
 			commerceShipmentId, orderByComparator);
 	}
 
@@ -444,12 +859,12 @@ public class CommerceShipmentItemUtil {
 	 * @return the previous, current, and next commerce shipment item
 	 * @throws NoSuchShipmentItemException if a commerce shipment item with the primary key could not be found
 	 */
-	public static CommerceShipmentItem[] findByCommerceShipment_PrevAndNext(
+	public static CommerceShipmentItem[] findByCommerceShipmentId_PrevAndNext(
 			long commerceShipmentItemId, long commerceShipmentId,
 			OrderByComparator<CommerceShipmentItem> orderByComparator)
 		throws com.liferay.commerce.exception.NoSuchShipmentItemException {
 
-		return getPersistence().findByCommerceShipment_PrevAndNext(
+		return getPersistence().findByCommerceShipmentId_PrevAndNext(
 			commerceShipmentItemId, commerceShipmentId, orderByComparator);
 	}
 
@@ -458,8 +873,8 @@ public class CommerceShipmentItemUtil {
 	 *
 	 * @param commerceShipmentId the commerce shipment ID
 	 */
-	public static void removeByCommerceShipment(long commerceShipmentId) {
-		getPersistence().removeByCommerceShipment(commerceShipmentId);
+	public static void removeByCommerceShipmentId(long commerceShipmentId) {
+		getPersistence().removeByCommerceShipmentId(commerceShipmentId);
 	}
 
 	/**
@@ -468,8 +883,8 @@ public class CommerceShipmentItemUtil {
 	 * @param commerceShipmentId the commerce shipment ID
 	 * @return the number of matching commerce shipment items
 	 */
-	public static int countByCommerceShipment(long commerceShipmentId) {
-		return getPersistence().countByCommerceShipment(commerceShipmentId);
+	public static int countByCommerceShipmentId(long commerceShipmentId) {
+		return getPersistence().countByCommerceShipmentId(commerceShipmentId);
 	}
 
 	/**
@@ -935,6 +1350,76 @@ public class CommerceShipmentItemUtil {
 	}
 
 	/**
+	 * Returns the commerce shipment item where companyId = &#63; and externalReferenceCode = &#63; or throws a <code>NoSuchShipmentItemException</code> if it could not be found.
+	 *
+	 * @param companyId the company ID
+	 * @param externalReferenceCode the external reference code
+	 * @return the matching commerce shipment item
+	 * @throws NoSuchShipmentItemException if a matching commerce shipment item could not be found
+	 */
+	public static CommerceShipmentItem findByC_ERC(
+			long companyId, String externalReferenceCode)
+		throws com.liferay.commerce.exception.NoSuchShipmentItemException {
+
+		return getPersistence().findByC_ERC(companyId, externalReferenceCode);
+	}
+
+	/**
+	 * Returns the commerce shipment item where companyId = &#63; and externalReferenceCode = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param companyId the company ID
+	 * @param externalReferenceCode the external reference code
+	 * @return the matching commerce shipment item, or <code>null</code> if a matching commerce shipment item could not be found
+	 */
+	public static CommerceShipmentItem fetchByC_ERC(
+		long companyId, String externalReferenceCode) {
+
+		return getPersistence().fetchByC_ERC(companyId, externalReferenceCode);
+	}
+
+	/**
+	 * Returns the commerce shipment item where companyId = &#63; and externalReferenceCode = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	 *
+	 * @param companyId the company ID
+	 * @param externalReferenceCode the external reference code
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the matching commerce shipment item, or <code>null</code> if a matching commerce shipment item could not be found
+	 */
+	public static CommerceShipmentItem fetchByC_ERC(
+		long companyId, String externalReferenceCode, boolean useFinderCache) {
+
+		return getPersistence().fetchByC_ERC(
+			companyId, externalReferenceCode, useFinderCache);
+	}
+
+	/**
+	 * Removes the commerce shipment item where companyId = &#63; and externalReferenceCode = &#63; from the database.
+	 *
+	 * @param companyId the company ID
+	 * @param externalReferenceCode the external reference code
+	 * @return the commerce shipment item that was removed
+	 */
+	public static CommerceShipmentItem removeByC_ERC(
+			long companyId, String externalReferenceCode)
+		throws com.liferay.commerce.exception.NoSuchShipmentItemException {
+
+		return getPersistence().removeByC_ERC(companyId, externalReferenceCode);
+	}
+
+	/**
+	 * Returns the number of commerce shipment items where companyId = &#63; and externalReferenceCode = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param externalReferenceCode the external reference code
+	 * @return the number of matching commerce shipment items
+	 */
+	public static int countByC_ERC(
+		long companyId, String externalReferenceCode) {
+
+		return getPersistence().countByC_ERC(companyId, externalReferenceCode);
+	}
+
+	/**
 	 * Caches the commerce shipment item in the entity cache if it is enabled.
 	 *
 	 * @param commerceShipmentItem the commerce shipment item
@@ -1091,29 +1576,9 @@ public class CommerceShipmentItemUtil {
 	}
 
 	public static CommerceShipmentItemPersistence getPersistence() {
-		return _serviceTracker.getService();
+		return _persistence;
 	}
 
-	private static ServiceTracker
-		<CommerceShipmentItemPersistence, CommerceShipmentItemPersistence>
-			_serviceTracker;
-
-	static {
-		Bundle bundle = FrameworkUtil.getBundle(
-			CommerceShipmentItemPersistence.class);
-
-		ServiceTracker
-			<CommerceShipmentItemPersistence, CommerceShipmentItemPersistence>
-				serviceTracker =
-					new ServiceTracker
-						<CommerceShipmentItemPersistence,
-						 CommerceShipmentItemPersistence>(
-							 bundle.getBundleContext(),
-							 CommerceShipmentItemPersistence.class, null);
-
-		serviceTracker.open();
-
-		_serviceTracker = serviceTracker;
-	}
+	private static volatile CommerceShipmentItemPersistence _persistence;
 
 }

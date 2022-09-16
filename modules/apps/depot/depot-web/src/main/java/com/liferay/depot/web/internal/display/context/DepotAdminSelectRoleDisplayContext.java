@@ -16,7 +16,9 @@ package com.liferay.depot.web.internal.display.context;
 
 import com.liferay.depot.constants.DepotRolesConstants;
 import com.liferay.depot.model.DepotEntry;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -29,6 +31,7 @@ import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.security.membershippolicy.SiteMembershipPolicyUtil;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.GroupServiceUtil;
 import com.liferay.portal.kernel.service.RoleLocalServiceUtil;
@@ -177,17 +180,9 @@ public class DepotAdminSelectRoleDisplayContext {
 				_getPortletURL(_renderRequest, _renderResponse, _user));
 
 			groupSearch.setEmptyResultsMessage("no-asset-libraries-were-found");
-
-			GroupSearchTerms groupSearchTerms =
-				(GroupSearchTerms)groupSearch.getSearchTerms();
-
-			List<Group> groups = _getDepotGroups(groupSearchTerms);
-
-			groupSearch.setTotal(groups.size());
-
-			groupSearch.setResults(
-				ListUtil.subList(
-					groups, groupSearch.getStart(), groupSearch.getEnd()));
+			groupSearch.setResultsAndTotal(
+				_getDepotGroups(
+					(GroupSearchTerms)groupSearch.getSearchTerms()));
 
 			_groupSearch = groupSearch;
 
@@ -195,13 +190,13 @@ public class DepotAdminSelectRoleDisplayContext {
 		}
 
 		public PortletURL getSelectRolePortletURL() {
-			PortletURL portletURL = _getPortletURL(
-				_renderRequest, _renderResponse, _user);
-
-			portletURL.setParameter("resetCur", Boolean.TRUE.toString());
-			portletURL.setParameter("step", String.valueOf(Step2.TYPE));
-
-			return portletURL;
+			return PortletURLBuilder.create(
+				_getPortletURL(_renderRequest, _renderResponse, _user)
+			).setParameter(
+				"resetCur", true
+			).setParameter(
+				"step", Step2.TYPE
+			).buildPortletURL();
 		}
 
 		public int getType() {
@@ -230,7 +225,12 @@ public class DepotAdminSelectRoleDisplayContext {
 			}
 
 			return GroupLocalServiceUtil.search(
-				_user.getCompanyId(), groupSearchTerms.getKeywords(),
+				_user.getCompanyId(),
+				new long[] {
+					ClassNameLocalServiceUtil.getClassNameId(DepotEntry.class)
+				},
+				GroupConstants.ANY_PARENT_GROUP_ID,
+				groupSearchTerms.getKeywords(),
 				LinkedHashMapBuilder.<String, Object>put(
 					"inherit", Boolean.FALSE
 				).put(
@@ -274,16 +274,17 @@ public class DepotAdminSelectRoleDisplayContext {
 		}
 
 		public String getBreadCrumbs() throws PortalException {
-			PortletURL portletURL = _getPortletURL(
-				_renderRequest, _renderResponse, _user);
-
-			portletURL.setParameter("step", String.valueOf(Step1.TYPE));
-
 			ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
 				_themeDisplay.getLocale(), getClass());
 
 			return StringBundler.concat(
-				"<a href=\"", portletURL.toString(), "\">",
+				"<a href=\"",
+				PortletURLBuilder.create(
+					_getPortletURL(_renderRequest, _renderResponse, _user)
+				).setParameter(
+					"step", Step1.TYPE
+				).buildString(),
+				"\">",
 				ResourceBundleUtil.getString(resourceBundle, "asset-libraries"),
 				"</a> &raquo; ",
 				HtmlUtil.escape(
@@ -292,12 +293,11 @@ public class DepotAdminSelectRoleDisplayContext {
 
 		public Map<String, Object> getData(Role role) throws PortalException {
 			return HashMapBuilder.<String, Object>put(
-				"entityid", role.getRoleId()
+				"entityid",
+				_group.getGroupId() + StringPool.DASH + role.getRoleId()
 			).put(
 				"groupdescriptivename",
 				_group.getDescriptiveName(_themeDisplay.getLocale())
-			).put(
-				"groupid", _group.getGroupId()
 			).put(
 				"iconcssclass", RolesAdminUtil.getIconCssClass(role)
 			).put(
@@ -332,13 +332,7 @@ public class DepotAdminSelectRoleDisplayContext {
 				roles = _filterGroupRoles(roles);
 			}
 
-			int rolesCount = roles.size();
-
-			roleSearch.setTotal(rolesCount);
-
-			roleSearch.setResults(
-				ListUtil.subList(
-					roles, roleSearch.getStart(), roleSearch.getEnd()));
+			roleSearch.setResultsAndTotal(roles);
 
 			_roleSearch = roleSearch;
 

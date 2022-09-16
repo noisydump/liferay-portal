@@ -88,7 +88,7 @@ public class UserGroupsAdminPortletDataHandler extends BasePortletDataHandler {
 
 	@Override
 	protected String doExportData(
-			final PortletDataContext portletDataContext, String portletId,
+			PortletDataContext portletDataContext, String portletId,
 			PortletPreferences portletPreferences)
 		throws Exception {
 
@@ -142,13 +142,7 @@ public class UserGroupsAdminPortletDataHandler extends BasePortletDataHandler {
 		actionableDynamicQuery.performCount();
 	}
 
-	@Reference(unbind = "-")
-	protected void setUserGroupLocalService(
-		UserGroupLocalService userGroupLocalService) {
-
-		_userGroupLocalService = userGroupLocalService;
-	}
-
+	@Reference
 	private UserGroupLocalService _userGroupLocalService;
 
 }

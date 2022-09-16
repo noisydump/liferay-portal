@@ -17,7 +17,7 @@ package com.liferay.journal.content.asset.addon.entry.comments.internal;
 import com.liferay.journal.configuration.JournalServiceConfiguration;
 import com.liferay.journal.content.asset.addon.entry.ContentMetadataAssetAddonEntry;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.servlet.taglib.ui.AssetAddonEntry;
 import com.liferay.portal.kernel.servlet.taglib.ui.BaseJSPAssetAddonEntry;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -66,7 +66,12 @@ public class CommentsContentMetadataAssetAddonEntry
 
 	@Override
 	public String getLabel(Locale locale) {
-		return LanguageUtil.get(locale, "comments");
+		return _language.get(locale, "comments");
+	}
+
+	@Override
+	public ServletContext getServletContext() {
+		return _servletContext;
 	}
 
 	@Override
@@ -122,15 +127,6 @@ public class CommentsContentMetadataAssetAddonEntry
 			commentRatingsContentMetadataAssetAddonEntry;
 	}
 
-	@Override
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.journal.content.asset.addon.entry.comments)",
-		unbind = "-"
-	)
-	public void setServletContext(ServletContext servletContext) {
-		super.setServletContext(servletContext);
-	}
-
 	@Activate
 	@Modified
 	protected void activate(Map<String, Object> properties) {
@@ -140,6 +136,14 @@ public class CommentsContentMetadataAssetAddonEntry
 
 	private CommentRatingsContentMetadataAssetAddonEntry
 		_commentRatingsContentMetadataAssetAddonEntry;
-	private JournalServiceConfiguration _journalServiceConfiguration;
+	private volatile JournalServiceConfiguration _journalServiceConfiguration;
+
+	@Reference
+	private Language _language;
+
+	@Reference(
+		target = "(osgi.web.symbolicname=com.liferay.journal.content.asset.addon.entry.comments)"
+	)
+	private ServletContext _servletContext;
 
 }

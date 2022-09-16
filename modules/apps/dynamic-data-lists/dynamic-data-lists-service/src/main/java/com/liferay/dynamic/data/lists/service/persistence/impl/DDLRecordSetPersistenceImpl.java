@@ -20,11 +20,11 @@ import com.liferay.dynamic.data.lists.model.DDLRecordSetTable;
 import com.liferay.dynamic.data.lists.model.impl.DDLRecordSetImpl;
 import com.liferay.dynamic.data.lists.model.impl.DDLRecordSetModelImpl;
 import com.liferay.dynamic.data.lists.service.persistence.DDLRecordSetPersistence;
+import com.liferay.dynamic.data.lists.service.persistence.DDLRecordSetUtil;
 import com.liferay.dynamic.data.lists.service.persistence.impl.constants.DDLPersistenceConstants;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.change.tracking.CTColumnResolutionType;
 import com.liferay.portal.kernel.configuration.Configuration;
-import com.liferay.portal.kernel.dao.orm.ArgumentsResolver;
 import com.liferay.portal.kernel.dao.orm.EntityCache;
 import com.liferay.portal.kernel.dao.orm.FinderCache;
 import com.liferay.portal.kernel.dao.orm.FinderPath;
@@ -36,7 +36,6 @@ import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.dao.orm.SessionFactory;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.security.permission.InlineSQLHelperUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -45,16 +44,19 @@ import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.change.tracking.helper.CTPersistenceHelper;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.HashMapDictionary;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
+import com.liferay.portal.kernel.uuid.PortalUUID;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
 import java.util.ArrayList;
@@ -68,12 +70,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import javax.sql.DataSource;
 
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
@@ -2475,7 +2474,7 @@ public class DDLRecordSetPersistenceImpl
 	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>DDLRecordSetModelImpl</code>.
 	 * </p>
 	 *
-	 * @param groupId the group ID
+	 * @param groupIds the group IDs
 	 * @param start the lower bound of the range of ddl record sets
 	 * @param end the upper bound of the range of ddl record sets (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
@@ -3369,7 +3368,7 @@ public class DDLRecordSetPersistenceImpl
 	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>DDLRecordSetModelImpl</code>.
 	 * </p>
 	 *
-	 * @param DDMStructureId the ddm structure ID
+	 * @param DDMStructureIds the ddm structure IDs
 	 * @param start the lower bound of the range of ddl record sets
 	 * @param end the upper bound of the range of ddl record sets (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
@@ -3956,6 +3955,8 @@ public class DDLRecordSetPersistenceImpl
 			ddlRecordSet);
 	}
 
+	private int _valueObjectFinderCacheListThreshold;
+
 	/**
 	 * Caches the ddl record sets in the entity cache if it is enabled.
 	 *
@@ -3963,16 +3964,33 @@ public class DDLRecordSetPersistenceImpl
 	 */
 	@Override
 	public void cacheResult(List<DDLRecordSet> ddlRecordSets) {
+		if ((_valueObjectFinderCacheListThreshold == 0) ||
+			((_valueObjectFinderCacheListThreshold > 0) &&
+			 (ddlRecordSets.size() > _valueObjectFinderCacheListThreshold))) {
+
+			return;
+		}
+
 		for (DDLRecordSet ddlRecordSet : ddlRecordSets) {
 			if (ddlRecordSet.getCtCollectionId() != 0) {
 				continue;
 			}
 
-			if (entityCache.getResult(
-					DDLRecordSetImpl.class, ddlRecordSet.getPrimaryKey()) ==
-						null) {
+			DDLRecordSet cachedDDLRecordSet =
+				(DDLRecordSet)entityCache.getResult(
+					DDLRecordSetImpl.class, ddlRecordSet.getPrimaryKey());
 
+			if (cachedDDLRecordSet == null) {
 				cacheResult(ddlRecordSet);
+			}
+			else {
+				DDLRecordSetModelImpl ddlRecordSetModelImpl =
+					(DDLRecordSetModelImpl)ddlRecordSet;
+				DDLRecordSetModelImpl cachedDDLRecordSetModelImpl =
+					(DDLRecordSetModelImpl)cachedDDLRecordSet;
+
+				ddlRecordSetModelImpl.setDDMFormValues(
+					cachedDDLRecordSetModelImpl.getDDMFormValues());
 			}
 		}
 	}
@@ -4053,7 +4071,7 @@ public class DDLRecordSetPersistenceImpl
 		ddlRecordSet.setNew(true);
 		ddlRecordSet.setPrimaryKey(recordSetId);
 
-		String uuid = PortalUUIDUtil.generate();
+		String uuid = _portalUUID.generate();
 
 		ddlRecordSet.setUuid(uuid);
 
@@ -4174,7 +4192,7 @@ public class DDLRecordSetPersistenceImpl
 			(DDLRecordSetModelImpl)ddlRecordSet;
 
 		if (Validator.isNull(ddlRecordSet.getUuid())) {
-			String uuid = PortalUUIDUtil.generate();
+			String uuid = _portalUUID.generate();
 
 			ddlRecordSet.setUuid(uuid);
 		}
@@ -4182,24 +4200,24 @@ public class DDLRecordSetPersistenceImpl
 		ServiceContext serviceContext =
 			ServiceContextThreadLocal.getServiceContext();
 
-		Date now = new Date();
+		Date date = new Date();
 
 		if (isNew && (ddlRecordSet.getCreateDate() == null)) {
 			if (serviceContext == null) {
-				ddlRecordSet.setCreateDate(now);
+				ddlRecordSet.setCreateDate(date);
 			}
 			else {
-				ddlRecordSet.setCreateDate(serviceContext.getCreateDate(now));
+				ddlRecordSet.setCreateDate(serviceContext.getCreateDate(date));
 			}
 		}
 
 		if (!ddlRecordSetModelImpl.hasSetModifiedDate()) {
 			if (serviceContext == null) {
-				ddlRecordSet.setModifiedDate(now);
+				ddlRecordSet.setModifiedDate(date);
 			}
 			else {
 				ddlRecordSet.setModifiedDate(
-					serviceContext.getModifiedDate(now));
+					serviceContext.getModifiedDate(date));
 			}
 		}
 
@@ -4299,7 +4317,9 @@ public class DDLRecordSetPersistenceImpl
 	 */
 	@Override
 	public DDLRecordSet fetchByPrimaryKey(Serializable primaryKey) {
-		if (ctPersistenceHelper.isProductionMode(DDLRecordSet.class)) {
+		if (ctPersistenceHelper.isProductionMode(
+				DDLRecordSet.class, primaryKey)) {
+
 			return super.fetchByPrimaryKey(primaryKey);
 		}
 
@@ -4362,6 +4382,26 @@ public class DDLRecordSetPersistenceImpl
 
 			if (ddlRecordSet != null) {
 				map.put(primaryKey, ddlRecordSet);
+			}
+
+			return map;
+		}
+
+		if ((databaseInMaxParameters > 0) &&
+			(primaryKeys.size() > databaseInMaxParameters)) {
+
+			Iterator<Serializable> iterator = primaryKeys.iterator();
+
+			while (iterator.hasNext()) {
+				Set<Serializable> page = new HashSet<>();
+
+				for (int i = 0;
+					 (i < databaseInMaxParameters) && iterator.hasNext(); i++) {
+
+					page.add(iterator.next());
+				}
+
+				map.putAll(fetchByPrimaryKeys(page));
 			}
 
 			return map;
@@ -4624,7 +4664,8 @@ public class DDLRecordSetPersistenceImpl
 	public Set<String> getCTColumnNames(
 		CTColumnResolutionType ctColumnResolutionType) {
 
-		return _ctColumnNamesMap.get(ctColumnResolutionType);
+		return _ctColumnNamesMap.getOrDefault(
+			ctColumnResolutionType, Collections.emptySet());
 	}
 
 	@Override
@@ -4658,7 +4699,6 @@ public class DDLRecordSetPersistenceImpl
 	static {
 		Set<String> ctControlColumnNames = new HashSet<String>();
 		Set<String> ctIgnoreColumnNames = new HashSet<String>();
-		Set<String> ctMergeColumnNames = new HashSet<String>();
 		Set<String> ctStrictColumnNames = new HashSet<String>();
 
 		ctControlColumnNames.add("mvccVersion");
@@ -4686,7 +4726,6 @@ public class DDLRecordSetPersistenceImpl
 			CTColumnResolutionType.CONTROL, ctControlColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.IGNORE, ctIgnoreColumnNames);
-		_ctColumnNamesMap.put(CTColumnResolutionType.MERGE, ctMergeColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.PK, Collections.singleton("recordSetId"));
 		_ctColumnNamesMap.put(
@@ -4701,12 +4740,9 @@ public class DDLRecordSetPersistenceImpl
 	 * Initializes the ddl record set persistence.
 	 */
 	@Activate
-	public void activate(BundleContext bundleContext) {
-		_bundleContext = bundleContext;
-
-		_argumentsResolverServiceRegistration = _bundleContext.registerService(
-			ArgumentsResolver.class, new DDLRecordSetModelArgumentsResolver(),
-			new HashMapDictionary<>());
+	public void activate() {
+		_valueObjectFinderCacheListThreshold = GetterUtil.getInteger(
+			PropsUtil.get(PropsKeys.VALUE_OBJECT_FINDER_CACHE_LIST_THRESHOLD));
 
 		_finderPathWithPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
@@ -4822,13 +4858,31 @@ public class DDLRecordSetPersistenceImpl
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_R",
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"groupId", "recordSetKey"}, false);
+
+		_setDDLRecordSetUtilPersistence(this);
 	}
 
 	@Deactivate
 	public void deactivate() {
-		entityCache.removeCache(DDLRecordSetImpl.class.getName());
+		_setDDLRecordSetUtilPersistence(null);
 
-		_argumentsResolverServiceRegistration.unregister();
+		entityCache.removeCache(DDLRecordSetImpl.class.getName());
+	}
+
+	private void _setDDLRecordSetUtilPersistence(
+		DDLRecordSetPersistence ddlRecordSetPersistence) {
+
+		try {
+			Field field = DDLRecordSetUtil.class.getDeclaredField(
+				"_persistence");
+
+			field.setAccessible(true);
+
+			field.set(null, ddlRecordSetPersistence);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
 	}
 
 	@Override
@@ -4856,8 +4910,6 @@ public class DDLRecordSetPersistenceImpl
 	public void setSessionFactory(SessionFactory sessionFactory) {
 		super.setSessionFactory(sessionFactory);
 	}
-
-	private BundleContext _bundleContext;
 
 	@Reference
 	protected CTPersistenceHelper ctPersistenceHelper;
@@ -4922,93 +4974,11 @@ public class DDLRecordSetPersistenceImpl
 		return finderCache;
 	}
 
-	private ServiceRegistration<ArgumentsResolver>
-		_argumentsResolverServiceRegistration;
+	@Reference
+	private PortalUUID _portalUUID;
 
-	private static class DDLRecordSetModelArgumentsResolver
-		implements ArgumentsResolver {
-
-		@Override
-		public Object[] getArguments(
-			FinderPath finderPath, BaseModel<?> baseModel, boolean checkColumn,
-			boolean original) {
-
-			String[] columnNames = finderPath.getColumnNames();
-
-			if ((columnNames == null) || (columnNames.length == 0)) {
-				if (baseModel.isNew()) {
-					return FINDER_ARGS_EMPTY;
-				}
-
-				return null;
-			}
-
-			DDLRecordSetModelImpl ddlRecordSetModelImpl =
-				(DDLRecordSetModelImpl)baseModel;
-
-			long columnBitmask = ddlRecordSetModelImpl.getColumnBitmask();
-
-			if (!checkColumn || (columnBitmask == 0)) {
-				return _getValue(ddlRecordSetModelImpl, columnNames, original);
-			}
-
-			Long finderPathColumnBitmask = _finderPathColumnBitmasksCache.get(
-				finderPath);
-
-			if (finderPathColumnBitmask == null) {
-				finderPathColumnBitmask = 0L;
-
-				for (String columnName : columnNames) {
-					finderPathColumnBitmask |=
-						ddlRecordSetModelImpl.getColumnBitmask(columnName);
-				}
-
-				_finderPathColumnBitmasksCache.put(
-					finderPath, finderPathColumnBitmask);
-			}
-
-			if ((columnBitmask & finderPathColumnBitmask) != 0) {
-				return _getValue(ddlRecordSetModelImpl, columnNames, original);
-			}
-
-			return null;
-		}
-
-		@Override
-		public String getClassName() {
-			return DDLRecordSetImpl.class.getName();
-		}
-
-		@Override
-		public String getTableName() {
-			return DDLRecordSetTable.INSTANCE.getTableName();
-		}
-
-		private Object[] _getValue(
-			DDLRecordSetModelImpl ddlRecordSetModelImpl, String[] columnNames,
-			boolean original) {
-
-			Object[] arguments = new Object[columnNames.length];
-
-			for (int i = 0; i < arguments.length; i++) {
-				String columnName = columnNames[i];
-
-				if (original) {
-					arguments[i] = ddlRecordSetModelImpl.getColumnOriginalValue(
-						columnName);
-				}
-				else {
-					arguments[i] = ddlRecordSetModelImpl.getColumnValue(
-						columnName);
-				}
-			}
-
-			return arguments;
-		}
-
-		private static Map<FinderPath, Long> _finderPathColumnBitmasksCache =
-			new ConcurrentHashMap<>();
-
-	}
+	@Reference
+	private DDLRecordSetModelArgumentsResolver
+		_ddlRecordSetModelArgumentsResolver;
 
 }

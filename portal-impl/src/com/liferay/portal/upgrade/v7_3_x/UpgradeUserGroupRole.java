@@ -38,22 +38,21 @@ public class UpgradeUserGroupRole extends UpgradeProcess {
 		String normalizedTableName = dbInspector.normalizeName(
 			"UserGroupRole", databaseMetaData);
 
-		try (ResultSet rs = databaseMetaData.getColumns(
+		try (ResultSet resultSet = databaseMetaData.getColumns(
 				dbInspector.getCatalog(), dbInspector.getSchema(),
 				normalizedTableName,
 				dbInspector.normalizeName(
 					"userGroupRoleId", databaseMetaData))) {
 
-			if (rs.next()) {
+			if (resultSet.next()) {
 				return;
 			}
 		}
 
 		removePrimaryKey("UserGroupRole");
 
-		runSQL(
-			"alter table UserGroupRole add userGroupRoleId LONG default 0 " +
-				"not null");
+		alterTableAddColumn(
+			"UserGroupRole", "userGroupRoleId", "LONG default 0 not null");
 
 		long userGroupRoleId = 0;
 
@@ -62,9 +61,9 @@ public class UpgradeUserGroupRole extends UpgradeProcess {
 					"select userId, groupId, roleId from UserGroupRole");
 			PreparedStatement updatePreparedStatement =
 				AutoBatchPreparedStatementUtil.autoBatch(
-					connection.prepareStatement(
-						"update UserGroupRole set userGroupRoleId = ? where " +
-							"userId = ? and groupId = ? and roleId = ?"));
+					connection,
+					"update UserGroupRole set userGroupRoleId = ? where " +
+						"userId = ? and groupId = ? and roleId = ?");
 			ResultSet resultSet = selectPreparedStatement.executeQuery()) {
 
 			while (resultSet.next()) {

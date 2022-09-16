@@ -2,12 +2,39 @@
 <head>
 <title>BlogsEntry</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">BlogsEntry</td></tr>
 </thead>
+
 <tbody>
+<tr>
+	<td>ENTRY_COVER_IMAGE_CAPTION</td>
+	<td>//div[contains(@class,'cover-image-caption')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ENTRY_COVER_IMAGE_CAPTION_LINK</td>
+	<td>//div[contains(@class,'cover-image-caption')]//a</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ENTRY_COVER_IMAGE_CAPTION_LINK_CHECK_ICON</td>
+	<td>//span[contains(@class,'check_icon')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ENTRY_COVER_IMAGE_CAPTION_LINK_ICON</td>
+	<td>//div[contains(@class,'coverImageCaptionEditor')]//*[contains(@class,'cke_button_icon')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ENTRY_COVER_IMAGE_CAPTION_LINK_INPUT</td>
+	<td>//input[contains(@class,'textinput')]</td>
+	<td></td>
+</tr>
 <tr>
 	<td>ENTRY_COVER_IMAGE</td>
 	<td>//div[contains(@class,'cover-image') and contains(@style,'${key_uploadFileName}')] | //div[contains(@class,'cover-image')]//img</td>
@@ -15,12 +42,12 @@
 </tr>
 <tr>
 	<td>ENTRY_COVER_IMAGE_SELECT_FILE</td>
-	<td>//div[contains(@class,'image-selector')]//a[contains(.,'Select File')]</td>
+	<td>//div[contains(@class,'blogs-cover-image-selector')]//div[contains(@class,'browse-image-controls')]//button[contains(.,'Select File')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>ENTRY_COVER_IMAGE_UNPUBLISHED</td>
-	<td>//div[@class='image-wrapper']//img[contains(@src,'${key_coverImageName}')]</td>
+	<td>//div[contains(@class,'image-wrapper')]//img[contains(@src,'${key_coverImageName}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -30,7 +57,7 @@
 </tr>
 <tr>
 	<td>TITLE</td>
-	<td>//div[contains(@class,'autofit-row')]//h3[contains(.,'${key_entryTitle}')] | //div[contains(@class,'entry-title')]//p[contains(.,'${key_entryTitle}')]</td>
+	<td>//div[contains(@class,'autofit-row')]//h3[contains(.,'${key_entryTitle}')] | //div[contains(@class,'entry-title')]//*[contains(.,'${key_entryTitle}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -65,12 +92,17 @@
 </tr>
 <tr>
 	<td>CONTENT</td>
-	<td>//div[contains(@class,'content')]//p[contains(.,'${key_entryContent}')]</td>
+	<td>//div[contains(@class,'content')]//p[contains(normalize-space(),'${key_entryContent}')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>CONTENT_ABSTRACT</td>
-	<td>//div[contains(@class,'content')]//p[contains(.,'${key_entryAbstractDescription}')]</td>
+	<td>//div[contains(@class,'content')]//p[contains(normalize-space(),'${key_entryAbstractDescription}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>CONTENT_ABSTRACT_AP</td>
+	<td>//div[contains(@class,'asset-content')]//div[contains(.,'${key_entryAbstractDescription}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -84,6 +116,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>CONTENT_INLINE_IMAGE_SPECIFIC</td>
+	<td>//div[contains(@class,'content')]//p[contains(normalize-space(),'${key_entryContent}')]//img[contains(@src,'${key_uploadFileName}')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>CONTENT_INLINE_IMAGE_PREVIEW</td>
 	<td>so/screenshots/blogs/content_inline_image_preview.png</td>
 	<td></td>
@@ -94,13 +131,23 @@
 	<td></td>
 </tr>
 <tr>
+	<td>CONTENT_HTML_CITE</td>
+	<td>//div[contains(@class,'widget-mode-detail-text')]/cite</td>
+	<td></td>
+</tr>
+<tr>
+	<td>CONTENT_HTML_H2</td>
+	<td>//div[contains(@class,'widget-mode-detail-text')]/h2</td>
+	<td></td>
+</tr>
+<tr>
 	<td>CONTENT_HTML_ITALICS</td>
 	<td>//div[contains(@class,'widget-mode-detail-text')]/p/i</td>
 	<td></td>
 </tr>
 <tr>
 	<td>CONTENT_LINK</td>
-	<td>//div[contains(@class,'content')]//p[contains(.,'${key_entryContent}')]//a</td>
+	<td>//div[contains(@class,'content')]//p[contains(normalize-space(),'${key_entryContent}')]//a</td>
 	<td></td>
 </tr>
 <tr>
@@ -121,6 +168,11 @@
 <tr>
 	<td>TAG</td>
 	<td>//div[contains(.,'${key_entryTitle}')]//span/a[contains(.,'${key_tagName}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>TAG_2</td>
+	<td>xpath=(//div[contains(.,'${key_entryTitle}')]//span/a[contains(.,'${key_tagName}')])[2]</td>
 	<td></td>
 </tr>
 <tr>
@@ -150,7 +202,7 @@
 </tr>
 <tr>
 	<td>SMALL_IMAGE</td>
-	<td>//div[@class='current-image' and contains(@src,'${key_smallImage}')]</td>
+	<td>//div/img[@class='current-image' and contains(@src,'${key_smallImage}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -161,6 +213,24 @@
 <tr>
 	<td>VIDEO_EMBED_HELP_MESSAGE</td>
 	<td>//div[@class='embed-help-message']//span</td>
+	<td></td>
+</tr>
+
+<!--FRIENDLY_URL-->
+
+<tr>
+	<td>FRIENDLY_URL_ACTIVE_URL</td>
+	<td>//div[contains(@class,'modal-dialog')]//div[contains(@class,'active-url')]//p[normalize-space(text())='${key_activeURL}']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>FRIENDLY_URL_HISTORY_ITEM</td>
+	<td>//div[contains(@class,'modal-dialog')]//ul/li[contains(@class,'list-group-item')]//p[normalize-space(text())='${key_oldFriendlyURL}']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>FRIENDLY_URL_HISTORY_ITEM_LAST</td>
+	<td>xpath=(//div[contains(@class,'modal-dialog')]//ul/li[contains(@class,'list-group-item')]//p[normalize-space(text())='${key_oldFriendlyURL}'])[last()]</td>
 	<td></td>
 </tr>
 </tbody>

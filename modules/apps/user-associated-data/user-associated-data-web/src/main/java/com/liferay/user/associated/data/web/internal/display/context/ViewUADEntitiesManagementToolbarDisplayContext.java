@@ -17,8 +17,8 @@ package com.liferay.user.associated.data.web.internal.display.context;
 import com.liferay.frontend.taglib.clay.servlet.taglib.display.context.SearchContainerManagementToolbarDisplayContext;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringBundler;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -82,18 +82,16 @@ public class ViewUADEntitiesManagementToolbarDisplayContext
 
 	@Override
 	public String getClearResultsURL() {
-		PortletURL portletURL = getPortletURL();
-
-		portletURL.setParameter("keywords", (String)null);
-
-		return portletURL.toString();
+		return PortletURLBuilder.create(
+			getPortletURL()
+		).setKeywords(
+			(String)null
+		).buildString();
 	}
 
 	@Override
 	public String getComponentId() {
-		return StringBundler.concat(
-			"viewUADEntitiesManagementToolbar", StringPool.UNDERLINE,
-			StringUtil.randomId());
+		return "viewUADEntitiesManagementToolbar_" + StringUtil.randomId();
 	}
 
 	@Override
@@ -103,9 +101,7 @@ public class ViewUADEntitiesManagementToolbarDisplayContext
 
 	@Override
 	public String getSearchActionURL() {
-		PortletURL portletURL = getPortletURL();
-
-		return portletURL.toString();
+		return String.valueOf(getPortletURL());
 	}
 
 	@Override
@@ -139,12 +135,14 @@ public class ViewUADEntitiesManagementToolbarDisplayContext
 		}
 		catch (PortletException portletException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(portletException, portletException);
+				_log.warn(portletException);
 			}
 
-			portletURL = liferayPortletResponse.createRenderURL();
-
-			portletURL.setParameters(portletURL.getParameterMap());
+			portletURL = PortletURLBuilder.createRenderURL(
+				liferayPortletResponse
+			).setParameters(
+				portletURL.getParameterMap()
+			).buildPortletURL();
 		}
 
 		String[] parameterNames = {

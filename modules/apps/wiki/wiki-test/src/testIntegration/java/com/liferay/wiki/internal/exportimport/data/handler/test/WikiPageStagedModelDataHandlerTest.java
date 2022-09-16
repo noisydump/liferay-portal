@@ -222,12 +222,10 @@ public class WikiPageStagedModelDataHandlerTest
 		addDependentStagedModel(
 			dependentStagedModelsMap, DLFileEntry.class,
 			attachmentsFileEntries.get(0));
-
-		Repository repository = RepositoryLocalServiceUtil.getRepository(
-			fileEntry.getRepositoryId());
-
 		addDependentStagedModel(
-			dependentStagedModelsMap, Repository.class, repository);
+			dependentStagedModelsMap, Repository.class,
+			RepositoryLocalServiceUtil.getRepository(
+				fileEntry.getRepositoryId()));
 
 		return page;
 	}
@@ -363,6 +361,9 @@ public class WikiPageStagedModelDataHandlerTest
 		WikiPage page = (WikiPage)stagedModel;
 		WikiPage importedPage = (WikiPage)importedStagedModel;
 
+		Assert.assertEquals(
+			page.getExternalReferenceCode(),
+			importedPage.getExternalReferenceCode());
 		Assert.assertEquals(page.getTitle(), importedPage.getTitle());
 		Assert.assertEquals(page.getVersion(), importedPage.getVersion(), 0L);
 		Assert.assertEquals(page.isMinorEdit(), importedPage.isMinorEdit());

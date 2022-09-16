@@ -163,6 +163,10 @@ public class PermissionCacheUtil {
 	}
 
 	public static UserBag getUserBag(long userId) {
+		if (!CTCollectionThreadLocal.isProductionMode()) {
+			return null;
+		}
+
 		return _userBagPortalCache.get(userId);
 	}
 
@@ -221,8 +225,10 @@ public class PermissionCacheUtil {
 	}
 
 	public static void putUserBag(long userId, UserBag userBag) {
-		PortalCacheHelperUtil.putWithoutReplicator(
-			_userBagPortalCache, userId, userBag);
+		if (CTCollectionThreadLocal.isProductionMode()) {
+			PortalCacheHelperUtil.putWithoutReplicator(
+				_userBagPortalCache, userId, userBag);
+		}
 	}
 
 	public static void putUserGroupRoleIds(
@@ -262,52 +268,6 @@ public class PermissionCacheUtil {
 
 		PortalCacheHelperUtil.putWithoutReplicator(
 			_userRolePortalCache, userRoleKey, value);
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static void removePermission(
-		long groupId, String name, String primKey, long[] roleIds,
-		String actionId) {
-
-		PermissionKey permissionKey = new PermissionKey(
-			groupId, name, primKey, roleIds, actionId);
-
-		_permissionPortalCache.remove(permissionKey);
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static void removeUserBag(long userId) {
-		_userBagPortalCache.remove(userId);
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static void removeUserGroupRoleIds(long userId, long groupId) {
-		UserGroupRoleIdsKey userGroupRoleIdsKey = new UserGroupRoleIdsKey(
-			userId, groupId);
-
-		_userGroupRoleIdsPortalCache.remove(userGroupRoleIdsKey);
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static void removeUserPrimaryKeyRole(
-		long userId, long primaryKey, String roleName) {
-
-		UserPrimaryKeyRoleKey userPrimaryKeyRoleKey = new UserPrimaryKeyRoleKey(
-			userId, primaryKey, roleName);
-
-		_userPrimaryKeyRolePortalCache.remove(userPrimaryKeyRoleKey);
 	}
 
 	private static void _clearPermissionChecksMap() {

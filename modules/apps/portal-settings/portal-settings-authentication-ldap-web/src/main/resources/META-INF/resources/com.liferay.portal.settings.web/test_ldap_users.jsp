@@ -125,34 +125,15 @@ if (Validator.isNotNull(userFilter) && !userFilter.equals(StringPool.STAR)) {
 
 <%
 boolean showMissingAttributeMessage = false;
-
-PortletURL portletURL = renderResponse.createRenderURL();
-
-portletURL.setParameter("mvcRenderCommandName", "/portal_settings_authentication_ldap/test_ldap_users");
-portletURL.setParameter("ldapServerId", String.valueOf(ldapServerId));
-portletURL.setParameter("baseProviderURL", baseProviderURL);
-portletURL.setParameter("baseDN", baseDN);
-portletURL.setParameter("principal", principal);
-portletURL.setParameter("credentials", credentials);
-portletURL.setParameter("importUserSearchFilter", userFilter);
-portletURL.setParameter("userMappingScreenName", ParamUtil.getString(request, "userMappingScreenName"));
-portletURL.setParameter("userMappingPassword", ParamUtil.getString(request, "userMappingPassword"));
-portletURL.setParameter("userMappingEmailAddress", ParamUtil.getString(request, "userMappingEmailAddress"));
-portletURL.setParameter("userMappingFullName", ParamUtil.getString(request, "userMappingFullName"));
-portletURL.setParameter("userMappingFirstName", ParamUtil.getString(request, "userMappingFirstName"));
-portletURL.setParameter("userMappingLastName", ParamUtil.getString(request, "userMappingLastName"));
-portletURL.setParameter("userMappingJobTitle", ParamUtil.getString(request, "userMappingJobTitle"));
-portletURL.setParameter("userMappingGroup", ParamUtil.getString(request, "userMappingGroup"));
-portletURL.setWindowState(LiferayWindowState.POP_UP);
 %>
 
 <liferay-ui:search-container
 	emptyResultsMessage="no-users-were-found"
-	iteratorURL="<%= portletURL %>"
 	total="<%= searchResults.size() %>"
 >
 	<liferay-ui:search-container-results
-		results="<%= ListUtil.subList(searchResults, searchContainer.getStart(), searchContainer.getEnd()) %>"
+		calculateStartAndEnd="<%= true %>"
+		results="<%= searchResults %>"
 	/>
 
 	<liferay-ui:search-container-row
@@ -206,20 +187,18 @@ portletURL.setWindowState(LiferayWindowState.POP_UP);
 		/>
 	</liferay-ui:search-container-row>
 
-	<liferay-ui:search-iterator />
+	<liferay-ui:search-iterator
+		paginate="<%= false %>"
+	/>
 </liferay-ui:search-container>
 
-<%
-if (showMissingAttributeMessage) {
-%>
-
+<c:if test="<%= showMissingAttributeMessage %>">
 	<div class="alert alert-info">
 		<liferay-ui:message key="the-above-results-include-users-which-are-missing-the-required-attributes-(screen-name,-password,-email-address,-first-name,-and-last-name).-these-users-will-not-be-imported-until-these-attributes-are-filled-in" />
 	</div>
+</c:if>
 
 <%
-}
-
 if (safeLdapContext != null) {
 	safeLdapContext.close();
 }

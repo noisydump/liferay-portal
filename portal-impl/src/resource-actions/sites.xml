@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!DOCTYPE resource-action-mapping PUBLIC "-//Liferay//DTD Resource Action Mapping 7.0.0//EN" "http://www.liferay.com/dtd/liferay-resource-action-mapping_7_0_0.dtd">
+<!DOCTYPE resource-action-mapping PUBLIC "-//Liferay//DTD Resource Action Mapping 7.4.0//EN" "http://www.liferay.com/dtd/liferay-resource-action-mapping_7_4_0.dtd">
 
 <resource-action-mapping>
 	<model-resource>
@@ -19,7 +19,10 @@
 				<action-key>PERMISSIONS</action-key>
 				<action-key>UPDATE</action-key>
 				<action-key>UPDATE_DISCUSSION</action-key>
+				<action-key>UPDATE_LAYOUT_ADVANCED_OPTIONS</action-key>
+				<action-key>UPDATE_LAYOUT_BASIC</action-key>
 				<action-key>UPDATE_LAYOUT_CONTENT</action-key>
+				<action-key>UPDATE_LAYOUT_LIMITED</action-key>
 				<action-key>VIEW</action-key>
 			</supports>
 			<site-member-defaults>
@@ -40,7 +43,10 @@
 				<action-key>PERMISSIONS</action-key>
 				<action-key>UPDATE</action-key>
 				<action-key>UPDATE_DISCUSSION</action-key>
+				<action-key>UPDATE_LAYOUT_ADVANCED_OPTIONS</action-key>
+				<action-key>UPDATE_LAYOUT_BASIC</action-key>
 				<action-key>UPDATE_LAYOUT_CONTENT</action-key>
+				<action-key>UPDATE_LAYOUT_LIMITED</action-key>
 			</guest-unsupported>
 		</permissions>
 	</model-resource>

@@ -18,19 +18,16 @@ import com.liferay.knowledge.base.constants.KBActionKeys;
 import com.liferay.knowledge.base.constants.KBConstants;
 import com.liferay.knowledge.base.constants.KBPortletKeys;
 import com.liferay.knowledge.base.model.KBArticle;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfigurationIcon;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.WebKeys;
-
-import java.util.ResourceBundle;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
-import javax.portlet.PortletURL;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -42,7 +39,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + KBPortletKeys.KNOWLEDGE_BASE_ADMIN,
-		"path=/admin/view_article.jsp", "path=/admin/view_articles.jsp"
+		"path=/admin/view_kb_articles.jsp", "path=/knowledge_base/view_article"
 	},
 	service = PortletConfigurationIcon.class
 )
@@ -51,35 +48,28 @@ public class AddChildKBArticlePortletConfigurationIcon
 
 	@Override
 	public String getMessage(PortletRequest portletRequest) {
-		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
-			"content.Language", getLocale(portletRequest), getClass());
-
-		return LanguageUtil.get(resourceBundle, "add-child-article");
+		return _language.get(getLocale(portletRequest), "add-child-article");
 	}
 
 	@Override
 	public String getURL(
 		PortletRequest portletRequest, PortletResponse portletResponse) {
 
-		PortletURL portletURL = _portal.getControlPanelPortletURL(
-			portletRequest, KBPortletKeys.KNOWLEDGE_BASE_ADMIN,
-			PortletRequest.RENDER_PHASE);
-
-		portletURL.setParameter("mvcPath", "/admin/edit_article.jsp");
-
-		portletURL.setParameter(
-			"redirect", _portal.getCurrentURL(portletRequest));
-
 		KBArticle kbArticle = getKBArticle(portletRequest);
 
-		portletURL.setParameter(
-			"parentResourceClassNameId",
-			String.valueOf(kbArticle.getClassNameId()));
-		portletURL.setParameter(
-			"parentResourcePrimKey",
-			String.valueOf(kbArticle.getResourcePrimKey()));
-
-		return portletURL.toString();
+		return PortletURLBuilder.create(
+			_portal.getControlPanelPortletURL(
+				portletRequest, KBPortletKeys.KNOWLEDGE_BASE_ADMIN,
+				PortletRequest.RENDER_PHASE)
+		).setMVCPath(
+			"/admin/common/edit_kb_article.jsp"
+		).setRedirect(
+			_portal.getCurrentURL(portletRequest)
+		).setParameter(
+			"parentResourceClassNameId", kbArticle.getClassNameId()
+		).setParameter(
+			"parentResourcePrimKey", kbArticle.getResourcePrimKey()
+		).buildString();
 	}
 
 	@Override
@@ -101,6 +91,9 @@ public class AddChildKBArticlePortletConfigurationIcon
 
 		return false;
 	}
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private Portal _portal;

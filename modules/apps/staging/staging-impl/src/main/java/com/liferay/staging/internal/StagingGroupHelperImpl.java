@@ -284,9 +284,8 @@ public class StagingGroupHelperImpl implements StagingGroupHelper {
 
 	@Override
 	public boolean isStagedPortlet(long groupId, String portletId) {
-		Group group = _groupLocalService.fetchGroup(groupId);
-
-		return isStagedPortlet(group, portletId);
+		return isStagedPortlet(
+			_groupLocalService.fetchGroup(groupId), portletId);
 	}
 
 	@Override
@@ -306,7 +305,7 @@ public class StagingGroupHelperImpl implements StagingGroupHelper {
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(exception, exception);
+				_log.debug(exception);
 			}
 
 			return true;

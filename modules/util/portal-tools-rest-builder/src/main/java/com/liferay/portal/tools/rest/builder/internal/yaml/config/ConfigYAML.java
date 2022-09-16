@@ -14,6 +14,9 @@
 
 package com.liferay.portal.tools.rest.builder.internal.yaml.config;
 
+import java.util.Collections;
+import java.util.List;
+
 /**
  * @author Peter Shin
  */
@@ -43,6 +46,10 @@ public class ConfigYAML {
 		return _clientMavenGroupId;
 	}
 
+	public List<String> getDisabledBatchSchemaNames() {
+		return _disabledBatchSchemaNames;
+	}
+
 	public String getGraphQLNamespace() {
 		return _graphQLNamespace;
 	}
@@ -57,6 +64,10 @@ public class ConfigYAML {
 
 	public String getLicenseURL() {
 		return _licenseURL;
+	}
+
+	public String getResourceApplicationSelect() {
+		return _resourceApplicationSelect;
 	}
 
 	public String getTestDir() {
@@ -87,8 +98,16 @@ public class ConfigYAML {
 		return _generateGraphQL;
 	}
 
+	public boolean isGenerateOpenAPI() {
+		return _generateOpenAPI;
+	}
+
 	public boolean isGenerateREST() {
 		return _generateREST;
+	}
+
+	public boolean isLiferayEnterpriseApp() {
+		return _liferayEnterpriseApp;
 	}
 
 	public boolean isWarningsEnabled() {
@@ -117,6 +136,12 @@ public class ConfigYAML {
 
 	public void setClientMavenGroupId(String clientMavenGroupId) {
 		_clientMavenGroupId = clientMavenGroupId;
+	}
+
+	public void setDisabledBatchSchemaNames(
+		List<String> disabledBatchSchemaNames) {
+
+		_disabledBatchSchemaNames = disabledBatchSchemaNames;
 	}
 
 	public void setForceClientVersionDescription(
@@ -153,6 +178,10 @@ public class ConfigYAML {
 		_generateGraphQL = generateGraphQL;
 	}
 
+	public void setGenerateOpenAPI(boolean generateOpenAPI) {
+		_generateOpenAPI = generateOpenAPI;
+	}
+
 	public void setGenerateREST(boolean generateREST) {
 		_generateREST = generateREST;
 	}
@@ -173,6 +202,14 @@ public class ConfigYAML {
 		_licenseURL = licenseURL;
 	}
 
+	public void setLiferayEnterpriseApp(boolean liferayEnterpriseApp) {
+		_liferayEnterpriseApp = liferayEnterpriseApp;
+	}
+
+	public void setResourceApplicationSelect(String resourceApplicationSelect) {
+		_resourceApplicationSelect = resourceApplicationSelect;
+	}
+
 	public void setTestDir(String testDir) {
 		_testDir = testDir;
 	}
@@ -187,18 +224,22 @@ public class ConfigYAML {
 	private String _author;
 	private String _clientDir;
 	private String _clientMavenGroupId;
+	private List<String> _disabledBatchSchemaNames = Collections.emptyList();
 	private boolean _forceClientVersionDescription = true;
 	private boolean _forcePredictableContentApplicationXML = true;
-	private boolean _forcePredictableOperationId = true;
+	private boolean _forcePredictableOperationId;
 	private boolean _forcePredictableSchemaPropertyName = true;
 	private boolean _generateBatch = true;
 	private boolean _generateGraphQL = true;
+	private boolean _generateOpenAPI = true;
 	private boolean _generateREST = true;
 	private String _graphQLNamespace;
 	private String _implDir = "src/main/java";
 	private String _licenseName = "Apache 2.0";
 	private String _licenseURL =
 		"http://www.apache.org/licenses/LICENSE-2.0.html";
+	private boolean _liferayEnterpriseApp;
+	private String _resourceApplicationSelect;
 	private String _testDir;
 	private boolean _warningsEnabled = true;
 

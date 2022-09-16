@@ -23,8 +23,7 @@ import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.journal.model.JournalFolder;
 import com.liferay.journal.service.JournalFolderLocalService;
-import com.liferay.journal.service.persistence.JournalArticleFinder;
-import com.liferay.journal.service.persistence.JournalArticlePersistence;
+import com.liferay.journal.service.JournalFolderLocalServiceUtil;
 import com.liferay.journal.service.persistence.JournalFolderFinder;
 import com.liferay.journal.service.persistence.JournalFolderPersistence;
 import com.liferay.petra.function.UnsafeFunction;
@@ -49,6 +48,8 @@ import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -65,10 +66,13 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -89,7 +93,7 @@ public abstract class JournalFolderLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>JournalFolderLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.journal.service.JournalFolderLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>JournalFolderLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>JournalFolderLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -160,6 +164,13 @@ public abstract class JournalFolderLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return journalFolderPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -266,6 +277,50 @@ public abstract class JournalFolderLocalServiceBaseImpl
 		String uuid, long groupId) {
 
 		return journalFolderPersistence.fetchByUUID_G(uuid, groupId);
+	}
+
+	/**
+	 * Returns the journal folder with the matching external reference code and group.
+	 *
+	 * @param groupId the primary key of the group
+	 * @param externalReferenceCode the journal folder's external reference code
+	 * @return the matching journal folder, or <code>null</code> if a matching journal folder could not be found
+	 */
+	@Override
+	public JournalFolder fetchJournalFolderByExternalReferenceCode(
+		long groupId, String externalReferenceCode) {
+
+		return journalFolderPersistence.fetchByG_ERC(
+			groupId, externalReferenceCode);
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #fetchJournalFolderByExternalReferenceCode(long, String)}
+	 */
+	@Deprecated
+	@Override
+	public JournalFolder fetchJournalFolderByReferenceCode(
+		long groupId, String externalReferenceCode) {
+
+		return fetchJournalFolderByExternalReferenceCode(
+			groupId, externalReferenceCode);
+	}
+
+	/**
+	 * Returns the journal folder with the matching external reference code and group.
+	 *
+	 * @param groupId the primary key of the group
+	 * @param externalReferenceCode the journal folder's external reference code
+	 * @return the matching journal folder
+	 * @throws PortalException if a matching journal folder could not be found
+	 */
+	@Override
+	public JournalFolder getJournalFolderByExternalReferenceCode(
+			long groupId, String externalReferenceCode)
+		throws PortalException {
+
+		return journalFolderPersistence.findByG_ERC(
+			groupId, externalReferenceCode);
 	}
 
 	/**
@@ -468,6 +523,11 @@ public abstract class JournalFolderLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement JournalFolderLocalServiceImpl#deleteJournalFolder(JournalFolder) to avoid orphaned data");
+		}
+
 		return journalFolderLocalService.deleteJournalFolder(
 			(JournalFolder)persistedModel);
 	}
@@ -578,6 +638,11 @@ public abstract class JournalFolderLocalServiceBaseImpl
 		return journalFolderPersistence.update(journalFolder);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -589,6 +654,8 @@ public abstract class JournalFolderLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		journalFolderLocalService = (JournalFolderLocalService)aopProxy;
+
+		_setLocalServiceUtilService(journalFolderLocalService);
 	}
 
 	/**
@@ -648,6 +715,22 @@ public abstract class JournalFolderLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		JournalFolderLocalService journalFolderLocalService) {
+
+		try {
+			Field field = JournalFolderLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, journalFolderLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected JournalFolderLocalService journalFolderLocalService;
 
 	@Reference
@@ -660,47 +743,7 @@ public abstract class JournalFolderLocalServiceBaseImpl
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@Reference
-	protected JournalArticlePersistence journalArticlePersistence;
-
-	@Reference
-	protected JournalArticleFinder journalArticleFinder;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.ClassNameLocalService
-		classNameLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.ResourceLocalService
-		resourceLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
-
-	@Reference
-	protected
-		com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService
-			workflowDefinitionLinkLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService
-		workflowInstanceLinkLocalService;
-
-	@Reference
-	protected com.liferay.asset.kernel.service.AssetEntryLocalService
-		assetEntryLocalService;
-
-	@Reference
-	protected com.liferay.asset.kernel.service.AssetLinkLocalService
-		assetLinkLocalService;
-
-	@Reference
-	protected com.liferay.expando.kernel.service.ExpandoValueLocalService
-		expandoValueLocalService;
-
-	@Reference
-	protected com.liferay.ratings.kernel.service.RatingsStatsLocalService
-		ratingsStatsLocalService;
+	private static final Log _log = LogFactoryUtil.getLog(
+		JournalFolderLocalServiceBaseImpl.class);
 
 }

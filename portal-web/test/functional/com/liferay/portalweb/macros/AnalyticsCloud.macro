@@ -13,41 +13,12 @@ definition {
 			locator1 = "AnalyticsCloudConnection#ANALYTICS_CLOUD_PASSWORD_LOGIN_FIELD",
 			value1 = "${password}");
 
+		Check(locator1 = "AnalyticsCloudConnection#REMEMBER_ME_CHECKBOX");
+
 		Click(locator1 = "AnalyticsCloudConnection#ANALYTICS_CLOUD_LOGIN_BUTTON");
 	}
 
-	macro syncAnalyticsCloud {
-		ApplicationsMenu.gotoPortlet(
-			category = "Configuration",
-			panel = "Control Panel",
-			portlet = "Instance Settings");
-
-		Click(locator1 = "AnalyticsCloudConnection#ANALYTICS_CLOUD_DXP_BUTTON");
-
-		Click(locator1 = "AnalyticsCloudConnection#DXP_TOKEN_INPUT");
-
-		Paste(locator1 = "AnalyticsCloudConnection#DXP_TOKEN_INPUT");
-
-		Click(locator1 = "AnalyticsCloudConnection#CONNECT_ANALYTICS_CLOUD_BUTTON");
-
-		Click(locator1 = "AnalyticsCloudConnection#SYNCED_SITES_BUTTON");
-
-		Click(locator1 = "AnalyticsCloudConnection#NEW_PROPERTY_BUTTON");
-
-		Click(locator1 = "AnalyticsCloudConnection#INPUT_LIFERAY_DXP_CHECKBOX");
-
-		Click(locator1 = "AnalyticsCloudConnection#DONE_BUTTON");
-	}
-
-	macro takeTokenFromAnalyticsCloud {
-		Click(locator1 = "AnalyticsCloudConnection#FARO_WORKSPACE_BUTTON");
-
-		if (IsElementPresent(locator1 = "AnalyticsCloudConnection#INTRODUCING_PROPERTIES_NEXT_BUTTON")) {
-			Click(locator1 = "AnalyticsCloudConnection#INTRODUCING_PROPERTIES_NEXT_BUTTON");
-
-			Click(locator1 = "AnalyticsCloudConnection#SKIP_FOR_NOW_BUTTON");
-		}
-
+	macro takeInvalidTokenFromAnalyticsCloud {
 		Click(locator1 = "AnalyticsCloudConnection#ANALYTICS_CLOUD_SETTINGS_BUTTON");
 
 		Click(locator1 = "AnalyticsCloudConnection#ANALYTICS_CLOUD_ADD_DATA_SOURCE_BUTTON");
@@ -56,7 +27,23 @@ definition {
 
 		Click(locator1 = "AnalyticsCloudConnection#ANALYTICS_CLOUD_CONNECT_WITH_TOKEN_BUTTON");
 
+		Click(locator1 = "AnalyticsCloudConnection#ANALYTICS_CLOUD_TOKEN_INPUT");
+
 		Copy(locator1 = "AnalyticsCloudConnection#ANALYTICS_CLOUD_TOKEN_INPUT");
+
+		ACUtils.launchDXP();
+
+		ACDXPSettings.goToInstanceSettingsAC();
+
+		Click(locator1 = "ACDXPSettings#TOKEN_INPUT_FIELD");
+
+		Type(
+			locator1 = "ACDXPSettings#TOKEN_INPUT_FIELD",
+			value1 = "TEST123");
+
+		Click(locator1 = "ACDXPSettings#CONNECT_DISCONNECT_BUTTON");
+
+		Alert.viewErrorMessage(errorMessage = "Your request failed to complete.");
 	}
 
 	macro teardownAnalyticsCloud {

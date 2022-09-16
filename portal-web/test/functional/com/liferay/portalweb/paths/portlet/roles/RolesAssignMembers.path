@@ -2,13 +2,17 @@
 <head>
 <title>RolesAssignMembers</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">RolesAssignMembers</td></tr>
 </thead>
+
 <tbody>
+
 <!--ADD_ASSIGNEE_TABLE-->
+
 <tr>
 	<td>ADD_ASSIGNEE_TABLE_CHECKBOX</td>
 	<td>//div[contains(@id,'assigneesSearchSearchContainer')]//tr[contains(.,'${key_assigneeName}')]/td[1]//input[contains(@name,'rowIds')]</td>
@@ -24,7 +28,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--USER_TABLE-->
+
 <tr>
 	<td>USER_TABLE_CHECKBOX</td>
 	<td>//div[contains(@id,'assigneesSearchSearchContainer')]//tr[contains(.,'${key_userScreenName}')]/td[1]//input[contains(@name,'rowIds')]</td>

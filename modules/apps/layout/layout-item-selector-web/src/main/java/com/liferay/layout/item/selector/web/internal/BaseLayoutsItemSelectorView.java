@@ -18,6 +18,7 @@ import com.liferay.item.selector.ItemSelectorReturnType;
 import com.liferay.item.selector.ItemSelectorView;
 import com.liferay.item.selector.criteria.URLItemSelectorReturnType;
 import com.liferay.item.selector.criteria.UUIDItemSelectorReturnType;
+import com.liferay.layout.item.selector.LayoutItemSelectorReturnType;
 import com.liferay.layout.item.selector.criterion.LayoutItemSelectorCriterion;
 import com.liferay.layout.item.selector.view.LayoutItemSelectorView;
 import com.liferay.layout.item.selector.web.internal.constants.LayoutsItemSelectorWebKeys;
@@ -36,6 +37,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Roberto Díaz
@@ -72,8 +74,9 @@ public abstract class BaseLayoutsItemSelectorView
 		LayoutItemSelectorViewDisplayContext
 			layoutItemSelectorViewDisplayContext =
 				new LayoutItemSelectorViewDisplayContext(
-					layoutItemSelectorCriterion, itemSelectedEventName,
-					isPrivateLayout());
+					(HttpServletRequest)servletRequest,
+					layoutItemSelectorCriterion, portletURL,
+					itemSelectedEventName, isPrivateLayout());
 
 		servletRequest.setAttribute(
 			LayoutsItemSelectorWebKeys.
@@ -91,6 +94,7 @@ public abstract class BaseLayoutsItemSelectorView
 	private static final List<ItemSelectorReturnType>
 		_supportedItemSelectorReturnTypes = Collections.unmodifiableList(
 			ListUtil.fromArray(
+				new LayoutItemSelectorReturnType(),
 				new URLItemSelectorReturnType(),
 				new UUIDItemSelectorReturnType()));
 

@@ -41,12 +41,13 @@ public interface ProductOptionValueResource {
 	}
 
 	public Page<ProductOptionValue> getProductOptionIdProductOptionValuesPage(
-			Long id, Pagination pagination)
+			Long id, String search, Pagination pagination, String sortString)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse
 			getProductOptionIdProductOptionValuesPageHttpResponse(
-				Long id, Pagination pagination)
+				Long id, String search, Pagination pagination,
+				String sortString)
 		throws Exception;
 
 	public ProductOptionValue postProductOptionIdProductOptionValue(
@@ -80,6 +81,12 @@ public interface ProductOptionValueResource {
 			return new ProductOptionValueResourceImpl(this);
 		}
 
+		public Builder contextPath(String contextPath) {
+			_contextPath = contextPath;
+
+			return this;
+		}
+
 		public Builder endpoint(String host, int port, String scheme) {
 			_host = host;
 			_port = port;
@@ -106,9 +113,26 @@ public interface ProductOptionValueResource {
 			return this;
 		}
 
+		public Builder parameters(String... parameters) {
+			if ((parameters.length % 2) != 0) {
+				throw new IllegalArgumentException(
+					"Parameters length is not an even number");
+			}
+
+			for (int i = 0; i < parameters.length; i += 2) {
+				String parameterName = String.valueOf(parameters[i]);
+				String parameterValue = String.valueOf(parameters[i + 1]);
+
+				_parameters.put(parameterName, parameterValue);
+			}
+
+			return this;
+		}
+
 		private Builder() {
 		}
 
+		private String _contextPath = "";
 		private Map<String, String> _headers = new LinkedHashMap<>();
 		private String _host = "localhost";
 		private Locale _locale;
@@ -125,20 +149,38 @@ public interface ProductOptionValueResource {
 
 		public Page<ProductOptionValue>
 				getProductOptionIdProductOptionValuesPage(
-					Long id, Pagination pagination)
+					Long id, String search, Pagination pagination,
+					String sortString)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
 				getProductOptionIdProductOptionValuesPageHttpResponse(
-					id, pagination);
+					id, search, pagination, sortString);
 
 			String content = httpResponse.getContent();
 
-			_logger.fine("HTTP response content: " + content);
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
 
-			_logger.fine("HTTP response message: " + httpResponse.getMessage());
-			_logger.fine(
-				"HTTP response status code: " + httpResponse.getStatusCode());
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
 
 			try {
 				return Page.of(content, ProductOptionValueSerDes::toDTO);
@@ -154,7 +196,8 @@ public interface ProductOptionValueResource {
 
 		public HttpInvoker.HttpResponse
 				getProductOptionIdProductOptionValuesPageHttpResponse(
-					Long id, Pagination pagination)
+					Long id, String search, Pagination pagination,
+					String sortString)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -178,6 +221,10 @@ public interface ProductOptionValueResource {
 
 			httpInvoker.httpMethod(HttpInvoker.HttpMethod.GET);
 
+			if (search != null) {
+				httpInvoker.parameter("search", String.valueOf(search));
+			}
+
 			if (pagination != null) {
 				httpInvoker.parameter(
 					"page", String.valueOf(pagination.getPage()));
@@ -185,9 +232,13 @@ public interface ProductOptionValueResource {
 					"pageSize", String.valueOf(pagination.getPageSize()));
 			}
 
+			if (sortString != null) {
+				httpInvoker.parameter("sort", sortString);
+			}
+
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
-					_builder._port +
+					_builder._port + _builder._contextPath +
 						"/o/headless-commerce-admin-catalog/v1.0/productOptions/{id}/productOptionValues");
 
 			httpInvoker.path("id", id);
@@ -208,11 +259,28 @@ public interface ProductOptionValueResource {
 
 			String content = httpResponse.getContent();
 
-			_logger.fine("HTTP response content: " + content);
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
 
-			_logger.fine("HTTP response message: " + httpResponse.getMessage());
-			_logger.fine(
-				"HTTP response status code: " + httpResponse.getStatusCode());
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
 
 			try {
 				return ProductOptionValueSerDes.toDTO(content);
@@ -256,7 +324,7 @@ public interface ProductOptionValueResource {
 
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
-					_builder._port +
+					_builder._port + _builder._contextPath +
 						"/o/headless-commerce-admin-catalog/v1.0/productOptions/{id}/productOptionValues");
 
 			httpInvoker.path("id", id);
@@ -277,11 +345,28 @@ public interface ProductOptionValueResource {
 
 			String content = httpResponse.getContent();
 
-			_logger.fine("HTTP response content: " + content);
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
 
-			_logger.fine("HTTP response message: " + httpResponse.getMessage());
-			_logger.fine(
-				"HTTP response status code: " + httpResponse.getStatusCode());
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
 		}
 
 		public HttpInvoker.HttpResponse
@@ -319,8 +404,8 @@ public interface ProductOptionValueResource {
 
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
-					_builder._port +
-						"/o/headless-commerce-admin-catalog/v1.0/productOptions/{id}/productOptionValues/batch");
+					_builder._port + _builder._contextPath +
+						"/o/headless-commerce-admin-catalog/v1.0/productOptions/productOptionValues/batch");
 
 			httpInvoker.path("id", id);
 

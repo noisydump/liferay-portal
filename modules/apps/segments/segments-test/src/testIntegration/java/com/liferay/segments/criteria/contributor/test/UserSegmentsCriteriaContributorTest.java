@@ -21,7 +21,6 @@ import com.liferay.expando.kernel.model.ExpandoTable;
 import com.liferay.expando.kernel.model.ExpandoValue;
 import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
 import com.liferay.layout.test.util.LayoutTestUtil;
-import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.User;
@@ -47,10 +46,6 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portlet.expando.util.test.ExpandoTestUtil;
 import com.liferay.portletmvc4spring.test.mock.web.portlet.MockPortletRequest;
-import com.liferay.registry.Filter;
-import com.liferay.registry.Registry;
-import com.liferay.registry.RegistryUtil;
-import com.liferay.registry.ServiceTracker;
 import com.liferay.segments.criteria.contributor.SegmentsCriteriaContributor;
 import com.liferay.segments.field.Field;
 
@@ -74,6 +69,12 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.util.tracker.ServiceTracker;
+
 import org.springframework.mock.web.MockHttpServletRequest;
 
 /**
@@ -90,23 +91,28 @@ public class UserSegmentsCriteriaContributorTest {
 			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@BeforeClass
-	public static void setUpClass() {
-		Registry registry = RegistryUtil.getRegistry();
+	public static void setUpClass() throws InvalidSyntaxException {
+		Bundle bundle = FrameworkUtil.getBundle(
+			UserSegmentsCriteriaContributorTest.class);
 
-		Filter filter = registry.getFilter(
-			"(&(entity.model.name=User)(objectClass=" +
-				EntityModel.class.getName() + "))");
+		BundleContext bundleContext = bundle.getBundleContext();
 
-		_entityModelServiceTracker = registry.trackServices(filter);
+		_entityModelServiceTracker = new ServiceTracker<>(
+			bundleContext,
+			bundleContext.createFilter(
+				"(&(entity.model.name=User)(objectClass=" +
+					EntityModel.class.getName() + "))"),
+			null);
 
 		_entityModelServiceTracker.open();
 
-		filter = registry.getFilter(
-			"(&(objectClass=" + SegmentsCriteriaContributor.class.getName() +
-				")(segments.criteria.contributor.key=user))");
-
-		_segmentsCriteriaContributorServiceTracker = registry.trackServices(
-			filter);
+		_segmentsCriteriaContributorServiceTracker = new ServiceTracker<>(
+			bundleContext,
+			bundleContext.createFilter(
+				"(&(objectClass=" +
+					SegmentsCriteriaContributor.class.getName() +
+						")(segments.criteria.contributor.key=user))"),
+			null);
 
 		_segmentsCriteriaContributorServiceTracker.open();
 	}
@@ -183,25 +189,25 @@ public class UserSegmentsCriteriaContributorTest {
 		List<Field> fields = segmentsCriteriaContributor.getFields(
 			_getMockPortletRequest());
 
-		Stream<Field> fieldStream = fields.stream();
+		Stream<Field> fieldsStream = fields.stream();
 
-		Optional<Field> optionalField = fieldStream.filter(
+		Optional<Field> fieldOptional = fieldsStream.filter(
 			field -> StringUtil.endsWith(
 				field.getName(),
 				Normalizer.normalizeIdentifier(expandoColumn.getName()))
 		).findFirst();
 
-		Assert.assertTrue(optionalField.isPresent());
+		Assert.assertTrue(fieldOptional.isPresent());
 
-		Field field = optionalField.get();
+		Field field = fieldOptional.get();
 
 		List<Field.Option> options = field.getOptions();
 
-		Stream<Field.Option> optionStream = options.stream();
+		Stream<Field.Option> optionsStream = options.stream();
 
 		Assert.assertEquals(
 			Arrays.asList(defaultValue),
-			optionStream.map(
+			optionsStream.map(
 				Field.Option::getValue
 			).collect(
 				Collectors.toList()
@@ -216,15 +222,15 @@ public class UserSegmentsCriteriaContributorTest {
 		List<Field> fields = segmentsCriteriaContributor.getFields(
 			_getMockPortletRequest());
 
-		Stream<Field> fieldStream = fields.stream();
+		Stream<Field> fieldsStream = fields.stream();
 
-		Optional<Field> optionalField = fieldStream.filter(
+		Optional<Field> fieldOptional = fieldsStream.filter(
 			field -> Objects.equals(field.getName(), "groupIds")
 		).findFirst();
 
-		Assert.assertTrue(optionalField.isPresent());
+		Assert.assertTrue(fieldOptional.isPresent());
 
-		Field field = optionalField.get();
+		Field field = fieldOptional.get();
 
 		Assert.assertEquals("id", field.getType());
 
@@ -266,12 +272,10 @@ public class UserSegmentsCriteriaContributorTest {
 	private MockPortletRequest _getMockPortletRequest() throws Exception {
 		ThemeDisplay themeDisplay = new ThemeDisplay();
 
-		Company company = _companyLocalService.getCompany(
-			TestPropsValues.getCompanyId());
+		themeDisplay.setCompany(
+			_companyLocalService.getCompany(TestPropsValues.getCompanyId()));
 
-		themeDisplay.setCompany(company);
-
-		Layout layout = LayoutTestUtil.addLayout(_group);
+		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
 
 		themeDisplay.setLayout(layout);
 		themeDisplay.setLayoutSet(layout.getLayoutSet());

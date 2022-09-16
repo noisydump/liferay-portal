@@ -14,12 +14,19 @@
 
 package com.liferay.portal.upgrade.internal.registry;
 
+import com.liferay.portal.kernel.upgrade.DummyUpgradeStep;
+import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.upgrade.UpgradeStep;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+
+import org.osgi.framework.Version;
 
 /**
  * @author Preston Crary
@@ -30,7 +37,27 @@ public class UpgradeStepRegistry implements UpgradeStepRegistrator.Registry {
 		_buildNumber = buildNumber;
 	}
 
+	public List<UpgradeStep> getInitialDeploymentUpgradeSteps() {
+		return _initialDeploymentUpgradeSteps;
+	}
+
 	public List<UpgradeInfo> getUpgradeInfos() {
+		if (_initialization) {
+			if (_upgradeInfos.isEmpty()) {
+				return Arrays.asList(
+					new UpgradeInfo(
+						"0.0.0", "1.0.0", _buildNumber,
+						new DummyUpgradeStep()));
+			}
+
+			return ListUtil.concat(
+				Arrays.asList(
+					new UpgradeInfo(
+						"0.0.0", _getFinalSchemaVersion(_upgradeInfos),
+						_buildNumber, new DummyUpgradeStep())),
+				_upgradeInfos);
+		}
+
 		return _upgradeInfos;
 	}
 
@@ -44,6 +71,18 @@ public class UpgradeStepRegistry implements UpgradeStepRegistrator.Registry {
 			upgradeSteps);
 	}
 
+	@Override
+	public void registerInitialDeploymentUpgradeSteps(
+		UpgradeStep... upgradeSteps) {
+
+		Collections.addAll(_initialDeploymentUpgradeSteps, upgradeSteps);
+	}
+
+	@Override
+	public void registerInitialization() {
+		_initialization = true;
+	}
+
 	private void _createUpgradeInfos(
 		String fromSchemaVersionString, String toSchemaVersionString,
 		int buildNumber, UpgradeStep... upgradeSteps) {
@@ -54,11 +93,29 @@ public class UpgradeStepRegistry implements UpgradeStepRegistrator.Registry {
 
 		String upgradeInfoFromSchemaVersionString = fromSchemaVersionString;
 
-		for (int i = 0; i < (upgradeSteps.length - 1); i++) {
-			UpgradeStep upgradeStep = upgradeSteps[i];
+		List<UpgradeStep> upgradeStepsList = new ArrayList<>();
+
+		for (UpgradeStep upgradeStep : upgradeSteps) {
+			if (upgradeStep instanceof UpgradeProcess) {
+				UpgradeProcess upgradeProcess = (UpgradeProcess)upgradeStep;
+
+				for (UpgradeStep innerUpgradeStep :
+						upgradeProcess.getUpgradeSteps()) {
+
+					upgradeStepsList.add(innerUpgradeStep);
+				}
+			}
+			else {
+				upgradeStepsList.add(upgradeStep);
+			}
+		}
+
+		for (int i = 0; i < (upgradeStepsList.size() - 1); i++) {
+			UpgradeStep upgradeStep = upgradeStepsList.get(i);
 
 			String upgradeInfoToSchemaVersionString =
-				toSchemaVersionString + ".step" + (i - upgradeSteps.length + 1);
+				toSchemaVersionString + ".step" +
+					(i - upgradeStepsList.size() + 1);
 
 			UpgradeInfo upgradeInfo = new UpgradeInfo(
 				upgradeInfoFromSchemaVersionString,
@@ -72,12 +129,37 @@ public class UpgradeStepRegistry implements UpgradeStepRegistrator.Registry {
 
 		UpgradeInfo upgradeInfo = new UpgradeInfo(
 			upgradeInfoFromSchemaVersionString, toSchemaVersionString,
-			buildNumber, upgradeSteps[upgradeSteps.length - 1]);
+			buildNumber, upgradeStepsList.get(upgradeStepsList.size() - 1));
 
 		_upgradeInfos.add(upgradeInfo);
 	}
 
+	private String _getFinalSchemaVersion(List<UpgradeInfo> upgradeInfos) {
+		Version finalSchemaVersion = null;
+
+		for (UpgradeInfo upgradeInfo : upgradeInfos) {
+			String toSchemaVersion = upgradeInfo.getToSchemaVersionString();
+
+			Version schemaVersion = Version.parseVersion(
+				toSchemaVersion.substring(0, 5));
+
+			if (finalSchemaVersion == null) {
+				finalSchemaVersion = schemaVersion;
+			}
+			else {
+				finalSchemaVersion =
+					(finalSchemaVersion.compareTo(schemaVersion) >= 0) ?
+						finalSchemaVersion : schemaVersion;
+			}
+		}
+
+		return finalSchemaVersion.toString();
+	}
+
 	private final int _buildNumber;
+	private final List<UpgradeStep> _initialDeploymentUpgradeSteps =
+		new ArrayList<>();
+	private boolean _initialization;
 	private final List<UpgradeInfo> _upgradeInfos = new ArrayList<>();
 
 }

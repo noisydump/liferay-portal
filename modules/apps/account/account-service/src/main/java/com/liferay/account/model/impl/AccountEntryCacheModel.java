@@ -77,10 +77,12 @@ public class AccountEntryCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(41);
+		StringBundler sb = new StringBundler(45);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
+		sb.append(", uuid=");
+		sb.append(uuid);
 		sb.append(", externalReferenceCode=");
 		sb.append(externalReferenceCode);
 		sb.append(", accountEntryId=");
@@ -97,6 +99,8 @@ public class AccountEntryCacheModel
 		sb.append(modifiedDate);
 		sb.append(", defaultBillingAddressId=");
 		sb.append(defaultBillingAddressId);
+		sb.append(", defaultCPaymentMethodKey=");
+		sb.append(defaultCPaymentMethodKey);
 		sb.append(", defaultShippingAddressId=");
 		sb.append(defaultShippingAddressId);
 		sb.append(", parentAccountEntryId=");
@@ -129,6 +133,13 @@ public class AccountEntryCacheModel
 		AccountEntryImpl accountEntryImpl = new AccountEntryImpl();
 
 		accountEntryImpl.setMvccVersion(mvccVersion);
+
+		if (uuid == null) {
+			accountEntryImpl.setUuid("");
+		}
+		else {
+			accountEntryImpl.setUuid(uuid);
+		}
 
 		if (externalReferenceCode == null) {
 			accountEntryImpl.setExternalReferenceCode("");
@@ -163,6 +174,15 @@ public class AccountEntryCacheModel
 		}
 
 		accountEntryImpl.setDefaultBillingAddressId(defaultBillingAddressId);
+
+		if (defaultCPaymentMethodKey == null) {
+			accountEntryImpl.setDefaultCPaymentMethodKey("");
+		}
+		else {
+			accountEntryImpl.setDefaultCPaymentMethodKey(
+				defaultCPaymentMethodKey);
+		}
+
 		accountEntryImpl.setDefaultShippingAddressId(defaultShippingAddressId);
 		accountEntryImpl.setParentAccountEntryId(parentAccountEntryId);
 
@@ -227,6 +247,7 @@ public class AccountEntryCacheModel
 	@Override
 	public void readExternal(ObjectInput objectInput) throws IOException {
 		mvccVersion = objectInput.readLong();
+		uuid = objectInput.readUTF();
 		externalReferenceCode = objectInput.readUTF();
 
 		accountEntryId = objectInput.readLong();
@@ -239,6 +260,7 @@ public class AccountEntryCacheModel
 		modifiedDate = objectInput.readLong();
 
 		defaultBillingAddressId = objectInput.readLong();
+		defaultCPaymentMethodKey = objectInput.readUTF();
 
 		defaultShippingAddressId = objectInput.readLong();
 
@@ -259,6 +281,13 @@ public class AccountEntryCacheModel
 	@Override
 	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(mvccVersion);
+
+		if (uuid == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(uuid);
+		}
 
 		if (externalReferenceCode == null) {
 			objectOutput.writeUTF("");
@@ -284,6 +313,13 @@ public class AccountEntryCacheModel
 		objectOutput.writeLong(modifiedDate);
 
 		objectOutput.writeLong(defaultBillingAddressId);
+
+		if (defaultCPaymentMethodKey == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(defaultCPaymentMethodKey);
+		}
 
 		objectOutput.writeLong(defaultShippingAddressId);
 
@@ -344,6 +380,7 @@ public class AccountEntryCacheModel
 	}
 
 	public long mvccVersion;
+	public String uuid;
 	public String externalReferenceCode;
 	public long accountEntryId;
 	public long companyId;
@@ -352,6 +389,7 @@ public class AccountEntryCacheModel
 	public long createDate;
 	public long modifiedDate;
 	public long defaultBillingAddressId;
+	public String defaultCPaymentMethodKey;
 	public long defaultShippingAddressId;
 	public long parentAccountEntryId;
 	public String description;

@@ -15,20 +15,17 @@
 package com.liferay.portal.deploy.hot;
 
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.module.util.SystemBundleUtil;
+import com.liferay.portal.kernel.servlet.ServletContextPool;
 import com.liferay.portal.kernel.url.URLContainer;
 import com.liferay.portal.kernel.util.CustomJspRegistryUtil;
-import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.spring.context.PortalContextLoaderListener;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.portal.util.CustomJspRegistryImpl;
-import com.liferay.portal.util.FileImpl;
 import com.liferay.portal.util.PortalImpl;
-import com.liferay.registry.BasicRegistryImpl;
-import com.liferay.registry.Registry;
-import com.liferay.registry.RegistryUtil;
-import com.liferay.registry.ServiceReference;
-import com.liferay.registry.ServiceRegistration;
 
 import java.net.URL;
 
@@ -38,14 +35,27 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.servlet.ServletContext;
+
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
+
+import org.mockito.Mockito;
+
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 
 /**
  * @author Leon Chi
  */
 public class CustomJspBagRegistryUtilTest {
+
+	@ClassRule
+	public static LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@BeforeClass
 	public static void setUpClass() {
@@ -58,23 +68,27 @@ public class CustomJspBagRegistryUtilTest {
 
 		customJspRegistryUtil.setCustomJspRegistry(new CustomJspRegistryImpl());
 
-		FileUtil fileUtil = new FileUtil();
+		_servletContext = Mockito.mock(ServletContext.class);
 
-		fileUtil.setFile(new FileImpl());
+		Mockito.when(
+			_servletContext.getRealPath(Mockito.anyString())
+		).thenReturn(
+			StringPool.BLANK
+		);
 
-		RegistryUtil.setRegistry(new BasicRegistryImpl());
+		ServletContextPool.put(
+			PortalContextLoaderListener.getPortalServletContextName(),
+			_servletContext);
 	}
 
 	@Test
 	public void testGetCustomJspBags() {
 		TestCustomJspBag testCustomJspBag = new TestCustomJspBag(false);
 
-		Registry registry = RegistryUtil.getRegistry();
-
 		ServiceRegistration<CustomJspBag> serviceRegistration =
-			registry.registerService(
+			_bundleContext.registerService(
 				CustomJspBag.class, testCustomJspBag,
-				HashMapBuilder.<String, Object>put(
+				HashMapDictionaryBuilder.<String, Object>put(
 					"context.id", _TEST_CUSTOM_JSP_BAG
 				).put(
 					"context.name", "Test Custom JSP Bag"
@@ -101,12 +115,10 @@ public class CustomJspBagRegistryUtilTest {
 	public void testGetGlobalCustomJspBags() {
 		TestCustomJspBag testCustomJspBag = new TestCustomJspBag(true);
 
-		Registry registry = RegistryUtil.getRegistry();
-
 		ServiceRegistration<CustomJspBag> serviceRegistration =
-			registry.registerService(
+			_bundleContext.registerService(
 				CustomJspBag.class, testCustomJspBag,
-				HashMapBuilder.<String, Object>put(
+				HashMapDictionaryBuilder.<String, Object>put(
 					"context.id", _TEST_GLOBAL_CUSTOM_JSP_BAG
 				).put(
 					"context.name", "Test Global Custom JSP Bag"
@@ -154,6 +166,10 @@ public class CustomJspBagRegistryUtilTest {
 
 	private static final String _TEST_GLOBAL_CUSTOM_JSP_BAG =
 		"TEST_GLOBAL_CUSTOM_JSP_BAG";
+
+	private static final BundleContext _bundleContext =
+		SystemBundleUtil.getBundleContext();
+	private static ServletContext _servletContext;
 
 	private static class TestCustomJspBag implements CustomJspBag {
 

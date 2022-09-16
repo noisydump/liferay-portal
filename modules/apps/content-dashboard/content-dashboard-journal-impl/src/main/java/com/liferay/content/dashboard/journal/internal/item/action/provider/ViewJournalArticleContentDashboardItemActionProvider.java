@@ -19,8 +19,11 @@ import com.liferay.content.dashboard.item.action.ContentDashboardItemAction;
 import com.liferay.content.dashboard.item.action.provider.ContentDashboardItemActionProvider;
 import com.liferay.content.dashboard.journal.internal.item.action.ViewJournalArticleContentDashboardItemAction;
 import com.liferay.journal.model.JournalArticle;
+import com.liferay.layout.display.page.LayoutDisplayPageProviderTracker;
+import com.liferay.layout.seo.kernel.LayoutSEOLinkManager;
 import com.liferay.portal.kernel.language.Language;
-import com.liferay.portal.kernel.util.Http;
+import com.liferay.portal.kernel.service.LayoutLocalService;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 
 import javax.servlet.http.HttpServletRequest;
@@ -79,8 +82,9 @@ public class ViewJournalArticleContentDashboardItemActionProvider
 		HttpServletRequest httpServletRequest, JournalArticle journalArticle) {
 
 		return new ViewJournalArticleContentDashboardItemAction(
-			_assetDisplayPageFriendlyURLProvider, _http, httpServletRequest,
-			journalArticle, _language);
+			_assetDisplayPageFriendlyURLProvider, httpServletRequest,
+			journalArticle, _language, _layoutDisplayPageProviderTracker,
+			_layoutLocalService, _layoutSEOLinkManager, _portal);
 	}
 
 	@Reference
@@ -88,9 +92,18 @@ public class ViewJournalArticleContentDashboardItemActionProvider
 		_assetDisplayPageFriendlyURLProvider;
 
 	@Reference
-	private Http _http;
+	private Language _language;
 
 	@Reference
-	private Language _language;
+	private LayoutDisplayPageProviderTracker _layoutDisplayPageProviderTracker;
+
+	@Reference
+	private LayoutLocalService _layoutLocalService;
+
+	@Reference
+	private LayoutSEOLinkManager _layoutSEOLinkManager;
+
+	@Reference
+	private Portal _portal;
 
 }

@@ -15,15 +15,14 @@
 package com.liferay.commerce.notification.service.impl;
 
 import com.liferay.commerce.notification.constants.CommerceNotificationActionKeys;
-import com.liferay.commerce.notification.constants.CommerceNotificationConstants;
 import com.liferay.commerce.notification.model.CommerceNotificationTemplate;
 import com.liferay.commerce.notification.service.base.CommerceNotificationTemplateServiceBaseImpl;
+import com.liferay.commerce.product.constants.CPConstants;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
-import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionFactory;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
-import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermissionFactory;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
@@ -31,29 +30,39 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
 /**
  * @author Alessio Antonio Rendina
  */
+@Component(
+	enabled = false,
+	property = {
+		"json.web.service.context.name=commerce",
+		"json.web.service.context.path=CommerceNotificationTemplate"
+	},
+	service = AopService.class
+)
 public class CommerceNotificationTemplateServiceImpl
 	extends CommerceNotificationTemplateServiceBaseImpl {
 
 	@Override
 	public CommerceNotificationTemplate addCommerceNotificationTemplate(
-			long userId, long groupId, String name, String description,
-			String from, Map<Locale, String> fromNameMap, String to, String cc,
-			String bcc, String type, boolean enabled,
-			Map<Locale, String> subjectMap, Map<Locale, String> bodyMap,
-			ServiceContext serviceContext)
+			long groupId, String name, String description, String from,
+			Map<Locale, String> fromNameMap, String to, String cc, String bcc,
+			String type, boolean enabled, Map<Locale, String> subjectMap,
+			Map<Locale, String> bodyMap, ServiceContext serviceContext)
 		throws PortalException {
 
 		_portletResourcePermission.check(
-			getPermissionChecker(), serviceContext.getScopeGroupId(),
+			getPermissionChecker(), groupId,
 			CommerceNotificationActionKeys.ADD_COMMERCE_NOTIFICATION_TEMPLATE);
 
 		return commerceNotificationTemplateLocalService.
 			addCommerceNotificationTemplate(
-				userId, groupId, name, description, from, fromNameMap, to, cc,
-				bcc, type, enabled, subjectMap, bodyMap, serviceContext);
+				getUserId(), groupId, name, description, from, fromNameMap, to,
+				cc, bcc, type, enabled, subjectMap, bodyMap, serviceContext);
 	}
 
 	/**
@@ -70,9 +79,9 @@ public class CommerceNotificationTemplateServiceImpl
 
 		return commerceNotificationTemplateService.
 			addCommerceNotificationTemplate(
-				serviceContext.getUserId(), serviceContext.getScopeGroupId(),
-				name, description, from, fromNameMap, to, cc, bcc, type,
-				enabled, subjectMap, bodyMap, serviceContext);
+				serviceContext.getScopeGroupId(), name, description, from,
+				fromNameMap, to, cc, bcc, type, enabled, subjectMap, bodyMap,
+				serviceContext);
 	}
 
 	@Override
@@ -107,14 +116,8 @@ public class CommerceNotificationTemplateServiceImpl
 			OrderByComparator<CommerceNotificationTemplate> orderByComparator)
 		throws PortalException {
 
-		_portletResourcePermission.check(
-			getPermissionChecker(), groupId,
-			CommerceNotificationActionKeys.
-				VIEW_COMMERCE_NOTIFICATION_TEMPLATES);
-
-		return commerceNotificationTemplateLocalService.
-			getCommerceNotificationTemplates(
-				groupId, enabled, start, end, orderByComparator);
+		return commerceNotificationTemplatePersistence.filterFindByG_E(
+			groupId, enabled, start, end, orderByComparator);
 	}
 
 	@Override
@@ -123,27 +126,16 @@ public class CommerceNotificationTemplateServiceImpl
 			OrderByComparator<CommerceNotificationTemplate> orderByComparator)
 		throws PortalException {
 
-		_portletResourcePermission.check(
-			getPermissionChecker(), groupId,
-			CommerceNotificationActionKeys.
-				VIEW_COMMERCE_NOTIFICATION_TEMPLATES);
-
-		return commerceNotificationTemplateLocalService.
-			getCommerceNotificationTemplates(
-				groupId, start, end, orderByComparator);
+		return commerceNotificationTemplatePersistence.filterFindByGroupId(
+			groupId, start, end, orderByComparator);
 	}
 
 	@Override
 	public int getCommerceNotificationTemplatesCount(long groupId)
 		throws PortalException {
 
-		_portletResourcePermission.check(
-			getPermissionChecker(), groupId,
-			CommerceNotificationActionKeys.
-				VIEW_COMMERCE_NOTIFICATION_TEMPLATES);
-
-		return commerceNotificationTemplateLocalService.
-			getCommerceNotificationTemplatesCount(groupId);
+		return commerceNotificationTemplatePersistence.filterCountByGroupId(
+			groupId);
 	}
 
 	@Override
@@ -151,13 +143,8 @@ public class CommerceNotificationTemplateServiceImpl
 			long groupId, boolean enabled)
 		throws PortalException {
 
-		_portletResourcePermission.check(
-			getPermissionChecker(), groupId,
-			CommerceNotificationActionKeys.
-				VIEW_COMMERCE_NOTIFICATION_TEMPLATES);
-
-		return commerceNotificationTemplateLocalService.
-			getCommerceNotificationTemplatesCount(groupId, enabled);
+		return commerceNotificationTemplatePersistence.filterCountByG_E(
+			groupId, enabled);
 	}
 
 	@Override
@@ -180,18 +167,15 @@ public class CommerceNotificationTemplateServiceImpl
 				serviceContext);
 	}
 
-	private static volatile ModelResourcePermission
-		<CommerceNotificationTemplate>
-			_commerceNotificationTemplateResourcePermission =
-				ModelResourcePermissionFactory.getInstance(
-					CommerceNotificationTemplateServiceImpl.class,
-					"_commerceNotificationTemplateResourcePermission",
-					CommerceNotificationTemplate.class);
-	private static volatile PortletResourcePermission
-		_portletResourcePermission =
-			PortletResourcePermissionFactory.getInstance(
-				CommerceNotificationTemplateServiceImpl.class,
-				"_portletResourcePermission",
-				CommerceNotificationConstants.RESOURCE_NAME);
+	@Reference(
+		target = "(model.class.name=com.liferay.commerce.notification.model.CommerceNotificationTemplate)"
+	)
+	private ModelResourcePermission<CommerceNotificationTemplate>
+		_commerceNotificationTemplateResourcePermission;
+
+	@Reference(
+		target = "(resource.name=" + CPConstants.RESOURCE_NAME_CHANNEL + ")"
+	)
+	private PortletResourcePermission _portletResourcePermission;
 
 }

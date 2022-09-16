@@ -40,8 +40,8 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.InfrastructureUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
-import com.liferay.portal.test.log.CaptureAppender;
-import com.liferay.portal.test.log.Log4JLoggerTestUtil;
+import com.liferay.portal.test.log.LogCapture;
+import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
@@ -55,8 +55,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.log4j.Level;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -166,23 +164,23 @@ public class CTClosureFactoryImplTest {
 
 		_db.runSQL(
 			"create table GrandParentTable (grandParentId LONG not null " +
-				"primary key, parentGrandParentId LONG);");
+				"primary key, parentGrandParentId LONG)");
 		_db.runSQL(
 			StringBundler.concat(
 				"create table ParentTable (parentId LONG not null, ",
 				"ctCollectionId LONG not null, grandParentId LONG, name ",
-				"VARCHAR(75) null, primary key (parentId, ctCollectionId));"));
+				"VARCHAR(75) null, primary key (parentId, ctCollectionId))"));
 
 		_db.runSQL(
 			"create unique index IX_GP_N on ParentTable (grandParentId, " +
-				"name, ctCollectionId);");
+				"name, ctCollectionId)");
 
 		_db.runSQL(
 			StringBundler.concat(
 				"create table ChildTable (childId LONG not null, ",
 				"ctCollectionId LONG not null, grandParentId LONG, ",
 				"parentChildId LONG, parentName VARCHAR(75) null, primary key ",
-				"(childId, ctCollectionId));"));
+				"(childId, ctCollectionId))"));
 
 		_ctCollection = _ctCollectionLocalService.addCTCollection(
 			TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
@@ -191,11 +189,10 @@ public class CTClosureFactoryImplTest {
 
 	@After
 	public void tearDown() throws Exception {
-		try (CaptureAppender captureAppender =
-				Log4JLoggerTestUtil.configureLog4JLogger(
-					"com.liferay.change.tracking.service.impl." +
-						"CTCollectionLocalServiceImpl",
-					Level.WARN)) {
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				"com.liferay.change.tracking.service.impl." +
+					"CTCollectionLocalServiceImpl",
+				LoggerTestUtil.WARN)) {
 
 			_ctCollectionLocalService.deleteCTCollection(
 				_ctCollection.getCtCollectionId());
@@ -589,15 +586,19 @@ public class CTClosureFactoryImplTest {
 
 		public static final ChildTable INSTANCE = new ChildTable();
 
-		public final Column<ChildTable, Long> childId = createColumn(
+		public final Column<ChildTable, Long> childIdColumn = createColumn(
 			"childId", Long.class, Types.BIGINT, Column.FLAG_PRIMARY);
-		public final Column<ChildTable, Long> ctCollectionId = createColumn(
-			"ctCollectionId", Long.class, Types.BIGINT, Column.FLAG_PRIMARY);
-		public final Column<ChildTable, Long> grandParentId = createColumn(
-			"grandParentId", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
-		public final Column<ChildTable, Long> parentChildId = createColumn(
-			"parentChildId", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
-		public final Column<ChildTable, String> parentName = createColumn(
+		public final Column<ChildTable, Long> ctCollectionIdColumn =
+			createColumn(
+				"ctCollectionId", Long.class, Types.BIGINT,
+				Column.FLAG_PRIMARY);
+		public final Column<ChildTable, Long> grandParentIdColumn =
+			createColumn(
+				"grandParentId", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
+		public final Column<ChildTable, Long> parentChildIdColumn =
+			createColumn(
+				"parentChildId", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
+		public final Column<ChildTable, String> parentNameColumn = createColumn(
 			"parentName", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
 
 		private ChildTable() {
@@ -625,8 +626,8 @@ public class CTClosureFactoryImplTest {
 					GrandParentTable.INSTANCE
 				).innerJoinON(
 					ChildTable.INSTANCE,
-					ChildTable.INSTANCE.grandParentId.eq(
-						GrandParentTable.INSTANCE.grandParentId)
+					ChildTable.INSTANCE.grandParentIdColumn.eq(
+						GrandParentTable.INSTANCE.grandParentIdColumn)
 				)
 			).referenceInnerJoin(
 				fromStep -> {
@@ -637,8 +638,8 @@ public class CTClosureFactoryImplTest {
 						aliasChildTable
 					).innerJoinON(
 						ChildTable.INSTANCE,
-						ChildTable.INSTANCE.parentChildId.eq(
-							aliasChildTable.childId)
+						ChildTable.INSTANCE.parentChildIdColumn.eq(
+							aliasChildTable.childIdColumn)
 					);
 				}
 			);
@@ -668,10 +669,10 @@ public class CTClosureFactoryImplTest {
 
 		public static final GrandParentTable INSTANCE = new GrandParentTable();
 
-		public final Column<GrandParentTable, Long> grandParentId =
+		public final Column<GrandParentTable, Long> grandParentIdColumn =
 			createColumn(
 				"grandParentId", Long.class, Types.BIGINT, Column.FLAG_PRIMARY);
-		public final Column<GrandParentTable, Long> parentGrandParentId =
+		public final Column<GrandParentTable, Long> parentGrandParentIdColumn =
 			createColumn(
 				"parentGrandParentId", Long.class, Types.BIGINT,
 				Column.FLAG_DEFAULT);
@@ -695,8 +696,8 @@ public class CTClosureFactoryImplTest {
 					ChildTable.INSTANCE
 				).innerJoinON(
 					GrandParentTable.INSTANCE,
-					GrandParentTable.INSTANCE.grandParentId.eq(
-						ChildTable.INSTANCE.grandParentId)
+					GrandParentTable.INSTANCE.grandParentIdColumn.eq(
+						ChildTable.INSTANCE.grandParentIdColumn)
 				));
 		}
 
@@ -706,8 +707,8 @@ public class CTClosureFactoryImplTest {
 				parentTableReferenceInfoBuilder) {
 
 			parentTableReferenceInfoBuilder.parentColumnReference(
-				GrandParentTable.INSTANCE.grandParentId,
-				GrandParentTable.INSTANCE.parentGrandParentId);
+				GrandParentTable.INSTANCE.grandParentIdColumn,
+				GrandParentTable.INSTANCE.parentGrandParentIdColumn);
 		}
 
 		@Override
@@ -734,13 +735,16 @@ public class CTClosureFactoryImplTest {
 
 		public static final ParentTable INSTANCE = new ParentTable();
 
-		public final Column<ParentTable, Long> ctCollectionId = createColumn(
-			"ctCollectionId", Long.class, Types.BIGINT, Column.FLAG_PRIMARY);
-		public final Column<ParentTable, Long> grandParentId = createColumn(
-			"grandParentId", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
-		public final Column<ParentTable, String> name = createColumn(
+		public final Column<ParentTable, Long> ctCollectionIdColumn =
+			createColumn(
+				"ctCollectionId", Long.class, Types.BIGINT,
+				Column.FLAG_PRIMARY);
+		public final Column<ParentTable, Long> grandParentIdColumn =
+			createColumn(
+				"grandParentId", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
+		public final Column<ParentTable, String> nameColumn = createColumn(
 			"name", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
-		public final Column<ParentTable, Long> parentId = createColumn(
+		public final Column<ParentTable, Long> parentIdColumn = createColumn(
 			"parentId", Long.class, Types.BIGINT, Column.FLAG_PRIMARY);
 
 		private ParentTable() {
@@ -762,11 +766,11 @@ public class CTClosureFactoryImplTest {
 					ChildTable.INSTANCE
 				).innerJoinON(
 					ParentTable.INSTANCE,
-					ParentTable.INSTANCE.grandParentId.eq(
-						ChildTable.INSTANCE.grandParentId
+					ParentTable.INSTANCE.grandParentIdColumn.eq(
+						ChildTable.INSTANCE.grandParentIdColumn
 					).and(
-						ParentTable.INSTANCE.name.eq(
-							ChildTable.INSTANCE.parentName)
+						ParentTable.INSTANCE.nameColumn.eq(
+							ChildTable.INSTANCE.parentNameColumn)
 					)
 				));
 		}
@@ -781,8 +785,8 @@ public class CTClosureFactoryImplTest {
 					GrandParentTable.INSTANCE
 				).innerJoinON(
 					ParentTable.INSTANCE,
-					ParentTable.INSTANCE.grandParentId.eq(
-						GrandParentTable.INSTANCE.grandParentId)
+					ParentTable.INSTANCE.grandParentIdColumn.eq(
+						GrandParentTable.INSTANCE.grandParentIdColumn)
 				));
 		}
 
@@ -846,6 +850,11 @@ public class CTClosureFactoryImplTest {
 
 		@Override
 		public Object clone() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public T cloneWithOriginalValues() {
 			throw new UnsupportedOperationException();
 		}
 

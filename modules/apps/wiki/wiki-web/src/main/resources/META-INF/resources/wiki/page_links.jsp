@@ -50,18 +50,24 @@ boolean hasOutgoingLinkPages = ListUtil.isNotEmpty(outgoingLinkPages);
 								<%
 								for (WikiPage incomingLinkPage : incomingLinkPages) {
 									WikiNode wikiNode = incomingLinkPage.getNode();
-
-									PortletURL portletURL = liferayPortletResponse.createRenderURL();
-
-									portletURL.setParameter("mvcRenderCommandName", "/wiki/view");
-									portletURL.setParameter("redirect", currentURL);
-									portletURL.setParameter("nodeName", wikiNode.getName());
-									portletURL.setParameter("title", incomingLinkPage.getTitle());
 								%>
 
 									<dt class="h5">
 										<h4>
-											<a class="text-default" href="<%= portletURL.toString() %>"><%= incomingLinkPage.getTitle() %></a>
+											<a
+												class="text-default" href="<%=
+PortletURLBuilder.createRenderURL(
+										liferayPortletResponse
+									).setMVCRenderCommandName(
+										"/wiki/view"
+									).setRedirect(
+										currentURL
+									).setParameter(
+										"nodeName", wikiNode.getName()
+									).setParameter(
+										"title", incomingLinkPage.getTitle()
+									).buildString() %>"><%= incomingLinkPage.getTitle() %></a
+											>
 										</h4>
 									</dt>
 									<dd>
@@ -110,18 +116,24 @@ boolean hasOutgoingLinkPages = ListUtil.isNotEmpty(outgoingLinkPages);
 
 											<%
 											WikiNode wikiNode = outgoingLinkPage.getNode();
-
-											PortletURL portletURL = liferayPortletResponse.createRenderURL();
-
-											portletURL.setParameter("mvcRenderCommandName", "/wiki/view");
-											portletURL.setParameter("redirect", currentURL);
-											portletURL.setParameter("nodeName", wikiNode.getName());
-											portletURL.setParameter("title", outgoingLinkPage.getTitle());
 											%>
 
 											<dt class="h5">
 												<h4 class="text-truncate">
-													<a class="text-default" href="<%= portletURL.toString() %>"><%= outgoingLinkPage.getTitle() %></a>
+													<a
+														class="text-default" href="<%=
+PortletURLBuilder.createRenderURL(
+												liferayPortletResponse
+											).setMVCRenderCommandName(
+												"/wiki/view"
+											).setRedirect(
+												currentURL
+											).setParameter(
+												"nodeName", wikiNode.getName()
+											).setParameter(
+												"title", outgoingLinkPage.getTitle()
+											).buildString() %>"><%= outgoingLinkPage.getTitle() %></a
+													>
 												</h4>
 											</dt>
 											<dd>

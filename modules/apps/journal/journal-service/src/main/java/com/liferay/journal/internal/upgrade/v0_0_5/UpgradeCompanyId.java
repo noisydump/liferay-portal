@@ -14,21 +14,12 @@
 
 package com.liferay.journal.internal.upgrade.v0_0_5;
 
-import com.liferay.portal.kernel.upgrade.BaseUpgradeCompanyId;
+import com.liferay.portal.kernel.upgrade.BaseCompanyIdUpgradeProcess;
 
 /**
  * @author Brian Wing Shun Chan
  */
-public class UpgradeCompanyId extends BaseUpgradeCompanyId {
-
-	@Override
-	protected void doUpgrade() throws Exception {
-		super.doUpgrade();
-
-		runSQL(
-			"create index IX_CC7576C7 on JournalArticleResource " +
-				"(uuid_[$COLUMN_LENGTH:75$], companyId)");
-	}
+public class UpgradeCompanyId extends BaseCompanyIdUpgradeProcess {
 
 	@Override
 	protected TableUpdater[] getTableUpdaters() {

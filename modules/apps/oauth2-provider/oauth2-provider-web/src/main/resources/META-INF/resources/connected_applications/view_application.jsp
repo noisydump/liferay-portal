@@ -81,7 +81,6 @@ renderResponse.setTitle(oAuth2Application.getName());
 
 					<%
 					for (String applicationName : assignableScopes.getApplicationNames()) {
-						String applicationScopeDescription = StringUtil.merge(assignableScopes.getApplicationScopeDescription(themeDisplay.getCompanyId(), applicationName), ", ");
 					%>
 
 						<li class="list-group-item list-group-item-flex">
@@ -96,7 +95,7 @@ renderResponse.setTitle(oAuth2Application.getName());
 							>
 								<h4 class="list-group-title text-truncate"><%= HtmlUtil.escape(assignableScopes.getApplicationDescription(applicationName)) %></h4>
 
-								<p class="list-group-subtitle text-truncate"><%= applicationScopeDescription %></p>
+								<p class="list-group-subtitle text-truncate"><%= StringUtil.merge(assignableScopes.getApplicationScopeDescription(themeDisplay.getCompanyId(), applicationName), ", ") %></p>
 							</clay:content-col>
 						</li>
 
@@ -153,14 +152,16 @@ renderResponse.setTitle(oAuth2Application.getName());
 	);
 
 	if (removeAccessButton) {
-		removeAccessButton.addEventListener('click', function () {
-			if (
-				confirm(
-					'<%= UnicodeLanguageUtil.format(request, "x-will-no-longer-have-access-to-your-account-removed-access-cannot-be-recovered", new String[] {oAuth2Application.getName()}) %>'
-				)
-			) {
-				submitForm(document.<portlet:namespace />fm);
-			}
+		removeAccessButton.addEventListener('click', () => {
+			Liferay.Util.openConfirmModal({
+				message:
+					'<%= UnicodeLanguageUtil.format(request, "x-will-no-longer-have-access-to-your-account-removed-access-cannot-be-recovered", new String[] {oAuth2Application.getName()}) %>',
+				onConfirm: (isConfirmed) => {
+					if (isConfirmed) {
+						submitForm(document.<portlet:namespace />fm);
+					}
+				},
+			});
 		});
 	}
 </script>

@@ -30,6 +30,10 @@ public class AssetListEntryUsageLocalServiceWrapper
 	implements AssetListEntryUsageLocalService,
 			   ServiceWrapper<AssetListEntryUsageLocalService> {
 
+	public AssetListEntryUsageLocalServiceWrapper() {
+		this(null);
+	}
+
 	public AssetListEntryUsageLocalServiceWrapper(
 		AssetListEntryUsageLocalService assetListEntryUsageLocalService) {
 
@@ -56,14 +60,14 @@ public class AssetListEntryUsageLocalServiceWrapper
 
 	@Override
 	public AssetListEntryUsage addAssetListEntryUsage(
-			long userId, long groupId, long assetListEntryId, long classNameId,
-			long classPK, String portletId,
+			long userId, long groupId, long classNameId, String containerKey,
+			long containerType, String key, long plid,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _assetListEntryUsageLocalService.addAssetListEntryUsage(
-			userId, groupId, assetListEntryId, classNameId, classPK, portletId,
-			serviceContext);
+			userId, groupId, classNameId, containerKey, containerType, key,
+			plid, serviceContext);
 	}
 
 	/**
@@ -130,6 +134,14 @@ public class AssetListEntryUsageLocalServiceWrapper
 			assetListEntryUsageId);
 	}
 
+	@Override
+	public void deleteAssetListEntryUsages(
+		String containerKey, long containerType, long plid) {
+
+		_assetListEntryUsageLocalService.deleteAssetListEntryUsages(
+			containerKey, containerType, plid);
+	}
+
 	/**
 	 * @throws PortalException
 	 */
@@ -145,6 +157,13 @@ public class AssetListEntryUsageLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _assetListEntryUsageLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _assetListEntryUsageLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -248,10 +267,11 @@ public class AssetListEntryUsageLocalServiceWrapper
 
 	@Override
 	public AssetListEntryUsage fetchAssetListEntryUsage(
-		long classNameId, long classPK, String portletId) {
+		long groupId, long classNameId, String containerKey, long containerType,
+		String key, long plid) {
 
 		return _assetListEntryUsageLocalService.fetchAssetListEntryUsage(
-			classNameId, classPK, portletId);
+			groupId, classNameId, containerKey, containerType, key, plid);
 	}
 
 	/**
@@ -274,6 +294,14 @@ public class AssetListEntryUsageLocalServiceWrapper
 		getActionableDynamicQuery() {
 
 		return _assetListEntryUsageLocalService.getActionableDynamicQuery();
+	}
+
+	@Override
+	public java.util.List<AssetListEntryUsage> getAssetEntryListUsagesByPlid(
+		long plid) {
+
+		return _assetListEntryUsageLocalService.getAssetEntryListUsagesByPlid(
+			plid);
 	}
 
 	/**
@@ -330,38 +358,47 @@ public class AssetListEntryUsageLocalServiceWrapper
 
 	@Override
 	public java.util.List<AssetListEntryUsage> getAssetListEntryUsages(
-		long assetListEntryId) {
+		long groupId, long classNameId, String key) {
 
 		return _assetListEntryUsageLocalService.getAssetListEntryUsages(
-			assetListEntryId);
+			groupId, classNameId, key);
 	}
 
 	@Override
 	public java.util.List<AssetListEntryUsage> getAssetListEntryUsages(
-		long assetListEntryId, int start, int end,
+		long groupId, long classNameId, String key, int type) {
+
+		return _assetListEntryUsageLocalService.getAssetListEntryUsages(
+			groupId, classNameId, key, type);
+	}
+
+	@Override
+	public java.util.List<AssetListEntryUsage> getAssetListEntryUsages(
+		long groupId, long classNameId, String key, int type, int start,
+		int end,
 		com.liferay.portal.kernel.util.OrderByComparator<AssetListEntryUsage>
 			orderByComparator) {
 
 		return _assetListEntryUsageLocalService.getAssetListEntryUsages(
-			assetListEntryId, start, end, orderByComparator);
+			groupId, classNameId, key, type, start, end, orderByComparator);
 	}
 
 	@Override
 	public java.util.List<AssetListEntryUsage> getAssetListEntryUsages(
-		long assetListEntryId, long classNameId) {
-
-		return _assetListEntryUsageLocalService.getAssetListEntryUsages(
-			assetListEntryId, classNameId);
-	}
-
-	@Override
-	public java.util.List<AssetListEntryUsage> getAssetListEntryUsages(
-		long assetListEntryId, long classNameId, int start, int end,
+		long groupId, long classNameId, String key, int start, int end,
 		com.liferay.portal.kernel.util.OrderByComparator<AssetListEntryUsage>
 			orderByComparator) {
 
 		return _assetListEntryUsageLocalService.getAssetListEntryUsages(
-			assetListEntryId, classNameId, start, end, orderByComparator);
+			groupId, classNameId, key, start, end, orderByComparator);
+	}
+
+	@Override
+	public java.util.List<AssetListEntryUsage> getAssetListEntryUsages(
+		String containerKey, long containerType, long plid) {
+
+		return _assetListEntryUsageLocalService.getAssetListEntryUsages(
+			containerKey, containerType, plid);
 	}
 
 	/**
@@ -412,17 +449,19 @@ public class AssetListEntryUsageLocalServiceWrapper
 	}
 
 	@Override
-	public int getAssetListEntryUsagesCount(long assetListEntryId) {
+	public int getAssetListEntryUsagesCount(
+		long groupId, long classNameId, String key) {
+
 		return _assetListEntryUsageLocalService.getAssetListEntryUsagesCount(
-			assetListEntryId);
+			groupId, classNameId, key);
 	}
 
 	@Override
 	public int getAssetListEntryUsagesCount(
-		long assetListEntryId, long classNameId) {
+		long groupId, long classNameId, String key, int type) {
 
 		return _assetListEntryUsageLocalService.getAssetListEntryUsagesCount(
-			assetListEntryId, classNameId);
+			groupId, classNameId, key, type);
 	}
 
 	@Override

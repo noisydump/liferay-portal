@@ -15,12 +15,15 @@
 package com.liferay.dynamic.data.mapping.form.web.internal.portlet.action;
 
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.Calendar;
 import java.util.Date;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -28,9 +31,14 @@ import org.junit.Test;
  */
 public class SaveFormInstanceMVCResourceCommandTest {
 
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
 	@Before
 	public void setUp() throws Exception {
-		setUpSaveFormInstanceMVCResourceCommand();
+		_setUpSaveFormInstanceMVCResourceCommand();
 	}
 
 	@Test
@@ -57,7 +65,7 @@ public class SaveFormInstanceMVCResourceCommandTest {
 				date, LocaleUtil.US, "America/Sao_Paulo"));
 	}
 
-	protected void setUpSaveFormInstanceMVCResourceCommand() throws Exception {
+	private void _setUpSaveFormInstanceMVCResourceCommand() throws Exception {
 		_saveFormInstanceMVCResourceCommand =
 			new SaveFormInstanceMVCResourceCommand();
 	}

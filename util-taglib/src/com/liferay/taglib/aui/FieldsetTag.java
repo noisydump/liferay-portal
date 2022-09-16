@@ -27,7 +27,6 @@ import com.liferay.taglib.util.InlineUtil;
 import javax.portlet.PortletResponse;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.JspWriter;
 
 /**
@@ -38,34 +37,12 @@ import javax.servlet.jsp.JspWriter;
 public class FieldsetTag extends BaseFieldsetTag {
 
 	@Override
-	public int doStartTag() throws JspException {
-		FieldsetGroupTag fieldsetGroupTag =
-			(FieldsetGroupTag)findAncestorWithClass(
-				this, FieldsetGroupTag.class);
-
-		if (Validator.isNull(getMarkupView()) && (fieldsetGroupTag != null)) {
-			setMarkupView(fieldsetGroupTag.getMarkupView());
-		}
-
-		return super.doStartTag();
-	}
-
-	@Override
 	protected String getEndPage() {
-		if (Validator.isNotNull(getMarkupView())) {
-			return "/html/taglib/aui/fieldset/" + getMarkupView() + "/end.jsp";
-		}
-
 		return "/html/taglib/aui/fieldset/end.jsp";
 	}
 
 	@Override
 	protected String getStartPage() {
-		if (Validator.isNotNull(getMarkupView())) {
-			return "/html/taglib/aui/fieldset/" + getMarkupView() +
-				"/start.jsp";
-		}
-
 		return "/html/taglib/aui/fieldset/start.jsp";
 	}
 
@@ -101,18 +78,15 @@ public class FieldsetTag extends BaseFieldsetTag {
 
 		jspWriter.write(
 			InlineUtil.buildDynamicAttributes(getDynamicAttributes()));
+		jspWriter.write(
+			"><legend class=\"fieldset-legend\"><span class=\"legend\">");
 
-		jspWriter.write(StringPool.GREATER_THAN);
+		String label = getLabel();
 
-		String lable = getLabel();
-
-		if (lable != null) {
-			jspWriter.write(
-				"<legend class=\"fieldset-legend\"><span class=\"legend\">");
-
+		if (label != null) {
 			MessageTag messageTag = new MessageTag();
 
-			messageTag.setKey(lable);
+			messageTag.setKey(label);
 			messageTag.setLocalizeKey(getLocalizeLabel());
 
 			messageTag.doTag(pageContext);
@@ -126,9 +100,9 @@ public class FieldsetTag extends BaseFieldsetTag {
 
 				iconHelpTag.doTag(pageContext);
 			}
-
-			jspWriter.write("</span></legend>");
 		}
+
+		jspWriter.write("</span></legend>");
 
 		if (getColumn()) {
 			jspWriter.write("<div class=\"row\">");

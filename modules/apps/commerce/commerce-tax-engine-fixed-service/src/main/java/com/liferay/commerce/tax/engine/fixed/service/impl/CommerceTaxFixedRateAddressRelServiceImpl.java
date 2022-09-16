@@ -18,36 +18,45 @@ import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.tax.engine.fixed.model.CommerceTaxFixedRateAddressRel;
 import com.liferay.commerce.tax.engine.fixed.service.base.CommerceTaxFixedRateAddressRelServiceBaseImpl;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
-import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionFactory;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.OrderByComparator;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.util.List;
+
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Marco Leo
  * @author Alessio Antonio Rendina
  */
+@Component(
+	enabled = false,
+	property = {
+		"json.web.service.context.name=commerce",
+		"json.web.service.context.path=CommerceTaxFixedRateAddressRel"
+	},
+	service = AopService.class
+)
 public class CommerceTaxFixedRateAddressRelServiceImpl
 	extends CommerceTaxFixedRateAddressRelServiceBaseImpl {
 
 	@Override
 	public CommerceTaxFixedRateAddressRel addCommerceTaxFixedRateAddressRel(
-			long userId, long groupId, long commerceTaxMethodId,
-			long cpTaxCategoryId, long commerceCountryId, long commerceRegionId,
-			String zip, double rate)
+			long groupId, long commerceTaxMethodId, long cpTaxCategoryId,
+			long countryId, long regionId, String zip, double rate)
 		throws PortalException {
 
 		_checkCommerceChannel(groupId);
 
 		return commerceTaxFixedRateAddressRelLocalService.
 			addCommerceTaxFixedRateAddressRel(
-				userId, groupId, commerceTaxMethodId, cpTaxCategoryId,
-				commerceCountryId, commerceRegionId, zip, rate);
+				getUserId(), groupId, commerceTaxMethodId, cpTaxCategoryId,
+				countryId, regionId, zip, rate);
 	}
 
 	/**
@@ -56,16 +65,15 @@ public class CommerceTaxFixedRateAddressRelServiceImpl
 	@Deprecated
 	@Override
 	public CommerceTaxFixedRateAddressRel addCommerceTaxFixedRateAddressRel(
-			long commerceTaxMethodId, long cpTaxCategoryId,
-			long commerceCountryId, long commerceRegionId, String zip,
-			double rate, ServiceContext serviceContext)
+			long commerceTaxMethodId, long cpTaxCategoryId, long countryId,
+			long regionId, String zip, double rate,
+			ServiceContext serviceContext)
 		throws PortalException {
 
 		return commerceTaxFixedRateAddressRelService.
 			addCommerceTaxFixedRateAddressRel(
-				serviceContext.getUserId(), serviceContext.getScopeGroupId(),
-				commerceTaxMethodId, cpTaxCategoryId, commerceCountryId,
-				commerceRegionId, zip, rate);
+				serviceContext.getScopeGroupId(), commerceTaxMethodId,
+				cpTaxCategoryId, countryId, regionId, zip, rate);
 	}
 
 	@Override
@@ -130,8 +138,8 @@ public class CommerceTaxFixedRateAddressRelServiceImpl
 
 	@Override
 	public CommerceTaxFixedRateAddressRel updateCommerceTaxFixedRateAddressRel(
-			long commerceTaxFixedRateAddressRelId, long commerceCountryId,
-			long commerceRegionId, String zip, double rate)
+			long commerceTaxFixedRateAddressRelId, long countryId,
+			long regionId, String zip, double rate)
 		throws PortalException {
 
 		CommerceTaxFixedRateAddressRel commerceTaxFixedRateAddressRel =
@@ -143,8 +151,8 @@ public class CommerceTaxFixedRateAddressRelServiceImpl
 
 		return commerceTaxFixedRateAddressRelLocalService.
 			updateCommerceTaxFixedRateAddressRel(
-				commerceTaxFixedRateAddressRelId, commerceCountryId,
-				commerceRegionId, zip, rate);
+				commerceTaxFixedRateAddressRelId, countryId, regionId, zip,
+				rate);
 	}
 
 	private void _checkCommerceChannel(long groupId) throws PortalException {
@@ -155,14 +163,13 @@ public class CommerceTaxFixedRateAddressRelServiceImpl
 			getPermissionChecker(), commerceChannel, ActionKeys.UPDATE);
 	}
 
-	private static volatile ModelResourcePermission<CommerceChannel>
-		_commerceChannelModelResourcePermission =
-			ModelResourcePermissionFactory.getInstance(
-				CommerceTaxFixedRateAddressRelServiceImpl.class,
-				"_commerceChannelModelResourcePermission",
-				CommerceChannel.class);
-
-	@ServiceReference(type = CommerceChannelLocalService.class)
+	@Reference
 	private CommerceChannelLocalService _commerceChannelLocalService;
+
+	@Reference(
+		target = "(model.class.name=com.liferay.commerce.product.model.CommerceChannel)"
+	)
+	private ModelResourcePermission<CommerceChannel>
+		_commerceChannelModelResourcePermission;
 
 }

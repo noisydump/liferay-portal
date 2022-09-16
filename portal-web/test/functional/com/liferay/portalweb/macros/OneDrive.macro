@@ -1,7 +1,7 @@
 definition {
 
 	macro AddDocument {
-		Alert.viewInfoMessageSpecific(infoMessage = "The document has been checked out, please on finish editing check in the document to save changes into the document library.");
+		Alert.viewInfoMessageSpecific(infoMessage = "The document has been checked out. Please check in the document after edits are made to save the changes into the document library.");
 
 		Type(
 			locator1 = "TextInput#TITLE",
@@ -9,9 +9,9 @@ definition {
 
 		Click(locator1 = "Button#SAVE");
 
-		Pause(locator1 = "10000");
-
-		SelectWindow.selectPopUp(locator1 = "null");
+		SelectWindow.waitForSelectPopUp(
+			locator1 = "null",
+			value1 = "60000");
 
 		if (IsElementNotPresent(locator1 = "IFrame#WEB_APPLICATION")) {
 			Close.closeWindow(locator1 = "null");
@@ -30,25 +30,21 @@ definition {
 
 			Click(locator1 = "Button#SAVE");
 
-			Pause(locator1 = "10000");
-
-			SelectWindow.selectPopUp(locator1 = "null");
+			SelectWindow.waitForSelectPopUp(
+				locator1 = "null",
+				value1 = "60000");
 		}
 
 		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#WEB_APPLICATION");
 
-		Pause(locator1 = "10000");
+		WaitForPageLoad();
 
 		if (isSet(dmDocumentContent)) {
-			Pause(locator1 = "10000");
-
-			Click(locator1 = "OneDrive#DOCUMENTS_CONTENT");
-
-			Pause(locator1 = "10000");
-
-			Type(
+			Type.sendKeys(
 				locator1 = "OneDrive#DOCUMENTS_CONTENT",
 				value1 = "${dmDocumentContent}");
+
+			WaitForElementPresent(locator1 = "OneDrive#DOCUMENTS_SAVE_STATUS");
 		}
 
 		Navigator.closeWindow();
@@ -57,50 +53,116 @@ definition {
 	}
 
 	macro deleteDocument {
-		var key_documentTitle = "${dmDocumentTitle}";
+		if (isSet(dmDocumentTitle)) {
+			var key_documentTitle = "${dmDocumentTitle}";
 
-		while (IsElementPresent(locator1 = "OneDrive#FILES_TITLE")) {
-			Click.mouseOverClick(locator1 = "OneDrive#FILES_CHECKBOX");
+			while (IsElementPresent(locator1 = "OneDrive#FILES_TITLE")) {
+				Click.mouseOverClick(locator1 = "OneDrive#FILES_CHECKBOX");
 
-			Click(locator1 = "OneDrive#DELETE");
+				Click(locator1 = "OneDrive#DELETE");
 
-			Click(locator1 = "OneDrive#DELETE_CONFIRMATION");
+				Click(locator1 = "OneDrive#DELETE_CONFIRMATION");
 
-			Pause(locator1 = "3000");
+				if (IsElementPresent(locator1 = "OneDrive#DELETE_CONFIRM_MESSAGE")) {
+					Click(locator1 = "OneDrive#DELETE_ANYWAY");
+				}
+
+				VerifyElementPresent(locator1 = "OneDrive#DELETE_MESSAGE");
+			}
+		}
+		else {
+			var key_documentTitle = "hours ago";
+
+			while (IsElementPresent(locator1 = "OneDrive#FILES_CHECKBOX")) {
+				Click.mouseOverClick(locator1 = "OneDrive#FILES_CHECKBOX");
+
+				Click(locator1 = "OneDrive#DELETE");
+
+				Click(locator1 = "OneDrive#DELETE_CONFIRMATION");
+
+				VerifyElementPresent(locator1 = "OneDrive#DELETE_MESSAGE");
+			}
+
+			var key_documentTitle = "Yesterday";
+
+			while (IsElementPresent(locator1 = "OneDrive#FILES_CHECKBOX")) {
+				Click.mouseOverClick(locator1 = "OneDrive#FILES_CHECKBOX");
+
+				Click(locator1 = "OneDrive#DELETE");
+
+				Click(locator1 = "OneDrive#DELETE_CONFIRMATION");
+
+				VerifyElementPresent(locator1 = "OneDrive#DELETE_MESSAGE");
+			}
 		}
 	}
 
 	macro editTitle {
-		Pause(locator1 = "10000");
+		WaitForPageLoad();
 
-		SelectWindow.selectPopUp(locator1 = "null");
+		SelectWindow.waitForSelectPopUp(
+			locator1 = "null",
+			value1 = "60000");
 
 		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#WEB_APPLICATION");
 
 		Click(locator1 = "OneDrive#DOCUMENTS_TITLE");
 
-		if (isSet(dmDocumentTypeName)) {
-			Type(
-				locator1 = "OneDrive#DOCUMENTS_TITLE_RENAME",
-				value1 = "${dmDocumentTitle}");
-
-			KeyPress(
-				locator1 = "OneDrive#DOCUMENTS_TITLE_RENAME",
-				value1 = "\RETURN");
+		if (IsElementNotPresent(locator1 = "OneDrive#DOCUMENTS_TITLE_RENAME")) {
+			while (IsElementNotPresent(locator1 = "OneDrive#DOCUMENTS_TITLE_RENAME")) {
+				Click(locator1 = "OneDrive#DOCUMENTS_TITLE");
+			}
 		}
-		else {
-			Type(
-				locator1 = "OneDrive#DOCUMENTS_TITLE",
-				value1 = "${dmDocumentTitle}");
 
-			KeyPress(
-				locator1 = "OneDrive#DOCUMENTS_TITLE",
-				value1 = "\RETURN");
-		}
+		Type(
+			locator1 = "OneDrive#DOCUMENTS_TITLE_RENAME",
+			value1 = "${dmDocumentTitle}");
+
+		KeyPress(
+			locator1 = "OneDrive#DOCUMENTS_TITLE_RENAME",
+			value1 = "\RETURN");
+
+		WaitForPageLoad();
+
+		WaitForElementPresent(locator1 = "OneDrive#DOCUMENTS_SAVE_STATUS");
 
 		Navigator.closeWindow();
 
 		SelectFrameTop();
+	}
+
+	macro enableOneDrive {
+		DMNavigator.openToConfigInSystemSettings(portlet = "One Drive");
+
+		var oneDriveClientId = PropsUtil.get("onedrive.client.id");
+
+		Type(
+			key_text = "clientId",
+			locator1 = "TextArea#ANY",
+			value1 = "${oneDriveClientId}");
+
+		var oneDriveClientSecret = PropsUtil.get("onedrive.client.secret");
+
+		Type(
+			key_text = "clientSecret",
+			locator1 = "TextArea#ANY",
+			value1 = "${oneDriveClientSecret}");
+
+		var oneDriveTenant = PropsUtil.get("onedrive.tenant");
+
+		Type(
+			key_text = "tenant",
+			locator1 = "TextArea#ANY",
+			value1 = "${oneDriveTenant}");
+
+		ScrollWebElementIntoView(locator1 = "Button#CANCEL");
+
+		if (IsElementPresent(locator1 = "Button#UPDATE")) {
+			PortletEntry.update();
+		}
+		else if (IsElementPresent(locator1 = "Button#SAVE")) {
+			PortletEntry.save();
+		}
 	}
 
 	macro gotoEdit {
@@ -114,7 +176,7 @@ definition {
 	macro goToOneDrive {
 		Navigator.openSpecificURL(url = "https://liferaycolab-my.sharepoint.com/personal/sharepoint_liferaycolab_onmicrosoft_com/_layouts/15/onedrive.aspx");
 
-		Pause(locator1 = "10000");
+		WaitForPageLoad();
 
 		MicrosoftLogin.accountSignIn(
 			userEmail = "${userName}",
@@ -123,7 +185,7 @@ definition {
 
 		MicrosoftLogin.confirmMicrosoftApp();
 
-		Pause(locator1 = "30000");
+		WaitForPageLoad();
 
 		SelectWindow.selectPopUp(locator1 = "null");
 	}

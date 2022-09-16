@@ -19,19 +19,19 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.portletdisplaytemplate.PortletDisplayTemplateManager;
-import com.liferay.portal.kernel.upgrade.BaseUpgradePortletPreferences;
+import com.liferay.portal.kernel.upgrade.BasePortletPreferencesUpgradeProcess;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.site.navigation.breadcrumb.web.internal.constants.SiteNavigationBreadcrumbPortletKeys;
 
 import javax.portlet.PortletPreferences;
-import javax.portlet.ReadOnlyException;
 
 /**
  * @author Julio Camarero
  */
-public class UpgradePortletPreferences extends BaseUpgradePortletPreferences {
+public class UpgradePortletPreferences
+	extends BasePortletPreferencesUpgradeProcess {
 
 	@Override
 	protected String[] getPortletIds() {
@@ -42,8 +42,23 @@ public class UpgradePortletPreferences extends BaseUpgradePortletPreferences {
 		};
 	}
 
-	protected void upgradeDisplayStyle(PortletPreferences portletPreferences)
-		throws ReadOnlyException {
+	@Override
+	protected String upgradePreferences(
+			long companyId, long ownerId, int ownerType, long plid,
+			String portletId, String xml)
+		throws Exception {
+
+		PortletPreferences portletPreferences =
+			PortletPreferencesFactoryUtil.fromXML(
+				companyId, ownerId, ownerType, plid, portletId, xml);
+
+		_upgradeDisplayStyle(portletPreferences);
+
+		return PortletPreferencesFactoryUtil.toXML(portletPreferences);
+	}
+
+	private void _upgradeDisplayStyle(PortletPreferences portletPreferences)
+		throws Exception {
 
 		String displayStyle = GetterUtil.getString(
 			portletPreferences.getValue("displayStyle", null));
@@ -76,21 +91,6 @@ public class UpgradePortletPreferences extends BaseUpgradePortletPreferences {
 						"of widget templates");
 			}
 		}
-	}
-
-	@Override
-	protected String upgradePreferences(
-			long companyId, long ownerId, int ownerType, long plid,
-			String portletId, String xml)
-		throws Exception {
-
-		PortletPreferences portletPreferences =
-			PortletPreferencesFactoryUtil.fromXML(
-				companyId, ownerId, ownerType, plid, portletId, xml);
-
-		upgradeDisplayStyle(portletPreferences);
-
-		return PortletPreferencesFactoryUtil.toXML(portletPreferences);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

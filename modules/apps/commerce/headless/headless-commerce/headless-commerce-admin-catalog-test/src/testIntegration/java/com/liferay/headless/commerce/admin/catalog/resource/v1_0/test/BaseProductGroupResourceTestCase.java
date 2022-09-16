@@ -35,7 +35,6 @@ import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
@@ -44,19 +43,16 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.search.test.util.SearchTestRule;
-import com.liferay.portal.test.log.CaptureAppender;
-import com.liferay.portal.test.log.Log4JLoggerTestUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import java.text.DateFormat;
@@ -66,9 +62,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -76,10 +74,7 @@ import javax.annotation.Generated;
 
 import javax.ws.rs.core.MultivaluedHashMap;
 
-import org.apache.commons.beanutils.BeanUtils;
-import org.apache.commons.beanutils.BeanUtilsBean;
 import org.apache.commons.lang.time.DateUtils;
-import org.apache.log4j.Level;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -205,9 +200,9 @@ public abstract class BaseProductGroupResourceTestCase {
 	@Test
 	public void testGetProductGroupsPage() throws Exception {
 		Page<ProductGroup> page = productGroupResource.getProductGroupsPage(
-			RandomTestUtil.randomString(), null, Pagination.of(1, 2), null);
+			null, null, Pagination.of(1, 10), null);
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		ProductGroup productGroup1 = testGetProductGroupsPage_addProductGroup(
 			randomProductGroup());
@@ -216,13 +211,12 @@ public abstract class BaseProductGroupResourceTestCase {
 			randomProductGroup());
 
 		page = productGroupResource.getProductGroupsPage(
-			null, null, Pagination.of(1, 2), null);
+			null, null, Pagination.of(1, 10), null);
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(productGroup1, productGroup2),
-			(List<ProductGroup>)page.getItems());
+		assertContains(productGroup1, (List<ProductGroup>)page.getItems());
+		assertContains(productGroup2, (List<ProductGroup>)page.getItems());
 		assertValid(page);
 
 		productGroupResource.deleteProductGroup(productGroup1.getId());
@@ -248,6 +242,35 @@ public abstract class BaseProductGroupResourceTestCase {
 		for (EntityField entityField : entityFields) {
 			Page<ProductGroup> page = productGroupResource.getProductGroupsPage(
 				null, getFilterString(entityField, "between", productGroup1),
+				Pagination.of(1, 2), null);
+
+			assertEquals(
+				Collections.singletonList(productGroup1),
+				(List<ProductGroup>)page.getItems());
+		}
+	}
+
+	@Test
+	public void testGetProductGroupsPageWithFilterDoubleEquals()
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(
+			EntityField.Type.DOUBLE);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		ProductGroup productGroup1 = testGetProductGroupsPage_addProductGroup(
+			randomProductGroup());
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		ProductGroup productGroup2 = testGetProductGroupsPage_addProductGroup(
+			randomProductGroup());
+
+		for (EntityField entityField : entityFields) {
+			Page<ProductGroup> page = productGroupResource.getProductGroupsPage(
+				null, getFilterString(entityField, "eq", productGroup1),
 				Pagination.of(1, 2), null);
 
 			assertEquals(
@@ -287,6 +310,11 @@ public abstract class BaseProductGroupResourceTestCase {
 
 	@Test
 	public void testGetProductGroupsPageWithPagination() throws Exception {
+		Page<ProductGroup> totalPage =
+			productGroupResource.getProductGroupsPage(null, null, null, null);
+
+		int totalCount = GetterUtil.getInteger(totalPage.getTotalCount());
+
 		ProductGroup productGroup1 = testGetProductGroupsPage_addProductGroup(
 			randomProductGroup());
 
@@ -297,18 +325,18 @@ public abstract class BaseProductGroupResourceTestCase {
 			randomProductGroup());
 
 		Page<ProductGroup> page1 = productGroupResource.getProductGroupsPage(
-			null, null, Pagination.of(1, 2), null);
+			null, null, Pagination.of(1, totalCount + 2), null);
 
 		List<ProductGroup> productGroups1 =
 			(List<ProductGroup>)page1.getItems();
 
 		Assert.assertEquals(
-			productGroups1.toString(), 2, productGroups1.size());
+			productGroups1.toString(), totalCount + 2, productGroups1.size());
 
 		Page<ProductGroup> page2 = productGroupResource.getProductGroupsPage(
-			null, null, Pagination.of(2, 2), null);
+			null, null, Pagination.of(2, totalCount + 2), null);
 
-		Assert.assertEquals(3, page2.getTotalCount());
+		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
 		List<ProductGroup> productGroups2 =
 			(List<ProductGroup>)page2.getItems();
@@ -317,11 +345,11 @@ public abstract class BaseProductGroupResourceTestCase {
 			productGroups2.toString(), 1, productGroups2.size());
 
 		Page<ProductGroup> page3 = productGroupResource.getProductGroupsPage(
-			null, null, Pagination.of(1, 3), null);
+			null, null, Pagination.of(1, totalCount + 3), null);
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(productGroup1, productGroup2, productGroup3),
-			(List<ProductGroup>)page3.getItems());
+		assertContains(productGroup1, (List<ProductGroup>)page3.getItems());
+		assertContains(productGroup2, (List<ProductGroup>)page3.getItems());
+		assertContains(productGroup3, (List<ProductGroup>)page3.getItems());
 	}
 
 	@Test
@@ -329,9 +357,21 @@ public abstract class BaseProductGroupResourceTestCase {
 		testGetProductGroupsPageWithSort(
 			EntityField.Type.DATE_TIME,
 			(entityField, productGroup1, productGroup2) -> {
-				BeanUtils.setProperty(
+				BeanTestUtil.setProperty(
 					productGroup1, entityField.getName(),
 					DateUtils.addMinutes(new Date(), -2));
+			});
+	}
+
+	@Test
+	public void testGetProductGroupsPageWithSortDouble() throws Exception {
+		testGetProductGroupsPageWithSort(
+			EntityField.Type.DOUBLE,
+			(entityField, productGroup1, productGroup2) -> {
+				BeanTestUtil.setProperty(
+					productGroup1, entityField.getName(), 0.1);
+				BeanTestUtil.setProperty(
+					productGroup2, entityField.getName(), 0.5);
 			});
 	}
 
@@ -340,8 +380,10 @@ public abstract class BaseProductGroupResourceTestCase {
 		testGetProductGroupsPageWithSort(
 			EntityField.Type.INTEGER,
 			(entityField, productGroup1, productGroup2) -> {
-				BeanUtils.setProperty(productGroup1, entityField.getName(), 0);
-				BeanUtils.setProperty(productGroup2, entityField.getName(), 1);
+				BeanTestUtil.setProperty(
+					productGroup1, entityField.getName(), 0);
+				BeanTestUtil.setProperty(
+					productGroup2, entityField.getName(), 1);
 			});
 	}
 
@@ -360,21 +402,21 @@ public abstract class BaseProductGroupResourceTestCase {
 				Class<?> returnType = method.getReturnType();
 
 				if (returnType.isAssignableFrom(Map.class)) {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						productGroup1, entityFieldName,
 						Collections.singletonMap("Aaa", "Aaa"));
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						productGroup2, entityFieldName,
 						Collections.singletonMap("Bbb", "Bbb"));
 				}
 				else if (entityFieldName.contains("email")) {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						productGroup1, entityFieldName,
 						"aaa" +
 							StringUtil.toLowerCase(
 								RandomTestUtil.randomString()) +
 									"@liferay.com");
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						productGroup2, entityFieldName,
 						"bbb" +
 							StringUtil.toLowerCase(
@@ -382,12 +424,12 @@ public abstract class BaseProductGroupResourceTestCase {
 									"@liferay.com");
 				}
 				else {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						productGroup1, entityFieldName,
 						"aaa" +
 							StringUtil.toLowerCase(
 								RandomTestUtil.randomString()));
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						productGroup2, entityFieldName,
 						"bbb" +
 							StringUtil.toLowerCase(
@@ -456,7 +498,7 @@ public abstract class BaseProductGroupResourceTestCase {
 			new HashMap<String, Object>() {
 				{
 					put("page", 1);
-					put("pageSize", 2);
+					put("pageSize", 10);
 				}
 			},
 			new GraphQLField("items", getGraphQLFields()),
@@ -466,22 +508,36 @@ public abstract class BaseProductGroupResourceTestCase {
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/productGroups");
 
-		Assert.assertEquals(0, productGroupsJSONObject.get("totalCount"));
+		long totalCount = productGroupsJSONObject.getLong("totalCount");
 
-		ProductGroup productGroup1 = testGraphQLProductGroup_addProductGroup();
-		ProductGroup productGroup2 = testGraphQLProductGroup_addProductGroup();
+		ProductGroup productGroup1 =
+			testGraphQLGetProductGroupsPage_addProductGroup();
+		ProductGroup productGroup2 =
+			testGraphQLGetProductGroupsPage_addProductGroup();
 
 		productGroupsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/productGroups");
 
-		Assert.assertEquals(2, productGroupsJSONObject.get("totalCount"));
+		Assert.assertEquals(
+			totalCount + 2, productGroupsJSONObject.getLong("totalCount"));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(productGroup1, productGroup2),
+		assertContains(
+			productGroup1,
 			Arrays.asList(
 				ProductGroupSerDes.toDTOs(
 					productGroupsJSONObject.getString("items"))));
+		assertContains(
+			productGroup2,
+			Arrays.asList(
+				ProductGroupSerDes.toDTOs(
+					productGroupsJSONObject.getString("items"))));
+	}
+
+	protected ProductGroup testGraphQLGetProductGroupsPage_addProductGroup()
+		throws Exception {
+
+		return testGraphQLProductGroup_addProductGroup();
 	}
 
 	@Test
@@ -493,22 +549,6 @@ public abstract class BaseProductGroupResourceTestCase {
 
 		assertEquals(randomProductGroup, postProductGroup);
 		assertValid(postProductGroup);
-
-		randomProductGroup = randomProductGroup();
-
-		assertHttpResponseStatusCode(
-			404,
-			productGroupResource.
-				getProductGroupByExternalReferenceCodeHttpResponse(
-					randomProductGroup.getExternalReferenceCode()));
-
-		testPostProductGroup_addProductGroup(randomProductGroup);
-
-		assertHttpResponseStatusCode(
-			200,
-			productGroupResource.
-				getProductGroupByExternalReferenceCodeHttpResponse(
-					randomProductGroup.getExternalReferenceCode()));
 	}
 
 	protected ProductGroup testPostProductGroup_addProductGroup(
@@ -579,7 +619,8 @@ public abstract class BaseProductGroupResourceTestCase {
 	public void testGraphQLGetProductGroupByExternalReferenceCode()
 		throws Exception {
 
-		ProductGroup productGroup = testGraphQLProductGroup_addProductGroup();
+		ProductGroup productGroup =
+			testGraphQLGetProductGroupByExternalReferenceCode_addProductGroup();
 
 		Assert.assertTrue(
 			equals(
@@ -629,6 +670,13 @@ public abstract class BaseProductGroupResourceTestCase {
 				"Object/code"));
 	}
 
+	protected ProductGroup
+			testGraphQLGetProductGroupByExternalReferenceCode_addProductGroup()
+		throws Exception {
+
+		return testGraphQLProductGroup_addProductGroup();
+	}
+
 	@Test
 	public void testPatchProductGroupByExternalReferenceCode()
 		throws Exception {
@@ -666,7 +714,8 @@ public abstract class BaseProductGroupResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteProductGroup() throws Exception {
-		ProductGroup productGroup = testGraphQLProductGroup_addProductGroup();
+		ProductGroup productGroup =
+			testGraphQLDeleteProductGroup_addProductGroup();
 
 		Assert.assertTrue(
 			JSONUtil.getValueAsBoolean(
@@ -679,26 +728,25 @@ public abstract class BaseProductGroupResourceTestCase {
 							}
 						})),
 				"JSONObject/data", "Object/deleteProductGroup"));
+		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"productGroup",
+					new HashMap<String, Object>() {
+						{
+							put("id", productGroup.getId());
+						}
+					},
+					new GraphQLField("id"))),
+			"JSONArray/errors");
 
-		try (CaptureAppender captureAppender =
-				Log4JLoggerTestUtil.configureLog4JLogger(
-					"graphql.execution.SimpleDataFetcherExceptionHandler",
-					Level.WARN)) {
+		Assert.assertTrue(errorsJSONArray.length() > 0);
+	}
 
-			JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"productGroup",
-						new HashMap<String, Object>() {
-							{
-								put("id", productGroup.getId());
-							}
-						},
-						new GraphQLField("id"))),
-				"JSONArray/errors");
+	protected ProductGroup testGraphQLDeleteProductGroup_addProductGroup()
+		throws Exception {
 
-			Assert.assertTrue(errorsJSONArray.length() > 0);
-		}
+		return testGraphQLProductGroup_addProductGroup();
 	}
 
 	@Test
@@ -721,7 +769,8 @@ public abstract class BaseProductGroupResourceTestCase {
 
 	@Test
 	public void testGraphQLGetProductGroup() throws Exception {
-		ProductGroup productGroup = testGraphQLProductGroup_addProductGroup();
+		ProductGroup productGroup =
+			testGraphQLGetProductGroup_addProductGroup();
 
 		Assert.assertTrue(
 			equals(
@@ -760,6 +809,12 @@ public abstract class BaseProductGroupResourceTestCase {
 				"Object/code"));
 	}
 
+	protected ProductGroup testGraphQLGetProductGroup_addProductGroup()
+		throws Exception {
+
+		return testGraphQLProductGroup_addProductGroup();
+	}
+
 	@Test
 	public void testPatchProductGroup() throws Exception {
 		Assert.assertTrue(false);
@@ -773,6 +828,23 @@ public abstract class BaseProductGroupResourceTestCase {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	protected void assertContains(
+		ProductGroup productGroup, List<ProductGroup> productGroups) {
+
+		boolean contains = false;
+
+		for (ProductGroup item : productGroups) {
+			if (equals(productGroup, item)) {
+				contains = true;
+
+				break;
+			}
+		}
+
+		Assert.assertTrue(
+			productGroups + " does not contain " + productGroup, contains);
 	}
 
 	protected void assertHttpResponseStatusCode(
@@ -918,8 +990,8 @@ public abstract class BaseProductGroupResourceTestCase {
 	protected List<GraphQLField> getGraphQLFields() throws Exception {
 		List<GraphQLField> graphQLFields = new ArrayList<>();
 
-		for (Field field :
-				ReflectionUtil.getDeclaredFields(
+		for (java.lang.reflect.Field field :
+				getDeclaredFields(
 					com.liferay.headless.commerce.admin.catalog.dto.v1_0.
 						ProductGroup.class)) {
 
@@ -935,12 +1007,13 @@ public abstract class BaseProductGroupResourceTestCase {
 		return graphQLFields;
 	}
 
-	protected List<GraphQLField> getGraphQLFields(Field... fields)
+	protected List<GraphQLField> getGraphQLFields(
+			java.lang.reflect.Field... fields)
 		throws Exception {
 
 		List<GraphQLField> graphQLFields = new ArrayList<>();
 
-		for (Field field : fields) {
+		for (java.lang.reflect.Field field : fields) {
 			com.liferay.portal.vulcan.graphql.annotation.GraphQLField
 				vulcanGraphQLField = field.getAnnotation(
 					com.liferay.portal.vulcan.graphql.annotation.GraphQLField.
@@ -954,7 +1027,7 @@ public abstract class BaseProductGroupResourceTestCase {
 				}
 
 				List<GraphQLField> childrenGraphQLFields = getGraphQLFields(
-					ReflectionUtil.getDeclaredFields(clazz));
+					getDeclaredFields(clazz));
 
 				graphQLFields.add(
 					new GraphQLField(field.getName(), childrenGraphQLFields));
@@ -1090,6 +1163,19 @@ public abstract class BaseProductGroupResourceTestCase {
 		return false;
 	}
 
+	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
+		throws Exception {
+
+		Stream<java.lang.reflect.Field> stream = Stream.of(
+			ReflectionUtil.getDeclaredFields(clazz));
+
+		return stream.filter(
+			field -> !field.isSynthetic()
+		).toArray(
+			java.lang.reflect.Field[]::new
+		);
+	}
+
 	protected java.util.Collection<EntityField> getEntityFields()
 		throws Exception {
 
@@ -1169,8 +1255,9 @@ public abstract class BaseProductGroupResourceTestCase {
 		}
 
 		if (entityFieldName.equals("productsCount")) {
-			throw new IllegalArgumentException(
-				"Invalid entity field " + entityFieldName);
+			sb.append(String.valueOf(productGroup.getProductsCount()));
+
+			return sb.toString();
 		}
 
 		if (entityFieldName.equals("title")) {
@@ -1245,6 +1332,115 @@ public abstract class BaseProductGroupResourceTestCase {
 	protected Company testCompany;
 	protected Group testGroup;
 
+	protected static class BeanTestUtil {
+
+		public static void copyProperties(Object source, Object target)
+			throws Exception {
+
+			Class<?> sourceClass = _getSuperClass(source.getClass());
+
+			Class<?> targetClass = target.getClass();
+
+			for (java.lang.reflect.Field field :
+					sourceClass.getDeclaredFields()) {
+
+				if (field.isSynthetic()) {
+					continue;
+				}
+
+				Method getMethod = _getMethod(
+					sourceClass, field.getName(), "get");
+
+				Method setMethod = _getMethod(
+					targetClass, field.getName(), "set",
+					getMethod.getReturnType());
+
+				setMethod.invoke(target, getMethod.invoke(source));
+			}
+		}
+
+		public static boolean hasProperty(Object bean, String name) {
+			Method setMethod = _getMethod(
+				bean.getClass(), "set" + StringUtil.upperCaseFirstLetter(name));
+
+			if (setMethod != null) {
+				return true;
+			}
+
+			return false;
+		}
+
+		public static void setProperty(Object bean, String name, Object value)
+			throws Exception {
+
+			Class<?> clazz = bean.getClass();
+
+			Method setMethod = _getMethod(
+				clazz, "set" + StringUtil.upperCaseFirstLetter(name));
+
+			if (setMethod == null) {
+				throw new NoSuchMethodException();
+			}
+
+			Class<?>[] parameterTypes = setMethod.getParameterTypes();
+
+			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
+		}
+
+		private static Method _getMethod(Class<?> clazz, String name) {
+			for (Method method : clazz.getMethods()) {
+				if (name.equals(method.getName()) &&
+					(method.getParameterCount() == 1) &&
+					_parameterTypes.contains(method.getParameterTypes()[0])) {
+
+					return method;
+				}
+			}
+
+			return null;
+		}
+
+		private static Method _getMethod(
+				Class<?> clazz, String fieldName, String prefix,
+				Class<?>... parameterTypes)
+			throws Exception {
+
+			return clazz.getMethod(
+				prefix + StringUtil.upperCaseFirstLetter(fieldName),
+				parameterTypes);
+		}
+
+		private static Class<?> _getSuperClass(Class<?> clazz) {
+			Class<?> superClass = clazz.getSuperclass();
+
+			if ((superClass == null) || (superClass == Object.class)) {
+				return clazz;
+			}
+
+			return superClass;
+		}
+
+		private static Object _translateValue(
+			Class<?> parameterType, Object value) {
+
+			if ((value instanceof Integer) &&
+				parameterType.equals(Long.class)) {
+
+				Integer intValue = (Integer)value;
+
+				return intValue.longValue();
+			}
+
+			return value;
+		}
+
+		private static final Set<Class<?>> _parameterTypes = new HashSet<>(
+			Arrays.asList(
+				Boolean.class, Date.class, Double.class, Integer.class,
+				Long.class, Map.class, String.class));
+
+	}
+
 	protected class GraphQLField {
 
 		public GraphQLField(String key, GraphQLField... graphQLFields) {
@@ -1284,12 +1480,12 @@ public abstract class BaseProductGroupResourceTestCase {
 						_parameterMap.entrySet()) {
 
 					sb.append(entry.getKey());
-					sb.append(":");
+					sb.append(": ");
 					sb.append(entry.getValue());
-					sb.append(",");
+					sb.append(", ");
 				}
 
-				sb.setLength(sb.length() - 1);
+				sb.setLength(sb.length() - 2);
 
 				sb.append(")");
 			}
@@ -1299,10 +1495,10 @@ public abstract class BaseProductGroupResourceTestCase {
 
 				for (GraphQLField graphQLField : _graphQLFields) {
 					sb.append(graphQLField.toString());
-					sb.append(",");
+					sb.append(", ");
 				}
 
-				sb.setLength(sb.length() - 1);
+				sb.setLength(sb.length() - 2);
 
 				sb.append("}");
 			}
@@ -1316,21 +1512,9 @@ public abstract class BaseProductGroupResourceTestCase {
 
 	}
 
-	private static final Log _log = LogFactoryUtil.getLog(
-		BaseProductGroupResourceTestCase.class);
+	private static final com.liferay.portal.kernel.log.Log _log =
+		LogFactoryUtil.getLog(BaseProductGroupResourceTestCase.class);
 
-	private static BeanUtilsBean _beanUtilsBean = new BeanUtilsBean() {
-
-		@Override
-		public void copyProperty(Object bean, String name, Object value)
-			throws IllegalAccessException, InvocationTargetException {
-
-			if (value != null) {
-				super.copyProperty(bean, name, value);
-			}
-		}
-
-	};
 	private static DateFormat _dateFormat;
 
 	@Inject

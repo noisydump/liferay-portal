@@ -3,6 +3,7 @@
 <model-hints>
 	<model name="com.liferay.account.model.AccountEntry">
 		<field name="mvccVersion" type="long" />
+		<field name="uuid" type="String" />
 		<field name="externalReferenceCode" type="String" />
 		<field name="accountEntryId" type="long" />
 		<field name="companyId" type="long" />
@@ -11,6 +12,7 @@
 		<field name="createDate" type="Date" />
 		<field name="modifiedDate" type="Date" />
 		<field name="defaultBillingAddressId" type="long" />
+		<field name="defaultCPaymentMethodKey" type="String" />
 		<field name="defaultShippingAddressId" type="long" />
 		<field name="parentAccountEntryId" type="long" />
 		<field name="description" type="String">
@@ -49,6 +51,7 @@
 	</model>
 	<model name="com.liferay.account.model.AccountGroup">
 		<field name="mvccVersion" type="long" />
+		<field name="uuid" type="String" />
 		<field name="externalReferenceCode" type="String" />
 		<field name="accountGroupId" type="long" />
 		<field name="companyId" type="long" />
@@ -58,12 +61,19 @@
 		<field name="modifiedDate" type="Date" />
 		<field name="defaultAccountGroup" type="boolean" />
 		<field name="description" type="String" />
-		<field name="name" type="String" />
+		<field name="name" type="String">
+			<validator name="required" />
+		</field>
+		<field name="type" type="String" />
 	</model>
 	<model name="com.liferay.account.model.AccountGroupRel">
 		<field name="mvccVersion" type="long" />
-		<field name="AccountGroupRelId" type="long" />
+		<field name="accountGroupRelId" type="long" />
 		<field name="companyId" type="long" />
+		<field name="userId" type="long" />
+		<field name="userName" type="String" />
+		<field name="createDate" type="Date" />
+		<field name="modifiedDate" type="Date" />
 		<field name="accountGroupId" type="long" />
 		<field name="classNameId" type="long" />
 		<field name="classPK" type="long" />

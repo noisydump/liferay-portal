@@ -86,11 +86,11 @@ public interface AccountGroupRelLocalService
 	/**
 	 * Creates a new account group rel with the primary key. Does not add the account group rel to the database.
 	 *
-	 * @param AccountGroupRelId the primary key for the new account group rel
+	 * @param accountGroupRelId the primary key for the new account group rel
 	 * @return the new account group rel
 	 */
 	@Transactional(enabled = false)
-	public AccountGroupRel createAccountGroupRel(long AccountGroupRelId);
+	public AccountGroupRel createAccountGroupRel(long accountGroupRelId);
 
 	/**
 	 * @throws PortalException
@@ -119,17 +119,21 @@ public interface AccountGroupRelLocalService
 	 * <strong>Important:</strong> Inspect AccountGroupRelLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
 	 * </p>
 	 *
-	 * @param AccountGroupRelId the primary key of the account group rel
+	 * @param accountGroupRelId the primary key of the account group rel
 	 * @return the account group rel that was removed
 	 * @throws PortalException if a account group rel with the primary key could not be found
 	 */
 	@Indexable(type = IndexableType.DELETE)
-	public AccountGroupRel deleteAccountGroupRel(long AccountGroupRelId)
+	public AccountGroupRel deleteAccountGroupRel(long accountGroupRelId)
 		throws PortalException;
 
 	public void deleteAccountGroupRels(
 			long accountGroupId, String className, long[] classPKs)
 		throws PortalException;
+
+	public void deleteAccountGroupRels(String className, long[] classPKs);
+
+	public void deleteAccountGroupRelsByAccountGroupId(long accountGroupId);
 
 	/**
 	 * @throws PortalException
@@ -140,6 +144,9 @@ public interface AccountGroupRelLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public <T> T dslQuery(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
@@ -208,7 +215,7 @@ public interface AccountGroupRelLocalService
 		DynamicQuery dynamicQuery, Projection projection);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public AccountGroupRel fetchAccountGroupRel(long AccountGroupRelId);
+	public AccountGroupRel fetchAccountGroupRel(long accountGroupRelId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public AccountGroupRel fetchAccountGroupRel(
@@ -217,12 +224,12 @@ public interface AccountGroupRelLocalService
 	/**
 	 * Returns the account group rel with the primary key.
 	 *
-	 * @param AccountGroupRelId the primary key of the account group rel
+	 * @param accountGroupRelId the primary key of the account group rel
 	 * @return the account group rel
 	 * @throws PortalException if a account group rel with the primary key could not be found
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public AccountGroupRel getAccountGroupRel(long AccountGroupRelId)
+	public AccountGroupRel getAccountGroupRel(long accountGroupRelId)
 		throws PortalException;
 
 	/**
@@ -241,11 +248,25 @@ public interface AccountGroupRelLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<AccountGroupRel> getAccountGroupRels(
+		long accountGroupId, String className);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<AccountGroupRel> getAccountGroupRels(
 		String className, long classPK);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<AccountGroupRel> getAccountGroupRels(
+		String className, long classPK, int start, int end,
+		OrderByComparator<AccountGroupRel> orderByComparator);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<AccountGroupRel> getAccountGroupRelsByAccountGroupId(
 		long accountGroupId);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<AccountGroupRel> getAccountGroupRelsByAccountGroupId(
+		long accountGroupId, int start, int end,
+		OrderByComparator<AccountGroupRel> orderByComparator);
 
 	/**
 	 * Returns the number of account group rels.
@@ -254,6 +275,9 @@ public interface AccountGroupRelLocalService
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getAccountGroupRelsCount();
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getAccountGroupRelsCount(String className, long classPK);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public long getAccountGroupRelsCountByAccountGroupId(long accountGroupId);

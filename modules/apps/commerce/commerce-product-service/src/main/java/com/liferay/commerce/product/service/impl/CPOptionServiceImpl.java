@@ -23,8 +23,8 @@ import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionFactory;
+import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.service.permission.PortalPermissionUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.util.List;
@@ -43,12 +43,42 @@ public class CPOptionServiceImpl extends CPOptionServiceBaseImpl {
 			boolean skuContributor, String key, ServiceContext serviceContext)
 		throws PortalException {
 
-		PortalPermissionUtil.check(
-			getPermissionChecker(), CPActionKeys.ADD_COMMERCE_PRODUCT_OPTION);
+		PortletResourcePermission portletResourcePermission =
+			_cpOptionModelResourcePermission.getPortletResourcePermission();
+
+		portletResourcePermission.check(
+			getPermissionChecker(), null,
+			CPActionKeys.ADD_COMMERCE_PRODUCT_OPTION);
 
 		return cpOptionLocalService.addCPOption(
-			getUserId(), nameMap, descriptionMap, ddmFormFieldTypeName,
-			facetable, required, skuContributor, key, null, serviceContext);
+			null, getUserId(), nameMap, descriptionMap, ddmFormFieldTypeName,
+			facetable, required, skuContributor, key, serviceContext);
+	}
+
+	@Override
+	public CPOption addOrUpdateCPOption(
+			String externalReferenceCode, Map<Locale, String> nameMap,
+			Map<Locale, String> descriptionMap, String ddmFormFieldTypeName,
+			boolean facetable, boolean required, boolean skuContributor,
+			String key, ServiceContext serviceContext)
+		throws PortalException {
+
+		CPOption cpOption = cpOptionLocalService.fetchByExternalReferenceCode(
+			externalReferenceCode, serviceContext.getCompanyId());
+
+		if (cpOption == null) {
+			PortletResourcePermission portletResourcePermission =
+				_cpOptionModelResourcePermission.getPortletResourcePermission();
+
+			portletResourcePermission.check(
+				getPermissionChecker(), null,
+				CPActionKeys.ADD_COMMERCE_PRODUCT_OPTION);
+		}
+
+		return cpOptionLocalService.addOrUpdateCPOption(
+			externalReferenceCode, getUserId(), nameMap, descriptionMap,
+			ddmFormFieldTypeName, facetable, required, skuContributor, key,
+			serviceContext);
 	}
 
 	@Override
@@ -61,11 +91,11 @@ public class CPOptionServiceImpl extends CPOptionServiceBaseImpl {
 
 	@Override
 	public CPOption fetchByExternalReferenceCode(
-			long companyId, String externalReferenceCode)
+			String externalReferenceCode, long companyId)
 		throws PortalException {
 
 		CPOption cpOption = cpOptionLocalService.fetchByExternalReferenceCode(
-			companyId, externalReferenceCode);
+			externalReferenceCode, companyId);
 
 		if (cpOption != null) {
 			_cpOptionModelResourcePermission.check(
@@ -146,37 +176,14 @@ public class CPOptionServiceImpl extends CPOptionServiceBaseImpl {
 
 	@Override
 	public CPOption updateCPOptionExternalReferenceCode(
-			long cpOptionId, String externalReferenceCode)
+			String externalReferenceCode, long cpOptionId)
 		throws PortalException {
 
 		_cpOptionModelResourcePermission.check(
 			getPermissionChecker(), cpOptionId, ActionKeys.UPDATE);
 
 		return cpOptionLocalService.updateCPOptionExternalReferenceCode(
-			cpOptionId, externalReferenceCode);
-	}
-
-	@Override
-	public CPOption upsertCPOption(
-			Map<Locale, String> nameMap, Map<Locale, String> descriptionMap,
-			String ddmFormFieldTypeName, boolean facetable, boolean required,
-			boolean skuContributor, String key, String externalReferenceCode,
-			ServiceContext serviceContext)
-		throws PortalException {
-
-		CPOption cpOption = cpOptionLocalService.fetchByExternalReferenceCode(
-			serviceContext.getCompanyId(), externalReferenceCode);
-
-		if (cpOption == null) {
-			PortalPermissionUtil.check(
-				getPermissionChecker(),
-				CPActionKeys.ADD_COMMERCE_PRODUCT_OPTION);
-		}
-
-		return cpOptionLocalService.upsertCPOption(
-			getUserId(), nameMap, descriptionMap, ddmFormFieldTypeName,
-			facetable, required, skuContributor, key, externalReferenceCode,
-			serviceContext);
+			externalReferenceCode, cpOptionId);
 	}
 
 	private static volatile ModelResourcePermission<CPOption>

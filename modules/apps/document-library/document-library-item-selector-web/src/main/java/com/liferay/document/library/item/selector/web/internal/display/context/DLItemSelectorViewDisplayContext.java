@@ -20,6 +20,7 @@ import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryServiceUtil;
 import com.liferay.document.library.constants.DLPortletKeys;
 import com.liferay.document.library.item.selector.web.internal.DLItemSelectorView;
+import com.liferay.document.library.item.selector.web.internal.criterion.DLItemSelectorCriterionCreationMenuRestrictionUtil;
 import com.liferay.document.library.kernel.model.DLFileEntryConstants;
 import com.liferay.document.library.kernel.model.DLFileEntryTypeConstants;
 import com.liferay.document.library.kernel.model.DLFileShortcutConstants;
@@ -34,6 +35,7 @@ import com.liferay.item.selector.ItemSelectorReturnTypeResolver;
 import com.liferay.item.selector.ItemSelectorReturnTypeResolverHandler;
 import com.liferay.item.selector.criteria.info.item.criterion.InfoItemItemSelectorCriterion;
 import com.liferay.item.selector.taglib.servlet.taglib.util.RepositoryEntryBrowserTagUtil;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.dao.search.SearchPaginationUtil;
@@ -75,8 +77,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
-import javax.portlet.ActionRequest;
 import javax.portlet.PortletException;
 import javax.portlet.PortletURL;
 
@@ -118,6 +120,23 @@ public class DLItemSelectorViewDisplayContext<T extends ItemSelectorCriterion> {
 			WebKeys.THEME_DISPLAY);
 	}
 
+	public Set<String> getAllowedCreationMenuUIItemKeys() {
+		return DLItemSelectorCriterionCreationMenuRestrictionUtil.
+			getAllowedCreationMenuUIItemKeys(_itemSelectorCriterion);
+	}
+
+	public PortletURL getEditImageURL(
+		LiferayPortletResponse liferayPortletResponse) {
+
+		return PortletURLBuilder.createActionURL(
+			liferayPortletResponse, PortletKeys.DOCUMENT_LIBRARY
+		).setActionName(
+			"/document_library/image_editor"
+		).setParameter(
+			"folderId", _getFolderId()
+		).buildPortletURL();
+	}
+
 	public String[] getExtensions() {
 		return _dlItemSelectorView.getExtensions();
 	}
@@ -134,17 +153,21 @@ public class DLItemSelectorViewDisplayContext<T extends ItemSelectorCriterion> {
 				_itemSelectorCriterion, _dlItemSelectorView, FileEntry.class);
 	}
 
+	public String getMimeTypeRestriction() {
+		return _itemSelectorCriterion.getMimeTypeRestriction();
+	}
+
 	public PortletURL getPortletURL(
 			LiferayPortletResponse liferayPortletResponse)
 		throws PortletException {
 
-		PortletURL portletURL = PortletURLUtil.clone(
-			_portletURL, liferayPortletResponse);
-
-		portletURL.setParameter("folderId", String.valueOf(_getFolderId()));
-		portletURL.setParameter("selectedTab", String.valueOf(getTitle()));
-
-		return portletURL;
+		return PortletURLBuilder.create(
+			PortletURLUtil.clone(_portletURL, liferayPortletResponse)
+		).setParameter(
+			"folderId", _getFolderId()
+		).setParameter(
+			"selectedTab", getTitle()
+		).buildPortletURL();
 	}
 
 	public List<Object> getRepositoryEntries() throws Exception {
@@ -285,14 +308,13 @@ public class DLItemSelectorViewDisplayContext<T extends ItemSelectorCriterion> {
 			}
 		}
 
-		PortletURL portletURL = liferayPortletResponse.createActionURL(
-			PortletKeys.DOCUMENT_LIBRARY);
-
-		portletURL.setParameter(
-			ActionRequest.ACTION_NAME, "/document_library/upload_file_entry");
-		portletURL.setParameter("folderId", String.valueOf(_getFolderId()));
-
-		return portletURL;
+		return PortletURLBuilder.createActionURL(
+			liferayPortletResponse, PortletKeys.DOCUMENT_LIBRARY
+		).setActionName(
+			"/document_library/upload_file_entry"
+		).setParameter(
+			"folderId", _getFolderId()
+		).buildPortletURL();
 	}
 
 	public boolean isShowDragAndDropZone() throws PortalException {
@@ -309,14 +331,11 @@ public class DLItemSelectorViewDisplayContext<T extends ItemSelectorCriterion> {
 			_showDragAndDropZone = false;
 		}
 		else {
-			long defaultFileEntryTypeId =
-				DLFileEntryTypeLocalServiceUtil.getDefaultFileEntryTypeId(
-					_getFolderId());
-
 			if (DLUtil.hasWorkflowDefinitionLink(
 					_themeDisplay.getCompanyId(),
 					_themeDisplay.getScopeGroupId(), _getFolderId(),
-					defaultFileEntryTypeId)) {
+					DLFileEntryTypeLocalServiceUtil.getDefaultFileEntryTypeId(
+						_getFolderId()))) {
 
 				_showDragAndDropZone = false;
 			}

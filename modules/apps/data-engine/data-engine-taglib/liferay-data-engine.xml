@@ -56,6 +56,18 @@
 				<required>false</required>
 			</attribute>
 			<attribute>
+				<name>module</name>
+				<inputType>java.lang.String</inputType>
+				<outputType>java.lang.String</outputType>
+				<required>false</required>
+			</attribute>
+			<attribute>
+				<name>moduleServletContext</name>
+				<inputType>javax.servlet.ServletContext</inputType>
+				<outputType>javax.servlet.ServletContext</outputType>
+				<required>false</required>
+			</attribute>
+			<attribute>
 				<name>namespace</name>
 				<inputType>java.lang.String</inputType>
 				<outputType>java.lang.String</outputType>
@@ -64,6 +76,19 @@
 			<attribute>
 				<name>scopes</name>
 				<inputType>java.util.Set</inputType>
+				<required>false</required>
+			</attribute>
+			<attribute>
+				<name>searchableFieldsDisabled</name>
+				<inputType>boolean</inputType>
+				<outputType>boolean</outputType>
+				<defaultValue>false</defaultValue>
+				<required>false</required>
+			</attribute>
+			<attribute>
+				<name>submitButtonId</name>
+				<inputType>java.lang.String</inputType>
+				<outputType>java.lang.String</outputType>
 				<required>false</required>
 			</attribute>
 		</attributes>
@@ -100,16 +125,46 @@
 				<required>false</required>
 			</attribute>
 			<attribute>
+				<name>defaultLanguageId</name>
+				<inputType>java.lang.String</inputType>
+				<outputType>java.lang.String</outputType>
+				<required>false</required>
+			</attribute>
+			<attribute>
+				<name>languageId</name>
+				<inputType>java.lang.String</inputType>
+				<outputType>java.lang.String</outputType>
+				<required>false</required>
+			</attribute>
+			<attribute>
 				<name>namespace</name>
 				<inputType>java.lang.String</inputType>
 				<outputType>java.lang.String</outputType>
 				<required>true</required>
 			</attribute>
 			<attribute>
+				<name>persistDefaultValues</name>
+				<inputType>boolean</inputType>
+				<outputType>boolean</outputType>
+				<required>false</required>
+			</attribute>
+			<attribute>
+				<name>persisted</name>
+				<inputType>boolean</inputType>
+				<outputType>boolean</outputType>
+				<required>false</required>
+			</attribute>
+			<attribute>
 				<name>readOnly</name>
 				<inputType>boolean</inputType>
 				<outputType>boolean</outputType>
 				<required>false</required>
+			</attribute>
+			<attribute>
+				<name>submittable</name>
+				<inputType>boolean</inputType>
+				<outputType>boolean</outputType>
+				<defaultValue>true</defaultValue>
 			</attribute>
 		</attributes>
 	</component>

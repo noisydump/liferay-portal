@@ -79,6 +79,12 @@ public interface ${schemaName}Resource {
 			return new ${schemaName}ResourceImpl(this);
 		}
 
+		public Builder contextPath(String contextPath) {
+			_contextPath = contextPath;
+
+			return this;
+		}
+
 		public Builder endpoint(String host, int port, String scheme) {
 			_host = host;
 			_port = port;
@@ -105,9 +111,26 @@ public interface ${schemaName}Resource {
 			return this;
 		}
 
+		public Builder parameters(String... parameters) {
+			if ((parameters.length % 2) != 0) {
+				throw new IllegalArgumentException(
+					"Parameters length is not an even number");
+			}
+
+			for (int i = 0; i < parameters.length; i += 2) {
+				String parameterName = String.valueOf(parameters[i]);
+				String parameterValue = String.valueOf(parameters[i + 1]);
+
+				_parameters.put(parameterName, parameterValue);
+			}
+
+			return this;
+		}
+
 		private Builder() {
 		}
 
+		private String _contextPath = "";
 		private Map<String, String> _headers = new LinkedHashMap<>();
 		private String _host = "localhost";
 		private Locale _locale;
@@ -132,10 +155,18 @@ public interface ${schemaName}Resource {
 
 				String content = httpResponse.getContent();
 
-				_logger.fine("HTTP response content: " + content);
+				if (httpResponse.getStatusCode() / 100 != 2) {
+					_logger.log(Level.WARNING, "Unable to process HTTP response content: " + content);
+					_logger.log(Level.WARNING, "HTTP response message: " + httpResponse.getMessage());
+					_logger.log(Level.WARNING, "HTTP response status code: " + httpResponse.getStatusCode());
 
-				_logger.fine("HTTP response message: " + httpResponse.getMessage());
-				_logger.fine("HTTP response status code: " + httpResponse.getStatusCode());
+					throw new Problem.ProblemException(Problem.toDTO(content));
+				}
+				else {
+					_logger.fine("HTTP response content: " + content);
+					_logger.fine("HTTP response message: " + httpResponse.getMessage());
+					_logger.fine("HTTP response status code: " + httpResponse.getStatusCode());
+				}
 
 				<#if !javaMethodSignature.returnType?contains("javax.ws.rs.core.Response")>
 					try {
@@ -154,6 +185,8 @@ public interface ${schemaName}Resource {
 							return ${javaMethodSignature.returnType}.valueOf(content);
 						<#elseif stringUtil.equals(javaMethodSignature.returnType, "java.lang.Number")>
 							return Double.valueOf(content);
+						<#elseif stringUtil.equals(javaMethodSignature.returnType, "java.lang.Object")>
+							return (Object)content;
 						<#elseif stringUtil.equals(javaMethodSignature.returnType, "java.math.BigDecimal")>
 							return new java.math.BigDecimal(content);
 						<#elseif stringUtil.equals(javaMethodSignature.returnType, "java.util.Date")>
@@ -175,8 +208,8 @@ public interface ${schemaName}Resource {
 			public HttpInvoker.HttpResponse ${javaMethodSignature.methodName}HttpResponse(${parameters}) throws Exception {
 				HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
 
-				<#if freeMarkerTool.hasHTTPMethod(javaMethodSignature, "patch", "post", "put")>
-					<#if freeMarkerTool.hasRequestBodyMediaType(javaMethodSignature, "multipart/form-data")>
+				<#if freeMarkerTool.hasHTTPMethod(javaMethodSignature, "delete", "patch", "post", "put")>
+					<#if freeMarkerTool.hasRequestBodyMediaType(javaMethodSignature, "multipart/form-data") && freeMarkerTool.hasParameter(javaMethodSignature, "multipartBody")>
 						httpInvoker.multipart();
 
 						httpInvoker.part("${schemaVarName}", ${schemaName}SerDes.toJSON(${schemaVarName}));
@@ -185,25 +218,36 @@ public interface ${schemaName}Resource {
 							httpInvoker.part(entry.getKey(), entry.getValue());
 						}
 					<#else>
-						httpInvoker.body(
+						<#assign
+							bodyJavaMethodParameters = freeMarkerTool.getBodyJavaMethodParameters(javaMethodSignature)
+						/>
 
-						<#list javaMethodSignature.javaMethodParameters as javaMethodParameter>
-							<#if javaMethodParameter?is_last>
-								<#if javaMethodParameter.parameterType?starts_with("[L")>
-									Stream.of(
-										${javaMethodParameter.parameterName}
-									).map(
-										value -> String.valueOf(value)
-									).collect(
-										Collectors.toList()
-									).toString()
-								<#else>
-									${javaMethodParameter.parameterName}.toString()
-								</#if>
-							</#if>
-						</#list>
+						<#if bodyJavaMethodParameters?has_content>
+							httpInvoker.body(
+								<#list bodyJavaMethodParameters as javaMethodParameter>
+									<#if javaMethodParameter?is_last>
+										<#if javaMethodParameter.parameterType?starts_with("[L")>
+											Stream.of(
+												${javaMethodParameter.parameterName}
+											).map(
+												value ->
 
-						, "application/json");
+												<#if javaMethodParameter.parameterType?contains("String")>
+													"\"" + String.valueOf(value) + "\""
+												<#else>
+													String.valueOf(value)
+												</#if>
+											).collect(
+												Collectors.toList()
+											).toString()
+										<#else>
+											${javaMethodParameter.parameterName}.toString()
+										</#if>
+									</#if>
+								</#list>
+
+								, "application/json");
+						</#if>
 					</#if>
 				</#if>
 
@@ -223,7 +267,7 @@ public interface ${schemaName}Resource {
 
 				<#list javaMethodSignature.javaMethodParameters as javaMethodParameter>
 					<#if stringUtil.equals(javaMethodParameter.parameterType, "java.util.Date")>
-						DateFormat liferayToJSONDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+						DateFormat liferayToJSONDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXX");
 
 						<#break>
 					</#if>
@@ -268,7 +312,7 @@ public interface ${schemaName}Resource {
 					</#if>
 				</#list>
 
-				httpInvoker.path(_builder._scheme + "://" + _builder._host + ":" + _builder._port + "/o${configYAML.application.baseURI}/${openAPIYAML.info.version}${javaMethodSignature.path}");
+				httpInvoker.path(_builder._scheme + "://" + _builder._host + ":" + _builder._port + _builder._contextPath + "/o${configYAML.application.baseURI}/${openAPIYAML.info.version}${javaMethodSignature.path}");
 
 				<#list javaMethodSignature.pathJavaMethodParameters as javaMethodParameter>
 					httpInvoker.path("${javaMethodParameter.parameterName}", ${javaMethodParameter.parameterName});

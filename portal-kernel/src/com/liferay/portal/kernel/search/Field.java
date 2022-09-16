@@ -50,6 +50,10 @@ public class Field implements Serializable {
 
 	public static final String ASSET_CATEGORY_TITLES = "assetCategoryTitles";
 
+	public static final String ASSET_ENTRY_ID = "assetEntryId";
+
+	public static final String ASSET_ENTRY_IDS = "assetEntryIds";
+
 	public static final String ASSET_INTERNAL_CATEGORY_ID =
 		"assetInternalCategoryId";
 
@@ -195,6 +199,8 @@ public class Field implements Serializable {
 
 	public static final String VIEW_ACTION_ID = "viewActionId";
 
+	public static final String VISIBILITY_TYPE = "visibilityType";
+
 	public static String getLocalizedName(Locale locale, String name) {
 		if (locale == null) {
 			return name;
@@ -229,6 +235,10 @@ public class Field implements Serializable {
 			!DocumentImpl.isSortableTextField(fieldName)) {
 
 			return scoreFieldName;
+		}
+
+		if (fieldName.equals(Field.ENTRY_CLASS_PK)) {
+			return fieldName;
 		}
 
 		return getSortableFieldName(fieldName);
@@ -528,39 +538,27 @@ public class Field implements Serializable {
 	protected void validate(String name) {
 		if (name.contains(StringPool.COMMA)) {
 			throw new IllegalArgumentException(
-				StringBundler.concat(
-					"Name must not contain ", StringPool.COMMA, ": ", name));
-		}
-
-		if (name.contains(StringPool.PERIOD)) {
-			throw new IllegalArgumentException(
-				StringBundler.concat(
-					"Name must not contain ", StringPool.PERIOD, ": ", name));
+				"Name must not contain ,: " + name);
 		}
 
 		if (name.contains(StringPool.POUND)) {
 			throw new IllegalArgumentException(
-				StringBundler.concat(
-					"Name must not contain ", StringPool.POUND, ": ", name));
+				"Name must not contain #: " + name);
 		}
 
 		if (name.contains(StringPool.SLASH)) {
 			throw new IllegalArgumentException(
-				StringBundler.concat(
-					"Name must not contain ", StringPool.SLASH, ": ", name));
+				"Name must not contain /: " + name);
 		}
 
 		if (name.contains(StringPool.STAR)) {
 			throw new IllegalArgumentException(
-				StringBundler.concat(
-					"Name must not contain ", StringPool.STAR, ": ", name));
+				"Name must not contain *: " + name);
 		}
 
 		if (name.startsWith(StringPool.UNDERLINE)) {
 			throw new IllegalArgumentException(
-				StringBundler.concat(
-					"Name must not start with ", StringPool.UNDERLINE, ": ",
-					name));
+				"Name must not start with _: " + name);
 		}
 	}
 

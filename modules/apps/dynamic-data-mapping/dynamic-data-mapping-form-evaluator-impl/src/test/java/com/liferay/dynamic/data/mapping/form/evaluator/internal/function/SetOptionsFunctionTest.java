@@ -22,6 +22,7 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.util.KeyValuePair;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,35 +30,32 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
-
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
 
 /**
  * @author Leonardo Barros
  */
-@PrepareForTest(LanguageUtil.class)
-@RunWith(MockitoJUnitRunner.class)
-public class SetOptionsFunctionTest extends PowerMockito {
+public class SetOptionsFunctionTest {
 
-	@Before
-	public void setUp() throws Exception {
-		_setOptionsFunction = new SetOptionsFunction(_jsonFactory);
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
+	@BeforeClass
+	public static void setUpClass() {
 		_setUpLanguageUtil();
 	}
 
 	@Test
 	public void testApply() {
-		when(
+		Mockito.when(
 			_language.getLanguageId(new Locale("pt", "BR"))
 		).thenReturn(
 			"pt_BR"
@@ -77,13 +75,10 @@ public class SetOptionsFunctionTest extends PowerMockito {
 
 		jsonObject.put("pt_BR", jsonArray);
 
-		String json = jsonObject.toJSONString();
+		String json = jsonObject.toString();
 
-		DefaultDDMExpressionObserver defaultDDMExpressionObserver =
-			new DefaultDDMExpressionObserver();
-
-		DefaultDDMExpressionObserver spyDefaultDDMExpressionObserver = spy(
-			defaultDDMExpressionObserver);
+		DefaultDDMExpressionObserver spyDefaultDDMExpressionObserver =
+			Mockito.spy(new DefaultDDMExpressionObserver());
 
 		_setOptionsFunction.setDDMExpressionObserver(
 			spyDefaultDDMExpressionObserver);
@@ -128,17 +123,14 @@ public class SetOptionsFunctionTest extends PowerMockito {
 
 	@Test
 	public void testInvalidJSON() {
-		when(
+		Mockito.when(
 			_language.getLanguageId(new Locale("pt", "BR"))
 		).thenReturn(
 			"pt_BR"
 		);
 
-		DefaultDDMExpressionObserver defaultDDMExpressionObserver =
-			new DefaultDDMExpressionObserver();
-
-		DefaultDDMExpressionObserver spyDefaultDDMExpressionObserver = spy(
-			defaultDDMExpressionObserver);
+		DefaultDDMExpressionObserver spyDefaultDDMExpressionObserver =
+			Mockito.spy(new DefaultDDMExpressionObserver());
 
 		_setOptionsFunction.setDDMExpressionObserver(
 			spyDefaultDDMExpressionObserver);
@@ -180,6 +172,12 @@ public class SetOptionsFunctionTest extends PowerMockito {
 		Assert.assertFalse(_setOptionsFunction.apply("field", "json"));
 	}
 
+	private static void _setUpLanguageUtil() {
+		LanguageUtil languageUtil = new LanguageUtil();
+
+		languageUtil.setLanguage(_language);
+	}
+
 	private JSONObject _createJSONObject(String label, String value) {
 		JSONObject jsonObject = _jsonFactory.createJSONObject();
 
@@ -192,17 +190,10 @@ public class SetOptionsFunctionTest extends PowerMockito {
 		return jsonObject;
 	}
 
-	private void _setUpLanguageUtil() {
-		LanguageUtil languageUtil = new LanguageUtil();
-
-		languageUtil.setLanguage(_language);
-	}
-
 	private static final JSONFactory _jsonFactory = new JSONFactoryImpl();
+	private static final Language _language = Mockito.mock(Language.class);
 
-	@Mock
-	private Language _language;
-
-	private SetOptionsFunction _setOptionsFunction;
+	private final SetOptionsFunction _setOptionsFunction =
+		new SetOptionsFunction(_jsonFactory);
 
 }

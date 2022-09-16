@@ -24,6 +24,10 @@ package com.liferay.portal.kernel.service;
 public class RegionLocalServiceWrapper
 	implements RegionLocalService, ServiceWrapper<RegionLocalService> {
 
+	public RegionLocalServiceWrapper() {
+		this(null);
+	}
+
 	public RegionLocalServiceWrapper(RegionLocalService regionLocalService) {
 		_regionLocalService = regionLocalService;
 	}
@@ -121,12 +125,10 @@ public class RegionLocalServiceWrapper
 	 *
 	 * @param region the region
 	 * @return the region that was removed
-	 * @throws PortalException
 	 */
 	@Override
 	public com.liferay.portal.kernel.model.Region deleteRegion(
-			com.liferay.portal.kernel.model.Region region)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		com.liferay.portal.kernel.model.Region region) {
 
 		return _regionLocalService.deleteRegion(region);
 	}
@@ -134,6 +136,13 @@ public class RegionLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _regionLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _regionLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -430,6 +439,22 @@ public class RegionLocalServiceWrapper
 	@Override
 	public int getRegionsCount(long countryId, boolean active) {
 		return _regionLocalService.getRegionsCount(countryId, active);
+	}
+
+	@Override
+	public com.liferay.portal.kernel.search.BaseModelSearchResult
+		<com.liferay.portal.kernel.model.Region> searchRegions(
+				long companyId, java.lang.Boolean active,
+				java.lang.String keywords,
+				java.util.LinkedHashMap<java.lang.String, java.lang.Object>
+					params,
+				int start, int end,
+				com.liferay.portal.kernel.util.OrderByComparator
+					<com.liferay.portal.kernel.model.Region> orderByComparator)
+			throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _regionLocalService.searchRegions(
+			companyId, active, keywords, params, start, end, orderByComparator);
 	}
 
 	@Override

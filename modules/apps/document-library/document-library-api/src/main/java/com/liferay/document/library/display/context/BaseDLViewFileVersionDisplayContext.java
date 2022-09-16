@@ -16,9 +16,9 @@ package com.liferay.document.library.display.context;
 
 import com.liferay.dynamic.data.mapping.kernel.DDMStructure;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.repository.model.FileVersion;
-import com.liferay.portal.kernel.servlet.taglib.ui.Menu;
 import com.liferay.portal.kernel.servlet.taglib.ui.ToolbarItem;
 
 import java.io.IOException;
@@ -48,6 +48,11 @@ public class BaseDLViewFileVersionDisplayContext
 			httpServletResponse);
 
 		this.fileVersion = fileVersion;
+	}
+
+	@Override
+	public List<DropdownItem> getActionDropdownItems() throws PortalException {
+		return parentDisplayContext.getActionDropdownItems();
 	}
 
 	@Override
@@ -97,11 +102,6 @@ public class BaseDLViewFileVersionDisplayContext
 	@Override
 	public String getIconFileMimeType() {
 		return parentDisplayContext.getIconFileMimeType();
-	}
-
-	@Override
-	public Menu getMenu() throws PortalException {
-		return parentDisplayContext.getMenu();
 	}
 
 	@Override

@@ -19,7 +19,7 @@ import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.asset.kernel.service.AssetTagLocalService;
 import com.liferay.asset.kernel.service.AssetTagService;
 import com.liferay.headless.admin.taxonomy.dto.v1_0.Keyword;
-import com.liferay.headless.admin.taxonomy.internal.dto.v1_0.util.CreatorUtil;
+import com.liferay.headless.admin.taxonomy.internal.dto.v1_0.converter.KeywordDTOConverter;
 import com.liferay.headless.admin.taxonomy.internal.odata.entity.v1_0.KeywordEntityModel;
 import com.liferay.headless.admin.taxonomy.resource.v1_0.KeywordResource;
 import com.liferay.petra.string.StringPool;
@@ -29,11 +29,10 @@ import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.ProjectionList;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.Type;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.search.Field;
-import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -41,14 +40,15 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.vulcan.aggregation.Aggregation;
+import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
+import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
-import com.liferay.portal.vulcan.resource.EntityModelResource;
-import com.liferay.portal.vulcan.util.GroupUtil;
 import com.liferay.portal.vulcan.util.SearchUtil;
 import com.liferay.portlet.asset.model.impl.AssetTagImpl;
+import com.liferay.portlet.asset.service.permission.AssetTagsPermission;
 
 import java.sql.Timestamp;
 
@@ -67,8 +67,7 @@ import org.osgi.service.component.annotations.ServiceScope;
 	properties = "OSGI-INF/liferay/rest/v1_0/keyword.properties",
 	scope = ServiceScope.PROTOTYPE, service = KeywordResource.class
 )
-public class KeywordResourceImpl
-	extends BaseKeywordResourceImpl implements EntityModelResource {
+public class KeywordResourceImpl extends BaseKeywordResourceImpl {
 
 	@Override
 	public void deleteKeyword(Long keywordId) throws Exception {
@@ -77,12 +76,12 @@ public class KeywordResourceImpl
 
 	@Override
 	public Page<Keyword> getAssetLibraryKeywordsPage(
-			Long assetLibraryId, String search, Filter filter,
-			Pagination pagination, Sort[] sorts)
+			Long assetLibraryId, String search, Aggregation aggregation,
+			Filter filter, Pagination pagination, Sort[] sorts)
 		throws Exception {
 
 		return getSiteKeywordsPage(
-			assetLibraryId, search, filter, pagination, sorts);
+			assetLibraryId, search, aggregation, filter, pagination, sorts);
 	}
 
 	@Override
@@ -131,28 +130,44 @@ public class KeywordResourceImpl
 
 	@Override
 	public Page<Keyword> getSiteKeywordsPage(
-			Long siteId, String search, Filter filter, Pagination pagination,
-			Sort[] sorts)
+			Long siteId, String search, Aggregation aggregation, Filter filter,
+			Pagination pagination, Sort[] sorts)
 		throws Exception {
 
 		return SearchUtil.search(
 			HashMapBuilder.put(
 				"create",
 				addAction(
-					"MANAGE_TAG", "postSiteKeyword", "com.liferay.asset.tags",
-					siteId)
+					ActionKeys.MANAGE_TAG, "postSiteKeyword",
+					AssetTagsPermission.RESOURCE_NAME, siteId)
+			).put(
+				"createBatch",
+				addAction(
+					ActionKeys.MANAGE_TAG, "postSiteKeywordBatch",
+					AssetTagsPermission.RESOURCE_NAME, siteId)
+			).put(
+				"deleteBatch",
+				addAction(
+					ActionKeys.DELETE, "deleteKeywordBatch",
+					AssetTagsPermission.RESOURCE_NAME, null)
 			).put(
 				"get",
 				addAction(
-					"MANAGE_TAG", "getSiteKeywordsPage",
-					"com.liferay.asset.tags", siteId)
+					ActionKeys.MANAGE_TAG, "getSiteKeywordsPage",
+					AssetTagsPermission.RESOURCE_NAME, siteId)
+			).put(
+				"updateBatch",
+				addAction(
+					ActionKeys.UPDATE, "putKeywordBatch",
+					AssetTagsPermission.RESOURCE_NAME, null)
 			).build(),
 			booleanQuery -> {
 			},
-			filter, AssetTag.class, search, pagination,
+			filter, AssetTag.class.getName(), search, pagination,
 			queryConfig -> queryConfig.setSelectedFieldNames(
 				Field.ENTRY_CLASS_PK),
 			searchContext -> {
+				searchContext.addVulcanAggregation(aggregation);
 				searchContext.setAttribute(Field.NAME, search);
 				searchContext.setCompanyId(contextCompany.getCompanyId());
 				searchContext.setGroupIds(new long[] {siteId});
@@ -185,6 +200,36 @@ public class KeywordResourceImpl
 
 		return _toKeyword(
 			_assetTagService.updateTag(keywordId, keyword.getName(), null));
+	}
+
+	@Override
+	public void putKeywordSubscribe(Long tagId) throws Exception {
+		AssetTag assetTag = _assetTagLocalService.getAssetTag(tagId);
+
+		_assetTagService.subscribeTag(
+			contextUser.getUserId(), assetTag.getGroupId(), tagId);
+	}
+
+	@Override
+	public void putKeywordUnsubscribe(Long tagId) throws Exception {
+		_assetTagService.unsubscribeTag(contextUser.getUserId(), tagId);
+	}
+
+	@Override
+	protected Long getPermissionCheckerGroupId(Object id) throws Exception {
+		AssetTag assetTag = _assetTagService.getTag((Long)id);
+
+		return assetTag.getGroupId();
+	}
+
+	@Override
+	protected String getPermissionCheckerPortletName(Object id) {
+		return AssetTagsPermission.RESOURCE_NAME;
+	}
+
+	@Override
+	protected String getPermissionCheckerResourceName(Object id) {
+		return AssetTagsPermission.RESOURCE_NAME;
 	}
 
 	private ProjectionList _getProjectionList() {
@@ -252,65 +297,49 @@ public class KeywordResourceImpl
 	}
 
 	private Keyword _toKeyword(AssetTag assetTag) {
-		Group group = groupLocalService.fetchGroup(assetTag.getGroupId());
-
-		return new Keyword() {
-			{
-				actions = HashMapBuilder.put(
+		return _keywordDTOConverter.toDTO(
+			new DefaultDTOConverterContext(
+				contextAcceptLanguage.isAcceptAllLanguages(),
+				HashMapBuilder.put(
 					"delete",
 					addAction(
-						"MANAGE_TAG", assetTag.getTagId(), "deleteKeyword",
-						assetTag.getUserId(), "com.liferay.asset.tags",
+						ActionKeys.MANAGE_TAG, assetTag.getTagId(),
+						"deleteKeyword", assetTag.getUserId(),
+						AssetTagsPermission.RESOURCE_NAME,
 						assetTag.getGroupId())
 				).put(
 					"get",
 					addAction(
-						"MANAGE_TAG", assetTag.getTagId(), "getKeyword",
-						assetTag.getUserId(), "com.liferay.asset.tags",
+						ActionKeys.MANAGE_TAG, assetTag.getTagId(),
+						"getKeyword", assetTag.getUserId(),
+						AssetTagsPermission.RESOURCE_NAME,
 						assetTag.getGroupId())
 				).put(
 					"replace",
 					addAction(
-						"MANAGE_TAG", assetTag.getTagId(), "putKeyword",
-						assetTag.getUserId(), "com.liferay.asset.tags",
+						ActionKeys.MANAGE_TAG, assetTag.getTagId(),
+						"putKeyword", assetTag.getUserId(),
+						AssetTagsPermission.RESOURCE_NAME,
 						assetTag.getGroupId())
-				).build();
-				assetLibraryKey = GroupUtil.getAssetLibraryKey(group);
-				dateCreated = assetTag.getCreateDate();
-				dateModified = assetTag.getModifiedDate();
-				id = assetTag.getTagId();
-				name = assetTag.getName();
-				siteId = GroupUtil.getSiteId(group);
-
-				setCreator(
-					() -> {
-						if (assetTag.getUserId() != 0) {
-							return CreatorUtil.toCreator(
-								_portal,
-								_userLocalService.fetchUser(
-									assetTag.getUserId()));
-						}
-
-						return null;
-					});
-				setKeywordUsageCount(
-					() -> {
-						Hits hits = _assetEntryLocalService.search(
-							assetTag.getCompanyId(),
-							new long[] {assetTag.getGroupId()},
-							assetTag.getUserId(), null, 0, null, null, null,
-							null, assetTag.getName(), true,
-							new int[] {
-								WorkflowConstants.STATUS_APPROVED,
-								WorkflowConstants.STATUS_PENDING,
-								WorkflowConstants.STATUS_SCHEDULED
-							},
-							false, 0, 1);
-
-						return hits.getLength();
-					});
-			}
-		};
+				).put(
+					"subscribe",
+					addAction(
+						ActionKeys.SUBSCRIBE, assetTag.getTagId(),
+						"putKeywordSubscribe", assetTag.getUserId(),
+						AssetTagsPermission.RESOURCE_NAME,
+						assetTag.getGroupId())
+				).put(
+					"unsubscribe",
+					addAction(
+						ActionKeys.SUBSCRIBE, assetTag.getTagId(),
+						"putKeywordUnsubscribe", assetTag.getUserId(),
+						AssetTagsPermission.RESOURCE_NAME,
+						assetTag.getGroupId())
+				).build(),
+				_dtoConverterRegistry, assetTag.getTagId(),
+				contextAcceptLanguage.getPreferredLocale(), contextUriInfo,
+				contextUser),
+			assetTag);
 	}
 
 	private static final EntityModel _entityModel = new KeywordEntityModel();
@@ -323,6 +352,12 @@ public class KeywordResourceImpl
 
 	@Reference
 	private AssetTagService _assetTagService;
+
+	@Reference
+	private DTOConverterRegistry _dtoConverterRegistry;
+
+	@Reference
+	private KeywordDTOConverter _keywordDTOConverter;
 
 	@Reference
 	private Portal _portal;

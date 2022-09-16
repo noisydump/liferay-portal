@@ -90,7 +90,6 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.portlet.autopropagated-parameters=navigationStartsOn",
 		"com.liferay.portlet.autopropagated-parameters=refererPortletName",
 		"com.liferay.portlet.autopropagated-parameters=refererWebDAVToken",
-		"com.liferay.portlet.autopropagated-parameters=scopeTitle",
 		"com.liferay.portlet.autopropagated-parameters=showAncestorScopes",
 		"com.liferay.portlet.autopropagated-parameters=showBackURL",
 		"com.liferay.portlet.autopropagated-parameters=showCacheableInput",
@@ -182,11 +181,12 @@ public class DDMPortlet extends MVCPortlet {
 		throws IOException, PortletException {
 
 		try {
-			setDDMDisplayContextRequestAttribute(renderRequest, renderResponse);
+			_setDDMDisplayContextRequestAttribute(
+				renderRequest, renderResponse);
 
-			setDDMTemplateRequestAttribute(renderRequest);
+			_setDDMTemplateRequestAttribute(renderRequest);
 
-			setDDMStructureRequestAttribute(renderRequest);
+			_setDDMStructureRequestAttribute(renderRequest);
 		}
 		catch (NoSuchStructureException | NoSuchTemplateException exception) {
 
@@ -194,7 +194,7 @@ public class DDMPortlet extends MVCPortlet {
 			// or template key for a new model that does not yet exist
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(exception, exception);
+				_log.debug(exception);
 			}
 		}
 		catch (Exception exception) {
@@ -225,42 +225,56 @@ public class DDMPortlet extends MVCPortlet {
 			DDMWebConfiguration.class, properties);
 	}
 
-	protected void setDDMDisplayContextRequestAttribute(
+	@Reference
+	protected DDMDisplayRegistry ddmDisplayRegistry;
+
+	@Reference
+	protected volatile DDMStructureLinkLocalService
+		ddmStructureLinkLocalService;
+
+	@Reference
+	protected volatile DDMStructureLocalService ddmStructureLocalService;
+
+	@Reference
+	protected volatile DDMStructureService ddmStructureService;
+
+	@Reference
+	protected DDMTemplateHelper ddmTemplateHelper;
+
+	@Reference
+	protected volatile DDMTemplateLocalService ddmTemplateLocalService;
+
+	@Reference
+	protected volatile DDMTemplateService ddmTemplateService;
+
+	protected volatile DDMWebConfiguration ddmWebConfiguration;
+
+	@Reference
+	protected Portal portal;
+
+	@Reference(
+		target = "(&(release.bundle.symbolic.name=com.liferay.dynamic.data.mapping.web)(&(release.schema.version>=1.0.0)(!(release.schema.version>=2.0.0))))"
+	)
+	protected Release release;
+
+	@Reference
+	protected StorageAdapterRegistry storageAdapterRegistry;
+
+	private void _setDDMDisplayContextRequestAttribute(
 			RenderRequest renderRequest, RenderResponse renderResponse)
 		throws PortalException {
 
 		DDMDisplayContext ddmDisplayContext = new DDMDisplayContext(
-			renderRequest, renderResponse, _ddmDisplayRegistry,
+			renderRequest, renderResponse, ddmDisplayRegistry,
 			ddmStructureLinkLocalService, ddmStructureService,
-			_ddmTemplateHelper, ddmTemplateService, ddmWebConfiguration,
-			_storageAdapterRegistry);
+			ddmTemplateHelper, ddmTemplateService, ddmWebConfiguration,
+			storageAdapterRegistry);
 
 		renderRequest.setAttribute(
 			WebKeys.PORTLET_DISPLAY_CONTEXT, ddmDisplayContext);
 	}
 
-	@Reference(unbind = "-")
-	protected void setDDMDisplayRegistry(
-		DDMDisplayRegistry ddmDisplayRegistry) {
-
-		_ddmDisplayRegistry = ddmDisplayRegistry;
-	}
-
-	@Reference(unbind = "-")
-	protected void setDDMStructureLinkLocalService(
-		DDMStructureLinkLocalService ddmStructureLinkLocalService) {
-
-		this.ddmStructureLinkLocalService = ddmStructureLinkLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setDDMStructureLocalService(
-		DDMStructureLocalService ddmStructureLocalService) {
-
-		this.ddmStructureLocalService = ddmStructureLocalService;
-	}
-
-	protected void setDDMStructureRequestAttribute(RenderRequest renderRequest)
+	private void _setDDMStructureRequestAttribute(RenderRequest renderRequest)
 		throws PortalException {
 
 		long classNameId = ParamUtil.getLong(renderRequest, "classNameId");
@@ -281,26 +295,7 @@ public class DDMPortlet extends MVCPortlet {
 		}
 	}
 
-	@Reference(unbind = "-")
-	protected void setDDMStructureService(
-		DDMStructureService ddmStructureService) {
-
-		this.ddmStructureService = ddmStructureService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setDDMTemplateHelper(DDMTemplateHelper ddmTemplateHelper) {
-		_ddmTemplateHelper = ddmTemplateHelper;
-	}
-
-	@Reference(unbind = "-")
-	protected void setDDMTemplateLocalService(
-		DDMTemplateLocalService ddmTemplateLocalService) {
-
-		this.ddmTemplateLocalService = ddmTemplateLocalService;
-	}
-
-	protected void setDDMTemplateRequestAttribute(RenderRequest renderRequest)
+	private void _setDDMTemplateRequestAttribute(RenderRequest renderRequest)
 		throws PortalException {
 
 		long templateId = ParamUtil.getLong(renderRequest, "templateId");
@@ -314,42 +309,6 @@ public class DDMPortlet extends MVCPortlet {
 		}
 	}
 
-	@Reference(unbind = "-")
-	protected void setDDMTemplateService(
-		DDMTemplateService ddmTemplateService) {
-
-		this.ddmTemplateService = ddmTemplateService;
-	}
-
-	@Reference(
-		target = "(&(release.bundle.symbolic.name=com.liferay.dynamic.data.mapping.web)(&(release.schema.version>=1.0.0)(!(release.schema.version>=2.0.0))))",
-		unbind = "-"
-	)
-	protected void setRelease(Release release) {
-	}
-
-	@Reference(unbind = "-")
-	protected void setStorageAdapterRegistry(
-		StorageAdapterRegistry storageAdapterRegistry) {
-
-		_storageAdapterRegistry = storageAdapterRegistry;
-	}
-
-	protected volatile DDMStructureLinkLocalService
-		ddmStructureLinkLocalService;
-	protected volatile DDMStructureLocalService ddmStructureLocalService;
-	protected volatile DDMStructureService ddmStructureService;
-	protected volatile DDMTemplateLocalService ddmTemplateLocalService;
-	protected volatile DDMTemplateService ddmTemplateService;
-	protected volatile DDMWebConfiguration ddmWebConfiguration;
-
-	@Reference
-	protected Portal portal;
-
 	private static final Log _log = LogFactoryUtil.getLog(DDMPortlet.class);
-
-	private DDMDisplayRegistry _ddmDisplayRegistry;
-	private DDMTemplateHelper _ddmTemplateHelper;
-	private StorageAdapterRegistry _storageAdapterRegistry;
 
 }

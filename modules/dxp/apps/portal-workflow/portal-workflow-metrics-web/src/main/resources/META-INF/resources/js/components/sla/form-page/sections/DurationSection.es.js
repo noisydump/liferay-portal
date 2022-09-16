@@ -9,8 +9,9 @@
  * distribution rights of the Software.
  */
 
+import {ClaySelect} from '@clayui/form';
 import ClayLayout from '@clayui/layout';
-import React, {useCallback, useContext, useMemo} from 'react';
+import React, {useCallback, useContext} from 'react';
 import MaskedInput from 'react-text-mask';
 import createNumberMask from 'text-mask-addons/dist/createNumberMask';
 
@@ -26,7 +27,7 @@ import {
 import {SLAFormContext} from '../SLAFormPageProvider.es';
 import {validateDuration, validateHours} from '../util/slaFormUtil.es';
 
-const DurationSection = ({onChangeHandler}) => {
+export default function DurationSection({onChangeHandler}) {
 	const {
 		calendars,
 		defaultCalendar,
@@ -35,16 +36,12 @@ const DurationSection = ({onChangeHandler}) => {
 		sla: {calendarKey = defaultCalendar.key, days, hours},
 	} = useContext(SLAFormContext);
 
-	const daysMask = useMemo(
-		() =>
-			createNumberMask({
-				allowLeadingZeroes: true,
-				includeThousandsSeparator: false,
-				integerLimit: 4,
-				prefix: '',
-			}),
-		[]
-	);
+	const daysMask = createNumberMask({
+		allowLeadingZeroes: true,
+		includeThousandsSeparator: false,
+		integerLimit: 4,
+		prefix: '',
+	});
 
 	const onDurationChanged = useCallback(
 		(newDays) => {
@@ -80,6 +77,13 @@ const DurationSection = ({onChangeHandler}) => {
 			}
 		}
 	}, [days, errors, hours, setErrors]);
+
+	const getCalendarLabel = (calendar) =>
+		`${calendar.title} ${
+			calendar.defaultCalendar
+				? `(${Liferay.Language.get('system-default')})`
+				: ''
+		}`;
 
 	return (
 		<>
@@ -148,7 +152,7 @@ const DurationSection = ({onChangeHandler}) => {
 							htmlFor="slaCalendarKey"
 							label={Liferay.Language.get('calendar')}
 						>
-							<select
+							<ClaySelect
 								className="form-control"
 								id="slaCalendarKey"
 								name={CALENDAR_KEY}
@@ -156,21 +160,17 @@ const DurationSection = ({onChangeHandler}) => {
 								value={calendarKey}
 							>
 								{calendars.map((calendar, index) => (
-									<option key={index} value={calendar.key}>
-										{calendar.title}{' '}
-										{calendar.defaultCalendar &&
-											`(${Liferay.Language.get(
-												'system-default'
-											)})`}
-									</option>
+									<ClaySelect.Option
+										key={index}
+										label={getCalendarLabel(calendar)}
+										value={calendar.key}
+									/>
 								))}
-							</select>
+							</ClaySelect>
 						</FormGroupWithStatus>
 					</ClayLayout.Col>
 				)}
 			</ClayLayout.Row>
 		</>
 	);
-};
-
-export {DurationSection};
+}

@@ -14,16 +14,16 @@ import ClayDropDown from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
 import ClayLabel from '@clayui/label';
 import ClayLayout from '@clayui/layout';
+import {ClayTooltipProvider} from '@clayui/tooltip';
 import PropTypes from 'prop-types';
-import React, {useMemo, useState} from 'react';
+import React, {useContext, useMemo, useState} from 'react';
 
-import {useChartState} from '../context/ChartStateContext';
+import {ChartStateContext} from '../context/ChartStateContext';
+import {StoreStateContext} from '../context/StoreContext';
 
-export default function Translation({
-	defaultLanguage,
-	onSelectedLanguageClick,
-	viewURLs,
-}) {
+export default function Translation({onSelectedLanguageClick, viewURLs}) {
+	const {languageTag: defaultLanguage} = useContext(StoreStateContext);
+
 	const [active, setActive] = useState(false);
 
 	const selectedLanguage = useMemo(() => {
@@ -33,22 +33,17 @@ export default function Translation({
 		);
 	}, [defaultLanguage, viewURLs]);
 
-	const {state: chartState} = useChartState();
+	const {timeSpanKey, timeSpanOffset} = useContext(ChartStateContext);
 
 	return (
 		<ClayLayout.ContentRow>
-			<ClayLayout.ContentCol expand>
-				<h5>{Liferay.Language.get('languages-translated-into')}</h5>
-				<span className="text-secondary">
-					{Liferay.Language.get(
-						'select-language-to-view-its-metrics'
-					)}
-				</span>
-			</ClayLayout.ContentCol>
 			<ClayLayout.ContentCol>
 				<ClayDropDown
 					active={active}
 					hasLeftSymbols
+					menuElementAttrs={{
+						className: 'dropdown-menu__translation',
+					}}
 					onActiveChange={setActive}
 					trigger={
 						<ClayButton
@@ -57,6 +52,7 @@ export default function Translation({
 							small
 						>
 							<ClayIcon symbol={selectedLanguage.toLowerCase()} />
+
 							<span
 								className="d-block font-weight-normal"
 								style={{fontSize: '9px'}}
@@ -76,33 +72,32 @@ export default function Translation({
 								onClick={() => {
 									onSelectedLanguageClick(
 										language.viewURL,
-										chartState.timeSpanKey,
-										chartState.timeSpanOffset
+										timeSpanKey,
+										timeSpanOffset
 									);
 								}}
 								symbolLeft={language.languageId.toLowerCase()}
 							>
 								<ClayLayout.ContentRow>
 									<ClayLayout.ContentCol expand>
-										<span>{language.languageId}</span>
+										<ClayTooltipProvider>
+											<span
+												className="text-truncate-inline"
+												data-tooltip-align="top"
+												title={language.languageLabel}
+											>
+												<span className="text-truncate">
+													{language.languageLabel}
+												</span>
+											</span>
+										</ClayTooltipProvider>
 									</ClayLayout.ContentCol>
-									<ClayLayout.ContentCol>
-										<ClayLabel
-											displayType={
-												language.default
-													? 'primary'
-													: 'success'
-											}
-										>
-											{language.default
-												? Liferay.Language.get(
-														'default'
-												  )
-												: Liferay.Language.get(
-														'translated'
-												  )}
+
+									{language.default && (
+										<ClayLabel displayType="primary">
+											{Liferay.Language.get('default')}
 										</ClayLabel>
-									</ClayLayout.ContentCol>
+									)}
 								</ClayLayout.ContentRow>
 							</ClayDropDown.Item>
 						))}
@@ -114,7 +109,6 @@ export default function Translation({
 }
 
 Translation.propTypes = {
-	defaultLanguage: PropTypes.string.isRequired,
 	onSelectedLanguageClick: PropTypes.func.isRequired,
 	viewURLs: PropTypes.arrayOf(
 		PropTypes.shape({

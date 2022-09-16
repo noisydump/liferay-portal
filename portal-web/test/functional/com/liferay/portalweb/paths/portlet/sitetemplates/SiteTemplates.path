@@ -2,11 +2,13 @@
 <head>
 <title>SiteTemplates</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">SiteTemplates</td></tr>
 </thead>
+
 <tbody>
 <tr>
 	<td>SITE_TEMPLATE_NAME</td>
@@ -18,7 +20,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--CONFIGURATION-->
+
 <tr>
 	<td>CONFIGURATION_SITE_TEMPLATE_SETTINGS</td>
 	<td>//li[contains(.,'Site Template Settings')]/a[contains(@id,'SiteTemplateSettingsPortlet')]</td>
@@ -29,7 +33,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--SITE_TEMPLATE_TABLE-->
+
 <tr>
 	<td>SITE_TEMPLATE_TABLE_NAME</td>
 	<td>//tr[contains(.,'${key_siteTemplateName}')]/td//a</td>

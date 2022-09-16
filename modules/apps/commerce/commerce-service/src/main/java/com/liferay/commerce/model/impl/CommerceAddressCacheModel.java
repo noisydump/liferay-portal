@@ -18,6 +18,7 @@ import com.liferay.commerce.model.CommerceAddress;
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.model.CacheModel;
+import com.liferay.portal.kernel.model.MVCCModel;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -33,7 +34,7 @@ import java.util.Date;
  * @generated
  */
 public class CommerceAddressCacheModel
-	implements CacheModel<CommerceAddress>, Externalizable {
+	implements CacheModel<CommerceAddress>, Externalizable, MVCCModel {
 
 	@Override
 	public boolean equals(Object object) {
@@ -48,7 +49,10 @@ public class CommerceAddressCacheModel
 		CommerceAddressCacheModel commerceAddressCacheModel =
 			(CommerceAddressCacheModel)object;
 
-		if (commerceAddressId == commerceAddressCacheModel.commerceAddressId) {
+		if ((commerceAddressId ==
+				commerceAddressCacheModel.commerceAddressId) &&
+			(mvccVersion == commerceAddressCacheModel.mvccVersion)) {
+
 			return true;
 		}
 
@@ -57,14 +61,28 @@ public class CommerceAddressCacheModel
 
 	@Override
 	public int hashCode() {
-		return HashUtil.hash(0, commerceAddressId);
+		int hashCode = HashUtil.hash(0, commerceAddressId);
+
+		return HashUtil.hash(hashCode, mvccVersion);
+	}
+
+	@Override
+	public long getMvccVersion() {
+		return mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		this.mvccVersion = mvccVersion;
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(51);
+		StringBundler sb = new StringBundler(53);
 
-		sb.append("{externalReferenceCode=");
+		sb.append("{mvccVersion=");
+		sb.append(mvccVersion);
+		sb.append(", externalReferenceCode=");
 		sb.append(externalReferenceCode);
 		sb.append(", commerceAddressId=");
 		sb.append(commerceAddressId);
@@ -98,10 +116,10 @@ public class CommerceAddressCacheModel
 		sb.append(city);
 		sb.append(", zip=");
 		sb.append(zip);
-		sb.append(", commerceRegionId=");
-		sb.append(commerceRegionId);
-		sb.append(", commerceCountryId=");
-		sb.append(commerceCountryId);
+		sb.append(", regionId=");
+		sb.append(regionId);
+		sb.append(", countryId=");
+		sb.append(countryId);
 		sb.append(", latitude=");
 		sb.append(latitude);
 		sb.append(", longitude=");
@@ -122,6 +140,8 @@ public class CommerceAddressCacheModel
 	@Override
 	public CommerceAddress toEntityModel() {
 		CommerceAddressImpl commerceAddressImpl = new CommerceAddressImpl();
+
+		commerceAddressImpl.setMvccVersion(mvccVersion);
 
 		if (externalReferenceCode == null) {
 			commerceAddressImpl.setExternalReferenceCode("");
@@ -208,8 +228,8 @@ public class CommerceAddressCacheModel
 			commerceAddressImpl.setZip(zip);
 		}
 
-		commerceAddressImpl.setCommerceRegionId(commerceRegionId);
-		commerceAddressImpl.setCommerceCountryId(commerceCountryId);
+		commerceAddressImpl.setRegionId(regionId);
+		commerceAddressImpl.setCountryId(countryId);
 		commerceAddressImpl.setLatitude(latitude);
 		commerceAddressImpl.setLongitude(longitude);
 
@@ -231,6 +251,7 @@ public class CommerceAddressCacheModel
 
 	@Override
 	public void readExternal(ObjectInput objectInput) throws IOException {
+		mvccVersion = objectInput.readLong();
 		externalReferenceCode = objectInput.readUTF();
 
 		commerceAddressId = objectInput.readLong();
@@ -255,9 +276,9 @@ public class CommerceAddressCacheModel
 		city = objectInput.readUTF();
 		zip = objectInput.readUTF();
 
-		commerceRegionId = objectInput.readLong();
+		regionId = objectInput.readLong();
 
-		commerceCountryId = objectInput.readLong();
+		countryId = objectInput.readLong();
 
 		latitude = objectInput.readDouble();
 
@@ -273,6 +294,8 @@ public class CommerceAddressCacheModel
 
 	@Override
 	public void writeExternal(ObjectOutput objectOutput) throws IOException {
+		objectOutput.writeLong(mvccVersion);
+
 		if (externalReferenceCode == null) {
 			objectOutput.writeUTF("");
 		}
@@ -351,9 +374,9 @@ public class CommerceAddressCacheModel
 			objectOutput.writeUTF(zip);
 		}
 
-		objectOutput.writeLong(commerceRegionId);
+		objectOutput.writeLong(regionId);
 
-		objectOutput.writeLong(commerceCountryId);
+		objectOutput.writeLong(countryId);
 
 		objectOutput.writeDouble(latitude);
 
@@ -373,6 +396,7 @@ public class CommerceAddressCacheModel
 		objectOutput.writeInt(type);
 	}
 
+	public long mvccVersion;
 	public String externalReferenceCode;
 	public long commerceAddressId;
 	public long groupId;
@@ -390,8 +414,8 @@ public class CommerceAddressCacheModel
 	public String street3;
 	public String city;
 	public String zip;
-	public long commerceRegionId;
-	public long commerceCountryId;
+	public long regionId;
+	public long countryId;
 	public double latitude;
 	public double longitude;
 	public String phoneNumber;

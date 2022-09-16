@@ -2,11 +2,13 @@
 <head>
 <title>AnnouncementsManageEntries</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">AnnouncementsManageEntries</td></tr>
 </thead>
+
 <tbody>
 <tr>
 	<td>DISTRIBUTION_SCOPE_SELECT</td>
@@ -18,7 +20,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--ENTRY_TABLE-->
+
 <tr>
 	<td>ENTRY_TABLE_ACTIONS_GENERIC</td>
 	<td>//td[7]//div/a</td>

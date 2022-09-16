@@ -17,12 +17,14 @@ package com.liferay.portlet.asset.service.impl;
 import com.liferay.asset.kernel.model.AssetCategoryConstants;
 import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.model.AssetVocabularyDisplay;
+import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
@@ -106,6 +108,22 @@ public class AssetVocabularyServiceImpl extends AssetVocabularyServiceBaseImpl {
 	}
 
 	@Override
+	public AssetVocabulary addVocabulary(
+			String externalReferenceCode, long groupId, String name,
+			String title, Map<Locale, String> titleMap,
+			Map<Locale, String> descriptionMap, String settings,
+			int visibilityType, ServiceContext serviceContext)
+		throws PortalException {
+
+		AssetCategoriesPermission.check(
+			getPermissionChecker(), groupId, ActionKeys.ADD_VOCABULARY);
+
+		return assetVocabularyLocalService.addVocabulary(
+			externalReferenceCode, getUserId(), groupId, name, title, titleMap,
+			descriptionMap, settings, visibilityType, serviceContext);
+	}
+
+	@Override
 	public List<AssetVocabulary> deleteVocabularies(
 			long[] vocabularyIds, ServiceContext serviceContext)
 		throws PortalException {
@@ -167,6 +185,23 @@ public class AssetVocabularyServiceImpl extends AssetVocabularyServiceBaseImpl {
 	}
 
 	@Override
+	public AssetVocabulary getAssetVocabularyByExternalReferenceCode(
+			long groupId, String externalReferenceCode)
+		throws PortalException {
+
+		AssetVocabulary vocabulary =
+			assetVocabularyLocalService.
+				getAssetVocabularyByExternalReferenceCode(
+					groupId, externalReferenceCode);
+
+		AssetVocabularyPermission.check(
+			getPermissionChecker(), vocabulary.getVocabularyId(),
+			ActionKeys.VIEW);
+
+		return vocabulary;
+	}
+
+	@Override
 	public List<AssetVocabulary> getGroupsVocabularies(long[] groupIds) {
 		return getGroupsVocabularies(groupIds, null);
 	}
@@ -190,7 +225,7 @@ public class AssetVocabularyServiceImpl extends AssetVocabularyServiceBaseImpl {
 			return vocabularies;
 		}
 
-		long classNameId = classNameLocalService.getClassNameId(className);
+		long classNameId = _classNameLocalService.getClassNameId(className);
 
 		return ListUtil.filter(
 			vocabularies,
@@ -377,7 +412,8 @@ public class AssetVocabularyServiceImpl extends AssetVocabularyServiceBaseImpl {
 
 		BaseModelSearchResult<AssetVocabulary> baseModelSearchResult =
 			assetVocabularyLocalService.searchVocabularies(
-				user.getCompanyId(), groupId, title, start, end, sort);
+				user.getCompanyId(), new long[] {groupId}, title, null, start,
+				end, sort);
 
 		List<AssetVocabulary> vocabularies =
 			baseModelSearchResult.getBaseModels();
@@ -443,19 +479,7 @@ public class AssetVocabularyServiceImpl extends AssetVocabularyServiceBaseImpl {
 			serviceContext);
 	}
 
-	@Override
-	public AssetVocabulary updateVocabulary(
-			long vocabularyId, String name, String title,
-			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
-			String settings, ServiceContext serviceContext)
-		throws PortalException {
-
-		AssetVocabularyPermission.check(
-			getPermissionChecker(), vocabularyId, ActionKeys.UPDATE);
-
-		return assetVocabularyLocalService.updateVocabulary(
-			vocabularyId, name, title, titleMap, descriptionMap, settings,
-			serviceContext);
-	}
+	@BeanReference(type = ClassNameLocalService.class)
+	private ClassNameLocalService _classNameLocalService;
 
 }

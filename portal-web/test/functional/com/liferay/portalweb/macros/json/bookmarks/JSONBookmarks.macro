@@ -4,14 +4,14 @@ definition {
 	macro addBookmarks {
 		Variables.assertDefined(parameterList = "${groupName},${name},${url}");
 
-		var groupId = JSONBookmarksSetter.setGroupId(groupName = "${groupName}", site = "${site}");
+		var groupId = JSONBookmarksSetter.setGroupId(
+			groupName = "${groupName}",
+			site = "${site}");
 
 		var folderId = JSONBookmarksSetter.setFolderId(
 			folderName = "${folderName}",
 			groupId = "${groupId}");
-
 		var url = StringUtil.replace("${url}", ":", "%3A");
-
 		var serviceContext = JSONBookmarksSetter.setServiceContext(
 			assetCategoryIds = "${assetCategoryIds}",
 			assetTagNames = "${assetTagNames}",
@@ -30,7 +30,9 @@ definition {
 	macro addFolder {
 		Variables.assertDefined(parameterList = "${folderName},${groupName}");
 
-		var groupId = JSONBookmarksSetter.setGroupId(groupName = "${groupName}", site = "${site}");
+		var groupId = JSONBookmarksSetter.setGroupId(
+			groupName = "${groupName}",
+			site = "${site}");
 
 		var parentFolderId = JSONBookmarksSetter.setFolderId(
 			folderName = "${parentFolderName}",

@@ -21,7 +21,6 @@ import com.liferay.portal.kernel.model.BaseModelListener;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutRevision;
-import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.model.LayoutSetPrototype;
 import com.liferay.portal.kernel.model.PortletPreferences;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
@@ -47,7 +46,10 @@ public class PortletPreferencesModelListener
 	}
 
 	@Override
-	public void onAfterUpdate(PortletPreferences portletPreferences) {
+	public void onAfterUpdate(
+		PortletPreferences originalPortletPreferences,
+		PortletPreferences portletPreferences) {
+
 		clearCache(portletPreferences);
 
 		updateLayout(portletPreferences);
@@ -85,7 +87,7 @@ public class PortletPreferencesModelListener
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(exception, exception);
+				_log.debug(exception);
 			}
 
 			CacheUtil.clearCache();
@@ -131,11 +133,10 @@ public class PortletPreferencesModelListener
 				Layout layout = LayoutLocalServiceUtil.fetchLayout(
 					portletPreferences.getPlid());
 
-				if (layout == null) {
-					return;
-				}
+				if ((layout == null) ||
+					NotifiedAssetEntryThreadLocal.
+						isNotifiedAssetEntryIdsModified()) {
 
-				if (_isNotifiedAssetEntryIdsModified(layout)) {
 					return;
 				}
 
@@ -150,22 +151,6 @@ public class PortletPreferencesModelListener
 			_log.error(
 				"Unable to update the layout's modified date", exception);
 		}
-	}
-
-	private boolean _isNotifiedAssetEntryIdsModified(Layout layout) {
-		if (!NotifiedAssetEntryThreadLocal.isNotifiedAssetEntryIdsModified()) {
-			return false;
-		}
-
-		LayoutSet layoutSet = layout.getLayoutSet();
-
-		if (!layout.isLayoutPrototypeLinkActive() &&
-			!layoutSet.isLayoutSetPrototypeLinkActive()) {
-
-			return false;
-		}
-
-		return true;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

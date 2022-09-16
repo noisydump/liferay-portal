@@ -14,27 +14,33 @@
 
 import React, {useEffect, useRef, useState} from 'react';
 
+import {CONTAINER_DISPLAY_OPTIONS} from '../config/constants/containerDisplayOptions';
 import {
 	ARROW_DOWN_KEYCODE,
+	ARROW_LEFT_KEYCODE,
+	ARROW_RIGHT_KEYCODE,
 	ARROW_UP_KEYCODE,
 	BACKSPACE_KEYCODE,
 	D_KEYCODE,
+	PERIOID_KEYCODE,
 	S_KEYCODE,
 	Z_KEYCODE,
 } from '../config/constants/keycodes';
 import {MOVE_ITEM_DIRECTIONS} from '../config/constants/moveItemDirections';
+import {useActiveItemId, useSelectItem} from '../contexts/ControlsContext';
+import {useDispatch, useSelector} from '../contexts/StoreContext';
 import selectCanUpdatePageStructure from '../selectors/selectCanUpdatePageStructure';
-import {useDispatch, useSelector} from '../store/index';
 import deleteItem from '../thunks/deleteItem';
 import duplicateItem from '../thunks/duplicateItem';
 import moveItem from '../thunks/moveItem';
 import redoThunk from '../thunks/redo';
+import switchSidebarPanel from '../thunks/switchSidebarPanel';
 import undoThunk from '../thunks/undo';
 import canBeDuplicated from '../utils/canBeDuplicated';
 import canBeRemoved from '../utils/canBeRemoved';
 import canBeSaved from '../utils/canBeSaved';
-import {useActiveItemId, useSelectItem} from './Controls';
 import SaveFragmentCompositionModal from './SaveFragmentCompositionModal';
+import ShortcutModal from './ShortcutModal';
 
 const ctrlOrMeta = (event) =>
 	(event.ctrlKey && !event.metaKey) || (!event.ctrlKey && event.metaKey);
@@ -42,11 +48,17 @@ const ctrlOrMeta = (event) =>
 const isEditableField = (element) =>
 	!!element.closest('.page-editor__editable');
 
+const isEditingEditableField = () =>
+	!!document.activeElement.getAttribute('contenteditable');
+
 const isInteractiveElement = (element) => {
 	return (
 		['INPUT', 'OPTION', 'SELECT', 'TEXTAREA'].includes(element.tagName) ||
+		!!element.closest('.alloy-editor-container') ||
 		!!element.closest('.cke_editable') ||
-		!!element.closest('.alloy-editor-container')
+		!!element.closest('.dropdown-menu') ||
+		!!element.closest('.page-editor__page-structure__item-configuration') ||
+		!!element.closest('.page-editor__allowed-fragment__tree')
 	);
 };
 
@@ -57,20 +69,15 @@ const isWithinIframe = () => {
 export default function ShortcutManager() {
 	const activeItemId = useActiveItemId();
 	const dispatch = useDispatch();
-	const selectItem = useSelectItem();
-
 	const canUpdatePageStructure = useSelector(selectCanUpdatePageStructure);
-
 	const [openSaveModal, setOpenSaveModal] = useState(false);
-
+	const [openShortcutModal, setOpenShorcutModal] = useState(false);
+	const selectItem = useSelectItem();
 	const state = useSelector((state) => state);
+	const sidebarHidden = state.sidebar.hidden;
+	const {widgets} = state;
 
-	const {
-		fragmentEntryLinks,
-		layoutData,
-		segmentsExperienceId,
-		widgets,
-	} = state;
+	const {fragmentEntryLinks, layoutData, segmentsExperienceId} = state;
 
 	const activeItem = layoutData.items[activeItemId];
 
@@ -84,27 +91,8 @@ export default function ShortcutManager() {
 		);
 	};
 
-	const remove = () => {
-		dispatch(
-			deleteItem({
-				itemId: activeItemId,
-				selectItem,
-				store: state,
-			})
-		);
-	};
-
-	const save = () => {
-		setOpenSaveModal(true);
-	};
-
-	const undo = (event) => {
-		if (event.shiftKey) {
-			dispatch(redoThunk({store: state}));
-		}
-		else {
-			dispatch(undoThunk({store: state}));
-		}
+	const hideSidebar = () => {
+		dispatch(switchSidebarPanel({hidden: !sidebarHidden}));
 	};
 
 	const move = (event) => {
@@ -117,7 +105,8 @@ export default function ShortcutManager() {
 		const currentPosition = parentItem.children.indexOf(itemId);
 
 		const direction =
-			event.keyCode === ARROW_UP_KEYCODE
+			event.keyCode === ARROW_UP_KEYCODE ||
+			event.keyCode === ARROW_LEFT_KEYCODE
 				? MOVE_ITEM_DIRECTIONS.UP
 				: MOVE_ITEM_DIRECTIONS.DOWN;
 
@@ -148,6 +137,32 @@ export default function ShortcutManager() {
 		);
 	};
 
+	const openShortcutModalAction = () => {
+		setOpenShorcutModal(true);
+	};
+
+	const remove = () => {
+		dispatch(
+			deleteItem({
+				itemId: activeItemId,
+				selectItem,
+			})
+		);
+	};
+
+	const save = () => {
+		setOpenSaveModal(true);
+	};
+
+	const undo = (event) => {
+		if (event.shiftKey) {
+			dispatch(redoThunk({store: state}));
+		}
+		else {
+			dispatch(undoThunk({store: state}));
+		}
+	};
+
 	const keymapRef = useRef(null);
 
 	keymapRef.current = {
@@ -165,6 +180,18 @@ export default function ShortcutManager() {
 			isKeyCombination: (event) =>
 				ctrlOrMeta(event) && event.keyCode === D_KEYCODE,
 		},
+		hideSidebar: {
+			action: hideSidebar,
+			canBeExecuted: (event) =>
+				!isInteractiveElement(event.target) &&
+				!isWithinIframe() &&
+				!isEditingEditableField(),
+
+			isKeyCombination: (event) =>
+				ctrlOrMeta(event) &&
+				event.shiftKey &&
+				event.keyCode === PERIOID_KEYCODE,
+		},
 		move: {
 			action: move,
 			canBeExecuted: (event) =>
@@ -172,9 +199,38 @@ export default function ShortcutManager() {
 				!!layoutData.items[activeItemId] &&
 				!isEditableField(event.target) &&
 				!isInteractiveElement(event.target),
-			isKeyCombination: (event) =>
-				event.keyCode === ARROW_UP_KEYCODE ||
-				event.keyCode === ARROW_DOWN_KEYCODE,
+			isKeyCombination: (event) => {
+				if (!activeItem) {
+					return false;
+				}
+
+				const {parentId} = activeItem;
+
+				const parentItem = layoutData.items[parentId];
+
+				if (
+					parentItem.config.contentDisplay ===
+					CONTAINER_DISPLAY_OPTIONS.flexRow
+				) {
+					return (
+						event.keyCode === ARROW_RIGHT_KEYCODE ||
+						event.keyCode === ARROW_LEFT_KEYCODE
+					);
+				}
+
+				return (
+					event.keyCode === ARROW_UP_KEYCODE ||
+					event.keyCode === ARROW_DOWN_KEYCODE
+				);
+			},
+		},
+		openShortcutModal: {
+			action: openShortcutModalAction,
+			canBeExecuted: (event) =>
+				!isInteractiveElement(event.target) &&
+				!isWithinIframe() &&
+				!isEditingEditableField(),
+			isKeyCombination: (event) => event.shiftKey && event.key === '?',
 		},
 		remove: {
 			action: remove,
@@ -182,7 +238,6 @@ export default function ShortcutManager() {
 				canUpdatePageStructure &&
 				!!layoutData.items[activeItemId] &&
 				canBeRemoved(layoutData.items[activeItemId], layoutData) &&
-				!isEditableField(event.target) &&
 				!isInteractiveElement(event.target),
 			isKeyCombination: (event) => event.keyCode === BACKSPACE_KEYCODE,
 		},
@@ -200,7 +255,8 @@ export default function ShortcutManager() {
 			canBeExecuted: (event) =>
 				(isEditableField(event.target) ||
 					!isInteractiveElement(event.target)) &&
-				!isWithinIframe(),
+				!isWithinIframe() &&
+				!isEditingEditableField(),
 			isKeyCombination: (event) =>
 				ctrlOrMeta(event) &&
 				event.keyCode === Z_KEYCODE &&
@@ -236,6 +292,12 @@ export default function ShortcutManager() {
 			{openSaveModal && (
 				<SaveFragmentCompositionModal
 					onCloseModal={() => setOpenSaveModal(false)}
+				/>
+			)}
+
+			{openShortcutModal && (
+				<ShortcutModal
+					onCloseModal={() => setOpenShorcutModal(false)}
 				/>
 			)}
 		</>

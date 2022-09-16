@@ -92,10 +92,9 @@ public class AssetCategoryTitlesMultiLanguageSearchTest {
 
 		GroupSearchFixture groupSearchFixture = new GroupSearchFixture();
 
-		_assetCategories = new ArrayList<>();
-		_assetVocabularies = new ArrayList<>();
 		_groups = groupSearchFixture.getGroups();
 		_groupSearchFixture = groupSearchFixture;
+
 		_journalArticles = journalArticleSearchFixture.getJournalArticles();
 		_journalArticleSearchFixture = journalArticleSearchFixture;
 	}
@@ -413,10 +412,10 @@ public class AssetCategoryTitlesMultiLanguageSearchTest {
 	protected static UserLocalService userLocalService;
 
 	@DeleteAfterTestRun
-	private List<AssetCategory> _assetCategories;
+	private List<AssetCategory> _assetCategories = new ArrayList<>();
 
 	@DeleteAfterTestRun
-	private List<AssetVocabulary> _assetVocabularies;
+	private List<AssetVocabulary> _assetVocabularies = new ArrayList<>();
 
 	@DeleteAfterTestRun
 	private List<Group> _groups;

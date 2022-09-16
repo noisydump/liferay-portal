@@ -14,15 +14,14 @@
 
 package com.liferay.commerce.product.internal.upgrade.v2_0_0;
 
-import com.liferay.commerce.product.internal.upgrade.base.BaseCommerceProductServiceUpgradeProcess;
 import com.liferay.commerce.product.model.impl.CPInstanceModelImpl;
-import com.liferay.commerce.product.model.impl.CPInstanceOptionValueRelModelImpl;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.jdbc.AutoBatchPreparedStatementUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.uuid.PortalUUID;
 
 import java.sql.Date;
@@ -38,8 +37,7 @@ import java.util.Map;
  * @author Matija Petanjek
  * @author Igor Beslic
  */
-public class CPInstanceOptionValueRelUpgradeProcess
-	extends BaseCommerceProductServiceUpgradeProcess {
+public class CPInstanceOptionValueRelUpgradeProcess extends UpgradeProcess {
 
 	public CPInstanceOptionValueRelUpgradeProcess(
 		JSONFactory jsonFactory, PortalUUID portalUUID) {
@@ -50,52 +48,49 @@ public class CPInstanceOptionValueRelUpgradeProcess
 
 	@Override
 	protected void doUpgrade() throws Exception {
-		if (!hasTable(CPInstanceOptionValueRelModelImpl.TABLE_NAME)) {
-			runSQL(CPInstanceOptionValueRelModelImpl.TABLE_SQL_CREATE);
-		}
-
 		_importContentFromCPInstanceJsonField();
 
-		dropColumn(CPInstanceModelImpl.TABLE_NAME, "json");
+		alterTableDropColumn(CPInstanceModelImpl.TABLE_NAME, "json");
 	}
 
 	private PreparedStatement _cpDefinitionOptionRelIdPreparedStatement()
 		throws SQLException {
 
-		if (_preparedStatementCPDefinitionOptionRelId != null) {
-			return _preparedStatementCPDefinitionOptionRelId;
+		if (_cpDefinitionOptionRelIdPreparedStatement != null) {
+			return _cpDefinitionOptionRelIdPreparedStatement;
 		}
 
-		_preparedStatementCPDefinitionOptionRelId = connection.prepareStatement(
+		_cpDefinitionOptionRelIdPreparedStatement = connection.prepareStatement(
 			_SELECT_CP_DEFINITION_OPTION_REL_ID);
 
-		return _preparedStatementCPDefinitionOptionRelId;
+		return _cpDefinitionOptionRelIdPreparedStatement;
 	}
 
 	private PreparedStatement _cpDefinitionOptionValueRelIdPreparedStatement()
 		throws SQLException {
 
-		if (_preparedStatementCPDefinitionOptionValueRelId != null) {
-			return _preparedStatementCPDefinitionOptionValueRelId;
+		if (_cpDefinitionOptionValueRelIdPreparedStatement != null) {
+			return _cpDefinitionOptionValueRelIdPreparedStatement;
 		}
 
-		_preparedStatementCPDefinitionOptionValueRelId =
+		_cpDefinitionOptionValueRelIdPreparedStatement =
 			connection.prepareStatement(
 				_SELECT_CP_DEFINITION_OPTION_VALUE_REL_ID);
 
-		return _preparedStatementCPDefinitionOptionValueRelId;
+		return _cpDefinitionOptionValueRelIdPreparedStatement;
 	}
 
 	private long _getCPDefinitionOptionRelId(
 			long cpDefinitionId, String cpDefinitionOptionRelKey)
 		throws SQLException {
 
-		PreparedStatement ps = _cpDefinitionOptionRelIdPreparedStatement();
+		PreparedStatement preparedStatement =
+			_cpDefinitionOptionRelIdPreparedStatement();
 
-		ps.setLong(1, cpDefinitionId);
-		ps.setString(2, cpDefinitionOptionRelKey);
+		preparedStatement.setLong(1, cpDefinitionId);
+		preparedStatement.setString(2, cpDefinitionOptionRelKey);
 
-		try (ResultSet resultSet = ps.executeQuery()) {
+		try (ResultSet resultSet = preparedStatement.executeQuery()) {
 			if (resultSet.next()) {
 				return resultSet.getLong("CPDefinitionOptionRelId");
 			}
@@ -108,12 +103,13 @@ public class CPInstanceOptionValueRelUpgradeProcess
 			long cpDefinitionOptionRelId, String cpDefinitionOptionValueKey)
 		throws SQLException {
 
-		PreparedStatement ps = _cpDefinitionOptionValueRelIdPreparedStatement();
+		PreparedStatement preparedStatement =
+			_cpDefinitionOptionValueRelIdPreparedStatement();
 
-		ps.setLong(1, cpDefinitionOptionRelId);
-		ps.setString(2, cpDefinitionOptionValueKey);
+		preparedStatement.setLong(1, cpDefinitionOptionRelId);
+		preparedStatement.setString(2, cpDefinitionOptionValueKey);
 
-		try (ResultSet resultSet = ps.executeQuery()) {
+		try (ResultSet resultSet = preparedStatement.executeQuery()) {
 			if (resultSet.next()) {
 				return resultSet.getLong("CPDefinitionOptionValueRelId");
 			}
@@ -130,20 +126,21 @@ public class CPInstanceOptionValueRelUpgradeProcess
 			"CPDefinitionOptionValueRelId, CPInstanceId) values (?, ?, ?, ?, ",
 			"?, ?, ?, ?, ?, ?, ?)");
 
-		try (PreparedStatement ps =
+		try (PreparedStatement preparedStatement =
 				AutoBatchPreparedStatementUtil.concurrentAutoBatch(
 					connection, insertCPInstanceOptionValueRelSQL);
 			Statement s = connection.createStatement(
 				ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-			ResultSet rs = s.executeQuery(
+			ResultSet resultSet = s.executeQuery(
 				"select CPInstanceId, groupId, companyId, userId, userName, " +
 					"CPDefinitionId, json from CPInstance")) {
 
-			while (rs.next()) {
-				_queueInsertCPInstanceOptionValueRelCommands(ps, rs);
+			while (resultSet.next()) {
+				_queueInsertCPInstanceOptionValueRelCommands(
+					preparedStatement, resultSet);
 			}
 
-			ps.executeBatch();
+			preparedStatement.executeBatch();
 		}
 	}
 
@@ -165,19 +162,19 @@ public class CPInstanceOptionValueRelUpgradeProcess
 	}
 
 	private void _queueInsertCPInstanceOptionValueRelCommands(
-			PreparedStatement ps, ResultSet rs)
+			PreparedStatement preparedStatement, ResultSet resultSet)
 		throws JSONException, SQLException {
 
-		long groupId = rs.getLong("groupId");
-		long companyId = rs.getLong("companyId");
-		long userId = rs.getLong("userId");
+		long groupId = resultSet.getLong("groupId");
+		long companyId = resultSet.getLong("companyId");
+		long userId = resultSet.getLong("userId");
 
-		String userName = rs.getString("userName");
+		String userName = resultSet.getString("userName");
 
-		long cpInstanceId = rs.getLong("CPInstanceId");
-		long cpDefinitionId = rs.getLong("CPDefinitionId");
+		long cpInstanceId = resultSet.getLong("CPInstanceId");
+		long cpDefinitionId = resultSet.getLong("CPDefinitionId");
 
-		String json = rs.getString("json");
+		String json = resultSet.getString("json");
 
 		Map<String, String> processedCPInstanceOptions = new HashMap<>();
 
@@ -217,23 +214,23 @@ public class CPInstanceOptionValueRelUpgradeProcess
 				String uuid = _portalUUID.generate();
 				long cpInstanceOptionValueRelId = increment();
 
-				ps.setString(1, uuid);
-				ps.setLong(2, cpInstanceOptionValueRelId);
-				ps.setLong(3, groupId);
-				ps.setLong(4, companyId);
-				ps.setLong(5, userId);
-				ps.setString(6, userName);
+				preparedStatement.setString(1, uuid);
+				preparedStatement.setLong(2, cpInstanceOptionValueRelId);
+				preparedStatement.setLong(3, groupId);
+				preparedStatement.setLong(4, companyId);
+				preparedStatement.setLong(5, userId);
+				preparedStatement.setString(6, userName);
 
-				Date now = new Date(System.currentTimeMillis());
+				Date date = new Date(System.currentTimeMillis());
 
-				ps.setDate(7, now);
-				ps.setDate(8, now);
+				preparedStatement.setDate(7, date);
+				preparedStatement.setDate(8, date);
 
-				ps.setLong(9, cpDefinitionOptionRelId);
-				ps.setLong(10, cpDefinitionOptionValueRelId);
-				ps.setLong(11, cpInstanceId);
+				preparedStatement.setLong(9, cpDefinitionOptionRelId);
+				preparedStatement.setLong(10, cpDefinitionOptionValueRelId);
+				preparedStatement.setLong(11, cpInstanceId);
 
-				ps.addBatch();
+				preparedStatement.addBatch();
 			}
 		}
 	}
@@ -246,9 +243,9 @@ public class CPInstanceOptionValueRelUpgradeProcess
 		"select CPDefinitionOptionValueRelId from CPDefinitionOptionValueRel " +
 			"where CPDefinitionOptionRelId = ? and key_ = ?";
 
+	private PreparedStatement _cpDefinitionOptionRelIdPreparedStatement;
+	private PreparedStatement _cpDefinitionOptionValueRelIdPreparedStatement;
 	private final JSONFactory _jsonFactory;
 	private final PortalUUID _portalUUID;
-	private PreparedStatement _preparedStatementCPDefinitionOptionRelId;
-	private PreparedStatement _preparedStatementCPDefinitionOptionValueRelId;
 
 }

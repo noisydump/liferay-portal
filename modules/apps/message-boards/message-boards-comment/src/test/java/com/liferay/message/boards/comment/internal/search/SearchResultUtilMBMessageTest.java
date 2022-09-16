@@ -31,25 +31,28 @@ import com.liferay.portal.search.internal.result.SearchResultTranslatorImpl;
 import com.liferay.portal.search.internal.result.SummaryFactoryImpl;
 import com.liferay.portal.search.test.util.BaseSearchResultUtilTestCase;
 import com.liferay.portal.search.test.util.SearchTestUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-import org.mockito.Mock;
 import org.mockito.Mockito;
-
-import org.powermock.modules.junit4.PowerMockRunner;
 
 /**
  * @author André de Oliveira
  */
-@RunWith(PowerMockRunner.class)
 public class SearchResultUtilMBMessageTest
 	extends BaseSearchResultUtilTestCase {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Before
 	@Override
@@ -88,7 +91,7 @@ public class SearchResultUtilMBMessageTest
 	}
 
 	@Test
-	public void testMBMessage() throws Exception {
+	public void testMBMessage() {
 		SearchResult searchResult = assertOneSearchResult(
 			SearchTestUtil.createDocument(_CLASS_NAME_MB_MESSAGE));
 
@@ -104,7 +107,7 @@ public class SearchResultUtilMBMessageTest
 			commentRelatedSearchResults.toString(),
 			commentRelatedSearchResults.isEmpty());
 
-		Mockito.verifyZeroInteractions(_mbMessageLocalService);
+		Mockito.verifyNoInteractions(_mbMessageLocalService);
 
 		Assert.assertNull(searchResult.getSummary());
 
@@ -113,7 +116,7 @@ public class SearchResultUtilMBMessageTest
 	}
 
 	@Test
-	public void testMBMessageAttachment() throws Exception {
+	public void testMBMessageAttachment() {
 		SearchResult searchResult = assertOneSearchResult(
 			SearchTestUtil.createAttachmentDocument(_CLASS_NAME_MB_MESSAGE));
 
@@ -164,7 +167,18 @@ public class SearchResultUtilMBMessageTest
 			SearchTestUtil.ATTACHMENT_OWNER_CLASS_PK);
 	}
 
-	protected SearchResultContributor createSearchResultContributor() {
+	@Override
+	protected SearchResultTranslator createSearchResultTranslator() {
+		SearchResultTranslatorImpl searchResultTranslatorImpl =
+			new SearchResultTranslatorImpl();
+
+		searchResultTranslatorImpl.setSearchResultManager(
+			_createSearchResultManager());
+
+		return searchResultTranslatorImpl;
+	}
+
+	private SearchResultContributor _createSearchResultContributor() {
 		MBMessageCommentSearchResultContributor
 			mbMessageCommentSearchResultContributor =
 				new MBMessageCommentSearchResultContributor();
@@ -177,30 +191,19 @@ public class SearchResultUtilMBMessageTest
 		return mbMessageCommentSearchResultContributor;
 	}
 
-	protected SearchResultManager createSearchResultManager() {
+	private SearchResultManager _createSearchResultManager() {
 		SearchResultManagerImpl searchResultManagerImpl =
 			new SearchResultManagerImpl();
 
 		searchResultManagerImpl.addSearchResultContributor(
-			createSearchResultContributor());
+			_createSearchResultContributor());
 		searchResultManagerImpl.setClassNameLocalService(classNameLocalService);
-		searchResultManagerImpl.setSummaryFactory(createSummaryFactory());
+		searchResultManagerImpl.setSummaryFactory(_createSummaryFactory());
 
 		return searchResultManagerImpl;
 	}
 
-	@Override
-	protected SearchResultTranslator createSearchResultTranslator() {
-		SearchResultTranslatorImpl searchResultTranslatorImpl =
-			new SearchResultTranslatorImpl();
-
-		searchResultTranslatorImpl.setSearchResultManager(
-			createSearchResultManager());
-
-		return searchResultTranslatorImpl;
-	}
-
-	protected SummaryFactory createSummaryFactory() {
+	private SummaryFactory _createSummaryFactory() {
 		SummaryFactoryImpl summaryFactoryImpl = new SummaryFactoryImpl();
 
 		summaryFactoryImpl.setIndexerRegistry(_indexerRegistry);
@@ -211,19 +214,13 @@ public class SearchResultUtilMBMessageTest
 	private static final String _CLASS_NAME_MB_MESSAGE =
 		MBMessage.class.getName();
 
-	@Mock
-	private Comment _comment;
-
-	@Mock
-	private CommentManager _commentManager;
-
-	@Mock
-	private IndexerRegistry _indexerRegistry;
-
-	@Mock
-	private MBMessage _mbMessage;
-
-	@Mock
-	private MBMessageLocalService _mbMessageLocalService;
+	private final Comment _comment = Mockito.mock(Comment.class);
+	private final CommentManager _commentManager = Mockito.mock(
+		CommentManager.class);
+	private final IndexerRegistry _indexerRegistry = Mockito.mock(
+		IndexerRegistry.class);
+	private final MBMessage _mbMessage = Mockito.mock(MBMessage.class);
+	private final MBMessageLocalService _mbMessageLocalService = Mockito.mock(
+		MBMessageLocalService.class);
 
 }

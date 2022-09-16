@@ -29,18 +29,21 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -132,56 +135,56 @@ public class UserNotificationEventModelImpl
 	public static final boolean COLUMN_BITMASK_ENABLED = true;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long ACTIONREQUIRED_COLUMN_BITMASK = 1L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long ARCHIVED_COLUMN_BITMASK = 2L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long COMPANYID_COLUMN_BITMASK = 4L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long DELIVERED_COLUMN_BITMASK = 8L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long DELIVERYTYPE_COLUMN_BITMASK = 16L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long TYPE_COLUMN_BITMASK = 32L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long USERID_COLUMN_BITMASK = 64L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long UUID_COLUMN_BITMASK = 128L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *		#getColumnBitmask(String)
+	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long TIMESTAMP_COLUMN_BITMASK = 256L;
@@ -274,34 +277,6 @@ public class UserNotificationEventModelImpl
 		getAttributeSetterBiConsumers() {
 
 		return _attributeSetterBiConsumers;
-	}
-
-	private static Function<InvocationHandler, UserNotificationEvent>
-		_getProxyProviderFunction() {
-
-		Class<?> proxyClass = ProxyUtil.getProxyClass(
-			UserNotificationEvent.class.getClassLoader(),
-			UserNotificationEvent.class, ModelWrapper.class);
-
-		try {
-			Constructor<UserNotificationEvent> constructor =
-				(Constructor<UserNotificationEvent>)proxyClass.getConstructor(
-					InvocationHandler.class);
-
-			return invocationHandler -> {
-				try {
-					return constructor.newInstance(invocationHandler);
-				}
-				catch (ReflectiveOperationException
-							reflectiveOperationException) {
-
-					throw new InternalError(reflectiveOperationException);
-				}
-			};
-		}
-		catch (NoSuchMethodException noSuchMethodException) {
-			throw new InternalError(noSuchMethodException);
-		}
 	}
 
 	private static final Map<String, Function<UserNotificationEvent, Object>>
@@ -722,7 +697,9 @@ public class UserNotificationEventModelImpl
 		for (Map.Entry<String, Object> entry :
 				_columnOriginalValues.entrySet()) {
 
-			if (entry.getValue() != getColumnValue(entry.getKey())) {
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
 				_columnBitmask |= _columnBitmasks.get(entry.getKey());
 			}
 		}
@@ -780,6 +757,41 @@ public class UserNotificationEventModelImpl
 		userNotificationEventImpl.setArchived(isArchived());
 
 		userNotificationEventImpl.resetOriginalValues();
+
+		return userNotificationEventImpl;
+	}
+
+	@Override
+	public UserNotificationEvent cloneWithOriginalValues() {
+		UserNotificationEventImpl userNotificationEventImpl =
+			new UserNotificationEventImpl();
+
+		userNotificationEventImpl.setMvccVersion(
+			this.<Long>getColumnOriginalValue("mvccVersion"));
+		userNotificationEventImpl.setUuid(
+			this.<String>getColumnOriginalValue("uuid_"));
+		userNotificationEventImpl.setUserNotificationEventId(
+			this.<Long>getColumnOriginalValue("userNotificationEventId"));
+		userNotificationEventImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		userNotificationEventImpl.setUserId(
+			this.<Long>getColumnOriginalValue("userId"));
+		userNotificationEventImpl.setType(
+			this.<String>getColumnOriginalValue("type_"));
+		userNotificationEventImpl.setTimestamp(
+			this.<Long>getColumnOriginalValue("timestamp"));
+		userNotificationEventImpl.setDeliveryType(
+			this.<Integer>getColumnOriginalValue("deliveryType"));
+		userNotificationEventImpl.setDeliverBy(
+			this.<Long>getColumnOriginalValue("deliverBy"));
+		userNotificationEventImpl.setDelivered(
+			this.<Boolean>getColumnOriginalValue("delivered"));
+		userNotificationEventImpl.setPayload(
+			this.<String>getColumnOriginalValue("payload"));
+		userNotificationEventImpl.setActionRequired(
+			this.<Boolean>getColumnOriginalValue("actionRequired"));
+		userNotificationEventImpl.setArchived(
+			this.<Boolean>getColumnOriginalValue("archived"));
 
 		return userNotificationEventImpl;
 	}
@@ -919,7 +931,7 @@ public class UserNotificationEventModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			(4 * attributeGetterFunctions.size()) + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -930,10 +942,27 @@ public class UserNotificationEventModelImpl
 			Function<UserNotificationEvent, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(
-				attributeGetterFunction.apply((UserNotificationEvent)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply(
+				(UserNotificationEvent)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -981,7 +1010,9 @@ public class UserNotificationEventModelImpl
 	private static class EscapedModelProxyProviderFunctionHolder {
 
 		private static final Function<InvocationHandler, UserNotificationEvent>
-			_escapedModelProxyProviderFunction = _getProxyProviderFunction();
+			_escapedModelProxyProviderFunction =
+				ProxyUtil.getProxyProviderFunction(
+					UserNotificationEvent.class, ModelWrapper.class);
 
 	}
 

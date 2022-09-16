@@ -1,7 +1,5 @@
 {
 	"dependencies": {
-		"frontend-js-web": "*",
-		"metal-events": "2.16.8"
 	},
 	"name": "message-boards-web",
 	"scripts": {
@@ -9,5 +7,5 @@
 		"checkFormat": "liferay-npm-scripts check",
 		"format": "liferay-npm-scripts fix"
 	},
-	"version": "5.0.0"
+	"version": "5.0.57"
 }

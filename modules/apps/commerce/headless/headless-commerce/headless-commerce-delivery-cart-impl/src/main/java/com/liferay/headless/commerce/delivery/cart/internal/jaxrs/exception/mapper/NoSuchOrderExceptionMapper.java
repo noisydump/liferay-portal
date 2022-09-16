@@ -31,7 +31,7 @@ import org.osgi.service.component.annotations.Component;
 	property = {
 		"osgi.jaxrs.application.select=(osgi.jaxrs.name=Liferay.Headless.Commerce.Delivery.Cart)",
 		"osgi.jaxrs.extension=true",
-		"osgi.jaxrs.name=Liferay.Headless.Commerce.Delivery.Cart.NoSuchOrderException"
+		"osgi.jaxrs.name=Liferay.Headless.Commerce.Delivery.Cart.NoSuchOrderExceptionMapper"
 	},
 	service = ExceptionMapper.class
 )
@@ -46,7 +46,7 @@ public class NoSuchOrderExceptionMapper
 
 	@Override
 	public Response.Status getStatus() {
-		return Response.Status.BAD_REQUEST;
+		return Response.Status.NOT_FOUND;
 	}
 
 }

@@ -19,7 +19,7 @@ import ClayIcon from '@clayui/icon';
 import ClayLabel from '@clayui/label';
 import ClayLayout from '@clayui/layout';
 import classNames from 'classnames';
-import React, {useRef, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 
 import {FieldBase} from '../FieldBase/ReactFieldBase.es';
 import InputComponent from './InputComponent.es';
@@ -28,7 +28,9 @@ import {
 	getEditingValue,
 	getInitialInternalValue,
 	normalizeLocaleId,
+	transformAvailableLocales,
 	transformAvailableLocalesAndValue,
+	transformEditingLocale,
 } from './transform.es';
 
 const INITIAL_DEFAULT_LOCALE = {
@@ -95,10 +97,12 @@ const LocalesDropdown = ({
 				<span className="inline-item">
 					<ClayIcon symbol={editingLocale.icon} />
 				</span>
+
 				<span className="btn-section" data-testid="triggerText">
 					{editingLocale.icon}
 				</span>
 			</ClayButton>
+
 			<ClayDropDown.Menu
 				active={dropdownActive}
 				alignElementRef={alignElementRef}
@@ -132,6 +136,7 @@ const LocalesDropdown = ({
 											<span className="inline-item inline-item-before">
 												<ClayIcon symbol={icon} />
 											</span>
+
 											{displayName}
 										</ClayLayout.ContentSection>
 									</ClayLayout.ContentCol>
@@ -172,6 +177,10 @@ const LocalizableText = ({
 	readOnly,
 	value,
 }) => {
+	const [currentAvailableLocales, setCurrentAvailableLocales] = useState(
+		availableLocales
+	);
+
 	const [currentEditingLocale, setCurrentEditingLocale] = useState(
 		editingLocale
 	);
@@ -196,6 +205,46 @@ const LocalizableText = ({
 		? currentInternalValue
 		: predefinedValue;
 
+	useEffect(() => {
+		const translationManager = Liferay.component('translationManager');
+
+		if (!translationManager) {
+			return;
+		}
+
+		const newAvailableLocales = translationManager.get('availableLocales');
+
+		const {availableLocales} = {
+			...transformAvailableLocales(
+				[...newAvailableLocales],
+				defaultLocale,
+				currentValue
+			),
+		};
+
+		const newEditingLocale = transformEditingLocale({
+			defaultLocale,
+			editingLocale: newAvailableLocales.get(
+				translationManager.get('editingLocale')
+			),
+			value: currentValue,
+		});
+
+		setCurrentAvailableLocales(availableLocales);
+
+		setCurrentEditingLocale(newEditingLocale);
+
+		setCurrentInternalValue(
+			getEditingValue({
+				defaultLocale,
+				editingLocale: newEditingLocale,
+				fieldName,
+				value: currentValue,
+			})
+		);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [defaultLocale, fieldName]);
+
 	return (
 		<ClayInput.Group>
 			<InputComponent
@@ -217,6 +266,16 @@ const LocalizableText = ({
 					setCurrentValue(newValue);
 					setCurrentInternalValue(target.value);
 
+					const {availableLocales} = {
+						...transformAvailableLocalesAndValue({
+							availableLocales: currentAvailableLocales,
+							defaultLocale,
+							value: newValue,
+						}),
+					};
+
+					setCurrentAvailableLocales(availableLocales);
+
 					onFieldChanged({event, value: newValue});
 				}}
 				onFieldFocused={onFieldFocused}
@@ -236,11 +295,11 @@ const LocalizableText = ({
 				shrink
 			>
 				<LocalesDropdown
-					availableLocales={availableLocales}
+					availableLocales={currentAvailableLocales}
 					editingLocale={currentEditingLocale}
 					fieldName={fieldName}
 					onLanguageClicked={({localeId}) => {
-						const newEditingLocale = availableLocales.find(
+						const newEditingLocale = currentAvailableLocales.find(
 							(availableLocale) =>
 								availableLocale.localeId === localeId
 						);
@@ -254,6 +313,7 @@ const LocalizableText = ({
 							getEditingValue({
 								defaultLocale,
 								editingLocale: newEditingLocale,
+								fieldName,
 								value: currentValue,
 							})
 						);

@@ -14,6 +14,7 @@
 
 package com.liferay.fragment.util.configuration;
 
+import com.liferay.fragment.constants.FragmentConfigurationFieldDataType;
 import com.liferay.info.item.InfoItemReference;
 import com.liferay.layout.display.page.LayoutDisplayPageObjectProvider;
 import com.liferay.layout.display.page.LayoutDisplayPageProvider;
@@ -23,9 +24,11 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.Objects;
@@ -79,19 +82,46 @@ public class FragmentConfigurationField {
 	}
 
 	public String getDefaultValue() {
-		if (Validator.isNotNull(_defaultValue) &&
-			!Objects.equals("itemSelector", _type)) {
-
-			return _defaultValue;
-		}
-		else if (Objects.equals("colorPalette", _type)) {
+		if (Objects.equals("colorPalette", _type)) {
 			return _getColorPaletteDefaultValue();
 		}
 		else if (Objects.equals("itemSelector", _type)) {
 			return _getItemSelectorDefaultValue();
 		}
+		else if (Objects.equals("text", _type) && isLocalizable()) {
+			return _getTextDefaultValue();
+		}
+
+		if (Validator.isNotNull(_defaultValue)) {
+			return _defaultValue;
+		}
 
 		return StringPool.BLANK;
+	}
+
+	public FragmentConfigurationFieldDataType
+		getFragmentConfigurationFieldDataType() {
+
+		if (StringUtil.equalsIgnoreCase(getDataType(), "array")) {
+			return FragmentConfigurationFieldDataType.ARRAY;
+		}
+		else if (StringUtil.equalsIgnoreCase(getDataType(), "bool")) {
+			return FragmentConfigurationFieldDataType.BOOLEAN;
+		}
+		else if (StringUtil.equalsIgnoreCase(getDataType(), "double")) {
+			return FragmentConfigurationFieldDataType.DOUBLE;
+		}
+		else if (StringUtil.equalsIgnoreCase(getDataType(), "int")) {
+			return FragmentConfigurationFieldDataType.INTEGER;
+		}
+		else if (StringUtil.equalsIgnoreCase(getDataType(), "object")) {
+			return FragmentConfigurationFieldDataType.OBJECT;
+		}
+		else if (StringUtil.equalsIgnoreCase(getDataType(), "string")) {
+			return FragmentConfigurationFieldDataType.STRING;
+		}
+
+		return null;
 	}
 
 	public String getName() {
@@ -107,13 +137,15 @@ public class FragmentConfigurationField {
 	}
 
 	private String _getColorPaletteDefaultValue() {
-		JSONObject defaultValueJSONObject = JSONUtil.put(
+		if (Validator.isNotNull(_defaultValue)) {
+			return _defaultValue;
+		}
+
+		return JSONUtil.put(
 			"cssClass", StringPool.BLANK
 		).put(
 			"rgbValue", StringPool.BLANK
-		);
-
-		return defaultValueJSONObject.toString();
+		).toString();
 	}
 
 	private String _getItemSelectorDefaultValue() {
@@ -168,6 +200,15 @@ public class FragmentConfigurationField {
 		}
 
 		return _defaultValue;
+	}
+
+	private String _getTextDefaultValue() {
+		if (Validator.isNull(_defaultValue)) {
+			return _defaultValue;
+		}
+
+		return LanguageUtil.get(
+			LocaleUtil.getMostRelevantLocale(), _defaultValue);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

@@ -18,11 +18,6 @@
 
 <%
 User selUser = PortalUtil.getSelectedUser(request, false);
-
-PortletURL portletURL = renderResponse.createRenderURL();
-
-portletURL.setParameter("p_u_i_d", String.valueOf(selUser.getUserId()));
-portletURL.setParameter("mvcPath", "/account_users_admin/edit_account_user.jsp");
 %>
 
 <liferay-frontend:screen-navigation
@@ -32,7 +27,15 @@ portletURL.setParameter("mvcPath", "/account_users_admin/edit_account_user.jsp")
 	key="<%= AccountScreenNavigationEntryConstants.SCREEN_NAVIGATION_KEY_ACCOUNT_USER %>"
 	menubarCssClass="menubar menubar-transparent menubar-vertical-expand-lg"
 	navCssClass="col-lg-3"
-	portletURL="<%= portletURL %>"
+	portletURL='<%=
+		PortletURLBuilder.createRenderURL(
+			renderResponse
+		).setMVCPath(
+			"/account_users_admin/edit_account_user.jsp"
+		).setParameter(
+			"p_u_i_d", selUser.getUserId()
+		).buildPortletURL()
+	%>'
 />
 
 <%
@@ -62,11 +65,15 @@ AccountUserDisplay accountUserDisplay = AccountUserDisplay.of(selUser);
 		if (accountUserDisplay.isValidateEmailAddress()) {
 			context.put("validDomains", accountUserDisplay.getValidDomainsString());
 
-			PortletURL viewValidDomainsURL = renderResponse.createRenderURL();
-
-			viewValidDomainsURL.setParameter("mvcPath", "/account_users_admin/account_user/view_valid_domains.jsp");
-			viewValidDomainsURL.setParameter("validDomains", accountUserDisplay.getValidDomainsString());
-			viewValidDomainsURL.setWindowState(LiferayWindowState.POP_UP);
+			PortletURL viewValidDomainsURL = PortletURLBuilder.createRenderURL(
+				renderResponse
+			).setMVCPath(
+				"/account_users_admin/account_user/view_valid_domains.jsp"
+			).setParameter(
+				"validDomains", accountUserDisplay.getValidDomainsString()
+			).setWindowState(
+				LiferayWindowState.POP_UP
+			).buildPortletURL();
 
 			context.put("viewValidDomainsURL", viewValidDomainsURL.toString());
 		}

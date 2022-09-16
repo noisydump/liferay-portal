@@ -12,6 +12,8 @@
  * details.
  */
 
+import openWindow from './util/open_window';
+
 /**
  * Hides layout pane
  * @param {Object} options
@@ -20,10 +22,10 @@
 export function hideLayoutPane(options) {
 	options = options || {};
 
-	var obj = options.obj;
-	var pane = options.pane;
+	const object = options.obj;
+	let pane = options.pane;
 
-	if (obj && obj.checked) {
+	if (object && object.checked) {
 		pane = document.querySelector(pane);
 
 		if (pane) {
@@ -51,12 +53,12 @@ export function getLayoutIcons() {
 export function proposeLayout(options) {
 	options = options || {};
 
-	var namespace = options.namespace;
-	var reviewers = options.reviewers;
+	const namespace = options.namespace;
+	const reviewers = options.reviewers;
 
-	var contents = '<div><form action="' + options.url + '" method="post">';
+	let contents = '<div><form action="' + options.url + '" method="post">';
 
-	if (reviewers.length > 0) {
+	if (reviewers.length) {
 		contents +=
 			'<textarea name="' +
 			namespace +
@@ -66,7 +68,7 @@ export function proposeLayout(options) {
 			namespace +
 			'reviewUserId">';
 
-		for (var i = 0; i < reviewers.length; i++) {
+		for (let i = 0; i < reviewers.length; i++) {
 			contents +=
 				'<option value="' +
 				reviewers[i].userId +
@@ -93,7 +95,7 @@ export function proposeLayout(options) {
 
 	contents += '</form></div>';
 
-	Liferay.Util.openWindow({
+	openWindow({
 		dialog: {
 			destroyOnHide: true,
 		},
@@ -109,13 +111,13 @@ export function proposeLayout(options) {
 export function publishToLive(options) {
 	options = options || {};
 
-	Liferay.Util.openWindow({
+	openWindow({
 		dialog: {
 			constrain: true,
 			modal: true,
 			on: {
 				visibleChange(event) {
-					var instance = this;
+					const instance = this;
 
 					if (!event.newVal) {
 						instance.destroy();
@@ -136,10 +138,10 @@ export function publishToLive(options) {
 export function showLayoutPane(options) {
 	options = options || {};
 
-	var obj = options.obj;
-	var pane = options.pane;
+	const object = options.obj;
+	let pane = options.pane;
 
-	if (obj && obj.checked) {
+	if (object && object.checked) {
 		pane = document.querySelector(pane);
 
 		if (pane) {
@@ -156,11 +158,11 @@ export function showLayoutPane(options) {
 export function toggleLayoutDetails(options) {
 	options = options || {};
 
-	var detail = document.querySelector(options.detail);
-	var img = document.querySelector(options.toggle);
+	const detail = document.querySelector(options.detail);
+	const image = document.querySelector(options.toggle);
 
-	if (detail && img) {
-		var icon = themeDisplay.getPathThemeImages() + '/arrows/01_plus.png';
+	if (detail && image) {
+		let icon = themeDisplay.getPathThemeImages() + '/arrows/01_plus.png';
 
 		if (detail.classList.contains('hide')) {
 			detail.classList.remove('hide');
@@ -171,6 +173,6 @@ export function toggleLayoutDetails(options) {
 			detail.classList.add('hide');
 		}
 
-		img.setAttribute('src', icon);
+		image.setAttribute('src', icon);
 	}
 }

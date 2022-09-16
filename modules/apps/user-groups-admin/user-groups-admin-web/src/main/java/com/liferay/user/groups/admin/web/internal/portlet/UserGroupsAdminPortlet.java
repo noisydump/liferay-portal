@@ -14,7 +14,7 @@
 
 package com.liferay.user.groups.admin.web.internal.portlet;
 
-import com.liferay.petra.lang.SafeClosable;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.portal.kernel.exception.DuplicateUserGroupException;
 import com.liferay.portal.kernel.exception.NoSuchUserGroupException;
 import com.liferay.portal.kernel.exception.RequiredUserGroupException;
@@ -31,7 +31,7 @@ import com.liferay.portal.kernel.service.UserService;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.sites.kernel.util.SitesUtil;
+import com.liferay.sites.kernel.util.Sites;
 import com.liferay.user.groups.admin.constants.UserGroupsAdminPortletKeys;
 
 import java.io.IOException;
@@ -67,7 +67,8 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + UserGroupsAdminPortletKeys.USER_GROUPS_ADMIN,
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=administrator"
+		"javax.portlet.security-role-ref=administrator",
+		"javax.portlet.version=3.0"
 	},
 	service = Portlet.class
 )
@@ -99,8 +100,8 @@ public class UserGroupsAdminPortlet extends MVCPortlet {
 
 		UserGroup userGroup = null;
 
-		try (SafeClosable safeClosable =
-				ProxyModeThreadLocal.setWithSafeClosable(true)) {
+		try (SafeCloseable safeCloseable =
+				ProxyModeThreadLocal.setWithSafeCloseable(true)) {
 
 			if (userGroupId <= 0) {
 
@@ -133,7 +134,7 @@ public class UserGroupsAdminPortlet extends MVCPortlet {
 			boolean privateLayoutSetPrototypeLinkEnabled = ParamUtil.getBoolean(
 				actionRequest, "privateLayoutSetPrototypeLinkEnabled");
 
-			SitesUtil.updateLayoutSetPrototypesLinks(
+			_sites.updateLayoutSetPrototypesLinks(
 				userGroup.getGroup(), publicLayoutSetPrototypeId,
 				privateLayoutSetPrototypeId,
 				publicLayoutSetPrototypeLinkEnabled,
@@ -152,8 +153,8 @@ public class UserGroupsAdminPortlet extends MVCPortlet {
 		long[] removeUserIds = StringUtil.split(
 			ParamUtil.getString(actionRequest, "removeUserIds"), 0L);
 
-		try (SafeClosable safeClosable =
-				ProxyModeThreadLocal.setWithSafeClosable(true)) {
+		try (SafeCloseable safeCloseable =
+				ProxyModeThreadLocal.setWithSafeCloseable(true)) {
 
 			_userService.addUserGroupUsers(userGroupId, addUserIds);
 			_userService.unsetUserGroupUsers(userGroupId, removeUserIds);
@@ -206,17 +207,13 @@ public class UserGroupsAdminPortlet extends MVCPortlet {
 		return false;
 	}
 
-	@Reference(unbind = "-")
-	protected void setUserGroupService(UserGroupService userGroupService) {
-		_userGroupService = userGroupService;
-	}
+	@Reference
+	private Sites _sites;
 
-	@Reference(unbind = "-")
-	protected void setUserService(UserService userService) {
-		_userService = userService;
-	}
-
+	@Reference
 	private UserGroupService _userGroupService;
+
+	@Reference
 	private UserService _userService;
 
 }

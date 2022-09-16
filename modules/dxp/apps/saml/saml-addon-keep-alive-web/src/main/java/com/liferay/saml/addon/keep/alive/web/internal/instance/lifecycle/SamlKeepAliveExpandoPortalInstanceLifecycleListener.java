@@ -14,7 +14,6 @@
 
 package com.liferay.saml.addon.keep.alive.web.internal.instance.lifecycle;
 
-import com.liferay.expando.kernel.exception.NoSuchTableException;
 import com.liferay.expando.kernel.model.ExpandoColumn;
 import com.liferay.expando.kernel.model.ExpandoColumnConstants;
 import com.liferay.expando.kernel.model.ExpandoTable;
@@ -43,11 +42,11 @@ public class SamlKeepAliveExpandoPortalInstanceLifecycleListener
 
 	@Override
 	public void portalInstanceRegistered(Company company) throws Exception {
-		addExpandoColumn(company.getCompanyId(), SamlIdpSpConnection.class);
-		addExpandoColumn(company.getCompanyId(), SamlSpIdpConnection.class);
+		_addExpandoColumn(company.getCompanyId(), SamlIdpSpConnection.class);
+		_addExpandoColumn(company.getCompanyId(), SamlSpIdpConnection.class);
 	}
 
-	protected void addExpandoColumn(long companyId, Class<?> clazz)
+	private void _addExpandoColumn(long companyId, Class<?> clazz)
 		throws Exception {
 
 		if (_log.isDebugEnabled()) {
@@ -56,17 +55,10 @@ public class SamlKeepAliveExpandoPortalInstanceLifecycleListener
 					"Add field ", clazz.getName(), " for company ", companyId));
 		}
 
-		ExpandoTable expandoTable = null;
+		ExpandoTable expandoTable = _expandoTableLocalService.fetchDefaultTable(
+			companyId, clazz.getName());
 
-		try {
-			expandoTable = _expandoTableLocalService.getDefaultTable(
-				companyId, clazz.getName());
-		}
-		catch (NoSuchTableException noSuchTableException) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(noSuchTableException, noSuchTableException);
-			}
-
+		if (expandoTable == null) {
 			expandoTable = _expandoTableLocalService.addDefaultTable(
 				companyId, clazz.getName());
 		}

@@ -14,7 +14,6 @@
 
 package com.liferay.fragment.internal.processor;
 
-import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.processor.FragmentEntryProcessor;
 import com.liferay.fragment.processor.FragmentEntryProcessorContext;
@@ -22,13 +21,17 @@ import com.liferay.fragment.processor.FragmentEntryProcessorRegistry;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerListFactory;
 import com.liferay.osgi.service.tracker.collections.map.PropertyServiceReferenceComparator;
+import com.liferay.petra.lang.CentralizedThreadLocal;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
@@ -42,22 +45,6 @@ import org.osgi.service.component.annotations.Reference;
 @Component(immediate = true, service = FragmentEntryProcessorRegistry.class)
 public class FragmentEntryProcessorRegistryImpl
 	implements FragmentEntryProcessorRegistry {
-
-	@Override
-	public void deleteFragmentEntryLinkData(
-		FragmentEntryLink fragmentEntryLink) {
-
-		if (ExportImportThreadLocal.isImportInProcess()) {
-			return;
-		}
-
-		for (FragmentEntryProcessor fragmentEntryProcessor :
-				_serviceTrackerList) {
-
-			fragmentEntryProcessor.deleteFragmentEntryLinkData(
-				fragmentEntryLink);
-		}
-	}
 
 	@Override
 	public JSONArray getAvailableTagsJSONArray() {
@@ -116,7 +103,9 @@ public class FragmentEntryProcessorRegistryImpl
 				fragmentEntryProcessor.getDefaultEditableValuesJSONObject(
 					html, configuration);
 
-			if (defaultEditableValuesJSONObject != null) {
+			if ((defaultEditableValuesJSONObject != null) &&
+				(defaultEditableValuesJSONObject.length() > 0)) {
+
 				Class<?> clazz = fragmentEntryProcessor.getClass();
 
 				jsonObject.put(
@@ -167,16 +156,28 @@ public class FragmentEntryProcessorRegistryImpl
 	public void validateFragmentEntryHTML(String html, String configuration)
 		throws PortalException {
 
+		if (CompanyThreadLocal.isInitializingPortalInstance()) {
+			return;
+		}
+
+		Set<String> validHTMLs = _validHTMLsThreadLocal.get();
+
+		if (validHTMLs.contains(html)) {
+			return;
+		}
+
 		for (FragmentEntryProcessor fragmentEntryProcessor :
 				_serviceTrackerList) {
 
 			fragmentEntryProcessor.validateFragmentEntryHTML(
 				html, configuration);
 		}
+
+		validHTMLs.add(html);
 	}
 
 	@Activate
-	protected void activate(final BundleContext bundleContext) {
+	protected void activate(BundleContext bundleContext) {
 		_serviceTrackerList = ServiceTrackerListFactory.open(
 			bundleContext, FragmentEntryProcessor.class,
 			Collections.reverseOrder(
@@ -189,10 +190,15 @@ public class FragmentEntryProcessorRegistryImpl
 		_serviceTrackerList.close();
 	}
 
+	private static final ThreadLocal<Set<String>> _validHTMLsThreadLocal =
+		new CentralizedThreadLocal(
+			FragmentEntryProcessorRegistryImpl.class.getName() +
+				"._validHTMLsThreadLocal",
+			HashSet::new);
+
 	@Reference
 	private JSONFactory _jsonFactory;
 
-	private ServiceTrackerList<FragmentEntryProcessor, FragmentEntryProcessor>
-		_serviceTrackerList;
+	private ServiceTrackerList<FragmentEntryProcessor> _serviceTrackerList;
 
 }

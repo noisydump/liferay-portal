@@ -222,6 +222,27 @@ public class WorkflowLog implements Cloneable, Serializable {
 
 	protected String previousState;
 
+	public String getPreviousStateLabel() {
+		return previousStateLabel;
+	}
+
+	public void setPreviousStateLabel(String previousStateLabel) {
+		this.previousStateLabel = previousStateLabel;
+	}
+
+	public void setPreviousStateLabel(
+		UnsafeSupplier<String, Exception> previousStateLabelUnsafeSupplier) {
+
+		try {
+			previousStateLabel = previousStateLabelUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String previousStateLabel;
+
 	public Role getRole() {
 		return role;
 	}
@@ -261,6 +282,27 @@ public class WorkflowLog implements Cloneable, Serializable {
 	}
 
 	protected String state;
+
+	public String getStateLabel() {
+		return stateLabel;
+	}
+
+	public void setStateLabel(String stateLabel) {
+		this.stateLabel = stateLabel;
+	}
+
+	public void setStateLabel(
+		UnsafeSupplier<String, Exception> stateLabelUnsafeSupplier) {
+
+		try {
+			stateLabel = stateLabelUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String stateLabel;
 
 	public Type getType() {
 		return type;
@@ -343,12 +385,15 @@ public class WorkflowLog implements Cloneable, Serializable {
 
 	public static enum Type {
 
-		TASK_ASSIGN("TaskAssign"), TASK_COMPLETION("TaskCompletion"),
-		TASK_UPDATE("TaskUpdate"), TRANSITION("Transition");
+		NODE_ENTRY("NodeEntry"), TASK_ASSIGN("TaskAssign"),
+		TASK_COMPLETION("TaskCompletion"), TASK_UPDATE("TaskUpdate"),
+		TRANSITION("Transition");
 
 		public static Type create(String value) {
 			for (Type type : values()) {
-				if (Objects.equals(type.getValue(), value)) {
+				if (Objects.equals(type.getValue(), value) ||
+					Objects.equals(type.name(), value)) {
+
 					return type;
 				}
 			}

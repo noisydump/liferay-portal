@@ -65,16 +65,25 @@ long selPlid = ParamUtil.getLong(request, "selPlid", LayoutConstants.DEFAULT_PAR
 
 boolean configuredPublish = (exportImportConfiguration == null) ? false : true;
 
-PortletURL customPublishURL = renderResponse.createRenderURL();
-
-customPublishURL.setParameter("mvcRenderCommandName", "/export_import/publish_layouts");
-customPublishURL.setParameter(Constants.CMD, cmd);
-customPublishURL.setParameter("tabs1", privateLayout ? "private-pages" : "public-pages");
-customPublishURL.setParameter("groupId", String.valueOf(stagingGroupId));
-customPublishURL.setParameter("layoutSetBranchId", String.valueOf(layoutSetBranchId));
-customPublishURL.setParameter("privateLayout", String.valueOf(privateLayout));
-customPublishURL.setParameter("publishConfigurationButtons", "custom");
-customPublishURL.setParameter("selPlid", String.valueOf(selPlid));
+PortletURL customPublishURL = PortletURLBuilder.createRenderURL(
+	renderResponse
+).setMVCRenderCommandName(
+	"/export_import/publish_layouts"
+).setCMD(
+	cmd
+).setTabs1(
+	privateLayout ? "private-pages" : "public-pages"
+).setParameter(
+	"groupId", stagingGroupId
+).setParameter(
+	"layoutSetBranchId", layoutSetBranchId
+).setParameter(
+	"privateLayout", privateLayout
+).setParameter(
+	"publishConfigurationButtons", "custom"
+).setParameter(
+	"selPlid", selPlid
+).buildPortletURL();
 
 boolean localPublishing = true;
 
@@ -84,43 +93,37 @@ if ((liveGroup.isStaged() && liveGroup.isStagedRemotely()) || cmd.equals(Constan
 
 UnicodeProperties liveGroupTypeSettings = liveGroup.getTypeSettingsProperties();
 
-PortletURL publishTemplatesURL = renderResponse.createRenderURL();
+PortletURL publishTemplatesURL = PortletURLBuilder.createRenderURL(
+	renderResponse
+).setMVCRenderCommandName(
+	"/export_import/publish_layouts"
+).setCMD(
+	Constants.PUBLISH
+).setParameter(
+	"groupId", stagingGroupId
+).setParameter(
+	"layoutSetBranchId", layoutSetBranchId
+).setParameter(
+	"layoutSetBranchName", layoutSetBranchName
+).setParameter(
+	"localPublishing", localPublishing
+).setParameter(
+	"privateLayout", privateLayout
+).setParameter(
+	"publishConfigurationButtons", "saved"
+).buildPortletURL();
 
-publishTemplatesURL.setParameter("mvcRenderCommandName", "/export_import/publish_layouts");
-publishTemplatesURL.setParameter(Constants.CMD, Constants.PUBLISH);
-publishTemplatesURL.setParameter("groupId", String.valueOf(stagingGroupId));
-publishTemplatesURL.setParameter("layoutSetBranchId", String.valueOf(layoutSetBranchId));
-publishTemplatesURL.setParameter("layoutSetBranchName", layoutSetBranchName);
-publishTemplatesURL.setParameter("localPublishing", String.valueOf(localPublishing));
-publishTemplatesURL.setParameter("privateLayout", String.valueOf(privateLayout));
-publishTemplatesURL.setParameter("publishConfigurationButtons", "saved");
-
-PortletURL simplePublishRedirectURL = renderResponse.createRenderURL();
-
-simplePublishRedirectURL.setParameter("mvcRenderCommandName", "/export_import/publish_layouts");
-simplePublishRedirectURL.setParameter("groupId", String.valueOf(groupId));
-simplePublishRedirectURL.setParameter("privateLayout", String.valueOf(privateLayout));
-simplePublishRedirectURL.setParameter("quickPublish", Boolean.TRUE.toString());
-
-PortletURL simplePublishURL = renderResponse.createRenderURL();
-
-simplePublishURL.setParameter("mvcRenderCommandName", "/export_import/publish_layouts_simple");
-simplePublishURL.setParameter(Constants.CMD, "localPublishing ? Constants.PUBLISH_TO_LIVE : Constants.PUBLISH_TO_REMOTE");
-simplePublishURL.setParameter("redirect", simplePublishRedirectURL.toString());
-simplePublishURL.setParameter("lastImportUserName", user.getFullName());
-simplePublishURL.setParameter("lastImportUserUuid", String.valueOf(user.getUserUuid()));
-simplePublishURL.setParameter("layoutSetBranchId", String.valueOf(layoutSetBranchId));
-simplePublishURL.setParameter("layoutSetBranchName", layoutSetBranchName);
-simplePublishURL.setParameter("localPublishing", String.valueOf(localPublishing));
-simplePublishURL.setParameter("privateLayout", String.valueOf(privateLayout));
-simplePublishURL.setParameter("quickPublish", Boolean.TRUE.toString());
-simplePublishURL.setParameter("remoteAddress", liveGroupTypeSettings.getProperty("remoteAddress"));
-simplePublishURL.setParameter("remotePort", liveGroupTypeSettings.getProperty("remotePort"));
-simplePublishURL.setParameter("remotePathContext", liveGroupTypeSettings.getProperty("remotePathContext"));
-simplePublishURL.setParameter("remoteGroupId", liveGroupTypeSettings.getProperty("remoteGroupId"));
-simplePublishURL.setParameter("secureConnection", liveGroupTypeSettings.getProperty("secureConnection"));
-simplePublishURL.setParameter("sourceGroupId", String.valueOf(stagingGroupId));
-simplePublishURL.setParameter("targetGroupId", String.valueOf(liveGroupId));
+PortletURL simplePublishRedirectURL = PortletURLBuilder.createRenderURL(
+	renderResponse
+).setMVCRenderCommandName(
+	"/export_import/publish_layouts"
+).setParameter(
+	"groupId", groupId
+).setParameter(
+	"privateLayout", privateLayout
+).setParameter(
+	"quickPublish", true
+).buildPortletURL();
 %>
 
 <c:if test='<%= !publishConfigurationButtons.equals("template") %>'>
@@ -158,7 +161,45 @@ simplePublishURL.setParameter("targetGroupId", String.valueOf(liveGroupId));
 			<clay:content-col>
 				<clay:link
 					displayType="link"
-					href="<%= simplePublishURL.toString() %>"
+					href='<%=
+						PortletURLBuilder.createRenderURL(
+							renderResponse
+						).setMVCRenderCommandName(
+							"/export_import/publish_layouts_simple"
+						).setCMD(
+							"localPublishing ? Constants.PUBLISH_TO_LIVE : Constants.PUBLISH_TO_REMOTE"
+						).setRedirect(
+							simplePublishRedirectURL
+						).setParameter(
+							"lastImportUserName", user.getFullName()
+						).setParameter(
+							"lastImportUserUuid", user.getUserUuid()
+						).setParameter(
+							"layoutSetBranchId", layoutSetBranchId
+						).setParameter(
+							"layoutSetBranchName", layoutSetBranchName
+						).setParameter(
+							"localPublishing", localPublishing
+						).setParameter(
+							"privateLayout", privateLayout
+						).setParameter(
+							"quickPublish", true
+						).setParameter(
+							"remoteAddress", liveGroupTypeSettings.getProperty("remoteAddress")
+						).setParameter(
+							"remoteGroupId", liveGroupTypeSettings.getProperty("remoteGroupId")
+						).setParameter(
+							"remotePathContext", liveGroupTypeSettings.getProperty("remotePathContext")
+						).setParameter(
+							"remotePort", liveGroupTypeSettings.getProperty("remotePort")
+						).setParameter(
+							"secureConnection", liveGroupTypeSettings.getProperty("secureConnection")
+						).setParameter(
+							"sourceGroupId", stagingGroupId
+						).setParameter(
+							"targetGroupId", liveGroupId
+						).buildString()
+					%>'
 					label="switch-to-simple-publish-process"
 					small="<%= true %>"
 					type="button"

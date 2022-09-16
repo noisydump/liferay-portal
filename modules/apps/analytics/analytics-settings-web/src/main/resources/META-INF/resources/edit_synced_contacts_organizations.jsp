@@ -17,10 +17,13 @@
 <%@ include file="/init.jsp" %>
 
 <%
-PortletURL portletURL = renderResponse.createRenderURL();
-
-portletURL.setParameter("mvcRenderCommandName", "/configuration_admin/view_configuration_screen");
-portletURL.setParameter("configurationScreenKey", "2-synced-contact-data");
+PortletURL portletURL = PortletURLBuilder.createRenderURL(
+	renderResponse
+).setMVCRenderCommandName(
+	"/configuration_admin/view_configuration_screen"
+).setParameter(
+	"configurationScreenKey", "2-synced-contact-data"
+).buildPortletURL();
 
 String redirect = ParamUtil.getString(request, "redirect", portletURL.toString());
 
@@ -68,8 +71,8 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(resourceBundle, "
 	OrganizationDisplayContext organizationDisplayContext = new OrganizationDisplayContext(renderRequest, renderResponse);
 	%>
 
-	<clay:management-toolbar-v2
-		displayContext="<%= new OrganizationManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, organizationDisplayContext) %>"
+	<clay:management-toolbar
+		managementToolbarDisplayContext="<%= new OrganizationManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, organizationDisplayContext) %>"
 	/>
 
 	<aui:form action="<%= editSyncedContactsFieldsURL %>" method="post" name="fm">

@@ -2,13 +2,17 @@
 <head>
 <title>WCConfiguration</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">WCConfiguration</td></tr>
 </thead>
+
 <tbody>
+
 <!--NAVIGATION-->
+
 <tr>
 	<td>NAVIGATION_WEB_CONTENT_ADDED_EMAIL</td>
 	<td>//*[contains(@class,'nav-link') and contains(.,'Web Content Added Email')]</td>

@@ -30,6 +30,10 @@ public class TranslationEntryLocalServiceWrapper
 	implements ServiceWrapper<TranslationEntryLocalService>,
 			   TranslationEntryLocalService {
 
+	public TranslationEntryLocalServiceWrapper() {
+		this(null);
+	}
+
 	public TranslationEntryLocalServiceWrapper(
 		TranslationEntryLocalService translationEntryLocalService) {
 
@@ -116,13 +120,17 @@ public class TranslationEntryLocalServiceWrapper
 	}
 
 	@Override
-	public void deleteTranslationEntries(long classNameId, long classPK) {
+	public void deleteTranslationEntries(long classNameId, long classPK)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
 		_translationEntryLocalService.deleteTranslationEntries(
 			classNameId, classPK);
 	}
 
 	@Override
-	public void deleteTranslationEntries(String className, long classPK) {
+	public void deleteTranslationEntries(String className, long classPK)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
 		_translationEntryLocalService.deleteTranslationEntries(
 			className, classPK);
 	}
@@ -167,6 +175,13 @@ public class TranslationEntryLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _translationEntryLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _translationEntryLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -407,6 +422,14 @@ public class TranslationEntryLocalServiceWrapper
 	@Override
 	public int getTranslationEntriesCount() {
 		return _translationEntryLocalService.getTranslationEntriesCount();
+	}
+
+	@Override
+	public int getTranslationEntriesCount(
+		String className, long classPK, int[] statuses, boolean exclude) {
+
+		return _translationEntryLocalService.getTranslationEntriesCount(
+			className, classPK, statuses, exclude);
 	}
 
 	/**

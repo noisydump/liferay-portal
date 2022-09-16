@@ -17,20 +17,24 @@ package com.liferay.adaptive.media.journal.web.internal.messaging;
 import com.liferay.journal.util.JournalContent;
 import com.liferay.portal.kernel.messaging.Message;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
 
 /**
  * @author Alejandro Tardín
  */
-@RunWith(MockitoJUnitRunner.class)
 public class AMJournalImageConfigurationMessageListenerTest {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Before
 	public void setUp() {
@@ -53,8 +57,7 @@ public class AMJournalImageConfigurationMessageListenerTest {
 	private final AMJournalImageConfigurationMessageListener
 		_amJournalImageConfigurationMessageListener =
 			new AMJournalImageConfigurationMessageListener();
-
-	@Mock
-	private JournalContent _journalContent;
+	private final JournalContent _journalContent = Mockito.mock(
+		JournalContent.class);
 
 }

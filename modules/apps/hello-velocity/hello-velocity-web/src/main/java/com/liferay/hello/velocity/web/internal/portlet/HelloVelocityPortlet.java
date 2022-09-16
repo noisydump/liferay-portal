@@ -15,8 +15,10 @@
 package com.liferay.hello.velocity.web.internal.portlet;
 
 import com.liferay.hello.velocity.web.internal.constants.HelloVelocityPortletKeys;
-import com.liferay.petra.content.ContentUtil;
 import com.liferay.petra.string.StringPool;
+import com.liferay.petra.string.StringUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.template.StringTemplateResource;
 import com.liferay.portal.kernel.template.Template;
@@ -24,6 +26,8 @@ import com.liferay.portal.kernel.template.TemplateConstants;
 import com.liferay.portal.kernel.template.TemplateManagerUtil;
 import com.liferay.portal.kernel.template.TemplateResource;
 import com.liferay.portlet.VelocityPortlet;
+
+import java.io.IOException;
 
 import javax.portlet.Portlet;
 import javax.portlet.PortletRequest;
@@ -64,18 +68,6 @@ public class HelloVelocityPortlet extends VelocityPortlet {
 		return name;
 	}
 
-	protected TemplateResource getTemplateResource(String templateId) {
-		if (templateId.indexOf(StringPool.SLASH) != 0) {
-			templateId = StringPool.SLASH.concat(templateId);
-		}
-
-		String content = ContentUtil.get(
-			HelloVelocityPortlet.class.getClassLoader(),
-			"META-INF/resources" + templateId);
-
-		return new StringTemplateResource(templateId, content);
-	}
-
 	@Override
 	protected void mergeTemplate(
 			String templateId, PortletRequest portletRequest,
@@ -83,7 +75,7 @@ public class HelloVelocityPortlet extends VelocityPortlet {
 		throws Exception {
 
 		Template template = TemplateManagerUtil.getTemplate(
-			TemplateConstants.LANG_TYPE_VM, getTemplateResource(templateId),
+			TemplateConstants.LANG_TYPE_VM, _getTemplateResource(templateId),
 			false);
 
 		prepareTemplate(template, portletRequest, portletResponse);
@@ -97,5 +89,29 @@ public class HelloVelocityPortlet extends VelocityPortlet {
 	)
 	protected void setRelease(Release release) {
 	}
+
+	private TemplateResource _getTemplateResource(String templateId) {
+		if (templateId.indexOf(StringPool.SLASH) != 0) {
+			templateId = StringPool.SLASH.concat(templateId);
+		}
+
+		String content = null;
+
+		try {
+			content = StringUtil.read(
+				HelloVelocityPortlet.class.getClassLoader(),
+				"META-INF/resources" + templateId);
+		}
+		catch (IOException ioException) {
+			_log.error(
+				"Unable to read the content for META-INF/resources" +
+					templateId);
+		}
+
+		return new StringTemplateResource(templateId, content);
+	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		HelloVelocityPortlet.class);
 
 }

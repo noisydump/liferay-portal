@@ -1,5 +1,41 @@
 # Liferay Gradle Plugins Jasper JSPC Change Log
 
+## 2.0.13 - 2021-06-21
+
+### Commits
+- [LPS-134306] Sort (634259c2e9)
+
+## 2.0.12 - 2021-06-17
+
+### Commits
+- [LPS-134306] Disable tag pooling in precompiled jsps (380d4ebed2)
+- [LPS-130505] Revert "LPS-130505 SF, no need to call methods" (d4477c5996)
+- [LPS-130505] SF, no need to call methods (54557cd107)
+
+## 2.0.11 - 2021-03-30
+
+### Commits
+- [LPS-129870] Exclude com.liferay.portal dependencies (f8b8323c67)
+
+## 2.0.10 - 2020-11-02
+
+### Commits
+- [LPS-111291] Update readme (a87d2593e9)
+- [LPS-111291] Gradle 5.6.4 tests (40f4f9e2f3)
+- [LPS-111291] Update README.markdown (eea12b7f8f)
+- [LPS-111291] Update plugins Gradle version (003c3832b0)
+
+### Dependencies
+- [LPS-111291] Update the com.liferay.gradle.util dependency to version 1.0.44.
+- [LPS-115020] Update the com.liferay.gradle.util dependency to version 1.0.43.
+- [LPS-88645] Update the com.liferay.gradle.util dependency to version 1.0.42.
+- [LPS-88645] Update the com.liferay.gradle.util dependency to version 1.0.41.
+- [LPS-113624] Update the com.liferay.gradle.util dependency to version 1.0.40.
+- [LPS-110422] Update the com.liferay.gradle.util dependency to version 1.0.39.
+- [LPS-111896] Update the com.liferay.gradle.util dependency to version 1.0.38.
+- [LPS-88645] Update the com.liferay.gradle.util dependency to version 1.0.37.
+- [LPS-110283] Update the com.liferay.gradle.util dependency to version 1.0.36.
+
 ## 2.0.9 - 2020-03-06
 
 ### Commits
@@ -281,6 +317,7 @@ are closures, they will be evaluated while running the tasks (b6cddc02e0)
 [LPS-86589]: https://issues.liferay.com/browse/LPS-86589
 [LPS-87192]: https://issues.liferay.com/browse/LPS-87192
 [LPS-87466]: https://issues.liferay.com/browse/LPS-87466
+[LPS-88645]: https://issues.liferay.com/browse/LPS-88645
 [LPS-96095]: https://issues.liferay.com/browse/LPS-96095
 [LPS-96247]: https://issues.liferay.com/browse/LPS-96247
 [LPS-98877]: https://issues.liferay.com/browse/LPS-98877
@@ -290,4 +327,13 @@ are closures, they will be evaluated while running the tasks (b6cddc02e0)
 [LPS-105380]: https://issues.liferay.com/browse/LPS-105380
 [LPS-106149]: https://issues.liferay.com/browse/LPS-106149
 [LPS-109312]: https://issues.liferay.com/browse/LPS-109312
+[LPS-110283]: https://issues.liferay.com/browse/LPS-110283
+[LPS-110422]: https://issues.liferay.com/browse/LPS-110422
+[LPS-111291]: https://issues.liferay.com/browse/LPS-111291
+[LPS-111896]: https://issues.liferay.com/browse/LPS-111896
+[LPS-113624]: https://issues.liferay.com/browse/LPS-113624
+[LPS-115020]: https://issues.liferay.com/browse/LPS-115020
+[LPS-129870]: https://issues.liferay.com/browse/LPS-129870
+[LPS-130505]: https://issues.liferay.com/browse/LPS-130505
+[LPS-134306]: https://issues.liferay.com/browse/LPS-134306
 [LRDOCS-4129]: https://issues.liferay.com/browse/LRDOCS-4129

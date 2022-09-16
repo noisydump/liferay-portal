@@ -35,13 +35,19 @@ for (ProductNavigationControlMenuCategory productNavigationControlMenuCategory :
 	productNavigationControlMenuEntriesMap.put(productNavigationControlMenuCategory, productNavigationControlMenuEntries);
 
 	if (!productNavigationControlMenuEntries.isEmpty()) {
-		hasControlMenuEntries = true;
+		for (ProductNavigationControlMenuEntry productNavigationControlMenuEntry : productNavigationControlMenuEntries) {
+			if (productNavigationControlMenuEntry.isRelevant(request)) {
+				hasControlMenuEntries = true;
+
+				break;
+			}
+		}
 	}
 }
 %>
 
 <c:if test="<%= hasControlMenuEntries %>">
-	<div class="control-menu-container">
+	<div class="cadmin control-menu-container">
 		<liferay-util:dynamic-include key="com.liferay.product.navigation.taglib#/page.jsp#pre" />
 
 		<div class="control-menu control-menu-level-1 control-menu-level-1-<%= applicationsMenuApp ? "light" : "dark" %> d-print-none" data-qa-id="controlMenu" id="<portlet:namespace />ControlMenu">
@@ -60,7 +66,7 @@ for (ProductNavigationControlMenuCategory productNavigationControlMenuCategory :
 
 								<%
 								for (ProductNavigationControlMenuEntry productNavigationControlMenuEntry : entry.getValue()) {
-									if (productNavigationControlMenuEntry.includeIcon(request, PipingServletResponse.createPipingServletResponse(pageContext))) {
+									if (productNavigationControlMenuEntry.includeIcon(request, PipingServletResponseFactory.createPipingServletResponse(pageContext))) {
 										continue;
 									}
 								%>
@@ -72,7 +78,6 @@ for (ProductNavigationControlMenuCategory productNavigationControlMenuCategory :
 											iconCssClass="<%= productNavigationControlMenuEntry.getIconCssClass(request) %>"
 											label="<%= false %>"
 											linkCssClass='<%= "control-menu-icon " + productNavigationControlMenuEntry.getLinkCssClass(request) %>'
-											markupView="<%= productNavigationControlMenuEntry.getMarkupView(request) %>"
 											message="<%= productNavigationControlMenuEntry.getLabel(locale) %>"
 											method="get"
 											url="<%= productNavigationControlMenuEntry.getURL(request) %>"
@@ -100,7 +105,7 @@ for (ProductNavigationControlMenuCategory productNavigationControlMenuCategory :
 					List<ProductNavigationControlMenuEntry> productNavigationControlMenuEntries = productNavigationControlMenuEntriesMap.get(productNavigationControlMenuCategory);
 
 					for (ProductNavigationControlMenuEntry productNavigationControlMenuEntry : productNavigationControlMenuEntries) {
-						productNavigationControlMenuEntry.includeBody(request, PipingServletResponse.createPipingServletResponse(pageContext));
+						productNavigationControlMenuEntry.includeBody(request, PipingServletResponseFactory.createPipingServletResponse(pageContext));
 					}
 				}
 				%>
@@ -120,13 +125,13 @@ for (ProductNavigationControlMenuCategory productNavigationControlMenuCategory :
 			'#<portlet:namespace />ControlMenu [data-toggle="liferay-sidenav"]'
 		);
 
-		var sidenavInstances = Array.from(sidenavToggles).map(function (toggle) {
-			return Liferay.SideNavigation.instance(toggle);
-		});
+		var sidenavInstances = Array.from(sidenavToggles)
+			.map((toggle) => Liferay.SideNavigation.instance(toggle))
+			.filter((instance) => instance);
 
-		sidenavInstances.forEach(function (instance) {
-			instance.on('openStart.lexicon.sidenav', function (event, source) {
-				sidenavInstances.forEach(function (sidenav) {
+		sidenavInstances.forEach((instance) => {
+			instance.on('openStart.lexicon.sidenav', (event, source) => {
+				sidenavInstances.forEach((sidenav) => {
 					if (sidenav !== source) {
 						sidenav.hide();
 					}

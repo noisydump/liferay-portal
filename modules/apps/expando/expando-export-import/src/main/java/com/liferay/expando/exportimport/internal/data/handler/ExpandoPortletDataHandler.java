@@ -85,7 +85,7 @@ public class ExpandoPortletDataHandler extends BasePortletDataHandler {
 
 	@Override
 	protected String doExportData(
-			final PortletDataContext portletDataContext, String portletId,
+			PortletDataContext portletDataContext, String portletId,
 			PortletPreferences portletPreferences)
 		throws Exception {
 
@@ -168,31 +168,14 @@ public class ExpandoPortletDataHandler extends BasePortletDataHandler {
 	}
 
 	@Reference(
-		target = "(model.class.name=com.liferay.expando.kernel.model.adapter.StagedExpandoColumn)",
-		unbind = "-"
+		target = "(model.class.name=com.liferay.expando.kernel.model.adapter.StagedExpandoColumn)"
 	)
-	protected void setStagedExpandoColumnStagedModelRepository(
-		StagedModelRepository<StagedExpandoColumn>
-			stagedExpandoColumnStagedModelRepository) {
-
-		_stagedExpandoColumnStagedModelRepository =
-			stagedExpandoColumnStagedModelRepository;
-	}
-
-	@Reference(
-		target = "(model.class.name=com.liferay.expando.kernel.model.adapter.StagedExpandoTable)",
-		unbind = "-"
-	)
-	protected void setStagedExpandoTableStagedModelRepository(
-		StagedModelRepository<StagedExpandoTable>
-			stagedExpandoTableStagedModelRepository) {
-
-		_stagedExpandoTableStagedModelRepository =
-			stagedExpandoTableStagedModelRepository;
-	}
-
 	private StagedModelRepository<StagedExpandoColumn>
 		_stagedExpandoColumnStagedModelRepository;
+
+	@Reference(
+		target = "(model.class.name=com.liferay.expando.kernel.model.adapter.StagedExpandoTable)"
+	)
 	private StagedModelRepository<StagedExpandoTable>
 		_stagedExpandoTableStagedModelRepository;
 

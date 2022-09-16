@@ -59,7 +59,7 @@ public class WorkflowTaskAssignToMeSerDes {
 		sb.append("{");
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+			"yyyy-MM-dd'T'HH:mm:ssXX");
 
 		if (workflowTaskAssignToMe.getComment() != null) {
 			if (sb.length() > 1) {
@@ -123,7 +123,7 @@ public class WorkflowTaskAssignToMeSerDes {
 		Map<String, String> map = new TreeMap<>();
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+			"yyyy-MM-dd'T'HH:mm:ssXX");
 
 		if (workflowTaskAssignToMe.getComment() == null) {
 			map.put("comment", null);
@@ -191,9 +191,6 @@ public class WorkflowTaskAssignToMeSerDes {
 						Long.valueOf((String)jsonParserFieldValue));
 				}
 			}
-			else if (jsonParserFieldName.equals("status")) {
-				throw new IllegalArgumentException();
-			}
 		}
 
 	}
@@ -222,7 +219,7 @@ public class WorkflowTaskAssignToMeSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -258,7 +255,7 @@ public class WorkflowTaskAssignToMeSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

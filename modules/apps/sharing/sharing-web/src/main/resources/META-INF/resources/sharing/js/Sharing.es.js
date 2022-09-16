@@ -25,7 +25,7 @@ import ClayIcon from '@clayui/icon';
 import ClayModal from '@clayui/modal';
 import ClayMultiSelect from '@clayui/multi-select';
 import ClaySticker from '@clayui/sticker';
-import {fetch, objectToFormData} from 'frontend-js-web';
+import {fetch, getOpener, objectToFormData, sub} from 'frontend-js-web';
 import React, {useCallback, useRef, useState} from 'react';
 
 function filterDuplicateItems(items) {
@@ -96,16 +96,16 @@ const Sharing = ({
 	const [multiSelectValue, setMultiSelectValue] = useState('');
 	const [allowSharingChecked, setAllowSharingChecked] = useState(true);
 	const [sharingPermission, setSharingPermission] = useState('VIEW');
-	const emailValidationInProgress = useRef(false);
+	const emailValidationInProgressRef = useRef(false);
 
 	const closeDialog = () => {
-		Liferay.Util.getOpener().Liferay.fire('closeModal', {
+		getOpener().Liferay.fire('closeModal', {
 			id: 'sharingDialog',
 		});
 	};
 
 	const showNotification = (message, error) => {
-		const parentOpenToast = Liferay.Util.getOpener().Liferay.Util.openToast;
+		const parentOpenToast = getOpener().Liferay.Util.openToast;
 
 		const openToastParams = {message};
 
@@ -170,7 +170,7 @@ const Sharing = ({
 
 	const handleItemsChange = useCallback(
 		(items) => {
-			emailValidationInProgress.current = true;
+			emailValidationInProgressRef.current = true;
 
 			Promise.all(
 				items.map((item) => {
@@ -183,7 +183,7 @@ const Sharing = ({
 
 					if (!isEmailAddressValid(item.value)) {
 						return Promise.resolve({
-							error: Liferay.Util.sub(
+							error: sub(
 								Liferay.Language.get(
 									'x-is-not-a-valid-email-address'
 								),
@@ -202,7 +202,7 @@ const Sharing = ({
 						.then((response) => response.json())
 						.then(({userExists}) => ({
 							error: !userExists
-								? Liferay.Util.sub(
+								? sub(
 										Liferay.Language.get(
 											'user-x-does-not-exist'
 										),
@@ -213,7 +213,7 @@ const Sharing = ({
 						}));
 				})
 			).then((results) => {
-				emailValidationInProgress.current = false;
+				emailValidationInProgressRef.current = false;
 
 				const erroredResults = results.filter(({error}) => !!error);
 
@@ -221,7 +221,7 @@ const Sharing = ({
 					erroredResults.map(({error}) => error)
 				);
 
-				if (erroredResults.length === 0) {
+				if (!erroredResults.length) {
 					setMultiSelectValue('');
 				}
 
@@ -242,12 +242,14 @@ const Sharing = ({
 	);
 
 	const handleChange = useCallback((value) => {
-		if (!emailValidationInProgress.current) {
+		if (!emailValidationInProgressRef.current) {
 			setMultiSelectValue(value);
+
+			if (value.trim() === '') {
+				setEmailAddressErrorMessages([]);
+			}
 		}
 	}, []);
-
-	const multiSelectFilter = useCallback(() => true, []);
 
 	const {resource} = useResource({
 		fetchOptions: {
@@ -281,9 +283,7 @@ const Sharing = ({
 							</label>
 
 							<ClayMultiSelect
-								filter={multiSelectFilter}
 								inputName={`${portletNamespace}userEmailAddress`}
-								inputValue={multiSelectValue}
 								items={selectedItems}
 								menuRenderer={SharingAutocomplete}
 								onChange={handleChange}
@@ -307,7 +307,9 @@ const Sharing = ({
 										  })
 										: []
 								}
+								value={multiSelectValue}
 							/>
+
 							<ClayForm.FeedbackGroup>
 								<ClayForm.Text>
 									{Liferay.Language.get(
@@ -316,7 +318,7 @@ const Sharing = ({
 								</ClayForm.Text>
 							</ClayForm.FeedbackGroup>
 
-							{emailAddressErrorMessages.length > 0 && (
+							{!!emailAddressErrorMessages.length && (
 								<ClayForm.FeedbackGroup>
 									{emailAddressErrorMessages.map(
 										(emailAddressErrorMessage) => (
@@ -353,10 +355,10 @@ const Sharing = ({
 				<ClayForm.Group>
 					<ClayRadioGroup
 						name={`${portletNamespace}sharingEntryPermissionDisplayActionId`}
-						onSelectedValueChange={(permission) =>
+						onChange={(permission) =>
 							setSharingPermission(permission)
 						}
-						selectedValue={sharingPermission}
+						value={sharingPermission}
 					>
 						{sharingEntryPermissionDisplays.map((display) => (
 							<ClayRadio
@@ -392,7 +394,15 @@ const Sharing = ({
 							{Liferay.Language.get('cancel')}
 						</ClayButton>
 
-						<ClayButton displayType="primary" type="submit">
+						<ClayButton
+							disabled={
+								!selectedItems.length ||
+								!!emailAddressErrorMessages.length ||
+								multiSelectValue.trim() !== ''
+							}
+							displayType="primary"
+							type="submit"
+						>
 							{Liferay.Language.get('share')}
 						</ClayButton>
 					</ClayButton.Group>

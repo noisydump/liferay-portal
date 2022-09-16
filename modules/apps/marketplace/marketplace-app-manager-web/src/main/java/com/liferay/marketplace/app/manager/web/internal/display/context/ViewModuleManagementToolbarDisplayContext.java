@@ -18,6 +18,7 @@ import com.liferay.marketplace.app.manager.web.internal.util.AppDisplay;
 import com.liferay.marketplace.app.manager.web.internal.util.AppDisplayFactoryUtil;
 import com.liferay.marketplace.app.manager.web.internal.util.BundleManagerUtil;
 import com.liferay.marketplace.app.manager.web.internal.util.comparator.ModuleServiceReferenceComparator;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
@@ -27,7 +28,6 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -64,27 +64,24 @@ public class ViewModuleManagementToolbarDisplayContext
 
 		AppDisplay appDisplay = null;
 
-		List<Bundle> allBundles = BundleManagerUtil.getBundles();
-
 		if (Validator.isNumber(app)) {
 			appDisplay = AppDisplayFactoryUtil.getAppDisplay(
-				allBundles, GetterUtil.getLong(app));
+				BundleManagerUtil.getBundles(), GetterUtil.getLong(app));
 		}
 
 		if (appDisplay == null) {
 			appDisplay = AppDisplayFactoryUtil.getAppDisplay(
-				allBundles, app, httpServletRequest.getLocale());
+				BundleManagerUtil.getBundles(), app,
+				httpServletRequest.getLocale());
 		}
 
 		return appDisplay;
 	}
 
 	public Bundle getBundle() {
-		String symbolicName = ParamUtil.getString(
-			httpServletRequest, "symbolicName");
-		String version = ParamUtil.getString(httpServletRequest, "version");
-
-		return BundleManagerUtil.getBundle(symbolicName, version);
+		return BundleManagerUtil.getBundle(
+			ParamUtil.getString(httpServletRequest, "symbolicName"),
+			ParamUtil.getString(httpServletRequest, "version"));
 	}
 
 	public String getPluginType() {
@@ -94,18 +91,23 @@ public class ViewModuleManagementToolbarDisplayContext
 
 	@Override
 	public PortletURL getPortletURL() {
-		PortletURL portletURL = liferayPortletResponse.createRenderURL();
-
-		portletURL.setParameter("mvcPath", "/view_module.jsp");
-		portletURL.setParameter("app", getApp());
-
 		Bundle bundle = getBundle();
 
-		portletURL.setParameter("symbolicName", bundle.getSymbolicName());
-		portletURL.setParameter("version", String.valueOf(bundle.getVersion()));
-
-		portletURL.setParameter("pluginType", getPluginType());
-		portletURL.setParameter("orderByType", getOrderByType());
+		PortletURL portletURL = PortletURLBuilder.createRenderURL(
+			liferayPortletResponse
+		).setMVCPath(
+			"/view_module.jsp"
+		).setParameter(
+			"app", getApp()
+		).setParameter(
+			"orderByType", getOrderByType()
+		).setParameter(
+			"pluginType", getPluginType()
+		).setParameter(
+			"symbolicName", bundle.getSymbolicName()
+		).setParameter(
+			"version", bundle.getVersion()
+		).buildPortletURL();
 
 		if (_searchContainer != null) {
 			portletURL.setParameter(
@@ -147,45 +149,26 @@ public class ViewModuleManagementToolbarDisplayContext
 			Collections.<ServiceReference<?>>emptyList();
 
 		if (pluginType.equals("portlets")) {
-			Collection<ServiceReference<Portlet>> serviceReferenceCollection =
-				bundleContext.getServiceReferences(
-					Portlet.class,
-					"(service.bundleid=" + bundle.getBundleId() + ")");
-
-			serviceReferences = new ArrayList<>(serviceReferenceCollection);
-
 			serviceReferences = ListUtil.sort(
-				serviceReferences,
+				new ArrayList<>(
+					bundleContext.getServiceReferences(
+						Portlet.class,
+						"(service.bundleid=" + bundle.getBundleId() + ")")),
 				new ModuleServiceReferenceComparator(
 					"javax.portlet.display-name", getOrderByType()));
 		}
 		else {
-			ServiceReference<?>[] serviceReferenceArray =
-				(ServiceReference<?>[])bundleContext.getServiceReferences(
-					(String)null,
-					"(&(component.id=*)(service.bundleid=" +
-						bundle.getBundleId() + "))");
-
-			serviceReferences = ListUtil.fromArray(serviceReferenceArray);
-
 			serviceReferences = ListUtil.sort(
-				serviceReferences,
+				ListUtil.fromArray(
+					(ServiceReference<?>[])bundleContext.getServiceReferences(
+						(String)null,
+						"(&(component.id=*)(service.bundleid=" +
+							bundle.getBundleId() + "))")),
 				new ModuleServiceReferenceComparator(
 					"component.name", getOrderByType()));
 		}
 
-		int end = searchContainer.getEnd();
-
-		if (end > serviceReferences.size()) {
-			end = serviceReferences.size();
-		}
-
-		List<Object> results = new ArrayList<>(serviceReferences);
-
-		searchContainer.setResults(
-			results.subList(searchContainer.getStart(), end));
-
-		searchContainer.setTotal(serviceReferences.size());
+		searchContainer.setResultsAndTotal(new ArrayList<>(serviceReferences));
 
 		_searchContainer = searchContainer;
 

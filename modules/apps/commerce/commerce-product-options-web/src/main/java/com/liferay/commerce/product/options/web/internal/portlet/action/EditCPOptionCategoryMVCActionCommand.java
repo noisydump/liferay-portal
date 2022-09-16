@@ -28,7 +28,6 @@ import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.StringUtil;
 
 import java.util.Locale;
 import java.util.Map;
@@ -52,29 +51,6 @@ import org.osgi.service.component.annotations.Reference;
 )
 public class EditCPOptionCategoryMVCActionCommand extends BaseMVCActionCommand {
 
-	protected void deleteCPOptionCategories(ActionRequest actionRequest)
-		throws Exception {
-
-		long[] deleteCPOptionCategoryIds = null;
-
-		long cpOptionCategoryId = ParamUtil.getLong(
-			actionRequest, "cpOptionCategoryId");
-
-		if (cpOptionCategoryId > 0) {
-			deleteCPOptionCategoryIds = new long[] {cpOptionCategoryId};
-		}
-		else {
-			deleteCPOptionCategoryIds = StringUtil.split(
-				ParamUtil.getString(actionRequest, "deleteCPOptionCategoryIds"),
-				0L);
-		}
-
-		for (long deleteCPOptionCategoryId : deleteCPOptionCategoryIds) {
-			_cpOptionCategoryService.deleteCPOptionCategory(
-				deleteCPOptionCategoryId);
-		}
-	}
-
 	@Override
 	protected void doProcessAction(
 			ActionRequest actionRequest, ActionResponse actionResponse)
@@ -84,12 +60,12 @@ public class EditCPOptionCategoryMVCActionCommand extends BaseMVCActionCommand {
 
 		try {
 			if (cmd.equals(Constants.DELETE)) {
-				deleteCPOptionCategories(actionRequest);
+				_deleteCPOptionCategories(actionRequest);
 			}
 			else if (cmd.equals(Constants.ADD) ||
 					 cmd.equals(Constants.UPDATE)) {
 
-				updateCPOptionCategory(actionRequest);
+				_updateCPOptionCategory(actionRequest);
 			}
 		}
 		catch (Exception exception) {
@@ -116,7 +92,29 @@ public class EditCPOptionCategoryMVCActionCommand extends BaseMVCActionCommand {
 		}
 	}
 
-	protected CPOptionCategory updateCPOptionCategory(
+	private void _deleteCPOptionCategories(ActionRequest actionRequest)
+		throws Exception {
+
+		long[] deleteCPOptionCategoryIds = null;
+
+		long cpOptionCategoryId = ParamUtil.getLong(
+			actionRequest, "cpOptionCategoryId");
+
+		if (cpOptionCategoryId > 0) {
+			deleteCPOptionCategoryIds = new long[] {cpOptionCategoryId};
+		}
+		else {
+			deleteCPOptionCategoryIds = ParamUtil.getLongValues(
+				actionRequest, "rowIds");
+		}
+
+		for (long deleteCPOptionCategoryId : deleteCPOptionCategoryIds) {
+			_cpOptionCategoryService.deleteCPOptionCategory(
+				deleteCPOptionCategoryId);
+		}
+	}
+
+	private CPOptionCategory _updateCPOptionCategory(
 			ActionRequest actionRequest)
 		throws Exception {
 

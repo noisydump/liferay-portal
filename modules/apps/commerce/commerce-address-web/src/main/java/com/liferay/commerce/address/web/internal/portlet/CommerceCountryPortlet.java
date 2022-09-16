@@ -15,15 +15,16 @@
 package com.liferay.commerce.address.web.internal.portlet;
 
 import com.liferay.commerce.address.web.internal.display.context.CommerceCountriesDisplayContext;
-import com.liferay.commerce.address.web.internal.portlet.action.ActionHelper;
+import com.liferay.commerce.address.web.internal.portlet.action.helper.ActionHelper;
 import com.liferay.commerce.constants.CommerceConstants;
 import com.liferay.commerce.constants.CommercePortletKeys;
 import com.liferay.commerce.product.service.CommerceChannelRelService;
 import com.liferay.commerce.product.service.CommerceChannelService;
-import com.liferay.commerce.service.CommerceCountryService;
 import com.liferay.commerce.starter.CommerceRegionsStarterRegistry;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
+import com.liferay.portal.kernel.service.CountryService;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.io.IOException;
@@ -58,7 +59,8 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + CommercePortletKeys.COMMERCE_COUNTRY,
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=power-user,user"
+		"javax.portlet.security-role-ref=power-user,user",
+		"javax.portlet.version=3.0"
 	},
 	service = {CommerceCountryPortlet.class, Portlet.class}
 )
@@ -72,8 +74,8 @@ public class CommerceCountryPortlet extends MVCPortlet {
 		CommerceCountriesDisplayContext commerceCountriesDisplayContext =
 			new CommerceCountriesDisplayContext(
 				_actionHelper, _commerceChannelRelService,
-				_commerceChannelService, _commerceCountryService,
-				_commerceRegionsStarterRegistry, _portletResourcePermission,
+				_commerceChannelService, _commerceRegionsStarterRegistry,
+				_countryService, _portal, _portletResourcePermission,
 				renderRequest, renderResponse);
 
 		renderRequest.setAttribute(
@@ -92,13 +94,16 @@ public class CommerceCountryPortlet extends MVCPortlet {
 	private CommerceChannelService _commerceChannelService;
 
 	@Reference
-	private CommerceCountryService _commerceCountryService;
-
-	@Reference
 	private CommerceRegionsStarterRegistry _commerceRegionsStarterRegistry;
 
+	@Reference
+	private CountryService _countryService;
+
+	@Reference
+	private Portal _portal;
+
 	@Reference(
-		target = "(resource.name=" + CommerceConstants.RESOURCE_NAME_ADDRESS + ")"
+		target = "(resource.name=" + CommerceConstants.RESOURCE_NAME_COMMERCE_ADDRESS + ")"
 	)
 	private PortletResourcePermission _portletResourcePermission;
 

@@ -21,7 +21,10 @@ import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClass
 /**
  * @author Preston Crary
  */
-@ExtendedObjectClassDefinition(category = "upgrades")
+@ExtendedObjectClassDefinition(
+	category = "upgrades", liferayLearnMessageKey = "general",
+	liferayLearnMessageResource = "data-cleanup"
+)
 @Meta.OCD(
 	id = "com.liferay.data.cleanup.internal.configuration.DataCleanupConfiguration",
 	name = "data-cleanup-configuration-name"
@@ -46,6 +49,18 @@ public interface DataCleanupConfiguration {
 	public boolean cleanUpDirectoryModuleData();
 
 	@Meta.AD(
+		deflt = "false", name = "clean-up-hello-world-module-data",
+		required = false
+	)
+	public boolean cleanUpHelloWorldModuleData();
+
+	@Meta.AD(
+		deflt = "false", name = "clean-up-image-editor-module-data",
+		required = false
+	)
+	public boolean cleanUpImageEditorModuleData();
+
+	@Meta.AD(
 		deflt = "false", name = "clean-up-invitation-module-data",
 		required = false
 	)
@@ -58,10 +73,22 @@ public interface DataCleanupConfiguration {
 	public boolean cleanUpMailReaderModuleData();
 
 	@Meta.AD(
+		deflt = "false", name = "clean-up-open-social-module-data",
+		required = false
+	)
+	public boolean cleanUpOpenSocialModuleData();
+
+	@Meta.AD(
 		deflt = "false", name = "clean-up-private-messaging-module-data",
 		required = false
 	)
 	public boolean cleanUpPrivateMessagingModuleData();
+
+	@Meta.AD(
+		deflt = "false", name = "clean-up-software-catalog-module-data",
+		required = false
+	)
+	public boolean cleanUpSoftwareCatalogModuleData();
 
 	@Meta.AD(
 		deflt = "false", name = "clean-up-shopping-module-data",

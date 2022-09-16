@@ -19,7 +19,9 @@ import com.liferay.portal.kernel.exception.LocaleException;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.GroupedModel;
 import com.liferay.portal.kernel.model.LocalizedModel;
+import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
+import com.liferay.portal.kernel.model.StagedAuditedModel;
 
 import java.math.BigDecimal;
 
@@ -43,7 +45,7 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface CommerceOrderItemModel
 	extends BaseModel<CommerceOrderItem>, GroupedModel, LocalizedModel,
-			ShardedModel {
+			MVCCModel, ShardedModel, StagedAuditedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -64,6 +66,39 @@ public interface CommerceOrderItemModel
 	 * @param primaryKey the primary key of this commerce order item
 	 */
 	public void setPrimaryKey(long primaryKey);
+
+	/**
+	 * Returns the mvcc version of this commerce order item.
+	 *
+	 * @return the mvcc version of this commerce order item
+	 */
+	@Override
+	public long getMvccVersion();
+
+	/**
+	 * Sets the mvcc version of this commerce order item.
+	 *
+	 * @param mvccVersion the mvcc version of this commerce order item
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion);
+
+	/**
+	 * Returns the uuid of this commerce order item.
+	 *
+	 * @return the uuid of this commerce order item
+	 */
+	@AutoEscape
+	@Override
+	public String getUuid();
+
+	/**
+	 * Sets the uuid of this commerce order item.
+	 *
+	 * @param uuid the uuid of this commerce order item
+	 */
+	@Override
+	public void setUuid(String uuid);
 
 	/**
 	 * Returns the external reference code of this commerce order item.
@@ -264,6 +299,20 @@ public interface CommerceOrderItemModel
 	public void setCPInstanceId(long CPInstanceId);
 
 	/**
+	 * Returns the cp measurement unit ID of this commerce order item.
+	 *
+	 * @return the cp measurement unit ID of this commerce order item
+	 */
+	public long getCPMeasurementUnitId();
+
+	/**
+	 * Sets the cp measurement unit ID of this commerce order item.
+	 *
+	 * @param CPMeasurementUnitId the cp measurement unit ID of this commerce order item
+	 */
+	public void setCPMeasurementUnitId(long CPMeasurementUnitId);
+
+	/**
 	 * Returns the c product ID of this commerce order item.
 	 *
 	 * @return the c product ID of this commerce order item
@@ -304,6 +353,20 @@ public interface CommerceOrderItemModel
 	 * @param shippingAddressId the shipping address ID of this commerce order item
 	 */
 	public void setShippingAddressId(long shippingAddressId);
+
+	/**
+	 * Returns the decimal quantity of this commerce order item.
+	 *
+	 * @return the decimal quantity of this commerce order item
+	 */
+	public BigDecimal getDecimalQuantity();
+
+	/**
+	 * Sets the decimal quantity of this commerce order item.
+	 *
+	 * @param decimalQuantity the decimal quantity of this commerce order item
+	 */
+	public void setDecimalQuantity(BigDecimal decimalQuantity);
 
 	/**
 	 * Returns the delivery group of this commerce order item.
@@ -407,6 +470,27 @@ public interface CommerceOrderItemModel
 	 * @param discountAmount the discount amount of this commerce order item
 	 */
 	public void setDiscountAmount(BigDecimal discountAmount);
+
+	/**
+	 * Returns the discount manually adjusted of this commerce order item.
+	 *
+	 * @return the discount manually adjusted of this commerce order item
+	 */
+	public boolean getDiscountManuallyAdjusted();
+
+	/**
+	 * Returns <code>true</code> if this commerce order item is discount manually adjusted.
+	 *
+	 * @return <code>true</code> if this commerce order item is discount manually adjusted; <code>false</code> otherwise
+	 */
+	public boolean isDiscountManuallyAdjusted();
+
+	/**
+	 * Sets whether this commerce order item is discount manually adjusted.
+	 *
+	 * @param discountManuallyAdjusted the discount manually adjusted of this commerce order item
+	 */
+	public void setDiscountManuallyAdjusted(boolean discountManuallyAdjusted);
 
 	/**
 	 * Returns the discount percentage level1 of this commerce order item.
@@ -755,6 +839,27 @@ public interface CommerceOrderItemModel
 	public void setNameMap(Map<Locale, String> nameMap, Locale defaultLocale);
 
 	/**
+	 * Returns the price manually adjusted of this commerce order item.
+	 *
+	 * @return the price manually adjusted of this commerce order item
+	 */
+	public boolean getPriceManuallyAdjusted();
+
+	/**
+	 * Returns <code>true</code> if this commerce order item is price manually adjusted.
+	 *
+	 * @return <code>true</code> if this commerce order item is price manually adjusted; <code>false</code> otherwise
+	 */
+	public boolean isPriceManuallyAdjusted();
+
+	/**
+	 * Sets whether this commerce order item is price manually adjusted.
+	 *
+	 * @param priceManuallyAdjusted the price manually adjusted of this commerce order item
+	 */
+	public void setPriceManuallyAdjusted(boolean priceManuallyAdjusted);
+
+	/**
 	 * Returns the printed note of this commerce order item.
 	 *
 	 * @return the printed note of this commerce order item
@@ -1043,5 +1148,8 @@ public interface CommerceOrderItemModel
 	@Override
 	public void prepareLocalizedFieldsForImport(Locale defaultImportLocale)
 		throws LocaleException;
+
+	@Override
+	public CommerceOrderItem cloneWithOriginalValues();
 
 }

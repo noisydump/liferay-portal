@@ -16,7 +16,9 @@ package com.liferay.commerce.pricing.service;
 
 import com.liferay.commerce.pricing.model.CommercePriceModifier;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
+import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery;
@@ -31,6 +33,8 @@ import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalService;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.change.tracking.CTService;
+import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
@@ -56,13 +60,15 @@ import org.osgi.annotation.versioning.ProviderType;
  * @see CommercePriceModifierLocalServiceUtil
  * @generated
  */
+@CTAware
 @ProviderType
 @Transactional(
 	isolation = Isolation.PORTAL,
 	rollbackFor = {PortalException.class, SystemException.class}
 )
 public interface CommercePriceModifierLocalService
-	extends BaseLocalService, PersistedModelLocalService {
+	extends BaseLocalService, CTService<CommercePriceModifier>,
+			PersistedModelLocalService {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -107,15 +113,29 @@ public interface CommercePriceModifierLocalService
 		throws PortalException;
 
 	public CommercePriceModifier addCommercePriceModifier(
-			long groupId, String title, String target, long commercePriceListId,
-			String modifierType, BigDecimal modifierAmount, double priority,
-			boolean active, int displayDateMonth, int displayDateDay,
-			int displayDateYear, int displayDateHour, int displayDateMinute,
-			int expirationDateMonth, int expirationDateDay,
-			int expirationDateYear, int expirationDateHour,
-			int expirationDateMinute, String externalReferenceCode,
+			String externalReferenceCode, long groupId, String title,
+			String target, long commercePriceListId, String modifierType,
+			BigDecimal modifierAmount, double priority, boolean active,
+			int displayDateMonth, int displayDateDay, int displayDateYear,
+			int displayDateHour, int displayDateMinute, int expirationDateMonth,
+			int expirationDateDay, int expirationDateYear,
+			int expirationDateHour, int expirationDateMinute,
 			boolean neverExpire, ServiceContext serviceContext)
 		throws PortalException;
+
+	public CommercePriceModifier addOrUpdateCommercePriceModifier(
+			String externalReferenceCode, long userId,
+			long commercePriceModifierId, long groupId, String title,
+			String target, long commercePriceListId, String modifierType,
+			BigDecimal modifierAmount, double priority, boolean active,
+			int displayDateMonth, int displayDateDay, int displayDateYear,
+			int displayDateHour, int displayDateMinute, int expirationDateMonth,
+			int expirationDateDay, int expirationDateYear,
+			int expirationDateHour, int expirationDateMinute,
+			boolean neverExpire, ServiceContext serviceContext)
+		throws PortalException;
+
+	public void checkCommercePriceModifiers() throws PortalException;
 
 	/**
 	 * Creates a new commerce price modifier with the primary key. Does not add the commerce price modifier to the database.
@@ -182,6 +202,9 @@ public interface CommercePriceModifierLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public <T> T dslQuery(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
@@ -251,7 +274,7 @@ public interface CommercePriceModifierLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public CommercePriceModifier fetchByExternalReferenceCode(
-		long companyId, String externalReferenceCode);
+		String externalReferenceCode, long companyId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public CommercePriceModifier fetchCommercePriceModifier(
@@ -264,6 +287,15 @@ public interface CommercePriceModifierLocalService
 	 * @param externalReferenceCode the commerce price modifier's external reference code
 	 * @return the matching commerce price modifier, or <code>null</code> if a matching commerce price modifier could not be found
 	 */
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public CommercePriceModifier
+		fetchCommercePriceModifierByExternalReferenceCode(
+			long companyId, String externalReferenceCode);
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #fetchCommercePriceModifierByExternalReferenceCode(long, String)}
+	 */
+	@Deprecated
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public CommercePriceModifier fetchCommercePriceModifierByReferenceCode(
 		long companyId, String externalReferenceCode);
@@ -292,6 +324,20 @@ public interface CommercePriceModifierLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public CommercePriceModifier getCommercePriceModifier(
 			long commercePriceModifierId)
+		throws PortalException;
+
+	/**
+	 * Returns the commerce price modifier with the matching external reference code and company.
+	 *
+	 * @param companyId the primary key of the company
+	 * @param externalReferenceCode the commerce price modifier's external reference code
+	 * @return the matching commerce price modifier
+	 * @throws PortalException if a matching commerce price modifier could not be found
+	 */
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public CommercePriceModifier
+			getCommercePriceModifierByExternalReferenceCode(
+				long companyId, String externalReferenceCode)
 		throws PortalException;
 
 	/**
@@ -431,16 +477,19 @@ public interface CommercePriceModifierLocalService
 			Map<String, Serializable> workflowContext)
 		throws PortalException;
 
-	public CommercePriceModifier upsertCommercePriceModifier(
-			long userId, long commercePriceModifierId, long groupId,
-			String title, String target, long commercePriceListId,
-			String modifierType, BigDecimal modifierAmount, double priority,
-			boolean active, int displayDateMonth, int displayDateDay,
-			int displayDateYear, int displayDateHour, int displayDateMinute,
-			int expirationDateMonth, int expirationDateDay,
-			int expirationDateYear, int expirationDateHour,
-			int expirationDateMinute, String externalReferenceCode,
-			boolean neverExpire, ServiceContext serviceContext)
-		throws PortalException;
+	@Override
+	@Transactional(enabled = false)
+	public CTPersistence<CommercePriceModifier> getCTPersistence();
+
+	@Override
+	@Transactional(enabled = false)
+	public Class<CommercePriceModifier> getModelClass();
+
+	@Override
+	@Transactional(rollbackFor = Throwable.class)
+	public <R, E extends Throwable> R updateWithUnsafeFunction(
+			UnsafeFunction<CTPersistence<CommercePriceModifier>, R, E>
+				updateUnsafeFunction)
+		throws E;
 
 }

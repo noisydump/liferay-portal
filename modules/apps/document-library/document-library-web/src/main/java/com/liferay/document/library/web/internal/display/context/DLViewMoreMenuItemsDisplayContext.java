@@ -14,8 +14,7 @@
 
 package com.liferay.document.library.web.internal.display.context;
 
-import com.liferay.depot.model.DepotEntry;
-import com.liferay.depot.service.DepotEntryLocalServiceUtil;
+import com.liferay.depot.util.SiteConnectedGroupGroupProviderUtil;
 import com.liferay.document.library.kernel.model.DLFileEntryType;
 import com.liferay.document.library.kernel.model.DLFolder;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
@@ -23,7 +22,7 @@ import com.liferay.document.library.kernel.service.DLAppServiceUtil;
 import com.liferay.document.library.kernel.service.DLFileEntryTypeServiceUtil;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemListBuilder;
-import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.dao.search.DisplayTerms;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -32,8 +31,6 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -114,14 +111,15 @@ public class DLViewMoreMenuItemsDisplayContext {
 	}
 
 	public PortletURL getPortletURL() {
-		PortletURL portletURL = _renderResponse.createRenderURL();
-
-		portletURL.setParameter(
-			"mvcPath", "/document_library/view_more_menu_items.jsp");
-		portletURL.setParameter("folderId", String.valueOf(_folderId));
-		portletURL.setParameter("eventName", getEventName());
-
-		return portletURL;
+		return PortletURLBuilder.createRenderURL(
+			_renderResponse
+		).setMVCPath(
+			"/document_library/view_more_menu_items.jsp"
+		).setParameter(
+			"eventName", getEventName()
+		).setParameter(
+			"folderId", _folderId
+		).buildPortletURL();
 	}
 
 	public String getSearchActionURL() {
@@ -142,7 +140,7 @@ public class DLViewMoreMenuItemsDisplayContext {
 			getPortletURL(), null,
 			LanguageUtil.get(_httpServletRequest, "there-are-no-results"));
 
-		DisplayTerms searchTerms = searchContainer.getSearchTerms();
+		DisplayTerms displayTerms = searchContainer.getSearchTerms();
 
 		ThemeDisplay themeDisplay =
 			(ThemeDisplay)_httpServletRequest.getAttribute(
@@ -152,20 +150,21 @@ public class DLViewMoreMenuItemsDisplayContext {
 		boolean includeBasicFileEntryType = ParamUtil.getBoolean(
 			_renderRequest, "includeBasicFileEntryType");
 
-		searchContainer.setResults(
-			DLFileEntryTypeServiceUtil.search(
+		searchContainer.setResultsAndTotal(
+			() -> DLFileEntryTypeServiceUtil.search(
 				themeDisplay.getCompanyId(), folderId,
-				_getCurrentAndAncestorSiteAndDepotGroupIds(
-					themeDisplay.getScopeGroupId()),
-				searchTerms.getKeywords(), includeBasicFileEntryType,
+				SiteConnectedGroupGroupProviderUtil.
+					getCurrentAndAncestorSiteAndDepotGroupIds(
+						themeDisplay.getScopeGroupId(), true),
+				displayTerms.getKeywords(), includeBasicFileEntryType,
 				_inherited, searchContainer.getStart(),
-				searchContainer.getEnd()));
-		searchContainer.setTotal(
+				searchContainer.getEnd()),
 			DLFileEntryTypeServiceUtil.searchCount(
 				themeDisplay.getCompanyId(), folderId,
-				_getCurrentAndAncestorSiteAndDepotGroupIds(
-					themeDisplay.getScopeGroupId()),
-				searchTerms.getKeywords(), includeBasicFileEntryType,
+				SiteConnectedGroupGroupProviderUtil.
+					getCurrentAndAncestorSiteAndDepotGroupIds(
+						themeDisplay.getScopeGroupId(), true),
+				displayTerms.getKeywords(), includeBasicFileEntryType,
 				_inherited));
 
 		_searchContainer = searchContainer;
@@ -177,17 +176,6 @@ public class DLViewMoreMenuItemsDisplayContext {
 		SearchContainer<DLFileEntryType> searchContainer = getSearchContainer();
 
 		return searchContainer.getTotal();
-	}
-
-	private long[] _getCurrentAndAncestorSiteAndDepotGroupIds(long groupId)
-		throws PortalException {
-
-		return ArrayUtil.append(
-			PortalUtil.getCurrentAndAncestorSiteGroupIds(groupId),
-			ListUtil.toLongArray(
-				DepotEntryLocalServiceUtil.getGroupConnectedDepotEntries(
-					groupId, true, QueryUtil.ALL_POS, QueryUtil.ALL_POS),
-				DepotEntry::getGroupId));
 	}
 
 	private long _getPrimaryFolderId(long folderId) throws PortalException {

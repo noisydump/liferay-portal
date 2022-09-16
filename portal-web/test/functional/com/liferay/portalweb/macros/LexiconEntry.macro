@@ -1,13 +1,9 @@
 definition {
 
 	macro changeDisplayStyle {
-		var browserType = PropsUtil.get("browser.type");
+		WaitForPageLoad();
 
-		if ("${browserType}" == "chrome") {
-			MetalComponent.waitForManagementBar();
-		}
-
-		Click(locator1 = "Icon#CURRENT_DISPLAY_STYLE");
+		Click.mouseOverClick(locator1 = "Icon#CURRENT_DISPLAY_STYLE");
 
 		MenuItem.click(menuItem = StringUtil.upperCaseFirstLetter("${displayStyle}"));
 	}
@@ -52,16 +48,15 @@ definition {
 	}
 
 	macro gotoAdd {
-		var browserType = PropsUtil.get("browser.type");
+		WaitForPageLoad();
 
-		if ("${browserType}" == "chrome") {
-			MetalComponent.waitForManagementBar();
-		}
 		Click(locator1 = "Button#PLUS");
+
+		SelectFrameTop();
 	}
 
 	macro gotoAddDropdownMenuItem {
-		LexiconEntry.gotoAdd();
+		LexiconEntry.gotoAddNoSelectFrame();
 
 		DropdownMenuItem.click(menuItem = "${menuItem}");
 	}
@@ -72,12 +67,14 @@ definition {
 		MenuItem.click(menuItem = "${menuItem}");
 	}
 
-	macro gotoAddReport {
-		var browserType = PropsUtil.get("browser.type");
+	macro gotoAddNoSelectFrame {
+		WaitForPageLoad();
 
-		if ("${browserType}" == "chrome") {
-			MetalComponent.waitForReportsManagementBar();
-		}
+		Click(locator1 = "Button#PLUS");
+	}
+
+	macro gotoAddReport {
+		WaitForPageLoad();
 
 		Click(locator1 = "Button#PLUS");
 	}
@@ -97,7 +94,7 @@ definition {
 	}
 
 	macro gotoEntry {
-		if (IsElementPresent(locator1 = "Icon#DISPLAY_STYLE_ACTIVE", key_displayStyle = "cards")) {
+		if (IsElementPresent(key_displayStyle = "cards", locator1 = "Icon#DISPLAY_STYLE_ACTIVE")) {
 			AssertClick(
 				key_card = "${rowEntry}",
 				locator1 = "Card#CARD_TITLE_LINK",
@@ -136,7 +133,7 @@ definition {
 	}
 
 	macro gotoFragmentPageContentEllipsisMenuItem {
-		Click.waitForMenuToggleJSClick(
+		Click.clickAtNotVisible(
 			key_rowEntry = "${rowEntry}",
 			locator1 = "Icon#FRAGMENT_PAGE_CONTENT_VERTICAL_ELLIPSIS");
 
@@ -165,7 +162,6 @@ definition {
 				key_rowEntry = "${rowEntry}",
 				locator1 = "Icon#ROW_VERTICAL_ELLIPSIS_SAFARI");
 		}
-
 		else {
 			Click.waitForMenuToggleJSClick(
 				key_rowEntry = "${rowEntry}",
@@ -185,11 +181,42 @@ definition {
 			locator1 = "Icon#CURRENT_DISPLAY_STYLE_ACTIVE");
 	}
 
+	macro viewAddMenuItem {
+		LexiconEntry.gotoAdd();
+
+		AssertElementPresent(
+			key_menuItem = "${menuItem}",
+			locator1 = "MenuItem#ANY_MENU_ITEM");
+	}
+
 	macro viewEntryContent {
 		AssertElementPresent(
 			key_rowAny = "${rowAny}",
 			key_rowEntry = "${rowEntry}",
 			locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_ANY");
+	}
+
+	macro viewEntryMenu {
+		var browserType = PropsUtil.get("browser.type");
+
+		if ("${browserType}" == "safari") {
+			AssertElementPresent(
+				key_rowEntry = "${rowEntry}",
+				locator1 = "Icon#ROW_VERTICAL_ELLIPSIS_SAFARI");
+		}
+		else {
+			AssertElementPresent(
+				key_rowEntry = "${rowEntry}",
+				locator1 = "Icon#ROW_VERTICAL_ELLIPSIS");
+		}
+	}
+
+	macro viewEntryMenuItem {
+		LexiconEntry.openEntryMenu(rowEntry = "${rowEntry}");
+
+		AssertElementPresent(
+			key_menuItem = "${menuItem}",
+			locator1 = "MenuItem#ANY_MENU_ITEM");
 	}
 
 	macro viewEntryName {

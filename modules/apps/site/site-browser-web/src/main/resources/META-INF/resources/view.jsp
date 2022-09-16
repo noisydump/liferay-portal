@@ -20,8 +20,8 @@
 	navigationItems="<%= siteBrowserDisplayContext.getNavigationItems() %>"
 />
 
-<clay:management-toolbar-v2
-	displayContext="<%= new SiteBrowserManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, siteBrowserDisplayContext) %>"
+<clay:management-toolbar
+	managementToolbarDisplayContext="<%= new SiteBrowserManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, siteBrowserDisplayContext) %>"
 />
 
 <aui:form action="<%= siteBrowserDisplayContext.getPortletURL() %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="selectGroupFm">
@@ -63,7 +63,7 @@
 						<h5>
 							<c:choose>
 								<c:when test="<%= siteBrowserDisplayContext.isShowLink(group) %>">
-									<aui:a cssClass="selector-button" data="<%= data %>" href="javascript:;">
+									<aui:a cssClass="selector-button" data="<%= data %>" href="javascript:void(0);">
 										<%= HtmlUtil.escape(group.getDescriptiveName(locale)) %>
 									</aui:a>
 								</c:when>
@@ -92,7 +92,7 @@
 					>
 						<c:choose>
 							<c:when test="<%= siteBrowserDisplayContext.isShowLink(group) %>">
-								<aui:a cssClass="selector-button" data="<%= data %>" href="javascript:;">
+								<aui:a cssClass="selector-button" data="<%= data %>" href="javascript:void(0);">
 									<%= HtmlUtil.escape(group.getDescriptiveName(locale)) %>
 								</aui:a>
 							</c:when>
@@ -116,11 +116,3 @@
 		/>
 	</liferay-ui:search-container>
 </aui:form>
-
-<aui:script>
-	Liferay.Util.selectEntityHandler(
-		'#<portlet:namespace />selectGroupFm',
-		'<%= HtmlUtil.escapeJS(siteBrowserDisplayContext.getEventName()) %>',
-		<%= siteBrowserDisplayContext.getSelUser() != null %>
-	);
-</aui:script>

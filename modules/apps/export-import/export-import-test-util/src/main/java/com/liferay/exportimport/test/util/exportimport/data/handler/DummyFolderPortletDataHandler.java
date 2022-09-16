@@ -86,7 +86,7 @@ public class DummyFolderPortletDataHandler extends BasePortletDataHandler {
 
 	@Override
 	protected String doExportData(
-			final PortletDataContext portletDataContext, String portletId,
+			PortletDataContext portletDataContext, String portletId,
 			PortletPreferences portletPreferences)
 		throws Exception {
 
@@ -145,15 +145,8 @@ public class DummyFolderPortletDataHandler extends BasePortletDataHandler {
 	}
 
 	@Reference(
-		target = "(model.class.name=com.liferay.exportimport.test.util.model.DummyFolder)",
-		unbind = "-"
+		target = "(model.class.name=com.liferay.exportimport.test.util.model.DummyFolder)"
 	)
-	protected void setDummyFolderStagedModelRepository(
-		StagedModelRepository<DummyFolder> dummyFolderStagedModelRepository) {
-
-		_dummyFolderStagedModelRepository = dummyFolderStagedModelRepository;
-	}
-
 	private StagedModelRepository<DummyFolder>
 		_dummyFolderStagedModelRepository;
 

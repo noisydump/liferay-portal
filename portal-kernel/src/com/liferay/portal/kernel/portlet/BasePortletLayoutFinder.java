@@ -28,10 +28,12 @@ import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
+import com.liferay.portal.kernel.service.PortletPreferencesLocalServiceUtil;
 import com.liferay.portal.kernel.service.permission.LayoutPermissionUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ObjectValuePair;
+import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.sites.kernel.util.SitesUtil;
 
@@ -81,7 +83,7 @@ public abstract class BasePortletLayoutFinder implements PortletLayoutFinder {
 				// LPS-52675
 
 				if (_log.isDebugEnabled()) {
-					_log.debug(noSuchLayoutException, noSuchLayoutException);
+					_log.debug(noSuchLayoutException);
 				}
 			}
 		}
@@ -115,25 +117,6 @@ public abstract class BasePortletLayoutFinder implements PortletLayoutFinder {
 			(boolean)plidAndPortletId[2]);
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	protected Object[] fetchPlidAndPortletId(
-			PermissionChecker permissionChecker, long groupId,
-			String[] portletIds)
-		throws PortalException {
-
-		Object[] plidAndPortletId = _fetchPlidAndPortletId(
-			permissionChecker, groupId, portletIds);
-
-		if ((plidAndPortletId == null) || (boolean)plidAndPortletId[2]) {
-			return null;
-		}
-
-		return new Object[] {plidAndPortletId[0], plidAndPortletId[1]};
-	}
-
 	protected String getPortletId(
 		LayoutTypePortlet layoutTypePortlet, String portletId) {
 
@@ -146,21 +129,27 @@ public abstract class BasePortletLayoutFinder implements PortletLayoutFinder {
 			}
 		}
 
+		Layout layout = layoutTypePortlet.getLayout();
+
+		List<com.liferay.portal.kernel.model.PortletPreferences>
+			layoutPortletPreferences =
+				PortletPreferencesLocalServiceUtil.getPortletPreferences(
+					PortletKeys.PREFS_OWNER_TYPE_LAYOUT, layout.getPlid(),
+					portletId);
+
+		if (!layoutPortletPreferences.isEmpty()) {
+			com.liferay.portal.kernel.model.PortletPreferences
+				portletPreferences = layoutPortletPreferences.get(0);
+
+			return portletPreferences.getPortletId();
+		}
+
 		return null;
 	}
 
 	protected abstract String[] getPortletIds();
 
 	protected class ResultImpl implements PortletLayoutFinder.Result {
-
-		/**
-		 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-		 *             #ResultImpl(long, String, boolean)}
-		 */
-		@Deprecated
-		public ResultImpl(long plid, String portletId) {
-			this(plid, portletId, false);
-		}
 
 		public ResultImpl(long plid, String portletId, boolean signInRequired) {
 			_plid = plid;

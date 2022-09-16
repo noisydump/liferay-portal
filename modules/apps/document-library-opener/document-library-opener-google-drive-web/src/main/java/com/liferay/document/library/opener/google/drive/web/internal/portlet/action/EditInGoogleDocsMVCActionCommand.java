@@ -21,7 +21,7 @@ import com.liferay.document.library.opener.constants.DLOpenerMimeTypes;
 import com.liferay.document.library.opener.google.drive.web.internal.DLOpenerGoogleDriveFileReference;
 import com.liferay.document.library.opener.google.drive.web.internal.DLOpenerGoogleDriveManager;
 import com.liferay.document.library.opener.google.drive.web.internal.constants.DLOpenerGoogleDriveWebKeys;
-import com.liferay.document.library.opener.google.drive.web.internal.util.GoogleDrivePortletRequestAuthorizationHelper;
+import com.liferay.document.library.opener.google.drive.web.internal.helper.GoogleDrivePortletRequestAuthorizationHelper;
 import com.liferay.document.library.opener.upload.UniqueFileEntryTitleProvider;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -95,13 +95,15 @@ public class EditInGoogleDocsMVCActionCommand extends BaseMVCActionCommand {
 
 		String title = _uniqueFileEntryTitleProvider.provide(
 			serviceContext.getScopeGroupId(), folderId,
+			DLOpenerMimeTypes.getMimeTypeExtension(contentType),
 			serviceContext.getLocale());
 
 		serviceContext.setWorkflowAction(WorkflowConstants.ACTION_SAVE_DRAFT);
 
 		FileEntry fileEntry = _dlAppService.addFileEntry(
-			repositoryId, folderId, null, contentType, title, StringPool.BLANK,
-			StringPool.BLANK, new byte[0], serviceContext);
+			null, repositoryId, folderId, null, contentType, title, null,
+			StringPool.BLANK, StringPool.BLANK, new byte[0], null, null,
+			serviceContext);
 
 		_dlAppService.checkOutFileEntry(
 			fileEntry.getFileEntryId(), serviceContext);

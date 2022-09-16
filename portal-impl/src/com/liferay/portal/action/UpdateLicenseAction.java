@@ -19,6 +19,8 @@ import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.license.util.LicenseManagerUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.servlet.ServletResponseUtil;
 import com.liferay.portal.kernel.util.Constants;
@@ -64,23 +66,20 @@ public class UpdateLicenseAction implements Action {
 				httpServletRequest, "clusterNodeId");
 
 			if (cmd.equals("licenseProperties")) {
-				String licenseProperties = _getLicenseProperties(clusterNodeId);
-
 				httpServletResponse.setContentType(
 					ContentTypes.APPLICATION_JSON);
 
 				ServletResponseUtil.write(
-					httpServletResponse, licenseProperties);
+					httpServletResponse, _getLicenseProperties(clusterNodeId));
 
 				return null;
 			}
 			else if (cmd.equals("serverInfo")) {
-				String serverInfo = _getServerInfo(clusterNodeId);
-
 				httpServletResponse.setContentType(
 					ContentTypes.APPLICATION_JSON);
 
-				ServletResponseUtil.write(httpServletResponse, serverInfo);
+				ServletResponseUtil.write(
+					httpServletResponse, _getServerInfo(clusterNodeId));
 
 				return null;
 			}
@@ -139,6 +138,9 @@ public class UpdateLicenseAction implements Action {
 			user = PortalUtil.getUser(httpServletRequest);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		if ((user != null) && OmniadminUtil.isOmniadmin(user)) {
@@ -173,5 +175,8 @@ public class UpdateLicenseAction implements Action {
 
 		return false;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		UpdateLicenseAction.class);
 
 }

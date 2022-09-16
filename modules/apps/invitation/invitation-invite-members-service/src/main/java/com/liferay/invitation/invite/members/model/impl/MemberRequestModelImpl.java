@@ -30,12 +30,13 @@ import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
 import java.util.Collections;
@@ -43,6 +44,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -112,32 +114,32 @@ public class MemberRequestModelImpl
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long GROUPID_COLUMN_BITMASK = 1L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long KEY_COLUMN_BITMASK = 2L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long RECEIVERUSERID_COLUMN_BITMASK = 4L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long STATUS_COLUMN_BITMASK = 8L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *		#getColumnBitmask(String)
+	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long CREATEDATE_COLUMN_BITMASK = 16L;
@@ -239,34 +241,6 @@ public class MemberRequestModelImpl
 		getAttributeSetterBiConsumers() {
 
 		return _attributeSetterBiConsumers;
-	}
-
-	private static Function<InvocationHandler, MemberRequest>
-		_getProxyProviderFunction() {
-
-		Class<?> proxyClass = ProxyUtil.getProxyClass(
-			MemberRequest.class.getClassLoader(), MemberRequest.class,
-			ModelWrapper.class);
-
-		try {
-			Constructor<MemberRequest> constructor =
-				(Constructor<MemberRequest>)proxyClass.getConstructor(
-					InvocationHandler.class);
-
-			return invocationHandler -> {
-				try {
-					return constructor.newInstance(invocationHandler);
-				}
-				catch (ReflectiveOperationException
-							reflectiveOperationException) {
-
-					throw new InternalError(reflectiveOperationException);
-				}
-			};
-		}
-		catch (NoSuchMethodException noSuchMethodException) {
-			throw new InternalError(noSuchMethodException);
-		}
 	}
 
 	private static final Map<String, Function<MemberRequest, Object>>
@@ -608,7 +582,9 @@ public class MemberRequestModelImpl
 		for (Map.Entry<String, Object> entry :
 				_columnOriginalValues.entrySet()) {
 
-			if (entry.getValue() != getColumnValue(entry.getKey())) {
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
 				_columnBitmask |= _columnBitmasks.get(entry.getKey());
 			}
 		}
@@ -662,6 +638,37 @@ public class MemberRequestModelImpl
 		memberRequestImpl.setStatus(getStatus());
 
 		memberRequestImpl.resetOriginalValues();
+
+		return memberRequestImpl;
+	}
+
+	@Override
+	public MemberRequest cloneWithOriginalValues() {
+		MemberRequestImpl memberRequestImpl = new MemberRequestImpl();
+
+		memberRequestImpl.setMemberRequestId(
+			this.<Long>getColumnOriginalValue("memberRequestId"));
+		memberRequestImpl.setGroupId(
+			this.<Long>getColumnOriginalValue("groupId"));
+		memberRequestImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		memberRequestImpl.setUserId(
+			this.<Long>getColumnOriginalValue("userId"));
+		memberRequestImpl.setUserName(
+			this.<String>getColumnOriginalValue("userName"));
+		memberRequestImpl.setCreateDate(
+			this.<Date>getColumnOriginalValue("createDate"));
+		memberRequestImpl.setModifiedDate(
+			this.<Date>getColumnOriginalValue("modifiedDate"));
+		memberRequestImpl.setKey(this.<String>getColumnOriginalValue("key_"));
+		memberRequestImpl.setReceiverUserId(
+			this.<Long>getColumnOriginalValue("receiverUserId"));
+		memberRequestImpl.setInvitedRoleId(
+			this.<Long>getColumnOriginalValue("invitedRoleId"));
+		memberRequestImpl.setInvitedTeamId(
+			this.<Long>getColumnOriginalValue("invitedTeamId"));
+		memberRequestImpl.setStatus(
+			this.<Integer>getColumnOriginalValue("status"));
 
 		return memberRequestImpl;
 	}
@@ -800,7 +807,7 @@ public class MemberRequestModelImpl
 			getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			(4 * attributeGetterFunctions.size()) + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -811,9 +818,26 @@ public class MemberRequestModelImpl
 			Function<MemberRequest, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((MemberRequest)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply((MemberRequest)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -860,7 +884,9 @@ public class MemberRequestModelImpl
 	private static class EscapedModelProxyProviderFunctionHolder {
 
 		private static final Function<InvocationHandler, MemberRequest>
-			_escapedModelProxyProviderFunction = _getProxyProviderFunction();
+			_escapedModelProxyProviderFunction =
+				ProxyUtil.getProxyProviderFunction(
+					MemberRequest.class, ModelWrapper.class);
 
 	}
 

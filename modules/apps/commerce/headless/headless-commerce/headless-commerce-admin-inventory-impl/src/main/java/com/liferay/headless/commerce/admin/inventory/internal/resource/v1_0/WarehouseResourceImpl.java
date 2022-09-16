@@ -24,10 +24,8 @@ import com.liferay.headless.commerce.admin.inventory.internal.dto.v1_0.Warehouse
 import com.liferay.headless.commerce.admin.inventory.internal.odata.entity.v1_0.WarehouseEntityModel;
 import com.liferay.headless.commerce.admin.inventory.resource.v1_0.WarehouseResource;
 import com.liferay.headless.commerce.core.util.ServiceContextHelper;
-import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.search.Field;
-import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -35,8 +33,9 @@ import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
-import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.SearchUtil;
+
+import java.util.Collections;
 
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
@@ -53,8 +52,7 @@ import org.osgi.service.component.annotations.ServiceScope;
 	properties = "OSGI-INF/liferay/rest/v1_0/warehouse.properties",
 	scope = ServiceScope.PROTOTYPE, service = WarehouseResource.class
 )
-public class WarehouseResourceImpl
-	extends BaseWarehouseResourceImpl implements EntityModelResource {
+public class WarehouseResourceImpl extends BaseWarehouseResourceImpl {
 
 	@Override
 	public Response deleteWarehousByExternalReferenceCode(
@@ -67,7 +65,7 @@ public class WarehouseResourceImpl
 
 		if (commerceInventoryWarehouse == null) {
 			throw new NoSuchInventoryWarehouseException(
-				"Unable to find Warehouse with externalReferenceCode: " +
+				"Unable to find warehouse with external reference code " +
 					externalReferenceCode);
 		}
 
@@ -106,7 +104,7 @@ public class WarehouseResourceImpl
 
 		if (commerceInventoryWarehouse == null) {
 			throw new NoSuchInventoryWarehouseException(
-				"Unable to find Warehouse with externalReferenceCode: " +
+				"Unable to find warehouse with external reference code " +
 					externalReferenceCode);
 		}
 
@@ -122,25 +120,20 @@ public class WarehouseResourceImpl
 		throws Exception {
 
 		return SearchUtil.search(
+			Collections.emptyMap(),
 			booleanQuery -> booleanQuery.getPreBooleanFilter(), filter,
-			CommerceInventoryWarehouse.class, StringPool.BLANK, pagination,
+			CommerceInventoryWarehouse.class.getName(), StringPool.BLANK,
+			pagination,
 			queryConfig -> queryConfig.setSelectedFieldNames(
 				Field.ENTRY_CLASS_PK),
-			new UnsafeConsumer() {
-
-				public void accept(Object object) throws Exception {
-					SearchContext searchContext = (SearchContext)object;
-
-					searchContext.setCompanyId(contextCompany.getCompanyId());
-				}
-
-			},
+			searchContext -> searchContext.setCompanyId(
+				contextCompany.getCompanyId()),
+			sorts,
 			document -> _toWarehouse(
 				_commerceInventoryWarehouseService.
 					getCommerceInventoryWarehouse(
 						GetterUtil.getLong(
-							document.get(Field.ENTRY_CLASS_PK)))),
-			sorts);
+							document.get(Field.ENTRY_CLASS_PK)))));
 	}
 
 	@Override
@@ -162,7 +155,7 @@ public class WarehouseResourceImpl
 
 		if (commerceInventoryWarehouse == null) {
 			throw new NoSuchInventoryWarehouseException(
-				"Unable to find Warehouse with externalReferenceCode: " +
+				"Unable to find warehouse with external reference code " +
 					externalReferenceCode);
 		}
 
@@ -244,8 +237,7 @@ public class WarehouseResourceImpl
 		if (warehouseItems != null) {
 			for (WarehouseItem warehouseItem : warehouseItems) {
 				_commerceInventoryWarehouseItemService.
-					upsertCommerceInventoryWarehouseItem(
-						contextUser.getUserId(),
+					addOrUpdateCommerceInventoryWarehouseItem(
 						commerceInventoryWarehouse.
 							getCommerceInventoryWarehouseId(),
 						warehouseItem.getSku(), warehouseItem.getQuantity());

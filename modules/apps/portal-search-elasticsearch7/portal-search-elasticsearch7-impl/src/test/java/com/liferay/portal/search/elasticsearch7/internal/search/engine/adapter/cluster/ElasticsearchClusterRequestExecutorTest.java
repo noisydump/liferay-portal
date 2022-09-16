@@ -19,23 +19,27 @@ import com.liferay.portal.search.engine.adapter.cluster.ClusterRequestExecutor;
 import com.liferay.portal.search.engine.adapter.cluster.HealthClusterRequest;
 import com.liferay.portal.search.engine.adapter.cluster.StateClusterRequest;
 import com.liferay.portal.search.engine.adapter.cluster.StatsClusterRequest;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
-import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 
 /**
  * @author Dylan Rebelak
  */
 public class ElasticsearchClusterRequestExecutorTest {
 
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
 	@Before
 	public void setUp() throws Exception {
-		MockitoAnnotations.initMocks(this);
-
 		_clusterRequestExecutor = new ElasticsearchClusterRequestExecutor() {
 			{
 				setHealthClusterRequestExecutor(_healthClusterRequestExecutor);
@@ -88,14 +92,11 @@ public class ElasticsearchClusterRequestExecutorTest {
 	}
 
 	private ClusterRequestExecutor _clusterRequestExecutor;
-
-	@Mock
-	private HealthClusterRequestExecutor _healthClusterRequestExecutor;
-
-	@Mock
-	private StateClusterRequestExecutor _stateClusterRequestExecutor;
-
-	@Mock
-	private StatsClusterRequestExecutor _statsClusterRequestExecutor;
+	private final HealthClusterRequestExecutor _healthClusterRequestExecutor =
+		Mockito.mock(HealthClusterRequestExecutor.class);
+	private final StateClusterRequestExecutor _stateClusterRequestExecutor =
+		Mockito.mock(StateClusterRequestExecutor.class);
+	private final StatsClusterRequestExecutor _statsClusterRequestExecutor =
+		Mockito.mock(StatsClusterRequestExecutor.class);
 
 }

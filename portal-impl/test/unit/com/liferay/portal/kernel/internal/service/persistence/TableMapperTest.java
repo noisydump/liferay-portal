@@ -17,7 +17,6 @@ package com.liferay.portal.kernel.internal.service.persistence;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.cache.PortalCache;
 import com.liferay.portal.kernel.cache.PortalCacheHelperUtil;
-import com.liferay.portal.kernel.cache.PortalCacheManager;
 import com.liferay.portal.kernel.cache.PortalCacheManagerNames;
 import com.liferay.portal.kernel.cache.PortalCacheManagerProvider;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
@@ -42,13 +41,13 @@ import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
 import com.liferay.portal.kernel.service.persistence.impl.TableMapper;
 import com.liferay.portal.kernel.service.persistence.impl.TableMapperFactory;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
-import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.portal.tools.ToolDependencies;
-import com.liferay.portal.util.PropsImpl;
 
 import java.io.Serializable;
 
@@ -78,23 +77,25 @@ import org.junit.Test;
 public class TableMapperTest {
 
 	@ClassRule
-	public static final CodeCoverageAssertor codeCoverageAssertor =
-		new CodeCoverageAssertor() {
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new CodeCoverageAssertor() {
 
-			@Override
-			public void appendAssertClasses(List<Class<?>> assertClasses) {
-				assertClasses.clear();
+				@Override
+				public void appendAssertClasses(List<Class<?>> assertClasses) {
+					assertClasses.clear();
 
-				assertClasses.add(ReverseTableMapper.class);
-				assertClasses.add(TableMapperFactory.class);
-				assertClasses.add(TableMapperImpl.class);
+					assertClasses.add(ReverseTableMapper.class);
+					assertClasses.add(TableMapperFactory.class);
+					assertClasses.add(TableMapperImpl.class);
 
-				Collections.addAll(
-					assertClasses,
-					TableMapperFactory.class.getDeclaredClasses());
-			}
+					Collections.addAll(
+						assertClasses,
+						TableMapperFactory.class.getDeclaredClasses());
+				}
 
-		};
+			},
+			LiferayUnitTestRule.INSTANCE);
 
 	@BeforeClass
 	public static void setUpClass() {
@@ -113,8 +114,6 @@ public class TableMapperTest {
 
 		mappingSqlQueryFactoryUtil.setMappingSqlQueryFactory(
 			new MockMappingSqlQueryFactory());
-
-		PropsUtil.setProps(new PropsImpl());
 
 		SqlUpdateFactoryUtil sqlUpdateFactoryUtil = new SqlUpdateFactoryUtil();
 
@@ -1212,10 +1211,9 @@ public class TableMapperTest {
 		_mappingStore.put(leftPrimaryKey1, new long[] {rightPrimaryKey});
 		_mappingStore.put(leftPrimaryKey2, new long[] {rightPrimaryKey});
 
-		leftPrimaryKeys = _tableMapperImpl.getLeftPrimaryKeys(rightPrimaryKey);
-
 		Assert.assertArrayEquals(
-			new long[] {leftPrimaryKey2, leftPrimaryKey1}, leftPrimaryKeys);
+			new long[] {leftPrimaryKey2, leftPrimaryKey1},
+			_tableMapperImpl.getLeftPrimaryKeys(rightPrimaryKey));
 
 		// Database error
 
@@ -1400,10 +1398,9 @@ public class TableMapperTest {
 		_mappingStore.put(
 			leftPrimaryKey, new long[] {rightPrimaryKey1, rightPrimaryKey2});
 
-		rightPrimaryKeys = _tableMapperImpl.getRightPrimaryKeys(leftPrimaryKey);
-
 		Assert.assertArrayEquals(
-			new long[] {rightPrimaryKey2, rightPrimaryKey1}, rightPrimaryKeys);
+			new long[] {rightPrimaryKey2, rightPrimaryKey1},
+			_tableMapperImpl.getRightPrimaryKeys(leftPrimaryKey));
 
 		// Database error
 
@@ -1447,14 +1444,12 @@ public class TableMapperTest {
 	public void testReverseTableMapper() {
 		Class<?> clazz = TableMapper.class;
 
-		ClassLoader classLoader = clazz.getClassLoader();
-
 		RecordInvocationHandler recordInvocationHandler =
 			new RecordInvocationHandler();
 
 		TableMapper<Left, Right> tableMapper =
 			(TableMapper<Left, Right>)ProxyUtil.newProxyInstance(
-				classLoader, new Class<?>[] {TableMapper.class},
+				clazz.getClassLoader(), new Class<?>[] {TableMapper.class},
 				recordInvocationHandler);
 
 		ReverseTableMapper<Right, Left> reverseTableMapper =
@@ -1745,13 +1740,11 @@ public class TableMapperTest {
 	}
 
 	protected void testDestroy(TableMapper<?, ?> tableMapper) {
-		PortalCacheManager<?, ?> portalCacheManager =
-			PortalCacheManagerProvider.getPortalCacheManager(
-				PortalCacheManagerNames.MULTI_VM);
-
 		Map<String, PortalCache<?, ?>> portalCaches =
 			ReflectionTestUtil.getFieldValue(
-				portalCacheManager, "_dynamicPortalCaches");
+				PortalCacheManagerProvider.getPortalCacheManager(
+					PortalCacheManagerNames.MULTI_VM),
+				"_dynamicPortalCaches");
 
 		Assert.assertEquals(portalCaches.toString(), 2, portalCaches.size());
 
@@ -2467,12 +2460,9 @@ public class TableMapperTest {
 					StringBundler.concat(
 						"DELETE FROM ", _TABLE_NAME, " WHERE ",
 						_RIGHT_COLUMN_NAME, " = ? AND ", _LEFT_COLUMN_NAME,
-						" = ?"))) {
+						" = ?")) ||
+				sql.contains("ctCollectionId")) {
 
-				return null;
-			}
-
-			if (sql.contains("ctCollectionId")) {
 				return null;
 			}
 

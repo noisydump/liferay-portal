@@ -32,8 +32,6 @@ else {
 	request.setAttribute(WebKeys.SINGLE_PAGE_APPLICATION_CLEAR_CACHE, Boolean.TRUE);
 }
 
-String eventName = ParamUtil.getString(request, "eventName", liferayPortletResponse.getNamespace() + "selectUsers");
-
 SelectOrganizationUsersManagementToolbarDisplayContext selectOrganizationUsersManagementToolbarDisplayContext = new SelectOrganizationUsersManagementToolbarDisplayContext(request, renderRequest, renderResponse, organization, displayStyle);
 
 PortletURL portletURL = selectOrganizationUsersManagementToolbarDisplayContext.getPortletURL();
@@ -43,7 +41,7 @@ SearchContainer<User> userSearchContainer = selectOrganizationUsersManagementToo
 
 <liferay-ui:membership-policy-error />
 
-<clay:management-toolbar-v2
+<clay:management-toolbar
 	clearResultsURL="<%= selectOrganizationUsersManagementToolbarDisplayContext.getClearResultsURL() %>"
 	filterDropdownItems="<%= selectOrganizationUsersManagementToolbarDisplayContext.getFilterDropdownItems() %>"
 	itemsTotal="<%= userSearchContainer.getTotal() %>"
@@ -57,7 +55,7 @@ SearchContainer<User> userSearchContainer = selectOrganizationUsersManagementToo
 	viewTypeItems="<%= selectOrganizationUsersManagementToolbarDisplayContext.getViewTypeItems() %>"
 />
 
-<aui:form action="<%= portletURL.toString() %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="fm">
+<aui:form action="<%= portletURL %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="fm">
 	<liferay-ui:search-container
 		id="users"
 		searchContainer="<%= userSearchContainer %>"
@@ -89,13 +87,8 @@ SearchContainer<User> userSearchContainer = selectOrganizationUsersManagementToo
 				</c:when>
 				<c:when test='<%= displayStyle.equals("icon") %>'>
 					<liferay-ui:search-container-column-text>
-						<liferay-frontend:user-vertical-card
-							actionJspServletContext="<%= application %>"
-							resultRow="<%= row %>"
-							rowChecker="<%= userSearchContainer.getRowChecker() %>"
-							subtitle="<%= user2.getScreenName() %>"
-							title="<%= user2.getFullName() %>"
-							userId="<%= user2.getUserId() %>"
+						<clay:user-card
+							userCard="<%= new UserVerticalCard(renderRequest, userSearchContainer.getRowChecker(), user2) %>"
 						/>
 					</liferay-ui:search-container-column-text>
 				</c:when>
@@ -121,26 +114,3 @@ SearchContainer<User> userSearchContainer = selectOrganizationUsersManagementToo
 		/>
 	</liferay-ui:search-container>
 </aui:form>
-
-<aui:script use="liferay-search-container">
-	var searchContainer = Liferay.SearchContainer.get('<portlet:namespace />users');
-
-	searchContainer.on('rowToggled', function (event) {
-		var selectedItems = event.elements.allSelectedElements;
-
-		var result = {};
-
-		if (!selectedItems.isEmpty()) {
-			result = {
-				data: {
-					value: selectedItems.get('value').join(','),
-				},
-			};
-		}
-
-		Liferay.Util.getOpener().Liferay.fire(
-			'<%= HtmlUtil.escapeJS(eventName) %>',
-			result
-		);
-	});
-</aui:script>

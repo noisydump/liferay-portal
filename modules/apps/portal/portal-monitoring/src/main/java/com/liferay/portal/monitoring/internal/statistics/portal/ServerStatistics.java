@@ -18,6 +18,7 @@ import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.monitoring.DataSampleProcessor;
 import com.liferay.portal.kernel.monitoring.MonitoringException;
 import com.liferay.portal.kernel.service.CompanyLocalService;
+import com.liferay.portal.kernel.util.ArrayUtil;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -52,7 +53,7 @@ public class ServerStatistics
 
 		if (companyStatistics == null) {
 			throw new MonitoringException(
-				"No statistics found for company id " + companyId);
+				"No statistics found for company ID " + companyId);
 		}
 
 		return companyStatistics;
@@ -66,7 +67,7 @@ public class ServerStatistics
 
 		if (companyStatistics == null) {
 			throw new MonitoringException(
-				"No statistics found for web id " + webId);
+				"No statistics found for web ID " + webId);
 		}
 
 		return companyStatistics;
@@ -97,7 +98,7 @@ public class ServerStatistics
 			}
 			catch (Exception exception) {
 				throw new IllegalStateException(
-					"Unable to get company with company id " + companyId,
+					"Unable to get company with company ID " + companyId,
 					exception);
 			}
 		}
@@ -117,9 +118,9 @@ public class ServerStatistics
 	}
 
 	public void reset() {
-		for (long companyId : _companyStatisticsByCompanyId.keySet()) {
-			reset(companyId);
-		}
+		_companyLocalService.forEachCompanyId(
+			companyId -> reset(companyId),
+			ArrayUtil.toLongArray(_companyStatisticsByCompanyId.keySet()));
 	}
 
 	public void reset(long companyId) {

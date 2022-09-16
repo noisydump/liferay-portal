@@ -16,11 +16,11 @@ import {useFilter} from '../../../../../shared/hooks/useFilter.es';
 import {usePaginationState} from '../../../../../shared/hooks/usePaginationState.es';
 import {AppContext} from '../../../../AppContext.es';
 import {ModalContext} from '../../ModalProvider.es';
-import {Body} from './SelectTasksStepBody.es';
-import {Header} from './SelectTasksStepHeader.es';
+import Body from './SelectTasksStepBody.es';
+import Header from './SelectTasksStepHeader.es';
 import {useFetchTasks} from './hooks/useFetchTasks.es';
 
-const SelectTasksStep = ({setErrorToast, withoutUnassigned}) => {
+function SelectTasksStep({setErrorToast, withoutUnassigned}) {
 	const {deltaValues} = useContext(AppContext);
 	const {setSelectTasks} = useContext(ModalContext);
 
@@ -40,15 +40,22 @@ const SelectTasksStep = ({setErrorToast, withoutUnassigned}) => {
 
 	const paginationState = {
 		...pagination,
-		totalCount: data.totalCount,
+		totalCount: data?.totalCount,
 	};
 
 	useEffect(() => {
 		if (page !== 1) {
 			pagination.setPage(1);
 		}
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [bulkAssigneeIds, bulkTaskNames]);
+
+	useEffect(() => {
+		fetchTasks();
+
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [page, pageSize, bulkAssigneeIds, bulkTaskNames]);
 
 	const [retry, setRetry] = useState(0);
 
@@ -56,15 +63,16 @@ const SelectTasksStep = ({setErrorToast, withoutUnassigned}) => {
 		setErrorToast(false);
 
 		return [
-			fetchTasks().catch((err) => {
+			fetchTasks().catch((error) => {
 				setSelectTasks({selectAll: false, tasks: []});
 				setErrorToast(Liferay.Language.get('your-request-has-failed'));
 
-				return Promise.reject(err);
+				return Promise.reject(error);
 			}),
 		];
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [fetchTasks, retry]);
+	}, [retry]);
 
 	return (
 		<div className="fixed-height modal-metrics-content">
@@ -83,7 +91,7 @@ const SelectTasksStep = ({setErrorToast, withoutUnassigned}) => {
 			</PromisesResolver>
 		</div>
 	);
-};
+}
 
 SelectTasksStep.Body = Body;
 SelectTasksStep.Header = Header;

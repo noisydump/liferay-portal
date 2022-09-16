@@ -4,10 +4,10 @@
 		"layoutFriendlyURL": "/catalog",
 		"portletName": "com_liferay_commerce_product_content_search_web_internal_portlet_CPSearchResultsPortlet",
 		"portletPreferences": {
-			"cpContentListRendererKey": "list-minium",
-			"grouped--cpTypeListEntryRendererKey": "list-entry-minium",
-			"simple--cpTypeListEntryRendererKey": "list-entry-minium",
-			"virtual--cpTypeListEntryRendererKey": "list-entry-minium"
+			"cpContentListRendererKey": "list-default",
+			"grouped--cpTypeListEntryRendererKey": "list-entry-default",
+			"simple--cpTypeListEntryRendererKey": "list-entry-default",
+			"virtual--cpTypeListEntryRendererKey": "list-entry-default"
 		}
 	},
 	{
@@ -38,9 +38,9 @@
 		"layoutFriendlyURL": "/compare",
 		"portletName": "com_liferay_commerce_product_content_web_internal_portlet_CPCompareContentPortlet",
 		"portletPreferences": {
-			"grouped--cpTypeListEntryRendererKey": "list-entry-minium",
-			"simple--cpTypeListEntryRendererKey": "list-entry-minium",
-			"virtual--cpTypeListEntryRendererKey": "list-entry-minium"
+			"grouped--cpTypeListEntryRendererKey": "list-entry-default",
+			"simple--cpTypeListEntryRendererKey": "list-entry-default",
+			"virtual--cpTypeListEntryRendererKey": "list-entry-default"
 		}
 	},
 	{
@@ -49,9 +49,9 @@
 		"portletName": "com_liferay_commerce_product_content_web_internal_portlet_CPContentPortlet",
 		"portletPreferences": {
 			"cpType": "simple",
-			"grouped--cpTypeRendererKey": "minium",
-			"simple--cpTypeRendererKey": "minium",
-			"virtual--cpTypeRendererKey": "minium"
+			"grouped--cpTypeRendererKey": "default",
+			"simple--cpTypeRendererKey": "default",
+			"virtual--cpTypeRendererKey": "default"
 		}
 	},
 	{
@@ -75,9 +75,9 @@
 		"layoutFriendlyURL": "/dashboard",
 		"portletName": "com_liferay_commerce_product_content_web_internal_portlet_CPPublisherPortlet",
 		"portletPreferences": {
-			"cpContentListRendererKey": "list-minium",
+			"cpContentListRendererKey": "list-default",
 			"dataSource": "assetCategoriesAndTagsDataSource",
-			"grouped--cpTypeListEntryRendererKey": "list-entry-minium",
+			"grouped--cpTypeListEntryRendererKey": "list-entry-default",
 			"paginationDelta": "5",
 			"paginationType": "more",
 			"queryAndOperator0": "true",
@@ -86,8 +86,8 @@
 			"queryValues0": "featured",
 			"renderSelection": "custom",
 			"selectionStyle": "dynamic",
-			"simple--cpTypeListEntryRendererKey": "list-entry-minium",
-			"virtual--cpTypeListEntryRendererKey": "list-entry-minium"
+			"simple--cpTypeListEntryRendererKey": "list-entry-default",
+			"virtual--cpTypeListEntryRendererKey": "list-entry-default"
 		}
 	},
 	{

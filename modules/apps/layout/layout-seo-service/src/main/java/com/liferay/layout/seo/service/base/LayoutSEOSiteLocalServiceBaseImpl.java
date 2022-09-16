@@ -21,7 +21,9 @@ import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.layout.seo.model.LayoutSEOSite;
 import com.liferay.layout.seo.service.LayoutSEOSiteLocalService;
+import com.liferay.layout.seo.service.LayoutSEOSiteLocalServiceUtil;
 import com.liferay.layout.seo.service.persistence.LayoutSEOSitePersistence;
+import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
@@ -37,23 +39,30 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
+import com.liferay.portal.kernel.service.change.tracking.CTService;
 import com.liferay.portal.kernel.service.persistence.BasePersistence;
+import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -74,7 +83,7 @@ public abstract class LayoutSEOSiteLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>LayoutSEOSiteLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.layout.seo.service.LayoutSEOSiteLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>LayoutSEOSiteLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>LayoutSEOSiteLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -145,6 +154,13 @@ public abstract class LayoutSEOSiteLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return layoutSEOSitePersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -393,6 +409,11 @@ public abstract class LayoutSEOSiteLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement LayoutSEOSiteLocalServiceImpl#deleteLayoutSEOSite(LayoutSEOSite) to avoid orphaned data");
+		}
+
 		return layoutSEOSiteLocalService.deleteLayoutSEOSite(
 			(LayoutSEOSite)persistedModel);
 	}
@@ -503,17 +524,24 @@ public abstract class LayoutSEOSiteLocalServiceBaseImpl
 		return layoutSEOSitePersistence.update(layoutSEOSite);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
 			LayoutSEOSiteLocalService.class, IdentifiableOSGiService.class,
-			PersistedModelLocalService.class
+			CTService.class, PersistedModelLocalService.class
 		};
 	}
 
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		layoutSEOSiteLocalService = (LayoutSEOSiteLocalService)aopProxy;
+
+		_setLocalServiceUtilService(layoutSEOSiteLocalService);
 	}
 
 	/**
@@ -526,8 +554,23 @@ public abstract class LayoutSEOSiteLocalServiceBaseImpl
 		return LayoutSEOSiteLocalService.class.getName();
 	}
 
-	protected Class<?> getModelClass() {
+	@Override
+	public CTPersistence<LayoutSEOSite> getCTPersistence() {
+		return layoutSEOSitePersistence;
+	}
+
+	@Override
+	public Class<LayoutSEOSite> getModelClass() {
 		return LayoutSEOSite.class;
+	}
+
+	@Override
+	public <R, E extends Throwable> R updateWithUnsafeFunction(
+			UnsafeFunction<CTPersistence<LayoutSEOSite>, R, E>
+				updateUnsafeFunction)
+		throws E {
+
+		return updateUnsafeFunction.apply(layoutSEOSitePersistence);
 	}
 
 	protected String getModelClassName() {
@@ -558,6 +601,22 @@ public abstract class LayoutSEOSiteLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		LayoutSEOSiteLocalService layoutSEOSiteLocalService) {
+
+		try {
+			Field field = LayoutSEOSiteLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, layoutSEOSiteLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected LayoutSEOSiteLocalService layoutSEOSiteLocalService;
 
 	@Reference
@@ -567,8 +626,7 @@ public abstract class LayoutSEOSiteLocalServiceBaseImpl
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@Reference
-	protected com.liferay.portal.kernel.service.GroupLocalService
-		groupLocalService;
+	private static final Log _log = LogFactoryUtil.getLog(
+		LayoutSEOSiteLocalServiceBaseImpl.class);
 
 }

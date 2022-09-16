@@ -120,7 +120,7 @@ public class AppDockerPlugin implements Plugin<Project> {
 		final Sync prepareAppDockerImageInputDirTask,
 		final AppDockerExtension appDockerExtension) {
 
-		final DockerBuildImage dockerBuildImage = GradleUtil.addTask(
+		DockerBuildImage dockerBuildImage = GradleUtil.addTask(
 			prepareAppDockerImageInputDirTask.getProject(),
 			BUILD_APP_DOCKER_IMAGE_TASK_NAME, DockerBuildImage.class);
 
@@ -205,7 +205,7 @@ public class AppDockerPlugin implements Plugin<Project> {
 	}
 
 	private DockerPushImage _addTaskPushAppDockerImage(
-		final DockerBuildImage buildAppDockerImageTask,
+		DockerBuildImage buildAppDockerImageTask,
 		final AppDockerExtension appDockerExtension) {
 
 		DockerPushImage dockerPushImage = GradleUtil.addTask(
@@ -242,11 +242,11 @@ public class AppDockerPlugin implements Plugin<Project> {
 		String imageRepositoryAndTag = _getImageRepositoryAndTag(
 			dockerTagImage.getRepository(), dockerTagImage.getTag());
 
-		String taskName = _getTaskName(
-			PUSH_APP_DOCKER_IMAGE_TASK_NAME, imageRepositoryAndTag);
-
 		DockerPushImage dockerPushImage = GradleUtil.addTask(
-			dockerTagImage.getProject(), taskName, DockerPushImage.class);
+			dockerTagImage.getProject(),
+			_getTaskName(
+				PUSH_APP_DOCKER_IMAGE_TASK_NAME, imageRepositoryAndTag),
+			DockerPushImage.class);
 
 		dockerPushImage.setDependsOn(Collections.singleton(dockerTagImage));
 		dockerPushImage.setDescription(
@@ -291,11 +291,10 @@ public class AppDockerPlugin implements Plugin<Project> {
 		String imageRepositoryAndTag = _getImageRepositoryAndTag(
 			imageRepository, imageTag);
 
-		String taskName = _getTaskName(
-			TAG_APP_DOCKER_IMAGE_TASK_NAME, imageRepositoryAndTag);
-
 		DockerTagImage dockerTagImage = GradleUtil.addTask(
-			project, taskName, DockerTagImage.class);
+			project,
+			_getTaskName(TAG_APP_DOCKER_IMAGE_TASK_NAME, imageRepositoryAndTag),
+			DockerTagImage.class);
 
 		dockerTagImage.setDependsOn(
 			Collections.singleton(buildAppDockerImagetask));

@@ -17,6 +17,7 @@ package com.liferay.data.engine.rest.resource.v2_0.test.util;
 import com.liferay.data.engine.rest.client.dto.v2_0.DataDefinition;
 import com.liferay.data.engine.rest.client.dto.v2_0.DataDefinitionField;
 import com.liferay.data.engine.rest.client.resource.v2_0.DataDefinitionResource;
+import com.liferay.data.engine.rest.resource.v2_0.test.util.content.type.TestDataDefinitionContentType;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.storage.StorageType;
 import com.liferay.dynamic.data.mapping.test.util.DDMStructureTestHelper;
@@ -29,6 +30,8 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.InputStream;
+
+import java.util.Map;
 
 /**
  * @author Gabriel Albuquerque
@@ -49,7 +52,7 @@ public class DataDefinitionTestUtil {
 		).build();
 
 		return dataDefinitionResource.postSiteDataDefinitionByContentType(
-			groupId, "app-builder", dataDefinition);
+			groupId, "test", dataDefinition);
 	}
 
 	public static DataDefinition addDataDefinition(long groupId)
@@ -76,19 +79,52 @@ public class DataDefinitionTestUtil {
 		).build();
 
 		return dataDefinitionResource.postSiteDataDefinitionByContentType(
-			groupId, "app-builder", dataDefinition);
+			groupId, "test", dataDefinition);
+	}
+
+	public static DataDefinition addDataDefinitionWithFieldset(long groupId)
+		throws Exception {
+
+		DataDefinition dataDefinition = DataDefinition.toDTO(
+			read("data-definition-object-structure-with-fieldset.json"));
+
+		DataDefinitionResource.Builder builder =
+			DataDefinitionResource.builder();
+
+		DataDefinitionResource dataDefinitionResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+
+		DataDefinition fieldsetDataDefinition =
+			dataDefinitionResource.postSiteDataDefinitionByContentType(
+				groupId, "test",
+				DataDefinition.toDTO(
+					read("data-definition-fieldset-structure.json")));
+
+		for (DataDefinitionField dataDefinitionField :
+				dataDefinition.getDataDefinitionFields()) {
+
+			Map<String, Object> customProperties =
+				dataDefinitionField.getCustomProperties();
+
+			customProperties.put(
+				"ddmStructureId", fieldsetDataDefinition.getId());
+		}
+
+		return dataDefinitionResource.postSiteDataDefinitionByContentType(
+			groupId, "test", dataDefinition);
 	}
 
 	public static DDMStructure addDDMStructure(Group group) throws Exception {
 		DDMStructureTestHelper ddmStructureTestHelper =
 			new DDMStructureTestHelper(
-				PortalUtil.getClassNameId(
-					"com.liferay.app.builder.model.AppBuilderApp"),
+				PortalUtil.getClassNameId(TestDataDefinitionContentType.class),
 				group);
 
 		return ddmStructureTestHelper.addStructure(
-			PortalUtil.getClassNameId(
-				"com.liferay.app.builder.model.AppBuilderApp"),
+			PortalUtil.getClassNameId(TestDataDefinitionContentType.class),
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 			read("test-structured-content-structure.json"),
 			StorageType.DEFAULT.getValue());

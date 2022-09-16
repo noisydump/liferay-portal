@@ -15,6 +15,8 @@
 package com.liferay.portal.tools;
 
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.xml.Document;
@@ -62,17 +64,15 @@ public class EARBuilder {
 				Element contextRootElement = webElement.addElement(
 					"context-root");
 
-				String contextRoot = _getContextRoot(
-					pluginFileName, portalContextPath);
-
-				contextRootElement.addText(contextRoot);
+				contextRootElement.addText(
+					_getContextRoot(pluginFileName, portalContextPath));
 			}
 
 			FileUtil.write(
 				originalApplicationXML, document.formattedString(), true);
 		}
 		catch (Exception exception) {
-			exception.printStackTrace();
+			_log.error(exception);
 		}
 	}
 
@@ -100,5 +100,7 @@ public class EARBuilder {
 
 		return StringPool.SLASH.concat(contextRoot);
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(EARBuilder.class);
 
 }

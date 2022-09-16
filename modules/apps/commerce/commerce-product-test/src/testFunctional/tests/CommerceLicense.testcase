@@ -1,14 +1,14 @@
 @component-name = "portal-commerce"
 definition {
 
-	property portal.release = "false";
+	property license.required = "true";
+	property portal.release = "true";
 	property portal.upstream = "false";
+	property test.run.environment = "EE";
 	property testray.main.component.name = "Commerce";
 
 	setUp {
-		TestCase.setUpPortalInstance();
-
-		User.firstLoginPG();
+		CommerceConfiguration.commerceSetUp();
 	}
 
 	tearDown {
@@ -19,46 +19,72 @@ definition {
 		}
 	}
 
-	@priority = "5"
-	test ViewCommerceDisabled {
-		property commerce.enabled = "false";
-		property portal.release = "true";
+	@priority = "3"
+	test DeactivateCommerce {
+		property test.name.skip.portal.instance = "CommerceLicense#DeactivateCommerce";
 
 		ApplicationsMenuHelper.openApplicationsMenu();
 
-		var key_panel = "Applications";
+		CommerceLicense.viewCommerceAvailable();
 
-		AssertElementPresent(locator1 = "ApplicationsMenu#PANEL");
+		Portlet.shutdownServer();
 
-		var key_panel = "Commerce";
+		AntCommand(
+			locator1 = "build-test.xml",
+			value1 = "portal-ext-properties-update -Dadd.new.properties=true -Dupdate.properties=enterprise.product.commerce.enabled=false");
 
-		AssertElementNotPresent(locator1 = "ApplicationsMenu#PANEL");
+		Portlet.startServer(commerceEnabled = "false");
+
+		User.firstLoginPG();
+
+		CommerceLicense.viewCommerceMissing();
+	}
+
+	@priority = "4"
+	test DeleteEnterpriseLicenseModule {
+		property test.name.skip.portal.instance = "CommerceLicense#DeleteEnterpriseLicenseModule";
+
+		Portlet.shutdownServer();
+
+		var liferayHome = PropsUtil.get("liferay.home.dir.name");
+
+		FileUtil.delete("${liferayHome}/osgi/static/com.liferay.portal.license.enterprise.app.jar");
+
+		FileUtil.delete("${liferayHome}/osgi/marketplace/Liferay Foundation - Liferay License Manager - Impl.lpkg");
+
+		FileUtil.delete("${liferayHome}/osgi/core/com.liferay.portal.app.license.api.jar");
+
+		FileUtil.delete("${liferayHome}/osgi/core/com.liferay.portal.app.license.impl.jar");
+
+		FileUtil.delete("${liferayHome}/osgi/core/com.liferay.portal.app.license.resolver.hook.jar");
+
+		AntCommand(
+			locator1 = "build-test.xml",
+			value1 = "delete-static-impl-license-jar -DliferayHome=${liferayHome}");
+
+		Portlet.startServer(keepOsGiState = "false");
+
+		User.firstLoginPG();
+
+		CommerceLicense.viewCommerceMissing();
 	}
 
 	@priority = "5"
-	test ViewCommerceEnabled {
-		property commerce.enabled = "true";
+	test EnableCommerceAfterPortalStarts {
+		property commerce.enabled = "false";
+		property test.name.skip.portal.instance = "CommerceLicense#EnableCommerceAfterPortalStarts";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Configuration",
-			panel = "Control Panel",
-			portlet = "Search");
+		CommerceLicense.viewCommerceMissing();
 
-		SearchAdministration.executeSearchActions(actionsDescription = "Reindex all search indexes.");
+		Portlet.shutdownServer();
 
-		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Speedwell");
+		AntCommand(
+			locator1 = "build-test.xml",
+			value1 = "portal-ext-properties-update -Dupdate.properties.original=enterprise.product.commerce.enabled=false -Dupdate.properties=enterprise.product.commerce.enabled=true");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		Portlet.startServer(deleteLiferayHome = "false");
 
-		CommerceNavigator.gotoEntry(entryName = "Speedwell Portal");
-
-		CommerceChannels.activatePaymentMethod(paymentMethod = "Money Order");
-
-		Navigator.openWithAppendToBaseURL(urlAppend = "web/speedwell");
-
-		CommerceNavigator.gotoSpeedwellTopbarItem(menuItem = "Catalog");
+		CommerceLicense.executeSmoke();
 	}
 
 }

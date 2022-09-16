@@ -56,10 +56,13 @@ List<Long> hitLayoutIds = JournalContentSearchLocalServiceUtil.getLayoutIds(layo
 	<c:when test="<%= Validator.isNotNull(journalContentSearchPortletInstanceConfiguration.targetPortletId()) %>">
 
 		<%
-		PortletURL webContentPortletURL = PortletURLFactoryUtil.create(request, journalContentSearchPortletInstanceConfiguration.targetPortletId(), PortletRequest.RENDER_PHASE);
-
-		webContentPortletURL.setParameter("groupId", String.valueOf(articleGroupId));
-		webContentPortletURL.setParameter("articleId", articleId);
+		PortletURL webContentPortletURL = PortletURLBuilder.create(
+			PortletURLFactoryUtil.create(request, journalContentSearchPortletInstanceConfiguration.targetPortletId(), PortletRequest.RENDER_PHASE)
+		).setParameter(
+			"articleId", articleId
+		).setParameter(
+			"groupId", articleGroupId
+		).buildPortletURL();
 		%>
 
 		<br /><a href="<%= webContentPortletURL.toString() %>"><%= StringUtil.shorten(webContentPortletURL.toString(), 100) %></a>
@@ -67,5 +70,5 @@ List<Long> hitLayoutIds = JournalContentSearchLocalServiceUtil.getLayoutIds(layo
 </c:choose>
 
 <%!
-private static Log _log = LogFactoryUtil.getLog("com_liferay_journal_content_search_web.article_content_jspf");
+private static final Log _log = LogFactoryUtil.getLog("com_liferay_journal_content_search_web.article_content_jspf");
 %>

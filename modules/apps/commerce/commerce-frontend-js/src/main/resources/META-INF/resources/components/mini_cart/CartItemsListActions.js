@@ -14,18 +14,19 @@
 
 import ClayButton from '@clayui/button';
 import classnames from 'classnames';
-import PropTypes from 'prop-types';
 import React, {useContext, useState} from 'react';
 
-import {PRODUCT_REMOVED_FROM_CART} from '../../utilities/eventsDefinitions';
+import ServiceProvider from '../../ServiceProvider/index';
+import {CART_PRODUCT_QUANTITY_CHANGED} from '../../utilities/eventsDefinitions';
 import {liferayNavigate} from '../../utilities/index';
 import {ALL} from '../add_to_cart/constants';
 import MiniCartContext from './MiniCartContext';
 import {REMOVE_ALL_ITEMS, VIEW_DETAILS} from './util/constants';
 
-function CartItemsListActions({numberOfItems}) {
+const CartResource = ServiceProvider.DeliveryCartAPI('v1');
+
+function CartItemsListActions() {
 	const {
-		CartResource,
 		actionURLs,
 		cartState,
 		labels,
@@ -33,7 +34,7 @@ function CartItemsListActions({numberOfItems}) {
 		updateCartModel,
 	} = useContext(MiniCartContext);
 
-	const {id: orderId} = cartState;
+	const {cartItems = [], id: orderId} = cartState;
 	const {orderDetailURL} = actionURLs;
 
 	const [isAsking, setIsAsking] = useState(false);
@@ -44,37 +45,43 @@ function CartItemsListActions({numberOfItems}) {
 		setIsUpdating(true);
 
 		CartResource.updateCartById(orderId, {cartItems: []})
-			.then(() => updateCartModel({orderId}))
+			.then(() => updateCartModel({order: {id: orderId}}))
 			.then(() => {
 				setIsAsking(false);
 				setIsUpdating(false);
 
-				Liferay.fire(PRODUCT_REMOVED_FROM_CART, {skuId: ALL});
+				Liferay.fire(CART_PRODUCT_QUANTITY_CHANGED, {
+					quantity: 0,
+					skuId: ALL,
+				});
 			});
 	};
 
 	return (
-		<div className={'mini-cart-header'}>
-			<div className={'mini-cart-header-block'}>
-				<div className={'mini-cart-header-resume'}>
-					{numberOfItems > 0 && (
+		<div className="mini-cart-header">
+			<div className="mini-cart-header-block">
+				<div className="mini-cart-header-resume">
+					{!!cartItems.length && (
 						<>
-							<span className={'items'}>{numberOfItems}</span>
-							{` ${
-								numberOfItems > 1
-									? Liferay.Language.get('products')
-									: Liferay.Language.get('product')
-							}`}
+							<span className="items">{cartItems.length}</span>
+							{cartItems.length > 1
+								? ' ' + Liferay.Language.get('products')
+								: ' ' + Liferay.Language.get('product')}
 						</>
 					)}
 				</div>
 
-				<div className={'mini-cart-header-actions'}>
-					<span className={classnames('actions', isAsking && 'hide')}>
+				<div className="mini-cart-header-actions">
+					<span
+						className={classnames({
+							actions: true,
+							hide: isAsking,
+						})}
+					>
 						<ClayButton
-							className={'action'}
-							disabled={!numberOfItems}
-							displayType={'link'}
+							className="action"
+							disabled={!cartItems.length}
+							displayType="link"
 							onClick={() => {
 								liferayNavigate(orderDetailURL);
 							}}
@@ -84,9 +91,9 @@ function CartItemsListActions({numberOfItems}) {
 						</ClayButton>
 
 						<ClayButton
-							className={'action text-danger'}
-							disabled={!numberOfItems}
-							displayType={'link'}
+							className="action text-danger"
+							disabled={!cartItems.length}
+							displayType="link"
 							onClick={askConfirmation}
 							small
 						>
@@ -95,25 +102,26 @@ function CartItemsListActions({numberOfItems}) {
 					</span>
 
 					<div
-						className={classnames(
-							'confirmation-prompt',
-							!isAsking && 'hide'
-						)}
+						className={classnames({
+							'confirmation-prompt': true,
+							'hide': !isAsking,
+						})}
 					>
 						<span>{Liferay.Language.get('are-you-sure')}</span>
 
 						<span>
 							<button
-								className={'btn btn-outline-success btn-sm'}
+								className="btn btn-outline-success btn-sm"
 								onClick={flushCart}
-								type={'button'}
+								type="button"
 							>
 								{Liferay.Language.get('yes')}
 							</button>
+
 							<button
-								className={'btn btn-outline-danger btn-sm'}
+								className="btn btn-outline-danger btn-sm"
 								onClick={cancel}
-								type={'button'}
+								type="button"
 							>
 								{Liferay.Language.get('no')}
 							</button>
@@ -124,9 +132,5 @@ function CartItemsListActions({numberOfItems}) {
 		</div>
 	);
 }
-
-CartItemsListActions.propTypes = {
-	numberOfItems: PropTypes.number,
-};
 
 export default CartItemsListActions;

@@ -16,6 +16,7 @@ package com.liferay.layout.seo.service.base;
 
 import com.liferay.layout.seo.model.LayoutSEOSite;
 import com.liferay.layout.seo.service.LayoutSEOSiteService;
+import com.liferay.layout.seo.service.LayoutSEOSiteServiceUtil;
 import com.liferay.layout.seo.service.persistence.LayoutSEOSitePersistence;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
@@ -23,12 +24,17 @@ import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.service.BaseServiceImpl;
 import com.liferay.portal.kernel.util.PortalUtil;
 
+import java.lang.reflect.Field;
+
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -49,8 +55,13 @@ public abstract class LayoutSEOSiteServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>LayoutSEOSiteService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.layout.seo.service.LayoutSEOSiteServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>LayoutSEOSiteService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>LayoutSEOSiteServiceUtil</code>.
 	 */
+	@Deactivate
+	protected void deactivate() {
+		_setServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -61,6 +72,8 @@ public abstract class LayoutSEOSiteServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		layoutSEOSiteService = (LayoutSEOSiteService)aopProxy;
+
+		_setServiceUtilService(layoutSEOSiteService);
 	}
 
 	/**
@@ -105,6 +118,22 @@ public abstract class LayoutSEOSiteServiceBaseImpl
 		}
 	}
 
+	private void _setServiceUtilService(
+		LayoutSEOSiteService layoutSEOSiteService) {
+
+		try {
+			Field field = LayoutSEOSiteServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, layoutSEOSiteService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@Reference
 	protected com.liferay.layout.seo.service.LayoutSEOSiteLocalService
 		layoutSEOSiteLocalService;
@@ -118,11 +147,7 @@ public abstract class LayoutSEOSiteServiceBaseImpl
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@Reference
-	protected com.liferay.portal.kernel.service.GroupLocalService
-		groupLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.GroupService groupService;
+	private static final Log _log = LogFactoryUtil.getLog(
+		LayoutSEOSiteServiceBaseImpl.class);
 
 }

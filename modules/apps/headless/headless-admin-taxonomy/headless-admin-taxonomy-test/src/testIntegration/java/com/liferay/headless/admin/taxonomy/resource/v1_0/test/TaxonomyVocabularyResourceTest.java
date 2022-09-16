@@ -18,8 +18,8 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.headless.admin.taxonomy.client.dto.v1_0.AssetType;
 import com.liferay.headless.admin.taxonomy.client.dto.v1_0.TaxonomyVocabulary;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
-import org.junit.Before;
 import org.junit.runner.RunWith;
 
 /**
@@ -28,14 +28,6 @@ import org.junit.runner.RunWith;
 @RunWith(Arquillian.class)
 public class TaxonomyVocabularyResourceTest
 	extends BaseTaxonomyVocabularyResourceTestCase {
-
-	@Before
-	@Override
-	public void setUp() throws Exception {
-		super.setUp();
-
-		testGroup = testDepotEntry.getGroup();
-	}
 
 	@Override
 	protected String[] getAdditionalAssertFieldNames() {
@@ -61,10 +53,61 @@ public class TaxonomyVocabularyResourceTest
 					}
 				};
 				description = RandomTestUtil.randomString();
+				externalReferenceCode = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
 				name = RandomTestUtil.randomString();
 				siteId = testGroup.getGroupId();
 			}
 		};
+	}
+
+	@Override
+	protected Long
+			testDeleteAssetLibraryTaxonomyVocabularyByExternalReferenceCode_getAssetLibraryId()
+		throws Exception {
+
+		return testDepotEntry.getDepotEntryId();
+	}
+
+	@Override
+	protected TaxonomyVocabulary
+			testGetAssetLibraryTaxonomyVocabularyByExternalReferenceCode_addTaxonomyVocabulary()
+		throws Exception {
+
+		return testPostAssetLibraryTaxonomyVocabulary_addTaxonomyVocabulary(
+			randomTaxonomyVocabulary());
+	}
+
+	@Override
+	protected Long
+			testGetAssetLibraryTaxonomyVocabularyByExternalReferenceCode_getAssetLibraryId()
+		throws Exception {
+
+		return testDepotEntry.getDepotEntryId();
+	}
+
+	@Override
+	protected TaxonomyVocabulary
+			testGraphQLGetAssetLibraryTaxonomyVocabularyByExternalReferenceCode_addTaxonomyVocabulary()
+		throws Exception {
+
+		return testGetAssetLibraryTaxonomyVocabularyByExternalReferenceCode_addTaxonomyVocabulary();
+	}
+
+	@Override
+	protected Long
+			testGraphQLGetAssetLibraryTaxonomyVocabularyByExternalReferenceCode_getAssetLibraryId()
+		throws Exception {
+
+		return testDepotEntry.getDepotEntryId();
+	}
+
+	@Override
+	protected Long
+			testPutAssetLibraryTaxonomyVocabularyByExternalReferenceCode_getAssetLibraryId()
+		throws Exception {
+
+		return testDepotEntry.getDepotEntryId();
 	}
 
 }

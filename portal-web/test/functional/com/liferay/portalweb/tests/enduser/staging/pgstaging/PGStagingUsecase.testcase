@@ -21,13 +21,14 @@ definition {
 			JSONUser.tearDownNonAdminUsers();
 
 			JSONOrganization.deleteOrganizationByName(organizationName = "Staging Organization Name");
-
-			Role.tearDownCP();
 		}
 	}
 
+	@description = "Check the actions of organizational users with different identities in the workflow of publishing Blogs in local staging."
 	@priority = "3"
 	test BlogsOrganizationWorkflowStaging {
+		property test.name.skip.portal.instance = "PGStagingUsecase#BlogsOrganizationWorkflowStaging";
+
 		Role.openRolesAdmin();
 
 		Role.definePermissionCP(
@@ -52,9 +53,9 @@ definition {
 			organizationName = "Staging Organization Name",
 			organizationSite = "true");
 
-		SitePages.openPagesAdmin(siteURLKey = "Staging Organization Name");
+		PagesAdmin.openPagesAdmin(siteURLKey = "Staging Organization Name");
 
-		SitePages.addPublicPage(pageName = "Staging Test Page");
+		PagesAdmin.addPage(pageName = "Staging Test Page");
 
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
@@ -118,9 +119,7 @@ definition {
 			roleTitle = "Organization Administrator",
 			userEmailAddress = "usereaoa@liferay.com");
 
-		Staging.openStagingAdmin(siteURLKey = "staging-organization-name");
-
-		Staging.activateStagingCP(siteName = "Staging Organization Name");
+		JSONStaging.enableLocalStaging(groupName = "Staging Organization Name");
 
 		Workflow.openWorkflowAdmin(siteURLKey = "staging-organization-name-staging");
 
@@ -138,9 +137,9 @@ definition {
 			pageName = "Staging Test Page",
 			portletName = "Blogs");
 
-		User.logoutUserPG();
+		User.logoutPG();
 
-		SitePages.openPagesAdmin(siteURLKey = "Staging Organization Name");
+		PagesAdmin.openPagesAdmin(siteURLKey = "Staging Organization Name");
 
 		AssertElementNotPresent(
 			key_portletName = "Blogs",
@@ -156,7 +155,7 @@ definition {
 
 		Staging.publishToLive();
 
-		User.logoutUserPG();
+		User.logoutPG();
 
 		Navigator.openSiteURL(siteName = "Staging Organization Name");
 
@@ -174,9 +173,9 @@ definition {
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs Entry Title");
 
-		User.logoutUserPG();
+		User.logoutPG();
 
-		SitePages.openPagesAdmin(siteURLKey = "Staging Organization Name");
+		PagesAdmin.openPagesAdmin(siteURLKey = "Staging Organization Name");
 
 		AssertElementNotPresent(
 			key_entryTitle = "Blogs Entry Title",
@@ -198,9 +197,9 @@ definition {
 			workflowAssetType = "Blogs Entry",
 			workflowTask = "Review");
 
-		User.logoutUserPG();
+		User.logoutPG();
 
-		SitePages.openPagesAdmin(siteURLKey = "Staging Organization Name");
+		PagesAdmin.openPagesAdmin(siteURLKey = "Staging Organization Name");
 
 		AssertElementNotPresent(
 			key_entryTitle = "Blogs Entry Title",
@@ -216,7 +215,7 @@ definition {
 
 		Staging.publishToLive();
 
-		User.logoutUserPG();
+		User.logoutPG();
 
 		Navigator.openSiteURL(siteName = "Staging Organization Name");
 

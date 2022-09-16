@@ -27,10 +27,10 @@ try {
 	}
 }
 catch (PortletException pe) {
-	_log.error(pe, pe);
+	_log.error(pe);
 }
 catch (RuntimeException re) {
-	_log.error(re, re);
+	_log.error(re);
 }
 
 if ((invokerPortlet == null) || !invokerPortlet.isHeaderPortlet()) {
@@ -246,5 +246,5 @@ liferayHeaderRequest.cleanUp();
 %>
 
 <%!
-private static Log _log = LogFactoryUtil.getLog("portal_web.docroot.html.portal.header_portlet_jsp");
+private static final Log _log = LogFactoryUtil.getLog("portal_web.docroot.html.portal.header_portlet_jsp");
 %>

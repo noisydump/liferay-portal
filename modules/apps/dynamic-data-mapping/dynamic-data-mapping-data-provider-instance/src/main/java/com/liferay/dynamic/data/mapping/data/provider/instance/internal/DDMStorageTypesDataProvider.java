@@ -18,7 +18,8 @@ import com.liferay.dynamic.data.mapping.data.provider.DDMDataProvider;
 import com.liferay.dynamic.data.mapping.data.provider.DDMDataProviderRequest;
 import com.liferay.dynamic.data.mapping.data.provider.DDMDataProviderResponse;
 import com.liferay.dynamic.data.mapping.storage.DDMStorageAdapterTracker;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.dynamic.data.mapping.storage.StorageType;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.util.KeyValuePair;
 
 import java.util.ArrayList;
@@ -58,6 +59,10 @@ public class DDMStorageTypesDataProvider implements DDMDataProvider {
 			httpServletRequestOptional.orElse(null);
 
 		for (String storageType : storageTypes) {
+			if (storageType.equals(StorageType.JSON.getValue())) {
+				continue;
+			}
+
 			if (httpServletRequest == null) {
 				keyValuePairs.add(new KeyValuePair(storageType, storageType));
 
@@ -67,9 +72,9 @@ public class DDMStorageTypesDataProvider implements DDMDataProvider {
 			keyValuePairs.add(
 				new KeyValuePair(
 					storageType,
-					LanguageUtil.get(
+					_language.get(
 						httpServletRequest, storageType + "[stands-for]",
-						LanguageUtil.get(httpServletRequest, storageType))));
+						_language.get(httpServletRequest, storageType))));
 		}
 
 		DDMDataProviderResponse.Builder builder =
@@ -87,5 +92,8 @@ public class DDMStorageTypesDataProvider implements DDMDataProvider {
 
 	@Reference
 	protected DDMStorageAdapterTracker ddmStorageAdapterTracker;
+
+	@Reference
+	private Language _language;
 
 }

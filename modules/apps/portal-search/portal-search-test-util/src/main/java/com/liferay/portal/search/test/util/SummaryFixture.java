@@ -17,7 +17,6 @@ package com.liferay.portal.search.test.util;
 import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.LayoutSet;
-import com.liferay.portal.kernel.model.Theme;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
@@ -143,19 +142,17 @@ public class SummaryFixture<T> {
 
 		themeDisplay.setCompany(
 			CompanyLocalServiceUtil.getCompany(_group.getCompanyId()));
-		themeDisplay.setLayout(LayoutTestUtil.addLayout(_group));
+		themeDisplay.setLayout(LayoutTestUtil.addTypePortletLayout(_group));
 
 		LayoutSet layoutSet = _group.getPublicLayoutSet();
 
 		themeDisplay.setLayoutSet(layoutSet);
 
 		themeDisplay.setLocale(locale);
-
-		Theme theme = ThemeLocalServiceUtil.getTheme(
-			_group.getCompanyId(), layoutSet.getThemeId());
-
-		themeDisplay.setLookAndFeel(theme, null);
-
+		themeDisplay.setLookAndFeel(
+			ThemeLocalServiceUtil.getTheme(
+				_group.getCompanyId(), layoutSet.getThemeId()),
+			null);
 		themeDisplay.setRealUser(_user);
 		themeDisplay.setRequest(httpServletRequest);
 		themeDisplay.setResponse(httpServletResponse);

@@ -17,7 +17,6 @@ package com.liferay.commerce.product.content.util;
 import aQute.bnd.annotation.ProviderType;
 
 import com.liferay.commerce.product.catalog.CPCatalogEntry;
-import com.liferay.commerce.product.catalog.CPMedia;
 import com.liferay.commerce.product.catalog.CPSku;
 import com.liferay.commerce.product.content.render.CPContentRenderer;
 import com.liferay.commerce.product.model.CPDefinitionSpecificationOptionValue;
@@ -25,9 +24,11 @@ import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.model.CPOptionCategory;
 import com.liferay.commerce.product.type.CPType;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 
 import java.util.List;
@@ -41,9 +42,15 @@ import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author Alessio Antonio Rendina
+ * @author Ivica Cardic
  */
 @ProviderType
 public interface CPContentHelper {
+
+	public JSONObject getAvailabilityContentContributorValueJSONObject(
+			CPCatalogEntry cpCatalogEntry,
+			HttpServletRequest httpServletRequest)
+		throws Exception;
 
 	public String getAvailabilityEstimateLabel(
 			HttpServletRequest httpServletRequest)
@@ -57,15 +64,16 @@ public interface CPContentHelper {
 				long cpDefinitionId, long cpOptionCategoryId)
 		throws PortalException;
 
-	public List<CPMedia> getCPAttachmentFileEntries(
-			long cpDefinitionId, ThemeDisplay themeDisplay)
-		throws PortalException;
-
 	public CPCatalogEntry getCPCatalogEntry(
 			HttpServletRequest httpServletRequest)
 		throws PortalException;
 
-	public Object getCPContentContributorValue(
+	public JSONObject getCPContentContributorValueJSONObject(
+			String contributorKey, CPCatalogEntry cpCatalogEntry,
+			HttpServletRequest httpServletRequest)
+		throws Exception;
+
+	public JSONObject getCPContentContributorValueJSONObject(
 			String contributorKey, HttpServletRequest httpServletRequest)
 		throws Exception;
 
@@ -74,13 +82,24 @@ public interface CPContentHelper {
 
 	public List<CPContentRenderer> getCPContentRenderers(String cpType);
 
+	public FileVersion getCPDefinitionImageFileVersion(
+			long cpDefinitionId, HttpServletRequest httpServletRequest)
+		throws Exception;
+
 	public List<CPDefinitionSpecificationOptionValue>
 			getCPDefinitionSpecificationOptionValues(long cpDefinitionId)
+		throws PortalException;
+
+	public List<CPMedia> getCPMedias(
+			long cpDefinitionId, ThemeDisplay themeDisplay)
 		throws PortalException;
 
 	public List<CPOptionCategory> getCPOptionCategories(long companyId);
 
 	public List<CPType> getCPTypes();
+
+	public CPInstance getDefaultCPInstance(CPCatalogEntry cpCatalogEntry)
+		throws Exception;
 
 	public CPInstance getDefaultCPInstance(
 			HttpServletRequest httpServletRequest)
@@ -88,6 +107,10 @@ public interface CPContentHelper {
 
 	public CPSku getDefaultCPSku(CPCatalogEntry cpCatalogEntry)
 		throws Exception;
+
+	public String getDefaultImageFileURL(
+			long commerceAccountId, long cpDefinitionId)
+		throws PortalException;
 
 	public String getDownloadFileEntryURL(
 			FileEntry fileEntry, ThemeDisplay themeDisplay)
@@ -103,6 +126,16 @@ public interface CPContentHelper {
 
 	public String getImageURL(FileEntry fileEntry, ThemeDisplay themeDisplay)
 		throws Exception;
+
+	public String getIncomingQuantityLabel(
+			HttpServletRequest httpServletRequest, String sku)
+		throws PortalException;
+
+	public int getMinOrderQuantity(long cpDefinitionId);
+
+	public String getReplacementCommerceProductFriendlyURL(
+			CPSku cpSku, ThemeDisplay themeDisplay)
+		throws PortalException;
 
 	public String getStockQuantity(HttpServletRequest httpServletRequest)
 		throws Exception;
@@ -121,8 +154,16 @@ public interface CPContentHelper {
 
 	public boolean hasChildCPDefinitions(long cpDefinitionId);
 
+	public boolean hasCPDefinitionOptionRels(long cpDefinitionId);
+
 	public boolean hasCPDefinitionSpecificationOptionValues(long cpDefinitionId)
 		throws PortalException;
+
+	public boolean hasDirectReplacement(CPSku cpSku) throws Exception;
+
+	public boolean hasReplacement(
+			CPSku cpSku, HttpServletRequest httpServletRequest)
+		throws Exception;
 
 	public boolean isInWishList(
 			CPSku cpSku, CPCatalogEntry cpCatalogEntry,

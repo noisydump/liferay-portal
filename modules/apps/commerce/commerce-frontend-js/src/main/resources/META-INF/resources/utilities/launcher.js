@@ -12,7 +12,7 @@
  * details.
  */
 
-import {render} from 'frontend-js-react-web';
+import {render} from '@liferay/frontend-js-react-web';
 
 export default function launcher(
 	Component,
@@ -20,11 +20,11 @@ export default function launcher(
 	containerId,
 	props = {}
 ) {
-	const container = window.document.getElementById(containerId),
-		renderData = {
-			componentId,
-			...props,
-		};
+	const container = window.document.getElementById(containerId);
+	const renderData = {
+		componentId,
+		...props,
+	};
 
-	render(Component, renderData, container);
+	return render(Component, renderData, container);
 }

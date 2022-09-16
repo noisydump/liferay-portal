@@ -62,11 +62,14 @@ public class ContentElementSerDes {
 
 			sb.append("\"content\": ");
 
-			sb.append("\"");
-
-			sb.append(_escape(contentElement.getContent()));
-
-			sb.append("\"");
+			if (contentElement.getContent() instanceof String) {
+				sb.append("\"");
+				sb.append((String)contentElement.getContent());
+				sb.append("\"");
+			}
+			else {
+				sb.append(contentElement.getContent());
+			}
 		}
 
 		if (contentElement.getContentType() != null) {
@@ -222,9 +225,6 @@ public class ContentElementSerDes {
 							(String)jsonParserFieldValue));
 				}
 			}
-			else if (jsonParserFieldName.equals("status")) {
-				throw new IllegalArgumentException();
-			}
 		}
 
 	}
@@ -253,7 +253,7 @@ public class ContentElementSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -289,7 +289,7 @@ public class ContentElementSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

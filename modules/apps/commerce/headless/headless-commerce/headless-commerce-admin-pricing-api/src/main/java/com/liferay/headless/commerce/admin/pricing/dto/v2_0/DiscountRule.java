@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
@@ -56,6 +57,10 @@ public class DiscountRule implements Serializable {
 		return ObjectMapperUtil.readValue(DiscountRule.class, json);
 	}
 
+	public static DiscountRule unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(DiscountRule.class, json);
+	}
+
 	@Schema
 	@Valid
 	public Map<String, Map<String, String>> getActions() {
@@ -87,7 +92,7 @@ public class DiscountRule implements Serializable {
 	protected Map<String, Map<String, String>> actions;
 
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "30324")
 	public Long getDiscountId() {
 		return discountId;
 	}
@@ -116,7 +121,7 @@ public class DiscountRule implements Serializable {
 	protected Long discountId;
 
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "30643")
 	public Long getId() {
 		return id;
 	}
@@ -168,7 +173,7 @@ public class DiscountRule implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String name;
 
-	@Schema
+	@Schema(example = "cart-total")
 	public String getType() {
 		return type;
 	}
@@ -195,7 +200,7 @@ public class DiscountRule implements Serializable {
 	@NotEmpty
 	protected String type;
 
-	@Schema
+	@Schema(example = "22.50")
 	public String getTypeSettings() {
 		return typeSettings;
 	}
@@ -328,15 +333,16 @@ public class DiscountRule implements Serializable {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.commerce.admin.pricing.dto.v2_0.DiscountRule",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
 	}
 
 	private static boolean _isArray(Object value) {
@@ -362,8 +368,8 @@ public class DiscountRule implements Serializable {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -394,7 +400,7 @@ public class DiscountRule implements Serializable {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -402,7 +408,7 @@ public class DiscountRule implements Serializable {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -410,5 +416,10 @@ public class DiscountRule implements Serializable {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

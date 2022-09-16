@@ -16,22 +16,25 @@ package com.liferay.asset.list.service.base;
 
 import com.liferay.asset.list.model.AssetListEntry;
 import com.liferay.asset.list.service.AssetListEntryService;
-import com.liferay.asset.list.service.persistence.AssetListEntryAssetEntryRelFinder;
-import com.liferay.asset.list.service.persistence.AssetListEntryAssetEntryRelPersistence;
+import com.liferay.asset.list.service.AssetListEntryServiceUtil;
 import com.liferay.asset.list.service.persistence.AssetListEntryPersistence;
-import com.liferay.asset.list.service.persistence.AssetListEntrySegmentsEntryRelPersistence;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.service.BaseServiceImpl;
 import com.liferay.portal.kernel.util.PortalUtil;
 
+import java.lang.reflect.Field;
+
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -52,8 +55,13 @@ public abstract class AssetListEntryServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>AssetListEntryService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.asset.list.service.AssetListEntryServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>AssetListEntryService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>AssetListEntryServiceUtil</code>.
 	 */
+	@Deactivate
+	protected void deactivate() {
+		_setServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -64,6 +72,8 @@ public abstract class AssetListEntryServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		assetListEntryService = (AssetListEntryService)aopProxy;
+
+		_setServiceUtilService(assetListEntryService);
 	}
 
 	/**
@@ -108,6 +118,22 @@ public abstract class AssetListEntryServiceBaseImpl
 		}
 	}
 
+	private void _setServiceUtilService(
+		AssetListEntryService assetListEntryService) {
+
+		try {
+			Field field = AssetListEntryServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, assetListEntryService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@Reference
 	protected com.liferay.asset.list.service.AssetListEntryLocalService
 		assetListEntryLocalService;
@@ -121,27 +147,7 @@ public abstract class AssetListEntryServiceBaseImpl
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@Reference
-	protected com.liferay.portal.kernel.service.ResourceLocalService
-		resourceLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserService userService;
-
-	@Reference
-	protected AssetListEntryAssetEntryRelPersistence
-		assetListEntryAssetEntryRelPersistence;
-
-	@Reference
-	protected AssetListEntryAssetEntryRelFinder
-		assetListEntryAssetEntryRelFinder;
-
-	@Reference
-	protected AssetListEntrySegmentsEntryRelPersistence
-		assetListEntrySegmentsEntryRelPersistence;
+	private static final Log _log = LogFactoryUtil.getLog(
+		AssetListEntryServiceBaseImpl.class);
 
 }

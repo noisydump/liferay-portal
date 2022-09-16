@@ -91,11 +91,7 @@ public class LayoutStagingImpl implements LayoutStaging {
 
 	@Override
 	public LayoutStagingHandler getLayoutStagingHandler(Layout layout) {
-		if (layout == null) {
-			return null;
-		}
-
-		if (!ProxyUtil.isProxyClass(layout.getClass())) {
+		if ((layout == null) || !ProxyUtil.isProxyClass(layout.getClass())) {
 			return null;
 		}
 
@@ -170,7 +166,7 @@ public class LayoutStagingImpl implements LayoutStaging {
 			// LPS-52675
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(portalException, portalException);
+				_log.debug(portalException);
 			}
 
 			return false;
@@ -291,19 +287,13 @@ public class LayoutStagingImpl implements LayoutStaging {
 		return true;
 	}
 
-	@Reference(unbind = "-")
-	protected void setLayoutSetBranchLocalService(
-		LayoutSetBranchLocalService layoutSetBranchLocalService) {
-
-		_layoutSetBranchLocalService = layoutSetBranchLocalService;
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		LayoutStagingImpl.class);
 
 	@Reference
 	private LayoutRevisionLocalService _layoutRevisionLocalService;
 
+	@Reference
 	private LayoutSetBranchLocalService _layoutSetBranchLocalService;
 
 }

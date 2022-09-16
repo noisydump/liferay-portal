@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
+ * Copyright (c) 2000-2021 Liferay, Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the Free
@@ -38,12 +38,17 @@ public class OASConstants {
 
 	public static final String OPERATION_POST = "post";
 
+	public static final String PATH_COMPONENTS_SCHEMAS = "components>schemas";
+
 	public static final String PATH_COMPONENTS_SCHEMAS_PATTERN =
 		"components>schemas>SCHEMA_TPL";
 
 	public static final String PATH_ITEMS_ITEMS_REF = "items>items>$ref";
 
 	public static final String PATH_ITEMS_REF = "items>$ref";
+
+	public static final String PATH_PROPERTIES_X_CLASS_NAME_DEFAULT =
+		"properties>x-class-name>default";
 
 	public static final String
 		PATH_REQUEST_BODY_CONTENT_APPLICATION_JSON_SCHEMA_PATTERN =

@@ -21,11 +21,44 @@ definition {
 		}
 	}
 
+	test AssertAliasCaseInsensitivity {
+		JSONWebcontent.addWebContent(
+			content = "WC WC",
+			groupName = "Guest",
+			title = "WC Title");
+
+		SearchTuning.openResultRankingsAdmin();
+
+		SearchTuning.addResultRanking(searchQuery = "Title");
+
+		SearchTuning.pinResult(assetTitle = "WC Title");
+
+		SearchTuning.configureAliases(addAlias = "abc");
+
+		SearchTuning.configureAliases(addAlias = "ABC");
+
+		Button.clickSave();
+
+		Navigator.openURL();
+
+		SearchPortlets.searchEmbedded(searchTerm = "abc");
+
+		SearchResultPortlet.viewSearchResults(
+			searchAssetTitle = "WC Title",
+			searchAssetType = "Web Content Article");
+
+		SearchPortlets.searchEmbedded(searchTerm = "ABC");
+
+		SearchResultPortlet.viewSearchResults(
+			searchAssetTitle = "WC Title",
+			searchAssetType = "Web Content Article");
+	}
+
+	@priority = "3"
 	test AssertCannotAddDuplicateQueriesAndAliases {
-		ApplicationsMenu.gotoPortlet(
-			category = "Search Tuning",
-			panel = "Applications",
-			portlet = "Result Rankings");
+		property app.server.types = "tomcat,websphere";
+
+		SearchTuning.openResultRankingsAdmin();
 
 		SearchTuning.addResultRanking(searchQuery = "Article");
 
@@ -51,10 +84,7 @@ definition {
 
 		Alert.viewErrorMessage(errorMessage = "A ranking with that search query already exists.");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Search Tuning",
-			panel = "Applications",
-			portlet = "Result Rankings");
+		SearchTuning.openResultRankingsAdmin();
 
 		AssertElementNotPresent(
 			key_query = "Article",
@@ -81,6 +111,7 @@ definition {
 		Alert.viewErrorMessage(errorMessage = "Active search queries and aliases must be unique across all rankings. The following ones already exist: Journal.");
 	}
 
+	@priority = "4"
 	test AssertDeletedResultRanking {
 		var content = "Article Article Article";
 
@@ -93,10 +124,7 @@ definition {
 			var content = StringUtil.replaceFirst("${content}", "Article ", "");
 		}
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Search Tuning",
-			panel = "Applications",
-			portlet = "Result Rankings");
+		SearchTuning.openResultRankingsAdmin();
 
 		SearchTuning.addResultRanking(searchQuery = "Article");
 
@@ -116,10 +144,7 @@ definition {
 			searchAssetTitle = "Article 2",
 			searchAssetType = "Web Content Article");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Search Tuning",
-			panel = "Applications",
-			portlet = "Result Rankings");
+		SearchTuning.openResultRankingsAdmin();
 
 		LexiconEntry.delete(rowEntry = "Article");
 
@@ -134,11 +159,9 @@ definition {
 		SearchResultPortlet.viewSearchResultsSpecificOrder(resultsList = "Article 1,Article 2,Article 3");
 	}
 
+	@priority = "3"
 	test AssertResultRankingsMiscUI {
-		ApplicationsMenu.gotoPortlet(
-			category = "Search Tuning",
-			panel = "Applications",
-			portlet = "Result Rankings");
+		SearchTuning.openResultRankingsAdmin();
 
 		AssertElementNotPresent(locator1 = "Pagination#PAGINATION_BAR");
 
@@ -170,7 +193,7 @@ definition {
 				locator1 = "SearchTuning#RESULT_RANKINGS_ENTRY");
 		}
 
-		Pagination.viewResults(results = "Showing 1 to 4 of 7 Entries");
+		Pagination.viewResults(results = "Showing 1 to 4 of 7 entries.");
 
 		Click(locator1 = "Pagination#NEXT_LINK");
 
@@ -186,11 +209,11 @@ definition {
 				locator1 = "SearchTuning#RESULT_RANKINGS_ENTRY");
 		}
 
-		Pagination.viewResults(results = "Showing 5 to 7 of 7 Entries");
+		Pagination.viewResults(results = "Showing 5 to 7 of 7 entries.");
 
 		Click(locator1 = "Pagination#PREVIOUS_LINK");
 
-		Pagination.viewResults(results = "Showing 1 to 4 of 7 Entries");
+		Pagination.viewResults(results = "Showing 1 to 4 of 7 entries.");
 
 		PortletEntry.deleteViaToolbar(rowEntries = "Article 1,Article 2,Article 3");
 
@@ -211,41 +234,47 @@ definition {
 			value1 = "No Custom Results Yet");
 	}
 
+	@priority = "4"
+	test AssertResultRankingsPagination {
+		property custom.properties = "search.container.page.default.delta=5";
+
+		SearchTuning.openResultRankingsAdmin();
+
+		AssertElementNotPresent(locator1 = "Pagination#PAGINATION_BAR");
+
+		for (var counter : list "1,2,3,4,5") {
+			SearchTuning.addResultRanking(searchQuery = "Article ${counter}");
+
+			Button.clickSave();
+		}
+
+		AssertElementPresent(locator1 = "Pagination#PAGINATION_BAR");
+
+		SearchTuning.addResultRanking(searchQuery = "Article 6");
+
+		Button.clickSave();
+
+		Click(locator1 = "Pagination#NEXT_LINK");
+
+		AssertElementPresent(locator1 = "Pagination#CURRENT_PAGE_SELECT");
+	}
+
+	@priority = "4"
 	test AssertResultRankingsWithSynonyms {
-		property portal.suite.search.engine = "disable";
-		property portal.upstream = "quarantine";
+		property app.server.types = "jboss,tomcat,wildfly";
 
-		JSONWebcontent.addWebContent(
-			content = "Article Article Article Article",
-			groupName = "Guest",
-			title = "Article 1");
+		for (var webContentTitle : list "Article 1,Article 2,Journal 1,Journal 2") {
+			JSONWebcontent.addWebContent(
+				content = "",
+				groupName = "Guest",
+				title = "${webContentTitle}");
+		}
 
-		JSONWebcontent.addWebContent(
-			content = "Article Article Article",
-			groupName = "Guest",
-			title = "Article 2");
-
-		JSONWebcontent.addWebContent(
-			content = "Journal Journal",
-			groupName = "Guest",
-			title = "Journal 1");
-
-		JSONWebcontent.addWebContent(
-			content = "Journal",
-			groupName = "Guest",
-			title = "Journal 2");
-
-		ApplicationsMenu.gotoPortlet(
-			category = "Search Tuning",
-			panel = "Applications",
-			portlet = "Synonyms");
+		SearchTuning.openSynonymsAdmin();
 
 		SearchTuning.addSynonymSet(synonyms = "Article,Journal");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Search Tuning",
-			panel = "Applications",
-			portlet = "Result Rankings");
+		SearchTuning.openResultRankingsAdmin();
 
 		SearchTuning.addResultRanking(searchQuery = "Article");
 
@@ -259,7 +288,15 @@ definition {
 
 		SearchPortlets.searchEmbedded(searchTerm = "Article");
 
-		SearchResultPortlet.viewSearchResultsSpecificOrder(resultsList = "Journal 2,Article 1,Journal 1");
+		SearchResultPortlet.viewSearchResultsSpecificOrder(resultsList = "Journal 2");
+
+		SearchResultPortlet.viewSearchResults(
+			searchAssetTitle = "Article 1",
+			searchAssetType = "Web Content Article");
+
+		SearchResultPortlet.viewSearchResults(
+			searchAssetTitle = "Journal 1",
+			searchAssetType = "Web Content Article");
 
 		SearchResultPortlet.viewSearchResultNotPresent(
 			searchAssetTitle = "Article 2",
@@ -267,19 +304,22 @@ definition {
 
 		SearchPortlets.searchEmbedded(searchTerm = "Journal");
 
-		SearchResultPortlet.viewSearchResultsSpecificOrder(resultsList = "Article 1,Article 2,Journal 1,Journal 2");
+		AssertTextNotEquals.assertNotPartialText(
+			locator1 = "SearchResults#ASSET_ENTRY_TABLE_TITLE_SPECIFIC_ORDER",
+			resultOrder = "1",
+			value1 = "Journal 2");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Search Tuning",
-			panel = "Applications",
-			portlet = "Synonyms");
+		for (var webContentTitle : list "Article 1,Article 2,Journal 1,Journal 2") {
+			SearchResultPortlet.viewSearchResults(
+				searchAssetTitle = "${webContentTitle}",
+				searchAssetType = "Web Content Article");
+		}
+
+		SearchTuning.openSynonymsAdmin();
 
 		SearchTuning.deleteSynonymSet(synonymSet = "Article, Journal");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Search Tuning",
-			panel = "Applications",
-			portlet = "Result Rankings");
+		SearchTuning.openResultRankingsAdmin();
 
 		LexiconEntry.gotoEntryMenuItem(
 			menuItem = "Edit",
@@ -303,12 +343,17 @@ definition {
 
 		SearchPortlets.searchEmbedded(searchTerm = "Journal");
 
-		SearchResultPortlet.viewSearchResultsSpecificOrder(resultsList = "Journal 1,Journal 2");
+		SearchResultPortlet.viewSearchResults(
+			searchAssetTitle = "Journal 1",
+			searchAssetType = "Web Content Article");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Search Tuning",
-			panel = "Applications",
-			portlet = "Result Rankings");
+		SearchResultPortlet.viewSearchResults(
+			searchAssetTitle = "Journal 2",
+			searchAssetType = "Web Content Article");
+
+		SearchResultPortlet.viewMultipleSearchResultsNotPresent(noResultsList = "Article 1/Web Content Article,Article 2/Web Content Article");
+
+		SearchTuning.openResultRankingsAdmin();
 
 		LexiconEntry.gotoEntryMenuItem(
 			menuItem = "Edit",
@@ -336,10 +381,7 @@ definition {
 
 		SearchResultPortlet.viewMultipleSearchResultsNotPresent(noResultsList = "Article 2/Web Content Article,Journal 1/Web Content Article,Journal 2/Web Content Article");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Search Tuning",
-			panel = "Applications",
-			portlet = "Result Rankings");
+		SearchTuning.openResultRankingsAdmin();
 
 		LexiconEntry.gotoEntryMenuItem(
 			menuItem = "Edit",
@@ -351,17 +393,11 @@ definition {
 
 		Button.clickSave();
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Search Tuning",
-			panel = "Applications",
-			portlet = "Synonyms");
+		SearchTuning.openSynonymsAdmin();
 
 		SearchTuning.addSynonymSet(synonyms = "Article,Journal");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Search Tuning",
-			panel = "Applications",
-			portlet = "Result Rankings");
+		SearchTuning.openResultRankingsAdmin();
 
 		LexiconEntry.gotoEntryMenuItem(
 			menuItem = "Edit",
@@ -381,36 +417,34 @@ definition {
 
 		Navigator.openURL();
 
-		SearchPortlets.searchEmbedded(searchTerm = "Article");
+		for (var searchTerm : list "Article,Journal") {
+			SearchPortlets.searchEmbedded(searchTerm = "${searchTerm}");
 
-		SearchResultPortlet.viewSearchResultsSpecificOrder(resultsList = "Journal 2,Article 1,Journal 1");
+			SearchResultPortlet.viewSearchResultsSpecificOrder(resultsList = "Journal 2");
 
-		SearchResultPortlet.viewSearchResultNotPresent(
-			searchAssetTitle = "Article 2",
-			searchAssetType = "Web Content Article");
+			SearchResultPortlet.viewSearchResults(
+				searchAssetTitle = "Article 1",
+				searchAssetType = "Web Content Article");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Journal");
+			SearchResultPortlet.viewSearchResults(
+				searchAssetTitle = "Journal 1",
+				searchAssetType = "Web Content Article");
 
-		SearchResultPortlet.viewSearchResultsSpecificOrder(resultsList = "Journal 2,Article 1,Journal 1");
-
-		SearchResultPortlet.viewSearchResultNotPresent(
-			searchAssetTitle = "Article 2",
-			searchAssetType = "Web Content Article");
+			SearchResultPortlet.viewSearchResultNotPresent(
+				searchAssetTitle = "Article 2",
+				searchAssetType = "Web Content Article");
+		}
 	}
 
+	@priority = "3"
 	test AssertSynonymBulkActions {
-		ApplicationsMenu.gotoPortlet(
-			category = "Search Tuning",
-			panel = "Applications",
-			portlet = "Synonyms");
+		SearchTuning.openSynonymsAdmin();
 
 		AssertElementNotPresent(locator1 = "Pagination#PAGINATION_BAR");
 
 		for (var counter : list "1,2,3,4,5,6") {
 			SearchTuning.addSynonymSet(synonyms = "phone${counter},mobile${counter}");
 		}
-
-		AssertElementNotPresent(locator1 = "Pagination#PAGINATION_BAR");
 
 		PortletEntry.selectAll();
 
@@ -471,7 +505,31 @@ definition {
 			value1 = "There are no entries.");
 	}
 
+	@priority = "4"
+	test AssertSynonymsPagination {
+		property custom.properties = "search.container.page.default.delta=5";
+
+		SearchTuning.openSynonymsAdmin();
+
+		AssertElementNotPresent(locator1 = "Pagination#PAGINATION_BAR");
+
+		for (var counter : list "1,2,3,4,5") {
+			SearchTuning.addSynonymSet(synonyms = "Article ${counter}");
+		}
+
+		AssertElementPresent(locator1 = "Pagination#PAGINATION_BAR");
+
+		SearchTuning.addSynonymSet(synonyms = "Article 6");
+
+		Click(locator1 = "Pagination#NEXT_LINK");
+
+		AssertElementPresent(locator1 = "Pagination#CURRENT_PAGE_SELECT");
+	}
+
+	@priority = "5"
 	test EnableAndDisableResultRankings {
+		property app.server.types = "tomcat,weblogic,websphere";
+
 		var content = "Article Article Article Article";
 
 		for (var count : list "1,2,3,4") {
@@ -483,10 +541,7 @@ definition {
 			var content = StringUtil.replaceFirst("${content}", "Article ", "");
 		}
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Search Tuning",
-			panel = "Applications",
-			portlet = "Result Rankings");
+		SearchTuning.openResultRankingsAdmin();
 
 		SearchTuning.addResultRanking(searchQuery = "Article");
 
@@ -558,10 +613,7 @@ definition {
 
 		SearchResultPortlet.viewNoSearchResults(searchTerm = "apple");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Search Tuning",
-			panel = "Applications",
-			portlet = "Result Rankings");
+		SearchTuning.openResultRankingsAdmin();
 
 		Click(
 			key_query = "Article",
@@ -617,6 +669,25 @@ definition {
 		SearchResultPortlet.viewNoSearchResults(searchTerm = "orange");
 	}
 
+	test NavigateToResultRankingsViaUI {
+		ApplicationsMenu.gotoPortlet(
+			category = "Search Tuning",
+			panel = "Applications",
+			portlet = "Result Rankings");
+
+		ControlMenu.viewHeaderTitle(headerTitle = "Result Rankings");
+	}
+
+	test NavigateToSynonymsViaUI {
+		ApplicationsMenu.gotoPortlet(
+			category = "Search Tuning",
+			panel = "Applications",
+			portlet = "Synonyms");
+
+		ControlMenu.viewHeaderTitle(headerTitle = "Synonyms");
+	}
+
+	@priority = "4"
 	test PinAndHideResultsWithAliases {
 		property portal.acceptance = "true";
 
@@ -635,10 +706,7 @@ definition {
 			groupName = "Guest",
 			title = "WC Title 3");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Search Tuning",
-			panel = "Applications",
-			portlet = "Result Rankings");
+		SearchTuning.openResultRankingsAdmin();
 
 		SearchTuning.addResultRanking(searchQuery = "WC Title");
 
@@ -678,10 +746,7 @@ definition {
 
 		SearchResultPortlet.viewMultipleSearchResultsNotPresent(noResultsList = "WC Title 1/Web Content Article,WC Title 2/Web Content Article");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Search Tuning",
-			panel = "Applications",
-			portlet = "Result Rankings");
+		SearchTuning.openResultRankingsAdmin();
 
 		LexiconEntry.gotoEntryMenuItem(
 			menuItem = "Edit",
@@ -715,10 +780,7 @@ definition {
 
 		SearchResultPortlet.viewNoSearchResults(searchTerm = "banana");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Search Tuning",
-			panel = "Applications",
-			portlet = "Result Rankings");
+		SearchTuning.openResultRankingsAdmin();
 
 		LexiconEntry.gotoEntryMenuItem(
 			menuItem = "Edit",
@@ -737,7 +799,97 @@ definition {
 		SearchResultPortlet.viewSearchResultsSpecificOrder(resultsList = "WC Title 1,WC Title 2,WC Title 3");
 	}
 
+	@priority = "5"
+	test ReindexingRestoresResultRankingsIndex {
+		property test.name.skip.portal.instance = "SearchTuningES7#ReindexingRestoresResultRankingsIndex";
+
+		for (var title : list "Article,Journal") {
+			JSONWebcontent.addWebContent(
+				content = "WC Content",
+				groupName = "Guest",
+				title = "Liferay ${title}");
+		}
+
+		SearchTuning.openResultRankingsAdmin();
+
+		SearchTuning.addResultRanking(searchQuery = "Article");
+
+		SearchTuning.pinResult(assetTitle = "Liferay Article");
+
+		Button.clickSave();
+
+		SearchTuning.addResultRanking(searchQuery = "Journal");
+
+		Button.clickSave();
+
+		SearchAdministration.executeReindex();
+
+		SearchTuning.openResultRankingsAdmin();
+
+		for (var title : list "Article,Journal") {
+			AssertElementPresent(
+				key_query = "${title}",
+				locator1 = "SearchTuning#RESULT_RANKINGS_ENTRY");
+		}
+
+		SearchAdministration.openSearchAdmin();
+
+		Navigator.gotoNavItem(navItem = "Field Mappings");
+
+		var companyId = JSONCompany.getCompanyId();
+
+		Click(
+			key_navNested = "liferay-${companyId}-search-tuning-rankings",
+			locator1 = "NavNested#NAV_NESTED_LINK");
+
+		AssertTextEquals.assertPartialText(
+			indexName = "liferay-${companyId}-search-tuning-rankings",
+			locator1 = "Search#FIELD_MAPPINGS_EDITOR",
+			value1 = "liferay-${companyId}-search-tuning-rankings");
+	}
+
+	@priority = "5"
+	test ReindexingRestoresSynonymsIndex {
+		property test.name.skip.portal.instance = "SearchTuningES7#ReindexingRestoresSynonymsIndex";
+
+		SearchTuning.openSynonymsAdmin();
+
+		SearchTuning.addSynonymSet(synonyms = "liferay,company");
+
+		SearchTuning.addSynonymSet(synonyms = "dxp,platform");
+
+		SearchAdministration.executeReindex();
+
+		SearchTuning.openSynonymsAdmin();
+
+		AssertElementPresent(
+			key_synonyms = "liferay, company",
+			locator1 = "SearchTuning#SYNONYMS_ENTRY");
+
+		AssertElementPresent(
+			key_synonyms = "dxp, platform",
+			locator1 = "SearchTuning#SYNONYMS_ENTRY");
+
+		SearchAdministration.openSearchAdmin();
+
+		Navigator.gotoNavItem(navItem = "Field Mappings");
+
+		var companyId = JSONCompany.getCompanyId();
+
+		Click(
+			key_navNested = "liferay-${companyId}-search-tuning-synonyms",
+			locator1 = "NavNested#NAV_NESTED_LINK");
+
+		AssertTextEquals.assertPartialText(
+			indexName = "liferay-${companyId}-search-tuning-synonyms",
+			locator1 = "Search#FIELD_MAPPINGS_EDITOR",
+			value1 = "liferay-${companyId}-search-tuning-synonyms");
+	}
+
+	@priority = "4"
 	test ReorderAddedResultsFromOtherSites {
+		property app.server.types = "jboss,tomcat,weblogic,wildfly";
+
 		JSONWebcontent.addWebContent(
 			content = "WC Content",
 			groupName = "Guest",
@@ -760,10 +912,7 @@ definition {
 			groupName = "New Site",
 			title = "New Site Journal");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Search Tuning",
-			panel = "Applications",
-			portlet = "Result Rankings");
+		SearchTuning.openResultRankingsAdmin();
 
 		SearchTuning.addResultRanking(searchQuery = "Article");
 
@@ -791,10 +940,7 @@ definition {
 
 		SearchResultPortlet.viewSearchResultsSpecificOrder(resultsList = "Liferay Journal,New Site Article,New Site Journal,Liferay Article");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Search Tuning",
-			panel = "Applications",
-			portlet = "Result Rankings");
+		SearchTuning.openResultRankingsAdmin();
 
 		LexiconEntry.gotoEntryMenuItem(
 			menuItem = "Edit",
@@ -817,6 +963,34 @@ definition {
 		SearchResultPortlet.viewMultipleSearchResultsNotPresent(noResultsList = "Liferay Journal/Web Content Article,New Site Article/Web Content Article,New Site Journal/Web Content Article");
 	}
 
+	@description = "This is a use case for LPS-126743"
+	@priority = "4"
+	test SearchWithMoreThanTenSynonymSets {
+		SearchTuning.openSynonymsAdmin();
+
+		var digit = "1";
+
+		for (var number : list "one,two,three,four,five,six,seven,eight,nine,ten,eleven") {
+			SearchTuning.addSynonymSet(synonyms = "${digit},${number}");
+
+			var digit = ${digit} + 1;
+		}
+
+		JSONWebcontent.addWebContent(
+			content = "",
+			groupName = "Guest",
+			title = "eleven");
+
+		Navigator.openURL();
+
+		SearchPortlets.searchEmbedded(searchTerm = "11");
+
+		SearchResultPortlet.viewSearchResults(
+			searchAssetTitle = "eleven",
+			searchAssetType = "Web Content Article");
+	}
+
+	@priority = "5"
 	test SearchWithSynonyms {
 		property portal.acceptance = "true";
 
@@ -827,10 +1001,7 @@ definition {
 				title = "${title}");
 		}
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Search Tuning",
-			panel = "Applications",
-			portlet = "Synonyms");
+		SearchTuning.openSynonymsAdmin();
 
 		SearchTuning.addSynonymSet(synonyms = "banana,red apple,blue.berry!,&quot;xigua&quot;,fruit,sweet");
 
@@ -850,10 +1021,7 @@ definition {
 				searchTerm = "${searchTerm}");
 		}
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Search Tuning",
-			panel = "Applications",
-			portlet = "Synonyms");
+		SearchTuning.openSynonymsAdmin();
 
 		SearchTuning.editSynonymSet(
 			addSynonyms = "pear",
@@ -892,10 +1060,7 @@ definition {
 			resultsList = "red apple/Web Content Article,blue.berry!/Web Content Article,&quot;xigua&quot;/Web Content Article",
 			searchTerm = "red apple");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Search Tuning",
-			panel = "Applications",
-			portlet = "Synonyms");
+		SearchTuning.openSynonymsAdmin();
 
 		SearchTuning.addSynonymSet(synonyms = "red apple,citrus-orange");
 
@@ -917,10 +1082,7 @@ definition {
 			resultsList = "red apple/Web Content Article,citrus-orange/Web Content Article",
 			searchTerm = "citrus-orange");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Search Tuning",
-			panel = "Applications",
-			portlet = "Synonyms");
+		SearchTuning.openSynonymsAdmin();
 
 		SearchTuning.deleteSynonymSet(synonymSet = "red apple, blue.berry!, &quot;xigua&quot;, fruit, sweet, pear");
 
@@ -931,6 +1093,7 @@ definition {
 		SearchResultPortlet.viewNoSearchResults(searchTerm = "fruit");
 	}
 
+	@priority = "3"
 	test ViewResultRankingsAssetDetails {
 		JSONMBMessage.addMessage(
 			groupName = "Guest",
@@ -942,10 +1105,7 @@ definition {
 			groupName = "Guest",
 			title = "Web Content Article Apple");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Search Tuning",
-			panel = "Applications",
-			portlet = "Result Rankings");
+		SearchTuning.openResultRankingsAdmin();
 
 		SearchTuning.addResultRanking(searchQuery = "Apple");
 
@@ -954,7 +1114,6 @@ definition {
 			locator1 = "SearchTuning#RESULT_RANKINGS_RESULT_TITLE");
 
 		var assetName = "MB Thread Message Subject Apple";
-
 		var siteName = TestCase.getSiteName(siteName = "${siteName}");
 
 		SelectWindow(locator1 = "title=${assetName} - ${assetName} - ${siteName}");
@@ -980,6 +1139,7 @@ definition {
 			locator1 = "SearchTuning#RESULT_RANKINGS_ASSET_DETAILS_TITLE");
 
 		AssertTextEquals(
+			index = "1",
 			locator1 = "WCD#WEB_CONTENT_CONTENT",
 			value1 = "red apple, citrus-orange");
 	}

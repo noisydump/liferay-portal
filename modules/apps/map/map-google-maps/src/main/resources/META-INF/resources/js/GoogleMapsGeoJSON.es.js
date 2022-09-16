@@ -12,7 +12,7 @@
  * details.
  */
 
-import GeoJSONBase from 'map-common/js/GeoJSONBase.es';
+import GeoJSONBase from '@liferay/map-common/js/GeoJSONBase';
 
 /**
  * GoogleMapsGeoJSON
@@ -25,8 +25,10 @@ class GoogleMapsGeoJSON extends GeoJSONBase {
 	 * @param  {Array} args List of arguments to be passed to State
 	 * @review
 	 */
-	constructor(...args) {
-		super(...args);
+	constructor(args) {
+		super(args);
+
+		this.map = args.map;
 
 		this.eventHandlers = [];
 

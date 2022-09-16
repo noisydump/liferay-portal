@@ -13,13 +13,14 @@
  */
 
 import updateFragmentEntryLinkConfiguration from '../actions/updateFragmentEntryLinkConfiguration';
+import updatePageContents from '../actions/updatePageContents';
 import {FREEMARKER_FRAGMENT_ENTRY_PROCESSOR} from '../config/constants/freemarkerFragmentEntryProcessor';
 import FragmentService from '../services/FragmentService';
+import InfoItemService from '../services/InfoItemService';
 
 export default function updateFragmentConfiguration({
 	configurationValues,
 	fragmentEntryLink,
-	languageId,
 }) {
 	const {editableValues, fragmentEntryLinkId} = fragmentEntryLink;
 
@@ -28,20 +29,33 @@ export default function updateFragmentConfiguration({
 		[FREEMARKER_FRAGMENT_ENTRY_PROCESSOR]: configurationValues,
 	};
 
-	return (dispatch) => {
+	return (dispatch, getState) => {
 		return FragmentService.updateConfigurationValues({
-			configurationValues: nextEditableValues,
+			editableValues: nextEditableValues,
 			fragmentEntryLinkId,
-			languageId,
+			languageId: getState().languageId,
 			onNetworkStatus: dispatch,
-		}).then(({fragmentEntryLink, layoutData}) => {
-			dispatch(
-				updateFragmentEntryLinkConfiguration({
-					fragmentEntryLink,
-					fragmentEntryLinkId,
-					layoutData,
-				})
-			);
-		});
+		})
+			.then(({fragmentEntryLink, layoutData}) => {
+				dispatch(
+					updateFragmentEntryLinkConfiguration({
+						fragmentEntryLink,
+						fragmentEntryLinkId,
+						layoutData,
+					})
+				);
+			})
+			.then(() => {
+				InfoItemService.getPageContents({
+					onNetworkStatus: dispatch,
+					segmentsExperienceId: getState().segmentsExperienceId,
+				}).then((pageContents) => {
+					dispatch(
+						updatePageContents({
+							pageContents,
+						})
+					);
+				});
+			});
 	};
 }

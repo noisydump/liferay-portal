@@ -14,12 +14,14 @@
 
 package com.liferay.poshi.runner;
 
+import com.liferay.data.guard.connector.client.DataGuardClient;
 import com.liferay.poshi.core.PoshiContext;
 import com.liferay.poshi.core.PoshiGetterUtil;
 import com.liferay.poshi.core.PoshiStackTraceUtil;
 import com.liferay.poshi.core.PoshiValidation;
 import com.liferay.poshi.core.PoshiVariablesUtil;
 import com.liferay.poshi.core.util.FileUtil;
+import com.liferay.poshi.core.util.GetterUtil;
 import com.liferay.poshi.core.util.PropsValues;
 import com.liferay.poshi.runner.logger.PoshiLogger;
 import com.liferay.poshi.runner.logger.SummaryLogger;
@@ -36,6 +38,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.dom4j.Element;
 
@@ -169,9 +172,25 @@ public class PoshiRunner {
 		FileUtil.delete(new File(PropsValues.OUTPUT_DIR_NAME));
 
 		try {
+			if (PropsValues.LIFERAY_DATA_GUARD_ENABLED) {
+				_dataGuardClient = new DataGuardClient();
+
+				_dataGuardClient.connect();
+
+				_dataGuardId = _dataGuardClient.startCapture();
+			}
+
 			SummaryLogger.startRunning();
 
-			SeleniumUtil.startSelenium();
+			Properties properties =
+				PoshiContext.getNamespacedClassCommandNameProperties(
+					_testNamespacedClassCommandName);
+
+			if (!GetterUtil.getBoolean(
+					properties.getProperty("disable-webdriver"))) {
+
+				SeleniumUtil.startSelenium();
+			}
 
 			_runSetUp();
 		}
@@ -194,7 +213,7 @@ public class PoshiRunner {
 	}
 
 	@After
-	public void tearDown() throws Exception {
+	public void tearDown() throws Throwable {
 		LiferaySeleniumUtil.writePoshiWarnings();
 
 		SummaryLogger.createSummaryReport();
@@ -216,9 +235,35 @@ public class PoshiRunner {
 
 			SummaryLogger.stopRunning();
 
-			_poshiLogger.createPoshiReport();
+			try {
+				_poshiLogger.createPoshiReport();
+			}
+			catch (OutOfMemoryError outOfMemoryError) {
+				System.out.println(
+					"Unable to create Poshi syntax logger. See POSHI-378 for " +
+						"details. Use the summary.html log instead.");
+			}
 
 			SeleniumUtil.stopSelenium();
+		}
+
+		if (!PropsValues.LIFERAY_DATA_GUARD_ENABLED) {
+			return;
+		}
+
+		try {
+			_dataGuardClient.endCapture(
+				_dataGuardId, _testNamespacedClassCommandName);
+		}
+		catch (Throwable throwable) {
+			System.out.println(throwable.getMessage());
+
+			throwable.printStackTrace();
+
+			throw throwable;
+		}
+		finally {
+			_dataGuardClient.close();
 		}
 	}
 
@@ -300,6 +345,8 @@ public class PoshiRunner {
 		_runNamespacedClassCommandName(_testNamespacedClassName + "#tear-down");
 	}
 
+	private static DataGuardClient _dataGuardClient;
+	private static long _dataGuardId;
 	private static int _jvmRetryCount;
 	private static final Map<String, List<String>> _testResults =
 		new HashMap<>();
@@ -391,19 +438,13 @@ public class PoshiRunner {
 
 					for (Throwable throwable2 : throwables) {
 						if (validRetryThrowableClass.equals(
-								throwable2.getClass())) {
+								throwable2.getClass()) &&
+							((validRetryThrowableShortMessage == null) ||
+							 validRetryThrowableShortMessage.isEmpty() ||
+							 validRetryThrowableShortMessage.equals(
+								 _getShortMessage(throwable2)))) {
 
-							if ((validRetryThrowableShortMessage == null) ||
-								validRetryThrowableShortMessage.isEmpty()) {
-
-								return true;
-							}
-
-							if (validRetryThrowableShortMessage.equals(
-									_getShortMessage(throwable2))) {
-
-								return true;
-							}
+							return true;
 						}
 					}
 				}
@@ -427,13 +468,9 @@ public class PoshiRunner {
 			}
 
 			private boolean _isTestcaseRetryable() {
-				if (_testcaseRetryCount >=
-						PropsValues.TEST_TESTCASE_MAX_RETRIES) {
-
-					return false;
-				}
-
-				if (PropsValues.TEST_SKIP_TEAR_DOWN ||
+				if ((_testcaseRetryCount >=
+						PropsValues.TEST_TESTCASE_MAX_RETRIES) ||
+					PropsValues.TEST_SKIP_TEAR_DOWN ||
 					(PropsValues.TEST_TESTCASE_MAX_RETRIES == 0)) {
 
 					return false;

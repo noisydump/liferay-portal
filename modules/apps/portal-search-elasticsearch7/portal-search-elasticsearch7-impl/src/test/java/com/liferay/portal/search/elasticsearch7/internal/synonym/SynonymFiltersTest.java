@@ -31,6 +31,7 @@ import com.liferay.portal.search.engine.adapter.index.CreateIndexResponse;
 import com.liferay.portal.search.engine.adapter.index.DeleteIndexRequest;
 import com.liferay.portal.search.engine.adapter.index.DeleteIndexResponse;
 import com.liferay.portal.search.engine.adapter.index.IndexRequestExecutor;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import org.elasticsearch.index.query.MatchPhraseQueryBuilder;
 
@@ -38,12 +39,17 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 /**
  * @author Adam Brandizzi
  */
 public class SynonymFiltersTest {
+
+	@ClassRule
+	public static LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
@@ -53,7 +59,8 @@ public class SynonymFiltersTest {
 
 		_elasticsearchFixture.setUp();
 
-		_searchEngineAdapter = createSearchEngineAdapter(_elasticsearchFixture);
+		_searchEngineAdapter = _createSearchEngineAdapter(
+			_elasticsearchFixture);
 
 		_singleFieldFixture = new SingleFieldFixture(
 			_elasticsearchFixture.getRestHighLevelClient(),
@@ -71,24 +78,24 @@ public class SynonymFiltersTest {
 
 	@After
 	public void tearDown() throws Exception {
-		deleteIndex();
+		_deleteIndex();
 	}
 
 	@Test
 	public void testSynonymFilterFailsWithSpaceInSynonymSetAndMatchPhraseQuery()
 		throws Exception {
 
-		createIndex("synonym-filter-spaced");
+		_createIndex("synonym-filter-spaced");
 
 		_singleFieldFixture.indexDocument("git hash");
 		_singleFieldFixture.indexDocument("stable");
 
-		assertMatchPhraseQuerySearch("stable", "git hash");
+		_assertMatchPhraseQuerySearch("stable", "git hash");
 	}
 
 	@Test
 	public void testSynonymFilterIgnoresQuoteInSearchString() throws Exception {
-		createIndex("synonym-filter-unquoted");
+		_createIndex("synonym-filter-unquoted");
 
 		_singleFieldFixture.indexDocument("\"stable\"");
 		_singleFieldFixture.indexDocument("upstream");
@@ -99,7 +106,7 @@ public class SynonymFiltersTest {
 
 	@Test
 	public void testSynonymFilterIgnoresQuoteInSynonymSet() throws Exception {
-		createIndex("synonym-filter-quoted");
+		_createIndex("synonym-filter-quoted");
 
 		_singleFieldFixture.indexDocument("\"stable\"");
 		_singleFieldFixture.indexDocument("upstream");
@@ -109,7 +116,7 @@ public class SynonymFiltersTest {
 
 	@Test
 	public void testSynonymFilterIgnoresSpaceInSearchString() throws Exception {
-		createIndex("synonym-filter-spaced");
+		_createIndex("synonym-filter-spaced");
 
 		_singleFieldFixture.indexDocument("git hash");
 		_singleFieldFixture.indexDocument("stable");
@@ -119,7 +126,7 @@ public class SynonymFiltersTest {
 
 	@Test
 	public void testSynonymFilterIgnoresSpaceInSynonymSet() throws Exception {
-		createIndex("synonym-filter-spaced");
+		_createIndex("synonym-filter-spaced");
 
 		_singleFieldFixture.indexDocument("git hash");
 		_singleFieldFixture.indexDocument("stable");
@@ -131,7 +138,7 @@ public class SynonymFiltersTest {
 	public void testSynonymGraphFilterIgnoresQuoteInSearchString()
 		throws Exception {
 
-		createIndex("synonym-graph-filter-unquoted");
+		_createIndex("synonym-graph-filter-unquoted");
 
 		_singleFieldFixture.indexDocument("\"stable\"");
 		_singleFieldFixture.indexDocument("upstream");
@@ -144,7 +151,7 @@ public class SynonymFiltersTest {
 	public void testSynonymGraphFilterIgnoresQuoteInSynonymSet()
 		throws Exception {
 
-		createIndex("synonym-graph-filter-quoted");
+		_createIndex("synonym-graph-filter-quoted");
 
 		_singleFieldFixture.indexDocument("\"stable\"");
 		_singleFieldFixture.indexDocument("upstream");
@@ -156,7 +163,7 @@ public class SynonymFiltersTest {
 	public void testSynonymGraphFilterIgnoresSpaceInSearchString()
 		throws Exception {
 
-		createIndex("synonym-graph-filter-spaced");
+		_createIndex("synonym-graph-filter-spaced");
 
 		_singleFieldFixture.indexDocument("git hash");
 		_singleFieldFixture.indexDocument("stable");
@@ -168,7 +175,7 @@ public class SynonymFiltersTest {
 	public void testSynonymGraphFilterIgnoresSpaceInSynonymSet()
 		throws Exception {
 
-		createIndex("synonym-graph-filter-spaced");
+		_createIndex("synonym-graph-filter-spaced");
 
 		_singleFieldFixture.indexDocument("git hash");
 		_singleFieldFixture.indexDocument("stable");
@@ -180,15 +187,15 @@ public class SynonymFiltersTest {
 	public void testSynonymGraphFilterWorksWithSpaceInSynonymSetAndMatchPhraseQuery()
 		throws Exception {
 
-		createIndex("synonym-graph-filter-spaced");
+		_createIndex("synonym-graph-filter-spaced");
 
 		_singleFieldFixture.indexDocument("git hash");
 		_singleFieldFixture.indexDocument("stable");
 
-		assertMatchPhraseQuerySearch("stable", "git hash", "stable");
+		_assertMatchPhraseQuerySearch("stable", "git hash", "stable");
 	}
 
-	protected static IndexRequestExecutor createIndexRequestExecutor(
+	private static IndexRequestExecutor _createIndexRequestExecutor(
 		ElasticsearchClientResolver elasticsearchClientResolver) {
 
 		IndexRequestExecutorFixture indexRequestExecutorFixture =
@@ -203,18 +210,18 @@ public class SynonymFiltersTest {
 		return indexRequestExecutorFixture.getIndexRequestExecutor();
 	}
 
-	protected static SearchEngineAdapter createSearchEngineAdapter(
+	private static SearchEngineAdapter _createSearchEngineAdapter(
 		ElasticsearchClientResolver elasticsearchClientResolver) {
 
 		return new ElasticsearchSearchEngineAdapterImpl() {
 			{
 				setIndexRequestExecutor(
-					createIndexRequestExecutor(elasticsearchClientResolver));
+					_createIndexRequestExecutor(elasticsearchClientResolver));
 			}
 		};
 	}
 
-	protected void assertMatchPhraseQuerySearch(
+	private void _assertMatchPhraseQuerySearch(
 			String text, String... expectedValues)
 		throws Exception {
 
@@ -226,11 +233,11 @@ public class SynonymFiltersTest {
 			matchPhraseQueryBuilder, expectedValues);
 	}
 
-	protected void createIndex(String suffix) {
+	private void _createIndex(String suffix) {
 		CreateIndexRequest createIndexRequest = new CreateIndexRequest(
 			_INDEX_NAME);
 
-		createIndexRequest.setSource(getSource(suffix));
+		createIndexRequest.setSource(_getSource(suffix));
 
 		CreateIndexResponse createIndexResponse = _searchEngineAdapter.execute(
 			createIndexRequest);
@@ -238,7 +245,7 @@ public class SynonymFiltersTest {
 		Assert.assertTrue(createIndexResponse.isAcknowledged());
 	}
 
-	protected void deleteIndex() {
+	private void _deleteIndex() {
 		DeleteIndexRequest deleteIndexRequest = new DeleteIndexRequest(
 			_INDEX_NAME);
 
@@ -248,7 +255,7 @@ public class SynonymFiltersTest {
 		Assert.assertTrue(deleteIndexResponse.isAcknowledged());
 	}
 
-	protected String getSource(String suffix) {
+	private String _getSource(String suffix) {
 		return ResourceUtil.getResourceAsString(
 			getClass(),
 			"dependencies/synonym-filters-test-" + suffix + ".json");

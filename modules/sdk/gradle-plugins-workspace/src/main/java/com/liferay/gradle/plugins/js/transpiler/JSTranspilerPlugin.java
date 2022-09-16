@@ -16,8 +16,8 @@ package com.liferay.gradle.plugins.js.transpiler;
 
 import com.liferay.gradle.plugins.js.transpiler.internal.util.JSTranspilerPluginUtil;
 import com.liferay.gradle.plugins.node.NodePlugin;
-import com.liferay.gradle.plugins.node.tasks.DownloadNodeModuleTask;
-import com.liferay.gradle.plugins.node.tasks.NpmInstallTask;
+import com.liferay.gradle.plugins.node.task.DownloadNodeModuleTask;
+import com.liferay.gradle.plugins.node.task.NpmInstallTask;
 import com.liferay.gradle.util.FileUtil;
 import com.liferay.gradle.util.GradleUtil;
 import com.liferay.gradle.util.copy.RenameDependencyClosure;
@@ -298,6 +298,6 @@ public class JSTranspilerPlugin implements Plugin<Project> {
 		return iterator.next();
 	}
 
-	private static final String _METAL_CLI_VERSION = "1.3.1";
+	private static final String _METAL_CLI_VERSION = "4.0.1";
 
 }

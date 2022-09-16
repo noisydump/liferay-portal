@@ -26,14 +26,14 @@
 
 			<c:if test="<%= showSubmitButton || Validator.isNotNull(submitButtonLabel) %>">
 				<button class="btn btn-primary form-submitter ml-3" type="submit">
-					<%= Validator.isNotNull(submitButtonLabel) ? submitButtonLabel : LanguageUtil.get(request, "submit") %>
+					<%= Validator.isNotNull(submitButtonLabel) ? HtmlUtil.escape(submitButtonLabel) : LanguageUtil.get(request, "submit") %>
 				</button>
 			</c:if>
 		</div>
 	</c:if>
 </div>
 
-<aui:script require="commerce-frontend-js/utilities/eventsDefinitions as events, commerce-frontend-js/utilities/debounce as debounce">
+<aui:script require="commerce-frontend-js/utilities/eventsDefinitions as events, frontend-js-web/liferay/debounce/debounce.es as debounce">
 	function closeModal(isSuccessful) {
 		var eventDetail = {};
 
@@ -45,10 +45,14 @@
 			};
 		}
 
+		<c:if test="<%= redirect != null %>">
+			eventDetail.redirectURL = '<%= redirect %>';
+		</c:if>
+
 		window.top.Liferay.fire(events.CLOSE_MODAL, eventDetail);
 	}
 
-	window.addEventListener('keyup', function (event) {
+	window.addEventListener('keyup', (event) => {
 		event.preventDefault();
 
 		if (event.key === 'Escape') {
@@ -56,14 +60,17 @@
 		}
 	});
 
-	<c:if test='<%= SessionMessages.contains(renderRequest, "requestProcessed") %>'>
-		closeModal(true);
-	</c:if>
+	<c:choose>
+		<c:when test='<%= SessionMessages.contains(renderRequest, "requestProcessed") %>'>
+			closeModal(true);
+		</c:when>
+		<c:otherwise>
+			window.top.Liferay.fire(events.IS_LOADING_MODAL, {isLoading: false});
+		</c:otherwise>
+	</c:choose>
 
-	window.top.Liferay.fire(events.IS_LOADING_MODAL, {isLoading: false});
-
-	document.querySelectorAll('.modal-closer').forEach(function (trigger) {
-		trigger.addEventListener('click', function (e) {
+	document.querySelectorAll('.modal-closer').forEach((trigger) => {
+		trigger.addEventListener('click', (e) => {
 			e.preventDefault();
 			window.top.Liferay.fire(events.CLOSE_MODAL);
 		});
@@ -76,7 +83,7 @@
 	if (iframeForm) {
 		iframeForm.appendChild(iframeFooter);
 
-		iframeForm.addEventListener('submit', function (e) {
+		iframeForm.addEventListener('submit', (e) => {
 			window.top.Liferay.fire(events.IS_LOADING_MODAL, {isLoading: true});
 
 			var form = Liferay.Form.get(iframeForm.id);

@@ -16,19 +16,24 @@ package com.liferay.portal.service.impl;
 
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.exception.NoSuchResourceActionException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
-import com.liferay.portal.kernel.model.Company;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.ResourceAction;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.ResourcePermission;
 import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
+import com.liferay.portal.kernel.service.CompanyLocalService;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
+import com.liferay.portal.kernel.service.persistence.ResourcePermissionPersistence;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.security.permission.PermissionCacheUtil;
@@ -183,6 +188,10 @@ public class ResourceActionLocalServiceImpl
 						resourceAction);
 				}
 				catch (Throwable throwable) {
+					if (_log.isDebugEnabled()) {
+						_log.debug(throwable);
+					}
+
 					resourceAction =
 						resourceActionLocalService.addResourceAction(
 							name, actionId, bitwiseValue);
@@ -223,19 +232,19 @@ public class ResourceActionLocalServiceImpl
 			}
 
 			if (guestBitwiseValue > 0) {
-				resourcePermissionLocalService.addResourcePermissions(
+				_resourcePermissionLocalService.addResourcePermissions(
 					name, RoleConstants.GUEST,
 					ResourceConstants.SCOPE_INDIVIDUAL, guestBitwiseValue);
 			}
 
 			if (ownerBitwiseValue > 0) {
-				resourcePermissionLocalService.addResourcePermissions(
+				_resourcePermissionLocalService.addResourcePermissions(
 					name, RoleConstants.OWNER,
 					ResourceConstants.SCOPE_INDIVIDUAL, ownerBitwiseValue);
 			}
 
 			if (siteMemberBitwiseValue > 0) {
-				resourcePermissionLocalService.addResourcePermissions(
+				_resourcePermissionLocalService.addResourcePermissions(
 					name, RoleConstants.SITE_MEMBER,
 					ResourceConstants.SCOPE_INDIVIDUAL, siteMemberBitwiseValue);
 			}
@@ -252,8 +261,8 @@ public class ResourceActionLocalServiceImpl
 
 	@Override
 	public ResourceAction deleteResourceAction(ResourceAction resourceAction) {
-		final String name = resourceAction.getName();
-		final long bitwiseValue = resourceAction.getBitwiseValue();
+		String name = resourceAction.getName();
+		long bitwiseValue = resourceAction.getBitwiseValue();
 
 		ActionableDynamicQuery.AddCriteriaMethod addCriteriaMethod =
 			dynamicQuery -> {
@@ -262,35 +271,36 @@ public class ResourceActionLocalServiceImpl
 				dynamicQuery.add(nameProperty.eq(name));
 			};
 
-		for (Company company : companyLocalService.getCompanies()) {
-			ActionableDynamicQuery actionableDynamicQuery =
-				resourcePermissionLocalService.getActionableDynamicQuery();
+		_companyLocalService.forEachCompanyId(
+			companyId -> {
+				ActionableDynamicQuery actionableDynamicQuery =
+					_resourcePermissionLocalService.getActionableDynamicQuery();
 
-			actionableDynamicQuery.setAddCriteriaMethod(addCriteriaMethod);
-			actionableDynamicQuery.setCompanyId(company.getCompanyId());
-			actionableDynamicQuery.setPerformActionMethod(
-				(ResourcePermission resourcePermission) -> {
-					long actionIds = resourcePermission.getActionIds();
+				actionableDynamicQuery.setAddCriteriaMethod(addCriteriaMethod);
+				actionableDynamicQuery.setCompanyId(companyId);
+				actionableDynamicQuery.setPerformActionMethod(
+					(ResourcePermission resourcePermission) -> {
+						long actionIds = resourcePermission.getActionIds();
 
-					if ((actionIds & bitwiseValue) != 0) {
-						actionIds &= ~bitwiseValue;
+						if ((actionIds & bitwiseValue) != 0) {
+							actionIds &= ~bitwiseValue;
 
-						resourcePermission.setActionIds(actionIds);
-						resourcePermission.setViewActionId(
-							(actionIds % 2) == 1);
+							resourcePermission.setActionIds(actionIds);
+							resourcePermission.setViewActionId(
+								(actionIds % 2) == 1);
 
-						resourcePermissionPersistence.update(
-							resourcePermission);
-					}
-				});
+							_resourcePermissionPersistence.update(
+								resourcePermission);
+						}
+					});
 
-			try {
-				actionableDynamicQuery.performActions();
-			}
-			catch (PortalException portalException) {
-				throw new SystemException(portalException);
-			}
-		}
+				try {
+					actionableDynamicQuery.performActions();
+				}
+				catch (PortalException portalException) {
+					throw new SystemException(portalException);
+				}
+			});
 
 		_resourceActions.remove(
 			encodeKey(resourceAction.getName(), resourceAction.getActionId()));
@@ -340,7 +350,19 @@ public class ResourceActionLocalServiceImpl
 		return StringBundler.concat(name, StringPool.POUND, actionId);
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		ResourceActionLocalServiceImpl.class);
+
 	private static final Map<String, ResourceAction> _resourceActions =
 		new ConcurrentHashMap<>();
+
+	@BeanReference(type = CompanyLocalService.class)
+	private CompanyLocalService _companyLocalService;
+
+	@BeanReference(type = ResourcePermissionLocalService.class)
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
+
+	@BeanReference(type = ResourcePermissionPersistence.class)
+	private ResourcePermissionPersistence _resourcePermissionPersistence;
 
 }

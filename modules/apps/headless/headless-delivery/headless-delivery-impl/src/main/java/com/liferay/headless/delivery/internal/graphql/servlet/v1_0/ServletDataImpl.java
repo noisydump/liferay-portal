@@ -20,13 +20,11 @@ import com.liferay.headless.delivery.resource.v1_0.BlogPostingImageResource;
 import com.liferay.headless.delivery.resource.v1_0.BlogPostingResource;
 import com.liferay.headless.delivery.resource.v1_0.CommentResource;
 import com.liferay.headless.delivery.resource.v1_0.ContentElementResource;
-import com.liferay.headless.delivery.resource.v1_0.ContentPageResource;
 import com.liferay.headless.delivery.resource.v1_0.ContentSetElementResource;
 import com.liferay.headless.delivery.resource.v1_0.ContentStructureResource;
 import com.liferay.headless.delivery.resource.v1_0.ContentTemplateResource;
 import com.liferay.headless.delivery.resource.v1_0.DocumentFolderResource;
 import com.liferay.headless.delivery.resource.v1_0.DocumentResource;
-import com.liferay.headless.delivery.resource.v1_0.ExperienceResource;
 import com.liferay.headless.delivery.resource.v1_0.KnowledgeBaseArticleResource;
 import com.liferay.headless.delivery.resource.v1_0.KnowledgeBaseAttachmentResource;
 import com.liferay.headless.delivery.resource.v1_0.KnowledgeBaseFolderResource;
@@ -36,6 +34,7 @@ import com.liferay.headless.delivery.resource.v1_0.MessageBoardMessageResource;
 import com.liferay.headless.delivery.resource.v1_0.MessageBoardSectionResource;
 import com.liferay.headless.delivery.resource.v1_0.MessageBoardThreadResource;
 import com.liferay.headless.delivery.resource.v1_0.NavigationMenuResource;
+import com.liferay.headless.delivery.resource.v1_0.SitePageResource;
 import com.liferay.headless.delivery.resource.v1_0.StructuredContentFolderResource;
 import com.liferay.headless.delivery.resource.v1_0.StructuredContentResource;
 import com.liferay.headless.delivery.resource.v1_0.WikiNodeResource;
@@ -68,6 +67,8 @@ public class ServletDataImpl implements ServletData {
 			_blogPostingImageResourceComponentServiceObjects);
 		Mutation.setCommentResourceComponentServiceObjects(
 			_commentResourceComponentServiceObjects);
+		Mutation.setContentStructureResourceComponentServiceObjects(
+			_contentStructureResourceComponentServiceObjects);
 		Mutation.setDocumentResourceComponentServiceObjects(
 			_documentResourceComponentServiceObjects);
 		Mutation.setDocumentFolderResourceComponentServiceObjects(
@@ -107,8 +108,6 @@ public class ServletDataImpl implements ServletData {
 			_commentResourceComponentServiceObjects);
 		Query.setContentElementResourceComponentServiceObjects(
 			_contentElementResourceComponentServiceObjects);
-		Query.setContentPageResourceComponentServiceObjects(
-			_contentPageResourceComponentServiceObjects);
 		Query.setContentSetElementResourceComponentServiceObjects(
 			_contentSetElementResourceComponentServiceObjects);
 		Query.setContentStructureResourceComponentServiceObjects(
@@ -119,8 +118,6 @@ public class ServletDataImpl implements ServletData {
 			_documentResourceComponentServiceObjects);
 		Query.setDocumentFolderResourceComponentServiceObjects(
 			_documentFolderResourceComponentServiceObjects);
-		Query.setExperienceResourceComponentServiceObjects(
-			_experienceResourceComponentServiceObjects);
 		Query.setKnowledgeBaseArticleResourceComponentServiceObjects(
 			_knowledgeBaseArticleResourceComponentServiceObjects);
 		Query.setKnowledgeBaseAttachmentResourceComponentServiceObjects(
@@ -139,6 +136,8 @@ public class ServletDataImpl implements ServletData {
 			_messageBoardThreadResourceComponentServiceObjects);
 		Query.setNavigationMenuResourceComponentServiceObjects(
 			_navigationMenuResourceComponentServiceObjects);
+		Query.setSitePageResourceComponentServiceObjects(
+			_sitePageResourceComponentServiceObjects);
 		Query.setStructuredContentResourceComponentServiceObjects(
 			_structuredContentResourceComponentServiceObjects);
 		Query.setStructuredContentFolderResourceComponentServiceObjects(
@@ -177,6 +176,10 @@ public class ServletDataImpl implements ServletData {
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
 	private ComponentServiceObjects<CommentResource>
 		_commentResourceComponentServiceObjects;
+
+	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
+	private ComponentServiceObjects<ContentStructureResource>
+		_contentStructureResourceComponentServiceObjects;
 
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
 	private ComponentServiceObjects<DocumentResource>
@@ -243,27 +246,19 @@ public class ServletDataImpl implements ServletData {
 		_contentElementResourceComponentServiceObjects;
 
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
-	private ComponentServiceObjects<ContentPageResource>
-		_contentPageResourceComponentServiceObjects;
-
-	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
 	private ComponentServiceObjects<ContentSetElementResource>
 		_contentSetElementResourceComponentServiceObjects;
-
-	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
-	private ComponentServiceObjects<ContentStructureResource>
-		_contentStructureResourceComponentServiceObjects;
 
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
 	private ComponentServiceObjects<ContentTemplateResource>
 		_contentTemplateResourceComponentServiceObjects;
 
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
-	private ComponentServiceObjects<ExperienceResource>
-		_experienceResourceComponentServiceObjects;
-
-	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
 	private ComponentServiceObjects<LanguageResource>
 		_languageResourceComponentServiceObjects;
+
+	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
+	private ComponentServiceObjects<SitePageResource>
+		_sitePageResourceComponentServiceObjects;
 
 }

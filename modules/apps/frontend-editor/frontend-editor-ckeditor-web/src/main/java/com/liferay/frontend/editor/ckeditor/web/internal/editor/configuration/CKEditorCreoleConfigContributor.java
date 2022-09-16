@@ -20,7 +20,7 @@ import com.liferay.portal.kernel.editor.configuration.EditorConfigContributor;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Validator;
@@ -28,6 +28,7 @@ import com.liferay.portal.kernel.util.Validator;
 import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Ambrín Chaudhary
@@ -77,82 +78,88 @@ public class CKEditorCreoleConfigContributor
 				"sourcearea,wikilink"
 		).put(
 			"filebrowserWindowFeatures",
-			"title=" + LanguageUtil.get(themeDisplay.getLocale(), "browse")
+			"title=" + _language.get(themeDisplay.getLocale(), "browse")
 		).put(
 			"format_tags", "p;h1;h2;h3;h4;h5;h6;pre"
-		);
-
-		StringBundler sb = new StringBundler(4);
-
-		sb.append("bidi,codemirror,colorbutton,colordialog,div,");
-		sb.append("elementspath,font,forms,indentblock,justify,keystrokes");
-		sb.append("link,maximize,newpage,pagebreak,preview,print,save,");
-		sb.append("showblocks,smiley,stylescombo,templates,video");
-
-		jsonObject.put(
-			"removePlugins", sb.toString()
+		).put(
+			"removePlugins",
+			StringBundler.concat(
+				"bidi,codemirror,colorbutton,colordialog,div,elementspath,",
+				"font,forms,indentblock,justify,keystrokes,link,maximize,",
+				"newpage,pagebreak,preview,print,save,showblocks,smiley,",
+				"stylescombo,templates,video")
 		).put(
 			"toolbar_creole",
-			getToolbarsCreoleJSONArray(inputEditorTaglibAttributes)
+			_getToolbarsCreoleJSONArray(inputEditorTaglibAttributes)
 		).put(
 			"toolbar_phone",
-			getToolbarsPhoneJSONArray(inputEditorTaglibAttributes)
+			_getToolbarsPhoneJSONArray(inputEditorTaglibAttributes)
 		).put(
 			"toolbar_tablet",
-			getToolbarsTabletJSONArray(inputEditorTaglibAttributes)
+			_getToolbarsTabletJSONArray(inputEditorTaglibAttributes)
 		);
 	}
 
-	protected JSONArray getToolbarsCreoleJSONArray(
+	private JSONArray _getToolbarsCreoleJSONArray(
 		Map<String, Object> inputEditorTaglibAttributes) {
 
-		JSONArray jsonArray = JSONUtil.putAll(
+		return JSONUtil.putAll(
 			toJSONArray("['Bold', 'Italic', 'Underline', '-' ,'RemoveFormat']"),
 			toJSONArray("['NumberedList', 'BulletedList', '-']"),
 			toJSONArray("['Format']"), toJSONArray("['Link', 'Unlink']"),
-			toJSONArray(
-				"['Table', '-','ImageSelector', '-', 'HorizontalRule']"));
+			toJSONArray("['Table', '-','ImageSelector', '-', 'HorizontalRule']")
+		).put(
+			() -> {
+				if (isShowSource(inputEditorTaglibAttributes)) {
+					return toJSONArray("['Source']");
+				}
 
-		if (isShowSource(inputEditorTaglibAttributes)) {
-			jsonArray.put(toJSONArray("['Source']"));
-		}
-
-		jsonArray.put(toJSONArray("['A11YBtn']"));
-
-		return jsonArray;
+				return null;
+			}
+		).put(
+			toJSONArray("['A11YBtn']")
+		);
 	}
 
-	protected JSONArray getToolbarsPhoneJSONArray(
+	private JSONArray _getToolbarsPhoneJSONArray(
 		Map<String, Object> inputEditorTaglibAttributes) {
 
-		JSONArray jsonArray = JSONUtil.putAll(
+		return JSONUtil.putAll(
 			toJSONArray("['Bold', 'Italic']"),
 			toJSONArray("['NumberedList', 'BulletedList']"),
-			toJSONArray("['Link', 'Unlink']"),
-			toJSONArray("['ImageSelector']"));
+			toJSONArray("['Link', 'Unlink']"), toJSONArray("['ImageSelector']")
+		).put(
+			() -> {
+				if (isShowSource(inputEditorTaglibAttributes)) {
+					return toJSONArray("['Source']");
+				}
 
-		if (isShowSource(inputEditorTaglibAttributes)) {
-			jsonArray.put(toJSONArray("['Source']"));
-		}
-
-		return jsonArray;
+				return null;
+			}
+		);
 	}
 
-	protected JSONArray getToolbarsTabletJSONArray(
+	private JSONArray _getToolbarsTabletJSONArray(
 		Map<String, Object> inputEditorTaglibAttributes) {
 
-		JSONArray jsonArray = JSONUtil.putAll(
+		return JSONUtil.putAll(
 			toJSONArray("['Bold', 'Italic']"),
 			toJSONArray(
 				"['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent']"),
 			toJSONArray("['Format']"), toJSONArray("['Link', 'Unlink']"),
-			toJSONArray("['ImageSelector']"));
+			toJSONArray("['ImageSelector']")
+		).put(
+			() -> {
+				if (isShowSource(inputEditorTaglibAttributes)) {
+					return toJSONArray("['Source']");
+				}
 
-		if (isShowSource(inputEditorTaglibAttributes)) {
-			jsonArray.put(toJSONArray("['Source']"));
-		}
-
-		return jsonArray;
+				return null;
+			}
+		);
 	}
+
+	@Reference
+	private Language _language;
 
 }

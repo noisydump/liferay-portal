@@ -17,6 +17,7 @@ package com.liferay.message.boards.service;
 import com.liferay.message.boards.model.MBMessage;
 import com.liferay.message.boards.model.MBMessageDisplay;
 import com.liferay.portal.kernel.change.tracking.CTAware;
+import com.liferay.portal.kernel.dao.orm.QueryDefinition;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.jsonwebservice.JSONWebService;
@@ -68,6 +69,12 @@ public interface MBMessageService extends BaseService {
 			ServiceContext serviceContext)
 		throws PortalException;
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #addMessage(String, long, String, String, String, List,
+	 boolean, double, boolean, ServiceContext)}
+	 */
+	@Deprecated
 	public MBMessage addMessage(
 			long groupId, long categoryId, String subject, String body,
 			String format,
@@ -76,6 +83,12 @@ public interface MBMessageService extends BaseService {
 			ServiceContext serviceContext)
 		throws PortalException;
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #addMessage(String, long, String, String, String, List,
+	 boolean, double, boolean, ServiceContext)}
+	 */
+	@Deprecated
 	public MBMessage addMessage(
 			long groupId, long categoryId, String subject, String body,
 			String format, String fileName, File file, boolean anonymous,
@@ -83,13 +96,33 @@ public interface MBMessageService extends BaseService {
 			ServiceContext serviceContext)
 		throws FileNotFoundException, PortalException;
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #addMessage(String, long, String, String, String, List,
+	 boolean, double, boolean, ServiceContext)}
+	 */
+	@Deprecated
 	public MBMessage addMessage(
 			long categoryId, String subject, String body,
 			ServiceContext serviceContext)
 		throws PortalException;
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #addMessage(String, long, String, String, String, List,
+	 boolean, double, boolean, ServiceContext)}
+	 */
+	@Deprecated
 	public MBMessage addMessage(
 			long parentMessageId, String subject, String body, String format,
+			List<ObjectValuePair<String, InputStream>> inputStreamOVPs,
+			boolean anonymous, double priority, boolean allowPingbacks,
+			ServiceContext serviceContext)
+		throws PortalException;
+
+	public MBMessage addMessage(
+			String externalReferenceCode, long parentMessageId, String subject,
+			String body, String format,
 			List<ObjectValuePair<String, InputStream>> inputStreamOVPs,
 			boolean anonymous, double priority, boolean allowPingbacks,
 			ServiceContext serviceContext)
@@ -137,6 +170,18 @@ public interface MBMessageService extends BaseService {
 			long groupId, long categoryId, int status, int max, String type,
 			double version, String displayStyle, String feedURL,
 			String entryURL, ThemeDisplay themeDisplay)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<MBMessage> getChildMessages(
+			long parentMessageId, boolean flatten,
+			QueryDefinition<MBMessage> queryDefinition)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getChildMessagesCount(
+			long parentMessageId, boolean flatten,
+			QueryDefinition<MBMessage> queryDefinition)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)

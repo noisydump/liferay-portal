@@ -82,12 +82,12 @@ public class PortalPreferencesCacheModel
 		sb.append(mvccVersion);
 		sb.append(", portalPreferencesId=");
 		sb.append(portalPreferencesId);
+		sb.append(", companyId=");
+		sb.append(companyId);
 		sb.append(", ownerId=");
 		sb.append(ownerId);
 		sb.append(", ownerType=");
 		sb.append(ownerType);
-		sb.append(", preferences=");
-		sb.append(preferences);
 		sb.append("}");
 
 		return sb.toString();
@@ -100,15 +100,9 @@ public class PortalPreferencesCacheModel
 
 		portalPreferencesImpl.setMvccVersion(mvccVersion);
 		portalPreferencesImpl.setPortalPreferencesId(portalPreferencesId);
+		portalPreferencesImpl.setCompanyId(companyId);
 		portalPreferencesImpl.setOwnerId(ownerId);
 		portalPreferencesImpl.setOwnerType(ownerType);
-
-		if (preferences == null) {
-			portalPreferencesImpl.setPreferences("");
-		}
-		else {
-			portalPreferencesImpl.setPreferences(preferences);
-		}
 
 		portalPreferencesImpl.resetOriginalValues();
 
@@ -116,17 +110,16 @@ public class PortalPreferencesCacheModel
 	}
 
 	@Override
-	public void readExternal(ObjectInput objectInput)
-		throws ClassNotFoundException, IOException {
-
+	public void readExternal(ObjectInput objectInput) throws IOException {
 		mvccVersion = objectInput.readLong();
 
 		portalPreferencesId = objectInput.readLong();
 
+		companyId = objectInput.readLong();
+
 		ownerId = objectInput.readLong();
 
 		ownerType = objectInput.readInt();
-		preferences = (String)objectInput.readObject();
 	}
 
 	@Override
@@ -135,22 +128,17 @@ public class PortalPreferencesCacheModel
 
 		objectOutput.writeLong(portalPreferencesId);
 
+		objectOutput.writeLong(companyId);
+
 		objectOutput.writeLong(ownerId);
 
 		objectOutput.writeInt(ownerType);
-
-		if (preferences == null) {
-			objectOutput.writeObject("");
-		}
-		else {
-			objectOutput.writeObject(preferences);
-		}
 	}
 
 	public long mvccVersion;
 	public long portalPreferencesId;
+	public long companyId;
 	public long ownerId;
 	public int ownerType;
-	public String preferences;
 
 }

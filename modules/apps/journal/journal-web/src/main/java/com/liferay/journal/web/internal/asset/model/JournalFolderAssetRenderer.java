@@ -19,7 +19,10 @@ import com.liferay.asset.kernel.model.BaseJSPAssetRenderer;
 import com.liferay.journal.constants.JournalPortletKeys;
 import com.liferay.journal.model.JournalFolder;
 import com.liferay.journal.web.internal.security.permission.resource.JournalFolderPermission;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
@@ -139,15 +142,15 @@ public class JournalFolderAssetRenderer
 			group = themeDisplay.getScopeGroup();
 		}
 
-		PortletURL portletURL = PortalUtil.getControlPanelPortletURL(
-			liferayPortletRequest, group, JournalPortletKeys.JOURNAL, 0, 0,
-			PortletRequest.RENDER_PHASE);
-
-		portletURL.setParameter("mvcPath", "/edit_folder.jsp");
-		portletURL.setParameter(
-			"folderId", String.valueOf(_folder.getFolderId()));
-
-		return portletURL;
+		return PortletURLBuilder.create(
+			PortalUtil.getControlPanelPortletURL(
+				liferayPortletRequest, group, JournalPortletKeys.JOURNAL, 0, 0,
+				PortletRequest.RENDER_PHASE)
+		).setMVCPath(
+			"/edit_folder.jsp"
+		).setParameter(
+			"folderId", _folder.getFolderId()
+		).buildPortletURL();
 	}
 
 	@Override
@@ -159,15 +162,15 @@ public class JournalFolderAssetRenderer
 		AssetRendererFactory<JournalFolder> assetRendererFactory =
 			getAssetRendererFactory();
 
-		PortletURL portletURL = assetRendererFactory.getURLView(
-			liferayPortletResponse, windowState);
-
-		portletURL.setParameter("mvcPath", "/asset/folder_full_content.jsp");
-		portletURL.setParameter(
-			"folderId", String.valueOf(_folder.getFolderId()));
-		portletURL.setWindowState(windowState);
-
-		return portletURL.toString();
+		return PortletURLBuilder.create(
+			assetRendererFactory.getURLView(liferayPortletResponse, windowState)
+		).setMVCPath(
+			"/asset/folder_full_content.jsp"
+		).setParameter(
+			"folderId", _folder.getFolderId()
+		).setWindowState(
+			windowState
+		).buildString();
 	}
 
 	@Override
@@ -180,6 +183,10 @@ public class JournalFolderAssetRenderer
 			return getURLView(liferayPortletResponse, WindowState.MAXIMIZED);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			return noSuchEntryRedirect;
 		}
 	}
@@ -214,6 +221,9 @@ public class JournalFolderAssetRenderer
 		return JournalFolderPermission.contains(
 			permissionChecker, _folder, ActionKeys.VIEW);
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		JournalFolderAssetRenderer.class);
 
 	private final JournalFolder _folder;
 	private final TrashHelper _trashHelper;

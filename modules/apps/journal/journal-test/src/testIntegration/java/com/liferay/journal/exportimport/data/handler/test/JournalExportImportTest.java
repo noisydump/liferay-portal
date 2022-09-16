@@ -46,7 +46,6 @@ import com.liferay.journal.model.JournalArticleResource;
 import com.liferay.journal.service.JournalArticleLocalServiceUtil;
 import com.liferay.journal.test.util.JournalTestUtil;
 import com.liferay.journal.util.JournalContent;
-import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -76,12 +75,8 @@ import com.liferay.portal.kernel.zip.ZipReaderFactoryUtil;
 import com.liferay.portal.kernel.zip.ZipWriter;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.util.PropsValues;
 
 import java.io.Serializable;
-
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -121,22 +116,6 @@ public class JournalExportImportTest extends BasePortletExportImportTestCase {
 		return JournalPortletKeys.JOURNAL;
 	}
 
-	public void setPortalProperty(String propertyName, Object value)
-		throws Exception {
-
-		Field field = ReflectionUtil.getDeclaredField(
-			PropsValues.class, propertyName);
-
-		field.setAccessible(true);
-
-		Field modifiersField = Field.class.getDeclaredField("modifiers");
-
-		modifiersField.setAccessible(true);
-		modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
-
-		field.set(null, value);
-	}
-
 	@Before
 	@Override
 	public void setUp() throws Exception {
@@ -161,10 +140,10 @@ public class JournalExportImportTest extends BasePortletExportImportTestCase {
 
 		article = (JournalArticle)addVersion(article);
 
-		int articlesCount = JournalArticleLocalServiceUtil.getArticlesCount(
-			group.getGroupId(), article.getArticleId());
-
-		Assert.assertEquals(2, articlesCount);
+		Assert.assertEquals(
+			2,
+			JournalArticleLocalServiceUtil.getArticlesCount(
+				group.getGroupId(), article.getArticleId()));
 
 		Map<String, String[]> exportParameterMap = new HashMap<>();
 
@@ -179,10 +158,10 @@ public class JournalExportImportTest extends BasePortletExportImportTestCase {
 
 		Assert.assertNotNull(importedArticle);
 
-		articlesCount = JournalArticleLocalServiceUtil.getArticlesCount(
-			importedGroup.getGroupId(), importedArticle.getArticleId());
-
-		Assert.assertEquals(1, articlesCount);
+		Assert.assertEquals(
+			1,
+			JournalArticleLocalServiceUtil.getArticlesCount(
+				importedGroup.getGroupId(), importedArticle.getArticleId()));
 	}
 
 	@Test
@@ -354,11 +333,9 @@ public class JournalExportImportTest extends BasePortletExportImportTestCase {
 
 		JournalArticle article = (JournalArticle)stagedModel;
 
-		JournalArticle latestArticle =
+		deleteStagedModel(
 			JournalArticleLocalServiceUtil.getLatestArticle(
-				article.getGroupId(), article.getArticleId());
-
-		deleteStagedModel(latestArticle);
+				article.getGroupId(), article.getArticleId()));
 	}
 
 	@Override
@@ -396,10 +373,10 @@ public class JournalExportImportTest extends BasePortletExportImportTestCase {
 
 		exportImportPortlet(JournalPortletKeys.JOURNAL);
 
-		int articlesCount = JournalArticleLocalServiceUtil.getArticlesCount(
-			importedGroup.getGroupId());
-
-		Assert.assertEquals(1, articlesCount);
+		Assert.assertEquals(
+			1,
+			JournalArticleLocalServiceUtil.getArticlesCount(
+				importedGroup.getGroupId()));
 
 		JournalArticle groupArticle =
 			JournalArticleLocalServiceUtil.fetchJournalArticleByUuidAndGroupId(
@@ -531,13 +508,11 @@ public class JournalExportImportTest extends BasePortletExportImportTestCase {
 		String userIdStrategyString = MapUtil.getString(
 			parameterMap, PortletDataHandlerKeys.USER_ID_STRATEGY);
 
-		UserIdStrategy userIdStrategy =
-			ExportImportHelperUtil.getUserIdStrategy(
-				TestPropsValues.getUserId(), userIdStrategyString);
-
 		return PortletDataContextFactoryUtil.createImportPortletDataContext(
 			group.getCompanyId(), importedGroup.getGroupId(), parameterMap,
-			userIdStrategy, ZipReaderFactoryUtil.getZipReader(larFile));
+			ExportImportHelperUtil.getUserIdStrategy(
+				TestPropsValues.getUserId(), userIdStrategyString),
+			ZipReaderFactoryUtil.getZipReader(larFile));
 	}
 
 	@Override

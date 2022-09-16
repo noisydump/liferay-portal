@@ -14,9 +14,9 @@
 
 package com.liferay.portal.kernel.test.portlet;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.portlet.LiferayPortletURL;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.StringBundler;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -98,7 +98,7 @@ public class MockLiferayPortletURL implements LiferayPortletURL {
 
 	@Override
 	public String getPortletId() {
-		return null;
+		return _portletId;
 	}
 
 	@Override
@@ -237,6 +237,7 @@ public class MockLiferayPortletURL implements LiferayPortletURL {
 
 	@Override
 	public void setPortletId(String portletId) {
+		_portletId = portletId;
 	}
 
 	@Override
@@ -294,11 +295,24 @@ public class MockLiferayPortletURL implements LiferayPortletURL {
 		sb.append("//localhost/test?");
 
 		for (Map.Entry<String, String[]> entry : entries) {
-			sb.append("param_");
-			sb.append(entry.getKey());
-			sb.append("=");
-			sb.append(entry.getValue()[0]);
-			sb.append(";");
+			String[] values = entry.getValue();
+
+			if (ArrayUtil.isEmpty(values)) {
+				continue;
+			}
+
+			for (String value : values) {
+				if (value == null) {
+					continue;
+				}
+
+				sb.append(_portletId);
+				sb.append("_");
+				sb.append(entry.getKey());
+				sb.append("=");
+				sb.append(value);
+				sb.append(";");
+			}
 		}
 
 		if (!entries.isEmpty()) {
@@ -321,5 +335,6 @@ public class MockLiferayPortletURL implements LiferayPortletURL {
 	}
 
 	private Map<String, String[]> _parameters = new ConcurrentHashMap<>();
+	private String _portletId = "param";
 
 }

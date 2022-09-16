@@ -41,13 +41,17 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.ModelHintsUtil;
 import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
 import com.liferay.portal.kernel.util.LocaleThreadLocal;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
+import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.util.List;
 import java.util.Locale;
@@ -132,15 +136,11 @@ public class CPDefinitionImpl extends CPDefinitionBaseImpl {
 		return null;
 	}
 
-	public CPDefinitionImpl() {
-	}
-
 	@Override
 	public Object clone() {
 		CPDefinitionImpl cpDefinitionImpl = (CPDefinitionImpl)super.clone();
 
 		cpDefinitionImpl.setDescriptionMap(getDescriptionMap());
-		cpDefinitionImpl.setLayoutUuid(getLayoutUuid());
 		cpDefinitionImpl.setNameMap(getNameMap());
 		cpDefinitionImpl.setShortDescriptionMap(getShortDescriptionMap());
 		cpDefinitionImpl.setUrlTitleMap(getUrlTitleMap());
@@ -200,7 +200,8 @@ public class CPDefinitionImpl extends CPDefinitionBaseImpl {
 	@Override
 	public List<CPInstance> getCPInstances() {
 		return CPInstanceLocalServiceUtil.getCPDefinitionInstances(
-			getCPDefinitionId(), QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+			getCPDefinitionId(), WorkflowConstants.STATUS_ANY,
+			QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 	}
 
 	@Override
@@ -219,28 +220,19 @@ public class CPDefinitionImpl extends CPDefinitionBaseImpl {
 	}
 
 	@Override
-	public String getDefaultImageFileURL() throws PortalException {
+	public String getDefaultImageThumbnailSrc(long commerceAccountId)
+		throws Exception {
+
 		CPAttachmentFileEntry cpAttachmentFileEntry =
-			CPDefinitionLocalServiceUtil.getDefaultImage(getCPDefinitionId());
+			CPDefinitionLocalServiceUtil.getDefaultImageCPAttachmentFileEntry(
+				getCPDefinitionId());
 
 		if (cpAttachmentFileEntry == null) {
-			return CommerceMediaResolverUtil.getDefaultUrl(getGroupId());
+			return CommerceMediaResolverUtil.getDefaultURL(getGroupId());
 		}
 
-		return CommerceMediaResolverUtil.getUrl(
-			cpAttachmentFileEntry.getCPAttachmentFileEntryId());
-	}
-
-	@Override
-	public String getDefaultImageThumbnailSrc() throws Exception {
-		CPAttachmentFileEntry cpAttachmentFileEntry =
-			CPDefinitionLocalServiceUtil.getDefaultImage(getCPDefinitionId());
-
-		if (cpAttachmentFileEntry == null) {
-			return CommerceMediaResolverUtil.getDefaultUrl(getGroupId());
-		}
-
-		return CommerceMediaResolverUtil.getThumbnailUrl(
+		return CommerceMediaResolverUtil.getThumbnailURL(
+			commerceAccountId,
 			cpAttachmentFileEntry.getCPAttachmentFileEntryId());
 	}
 
@@ -259,10 +251,11 @@ public class CPDefinitionImpl extends CPDefinitionBaseImpl {
 	public UnicodeProperties getDeliverySubscriptionTypeSettingsProperties() {
 		if (_deliverySubscriptionTypeSettingsUnicodeProperties == null) {
 			_deliverySubscriptionTypeSettingsUnicodeProperties =
-				new UnicodeProperties(true);
-
-			_deliverySubscriptionTypeSettingsUnicodeProperties.fastLoad(
-				getDeliverySubscriptionTypeSettings());
+				UnicodePropertiesBuilder.create(
+					true
+				).fastLoad(
+					getDeliverySubscriptionTypeSettings()
+				).build();
 		}
 
 		return _deliverySubscriptionTypeSettingsUnicodeProperties;
@@ -279,18 +272,6 @@ public class CPDefinitionImpl extends CPDefinitionBaseImpl {
 				getCPDefinitionId());
 
 		return _descriptionMap;
-	}
-
-	@Override
-	public String getLayoutUuid() {
-		if (Validator.isNotNull(_layoutUuid)) {
-			return _layoutUuid;
-		}
-
-		_layoutUuid = CPDefinitionLocalServiceUtil.getLayoutUuid(
-			getCPDefinitionId());
-
-		return _layoutUuid;
 	}
 
 	@Override
@@ -367,11 +348,12 @@ public class CPDefinitionImpl extends CPDefinitionBaseImpl {
 	@Override
 	public UnicodeProperties getSubscriptionTypeSettingsProperties() {
 		if (_subscriptionTypeSettingsUnicodeProperties == null) {
-			_subscriptionTypeSettingsUnicodeProperties = new UnicodeProperties(
-				true);
-
-			_subscriptionTypeSettingsUnicodeProperties.fastLoad(
-				getSubscriptionTypeSettings());
+			_subscriptionTypeSettingsUnicodeProperties =
+				UnicodePropertiesBuilder.create(
+					true
+				).fastLoad(
+					getSubscriptionTypeSettings()
+				).build();
 		}
 
 		return _subscriptionTypeSettingsUnicodeProperties;
@@ -389,13 +371,14 @@ public class CPDefinitionImpl extends CPDefinitionBaseImpl {
 					classNameId, getCProductId());
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			return StringPool.BLANK;
 		}
 
-		Map<String, String> languageIdToUrlTitleMap =
-			friendlyURLEntry.getLanguageIdToUrlTitleMap();
-
-		return languageIdToUrlTitleMap.get(languageId);
+		return friendlyURLEntry.getUrlTitle(languageId);
 	}
 
 	@Override
@@ -446,11 +429,6 @@ public class CPDefinitionImpl extends CPDefinitionBaseImpl {
 	}
 
 	@Override
-	public void setLayoutUuid(String layoutUuid) {
-		_layoutUuid = layoutUuid;
-	}
-
-	@Override
 	public void setNameMap(Map<Locale, String> nameMap) {
 		_nameMap = nameMap;
 	}
@@ -490,10 +468,12 @@ public class CPDefinitionImpl extends CPDefinitionBaseImpl {
 		_urlTitleMap = urlTitleMap;
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		CPDefinitionImpl.class);
+
 	private UnicodeProperties
 		_deliverySubscriptionTypeSettingsUnicodeProperties;
 	private Map<Locale, String> _descriptionMap;
-	private String _layoutUuid;
 	private Map<Locale, String> _metaDescriptionMap;
 	private Map<Locale, String> _metaKeywordsMap;
 	private Map<Locale, String> _metaTitleMap;

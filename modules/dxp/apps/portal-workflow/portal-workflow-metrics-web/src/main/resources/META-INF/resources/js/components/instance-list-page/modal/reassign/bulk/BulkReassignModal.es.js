@@ -10,7 +10,7 @@
  */
 
 import {useModal} from '@clayui/modal';
-import React, {useCallback, useContext, useMemo, useState} from 'react';
+import React, {useCallback, useContext, useState} from 'react';
 
 import ModalWithSteps from '../../../../../shared/components/modal-with-steps/ModalWithSteps.es';
 import {useToaster} from '../../../../../shared/components/toaster/hooks/useToaster.es';
@@ -22,7 +22,7 @@ import SelectTasksStep from '../../shared/select-tasks-step/SelectTasksStep.es';
 import {useFetchTasks} from '../../shared/select-tasks-step/hooks/useFetchTasks.es';
 import SelectAssigneesStep from './select-assignees-step/SelectAssigneesStep.es';
 
-const BulkReassignModal = () => {
+export default function BulkReassignModal() {
 	const {
 		bulkReassign: {reassignedTasks, reassigning},
 		closeModal,
@@ -31,7 +31,14 @@ const BulkReassignModal = () => {
 		setSelectTasks,
 		visibleModal,
 	} = useContext(ModalContext);
-	const {clearFilters, fetchTasks} = useFetchTasks();
+	const {clearFilters, fetchTasks} = useFetchTasks({
+		callback: ({items}) => {
+			setFetching(false);
+			setSelectTasks({selectAll, tasks: items});
+
+			setCurrentStep('selectAssignees');
+		},
+	});
 	const {setSelectAll, setSelectedItems} = useContext(InstanceListContext);
 	const [currentStep, setCurrentStep] = useState('selectTasks');
 	const [errorToast, setErrorToast] = useState(null);
@@ -64,31 +71,41 @@ const BulkReassignModal = () => {
 	const {patchData} = usePatch({
 		admin: true,
 		body: reassignedTasks,
-		url: 'workflow-tasks/assign-to-user',
+		callback: () => {
+			toaster.success(
+				reassignedTasks.length > 1
+					? sub(
+							Liferay.Language.get(
+								'x-tasks-have-been-reassigned'
+							),
+							[reassignedTasks.length]
+					  )
+					: Liferay.Language.get('this-task-has-been-reassigned')
+			);
+
+			onCloseModal(true);
+			setSelectedItems([]);
+			setSelectAll(false);
+			window.location.reload();
+		},
+		url: '/workflow-tasks/assign-to-user',
 	});
 
 	const handleNext = useCallback(() => {
 		if (selectAll) {
 			setFetching(true);
-			fetchTasks()
-				.then(({items}) => {
-					setFetching(false);
-					setSelectTasks({selectAll, tasks: items});
 
-					setCurrentStep('selectAssignees');
-				})
-				.catch(() => {
-					setErrorToast(
-						Liferay.Language.get('your-request-has-failed')
-					);
-					setFetching(false);
-				});
+			fetchTasks().catch(() => {
+				setErrorToast(Liferay.Language.get('your-request-has-failed'));
+				setFetching(false);
+			});
 		}
 		else {
 			setCurrentStep('selectAssignees');
 		}
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [setBulkReassign, fetchTasks, selectAll]);
+	}, [selectAll]);
 
 	const handlePrevious = useCallback(() => {
 		clearContext();
@@ -104,106 +121,69 @@ const BulkReassignModal = () => {
 
 		setErrorToast(false);
 
-		patchData()
-			.then(() => {
-				toaster.success(
-					reassignedTasks.length > 1
-						? sub(
-								Liferay.Language.get(
-									'x-tasks-have-been-reassigned'
-								),
-								[reassignedTasks.length]
-						  )
-						: Liferay.Language.get('this-task-has-been-reassigned')
-				);
+		patchData().catch(() => {
+			const error = `${Liferay.Language.get(
+				'your-request-has-failed'
+			)} ${Liferay.Language.get('select-reassign-to-retry')}`;
 
-				onCloseModal(true);
-				setSelectedItems([]);
-				setSelectAll(false);
-			})
-			.catch(() => {
-				const error = `${Liferay.Language.get(
-					'your-request-has-failed'
-				)} ${Liferay.Language.get('select-reassign-to-retry')}`;
+			setBulkReassign((bulkReassign) => ({
+				...bulkReassign,
+				reassigning: false,
+			}));
 
-				setBulkReassign((bulkReassign) => ({
-					...bulkReassign,
-					reassigning: false,
-				}));
+			setErrorToast(error);
+		});
 
-				setErrorToast(error);
-			});
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [patchData, setBulkReassign]);
+	}, [reassignedTasks]);
 
-	const getStep = useCallback(
-		(step) => {
-			const steps = {
-				selectAssignees: {
-					cancelBtn: {
-						disabled: reassigning,
-						handle: onClose,
-					},
-					component: SelectAssigneesStep,
-					nextBtn: {
-						disabled:
-							reassigning ||
-							reassignedTasks.length !== tasks.length,
-						handle: handleReassign,
-						text: Liferay.Language.get('reassign'),
-					},
-					order: 2,
-					previousBtn: {
-						disabled: reassigning,
-						handle: handlePrevious,
-					},
-					props: {setErrorToast},
-					subtitle: Liferay.Language.get('select-assignees'),
-					title: Liferay.Language.get('select-new-assignees'),
-				},
-				selectTasks: {
-					cancelBtn: {
-						disabled: fetching,
-						handle: onClose,
-					},
-					component: SelectTasksStep,
-					nextBtn: {
-						disabled: tasks.length === 0 || fetching,
-						handle: handleNext,
-						text: Liferay.Language.get('next'),
-					},
-					order: 1,
-					previousBtn: false,
-					props: {setErrorToast},
-					subtitle: Liferay.Language.get('select-tasks'),
-					title: Liferay.Language.get('select-tasks-to-reassign'),
-				},
-			};
-
-			return steps[step];
+	const steps = {
+		selectAssignees: {
+			cancelBtn: {
+				disabled: reassigning,
+				handle: onClose,
+			},
+			component: SelectAssigneesStep,
+			nextBtn: {
+				disabled:
+					reassigning || reassignedTasks.length !== tasks.length,
+				handle: handleReassign,
+				text: Liferay.Language.get('reassign'),
+			},
+			order: 2,
+			previousBtn: {
+				disabled: reassigning,
+				handle: handlePrevious,
+			},
+			props: {setErrorToast},
+			subtitle: Liferay.Language.get('select-assignees'),
+			title: Liferay.Language.get('select-new-assignees'),
 		},
-		[
-			reassigning,
-			onClose,
-			reassignedTasks,
-			tasks,
-			handleReassign,
-			handlePrevious,
-			fetching,
-			handleNext,
-		]
-	);
-
-	const step = useMemo(() => getStep(currentStep), [currentStep, getStep]);
+		selectTasks: {
+			cancelBtn: {
+				disabled: fetching,
+				handle: onClose,
+			},
+			component: SelectTasksStep,
+			nextBtn: {
+				disabled: !tasks.length || fetching,
+				handle: handleNext,
+				text: Liferay.Language.get('next'),
+			},
+			order: 1,
+			previousBtn: false,
+			props: {setErrorToast},
+			subtitle: Liferay.Language.get('select-tasks'),
+			title: Liferay.Language.get('select-tasks-to-reassign'),
+		},
+	};
 
 	return (
 		<ModalWithSteps
 			error={errorToast}
 			observer={observer}
-			step={step}
+			step={steps[currentStep]}
 			visible={visibleModal === 'bulkReassign'}
 		/>
 	);
-};
-
-export default BulkReassignModal;
+}

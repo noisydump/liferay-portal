@@ -1,5 +1,34 @@
 # Liferay Gradle Plugins WSDD Builder Change Log
 
+## 1.0.17 - 2021-05-18
+
+### Commits
+- [COMMERCE-4584] Fix buildWSDD (9928360b66)
+- [LPS-105380] Partial revert (aafd3818ae)
+- [LPS-105380] Auto SF, XMLDTDVersionCheck (a7cb83d66b)
+
+## 1.0.16 - 2020-11-02
+
+### Commits
+- [LPS-111291] Update readme (a87d2593e9)
+- [LPS-111291] Gradle 5.6.4 tests (40f4f9e2f3)
+- [LPS-111291] Update README.markdown (eea12b7f8f)
+- [LPS-111291] Update plugins Gradle version (003c3832b0)
+- [LPS-105380] Rename vars, follow case of name of type (46c8ad4dd5)
+- [LPS-105380] Rename variable: cause -> throwable (d8ff33c6c2)
+- [LPS-108328] Remove version number check (69092ebf90)
+
+### Dependencies
+- [LPS-111291] Update the com.liferay.gradle.util dependency to version 1.0.44.
+- [LPS-115020] Update the com.liferay.gradle.util dependency to version 1.0.43.
+- [LPS-88645] Update the com.liferay.gradle.util dependency to version 1.0.42.
+- [LPS-88645] Update the com.liferay.gradle.util dependency to version 1.0.41.
+- [LPS-113624] Update the com.liferay.gradle.util dependency to version 1.0.40.
+- [LPS-110422] Update the com.liferay.gradle.util dependency to version 1.0.39.
+- [LPS-111896] Update the com.liferay.gradle.util dependency to version 1.0.38.
+- [LPS-88645] Update the com.liferay.gradle.util dependency to version 1.0.37.
+- [LPS-110283] Update the com.liferay.gradle.util dependency to version 1.0.36.
+
 ## 1.0.15 - 2020-03-04
 
 ### Commits
@@ -218,6 +247,7 @@ resolution (5343a0699e)
 - [LPS-51081] Use Gradle utilities (be5dfc70dc)
 - [LPS-51081] Rename (0285936b82)
 
+[COMMERCE-4584]: https://issues.liferay.com/browse/COMMERCE-4584
 [LPS-51081]: https://issues.liferay.com/browse/LPS-51081
 [LPS-51801]: https://issues.liferay.com/browse/LPS-51801
 [LPS-55043]: https://issues.liferay.com/browse/LPS-55043
@@ -262,13 +292,21 @@ resolution (5343a0699e)
 [LPS-86589]: https://issues.liferay.com/browse/LPS-86589
 [LPS-87192]: https://issues.liferay.com/browse/LPS-87192
 [LPS-87466]: https://issues.liferay.com/browse/LPS-87466
+[LPS-88645]: https://issues.liferay.com/browse/LPS-88645
 [LPS-96247]: https://issues.liferay.com/browse/LPS-96247
 [LPS-100515]: https://issues.liferay.com/browse/LPS-100515
 [LPS-101089]: https://issues.liferay.com/browse/LPS-101089
 [LPS-102700]: https://issues.liferay.com/browse/LPS-102700
 [LPS-105247]: https://issues.liferay.com/browse/LPS-105247
+[LPS-105380]: https://issues.liferay.com/browse/LPS-105380
 [LPS-106149]: https://issues.liferay.com/browse/LPS-106149
 [LPS-106167]: https://issues.liferay.com/browse/LPS-106167
 [LPS-107008]: https://issues.liferay.com/browse/LPS-107008
 [LPS-108328]: https://issues.liferay.com/browse/LPS-108328
+[LPS-110283]: https://issues.liferay.com/browse/LPS-110283
+[LPS-110422]: https://issues.liferay.com/browse/LPS-110422
+[LPS-111291]: https://issues.liferay.com/browse/LPS-111291
+[LPS-111896]: https://issues.liferay.com/browse/LPS-111896
+[LPS-113624]: https://issues.liferay.com/browse/LPS-113624
+[LPS-115020]: https://issues.liferay.com/browse/LPS-115020
 [LRDOCS-4319]: https://issues.liferay.com/browse/LRDOCS-4319

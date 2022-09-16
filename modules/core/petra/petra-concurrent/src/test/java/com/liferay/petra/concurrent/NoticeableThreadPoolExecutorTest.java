@@ -17,7 +17,9 @@ package com.liferay.petra.concurrent;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.test.util.ThreadTestUtil;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
@@ -34,6 +36,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -42,15 +45,18 @@ import org.junit.Test;
 public class NoticeableThreadPoolExecutorTest {
 
 	@ClassRule
-	public static final CodeCoverageAssertor codeCoverageAssertor =
-		new CodeCoverageAssertor() {
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new CodeCoverageAssertor() {
 
-			@Override
-			public void appendAssertClasses(List<Class<?>> assertClasses) {
-				assertClasses.add(BaseNoticeableExecutorService.class);
-			}
+				@Override
+				public void appendAssertClasses(List<Class<?>> assertClasses) {
+					assertClasses.add(BaseNoticeableExecutorService.class);
+				}
 
-		};
+			},
+			LiferayUnitTestRule.INSTANCE);
 
 	@Test
 	public void testAdjustSize() throws InterruptedException {
@@ -287,7 +293,32 @@ public class NoticeableThreadPoolExecutorTest {
 	}
 
 	@Test
-	public void testRejectedByShutdown() throws InterruptedException {
+	public void testRejectedByShutdownNoticeableThreadPoolExecutor()
+		throws InterruptedException {
+
+		BlockingQueue<Runnable> rejectedTasks = new LinkedBlockingQueue<>();
+
+		NoticeableThreadPoolExecutor noticeableThreadPoolExecutor =
+			new NoticeableThreadPoolExecutor(
+				1, 1, 1, TimeUnit.NANOSECONDS, new SynchronousQueue<>(),
+				new MethodNameThreadFactory(),
+				(runnable, threadPoolExecutor) -> rejectedTasks.add(runnable),
+				new ThreadPoolHandlerAdapter());
+
+		noticeableThreadPoolExecutor.shutdown();
+
+		Runnable runnable = () -> {
+		};
+
+		noticeableThreadPoolExecutor.execute(runnable);
+
+		Assert.assertSame(runnable, rejectedTasks.take());
+	}
+
+	@Test
+	public void testRejectedByShutdownWorkerThreadPoolExecutor()
+		throws InterruptedException {
+
 		BlockingQueue<Runnable> rejectedTasks = new LinkedBlockingQueue<>();
 
 		NoticeableThreadPoolExecutor noticeableThreadPoolExecutor =

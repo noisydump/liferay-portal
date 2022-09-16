@@ -16,7 +16,9 @@ package com.liferay.commerce.product.service;
 
 import com.liferay.commerce.product.model.CPDisplayLayout;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
+import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery;
@@ -31,7 +33,8 @@ import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.service.BaseLocalService;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
-import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.change.tracking.CTService;
+import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
@@ -53,28 +56,21 @@ import org.osgi.annotation.versioning.ProviderType;
  * @see CPDisplayLayoutLocalServiceUtil
  * @generated
  */
+@CTAware
 @ProviderType
 @Transactional(
 	isolation = Isolation.PORTAL,
 	rollbackFor = {PortalException.class, SystemException.class}
 )
 public interface CPDisplayLayoutLocalService
-	extends BaseLocalService, PersistedModelLocalService {
+	extends BaseLocalService, CTService<CPDisplayLayout>,
+			PersistedModelLocalService {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
 	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.commerce.product.service.impl.CPDisplayLayoutLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the cp display layout local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link CPDisplayLayoutLocalServiceUtil} if injection and service tracking are not available.
 	 */
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x)
-	 */
-	@Deprecated
-	public CPDisplayLayout addCPDisplayLayout(
-			Class<?> clazz, long classPK, String layoutUuid,
-			ServiceContext serviceContext)
-		throws PortalException;
 
 	/**
 	 * Adds the cp display layout to the database. Also notifies the appropriate model listeners.
@@ -142,12 +138,7 @@ public interface CPDisplayLayoutLocalService
 	public CPDisplayLayout deleteCPDisplayLayout(long CPDisplayLayoutId)
 		throws PortalException;
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public void deleteCPDisplayLayoutByGroupIdAndLayoutUuid(
-		long groupId, String layoutUuid);
+	public void deleteCPDisplayLayouts(Class<?> clazz, long classPK);
 
 	/**
 	 * @throws PortalException
@@ -158,6 +149,9 @@ public interface CPDisplayLayoutLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public <T> T dslQuery(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
@@ -226,10 +220,11 @@ public interface CPDisplayLayoutLocalService
 		DynamicQuery dynamicQuery, Projection projection);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public CPDisplayLayout fetchCPDisplayLayout(Class<?> clazz, long classPK);
+	public CPDisplayLayout fetchCPDisplayLayout(long CPDisplayLayoutId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public CPDisplayLayout fetchCPDisplayLayout(long CPDisplayLayoutId);
+	public CPDisplayLayout fetchCPDisplayLayout(
+		long groupId, Class<?> clazz, long classPK);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<CPDisplayLayout> fetchCPDisplayLayoutByGroupIdAndLayoutUuid(
@@ -369,7 +364,22 @@ public interface CPDisplayLayoutLocalService
 
 	@Indexable(type = IndexableType.REINDEX)
 	public CPDisplayLayout updateCPDisplayLayout(
-			long cpDisplayLayoutId, String layoutUuid)
+			long cpDisplayLayoutId, long classPK, String layoutUuid)
 		throws PortalException;
+
+	@Override
+	@Transactional(enabled = false)
+	public CTPersistence<CPDisplayLayout> getCTPersistence();
+
+	@Override
+	@Transactional(enabled = false)
+	public Class<CPDisplayLayout> getModelClass();
+
+	@Override
+	@Transactional(rollbackFor = Throwable.class)
+	public <R, E extends Throwable> R updateWithUnsafeFunction(
+			UnsafeFunction<CTPersistence<CPDisplayLayout>, R, E>
+				updateUnsafeFunction)
+		throws E;
 
 }

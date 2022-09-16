@@ -19,10 +19,10 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.struts.Definition;
 import com.liferay.portal.struts.TilesUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.saml.constants.SamlWebKeys;
 import com.liferay.saml.opensaml.integration.internal.BaseSamlTestCase;
 import com.liferay.saml.opensaml.integration.internal.binding.SamlBinding;
-import com.liferay.saml.persistence.model.SamlIdpSpConnection;
 import com.liferay.saml.persistence.model.SamlIdpSpSession;
 import com.liferay.saml.persistence.model.SamlSpSession;
 import com.liferay.saml.persistence.model.impl.SamlIdpSpConnectionImpl;
@@ -43,8 +43,9 @@ import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import org.mockito.Mockito;
 
@@ -54,9 +55,6 @@ import org.opensaml.saml.common.xml.SAMLConstants;
 import org.opensaml.saml.saml2.core.LogoutRequest;
 import org.opensaml.saml.saml2.core.NameID;
 
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.modules.junit4.PowerMockRunner;
-
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -64,9 +62,12 @@ import org.springframework.mock.web.MockHttpServletResponse;
  * @author Matthew Tambara
  * @author William Newbury
  */
-@PowerMockIgnore("javax.security.*")
-@RunWith(PowerMockRunner.class)
 public class SingleLogoutProfileIntegrationTest extends BaseSamlTestCase {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Before
 	@Override
@@ -94,6 +95,8 @@ public class SingleLogoutProfileIntegrationTest extends BaseSamlTestCase {
 		_singleLogoutProfileImpl.setMetadataManager(metadataManagerImpl);
 		_singleLogoutProfileImpl.setPortal(portal);
 		_singleLogoutProfileImpl.setSamlBindings(samlBindings);
+		_singleLogoutProfileImpl.setSamlPeerBindingLocalService(
+			samlPeerBindingLocalService);
 		_singleLogoutProfileImpl.setSamlProviderConfigurationHelper(
 			samlProviderConfigurationHelper);
 		_singleLogoutProfileImpl.setSamlSpSessionLocalService(
@@ -109,7 +112,8 @@ public class SingleLogoutProfileIntegrationTest extends BaseSamlTestCase {
 
 		SamlSloContext samlSloContext = new SamlSloContext(
 			null, _samlIdpSpConnectionLocalService,
-			_samlIdpSpSessionLocalService, userLocalService);
+			_samlIdpSpSessionLocalService, samlPeerBindingLocalService,
+			userLocalService);
 
 		_singleLogoutProfileImpl.performIdpSpLogout(
 			mockHttpServletRequest, new MockHttpServletResponse(),
@@ -128,13 +132,11 @@ public class SingleLogoutProfileIntegrationTest extends BaseSamlTestCase {
 
 	@Test
 	public void testPerformIdpSpLogoutValidSloRequestInfo() throws Exception {
-		SamlIdpSpConnection samlIdpSpConnection = new SamlIdpSpConnectionImpl();
-
-		when(
+		Mockito.when(
 			_samlIdpSpConnectionLocalService.getSamlIdpSpConnection(
 				COMPANY_ID, SP_ENTITY_ID)
 		).thenReturn(
-			samlIdpSpConnection
+			new SamlIdpSpConnectionImpl()
 		);
 
 		List<SamlIdpSpSession> samlIdpSpSessions = new ArrayList<>();
@@ -142,11 +144,12 @@ public class SingleLogoutProfileIntegrationTest extends BaseSamlTestCase {
 		SamlIdpSpSessionImpl samlIdpSpSessionImpl = new SamlIdpSpSessionImpl();
 
 		samlIdpSpSessionImpl.setCompanyId(COMPANY_ID);
-		samlIdpSpSessionImpl.setSamlSpEntityId(SP_ENTITY_ID);
+		samlIdpSpSessionImpl.setSamlPeerBindingId(
+			prepareSamlPeerBinding(SP_ENTITY_ID, null, null, null));
 
 		samlIdpSpSessions.add(samlIdpSpSessionImpl);
 
-		when(
+		Mockito.when(
 			_samlIdpSpSessionLocalService.getSamlIdpSpSessions(SESSION_ID)
 		).thenReturn(
 			samlIdpSpSessions
@@ -164,7 +167,8 @@ public class SingleLogoutProfileIntegrationTest extends BaseSamlTestCase {
 
 		SamlSloContext samlSloContext = new SamlSloContext(
 			samlIdpSsoSessionImpl, _samlIdpSpConnectionLocalService,
-			_samlIdpSpSessionLocalService, userLocalService);
+			_samlIdpSpSessionLocalService, samlPeerBindingLocalService,
+			userLocalService);
 
 		SamlSloRequestInfo samlSloRequestInfo =
 			samlSloContext.getSamlSloRequestInfo(SP_ENTITY_ID);
@@ -209,17 +213,21 @@ public class SingleLogoutProfileIntegrationTest extends BaseSamlTestCase {
 
 		SamlSloContext samlSloContext = new SamlSloContext(
 			samlIdpSsoSessionImpl, _samlIdpSpConnectionLocalService,
-			_samlIdpSpSessionLocalService, userLocalService);
+			_samlIdpSpSessionLocalService, samlPeerBindingLocalService,
+			userLocalService);
 
 		SamlIdpSpSessionImpl samlIdpSpSessionImpl = new SamlIdpSpSessionImpl();
 
-		samlIdpSpSessionImpl.setNameIdFormat(NameID.EMAIL);
-		samlIdpSpSessionImpl.setNameIdValue("test@liferay.com");
-		samlIdpSpSessionImpl.setSamlSpEntityId(SP_ENTITY_ID);
+		samlIdpSpSessionImpl.setSamlPeerBindingId(
+			prepareSamlPeerBinding(
+				SP_ENTITY_ID, NameID.EMAIL, null, "test@liferay.com"));
 
 		SamlSloRequestInfo samlSloRequestInfo = new SamlSloRequestInfo();
 
 		samlSloRequestInfo.setSamlIdpSpSession(samlIdpSpSessionImpl);
+		samlSloRequestInfo.setSamlPeerBinding(
+			samlPeerBindingLocalService.getSamlPeerBinding(
+				samlIdpSpSessionImpl.getSamlPeerBindingId()));
 
 		_singleLogoutProfileImpl.sendIdpLogoutRequest(
 			mockHttpServletRequest, mockHttpServletResponse, samlSloContext,
@@ -272,18 +280,18 @@ public class SingleLogoutProfileIntegrationTest extends BaseSamlTestCase {
 	public void testSendSpLogoutRequestValidSpSession() throws Exception {
 		SamlSpSession samlSpSession = new SamlSpSessionImpl();
 
-		samlSpSession.setSamlIdpEntityId(IDP_ENTITY_ID);
-		samlSpSession.setNameIdFormat(NameID.EMAIL);
-		samlSpSession.setNameIdValue("test@liferay.com");
+		samlSpSession.setSamlPeerBindingId(
+			prepareSamlPeerBinding(
+				IDP_ENTITY_ID, NameID.EMAIL, null, "test@liferay.com"));
 
-		when(
+		Mockito.when(
 			_samlSpSessionLocalService.fetchSamlSpSessionByJSessionId(
 				Mockito.anyString())
 		).thenReturn(
 			samlSpSession
 		);
 
-		when(
+		Mockito.when(
 			_samlSpSessionLocalService.fetchSamlSpSessionBySamlSpSessionKey(
 				Mockito.anyString())
 		).thenReturn(

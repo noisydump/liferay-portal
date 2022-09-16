@@ -22,6 +22,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.InvokerPortlet;
 import com.liferay.portal.kernel.util.ClassUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 
 import java.lang.reflect.Method;
 
@@ -54,10 +55,12 @@ public class BeanPortletInvokerPortlet implements InvokerPortlet {
 
 	public BeanPortletInvokerPortlet(
 		Map<BeanPortletMethodType, List<BeanPortletMethod>> beanMethods,
-		BeanPortletMethodInvoker beanPortletMethodInvoker) {
+		BeanPortletMethodInvoker beanPortletMethodInvoker,
+		ClassLoader portletClassLoader) {
 
 		_beanMethods = beanMethods;
 		_beanPortletMethodInvoker = beanPortletMethodInvoker;
+		_portletClassLoader = portletClassLoader;
 
 		boolean facesPortlet = false;
 
@@ -88,7 +91,7 @@ public class BeanPortletInvokerPortlet implements InvokerPortlet {
 			_invokeBeanMethods(_beanMethods.get(BeanPortletMethodType.DESTROY));
 		}
 		catch (PortletException portletException) {
-			_log.error(portletException, portletException);
+			_log.error(portletException);
 		}
 	}
 
@@ -104,9 +107,7 @@ public class BeanPortletInvokerPortlet implements InvokerPortlet {
 
 	@Override
 	public ClassLoader getPortletClassLoader() {
-		Class<? extends BeanPortletInvokerPortlet> portletClass = getClass();
-
-		return portletClass.getClassLoader();
+		return _portletClassLoader;
 	}
 
 	@Override
@@ -166,7 +167,7 @@ public class BeanPortletInvokerPortlet implements InvokerPortlet {
 		List<BeanPortletMethod> beanPortletMethods = _beanMethods.get(
 			BeanPortletMethodType.EVENT);
 
-		if ((beanPortletMethods == null) || beanPortletMethods.isEmpty()) {
+		if (ListUtil.isEmpty(beanPortletMethods)) {
 			return;
 		}
 
@@ -223,7 +224,7 @@ public class BeanPortletInvokerPortlet implements InvokerPortlet {
 			List<BeanPortletMethod> beanPortletMethods, Object... arguments)
 		throws PortletException {
 
-		if ((beanPortletMethods == null) || beanPortletMethods.isEmpty()) {
+		if (ListUtil.isEmpty(beanPortletMethods)) {
 			return;
 		}
 
@@ -248,7 +249,7 @@ public class BeanPortletInvokerPortlet implements InvokerPortlet {
 			PortletRequest portletRequest, PortletResponse portletResponse)
 		throws PortletException {
 
-		if ((beanPortletMethods == null) || beanPortletMethods.isEmpty()) {
+		if (ListUtil.isEmpty(beanPortletMethods)) {
 			return;
 		}
 
@@ -264,6 +265,7 @@ public class BeanPortletInvokerPortlet implements InvokerPortlet {
 		_beanMethods;
 	private final BeanPortletMethodInvoker _beanPortletMethodInvoker;
 	private final boolean _facesPortlet;
+	private final ClassLoader _portletClassLoader;
 	private PortletConfig _portletConfig;
 
 }

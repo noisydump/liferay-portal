@@ -15,10 +15,16 @@
 package com.liferay.portal.workflow.task.web.internal.notifications;
 
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserNotificationEvent;
 import com.liferay.portal.kernel.notifications.BaseUserNotificationHandler;
+import com.liferay.portal.kernel.notifications.UserNotificationFeedEntry;
 import com.liferay.portal.kernel.notifications.UserNotificationHandler;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserNotificationEventLocalService;
@@ -26,12 +32,16 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.workflow.WorkflowHandler;
 import com.liferay.portal.kernel.workflow.WorkflowHandlerRegistryUtil;
 import com.liferay.portal.kernel.workflow.WorkflowTask;
 import com.liferay.portal.kernel.workflow.WorkflowTaskManagerUtil;
 import com.liferay.portal.workflow.task.web.internal.permission.WorkflowTaskPermissionChecker;
+
+import java.util.Locale;
+import java.util.Objects;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -54,6 +64,62 @@ public class WorkflowTaskUserNotificationHandler
 	}
 
 	@Override
+	public UserNotificationFeedEntry interpret(
+			UserNotificationEvent userNotificationEvent,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
+			userNotificationEvent.getPayload());
+
+		if (Objects.nonNull(
+				WorkflowHandlerRegistryUtil.getWorkflowHandler(
+					jsonObject.getString("entryClassName")))) {
+
+			return super.interpret(userNotificationEvent, serviceContext);
+		}
+
+		Locale locale = serviceContext.getLocale();
+
+		return new UserNotificationFeedEntry(
+			false,
+			StringUtil.replace(
+				_BODY_TEMPLATE_DEFAULT, new String[] {"[$BODY$]", "[$TITLE$]"},
+				new String[] {
+					_language.format(
+						locale, "notification-for-x-was-deactivated",
+						jsonObject.getString("entryType"), false),
+					_language.get(locale, "notification-no-longer-applies")
+				}),
+			StringPool.BLANK, false);
+	}
+
+	@Override
+	public boolean isApplicable(
+		UserNotificationEvent userNotificationEvent,
+		ServiceContext serviceContext) {
+
+		try {
+			JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
+				userNotificationEvent.getPayload());
+
+			for (User user :
+					WorkflowTaskManagerUtil.getNotifiableUsers(
+						jsonObject.getLong("workflowTaskId"))) {
+
+				if (user.getUserId() == serviceContext.getUserId()) {
+					return true;
+				}
+			}
+		}
+		catch (PortalException portalException) {
+			_log.error(portalException);
+		}
+
+		return false;
+	}
+
+	@Override
 	protected String getBody(
 			UserNotificationEvent userNotificationEvent,
 			ServiceContext serviceContext)
@@ -65,8 +131,7 @@ public class WorkflowTaskUserNotificationHandler
 		long workflowTaskId = jsonObject.getLong("workflowTaskId");
 
 		if (workflowTaskId > 0) {
-			WorkflowTask workflowTask = _fetchWorkflowTask(
-				workflowTaskId, serviceContext);
+			WorkflowTask workflowTask = _fetchWorkflowTask(workflowTaskId);
 
 			if (workflowTask == null) {
 				_userNotificationEventLocalService.deleteUserNotificationEvent(
@@ -110,35 +175,25 @@ public class WorkflowTaskUserNotificationHandler
 		serviceContext.setAttribute(
 			"portletId", jsonObject.getString("portletId"));
 
-		return workflowHandler.getURLEditWorkflowTask(
+		return workflowHandler.getNotificationLink(
 			workflowTaskId, serviceContext);
 	}
 
-	@Reference(unbind = "-")
-	protected void setUserNotificationEventLocalService(
-		UserNotificationEventLocalService userNotificationEventLocalService) {
-
-		_userNotificationEventLocalService = userNotificationEventLocalService;
-	}
-
-	private WorkflowTask _fetchWorkflowTask(
-			long workflowTaskId, ServiceContext serviceContext)
+	private WorkflowTask _fetchWorkflowTask(long workflowTaskId)
 		throws Exception {
 
 		if (workflowTaskId <= 0) {
 			return null;
 		}
 
-		return WorkflowTaskManagerUtil.fetchWorkflowTask(
-			serviceContext.getCompanyId(), workflowTaskId);
+		return WorkflowTaskManagerUtil.fetchWorkflowTask(workflowTaskId);
 	}
 
 	private boolean _hasPermission(
 			long workflowTaskId, ServiceContext serviceContext)
 		throws Exception {
 
-		WorkflowTask workflowTask = _fetchWorkflowTask(
-			workflowTaskId, serviceContext);
+		WorkflowTask workflowTask = _fetchWorkflowTask(workflowTaskId);
 
 		if (workflowTask == null) {
 			return false;
@@ -154,8 +209,20 @@ public class WorkflowTaskUserNotificationHandler
 			groupId, workflowTask, themeDisplay.getPermissionChecker());
 	}
 
+	private static final String _BODY_TEMPLATE_DEFAULT =
+		"<div class=\"title\">[$TITLE$]</div><div class=\"body\">[$BODY$]" +
+			"</div>";
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		WorkflowTaskUserNotificationHandler.class);
+
+	@Reference
+	private Language _language;
+
+	@Reference
 	private UserNotificationEventLocalService
 		_userNotificationEventLocalService;
+
 	private final WorkflowTaskPermissionChecker _workflowTaskPermissionChecker =
 		new WorkflowTaskPermissionChecker();
 

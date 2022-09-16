@@ -15,6 +15,7 @@
 package com.liferay.commerce.product.service;
 
 import com.liferay.commerce.product.model.CPDefinitionOptionValueRel;
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.jsonwebservice.JSONWebService;
@@ -47,6 +48,7 @@ import org.osgi.annotation.versioning.ProviderType;
  * @generated
  */
 @AccessControlled
+@CTAware
 @JSONWebService
 @OSGiBeanProperties(
 	property = {
@@ -126,29 +128,13 @@ public interface CPDefinitionOptionValueRelService extends BaseService {
 	public BaseModelSearchResult<CPDefinitionOptionValueRel>
 			searchCPDefinitionOptionValueRels(
 				long companyId, long groupId, long cpDefinitionOptionRelId,
-				String keywords, int start, int end, Sort sort)
+				String keywords, int start, int end, Sort[] sorts)
 		throws PortalException;
 
-	/**
-	 * @param cpDefinitionOptionValueRelId
-	 * @param nameMap
-	 * @param priority
-	 * @param key
-	 * @param cpInstanceId
-	 * @param quantity
-	 * @param price
-	 * @param serviceContext
-	 * @return
-	 * @throws PortalException
-	 * @deprecated As of Athanasius (7.3.x), use {@link
-	 #updateCPDefinitionOptionValueRel(long, Map, double, String,
-	 long, int, boolean, BigDecimal, ServiceContext)}
-	 */
-	@Deprecated
-	public CPDefinitionOptionValueRel updateCPDefinitionOptionValueRel(
-			long cpDefinitionOptionValueRelId, Map<Locale, String> nameMap,
-			double priority, String key, long cpInstanceId, int quantity,
-			BigDecimal price, ServiceContext serviceContext)
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int searchCPDefinitionOptionValueRelsCount(
+			long companyId, long groupId, long cpDefinitionOptionRelId,
+			String keywords)
 		throws PortalException;
 
 	public CPDefinitionOptionValueRel updateCPDefinitionOptionValueRel(
@@ -156,24 +142,6 @@ public interface CPDefinitionOptionValueRelService extends BaseService {
 			double priority, String key, long cpInstanceId, int quantity,
 			boolean preselected, BigDecimal price,
 			ServiceContext serviceContext)
-		throws PortalException;
-
-	/**
-	 * @param cpDefinitionOptionValueRelId
-	 * @param nameMap
-	 * @param priority
-	 * @param key
-	 * @param serviceContext
-	 * @return
-	 * @throws PortalException
-	 * @deprecated As of Athanasius (7.3.x), use {@link
-	 #updateCPDefinitionOptionValueRel(long, Map, double, String,
-	 long, int, boolean, BigDecimal, ServiceContext)}
-	 */
-	@Deprecated
-	public CPDefinitionOptionValueRel updateCPDefinitionOptionValueRel(
-			long cpDefinitionOptionValueRelId, Map<Locale, String> nameMap,
-			double priority, String key, ServiceContext serviceContext)
 		throws PortalException;
 
 	public CPDefinitionOptionValueRel

@@ -56,6 +56,96 @@ public class PageCollectionDefinition implements Cloneable, Serializable {
 
 	protected CollectionConfig collectionConfig;
 
+	public CollectionViewport[] getCollectionViewports() {
+		return collectionViewports;
+	}
+
+	public void setCollectionViewports(
+		CollectionViewport[] collectionViewports) {
+
+		this.collectionViewports = collectionViewports;
+	}
+
+	public void setCollectionViewports(
+		UnsafeSupplier<CollectionViewport[], Exception>
+			collectionViewportsUnsafeSupplier) {
+
+		try {
+			collectionViewports = collectionViewportsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected CollectionViewport[] collectionViewports;
+
+	public Boolean getDisplayAllItems() {
+		return displayAllItems;
+	}
+
+	public void setDisplayAllItems(Boolean displayAllItems) {
+		this.displayAllItems = displayAllItems;
+	}
+
+	public void setDisplayAllItems(
+		UnsafeSupplier<Boolean, Exception> displayAllItemsUnsafeSupplier) {
+
+		try {
+			displayAllItems = displayAllItemsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Boolean displayAllItems;
+
+	public Boolean getDisplayAllPages() {
+		return displayAllPages;
+	}
+
+	public void setDisplayAllPages(Boolean displayAllPages) {
+		this.displayAllPages = displayAllPages;
+	}
+
+	public void setDisplayAllPages(
+		UnsafeSupplier<Boolean, Exception> displayAllPagesUnsafeSupplier) {
+
+		try {
+			displayAllPages = displayAllPagesUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Boolean displayAllPages;
+
+	public EmptyCollectionConfig getEmptyCollectionConfig() {
+		return emptyCollectionConfig;
+	}
+
+	public void setEmptyCollectionConfig(
+		EmptyCollectionConfig emptyCollectionConfig) {
+
+		this.emptyCollectionConfig = emptyCollectionConfig;
+	}
+
+	public void setEmptyCollectionConfig(
+		UnsafeSupplier<EmptyCollectionConfig, Exception>
+			emptyCollectionConfigUnsafeSupplier) {
+
+		try {
+			emptyCollectionConfig = emptyCollectionConfigUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected EmptyCollectionConfig emptyCollectionConfig;
+
 	public FragmentStyle getFragmentStyle() {
 		return fragmentStyle;
 	}
@@ -141,6 +231,25 @@ public class PageCollectionDefinition implements Cloneable, Serializable {
 
 	protected String listStyle;
 
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public void setName(UnsafeSupplier<String, Exception> nameUnsafeSupplier) {
+		try {
+			name = nameUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String name;
+
 	public Integer getNumberOfColumns() {
 		return numberOfColumns;
 	}
@@ -182,6 +291,99 @@ public class PageCollectionDefinition implements Cloneable, Serializable {
 	}
 
 	protected Integer numberOfItems;
+
+	public Integer getNumberOfItemsPerPage() {
+		return numberOfItemsPerPage;
+	}
+
+	public void setNumberOfItemsPerPage(Integer numberOfItemsPerPage) {
+		this.numberOfItemsPerPage = numberOfItemsPerPage;
+	}
+
+	public void setNumberOfItemsPerPage(
+		UnsafeSupplier<Integer, Exception> numberOfItemsPerPageUnsafeSupplier) {
+
+		try {
+			numberOfItemsPerPage = numberOfItemsPerPageUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Integer numberOfItemsPerPage;
+
+	public Integer getNumberOfPages() {
+		return numberOfPages;
+	}
+
+	public void setNumberOfPages(Integer numberOfPages) {
+		this.numberOfPages = numberOfPages;
+	}
+
+	public void setNumberOfPages(
+		UnsafeSupplier<Integer, Exception> numberOfPagesUnsafeSupplier) {
+
+		try {
+			numberOfPages = numberOfPagesUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Integer numberOfPages;
+
+	public PaginationType getPaginationType() {
+		return paginationType;
+	}
+
+	public String getPaginationTypeAsString() {
+		if (paginationType == null) {
+			return null;
+		}
+
+		return paginationType.toString();
+	}
+
+	public void setPaginationType(PaginationType paginationType) {
+		this.paginationType = paginationType;
+	}
+
+	public void setPaginationType(
+		UnsafeSupplier<PaginationType, Exception>
+			paginationTypeUnsafeSupplier) {
+
+		try {
+			paginationType = paginationTypeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected PaginationType paginationType;
+
+	public Boolean getShowAllItems() {
+		return showAllItems;
+	}
+
+	public void setShowAllItems(Boolean showAllItems) {
+		this.showAllItems = showAllItems;
+	}
+
+	public void setShowAllItems(
+		UnsafeSupplier<Boolean, Exception> showAllItemsUnsafeSupplier) {
+
+		try {
+			showAllItems = showAllItemsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Boolean showAllItems;
 
 	public String getTemplateKey() {
 		return templateKey;
@@ -234,6 +436,39 @@ public class PageCollectionDefinition implements Cloneable, Serializable {
 
 	public String toString() {
 		return PageCollectionDefinitionSerDes.toJSON(this);
+	}
+
+	public static enum PaginationType {
+
+		NONE("None"), NUMERIC("Numeric"), REGULAR("Regular"), SIMPLE("Simple");
+
+		public static PaginationType create(String value) {
+			for (PaginationType paginationType : values()) {
+				if (Objects.equals(paginationType.getValue(), value) ||
+					Objects.equals(paginationType.name(), value)) {
+
+					return paginationType;
+				}
+			}
+
+			return null;
+		}
+
+		public String getValue() {
+			return _value;
+		}
+
+		@Override
+		public String toString() {
+			return _value;
+		}
+
+		private PaginationType(String value) {
+			_value = value;
+		}
+
+		private final String _value;
+
 	}
 
 }

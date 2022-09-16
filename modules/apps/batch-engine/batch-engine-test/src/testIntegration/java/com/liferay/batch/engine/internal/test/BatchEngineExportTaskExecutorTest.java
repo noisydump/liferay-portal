@@ -29,8 +29,9 @@ import com.liferay.petra.string.CharPool;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.test.log.CaptureAppender;
-import com.liferay.portal.test.log.Log4JLoggerTestUtil;
+import com.liferay.portal.test.log.LogCapture;
+import com.liferay.portal.test.log.LogEntry;
+import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.Inject;
 
 import java.io.InputStream;
@@ -46,12 +47,11 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.zip.ZipInputStream;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.spi.LoggingEvent;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DateUtil;
@@ -103,15 +103,14 @@ public class BatchEngineExportTaskExecutorTest
 	public void testExportBlogPostingsToCSVFileWithEmptyFieldNames()
 		throws Exception {
 
-		try (CaptureAppender captureAppender =
-				Log4JLoggerTestUtil.configureLog4JLogger(
-					_CLASS_NAME_BATCH_ENGINE_EXPORT_TASK_EXECUTOR_IMPL,
-					Level.ERROR)) {
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				_CLASS_NAME_BATCH_ENGINE_EXPORT_TASK_EXECUTOR_IMPL,
+				LoggerTestUtil.ERROR)) {
 
 			_testExportBlogPostingsToCSVFile(
 				Collections.emptyList(), line -> new Object[0], _parameters);
 
-			_assertEmptyFieldNames(captureAppender);
+			_assertEmptyFieldNames(logCapture);
 		}
 	}
 
@@ -132,21 +131,19 @@ public class BatchEngineExportTaskExecutorTest
 
 		List<BlogsEntry> blogsEntries = addBlogsEntries();
 
-		Assert.assertEquals(
-			ROWS_COUNT, blogsEntryLocalService.getBlogsEntriesCount());
+		assertBlogsEntriesCount();
 
 		List<String> fieldNames = Arrays.asList(
 			"articleBody", "datePublished", "headline", "id");
 
 		_exportBlogPostings("CSV", fieldNames, _parameters);
 
-		BatchEngineExportTask batchEngineExportTask =
-			_batchEngineExportTaskLocalService.getBatchEngineExportTask(
-				_batchEngineExportTask.getBatchEngineExportTaskId());
-
 		_assertExportedValues(
 			Collections.singletonList(blogsEntries.get(1)), fieldNames,
-			_readRowValuesList(_csvFilterFunction, batchEngineExportTask));
+			_readRowValuesList(
+				_csvFilterFunction,
+				_batchEngineExportTaskLocalService.getBatchEngineExportTask(
+					_batchEngineExportTask.getBatchEngineExportTaskId())));
 	}
 
 	@Test
@@ -157,8 +154,7 @@ public class BatchEngineExportTaskExecutorTest
 
 		List<BlogsEntry> blogsEntries = addBlogsEntries();
 
-		Assert.assertEquals(
-			ROWS_COUNT, blogsEntryLocalService.getBlogsEntriesCount());
+		assertBlogsEntriesCount();
 
 		List<String> fieldNames = Arrays.asList(
 			"articleBody", "datePublished", "headline", "id");
@@ -245,10 +241,9 @@ public class BatchEngineExportTaskExecutorTest
 	public void testExportBlogPostingsToXLSFileWithEmptyFieldNames()
 		throws Exception {
 
-		try (CaptureAppender captureAppender =
-				Log4JLoggerTestUtil.configureLog4JLogger(
-					_CLASS_NAME_BATCH_ENGINE_EXPORT_TASK_EXECUTOR_IMPL,
-					Level.ERROR)) {
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				_CLASS_NAME_BATCH_ENGINE_EXPORT_TASK_EXECUTOR_IMPL,
+				LoggerTestUtil.ERROR)) {
 
 			_testExportBlogPostingsToXLSFile(
 				Collections.emptyList(), rowValues -> new Object[0],
@@ -285,16 +280,16 @@ public class BatchEngineExportTaskExecutorTest
 
 	}
 
-	private void _assertEmptyFieldNames(CaptureAppender captureAppender) {
-		List<LoggingEvent> loggingEvents = captureAppender.getLoggingEvents();
+	private void _assertEmptyFieldNames(LogCapture logCapture) {
+		List<LogEntry> logEntries = logCapture.getLogEntries();
 
-		Assert.assertEquals(loggingEvents.toString(), 1, loggingEvents.size());
+		Assert.assertEquals(logEntries.toString(), 1, logEntries.size());
 
-		LoggingEvent loggingEvent = loggingEvents.get(0);
+		LogEntry logEntry = logEntries.get(0);
 
-		Assert.assertEquals(Level.ERROR, loggingEvent.getLevel());
+		Assert.assertEquals(LoggerTestUtil.ERROR, logEntry.getPriority());
 
-		String message = (String)loggingEvent.getMessage();
+		String message = logEntry.getMessage();
 
 		Assert.assertTrue(
 			message.startsWith("Unable to update batch engine export task"));
@@ -383,6 +378,25 @@ public class BatchEngineExportTaskExecutorTest
 		}
 	}
 
+	private void _assertItemsCount(
+		BatchEngineExportTask batchEngineExportTask) {
+
+		if (Objects.equals(
+				batchEngineExportTask.getExecuteStatus(),
+				BatchEngineTaskExecuteStatus.FAILED.toString())) {
+
+			Assert.assertEquals(
+				0, batchEngineExportTask.getProcessedItemsCount());
+			Assert.assertEquals(0, batchEngineExportTask.getTotalItemsCount());
+		}
+		else {
+			Assert.assertEquals(
+				ROWS_COUNT, batchEngineExportTask.getProcessedItemsCount());
+			Assert.assertEquals(
+				ROWS_COUNT, batchEngineExportTask.getTotalItemsCount());
+		}
+	}
+
 	private void _exportBlogPostings(
 		String contentType, List<String> fieldNames,
 		Map<String, Serializable> parameters) {
@@ -391,7 +405,7 @@ public class BatchEngineExportTaskExecutorTest
 
 		_batchEngineExportTask =
 			_batchEngineExportTaskLocalService.addBatchEngineExportTask(
-				user.getCompanyId(), user.getUserId(), null,
+				null, user.getCompanyId(), user.getUserId(), null,
 				BlogPosting.class.getName(), contentType,
 				BatchEngineTaskExecuteStatus.INITIAL.name(), fieldNames,
 				parameters, null);
@@ -439,14 +453,15 @@ public class BatchEngineExportTaskExecutorTest
 
 		List<BlogsEntry> blogsEntries = addBlogsEntries();
 
-		Assert.assertEquals(
-			ROWS_COUNT, blogsEntryLocalService.getBlogsEntriesCount());
+		assertBlogsEntriesCount();
 
 		_exportBlogPostings("CSV", fieldNames, parameters);
 
 		BatchEngineExportTask batchEngineExportTask =
 			_batchEngineExportTaskLocalService.getBatchEngineExportTask(
 				_batchEngineExportTask.getBatchEngineExportTaskId());
+
+		_assertItemsCount(batchEngineExportTask);
 
 		if (fieldNames.isEmpty()) {
 			Assert.assertEquals(
@@ -469,14 +484,15 @@ public class BatchEngineExportTaskExecutorTest
 
 		List<BlogsEntry> blogsEntries = addBlogsEntries();
 
-		Assert.assertEquals(
-			ROWS_COUNT, blogsEntryLocalService.getBlogsEntriesCount());
+		assertBlogsEntriesCount();
 
 		_exportBlogPostings("JSON", fieldNames, parameters);
 
 		BatchEngineExportTask batchEngineExportTask =
 			_batchEngineExportTaskLocalService.getBatchEngineExportTask(
 				_batchEngineExportTask.getBatchEngineExportTaskId());
+
+		_assertItemsCount(batchEngineExportTask);
 
 		List<BlogPosting> blogPostings = _objectMapper.readValue(
 			_getZipInputStream(
@@ -502,14 +518,15 @@ public class BatchEngineExportTaskExecutorTest
 
 		List<BlogsEntry> blogsEntries = addBlogsEntries();
 
-		Assert.assertEquals(
-			ROWS_COUNT, blogsEntryLocalService.getBlogsEntriesCount());
+		assertBlogsEntriesCount();
 
 		_exportBlogPostings("JSONL", fieldNames, parameters);
 
 		BatchEngineExportTask batchEngineExportTask =
 			_batchEngineExportTaskLocalService.getBatchEngineExportTask(
 				_batchEngineExportTask.getBatchEngineExportTaskId());
+
+		_assertItemsCount(batchEngineExportTask);
 
 		UnsyncBufferedReader unsyncBufferedReader = new UnsyncBufferedReader(
 			new InputStreamReader(
@@ -545,14 +562,15 @@ public class BatchEngineExportTaskExecutorTest
 
 		List<BlogsEntry> blogsEntries = addBlogsEntries();
 
-		Assert.assertEquals(
-			ROWS_COUNT, blogsEntryLocalService.getBlogsEntriesCount());
+		assertBlogsEntriesCount();
 
 		_exportBlogPostings("XLS", fieldNames, parameters);
 
 		BatchEngineExportTask batchEngineExportTask =
 			_batchEngineExportTaskLocalService.getBatchEngineExportTask(
 				_batchEngineExportTask.getBatchEngineExportTaskId());
+
+		_assertItemsCount(batchEngineExportTask);
 
 		if (fieldNames.isEmpty()) {
 			Assert.assertEquals(

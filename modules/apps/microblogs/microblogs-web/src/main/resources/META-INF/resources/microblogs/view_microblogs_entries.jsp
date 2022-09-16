@@ -46,13 +46,14 @@ PortletURL microblogsEntriesURL = (PortletURL)request.getAttribute(WebKeys.MICRO
 	</div>
 </c:if>
 
-<%
-if (microblogsEntries != null) {
+<c:if test="<%= microblogsEntries != null %>">
+
+	<%
 	for (MicroblogsEntry microblogsEntry : microblogsEntries) {
 		String userFullName = HtmlUtil.escape(PortalUtil.getUserName(microblogsEntry));
 
 		User curUser = UserLocalServiceUtil.fetchUserById(microblogsEntry.getUserId());
-%>
+	%>
 
 		<div class="microblogs-entry" id="<portlet:namespace />microblogsEntry<%= microblogsEntry.getMicroblogsEntryId() %>">
 			<span class="thumbnail">
@@ -78,14 +79,9 @@ if (microblogsEntries != null) {
 				</div>
 
 				<div class="content">
-
-					<%
-					String content = HtmlUtil.replaceNewLine(MicroblogsWebUtil.getProcessedContent(microblogsEntry, ServiceContextFactory.getInstance(request)));
-					%>
-
 					<span>
 						<p>
-							<%= content %>
+							<%= HtmlUtil.replaceNewLine(MicroblogsWebUtil.getProcessedContent(microblogsEntry, ServiceContextFactory.getInstance(request))) %>
 						</p>
 					</span>
 				</div>
@@ -159,7 +155,8 @@ if (microblogsEntries != null) {
 			<div class="comments-container reply" id="<portlet:namespace />commentsContainer<%= microblogsEntry.getMicroblogsEntryId() %>"><!-- --></div>
 		</div>
 
-<%
+	<%
 	}
-}
-%>
+	%>
+
+</c:if>

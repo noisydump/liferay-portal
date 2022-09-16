@@ -31,23 +31,33 @@ import com.liferay.commerce.product.type.virtual.exception.CPDefinitionVirtualSe
 import com.liferay.commerce.product.type.virtual.model.CPDefinitionVirtualSetting;
 import com.liferay.commerce.product.type.virtual.service.base.CPDefinitionVirtualSettingLocalServiceBaseImpl;
 import com.liferay.document.library.kernel.exception.NoSuchFileEntryException;
+import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.journal.model.JournalArticle;
+import com.liferay.journal.service.JournalArticleLocalService;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
-import com.liferay.portal.spring.extender.service.ServiceReference;
+import com.liferay.portal.kernel.uuid.PortalUUID;
 
 import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
 
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
 /**
  * @author Marco Leo
  * @author Alessio Antonio Rendina
  */
+@Component(
+	enabled = false,
+	property = "model.class.name=com.liferay.commerce.product.type.virtual.model.CPDefinitionVirtualSetting",
+	service = AopService.class
+)
 public class CPDefinitionVirtualSettingLocalServiceImpl
 	extends CPDefinitionVirtualSettingLocalServiceBaseImpl {
 
@@ -196,10 +206,9 @@ public class CPDefinitionVirtualSettingLocalServiceImpl
 			CPDefinitionVirtualSetting newCPDefinitionVirtualSetting =
 				(CPDefinitionVirtualSetting)cpDefinitionVirtualSetting.clone();
 
-			newCPDefinitionVirtualSetting.setUuid(PortalUUIDUtil.generate());
+			newCPDefinitionVirtualSetting.setUuid(_portalUUID.generate());
 			newCPDefinitionVirtualSetting.setCPDefinitionVirtualSettingId(
 				counterLocalService.increment());
-
 			newCPDefinitionVirtualSetting.setClassPK(newCPDefinitionId);
 
 			cpDefinitionVirtualSettingLocalService.
@@ -422,7 +431,7 @@ public class CPDefinitionVirtualSettingLocalServiceImpl
 
 		if (fileEntryId > 0) {
 			try {
-				dlAppLocalService.getFileEntry(fileEntryId);
+				_dlAppLocalService.getFileEntry(fileEntryId);
 			}
 			catch (NoSuchFileEntryException noSuchFileEntryException) {
 				throw new CPDefinitionVirtualSettingFileEntryIdException(
@@ -439,7 +448,7 @@ public class CPDefinitionVirtualSettingLocalServiceImpl
 		if (useSample) {
 			if (sampleFileEntryId > 0) {
 				try {
-					dlAppLocalService.getFileEntry(sampleFileEntryId);
+					_dlAppLocalService.getFileEntry(sampleFileEntryId);
 				}
 				catch (NoSuchFileEntryException noSuchFileEntryException) {
 					throw new CPDefinitionVirtualSettingSampleFileEntryIdException(
@@ -457,7 +466,7 @@ public class CPDefinitionVirtualSettingLocalServiceImpl
 		if (termsOfUseRequired) {
 			if (termsOfUseJournalArticleResourcePrimKey > 0) {
 				JournalArticle journalArticle =
-					journalArticleLocalService.fetchLatestArticle(
+					_journalArticleLocalService.fetchLatestArticle(
 						termsOfUseJournalArticleResourcePrimKey);
 
 				if (journalArticle == null) {
@@ -487,13 +496,22 @@ public class CPDefinitionVirtualSettingLocalServiceImpl
 		}
 	}
 
-	@ServiceReference(type = CPDefinitionLocalService.class)
+	@Reference
 	private CPDefinitionLocalService _cpDefinitionLocalService;
 
-	@ServiceReference(type = CPInstanceLocalService.class)
+	@Reference
 	private CPInstanceLocalService _cpInstanceLocalService;
 
-	@ServiceReference(type = CProductLocalService.class)
+	@Reference
 	private CProductLocalService _cProductLocalService;
+
+	@Reference
+	private DLAppLocalService _dlAppLocalService;
+
+	@Reference
+	private JournalArticleLocalService _journalArticleLocalService;
+
+	@Reference
+	private PortalUUID _portalUUID;
 
 }

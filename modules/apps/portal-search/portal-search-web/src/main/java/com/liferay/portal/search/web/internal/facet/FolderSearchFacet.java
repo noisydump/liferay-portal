@@ -85,19 +85,17 @@ public class FolderSearchFacet extends BaseJSPSearchFacet {
 
 	@Override
 	public JSONObject getJSONData(ActionRequest actionRequest) {
-		int frequencyThreshold = ParamUtil.getInteger(
-			actionRequest, getClassName() + "frequencyThreshold", 1);
-		int maxTerms = ParamUtil.getInteger(
-			actionRequest, getClassName() + "maxTerms", 10);
-		boolean showAssetCount = ParamUtil.getBoolean(
-			actionRequest, getClassName() + "showAssetCount", true);
-
 		return JSONUtil.put(
-			"frequencyThreshold", frequencyThreshold
+			"frequencyThreshold",
+			ParamUtil.getInteger(
+				actionRequest, getClassName() + "frequencyThreshold", 1)
 		).put(
-			"maxTerms", maxTerms
+			"maxTerms",
+			ParamUtil.getInteger(actionRequest, getClassName() + "maxTerms", 10)
 		).put(
-			"showAssetCount", showAssetCount
+			"showAssetCount",
+			ParamUtil.getBoolean(
+				actionRequest, getClassName() + "showAssetCount", true)
 		);
 	}
 
@@ -112,20 +110,19 @@ public class FolderSearchFacet extends BaseJSPSearchFacet {
 	}
 
 	@Override
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.portal.search.web)",
-		unbind = "-"
-	)
-	public void setServletContext(ServletContext servletContext) {
-		super.setServletContext(servletContext);
-	}
-
-	@Override
 	protected FacetFactory getFacetFactory() {
 		return folderFacetFactory;
 	}
 
+	@Override
+	protected ServletContext getServletContext() {
+		return _servletContext;
+	}
+
 	@Reference
 	protected FolderFacetFactory folderFacetFactory;
+
+	@Reference(target = "(osgi.web.symbolicname=com.liferay.portal.search.web)")
+	private ServletContext _servletContext;
 
 }

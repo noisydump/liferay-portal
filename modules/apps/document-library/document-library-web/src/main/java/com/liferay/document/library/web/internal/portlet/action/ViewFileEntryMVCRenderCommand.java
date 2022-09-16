@@ -17,6 +17,7 @@ package com.liferay.document.library.web.internal.portlet.action;
 import com.liferay.asset.display.page.portlet.AssetDisplayPageFriendlyURLProvider;
 import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
+import com.liferay.asset.util.LinkedAssetEntryIdsUtil;
 import com.liferay.document.library.constants.DLPortletKeys;
 import com.liferay.document.library.display.context.DLDisplayContextProvider;
 import com.liferay.document.library.kernel.exception.NoSuchFileEntryException;
@@ -68,7 +69,7 @@ import org.osgi.service.component.annotations.Reference;
 	service = MVCRenderCommand.class
 )
 public class ViewFileEntryMVCRenderCommand
-	extends GetFileEntryMVCRenderCommand {
+	extends BaseFileEntryMVCRenderCommand {
 
 	@Override
 	public String render(
@@ -155,7 +156,8 @@ public class ViewFileEntryMVCRenderCommand
 		DLViewFileEntryDisplayContext dlViewFileEntryDisplayContext =
 			new DLViewFileEntryDisplayContext(
 				dlAdminDisplayContext, _dlDisplayContextProvider, _html,
-				_language, _portal, renderRequest, renderResponse);
+				_portal.getHttpServletRequest(renderRequest), _language,
+				_portal, renderRequest, renderResponse);
 
 		renderRequest.setAttribute(
 			DLViewFileEntryDisplayContext.class.getName(),
@@ -169,6 +171,11 @@ public class ViewFileEntryMVCRenderCommand
 
 		renderRequest.setAttribute(
 			WebKeys.LAYOUT_ASSET_ENTRY, layoutAssetEntry);
+
+		if (layoutAssetEntry != null) {
+			LinkedAssetEntryIdsUtil.addLinkedAssetEntryId(
+				renderRequest, layoutAssetEntry.getEntryId());
+		}
 	}
 
 	@Reference

@@ -20,11 +20,14 @@ import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.service.BaseServiceImpl;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.reports.engine.console.model.Definition;
 import com.liferay.portal.reports.engine.console.service.DefinitionService;
+import com.liferay.portal.reports.engine.console.service.DefinitionServiceUtil;
 import com.liferay.portal.reports.engine.console.service.persistence.DefinitionFinder;
 import com.liferay.portal.reports.engine.console.service.persistence.DefinitionPersistence;
 import com.liferay.portal.reports.engine.console.service.persistence.EntryFinder;
@@ -32,8 +35,11 @@ import com.liferay.portal.reports.engine.console.service.persistence.EntryPersis
 import com.liferay.portal.reports.engine.console.service.persistence.SourceFinder;
 import com.liferay.portal.reports.engine.console.service.persistence.SourcePersistence;
 
+import java.lang.reflect.Field;
+
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -54,8 +60,13 @@ public abstract class DefinitionServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>DefinitionService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.reports.engine.console.service.DefinitionServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>DefinitionService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>DefinitionServiceUtil</code>.
 	 */
+	@Deactivate
+	protected void deactivate() {
+		_setServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -66,6 +77,8 @@ public abstract class DefinitionServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		definitionService = (DefinitionService)aopProxy;
+
+		_setServiceUtilService(definitionService);
 	}
 
 	/**
@@ -107,6 +120,20 @@ public abstract class DefinitionServiceBaseImpl
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
+		}
+	}
+
+	private void _setServiceUtilService(DefinitionService definitionService) {
+		try {
+			Field field = DefinitionServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, definitionService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
 		}
 	}
 
@@ -157,5 +184,8 @@ public abstract class DefinitionServiceBaseImpl
 
 	@Reference
 	protected com.liferay.portal.kernel.service.UserService userService;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		DefinitionServiceBaseImpl.class);
 
 }

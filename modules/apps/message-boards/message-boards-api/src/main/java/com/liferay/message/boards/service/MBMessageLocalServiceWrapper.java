@@ -29,6 +29,10 @@ import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersisten
 public class MBMessageLocalServiceWrapper
 	implements MBMessageLocalService, ServiceWrapper<MBMessageLocalService> {
 
+	public MBMessageLocalServiceWrapper() {
+		this(null);
+	}
+
 	public MBMessageLocalServiceWrapper(
 		MBMessageLocalService mbMessageLocalService) {
 
@@ -47,15 +51,15 @@ public class MBMessageLocalServiceWrapper
 
 	@Override
 	public MBMessage addDiscussionMessage(
-			long userId, String userName, long groupId, String className,
-			long classPK, long threadId, long parentMessageId, String subject,
-			String body,
+			String externalReferenceCode, long userId, String userName,
+			long groupId, String className, long classPK, long threadId,
+			long parentMessageId, String subject, String body,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _mbMessageLocalService.addDiscussionMessage(
-			userId, userName, groupId, className, classPK, threadId,
-			parentMessageId, subject, body, serviceContext);
+			externalReferenceCode, userId, userName, groupId, className,
+			classPK, threadId, parentMessageId, subject, body, serviceContext);
 	}
 
 	/**
@@ -73,6 +77,13 @@ public class MBMessageLocalServiceWrapper
 		return _mbMessageLocalService.addMBMessage(mbMessage);
 	}
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #addMessage(String, long, String, long, long, long, long,
+	 String, String, String, List, boolean, double, boolean,
+	 ServiceContext)}
+	 */
+	@Deprecated
 	@Override
 	public MBMessage addMessage(
 			long userId, String userName, long groupId, long categoryId,
@@ -91,6 +102,13 @@ public class MBMessageLocalServiceWrapper
 			allowPingbacks, serviceContext);
 	}
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #addMessage(String, long, String, long, long, long, long,
+	 String, String, String, List, boolean, double, boolean,
+	 ServiceContext)}
+	 */
+	@Deprecated
 	@Override
 	public MBMessage addMessage(
 			long userId, String userName, long groupId, long categoryId,
@@ -103,6 +121,13 @@ public class MBMessageLocalServiceWrapper
 			serviceContext);
 	}
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #addMessage(String, long, String, long, long, long, long,
+	 String, String, String, List, boolean, double, boolean,
+	 ServiceContext)}
+	 */
+	@Deprecated
 	@Override
 	public MBMessage addMessage(
 			long userId, String userName, long groupId, long categoryId,
@@ -120,6 +145,13 @@ public class MBMessageLocalServiceWrapper
 			serviceContext);
 	}
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #addMessage(String, long, String, long, long, long, long,
+	 String, String, String, List, boolean, double, boolean,
+	 ServiceContext)}
+	 */
+	@Deprecated
 	@Override
 	public MBMessage addMessage(
 			long userId, String userName, long groupId, long categoryId,
@@ -134,6 +166,24 @@ public class MBMessageLocalServiceWrapper
 			userId, userName, groupId, categoryId, subject, body, format,
 			fileName, file, anonymous, priority, allowPingbacks,
 			serviceContext);
+	}
+
+	@Override
+	public MBMessage addMessage(
+			String externalReferenceCode, long userId, String userName,
+			long groupId, long categoryId, long threadId, long parentMessageId,
+			String subject, String body, String format,
+			java.util.List
+				<com.liferay.portal.kernel.util.ObjectValuePair
+					<String, java.io.InputStream>> inputStreamOVPs,
+			boolean anonymous, double priority, boolean allowPingbacks,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _mbMessageLocalService.addMessage(
+			externalReferenceCode, userId, userName, groupId, categoryId,
+			threadId, parentMessageId, subject, body, format, inputStreamOVPs,
+			anonymous, priority, allowPingbacks, serviceContext);
 	}
 
 	@Override
@@ -320,6 +370,13 @@ public class MBMessageLocalServiceWrapper
 	}
 
 	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _mbMessageLocalService.dslQueryCount(dslQuery);
+	}
+
+	@Override
 	public com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery() {
 		return _mbMessageLocalService.dynamicQuery();
 	}
@@ -434,6 +491,33 @@ public class MBMessageLocalServiceWrapper
 	@Override
 	public MBMessage fetchMBMessage(long messageId) {
 		return _mbMessageLocalService.fetchMBMessage(messageId);
+	}
+
+	/**
+	 * Returns the message-boards message with the matching external reference code and group.
+	 *
+	 * @param groupId the primary key of the group
+	 * @param externalReferenceCode the message-boards message's external reference code
+	 * @return the matching message-boards message, or <code>null</code> if a matching message-boards message could not be found
+	 */
+	@Override
+	public MBMessage fetchMBMessageByExternalReferenceCode(
+		long groupId, String externalReferenceCode) {
+
+		return _mbMessageLocalService.fetchMBMessageByExternalReferenceCode(
+			groupId, externalReferenceCode);
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #fetchMBMessageByExternalReferenceCode(long, String)}
+	 */
+	@Deprecated
+	@Override
+	public MBMessage fetchMBMessageByReferenceCode(
+		long groupId, String externalReferenceCode) {
+
+		return _mbMessageLocalService.fetchMBMessageByReferenceCode(
+			groupId, externalReferenceCode);
 	}
 
 	@Override
@@ -686,6 +770,23 @@ public class MBMessageLocalServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _mbMessageLocalService.getMBMessage(messageId);
+	}
+
+	/**
+	 * Returns the message-boards message with the matching external reference code and group.
+	 *
+	 * @param groupId the primary key of the group
+	 * @param externalReferenceCode the message-boards message's external reference code
+	 * @return the matching message-boards message
+	 * @throws PortalException if a matching message-boards message could not be found
+	 */
+	@Override
+	public MBMessage getMBMessageByExternalReferenceCode(
+			long groupId, String externalReferenceCode)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _mbMessageLocalService.getMBMessageByExternalReferenceCode(
+			groupId, externalReferenceCode);
 	}
 
 	/**

@@ -16,8 +16,8 @@
 
 <%@ include file="/init.jsp" %>
 
-<clay:management-toolbar-v2
-	displayContext="<%= new AssetTagsSelectorManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, assetTagsSelectorDisplayContext) %>"
+<clay:management-toolbar
+	managementToolbarDisplayContext="<%= new AssetTagsSelectorManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, assetTagsSelectorDisplayContext) %>"
 />
 
 <clay:container-fluid>
@@ -36,6 +36,12 @@
 				truncate="<%= true %>"
 				value="<%= tag.getName() %>"
 			/>
+
+			<liferay-ui:search-container-column-text
+				cssClass="table-cell-expand"
+				name="site"
+				value="<%= HtmlUtil.escape(assetTagsSelectorDisplayContext.getAssetTagGroupName(tag, locale)) %>"
+			/>
 		</liferay-ui:search-container-row>
 
 		<liferay-ui:search-iterator
@@ -44,34 +50,3 @@
 		/>
 	</liferay-ui:search-container>
 </clay:container-fluid>
-
-<aui:script use="liferay-search-container">
-	var searchContainer = Liferay.SearchContainer.get('<portlet:namespace />tags');
-
-	var searchContainerData = searchContainer.getData(true);
-
-	var selectedTagNames = <%= JSONFactoryUtil.serialize(assetTagsSelectorDisplayContext.getSelectedTagNames()) %>;
-
-	selectedTagNames = selectedTagNames.filter(function (tag) {
-		return searchContainerData.indexOf(tag) === -1;
-	});
-
-	searchContainer.on('rowToggled', function (event) {
-		var items = '';
-
-		var selectedItems = event.elements.allSelectedElements;
-
-		if (selectedItems.size() > 0) {
-			items = selectedTagNames.concat(selectedItems.attr('value')).join(',');
-		}
-
-		Liferay.Util.getOpener().Liferay.fire(
-			'<%= HtmlUtil.escapeJS(assetTagsSelectorDisplayContext.getEventName()) %>',
-			{
-				data: {
-					items: items,
-				},
-			}
-		);
-	});
-</aui:script>

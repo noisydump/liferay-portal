@@ -20,17 +20,24 @@ import com.liferay.fragment.model.FragmentEntry;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.service.FragmentEntryLinkService;
 import com.liferay.fragment.service.FragmentEntryLocalService;
+import com.liferay.layout.content.page.editor.constants.ContentPageEditorPortletKeys;
+import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalService;
+import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalServiceUtil;
+import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.LayoutTypePortlet;
+import com.liferay.portal.kernel.model.Portlet;
+import com.liferay.portal.kernel.portlet.PortletConfigFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
+import com.liferay.portal.kernel.service.PortletLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.servlet.HttpMethods;
@@ -44,6 +51,7 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -51,7 +59,7 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
-import com.liferay.segments.constants.SegmentsExperienceConstants;
+import com.liferay.segments.service.SegmentsExperienceLocalService;
 
 import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceResponse;
@@ -146,25 +154,43 @@ public class GetPagePreviewMVCResourceCommandTest {
 				TestPropsValues.getUserId(), _group.getGroupId(), 0,
 				StringUtil.randomString(), StringUtil.randomString(),
 				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-				RandomTestUtil.randomString(), "{fieldSets: []}", 0,
-				FragmentConstants.TYPE_COMPONENT,
+				RandomTestUtil.randomString(), false, "{fieldSets: []}", null,
+				0, FragmentConstants.TYPE_COMPONENT, null,
 				WorkflowConstants.STATUS_APPROVED, _serviceContext);
+
+		long defaultSegmentsExperienceId =
+			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
+				layout.getPlid());
 
 		_fragmentEntryLink = _fragmentEntryLinkService.addFragmentEntryLink(
 			_group.getGroupId(), 0, fragmentEntry.getFragmentEntryId(),
-			SegmentsExperienceConstants.ID_DEFAULT, layout.getPlid(),
+			defaultSegmentsExperienceId, layout.getPlid(),
 			fragmentEntry.getCss(), fragmentEntry.getHtml(),
 			fragmentEntry.getJs(), fragmentEntry.getConfiguration(), null,
-			StringPool.BLANK, 0, null, _serviceContext);
+			StringPool.BLANK, 0, null, fragmentEntry.getType(),
+			_serviceContext);
+
+		LayoutPageTemplateStructure layoutPageTemplateStructure =
+			LayoutPageTemplateStructureLocalServiceUtil.
+				fetchLayoutPageTemplateStructure(
+					_group.getGroupId(), layout.getPlid());
+
+		LayoutStructure layoutStructure = LayoutStructure.of(
+			layoutPageTemplateStructure.getData(defaultSegmentsExperienceId));
+
+		layoutStructure.addFragmentStyledLayoutStructureItem(
+			_fragmentEntryLink.getFragmentEntryLinkId(),
+			layoutStructure.getMainItemId(), 0);
 
 		_layoutPageTemplateStructureLocalService.
-			rebuildLayoutPageTemplateStructure(
-				_group.getGroupId(), layout.getPlid());
+			updateLayoutPageTemplateStructureData(
+				_group.getGroupId(), layout.getPlid(),
+				defaultSegmentsExperienceId, layoutStructure.toString());
 
 		_themeDisplay.setLayout(layout);
+		_themeDisplay.setLayoutSet(layout.getLayoutSet());
 		_themeDisplay.setLayoutTypePortlet(
 			(LayoutTypePortlet)layout.getLayoutType());
-		_themeDisplay.setLayoutSet(layout.getLayoutSet());
 		_themeDisplay.setLookAndFeel(
 			layout.getTheme(), layout.getColorScheme());
 		_themeDisplay.setPlid(layout.getPlid());
@@ -174,17 +200,34 @@ public class GetPagePreviewMVCResourceCommandTest {
 		MockLiferayResourceRequest mockLiferayResourceRequest =
 			new MockLiferayResourceRequest();
 
+		Portlet portlet = _portletLocalService.getPortletById(
+			ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET);
+
+		mockLiferayResourceRequest.setAttribute(
+			JavaConstants.JAVAX_PORTLET_CONFIG,
+			PortletConfigFactoryUtil.create(portlet, null));
+
 		mockLiferayResourceRequest.setAttribute(
 			WebKeys.THEME_DISPLAY, _themeDisplay);
 
-		MockHttpServletRequest httpServletRequest =
+		mockLiferayResourceRequest.addParameter(
+			"segmentsExperienceId",
+			String.valueOf(
+				_segmentsExperienceLocalService.
+					fetchDefaultSegmentsExperienceId(
+						_fragmentEntryLink.getPlid())));
+
+		MockHttpServletRequest mockHttpServletRequest =
 			(MockHttpServletRequest)
 				mockLiferayResourceRequest.getHttpServletRequest();
 
-		httpServletRequest.setAttribute(WebKeys.THEME_DISPLAY, _themeDisplay);
-		httpServletRequest.setMethod(HttpMethods.GET);
+		mockHttpServletRequest.setAttribute(
+			WebKeys.THEME_DISPLAY, _themeDisplay);
+		mockHttpServletRequest.setMethod(HttpMethods.GET);
 
-		_serviceContext.setRequest(httpServletRequest);
+		_themeDisplay.setRequest(mockHttpServletRequest);
+
+		_serviceContext.setRequest(mockHttpServletRequest);
 
 		MockLiferayResourceResponse mockLiferayResourceResponse =
 			new MockLiferayResourceResponse();
@@ -233,6 +276,12 @@ public class GetPagePreviewMVCResourceCommandTest {
 		filter = "mvc.command.name=/layout_content_page_editor/get_page_preview"
 	)
 	private MVCResourceCommand _mvcResourceCommand;
+
+	@Inject
+	private PortletLocalService _portletLocalService;
+
+	@Inject
+	private SegmentsExperienceLocalService _segmentsExperienceLocalService;
 
 	private ServiceContext _serviceContext;
 	private ThemeDisplay _themeDisplay;

@@ -63,7 +63,7 @@ public class LinksToLayoutsExportImportContentProcessor
 			boolean escapeContent)
 		throws Exception {
 
-		return replaceExportLinksToLayouts(
+		return _replaceExportLinksToLayouts(
 			portletDataContext, stagedModel, content);
 	}
 
@@ -73,19 +73,19 @@ public class LinksToLayoutsExportImportContentProcessor
 			String content)
 		throws Exception {
 
-		return replaceImportLinksToLayouts(portletDataContext, content);
+		return _replaceImportLinksToLayouts(portletDataContext, content);
 	}
 
 	@Override
 	public void validateContentReferences(long groupId, String content)
 		throws PortalException {
 
-		if (isValidateLinksToLayoutsReferences()) {
-			validateLinksToLayoutsReferences(content);
+		if (_isValidateLinksToLayoutsReferences()) {
+			_validateLinksToLayoutsReferences(content);
 		}
 	}
 
-	protected boolean isValidateLinksToLayoutsReferences() {
+	private boolean _isValidateLinksToLayoutsReferences() {
 		try {
 			ExportImportServiceConfiguration configuration =
 				_configurationProvider.getCompanyConfiguration(
@@ -95,13 +95,13 @@ public class LinksToLayoutsExportImportContentProcessor
 			return configuration.validateLayoutReferences();
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 		}
 
 		return true;
 	}
 
-	protected String replaceExportLinksToLayouts(
+	private String _replaceExportLinksToLayouts(
 			PortletDataContext portletDataContext, StagedModel stagedModel,
 			String content)
 		throws Exception {
@@ -125,16 +125,13 @@ public class LinksToLayoutsExportImportContentProcessor
 
 				String oldLinkToLayout = matcher.group(0);
 
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(type);
-				sb.append(StringPool.AT);
-				sb.append(layout.getPlid());
-
 				String newLinkToLayout = StringUtil.replace(
-					oldLinkToLayout, type, sb.toString());
+					oldLinkToLayout, type,
+					StringBundler.concat(
+						type, StringPool.AT, layout.getPlid()));
 
 				oldLinksToLayout.add(oldLinkToLayout);
+
 				newLinksToLayout.add(newLinkToLayout);
 
 				Element entityElement = portletDataContext.getExportDataElement(
@@ -171,7 +168,7 @@ public class LinksToLayoutsExportImportContentProcessor
 			ArrayUtil.toStringArray(newLinksToLayout.toArray()));
 	}
 
-	protected String replaceImportLinksToLayouts(
+	private String _replaceImportLinksToLayouts(
 			PortletDataContext portletDataContext, String content)
 		throws Exception {
 
@@ -248,7 +245,7 @@ public class LinksToLayoutsExportImportContentProcessor
 				newLayoutId = layout.getLayoutId();
 			}
 			else if (_log.isWarnEnabled()) {
-				_log.warn("Unable to get layout with plid " + oldPlid);
+				_log.warn("Unable to get layout with PLID " + oldPlid);
 			}
 
 			String oldLinkToLayout = matcher.group(0);
@@ -284,14 +281,7 @@ public class LinksToLayoutsExportImportContentProcessor
 			ArrayUtil.toStringArray(newLinksToLayout.toArray()));
 	}
 
-	@Reference(unbind = "-")
-	protected void setConfigurationProvider(
-		ConfigurationProvider configurationProvider) {
-
-		_configurationProvider = configurationProvider;
-	}
-
-	protected void validateLinksToLayoutsReferences(String content)
+	private void _validateLinksToLayoutsReferences(String content)
 		throws PortalException {
 
 		Matcher matcher = _exportLinksToLayoutPattern.matcher(content);
@@ -341,6 +331,7 @@ public class LinksToLayoutsExportImportContentProcessor
 	private static final Pattern _importLinksToLayoutPattern = Pattern.compile(
 		"\\[([\\d]+)@(private(-group|-user)?|public)@([\\d]+)(@([\\d]+))?\\]");
 
+	@Reference
 	private ConfigurationProvider _configurationProvider;
 
 	@Reference

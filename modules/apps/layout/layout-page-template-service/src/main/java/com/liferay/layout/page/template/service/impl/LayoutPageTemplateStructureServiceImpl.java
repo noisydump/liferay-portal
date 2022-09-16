@@ -22,6 +22,8 @@ import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.BaseModelPermissionCheckerUtil;
+import com.liferay.portal.kernel.service.permission.LayoutPermission;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Portal;
 
 import org.osgi.service.component.annotations.Component;
@@ -40,41 +42,29 @@ import org.osgi.service.component.annotations.Reference;
 public class LayoutPageTemplateStructureServiceImpl
 	extends LayoutPageTemplateStructureServiceBaseImpl {
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *             #updateLayoutPageTemplateStructureData(long, long, long,
-	 *             String)}
-	 */
-	@Deprecated
-	@Override
-	public LayoutPageTemplateStructure updateLayoutPageTemplateStructure(
-			long groupId, long classNameId, long classPK,
-			long segmentsExperienceId, String data)
-		throws PortalException {
-
-		return updateLayoutPageTemplateStructureData(
-			groupId, classPK, segmentsExperienceId, data);
-	}
-
 	@Override
 	public LayoutPageTemplateStructure updateLayoutPageTemplateStructureData(
 			long groupId, long plid, long segmentsExperienceId, String data)
 		throws PortalException {
 
-		Boolean containsPermission =
-			BaseModelPermissionCheckerUtil.containsBaseModelPermission(
-				getPermissionChecker(), groupId, Layout.class.getName(), plid,
-				ActionKeys.UPDATE);
+		if (GetterUtil.getBoolean(
+				BaseModelPermissionCheckerUtil.containsBaseModelPermission(
+					getPermissionChecker(), groupId, Layout.class.getName(),
+					plid, ActionKeys.UPDATE)) ||
+			_layoutPermission.containsLayoutRestrictedUpdatePermission(
+				getPermissionChecker(), plid)) {
 
-		if (!containsPermission) {
-			throw new PrincipalException.MustHavePermission(
-				getUserId(), Layout.class.getName(), plid, ActionKeys.UPDATE);
+			return layoutPageTemplateStructureLocalService.
+				updateLayoutPageTemplateStructureData(
+					groupId, plid, segmentsExperienceId, data);
 		}
 
-		return layoutPageTemplateStructureLocalService.
-			updateLayoutPageTemplateStructureData(
-				groupId, plid, segmentsExperienceId, data);
+		throw new PrincipalException.MustHavePermission(
+			getUserId(), Layout.class.getName(), plid, ActionKeys.UPDATE);
 	}
+
+	@Reference
+	private LayoutPermission _layoutPermission;
 
 	@Reference
 	private Portal _portal;

@@ -28,6 +28,8 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -41,9 +43,12 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.spring.extender.service.ServiceReference;
 import com.liferay.portal.tools.service.builder.test.model.ERCCompanyEntry;
 import com.liferay.portal.tools.service.builder.test.service.ERCCompanyEntryLocalService;
+import com.liferay.portal.tools.service.builder.test.service.ERCCompanyEntryLocalServiceUtil;
 import com.liferay.portal.tools.service.builder.test.service.persistence.ERCCompanyEntryPersistence;
 
 import java.io.Serializable;
+
+import java.lang.reflect.Field;
 
 import java.util.List;
 
@@ -67,7 +72,7 @@ public abstract class ERCCompanyEntryLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>ERCCompanyEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.tools.service.builder.test.service.ERCCompanyEntryLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>ERCCompanyEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>ERCCompanyEntryLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -140,6 +145,13 @@ public abstract class ERCCompanyEntryLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return ercCompanyEntryPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -235,6 +247,21 @@ public abstract class ERCCompanyEntryLocalServiceBaseImpl
 	}
 
 	/**
+	 * Returns the erc company entry with the matching UUID and company.
+	 *
+	 * @param uuid the erc company entry's UUID
+	 * @param companyId the primary key of the company
+	 * @return the matching erc company entry, or <code>null</code> if a matching erc company entry could not be found
+	 */
+	@Override
+	public ERCCompanyEntry fetchERCCompanyEntryByUuidAndCompanyId(
+		String uuid, long companyId) {
+
+		return ercCompanyEntryPersistence.fetchByUuid_C_First(
+			uuid, companyId, null);
+	}
+
+	/**
 	 * Returns the erc company entry with the matching external reference code and company.
 	 *
 	 * @param companyId the primary key of the company
@@ -242,10 +269,39 @@ public abstract class ERCCompanyEntryLocalServiceBaseImpl
 	 * @return the matching erc company entry, or <code>null</code> if a matching erc company entry could not be found
 	 */
 	@Override
-	public ERCCompanyEntry fetchERCCompanyEntryByReferenceCode(
+	public ERCCompanyEntry fetchERCCompanyEntryByExternalReferenceCode(
 		long companyId, String externalReferenceCode) {
 
 		return ercCompanyEntryPersistence.fetchByC_ERC(
+			companyId, externalReferenceCode);
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #fetchERCCompanyEntryByExternalReferenceCode(long, String)}
+	 */
+	@Deprecated
+	@Override
+	public ERCCompanyEntry fetchERCCompanyEntryByReferenceCode(
+		long companyId, String externalReferenceCode) {
+
+		return fetchERCCompanyEntryByExternalReferenceCode(
+			companyId, externalReferenceCode);
+	}
+
+	/**
+	 * Returns the erc company entry with the matching external reference code and company.
+	 *
+	 * @param companyId the primary key of the company
+	 * @param externalReferenceCode the erc company entry's external reference code
+	 * @return the matching erc company entry
+	 * @throws PortalException if a matching erc company entry could not be found
+	 */
+	@Override
+	public ERCCompanyEntry getERCCompanyEntryByExternalReferenceCode(
+			long companyId, String externalReferenceCode)
+		throws PortalException {
+
+		return ercCompanyEntryPersistence.findByC_ERC(
 			companyId, externalReferenceCode);
 	}
 
@@ -323,6 +379,11 @@ public abstract class ERCCompanyEntryLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement ERCCompanyEntryLocalServiceImpl#deleteERCCompanyEntry(ERCCompanyEntry) to avoid orphaned data");
+		}
+
 		return ercCompanyEntryLocalService.deleteERCCompanyEntry(
 			(ERCCompanyEntry)persistedModel);
 	}
@@ -340,6 +401,23 @@ public abstract class ERCCompanyEntryLocalServiceBaseImpl
 		throws PortalException {
 
 		return ercCompanyEntryPersistence.findByPrimaryKey(primaryKeyObj);
+	}
+
+	/**
+	 * Returns the erc company entry with the matching UUID and company.
+	 *
+	 * @param uuid the erc company entry's UUID
+	 * @param companyId the primary key of the company
+	 * @return the matching erc company entry
+	 * @throws PortalException if a matching erc company entry could not be found
+	 */
+	@Override
+	public ERCCompanyEntry getERCCompanyEntryByUuidAndCompanyId(
+			String uuid, long companyId)
+		throws PortalException {
+
+		return ercCompanyEntryPersistence.findByUuid_C_First(
+			uuid, companyId, null);
 	}
 
 	/**
@@ -453,11 +531,15 @@ public abstract class ERCCompanyEntryLocalServiceBaseImpl
 		persistedModelLocalServiceRegistry.register(
 			"com.liferay.portal.tools.service.builder.test.model.ERCCompanyEntry",
 			ercCompanyEntryLocalService);
+
+		_setLocalServiceUtilService(ercCompanyEntryLocalService);
 	}
 
 	public void destroy() {
 		persistedModelLocalServiceRegistry.unregister(
 			"com.liferay.portal.tools.service.builder.test.model.ERCCompanyEntry");
+
+		_setLocalServiceUtilService(null);
 	}
 
 	/**
@@ -502,6 +584,23 @@ public abstract class ERCCompanyEntryLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		ERCCompanyEntryLocalService ercCompanyEntryLocalService) {
+
+		try {
+			Field field =
+				ERCCompanyEntryLocalServiceUtil.class.getDeclaredField(
+					"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, ercCompanyEntryLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@BeanReference(type = ERCCompanyEntryLocalService.class)
 	protected ERCCompanyEntryLocalService ercCompanyEntryLocalService;
 
@@ -513,6 +612,9 @@ public abstract class ERCCompanyEntryLocalServiceBaseImpl
 	)
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		ERCCompanyEntryLocalServiceBaseImpl.class);
 
 	@ServiceReference(type = PersistedModelLocalServiceRegistry.class)
 	protected PersistedModelLocalServiceRegistry

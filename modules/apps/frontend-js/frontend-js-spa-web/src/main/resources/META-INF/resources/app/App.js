@@ -12,10 +12,8 @@
  * details.
  */
 
-import {debounce, delegate} from 'frontend-js-web';
+import {EventEmitter, EventHandler, debounce, delegate} from 'frontend-js-web';
 
-import EventEmitter from '../events/EventEmitter';
-import EventHandler from '../events/EventHandler';
 import Route from '../route/Route';
 import Screen from '../screen/Screen';
 import Surface from '../surface/Surface';
@@ -27,7 +25,6 @@ import {
 	getUrlPathWithoutHash,
 	getUrlPathWithoutHashAndSearch,
 	isCurrentBrowserPath,
-	log,
 	removePathTrailingSlash,
 	setReferrer,
 } from '../util/utils';
@@ -42,7 +39,7 @@ class App extends EventEmitter {
 	/**
 	 * App class that handle routes and screens lifecycle.
 	 */
-	constructor() {
+	constructor(config) {
 		super();
 
 		/**
@@ -105,8 +102,9 @@ class App extends EventEmitter {
 		 * @default form[enctype="multipart/form-data"]:not([data-senna-off])
 		 * @protected
 		 */
-		this.formSelector =
-			'form[enctype="multipart/form-data"]:not([data-senna-off])';
+		this.formSelector = config?.navigationExceptionSelectors
+			? `form${config.navigationExceptionSelectors}`
+			: 'form[enctype="multipart/form-data"]:not([data-senna-off])';
 
 		/**
 		 * When enabled, the route matching ignores query string from the path.
@@ -122,7 +120,9 @@ class App extends EventEmitter {
 		 * @default a:not([data-senna-off])
 		 * @protected
 		 */
-		this.linkSelector = 'a:not([data-senna-off]):not([target="_blank"])';
+		this.linkSelector = config?.navigationExceptionSelectors
+			? `a${config.navigationExceptionSelectors}`
+			: 'a:not([data-senna-off]):not([target="_blank"])';
 
 		/**
 		 * Holds the loading css class.
@@ -359,14 +359,10 @@ class App extends EventEmitter {
 			const path = getUrlPath(url);
 
 			if (!this.isLinkSameOrigin_(uri.host)) {
-				log('Offsite link clicked');
-
 				return false;
 			}
 
 			if (!this.isSameBasePath_(path)) {
-				log("Link clicked outside app's base path");
-
 				return false;
 			}
 
@@ -377,8 +373,6 @@ class App extends EventEmitter {
 			}
 
 			if (!this.findRoute(path)) {
-				log('No route for ' + path);
-
 				return false;
 			}
 
@@ -416,14 +410,12 @@ class App extends EventEmitter {
 	 */
 	createScreenInstance(path, route) {
 		if (!this.pendingNavigate && path === this.activePath) {
-			log('Already at destination, refresh navigation');
-
 			return this.activeScreen;
 		}
 		/* jshint newcap: false */
-		var screen = this.screens[path];
+		let screen = this.screens[path];
 		if (!screen) {
-			var handler = route.getHandler();
+			const handler = route.getHandler();
 			if (
 				handler === Screen ||
 				Screen.isImplementedBy(handler.prototype)
@@ -433,7 +425,6 @@ class App extends EventEmitter {
 			else {
 				screen = handler(route) || new Screen();
 			}
-			log('Create screen for [' + path + '] [' + screen + ']');
 		}
 
 		return screen;
@@ -469,17 +460,15 @@ class App extends EventEmitter {
 	 * @return {Promise} Returns a pending request cancellable promise.
 	 */
 	doNavigate_(path, opt_replaceHistory) {
-		var route = this.findRoute(path);
+		const route = this.findRoute(path);
 		if (!route) {
 			return Promise.reject(new Error('No route for ' + path));
 		}
 
-		log('Navigate to [' + path + ']');
-
 		this.stopPendingNavigate_();
 		this.isNavigationPending = true;
 
-		var nextScreen = this.createScreenInstance(path, route);
+		const nextScreen = this.createScreenInstance(path, route);
 
 		return this.maybePreventDeactivate_()
 			.then(() => this.maybePreventActivate_(nextScreen))
@@ -563,7 +552,6 @@ class App extends EventEmitter {
 		this.pendingNavigate = null;
 		Liferay.SPA.__capturedFormElement__ = null;
 		Liferay.SPA.__capturedFormButtonElement__ = null;
-		log('Navigation done');
 	}
 
 	/**
@@ -575,8 +563,8 @@ class App extends EventEmitter {
 	 */
 	findRoute(path) {
 		path = this.getRoutePath(path);
-		for (var i = 0; i < this.routes.length; i++) {
-			var route = this.routes[i];
+		for (let i = 0; i < this.routes.length; i++) {
+			const route = this.routes[i];
 			if (route.matchesPath(path)) {
 				return route;
 			}
@@ -678,7 +666,6 @@ class App extends EventEmitter {
 	 * @protected
 	 */
 	handleNavigateError_(path, nextScreen, error) {
-		log('Navigation error for [' + nextScreen + '] (' + error.stack + ')');
 		this.emit('navigationError', {
 			error,
 			nextScreen,
@@ -702,7 +689,7 @@ class App extends EventEmitter {
 	 * @return {boolean}
 	 */
 	hasRoutes() {
-		return this.routes.length > 0;
+		return !!this.routes.length;
 	}
 
 	/**
@@ -733,7 +720,7 @@ class App extends EventEmitter {
 	 * @protected
 	 */
 	lockHistoryScrollPosition_() {
-		var state = window.history.state;
+		const state = window.history.state;
 		if (!state) {
 			return;
 		}
@@ -747,8 +734,8 @@ class App extends EventEmitter {
 		// behaviors can happen even on the same browser, hence the race will decide
 		// the winner.
 
-		var winner = false;
-		var switchScrollPositionRace = function () {
+		let winner = false;
+		const switchScrollPositionRace = function () {
 			document.removeEventListener(
 				'scroll',
 				switchScrollPositionRace,
@@ -820,11 +807,11 @@ class App extends EventEmitter {
 			return;
 		}
 
-		var navigateFailed = false;
+		let navigateFailed = false;
 		try {
 			this.navigate(getUrlPath(href), false, event);
 		}
-		catch (err) {
+		catch (error) {
 
 			// Do not prevent link navigation in case some synchronous error occurs
 
@@ -950,8 +937,8 @@ class App extends EventEmitter {
 	 * @param {!string} path Path containing anchor
 	 */
 	maybeUpdateScrollPositionState_() {
-		var hash = window.location.hash;
-		var anchorElement = document.getElementById(hash.substring(1));
+		const hash = window.location.hash;
+		const anchorElement = document.getElementById(hash.substring(1));
 		if (anchorElement) {
 			const {offsetLeft, offsetTop} = getNodeOffset(anchorElement);
 			this.saveHistoryCurrentPageScrollPosition_(offsetTop, offsetLeft);
@@ -1012,8 +999,6 @@ class App extends EventEmitter {
 				this.pendingNavigate.path === event.path ||
 				this.navigationStrategy === NavigationStrategy.SCHEDULE_LAST
 			) {
-				log('Waiting...');
-
 				return;
 			}
 		}
@@ -1034,7 +1019,7 @@ class App extends EventEmitter {
 	 * @protected
 	 */
 	onBeforeUnloadDefault_(event) {
-		var func = window._onbeforeunload;
+		const func = window._onbeforeunload;
 		if (func && !func._overloaded && func()) {
 			event.preventDefault();
 		}
@@ -1054,10 +1039,6 @@ class App extends EventEmitter {
 			event.shiftKey ||
 			event.button
 		) {
-			log(
-				'Navigate aborted, invalid mouse button or modifier key pressed.'
-			);
-
 			return;
 		}
 		this.maybeNavigate_(event.delegateTarget.href, event);
@@ -1070,10 +1051,8 @@ class App extends EventEmitter {
 	 * @protected
 	 */
 	onDocSubmitDelegate_(event) {
-		var form = event.delegateTarget;
+		const form = event.delegateTarget;
 		if (form.method === 'get') {
-			log('GET method not supported');
-
 			return;
 		}
 		event.capturedFormElement = form;
@@ -1133,7 +1112,7 @@ class App extends EventEmitter {
 			return;
 		}
 
-		var state = event.state;
+		const state = event.state;
 
 		if (!state) {
 			if (window.location.hash) {
@@ -1163,7 +1142,6 @@ class App extends EventEmitter {
 		}
 
 		if (state.senna) {
-			log('History navigation to [' + state.path + ']');
 			this.popstateScrollTop = state.scrollTop;
 			this.popstateScrollLeft = state.scrollLeft;
 			if (!this.nativeScrollRestorationSupported) {
@@ -1215,7 +1193,7 @@ class App extends EventEmitter {
 		this.captureScrollPositionFromScrollEvent = false;
 		document.documentElement.classList.add(this.loadingCssClass);
 
-		var endNavigatePayload = {
+		const endNavigatePayload = {
 			form: event.form,
 			path: event.path,
 		};
@@ -1251,14 +1229,12 @@ class App extends EventEmitter {
 	 * @return {Promise} Returns a pending request cancellable promise.
 	 */
 	prefetch(path) {
-		var route = this.findRoute(path);
+		const route = this.findRoute(path);
 		if (!route) {
 			return Promise.reject(new Error('No route for ' + path));
 		}
 
-		log('Prefetching [' + path + ']');
-
-		var nextScreen = this.createScreenInstance(path, route);
+		const nextScreen = this.createScreenInstance(path, route);
 
 		return nextScreen
 			.load(path)
@@ -1320,18 +1296,8 @@ class App extends EventEmitter {
 	 */
 	prepareNavigateSurfaces_(nextScreen, surfaces, params) {
 		Object.keys(surfaces).forEach((id) => {
-			var surfaceContent = nextScreen.getSurfaceContent(id, params);
+			const surfaceContent = nextScreen.getSurfaceContent(id, params);
 			surfaces[id].addContent(nextScreen.getId(), surfaceContent);
-			log(
-				'Screen [' +
-					nextScreen.getId() +
-					'] add content to surface ' +
-					'[' +
-					surfaces[id] +
-					'] [' +
-					(surfaceContent ? '...' : 'empty') +
-					']'
-			);
 		});
 	}
 
@@ -1362,7 +1328,7 @@ class App extends EventEmitter {
 	 * @param {!string} path Path containing the querystring part.
 	 */
 	removeScreen(path) {
-		var screen = this.screens[path];
+		const screen = this.screens[path];
 		if (screen) {
 			Object.keys(this.surfaces).forEach((surfaceId) =>
 				this.surfaces[surfaceId].remove(screen.getId())
@@ -1378,7 +1344,7 @@ class App extends EventEmitter {
 	 * @param {!number} scrollLeft Number containing the left scroll position to be saved.
 	 */
 	saveHistoryCurrentPageScrollPosition_(scrollTop, scrollLeft) {
-		var state = window.history.state;
+		const state = window.history.state;
 		if (state && state.senna) {
 			[state.scrollTop, state.scrollLeft] = [scrollTop, scrollLeft];
 			window.history.replaceState(state, null, null);
@@ -1476,7 +1442,7 @@ class App extends EventEmitter {
 	stopPendingNavigate_() {
 		if (this.pendingNavigate) {
 
-			//this.pendingNavigate.cancel('Cancel pending navigation');
+			// this.pendingNavigate.cancel('Cancel pending navigation');
 
 		}
 		this.pendingNavigate = null;
@@ -1490,15 +1456,15 @@ class App extends EventEmitter {
 	 * @return {?Promise=}
 	 */
 	syncScrollPositionSyncThenAsync_() {
-		var state = window.history.state;
+		const state = window.history.state;
 		if (!state) {
 			return;
 		}
 
-		var scrollTop = state.scrollTop;
-		var scrollLeft = state.scrollLeft;
+		const scrollTop = state.scrollTop;
+		const scrollLeft = state.scrollLeft;
 
-		var sync = () => {
+		const sync = () => {
 			if (this.updateScrollPosition) {
 				window.scrollTo(scrollLeft, scrollTop);
 			}

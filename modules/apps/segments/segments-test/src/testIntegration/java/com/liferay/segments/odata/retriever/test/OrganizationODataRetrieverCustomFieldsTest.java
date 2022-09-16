@@ -45,18 +45,12 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portlet.expando.util.test.ExpandoTestUtil;
-import com.liferay.registry.Filter;
-import com.liferay.registry.Registry;
-import com.liferay.registry.RegistryUtil;
-import com.liferay.registry.ServiceTracker;
 import com.liferay.segments.odata.retriever.ODataRetriever;
 
 import java.io.Serializable;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -68,6 +62,11 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * @author David Arques
@@ -87,15 +86,19 @@ public class OrganizationODataRetrieverCustomFieldsTest {
 		_expandoTable = ExpandoTestUtil.addTable(
 			PortalUtil.getClassNameId(Organization.class), "CUSTOM_FIELDS");
 
-		Registry registry = RegistryUtil.getRegistry();
+		Bundle bundle = FrameworkUtil.getBundle(
+			OrganizationODataRetrieverCustomFieldsTest.class);
 
-		Filter filter = registry.getFilter(
-			StringBundler.concat(
-				"(&(model.class.name=com.liferay.portal.kernel.model.",
-				"Organization)(objectClass=", ODataRetriever.class.getName(),
-				"))"));
+		BundleContext bundleContext = bundle.getBundleContext();
 
-		_serviceTracker = registry.trackServices(filter);
+		_serviceTracker = new ServiceTracker<>(
+			bundleContext,
+			bundleContext.createFilter(
+				StringBundler.concat(
+					"(&(model.class.name=com.liferay.portal.kernel.model.",
+					"Organization)(objectClass=",
+					ODataRetriever.class.getName(), "))")),
+			null);
 
 		_serviceTracker.open();
 	}
@@ -262,7 +265,7 @@ public class OrganizationODataRetrieverCustomFieldsTest {
 			ExpandoColumnConstants.DOUBLE_ARRAY,
 			ExpandoColumnConstants.INDEX_TYPE_KEYWORD);
 
-		double columnValue = 1.0;
+		double[] columnValue = {1.0};
 
 		Organization organization1 = _addOrganization(
 			expandoColumn.getName(), columnValue);
@@ -274,7 +277,8 @@ public class OrganizationODataRetrieverCustomFieldsTest {
 		_organizations.add(organization2);
 
 		String filterString = String.format(
-			"(customField/%s eq %s)", _encodeName(expandoColumn), columnValue);
+			"(customField/%s eq %s)", _encodeName(expandoColumn),
+			columnValue[0]);
 
 		int count = _getODataRetriever().getResultsCount(
 			TestPropsValues.getCompanyId(), filterString,
@@ -298,7 +302,7 @@ public class OrganizationODataRetrieverCustomFieldsTest {
 			ExpandoColumnConstants.DOUBLE_ARRAY,
 			ExpandoColumnConstants.INDEX_TYPE_TEXT);
 
-		double columnValue = 1.0;
+		double[] columnValue = {1.0};
 
 		Organization organization1 = _addOrganization(
 			expandoColumn.getName(), columnValue);
@@ -310,7 +314,8 @@ public class OrganizationODataRetrieverCustomFieldsTest {
 		_organizations.add(organization2);
 
 		String filterString = String.format(
-			"(customField/%s eq %s)", _encodeName(expandoColumn), columnValue);
+			"(customField/%s eq %s)", _encodeName(expandoColumn),
+			columnValue[0]);
 
 		int count = _getODataRetriever().getResultsCount(
 			TestPropsValues.getCompanyId(), filterString,
@@ -406,7 +411,7 @@ public class OrganizationODataRetrieverCustomFieldsTest {
 			ExpandoColumnConstants.FLOAT_ARRAY,
 			ExpandoColumnConstants.INDEX_TYPE_KEYWORD);
 
-		float columnValue = 1.0F;
+		float[] columnValue = {1.0F};
 
 		Organization organization1 = _addOrganization(
 			expandoColumn.getName(), columnValue);
@@ -418,7 +423,8 @@ public class OrganizationODataRetrieverCustomFieldsTest {
 		_organizations.add(organization2);
 
 		String filterString = String.format(
-			"(customField/%s eq %s)", _encodeName(expandoColumn), columnValue);
+			"(customField/%s eq %s)", _encodeName(expandoColumn),
+			columnValue[0]);
 
 		int count = _getODataRetriever().getResultsCount(
 			TestPropsValues.getCompanyId(), filterString,
@@ -442,7 +448,7 @@ public class OrganizationODataRetrieverCustomFieldsTest {
 			ExpandoColumnConstants.FLOAT_ARRAY,
 			ExpandoColumnConstants.INDEX_TYPE_TEXT);
 
-		float columnValue = 1.0F;
+		float[] columnValue = {1.0F};
 
 		Organization organization1 = _addOrganization(
 			expandoColumn.getName(), columnValue);
@@ -454,7 +460,8 @@ public class OrganizationODataRetrieverCustomFieldsTest {
 		_organizations.add(organization2);
 
 		String filterString = String.format(
-			"(customField/%s eq %s)", _encodeName(expandoColumn), columnValue);
+			"(customField/%s eq %s)", _encodeName(expandoColumn),
+			columnValue[0]);
 
 		int count = _getODataRetriever().getResultsCount(
 			TestPropsValues.getCompanyId(), filterString,
@@ -550,7 +557,7 @@ public class OrganizationODataRetrieverCustomFieldsTest {
 			ExpandoColumnConstants.INTEGER_ARRAY,
 			ExpandoColumnConstants.INDEX_TYPE_KEYWORD);
 
-		int columnValue = 1;
+		int[] columnValue = {1};
 
 		Organization organization1 = _addOrganization(
 			expandoColumn.getName(), columnValue);
@@ -562,7 +569,8 @@ public class OrganizationODataRetrieverCustomFieldsTest {
 		_organizations.add(organization2);
 
 		String filterString = String.format(
-			"(customField/%s eq %s)", _encodeName(expandoColumn), columnValue);
+			"(customField/%s eq %s)", _encodeName(expandoColumn),
+			columnValue[0]);
 
 		int count = _getODataRetriever().getResultsCount(
 			TestPropsValues.getCompanyId(), filterString,
@@ -586,7 +594,7 @@ public class OrganizationODataRetrieverCustomFieldsTest {
 			ExpandoColumnConstants.INTEGER_ARRAY,
 			ExpandoColumnConstants.INDEX_TYPE_TEXT);
 
-		int columnValue = 1;
+		int[] columnValue = {1};
 
 		Organization organization1 = _addOrganization(
 			expandoColumn.getName(), columnValue);
@@ -598,7 +606,8 @@ public class OrganizationODataRetrieverCustomFieldsTest {
 		_organizations.add(organization2);
 
 		String filterString = String.format(
-			"(customField/%s eq %s)", _encodeName(expandoColumn), columnValue);
+			"(customField/%s eq %s)", _encodeName(expandoColumn),
+			columnValue[0]);
 
 		int count = _getODataRetriever().getResultsCount(
 			TestPropsValues.getCompanyId(), filterString,
@@ -775,7 +784,7 @@ public class OrganizationODataRetrieverCustomFieldsTest {
 			ExpandoColumnConstants.LONG_ARRAY,
 			ExpandoColumnConstants.INDEX_TYPE_KEYWORD);
 
-		long columnValue = 1;
+		long[] columnValue = {1};
 
 		Organization organization1 = _addOrganization(
 			expandoColumn.getName(), columnValue);
@@ -787,7 +796,8 @@ public class OrganizationODataRetrieverCustomFieldsTest {
 		_organizations.add(organization2);
 
 		String filterString = String.format(
-			"(customField/%s eq %s)", _encodeName(expandoColumn), columnValue);
+			"(customField/%s eq %s)", _encodeName(expandoColumn),
+			columnValue[0]);
 
 		int count = _getODataRetriever().getResultsCount(
 			TestPropsValues.getCompanyId(), filterString,
@@ -811,7 +821,7 @@ public class OrganizationODataRetrieverCustomFieldsTest {
 			ExpandoColumnConstants.LONG_ARRAY,
 			ExpandoColumnConstants.INDEX_TYPE_TEXT);
 
-		long columnValue = 1;
+		long[] columnValue = {1};
 
 		Organization organization1 = _addOrganization(
 			expandoColumn.getName(), columnValue);
@@ -823,7 +833,8 @@ public class OrganizationODataRetrieverCustomFieldsTest {
 		_organizations.add(organization2);
 
 		String filterString = String.format(
-			"(customField/%s eq %s)", _encodeName(expandoColumn), columnValue);
+			"(customField/%s eq %s)", _encodeName(expandoColumn),
+			columnValue[0]);
 
 		int count = _getODataRetriever().getResultsCount(
 			TestPropsValues.getCompanyId(), filterString,
@@ -919,7 +930,7 @@ public class OrganizationODataRetrieverCustomFieldsTest {
 			ExpandoColumnConstants.SHORT_ARRAY,
 			ExpandoColumnConstants.INDEX_TYPE_KEYWORD);
 
-		short columnValue = 1;
+		short[] columnValue = {1};
 
 		Organization organization1 = _addOrganization(
 			expandoColumn.getName(), columnValue);
@@ -931,7 +942,8 @@ public class OrganizationODataRetrieverCustomFieldsTest {
 		_organizations.add(organization2);
 
 		String filterString = String.format(
-			"(customField/%s eq %s)", _encodeName(expandoColumn), columnValue);
+			"(customField/%s eq %s)", _encodeName(expandoColumn),
+			columnValue[0]);
 
 		int count = _getODataRetriever().getResultsCount(
 			TestPropsValues.getCompanyId(), filterString,
@@ -955,7 +967,7 @@ public class OrganizationODataRetrieverCustomFieldsTest {
 			ExpandoColumnConstants.SHORT_ARRAY,
 			ExpandoColumnConstants.INDEX_TYPE_TEXT);
 
-		short columnValue = 1;
+		short[] columnValue = {1};
 
 		Organization organization1 = _addOrganization(
 			expandoColumn.getName(), columnValue);
@@ -967,7 +979,8 @@ public class OrganizationODataRetrieverCustomFieldsTest {
 		_organizations.add(organization2);
 
 		String filterString = String.format(
-			"(customField/%s eq %s)", _encodeName(expandoColumn), columnValue);
+			"(customField/%s eq %s)", _encodeName(expandoColumn),
+			columnValue[0]);
 
 		int count = _getODataRetriever().getResultsCount(
 			TestPropsValues.getCompanyId(), filterString,
@@ -1164,25 +1177,8 @@ public class OrganizationODataRetrieverCustomFieldsTest {
 
 	private String _encodeName(ExpandoColumn expandoColumn) throws Exception {
 		return ReflectionTestUtil.invoke(
-			_getExpandoColumnModelListener(), "_encodeName",
-			new Class<?>[] {ExpandoColumn.class}, expandoColumn);
-	}
-
-	private ModelListener<ExpandoColumn> _getExpandoColumnModelListener()
-		throws Exception {
-
-		Registry registry = RegistryUtil.getRegistry();
-
-		Collection<ModelListener<ExpandoColumn>> collection =
-			registry.getServices(
-				(Class<ModelListener<ExpandoColumn>>)
-					(Class<?>)ModelListener.class,
-				"(component.name=com.liferay.segments.internal.model." +
-					"listener.OrganizationExpandoColumnModelListener)");
-
-		Iterator<ModelListener<ExpandoColumn>> iterator = collection.iterator();
-
-		return iterator.next();
+			_modelListener, "_encodeName", new Class<?>[] {ExpandoColumn.class},
+			expandoColumn);
 	}
 
 	private ODataRetriever<Organization> _getODataRetriever() {
@@ -1198,6 +1194,11 @@ public class OrganizationODataRetrieverCustomFieldsTest {
 
 	@DeleteAfterTestRun
 	private ExpandoTable _expandoTable;
+
+	@Inject(
+		filter = "component.name=com.liferay.segments.internal.model.listener.OrganizationExpandoColumnModelListener"
+	)
+	private ModelListener<ExpandoColumn> _modelListener;
 
 	@Inject
 	private OrganizationLocalService _organizationLocalService;

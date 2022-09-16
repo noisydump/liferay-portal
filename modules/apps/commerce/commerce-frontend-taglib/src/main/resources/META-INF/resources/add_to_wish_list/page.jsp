@@ -23,11 +23,10 @@
 <aui:script require="commerce-frontend-js/components/add_to_wish_list/entry as AddToWishList">
 	const initialProps = {
 		accountId: <%= commerceAccountId %>,
-		cpDefinitionId: <%= cpDefinitionId %>,
+		cpDefinitionId: <%= cpCatalogEntry.getCPDefinitionId() %>,
 		large: <%= large %>,
 		isInWishList: <%= inWishList %>,
 		skuId: <%= skuId %>,
-		spritemap: '<%= spritemap %>',
 	};
 
 	AddToWishList.default(

@@ -19,11 +19,11 @@ import com.liferay.commerce.payment.service.CommercePaymentMethodGroupRelService
 import com.liferay.commerce.payment.web.internal.display.context.CommercePaymentMethodGroupRelsDisplayContext;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
-import com.liferay.commerce.service.CommerceCountryService;
 import com.liferay.frontend.taglib.servlet.taglib.ScreenNavigationCategory;
 import com.liferay.frontend.taglib.servlet.taglib.ScreenNavigationEntry;
 import com.liferay.frontend.taglib.servlet.taglib.util.JSPRenderer;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.service.CountryService;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
@@ -69,7 +69,7 @@ public class CommerceChannelPaymentRestrictionsScreenNavigationCategory
 		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
 			"content.Language", locale, getClass());
 
-		return LanguageUtil.get(resourceBundle, getCategoryKey());
+		return _language.get(resourceBundle, getCategoryKey());
 	}
 
 	@Override
@@ -86,9 +86,10 @@ public class CommerceChannelPaymentRestrictionsScreenNavigationCategory
 		CommercePaymentMethodGroupRelsDisplayContext
 			commercePaymentMethodGroupRelsDisplayContext =
 				new CommercePaymentMethodGroupRelsDisplayContext(
-					_commerceChannelLocalService, _commerceCountryService,
+					_commerceChannelLocalService,
 					_commercePaymentMethodGroupRelService,
-					_commercePaymentMethodRegistry, httpServletRequest);
+					_commercePaymentMethodRegistry, _countryService,
+					httpServletRequest);
 
 		httpServletRequest.setAttribute(
 			WebKeys.PORTLET_DISPLAY_CONTEXT,
@@ -96,14 +97,11 @@ public class CommerceChannelPaymentRestrictionsScreenNavigationCategory
 
 		_jspRenderer.renderJSP(
 			_servletContext, httpServletRequest, httpServletResponse,
-			"/payment_method/restrictions.jsp");
+			"/commerce_payment_method/restrictions.jsp");
 	}
 
 	@Reference
 	private CommerceChannelLocalService _commerceChannelLocalService;
-
-	@Reference
-	private CommerceCountryService _commerceCountryService;
 
 	@Reference
 	private CommercePaymentMethodGroupRelService
@@ -113,7 +111,13 @@ public class CommerceChannelPaymentRestrictionsScreenNavigationCategory
 	private CommercePaymentMethodRegistry _commercePaymentMethodRegistry;
 
 	@Reference
+	private CountryService _countryService;
+
+	@Reference
 	private JSPRenderer _jspRenderer;
+
+	@Reference
+	private Language _language;
 
 	@Reference(
 		target = "(osgi.web.symbolicname=com.liferay.commerce.payment.web)"

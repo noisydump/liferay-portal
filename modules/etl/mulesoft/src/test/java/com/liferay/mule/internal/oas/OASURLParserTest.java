@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
+ * Copyright (c) 2000-2021 Liferay, Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the Free
@@ -44,7 +44,7 @@ public class OASURLParserTest {
 		OASURLParser oasURLParser = new OASURLParser(OPEN_API_URL);
 
 		Assert.assertEquals(
-			"headless-commerce-admin-catalog", oasURLParser.getJaxRSAppBase());
+			"/headless-commerce-admin-catalog", oasURLParser.getJaxRSAppBase());
 	}
 
 	@Test
@@ -77,6 +77,17 @@ public class OASURLParserTest {
 		Assert.assertEquals(
 			"http://localhost:8080/o/headless-commerce-admin-catalog",
 			oasURLParser.getServerBaseURL());
+	}
+
+	@Test
+	public void testGetServerBaseURLWithCustomJaxRSAppBase()
+		throws MalformedURLException {
+
+		OASURLParser oasURLParser = new OASURLParser(OPEN_API_URL);
+
+		Assert.assertEquals(
+			"http://localhost:8080/o/custom-jax-rs-app",
+			oasURLParser.getServerBaseURL("/custom-jax-rs-app"));
 	}
 
 	@Test(expected = MalformedURLException.class)

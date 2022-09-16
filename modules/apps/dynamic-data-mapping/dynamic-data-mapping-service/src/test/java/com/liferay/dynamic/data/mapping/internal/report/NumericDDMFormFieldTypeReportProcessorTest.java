@@ -15,7 +15,7 @@
 package com.liferay.dynamic.data.mapping.internal.report;
 
 import com.liferay.dynamic.data.mapping.constants.DDMFormInstanceReportConstants;
-import com.liferay.dynamic.data.mapping.model.DDMFormFieldType;
+import com.liferay.dynamic.data.mapping.form.field.type.constants.DDMFormFieldTypeConstants;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstance;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecord;
 import com.liferay.dynamic.data.mapping.model.LocalizedValue;
@@ -23,7 +23,6 @@ import com.liferay.dynamic.data.mapping.model.Value;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordLocalService;
 import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
-import com.liferay.portal.json.JSONFactoryImpl;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -31,6 +30,7 @@ import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.math.BigDecimal;
 
@@ -41,28 +41,27 @@ import java.util.Locale;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
-
-import org.powermock.api.mockito.PowerMockito;
 
 /**
  * @author Marcos Martins
  */
-@RunWith(MockitoJUnitRunner.class)
-public class NumericDDMFormFieldTypeReportProcessorTest extends PowerMockito {
+public class NumericDDMFormFieldTypeReportProcessorTest {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Before
 	public void setUp() {
 		_numericDDMFormFieldTypeReportProcessor.
 			ddmFormInstanceRecordLocalService =
 				_ddmFormInstanceRecordLocalService;
-
-		_setUpJSONFactoryUtil();
 	}
 
 	@Test
@@ -105,9 +104,9 @@ public class NumericDDMFormFieldTypeReportProcessorTest extends PowerMockito {
 		DDMFormInstanceRecord ddmFormInstanceRecord =
 			_mockDDMFormInstanceRecord(formInstanceRecordId);
 
-		DDMFormInstance ddmFormInstance = mock(DDMFormInstance.class);
+		DDMFormInstance ddmFormInstance = Mockito.mock(DDMFormInstance.class);
 
-		when(
+		Mockito.when(
 			ddmFormInstance.getFormInstanceId()
 		).thenReturn(
 			0L
@@ -120,25 +119,25 @@ public class NumericDDMFormFieldTypeReportProcessorTest extends PowerMockito {
 				_createDDMFormInstanceRecord(String.valueOf(i)));
 		}
 
-		when(
+		Mockito.when(
 			ddmFormInstance.getFormInstanceRecords()
 		).thenReturn(
 			ddmFormInstanceRecords
 		);
 
-		when(
+		Mockito.when(
 			ddmFormInstanceRecord.getFormInstance()
 		).thenReturn(
 			ddmFormInstance
 		);
 
-		when(
+		Mockito.when(
 			_ddmFormInstanceRecordLocalService.searchFormInstanceRecords(
 				Mockito.eq(0L), Mockito.eq(new String[] {"field1"}),
 				Mockito.eq(WorkflowConstants.STATUS_APPROVED), Mockito.eq(0),
 				Mockito.eq(_VALUES_MAX_LENGTH + 1), Mockito.any())
 		).thenReturn(
-			new BaseModelSearchResult<DDMFormInstanceRecord>(
+			new BaseModelSearchResult<>(
 				ddmFormInstanceRecords, ddmFormInstanceRecords.size())
 		);
 
@@ -159,7 +158,7 @@ public class NumericDDMFormFieldTypeReportProcessorTest extends PowerMockito {
 				).put(
 					"totalEntries", 5
 				).put(
-					"type", DDMFormFieldType.NUMERIC
+					"type", DDMFormFieldTypeConstants.NUMERIC
 				).put(
 					"values",
 					JSONUtil.putAll(
@@ -216,7 +215,7 @@ public class NumericDDMFormFieldTypeReportProcessorTest extends PowerMockito {
 			_numericDDMFormFieldTypeReportProcessor.process(
 				ddmFormFieldValue,
 				JSONUtil.put(
-					"type", DDMFormFieldType.NUMERIC
+					"type", DDMFormFieldTypeConstants.NUMERIC
 				).put(
 					"values", JSONFactoryUtil.createJSONObject()
 				),
@@ -260,7 +259,7 @@ public class NumericDDMFormFieldTypeReportProcessorTest extends PowerMockito {
 				).put(
 					"totalEntries", 1
 				).put(
-					"type", DDMFormFieldType.NUMERIC
+					"type", DDMFormFieldTypeConstants.NUMERIC
 				).put(
 					"values",
 					JSONUtil.put(
@@ -313,7 +312,7 @@ public class NumericDDMFormFieldTypeReportProcessorTest extends PowerMockito {
 				).put(
 					"totalEntries", 1
 				).put(
-					"type", DDMFormFieldType.NUMERIC
+					"type", DDMFormFieldTypeConstants.NUMERIC
 				).put(
 					"values",
 					JSONUtil.put(
@@ -345,23 +344,23 @@ public class NumericDDMFormFieldTypeReportProcessorTest extends PowerMockito {
 			String valueString)
 		throws Exception {
 
-		DDMFormInstanceRecord ddmFormInstanceRecord = mock(
+		DDMFormInstanceRecord ddmFormInstanceRecord = Mockito.mock(
 			DDMFormInstanceRecord.class);
 
 		DDMFormFieldValue ddmFormFieldValue = _mockDDMFormFieldValue(
 			LocaleUtil.US, "", valueString);
 
-		DDMFormValues ddmFormValues = mock(DDMFormValues.class);
+		DDMFormValues ddmFormValues = Mockito.mock(DDMFormValues.class);
 
-		when(
-			ddmFormValues.getDDMFormFieldValuesMap(false)
+		Mockito.when(
+			ddmFormValues.getDDMFormFieldValuesMap(true)
 		).thenReturn(
-			HashMapBuilder.<String, List<DDMFormFieldValue>>put(
+			HashMapBuilder.put(
 				"field1", Arrays.asList(ddmFormFieldValue)
 			).build()
 		);
 
-		when(
+		Mockito.when(
 			ddmFormInstanceRecord.getDDMFormValues()
 		).thenReturn(
 			ddmFormValues
@@ -373,25 +372,26 @@ public class NumericDDMFormFieldTypeReportProcessorTest extends PowerMockito {
 	private DDMFormFieldValue _mockDDMFormFieldValue(
 		Locale defaultLocale, String fieldName, String fieldValue) {
 
-		DDMFormFieldValue ddmFormFieldValue = mock(DDMFormFieldValue.class);
+		DDMFormFieldValue ddmFormFieldValue = Mockito.mock(
+			DDMFormFieldValue.class);
 
-		when(
+		Mockito.when(
 			ddmFormFieldValue.getName()
 		).thenReturn(
 			fieldName
 		);
 
-		when(
+		Mockito.when(
 			ddmFormFieldValue.getType()
 		).thenReturn(
-			DDMFormFieldType.NUMERIC
+			DDMFormFieldTypeConstants.NUMERIC
 		);
 
 		Value value = new LocalizedValue(defaultLocale);
 
 		value.addString(value.getDefaultLocale(), fieldValue);
 
-		when(
+		Mockito.when(
 			ddmFormFieldValue.getValue()
 		).thenReturn(
 			value
@@ -404,16 +404,16 @@ public class NumericDDMFormFieldTypeReportProcessorTest extends PowerMockito {
 			long formInstanceRecordId)
 		throws Exception {
 
-		DDMFormInstanceRecord ddmFormInstanceRecord = mock(
+		DDMFormInstanceRecord ddmFormInstanceRecord = Mockito.mock(
 			DDMFormInstanceRecord.class);
 
-		when(
+		Mockito.when(
 			ddmFormInstanceRecord.getFormInstanceId()
 		).thenReturn(
 			0L
 		);
 
-		when(
+		Mockito.when(
 			_ddmFormInstanceRecordLocalService.getFormInstanceRecord(
 				formInstanceRecordId)
 		).thenReturn(
@@ -423,18 +423,11 @@ public class NumericDDMFormFieldTypeReportProcessorTest extends PowerMockito {
 		return ddmFormInstanceRecord;
 	}
 
-	private void _setUpJSONFactoryUtil() {
-		JSONFactoryUtil jsonFactoryUtil = new JSONFactoryUtil();
-
-		jsonFactoryUtil.setJSONFactory(new JSONFactoryImpl());
-	}
-
 	private static final int _VALUES_MAX_LENGTH = 5;
 
-	@Mock
-	private DDMFormInstanceRecordLocalService
-		_ddmFormInstanceRecordLocalService;
-
+	private final DDMFormInstanceRecordLocalService
+		_ddmFormInstanceRecordLocalService = Mockito.mock(
+			DDMFormInstanceRecordLocalService.class);
 	private final NumericDDMFormFieldTypeReportProcessor
 		_numericDDMFormFieldTypeReportProcessor =
 			new NumericDDMFormFieldTypeReportProcessor();

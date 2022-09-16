@@ -21,6 +21,8 @@ import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.model.DDMFormValuesReader;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.search.Field;
@@ -138,7 +140,7 @@ public class AssetRendererSearchResultInterpreter
 
 	@Override
 	public AssetRenderer<?> getAssetRenderer(Document document) {
-		AssetRendererFactory<?> assetRendererFactory = getAssetRendererFactory(
+		AssetRendererFactory<?> assetRendererFactory = _getAssetRendererFactory(
 			document);
 
 		if (assetRendererFactory == null) {
@@ -150,6 +152,10 @@ public class AssetRendererSearchResultInterpreter
 				GetterUtil.getLong(document.getLong(Field.ENTRY_CLASS_PK)));
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			return null;
 		}
 	}
@@ -576,12 +582,15 @@ public class AssetRendererSearchResultInterpreter
 		return assetRendererFactory.isSupportsClassTypes();
 	}
 
-	protected AssetRendererFactory<?> getAssetRendererFactory(
+	private AssetRendererFactory<?> _getAssetRendererFactory(
 		Document document) {
 
 		return AssetRendererFactoryRegistryUtil.
 			getAssetRendererFactoryByClassName(
 				document.getString(Field.ENTRY_CLASS_NAME));
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		AssetRendererSearchResultInterpreter.class);
 
 }

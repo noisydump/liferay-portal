@@ -5,13 +5,20 @@
 				"actionIds": [
 					"MANAGE_AVAILABLE_ACCOUNTS"
 				],
-				"resource": "com.liferay.commerce.account"
+				"resource": "com.liferay.portal.kernel.model.Organization"
 			},
 			{
 				"actionIds": [
 					"MANAGE_ORGANIZATIONS"
 				],
 				"resource": "com.liferay.commerce.account.model.CommerceAccount"
+			},
+			{
+				"actionIds": [
+					"CHECKOUT_OPEN_COMMERCE_ORDERS",
+					"VIEW_OPEN_COMMERCE_ORDERS"
+				],
+				"resource": "com.liferay.commerce.order"
 			}
 		],
 		"name": "Sales Agent",
@@ -61,6 +68,12 @@
 		"actions": [
 			{
 				"actionIds": [
+					"ADD_COMMERCE_CATALOG"
+				],
+				"resource": "com.liferay.commerce.catalog"
+			},
+			{
+				"actionIds": [
 					"ACCESS_IN_CONTROL_PANEL"
 				],
 				"resource": "com_liferay_commerce_catalog_web_internal_portlet_CommerceCatalogsPortlet"
@@ -87,7 +100,6 @@
 			},
 			{
 				"actionIds": [
-					"ADD_COMMERCE_CATALOG",
 					"VIEW_CONTROL_PANEL"
 				],
 				"resource": "90"
@@ -132,7 +144,7 @@
 			},
 			{
 				"actionIds": [
-					"MANAGE_AVAILABLE_ACCOUNTS"
+					"MANAGE_ALL_ACCOUNTS"
 				],
 				"resource": "com.liferay.commerce.account"
 			},
@@ -147,6 +159,18 @@
 					"MANAGE_COMMERCE_SUBSCRIPTIONS"
 				],
 				"resource": "com.liferay.commerce.subscription"
+			},
+			{
+				"actionIds": [
+					"MANAGE_COMMERCE_ORDER_DELIVERY_TERMS"
+				],
+				"resource": "com.liferay.commerce.order"
+			},
+			{
+				"actionIds": [
+					"MANAGE_COMMERCE_ORDER_PAYMENT_TERMS"
+				],
+				"resource": "com.liferay.commerce.order"
 			},
 			{
 				"actionIds": [
@@ -175,8 +199,8 @@
 		"actions": [
 			{
 				"actionIds": [
-					"VIEW_OPEN_COMMERCE_ORDERS",
-					"CHECKOUT_OPEN_COMMERCE_ORDERS"
+					"CHECKOUT_OPEN_COMMERCE_ORDERS",
+					"VIEW_OPEN_COMMERCE_ORDERS"
 				],
 				"resource": "com.liferay.commerce.order"
 			}

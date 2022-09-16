@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
+ * Copyright (c) 2000-2021 Liferay, Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the Free
@@ -32,6 +32,8 @@ public class LiferayResponseErrorProvider implements ErrorTypeProvider {
 		Set<ErrorTypeDefinition> errors = new HashSet<>();
 
 		errors.add(LiferayError.BAD_REQUEST);
+		errors.add(LiferayError.BATCH_EXPORT_FAILED);
+		errors.add(LiferayError.BATCH_IMPORT_FAILED);
 		errors.add(LiferayError.CONNECTION_TIMEOUT);
 		errors.add(LiferayError.EXECUTION);
 		errors.add(LiferayError.INVALID_OAS_DOCUMENT);

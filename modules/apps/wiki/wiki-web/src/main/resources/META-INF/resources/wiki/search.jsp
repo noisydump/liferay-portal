@@ -34,13 +34,6 @@ String keywords = ParamUtil.getString(request, "keywords");
 boolean createNewPage = WikiNodePermission.contains(permissionChecker, node, ActionKeys.ADD_PAGE);
 
 WikiURLHelper wikiURLHelper = new WikiURLHelper(wikiRequestHelper, renderResponse, wikiGroupServiceConfiguration);
-
-PortletURL portletURL = renderResponse.createRenderURL();
-
-portletURL.setParameter("mvcRenderCommandName", "/wiki/search");
-portletURL.setParameter("redirect", redirect);
-portletURL.setParameter("nodeId", String.valueOf(nodeId));
-portletURL.setParameter("keywords", keywords);
 %>
 
 <aui:form action="<%= wikiURLHelper.getSearchURL() %>" method="get" name="fm">
@@ -61,37 +54,13 @@ portletURL.setParameter("keywords", keywords);
 		/>
 	</div>
 
+	<%
+	WikiSearchDisplayContext wikiSearchDisplayContext = new WikiSearchDisplayContext(request, renderRequest, renderResponse, wikiPortletInstanceSettingsHelper);
+	%>
+
 	<liferay-ui:search-container
-		emptyResultsMessage='<%= LanguageUtil.format(request, "no-pages-were-found-that-matched-the-keywords-x", "<strong>" + HtmlUtil.escape(keywords) + "</strong>", false) %>'
-		iteratorURL="<%= portletURL %>"
+		searchContainer="<%= wikiSearchDisplayContext.getSearchContainer() %>"
 	>
-
-		<%
-		Indexer<WikiPage> indexer = IndexerRegistryUtil.getIndexer(WikiPage.class);
-
-		SearchContext searchContext = SearchContextFactory.getInstance(request);
-
-		QueryConfig queryConfig = searchContext.getQueryConfig();
-
-		queryConfig.setHighlightEnabled(wikiPortletInstanceSettingsHelper.isEnableHighlighting());
-
-		searchContext.setAttribute("paginationType", "more");
-		searchContext.setEnd(searchContainer.getEnd());
-		searchContext.setIncludeAttachments(true);
-		searchContext.setIncludeDiscussions(true);
-		searchContext.setKeywords(keywords);
-		searchContext.setNodeIds(nodeIds);
-		searchContext.setStart(searchContainer.getStart());
-
-		Hits hits = indexer.search(searchContext);
-
-		searchContainer.setTotal(hits.getLength());
-		%>
-
-		<liferay-ui:search-container-results
-			results="<%= SearchResultUtil.getSearchResults(hits, locale) %>"
-		/>
-
 		<liferay-ui:search-container-row
 			className="com.liferay.portal.kernel.search.SearchResult"
 			modelVar="searchResult"
@@ -120,12 +89,17 @@ portletURL.setParameter("keywords", keywords);
 			viewPageURL.setParameter("nodeName", node.getName());
 			viewPageURL.setParameter("title", wikiPage.getTitle());
 
-			PortletURL editPageURL = renderResponse.createRenderURL();
-
-			editPageURL.setParameter("mvcRenderCommandName", "/wiki/edit_page");
-			editPageURL.setParameter("redirect", currentURL);
-			editPageURL.setParameter("nodeId", String.valueOf(node.getNodeId()));
-			editPageURL.setParameter("title", title);
+			PortletURL editPageURL = PortletURLBuilder.createRenderURL(
+				renderResponse
+			).setMVCRenderCommandName(
+				"/wiki/edit_page"
+			).setRedirect(
+				currentURL
+			).setParameter(
+				"nodeId", node.getNodeId()
+			).setParameter(
+				"title", title
+			).buildPortletURL();
 
 			WikiEngineRenderer wikiEngineRenderer = (WikiEngineRenderer)request.getAttribute(WikiWebKeys.WIKI_ENGINE_RENDERER);
 

@@ -16,12 +16,11 @@ package com.liferay.dynamic.data.mapping.form.field.type.internal.date;
 
 import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldTemplateContextContributor;
 import com.liferay.dynamic.data.mapping.form.field.type.constants.DDMFormFieldTypeConstants;
+import com.liferay.dynamic.data.mapping.form.field.type.internal.util.DDMFormFieldTypeUtil;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
-import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.dynamic.data.mapping.render.DDMFormFieldRenderingContext;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.util.CalendarUtil;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleThreadLocal;
 
@@ -37,13 +36,17 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Marcellus Tavares
  */
 @Component(
 	immediate = true,
-	property = "ddm.form.field.type.name=" + DDMFormFieldTypeConstants.DATE,
+	property = {
+		"ddm.form.field.type.name=" + DDMFormFieldTypeConstants.DATE,
+		"ddm.form.field.type.name=" + DDMFormFieldTypeConstants.DATE_TIME
+	},
 	service = {
 		DateDDMFormFieldTemplateContextContributor.class,
 		DDMFormFieldTemplateContextContributor.class
@@ -66,13 +69,20 @@ public class DateDDMFormFieldTemplateContextContributor
 					LocaleThreadLocal.getThemeDisplayLocale()))
 		).put(
 			"predefinedValue",
-			_getPredefinedValue(ddmFormField, ddmFormFieldRenderingContext)
+			DDMFormFieldTypeUtil.getPropertyValue(
+				ddmFormField, ddmFormFieldRenderingContext.getLocale(),
+				"predefinedValue")
+		).put(
+			"tooltip",
+			DDMFormFieldTypeUtil.getPropertyValue(
+				ddmFormField, ddmFormFieldRenderingContext.getLocale(),
+				"tooltip")
 		).put(
 			"weekdaysShort",
 			Stream.of(
 				CalendarUtil.DAYS_ABBREVIATION
 			).map(
-				day -> LanguageUtil.get(
+				day -> _language.get(
 					LocaleThreadLocal.getThemeDisplayLocale(), day)
 			).collect(
 				Collectors.toList()
@@ -91,21 +101,6 @@ public class DateDDMFormFieldTemplateContextContributor
 		return dayOfWeek.getValue() % 7;
 	}
 
-	private String _getPredefinedValue(
-		DDMFormField ddmFormField,
-		DDMFormFieldRenderingContext ddmFormFieldRenderingContext) {
-
-		LocalizedValue predefinedValue = ddmFormField.getPredefinedValue();
-
-		if (predefinedValue == null) {
-			return null;
-		}
-
-		return GetterUtil.getString(
-			predefinedValue.getString(
-				ddmFormFieldRenderingContext.getLocale()));
-	}
-
 	private List<Integer> _getYears() {
 		List<Integer> years = new ArrayList<>();
 
@@ -121,5 +116,8 @@ public class DateDDMFormFieldTemplateContextContributor
 
 		return years;
 	}
+
+	@Reference
+	private Language _language;
 
 }

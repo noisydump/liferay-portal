@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
@@ -44,7 +45,9 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @generated
  */
 @Generated("")
-@GraphQLName("SEOSettings")
+@GraphQLName(
+	description = "Represents settings related with SEO.", value = "SEOSettings"
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "SEOSettings")
 public class SEOSettings implements Serializable {
@@ -53,7 +56,11 @@ public class SEOSettings implements Serializable {
 		return ObjectMapperUtil.readValue(SEOSettings.class, json);
 	}
 
-	@Schema
+	public static SEOSettings unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(SEOSettings.class, json);
+	}
+
+	@Schema(description = "The canonical URL of the page, if it exists.")
 	public String getCustomCanonicalURL() {
 		return customCanonicalURL;
 	}
@@ -77,11 +84,13 @@ public class SEOSettings implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The canonical URL of the page, if it exists.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String customCanonicalURL;
 
-	@Schema
+	@Schema(
+		description = "The localized canonical URL of the page, if it exists."
+	)
 	@Valid
 	public Map<String, String> getCustomCanonicalURL_i18n() {
 		return customCanonicalURL_i18n;
@@ -110,11 +119,15 @@ public class SEOSettings implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "The localized canonical URL of the page, if it exists."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Map<String, String> customCanonicalURL_i18n;
 
-	@Schema(description = "The page's description.")
+	@Schema(
+		description = "The page's description to be used as summary for search engines."
+	)
 	public String getDescription() {
 		return description;
 	}
@@ -138,11 +151,15 @@ public class SEOSettings implements Serializable {
 		}
 	}
 
-	@GraphQLField(description = "The page's description.")
+	@GraphQLField(
+		description = "The page's description to be used as summary for search engines."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String description;
 
-	@Schema
+	@Schema(
+		description = "The localized descriptions of the page to be used as summary for search engines."
+	)
 	@Valid
 	public Map<String, String> getDescription_i18n() {
 		return description_i18n;
@@ -168,11 +185,13 @@ public class SEOSettings implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "The localized descriptions of the page to be used as summary for search engines."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Map<String, String> description_i18n;
 
-	@Schema(description = "The page's main title.")
+	@Schema(description = "The page's main title to be used by search engines.")
 	public String getHtmlTitle() {
 		return htmlTitle;
 	}
@@ -196,11 +215,15 @@ public class SEOSettings implements Serializable {
 		}
 	}
 
-	@GraphQLField(description = "The page's main title.")
+	@GraphQLField(
+		description = "The page's main title to be used by search engines."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String htmlTitle;
 
-	@Schema
+	@Schema(
+		description = "The localized main titles of the page to be used by search engines."
+	)
 	@Valid
 	public Map<String, String> getHtmlTitle_i18n() {
 		return htmlTitle_i18n;
@@ -226,11 +249,15 @@ public class SEOSettings implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "The localized main titles of the page to be used by search engines."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Map<String, String> htmlTitle_i18n;
 
-	@Schema
+	@Schema(
+		description = "A tag telling search engines if and how they should crawl the page."
+	)
 	public String getRobots() {
 		return robots;
 	}
@@ -254,11 +281,15 @@ public class SEOSettings implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "A tag telling search engines if and how they should crawl the page."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String robots;
 
-	@Schema
+	@Schema(
+		description = "A localized tag telling search engines if and how they should crawl the page."
+	)
 	@Valid
 	public Map<String, String> getRobots_i18n() {
 		return robots_i18n;
@@ -284,11 +315,15 @@ public class SEOSettings implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "A localized tag telling search engines if and how they should crawl the page."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Map<String, String> robots_i18n;
 
-	@Schema
+	@Schema(
+		description = "A list of target keywords of the page to be used by search engines."
+	)
 	public String getSeoKeywords() {
 		return seoKeywords;
 	}
@@ -312,11 +347,15 @@ public class SEOSettings implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "A list of target keywords of the page to be used by search engines."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String seoKeywords;
 
-	@Schema
+	@Schema(
+		description = "A list of localized target keywords of the page to be used by search engines."
+	)
 	@Valid
 	public Map<String, String> getSeoKeywords_i18n() {
 		return seoKeywords_i18n;
@@ -342,7 +381,9 @@ public class SEOSettings implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "A list of localized target keywords of the page to be used by search engines."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Map<String, String> seoKeywords_i18n;
 
@@ -499,15 +540,16 @@ public class SEOSettings implements Serializable {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.SEOSettings",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
 	}
 
 	private static boolean _isArray(Object value) {
@@ -533,8 +575,8 @@ public class SEOSettings implements Serializable {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -565,7 +607,7 @@ public class SEOSettings implements Serializable {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -573,7 +615,7 @@ public class SEOSettings implements Serializable {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -581,5 +623,10 @@ public class SEOSettings implements Serializable {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

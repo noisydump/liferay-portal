@@ -23,11 +23,16 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 
 /**
  * @author Pavel Savinov
@@ -66,86 +71,43 @@ public abstract class StyledLayoutStructureItem extends LayoutStructureItem {
 		return super.equals(object);
 	}
 
-	public String getAlign() {
-		return GetterUtil.getString(_getStyleProperty("align"));
-	}
-
-	public String getBackgroundColor() {
-		return _getColor("backgroundColor");
-	}
-
-	public String getBackgroundColorCssClass() {
-		return _getColorCssClass("backgroundColor");
-	}
-
 	public JSONObject getBackgroundImageJSONObject() {
-		return (JSONObject)_getStyleProperty("backgroundImage");
+		return Optional.ofNullable(
+			stylesJSONObject.getJSONObject("backgroundImage")
+		).orElse(
+			JSONFactoryUtil.createJSONObject()
+		);
 	}
 
-	public String getBorderColor() {
-		return _getColor("borderColor");
+	public String getCssClass() {
+		return LAYOUT_STRUCTURE_ITEM_CSS_CLASS_PREFIX + getItemType();
 	}
 
-	public String getBorderColorCssClass() {
-		return _getColorCssClass("borderColor");
+	public Set<String> getCssClasses() {
+		return _cssClasses;
 	}
 
-	public String getBorderRadius() {
-		return GetterUtil.getString(_getStyleProperty("borderRadius"));
+	public String getCustomCSS() {
+		return _customCSS;
 	}
 
-	public int getBorderWidth() {
-		return GetterUtil.getInteger(_getStyleProperty("borderWidth"));
-	}
-
-	public String getContentDisplay() {
-		return GetterUtil.getString(_getStyleProperty("display"));
-	}
-
-	public String getFontFamily() {
-		return GetterUtil.getString(_getStyleProperty("fontFamily"));
-	}
-
-	public String getFontSize() {
-		return GetterUtil.getString(_getStyleProperty("fontSize"));
-	}
-
-	public String getFontWeight() {
-		return GetterUtil.getString(_getStyleProperty("fontWeight"));
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *             #getFontWeight()}
-	 */
-	@Deprecated
-	public String getFontWeightCssClass() {
-		return StringPool.BLANK;
-	}
-
-	public String getHeight() {
-		return GetterUtil.getString(_getStyleProperty("height"));
+	public Map<String, String> getCustomCSSViewports() {
+		return _customCSSViewports;
 	}
 
 	@Override
 	public JSONObject getItemConfigJSONObject() {
-		try {
-			Map<String, Object> defaultValues =
-				CommonStylesUtil.getDefaultStyleValues();
+		JSONObject jsonObject = JSONUtil.put(
+			"cssClasses", JSONFactoryUtil.createJSONArray(_cssClasses)
+		).put(
+			"customCSS", _customCSS
+		).put(
+			"name", _name
+		).put(
+			"styles", stylesJSONObject
+		);
 
-			for (Map.Entry<String, Object> entry : defaultValues.entrySet()) {
-				if (!stylesJSONObject.has(entry.getKey())) {
-					stylesJSONObject.put(entry.getKey(), entry.getValue());
-				}
-			}
-		}
-		catch (Exception exception) {
-			_log.error("Unable to get default style values", exception);
-		}
-
-		JSONObject jsonObject = JSONUtil.put("styles", stylesJSONObject);
-
-		for (ViewportSize viewportSize : ViewportSize.values()) {
+		for (ViewportSize viewportSize : _viewportSizes) {
 			if (viewportSize.equals(ViewportSize.DESKTOP)) {
 				continue;
 			}
@@ -153,93 +115,29 @@ public abstract class StyledLayoutStructureItem extends LayoutStructureItem {
 			jsonObject.put(
 				viewportSize.getViewportSizeId(),
 				JSONUtil.put(
+					"customCSS",
+					_customCSSViewports.get(viewportSize.getViewportSizeId())
+				).put(
 					"styles",
 					viewportStyleJSONObjects.getOrDefault(
 						viewportSize.getViewportSizeId(),
-						JSONFactoryUtil.createJSONObject())));
+						JSONFactoryUtil.createJSONObject())
+				));
 		}
 
 		return jsonObject;
 	}
 
-	public String getJustify() {
-		return GetterUtil.getString(_getStyleProperty("justify"));
+	public String getName() {
+		return _name;
 	}
 
-	public int getMarginBottom() {
-		return GetterUtil.getInteger(_getStyleProperty("marginBottom"));
+	public String getStyledCssClasses() {
+		return StringUtil.merge(getCssClasses(), StringPool.SPACE);
 	}
 
-	public int getMarginLeft() {
-		return GetterUtil.getInteger(_getStyleProperty("marginLeft"));
-	}
-
-	public int getMarginRight() {
-		return GetterUtil.getInteger(_getStyleProperty("marginRight"));
-	}
-
-	public int getMarginTop() {
-		return GetterUtil.getInteger(_getStyleProperty("marginTop"));
-	}
-
-	public String getMaxHeight() {
-		return GetterUtil.getString(_getStyleProperty("maxHeight"));
-	}
-
-	public String getMaxWidth() {
-		return GetterUtil.getString(_getStyleProperty("maxWidth"));
-	}
-
-	public String getMinHeight() {
-		return GetterUtil.getString(_getStyleProperty("minHeight"));
-	}
-
-	public String getMinWidth() {
-		return GetterUtil.getString(_getStyleProperty("minWidth"));
-	}
-
-	public int getOpacity() {
-		return GetterUtil.getInteger(_getStyleProperty("opacity"));
-	}
-
-	public String getOverflow() {
-		return GetterUtil.getString(_getStyleProperty("overflow"));
-	}
-
-	public int getPaddingBottom() {
-		return GetterUtil.getInteger(_getStyleProperty("paddingBottom"));
-	}
-
-	public int getPaddingLeft() {
-		return GetterUtil.getInteger(_getStyleProperty("paddingLeft"));
-	}
-
-	public int getPaddingRight() {
-		return GetterUtil.getInteger(_getStyleProperty("paddingRight"));
-	}
-
-	public int getPaddingTop() {
-		return GetterUtil.getInteger(_getStyleProperty("paddingTop"));
-	}
-
-	public String getShadow() {
-		return GetterUtil.getString(_getStyleProperty("shadow"));
-	}
-
-	public String getTextAlignCssClass() {
-		return GetterUtil.getString(_getStyleProperty("textAlign"));
-	}
-
-	public String getTextColor() {
-		return _getColor("textColor");
-	}
-
-	public String getTextColorCssClass() {
-		return _getColorCssClass("textColor");
-	}
-
-	public String getWidth() {
-		return GetterUtil.getString(_getStyleProperty("width"));
+	public String getUniqueCssClass() {
+		return LAYOUT_STRUCTURE_ITEM_CSS_CLASS_PREFIX + getItemId();
 	}
 
 	@Override
@@ -247,66 +145,60 @@ public abstract class StyledLayoutStructureItem extends LayoutStructureItem {
 		return HashUtil.hash(0, getItemId());
 	}
 
+	public void setCssClasses(Set<String> cssClasses) {
+		_cssClasses = cssClasses;
+	}
+
+	public void setCustomCSS(String customCSS) {
+		_customCSS = customCSS;
+	}
+
+	public void setCustomCSSViewport(String viewportSizeId, String customCSS) {
+		_customCSSViewports.put(viewportSizeId, customCSS);
+	}
+
+	public void setName(String name) {
+		_name = name;
+	}
+
 	@Override
 	public void updateItemConfig(JSONObject itemConfigJSONObject) {
-		try {
-			List<String> availableStyleNames =
-				CommonStylesUtil.getAvailableStyleNames();
+		if (itemConfigJSONObject.has("cssClasses")) {
+			LinkedHashSet<String> cssClasses = new LinkedHashSet<>();
 
-			for (String styleName : availableStyleNames) {
-				if (itemConfigJSONObject.has(styleName)) {
-					stylesJSONObject.put(
-						styleName, itemConfigJSONObject.get(styleName));
-				}
-			}
+			JSONUtil.addToStringCollection(
+				cssClasses, itemConfigJSONObject.getJSONArray("cssClasses"));
+
+			setCssClasses(cssClasses);
+		}
+
+		if (itemConfigJSONObject.has("customCSS")) {
+			setCustomCSS(itemConfigJSONObject.getString("customCSS"));
+		}
+
+		if (itemConfigJSONObject.has("name")) {
+			setName(itemConfigJSONObject.getString("name"));
+		}
+
+		try {
+			_updateItemConfigValues(stylesJSONObject, itemConfigJSONObject);
 
 			if (itemConfigJSONObject.has("styles")) {
 				JSONObject newStylesJSONObject =
 					itemConfigJSONObject.getJSONObject("styles");
 
-				for (String styleName : availableStyleNames) {
-					if (newStylesJSONObject.has(styleName)) {
-						stylesJSONObject.put(
-							styleName, newStylesJSONObject.get(styleName));
-					}
-				}
+				_updateItemConfigValues(stylesJSONObject, newStylesJSONObject);
 			}
 
-			for (ViewportSize viewportSize : ViewportSize.values()) {
+			for (ViewportSize viewportSize : _viewportSizes) {
 				if (viewportSize.equals(ViewportSize.DESKTOP)) {
 					continue;
 				}
 
-				JSONObject currentViewportStyleJSONObject =
-					viewportStyleJSONObjects.getOrDefault(
-						viewportSize.getViewportSizeId(),
-						JSONFactoryUtil.createJSONObject());
+				_updateCustomCSSViewports(itemConfigJSONObject, viewportSize);
 
-				if (itemConfigJSONObject.has(
-						viewportSize.getViewportSizeId())) {
-
-					JSONObject viewportItemConfigJSONObject =
-						itemConfigJSONObject.getJSONObject(
-							viewportSize.getViewportSizeId());
-
-					JSONObject newStylesJSONObject =
-						viewportItemConfigJSONObject.getJSONObject("styles");
-
-					if (newStylesJSONObject == null) {
-						continue;
-					}
-
-					for (String styleName : availableStyleNames) {
-						if (newStylesJSONObject.has(styleName)) {
-							currentViewportStyleJSONObject.put(
-								styleName, newStylesJSONObject.get(styleName));
-						}
-					}
-				}
-
-				viewportStyleJSONObjects.put(
-					viewportSize.getViewportSizeId(),
-					currentViewportStyleJSONObject);
+				_updateViewportStyleJSONObjects(
+					itemConfigJSONObject, viewportSize);
 			}
 		}
 		catch (Exception exception) {
@@ -314,97 +206,102 @@ public abstract class StyledLayoutStructureItem extends LayoutStructureItem {
 		}
 	}
 
+	protected static final String LAYOUT_STRUCTURE_ITEM_CSS_CLASS_PREFIX =
+		"lfr-layout-structure-item-";
+
 	protected JSONObject stylesJSONObject = JSONFactoryUtil.createJSONObject();
 	protected Map<String, JSONObject> viewportStyleJSONObjects =
 		new HashMap<>();
 
-	private String _getColor(String property) {
-		JSONObject configJSONObject = getItemConfigJSONObject();
+	private void _updateCustomCSSViewports(
+		JSONObject itemConfigJSONObject, ViewportSize viewportSize) {
 
-		Object configColorObject = configJSONObject.get(property);
+		JSONObject viewportItemConfigJSONObject =
+			itemConfigJSONObject.getJSONObject(
+				viewportSize.getViewportSizeId());
 
-		Object styleColorObject = stylesJSONObject.get(property);
+		if ((viewportItemConfigJSONObject != null) &&
+			viewportItemConfigJSONObject.has("customCSS")) {
 
-		if ((styleColorObject == null) && (configColorObject != null)) {
-			if (configColorObject instanceof String) {
-				return GetterUtil.getString(configColorObject);
-			}
-
-			JSONObject configColorJSONObject = configJSONObject.getJSONObject(
-				property);
-
-			return configColorJSONObject.getString(
-				"rgbValue", StringPool.BLANK);
+			_customCSSViewports.put(
+				viewportSize.getViewportSizeId(),
+				viewportItemConfigJSONObject.getString("customCSS"));
 		}
-
-		if ((styleColorObject != null) &&
-			(styleColorObject instanceof String)) {
-
-			return GetterUtil.getString(styleColorObject);
-		}
-		else if ((styleColorObject != null) &&
-				 (styleColorObject instanceof JSONObject)) {
-
-			JSONObject styleColorJSONObject = stylesJSONObject.getJSONObject(
-				property);
-
-			return styleColorJSONObject.getString("rgbValue", StringPool.BLANK);
-		}
-
-		return StringPool.BLANK;
 	}
 
-	private String _getColorCssClass(String property) {
-		JSONObject configJSONObject = getItemConfigJSONObject();
+	private void _updateItemConfigValues(
+			JSONObject currentJSONObject, JSONObject newJSONObject)
+		throws Exception {
 
-		JSONObject configColorJSONObject = configJSONObject.getJSONObject(
-			property);
+		List<String> availableStyleNames =
+			CommonStylesUtil.getAvailableStyleNames();
 
-		JSONObject styleColorJSONObject = stylesJSONObject.getJSONObject(
-			property);
+		for (String styleName : availableStyleNames) {
+			if (newJSONObject.has(styleName)) {
+				Object styleValue = newJSONObject.get(styleName);
 
-		if (((styleColorJSONObject == null) ||
-			 !styleColorJSONObject.has("cssClass")) &&
-			(configColorJSONObject != null)) {
+				if (Objects.equals(
+						styleValue,
+						CommonStylesUtil.getDefaultStyleValue(styleName))) {
 
-			return configColorJSONObject.getString(
-				"cssClass",
-				configColorJSONObject.getString("color", StringPool.BLANK));
-		}
-		else if (styleColorJSONObject == null) {
-			String styleColor = stylesJSONObject.getString(property);
-
-			if (!styleColor.startsWith(StringPool.POUND)) {
-				return styleColor;
+					currentJSONObject.remove(styleName);
+				}
+				else {
+					currentJSONObject.put(styleName, styleValue);
+				}
 			}
-
-			return StringPool.BLANK;
 		}
-
-		return styleColorJSONObject.getString(
-			"cssClass",
-			styleColorJSONObject.getString("color", StringPool.BLANK));
 	}
 
-	private Object _getStyleProperty(String propertyKey) {
-		JSONObject configJSONObject = getItemConfigJSONObject();
+	private void _updateViewportStyleJSONObjects(
+		JSONObject itemConfigJSONObject, ViewportSize viewportSize) {
 
-		Object configValue = configJSONObject.get(propertyKey);
+		List<String> availableStyleNames =
+			CommonStylesUtil.getAvailableStyleNames();
 
-		Object styleValue = stylesJSONObject.get(propertyKey);
+		JSONObject viewportItemConfigJSONObject =
+			itemConfigJSONObject.getJSONObject(
+				viewportSize.getViewportSizeId());
 
-		if ((configValue != null) && (styleValue == null)) {
-			return configValue;
+		if (ListUtil.isEmpty(availableStyleNames) ||
+			(viewportItemConfigJSONObject == null)) {
+
+			return;
 		}
 
-		if (styleValue != null) {
-			return styleValue;
+		JSONObject newStylesJSONObject =
+			viewportItemConfigJSONObject.getJSONObject("styles");
+
+		if ((newStylesJSONObject == null) ||
+			(newStylesJSONObject.length() == 0)) {
+
+			return;
 		}
 
-		return CommonStylesUtil.getDefaultStyleValue(propertyKey);
+		JSONObject currentViewportStyleJSONObject =
+			viewportStyleJSONObjects.getOrDefault(
+				viewportSize.getViewportSizeId(),
+				JSONFactoryUtil.createJSONObject());
+
+		for (String styleName : availableStyleNames) {
+			if (newStylesJSONObject.has(styleName)) {
+				currentViewportStyleJSONObject.put(
+					styleName, newStylesJSONObject.get(styleName));
+			}
+		}
+
+		viewportStyleJSONObjects.put(
+			viewportSize.getViewportSizeId(), currentViewportStyleJSONObject);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		StyledLayoutStructureItem.class);
+
+	private static final ViewportSize[] _viewportSizes = ViewportSize.values();
+
+	private Set<String> _cssClasses;
+	private String _customCSS;
+	private final Map<String, String> _customCSSViewports = new HashMap<>();
+	private String _name;
 
 }

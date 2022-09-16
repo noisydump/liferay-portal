@@ -16,7 +16,7 @@ package com.liferay.message.boards.internal.util;
 
 import com.liferay.message.boards.constants.MBMessageConstants;
 import com.liferay.message.boards.model.MBMessage;
-import com.liferay.petra.mail.JavaMailUtil;
+import com.liferay.petra.io.StreamUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -53,8 +53,6 @@ public class MBMailUtil {
 
 		Object partContent = _getPartContent(part);
 
-		String contentType = StringUtil.toLowerCase(part.getContentType());
-
 		if ((part.getDisposition() != null) &&
 			StringUtil.equalsIgnoreCase(
 				part.getDisposition(), MimeMessage.ATTACHMENT)) {
@@ -71,7 +69,7 @@ public class MBMailUtil {
 				bytes = s.getBytes();
 			}
 			else if (partContent instanceof InputStream) {
-				bytes = JavaMailUtil.getBytes(part);
+				bytes = StreamUtil.toByteArray(part.getInputStream());
 			}
 
 			mbMailMessage.addBytes(part.getFileName(), bytes);
@@ -87,6 +85,9 @@ public class MBMailUtil {
 				}
 			}
 			else if (partContent instanceof String) {
+				String contentType = StringUtil.toLowerCase(
+					part.getContentType());
+
 				String messageBody = SanitizerUtil.sanitize(
 					0, 0, 0, MBMessage.class.getName(), 0, contentType,
 					Sanitizer.MODE_ALL, (String)partContent,
@@ -194,18 +195,10 @@ public class MBMailUtil {
 			return defaultMailingListAddress;
 		}
 
-		StringBundler sb = new StringBundler(8);
-
-		sb.append(MESSAGE_POP_PORTLET_PREFIX);
-		sb.append(categoryId);
-		sb.append(StringPool.PERIOD);
-		sb.append(messageId);
-		sb.append(StringPool.AT);
-		sb.append(PropsValues.POP_SERVER_SUBDOMAIN);
-		sb.append(StringPool.PERIOD);
-		sb.append(mx);
-
-		return sb.toString();
+		return StringBundler.concat(
+			MESSAGE_POP_PORTLET_PREFIX, categoryId, StringPool.PERIOD,
+			messageId, StringPool.AT, PropsValues.POP_SERVER_SUBDOMAIN,
+			StringPool.PERIOD, mx);
 	}
 
 	public static String getSubjectForEmail(MBMessage message)

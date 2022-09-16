@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
@@ -42,7 +43,10 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @generated
  */
 @Generated("")
-@GraphQLName("OpenGraphSettingsMapping")
+@GraphQLName(
+	description = "Specific settings related to Open Graph",
+	value = "OpenGraphSettingsMapping"
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "OpenGraphSettingsMapping")
 public class OpenGraphSettingsMapping implements Serializable {
@@ -51,25 +55,32 @@ public class OpenGraphSettingsMapping implements Serializable {
 		return ObjectMapperUtil.readValue(OpenGraphSettingsMapping.class, json);
 	}
 
+	public static OpenGraphSettingsMapping unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(
+			OpenGraphSettingsMapping.class, json);
+	}
+
 	@Schema(
 		description = "Field of the content type that will be used as the description"
 	)
-	public String getDescriptionMappingField() {
-		return descriptionMappingField;
+	public String getDescriptionMappingFieldKey() {
+		return descriptionMappingFieldKey;
 	}
 
-	public void setDescriptionMappingField(String descriptionMappingField) {
-		this.descriptionMappingField = descriptionMappingField;
+	public void setDescriptionMappingFieldKey(
+		String descriptionMappingFieldKey) {
+
+		this.descriptionMappingFieldKey = descriptionMappingFieldKey;
 	}
 
 	@JsonIgnore
-	public void setDescriptionMappingField(
+	public void setDescriptionMappingFieldKey(
 		UnsafeSupplier<String, Exception>
-			descriptionMappingFieldUnsafeSupplier) {
+			descriptionMappingFieldKeyUnsafeSupplier) {
 
 		try {
-			descriptionMappingField =
-				descriptionMappingFieldUnsafeSupplier.get();
+			descriptionMappingFieldKey =
+				descriptionMappingFieldKeyUnsafeSupplier.get();
 		}
 		catch (RuntimeException re) {
 			throw re;
@@ -83,25 +94,27 @@ public class OpenGraphSettingsMapping implements Serializable {
 		description = "Field of the content type that will be used as the description"
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected String descriptionMappingField;
+	protected String descriptionMappingFieldKey;
 
 	@Schema(
 		description = "Field of the content type that will be used as the alt property of the image"
 	)
-	public String getImageAltMappingField() {
-		return imageAltMappingField;
+	public String getImageAltMappingFieldKey() {
+		return imageAltMappingFieldKey;
 	}
 
-	public void setImageAltMappingField(String imageAltMappingField) {
-		this.imageAltMappingField = imageAltMappingField;
+	public void setImageAltMappingFieldKey(String imageAltMappingFieldKey) {
+		this.imageAltMappingFieldKey = imageAltMappingFieldKey;
 	}
 
 	@JsonIgnore
-	public void setImageAltMappingField(
-		UnsafeSupplier<String, Exception> imageAltMappingFieldUnsafeSupplier) {
+	public void setImageAltMappingFieldKey(
+		UnsafeSupplier<String, Exception>
+			imageAltMappingFieldKeyUnsafeSupplier) {
 
 		try {
-			imageAltMappingField = imageAltMappingFieldUnsafeSupplier.get();
+			imageAltMappingFieldKey =
+				imageAltMappingFieldKeyUnsafeSupplier.get();
 		}
 		catch (RuntimeException re) {
 			throw re;
@@ -115,25 +128,25 @@ public class OpenGraphSettingsMapping implements Serializable {
 		description = "Field of the content type that will be used as the alt property of the image"
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected String imageAltMappingField;
+	protected String imageAltMappingFieldKey;
 
 	@Schema(
 		description = "Field of the content type that will be used as the image"
 	)
-	public String getImageMappingField() {
-		return imageMappingField;
+	public String getImageMappingFieldKey() {
+		return imageMappingFieldKey;
 	}
 
-	public void setImageMappingField(String imageMappingField) {
-		this.imageMappingField = imageMappingField;
+	public void setImageMappingFieldKey(String imageMappingFieldKey) {
+		this.imageMappingFieldKey = imageMappingFieldKey;
 	}
 
 	@JsonIgnore
-	public void setImageMappingField(
-		UnsafeSupplier<String, Exception> imageMappingFieldUnsafeSupplier) {
+	public void setImageMappingFieldKey(
+		UnsafeSupplier<String, Exception> imageMappingFieldKeyUnsafeSupplier) {
 
 		try {
-			imageMappingField = imageMappingFieldUnsafeSupplier.get();
+			imageMappingFieldKey = imageMappingFieldKeyUnsafeSupplier.get();
 		}
 		catch (RuntimeException re) {
 			throw re;
@@ -147,25 +160,25 @@ public class OpenGraphSettingsMapping implements Serializable {
 		description = "Field of the content type that will be used as the image"
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected String imageMappingField;
+	protected String imageMappingFieldKey;
 
 	@Schema(
 		description = "Field of the content type that will be used as the title"
 	)
-	public String getTitleMappingField() {
-		return titleMappingField;
+	public String getTitleMappingFieldKey() {
+		return titleMappingFieldKey;
 	}
 
-	public void setTitleMappingField(String titleMappingField) {
-		this.titleMappingField = titleMappingField;
+	public void setTitleMappingFieldKey(String titleMappingFieldKey) {
+		this.titleMappingFieldKey = titleMappingFieldKey;
 	}
 
 	@JsonIgnore
-	public void setTitleMappingField(
-		UnsafeSupplier<String, Exception> titleMappingFieldUnsafeSupplier) {
+	public void setTitleMappingFieldKey(
+		UnsafeSupplier<String, Exception> titleMappingFieldKeyUnsafeSupplier) {
 
 		try {
-			titleMappingField = titleMappingFieldUnsafeSupplier.get();
+			titleMappingFieldKey = titleMappingFieldKeyUnsafeSupplier.get();
 		}
 		catch (RuntimeException re) {
 			throw re;
@@ -179,7 +192,7 @@ public class OpenGraphSettingsMapping implements Serializable {
 		description = "Field of the content type that will be used as the title"
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected String titleMappingField;
+	protected String titleMappingFieldKey;
 
 	@Override
 	public boolean equals(Object object) {
@@ -209,58 +222,58 @@ public class OpenGraphSettingsMapping implements Serializable {
 
 		sb.append("{");
 
-		if (descriptionMappingField != null) {
+		if (descriptionMappingFieldKey != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"descriptionMappingField\": ");
+			sb.append("\"descriptionMappingFieldKey\": ");
 
 			sb.append("\"");
 
-			sb.append(_escape(descriptionMappingField));
+			sb.append(_escape(descriptionMappingFieldKey));
 
 			sb.append("\"");
 		}
 
-		if (imageAltMappingField != null) {
+		if (imageAltMappingFieldKey != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"imageAltMappingField\": ");
+			sb.append("\"imageAltMappingFieldKey\": ");
 
 			sb.append("\"");
 
-			sb.append(_escape(imageAltMappingField));
+			sb.append(_escape(imageAltMappingFieldKey));
 
 			sb.append("\"");
 		}
 
-		if (imageMappingField != null) {
+		if (imageMappingFieldKey != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"imageMappingField\": ");
+			sb.append("\"imageMappingFieldKey\": ");
 
 			sb.append("\"");
 
-			sb.append(_escape(imageMappingField));
+			sb.append(_escape(imageMappingFieldKey));
 
 			sb.append("\"");
 		}
 
-		if (titleMappingField != null) {
+		if (titleMappingFieldKey != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"titleMappingField\": ");
+			sb.append("\"titleMappingFieldKey\": ");
 
 			sb.append("\"");
 
-			sb.append(_escape(titleMappingField));
+			sb.append(_escape(titleMappingFieldKey));
 
 			sb.append("\"");
 		}
@@ -271,15 +284,16 @@ public class OpenGraphSettingsMapping implements Serializable {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.admin.content.dto.v1_0.OpenGraphSettingsMapping",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
 	}
 
 	private static boolean _isArray(Object value) {
@@ -305,8 +319,8 @@ public class OpenGraphSettingsMapping implements Serializable {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -337,7 +351,7 @@ public class OpenGraphSettingsMapping implements Serializable {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -345,7 +359,7 @@ public class OpenGraphSettingsMapping implements Serializable {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -353,5 +367,10 @@ public class OpenGraphSettingsMapping implements Serializable {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

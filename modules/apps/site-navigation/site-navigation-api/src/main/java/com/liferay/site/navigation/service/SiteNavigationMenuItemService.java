@@ -14,6 +14,7 @@
 
 package com.liferay.site.navigation.service;
 
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.jsonwebservice.JSONWebService;
@@ -39,6 +40,7 @@ import org.osgi.annotation.versioning.ProviderType;
  * @generated
  */
 @AccessControlled
+@CTAware
 @JSONWebService
 @ProviderType
 @Transactional(
@@ -62,6 +64,10 @@ public interface SiteNavigationMenuItemService extends BaseService {
 			long siteNavigationMenuItemId)
 		throws PortalException;
 
+	public SiteNavigationMenuItem deleteSiteNavigationMenuItem(
+			long siteNavigationMenuItemId, boolean deleteChildren)
+		throws PortalException;
+
 	public void deleteSiteNavigationMenuItems(long siteNavigationMenuId)
 		throws PortalException;
 
@@ -71,6 +77,10 @@ public interface SiteNavigationMenuItemService extends BaseService {
 	 * @return the OSGi service identifier
 	 */
 	public String getOSGiServiceIdentifier();
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<Long> getParentSiteNavigationMenuItemIds(
+		long siteNavigationMenuId, String typeSettingsKeyword);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<SiteNavigationMenuItem> getSiteNavigationMenuItems(

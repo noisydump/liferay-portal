@@ -20,6 +20,8 @@ import com.liferay.exportimport.kernel.lar.PortletDataException;
 import com.liferay.exportimport.portlet.preferences.processor.Capability;
 import com.liferay.exportimport.portlet.preferences.processor.ExportImportPortletPreferencesProcessor;
 import com.liferay.exportimport.portlet.preferences.processor.ExportImportPortletPreferencesProcessorHelper;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Organization;
@@ -69,11 +71,15 @@ public class BlogsAggregatorExportImportPortletPreferencesProcessor
 		throws PortletDataException {
 
 		try {
-			return updateExportPortletPreferences(
+			return _updateExportPortletPreferences(
 				portletDataContext, portletDataContext.getRootPortletId(),
 				portletPreferences);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			return portletPreferences;
 		}
 	}
@@ -85,15 +91,19 @@ public class BlogsAggregatorExportImportPortletPreferencesProcessor
 		throws PortletDataException {
 
 		try {
-			return updateImportPortletPreferences(
+			return _updateImportPortletPreferences(
 				portletDataContext, portletPreferences);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			return portletPreferences;
 		}
 	}
 
-	protected PortletPreferences updateExportPortletPreferences(
+	private PortletPreferences _updateExportPortletPreferences(
 			PortletDataContext portletDataContext, String portletId,
 			PortletPreferences portletPreferences)
 		throws Exception {
@@ -136,7 +146,7 @@ public class BlogsAggregatorExportImportPortletPreferencesProcessor
 		return portletPreferences;
 	}
 
-	protected PortletPreferences updateImportPortletPreferences(
+	private PortletPreferences _updateImportPortletPreferences(
 			PortletDataContext portletDataContext,
 			PortletPreferences portletPreferences)
 		throws Exception {
@@ -181,6 +191,9 @@ public class BlogsAggregatorExportImportPortletPreferencesProcessor
 
 		return portletPreferences;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		BlogsAggregatorExportImportPortletPreferencesProcessor.class);
 
 	@Reference
 	private CompanyLocalService _companyLocalService;

@@ -502,6 +502,13 @@
 			</attribute>
 			<attribute>
 				<name>markupView</name>
+				<description>Deprecated as of 7.4.0, with no direct replacement.</description>
+				<inputType>java.lang.String</inputType>
+				<outputType>java.lang.String</outputType>
+			</attribute>
+			<attribute>
+				<description>A CSS class for styling the panel-header-link.</description>
+				<name>panelHeaderLinkCssClass</name>
 				<inputType>java.lang.String</inputType>
 				<outputType>java.lang.String</outputType>
 			</attribute>
@@ -512,6 +519,7 @@
 		<attributes>
 			<attribute>
 				<name>markupView</name>
+				<description>Deprecated as of 7.4.0, with no direct replacement.</description>
 				<inputType>java.lang.String</inputType>
 				<outputType>java.lang.String</outputType>
 			</attribute>
@@ -623,6 +631,7 @@
 			</attribute>
 			<attribute>
 				<name>markupView</name>
+				<description>Deprecated as of 7.4.0, with no direct replacement.</description>
 				<inputType>java.lang.String</inputType>
 				<outputType>java.lang.String</outputType>
 			</attribute>
@@ -1065,6 +1074,7 @@
 			</attribute>
 			<attribute>
 				<name>markupView</name>
+				<description>Deprecated as of 7.4.0, with no direct replacement.</description>
 				<inputType>java.lang.String</inputType>
 				<outputType>java.lang.String</outputType>
 			</attribute>
@@ -1346,6 +1356,11 @@
 	<component dynamicAttributes="false" name="Script" parentClass="com.liferay.taglib.util.PositionTagSupport" writeJSP="false">
 		<description>Creates a script component in which to write JavaScript that facilitates using AlloyUI modules.</description>
 		<attributes>
+			<attribute>
+				<name>load</name>
+				<inputType>java.lang.String</inputType>
+				<outputType>java.lang.String</outputType>
+			</attribute>
 			<attribute>
 				<description>A position for the script.</description>
 				<name>position</name>
@@ -1639,7 +1654,7 @@
 		</attributes>
 	</component>
 	<component dynamicAttributes="false" name="WorkflowStatus">
-		<description>Creates a UI component that displays the current status of its associated workflow.</description>
+		<description>Creates a UI component that displays the current status of its associated workflow. Deprecated as of Cavanaugh (7.4.x), replaced by <code>liferay-portal-workflow:status</code></description>
 		<attributes>
 			<attribute>
 				<description>A bean associated with the workflow status component.</description>
@@ -1661,6 +1676,7 @@
 			</attribute>
 			<attribute>
 				<name>markupView</name>
+				<description>Deprecated as of 7.4.0, with no direct replacement.</description>
 				<inputType>java.lang.String</inputType>
 				<outputType>java.lang.String</outputType>
 			</attribute>

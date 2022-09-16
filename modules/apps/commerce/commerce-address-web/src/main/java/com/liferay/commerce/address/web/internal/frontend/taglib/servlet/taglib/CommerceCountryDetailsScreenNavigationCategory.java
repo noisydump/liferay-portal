@@ -14,12 +14,12 @@
 
 package com.liferay.commerce.address.web.internal.frontend.taglib.servlet.taglib;
 
-import com.liferay.commerce.address.web.internal.servlet.taglib.ui.constants.CommerceCountryScreenNavigationConstants;
-import com.liferay.commerce.model.CommerceCountry;
+import com.liferay.commerce.address.web.internal.constants.CommerceCountryScreenNavigationConstants;
 import com.liferay.frontend.taglib.servlet.taglib.ScreenNavigationCategory;
 import com.liferay.frontend.taglib.servlet.taglib.ScreenNavigationEntry;
 import com.liferay.frontend.taglib.servlet.taglib.util.JSPRenderer;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.model.Country;
 
 import java.io.IOException;
 
@@ -44,8 +44,7 @@ import org.osgi.service.component.annotations.Reference;
 	service = {ScreenNavigationCategory.class, ScreenNavigationEntry.class}
 )
 public class CommerceCountryDetailsScreenNavigationCategory
-	implements ScreenNavigationCategory,
-			   ScreenNavigationEntry<CommerceCountry> {
+	implements ScreenNavigationCategory, ScreenNavigationEntry<Country> {
 
 	@Override
 	public String getCategoryKey() {
@@ -61,7 +60,7 @@ public class CommerceCountryDetailsScreenNavigationCategory
 
 	@Override
 	public String getLabel(Locale locale) {
-		return LanguageUtil.get(locale, "details");
+		return _language.get(locale, "details");
 	}
 
 	@Override
@@ -78,11 +77,14 @@ public class CommerceCountryDetailsScreenNavigationCategory
 
 		_jspRenderer.renderJSP(
 			_servletContext, httpServletRequest, httpServletResponse,
-			"/country/details.jsp");
+			"/commerce_country/details.jsp");
 	}
 
 	@Reference
 	private JSPRenderer _jspRenderer;
+
+	@Reference
+	private Language _language;
 
 	@Reference(
 		target = "(osgi.web.symbolicname=com.liferay.commerce.address.web)"

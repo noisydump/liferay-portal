@@ -49,6 +49,11 @@ public class LayoutEditorToolbarControlMenuJSPDynamicInclude
 	extends BaseJSPDynamicInclude {
 
 	@Override
+	public ServletContext getServletContext() {
+		return _servletContext;
+	}
+
+	@Override
 	public void include(
 			HttpServletRequest httpServletRequest,
 			HttpServletResponse httpServletResponse, String key)
@@ -61,7 +66,7 @@ public class LayoutEditorToolbarControlMenuJSPDynamicInclude
 		}
 		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(portalException, portalException);
+				_log.debug(portalException);
 			}
 		}
 
@@ -90,19 +95,12 @@ public class LayoutEditorToolbarControlMenuJSPDynamicInclude
 		String mode = ParamUtil.getString(
 			httpServletRequest, "p_l_mode", Constants.VIEW);
 
-		if (!Objects.equals(mode, Constants.EDIT)) {
-			return false;
-		}
-
-		if (!LayoutPermissionUtil.contains(
-				themeDisplay.getPermissionChecker(), layout,
-				ActionKeys.UPDATE) &&
-			!LayoutPermissionUtil.contains(
-				themeDisplay.getPermissionChecker(), layout,
-				ActionKeys.UPDATE_LAYOUT_CONTENT) &&
-			!_modelResourcePermission.contains(
-				themeDisplay.getPermissionChecker(), layout.getPlid(),
-				ActionKeys.UPDATE)) {
+		if (!Objects.equals(mode, Constants.EDIT) ||
+			(!LayoutPermissionUtil.containsLayoutUpdatePermission(
+				themeDisplay.getPermissionChecker(), layout) &&
+			 !_modelResourcePermission.contains(
+				 themeDisplay.getPermissionChecker(), layout.getPlid(),
+				 ActionKeys.UPDATE))) {
 
 			return false;
 		}
@@ -124,15 +122,6 @@ public class LayoutEditorToolbarControlMenuJSPDynamicInclude
 	@Override
 	protected Log getLog() {
 		return _log;
-	}
-
-	@Override
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.layout.type.controller.content)",
-		unbind = "-"
-	)
-	protected void setServletContext(ServletContext servletContext) {
-		super.setServletContext(servletContext);
 	}
 
 	private boolean _isConversionLayout(Layout layout) throws PortalException {
@@ -157,5 +146,10 @@ public class LayoutEditorToolbarControlMenuJSPDynamicInclude
 
 	@Reference
 	private LayoutContentModelResourcePermission _modelResourcePermission;
+
+	@Reference(
+		target = "(osgi.web.symbolicname=com.liferay.layout.type.controller.content)"
+	)
+	private ServletContext _servletContext;
 
 }

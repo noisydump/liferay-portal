@@ -14,76 +14,98 @@
 
 package com.liferay.portal.kernel.util;
 
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.test.CaptureHandler;
-import com.liferay.portal.kernel.test.JDKLoggerTestUtil;
+import com.liferay.portal.test.log.LogCapture;
+import com.liferay.portal.test.log.LogEntry;
+import com.liferay.portal.test.log.LoggerTestUtil;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.logging.Level;
-import java.util.logging.LogRecord;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.mockito.Mockito;
 
 /**
  * @author Wesley Gong
  */
-@PrepareForTest(LanguageUtil.class)
-@RunWith(PowerMockRunner.class)
-public class LocaleUtilTest extends PowerMockito {
+public class LocaleUtilTest {
 
 	@Test
 	public void testFromLanguageId() {
-		mockStatic(LanguageUtil.class);
+		LanguageUtil languageUtil = new LanguageUtil();
 
-		when(
-			LanguageUtil.isAvailableLocale(Locale.US)
+		Language language = Mockito.mock(Language.class);
+
+		languageUtil.setLanguage(language);
+
+		Mockito.when(
+			language.isAvailableLocale(Locale.US)
 		).thenReturn(
 			true
 		);
 
-		try (CaptureHandler captureHandler =
-				JDKLoggerTestUtil.configureJDKLogger(
-					LocaleUtil.class.getName(), Level.WARNING)) {
+		Mockito.when(
+			language.isAvailableLanguageCode("en")
+		).thenReturn(
+			false
+		);
 
-			List<LogRecord> logRecords = captureHandler.getLogRecords();
+		Mockito.when(
+			language.isAvailableLanguageCode("fr")
+		).thenReturn(
+			true
+		);
+
+		try (LogCapture logCapture = LoggerTestUtil.configureJDKLogger(
+				LocaleUtil.class.getName(), Level.WARNING)) {
+
+			List<LogEntry> logEntries = logCapture.getLogEntries();
 
 			Assert.assertEquals(Locale.US, LocaleUtil.fromLanguageId("en_US"));
-			Assert.assertEquals(logRecords.toString(), 0, logRecords.size());
+			Assert.assertEquals(logEntries.toString(), 0, logEntries.size());
 
-			logRecords.clear();
+			logEntries.clear();
 
 			LocaleUtil.fromLanguageId("en");
 
-			Assert.assertEquals(logRecords.toString(), 1, logRecords.size());
+			Assert.assertEquals(logEntries.toString(), 1, logEntries.size());
 
-			LogRecord logRecord = logRecords.get(0);
+			LogEntry logEntry = logEntries.get(0);
 
 			Assert.assertEquals(
-				"en is not a valid language id", logRecord.getMessage());
+				"en is not a valid language id", logEntry.getMessage());
+
+			logEntries.clear();
+
+			Assert.assertEquals(Locale.FRENCH, LocaleUtil.fromLanguageId("fr"));
+			Assert.assertEquals(logEntries.toString(), 0, logEntries.size());
 		}
 	}
 
 	@Test
 	public void testFromLanguageIdBCP47() {
-		mockStatic(LanguageUtil.class);
+		LanguageUtil languageUtil = new LanguageUtil();
 
-		when(
-			LanguageUtil.isAvailableLocale(Locale.US)
+		Language language = Mockito.mock(Language.class);
+
+		languageUtil.setLanguage(language);
+
+		Mockito.when(
+			language.isAvailableLocale(Locale.US)
 		).thenReturn(
 			true
 		);
 
 		Assert.assertEquals(Locale.US, LocaleUtil.fromLanguageId("en-US"));
 
-		when(
-			LanguageUtil.isAvailableLocale(Locale.SIMPLIFIED_CHINESE)
+		Mockito.when(
+			language.isAvailableLocale(Locale.SIMPLIFIED_CHINESE)
 		).thenReturn(
 			true
 		);
@@ -91,8 +113,8 @@ public class LocaleUtilTest extends PowerMockito {
 		Assert.assertEquals(
 			Locale.SIMPLIFIED_CHINESE, LocaleUtil.fromLanguageId("zh-Hans-CN"));
 
-		when(
-			LanguageUtil.isAvailableLocale(Locale.TRADITIONAL_CHINESE)
+		Mockito.when(
+			language.isAvailableLocale(Locale.TRADITIONAL_CHINESE)
 		).thenReturn(
 			true
 		);
@@ -100,6 +122,117 @@ public class LocaleUtilTest extends PowerMockito {
 		Assert.assertEquals(
 			Locale.TRADITIONAL_CHINESE,
 			LocaleUtil.fromLanguageId("zh-Hant-TW"));
+	}
+
+	@Test
+	public void testFromLanguageIdLocaleIsCreatedAndRetrievableWhenNoValidationDone() {
+		LanguageUtil languageUtil = new LanguageUtil();
+
+		Language language = Mockito.mock(Language.class);
+
+		languageUtil.setLanguage(language);
+
+		Mockito.when(
+			language.isAvailableLocale(Locale.ITALY)
+		).thenReturn(
+			false
+		);
+
+		Assert.assertNotNull(LocaleUtil.fromLanguageId("it_IT", false));
+
+		Assert.assertSame(
+			LocaleUtil.fromLanguageId("it_IT", false),
+			LocaleUtil.fromLanguageId("it_IT", false));
+	}
+
+	@Test
+	public void testFromLanguageValidation() {
+		LanguageUtil languageUtil = new LanguageUtil();
+
+		Language language = Mockito.mock(Language.class);
+
+		languageUtil.setLanguage(language);
+
+		Mockito.when(
+			language.isAvailableLocale(Locale.GERMANY)
+		).thenReturn(
+			false
+		);
+
+		Assert.assertEquals(
+			Locale.GERMANY, LocaleUtil.fromLanguageId("de_DE", false, false));
+		Assert.assertNull(LocaleUtil.fromLanguageId("de_DE", true, false));
+	}
+
+	@Test
+	public void testGetLocaleDisplayName() {
+		LanguageUtil languageUtil = new LanguageUtil();
+
+		Language language = Mockito.mock(Language.class);
+
+		languageUtil.setLanguage(language);
+
+		Mockito.when(
+			language.get(Locale.US, "language.en")
+		).thenReturn(
+			"English"
+		);
+
+		Mockito.when(
+			language.get(Locale.US, "language.ca")
+		).thenReturn(
+			"Catalan"
+		);
+
+		Assert.assertEquals(
+			"English (United States)",
+			LocaleUtil.getLocaleDisplayName(Locale.US, Locale.US));
+
+		Locale catalanLocale = new Locale("ca", "ES");
+
+		Assert.assertEquals(
+			"Catalan (Spain)",
+			LocaleUtil.getLocaleDisplayName(catalanLocale, Locale.US));
+
+		Locale catalanValenciaLocale = new Locale("ca", "ES", "VALENCIA");
+
+		Assert.assertEquals(
+			"Catalan (Spain, VALENCIA)",
+			LocaleUtil.getLocaleDisplayName(catalanValenciaLocale, Locale.US));
+	}
+
+	@Test
+	public void testGetLongDisplayName() {
+		LanguageUtil languageUtil = new LanguageUtil();
+
+		Language language = Mockito.mock(Language.class);
+
+		languageUtil.setLanguage(language);
+
+		Mockito.when(
+			language.isBetaLocale(Mockito.any())
+		).thenReturn(
+			false
+		);
+
+		Set<String> duplicateLanguages = Collections.singleton("ca");
+
+		Assert.assertEquals(
+			"English",
+			LocaleUtil.getLongDisplayName(Locale.US, duplicateLanguages));
+
+		Locale catalanLocale = new Locale("ca", "ES");
+
+		Assert.assertEquals(
+			"catal\u00e0 (Espanya)",
+			LocaleUtil.getLongDisplayName(catalanLocale, duplicateLanguages));
+
+		Locale catalanValenciaLocale = new Locale("ca", "ES", "VALENCIA");
+
+		Assert.assertEquals(
+			"catal\u00e0 (Espanya, VALENCIA)",
+			LocaleUtil.getLongDisplayName(
+				catalanValenciaLocale, duplicateLanguages));
 	}
 
 }

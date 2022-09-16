@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
@@ -28,6 +29,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.io.Serializable;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+
+import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
@@ -57,7 +62,13 @@ public class Account implements Serializable {
 		return ObjectMapperUtil.readValue(Account.class, json);
 	}
 
-	@Schema
+	public static Account unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(Account.class, json);
+	}
+
+	@Schema(
+		example = "[{city=Diamond Bar, countryISOCode=US, defaultBilling=true, defaultShipping=true, description=right stairs, first room on the left, id=31130, latitude=33.9976884, longitude=-117.8144595, name=Alessio Antonio Rendina, phoneNumber=(123) 456 7890, regionISOCode=CA, street1=1400 Montefino Ave, street2=1st floor, street3=suite 200, zip=91765}]"
+	)
 	@Valid
 	public AccountAddress[] getAccountAddresses() {
 		return accountAddresses;
@@ -87,7 +98,9 @@ public class Account implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected AccountAddress[] accountAddresses;
 
-	@Schema
+	@Schema(
+		example = "[{description={en_US=Account Administrator Description US, hr_HR=Account Administrator Description HR, hu_HU=Account Administrator Description HU}}, {id=31256, name=Alessio Antonio Rendina, roles=null}]"
+	)
 	@Valid
 	public AccountMember[] getAccountMembers() {
 		return accountMembers;
@@ -117,7 +130,9 @@ public class Account implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected AccountMember[] accountMembers;
 
-	@Schema
+	@Schema(
+		example = "[{id=20546, name=Liferay Italy, organizationId=20433, treePath=/Liferay/Liferay Italy}]"
+	)
 	@Valid
 	public AccountOrganization[] getAccountOrganizations() {
 		return accountOrganizations;
@@ -149,6 +164,34 @@ public class Account implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected AccountOrganization[] accountOrganizations;
 
+	@Schema(example = "true")
+	public Boolean getActive() {
+		return active;
+	}
+
+	public void setActive(Boolean active) {
+		this.active = active;
+	}
+
+	@JsonIgnore
+	public void setActive(
+		UnsafeSupplier<Boolean, Exception> activeUnsafeSupplier) {
+
+		try {
+			active = activeUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Boolean active;
+
 	@Schema
 	@Valid
 	public Map<String, ?> getCustomFields() {
@@ -178,7 +221,131 @@ public class Account implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Map<String, ?> customFields;
 
-	@Schema
+	@Schema(description = "The account's creation date.")
+	public Date getDateCreated() {
+		return dateCreated;
+	}
+
+	public void setDateCreated(Date dateCreated) {
+		this.dateCreated = dateCreated;
+	}
+
+	@JsonIgnore
+	public void setDateCreated(
+		UnsafeSupplier<Date, Exception> dateCreatedUnsafeSupplier) {
+
+		try {
+			dateCreated = dateCreatedUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(description = "The account's creation date.")
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Date dateCreated;
+
+	@Schema(description = "The account's most recent modification date.")
+	public Date getDateModified() {
+		return dateModified;
+	}
+
+	public void setDateModified(Date dateModified) {
+		this.dateModified = dateModified;
+	}
+
+	@JsonIgnore
+	public void setDateModified(
+		UnsafeSupplier<Date, Exception> dateModifiedUnsafeSupplier) {
+
+		try {
+			dateModified = dateModifiedUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(description = "The account's most recent modification date.")
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Date dateModified;
+
+	@DecimalMin("0")
+	@Schema(example = "10130")
+	public Long getDefaultBillingAccountAddressId() {
+		return defaultBillingAccountAddressId;
+	}
+
+	public void setDefaultBillingAccountAddressId(
+		Long defaultBillingAccountAddressId) {
+
+		this.defaultBillingAccountAddressId = defaultBillingAccountAddressId;
+	}
+
+	@JsonIgnore
+	public void setDefaultBillingAccountAddressId(
+		UnsafeSupplier<Long, Exception>
+			defaultBillingAccountAddressIdUnsafeSupplier) {
+
+		try {
+			defaultBillingAccountAddressId =
+				defaultBillingAccountAddressIdUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Long defaultBillingAccountAddressId;
+
+	@DecimalMin("0")
+	@Schema(example = "10131")
+	public Long getDefaultShippingAccountAddressId() {
+		return defaultShippingAccountAddressId;
+	}
+
+	public void setDefaultShippingAccountAddressId(
+		Long defaultShippingAccountAddressId) {
+
+		this.defaultShippingAccountAddressId = defaultShippingAccountAddressId;
+	}
+
+	@JsonIgnore
+	public void setDefaultShippingAccountAddressId(
+		UnsafeSupplier<Long, Exception>
+			defaultShippingAccountAddressIdUnsafeSupplier) {
+
+		try {
+			defaultShippingAccountAddressId =
+				defaultShippingAccountAddressIdUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Long defaultShippingAccountAddressId;
+
+	@Schema(
+		example = "[joe.1@commerce.com, joe.2@commerce.com, joe.3@commerce.com]"
+	)
 	public String[] getEmailAddresses() {
 		return emailAddresses;
 	}
@@ -206,7 +373,7 @@ public class Account implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String[] emailAddresses;
 
-	@Schema
+	@Schema(example = "AB-34098-789-N")
 	public String getExternalReferenceCode() {
 		return externalReferenceCode;
 	}
@@ -236,7 +403,7 @@ public class Account implements Serializable {
 	protected String externalReferenceCode;
 
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "30130")
 	public Long getId() {
 		return id;
 	}
@@ -263,7 +430,7 @@ public class Account implements Serializable {
 	protected Long id;
 
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "20078")
 	public Long getLogoId() {
 		return logoId;
 	}
@@ -291,7 +458,7 @@ public class Account implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Long logoId;
 
-	@Schema
+	@Schema(example = "AB-34098-789-N")
 	public String getLogoURL() {
 		return logoURL;
 	}
@@ -319,7 +486,7 @@ public class Account implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String logoURL;
 
-	@Schema
+	@Schema(example = "Account Name")
 	public String getName() {
 		return name;
 	}
@@ -346,7 +513,7 @@ public class Account implements Serializable {
 	@NotEmpty
 	protected String name;
 
-	@Schema
+	@Schema(example = "true")
 	public Boolean getRoot() {
 		return root;
 	}
@@ -372,7 +539,7 @@ public class Account implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Boolean root;
 
-	@Schema
+	@Schema(example = "Abcd1234")
 	public String getTaxId() {
 		return taxId;
 	}
@@ -402,7 +569,7 @@ public class Account implements Serializable {
 
 	@DecimalMax("2")
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "1")
 	public Integer getType() {
 		return type;
 	}
@@ -454,6 +621,9 @@ public class Account implements Serializable {
 		StringBundler sb = new StringBundler();
 
 		sb.append("{");
+
+		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
+			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 
 		if (accountAddresses != null) {
 			if (sb.length() > 1) {
@@ -515,6 +685,16 @@ public class Account implements Serializable {
 			sb.append("]");
 		}
 
+		if (active != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"active\": ");
+
+			sb.append(active);
+		}
+
 		if (customFields != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -523,6 +703,54 @@ public class Account implements Serializable {
 			sb.append("\"customFields\": ");
 
 			sb.append(_toJSON(customFields));
+		}
+
+		if (dateCreated != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"dateCreated\": ");
+
+			sb.append("\"");
+
+			sb.append(liferayToJSONDateFormat.format(dateCreated));
+
+			sb.append("\"");
+		}
+
+		if (dateModified != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"dateModified\": ");
+
+			sb.append("\"");
+
+			sb.append(liferayToJSONDateFormat.format(dateModified));
+
+			sb.append("\"");
+		}
+
+		if (defaultBillingAccountAddressId != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"defaultBillingAccountAddressId\": ");
+
+			sb.append(defaultBillingAccountAddressId);
+		}
+
+		if (defaultShippingAccountAddressId != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"defaultShippingAccountAddressId\": ");
+
+			sb.append(defaultShippingAccountAddressId);
 		}
 
 		if (emailAddresses != null) {
@@ -651,15 +879,16 @@ public class Account implements Serializable {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.commerce.admin.account.dto.v1_0.Account",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
 	}
 
 	private static boolean _isArray(Object value) {
@@ -685,8 +914,8 @@ public class Account implements Serializable {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -717,7 +946,7 @@ public class Account implements Serializable {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -725,7 +954,7 @@ public class Account implements Serializable {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -733,5 +962,10 @@ public class Account implements Serializable {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

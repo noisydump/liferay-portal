@@ -14,7 +14,7 @@
 
 package com.liferay.frontend.taglib.clay.sample.web.internal.display.context;
 
-import com.liferay.frontend.taglib.clay.servlet.taglib.soy.FileCard;
+import com.liferay.frontend.taglib.clay.servlet.taglib.FileCard;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItem;
@@ -196,6 +196,7 @@ public class ClaySampleFileCard implements FileCard {
 	@Override
 	public String getStickerStyle() {
 		if (_stickerStyle != null) {
+			return _stickerStyle;
 		}
 
 		return "info";

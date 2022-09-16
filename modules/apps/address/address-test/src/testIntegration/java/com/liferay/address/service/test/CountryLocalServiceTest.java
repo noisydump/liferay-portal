@@ -20,12 +20,13 @@ import com.liferay.portal.kernel.model.Address;
 import com.liferay.portal.kernel.model.Country;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.OrganizationConstants;
+import com.liferay.portal.kernel.model.Region;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.service.AddressLocalService;
 import com.liferay.portal.kernel.service.CountryLocalService;
 import com.liferay.portal.kernel.service.OrganizationLocalService;
-import com.liferay.portal.kernel.service.RegionService;
+import com.liferay.portal.kernel.service.RegionLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.DataGuard;
 import com.liferay.portal.kernel.test.util.OrganizationTestUtil;
@@ -93,8 +94,6 @@ public class CountryLocalServiceTest {
 
 		User user = TestPropsValues.getUser();
 
-		// Address
-
 		Address address = _addressLocalService.addAddress(
 			null, user.getUserId(), null, user.getContactId(),
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
@@ -104,8 +103,6 @@ public class CountryLocalServiceTest {
 			"1234567890", ServiceContextTestUtil.getServiceContext());
 
 		Assert.assertEquals(country.getCountryId(), address.getCountryId());
-
-		// Organization
 
 		Organization organization = OrganizationTestUtil.addOrganization();
 
@@ -122,17 +119,19 @@ public class CountryLocalServiceTest {
 					null, null, country.getCountryId(), null, QueryUtil.ALL_POS,
 					QueryUtil.ALL_POS)));
 
+		Region region = _addRegion(country.getCountryId());
+
+		_regionLocalService.updateRegionLocalization(
+			region, RandomTestUtil.randomString(2),
+			RandomTestUtil.randomString());
+
 		_countryLocalService.deleteCountry(country);
 
 		Assert.assertNull(
 			_countryLocalService.fetchCountry(country.getCountryId()));
 
-		// Assert address is deleted
-
 		Assert.assertNull(
 			_addressLocalService.fetchAddress(address.getAddressId()));
-
-		// Assert organization is updated
 
 		organization = _organizationLocalService.getOrganization(
 			organization.getOrganizationId());
@@ -146,47 +145,51 @@ public class CountryLocalServiceTest {
 					OrganizationConstants.ANY_PARENT_ORGANIZATION_ID, null,
 					null, null, country.getCountryId(), null, QueryUtil.ALL_POS,
 					QueryUtil.ALL_POS)));
+		Assert.assertNull(
+			_regionLocalService.fetchRegion(region.getRegionId()));
+		Assert.assertTrue(
+			ListUtil.isEmpty(
+				_regionLocalService.getRegionLocalizations(
+					region.getRegionId())));
 	}
 
 	@Test
 	public void testSearchCountries() throws Exception {
-		Country country = _addCountry(
-			"a1", "a11", true, RandomTestUtil.randomString());
-
 		String keywords = RandomTestUtil.randomString();
 
-		List<Country> expectedCountries = Arrays.asList(
-			_addCountry("a2", "a22", true, keywords),
-			_addCountry(
-				"a3", "a33", true, keywords + RandomTestUtil.randomString()));
+		Country country1 = _addCountry(
+			"a1", "a11", true, RandomTestUtil.randomString());
 
-		_addCountry("a4", "a44", false, RandomTestUtil.randomString());
+		Country country2 = _addCountry("a2", "a22", true, keywords);
+		Country country3 = _addCountry(
+			"a3", "a33", true, keywords + RandomTestUtil.randomString());
+		Country country4 = _addCountry(
+			"a4", "a44", false, keywords + RandomTestUtil.randomString());
 
-		BaseModelSearchResult<Country> baseModelSearchResult =
-			_countryLocalService.searchCountries(
-				country.getCompanyId(), true, keywords, QueryUtil.ALL_POS,
-				QueryUtil.ALL_POS,
-				OrderByComparatorFactoryUtil.create("Country", "name", true));
-
-		Assert.assertEquals(
-			expectedCountries.size(), baseModelSearchResult.getLength());
-		Assert.assertEquals(
-			expectedCountries, baseModelSearchResult.getBaseModels());
+		_testSearchCountries(keywords, true, country2, country3);
+		_testSearchCountries(keywords, false, country4);
+		_testSearchCountries(keywords, null, country2, country3, country4);
 
 		String localizedCountryName = RandomTestUtil.randomString();
 
 		_countryLocalService.updateCountryLocalization(
-			country, "de_DE", localizedCountryName);
+			country1, "de_DE", localizedCountryName);
 
-		baseModelSearchResult = _countryLocalService.searchCountries(
-			country.getCompanyId(), true, localizedCountryName,
-			QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+		_testSearchCountries(localizedCountryName, true, country1);
+	}
 
-		Assert.assertEquals(1, baseModelSearchResult.getLength());
+	@Test
+	public void testSearchCountriesByISOCodes() throws Exception {
+		String a2 = "a1";
+		String a3 = "a11";
+		String number = "aaa";
 
-		List<Country> countries = baseModelSearchResult.getBaseModels();
+		Country country = _addCountry(
+			a2, a3, true, RandomTestUtil.randomString(), number);
 
-		Assert.assertEquals(country, countries.get(0));
+		_testSearchCountries(a2, true, country);
+		_testSearchCountries(a3, true, country);
+		_testSearchCountries(number, true, country);
 	}
 
 	@Test
@@ -208,16 +211,17 @@ public class CountryLocalServiceTest {
 		_addCountry(
 			"a6", "a66", false, keywords + RandomTestUtil.randomString());
 
+		_assertSearchCountriesPaginationSort(
+			expectedCountries, keywords,
+			OrderByComparatorFactoryUtil.create("Country", "countryId", true),
+			ServiceContextTestUtil.getServiceContext());
+
 		Comparator<Country> comparator = Comparator.comparing(
-			Country::getName, String.CASE_INSENSITIVE_ORDER);
+			Country::getCountryId);
 
 		_assertSearchCountriesPaginationSort(
-			ListUtil.sort(expectedCountries, comparator), keywords,
-			OrderByComparatorFactoryUtil.create("Country", "name", true),
-			ServiceContextTestUtil.getServiceContext());
-		_assertSearchCountriesPaginationSort(
 			ListUtil.sort(expectedCountries, comparator.reversed()), keywords,
-			OrderByComparatorFactoryUtil.create("Country", "name", false),
+			OrderByComparatorFactoryUtil.create("Country", "countryId", false),
 			ServiceContextTestUtil.getServiceContext());
 	}
 
@@ -264,11 +268,26 @@ public class CountryLocalServiceTest {
 			String a2, String a3, boolean active, String name)
 		throws Exception {
 
+		return _addCountry(a2, a3, active, name, RandomTestUtil.randomString());
+	}
+
+	private Country _addCountry(
+			String a2, String a3, boolean active, String name, String number)
+		throws Exception {
+
 		return _countryLocalService.addCountry(
 			a2, a3, active, RandomTestUtil.randomBoolean(),
-			RandomTestUtil.randomString(), name, RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(), name, number,
 			RandomTestUtil.randomDouble(), RandomTestUtil.randomBoolean(),
 			RandomTestUtil.randomBoolean(), RandomTestUtil.randomBoolean(),
+			ServiceContextTestUtil.getServiceContext());
+	}
+
+	private Region _addRegion(long countryId) throws Exception {
+		return _regionLocalService.addRegion(
+			countryId, RandomTestUtil.randomBoolean(),
+			RandomTestUtil.randomString(), RandomTestUtil.randomDouble(),
+			RandomTestUtil.randomString(),
 			ServiceContextTestUtil.getServiceContext());
 	}
 
@@ -297,6 +316,29 @@ public class CountryLocalServiceTest {
 		}
 	}
 
+	private void _testSearchCountries(
+			String keywords, Boolean active, Country... expectedCountries)
+		throws Exception {
+
+		List<Country> expectedCountriesList = Arrays.asList(expectedCountries);
+
+		Arrays.sort(
+			expectedCountries,
+			Comparator.comparing(
+				Country::getName, String.CASE_INSENSITIVE_ORDER));
+
+		BaseModelSearchResult<Country> baseModelSearchResult =
+			_countryLocalService.searchCountries(
+				TestPropsValues.getCompanyId(), active, keywords,
+				QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+				OrderByComparatorFactoryUtil.create("Country", "name", true));
+
+		Assert.assertEquals(
+			expectedCountriesList.size(), baseModelSearchResult.getLength());
+		Assert.assertEquals(
+			expectedCountriesList, baseModelSearchResult.getBaseModels());
+	}
+
 	@Inject
 	private static AddressLocalService _addressLocalService;
 
@@ -307,6 +349,6 @@ public class CountryLocalServiceTest {
 	private static OrganizationLocalService _organizationLocalService;
 
 	@Inject
-	private static RegionService _regionService;
+	private static RegionLocalService _regionLocalService;
 
 }

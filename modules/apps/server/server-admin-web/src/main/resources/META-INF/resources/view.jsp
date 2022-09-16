@@ -19,13 +19,6 @@
 <%
 int cur = ParamUtil.getInteger(request, SearchContainer.DEFAULT_CUR_PARAM);
 int delta = ParamUtil.getInteger(request, SearchContainer.DEFAULT_DELTA_PARAM);
-String keywords = ParamUtil.getString(request, "keywords");
-
-PortletURL portletURL = renderResponse.createRenderURL();
-
-portletURL.setParameter("mvcRenderCommandName", "/server_admin/view");
-portletURL.setParameter("tabs1", tabs1);
-portletURL.setParameter("tabs2", tabs2);
 %>
 
 <portlet:renderURL var="redirectURL">
@@ -33,10 +26,24 @@ portletURL.setParameter("tabs2", tabs2);
 	<portlet:param name="tabs1" value="<%= tabs1 %>" />
 	<portlet:param name="cur" value="<%= String.valueOf(cur) %>" />
 	<portlet:param name="delta" value="<%= String.valueOf(delta) %>" />
-	<portlet:param name="keywords" value="<%= keywords %>" />
+	<portlet:param name="keywords" value='<%= ParamUtil.getString(request, "keywords") %>' />
 </portlet:renderURL>
 
-<aui:form action="<%= portletURL.toString() %>" method="post" name="fm">
+<aui:form
+	action='<%=
+		PortletURLBuilder.createRenderURL(
+			renderResponse
+		).setMVCRenderCommandName(
+			"/server_admin/view"
+		).setTabs1(
+			tabs1
+		).setTabs2(
+			tabs2
+		).buildString()
+	%>'
+	method="post"
+	name="fm"
+>
 	<aui:input name="tabs1" type="hidden" value="<%= tabs1 %>" />
 	<aui:input name="redirect" type="hidden" value="<%= redirectURL %>" />
 

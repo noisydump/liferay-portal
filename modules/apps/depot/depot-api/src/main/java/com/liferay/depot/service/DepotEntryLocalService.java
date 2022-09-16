@@ -114,9 +114,11 @@ public interface DepotEntryLocalService
 	 *
 	 * @param depotEntry the depot entry
 	 * @return the depot entry that was removed
+	 * @throws PortalException
 	 */
 	@Indexable(type = IndexableType.DELETE)
-	public DepotEntry deleteDepotEntry(DepotEntry depotEntry);
+	public DepotEntry deleteDepotEntry(DepotEntry depotEntry)
+		throws PortalException;
 
 	/**
 	 * Deletes the depot entry with the primary key from the database. Also notifies the appropriate model listeners.
@@ -142,6 +144,9 @@ public interface DepotEntryLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public <T> T dslQuery(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();

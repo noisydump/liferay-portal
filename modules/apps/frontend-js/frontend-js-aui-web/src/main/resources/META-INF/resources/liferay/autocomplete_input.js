@@ -15,24 +15,24 @@
 AUI.add(
 	'liferay-autocomplete-input',
 	(A) => {
-		var AArray = A.Array;
-		var Lang = A.Lang;
+		const AArray = A.Array;
+		const Lang = A.Lang;
 
-		var REGEX_TRIGGER = /trigger/g;
+		const REGEX_TRIGGER = /trigger/g;
 
-		var STR_PHRASE_MATCH = 'phraseMatch';
+		const STR_PHRASE_MATCH = 'phraseMatch';
 
-		var STR_TRIGGER = 'trigger';
+		const STR_TRIGGER = 'trigger';
 
-		var STR_VISIBLE = 'visible';
+		const STR_VISIBLE = 'visible';
 
-		var TRIGGER_CONFIG_DEFAULTS = {
+		const TRIGGER_CONFIG_DEFAULTS = {
 			activateFirstItem: true,
 			resultFilters: STR_PHRASE_MATCH,
 			resultHighlighter: STR_PHRASE_MATCH,
 		};
 
-		var AutoCompleteInputBase = function () {};
+		const AutoCompleteInputBase = function () {};
 
 		AutoCompleteInputBase.ATTRS = {
 			caretAtTerm: {
@@ -75,9 +75,9 @@ AUI.add(
 
 		AutoCompleteInputBase.prototype = {
 			_acResultFormatter(query, results) {
-				var instance = this;
+				const instance = this;
 
-				var tplResults = instance.get('tplResults');
+				const tplResults = instance.get('tplResults');
 
 				return results.map((result) => {
 					return Lang.sub(tplResults, result.raw);
@@ -85,16 +85,16 @@ AUI.add(
 			},
 
 			_adjustACPosition() {
-				var instance = this;
+				const instance = this;
 
-				var xy = instance._getACPositionBase();
+				const xy = instance._getACPositionBase();
 
-				var caretXY = instance._getCaretOffset();
+				const caretXY = instance._getCaretOffset();
 
-				var offset = instance.get('offset');
+				const offset = instance.get('offset');
 
-				var offsetX = 0;
-				var offsetY = 0;
+				let offsetX = 0;
+				let offsetY = 0;
 
 				if (Array.isArray(offset)) {
 					offsetX = offset[0];
@@ -104,7 +104,7 @@ AUI.add(
 					offsetY = offset;
 				}
 
-				var acOffset = instance._getACPositionOffset();
+				const acOffset = instance._getACPositionOffset();
 
 				xy[0] += caretXY.x + offsetX + acOffset[0];
 				xy[1] += caretXY.y + offsetY + acOffset[1];
@@ -113,7 +113,7 @@ AUI.add(
 			},
 
 			_afterACVisibleChange(event) {
-				var instance = this;
+				const instance = this;
 
 				if (event.newVal) {
 					instance._adjustACPosition();
@@ -123,7 +123,7 @@ AUI.add(
 			},
 
 			_bindUIACIBase() {
-				var instance = this;
+				const instance = this;
 
 				instance.on('query', instance._onACQuery, instance);
 
@@ -135,15 +135,21 @@ AUI.add(
 			},
 
 			_defSelectFn(event) {
-				var instance = this;
+				const instance = this;
 
-				var text = event.result.text;
+				const tplReplace = instance.get('tplReplace');
 
-				var tplReplace = instance.get('tplReplace');
+				let text = event.result.text;
+
+				const mentionsResult = document.getElementById(
+					'_com_liferay_mentions_web_portlet_MentionsPortlet_mentionsResult'
+				);
 
 				if (tplReplace) {
 					text = Lang.sub(tplReplace, event.result.raw);
 				}
+
+				mentionsResult.style.display = 'none';
 
 				instance._inputNode.focus();
 
@@ -157,12 +163,12 @@ AUI.add(
 			},
 
 			_getRegExp() {
-				var instance = this;
+				const instance = this;
 
-				var regExp = instance.get('regExp');
+				let regExp = instance.get('regExp');
 
 				if (Lang.isString(regExp)) {
-					var triggersExpr =
+					const triggersExpr =
 						'[' + instance._getTriggers().join('|') + ']';
 
 					regExp = new RegExp(
@@ -174,10 +180,10 @@ AUI.add(
 			},
 
 			_getTriggers() {
-				var instance = this;
+				const instance = this;
 
 				if (!instance._triggers) {
-					var triggers = [];
+					const triggers = [];
 
 					instance.get(STR_TRIGGER).forEach((item) => {
 						triggers.push(Lang.isString(item) ? item : item.term);
@@ -190,7 +196,7 @@ AUI.add(
 			},
 
 			_keyDown() {
-				var instance = this;
+				const instance = this;
 
 				if (instance.get(STR_VISIBLE)) {
 					instance._activateNextItem();
@@ -198,9 +204,9 @@ AUI.add(
 			},
 
 			_onACQuery(event) {
-				var instance = this;
+				const instance = this;
 
-				var input = instance._getQuery(event.query);
+				const input = instance._getQuery(event.query);
 
 				if (input) {
 					instance._setTriggerConfig(input[0]);
@@ -217,7 +223,7 @@ AUI.add(
 			},
 
 			_processKeyUp(query) {
-				var instance = this;
+				const instance = this;
 
 				if (query) {
 					instance._setTriggerConfig(query[0]);
@@ -232,18 +238,19 @@ AUI.add(
 			},
 
 			_setTriggerConfig(trigger) {
-				var instance = this;
+				const instance = this;
 
 				if (trigger !== instance._trigger) {
-					var triggers = instance._getTriggers();
+					const triggers = instance._getTriggers();
 
-					var triggerConfig = instance.get(STR_TRIGGER)[
+					const triggerConfig = instance.get(STR_TRIGGER)[
 						triggers.indexOf(trigger)
 					];
 
-					instance.setAttrs(
-						A.merge(instance._triggerConfigDefaults, triggerConfig)
-					);
+					instance.setAttrs({
+						...instance._triggerConfigDefaults,
+						...triggerConfig,
+					});
 
 					instance._trigger = trigger;
 				}
@@ -256,13 +263,13 @@ AUI.add(
 			},
 
 			destructor() {
-				var instance = this;
+				const instance = this;
 
 				new A.EventHandle(instance._eventHandles).detach();
 			},
 
 			initializer() {
-				var instance = this;
+				const instance = this;
 
 				instance
 					.get('boundingBox')
@@ -275,17 +282,17 @@ AUI.add(
 
 				instance._bindUIACIBase();
 
-				var autocompleteAttrs = A.Object.keys(
+				const autocompleteAttrs = Object.keys(
 					A.AutoComplete.ATTRS
 				).filter((item) => {
 					return item !== 'value';
 				});
 
-				instance._triggerConfigDefaults = A.merge(
-					TRIGGER_CONFIG_DEFAULTS
-				);
+				instance._triggerConfigDefaults = TRIGGER_CONFIG_DEFAULTS;
 
-				A.mix(
+				// eslint-disable-next-line prefer-object-spread
+				Object.assign(
+					{},
 					instance._triggerConfigDefaults,
 					instance.getAttrs(),
 					false,

@@ -18,9 +18,8 @@ import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskExecutor;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskExecutorRegistry;
-import com.liferay.portal.kernel.util.HashMapDictionary;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 
-import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -41,8 +40,7 @@ public class BackgroundTaskExecutorRegistryImpl
 	public synchronized BackgroundTaskExecutor getBackgroundTaskExecutor(
 		String backgroundTaskExecutorClassName) {
 
-		return _backgroundTaskExecutors.getService(
-			backgroundTaskExecutorClassName);
+		return _serviceTrackerMap.getService(backgroundTaskExecutorClassName);
 	}
 
 	@Override
@@ -50,18 +48,15 @@ public class BackgroundTaskExecutorRegistryImpl
 		String backgroundTaskExecutorClassName,
 		BackgroundTaskExecutor backgroundTaskExecutor) {
 
-		Dictionary<String, Object> properties = new HashMapDictionary<>();
-
-		properties.put(
-			"background.task.executor.class.name",
-			backgroundTaskExecutorClassName);
-
 		ServiceRegistration<BackgroundTaskExecutor> serviceRegistration =
 			_bundleContext.registerService(
 				BackgroundTaskExecutor.class, backgroundTaskExecutor,
-				properties);
+				HashMapDictionaryBuilder.<String, Object>put(
+					"background.task.executor.class.name",
+					backgroundTaskExecutorClassName
+				).build());
 
-		_backgroundTaskExecutorRegistrations.put(
+		_serviceRegistrations.put(
 			backgroundTaskExecutorClassName, serviceRegistration);
 	}
 
@@ -69,15 +64,14 @@ public class BackgroundTaskExecutorRegistryImpl
 	public synchronized void unregisterBackgroundTaskExecutor(
 		String backgroundTaskExecutorClassName) {
 
-		if (!_backgroundTaskExecutorRegistrations.containsKey(
+		if (!_serviceRegistrations.containsKey(
 				backgroundTaskExecutorClassName)) {
 
 			return;
 		}
 
 		ServiceRegistration<BackgroundTaskExecutor> serviceRegistration =
-			_backgroundTaskExecutorRegistrations.get(
-				backgroundTaskExecutorClassName);
+			_serviceRegistrations.get(backgroundTaskExecutorClassName);
 
 		serviceRegistration.unregister();
 	}
@@ -86,30 +80,30 @@ public class BackgroundTaskExecutorRegistryImpl
 	protected void activate(BundleContext bundleContext) {
 		_bundleContext = bundleContext;
 
-		_backgroundTaskExecutors = ServiceTrackerMapFactory.openSingleValueMap(
+		_serviceTrackerMap = ServiceTrackerMapFactory.openSingleValueMap(
 			bundleContext, BackgroundTaskExecutor.class,
 			"background.task.executor.class.name");
 	}
 
 	@Deactivate
 	protected synchronized void deactivate() {
-		_backgroundTaskExecutors.close();
+		_serviceTrackerMap.close();
 
 		_bundleContext = null;
 
 		for (ServiceRegistration<BackgroundTaskExecutor> serviceRegistration :
-				_backgroundTaskExecutorRegistrations.values()) {
+				_serviceRegistrations.values()) {
 
 			serviceRegistration.unregister();
 		}
 
-		_backgroundTaskExecutorRegistrations.clear();
+		_serviceRegistrations.clear();
 	}
 
-	private final Map<String, ServiceRegistration<BackgroundTaskExecutor>>
-		_backgroundTaskExecutorRegistrations = new HashMap<>();
-	private ServiceTrackerMap<String, BackgroundTaskExecutor>
-		_backgroundTaskExecutors;
 	private BundleContext _bundleContext;
+	private final Map<String, ServiceRegistration<BackgroundTaskExecutor>>
+		_serviceRegistrations = new HashMap<>();
+	private ServiceTrackerMap<String, BackgroundTaskExecutor>
+		_serviceTrackerMap;
 
 }

@@ -19,6 +19,7 @@ import com.liferay.headless.commerce.admin.account.client.serdes.v1_0.AccountSer
 
 import java.io.Serializable;
 
+import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
 
@@ -103,6 +104,27 @@ public class Account implements Cloneable, Serializable {
 
 	protected AccountOrganization[] accountOrganizations;
 
+	public Boolean getActive() {
+		return active;
+	}
+
+	public void setActive(Boolean active) {
+		this.active = active;
+	}
+
+	public void setActive(
+		UnsafeSupplier<Boolean, Exception> activeUnsafeSupplier) {
+
+		try {
+			active = activeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Boolean active;
+
 	public Map<String, ?> getCustomFields() {
 		return customFields;
 	}
@@ -123,6 +145,98 @@ public class Account implements Cloneable, Serializable {
 	}
 
 	protected Map<String, ?> customFields;
+
+	public Date getDateCreated() {
+		return dateCreated;
+	}
+
+	public void setDateCreated(Date dateCreated) {
+		this.dateCreated = dateCreated;
+	}
+
+	public void setDateCreated(
+		UnsafeSupplier<Date, Exception> dateCreatedUnsafeSupplier) {
+
+		try {
+			dateCreated = dateCreatedUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Date dateCreated;
+
+	public Date getDateModified() {
+		return dateModified;
+	}
+
+	public void setDateModified(Date dateModified) {
+		this.dateModified = dateModified;
+	}
+
+	public void setDateModified(
+		UnsafeSupplier<Date, Exception> dateModifiedUnsafeSupplier) {
+
+		try {
+			dateModified = dateModifiedUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Date dateModified;
+
+	public Long getDefaultBillingAccountAddressId() {
+		return defaultBillingAccountAddressId;
+	}
+
+	public void setDefaultBillingAccountAddressId(
+		Long defaultBillingAccountAddressId) {
+
+		this.defaultBillingAccountAddressId = defaultBillingAccountAddressId;
+	}
+
+	public void setDefaultBillingAccountAddressId(
+		UnsafeSupplier<Long, Exception>
+			defaultBillingAccountAddressIdUnsafeSupplier) {
+
+		try {
+			defaultBillingAccountAddressId =
+				defaultBillingAccountAddressIdUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Long defaultBillingAccountAddressId;
+
+	public Long getDefaultShippingAccountAddressId() {
+		return defaultShippingAccountAddressId;
+	}
+
+	public void setDefaultShippingAccountAddressId(
+		Long defaultShippingAccountAddressId) {
+
+		this.defaultShippingAccountAddressId = defaultShippingAccountAddressId;
+	}
+
+	public void setDefaultShippingAccountAddressId(
+		UnsafeSupplier<Long, Exception>
+			defaultShippingAccountAddressIdUnsafeSupplier) {
+
+		try {
+			defaultShippingAccountAddressId =
+				defaultShippingAccountAddressIdUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Long defaultShippingAccountAddressId;
 
 	public String[] getEmailAddresses() {
 		return emailAddresses;

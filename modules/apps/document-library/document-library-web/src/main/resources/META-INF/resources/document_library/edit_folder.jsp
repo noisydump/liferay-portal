@@ -38,7 +38,9 @@ renderResponse.setTitle(dlEditFolderDisplayContext.getHeaderTitle());
 	/>
 </liferay-util:buffer>
 
-<clay:container-fluid>
+<clay:container-fluid
+	cssClass="container-form-lg"
+>
 	<portlet:actionURL name="/document_library/edit_folder" var="editFolderURL">
 		<portlet:param name="mvcRenderCommandName" value="/document_library/edit_folder" />
 	</portlet:actionURL>
@@ -136,11 +138,12 @@ renderResponse.setTitle(dlEditFolderDisplayContext.getHeaderTitle());
 									</c:if>
 
 									<liferay-ui:search-container-column-text>
-										<a class="modify-link" data-rowId="<%= dlFileEntryType.getFileEntryTypeId() %>" href="javascript:;"><%= removeFileEntryTypeIcon %></a>
+										<a class="modify-link" data-rowId="<%= dlFileEntryType.getFileEntryTypeId() %>" href="javascript:void(0);"><%= removeFileEntryTypeIcon %></a>
 									</liferay-ui:search-container-column-text>
 								</liferay-ui:search-container-row>
 
 								<liferay-ui:search-iterator
+									markupView="lexicon"
 									paginate="<%= false %>"
 								/>
 							</liferay-ui:search-container>
@@ -153,7 +156,7 @@ renderResponse.setTitle(dlEditFolderDisplayContext.getHeaderTitle());
 								linkCssClass="btn btn-secondary"
 								markupView="lexicon"
 								message="select-document-type"
-								url="javascript:;"
+								url="javascript:void(0);"
 							/>
 
 							<aui:select cssClass='<%= ListUtil.isNotEmpty(dlEditFolderDisplayContext.getDLFileEntryTypes()) ? "default-document-type" : "default-document-type hide" %>' helpMessage="default-document-type-help" label="default-document-type" name="defaultFileEntryTypeId">
@@ -226,13 +229,13 @@ renderResponse.setTitle(dlEditFolderDisplayContext.getHeaderTitle());
 					</aui:fieldset>
 				</c:if>
 			</c:if>
+
+			<div class="sheet-footer">
+				<aui:button type="submit" />
+
+				<aui:button href="<%= dlEditFolderDisplayContext.getRedirect() %>" type="cancel" />
+			</div>
 		</aui:fieldset-group>
-
-		<aui:button-row>
-			<aui:button type="submit" />
-
-			<aui:button href="<%= dlEditFolderDisplayContext.getRedirect() %>" type="cancel" />
-		</aui:button-row>
 	</aui:form>
 </clay:container-fluid>
 
@@ -264,15 +267,17 @@ renderResponse.setTitle(dlEditFolderDisplayContext.getHeaderTitle());
 		var message =
 			'<%= UnicodeLanguageUtil.get(request, dlEditFolderDisplayContext.isWorkflowEnabled() ? "change-document-types-and-workflow-message" : "change-document-types-message") %>';
 
-		var submit = true;
-
 		if (<portlet:namespace />documentTypesChanged) {
-			if (!confirm(message)) {
-				submit = false;
-			}
+			Liferay.Util.openConfirmModal({
+				message: message,
+				onConfirm: (isConfirmed) => {
+					if (isConfirmed) {
+						submitForm(document.<portlet:namespace />fm);
+					}
+				},
+			});
 		}
-
-		if (submit) {
+		else {
 			submitForm(document.<portlet:namespace />fm);
 		}
 	};
@@ -306,18 +311,10 @@ renderResponse.setTitle(dlEditFolderDisplayContext.getHeaderTitle());
 		var fileEntryTypeLink =
 			'<a class="modify-link" data-rowId="' +
 			fileEntryTypeId +
-			'" href="javascript:;"><%= UnicodeFormatter.toString(removeFileEntryTypeIcon) %></a>';
+			'" href="javascript:void(0);"><%= UnicodeFormatter.toString(removeFileEntryTypeIcon) %></a>';
 
 		<c:choose>
 			<c:when test="<%= dlEditFolderDisplayContext.isWorkflowEnabled() %>">
-				var restrictionTypeWorkflow = document.getElementById(
-					'<portlet:namespace />restrictionTypeWorkflow'
-				);
-
-				restrictionTypeWorkflow.classList.add('hide');
-				restrictionTypeWorkflow.setAttribute('hidden', 'hidden');
-				restrictionTypeWorkflow.style.display = 'none';
-
 				var workflowDefinitions =
 					'<%= UnicodeFormatter.toString(workflowDefinitionsBuffer) %>';
 
@@ -375,7 +372,7 @@ renderResponse.setTitle(dlEditFolderDisplayContext.getHeaderTitle());
 	);
 
 	if (selectDocumentTypeButton) {
-		selectDocumentTypeButton.addEventListener('click', function () {
+		selectDocumentTypeButton.addEventListener('click', () => {
 			var searchContainer = Liferay.SearchContainer.get(
 				'<portlet:namespace />dlFileEntryTypesSearchContainer'
 			);
@@ -412,7 +409,7 @@ renderResponse.setTitle(dlEditFolderDisplayContext.getHeaderTitle());
 
 	searchContainer.get('contentBox').delegate(
 		'click',
-		function (event) {
+		(event) => {
 			var A = AUI();
 
 			var link = event.currentTarget;
@@ -429,35 +426,6 @@ renderResponse.setTitle(dlEditFolderDisplayContext.getHeaderTitle());
 			option.parentElement.removeChild(option);
 
 			<portlet:namespace />documentTypesChanged = true;
-
-			var select = document.getElementById(
-				'<%= liferayPortletResponse.getNamespace() + "workflowDefinition" + DLFileEntryTypeConstants.FILE_ENTRY_TYPE_ID_ALL %>'
-			);
-
-			var selectContainer = document.getElementById(
-				'<portlet:namespace />restrictionTypeWorkflow'
-			);
-
-			var fileEntryTypesCount = select.children.length;
-
-			if (fileEntryTypesCount == 0) {
-				selectContainer.classList.add('hide');
-				selectContainer.setAttribute('hidden', 'hidden');
-				selectContainer.style.display = 'none';
-
-				var restrictionTypeWorkflow = document.getElementById(
-					'<portlet:namespace />restrictionTypeWorkflow'
-				);
-
-				restrictionTypeWorkflow.classList.remove('hide');
-				restrictionTypeWorkflow.removeAttribute('hidden');
-				restrictionTypeWorkflow.style.display = '';
-			}
-			else {
-				selectContainer.classList.remove('hide');
-				selectContainer.removeAttribute('hidden');
-				selectContainer.style.display = '';
-			}
 		},
 		'.modify-link'
 	);

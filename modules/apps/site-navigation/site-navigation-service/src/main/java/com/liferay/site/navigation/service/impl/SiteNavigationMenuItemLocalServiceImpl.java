@@ -14,6 +14,7 @@
 
 package com.liferay.site.navigation.service.impl;
 
+import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -24,16 +25,20 @@ import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.LayoutService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
+import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.site.navigation.exception.InvalidSiteNavigationMenuItemOrderException;
 import com.liferay.site.navigation.exception.InvalidSiteNavigationMenuItemTypeException;
 import com.liferay.site.navigation.exception.SiteNavigationMenuItemNameException;
 import com.liferay.site.navigation.model.SiteNavigationMenu;
 import com.liferay.site.navigation.model.SiteNavigationMenuItem;
+import com.liferay.site.navigation.model.SiteNavigationMenuItemTable;
 import com.liferay.site.navigation.service.base.SiteNavigationMenuItemLocalServiceBaseImpl;
+import com.liferay.site.navigation.service.persistence.SiteNavigationMenuPersistence;
 import com.liferay.site.navigation.type.SiteNavigationMenuItemType;
 import com.liferay.site.navigation.type.SiteNavigationMenuItemTypeRegistry;
 import com.liferay.site.navigation.util.comparator.SiteNavigationMenuItemOrderComparator;
@@ -73,7 +78,7 @@ public class SiteNavigationMenuItemLocalServiceImpl
 
 		validateName(name);
 
-		User user = userLocalService.getUser(userId);
+		User user = _userLocalService.getUser(userId);
 
 		long siteNavigationMenuItemId = counterLocalService.increment();
 
@@ -118,6 +123,15 @@ public class SiteNavigationMenuItemLocalServiceImpl
 			long siteNavigationMenuItemId)
 		throws PortalException {
 
+		return siteNavigationMenuItemLocalService.deleteSiteNavigationMenuItem(
+			siteNavigationMenuItemId, false);
+	}
+
+	@Override
+	public SiteNavigationMenuItem deleteSiteNavigationMenuItem(
+			long siteNavigationMenuItemId, boolean deleteChildren)
+		throws PortalException {
+
 		SiteNavigationMenuItem siteNavigationMenuItem =
 			getSiteNavigationMenuItem(siteNavigationMenuItemId);
 
@@ -126,33 +140,45 @@ public class SiteNavigationMenuItemLocalServiceImpl
 				siteNavigationMenuItem.getSiteNavigationMenuId(),
 				siteNavigationMenuItemId);
 
-		if (!siteNavigationMenuItems.isEmpty()) {
-			List<SiteNavigationMenuItem> siblingsSiteNavigationMenuItems =
-				getSiteNavigationMenuItems(
-					siteNavigationMenuItem.getSiteNavigationMenuId(),
-					siteNavigationMenuItem.getParentSiteNavigationMenuItemId());
+		List<SiteNavigationMenuItem> siblingsSiteNavigationMenuItems =
+			getSiteNavigationMenuItems(
+				siteNavigationMenuItem.getSiteNavigationMenuId(),
+				siteNavigationMenuItem.getParentSiteNavigationMenuItemId());
 
-			for (SiteNavigationMenuItem siblingSiteNavigationMenuItem :
-					siblingsSiteNavigationMenuItems) {
+		int siblingOrderOffset = siteNavigationMenuItems.size();
 
-				if (siblingSiteNavigationMenuItem.getOrder() <=
-						siteNavigationMenuItem.getOrder()) {
+		if (deleteChildren) {
+			siblingOrderOffset = 0;
+		}
 
-					continue;
-				}
+		for (SiteNavigationMenuItem siblingSiteNavigationMenuItem :
+				siblingsSiteNavigationMenuItems) {
 
-				siblingSiteNavigationMenuItem.setOrder(
-					siteNavigationMenuItems.size() +
-						siblingSiteNavigationMenuItem.getOrder() - 1);
+			if (siblingSiteNavigationMenuItem.getOrder() <=
+					siteNavigationMenuItem.getOrder()) {
 
-				siteNavigationMenuItemPersistence.update(
-					siblingSiteNavigationMenuItem);
+				continue;
 			}
+
+			siblingSiteNavigationMenuItem.setOrder(
+				siblingOrderOffset + siblingSiteNavigationMenuItem.getOrder() -
+					1);
+
+			siteNavigationMenuItemPersistence.update(
+				siblingSiteNavigationMenuItem);
 		}
 
 		for (int i = 0; i < siteNavigationMenuItems.size(); i++) {
 			SiteNavigationMenuItem childSiteNavigationMenuItem =
 				siteNavigationMenuItems.get(i);
+
+			if (deleteChildren) {
+				siteNavigationMenuItemLocalService.deleteSiteNavigationMenuItem(
+					childSiteNavigationMenuItem.getSiteNavigationMenuItemId(),
+					true);
+
+				continue;
+			}
 
 			childSiteNavigationMenuItem.setParentSiteNavigationMenuItemId(
 				siteNavigationMenuItem.getParentSiteNavigationMenuItemId());
@@ -185,12 +211,32 @@ public class SiteNavigationMenuItemLocalServiceImpl
 	@Override
 	public void deleteSiteNavigationMenuItemsByGroupId(long groupId) {
 		List<SiteNavigationMenu> siteNavigationMenus =
-			siteNavigationMenuPersistence.findByGroupId(groupId);
+			_siteNavigationMenuPersistence.findByGroupId(groupId);
 
 		for (SiteNavigationMenu siteNavigationMenu : siteNavigationMenus) {
 			siteNavigationMenuItemPersistence.removeBySiteNavigationMenuId(
 				siteNavigationMenu.getSiteNavigationMenuId());
 		}
+	}
+
+	@Override
+	public List<Long> getParentSiteNavigationMenuItemIds(
+		long siteNavigationMenuId, String typeSettingsKeyword) {
+
+		return siteNavigationMenuItemPersistence.dslQuery(
+			DSLQueryFactoryUtil.select(
+				SiteNavigationMenuItemTable.INSTANCE.
+					parentSiteNavigationMenuItemId
+			).from(
+				SiteNavigationMenuItemTable.INSTANCE
+			).where(
+				SiteNavigationMenuItemTable.INSTANCE.siteNavigationMenuId.eq(
+					siteNavigationMenuId
+				).and(
+					SiteNavigationMenuItemTable.INSTANCE.typeSettings.like(
+						typeSettingsKeyword)
+				)
+			));
 	}
 
 	@Override
@@ -319,8 +365,6 @@ public class SiteNavigationMenuItemLocalServiceImpl
 			ServiceContext serviceContext)
 		throws PortalException {
 
-		User user = userLocalService.getUser(userId);
-
 		SiteNavigationMenuItem siteNavigationMenuItem =
 			siteNavigationMenuItemPersistence.fetchByPrimaryKey(
 				siteNavigationMenuItemId);
@@ -333,6 +377,8 @@ public class SiteNavigationMenuItemLocalServiceImpl
 			throw new InvalidSiteNavigationMenuItemTypeException(
 				siteNavigationMenuItem.getType());
 		}
+
+		User user = _userLocalService.getUser(userId);
 
 		String name = siteNavigationMenuItemType.getName(typeSettings);
 
@@ -377,10 +423,12 @@ public class SiteNavigationMenuItemLocalServiceImpl
 	}
 
 	protected void validateLayout(String typeSettings) throws PortalException {
-		UnicodeProperties typeSettingsUnicodeProperties = new UnicodeProperties(
-			true);
-
-		typeSettingsUnicodeProperties.fastLoad(typeSettings);
+		UnicodeProperties typeSettingsUnicodeProperties =
+			UnicodePropertiesBuilder.create(
+				true
+			).fastLoad(
+				typeSettings
+			).build();
 
 		String layoutUuid = typeSettingsUnicodeProperties.getProperty(
 			"layoutUuid");
@@ -418,5 +466,11 @@ public class SiteNavigationMenuItemLocalServiceImpl
 	@Reference
 	private SiteNavigationMenuItemTypeRegistry
 		_siteNavigationMenuItemTypeRegistry;
+
+	@Reference
+	private SiteNavigationMenuPersistence _siteNavigationMenuPersistence;
+
+	@Reference
+	private UserLocalService _userLocalService;
 
 }

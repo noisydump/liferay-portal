@@ -15,8 +15,9 @@
 import ClayButton from '@clayui/button';
 import ClayForm, {ClayInput} from '@clayui/form';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
+import {useIsMounted} from '@liferay/frontend-js-react-web';
 import classNames from 'classnames';
-import {useIsMounted} from 'frontend-js-react-web';
+import {getOpener} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useRef, useState} from 'react';
 
@@ -62,7 +63,7 @@ const ItemSelectorUrl = ({eventName}) => {
 			},
 		};
 
-		Liferay.Util.getOpener().Liferay.fire(eventName, eventData);
+		getOpener().Liferay.fire(eventName, eventData);
 	};
 
 	const handleUrlChange = (event) => {
@@ -92,6 +93,7 @@ const ItemSelectorUrl = ({eventName}) => {
 					<label htmlFor={inputName}>
 						{Liferay.Language.get('url')}
 					</label>
+
 					<ClayInput
 						id={inputName}
 						onChange={handleUrlChange}
@@ -99,12 +101,14 @@ const ItemSelectorUrl = ({eventName}) => {
 						type="text"
 						value={url}
 					/>
+
 					<p className="form-text">
 						{sub(Liferay.Language.get('for-example-x'), [
 							'http://www.liferay.com/liferay.png',
 						])}
 					</p>
 				</ClayForm.Group>
+
 				<ClayButton disabled={!loaded} type="submit">
 					{Liferay.Language.get('add')}
 				</ClayButton>
@@ -123,9 +127,11 @@ const ItemSelectorUrl = ({eventName}) => {
 						src={url}
 					/>
 				)}
+
 				{(isLoading || previewError) && (
 					<div className="aspect-ratio-item aspect-ratio-item-center-middle aspect-ratio-item-fluid">
 						{isLoading && <ClayLoadingIndicator />}
+
 						{previewError && (
 							<strong className="text-secondary">
 								{Liferay.Language.get(

@@ -64,5 +64,5 @@ List<NavigationItem> navigationItems = localizedItemSelectorRendering.getNavigat
 </c:choose>
 
 <%!
-private static Log _log = LogFactoryUtil.getLog("com_liferay_item_selector_web.view_jsp");
+private static final Log _log = LogFactoryUtil.getLog("com_liferay_item_selector_web.view_jsp");
 %>

@@ -14,9 +14,8 @@
 
 package com.liferay.commerce.product.internal.upgrade.v1_9_0;
 
-import com.liferay.commerce.product.internal.upgrade.base.BaseCommerceProductServiceUpgradeProcess;
-import com.liferay.commerce.product.model.impl.CPDefinitionOptionRelModelImpl;
 import com.liferay.portal.kernel.dao.jdbc.AutoBatchPreparedStatementUtil;
+import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -25,35 +24,32 @@ import java.sql.Statement;
 /**
  * @author Marco Leo
  */
-public class CPDefinitionOptionRelUpgradeProcess
-	extends BaseCommerceProductServiceUpgradeProcess {
+public class CPDefinitionOptionRelUpgradeProcess extends UpgradeProcess {
 
 	@Override
 	protected void doUpgrade() throws Exception {
-		addColumn(
-			CPDefinitionOptionRelModelImpl.class,
-			CPDefinitionOptionRelModelImpl.TABLE_NAME, "key_", "VARCHAR(75)");
+		alterTableAddColumn("CPDefinitionOptionRel", "key_", "VARCHAR(75)");
 
 		String selectCPOptionSQL =
 			"select distinct CPOptionId, key_  from CPOption";
 		String updateCPDefinitionOptionRelSQL =
 			"update CPDefinitionOptionRel set key_ = ? WHERE CPOptionId = ?";
 
-		try (PreparedStatement ps =
+		try (PreparedStatement preparedStatement =
 				AutoBatchPreparedStatementUtil.concurrentAutoBatch(
 					connection, updateCPDefinitionOptionRelSQL);
 			Statement s = connection.createStatement(
 				ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-			ResultSet rs = s.executeQuery(selectCPOptionSQL)) {
+			ResultSet resultSet = s.executeQuery(selectCPOptionSQL)) {
 
-			while (rs.next()) {
-				ps.setString(1, rs.getString("key_"));
-				ps.setLong(2, rs.getLong("CPOptionId"));
+			while (resultSet.next()) {
+				preparedStatement.setString(1, resultSet.getString("key_"));
+				preparedStatement.setLong(2, resultSet.getLong("CPOptionId"));
 
-				ps.addBatch();
+				preparedStatement.addBatch();
 			}
 
-			ps.executeBatch();
+			preparedStatement.executeBatch();
 		}
 	}
 

@@ -14,9 +14,14 @@
 
 package com.liferay.commerce.account.model.impl;
 
+import com.liferay.account.model.AccountEntryOrganizationRel;
+import com.liferay.commerce.account.model.CommerceAccountOrganizationRel;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.service.OrganizationLocalServiceUtil;
+
+import java.util.Map;
+import java.util.function.BiConsumer;
 
 /**
  * @author Alessio Antonio Rendina
@@ -24,7 +29,40 @@ import com.liferay.portal.kernel.service.OrganizationLocalServiceUtil;
 public class CommerceAccountOrganizationRelImpl
 	extends CommerceAccountOrganizationRelBaseImpl {
 
-	public CommerceAccountOrganizationRelImpl() {
+	public static CommerceAccountOrganizationRelImpl
+		fromAccountEntryOrganizationRel(
+			AccountEntryOrganizationRel accountEntryOrganizationRel) {
+
+		if (accountEntryOrganizationRel == null) {
+			return null;
+		}
+
+		CommerceAccountOrganizationRelImpl commerceAccountOrganizationRelImpl =
+			new CommerceAccountOrganizationRelImpl();
+
+		Map<String, BiConsumer<CommerceAccountOrganizationRel, Object>>
+			attributeSetterBiConsumers =
+				commerceAccountOrganizationRelImpl.
+					getAttributeSetterBiConsumers();
+
+		Map<String, Object> modelAttributes =
+			accountEntryOrganizationRel.getModelAttributes();
+
+		for (Map.Entry<String, Object> entry : modelAttributes.entrySet()) {
+			BiConsumer<CommerceAccountOrganizationRel, Object>
+				attributeSetterBiConsumer = attributeSetterBiConsumers.get(
+					entry.getKey());
+
+			if (attributeSetterBiConsumer != null) {
+				attributeSetterBiConsumer.accept(
+					commerceAccountOrganizationRelImpl, entry.getValue());
+			}
+		}
+
+		commerceAccountOrganizationRelImpl.setCommerceAccountId(
+			accountEntryOrganizationRel.getAccountEntryId());
+
+		return commerceAccountOrganizationRelImpl;
 	}
 
 	@Override

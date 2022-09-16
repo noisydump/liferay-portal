@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
@@ -46,13 +47,21 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @generated
  */
 @Generated("")
-@GraphQLName("PageColumnDefinition")
+@GraphQLName(
+	description = "Represents a definition of a Page Column.",
+	value = "PageColumnDefinition"
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "PageColumnDefinition")
 public class PageColumnDefinition implements Serializable {
 
 	public static PageColumnDefinition toDTO(String json) {
 		return ObjectMapperUtil.readValue(PageColumnDefinition.class, json);
+	}
+
+	public static PageColumnDefinition unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(
+			PageColumnDefinition.class, json);
 	}
 
 	@Schema(
@@ -93,7 +102,9 @@ public class PageColumnDefinition implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected ColumnViewportConfig columnViewportConfig;
 
-	@Schema
+	@Schema(
+		description = "A list of column viewports of the page column definition."
+	)
 	@Valid
 	public ColumnViewport[] getColumnViewports() {
 		return columnViewports;
@@ -119,13 +130,15 @@ public class PageColumnDefinition implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "A list of column viewports of the page column definition."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected ColumnViewport[] columnViewports;
 
 	@DecimalMax("12")
 	@DecimalMin("1")
-	@Schema
+	@Schema(description = "The page column's size.")
 	public Integer getSize() {
 		return size;
 	}
@@ -147,7 +160,7 @@ public class PageColumnDefinition implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The page column's size.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Integer size;
 
@@ -225,15 +238,16 @@ public class PageColumnDefinition implements Serializable {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.PageColumnDefinition",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
 	}
 
 	private static boolean _isArray(Object value) {
@@ -259,8 +273,8 @@ public class PageColumnDefinition implements Serializable {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -291,7 +305,7 @@ public class PageColumnDefinition implements Serializable {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -299,7 +313,7 @@ public class PageColumnDefinition implements Serializable {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -307,5 +321,10 @@ public class PageColumnDefinition implements Serializable {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
@@ -44,7 +45,10 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @generated
  */
 @Generated("")
-@GraphQLName("OpenGraphSettings")
+@GraphQLName(
+	description = "Represents settings related with Open Graph protocol.",
+	value = "OpenGraphSettings"
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "OpenGraphSettings")
 public class OpenGraphSettings implements Serializable {
@@ -53,7 +57,11 @@ public class OpenGraphSettings implements Serializable {
 		return ObjectMapperUtil.readValue(OpenGraphSettings.class, json);
 	}
 
-	@Schema
+	public static OpenGraphSettings unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(OpenGraphSettings.class, json);
+	}
+
+	@Schema(description = "The Open Graph's description.")
 	public String getDescription() {
 		return description;
 	}
@@ -77,11 +85,11 @@ public class OpenGraphSettings implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The Open Graph's description.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String description;
 
-	@Schema
+	@Schema(description = "The localized Open Graph's descriptions.")
 	@Valid
 	public Map<String, String> getDescription_i18n() {
 		return description_i18n;
@@ -107,11 +115,11 @@ public class OpenGraphSettings implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The localized Open Graph's descriptions.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Map<String, String> description_i18n;
 
-	@Schema
+	@Schema(description = "The Open Graph's image.")
 	@Valid
 	public ContentDocument getImage() {
 		return image;
@@ -136,11 +144,11 @@ public class OpenGraphSettings implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The Open Graph's image.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected ContentDocument image;
 
-	@Schema
+	@Schema(description = "The Open Graph's title.")
 	public String getTitle() {
 		return title;
 	}
@@ -164,11 +172,11 @@ public class OpenGraphSettings implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The Open Graph's title.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String title;
 
-	@Schema
+	@Schema(description = "The localized Open Graph's titles.")
 	@Valid
 	public Map<String, String> getTitle_i18n() {
 		return title_i18n;
@@ -194,7 +202,7 @@ public class OpenGraphSettings implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The localized Open Graph's titles.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Map<String, String> title_i18n;
 
@@ -289,15 +297,16 @@ public class OpenGraphSettings implements Serializable {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.OpenGraphSettings",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
 	}
 
 	private static boolean _isArray(Object value) {
@@ -323,8 +332,8 @@ public class OpenGraphSettings implements Serializable {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -355,7 +364,7 @@ public class OpenGraphSettings implements Serializable {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -363,7 +372,7 @@ public class OpenGraphSettings implements Serializable {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -371,5 +380,10 @@ public class OpenGraphSettings implements Serializable {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

@@ -70,42 +70,34 @@ public class KBCommentsChecker extends EmptyOnClickRowChecker {
 		HttpServletRequest httpServletRequest, boolean checked,
 		boolean disabled, String primaryKey) {
 
-		long kbCommentId = GetterUtil.getLong(primaryKey);
-
-		KBComment kbComment = null;
-
 		try {
-			kbComment = KBCommentLocalServiceUtil.getKBComment(kbCommentId);
+			long kbCommentId = GetterUtil.getLong(primaryKey);
 
 			KBCommentPermission.contains(
-				_permissionChecker, kbComment, ActionKeys.DELETE);
+				_permissionChecker,
+				KBCommentLocalServiceUtil.getKBComment(kbCommentId),
+				ActionKeys.DELETE);
+
+			String checkBoxRowIds = StringBundler.concat(
+				"['", _liferayPortletResponse.getNamespace(),
+				RowChecker.ROW_IDS, KBComment.class.getSimpleName(), "']");
+
+			return getRowCheckBox(
+				httpServletRequest, checked, disabled,
+				_liferayPortletResponse.getNamespace() + RowChecker.ROW_IDS +
+					KBComment.class.getSimpleName(),
+				primaryKey, checkBoxRowIds, getAllRowIds(), StringPool.BLANK);
 		}
 		catch (PortalException portalException) {
 
 			// LPS-52675
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(portalException, portalException);
+				_log.debug(portalException);
 			}
 
 			return StringPool.BLANK;
 		}
-
-		StringBundler sb = new StringBundler(5);
-
-		sb.append("['");
-		sb.append(_liferayPortletResponse.getNamespace());
-		sb.append(RowChecker.ROW_IDS);
-		sb.append(KBComment.class.getSimpleName());
-		sb.append("']");
-
-		String checkBoxRowIds = sb.toString();
-
-		return getRowCheckBox(
-			httpServletRequest, checked, disabled,
-			_liferayPortletResponse.getNamespace() + RowChecker.ROW_IDS +
-				KBComment.class.getSimpleName(),
-			primaryKey, checkBoxRowIds, getAllRowIds(), StringPool.BLANK);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

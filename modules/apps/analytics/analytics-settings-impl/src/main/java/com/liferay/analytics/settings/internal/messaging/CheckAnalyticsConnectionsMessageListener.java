@@ -35,7 +35,6 @@ import java.util.Map;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -48,7 +47,6 @@ public class CheckAnalyticsConnectionsMessageListener
 	extends BaseMessageListener {
 
 	@Activate
-	@Modified
 	protected void activate() {
 		Class<?> clazz = getClass();
 
@@ -97,11 +95,6 @@ public class CheckAnalyticsConnectionsMessageListener
 		}
 	}
 
-	@Reference(target = ModuleServiceLifecycle.PORTAL_INITIALIZED, unbind = "-")
-	protected void setModuleServiceLifecycle(
-		ModuleServiceLifecycle moduleServiceLifecycle) {
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		CheckAnalyticsConnectionsMessageListener.class);
 
@@ -110,6 +103,9 @@ public class CheckAnalyticsConnectionsMessageListener
 
 	@Reference
 	private AnalyticsMessageSenderClient _analyticsMessageSenderClient;
+
+	@Reference(target = ModuleServiceLifecycle.PORTAL_INITIALIZED)
+	private ModuleServiceLifecycle _moduleServiceLifecycle;
 
 	@Reference
 	private SchedulerEngineHelper _schedulerEngineHelper;

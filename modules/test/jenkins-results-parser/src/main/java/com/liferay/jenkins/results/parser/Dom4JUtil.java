@@ -329,10 +329,10 @@ public class Dom4JUtil {
 	}
 
 	public static Element toCodeSnippetElement(String content) {
+		content = content.replaceAll("\\t", "  ");
+
 		return getNewElement(
-			"pre", null,
-			getNewElement(
-				"code", null, JenkinsResultsParserUtil.redact(content)));
+			"pre", null, JenkinsResultsParserUtil.redact(content));
 	}
 
 	public static void truncateElement(Element element, int size) {

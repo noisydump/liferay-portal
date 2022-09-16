@@ -16,7 +16,7 @@ package com.liferay.bookmarks.service.base;
 
 import com.liferay.bookmarks.model.BookmarksFolder;
 import com.liferay.bookmarks.service.BookmarksFolderLocalService;
-import com.liferay.bookmarks.service.persistence.BookmarksEntryPersistence;
+import com.liferay.bookmarks.service.BookmarksFolderLocalServiceUtil;
 import com.liferay.bookmarks.service.persistence.BookmarksFolderFinder;
 import com.liferay.bookmarks.service.persistence.BookmarksFolderPersistence;
 import com.liferay.exportimport.kernel.lar.ExportImportHelperUtil;
@@ -47,6 +47,8 @@ import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -61,10 +63,13 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -86,7 +91,7 @@ public abstract class BookmarksFolderLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>BookmarksFolderLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.bookmarks.service.BookmarksFolderLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>BookmarksFolderLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>BookmarksFolderLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -159,6 +164,13 @@ public abstract class BookmarksFolderLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return bookmarksFolderPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -467,6 +479,11 @@ public abstract class BookmarksFolderLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement BookmarksFolderLocalServiceImpl#deleteBookmarksFolder(BookmarksFolder) to avoid orphaned data");
+		}
+
 		return bookmarksFolderLocalService.deleteBookmarksFolder(
 			(BookmarksFolder)persistedModel);
 	}
@@ -579,6 +596,11 @@ public abstract class BookmarksFolderLocalServiceBaseImpl
 		return bookmarksFolderPersistence.update(bookmarksFolder);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -590,6 +612,8 @@ public abstract class BookmarksFolderLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		bookmarksFolderLocalService = (BookmarksFolderLocalService)aopProxy;
+
+		_setLocalServiceUtilService(bookmarksFolderLocalService);
 	}
 
 	/**
@@ -634,8 +658,22 @@ public abstract class BookmarksFolderLocalServiceBaseImpl
 		}
 	}
 
-	@Reference
-	protected BookmarksEntryPersistence bookmarksEntryPersistence;
+	private void _setLocalServiceUtilService(
+		BookmarksFolderLocalService bookmarksFolderLocalService) {
+
+		try {
+			Field field =
+				BookmarksFolderLocalServiceUtil.class.getDeclaredField(
+					"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, bookmarksFolderLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
 
 	protected BookmarksFolderLocalService bookmarksFolderLocalService;
 
@@ -649,36 +687,7 @@ public abstract class BookmarksFolderLocalServiceBaseImpl
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@Reference
-	protected com.liferay.portal.kernel.service.ClassNameLocalService
-		classNameLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.ResourceLocalService
-		resourceLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
-
-	@Reference
-	protected com.liferay.asset.kernel.service.AssetEntryLocalService
-		assetEntryLocalService;
-
-	@Reference
-	protected com.liferay.asset.kernel.service.AssetLinkLocalService
-		assetLinkLocalService;
-
-	@Reference
-	protected com.liferay.expando.kernel.service.ExpandoRowLocalService
-		expandoRowLocalService;
-
-	@Reference
-	protected com.liferay.ratings.kernel.service.RatingsStatsLocalService
-		ratingsStatsLocalService;
-
-	@Reference
-	protected com.liferay.social.kernel.service.SocialActivityLocalService
-		socialActivityLocalService;
+	private static final Log _log = LogFactoryUtil.getLog(
+		BookmarksFolderLocalServiceBaseImpl.class);
 
 }

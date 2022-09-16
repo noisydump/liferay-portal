@@ -25,10 +25,10 @@ import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldTypeServices
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.dynamic.data.mapping.render.DDMFormFieldValueRendererRegistry;
-import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.dynamic.data.mapping.storage.StorageEngine;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.util.HtmlParser;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.Element;
@@ -57,43 +57,6 @@ public class DDLXMLExporter extends BaseDDLExporter {
 		return "xml";
 	}
 
-	protected void addFieldElement(
-		DDMFormFieldRenderedValue ddmFormFieldRenderedValue, Element element,
-		Map.Entry<String, DDMFormField> entry) {
-
-		LocalizedValue label = null;
-		String value = null;
-
-		if (ddmFormFieldRenderedValue == null) {
-			DDMFormField ddmFormField = entry.getValue();
-
-			label = ddmFormField.getLabel();
-
-			value = StringPool.BLANK;
-		}
-		else {
-			label = ddmFormFieldRenderedValue.getLabel();
-
-			value = ddmFormFieldRenderedValue.getValue();
-		}
-
-		addFieldElement(element, label.getString(getLocale()), value);
-	}
-
-	protected void addFieldElement(
-		Element fieldsElement, String label, Serializable value) {
-
-		Element fieldElement = fieldsElement.addElement("field");
-
-		Element labelElement = fieldElement.addElement("label");
-
-		labelElement.addText(label);
-
-		Element valueElement = fieldElement.addElement("value");
-
-		valueElement.addText(String.valueOf(value));
-	}
-
 	@Override
 	protected byte[] doExport(
 			long recordSetId, int status, int start, int end,
@@ -119,11 +82,11 @@ public class DDLXMLExporter extends BaseDDLExporter {
 
 			DDLRecordVersion recordVersion = record.getRecordVersion();
 
-			DDMFormValues ddmFormValues = _storageEngine.getDDMFormValues(
-				recordVersion.getDDMStorageId());
-
 			Map<String, DDMFormFieldRenderedValue> values = getRenderedValues(
-				recordSet.getScope(), ddmFormFields.values(), ddmFormValues);
+				recordSet.getScope(), ddmFormFields.values(),
+				_storageEngine.getDDMFormValues(
+					recordVersion.getDDMStorageId()),
+				_htmlParser);
 
 			for (Map.Entry<String, DDMFormField> entry :
 					ddmFormFields.entrySet()) {
@@ -131,22 +94,22 @@ public class DDLXMLExporter extends BaseDDLExporter {
 				DDMFormFieldRenderedValue ddmFormFieldRenderedValue =
 					values.get(entry.getKey());
 
-				addFieldElement(
+				_addFieldElement(
 					ddmFormFieldRenderedValue, fieldsElement, entry);
 			}
 
 			Locale locale = getLocale();
 
-			addFieldElement(
-				fieldsElement, LanguageUtil.get(locale, "status"),
+			_addFieldElement(
+				fieldsElement, _language.get(locale, "status"),
 				getStatusMessage(recordVersion.getStatus()));
 
-			addFieldElement(
-				fieldsElement, LanguageUtil.get(locale, "modified-date"),
+			_addFieldElement(
+				fieldsElement, _language.get(locale, "modified-date"),
 				formatDate(recordVersion.getStatusDate(), dateTimeFormatter));
 
-			addFieldElement(
-				fieldsElement, LanguageUtil.get(locale, "author"),
+			_addFieldElement(
+				fieldsElement, _language.get(locale, "author"),
 				recordVersion.getUserName());
 		}
 
@@ -174,52 +137,66 @@ public class DDLXMLExporter extends BaseDDLExporter {
 		return _ddmFormFieldValueRendererRegistry;
 	}
 
-	@Reference(unbind = "-")
-	protected void setDDLRecordLocalService(
-		DDLRecordLocalService ddlRecordLocalService) {
+	private void _addFieldElement(
+		DDMFormFieldRenderedValue ddmFormFieldRenderedValue, Element element,
+		Map.Entry<String, DDMFormField> entry) {
 
-		_ddlRecordLocalService = ddlRecordLocalService;
+		LocalizedValue label = null;
+		String value = null;
+
+		if (ddmFormFieldRenderedValue == null) {
+			DDMFormField ddmFormField = entry.getValue();
+
+			label = ddmFormField.getLabel();
+
+			value = StringPool.BLANK;
+		}
+		else {
+			label = ddmFormFieldRenderedValue.getLabel();
+
+			value = ddmFormFieldRenderedValue.getValue();
+		}
+
+		_addFieldElement(element, label.getString(getLocale()), value);
 	}
 
-	@Reference(unbind = "-")
-	protected void setDDLRecordSetService(
-		DDLRecordSetService ddlRecordSetService) {
+	private void _addFieldElement(
+		Element fieldsElement, String label, Serializable value) {
 
-		_ddlRecordSetService = ddlRecordSetService;
+		Element fieldElement = fieldsElement.addElement("field");
+
+		Element labelElement = fieldElement.addElement("label");
+
+		labelElement.addText(label);
+
+		Element valueElement = fieldElement.addElement("value");
+
+		valueElement.addText(String.valueOf(value));
 	}
 
-	@Reference(unbind = "-")
-	protected void setDDLRecordSetVersionService(
-		DDLRecordSetVersionService ddlRecordSetVersionService) {
-
-		_ddlRecordSetVersionService = ddlRecordSetVersionService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setDDMFormFieldTypeServicesTracker(
-		DDMFormFieldTypeServicesTracker ddmFormFieldTypeServicesTracker) {
-
-		_ddmFormFieldTypeServicesTracker = ddmFormFieldTypeServicesTracker;
-	}
-
-	@Reference(unbind = "-")
-	protected void setDDMFormFieldValueRendererRegistry(
-		DDMFormFieldValueRendererRegistry ddmFormFieldValueRendererRegistry) {
-
-		_ddmFormFieldValueRendererRegistry = ddmFormFieldValueRendererRegistry;
-	}
-
-	@Reference(unbind = "-")
-	protected void setStorageEngine(StorageEngine storageEngine) {
-		_storageEngine = storageEngine;
-	}
-
+	@Reference
 	private DDLRecordLocalService _ddlRecordLocalService;
+
+	@Reference
 	private DDLRecordSetService _ddlRecordSetService;
+
+	@Reference
 	private DDLRecordSetVersionService _ddlRecordSetVersionService;
+
+	@Reference
 	private DDMFormFieldTypeServicesTracker _ddmFormFieldTypeServicesTracker;
+
+	@Reference
 	private DDMFormFieldValueRendererRegistry
 		_ddmFormFieldValueRendererRegistry;
+
+	@Reference
+	private HtmlParser _htmlParser;
+
+	@Reference
+	private Language _language;
+
+	@Reference
 	private StorageEngine _storageEngine;
 
 }

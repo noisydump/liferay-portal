@@ -186,7 +186,7 @@ public class LayoutPageTemplateEntryStagedModelDataHandler
 				uuid, groupId);
 		}
 		else {
-			existingLayoutPageTemplateEntry = fetchExistingTemplate(
+			existingLayoutPageTemplateEntry = _fetchExistingTemplate(
 				uuid, groupId, name, type, 0L, preloaded);
 		}
 
@@ -300,13 +300,11 @@ public class LayoutPageTemplateEntryStagedModelDataHandler
 				(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
 					LayoutPrototype.class);
 
-			long layoutPrototypeId = MapUtil.getLong(
-				layoutPrototypeIds,
-				layoutPageTemplateEntry.getLayoutPrototypeId(),
-				layoutPageTemplateEntry.getLayoutPrototypeId());
-
 			importedLayoutPageTemplateEntry.setLayoutPrototypeId(
-				layoutPrototypeId);
+				MapUtil.getLong(
+					layoutPrototypeIds,
+					layoutPageTemplateEntry.getLayoutPrototypeId(),
+					layoutPageTemplateEntry.getLayoutPrototypeId()));
 		}
 
 		if (portletDataContext.isDataStrategyMirror()) {
@@ -318,7 +316,7 @@ public class LayoutPageTemplateEntryStagedModelDataHandler
 				element.attributeValue("preloaded"));
 
 			LayoutPageTemplateEntry existingLayoutPageTemplateEntry =
-				fetchExistingTemplate(
+				_fetchExistingTemplate(
 					layoutPageTemplateEntry.getUuid(),
 					portletDataContext.getScopeGroupId(),
 					layoutPageTemplateEntry.getName(),
@@ -370,32 +368,6 @@ public class LayoutPageTemplateEntryStagedModelDataHandler
 			layoutPageTemplateEntry, importedLayoutPageTemplateEntry);
 	}
 
-	protected LayoutPageTemplateEntry fetchExistingTemplate(
-		String uuid, long groupId, String name, int type, long plid,
-		boolean preloaded) {
-
-		LayoutPageTemplateEntry existingTemplate = null;
-
-		if (!preloaded) {
-			existingTemplate =
-				_stagedModelRepository.fetchStagedModelByUuidAndGroupId(
-					uuid, groupId);
-		}
-		else if (plid > 0) {
-			existingTemplate =
-				_layoutPageTemplateEntryLocalService.
-					fetchLayoutPageTemplateEntryByPlid(plid);
-		}
-
-		if ((existingTemplate == null) && preloaded) {
-			existingTemplate =
-				_layoutPageTemplateEntryLocalService.
-					fetchLayoutPageTemplateEntry(groupId, name, type);
-		}
-
-		return existingTemplate;
-	}
-
 	@Override
 	protected StagedModelRepository<LayoutPageTemplateEntry>
 		getStagedModelRepository() {
@@ -438,7 +410,10 @@ public class LayoutPageTemplateEntryStagedModelDataHandler
 		Layout layout = _layoutLocalService.fetchLayout(
 			layoutPageTemplateEntry.getPlid());
 
-		if (layout == null) {
+		if ((layout == null) ||
+			(!_layoutExportImportConfiguration.exportDraftLayout() &&
+			 !layout.isPublished())) {
+
 			return;
 		}
 
@@ -465,6 +440,32 @@ public class LayoutPageTemplateEntryStagedModelDataHandler
 		StagedModelDataHandlerUtil.exportReferenceStagedModel(
 			portletDataContext, layoutPageTemplateEntry, layout,
 			PortletDataContext.REFERENCE_TYPE_DEPENDENCY);
+	}
+
+	private LayoutPageTemplateEntry _fetchExistingTemplate(
+		String uuid, long groupId, String name, int type, long plid,
+		boolean preloaded) {
+
+		LayoutPageTemplateEntry existingTemplate = null;
+
+		if (!preloaded) {
+			existingTemplate =
+				_stagedModelRepository.fetchStagedModelByUuidAndGroupId(
+					uuid, groupId);
+		}
+		else if (plid > 0) {
+			existingTemplate =
+				_layoutPageTemplateEntryLocalService.
+					fetchLayoutPageTemplateEntryByPlid(plid);
+		}
+
+		if ((existingTemplate == null) && preloaded) {
+			existingTemplate =
+				_layoutPageTemplateEntryLocalService.
+					fetchLayoutPageTemplateEntry(groupId, name, type);
+		}
+
+		return existingTemplate;
 	}
 
 	private void _validateLayoutPrototype(
@@ -506,19 +507,13 @@ public class LayoutPageTemplateEntryStagedModelDataHandler
 				(existingLayoutPageTemplateEntry.getCompanyId() ==
 					importedLayoutPageTemplateEntry.getCompanyId())) {
 
-				StringBundler sb = new StringBundler(8);
-
-				sb.append("Layout page template ");
-				sb.append(
-					layoutPageTemplateEntry.getLayoutPageTemplateEntryId());
-				sb.append(" cannot be imported because a layout prototype ");
-				sb.append("with UUID ");
-				sb.append(layoutPrototype.getUuid());
-				sb.append(" and company ID ");
-				sb.append(portletDataContext.getCompanyId());
-				sb.append(" already exists");
-
-				throw new UnsupportedOperationException(sb.toString());
+				throw new UnsupportedOperationException(
+					StringBundler.concat(
+						"Layout page template ",
+						layoutPageTemplateEntry.getLayoutPageTemplateEntryId(),
+						" cannot be imported because a layout prototype with ",
+						"UUID ", layoutPrototype.getUuid(), " and company ID ",
+						portletDataContext.getCompanyId(), " already exists"));
 			}
 		}
 	}

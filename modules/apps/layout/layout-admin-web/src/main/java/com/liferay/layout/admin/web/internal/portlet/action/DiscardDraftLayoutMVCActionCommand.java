@@ -23,9 +23,10 @@ import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
-import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.LayoutLocalService;
+import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.service.permission.LayoutPermissionUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.transaction.Transactional;
@@ -74,26 +75,12 @@ public class DiscardDraftLayoutMVCActionCommand
 
 		long selPlid = ParamUtil.getLong(actionRequest, "selPlid");
 
-		try {
-			LayoutPermissionUtil.check(
-				themeDisplay.getPermissionChecker(), selPlid,
-				ActionKeys.UPDATE);
-		}
-		catch (PrincipalException principalException) {
-			if (!LayoutPermissionUtil.contains(
-					themeDisplay.getPermissionChecker(), selPlid,
-					ActionKeys.UPDATE_LAYOUT_CONTENT)) {
-
-				throw principalException;
-			}
-		}
+		LayoutPermissionUtil.checkLayoutUpdatePermission(
+			themeDisplay.getPermissionChecker(), selPlid);
 
 		Layout draftLayout = _layoutLocalService.getLayout(selPlid);
 
-		if ((draftLayout.getClassPK() == 0) ||
-			(_portal.getClassNameId(Layout.class) !=
-				draftLayout.getClassNameId())) {
-
+		if (!draftLayout.isDraftLayout()) {
 			sendRedirect(actionRequest, actionResponse);
 
 			return;
@@ -123,11 +110,18 @@ public class DiscardDraftLayoutMVCActionCommand
 			themeDisplay.getPermissionChecker(), layout.getPlid(),
 			ActionKeys.VIEW);
 
+		boolean published = layout.isPublished();
+
 		draftLayout = _layoutCopyHelper.copyLayout(layout, draftLayout);
 
-		draftLayout.setStatus(WorkflowConstants.STATUS_APPROVED);
+		ServiceContext serviceContext = ServiceContextFactory.getInstance(
+			Layout.class.getName(), actionRequest);
 
-		_layoutLocalService.updateLayout(draftLayout);
+		serviceContext.setAttribute("published", published);
+
+		_layoutLocalService.updateStatus(
+			themeDisplay.getUserId(), draftLayout.getPlid(),
+			WorkflowConstants.STATUS_APPROVED, serviceContext);
 
 		sendRedirect(actionRequest, actionResponse);
 	}

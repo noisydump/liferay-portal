@@ -16,7 +16,6 @@ package com.liferay.commerce.model.impl;
 
 import com.liferay.commerce.model.CommerceAddress;
 import com.liferay.commerce.model.CommerceAddressModel;
-import com.liferay.commerce.model.CommerceAddressSoap;
 import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.expando.kernel.util.ExpandoBridgeFactoryUtil;
 import com.liferay.petra.string.StringBundler;
@@ -33,22 +32,22 @@ import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -75,7 +74,7 @@ public class CommerceAddressModelImpl
 	public static final String TABLE_NAME = "CommerceAddress";
 
 	public static final Object[][] TABLE_COLUMNS = {
-		{"externalReferenceCode", Types.VARCHAR},
+		{"mvccVersion", Types.BIGINT}, {"externalReferenceCode", Types.VARCHAR},
 		{"commerceAddressId", Types.BIGINT}, {"groupId", Types.BIGINT},
 		{"companyId", Types.BIGINT}, {"userId", Types.BIGINT},
 		{"userName", Types.VARCHAR}, {"createDate", Types.TIMESTAMP},
@@ -84,7 +83,7 @@ public class CommerceAddressModelImpl
 		{"description", Types.VARCHAR}, {"street1", Types.VARCHAR},
 		{"street2", Types.VARCHAR}, {"street3", Types.VARCHAR},
 		{"city", Types.VARCHAR}, {"zip", Types.VARCHAR},
-		{"commerceRegionId", Types.BIGINT}, {"commerceCountryId", Types.BIGINT},
+		{"regionId", Types.BIGINT}, {"countryId", Types.BIGINT},
 		{"latitude", Types.DOUBLE}, {"longitude", Types.DOUBLE},
 		{"phoneNumber", Types.VARCHAR}, {"defaultBilling", Types.BOOLEAN},
 		{"defaultShipping", Types.BOOLEAN}, {"type_", Types.INTEGER}
@@ -94,6 +93,7 @@ public class CommerceAddressModelImpl
 		new HashMap<String, Integer>();
 
 	static {
+		TABLE_COLUMNS_MAP.put("mvccVersion", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("externalReferenceCode", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("commerceAddressId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("groupId", Types.BIGINT);
@@ -111,8 +111,8 @@ public class CommerceAddressModelImpl
 		TABLE_COLUMNS_MAP.put("street3", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("city", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("zip", Types.VARCHAR);
-		TABLE_COLUMNS_MAP.put("commerceRegionId", Types.BIGINT);
-		TABLE_COLUMNS_MAP.put("commerceCountryId", Types.BIGINT);
+		TABLE_COLUMNS_MAP.put("regionId", Types.BIGINT);
+		TABLE_COLUMNS_MAP.put("countryId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("latitude", Types.DOUBLE);
 		TABLE_COLUMNS_MAP.put("longitude", Types.DOUBLE);
 		TABLE_COLUMNS_MAP.put("phoneNumber", Types.VARCHAR);
@@ -122,7 +122,7 @@ public class CommerceAddressModelImpl
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table CommerceAddress (externalReferenceCode VARCHAR(75) null,commerceAddressId LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,classNameId LONG,classPK LONG,name VARCHAR(255) null,description STRING null,street1 VARCHAR(255) null,street2 VARCHAR(255) null,street3 VARCHAR(255) null,city VARCHAR(75) null,zip VARCHAR(75) null,commerceRegionId LONG,commerceCountryId LONG,latitude DOUBLE,longitude DOUBLE,phoneNumber VARCHAR(75) null,defaultBilling BOOLEAN,defaultShipping BOOLEAN,type_ INTEGER)";
+		"create table CommerceAddress (mvccVersion LONG default 0 not null,externalReferenceCode VARCHAR(75) null,commerceAddressId LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,classNameId LONG,classPK LONG,name VARCHAR(255) null,description STRING null,street1 VARCHAR(255) null,street2 VARCHAR(255) null,street3 VARCHAR(255) null,city VARCHAR(75) null,zip VARCHAR(75) null,regionId LONG,countryId LONG,latitude DOUBLE,longitude DOUBLE,phoneNumber VARCHAR(75) null,defaultBilling BOOLEAN,defaultShipping BOOLEAN,type_ INTEGER)";
 
 	public static final String TABLE_SQL_DROP = "drop table CommerceAddress";
 
@@ -157,140 +157,71 @@ public class CommerceAddressModelImpl
 	public static final boolean COLUMN_BITMASK_ENABLED = true;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long CLASSNAMEID_COLUMN_BITMASK = 1L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long CLASSPK_COLUMN_BITMASK = 2L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long COMMERCECOUNTRYID_COLUMN_BITMASK = 4L;
+	public static final long COMPANYID_COLUMN_BITMASK = 4L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long COMMERCEREGIONID_COLUMN_BITMASK = 8L;
+	public static final long COUNTRYID_COLUMN_BITMASK = 8L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long COMPANYID_COLUMN_BITMASK = 16L;
+	public static final long DEFAULTBILLING_COLUMN_BITMASK = 16L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long DEFAULTBILLING_COLUMN_BITMASK = 32L;
+	public static final long DEFAULTSHIPPING_COLUMN_BITMASK = 32L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long DEFAULTSHIPPING_COLUMN_BITMASK = 64L;
+	public static final long EXTERNALREFERENCECODE_COLUMN_BITMASK = 64L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long EXTERNALREFERENCECODE_COLUMN_BITMASK = 128L;
+	public static final long GROUPID_COLUMN_BITMASK = 128L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long GROUPID_COLUMN_BITMASK = 256L;
+	public static final long REGIONID_COLUMN_BITMASK = 256L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long TYPE_COLUMN_BITMASK = 512L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *		#getColumnBitmask(String)
+	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long CREATEDATE_COLUMN_BITMASK = 1024L;
-
-	/**
-	 * Converts the soap model instance into a normal model instance.
-	 *
-	 * @param soapModel the soap model instance to convert
-	 * @return the normal model instance
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static CommerceAddress toModel(CommerceAddressSoap soapModel) {
-		if (soapModel == null) {
-			return null;
-		}
-
-		CommerceAddress model = new CommerceAddressImpl();
-
-		model.setExternalReferenceCode(soapModel.getExternalReferenceCode());
-		model.setCommerceAddressId(soapModel.getCommerceAddressId());
-		model.setGroupId(soapModel.getGroupId());
-		model.setCompanyId(soapModel.getCompanyId());
-		model.setUserId(soapModel.getUserId());
-		model.setUserName(soapModel.getUserName());
-		model.setCreateDate(soapModel.getCreateDate());
-		model.setModifiedDate(soapModel.getModifiedDate());
-		model.setClassNameId(soapModel.getClassNameId());
-		model.setClassPK(soapModel.getClassPK());
-		model.setName(soapModel.getName());
-		model.setDescription(soapModel.getDescription());
-		model.setStreet1(soapModel.getStreet1());
-		model.setStreet2(soapModel.getStreet2());
-		model.setStreet3(soapModel.getStreet3());
-		model.setCity(soapModel.getCity());
-		model.setZip(soapModel.getZip());
-		model.setCommerceRegionId(soapModel.getCommerceRegionId());
-		model.setCommerceCountryId(soapModel.getCommerceCountryId());
-		model.setLatitude(soapModel.getLatitude());
-		model.setLongitude(soapModel.getLongitude());
-		model.setPhoneNumber(soapModel.getPhoneNumber());
-		model.setDefaultBilling(soapModel.isDefaultBilling());
-		model.setDefaultShipping(soapModel.isDefaultShipping());
-		model.setType(soapModel.getType());
-
-		return model;
-	}
-
-	/**
-	 * Converts the soap model instances into normal model instances.
-	 *
-	 * @param soapModels the soap model instances to convert
-	 * @return the normal model instances
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static List<CommerceAddress> toModels(
-		CommerceAddressSoap[] soapModels) {
-
-		if (soapModels == null) {
-			return null;
-		}
-
-		List<CommerceAddress> models = new ArrayList<CommerceAddress>(
-			soapModels.length);
-
-		for (CommerceAddressSoap soapModel : soapModels) {
-			models.add(toModel(soapModel));
-		}
-
-		return models;
-	}
 
 	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(
 		com.liferay.commerce.service.util.ServiceProps.get(
@@ -381,34 +312,6 @@ public class CommerceAddressModelImpl
 		return _attributeSetterBiConsumers;
 	}
 
-	private static Function<InvocationHandler, CommerceAddress>
-		_getProxyProviderFunction() {
-
-		Class<?> proxyClass = ProxyUtil.getProxyClass(
-			CommerceAddress.class.getClassLoader(), CommerceAddress.class,
-			ModelWrapper.class);
-
-		try {
-			Constructor<CommerceAddress> constructor =
-				(Constructor<CommerceAddress>)proxyClass.getConstructor(
-					InvocationHandler.class);
-
-			return invocationHandler -> {
-				try {
-					return constructor.newInstance(invocationHandler);
-				}
-				catch (ReflectiveOperationException
-							reflectiveOperationException) {
-
-					throw new InternalError(reflectiveOperationException);
-				}
-			};
-		}
-		catch (NoSuchMethodException noSuchMethodException) {
-			throw new InternalError(noSuchMethodException);
-		}
-	}
-
 	private static final Map<String, Function<CommerceAddress, Object>>
 		_attributeGetterFunctions;
 	private static final Map<String, BiConsumer<CommerceAddress, Object>>
@@ -421,6 +324,11 @@ public class CommerceAddressModelImpl
 		Map<String, BiConsumer<CommerceAddress, ?>> attributeSetterBiConsumers =
 			new LinkedHashMap<String, BiConsumer<CommerceAddress, ?>>();
 
+		attributeGetterFunctions.put(
+			"mvccVersion", CommerceAddress::getMvccVersion);
+		attributeSetterBiConsumers.put(
+			"mvccVersion",
+			(BiConsumer<CommerceAddress, Long>)CommerceAddress::setMvccVersion);
 		attributeGetterFunctions.put(
 			"externalReferenceCode", CommerceAddress::getExternalReferenceCode);
 		attributeSetterBiConsumers.put(
@@ -500,18 +408,15 @@ public class CommerceAddressModelImpl
 		attributeSetterBiConsumers.put(
 			"zip",
 			(BiConsumer<CommerceAddress, String>)CommerceAddress::setZip);
-		attributeGetterFunctions.put(
-			"commerceRegionId", CommerceAddress::getCommerceRegionId);
+		attributeGetterFunctions.put("regionId", CommerceAddress::getRegionId);
 		attributeSetterBiConsumers.put(
-			"commerceRegionId",
-			(BiConsumer<CommerceAddress, Long>)
-				CommerceAddress::setCommerceRegionId);
+			"regionId",
+			(BiConsumer<CommerceAddress, Long>)CommerceAddress::setRegionId);
 		attributeGetterFunctions.put(
-			"commerceCountryId", CommerceAddress::getCommerceCountryId);
+			"countryId", CommerceAddress::getCountryId);
 		attributeSetterBiConsumers.put(
-			"commerceCountryId",
-			(BiConsumer<CommerceAddress, Long>)
-				CommerceAddress::setCommerceCountryId);
+			"countryId",
+			(BiConsumer<CommerceAddress, Long>)CommerceAddress::setCountryId);
 		attributeGetterFunctions.put("latitude", CommerceAddress::getLatitude);
 		attributeSetterBiConsumers.put(
 			"latitude",
@@ -548,6 +453,21 @@ public class CommerceAddressModelImpl
 			attributeGetterFunctions);
 		_attributeSetterBiConsumers = Collections.unmodifiableMap(
 			(Map)attributeSetterBiConsumers);
+	}
+
+	@JSON
+	@Override
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_mvccVersion = mvccVersion;
 	}
 
 	@JSON
@@ -941,17 +861,17 @@ public class CommerceAddressModelImpl
 
 	@JSON
 	@Override
-	public long getCommerceRegionId() {
-		return _commerceRegionId;
+	public long getRegionId() {
+		return _regionId;
 	}
 
 	@Override
-	public void setCommerceRegionId(long commerceRegionId) {
+	public void setRegionId(long regionId) {
 		if (_columnOriginalValues == Collections.EMPTY_MAP) {
 			_setColumnOriginalValues();
 		}
 
-		_commerceRegionId = commerceRegionId;
+		_regionId = regionId;
 	}
 
 	/**
@@ -959,24 +879,24 @@ public class CommerceAddressModelImpl
 	 *             #getColumnOriginalValue(String)}
 	 */
 	@Deprecated
-	public long getOriginalCommerceRegionId() {
+	public long getOriginalRegionId() {
 		return GetterUtil.getLong(
-			this.<Long>getColumnOriginalValue("commerceRegionId"));
+			this.<Long>getColumnOriginalValue("regionId"));
 	}
 
 	@JSON
 	@Override
-	public long getCommerceCountryId() {
-		return _commerceCountryId;
+	public long getCountryId() {
+		return _countryId;
 	}
 
 	@Override
-	public void setCommerceCountryId(long commerceCountryId) {
+	public void setCountryId(long countryId) {
 		if (_columnOriginalValues == Collections.EMPTY_MAP) {
 			_setColumnOriginalValues();
 		}
 
-		_commerceCountryId = commerceCountryId;
+		_countryId = countryId;
 	}
 
 	/**
@@ -984,9 +904,9 @@ public class CommerceAddressModelImpl
 	 *             #getColumnOriginalValue(String)}
 	 */
 	@Deprecated
-	public long getOriginalCommerceCountryId() {
+	public long getOriginalCountryId() {
 		return GetterUtil.getLong(
-			this.<Long>getColumnOriginalValue("commerceCountryId"));
+			this.<Long>getColumnOriginalValue("countryId"));
 	}
 
 	@JSON
@@ -1140,7 +1060,9 @@ public class CommerceAddressModelImpl
 		for (Map.Entry<String, Object> entry :
 				_columnOriginalValues.entrySet()) {
 
-			if (entry.getValue() != getColumnValue(entry.getKey())) {
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
 				_columnBitmask |= _columnBitmasks.get(entry.getKey());
 			}
 		}
@@ -1180,6 +1102,7 @@ public class CommerceAddressModelImpl
 	public Object clone() {
 		CommerceAddressImpl commerceAddressImpl = new CommerceAddressImpl();
 
+		commerceAddressImpl.setMvccVersion(getMvccVersion());
 		commerceAddressImpl.setExternalReferenceCode(
 			getExternalReferenceCode());
 		commerceAddressImpl.setCommerceAddressId(getCommerceAddressId());
@@ -1198,8 +1121,8 @@ public class CommerceAddressModelImpl
 		commerceAddressImpl.setStreet3(getStreet3());
 		commerceAddressImpl.setCity(getCity());
 		commerceAddressImpl.setZip(getZip());
-		commerceAddressImpl.setCommerceRegionId(getCommerceRegionId());
-		commerceAddressImpl.setCommerceCountryId(getCommerceCountryId());
+		commerceAddressImpl.setRegionId(getRegionId());
+		commerceAddressImpl.setCountryId(getCountryId());
 		commerceAddressImpl.setLatitude(getLatitude());
 		commerceAddressImpl.setLongitude(getLongitude());
 		commerceAddressImpl.setPhoneNumber(getPhoneNumber());
@@ -1208,6 +1131,65 @@ public class CommerceAddressModelImpl
 		commerceAddressImpl.setType(getType());
 
 		commerceAddressImpl.resetOriginalValues();
+
+		return commerceAddressImpl;
+	}
+
+	@Override
+	public CommerceAddress cloneWithOriginalValues() {
+		CommerceAddressImpl commerceAddressImpl = new CommerceAddressImpl();
+
+		commerceAddressImpl.setMvccVersion(
+			this.<Long>getColumnOriginalValue("mvccVersion"));
+		commerceAddressImpl.setExternalReferenceCode(
+			this.<String>getColumnOriginalValue("externalReferenceCode"));
+		commerceAddressImpl.setCommerceAddressId(
+			this.<Long>getColumnOriginalValue("commerceAddressId"));
+		commerceAddressImpl.setGroupId(
+			this.<Long>getColumnOriginalValue("groupId"));
+		commerceAddressImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		commerceAddressImpl.setUserId(
+			this.<Long>getColumnOriginalValue("userId"));
+		commerceAddressImpl.setUserName(
+			this.<String>getColumnOriginalValue("userName"));
+		commerceAddressImpl.setCreateDate(
+			this.<Date>getColumnOriginalValue("createDate"));
+		commerceAddressImpl.setModifiedDate(
+			this.<Date>getColumnOriginalValue("modifiedDate"));
+		commerceAddressImpl.setClassNameId(
+			this.<Long>getColumnOriginalValue("classNameId"));
+		commerceAddressImpl.setClassPK(
+			this.<Long>getColumnOriginalValue("classPK"));
+		commerceAddressImpl.setName(
+			this.<String>getColumnOriginalValue("name"));
+		commerceAddressImpl.setDescription(
+			this.<String>getColumnOriginalValue("description"));
+		commerceAddressImpl.setStreet1(
+			this.<String>getColumnOriginalValue("street1"));
+		commerceAddressImpl.setStreet2(
+			this.<String>getColumnOriginalValue("street2"));
+		commerceAddressImpl.setStreet3(
+			this.<String>getColumnOriginalValue("street3"));
+		commerceAddressImpl.setCity(
+			this.<String>getColumnOriginalValue("city"));
+		commerceAddressImpl.setZip(this.<String>getColumnOriginalValue("zip"));
+		commerceAddressImpl.setRegionId(
+			this.<Long>getColumnOriginalValue("regionId"));
+		commerceAddressImpl.setCountryId(
+			this.<Long>getColumnOriginalValue("countryId"));
+		commerceAddressImpl.setLatitude(
+			this.<Double>getColumnOriginalValue("latitude"));
+		commerceAddressImpl.setLongitude(
+			this.<Double>getColumnOriginalValue("longitude"));
+		commerceAddressImpl.setPhoneNumber(
+			this.<String>getColumnOriginalValue("phoneNumber"));
+		commerceAddressImpl.setDefaultBilling(
+			this.<Boolean>getColumnOriginalValue("defaultBilling"));
+		commerceAddressImpl.setDefaultShipping(
+			this.<Boolean>getColumnOriginalValue("defaultShipping"));
+		commerceAddressImpl.setType(
+			this.<Integer>getColumnOriginalValue("type_"));
 
 		return commerceAddressImpl;
 	}
@@ -1286,6 +1268,8 @@ public class CommerceAddressModelImpl
 	public CacheModel<CommerceAddress> toCacheModel() {
 		CommerceAddressCacheModel commerceAddressCacheModel =
 			new CommerceAddressCacheModel();
+
+		commerceAddressCacheModel.mvccVersion = getMvccVersion();
 
 		commerceAddressCacheModel.externalReferenceCode =
 			getExternalReferenceCode();
@@ -1393,9 +1377,9 @@ public class CommerceAddressModelImpl
 			commerceAddressCacheModel.zip = null;
 		}
 
-		commerceAddressCacheModel.commerceRegionId = getCommerceRegionId();
+		commerceAddressCacheModel.regionId = getRegionId();
 
-		commerceAddressCacheModel.commerceCountryId = getCommerceCountryId();
+		commerceAddressCacheModel.countryId = getCountryId();
 
 		commerceAddressCacheModel.latitude = getLatitude();
 
@@ -1424,7 +1408,7 @@ public class CommerceAddressModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			(4 * attributeGetterFunctions.size()) + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -1435,9 +1419,26 @@ public class CommerceAddressModelImpl
 			Function<CommerceAddress, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((CommerceAddress)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply((CommerceAddress)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -1484,10 +1485,13 @@ public class CommerceAddressModelImpl
 	private static class EscapedModelProxyProviderFunctionHolder {
 
 		private static final Function<InvocationHandler, CommerceAddress>
-			_escapedModelProxyProviderFunction = _getProxyProviderFunction();
+			_escapedModelProxyProviderFunction =
+				ProxyUtil.getProxyProviderFunction(
+					CommerceAddress.class, ModelWrapper.class);
 
 	}
 
+	private long _mvccVersion;
 	private String _externalReferenceCode;
 	private long _commerceAddressId;
 	private long _groupId;
@@ -1506,8 +1510,8 @@ public class CommerceAddressModelImpl
 	private String _street3;
 	private String _city;
 	private String _zip;
-	private long _commerceRegionId;
-	private long _commerceCountryId;
+	private long _regionId;
+	private long _countryId;
 	private double _latitude;
 	private double _longitude;
 	private String _phoneNumber;
@@ -1544,6 +1548,7 @@ public class CommerceAddressModelImpl
 	private void _setColumnOriginalValues() {
 		_columnOriginalValues = new HashMap<String, Object>();
 
+		_columnOriginalValues.put("mvccVersion", _mvccVersion);
 		_columnOriginalValues.put(
 			"externalReferenceCode", _externalReferenceCode);
 		_columnOriginalValues.put("commerceAddressId", _commerceAddressId);
@@ -1562,8 +1567,8 @@ public class CommerceAddressModelImpl
 		_columnOriginalValues.put("street3", _street3);
 		_columnOriginalValues.put("city", _city);
 		_columnOriginalValues.put("zip", _zip);
-		_columnOriginalValues.put("commerceRegionId", _commerceRegionId);
-		_columnOriginalValues.put("commerceCountryId", _commerceCountryId);
+		_columnOriginalValues.put("regionId", _regionId);
+		_columnOriginalValues.put("countryId", _countryId);
 		_columnOriginalValues.put("latitude", _latitude);
 		_columnOriginalValues.put("longitude", _longitude);
 		_columnOriginalValues.put("phoneNumber", _phoneNumber);
@@ -1593,55 +1598,57 @@ public class CommerceAddressModelImpl
 	static {
 		Map<String, Long> columnBitmasks = new HashMap<>();
 
-		columnBitmasks.put("externalReferenceCode", 1L);
+		columnBitmasks.put("mvccVersion", 1L);
 
-		columnBitmasks.put("commerceAddressId", 2L);
+		columnBitmasks.put("externalReferenceCode", 2L);
 
-		columnBitmasks.put("groupId", 4L);
+		columnBitmasks.put("commerceAddressId", 4L);
 
-		columnBitmasks.put("companyId", 8L);
+		columnBitmasks.put("groupId", 8L);
 
-		columnBitmasks.put("userId", 16L);
+		columnBitmasks.put("companyId", 16L);
 
-		columnBitmasks.put("userName", 32L);
+		columnBitmasks.put("userId", 32L);
 
-		columnBitmasks.put("createDate", 64L);
+		columnBitmasks.put("userName", 64L);
 
-		columnBitmasks.put("modifiedDate", 128L);
+		columnBitmasks.put("createDate", 128L);
 
-		columnBitmasks.put("classNameId", 256L);
+		columnBitmasks.put("modifiedDate", 256L);
 
-		columnBitmasks.put("classPK", 512L);
+		columnBitmasks.put("classNameId", 512L);
 
-		columnBitmasks.put("name", 1024L);
+		columnBitmasks.put("classPK", 1024L);
 
-		columnBitmasks.put("description", 2048L);
+		columnBitmasks.put("name", 2048L);
 
-		columnBitmasks.put("street1", 4096L);
+		columnBitmasks.put("description", 4096L);
 
-		columnBitmasks.put("street2", 8192L);
+		columnBitmasks.put("street1", 8192L);
 
-		columnBitmasks.put("street3", 16384L);
+		columnBitmasks.put("street2", 16384L);
 
-		columnBitmasks.put("city", 32768L);
+		columnBitmasks.put("street3", 32768L);
 
-		columnBitmasks.put("zip", 65536L);
+		columnBitmasks.put("city", 65536L);
 
-		columnBitmasks.put("commerceRegionId", 131072L);
+		columnBitmasks.put("zip", 131072L);
 
-		columnBitmasks.put("commerceCountryId", 262144L);
+		columnBitmasks.put("regionId", 262144L);
 
-		columnBitmasks.put("latitude", 524288L);
+		columnBitmasks.put("countryId", 524288L);
 
-		columnBitmasks.put("longitude", 1048576L);
+		columnBitmasks.put("latitude", 1048576L);
 
-		columnBitmasks.put("phoneNumber", 2097152L);
+		columnBitmasks.put("longitude", 2097152L);
 
-		columnBitmasks.put("defaultBilling", 4194304L);
+		columnBitmasks.put("phoneNumber", 4194304L);
 
-		columnBitmasks.put("defaultShipping", 8388608L);
+		columnBitmasks.put("defaultBilling", 8388608L);
 
-		columnBitmasks.put("type_", 16777216L);
+		columnBitmasks.put("defaultShipping", 16777216L);
+
+		columnBitmasks.put("type_", 33554432L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}

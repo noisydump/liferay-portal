@@ -14,9 +14,10 @@
 
 package com.liferay.commerce.inventory.service;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.util.tracker.ServiceTracker;
+import com.liferay.commerce.inventory.model.CommerceInventoryReplenishmentItem;
+import com.liferay.portal.kernel.exception.PortalException;
+
+import java.util.List;
 
 /**
  * Provides the remote service utility for CommerceInventoryReplenishmentItem. This utility wraps
@@ -37,42 +38,65 @@ public class CommerceInventoryReplenishmentItemServiceUtil {
 	 *
 	 * Never modify this class directly. Add custom service methods to <code>com.liferay.commerce.inventory.service.impl.CommerceInventoryReplenishmentItemServiceImpl</code> and rerun ServiceBuilder to regenerate this class.
 	 */
-	public static
-		com.liferay.commerce.inventory.model.CommerceInventoryReplenishmentItem
-				addCommerceInventoryReplenishmentItem(
-					long userId, long commerceInventoryWarehouseId, String sku,
-					java.util.Date availabilityDate, int quantity)
-			throws com.liferay.portal.kernel.exception.PortalException {
+	public static CommerceInventoryReplenishmentItem
+			addCommerceInventoryReplenishmentItem(
+				String externalReferenceCode, long commerceInventoryWarehouseId,
+				String sku, java.util.Date availabilityDate, int quantity)
+		throws PortalException {
 
 		return getService().addCommerceInventoryReplenishmentItem(
-			userId, commerceInventoryWarehouseId, sku, availabilityDate,
-			quantity);
+			externalReferenceCode, commerceInventoryWarehouseId, sku,
+			availabilityDate, quantity);
 	}
 
 	public static void deleteCommerceInventoryReplenishmentItem(
 			long commerceInventoryReplenishmentItemId)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		getService().deleteCommerceInventoryReplenishmentItem(
 			commerceInventoryReplenishmentItemId);
 	}
 
-	public static
-		com.liferay.commerce.inventory.model.CommerceInventoryReplenishmentItem
-				getCommerceInventoryReplenishmentItem(
-					long commerceInventoryReplenishmentItemId)
-			throws com.liferay.portal.kernel.exception.PortalException {
+	public static void deleteCommerceInventoryReplenishmentItems(
+			long companyId, String sku)
+		throws PortalException {
+
+		getService().deleteCommerceInventoryReplenishmentItems(companyId, sku);
+	}
+
+	public static CommerceInventoryReplenishmentItem
+			fetchCommerceInventoryReplenishmentItemByExternalReferenceCode(
+				String externalReferenceCode, long companyId)
+		throws PortalException {
+
+		return getService().
+			fetchCommerceInventoryReplenishmentItemByExternalReferenceCode(
+				externalReferenceCode, companyId);
+	}
+
+	public static CommerceInventoryReplenishmentItem
+			getCommerceInventoryReplenishmentItem(
+				long commerceInventoryReplenishmentItemId)
+		throws PortalException {
 
 		return getService().getCommerceInventoryReplenishmentItem(
 			commerceInventoryReplenishmentItemId);
 	}
 
-	public static java.util.List
-		<com.liferay.commerce.inventory.model.
-			CommerceInventoryReplenishmentItem>
-					getCommerceInventoryReplenishmentItemsByCompanyIdAndSku(
-						long companyId, String sku, int start, int end)
-				throws com.liferay.portal.kernel.exception.PortalException {
+	public static List<CommerceInventoryReplenishmentItem>
+			getCommerceInventoryReplenishmentItemsByCommerceInventoryWarehouseId(
+				long commerceInventoryWarehouseId, int start, int end)
+		throws PortalException {
+
+		return getService().
+			getCommerceInventoryReplenishmentItemsByCommerceInventoryWarehouseId(
+				commerceInventoryWarehouseId, start, end);
+	}
+
+	public static List<CommerceInventoryReplenishmentItem>
+			getCommerceInventoryReplenishmentItemsByCompanyIdAndSku(
+				long companyId, String sku, int start, int end)
+		throws PortalException {
 
 		return getService().
 			getCommerceInventoryReplenishmentItemsByCompanyIdAndSku(
@@ -81,16 +105,26 @@ public class CommerceInventoryReplenishmentItemServiceUtil {
 
 	public static long getCommerceInventoryReplenishmentItemsCount(
 			long commerceInventoryWarehouseId, String sku)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		return getService().getCommerceInventoryReplenishmentItemsCount(
 			commerceInventoryWarehouseId, sku);
 	}
 
 	public static int
+			getCommerceInventoryReplenishmentItemsCountByCommerceInventoryWarehouseId(
+				long commerceInventoryWarehouseId)
+		throws PortalException {
+
+		return getService().
+			getCommerceInventoryReplenishmentItemsCountByCommerceInventoryWarehouseId(
+				commerceInventoryWarehouseId);
+	}
+
+	public static int
 			getCommerceInventoryReplenishmentItemsCountByCompanyIdAndSku(
 				long companyId, String sku)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		return getService().
 			getCommerceInventoryReplenishmentItemsCountByCompanyIdAndSku(
@@ -106,43 +140,22 @@ public class CommerceInventoryReplenishmentItemServiceUtil {
 		return getService().getOSGiServiceIdentifier();
 	}
 
-	public static
-		com.liferay.commerce.inventory.model.CommerceInventoryReplenishmentItem
-				updateCommerceInventoryReplenishmentItem(
-					long commerceInventoryReplenishmentItemId,
-					java.util.Date availabilityDate, int quantity,
-					long mvccVersion)
-			throws com.liferay.portal.kernel.exception.PortalException {
+	public static CommerceInventoryReplenishmentItem
+			updateCommerceInventoryReplenishmentItem(
+				String externalReferenceCode,
+				long commerceInventoryReplenishmentItemId,
+				java.util.Date availabilityDate, int quantity, long mvccVersion)
+		throws PortalException {
 
 		return getService().updateCommerceInventoryReplenishmentItem(
-			commerceInventoryReplenishmentItemId, availabilityDate, quantity,
-			mvccVersion);
+			externalReferenceCode, commerceInventoryReplenishmentItemId,
+			availabilityDate, quantity, mvccVersion);
 	}
 
 	public static CommerceInventoryReplenishmentItemService getService() {
-		return _serviceTracker.getService();
+		return _service;
 	}
 
-	private static ServiceTracker
-		<CommerceInventoryReplenishmentItemService,
-		 CommerceInventoryReplenishmentItemService> _serviceTracker;
-
-	static {
-		Bundle bundle = FrameworkUtil.getBundle(
-			CommerceInventoryReplenishmentItemService.class);
-
-		ServiceTracker
-			<CommerceInventoryReplenishmentItemService,
-			 CommerceInventoryReplenishmentItemService> serviceTracker =
-				new ServiceTracker
-					<CommerceInventoryReplenishmentItemService,
-					 CommerceInventoryReplenishmentItemService>(
-						 bundle.getBundleContext(),
-						 CommerceInventoryReplenishmentItemService.class, null);
-
-		serviceTracker.open();
-
-		_serviceTracker = serviceTracker;
-	}
+	private static volatile CommerceInventoryReplenishmentItemService _service;
 
 }

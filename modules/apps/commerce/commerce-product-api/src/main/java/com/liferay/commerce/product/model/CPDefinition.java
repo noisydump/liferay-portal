@@ -82,17 +82,13 @@ public interface CPDefinition extends CPDefinitionModel, PersistedModel {
 	public CPTaxCategory getCPTaxCategory()
 		throws com.liferay.portal.kernel.exception.PortalException;
 
-	public String getDefaultImageFileURL()
-		throws com.liferay.portal.kernel.exception.PortalException;
-
-	public String getDefaultImageThumbnailSrc() throws Exception;
+	public String getDefaultImageThumbnailSrc(long commerceAccountId)
+		throws Exception;
 
 	public com.liferay.portal.kernel.util.UnicodeProperties
 		getDeliverySubscriptionTypeSettingsProperties();
 
 	public java.util.Map<java.util.Locale, String> getDescriptionMap();
-
-	public String getLayoutUuid();
 
 	public java.util.Map<java.util.Locale, String> getMetaDescriptionMap();
 
@@ -121,8 +117,6 @@ public interface CPDefinition extends CPDefinitionModel, PersistedModel {
 
 	public void setDescriptionMap(
 		java.util.Map<java.util.Locale, String> descriptionMap);
-
-	public void setLayoutUuid(String layoutUuid);
 
 	public void setNameMap(java.util.Map<java.util.Locale, String> nameMap);
 

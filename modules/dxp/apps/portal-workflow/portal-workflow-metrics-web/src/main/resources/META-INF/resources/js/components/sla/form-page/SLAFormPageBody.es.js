@@ -33,8 +33,8 @@ import {
 } from './SLAFormConstants.es';
 import {AlertChange, AlertMessage} from './SLAFormPageAlerts.es';
 import {SLAFormContext} from './SLAFormPageProvider.es';
-import {DurationSection} from './sections/DurationSection.es';
-import {TimeFrameSection} from './sections/TimeFrameSection.es';
+import DurationSection from './sections/DurationSection.es';
+import TimeFrameSection from './sections/TimeFrameSection.es';
 import {
 	hasErrors,
 	validateDuration,
@@ -43,7 +43,7 @@ import {
 	validateNodeKeys,
 } from './util/slaFormUtil.es';
 
-const Body = ({history, id, processId, query}) => {
+function Body({history, id, processId, query}) {
 	const {defaultDelta} = useContext(AppContext);
 	const {setSLAUpdated} = useContext(SLAContext);
 	const {
@@ -61,16 +61,14 @@ const Body = ({history, id, processId, query}) => {
 
 	usePageTitle(id ? sla.name : Liferay.Language.get('new-sla'));
 
-	const handleErrors = (error) => {
-		const {data} = error.response || {};
-
-		if (Array.isArray(data)) {
-			data.forEach(({fieldName, message}) => {
+	const handleErrors = (dataError) => {
+		if (Array.isArray(dataError)) {
+			dataError.forEach(({fieldName, message}) => {
 				errors[fieldName || ALERT_MESSAGE] = message;
 			});
 
 			const nodeKeys = [PAUSE_NODE_KEYS, START_NODE_KEYS, STOP_NODE_KEYS];
-			const nodeErrors = data.filter(({fieldName}) =>
+			const nodeErrors = dataError.filter(({fieldName}) =>
 				nodeKeys.includes(fieldName)
 			);
 
@@ -262,11 +260,11 @@ const Body = ({history, id, processId, query}) => {
 			</ClayForm>
 		</ContentView>
 	);
-};
+}
 
 Body.AlertChange = AlertChange;
 Body.AlertMessage = AlertMessage;
 Body.DurationSection = DurationSection;
 Body.TimeFrameSection = TimeFrameSection;
 
-export {Body};
+export default Body;

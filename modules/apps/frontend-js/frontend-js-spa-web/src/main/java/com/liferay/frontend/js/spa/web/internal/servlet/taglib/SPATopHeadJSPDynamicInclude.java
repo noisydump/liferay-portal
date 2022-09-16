@@ -14,7 +14,7 @@
 
 package com.liferay.frontend.js.spa.web.internal.servlet.taglib;
 
-import com.liferay.frontend.js.module.launcher.JSModuleLauncher;
+import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolver;
 import com.liferay.frontend.js.spa.web.internal.servlet.taglib.helper.SPAHelper;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -22,6 +22,7 @@ import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.servlet.taglib.BaseJSPDynamicInclude;
 import com.liferay.portal.kernel.servlet.taglib.DynamicInclude;
+import com.liferay.portal.kernel.servlet.taglib.aui.ScriptData;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Html;
@@ -31,6 +32,7 @@ import com.liferay.portal.kernel.util.WebKeys;
 
 import java.io.IOException;
 
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -56,22 +58,6 @@ public class SPATopHeadJSPDynamicInclude extends BaseJSPDynamicInclude {
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		JSONObject userNotificationJSONObject = JSONUtil.put(
-			"message",
-			_language.get(
-				_spaHelper.getLanguageResourceBundle(
-					"frontend-js-spa-web", themeDisplay.getLocale()),
-				"it-looks-like-this-is-taking-longer-than-expected")
-		).put(
-			"timeout", _spaHelper.getUserNotificationTimeout()
-		).put(
-			"title",
-			_language.get(
-				_spaHelper.getLanguageResourceBundle(
-					"frontend-js-spa-web", themeDisplay.getLocale()),
-				"oops")
-		);
-
 		JSONObject configJSONObject = JSONUtil.put(
 			"cacheExpirationTime",
 			_spaHelper.getCacheExpirationTime(themeDisplay.getCompanyId())
@@ -95,14 +81,38 @@ public class SPATopHeadJSPDynamicInclude extends BaseJSPDynamicInclude {
 		).put(
 			"requestTimeout", _spaHelper.getRequestTimeout()
 		).put(
-			"userNotification", userNotificationJSONObject
+			"userNotification",
+			JSONUtil.put(
+				"message",
+				_language.get(
+					_spaHelper.getLanguageResourceBundle(
+						"frontend-js-spa-web", themeDisplay.getLocale()),
+					"it-looks-like-this-is-taking-longer-than-expected")
+			).put(
+				"timeout", _spaHelper.getUserNotificationTimeout()
+			).put(
+				"title",
+				_language.get(
+					_spaHelper.getLanguageResourceBundle(
+						"frontend-js-spa-web", themeDisplay.getLocale()),
+					"oops")
+			)
 		).put(
 			"validStatusCodes", _spaHelper.getValidStatusCodesJSONArray()
 		);
 
-		_jsModuleLauncher.writeModuleInvocation(
-			httpServletResponse.getWriter(), "frontend-js-spa-web",
-			configJSONObject.toJSONString());
+		String initModuleName = _npmResolver.resolveModuleName(
+			"frontend-js-spa-web/init");
+
+		ScriptData initScriptData = new ScriptData();
+
+		initScriptData.append(
+			null,
+			"frontendJsSpaWebInit.default(" + configJSONObject.toString() + ")",
+			initModuleName + " as frontendJsSpaWebInit",
+			ScriptData.ModulesType.ES6);
+
+		initScriptData.writeTo(httpServletResponse.getWriter());
 	}
 
 	@Override
@@ -126,14 +136,19 @@ public class SPATopHeadJSPDynamicInclude extends BaseJSPDynamicInclude {
 		return null;
 	}
 
+	@Override
+	protected ServletContext getServletContext() {
+		return null;
+	}
+
 	@Reference
 	private Html _html;
 
 	@Reference
-	private JSModuleLauncher _jsModuleLauncher;
+	private Language _language;
 
 	@Reference
-	private Language _language;
+	private NPMResolver _npmResolver;
 
 	@Reference
 	private Props _props;

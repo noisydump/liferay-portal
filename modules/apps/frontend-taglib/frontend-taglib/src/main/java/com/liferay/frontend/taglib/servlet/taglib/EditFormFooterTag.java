@@ -14,11 +14,11 @@
 
 package com.liferay.frontend.taglib.servlet.taglib;
 
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.taglib.util.IncludeTag;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspWriter;
 
 /**
@@ -43,11 +43,14 @@ public class EditFormFooterTag extends IncludeTag {
 
 		String cssClass = "sheet-footer";
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		HttpServletRequest httpServletRequest = getRequest();
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		if (themeDisplay.isStatePopUp()) {
-			cssClass = cssClass + StringPool.SPACE + "dialog-footer";
+			cssClass = cssClass + " dialog-footer";
 		}
 
 		jspWriter.write(cssClass);

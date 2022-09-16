@@ -126,10 +126,9 @@ NumberFormat decimalFormat = NumberFormat.getNumberInstance(locale);
 										String symbol2 = symbols[j];
 
 										currencyConverter = CurrencyConverterUtil.getCurrencyConverter(symbol2 + symbol);
-
-										if (currencyConverter != null) {
 									%>
 
+										<c:if test="<%= currencyConverter != null %>">
 											<td>
 												<c:if test="<%= i != j %>">
 													<%= decimalFormat.format(currencyConverter.getRate()) %>
@@ -139,9 +138,9 @@ NumberFormat decimalFormat = NumberFormat.getNumberInstance(locale);
 													1
 												</c:if>
 											</td>
+										</c:if>
 
 									<%
-										}
 									}
 									%>
 
@@ -183,11 +182,15 @@ NumberFormat decimalFormat = NumberFormat.getNumberInstance(locale);
 							<span class="currency-header"><liferay-ui:message key="historical-charts" /></span>
 
 							<%
-							PortletURL portletURL = renderResponse.createRenderURL();
-
-							portletURL.setParameter("number", String.valueOf(number));
-							portletURL.setParameter("from", currencyConverter.getFromSymbol());
-							portletURL.setParameter("to", currencyConverter.getToSymbol());
+							PortletURL portletURL = PortletURLBuilder.createRenderURL(
+								renderResponse
+							).setParameter(
+								"from", currencyConverter.getFromSymbol()
+							).setParameter(
+								"number", number
+							).setParameter(
+								"to", currencyConverter.getToSymbol()
+							).buildPortletURL();
 							%>
 
 							<c:choose>

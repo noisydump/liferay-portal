@@ -178,29 +178,12 @@
 		<tag-class>com.liferay.layout.taglib.servlet.taglib.RenderFragmentLayoutTag</tag-class>
 		<body-content>JSP</body-content>
 		<attribute>
-			<name>fieldValues</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<description>Deprecated as of 7.3.0, with no direct replacement.</description>
-			<name>groupId</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
 			<name>mainItemId</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
 			<name>mode</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<description>Deprecated as of 7.3.0, with no direct replacement.</description>
-			<name>plid</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
@@ -216,14 +199,9 @@
 		<tag-class>com.liferay.layout.taglib.servlet.taglib.RenderLayoutStructureTag</tag-class>
 		<body-content>JSP</body-content>
 		<attribute>
-			<name>fieldValues</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
 			<description></description>
 			<name>layoutStructure</name>
-			<required>true</required>
+			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
@@ -278,6 +256,12 @@
 		</attribute>
 		<attribute>
 			<description></description>
+			<name>itemSelectorReturnType</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description></description>
 			<name>itemSelectorSaveEvent</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
@@ -304,6 +288,13 @@
 			<description></description>
 			<name>privateLayout</name>
 			<required>true</required>
+			<rtexprvalue>true</rtexprvalue>
+			<type>boolean</type>
+		</attribute>
+		<attribute>
+			<description></description>
+			<name>showDraftLayouts</name>
+			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 			<type>boolean</type>
 		</attribute>

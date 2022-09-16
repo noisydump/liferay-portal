@@ -25,10 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.util.tracker.ServiceTracker;
-
 /**
  * The persistence utility for the asset list entry asset entry rel service. This utility wraps <code>com.liferay.asset.list.service.persistence.impl.AssetListEntryAssetEntryRelPersistenceImpl</code> and provides direct access to the database for CRUD operations. This utility should only be used by the service layer, as it must operate within a transaction. Never access this utility in a JSP, controller, model, or other front-end class.
  *
@@ -978,7 +974,7 @@ public class AssetListEntryAssetEntryRelUtil {
 	 * </p>
 	 *
 	 * @param assetListEntryId the asset list entry ID
-	 * @param segmentsEntryId the segments entry ID
+	 * @param segmentsEntryIds the segments entry IDs
 	 * @param start the lower bound of the range of asset list entry asset entry rels
 	 * @param end the upper bound of the range of asset list entry asset entry rels (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
@@ -1495,29 +1491,9 @@ public class AssetListEntryAssetEntryRelUtil {
 	}
 
 	public static AssetListEntryAssetEntryRelPersistence getPersistence() {
-		return _serviceTracker.getService();
+		return _persistence;
 	}
 
-	private static ServiceTracker
-		<AssetListEntryAssetEntryRelPersistence,
-		 AssetListEntryAssetEntryRelPersistence> _serviceTracker;
-
-	static {
-		Bundle bundle = FrameworkUtil.getBundle(
-			AssetListEntryAssetEntryRelPersistence.class);
-
-		ServiceTracker
-			<AssetListEntryAssetEntryRelPersistence,
-			 AssetListEntryAssetEntryRelPersistence> serviceTracker =
-				new ServiceTracker
-					<AssetListEntryAssetEntryRelPersistence,
-					 AssetListEntryAssetEntryRelPersistence>(
-						 bundle.getBundleContext(),
-						 AssetListEntryAssetEntryRelPersistence.class, null);
-
-		serviceTracker.open();
-
-		_serviceTracker = serviceTracker;
-	}
+	private static volatile AssetListEntryAssetEntryRelPersistence _persistence;
 
 }

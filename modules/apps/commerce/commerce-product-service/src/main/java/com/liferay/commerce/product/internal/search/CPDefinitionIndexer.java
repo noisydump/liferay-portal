@@ -14,6 +14,7 @@
 
 package com.liferay.commerce.product.internal.search;
 
+import com.liferay.commerce.account.constants.CommerceAccountConstants;
 import com.liferay.commerce.account.model.CommerceAccountGroupRel;
 import com.liferay.commerce.account.service.CommerceAccountGroupRelService;
 import com.liferay.commerce.media.CommerceMediaResolver;
@@ -38,14 +39,17 @@ import com.liferay.commerce.product.model.CommerceChannelRel;
 import com.liferay.commerce.product.service.CPDefinitionLinkLocalService;
 import com.liferay.commerce.product.service.CPDefinitionLocalService;
 import com.liferay.commerce.product.service.CPInstanceLocalService;
+import com.liferay.commerce.product.service.CommerceCatalogService;
 import com.liferay.commerce.product.service.CommerceChannelRelLocalService;
+import com.liferay.commerce.util.CommerceBigDecimalUtil;
 import com.liferay.friendly.url.model.FriendlyURLEntry;
 import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.BaseIndexer;
@@ -55,6 +59,7 @@ import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.IndexWriterHelper;
 import com.liferay.portal.kernel.search.Indexer;
+import com.liferay.portal.kernel.search.ParseException;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.Summary;
 import com.liferay.portal.kernel.search.facet.util.RangeParserUtil;
@@ -63,12 +68,17 @@ import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.search.filter.RangeTermFilter;
 import com.liferay.portal.kernel.search.filter.TermFilter;
 import com.liferay.portal.kernel.search.filter.TermsFilter;
+import com.liferay.portal.kernel.search.generic.BooleanQueryImpl;
+import com.liferay.portal.kernel.search.generic.MultiMatchQuery;
+import com.liferay.portal.kernel.search.generic.TermQueryImpl;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.search.expando.ExpandoBridgeIndexer;
 
 import java.io.Serializable;
 
@@ -206,49 +216,53 @@ public class CPDefinitionIndexer extends BaseIndexer<CPDefinition> {
 			long commerceChannelId = GetterUtil.getLong(
 				attributes.get("commerceChannelGroupId"));
 
-			BooleanFilter channelBooleanFiler = new BooleanFilter();
+			BooleanFilter commerceChannelBooleanFilter = new BooleanFilter();
 
-			BooleanFilter channelFilterEnableBooleanFiler = new BooleanFilter();
+			BooleanFilter commerceChannelFilterEnableBooleanFilter =
+				new BooleanFilter();
 
-			channelFilterEnableBooleanFiler.addTerm(
+			commerceChannelFilterEnableBooleanFilter.addTerm(
 				CPField.CHANNEL_FILTER_ENABLED, Boolean.TRUE.toString(),
 				BooleanClauseOccur.MUST);
 
 			if (commerceChannelId > 0) {
-				channelFilterEnableBooleanFiler.addTerm(
-					CPField.CHANNEL_GROUP_IDS,
+				commerceChannelFilterEnableBooleanFilter.addTerm(
+					CPField.COMMERCE_CHANNEL_GROUP_IDS,
 					String.valueOf(commerceChannelId), BooleanClauseOccur.MUST);
 			}
 			else {
-				channelFilterEnableBooleanFiler.addTerm(
-					CPField.CHANNEL_GROUP_IDS, "-1", BooleanClauseOccur.MUST);
+				commerceChannelFilterEnableBooleanFilter.addTerm(
+					CPField.COMMERCE_CHANNEL_GROUP_IDS, "-1",
+					BooleanClauseOccur.MUST);
 			}
 
-			channelBooleanFiler.add(
-				channelFilterEnableBooleanFiler, BooleanClauseOccur.SHOULD);
-			channelBooleanFiler.addTerm(
+			commerceChannelBooleanFilter.add(
+				commerceChannelFilterEnableBooleanFilter,
+				BooleanClauseOccur.SHOULD);
+			commerceChannelBooleanFilter.addTerm(
 				CPField.CHANNEL_FILTER_ENABLED, Boolean.FALSE.toString(),
 				BooleanClauseOccur.SHOULD);
 
 			contextBooleanFilter.add(
-				channelBooleanFiler, BooleanClauseOccur.MUST);
+				commerceChannelBooleanFilter, BooleanClauseOccur.MUST);
 
 			long[] commerceAccountGroupIds = GetterUtil.getLongValues(
 				searchContext.getAttribute("commerceAccountGroupIds"), null);
 
-			BooleanFilter accountGroupsBooleanFilter = new BooleanFilter();
-
-			BooleanFilter accountGroupsFilteEnableBooleanFilter =
+			BooleanFilter commerceAccountGroupsBooleanFilter =
 				new BooleanFilter();
 
-			accountGroupsFilteEnableBooleanFilter.addTerm(
+			BooleanFilter commerceAccountGroupsFilterEnableBooleanFilter =
+				new BooleanFilter();
+
+			commerceAccountGroupsFilterEnableBooleanFilter.addTerm(
 				CPField.ACCOUNT_GROUP_FILTER_ENABLED, Boolean.TRUE.toString(),
 				BooleanClauseOccur.MUST);
 
 			if ((commerceAccountGroupIds != null) &&
 				(commerceAccountGroupIds.length > 0)) {
 
-				BooleanFilter accountGroupIdsBooleanFilter =
+				BooleanFilter commerceAccountGroupIdsBooleanFilter =
 					new BooleanFilter();
 
 				for (long commerceAccountGroupId : commerceAccountGroupIds) {
@@ -256,34 +270,44 @@ public class CPDefinitionIndexer extends BaseIndexer<CPDefinition> {
 						"commerceAccountGroupIds",
 						String.valueOf(commerceAccountGroupId));
 
-					accountGroupIdsBooleanFilter.add(
+					commerceAccountGroupIdsBooleanFilter.add(
 						termFilter, BooleanClauseOccur.SHOULD);
 				}
 
-				accountGroupsFilteEnableBooleanFilter.add(
-					accountGroupIdsBooleanFilter, BooleanClauseOccur.MUST);
+				commerceAccountGroupsFilterEnableBooleanFilter.add(
+					commerceAccountGroupIdsBooleanFilter,
+					BooleanClauseOccur.MUST);
 			}
 			else {
-				accountGroupsFilteEnableBooleanFilter.addTerm(
+				commerceAccountGroupsFilterEnableBooleanFilter.addTerm(
 					"commerceAccountGroupIds", "-1", BooleanClauseOccur.MUST);
 			}
 
-			accountGroupsBooleanFilter.add(
-				accountGroupsFilteEnableBooleanFilter,
+			commerceAccountGroupsBooleanFilter.add(
+				commerceAccountGroupsFilterEnableBooleanFilter,
 				BooleanClauseOccur.SHOULD);
-			accountGroupsBooleanFilter.addTerm(
+			commerceAccountGroupsBooleanFilter.addTerm(
 				CPField.ACCOUNT_GROUP_FILTER_ENABLED, Boolean.FALSE.toString(),
 				BooleanClauseOccur.SHOULD);
 
 			contextBooleanFilter.add(
-				accountGroupsBooleanFilter, BooleanClauseOccur.MUST);
+				commerceAccountGroupsBooleanFilter, BooleanClauseOccur.MUST);
 		}
 		else {
-			long[] groupIds = searchContext.getGroupIds();
+			long[] commerceCatalogIds = _getUserCommerceCatalogIds(
+				searchContext);
 
-			if ((groupIds == null) || (groupIds.length == 0)) {
-				contextBooleanFilter.addTerm(
-					Field.GROUP_ID, "-1", BooleanClauseOccur.MUST);
+			if (commerceCatalogIds.length > 0) {
+				_addCommerceCatalogIdFilters(
+					contextBooleanFilter, commerceCatalogIds);
+			}
+			else {
+				long[] groupIds = searchContext.getGroupIds();
+
+				if ((groupIds == null) || (groupIds.length == 0)) {
+					contextBooleanFilter.addTerm(
+						Field.GROUP_ID, "-1", BooleanClauseOccur.MUST);
+				}
 			}
 		}
 	}
@@ -319,6 +343,38 @@ public class CPDefinitionIndexer extends BaseIndexer<CPDefinition> {
 
 			if (Validator.isNotNull(expandoAttributes)) {
 				addSearchExpando(searchQuery, searchContext, expandoAttributes);
+			}
+		}
+
+		String keywords = searchContext.getKeywords();
+
+		if (Validator.isNotNull(keywords)) {
+			try {
+				keywords = StringUtil.toLowerCase(keywords);
+
+				BooleanQuery booleanQuery = new BooleanQueryImpl();
+
+				booleanQuery.add(
+					new TermQueryImpl(CPField.SKUS + ".1_10_ngram", keywords),
+					BooleanClauseOccur.SHOULD);
+
+				MultiMatchQuery multiMatchQuery = new MultiMatchQuery(keywords);
+
+				multiMatchQuery.addFields(
+					CPField.SKUS, CPField.SKUS + ".reverse");
+				multiMatchQuery.setType(MultiMatchQuery.Type.PHRASE_PREFIX);
+
+				booleanQuery.add(multiMatchQuery, BooleanClauseOccur.SHOULD);
+
+				if (searchContext.isAndSearch()) {
+					searchQuery.add(booleanQuery, BooleanClauseOccur.MUST);
+				}
+				else {
+					searchQuery.add(booleanQuery, BooleanClauseOccur.SHOULD);
+				}
+			}
+			catch (ParseException parseException) {
+				throw new SystemException(parseException);
 			}
 		}
 	}
@@ -361,42 +417,21 @@ public class CPDefinitionIndexer extends BaseIndexer<CPDefinition> {
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(exception, exception);
+				_log.debug(exception);
 			}
 		}
 
 		for (String languageId : languageIds) {
 			String description = cpDefinition.getDescription(languageId);
-			String name = cpDefinition.getName(languageId);
-			String urlTitle = languageIdToUrlTitleMap.get(languageId);
 			String metaDescription = cpDefinition.getMetaDescription(
 				languageId);
 			String metaKeywords = cpDefinition.getMetaKeywords(languageId);
 			String metaTitle = cpDefinition.getMetaTitle(languageId);
+			String name = cpDefinition.getName(languageId);
 			String shortDescription = cpDefinition.getShortDescription(
 				languageId);
+			String urlTitle = languageIdToUrlTitleMap.get(languageId);
 
-			if (languageId.equals(cpDefinitionDefaultLanguageId)) {
-				document.addText(Field.DESCRIPTION, description);
-				document.addText(Field.NAME, name);
-				document.addText(Field.URL, urlTitle);
-				document.addText(CPField.META_DESCRIPTION, metaDescription);
-				document.addText(CPField.META_KEYWORDS, metaKeywords);
-				document.addText(CPField.META_TITLE, metaTitle);
-				document.addText(CPField.SHORT_DESCRIPTION, shortDescription);
-				document.addText("defaultLanguageId", languageId);
-			}
-
-			document.addText(
-				LocalizationUtil.getLocalizedName(Field.NAME, languageId),
-				name);
-			document.addText(
-				LocalizationUtil.getLocalizedName(
-					Field.DESCRIPTION, languageId),
-				description);
-			document.addText(
-				LocalizationUtil.getLocalizedName(Field.URL, languageId),
-				urlTitle);
 			document.addText(
 				LocalizationUtil.getLocalizedName(
 					CPField.META_DESCRIPTION, languageId),
@@ -413,23 +448,43 @@ public class CPDefinitionIndexer extends BaseIndexer<CPDefinition> {
 				LocalizationUtil.getLocalizedName(
 					CPField.SHORT_DESCRIPTION, languageId),
 				shortDescription);
+			document.addText(
+				LocalizationUtil.getLocalizedName(
+					Field.DESCRIPTION, languageId),
+				description);
+			document.addText(
+				LocalizationUtil.getLocalizedName(Field.NAME, languageId),
+				name);
+			document.addText(
+				LocalizationUtil.getLocalizedName(Field.URL, languageId),
+				urlTitle);
 
 			document.addText(Field.CONTENT, description);
 		}
 
 		document.addText(
+			CPField.META_DESCRIPTION,
+			cpDefinition.getMetaDescription(cpDefinitionDefaultLanguageId));
+		document.addText(
+			CPField.META_KEYWORDS,
+			cpDefinition.getMetaKeywords(cpDefinitionDefaultLanguageId));
+		document.addText(
+			CPField.META_TITLE,
+			cpDefinition.getMetaTitle(cpDefinitionDefaultLanguageId));
+		document.addText(
 			Field.NAME, cpDefinition.getName(cpDefinitionDefaultLanguageId));
+		document.addText(
+			CPField.SHORT_DESCRIPTION,
+			cpDefinition.getShortDescription(cpDefinitionDefaultLanguageId));
 		document.addText(
 			Field.DESCRIPTION,
 			cpDefinition.getDescription(cpDefinitionDefaultLanguageId));
 		document.addText(
 			Field.URL,
 			languageIdToUrlTitleMap.get(cpDefinitionDefaultLanguageId));
-		document.addText(
-			CPField.SHORT_DESCRIPTION,
-			cpDefinition.getShortDescription(cpDefinitionDefaultLanguageId));
+		document.addText("defaultLanguageId", cpDefinitionDefaultLanguageId);
 
-		List<Long> channelGroupIds = new ArrayList<>();
+		List<Long> commerceChannelGroupIds = new ArrayList<>();
 
 		for (CommerceChannelRel commerceChannelRel :
 				_commerceChannelRelLocalService.getCommerceChannelRels(
@@ -440,11 +495,12 @@ public class CPDefinitionIndexer extends BaseIndexer<CPDefinition> {
 			CommerceChannel commerceChannel =
 				commerceChannelRel.getCommerceChannel();
 
-			channelGroupIds.add(commerceChannel.getGroupId());
+			commerceChannelGroupIds.add(commerceChannel.getGroupId());
 		}
 
 		document.addNumber(
-			CPField.CHANNEL_GROUP_IDS, ArrayUtil.toLongArray(channelGroupIds));
+			CPField.COMMERCE_CHANNEL_GROUP_IDS,
+			ArrayUtil.toLongArray(commerceChannelGroupIds));
 
 		List<CommerceAccountGroupRel> commerceAccountGroupRels =
 			_commerceAccountGroupRelService.getCommerceAccountGroupRels(
@@ -483,11 +539,11 @@ public class CPDefinitionIndexer extends BaseIndexer<CPDefinition> {
 
 			List<String> optionValueIds = new ArrayList<>();
 
-			Set<Locale> availableLocales = LanguageUtil.getAvailableLocales(
+			Set<Locale> availableLocales = _language.getAvailableLocales(
 				cpDefinitionOptionRel.getGroupId());
 
 			for (Locale locale : availableLocales) {
-				String languageId = LanguageUtil.getLanguageId(locale);
+				String languageId = _language.getLanguageId(locale);
 
 				List<String> localizedOptionValues = new ArrayList<>();
 
@@ -543,22 +599,17 @@ public class CPDefinitionIndexer extends BaseIndexer<CPDefinition> {
 		document.addKeyword(
 			CPField.CHANNEL_FILTER_ENABLED,
 			cpDefinition.isChannelFilterEnabled());
-
 		document.addKeyword(
 			CPField.IS_IGNORE_SKU_COMBINATIONS,
 			cpDefinition.isIgnoreSKUCombinations());
-
 		document.addKeyword(CPField.PRODUCT_ID, cpDefinition.getCProductId());
-
 		document.addText(
 			CPField.OPTION_NAMES, ArrayUtil.toStringArray(optionNames));
 		document.addNumber(
 			CPField.OPTION_IDS, ArrayUtil.toLongArray(optionIds));
-
-		String[] skus = _cpInstanceLocalService.getSKUs(
-			cpDefinition.getCPDefinitionId());
-
-		document.addText(CPField.SKUS, skus);
+		document.addText(
+			CPField.SKUS,
+			_cpInstanceLocalService.getSKUs(cpDefinition.getCPDefinitionId()));
 
 		List<String> specificationOptionNames = new ArrayList<>();
 		List<Long> specificationOptionIds = new ArrayList<>();
@@ -589,11 +640,11 @@ public class CPDefinitionIndexer extends BaseIndexer<CPDefinition> {
 
 			specificationOptionValuesNames.add(specificationOptionValue);
 
-			Set<Locale> availableLocales = LanguageUtil.getAvailableLocales(
+			Set<Locale> availableLocales = _language.getAvailableLocales(
 				cpDefinitionSpecificationOptionValue.getGroupId());
 
 			for (Locale locale : availableLocales) {
-				String languageId = LanguageUtil.getLanguageId(locale);
+				String languageId = _language.getLanguageId(locale);
 
 				String localizedSpecificationOptionValue =
 					cpDefinitionSpecificationOptionValue.getValue(languageId);
@@ -698,7 +749,7 @@ public class CPDefinitionIndexer extends BaseIndexer<CPDefinition> {
 				continue;
 			}
 
-			String[] linkedProductIds = getReverseCPDefinitionIds(
+			String[] linkedProductIds = _getReverseCPDefinitionIds(
 				cProduct.getCProductId(), type);
 
 			document.addKeyword(type, linkedProductIds);
@@ -707,7 +758,7 @@ public class CPDefinitionIndexer extends BaseIndexer<CPDefinition> {
 		long cpAttachmentFileEntryId = 0;
 
 		CPAttachmentFileEntry cpAttachmentFileEntry =
-			_cpDefinitionLocalService.getDefaultImage(
+			_cpDefinitionLocalService.getDefaultImageCPAttachmentFileEntry(
 				cpDefinition.getCPDefinitionId());
 
 		if (cpAttachmentFileEntry != null) {
@@ -722,21 +773,21 @@ public class CPDefinitionIndexer extends BaseIndexer<CPDefinition> {
 		if (cpAttachmentFileEntryId == 0) {
 			document.addKeyword(
 				CPField.DEFAULT_IMAGE_FILE_URL,
-				_commerceMediaResolver.getDefaultUrl(
+				_commerceMediaResolver.getDefaultURL(
 					cpDefinition.getGroupId()));
 		}
 		else {
 			document.addKeyword(
 				CPField.DEFAULT_IMAGE_FILE_URL,
-				_commerceMediaResolver.getUrl(
+				_commerceMediaResolver.getURL(
+					CommerceAccountConstants.ACCOUNT_ID_GUEST,
 					cpAttachmentFileEntryId, false, false, false));
 		}
 
-		if ((cpDefinition.getStatus() != WorkflowConstants.STATUS_APPROVED) ||
-			((cpDefinition.getCPDefinitionId() !=
+		if ((cpDefinition.getCPDefinitionId() !=
 				cProduct.getPublishedCPDefinitionId()) &&
-			 _cpDefinitionLocalService.isVersionable(
-				 cpDefinition.getCPDefinitionId()))) {
+			_cpDefinitionLocalService.isVersionable(
+				cpDefinition.getCPDefinitionId())) {
 
 			document.addKeyword(Field.HIDDEN, true);
 		}
@@ -754,7 +805,17 @@ public class CPDefinitionIndexer extends BaseIndexer<CPDefinition> {
 		if (cpInstances.size() == 1) {
 			CPInstance cpInstance = cpInstances.get(0);
 
-			document.addNumber(CPField.BASE_PRICE, cpInstance.getPrice());
+			BigDecimal price = cpInstance.getPrice();
+			BigDecimal promoPrice = cpInstance.getPromoPrice();
+
+			if ((promoPrice.compareTo(BigDecimal.ZERO) > 0) &&
+				CommerceBigDecimalUtil.lt(promoPrice, price)) {
+
+				document.addNumber(CPField.BASE_PRICE, promoPrice);
+			}
+			else {
+				document.addNumber(CPField.BASE_PRICE, price);
+			}
 		}
 		else if (!cpInstances.isEmpty()) {
 			CPInstance firstCPInstance = cpInstances.get(0);
@@ -774,15 +835,30 @@ public class CPDefinitionIndexer extends BaseIndexer<CPDefinition> {
 							cpInstance.getCPInstanceUuid(),
 							CommercePriceListConstants.TYPE_PRICE_LIST);
 
+				if (commercePriceEntry == null) {
+					continue;
+				}
+
 				BigDecimal price = commercePriceEntry.getPrice();
 
-				if (lowestPrice.compareTo(price) < 0) {
+				BigDecimal promoPrice = cpInstance.getPromoPrice();
+
+				if ((promoPrice.compareTo(BigDecimal.ZERO) > 0) &&
+					CommerceBigDecimalUtil.lt(promoPrice, price)) {
+
+					price = promoPrice;
+				}
+
+				if (CommerceBigDecimalUtil.lt(price, lowestPrice)) {
 					lowestPrice = price;
 				}
 			}
 
 			document.addNumber(CPField.BASE_PRICE, lowestPrice);
 		}
+
+		_expandoBridgeIndexer.addAttributes(
+			document, cpDefinition.getExpandoBridge());
 
 		if (_log.isDebugEnabled()) {
 			_log.debug("Document " + cpDefinition + " indexed successfully");
@@ -820,10 +896,20 @@ public class CPDefinitionIndexer extends BaseIndexer<CPDefinition> {
 	protected void doReindex(String[] ids) throws Exception {
 		long companyId = GetterUtil.getLong(ids[0]);
 
-		reindexCPDefinitions(companyId);
+		_reindexCPDefinitions(companyId);
 	}
 
-	protected String[] getReverseCPDefinitionIds(long cProductId, String type) {
+	private void _addCommerceCatalogIdFilters(
+		BooleanFilter contextBooleanFilter, long[] commerceCatalogIds) {
+
+		TermsFilter termsFilter = new TermsFilter("commerceCatalogId");
+
+		termsFilter.addValues(ArrayUtil.toStringArray(commerceCatalogIds));
+
+		contextBooleanFilter.add(termsFilter, BooleanClauseOccur.MUST);
+	}
+
+	private String[] _getReverseCPDefinitionIds(long cProductId, String type) {
 		List<CPDefinitionLink> cpDefinitionLinks =
 			_cpDefinitionLinkLocalService.getReverseCPDefinitionLinks(
 				cProductId, type);
@@ -841,8 +927,25 @@ public class CPDefinitionIndexer extends BaseIndexer<CPDefinition> {
 		return reverseCPDefinitionIds.toArray(reverseCPDefinitionIdsArray);
 	}
 
-	protected void reindexCPDefinitions(long companyId) throws PortalException {
-		final IndexableActionableDynamicQuery indexableActionableDynamicQuery =
+	private long[] _getUserCommerceCatalogIds(SearchContext searchContext) {
+		List<CommerceCatalog> commerceCatalogs =
+			_commerceCatalogService.getCommerceCatalogs(
+				searchContext.getCompanyId(), QueryUtil.ALL_POS,
+				QueryUtil.ALL_POS);
+
+		if (commerceCatalogs.isEmpty()) {
+			return new long[0];
+		}
+
+		Stream<CommerceCatalog> stream = commerceCatalogs.stream();
+
+		return stream.mapToLong(
+			commerceCatalog -> commerceCatalog.getCommerceCatalogId()
+		).toArray();
+	}
+
+	private void _reindexCPDefinitions(long companyId) throws Exception {
+		IndexableActionableDynamicQuery indexableActionableDynamicQuery =
 			_cpDefinitionLocalService.getIndexableActionableDynamicQuery();
 
 		indexableActionableDynamicQuery.setCompanyId(companyId);
@@ -876,6 +979,9 @@ public class CPDefinitionIndexer extends BaseIndexer<CPDefinition> {
 	private CommerceAccountGroupRelService _commerceAccountGroupRelService;
 
 	@Reference
+	private CommerceCatalogService _commerceCatalogService;
+
+	@Reference
 	private CommerceChannelRelLocalService _commerceChannelRelLocalService;
 
 	@Reference
@@ -897,9 +1003,15 @@ public class CPDefinitionIndexer extends BaseIndexer<CPDefinition> {
 	private CPInstanceLocalService _cpInstanceLocalService;
 
 	@Reference
+	private ExpandoBridgeIndexer _expandoBridgeIndexer;
+
+	@Reference
 	private FriendlyURLEntryLocalService _friendlyURLEntryLocalService;
 
 	@Reference
 	private IndexWriterHelper _indexWriterHelper;
+
+	@Reference
+	private Language _language;
 
 }

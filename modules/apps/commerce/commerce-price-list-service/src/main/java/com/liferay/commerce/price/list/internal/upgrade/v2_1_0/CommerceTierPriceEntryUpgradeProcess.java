@@ -14,76 +14,40 @@
 
 package com.liferay.commerce.price.list.internal.upgrade.v2_1_0;
 
-import com.liferay.commerce.price.list.internal.upgrade.base.BaseCommercePriceListUpgradeProcess;
-import com.liferay.commerce.price.list.internal.upgrade.v2_1_0.util.CommerceTierPriceEntryTable;
+import com.liferay.portal.kernel.upgrade.UpgradeProcess;
+import com.liferay.portal.kernel.upgrade.UpgradeProcessFactory;
+import com.liferay.portal.kernel.upgrade.UpgradeStep;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 /**
  * @author Riccardo Alberti
  */
-public class CommerceTierPriceEntryUpgradeProcess
-	extends BaseCommercePriceListUpgradeProcess {
+public class CommerceTierPriceEntryUpgradeProcess extends UpgradeProcess {
 
 	@Override
 	public void doUpgrade() throws Exception {
-		addColumn(
-			CommerceTierPriceEntryTable.class,
-			CommerceTierPriceEntryTable.TABLE_NAME, "discountDiscovery",
-			"BOOLEAN");
-
-		addColumn(
-			CommerceTierPriceEntryTable.class,
-			CommerceTierPriceEntryTable.TABLE_NAME, "discountLevel1",
-			"DECIMAL(30,16)");
-
-		addColumn(
-			CommerceTierPriceEntryTable.class,
-			CommerceTierPriceEntryTable.TABLE_NAME, "discountLevel2",
-			"DECIMAL(30,16)");
-
-		addColumn(
-			CommerceTierPriceEntryTable.class,
-			CommerceTierPriceEntryTable.TABLE_NAME, "discountLevel3",
-			"DECIMAL(30,16)");
-
-		addColumn(
-			CommerceTierPriceEntryTable.class,
-			CommerceTierPriceEntryTable.TABLE_NAME, "discountLevel4",
-			"DECIMAL(30,16)");
-
-		addColumn(
-			CommerceTierPriceEntryTable.class,
-			CommerceTierPriceEntryTable.TABLE_NAME, "displayDate", "DATE");
-
-		addColumn(
-			CommerceTierPriceEntryTable.class,
-			CommerceTierPriceEntryTable.TABLE_NAME, "expirationDate", "DATE");
-
-		addColumn(
-			CommerceTierPriceEntryTable.class,
-			CommerceTierPriceEntryTable.TABLE_NAME, "status", "INTEGER");
-
-		addColumn(
-			CommerceTierPriceEntryTable.class,
-			CommerceTierPriceEntryTable.TABLE_NAME, "statusByUserId", "LONG");
-
-		addColumn(
-			CommerceTierPriceEntryTable.class,
-			CommerceTierPriceEntryTable.TABLE_NAME, "statusByUserName",
-			"VARCHAR(75)");
-
-		addColumn(
-			CommerceTierPriceEntryTable.class,
-			CommerceTierPriceEntryTable.TABLE_NAME, "statusDate", "DATE");
-
 		runSQL(
-			"UPDATE CommerceTierPriceEntry SET displayDate = lastPublishDate");
+			"update CommerceTierPriceEntry set displayDate = lastPublishDate");
 		runSQL(
-			"UPDATE CommerceTierPriceEntry SET status = " +
+			"update CommerceTierPriceEntry set status = " +
 				WorkflowConstants.STATUS_APPROVED);
-		runSQL("UPDATE CommerceTierPriceEntry SET statusByUserId = userId");
-		runSQL("UPDATE CommerceTierPriceEntry SET statusByUserName = userName");
-		runSQL("UPDATE CommerceTierPriceEntry SET statusDate = modifiedDate");
+		runSQL("update CommerceTierPriceEntry set statusByUserId = userId");
+		runSQL("update CommerceTierPriceEntry set statusByUserName = userName");
+		runSQL("update CommerceTierPriceEntry set statusDate = modifiedDate");
+	}
+
+	@Override
+	protected UpgradeStep[] getPreUpgradeSteps() {
+		return new UpgradeStep[] {
+			UpgradeProcessFactory.addColumns(
+				"CommerceTierPriceEntry", "discountDiscovery BOOLEAN",
+				"discountLevel1 DECIMAL(30,16)",
+				"discountLevel2 DECIMAL(30,16)",
+				"discountLevel3 DECIMAL(30,16)",
+				"discountLevel4 DECIMAL(30,16)", "displayDate DATE",
+				"expirationDate DATE", "status INTEGER", "statusByUserId LONG",
+				"statusByUserName VARCHAR(75)", "statusDate DATE")
+		};
 	}
 
 }

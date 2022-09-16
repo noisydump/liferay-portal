@@ -16,7 +16,12 @@ package com.liferay.jenkins.results.parser;
 
 import java.io.IOException;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
@@ -33,6 +38,14 @@ public class GitHubRemoteGitCommit extends BaseGitCommit {
 		return JenkinsResultsParserUtil.combine(
 			"https://github.com/", _gitHubUsername, "/", getGitRepositoryName(),
 			"/commit/", getSHA());
+	}
+
+	public List<String> getModifiedFilenames() {
+		if (modifiedFilenames == null) {
+			init();
+		}
+
+		return modifiedFilenames;
 	}
 
 	public List<String> getStatusDescriptions() {
@@ -97,9 +110,20 @@ public class GitHubRemoteGitCommit extends BaseGitCommit {
 
 	protected GitHubRemoteGitCommit(
 		String emailAddress, String gitHubUsername, String gitRepositoryName,
-		String message, String sha, Type type, long commitTime) {
+		String message, List<String> modifiedFilenames, String sha, Type type,
+		long commitTime) {
 
 		super(emailAddress, gitRepositoryName, message, sha, type, commitTime);
+
+		_gitHubUsername = gitHubUsername;
+		this.modifiedFilenames = modifiedFilenames;
+	}
+
+	protected GitHubRemoteGitCommit(
+		String gitHubUsername, String gitRepositoryName, String sha,
+		Type type) {
+
+		super(gitRepositoryName, sha, type);
 
 		_gitHubUsername = gitHubUsername;
 	}
@@ -108,6 +132,72 @@ public class GitHubRemoteGitCommit extends BaseGitCommit {
 		return JenkinsResultsParserUtil.getGitHubApiUrl(
 			getGitRepositoryName(), _gitHubUsername, "statuses/" + getSHA());
 	}
+
+	protected void init() {
+		try {
+			JSONObject jsonObject = JenkinsResultsParserUtil.toJSONObject(
+				getGitHubCommitURL(), false);
+
+			JSONObject commitJSONObject = jsonObject.getJSONObject("commit");
+
+			message = commitJSONObject.getString("message");
+
+			JSONObject committerJSONObject = commitJSONObject.getJSONObject(
+				"committer");
+
+			modifiedFilenames = Collections.emptyList();
+
+			JSONArray filesJSONArray = jsonObject.getJSONArray("files");
+
+			if (filesJSONArray != null) {
+				modifiedFilenames = new ArrayList<>(filesJSONArray.length());
+
+				for (int i = 0; i < filesJSONArray.length(); i++) {
+					JSONObject fileJSONObject = filesJSONArray.getJSONObject(i);
+
+					modifiedFilenames.add(fileJSONObject.getString("filename"));
+				}
+			}
+
+			try {
+				DateFormat gitHubDateFormat =
+					JenkinsResultsParserUtil.getGitHubDateFormat();
+
+				Date commitDate = gitHubDateFormat.parse(
+					committerJSONObject.getString("date"));
+
+				commitTime = commitDate.getTime();
+			}
+			catch (ParseException parseException) {
+				throw new RuntimeException(
+					"Unable to parse committer date " +
+						committerJSONObject.getString("date"),
+					parseException);
+			}
+		}
+		catch (IOException ioException) {
+			throw new RuntimeException(
+				"Unable to get GitHub API JSON for commit " + getSHA(),
+				ioException);
+		}
+	}
+
+	@Override
+	protected void initCommitTime() {
+		init();
+	}
+
+	@Override
+	protected void initEmailAddress() {
+		init();
+	}
+
+	@Override
+	protected void initMessage() {
+		init();
+	}
+
+	protected List<String> modifiedFilenames;
 
 	private final String _gitHubUsername;
 

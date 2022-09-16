@@ -17,6 +17,8 @@ package com.liferay.portal.kernel.plugin;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -213,11 +215,7 @@ public class Version implements Comparable<Version>, Serializable {
 	}
 
 	public boolean includes(Version version) {
-		if (equals(version)) {
-			return true;
-		}
-
-		if (getMajor().equals(StringPool.STAR)) {
+		if (equals(version) || getMajor().equals(StringPool.STAR)) {
 			return true;
 		}
 
@@ -396,6 +394,10 @@ public class Version implements Comparable<Version>, Serializable {
 				return false;
 			}
 			catch (NumberFormatException numberFormatException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(numberFormatException);
+				}
+
 				return false;
 			}
 		}
@@ -404,6 +406,8 @@ public class Version implements Comparable<Version>, Serializable {
 	}
 
 	private static final String _SEPARATOR = StringPool.PERIOD;
+
+	private static final Log _log = LogFactoryUtil.getLog(Version.class);
 
 	private static final Map<String, Version> _versions =
 		new ConcurrentHashMap<>();

@@ -25,7 +25,6 @@ boolean defaultLogo = GetterUtil.getBoolean((String)request.getAttribute("lifera
 String defaultLogoURL = (String)request.getAttribute("liferay-ui:logo-selector:defaultLogoURL");
 String editLogoFn = GetterUtil.getString((String)request.getAttribute("liferay-ui:logo-selector:editLogoFn"));
 String logoDisplaySelector = (String)request.getAttribute("liferay-ui:logo-selector:logoDisplaySelector");
-long maxFileSize = GetterUtil.getLong((String)request.getAttribute("liferay-ui:logo-selector:maxFileSize"));
 boolean preserveRatio = GetterUtil.getBoolean((String)request.getAttribute("liferay-ui:logo-selector:preserveRatio"));
 boolean showBackground = GetterUtil.getBoolean((String)request.getAttribute("liferay-ui:logo-selector:showBackground"));
 boolean showButtons = GetterUtil.getBoolean((String)request.getAttribute("liferay-ui:logo-selector:showButtons"));
@@ -57,8 +56,8 @@ else {
 	<c:when test="<%= showButtons %>">
 		<div class="taglib-logo-selector" id="<%= randomNamespace %>taglibLogoSelector">
 			<div class="taglib-logo-selector-content" id="<%= randomNamespace %>taglibLogoSelectorContent">
-				<a class="lfr-change-logo <%= showBackground ? "show-background" : StringPool.BLANK %>" href="javascript:;">
-					<img alt="<liferay-ui:message escapeAttribute="<%= true %>" key="current-image" />" class="avatar img-fluid" id="<%= randomNamespace %>avatar" src="<%= HtmlUtil.escape(imageURL) %>" />
+				<a class="lfr-change-logo <%= showBackground ? "show-background" : StringPool.BLANK %>" href="javascript:void(0);">
+					<img alt="<liferay-ui:message escapeAttribute="<%= true %>" key="current-image" />" class="avatar img-fluid mw-100" id="<%= randomNamespace %>avatar" src="<%= HtmlUtil.escape(imageURL) %>" />
 				</a>
 
 				<c:if test='<%= Validator.isNull(imageURL) || imageURL.contains("/spacer.png") %>'>
@@ -67,11 +66,11 @@ else {
 					</p>
 				</c:if>
 
-				<div class="portrait-icons">
+				<div class="mb-4 mt-3 portrait-icons">
 					<div class="btn-group button-holder">
-						<aui:button cssClass="btn btn-secondary edit-logo modify-link" value="change" />
+						<aui:button cssClass="edit-logo modify-link mr-3" value="change" />
 
-						<aui:button cssClass="btn btn-secondary delete-logo modify-link" disabled="<%= defaultLogo && (fileEntryId == 0) %>" value="delete" />
+						<aui:button cssClass="delete-logo modify-link" disabled="<%= defaultLogo && (fileEntryId == 0) %>" value="delete" />
 					</div>
 
 					<aui:input name="deleteLogo" type="hidden" value="<%= deleteLogo %>" />
@@ -86,7 +85,6 @@ else {
 			<liferay-portlet:param name="randomNamespace" value="<%= randomNamespace %>" />
 			<liferay-portlet:param name="aspectRatio" value="<%= String.valueOf(aspectRatio) %>" />
 			<liferay-portlet:param name="currentLogoURL" value="<%= currentLogoURL %>" />
-			<liferay-portlet:param name="maxFileSize" value="<%= String.valueOf(maxFileSize) %>" />
 			<liferay-portlet:param name="preserveRatio" value="<%= String.valueOf(preserveRatio) %>" />
 			<liferay-portlet:param name="tempImageFileName" value="<%= tempImageFileName %>" />
 		</liferay-portlet:renderURL>

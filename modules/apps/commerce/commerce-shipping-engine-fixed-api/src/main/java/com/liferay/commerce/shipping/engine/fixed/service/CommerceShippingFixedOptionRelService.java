@@ -21,7 +21,6 @@ import com.liferay.portal.kernel.jsonwebservice.JSONWebService;
 import com.liferay.portal.kernel.security.access.control.AccessControlled;
 import com.liferay.portal.kernel.service.BaseService;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.spring.osgi.OSGiBeanProperties;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
@@ -44,13 +43,6 @@ import org.osgi.annotation.versioning.ProviderType;
  */
 @AccessControlled
 @JSONWebService
-@OSGiBeanProperties(
-	property = {
-		"json.web.service.context.name=commerce",
-		"json.web.service.context.path=CommerceShippingFixedOptionRel"
-	},
-	service = CommerceShippingFixedOptionRelService.class
-)
 @ProviderType
 @Transactional(
 	isolation = Isolation.PORTAL,
@@ -64,12 +56,12 @@ public interface CommerceShippingFixedOptionRelService extends BaseService {
 	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.commerce.shipping.engine.fixed.service.impl.CommerceShippingFixedOptionRelServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the commerce shipping fixed option rel remote service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link CommerceShippingFixedOptionRelServiceUtil} if injection and service tracking are not available.
 	 */
 	public CommerceShippingFixedOptionRel addCommerceShippingFixedOptionRel(
-			long userId, long groupId, long commerceShippingMethodId,
+			long groupId, long commerceShippingMethodId,
 			long commerceShippingFixedOptionId,
-			long commerceInventoryWarehouseId, long commerceCountryId,
-			long commerceRegionId, String zip, double weightFrom,
-			double weightTo, BigDecimal fixedPrice,
-			BigDecimal rateUnitWeightPrice, double ratePercentage)
+			long commerceInventoryWarehouseId, long countryId, long regionId,
+			String zip, double weightFrom, double weightTo,
+			BigDecimal fixedPrice, BigDecimal rateUnitWeightPrice,
+			double ratePercentage)
 		throws PortalException;
 
 	/**
@@ -78,11 +70,10 @@ public interface CommerceShippingFixedOptionRelService extends BaseService {
 	@Deprecated
 	public CommerceShippingFixedOptionRel addCommerceShippingFixedOptionRel(
 			long commerceShippingMethodId, long commerceShippingFixedOptionId,
-			long commerceInventoryWarehouseId, long commerceCountryId,
-			long commerceRegionId, String zip, double weightFrom,
-			double weightTo, BigDecimal fixedPrice,
-			BigDecimal rateUnitWeightPrice, double ratePercentage,
-			ServiceContext serviceContext)
+			long commerceInventoryWarehouseId, long countryId, long regionId,
+			String zip, double weightFrom, double weightTo,
+			BigDecimal fixedPrice, BigDecimal rateUnitWeightPrice,
+			double ratePercentage, ServiceContext serviceContext)
 		throws PortalException;
 
 	public void deleteCommerceShippingFixedOptionRel(
@@ -116,10 +107,10 @@ public interface CommerceShippingFixedOptionRelService extends BaseService {
 
 	public CommerceShippingFixedOptionRel updateCommerceShippingFixedOptionRel(
 			long commerceShippingFixedOptionRelId,
-			long commerceInventoryWarehouseId, long commerceCountryId,
-			long commerceRegionId, String zip, double weightFrom,
-			double weightTo, BigDecimal fixedPrice,
-			BigDecimal rateUnitWeightPrice, double ratePercentage)
+			long commerceInventoryWarehouseId, long countryId, long regionId,
+			String zip, double weightFrom, double weightTo,
+			BigDecimal fixedPrice, BigDecimal rateUnitWeightPrice,
+			double ratePercentage)
 		throws PortalException;
 
 }

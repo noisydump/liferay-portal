@@ -23,33 +23,38 @@ import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.SQLQuery;
 import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.exception.SystemException;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.util.List;
+
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Alessio Antonio Rendina
  */
+@Component(
+	enabled = false, service = CommerceTaxFixedRateAddressRelFinder.class
+)
 public class CommerceTaxFixedRateAddressRelFinderImpl
 	extends CommerceTaxFixedRateAddressRelFinderBaseImpl
 	implements CommerceTaxFixedRateAddressRelFinder {
 
-	public static final String FIND_BY_C_C_C_Z =
-		CommerceTaxFixedRateAddressRelFinder.class.getName() + ".findByC_C_C_Z";
+	public static final String FIND_BY_C_C_R_Z =
+		CommerceTaxFixedRateAddressRelFinder.class.getName() + ".findByC_C_R_Z";
 
-	public static final String FIND_BY_C_C_C_C_Z =
+	public static final String FIND_BY_C_C_C_R_Z =
 		CommerceTaxFixedRateAddressRelFinder.class.getName() +
-			".findByC_C_C_C_Z";
+			".findByC_C_C_R_Z";
 
 	@Override
-	public CommerceTaxFixedRateAddressRel fetchByC_C_C_C_Z_First(
-		long commerceTaxMethodId, long cpTaxCategoryId, long commerceCountryId,
-		long commerceRegionId, String zip) {
+	public CommerceTaxFixedRateAddressRel fetchByC_C_C_R_Z_First(
+		long commerceTaxMethodId, long cpTaxCategoryId, long countryId,
+		long regionId, String zip) {
 
 		List<CommerceTaxFixedRateAddressRel> commerceTaxFixedRateAddressRels =
-			findByC_C_C_C_Z(
-				commerceTaxMethodId, cpTaxCategoryId, commerceCountryId,
-				commerceRegionId, zip, QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+			findByC_C_C_R_Z(
+				commerceTaxMethodId, cpTaxCategoryId, countryId, regionId, zip,
+				QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 
 		if (!commerceTaxFixedRateAddressRels.isEmpty()) {
 			return commerceTaxFixedRateAddressRels.get(0);
@@ -59,13 +64,11 @@ public class CommerceTaxFixedRateAddressRelFinderImpl
 	}
 
 	@Override
-	public CommerceTaxFixedRateAddressRel fetchByC_C_C_Z_First(
-		long commerceTaxMethodId, long commerceCountryId, long commerceRegionId,
-		String zip) {
+	public CommerceTaxFixedRateAddressRel fetchByC_C_R_Z_First(
+		long commerceTaxMethodId, long countryId, long regionId, String zip) {
 
 		List<CommerceTaxFixedRateAddressRel> commerceTaxFixedRateAddressRels =
-			findByC_C_C_Z(
-				commerceTaxMethodId, commerceCountryId, commerceRegionId, zip);
+			findByC_C_R_Z(commerceTaxMethodId, countryId, regionId, zip);
 
 		if (!commerceTaxFixedRateAddressRels.isEmpty()) {
 			return commerceTaxFixedRateAddressRels.get(0);
@@ -75,26 +78,25 @@ public class CommerceTaxFixedRateAddressRelFinderImpl
 	}
 
 	@Override
-	public List<CommerceTaxFixedRateAddressRel> findByC_C_C_Z(
-		long commerceTaxMethodId, long commerceCountryId, long commerceRegionId,
-		String zip) {
+	public List<CommerceTaxFixedRateAddressRel> findByC_C_R_Z(
+		long commerceTaxMethodId, long countryId, long regionId, String zip) {
 
-		return findByC_C_C_Z(
-			commerceTaxMethodId, commerceCountryId, commerceRegionId, zip,
-			QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+		return findByC_C_R_Z(
+			commerceTaxMethodId, countryId, regionId, zip, QueryUtil.ALL_POS,
+			QueryUtil.ALL_POS);
 	}
 
 	@Override
-	public List<CommerceTaxFixedRateAddressRel> findByC_C_C_Z(
-		long commerceTaxMethodId, long commerceCountryId, long commerceRegionId,
-		String zip, int start, int end) {
+	public List<CommerceTaxFixedRateAddressRel> findByC_C_R_Z(
+		long commerceTaxMethodId, long countryId, long regionId, String zip,
+		int start, int end) {
 
 		Session session = null;
 
 		try {
 			session = openSession();
 
-			String sql = _customSQL.get(getClass(), FIND_BY_C_C_C_Z);
+			String sql = _customSQL.get(getClass(), FIND_BY_C_C_R_Z);
 
 			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
@@ -105,8 +107,8 @@ public class CommerceTaxFixedRateAddressRelFinderImpl
 			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
 
 			queryPos.add(commerceTaxMethodId);
-			queryPos.add(commerceCountryId);
-			queryPos.add(commerceRegionId);
+			queryPos.add(countryId);
+			queryPos.add(regionId);
 			queryPos.add(zip);
 
 			return (List<CommerceTaxFixedRateAddressRel>)QueryUtil.list(
@@ -121,16 +123,16 @@ public class CommerceTaxFixedRateAddressRelFinderImpl
 	}
 
 	@Override
-	public List<CommerceTaxFixedRateAddressRel> findByC_C_C_C_Z(
-		long commerceTaxMethodId, long cpTaxCategoryId, long commerceCountryId,
-		long commerceRegionId, String zip, int start, int end) {
+	public List<CommerceTaxFixedRateAddressRel> findByC_C_C_R_Z(
+		long commerceTaxMethodId, long cpTaxCategoryId, long countryId,
+		long regionId, String zip, int start, int end) {
 
 		Session session = null;
 
 		try {
 			session = openSession();
 
-			String sql = _customSQL.get(getClass(), FIND_BY_C_C_C_C_Z);
+			String sql = _customSQL.get(getClass(), FIND_BY_C_C_C_R_Z);
 
 			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
@@ -142,8 +144,8 @@ public class CommerceTaxFixedRateAddressRelFinderImpl
 
 			queryPos.add(commerceTaxMethodId);
 			queryPos.add(cpTaxCategoryId);
-			queryPos.add(commerceCountryId);
-			queryPos.add(commerceRegionId);
+			queryPos.add(countryId);
+			queryPos.add(regionId);
 			queryPos.add(zip);
 
 			return (List<CommerceTaxFixedRateAddressRel>)QueryUtil.list(
@@ -157,7 +159,7 @@ public class CommerceTaxFixedRateAddressRelFinderImpl
 		}
 	}
 
-	@ServiceReference(type = CustomSQL.class)
+	@Reference
 	private CustomSQL _customSQL;
 
 }

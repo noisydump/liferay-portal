@@ -64,20 +64,23 @@ if (row == null) {
 	showWhenSingleIcon="<%= true %>"
 >
 	<c:if test="<%= (folder != null) && BookmarksFolderPermission.contains(permissionChecker, folder, ActionKeys.UPDATE) %>">
-
-		<%
-		PortletURL editURL = PortalUtil.getControlPanelPortletURL(request, themeDisplay.getScopeGroup(), BookmarksPortletKeys.BOOKMARKS_ADMIN, 0, themeDisplay.getPlid(), PortletRequest.RENDER_PHASE);
-
-		editURL.setParameter("mvcRenderCommandName", "/bookmarks/edit_folder");
-		editURL.setParameter("redirect", currentURL);
-		editURL.setParameter("portletResource", portletDisplay.getId());
-		editURL.setParameter("folderId", String.valueOf(folder.getFolderId()));
-		editURL.setParameter("mergeWithParentFolderDisabled", String.valueOf(row == null));
-		%>
-
 		<liferay-ui:icon
 			message="edit"
-			url="<%= editURL.toString() %>"
+			url='<%=
+				PortletURLBuilder.create(
+					PortalUtil.getControlPanelPortletURL(request, themeDisplay.getScopeGroup(), BookmarksPortletKeys.BOOKMARKS_ADMIN, 0, themeDisplay.getPlid(), PortletRequest.RENDER_PHASE)
+				).setMVCRenderCommandName(
+					"/bookmarks/edit_folder"
+				).setRedirect(
+					currentURL
+				).setPortletResource(
+					portletDisplay.getId()
+				).setParameter(
+					"folderId", folder.getFolderId()
+				).setParameter(
+					"mergeWithParentFolderDisabled", row == null
+				).buildString()
+			%>'
 		/>
 
 		<portlet:renderURL var="moveURL">

@@ -8,7 +8,7 @@ definition {
 		LexiconEntry.gotoAdd();
 
 		Type.clickAtType(
-			locator1 = "TextInput#NAME",
+			locator1 = "DDL#NAME_INPUT",
 			value1 = "${ddlListName}");
 
 		if (isSet(ddlListDescription)) {
@@ -104,6 +104,22 @@ definition {
 		LexiconEntry.gotoEllipsisMenuItem(menuItem = "Permissions");
 	}
 
+	macro editUserViewPermissionCP {
+		ProductMenu.gotoPortlet(
+			category = "Content & Data",
+			portlet = "Dynamic Data Lists");
+
+		DDLList.editPermissions(ddlListName = "${ddlListName}");
+
+		if (IsElementPresent.isElementPresentAfterWait(locator1 = "IFrame#MODAL_BODY")) {
+			SelectFrame(locator1 = "IFrame#MODAL_BODY");
+		}
+
+		PermissionsInline.addOrRemoveViewPermissionFromAllRoles(
+			addOrRemoveViewPermission = "${addOrRemoveViewPermission}",
+			roleList = "${roleList}");
+	}
+
 	macro editViaDDLDisplayPG {
 		Click(
 			locator1 = "DDL#PORTLET_ACTIONS_EDIT_LIST",
@@ -122,10 +138,37 @@ definition {
 			value1 = "Save");
 	}
 
+	macro expandCollapsedIcon {
+		if (isSet(classNameList)) {
+			for (var className : list "${classNameList}") {
+				var key_sectionName = "${className}";
+
+				if (IsElementPresent(key_tab = "${className}", locator1 = "StyleBookEditor#STYLE_BOOK_EDITOR_SIDEBAR_EXPANDED")) {
+					AssertElementPresent(locator1 = "StyleBookEditor#STYLE_BOOK_EDITOR_SIDEBAR_EXPANDED");
+				}
+				else {
+					Click(locator1 = "StyleBookEditor#STYLE_BOOK_EDITOR_SIDEBAR_COLLAPSED");
+				}
+			}
+		}
+		else {
+			var key_sectionName = "${className}";
+
+			if (IsElementPresent(key_tab = "${className}", locator1 = "StyleBookEditor#STYLE_BOOK_EDITOR_SIDEBAR_EXPANDED")) {
+				AssertElementPresent(locator1 = "StyleBookEditor#STYLE_BOOK_EDITOR_SIDEBAR_EXPANDED");
+			}
+			else {
+				Click(locator1 = "StyleBookEditor#STYLE_BOOK_EDITOR_SIDEBAR_COLLAPSED");
+			}
+		}
+	}
+
+	macro openDynamicDataListsAdmin {
+		Navigator.openWithAppendToBaseURL(urlAppend = "group/${siteURLKey}/~/control_panel/manage?p_p_id=com_liferay_dynamic_data_lists_web_portlet_DDLPortlet");
+	}
+
 	macro saveViaDDLDisplayPG {
 		DDLDataDefinition.save();
-
-		Pause(locator1 = "5000");
 	}
 
 	macro selectViaDDLDisplayPG {
@@ -158,7 +201,7 @@ definition {
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
+			category = "Content & Data",
 			portlet = "Dynamic Data Lists");
 
 		while (IsElementPresent(locator1 = "Icon#BODY_VERTICAL_ELLIPSIS")) {

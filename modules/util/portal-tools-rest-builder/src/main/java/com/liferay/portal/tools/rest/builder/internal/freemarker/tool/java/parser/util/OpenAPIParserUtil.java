@@ -14,6 +14,7 @@
 
 package com.liferay.portal.tools.rest.builder.internal.freemarker.tool.java.parser.util;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TextFormatter;
 import com.liferay.portal.kernel.util.Validator;
@@ -25,6 +26,7 @@ import com.liferay.portal.tools.rest.builder.internal.yaml.YAMLUtil;
 import com.liferay.portal.tools.rest.builder.internal.yaml.config.ConfigYAML;
 import com.liferay.portal.tools.rest.builder.internal.yaml.openapi.Components;
 import com.liferay.portal.tools.rest.builder.internal.yaml.openapi.Content;
+import com.liferay.portal.tools.rest.builder.internal.yaml.openapi.Info;
 import com.liferay.portal.tools.rest.builder.internal.yaml.openapi.Items;
 import com.liferay.portal.tools.rest.builder.internal.yaml.openapi.OpenAPIYAML;
 import com.liferay.portal.tools.rest.builder.internal.yaml.openapi.Operation;
@@ -151,13 +153,10 @@ public class OpenAPIParserUtil {
 	}
 
 	public static List<String> getExternalReferences(OpenAPIYAML openAPIYAML) {
+		Set<String> externalReferences = new HashSet<>();
+
 		Map<String, PathItem> pathItems = openAPIYAML.getPathItems();
 
-		if (pathItems == null) {
-			return Collections.emptyList();
-		}
-
-		Set<String> externalReferences = new HashSet<>();
 		Map<String, Schema> schemas = Optional.ofNullable(
 			openAPIYAML.getComponents()
 		).map(
@@ -166,24 +165,44 @@ public class OpenAPIParserUtil {
 			new HashMap<>()
 		);
 
-		for (Map.Entry<String, PathItem> entry1 : pathItems.entrySet()) {
-			List<Operation> operations = getOperations(entry1.getValue());
+		if (pathItems != null) {
+			for (PathItem pathItem : pathItems.values()) {
+				List<Operation> operations = getOperations(pathItem);
 
-			for (Operation operation : operations) {
-				RequestBody requestBody = operation.getRequestBody();
+				for (Operation operation : operations) {
+					RequestBody requestBody = operation.getRequestBody();
 
-				if (requestBody != null) {
-					_getExternalReferences(
-						requestBody.getContent(), externalReferences, schemas);
+					if (requestBody != null) {
+						_addExternalReferences(
+							requestBody.getContent(), externalReferences,
+							schemas);
+					}
+
+					Map<ResponseCode, Response> responses =
+						operation.getResponses();
+
+					for (Response response : responses.values()) {
+						if (response == null) {
+							continue;
+						}
+
+						_addExternalReferences(
+							response.getContent(), externalReferences, schemas);
+					}
 				}
+			}
+		}
 
-				Map<ResponseCode, Response> responses =
-					operation.getResponses();
+		for (Schema schema : schemas.values()) {
+			Map<String, Schema> propertySchemas = schema.getPropertySchemas();
 
-				for (Response response : responses.values()) {
-					_getExternalReferences(
-						response.getContent(), externalReferences, schemas);
-				}
+			if (propertySchemas == null) {
+				continue;
+			}
+
+			for (Schema propertySchema : propertySchemas.values()) {
+				_addExternalReferences(
+					externalReferences, propertySchema, schemas);
 			}
 		}
 
@@ -196,17 +215,35 @@ public class OpenAPIParserUtil {
 
 		Map<String, Schema> externalReferencesMap = new HashMap<>();
 
-		List<String> externalReferences = getExternalReferences(openAPIYAML);
+		String externalReference = null;
+		Set<String> visitedPaths = new HashSet<>();
 
-		for (String externalReference : externalReferences) {
+		Queue<String> queue = new LinkedList<>(
+			getExternalReferences(openAPIYAML));
+
+		while ((externalReference = queue.poll()) != null) {
 			String path = externalReference.substring(
 				0, externalReference.indexOf("#"));
 
-			File openAPIFile = new File(path);
+			if (visitedPaths.contains(path)) {
+				continue;
+			}
+
+			visitedPaths.add(path);
+
+			openAPIYAML = YAMLUtil.loadOpenAPIYAML(
+				FileUtil.read(new File(path)));
 
 			externalReferencesMap.putAll(
-				OpenAPIUtil.getAllSchemas(
-					YAMLUtil.loadOpenAPIYAML(FileUtil.read(openAPIFile))));
+				OpenAPIUtil.getAllSchemas(openAPIYAML));
+
+			for (String curExternalReference :
+					getExternalReferences(openAPIYAML)) {
+
+				queue.add(
+					path.substring(0, path.lastIndexOf("/") + 1) +
+						curExternalReference);
+			}
 		}
 
 		return externalReferencesMap;
@@ -264,32 +301,54 @@ public class OpenAPIParserUtil {
 			return javaDataTypeMap.get(getReferenceName(schema.getReference()));
 		}
 
-		return _openAPIDataTypeMap.get(
+		String type = _openAPIDataTypeMap.get(
 			new AbstractMap.SimpleImmutableEntry<>(
 				schema.getType(), schema.getFormat()));
+
+		if (type == null) {
+			throw new RuntimeException(
+				StringBundler.concat(
+					"Unsupported combination of type/format: ",
+					schema.getType(), "/", schema.getFormat()));
+		}
+
+		return type;
 	}
 
 	public static Map<String, String> getJavaDataTypeMap(
 		ConfigYAML configYAML, OpenAPIYAML openAPIYAML) {
 
-		Map<String, Schema> allSchemas = OpenAPIUtil.getAllSchemas(openAPIYAML);
 		Map<String, String> javaDataTypeMap = new HashMap<>();
 
-		List<String> externalReferences = getExternalReferences(openAPIYAML);
+		Set<String> visitedPaths = new HashSet<>();
 
 		try {
-			for (String externalReference : externalReferences) {
-				String openAPIPath = externalReference.substring(
+			for (String externalReference :
+					getExternalReferences(openAPIYAML)) {
+
+				String path = externalReference.substring(
 					0, externalReference.indexOf("#"));
 
+				if (visitedPaths.contains(path)) {
+					continue;
+				}
+
+				visitedPaths.add(path);
+
 				String configPath = StringUtil.replace(
-					openAPIPath, "rest-openapi.yaml", "rest-config.yaml");
+					path, "rest-openapi.yaml", "rest-config.yaml");
 
 				ConfigYAML externalConfigYAML = YAMLUtil.loadConfigYAML(
 					FileUtil.read(new File(configPath)));
 
 				OpenAPIYAML externalOpenAPIYAML = YAMLUtil.loadOpenAPIYAML(
-					FileUtil.read(new File(openAPIPath)));
+					FileUtil.read(new File(path)));
+
+				if ((externalConfigYAML == null) ||
+					(externalOpenAPIYAML == null)) {
+
+					continue;
+				}
 
 				Map<String, String> externalJavaDataTypeMap =
 					getJavaDataTypeMap(externalConfigYAML, externalOpenAPIYAML);
@@ -300,6 +359,8 @@ public class OpenAPIParserUtil {
 		catch (IOException ioException) {
 			throw new RuntimeException(ioException);
 		}
+
+		Map<String, Schema> allSchemas = OpenAPIUtil.getAllSchemas(openAPIYAML);
 
 		for (String schemaName : allSchemas.keySet()) {
 			StringBuilder sb = new StringBuilder();
@@ -339,15 +400,11 @@ public class OpenAPIParserUtil {
 			OpenAPIUtil.getGlobalEnumSchemas(openAPIYAML);
 
 		for (String schemaName : globalEnumSchemas.keySet()) {
-			StringBuilder sb = new StringBuilder();
-
-			sb.append(configYAML.getApiPackagePath());
-			sb.append(".constant.");
-			sb.append(OpenAPIUtil.escapeVersion(openAPIYAML));
-			sb.append('.');
-			sb.append(schemaName);
-
-			javaDataTypeMap.put(schemaName, sb.toString());
+			javaDataTypeMap.put(
+				schemaName,
+				StringBundler.concat(
+					configYAML.getApiPackagePath(), ".constant.",
+					OpenAPIUtil.escapeVersion(openAPIYAML), '.', schemaName));
 		}
 
 		return javaDataTypeMap;
@@ -390,7 +447,7 @@ public class OpenAPIParserUtil {
 	public static String getParameter(
 		JavaMethodParameter javaMethodParameter, String parameterAnnotation) {
 
-		StringBuilder sb = new StringBuilder();
+		StringBundler sb = new StringBundler(6);
 
 		if (Validator.isNotNull(parameterAnnotation)) {
 			sb.append(parameterAnnotation);
@@ -445,6 +502,12 @@ public class OpenAPIParserUtil {
 		return TextFormatter.format(schemaName, TextFormatter.I);
 	}
 
+	public static String getVersion(OpenAPIYAML openAPIYAML) {
+		Info info = openAPIYAML.getInfo();
+
+		return info.getVersion();
+	}
+
 	public static boolean hasHTTPMethod(
 		JavaMethodSignature javaMethodSignature, String... httpMethods) {
 
@@ -459,7 +522,7 @@ public class OpenAPIParserUtil {
 		return false;
 	}
 
-	private static void _getExternalReferences(
+	private static void _addExternalReferences(
 		Map<String, Content> contents, Set<String> externalReferences,
 		Map<String, Schema> schemas) {
 
@@ -468,59 +531,65 @@ public class OpenAPIParserUtil {
 		}
 
 		for (Content content : contents.values()) {
-			Schema contentSchema = content.getSchema();
+			_addExternalReferences(
+				externalReferences, content.getSchema(), schemas);
+		}
+	}
 
-			if (contentSchema == null) {
-				continue;
-			}
+	private static void _addExternalReferences(
+		Set<String> externalReferences, Schema schema,
+		Map<String, Schema> schemas) {
 
-			Queue<Map<String, Schema>> queue = new LinkedList<>();
+		if (schema == null) {
+			return;
+		}
 
-			queue.add(Collections.singletonMap("content", contentSchema));
+		Queue<Map<String, Schema>> queue = new LinkedList<>();
 
-			Map<String, Schema> map = null;
-			Set<String> visited = new HashSet<>();
+		queue.add(Collections.singletonMap("content", schema));
 
-			while ((map = queue.poll()) != null) {
-				for (Map.Entry<String, Schema> entry : map.entrySet()) {
-					if (visited.contains(entry.getKey())) {
-						continue;
-					}
+		Map<String, Schema> map = null;
+		Set<String> visited = new HashSet<>();
 
-					Schema schema = entry.getValue();
+		while ((map = queue.poll()) != null) {
+			for (Map.Entry<String, Schema> entry : map.entrySet()) {
+				if (visited.contains(entry.getKey())) {
+					continue;
+				}
 
-					String reference = _getReference(schema);
+				Schema currentSchema = entry.getValue();
 
-					if (reference != null) {
-						if (reference.contains("#/components/schemas/")) {
-							String referenceName = getReferenceName(reference);
+				String reference = _getReference(currentSchema);
 
-							Schema referenceSchema = schemas.get(referenceName);
+				if (reference != null) {
+					if (reference.contains("#/components/schemas/")) {
+						String referenceName = getReferenceName(reference);
 
-							if (referenceSchema != null) {
-								queue.add(
-									Collections.singletonMap(
-										referenceName, referenceSchema));
-								visited.add(entry.getKey());
-							}
+						Schema referenceSchema = schemas.get(referenceName);
+
+						if (referenceSchema != null) {
+							queue.add(
+								Collections.singletonMap(
+									referenceName, referenceSchema));
+							visited.add(entry.getKey());
 						}
-						else {
-							externalReferences.add(reference);
-						}
 					}
-					else if (schema.getAllOfSchemas() != null) {
-						List<Schema> allOfSchemas = schema.getAllOfSchemas();
+					else {
+						externalReferences.add(reference);
+					}
+				}
+				else if (currentSchema.getAllOfSchemas() != null) {
+					List<Schema> allOfSchemas = currentSchema.getAllOfSchemas();
 
-						queue.add(
-							Collections.singletonMap(
-								"allOf" + entry.getKey(), allOfSchemas.get(0)));
+					queue.add(
+						Collections.singletonMap(
+							"allOf" + entry.getKey(), allOfSchemas.get(0)));
 
-						visited.add(entry.getKey());
-					}
-					else if (schema.getPropertySchemas() != null) {
-						queue.add(schema.getPropertySchemas());
-						visited.add(entry.getKey());
-					}
+					visited.add(entry.getKey());
+				}
+				else if (currentSchema.getPropertySchemas() != null) {
+					queue.add(currentSchema.getPropertySchemas());
+					visited.add(entry.getKey());
 				}
 			}
 		}

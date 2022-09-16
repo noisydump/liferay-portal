@@ -17,12 +17,16 @@ package com.liferay.portal.bundle.blacklist;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.StreamUtil;
+import com.liferay.portal.kernel.util.SystemProperties;
 import com.liferay.portal.lpkg.deployer.test.util.LPKGTestUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -30,9 +34,14 @@ import org.junit.Test;
  */
 public class BundleBlacklistSetUpBatchTest {
 
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
 	@Test
 	public void testCreateAndBlacklistTestBundles() throws Exception {
-		String liferayHome = System.getProperty("liferay.home");
+		String liferayHome = SystemProperties.get("liferay.home");
 
 		Assert.assertNotNull(
 			"Missing system property \"liferay.home\"", liferayHome);
@@ -64,16 +73,9 @@ public class BundleBlacklistSetUpBatchTest {
 				outputStream);
 		}
 
-		StringBundler sb = new StringBundler(6);
-
-		sb.append("blacklistBundleSymbolicNames=");
-		sb.append(StringPool.QUOTE);
-		sb.append(_JAR_BUNDLE_SYMBOLIC_NAME);
-		sb.append(StringPool.COMMA);
-		sb.append(_WAR_BUNDLE_SYMBOLIC_NAME);
-		sb.append(StringPool.QUOTE);
-
-		String configBody = sb.toString();
+		String configBody = StringBundler.concat(
+			"blacklistBundleSymbolicNames=\"", _JAR_BUNDLE_SYMBOLIC_NAME,
+			StringPool.COMMA, _WAR_BUNDLE_SYMBOLIC_NAME, StringPool.QUOTE);
 
 		try (OutputStream outputStream = new FileOutputStream(
 				liferayHome + "/osgi/configs/" + blacklistConfigName)) {

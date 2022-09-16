@@ -221,18 +221,6 @@ public class JournalFeedStagedModelDataHandler
 		ServiceContext serviceContext = portletDataContext.createServiceContext(
 			feed);
 
-		boolean addGroupPermissions =
-			_journalCreationStrategy.addGroupPermissions(
-				portletDataContext, feed);
-
-		serviceContext.setAddGroupPermissions(addGroupPermissions);
-
-		boolean addGuestPermissions =
-			_journalCreationStrategy.addGuestPermissions(
-				portletDataContext, feed);
-
-		serviceContext.setAddGuestPermissions(addGuestPermissions);
-
 		JournalFeed importedFeed = null;
 
 		try {
@@ -284,15 +272,11 @@ public class JournalFeedStagedModelDataHandler
 
 			if (!feedId.equals(importedFeed.getFeedId())) {
 				if (_log.isWarnEnabled()) {
-					StringBundler sb = new StringBundler(5);
-
-					sb.append("A feed with the ID ");
-					sb.append(feedId);
-					sb.append(" already exists. The new generated ID is ");
-					sb.append(importedFeed.getFeedId());
-					sb.append(".");
-
-					_log.warn(sb.toString());
+					_log.warn(
+						StringBundler.concat(
+							"A feed with the ID ", feedId,
+							" already exists. The new generated ID is ",
+							importedFeed.getFeedId(), "."));
 				}
 			}
 		}
@@ -300,66 +284,33 @@ public class JournalFeedStagedModelDataHandler
 					feedTargetLayoutFriendlyUrlException) {
 
 			if (_log.isWarnEnabled()) {
-				StringBundler sb = new StringBundler(7);
-
-				sb.append("A feed with the ID ");
-				sb.append(feedId);
-				sb.append(" cannot be imported because layout with friendly ");
-				sb.append("URL ");
-				sb.append(feed.getTargetLayoutFriendlyUrl());
-				sb.append(" does not exist: ");
-				sb.append(feedTargetLayoutFriendlyUrlException.getMessage());
-
-				_log.warn(sb.toString());
+				_log.warn(
+					StringBundler.concat(
+						"A feed with the ID ", feedId,
+						" cannot be imported because layout with friendly URL ",
+						feed.getTargetLayoutFriendlyUrl(), " does not exist: ",
+						feedTargetLayoutFriendlyUrlException.getMessage()));
 			}
 		}
-	}
-
-	@Reference(unbind = "-")
-	protected void setDDMStructureLocalService(
-		DDMStructureLocalService ddmStructureLocalService) {
-
-		_ddmStructureLocalService = ddmStructureLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setDDMTemplateLocalService(
-		DDMTemplateLocalService ddmTemplateLocalService) {
-
-		_ddmTemplateLocalService = ddmTemplateLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setJournalCreationStrategy(
-		JournalCreationStrategy journalCreationStrategy) {
-
-		_journalCreationStrategy = journalCreationStrategy;
-	}
-
-	@Reference(unbind = "-")
-	protected void setJournalFeedExportImportContentProcessor(
-		JournalFeedExportImportContentProcessor
-			journalFeedExportImportContentProcessor) {
-
-		_journalFeedExportImportContentProcessor =
-			journalFeedExportImportContentProcessor;
-	}
-
-	@Reference(unbind = "-")
-	protected void setJournalFeedLocalService(
-		JournalFeedLocalService journalFeedLocalService) {
-
-		_journalFeedLocalService = journalFeedLocalService;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		JournalFeedStagedModelDataHandler.class);
 
+	@Reference
 	private DDMStructureLocalService _ddmStructureLocalService;
+
+	@Reference
 	private DDMTemplateLocalService _ddmTemplateLocalService;
+
+	@Reference
 	private JournalCreationStrategy _journalCreationStrategy;
+
+	@Reference
 	private JournalFeedExportImportContentProcessor
 		_journalFeedExportImportContentProcessor;
+
+	@Reference
 	private JournalFeedLocalService _journalFeedLocalService;
 
 	@Reference

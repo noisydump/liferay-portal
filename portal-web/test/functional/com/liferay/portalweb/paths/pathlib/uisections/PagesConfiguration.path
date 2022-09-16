@@ -2,11 +2,13 @@
 <head>
 <title>PagesConfiguration</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">PagesConfiguration</td></tr>
 </thead>
+
 <tbody>
 <tr>
 	<td>PAGES_SPECIFIC_PAGE_NAME</td>
@@ -44,8 +46,13 @@
 	<td></td>
 </tr>
 <tr>
-	<td>CONTENT_CHOOSE_CONTENT_CHECKBOX_LABEL</td>
-	<td>//label[contains(.,'${key_contentName}')]/input</td>
+	<td>PAGES_ALL_PAGES_CHECKBOX</td>
+	<td>xpath=(//div[normalize-space()='Pages']//span[contains(@class,'icon-check')])[1]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PAGES_ALL_PAGES_CHECKED</td>
+	<td>//li/div[contains(@class,'checked') and normalize-space()='Pages']//span[contains(@class,'icon-check')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -54,8 +61,18 @@
 	<td></td>
 </tr>
 <tr>
+	<td>PAGES_ALL_PUBLIC_PAGES_CHECKED</td>
+	<td>//li/div[contains(@class,'checked') and contains(.,'Public Pages')]//span[contains(@class,'icon-check')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>PAGES_ALL_PRIVATE_PAGES_CHECKBOX</td>
 	<td>xpath=(//div[contains(.,'Private Pages')]//span[contains(@class,'icon-check')])[1]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PAGES_ANY_PAGE_CHECKED</td>
+	<td>//li/div[contains(@class,'checked')]//span[contains(@class,'icon-check')]</td>
 	<td></td>
 </tr>
 <tr>

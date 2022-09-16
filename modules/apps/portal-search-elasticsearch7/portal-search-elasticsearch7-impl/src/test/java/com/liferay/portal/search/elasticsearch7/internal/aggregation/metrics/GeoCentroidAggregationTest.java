@@ -22,8 +22,11 @@ import com.liferay.portal.search.geolocation.GeoLocationPoint;
 import com.liferay.portal.search.test.util.aggregation.metrics.BaseGeoCentroidAggregationTestCase;
 import com.liferay.portal.search.test.util.indexing.DocumentCreationHelpers;
 import com.liferay.portal.search.test.util.indexing.IndexingFixture;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -31,6 +34,11 @@ import org.junit.Test;
  */
 public class GeoCentroidAggregationTest
 	extends BaseGeoCentroidAggregationTestCase {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Override
 	@Test

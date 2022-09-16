@@ -45,7 +45,9 @@ public class ProjectTemplatesThemeTest implements BaseProjectTemplatesTestCase {
 	@Parameterized.Parameters(name = "Testcase-{index}: testing {0}")
 	public static Iterable<Object[]> data() {
 		return Arrays.asList(
-			new Object[][] {{"7.0.6"}, {"7.1.3"}, {"7.2.1"}, {"7.3.5"}});
+			new Object[][] {
+				{"7.0.6-2"}, {"7.1.3-1"}, {"7.2.1-1"}, {"7.3.7"}, {"7.4.3.4"}
+			});
 	}
 
 	@BeforeClass

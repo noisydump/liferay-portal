@@ -20,6 +20,7 @@ import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.asset.kernel.service.AssetEntryLocalServiceWrapper;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceWrapper;
 
 import java.util.Date;
@@ -33,16 +34,6 @@ import org.osgi.service.component.annotations.Reference;
 @Component(immediate = true, service = ServiceWrapper.class)
 public class AssetEntryAssetCategoryRelAssetEntryLocalServiceWrapper
 	extends AssetEntryLocalServiceWrapper {
-
-	public AssetEntryAssetCategoryRelAssetEntryLocalServiceWrapper() {
-		super(null);
-	}
-
-	public AssetEntryAssetCategoryRelAssetEntryLocalServiceWrapper(
-		AssetEntryLocalService assetEntryLocalService) {
-
-		super(assetEntryLocalService);
-	}
 
 	@Override
 	public AssetEntry deleteAssetEntry(AssetEntry entry) {
@@ -71,6 +62,14 @@ public class AssetEntryAssetCategoryRelAssetEntryLocalServiceWrapper
 	}
 
 	@Override
+	public void deleteEntry(long entryId) throws PortalException {
+		_assetEntryAssetCategoryRelLocalService.
+			deleteAssetEntryAssetCategoryRelByAssetEntryId(entryId);
+
+		super.deleteEntry(entryId);
+	}
+
+	@Override
 	public void deleteEntry(String className, long classPK)
 		throws PortalException {
 
@@ -96,21 +95,42 @@ public class AssetEntryAssetCategoryRelAssetEntryLocalServiceWrapper
 			int height, int width, Double priority)
 		throws PortalException {
 
+		return updateEntry(
+			userId, groupId, createDate, modifiedDate, className, classPK,
+			classUuid, classTypeId, categoryIds, tagNames, listable, visible,
+			startDate, endDate, publishDate, expirationDate, mimeType, title,
+			description, summary, url, layoutUuid, height, width, priority,
+			null);
+	}
+
+	@Override
+	public AssetEntry updateEntry(
+			long userId, long groupId, Date createDate, Date modifiedDate,
+			String className, long classPK, String classUuid, long classTypeId,
+			long[] categoryIds, String[] tagNames, boolean listable,
+			boolean visible, Date startDate, Date endDate, Date publishDate,
+			Date expirationDate, String mimeType, String title,
+			String description, String summary, String url, String layoutUuid,
+			int height, int width, Double priority,
+			ServiceContext serviceContext)
+		throws PortalException {
+
 		AssetEntry entry = super.updateEntry(
 			userId, groupId, createDate, modifiedDate, className, classPK,
 			classUuid, classTypeId, categoryIds, tagNames, listable, visible,
 			startDate, endDate, publishDate, expirationDate, mimeType, title,
-			description, summary, url, layoutUuid, height, width, priority);
+			description, summary, url, layoutUuid, height, width, priority,
+			serviceContext);
 
 		if ((categoryIds != null) &&
 			(!entry.isNew() || (categoryIds.length > 0))) {
 
+			categoryIds = _assetCategoryLocalService.getViewableCategoryIds(
+				className, classPK, categoryIds);
+
 			_assetEntryAssetCategoryRelLocalService.
 				deleteAssetEntryAssetCategoryRelByAssetEntryId(
 					entry.getEntryId());
-
-			categoryIds = _assetCategoryLocalService.getViewableCategoryIds(
-				className, classPK, categoryIds);
 
 			for (long categoryId : categoryIds) {
 				_assetEntryAssetCategoryRelLocalService.

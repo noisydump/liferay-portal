@@ -20,6 +20,7 @@ import com.liferay.headless.commerce.admin.pricing.client.dto.v2_0.PriceListAcco
 import com.liferay.headless.commerce.admin.pricing.client.dto.v2_0.PriceListAccountGroup;
 import com.liferay.headless.commerce.admin.pricing.client.dto.v2_0.PriceListChannel;
 import com.liferay.headless.commerce.admin.pricing.client.dto.v2_0.PriceListDiscount;
+import com.liferay.headless.commerce.admin.pricing.client.dto.v2_0.PriceListOrderType;
 import com.liferay.headless.commerce.admin.pricing.client.dto.v2_0.PriceModifier;
 import com.liferay.headless.commerce.admin.pricing.client.json.BaseJSONParser;
 
@@ -64,7 +65,7 @@ public class PriceListSerDes {
 		sb.append("{");
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+			"yyyy-MM-dd'T'HH:mm:ssXX");
 
 		if (priceList.getActions() != null) {
 			if (sb.length() > 1) {
@@ -374,6 +375,29 @@ public class PriceListSerDes {
 			sb.append("]");
 		}
 
+		if (priceList.getPriceListOrderTypes() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"priceListOrderTypes\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < priceList.getPriceListOrderTypes().length;
+				 i++) {
+
+				sb.append(
+					String.valueOf(priceList.getPriceListOrderTypes()[i]));
+
+				if ((i + 1) < priceList.getPriceListOrderTypes().length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
 		if (priceList.getPriceModifiers() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -447,7 +471,7 @@ public class PriceListSerDes {
 		Map<String, String> map = new TreeMap<>();
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+			"yyyy-MM-dd'T'HH:mm:ssXX");
 
 		if (priceList.getActions() == null) {
 			map.put("actions", null);
@@ -624,6 +648,15 @@ public class PriceListSerDes {
 			map.put(
 				"priceListDiscounts",
 				String.valueOf(priceList.getPriceListDiscounts()));
+		}
+
+		if (priceList.getPriceListOrderTypes() == null) {
+			map.put("priceListOrderTypes", null);
+		}
+		else {
+			map.put(
+				"priceListOrderTypes",
+				String.valueOf(priceList.getPriceListOrderTypes()));
 		}
 
 		if (priceList.getPriceModifiers() == null) {
@@ -846,6 +879,21 @@ public class PriceListSerDes {
 						));
 				}
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "priceListOrderTypes")) {
+
+				if (jsonParserFieldValue != null) {
+					priceList.setPriceListOrderTypes(
+						Stream.of(
+							toStrings((Object[])jsonParserFieldValue)
+						).map(
+							object -> PriceListOrderTypeSerDes.toDTO(
+								(String)object)
+						).toArray(
+							size -> new PriceListOrderType[size]
+						));
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "priceModifiers")) {
 				if (jsonParserFieldValue != null) {
 					priceList.setPriceModifiers(
@@ -878,9 +926,6 @@ public class PriceListSerDes {
 						StatusSerDes.toDTO((String)jsonParserFieldValue));
 				}
 			}
-			else if (jsonParserFieldName.equals("status")) {
-				throw new IllegalArgumentException();
-			}
 		}
 
 	}
@@ -909,7 +954,7 @@ public class PriceListSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -945,7 +990,7 @@ public class PriceListSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

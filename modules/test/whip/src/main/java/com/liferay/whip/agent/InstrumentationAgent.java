@@ -61,9 +61,8 @@ public class InstrumentationAgent {
 					continue;
 				}
 
-				ClassData classData = projectData.getClassData(clazz.getName());
-
-				_assertClassDataCoverage(assertionErrors, classData);
+				_assertClassDataCoverage(
+					assertionErrors, projectData.getClassData(clazz.getName()));
 
 				if (includeInnerClasses) {
 					Class<?>[] declaredClasses = clazz.getDeclaredClasses();
@@ -80,10 +79,9 @@ public class InstrumentationAgent {
 							}
 						}
 
-						classData = projectData.getClassData(
-							declaredClass.getName());
-
-						_assertClassDataCoverage(assertionErrors, classData);
+						_assertClassDataCoverage(
+							assertionErrors,
+							projectData.getClassData(declaredClass.getName()));
 					}
 				}
 			}
@@ -233,7 +231,7 @@ public class InstrumentationAgent {
 		String[] excludes = arguments[1].split(",");
 
 		if (Boolean.getBoolean("whip.static.instrument")) {
-			final WhipClassFileTransformer whipClassFileTransformer =
+			WhipClassFileTransformer whipClassFileTransformer =
 				new WhipClassFileTransformer(includes, excludes);
 
 			instrumentation.addTransformer(whipClassFileTransformer);

@@ -23,7 +23,7 @@ import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CommerceChannelService;
 import com.liferay.frontend.taglib.servlet.taglib.ScreenNavigationEntry;
 import com.liferay.frontend.taglib.servlet.taglib.util.JSPRenderer;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
@@ -53,7 +53,7 @@ public class AuthorizeNetCommercePaymentMethodConfigurationScreenNavigationEntry
 	implements ScreenNavigationEntry<CommercePaymentMethodGroupRel> {
 
 	public static final String
-		ENTRY_KEY_PAYPAL_COMMERCE_PAYMENT_METHOD_CONFIGURATION =
+		ENTRY_KEY_AUTHORIZE_NET_COMMERCE_PAYMENT_METHOD_CONFIGURATION =
 			"authorize-net-configuration";
 
 	@Override
@@ -64,12 +64,12 @@ public class AuthorizeNetCommercePaymentMethodConfigurationScreenNavigationEntry
 
 	@Override
 	public String getEntryKey() {
-		return ENTRY_KEY_PAYPAL_COMMERCE_PAYMENT_METHOD_CONFIGURATION;
+		return ENTRY_KEY_AUTHORIZE_NET_COMMERCE_PAYMENT_METHOD_CONFIGURATION;
 	}
 
 	@Override
 	public String getLabel(Locale locale) {
-		return LanguageUtil.get(
+		return _language.get(
 			locale,
 			CommercePaymentScreenNavigationConstants.
 				CATEGORY_KEY_COMMERCE_PAYMENT_METHOD_CONFIGURATION);
@@ -144,6 +144,9 @@ public class AuthorizeNetCommercePaymentMethodConfigurationScreenNavigationEntry
 
 	@Reference
 	private JSPRenderer _jspRenderer;
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private Portal _portal;

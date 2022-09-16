@@ -15,13 +15,15 @@
 package com.liferay.frontend.taglib.form.navigator.internal.configuration;
 
 import com.liferay.petra.string.StringBundler;
-import com.liferay.petra.string.StringPool;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.Iterator;
 import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -30,26 +32,21 @@ import org.junit.Test;
 public class RetrieverWhenAConfigurationEntryHasSeveralLinesTest
 	extends BaseFormNavigatorEntryConfigurationRetrieverTestCase {
 
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
 	@Before
 	@Override
 	public void setUp() throws Exception {
 		super.setUp();
 
-		StringBundler sb1 = new StringBundler(4);
-
-		sb1.append("add.general");
-		sb1.append(StringPool.EQUAL);
-		sb1.append("formNavigatorEntryKey1,formNavigatorEntryKey2,");
-		sb1.append("formNavigatorEntryKey3");
-
-		StringBundler sb2 = new StringBundler(4);
-
-		sb2.append("update.general");
-		sb2.append(StringPool.EQUAL);
-		sb2.append("formNavigatorEntryKey1,formNavigatorEntryKey4,");
-		sb2.append("formNavigatorEntryKey5");
-
-		String config = sb1.toString() + "\n" + sb2.toString();
+		String config = StringBundler.concat(
+			"add.general=formNavigatorEntryKey1,formNavigatorEntryKey2,",
+			"formNavigatorEntryKey3\n",
+			"update.general=formNavigatorEntryKey1,formNavigatorEntryKey4,",
+			"formNavigatorEntryKey5");
 
 		createConfiguration("form1", new String[] {config});
 	}

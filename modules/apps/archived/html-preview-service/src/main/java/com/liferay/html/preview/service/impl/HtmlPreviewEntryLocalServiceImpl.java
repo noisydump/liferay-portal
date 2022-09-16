@@ -23,10 +23,13 @@ import com.liferay.html.preview.service.base.HtmlPreviewEntryLocalServiceBaseImp
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Repository;
+import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.systemevent.SystemEvent;
 
 import java.io.File;
 
@@ -51,7 +54,7 @@ public class HtmlPreviewEntryLocalServiceImpl
 			String content, String mimeType, ServiceContext serviceContext)
 		throws PortalException {
 
-		User user = userLocalService.getUser(userId);
+		User user = _userLocalService.getUser(userId);
 
 		long htmlPreviewEntryId = counterLocalService.increment();
 
@@ -81,6 +84,7 @@ public class HtmlPreviewEntryLocalServiceImpl
 	}
 
 	@Override
+	@SystemEvent(type = SystemEventConstants.TYPE_DELETE)
 	public HtmlPreviewEntry deleteHtmlPreviewEntry(
 			HtmlPreviewEntry htmlPreviewEntry)
 		throws PortalException {
@@ -166,7 +170,7 @@ public class HtmlPreviewEntryLocalServiceImpl
 		}
 
 		return PortletFileRepositoryUtil.addPortletFileEntry(
-			groupId, userId, HtmlPreviewEntry.class.getName(),
+			null, groupId, userId, HtmlPreviewEntry.class.getName(),
 			htmlPreviewEntryId, HtmlPreviewEntry.class.getName(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, file,
 			String.valueOf(htmlPreviewEntryId), mimeType, false);
@@ -174,5 +178,8 @@ public class HtmlPreviewEntryLocalServiceImpl
 
 	@Reference
 	private HtmlPreviewProcessorTracker _htmlPreviewProcessorTracker;
+
+	@Reference
+	private UserLocalService _userLocalService;
 
 }

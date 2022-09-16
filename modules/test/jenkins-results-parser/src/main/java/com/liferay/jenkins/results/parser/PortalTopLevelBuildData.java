@@ -27,6 +27,19 @@ public class PortalTopLevelBuildData
 	}
 
 	@Override
+	public Job.BuildProfile getBuildProfile() {
+		String portalUpstreamBranchName = getPortalUpstreamBranchName();
+
+		if (portalUpstreamBranchName.equals("master") ||
+			portalUpstreamBranchName.startsWith("7")) {
+
+			return Job.BuildProfile.DXP;
+		}
+
+		return Job.BuildProfile.PORTAL;
+	}
+
+	@Override
 	public String getPortalBranchSHA() {
 		return getString("portal_branch_sha");
 	}
@@ -76,8 +89,8 @@ public class PortalTopLevelBuildData
 
 		super(runID, jobName, buildURL);
 
-		setPortalGitHubURL(URL_PORTAL_GITHUB_BRANCH_DEFAULT);
-		setPortalUpstreamBranchName(NAME_PORTAL_UPSTREAM_BRANCH_DEFAULT);
+		setPortalGitHubURL(_getPortalGitHubURL());
+		setPortalUpstreamBranchName(_getPortalUpstreamBranchName());
 
 		validateKeys(_REQUIRED_KEYS);
 	}
@@ -85,6 +98,27 @@ public class PortalTopLevelBuildData
 	@Override
 	protected String getType() {
 		return _TYPE;
+	}
+
+	private String _getPortalGitHubURL() {
+		String portalGitHubURL = optString("portal_github_url");
+
+		if (!JenkinsResultsParserUtil.isNullOrEmpty(portalGitHubURL)) {
+			return portalGitHubURL;
+		}
+
+		return URL_PORTAL_GITHUB_BRANCH_DEFAULT;
+	}
+
+	private String _getPortalUpstreamBranchName() {
+		String portalUpstreamBranchName = optString(
+			"portal_upstream_branch_name");
+
+		if (!JenkinsResultsParserUtil.isNullOrEmpty(portalUpstreamBranchName)) {
+			return portalUpstreamBranchName;
+		}
+
+		return NAME_PORTAL_UPSTREAM_BRANCH_DEFAULT;
 	}
 
 	private static final String[] _REQUIRED_KEYS = {

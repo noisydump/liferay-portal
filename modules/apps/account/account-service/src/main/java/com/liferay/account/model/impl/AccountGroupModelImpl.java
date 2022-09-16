@@ -16,9 +16,9 @@ package com.liferay.account.model.impl;
 
 import com.liferay.account.model.AccountGroup;
 import com.liferay.account.model.AccountGroupModel;
-import com.liferay.account.model.AccountGroupSoap;
 import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.expando.kernel.util.ExpandoBridgeFactoryUtil;
+import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.bean.AutoEscapeBeanHandler;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -30,22 +30,23 @@ import com.liferay.portal.kernel.model.impl.BaseModelImpl;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -72,12 +73,13 @@ public class AccountGroupModelImpl
 	public static final String TABLE_NAME = "AccountGroup";
 
 	public static final Object[][] TABLE_COLUMNS = {
-		{"mvccVersion", Types.BIGINT}, {"externalReferenceCode", Types.VARCHAR},
+		{"mvccVersion", Types.BIGINT}, {"uuid_", Types.VARCHAR},
+		{"externalReferenceCode", Types.VARCHAR},
 		{"accountGroupId", Types.BIGINT}, {"companyId", Types.BIGINT},
 		{"userId", Types.BIGINT}, {"userName", Types.VARCHAR},
 		{"createDate", Types.TIMESTAMP}, {"modifiedDate", Types.TIMESTAMP},
 		{"defaultAccountGroup", Types.BOOLEAN}, {"description", Types.VARCHAR},
-		{"name", Types.VARCHAR}
+		{"name", Types.VARCHAR}, {"type_", Types.VARCHAR}
 	};
 
 	public static final Map<String, Integer> TABLE_COLUMNS_MAP =
@@ -85,6 +87,7 @@ public class AccountGroupModelImpl
 
 	static {
 		TABLE_COLUMNS_MAP.put("mvccVersion", Types.BIGINT);
+		TABLE_COLUMNS_MAP.put("uuid_", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("externalReferenceCode", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("accountGroupId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("companyId", Types.BIGINT);
@@ -95,10 +98,11 @@ public class AccountGroupModelImpl
 		TABLE_COLUMNS_MAP.put("defaultAccountGroup", Types.BOOLEAN);
 		TABLE_COLUMNS_MAP.put("description", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("name", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("type_", Types.VARCHAR);
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table AccountGroup (mvccVersion LONG default 0 not null,externalReferenceCode VARCHAR(75) null,accountGroupId LONG not null primary key,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,defaultAccountGroup BOOLEAN,description VARCHAR(75) null,name VARCHAR(75) null)";
+		"create table AccountGroup (mvccVersion LONG default 0 not null,uuid_ VARCHAR(75) null,externalReferenceCode VARCHAR(75) null,accountGroupId LONG not null primary key,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,defaultAccountGroup BOOLEAN,description VARCHAR(75) null,name VARCHAR(75) null,type_ VARCHAR(75) null)";
 
 	public static final String TABLE_SQL_DROP = "drop table AccountGroup";
 
@@ -115,29 +119,40 @@ public class AccountGroupModelImpl
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long COMPANYID_COLUMN_BITMASK = 1L;
+	public static final long ACCOUNTGROUPID_COLUMN_BITMASK = 1L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long DEFAULTACCOUNTGROUP_COLUMN_BITMASK = 2L;
+	public static final long COMPANYID_COLUMN_BITMASK = 2L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long EXTERNALREFERENCECODE_COLUMN_BITMASK = 4L;
+	public static final long DEFAULTACCOUNTGROUP_COLUMN_BITMASK = 4L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *		#getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long ACCOUNTGROUPID_COLUMN_BITMASK = 8L;
+	public static final long EXTERNALREFERENCECODE_COLUMN_BITMASK = 8L;
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
+	public static final long TYPE_COLUMN_BITMASK = 16L;
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
+	public static final long UUID_COLUMN_BITMASK = 32L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
@@ -151,59 +166,6 @@ public class AccountGroupModelImpl
 	 */
 	@Deprecated
 	public static void setFinderCacheEnabled(boolean finderCacheEnabled) {
-	}
-
-	/**
-	 * Converts the soap model instance into a normal model instance.
-	 *
-	 * @param soapModel the soap model instance to convert
-	 * @return the normal model instance
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static AccountGroup toModel(AccountGroupSoap soapModel) {
-		if (soapModel == null) {
-			return null;
-		}
-
-		AccountGroup model = new AccountGroupImpl();
-
-		model.setMvccVersion(soapModel.getMvccVersion());
-		model.setExternalReferenceCode(soapModel.getExternalReferenceCode());
-		model.setAccountGroupId(soapModel.getAccountGroupId());
-		model.setCompanyId(soapModel.getCompanyId());
-		model.setUserId(soapModel.getUserId());
-		model.setUserName(soapModel.getUserName());
-		model.setCreateDate(soapModel.getCreateDate());
-		model.setModifiedDate(soapModel.getModifiedDate());
-		model.setDefaultAccountGroup(soapModel.isDefaultAccountGroup());
-		model.setDescription(soapModel.getDescription());
-		model.setName(soapModel.getName());
-
-		return model;
-	}
-
-	/**
-	 * Converts the soap model instances into normal model instances.
-	 *
-	 * @param soapModels the soap model instances to convert
-	 * @return the normal model instances
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static List<AccountGroup> toModels(AccountGroupSoap[] soapModels) {
-		if (soapModels == null) {
-			return null;
-		}
-
-		List<AccountGroup> models = new ArrayList<AccountGroup>(
-			soapModels.length);
-
-		for (AccountGroupSoap soapModel : soapModels) {
-			models.add(toModel(soapModel));
-		}
-
-		return models;
 	}
 
 	public AccountGroupModelImpl() {
@@ -291,34 +253,6 @@ public class AccountGroupModelImpl
 		return _attributeSetterBiConsumers;
 	}
 
-	private static Function<InvocationHandler, AccountGroup>
-		_getProxyProviderFunction() {
-
-		Class<?> proxyClass = ProxyUtil.getProxyClass(
-			AccountGroup.class.getClassLoader(), AccountGroup.class,
-			ModelWrapper.class);
-
-		try {
-			Constructor<AccountGroup> constructor =
-				(Constructor<AccountGroup>)proxyClass.getConstructor(
-					InvocationHandler.class);
-
-			return invocationHandler -> {
-				try {
-					return constructor.newInstance(invocationHandler);
-				}
-				catch (ReflectiveOperationException
-							reflectiveOperationException) {
-
-					throw new InternalError(reflectiveOperationException);
-				}
-			};
-		}
-		catch (NoSuchMethodException noSuchMethodException) {
-			throw new InternalError(noSuchMethodException);
-		}
-	}
-
 	private static final Map<String, Function<AccountGroup, Object>>
 		_attributeGetterFunctions;
 	private static final Map<String, BiConsumer<AccountGroup, Object>>
@@ -335,6 +269,9 @@ public class AccountGroupModelImpl
 		attributeSetterBiConsumers.put(
 			"mvccVersion",
 			(BiConsumer<AccountGroup, Long>)AccountGroup::setMvccVersion);
+		attributeGetterFunctions.put("uuid", AccountGroup::getUuid);
+		attributeSetterBiConsumers.put(
+			"uuid", (BiConsumer<AccountGroup, String>)AccountGroup::setUuid);
 		attributeGetterFunctions.put(
 			"externalReferenceCode", AccountGroup::getExternalReferenceCode);
 		attributeSetterBiConsumers.put(
@@ -380,6 +317,9 @@ public class AccountGroupModelImpl
 		attributeGetterFunctions.put("name", AccountGroup::getName);
 		attributeSetterBiConsumers.put(
 			"name", (BiConsumer<AccountGroup, String>)AccountGroup::setName);
+		attributeGetterFunctions.put("type", AccountGroup::getType);
+		attributeSetterBiConsumers.put(
+			"type", (BiConsumer<AccountGroup, String>)AccountGroup::setType);
 
 		_attributeGetterFunctions = Collections.unmodifiableMap(
 			attributeGetterFunctions);
@@ -400,6 +340,35 @@ public class AccountGroupModelImpl
 		}
 
 		_mvccVersion = mvccVersion;
+	}
+
+	@JSON
+	@Override
+	public String getUuid() {
+		if (_uuid == null) {
+			return "";
+		}
+		else {
+			return _uuid;
+		}
+	}
+
+	@Override
+	public void setUuid(String uuid) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_uuid = uuid;
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
+	public String getOriginalUuid() {
+		return getColumnOriginalValue("uuid_");
 	}
 
 	@JSON
@@ -444,6 +413,16 @@ public class AccountGroupModelImpl
 		}
 
 		_accountGroupId = accountGroupId;
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
+	public long getOriginalAccountGroupId() {
+		return GetterUtil.getLong(
+			this.<Long>getColumnOriginalValue("accountGroupId"));
 	}
 
 	@JSON
@@ -629,6 +608,41 @@ public class AccountGroupModelImpl
 		_name = name;
 	}
 
+	@JSON
+	@Override
+	public String getType() {
+		if (_type == null) {
+			return "";
+		}
+		else {
+			return _type;
+		}
+	}
+
+	@Override
+	public void setType(String type) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_type = type;
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
+	public String getOriginalType() {
+		return getColumnOriginalValue("type_");
+	}
+
+	@Override
+	public StagedModelType getStagedModelType() {
+		return new StagedModelType(
+			PortalUtil.getClassNameId(AccountGroup.class.getName()));
+	}
+
 	public long getColumnBitmask() {
 		if (_columnBitmask > 0) {
 			return _columnBitmask;
@@ -643,7 +657,9 @@ public class AccountGroupModelImpl
 		for (Map.Entry<String, Object> entry :
 				_columnOriginalValues.entrySet()) {
 
-			if (entry.getValue() != getColumnValue(entry.getKey())) {
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
 				_columnBitmask |= _columnBitmasks.get(entry.getKey());
 			}
 		}
@@ -684,6 +700,7 @@ public class AccountGroupModelImpl
 		AccountGroupImpl accountGroupImpl = new AccountGroupImpl();
 
 		accountGroupImpl.setMvccVersion(getMvccVersion());
+		accountGroupImpl.setUuid(getUuid());
 		accountGroupImpl.setExternalReferenceCode(getExternalReferenceCode());
 		accountGroupImpl.setAccountGroupId(getAccountGroupId());
 		accountGroupImpl.setCompanyId(getCompanyId());
@@ -694,8 +711,39 @@ public class AccountGroupModelImpl
 		accountGroupImpl.setDefaultAccountGroup(isDefaultAccountGroup());
 		accountGroupImpl.setDescription(getDescription());
 		accountGroupImpl.setName(getName());
+		accountGroupImpl.setType(getType());
 
 		accountGroupImpl.resetOriginalValues();
+
+		return accountGroupImpl;
+	}
+
+	@Override
+	public AccountGroup cloneWithOriginalValues() {
+		AccountGroupImpl accountGroupImpl = new AccountGroupImpl();
+
+		accountGroupImpl.setMvccVersion(
+			this.<Long>getColumnOriginalValue("mvccVersion"));
+		accountGroupImpl.setUuid(this.<String>getColumnOriginalValue("uuid_"));
+		accountGroupImpl.setExternalReferenceCode(
+			this.<String>getColumnOriginalValue("externalReferenceCode"));
+		accountGroupImpl.setAccountGroupId(
+			this.<Long>getColumnOriginalValue("accountGroupId"));
+		accountGroupImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		accountGroupImpl.setUserId(this.<Long>getColumnOriginalValue("userId"));
+		accountGroupImpl.setUserName(
+			this.<String>getColumnOriginalValue("userName"));
+		accountGroupImpl.setCreateDate(
+			this.<Date>getColumnOriginalValue("createDate"));
+		accountGroupImpl.setModifiedDate(
+			this.<Date>getColumnOriginalValue("modifiedDate"));
+		accountGroupImpl.setDefaultAccountGroup(
+			this.<Boolean>getColumnOriginalValue("defaultAccountGroup"));
+		accountGroupImpl.setDescription(
+			this.<String>getColumnOriginalValue("description"));
+		accountGroupImpl.setName(this.<String>getColumnOriginalValue("name"));
+		accountGroupImpl.setType(this.<String>getColumnOriginalValue("type_"));
 
 		return accountGroupImpl;
 	}
@@ -776,6 +824,14 @@ public class AccountGroupModelImpl
 
 		accountGroupCacheModel.mvccVersion = getMvccVersion();
 
+		accountGroupCacheModel.uuid = getUuid();
+
+		String uuid = accountGroupCacheModel.uuid;
+
+		if ((uuid != null) && (uuid.length() == 0)) {
+			accountGroupCacheModel.uuid = null;
+		}
+
 		accountGroupCacheModel.externalReferenceCode =
 			getExternalReferenceCode();
 
@@ -838,6 +894,14 @@ public class AccountGroupModelImpl
 			accountGroupCacheModel.name = null;
 		}
 
+		accountGroupCacheModel.type = getType();
+
+		String type = accountGroupCacheModel.type;
+
+		if ((type != null) && (type.length() == 0)) {
+			accountGroupCacheModel.type = null;
+		}
+
 		return accountGroupCacheModel;
 	}
 
@@ -847,7 +911,7 @@ public class AccountGroupModelImpl
 			getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			(4 * attributeGetterFunctions.size()) + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -858,9 +922,26 @@ public class AccountGroupModelImpl
 			Function<AccountGroup, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((AccountGroup)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply((AccountGroup)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -907,11 +988,14 @@ public class AccountGroupModelImpl
 	private static class EscapedModelProxyProviderFunctionHolder {
 
 		private static final Function<InvocationHandler, AccountGroup>
-			_escapedModelProxyProviderFunction = _getProxyProviderFunction();
+			_escapedModelProxyProviderFunction =
+				ProxyUtil.getProxyProviderFunction(
+					AccountGroup.class, ModelWrapper.class);
 
 	}
 
 	private long _mvccVersion;
+	private String _uuid;
 	private String _externalReferenceCode;
 	private long _accountGroupId;
 	private long _companyId;
@@ -923,8 +1007,11 @@ public class AccountGroupModelImpl
 	private boolean _defaultAccountGroup;
 	private String _description;
 	private String _name;
+	private String _type;
 
 	public <T> T getColumnValue(String columnName) {
+		columnName = _attributeNames.getOrDefault(columnName, columnName);
+
 		Function<AccountGroup, Object> function = _attributeGetterFunctions.get(
 			columnName);
 
@@ -952,6 +1039,7 @@ public class AccountGroupModelImpl
 		_columnOriginalValues = new HashMap<String, Object>();
 
 		_columnOriginalValues.put("mvccVersion", _mvccVersion);
+		_columnOriginalValues.put("uuid_", _uuid);
 		_columnOriginalValues.put(
 			"externalReferenceCode", _externalReferenceCode);
 		_columnOriginalValues.put("accountGroupId", _accountGroupId);
@@ -963,6 +1051,18 @@ public class AccountGroupModelImpl
 		_columnOriginalValues.put("defaultAccountGroup", _defaultAccountGroup);
 		_columnOriginalValues.put("description", _description);
 		_columnOriginalValues.put("name", _name);
+		_columnOriginalValues.put("type_", _type);
+	}
+
+	private static final Map<String, String> _attributeNames;
+
+	static {
+		Map<String, String> attributeNames = new HashMap<>();
+
+		attributeNames.put("uuid_", "uuid");
+		attributeNames.put("type_", "type");
+
+		_attributeNames = Collections.unmodifiableMap(attributeNames);
 	}
 
 	private transient Map<String, Object> _columnOriginalValues;
@@ -978,25 +1078,29 @@ public class AccountGroupModelImpl
 
 		columnBitmasks.put("mvccVersion", 1L);
 
-		columnBitmasks.put("externalReferenceCode", 2L);
+		columnBitmasks.put("uuid_", 2L);
 
-		columnBitmasks.put("accountGroupId", 4L);
+		columnBitmasks.put("externalReferenceCode", 4L);
 
-		columnBitmasks.put("companyId", 8L);
+		columnBitmasks.put("accountGroupId", 8L);
 
-		columnBitmasks.put("userId", 16L);
+		columnBitmasks.put("companyId", 16L);
 
-		columnBitmasks.put("userName", 32L);
+		columnBitmasks.put("userId", 32L);
 
-		columnBitmasks.put("createDate", 64L);
+		columnBitmasks.put("userName", 64L);
 
-		columnBitmasks.put("modifiedDate", 128L);
+		columnBitmasks.put("createDate", 128L);
 
-		columnBitmasks.put("defaultAccountGroup", 256L);
+		columnBitmasks.put("modifiedDate", 256L);
 
-		columnBitmasks.put("description", 512L);
+		columnBitmasks.put("defaultAccountGroup", 512L);
 
-		columnBitmasks.put("name", 1024L);
+		columnBitmasks.put("description", 1024L);
+
+		columnBitmasks.put("name", 2048L);
+
+		columnBitmasks.put("type_", 4096L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}

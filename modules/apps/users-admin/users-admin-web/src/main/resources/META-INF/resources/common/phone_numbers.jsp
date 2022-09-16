@@ -37,21 +37,23 @@ List<Phone> phones = PhoneServiceUtil.getPhones(className, classPK);
 
 	<clay:content-col>
 		<span class="heading-end">
-
-			<%
-			PortletURL editURL = liferayPortletResponse.createRenderURL();
-
-			editURL.setParameter("mvcPath", "/common/edit_phone_number.jsp");
-			editURL.setParameter("redirect", currentURL);
-			editURL.setParameter("className", className);
-			editURL.setParameter("classPK", String.valueOf(classPK));
-			%>
-
 			<liferay-ui:icon
 				label="<%= true %>"
 				linkCssClass="add-phone-number-link btn btn-secondary btn-sm"
 				message="add"
-				url="<%= editURL.toString() %>"
+				url='<%=
+					PortletURLBuilder.createRenderURL(
+						liferayPortletResponse
+					).setMVCPath(
+						"/common/edit_phone_number.jsp"
+					).setRedirect(
+						currentURL
+					).setParameter(
+						"className", className
+					).setParameter(
+						"classPK", classPK
+					).buildString()
+				%>'
 			/>
 		</span>
 	</clay:content-col>
@@ -69,7 +71,8 @@ List<Phone> phones = PhoneServiceUtil.getPhones(className, classPK);
 	total="<%= phones.size() %>"
 >
 	<liferay-ui:search-container-results
-		results="<%= phones.subList(searchContainer.getStart(), searchContainer.getResultEnd()) %>"
+		calculateStartAndEnd="<%= true %>"
+		results="<%= phones %>"
 	/>
 
 	<liferay-ui:search-container-row

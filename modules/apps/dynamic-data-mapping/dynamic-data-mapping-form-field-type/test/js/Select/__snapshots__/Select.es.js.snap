@@ -11,7 +11,9 @@ exports[`Select calls onChange callback when an item is selected using multisele
       aria-hidden="true"
       class="form-control form-control"
       hidden=""
+      id="undefined_field"
       multiple=""
+      name="undefined_field"
       size="7"
     >
       <option
@@ -75,18 +77,22 @@ exports[`Select calls onChange callback when an item is selected using multisele
     <div>
       <div
         class="dropdown-menu ddm-btn-full ddm-select-dropdown show"
-        style="left: -999px; top: -995px;"
+        role="presentation"
+        style="left: -999px; top: -1003px;"
       >
         <ul
           class="list-unstyled"
+          role="menu"
         >
           <li
             aria-selected="false"
+            role="presentation"
           >
             <button
               class="dropdown-item"
               data-testid="dropdownItem-0"
               label="label1"
+              role="menuitem"
             >
               <div
                 class="custom-control custom-checkbox"
@@ -113,11 +119,13 @@ exports[`Select calls onChange callback when an item is selected using multisele
           </li>
           <li
             aria-selected="false"
+            role="presentation"
           >
             <button
               class="dropdown-item"
               data-testid="dropdownItem-1"
               label="label2"
+              role="menuitem"
             >
               <div
                 class="custom-control custom-checkbox"
@@ -144,11 +152,13 @@ exports[`Select calls onChange callback when an item is selected using multisele
           </li>
           <li
             aria-selected="false"
+            role="presentation"
           >
             <button
               class="dropdown-item"
               data-testid="dropdownItem-2"
               label="label3"
+              role="menuitem"
             >
               <div
                 class="custom-control custom-checkbox"
@@ -175,11 +185,13 @@ exports[`Select calls onChange callback when an item is selected using multisele
           </li>
           <li
             aria-selected="false"
+            role="presentation"
           >
             <button
               class="dropdown-item"
               data-testid="dropdownItem-3"
               label="label4"
+              role="menuitem"
             >
               <div
                 class="custom-control custom-checkbox"
@@ -206,11 +218,13 @@ exports[`Select calls onChange callback when an item is selected using multisele
           </li>
           <li
             aria-selected="false"
+            role="presentation"
           >
             <button
               class="dropdown-item"
               data-testid="dropdownItem-4"
               label="label5"
+              role="menuitem"
             >
               <div
                 class="custom-control custom-checkbox"
@@ -237,11 +251,13 @@ exports[`Select calls onChange callback when an item is selected using multisele
           </li>
           <li
             aria-selected="false"
+            role="presentation"
           >
             <button
               class="dropdown-item"
               data-testid="dropdownItem-5"
               label="label6"
+              role="menuitem"
             >
               <div
                 class="custom-control custom-checkbox"
@@ -268,11 +284,13 @@ exports[`Select calls onChange callback when an item is selected using multisele
           </li>
           <li
             aria-selected="false"
+            role="presentation"
           >
             <button
               class="dropdown-item"
               data-testid="dropdownItem-6"
               label="label7"
+              role="menuitem"
             >
               <div
                 class="custom-control custom-checkbox"
@@ -300,6 +318,15 @@ exports[`Select calls onChange callback when an item is selected using multisele
         </ul>
       </div>
     </div>
+    <input
+      type="hidden"
+      value=""
+    />
+    <input
+      name="undefined_edited"
+      type="hidden"
+      value="false"
+    />
     
   </div>
 </div>
@@ -316,7 +343,9 @@ exports[`Select filters according to the input and calls onChange callback when 
       aria-hidden="true"
       class="form-control form-control"
       hidden=""
+      id="undefined_field"
       multiple=""
+      name="undefined_field"
       size="12"
     >
       <option
@@ -354,7 +383,8 @@ exports[`Select filters according to the input and calls onChange callback when 
     <div>
       <div
         class="dropdown-menu ddm-btn-full ddm-select-dropdown show"
-        style="left: -999px; top: -995px;"
+        role="presentation"
+        style="left: -999px; top: -1003px;"
       >
         <form
           class=""
@@ -396,45 +426,17 @@ exports[`Select filters according to the input and calls onChange callback when 
         </form>
         <ul
           class="list-unstyled"
+          role="menu"
         >
           <li
             aria-selected="false"
+            role="presentation"
           >
             <button
               class="dropdown-item"
               data-testid="dropdownItem-0"
-              label="choose-an-option"
-            >
-              <div
-                class="custom-control custom-checkbox"
-              >
-                <label>
-                  <input
-                    aria-label="choose-an-option"
-                    class="custom-control-input"
-                    data-testid="labelItem-null"
-                    type="checkbox"
-                  />
-                  <span
-                    class="custom-control-label"
-                  >
-                    <span
-                      class="custom-control-label-text"
-                    >
-                      choose-an-option
-                    </span>
-                  </span>
-                </label>
-              </div>
-            </button>
-          </li>
-          <li
-            aria-selected="false"
-          >
-            <button
-              class="dropdown-item"
-              data-testid="dropdownItem-1"
               label="label1"
+              role="menuitem"
             >
               <div
                 class="custom-control custom-checkbox"
@@ -461,11 +463,13 @@ exports[`Select filters according to the input and calls onChange callback when 
           </li>
           <li
             aria-selected="false"
+            role="presentation"
           >
             <button
               class="dropdown-item"
-              data-testid="dropdownItem-2"
+              data-testid="dropdownItem-1"
               label="label10"
+              role="menuitem"
             >
               <div
                 class="custom-control custom-checkbox"
@@ -492,11 +496,13 @@ exports[`Select filters according to the input and calls onChange callback when 
           </li>
           <li
             aria-selected="false"
+            role="presentation"
           >
             <button
               class="dropdown-item"
-              data-testid="dropdownItem-3"
+              data-testid="dropdownItem-2"
               label="label11"
+              role="menuitem"
             >
               <div
                 class="custom-control custom-checkbox"
@@ -523,11 +529,13 @@ exports[`Select filters according to the input and calls onChange callback when 
           </li>
           <li
             aria-selected="false"
+            role="presentation"
           >
             <button
               class="dropdown-item"
-              data-testid="dropdownItem-4"
+              data-testid="dropdownItem-3"
               label="label12"
+              role="menuitem"
             >
               <div
                 class="custom-control custom-checkbox"
@@ -555,6 +563,15 @@ exports[`Select filters according to the input and calls onChange callback when 
         </ul>
       </div>
     </div>
+    <input
+      type="hidden"
+      value=""
+    />
+    <input
+      name="undefined_edited"
+      type="hidden"
+      value="false"
+    />
     
   </div>
 </div>
@@ -571,7 +588,9 @@ exports[`Select has a help text 1`] = `
       aria-hidden="true"
       class="form-control form-control"
       hidden=""
+      id="undefined_field"
       multiple=""
+      name="undefined_field"
     >
       <option
         disabled=""
@@ -580,6 +599,7 @@ exports[`Select has a help text 1`] = `
     </select>
     <div
       class="form-builder-select-field input-group-container"
+      style=""
     >
       <div
         class="form-control results-chosen select-field-trigger"
@@ -607,17 +627,22 @@ exports[`Select has a help text 1`] = `
     <div>
       <div
         class="dropdown-menu ddm-btn-full ddm-select-dropdown"
+        role="presentation"
+        style="left: -999px; top: -1003px;"
       >
         <ul
           class="list-unstyled"
+          role="menu"
         >
           <li
             aria-selected="false"
+            role="presentation"
           >
             <button
               class="dropdown-item"
               data-testid="dropdownItem-0"
               label="choose-an-option"
+              role="menuitem"
             >
               choose-an-option
             </button>
@@ -625,18 +650,28 @@ exports[`Select has a help text 1`] = `
         </ul>
       </div>
     </div>
-    <span
+    <input
+      type="hidden"
+      value=""
+    />
+    <input
+      name="undefined_edited"
+      type="hidden"
+      value="false"
+    />
+    <div
       aria-hidden="true"
-      class="form-text"
+      class="form-feedback-group lfr-de__field-feedback"
     >
-      Type something
-    </span>
+      <div>
+        Type something
+      </div>
+    </div>
     <span
       class="sr-only"
       id="undefined_fieldDetails"
     >
       Type something
-      <br />
     </span>
   </div>
 </div>
@@ -653,7 +688,9 @@ exports[`Select has a key 1`] = `
       aria-hidden="true"
       class="form-control form-control"
       hidden=""
+      id="undefined_field"
       multiple=""
+      name="undefined_field"
     >
       <option
         disabled=""
@@ -662,6 +699,7 @@ exports[`Select has a key 1`] = `
     </select>
     <div
       class="form-builder-select-field input-group-container"
+      style=""
     >
       <div
         class="form-control results-chosen select-field-trigger"
@@ -689,17 +727,22 @@ exports[`Select has a key 1`] = `
     <div>
       <div
         class="dropdown-menu ddm-btn-full ddm-select-dropdown"
+        role="presentation"
+        style="left: -999px; top: -1003px;"
       >
         <ul
           class="list-unstyled"
+          role="menu"
         >
           <li
             aria-selected="false"
+            role="presentation"
           >
             <button
               class="dropdown-item"
               data-testid="dropdownItem-0"
               label="choose-an-option"
+              role="menuitem"
             >
               choose-an-option
             </button>
@@ -707,6 +750,15 @@ exports[`Select has a key 1`] = `
         </ul>
       </div>
     </div>
+    <input
+      type="hidden"
+      value=""
+    />
+    <input
+      name="undefined_edited"
+      type="hidden"
+      value="false"
+    />
     
   </div>
 </div>
@@ -718,7 +770,7 @@ exports[`Select has a label 1`] = `
     class="form-group hide"
   >
     <label
-      aria-describedby="undefined_fieldDetails"
+      aria-labelledby="undefined_fieldDetails"
       class="ddm-label"
       tabindex="0"
     >
@@ -728,7 +780,9 @@ exports[`Select has a label 1`] = `
       aria-hidden="true"
       class="form-control form-control"
       hidden=""
+      id="undefined_field"
       multiple=""
+      name="undefined_field"
     >
       <option
         disabled=""
@@ -737,6 +791,7 @@ exports[`Select has a label 1`] = `
     </select>
     <div
       class="form-builder-select-field input-group-container"
+      style=""
     >
       <div
         class="form-control results-chosen select-field-trigger"
@@ -764,17 +819,22 @@ exports[`Select has a label 1`] = `
     <div>
       <div
         class="dropdown-menu ddm-btn-full ddm-select-dropdown"
+        role="presentation"
+        style="left: -999px; top: -1003px;"
       >
         <ul
           class="list-unstyled"
+          role="menu"
         >
           <li
             aria-selected="false"
+            role="presentation"
           >
             <button
               class="dropdown-item"
               data-testid="dropdownItem-0"
               label="choose-an-option"
+              role="menuitem"
             >
               choose-an-option
             </button>
@@ -782,12 +842,20 @@ exports[`Select has a label 1`] = `
         </ul>
       </div>
     </div>
+    <input
+      type="hidden"
+      value=""
+    />
+    <input
+      name="undefined_edited"
+      type="hidden"
+      value="false"
+    />
     <span
       class="sr-only"
       id="undefined_fieldDetails"
     >
       label
-      <br />
     </span>
   </div>
 </div>
@@ -804,7 +872,9 @@ exports[`Select has a placeholder 1`] = `
       aria-hidden="true"
       class="form-control form-control"
       hidden=""
+      id="undefined_field"
       multiple=""
+      name="undefined_field"
     >
       <option
         disabled=""
@@ -813,6 +883,7 @@ exports[`Select has a placeholder 1`] = `
     </select>
     <div
       class="form-builder-select-field input-group-container"
+      style=""
     >
       <div
         class="form-control results-chosen select-field-trigger"
@@ -840,17 +911,22 @@ exports[`Select has a placeholder 1`] = `
     <div>
       <div
         class="dropdown-menu ddm-btn-full ddm-select-dropdown"
+        role="presentation"
+        style="left: -999px; top: -1003px;"
       >
         <ul
           class="list-unstyled"
+          role="menu"
         >
           <li
             aria-selected="false"
+            role="presentation"
           >
             <button
               class="dropdown-item"
               data-testid="dropdownItem-0"
               label="choose-an-option"
+              role="menuitem"
             >
               choose-an-option
             </button>
@@ -858,6 +934,15 @@ exports[`Select has a placeholder 1`] = `
         </ul>
       </div>
     </div>
+    <input
+      type="hidden"
+      value=""
+    />
+    <input
+      name="undefined_edited"
+      type="hidden"
+      value="false"
+    />
     
   </div>
 </div>
@@ -874,7 +959,9 @@ exports[`Select has a predefinedValue 1`] = `
       aria-hidden="true"
       class="form-control form-control"
       hidden=""
+      id="undefined_field"
       multiple=""
+      name="undefined_field"
     >
       <option
         disabled=""
@@ -883,6 +970,7 @@ exports[`Select has a predefinedValue 1`] = `
     </select>
     <div
       class="form-builder-select-field input-group-container"
+      style=""
     >
       <div
         class="form-control results-chosen select-field-trigger"
@@ -910,17 +998,22 @@ exports[`Select has a predefinedValue 1`] = `
     <div>
       <div
         class="dropdown-menu ddm-btn-full ddm-select-dropdown"
+        role="presentation"
+        style="left: -999px; top: -1003px;"
       >
         <ul
           class="list-unstyled"
+          role="menu"
         >
           <li
             aria-selected="false"
+            role="presentation"
           >
             <button
               class="dropdown-item"
               data-testid="dropdownItem-0"
               label="choose-an-option"
+              role="menuitem"
             >
               choose-an-option
             </button>
@@ -928,6 +1021,15 @@ exports[`Select has a predefinedValue 1`] = `
         </ul>
       </div>
     </div>
+    <input
+      type="hidden"
+      value=""
+    />
+    <input
+      name="undefined_edited"
+      type="hidden"
+      value="false"
+    />
     
   </div>
 </div>
@@ -944,7 +1046,9 @@ exports[`Select has a value 1`] = `
       aria-hidden="true"
       class="form-control form-control"
       hidden=""
+      id="undefined_field"
       multiple=""
+      name="undefined_field"
     >
       <option
         disabled=""
@@ -953,6 +1057,7 @@ exports[`Select has a value 1`] = `
     </select>
     <div
       class="form-builder-select-field input-group-container"
+      style=""
     >
       <div
         class="form-control results-chosen select-field-trigger"
@@ -980,17 +1085,22 @@ exports[`Select has a value 1`] = `
     <div>
       <div
         class="dropdown-menu ddm-btn-full ddm-select-dropdown"
+        role="presentation"
+        style="left: -999px; top: -1003px;"
       >
         <ul
           class="list-unstyled"
+          role="menu"
         >
           <li
             aria-selected="false"
+            role="presentation"
           >
             <button
               class="dropdown-item"
               data-testid="dropdownItem-0"
               label="choose-an-option"
+              role="menuitem"
             >
               choose-an-option
             </button>
@@ -998,6 +1108,15 @@ exports[`Select has a value 1`] = `
         </ul>
       </div>
     </div>
+    <input
+      type="hidden"
+      value=""
+    />
+    <input
+      name="undefined_edited"
+      type="hidden"
+      value="false"
+    />
     
   </div>
 </div>
@@ -1006,7 +1125,7 @@ exports[`Select has a value 1`] = `
 exports[`Select has an id 1`] = `
 <div>
   <div
-    aria-labelledby="undefined_fieldDetails"
+    aria-labelledby="Id_fieldDetails"
     class="form-group hide"
     tabindex="0"
   >
@@ -1014,7 +1133,9 @@ exports[`Select has an id 1`] = `
       aria-hidden="true"
       class="form-control form-control"
       hidden=""
+      id="undefined_field"
       multiple=""
+      name="undefined_field"
     >
       <option
         disabled=""
@@ -1023,6 +1144,7 @@ exports[`Select has an id 1`] = `
     </select>
     <div
       class="form-builder-select-field input-group-container"
+      style=""
     >
       <div
         class="form-control results-chosen select-field-trigger"
@@ -1051,17 +1173,22 @@ exports[`Select has an id 1`] = `
     <div>
       <div
         class="dropdown-menu ddm-btn-full ddm-select-dropdown"
+        role="presentation"
+        style="left: -999px; top: -1003px;"
       >
         <ul
           class="list-unstyled"
+          role="menu"
         >
           <li
             aria-selected="false"
+            role="presentation"
           >
             <button
               class="dropdown-item"
               data-testid="dropdownItem-0"
               label="choose-an-option"
+              role="menuitem"
             >
               choose-an-option
             </button>
@@ -1069,6 +1196,15 @@ exports[`Select has an id 1`] = `
         </ul>
       </div>
     </div>
+    <input
+      type="hidden"
+      value=""
+    />
+    <input
+      name="undefined_edited"
+      type="hidden"
+      value="false"
+    />
     
   </div>
 </div>
@@ -1085,7 +1221,9 @@ exports[`Select has class dropdown-opened when it's opened 1`] = `
       aria-hidden="true"
       class="form-control form-control"
       hidden=""
+      id="undefined_field"
       multiple=""
+      name="undefined_field"
     >
       <option
         disabled=""
@@ -1094,6 +1232,7 @@ exports[`Select has class dropdown-opened when it's opened 1`] = `
     </select>
     <div
       class="form-builder-select-field input-group-container"
+      style=""
     >
       <div
         class="form-control results-chosen select-field-trigger"
@@ -1121,17 +1260,22 @@ exports[`Select has class dropdown-opened when it's opened 1`] = `
     <div>
       <div
         class="dropdown-menu ddm-btn-full ddm-select-dropdown"
+        role="presentation"
+        style="left: -999px; top: -1003px;"
       >
         <ul
           class="list-unstyled"
+          role="menu"
         >
           <li
             aria-selected="false"
+            role="presentation"
           >
             <button
               class="dropdown-item"
               data-testid="dropdownItem-0"
               label="choose-an-option"
+              role="menuitem"
             >
               choose-an-option
             </button>
@@ -1139,6 +1283,15 @@ exports[`Select has class dropdown-opened when it's opened 1`] = `
         </ul>
       </div>
     </div>
+    <input
+      type="hidden"
+      value=""
+    />
+    <input
+      name="undefined_edited"
+      type="hidden"
+      value="false"
+    />
     
   </div>
 </div>
@@ -1155,7 +1308,9 @@ exports[`Select is closed by default 1`] = `
       aria-hidden="true"
       class="form-control form-control"
       hidden=""
+      id="undefined_field"
       multiple=""
+      name="undefined_field"
     >
       <option
         disabled=""
@@ -1164,6 +1319,7 @@ exports[`Select is closed by default 1`] = `
     </select>
     <div
       class="form-builder-select-field input-group-container"
+      style=""
     >
       <div
         class="form-control results-chosen select-field-trigger"
@@ -1191,17 +1347,22 @@ exports[`Select is closed by default 1`] = `
     <div>
       <div
         class="dropdown-menu ddm-btn-full ddm-select-dropdown"
+        role="presentation"
+        style="left: -999px; top: -1003px;"
       >
         <ul
           class="list-unstyled"
+          role="menu"
         >
           <li
             aria-selected="false"
+            role="presentation"
           >
             <button
               class="dropdown-item"
               data-testid="dropdownItem-0"
               label="choose-an-option"
+              role="menuitem"
             >
               choose-an-option
             </button>
@@ -1209,6 +1370,15 @@ exports[`Select is closed by default 1`] = `
         </ul>
       </div>
     </div>
+    <input
+      type="hidden"
+      value=""
+    />
+    <input
+      name="undefined_edited"
+      type="hidden"
+      value="false"
+    />
     
   </div>
 </div>
@@ -1225,7 +1395,9 @@ exports[`Select is not required 1`] = `
       aria-hidden="true"
       class="form-control form-control"
       hidden=""
+      id="undefined_field"
       multiple=""
+      name="undefined_field"
     >
       <option
         disabled=""
@@ -1234,6 +1406,7 @@ exports[`Select is not required 1`] = `
     </select>
     <div
       class="form-builder-select-field input-group-container"
+      style=""
     >
       <div
         class="form-control results-chosen select-field-trigger"
@@ -1261,17 +1434,22 @@ exports[`Select is not required 1`] = `
     <div>
       <div
         class="dropdown-menu ddm-btn-full ddm-select-dropdown"
+        role="presentation"
+        style="left: -999px; top: -1003px;"
       >
         <ul
           class="list-unstyled"
+          role="menu"
         >
           <li
             aria-selected="false"
+            role="presentation"
           >
             <button
               class="dropdown-item"
               data-testid="dropdownItem-0"
               label="choose-an-option"
+              role="menuitem"
             >
               choose-an-option
             </button>
@@ -1279,6 +1457,15 @@ exports[`Select is not required 1`] = `
         </ul>
       </div>
     </div>
+    <input
+      type="hidden"
+      value=""
+    />
+    <input
+      name="undefined_edited"
+      type="hidden"
+      value="false"
+    />
     
   </div>
 </div>
@@ -1290,7 +1477,7 @@ exports[`Select puts an asterisk when field is required 1`] = `
     class="form-group hide"
   >
     <label
-      aria-describedby="undefined_fieldDetails"
+      aria-labelledby="undefined_fieldDetails"
       class="ddm-label"
       tabindex="0"
     >
@@ -1312,7 +1499,9 @@ exports[`Select puts an asterisk when field is required 1`] = `
       aria-hidden="true"
       class="form-control form-control"
       hidden=""
+      id="undefined_field"
       multiple=""
+      name="undefined_field"
     >
       <option
         disabled=""
@@ -1321,6 +1510,7 @@ exports[`Select puts an asterisk when field is required 1`] = `
     </select>
     <div
       class="form-builder-select-field input-group-container"
+      style=""
     >
       <div
         class="form-control results-chosen select-field-trigger"
@@ -1348,17 +1538,22 @@ exports[`Select puts an asterisk when field is required 1`] = `
     <div>
       <div
         class="dropdown-menu ddm-btn-full ddm-select-dropdown"
+        role="presentation"
+        style="left: -999px; top: -1003px;"
       >
         <ul
           class="list-unstyled"
+          role="menu"
         >
           <li
             aria-selected="false"
+            role="presentation"
           >
             <button
               class="dropdown-item"
               data-testid="dropdownItem-0"
               label="choose-an-option"
+              role="menuitem"
             >
               choose-an-option
             </button>
@@ -1366,6 +1561,15 @@ exports[`Select puts an asterisk when field is required 1`] = `
         </ul>
       </div>
     </div>
+    <input
+      type="hidden"
+      value=""
+    />
+    <input
+      name="undefined_edited"
+      type="hidden"
+      value="false"
+    />
     <span
       class="sr-only"
       id="undefined_fieldDetails"
@@ -1384,7 +1588,7 @@ exports[`Select renders Label if showLabel is true 1`] = `
     class="form-group hide"
   >
     <label
-      aria-describedby="undefined_fieldDetails"
+      aria-labelledby="undefined_fieldDetails"
       class="ddm-label"
       tabindex="0"
     >
@@ -1394,7 +1598,9 @@ exports[`Select renders Label if showLabel is true 1`] = `
       aria-hidden="true"
       class="form-control form-control"
       hidden=""
+      id="undefined_field"
       multiple=""
+      name="undefined_field"
     >
       <option
         disabled=""
@@ -1403,6 +1609,7 @@ exports[`Select renders Label if showLabel is true 1`] = `
     </select>
     <div
       class="form-builder-select-field input-group-container"
+      style=""
     >
       <div
         class="form-control results-chosen select-field-trigger"
@@ -1430,17 +1637,22 @@ exports[`Select renders Label if showLabel is true 1`] = `
     <div>
       <div
         class="dropdown-menu ddm-btn-full ddm-select-dropdown"
+        role="presentation"
+        style="left: -999px; top: -1003px;"
       >
         <ul
           class="list-unstyled"
+          role="menu"
         >
           <li
             aria-selected="false"
+            role="presentation"
           >
             <button
               class="dropdown-item"
               data-testid="dropdownItem-0"
               label="choose-an-option"
+              role="menuitem"
             >
               choose-an-option
             </button>
@@ -1448,12 +1660,20 @@ exports[`Select renders Label if showLabel is true 1`] = `
         </ul>
       </div>
     </div>
+    <input
+      type="hidden"
+      value=""
+    />
+    <input
+      name="undefined_edited"
+      type="hidden"
+      value="false"
+    />
     <span
       class="sr-only"
       id="undefined_fieldDetails"
     >
       text
-      <br />
     </span>
   </div>
 </div>
@@ -1470,7 +1690,9 @@ exports[`Select renders no options when options come empty 1`] = `
       aria-hidden="true"
       class="form-control form-control"
       hidden=""
+      id="undefined_field"
       multiple=""
+      name="undefined_field"
     >
       <option
         disabled=""
@@ -1479,6 +1701,7 @@ exports[`Select renders no options when options come empty 1`] = `
     </select>
     <div
       class="form-builder-select-field input-group-container"
+      style=""
     >
       <div
         class="form-control results-chosen select-field-trigger"
@@ -1506,17 +1729,22 @@ exports[`Select renders no options when options come empty 1`] = `
     <div>
       <div
         class="dropdown-menu ddm-btn-full ddm-select-dropdown"
+        role="presentation"
+        style="left: -999px; top: -1003px;"
       >
         <ul
           class="list-unstyled"
+          role="menu"
         >
           <li
             aria-selected="false"
+            role="presentation"
           >
             <button
               class="dropdown-item"
               data-testid="dropdownItem-0"
               label="choose-an-option"
+              role="menuitem"
             >
               choose-an-option
             </button>
@@ -1524,6 +1752,15 @@ exports[`Select renders no options when options come empty 1`] = `
         </ul>
       </div>
     </div>
+    <input
+      type="hidden"
+      value=""
+    />
+    <input
+      name="undefined_edited"
+      type="hidden"
+      value="false"
+    />
     
   </div>
 </div>
@@ -1540,7 +1777,9 @@ exports[`Select renders options 1`] = `
       aria-hidden="true"
       class="form-control form-control"
       hidden=""
+      id="undefined_field"
       multiple=""
+      name="undefined_field"
     >
       <option
         disabled=""
@@ -1549,6 +1788,7 @@ exports[`Select renders options 1`] = `
     </select>
     <div
       class="form-builder-select-field input-group-container"
+      style=""
     >
       <div
         class="form-control results-chosen select-field-trigger"
@@ -1576,28 +1816,35 @@ exports[`Select renders options 1`] = `
     <div>
       <div
         class="dropdown-menu ddm-btn-full ddm-select-dropdown"
+        role="presentation"
+        style="left: -999px; top: -1003px;"
       >
         <ul
           class="list-unstyled"
+          role="menu"
         >
           <li
             aria-selected="false"
+            role="presentation"
           >
             <button
               class="dropdown-item"
               data-testid="dropdownItem-0"
               label="choose-an-option"
+              role="menuitem"
             >
               choose-an-option
             </button>
           </li>
           <li
             aria-selected="false"
+            role="presentation"
           >
             <button
               class="dropdown-item"
               data-testid="dropdownItem-1"
               label="label"
+              role="menuitem"
             >
               label
             </button>
@@ -1605,6 +1852,15 @@ exports[`Select renders options 1`] = `
         </ul>
       </div>
     </div>
+    <input
+      type="hidden"
+      value=""
+    />
+    <input
+      name="undefined_edited"
+      type="hidden"
+      value="false"
+    />
     
   </div>
 </div>
@@ -1621,7 +1877,9 @@ exports[`Select shows a search input when the number of options is more than the
       aria-hidden="true"
       class="form-control form-control"
       hidden=""
+      id="undefined_field"
       multiple=""
+      name="undefined_field"
       size="12"
     >
       <option
@@ -1659,7 +1917,8 @@ exports[`Select shows a search input when the number of options is more than the
     <div>
       <div
         class="dropdown-menu ddm-btn-full ddm-select-dropdown show"
-        style="left: -999px; top: -995px;"
+        role="presentation"
+        style="left: -999px; top: -1003px;"
       >
         <form
           class=""
@@ -1701,45 +1960,17 @@ exports[`Select shows a search input when the number of options is more than the
         </form>
         <ul
           class="list-unstyled"
+          role="menu"
         >
           <li
             aria-selected="false"
+            role="presentation"
           >
             <button
               class="dropdown-item"
               data-testid="dropdownItem-0"
-              label="choose-an-option"
-            >
-              <div
-                class="custom-control custom-checkbox"
-              >
-                <label>
-                  <input
-                    aria-label="choose-an-option"
-                    class="custom-control-input"
-                    data-testid="labelItem-null"
-                    type="checkbox"
-                  />
-                  <span
-                    class="custom-control-label"
-                  >
-                    <span
-                      class="custom-control-label-text"
-                    >
-                      choose-an-option
-                    </span>
-                  </span>
-                </label>
-              </div>
-            </button>
-          </li>
-          <li
-            aria-selected="false"
-          >
-            <button
-              class="dropdown-item"
-              data-testid="dropdownItem-1"
               label="label1"
+              role="menuitem"
             >
               <div
                 class="custom-control custom-checkbox"
@@ -1766,11 +1997,13 @@ exports[`Select shows a search input when the number of options is more than the
           </li>
           <li
             aria-selected="false"
+            role="presentation"
           >
             <button
               class="dropdown-item"
-              data-testid="dropdownItem-2"
+              data-testid="dropdownItem-1"
               label="label2"
+              role="menuitem"
             >
               <div
                 class="custom-control custom-checkbox"
@@ -1797,11 +2030,13 @@ exports[`Select shows a search input when the number of options is more than the
           </li>
           <li
             aria-selected="false"
+            role="presentation"
           >
             <button
               class="dropdown-item"
-              data-testid="dropdownItem-3"
+              data-testid="dropdownItem-2"
               label="label3"
+              role="menuitem"
             >
               <div
                 class="custom-control custom-checkbox"
@@ -1828,11 +2063,13 @@ exports[`Select shows a search input when the number of options is more than the
           </li>
           <li
             aria-selected="false"
+            role="presentation"
           >
             <button
               class="dropdown-item"
-              data-testid="dropdownItem-4"
+              data-testid="dropdownItem-3"
               label="label4"
+              role="menuitem"
             >
               <div
                 class="custom-control custom-checkbox"
@@ -1859,11 +2096,13 @@ exports[`Select shows a search input when the number of options is more than the
           </li>
           <li
             aria-selected="false"
+            role="presentation"
           >
             <button
               class="dropdown-item"
-              data-testid="dropdownItem-5"
+              data-testid="dropdownItem-4"
               label="label5"
+              role="menuitem"
             >
               <div
                 class="custom-control custom-checkbox"
@@ -1890,11 +2129,13 @@ exports[`Select shows a search input when the number of options is more than the
           </li>
           <li
             aria-selected="false"
+            role="presentation"
           >
             <button
               class="dropdown-item"
-              data-testid="dropdownItem-6"
+              data-testid="dropdownItem-5"
               label="label6"
+              role="menuitem"
             >
               <div
                 class="custom-control custom-checkbox"
@@ -1921,11 +2162,13 @@ exports[`Select shows a search input when the number of options is more than the
           </li>
           <li
             aria-selected="false"
+            role="presentation"
           >
             <button
               class="dropdown-item"
-              data-testid="dropdownItem-7"
+              data-testid="dropdownItem-6"
               label="label7"
+              role="menuitem"
             >
               <div
                 class="custom-control custom-checkbox"
@@ -1952,11 +2195,13 @@ exports[`Select shows a search input when the number of options is more than the
           </li>
           <li
             aria-selected="false"
+            role="presentation"
           >
             <button
               class="dropdown-item"
-              data-testid="dropdownItem-8"
+              data-testid="dropdownItem-7"
               label="label8"
+              role="menuitem"
             >
               <div
                 class="custom-control custom-checkbox"
@@ -1983,11 +2228,13 @@ exports[`Select shows a search input when the number of options is more than the
           </li>
           <li
             aria-selected="false"
+            role="presentation"
           >
             <button
               class="dropdown-item"
-              data-testid="dropdownItem-9"
+              data-testid="dropdownItem-8"
               label="label9"
+              role="menuitem"
             >
               <div
                 class="custom-control custom-checkbox"
@@ -2014,11 +2261,13 @@ exports[`Select shows a search input when the number of options is more than the
           </li>
           <li
             aria-selected="false"
+            role="presentation"
           >
             <button
               class="dropdown-item"
-              data-testid="dropdownItem-10"
+              data-testid="dropdownItem-9"
               label="label10"
+              role="menuitem"
             >
               <div
                 class="custom-control custom-checkbox"
@@ -2045,11 +2294,13 @@ exports[`Select shows a search input when the number of options is more than the
           </li>
           <li
             aria-selected="false"
+            role="presentation"
           >
             <button
               class="dropdown-item"
-              data-testid="dropdownItem-11"
+              data-testid="dropdownItem-10"
               label="label11"
+              role="menuitem"
             >
               <div
                 class="custom-control custom-checkbox"
@@ -2076,11 +2327,13 @@ exports[`Select shows a search input when the number of options is more than the
           </li>
           <li
             aria-selected="false"
+            role="presentation"
           >
             <button
               class="dropdown-item"
-              data-testid="dropdownItem-12"
+              data-testid="dropdownItem-11"
               label="label12"
+              role="menuitem"
             >
               <div
                 class="custom-control custom-checkbox"
@@ -2108,6 +2361,15 @@ exports[`Select shows a search input when the number of options is more than the
         </ul>
       </div>
     </div>
+    <input
+      type="hidden"
+      value=""
+    />
+    <input
+      name="undefined_edited"
+      type="hidden"
+      value="false"
+    />
     
   </div>
 </div>

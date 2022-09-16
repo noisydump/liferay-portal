@@ -34,6 +34,7 @@ import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Portal;
 
 import java.util.Objects;
@@ -111,14 +112,11 @@ public class CommerceSubscriptionEngineImpl
 			_commercePaymentUtils.getCommercePaymentRequestProvider(
 				commercePaymentMethod);
 
-		CommercePaymentRequest commercePaymentRequest =
-			commercePaymentRequestProvider.getCommercePaymentRequest(
-				null, commerceOrder.getCommerceOrderId(), null, null, null,
-				commerceOrder.getTransactionId());
-
 		boolean activateSubscription =
 			commercePaymentMethod.activateRecurringPayment(
-				commercePaymentRequest);
+				commercePaymentRequestProvider.getCommercePaymentRequest(
+					null, commerceOrder.getCommerceOrderId(), null, null, null,
+					commerceOrder.getTransactionId()));
 
 		if (activateSubscription) {
 			_commerceSubscriptionEntryLocalService.updateSubscriptionStatus(
@@ -173,14 +171,11 @@ public class CommerceSubscriptionEngineImpl
 			_commercePaymentUtils.getCommercePaymentRequestProvider(
 				commercePaymentMethod);
 
-		CommercePaymentRequest commercePaymentRequest =
-			commercePaymentRequestProvider.getCommercePaymentRequest(
-				null, commerceOrder.getCommerceOrderId(), null, null, null,
-				commerceOrder.getTransactionId());
-
 		boolean activateSubscription =
 			commercePaymentMethod.cancelRecurringPayment(
-				commercePaymentRequest);
+				commercePaymentRequestProvider.getCommercePaymentRequest(
+					null, commerceOrder.getCommerceOrderId(), null, null, null,
+					commerceOrder.getTransactionId()));
 
 		if (activateSubscription) {
 			_commerceSubscriptionEntryLocalService.updateSubscriptionStatus(
@@ -207,7 +202,8 @@ public class CommerceSubscriptionEngineImpl
 		if ((commercePaymentMethod == null) ||
 			!commercePaymentMethod.isCompleteRecurringEnabled()) {
 
-			return _commercePaymentUtils.emptyResult(commerceOrderId);
+			return _commercePaymentUtils.emptyResult(
+				commerceOrderId, transactionId);
 		}
 
 		CommerceOrder commerceOrder =
@@ -222,17 +218,21 @@ public class CommerceSubscriptionEngineImpl
 			commercePaymentMethod.completeRecurringPayment(
 				commercePaymentRequest);
 
-		int paymentStatus = commercePaymentResult.getNewPaymentStatus();
-
 		commerceOrder =
 			_commerceOrderLocalService.updatePaymentStatusAndTransactionId(
-				commerceOrder.getUserId(), commerceOrderId, paymentStatus,
-				transactionId);
+				commerceOrder.getUserId(), commerceOrderId,
+				commercePaymentResult.getNewPaymentStatus(),
+				GetterUtil.getString(
+					commercePaymentResult.getAuthTransactionId(),
+					commerceOrder.getTransactionId()));
 
 		_commerceOrderPaymentLocalService.addCommerceOrderPayment(
-			commerceOrderId, paymentStatus, StringPool.BLANK);
+			commerceOrderId, commercePaymentResult.getNewPaymentStatus(),
+			StringPool.BLANK);
 
-		if (paymentStatus == CommerceOrderConstants.PAYMENT_STATUS_PAID) {
+		if (commercePaymentResult.getNewPaymentStatus() ==
+				CommerceOrderConstants.PAYMENT_STATUS_PAID) {
+
 			PermissionChecker permissionChecker =
 				PermissionThreadLocal.getPermissionChecker();
 
@@ -264,13 +264,10 @@ public class CommerceSubscriptionEngineImpl
 		CommerceOrder commerceOrder =
 			_commerceOrderLocalService.getCommerceOrder(commerceOrderId);
 
-		CommercePaymentRequest commercePaymentRequest =
+		return commercePaymentMethod.getSubscriptionValidity(
 			commercePaymentRequestProvider.getCommercePaymentRequest(
 				null, commerceOrderId, null, null, null,
-				commerceOrder.getTransactionId());
-
-		return commercePaymentMethod.getSubscriptionValidity(
-			commercePaymentRequest);
+				commerceOrder.getTransactionId()));
 	}
 
 	@Override
@@ -291,7 +288,8 @@ public class CommerceSubscriptionEngineImpl
 		if ((commercePaymentMethod == null) ||
 			!commercePaymentMethod.isProcessRecurringEnabled()) {
 
-			return _commercePaymentUtils.emptyResult(commerceOrderId);
+			return _commercePaymentUtils.emptyResult(
+				commerceOrderId, StringPool.BLANK);
 		}
 
 		CommercePaymentRequest commercePaymentRequest =
@@ -376,14 +374,11 @@ public class CommerceSubscriptionEngineImpl
 			_commercePaymentUtils.getCommercePaymentRequestProvider(
 				commercePaymentMethod);
 
-		CommercePaymentRequest commercePaymentRequest =
-			commercePaymentRequestProvider.getCommercePaymentRequest(
-				null, commerceOrder.getCommerceOrderId(), null, null, null,
-				commerceOrder.getTransactionId());
-
 		boolean suspendSubscription =
 			commercePaymentMethod.suspendRecurringPayment(
-				commercePaymentRequest);
+				commercePaymentRequestProvider.getCommercePaymentRequest(
+					null, commerceOrder.getCommerceOrderId(), null, null, null,
+					commerceOrder.getTransactionId()));
 
 		if (suspendSubscription) {
 			_commerceSubscriptionEntryLocalService.updateSubscriptionStatus(

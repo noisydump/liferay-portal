@@ -57,12 +57,17 @@ if (group.isOrganization()) {
 
 String className = ParamUtil.getString(request, "className", User.class.getName());
 
-PortletURL portletURL = renderResponse.createRenderURL();
-
-portletURL.setParameter("tabs1", tabs1);
-portletURL.setParameter("redirect", redirect);
-portletURL.setParameter("className", className);
-portletURL.setParameter("groupId", String.valueOf(group.getGroupId()));
+PortletURL portletURL = PortletURLBuilder.createRenderURL(
+	renderResponse
+).setRedirect(
+	redirect
+).setTabs1(
+	tabs1
+).setParameter(
+	"className", className
+).setParameter(
+	"groupId", group.getGroupId()
+).buildPortletURL();
 
 if (role != null) {
 	portletURL.setParameter("roleId", String.valueOf(roleId));
@@ -166,23 +171,24 @@ String methodName = null;
 </liferay-util:buffer>
 
 <%
-PortletURL clearResultsURL = (PortletURL)request.getAttribute("edit_roles.jsp-portletURL");
-
-clearResultsURL.setParameter("keywords", StringPool.BLANK);
+PortletURL clearResultsURL = PortletURLBuilder.create(
+	(PortletURL)request.getAttribute("edit_roles.jsp-portletURL")
+).setKeywords(
+	StringPool.BLANK
+).buildPortletURL();
 
 SearchContainer<?> searchContainer = (SearchContainer<?>)request.getAttribute("liferay-ui:search:searchContainer");
 %>
 
-<clay:management-toolbar-v2
+<clay:management-toolbar
 	clearResultsURL="<%= clearResultsURL.toString() %>"
 	itemsTotal="<%= searchContainer.getTotal() %>"
-	namespace="<%= liferayPortletResponse.getNamespace() %>"
 	searchActionURL="<%= portletURL.toString() %>"
 	selectable="<%= false %>"
 	showCreationMenu="<%= false %>"
 />
 
-<aui:form action="<%= portletURL.toString() %>" method="post" name="fm">
+<aui:form action="<%= portletURL %>" method="post" name="fm">
 	<aui:input name="tabs1" type="hidden" value="<%= tabs1 %>" />
 	<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
 	<aui:input name="groupId" type="hidden" value="<%= String.valueOf(group.getGroupId()) %>" />
@@ -219,11 +225,11 @@ SearchContainer<?> searchContainer = (SearchContainer<?>)request.getAttribute("l
 		Util.postForm(form, {
 			data: {
 				redirect: redirect,
-				addUserGroupIds: Util.listCheckedExcept(
+				addUserGroupIds: Util.getCheckedCheckboxes(
 					form,
 					'<portlet:namespace />allRowIds'
 				),
-				removeUserGroupIds: Util.listUncheckedExcept(
+				removeUserGroupIds: Util.getUncheckedCheckboxes(
 					form,
 					'<portlet:namespace />allRowIds'
 				),
@@ -240,11 +246,11 @@ SearchContainer<?> searchContainer = (SearchContainer<?>)request.getAttribute("l
 		Util.postForm(form, {
 			data: {
 				redirect: redirect,
-				addUserIds: Util.listCheckedExcept(
+				addUserIds: Util.getCheckedCheckboxes(
 					form,
 					'<portlet:namespace />allRowIds'
 				),
-				removeUserIds: Util.listUncheckedExcept(
+				removeUserIds: Util.getUncheckedCheckboxes(
 					form,
 					'<portlet:namespace />allRowIds'
 				),

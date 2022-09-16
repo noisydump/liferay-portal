@@ -18,6 +18,7 @@ import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.workflow.kaleo.definition.Action;
 import com.liferay.portal.workflow.kaleo.definition.ExecutionType;
 import com.liferay.portal.workflow.kaleo.definition.ScriptLanguage;
@@ -28,6 +29,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Brian Wing Shun Chan
@@ -46,8 +48,9 @@ public class KaleoActionLocalServiceImpl
 			ServiceContext serviceContext)
 		throws PortalException {
 
-		User user = userLocalService.getUser(serviceContext.getGuestOrUserId());
-		Date now = new Date();
+		User user = _userLocalService.getUser(
+			serviceContext.getGuestOrUserId());
+		Date date = new Date();
 
 		long kaleoActionId = counterLocalService.increment();
 
@@ -56,8 +59,8 @@ public class KaleoActionLocalServiceImpl
 		kaleoAction.setCompanyId(user.getCompanyId());
 		kaleoAction.setUserId(user.getUserId());
 		kaleoAction.setUserName(user.getFullName());
-		kaleoAction.setCreateDate(now);
-		kaleoAction.setModifiedDate(now);
+		kaleoAction.setCreateDate(date);
+		kaleoAction.setModifiedDate(date);
 		kaleoAction.setKaleoClassName(kaleoClassName);
 		kaleoAction.setKaleoClassPK(kaleoClassPK);
 		kaleoAction.setKaleoDefinitionId(kaleoDefinitionId);
@@ -113,30 +116,7 @@ public class KaleoActionLocalServiceImpl
 			companyId, kaleoClassName, kaleoClassPK, executionType);
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *             #getKaleoActions(long, String, long)}
-	 */
-	@Deprecated
-	@Override
-	public List<KaleoAction> getKaleoActions(
-		String kaleoClassName, long kaleoClassPK) {
-
-		return kaleoActionPersistence.findByKCN_KCPK(
-			kaleoClassName, kaleoClassPK);
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *             #getKaleoActions(long, String, long, String)}
-	 */
-	@Deprecated
-	@Override
-	public List<KaleoAction> getKaleoActions(
-		String kaleoClassName, long kaleoClassPK, String executionType) {
-
-		return kaleoActionPersistence.findByKCN_KCPK_ET(
-			kaleoClassName, kaleoClassPK, executionType);
-	}
+	@Reference
+	private UserLocalService _userLocalService;
 
 }

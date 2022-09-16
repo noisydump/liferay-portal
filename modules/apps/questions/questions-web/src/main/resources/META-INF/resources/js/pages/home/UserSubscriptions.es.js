@@ -12,11 +12,11 @@
  * details.
  */
 
-import {useMutation, useQuery} from '@apollo/client';
 import {ClayButtonWithIcon} from '@clayui/button';
 import {ClayDropDownWithItems} from '@clayui/drop-down';
 import ClayEmptyState from '@clayui/empty-state';
-import React, {useContext, useEffect, useState} from 'react';
+import {useMutation, useQuery} from 'graphql-hooks';
+import React, {useContext, useState} from 'react';
 import {withRouter} from 'react-router-dom';
 
 import {AppContext} from '../../AppContext.es';
@@ -24,59 +24,58 @@ import Alert from '../../components/Alert.es';
 import DeleteQuestion from '../../components/DeleteQuestion.es';
 import Link from '../../components/Link.es';
 import QuestionRow from '../../components/QuestionRow.es';
+import TagsLayout from '../../components/TagsLayout.es';
+import useTags from '../../hooks/useTags.es';
 import {
-	client,
 	getSubscriptionsQuery,
 	unsubscribeMyUserAccountQuery,
 } from '../../utils/client.es';
 import {historyPushWithSlug} from '../../utils/utils.es';
 
-export default withRouter(({history}) => {
-	const [entity, setEntity] = useState({});
+export default withRouter(({history, location}) => {
 	const [info, setInfo] = useState({});
 	const [questionToDelete, setQuestionToDelete] = useState({});
 
+	const {
+		error,
+		orderBy,
+		page,
+		pageSize,
+		search,
+		tagsItemsSelected,
+	} = useTags({history, location});
+
+	const tagsFiltredSelected = tagsItemsSelected();
+
+	const linkSubscriptionPage = location.pathname.split('/')[2];
+
 	const context = useContext(AppContext);
 
-	const {data: threads, refetch: refetchThreads} = useQuery(
+	const {data: threads, refetch: refetchThread} = useQuery(
 		getSubscriptionsQuery,
 		{
-			fetchPolicy: 'network-only',
 			variables: {
 				contentType: 'MessageBoardThread',
 			},
 		}
 	);
 
+	if (threads && threads.myUserAccountSubscriptions.items) {
+		threads.myUserAccountSubscriptions.items = threads.myUserAccountSubscriptions.items.filter(
+			(thread) => thread.graphQLNode.showAsQuestion
+		);
+	}
+
 	const {data: topics, refetch: refetchTopics} = useQuery(
 		getSubscriptionsQuery,
 		{
-			fetchPolicy: 'network-only',
 			variables: {
 				contentType: 'MessageBoardSection',
 			},
 		}
 	);
 
-	const [unsubscribe] = useMutation(unsubscribeMyUserAccountQuery, {
-		onCompleted() {
-			refetchThreads();
-			refetchTopics();
-			setInfo({
-				title: 'You have unsubscribed from this asset successfully.',
-			});
-		},
-	});
-
-	useEffect(() => {
-		if (entity.title) {
-			client.cache.evict(`MessageBoardSection:${entity.id}`);
-		}
-		else {
-			client.cache.evict(`MessageBoardThread:${entity.id}`);
-		}
-		client.cache.gc();
-	}, [entity]);
+	const [unsubscribe] = useMutation(unsubscribeMyUserAccountQuery);
 
 	const [showDeleteModalPanel, setShowDeleteModalPanel] = useState(false);
 
@@ -89,11 +88,17 @@ export default withRouter(({history}) => {
 			{
 				label: 'Unsubscribe',
 				onClick: () => {
-					setEntity({...data.graphQLNode});
 					unsubscribe({
 						variables: {
 							subscriptionId: data.id,
 						},
+					}).then(() => {
+						refetchThread();
+						refetchTopics();
+						setInfo({
+							title:
+								'You have unsubscribed from this asset successfully.',
+						});
 					});
 				},
 			},
@@ -145,8 +150,39 @@ export default withRouter(({history}) => {
 	return (
 		<section className="questions-section questions-section-list">
 			<div className="c-p-5 questions-container row">
-				<div className="col-xl-8 offset-xl-2">
-					<h2 className="sheet-subtitle">Topics</h2>
+				<div className="c-mt-3 c-mx-auto c-px-0 w-100">
+					<h2 className="sheet-subtitle">
+						{Liferay.Language.get('tags')}
+					</h2>
+
+					{tagsFiltredSelected?.items?.length ? (
+						<div className="c-mt-3 row">
+							{tagsFiltredSelected.items.map((tag) => (
+								<div className="col-md-4" key={tag.id}>
+									<TagsLayout
+										context={context.siteKey}
+										linkPage={linkSubscriptionPage}
+										orderBy={orderBy}
+										page={page}
+										pageSize={pageSize}
+										search={search}
+										tag={tag}
+									/>
+								</div>
+							))}
+
+							<Alert info={error} />
+						</div>
+					) : (
+						<ClayEmptyState
+							title={Liferay.Language.get('there-are-no-results')}
+						/>
+					)}
+
+					<h2 className="mt-5 sheet-subtitle">
+						{Liferay.Language.get('topics')}
+					</h2>
+
 					{topics &&
 						topics.myUserAccountSubscriptions.items &&
 						!topics.myUserAccountSubscriptions.items.length && (
@@ -156,6 +192,7 @@ export default withRouter(({history}) => {
 								)}
 							/>
 						)}
+
 					<div className="row">
 						{topics &&
 							topics.myUserAccountSubscriptions.items &&
@@ -197,6 +234,7 @@ export default withRouter(({history}) => {
 															</div>
 														</Link>
 													</div>
+
 													<div className="autofit-col">
 														<ClayDropDownWithItems
 															items={actions(
@@ -218,7 +256,11 @@ export default withRouter(({history}) => {
 								)
 							)}
 					</div>
-					<h2 className="mt-5 sheet-subtitle">Questions</h2>
+
+					<h2 className="mt-5 sheet-subtitle">
+						{Liferay.Language.get('questions')}
+					</h2>
+
 					<div>
 						{threads &&
 							threads.myUserAccountSubscriptions.items &&
@@ -230,12 +272,14 @@ export default withRouter(({history}) => {
 									)}
 								/>
 							)}
+
 						{threads &&
 							threads.myUserAccountSubscriptions.items &&
 							threads.myUserAccountSubscriptions.items.map(
 								(data) => (
 									<div key={data.id}>
 										<QuestionRow
+											context={context}
 											currentSection={
 												context.useTopicNamesInURL
 													? data.graphQLNode
@@ -257,6 +301,7 @@ export default withRouter(({history}) => {
 									</div>
 								)
 							)}
+
 						<DeleteQuestion
 							deleteModalVisibility={showDeleteModalPanel}
 							question={questionToDelete}
@@ -265,7 +310,8 @@ export default withRouter(({history}) => {
 					</div>
 				</div>
 			</div>
-			<Alert displayType={'success'} info={info} />
+
+			<Alert displayType="success" info={info} />
 		</section>
 	);
 });

@@ -1,59 +1,22 @@
 @component-name = "portal-commerce"
 definition {
 
+	property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Commerce";
+	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
+	property testray.main.component.name = "Shopping Experience";
 
 	setUp {
-		TestCase.setUpPortalInstance();
-
-		User.firstLoginPG();
-
-		PortalSettings.gotoConfiguration(
-			configurationCategory = "User Authentication",
-			configurationName = "General",
-			configurationScope = "Virtual Instance Scope");
-
-		Uncheck(locator1 = "PortalSettingsAuthentication#AUTHENTICATION_GENERAL_REQUIRE_STRANGERS_TO_VERIFY_THEIR_EMAIL_ADDRESS_CHECKBOX");
-
-		PortletEntry.save();
-
-		ApplicationsMenu.gotoPortlet(
-			category = "Configuration",
-			panel = "Control Panel",
-			portlet = "Search");
-
-		SearchAdministration.executeSearchActions(actionsDescription = "Reindex all search indexes.");
+		CommerceConfiguration.commerceSetUp();
 	}
 
 	tearDown {
-		var testPortalInstance = PropsUtil.get("test.portal.instance");
-
-		if ("${testPortalInstance}" == "true") {
-			PortalInstances.tearDownCP();
-		}
-		else {
-			Navigator.openURL();
-
-			if (IsElementPresent(locator1 = "UserBar#USER_AVATAR_IMAGE")) {
-				User.logoutPG();
-			}
-
-			User.firstLoginPG();
-
-			CommerceConfiguration.commerceAdminTearDown(userScreenName = "buyer");
-
-			CommerceConfiguration.commerceInitializersTearDown();
-
-			User.logoutPG();
-		}
+		CommerceConfiguration.commerceTearDown();
 	}
 
 	test AssertGuestCartIsTransferredToAccount {
-		property portal.acceptance = "quarantine";
-		property portal.upstream = "quarantine";
-		property test.name.skip.portal.instance = "GuestCheckout#AssertGuestCartIsTransferredToAccount";
+		property portal.acceptance = "false";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Speedwell");
 
@@ -117,23 +80,21 @@ definition {
 			productName = "U-Joint",
 			productQuantity = "1");
 
-		Pause(locator1 = "5000");
-
 		CommerceNavigator.gotoMiniCart();
 
 		FrontStore.viewMiniCart(
 			cartItemNames = "U-Joint,",
 			cartItemPriceValues = "24,",
 			cartItemQuantities = "1,",
-			cartItemSKUs = "SPEED55861,");
+			cartItemSkUs = "SPEED55861,");
 
 		Click(locator1 = "CommerceAccelerators#MINI_CART_CLOSE");
 
 		CommerceNavigator.gotoSpeedwellAccountDropdownItem(dropdownItem = "Sign In");
 
 		CommerceLogin.loginPG(
+			newPassword = "test",
 			password = "ttest",
-			resetPassword = "test",
 			samlEnabled = "true",
 			userEmailAddress = "buyer@liferay.com");
 
@@ -145,15 +106,13 @@ definition {
 			cartItemNames = "U-Joint,",
 			cartItemPriceValues = "24,",
 			cartItemQuantities = "1,",
-			cartItemSKUs = "SPEED55861,");
+			cartItemSkUs = "SPEED55861,");
 
 		Click(locator1 = "CommerceAccelerators#MINI_CART_CLOSE");
 	}
 
 	test AssertGuestCartItemIsNotTransferredIfSkuIsAlreadyPresent {
-		property portal.acceptance = "quarantine";
-		property portal.upstream = "quarantine";
-		property test.name.skip.portal.instance = "GuestCheckout#AssertGuestCartItemIsNotTransferredIfSkuIsAlreadyPresent";
+		property portal.acceptance = "false";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Speedwell");
 
@@ -210,8 +169,8 @@ definition {
 		User.logoutPG();
 
 		CommerceLogin.speedwellLogin(
+			newPassword = "test",
 			password = "ttest",
-			resetPassword = "test",
 			urlAppend = "web/speedwell",
 			userEmailAddress = "buyer@liferay.com");
 
@@ -221,15 +180,13 @@ definition {
 			productName = "U-Joint",
 			productQuantity = "1");
 
-		Pause(locator1 = "5000");
-
 		CommerceNavigator.gotoMiniCart();
 
 		FrontStore.viewMiniCart(
 			cartItemNames = "U-Joint,",
 			cartItemPriceValues = "24,",
 			cartItemQuantities = "1,",
-			cartItemSKUs = "SPEED55861,",
+			cartItemSkUs = "SPEED55861,",
 			cartSummaryQuantity = "1",
 			cartSummarySubtotal = "24",
 			cartSummaryTotal = "${cartSummarySubtotal}");
@@ -246,15 +203,13 @@ definition {
 			productName = "U-Joint",
 			productQuantity = "5");
 
-		Pause(locator1 = "5000");
-
 		CommerceNavigator.gotoMiniCart();
 
 		FrontStore.viewMiniCart(
 			cartItemNames = "U-Joint,",
 			cartItemPriceValues = "24,",
 			cartItemQuantities = "5,",
-			cartItemSKUs = "SPEED55861,",
+			cartItemSkUs = "SPEED55861,",
 			cartSummaryQuantity = "5",
 			cartSummarySubtotal = "120",
 			cartSummaryTotal = "${cartSummarySubtotal}");
@@ -274,16 +229,14 @@ definition {
 			cartItemNames = "U-Joint,",
 			cartItemPriceValues = "24,",
 			cartItemQuantities = "1,",
-			cartItemSKUs = "SPEED55861,",
+			cartItemSkUs = "SPEED55861,",
 			cartSummaryQuantity = "1",
 			cartSummarySubtotal = "24",
 			cartSummaryTotal = "${cartSummarySubtotal}");
 	}
 
 	test AssertGuestCartItemIsTransferredToExistingCart {
-		property portal.acceptance = "quarantine";
-		property portal.upstream = "quarantine";
-		property test.name.skip.portal.instance = "GuestCheckout#AssertGuestCartItemIsTransferredToExistingCart";
+		property portal.acceptance = "false";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Speedwell");
 
@@ -340,8 +293,8 @@ definition {
 		User.logoutPG();
 
 		CommerceLogin.speedwellLogin(
+			newPassword = "test",
 			password = "ttest",
-			resetPassword = "test",
 			urlAppend = "web/speedwell",
 			userEmailAddress = "buyer@liferay.com");
 
@@ -351,15 +304,13 @@ definition {
 			productName = "U-Joint",
 			productQuantity = "1");
 
-		Pause(locator1 = "5000");
-
 		CommerceNavigator.gotoMiniCart();
 
 		FrontStore.viewMiniCart(
 			cartItemNames = "U-Joint,",
 			cartItemPriceValues = "24,",
 			cartItemQuantities = "1,",
-			cartItemSKUs = "SPEED55861,",
+			cartItemSkUs = "SPEED55861,",
 			cartSummaryQuantity = "1",
 			cartSummarySubtotal = "24",
 			cartSummaryTotal = "${cartSummarySubtotal}");
@@ -376,15 +327,13 @@ definition {
 			productName = "Transmission Cooler Line Assembly",
 			productQuantity = "5");
 
-		Pause(locator1 = "5000");
-
 		CommerceNavigator.gotoMiniCart();
 
 		FrontStore.viewMiniCart(
 			cartItemNames = "Transmission Cooler Line Assembly,",
 			cartItemPriceValues = "15,",
 			cartItemQuantities = "5,",
-			cartItemSKUs = "SPEED55860,",
+			cartItemSkUs = "SPEED55860,",
 			cartSummaryQuantity = "5",
 			cartSummarySubtotal = "75",
 			cartSummaryTotal = "${cartSummarySubtotal}");
@@ -404,16 +353,14 @@ definition {
 			cartItemNames = "U-Joint,Transmission Cooler Line Assembly,",
 			cartItemPriceValues = "24,15,",
 			cartItemQuantities = "1,5,",
-			cartItemSKUs = "SPEED55861,SPEED55860,",
+			cartItemSkUs = "SPEED55861,SPEED55860,",
 			cartSummaryQuantity = "6",
 			cartSummarySubtotal = "99",
 			cartSummaryTotal = "${cartSummarySubtotal}");
 	}
 
 	test AssertGuestCheckoutAuthenticationPage {
-		property portal.acceptance = "quarantine";
-		property portal.upstream = "quarantine";
-		property test.name.skip.portal.instance = "GuestCheckout#AssertGuestCheckoutAuthenticationPage";
+		property portal.acceptance = "true";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Speedwell");
 
@@ -452,8 +399,6 @@ definition {
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
 			productQuantity = "1");
-
-		Pause(locator1 = "5000");
 
 		CommerceNavigator.gotoMiniCart();
 
@@ -463,9 +408,7 @@ definition {
 	}
 
 	test AssertGuestsWithSameEmailHaveDifferentAccounts {
-		property portal.acceptance = "quarantine";
-		property portal.upstream = "quarantine";
-		property test.name.skip.portal.instance = "GuestCheckout#AssertGuestsWithSameEmailHaveDifferentAccounts";
+		property portal.acceptance = "true";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Speedwell");
 
@@ -504,8 +447,6 @@ definition {
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
 			productQuantity = "1");
-
-		Pause(locator1 = "5000");
 
 		CommerceNavigator.gotoMiniCart();
 
@@ -534,8 +475,6 @@ definition {
 			productName = "U-Joint",
 			productQuantity = "1");
 
-		Pause(locator1 = "5000");
-
 		CommerceNavigator.gotoMiniCart();
 
 		Button.click(button = "Submit");
@@ -560,7 +499,7 @@ definition {
 		User.loginPG();
 
 		ApplicationsMenu.gotoPortlet(
-			category = "Users",
+			category = "Accounts",
 			panel = "Control Panel",
 			portlet = "Accounts");
 
@@ -584,9 +523,7 @@ definition {
 	}
 
 	test AssertNewAccountIsCreatedAfterGuestCheckout {
-		property portal.acceptance = "quarantine";
-		property portal.upstream = "quarantine";
-		property test.name.skip.portal.instance = "GuestCheckout#AssertNewAccountIsCreatedAfterGuestCheckout";
+		property portal.acceptance = "true";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Speedwell");
 
@@ -622,8 +559,6 @@ definition {
 			productName = "U-Joint",
 			productQuantity = "1");
 
-		Pause(locator1 = "5000");
-
 		CommerceNavigator.gotoMiniCart();
 
 		Button.click(button = "Submit");
@@ -650,21 +585,23 @@ definition {
 		User.firstLoginPG();
 
 		ApplicationsMenu.gotoPortlet(
-			category = "Users",
+			category = "Accounts",
 			panel = "Control Panel",
 			portlet = "Accounts");
 
 		CommerceNavigator.gotoEntry(entryName = "Address Name");
 
-		AssertTextEquals(
-			locator1 = "TextInput#EMAIL",
-			value1 = "buyer@liferay.com");
+		var guestAccountEmail = CommerceJSONAccountsAPI._getCommerceAccountEmail(
+			accountName = "Address Name",
+			accountType = "Guest");
+
+		TestUtils.assertEquals(
+			actual = "${guestAccountEmail}",
+			expected = "buyer@liferay.com");
 	}
 
 	test GuestAccountIsNotCombinedWithExistingUserAccount {
-		property portal.acceptance = "quarantine";
-		property portal.upstream = "quarantine";
-		property test.name.skip.portal.instance = "GuestCheckout#GuestAccountIsNotCombinedWithExistingUserAccount";
+		property portal.acceptance = "true";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Speedwell");
 
@@ -721,8 +658,8 @@ definition {
 		User.logoutPG();
 
 		CommerceLogin.speedwellLogin(
+			newPassword = "test",
 			password = "ttest",
-			resetPassword = "test",
 			urlAppend = "web/speedwell",
 			userEmailAddress = "buyer@liferay.com");
 
@@ -731,8 +668,6 @@ definition {
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
 			productQuantity = "1");
-
-		Pause(locator1 = "5000");
 
 		CommerceNavigator.gotoMiniCart();
 
@@ -759,8 +694,6 @@ definition {
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
 			productQuantity = "1");
-
-		Pause(locator1 = "5000");
 
 		CommerceNavigator.gotoMiniCart();
 
@@ -803,7 +736,7 @@ definition {
 		User.loginPG();
 
 		ApplicationsMenu.gotoPortlet(
-			category = "Users",
+			category = "Accounts",
 			panel = "Control Panel",
 			portlet = "Accounts");
 
@@ -812,7 +745,7 @@ definition {
 		CommerceEntry.viewAccountsEntry(
 			accountEmail = "buyer@liferay.com",
 			accountName = "Buyer User",
-			accountType = "Personal",
+			accountType = "Person",
 			isAccountActive = "true");
 
 		Click(locator1 = "Icon#BACK");
@@ -827,35 +760,9 @@ definition {
 	}
 
 	test GuestCheckoutDisabled {
-		property portal.acceptance = "quarantine";
-		property portal.upstream = "quarantine";
-		property test.name.skip.portal.instance = "GuestCheckout#GuestCheckoutDisabled";
+		property portal.acceptance = "true";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Speedwell");
-
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
-
-		User.addCP(
-			userEmailAddress = "buyer@liferay.com",
-			userFirstName = "Buyer",
-			userLastName = "User",
-			userScreenName = "buyer");
-
-		Click(locator1 = "Icon#BACK");
-
-		CommerceLogin.editPasswordCP(
-			newPassword = "ttest",
-			requirePasswordReset = "true",
-			userScreenName = "buyer");
-
-		Click(locator1 = "Icon#BACK");
-
-		User.editUserSiteCP(
-			siteName = "Speedwell",
-			userScreenName = "buyer");
 
 		CommerceNavigator.gotoPortlet(
 			category = "Store Management",
@@ -863,15 +770,9 @@ definition {
 
 		CommerceNavigator.gotoEntry(entryName = "Speedwell Portal");
 
-		CommerceChannels.activatePaymentMethod(paymentMethod = "Money Order");
-
-		Refresh();
-
 		AssertNotChecked.assertNotCheckedNotVisible(
 			key_toggleSwitchLabel = "Guest Checkout",
 			locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
-
-		Button.clickSave();
 
 		User.logoutPG();
 
@@ -879,63 +780,15 @@ definition {
 
 		CommerceNavigator.gotoSpeedwellTopbarItem(menuItem = "Catalog");
 
-		FrontStore.addInitializerProductToCart(
-			productName = "U-Joint",
-			productQuantity = "1");
+		AssertElementPresent(
+			key_productName = "U-Joint",
+			locator1 = "CommerceAccelerators#PRODUCT_CARD_QUANTITY_SELECTOR_INPUT_FIELD_DISABLED");
 
-		Pause(locator1 = "5000");
-
-		CommerceNavigator.gotoMiniCart();
-
-		Button.click(button = "Submit");
-
-		CommerceCheckout.initializersCheckout(
-			guestEmail = "buyer@liferay.com",
-			newAddressAddress = "Test Address",
-			newAddressCity = "Test City",
-			newAddressCountry = "United States",
-			newAddressName = "Address Name",
-			newAddressZipCode = "Test Zip Code",
-			paymentMethod = "Money Order",
-			productName = "U-Joint",
-			productQuantity = "1",
-			productUnitPrice = "24",
-			shippingMethod = "Standard");
-
-		Alert.viewErrorMessage(errorMessage = "You must sign in to complete this order.");
-
-		CommerceNavigator.gotoSpeedwellAccountDropdownItem(dropdownItem = "Sign In");
-
-		CommerceLogin.loginPG(
-			password = "ttest",
-			resetPassword = "test",
-			samlEnabled = "true",
-			userEmailAddress = "buyer@liferay.com");
-
-		CommerceCheckout.viewCheckoutOrderSummary(
-			addressAddress = "Test Address",
-			addressCity = "Test City",
-			addressCountry = "United States",
-			addressName = "Address Name",
-			deliveryValue = "15",
-			paymentMethod = "Money Order",
-			productName = "U-Joint",
-			productPrice = "24",
-			productQuantity = "1",
-			subtotalValue = "24",
-			totalValue = "39");
-
-		Click(locator1 = "Button#CONTINUE");
-
-		AssertTextEquals(
-			locator1 = "CommerceAccelerators#CHECKOUT_SUCCESS_MESSAGE",
-			value1 = "Your order has been processed but not completed yet.");
+		CommerceAcceleratorsInitializer.viewDisabledAddToCartButton(productName = "U-Joint");
 	}
 
 	test GuestCheckoutEnabled {
-		property portal.acceptance = "quarantine";
-		property portal.upstream = "quarantine";
-		property test.name.skip.portal.instance = "GuestCheckout#GuestCheckoutEnabled";
+		property portal.acceptance = "true";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Speedwell");
 
@@ -975,8 +828,6 @@ definition {
 			productName = "U-Joint",
 			productQuantity = "1");
 
-		Pause(locator1 = "5000");
-
 		CommerceNavigator.gotoMiniCart();
 
 		Button.click(button = "Submit");
@@ -1002,9 +853,7 @@ definition {
 	}
 
 	test GuestCheckoutEnabledWithoutAuthenticationPage {
-		property portal.acceptance = "quarantine";
-		property portal.upstream = "quarantine";
-		property test.name.skip.portal.instance = "GuestCheckout#GuestCheckoutEnabledWithoutAuthenticationPage";
+		property portal.acceptance = "true";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Speedwell");
 
@@ -1034,8 +883,6 @@ definition {
 			productName = "U-Joint",
 			productQuantity = "1");
 
-		Pause(locator1 = "5000");
-
 		CommerceNavigator.gotoMiniCart();
 
 		Button.click(button = "Submit");
@@ -1054,9 +901,7 @@ definition {
 	}
 
 	test GuestCheckoutWithNoShippableProduct {
-		property portal.acceptance = "quarantine";
-		property portal.upstream = "quarantine";
-		property test.name.skip.portal.instance = "GuestCheckout#GuestCheckoutWithNoShippableProduct";
+		property portal.acceptance = "false";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Speedwell");
 
@@ -1108,8 +953,6 @@ definition {
 			productName = "U-Joint",
 			productQuantity = "1");
 
-		Pause(locator1 = "5000");
-
 		CommerceNavigator.gotoMiniCart();
 
 		Button.click(button = "Submit");
@@ -1134,9 +977,7 @@ definition {
 	}
 
 	test GuestCheckoutWithShippableProduct {
-		property portal.acceptance = "quarantine";
-		property portal.upstream = "quarantine";
-		property test.name.skip.portal.instance = "GuestCheckout#GuestCheckoutWithShippableProduct";
+		property portal.acceptance = "true";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Speedwell");
 
@@ -1172,8 +1013,6 @@ definition {
 			productName = "U-Joint",
 			productQuantity = "1");
 
-		Pause(locator1 = "5000");
-
 		CommerceNavigator.gotoMiniCart();
 
 		Button.click(button = "Submit");
@@ -1197,8 +1036,7 @@ definition {
 	}
 
 	test UserAccountIsNotCombinedWithExistingGuestAccount {
-		property portal.acceptance = "quarantine";
-		property portal.upstream = "quarantine";
+		property portal.acceptance = "false";
 		property test.name.skip.portal.instance = "GuestCheckout#UserAccountIsNotCombinedWithExistingGuestAccount";
 
 		ApplicationsMenu.gotoPortlet(
@@ -1255,8 +1093,6 @@ definition {
 			productName = "U-Joint",
 			productQuantity = "1");
 
-		Pause(locator1 = "5000");
-
 		CommerceNavigator.gotoMiniCart();
 
 		Button.click(button = "Submit");
@@ -1284,8 +1120,6 @@ definition {
 			productName = "U-Joint",
 			productQuantity = "1");
 
-		Pause(locator1 = "5000");
-
 		CommerceNavigator.gotoMiniCart();
 
 		Button.click(button = "Submit");
@@ -1300,8 +1134,8 @@ definition {
 			userScreenName = "buyeruser");
 
 		CommerceLogin.speedwellLogin(
+			newPassword = "test",
 			password = "ttest",
-			resetPassword = "test",
 			urlAppend = "web/speedwell",
 			userEmailAddress = "buyer@liferay.com");
 
@@ -1338,7 +1172,7 @@ definition {
 		User.loginPG();
 
 		ApplicationsMenu.gotoPortlet(
-			category = "Users",
+			category = "Accounts",
 			panel = "Control Panel",
 			portlet = "Accounts");
 
@@ -1357,7 +1191,7 @@ definition {
 		CommerceEntry.viewAccountsEntry(
 			accountEmail = "buyer@liferay.com",
 			accountName = "Buyer User",
-			accountType = "Personal",
+			accountType = "Person",
 			isAccountActive = "true");
 	}
 

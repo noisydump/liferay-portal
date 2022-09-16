@@ -102,12 +102,13 @@ public class ExportImportDateUtil {
 			portletRequest, paramPrefix + "Minute");
 		int dateAmPm = ParamUtil.getInteger(
 			portletRequest, paramPrefix + "AmPm");
-		TimeZone timeZone = TimeZoneUtil.getTimeZone(
-			ParamUtil.getString(portletRequest, "timeZoneId"));
 
 		return getCalendar(
 			dateAmPm, dateYear, dateMonth, dateDay, dateHour, dateMinute,
-			themeDisplay.getLocale(), timeZone, timeZoneSensitive);
+			themeDisplay.getLocale(),
+			TimeZoneUtil.getTimeZone(
+				ParamUtil.getString(portletRequest, "timeZoneId")),
+			timeZoneSensitive);
 	}
 
 	public static DateRange getDateRange(
@@ -246,11 +247,8 @@ public class ExportImportDateUtil {
 
 			// This is a valid scenario in case of group level portlets
 
-			if (portletDataContext.getStartDate() == null) {
-				return portletLastPublishDate;
-			}
-
-			if (portletLastPublishDate.before(
+			if ((portletDataContext.getStartDate() == null) ||
+				portletLastPublishDate.before(
 					portletDataContext.getStartDate())) {
 
 				return portletLastPublishDate;
@@ -395,7 +393,7 @@ public class ExportImportDateUtil {
 			}
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 		}
 	}
 
@@ -475,10 +473,9 @@ public class ExportImportDateUtil {
 				lastPublishDate = getLastPublishDate(portletPreferences);
 			}
 			else {
-				LayoutSet layoutSet = LayoutSetLocalServiceUtil.getLayoutSet(
-					groupId, privateLayout);
-
-				lastPublishDate = getLastPublishDate(layoutSet);
+				lastPublishDate = getLastPublishDate(
+					LayoutSetLocalServiceUtil.getLayoutSet(
+						groupId, privateLayout));
 			}
 
 			if (lastPublishDate != null) {
@@ -488,11 +485,11 @@ public class ExportImportDateUtil {
 			}
 		}
 		else if (range.equals(RANGE_LAST)) {
-			Date now = new Date();
+			Date date = new Date();
 
-			startDate = new Date(now.getTime() - (rangeLast * Time.HOUR));
+			startDate = new Date(date.getTime() - (rangeLast * Time.HOUR));
 
-			endDate = now;
+			endDate = date;
 		}
 
 		return new DateRange(startDate, endDate);

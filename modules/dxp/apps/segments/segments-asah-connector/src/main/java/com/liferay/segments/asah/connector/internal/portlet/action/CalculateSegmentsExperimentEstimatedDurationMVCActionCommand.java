@@ -18,7 +18,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
@@ -104,7 +104,7 @@ public class CalculateSegmentsExperimentEstimatedDurationMVCActionCommand
 
 			jsonObject = JSONUtil.put(
 				"error",
-				LanguageUtil.get(
+				_language.get(
 					themeDisplay.getRequest(), "an-unexpected-error-occurred"));
 		}
 
@@ -135,43 +135,44 @@ public class CalculateSegmentsExperimentEstimatedDurationMVCActionCommand
 				ActionRequest actionRequest)
 		throws PortalException {
 
-		long segmentsExperimentId = ParamUtil.getLong(
-			actionRequest, "segmentsExperimentId");
-
-		SegmentsExperiment segmentsExperiment =
-			_segmentsExperimentLocalService.getSegmentsExperiment(
-				segmentsExperimentId);
-
-		String segmentsExperimentRels = ParamUtil.getString(
-			actionRequest, "segmentsExperimentRels");
-
-		JSONObject segmentsExperimentRelsJSONObject =
-			JSONFactoryUtil.createJSONObject(segmentsExperimentRels);
-
-		Iterator<String> iterator = segmentsExperimentRelsJSONObject.keys();
-
-		Map<String, Double> segmentsExperienceKeySplitMap = new HashMap<>();
-
-		while (iterator.hasNext()) {
-			String key = iterator.next();
-
-			SegmentsExperimentRel segmentsExperimentRel =
-				_segmentsExperimentRelLocalService.getSegmentsExperimentRel(
-					GetterUtil.getLong(key));
-
-			segmentsExperienceKeySplitMap.put(
-				segmentsExperimentRel.getSegmentsExperienceKey(),
-				segmentsExperimentRelsJSONObject.getDouble(key));
-		}
-
-		Long segmentsExperimentEstimatedDaysDuration =
-			_calculateSegmentsExperimentEstimatedDaysDuration(
-				ParamUtil.getDouble(actionRequest, "confidenceLevel"),
-				segmentsExperiment, segmentsExperienceKeySplitMap);
-
 		return JSONUtil.put(
 			"segmentsExperimentEstimatedDaysDuration",
-			segmentsExperimentEstimatedDaysDuration);
+			() -> {
+				long segmentsExperimentId = ParamUtil.getLong(
+					actionRequest, "segmentsExperimentId");
+
+				SegmentsExperiment segmentsExperiment =
+					_segmentsExperimentLocalService.getSegmentsExperiment(
+						segmentsExperimentId);
+
+				String segmentsExperimentRels = ParamUtil.getString(
+					actionRequest, "segmentsExperimentRels");
+
+				JSONObject segmentsExperimentRelsJSONObject =
+					JSONFactoryUtil.createJSONObject(segmentsExperimentRels);
+
+				Iterator<String> iterator =
+					segmentsExperimentRelsJSONObject.keys();
+
+				Map<String, Double> segmentsExperienceKeySplitMap =
+					new HashMap<>();
+
+				while (iterator.hasNext()) {
+					String key = iterator.next();
+
+					SegmentsExperimentRel segmentsExperimentRel =
+						_segmentsExperimentRelLocalService.
+							getSegmentsExperimentRel(GetterUtil.getLong(key));
+
+					segmentsExperienceKeySplitMap.put(
+						segmentsExperimentRel.getSegmentsExperienceKey(),
+						segmentsExperimentRelsJSONObject.getDouble(key));
+				}
+
+				return _calculateSegmentsExperimentEstimatedDaysDuration(
+					ParamUtil.getDouble(actionRequest, "confidenceLevel"),
+					segmentsExperiment, segmentsExperienceKeySplitMap);
+			});
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -181,6 +182,9 @@ public class CalculateSegmentsExperimentEstimatedDurationMVCActionCommand
 
 	@Reference
 	private JSONWebServiceClient _jsonWebServiceClient;
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private Portal _portal;

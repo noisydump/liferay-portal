@@ -16,15 +16,23 @@ package com.liferay.commerce.product.service.impl;
 
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPDefinitionSpecificationOptionValue;
+import com.liferay.commerce.product.service.CPDefinitionLocalService;
 import com.liferay.commerce.product.service.base.CPDefinitionSpecificationOptionValueLocalServiceBaseImpl;
+import com.liferay.commerce.product.service.persistence.CPDefinitionPersistence;
+import com.liferay.expando.kernel.service.ExpandoRowLocalService;
+import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.util.List;
 import java.util.Locale;
@@ -45,9 +53,9 @@ public class CPDefinitionSpecificationOptionValueLocalServiceImpl
 				double priority, ServiceContext serviceContext)
 		throws PortalException {
 
-		CPDefinition cpDefinition = cpDefinitionPersistence.findByPrimaryKey(
+		CPDefinition cpDefinition = _cpDefinitionPersistence.findByPrimaryKey(
 			cpDefinitionId);
-		User user = userLocalService.getUser(serviceContext.getUserId());
+		User user = _userLocalService.getUser(serviceContext.getUserId());
 
 		long cpDefinitionSpecificationOptionValueId =
 			counterLocalService.increment();
@@ -57,8 +65,8 @@ public class CPDefinitionSpecificationOptionValueLocalServiceImpl
 				cpDefinitionSpecificationOptionValuePersistence.create(
 					cpDefinitionSpecificationOptionValueId);
 
-		if (cpDefinitionLocalService.isVersionable(cpDefinitionId)) {
-			cpDefinition = cpDefinitionLocalService.copyCPDefinition(
+		if (_cpDefinitionLocalService.isVersionable(cpDefinitionId)) {
+			cpDefinition = _cpDefinitionLocalService.copyCPDefinition(
 				cpDefinitionId);
 
 			cpDefinitionId = cpDefinition.getCPDefinitionId();
@@ -92,18 +100,19 @@ public class CPDefinitionSpecificationOptionValueLocalServiceImpl
 	}
 
 	@Override
+	@SystemEvent(type = SystemEventConstants.TYPE_DELETE)
 	public CPDefinitionSpecificationOptionValue
 			deleteCPDefinitionSpecificationOptionValue(
 				CPDefinitionSpecificationOptionValue
 					cpDefinitionSpecificationOptionValue)
 		throws PortalException {
 
-		if (cpDefinitionLocalService.isVersionable(
+		if (_cpDefinitionLocalService.isVersionable(
 				cpDefinitionSpecificationOptionValue.getCPDefinitionId())) {
 
 			try {
 				CPDefinition newCPDefinition =
-					cpDefinitionLocalService.copyCPDefinition(
+					_cpDefinitionLocalService.copyCPDefinition(
 						cpDefinitionSpecificationOptionValue.
 							getCPDefinitionId());
 
@@ -126,7 +135,7 @@ public class CPDefinitionSpecificationOptionValueLocalServiceImpl
 
 		// Expando
 
-		expandoRowLocalService.deleteRows(
+		_expandoRowLocalService.deleteRows(
 			cpDefinitionSpecificationOptionValue.
 				getCPDefinitionSpecificationOptionValueId());
 
@@ -290,11 +299,11 @@ public class CPDefinitionSpecificationOptionValueLocalServiceImpl
 				cpDefinitionSpecificationOptionValuePersistence.
 					findByPrimaryKey(cpDefinitionSpecificationOptionValueId);
 
-		if (cpDefinitionLocalService.isVersionable(
+		if (_cpDefinitionLocalService.isVersionable(
 				cpDefinitionSpecificationOptionValue.getCPDefinitionId())) {
 
 			CPDefinition newCPDefinition =
-				cpDefinitionLocalService.copyCPDefinition(
+				_cpDefinitionLocalService.copyCPDefinition(
 					cpDefinitionSpecificationOptionValue.getCPDefinitionId());
 
 			cpDefinitionSpecificationOptionValue =
@@ -336,11 +345,11 @@ public class CPDefinitionSpecificationOptionValueLocalServiceImpl
 				cpDefinitionSpecificationOptionValuePersistence.
 					findByPrimaryKey(cpDefinitionSpecificationOptionValueId);
 
-		if (cpDefinitionLocalService.isVersionable(
+		if (_cpDefinitionLocalService.isVersionable(
 				cpDefinitionSpecificationOptionValue.getCPDefinitionId())) {
 
 			CPDefinition newCPDefinition =
-				cpDefinitionLocalService.copyCPDefinition(
+				_cpDefinitionLocalService.copyCPDefinition(
 					cpDefinitionSpecificationOptionValue.getCPDefinitionId());
 
 			cpDefinitionSpecificationOptionValue =
@@ -373,5 +382,17 @@ public class CPDefinitionSpecificationOptionValueLocalServiceImpl
 
 		indexer.reindex(CPDefinition.class.getName(), cpDefinitionId);
 	}
+
+	@BeanReference(type = CPDefinitionLocalService.class)
+	private CPDefinitionLocalService _cpDefinitionLocalService;
+
+	@BeanReference(type = CPDefinitionPersistence.class)
+	private CPDefinitionPersistence _cpDefinitionPersistence;
+
+	@ServiceReference(type = ExpandoRowLocalService.class)
+	private ExpandoRowLocalService _expandoRowLocalService;
+
+	@ServiceReference(type = UserLocalService.class)
+	private UserLocalService _userLocalService;
 
 }

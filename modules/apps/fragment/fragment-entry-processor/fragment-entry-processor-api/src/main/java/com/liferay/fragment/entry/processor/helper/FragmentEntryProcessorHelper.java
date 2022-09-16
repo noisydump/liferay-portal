@@ -16,12 +16,15 @@ package com.liferay.fragment.entry.processor.helper;
 
 import aQute.bnd.annotation.ProviderType;
 
-import com.liferay.fragment.processor.FragmentEntryProcessorContext;
+import com.liferay.info.item.InfoItemFieldValues;
+import com.liferay.info.item.provider.InfoItemFieldValuesProvider;
+import com.liferay.info.type.WebImage;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONObject;
 
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * @author Eudaldo Alonso
@@ -29,48 +32,44 @@ import java.util.Map;
 @ProviderType
 public interface FragmentEntryProcessorHelper {
 
-	public default String formatMappedValue(Object value, Locale locale) {
-		return value.toString();
-	}
+	public String formatMappedValue(Object value, Locale locale);
 
 	public String getEditableValue(JSONObject jsonObject, Locale locale);
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *             #getEditableValue(JSONObject, Locale)}
-	 */
-	@Deprecated
-	public String getEditableValue(
-		JSONObject jsonObject, Locale locale, long[] segmentsExperienceIds);
+	public long getFileEntryId(
+			long classNameId, long classPK, String fieldName, Locale locale)
+		throws PortalException;
+
+	public long getFileEntryId(
+		Object displayObject, String fieldName, Locale locale);
+
+	public long getFileEntryId(String className, long classPK);
+
+	public long getFileEntryId(WebImage webImage);
 
 	public Object getMappedCollectionValue(
-			JSONObject jsonObject,
-			FragmentEntryProcessorContext fragmentEntryProcessorContext)
+			Optional<Object> displayObjectOptional, JSONObject jsonObject,
+			Locale locale)
 		throws PortalException;
 
-	public Object getMappedValue(
+	public Object getMappedInfoItemFieldValue(
 			JSONObject jsonObject,
-			Map<Long, Map<String, Object>> infoDisplaysFieldValues,
-			FragmentEntryProcessorContext fragmentEntryProcessorContext)
+			Map<Long, InfoItemFieldValues> infoItemFieldValuesMap,
+			Locale locale, String mode, long previewClassPK,
+			String previewVersion)
 		throws PortalException;
 
-	public default Object getMappedValue(
+	public Object getMappedInfoItemFieldValue(
 			JSONObject jsonObject,
-			Map<Long, Map<String, Object>> infoDisplaysFieldValues, String mode,
-			Locale locale, long previewClassPK, int previewType)
-		throws PortalException {
-
-		return getMappedValue(
-			jsonObject, infoDisplaysFieldValues, mode, locale, previewClassPK,
-			0, previewType);
-	}
-
-	public Object getMappedValue(
-			JSONObject jsonObject,
-			Map<Long, Map<String, Object>> infoDisplaysFieldValues, String mode,
+			Map<Long, InfoItemFieldValues> infoItemFieldValuesMap, String mode,
 			Locale locale, long previewClassPK, long previewClassNameId,
 			int previewType)
 		throws PortalException;
+
+	public Object getMappedInfoItemFieldValue(
+		String fieldName,
+		InfoItemFieldValuesProvider infoItemFieldValuesProvider, Locale locale,
+		Object object);
 
 	public boolean isAssetDisplayPage(String mode);
 
@@ -78,9 +77,6 @@ public interface FragmentEntryProcessorHelper {
 
 	public boolean isMappedCollection(JSONObject jsonObject);
 
-	public String processTemplate(
-			String html,
-			FragmentEntryProcessorContext fragmentEntryProcessorContext)
-		throws PortalException;
+	public boolean isMappedLayout(JSONObject jsonObject);
 
 }

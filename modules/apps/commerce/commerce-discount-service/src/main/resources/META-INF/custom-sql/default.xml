@@ -8,14 +8,14 @@
 			FROM
 				CommerceDiscountAccountRel
 			JOIN
+				AccountEntry ON
+					CommerceDiscountAccountRel.commerceAccountId = AccountEntry.accountEntryId
+			JOIN
 				CommerceDiscount ON
 					CommerceDiscountAccountRel.commerceDiscountId = CommerceDiscount.commerceDiscountId
-			JOIN
-				CommerceAccount ON
-					CommerceDiscountAccountRel.commerceAccountId = CommerceAccount.commerceAccountId
 			WHERE
 				(CommerceDiscount.commerceDiscountId = ?) AND
-				(LOWER(CommerceAccount.name) LIKE ? [$AND_OR_NULL_CHECK$])
+				(LOWER(AccountEntry.name) LIKE ? [$AND_OR_NULL_CHECK$])
 		]]>
 	</sql>
 	<sql id="com.liferay.commerce.discount.service.persistence.CommerceDiscountAccountRelFinder.findByCommerceDiscountId">
@@ -25,14 +25,14 @@
 			FROM
 				CommerceDiscountAccountRel
 			JOIN
+				AccountEntry ON
+					CommerceDiscountAccountRel.commerceAccountId = AccountEntry.accountEntryId
+			JOIN
 				CommerceDiscount ON
 					CommerceDiscountAccountRel.commerceDiscountId = CommerceDiscount.commerceDiscountId
-			JOIN
-				CommerceAccount ON
-					CommerceDiscountAccountRel.commerceAccountId = CommerceAccount.commerceAccountId
 			WHERE
 				(CommerceDiscount.commerceDiscountId = ?) AND
-				(LOWER(CommerceAccount.name) LIKE ? [$AND_OR_NULL_CHECK$])
+				(LOWER(AccountEntry.name) LIKE ? [$AND_OR_NULL_CHECK$])
 		]]>
 	</sql>
 	<sql id="com.liferay.commerce.discount.service.persistence.CommerceDiscountCommerceAccountGroupRelFinder.countByCommerceDiscountId">
@@ -45,11 +45,11 @@
 				CommerceDiscount ON
 					CDiscountCAccountGroupRel.commerceDiscountId = CommerceDiscount.commerceDiscountId
 			JOIN
-				CommerceAccountGroup ON
-					CDiscountCAccountGroupRel.commerceAccountGroupId = CommerceAccountGroup.commerceAccountGroupId
+				AccountGroup ON
+					CDiscountCAccountGroupRel.commerceAccountGroupId = AccountGroup.accountGroupId
 			WHERE
 				(CommerceDiscount.commerceDiscountId = ?) AND
-				(LOWER(CommerceAccountGroup.name) LIKE ? [$AND_OR_NULL_CHECK$])
+				(LOWER(AccountGroup.name) LIKE ? [$AND_OR_NULL_CHECK$])
 		]]>
 	</sql>
 	<sql id="com.liferay.commerce.discount.service.persistence.CommerceDiscountCommerceAccountGroupRelFinder.findByCommerceDiscountId">
@@ -62,11 +62,11 @@
 				CommerceDiscount ON
 					CDiscountCAccountGroupRel.commerceDiscountId = CommerceDiscount.commerceDiscountId
 			JOIN
-				CommerceAccountGroup ON
-					CDiscountCAccountGroupRel.commerceAccountGroupId = CommerceAccountGroup.commerceAccountGroupId
+				AccountGroup ON
+					CDiscountCAccountGroupRel.commerceAccountGroupId = AccountGroup.accountGroupId
 			WHERE
 				(CommerceDiscount.commerceDiscountId = ?) AND
-				(LOWER(CommerceAccountGroup.name) LIKE ? [$AND_OR_NULL_CHECK$])
+				(LOWER(AccountGroup.name) LIKE ? [$AND_OR_NULL_CHECK$])
 		]]>
 	</sql>
 	<sql id="com.liferay.commerce.discount.service.persistence.CommerceDiscountFinder.countByCommercePricingClassId">
@@ -112,15 +112,15 @@
 						(CommerceChannelRel.commerceChannelRelId IS NULL)
 					) OR
 					(
-						(CDiscountCAccountGroupRel.cDiscountCAccountGroupRelId IN ([$ACCOUNT_GROUP_IDS$])) AND
+						(CDiscountCAccountGroupRel.commerceAccountGroupId IN ([$ACCOUNT_GROUP_IDS$])) AND
 						(CommerceChannelRel.commerceChannelId = ?)
 					) OR
 					(
-						(CDiscountCAccountGroupRel.cDiscountCAccountGroupRelId IN ([$ACCOUNT_GROUP_IDS$])) AND
+						(CDiscountCAccountGroupRel.commerceAccountGroupId IN ([$ACCOUNT_GROUP_IDS$])) AND
 						(CommerceChannelRel.commerceChannelRelId IS NULL)
 					) OR
 					(
-						(CommerceDiscountAccountRel.commerceAccountId IS NULL) AND
+						(CommerceDiscountAccountRel.commerceDiscountAccountRelId IS NULL) AND
 						(CDiscountCAccountGroupRel.cDiscountCAccountGroupRelId IS NULL) AND
 						(CommerceChannelRel.commerceChannelId = ?)
 					) OR
@@ -348,15 +348,15 @@
 				CommerceDiscountRel ON
 					CommerceDiscountRel.commerceDiscountId = CommerceDiscount.commerceDiscountId
 			LEFT JOIN
-				CommerceDiscountAccountRel ON
-					CommerceDiscountAccountRel.commerceDiscountId = CommerceDiscount.commerceDiscountId
-			LEFT JOIN
 				CDiscountCAccountGroupRel ON
 					CDiscountCAccountGroupRel.commerceDiscountId = CommerceDiscount.commerceDiscountId
+			LEFT JOIN
+				CommerceDiscountAccountRel ON
+					CommerceDiscountAccountRel.commerceDiscountId = CommerceDiscount.commerceDiscountId
 			WHERE
 				(CommerceDiscount.active_ = [$TRUE$]) AND
-				(CommerceDiscountAccountRel.commerceAccountId IS NULL) AND
 				(CDiscountCAccountGroupRel.commerceAccountGroupId IS NULL) AND
+				(CommerceDiscountAccountRel.commerceAccountId IS NULL) AND
 				(CommerceChannelRel.commerceChannelId = ?) AND
 				(
 					(
@@ -388,15 +388,15 @@
 					(CommerceChannelRel.classPK = CommerceDiscount.commerceDiscountId) AND
 					(CommerceChannelRel.classNameId = ?)
 			LEFT JOIN
-				CommerceDiscountAccountRel ON
-					CommerceDiscountAccountRel.commerceDiscountId = CommerceDiscount.commerceDiscountId
-			LEFT JOIN
 				CDiscountCAccountGroupRel ON
 					CDiscountCAccountGroupRel.commerceDiscountId = CommerceDiscount.commerceDiscountId
+			LEFT JOIN
+				CommerceDiscountAccountRel ON
+					CommerceDiscountAccountRel.commerceDiscountId = CommerceDiscount.commerceDiscountId
 			WHERE
 				(CommerceDiscount.active_ = [$TRUE$]) AND
-				(CommerceDiscountAccountRel.commerceAccountId IS NULL) AND
 				(CDiscountCAccountGroupRel.commerceAccountGroupId IS NULL) AND
+				(CommerceDiscountAccountRel.commerceAccountId IS NULL) AND
 				(CommerceChannelRel.commerceChannelId = ?) AND
 				(CommerceDiscount.target = ?)
 		]]>

@@ -15,6 +15,7 @@
 package com.liferay.fragment.service.impl;
 
 import com.liferay.fragment.exception.DuplicateFragmentCompositionKeyException;
+import com.liferay.fragment.exception.FragmentCompositionDescriptionException;
 import com.liferay.fragment.exception.FragmentCompositionNameException;
 import com.liferay.fragment.model.FragmentComposition;
 import com.liferay.fragment.service.base.FragmentCompositionLocalServiceBaseImpl;
@@ -29,7 +30,9 @@ import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil;
+import com.liferay.portal.kernel.service.ResourceLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -62,7 +65,7 @@ public class FragmentCompositionLocalServiceImpl
 
 		// Fragment composition
 
-		User user = userLocalService.getUser(userId);
+		User user = _userLocalService.getUser(userId);
 
 		if (Validator.isNull(fragmentCompositionKey)) {
 			fragmentCompositionKey = generateFragmentCompositionKey(
@@ -72,8 +75,10 @@ public class FragmentCompositionLocalServiceImpl
 		fragmentCompositionKey = _getFragmentCompositionKey(
 			fragmentCompositionKey);
 
-		validate(name);
 		validateFragmentCompositionKey(groupId, fragmentCompositionKey);
+
+		validateName(name);
+		validateDescription(description);
 
 		long fragmentCompositionId = counterLocalService.increment();
 
@@ -115,7 +120,7 @@ public class FragmentCompositionLocalServiceImpl
 
 		// Resources
 
-		resourceLocalService.deleteResource(
+		_resourceLocalService.deleteResource(
 			fragmentComposition.getCompanyId(),
 			FragmentComposition.class.getName(),
 			ResourceConstants.SCOPE_INDIVIDUAL,
@@ -290,9 +295,10 @@ public class FragmentCompositionLocalServiceImpl
 			fragmentCompositionPersistence.findByPrimaryKey(
 				fragmentCompositionId);
 
-		validate(name);
+		validateName(name);
+		validateDescription(description);
 
-		User user = userLocalService.getUser(userId);
+		User user = _userLocalService.getUser(userId);
 
 		fragmentComposition.setModifiedDate(new Date());
 		fragmentComposition.setFragmentCollectionId(fragmentCollectionId);
@@ -308,28 +314,6 @@ public class FragmentCompositionLocalServiceImpl
 		return fragmentCompositionPersistence.update(fragmentComposition);
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 * #updateFragmentComposition(long, long, long, String, String, String, long, int)}
-	 */
-	@Deprecated
-	@Override
-	public FragmentComposition updateFragmentComposition(
-			long userId, long fragmentCompositionId, String name,
-			String description, String data, long previewFileEntryId,
-			int status)
-		throws PortalException {
-
-		FragmentComposition fragmentComposition =
-			fragmentCompositionPersistence.findByPrimaryKey(
-				fragmentCompositionId);
-
-		return updateFragmentComposition(
-			userId, fragmentCompositionId,
-			fragmentComposition.getFragmentCollectionId(), name, description,
-			data, previewFileEntryId, status);
-	}
-
 	@Override
 	public FragmentComposition updateFragmentComposition(
 			long fragmentCompositionId, String name)
@@ -339,14 +323,46 @@ public class FragmentCompositionLocalServiceImpl
 			fragmentCompositionPersistence.findByPrimaryKey(
 				fragmentCompositionId);
 
-		validate(name);
+		validateName(name);
 
 		fragmentComposition.setName(name);
 
 		return fragmentCompositionPersistence.update(fragmentComposition);
 	}
 
-	protected void validate(String name) throws PortalException {
+	protected void validateDescription(String description)
+		throws PortalException {
+
+		if (Validator.isNull(description)) {
+			return;
+		}
+
+		int descriptionMaxLength = ModelHintsUtil.getMaxLength(
+			FragmentComposition.class.getName(), "description");
+
+		if (description.length() > descriptionMaxLength) {
+			throw new FragmentCompositionDescriptionException(
+				"Maximum length of description exceeded");
+		}
+	}
+
+	protected void validateFragmentCompositionKey(
+			long groupId, String fragmentCompositionKey)
+		throws PortalException {
+
+		fragmentCompositionKey = _getFragmentCompositionKey(
+			fragmentCompositionKey);
+
+		FragmentComposition fragmentComposition =
+			fragmentCompositionPersistence.fetchByG_FCK(
+				groupId, fragmentCompositionKey);
+
+		if (fragmentComposition != null) {
+			throw new DuplicateFragmentCompositionKeyException();
+		}
+	}
+
+	protected void validateName(String name) throws PortalException {
 		if (Validator.isNull(name)) {
 			throw new FragmentCompositionNameException("Name must not be null");
 		}
@@ -367,22 +383,6 @@ public class FragmentCompositionLocalServiceImpl
 		}
 	}
 
-	protected void validateFragmentCompositionKey(
-			long groupId, String fragmentCompositionKey)
-		throws PortalException {
-
-		fragmentCompositionKey = _getFragmentCompositionKey(
-			fragmentCompositionKey);
-
-		FragmentComposition fragmentComposition =
-			fragmentCompositionPersistence.fetchByG_FCK(
-				groupId, fragmentCompositionKey);
-
-		if (fragmentComposition != null) {
-			throw new DuplicateFragmentCompositionKeyException();
-		}
-	}
-
 	private String _getFragmentCompositionKey(String fragmentCompositionKey) {
 		if (fragmentCompositionKey != null) {
 			fragmentCompositionKey = fragmentCompositionKey.trim();
@@ -395,5 +395,11 @@ public class FragmentCompositionLocalServiceImpl
 
 	@Reference
 	private CustomSQL _customSQL;
+
+	@Reference
+	private ResourceLocalService _resourceLocalService;
+
+	@Reference
+	private UserLocalService _userLocalService;
 
 }

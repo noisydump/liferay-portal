@@ -21,11 +21,15 @@ WikiNode node = (WikiNode)request.getAttribute(WikiWebKeys.WIKI_NODE);
 
 List<FileEntry> attachmentsFileEntries = node.getDeletedAttachmentsFiles();
 
-PortletURL portletURL = renderResponse.createRenderURL();
-
-portletURL.setParameter("mvcRenderCommandName", "/wiki/view_pages");
-portletURL.setParameter("redirect", currentURL);
-portletURL.setParameter("nodeId", String.valueOf(node.getNodeId()));
+PortletURL portletURL = PortletURLBuilder.createRenderURL(
+	renderResponse
+).setMVCRenderCommandName(
+	"/wiki/view_pages"
+).setRedirect(
+	currentURL
+).setParameter(
+	"nodeId", node.getNodeId()
+).buildPortletURL();
 
 PortalUtil.addPortletBreadcrumbEntry(request, node.getName(), portletURL.toString());
 
@@ -64,12 +68,17 @@ renderResponse.setTitle(LanguageUtil.get(request, "removed-attachments"));
 	int attachmentsFileEntriesCount = attachmentsFileEntries.size();
 	String emptyResultsMessage = "this-wiki-node-does-not-have-file-attachments-in-the-recycle-bin";
 
-	PortletURL iteratorURL = renderResponse.createRenderURL();
-
-	iteratorURL.setParameter("mvcRenderCommandName", "/wiki/view_node_deleted_attachments");
-	iteratorURL.setParameter("redirect", currentURL);
-	iteratorURL.setParameter("nodeId", String.valueOf(node.getNodeId()));
-	iteratorURL.setParameter("viewTrashAttachments", Boolean.TRUE.toString());
+	PortletURL iteratorURL = PortletURLBuilder.createRenderURL(
+		renderResponse
+	).setMVCRenderCommandName(
+		"/wiki/view_node_deleted_attachments"
+	).setRedirect(
+		currentURL
+	).setParameter(
+		"nodeId", node.getNodeId()
+	).setParameter(
+		"viewTrashAttachments", true
+	).buildPortletURL();
 
 	boolean paginate = true;
 	boolean showPageAttachmentAction = true;

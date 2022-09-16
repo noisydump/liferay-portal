@@ -18,12 +18,15 @@ import com.liferay.portal.kernel.transaction.TransactionAttribute;
 import com.liferay.portal.kernel.transaction.TransactionLifecycleListener;
 import com.liferay.portal.kernel.transaction.TransactionLifecycleManager;
 import com.liferay.portal.kernel.transaction.TransactionStatus;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.Arrays;
 
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 import org.springframework.transaction.PlatformTransactionManager;
@@ -33,6 +36,11 @@ import org.springframework.transaction.PlatformTransactionManager;
  */
 public class DefaultTransactionExecutorTest
 	extends CounterTransactionExecutorTest {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Before
 	public void setUp() {
@@ -90,11 +98,8 @@ public class DefaultTransactionExecutorTest
 			failingTransactionLifecycleListener);
 
 		try {
-			RecordPlatformTransactionManager recordPlatformTransactionManager =
-				new RecordPlatformTransactionManager();
-
 			TransactionExecutor transactionExecutor = createTransactionExecutor(
-				recordPlatformTransactionManager);
+				new RecordPlatformTransactionManager());
 
 			try {
 				transactionExecutor.execute(

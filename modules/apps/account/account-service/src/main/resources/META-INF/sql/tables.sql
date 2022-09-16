@@ -1,5 +1,6 @@
 create table AccountEntry (
 	mvccVersion LONG default 0 not null,
+	uuid_ VARCHAR(75) null,
 	externalReferenceCode VARCHAR(75) null,
 	accountEntryId LONG not null primary key,
 	companyId LONG,
@@ -8,6 +9,7 @@ create table AccountEntry (
 	createDate DATE null,
 	modifiedDate DATE null,
 	defaultBillingAddressId LONG,
+	defaultCPaymentMethodKey VARCHAR(75) null,
 	defaultShippingAddressId LONG,
 	parentAccountEntryId LONG,
 	description STRING null,
@@ -39,6 +41,7 @@ create table AccountEntryUserRel (
 
 create table AccountGroup (
 	mvccVersion LONG default 0 not null,
+	uuid_ VARCHAR(75) null,
 	externalReferenceCode VARCHAR(75) null,
 	accountGroupId LONG not null primary key,
 	companyId LONG,
@@ -48,13 +51,18 @@ create table AccountGroup (
 	modifiedDate DATE null,
 	defaultAccountGroup BOOLEAN,
 	description VARCHAR(75) null,
-	name VARCHAR(75) null
+	name VARCHAR(75) null,
+	type_ VARCHAR(75) null
 );
 
 create table AccountGroupRel (
 	mvccVersion LONG default 0 not null,
-	AccountGroupRelId LONG not null primary key,
+	accountGroupRelId LONG not null primary key,
 	companyId LONG,
+	userId LONG,
+	userName VARCHAR(75) null,
+	createDate DATE null,
+	modifiedDate DATE null,
 	accountGroupId LONG,
 	classNameId LONG,
 	classPK LONG

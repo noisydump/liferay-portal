@@ -20,4 +20,8 @@ definition {
 		Navigator.gotoNavTab(navTab = "Service Provider Connections");
 	}
 
+	macro viewConsoleValue {
+		WaitForConsoleTextPresent(value1 = "${consoleValue}");
+	}
+
 }

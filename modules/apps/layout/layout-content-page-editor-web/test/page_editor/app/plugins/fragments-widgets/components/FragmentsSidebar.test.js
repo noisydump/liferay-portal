@@ -13,12 +13,13 @@
  */
 
 import '@testing-library/jest-dom/extend-expect';
-import {act, cleanup, fireEvent, render} from '@testing-library/react';
+import {act, fireEvent, render} from '@testing-library/react';
 import React from 'react';
 import {DndProvider} from 'react-dnd';
 import {HTML5Backend} from 'react-dnd-html5-backend';
 
-import {StoreAPIContextProvider} from '../../../../../../src/main/resources/META-INF/resources/page_editor/app/store/index';
+import {StoreAPIContextProvider} from '../../../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/StoreContext';
+import {setIn} from '../../../../../../src/main/resources/META-INF/resources/page_editor/app/utils/setIn';
 import FragmentsSidebar from '../../../../../../src/main/resources/META-INF/resources/page_editor/plugins/fragments-widgets/components/FragmentsSidebar';
 import TabsPanel from '../../../../../../src/main/resources/META-INF/resources/page_editor/plugins/fragments-widgets/components/TabsPanel';
 
@@ -38,59 +39,49 @@ jest.mock(
 	}
 );
 
-const STATE = {
-	fragments: [
-		{
-			fragmentCollectionId: 'collection-1',
-			fragmentEntries: [
-				{
-					fragmentEntryKey: 'fragment-1',
-					groupId: '0',
-					icon: 'fragment-1-icon',
-					imagePreviewURL: '/fragment-1-image.png',
-					label: 'Fragment 1',
-					name: 'Fragment 1',
-					type: 1,
-				},
-				{
-					fragmentEntryKey: 'fragment-2',
-					groupId: '0',
-					icon: 'fragment-2-icon',
-					imagePreviewURL: '/fragment-2-image.png',
-					label: 'Fragment 2',
-					name: 'Fragment 2',
-					type: 1,
-				},
-				{
-					fragmentEntryKey: 'fragment-3',
-					groupId: '0',
-					icon: 'fragment-3-icon',
-					imagePreviewURL: '/fragment-3-image',
-					label: 'Fragment 3',
-					name: 'Fragment 3',
-					type: 1,
-				},
-			],
-			name: 'Collection 1',
+const DEFAULT_WIDGETS = [
+	{
+		categories: [],
+		path: 'widget-collection-1',
+		portlets: [
+			{
+				instanceable: true,
+				portletId: 'portlet-1',
+				portletItems: [
+					{
+						instanceable: true,
+						portletId: 'template-portlet-1',
+						portletItemId: '40063',
+						preview: '',
+						title: 'Template Portlet 1',
+						used: false,
+					},
+				],
+				title: 'Portlet 1',
+				used: false,
+			},
+		],
+		title: 'Widget Collection 1',
+	},
+];
+
+const NORMALIZED_PORTLET_ITEMS = [
+	{
+		data: {
+			instanceable: true,
+			portletId: 'template-portlet-1',
+			portletItemId: '40063',
+			used: false,
 		},
-	],
-	widgets: [
-		{
-			categories: [],
-			path: 'widget-collection-1',
-			portlets: [
-				{
-					instanceable: true,
-					portletId: 'portlet-1',
-					portletItems: [],
-					title: 'Portlet 1',
-					used: false,
-				},
-			],
-			title: 'Widget Collection 1',
-		},
-	],
-};
+		disabled: false,
+		icon: 'square-hole-multi',
+		itemId: 'template-portlet-1',
+		label: 'Template Portlet 1',
+		portletItems: null,
+		preview: '',
+		type: 'fragment',
+	},
+];
 
 const NORMALIZED_TABS = [
 	{
@@ -138,6 +129,7 @@ const NORMALIZED_TABS = [
 				label: 'Collection 1',
 			},
 		],
+		id: 'fragments',
 		label: 'fragments',
 	},
 	{
@@ -152,10 +144,10 @@ const NORMALIZED_TABS = [
 							used: false,
 						},
 						disabled: false,
-						icon: 'cards2',
+						icon: 'square-hole-multi',
 						itemId: 'portlet-1',
 						label: 'Portlet 1',
-						portletItems: null,
+						portletItems: NORMALIZED_PORTLET_ITEMS,
 						preview: '',
 						type: 'fragment',
 					},
@@ -164,16 +156,55 @@ const NORMALIZED_TABS = [
 				label: 'Widget Collection 1',
 			},
 		],
+		id: 'widgets',
 		label: 'widgets',
 	},
 ];
 
-const renderComponent = (state = {}) => {
+const renderComponent = (widgets = DEFAULT_WIDGETS) => {
 	return render(
 		<DndProvider backend={HTML5Backend}>
 			<StoreAPIContextProvider
 				dispatch={() => Promise.resolve({})}
-				getState={() => state}
+				getState={() => ({
+					fragmentEntryLinks: [],
+					fragments: [
+						{
+							fragmentCollectionId: 'collection-1',
+							fragmentEntries: [
+								{
+									fragmentEntryKey: 'fragment-1',
+									groupId: '0',
+									icon: 'fragment-1-icon',
+									imagePreviewURL: '/fragment-1-image.png',
+									label: 'Fragment 1',
+									name: 'Fragment 1',
+									type: 1,
+								},
+								{
+									fragmentEntryKey: 'fragment-2',
+									groupId: '0',
+									icon: 'fragment-2-icon',
+									imagePreviewURL: '/fragment-2-image.png',
+									label: 'Fragment 2',
+									name: 'Fragment 2',
+									type: 1,
+								},
+								{
+									fragmentEntryKey: 'fragment-3',
+									groupId: '0',
+									icon: 'fragment-3-icon',
+									imagePreviewURL: '/fragment-3-image',
+									label: 'Fragment 3',
+									name: 'Fragment 3',
+									type: 1,
+								},
+							],
+							name: 'Collection 1',
+						},
+					],
+					widgets,
+				})}
 			>
 				<FragmentsSidebar />
 			</StoreAPIContextProvider>
@@ -183,25 +214,30 @@ const renderComponent = (state = {}) => {
 
 describe('FragmentsSidebar', () => {
 	afterEach(() => {
-		cleanup();
 		TabsPanel.mockClear();
 		jest.useFakeTimers();
 	});
 
 	it('has a sidebar panel title', () => {
-		const {getByText} = renderComponent(STATE);
+		const {getByText} = renderComponent();
 
 		expect(getByText('fragments-and-widgets')).toBeInTheDocument();
 	});
 
 	it('normalizes fragments and widgets format', () => {
-		renderComponent(STATE);
+		renderComponent();
 
-		expect(TabsPanel).toHaveBeenCalledWith({tabs: NORMALIZED_TABS}, {});
+		expect(TabsPanel).toHaveBeenCalledWith(
+			expect.objectContaining({
+				displayStyle: 'list',
+				tabs: NORMALIZED_TABS,
+			}),
+			{}
+		);
 	});
 
 	it('filters fragments and widgets according to a input value', () => {
-		const {getByLabelText, queryByText} = renderComponent(STATE);
+		const {getByLabelText, queryByText} = renderComponent();
 		const input = getByLabelText('search-form');
 
 		act(() => {
@@ -219,7 +255,7 @@ describe('FragmentsSidebar', () => {
 	});
 
 	it('filters collections according to a input value', () => {
-		const {getByLabelText, queryByText} = renderComponent(STATE);
+		const {getByLabelText, queryByText} = renderComponent();
 		const input = getByLabelText('search-form');
 
 		act(() => {
@@ -237,201 +273,337 @@ describe('FragmentsSidebar', () => {
 		expect(queryByText('Fragment 3')).not.toBeInTheDocument();
 	});
 
+	it('filters widget template according to a input value', () => {
+		const {getByLabelText, queryByText} = renderComponent();
+		const input = getByLabelText('search-form');
+
+		act(() => {
+			fireEvent.change(input, {
+				target: {value: 'Template Portlet 1'},
+			});
+
+			jest.runAllTimers();
+		});
+
+		expect(queryByText('Widget Collection 1')).toBeInTheDocument();
+		expect(queryByText('Portlet 1')).toBeInTheDocument();
+		expect(queryByText('Template Portlet 1')).toBeInTheDocument();
+		expect(queryByText('Fragment 1')).not.toBeInTheDocument();
+		expect(queryByText('Fragment 2')).not.toBeInTheDocument();
+		expect(queryByText('Fragment 3')).not.toBeInTheDocument();
+	});
+
 	it('sets square-hole icon when the widget is not instanceable', () => {
-		const tabs = NORMALIZED_TABS;
-		const state = STATE;
-
-		state.widgets[0].portlets[0].instanceable = false;
-		tabs[1].collections[0].children[0] = {
-			data: {
-				instanceable: false,
-				portletId: 'portlet-1',
-				portletItemId: null,
-				used: false,
-			},
-			disabled: false,
-			icon: 'square-hole',
-			itemId: 'portlet-1',
-			label: 'Portlet 1',
-			portletItems: null,
-			preview: '',
-			type: 'fragment',
-		};
-		renderComponent(state);
-
-		expect(TabsPanel).toHaveBeenCalledWith({tabs}, {});
-	});
-
-	it('disables a widget when it is not instanceable and it is used', () => {
-		const tabs = NORMALIZED_TABS;
-		const state = STATE;
-
-		state.widgets[0].portlets[0].instanceable = false;
-		state.widgets[0].portlets[0].used = true;
-		tabs[1].collections[0].children[0] = {
-			data: {
-				instanceable: false,
-				portletId: 'portlet-1',
-				portletItemId: null,
-				used: true,
-			},
-			disabled: true,
-			icon: 'square-hole',
-			itemId: 'portlet-1',
-			label: 'Portlet 1',
-			portletItems: null,
-			preview: '',
-			type: 'fragment',
-		};
-		renderComponent(state);
-
-		expect(TabsPanel).toHaveBeenCalledWith({tabs}, {});
-	});
-
-	it('normalizes collection with portlets items', () => {
-		const tabs = NORMALIZED_TABS;
-		const state = STATE;
-
-		state.widgets[0].portlets[0].portletItems[0] = {
-			instanceable: true,
-			portletId: 'portlet-item-1',
-			title: 'Portlet Item 1',
-			used: false,
-		};
-		tabs[1].collections[0].children[0].portletItems = [
+		const widgets = [
 			{
-				data: {
-					instanceable: true,
-					portletId: 'portlet-item-1',
-					portletItemId: null,
-					used: false,
-				},
-				disabled: false,
-				icon: 'cards2',
-				itemId: 'portlet-item-1',
-				label: 'Portlet Item 1',
-				portletItems: null,
-				preview: '',
-				type: 'fragment',
-			},
-		];
-		renderComponent(state);
-
-		expect(TabsPanel).toHaveBeenCalledWith({tabs}, {});
-	});
-
-	it('normalizes collection with more collections inside', () => {
-		const tabs = NORMALIZED_TABS;
-		const state = STATE;
-
-		state.widgets[0].categories = [
-			{
-				categories: [
+				categories: [],
+				path: 'widget-collection-1',
+				portlets: [
 					{
-						categories: [],
-						path: 'collection-4',
-						portlets: [
+						instanceable: false,
+						portletId: 'portlet-1',
+						portletItems: [
 							{
-								instanceable: true,
-								portletId: 'collection-4-portlet',
-								portletItems: [],
-								title: 'Collection 4 Portlet',
+								instanceable: false,
+								portletId: 'template-portlet-1',
+								portletItemId: '40063',
+								preview: '',
+								title: 'Template Portlet 1',
 								used: false,
 							},
 						],
-						title: 'Widget Collection 3',
+						title: 'Portlet 1',
+						used: false,
 					},
 				],
-				path: 'widget-collection-2',
-				portlets: [],
-				title: 'Widget Collection 2',
+				title: 'Widget Collection 1',
 			},
 		];
-		tabs[1].collections[0].collections = [
-			{
-				children: [],
-				collectionId: 'widget-collection-2',
-				collections: [
+
+		renderComponent(widgets);
+
+		expect(TabsPanel).toHaveBeenCalledWith(
+			expect.objectContaining({
+				displayStyle: 'list',
+				tabs: setIn(
+					NORMALIZED_TABS,
+					[1, 'collections', 0, 'children', 0],
 					{
-						children: [
+						data: {
+							instanceable: false,
+							portletId: 'portlet-1',
+							portletItemId: null,
+							used: false,
+						},
+						disabled: false,
+						icon: 'square-hole',
+						itemId: 'portlet-1',
+						label: 'Portlet 1',
+						portletItems: [
 							{
 								data: {
-									instanceable: true,
-									portletId: 'collection-4-portlet',
-									portletItemId: null,
+									instanceable: false,
+									portletId: 'template-portlet-1',
+									portletItemId: '40063',
 									used: false,
 								},
 								disabled: false,
-								icon: 'cards2',
-								itemId: 'collection-4-portlet',
-								label: 'Collection 4 Portlet',
+								icon: 'square-hole',
+								itemId: 'template-portlet-1',
+								label: 'Template Portlet 1',
 								portletItems: null,
 								preview: '',
 								type: 'fragment',
 							},
 						],
-						collectionId: 'collection-4',
-						label: 'Widget Collection 3',
+						preview: '',
+						type: 'fragment',
+					}
+				),
+			}),
+			{}
+		);
+	});
+
+	it('disables a widget when it is not instanceable and it is used', () => {
+		const widgets = [
+			{
+				categories: [],
+				path: 'widget-collection-1',
+				portlets: [
+					{
+						instanceable: false,
+						portletId: 'portlet-1',
+						portletItems: [
+							{
+								instanceable: false,
+								portletId: 'template-portlet-1',
+								portletItemId: 'template-portlet-item-id-1',
+								preview: '',
+								title: 'Template Portlet 1',
+								used: true,
+							},
+						],
+						title: 'Portlet 1',
+						used: true,
 					},
 				],
-				label: 'Widget Collection 2',
+				title: 'Widget Collection 1',
 			},
 		];
 
-		renderComponent(state);
+		renderComponent(widgets);
 
-		expect(TabsPanel).toHaveBeenCalledWith({tabs}, {});
+		expect(TabsPanel).toHaveBeenCalledWith(
+			expect.objectContaining({
+				displayStyle: 'list',
+				tabs: setIn(
+					NORMALIZED_TABS,
+					[1, 'collections', 0, 'children', 0],
+					{
+						data: {
+							instanceable: false,
+							portletId: 'portlet-1',
+							portletItemId: null,
+							used: true,
+						},
+						disabled: true,
+						icon: 'square-hole',
+						itemId: 'portlet-1',
+						label: 'Portlet 1',
+						portletItems: [
+							{
+								data: {
+									instanceable: false,
+									portletId: 'template-portlet-1',
+									portletItemId: 'template-portlet-item-id-1',
+									used: true,
+								},
+								disabled: true,
+								icon: 'square-hole',
+								itemId: 'template-portlet-1',
+								label: 'Template Portlet 1',
+								portletItems: null,
+								preview: '',
+								type: 'fragment',
+							},
+						],
+						preview: '',
+						type: 'fragment',
+					}
+				),
+			}),
+			{}
+		);
 	});
 
-	it('hides the fragment preview when it is basic component', () => {
-		const tabs = NORMALIZED_TABS;
-		tabs[0] = {
-			collections: [
-				{
-					children: [
+	it('normalizes collection with portlets items', () => {
+		const widgets = [
+			{
+				categories: [],
+				path: 'widget-collection-1',
+				portlets: [
+					{
+						instanceable: true,
+						portletId: 'portlet-1',
+						portletItems: [
+							{
+								instanceable: true,
+								portletId: 'portlet-item-1',
+								title: 'Portlet Item 1',
+								used: false,
+							},
+						],
+						title: 'Portlet 1',
+						used: false,
+					},
+				],
+				title: 'Widget Collection 1',
+			},
+		];
+
+		renderComponent(widgets);
+
+		expect(TabsPanel).toHaveBeenCalledWith(
+			expect.objectContaining({
+				displayStyle: 'list',
+				tabs: setIn(
+					NORMALIZED_TABS,
+					[1, 'collections', 0, 'children', 0, 'portletItems'],
+					[
 						{
 							data: {
-								fragmentEntryKey: 'fragment-1',
-								groupId: '0',
-								type: 1,
+								instanceable: true,
+								portletId: 'portlet-item-1',
+								portletItemId: null,
+								used: false,
 							},
-							icon: 'fragment-1-icon',
-							itemId: 'fragment-1',
-							label: 'Fragment 1',
-							preview: null,
+							disabled: false,
+							icon: 'square-hole-multi',
+							itemId: 'portlet-item-1',
+							label: 'Portlet Item 1',
+							portletItems: null,
+							preview: '',
 							type: 'fragment',
 						},
-					],
-					collectionId: 'BASIC_COMPONENT',
-					label: 'Collection 1',
-				},
-			],
-			label: 'fragments',
-		};
+					]
+				),
+			}),
+			{}
+		);
+	});
 
-		const state = {
-			...STATE,
-			fragments: [
-				{
-					fragmentCollectionId: 'BASIC_COMPONENT',
-					fragmentEntries: [
+	it('normalizes collection with more collections inside', () => {
+		const widgets = [
+			{
+				categories: [
+					{
+						categories: [
+							{
+								categories: [],
+								path: 'collection-4',
+								portlets: [
+									{
+										instanceable: true,
+										portletId: 'collection-4-portlet',
+										portletItems: [],
+										title: 'Collection 4 Portlet',
+										used: false,
+									},
+								],
+								title: 'Widget Collection 3',
+							},
+						],
+						path: 'widget-collection-2',
+						portlets: [],
+						title: 'Widget Collection 2',
+					},
+				],
+				path: 'widget-collection-1',
+				portlets: [
+					{
+						instanceable: true,
+						portletId: 'portlet-1',
+						portletItems: [
+							{
+								instanceable: true,
+								portletId: 'template-portlet-1',
+								portletItemId: '40063',
+								preview: '',
+								title: 'Template Portlet 1',
+								used: false,
+							},
+						],
+						title: 'Portlet 1',
+						used: false,
+					},
+				],
+				title: 'Widget Collection 1',
+			},
+		];
+
+		renderComponent(widgets);
+
+		expect(TabsPanel).toHaveBeenCalledWith(
+			expect.objectContaining({
+				displayStyle: 'list',
+				tabs: setIn(
+					NORMALIZED_TABS,
+					[1, 'collections', 0, 'collections'],
+					[
 						{
-							fragmentEntryKey: 'fragment-1',
-							groupId: '0',
-							icon: 'fragment-1-icon',
-							imagePreviewURL: '/fragment-1-image.png',
-							label: 'Fragment 1',
-							name: 'Fragment 1',
-							type: 1,
+							children: [],
+							collectionId: 'widget-collection-2',
+							collections: [
+								{
+									children: [
+										{
+											data: {
+												instanceable: true,
+												portletId:
+													'collection-4-portlet',
+												portletItemId: null,
+												used: false,
+											},
+											disabled: false,
+											icon: 'square-hole-multi',
+											itemId: 'collection-4-portlet',
+											label: 'Collection 4 Portlet',
+											portletItems: null,
+											preview: '',
+											type: 'fragment',
+										},
+									],
+									collectionId: 'collection-4',
+									label: 'Widget Collection 3',
+								},
+							],
+							label: 'Widget Collection 2',
 						},
-					],
-					name: 'Collection 1',
-				},
-			],
-		};
+					]
+				),
+			}),
+			{}
+		);
+	});
 
-		renderComponent(state);
+	describe('Button to switch the display style', () => {
+		Liferay.Util.sub.mockImplementation((langKey, args) =>
+			langKey.replace('x', args)
+		);
 
-		expect(TabsPanel).toHaveBeenCalledWith({tabs}, {});
+		it('shows the card view when the display style is list', () => {
+			const {getByTitle} = renderComponent();
+
+			expect(getByTitle('switch-to-card-view')).toBeInTheDocument();
+		});
+
+		it('shows the list view when the display style is card', () => {
+			const {getByTitle} = renderComponent();
+
+			fireEvent.click(getByTitle('switch-to-card-view'));
+
+			expect(getByTitle('switch-to-list-view')).toBeInTheDocument();
+		});
 	});
 });

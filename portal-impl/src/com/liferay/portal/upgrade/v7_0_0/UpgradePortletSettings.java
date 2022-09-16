@@ -59,21 +59,21 @@ public abstract class UpgradePortletSettings extends UpgradeProcess {
 						"where PortletPreferences.ownerType = ", ownerType,
 						" and PortletPreferences.portletId = '", portletId,
 						"'"));
-			ResultSet rs = selectPreparedStatement.executeQuery()) {
+			ResultSet resultSet = selectPreparedStatement.executeQuery()) {
 
-			while (rs.next()) {
-				long oldPortletPreferencesId = rs.getLong(1);
+			while (resultSet.next()) {
+				long oldPortletPreferencesId = resultSet.getLong(1);
 
 				long ownerId = 0;
 				long plid = 0;
 
 				if (ownerType == PortletKeys.PREFS_OWNER_TYPE_LAYOUT) {
-					ownerId = rs.getLong(3);
+					ownerId = resultSet.getLong(3);
 					plid = 0;
 				}
 				else {
-					ownerId = rs.getLong(1);
-					plid = rs.getLong(2);
+					ownerId = resultSet.getLong(1);
+					plid = resultSet.getLong(2);
 				}
 
 				long newPortletPreferencesId = increment();
@@ -159,9 +159,7 @@ public abstract class UpgradePortletSettings extends UpgradeProcess {
 			if (_log.isDebugEnabled()) {
 				_log.debug(
 					"Upgrading display portlet " + portletId + " settings");
-			}
 
-			if (_log.isDebugEnabled()) {
 				_log.debug("Delete service keys from portlet settings");
 			}
 
@@ -232,19 +230,19 @@ public abstract class UpgradePortletSettings extends UpgradeProcess {
 						"?"));
 			PreparedStatement insertPreparedStatement =
 				AutoBatchPreparedStatementUtil.autoBatch(
-					connection.prepareStatement(
-						StringBundler.concat(
-							"insert into PortletPreferenceValue (mvccVersion, ",
-							"ctCollectionId, portletPreferenceValueId, ",
-							"companyId, portletPreferencesId, index_, ",
-							"largeValue, name, readOnly, smallValue) select 0 ",
-							"as mvccVersion, 0 as ctCollectionId, ? as ",
-							"portletPreferenceValueId, TEMP_TABLE.companyId, ",
-							"? as portletPreferencesId, TEMP_TABLE.index_, ",
-							"TEMP_TABLE.largeValue, TEMP_TABLE.name, ",
-							"TEMP_TABLE.readOnly, TEMP_TABLE.smallValue from ",
-							"PortletPreferenceValue TEMP_TABLE where ",
-							"TEMP_TABLE.portletPreferenceValueId = ?")))) {
+					connection,
+					StringBundler.concat(
+						"insert into PortletPreferenceValue (mvccVersion, ",
+						"ctCollectionId, portletPreferenceValueId, companyId, ",
+						"portletPreferencesId, index_, largeValue, name, ",
+						"readOnly, smallValue) select 0 as mvccVersion, 0 as ",
+						"ctCollectionId, ? as portletPreferenceValueId, ",
+						"TEMP_TABLE.companyId, ? as portletPreferencesId, ",
+						"TEMP_TABLE.index_, TEMP_TABLE.largeValue, ",
+						"TEMP_TABLE.name, TEMP_TABLE.readOnly, ",
+						"TEMP_TABLE.smallValue from PortletPreferenceValue ",
+						"TEMP_TABLE where TEMP_TABLE.portletPreferenceValueId ",
+						"= ?"))) {
 
 			selectPreparedStatement.setLong(1, oldPortletPreferencesId);
 

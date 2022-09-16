@@ -114,15 +114,9 @@
 		};
 
 		Liferay.Data.notices = [
-			<c:if test="<%= permissionChecker.isOmniadmin() && PortalUtil.isUpdateAvailable() %>">
-				{
-					message: '<a class="update-available" href="<%= themeDisplay.getURLUpdateManager() %>"><liferay-ui:message key="updates-are-available-for-liferay" /></a>'
-				},
-			</c:if>
-
 			<c:if test="<%= ShutdownUtil.isInProcess() %>">
 				{
-					title: '<liferay-ui:message key="maintenance-alert" /> <span class="notice-date"><%= FastDateFormatFactoryUtil.getTime(locale).format(Time.getDate(CalendarFactoryUtil.getCalendar(timeZone))) %> <%= timeZone.getDisplayName(false, TimeZone.SHORT, locale) %></span>',
+					title: '<liferay-ui:message key="maintenance-alert" /> <span class="mx-2"><%= FastDateFormatFactoryUtil.getTime(locale).format(Time.getDate(CalendarFactoryUtil.getCalendar(timeZone))) %> <%= timeZone.getDisplayName(false, TimeZone.SHORT, locale) %></span>',
 					message: '<liferay-ui:message arguments="<%= String.valueOf((ShutdownUtil.getInProcess() / Time.MINUTE) + 1) %>" key="the-portal-will-shutdown-for-maintenance-in-x-minutes" translateArguments="<%= false %>" />'
 						<c:if test="<%= Validator.isNotNull(ShutdownUtil.getMessage()) %>">
 							+ '<span class="custom-shutdown-message"><%= HtmlUtil.escape(ShutdownUtil.getMessage()) %></span>'
@@ -142,7 +136,7 @@
 				String selLanguageId = LocaleUtil.toLanguageId(curLocale);
 			%>
 
-				available['<%= selLanguageId %>'] = '<%= curLocale.getDisplayName(locale) %>';
+				available['<%= selLanguageId %>'] = '<%= HtmlUtil.escapeJS(curLocale.getDisplayName(locale)) %>';
 				direction['<%= selLanguageId %>'] = '<%= LanguageUtil.get(curLocale, "lang.dir") %>';
 
 			<%
@@ -158,6 +152,14 @@
 			};
 		})();
 
+		var featureFlags = <%= PropsValues.FEATURE_FLAGS_JSON %>;
+
+		Liferay.FeatureFlags = Object.keys(featureFlags).reduce(
+			(acc, key) => ({
+				...acc, [key]: featureFlags[key] === 'true'
+			}), {}
+		);
+
 		Liferay.PortletKeys = {
 			DOCUMENT_LIBRARY: '<%= PortletKeys.DOCUMENT_LIBRARY %>',
 			DYNAMIC_DATA_MAPPING: 'com_liferay_dynamic_data_mapping_web_portlet_DDMPortlet',
@@ -166,7 +168,6 @@
 
 		Liferay.PropsValues = {
 			JAVASCRIPT_SINGLE_PAGE_APPLICATION_TIMEOUT: <%= PrefsPropsUtil.getInteger(themeDisplay.getCompanyId(), PropsKeys.JAVASCRIPT_SINGLE_PAGE_APPLICATION_TIMEOUT, PropsValues.JAVASCRIPT_SINGLE_PAGE_APPLICATION_TIMEOUT) %>,
-			NTLM_AUTH_ENABLED: <%= PrefsPropsUtil.getBoolean(themeDisplay.getCompanyId(), PropsKeys.NTLM_AUTH_ENABLED, PropsValues.NTLM_AUTH_ENABLED) %>,
 			UPLOAD_SERVLET_REQUEST_IMPL_MAX_SIZE: <%= UploadServletRequestConfigurationHelperUtil.getMaxSize() %>
 		};
 
@@ -221,9 +222,7 @@
 
 				String completeURL = PortalUtil.getCurrentCompleteURL(request);
 
-				String canonicalURL = PortalUtil.getCanonicalURL(completeURL, themeDisplay, layout, false, false);
-
-				LayoutSEOLink layoutSEOLink = layoutSEOLinkManager.getCanonicalLayoutSEOLink(layout, themeDisplay.getLocale(), canonicalURL, PortalUtil.getAlternateURLs(canonicalURL, themeDisplay, layout));
+				LayoutSEOLink layoutSEOLink = layoutSEOLinkManager.getCanonicalLayoutSEOLink(layout, themeDisplay.getLocale(), PortalUtil.getCanonicalURL(completeURL, themeDisplay, layout, false, false), themeDisplay);
 				%>
 
 				return '<%= HtmlUtil.escapeJS(layoutSEOLink.getHref()) %>';
@@ -279,6 +278,15 @@
 			getPortalURL: function() {
 				return '<%= themeDisplay.getPortalURL() %>';
 			},
+			getRealUserId: function() {
+				return '<%= themeDisplay.getRealUserId() %>';
+			},
+			getRemoteAddr: function() {
+				return '<%= themeDisplay.getRemoteAddr() %>';
+			},
+			getRemoteHost: function() {
+				return '<%= themeDisplay.getRemoteHost() %>';
+			},
 			getScopeGroupId: function() {
 				return '<%= scopeGroup.getGroupId() %>';
 			},
@@ -318,6 +326,18 @@
 			isSignedIn: function() {
 				return <%= themeDisplay.isSignedIn() %>;
 			},
+
+			isStagedPortlet: function() {
+				<c:choose>
+					<c:when test="<%= Validator.isNotNull(themeDisplay.getPpid()) %>">
+						return <%= liveGroup.isStagedPortlet(themeDisplay.getPpid()) %>;
+					</c:when>
+					<c:otherwise>
+						return false;
+					</c:otherwise>
+				</c:choose>
+			},
+
 			isStateExclusive: function() {
 				return <%= themeDisplay.isStateExclusive() %>;
 			},
@@ -514,7 +534,7 @@ for (String analyticsType : analyticsTypes) {
 		<c:otherwise>
 
 			<%
-			String analyticsScript = HtmlUtil.escape(groupTypeSettings.getProperty(Sites.ANALYTICS_PREFIX + analyticsType));
+			String analyticsScript = groupTypeSettings.getProperty(Sites.ANALYTICS_PREFIX + analyticsType);
 			%>
 
 			<c:if test="<%= Validator.isNotNull(analyticsScript) %>">

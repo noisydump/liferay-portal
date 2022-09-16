@@ -21,7 +21,7 @@ import com.liferay.commerce.pricing.web.internal.display.context.CommercePricing
 import com.liferay.frontend.taglib.servlet.taglib.ScreenNavigationCategory;
 import com.liferay.frontend.taglib.servlet.taglib.ScreenNavigationEntry;
 import com.liferay.frontend.taglib.servlet.taglib.util.JSPRenderer;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
@@ -74,7 +74,7 @@ public class CommercePricingClassDiscountsScreenNavigationCategory
 		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
 			"content.Language", locale, getClass());
 
-		return LanguageUtil.get(
+		return _language.get(
 			resourceBundle,
 			CommercePricingClassScreenNavigationConstants.
 				CATEGORY_KEY_DISCOUNTS);
@@ -105,7 +105,7 @@ public class CommercePricingClassDiscountsScreenNavigationCategory
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(exception, exception);
+				_log.debug(exception);
 			}
 		}
 
@@ -131,7 +131,7 @@ public class CommercePricingClassDiscountsScreenNavigationCategory
 
 		_jspRenderer.renderJSP(
 			httpServletRequest, httpServletResponse,
-			"/pricing_class/discounts.jsp");
+			"/commerce_pricing_class/discounts.jsp");
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -148,5 +148,8 @@ public class CommercePricingClassDiscountsScreenNavigationCategory
 
 	@Reference
 	private JSPRenderer _jspRenderer;
+
+	@Reference
+	private Language _language;
 
 }

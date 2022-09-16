@@ -11,20 +11,14 @@
 
 import {ClayCheckbox, ClayInput} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
-import ClayManagementToolbar from '@clayui/management-toolbar';
-import React, {
-	useCallback,
-	useContext,
-	useEffect,
-	useMemo,
-	useState,
-} from 'react';
+import {ManagementToolbar} from 'frontend-js-components-web';
+import React, {useCallback, useContext, useEffect, useState} from 'react';
 
 import {Autocomplete} from '../../../../../../shared/components/autocomplete/Autocomplete.es';
 import PromisesResolver from '../../../../../../shared/components/promises-resolver/PromisesResolver.es';
 import {ModalContext} from '../../../ModalProvider.es';
 
-const Header = ({data}) => {
+export default function Header({data}) {
 	const {
 		bulkReassign,
 		selectTasks: {tasks},
@@ -45,15 +39,7 @@ const Header = ({data}) => {
 		}
 	}, [data]);
 
-	const defaultValue = useMemo(
-		() => (selectedAssignee ? selectedAssignee.name : ''),
-		[selectedAssignee]
-	);
-
-	const disableBulk = useMemo(() => reassigning || assignees.length === 0, [
-		assignees,
-		reassigning,
-	]);
+	const disableBulk = reassigning || !assignees.length;
 
 	const handleCheck = ({target}) => {
 		setBulkReassign({
@@ -87,11 +73,15 @@ const Header = ({data}) => {
 		[bulkReassign, tasks, setBulkReassign]
 	);
 
+	const handleSubmit = (event) => {
+		event.preventDefault();
+	};
+
 	return (
 		<PromisesResolver.Resolved>
-			<ClayManagementToolbar className="border-bottom mb-0 px-3">
-				<ClayManagementToolbar.ItemList>
-					<ClayManagementToolbar.Item className="pt-2">
+			<ManagementToolbar.Container className="border-bottom mb-0 px-3">
+				<ManagementToolbar.ItemList>
+					<ManagementToolbar.Item className="pt-2">
 						<ClayCheckbox
 							checked={useSameAssignee}
 							disabled={disableBulk}
@@ -100,11 +90,12 @@ const Header = ({data}) => {
 							)}
 							onChange={handleCheck}
 						/>
-					</ClayManagementToolbar.Item>
-				</ClayManagementToolbar.ItemList>
-				<ClayManagementToolbar.Search>
+					</ManagementToolbar.Item>
+				</ManagementToolbar.ItemList>
+
+				<ManagementToolbar.Search onSubmit={handleSubmit}>
 					<Autocomplete
-						defaultValue={defaultValue}
+						defaultValue={selectedAssignee?.name || ''}
 						disabled={disableBulk || !useSameAssignee}
 						items={assignees}
 						onSelect={handleSelect}
@@ -113,17 +104,11 @@ const Header = ({data}) => {
 						)}
 					>
 						<ClayInput.GroupInsetItem after tag="span">
-							<ClayIcon
-								className="m-2"
-								displayType="unstyled"
-								symbol="search"
-							/>
+							<ClayIcon className="m-2" symbol="search" />
 						</ClayInput.GroupInsetItem>
 					</Autocomplete>
-				</ClayManagementToolbar.Search>
-			</ClayManagementToolbar>
+				</ManagementToolbar.Search>
+			</ManagementToolbar.Container>
 		</PromisesResolver.Resolved>
 	);
-};
-
-export {Header};
+}

@@ -20,15 +20,21 @@ import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.service.BaseServiceImpl;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.reading.time.model.ReadingTimeEntry;
 import com.liferay.reading.time.service.ReadingTimeEntryService;
+import com.liferay.reading.time.service.ReadingTimeEntryServiceUtil;
 import com.liferay.reading.time.service.persistence.ReadingTimeEntryPersistence;
+
+import java.lang.reflect.Field;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -49,8 +55,13 @@ public abstract class ReadingTimeEntryServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>ReadingTimeEntryService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.reading.time.service.ReadingTimeEntryServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>ReadingTimeEntryService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>ReadingTimeEntryServiceUtil</code>.
 	 */
+	@Deactivate
+	protected void deactivate() {
+		_setServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -61,6 +72,8 @@ public abstract class ReadingTimeEntryServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		readingTimeEntryService = (ReadingTimeEntryService)aopProxy;
+
+		_setServiceUtilService(readingTimeEntryService);
 	}
 
 	/**
@@ -105,6 +118,22 @@ public abstract class ReadingTimeEntryServiceBaseImpl
 		}
 	}
 
+	private void _setServiceUtilService(
+		ReadingTimeEntryService readingTimeEntryService) {
+
+		try {
+			Field field = ReadingTimeEntryServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, readingTimeEntryService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@Reference
 	protected com.liferay.reading.time.service.ReadingTimeEntryLocalService
 		readingTimeEntryLocalService;
@@ -117,5 +146,8 @@ public abstract class ReadingTimeEntryServiceBaseImpl
 	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		ReadingTimeEntryServiceBaseImpl.class);
 
 }

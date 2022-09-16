@@ -16,7 +16,9 @@ package com.liferay.commerce.price.list.service;
 
 import com.liferay.commerce.price.list.model.CommercePriceEntry;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
+import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery;
@@ -35,6 +37,8 @@ import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.service.BaseLocalService;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.change.tracking.CTService;
+import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
@@ -60,13 +64,15 @@ import org.osgi.annotation.versioning.ProviderType;
  * @see CommercePriceEntryLocalServiceUtil
  * @generated
  */
+@CTAware
 @ProviderType
 @Transactional(
 	isolation = Isolation.PORTAL,
 	rollbackFor = {PortalException.class, SystemException.class}
 )
 public interface CommercePriceEntryLocalService
-	extends BaseLocalService, PersistedModelLocalService {
+	extends BaseLocalService, CTService<CommercePriceEntry>,
+			PersistedModelLocalService {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -94,16 +100,6 @@ public interface CommercePriceEntryLocalService
 	@Deprecated
 	public CommercePriceEntry addCommercePriceEntry(
 			long cpInstanceId, long commercePriceListId, BigDecimal price,
-			BigDecimal promoPrice, ServiceContext serviceContext)
-		throws PortalException;
-
-	/**
-	 * @deprecated As of Mueller (7.2.x)
-	 */
-	@Deprecated
-	public CommercePriceEntry addCommercePriceEntry(
-			long cpInstanceId, long commercePriceListId,
-			String externalReferenceCode, BigDecimal price,
 			BigDecimal promoPrice, ServiceContext serviceContext)
 		throws PortalException;
 
@@ -169,6 +165,16 @@ public interface CommercePriceEntryLocalService
 			ServiceContext serviceContext)
 		throws PortalException;
 
+	/**
+	 * @deprecated As of Mueller (7.2.x)
+	 */
+	@Deprecated
+	public CommercePriceEntry addCommercePriceEntry(
+			String externalReferenceCode, long cpInstanceId,
+			long commercePriceListId, BigDecimal price, BigDecimal promoPrice,
+			ServiceContext serviceContext)
+		throws PortalException;
+
 	@Indexable(type = IndexableType.REINDEX)
 	public CommercePriceEntry addCommercePriceEntry(
 			String externalReferenceCode, long cProductId,
@@ -200,6 +206,67 @@ public interface CommercePriceEntryLocalService
 			int expirationDateMonth, int expirationDateDay,
 			int expirationDateYear, int expirationDateHour,
 			int expirationDateMinute, boolean neverExpire,
+			ServiceContext serviceContext)
+		throws PortalException;
+
+	public CommercePriceEntry addOrUpdateCommercePriceEntry(
+			String externalReferenceCode, long commercePriceEntryId,
+			long cProductId, String cpInstanceUuid, long commercePriceListId,
+			BigDecimal price, BigDecimal promoPrice, boolean discountDiscovery,
+			BigDecimal discountLevel1, BigDecimal discountLevel2,
+			BigDecimal discountLevel3, BigDecimal discountLevel4,
+			int displayDateMonth, int displayDateDay, int displayDateYear,
+			int displayDateHour, int displayDateMinute, int expirationDateMonth,
+			int expirationDateDay, int expirationDateYear,
+			int expirationDateHour, int expirationDateMinute,
+			boolean neverExpire, String skuExternalReferenceCode,
+			ServiceContext serviceContext)
+		throws PortalException;
+
+	/**
+	 * This method is used to insert a new CommercePriceEntry or update an
+	 * existing one
+	 *
+	 * @param externalReferenceCode - The external identifier code from a 3rd
+	 party system to be able to locate the same entity in the portal
+	 <b>Only</b> used when updating an entity; the first entity with a
+	 matching reference code one will be updated
+	 * @param commercePriceEntryId - <b>Only</b> used when updating an entity
+	 the matching one will be updated
+	 * @param cProductId - <b>Only</b> used when adding a new entity
+	 * @param commercePriceListId - <b>Only</b> used when adding a new entity
+	 to a price list
+	 * @param price
+	 * @param promoPrice
+	 * @param skuExternalReferenceCode - <b>Only</b> used when adding a new
+	 entity, similar as <code>cpInstanceId</code> but the external
+	 identifier code from a 3rd party system. If cpInstanceId is used,
+	 it doesn't have any effect, otherwise it tries to fetch the
+	 CPInstance against the external code reference
+	 * @param serviceContext
+	 * @return CommercePriceEntry
+	 * @throws PortalException
+	 * @review
+	 */
+	@Indexable(type = IndexableType.REINDEX)
+	public CommercePriceEntry addOrUpdateCommercePriceEntry(
+			String externalReferenceCode, long commercePriceEntryId,
+			long cProductId, String cpInstanceUuid, long commercePriceListId,
+			BigDecimal price, BigDecimal promoPrice,
+			String skuExternalReferenceCode, ServiceContext serviceContext)
+		throws PortalException;
+
+	public CommercePriceEntry addOrUpdateCommercePriceEntry(
+			String externalReferenceCode, long commercePriceEntryId,
+			long cProductId, String cpInstanceUuid, long commercePriceListId,
+			BigDecimal price, boolean discountDiscovery,
+			BigDecimal discountLevel1, BigDecimal discountLevel2,
+			BigDecimal discountLevel3, BigDecimal discountLevel4,
+			int displayDateMonth, int displayDateDay, int displayDateYear,
+			int displayDateHour, int displayDateMinute, int expirationDateMonth,
+			int expirationDateDay, int expirationDateYear,
+			int expirationDateHour, int expirationDateMinute,
+			boolean neverExpire, String skuExternalReferenceCode,
 			ServiceContext serviceContext)
 		throws PortalException;
 
@@ -276,6 +343,9 @@ public interface CommercePriceEntryLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public <T> T dslQuery(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
@@ -396,6 +466,14 @@ public interface CommercePriceEntryLocalService
 	 * @return the matching commerce price entry, or <code>null</code> if a matching commerce price entry could not be found
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public CommercePriceEntry fetchCommercePriceEntryByExternalReferenceCode(
+		long companyId, String externalReferenceCode);
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #fetchCommercePriceEntryByExternalReferenceCode(long, String)}
+	 */
+	@Deprecated
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public CommercePriceEntry fetchCommercePriceEntryByReferenceCode(
 		long companyId, String externalReferenceCode);
 
@@ -463,6 +541,19 @@ public interface CommercePriceEntryLocalService
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public CommercePriceEntry getCommercePriceEntry(long commercePriceEntryId)
+		throws PortalException;
+
+	/**
+	 * Returns the commerce price entry with the matching external reference code and company.
+	 *
+	 * @param companyId the primary key of the company
+	 * @param externalReferenceCode the commerce price entry's external reference code
+	 * @return the matching commerce price entry
+	 * @throws PortalException if a matching commerce price entry could not be found
+	 */
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public CommercePriceEntry getCommercePriceEntryByExternalReferenceCode(
+			long companyId, String externalReferenceCode)
 		throws PortalException;
 
 	/**
@@ -656,7 +747,7 @@ public interface CommercePriceEntryLocalService
 
 	/**
 	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
-	 #upsertCommercePriceEntry(String, long, long, String, long,
+	 #addOrUpdateCommercePriceEntry(String, long, long, String, long,
 	 BigDecimal, BigDecimal, boolean, BigDecimal, BigDecimal,
 	 BigDecimal, BigDecimal, int, int, int, int, int, int, int,
 	 int, int, int, boolean, String, ServiceContext)}
@@ -678,7 +769,7 @@ public interface CommercePriceEntryLocalService
 
 	/**
 	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
-	 #upsertCommercePriceEntry(String, long, long, String, long,
+	 #addOrUpdateCommercePriceEntry(String, long, long, String, long,
 	 BigDecimal, BigDecimal, String, ServiceContext)}
 	 */
 	@Deprecated
@@ -692,7 +783,7 @@ public interface CommercePriceEntryLocalService
 
 	/**
 	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
-	 #upsertCommercePriceEntry(String, long, long, String, long,
+	 #addOrUpdateCommercePriceEntry(String, long, long, String, long,
 	 BigDecimal, BigDecimal, BigDecimal, BigDecimal, int, int,
 	 int, int, int, int, int, int, int, int, boolean, String,
 	 ServiceContext)}
@@ -712,65 +803,19 @@ public interface CommercePriceEntryLocalService
 			ServiceContext serviceContext)
 		throws PortalException;
 
-	public CommercePriceEntry upsertCommercePriceEntry(
-			String externalReferenceCode, long commercePriceEntryId,
-			long cProductId, String cpInstanceUuid, long commercePriceListId,
-			BigDecimal price, BigDecimal promoPrice, boolean discountDiscovery,
-			BigDecimal discountLevel1, BigDecimal discountLevel2,
-			BigDecimal discountLevel3, BigDecimal discountLevel4,
-			int displayDateMonth, int displayDateDay, int displayDateYear,
-			int displayDateHour, int displayDateMinute, int expirationDateMonth,
-			int expirationDateDay, int expirationDateYear,
-			int expirationDateHour, int expirationDateMinute,
-			boolean neverExpire, String skuExternalReferenceCode,
-			ServiceContext serviceContext)
-		throws PortalException;
+	@Override
+	@Transactional(enabled = false)
+	public CTPersistence<CommercePriceEntry> getCTPersistence();
 
-	/**
-	 * This method is used to insert a new CommercePriceEntry or update an
-	 * existing one
-	 *
-	 * @param externalReferenceCode - The external identifier code from a 3rd
-	 party system to be able to locate the same entity in the portal
-	 <b>Only</b> used when updating an entity; the first entity with a
-	 matching reference code one will be updated
-	 * @param commercePriceEntryId - <b>Only</b> used when updating an entity
-	 the matching one will be updated
-	 * @param cProductId - <b>Only</b> used when adding a new entity
-	 * @param commercePriceListId - <b>Only</b> used when adding a new entity
-	 to a price list
-	 * @param price
-	 * @param promoPrice
-	 * @param skuExternalReferenceCode - <b>Only</b> used when adding a new
-	 entity, similar as <code>cpInstanceId</code> but the external
-	 identifier code from a 3rd party system. If cpInstanceId is used,
-	 it doesn't have any effect, otherwise it tries to fetch the
-	 CPInstance against the external code reference
-	 * @param serviceContext
-	 * @return CommercePriceEntry
-	 * @throws PortalException
-	 * @review
-	 */
-	@Indexable(type = IndexableType.REINDEX)
-	public CommercePriceEntry upsertCommercePriceEntry(
-			String externalReferenceCode, long commercePriceEntryId,
-			long cProductId, String cpInstanceUuid, long commercePriceListId,
-			BigDecimal price, BigDecimal promoPrice,
-			String skuExternalReferenceCode, ServiceContext serviceContext)
-		throws PortalException;
+	@Override
+	@Transactional(enabled = false)
+	public Class<CommercePriceEntry> getModelClass();
 
-	public CommercePriceEntry upsertCommercePriceEntry(
-			String externalReferenceCode, long commercePriceEntryId,
-			long cProductId, String cpInstanceUuid, long commercePriceListId,
-			BigDecimal price, boolean discountDiscovery,
-			BigDecimal discountLevel1, BigDecimal discountLevel2,
-			BigDecimal discountLevel3, BigDecimal discountLevel4,
-			int displayDateMonth, int displayDateDay, int displayDateYear,
-			int displayDateHour, int displayDateMinute, int expirationDateMonth,
-			int expirationDateDay, int expirationDateYear,
-			int expirationDateHour, int expirationDateMinute,
-			boolean neverExpire, String skuExternalReferenceCode,
-			ServiceContext serviceContext)
-		throws PortalException;
+	@Override
+	@Transactional(rollbackFor = Throwable.class)
+	public <R, E extends Throwable> R updateWithUnsafeFunction(
+			UnsafeFunction<CTPersistence<CommercePriceEntry>, R, E>
+				updateUnsafeFunction)
+		throws E;
 
 }

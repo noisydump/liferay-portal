@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
@@ -48,7 +49,9 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @generated
  */
 @Generated("")
-@GraphQLName("PageTemplate")
+@GraphQLName(
+	description = "Represents a Page template.", value = "PageTemplate"
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "PageTemplate")
 public class PageTemplate implements Serializable {
@@ -57,7 +60,11 @@ public class PageTemplate implements Serializable {
 		return ObjectMapperUtil.readValue(PageTemplate.class, json);
 	}
 
-	@Schema
+	public static PageTemplate unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(PageTemplate.class, json);
+	}
+
+	@Schema(description = "The page template's creator.")
 	@Valid
 	public Creator getCreator() {
 		return creator;
@@ -82,11 +89,11 @@ public class PageTemplate implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The page template's creator.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Creator creator;
 
-	@Schema
+	@Schema(description = "The page template's creation date.")
 	public Date getDateCreated() {
 		return dateCreated;
 	}
@@ -110,11 +117,11 @@ public class PageTemplate implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The page template's creation date.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Date dateCreated;
 
-	@Schema
+	@Schema(description = "The last time the page template changed.")
 	public Date getDateModified() {
 		return dateModified;
 	}
@@ -138,11 +145,11 @@ public class PageTemplate implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The last time the page template changed.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Date dateModified;
 
-	@Schema
+	@Schema(description = "The page template's ID.")
 	public Long getId() {
 		return id;
 	}
@@ -164,11 +171,11 @@ public class PageTemplate implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The page template's ID.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Long id;
 
-	@Schema
+	@Schema(description = "A list of keywords describing the page template.")
 	public String[] getKeywords() {
 		return keywords;
 	}
@@ -192,11 +199,13 @@ public class PageTemplate implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "A list of keywords describing the page template."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String[] keywords;
 
-	@Schema
+	@Schema(description = "The page template's name.")
 	public String getName() {
 		return name;
 	}
@@ -218,11 +227,11 @@ public class PageTemplate implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The page template's name.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String name;
 
-	@Schema
+	@Schema(description = "The page template's definition.")
 	@Valid
 	public PageDefinition getPageDefinition() {
 		return pageDefinition;
@@ -248,11 +257,11 @@ public class PageTemplate implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The page template's definition.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected PageDefinition pageDefinition;
 
-	@Schema
+	@Schema(description = "The page template's collection.")
 	@Valid
 	public PageTemplateCollection getPageTemplateCollection() {
 		return pageTemplateCollection;
@@ -280,7 +289,7 @@ public class PageTemplate implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The page template's collection.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected PageTemplateCollection pageTemplateCollection;
 
@@ -318,7 +327,9 @@ public class PageTemplate implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected TaxonomyCategoryBrief[] taxonomyCategoryBriefs;
 
-	@Schema
+	@Schema(
+		description = "A write-only field that adds `TaxonomyCategory` instances to the page template."
+	)
 	public Long[] getTaxonomyCategoryIds() {
 		return taxonomyCategoryIds;
 	}
@@ -342,7 +353,9 @@ public class PageTemplate implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "A write-only field that adds `TaxonomyCategory` instances to the page template."
+	)
 	@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
 	protected Long[] taxonomyCategoryIds;
 
@@ -572,15 +585,16 @@ public class PageTemplate implements Serializable {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.PageTemplate",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
 	}
 
 	private static boolean _isArray(Object value) {
@@ -606,8 +620,8 @@ public class PageTemplate implements Serializable {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -638,7 +652,7 @@ public class PageTemplate implements Serializable {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -646,7 +660,7 @@ public class PageTemplate implements Serializable {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -654,5 +668,10 @@ public class PageTemplate implements Serializable {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

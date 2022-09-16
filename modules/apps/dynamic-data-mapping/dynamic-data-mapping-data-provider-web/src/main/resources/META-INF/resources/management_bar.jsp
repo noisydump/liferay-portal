@@ -20,15 +20,25 @@
 PortletURL portletURL = ddmDataProviderDisplayContext.getPortletURL();
 %>
 
-<clay:management-toolbar-v2
+<portlet:actionURL name="/dynamic_data_mapping_data_provider/delete_data_provider" var="deleteDataProviderURL">
+	<portlet:param name="mvcPath" value="/view.jsp" />
+	<portlet:param name="redirect" value="<%= currentURL %>" />
+	<portlet:param name="refererPortletName" value="<%= DDMPortletKeys.DYNAMIC_DATA_MAPPING_FORM_ADMIN %>" />
+</portlet:actionURL>
+
+<clay:management-toolbar
 	actionDropdownItems="<%= ddmDataProviderDisplayContext.getActionItemsDropdownItems() %>"
+	additionalProps='<%=
+		HashMapBuilder.<String, Object>put(
+			"deleteDataProviderURL", deleteDataProviderURL.toString()
+		).build()
+	%>'
 	clearResultsURL="<%= ddmDataProviderDisplayContext.getClearResultsURL() %>"
-	componentId="ddmDataProviderManagementToolbar"
 	creationMenu="<%= ddmDataProviderDisplayContext.getCreationMenu() %>"
 	disabled="<%= ddmDataProviderDisplayContext.isDisabledManagementBar() %>"
 	filterDropdownItems="<%= ddmDataProviderDisplayContext.getFilterItemsDropdownItems() %>"
 	itemsTotal="<%= ddmDataProviderDisplayContext.getTotalItems() %>"
-	namespace="<%= liferayPortletResponse.getNamespace() %>"
+	propsTransformer="js/DDMDataProviderManagementToolbarPropsTransformer"
 	searchActionURL="<%= portletURL.toString() %>"
 	searchContainerId="<%= ddmDataProviderDisplayContext.getSearchContainerId() %>"
 	searchFormName="fm1"
@@ -36,54 +46,3 @@ PortletURL portletURL = ddmDataProviderDisplayContext.getPortletURL();
 	sortingURL="<%= ddmDataProviderDisplayContext.getSortingURL() %>"
 	viewTypeItems="<%= ddmDataProviderDisplayContext.getViewTypesItems() %>"
 />
-
-<aui:script>
-	var deleteDataProviderInstances = function () {
-		if (
-			confirm(
-				'<%= UnicodeLanguageUtil.get(request, "are-you-sure-you-want-to-delete-this") %>'
-			)
-		) {
-			var searchContainer = document.getElementById(
-				'<portlet:namespace />dataProviderInstance'
-			);
-
-			if (searchContainer) {
-				Liferay.Util.postForm(
-					document.<portlet:namespace />searchContainerForm,
-					{
-						data: {
-							deleteDataProviderInstanceIds: Liferay.Util.listCheckedExcept(
-								searchContainer,
-								'<portlet:namespace />allRowIds'
-							),
-						},
-
-						<portlet:actionURL name="/dynamic_data_mapping_data_provider/delete_data_provider" var="deleteDataProviderURL">
-							<portlet:param name="mvcPath" value="/view.jsp" />
-							<portlet:param name="redirect" value="<%= currentURL %>" />
-						</portlet:actionURL>
-
-						url: '<%= deleteDataProviderURL %>',
-					}
-				);
-			}
-		}
-	};
-
-	var ACTIONS = {
-		deleteDataProviderInstances: deleteDataProviderInstances,
-	};
-
-	Liferay.componentReady('ddmDataProviderManagementToolbar').then(function (
-		managementToolbar
-	) {
-		managementToolbar.on(['actionItemClicked'], function (event) {
-			var itemData = event.data.item.data;
-
-			if (itemData && itemData.action && ACTIONS[itemData.action]) {
-				ACTIONS[itemData.action]();
-			}
-		});
-	});
-</aui:script>

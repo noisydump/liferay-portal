@@ -19,6 +19,8 @@ import java.io.InputStream;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -26,6 +28,34 @@ import java.util.stream.Stream;
  * @author Gregory Amerson
  */
 public class StringUtil {
+
+	public static String capitalize(String s) {
+		if ((s == null) || s.isEmpty()) {
+			return "";
+		}
+
+		char firstChar = s.charAt(0);
+
+		if (Character.isLowerCase(firstChar)) {
+			s = Character.toUpperCase(firstChar) + s.substring(1);
+		}
+
+		return s;
+	}
+
+	public static String getDockerSafeName(String name) {
+		Matcher matcher = _camelCasePattern.matcher(name);
+
+		String dockerSafeName = matcher.replaceAll("-");
+
+		if ((name.charAt(0) != '-') && (dockerSafeName.charAt(0) == '-') &&
+			(dockerSafeName.length() > 1)) {
+
+			dockerSafeName = dockerSafeName.substring(1);
+		}
+
+		return dockerSafeName.toLowerCase();
+	}
 
 	public static String read(InputStream inputStream) throws IOException {
 		byte[] buffer = new byte[8192];
@@ -55,6 +85,10 @@ public class StringUtil {
 		}
 
 		return new String(buffer, 0, offset, "UTF-8");
+	}
+
+	public static String toAlphaNumericLowerCase(String value) {
+		return toLowerCase(value.replaceAll("[^a-zA-Z0-9]", ""));
 	}
 
 	public static String toLowerCase(String s) {
@@ -95,5 +129,8 @@ public class StringUtil {
 
 		return stream.collect(Collectors.joining(", "));
 	}
+
+	private static final Pattern _camelCasePattern = Pattern.compile(
+		"(?<=[a-z])(?=[A-Z])|(?=[A-Z][a-z])");
 
 }

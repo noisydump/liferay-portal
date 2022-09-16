@@ -16,6 +16,7 @@ package com.liferay.commerce.product.internal.search;
 
 import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
+import com.liferay.commerce.product.constants.CPField;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPDisplayLayout;
 import com.liferay.commerce.product.model.CommerceCatalog;
@@ -36,7 +37,9 @@ import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.Summary;
 import com.liferay.portal.kernel.search.filter.BooleanFilter;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.Html;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -58,9 +61,6 @@ import org.osgi.service.component.annotations.Reference;
 public class CPDisplayLayoutIndexer extends BaseIndexer<CPDisplayLayout> {
 
 	public static final String CLASS_NAME = CPDisplayLayout.class.getName();
-
-	public static final String FIELD_COMMERCE_CATALOG_GROUP_ID =
-		"commerceCatalogGroupId";
 
 	public static final String FIELD_ENTRY_MODEL_CLASS_NAME =
 		"entryModelClassName";
@@ -133,7 +133,7 @@ public class CPDisplayLayoutIndexer extends BaseIndexer<CPDisplayLayout> {
 			CommerceCatalog commerceCatalog = cpDefinition.getCommerceCatalog();
 
 			document.addKeyword(
-				FIELD_COMMERCE_CATALOG_GROUP_ID, cpDefinition.getGroupId());
+				CPField.COMMERCE_CATALOG_GROUP_ID, cpDefinition.getGroupId());
 
 			Locale locale = LocaleUtil.fromLanguageId(
 				commerceCatalog.getCatalogDefaultLanguageId());
@@ -152,12 +152,25 @@ public class CPDisplayLayoutIndexer extends BaseIndexer<CPDisplayLayout> {
 				_assetCategoryLocalService.getAssetCategory(
 					cpDisplayLayout.getClassPK());
 
+			String[] availableLanguageIds =
+				LocalizationUtil.getAvailableLanguageIds(
+					assetCategory.getDescription());
+
+			for (String availableLanguageId : availableLanguageIds) {
+				document.addText(
+					LocalizationUtil.getLocalizedName(
+						Field.DESCRIPTION, availableLanguageId),
+					_html.stripHtml(
+						assetCategory.getDescription(availableLanguageId)));
+			}
+
 			Locale siteDefaultLocale = _portal.getSiteDefaultLocale(
 				assetCategory.getGroupId());
 
-			addLocalizedField(
-				document, Field.DESCRIPTION, siteDefaultLocale,
-				assetCategory.getDescriptionMap());
+			document.addText(
+				Field.DESCRIPTION,
+				_html.stripHtml(
+					assetCategory.getDescription(siteDefaultLocale)));
 
 			document.addText(Field.NAME, assetCategory.getName());
 
@@ -204,13 +217,11 @@ public class CPDisplayLayoutIndexer extends BaseIndexer<CPDisplayLayout> {
 	protected void doReindex(String[] ids) throws Exception {
 		long companyId = GetterUtil.getLong(ids[0]);
 
-		reindexCPDisplayLayouts(companyId);
+		_reindexCPDisplayLayouts(companyId);
 	}
 
-	protected void reindexCPDisplayLayouts(long companyId)
-		throws PortalException {
-
-		final IndexableActionableDynamicQuery indexableActionableDynamicQuery =
+	private void _reindexCPDisplayLayouts(long companyId) throws Exception {
+		IndexableActionableDynamicQuery indexableActionableDynamicQuery =
 			_cpDisplayLayoutLocalService.getIndexableActionableDynamicQuery();
 
 		indexableActionableDynamicQuery.setCompanyId(companyId);
@@ -245,6 +256,9 @@ public class CPDisplayLayoutIndexer extends BaseIndexer<CPDisplayLayout> {
 
 	@Reference
 	private CPDisplayLayoutLocalService _cpDisplayLayoutLocalService;
+
+	@Reference
+	private Html _html;
 
 	@Reference
 	private IndexWriterHelper _indexWriterHelper;

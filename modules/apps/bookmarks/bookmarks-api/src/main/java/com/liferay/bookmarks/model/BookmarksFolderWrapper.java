@@ -184,6 +184,11 @@ public class BookmarksFolderWrapper
 	}
 
 	@Override
+	public BookmarksFolder cloneWithOriginalValues() {
+		return wrap(model.cloneWithOriginalValues());
+	}
+
+	@Override
 	public java.util.List<Long> getAncestorFolderIds()
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -414,18 +419,6 @@ public class BookmarksFolderWrapper
 	@Override
 	public long getTrashEntryClassPK() {
 		return model.getTrashEntryClassPK();
-	}
-
-	/**
-	 * Returns the trash handler for this bookmarks folder.
-	 *
-	 * @return the trash handler for this bookmarks folder
-	 * @deprecated As of Judson (7.1.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public com.liferay.portal.kernel.trash.TrashHandler getTrashHandler() {
-		return model.getTrashHandler();
 	}
 
 	/**

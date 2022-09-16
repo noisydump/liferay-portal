@@ -70,14 +70,14 @@ public class AccountMemberResourceImpl
 
 		if (commerceAccount == null) {
 			throw new NoSuchAccountException(
-				"Unable to find Account with externalReferenceCode: " +
+				"Unable to find account with external reference code " +
 					externalReferenceCode);
 		}
 
 		_commerceAccountUserRelService.deleteCommerceAccountUserRel(
 			commerceAccount.getCommerceAccountId(), userId);
 
-		Response.ResponseBuilder responseBuilder = Response.ok();
+		Response.ResponseBuilder responseBuilder = Response.noContent();
 
 		return responseBuilder.build();
 	}
@@ -88,7 +88,7 @@ public class AccountMemberResourceImpl
 
 		_commerceAccountUserRelService.deleteCommerceAccountUserRel(id, userId);
 
-		Response.ResponseBuilder responseBuilder = Response.ok();
+		Response.ResponseBuilder responseBuilder = Response.noContent();
 
 		return responseBuilder.build();
 	}
@@ -104,7 +104,7 @@ public class AccountMemberResourceImpl
 
 		if (commerceAccount == null) {
 			throw new NoSuchAccountException(
-				"Unable to find Account with externalReferenceCode: " +
+				"Unable to find account with external reference code " +
 					externalReferenceCode);
 		}
 
@@ -131,7 +131,7 @@ public class AccountMemberResourceImpl
 
 		if (commerceAccount == null) {
 			throw new NoSuchAccountException(
-				"Unable to find Account with externalReferenceCode: " +
+				"Unable to find account with external reference code " +
 					externalReferenceCode);
 		}
 
@@ -158,7 +158,7 @@ public class AccountMemberResourceImpl
 				contextAcceptLanguage.getPreferredLocale()));
 	}
 
-	@NestedField(parentClass = Account.class, value = "users")
+	@NestedField(parentClass = Account.class, value = "accountMembers")
 	@Override
 	public Page<AccountMember> getAccountIdAccountMembersPage(
 			Long id, Pagination pagination)
@@ -187,16 +187,12 @@ public class AccountMemberResourceImpl
 
 		if (commerceAccount == null) {
 			throw new NoSuchAccountException(
-				"Unable to find Account with externalReferenceCode: " +
+				"Unable to find account with external reference code " +
 					externalReferenceCode);
 		}
 
 		_updateCommerceAccountUserRel(
-			commerceAccount,
-			AccountMemberUtil.getUser(
-				_userLocalService, accountMember,
-				contextCompany.getCompanyId()),
-			accountMember);
+			commerceAccount, _userLocalService.getUser(userId), accountMember);
 
 		Response.ResponseBuilder responseBuilder = Response.ok();
 
@@ -210,10 +206,7 @@ public class AccountMemberResourceImpl
 
 		_updateCommerceAccountUserRel(
 			_commerceAccountService.getCommerceAccount(id),
-			AccountMemberUtil.getUser(
-				_userLocalService, accountMember,
-				contextCompany.getCompanyId()),
-			accountMember);
+			_userLocalService.getUser(userId), accountMember);
 
 		Response.ResponseBuilder responseBuilder = Response.ok();
 
@@ -231,7 +224,7 @@ public class AccountMemberResourceImpl
 
 		if (commerceAccount == null) {
 			throw new NoSuchAccountException(
-				"Unable to find Account with externalReferenceCode: " +
+				"Unable to find account with external reference code " +
 					externalReferenceCode);
 		}
 
@@ -293,25 +286,23 @@ public class AccountMemberResourceImpl
 			AccountMember accountMember)
 		throws Exception {
 
-		long[] roleIds = null;
+		_userGroupRoleLocalService.deleteUserGroupRoles(
+			user.getUserId(),
+			new long[] {commerceAccount.getCommerceAccountGroupId()});
 
 		AccountRole[] accountRoles = accountMember.getAccountRoles();
 
 		if (accountRoles != null) {
 			Stream<AccountRole> accountRoleStream = Arrays.stream(accountRoles);
 
-			roleIds = accountRoleStream.mapToLong(
+			long[] roleIds = accountRoleStream.mapToLong(
 				AccountRole::getRoleId
 			).toArray();
+
+			_userGroupRoleLocalService.addUserGroupRoles(
+				user.getUserId(), commerceAccount.getCommerceAccountGroupId(),
+				roleIds);
 		}
-
-		_userGroupRoleLocalService.deleteUserGroupRoles(
-			user.getUserId(),
-			new long[] {commerceAccount.getCommerceAccountGroupId()});
-
-		_userGroupRoleLocalService.addUserGroupRoles(
-			user.getUserId(), commerceAccount.getCommerceAccountGroupId(),
-			roleIds);
 	}
 
 	@Reference

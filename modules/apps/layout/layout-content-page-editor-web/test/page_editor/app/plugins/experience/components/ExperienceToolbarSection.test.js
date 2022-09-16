@@ -12,23 +12,16 @@
  * details.
  */
 
-import {
-	cleanup,
-	render,
-	wait,
-	waitForElement,
-	within,
-} from '@testing-library/react';
+import {render, waitFor, within} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 
 import configModule from '../../../../../../src/main/resources/META-INF/resources/page_editor/app/config';
+import {StoreAPIContextProvider} from '../../../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/StoreContext';
 import serviceFetch from '../../../../../../src/main/resources/META-INF/resources/page_editor/app/services/serviceFetch';
-import {StoreAPIContextProvider} from '../../../../../../src/main/resources/META-INF/resources/page_editor/app/store/index';
 import {
 	CREATE_SEGMENTS_EXPERIENCE,
 	DELETE_SEGMENTS_EXPERIENCE,
-	DUPLICATE_SEGMENTS_EXPERIENCE,
 	UPDATE_SEGMENTS_EXPERIENCE,
 	UPDATE_SEGMENTS_EXPERIENCES_LIST,
 } from '../../../../../../src/main/resources/META-INF/resources/page_editor/plugins/experience/actions';
@@ -41,11 +34,6 @@ const MOCK_DUPLICATE_URL = 'duplicate-experience-test-url';
 const MOCK_CREATE_URL = 'create-experience-test-url';
 const MOCK_UPDATE_PRIORITY_URL = 'update-experience-priority-test-url';
 const MOCK_UPDATE_URL = 'update-experience-test-url';
-
-jest.mock(
-	'../../../../../../src/main/resources/META-INF/resources/page_editor/app/config',
-	() => ({config: {}})
-);
 
 jest.mock(
 	'../../../../../../src/main/resources/META-INF/resources/page_editor/app/services/serviceFetch',
@@ -76,8 +64,7 @@ function renderExperienceToolbarSection(
 
 const mockState = {
 	availableSegmentsExperiences: {
-		0: {
-			active: true,
+		'0': {
 			hasLockedSegmentsExperiment: false,
 			name: 'Default Experience',
 			priority: -1,
@@ -87,8 +74,8 @@ const mockState = {
 			segmentsExperimentURL: 'https//:default-experience.com',
 		},
 		'test-experience-id-01': {
-			active: true,
 			hasLockedSegmentsExperiment: false,
+			languageIds: ['en_US', 'es_ES'],
 			name: 'Experience #1',
 			priority: 3,
 			segmentsEntryId: 'test-segment-id-00',
@@ -97,8 +84,8 @@ const mockState = {
 			segmentsExperimentURL: 'https//:experience-1.com',
 		},
 		'test-experience-id-02': {
-			active: true,
 			hasLockedSegmentsExperiment: false,
+			languageIds: ['en_US', 'es_ES', 'ar_SA'],
 			name: 'Experience #2',
 			priority: 1,
 			segmentsEntryId: 'test-segment-id-01',
@@ -117,6 +104,29 @@ const mockState = {
 
 const mockConfig = {
 	addSegmentsExperienceURL: MOCK_CREATE_URL,
+	availableLanguages: {
+		ar_SA: {
+			default: false,
+			displayName: 'Arabic (Saudi Arabia)',
+			languageIcon: 'ar-sa',
+			languageId: 'ar_SA',
+			w3cLanguageId: 'ar-SA',
+		},
+		en_US: {
+			default: false,
+			displayName: 'English (United States)',
+			languageIcon: 'en-us',
+			languageId: 'en_US',
+			w3cLanguageId: 'en-US',
+		},
+		es_ES: {
+			default: true,
+			displayName: 'Spanish (Spain)',
+			languageIcon: 'es-es',
+			languageId: 'es_ES',
+			w3cLanguageId: 'es-ES',
+		},
+	},
 	availableSegmentsEntries: {
 		'test-segment-id-00': {
 			name: 'A segment 0',
@@ -138,25 +148,29 @@ const mockConfig = {
 describe('ExperienceToolbarSection', () => {
 	beforeAll(() => {
 		Liferay.component = jest.fn();
+
+		window.Liferay = {
+			...Liferay,
+			FeatureFlags: {},
+		};
 	});
 
 	afterEach(() => {
-		cleanup();
 		serviceFetch.mockReset();
 	});
 
 	it('shows a list of Experiences ordered by priority', async () => {
 		const {
+			findByRole,
 			getAllByRole,
 			getByLabelText,
-			getByRole,
 		} = renderExperienceToolbarSection(mockState, mockConfig);
 
 		const dropDownButton = getByLabelText('experience');
 
 		userEvent.click(dropDownButton);
 
-		await waitForElement(() => getByRole('list'));
+		await findByRole('list');
 
 		const listedExperiences = getAllByRole('listitem');
 
@@ -184,7 +198,6 @@ describe('ExperienceToolbarSection', () => {
 			availableSegmentsExperiences: {
 				...mockState.availableSegmentsExperiences,
 				'test-experience-id-03': {
-					active: true,
 					hasLockedSegmentsExperiment: true,
 					name: 'Experience #3',
 					priority: 5,
@@ -200,14 +213,16 @@ describe('ExperienceToolbarSection', () => {
 		};
 		const mockDispatch = jest.fn((a) => {
 			if (typeof a === 'function') {
-				return a(mockDispatch);
+				return a(mockDispatch, () => ({
+					loadedSegmentsExperiences: [],
+				}));
 			}
 		});
 
 		const {
+			findByRole,
 			getAllByRole,
 			getByLabelText,
-			getByRole,
 			getByText,
 		} = renderExperienceToolbarSection(
 			mockStateWithLockedExperience,
@@ -219,13 +234,13 @@ describe('ExperienceToolbarSection', () => {
 
 		userEvent.click(dropDownButton);
 
-		await waitForElement(() => getByRole('list'));
+		await findByRole('list');
 
 		expect(getByText('Experience #3')).toBeInTheDocument();
 
 		const icons = getAllByRole('presentation');
 
-		const lockIcon = icons[1];
+		const lockIcon = icons[2];
 
 		// Hackily work around:
 		//
@@ -251,21 +266,23 @@ describe('ExperienceToolbarSection', () => {
 
 		const mockDispatch = jest.fn((a) => {
 			if (typeof a === 'function') {
-				return a(mockDispatch);
+				return a(mockDispatch, () => ({
+					loadedSegmentsExperiences: [],
+				}));
 			}
 		});
 
 		const {
+			findByRole,
 			getAllByRole,
 			getByLabelText,
-			getByRole,
 		} = renderExperienceToolbarSection(mockState, mockConfig, mockDispatch);
 
 		const dropDownButton = getByLabelText('experience');
 
 		userEvent.click(dropDownButton);
 
-		await waitForElement(() => getByRole('list'));
+		await findByRole('list');
 
 		const experienceItems = getAllByRole('listitem');
 
@@ -297,7 +314,7 @@ describe('ExperienceToolbarSection', () => {
 
 		userEvent.click(bottomExperiencePriorityButton);
 
-		await wait(() => expect(serviceFetch).toHaveBeenCalledTimes(1));
+		await waitFor(() => expect(serviceFetch).toHaveBeenCalledTimes(1));
 
 		expect(serviceFetch).toHaveBeenCalledWith(
 			expect.stringContaining(MOCK_UPDATE_PRIORITY_URL),
@@ -327,21 +344,23 @@ describe('ExperienceToolbarSection', () => {
 
 		const mockDispatch = jest.fn((a) => {
 			if (typeof a === 'function') {
-				return a(mockDispatch);
+				return a(mockDispatch, () => ({
+					loadedSegmentsExperiences: [],
+				}));
 			}
 		});
 
 		const {
+			findByRole,
 			getAllByRole,
 			getByLabelText,
-			getByRole,
 		} = renderExperienceToolbarSection(mockState, mockConfig, mockDispatch);
 
 		const dropDownButton = getByLabelText('experience');
 
 		userEvent.click(dropDownButton);
 
-		await waitForElement(() => getByRole('list'));
+		await findByRole('list');
 
 		const experienceItems = getAllByRole('listitem');
 
@@ -373,7 +392,7 @@ describe('ExperienceToolbarSection', () => {
 
 		userEvent.click(topExperiencePriorityButton);
 
-		await wait(() => expect(serviceFetch).toHaveBeenCalledTimes(1));
+		await waitFor(() => expect(serviceFetch).toHaveBeenCalledTimes(1));
 
 		expect(serviceFetch).toHaveBeenCalledWith(
 			expect.stringContaining(MOCK_UPDATE_PRIORITY_URL),
@@ -412,14 +431,17 @@ describe('ExperienceToolbarSection', () => {
 
 		const mockDispatch = jest.fn((a) => {
 			if (typeof a === 'function') {
-				return a(mockDispatch);
+				return a(mockDispatch, () => ({
+					loadedSegmentsExperiences: [],
+				}));
 			}
 		});
 
 		const {
+			findByLabelText,
+			findByRole,
 			getAllByRole,
 			getByLabelText,
-			getByRole,
 			getByText,
 		} = renderExperienceToolbarSection(mockState, mockConfig, mockDispatch);
 
@@ -427,7 +449,7 @@ describe('ExperienceToolbarSection', () => {
 
 		userEvent.click(dropDownButton);
 
-		await waitForElement(() => getByRole('list'));
+		await findByRole('list');
 
 		const experienceItems = getAllByRole('listitem');
 
@@ -437,7 +459,7 @@ describe('ExperienceToolbarSection', () => {
 
 		userEvent.click(newExperienceButton);
 
-		await wait(() => getByLabelText('name'));
+		await findByLabelText('name');
 
 		const nameInput = getByLabelText('name');
 		const audienceInput = getByLabelText('audience');
@@ -451,7 +473,7 @@ describe('ExperienceToolbarSection', () => {
 
 		userEvent.click(getByText('save').parentElement);
 
-		await wait(() => expect(serviceFetch).toHaveBeenCalledTimes(2));
+		await waitFor(() => expect(serviceFetch).toHaveBeenCalledTimes(2));
 
 		expect(serviceFetch).toHaveBeenCalledWith(
 			expect.stringContaining(MOCK_CREATE_URL),
@@ -481,14 +503,17 @@ describe('ExperienceToolbarSection', () => {
 
 		const mockDispatch = jest.fn((a) => {
 			if (typeof a === 'function') {
-				return a(mockDispatch);
+				return a(mockDispatch, () => ({
+					loadedSegmentsExperiences: [],
+				}));
 			}
 		});
 
 		const {
+			findByLabelText,
+			findByRole,
 			getAllByRole,
 			getByLabelText,
-			getByRole,
 			getByText,
 		} = renderExperienceToolbarSection(mockState, mockConfig, mockDispatch);
 
@@ -496,7 +521,7 @@ describe('ExperienceToolbarSection', () => {
 
 		userEvent.click(dropDownButton);
 
-		await waitForElement(() => getByRole('list'));
+		await findByRole('list');
 
 		const experienceItems = getAllByRole('listitem');
 
@@ -514,7 +539,7 @@ describe('ExperienceToolbarSection', () => {
 
 		userEvent.click(editExperienceButton);
 
-		await waitForElement(() => getByLabelText('name'));
+		await findByLabelText('name');
 
 		const nameInput = getByLabelText('name');
 		const segmentSelect = getByLabelText('audience');
@@ -533,13 +558,12 @@ describe('ExperienceToolbarSection', () => {
 
 		userEvent.click(getByText('save').parentElement);
 
-		await wait(() => expect(serviceFetch).toHaveBeenCalledTimes(1));
+		await waitFor(() => expect(serviceFetch).toHaveBeenCalledTimes(1));
 
 		expect(serviceFetch).toHaveBeenCalledWith(
 			expect.stringContaining(MOCK_UPDATE_URL),
 			expect.objectContaining({
 				body: expect.objectContaining({
-					active: true,
 					name: 'New Experience #1',
 					segmentsEntryId: 'test-segment-id-00',
 					segmentsExperienceId: 'test-experience-id-01',
@@ -567,7 +591,9 @@ describe('ExperienceToolbarSection', () => {
 
 		const mockDispatch = jest.fn((a) => {
 			if (typeof a === 'function') {
-				return a(mockDispatch);
+				return a(mockDispatch, () => ({
+					loadedSegmentsExperiences: [],
+				}));
 			}
 		});
 
@@ -651,9 +677,9 @@ describe('ExperienceToolbarSection', () => {
 		};
 
 		const {
+			findByRole,
 			getAllByRole,
 			getByLabelText,
-			getByRole,
 		} = renderExperienceToolbarSection(
 			mockStateForDelete,
 			mockConfig,
@@ -664,7 +690,7 @@ describe('ExperienceToolbarSection', () => {
 
 		userEvent.click(dropDownButton);
 
-		await waitForElement(() => getByRole('list'));
+		await findByRole('list');
 
 		const experienceItems = getAllByRole('listitem');
 
@@ -680,9 +706,9 @@ describe('ExperienceToolbarSection', () => {
 
 		userEvent.click(deleteExperienceButton);
 
-		await wait(() => expect(window.confirm).toHaveBeenCalledTimes(1));
+		await waitFor(() => expect(window.confirm).toHaveBeenCalledTimes(1));
 
-		await wait(() => expect(serviceFetch).toHaveBeenCalledTimes(1));
+		await waitFor(() => expect(serviceFetch).toHaveBeenCalledTimes(1));
 
 		expect(serviceFetch).toHaveBeenCalledWith(
 			expect.stringContaining(MOCK_DELETE_URL),
@@ -720,21 +746,23 @@ describe('ExperienceToolbarSection', () => {
 
 		const mockDispatch = jest.fn((a) => {
 			if (typeof a === 'function') {
-				return a(mockDispatch);
+				return a(mockDispatch, () => ({
+					loadedSegmentsExperiences: [],
+				}));
 			}
 		});
 
 		const {
+			findByRole,
 			getAllByRole,
 			getByLabelText,
-			getByRole,
 		} = renderExperienceToolbarSection(mockState, mockConfig, mockDispatch);
 
 		const dropDownButton = getByLabelText('experience');
 
 		userEvent.click(dropDownButton);
 
-		await waitForElement(() => getByRole('list'));
+		await findByRole('list');
 
 		const experienceItems = getAllByRole('listitem');
 
@@ -750,7 +778,7 @@ describe('ExperienceToolbarSection', () => {
 
 		userEvent.click(duplicateExperienceButton);
 
-		await wait(() => expect(serviceFetch).toHaveBeenCalledTimes(2));
+		await waitFor(() => expect(serviceFetch).toHaveBeenCalledTimes(2));
 
 		expect(serviceFetch).toHaveBeenCalledWith(
 			expect.stringContaining(MOCK_DUPLICATE_URL),
@@ -764,7 +792,7 @@ describe('ExperienceToolbarSection', () => {
 
 		expect(mockDispatch).toHaveBeenCalledWith(
 			expect.objectContaining({
-				type: DUPLICATE_SEGMENTS_EXPERIENCE,
+				type: CREATE_SEGMENTS_EXPERIENCE,
 			})
 		);
 	});

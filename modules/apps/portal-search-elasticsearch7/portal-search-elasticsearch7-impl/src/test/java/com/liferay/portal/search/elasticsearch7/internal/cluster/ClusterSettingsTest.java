@@ -15,6 +15,7 @@
 package com.liferay.portal.search.elasticsearch7.internal.cluster;
 
 import com.liferay.portal.search.elasticsearch7.internal.connection.ElasticsearchFixture;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import org.elasticsearch.action.admin.cluster.settings.ClusterGetSettingsRequest;
 import org.elasticsearch.action.admin.cluster.settings.ClusterGetSettingsResponse;
@@ -25,12 +26,17 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 /**
  * @author William Newbury
  */
 public class ClusterSettingsTest {
+
+	@ClassRule
+	public static LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Before
 	public void setUp() throws Exception {

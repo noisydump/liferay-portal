@@ -22,7 +22,7 @@ import com.liferay.info.item.InfoItemFieldValues;
  */
 public interface InfoItemFieldValuesProvider<T> {
 
-	public default InfoFieldValue<Object> getInfoItemFieldValue(
+	public default InfoFieldValue<Object> getInfoFieldValue(
 		T t, String fieldName) {
 
 		InfoItemFieldValues infoItemFieldValues = getInfoItemFieldValues(t);

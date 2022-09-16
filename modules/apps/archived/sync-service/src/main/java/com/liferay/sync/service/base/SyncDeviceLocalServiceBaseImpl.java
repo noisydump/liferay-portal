@@ -34,6 +34,8 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -46,6 +48,7 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.sync.model.SyncDevice;
 import com.liferay.sync.service.SyncDeviceLocalService;
+import com.liferay.sync.service.SyncDeviceLocalServiceUtil;
 import com.liferay.sync.service.persistence.SyncDLFileVersionDiffPersistence;
 import com.liferay.sync.service.persistence.SyncDLObjectFinder;
 import com.liferay.sync.service.persistence.SyncDLObjectPersistence;
@@ -53,10 +56,13 @@ import com.liferay.sync.service.persistence.SyncDevicePersistence;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -77,7 +83,7 @@ public abstract class SyncDeviceLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>SyncDeviceLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.sync.service.SyncDeviceLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>SyncDeviceLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>SyncDeviceLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -148,6 +154,13 @@ public abstract class SyncDeviceLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return syncDevicePersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -393,6 +406,11 @@ public abstract class SyncDeviceLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement SyncDeviceLocalServiceImpl#deleteSyncDevice(SyncDevice) to avoid orphaned data");
+		}
+
 		return syncDeviceLocalService.deleteSyncDevice(
 			(SyncDevice)persistedModel);
 	}
@@ -470,6 +488,11 @@ public abstract class SyncDeviceLocalServiceBaseImpl
 		return syncDevicePersistence.update(syncDevice);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -481,6 +504,8 @@ public abstract class SyncDeviceLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		syncDeviceLocalService = (SyncDeviceLocalService)aopProxy;
+
+		_setLocalServiceUtilService(syncDeviceLocalService);
 	}
 
 	/**
@@ -525,6 +550,22 @@ public abstract class SyncDeviceLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		SyncDeviceLocalService syncDeviceLocalService) {
+
+		try {
+			Field field = SyncDeviceLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, syncDeviceLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected SyncDeviceLocalService syncDeviceLocalService;
 
 	@Reference
@@ -554,5 +595,8 @@ public abstract class SyncDeviceLocalServiceBaseImpl
 	@Reference
 	protected com.liferay.portal.kernel.service.UserLocalService
 		userLocalService;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		SyncDeviceLocalServiceBaseImpl.class);
 
 }

@@ -40,6 +40,8 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ProxyFactory;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -351,6 +353,10 @@ public class NPMRegistryImpl implements NPMRegistry {
 				content = StringUtil.read(url.openStream());
 			}
 			catch (IOException ioException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(ioException);
+				}
+
 				return null;
 			}
 
@@ -361,6 +367,10 @@ public class NPMRegistryImpl implements NPMRegistry {
 			return _jsonFactory.createJSONObject(content);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			return null;
 		}
 	}
@@ -436,15 +446,12 @@ public class NPMRegistryImpl implements NPMRegistry {
 			for (String bridge : bridges) {
 				bridge = bridge.trim();
 
-				StringBundler sb = new StringBundler(5);
-
-				sb.append(packageJSONObject.getString("name"));
-				sb.append(StringPool.AT);
-				sb.append(packageJSONObject.getString("version"));
-				sb.append("/bridge/");
-				sb.append(bridge);
-
-				_globalAliases.put(bridge, sb.toString());
+				_globalAliases.put(
+					bridge,
+					StringBundler.concat(
+						packageJSONObject.getString("name"), StringPool.AT,
+						packageJSONObject.getString("version"), "/bridge/",
+						bridge));
 			}
 		}
 	}
@@ -484,11 +491,11 @@ public class NPMRegistryImpl implements NPMRegistry {
 
 					String aliasResolvedId = ModuleNameUtil.getModuleResolvedId(
 						jsPackage, jsModuleAlias.getAlias());
-					String moduleResolvedId =
-						ModuleNameUtil.getModuleResolvedId(
-							jsPackage, jsModuleAlias.getModuleName());
 
-					exactMatchMap.put(aliasResolvedId, moduleResolvedId);
+					exactMatchMap.put(
+						aliasResolvedId,
+						ModuleNameUtil.getModuleResolvedId(
+							jsPackage, jsModuleAlias.getModuleName()));
 				}
 
 				for (JSModule jsModule : jsPackage.getJSModules()) {
@@ -522,21 +529,23 @@ public class NPMRegistryImpl implements NPMRegistry {
 	private static final JSPackage _NULL_JS_PACKAGE =
 		ProxyFactory.newDummyInstance(JSPackage.class);
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		NPMRegistryImpl.class);
+
 	private static final ThreadLocal<Boolean> _activationThreadLocal =
 		new CentralizedThreadLocal<>(
 			NPMRegistryImpl.class.getName() + "._activationThreadLocal",
 			() -> Boolean.FALSE);
 
-	private Boolean _applyVersioning;
+	private volatile Boolean _applyVersioning;
 	private BundleContext _bundleContext;
 	private BundleTracker<JSBundle> _bundleTracker;
 	private final Map<String, JSPackage> _dependencyJSPackages =
 		new ConcurrentHashMap<>();
 	private Map<String, String> _exactMatchMap;
 	private final Map<String, String> _globalAliases = new HashMap<>();
-	private ServiceTrackerList
-		<JavaScriptAwarePortalWebResources, JavaScriptAwarePortalWebResources>
-			_javaScriptAwarePortalWebResources;
+	private ServiceTrackerList<JavaScriptAwarePortalWebResources>
+		_javaScriptAwarePortalWebResources;
 
 	@Reference
 	private JSBundleProcessor _jsBundleProcessor;
@@ -548,14 +557,13 @@ public class NPMRegistryImpl implements NPMRegistry {
 
 	private Map<String, JSPackage> _jsPackages = new HashMap<>();
 	private List<JSPackageVersion> _jsPackageVersions = new ArrayList<>();
-	private ServiceTrackerList
-		<NPMRegistryUpdatesListener, NPMRegistryUpdatesListener>
-			_npmRegistryUpdatesListeners;
+	private ServiceTrackerList<NPMRegistryUpdatesListener>
+		_npmRegistryUpdatesListeners;
 	private final Map<String, String> _partialMatchMap =
 		new ConcurrentHashMap<>();
 	private Map<String, JSModule> _resolvedJSModules = new HashMap<>();
 	private Map<String, JSPackage> _resolvedJSPackages = new HashMap<>();
-	private ServiceTracker<ServletContext, JSConfigGeneratorPackage>
+	private volatile ServiceTracker<ServletContext, JSConfigGeneratorPackage>
 		_serviceTracker;
 
 	private static class JSPackageVersion {

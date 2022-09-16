@@ -28,7 +28,15 @@ import addPortlet from './addPortlet';
 import {LAYOUT_DATA_ITEM_TYPES} from './constants/layoutDataItemTypes';
 import {POSITIONS} from './constants/positions';
 
+const DROP_ACTIVE_VALID_CLASS = 'yui3-dd-drop-active-valid';
+
+const DROP_CLASS = 'yui3-dd-drop';
+
 const DROP_OVER_CLASS = 'yui3-dd-drop-over';
+
+const DROP_ZONE_CLASS = 'portlet-dropzone';
+
+const DROP_ZONE_DISABLED_CLASS = 'portlet-dropzone-disabled';
 
 const initialDragDrop = {
 	dragIndicatorPosition: {},
@@ -42,7 +50,7 @@ const initialDragDrop = {
 const DragAndDropContext = React.createContext(initialDragDrop);
 export const DragAndDropProvider = DragAndDropContext.Provider;
 
-export const useDragItem = (sourceItem) => {
+export function useDragItem(sourceItem) {
 	const getSourceItem = useCallback(() => sourceItem, [sourceItem]);
 	const sourceRef = useRef(null);
 
@@ -71,9 +79,9 @@ export const useDragItem = (sourceItem) => {
 		isDraggingSource,
 		sourceRef,
 	};
-};
+}
 
-export const useDragSymbol = ({data, icon, label, portletId, type}) => {
+export function useDragSymbol({data, icon, label, portletId, type}) {
 	const sourceItem = useMemo(
 		() => ({
 			data,
@@ -97,9 +105,9 @@ export const useDragSymbol = ({data, icon, label, portletId, type}) => {
 		isDraggingSource,
 		sourceRef: symbolRef,
 	};
-};
+}
 
-export const useDropClear = (targetItem) => {
+export function useDropClear(targetItem) {
 	const {dropTargetColumn, setDropTargetColumn} = useContext(
 		DragAndDropContext
 	);
@@ -113,6 +121,7 @@ export const useDropClear = (targetItem) => {
 
 			if (dropTargetColumn) {
 				dropTargetColumn.classList.remove(DROP_OVER_CLASS);
+				dropTargetColumn.classList.remove(DROP_ACTIVE_VALID_CLASS);
 			}
 
 			setDropTargetColumn(null);
@@ -120,7 +129,7 @@ export const useDropClear = (targetItem) => {
 	});
 
 	setDropClearRef(targetItem);
-};
+}
 
 const getHoverPosition = (monitor, targetItem) => {
 	const clientOffset = monitor.getClientOffset();
@@ -162,7 +171,7 @@ const getDropIndicatorPosition = ({
 	};
 };
 
-export const useDropTarget = (targetItem) => {
+export function useDropTarget(targetItem) {
 	const {
 		dropTargetColumn,
 		dropTargetItem,
@@ -187,8 +196,16 @@ export const useDropTarget = (targetItem) => {
 		};
 	}, []);
 
-	const [, setDropTargetRef] = useDrop({
+	const itemIsDroppable = (item) => item.classList.contains(DROP_CLASS);
+	const itemIsDropzone = (item) =>
+		item.classList.contains(DROP_ZONE_CLASS) &&
+		!item.classList.contains(DROP_ZONE_DISABLED_CLASS);
+
+	const [{validDrop}, setDropTargetRef] = useDrop({
 		accept: Object.values(LAYOUT_DATA_ITEM_TYPES),
+		collect: (monitor) => ({
+			validDrop: monitor.canDrop(),
+		}),
 		drop(item, monitor) {
 			setDropTargetColumn(null);
 
@@ -196,8 +213,13 @@ export const useDropTarget = (targetItem) => {
 				return;
 			}
 
+			if (!itemIsDroppable(targetItem) && !itemIsDropzone(targetItem)) {
+				return;
+			}
+
 			if (!item.disabled) {
 				dropTargetColumn.classList.remove(DROP_OVER_CLASS);
+				dropTargetColumn.classList.remove(DROP_ACTIVE_VALID_CLASS);
 
 				addPortlet({item, plid, targetItem, targetPosition});
 
@@ -215,22 +237,28 @@ export const useDropTarget = (targetItem) => {
 				return;
 			}
 
-			const itemIsDropzone = targetItem.classList.contains(
-				'portlet-dropzone'
-			);
+			const targetItemIsDropzone = itemIsDropzone(targetItem);
 
-			const parentTargetItem = itemIsDropzone
+			if (!itemIsDroppable(targetItem) && !targetItemIsDropzone) {
+				return;
+			}
+
+			const parentTargetItem = targetItemIsDropzone
 				? targetItem.parentElement
 				: targetItem.parentElement.parentElement;
 
 			if (dropTargetColumn !== parentTargetItem) {
 				if (dropTargetColumn) {
 					dropTargetColumn.classList.remove(DROP_OVER_CLASS);
+					dropTargetColumn.classList.remove(DROP_ACTIVE_VALID_CLASS);
 				}
 				setDropTargetColumn(parentTargetItem);
 
-				if (itemIsDropzone) {
+				if (targetItemIsDropzone) {
 					parentTargetItem.classList.add(DROP_OVER_CLASS);
+				}
+				else if (validDrop) {
+					parentTargetItem.classList.add(DROP_ACTIVE_VALID_CLASS);
 				}
 			}
 
@@ -258,4 +286,4 @@ export const useDropTarget = (targetItem) => {
 	});
 
 	setDropTargetRef(targetItem);
-};
+}

@@ -1,0 +1,184 @@
+@component-name = "portal-knowledge-base"
+definition {
+
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property testray.main.component.name = "Knowledge Base";
+
+	setUp {
+		TestCase.setUpPortalInstance();
+
+		User.firstLoginPG();
+
+		KBAdmin.openKBAdmin(siteURLKey = "guest");
+
+		Refresh();
+	}
+
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
+
+		if ("${testPortalInstance}" == "true") {
+			PortalInstances.tearDownCP();
+		}
+		else {
+			KBFolder.tearDownCP();
+
+			KBArticle.tearDownCP();
+		}
+	}
+
+	@priority = "4"
+	@refactordone
+	test CanAddMultipleArticles {
+		for (var kbCount : list "1,2,3") {
+			JSONKnowledgeBase.addkBArticle(
+				groupName = "Guest",
+				kbArticleContent = "Knowledge Base Article Content ${kbCount}",
+				kbArticleTitle = "Knowledge Base Article Title ${kbCount}");
+		}
+
+		for (var kbCount : list "1,2,3") {
+			KBAdmin.openKBAdmin(siteURLKey = "guest");
+
+			KBArticle.viewCP(
+				kbArticleContent = "Knowledge Base Article Content ${kbCount}",
+				kbArticleTitle = "Knowledge Base Article Title ${kbCount}");
+		}
+	}
+
+	@priority = "5"
+	@refactordone
+	test CanDeleteArticle {
+		property portal.acceptance = "true";
+
+		JSONKnowledgeBase.addkBArticle(
+			groupName = "Guest",
+			kbArticleContent = "Knowledge Base Article Content",
+			kbArticleTitle = "Knowledge Base Article Title");
+
+		KBAdmin.openKBAdmin(siteURLKey = "guest");
+
+		KBArticle.selectArticleCP(kbArticleTitle = "Knowledge Base Article Title");
+
+		KBArticle.deleteCP();
+
+		KBAdmin.openKBAdmin(siteURLKey = "guest");
+
+		KBArticle.viewDefaultCP();
+	}
+
+	@priority = "4"
+	@refactordone
+	test CanEditArticleAndAddAttachment {
+		property portal.acceptance = "true";
+
+		JSONKnowledgeBase.addkBArticle(
+			groupName = "Guest",
+			kbArticleContent = "Knowledge Base Article Content",
+			kbArticleTitle = "Knowledge Base Article Title");
+
+		KBAdmin.openKBAdmin(siteURLKey = "guest");
+
+		KBArticle.editCP(
+			kbArticleAttachment = "Document_1.txt",
+			kbArticleContentEdit = "Knowledge Base Article Content Edit",
+			kbArticleTitle = "Knowledge Base Article Title",
+			kbArticleTitleEdit = "Knowledge Base Article Title Edit");
+
+		KBAdmin.openKBAdmin(siteURLKey = "guest");
+
+		KBArticle.viewKBArticleWithAttachmentCP(
+			kbArticleAttachment = "Document_1.txt (259 B) Delete",
+			kbArticleContent = "Knowledge Base Article Content Edit",
+			kbArticleTitle = "Knowledge Base Article Title Edit");
+	}
+
+	@priority = "4"
+	@refactordone
+	test CanRemoveParentArticle {
+		JSONKnowledgeBase.addkBArticle(
+			groupName = "Guest",
+			kbArticleContent = "Knowledge Base Article Parent",
+			kbArticleTitle = "Knowledge Base Article Title Parent");
+
+		JSONKnowledgeBase.addkBArticle(
+			groupName = "Guest",
+			kbArticleContent = "Knowledge Base Article Content Child",
+			kbArticleTitle = "Knowledge Base Article Title Child");
+
+		KBAdmin.openKBAdmin(siteURLKey = "guest");
+
+		KBArticle.moveArticleCP(
+			kbArticleCurrentParent = "Home",
+			kbArticleTitle = "Knowledge Base Article Title Child");
+
+		KBArticle.selectParentArticleCP(kbArticleTitle = "Knowledge Base Article Title Parent");
+
+		KBArticle.gotoViaKBAdminCP(
+			hasChildArticle = "true",
+			kbArticleTitle = "Knowledge Base Article Title Parent");
+
+		KBArticle.viewChildArticleCP(
+			kbChildArticleContent = "Knowledge Base Article Content Child",
+			kbChildArticleTitle = "Knowledge Base Article Title Child");
+
+		KBArticle.moveArticleCP(
+			kbArticleCurrentParent = "Knowledge Base Article Title Parent",
+			kbArticleTitle = "Knowledge Base Article Title Child");
+
+		KBFolder.selectParentCP(kbFolderName = "Home");
+
+		KBAdmin.openKBAdmin(siteURLKey = "guest");
+
+		KBArticle.viewCP(
+			kbArticleContent = "Knowledge Base Article Content Child",
+			kbArticleTitle = "Knowledge Base Article Title Child");
+	}
+
+	@priority = "4"
+	@refactordone
+	test CanSelectParentArticle {
+		JSONKnowledgeBase.addkBArticle(
+			groupName = "Guest",
+			kbArticleContent = "Knowledge Base Article Content Parent",
+			kbArticleTitle = "Knowledge Base Article Title Parent");
+
+		JSONKnowledgeBase.addkBArticle(
+			groupName = "Guest",
+			kbArticleContent = "Knowledge Base Article Content Child",
+			kbArticleTitle = "Knowledge Base Article Title Child");
+
+		KBAdmin.openKBAdmin(siteURLKey = "guest");
+
+		KBArticle.moveArticleCP(
+			kbArticleCurrentParent = "Home",
+			kbArticleTitle = "Knowledge Base Article Title Child");
+
+		KBArticle.selectParentArticleCP(kbArticleTitle = "Knowledge Base Article Title Parent");
+
+		KBArticle.gotoViaKBAdminCP(
+			hasChildArticle = "true",
+			kbArticleTitle = "Knowledge Base Article Title Parent");
+
+		KBArticle.viewChildArticleCP(
+			kbChildArticleContent = "Knowledge Base Article Content Child",
+			kbChildArticleTitle = "Knowledge Base Article Title Child");
+	}
+
+	@priority = "4"
+	@refactordone
+	test CanViewArticlePriority {
+		JSONKnowledgeBase.addkBArticle(
+			groupName = "Guest",
+			kbArticleContent = "Knowledge Base Article Content 1",
+			kbArticleTitle = "Knowledge Base Article Title 1");
+
+		KBAdmin.openKBAdmin(siteURLKey = "guest");
+
+		KBArticle.viewKBArticlePriorityCP(
+			kbArticleTitle = "Knowledge Base Article Title 1",
+			kbPriority = "1.0");
+	}
+
+}

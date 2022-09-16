@@ -16,7 +16,6 @@ package com.liferay.commerce.price.list.model.impl;
 
 import com.liferay.commerce.price.list.model.CommercePriceListCommerceAccountGroupRel;
 import com.liferay.commerce.price.list.model.CommercePriceListCommerceAccountGroupRelModel;
-import com.liferay.commerce.price.list.model.CommercePriceListCommerceAccountGroupRelSoap;
 import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.expando.kernel.util.ExpandoBridgeFactoryUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
@@ -33,21 +32,21 @@ import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -75,6 +74,7 @@ public class CommercePriceListCommerceAccountGroupRelModelImpl
 	public static final String TABLE_NAME = "CPLCommerceGroupAccountRel";
 
 	public static final Object[][] TABLE_COLUMNS = {
+		{"mvccVersion", Types.BIGINT}, {"ctCollectionId", Types.BIGINT},
 		{"uuid_", Types.VARCHAR},
 		{"CPLCommerceAccountGroupRelId", Types.BIGINT},
 		{"companyId", Types.BIGINT}, {"userId", Types.BIGINT},
@@ -89,6 +89,8 @@ public class CommercePriceListCommerceAccountGroupRelModelImpl
 		new HashMap<String, Integer>();
 
 	static {
+		TABLE_COLUMNS_MAP.put("mvccVersion", Types.BIGINT);
+		TABLE_COLUMNS_MAP.put("ctCollectionId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("uuid_", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("CPLCommerceAccountGroupRelId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("companyId", Types.BIGINT);
@@ -103,7 +105,7 @@ public class CommercePriceListCommerceAccountGroupRelModelImpl
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table CPLCommerceGroupAccountRel (uuid_ VARCHAR(75) null,CPLCommerceAccountGroupRelId LONG not null primary key,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,commercePriceListId LONG,commerceAccountGroupId LONG,order_ INTEGER,lastPublishDate DATE null)";
+		"create table CPLCommerceGroupAccountRel (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,uuid_ VARCHAR(75) null,CPLCommerceAccountGroupRelId LONG not null,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,commercePriceListId LONG,commerceAccountGroupId LONG,order_ INTEGER,lastPublishDate DATE null,primary key (CPLCommerceAccountGroupRelId, ctCollectionId))";
 
 	public static final String TABLE_SQL_DROP =
 		"drop table CPLCommerceGroupAccountRel";
@@ -121,119 +123,49 @@ public class CommercePriceListCommerceAccountGroupRelModelImpl
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static final boolean ENTITY_CACHE_ENABLED = true;
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static final boolean FINDER_CACHE_ENABLED = true;
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static final boolean COLUMN_BITMASK_ENABLED = true;
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long COMMERCEACCOUNTGROUPID_COLUMN_BITMASK = 1L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long COMMERCEPRICELISTID_COLUMN_BITMASK = 2L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long COMPANYID_COLUMN_BITMASK = 4L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long UUID_COLUMN_BITMASK = 8L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *		#getColumnBitmask(String)
+	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long ORDER_COLUMN_BITMASK = 16L;
 
 	/**
-	 * Converts the soap model instance into a normal model instance.
-	 *
-	 * @param soapModel the soap model instance to convert
-	 * @return the normal model instance
 	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
 	 */
 	@Deprecated
-	public static CommercePriceListCommerceAccountGroupRel toModel(
-		CommercePriceListCommerceAccountGroupRelSoap soapModel) {
-
-		if (soapModel == null) {
-			return null;
-		}
-
-		CommercePriceListCommerceAccountGroupRel model =
-			new CommercePriceListCommerceAccountGroupRelImpl();
-
-		model.setUuid(soapModel.getUuid());
-		model.setCommercePriceListCommerceAccountGroupRelId(
-			soapModel.getCommercePriceListCommerceAccountGroupRelId());
-		model.setCompanyId(soapModel.getCompanyId());
-		model.setUserId(soapModel.getUserId());
-		model.setUserName(soapModel.getUserName());
-		model.setCreateDate(soapModel.getCreateDate());
-		model.setModifiedDate(soapModel.getModifiedDate());
-		model.setCommercePriceListId(soapModel.getCommercePriceListId());
-		model.setCommerceAccountGroupId(soapModel.getCommerceAccountGroupId());
-		model.setOrder(soapModel.getOrder());
-		model.setLastPublishDate(soapModel.getLastPublishDate());
-
-		return model;
+	public static void setEntityCacheEnabled(boolean entityCacheEnabled) {
 	}
 
 	/**
-	 * Converts the soap model instances into normal model instances.
-	 *
-	 * @param soapModels the soap model instances to convert
-	 * @return the normal model instances
 	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
 	 */
 	@Deprecated
-	public static List<CommercePriceListCommerceAccountGroupRel> toModels(
-		CommercePriceListCommerceAccountGroupRelSoap[] soapModels) {
-
-		if (soapModels == null) {
-			return null;
-		}
-
-		List<CommercePriceListCommerceAccountGroupRel> models =
-			new ArrayList<CommercePriceListCommerceAccountGroupRel>(
-				soapModels.length);
-
-		for (CommercePriceListCommerceAccountGroupRelSoap soapModel :
-				soapModels) {
-
-			models.add(toModel(soapModel));
-		}
-
-		return models;
+	public static void setFinderCacheEnabled(boolean finderCacheEnabled) {
 	}
-
-	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(
-		com.liferay.commerce.price.list.service.util.ServiceProps.get(
-			"lock.expiration.time.com.liferay.commerce.price.list.model.CommercePriceListCommerceAccountGroupRel"));
 
 	public CommercePriceListCommerceAccountGroupRelModelImpl() {
 	}
@@ -329,35 +261,6 @@ public class CommercePriceListCommerceAccountGroupRelModelImpl
 		return _attributeSetterBiConsumers;
 	}
 
-	private static Function
-		<InvocationHandler, CommercePriceListCommerceAccountGroupRel>
-			_getProxyProviderFunction() {
-
-		Class<?> proxyClass = ProxyUtil.getProxyClass(
-			CommercePriceListCommerceAccountGroupRel.class.getClassLoader(),
-			CommercePriceListCommerceAccountGroupRel.class, ModelWrapper.class);
-
-		try {
-			Constructor<CommercePriceListCommerceAccountGroupRel> constructor =
-				(Constructor<CommercePriceListCommerceAccountGroupRel>)
-					proxyClass.getConstructor(InvocationHandler.class);
-
-			return invocationHandler -> {
-				try {
-					return constructor.newInstance(invocationHandler);
-				}
-				catch (ReflectiveOperationException
-							reflectiveOperationException) {
-
-					throw new InternalError(reflectiveOperationException);
-				}
-			};
-		}
-		catch (NoSuchMethodException noSuchMethodException) {
-			throw new InternalError(noSuchMethodException);
-		}
-	}
-
 	private static final Map
 		<String, Function<CommercePriceListCommerceAccountGroupRel, Object>>
 			_attributeGetterFunctions;
@@ -378,6 +281,20 @@ public class CommercePriceListCommerceAccountGroupRelModelImpl
 					<String,
 					 BiConsumer<CommercePriceListCommerceAccountGroupRel, ?>>();
 
+		attributeGetterFunctions.put(
+			"mvccVersion",
+			CommercePriceListCommerceAccountGroupRel::getMvccVersion);
+		attributeSetterBiConsumers.put(
+			"mvccVersion",
+			(BiConsumer<CommercePriceListCommerceAccountGroupRel, Long>)
+				CommercePriceListCommerceAccountGroupRel::setMvccVersion);
+		attributeGetterFunctions.put(
+			"ctCollectionId",
+			CommercePriceListCommerceAccountGroupRel::getCtCollectionId);
+		attributeSetterBiConsumers.put(
+			"ctCollectionId",
+			(BiConsumer<CommercePriceListCommerceAccountGroupRel, Long>)
+				CommercePriceListCommerceAccountGroupRel::setCtCollectionId);
 		attributeGetterFunctions.put(
 			"uuid", CommercePriceListCommerceAccountGroupRel::getUuid);
 		attributeSetterBiConsumers.put(
@@ -461,6 +378,36 @@ public class CommercePriceListCommerceAccountGroupRelModelImpl
 			attributeGetterFunctions);
 		_attributeSetterBiConsumers = Collections.unmodifiableMap(
 			(Map)attributeSetterBiConsumers);
+	}
+
+	@JSON
+	@Override
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_mvccVersion = mvccVersion;
+	}
+
+	@JSON
+	@Override
+	public long getCtCollectionId() {
+		return _ctCollectionId;
+	}
+
+	@Override
+	public void setCtCollectionId(long ctCollectionId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_ctCollectionId = ctCollectionId;
 	}
 
 	@JSON
@@ -723,7 +670,9 @@ public class CommercePriceListCommerceAccountGroupRelModelImpl
 		for (Map.Entry<String, Object> entry :
 				_columnOriginalValues.entrySet()) {
 
-			if (entry.getValue() != getColumnValue(entry.getKey())) {
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
 				_columnBitmask |= _columnBitmasks.get(entry.getKey());
 			}
 		}
@@ -768,6 +717,10 @@ public class CommercePriceListCommerceAccountGroupRelModelImpl
 			commercePriceListCommerceAccountGroupRelImpl =
 				new CommercePriceListCommerceAccountGroupRelImpl();
 
+		commercePriceListCommerceAccountGroupRelImpl.setMvccVersion(
+			getMvccVersion());
+		commercePriceListCommerceAccountGroupRelImpl.setCtCollectionId(
+			getCtCollectionId());
 		commercePriceListCommerceAccountGroupRelImpl.setUuid(getUuid());
 		commercePriceListCommerceAccountGroupRelImpl.
 			setCommercePriceListCommerceAccountGroupRelId(
@@ -789,6 +742,44 @@ public class CommercePriceListCommerceAccountGroupRelModelImpl
 			getLastPublishDate());
 
 		commercePriceListCommerceAccountGroupRelImpl.resetOriginalValues();
+
+		return commercePriceListCommerceAccountGroupRelImpl;
+	}
+
+	@Override
+	public CommercePriceListCommerceAccountGroupRel cloneWithOriginalValues() {
+		CommercePriceListCommerceAccountGroupRelImpl
+			commercePriceListCommerceAccountGroupRelImpl =
+				new CommercePriceListCommerceAccountGroupRelImpl();
+
+		commercePriceListCommerceAccountGroupRelImpl.setMvccVersion(
+			this.<Long>getColumnOriginalValue("mvccVersion"));
+		commercePriceListCommerceAccountGroupRelImpl.setCtCollectionId(
+			this.<Long>getColumnOriginalValue("ctCollectionId"));
+		commercePriceListCommerceAccountGroupRelImpl.setUuid(
+			this.<String>getColumnOriginalValue("uuid_"));
+		commercePriceListCommerceAccountGroupRelImpl.
+			setCommercePriceListCommerceAccountGroupRelId(
+				this.<Long>getColumnOriginalValue(
+					"CPLCommerceAccountGroupRelId"));
+		commercePriceListCommerceAccountGroupRelImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		commercePriceListCommerceAccountGroupRelImpl.setUserId(
+			this.<Long>getColumnOriginalValue("userId"));
+		commercePriceListCommerceAccountGroupRelImpl.setUserName(
+			this.<String>getColumnOriginalValue("userName"));
+		commercePriceListCommerceAccountGroupRelImpl.setCreateDate(
+			this.<Date>getColumnOriginalValue("createDate"));
+		commercePriceListCommerceAccountGroupRelImpl.setModifiedDate(
+			this.<Date>getColumnOriginalValue("modifiedDate"));
+		commercePriceListCommerceAccountGroupRelImpl.setCommercePriceListId(
+			this.<Long>getColumnOriginalValue("commercePriceListId"));
+		commercePriceListCommerceAccountGroupRelImpl.setCommerceAccountGroupId(
+			this.<Long>getColumnOriginalValue("commerceAccountGroupId"));
+		commercePriceListCommerceAccountGroupRelImpl.setOrder(
+			this.<Integer>getColumnOriginalValue("order_"));
+		commercePriceListCommerceAccountGroupRelImpl.setLastPublishDate(
+			this.<Date>getColumnOriginalValue("lastPublishDate"));
 
 		return commercePriceListCommerceAccountGroupRelImpl;
 	}
@@ -855,7 +846,7 @@ public class CommercePriceListCommerceAccountGroupRelModelImpl
 	@Deprecated
 	@Override
 	public boolean isEntityCacheEnabled() {
-		return ENTITY_CACHE_ENABLED;
+		return true;
 	}
 
 	/**
@@ -864,7 +855,7 @@ public class CommercePriceListCommerceAccountGroupRelModelImpl
 	@Deprecated
 	@Override
 	public boolean isFinderCacheEnabled() {
-		return FINDER_CACHE_ENABLED;
+		return true;
 	}
 
 	@Override
@@ -881,6 +872,12 @@ public class CommercePriceListCommerceAccountGroupRelModelImpl
 		CommercePriceListCommerceAccountGroupRelCacheModel
 			commercePriceListCommerceAccountGroupRelCacheModel =
 				new CommercePriceListCommerceAccountGroupRelCacheModel();
+
+		commercePriceListCommerceAccountGroupRelCacheModel.mvccVersion =
+			getMvccVersion();
+
+		commercePriceListCommerceAccountGroupRelCacheModel.ctCollectionId =
+			getCtCollectionId();
 
 		commercePriceListCommerceAccountGroupRelCacheModel.uuid = getUuid();
 
@@ -959,7 +956,7 @@ public class CommercePriceListCommerceAccountGroupRelModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			(4 * attributeGetterFunctions.size()) + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -972,11 +969,27 @@ public class CommercePriceListCommerceAccountGroupRelModelImpl
 			Function<CommercePriceListCommerceAccountGroupRel, Object>
 				attributeGetterFunction = entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(
-				attributeGetterFunction.apply(
-					(CommercePriceListCommerceAccountGroupRel)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply(
+				(CommercePriceListCommerceAccountGroupRel)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -1029,10 +1042,14 @@ public class CommercePriceListCommerceAccountGroupRelModelImpl
 		private static final Function
 			<InvocationHandler, CommercePriceListCommerceAccountGroupRel>
 				_escapedModelProxyProviderFunction =
-					_getProxyProviderFunction();
+					ProxyUtil.getProxyProviderFunction(
+						CommercePriceListCommerceAccountGroupRel.class,
+						ModelWrapper.class);
 
 	}
 
+	private long _mvccVersion;
+	private long _ctCollectionId;
 	private String _uuid;
 	private long _commercePriceListCommerceAccountGroupRelId;
 	private long _companyId;
@@ -1076,6 +1093,8 @@ public class CommercePriceListCommerceAccountGroupRelModelImpl
 	private void _setColumnOriginalValues() {
 		_columnOriginalValues = new HashMap<String, Object>();
 
+		_columnOriginalValues.put("mvccVersion", _mvccVersion);
+		_columnOriginalValues.put("ctCollectionId", _ctCollectionId);
 		_columnOriginalValues.put("uuid_", _uuid);
 		_columnOriginalValues.put(
 			"CPLCommerceAccountGroupRelId",
@@ -1117,27 +1136,31 @@ public class CommercePriceListCommerceAccountGroupRelModelImpl
 	static {
 		Map<String, Long> columnBitmasks = new HashMap<>();
 
-		columnBitmasks.put("uuid_", 1L);
+		columnBitmasks.put("mvccVersion", 1L);
 
-		columnBitmasks.put("CPLCommerceAccountGroupRelId", 2L);
+		columnBitmasks.put("ctCollectionId", 2L);
 
-		columnBitmasks.put("companyId", 4L);
+		columnBitmasks.put("uuid_", 4L);
 
-		columnBitmasks.put("userId", 8L);
+		columnBitmasks.put("CPLCommerceAccountGroupRelId", 8L);
 
-		columnBitmasks.put("userName", 16L);
+		columnBitmasks.put("companyId", 16L);
 
-		columnBitmasks.put("createDate", 32L);
+		columnBitmasks.put("userId", 32L);
 
-		columnBitmasks.put("modifiedDate", 64L);
+		columnBitmasks.put("userName", 64L);
 
-		columnBitmasks.put("commercePriceListId", 128L);
+		columnBitmasks.put("createDate", 128L);
 
-		columnBitmasks.put("commerceAccountGroupId", 256L);
+		columnBitmasks.put("modifiedDate", 256L);
 
-		columnBitmasks.put("order_", 512L);
+		columnBitmasks.put("commercePriceListId", 512L);
 
-		columnBitmasks.put("lastPublishDate", 1024L);
+		columnBitmasks.put("commerceAccountGroupId", 1024L);
+
+		columnBitmasks.put("order_", 2048L);
+
+		columnBitmasks.put("lastPublishDate", 4096L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}

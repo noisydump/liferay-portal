@@ -20,8 +20,8 @@ import com.liferay.commerce.model.CommerceShippingMethodTable;
 import com.liferay.commerce.model.impl.CommerceShippingMethodImpl;
 import com.liferay.commerce.model.impl.CommerceShippingMethodModelImpl;
 import com.liferay.commerce.service.persistence.CommerceShippingMethodPersistence;
+import com.liferay.commerce.service.persistence.CommerceShippingMethodUtil;
 import com.liferay.petra.string.StringBundler;
-import com.liferay.portal.kernel.dao.orm.ArgumentsResolver;
 import com.liferay.portal.kernel.dao.orm.EntityCache;
 import com.liferay.portal.kernel.dao.orm.FinderCache;
 import com.liferay.portal.kernel.dao.orm.FinderPath;
@@ -31,19 +31,21 @@ import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
-import com.liferay.portal.kernel.util.HashMapDictionary;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
 import java.util.Date;
@@ -52,12 +54,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.framework.ServiceRegistration;
 
 /**
  * The persistence implementation for the commerce shipping method service.
@@ -593,257 +589,6 @@ public class CommerceShippingMethodPersistenceImpl
 
 	private static final String _FINDER_COLUMN_GROUPID_GROUPID_2 =
 		"commerceShippingMethod.groupId = ?";
-
-	private FinderPath _finderPathFetchByG_E;
-	private FinderPath _finderPathCountByG_E;
-
-	/**
-	 * Returns the commerce shipping method where groupId = &#63; and engineKey = &#63; or throws a <code>NoSuchShippingMethodException</code> if it could not be found.
-	 *
-	 * @param groupId the group ID
-	 * @param engineKey the engine key
-	 * @return the matching commerce shipping method
-	 * @throws NoSuchShippingMethodException if a matching commerce shipping method could not be found
-	 */
-	@Override
-	public CommerceShippingMethod findByG_E(long groupId, String engineKey)
-		throws NoSuchShippingMethodException {
-
-		CommerceShippingMethod commerceShippingMethod = fetchByG_E(
-			groupId, engineKey);
-
-		if (commerceShippingMethod == null) {
-			StringBundler sb = new StringBundler(6);
-
-			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-			sb.append("groupId=");
-			sb.append(groupId);
-
-			sb.append(", engineKey=");
-			sb.append(engineKey);
-
-			sb.append("}");
-
-			if (_log.isDebugEnabled()) {
-				_log.debug(sb.toString());
-			}
-
-			throw new NoSuchShippingMethodException(sb.toString());
-		}
-
-		return commerceShippingMethod;
-	}
-
-	/**
-	 * Returns the commerce shipping method where groupId = &#63; and engineKey = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param groupId the group ID
-	 * @param engineKey the engine key
-	 * @return the matching commerce shipping method, or <code>null</code> if a matching commerce shipping method could not be found
-	 */
-	@Override
-	public CommerceShippingMethod fetchByG_E(long groupId, String engineKey) {
-		return fetchByG_E(groupId, engineKey, true);
-	}
-
-	/**
-	 * Returns the commerce shipping method where groupId = &#63; and engineKey = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
-	 *
-	 * @param groupId the group ID
-	 * @param engineKey the engine key
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the matching commerce shipping method, or <code>null</code> if a matching commerce shipping method could not be found
-	 */
-	@Override
-	public CommerceShippingMethod fetchByG_E(
-		long groupId, String engineKey, boolean useFinderCache) {
-
-		engineKey = Objects.toString(engineKey, "");
-
-		Object[] finderArgs = null;
-
-		if (useFinderCache) {
-			finderArgs = new Object[] {groupId, engineKey};
-		}
-
-		Object result = null;
-
-		if (useFinderCache) {
-			result = finderCache.getResult(_finderPathFetchByG_E, finderArgs);
-		}
-
-		if (result instanceof CommerceShippingMethod) {
-			CommerceShippingMethod commerceShippingMethod =
-				(CommerceShippingMethod)result;
-
-			if ((groupId != commerceShippingMethod.getGroupId()) ||
-				!Objects.equals(
-					engineKey, commerceShippingMethod.getEngineKey())) {
-
-				result = null;
-			}
-		}
-
-		if (result == null) {
-			StringBundler sb = new StringBundler(4);
-
-			sb.append(_SQL_SELECT_COMMERCESHIPPINGMETHOD_WHERE);
-
-			sb.append(_FINDER_COLUMN_G_E_GROUPID_2);
-
-			boolean bindEngineKey = false;
-
-			if (engineKey.isEmpty()) {
-				sb.append(_FINDER_COLUMN_G_E_ENGINEKEY_3);
-			}
-			else {
-				bindEngineKey = true;
-
-				sb.append(_FINDER_COLUMN_G_E_ENGINEKEY_2);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(groupId);
-
-				if (bindEngineKey) {
-					queryPos.add(engineKey);
-				}
-
-				List<CommerceShippingMethod> list = query.list();
-
-				if (list.isEmpty()) {
-					if (useFinderCache) {
-						finderCache.putResult(
-							_finderPathFetchByG_E, finderArgs, list);
-					}
-				}
-				else {
-					CommerceShippingMethod commerceShippingMethod = list.get(0);
-
-					result = commerceShippingMethod;
-
-					cacheResult(commerceShippingMethod);
-				}
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		if (result instanceof List<?>) {
-			return null;
-		}
-		else {
-			return (CommerceShippingMethod)result;
-		}
-	}
-
-	/**
-	 * Removes the commerce shipping method where groupId = &#63; and engineKey = &#63; from the database.
-	 *
-	 * @param groupId the group ID
-	 * @param engineKey the engine key
-	 * @return the commerce shipping method that was removed
-	 */
-	@Override
-	public CommerceShippingMethod removeByG_E(long groupId, String engineKey)
-		throws NoSuchShippingMethodException {
-
-		CommerceShippingMethod commerceShippingMethod = findByG_E(
-			groupId, engineKey);
-
-		return remove(commerceShippingMethod);
-	}
-
-	/**
-	 * Returns the number of commerce shipping methods where groupId = &#63; and engineKey = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param engineKey the engine key
-	 * @return the number of matching commerce shipping methods
-	 */
-	@Override
-	public int countByG_E(long groupId, String engineKey) {
-		engineKey = Objects.toString(engineKey, "");
-
-		FinderPath finderPath = _finderPathCountByG_E;
-
-		Object[] finderArgs = new Object[] {groupId, engineKey};
-
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(3);
-
-			sb.append(_SQL_COUNT_COMMERCESHIPPINGMETHOD_WHERE);
-
-			sb.append(_FINDER_COLUMN_G_E_GROUPID_2);
-
-			boolean bindEngineKey = false;
-
-			if (engineKey.isEmpty()) {
-				sb.append(_FINDER_COLUMN_G_E_ENGINEKEY_3);
-			}
-			else {
-				bindEngineKey = true;
-
-				sb.append(_FINDER_COLUMN_G_E_ENGINEKEY_2);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(groupId);
-
-				if (bindEngineKey) {
-					queryPos.add(engineKey);
-				}
-
-				count = (Long)query.uniqueResult();
-
-				finderCache.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return count.intValue();
-	}
-
-	private static final String _FINDER_COLUMN_G_E_GROUPID_2 =
-		"commerceShippingMethod.groupId = ? AND ";
-
-	private static final String _FINDER_COLUMN_G_E_ENGINEKEY_2 =
-		"commerceShippingMethod.engineKey = ?";
-
-	private static final String _FINDER_COLUMN_G_E_ENGINEKEY_3 =
-		"(commerceShippingMethod.engineKey IS NULL OR commerceShippingMethod.engineKey = '')";
 
 	private FinderPath _finderPathWithPaginationFindByG_A;
 	private FinderPath _finderPathWithoutPaginationFindByG_A;
@@ -1388,6 +1133,257 @@ public class CommerceShippingMethodPersistenceImpl
 	private static final String _FINDER_COLUMN_G_A_ACTIVE_2 =
 		"commerceShippingMethod.active = ?";
 
+	private FinderPath _finderPathFetchByG_E;
+	private FinderPath _finderPathCountByG_E;
+
+	/**
+	 * Returns the commerce shipping method where groupId = &#63; and engineKey = &#63; or throws a <code>NoSuchShippingMethodException</code> if it could not be found.
+	 *
+	 * @param groupId the group ID
+	 * @param engineKey the engine key
+	 * @return the matching commerce shipping method
+	 * @throws NoSuchShippingMethodException if a matching commerce shipping method could not be found
+	 */
+	@Override
+	public CommerceShippingMethod findByG_E(long groupId, String engineKey)
+		throws NoSuchShippingMethodException {
+
+		CommerceShippingMethod commerceShippingMethod = fetchByG_E(
+			groupId, engineKey);
+
+		if (commerceShippingMethod == null) {
+			StringBundler sb = new StringBundler(6);
+
+			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+			sb.append("groupId=");
+			sb.append(groupId);
+
+			sb.append(", engineKey=");
+			sb.append(engineKey);
+
+			sb.append("}");
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(sb.toString());
+			}
+
+			throw new NoSuchShippingMethodException(sb.toString());
+		}
+
+		return commerceShippingMethod;
+	}
+
+	/**
+	 * Returns the commerce shipping method where groupId = &#63; and engineKey = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param groupId the group ID
+	 * @param engineKey the engine key
+	 * @return the matching commerce shipping method, or <code>null</code> if a matching commerce shipping method could not be found
+	 */
+	@Override
+	public CommerceShippingMethod fetchByG_E(long groupId, String engineKey) {
+		return fetchByG_E(groupId, engineKey, true);
+	}
+
+	/**
+	 * Returns the commerce shipping method where groupId = &#63; and engineKey = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	 *
+	 * @param groupId the group ID
+	 * @param engineKey the engine key
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the matching commerce shipping method, or <code>null</code> if a matching commerce shipping method could not be found
+	 */
+	@Override
+	public CommerceShippingMethod fetchByG_E(
+		long groupId, String engineKey, boolean useFinderCache) {
+
+		engineKey = Objects.toString(engineKey, "");
+
+		Object[] finderArgs = null;
+
+		if (useFinderCache) {
+			finderArgs = new Object[] {groupId, engineKey};
+		}
+
+		Object result = null;
+
+		if (useFinderCache) {
+			result = finderCache.getResult(_finderPathFetchByG_E, finderArgs);
+		}
+
+		if (result instanceof CommerceShippingMethod) {
+			CommerceShippingMethod commerceShippingMethod =
+				(CommerceShippingMethod)result;
+
+			if ((groupId != commerceShippingMethod.getGroupId()) ||
+				!Objects.equals(
+					engineKey, commerceShippingMethod.getEngineKey())) {
+
+				result = null;
+			}
+		}
+
+		if (result == null) {
+			StringBundler sb = new StringBundler(4);
+
+			sb.append(_SQL_SELECT_COMMERCESHIPPINGMETHOD_WHERE);
+
+			sb.append(_FINDER_COLUMN_G_E_GROUPID_2);
+
+			boolean bindEngineKey = false;
+
+			if (engineKey.isEmpty()) {
+				sb.append(_FINDER_COLUMN_G_E_ENGINEKEY_3);
+			}
+			else {
+				bindEngineKey = true;
+
+				sb.append(_FINDER_COLUMN_G_E_ENGINEKEY_2);
+			}
+
+			String sql = sb.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query query = session.createQuery(sql);
+
+				QueryPos queryPos = QueryPos.getInstance(query);
+
+				queryPos.add(groupId);
+
+				if (bindEngineKey) {
+					queryPos.add(engineKey);
+				}
+
+				List<CommerceShippingMethod> list = query.list();
+
+				if (list.isEmpty()) {
+					if (useFinderCache) {
+						finderCache.putResult(
+							_finderPathFetchByG_E, finderArgs, list);
+					}
+				}
+				else {
+					CommerceShippingMethod commerceShippingMethod = list.get(0);
+
+					result = commerceShippingMethod;
+
+					cacheResult(commerceShippingMethod);
+				}
+			}
+			catch (Exception exception) {
+				throw processException(exception);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		if (result instanceof List<?>) {
+			return null;
+		}
+		else {
+			return (CommerceShippingMethod)result;
+		}
+	}
+
+	/**
+	 * Removes the commerce shipping method where groupId = &#63; and engineKey = &#63; from the database.
+	 *
+	 * @param groupId the group ID
+	 * @param engineKey the engine key
+	 * @return the commerce shipping method that was removed
+	 */
+	@Override
+	public CommerceShippingMethod removeByG_E(long groupId, String engineKey)
+		throws NoSuchShippingMethodException {
+
+		CommerceShippingMethod commerceShippingMethod = findByG_E(
+			groupId, engineKey);
+
+		return remove(commerceShippingMethod);
+	}
+
+	/**
+	 * Returns the number of commerce shipping methods where groupId = &#63; and engineKey = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param engineKey the engine key
+	 * @return the number of matching commerce shipping methods
+	 */
+	@Override
+	public int countByG_E(long groupId, String engineKey) {
+		engineKey = Objects.toString(engineKey, "");
+
+		FinderPath finderPath = _finderPathCountByG_E;
+
+		Object[] finderArgs = new Object[] {groupId, engineKey};
+
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
+
+		if (count == null) {
+			StringBundler sb = new StringBundler(3);
+
+			sb.append(_SQL_COUNT_COMMERCESHIPPINGMETHOD_WHERE);
+
+			sb.append(_FINDER_COLUMN_G_E_GROUPID_2);
+
+			boolean bindEngineKey = false;
+
+			if (engineKey.isEmpty()) {
+				sb.append(_FINDER_COLUMN_G_E_ENGINEKEY_3);
+			}
+			else {
+				bindEngineKey = true;
+
+				sb.append(_FINDER_COLUMN_G_E_ENGINEKEY_2);
+			}
+
+			String sql = sb.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query query = session.createQuery(sql);
+
+				QueryPos queryPos = QueryPos.getInstance(query);
+
+				queryPos.add(groupId);
+
+				if (bindEngineKey) {
+					queryPos.add(engineKey);
+				}
+
+				count = (Long)query.uniqueResult();
+
+				finderCache.putResult(finderPath, finderArgs, count);
+			}
+			catch (Exception exception) {
+				throw processException(exception);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		return count.intValue();
+	}
+
+	private static final String _FINDER_COLUMN_G_E_GROUPID_2 =
+		"commerceShippingMethod.groupId = ? AND ";
+
+	private static final String _FINDER_COLUMN_G_E_ENGINEKEY_2 =
+		"commerceShippingMethod.engineKey = ?";
+
+	private static final String _FINDER_COLUMN_G_E_ENGINEKEY_3 =
+		"(commerceShippingMethod.engineKey IS NULL OR commerceShippingMethod.engineKey = '')";
+
 	public CommerceShippingMethodPersistenceImpl() {
 		Map<String, String> dbColumnNames = new HashMap<String, String>();
 
@@ -1423,6 +1419,8 @@ public class CommerceShippingMethodPersistenceImpl
 			commerceShippingMethod);
 	}
 
+	private int _valueObjectFinderCacheListThreshold;
+
 	/**
 	 * Caches the commerce shipping methods in the entity cache if it is enabled.
 	 *
@@ -1431,6 +1429,14 @@ public class CommerceShippingMethodPersistenceImpl
 	@Override
 	public void cacheResult(
 		List<CommerceShippingMethod> commerceShippingMethods) {
+
+		if ((_valueObjectFinderCacheListThreshold == 0) ||
+			((_valueObjectFinderCacheListThreshold > 0) &&
+			 (commerceShippingMethods.size() >
+				 _valueObjectFinderCacheListThreshold))) {
+
+			return;
+		}
 
 		for (CommerceShippingMethod commerceShippingMethod :
 				commerceShippingMethods) {
@@ -1645,25 +1651,25 @@ public class CommerceShippingMethodPersistenceImpl
 		ServiceContext serviceContext =
 			ServiceContextThreadLocal.getServiceContext();
 
-		Date now = new Date();
+		Date date = new Date();
 
 		if (isNew && (commerceShippingMethod.getCreateDate() == null)) {
 			if (serviceContext == null) {
-				commerceShippingMethod.setCreateDate(now);
+				commerceShippingMethod.setCreateDate(date);
 			}
 			else {
 				commerceShippingMethod.setCreateDate(
-					serviceContext.getCreateDate(now));
+					serviceContext.getCreateDate(date));
 			}
 		}
 
 		if (!commerceShippingMethodModelImpl.hasSetModifiedDate()) {
 			if (serviceContext == null) {
-				commerceShippingMethod.setModifiedDate(now);
+				commerceShippingMethod.setModifiedDate(date);
 			}
 			else {
 				commerceShippingMethod.setModifiedDate(
-					serviceContext.getModifiedDate(now));
+					serviceContext.getModifiedDate(date));
 			}
 		}
 
@@ -1967,15 +1973,8 @@ public class CommerceShippingMethodPersistenceImpl
 	 * Initializes the commerce shipping method persistence.
 	 */
 	public void afterPropertiesSet() {
-		Bundle bundle = FrameworkUtil.getBundle(
-			CommerceShippingMethodPersistenceImpl.class);
-
-		_bundleContext = bundle.getBundleContext();
-
-		_argumentsResolverServiceRegistration = _bundleContext.registerService(
-			ArgumentsResolver.class,
-			new CommerceShippingMethodModelArgumentsResolver(),
-			new HashMapDictionary<>());
+		_valueObjectFinderCacheListThreshold = GetterUtil.getInteger(
+			PropsUtil.get(PropsKeys.VALUE_OBJECT_FINDER_CACHE_LIST_THRESHOLD));
 
 		_finderPathWithPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
@@ -2007,16 +2006,6 @@ public class CommerceShippingMethodPersistenceImpl
 			new String[] {Long.class.getName()}, new String[] {"groupId"},
 			false);
 
-		_finderPathFetchByG_E = new FinderPath(
-			FINDER_CLASS_NAME_ENTITY, "fetchByG_E",
-			new String[] {Long.class.getName(), String.class.getName()},
-			new String[] {"groupId", "engineKey"}, true);
-
-		_finderPathCountByG_E = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_E",
-			new String[] {Long.class.getName(), String.class.getName()},
-			new String[] {"groupId", "engineKey"}, false);
-
 		_finderPathWithPaginationFindByG_A = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_A",
 			new String[] {
@@ -2035,15 +2024,41 @@ public class CommerceShippingMethodPersistenceImpl
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_A",
 			new String[] {Long.class.getName(), Boolean.class.getName()},
 			new String[] {"groupId", "active_"}, false);
+
+		_finderPathFetchByG_E = new FinderPath(
+			FINDER_CLASS_NAME_ENTITY, "fetchByG_E",
+			new String[] {Long.class.getName(), String.class.getName()},
+			new String[] {"groupId", "engineKey"}, true);
+
+		_finderPathCountByG_E = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_E",
+			new String[] {Long.class.getName(), String.class.getName()},
+			new String[] {"groupId", "engineKey"}, false);
+
+		_setCommerceShippingMethodUtilPersistence(this);
 	}
 
 	public void destroy() {
-		entityCache.removeCache(CommerceShippingMethodImpl.class.getName());
+		_setCommerceShippingMethodUtilPersistence(null);
 
-		_argumentsResolverServiceRegistration.unregister();
+		entityCache.removeCache(CommerceShippingMethodImpl.class.getName());
 	}
 
-	private BundleContext _bundleContext;
+	private void _setCommerceShippingMethodUtilPersistence(
+		CommerceShippingMethodPersistence commerceShippingMethodPersistence) {
+
+		try {
+			Field field = CommerceShippingMethodUtil.class.getDeclaredField(
+				"_persistence");
+
+			field.setAccessible(true);
+
+			field.set(null, commerceShippingMethodPersistence);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
 
 	@ServiceReference(type = EntityCache.class)
 	protected EntityCache entityCache;
@@ -2081,101 +2096,6 @@ public class CommerceShippingMethodPersistenceImpl
 	@Override
 	protected FinderCache getFinderCache() {
 		return finderCache;
-	}
-
-	private ServiceRegistration<ArgumentsResolver>
-		_argumentsResolverServiceRegistration;
-
-	private static class CommerceShippingMethodModelArgumentsResolver
-		implements ArgumentsResolver {
-
-		@Override
-		public Object[] getArguments(
-			FinderPath finderPath, BaseModel<?> baseModel, boolean checkColumn,
-			boolean original) {
-
-			String[] columnNames = finderPath.getColumnNames();
-
-			if ((columnNames == null) || (columnNames.length == 0)) {
-				if (baseModel.isNew()) {
-					return FINDER_ARGS_EMPTY;
-				}
-
-				return null;
-			}
-
-			CommerceShippingMethodModelImpl commerceShippingMethodModelImpl =
-				(CommerceShippingMethodModelImpl)baseModel;
-
-			long columnBitmask =
-				commerceShippingMethodModelImpl.getColumnBitmask();
-
-			if (!checkColumn || (columnBitmask == 0)) {
-				return _getValue(
-					commerceShippingMethodModelImpl, columnNames, original);
-			}
-
-			Long finderPathColumnBitmask = _finderPathColumnBitmasksCache.get(
-				finderPath);
-
-			if (finderPathColumnBitmask == null) {
-				finderPathColumnBitmask = 0L;
-
-				for (String columnName : columnNames) {
-					finderPathColumnBitmask |=
-						commerceShippingMethodModelImpl.getColumnBitmask(
-							columnName);
-				}
-
-				_finderPathColumnBitmasksCache.put(
-					finderPath, finderPathColumnBitmask);
-			}
-
-			if ((columnBitmask & finderPathColumnBitmask) != 0) {
-				return _getValue(
-					commerceShippingMethodModelImpl, columnNames, original);
-			}
-
-			return null;
-		}
-
-		@Override
-		public String getClassName() {
-			return CommerceShippingMethodImpl.class.getName();
-		}
-
-		@Override
-		public String getTableName() {
-			return CommerceShippingMethodTable.INSTANCE.getTableName();
-		}
-
-		private Object[] _getValue(
-			CommerceShippingMethodModelImpl commerceShippingMethodModelImpl,
-			String[] columnNames, boolean original) {
-
-			Object[] arguments = new Object[columnNames.length];
-
-			for (int i = 0; i < arguments.length; i++) {
-				String columnName = columnNames[i];
-
-				if (original) {
-					arguments[i] =
-						commerceShippingMethodModelImpl.getColumnOriginalValue(
-							columnName);
-				}
-				else {
-					arguments[i] =
-						commerceShippingMethodModelImpl.getColumnValue(
-							columnName);
-				}
-			}
-
-			return arguments;
-		}
-
-		private static Map<FinderPath, Long> _finderPathColumnBitmasksCache =
-			new ConcurrentHashMap<>();
-
 	}
 
 }

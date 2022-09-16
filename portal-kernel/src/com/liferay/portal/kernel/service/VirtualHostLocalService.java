@@ -134,6 +134,9 @@ public interface VirtualHostLocalService
 	public <T> T dslQuery(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
 
 	/**
@@ -272,8 +275,10 @@ public interface VirtualHostLocalService
 	public List<VirtualHost> getVirtualHosts(int start, int end);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<VirtualHost> getVirtualHosts(long companyId, long layoutSetId)
-		throws PortalException;
+	public List<VirtualHost> getVirtualHosts(long companyId);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<VirtualHost> getVirtualHosts(long companyId, long layoutSetId);
 
 	/**
 	 * Returns the number of virtual hosts.
@@ -282,6 +287,10 @@ public interface VirtualHostLocalService
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getVirtualHostsCount();
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public long getVirtualHostsCount(
+		long excludedLayoutSetId, String[] virtualHostNames);
 
 	/**
 	 * @deprecated As of Mueller (7.2.x), replaced by {@link

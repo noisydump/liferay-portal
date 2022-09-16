@@ -20,7 +20,7 @@
 assetPublisherDisplayContext.setPageKeywords();
 
 if (assetPublisherDisplayContext.isEnableTagBasedNavigation() && !assetPublisherDisplayContext.isSelectionStyleAssetList() && assetPublisherDisplayContext.isSelectionStyleManual() && (ArrayUtil.isNotEmpty(assetPublisherDisplayContext.getAllAssetCategoryIds()) || ArrayUtil.isNotEmpty(assetPublisherDisplayContext.getAllAssetTagNames()))) {
-	assetPublisherDisplayContext.setSelectionStyle("dynamic");
+	assetPublisherDisplayContext.setSelectionStyle(AssetPublisherSelectionStyleConstants.TYPE_DYNAMIC);
 }
 %>
 
@@ -86,6 +86,7 @@ if (assetPublisherDisplayContext.isEnableTagBasedNavigation() && !assetPublisher
 <c:if test="<%= assetPublisherDisplayContext.isShowMetadataDescriptions() %>">
 	<liferay-asset:categorization-filter
 		assetType="content"
+		groupIds="<%= assetPublisherDisplayContext.getGroupIds() %>"
 		portletURL="<%= assetPublisherDisplayContext.getPortletURL() %>"
 	/>
 </c:if>
@@ -123,13 +124,13 @@ if (assetPublisherDisplayContext.isEnableTagBasedNavigation() && !assetPublisher
 
 			<div class="alert alert-info text-center">
 				<c:choose>
-					<c:when test="<%= assetPublisherDisplayContext.isSelectionStyleAssetList() && (assetPublisherDisplayContext.fetchAssetListEntry() == null) && !portletName.equals(AssetPublisherPortletKeys.RELATED_ASSETS) %>">
+					<c:when test="<%= assetPublisherDisplayContext.isSelectionStyleAssetList() && (assetPublisherDisplayContext.fetchAssetListEntry() == null) && Validator.isNull(assetPublisherDisplayContext.getInfoListProviderKey()) && !portletName.equals(AssetPublisherPortletKeys.RELATED_ASSETS) %>">
 						<div>
 							<liferay-ui:message key="this-application-is-not-visible-to-users-yet" />
 						</div>
 
 						<div>
-							<aui:a href="javascript:;" onClick="<%= portletDisplay.getURLConfigurationJS() %>"><liferay-ui:message key="select-a-collection-to-make-it-visible" /></aui:a>
+							<aui:a href="javascript:void(0);" onClick="<%= portletDisplay.getURLConfigurationJS() %>"><liferay-ui:message key="select-a-collection-to-make-it-visible" /></aui:a>
 						</div>
 					</c:when>
 					<c:when test="<%= !portletName.equals(AssetPublisherPortletKeys.RELATED_ASSETS) %>">

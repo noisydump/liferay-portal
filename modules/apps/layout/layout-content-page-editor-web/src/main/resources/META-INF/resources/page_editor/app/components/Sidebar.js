@@ -15,23 +15,28 @@
 import {ClayButtonWithIcon, default as ClayButton} from '@clayui/button';
 import ClayIcon from '@clayui/icon';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
-import {ClayTooltipProvider} from '@clayui/tooltip';
+import {
+	ReactPortal,
+	useIsMounted,
+	useStateSafe,
+} from '@liferay/frontend-js-react-web';
 import classNames from 'classnames';
-import {useIsMounted, useStateSafe} from 'frontend-js-react-web';
-import React from 'react';
-import {createPortal} from 'react-dom';
+import React, {useRef} from 'react';
 
+import {useId} from '../../core/hooks/useId';
 import useLazy from '../../core/hooks/useLazy';
 import useLoad from '../../core/hooks/useLoad';
 import usePlugins from '../../core/hooks/usePlugins';
+import {useSessionState} from '../../core/hooks/useSessionState';
 import * as Actions from '../actions/index';
 import {config} from '../config/index';
+import {useSelectItem} from '../contexts/ControlsContext';
+import {useDispatch, useSelector} from '../contexts/StoreContext';
 import selectAvailablePanels from '../selectors/selectAvailablePanels';
-import selectAvailableSidebarPanels from '../selectors/selectAvailableSidebarPanels';
-import {useDispatch, useSelector} from '../store/index';
-import {useDropClear} from '../utils/dragAndDrop/useDragAndDrop';
-import {useId} from '../utils/useId';
-import {useSelectItem} from './Controls';
+import selectItemConfigurationOpen from '../selectors/selectItemConfigurationOpen';
+import selectSidebarIsOpened from '../selectors/selectSidebarIsOpened';
+import switchSidebarPanel from '../thunks/switchSidebarPanel';
+import {useDropClear} from '../utils/drag-and-drop/useDragAndDrop';
 
 const {Suspense, useCallback, useEffect} = React;
 
@@ -52,7 +57,9 @@ const swallow = [(value) => value, (_error) => undefined];
 const getActivePanelData = ({panelId, panels, sidebarPanels}) => {
 	let sidebarPanelId = panelId;
 
-	let panel = sidebarPanels[sidebarPanelId];
+	let panel = panels.some((panel) => panel.includes(sidebarPanelId))
+		? sidebarPanels[sidebarPanelId]
+		: null;
 
 	if (!panel) {
 		sidebarPanelId = panels[0][0];
@@ -62,6 +69,10 @@ const getActivePanelData = ({panelId, panels, sidebarPanels}) => {
 	return {panel, sidebarPanelId};
 };
 
+export const MAX_SIDEBAR_WIDTH = 500;
+export const MIN_SIZEBAR_WIDTH = 280;
+export const SIDEBAR_WIDTH_RESIZE_STEP = 20;
+
 export default function Sidebar() {
 	const dropClearRef = useDropClear();
 	const [hasError, setHasError] = useStateSafe(false);
@@ -69,19 +80,29 @@ export default function Sidebar() {
 	const dispatch = useDispatch();
 	const isMounted = useIsMounted();
 	const load = useLoad();
+	const [resizing, setResizing] = useStateSafe(false);
 	const selectItem = useSelectItem();
+	const separatorRef = useRef();
+	const sidebarContentId = useId();
 	const sidebarId = useId();
 	const store = useSelector((state) => state);
 
-	const panels = useSelector(selectAvailablePanels(config.panels));
-	const sidebarPanels = useSelector(
-		selectAvailableSidebarPanels(config.sidebarPanels)
+	const [sidebarWidth, setSidebarWidth] = useSessionState(
+		`${config.portletNamespace}_sidebar-width`,
+		MIN_SIZEBAR_WIDTH
 	);
-	const sidebarOpen = store.sidebar.open;
+
+	const sidebarWidthRef = useRef(sidebarWidth);
+	sidebarWidthRef.current = sidebarWidth;
+
+	const panels = useSelector(selectAvailablePanels(config.panels));
+	const sidebarHidden = store.sidebar.hidden;
+	const sidebarOpen = selectSidebarIsOpened(store);
+	const itemConfigurationOpen = selectItemConfigurationOpen(store);
 	const {panel, sidebarPanelId} = getActivePanelData({
 		panelId: store.sidebar.panelId,
 		panels,
-		sidebarPanels,
+		sidebarPanels: config.sidebarPanels,
 	});
 
 	const promise = panel
@@ -129,7 +150,7 @@ export default function Sidebar() {
 			}
 			else if (sidebarPanelId) {
 				dispatch(
-					Actions.switchSidebarPanel({
+					switchSidebarPanel({
 						sidebarOpen: false,
 						sidebarPanelId: null,
 					})
@@ -141,33 +162,103 @@ export default function Sidebar() {
 	);
 
 	useEffect(() => {
-		const sideNavigation = Liferay.SideNavigation.instance(
-			document.querySelector('.product-menu-toggle')
+		const wrapper = document.getElementById('wrapper');
+
+		if (!wrapper) {
+			return;
+		}
+
+		wrapper.classList.add('page-editor__wrapper');
+
+		wrapper.classList.toggle(
+			'page-editor__wrapper--padded-start',
+			sidebarOpen
 		);
 
-		if (sideNavigation) {
-			const onHandleSidebar = (open) => {
-				dispatch(
-					Actions.switchSidebarPanel({
-						sidebarOpen: open,
-					})
-				);
-			};
+		wrapper.classList.toggle(
+			'page-editor__wrapper--sidebar--hidden',
+			sidebarHidden
+		);
 
-			if (!sideNavigation.visible()) {
-				onHandleSidebar(true);
-			}
+		wrapper.classList.toggle(
+			'page-editor__wrapper--padded-end',
+			itemConfigurationOpen
+		);
 
-			const sideNavigationListener = sideNavigation.on(
-				'openStart.lexicon.sidenav',
-				() => onHandleSidebar(false)
-			);
+		return () => {
+			wrapper.classList.remove('page-editor__wrapper');
+			wrapper.classList.remove('page-editor__wrapper--padded-start');
+			wrapper.classList.remove('page-editor__wrapper--padded-end');
+		};
+	}, [sidebarOpen, itemConfigurationOpen]);
 
-			return () => {
-				sideNavigationListener.removeListener();
-			};
+	useEffect(() => {
+		const separatorElement = separatorRef.current;
+
+		if (!separatorElement) {
+			return;
 		}
-	}, []);
+
+		let initialSidebarWidth;
+		let initialCursorPosition;
+
+		const handleMouseMove = (event) => {
+			const cursorDelta = event.clientX - initialCursorPosition;
+
+			if (
+				Liferay.Language.direction?.[themeDisplay?.getLanguageId()] ===
+				'rtl'
+			) {
+				setSidebarWidth(
+					Math.min(
+						MAX_SIDEBAR_WIDTH,
+						Math.max(
+							MIN_SIZEBAR_WIDTH,
+							initialSidebarWidth - cursorDelta
+						)
+					)
+				);
+			}
+			else {
+				setSidebarWidth(
+					Math.min(
+						MAX_SIDEBAR_WIDTH,
+						Math.max(
+							MIN_SIZEBAR_WIDTH,
+							initialSidebarWidth + cursorDelta
+						)
+					)
+				);
+			}
+		};
+
+		const stopResizing = () => {
+			setResizing(false);
+			document.body.removeEventListener('mousemove', handleMouseMove);
+			document.body.removeEventListener('mouseleave', stopResizing);
+			document.body.removeEventListener('mouseup', stopResizing);
+		};
+
+		const handleMouseDown = (event) => {
+			setResizing(true);
+
+			event.preventDefault();
+
+			initialSidebarWidth = sidebarWidthRef.current;
+			initialCursorPosition = event.clientX;
+
+			document.body.addEventListener('mousemove', handleMouseMove);
+			document.body.addEventListener('mouseleave', stopResizing);
+			document.body.addEventListener('mouseup', stopResizing);
+		};
+
+		separatorElement.addEventListener('mousedown', handleMouseDown);
+
+		return () => {
+			stopResizing();
+			separatorElement.removeEventListener('mousedown', handleMouseDown);
+		};
+	}, [separatorRef, setResizing, setSidebarWidth, sidebarWidthRef]);
 
 	const SidebarPanel = useLazy(
 		useCallback(({instance}) => {
@@ -189,37 +280,88 @@ export default function Sidebar() {
 	const handleClick = (panel) => {
 		const open =
 			panel.sidebarPanelId === sidebarPanelId ? !sidebarOpen : true;
-		const productMenuToggle = document.querySelector(
-			'.product-menu-toggle'
-		);
-
-		if (productMenuToggle && !sidebarOpen) {
-			Liferay.SideNavigation.hide(productMenuToggle);
-		}
 
 		dispatch(
-			Actions.switchSidebarPanel({
+			switchSidebarPanel({
 				sidebarOpen: open,
 				sidebarPanelId: panel.sidebarPanelId,
 			})
 		);
 	};
 
-	return createPortal(
-		<ClayTooltipProvider>
+	const handleSeparatorKeyDown = (event) => {
+		if (
+			Liferay.Language.direction?.[themeDisplay?.getLanguageId()] ===
+			'rtl'
+		) {
+			if (event.key === 'ArrowLeft') {
+				setSidebarWidth(
+					Math.min(
+						MAX_SIDEBAR_WIDTH,
+						sidebarWidth + SIDEBAR_WIDTH_RESIZE_STEP
+					)
+				);
+			}
+			else if (event.key === 'ArrowRight') {
+				setSidebarWidth(
+					Math.max(
+						MIN_SIZEBAR_WIDTH,
+						sidebarWidth - SIDEBAR_WIDTH_RESIZE_STEP
+					)
+				);
+			}
+			else if (event.key === 'Home') {
+				setSidebarWidth(MIN_SIZEBAR_WIDTH);
+			}
+			else if (event.key === 'End') {
+				setSidebarWidth(MAX_SIDEBAR_WIDTH);
+			}
+		}
+		else {
+			if (event.key === 'ArrowLeft') {
+				setSidebarWidth(
+					Math.max(
+						MIN_SIZEBAR_WIDTH,
+						sidebarWidth - SIDEBAR_WIDTH_RESIZE_STEP
+					)
+				);
+			}
+			else if (event.key === 'ArrowRight') {
+				setSidebarWidth(
+					Math.min(
+						MAX_SIDEBAR_WIDTH,
+						sidebarWidth + SIDEBAR_WIDTH_RESIZE_STEP
+					)
+				);
+			}
+			else if (event.key === 'Home') {
+				setSidebarWidth(MIN_SIZEBAR_WIDTH);
+			}
+			else if (event.key === 'End') {
+				setSidebarWidth(MAX_SIDEBAR_WIDTH);
+			}
+		}
+	};
+
+	return (
+		<ReactPortal className="cadmin">
 			<div
-				className="page-editor__sidebar page-editor__theme-adapter-forms"
+				className={classNames(
+					'page-editor__sidebar page-editor__theme-adapter-forms'
+				)}
 				ref={dropClearRef}
+				style={{'--sidebar-content-width': `${sidebarWidth}px`}}
 			>
 				<div
 					className={classNames('page-editor__sidebar__buttons', {
-						light: true,
+						'light': true,
+						'page-editor__sidebar__buttons--hidden': sidebarHidden,
 					})}
 					onClick={deselectItem}
 				>
 					{panels.reduce((elements, group, groupIndex) => {
 						const buttons = group.map((panelId) => {
-							const panel = sidebarPanels[panelId];
+							const panel = config.sidebarPanels[panelId];
 
 							const active =
 								sidebarOpen && sidebarPanelId === panelId;
@@ -282,15 +424,17 @@ export default function Sidebar() {
 						}
 					}, [])}
 				</div>
+
 				<div
 					className={classNames({
 						'page-editor__sidebar__content': true,
 						'page-editor__sidebar__content--open': sidebarOpen,
-						rtl:
-							config.languageDirection[
+						'rtl':
+							Liferay.Language.direction?.[
 								themeDisplay?.getLanguageId()
 							] === 'rtl',
 					})}
+					id={sidebarContentId}
 					onClick={deselectItem}
 				>
 					{hasError ? (
@@ -300,7 +444,7 @@ export default function Sidebar() {
 								displayType="secondary"
 								onClick={() => {
 									dispatch(
-										Actions.switchSidebarPanel({
+										switchSidebarPanel({
 											sidebarOpen: false,
 											sidebarPanelId:
 												panels[0] && panels[0][0],
@@ -319,7 +463,14 @@ export default function Sidebar() {
 								setHasError(true);
 							}}
 						>
-							<Suspense fallback={<ClayLoadingIndicator />}>
+							<Suspense
+								fallback={
+									<ClayLoadingIndicator
+										className="my-4"
+										small
+									/>
+								}
+							>
 								<SidebarPanel
 									getInstance={getInstance}
 									pluginId={sidebarPanelId}
@@ -327,10 +478,25 @@ export default function Sidebar() {
 							</Suspense>
 						</ErrorBoundary>
 					)}
+
+					<div
+						aria-controls={sidebarContentId}
+						aria-label={Liferay.Language.get('resize-sidebar')}
+						aria-orientation="vertical"
+						aria-valuemax={MAX_SIDEBAR_WIDTH}
+						aria-valuemin={MIN_SIZEBAR_WIDTH}
+						aria-valuenow={sidebarWidth}
+						className={classNames('page-editor__sidebar__resizer', {
+							'page-editor__sidebar__resizer--resizing': resizing,
+						})}
+						onKeyDown={handleSeparatorKeyDown}
+						ref={separatorRef}
+						role="separator"
+						tabIndex={0}
+					/>
 				</div>
 			</div>
-		</ClayTooltipProvider>,
-		document.body
+		</ReactPortal>
 	);
 }
 

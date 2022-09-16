@@ -19,10 +19,10 @@ import com.liferay.gradle.plugins.defaults.internal.util.GradlePluginsDefaultsUt
 import com.liferay.gradle.plugins.defaults.internal.util.GradleUtil;
 import com.liferay.gradle.plugins.node.NodeExtension;
 import com.liferay.gradle.plugins.node.NodePlugin;
-import com.liferay.gradle.plugins.node.tasks.ExecutePackageManagerTask;
-import com.liferay.gradle.plugins.node.tasks.NpmInstallTask;
-import com.liferay.gradle.plugins.node.tasks.PackageRunTestTask;
-import com.liferay.gradle.plugins.node.tasks.PublishNodeModuleTask;
+import com.liferay.gradle.plugins.node.task.ExecutePackageManagerTask;
+import com.liferay.gradle.plugins.node.task.NpmInstallTask;
+import com.liferay.gradle.plugins.node.task.PackageRunTestTask;
+import com.liferay.gradle.plugins.node.task.PublishNodeModuleTask;
 import com.liferay.gradle.plugins.util.PortalTools;
 import com.liferay.gradle.util.Validator;
 
@@ -69,12 +69,22 @@ public class NodeDefaultsPlugin extends BaseDefaultsPlugin<NodePlugin> {
 
 			nodeExtension.setGlobal(false);
 			nodeExtension.setNodeVersion("6.6.0");
+			nodeExtension.setNpmVersion("6.4.1");
 		}
 		else if (PortalTools.PORTAL_VERSION_7_1_X.equals(portalVersion)) {
 			NodeExtension nodeExtension = GradleUtil.getExtension(
 				project, NodeExtension.class);
 
 			nodeExtension.setNodeVersion("8.15.0");
+			nodeExtension.setNpmVersion("6.4.1");
+		}
+		else if (PortalTools.PORTAL_VERSION_7_2_X.equals(portalVersion) ||
+				 PortalTools.PORTAL_VERSION_7_3_X.equals(portalVersion)) {
+
+			NodeExtension nodeExtension = GradleUtil.getExtension(
+				project, NodeExtension.class);
+
+			nodeExtension.setNodeVersion("10.15.3");
 			nodeExtension.setNpmVersion("6.4.1");
 		}
 	}

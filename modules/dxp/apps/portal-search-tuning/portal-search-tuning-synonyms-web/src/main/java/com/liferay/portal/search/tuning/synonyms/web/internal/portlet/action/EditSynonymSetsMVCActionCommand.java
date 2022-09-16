@@ -14,17 +14,18 @@
 
 package com.liferay.portal.search.tuning.synonyms.web.internal.portlet.action;
 
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.search.index.IndexNameBuilder;
+import com.liferay.portal.search.tuning.synonyms.index.name.SynonymSetIndexName;
+import com.liferay.portal.search.tuning.synonyms.index.name.SynonymSetIndexNameBuilder;
 import com.liferay.portal.search.tuning.synonyms.web.internal.constants.SynonymsPortletKeys;
 import com.liferay.portal.search.tuning.synonyms.web.internal.index.SynonymSet;
 import com.liferay.portal.search.tuning.synonyms.web.internal.index.SynonymSetIndexReader;
-import com.liferay.portal.search.tuning.synonyms.web.internal.index.SynonymSetIndexWriter;
-import com.liferay.portal.search.tuning.synonyms.web.internal.index.name.SynonymSetIndexName;
-import com.liferay.portal.search.tuning.synonyms.web.internal.index.name.SynonymSetIndexNameBuilder;
+import com.liferay.portal.search.tuning.synonyms.web.internal.storage.SynonymSetStorageAdapter;
 import com.liferay.portal.search.tuning.synonyms.web.internal.synchronizer.IndexToFilterSynchronizer;
 
 import java.util.Optional;
@@ -53,18 +54,7 @@ public class EditSynonymSetsMVCActionCommand extends BaseMVCActionCommand {
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
 
-		long companyId = portal.getCompanyId(actionRequest);
-
-		SynonymSetIndexName synonymSetIndexName =
-			_synonymSetIndexNameBuilder.getSynonymSetIndexName(companyId);
-
-		updateSynonymSetIndex(
-			synonymSetIndexName,
-			ParamUtil.getString(actionRequest, "synonymSet"),
-			getSynonymSetOptional(synonymSetIndexName, actionRequest));
-
-		_indexToFilterSynchronizer.copyToFilter(
-			synonymSetIndexName, _indexNameBuilder.getIndexName(companyId));
+		updateSynonymSet(actionRequest);
 
 		sendRedirect(actionRequest, actionResponse);
 	}
@@ -79,9 +69,28 @@ public class EditSynonymSetsMVCActionCommand extends BaseMVCActionCommand {
 		);
 	}
 
+	protected void updateSynonymSet(ActionRequest actionRequest)
+		throws PortalException {
+
+		long companyId = portal.getCompanyId(actionRequest);
+
+		SynonymSetIndexName synonymSetIndexName =
+			_synonymSetIndexNameBuilder.getSynonymSetIndexName(companyId);
+
+		updateSynonymSetIndex(
+			synonymSetIndexName,
+			ParamUtil.getString(actionRequest, "synonymSet"),
+			getSynonymSetOptional(synonymSetIndexName, actionRequest));
+
+		_indexToFilterSynchronizer.copyToFilter(
+			synonymSetIndexName, _indexNameBuilder.getIndexName(companyId),
+			false);
+	}
+
 	protected void updateSynonymSetIndex(
-		SynonymSetIndexName synonymSetIndexName, String synonyms,
-		Optional<SynonymSet> synonymSetOptional) {
+			SynonymSetIndexName synonymSetIndexName, String synonyms,
+			Optional<SynonymSet> synonymSetOptional)
+		throws PortalException {
 
 		SynonymSet.SynonymSetBuilder synonymSetBuilder =
 			new SynonymSet.SynonymSetBuilder();
@@ -89,14 +98,15 @@ public class EditSynonymSetsMVCActionCommand extends BaseMVCActionCommand {
 		synonymSetBuilder.synonyms(synonyms);
 
 		synonymSetOptional.ifPresent(
-			synonymSet -> synonymSetBuilder.id(synonymSet.getId()));
+			synonymSet -> synonymSetBuilder.synonymSetDocumentId(
+				synonymSet.getSynonymSetDocumentId()));
 
 		if (synonymSetOptional.isPresent()) {
-			_synonymSetIndexWriter.update(
+			_synonymSetStorageAdapter.update(
 				synonymSetIndexName, synonymSetBuilder.build());
 		}
 		else {
-			_synonymSetIndexWriter.create(
+			_synonymSetStorageAdapter.create(
 				synonymSetIndexName, synonymSetBuilder.build());
 		}
 	}
@@ -117,6 +127,6 @@ public class EditSynonymSetsMVCActionCommand extends BaseMVCActionCommand {
 	private SynonymSetIndexReader _synonymSetIndexReader;
 
 	@Reference
-	private SynonymSetIndexWriter _synonymSetIndexWriter;
+	private SynonymSetStorageAdapter _synonymSetStorageAdapter;
 
 }

@@ -35,9 +35,14 @@ public interface NodeExecutor {
 			List<PathElement> remainingPathElements)
 		throws PortalException;
 
-	public void executeTimer(
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
+	 */
+	@Deprecated
+	public default void executeTimer(
 			KaleoNode currentKaleoNode, ExecutionContext executionContext)
-		throws PortalException;
+		throws PortalException {
+	}
 
 	public void exit(
 			KaleoNode currentKaleoNode, ExecutionContext executionContext,

@@ -20,14 +20,20 @@ import com.liferay.change.tracking.model.CTCollection;
 import com.liferay.change.tracking.model.CTEntry;
 import com.liferay.change.tracking.service.CTEntryLocalService;
 import com.liferay.change.tracking.web.internal.display.CTDisplayRendererRegistry;
-import com.liferay.petra.string.StringPool;
+import com.liferay.change.tracking.web.internal.util.PublicationsPortletURLUtil;
+import com.liferay.layout.page.template.model.LayoutPageTemplateStructureRel;
+import com.liferay.learn.LearnMessage;
+import com.liferay.learn.LearnMessageUtil;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.change.tracking.sql.CTSQLModeThreadLocal;
+import com.liferay.portal.kernel.frontend.icons.FrontendIconsUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -35,20 +41,14 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import java.time.Instant;
-
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.TimeZone;
 
 import javax.portlet.ActionRequest;
-import javax.portlet.ActionURL;
-import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
-import javax.portlet.RenderURL;
 import javax.portlet.ResourceURL;
 
 import javax.servlet.http.HttpServletRequest;
@@ -109,20 +109,29 @@ public class ViewConflictsDisplayContext {
 		}
 
 		return HashMapBuilder.<String, Object>put(
-			"publishURL",
+			"learnLink",
 			() -> {
-				PortletURL publishURL = _renderResponse.createActionURL();
+				LearnMessage learnMessage = LearnMessageUtil.getLearnMessage(
+					"manually-resolving-conflicts",
+					_themeDisplay.getLanguageId(), "change-tracking-web");
 
-				publishURL.setParameter(
-					ActionRequest.ACTION_NAME,
-					"/change_tracking/publish_ct_collection");
-				publishURL.setParameter(
-					"ctCollectionId",
-					String.valueOf(_ctCollection.getCtCollectionId()));
-				publishURL.setParameter("name", _ctCollection.getName());
-
-				return publishURL.toString();
+				return JSONUtil.put(
+					"message", learnMessage.getMessage()
+				).put(
+					"url", learnMessage.getURL()
+				);
 			}
+		).put(
+			"publishURL",
+			() -> PortletURLBuilder.createActionURL(
+				_renderResponse
+			).setActionName(
+				"/change_tracking/publish_ct_collection"
+			).setParameter(
+				"ctCollectionId", _ctCollection.getCtCollectionId()
+			).setParameter(
+				"name", _ctCollection.getName()
+			).buildString()
 		).put(
 			"redirect", getRedirect()
 		).put(
@@ -131,34 +140,63 @@ public class ViewConflictsDisplayContext {
 			"schedule", ParamUtil.getBoolean(_renderRequest, "schedule")
 		).put(
 			"scheduleURL",
+			() -> PortletURLBuilder.createActionURL(
+				_renderResponse
+			).setActionName(
+				"/change_tracking/schedule_publication"
+			).setRedirect(
+				getRedirect()
+			).setParameter(
+				"ctCollectionId", _ctCollection.getCtCollectionId()
+			).buildString()
+		).put(
+			"showPageOverwriteWarning",
 			() -> {
-				PortletURL scheduleURL = _renderResponse.createActionURL();
+				List<ConflictInfo> layoutConflictInfos = _conflictInfoMap.get(
+					_portal.getClassNameId(Layout.class));
+				List<ConflictInfo> layoutPageTemplateStructureRelConflictInfos =
+					_conflictInfoMap.get(
+						_portal.getClassNameId(
+							LayoutPageTemplateStructureRel.class));
 
-				scheduleURL.setParameter(
-					ActionRequest.ACTION_NAME,
-					"/change_tracking/schedule_publication");
-				scheduleURL.setParameter("redirect", getRedirect());
-				scheduleURL.setParameter(
-					"ctCollectionId",
-					String.valueOf(_ctCollection.getCtCollectionId()));
+				if ((layoutConflictInfos == null) ||
+					(layoutPageTemplateStructureRelConflictInfos == null)) {
 
-				return scheduleURL.toString();
+					return false;
+				}
+
+				boolean hasResolvedLayoutConflict = false;
+
+				for (ConflictInfo conflictInfo : layoutConflictInfos) {
+					if (conflictInfo.isResolved()) {
+						hasResolvedLayoutConflict = true;
+
+						break;
+					}
+				}
+
+				if (!hasResolvedLayoutConflict) {
+					return false;
+				}
+
+				for (ConflictInfo conflictInfo :
+						layoutPageTemplateStructureRelConflictInfos) {
+
+					if (conflictInfo.isResolved()) {
+						return true;
+					}
+				}
+
+				return false;
 			}
 		).put(
-			"spritemap", _themeDisplay.getPathThemeImages() + "/clay/icons.svg"
+			"spritemap", FrontendIconsUtil.getSpritemap(_themeDisplay)
 		).put(
 			"timeZone",
 			() -> {
 				TimeZone timeZone = _themeDisplay.getTimeZone();
 
-				if (Objects.equals(timeZone.getID(), StringPool.UTC)) {
-					return "GMT";
-				}
-
-				Instant instant = Instant.now();
-
-				return "GMT" +
-					String.format("%tz", instant.atZone(timeZone.toZoneId()));
+				return timeZone.getID();
 			}
 		).put(
 			"unresolvedConflicts", unresolvedConflictsJSONArray
@@ -172,15 +210,38 @@ public class ViewConflictsDisplayContext {
 			return redirect;
 		}
 
-		PortletURL portletURL = _renderResponse.createRenderURL();
+		return PortletURLBuilder.createRenderURL(
+			_renderResponse
+		).setMVCRenderCommandName(
+			"/change_tracking/view_changes"
+		).setParameter(
+			"ctCollectionId", _ctCollection.getCtCollectionId()
+		).buildString();
+	}
 
-		portletURL.setParameter(
-			"mvcRenderCommandName", "/change_tracking/view_changes");
-		portletURL.setParameter(
-			"ctCollectionId",
-			String.valueOf(_ctCollection.getCtCollectionId()));
+	private JSONObject _createEditActionJSONObject(
+		String confirmationMessage, long ctCollectionId, String editURL,
+		String label) {
 
-		return portletURL.toString();
+		JSONObject editActionJSONObject = JSONUtil.put(
+			"label", label
+		).put(
+			"symbol", "pencil"
+		);
+
+		if (_activeCtCollectionId != ctCollectionId) {
+			editActionJSONObject.put(
+				"confirmationMessage", confirmationMessage);
+
+			editURL = PublicationsPortletURLUtil.getHref(
+				_renderResponse.createActionURL(), ActionRequest.ACTION_NAME,
+				"/change_tracking/checkout_ct_collection", "redirect", editURL,
+				"ctCollectionId", String.valueOf(ctCollectionId));
+		}
+
+		editActionJSONObject.put("href", editURL);
+
+		return editActionJSONObject;
 	}
 
 	private <T extends BaseModel<T>> JSONObject _getConflictJSONObject(
@@ -197,22 +258,25 @@ public class ViewConflictsDisplayContext {
 		).put(
 			"conflictResolution",
 			conflictInfo.getResolutionDescription(resourceBundle)
+		).put(
+			"dismissURL",
+			() -> {
+				if (!conflictInfo.isResolved()) {
+					return null;
+				}
+
+				return PortletURLBuilder.createActionURL(
+					_renderResponse
+				).setActionName(
+					"/change_tracking/delete_ct_auto_resolution_info"
+				).setRedirect(
+					_portal.getCurrentURL(_renderRequest)
+				).setParameter(
+					"ctAutoResolutionInfoId",
+					conflictInfo.getCTAutoResolutionInfoId()
+				).buildString();
+			}
 		);
-
-		if (conflictInfo.isResolved()) {
-			ActionURL dismissURL = _renderResponse.createActionURL();
-
-			dismissURL.setParameter(
-				ActionRequest.ACTION_NAME,
-				"/change_tracking/delete_ct_auto_resolution_info");
-			dismissURL.setParameter(
-				"redirect", _portal.getCurrentURL(_renderRequest));
-			dismissURL.setParameter(
-				"ctAutoResolutionInfoId",
-				String.valueOf(conflictInfo.getCTAutoResolutionInfoId()));
-
-			jsonObject.put("dismissURL", dismissURL.toString());
-		}
 
 		ResourceURL dataURL = _renderResponse.createResourceURL();
 
@@ -240,43 +304,63 @@ public class ViewConflictsDisplayContext {
 			if (!conflictInfo.isResolved()) {
 				JSONArray actionsJSONArray = JSONFactoryUtil.createJSONArray();
 
-				if (_ctCollection.getCtCollectionId() ==
-						_activeCtCollectionId) {
+				String editURL = _ctDisplayRendererRegistry.getEditURL(
+					_httpServletRequest, ctEntry);
 
-					String editURL = _ctDisplayRendererRegistry.getEditURL(
-						_httpServletRequest, ctEntry);
+				if (Validator.isNotNull(editURL)) {
+					actionsJSONArray.put(
+						_createEditActionJSONObject(
+							_language.format(
+								_httpServletRequest,
+								"you-are-currently-working-on-production.-" +
+									"work-on-x",
+								new Object[] {_ctCollection.getName()}, false),
+							_ctCollection.getCtCollectionId(), editURL,
+							_language.format(
+								_httpServletRequest, "edit-in-x",
+								new Object[] {_ctCollection.getName()},
+								false)));
 
-					if (Validator.isNotNull(editURL)) {
+					T productionModel = _ctDisplayRendererRegistry.fetchCTModel(
+						modelClassNameId, conflictInfo.getTargetPrimaryKey());
+
+					if (productionModel != null) {
 						actionsJSONArray.put(
-							JSONUtil.put(
-								"href", editURL
-							).put(
-								"label",
-								_language.get(_httpServletRequest, "edit-item")
-							).put(
-								"symbol", "pencil"
-							));
+							_createEditActionJSONObject(
+								_language.format(
+									_httpServletRequest,
+									"you-are-currently-working-on-x.-work-on-" +
+										"production",
+									new Object[] {_ctCollection.getName()},
+									false),
+								CTConstants.CT_COLLECTION_ID_PRODUCTION,
+								_ctDisplayRendererRegistry.getEditURL(
+									CTConstants.CT_COLLECTION_ID_PRODUCTION,
+									CTSQLModeThreadLocal.CTSQLMode.DEFAULT,
+									_httpServletRequest, productionModel,
+									modelClassNameId),
+								_language.get(
+									_httpServletRequest,
+									"edit-in-production")));
 					}
 				}
 
-				RenderURL discardURL = _renderResponse.createRenderURL();
-
-				discardURL.setParameter(
-					"mvcRenderCommandName", "/change_tracking/view_discard");
-				discardURL.setParameter(
-					"redirect", _portal.getCurrentURL(_renderRequest));
-				discardURL.setParameter(
-					"ctCollectionId",
-					String.valueOf(ctEntry.getCtCollectionId()));
-				discardURL.setParameter(
-					"modelClassNameId",
-					String.valueOf(ctEntry.getModelClassNameId()));
-				discardURL.setParameter(
-					"modelClassPK", String.valueOf(ctEntry.getModelClassPK()));
-
 				actionsJSONArray.put(
 					JSONUtil.put(
-						"href", discardURL.toString()
+						"href",
+						PortletURLBuilder.createRenderURL(
+							_renderResponse
+						).setMVCRenderCommandName(
+							"/change_tracking/view_discard"
+						).setRedirect(
+							_portal.getCurrentURL(_renderRequest)
+						).setParameter(
+							"ctCollectionId", ctEntry.getCtCollectionId()
+						).setParameter(
+							"modelClassNameId", ctEntry.getModelClassNameId()
+						).setParameter(
+							"modelClassPK", ctEntry.getModelClassPK()
+						).buildString()
 					).put(
 						"label",
 						_language.get(_httpServletRequest, "discard-change")

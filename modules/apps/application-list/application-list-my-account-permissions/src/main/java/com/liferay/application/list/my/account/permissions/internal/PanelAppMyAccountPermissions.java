@@ -22,7 +22,6 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.model.PortletConstants;
@@ -59,12 +58,6 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
 @Component(immediate = true, service = PanelAppMyAccountPermissions.class)
 public class PanelAppMyAccountPermissions {
 
-	public void initPermissions(List<Company> companies, Portlet portlet) {
-		for (Company company : companies) {
-			initPermissions(company.getCompanyId(), Arrays.asList(portlet));
-		}
-	}
-
 	public void initPermissions(long companyId, List<Portlet> portlets) {
 		Role userRole = _getUserRole(companyId);
 
@@ -91,6 +84,12 @@ public class PanelAppMyAccountPermissions {
 					exception);
 			}
 		}
+	}
+
+	public void initPermissions(Portlet portlet) {
+		_companyLocalService.forEachCompany(
+			company -> initPermissions(
+				company.getCompanyId(), Arrays.asList(portlet)));
 	}
 
 	@Activate
@@ -185,8 +184,10 @@ public class PanelAppMyAccountPermissions {
 		implements ServiceTrackerCustomizer<PanelApp, PanelApp> {
 
 		@Override
-		public PanelApp addingService(ServiceReference<PanelApp> reference) {
-			PanelApp panelApp = _bundleContext.getService(reference);
+		public PanelApp addingService(
+			ServiceReference<PanelApp> serviceReference) {
+
+			PanelApp panelApp = _bundleContext.getService(serviceReference);
 
 			try {
 				Portlet portlet = panelApp.getPortlet();
@@ -207,12 +208,12 @@ public class PanelAppMyAccountPermissions {
 					return panelApp;
 				}
 
-				initPermissions(_companyLocalService.getCompanies(), portlet);
+				initPermissions(portlet);
 
 				return panelApp;
 			}
 			catch (Throwable throwable) {
-				_bundleContext.ungetService(reference);
+				_bundleContext.ungetService(serviceReference);
 
 				throw throwable;
 			}

@@ -14,7 +14,7 @@ import React, {useEffect, useState} from 'react';
 
 import {useFetch} from '../../../shared/hooks/useFetch.es';
 
-const BlockedSLAInfo = ({processId}) => {
+export default function BlockedSLAInfo({processId}) {
 	const [visible, setVisible] = useState(true);
 
 	const {data, fetchData} = useFetch({
@@ -27,7 +27,7 @@ const BlockedSLAInfo = ({processId}) => {
 	}, []);
 
 	return (
-		data.totalCount > 0 &&
+		data?.totalCount > 0 &&
 		visible && (
 			<ClayAlert
 				displayType="danger"
@@ -40,6 +40,4 @@ const BlockedSLAInfo = ({processId}) => {
 			</ClayAlert>
 		)
 	);
-};
-
-export default BlockedSLAInfo;
+}

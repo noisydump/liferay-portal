@@ -1,7 +1,6 @@
 @component-name = "portal-upgrades"
 definition {
 
-	property database.types = "db2,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.component.names = "Asset Publisher,Upgrades WEM";
@@ -10,14 +9,11 @@ definition {
 	setUp {
 		SignIn.signIn();
 
-		Smoke.viewWelcomePage();
+		var portalURL = PropsUtil.get("portal.url");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Configuration",
-			panel = "Control Panel",
-			portlet = "Search");
+		AssertLocation(value1 = "${portalURL}/web/guest?SM_USER=test@liferay.com");
 
-		SearchAdministration.executeSearchActions(actionsDescription = "Reindex all search indexes.");
+		SearchAdministration.executeReindex();
 	}
 
 	@description = "This is a use case for LPS-78284."
@@ -28,6 +24,17 @@ definition {
 		property portal.version = "6.2.5";
 
 		Upgrade.viewAssetPublisher();
+	}
+
+	@priority = "5"
+	test ViewAssetPublisherArchive706 {
+		property data.archive.type = "data-archive-asset-publisher";
+		property database.types = "mariadb,mysql,postgresql";
+		property portal.version = "7.0.6";
+
+		Upgrade.viewDefaultPage();
+
+		Upgrade.viewAssetPublisher(categoryName = "Category Name");
 	}
 
 	@priority = "5"
@@ -42,12 +49,83 @@ definition {
 	}
 
 	@priority = "5"
+	test ViewAssetPublisherArchive721 {
+		property data.archive.type = "data-archive-asset-publisher";
+		property database.types = "mariadb,mysql,postgresql";
+		property portal.version = "7.2.1";
+
+		Upgrade.viewDefaultPage();
+
+		Upgrade.viewAssetPublisher(categoryName = "Category Name");
+	}
+
+	@priority = "5"
+	test ViewAssetPublisherArchive730 {
+		property data.archive.type = "data-archive-asset-publisher";
+		property database.types = "mariadb,mysql,postgresql";
+		property portal.version = "7.3.0";
+
+		Upgrade.viewDefaultPage();
+
+		Upgrade.viewAssetPublisher(categoryName = "Category Name");
+	}
+
+	@priority = "5"
+	test ViewAssetPublisherArchive7310 {
+		property data.archive.type = "data-archive-asset-publisher";
+		property database.types = "db2,mariadb,mysql,oracle,postgresql,sybase";
+		property portal.version = "7.3.10";
+
+		Upgrade.viewAssetPublisher(categoryName = "Category Name");
+	}
+
+	@priority = "5"
+	test ViewAssetPublisherArchive7413 {
+		property data.archive.type = "data-archive-asset-publisher";
+		property database.types = "db2,mariadb,mysql,oracle,postgresql,sybase";
+		property portal.version = "7.4.13";
+
+		Upgrade.viewAssetPublisher(categoryName = "Category Name");
+	}
+
+	@priority = "5"
 	test ViewAssetPublisherArchive70106 {
 		property data.archive.type = "data-archive-asset-publisher";
 		property database.types = "db2,mariadb,mysql,oracle,postgresql,sybase";
 		property portal.version = "7.0.10.6";
 
 		Upgrade.viewDefaultPage();
+
+		Upgrade.viewAssetPublisher(categoryName = "Category Name");
+	}
+
+	@priority = "5"
+	test ViewAssetPublisherArchive71103 {
+		property data.archive.type = "data-archive-asset-publisher";
+		property database.types = "db2,mariadb,mysql,oracle,postgresql,sybase";
+		property portal.version = "7.1.10.3";
+
+		Upgrade.viewDefaultPage();
+
+		Upgrade.viewAssetPublisher(categoryName = "Category Name");
+	}
+
+	@priority = "5"
+	test ViewAssetPublisherArchive72101 {
+		property data.archive.type = "data-archive-asset-publisher";
+		property database.types = "db2,mariadb,mysql,oracle,postgresql,sybase";
+		property portal.version = "7.2.10.1";
+
+		Upgrade.viewDefaultPage();
+
+		Upgrade.viewAssetPublisher(categoryName = "Category Name");
+	}
+
+	@priority = "5"
+	test ViewAssetPublisherArchive74321 {
+		property data.archive.type = "data-archive-asset-publisher";
+		property database.types = "mariadb,mysql,postgresql";
+		property portal.version = "7.4.3.21";
 
 		Upgrade.viewAssetPublisher(categoryName = "Category Name");
 	}

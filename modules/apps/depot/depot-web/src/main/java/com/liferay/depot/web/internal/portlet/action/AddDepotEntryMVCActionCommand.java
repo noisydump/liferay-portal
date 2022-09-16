@@ -25,7 +25,7 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.DuplicateGroupException;
 import com.liferay.portal.kernel.exception.GroupKeyException;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.ModelHintsUtil;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
@@ -46,7 +46,6 @@ import java.util.Map;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
-import javax.portlet.PortletURL;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -80,53 +79,59 @@ public class AddDepotEntryMVCActionCommand extends BaseMVCActionCommand {
 			LocalizationUtil.getLocalizationMap(actionRequest, "description");
 
 		try {
-			DepotEntry depotEntry = _depotEntryService.addDepotEntry(
-				nameMap, descriptionMap,
-				ServiceContextFactory.getInstance(
-					DepotEntry.class.getName(), actionRequest));
-
-			PortletURL editDepotURL =
-				DepotEntryURLUtil.getEditDepotEntryPortletURL(
-					depotEntry, ParamUtil.getString(actionRequest, "redirect"),
-					_portal.getLiferayPortletRequest(actionRequest));
-
 			MultiSessionMessages.add(
 				actionRequest,
 				DepotPortletKeys.DEPOT_ADMIN + "requestProcessed");
 
 			JSONPortletResponseUtil.writeJSON(
 				actionRequest, actionResponse,
-				JSONUtil.put("redirectURL", editDepotURL.toString()));
+				JSONUtil.put(
+					"redirectURL",
+					() -> {
+						DepotEntry depotEntry =
+							_depotEntryService.addDepotEntry(
+								nameMap, descriptionMap,
+								ServiceContextFactory.getInstance(
+									DepotEntry.class.getName(), actionRequest));
+
+						return String.valueOf(
+							DepotEntryURLUtil.getEditDepotEntryPortletURL(
+								depotEntry,
+								ParamUtil.getString(actionRequest, "redirect"),
+								_portal.getLiferayPortletRequest(
+									actionRequest)));
+					}));
 		}
 		catch (Exception exception) {
-			ThemeDisplay themeDisplay =
-				(ThemeDisplay)actionRequest.getAttribute(WebKeys.THEME_DISPLAY);
-
 			JSONPortletResponseUtil.writeJSON(
 				actionRequest, actionResponse,
 				JSONUtil.put(
-					"error", _getErrorMessage(exception, themeDisplay)));
+					"error",
+					_getErrorMessage(
+						(ThemeDisplay)actionRequest.getAttribute(
+							WebKeys.THEME_DISPLAY),
+						exception.getCause())));
 		}
 	}
 
 	private String _getErrorMessage(
-		Exception exception, ThemeDisplay themeDisplay) {
+		ThemeDisplay themeDisplay, Throwable throwable) {
 
-		if (exception instanceof DepotEntryNameException) {
-			return LanguageUtil.get(
+		if (throwable instanceof DepotEntryNameException) {
+			return _language.get(
 				themeDisplay.getRequest(), "please-enter-a-name");
 		}
 
-		if (exception instanceof DuplicateGroupException) {
-			return LanguageUtil.get(
+		if (throwable instanceof DuplicateGroupException) {
+			return _language.get(
 				themeDisplay.getRequest(), "please-enter-a-unique-name");
 		}
 
-		if (exception instanceof GroupKeyException) {
+		if (throwable instanceof GroupKeyException) {
 			return _handleGroupKeyException(themeDisplay);
 		}
 
-		return LanguageUtil.get(
+		return _language.get(
 			themeDisplay.getRequest(), "an-unexpected-error-occurred");
 	}
 
@@ -134,7 +139,7 @@ public class AddDepotEntryMVCActionCommand extends BaseMVCActionCommand {
 		StringBundler sb = new StringBundler(5);
 
 		sb.append(
-			LanguageUtil.format(
+			_language.format(
 				themeDisplay.getRequest(),
 				"the-x-cannot-be-x-or-a-reserved-word-such-as-x",
 				new String[] {
@@ -147,7 +152,7 @@ public class AddDepotEntryMVCActionCommand extends BaseMVCActionCommand {
 		sb.append(StringPool.SPACE);
 
 		sb.append(
-			LanguageUtil.format(
+			_language.format(
 				themeDisplay.getRequest(),
 				"the-x-cannot-contain-the-following-invalid-characters-x",
 				new String[] {
@@ -161,7 +166,7 @@ public class AddDepotEntryMVCActionCommand extends BaseMVCActionCommand {
 			Group.class.getName(), "groupKey");
 
 		sb.append(
-			LanguageUtil.format(
+			_language.format(
 				themeDisplay.getRequest(),
 				"the-x-cannot-contain-more-than-x-characters",
 				new String[] {
@@ -174,6 +179,9 @@ public class AddDepotEntryMVCActionCommand extends BaseMVCActionCommand {
 
 	@Reference
 	private DepotEntryService _depotEntryService;
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private Portal _portal;

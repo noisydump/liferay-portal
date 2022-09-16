@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
 import com.liferay.headless.delivery.client.dto.v1_0.BlogPostingImage;
+import com.liferay.headless.delivery.client.dto.v1_0.Field;
 import com.liferay.headless.delivery.client.http.HttpInvoker;
 import com.liferay.headless.delivery.client.pagination.Page;
 import com.liferay.headless.delivery.client.pagination.Pagination;
@@ -36,7 +37,6 @@ import com.liferay.portal.kernel.json.JSONDeserializer;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
@@ -50,16 +50,12 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.search.test.util.SearchTestRule;
-import com.liferay.portal.test.log.CaptureAppender;
-import com.liferay.portal.test.log.Log4JLoggerTestUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.io.File;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import java.text.DateFormat;
@@ -69,9 +65,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -79,10 +77,7 @@ import javax.annotation.Generated;
 
 import javax.ws.rs.core.MultivaluedHashMap;
 
-import org.apache.commons.beanutils.BeanUtils;
-import org.apache.commons.beanutils.BeanUtilsBean;
 import org.apache.commons.lang.time.DateUtils;
-import org.apache.log4j.Level;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -245,7 +240,7 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 	@Test
 	public void testGraphQLDeleteBlogPostingImage() throws Exception {
 		BlogPostingImage blogPostingImage =
-			testGraphQLBlogPostingImage_addBlogPostingImage();
+			testGraphQLDeleteBlogPostingImage_addBlogPostingImage();
 
 		Assert.assertTrue(
 			JSONUtil.getValueAsBoolean(
@@ -260,28 +255,26 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 							}
 						})),
 				"JSONObject/data", "Object/deleteBlogPostingImage"));
+		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"blogPostingImage",
+					new HashMap<String, Object>() {
+						{
+							put("blogPostingImageId", blogPostingImage.getId());
+						}
+					},
+					new GraphQLField("id"))),
+			"JSONArray/errors");
 
-		try (CaptureAppender captureAppender =
-				Log4JLoggerTestUtil.configureLog4JLogger(
-					"graphql.execution.SimpleDataFetcherExceptionHandler",
-					Level.WARN)) {
+		Assert.assertTrue(errorsJSONArray.length() > 0);
+	}
 
-			JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"blogPostingImage",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"blogPostingImageId",
-									blogPostingImage.getId());
-							}
-						},
-						new GraphQLField("id"))),
-				"JSONArray/errors");
+	protected BlogPostingImage
+			testGraphQLDeleteBlogPostingImage_addBlogPostingImage()
+		throws Exception {
 
-			Assert.assertTrue(errorsJSONArray.length() > 0);
-		}
+		return testGraphQLBlogPostingImage_addBlogPostingImage();
 	}
 
 	@Test
@@ -308,7 +301,7 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 	@Test
 	public void testGraphQLGetBlogPostingImage() throws Exception {
 		BlogPostingImage blogPostingImage =
-			testGraphQLBlogPostingImage_addBlogPostingImage();
+			testGraphQLGetBlogPostingImage_addBlogPostingImage();
 
 		Assert.assertTrue(
 			equals(
@@ -351,21 +344,26 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 				"Object/code"));
 	}
 
+	protected BlogPostingImage
+			testGraphQLGetBlogPostingImage_addBlogPostingImage()
+		throws Exception {
+
+		return testGraphQLBlogPostingImage_addBlogPostingImage();
+	}
+
 	@Test
 	public void testGetSiteBlogPostingImagesPage() throws Exception {
-		Page<BlogPostingImage> page =
-			blogPostingImageResource.getSiteBlogPostingImagesPage(
-				testGetSiteBlogPostingImagesPage_getSiteId(),
-				RandomTestUtil.randomString(), null, null, Pagination.of(1, 2),
-				null);
-
-		Assert.assertEquals(0, page.getTotalCount());
-
 		Long siteId = testGetSiteBlogPostingImagesPage_getSiteId();
 		Long irrelevantSiteId =
 			testGetSiteBlogPostingImagesPage_getIrrelevantSiteId();
 
-		if ((irrelevantSiteId != null)) {
+		Page<BlogPostingImage> page =
+			blogPostingImageResource.getSiteBlogPostingImagesPage(
+				siteId, null, null, null, Pagination.of(1, 10), null);
+
+		Assert.assertEquals(0, page.getTotalCount());
+
+		if (irrelevantSiteId != null) {
 			BlogPostingImage irrelevantBlogPostingImage =
 				testGetSiteBlogPostingImagesPage_addBlogPostingImage(
 					irrelevantSiteId, randomIrrelevantBlogPostingImage());
@@ -390,7 +388,7 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 				siteId, randomBlogPostingImage());
 
 		page = blogPostingImageResource.getSiteBlogPostingImagesPage(
-			siteId, null, null, null, Pagination.of(1, 2), null);
+			siteId, null, null, null, Pagination.of(1, 10), null);
 
 		Assert.assertEquals(2, page.getTotalCount());
 
@@ -430,6 +428,41 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 				blogPostingImageResource.getSiteBlogPostingImagesPage(
 					siteId, null, null,
 					getFilterString(entityField, "between", blogPostingImage1),
+					Pagination.of(1, 2), null);
+
+			assertEquals(
+				Collections.singletonList(blogPostingImage1),
+				(List<BlogPostingImage>)page.getItems());
+		}
+	}
+
+	@Test
+	public void testGetSiteBlogPostingImagesPageWithFilterDoubleEquals()
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(
+			EntityField.Type.DOUBLE);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		Long siteId = testGetSiteBlogPostingImagesPage_getSiteId();
+
+		BlogPostingImage blogPostingImage1 =
+			testGetSiteBlogPostingImagesPage_addBlogPostingImage(
+				siteId, randomBlogPostingImage());
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		BlogPostingImage blogPostingImage2 =
+			testGetSiteBlogPostingImagesPage_addBlogPostingImage(
+				siteId, randomBlogPostingImage());
+
+		for (EntityField entityField : entityFields) {
+			Page<BlogPostingImage> page =
+				blogPostingImageResource.getSiteBlogPostingImagesPage(
+					siteId, null, null,
+					getFilterString(entityField, "eq", blogPostingImage1),
 					Pagination.of(1, 2), null);
 
 			assertEquals(
@@ -530,9 +563,23 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 		testGetSiteBlogPostingImagesPageWithSort(
 			EntityField.Type.DATE_TIME,
 			(entityField, blogPostingImage1, blogPostingImage2) -> {
-				BeanUtils.setProperty(
+				BeanTestUtil.setProperty(
 					blogPostingImage1, entityField.getName(),
 					DateUtils.addMinutes(new Date(), -2));
+			});
+	}
+
+	@Test
+	public void testGetSiteBlogPostingImagesPageWithSortDouble()
+		throws Exception {
+
+		testGetSiteBlogPostingImagesPageWithSort(
+			EntityField.Type.DOUBLE,
+			(entityField, blogPostingImage1, blogPostingImage2) -> {
+				BeanTestUtil.setProperty(
+					blogPostingImage1, entityField.getName(), 0.1);
+				BeanTestUtil.setProperty(
+					blogPostingImage2, entityField.getName(), 0.5);
 			});
 	}
 
@@ -543,9 +590,9 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 		testGetSiteBlogPostingImagesPageWithSort(
 			EntityField.Type.INTEGER,
 			(entityField, blogPostingImage1, blogPostingImage2) -> {
-				BeanUtils.setProperty(
+				BeanTestUtil.setProperty(
 					blogPostingImage1, entityField.getName(), 0);
-				BeanUtils.setProperty(
+				BeanTestUtil.setProperty(
 					blogPostingImage2, entityField.getName(), 1);
 			});
 	}
@@ -567,21 +614,21 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 				Class<?> returnType = method.getReturnType();
 
 				if (returnType.isAssignableFrom(Map.class)) {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						blogPostingImage1, entityFieldName,
 						Collections.singletonMap("Aaa", "Aaa"));
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						blogPostingImage2, entityFieldName,
 						Collections.singletonMap("Bbb", "Bbb"));
 				}
 				else if (entityFieldName.contains("email")) {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						blogPostingImage1, entityFieldName,
 						"aaa" +
 							StringUtil.toLowerCase(
 								RandomTestUtil.randomString()) +
 									"@liferay.com");
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						blogPostingImage2, entityFieldName,
 						"bbb" +
 							StringUtil.toLowerCase(
@@ -589,12 +636,12 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 									"@liferay.com");
 				}
 				else {
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						blogPostingImage1, entityFieldName,
 						"aaa" +
 							StringUtil.toLowerCase(
 								RandomTestUtil.randomString()));
-					BeanUtils.setProperty(
+					BeanTestUtil.setProperty(
 						blogPostingImage2, entityFieldName,
 						"bbb" +
 							StringUtil.toLowerCase(
@@ -685,7 +732,7 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 			new HashMap<String, Object>() {
 				{
 					put("page", 1);
-					put("pageSize", 2);
+					put("pageSize", 10);
 
 					put("siteKey", "\"" + siteId + "\"");
 				}
@@ -700,21 +747,29 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 		Assert.assertEquals(0, blogPostingImagesJSONObject.get("totalCount"));
 
 		BlogPostingImage blogPostingImage1 =
-			testGraphQLBlogPostingImage_addBlogPostingImage();
+			testGraphQLGetSiteBlogPostingImagesPage_addBlogPostingImage();
 		BlogPostingImage blogPostingImage2 =
-			testGraphQLBlogPostingImage_addBlogPostingImage();
+			testGraphQLGetSiteBlogPostingImagesPage_addBlogPostingImage();
 
 		blogPostingImagesJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/blogPostingImages");
 
-		Assert.assertEquals(2, blogPostingImagesJSONObject.get("totalCount"));
+		Assert.assertEquals(
+			2, blogPostingImagesJSONObject.getLong("totalCount"));
 
 		assertEqualsIgnoringOrder(
 			Arrays.asList(blogPostingImage1, blogPostingImage2),
 			Arrays.asList(
 				BlogPostingImageSerDes.toDTOs(
 					blogPostingImagesJSONObject.getString("items"))));
+	}
+
+	protected BlogPostingImage
+			testGraphQLGetSiteBlogPostingImagesPage_addBlogPostingImage()
+		throws Exception {
+
+		return testGraphQLBlogPostingImage_addBlogPostingImage();
 	}
 
 	@Test
@@ -753,26 +808,25 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 
 			for (Object object : (Object[])value) {
 				if (arraySB.length() > 1) {
-					arraySB.append(",");
+					arraySB.append(", ");
 				}
 
 				arraySB.append("{");
 
 				Class<?> clazz = object.getClass();
 
-				for (Field field :
-						ReflectionUtil.getDeclaredFields(
-							clazz.getSuperclass())) {
+				for (java.lang.reflect.Field field :
+						getDeclaredFields(clazz.getSuperclass())) {
 
 					arraySB.append(field.getName());
 					arraySB.append(": ");
 
 					appendGraphQLFieldValue(arraySB, field.get(object));
 
-					arraySB.append(",");
+					arraySB.append(", ");
 				}
 
-				arraySB.setLength(arraySB.length() - 1);
+				arraySB.setLength(arraySB.length() - 2);
 
 				arraySB.append("}");
 			}
@@ -807,8 +861,8 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 
 		StringBuilder sb = new StringBuilder("{");
 
-		for (Field field :
-				ReflectionUtil.getDeclaredFields(BlogPostingImage.class)) {
+		for (java.lang.reflect.Field field :
+				getDeclaredFields(BlogPostingImage.class)) {
 
 			if (!ArrayUtil.contains(
 					getAdditionalAssertFieldNames(), field.getName())) {
@@ -848,6 +902,25 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 						graphQLFields)),
 				"JSONObject/data", "JSONObject/createSiteBlogPostingImage"),
 			BlogPostingImage.class);
+	}
+
+	protected void assertContains(
+		BlogPostingImage blogPostingImage,
+		List<BlogPostingImage> blogPostingImages) {
+
+		boolean contains = false;
+
+		for (BlogPostingImage item : blogPostingImages) {
+			if (equals(blogPostingImage, item)) {
+				contains = true;
+
+				break;
+			}
+		}
+
+		Assert.assertTrue(
+			blogPostingImages + " does not contain " + blogPostingImage,
+			contains);
 	}
 
 	protected void assertHttpResponseStatusCode(
@@ -1015,8 +1088,8 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 	protected List<GraphQLField> getGraphQLFields() throws Exception {
 		List<GraphQLField> graphQLFields = new ArrayList<>();
 
-		for (Field field :
-				ReflectionUtil.getDeclaredFields(
+		for (java.lang.reflect.Field field :
+				getDeclaredFields(
 					com.liferay.headless.delivery.dto.v1_0.BlogPostingImage.
 						class)) {
 
@@ -1032,12 +1105,13 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 		return graphQLFields;
 	}
 
-	protected List<GraphQLField> getGraphQLFields(Field... fields)
+	protected List<GraphQLField> getGraphQLFields(
+			java.lang.reflect.Field... fields)
 		throws Exception {
 
 		List<GraphQLField> graphQLFields = new ArrayList<>();
 
-		for (Field field : fields) {
+		for (java.lang.reflect.Field field : fields) {
 			com.liferay.portal.vulcan.graphql.annotation.GraphQLField
 				vulcanGraphQLField = field.getAnnotation(
 					com.liferay.portal.vulcan.graphql.annotation.GraphQLField.
@@ -1051,7 +1125,7 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 				}
 
 				List<GraphQLField> childrenGraphQLFields = getGraphQLFields(
-					ReflectionUtil.getDeclaredFields(clazz));
+					getDeclaredFields(clazz));
 
 				graphQLFields.add(
 					new GraphQLField(field.getName(), childrenGraphQLFields));
@@ -1195,6 +1269,19 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 		}
 
 		return false;
+	}
+
+	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
+		throws Exception {
+
+		Stream<java.lang.reflect.Field> stream = Stream.of(
+			ReflectionUtil.getDeclaredFields(clazz));
+
+		return stream.filter(
+			field -> !field.isSynthetic()
+		).toArray(
+			java.lang.reflect.Field[]::new
+		);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -1385,6 +1472,115 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 	protected Company testCompany;
 	protected Group testGroup;
 
+	protected static class BeanTestUtil {
+
+		public static void copyProperties(Object source, Object target)
+			throws Exception {
+
+			Class<?> sourceClass = _getSuperClass(source.getClass());
+
+			Class<?> targetClass = target.getClass();
+
+			for (java.lang.reflect.Field field :
+					sourceClass.getDeclaredFields()) {
+
+				if (field.isSynthetic()) {
+					continue;
+				}
+
+				Method getMethod = _getMethod(
+					sourceClass, field.getName(), "get");
+
+				Method setMethod = _getMethod(
+					targetClass, field.getName(), "set",
+					getMethod.getReturnType());
+
+				setMethod.invoke(target, getMethod.invoke(source));
+			}
+		}
+
+		public static boolean hasProperty(Object bean, String name) {
+			Method setMethod = _getMethod(
+				bean.getClass(), "set" + StringUtil.upperCaseFirstLetter(name));
+
+			if (setMethod != null) {
+				return true;
+			}
+
+			return false;
+		}
+
+		public static void setProperty(Object bean, String name, Object value)
+			throws Exception {
+
+			Class<?> clazz = bean.getClass();
+
+			Method setMethod = _getMethod(
+				clazz, "set" + StringUtil.upperCaseFirstLetter(name));
+
+			if (setMethod == null) {
+				throw new NoSuchMethodException();
+			}
+
+			Class<?>[] parameterTypes = setMethod.getParameterTypes();
+
+			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
+		}
+
+		private static Method _getMethod(Class<?> clazz, String name) {
+			for (Method method : clazz.getMethods()) {
+				if (name.equals(method.getName()) &&
+					(method.getParameterCount() == 1) &&
+					_parameterTypes.contains(method.getParameterTypes()[0])) {
+
+					return method;
+				}
+			}
+
+			return null;
+		}
+
+		private static Method _getMethod(
+				Class<?> clazz, String fieldName, String prefix,
+				Class<?>... parameterTypes)
+			throws Exception {
+
+			return clazz.getMethod(
+				prefix + StringUtil.upperCaseFirstLetter(fieldName),
+				parameterTypes);
+		}
+
+		private static Class<?> _getSuperClass(Class<?> clazz) {
+			Class<?> superClass = clazz.getSuperclass();
+
+			if ((superClass == null) || (superClass == Object.class)) {
+				return clazz;
+			}
+
+			return superClass;
+		}
+
+		private static Object _translateValue(
+			Class<?> parameterType, Object value) {
+
+			if ((value instanceof Integer) &&
+				parameterType.equals(Long.class)) {
+
+				Integer intValue = (Integer)value;
+
+				return intValue.longValue();
+			}
+
+			return value;
+		}
+
+		private static final Set<Class<?>> _parameterTypes = new HashSet<>(
+			Arrays.asList(
+				Boolean.class, Date.class, Double.class, Integer.class,
+				Long.class, Map.class, String.class));
+
+	}
+
 	protected class GraphQLField {
 
 		public GraphQLField(String key, GraphQLField... graphQLFields) {
@@ -1424,12 +1620,12 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 						_parameterMap.entrySet()) {
 
 					sb.append(entry.getKey());
-					sb.append(":");
+					sb.append(": ");
 					sb.append(entry.getValue());
-					sb.append(",");
+					sb.append(", ");
 				}
 
-				sb.setLength(sb.length() - 1);
+				sb.setLength(sb.length() - 2);
 
 				sb.append(")");
 			}
@@ -1439,10 +1635,10 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 
 				for (GraphQLField graphQLField : _graphQLFields) {
 					sb.append(graphQLField.toString());
-					sb.append(",");
+					sb.append(", ");
 				}
 
-				sb.setLength(sb.length() - 1);
+				sb.setLength(sb.length() - 2);
 
 				sb.append("}");
 			}
@@ -1456,21 +1652,9 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 
 	}
 
-	private static final Log _log = LogFactoryUtil.getLog(
-		BaseBlogPostingImageResourceTestCase.class);
+	private static final com.liferay.portal.kernel.log.Log _log =
+		LogFactoryUtil.getLog(BaseBlogPostingImageResourceTestCase.class);
 
-	private static BeanUtilsBean _beanUtilsBean = new BeanUtilsBean() {
-
-		@Override
-		public void copyProperty(Object bean, String name, Object value)
-			throws IllegalAccessException, InvocationTargetException {
-
-			if (value != null) {
-				super.copyProperty(bean, name, value);
-			}
-		}
-
-	};
 	private static DateFormat _dateFormat;
 
 	@Inject

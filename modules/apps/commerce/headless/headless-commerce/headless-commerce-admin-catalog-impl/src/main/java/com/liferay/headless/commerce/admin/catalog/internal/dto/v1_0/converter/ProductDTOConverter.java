@@ -14,8 +14,13 @@
 
 package com.liferay.headless.commerce.admin.catalog.internal.dto.v1_0.converter;
 
+import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetTag;
+import com.liferay.asset.kernel.model.AssetVocabulary;
+import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.asset.kernel.service.AssetTagService;
+import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
+import com.liferay.commerce.account.constants.CommerceAccountConstants;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.model.CProduct;
@@ -24,15 +29,18 @@ import com.liferay.commerce.product.service.CPDefinitionService;
 import com.liferay.commerce.product.type.CPType;
 import com.liferay.commerce.product.type.CPTypeServicesTracker;
 import com.liferay.expando.kernel.model.ExpandoBridge;
+import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Category;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Product;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Status;
+import com.liferay.headless.commerce.admin.catalog.internal.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.headless.commerce.core.util.LanguageUtils;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.language.LanguageResources;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
+import com.liferay.portal.vulcan.util.TransformUtil;
 
 import java.util.List;
 import java.util.Locale;
@@ -47,7 +55,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	enabled = false,
-	property = "model.class.name=com.liferay.commerce.product.model.CPDefinition",
+	property = "dto.class.name=com.liferay.commerce.product.model.CPDefinition",
 	service = {DTOConverter.class, ProductDTOConverter.class}
 )
 public class ProductDTOConverter
@@ -77,7 +85,7 @@ public class ProductDTOConverter
 		String productStatusLabel = WorkflowConstants.getStatusLabel(
 			cpDefinition.getStatus());
 
-		String productStatusLabelI18n = LanguageUtil.get(
+		String productStatusLabelI18n = _language.get(
 			resourceBundle,
 			WorkflowConstants.getStatusLabel(cpDefinition.getStatus()));
 
@@ -88,7 +96,19 @@ public class ProductDTOConverter
 				actions = dtoConverterContext.getActions();
 				active = !cpDefinition.isInactive();
 				catalogId = _getCommerceCatalogId(cpDefinition);
+				categories = TransformUtil.transformToArray(
+					_assetCategoryLocalService.getCategories(
+						cpDefinition.getModelClassName(),
+						cpDefinition.getCPDefinitionId()),
+					assetCategory -> _toCategory(assetCategory),
+					Category.class);
 				createDate = cpDefinition.getCreateDate();
+				customFields = CustomFieldsUtil.toCustomFields(
+					dtoConverterContext.isAcceptAllLanguages(),
+					CPDefinition.class.getName(),
+					cpDefinition.getCPDefinitionId(),
+					cpDefinition.getCompanyId(),
+					dtoConverterContext.getLocale());
 				description = LanguageUtils.getLanguageIdMap(
 					cpDefinition.getDescriptionMap());
 				displayDate = cpDefinition.getDisplayDate();
@@ -105,6 +125,9 @@ public class ProductDTOConverter
 				modifiedDate = cpDefinition.getModifiedDate();
 				name = LanguageUtils.getLanguageIdMap(
 					cpDefinition.getNameMap());
+				productAccountGroupFilter =
+					cpDefinition.isAccountGroupFilterEnabled();
+				productChannelFilter = cpDefinition.isChannelFilterEnabled();
 				productId = cProduct.getCProductId();
 				productStatus = cpDefinition.getStatus();
 				productType = cpType.getName();
@@ -114,8 +137,12 @@ public class ProductDTOConverter
 				skuFormatted = _getSku(
 					cpDefinition, dtoConverterContext.getLocale());
 				tags = _getTags(cpDefinition);
-				thumbnail = cpDefinition.getDefaultImageThumbnailSrc();
-				workflowStatusInfo = _getWorkflowStatusInfo(
+				thumbnail = cpDefinition.getDefaultImageThumbnailSrc(
+					CommerceAccountConstants.ACCOUNT_ID_ADMIN);
+				urls = LanguageUtils.getLanguageIdMap(
+					_cpDefinitionService.getUrlTitleMap(
+						cpDefinition.getCPDefinitionId()));
+				workflowStatusInfo = _toStatus(
 					cpDefinition.getStatus(), productStatusLabel,
 					productStatusLabelI18n);
 			}
@@ -144,7 +171,7 @@ public class ProductDTOConverter
 		}
 
 		if (cpInstances.size() > 1) {
-			return LanguageUtil.get(locale, "multiple-skus");
+			return _language.get(locale, "multiple-skus");
 		}
 
 		CPInstance cpInstance = cpInstances.get(0);
@@ -165,7 +192,31 @@ public class ProductDTOConverter
 		);
 	}
 
-	private Status _getWorkflowStatusInfo(
+	private Category _toCategory(AssetCategory assetCategory) {
+		return new Category() {
+			{
+				externalReferenceCode =
+					assetCategory.getExternalReferenceCode();
+				id = assetCategory.getCategoryId();
+				name = assetCategory.getName();
+
+				setVocabulary(
+					() -> {
+						AssetVocabulary assetVocabulary =
+							_assetVocabularyLocalService.fetchAssetVocabulary(
+								assetCategory.getVocabularyId());
+
+						if (assetVocabulary == null) {
+							return null;
+						}
+
+						return assetVocabulary.getName();
+					});
+			}
+		};
+	}
+
+	private Status _toStatus(
 		int statusCode, String productStatusLabel,
 		String productStatusLabelI18n) {
 
@@ -179,12 +230,21 @@ public class ProductDTOConverter
 	}
 
 	@Reference
+	private AssetCategoryLocalService _assetCategoryLocalService;
+
+	@Reference
 	private AssetTagService _assetTagService;
+
+	@Reference
+	private AssetVocabularyLocalService _assetVocabularyLocalService;
 
 	@Reference
 	private CPDefinitionService _cpDefinitionService;
 
 	@Reference
 	private CPTypeServicesTracker _cpTypeServicesTracker;
+
+	@Reference
+	private Language _language;
 
 }

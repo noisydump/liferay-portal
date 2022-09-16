@@ -32,17 +32,17 @@ if (dataJSONObject.has("values")) {
 	}
 }
 
-AssetEntriesSearchFacetDisplayBuilder assetEntriesSearchFacetDisplayBuilder = new AssetEntriesSearchFacetDisplayBuilder(renderRequest);
+AssetEntriesSearchFacetDisplayContextBuilder assetEntriesSearchFacetDisplayContextBuilder = new AssetEntriesSearchFacetDisplayContextBuilder(renderRequest);
 
-assetEntriesSearchFacetDisplayBuilder.setClassNames(values);
-assetEntriesSearchFacetDisplayBuilder.setFacet(facet);
-assetEntriesSearchFacetDisplayBuilder.setFrequenciesVisible(showAssetCount);
-assetEntriesSearchFacetDisplayBuilder.setFrequencyThreshold(frequencyThreshold);
-assetEntriesSearchFacetDisplayBuilder.setLocale(locale);
-assetEntriesSearchFacetDisplayBuilder.setParameterName(facet.getFieldId());
-assetEntriesSearchFacetDisplayBuilder.setParameterValue(fieldParam);
+assetEntriesSearchFacetDisplayContextBuilder.setClassNames(values);
+assetEntriesSearchFacetDisplayContextBuilder.setFacet(facet);
+assetEntriesSearchFacetDisplayContextBuilder.setFrequenciesVisible(showAssetCount);
+assetEntriesSearchFacetDisplayContextBuilder.setFrequencyThreshold(frequencyThreshold);
+assetEntriesSearchFacetDisplayContextBuilder.setLocale(locale);
+assetEntriesSearchFacetDisplayContextBuilder.setParameterName(facet.getFieldId());
+assetEntriesSearchFacetDisplayContextBuilder.setParameterValue(fieldParam);
 
-AssetEntriesSearchFacetDisplayContext assetEntriesSearchFacetDisplayContext = assetEntriesSearchFacetDisplayBuilder.build();
+AssetEntriesSearchFacetDisplayContext assetEntriesSearchFacetDisplayContext = assetEntriesSearchFacetDisplayContextBuilder.build();
 %>
 
 <div class="panel panel-secondary">
@@ -58,7 +58,7 @@ AssetEntriesSearchFacetDisplayContext assetEntriesSearchFacetDisplayContext = as
 
 			<ul class="asset-type list-unstyled">
 				<li class="default facet-value">
-					<a class="<%= assetEntriesSearchFacetDisplayContext.isNothingSelected() ? "facet-term-selected" : "facet-term-unselected" %>" data-value="" href="javascript:;"><liferay-ui:message key="<%= HtmlUtil.escape(facetConfiguration.getLabel()) %>" /></a>
+					<a class="<%= assetEntriesSearchFacetDisplayContext.isNothingSelected() ? "facet-term-selected" : "facet-term-unselected" %>" data-value="" href="javascript:void(0);"><liferay-ui:message key="<%= HtmlUtil.escape(facetConfiguration.getLabel()) %>" /></a>
 				</li>
 
 				<%
@@ -66,7 +66,7 @@ AssetEntriesSearchFacetDisplayContext assetEntriesSearchFacetDisplayContext = as
 				%>
 
 					<li class="facet-value">
-						<a class="<%= assetEntriesSearchFacetTermDisplayContext.isSelected() ? "facet-term-selected" : "facet-term-unselected" %>" data-value="<%= HtmlUtil.escapeAttribute(assetEntriesSearchFacetTermDisplayContext.getAssetType()) %>" href="javascript:;">
+						<a class="<%= assetEntriesSearchFacetTermDisplayContext.isSelected() ? "facet-term-selected" : "facet-term-unselected" %>" data-value="<%= HtmlUtil.escapeAttribute(assetEntriesSearchFacetTermDisplayContext.getAssetType()) %>" href="javascript:void(0);">
 							<%= assetEntriesSearchFacetTermDisplayContext.getTypeName() %>
 
 							<c:if test="<%= assetEntriesSearchFacetTermDisplayContext.isFrequencyVisible() %>">

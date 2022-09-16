@@ -69,13 +69,23 @@ else {
 	<aui:input name="definitionId" type="hidden" />
 
 	<c:if test="<%= definition != null %>">
-		<liferay-frontend:info-bar>
-			<span class="text-muted">
-				<span class="definition-id-label"><liferay-ui:message key="id" />:</span>
+		<div class="management-bar management-bar-light navbar navbar-expand-md">
+			<clay:container-fluid>
+				<ul class="m-auto navbar-nav"></ul>
 
-				<span class="definition-id-value"><%= definition.getDefinitionId() %></span>
-			</span>
-		</liferay-frontend:info-bar>
+				<ul class="middle navbar-nav">
+					<li class="nav-item">
+						<span class="text-muted">
+							<span class="definition-id-label"><liferay-ui:message key="id" />:</span>
+
+							<span class="definition-id-value"><%= definition.getDefinitionId() %></span>
+						</span>
+					</li>
+				</ul>
+
+				<ul class="end m-auto navbar-nav"></ul>
+			</clay:container-fluid>
+		</div>
 	</c:if>
 
 	<aui:fieldset-group markupView="lexicon">
@@ -88,9 +98,7 @@ else {
 				<aui:option label="<%= ReportDataSourceType.PORTAL.getValue() %>" selected="<%= sourceId == 0 %>" value="<%= 0 %>" />
 
 				<%
-				List<Source> sources = SourceServiceUtil.getSources(themeDisplay.getSiteGroupId(), null, null, false, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
-
-				for (Source source : sources) {
+				for (Source source : SourceServiceUtil.getSources(themeDisplay.getSiteGroupId(), null, null, false, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
 				%>
 
 					<aui:option label="<%= HtmlUtil.escape(source.getName(locale)) %>" selected="<%= sourceId == source.getSourceId() %>" value="<%= source.getSourceId() %>" />
@@ -207,8 +215,8 @@ else {
 	</aui:button-row>
 </aui:form>
 
-<script type="text/javascript">
-	AUI().ready(function (A) {
+<aui:script>
+	AUI().ready((A) => {
 		Liferay.Report.initialize({
 			namespace: '<portlet:namespace />',
 			parameters:
@@ -231,15 +239,17 @@ else {
 	}
 
 	function <portlet:namespace />deleteDefinition() {
-		if (
-			confirm(
-				'<%= UnicodeLanguageUtil.get(request, "are-you-sure-you-want-to-delete-this") %>'
-			)
-		) {
-			submitForm(
-				document.<portlet:namespace />fm,
-				'<portlet:actionURL name="/reports_admin/delete_definition"><portlet:param name="redirect" value="<%= definitionsURL %>" /></portlet:actionURL>'
-			);
-		}
+		Liferay.Util.openConfirmModal({
+			message:
+				'<%= UnicodeLanguageUtil.get(request, "are-you-sure-you-want-to-delete-this") %>',
+			onConfirm: (isConfirmed) => {
+				if (isConfirmed) {
+					submitForm(
+						document.<portlet:namespace />fm,
+						'<portlet:actionURL name="/reports_admin/delete_definition"><portlet:param name="redirect" value="<%= definitionsURL %>" /></portlet:actionURL>'
+					);
+				}
+			},
+		});
 	}
-</script>
+</aui:script>

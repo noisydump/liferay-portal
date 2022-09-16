@@ -94,9 +94,11 @@ public class CommercePriceEntryIndexer extends BaseIndexer<CommercePriceEntry> {
 		addSearchTerm(
 			searchQuery, searchContext, FIELD_EXTERNAL_REFERENCE_CODE, false);
 
-		addSearchTerm(searchQuery, searchContext, "sku", false);
 		addSearchLocalizedTerm(
 			searchQuery, searchContext, "cpDefinitionName", false);
+		addSearchTerm(searchQuery, searchContext, "sku", false);
+		addSearchTerm(
+			searchQuery, searchContext, "skuExternalReferenceCode", false);
 
 		LinkedHashMap<String, Object> params =
 			(LinkedHashMap<String, Object>)searchContext.getAttribute("params");
@@ -141,6 +143,8 @@ public class CommercePriceEntryIndexer extends BaseIndexer<CommercePriceEntry> {
 
 		document.addKeyword("cpInstanceId", cpInstance.getCPInstanceId());
 		document.addKeyword("sku", cpInstance.getSku());
+		document.addKeyword(
+			"skuExternalReferenceCode", cpInstance.getExternalReferenceCode());
 
 		CPDefinition cpDefinition = cpInstance.getCPDefinition();
 
@@ -188,13 +192,11 @@ public class CommercePriceEntryIndexer extends BaseIndexer<CommercePriceEntry> {
 	protected void doReindex(String[] ids) throws Exception {
 		long companyId = GetterUtil.getLong(ids[0]);
 
-		reindexCommercePriceEntries(companyId);
+		_reindexCommercePriceEntries(companyId);
 	}
 
-	protected void reindexCommercePriceEntries(long companyId)
-		throws PortalException {
-
-		final IndexableActionableDynamicQuery indexableActionableDynamicQuery =
+	private void _reindexCommercePriceEntries(long companyId) throws Exception {
+		IndexableActionableDynamicQuery indexableActionableDynamicQuery =
 			_commercePriceEntryLocalService.
 				getIndexableActionableDynamicQuery();
 

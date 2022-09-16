@@ -19,13 +19,13 @@
 <%
 DispatchTrigger dispatchTrigger = (DispatchTrigger)request.getAttribute(DispatchWebKeys.DISPATCH_TRIGGER);
 
-Date endDate = (dispatchTrigger.getEndDate() == null) ? new Date() : dispatchTrigger.getEndDate();
+Date timeZoneEndDate = (dispatchTrigger.getTimeZoneEndDate() == null) ? new Date() : dispatchTrigger.getTimeZoneEndDate();
 
-Date startDate = (dispatchTrigger.getStartDate() == null) ? new Date() : dispatchTrigger.getStartDate();
+Date timeZoneStartDate = (dispatchTrigger.getTimeZoneStartDate() == null) ? new Date() : dispatchTrigger.getTimeZoneStartDate();
 
-Calendar endDateCalendar = CalendarFactoryUtil.getCalendar(endDate.getTime());
+Calendar endDateCalendar = CalendarFactoryUtil.getCalendar(timeZoneEndDate.getTime());
 
-Calendar startDateCalendar = CalendarFactoryUtil.getCalendar(startDate.getTime());
+Calendar startDateCalendar = CalendarFactoryUtil.getCalendar(timeZoneStartDate.getTime());
 
 int endDateAmPm = endDateCalendar.get(Calendar.AM_PM);
 int endDateDay = endDateCalendar.get(Calendar.DATE);
@@ -42,21 +42,34 @@ int startDateMonth = startDateCalendar.get(Calendar.MONTH);
 int startDateYear = startDateCalendar.get(Calendar.YEAR);
 
 boolean neverEnd = ParamUtil.getBoolean(request, "neverEnd", true);
+boolean dispatchTaskExecutorReady = true;
 
-if ((dispatchTrigger != null) && (dispatchTrigger.getEndDate() != null)) {
-	neverEnd = false;
+DispatchTriggerDisplayContext dispatchTriggerDisplayContext = (DispatchTriggerDisplayContext)request.getAttribute(WebKeys.PORTLET_DISPLAY_CONTEXT);
+
+if (dispatchTrigger != null) {
+	if (dispatchTrigger.getEndDate() != null) {
+		neverEnd = false;
+	}
+
+	DispatchTriggerMetadata dispatchTriggerMetadata = dispatchTriggerDisplayContext.getDispatchTriggerMetadata(dispatchTrigger.getDispatchTriggerId());
+
+	dispatchTaskExecutorReady = dispatchTriggerMetadata.isDispatchTaskExecutorReady();
 }
 %>
 
 <portlet:actionURL name="/dispatch/edit_dispatch_trigger" var="editDispatchTriggerActionURL" />
 
 <aui:form action="<%= editDispatchTriggerActionURL %>" cssClass="container-fluid container-fluid-max-xl container-form-lg" method="post" name="fm">
-	<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
+	<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
 	<aui:input name="<%= Constants.CMD %>" type="hidden" value="schedule" />
 	<aui:input name="dispatchTriggerId" type="hidden" value="<%= String.valueOf(dispatchTrigger.getDispatchTriggerId()) %>" />
 
+	<div class="alert alert-warning <%= dispatchTaskExecutorReady ? "hide":"" %>">
+		<liferay-ui:message key="task-executor-is-not-ready" />
+	</div>
+
 	<aui:fieldset-group markupView="lexicon">
-		<aui:fieldset>
+		<aui:fieldset disabled="<%= !dispatchTaskExecutorReady %>">
 			<aui:model-context bean="<%= dispatchTrigger %>" model="<%= DispatchTrigger.class %>" />
 
 			<div class="lfr-form-content">
@@ -64,7 +77,7 @@ if ((dispatchTrigger != null) && (dispatchTrigger.getEndDate() != null)) {
 					<aui:input name="active" />
 
 					<c:choose>
-						<c:when test="<%= ClusterExecutorUtil.isEnabled() %>">
+						<c:when test="<%= ClusterExecutorUtil.isEnabled() && !dispatchTriggerDisplayContext.isClusterModeSingle(dispatchTrigger.getDispatchTaskExecutorType()) %>">
 							<aui:select label="task-execution-cluster-mode" name="dispatchTaskClusterMode">
 
 								<%
@@ -83,13 +96,38 @@ if ((dispatchTrigger != null) && (dispatchTrigger.getEndDate() != null)) {
 							</aui:select>
 						</c:when>
 						<c:otherwise>
+
+							<%
+							DispatchTaskClusterMode dispatchTaskClusterMode = DispatchTaskClusterMode.NOT_APPLICABLE;
+
+							if (dispatchTriggerDisplayContext.isClusterModeSingle(dispatchTrigger.getDispatchTaskExecutorType())) {
+								dispatchTaskClusterMode = DispatchTaskClusterMode.SINGLE_NODE;
+							}
+							%>
+
 							<aui:select disabled="<%= true %>" helpMessage="this-option-is-enabled-only-in-a-clustered-environment" label="task-execution-cluster-mode" name="dispatchTaskClusterMode">
-								<aui:option label="<%= DispatchTaskClusterMode.NOT_APPLICABLE.getLabel() %>" />
+								<aui:option label="<%= dispatchTaskClusterMode.getLabel() %>" />
 							</aui:select>
 						</c:otherwise>
 					</c:choose>
 
 					<aui:input name="overlapAllowed" />
+
+					<aui:select label="time-zone" name="timeZoneId">
+
+						<%
+						String dispatchTriggerTimeZoneId = dispatchTrigger.getTimeZoneId();
+
+						for (String timeZoneId : PropsUtil.getArray(PropsKeys.TIME_ZONES)) {
+						%>
+
+							<aui:option label="<%= timeZoneId %>" selected='<%= dispatchTriggerTimeZoneId.isEmpty() ? timeZoneId.equals("UTC") : dispatchTriggerTimeZoneId.equals(timeZoneId) %>' value="<%= timeZoneId %>" />
+
+						<%
+						}
+						%>
+
+					</aui:select>
 
 					<aui:input name="cronExpression" />
 
@@ -166,12 +204,12 @@ if ((dispatchTrigger != null) && (dispatchTrigger.getEndDate() != null)) {
 	Liferay.provide(
 		window,
 		'<portlet:namespace />updateEndDateTimeInputsDisabled',
-		function (checked) {
+		(checked) => {
 			document
 				.querySelectorAll(
 					'.end-date-input-selector input, .end-time-input-selector input'
 				)
-				.forEach(function (input) {
+				.forEach((input) => {
 					input.disabled = checked;
 				});
 		}

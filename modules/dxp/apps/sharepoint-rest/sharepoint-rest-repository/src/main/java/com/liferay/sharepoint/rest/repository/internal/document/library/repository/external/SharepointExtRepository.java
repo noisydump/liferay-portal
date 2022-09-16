@@ -51,10 +51,10 @@ import com.liferay.sharepoint.rest.repository.internal.configuration.SharepointS
 import com.liferay.sharepoint.rest.repository.internal.document.library.repository.external.model.SharepointFileEntry;
 import com.liferay.sharepoint.rest.repository.internal.document.library.repository.external.model.SharepointModel;
 import com.liferay.sharepoint.rest.repository.internal.document.library.repository.external.model.SharepointRootFolder;
+import com.liferay.sharepoint.rest.repository.internal.helper.SharepointURLHelper;
 import com.liferay.sharepoint.rest.repository.internal.search.kql.KQLQuery;
 import com.liferay.sharepoint.rest.repository.internal.search.kql.KQLQueryVisitor;
 import com.liferay.sharepoint.rest.repository.internal.util.SharepointServerResponseConverter;
-import com.liferay.sharepoint.rest.repository.internal.util.SharepointURLHelper;
 
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
@@ -861,7 +861,7 @@ public class SharepointExtRepository implements ExtRepository {
 			"Authorization", "Bearer " + _getAccessToken());
 		httpRequestWithBody.header(
 			"Content-Type", "application/json; odata=verbose");
-		httpRequestWithBody.body(jsonObject.toJSONString());
+		httpRequestWithBody.body(jsonObject.toString());
 
 		HttpResponse<String> httpResponse = httpRequestWithBody.asString();
 

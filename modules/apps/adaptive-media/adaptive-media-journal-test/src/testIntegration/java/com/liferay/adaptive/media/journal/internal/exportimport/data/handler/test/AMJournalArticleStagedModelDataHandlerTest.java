@@ -15,7 +15,6 @@
 package com.liferay.adaptive.media.journal.internal.exportimport.data.handler.test;
 
 import com.liferay.adaptive.media.image.configuration.AMImageConfigurationHelper;
-import com.liferay.adaptive.media.image.html.AMImageHTMLTagFactory;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
@@ -188,7 +187,8 @@ public class AMJournalArticleStagedModelDataHandlerTest
 
 		FileEntry fileEntry = _addImageFileEntry(serviceContext);
 
-		return _addJournalArticle(_getImgTag(fileEntry), serviceContext);
+		return _addJournalArticle(
+			_getContent(_getImgTag(fileEntry)), serviceContext);
 	}
 
 	@Override
@@ -200,7 +200,8 @@ public class AMJournalArticleStagedModelDataHandlerTest
 		FileEntry fileEntry = _addImageFileEntry(serviceContext);
 
 		return Collections.singletonList(
-			_addJournalArticle(_getImgTag(fileEntry), serviceContext));
+			_addJournalArticle(
+				_getContent(_getImgTag(fileEntry)), serviceContext));
 	}
 
 	@Override
@@ -232,15 +233,26 @@ public class AMJournalArticleStagedModelDataHandlerTest
 		throws Exception {
 
 		return _dlAppLocalService.addFileEntry(
-			TestPropsValues.getUserId(), stagingGroup.getGroupId(),
+			null, TestPropsValues.getUserId(), stagingGroup.getGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			StringUtil.randomString(), ContentTypes.IMAGE_JPEG,
-			FileUtil.getBytes(getClass(), "image.jpg"), serviceContext);
+			FileUtil.getBytes(getClass(), "image.jpg"), null, null,
+			serviceContext);
 	}
 
 	private JournalArticle _addJournalArticle(
 			String content, ServiceContext serviceContext)
 		throws Exception {
+
+		JournalFolder journalFolder = _journalFolderLocalService.addFolder(
+			null, serviceContext.getUserId(), serviceContext.getScopeGroupId(),
+			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+			RandomTestUtil.randomString(), "This is a test folder.",
+			serviceContext);
+
+		Map<Locale, String> titleMap = HashMapBuilder.put(
+			LocaleUtil.getSiteDefault(), "Test Article"
+		).build();
 
 		DDMForm ddmForm = DDMStructureTestUtil.getSampleDDMForm(
 			"content", "string", "text", true, "textarea",
@@ -258,24 +270,14 @@ public class AMJournalArticleStagedModelDataHandlerTest
 			ddmStructure.getStructureId(),
 			PortalUtil.getClassNameId(JournalArticle.class));
 
-		JournalFolder journalFolder = _journalFolderLocalService.addFolder(
-			serviceContext.getUserId(), serviceContext.getScopeGroupId(),
-			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID,
-			RandomTestUtil.randomString(), "This is a test folder.",
-			serviceContext);
-
 		return _journalArticleLocalService.addArticle(
-			serviceContext.getUserId(), serviceContext.getScopeGroupId(),
+			null, serviceContext.getUserId(), serviceContext.getScopeGroupId(),
 			journalFolder.getFolderId(),
 			JournalArticleConstants.CLASS_NAME_ID_DEFAULT, 0, StringPool.BLANK,
-			true, 0,
-			HashMapBuilder.put(
-				LocaleUtil.getSiteDefault(), "Test Article"
-			).build(),
-			null, content, ddmStructure.getStructureKey(),
-			ddmTemplate.getTemplateKey(), null, 1, 1, 1965, 0, 0, 0, 0, 0, 0, 0,
-			true, 0, 0, 0, 0, 0, true, true, false, null, null, null, null,
-			serviceContext);
+			true, 0, titleMap, null, titleMap, content,
+			ddmStructure.getStructureKey(), ddmTemplate.getTemplateKey(), null,
+			1, 1, 1965, 0, 0, 0, 0, 0, 0, 0, true, 0, 0, 0, 0, 0, true, true,
+			false, null, null, null, null, serviceContext);
 	}
 
 	private void _assertContentEquals(
@@ -299,14 +301,26 @@ public class AMJournalArticleStagedModelDataHandlerTest
 
 		Element rootElement = document.addElement("root");
 
+		rootElement.addAttribute(
+			"available-locales",
+			LocaleUtil.toLanguageId(LocaleUtil.getSiteDefault()));
+		rootElement.addAttribute(
+			"default-locale",
+			LocaleUtil.toLanguageId(LocaleUtil.getSiteDefault()));
+		rootElement.addElement("request");
+
 		Element dynamicElementElement = rootElement.addElement(
 			"dynamic-element");
 
+		dynamicElementElement.addAttribute("index-type", "text");
 		dynamicElementElement.addAttribute("name", "content");
-		dynamicElementElement.addAttribute("type", "text_area");
+		dynamicElementElement.addAttribute("type", "rich_text");
 
 		Element element = dynamicElementElement.addElement("dynamic-content");
 
+		element.addAttribute(
+			"language-id",
+			LocaleUtil.toLanguageId(LocaleUtil.getSiteDefault()));
 		element.addCDATA(html);
 
 		return document.asXML();
@@ -371,9 +385,6 @@ public class AMJournalArticleStagedModelDataHandlerTest
 
 	@Inject
 	private AMImageConfigurationHelper _amImageConfigurationHelper;
-
-	@Inject
-	private AMImageHTMLTagFactory _amImageHTMLTagFactory;
 
 	@Inject
 	private DLAppLocalService _dlAppLocalService;

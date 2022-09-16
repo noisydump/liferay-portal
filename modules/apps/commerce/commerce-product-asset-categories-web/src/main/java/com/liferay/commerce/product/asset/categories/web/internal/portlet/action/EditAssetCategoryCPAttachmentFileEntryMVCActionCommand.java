@@ -16,6 +16,7 @@ package com.liferay.commerce.product.asset.categories.web.internal.portlet.actio
 
 import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
+import com.liferay.commerce.product.asset.categories.web.internal.constants.CommerceProductAssetCategoriesPortletKeys;
 import com.liferay.commerce.product.model.CPAttachmentFileEntry;
 import com.liferay.commerce.product.service.CPAttachmentFileEntryService;
 import com.liferay.document.library.kernel.exception.NoSuchFileEntryException;
@@ -47,7 +48,7 @@ import org.osgi.service.component.annotations.Reference;
 @Component(
 	enabled = false, immediate = true,
 	property = {
-		"javax.portlet.name=com_liferay_asset_categories_admin_web_portlet_AssetCategoriesAdminPortlet",
+		"javax.portlet.name=" + CommerceProductAssetCategoriesPortletKeys.ASSET_CATEGORIES_ADMIN,
 		"mvc.command.name=/commerce_product_asset_categories/edit_asset_category_cp_attachment_file_entry"
 	},
 	service = MVCActionCommand.class
@@ -55,7 +56,37 @@ import org.osgi.service.component.annotations.Reference;
 public class EditAssetCategoryCPAttachmentFileEntryMVCActionCommand
 	extends BaseMVCActionCommand {
 
-	protected void deleteCPAttachmentFileEntry(ActionRequest actionRequest)
+	@Override
+	protected void doProcessAction(
+			ActionRequest actionRequest, ActionResponse actionResponse)
+		throws Exception {
+
+		String cmd = ParamUtil.getString(actionRequest, Constants.CMD);
+
+		try {
+			if (cmd.equals(Constants.ADD) || cmd.equals(Constants.UPDATE)) {
+				_updateCPAttachmentFileEntry(actionRequest);
+			}
+			else if (cmd.equals(Constants.DELETE)) {
+				_deleteCPAttachmentFileEntry(actionRequest);
+			}
+		}
+		catch (Exception exception) {
+			if (exception instanceof NoSuchFileEntryException) {
+				hideDefaultErrorMessage(actionRequest);
+				hideDefaultSuccessMessage(actionRequest);
+
+				SessionErrors.add(actionRequest, exception.getClass());
+			}
+			else {
+				_log.error(exception);
+
+				throw exception;
+			}
+		}
+	}
+
+	private void _deleteCPAttachmentFileEntry(ActionRequest actionRequest)
 		throws Exception {
 
 		long cpAttachmentFileEntryId = ParamUtil.getLong(
@@ -67,45 +98,16 @@ public class EditAssetCategoryCPAttachmentFileEntryMVCActionCommand
 		}
 	}
 
-	@Override
-	protected void doProcessAction(
-			ActionRequest actionRequest, ActionResponse actionResponse)
-		throws Exception {
-
-		String cmd = ParamUtil.getString(actionRequest, Constants.CMD);
-
-		try {
-			if (cmd.equals(Constants.ADD) || cmd.equals(Constants.UPDATE)) {
-				updateCPAttachmentFileEntry(actionRequest);
-			}
-			else if (cmd.equals(Constants.DELETE)) {
-				deleteCPAttachmentFileEntry(actionRequest);
-			}
-		}
-		catch (Exception exception) {
-			if (exception instanceof NoSuchFileEntryException) {
-				hideDefaultErrorMessage(actionRequest);
-				hideDefaultSuccessMessage(actionRequest);
-
-				SessionErrors.add(actionRequest, exception.getClass());
-			}
-			else {
-				_log.error(exception, exception);
-
-				throw exception;
-			}
-		}
-	}
-
-	protected void updateCPAttachmentFileEntry(ActionRequest actionRequest)
+	private void _updateCPAttachmentFileEntry(ActionRequest actionRequest)
 		throws Exception {
 
 		long cpAttachmentFileEntryId = ParamUtil.getLong(
 			actionRequest, "cpAttachmentFileEntryId");
 
-		long categoryId = ParamUtil.getLong(actionRequest, "categoryId");
 		long fileEntryId = ParamUtil.getLong(actionRequest, "fileEntryId");
 
+		boolean cdnEnabled = ParamUtil.getBoolean(actionRequest, "cdnEnabled");
+		String cdnURL = ParamUtil.getString(actionRequest, "cdnURL");
 		int displayDateMonth = ParamUtil.getInteger(
 			actionRequest, "displayDateMonth");
 		int displayDateDay = ParamUtil.getInteger(
@@ -152,21 +154,24 @@ public class EditAssetCategoryCPAttachmentFileEntryMVCActionCommand
 
 		if (cpAttachmentFileEntryId > 0) {
 			_cpAttachmentFileEntryService.updateCPAttachmentFileEntry(
-				cpAttachmentFileEntryId, fileEntryId, displayDateMonth,
-				displayDateDay, displayDateYear, displayDateHour,
-				displayDateMinute, expirationDateMonth, expirationDateDay,
-				expirationDateYear, expirationDateHour, expirationDateMinute,
-				neverExpire, titleMap, null, priority, type, serviceContext);
+				cpAttachmentFileEntryId, fileEntryId, cdnEnabled, cdnURL,
+				displayDateMonth, displayDateDay, displayDateYear,
+				displayDateHour, displayDateMinute, expirationDateMonth,
+				expirationDateDay, expirationDateYear, expirationDateHour,
+				expirationDateMinute, neverExpire, titleMap, null, priority,
+				type, serviceContext);
 		}
 		else {
 			long classNameId = _portal.getClassNameId(AssetCategory.class);
+
+			long categoryId = ParamUtil.getLong(actionRequest, "categoryId");
 
 			AssetCategory assetCategory =
 				_assetCategoryLocalService.getAssetCategory(categoryId);
 
 			_cpAttachmentFileEntryService.addCPAttachmentFileEntry(
-				serviceContext.getUserId(), assetCategory.getGroupId(),
-				classNameId, categoryId, fileEntryId, displayDateMonth,
+				assetCategory.getGroupId(), classNameId, categoryId,
+				fileEntryId, cdnEnabled, cdnURL, displayDateMonth,
 				displayDateDay, displayDateYear, displayDateHour,
 				displayDateMinute, expirationDateMonth, expirationDateDay,
 				expirationDateYear, expirationDateHour, expirationDateMinute,

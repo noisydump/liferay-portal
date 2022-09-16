@@ -25,9 +25,8 @@ import com.liferay.headless.commerce.admin.catalog.resource.v1_0.OptionResource;
 import com.liferay.headless.commerce.admin.catalog.resource.v1_0.OptionValueResource;
 import com.liferay.headless.commerce.core.util.LanguageUtils;
 import com.liferay.headless.commerce.core.util.ServiceContextHelper;
-import com.liferay.petra.function.UnsafeConsumer;
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.search.Field;
-import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
@@ -40,9 +39,9 @@ import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
-import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
+import java.util.Collections;
 import java.util.Map;
 
 import javax.ws.rs.core.MultivaluedMap;
@@ -60,8 +59,8 @@ import org.osgi.service.component.annotations.ServiceScope;
 	properties = "OSGI-INF/liferay/rest/v1_0/option.properties",
 	scope = ServiceScope.PROTOTYPE, service = OptionResource.class
 )
-public class OptionResourceImpl
-	extends BaseOptionResourceImpl implements EntityModelResource {
+@CTAware
+public class OptionResourceImpl extends BaseOptionResourceImpl {
 
 	@Override
 	public Response deleteOption(Long id) throws Exception {
@@ -80,11 +79,11 @@ public class OptionResourceImpl
 		throws Exception {
 
 		CPOption cpOption = _cpOptionService.fetchByExternalReferenceCode(
-			contextCompany.getCompanyId(), externalReferenceCode);
+			externalReferenceCode, contextCompany.getCompanyId());
 
 		if (cpOption == null) {
 			throw new NoSuchCPOptionException(
-				"Unable to find Option with externalReferenceCode: " +
+				"Unable to find option with external reference code " +
 					externalReferenceCode);
 		}
 
@@ -112,7 +111,7 @@ public class OptionResourceImpl
 		throws Exception {
 
 		CPOption cpOption = _cpOptionService.fetchByExternalReferenceCode(
-			contextCompany.getCompanyId(), externalReferenceCode);
+			externalReferenceCode, contextCompany.getCompanyId());
 
 		return _toOption(cpOption.getCPOptionId());
 	}
@@ -123,22 +122,16 @@ public class OptionResourceImpl
 		throws Exception {
 
 		return SearchUtil.search(
+			Collections.emptyMap(),
 			booleanQuery -> booleanQuery.getPreBooleanFilter(), filter,
-			CPOption.class, search, pagination,
+			CPOption.class.getName(), search, pagination,
 			queryConfig -> queryConfig.setSelectedFieldNames(
 				Field.ENTRY_CLASS_PK),
-			new UnsafeConsumer() {
-
-				public void accept(Object object) throws Exception {
-					SearchContext searchContext = (SearchContext)object;
-
-					searchContext.setCompanyId(contextCompany.getCompanyId());
-				}
-
-			},
+			searchContext -> searchContext.setCompanyId(
+				contextCompany.getCompanyId()),
+			sorts,
 			document -> _toOption(
-				GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK))),
-			sorts);
+				GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK))));
 	}
 
 	@Override
@@ -156,11 +149,11 @@ public class OptionResourceImpl
 		throws Exception {
 
 		CPOption cpOption = _cpOptionService.fetchByExternalReferenceCode(
-			contextCompany.getCompanyId(), externalReferenceCode);
+			externalReferenceCode, contextCompany.getCompanyId());
 
 		if (cpOption == null) {
 			throw new NoSuchCPOptionException(
-				"Unable to find Option with externalReferenceCode: " +
+				"Unable to find option with external reference code " +
 					externalReferenceCode);
 		}
 
@@ -173,7 +166,40 @@ public class OptionResourceImpl
 
 	@Override
 	public Option postOption(Option option) throws Exception {
-		return _upsertOption(option);
+		return _addOrUpdateOption(option);
+	}
+
+	private Option _addOrUpdateOption(Option option) throws Exception {
+		Option.FieldType fieldType = option.getFieldType();
+
+		CPOption cpOption = _cpOptionService.addOrUpdateCPOption(
+			option.getExternalReferenceCode(),
+			LanguageUtils.getLocalizedMap(option.getName()),
+			LanguageUtils.getLocalizedMap(option.getDescription()),
+			fieldType.getValue(), GetterUtil.get(option.getFacetable(), false),
+			GetterUtil.get(option.getRequired(), false),
+			GetterUtil.get(option.getSkuContributor(), false), option.getKey(),
+			_serviceContextHelper.getServiceContext());
+
+		_addOrUpdateOptionValues(cpOption, option.getOptionValues());
+
+		return _toOption(cpOption.getCPOptionId());
+	}
+
+	private void _addOrUpdateOptionValues(
+			CPOption cpOption, OptionValue[] optionValues)
+		throws Exception {
+
+		if (ArrayUtil.isEmpty(optionValues)) {
+			return;
+		}
+
+		_optionValueResource.setContextAcceptLanguage(contextAcceptLanguage);
+
+		for (OptionValue optionValue : optionValues) {
+			_optionValueResource.postOptionIdOptionValue(
+				cpOption.getCPOptionId(), optionValue);
+		}
 	}
 
 	private Map<String, Map<String, String>> _getActions(long cpOptionId) {
@@ -221,39 +247,6 @@ public class OptionResourceImpl
 			option.getKey(), _serviceContextHelper.getServiceContext());
 
 		return _toOption(cpOption.getCPOptionId());
-	}
-
-	private Option _upsertOption(Option option) throws Exception {
-		Option.FieldType fieldType = option.getFieldType();
-
-		CPOption cpOption = _cpOptionService.upsertCPOption(
-			LanguageUtils.getLocalizedMap(option.getName()),
-			LanguageUtils.getLocalizedMap(option.getDescription()),
-			fieldType.getValue(), GetterUtil.get(option.getFacetable(), false),
-			GetterUtil.get(option.getRequired(), false),
-			GetterUtil.get(option.getSkuContributor(), false), option.getKey(),
-			option.getExternalReferenceCode(),
-			_serviceContextHelper.getServiceContext());
-
-		_upsertOptionValues(cpOption, option.getOptionValues());
-
-		return _toOption(cpOption.getCPOptionId());
-	}
-
-	private void _upsertOptionValues(
-			CPOption cpOption, OptionValue[] optionValues)
-		throws Exception {
-
-		if (ArrayUtil.isEmpty(optionValues)) {
-			return;
-		}
-
-		_optionValueResource.setContextAcceptLanguage(contextAcceptLanguage);
-
-		for (OptionValue optionValue : optionValues) {
-			_optionValueResource.postOptionIdOptionValue(
-				cpOption.getCPOptionId(), optionValue);
-		}
 	}
 
 	private static final EntityModel _entityModel = new OptionEntityModel();

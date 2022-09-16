@@ -59,16 +59,16 @@ public class OrderItem implements Cloneable, Serializable {
 
 	protected Long bookedQuantityId;
 
-	public Map<String, ?> getCustomFields() {
+	public CustomField[] getCustomFields() {
 		return customFields;
 	}
 
-	public void setCustomFields(Map<String, ?> customFields) {
+	public void setCustomFields(CustomField[] customFields) {
 		this.customFields = customFields;
 	}
 
 	public void setCustomFields(
-		UnsafeSupplier<Map<String, ?>, Exception> customFieldsUnsafeSupplier) {
+		UnsafeSupplier<CustomField[], Exception> customFieldsUnsafeSupplier) {
 
 		try {
 			customFields = customFieldsUnsafeSupplier.get();
@@ -78,7 +78,28 @@ public class OrderItem implements Cloneable, Serializable {
 		}
 	}
 
-	protected Map<String, ?> customFields;
+	protected CustomField[] customFields;
+
+	public BigDecimal getDecimalQuantity() {
+		return decimalQuantity;
+	}
+
+	public void setDecimalQuantity(BigDecimal decimalQuantity) {
+		this.decimalQuantity = decimalQuantity;
+	}
+
+	public void setDecimalQuantity(
+		UnsafeSupplier<BigDecimal, Exception> decimalQuantityUnsafeSupplier) {
+
+		try {
+			decimalQuantity = decimalQuantityUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected BigDecimal decimalQuantity;
 
 	public String getDeliveryGroup() {
 		return deliveryGroup;
@@ -121,6 +142,29 @@ public class OrderItem implements Cloneable, Serializable {
 	}
 
 	protected BigDecimal discountAmount;
+
+	public Boolean getDiscountManuallyAdjusted() {
+		return discountManuallyAdjusted;
+	}
+
+	public void setDiscountManuallyAdjusted(Boolean discountManuallyAdjusted) {
+		this.discountManuallyAdjusted = discountManuallyAdjusted;
+	}
+
+	public void setDiscountManuallyAdjusted(
+		UnsafeSupplier<Boolean, Exception>
+			discountManuallyAdjustedUnsafeSupplier) {
+
+		try {
+			discountManuallyAdjusted =
+				discountManuallyAdjustedUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Boolean discountManuallyAdjusted;
 
 	public BigDecimal getDiscountPercentageLevel1() {
 		return discountPercentageLevel1;
@@ -413,6 +457,27 @@ public class OrderItem implements Cloneable, Serializable {
 
 	protected BigDecimal finalPriceWithTaxAmount;
 
+	public String getFormattedQuantity() {
+		return formattedQuantity;
+	}
+
+	public void setFormattedQuantity(String formattedQuantity) {
+		this.formattedQuantity = formattedQuantity;
+	}
+
+	public void setFormattedQuantity(
+		UnsafeSupplier<String, Exception> formattedQuantityUnsafeSupplier) {
+
+		try {
+			formattedQuantity = formattedQuantityUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String formattedQuantity;
+
 	public Long getId() {
 		return id;
 	}
@@ -452,6 +517,27 @@ public class OrderItem implements Cloneable, Serializable {
 	}
 
 	protected Map<String, String> name;
+
+	public String getOptions() {
+		return options;
+	}
+
+	public void setOptions(String options) {
+		this.options = options;
+	}
+
+	public void setOptions(
+		UnsafeSupplier<String, Exception> optionsUnsafeSupplier) {
+
+		try {
+			options = optionsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String options;
 
 	public String getOrderExternalReferenceCode() {
 		return orderExternalReferenceCode;
@@ -498,6 +584,28 @@ public class OrderItem implements Cloneable, Serializable {
 	}
 
 	protected Long orderId;
+
+	public Boolean getPriceManuallyAdjusted() {
+		return priceManuallyAdjusted;
+	}
+
+	public void setPriceManuallyAdjusted(Boolean priceManuallyAdjusted) {
+		this.priceManuallyAdjusted = priceManuallyAdjusted;
+	}
+
+	public void setPriceManuallyAdjusted(
+		UnsafeSupplier<Boolean, Exception>
+			priceManuallyAdjustedUnsafeSupplier) {
+
+		try {
+			priceManuallyAdjusted = priceManuallyAdjustedUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Boolean priceManuallyAdjusted;
 
 	public String getPrintedNote() {
 		return printedNote;
@@ -751,6 +859,27 @@ public class OrderItem implements Cloneable, Serializable {
 	}
 
 	protected Boolean subscription;
+
+	public String getUnitOfMeasure() {
+		return unitOfMeasure;
+	}
+
+	public void setUnitOfMeasure(String unitOfMeasure) {
+		this.unitOfMeasure = unitOfMeasure;
+	}
+
+	public void setUnitOfMeasure(
+		UnsafeSupplier<String, Exception> unitOfMeasureUnsafeSupplier) {
+
+		try {
+			unitOfMeasure = unitOfMeasureUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String unitOfMeasure;
 
 	public BigDecimal getUnitPrice() {
 		return unitPrice;

@@ -12,6 +12,18 @@
  * details.
  */
 
+import {State} from '@liferay/frontend-js-state-web';
+import {
+	fetch,
+	openConfirmModal,
+	toggleBoxes,
+	toggleDisabled,
+} from 'frontend-js-web';
+import {
+	STR_NULL_IMAGE_FILE_ENTRY_ID,
+	imageSelectorImageAtom,
+} from 'item-selector-taglib';
+
 const CSS_INVISIBLE = 'invisible';
 const STR_BLANK = '';
 const STR_CHANGE = 'change';
@@ -31,8 +43,8 @@ const STRINGS = {
 	),
 };
 
-function addNamespace(obj, namespace) {
-	return Object.entries(obj).reduce((memo, [key, value]) => ({
+function addNamespace(object, namespace) {
+	return Object.entries(object).reduce((memo, [key, value]) => ({
 		...memo,
 		[`${namespace}${key}`]: value,
 	}));
@@ -82,7 +94,7 @@ export default class Blogs {
 			this._shortenDescription = !customDescriptionEnabled;
 
 			if (emailEntryUpdatedEnabled) {
-				Liferay.Util.toggleBoxes(
+				toggleBoxes(
 					`${namespace}sendEmailEntryUpdated`,
 					`${namespace}emailEntryUpdatedCommentWrapper`
 				);
@@ -128,11 +140,13 @@ export default class Blogs {
 			'.cover-image-caption'
 		);
 
-		Liferay.on('coverImageDeleted', this._removeCaption, this);
-		Liferay.on(
-			['coverImageUploaded', 'coverImageSelected'],
-			this._showCaption,
-			this
+		this._imageSelectorCoverImageSubscription = State.subscribe(
+			imageSelectorImageAtom,
+			({paramName, ...data}) => {
+				if (paramName === 'coverImageFileEntry') {
+					this._updateCaption(data);
+				}
+			}
 		);
 
 		const publishButton = this._getElementById('publishButton');
@@ -204,13 +218,18 @@ export default class Blogs {
 		const tempImages = this._getTempImages();
 
 		if (tempImages.length) {
-			if (confirm(this._config.strings.confirmDiscardImages)) {
-				tempImages.each((image) => {
-					image.parentElement.remove();
-				});
+			openConfirmModal({
+				message: this._config.strings.confirmDiscardImages,
+				onConfirm: (isConfirmed) => {
+					if (isConfirmed) {
+						tempImages.each((image) => {
+							image.parentElement.remove();
+						});
 
-				instance._saveEntry(draft, ajax);
-			}
+						instance._saveEntry(draft, ajax);
+					}
+				},
+			});
 		}
 		else {
 			instance._saveEntry(draft, ajax);
@@ -262,6 +281,14 @@ export default class Blogs {
 		return document.getElementById(`${this._config.namespace}${id}`);
 	}
 
+	_getValuesByName(name) {
+		const nodes = document.querySelectorAll(
+			`input[name^=${this._config.namespace}${name}]`
+		);
+
+		return [...nodes].map((node) => node.value);
+	}
+
 	_getTempImages() {
 		return this._rootNode.querySelectorAll('img[data-random-id]');
 	}
@@ -293,14 +320,14 @@ export default class Blogs {
 
 			this.updateFriendlyURL(title);
 
-			Liferay.Util.toggleDisabled(urlTitleInput, true);
-			Liferay.Util.toggleDisabled(urlTitleInputLabel, true);
+			toggleDisabled(urlTitleInput, true);
+			toggleDisabled(urlTitleInputLabel, true);
 		}
 		else {
 			urlTitleInput.value = this._lastCustomURL || urlTitleInput.value;
 
-			Liferay.Util.toggleDisabled(urlTitleInput, false);
-			Liferay.Util.toggleDisabled(urlTitleInputLabel, false);
+			toggleDisabled(urlTitleInput, false);
+			toggleDisabled(urlTitleInputLabel, false);
 		}
 	}
 
@@ -311,9 +338,9 @@ export default class Blogs {
 			captionNode.classList.add(CSS_INVISIBLE);
 		}
 
-		window[`${this._config.namespace}coverImageCaptionEditor`].setHTML(
-			STR_BLANK
-		);
+		CKEDITOR.instances[
+			`${this._config.namespace}coverImageCaptionEditor`
+		].setData(STR_BLANK);
 	}
 
 	_saveEntry(draft, ajax) {
@@ -323,9 +350,10 @@ export default class Blogs {
 
 		const content = window[`${namespace}contentEditor`].getHTML();
 
-		const coverImageCaption = window[
+		const coverImageCaption = CKEDITOR.instances[
 			`${namespace}coverImageCaptionEditor`
-		].getHTML();
+		].getData();
+
 		const subtitle = this._getElementById('subtitle').value;
 		const title = this._getElementById('title').value;
 
@@ -350,13 +378,14 @@ export default class Blogs {
 				const allowPingbacks = this._getElementById('allowPingbacks');
 				const allowTrackbacks = this._getElementById('allowTrackbacks');
 
-				const assetTagNames = this._getElementById('assetTagNames');
-
 				const bodyData = addNamespace(
 					{
 						allowPingbacks: allowPingbacks?.value,
 						allowTrackbacks: allowTrackbacks?.value,
-						assetTagNames: assetTagNames?.value || '',
+						assetCategoryIds: this._getValuesByName(
+							'assetCategoryIds'
+						),
+						assetTagNames: this._getValuesByName('assetTagNames'),
 						cmd: constants.ADD,
 						content,
 						coverImageCaption,
@@ -400,16 +429,13 @@ export default class Blogs {
 					bodyData[item.getAttribute('name')] = item.value;
 				});
 
-				Liferay.Util.toggleDisabled(
-					this._getElementById('publishButton'),
-					true
-				);
+				toggleDisabled(this._getElementById('publishButton'), true);
 
 				this._updateStatus(strings.saveDraftMessage);
 
 				const body = new URLSearchParams(bodyData);
 
-				Liferay.Util.fetch(this._config.editEntryURL, {
+				fetch(this._config.editEntryURL, {
 					body,
 					method: 'POST',
 				})
@@ -439,6 +465,9 @@ export default class Blogs {
 								);
 							}
 
+							this._getElementById('urlTitle').value =
+								message.urlTitle;
+
 							if (saveStatus) {
 								const saveText = entry?.pending
 									? strings.savedAtMessage
@@ -456,14 +485,15 @@ export default class Blogs {
 							saveStatus.classList.add('hide');
 							saveStatus.hidden = true;
 						}
-
-						Liferay.Util.toggleDisabled(
-							this._getElementById('publishButton'),
-							false
-						);
 					})
 					.catch(() => {
 						this._updateStatus(strings.saveDraftError);
+					})
+					.finally(() => {
+						toggleDisabled(
+							this._getElementById('publishButton'),
+							false
+						);
 					});
 			}
 		}
@@ -509,6 +539,15 @@ export default class Blogs {
 		}
 	}
 
+	_updateCaption(imageData) {
+		if (imageData.fileEntryId !== STR_NULL_IMAGE_FILE_ENTRY_ID) {
+			this._showCaption();
+		}
+		else {
+			this._removeCaption();
+		}
+	}
+
 	_updateContentImages(finalContent, attributeDataImageId) {
 		const originalContent = window[
 			`${this._config.namespace}contentEditor`
@@ -518,7 +557,7 @@ export default class Blogs {
 
 		const finalContentImages = this._getContentImages(finalContent);
 
-		if (originalContentImages.length != finalContentImages.length) {
+		if (originalContentImages.length !== finalContentImages.length) {
 			return;
 		}
 
@@ -528,26 +567,26 @@ export default class Blogs {
 			const tempImageId = image.getAttribute(attributeDataImageId);
 
 			if (tempImageId) {
-				const el = document.querySelector(
+				const element = document.querySelector(
 					`img[${attributeDataImageId}="${tempImageId}"]`
 				);
 
-				if (el) {
+				if (element) {
 					const finalImage = finalContentImages[i];
 
-					if (el.tagName === finalImage.tagName) {
-						el.removeAttribute('data-cke-saved-src');
+					if (element.tagName === finalImage.tagName) {
+						element.removeAttribute('data-cke-saved-src');
 
 						for (let j = 0; j < finalImage.attributes.length; j++) {
 							const attr = finalImage.attributes[j];
 
-							el.setAttribute(attr.name, attr.value);
+							element.setAttribute(attr.name, attr.value);
 						}
 
-						el.removeAttribute(attributeDataImageId);
+						element.removeAttribute(attributeDataImageId);
 					}
 					else {
-						el.replaceWith(finalContentImages[i]);
+						element.replaceWith(finalContentImages[i]);
 					}
 				}
 			}
@@ -570,11 +609,8 @@ export default class Blogs {
 		this._eventsHandles.forEach((removeListener) => removeListener());
 		this._eventsHandles = [];
 
-		Liferay.detach('coverImageDeleted', this._removeCaption);
-		Liferay.detach(
-			['coverImageUploaded', 'coverImageSelected'],
-			this._showCaption
-		);
+		this._imageSelectorCoverImageSubscription.dispose();
+		this._imageSelectorCoverImageSubscription = null;
 	}
 
 	setCustomDescription(text) {
@@ -601,14 +637,14 @@ export default class Blogs {
 		const form = Liferay.Form.get(`${this._config.namespace}fm`);
 
 		if (!this._shortenDescription) {
-			Liferay.Util.toggleDisabled(descriptionNode, false);
-			Liferay.Util.toggleDisabled(descriptionLabelNode, false);
+			toggleDisabled(descriptionNode, false);
+			toggleDisabled(descriptionLabelNode, false);
 
 			form.addRule(`${this._config.namespace}description`, 'required');
 		}
 		else {
-			Liferay.Util.toggleDisabled(descriptionNode, true);
-			Liferay.Util.toggleDisabled(descriptionLabelNode, true);
+			toggleDisabled(descriptionNode, true);
+			toggleDisabled(descriptionLabelNode, true);
 
 			form.removeRule(`${this._config.namespace}description`, 'required');
 		}

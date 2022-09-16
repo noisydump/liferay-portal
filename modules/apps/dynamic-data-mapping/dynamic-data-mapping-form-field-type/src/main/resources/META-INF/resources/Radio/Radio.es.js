@@ -19,7 +19,15 @@ import {FieldBase} from '../FieldBase/ReactFieldBase.es';
 import {useSyncValue} from '../hooks/useSyncValue.es';
 import {setJSONArrayValue} from '../util/setters.es';
 
+import './Radio.scss';
+
 const Radio = ({
+	editingLanguageId,
+	inline,
+	name,
+	onBlur,
+	onChange,
+	onFocus,
 	options = [
 		{
 			label: 'Option 1',
@@ -30,17 +38,16 @@ const Radio = ({
 			value: 'option2',
 		},
 	],
-	inline,
-	name,
-	onBlur,
-	onChange,
-	onFocus,
 	predefinedValue,
 	readOnly: disabled,
 	value: initialValue,
 	...otherProps
 }) => {
 	const predefinedValueMemo = useMemo(() => {
+		if (typeof predefinedValue === 'string') {
+			return predefinedValue;
+		}
+
 		const predefinedValueJSONArray =
 			setJSONArrayValue(predefinedValue) || [];
 
@@ -48,20 +55,22 @@ const Radio = ({
 	}, [predefinedValue]);
 
 	const [currentValue, setCurrentValue] = useSyncValue(
-		initialValue ? initialValue : predefinedValueMemo
+		initialValue ? initialValue : predefinedValueMemo,
+		true,
+		editingLanguageId
 	);
 
 	return (
 		<FieldBase {...otherProps} name={name} readOnly={disabled}>
-			<div className="ddm-radio" onBlur={onBlur} onFocus={onFocus}>
-				{options.map((option) => (
+			<div className="ddm__radio" onBlur={onBlur} onFocus={onFocus}>
+				{options.map((option, index) => (
 					<ClayRadio
 						checked={currentValue === option.value}
 						disabled={disabled}
 						inline={inline}
 						key={option.value}
 						label={option.label}
-						name={name}
+						name={`${name}_${index}`}
 						onChange={(event) => {
 							setCurrentValue(option.value);
 
@@ -71,6 +80,8 @@ const Radio = ({
 					/>
 				))}
 			</div>
+
+			<input name={name} type="hidden" value={currentValue} />
 		</FieldBase>
 	);
 };

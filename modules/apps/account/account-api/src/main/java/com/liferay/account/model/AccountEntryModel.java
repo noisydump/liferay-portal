@@ -15,10 +15,10 @@
 package com.liferay.account.model;
 
 import com.liferay.portal.kernel.bean.AutoEscape;
-import com.liferay.portal.kernel.model.AuditedModel;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
+import com.liferay.portal.kernel.model.StagedAuditedModel;
 
 import java.util.Date;
 
@@ -37,7 +37,8 @@ import org.osgi.annotation.versioning.ProviderType;
  */
 @ProviderType
 public interface AccountEntryModel
-	extends AuditedModel, BaseModel<AccountEntry>, MVCCModel, ShardedModel {
+	extends BaseModel<AccountEntry>, MVCCModel, ShardedModel,
+			StagedAuditedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -74,6 +75,23 @@ public interface AccountEntryModel
 	 */
 	@Override
 	public void setMvccVersion(long mvccVersion);
+
+	/**
+	 * Returns the uuid of this account entry.
+	 *
+	 * @return the uuid of this account entry
+	 */
+	@AutoEscape
+	@Override
+	public String getUuid();
+
+	/**
+	 * Sets the uuid of this account entry.
+	 *
+	 * @param uuid the uuid of this account entry
+	 */
+	@Override
+	public void setUuid(String uuid);
 
 	/**
 	 * Returns the external reference code of this account entry.
@@ -214,6 +232,21 @@ public interface AccountEntryModel
 	 * @param defaultBillingAddressId the default billing address ID of this account entry
 	 */
 	public void setDefaultBillingAddressId(long defaultBillingAddressId);
+
+	/**
+	 * Returns the default c payment method key of this account entry.
+	 *
+	 * @return the default c payment method key of this account entry
+	 */
+	@AutoEscape
+	public String getDefaultCPaymentMethodKey();
+
+	/**
+	 * Sets the default c payment method key of this account entry.
+	 *
+	 * @param defaultCPaymentMethodKey the default c payment method key of this account entry
+	 */
+	public void setDefaultCPaymentMethodKey(String defaultCPaymentMethodKey);
 
 	/**
 	 * Returns the default shipping address ID of this account entry.
@@ -375,5 +408,8 @@ public interface AccountEntryModel
 	 * @param status the status of this account entry
 	 */
 	public void setStatus(int status);
+
+	@Override
+	public AccountEntry cloneWithOriginalValues();
 
 }

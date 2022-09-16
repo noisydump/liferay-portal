@@ -2,11 +2,13 @@
 <head>
 <title>DocumentsAndMediaSelectDocument</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">DocumentsAndMediaSelectDocument</td></tr>
 </thead>
+
 <tbody>
 <tr>
 	<td>SELECT_DOCUMENT_IFRAME</td>
@@ -23,7 +25,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--FOLDER_TABLE-->
+
 <tr>
 	<td>FOLDER_TABLE_FOLDER</td>
 	<td>//tr[contains(.,'${key_dmFolderName}')]/td[1]//span/a</td>
@@ -39,7 +43,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--DOCUMENTS_TABLE-->
+
 <tr>
 	<td>DOCUMENTS_TABLE_CHOOSE</td>
 	<td>//button[@data-entityname='${key_dmDocumentTypeName}']</td>

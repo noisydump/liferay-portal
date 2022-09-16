@@ -17,6 +17,8 @@ package com.liferay.portal.workflow.metrics.service.util;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -27,6 +29,7 @@ import com.liferay.portal.search.engine.adapter.search.CountSearchRequest;
 import com.liferay.portal.search.engine.adapter.search.CountSearchResponse;
 import com.liferay.portal.search.query.BooleanQuery;
 import com.liferay.portal.search.query.Queries;
+import com.liferay.portal.search.test.util.IdempotentRetryAssert;
 import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
@@ -41,6 +44,8 @@ import com.liferay.portal.workflow.kaleo.service.KaleoTaskLocalService;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import org.junit.After;
@@ -74,6 +79,96 @@ public abstract class BaseWorkflowMetricsTestCase {
 
 	@Rule
 	public SearchTestRule searchTestRule = new SearchTestRule();
+
+	protected void assertCount(
+			Consumer<BooleanQuery> booleanQueryConsumer, long expectedCount,
+			String indexName, String indexType, Object... parameters)
+		throws Exception {
+
+		if ((searchEngineAdapter == null) || (parameters == null)) {
+			return;
+		}
+
+		if ((parameters.length % 2) != 0) {
+			throw new IllegalArgumentException(
+				"Parameters length is not an even number");
+		}
+
+		CountSearchRequest countSearchRequest = new CountSearchRequest();
+
+		countSearchRequest.setIndexNames(indexName);
+
+		BooleanQuery booleanQuery = queries.booleanQuery();
+
+		BooleanQuery filterQuery = queries.booleanQuery();
+
+		for (int i = 0; i < parameters.length; i = i + 2) {
+			filterQuery.addMustQueryClauses(
+				queries.term(String.valueOf(parameters[i]), parameters[i + 1]));
+		}
+
+		booleanQueryConsumer.accept(filterQuery);
+
+		countSearchRequest.setQuery(
+			booleanQuery.addFilterQueryClauses(filterQuery));
+
+		countSearchRequest.setTypes(indexType);
+
+		CountSearchResponse countSearchResponse = searchEngineAdapter.execute(
+			countSearchRequest);
+
+		Assert.assertEquals(
+			StringBundler.concat(
+				indexName, " ", indexType, " ",
+				countSearchResponse.getSearchRequestString()),
+			expectedCount, countSearchResponse.getCount());
+	}
+
+	protected void assertCount(
+			long expectedCount, String indexName, String indexType,
+			Object... parameters)
+		throws Exception {
+
+		if ((searchEngineAdapter == null) || (parameters == null)) {
+			return;
+		}
+
+		if ((parameters.length % 2) != 0) {
+			throw new IllegalArgumentException(
+				"Parameters length is not an even number");
+		}
+
+		CountSearchRequest countSearchRequest = new CountSearchRequest();
+
+		countSearchRequest.setIndexNames(indexName);
+
+		BooleanQuery booleanQuery = queries.booleanQuery();
+
+		for (int i = 0; i < parameters.length; i = i + 2) {
+			booleanQuery.addMustQueryClauses(
+				queries.term(String.valueOf(parameters[i]), parameters[i + 1]));
+		}
+
+		countSearchRequest.setQuery(booleanQuery);
+
+		countSearchRequest.setTypes(indexType);
+
+		CountSearchResponse countSearchResponse = searchEngineAdapter.execute(
+			countSearchRequest);
+
+		Assert.assertEquals(
+			StringBundler.concat(
+				indexName, " ", indexType, " ",
+				countSearchResponse.getSearchRequestString()),
+			expectedCount, countSearchResponse.getCount());
+	}
+
+	protected void assertCount(
+			String indexName, String indexType, Object... parameters)
+		throws Exception {
+
+		assertCount(1, indexName, indexType, parameters);
+	}
 
 	protected String getInitialNodeKey(WorkflowDefinition workflowDefinition)
 		throws Exception {
@@ -118,6 +213,9 @@ public abstract class BaseWorkflowMetricsTestCase {
 						kaleoNode.getKaleoNodeId());
 				}
 				catch (PortalException portalException) {
+					if (_log.isDebugEnabled()) {
+						_log.debug(portalException);
+					}
 				}
 
 				return null;
@@ -154,53 +252,19 @@ public abstract class BaseWorkflowMetricsTestCase {
 	}
 
 	protected void retryAssertCount(
-			long expectedCount, String indexName, String indexType,
-			Object... parameters)
-		throws Exception {
-
-		if (searchEngineAdapter == null) {
-			return;
-		}
-
-		if (parameters == null) {
-			return;
-		}
-
-		if ((parameters.length % 2) != 0) {
-			throw new IllegalArgumentException(
-				"Parameters length is not an even number");
-		}
-
-		CountSearchRequest countSearchRequest = new CountSearchRequest();
-
-		countSearchRequest.setIndexNames(indexName);
-
-		BooleanQuery booleanQuery = queries.booleanQuery();
-
-		for (int i = 0; i < parameters.length; i = i + 2) {
-			booleanQuery.addMustQueryClauses(
-				queries.term(String.valueOf(parameters[i]), parameters[i + 1]));
-		}
-
-		countSearchRequest.setQuery(booleanQuery);
-
-		countSearchRequest.setTypes(indexType);
-
-		CountSearchResponse countSearchResponse = searchEngineAdapter.execute(
-			countSearchRequest);
-
-		Assert.assertEquals(
-			StringBundler.concat(
-				indexName, " ", indexType, " ",
-				countSearchResponse.getSearchRequestString()),
-			expectedCount, countSearchResponse.getCount());
-	}
-
-	protected void retryAssertCount(
+			Consumer<BooleanQuery> booleanQueryConsumer, long expectedCount,
 			String indexName, String indexType, Object... parameters)
 		throws Exception {
 
-		retryAssertCount(1, indexName, indexType, parameters);
+		IdempotentRetryAssert.retryAssert(
+			3, TimeUnit.SECONDS,
+			() -> {
+				assertCount(
+					booleanQueryConsumer, expectedCount, indexName, indexType,
+					parameters);
+
+				return null;
+			});
 	}
 
 	protected void undeployWorkflowDefinition() throws Exception {
@@ -289,6 +353,9 @@ public abstract class BaseWorkflowMetricsTestCase {
 			() -> StringPool.BLANK
 		);
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		BaseWorkflowMetricsTestCase.class);
 
 	@Inject
 	private KaleoDefinitionVersionLocalService

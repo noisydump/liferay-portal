@@ -18,9 +18,12 @@ import com.liferay.asset.entry.rel.model.AssetEntryAssetCategoryRel;
 import com.liferay.asset.entry.rel.service.base.AssetEntryAssetCategoryRelLocalServiceBaseImpl;
 import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.model.AssetRenderer;
+import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.model.ClassedModel;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.search.SearchException;
@@ -30,6 +33,7 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Eudaldo Alonso
@@ -189,6 +193,14 @@ public class AssetEntryAssetCategoryRelLocalServiceImpl
 	}
 
 	@Override
+	public int getAssetEntryAssetCategoryRelsCountByAssetCategoryId(
+		long assetCategoryId) {
+
+		return assetEntryAssetCategoryRelPersistence.countByAssetCategoryId(
+			assetCategoryId);
+	}
+
+	@Override
 	public long[] getAssetEntryPrimaryKeys(long assetCategoryId) {
 		List<AssetEntryAssetCategoryRel> assetEntryAssetCategoryRels =
 			getAssetEntryAssetCategoryRelsByAssetCategoryId(assetCategoryId);
@@ -203,7 +215,8 @@ public class AssetEntryAssetCategoryRelLocalServiceImpl
 			return;
 		}
 
-		AssetEntry assetEntry = assetEntryLocalService.fetchEntry(assetEntryId);
+		AssetEntry assetEntry = _assetEntryLocalService.fetchEntry(
+			assetEntryId);
 
 		if (assetEntry == null) {
 			return;
@@ -225,11 +238,16 @@ public class AssetEntryAssetCategoryRelLocalServiceImpl
 
 			Object assetObject = assetRenderer.getAssetObject();
 
-			if (assetObject == null) {
-				return;
+			if (assetObject instanceof BaseModel) {
+				indexer.reindex(assetObject);
 			}
+			else if (assetObject instanceof ClassedModel) {
+				ClassedModel classedModel = (ClassedModel)assetObject;
 
-			indexer.reindex(assetObject);
+				indexer.reindex(
+					assetEntry.getClassName(),
+					(Long)classedModel.getPrimaryKeyObj());
+			}
 		}
 		catch (SearchException searchException) {
 			_log.error("Unable to reindex asset entry", searchException);
@@ -238,5 +256,8 @@ public class AssetEntryAssetCategoryRelLocalServiceImpl
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		AssetEntryAssetCategoryRelLocalServiceImpl.class);
+
+	@Reference
+	private AssetEntryLocalService _assetEntryLocalService;
 
 }

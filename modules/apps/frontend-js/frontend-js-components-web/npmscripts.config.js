@@ -13,9 +13,9 @@
  */
 
 module.exports = {
-	federation: {
-		bridges: [],
-		runLegacyBuild: false,
+	build: {
+		bundler: {
+			ignore: ['**/legacy/config.js'],
+		},
 	},
-	preset: '@liferay/npm-scripts/src/presets/standard',
 };

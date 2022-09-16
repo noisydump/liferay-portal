@@ -47,7 +47,7 @@ UserGroup userGroup = (UserGroup)row.getObject();
 			%>'
 			id='<%= row.getRowId() + "assignRoles" %>'
 			message="assign-roles"
-			url="javascript:;"
+			url="javascript:void(0);"
 		/>
 
 		<portlet:renderURL var="unassignURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
@@ -68,7 +68,7 @@ UserGroup userGroup = (UserGroup)row.getObject();
 			%>'
 			id='<%= row.getRowId() + "unassignRoles" %>'
 			message="unassign-roles"
-			url="javascript:;"
+			url="javascript:void(0);"
 		/>
 	</c:if>
 
@@ -92,17 +92,17 @@ UserGroup userGroup = (UserGroup)row.getObject();
 	);
 
 	if (assignRolesLink) {
-		assignRolesLink.addEventListener('click', function (event) {
+		assignRolesLink.addEventListener('click', (event) => {
 			event.preventDefault();
 
-			var target = event.target;
-
-			if (!target.dataset.href) {
-				target = target.parentElement;
-			}
+			var target = event.currentTarget;
 
 			var addUserGroupGroupRoleFm =
 				document.<portlet:namespace />addUserGroupGroupRoleFm;
+
+			if (!addUserGroupGroupRoleFm) {
+				return;
+			}
 
 			Liferay.Util.setFormValues(addUserGroupGroupRoleFm, {
 				userGroupId: target.dataset.usergroupid,
@@ -112,18 +112,23 @@ UserGroup userGroup = (UserGroup)row.getObject();
 				buttonAddLabel: '<liferay-ui:message key="done" />',
 				multiple: true,
 				onSelect: function (selectedItems) {
-					if (selectedItems) {
-						Array.prototype.forEach.call(selectedItems, function (
-							selectedItem,
-							index
-						) {
-							addUserGroupGroupRoleFm.append(selectedItem);
-						});
+					if (selectedItems.length) {
+						const input = document.createElement('input');
+
+						input.name = '<portlet:namespace />rowIds';
+
+						const selectedUserGroupIds = Array.prototype.map.call(
+							selectedItems,
+							(item) => item.value
+						);
+
+						input.value = selectedUserGroupIds.join();
+
+						addUserGroupGroupRoleFm.appendChild(input);
 
 						submitForm(addUserGroupGroupRoleFm);
 					}
 				},
-				selectEventName: '<portlet:namespace />selectUserGroupsRoles',
 				title: '<liferay-ui:message key="assign-roles" />',
 				url: target.dataset.href,
 			});
@@ -135,17 +140,17 @@ UserGroup userGroup = (UserGroup)row.getObject();
 	);
 
 	if (unassignRolesLink) {
-		unassignRolesLink.addEventListener('click', function (event) {
+		unassignRolesLink.addEventListener('click', (event) => {
 			event.preventDefault();
 
-			var target = event.target;
-
-			if (!target.dataset.href) {
-				target = target.parentElement;
-			}
+			var target = event.currentTarget;
 
 			var unassignUserGroupGroupRoleFm =
 				document.<portlet:namespace />unassignUserGroupGroupRoleFm;
+
+			if (!unassignUserGroupGroupRoleFm) {
+				return;
+			}
 
 			Liferay.Util.setFormValues(unassignUserGroupGroupRoleFm, {
 				userGroupId: target.dataset.usergroupid,
@@ -155,13 +160,19 @@ UserGroup userGroup = (UserGroup)row.getObject();
 				buttonAddLabel: '<liferay-ui:message key="done" />',
 				multiple: true,
 				onSelect: function (selectedItems) {
-					if (selectedItems) {
-						Array.prototype.forEach.call(selectedItems, function (
-							selectedItem,
-							index
-						) {
-							unassignUserGroupGroupRoleFm.append(selectedItem);
-						});
+					if (selectedItems.length) {
+						const input = document.createElement('input');
+
+						input.name = '<portlet:namespace />rowIds';
+
+						const selectedUserGroupIds = Array.prototype.map.call(
+							selectedItems,
+							(item) => item.value
+						);
+
+						input.value = selectedUserGroupIds.join();
+
+						unassignUserGroupGroupRoleFm.appendChild(input);
 
 						submitForm(unassignUserGroupGroupRoleFm);
 					}

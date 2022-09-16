@@ -4,6 +4,7 @@
 	border-top-left-radius: 4px;
 	border-top-right-radius: 4px;
 	color: #fff;
+	display: flex;
 	font-weight: 600;
 	height: 28px;
 	justify-content: space-between;
@@ -11,8 +12,9 @@
 	padding: 0 0 2px 8px;
 	position: absolute;
 	top: -30px;
+	white-space: nowrap;
 	width: auto;
-	z-index: 50;
+	z-index: 40;
 
 	&.ddm-fieldset {
 		background-color: #5aca75;
@@ -29,4 +31,8 @@
 		margin-right: -8px;
 		margin-top: -4px;
 	}
+}
+
+.rtl .ddm-field-actions-container {
+	right: unset !important;
 }

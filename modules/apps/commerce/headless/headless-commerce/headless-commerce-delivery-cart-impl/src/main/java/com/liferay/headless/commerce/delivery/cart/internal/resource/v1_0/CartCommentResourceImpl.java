@@ -34,8 +34,6 @@ import com.liferay.portal.vulcan.pagination.Pagination;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.ws.rs.core.Response;
-
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ServiceScope;
@@ -53,12 +51,8 @@ public class CartCommentResourceImpl
 	extends BaseCartCommentResourceImpl implements NestedFieldSupport {
 
 	@Override
-	public Response deleteCartComment(Long commentId) throws Exception {
+	public void deleteCartComment(Long commentId) throws Exception {
 		_commerceOrderNoteService.deleteCommerceOrderNote(commentId);
-
-		Response.ResponseBuilder responseBuilder = Response.ok();
-
-		return responseBuilder.build();
 	}
 
 	@Override
@@ -72,21 +66,22 @@ public class CartCommentResourceImpl
 			@NestedFieldId("id") Long cartId, Pagination pagination)
 		throws Exception {
 
-		List<CommerceOrderNote> commerceOrderNotes =
-			_commerceOrderNoteService.getCommerceOrderNotes(cartId, false);
-
 		int totalItems = _commerceOrderNoteService.getCommerceOrderNotesCount(
 			cartId, false);
 
 		return Page.of(
-			_toOrderNotes(commerceOrderNotes), pagination, totalItems);
+			_toOrderNotes(
+				_commerceOrderNoteService.getCommerceOrderNotes(
+					cartId, false, pagination.getStartPosition(),
+					pagination.getEndPosition())),
+			pagination, totalItems);
 	}
 
 	@Override
 	public CartComment postCartComment(Long cartId, CartComment cartComment)
 		throws Exception {
 
-		return _upsertOrderNote(
+		return _addOrUpdateOrderNote(
 			_commerceOrderService.getCommerceOrder(cartId), cartComment);
 	}
 
@@ -102,7 +97,22 @@ public class CartCommentResourceImpl
 
 		cartComment.setId(commentId);
 
-		return _upsertOrderNote(commerceOrder, cartComment);
+		return _addOrUpdateOrderNote(commerceOrder, cartComment);
+	}
+
+	private CartComment _addOrUpdateOrderNote(
+			CommerceOrder commerceOrder, CartComment cartComment)
+		throws Exception {
+
+		CommerceOrderNote commerceOrderNote =
+			_commerceOrderNoteService.addOrUpdateCommerceOrderNote(
+				null, GetterUtil.get(cartComment.getId(), 0L),
+				commerceOrder.getCommerceOrderId(), cartComment.getContent(),
+				GetterUtil.get(cartComment.getRestricted(), false),
+				_serviceContextHelper.getServiceContext(
+					commerceOrder.getGroupId()));
+
+		return _toOrderNote(commerceOrderNote.getCommerceOrderNoteId());
 	}
 
 	private CartComment _toOrderNote(Long commerceOrderNoteId)
@@ -126,21 +136,6 @@ public class CartCommentResourceImpl
 		}
 
 		return orders;
-	}
-
-	private CartComment _upsertOrderNote(
-			CommerceOrder commerceOrder, CartComment cartComment)
-		throws Exception {
-
-		CommerceOrderNote commerceOrderNote =
-			_commerceOrderNoteService.upsertCommerceOrderNote(
-				GetterUtil.get(cartComment.getId(), 0L),
-				commerceOrder.getCommerceOrderId(), cartComment.getContent(),
-				GetterUtil.get(cartComment.getRestricted(), false), null,
-				_serviceContextHelper.getServiceContext(
-					commerceOrder.getGroupId()));
-
-		return _toOrderNote(commerceOrderNote.getCommerceOrderNoteId());
 	}
 
 	@Reference

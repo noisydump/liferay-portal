@@ -68,7 +68,7 @@ if (organizationId > 0) {
 
 					<portlet:namespace />selectOrganizationButton.addEventListener(
 						'click',
-						function (event) {
+						(event) => {
 							Liferay.Util.openSelectionModal({
 								onSelect: function (event) {
 									var form = document.getElementById('<portlet:namespace />fm');
@@ -111,10 +111,13 @@ if (organizationId > 0) {
 									'<liferay-ui:message arguments="organization" key="select-x" />',
 
 								<%
-								PortletURL selectOrganizationURL = PortletProviderUtil.getPortletURL(request, Organization.class.getName(), PortletProvider.Action.BROWSE);
-
-								selectOrganizationURL.setParameter("tabs1", "organizations");
-								selectOrganizationURL.setWindowState(LiferayWindowState.POP_UP);
+								PortletURL selectOrganizationURL = PortletURLBuilder.create(
+									PortletProviderUtil.getPortletURL(request, Organization.class.getName(), PortletProvider.Action.BROWSE)
+								).setTabs1(
+									"organizations"
+								).setWindowState(
+									LiferayWindowState.POP_UP
+								).buildPortletURL();
 								%>
 
 								url: '<%= selectOrganizationURL.toString() %>',
@@ -129,7 +132,7 @@ if (organizationId > 0) {
 					);
 
 					if (selectionMethodElement) {
-						selectionMethodElement.addEventListener('change', function (event) {
+						selectionMethodElement.addEventListener('change', (event) => {
 							var usersSelectionOptions = document.getElementById(
 								'<portlet:namespace />usersSelectionOptions'
 							);

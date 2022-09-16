@@ -16,6 +16,7 @@ package com.liferay.external.data.source.test.service.base;
 
 import com.liferay.external.data.source.test.model.TestEntity;
 import com.liferay.external.data.source.test.service.TestEntityLocalService;
+import com.liferay.external.data.source.test.service.TestEntityLocalServiceUtil;
 import com.liferay.external.data.source.test.service.persistence.TestEntityPersistence;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.bean.BeanReference;
@@ -31,6 +32,8 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -44,6 +47,8 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.io.Serializable;
+
+import java.lang.reflect.Field;
 
 import java.util.List;
 
@@ -67,7 +72,7 @@ public abstract class TestEntityLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>TestEntityLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.external.data.source.test.service.TestEntityLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>TestEntityLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>TestEntityLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -136,6 +141,13 @@ public abstract class TestEntityLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return testEntityPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -300,6 +312,11 @@ public abstract class TestEntityLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement TestEntityLocalServiceImpl#deleteTestEntity(TestEntity) to avoid orphaned data");
+		}
+
 		return testEntityLocalService.deleteTestEntity(
 			(TestEntity)persistedModel);
 	}
@@ -428,11 +445,15 @@ public abstract class TestEntityLocalServiceBaseImpl
 		persistedModelLocalServiceRegistry.register(
 			"com.liferay.external.data.source.test.model.TestEntity",
 			testEntityLocalService);
+
+		_setLocalServiceUtilService(testEntityLocalService);
 	}
 
 	public void destroy() {
 		persistedModelLocalServiceRegistry.unregister(
 			"com.liferay.external.data.source.test.model.TestEntity");
+
+		_setLocalServiceUtilService(null);
 	}
 
 	/**
@@ -477,6 +498,22 @@ public abstract class TestEntityLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		TestEntityLocalService testEntityLocalService) {
+
+		try {
+			Field field = TestEntityLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, testEntityLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@BeanReference(type = TestEntityLocalService.class)
 	protected TestEntityLocalService testEntityLocalService;
 
@@ -488,6 +525,9 @@ public abstract class TestEntityLocalServiceBaseImpl
 	)
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		TestEntityLocalServiceBaseImpl.class);
 
 	@ServiceReference(type = PersistedModelLocalServiceRegistry.class)
 	protected PersistedModelLocalServiceRegistry

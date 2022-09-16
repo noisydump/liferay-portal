@@ -24,6 +24,8 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.dao.search.RowChecker;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
@@ -104,6 +106,9 @@ public class EntriesChecker extends EmptyOnClickRowChecker {
 				}
 			}
 			catch (Exception exception) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(exception);
+				}
 			}
 		}
 		else if (folder != null) {
@@ -117,6 +122,9 @@ public class EntriesChecker extends EmptyOnClickRowChecker {
 				}
 			}
 			catch (Exception exception) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(exception);
+				}
 			}
 		}
 
@@ -124,19 +132,11 @@ public class EntriesChecker extends EmptyOnClickRowChecker {
 			return StringPool.BLANK;
 		}
 
-		StringBundler sb = new StringBundler(9);
-
-		sb.append("['");
-		sb.append(_liferayPortletResponse.getNamespace());
-		sb.append(RowChecker.ROW_IDS);
-		sb.append(JournalFolder.class.getSimpleName());
-		sb.append("', '");
-		sb.append(_liferayPortletResponse.getNamespace());
-		sb.append(RowChecker.ROW_IDS);
-		sb.append(JournalArticle.class.getSimpleName());
-		sb.append("']");
-
-		String checkBoxRowIds = sb.toString();
+		String checkBoxRowIds = StringBundler.concat(
+			"['", _liferayPortletResponse.getNamespace(), RowChecker.ROW_IDS,
+			JournalFolder.class.getSimpleName(), "', '",
+			_liferayPortletResponse.getNamespace(), RowChecker.ROW_IDS,
+			JournalArticle.class.getSimpleName(), "']");
 
 		return getRowCheckBox(
 			httpServletRequest, checked, disabled,
@@ -146,6 +146,8 @@ public class EntriesChecker extends EmptyOnClickRowChecker {
 			primaryKey, checkBoxRowIds, "'#" + getAllRowIds() + "'",
 			StringPool.BLANK);
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(EntriesChecker.class);
 
 	private final LiferayPortletResponse _liferayPortletResponse;
 	private final PermissionChecker _permissionChecker;

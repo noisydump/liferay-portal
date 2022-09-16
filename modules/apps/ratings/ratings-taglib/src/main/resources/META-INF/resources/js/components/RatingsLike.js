@@ -14,9 +14,8 @@
 
 import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
-import {ClayTooltipProvider} from '@clayui/tooltip';
+import {useIsMounted} from '@liferay/frontend-js-react-web';
 import classNames from 'classnames';
-import {useIsMounted} from 'frontend-js-react-web';
 import PropTypes from 'prop-types';
 import React, {useState} from 'react';
 
@@ -73,40 +72,40 @@ const RatingsLike = ({
 	};
 
 	return (
-		<ClayTooltipProvider>
-			<div className="ratings-like">
-				<ClayButton
-					aria-pressed={liked}
-					borderless
-					className={classNames({
-						'btn-animated': animatedButton,
-					})}
-					disabled={disabled}
-					displayType="secondary"
-					onClick={toggleLiked}
-					small
-					title={getTitle()}
-					value={totalLikes}
-				>
-					<span className="c-inner" tabIndex="-1">
-						<span className="inline-item inline-item-before">
-							<span className="off">
-								<ClayIcon symbol="heart" />
-							</span>
-							<span
-								className="on"
-								onAnimationEnd={HandleAnimationEnd}
-							>
-								<ClayIcon symbol="heart-full" />
-							</span>
+		<div className="ratings-like">
+			<ClayButton
+				aria-pressed={liked}
+				borderless
+				className={classNames({
+					'btn-animated': animatedButton,
+				})}
+				disabled={disabled}
+				displayType="secondary"
+				onClick={toggleLiked}
+				small
+				title={getTitle()}
+				value={totalLikes}
+			>
+				<span className="c-inner" tabIndex="-1">
+					<span className="inline-item inline-item-before">
+						<span className="off">
+							<ClayIcon symbol="heart" />
 						</span>
-						<span className="inline-item likes">
-							<AnimatedCounter counter={totalLikes} />
+
+						<span
+							className="on"
+							onAnimationEnd={HandleAnimationEnd}
+						>
+							<ClayIcon symbol="heart-full" />
 						</span>
 					</span>
-				</ClayButton>
-			</div>
-		</ClayTooltipProvider>
+
+					<span className="inline-item likes">
+						<AnimatedCounter counter={totalLikes} />
+					</span>
+				</span>
+			</ClayButton>
+		</div>
 	);
 };
 

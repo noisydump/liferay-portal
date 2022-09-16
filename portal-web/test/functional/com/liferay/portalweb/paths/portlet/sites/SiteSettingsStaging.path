@@ -2,13 +2,17 @@
 <head>
 <title>SiteSettingsStaging</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">SiteSettingsStaging</td></tr>
 </thead>
+
 <tbody>
+
 <!--STAGING-->
+
 <tr>
 	<td>NONE_RADIO</td>
 	<td>//span[contains(.,'None')]</td>
@@ -25,8 +29,18 @@
 	<td></td>
 </tr>
 <tr>
+	<td>ENABLED_ON_LOCAL_LIVE_CHECKBOX</td>
+	<td>//label[contains(.,'Local Live')]/input[@checked]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>ENABLED_ON_PUBLIC_PAGES_CHECKBOX</td>
 	<td>//span[contains(.,'Public Pages')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ENABLED_ON_REMOTE_LIVE_CHECKBOX</td>
+	<td>//label[contains(.,'Remote Live')]/input[@checked]</td>
 	<td></td>
 </tr>
 <tr>
@@ -44,7 +58,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--REMOTE_STAGING-->
+
 <tr>
 	<td>REMOTE_STAGING_IP</td>
 	<td>//input[contains(@id,'remoteAddress')]</td>

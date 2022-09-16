@@ -12,7 +12,7 @@
  * details.
  */
 
-import {EventHandler} from 'metal-events';
+import {EventHandler} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useEffect, useRef, useState} from 'react';
 
@@ -114,7 +114,7 @@ export default function Editor({
 			id={`${config.portletNamespace}${id}`}
 		>
 			<div
-				className="alloy-editor alloy-editor-placeholder form-control form-control-sm page-editor__editor"
+				className="alloy-editor form-control form-control-sm page-editor__editor page-editor__editor-placeholder"
 				contentEditable={false}
 				data-placeholder={placeholder}
 				data-required={false}

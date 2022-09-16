@@ -30,8 +30,7 @@ function filterDuplicates(list) {
 		(item, index) =>
 			cleanedList.findIndex(
 				(newVal) =>
-					newVal.label.toLowerCase() === item.label.toLowerCase() &&
-					newVal.value.toLowerCase() === item.value.toLowerCase()
+					newVal.label === item.label && newVal.value === item.value
 			) === index
 	);
 }
@@ -109,10 +108,10 @@ class Alias extends Component {
 					<ClayInput.GroupItem>
 						<ClayMultiSelect
 							id="aliases-input"
-							inputValue={inputValue}
 							items={transformListOfStringsToObjects(keywords)}
 							onChange={this._handleInputChange}
 							onItemsChange={this._handleItemsChange}
+							value={inputValue}
 						/>
 
 						<ClayForm.FeedbackGroup>

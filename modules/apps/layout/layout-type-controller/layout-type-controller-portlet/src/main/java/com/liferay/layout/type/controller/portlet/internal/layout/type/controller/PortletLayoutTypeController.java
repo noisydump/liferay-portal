@@ -14,24 +14,25 @@
 
 package com.liferay.layout.type.controller.portlet.internal.layout.type.controller;
 
-import com.liferay.fragment.constants.FragmentActionKeys;
-import com.liferay.fragment.renderer.FragmentRendererController;
+import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
+import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalService;
 import com.liferay.layout.type.controller.BaseLayoutTypeControllerImpl;
 import com.liferay.layout.type.controller.portlet.internal.constants.PortletLayoutTypeControllerWebKeys;
+import com.liferay.layout.type.controller.portlet.internal.display.context.PortletLayoutDisplayContext;
 import com.liferay.petra.io.unsync.UnsyncStringWriter;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.LayoutTypeController;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.service.PortletLocalService;
-import com.liferay.portal.kernel.servlet.DirectRequestDispatcherFactoryUtil;
-import com.liferay.portal.kernel.servlet.TransferHeadersHelperUtil;
+import com.liferay.portal.kernel.servlet.DirectRequestDispatcherFactory;
+import com.liferay.portal.kernel.servlet.PipingServletResponse;
+import com.liferay.portal.kernel.servlet.TransferHeadersHelper;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.servlet.DynamicServletRequestUtil;
-import com.liferay.taglib.servlet.PipingServletResponse;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
@@ -65,9 +66,9 @@ public class PortletLayoutTypeController extends BaseLayoutTypeControllerImpl {
 		httpServletRequest.setAttribute(WebKeys.SEL_LAYOUT, layout);
 
 		RequestDispatcher requestDispatcher =
-			TransferHeadersHelperUtil.getTransferHeadersRequestDispatcher(
-				DirectRequestDispatcherFactoryUtil.getRequestDispatcher(
-					servletContext, getEditPage()));
+			_transferHeadersHelper.getTransferHeadersRequestDispatcher(
+				_directRequestDispatcherFactory.getRequestDispatcher(
+					_servletContext, getEditPage()));
 
 		UnsyncStringWriter unsyncStringWriter = new UnsyncStringWriter();
 
@@ -85,14 +86,10 @@ public class PortletLayoutTypeController extends BaseLayoutTypeControllerImpl {
 			HttpServletResponse httpServletResponse, Layout layout)
 		throws Exception {
 
-		httpServletRequest.setAttribute(
-			FragmentActionKeys.FRAGMENT_RENDERER_CONTROLLER,
-			_fragmentRendererController);
-
 		RequestDispatcher requestDispatcher =
-			TransferHeadersHelperUtil.getTransferHeadersRequestDispatcher(
-				DirectRequestDispatcherFactoryUtil.getRequestDispatcher(
-					servletContext, getViewPage()));
+			_transferHeadersHelper.getTransferHeadersRequestDispatcher(
+				_directRequestDispatcherFactory.getRequestDispatcher(
+					_servletContext, getViewPage()));
 
 		HttpServletRequest originalHttpServletRequest =
 			_portal.getOriginalServletRequest(httpServletRequest);
@@ -106,13 +103,18 @@ public class PortletLayoutTypeController extends BaseLayoutTypeControllerImpl {
 				originalHttpServletRequest =
 					DynamicServletRequestUtil.createDynamicServletRequest(
 						originalHttpServletRequest, portlet,
-						httpServletRequest.getParameterMap(), true);
+						httpServletRequest.getParameterMap(), false);
 			}
 		}
 
 		httpServletRequest.setAttribute(
 			PortletLayoutTypeControllerWebKeys.ORIGINAL_HTTP_SERVLET_REQUEST,
 			originalHttpServletRequest);
+		httpServletRequest.setAttribute(
+			PortletLayoutTypeControllerWebKeys.PORTLET_LAYOUT_DISPLAY_CONTEXT,
+			new PortletLayoutDisplayContext(
+				_layoutPageTemplateEntryLocalService,
+				_layoutPageTemplateStructureLocalService));
 
 		UnsyncStringWriter unsyncStringWriter = new UnsyncStringWriter();
 
@@ -158,22 +160,6 @@ public class PortletLayoutTypeController extends BaseLayoutTypeControllerImpl {
 		return true;
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *             #createServletResponse(HttpServletResponse,
-	 *             UnsyncStringWriter)}
-	 */
-	@Deprecated
-	@Override
-	protected ServletResponse createServletResponse(
-		HttpServletResponse httpServletResponse,
-		com.liferay.portal.kernel.io.unsync.UnsyncStringWriter
-			unsyncStringWriter) {
-
-		return new PipingServletResponse(
-			httpServletResponse, unsyncStringWriter);
-	}
-
 	@Override
 	protected ServletResponse createServletResponse(
 		HttpServletResponse httpServletResponse,
@@ -189,16 +175,13 @@ public class PortletLayoutTypeController extends BaseLayoutTypeControllerImpl {
 	}
 
 	@Override
-	protected String getViewPage() {
-		return _VIEW_PAGE;
+	protected ServletContext getServletContext() {
+		return _servletContext;
 	}
 
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.layout.type.controller.portlet)",
-		unbind = "-"
-	)
-	protected void setServletContext(ServletContext servletContext) {
-		this.servletContext = servletContext;
+	@Override
+	protected String getViewPage() {
+		return _VIEW_PAGE;
 	}
 
 	private static final String _EDIT_PAGE = "/layout/edit/portlet.jsp";
@@ -210,12 +193,28 @@ public class PortletLayoutTypeController extends BaseLayoutTypeControllerImpl {
 	private static final String _VIEW_PAGE = "/layout/view/portlet.jsp";
 
 	@Reference
-	private FragmentRendererController _fragmentRendererController;
+	private DirectRequestDispatcherFactory _directRequestDispatcherFactory;
+
+	@Reference
+	private LayoutPageTemplateEntryLocalService
+		_layoutPageTemplateEntryLocalService;
+
+	@Reference
+	private LayoutPageTemplateStructureLocalService
+		_layoutPageTemplateStructureLocalService;
 
 	@Reference
 	private Portal _portal;
 
 	@Reference
 	private PortletLocalService _portletLocalService;
+
+	@Reference(
+		target = "(osgi.web.symbolicname=com.liferay.layout.type.controller.portlet)"
+	)
+	private ServletContext _servletContext;
+
+	@Reference
+	private TransferHeadersHelper _transferHeadersHelper;
 
 }

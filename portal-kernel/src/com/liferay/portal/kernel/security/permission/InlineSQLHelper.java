@@ -32,6 +32,9 @@ public interface InlineSQLHelper {
 	public <T extends Table<T>> Predicate getPermissionWherePredicate(
 		Class<?> modelClass, Column<T, Long> classPKColumn, long... groupIds);
 
+	public <T extends Table<T>> Predicate getPermissionWherePredicate(
+		String modelClassName, Column<T, Long> classPKColumn, long... groupIds);
+
 	/**
 	 * Returns <code>true</code> if the inline SQL helper is enabled.
 	 *

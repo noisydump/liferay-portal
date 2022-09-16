@@ -17,9 +17,10 @@ package com.liferay.dynamic.data.mapping.form.field.type.internal.checkbox;
 import com.liferay.configuration.admin.constants.ConfigurationAdminPortletKeys;
 import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldTemplateContextContributor;
 import com.liferay.dynamic.data.mapping.form.field.type.constants.DDMFormFieldTypeConstants;
+import com.liferay.dynamic.data.mapping.form.field.type.internal.util.DDMFormFieldTypeUtil;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
-import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.dynamic.data.mapping.render.DDMFormFieldRenderingContext;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
@@ -27,8 +28,6 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 
 import java.util.Map;
-
-import javax.portlet.PortletURL;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -56,7 +55,10 @@ public class CheckboxDDMFormFieldTemplateContextContributor
 		return HashMapBuilder.<String, Object>put(
 			"predefinedValue",
 			GetterUtil.getBoolean(
-				getPredefinedValue(ddmFormField, ddmFormFieldRenderingContext))
+				DDMFormFieldTypeUtil.getValue(
+					DDMFormFieldTypeUtil.getPropertyValue(
+						ddmFormField, ddmFormFieldRenderingContext.getLocale(),
+						"predefinedValue")))
 		).put(
 			"showAsSwitcher",
 			GetterUtil.getBoolean(ddmFormField.getProperty("showAsSwitcher"))
@@ -78,23 +80,16 @@ public class CheckboxDDMFormFieldTemplateContextContributor
 					ddmFormFieldRenderingContext.getHttpServletRequest());
 			}
 		).put(
+			"tooltip",
+			DDMFormFieldTypeUtil.getPropertyValue(
+				ddmFormField, ddmFormFieldRenderingContext.getLocale(),
+				"tooltip")
+		).put(
 			"value",
-			GetterUtil.getBoolean(ddmFormFieldRenderingContext.getValue())
+			GetterUtil.getBoolean(
+				DDMFormFieldTypeUtil.getValue(
+					ddmFormFieldRenderingContext.getValue()))
 		).build();
-	}
-
-	protected String getPredefinedValue(
-		DDMFormField ddmFormField,
-		DDMFormFieldRenderingContext ddmFormFieldRenderingContext) {
-
-		LocalizedValue predefinedValue = ddmFormField.getPredefinedValue();
-
-		if (predefinedValue == null) {
-			return null;
-		}
-
-		return predefinedValue.getString(
-			ddmFormFieldRenderingContext.getLocale());
 	}
 
 	private String _getSystemSettingsURL(
@@ -103,17 +98,16 @@ public class CheckboxDDMFormFieldTemplateContextContributor
 		RequestBackedPortletURLFactory requestBackedPortletURLFactory =
 			RequestBackedPortletURLFactoryUtil.create(httpServletRequest);
 
-		PortletURL portletURL = requestBackedPortletURLFactory.createActionURL(
-			ConfigurationAdminPortletKeys.SYSTEM_SETTINGS);
-
-		portletURL.setParameter(
-			"mvcRenderCommandName", "/configuration_admin/edit_configuration");
-		portletURL.setParameter(
+		return PortletURLBuilder.create(
+			requestBackedPortletURLFactory.createActionURL(
+				ConfigurationAdminPortletKeys.SYSTEM_SETTINGS)
+		).setMVCRenderCommandName(
+			"/configuration_admin/edit_configuration"
+		).setParameter(
 			"factoryPid",
 			"com.liferay.dynamic.data.mapping.form.web.internal." +
-				"configuration.DDMFormWebConfiguration");
-
-		return portletURL.toString();
+				"configuration.DDMFormWebConfiguration"
+		).buildString();
 	}
 
 }

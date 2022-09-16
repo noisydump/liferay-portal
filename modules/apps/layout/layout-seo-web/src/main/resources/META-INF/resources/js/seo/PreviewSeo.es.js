@@ -12,7 +12,7 @@
  * details.
  */
 
-import {useIsMounted} from 'frontend-js-react-web';
+import {useIsMounted} from '@liferay/frontend-js-react-web';
 import {isObject} from 'frontend-js-web';
 import {PropTypes} from 'prop-types';
 import React, {useCallback, useEffect, useState} from 'react';
@@ -33,6 +33,7 @@ const PreviewSeo = ({
 	const titleUrl = [
 		<div className="preview-seo-title text-truncate" key="title">
 			{title}
+
 			{titleSuffix && ` - ${titleSuffix}`}
 		</div>,
 		<div className="preview-seo-url text-truncate" key="url">
@@ -54,7 +55,9 @@ const PreviewSeo = ({
 					/>
 				</div>
 			)}
+
 			{displayType === 'og' ? titleUrl.reverse() : titleUrl}
+
 			<div className="preview-seo-description">
 				{description.length < MAX_LENGTH_DESCIPTION
 					? description

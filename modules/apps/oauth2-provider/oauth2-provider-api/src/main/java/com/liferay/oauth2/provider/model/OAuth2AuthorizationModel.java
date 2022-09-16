@@ -317,4 +317,22 @@ public interface OAuth2AuthorizationModel
 	 */
 	public void setRefreshTokenExpirationDate(Date refreshTokenExpirationDate);
 
+	/**
+	 * Returns the remember device content of this o auth2 authorization.
+	 *
+	 * @return the remember device content of this o auth2 authorization
+	 */
+	@AutoEscape
+	public String getRememberDeviceContent();
+
+	/**
+	 * Sets the remember device content of this o auth2 authorization.
+	 *
+	 * @param rememberDeviceContent the remember device content of this o auth2 authorization
+	 */
+	public void setRememberDeviceContent(String rememberDeviceContent);
+
+	@Override
+	public OAuth2Authorization cloneWithOriginalValues();
+
 }

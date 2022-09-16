@@ -14,13 +14,13 @@
 
 package com.liferay.commerce.price.list.internal.upgrade.v2_1_2;
 
-import com.liferay.commerce.price.list.internal.upgrade.base.BaseCommercePriceListUpgradeProcess;
 import com.liferay.commerce.price.list.model.CommercePriceList;
 import com.liferay.portal.kernel.model.RoleConstants;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourceLocalService;
 import com.liferay.portal.kernel.service.permission.ModelPermissions;
 import com.liferay.portal.kernel.service.permission.ModelPermissionsFactory;
+import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -30,8 +30,7 @@ import java.util.Arrays;
 /**
  * @author Riccardo Alberti
  */
-public class CommercePriceListUpgradeProcess
-	extends BaseCommercePriceListUpgradeProcess {
+public class CommercePriceListUpgradeProcess extends UpgradeProcess {
 
 	public CommercePriceListUpgradeProcess(
 		ResourceActionLocalService resourceActionLocalService,
@@ -58,16 +57,17 @@ public class CommercePriceListUpgradeProcess
 				"CommercePriceList";
 
 		try (Statement s = connection.createStatement();
-			ResultSet rs = s.executeQuery(selectCommercePriceListSQL)) {
+			ResultSet resultSet = s.executeQuery(selectCommercePriceListSQL)) {
 
-			while (rs.next()) {
-				long companyId = rs.getLong("companyId");
+			while (resultSet.next()) {
+				long companyId = resultSet.getLong("companyId");
 
-				long groupId = rs.getLong("groupId");
+				long groupId = resultSet.getLong("groupId");
 
-				long userId = rs.getLong("userId");
+				long userId = resultSet.getLong("userId");
 
-				long commercePriceListId = rs.getLong("commercePriceListId");
+				long commercePriceListId = resultSet.getLong(
+					"commercePriceListId");
 
 				_resourceLocalService.addModelResources(
 					companyId, groupId, userId,

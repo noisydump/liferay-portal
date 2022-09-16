@@ -29,9 +29,12 @@ import {
 import {sub} from '../utils.es';
 import Captcha from './Captcha.es';
 
+const OTHER_REASON_MAX_LENGTH = 75;
+
 const ModalContentForm = ({
 	captchaURI,
 	error,
+	form = {},
 	handleClose,
 	handleInputChange,
 	handleSubmit,
@@ -44,7 +47,10 @@ const ModalContentForm = ({
 	const {namespace} = useContext(ThemeContext);
 
 	return (
-		<form onSubmit={handleSubmit}>
+		<form
+			aria-label={Liferay.Language.get('report-inappropriate-content')}
+			onSubmit={handleSubmit}
+		>
 			<ClayModal.Body>
 				{error && (
 					<ClayAlert
@@ -54,6 +60,7 @@ const ModalContentForm = ({
 						{error}
 					</ClayAlert>
 				)}
+
 				<p>
 					{sub(
 						Liferay.Language.get(
@@ -67,6 +74,7 @@ const ModalContentForm = ({
 						false
 					)}
 				</p>
+
 				<div className="form-group">
 					<label
 						className="control-label"
@@ -74,6 +82,7 @@ const ModalContentForm = ({
 					>
 						{Liferay.Language.get('reason-for-the-report')}
 					</label>
+
 					<select
 						className="form-control"
 						id={`${namespace}selectedReason`}
@@ -86,11 +95,13 @@ const ModalContentForm = ({
 								{text}
 							</option>
 						))}
+
 						<option value={OTHER_REASON_VALUE}>
 							{Liferay.Language.get('other-reason')}
 						</option>
 					</select>
 				</div>
+
 				{selectedReason === OTHER_REASON_VALUE && (
 					<div className="form-group">
 						<label
@@ -98,16 +109,25 @@ const ModalContentForm = ({
 							htmlFor={`${namespace}otherReason`}
 						>
 							{Liferay.Language.get('other-reason')}
+
+							{` (${
+								OTHER_REASON_MAX_LENGTH -
+								(form.otherReason?.length ?? 0)
+							} ${Liferay.Language.get('characters')})`}
 						</label>
+
 						<input
 							autoFocus
 							className="form-control"
 							id={`${namespace}otherReason`}
+							maxLength={OTHER_REASON_MAX_LENGTH}
 							name="otherReason"
 							onChange={handleInputChange}
+							value={form.otherReason}
 						/>
 					</div>
 				)}
+
 				{!signedIn && (
 					<div className="form-group">
 						<label
@@ -116,6 +136,7 @@ const ModalContentForm = ({
 						>
 							{Liferay.Language.get('email-address')}
 						</label>
+
 						<input
 							className="form-control"
 							id={`${namespace}otherRreporterEmailAddresseason`}
@@ -125,8 +146,10 @@ const ModalContentForm = ({
 						/>
 					</div>
 				)}
+
 				{captchaURI && <Captcha uri={captchaURI} />}
 			</ClayModal.Body>
+
 			<ClayModal.Footer
 				last={
 					<ClayButton.Group spaced>
@@ -136,6 +159,7 @@ const ModalContentForm = ({
 						>
 							{Liferay.Language.get('cancel')}
 						</ClayButton>
+
 						<ClayButton
 							disabled={isSending}
 							displayType="primary"
@@ -155,6 +179,7 @@ const ModalBodySuccess = ({companyName}) => (
 		<p>
 			<strong>{Liferay.Language.get('thank-you-for-your-report')}</strong>
 		</p>
+
 		<p>
 			{sub(
 				Liferay.Language.get(
@@ -208,6 +233,7 @@ const FlagsModal = ({
 	captchaURI,
 	companyName,
 	error,
+	form,
 	handleClose,
 	handleInputChange,
 	handleSubmit,
@@ -224,10 +250,12 @@ const FlagsModal = ({
 			<ClayModal.Header>
 				{Liferay.Language.get('report-inappropriate-content')}
 			</ClayModal.Header>
+
 			{status === STATUS_REPORT ? (
 				<ModalContentForm
 					captchaURI={captchaURI}
 					error={error}
+					form={form}
 					handleClose={handleClose}
 					handleInputChange={handleInputChange}
 					handleSubmit={handleSubmit}

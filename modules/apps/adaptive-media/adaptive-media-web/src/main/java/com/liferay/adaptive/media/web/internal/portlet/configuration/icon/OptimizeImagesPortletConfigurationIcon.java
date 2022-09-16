@@ -18,9 +18,10 @@ import com.liferay.adaptive.media.image.configuration.AMImageConfigurationEntry;
 import com.liferay.adaptive.media.image.configuration.AMImageConfigurationHelper;
 import com.liferay.adaptive.media.web.internal.background.task.OptimizeImagesAllConfigurationsBackgroundTaskExecutor;
 import com.liferay.adaptive.media.web.internal.constants.AMPortletKeys;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskManager;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.portlet.configuration.icon.BasePortletConfigurationIcon;
 import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfigurationIcon;
@@ -37,10 +38,8 @@ import java.util.Collection;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
-import javax.portlet.ActionRequest;
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
-import javax.portlet.PortletURL;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -77,7 +76,7 @@ public class OptimizeImagesPortletConfigurationIcon
 
 	@Override
 	public String getMessage(PortletRequest portletRequest) {
-		return LanguageUtil.get(
+		return _language.get(
 			getResourceBundle(getLocale(portletRequest)), "adapt-all-images");
 	}
 
@@ -98,17 +97,16 @@ public class OptimizeImagesPortletConfigurationIcon
 			WebKeys.THEME_DISPLAY);
 
 		if (_isDisabled(themeDisplay.getCompanyId())) {
-			return "javascript:;";
+			return "javascript:void(0);";
 		}
 
-		PortletURL portletURL = _portal.getControlPanelPortletURL(
-			portletRequest, AMPortletKeys.ADAPTIVE_MEDIA,
-			PortletRequest.ACTION_PHASE);
-
-		portletURL.setParameter(
-			ActionRequest.ACTION_NAME, "/adaptive_media/optimize_images");
-
-		return portletURL.toString();
+		return PortletURLBuilder.create(
+			_portal.getControlPanelPortletURL(
+				portletRequest, AMPortletKeys.ADAPTIVE_MEDIA,
+				PortletRequest.ACTION_PHASE)
+		).setActionName(
+			"/adaptive_media/optimize_images"
+		).buildString();
 	}
 
 	@Override
@@ -159,6 +157,9 @@ public class OptimizeImagesPortletConfigurationIcon
 
 	@Reference
 	private BackgroundTaskManager _backgroundTaskManager;
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private Portal _portal;

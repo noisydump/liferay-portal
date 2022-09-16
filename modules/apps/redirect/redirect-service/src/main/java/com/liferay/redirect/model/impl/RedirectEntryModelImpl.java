@@ -30,24 +30,23 @@ import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.redirect.model.RedirectEntry;
 import com.liferay.redirect.model.RedirectEntryModel;
-import com.liferay.redirect.model.RedirectEntrySoap;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -122,38 +121,38 @@ public class RedirectEntryModelImpl
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long COMPANYID_COLUMN_BITMASK = 1L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long DESTINATIONURL_COLUMN_BITMASK = 2L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long GROUPID_COLUMN_BITMASK = 4L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long SOURCEURL_COLUMN_BITMASK = 8L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long UUID_COLUMN_BITMASK = 16L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *		#getColumnBitmask(String)
+	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long REDIRECTENTRYID_COLUMN_BITMASK = 32L;
@@ -170,62 +169,6 @@ public class RedirectEntryModelImpl
 	 */
 	@Deprecated
 	public static void setFinderCacheEnabled(boolean finderCacheEnabled) {
-	}
-
-	/**
-	 * Converts the soap model instance into a normal model instance.
-	 *
-	 * @param soapModel the soap model instance to convert
-	 * @return the normal model instance
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static RedirectEntry toModel(RedirectEntrySoap soapModel) {
-		if (soapModel == null) {
-			return null;
-		}
-
-		RedirectEntry model = new RedirectEntryImpl();
-
-		model.setMvccVersion(soapModel.getMvccVersion());
-		model.setUuid(soapModel.getUuid());
-		model.setRedirectEntryId(soapModel.getRedirectEntryId());
-		model.setGroupId(soapModel.getGroupId());
-		model.setCompanyId(soapModel.getCompanyId());
-		model.setUserId(soapModel.getUserId());
-		model.setUserName(soapModel.getUserName());
-		model.setCreateDate(soapModel.getCreateDate());
-		model.setModifiedDate(soapModel.getModifiedDate());
-		model.setDestinationURL(soapModel.getDestinationURL());
-		model.setExpirationDate(soapModel.getExpirationDate());
-		model.setLastOccurrenceDate(soapModel.getLastOccurrenceDate());
-		model.setPermanent(soapModel.isPermanent());
-		model.setSourceURL(soapModel.getSourceURL());
-
-		return model;
-	}
-
-	/**
-	 * Converts the soap model instances into normal model instances.
-	 *
-	 * @param soapModels the soap model instances to convert
-	 * @return the normal model instances
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static List<RedirectEntry> toModels(RedirectEntrySoap[] soapModels) {
-		if (soapModels == null) {
-			return null;
-		}
-
-		List<RedirectEntry> models = new ArrayList<RedirectEntry>(
-			soapModels.length);
-
-		for (RedirectEntrySoap soapModel : soapModels) {
-			models.add(toModel(soapModel));
-		}
-
-		return models;
 	}
 
 	public RedirectEntryModelImpl() {
@@ -311,34 +254,6 @@ public class RedirectEntryModelImpl
 		getAttributeSetterBiConsumers() {
 
 		return _attributeSetterBiConsumers;
-	}
-
-	private static Function<InvocationHandler, RedirectEntry>
-		_getProxyProviderFunction() {
-
-		Class<?> proxyClass = ProxyUtil.getProxyClass(
-			RedirectEntry.class.getClassLoader(), RedirectEntry.class,
-			ModelWrapper.class);
-
-		try {
-			Constructor<RedirectEntry> constructor =
-				(Constructor<RedirectEntry>)proxyClass.getConstructor(
-					InvocationHandler.class);
-
-			return invocationHandler -> {
-				try {
-					return constructor.newInstance(invocationHandler);
-				}
-				catch (ReflectiveOperationException
-							reflectiveOperationException) {
-
-					throw new InternalError(reflectiveOperationException);
-				}
-			};
-		}
-		catch (NoSuchMethodException noSuchMethodException) {
-			throw new InternalError(noSuchMethodException);
-		}
 	}
 
 	private static final Map<String, Function<RedirectEntry, Object>>
@@ -747,7 +662,9 @@ public class RedirectEntryModelImpl
 		for (Map.Entry<String, Object> entry :
 				_columnOriginalValues.entrySet()) {
 
-			if (entry.getValue() != getColumnValue(entry.getKey())) {
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
 				_columnBitmask |= _columnBitmasks.get(entry.getKey());
 			}
 		}
@@ -803,6 +720,41 @@ public class RedirectEntryModelImpl
 		redirectEntryImpl.setSourceURL(getSourceURL());
 
 		redirectEntryImpl.resetOriginalValues();
+
+		return redirectEntryImpl;
+	}
+
+	@Override
+	public RedirectEntry cloneWithOriginalValues() {
+		RedirectEntryImpl redirectEntryImpl = new RedirectEntryImpl();
+
+		redirectEntryImpl.setMvccVersion(
+			this.<Long>getColumnOriginalValue("mvccVersion"));
+		redirectEntryImpl.setUuid(this.<String>getColumnOriginalValue("uuid_"));
+		redirectEntryImpl.setRedirectEntryId(
+			this.<Long>getColumnOriginalValue("redirectEntryId"));
+		redirectEntryImpl.setGroupId(
+			this.<Long>getColumnOriginalValue("groupId"));
+		redirectEntryImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		redirectEntryImpl.setUserId(
+			this.<Long>getColumnOriginalValue("userId"));
+		redirectEntryImpl.setUserName(
+			this.<String>getColumnOriginalValue("userName"));
+		redirectEntryImpl.setCreateDate(
+			this.<Date>getColumnOriginalValue("createDate"));
+		redirectEntryImpl.setModifiedDate(
+			this.<Date>getColumnOriginalValue("modifiedDate"));
+		redirectEntryImpl.setDestinationURL(
+			this.<String>getColumnOriginalValue("destinationURL"));
+		redirectEntryImpl.setExpirationDate(
+			this.<Date>getColumnOriginalValue("expirationDate"));
+		redirectEntryImpl.setLastOccurrenceDate(
+			this.<Date>getColumnOriginalValue("lastOccurrenceDate"));
+		redirectEntryImpl.setPermanent(
+			this.<Boolean>getColumnOriginalValue("permanent_"));
+		redirectEntryImpl.setSourceURL(
+			this.<String>getColumnOriginalValue("sourceURL"));
 
 		return redirectEntryImpl;
 	}
@@ -971,7 +923,7 @@ public class RedirectEntryModelImpl
 			getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			(4 * attributeGetterFunctions.size()) + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -982,9 +934,26 @@ public class RedirectEntryModelImpl
 			Function<RedirectEntry, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((RedirectEntry)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply((RedirectEntry)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -1031,7 +1000,9 @@ public class RedirectEntryModelImpl
 	private static class EscapedModelProxyProviderFunctionHolder {
 
 		private static final Function<InvocationHandler, RedirectEntry>
-			_escapedModelProxyProviderFunction = _getProxyProviderFunction();
+			_escapedModelProxyProviderFunction =
+				ProxyUtil.getProxyProviderFunction(
+					RedirectEntry.class, ModelWrapper.class);
 
 	}
 

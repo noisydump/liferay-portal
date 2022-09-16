@@ -19,7 +19,7 @@ import React, {useState} from 'react';
 
 const {Item, ItemList} = ClayDropDown;
 
-export default ({actions, className, disabled}) => {
+export default function DropDown({actions, className, disabled}) {
 	const [active, setActive] = useState(false);
 
 	const DropdownButton = (
@@ -31,7 +31,7 @@ export default ({actions, className, disabled}) => {
 		/>
 	);
 
-	if (actions.length === 0) {
+	if (!actions.length) {
 		return DropdownButton;
 	}
 
@@ -48,7 +48,7 @@ export default ({actions, className, disabled}) => {
 	return (
 		<ClayDropDown
 			active={active}
-			alignmentPosition={Align.RightCenter}
+			alignmentPosition={Align.BottomRight}
 			className={classNames('dropdown-action', className)}
 			onActiveChange={(item) => setActive(item)}
 			trigger={DropdownButton}
@@ -65,4 +65,4 @@ export default ({actions, className, disabled}) => {
 			</ItemList>
 		</ClayDropDown>
 	);
-};
+}

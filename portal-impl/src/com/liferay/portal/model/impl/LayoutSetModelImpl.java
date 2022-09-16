@@ -22,27 +22,26 @@ import com.liferay.portal.kernel.json.JSON;
 import com.liferay.portal.kernel.model.CacheModel;
 import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.model.LayoutSetModel;
-import com.liferay.portal.kernel.model.LayoutSetSoap;
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.impl.BaseModelImpl;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -74,8 +73,9 @@ public class LayoutSetModelImpl
 		{"companyId", Types.BIGINT}, {"createDate", Types.TIMESTAMP},
 		{"modifiedDate", Types.TIMESTAMP}, {"privateLayout", Types.BOOLEAN},
 		{"logoId", Types.BIGINT}, {"themeId", Types.VARCHAR},
-		{"colorSchemeId", Types.VARCHAR}, {"css", Types.CLOB},
-		{"settings_", Types.CLOB}, {"layoutSetPrototypeUuid", Types.VARCHAR},
+		{"colorSchemeId", Types.VARCHAR}, {"faviconFileEntryId", Types.BIGINT},
+		{"css", Types.CLOB}, {"settings_", Types.CLOB},
+		{"layoutSetPrototypeUuid", Types.VARCHAR},
 		{"layoutSetPrototypeLinkEnabled", Types.BOOLEAN}
 	};
 
@@ -94,6 +94,7 @@ public class LayoutSetModelImpl
 		TABLE_COLUMNS_MAP.put("logoId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("themeId", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("colorSchemeId", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("faviconFileEntryId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("css", Types.CLOB);
 		TABLE_COLUMNS_MAP.put("settings_", Types.CLOB);
 		TABLE_COLUMNS_MAP.put("layoutSetPrototypeUuid", Types.VARCHAR);
@@ -101,7 +102,7 @@ public class LayoutSetModelImpl
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table LayoutSet (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,layoutSetId LONG not null,groupId LONG,companyId LONG,createDate DATE null,modifiedDate DATE null,privateLayout BOOLEAN,logoId LONG,themeId VARCHAR(75) null,colorSchemeId VARCHAR(75) null,css TEXT null,settings_ TEXT null,layoutSetPrototypeUuid VARCHAR(75) null,layoutSetPrototypeLinkEnabled BOOLEAN,primary key (layoutSetId, ctCollectionId))";
+		"create table LayoutSet (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,layoutSetId LONG not null,groupId LONG,companyId LONG,createDate DATE null,modifiedDate DATE null,privateLayout BOOLEAN,logoId LONG,themeId VARCHAR(75) null,colorSchemeId VARCHAR(75) null,faviconFileEntryId LONG,css TEXT null,settings_ TEXT null,layoutSetPrototypeUuid VARCHAR(75) null,layoutSetPrototypeLinkEnabled BOOLEAN,primary key (layoutSetId, ctCollectionId))";
 
 	public static final String TABLE_SQL_DROP = "drop table LayoutSet";
 
@@ -136,98 +137,41 @@ public class LayoutSetModelImpl
 	public static final boolean COLUMN_BITMASK_ENABLED = true;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long COMPANYID_COLUMN_BITMASK = 1L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long GROUPID_COLUMN_BITMASK = 2L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long LAYOUTSETPROTOTYPEUUID_COLUMN_BITMASK = 4L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long LOGOID_COLUMN_BITMASK = 8L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long PRIVATELAYOUT_COLUMN_BITMASK = 16L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *		#getColumnBitmask(String)
+	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long LAYOUTSETID_COLUMN_BITMASK = 32L;
-
-	/**
-	 * Converts the soap model instance into a normal model instance.
-	 *
-	 * @param soapModel the soap model instance to convert
-	 * @return the normal model instance
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static LayoutSet toModel(LayoutSetSoap soapModel) {
-		if (soapModel == null) {
-			return null;
-		}
-
-		LayoutSet model = new LayoutSetImpl();
-
-		model.setMvccVersion(soapModel.getMvccVersion());
-		model.setCtCollectionId(soapModel.getCtCollectionId());
-		model.setLayoutSetId(soapModel.getLayoutSetId());
-		model.setGroupId(soapModel.getGroupId());
-		model.setCompanyId(soapModel.getCompanyId());
-		model.setCreateDate(soapModel.getCreateDate());
-		model.setModifiedDate(soapModel.getModifiedDate());
-		model.setPrivateLayout(soapModel.isPrivateLayout());
-		model.setLogoId(soapModel.getLogoId());
-		model.setThemeId(soapModel.getThemeId());
-		model.setColorSchemeId(soapModel.getColorSchemeId());
-		model.setCss(soapModel.getCss());
-		model.setSettings(soapModel.getSettings());
-		model.setLayoutSetPrototypeUuid(soapModel.getLayoutSetPrototypeUuid());
-		model.setLayoutSetPrototypeLinkEnabled(
-			soapModel.isLayoutSetPrototypeLinkEnabled());
-
-		return model;
-	}
-
-	/**
-	 * Converts the soap model instances into normal model instances.
-	 *
-	 * @param soapModels the soap model instances to convert
-	 * @return the normal model instances
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static List<LayoutSet> toModels(LayoutSetSoap[] soapModels) {
-		if (soapModels == null) {
-			return null;
-		}
-
-		List<LayoutSet> models = new ArrayList<LayoutSet>(soapModels.length);
-
-		for (LayoutSetSoap soapModel : soapModels) {
-			models.add(toModel(soapModel));
-		}
-
-		return models;
-	}
 
 	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(
 		com.liferay.portal.util.PropsUtil.get(
@@ -317,34 +261,6 @@ public class LayoutSetModelImpl
 		return _attributeSetterBiConsumers;
 	}
 
-	private static Function<InvocationHandler, LayoutSet>
-		_getProxyProviderFunction() {
-
-		Class<?> proxyClass = ProxyUtil.getProxyClass(
-			LayoutSet.class.getClassLoader(), LayoutSet.class,
-			ModelWrapper.class);
-
-		try {
-			Constructor<LayoutSet> constructor =
-				(Constructor<LayoutSet>)proxyClass.getConstructor(
-					InvocationHandler.class);
-
-			return invocationHandler -> {
-				try {
-					return constructor.newInstance(invocationHandler);
-				}
-				catch (ReflectiveOperationException
-							reflectiveOperationException) {
-
-					throw new InternalError(reflectiveOperationException);
-				}
-			};
-		}
-		catch (NoSuchMethodException noSuchMethodException) {
-			throw new InternalError(noSuchMethodException);
-		}
-	}
-
 	private static final Map<String, Function<LayoutSet, Object>>
 		_attributeGetterFunctions;
 	private static final Map<String, BiConsumer<LayoutSet, Object>>
@@ -400,6 +316,11 @@ public class LayoutSetModelImpl
 		attributeSetterBiConsumers.put(
 			"colorSchemeId",
 			(BiConsumer<LayoutSet, String>)LayoutSet::setColorSchemeId);
+		attributeGetterFunctions.put(
+			"faviconFileEntryId", LayoutSet::getFaviconFileEntryId);
+		attributeSetterBiConsumers.put(
+			"faviconFileEntryId",
+			(BiConsumer<LayoutSet, Long>)LayoutSet::setFaviconFileEntryId);
 		attributeGetterFunctions.put("css", LayoutSet::getCss);
 		attributeSetterBiConsumers.put(
 			"css", (BiConsumer<LayoutSet, String>)LayoutSet::setCss);
@@ -653,6 +574,21 @@ public class LayoutSetModelImpl
 
 	@JSON
 	@Override
+	public long getFaviconFileEntryId() {
+		return _faviconFileEntryId;
+	}
+
+	@Override
+	public void setFaviconFileEntryId(long faviconFileEntryId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_faviconFileEntryId = faviconFileEntryId;
+	}
+
+	@JSON
+	@Override
 	public String getCss() {
 		if (_css == null) {
 			return "";
@@ -751,11 +687,12 @@ public class LayoutSetModelImpl
 		String companyFallbackVirtualHostname) {
 	}
 
-	public java.util.TreeMap getVirtualHostnames() {
+	public java.util.TreeMap<String, String> getVirtualHostnames() {
 		return null;
 	}
 
-	public void setVirtualHostnames(java.util.TreeMap virtualHostnames) {
+	public void setVirtualHostnames(
+		java.util.TreeMap<String, String> virtualHostnames) {
 	}
 
 	public long getColumnBitmask() {
@@ -772,7 +709,9 @@ public class LayoutSetModelImpl
 		for (Map.Entry<String, Object> entry :
 				_columnOriginalValues.entrySet()) {
 
-			if (entry.getValue() != getColumnValue(entry.getKey())) {
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
 				_columnBitmask |= _columnBitmasks.get(entry.getKey());
 			}
 		}
@@ -823,6 +762,7 @@ public class LayoutSetModelImpl
 		layoutSetImpl.setLogoId(getLogoId());
 		layoutSetImpl.setThemeId(getThemeId());
 		layoutSetImpl.setColorSchemeId(getColorSchemeId());
+		layoutSetImpl.setFaviconFileEntryId(getFaviconFileEntryId());
 		layoutSetImpl.setCss(getCss());
 		layoutSetImpl.setSettings(getSettings());
 		layoutSetImpl.setLayoutSetPrototypeUuid(getLayoutSetPrototypeUuid());
@@ -830,6 +770,44 @@ public class LayoutSetModelImpl
 			isLayoutSetPrototypeLinkEnabled());
 
 		layoutSetImpl.resetOriginalValues();
+
+		return layoutSetImpl;
+	}
+
+	@Override
+	public LayoutSet cloneWithOriginalValues() {
+		LayoutSetImpl layoutSetImpl = new LayoutSetImpl();
+
+		layoutSetImpl.setMvccVersion(
+			this.<Long>getColumnOriginalValue("mvccVersion"));
+		layoutSetImpl.setCtCollectionId(
+			this.<Long>getColumnOriginalValue("ctCollectionId"));
+		layoutSetImpl.setLayoutSetId(
+			this.<Long>getColumnOriginalValue("layoutSetId"));
+		layoutSetImpl.setGroupId(this.<Long>getColumnOriginalValue("groupId"));
+		layoutSetImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		layoutSetImpl.setCreateDate(
+			this.<Date>getColumnOriginalValue("createDate"));
+		layoutSetImpl.setModifiedDate(
+			this.<Date>getColumnOriginalValue("modifiedDate"));
+		layoutSetImpl.setPrivateLayout(
+			this.<Boolean>getColumnOriginalValue("privateLayout"));
+		layoutSetImpl.setLogoId(this.<Long>getColumnOriginalValue("logoId"));
+		layoutSetImpl.setThemeId(
+			this.<String>getColumnOriginalValue("themeId"));
+		layoutSetImpl.setColorSchemeId(
+			this.<String>getColumnOriginalValue("colorSchemeId"));
+		layoutSetImpl.setFaviconFileEntryId(
+			this.<Long>getColumnOriginalValue("faviconFileEntryId"));
+		layoutSetImpl.setCss(this.<String>getColumnOriginalValue("css"));
+		layoutSetImpl.setSettings(
+			this.<String>getColumnOriginalValue("settings_"));
+		layoutSetImpl.setLayoutSetPrototypeUuid(
+			this.<String>getColumnOriginalValue("layoutSetPrototypeUuid"));
+		layoutSetImpl.setLayoutSetPrototypeLinkEnabled(
+			this.<Boolean>getColumnOriginalValue(
+				"layoutSetPrototypeLinkEnabled"));
 
 		return layoutSetImpl;
 	}
@@ -959,6 +937,8 @@ public class LayoutSetModelImpl
 			layoutSetCacheModel.colorSchemeId = null;
 		}
 
+		layoutSetCacheModel.faviconFileEntryId = getFaviconFileEntryId();
+
 		layoutSetCacheModel.css = getCss();
 
 		String css = layoutSetCacheModel.css;
@@ -990,8 +970,12 @@ public class LayoutSetModelImpl
 		layoutSetCacheModel.layoutSetPrototypeLinkEnabled =
 			isLayoutSetPrototypeLinkEnabled();
 
+		setCompanyFallbackVirtualHostname(null);
+
 		layoutSetCacheModel._companyFallbackVirtualHostname =
 			getCompanyFallbackVirtualHostname();
+
+		setVirtualHostnames(null);
 
 		layoutSetCacheModel._virtualHostnames = getVirtualHostnames();
 
@@ -1004,7 +988,7 @@ public class LayoutSetModelImpl
 			getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			(4 * attributeGetterFunctions.size()) + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -1015,9 +999,26 @@ public class LayoutSetModelImpl
 			Function<LayoutSet, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((LayoutSet)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply((LayoutSet)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -1064,7 +1065,9 @@ public class LayoutSetModelImpl
 	private static class EscapedModelProxyProviderFunctionHolder {
 
 		private static final Function<InvocationHandler, LayoutSet>
-			_escapedModelProxyProviderFunction = _getProxyProviderFunction();
+			_escapedModelProxyProviderFunction =
+				ProxyUtil.getProxyProviderFunction(
+					LayoutSet.class, ModelWrapper.class);
 
 	}
 
@@ -1080,6 +1083,7 @@ public class LayoutSetModelImpl
 	private long _logoId;
 	private String _themeId;
 	private String _colorSchemeId;
+	private long _faviconFileEntryId;
 	private String _css;
 	private String _settings;
 	private String _layoutSetPrototypeUuid;
@@ -1125,6 +1129,7 @@ public class LayoutSetModelImpl
 		_columnOriginalValues.put("logoId", _logoId);
 		_columnOriginalValues.put("themeId", _themeId);
 		_columnOriginalValues.put("colorSchemeId", _colorSchemeId);
+		_columnOriginalValues.put("faviconFileEntryId", _faviconFileEntryId);
 		_columnOriginalValues.put("css", _css);
 		_columnOriginalValues.put("settings_", _settings);
 		_columnOriginalValues.put(
@@ -1176,13 +1181,15 @@ public class LayoutSetModelImpl
 
 		columnBitmasks.put("colorSchemeId", 1024L);
 
-		columnBitmasks.put("css", 2048L);
+		columnBitmasks.put("faviconFileEntryId", 2048L);
 
-		columnBitmasks.put("settings_", 4096L);
+		columnBitmasks.put("css", 4096L);
 
-		columnBitmasks.put("layoutSetPrototypeUuid", 8192L);
+		columnBitmasks.put("settings_", 8192L);
 
-		columnBitmasks.put("layoutSetPrototypeLinkEnabled", 16384L);
+		columnBitmasks.put("layoutSetPrototypeUuid", 16384L);
+
+		columnBitmasks.put("layoutSetPrototypeLinkEnabled", 32768L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}

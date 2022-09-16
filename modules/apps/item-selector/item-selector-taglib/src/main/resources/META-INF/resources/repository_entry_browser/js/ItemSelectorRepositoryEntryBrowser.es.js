@@ -12,11 +12,16 @@
  * details.
  */
 
+import {getSpritemap} from '@liferay/frontend-icons-web';
+import {render} from '@liferay/frontend-js-react-web';
 import {ClayAlert} from 'clay-alert';
-import {render} from 'frontend-js-react-web';
-import {PortletBase, delegate} from 'frontend-js-web';
-import {EventHandler} from 'metal-events';
-import {Config} from 'metal-state';
+import {
+	EventHandler,
+	PortletBase,
+	STATUS_CODE,
+	delegate,
+	sub,
+} from 'frontend-js-web';
 import ReactDOM from 'react-dom';
 
 import ItemSelectorPreview from '../../item_selector_preview/js/ItemSelectorPreview.es';
@@ -24,7 +29,6 @@ import ItemSelectorPreview from '../../item_selector_preview/js/ItemSelectorPrev
 const STR_DRAG_LEAVE = 'dragleave';
 const STR_DRAG_OVER = 'dragover';
 const STR_DROP = 'drop';
-const statusCode = Liferay.STATUS_CODE;
 
 /**
  * Handles the events in the Repository Entry Browser taglib.
@@ -37,7 +41,28 @@ class ItemSelectorRepositoryEntryBrowser extends PortletBase {
 	/**
 	 * @inheritDoc
 	 */
-	created() {
+	created(props) {
+		const {
+			closeCaption,
+			editImageURL,
+			itemSelectorSingleFileUploaderEnabled = false,
+			maxFileSize = Liferay.PropsValues
+				.UPLOAD_SERVLET_REQUEST_IMPL_MAX_SIZE,
+			rootNode,
+			validExtensions = '*',
+			uploadItemReturnType,
+			uploadItemURL,
+		} = props;
+
+		this.closeCaption = closeCaption;
+		this.editImageURL = editImageURL;
+		this.itemSelectorSingleFileUploaderEnabled = itemSelectorSingleFileUploaderEnabled;
+		this.maxFileSize = this._convertMaxFileSize(maxFileSize);
+		this.rootNode = rootNode;
+		this.validExtensions = validExtensions;
+		this.uploadItemReturnType = uploadItemReturnType;
+		this.uploadItemURL = uploadItemURL;
+
 		this._eventHandler = new EventHandler();
 	}
 
@@ -57,17 +82,17 @@ class ItemSelectorRepositoryEntryBrowser extends PortletBase {
 	}
 
 	attachItemSelectorPreviewComponent() {
-		const itemsNodes = Array.from(this.all('.item-preview'));
+		const itemsNodes = Array.from(this.all('.item-preview-editable'));
 
 		const items = itemsNodes.map((node) => node.dataset);
 
-		const clicableItems = Array.from(this.all('.icon-view'));
+		const clickableItems = Array.from(this.all('.icon-view'));
 
-		if (items.length === clicableItems.length) {
-			clicableItems.forEach((clicableItem, index) => {
-				clicableItem.addEventListener('click', (e) => {
-					e.preventDefault();
-					e.stopPropagation();
+		if (items.length === clickableItems.length) {
+			clickableItems.forEach((clickableItem, index) => {
+				clickableItem.addEventListener('click', (event) => {
+					event.preventDefault();
+					event.stopPropagation();
 
 					this.openItemSelectorPreview(items, index);
 				});
@@ -85,8 +110,10 @@ class ItemSelectorRepositoryEntryBrowser extends PortletBase {
 		const data = {
 			container,
 			currentIndex: index,
+			editImageURL: this.editImageURL,
 			handleSelectedItem: this._onItemSelected.bind(this),
 			headerTitle: this.closeCaption,
+			itemReturnType: this.uploadItemReturnType,
 			items,
 		};
 
@@ -120,62 +147,70 @@ class ItemSelectorRepositoryEntryBrowser extends PortletBase {
 			)
 		);
 
-		const inputFileNode = this.one('input[type="file"]');
+		if (!this.itemSelectorSingleFileUploaderEnabled) {
+			const inputFileNode = this.one('input[type="file"]');
 
-		if (inputFileNode) {
-			this._eventHandler.add(
-				inputFileNode.addEventListener('change', (event) => {
-					this._validateFile(event.target.files[0]);
-				})
-			);
-		}
+			if (inputFileNode) {
+				this._eventHandler.add(
+					inputFileNode.addEventListener('change', (event) => {
+						this._validateFile(event.target.files[0]);
+					})
+				);
+			}
 
-		if (this.uploadItemURL) {
-			const itemSelectorUploader = this._itemSelectorUploader;
-			const rootNode = this.rootNode;
+			if (this.uploadItemURL) {
+				const itemSelectorUploader = this._itemSelectorUploader;
 
-			this._eventHandler.add(
-				itemSelectorUploader.after('itemUploadCancel', () => {
-					this.closeItemSelectorPreview();
-				}),
-				itemSelectorUploader.after('itemUploadComplete', (itemData) => {
-					const itemFile = itemData.file;
-					const itemFileUrl = itemFile.url;
-					let itemFileValue = itemFile.resolvedValue;
+				const rootNode = this.rootNode;
 
-					if (!itemFileValue) {
-						const imageValue = {
-							fileEntryId: itemFile.fileEntryId,
-							groupId: itemFile.groupId,
-							title: itemFile.title,
-							type: itemFile.type,
-							url: itemFileUrl,
-							uuid: itemFile.uuid,
-						};
+				this._eventHandler.add(
+					itemSelectorUploader.after('itemUploadCancel', () => {
+						this.closeItemSelectorPreview();
+					}),
+					itemSelectorUploader.after(
+						'itemUploadComplete',
+						(itemData) => {
+							const itemFile = itemData.file;
+							const itemFileUrl = itemFile.url;
+							let itemFileValue = itemFile.resolvedValue;
 
-						itemFileValue = JSON.stringify(imageValue);
-					}
+							if (!itemFileValue) {
+								const imageValue = {
+									fileEntryId: itemFile.fileEntryId,
+									groupId: itemFile.groupId,
+									title: itemFile.title,
+									type: itemFile.type,
+									url: itemFileUrl,
+									uuid: itemFile.uuid,
+								};
 
-					Liferay.componentReady('ItemSelectorPreview').then(() => {
-						Liferay.fire('updateCurrentItem', {
-							url: itemFileUrl,
-							value: itemFileValue,
-						});
-					});
-				}),
-				itemSelectorUploader.after('itemUploadError', (event) => {
-					this._onItemUploadError(event);
-				}),
-				rootNode.addEventListener(STR_DRAG_OVER, (event) =>
-					this._ddEventHandler(event)
-				),
-				rootNode.addEventListener(STR_DRAG_LEAVE, (event) =>
-					this._ddEventHandler(event)
-				),
-				rootNode.addEventListener(STR_DROP, (event) =>
-					this._ddEventHandler(event)
-				)
-			);
+								itemFileValue = JSON.stringify(imageValue);
+							}
+
+							Liferay.componentReady('ItemSelectorPreview').then(
+								() => {
+									Liferay.fire('updateCurrentItem', {
+										...itemFile,
+										value: itemFileValue,
+									});
+								}
+							);
+						}
+					),
+					itemSelectorUploader.after('itemUploadError', (event) => {
+						this._onItemUploadError(event);
+					}),
+					rootNode.addEventListener(STR_DRAG_OVER, (event) =>
+						this._ddEventHandler(event)
+					),
+					rootNode.addEventListener(STR_DRAG_LEAVE, (event) =>
+						this._ddEventHandler(event)
+					),
+					rootNode.addEventListener(STR_DROP, (event) =>
+						this._ddEventHandler(event)
+					)
+				);
+			}
 		}
 	}
 
@@ -256,15 +291,15 @@ class ItemSelectorRepositoryEntryBrowser extends PortletBase {
 			const errorType = error.errorType;
 
 			switch (errorType) {
-				case statusCode.SC_FILE_ANTIVIRUS_EXCEPTION:
+				case STATUS_CODE.SC_FILE_ANTIVIRUS_EXCEPTION:
 					if (error.message) {
 						message = error.message;
 					}
 
 					break;
-				case statusCode.SC_FILE_EXTENSION_EXCEPTION:
+				case STATUS_CODE.SC_FILE_EXTENSION_EXCEPTION:
 					if (error.message) {
-						message = Liferay.Util.sub(
+						message = sub(
 							Liferay.Language.get(
 								'please-enter-a-file-with-a-valid-extension-x'
 							),
@@ -278,15 +313,15 @@ class ItemSelectorRepositoryEntryBrowser extends PortletBase {
 					}
 
 					break;
-				case statusCode.SC_FILE_NAME_EXCEPTION:
+				case STATUS_CODE.SC_FILE_NAME_EXCEPTION:
 					message = Liferay.Language.get(
 						'please-enter-a-file-with-a-valid-file-name'
 					);
 
 					break;
-				case statusCode.SC_FILE_SIZE_EXCEPTION:
-				case statusCode.SC_UPLOAD_REQUEST_CONTENT_LENGTH_EXCEPTION:
-					message = Liferay.Util.sub(
+				case STATUS_CODE.SC_FILE_SIZE_EXCEPTION:
+				case STATUS_CODE.SC_UPLOAD_REQUEST_CONTENT_LENGTH_EXCEPTION:
+					message = sub(
 						Liferay.Language.get(
 							'please-enter-a-file-with-a-valid-file-size-no-larger-than-x'
 						),
@@ -294,12 +329,12 @@ class ItemSelectorRepositoryEntryBrowser extends PortletBase {
 					);
 
 					break;
-				case statusCode.SC_UPLOAD_REQUEST_SIZE_EXCEPTION: {
+				case STATUS_CODE.SC_UPLOAD_REQUEST_SIZE_EXCEPTION: {
 					const maxUploadRequestSize =
 						Liferay.PropsValues
 							.UPLOAD_SERVLET_REQUEST_IMPL_MAX_SIZE;
 
-					message = Liferay.Util.sub(
+					message = sub(
 						Liferay.Language.get(
 							'request-is-larger-than-x-and-could-not-be-processed'
 						),
@@ -408,9 +443,7 @@ class ItemSelectorRepositoryEntryBrowser extends PortletBase {
 				closeable: true,
 				destroyOnHide: true,
 				message,
-				spritemap:
-					Liferay.ThemeDisplay.getPathThemeImages() +
-					'/clay/icons.svg',
+				spritemap: getSpritemap(),
 				style: 'danger',
 				title: '',
 				visible: true,
@@ -418,10 +451,7 @@ class ItemSelectorRepositoryEntryBrowser extends PortletBase {
 			this.one('.message-container')
 		);
 
-		this._hideTimeout = setTimeout(
-			() => this._closeAlert(),
-			this.hideAlertDelay
-		);
+		this._hideTimeout = setTimeout(() => this._closeAlert(), 5000);
 	}
 
 	/**
@@ -441,6 +471,7 @@ class ItemSelectorRepositoryEntryBrowser extends PortletBase {
 		const item = {
 			base64: preview,
 			metadata: JSON.stringify(this._getUploadFileMetadata(file)),
+			mimeType: file.type,
 			returntype: this.uploadItemReturnType,
 			title: file.name,
 			value: preview,
@@ -466,7 +497,7 @@ class ItemSelectorRepositoryEntryBrowser extends PortletBase {
 
 		if (
 			validExtensions === '*' ||
-			validExtensions.indexOf(fileExtension) != -1
+			validExtensions.indexOf(fileExtension) !== -1
 		) {
 			const maxFileSize = this.maxFileSize;
 
@@ -474,7 +505,7 @@ class ItemSelectorRepositoryEntryBrowser extends PortletBase {
 				this._previewFile(file);
 			}
 			else {
-				errorMessage = Liferay.Util.sub(
+				errorMessage = sub(
 					Liferay.Language.get(
 						'please-enter-a-file-with-a-valid-file-size-no-larger-than-x'
 					),
@@ -483,7 +514,7 @@ class ItemSelectorRepositoryEntryBrowser extends PortletBase {
 			}
 		}
 		else {
-			errorMessage = Liferay.Util.sub(
+			errorMessage = sub(
 				Liferay.Language.get(
 					'please-enter-a-file-with-a-valid-extension-x'
 				),
@@ -492,7 +523,7 @@ class ItemSelectorRepositoryEntryBrowser extends PortletBase {
 		}
 
 		if (errorMessage) {
-			var inputTypeFile = this.one('input[type="file"]');
+			const inputTypeFile = this.one('input[type="file"]');
 
 			if (inputTypeFile) {
 				inputTypeFile.value = '';
@@ -502,68 +533,5 @@ class ItemSelectorRepositoryEntryBrowser extends PortletBase {
 		}
 	}
 }
-
-/**
- * State definition.
- *
- * @static
- * @type {!Object}
- */
-ItemSelectorRepositoryEntryBrowser.STATE = {
-
-	/**
-	 * Text to show near the close icon in the Item Viewer
-	 *
-	 * @instance
-	 * @memberof ItemSelectorRepositoryEntryBrowser
-	 * @type {String}
-	 */
-	closeCaption: Config.string(),
-
-	/**
-	 * Time to hide the alert messages.
-	 *
-	 * @type {Number} milliseconds
-	 */
-	hideAlertDelay: Config.number().value(5000).internal(),
-
-	/**
-	 * Maximum allowed file size to drop in the item selector.
-	 *
-	 * @instance
-	 * @memberof ItemSelectorRepositoryEntryBrowser
-	 * @type {Number | String}
-	 */
-	maxFileSize: Config.oneOfType([Config.number(), Config.string()])
-		.setter('_convertMaxFileSize')
-		.value(Liferay.PropsValues.UPLOAD_SERVLET_REQUEST_IMPL_MAX_SIZE),
-
-	/**
-	 * The return type for the uploaded item.
-	 *
-	 * @instance
-	 * @memberof ItemSelectorRepositoryEntryBrowser
-	 * @type {String}
-	 */
-	uploadItemReturnType: Config.string(),
-
-	/**
-	 * URL to upload an item.
-	 *
-	 * @instance
-	 * @memberof ItemSelectorRepositoryEntryBrowser
-	 * @type {String}
-	 */
-	uploadItemURL: Config.string(),
-
-	/**
-	 * Valid extensions for files uploaded to the Item Selector.
-	 *
-	 * @instance
-	 * @memberof ItemSelectorRepositoryEntryBrowser
-	 * @type {String}
-	 */
-	validExtensions: Config.string().value('*'),
-};
 
 export default ItemSelectorRepositoryEntryBrowser;

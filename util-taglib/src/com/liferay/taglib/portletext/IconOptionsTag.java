@@ -20,9 +20,10 @@ import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfiguration
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.JavaConstants;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.util.comparator.PortletConfigurationIconComparator;
-import com.liferay.taglib.servlet.PipingServletResponse;
+import com.liferay.taglib.servlet.PipingServletResponseFactory;
 import com.liferay.taglib.ui.IconMenuTag;
 import com.liferay.taglib.ui.IconTag;
 
@@ -120,13 +121,27 @@ public class IconOptionsTag extends IconTag {
 
 		iconMenuTag.setCssClass("portlet-options");
 		iconMenuTag.setDirection(_direction);
+
+		for (PortletConfigurationIcon portletConfigurationIcon :
+				getPortletConfigurationIcons()) {
+
+			if (Validator.isNotNull(
+					portletConfigurationIcon.getIconCssClass())) {
+
+				iconMenuTag.setDropdownCssClass(
+					"dropdown-menu-indicator-start");
+
+				break;
+			}
+		}
+
 		iconMenuTag.setExtended(false);
 		iconMenuTag.setIcon("ellipsis-v");
 		iconMenuTag.setMarkupView("lexicon");
 		iconMenuTag.setMessage("options");
 		iconMenuTag.setShowArrow(false);
 		iconMenuTag.setShowWhenSingleIcon(true);
-		iconMenuTag.setTriggerCssClass("icon-monospaced");
+		iconMenuTag.setTriggerCssClass("component-action");
 
 		iconMenuTag.doBodyTag(
 			pageContext, this::_processPortletConfigurationIcons);
@@ -165,7 +180,7 @@ public class IconOptionsTag extends IconTag {
 
 				boolean include = portletConfigurationIcon.include(
 					httpServletRequest,
-					PipingServletResponse.createPipingServletResponse(
+					PipingServletResponseFactory.createPipingServletResponse(
 						pageContext));
 
 				if (include) {
@@ -178,8 +193,15 @@ public class IconOptionsTag extends IconTag {
 				iconTag.setAriaRole(portletConfigurationIcon.getAriaRole());
 				iconTag.setCssClass(portletConfigurationIcon.getCssClass());
 				iconTag.setData(portletConfigurationIcon.getData());
-				iconTag.setIconCssClass(
-					portletConfigurationIcon.getIconCssClass());
+
+				if (Validator.isNotNull(
+						portletConfigurationIcon.getIconCssClass())) {
+
+					iconTag.setIcon(portletConfigurationIcon.getIconCssClass());
+					iconTag.setIconCssClass("dropdown-item-indicator-start");
+					iconTag.setMarkupView("lexicon");
+				}
+
 				iconTag.setId(portletConfigurationIcon.getId());
 				iconTag.setImage(portletConfigurationIcon.getImage());
 				iconTag.setImageHover(portletConfigurationIcon.getImageHover());

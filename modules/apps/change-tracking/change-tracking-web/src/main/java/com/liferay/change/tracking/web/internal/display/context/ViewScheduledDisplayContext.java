@@ -25,13 +25,10 @@ import com.liferay.portal.kernel.dao.search.DisplayTerms;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.OrderByComparatorFactoryUtil;
-import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.util.PropsValues;
@@ -51,13 +48,16 @@ import javax.servlet.http.HttpServletRequest;
 /**
  * @author Samuel Trong Tran
  */
-public class ViewScheduledDisplayContext {
+public class ViewScheduledDisplayContext
+	extends BasePublicationsDisplayContext {
 
 	public ViewScheduledDisplayContext(
 		CTCollectionService ctCollectionService,
 		HttpServletRequest httpServletRequest, Language language,
 		PublishScheduler publishScheduler, RenderRequest renderRequest,
 		RenderResponse renderResponse) {
+
+		super(httpServletRequest);
 
 		_ctCollectionService = ctCollectionService;
 		_httpServletRequest = httpServletRequest;
@@ -68,10 +68,6 @@ public class ViewScheduledDisplayContext {
 
 		_themeDisplay = (ThemeDisplay)_renderRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
-	}
-
-	public String getDisplayStyle() {
-		return ParamUtil.getString(_renderRequest, "displayStyle", "list");
 	}
 
 	public Date getPublishingDate(long ctCollectionId) throws PortalException {
@@ -94,8 +90,8 @@ public class ViewScheduledDisplayContext {
 
 		searchContainer.setDeltaConfigurable(false);
 		searchContainer.setId("scheduled");
-		searchContainer.setOrderByCol(_getOrderByCol());
-		searchContainer.setOrderByType(_getOrderByType());
+		searchContainer.setOrderByCol(getOrderByCol());
+		searchContainer.setOrderByType(getOrderByType());
 
 		DisplayTerms displayTerms = searchContainer.getDisplayTerms();
 
@@ -106,9 +102,7 @@ public class ViewScheduledDisplayContext {
 				displayTerms.getKeywords(), QueryUtil.ALL_POS,
 				QueryUtil.ALL_POS, _getOrderByComparator());
 
-		searchContainer.setTotal(ctCollections.size());
-
-		if (Objects.equals(_getOrderByCol(), "publishing")) {
+		if (Objects.equals(getOrderByCol(), "publishing")) {
 			ctCollections = new ArrayList<>(ctCollections);
 
 			ctCollections.sort(
@@ -118,7 +112,7 @@ public class ViewScheduledDisplayContext {
 						Date date2 = getPublishingDate(c2.getCtCollectionId());
 
 						if (date1.before(date2)) {
-							if (Objects.equals(_getOrderByType(), "asc")) {
+							if (Objects.equals(getOrderByType(), "asc")) {
 								return 1;
 							}
 
@@ -126,7 +120,7 @@ public class ViewScheduledDisplayContext {
 						}
 
 						if (date1.after(date2)) {
-							if (Objects.equals(_getOrderByType(), "asc")) {
+							if (Objects.equals(getOrderByType(), "asc")) {
 								return -1;
 							}
 
@@ -134,21 +128,27 @@ public class ViewScheduledDisplayContext {
 						}
 					}
 					catch (PortalException portalException) {
-						_log.error(portalException, portalException);
+						log.error(portalException, portalException);
 					}
 
 					return 0;
 				});
 		}
 
-		int end = searchContainer.getEnd();
+		List<CTCollection> sortedCTCollections = ctCollections;
 
-		if (end > ctCollections.size()) {
-			end = ctCollections.size();
-		}
+		searchContainer.setResultsAndTotal(
+			() -> {
+				int end = searchContainer.getEnd();
 
-		searchContainer.setResults(
-			ctCollections.subList(searchContainer.getStart(), end));
+				if (end > sortedCTCollections.size()) {
+					end = sortedCTCollections.size();
+				}
+
+				return sortedCTCollections.subList(
+					searchContainer.getStart(), end);
+			},
+			sortedCTCollections.size());
 
 		_searchContainer = searchContainer;
 
@@ -169,8 +169,7 @@ public class ViewScheduledDisplayContext {
 				navigationItem.setActive(true);
 				navigationItem.setHref(
 					_renderResponse.createRenderURL(), "mvcRenderCommandName",
-					"/change_tracking/view_scheduled", "displayStyle",
-					getDisplayStyle());
+					"/change_tracking/view_scheduled");
 				navigationItem.setLabel(
 					_language.get(_httpServletRequest, "scheduled"));
 			}
@@ -179,40 +178,38 @@ public class ViewScheduledDisplayContext {
 				navigationItem.setActive(false);
 				navigationItem.setHref(
 					_renderResponse.createRenderURL(), "mvcRenderCommandName",
-					"/change_tracking/view_history", "displayStyle",
-					getDisplayStyle());
+					"/change_tracking/view_history");
 				navigationItem.setLabel(
 					_language.get(_httpServletRequest, "history"));
 			}
 		).build();
 	}
 
-	private String _getOrderByCol() {
-		return ParamUtil.getString(
-			_renderRequest, SearchContainer.DEFAULT_ORDER_BY_COL_PARAM, "name");
+	@Override
+	protected String getDefaultOrderByCol() {
+		return "name";
+	}
+
+	@Override
+	protected String getPortalPreferencesPrefix() {
+		return "scheduled";
 	}
 
 	private OrderByComparator<CTCollection> _getOrderByComparator() {
 		OrderByComparator<CTCollection> orderByComparator = null;
 
-		if (Objects.equals(_getOrderByCol(), "modified-date")) {
+		if (Objects.equals(getOrderByCol(), "modified-date")) {
 			orderByComparator = OrderByComparatorFactoryUtil.create(
 				"CTCollection", "modifiedDate",
-				Objects.equals(_getOrderByType(), "asc"));
+				Objects.equals(getOrderByType(), "asc"));
 		}
-		else if (Objects.equals(_getOrderByCol(), "name")) {
+		else if (Objects.equals(getOrderByCol(), "name")) {
 			orderByComparator = OrderByComparatorFactoryUtil.create(
-				"CTCollection", _getOrderByCol(),
-				Objects.equals(_getOrderByType(), "asc"));
+				"CTCollection", getOrderByCol(),
+				Objects.equals(getOrderByType(), "asc"));
 		}
 
 		return orderByComparator;
-	}
-
-	private String _getOrderByType() {
-		return ParamUtil.getString(
-			_renderRequest, SearchContainer.DEFAULT_ORDER_BY_TYPE_PARAM,
-			"desc");
 	}
 
 	private Map<Long, Date> _getPublishingDateMap() throws PortalException {
@@ -236,9 +233,6 @@ public class ViewScheduledDisplayContext {
 
 		return _publishingDateMap;
 	}
-
-	private static final Log _log = LogFactoryUtil.getLog(
-		ViewScheduledDisplayContext.class);
 
 	private final CTCollectionService _ctCollectionService;
 	private final HttpServletRequest _httpServletRequest;

@@ -22,6 +22,7 @@ import com.liferay.commerce.currency.constants.RoundingTypeConstants;
 import com.liferay.commerce.currency.exception.CommerceCurrencyCodeException;
 import com.liferay.commerce.currency.exception.CommerceCurrencyNameException;
 import com.liferay.commerce.currency.exception.NoSuchCurrencyException;
+import com.liferay.commerce.currency.internal.model.listener.PortalInstanceLifecycleListenerImpl;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.service.base.CommerceCurrencyLocalServiceBaseImpl;
 import com.liferay.commerce.currency.util.ExchangeRateProvider;
@@ -29,6 +30,7 @@ import com.liferay.commerce.currency.util.ExchangeRateProviderRegistry;
 import com.liferay.commerce.currency.util.comparator.CommerceCurrencyPriorityComparator;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.instance.lifecycle.PortalInstanceLifecycleListener;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -38,6 +40,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
+import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.settings.CompanyServiceSettingsLocator;
 import com.liferay.portal.kernel.settings.SystemSettingsLocator;
@@ -56,6 +59,11 @@ import java.math.RoundingMode;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceRegistration;
 
 /**
  * @author Andrea Di Giorgi
@@ -85,7 +93,7 @@ public class CommerceCurrencyLocalServiceImpl
 		if (formatPatternMap.isEmpty()) {
 			formatPatternMap.put(
 				user.getLocale(),
-				CommerceCurrencyConstants.DEFAULT_FORMAT_PATTERN);
+				CommerceCurrencyConstants.DECIMAL_FORMAT_PATTERN);
 		}
 
 		if (Validator.isNull(roundingMode)) {
@@ -125,6 +133,21 @@ public class CommerceCurrencyLocalServiceImpl
 	}
 
 	@Override
+	public void afterPropertiesSet() {
+		super.afterPropertiesSet();
+
+		Bundle bundle = FrameworkUtil.getBundle(getClass());
+
+		BundleContext bundleContext = bundle.getBundleContext();
+
+		_serviceRegistration = bundleContext.registerService(
+			PortalInstanceLifecycleListener.class,
+			new PortalInstanceLifecycleListenerImpl(
+				commerceCurrencyLocalService),
+			null);
+	}
+
+	@Override
 	public void deleteCommerceCurrencies(long companyId) {
 		commerceCurrencyPersistence.removeByCompanyId(companyId);
 	}
@@ -146,6 +169,13 @@ public class CommerceCurrencyLocalServiceImpl
 
 		return commerceCurrencyLocalService.deleteCommerceCurrency(
 			commerceCurrency);
+	}
+
+	@Override
+	public void destroy() {
+		super.destroy();
+
+		_serviceRegistration.unregister();
 	}
 
 	@Override
@@ -235,14 +265,11 @@ public class CommerceCurrencyLocalServiceImpl
 					serviceContext.getLocale(), jsonObject.getString("name")
 				).build();
 
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(symbol);
-				sb.append(StringPool.SPACE);
-				sb.append(CommerceCurrencyConstants.DEFAULT_FORMAT_PATTERN);
-
 				Map<Locale, String> formatPatternMap = HashMapBuilder.put(
-					serviceContext.getLocale(), sb.toString()
+					serviceContext.getLocale(),
+					StringBundler.concat(
+						symbol, StringPool.SPACE,
+						CommerceCurrencyConstants.DECIMAL_FORMAT_PATTERN)
 				).build();
 
 				RoundingMode roundingMode =
@@ -318,7 +345,7 @@ public class CommerceCurrencyLocalServiceImpl
 		if (formatPatternMap.isEmpty()) {
 			formatPatternMap.put(
 				serviceContext.getLocale(),
-				CommerceCurrencyConstants.DEFAULT_FORMAT_PATTERN);
+				CommerceCurrencyConstants.DECIMAL_FORMAT_PATTERN);
 		}
 
 		if (Validator.isNull(roundingMode)) {
@@ -394,7 +421,7 @@ public class CommerceCurrencyLocalServiceImpl
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(exception, exception);
+				_log.debug(exception);
 			}
 
 			return;
@@ -407,25 +434,26 @@ public class CommerceCurrencyLocalServiceImpl
 
 	@Override
 	public void updateExchangeRates() throws PortalException {
-		long[] companyIds = ArrayUtil.toLongArray(
-			commerceCurrencyFinder.getCompanyIds());
+		_companyLocalService.forEachCompanyId(
+			companyId -> {
+				CommerceCurrencyConfiguration commerceCurrencyConfiguration =
+					_configurationProvider.getConfiguration(
+						CommerceCurrencyConfiguration.class,
+						new CompanyServiceSettingsLocator(
+							companyId,
+							CommerceCurrencyExchangeRateConstants.
+								SERVICE_NAME));
 
-		for (long companyId : companyIds) {
-			CommerceCurrencyConfiguration commerceCurrencyConfiguration =
-				_configurationProvider.getConfiguration(
-					CommerceCurrencyConfiguration.class,
-					new CompanyServiceSettingsLocator(
-						companyId,
-						CommerceCurrencyExchangeRateConstants.SERVICE_NAME));
+				if (commerceCurrencyConfiguration.enableAutoUpdate()) {
+					String defaultExchangeRateProviderKey =
+						commerceCurrencyConfiguration.
+							defaultExchangeRateProviderKey();
 
-			if (commerceCurrencyConfiguration.enableAutoUpdate()) {
-				String defaultExchangeRateProviderKey =
-					commerceCurrencyConfiguration.
-						defaultExchangeRateProviderKey();
-
-				_updateExchangeRates(companyId, defaultExchangeRateProviderKey);
-			}
-		}
+					_updateExchangeRates(
+						companyId, defaultExchangeRateProviderKey);
+				}
+			},
+			ArrayUtil.toLongArray(commerceCurrencyFinder.getCompanyIds()));
 	}
 
 	protected void validate(
@@ -433,13 +461,11 @@ public class CommerceCurrencyLocalServiceImpl
 			Map<Locale, String> nameMap, boolean primary)
 		throws PortalException {
 
-		Locale locale = LocaleUtil.getSiteDefault();
-
 		if (Validator.isNull(code)) {
 			throw new CommerceCurrencyCodeException();
 		}
 
-		String name = nameMap.get(locale);
+		String name = nameMap.get(LocaleUtil.getSiteDefault());
 
 		if (Validator.isNull(name)) {
 			throw new CommerceCurrencyNameException();
@@ -478,10 +504,15 @@ public class CommerceCurrencyLocalServiceImpl
 	private static final Log _log = LogFactoryUtil.getLog(
 		CommerceCurrencyLocalServiceImpl.class);
 
+	@ServiceReference(type = CompanyLocalService.class)
+	private CompanyLocalService _companyLocalService;
+
 	@ServiceReference(type = ConfigurationProvider.class)
 	private ConfigurationProvider _configurationProvider;
 
 	@ServiceReference(type = ExchangeRateProviderRegistry.class)
 	private ExchangeRateProviderRegistry _exchangeRateProviderRegistry;
+
+	private ServiceRegistration<?> _serviceRegistration;
 
 }

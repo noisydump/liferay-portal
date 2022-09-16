@@ -22,11 +22,12 @@ String layoutSetBranchName = ParamUtil.getString(request, "layoutSetBranchName")
 
 portletDisplay.setShowBackIcon(true);
 
-PortletURL stagingProcessesURL = PortalUtil.getControlPanelPortletURL(request, StagingProcessesPortletKeys.STAGING_PROCESSES, PortletRequest.RENDER_PHASE);
-
-stagingProcessesURL.setParameter("mvcPath", "/view.jsp");
-
-portletDisplay.setURLBack(stagingProcessesURL.toString());
+portletDisplay.setURLBack(
+	PortletURLBuilder.create(
+		PortalUtil.getControlPanelPortletURL(request, StagingProcessesPortletKeys.STAGING_PROCESSES, PortletRequest.RENDER_PHASE)
+	).setMVCPath(
+		"/view.jsp"
+	).buildString());
 
 renderResponse.setTitle(LanguageUtil.get(request, "publish-templates"));
 %>
@@ -57,8 +58,8 @@ StagingProcessesWebPublishTemplatesToolbarDisplayContext stagingProcessesWebPubl
 	navigationItems="<%= publishTemplatesDisplayContext.getNavigationItems() %>"
 />
 
-<clay:management-toolbar-v2
-	displayContext="<%= stagingProcessesWebPublishTemplatesToolbarDisplayContext %>"
+<clay:management-toolbar
+	managementToolbarDisplayContext="<%= stagingProcessesWebPublishTemplatesToolbarDisplayContext %>"
 	searchFormName="searchFm"
 	selectable="<%= false %>"
 	showCreationMenu="<%= true %>"

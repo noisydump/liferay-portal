@@ -17,12 +17,12 @@ package com.liferay.product.navigation.simulation.device.internal.application.li
 import com.liferay.application.list.BaseJSPPanelApp;
 import com.liferay.application.list.PanelApp;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
-import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
+import com.liferay.portal.kernel.service.permission.GroupPermission;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.product.navigation.simulation.constants.ProductNavigationSimulationConstants;
 import com.liferay.product.navigation.simulation.constants.ProductNavigationSimulationPortletKeys;
@@ -58,7 +58,7 @@ public class DevicePreviewPanelApp extends BaseJSPPanelApp {
 		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
 			"content.Language", locale, getClass());
 
-		return LanguageUtil.get(resourceBundle, "screen-size");
+		return _language.get(resourceBundle, "screen-size");
 	}
 
 	@Override
@@ -71,11 +71,9 @@ public class DevicePreviewPanelApp extends BaseJSPPanelApp {
 	public boolean isShow(PermissionChecker permissionChecker, Group group)
 		throws PortalException {
 
-		if (group.isControlPanel()) {
-			return false;
-		}
+		if (group.isControlPanel() ||
+			!_hasPreviewInDevicePermission(permissionChecker, group)) {
 
-		if (!hasPreviewInDevicePermission(permissionChecker, group)) {
 			return false;
 		}
 
@@ -100,12 +98,18 @@ public class DevicePreviewPanelApp extends BaseJSPPanelApp {
 		super.setServletContext(servletContext);
 	}
 
-	protected boolean hasPreviewInDevicePermission(
+	private boolean _hasPreviewInDevicePermission(
 			PermissionChecker permissionChecker, Group group)
 		throws PortalException {
 
-		return GroupPermissionUtil.contains(
+		return _groupPermission.contains(
 			permissionChecker, group, ActionKeys.PREVIEW_IN_DEVICE);
 	}
+
+	@Reference
+	private GroupPermission _groupPermission;
+
+	@Reference
+	private Language _language;
 
 }

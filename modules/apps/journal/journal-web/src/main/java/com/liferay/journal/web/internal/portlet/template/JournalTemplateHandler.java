@@ -31,13 +31,12 @@ import com.liferay.journal.service.JournalArticleLocalService;
 import com.liferay.journal.service.JournalArticleService;
 import com.liferay.journal.util.JournalContent;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.template.TemplateHandler;
 import com.liferay.portal.kernel.template.TemplateVariableCodeHandler;
 import com.liferay.portal.kernel.template.TemplateVariableGroup;
-import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.SetUtil;
@@ -79,7 +78,7 @@ public class JournalTemplateHandler extends BaseDDMTemplateHandler {
 			contextObjects.put("journalContentUtil", _journalContent);
 		}
 		catch (SecurityException securityException) {
-			_log.error(securityException, securityException);
+			_log.error(securityException);
 		}
 
 		return contextObjects;
@@ -91,7 +90,7 @@ public class JournalTemplateHandler extends BaseDDMTemplateHandler {
 			JournalPortletKeys.JOURNAL,
 			ResourceBundleUtil.getBundle(locale, getClass()));
 
-		return LanguageUtil.format(locale, "x-template", portletTitle, false);
+		return _language.format(locale, "x-template", portletTitle, false);
 	}
 
 	@Override
@@ -101,7 +100,8 @@ public class JournalTemplateHandler extends BaseDDMTemplateHandler {
 
 	@Override
 	public String getTemplatesHelpPath(String language) {
-		return _templatesHelpPaths.get(language);
+		return "com/liferay/journal/web/portlet/template/dependencies" +
+			"/template.ftl";
 	}
 
 	@Override
@@ -117,8 +117,7 @@ public class JournalTemplateHandler extends BaseDDMTemplateHandler {
 
 		if (fieldsTemplateVariableGroup != null) {
 			fieldsTemplateVariableGroup.addVariable(
-				"friendly-url", String.class,
-				"friendlyURLs[themeDisplay.getLanguageId()]!\"\"");
+				"friendly-url", String.class, "friendlyURL");
 		}
 
 		String[] restrictedVariables = getRestrictedVariables(language);
@@ -225,33 +224,17 @@ public class JournalTemplateHandler extends BaseDDMTemplateHandler {
 		return _templateVariableCodeHandler;
 	}
 
-	@Reference(unbind = "-")
-	protected void setJournalContent(JournalContent journalContent) {
-		_journalContent = journalContent;
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		JournalTemplateHandler.class);
-
-	private static final Map<String, String> _templatesHelpPaths =
-		HashMapBuilder.put(
-			"css",
-			"com/liferay/journal/web/portlet/template/dependencies/template.css"
-		).put(
-			"ftl",
-			"com/liferay/journal/web/portlet/template/dependencies/template.ftl"
-		).put(
-			"vm",
-			"com/liferay/journal/web/portlet/template/dependencies/template.vm"
-		).put(
-			"xsl",
-			"com/liferay/journal/web/portlet/template/dependencies/template.xsl"
-		).build();
 
 	@Reference
 	private DDMStructureLocalService _ddmStructureLocalService;
 
+	@Reference
 	private JournalContent _journalContent;
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private Portal _portal;
@@ -261,9 +244,7 @@ public class JournalTemplateHandler extends BaseDDMTemplateHandler {
 			JournalTemplateHandler.class.getClassLoader(),
 			"com/liferay/journal/web/portlet/template/dependencies/",
 			SetUtil.fromArray(
-				new String[] {
-					"boolean", "date", "document-library", "geolocation",
-					"image", "journal-article", "link-to-page"
-				}));
+				"boolean", "date", "document-library", "geolocation", "image",
+				"journal-article", "link-to-page"));
 
 }

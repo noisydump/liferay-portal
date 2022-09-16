@@ -17,7 +17,8 @@
 <%@ include file="/init.jsp" %>
 
 <%
-String mfaUserAccountLabel = GetterUtil.getString(request.getAttribute(MFAWebKeys.MFA_USER_ACCOUNT_LABEL));
+User selectedUser = PortalUtil.getSelectedUser(request);
+
 SetupMFAChecker setupMFAChecker = (SetupMFAChecker)request.getAttribute(SetupMFAChecker.class.getName());
 %>
 
@@ -26,18 +27,19 @@ SetupMFAChecker setupMFAChecker = (SetupMFAChecker)request.getAttribute(SetupMFA
 </portlet:actionURL>
 
 <aui:form action="<%= actionURL %>" cssClass="portlet-users-admin-edit-user" data-senna-off="true" method="post" name="fm">
+	<aui:input name="p_u_i_d" type="hidden" value="<%= selectedUser.getUserId() %>" />
 	<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
 	<aui:input name="setupMFACheckerServiceId" type="hidden" value="<%= GetterUtil.getLong(request.getAttribute(MFAWebKeys.SETUP_MFA_CHECKER_SERVICE_ID)) %>" />
 
 	<div class="sheet sheet-lg">
 		<div class="sheet-header">
-			<h1 class="sheet-title"><%= mfaUserAccountLabel %></h1>
+			<h1 class="sheet-title"><%= GetterUtil.getString(request.getAttribute(MFAWebKeys.MFA_USER_ACCOUNT_LABEL)) %></h1>
 		</div>
 
 		<liferay-ui:error key="setupUserAccountFailed" message="user-account-setup-failed" />
 
 		<%
-		setupMFAChecker.includeSetup(request, response, user.getUserId());
+		setupMFAChecker.includeSetup(request, response, selectedUser.getUserId());
 		%>
 
 	</div>

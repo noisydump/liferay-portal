@@ -27,6 +27,10 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
 public class DLFileEntryTypeServiceWrapper
 	implements DLFileEntryTypeService, ServiceWrapper<DLFileEntryTypeService> {
 
+	public DLFileEntryTypeServiceWrapper() {
+		this(null);
+	}
+
 	public DLFileEntryTypeServiceWrapper(
 		DLFileEntryTypeService dlFileEntryTypeService) {
 
@@ -148,6 +152,18 @@ public class DLFileEntryTypeServiceWrapper
 	@Override
 	public java.util.List<DLFileEntryType> search(
 		long companyId, long[] groupIds, String keywords,
+		boolean includeBasicFileEntryType, int scope, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator<DLFileEntryType>
+			orderByComparator) {
+
+		return _dlFileEntryTypeService.search(
+			companyId, groupIds, keywords, includeBasicFileEntryType, scope,
+			start, end, orderByComparator);
+	}
+
+	@Override
+	public java.util.List<DLFileEntryType> search(
+		long companyId, long[] groupIds, String keywords,
 		boolean includeBasicFileEntryType, int start, int end,
 		com.liferay.portal.kernel.util.OrderByComparator<DLFileEntryType>
 			orderByComparator) {
@@ -174,6 +190,15 @@ public class DLFileEntryTypeServiceWrapper
 
 		return _dlFileEntryTypeService.searchCount(
 			companyId, groupIds, keywords, includeBasicFileEntryType);
+	}
+
+	@Override
+	public int searchCount(
+		long companyId, long[] groupIds, String keywords,
+		boolean includeBasicFileEntryType, int scope) {
+
+		return _dlFileEntryTypeService.searchCount(
+			companyId, groupIds, keywords, includeBasicFileEntryType, scope);
 	}
 
 	@Override

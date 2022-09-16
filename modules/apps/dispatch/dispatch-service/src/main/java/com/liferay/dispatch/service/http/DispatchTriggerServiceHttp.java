@@ -46,14 +46,13 @@ import com.liferay.portal.kernel.util.MethodKey;
  * </p>
  *
  * @author Matija Petanjek
- * @see DispatchTriggerServiceSoap
  * @generated
  */
 public class DispatchTriggerServiceHttp {
 
 	public static com.liferay.dispatch.model.DispatchTrigger addDispatchTrigger(
-			HttpPrincipal httpPrincipal, long userId,
-			String dispatchTaskExecutorType,
+			HttpPrincipal httpPrincipal, String externalReferenceCode,
+			long userId, String dispatchTaskExecutorType,
 			com.liferay.portal.kernel.util.UnicodeProperties
 				dispatchTaskSettingsUnicodeProperties,
 			String name)
@@ -65,8 +64,9 @@ public class DispatchTriggerServiceHttp {
 				_addDispatchTriggerParameterTypes0);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, userId, dispatchTaskExecutorType,
-				dispatchTaskSettingsUnicodeProperties, name);
+				methodKey, externalReferenceCode, userId,
+				dispatchTaskExecutorType, dispatchTaskSettingsUnicodeProperties,
+				name);
 
 			Object returnObj = null;
 
@@ -220,7 +220,8 @@ public class DispatchTriggerServiceHttp {
 				int endDateMonth, int endDateDay, int endDateYear,
 				int endDateHour, int endDateMinute, boolean neverEnd,
 				boolean overlapAllowed, int startDateMonth, int startDateDay,
-				int startDateYear, int startDateHour, int startDateMinute)
+				int startDateYear, int startDateHour, int startDateMinute,
+				String timeZoneId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		try {
@@ -233,7 +234,7 @@ public class DispatchTriggerServiceHttp {
 				dispatchTaskClusterMode, endDateMonth, endDateDay, endDateYear,
 				endDateHour, endDateMinute, neverEnd, overlapAllowed,
 				startDateMonth, startDateDay, startDateYear, startDateHour,
-				startDateMinute);
+				startDateMinute, timeZoneId);
 
 			Object returnObj = null;
 
@@ -313,7 +314,7 @@ public class DispatchTriggerServiceHttp {
 
 	private static final Class<?>[] _addDispatchTriggerParameterTypes0 =
 		new Class[] {
-			long.class, String.class,
+			String.class, long.class, String.class,
 			com.liferay.portal.kernel.util.UnicodeProperties.class, String.class
 		};
 	private static final Class<?>[] _deleteDispatchTriggerParameterTypes1 =
@@ -328,7 +329,7 @@ public class DispatchTriggerServiceHttp {
 			com.liferay.dispatch.executor.DispatchTaskClusterMode.class,
 			int.class, int.class, int.class, int.class, int.class,
 			boolean.class, boolean.class, int.class, int.class, int.class,
-			int.class, int.class
+			int.class, int.class, String.class
 		};
 	private static final Class<?>[] _updateDispatchTriggerParameterTypes5 =
 		new Class[] {

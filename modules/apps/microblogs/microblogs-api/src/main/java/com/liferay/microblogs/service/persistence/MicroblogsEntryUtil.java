@@ -26,10 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.util.tracker.ServiceTracker;
-
 /**
  * The persistence utility for the microblogs entry service. This utility wraps <code>com.liferay.microblogs.service.persistence.impl.MicroblogsEntryPersistenceImpl</code> and provides direct access to the database for CRUD operations. This utility should only be used by the service layer, as it must operate within a transaction. Never access this utility in a JSP, controller, model, or other front-end class.
  *
@@ -1250,7 +1246,7 @@ public class MicroblogsEntryUtil {
 	 * </p>
 	 *
 	 * @param creatorClassNameId the creator class name ID
-	 * @param creatorClassPK the creator class pk
+	 * @param creatorClassPKs the creator class pks
 	 * @param start the lower bound of the range of microblogs entries
 	 * @param end the upper bound of the range of microblogs entries (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
@@ -2284,7 +2280,7 @@ public class MicroblogsEntryUtil {
 	 *
 	 * @param companyId the company ID
 	 * @param creatorClassNameId the creator class name ID
-	 * @param creatorClassPK the creator class pk
+	 * @param creatorClassPKs the creator class pks
 	 * @param start the lower bound of the range of microblogs entries
 	 * @param end the upper bound of the range of microblogs entries (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
@@ -3075,7 +3071,7 @@ public class MicroblogsEntryUtil {
 	 * </p>
 	 *
 	 * @param creatorClassNameId the creator class name ID
-	 * @param creatorClassPK the creator class pk
+	 * @param creatorClassPKs the creator class pks
 	 * @param type the type
 	 * @param start the lower bound of the range of microblogs entries
 	 * @param end the upper bound of the range of microblogs entries (not inclusive)
@@ -3598,7 +3594,7 @@ public class MicroblogsEntryUtil {
 	 *
 	 * @param companyId the company ID
 	 * @param creatorClassNameId the creator class name ID
-	 * @param creatorClassPK the creator class pk
+	 * @param creatorClassPKs the creator class pks
 	 * @param type the type
 	 * @param start the lower bound of the range of microblogs entries
 	 * @param end the upper bound of the range of microblogs entries (not inclusive)
@@ -4178,27 +4174,9 @@ public class MicroblogsEntryUtil {
 	}
 
 	public static MicroblogsEntryPersistence getPersistence() {
-		return _serviceTracker.getService();
+		return _persistence;
 	}
 
-	private static ServiceTracker
-		<MicroblogsEntryPersistence, MicroblogsEntryPersistence>
-			_serviceTracker;
-
-	static {
-		Bundle bundle = FrameworkUtil.getBundle(
-			MicroblogsEntryPersistence.class);
-
-		ServiceTracker<MicroblogsEntryPersistence, MicroblogsEntryPersistence>
-			serviceTracker =
-				new ServiceTracker
-					<MicroblogsEntryPersistence, MicroblogsEntryPersistence>(
-						bundle.getBundleContext(),
-						MicroblogsEntryPersistence.class, null);
-
-		serviceTracker.open();
-
-		_serviceTracker = serviceTracker;
-	}
+	private static volatile MicroblogsEntryPersistence _persistence;
 
 }

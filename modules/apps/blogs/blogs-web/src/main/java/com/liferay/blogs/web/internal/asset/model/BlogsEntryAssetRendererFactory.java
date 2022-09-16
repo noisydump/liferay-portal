@@ -22,7 +22,10 @@ import com.liferay.blogs.constants.BlogsConstants;
 import com.liferay.blogs.constants.BlogsPortletKeys;
 import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.blogs.service.BlogsEntryLocalService;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.LiferayPortletURL;
@@ -72,9 +75,7 @@ public class BlogsEntryAssetRendererFactory
 		BlogsEntryAssetRenderer blogsEntryAssetRenderer =
 			new BlogsEntryAssetRenderer(
 				_blogsEntryLocalService.getEntry(classPK),
-				ResourceBundleLoaderUtil.
-					getResourceBundleLoaderByBundleSymbolicName(
-						"com.liferay.blogs.web"));
+				ResourceBundleLoaderUtil.getPortalResourceBundleLoader());
 
 		blogsEntryAssetRenderer.setAssetDisplayPageFriendlyURLProvider(
 			_assetDisplayPageFriendlyURLProvider);
@@ -92,9 +93,7 @@ public class BlogsEntryAssetRendererFactory
 		BlogsEntryAssetRenderer blogsEntryAssetRenderer =
 			new BlogsEntryAssetRenderer(
 				_blogsEntryLocalService.getEntry(groupId, urlTitle),
-				ResourceBundleLoaderUtil.
-					getResourceBundleLoaderByBundleSymbolicName(
-						"com.liferay.blogs.web"));
+				ResourceBundleLoaderUtil.getPortalResourceBundleLoader());
 
 		blogsEntryAssetRenderer.setServletContext(_servletContext);
 
@@ -121,13 +120,13 @@ public class BlogsEntryAssetRendererFactory
 		LiferayPortletRequest liferayPortletRequest,
 		LiferayPortletResponse liferayPortletResponse, long classTypeId) {
 
-		PortletURL portletURL = _portal.getControlPanelPortletURL(
-			liferayPortletRequest, getGroup(liferayPortletRequest),
-			BlogsPortletKeys.BLOGS, 0, 0, PortletRequest.RENDER_PHASE);
-
-		portletURL.setParameter("mvcRenderCommandName", "/blogs/edit_entry");
-
-		return portletURL;
+		return PortletURLBuilder.create(
+			_portal.getControlPanelPortletURL(
+				liferayPortletRequest, getGroup(liferayPortletRequest),
+				BlogsPortletKeys.BLOGS, 0, 0, PortletRequest.RENDER_PHASE)
+		).setMVCRenderCommandName(
+			"/blogs/edit_entry"
+		).buildPortletURL();
 	}
 
 	@Override
@@ -143,6 +142,9 @@ public class BlogsEntryAssetRendererFactory
 			liferayPortletURL.setWindowState(windowState);
 		}
 		catch (WindowStateException windowStateException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(windowStateException);
+			}
 		}
 
 		return liferayPortletURL;
@@ -164,6 +166,9 @@ public class BlogsEntryAssetRendererFactory
 		return _blogsEntryModelResourcePermission.contains(
 			permissionChecker, classPK, actionId);
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		BlogsEntryAssetRendererFactory.class);
 
 	@Reference
 	private AssetDisplayPageFriendlyURLProvider

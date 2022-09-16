@@ -26,7 +26,7 @@ import com.liferay.commerce.discount.target.CommerceDiscountProductTarget;
 import com.liferay.commerce.discount.target.CommerceDiscountTarget;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
@@ -82,7 +82,8 @@ public class ApplyToCategoriesCommerceDiscountTargetImpl
 
 		long[] assetCategoryIds = longStream.toArray();
 
-		document.addKeyword("target_asset_category_ids", assetCategoryIds);
+		document.addKeyword(
+			"commerce_discount_target_asset_category_ids", assetCategoryIds);
 	}
 
 	@Override
@@ -95,7 +96,7 @@ public class ApplyToCategoriesCommerceDiscountTargetImpl
 		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
 			"content.Language", locale, getClass());
 
-		return LanguageUtil.get(
+		return _language.get(
 			resourceBundle, CommerceDiscountConstants.TARGET_CATEGORIES);
 	}
 
@@ -110,11 +111,13 @@ public class ApplyToCategoriesCommerceDiscountTargetImpl
 
 		long[] assetCategoryIds = _getAssetCategoryIds(cpDefinition);
 
-		TermsFilter termsFilter = new TermsFilter("target_asset_category_ids");
+		TermsFilter termsFilter = new TermsFilter(
+			"commerce_discount_target_asset_category_ids");
 
 		termsFilter.addValues(ArrayUtil.toStringArray(assetCategoryIds));
 
-		Filter existFilter = new ExistsFilter("target_asset_category_ids");
+		Filter existFilter = new ExistsFilter(
+			"commerce_discount_target_asset_category_ids");
 
 		BooleanFilter existBooleanFilter = new BooleanFilter();
 
@@ -148,7 +151,7 @@ public class ApplyToCategoriesCommerceDiscountTargetImpl
 			return longStream.toArray();
 		}
 		catch (PortalException portalException) {
-			_log.error(portalException, portalException);
+			_log.error(portalException);
 		}
 
 		return new long[0];
@@ -165,5 +168,8 @@ public class ApplyToCategoriesCommerceDiscountTargetImpl
 
 	@Reference
 	private CommerceDiscountRelLocalService _commerceDiscountRelLocalService;
+
+	@Reference
+	private Language _language;
 
 }

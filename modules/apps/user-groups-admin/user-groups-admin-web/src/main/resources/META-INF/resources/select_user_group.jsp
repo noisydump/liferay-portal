@@ -28,7 +28,7 @@ SearchContainer<UserGroup> userGroupSearch = selectUserGroupManagementToolbarDis
 renderResponse.setTitle(LanguageUtil.get(request, "user-groups"));
 %>
 
-<clay:management-toolbar-v2
+<clay:management-toolbar
 	clearResultsURL="<%= selectUserGroupManagementToolbarDisplayContext.getClearResultsURL() %>"
 	itemsTotal="<%= userGroupSearch.getTotal() %>"
 	searchActionURL="<%= selectUserGroupManagementToolbarDisplayContext.getSearchActionURL() %>"
@@ -38,7 +38,7 @@ renderResponse.setTitle(LanguageUtil.get(request, "user-groups"));
 	viewTypeItems="<%= selectUserGroupManagementToolbarDisplayContext.getViewTypeItems() %>"
 />
 
-<aui:form action="<%= portletURL.toString() %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="selectUserGroupFm">
+<aui:form action="<%= portletURL %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="selectUserGroupFm">
 	<liferay-ui:search-container
 		searchContainer="<%= userGroupSearch %>"
 	>

@@ -15,9 +15,10 @@
 import ClayDropDown from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
 import ClaySticker from '@clayui/sticker';
+import {getSpritemap} from '@liferay/frontend-icons-web';
 import React from 'react';
 
-const spritemap = `${Liferay.ThemeDisplay.getPathThemeImages()}/clay/icons.svg`;
+const spritemap = getSpritemap();
 
 const MenuCustom = ({
 	inputValue,
@@ -49,8 +50,10 @@ const MenuCustom = ({
 									/>
 								</ClaySticker>
 							</div>
+
 							<div className="autofit-col">
 								<strong>{item[locator.label]}</strong>
+
 								<span>{item.email}</span>
 							</div>
 						</div>

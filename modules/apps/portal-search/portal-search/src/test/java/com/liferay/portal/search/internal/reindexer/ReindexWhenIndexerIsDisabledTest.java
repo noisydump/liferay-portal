@@ -18,26 +18,30 @@ import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistry;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.search.spi.reindexer.BulkReindexer;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.Arrays;
 import java.util.Collections;
 
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
-import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 
 /**
  * @author André de Oliveira
  */
 public class ReindexWhenIndexerIsDisabledTest {
 
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
 	@Before
 	public void setUp() {
-		MockitoAnnotations.initMocks(this);
-
 		_reindex = createReindex();
 	}
 
@@ -77,7 +81,7 @@ public class ReindexWhenIndexerIsDisabledTest {
 			Mockito.anyString(), Mockito.anyLong()
 		);
 
-		Mockito.verifyZeroInteractions(bulkReindexer);
+		Mockito.verifyNoInteractions(bulkReindexer);
 	}
 
 	@Test
@@ -149,11 +153,8 @@ public class ReindexWhenIndexerIsDisabledTest {
 		return reindex;
 	}
 
-	@Mock
-	protected BulkReindexer bulkReindexer;
-
-	@Mock
-	protected Indexer<?> indexer;
+	protected BulkReindexer bulkReindexer = Mockito.mock(BulkReindexer.class);
+	protected Indexer<?> indexer = Mockito.mock(Indexer.class);
 
 	private static final String _CLASS_NAME = RandomTestUtil.randomString();
 

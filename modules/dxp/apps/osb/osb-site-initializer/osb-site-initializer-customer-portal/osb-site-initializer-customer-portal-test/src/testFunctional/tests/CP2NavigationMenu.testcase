@@ -1,0 +1,191 @@
+@component-name = "portal-solutions"
+definition {
+
+	property osgi.modules.includes = "osb-site-initializer-customer-portal";
+	property portal.release = "false";
+	property portal.upstream = "true";
+	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
+	property testray.main.component.name = "OSB Site Initializer Customer Portal";
+
+	var testSiteName = "Customer Portal Site";
+	var testSiteURL = "customer-portal-site";
+
+	setUp {
+		task ("Set up instance and sign in") {
+			TestCase.setUpPortalInstance();
+
+			User.firstLoginPG();
+		}
+
+		task ("Create a new Customer Portal Site") {
+			CustomerPortal.addCustomerPortalSite(siteName = "${testSiteName}");
+		}
+	}
+
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
+
+		CustomerPortal.customerPortalApisTearDown();
+
+		if ("${testPortalInstance}" == "true") {
+			PortalInstances.tearDownCP();
+		}
+		else {
+			JSONGroup.deleteGroupByName(groupName = "${testSiteName}");
+		}
+	}
+
+	@description = "Automation ID: LPS-143811 | Test Summary: Verify if Analytics Cloud option is showing under Product Activation"
+	@priority = "3"
+	test IsAnalyticsCloudOptionAvailable {
+		task ("Go to CP2.0 and join a project") {
+			ApplicationsMenu.gotoSite(key_site = "Customer Portal Site");
+
+			CustomerPortal.enterOnProject(
+				status = "Expired",
+				title = "Test Account Analytics Cloud");
+		}
+
+		task ("Go to the product activation page") {
+			CP2NavigationMenu.goToProductActivation();
+		}
+
+		task ("Assert the Analytics Cloud product") {
+			AssertElementPresent(
+				key_text = "Analytics Cloud",
+				locator1 = "Button#ANY");
+		}
+	}
+
+	@description = "Automation ID: LPS-143813 | Test Summary: Verify if Commerce option is showing under Product Activation"
+	@priority = "3"
+	test IsCommerceOptionAvailable {
+		task ("Go to CP2.0 and join a project") {
+			ApplicationsMenu.gotoSite(key_site = "Customer Portal Site");
+
+			CustomerPortal.enterOnProject(title = "Test Account Commerce");
+		}
+
+		task ("Go to the product activation page") {
+			CP2NavigationMenu.goToProductActivation();
+		}
+
+		task ("Assert the Commerce product") {
+			AssertElementPresent(
+				key_text = "Commerce",
+				locator1 = "Button#ANY");
+		}
+	}
+
+	@description = "Automation ID: LPS-143815 | Test Summary: Verify if DXP Cloud option is showing under Product Activation"
+	@priority = "3"
+	test IsDXPCloudOptionAvailable {
+		task ("Go to CP2.0 and join a project") {
+			ApplicationsMenu.gotoSite(key_site = "Customer Portal Site");
+
+			CustomerPortal.enterOnProject(title = "Test Account LXC-SM");
+		}
+
+		task ("Go to the product activation page") {
+			CP2NavigationMenu.goToProductActivation();
+		}
+
+		task ("Assert the DXP Cloud product") {
+			AssertElementPresent(
+				key_text = "LXC-SM",
+				locator1 = "Button#ANY");
+		}
+	}
+
+	@description = "Automation ID: LPS-143814 | Test Summary: Verify if DXP option is showing under Product Activation"
+	@priority = "3"
+	test IsDXPOptionAvailable {
+		task ("Go to CP2.0 and join a project") {
+			ApplicationsMenu.gotoSite(key_site = "Customer Portal Site");
+
+			CustomerPortal.enterOnProject(title = "Test Account DXP");
+		}
+
+		task ("Go to the product activation page") {
+			CP2NavigationMenu.goToProductActivation();
+		}
+
+		task ("Assert the DXP product") {
+			AssertElementPresent(
+				key_text = "DXP",
+				locator1 = "Button#ANY");
+		}
+	}
+
+	@description = "Automation ID: LPS-143816 | Test Summary: Verify if Enterprise Search option is showing under Product Activation"
+	@priority = "3"
+	test IsEnterpriseSearchOptionAvailable {
+		task ("Go to CP2.0 and join a project") {
+			ApplicationsMenu.gotoSite(key_site = "Customer Portal Site");
+
+			CustomerPortal.enterOnProject(title = "Test Account Enterprise Search");
+		}
+
+		task ("Go to the product activation page") {
+			CP2NavigationMenu.goToProductActivation();
+		}
+
+		task ("Assert the Enterprise Search product") {
+			AssertElementPresent(
+				key_text = "Enterprise Search",
+				locator1 = "Button#ANY");
+		}
+	}
+
+	@description = "Automation ID: LPS-143801 | Test Summary: Verify if Overview is displayed on Navigation Menu"
+	@priority = "4"
+	test IsOverviewMenuDisplayed {
+		task ("Go to CP2.0 and join a project") {
+			ApplicationsMenu.gotoSite(key_site = "Customer Portal Site");
+
+			CustomerPortal.enterOnProject(title = "Test Account LXC-SM");
+		}
+
+		task ("Assert the Overview option in the on side menu") {
+			AssertElementPresent(locator1 = "CP2NavigationMenu#OVERVIEW");
+		}
+	}
+
+	@description = "Automation ID: LPS-143817 | Automation ID: Verify if Portal option is showing under Product Activation"
+	@priority = "3"
+	test IsPortalOptionAvailable {
+		task ("Go to CP2.0 and join a project") {
+			ApplicationsMenu.gotoSite(key_site = "Customer Portal Site");
+
+			CustomerPortal.enterOnProject(
+				status = "Future",
+				title = "Test Account Portal");
+		}
+
+		task ("Go to the product activation page") {
+			CP2NavigationMenu.goToProductActivation();
+		}
+
+		task ("Assert the Portal product") {
+			AssertElementPresent(
+				key_text = "Portal",
+				locator1 = "Button#ANY");
+		}
+	}
+
+	@description = "Automation ID: LPS-143809 | Test Summary: Verify if Team Members is displayed on Navigation Menu"
+	@ignore = "true"
+	@priority = "4"
+	test IsTeamMembersMenuDisplayed {
+		task ("Go to CP2.0 and join a project") {
+			ApplicationsMenu.gotoSite(key_site = "Customer Portal Site");
+
+			CustomerPortal.enterOnProject(title = "Test Account LXC-SM");
+		}
+
+		task ("Assert the Team Members option in the on side menu") {
+			AssertElementPresent(locator1 = "CP2NavigationMenu#TEAM_MEMBERS");
+		}
+	}
+
+}

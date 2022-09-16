@@ -16,8 +16,11 @@ package com.liferay.portal.dao.sql.transformer;
 
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.db.DBType;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -26,25 +29,21 @@ import org.junit.Test;
 public class OracleSQLTransformerLogicTest
 	extends BaseSQLTransformerLogicTestCase {
 
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
 	public OracleSQLTransformerLogicTest() {
 		super(new TestDB(DBType.ORACLE, 1, 0));
 	}
 
 	@Override
 	public String getDropTableIfExistsTextTransformedSQL() {
-		StringBundler sb = new StringBundler(9);
-
-		sb.append("BEGIN\n");
-		sb.append("EXECUTE IMMEDIATE 'DROP TABLE Foo';\n");
-		sb.append("EXCEPTION\n");
-		sb.append("WHEN OTHERS THEN\n");
-		sb.append("IF SQLCODE != -942 THEN\n");
-		sb.append("RAISE;\n");
-		sb.append("END IF;\n");
-		sb.append("END;\n");
-		sb.append("/");
-
-		return sb.toString();
+		return StringBundler.concat(
+			"BEGIN\n", "EXECUTE IMMEDIATE 'DROP TABLE Foo';\n", "EXCEPTION\n",
+			"WHEN OTHERS THEN\n", "IF SQLCODE != -942 THEN\n", "RAISE;\n",
+			"END IF;\n", "END;\n", "/");
 	}
 
 	@Override

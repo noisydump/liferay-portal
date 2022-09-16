@@ -14,9 +14,12 @@
 
 package com.liferay.trash.web.internal.portlet.configuration.icon;
 
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.configuration.icon.BasePortletConfigurationIcon;
 import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfigurationIcon;
@@ -28,7 +31,6 @@ import com.liferay.trash.web.internal.display.context.TrashDisplayContext;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
-import javax.portlet.PortletURL;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -47,8 +49,13 @@ public class RestoreTrashPortletConfigurationIcon
 	extends BasePortletConfigurationIcon {
 
 	@Override
+	public String getIconCssClass() {
+		return "restore";
+	}
+
+	@Override
 	public String getMessage(PortletRequest portletRequest) {
-		return LanguageUtil.get(
+		return _language.get(
 			getResourceBundle(getLocale(portletRequest)), "restore");
 	}
 
@@ -62,40 +69,40 @@ public class RestoreTrashPortletConfigurationIcon
 				_portal.getLiferayPortletRequest(portletRequest),
 				_portal.getLiferayPortletResponse(portletResponse));
 
-			TrashHandler trashHandler = trashDisplayContext.getTrashHandler();
-
 			long classPK = trashDisplayContext.getClassPK();
 
-			PortletURL moveURL = _portal.getControlPanelPortletURL(
-				portletRequest, TrashPortletKeys.TRASH,
-				PortletRequest.RENDER_PHASE);
+			return StringBundler.concat(
+				portletResponse.getNamespace(), "restoreDialog('",
+				PortletURLBuilder.create(
+					_portal.getControlPanelPortletURL(
+						portletRequest, TrashPortletKeys.TRASH,
+						PortletRequest.RENDER_PHASE)
+				).setMVCPath(
+					"/view_container_model.jsp"
+				).setRedirect(
+					trashDisplayContext.getViewContentRedirectURL()
+				).setParameter(
+					"classNameId", trashDisplayContext.getClassNameId()
+				).setParameter(
+					"classPK", classPK
+				).setParameter(
+					"containerModelClassNameId",
+					() -> {
+						TrashHandler trashHandler =
+							trashDisplayContext.getTrashHandler();
 
-			moveURL.setParameter("mvcPath", "/view_container_model.jsp");
-			moveURL.setParameter(
-				"redirect", trashDisplayContext.getViewContentRedirectURL());
-			moveURL.setParameter(
-				"classNameId",
-				String.valueOf(trashDisplayContext.getClassNameId()));
-			moveURL.setParameter("classPK", String.valueOf(classPK));
-
-			moveURL.setParameter(
-				"containerModelClassNameId",
-				String.valueOf(
-					_portal.getClassNameId(
-						trashHandler.getContainerModelClassName(classPK))));
-
-			moveURL.setWindowState(LiferayWindowState.POP_UP);
-
-			StringBundler sb = new StringBundler(4);
-
-			sb.append(portletResponse.getNamespace());
-			sb.append("restoreDialog('");
-			sb.append(moveURL);
-			sb.append("')");
-
-			return sb.toString();
+						return _portal.getClassNameId(
+							trashHandler.getContainerModelClassName(classPK));
+					}
+				).setWindowState(
+					LiferayWindowState.POP_UP
+				).buildPortletURL(),
+				"')");
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return StringPool.BLANK;
@@ -105,7 +112,7 @@ public class RestoreTrashPortletConfigurationIcon
 	public String getURL(
 		PortletRequest portletRequest, PortletResponse portletResponse) {
 
-		return "javascript:;";
+		return "javascript:void(0);";
 	}
 
 	@Override
@@ -120,11 +127,7 @@ public class RestoreTrashPortletConfigurationIcon
 
 		TrashHandler trashHandler = trashDisplayContext.getTrashHandler();
 
-		if (trashHandler == null) {
-			return false;
-		}
-
-		if (trashHandler.isContainerModel()) {
+		if ((trashHandler == null) || trashHandler.isContainerModel()) {
 			return false;
 		}
 
@@ -132,25 +135,30 @@ public class RestoreTrashPortletConfigurationIcon
 
 		if (trashEntry != null) {
 			try {
-				if (!trashHandler.isMovable(trashEntry.getClassPK())) {
-					return false;
-				}
+				if (!trashHandler.isMovable(trashEntry.getClassPK()) ||
+					!trashHandler.isRestorable(trashEntry.getClassPK()) ||
+					!trashHandler.isInTrashContainer(trashEntry.getClassPK())) {
 
-				if (!trashHandler.isRestorable(trashEntry.getClassPK())) {
-					return false;
-				}
-
-				if (!trashHandler.isInTrashContainer(trashEntry.getClassPK())) {
 					return false;
 				}
 			}
 			catch (Exception exception) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(exception);
+				}
+
 				return false;
 			}
 		}
 
 		return true;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		RestoreTrashPortletConfigurationIcon.class);
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private Portal _portal;

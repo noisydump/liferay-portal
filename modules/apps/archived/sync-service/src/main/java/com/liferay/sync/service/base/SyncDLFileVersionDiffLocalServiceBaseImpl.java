@@ -28,6 +28,8 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -40,6 +42,7 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.sync.model.SyncDLFileVersionDiff;
 import com.liferay.sync.service.SyncDLFileVersionDiffLocalService;
+import com.liferay.sync.service.SyncDLFileVersionDiffLocalServiceUtil;
 import com.liferay.sync.service.persistence.SyncDLFileVersionDiffPersistence;
 import com.liferay.sync.service.persistence.SyncDLObjectFinder;
 import com.liferay.sync.service.persistence.SyncDLObjectPersistence;
@@ -47,10 +50,13 @@ import com.liferay.sync.service.persistence.SyncDevicePersistence;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -72,7 +78,7 @@ public abstract class SyncDLFileVersionDiffLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>SyncDLFileVersionDiffLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.sync.service.SyncDLFileVersionDiffLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>SyncDLFileVersionDiffLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>SyncDLFileVersionDiffLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -152,6 +158,13 @@ public abstract class SyncDLFileVersionDiffLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return syncDLFileVersionDiffPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -332,6 +345,11 @@ public abstract class SyncDLFileVersionDiffLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement SyncDLFileVersionDiffLocalServiceImpl#deleteSyncDLFileVersionDiff(SyncDLFileVersionDiff) to avoid orphaned data");
+		}
+
 		return syncDLFileVersionDiffLocalService.deleteSyncDLFileVersionDiff(
 			(SyncDLFileVersionDiff)persistedModel);
 	}
@@ -397,6 +415,11 @@ public abstract class SyncDLFileVersionDiffLocalServiceBaseImpl
 		return syncDLFileVersionDiffPersistence.update(syncDLFileVersionDiff);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -409,6 +432,8 @@ public abstract class SyncDLFileVersionDiffLocalServiceBaseImpl
 	public void setAopProxy(Object aopProxy) {
 		syncDLFileVersionDiffLocalService =
 			(SyncDLFileVersionDiffLocalService)aopProxy;
+
+		_setLocalServiceUtilService(syncDLFileVersionDiffLocalService);
 	}
 
 	/**
@@ -454,6 +479,23 @@ public abstract class SyncDLFileVersionDiffLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		SyncDLFileVersionDiffLocalService syncDLFileVersionDiffLocalService) {
+
+		try {
+			Field field =
+				SyncDLFileVersionDiffLocalServiceUtil.class.getDeclaredField(
+					"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, syncDLFileVersionDiffLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@Reference
 	protected SyncDevicePersistence syncDevicePersistence;
 
@@ -478,10 +520,6 @@ public abstract class SyncDLFileVersionDiffLocalServiceBaseImpl
 		classNameLocalService;
 
 	@Reference
-	protected com.liferay.portal.kernel.service.CompanyLocalService
-		companyLocalService;
-
-	@Reference
 	protected com.liferay.portal.kernel.service.ResourceLocalService
 		resourceLocalService;
 
@@ -489,8 +527,7 @@ public abstract class SyncDLFileVersionDiffLocalServiceBaseImpl
 	protected com.liferay.portal.kernel.service.UserLocalService
 		userLocalService;
 
-	@Reference
-	protected com.liferay.document.library.kernel.service.DLAppLocalService
-		dlAppLocalService;
+	private static final Log _log = LogFactoryUtil.getLog(
+		SyncDLFileVersionDiffLocalServiceBaseImpl.class);
 
 }

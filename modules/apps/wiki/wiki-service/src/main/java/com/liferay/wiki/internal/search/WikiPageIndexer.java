@@ -22,7 +22,7 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.repository.capabilities.RelatedModelCapability;
@@ -48,7 +48,7 @@ import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.HtmlUtil;
+import com.liferay.portal.kernel.util.HtmlParser;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
@@ -135,7 +135,7 @@ public class WikiPageIndexer
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(exception, exception);
+				_log.debug(exception);
 			}
 
 			return;
@@ -250,7 +250,7 @@ public class WikiPageIndexer
 		String content = null;
 
 		try {
-			content = HtmlUtil.extractText(
+			content = _htmlParser.extractText(
 				_wikiEngineRenderer.convert(wikiPage, null, null, null));
 
 			document.addText(Field.CONTENT, content);
@@ -274,7 +274,7 @@ public class WikiPageIndexer
 		document.addText(Field.TITLE, title);
 
 		for (Locale locale :
-				LanguageUtil.getAvailableLocales(wikiPage.getGroupId())) {
+				_language.getAvailableLocales(wikiPage.getGroupId())) {
 
 			String languageId = LocaleUtil.toLanguageId(locale);
 
@@ -285,6 +285,9 @@ public class WikiPageIndexer
 				LocalizationUtil.getLocalizedName(Field.TITLE, languageId),
 				title);
 		}
+
+		document.addNumber(
+			"versionCount", GetterUtil.getDouble(wikiPage.getVersion()));
 
 		return document;
 	}
@@ -328,7 +331,7 @@ public class WikiPageIndexer
 	protected void doReindex(String[] ids) throws Exception {
 		long companyId = GetterUtil.getLong(ids[0]);
 
-		reindexNodes(companyId);
+		_reindexNodes(companyId);
 	}
 
 	@Override
@@ -347,12 +350,24 @@ public class WikiPageIndexer
 			getSearchEngineId(), wikiPage.getCompanyId(), getDocument(wikiPage),
 			isCommitImmediately());
 
-		reindexAttachments(wikiPage);
+		_reindexAttachments(wikiPage);
 	}
 
-	protected void reindexAttachments(WikiPage wikiPage)
-		throws PortalException {
+	@Reference
+	protected UIDFactory uidFactory;
 
+	private void _deleteDocument(WikiPage wikiPage) {
+		try {
+			_indexWriterHelper.deleteDocument(
+				getSearchEngineId(), wikiPage.getCompanyId(),
+				uidFactory.getUID(wikiPage), isCommitImmediately());
+		}
+		catch (SearchException searchException) {
+			throw new RuntimeException(searchException);
+		}
+	}
+
+	private void _reindexAttachments(WikiPage wikiPage) throws Exception {
 		Indexer<DLFileEntry> indexer = IndexerRegistryUtil.nullSafeGetIndexer(
 			DLFileEntry.class);
 
@@ -363,22 +378,46 @@ public class WikiPageIndexer
 		}
 	}
 
-	protected void reindexNodes(final long companyId) throws PortalException {
+	private void _reindexEveryVersionOfResourcePrimKey(long resourcePrimKey)
+		throws Exception {
+
+		List<WikiPage> wikiPages =
+			(List<WikiPage>)_wikiPageLocalService.getPersistedModel(
+				resourcePrimKey);
+
+		if (ListUtil.isEmpty(wikiPages)) {
+			return;
+		}
+
+		WikiPage latestWikiPage = _wikiPageLocalService.getPage(
+			resourcePrimKey, (Boolean)null);
+
+		for (WikiPage wikiPage : wikiPages) {
+			if (wikiPage.getPrimaryKey() == latestWikiPage.getPrimaryKey()) {
+				doReindex(wikiPage);
+			}
+			else {
+				_deleteDocument(wikiPage);
+			}
+		}
+	}
+
+	private void _reindexNodes(long companyId) throws Exception {
 		ActionableDynamicQuery actionableDynamicQuery =
 			_wikiNodeLocalService.getActionableDynamicQuery();
 
 		actionableDynamicQuery.setCompanyId(companyId);
 		actionableDynamicQuery.setPerformActionMethod(
-			(WikiNode node) -> reindexPages(
+			(WikiNode node) -> _reindexPages(
 				companyId, node.getGroupId(), node.getNodeId()));
 
 		actionableDynamicQuery.performActions();
 	}
 
-	protected void reindexPages(long companyId, long groupId, final long nodeId)
+	private void _reindexPages(long companyId, long groupId, long nodeId)
 		throws PortalException {
 
-		final IndexableActionableDynamicQuery indexableActionableDynamicQuery =
+		IndexableActionableDynamicQuery indexableActionableDynamicQuery =
 			_wikiPageLocalService.getIndexableActionableDynamicQuery();
 
 		indexableActionableDynamicQuery.setAddCriteriaMethod(
@@ -412,75 +451,17 @@ public class WikiPageIndexer
 		indexableActionableDynamicQuery.performActions();
 	}
 
-	@Reference(unbind = "-")
-	protected void setWikiEngineRenderer(
-		WikiEngineRenderer wikiEngineRenderer) {
-
-		_wikiEngineRenderer = wikiEngineRenderer;
-	}
-
-	@Reference(unbind = "-")
-	protected void setWikiNodeLocalService(
-		WikiNodeLocalService wikiNodeLocalService) {
-
-		_wikiNodeLocalService = wikiNodeLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setWikiNodeService(WikiNodeService wikiNodeService) {
-		_wikiNodeService = wikiNodeService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setWikiPageLocalService(
-		WikiPageLocalService wikiPageLocalService) {
-
-		_wikiPageLocalService = wikiPageLocalService;
-	}
-
-	@Reference
-	protected UIDFactory uidFactory;
-
-	private void _deleteDocument(WikiPage wikiPage) {
-		try {
-			_indexWriterHelper.deleteDocument(
-				getSearchEngineId(), wikiPage.getCompanyId(),
-				uidFactory.getUID(wikiPage), isCommitImmediately());
-		}
-		catch (SearchException searchException) {
-			throw new RuntimeException(searchException);
-		}
-	}
-
-	private void _reindexEveryVersionOfResourcePrimKey(long resourcePrimKey)
-		throws Exception {
-
-		List<WikiPage> wikiPages =
-			(List<WikiPage>)_wikiPageLocalService.getPersistedModel(
-				resourcePrimKey);
-
-		if (ListUtil.isEmpty(wikiPages)) {
-			return;
-		}
-
-		WikiPage latestWikiPage = _wikiPageLocalService.getPage(
-			resourcePrimKey, (Boolean)null);
-
-		for (WikiPage wikiPage : wikiPages) {
-			if (wikiPage.getPrimaryKey() == latestWikiPage.getPrimaryKey()) {
-				doReindex(wikiPage);
-			}
-			else {
-				_deleteDocument(wikiPage);
-			}
-		}
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		WikiPageIndexer.class);
 
 	@Reference
+	private HtmlParser _htmlParser;
+
+	@Reference
 	private IndexWriterHelper _indexWriterHelper;
+
+	@Reference
+	private Language _language;
 
 	private final RelatedEntryIndexer _relatedEntryIndexer =
 		new BaseRelatedEntryIndexer();
@@ -488,9 +469,16 @@ public class WikiPageIndexer
 	@Reference
 	private TrashHelper _trashHelper;
 
+	@Reference
 	private WikiEngineRenderer _wikiEngineRenderer;
+
+	@Reference
 	private WikiNodeLocalService _wikiNodeLocalService;
+
+	@Reference
 	private WikiNodeService _wikiNodeService;
+
+	@Reference
 	private WikiPageLocalService _wikiPageLocalService;
 
 	@Reference(target = "(model.class.name=com.liferay.wiki.model.WikiPage)")

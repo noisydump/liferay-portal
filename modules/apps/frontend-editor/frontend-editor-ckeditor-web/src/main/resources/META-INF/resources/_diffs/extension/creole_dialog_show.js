@@ -13,40 +13,43 @@
  */
 
 ckEditor.on('dialogShow', (event) => {
-	var A = AUI();
+	const A = AUI();
 
-	var MODIFIED = 'modified';
+	const MODIFIED = 'modified';
 
-	var SELECTOR_HBOX_FIRST = '.cke_dialog_ui_hbox_first';
+	const SELECTOR_HBOX_FIRST = '.cke_dialog_ui_hbox_first';
 
-	var dialog = event.data.definition.dialog;
+	const dialog = event.data.definition.dialog;
 
-	if (dialog.getName() == 'image') {
-		var lockButton = A.one('.cke_btn_locked');
+	if (dialog.getName() === 'image') {
+		const lockButton = document.querySelector('.cke_btn_locked');
 
 		if (lockButton) {
-			var imageProperties = lockButton.ancestor(SELECTOR_HBOX_FIRST);
+			const imageProperties = lockButton.closest(SELECTOR_HBOX_FIRST);
 
 			if (imageProperties) {
-				imageProperties.hide();
+				imageProperties.style.display = 'none';
 			}
 		}
 
-		var imagePreviewBox = A.one('.ImagePreviewBox');
+		const imagePreviewBox = document.querySelector('.ImagePreviewBox');
 
 		if (imagePreviewBox) {
-			imagePreviewBox.setStyle('width', 410);
+			imagePreviewBox.style.width = 410;
 		}
 	}
-	else if (dialog.getName() == 'cellProperties') {
-		var containerNode = A.one('#' + dialog.getElement('cellType').$.id);
+	else if (dialog.getName() === 'cellProperties') {
+		// eslint-disable-next-line @liferay/aui/no-one
+		const containerNode = A.one('#' + dialog.getElement('cellType').$.id);
 
 		if (!containerNode.getData(MODIFIED)) {
 			containerNode.one(SELECTOR_HBOX_FIRST).hide();
 
 			containerNode.one('.cke_dialog_ui_hbox_child').hide();
 
-			var cellTypeWrapper = containerNode.one('.cke_dialog_ui_hbox_last');
+			const cellTypeWrapper = containerNode.one(
+				'.cke_dialog_ui_hbox_last'
+			);
 
 			cellTypeWrapper.replaceClass(
 				'cke_dialog_ui_hbox_last',

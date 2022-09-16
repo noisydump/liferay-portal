@@ -20,10 +20,16 @@ import com.liferay.portal.workflow.kaleo.definition.Definition;
 import com.liferay.portal.workflow.kaleo.definition.Task;
 import com.liferay.portal.workflow.kaleo.definition.TaskForm;
 import com.liferay.portal.workflow.kaleo.definition.TaskFormReference;
+import com.liferay.portal.workflow.kaleo.definition.Transition;
 import com.liferay.portal.workflow.kaleo.definition.exception.KaleoDefinitionValidationException;
 import com.liferay.portal.workflow.kaleo.definition.parser.NodeValidator;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 
@@ -42,19 +48,19 @@ public class TaskNodeValidator extends BaseNodeValidator<Task> {
 
 		if (task.getIncomingTransitionsCount() == 0) {
 			throw new KaleoDefinitionValidationException.
-				MustSetIncomingTransition(task.getName());
+				MustSetIncomingTransition(task.getDefaultLabel());
 		}
 
 		if (task.getOutgoingTransitionsCount() == 0) {
 			throw new KaleoDefinitionValidationException.
-				MustSetOutgoingTransition(task.getName());
+				MustSetOutgoingTransition(task.getDefaultLabel());
 		}
 
 		Set<Assignment> assignments = task.getAssignments();
 
 		if ((assignments == null) || assignments.isEmpty()) {
 			throw new KaleoDefinitionValidationException.MustSetAssignments(
-				task.getName());
+				task.getDefaultLabel());
 		}
 
 		Set<TaskForm> taskForms = task.getTaskForms();
@@ -70,7 +76,28 @@ public class TaskNodeValidator extends BaseNodeValidator<Task> {
 
 				throw new KaleoDefinitionValidationException.
 					MustSetTaskFormDefinitionOrReference(
-						task.getName(), taskForm.getName());
+						task.getDefaultLabel(), taskForm.getName());
+			}
+		}
+
+		Map<String, Transition> outgoingTransitions =
+			task.getOutgoingTransitions();
+
+		if (outgoingTransitions.size() > 1) {
+			List<Transition> defaultTransitions = Stream.of(
+				outgoingTransitions.values()
+			).flatMap(
+				Collection::stream
+			).filter(
+				Transition::isDefault
+			).collect(
+				Collectors.toList()
+			);
+
+			if (defaultTransitions.size() > 1) {
+				throw new KaleoDefinitionValidationException.
+					MustNotSetMoreThanOneDefaultTransition(
+						task.getDefaultLabel());
 			}
 		}
 	}

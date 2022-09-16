@@ -26,6 +26,10 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
 public class DispatchTriggerServiceWrapper
 	implements DispatchTriggerService, ServiceWrapper<DispatchTriggerService> {
 
+	public DispatchTriggerServiceWrapper() {
+		this(null);
+	}
+
 	public DispatchTriggerServiceWrapper(
 		DispatchTriggerService dispatchTriggerService) {
 
@@ -34,14 +38,15 @@ public class DispatchTriggerServiceWrapper
 
 	@Override
 	public com.liferay.dispatch.model.DispatchTrigger addDispatchTrigger(
-			long userId, String dispatchTaskExecutorType,
+			String externalReferenceCode, long userId,
+			String dispatchTaskExecutorType,
 			com.liferay.portal.kernel.util.UnicodeProperties
 				dispatchTaskSettingsUnicodeProperties,
 			String name)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _dispatchTriggerService.addDispatchTrigger(
-			userId, dispatchTaskExecutorType,
+			externalReferenceCode, userId, dispatchTaskExecutorType,
 			dispatchTaskSettingsUnicodeProperties, name);
 	}
 
@@ -85,14 +90,14 @@ public class DispatchTriggerServiceWrapper
 			int endDateMonth, int endDateDay, int endDateYear, int endDateHour,
 			int endDateMinute, boolean neverEnd, boolean overlapAllowed,
 			int startDateMonth, int startDateDay, int startDateYear,
-			int startDateHour, int startDateMinute)
+			int startDateHour, int startDateMinute, String timeZoneId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _dispatchTriggerService.updateDispatchTrigger(
 			dispatchTriggerId, active, cronExpression, dispatchTaskClusterMode,
 			endDateMonth, endDateDay, endDateYear, endDateHour, endDateMinute,
 			neverEnd, overlapAllowed, startDateMonth, startDateDay,
-			startDateYear, startDateHour, startDateMinute);
+			startDateYear, startDateHour, startDateMinute, timeZoneId);
 	}
 
 	@Override

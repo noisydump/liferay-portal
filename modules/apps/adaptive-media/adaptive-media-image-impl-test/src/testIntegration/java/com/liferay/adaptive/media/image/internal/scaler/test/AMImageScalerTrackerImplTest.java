@@ -22,19 +22,15 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
-import com.liferay.portal.test.log.CaptureAppender;
-import com.liferay.portal.test.log.Log4JLoggerTestUtil;
+import com.liferay.portal.test.log.LogCapture;
+import com.liferay.portal.test.log.LogEntry;
+import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.registry.Registry;
-import com.liferay.registry.RegistryUtil;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
-
-import org.apache.log4j.Level;
-import org.apache.log4j.spi.LoggingEvent;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
@@ -65,10 +61,9 @@ public class AMImageScalerTrackerImplTest {
 	public void testAMImageScalerTrackerLogsWhenThereIsNoDefaultAMImageScaler()
 		throws Exception {
 
-		try (CaptureAppender captureAppender =
-				Log4JLoggerTestUtil.configureLog4JLogger(
-					_CLASS_NAME_ADAPTIVE_MEDIA_IMAGE_SCALER_TRACKER_IMPL,
-					Level.WARN)) {
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				_CLASS_NAME_ADAPTIVE_MEDIA_IMAGE_SCALER_TRACKER_IMPL,
+				LoggerTestUtil.WARN)) {
 
 			_disableAMDefaultImageScaler();
 
@@ -77,17 +72,14 @@ public class AMImageScalerTrackerImplTest {
 
 			_enableAMDefaultImageScaler();
 
-			List<LoggingEvent> loggingEvents =
-				captureAppender.getLoggingEvents();
+			List<LogEntry> logEntries = logCapture.getLogEntries();
+
+			Assert.assertEquals(logEntries.toString(), 1, logEntries.size());
+
+			LogEntry logEntry = logEntries.get(0);
 
 			Assert.assertEquals(
-				loggingEvents.toString(), 1, loggingEvents.size());
-
-			LoggingEvent loggingEvent = loggingEvents.get(0);
-
-			Assert.assertEquals(
-				"Unable to find default image scaler",
-				loggingEvent.getMessage());
+				"Unable to find default image scaler", logEntry.getMessage());
 		}
 	}
 
@@ -98,10 +90,9 @@ public class AMImageScalerTrackerImplTest {
 		ServiceRegistration<AMImageScaler> amImageScalerServiceRegistration =
 			null;
 
-		try (CaptureAppender captureAppender =
-				Log4JLoggerTestUtil.configureLog4JLogger(
-					_CLASS_NAME_ADAPTIVE_MEDIA_IMAGE_SCALER_TRACKER_IMPL,
-					Level.WARN)) {
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				_CLASS_NAME_ADAPTIVE_MEDIA_IMAGE_SCALER_TRACKER_IMPL,
+				LoggerTestUtil.WARN)) {
 
 			_disableAMDefaultImageScaler();
 
@@ -113,17 +104,14 @@ public class AMImageScalerTrackerImplTest {
 			_amImageScalerTracker.getAMImageScaler(
 				RandomTestUtil.randomString());
 
-			List<LoggingEvent> loggingEvents =
-				captureAppender.getLoggingEvents();
+			List<LogEntry> logEntries = logCapture.getLogEntries();
+
+			Assert.assertEquals(logEntries.toString(), 1, logEntries.size());
+
+			LogEntry logEntry = logEntries.get(0);
 
 			Assert.assertEquals(
-				loggingEvents.toString(), 1, loggingEvents.size());
-
-			LoggingEvent loggingEvent = loggingEvents.get(0);
-
-			Assert.assertEquals(
-				"Unable to find default image scaler",
-				loggingEvent.getMessage());
+				"Unable to find default image scaler", logEntry.getMessage());
 		}
 		finally {
 			_unregisterAMImageScaler(amImageScalerServiceRegistration);
@@ -136,20 +124,18 @@ public class AMImageScalerTrackerImplTest {
 	public void testAMImageScalerTrackerReturnsAMDefaultImageScalerWhenAsteriskMimeType()
 		throws Exception {
 
-		AMImageScaler amImageScaler = _amImageScalerTracker.getAMImageScaler(
-			"*");
-
-		Assert.assertEquals(_amDefaultImageScaler, amImageScaler);
+		Assert.assertEquals(
+			_amDefaultImageScaler, _amImageScalerTracker.getAMImageScaler("*"));
 	}
 
 	@Test
 	public void testAMImageScalerTrackerReturnsAMDefaultImageScalerWhenRandomMimeType()
 		throws Exception {
 
-		AMImageScaler amImageScaler = _amImageScalerTracker.getAMImageScaler(
-			RandomTestUtil.randomString());
-
-		Assert.assertEquals(_amDefaultImageScaler, amImageScaler);
+		Assert.assertEquals(
+			_amDefaultImageScaler,
+			_amImageScalerTracker.getAMImageScaler(
+				RandomTestUtil.randomString()));
 	}
 
 	@Test
@@ -257,11 +243,9 @@ public class AMImageScalerTrackerImplTest {
 		try {
 			_disableAMDefaultImageScaler();
 
-			AMImageScaler amImageScaler =
+			Assert.assertNull(
 				_amImageScalerTracker.getAMImageScaler(
-					RandomTestUtil.randomString());
-
-			Assert.assertNull(amImageScaler);
+					RandomTestUtil.randomString()));
 		}
 		finally {
 			_enableAMDefaultImageScaler();
@@ -283,11 +267,9 @@ public class AMImageScalerTrackerImplTest {
 			amImageScalerServiceRegistration = _registerAMImageScaler(
 				disabledAMImageScaler, "*", 10);
 
-			AMImageScaler amImageScaler =
+			Assert.assertNull(
 				_amImageScalerTracker.getAMImageScaler(
-					RandomTestUtil.randomString());
-
-			Assert.assertNull(amImageScaler);
+					RandomTestUtil.randomString()));
 		}
 		finally {
 			_unregisterAMImageScaler(amImageScalerServiceRegistration);
@@ -297,42 +279,24 @@ public class AMImageScalerTrackerImplTest {
 	}
 
 	private void _disableAMDefaultImageScaler() throws Exception {
-		Registry registry = RegistryUtil.getRegistry();
-
-		ServiceComponentRuntime serviceComponentRuntime = registry.getService(
-			registry.getServiceReference(ServiceComponentRuntime.class));
-
-		Object service = registry.getService(
-			registry.getServiceReference(
-				_CLASS_NAME_ADAPTIVE_MEDIA_IMAGE_SCALER_TRACKER));
-
 		ComponentDescriptionDTO componentDescriptionDTO =
-			serviceComponentRuntime.getComponentDescriptionDTO(
-				FrameworkUtil.getBundle(service.getClass()),
+			_serviceComponentRuntime.getComponentDescriptionDTO(
+				FrameworkUtil.getBundle(_amImageScalerTracker.getClass()),
 				_CLASS_NAME_ADAPTIVE_MEDIA_DEFAULT_IMAGE_SCALER);
 
-		Promise<Void> voidPromise = serviceComponentRuntime.disableComponent(
+		Promise<Void> voidPromise = _serviceComponentRuntime.disableComponent(
 			componentDescriptionDTO);
 
 		voidPromise.getValue();
 	}
 
 	private void _enableAMDefaultImageScaler() throws Exception {
-		Registry registry = RegistryUtil.getRegistry();
-
-		ServiceComponentRuntime serviceComponentRuntime = registry.getService(
-			registry.getServiceReference(ServiceComponentRuntime.class));
-
-		Object service = registry.getService(
-			registry.getServiceReference(
-				_CLASS_NAME_ADAPTIVE_MEDIA_IMAGE_SCALER_TRACKER));
-
 		ComponentDescriptionDTO componentDescriptionDTO =
-			serviceComponentRuntime.getComponentDescriptionDTO(
-				FrameworkUtil.getBundle(service.getClass()),
+			_serviceComponentRuntime.getComponentDescriptionDTO(
+				FrameworkUtil.getBundle(_amImageScalerTracker.getClass()),
 				_CLASS_NAME_ADAPTIVE_MEDIA_DEFAULT_IMAGE_SCALER);
 
-		Promise<Void> voidPromise = serviceComponentRuntime.enableComponent(
+		Promise<Void> voidPromise = _serviceComponentRuntime.enableComponent(
 			componentDescriptionDTO);
 
 		voidPromise.getValue();
@@ -342,13 +306,8 @@ public class AMImageScalerTrackerImplTest {
 			AMImageScaler amImageScaler, String mimeType, int serviceRanking)
 		throws Exception {
 
-		Registry registry = RegistryUtil.getRegistry();
-
-		Object service = registry.getService(
-			registry.getServiceReference(
-				_CLASS_NAME_ADAPTIVE_MEDIA_IMAGE_SCALER_TRACKER));
-
-		Bundle bundle = FrameworkUtil.getBundle(service.getClass());
+		Bundle bundle = FrameworkUtil.getBundle(
+			_amDefaultImageScaler.getClass());
 
 		BundleContext bundleContext = bundle.getBundleContext();
 
@@ -377,13 +336,12 @@ public class AMImageScalerTrackerImplTest {
 				"AMDefaultImageScaler";
 
 	private static final String
-		_CLASS_NAME_ADAPTIVE_MEDIA_IMAGE_SCALER_TRACKER =
-			"com.liferay.adaptive.media.image.scaler.AMImageScalerTracker";
-
-	private static final String
 		_CLASS_NAME_ADAPTIVE_MEDIA_IMAGE_SCALER_TRACKER_IMPL =
 			"com.liferay.adaptive.media.image.internal.scaler." +
 				"AMImageScalerTrackerImpl";
+
+	@Inject
+	private static ServiceComponentRuntime _serviceComponentRuntime;
 
 	@Inject(filter = "component.name=*.AMDefaultImageScaler")
 	private AMImageScaler _amDefaultImageScaler;

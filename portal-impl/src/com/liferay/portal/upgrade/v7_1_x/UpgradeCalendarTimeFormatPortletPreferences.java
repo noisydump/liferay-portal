@@ -16,7 +16,7 @@ package com.liferay.portal.upgrade.v7_1_x;
 
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
-import com.liferay.portal.kernel.upgrade.BaseUpgradePortletPreferences;
+import com.liferay.portal.kernel.upgrade.BasePortletPreferencesUpgradeProcess;
 
 import javax.portlet.PortletPreferences;
 
@@ -24,19 +24,14 @@ import javax.portlet.PortletPreferences;
  * @author Inácio Nery
  */
 public class UpgradeCalendarTimeFormatPortletPreferences
-	extends BaseUpgradePortletPreferences {
+	extends BasePortletPreferencesUpgradeProcess {
 
 	@Override
 	protected String getUpdatePortletPreferencesWhereClause() {
-		StringBundler sb = new StringBundler(5);
-
-		sb.append("(preferences like '%isoTimeFormat%");
-		sb.append(Boolean.TRUE.toString());
-		sb.append("%') or (preferences like '%isoTimeFormat%");
-		sb.append(Boolean.FALSE.toString());
-		sb.append("%')");
-
-		return sb.toString();
+		return StringBundler.concat(
+			"(preferences like '%isoTimeFormat%", Boolean.TRUE.toString(),
+			"%') or (preferences like '%isoTimeFormat%",
+			Boolean.FALSE.toString(), "%')");
 	}
 
 	@Override

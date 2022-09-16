@@ -17,10 +17,12 @@ package com.liferay.headless.delivery.internal.dto.v1_0.converter;
 import com.liferay.headless.delivery.dto.v1_0.MasterPage;
 import com.liferay.headless.delivery.dto.v1_0.PageDefinition;
 import com.liferay.headless.delivery.dto.v1_0.Settings;
+import com.liferay.headless.delivery.dto.v1_0.StyleBook;
 import com.liferay.headless.delivery.internal.dto.v1_0.mapper.LayoutStructureItemMapperTracker;
 import com.liferay.headless.delivery.internal.dto.v1_0.util.PageElementUtil;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
+import com.liferay.layout.util.constants.LayoutStructureConstants;
 import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.layout.util.structure.LayoutStructureItem;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -34,6 +36,8 @@ import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
+import com.liferay.style.book.model.StyleBookEntry;
+import com.liferay.style.book.service.StyleBookEntryLocalService;
 
 import java.util.Map;
 import java.util.Optional;
@@ -86,6 +90,8 @@ public class PageDefinitionDTOConverter
 					mainLayoutStructureItem, _layoutStructureItemMapperTracker,
 					saveInlineContent, saveMappingConfiguration);
 				settings = _toSettings(layout);
+				version =
+					LayoutStructureConstants.LATEST_PAGE_DEFINITION_VERSION;
 			}
 		};
 	}
@@ -105,7 +111,7 @@ public class PageDefinitionDTOConverter
 						}
 						catch (PortalException portalException) {
 							if (_log.isWarnEnabled()) {
-								_log.warn(portalException, portalException);
+								_log.warn(portalException);
 							}
 						}
 
@@ -156,6 +162,23 @@ public class PageDefinitionDTOConverter
 							}
 						};
 					});
+				setStyleBook(
+					() -> {
+						StyleBookEntry styleBookEntry =
+							_styleBookEntryLocalService.fetchStyleBookEntry(
+								layout.getStyleBookEntryId());
+
+						if (styleBookEntry == null) {
+							return null;
+						}
+
+						return new StyleBook() {
+							{
+								key = styleBookEntry.getStyleBookEntryKey();
+								name = styleBookEntry.getName();
+							}
+						};
+					});
 				setThemeName(
 					() -> {
 						Theme theme = layout.getTheme();
@@ -201,5 +224,8 @@ public class PageDefinitionDTOConverter
 
 	@Reference
 	private LayoutStructureItemMapperTracker _layoutStructureItemMapperTracker;
+
+	@Reference
+	private StyleBookEntryLocalService _styleBookEntryLocalService;
 
 }

@@ -30,6 +30,7 @@ import org.osgi.service.component.annotations.Component;
 	enabled = false,
 	property = {
 		"javax.portlet.name=" + CommercePortletKeys.COMMERCE_OPEN_ORDER_CONTENT,
+		"javax.portlet.name=" + CommercePortletKeys.COMMERCE_ORDER_CONTENT,
 		"mvc.command.name=/commerce_open_order_content/edit_commerce_order_notes"
 	},
 	service = MVCRenderCommand.class
@@ -42,7 +43,7 @@ public class EditCommerceOrderNotesMVCRenderCommand
 			RenderRequest renderRequest, RenderResponse renderResponse)
 		throws PortletException {
 
-		return "/pending_orders/edit_commerce_order_notes.jsp";
+		return "/pending_commerce_orders/edit_commerce_order_notes.jsp";
 	}
 
 }

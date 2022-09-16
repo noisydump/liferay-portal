@@ -105,6 +105,16 @@ public class SettingsSerDes {
 			sb.append(String.valueOf(settings.getMasterPage()));
 		}
 
+		if (settings.getStyleBook() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"styleBook\": ");
+
+			sb.append(String.valueOf(settings.getStyleBook()));
+		}
+
 		if (settings.getThemeName() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -126,11 +136,14 @@ public class SettingsSerDes {
 
 			sb.append("\"themeSettings\": ");
 
-			sb.append("\"");
-
-			sb.append(_escape(settings.getThemeSettings()));
-
-			sb.append("\"");
+			if (settings.getThemeSettings() instanceof String) {
+				sb.append("\"");
+				sb.append((String)settings.getThemeSettings());
+				sb.append("\"");
+			}
+			else {
+				sb.append(settings.getThemeSettings());
+			}
 		}
 
 		sb.append("}");
@@ -179,6 +192,13 @@ public class SettingsSerDes {
 		}
 		else {
 			map.put("masterPage", String.valueOf(settings.getMasterPage()));
+		}
+
+		if (settings.getStyleBook() == null) {
+			map.put("styleBook", null);
+		}
+		else {
+			map.put("styleBook", String.valueOf(settings.getStyleBook()));
 		}
 
 		if (settings.getThemeName() == null) {
@@ -237,6 +257,12 @@ public class SettingsSerDes {
 						MasterPageSerDes.toDTO((String)jsonParserFieldValue));
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "styleBook")) {
+				if (jsonParserFieldValue != null) {
+					settings.setStyleBook(
+						StyleBookSerDes.toDTO((String)jsonParserFieldValue));
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "themeName")) {
 				if (jsonParserFieldValue != null) {
 					settings.setThemeName((String)jsonParserFieldValue);
@@ -246,9 +272,6 @@ public class SettingsSerDes {
 				if (jsonParserFieldValue != null) {
 					settings.setThemeSettings((Object)jsonParserFieldValue);
 				}
-			}
-			else if (jsonParserFieldName.equals("status")) {
-				throw new IllegalArgumentException();
 			}
 		}
 
@@ -278,7 +301,7 @@ public class SettingsSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -314,7 +337,7 @@ public class SettingsSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

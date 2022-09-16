@@ -20,7 +20,10 @@ import com.liferay.message.boards.model.MBCategory;
 import com.liferay.message.boards.model.MBMessage;
 import com.liferay.message.boards.model.MBThread;
 import com.liferay.message.boards.web.internal.portlet.action.ActionUtil;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.configuration.icon.BasePortletConfigurationIcon;
 import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfigurationIcon;
@@ -32,7 +35,6 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.trash.TrashHelper;
 
-import javax.portlet.ActionRequest;
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
 import javax.portlet.PortletURL;
@@ -56,40 +58,35 @@ public class DeleteThreadPortletConfigurationIcon
 
 	@Override
 	public String getMessage(PortletRequest portletRequest) {
-		String key = "delete";
-
-		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
-		if (isTrashEnabled(themeDisplay.getScopeGroupId())) {
-			key = "move-to-recycle-bin";
-		}
-
-		return LanguageUtil.get(
-			getResourceBundle(getLocale(portletRequest)), key);
+		return _language.get(
+			getResourceBundle(getLocale(portletRequest)), "delete");
 	}
 
 	@Override
 	public String getURL(
 		PortletRequest portletRequest, PortletResponse portletResponse) {
 
-		PortletURL deleteURL = _portal.getControlPanelPortletURL(
-			portletRequest, MBPortletKeys.MESSAGE_BOARDS_ADMIN,
-			PortletRequest.ACTION_PHASE);
+		PortletURL deleteURL = PortletURLBuilder.create(
+			_portal.getControlPanelPortletURL(
+				portletRequest, MBPortletKeys.MESSAGE_BOARDS_ADMIN,
+				PortletRequest.ACTION_PHASE)
+		).setActionName(
+			"/message_boards/delete_thread"
+		).setCMD(
+			() -> {
+				ThemeDisplay themeDisplay =
+					(ThemeDisplay)portletRequest.getAttribute(
+						WebKeys.THEME_DISPLAY);
 
-		deleteURL.setParameter(
-			ActionRequest.ACTION_NAME, "/message_boards/delete_thread");
+				String cmd = Constants.DELETE;
 
-		String cmd = Constants.DELETE;
+				if (isTrashEnabled(themeDisplay.getScopeGroupId())) {
+					cmd = Constants.MOVE_TO_TRASH;
+				}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
-		if (isTrashEnabled(themeDisplay.getScopeGroupId())) {
-			cmd = Constants.MOVE_TO_TRASH;
-		}
-
-		deleteURL.setParameter(Constants.CMD, cmd);
+				return cmd;
+			}
+		).buildPortletURL();
 
 		try {
 			MBCategory category = ActionUtil.getCategory(portletRequest);
@@ -119,6 +116,10 @@ public class DeleteThreadPortletConfigurationIcon
 				"threadId", String.valueOf(message.getThreadId()));
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			return null;
 		}
 
@@ -150,6 +151,9 @@ public class DeleteThreadPortletConfigurationIcon
 			}
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return false;
@@ -172,10 +176,19 @@ public class DeleteThreadPortletConfigurationIcon
 			}
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return false;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		DeleteThreadPortletConfigurationIcon.class);
+
+	@Reference
+	private Language _language;
 
 	@Reference(
 		target = "(model.class.name=com.liferay.message.boards.model.MBMessage)"

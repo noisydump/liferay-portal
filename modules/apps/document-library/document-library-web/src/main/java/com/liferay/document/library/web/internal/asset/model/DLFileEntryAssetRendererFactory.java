@@ -29,6 +29,7 @@ import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
 import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService;
 import com.liferay.document.library.util.DLURLHelper;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
@@ -108,7 +109,7 @@ public class DLFileEntryAssetRendererFactory
 			// LPS-52675
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(noSuchFileEntryException, noSuchFileEntryException);
+				_log.debug(noSuchFileEntryException);
 			}
 
 			fileVersion = _dlAppLocalService.getFileVersion(classPK);
@@ -163,7 +164,7 @@ public class DLFileEntryAssetRendererFactory
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(exception, exception);
+				_log.debug(exception);
 			}
 
 			return super.getTypeName(locale, subtypeId);
@@ -177,32 +178,35 @@ public class DLFileEntryAssetRendererFactory
 
 		Group group = getGroup(liferayPortletRequest);
 
-		PortletURL portletURL = _portal.getControlPanelPortletURL(
-			liferayPortletRequest, group, DLPortletKeys.DOCUMENT_LIBRARY, 0, 0,
-			PortletRequest.RENDER_PHASE);
+		return PortletURLBuilder.create(
+			_portal.getControlPanelPortletURL(
+				liferayPortletRequest, group, DLPortletKeys.DOCUMENT_LIBRARY, 0,
+				0, PortletRequest.RENDER_PHASE)
+		).setMVCRenderCommandName(
+			"/document_library/edit_file_entry"
+		).setCMD(
+			Constants.ADD
+		).setParameter(
+			"fileEntryTypeId",
+			() -> {
+				long fileEntryTypeId =
+					DLFileEntryTypeConstants.FILE_ENTRY_TYPE_ID_BASIC_DOCUMENT;
 
-		portletURL.setParameter(
-			"mvcRenderCommandName", "/document_library/edit_file_entry");
-		portletURL.setParameter(Constants.CMD, Constants.ADD);
-		portletURL.setParameter("groupId", String.valueOf(group.getGroupId()));
-		portletURL.setParameter(
-			"folderId",
-			String.valueOf(DLFolderConstants.DEFAULT_PARENT_FOLDER_ID));
+				if (classTypeId >= 0) {
+					fileEntryTypeId = classTypeId;
+				}
 
-		long fileEntryTypeId =
-			DLFileEntryTypeConstants.FILE_ENTRY_TYPE_ID_BASIC_DOCUMENT;
-
-		if (classTypeId >= 0) {
-			fileEntryTypeId = classTypeId;
-		}
-
-		portletURL.setParameter(
-			"fileEntryTypeId", String.valueOf(fileEntryTypeId));
-
-		portletURL.setParameter("showMountFolder", Boolean.FALSE.toString());
-		portletURL.setParameter("showSelectFolder", Boolean.TRUE.toString());
-
-		return portletURL;
+				return fileEntryTypeId;
+			}
+		).setParameter(
+			"folderId", DLFolderConstants.DEFAULT_PARENT_FOLDER_ID
+		).setParameter(
+			"groupId", group.getGroupId()
+		).setParameter(
+			"showMountFolder", false
+		).setParameter(
+			"showSelectFolder", true
+		).buildPortletURL();
 	}
 
 	@Override
@@ -219,7 +223,7 @@ public class DLFileEntryAssetRendererFactory
 		}
 		catch (WindowStateException windowStateException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(windowStateException, windowStateException);
+				_log.debug(windowStateException);
 			}
 		}
 

@@ -19,7 +19,7 @@ import com.liferay.dynamic.data.lists.model.DDLRecordSet;
 import com.liferay.dynamic.data.lists.service.DDLRecordSetLocalService;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
@@ -52,7 +52,7 @@ public class DDLRecordModelSummaryContributor
 		Document document, Locale locale, String snippet) {
 
 		Summary summary = new Summary(
-			getTitle(GetterUtil.getLong(document.get("recordSetId")), locale),
+			_getTitle(GetterUtil.getLong(document.get("recordSetId")), locale),
 			document.get(
 				locale,
 				StringBundler.concat(
@@ -62,31 +62,6 @@ public class DDLRecordModelSummaryContributor
 		summary.setMaxContentLength(200);
 
 		return summary;
-	}
-
-	protected ResourceBundle getResourceBundle(Locale locale) {
-		ResourceBundleLoader resourceBundleLoader =
-			ResourceBundleLoaderUtil.getPortalResourceBundleLoader();
-
-		return resourceBundleLoader.loadResourceBundle(locale);
-	}
-
-	protected String getTitle(long ddlRecordSetId, Locale locale) {
-		try {
-			DDLRecordSet ddlRecordSet = ddlRecordSetLocalService.getRecordSet(
-				ddlRecordSetId);
-
-			String recordSetName = ddlRecordSet.getName(locale);
-
-			return LanguageUtil.format(
-				getResourceBundle(locale), _getLanguageKey(ddlRecordSet),
-				recordSetName, false);
-		}
-		catch (Exception exception) {
-			_log.error(exception, exception);
-		}
-
-		return StringPool.BLANK;
 	}
 
 	@Reference
@@ -102,7 +77,35 @@ public class DDLRecordModelSummaryContributor
 		return "form-record-for-form-x";
 	}
 
+	private ResourceBundle _getResourceBundle(Locale locale) {
+		ResourceBundleLoader resourceBundleLoader =
+			ResourceBundleLoaderUtil.getPortalResourceBundleLoader();
+
+		return resourceBundleLoader.loadResourceBundle(locale);
+	}
+
+	private String _getTitle(long ddlRecordSetId, Locale locale) {
+		try {
+			DDLRecordSet ddlRecordSet = ddlRecordSetLocalService.getRecordSet(
+				ddlRecordSetId);
+
+			String recordSetName = ddlRecordSet.getName(locale);
+
+			return _language.format(
+				_getResourceBundle(locale), _getLanguageKey(ddlRecordSet),
+				recordSetName, false);
+		}
+		catch (Exception exception) {
+			_log.error(exception);
+		}
+
+		return StringPool.BLANK;
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		DDLRecordModelSummaryContributor.class);
+
+	@Reference
+	private Language _language;
 
 }

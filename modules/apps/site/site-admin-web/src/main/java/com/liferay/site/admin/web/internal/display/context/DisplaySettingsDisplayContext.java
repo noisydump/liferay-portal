@@ -14,8 +14,8 @@
 
 package com.liferay.site.admin.web.internal.display.context;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.petra.string.StringUtil;
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -29,10 +29,15 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.util.PropsValues;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -57,7 +62,13 @@ public class DisplaySettingsDisplayContext {
 			WebKeys.THEME_DISPLAY);
 	}
 
-	public Map<String, Object> getPropsMap() throws PortalException {
+	public long getLiveGroupId() {
+		Group liveGroup = _getLiveGroup();
+
+		return liveGroup.getGroupId();
+	}
+
+	public Map<String, Object> getPropsMap() {
 		Group liveGroup = _getLiveGroup();
 
 		return HashMapBuilder.<String, Object>put(
@@ -66,12 +77,8 @@ public class DisplaySettingsDisplayContext {
 			"currentLanguages", _getCurrentLanguagesJSONArray()
 		).put(
 			"defaultLanguageId",
-			() -> {
-				Locale siteDefaultLocale = PortalUtil.getSiteDefaultLocale(
-					liveGroup.getGroupId());
-
-				return LocaleUtil.toLanguageId(siteDefaultLocale);
-			}
+			() -> LocaleUtil.toLanguageId(
+				PortalUtil.getSiteDefaultLocale(liveGroup.getGroupId()))
 		).put(
 			"inheritLocales",
 			() -> {
@@ -104,10 +111,10 @@ public class DisplaySettingsDisplayContext {
 				return value1.compareTo(value2);
 			});
 
-		Set<Locale> siteAvailableLocales = _getSiteAvailableLocales();
+		List<Locale> siteCurrentLocales = _getCurrentLocales();
 
 		for (Locale availableLocale : LanguageUtil.getAvailableLocales()) {
-			if (!siteAvailableLocales.contains(availableLocale)) {
+			if (!siteCurrentLocales.contains(availableLocale)) {
 				availableLanguagesJSONObjects.add(
 					JSONUtil.put(
 						"label",
@@ -131,6 +138,22 @@ public class DisplaySettingsDisplayContext {
 	private JSONArray _getCurrentLanguagesJSONArray() {
 		JSONArray currentLanguagesJSONArray = JSONFactoryUtil.createJSONArray();
 
+		for (Locale currentLocale : _getCurrentLocales()) {
+			currentLanguagesJSONArray.put(
+				JSONUtil.put(
+					"label",
+					currentLocale.getDisplayName(_themeDisplay.getLocale())
+				).put(
+					"value", LanguageUtil.getLanguageId(currentLocale)
+				));
+		}
+
+		return currentLanguagesJSONArray;
+	}
+
+	private List<Locale> _getCurrentLocales() {
+		List<Locale> currentLocales = new ArrayList<>();
+
 		UnicodeProperties typeSettingsUnicodeProperties =
 			_getTypeSettingsUnicodeProperties();
 
@@ -138,35 +161,29 @@ public class DisplaySettingsDisplayContext {
 			PropsKeys.LOCALES);
 
 		if (groupLanguageIds != null) {
+			Set<String> companyLanguageIds = SetUtil.fromArray(
+				PrefsPropsUtil.getStringArray(
+					_themeDisplay.getCompanyId(), PropsKeys.LOCALES,
+					StringPool.COMMA, PropsValues.LOCALES_ENABLED));
+
 			for (Locale currentLocale :
 					LocaleUtil.fromLanguageIds(
 						StringUtil.split(groupLanguageIds))) {
 
-				currentLanguagesJSONArray.put(
-					JSONUtil.put(
-						"label",
-						currentLocale.getDisplayName(_themeDisplay.getLocale())
-					).put(
-						"value", LanguageUtil.getLanguageId(currentLocale)
-					));
+				if (!companyLanguageIds.contains(
+						LanguageUtil.getLanguageId(currentLocale))) {
+
+					continue;
+				}
+
+				currentLocales.add(currentLocale);
 			}
 		}
 		else {
-			Set<Locale> siteAvailableLocales = _getSiteAvailableLocales();
-
-			for (Locale siteAvailableLocale : siteAvailableLocales) {
-				currentLanguagesJSONArray.put(
-					JSONUtil.put(
-						"label",
-						siteAvailableLocale.getDisplayName(
-							_themeDisplay.getLocale())
-					).put(
-						"value", LanguageUtil.getLanguageId(siteAvailableLocale)
-					));
-			}
+			currentLocales.addAll(_getSiteAvailableLocales());
 		}
 
-		return currentLanguagesJSONArray;
+		return currentLocales;
 	}
 
 	private Group _getLiveGroup() {
@@ -174,7 +191,14 @@ public class DisplaySettingsDisplayContext {
 			return _liveGroup;
 		}
 
-		_liveGroup = (Group)_httpServletRequest.getAttribute("site.liveGroup");
+		Group siteGroup = _themeDisplay.getSiteGroup();
+
+		if (siteGroup.isStagingGroup()) {
+			_liveGroup = siteGroup.getLiveGroup();
+		}
+		else {
+			_liveGroup = siteGroup;
+		}
 
 		return _liveGroup;
 	}

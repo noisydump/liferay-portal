@@ -79,7 +79,7 @@ public class AssetVocabularyConfigurationOptionsProviderTest {
 				).isPresent());
 		}
 		finally {
-			_assetVocabularyLocalService.deleteAssetVocabulary(
+			_assetVocabularyLocalService.deleteVocabulary(
 				assetVocabulary.getVocabularyId());
 		}
 	}
@@ -91,7 +91,7 @@ public class AssetVocabularyConfigurationOptionsProviderTest {
 	private CompanyLocalService _companyLocalService;
 
 	@Inject(
-		filter = "(&(configuration.pid=com.liferay.segments.context.vocabulary.internal.configuration.SegmentsContextVocabularyConfiguration)(configuration.field.name=assetVocabulary))"
+		filter = "(&(configuration.pid=com.liferay.segments.context.vocabulary.internal.configuration.SegmentsContextVocabularyConfiguration)(configuration.field.name=assetVocabularyName))"
 	)
 	private ConfigurationFieldOptionsProvider
 		_configurationFieldOptionsProvider;

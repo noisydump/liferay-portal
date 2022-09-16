@@ -22,13 +22,14 @@ import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.util.DLUtil;
 import com.liferay.document.library.util.DLURLHelperUtil;
 import com.liferay.document.library.web.internal.constants.DLWebKeys;
-import com.liferay.document.library.web.internal.display.context.logic.DLPortletInstanceSettingsHelper;
-import com.liferay.document.library.web.internal.display.context.util.DLRequestHelper;
+import com.liferay.document.library.web.internal.display.context.helper.DLPortletInstanceSettingsHelper;
+import com.liferay.document.library.web.internal.display.context.helper.DLRequestHelper;
 import com.liferay.document.library.web.internal.helper.DLTrashHelper;
 import com.liferay.document.library.web.internal.search.EntriesChecker;
 import com.liferay.document.library.web.internal.search.EntriesMover;
 import com.liferay.document.library.web.internal.security.permission.resource.DLFileEntryPermission;
 import com.liferay.document.library.web.internal.security.permission.resource.DLFolderPermission;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.User;
@@ -44,18 +45,17 @@ import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
 import com.liferay.portal.kernel.servlet.BrowserSnifferUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.HttpUtil;
+import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.util.RepositoryUtil;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Stream;
-
-import javax.portlet.PortletURL;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -82,10 +82,17 @@ public class DLViewEntriesDisplayContext {
 			WebKeys.THEME_DISPLAY);
 
 		_dlRequestHelper = new DLRequestHelper(_httpServletRequest);
+
+		_dlPortletInstanceSettingsHelper = new DLPortletInstanceSettingsHelper(
+			_dlRequestHelper);
 	}
 
 	public List<String> getAvailableActions(FileEntry fileEntry)
 		throws PortalException {
+
+		if (!_dlPortletInstanceSettingsHelper.isShowActions()) {
+			return Collections.emptyList();
+		}
 
 		List<String> availableActions = new ArrayList<>();
 
@@ -100,6 +107,8 @@ public class DLViewEntriesDisplayContext {
 
 		if (DLFileEntryPermission.contains(
 				permissionChecker, fileEntry, ActionKeys.UPDATE)) {
+
+			availableActions.add("collectDigitalSignature");
 
 			availableActions.add("move");
 
@@ -131,11 +140,22 @@ public class DLViewEntriesDisplayContext {
 			availableActions.add("download");
 		}
 
+		if (GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-87806")) &&
+			DLFileEntryPermission.contains(
+				permissionChecker, fileEntry, ActionKeys.PERMISSIONS)) {
+
+			availableActions.add("permissions");
+		}
+
 		return availableActions;
 	}
 
 	public List<String> getAvailableActions(Folder folder)
 		throws PortalException {
+
+		if (!_dlPortletInstanceSettingsHelper.isShowActions()) {
+			return Collections.emptyList();
+		}
 
 		List<String> availableActions = new ArrayList<>();
 
@@ -210,14 +230,6 @@ public class DLViewEntriesDisplayContext {
 		return _redirect;
 	}
 
-	public String getRowURL(Folder folder) throws PortalException {
-		FolderActionDisplayContext folderActionDisplayContext =
-			new FolderActionDisplayContext(
-				_dlTrashHelper, _httpServletRequest, _liferayPortletResponse);
-
-		return folderActionDisplayContext.getRowURL(folder);
-	}
-
 	public SearchContainer<RepositoryEntry> getSearchContainer()
 		throws PortalException {
 
@@ -228,7 +240,6 @@ public class DLViewEntriesDisplayContext {
 			_liferayPortletRequest, _liferayPortletResponse);
 
 		entriesChecker.setCssClass("entry-selector");
-
 		entriesChecker.setRememberCheckBoxStateURLRegex(
 			_dlAdminDisplayContext.getRememberCheckBoxStateURLRegex());
 
@@ -251,19 +262,17 @@ public class DLViewEntriesDisplayContext {
 	}
 
 	public String getViewFileEntryURL(FileEntry fileEntry) {
-		PortletURL portletURL = _liferayPortletResponse.createRenderURL();
-
-		portletURL.setParameter(
-			"mvcRenderCommandName", "/document_library/view_file_entry");
-		portletURL.setParameter(
-			"redirect",
-			HttpUtil.removeParameter(
+		return PortletURLBuilder.createRenderURL(
+			_liferayPortletResponse
+		).setMVCRenderCommandName(
+			"/document_library/view_file_entry"
+		).setRedirect(
+			HttpComponentsUtil.removeParameter(
 				_dlRequestHelper.getCurrentURL(),
-				_liferayPortletResponse.getNamespace() + "ajax"));
-		portletURL.setParameter(
-			"fileEntryId", String.valueOf(fileEntry.getFileEntryId()));
-
-		return portletURL.toString();
+				_liferayPortletResponse.getNamespace() + "ajax")
+		).setParameter(
+			"fileEntryId", fileEntry.getFileEntryId()
+		).buildString();
 	}
 
 	public boolean isDescriptiveDisplayStyle() {
@@ -318,10 +327,10 @@ public class DLViewEntriesDisplayContext {
 		if ((folderId != DLFolderConstants.DEFAULT_PARENT_FOLDER_ID) &&
 			(folderId != _dlAdminDisplayContext.getRootFolderId())) {
 
-			return true;
+			return false;
 		}
 
-		return false;
+		return true;
 	}
 
 	public boolean isVersioningStrategyOverridable() {
@@ -336,32 +345,36 @@ public class DLViewEntriesDisplayContext {
 	private boolean _hasValidAssetVocabularies(long scopeGroupId)
 		throws PortalException {
 
+		if (_hasValidAssetVocabularies != null) {
+			return _hasValidAssetVocabularies;
+		}
+
 		List<AssetVocabulary> assetVocabularies =
 			AssetVocabularyServiceUtil.getGroupVocabularies(
 				PortalUtil.getCurrentAndAncestorSiteGroupIds(scopeGroupId));
 
-		Stream<AssetVocabulary> stream = assetVocabularies.stream();
+		for (AssetVocabulary assetVocabulary : assetVocabularies) {
+			if (!assetVocabulary.isAssociatedToClassNameId(
+					ClassNameLocalServiceUtil.getClassNameId(
+						DLFileEntry.class.getName()))) {
 
-		return stream.anyMatch(
-			assetVocabulary -> {
-				if (!assetVocabulary.isAssociatedToClassNameId(
-						ClassNameLocalServiceUtil.getClassNameId(
-							DLFileEntry.class.getName()))) {
+				continue;
+			}
 
-					return false;
-				}
+			int count = AssetCategoryServiceUtil.getVocabularyCategoriesCount(
+				assetVocabulary.getGroupId(),
+				assetVocabulary.getVocabularyId());
 
-				int count =
-					AssetCategoryServiceUtil.getVocabularyCategoriesCount(
-						assetVocabulary.getGroupId(),
-						assetVocabulary.getVocabularyId());
+			if (count > 0) {
+				_hasValidAssetVocabularies = true;
 
-				if (count > 0) {
-					return true;
-				}
+				return _hasValidAssetVocabularies;
+			}
+		}
 
-				return false;
-			});
+		_hasValidAssetVocabularies = false;
+
+		return _hasValidAssetVocabularies;
 	}
 
 	private boolean _hasWorkflowDefinitionLink(FileEntry fileEntry) {
@@ -397,8 +410,11 @@ public class DLViewEntriesDisplayContext {
 	}
 
 	private final DLAdminDisplayContext _dlAdminDisplayContext;
+	private final DLPortletInstanceSettingsHelper
+		_dlPortletInstanceSettingsHelper;
 	private final DLRequestHelper _dlRequestHelper;
 	private final DLTrashHelper _dlTrashHelper;
+	private Boolean _hasValidAssetVocabularies;
 	private final HttpServletRequest _httpServletRequest;
 	private final LiferayPortletRequest _liferayPortletRequest;
 	private final LiferayPortletResponse _liferayPortletResponse;

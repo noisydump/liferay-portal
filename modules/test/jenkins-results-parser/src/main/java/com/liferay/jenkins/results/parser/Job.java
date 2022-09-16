@@ -18,14 +18,32 @@ import com.liferay.jenkins.results.parser.test.clazz.group.AxisTestClassGroup;
 import com.liferay.jenkins.results.parser.test.clazz.group.BatchTestClassGroup;
 import com.liferay.jenkins.results.parser.test.clazz.group.SegmentTestClassGroup;
 
+import java.io.File;
+
+import java.util.HashMap;
 import java.util.List;
-import java.util.Properties;
+import java.util.Map;
 import java.util.Set;
+
+import org.json.JSONObject;
 
 /**
  * @author Michael Hashimoto
  */
 public interface Job {
+
+	public Long getAverageBatchDuration(String batchName);
+
+	public Long getAverageBatchOverheadDuration(String batchName);
+
+	public Long getAverageTestDuration(String batchName, String testName);
+
+	public Long getAverageTestOverheadDuration(
+		String batchName, String testName);
+
+	public int getAxisCount();
+
+	public AxisTestClassGroup getAxisTestClassGroup(String axisName);
 
 	public List<AxisTestClassGroup> getAxisTestClassGroups();
 
@@ -37,6 +55,20 @@ public interface Job {
 
 	public BuildProfile getBuildProfile();
 
+	public String getCompanyDefaultLocale();
+
+	public List<AxisTestClassGroup> getDependentAxisTestClassGroups();
+
+	public Set<String> getDependentBatchNames();
+
+	public List<BatchTestClassGroup> getDependentBatchTestClassGroups();
+
+	public Set<String> getDependentSegmentNames();
+
+	public List<SegmentTestClassGroup> getDependentSegmentTestClassGroups();
+
+	public List<String> getDistNodes();
+
 	public DistType getDistType();
 
 	public Set<String> getDistTypes();
@@ -45,11 +77,13 @@ public interface Job {
 
 	public String getJobName();
 
-	public Properties getJobProperties();
+	public List<File> getJobPropertiesFiles();
 
-	public String getJobProperty(String key);
+	public List<String> getJobPropertyOptions();
 
 	public String getJobURL(JenkinsMaster jenkinsMaster);
+
+	public JSONObject getJSONObject();
 
 	public Set<String> getSegmentNames();
 
@@ -57,15 +91,23 @@ public interface Job {
 
 	public String getTestPropertiesContent();
 
+	public boolean isDownstreamEnabled();
+
 	public boolean isSegmentEnabled();
 
 	public boolean isValidationRequired();
 
-	public void readJobProperties();
+	public boolean testReleaseBundle();
+
+	public boolean testRelevantChanges();
 
 	public static enum BuildProfile {
 
 		DXP("DXP", "dxp"), PORTAL("Portal", "portal");
+
+		public static BuildProfile getByString(String string) {
+			return _buildProfiles.get(string);
+		}
 
 		public String toDisplayString() {
 			return _displayString;
@@ -79,6 +121,15 @@ public interface Job {
 		private BuildProfile(String displayString, String string) {
 			_displayString = displayString;
 			_string = string;
+		}
+
+		private static Map<String, BuildProfile> _buildProfiles =
+			new HashMap<>();
+
+		static {
+			for (BuildProfile buildProfile : values()) {
+				_buildProfiles.put(buildProfile.toString(), buildProfile);
+			}
 		}
 
 		private final String _displayString;

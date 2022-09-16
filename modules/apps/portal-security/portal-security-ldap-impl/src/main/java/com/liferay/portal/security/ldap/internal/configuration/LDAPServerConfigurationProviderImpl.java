@@ -17,6 +17,8 @@ package com.liferay.portal.security.ldap.internal.configuration;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapDictionary;
@@ -157,7 +159,7 @@ public class LDAPServerConfigurationProviderImpl
 			objectValuePair = objectValuePairs.get(ldapServerId);
 
 		if ((objectValuePair == null) &&
-			!MapUtil.isEmpty(defaultObjectValuePairs)) {
+			MapUtil.isNotEmpty(defaultObjectValuePairs)) {
 
 			objectValuePair = defaultObjectValuePairs.get(
 				LDAPServerConfiguration.LDAP_SERVER_ID_DEFAULT);
@@ -208,7 +210,7 @@ public class LDAPServerConfigurationProviderImpl
 			objectValuePair = objectValuePairs.get(ldapServerId);
 
 		if ((objectValuePair == null) &&
-			!MapUtil.isEmpty(defaultObjectValuePairs)) {
+			MapUtil.isNotEmpty(defaultObjectValuePairs)) {
 
 			objectValuePair = defaultObjectValuePairs.get(
 				LDAPServerConfiguration.LDAP_SERVER_ID_DEFAULT);
@@ -245,7 +247,7 @@ public class LDAPServerConfigurationProviderImpl
 		if (MapUtil.isEmpty(objectValuePairs) && useDefault) {
 			ldapServerConfigurations.add(_defaultLDAPServerConfiguration);
 		}
-		else if (!MapUtil.isEmpty(objectValuePairs)) {
+		else if (MapUtil.isNotEmpty(objectValuePairs)) {
 			List<ObjectValuePair<Configuration, LDAPServerConfiguration>>
 				objectValuePairsList = new ArrayList<>(
 					objectValuePairs.values());
@@ -264,6 +266,10 @@ public class LDAPServerConfigurationProviderImpl
 									LDAPConstants.AUTH_SERVER_PRIORITY));
 						}
 						catch (IllegalStateException illegalStateException) {
+							if (_log.isDebugEnabled()) {
+								_log.debug(illegalStateException);
+							}
+
 							return 0L;
 						}
 					}));
@@ -300,7 +306,7 @@ public class LDAPServerConfigurationProviderImpl
 			configurationsProperties.add(
 				new HashMapDictionary<String, Object>());
 		}
-		else if (!MapUtil.isEmpty(objectValuePairs)) {
+		else if (MapUtil.isNotEmpty(objectValuePairs)) {
 			for (ObjectValuePair<Configuration, LDAPServerConfiguration>
 					objectValuePair : objectValuePairs.values()) {
 
@@ -358,7 +364,9 @@ public class LDAPServerConfigurationProviderImpl
 				objectValuePairs = _configurations.get(companyId);
 			}
 
-			if ((ldapServerId != null) && !MapUtil.isEmpty(objectValuePairs)) {
+			if ((ldapServerId != null) &&
+				MapUtil.isNotEmpty(objectValuePairs)) {
+
 				objectValuePairs.remove(ldapServerId);
 			}
 		}
@@ -416,6 +424,9 @@ public class LDAPServerConfigurationProviderImpl
 
 		super.configurationAdmin = configurationAdmin;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		LDAPServerConfigurationProviderImpl.class);
 
 	private final Map
 		<Long,

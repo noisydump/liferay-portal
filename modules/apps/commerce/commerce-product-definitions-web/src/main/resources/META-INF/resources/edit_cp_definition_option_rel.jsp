@@ -27,7 +27,7 @@ String defaultLanguageId = cpDefinitionOptionRelDisplayContext.getCatalogDefault
 
 <portlet:actionURL name="/cp_definitions/edit_cp_definition_option_rel" var="editProductDefinitionOptionRelActionURL" />
 
-<commerce-ui:side-panel-content
+<liferay-frontend:side-panel-content
 	title='<%= (cpDefinitionOptionRel == null) ? LanguageUtil.get(request, "add-option") : LanguageUtil.format(request, "edit-x", cpDefinitionOptionRel.getName(languageId), false) %>'
 >
 	<aui:form action="<%= editProductDefinitionOptionRelActionURL %>" method="post" name="fm">
@@ -118,26 +118,24 @@ String defaultLanguageId = cpDefinitionOptionRelDisplayContext.getCatalogDefault
 			>
 
 				<%
-				String datasetDisplayId = CommerceProductDataSetConstants.COMMERCE_DATA_SET_KEY_PRODUCT_OPTION_VALUES;
+				String datasetDisplayId = CommerceProductFDSNames.PRODUCT_OPTION_VALUES;
 
 				if (cpDefinitionOptionRel.isPriceTypeStatic()) {
-					datasetDisplayId = CommerceProductDataSetConstants.COMMERCE_DATA_SET_KEY_PRODUCT_OPTION_VALUES_STATIC;
+					datasetDisplayId = CommerceProductFDSNames.PRODUCT_OPTION_VALUES_STATIC;
 				}
 				%>
 
-				<clay:data-set-display
+				<frontend-data-set:classic-display
 					contextParams='<%=
 						HashMapBuilder.<String, String>put(
 							"cpDefinitionOptionRelId", String.valueOf(cpDefinitionOptionRelId)
 						).build()
 					%>'
 					creationMenu="<%= cpDefinitionOptionRelDisplayContext.getCreationMenu() %>"
-					dataProviderKey="<%= CommerceProductDataSetConstants.COMMERCE_DATA_SET_KEY_PRODUCT_OPTION_VALUES %>"
+					dataProviderKey="<%= CommerceProductFDSNames.PRODUCT_OPTION_VALUES %>"
 					id="<%= datasetDisplayId %>"
 					itemsPerPage="<%= 10 %>"
-					namespace="<%= liferayPortletResponse.getNamespace() %>"
-					pageNumber="<%= 1 %>"
-					portletURL="<%= currentURLObj %>"
+					selectedItemsKey="cpdefinitionOptionValueRelId"
 				/>
 			</commerce-ui:panel>
 		</div>
@@ -198,9 +196,17 @@ String defaultLanguageId = cpDefinitionOptionRelDisplayContext.getCatalogDefault
 					formFieldTypeSelect.value != '' &&
 					!endsWith(formFieldTypeSelect.value, array)
 				) {
-					alert(
-						'<liferay-ui:message key="selected-field-type-price-type-and-sku-contributor-combination-is-not-allowed" />'
-					);
+					if (Liferay.FeatureFlags['LPS-148659']) {
+						Liferay.Util.openAlertModal({
+							message:
+								'<liferay-ui:message key="selected-field-type-price-type-and-sku-contributor-combination-is-not-allowed" />',
+						});
+					}
+					else {
+						alert(
+							'<liferay-ui:message key="selected-field-type-price-type-and-sku-contributor-combination-is-not-allowed" />'
+						);
+					}
 
 					return;
 				}
@@ -238,9 +244,16 @@ String defaultLanguageId = cpDefinitionOptionRelDisplayContext.getCatalogDefault
 						disable(priceTypeSelect);
 					}
 					else {
-						alert(
-							'<liferay-ui:message key="selected-field-type-price-type-and-sku-contributor-combination-is-not-allowed" />'
-						);
+						if (Liferay.FeatureFlags['LPS-148659']) {
+							Liferay.Util.openAlertModal(
+								'<liferay-ui:message key="selected-field-type-price-type-and-sku-contributor-combination-is-not-allowed" />'
+							);
+						}
+						else {
+							alert(
+								'<liferay-ui:message key="selected-field-type-price-type-and-sku-contributor-combination-is-not-allowed" />'
+							);
+						}
 
 						return;
 					}
@@ -259,9 +272,17 @@ String defaultLanguageId = cpDefinitionOptionRelDisplayContext.getCatalogDefault
 						disable(skuContributorInput);
 					}
 					else {
-						alert(
-							'<liferay-ui:message key="selected-field-type-price-type-and-sku-contributor-combination-is-not-allowed" />'
-						);
+						if (Liferay.FeatureFlags['LPS-148659']) {
+							Liferay.Util.openAlertModal({
+								message:
+									'<liferay-ui:message key="selected-field-type-price-type-and-sku-contributor-combination-is-not-allowed" />',
+							});
+						}
+						else {
+							alert(
+								'<liferay-ui:message key="selected-field-type-price-type-and-sku-contributor-combination-is-not-allowed" />'
+							);
+						}
 
 						return;
 					}
@@ -319,4 +340,4 @@ String defaultLanguageId = cpDefinitionOptionRelDisplayContext.getCatalogDefault
 			<aui:button cssClass="btn-lg" type="cancel" />
 		</aui:button-row>
 	</aui:form>
-</commerce-ui:side-panel-content>
+</liferay-frontend:side-panel-content>

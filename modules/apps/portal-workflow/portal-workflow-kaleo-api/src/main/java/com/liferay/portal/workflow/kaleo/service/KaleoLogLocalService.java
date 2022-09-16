@@ -14,7 +14,9 @@
 
 package com.liferay.portal.workflow.kaleo.service;
 
+import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
@@ -27,6 +29,8 @@ import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalService;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.change.tracking.CTService;
+import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
@@ -55,13 +59,14 @@ import org.osgi.annotation.versioning.ProviderType;
  * @see KaleoLogLocalServiceUtil
  * @generated
  */
+@CTAware
 @ProviderType
 @Transactional(
 	isolation = Isolation.PORTAL,
 	rollbackFor = {PortalException.class, SystemException.class}
 )
 public interface KaleoLogLocalService
-	extends BaseLocalService, PersistedModelLocalService {
+	extends BaseLocalService, CTService<KaleoLog>, PersistedModelLocalService {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -104,6 +109,29 @@ public interface KaleoLogLocalService
 	public KaleoLog addTaskAssignmentKaleoLog(
 			List<KaleoTaskAssignmentInstance>
 				previousKaleoTaskAssignmentInstances,
+			KaleoTaskAssignmentInstance kaleoTaskAssignmentInstance,
+			KaleoTaskInstanceToken kaleoTaskInstanceToken, String comment,
+			Map<String, Serializable> workflowContext,
+			ServiceContext serviceContext)
+		throws PortalException;
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #addTaskAssignmentKaleoLog(List, KaleoTaskAssignmentInstance,
+	 KaleoTaskInstanceToken, String, Map, ServiceContext)}}
+	 */
+	@Deprecated
+	@Indexable(type = IndexableType.REINDEX)
+	public KaleoLog addTaskAssignmentKaleoLog(
+			List<KaleoTaskAssignmentInstance>
+				previousKaleoTaskAssignmentInstances,
+			KaleoTaskInstanceToken kaleoTaskInstanceToken, String comment,
+			Map<String, Serializable> workflowContext,
+			ServiceContext serviceContext)
+		throws PortalException;
+
+	public List<KaleoLog> addTaskAssignmentKaleoLogs(
+			List<KaleoTaskAssignmentInstance> previousTaskAssignmentInstances,
 			KaleoTaskInstanceToken kaleoTaskInstanceToken, String comment,
 			Map<String, Serializable> workflowContext,
 			ServiceContext serviceContext)
@@ -195,6 +223,9 @@ public interface KaleoLogLocalService
 	public <T> T dslQuery(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
 
 	/**
@@ -269,30 +300,10 @@ public interface KaleoLogLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public IndexableActionableDynamicQuery getIndexableActionableDynamicQuery();
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 #getKaleoInstanceKaleoLogs(long, long, List, int, int,
-	 OrderByComparator)}
-	 */
-	@Deprecated
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<KaleoLog> getKaleoInstanceKaleoLogs(
-		long kaleoInstanceId, List<Integer> logTypes, int start, int end,
-		OrderByComparator<KaleoLog> orderByComparator);
-
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<KaleoLog> getKaleoInstanceKaleoLogs(
 		long companyId, long kaleoInstanceId, List<Integer> logTypes, int start,
 		int end, OrderByComparator<KaleoLog> orderByComparator);
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 #getKaleoInstanceKaleoLogsCount(long, long, List)}
-	 */
-	@Deprecated
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public int getKaleoInstanceKaleoLogsCount(
-		long kaleoInstanceId, List<Integer> logTypes);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getKaleoInstanceKaleoLogsCount(
@@ -330,30 +341,10 @@ public interface KaleoLogLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getKaleoLogsCount();
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 #getKaleoTaskInstanceTokenKaleoLogs(long, long, List, int,
-	 int, OrderByComparator)}
-	 */
-	@Deprecated
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<KaleoLog> getKaleoTaskInstanceTokenKaleoLogs(
-		long kaleoTaskInstanceTokenId, List<Integer> logTypes, int start,
-		int end, OrderByComparator<KaleoLog> orderByComparator);
-
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<KaleoLog> getKaleoTaskInstanceTokenKaleoLogs(
 		long companyId, long kaleoTaskInstanceTokenId, List<Integer> logTypes,
 		int start, int end, OrderByComparator<KaleoLog> orderByComparator);
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 #getKaleoTaskInstanceTokenKaleoLogsCount(long, long, List)}
-	 */
-	@Deprecated
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public int getKaleoTaskInstanceTokenKaleoLogsCount(
-		long kaleoTaskInstanceTokenId, List<Integer> logTypes);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getKaleoTaskInstanceTokenKaleoLogsCount(
@@ -386,5 +377,19 @@ public interface KaleoLogLocalService
 	 */
 	@Indexable(type = IndexableType.REINDEX)
 	public KaleoLog updateKaleoLog(KaleoLog kaleoLog);
+
+	@Override
+	@Transactional(enabled = false)
+	public CTPersistence<KaleoLog> getCTPersistence();
+
+	@Override
+	@Transactional(enabled = false)
+	public Class<KaleoLog> getModelClass();
+
+	@Override
+	@Transactional(rollbackFor = Throwable.class)
+	public <R, E extends Throwable> R updateWithUnsafeFunction(
+			UnsafeFunction<CTPersistence<KaleoLog>, R, E> updateUnsafeFunction)
+		throws E;
 
 }

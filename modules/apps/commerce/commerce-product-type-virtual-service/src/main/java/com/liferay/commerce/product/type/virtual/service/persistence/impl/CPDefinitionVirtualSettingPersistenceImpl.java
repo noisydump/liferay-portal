@@ -20,8 +20,10 @@ import com.liferay.commerce.product.type.virtual.model.CPDefinitionVirtualSettin
 import com.liferay.commerce.product.type.virtual.model.impl.CPDefinitionVirtualSettingImpl;
 import com.liferay.commerce.product.type.virtual.model.impl.CPDefinitionVirtualSettingModelImpl;
 import com.liferay.commerce.product.type.virtual.service.persistence.CPDefinitionVirtualSettingPersistence;
+import com.liferay.commerce.product.type.virtual.service.persistence.CPDefinitionVirtualSettingUtil;
+import com.liferay.commerce.product.type.virtual.service.persistence.impl.constants.CommercePersistenceConstants;
 import com.liferay.petra.string.StringBundler;
-import com.liferay.portal.kernel.dao.orm.ArgumentsResolver;
+import com.liferay.portal.kernel.configuration.Configuration;
 import com.liferay.portal.kernel.dao.orm.EntityCache;
 import com.liferay.portal.kernel.dao.orm.FinderCache;
 import com.liferay.portal.kernel.dao.orm.FinderPath;
@@ -29,23 +31,26 @@ import com.liferay.portal.kernel.dao.orm.Query;
 import com.liferay.portal.kernel.dao.orm.QueryPos;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.Session;
+import com.liferay.portal.kernel.dao.orm.SessionFactory;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
-import com.liferay.portal.kernel.util.HashMapDictionary;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
-import com.liferay.portal.spring.extender.service.ServiceReference;
+import com.liferay.portal.kernel.uuid.PortalUUID;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
 import java.util.Date;
@@ -54,12 +59,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.framework.ServiceRegistration;
+import javax.sql.DataSource;
+
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * The persistence implementation for the cp definition virtual setting service.
@@ -71,6 +77,11 @@ import org.osgi.framework.ServiceRegistration;
  * @author Marco Leo
  * @generated
  */
+@Component(
+	service = {
+		CPDefinitionVirtualSettingPersistence.class, BasePersistence.class
+	}
+)
 public class CPDefinitionVirtualSettingPersistenceImpl
 	extends BasePersistenceImpl<CPDefinitionVirtualSetting>
 	implements CPDefinitionVirtualSettingPersistence {
@@ -1755,6 +1766,8 @@ public class CPDefinitionVirtualSettingPersistenceImpl
 			cpDefinitionVirtualSetting);
 	}
 
+	private int _valueObjectFinderCacheListThreshold;
+
 	/**
 	 * Caches the cp definition virtual settings in the entity cache if it is enabled.
 	 *
@@ -1763,6 +1776,14 @@ public class CPDefinitionVirtualSettingPersistenceImpl
 	@Override
 	public void cacheResult(
 		List<CPDefinitionVirtualSetting> cpDefinitionVirtualSettings) {
+
+		if ((_valueObjectFinderCacheListThreshold == 0) ||
+			((_valueObjectFinderCacheListThreshold > 0) &&
+			 (cpDefinitionVirtualSettings.size() >
+				 _valueObjectFinderCacheListThreshold))) {
+
+			return;
+		}
 
 		for (CPDefinitionVirtualSetting cpDefinitionVirtualSetting :
 				cpDefinitionVirtualSettings) {
@@ -1868,7 +1889,7 @@ public class CPDefinitionVirtualSettingPersistenceImpl
 		cpDefinitionVirtualSetting.setNew(true);
 		cpDefinitionVirtualSetting.setPrimaryKey(CPDefinitionVirtualSettingId);
 
-		String uuid = PortalUUIDUtil.generate();
+		String uuid = _portalUUID.generate();
 
 		cpDefinitionVirtualSetting.setUuid(uuid);
 
@@ -2000,7 +2021,7 @@ public class CPDefinitionVirtualSettingPersistenceImpl
 				(CPDefinitionVirtualSettingModelImpl)cpDefinitionVirtualSetting;
 
 		if (Validator.isNull(cpDefinitionVirtualSetting.getUuid())) {
-			String uuid = PortalUUIDUtil.generate();
+			String uuid = _portalUUID.generate();
 
 			cpDefinitionVirtualSetting.setUuid(uuid);
 		}
@@ -2008,25 +2029,25 @@ public class CPDefinitionVirtualSettingPersistenceImpl
 		ServiceContext serviceContext =
 			ServiceContextThreadLocal.getServiceContext();
 
-		Date now = new Date();
+		Date date = new Date();
 
 		if (isNew && (cpDefinitionVirtualSetting.getCreateDate() == null)) {
 			if (serviceContext == null) {
-				cpDefinitionVirtualSetting.setCreateDate(now);
+				cpDefinitionVirtualSetting.setCreateDate(date);
 			}
 			else {
 				cpDefinitionVirtualSetting.setCreateDate(
-					serviceContext.getCreateDate(now));
+					serviceContext.getCreateDate(date));
 			}
 		}
 
 		if (!cpDefinitionVirtualSettingModelImpl.hasSetModifiedDate()) {
 			if (serviceContext == null) {
-				cpDefinitionVirtualSetting.setModifiedDate(now);
+				cpDefinitionVirtualSetting.setModifiedDate(date);
 			}
 			else {
 				cpDefinitionVirtualSetting.setModifiedDate(
-					serviceContext.getModifiedDate(now));
+					serviceContext.getModifiedDate(date));
 			}
 		}
 
@@ -2333,16 +2354,10 @@ public class CPDefinitionVirtualSettingPersistenceImpl
 	/**
 	 * Initializes the cp definition virtual setting persistence.
 	 */
-	public void afterPropertiesSet() {
-		Bundle bundle = FrameworkUtil.getBundle(
-			CPDefinitionVirtualSettingPersistenceImpl.class);
-
-		_bundleContext = bundle.getBundleContext();
-
-		_argumentsResolverServiceRegistration = _bundleContext.registerService(
-			ArgumentsResolver.class,
-			new CPDefinitionVirtualSettingModelArgumentsResolver(),
-			new HashMapDictionary<>());
+	@Activate
+	public void activate() {
+		_valueObjectFinderCacheListThreshold = GetterUtil.getInteger(
+			PropsUtil.get(PropsKeys.VALUE_OBJECT_FINDER_CACHE_LIST_THRESHOLD));
 
 		_finderPathWithPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
@@ -2412,20 +2427,64 @@ public class CPDefinitionVirtualSettingPersistenceImpl
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_C",
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"classNameId", "classPK"}, false);
+
+		_setCPDefinitionVirtualSettingUtilPersistence(this);
 	}
 
-	public void destroy() {
+	@Deactivate
+	public void deactivate() {
+		_setCPDefinitionVirtualSettingUtilPersistence(null);
+
 		entityCache.removeCache(CPDefinitionVirtualSettingImpl.class.getName());
-
-		_argumentsResolverServiceRegistration.unregister();
 	}
 
-	private BundleContext _bundleContext;
+	private void _setCPDefinitionVirtualSettingUtilPersistence(
+		CPDefinitionVirtualSettingPersistence
+			cpDefinitionVirtualSettingPersistence) {
 
-	@ServiceReference(type = EntityCache.class)
+		try {
+			Field field = CPDefinitionVirtualSettingUtil.class.getDeclaredField(
+				"_persistence");
+
+			field.setAccessible(true);
+
+			field.set(null, cpDefinitionVirtualSettingPersistence);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
+	@Override
+	@Reference(
+		target = CommercePersistenceConstants.SERVICE_CONFIGURATION_FILTER,
+		unbind = "-"
+	)
+	public void setConfiguration(Configuration configuration) {
+	}
+
+	@Override
+	@Reference(
+		target = CommercePersistenceConstants.ORIGIN_BUNDLE_SYMBOLIC_NAME_FILTER,
+		unbind = "-"
+	)
+	public void setDataSource(DataSource dataSource) {
+		super.setDataSource(dataSource);
+	}
+
+	@Override
+	@Reference(
+		target = CommercePersistenceConstants.ORIGIN_BUNDLE_SYMBOLIC_NAME_FILTER,
+		unbind = "-"
+	)
+	public void setSessionFactory(SessionFactory sessionFactory) {
+		super.setSessionFactory(sessionFactory);
+	}
+
+	@Reference
 	protected EntityCache entityCache;
 
-	@ServiceReference(type = FinderCache.class)
+	@Reference
 	protected FinderCache finderCache;
 
 	private static final String _SQL_SELECT_CPDEFINITIONVIRTUALSETTING =
@@ -2460,101 +2519,11 @@ public class CPDefinitionVirtualSettingPersistenceImpl
 		return finderCache;
 	}
 
-	private ServiceRegistration<ArgumentsResolver>
-		_argumentsResolverServiceRegistration;
+	@Reference
+	private PortalUUID _portalUUID;
 
-	private static class CPDefinitionVirtualSettingModelArgumentsResolver
-		implements ArgumentsResolver {
-
-		@Override
-		public Object[] getArguments(
-			FinderPath finderPath, BaseModel<?> baseModel, boolean checkColumn,
-			boolean original) {
-
-			String[] columnNames = finderPath.getColumnNames();
-
-			if ((columnNames == null) || (columnNames.length == 0)) {
-				if (baseModel.isNew()) {
-					return FINDER_ARGS_EMPTY;
-				}
-
-				return null;
-			}
-
-			CPDefinitionVirtualSettingModelImpl
-				cpDefinitionVirtualSettingModelImpl =
-					(CPDefinitionVirtualSettingModelImpl)baseModel;
-
-			long columnBitmask =
-				cpDefinitionVirtualSettingModelImpl.getColumnBitmask();
-
-			if (!checkColumn || (columnBitmask == 0)) {
-				return _getValue(
-					cpDefinitionVirtualSettingModelImpl, columnNames, original);
-			}
-
-			Long finderPathColumnBitmask = _finderPathColumnBitmasksCache.get(
-				finderPath);
-
-			if (finderPathColumnBitmask == null) {
-				finderPathColumnBitmask = 0L;
-
-				for (String columnName : columnNames) {
-					finderPathColumnBitmask |=
-						cpDefinitionVirtualSettingModelImpl.getColumnBitmask(
-							columnName);
-				}
-
-				_finderPathColumnBitmasksCache.put(
-					finderPath, finderPathColumnBitmask);
-			}
-
-			if ((columnBitmask & finderPathColumnBitmask) != 0) {
-				return _getValue(
-					cpDefinitionVirtualSettingModelImpl, columnNames, original);
-			}
-
-			return null;
-		}
-
-		@Override
-		public String getClassName() {
-			return CPDefinitionVirtualSettingImpl.class.getName();
-		}
-
-		@Override
-		public String getTableName() {
-			return CPDefinitionVirtualSettingTable.INSTANCE.getTableName();
-		}
-
-		private Object[] _getValue(
-			CPDefinitionVirtualSettingModelImpl
-				cpDefinitionVirtualSettingModelImpl,
-			String[] columnNames, boolean original) {
-
-			Object[] arguments = new Object[columnNames.length];
-
-			for (int i = 0; i < arguments.length; i++) {
-				String columnName = columnNames[i];
-
-				if (original) {
-					arguments[i] =
-						cpDefinitionVirtualSettingModelImpl.
-							getColumnOriginalValue(columnName);
-				}
-				else {
-					arguments[i] =
-						cpDefinitionVirtualSettingModelImpl.getColumnValue(
-							columnName);
-				}
-			}
-
-			return arguments;
-		}
-
-		private static Map<FinderPath, Long> _finderPathColumnBitmasksCache =
-			new ConcurrentHashMap<>();
-
-	}
+	@Reference
+	private CPDefinitionVirtualSettingModelArgumentsResolver
+		_cpDefinitionVirtualSettingModelArgumentsResolver;
 
 }

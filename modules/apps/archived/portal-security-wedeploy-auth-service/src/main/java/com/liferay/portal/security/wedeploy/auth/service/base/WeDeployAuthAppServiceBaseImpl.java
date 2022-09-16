@@ -20,16 +20,22 @@ import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.service.BaseServiceImpl;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.security.wedeploy.auth.model.WeDeployAuthApp;
 import com.liferay.portal.security.wedeploy.auth.service.WeDeployAuthAppService;
+import com.liferay.portal.security.wedeploy.auth.service.WeDeployAuthAppServiceUtil;
 import com.liferay.portal.security.wedeploy.auth.service.persistence.WeDeployAuthAppPersistence;
 import com.liferay.portal.security.wedeploy.auth.service.persistence.WeDeployAuthTokenPersistence;
 
+import java.lang.reflect.Field;
+
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -50,8 +56,13 @@ public abstract class WeDeployAuthAppServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>WeDeployAuthAppService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.security.wedeploy.auth.service.WeDeployAuthAppServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>WeDeployAuthAppService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>WeDeployAuthAppServiceUtil</code>.
 	 */
+	@Deactivate
+	protected void deactivate() {
+		_setServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -62,6 +73,8 @@ public abstract class WeDeployAuthAppServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		weDeployAuthAppService = (WeDeployAuthAppService)aopProxy;
+
+		_setServiceUtilService(weDeployAuthAppService);
 	}
 
 	/**
@@ -106,6 +119,22 @@ public abstract class WeDeployAuthAppServiceBaseImpl
 		}
 	}
 
+	private void _setServiceUtilService(
+		WeDeployAuthAppService weDeployAuthAppService) {
+
+		try {
+			Field field = WeDeployAuthAppServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, weDeployAuthAppService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@Reference
 	protected com.liferay.portal.security.wedeploy.auth.service.
 		WeDeployAuthAppLocalService weDeployAuthAppLocalService;
@@ -140,5 +169,8 @@ public abstract class WeDeployAuthAppServiceBaseImpl
 
 	@Reference
 	protected com.liferay.portal.kernel.service.UserService userService;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		WeDeployAuthAppServiceBaseImpl.class);
 
 }

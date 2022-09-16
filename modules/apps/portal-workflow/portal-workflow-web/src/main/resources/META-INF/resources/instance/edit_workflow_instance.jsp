@@ -50,9 +50,9 @@ renderResponse.setTitle(workflowInstanceEditDisplayContext.getHeaderTitle());
 				<clay:col
 					md="7"
 				>
-					<aui:field-wrapper label="state">
+					<aui:field-wrapper label="status">
 						<aui:fieldset>
-							<%= HtmlUtil.escape(workflowInstanceEditDisplayContext.getWorkflowInstanceState()) %>
+							<%= workflowInstanceEditDisplayContext.getStatus() %>
 						</aui:fieldset>
 					</aui:field-wrapper>
 				</clay:col>
@@ -87,28 +87,31 @@ renderResponse.setTitle(workflowInstanceEditDisplayContext.getHeaderTitle());
 						title="<%= workflowInstanceEditDisplayContext.getPanelTitle() %>"
 					>
 						<div class="task-content-actions">
-							<liferay-ui:icon-list>
-								<c:if test="<%= assetRenderer.hasViewPermission(permissionChecker) %>">
-									<portlet:renderURL var="viewFullContentURL">
-										<portlet:param name="mvcPath" value="/instance/view_content.jsp" />
-										<portlet:param name="redirect" value="<%= currentURL %>" />
+							<c:if test="<%= assetRenderer.hasViewPermission(permissionChecker) %>">
+								<portlet:renderURL var="viewFullContentURL">
+									<portlet:param name="mvcPath" value="/instance/view_content.jsp" />
+									<portlet:param name="redirect" value="<%= currentURL %>" />
 
-										<c:if test="<%= assetEntry != null %>">
-											<portlet:param name="assetEntryId" value="<%= String.valueOf(assetEntry.getEntryId()) %>" />
-											<portlet:param name="assetEntryVersionId" value="<%= workflowInstanceEditDisplayContext.getAssetEntryVersionId() %>" />
-										</c:if>
+									<c:if test="<%= assetEntry != null %>">
+										<portlet:param name="assetEntryId" value="<%= String.valueOf(assetEntry.getEntryId()) %>" />
+										<portlet:param name="assetEntryVersionId" value="<%= workflowInstanceEditDisplayContext.getAssetEntryVersionId() %>" />
+									</c:if>
 
-										<portlet:param name="type" value="<%= workflowInstanceEditDisplayContext.getAssetRendererFactory().getType() %>" />
-										<portlet:param name="showEditURL" value="<%= Boolean.FALSE.toString() %>" />
-									</portlet:renderURL>
+									<portlet:param name="type" value="<%= workflowInstanceEditDisplayContext.getAssetRendererFactory().getType() %>" />
+									<portlet:param name="showEditURL" value="<%= Boolean.FALSE.toString() %>" />
+								</portlet:renderURL>
 
-									<liferay-frontend:management-bar-button
-										href="<%= assetRenderer.isPreviewInContext() ? assetRenderer.getURLViewInContext(liferayPortletRequest, liferayPortletResponse, null) : viewFullContentURL.toString() %>"
-										icon="view"
-										label="view[action]"
-									/>
-								</c:if>
-							</liferay-ui:icon-list>
+								<liferay-ui:icon
+									data='<%= Collections.singletonMap("title", "View") %>'
+									icon="view"
+									label="<%= false %>"
+									linkCssClass="btn btn-monospaced btn-outline-secondary"
+									markupView="lexicon"
+									message="view[action]"
+									toolTip="<%= true %>"
+									url="<%= assetRenderer.isPreviewInContext() ? assetRenderer.getURLViewInContext(liferayPortletRequest, liferayPortletResponse, null) : viewFullContentURL.toString() %>"
+								/>
+							</c:if>
 						</div>
 
 						<h3 class="task-content-title">
@@ -138,19 +141,32 @@ renderResponse.setTitle(workflowInstanceEditDisplayContext.getHeaderTitle());
 						</c:if>
 					</liferay-ui:panel>
 
-					<liferay-ui:panel
-						markupView="lexicon"
-						title="comments"
-					>
-						<liferay-comment:discussion
-							className="<%= assetRenderer.getClassName() %>"
-							classPK="<%= assetRenderer.getClassPK() %>"
-							formName='<%= "fm" + assetRenderer.getClassPK() %>'
-							ratingsEnabled="<%= false %>"
-							redirect="<%= currentURL %>"
-							userId="<%= user.getUserId() %>"
-						/>
-					</liferay-ui:panel>
+					<%
+					WorkflowHandler<?> workflowHandler = workflowInstanceEditDisplayContext.getWorkflowHandler();
+					%>
+
+					<c:if test="<%= workflowHandler.isCommentable() %>">
+
+						<%
+						WorkflowInstance workflowInstance = (WorkflowInstance)renderRequest.getAttribute(WebKeys.WORKFLOW_INSTANCE);
+
+						long discussionClassPK = workflowHandler.getDiscussionClassPK(workflowInstance.getWorkflowContext());
+						%>
+
+						<liferay-ui:panel
+							markupView="lexicon"
+							title="comments"
+						>
+							<liferay-comment:discussion
+								className="<%= assetRenderer.getClassName() %>"
+								classPK="<%= discussionClassPK %>"
+								formName='<%= "fm" + discussionClassPK %>'
+								ratingsEnabled="<%= false %>"
+								redirect="<%= currentURL %>"
+								userId="<%= user.getUserId() %>"
+							/>
+						</liferay-ui:panel>
+					</c:if>
 				</c:if>
 
 				<c:if test="<%= !workflowInstanceEditDisplayContext.isWorkflowTasksEmpty() %>">
@@ -181,7 +197,7 @@ renderResponse.setTitle(workflowInstanceEditDisplayContext.getHeaderTitle());
 									name="task"
 								>
 									<span class="task-name" id="<%= workflowTask.getWorkflowTaskId() %>">
-										<liferay-ui:message key="<%= workflowInstanceEditDisplayContext.getTaskName(workflowTask) %>" />
+										<liferay-ui:message key="<%= workflowTask.getLabel(locale) %>" />
 									</span>
 								</liferay-ui:search-container-column-text>
 

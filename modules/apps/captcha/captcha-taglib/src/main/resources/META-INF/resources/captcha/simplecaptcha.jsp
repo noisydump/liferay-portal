@@ -21,18 +21,23 @@ String url = (String)request.getAttribute("liferay-captcha:captcha:url");
 %>
 
 <c:if test="<%= captchaEnabled %>">
-	<div class="taglib-captcha">
-		<img alt="<liferay-ui:message escapeAttribute="<%= true %>" key="text-to-identify" />" class="captcha" id="<portlet:namespace />captcha" src="<%= HtmlUtil.escapeAttribute(HttpUtil.addParameter(url, "t", String.valueOf(System.currentTimeMillis()))) %>" />
+	<div class="my-3 taglib-captcha">
+		<img alt="<liferay-ui:message escapeAttribute="<%= true %>"
+		key="text-to-identify" />" class="captcha d-inline-block mb-2"
+			id="<portlet:namespace />captcha" src="<%=
+				HtmlUtil.escapeAttribute(HttpComponentsUtil.addParameter(url, "t", String.valueOf(System.currentTimeMillis())))
+%>"
+		/>
 
 		<liferay-ui:icon
-			cssClass="refresh"
+			cssClass="align-top d-inline-block refresh"
 			icon="reload"
 			id="refreshCaptcha"
 			label="<%= false %>"
 			localizeMessage="<%= true %>"
 			markupView="lexicon"
 			message="refresh-captcha"
-			url="javascript:;"
+			url="javascript:void(0);"
 		/>
 
 		<aui:input ignoreRequestValue="<%= true %>" label="text-verification" name="captchaText" size="10" type="text" value="">
@@ -50,7 +55,7 @@ String url = (String)request.getAttribute("liferay-captcha:captcha:url");
 
 			if (refreshCaptcha && !hasEventAttached) {
 				hasEventAttached = true;
-				refreshCaptcha.addEventListener('click', function () {
+				refreshCaptcha.addEventListener('click', () => {
 					var url = Liferay.Util.addParams(
 						't=' + Date.now(),
 						'<%= HtmlUtil.escapeJS(url) %>'

@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
@@ -54,6 +55,11 @@ public class PriceModifierCategory implements Serializable {
 
 	public static PriceModifierCategory toDTO(String json) {
 		return ObjectMapperUtil.readValue(PriceModifierCategory.class, json);
+	}
+
+	public static PriceModifierCategory unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(
+			PriceModifierCategory.class, json);
 	}
 
 	@Schema
@@ -115,7 +121,7 @@ public class PriceModifierCategory implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Category category;
 
-	@Schema
+	@Schema(example = "PAB-34098-789-N")
 	public String getCategoryExternalReferenceCode() {
 		return categoryExternalReferenceCode;
 	}
@@ -148,7 +154,7 @@ public class PriceModifierCategory implements Serializable {
 	protected String categoryExternalReferenceCode;
 
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "30130")
 	public Long getCategoryId() {
 		return categoryId;
 	}
@@ -178,7 +184,7 @@ public class PriceModifierCategory implements Serializable {
 	protected Long categoryId;
 
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "30643")
 	public Long getPriceModifierCategoryId() {
 		return priceModifierCategoryId;
 	}
@@ -207,7 +213,7 @@ public class PriceModifierCategory implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Long priceModifierCategoryId;
 
-	@Schema
+	@Schema(example = "DAB-34098-789-N")
 	public String getPriceModifierExternalReferenceCode() {
 		return priceModifierExternalReferenceCode;
 	}
@@ -241,7 +247,7 @@ public class PriceModifierCategory implements Serializable {
 	protected String priceModifierExternalReferenceCode;
 
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "30324")
 	public Long getPriceModifierId() {
 		return priceModifierId;
 	}
@@ -382,15 +388,16 @@ public class PriceModifierCategory implements Serializable {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.commerce.admin.pricing.dto.v2_0.PriceModifierCategory",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
 	}
 
 	private static boolean _isArray(Object value) {
@@ -416,8 +423,8 @@ public class PriceModifierCategory implements Serializable {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -448,7 +455,7 @@ public class PriceModifierCategory implements Serializable {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -456,7 +463,7 @@ public class PriceModifierCategory implements Serializable {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -464,5 +471,10 @@ public class PriceModifierCategory implements Serializable {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

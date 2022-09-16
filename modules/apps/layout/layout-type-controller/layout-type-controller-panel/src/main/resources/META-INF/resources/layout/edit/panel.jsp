@@ -55,7 +55,7 @@ if (selLayout != null) {
 		formatJSONResults: function (json) {
 			var output = [];
 
-			A.each(json.children.list, function (item, index) {
+			A.each(json.children.list, (item, index) => {
 				var childPortlets = [];
 				var total = 0;
 
@@ -120,11 +120,11 @@ if (selLayout != null) {
 		portletLister.setServletContext(application);
 		portletLister.setThemeDisplay(themeDisplay);
 		portletLister.setUser(user);
-
-		JSONObject portletsJSONObject = JSONFactoryUtil.createJSONObject(JSONFactoryUtil.serialize(portletLister.getTreeView()));
 		%>
 
-		var portletList = <%= portletsJSONObject %>.serializable.list.list[0];
+		var portletList =
+			<%= JSONFactoryUtil.createJSONObject(JSONFactoryUtil.serialize(portletLister.getTreeView())) %>
+				.serializable.list.list[0];
 
 		var rootNode = {
 			alwaysShowHitArea: true,
@@ -159,7 +159,7 @@ if (selLayout != null) {
 		initPanelSelectPortlets();
 	</c:if>
 
-	Liferay.on('<portlet:namespace />toggleLayoutTypeFields', function (event) {
+	Liferay.on('<portlet:namespace />toggleLayoutTypeFields', (event) => {
 		if (event.type == 'panel') {
 			initPanelSelectPortlets();
 		}

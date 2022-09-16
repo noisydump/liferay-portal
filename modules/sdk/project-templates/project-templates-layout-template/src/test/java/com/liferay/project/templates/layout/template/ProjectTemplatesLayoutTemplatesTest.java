@@ -48,7 +48,9 @@ public class ProjectTemplatesLayoutTemplatesTest
 	@Parameterized.Parameters(name = "Testcase-{index}: testing {0}")
 	public static Iterable<Object[]> data() {
 		return Arrays.asList(
-			new Object[][] {{"7.0.6"}, {"7.1.3"}, {"7.2.1"}, {"7.3.5"}});
+			new Object[][] {
+				{"7.0.6-2"}, {"7.1.3-1"}, {"7.2.1-1"}, {"7.3.7"}, {"7.4.1-1"}
+			});
 	}
 
 	@BeforeClass
@@ -110,6 +112,12 @@ public class ProjectTemplatesLayoutTemplatesTest
 				gradleProjectDir,
 				"src/main/webapp/WEB-INF/liferay-layout-templates.xml",
 				"liferay-layout-templates_7_3_0.dtd");
+		}
+		else if (_liferayVersion.startsWith("7.4")) {
+			testContains(
+				gradleProjectDir,
+				"src/main/webapp/WEB-INF/liferay-layout-templates.xml",
+				"liferay-layout-templates_7_4_0.dtd");
 		}
 
 		testExists(gradleProjectDir, "src/main/webapp/foo.png");

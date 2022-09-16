@@ -14,12 +14,12 @@
 
 import baseReducer from './baseReducer';
 import collectionsReducer from './collectionsReducer';
-import editablesReducer from './editablesReducer';
+import defaultFragmentEntryLinksReducer from './defaultFragmentEntryLinksReducer';
 import fragmentEntryLinksReducer from './fragmentEntryLinksReducer';
 import fragmentsReducer from './fragmentsReducer';
 import languageIdReducer from './languageIdReducer';
 import layoutDataReducer from './layoutDataReducer';
-import mappedInfoItemsReducer from './mappedInfoItemsReducer';
+import mappingFieldsReducer from './mappingFieldsReducer';
 import masterLayoutReducer from './masterLayoutReducer';
 import networkReducer from './networkReducer';
 import pageContentsReducer from './pageContentsReducer';
@@ -33,12 +33,11 @@ import widgetsReducer from './widgetsReducer';
 const combinedReducer = (state, action) =>
 	Object.entries({
 		collections: collectionsReducer,
-		editables: editablesReducer,
 		fragmentEntryLinks: fragmentEntryLinksReducer,
 		fragments: fragmentsReducer,
 		languageId: languageIdReducer,
 		layoutData: layoutDataReducer,
-		mappedInfoItems: mappedInfoItemsReducer,
+		mappingFields: mappingFieldsReducer,
 		masterLayout: masterLayoutReducer,
 		network: networkReducer,
 		pageContents: pageContentsReducer,
@@ -61,7 +60,8 @@ const combinedReducer = (state, action) =>
  * been registered from plugins.
  */
 export function reducer(state, action) {
-	const nextState = undoReducer(state, action);
+	let nextState = undoReducer(state, action);
+	nextState = defaultFragmentEntryLinksReducer(nextState, action);
 
 	return [combinedReducer, ...Object.values(state.reducers || {})].reduce(
 		(nextState, nextReducer) => {

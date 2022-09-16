@@ -24,30 +24,27 @@ definition {
 
 	macro uploadSingleFile {
 		var key_uploadFileName = "${uploadFileName}";
+		var filePath = TestCase.getDependenciesDirPath(fileName = "${uploadFileName}");
 
-		SelectFrameTop(value1 = "relative=top");
+		WaitForElementPresent(locator1 = "ItemSelector#ITEM_SELECTOR_IFRAME");
 
 		SelectFrame.selectFrameNoLoading(locator1 = "ItemSelector#ITEM_SELECTOR_IFRAME");
 
-		AssertClick(
-			locator1 = "ItemSelector#SELECT_FILE_UPLOAD_IMAGE",
-			value1 = "Select File");
+		UploadFile(
+			locator1 = "TextInput#FILE",
+			value1 = "${filePath}");
 
-		SikuliUploadCommonFile(
-			locator1 = "OS#FILE_DIALOG_BOX_FILE_NAME_FIELD_PNG",
-			value1 = "${uploadFileName}");
+		WaitForElementPresent(locator1 = "ItemSelector#ADD_BUTTON");
 
-		AssertTextEquals(
-			locator1 = "ItemSelector#FILE_UPLOAD_CAPTION",
-			value1 = "${uploadFileName}");
-
-		SelectFrame.selectFrameNoLoading(locator1 = "ItemSelector#ITEM_SELECTOR_MODAL_FOOTER");
+		AssertElementPresent.pauseAssertVisible(
+			locator1 = "ItemSelector#ADD_BUTTON",
+			value1 = "Add");
 
 		AssertClick(
 			locator1 = "ItemSelector#ADD_BUTTON",
 			value1 = "Add");
 
-		SelectFrameTop(value1 = "relative=top");
+		SelectFrameTop();
 	}
 
 }

@@ -14,7 +14,7 @@
 
 package com.liferay.frontend.taglib.clay.servlet.taglib;
 
-import com.liferay.frontend.taglib.clay.servlet.taglib.soy.VerticalCard;
+import com.liferay.frontend.taglib.clay.internal.servlet.taglib.util.DropdownItemListUtil;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItem;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -585,7 +585,7 @@ public class VerticalCardTag extends BaseCardTag {
 
 		List<LabelItem> labels = getLabels();
 
-		if (!ListUtil.isEmpty(labels)) {
+		if (ListUtil.isNotEmpty(labels)) {
 			jspWriter.write("<div class=\"card-detail\">");
 
 			for (LabelItem labelItem : labels) {
@@ -621,7 +621,7 @@ public class VerticalCardTag extends BaseCardTag {
 
 		List<DropdownItem> actionDropdownItems = getActionDropdownItems();
 
-		if (!ListUtil.isEmpty(actionDropdownItems)) {
+		if (!DropdownItemListUtil.isEmpty(actionDropdownItems)) {
 			jspWriter.write("<div class=\"autofit-col\">");
 
 			DropdownActionsTag dropdownActionsTag = new DropdownActionsTag();

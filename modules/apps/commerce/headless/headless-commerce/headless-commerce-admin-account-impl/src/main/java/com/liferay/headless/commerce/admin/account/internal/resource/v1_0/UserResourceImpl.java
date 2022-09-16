@@ -61,7 +61,7 @@ public class UserResourceImpl extends BaseUserResourceImpl {
 
 		if (commerceAccount == null) {
 			throw new NoSuchAccountException(
-				"Unable to find Account with externalReferenceCode: " +
+				"Unable to find account with external reference code " +
 					externalReferenceCode);
 		}
 
@@ -74,7 +74,7 @@ public class UserResourceImpl extends BaseUserResourceImpl {
 			invitedUser = _userLocalService.fetchUserById(user.getId());
 		}
 		else if (Validator.isNotNull(user.getExternalReferenceCode())) {
-			invitedUser = _userLocalService.fetchUserByReferenceCode(
+			invitedUser = _userLocalService.fetchUserByExternalReferenceCode(
 				contextCompany.getCompanyId(), user.getExternalReferenceCode());
 		}
 

@@ -19,14 +19,11 @@ import com.liferay.portal.kernel.exception.NoSuchGroupException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
-import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.test.log.CaptureAppender;
-import com.liferay.portal.test.log.Log4JLoggerTestUtil;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
+import com.liferay.portal.test.log.LogCapture;
+import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.vulcan.internal.test.util.URLConnectionUtil;
-import com.liferay.registry.Registry;
-import com.liferay.registry.RegistryUtil;
-import com.liferay.registry.ServiceRegistration;
 
 import java.io.IOException;
 
@@ -40,8 +37,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Application;
 
-import org.apache.log4j.Level;
-
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -49,6 +44,11 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceRegistration;
 
 /**
  * @author Javier Gamarra
@@ -63,12 +63,15 @@ public class TransactionContainerRequestFilterTest {
 
 	@Before
 	public void setUp() {
-		Registry registry = RegistryUtil.getRegistry();
+		Bundle bundle = FrameworkUtil.getBundle(
+			TransactionContainerRequestFilterTest.class);
 
-		_serviceRegistration = registry.registerService(
+		BundleContext bundleContext = bundle.getBundleContext();
+
+		_serviceRegistration = bundleContext.registerService(
 			Application.class,
 			new TransactionContainerRequestFilterTest.TestApplication(),
-			HashMapBuilder.<String, Object>put(
+			HashMapDictionaryBuilder.<String, Object>put(
 				"liferay.auth.verifier", true
 			).put(
 				"liferay.oauth2", false
@@ -101,9 +104,8 @@ public class TransactionContainerRequestFilterTest {
 	public void testRollback() throws Exception {
 		Group group = GroupTestUtil.addGroup();
 
-		try (CaptureAppender captureAppender =
-				Log4JLoggerTestUtil.configureLog4JLogger(
-					_CLASS_NAME_EXCEPTION_MAPPER, Level.ERROR)) {
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				_CLASS_NAME_EXCEPTION_MAPPER, LoggerTestUtil.ERROR)) {
 
 			Assert.assertEquals(
 				500,

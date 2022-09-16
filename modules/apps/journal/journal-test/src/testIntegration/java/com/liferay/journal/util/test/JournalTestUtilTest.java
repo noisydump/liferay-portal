@@ -29,7 +29,6 @@ import com.liferay.journal.test.util.JournalTestUtil;
 import com.liferay.portal.kernel.exception.LocaleException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Group;
-import com.liferay.portal.kernel.portlet.PortletRequestModel;
 import com.liferay.portal.kernel.template.TemplateConstants;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
@@ -49,6 +48,7 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import java.lang.reflect.Method;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -78,8 +78,6 @@ public class JournalTestUtilTest {
 		_group = GroupTestUtil.addGroup();
 
 		_transformMethod = JournalTestUtil.getJournalUtilTransformMethod();
-
-		_getTokensMethod = JournalTestUtil.getJournalUtilGetTokensMethod();
 	}
 
 	@Test
@@ -94,8 +92,8 @@ public class JournalTestUtilTest {
 		DDMTemplate ddmTemplate = DDMTemplateTestUtil.addTemplate(
 			ddmStructure.getStructureId(),
 			PortalUtil.getClassNameId(JournalArticle.class),
-			TemplateConstants.LANG_TYPE_VM,
-			JournalTestUtil.getSampleTemplateXSL());
+			TemplateConstants.LANG_TYPE_FTL,
+			JournalTestUtil.getSampleTemplateFTL());
 
 		Assert.assertNotNull(
 			JournalTestUtil.addArticleWithXMLContent(
@@ -180,7 +178,7 @@ public class JournalTestUtilTest {
 	}
 
 	@Test
-	public void testAddDDMTemplateToDDMStructureWithXSLAndLanguage()
+	public void testAddDDMTemplateToDDMStructureWithLanguage()
 		throws Exception {
 
 		DDMStructure ddmStructure = DDMStructureTestUtil.addStructure(
@@ -190,8 +188,8 @@ public class JournalTestUtilTest {
 			DDMTemplateTestUtil.addTemplate(
 				ddmStructure.getStructureId(),
 				PortalUtil.getClassNameId(JournalArticle.class),
-				TemplateConstants.LANG_TYPE_VM,
-				JournalTestUtil.getSampleTemplateXSL()));
+				TemplateConstants.LANG_TYPE_FTL,
+				JournalTestUtil.getSampleTemplateFTL()));
 	}
 
 	@Test
@@ -207,8 +205,7 @@ public class JournalTestUtilTest {
 		String content = (String)_transformMethod.invoke(
 			null, null, getTokens(), Constants.VIEW, "en_US",
 			UnsecureSAXReaderUtil.read(xml), null,
-			JournalTestUtil.getSampleTemplateXSL(),
-			TemplateConstants.LANG_TYPE_VM);
+			JournalTestUtil.getSampleTemplateFTL(), false, new HashMap<>());
 
 		Assert.assertEquals("Joe Bloggs", content);
 	}
@@ -246,7 +243,7 @@ public class JournalTestUtilTest {
 				ddmStructure.getStructureKey(), null,
 				LocaleUtil.getSiteDefault()));
 
-		DDMStructureLocalServiceUtil.deleteDDMStructure(ddmStructure);
+		DDMStructureLocalServiceUtil.deleteStructure(ddmStructure);
 
 		try {
 			Assert.assertNull(
@@ -266,8 +263,7 @@ public class JournalTestUtilTest {
 		String content = (String)_transformMethod.invoke(
 			null, null, getTokens(), Constants.VIEW, "en_US",
 			UnsecureSAXReaderUtil.read(xml), null,
-			JournalTestUtil.getSampleTemplateXSL(),
-			TemplateConstants.LANG_TYPE_VM);
+			JournalTestUtil.getSampleTemplateFTL(), false, new HashMap<>());
 
 		Assert.assertEquals("Joe Bloggs", content);
 	}
@@ -278,9 +274,9 @@ public class JournalTestUtilTest {
 	}
 
 	@Test
-	public void testGetSampleTemplateXSL() {
+	public void testGetSampleTemplateVM() {
 		Assert.assertEquals(
-			"$name.getData()", JournalTestUtil.getSampleTemplateXSL());
+			"$name.getData()", JournalTestUtil.getSampleTemplateVM());
 	}
 
 	@Test
@@ -305,24 +301,17 @@ public class JournalTestUtilTest {
 	}
 
 	protected Map<String, String> getTokens() throws Exception {
-		Map<String, String> tokens = (Map)_getTokensMethod.invoke(
-			null, TestPropsValues.getGroupId(), (PortletRequestModel)null,
-			null);
-
-		tokens.put(
-			"article_group_id", String.valueOf(TestPropsValues.getGroupId()));
-		tokens.put(
-			"company_id", String.valueOf(TestPropsValues.getCompanyId()));
-		tokens.put(
-			"ddm_structure_id", String.valueOf(_ddmStructure.getStructureId()));
-
-		return tokens;
+		return HashMapBuilder.put(
+			"article_group_id", String.valueOf(TestPropsValues.getGroupId())
+		).put(
+			"company_id", String.valueOf(TestPropsValues.getCompanyId())
+		).put(
+			"ddm_structure_id", String.valueOf(_ddmStructure.getStructureId())
+		).build();
 	}
 
 	@DeleteAfterTestRun
 	private DDMStructure _ddmStructure;
-
-	private Method _getTokensMethod;
 
 	@DeleteAfterTestRun
 	private Group _group;

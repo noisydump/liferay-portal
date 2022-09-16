@@ -74,6 +74,11 @@ public class KaleoDesignerWorkflowPortletTab extends BaseWorkflowPortletTab {
 	}
 
 	@Override
+	public ServletContext getServletContext() {
+		return _servletContext;
+	}
+
+	@Override
 	public void prepareRender(
 			RenderRequest renderRequest, RenderResponse renderResponse)
 		throws PortletException {
@@ -82,13 +87,12 @@ public class KaleoDesignerWorkflowPortletTab extends BaseWorkflowPortletTab {
 				renderRequest, DuplicateKaleoDefinitionNameException.class)) {
 
 			try {
-				setKaleoDefinitionVersionRenderRequestAttribute(
-					renderRequest, renderResponse);
+				_setKaleoDefinitionVersionRenderRequestAttribute(renderRequest);
 
-				setKaleoDesignerServletContextRequestAttribute(renderRequest);
+				_setKaleoDesignerServletContextRequestAttribute(renderRequest);
 			}
 			catch (Exception exception) {
-				_log.error(exception, exception);
+				_log.error(exception);
 			}
 		}
 	}
@@ -117,8 +121,17 @@ public class KaleoDesignerWorkflowPortletTab extends BaseWorkflowPortletTab {
 			kaleoDefinitionVersionLocalService;
 	}
 
-	protected void setKaleoDefinitionVersionRenderRequestAttribute(
-			RenderRequest renderRequest, RenderResponse renderResponse)
+	@Reference(unbind = "-")
+	protected void setUserLocalService(UserLocalService userLocalService) {
+		_userLocalService = userLocalService;
+	}
+
+	@Reference(unbind = "-")
+	protected KaleoDefinitionVersionLocalService
+		kaleoDefinitionVersionLocalService;
+
+	private void _setKaleoDefinitionVersionRenderRequestAttribute(
+			RenderRequest renderRequest)
 		throws PortalException {
 
 		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
@@ -127,9 +140,7 @@ public class KaleoDesignerWorkflowPortletTab extends BaseWorkflowPortletTab {
 		if (_kaleoDesignerDisplayContext == null) {
 			_kaleoDesignerDisplayContext = new KaleoDesignerDisplayContext(
 				renderRequest, _kaleoDefinitionVersionLocalService,
-				ResourceBundleLoaderUtil.
-					getResourceBundleLoaderByBundleSymbolicName(
-						"com.liferay.portal.workflow.kaleo.designer.web"),
+				ResourceBundleLoaderUtil.getPortalResourceBundleLoader(),
 				_userLocalService);
 		}
 
@@ -168,38 +179,25 @@ public class KaleoDesignerWorkflowPortletTab extends BaseWorkflowPortletTab {
 			kaleoDefinitionVersion);
 	}
 
-	protected void setKaleoDesignerServletContextRequestAttribute(
+	private void _setKaleoDesignerServletContextRequestAttribute(
 		RenderRequest renderRequest) {
 
 		renderRequest.setAttribute(
 			"portletTabServletContext", getServletContext());
 	}
 
-	@Override
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.portal.workflow.kaleo.designer.web)",
-		unbind = "-"
-	)
-	protected void setServletContext(ServletContext servletContext) {
-		super.setServletContext(servletContext);
-	}
-
-	@Reference(unbind = "-")
-	protected void setUserLocalService(UserLocalService userLocalService) {
-		_userLocalService = userLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected KaleoDefinitionVersionLocalService
-		kaleoDefinitionVersionLocalService;
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		KaleoDesignerWorkflowPortletTab.class);
 
-	private boolean _companyAdministratorCanPublish;
+	private volatile boolean _companyAdministratorCanPublish;
 	private KaleoDefinitionVersionLocalService
 		_kaleoDefinitionVersionLocalService;
 	private KaleoDesignerDisplayContext _kaleoDesignerDisplayContext;
+
+	@Reference(
+		target = "(osgi.web.symbolicname=com.liferay.portal.workflow.kaleo.designer.web)"
+	)
+	private ServletContext _servletContext;
 
 	@Reference
 	private UserLocalService _userLocalService;

@@ -82,7 +82,8 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.portlet-info.title=Reports Admin",
 		"javax.portlet.portlet-mode=text/html;config",
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=administrator,guest,power-user,user"
+		"javax.portlet.security-role-ref=administrator,guest,power-user,user",
+		"javax.portlet.version=3.0"
 	},
 	service = Portlet.class
 )
@@ -94,11 +95,11 @@ public class AdminPortlet extends MVCPortlet {
 		throws IOException, PortletException {
 
 		try {
-			setDefinitionRequestAttribute(renderRequest);
+			_setDefinitionRequestAttribute(renderRequest);
 
-			setSourceRequestAttribute(renderRequest);
+			_setSourceRequestAttribute(renderRequest);
 
-			setReportsEngineAdminWebConfigurationRequestAttribute(
+			_setReportsEngineAdminWebConfigurationRequestAttribute(
 				renderRequest);
 		}
 		catch (Exception exception) {
@@ -124,7 +125,7 @@ public class AdminPortlet extends MVCPortlet {
 			String resourceID = resourceRequest.getResourceID();
 
 			if (resourceID.equals("download")) {
-				serveDownload(resourceRequest, resourceResponse);
+				_serveDownload(resourceRequest, resourceResponse);
 			}
 		}
 		catch (IOException ioException) {
@@ -158,7 +159,7 @@ public class AdminPortlet extends MVCPortlet {
 				ReportsEngineAdminWebConfiguration.class, properties);
 	}
 
-	protected void serveDownload(
+	private void _serveDownload(
 			ResourceRequest resourceRequest, ResourceResponse resourceResponse)
 		throws Exception {
 
@@ -177,7 +178,7 @@ public class AdminPortlet extends MVCPortlet {
 			MimeTypesUtil.getContentType(fileName));
 	}
 
-	protected void setDefinitionRequestAttribute(RenderRequest renderRequest)
+	private void _setDefinitionRequestAttribute(RenderRequest renderRequest)
 		throws PortalException {
 
 		long definitionId = ParamUtil.getLong(renderRequest, "definitionId");
@@ -191,7 +192,7 @@ public class AdminPortlet extends MVCPortlet {
 		renderRequest.setAttribute(ReportsEngineWebKeys.DEFINITION, definition);
 	}
 
-	protected void setReportsEngineAdminWebConfigurationRequestAttribute(
+	private void _setReportsEngineAdminWebConfigurationRequestAttribute(
 		RenderRequest renderRequest) {
 
 		renderRequest.setAttribute(
@@ -199,7 +200,7 @@ public class AdminPortlet extends MVCPortlet {
 			_reportsEngineAdminWebConfiguration);
 	}
 
-	protected void setSourceRequestAttribute(RenderRequest renderRequest)
+	private void _setSourceRequestAttribute(RenderRequest renderRequest)
 		throws PortalException {
 
 		long sourceId = ParamUtil.getLong(renderRequest, "sourceId");

@@ -46,15 +46,14 @@ import com.liferay.portal.kernel.util.MethodKey;
  * </p>
  *
  * @author Luca Pellizzon
- * @see CommercePaymentMethodGroupRelServiceSoap
  * @generated
  */
 public class CommercePaymentMethodGroupRelServiceHttp {
 
 	public static com.liferay.commerce.model.CommerceAddressRestriction
 			addCommerceAddressRestriction(
-				HttpPrincipal httpPrincipal, long userId, long groupId,
-				long classPK, long commerceCountryId)
+				HttpPrincipal httpPrincipal, long groupId, long classPK,
+				long countryId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		try {
@@ -64,7 +63,7 @@ public class CommercePaymentMethodGroupRelServiceHttp {
 				_addCommerceAddressRestrictionParameterTypes0);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, userId, groupId, classPK, commerceCountryId);
+				methodKey, groupId, classPK, countryId);
 
 			Object returnObj = null;
 
@@ -97,8 +96,7 @@ public class CommercePaymentMethodGroupRelServiceHttp {
 
 	public static com.liferay.commerce.model.CommerceAddressRestriction
 			addCommerceAddressRestriction(
-				HttpPrincipal httpPrincipal, long classPK,
-				long commerceCountryId,
+				HttpPrincipal httpPrincipal, long classPK, long countryId,
 				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -109,7 +107,7 @@ public class CommercePaymentMethodGroupRelServiceHttp {
 				_addCommerceAddressRestrictionParameterTypes1);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, classPK, commerceCountryId, serviceContext);
+				methodKey, classPK, countryId, serviceContext);
 
 			Object returnObj = null;
 
@@ -143,7 +141,7 @@ public class CommercePaymentMethodGroupRelServiceHttp {
 	public static
 		com.liferay.commerce.payment.model.CommercePaymentMethodGroupRel
 				addCommercePaymentMethodGroupRel(
-					HttpPrincipal httpPrincipal, long userId, long groupId,
+					HttpPrincipal httpPrincipal, long groupId,
 					java.util.Map<java.util.Locale, String> nameMap,
 					java.util.Map<java.util.Locale, String> descriptionMap,
 					java.io.File imageFile, String engineKey, double priority,
@@ -157,7 +155,7 @@ public class CommercePaymentMethodGroupRelServiceHttp {
 				_addCommercePaymentMethodGroupRelParameterTypes2);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, userId, groupId, nameMap, descriptionMap, imageFile,
+				methodKey, groupId, nameMap, descriptionMap, imageFile,
 				engineKey, priority, active);
 
 			Object returnObj = null;
@@ -758,8 +756,8 @@ public class CommercePaymentMethodGroupRelServiceHttp {
 	public static java.util.List
 		<com.liferay.commerce.payment.model.CommercePaymentMethodGroupRel>
 				getCommercePaymentMethodGroupRels(
-					HttpPrincipal httpPrincipal, long groupId,
-					long commerceCountryId, boolean active)
+					HttpPrincipal httpPrincipal, long groupId, long countryId,
+					boolean active)
 			throws com.liferay.portal.kernel.exception.PortalException {
 
 		try {
@@ -769,7 +767,7 @@ public class CommercePaymentMethodGroupRelServiceHttp {
 				_getCommercePaymentMethodGroupRelsParameterTypes16);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, groupId, commerceCountryId, active);
+				methodKey, groupId, countryId, active);
 
 			Object returnObj = null;
 
@@ -980,7 +978,7 @@ public class CommercePaymentMethodGroupRelServiceHttp {
 
 	private static final Class<?>[]
 		_addCommerceAddressRestrictionParameterTypes0 = new Class[] {
-			long.class, long.class, long.class, long.class
+			long.class, long.class, long.class
 		};
 	private static final Class<?>[]
 		_addCommerceAddressRestrictionParameterTypes1 = new Class[] {
@@ -989,7 +987,7 @@ public class CommercePaymentMethodGroupRelServiceHttp {
 		};
 	private static final Class<?>[]
 		_addCommercePaymentMethodGroupRelParameterTypes2 = new Class[] {
-			long.class, long.class, java.util.Map.class, java.util.Map.class,
+			long.class, java.util.Map.class, java.util.Map.class,
 			java.io.File.class, String.class, double.class, boolean.class
 		};
 	private static final Class<?>[]

@@ -229,19 +229,11 @@ public class PortletFileRepositoryTest {
 
 		String queryString = "param=value";
 
-		StringBundler sb = new StringBundler(8);
-
-		sb.append("/documents/portlet_file_entry/");
-		sb.append(_group.getGroupId());
-		sb.append(StringPool.SLASH);
-		sb.append(fileEntry.getTitle());
-		sb.append(StringPool.SLASH);
-		sb.append(fileEntry.getUuid());
-		sb.append(StringPool.QUESTION);
-		sb.append(queryString);
-
 		Assert.assertEquals(
-			sb.toString(),
+			StringBundler.concat(
+				"/documents/portlet_file_entry/", _group.getGroupId(),
+				StringPool.SLASH, fileEntry.getTitle(), StringPool.SLASH,
+				fileEntry.getUuid(), StringPool.QUESTION, queryString),
 			PortletFileRepositoryUtil.getPortletFileEntryURL(
 				null, fileEntry, StringPool.AMPERSAND + queryString));
 	}
@@ -251,7 +243,7 @@ public class PortletFileRepositoryTest {
 				TestDataConstants.TEST_BYTE_ARRAY)) {
 
 			return PortletFileRepositoryUtil.addPortletFileEntry(
-				_group.getGroupId(), TestPropsValues.getUserId(),
+				null, _group.getGroupId(), TestPropsValues.getUserId(),
 				User.class.getName(), TestPropsValues.getUserId(), _portletId,
 				_folder.getFolderId(), inputStream, name,
 				ContentTypes.APPLICATION_OCTET_STREAM, false);

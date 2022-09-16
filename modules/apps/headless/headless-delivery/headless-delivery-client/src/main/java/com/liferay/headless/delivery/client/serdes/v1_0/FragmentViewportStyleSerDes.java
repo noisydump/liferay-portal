@@ -55,6 +55,128 @@ public class FragmentViewportStyleSerDes {
 
 		sb.append("{");
 
+		if (fragmentViewportStyle.getBackgroundColor() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"backgroundColor\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(fragmentViewportStyle.getBackgroundColor()));
+
+			sb.append("\"");
+		}
+
+		if (fragmentViewportStyle.getBorderColor() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"borderColor\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(fragmentViewportStyle.getBorderColor()));
+
+			sb.append("\"");
+		}
+
+		if (fragmentViewportStyle.getBorderRadius() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"borderRadius\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(fragmentViewportStyle.getBorderRadius()));
+
+			sb.append("\"");
+		}
+
+		if (fragmentViewportStyle.getBorderWidth() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"borderWidth\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(fragmentViewportStyle.getBorderWidth()));
+
+			sb.append("\"");
+		}
+
+		if (fragmentViewportStyle.getFontFamily() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"fontFamily\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(fragmentViewportStyle.getFontFamily()));
+
+			sb.append("\"");
+		}
+
+		if (fragmentViewportStyle.getFontSize() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"fontSize\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(fragmentViewportStyle.getFontSize()));
+
+			sb.append("\"");
+		}
+
+		if (fragmentViewportStyle.getFontWeight() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"fontWeight\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(fragmentViewportStyle.getFontWeight()));
+
+			sb.append("\"");
+		}
+
+		if (fragmentViewportStyle.getHeight() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"height\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(fragmentViewportStyle.getHeight()));
+
+			sb.append("\"");
+		}
+
+		if (fragmentViewportStyle.getHidden() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"hidden\": ");
+
+			sb.append(fragmentViewportStyle.getHidden());
+		}
+
 		if (fragmentViewportStyle.getMarginBottom() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -107,6 +229,90 @@ public class FragmentViewportStyleSerDes {
 			sb.append("\"");
 
 			sb.append(_escape(fragmentViewportStyle.getMarginTop()));
+
+			sb.append("\"");
+		}
+
+		if (fragmentViewportStyle.getMaxHeight() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"maxHeight\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(fragmentViewportStyle.getMaxHeight()));
+
+			sb.append("\"");
+		}
+
+		if (fragmentViewportStyle.getMaxWidth() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"maxWidth\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(fragmentViewportStyle.getMaxWidth()));
+
+			sb.append("\"");
+		}
+
+		if (fragmentViewportStyle.getMinHeight() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"minHeight\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(fragmentViewportStyle.getMinHeight()));
+
+			sb.append("\"");
+		}
+
+		if (fragmentViewportStyle.getMinWidth() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"minWidth\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(fragmentViewportStyle.getMinWidth()));
+
+			sb.append("\"");
+		}
+
+		if (fragmentViewportStyle.getOpacity() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"opacity\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(fragmentViewportStyle.getOpacity()));
+
+			sb.append("\"");
+		}
+
+		if (fragmentViewportStyle.getOverflow() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"overflow\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(fragmentViewportStyle.getOverflow()));
 
 			sb.append("\"");
 		}
@@ -167,6 +373,62 @@ public class FragmentViewportStyleSerDes {
 			sb.append("\"");
 		}
 
+		if (fragmentViewportStyle.getShadow() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"shadow\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(fragmentViewportStyle.getShadow()));
+
+			sb.append("\"");
+		}
+
+		if (fragmentViewportStyle.getTextAlign() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"textAlign\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(fragmentViewportStyle.getTextAlign()));
+
+			sb.append("\"");
+		}
+
+		if (fragmentViewportStyle.getTextColor() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"textColor\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(fragmentViewportStyle.getTextColor()));
+
+			sb.append("\"");
+		}
+
+		if (fragmentViewportStyle.getWidth() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"width\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(fragmentViewportStyle.getWidth()));
+
+			sb.append("\"");
+		}
+
 		sb.append("}");
 
 		return sb.toString();
@@ -187,6 +449,85 @@ public class FragmentViewportStyleSerDes {
 		}
 
 		Map<String, String> map = new TreeMap<>();
+
+		if (fragmentViewportStyle.getBackgroundColor() == null) {
+			map.put("backgroundColor", null);
+		}
+		else {
+			map.put(
+				"backgroundColor",
+				String.valueOf(fragmentViewportStyle.getBackgroundColor()));
+		}
+
+		if (fragmentViewportStyle.getBorderColor() == null) {
+			map.put("borderColor", null);
+		}
+		else {
+			map.put(
+				"borderColor",
+				String.valueOf(fragmentViewportStyle.getBorderColor()));
+		}
+
+		if (fragmentViewportStyle.getBorderRadius() == null) {
+			map.put("borderRadius", null);
+		}
+		else {
+			map.put(
+				"borderRadius",
+				String.valueOf(fragmentViewportStyle.getBorderRadius()));
+		}
+
+		if (fragmentViewportStyle.getBorderWidth() == null) {
+			map.put("borderWidth", null);
+		}
+		else {
+			map.put(
+				"borderWidth",
+				String.valueOf(fragmentViewportStyle.getBorderWidth()));
+		}
+
+		if (fragmentViewportStyle.getFontFamily() == null) {
+			map.put("fontFamily", null);
+		}
+		else {
+			map.put(
+				"fontFamily",
+				String.valueOf(fragmentViewportStyle.getFontFamily()));
+		}
+
+		if (fragmentViewportStyle.getFontSize() == null) {
+			map.put("fontSize", null);
+		}
+		else {
+			map.put(
+				"fontSize",
+				String.valueOf(fragmentViewportStyle.getFontSize()));
+		}
+
+		if (fragmentViewportStyle.getFontWeight() == null) {
+			map.put("fontWeight", null);
+		}
+		else {
+			map.put(
+				"fontWeight",
+				String.valueOf(fragmentViewportStyle.getFontWeight()));
+		}
+
+		if (fragmentViewportStyle.getHeight() == null) {
+			map.put("height", null);
+		}
+		else {
+			map.put(
+				"height", String.valueOf(fragmentViewportStyle.getHeight()));
+		}
+
+		if (fragmentViewportStyle.getHidden() == null) {
+			map.put("hidden", null);
+		}
+		else {
+			map.put(
+				"hidden", String.valueOf(fragmentViewportStyle.getHidden()));
+		}
 
 		if (fragmentViewportStyle.getMarginBottom() == null) {
 			map.put("marginBottom", null);
@@ -222,6 +563,59 @@ public class FragmentViewportStyleSerDes {
 			map.put(
 				"marginTop",
 				String.valueOf(fragmentViewportStyle.getMarginTop()));
+		}
+
+		if (fragmentViewportStyle.getMaxHeight() == null) {
+			map.put("maxHeight", null);
+		}
+		else {
+			map.put(
+				"maxHeight",
+				String.valueOf(fragmentViewportStyle.getMaxHeight()));
+		}
+
+		if (fragmentViewportStyle.getMaxWidth() == null) {
+			map.put("maxWidth", null);
+		}
+		else {
+			map.put(
+				"maxWidth",
+				String.valueOf(fragmentViewportStyle.getMaxWidth()));
+		}
+
+		if (fragmentViewportStyle.getMinHeight() == null) {
+			map.put("minHeight", null);
+		}
+		else {
+			map.put(
+				"minHeight",
+				String.valueOf(fragmentViewportStyle.getMinHeight()));
+		}
+
+		if (fragmentViewportStyle.getMinWidth() == null) {
+			map.put("minWidth", null);
+		}
+		else {
+			map.put(
+				"minWidth",
+				String.valueOf(fragmentViewportStyle.getMinWidth()));
+		}
+
+		if (fragmentViewportStyle.getOpacity() == null) {
+			map.put("opacity", null);
+		}
+		else {
+			map.put(
+				"opacity", String.valueOf(fragmentViewportStyle.getOpacity()));
+		}
+
+		if (fragmentViewportStyle.getOverflow() == null) {
+			map.put("overflow", null);
+		}
+		else {
+			map.put(
+				"overflow",
+				String.valueOf(fragmentViewportStyle.getOverflow()));
 		}
 
 		if (fragmentViewportStyle.getPaddingBottom() == null) {
@@ -260,6 +654,39 @@ public class FragmentViewportStyleSerDes {
 				String.valueOf(fragmentViewportStyle.getPaddingTop()));
 		}
 
+		if (fragmentViewportStyle.getShadow() == null) {
+			map.put("shadow", null);
+		}
+		else {
+			map.put(
+				"shadow", String.valueOf(fragmentViewportStyle.getShadow()));
+		}
+
+		if (fragmentViewportStyle.getTextAlign() == null) {
+			map.put("textAlign", null);
+		}
+		else {
+			map.put(
+				"textAlign",
+				String.valueOf(fragmentViewportStyle.getTextAlign()));
+		}
+
+		if (fragmentViewportStyle.getTextColor() == null) {
+			map.put("textColor", null);
+		}
+		else {
+			map.put(
+				"textColor",
+				String.valueOf(fragmentViewportStyle.getTextColor()));
+		}
+
+		if (fragmentViewportStyle.getWidth() == null) {
+			map.put("width", null);
+		}
+		else {
+			map.put("width", String.valueOf(fragmentViewportStyle.getWidth()));
+		}
+
 		return map;
 	}
 
@@ -281,7 +708,61 @@ public class FragmentViewportStyleSerDes {
 			FragmentViewportStyle fragmentViewportStyle,
 			String jsonParserFieldName, Object jsonParserFieldValue) {
 
-			if (Objects.equals(jsonParserFieldName, "marginBottom")) {
+			if (Objects.equals(jsonParserFieldName, "backgroundColor")) {
+				if (jsonParserFieldValue != null) {
+					fragmentViewportStyle.setBackgroundColor(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "borderColor")) {
+				if (jsonParserFieldValue != null) {
+					fragmentViewportStyle.setBorderColor(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "borderRadius")) {
+				if (jsonParserFieldValue != null) {
+					fragmentViewportStyle.setBorderRadius(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "borderWidth")) {
+				if (jsonParserFieldValue != null) {
+					fragmentViewportStyle.setBorderWidth(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "fontFamily")) {
+				if (jsonParserFieldValue != null) {
+					fragmentViewportStyle.setFontFamily(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "fontSize")) {
+				if (jsonParserFieldValue != null) {
+					fragmentViewportStyle.setFontSize(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "fontWeight")) {
+				if (jsonParserFieldValue != null) {
+					fragmentViewportStyle.setFontWeight(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "height")) {
+				if (jsonParserFieldValue != null) {
+					fragmentViewportStyle.setHeight(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "hidden")) {
+				if (jsonParserFieldValue != null) {
+					fragmentViewportStyle.setHidden(
+						(Boolean)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "marginBottom")) {
 				if (jsonParserFieldValue != null) {
 					fragmentViewportStyle.setMarginBottom(
 						(String)jsonParserFieldValue);
@@ -302,6 +783,42 @@ public class FragmentViewportStyleSerDes {
 			else if (Objects.equals(jsonParserFieldName, "marginTop")) {
 				if (jsonParserFieldValue != null) {
 					fragmentViewportStyle.setMarginTop(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "maxHeight")) {
+				if (jsonParserFieldValue != null) {
+					fragmentViewportStyle.setMaxHeight(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "maxWidth")) {
+				if (jsonParserFieldValue != null) {
+					fragmentViewportStyle.setMaxWidth(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "minHeight")) {
+				if (jsonParserFieldValue != null) {
+					fragmentViewportStyle.setMinHeight(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "minWidth")) {
+				if (jsonParserFieldValue != null) {
+					fragmentViewportStyle.setMinWidth(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "opacity")) {
+				if (jsonParserFieldValue != null) {
+					fragmentViewportStyle.setOpacity(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "overflow")) {
+				if (jsonParserFieldValue != null) {
+					fragmentViewportStyle.setOverflow(
 						(String)jsonParserFieldValue);
 				}
 			}
@@ -329,8 +846,29 @@ public class FragmentViewportStyleSerDes {
 						(String)jsonParserFieldValue);
 				}
 			}
-			else if (jsonParserFieldName.equals("status")) {
-				throw new IllegalArgumentException();
+			else if (Objects.equals(jsonParserFieldName, "shadow")) {
+				if (jsonParserFieldValue != null) {
+					fragmentViewportStyle.setShadow(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "textAlign")) {
+				if (jsonParserFieldValue != null) {
+					fragmentViewportStyle.setTextAlign(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "textColor")) {
+				if (jsonParserFieldValue != null) {
+					fragmentViewportStyle.setTextColor(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "width")) {
+				if (jsonParserFieldValue != null) {
+					fragmentViewportStyle.setWidth(
+						(String)jsonParserFieldValue);
+				}
 			}
 		}
 
@@ -360,7 +898,7 @@ public class FragmentViewportStyleSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -396,7 +934,7 @@ public class FragmentViewportStyleSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

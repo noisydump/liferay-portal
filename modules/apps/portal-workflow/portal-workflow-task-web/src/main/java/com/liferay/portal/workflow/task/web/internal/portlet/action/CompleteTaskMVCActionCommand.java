@@ -49,7 +49,7 @@ import org.osgi.service.component.annotations.Reference;
 	service = MVCActionCommand.class
 )
 public class CompleteTaskMVCActionCommand
-	extends WorkflowTaskBaseMVCActionCommand {
+	extends BaseWorkflowTaskMVCActionCommand {
 
 	@Override
 	protected void doProcessAction(
@@ -91,7 +91,7 @@ public class CompleteTaskMVCActionCommand
 		throws Exception {
 
 		WorkflowTask workflowTask = workflowTaskManager.getWorkflowTask(
-			companyId, workflowTaskId);
+			workflowTaskId);
 
 		WorkflowInstance workflowInstance =
 			WorkflowInstanceManagerUtil.getWorkflowInstance(

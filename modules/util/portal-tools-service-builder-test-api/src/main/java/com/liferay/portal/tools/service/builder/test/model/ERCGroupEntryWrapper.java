@@ -41,6 +41,7 @@ public class ERCGroupEntryWrapper
 	public Map<String, Object> getModelAttributes() {
 		Map<String, Object> attributes = new HashMap<String, Object>();
 
+		attributes.put("uuid", getUuid());
 		attributes.put("externalReferenceCode", getExternalReferenceCode());
 		attributes.put("ercGroupEntryId", getErcGroupEntryId());
 		attributes.put("groupId", getGroupId());
@@ -51,6 +52,12 @@ public class ERCGroupEntryWrapper
 
 	@Override
 	public void setModelAttributes(Map<String, Object> attributes) {
+		String uuid = (String)attributes.get("uuid");
+
+		if (uuid != null) {
+			setUuid(uuid);
+		}
+
 		String externalReferenceCode = (String)attributes.get(
 			"externalReferenceCode");
 
@@ -75,6 +82,11 @@ public class ERCGroupEntryWrapper
 		if (companyId != null) {
 			setCompanyId(companyId);
 		}
+	}
+
+	@Override
+	public ERCGroupEntry cloneWithOriginalValues() {
+		return wrap(model.cloneWithOriginalValues());
 	}
 
 	/**
@@ -125,6 +137,16 @@ public class ERCGroupEntryWrapper
 	@Override
 	public long getPrimaryKey() {
 		return model.getPrimaryKey();
+	}
+
+	/**
+	 * Returns the uuid of this erc group entry.
+	 *
+	 * @return the uuid of this erc group entry
+	 */
+	@Override
+	public String getUuid() {
+		return model.getUuid();
 	}
 
 	@Override
@@ -180,6 +202,16 @@ public class ERCGroupEntryWrapper
 	@Override
 	public void setPrimaryKey(long primaryKey) {
 		model.setPrimaryKey(primaryKey);
+	}
+
+	/**
+	 * Sets the uuid of this erc group entry.
+	 *
+	 * @param uuid the uuid of this erc group entry
+	 */
+	@Override
+	public void setUuid(String uuid) {
+		model.setUuid(uuid);
 	}
 
 	@Override

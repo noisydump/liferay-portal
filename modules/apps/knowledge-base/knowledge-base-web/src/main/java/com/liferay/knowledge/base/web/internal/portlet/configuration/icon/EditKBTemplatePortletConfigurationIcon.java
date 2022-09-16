@@ -18,13 +18,13 @@ import com.liferay.knowledge.base.constants.KBActionKeys;
 import com.liferay.knowledge.base.constants.KBPortletKeys;
 import com.liferay.knowledge.base.model.KBTemplate;
 import com.liferay.knowledge.base.web.internal.constants.KBWebKeys;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.configuration.icon.BasePortletConfigurationIcon;
 import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfigurationIcon;
-import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
@@ -32,7 +32,6 @@ import com.liferay.portal.kernel.util.WebKeys;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
-import javax.portlet.PortletURL;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -44,7 +43,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + KBPortletKeys.KNOWLEDGE_BASE_ADMIN,
-		"path=/admin/view_template.jsp"
+		"path=/admin/view_kb_template.jsp"
 	},
 	service = PortletConfigurationIcon.class
 )
@@ -53,29 +52,30 @@ public class EditKBTemplatePortletConfigurationIcon
 
 	@Override
 	public String getMessage(PortletRequest portletRequest) {
-		return LanguageUtil.get(
-			getResourceBundle(getLocale(portletRequest)), "edit");
+		return _language.get(getLocale(portletRequest), "edit");
 	}
 
 	@Override
 	public String getURL(
 		PortletRequest portletRequest, PortletResponse portletResponse) {
 
-		PortletURL portletURL = _portal.getControlPanelPortletURL(
-			portletRequest, KBPortletKeys.KNOWLEDGE_BASE_ADMIN,
-			PortletRequest.RENDER_PHASE);
+		return PortletURLBuilder.create(
+			_portal.getControlPanelPortletURL(
+				portletRequest, KBPortletKeys.KNOWLEDGE_BASE_ADMIN,
+				PortletRequest.RENDER_PHASE)
+		).setMVCPath(
+			"/admin/edit_kb_template.jsp"
+		).setRedirect(
+			_portal.getCurrentURL(portletRequest)
+		).setParameter(
+			"kbTemplateId",
+			() -> {
+				KBTemplate kbTemplate = (KBTemplate)portletRequest.getAttribute(
+					KBWebKeys.KNOWLEDGE_BASE_KB_TEMPLATE);
 
-		portletURL.setParameter("mvcPath", "/admin/edit_template.jsp");
-		portletURL.setParameter(
-			"redirect", _portal.getCurrentURL(portletRequest));
-
-		KBTemplate kbTemplate = (KBTemplate)portletRequest.getAttribute(
-			KBWebKeys.KNOWLEDGE_BASE_KB_TEMPLATE);
-
-		portletURL.setParameter(
-			"kbTemplateId", String.valueOf(kbTemplate.getKbTemplateId()));
-
-		return portletURL.toString();
+				return kbTemplate.getKbTemplateId();
+			}
+		).buildString();
 	}
 
 	@Override
@@ -85,26 +85,25 @@ public class EditKBTemplatePortletConfigurationIcon
 
 	@Override
 	public boolean isShow(PortletRequest portletRequest) {
-		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
-		PermissionChecker permissionChecker =
-			themeDisplay.getPermissionChecker();
-
-		KBTemplate kbTemplate = (KBTemplate)portletRequest.getAttribute(
-			KBWebKeys.KNOWLEDGE_BASE_KB_TEMPLATE);
-
 		try {
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)portletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
+
+			KBTemplate kbTemplate = (KBTemplate)portletRequest.getAttribute(
+				KBWebKeys.KNOWLEDGE_BASE_KB_TEMPLATE);
+
 			return _kbTemplateModelResourcePermission.contains(
-				permissionChecker, kbTemplate, KBActionKeys.UPDATE);
+				themeDisplay.getPermissionChecker(), kbTemplate,
+				KBActionKeys.UPDATE);
 		}
 		catch (PortalException portalException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(portalException, portalException);
+				_log.warn(portalException);
 			}
-		}
 
-		return false;
+			return false;
+		}
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -115,6 +114,9 @@ public class EditKBTemplatePortletConfigurationIcon
 	)
 	private ModelResourcePermission<KBTemplate>
 		_kbTemplateModelResourcePermission;
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private Portal _portal;

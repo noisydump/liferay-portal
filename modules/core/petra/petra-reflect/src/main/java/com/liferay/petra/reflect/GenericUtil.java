@@ -23,6 +23,10 @@ import java.lang.reflect.Type;
 public class GenericUtil {
 
 	public static Class<?> getGenericClass(Class<?> clazz) {
+		return getGenericClass(clazz, 0);
+	}
+
+	public static Class<?> getGenericClass(Class<?> clazz, int index) {
 		Type[] genericInterfaceTypes = clazz.getGenericInterfaces();
 
 		for (Type genericInterfaceType : genericInterfaceTypes) {
@@ -30,7 +34,14 @@ public class GenericUtil {
 				ParameterizedType parameterizedType =
 					(ParameterizedType)genericInterfaceType;
 
-				return (Class<?>)parameterizedType.getActualTypeArguments()[0];
+				Type[] actualArgumentTypes =
+					parameterizedType.getActualTypeArguments();
+
+				if (index >= actualArgumentTypes.length) {
+					return Object.class;
+				}
+
+				return (Class<?>)actualArgumentTypes[index];
 			}
 		}
 
@@ -44,9 +55,13 @@ public class GenericUtil {
 	}
 
 	public static Class<?> getGenericClass(Object object) {
+		return getGenericClass(object, 0);
+	}
+
+	public static Class<?> getGenericClass(Object object, int index) {
 		Class<?> clazz = object.getClass();
 
-		return getGenericClass(clazz);
+		return getGenericClass(clazz, index);
 	}
 
 	public static String getGenericClassName(Object object) {

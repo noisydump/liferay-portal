@@ -16,108 +16,34 @@ import {ClayButtonWithIcon} from '@clayui/button';
 import ClayEmptyState from '@clayui/empty-state';
 import {ClayInput, ClaySelect} from '@clayui/form';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
-import React, {useContext, useEffect, useState} from 'react';
+import React from 'react';
 import {withRouter} from 'react-router-dom';
 
-import {AppContext} from '../../AppContext.es';
 import Alert from '../../components/Alert.es';
-import Link from '../../components/Link.es';
 import PaginatedList from '../../components/PaginatedList.es';
-import useQueryParams from '../../hooks/useQueryParams.es';
-import {getTags} from '../../utils/client.es';
-import lang from '../../utils/lang.es';
-import {
-	dateToInternationalHuman,
-	historyPushWithSlug,
-	isWebCrawler,
-	useDebounceCallback,
-} from '../../utils/utils.es';
-
-function getOrderByOptions() {
-	return [
-		{
-			label: Liferay.Language.get('latest-created'),
-			value: 'latest-created',
-		},
-		{
-			label: Liferay.Language.get('number-of-usages'),
-			value: 'number-of-usages',
-		},
-	];
-}
+import TagsLayout from '../../components/TagsLayout.es';
+import useTags from '../../hooks/useTags.es';
 
 export default withRouter(({history, location}) => {
-	const context = useContext(AppContext);
+	const {
+		changePage,
+		context,
+		debounceCallback,
+		error,
+		loading,
+		orderBy,
+		orderByOptions,
+		page,
+		pageSize,
+		search,
+		searchBoxValue,
+		setLoading,
+		setOrderBy,
+		setSearchBoxValue,
+		tags,
+	} = useTags({history, location});
 
-	const [error, setError] = useState({});
-	const [searchBoxValue, setSearchBoxValue] = useState('');
-	const [loading, setLoading] = useState(true);
-	const [orderBy, setOrderBy] = useState('number-of-usages');
-	const [page, setPage] = useState(1);
-	const [pageSize, setPageSize] = useState(20);
-	const [search, setSearch] = useState('');
-	const [tags, setTags] = useState([]);
-
-	useEffect(() => {
-		getTags(orderBy, page, pageSize, search, context.siteKey)
-			.then(({data, loading}) => {
-				setTags(data || []);
-				setLoading(loading);
-				setSearchBoxValue(search);
-			})
-			.catch((error) => {
-				if (process.env.NODE_ENV === 'development') {
-					console.error(error);
-				}
-				setLoading(false);
-				setError({message: 'Loading Tags', title: 'Error'});
-			});
-	}, [orderBy, page, pageSize, search, context.siteKey]);
-
-	const queryParams = useQueryParams(location);
-
-	useEffect(() => {
-		setPage(+queryParams.get('page') || 1);
-	}, [queryParams]);
-
-	useEffect(() => {
-		setPageSize(+queryParams.get('pagesize') || 20);
-	}, [queryParams]);
-
-	useEffect(() => {
-		setSearch(queryParams.get('search') || '');
-	}, [queryParams]);
-
-	const historyPushParser = historyPushWithSlug(history.push);
-
-	function buildURL(needHashtag, search, page, pageSize) {
-		let pathname = window.location.pathname;
-
-		pathname = pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
-
-		let url = isWebCrawler()
-			? pathname + '/-/tags?'
-			: needHashtag
-			? pathname + '/#/tags?'
-			: '/tags?';
-
-		if (search) {
-			url += `search=${search}&`;
-		}
-
-		url += `page=${page}&pagesize=${pageSize}`;
-
-		return url;
-	}
-
-	const orderByOptions = getOrderByOptions();
-
-	const [debounceCallback] = useDebounceCallback((needHashtag, search) => {
-		setLoading(true);
-		historyPushParser(buildURL(needHashtag, search, 1, pageSize));
-	}, 500);
-
-	const hrefConstructor = (page) => buildURL(true, search, page, pageSize);
+	const linkTagPage = location.pathname.split('/')[1];
 
 	return (
 		<>
@@ -170,10 +96,7 @@ export default withRouter(({history, location}) => {
 									}
 									onChange={(event) => {
 										setSearchBoxValue(event.target.value);
-										debounceCallback(
-											false,
-											event.target.value
-										);
+										debounceCallback(event.target.value);
 									}}
 									placeholder={Liferay.Language.get('search')}
 									type="text"
@@ -186,12 +109,13 @@ export default withRouter(({history, location}) => {
 									tag="span"
 								>
 									{loading && <ClayLoadingIndicator small />}
+
 									{!loading &&
 										((!!search && (
 											<ClayButtonWithIcon
 												displayType="unstyled"
 												onClick={() => {
-													debounceCallback(false, '');
+													debounceCallback('');
 												}}
 												symbol="times-circle"
 												type="submit"
@@ -213,7 +137,12 @@ export default withRouter(({history, location}) => {
 					<PaginatedList
 						activeDelta={pageSize}
 						activePage={page}
-						changeDelta={setPageSize}
+						changeDelta={(pageSize) =>
+							changePage(search, page, pageSize)
+						}
+						changePage={(page) =>
+							changePage(search, page, pageSize)
+						}
 						data={tags}
 						emptyState={
 							<ClayEmptyState
@@ -223,60 +152,19 @@ export default withRouter(({history, location}) => {
 								)}
 							/>
 						}
-						hrefConstructor={hrefConstructor}
 						loading={loading}
 					>
 						{(tag) => (
-							<div
-								className="col-md-3 question-tags"
-								key={tag.id}
-							>
-								<Link
-									title={tag.name}
-									to={`/questions/tag/${tag.name}`}
-								>
-									<div className="card card-interactive card-interactive-primary card-type-template template-card-horizontal">
-										<div className="card-body">
-											<div className="card-row">
-												<div className="autofit-col autofit-col-expand">
-													<div className="autofit-section">
-														<div className="card-title">
-															<span className="text-truncate">
-																{tag.name}
-															</span>
-														</div>
-														{orderBy ===
-														'latest-created' ? (
-															<div>
-																{lang.sub(
-																	Liferay.Language.get(
-																		'created-on'
-																	),
-																	[
-																		dateToInternationalHuman(
-																			tag.dateCreated
-																		),
-																	]
-																)}
-															</div>
-														) : (
-															<div>
-																{lang.sub(
-																	Liferay.Language.get(
-																		'used-x-times'
-																	),
-																	[
-																		tag.keywordUsageCount,
-																	]
-																)}
-															</div>
-														)}
-													</div>
-												</div>
-											</div>
-										</div>
-									</div>
-								</Link>
+							<div className="col-md-4" key={tag.id}>
+								<TagsLayout
+									context={context.siteKey}
+									linkPage={linkTagPage}
+									orderBy={orderBy}
+									page={page}
+									pageSize={pageSize}
+									search={search}
+									tag={tag}
+								/>
 							</div>
 						)}
 					</PaginatedList>

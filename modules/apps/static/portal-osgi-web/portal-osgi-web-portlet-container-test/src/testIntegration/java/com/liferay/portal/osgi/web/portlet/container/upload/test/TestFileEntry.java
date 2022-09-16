@@ -21,6 +21,8 @@ import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.lock.Lock;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.repository.capabilities.Capability;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileShortcut;
@@ -50,8 +52,6 @@ public class TestFileEntry implements FileEntry {
 		_folderId = folderId;
 		_groupId = groupId;
 		_inputStream = inputStream;
-
-		_date = new Date();
 	}
 
 	@Override
@@ -106,6 +106,11 @@ public class TestFileEntry implements FileEntry {
 	}
 
 	@Override
+	public Date getExpirationDate() {
+		return null;
+	}
+
+	@Override
 	public String getExtension() {
 		return RandomTestUtil.randomString(3);
 	}
@@ -151,6 +156,10 @@ public class TestFileEntry implements FileEntry {
 			return DLAppLocalServiceUtil.getFolder(_folderId);
 		}
 		catch (PortalException portalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(portalException);
+			}
+
 			return null;
 		}
 	}
@@ -254,6 +263,11 @@ public class TestFileEntry implements FileEntry {
 	@Override
 	public long getRepositoryId() {
 		return DLFolderConstants.DEFAULT_PARENT_FOLDER_ID;
+	}
+
+	@Override
+	public Date getReviewDate() {
+		return null;
 	}
 
 	@Override
@@ -401,15 +415,7 @@ public class TestFileEntry implements FileEntry {
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(5);
-
-		sb.append(_groupId);
-		sb.append("_");
-		sb.append(_folderId);
-		sb.append("_");
-		sb.append(_fileName);
-
-		return sb.toString();
+		return StringBundler.concat(_groupId, "_", _folderId, "_", _fileName);
 	}
 
 	@Override
@@ -417,7 +423,9 @@ public class TestFileEntry implements FileEntry {
 		return this;
 	}
 
-	private final Date _date;
+	private static final Log _log = LogFactoryUtil.getLog(TestFileEntry.class);
+
+	private final Date _date = new Date();
 	private final String _fileName;
 	private final long _folderId;
 	private long _groupId;

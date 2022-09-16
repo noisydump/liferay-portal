@@ -12,8 +12,8 @@
  * details.
  */
 
+import {useIsMounted, usePrevious} from '@liferay/frontend-js-react-web';
 import classNames from 'classnames';
-import {useIsMounted, usePrevious} from 'frontend-js-react-web';
 import PropTypes from 'prop-types';
 import React, {useEffect, useState} from 'react';
 
@@ -24,7 +24,7 @@ function SlidingText({current, previous}) {
 	const maxLength = current.toString().length + 1;
 
 	const finishAnimation = () => {
-		if (isMounted) {
+		if (isMounted()) {
 			setAnimated(false);
 		}
 	};
@@ -50,6 +50,7 @@ function SlidingText({current, previous}) {
 			}}
 		>
 			<span className="current">{current}</span>
+
 			{animated && <span className="previous">{previous}</span>}
 		</span>
 	);

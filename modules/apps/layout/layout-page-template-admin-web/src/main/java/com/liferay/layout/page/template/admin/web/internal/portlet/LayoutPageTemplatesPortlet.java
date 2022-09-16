@@ -14,16 +14,21 @@
 
 package com.liferay.layout.page.template.admin.web.internal.portlet;
 
+import com.liferay.asset.display.page.service.AssetDisplayPageEntryService;
+import com.liferay.asset.kernel.service.AssetEntryService;
 import com.liferay.info.constants.InfoDisplayWebKeys;
 import com.liferay.info.item.InfoItemServiceTracker;
+import com.liferay.info.search.InfoSearchClassMapperTracker;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.layout.page.template.admin.constants.LayoutPageTemplateAdminPortletKeys;
 import com.liferay.layout.page.template.admin.web.internal.configuration.LayoutPageTemplateAdminWebConfiguration;
 import com.liferay.layout.page.template.admin.web.internal.constants.LayoutPageTemplateAdminWebKeys;
+import com.liferay.layout.page.template.admin.web.internal.display.context.AssetDisplayPageUsagesDisplayContext;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -35,6 +40,7 @@ import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.staging.StagingGroupHelper;
 
@@ -76,7 +82,8 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.init-param.template-path=/META-INF/resources/",
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + LayoutPageTemplateAdminPortletKeys.LAYOUT_PAGE_TEMPLATES,
-		"javax.portlet.resource-bundle=content.Language"
+		"javax.portlet.resource-bundle=content.Language",
+		"javax.portlet.version=3.0"
 	},
 	service = Portlet.class
 )
@@ -134,7 +141,7 @@ public class LayoutPageTemplatesPortlet extends MVCPortlet {
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(exception, exception);
+				_log.warn(exception);
 			}
 		}
 
@@ -142,10 +149,24 @@ public class LayoutPageTemplatesPortlet extends MVCPortlet {
 			InfoDisplayWebKeys.INFO_ITEM_SERVICE_TRACKER,
 			_infoItemServiceTracker);
 		renderRequest.setAttribute(
+			LayoutPageTemplateAdminWebKeys.
+				ASSET_DISPLAY_PAGE_USAGES_DISPLAY_CONTEXT,
+			new AssetDisplayPageUsagesDisplayContext(
+				_assetDisplayPageEntryService, _assetEntryService,
+				_portal.getHttpServletRequest(renderRequest),
+				_infoSearchClassMapperTracker, _infoItemServiceTracker, _portal,
+				renderRequest, renderResponse));
+		renderRequest.setAttribute(
 			LayoutPageTemplateAdminWebConfiguration.class.getName(),
 			_layoutPageTemplateAdminWebConfiguration);
 		renderRequest.setAttribute(
 			LayoutPageTemplateAdminWebKeys.ITEM_SELECTOR, _itemSelector);
+
+		if ((scopeGroup != null) && scopeGroup.isCompany()) {
+			renderResponse.setTitle(
+				_language.get(
+					themeDisplay.getLocale(), "widget-page-templates"));
+		}
 
 		super.doDispatch(renderRequest, renderResponse);
 	}
@@ -154,10 +175,22 @@ public class LayoutPageTemplatesPortlet extends MVCPortlet {
 		LayoutPageTemplatesPortlet.class);
 
 	@Reference
+	private AssetDisplayPageEntryService _assetDisplayPageEntryService;
+
+	@Reference
+	private AssetEntryService _assetEntryService;
+
+	@Reference
 	private InfoItemServiceTracker _infoItemServiceTracker;
 
 	@Reference
+	private InfoSearchClassMapperTracker _infoSearchClassMapperTracker;
+
+	@Reference
 	private ItemSelector _itemSelector;
+
+	@Reference
+	private Language _language;
 
 	private volatile LayoutPageTemplateAdminWebConfiguration
 		_layoutPageTemplateAdminWebConfiguration;
@@ -168,6 +201,9 @@ public class LayoutPageTemplatesPortlet extends MVCPortlet {
 
 	@Reference
 	private LayoutPrototypeLocalService _layoutPrototypeLocalService;
+
+	@Reference
+	private Portal _portal;
 
 	@Reference
 	private StagingGroupHelper _stagingGroupHelper;

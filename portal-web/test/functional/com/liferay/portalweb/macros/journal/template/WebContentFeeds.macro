@@ -9,7 +9,7 @@ definition {
 
 		Type(
 			locator1 = "TextInput#TARGET_PAGE_FRIENDLY_URL",
-			value1 = "${pageFriendlyUrl}");
+			value1 = "${pageFriendlyURL}");
 
 		Panel.expandPanel(panel = "Web Content Constraints");
 
@@ -23,14 +23,14 @@ definition {
 	macro selectStructure {
 		var key_ddlDataDefinitionName = "${structureName}";
 
-		AssertClick(
-			locator1 = "DDMEditTemplate#DETAILS_SELECT_STRUCTURE",
-			value1 = "Select");
+		Click(
+			buttonId = "selectDDMStructure",
+			locator1 = "Button#BUTTON_ID");
 
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		ClickNoError(
-			locator1 = "DDMSelectStructure#DDM_STRUCTURE_TABLE_NAME_LINK",
+			locator1 = "DDMSelectFeed#FEED_STRUCTURE_TABLE_NAME",
 			value1 = "${structureName}");
 
 		AssertConfirm(value1 = "Selecting a new structure changes the available templates and available feed item content. Do you want to proceed?");

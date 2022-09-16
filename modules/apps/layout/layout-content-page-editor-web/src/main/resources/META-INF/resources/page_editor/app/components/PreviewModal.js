@@ -13,24 +13,27 @@
  */
 
 import {ClaySelect} from '@clayui/form';
-import ClayLayout from '@clayui/layout';
 import ClayModal from '@clayui/modal';
 import {addParams} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useMemo, useState} from 'react';
 
+import {useId} from '../../core/hooks/useId';
+import {LAYOUT_TYPES} from '../config/constants/layoutTypes';
 import {VIEWPORT_SIZES} from '../config/constants/viewportSizes';
 import {config} from '../config/index';
+import {useDisplayPagePreviewItem} from '../contexts/DisplayPagePreviewItemContext';
+import {useSelector} from '../contexts/StoreContext';
 import selectLanguageId from '../selectors/selectLanguageId';
 import selectSegmentsExperienceId from '../selectors/selectSegmentsExperienceId';
-import {useSelector} from '../store/index';
-import {useId} from '../utils/useId';
+import {DisplayPagePreviewItemSelectorContent} from './DisplayPagePreviewItemSelector';
 import Translation from './Translation';
 import ViewportSizeSelector from './ViewportSizeSelector';
 
 const PreviewModal = ({observer}) => {
 	const initialSegmentsExperienceId = useSelector(selectSegmentsExperienceId);
 	const [languageId, setLanguageId] = useState(useSelector(selectLanguageId));
+	const displayPagePreviewItem = useDisplayPagePreviewItem();
 
 	const [viewportSize, setViewportSize] = useState(
 		useSelector((state) => state.selectedViewportSize)
@@ -46,17 +49,32 @@ const PreviewModal = ({observer}) => {
 	);
 	const experienceSelectId = useId();
 
-	const previewURL = useMemo(
-		() =>
-			addParams(
+	const previewURL = useMemo(() => {
+		let nextURL = addParams(
+			{
+				[`${config.portletNamespace}languageId`]: languageId,
+				[`${config.portletNamespace}segmentsExperienceId`]: segmentsExperienceId,
+			},
+			config.previewPageURL
+		);
+
+		if (
+			config.layoutType === LAYOUT_TYPES.display &&
+			displayPagePreviewItem
+		) {
+			nextURL = addParams(
 				{
-					[`${config.portletNamespace}languageId`]: languageId,
-					[`${config.portletNamespace}segmentsExperienceId`]: segmentsExperienceId,
+					[`${config.portletNamespace}className`]: displayPagePreviewItem
+						.data.className,
+					[`${config.portletNamespace}classPK`]: displayPagePreviewItem
+						.data.classPK,
 				},
-				config.previewPageURL
-			),
-		[languageId, segmentsExperienceId]
-	);
+				nextURL
+			);
+		}
+
+		return nextURL;
+	}, [languageId, segmentsExperienceId, displayPagePreviewItem]);
 
 	const modalBodyWidth = useMemo(() => {
 		const {maxWidth, minWidth} = config.availableViewportSizes[
@@ -71,99 +89,82 @@ const PreviewModal = ({observer}) => {
 	return (
 		<ClayModal
 			className="page-editor__preview-modal"
+			containerProps={{className: 'cadmin'}}
 			observer={observer}
 			size="full-screen"
 		>
 			<ClayModal.Header>
-				<ClayLayout.ContainerFluid size={false}>
-					<ClayModal.Title className="pb-3 pt-3">
-						<div className="d-flex justify-content-between page-editor__theme-adapter-buttons responsive-mode">
-							<ul className="navbar-nav page-editor__preview-modal__part">
-								{availableSegmentsExperiences && (
-									<li className="mr-2 nav-item">
-										<div className="align-middle d-inline-flex">
-											<label
-												className="mr-2 mt-1"
-												htmlFor={experienceSelectId}
-											>
-												{Liferay.Language.get(
-													'experience'
-												)}
-											</label>
+				<div className="d-flex flex-grow-1 justify-content-between page-editor__theme-adapter-buttons responsive-mode">
+					<ul className="justify-content-start navbar-nav page-editor__preview-modal__part">
+						{availableSegmentsExperiences && (
+							<li className="mr-2 nav-item">
+								<div className="align-middle d-inline-flex">
+									<label
+										className="mr-2 mt-1 w-100"
+										htmlFor={experienceSelectId}
+									>
+										{Liferay.Language.get('experience')}
+									</label>
 
-											<ClaySelect
-												aria-label="Experience"
-												className="form-control-sm"
-												id={experienceSelectId}
-												onChange={(event) => {
-													setSegmentsExperienceId(
-														event.target.options[
-															event.target
-																.selectedIndex
-														].value
-													);
-												}}
-												value={segmentsExperienceId}
-											>
-												{availableSegmentsExperiences &&
-													Object.keys(
-														availableSegmentsExperiences
-													).map(
-														(
+									<ClaySelect
+										aria-label="Experience"
+										className="form-control-sm"
+										id={experienceSelectId}
+										onChange={(event) => {
+											setSegmentsExperienceId(
+												event.target.options[
+													event.target.selectedIndex
+												].value
+											);
+										}}
+										value={segmentsExperienceId}
+									>
+										{availableSegmentsExperiences &&
+											Object.keys(
+												availableSegmentsExperiences
+											).map((segmentsExperienceId) => (
+												<ClaySelect.Option
+													key={segmentsExperienceId}
+													label={
+														availableSegmentsExperiences[
 															segmentsExperienceId
-														) => (
-															<ClaySelect.Option
-																key={
-																	segmentsExperienceId
-																}
-																label={
-																	availableSegmentsExperiences[
-																		segmentsExperienceId
-																	].name
-																}
-																value={
-																	segmentsExperienceId
-																}
-															/>
-														)
-													)}
-											</ClaySelect>
-										</div>
-									</li>
-								)}
+														].name
+													}
+													value={segmentsExperienceId}
+												/>
+											))}
+									</ClaySelect>
+								</div>
+							</li>
+						)}
 
-								<li className="nav-item">
-									<Translation
-										availableLanguages={
-											config.availableLanguages
-										}
-										defaultLanguageId={
-											config.defaultLanguageId
-										}
-										dispatch={({
-											languageId: nextLanguageId,
-										}) => setLanguageId(nextLanguageId)}
-										fragmentEntryLinks={fragmentEntryLinks}
-										languageId={languageId}
-										segmentsExperienceId={
-											segmentsExperienceId
-										}
-										showNotTranslated={false}
-									/>
-								</li>
-							</ul>
+						<li className="nav-item">
+							<Translation
+								availableLanguages={config.availableLanguages}
+								defaultLanguageId={config.defaultLanguageId}
+								dispatch={({languageId: nextLanguageId}) =>
+									setLanguageId(nextLanguageId)
+								}
+								fragmentEntryLinks={fragmentEntryLinks}
+								languageId={languageId}
+								segmentsExperienceId={segmentsExperienceId}
+							/>
+						</li>
+					</ul>
 
-							<div className="page-editor__preview-modal__part">
-								<ViewportSizeSelector
-									onSizeSelected={setViewportSize}
-									selectedSize={viewportSize}
-								/>
-							</div>
+					<div className="page-editor__preview-modal__part">
+						<ViewportSizeSelector
+							onSizeSelected={setViewportSize}
+							selectedSize={viewportSize}
+						/>
+					</div>
 
-							<div className="page-editor__preview-modal__part"></div>
-						</div>
-					</ClayModal.Title>
-				</ClayLayout.ContainerFluid>
+					<div className="justify-content-end page-editor__preview-modal__part pr-3">
+						{config.layoutType === LAYOUT_TYPES.display ? (
+							<DisplayPagePreviewItemSelectorContent />
+						) : null}
+					</div>
+				</div>
 			</ClayModal.Header>
 
 			<ClayModal.Body

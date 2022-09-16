@@ -23,7 +23,6 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.Portlet;
-import com.liferay.portal.kernel.model.PortletPreferencesIds;
 import com.liferay.portal.kernel.portlet.InvokerPortlet;
 import com.liferay.portal.kernel.portlet.LiferayRenderRequest;
 import com.liferay.portal.kernel.portlet.LiferayRenderResponse;
@@ -150,12 +149,8 @@ public class CollectionItemsDetailProductNavigationControlMenuEntry
 	}
 
 	@Override
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.layout.type.controller.collection)",
-		unbind = "-"
-	)
-	public void setServletContext(ServletContext servletContext) {
-		super.setServletContext(servletContext);
+	protected ServletContext getServletContext() {
+		return _servletContext;
 	}
 
 	private LiferayRenderRequest _createLiferayRenderRequest(
@@ -172,13 +167,10 @@ public class CollectionItemsDetailProductNavigationControlMenuEntry
 		InvokerPortlet invokerPortlet = PortletInstanceFactoryUtil.create(
 			portlet, servletContext);
 
-		PortletPreferencesIds portletPreferencesIds =
-			PortletPreferencesFactoryUtil.getPortletPreferencesIds(
-				httpServletRequest, portlet.getPortletId());
-
 		PortletPreferences portletPreferences =
 			_portletPreferencesLocalService.getStrictPreferences(
-				portletPreferencesIds);
+				PortletPreferencesFactoryUtil.getPortletPreferencesIds(
+					httpServletRequest, portlet.getPortletId()));
 
 		PortletConfig portletConfig = PortletConfigFactoryUtil.create(
 			portlet, servletContext);
@@ -230,5 +222,10 @@ public class CollectionItemsDetailProductNavigationControlMenuEntry
 
 	@Reference
 	private PortletPreferencesLocalService _portletPreferencesLocalService;
+
+	@Reference(
+		target = "(osgi.web.symbolicname=com.liferay.layout.type.controller.collection)"
+	)
+	private ServletContext _servletContext;
 
 }

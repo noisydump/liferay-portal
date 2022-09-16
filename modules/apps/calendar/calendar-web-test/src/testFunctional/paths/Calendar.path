@@ -2,11 +2,13 @@
 <head>
 <title>Calendar</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">Calendar</td></tr>
 </thead>
+
 <tbody>
 <tr>
 	<td>ADD_EVENT_BUTTON</td>
@@ -33,7 +35,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--VIEW-->
+
 <tr>
 	<td>VIEW_TODAY_BUTTON</td>
 	<td>//button[contains(@class,'scheduler-base-today') and contains(@class,'btn')]</td>
@@ -90,11 +94,18 @@
 	<td></td>
 </tr>
 <tr>
+	<td>VIEW_SELECTED_NAME_LANGUAGE</td>
+	<td>//span[contains(@class,'btn-section') and contains(.,'${key_locale}')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td></td>
 	<td></td>
 	<td></td>
 </tr>
+
 <!--SMALL_CALENDAR-->
+
 <tr>
 	<td>SMALL_CALENDAR_PREVIOUS</td>
 	<td>//a[contains(@class,'yui3-calendarnav-prevmonth')]</td>
@@ -125,7 +136,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--MY_CALENDARS-->
+
 <tr>
 	<td>MY_CALENDARS_CALENDAR</td>
 	<td>//div[contains(@class,'toggler-header-expanded') and contains(.,'My Calendars')]/following-sibling::div[contains(.,'${key_userCalendarName}')]//span</td>
@@ -141,7 +154,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--MY_CALENDARS_MENULIST-->
+
 <tr>
 	<td>MY_CALENDARS_MENULIST_ADD_CALENDAR</td>
 	<td>//li[@class='simple-menu-item' and @data-id='add']</td>
@@ -157,7 +172,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--MY_CALENDARS_CALENDAR-->
+
 <tr>
 	<td>MY_CALENDARS_CALENDAR_PRIMARY_COLOR</td>
 	<td>//div[contains(@id,'myCalendarList')]/div/div/div[contains(@style,'${key_color}')]</td>
@@ -208,7 +225,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--CURRENT_SITE_CALENDARS-->
+
 <tr>
 	<td>CURRENT_SITE_CALENDARS_HEADER</td>
 	<td>//div[contains(@class,'toggler-header-expanded') and contains(.,"${key_siteName}'s Calendars")]/span[@class='calendar-portlet-list-text']</td>
@@ -229,7 +248,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--CURRENT_SITE_CALENDARS_CALENDAR-->
+
 <tr>
 	<td>CURRENT_SITE_CALENDARS_CALENDAR_PRIMARY</td>
 	<td>//div[contains(@id,'siteCalendarList')]/div/div/span[contains(.,'${key_calendarName}')]</td>
@@ -275,7 +296,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--OTHER_CALENDARS-->
+
 <tr>
 	<td>OTHER_CALENDARS_SEARCH</td>
 	<td>//input[contains(@id,'addOtherCalendar')]</td>
@@ -291,7 +314,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--OTHER_CALENDARS_CALENDAR-->
+
 <tr>
 	<td>OTHER_CALENDARS_CALENDAR</td>
 	<td>//div[contains(@id,'otherCalendarList')]/div/div[contains(.,'${key_calendarName}')]</td>
@@ -317,7 +342,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--OTHER_CALENDARS_CALENDAR_MENULIST-->
+
 <tr>
 	<td>OTHER_CALENDARS_CALENDAR_MENULIST_ADD_EVENT</td>
 	<td>//div[not(contains(@class,'simple-menu-hidden hide'))]/ul/li[@class='simple-menu-item' and @data-id='addEvent']</td>
@@ -338,7 +365,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--SCHEDULER_VIEW_DAY-->
+
 <tr>
 	<td>SCHEDULER_VIEW_DAY</td>
 	<td>//div[contains(@class,'scheduler-view scheduler-view-day') and not(contains(@class,'scheduler-view-week'))]</td>
@@ -369,7 +398,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--SCHEDULER_VIEW_WEEK-->
+
 <tr>
 	<td>SCHEDULER_VIEW_WEEK</td>
 	<td>//div[contains(@class,'scheduler-view scheduler-view-day scheduler-view-week')]</td>
@@ -405,7 +436,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--SCHEDULER_VIEW_MONTH-->
+
 <tr>
 	<td>SCHEDULER_VIEW_MONTH</td>
 	<td>//div[contains(@class,'scheduler-view scheduler-view-table scheduler-view-month scheduler-month-view')]</td>
@@ -418,7 +451,7 @@
 </tr>
 <tr>
 	<td>SCHEDULER_VIEW_MONTH_DATE</td>
-	<td>//div[contains(@class,'calendar-header-label')]</td>
+	<td>//div[contains(@class,'calendar-header')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -441,7 +474,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--SCHEDULER_VIEW_AGENDA-->
+
 <tr>
 	<td>SCHEDULER_VIEW_AGENDA</td>
 	<td>//div[contains(@class,'scheduler-view scheduler-view-agenda') and not(contains(@class,'hide'))]</td>
@@ -452,7 +487,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--SCHEDULER_EVENT-->
+
 <tr>
 	<td>SCHEDULER_EVENT_ALL_DAY</td>
 	<td>//div[contains(@class,'scheduler-event-all-day calendar-portlet-event') and contains(@data-startdate,'${key_startDate}') and contains(@data-starttime,'${key_startDateTime}') and contains(@data-enddate,'${key_endDate}') and contains(@data-endtime,'${key_endDateTime}')]</td>
@@ -496,6 +533,11 @@
 <tr>
 	<td>SCHEDULER_EVENT_SPECIFIC_ALL_DAY</td>
 	<td>//div[contains(@class,'calendar-portlet-event')]/div[contains(@class,'scheduler-event-content') and contains(.,'${key_eventTitle}')]/../../div</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SCHEDULER_EVENT_SPECIFIC_ALL_DAY_2</td>
+	<td>//div[contains(@class,'calendar-portlet-event')]/div[contains(@class,'scheduler-event-content') and contains(.,'${key_eventTitle}')]/../../div[2]</td>
 	<td></td>
 </tr>
 <tr>
@@ -568,7 +610,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--SCHEDULER_EVENT_DIALOG_BOX-->
+
 <tr>
 	<td>SCHEDULER_EVENT_DIALOG_BOX_EVENT_TITLE</td>
 	<td>//form[@id='schedulerEventRecorderForm']/div/div/div/div/input</td>
@@ -634,7 +678,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--SCHEDULER_VIEW-->
+
 <tr>
 	<td>SCHEDULER_VIEW_EVENT_FIRST_EVENT_AGENDA_VIEW</td>
 	<td>//div[@class='scheduler-view-agenda-events']/div[contains(@class,'header-first')]/following-sibling::div[contains(.,'${key_eventTitle}')]</td>
@@ -678,6 +724,11 @@
 <tr>
 	<td>SCHEDULER_VIEW_EVENT_NOT_TODAY</td>
 	<td>//td[not(contains(@class,'scheduler-today')) and contains(.,'${key_eventTitle}')]//div[@class='scheduler-event-content']/../../div</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PORTLET_TITLE</td>
+	<td>//div[contains(@class, 'portlet-column-only')]//h2[contains(@class,'portlet-title') and contains(.,'${key_portletTitle}')]</td>
 	<td></td>
 </tr>
 </tbody>

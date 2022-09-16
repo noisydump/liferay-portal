@@ -10,49 +10,46 @@
  */
 
 import ClayIcon from '@clayui/icon';
-import React, {useContext, useMemo} from 'react';
+import ClayPanel from '@clayui/panel';
+import React, {useContext} from 'react';
 
-import Panel from '../../../shared/components/Panel.es';
 import ContentView from '../../../shared/components/content-view/ContentView.es';
 import ReloadButton from '../../../shared/components/list/ReloadButton.es';
 import PromisesResolver from '../../../shared/components/promises-resolver/PromisesResolver.es';
 import ChildLink from '../../../shared/components/router/ChildLink.es';
 import {AppContext} from '../../AppContext.es';
-import {Table} from './PerformanceByAssigneeCardTable.es';
+import Table from './PerformanceByAssigneeCardTable.es';
 
-const Body = ({filtered, items, totalCount}) => {
-	const statesProps = useMemo(
-		() => ({
-			emptyProps: {
-				className: 'mt-5 py-8',
-				filtered,
-				hideAnimation: true,
-				messageClassName: 'small',
-			},
-			errorProps: {
-				actionButton: <ReloadButton />,
-				className: 'mt-4 py-8',
-				hideAnimation: true,
-				message: Liferay.Language.get(
-					'there-was-a-problem-retrieving-data-please-try-reloading-the-page'
-				),
-				messageClassName: 'small',
-			},
-			loadingProps: {className: 'mt-4 py-8'},
-		}),
-		[filtered]
-	);
+function Body({filtered, items, totalCount}) {
+	const statesProps = {
+		emptyProps: {
+			className: 'mt-5 py-8',
+			filtered,
+			hideAnimation: true,
+			messageClassName: 'small',
+		},
+		errorProps: {
+			actionButton: <ReloadButton />,
+			className: 'mt-4 py-8',
+			hideAnimation: true,
+			message: Liferay.Language.get(
+				'there-was-a-problem-retrieving-data-please-try-reloading-the-page'
+			),
+			messageClassName: 'small',
+		},
+		loadingProps: {className: 'mt-4 py-8'},
+	};
 
 	return (
-		<Panel.Body>
+		<ClayPanel.Body>
 			<ContentView {...statesProps}>
 				{totalCount > 0 && <Body.Table items={items} />}
 			</ContentView>
-		</Panel.Body>
+		</ClayPanel.Body>
 	);
-};
+}
 
-const Footer = ({processId, processStep, timeRange, totalCount}) => {
+function Footer({processId, processStep, timeRange, totalCount}) {
 	const {defaultDelta} = useContext(AppContext);
 	const filters = {};
 	const {dateEnd, dateStart, key} = timeRange;
@@ -73,7 +70,7 @@ const Footer = ({processId, processStep, timeRange, totalCount}) => {
 	return (
 		<PromisesResolver.Resolved>
 			{totalCount > 0 ? (
-				<Panel.Footer elementClasses="fixed-bottom">
+				<ClayPanel.Footer className="fixed-bottom">
 					<div className="mb-1 text-right">
 						<ChildLink
 							className="border-0 btn btn-secondary btn-sm"
@@ -89,11 +86,11 @@ const Footer = ({processId, processStep, timeRange, totalCount}) => {
 							<ClayIcon symbol="caret-right-l" />
 						</ChildLink>
 					</div>
-				</Panel.Footer>
+				</ClayPanel.Footer>
 			) : null}
 		</PromisesResolver.Resolved>
 	);
-};
+}
 
 Body.Table = Table;
 

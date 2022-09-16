@@ -18,11 +18,14 @@ import com.liferay.commerce.product.model.CPSpecificationOption;
 import com.liferay.commerce.product.options.web.internal.servlet.taglib.ui.constants.CPSpecificationOptionFormNavigatorConstants;
 import com.liferay.frontend.taglib.form.navigator.BaseJSPFormNavigatorEntry;
 import com.liferay.frontend.taglib.form.navigator.FormNavigatorEntry;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 
 import java.util.Locale;
 
+import javax.servlet.ServletContext;
+
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Andrea Di Giorgi
@@ -53,12 +56,20 @@ public class CPSpecificationOptionDetailsFormNavigatorEntry
 
 	@Override
 	public String getLabel(Locale locale) {
-		return LanguageUtil.get(locale, "details");
+		return _language.get(locale, "details");
+	}
+
+	@Override
+	public ServletContext getServletContext() {
+		return null;
 	}
 
 	@Override
 	protected String getJspPath() {
 		return "/specification_option/details.jsp";
 	}
+
+	@Reference
+	private Language _language;
 
 }

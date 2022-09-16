@@ -25,8 +25,7 @@ import com.liferay.portal.kernel.util.Props;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.ProxyFactory;
 import com.liferay.portal.kernel.util.ProxyUtil;
-import com.liferay.registry.BasicRegistryImpl;
-import com.liferay.registry.RegistryUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.io.Serializable;
 
@@ -34,6 +33,8 @@ import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -41,10 +42,13 @@ import org.junit.Test;
  */
 public class EntityCacheImplTest {
 
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
 	@Before
 	public void setUp() {
-		RegistryUtil.setRegistry(new BasicRegistryImpl());
-
 		_classLoader = EntityCacheImplTest.class.getClassLoader();
 		_nullModel = ReflectionTestUtil.getFieldValue(
 			BasePersistenceImpl.class, "nullModel");
@@ -121,10 +125,9 @@ public class EntityCacheImplTest {
 
 		entityCacheImpl.putResult(EntityCacheImplTest.class, 12345, _nullModel);
 
-		Serializable result = entityCacheImpl.getResult(
-			EntityCacheImplTest.class, 12345);
-
-		Assert.assertSame(_nullModel, result);
+		Assert.assertSame(
+			_nullModel,
+			entityCacheImpl.getResult(EntityCacheImplTest.class, 12345));
 	}
 
 	private ClassLoader _classLoader;

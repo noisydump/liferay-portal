@@ -36,7 +36,6 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Validator;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -74,6 +73,18 @@ public class DataDefinitionDDMFormUtil {
 		return ddmForm;
 	}
 
+	private static void _addOption(
+		DDMFormFieldOptions ddmFormFieldOptions, JSONObject jsonObject,
+		Locale locale) {
+
+		ddmFormFieldOptions.addOptionLabel(
+			JSONUtil.getValueAsString(jsonObject, "Object/value"), locale,
+			JSONUtil.getValueAsString(jsonObject, "Object/label"));
+		ddmFormFieldOptions.addOptionReference(
+			JSONUtil.getValueAsString(jsonObject, "Object/value"),
+			JSONUtil.getValueAsString(jsonObject, "Object/reference"));
+	}
+
 	private static DDMFormFieldOptions _getDDMFormFieldOptions(
 		Locale locale, Map<String, ?> options) {
 
@@ -93,9 +104,16 @@ public class DataDefinitionDDMFormUtil {
 
 				for (Object curValue : values) {
 					try {
-						JSONObject jsonObject =
-							JSONFactoryUtil.createJSONObject(
+						JSONObject jsonObject = null;
+
+						if (curValue instanceof Map) {
+							jsonObject = JSONFactoryUtil.createJSONObject(
+								(Map<?, ?>)curValue);
+						}
+						else {
+							jsonObject = JSONFactoryUtil.createJSONObject(
 								curValue.toString());
+						}
 
 						ddmFormFieldOptions.addOptionLabel(
 							jsonObject.getString("value"),
@@ -107,14 +125,19 @@ public class DataDefinitionDDMFormUtil {
 					}
 					catch (JSONException jsonException) {
 						if (_log.isDebugEnabled()) {
-							_log.debug(jsonException, jsonException);
+							_log.debug(jsonException);
 						}
 					}
 				}
 			}
 			else if (value instanceof List) {
 				for (Object option : (List<Object>)value) {
-					if (option instanceof Map) {
+					if (option instanceof JSONObject) {
+						_addOption(
+							ddmFormFieldOptions, (JSONObject)option,
+							LocaleUtil.fromLanguageId(entry.getKey()));
+					}
+					else if (option instanceof Map) {
 						ddmFormFieldOptions.addOptionLabel(
 							MapUtil.getString((Map<String, ?>)option, "value"),
 							LocaleUtil.fromLanguageId(entry.getKey()),
@@ -130,21 +153,13 @@ public class DataDefinitionDDMFormUtil {
 								JSONFactoryUtil.createJSONObject(
 									option.toString());
 
-							ddmFormFieldOptions.addOptionLabel(
-								JSONUtil.getValueAsString(
-									optionJSONObject, "Object/value"),
-								LocaleUtil.fromLanguageId(entry.getKey()),
-								JSONUtil.getValueAsString(
-									optionJSONObject, "Object/label"));
-							ddmFormFieldOptions.addOptionReference(
-								JSONUtil.getValueAsString(
-									optionJSONObject, "Object/value"),
-								JSONUtil.getValueAsString(
-									optionJSONObject, "Object/reference"));
+							_addOption(
+								ddmFormFieldOptions, optionJSONObject,
+								LocaleUtil.fromLanguageId(entry.getKey()));
 						}
 						catch (JSONException jsonException) {
 							if (_log.isDebugEnabled()) {
-								_log.debug(jsonException, jsonException);
+								_log.debug(jsonException);
 							}
 						}
 					}
@@ -210,26 +225,10 @@ public class DataDefinitionDDMFormUtil {
 			_toDDMFormFields(
 				dataDefinitionField.getNestedDataDefinitionFields(),
 				ddmFormFieldTypeServicesTracker, languageId));
-
-		Map<String, Object> defaultValue =
-			dataDefinitionField.getDefaultValue();
-
-		if (defaultValue != null) {
-			defaultValue.forEach(
-				(key, value) -> {
-					if (value instanceof ArrayList) {
-						value = String.valueOf(
-							JSONFactoryUtil.createJSONArray((ArrayList)value));
-					}
-
-					defaultValue.put(key, value);
-				});
-		}
-
 		ddmFormField.setPredefinedValue(
 			LocalizedValueUtil.toLocalizedValue(
-				defaultValue, LocaleUtil.fromLanguageId(languageId)));
-
+				dataDefinitionField.getDefaultValue(),
+				LocaleUtil.fromLanguageId(languageId)));
 		ddmFormField.setReadOnly(
 			GetterUtil.getBoolean(dataDefinitionField.getReadOnly()));
 		ddmFormField.setRepeatable(
@@ -237,7 +236,7 @@ public class DataDefinitionDDMFormUtil {
 		ddmFormField.setRequired(
 			GetterUtil.getBoolean(dataDefinitionField.getRequired()));
 		ddmFormField.setShowLabel(
-			GetterUtil.getBoolean(dataDefinitionField.getShowLabel()));
+			GetterUtil.getBoolean(dataDefinitionField.getShowLabel(), true));
 		ddmFormField.setTip(
 			LocalizedValueUtil.toLocalizedValue(
 				dataDefinitionField.getTip(),

@@ -140,14 +140,14 @@ public class WikiExportImportPortletPreferencesProcessor
 			"hiddenNodes", null);
 
 		for (String hiddenNodeName : StringUtil.split(hiddenNodeNames)) {
-			exportNode(portletDataContext, group, hiddenNodeName);
+			_exportNode(portletDataContext, group, hiddenNodeName);
 		}
 
 		String visibleNodeNames = portletPreferences.getValue(
 			"visibleNodes", null);
 
 		for (String visibleNodeName : StringUtil.split(visibleNodeNames)) {
-			exportNode(portletDataContext, group, visibleNodeName);
+			_exportNode(portletDataContext, group, visibleNodeName);
 		}
 
 		return portletPreferences;
@@ -203,7 +203,7 @@ public class WikiExportImportPortletPreferencesProcessor
 		return portletPreferences;
 	}
 
-	protected void exportNode(
+	private void _exportNode(
 			PortletDataContext portletDataContext, Group group, String nodeName)
 		throws PortletDataException {
 
@@ -228,31 +228,13 @@ public class WikiExportImportPortletPreferencesProcessor
 			portletDataContext, portletDataContext.getPortletId(), node);
 	}
 
-	@Reference(unbind = "-")
-	protected void setGroupLocalService(GroupLocalService groupLocalService) {
-		_groupLocalService = groupLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setWikiNodeLocalService(
-		WikiNodeLocalService wikiNodeLocalService) {
-
-		_wikiNodeLocalService = wikiNodeLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setWikiPageLocalService(
-		WikiPageLocalService wikiPageLocalService) {
-
-		_wikiPageLocalService = wikiPageLocalService;
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		WikiExportImportPortletPreferencesProcessor.class);
 
 	@Reference
 	private ExportImportHelper _exportImportHelper;
 
+	@Reference
 	private GroupLocalService _groupLocalService;
 
 	@Reference(target = "(name=PortletDisplayTemplateExporter)")
@@ -268,7 +250,10 @@ public class WikiExportImportPortletPreferencesProcessor
 	private WikiCommentsAndRatingsExporterImporterCapability
 		_wikiCommentsAndRatingsExporterImporterCapability;
 
+	@Reference
 	private WikiNodeLocalService _wikiNodeLocalService;
+
+	@Reference
 	private WikiPageLocalService _wikiPageLocalService;
 
 	@Reference(target = "(javax.portlet.name=" + WikiPortletKeys.WIKI + ")")

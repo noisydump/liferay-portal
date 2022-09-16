@@ -20,12 +20,16 @@ import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.service.BaseServiceImpl;
 import com.liferay.portal.kernel.service.ThemeService;
-import com.liferay.portal.kernel.service.persistence.PluginSettingPersistence;
+import com.liferay.portal.kernel.service.ThemeServiceUtil;
 import com.liferay.portal.kernel.util.InfrastructureUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+
+import java.lang.reflect.Field;
 
 import javax.sql.DataSource;
 
@@ -46,7 +50,7 @@ public abstract class ThemeServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>ThemeService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.kernel.service.ThemeServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>ThemeService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>ThemeServiceUtil</code>.
 	 */
 
 	/**
@@ -112,99 +116,12 @@ public abstract class ThemeServiceBaseImpl
 		this.counterLocalService = counterLocalService;
 	}
 
-	/**
-	 * Returns the layout template local service.
-	 *
-	 * @return the layout template local service
-	 */
-	public com.liferay.portal.kernel.service.LayoutTemplateLocalService
-		getLayoutTemplateLocalService() {
-
-		return layoutTemplateLocalService;
-	}
-
-	/**
-	 * Sets the layout template local service.
-	 *
-	 * @param layoutTemplateLocalService the layout template local service
-	 */
-	public void setLayoutTemplateLocalService(
-		com.liferay.portal.kernel.service.LayoutTemplateLocalService
-			layoutTemplateLocalService) {
-
-		this.layoutTemplateLocalService = layoutTemplateLocalService;
-	}
-
-	/**
-	 * Returns the plugin setting local service.
-	 *
-	 * @return the plugin setting local service
-	 */
-	public com.liferay.portal.kernel.service.PluginSettingLocalService
-		getPluginSettingLocalService() {
-
-		return pluginSettingLocalService;
-	}
-
-	/**
-	 * Sets the plugin setting local service.
-	 *
-	 * @param pluginSettingLocalService the plugin setting local service
-	 */
-	public void setPluginSettingLocalService(
-		com.liferay.portal.kernel.service.PluginSettingLocalService
-			pluginSettingLocalService) {
-
-		this.pluginSettingLocalService = pluginSettingLocalService;
-	}
-
-	/**
-	 * Returns the plugin setting remote service.
-	 *
-	 * @return the plugin setting remote service
-	 */
-	public com.liferay.portal.kernel.service.PluginSettingService
-		getPluginSettingService() {
-
-		return pluginSettingService;
-	}
-
-	/**
-	 * Sets the plugin setting remote service.
-	 *
-	 * @param pluginSettingService the plugin setting remote service
-	 */
-	public void setPluginSettingService(
-		com.liferay.portal.kernel.service.PluginSettingService
-			pluginSettingService) {
-
-		this.pluginSettingService = pluginSettingService;
-	}
-
-	/**
-	 * Returns the plugin setting persistence.
-	 *
-	 * @return the plugin setting persistence
-	 */
-	public PluginSettingPersistence getPluginSettingPersistence() {
-		return pluginSettingPersistence;
-	}
-
-	/**
-	 * Sets the plugin setting persistence.
-	 *
-	 * @param pluginSettingPersistence the plugin setting persistence
-	 */
-	public void setPluginSettingPersistence(
-		PluginSettingPersistence pluginSettingPersistence) {
-
-		this.pluginSettingPersistence = pluginSettingPersistence;
-	}
-
 	public void afterPropertiesSet() {
+		_setServiceUtilService(themeService);
 	}
 
 	public void destroy() {
+		_setServiceUtilService(null);
 	}
 
 	/**
@@ -241,6 +158,19 @@ public abstract class ThemeServiceBaseImpl
 		}
 	}
 
+	private void _setServiceUtilService(ThemeService themeService) {
+		try {
+			Field field = ThemeServiceUtil.class.getDeclaredField("_service");
+
+			field.setAccessible(true);
+
+			field.set(null, themeService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@BeanReference(
 		type = com.liferay.portal.kernel.service.ThemeLocalService.class
 	)
@@ -256,25 +186,7 @@ public abstract class ThemeServiceBaseImpl
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@BeanReference(
-		type = com.liferay.portal.kernel.service.LayoutTemplateLocalService.class
-	)
-	protected com.liferay.portal.kernel.service.LayoutTemplateLocalService
-		layoutTemplateLocalService;
-
-	@BeanReference(
-		type = com.liferay.portal.kernel.service.PluginSettingLocalService.class
-	)
-	protected com.liferay.portal.kernel.service.PluginSettingLocalService
-		pluginSettingLocalService;
-
-	@BeanReference(
-		type = com.liferay.portal.kernel.service.PluginSettingService.class
-	)
-	protected com.liferay.portal.kernel.service.PluginSettingService
-		pluginSettingService;
-
-	@BeanReference(type = PluginSettingPersistence.class)
-	protected PluginSettingPersistence pluginSettingPersistence;
+	private static final Log _log = LogFactoryUtil.getLog(
+		ThemeServiceBaseImpl.class);
 
 }

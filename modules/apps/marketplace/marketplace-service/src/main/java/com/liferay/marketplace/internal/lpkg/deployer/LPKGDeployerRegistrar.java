@@ -67,6 +67,10 @@ public class LPKGDeployerRegistrar {
 		Map<Bundle, List<Bundle>> deployedLPKGBundles =
 			_lpkgDeployer.getDeployedLPKGBundles();
 
+		if (deployedLPKGBundles.isEmpty()) {
+			return;
+		}
+
 		Map<Long, App> apps = new HashMap<>();
 
 		for (App app :
@@ -99,7 +103,7 @@ public class LPKGDeployerRegistrar {
 	}
 
 	@Reference(
-		target = "(&(release.bundle.symbolic.name=com.liferay.marketplace.service)(release.schema.version=2.0.2))",
+		target = "(&(release.bundle.symbolic.name=com.liferay.marketplace.service)(release.schema.version=2.0.3))",
 		unbind = "-"
 	)
 	protected void setRelease(Release release) {

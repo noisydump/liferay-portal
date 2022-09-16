@@ -306,7 +306,8 @@ public class MBMessageStagedModelDataHandler
 					}
 					else {
 						importedMessage = _mbMessageLocalService.addMessage(
-							userId, message.getUserName(),
+							message.getExternalReferenceCode(), userId,
+							message.getUserName(),
 							portletDataContext.getScopeGroupId(),
 							parentCategoryId, threadId, parentMessageId,
 							message.getSubject(), message.getBody(),
@@ -355,7 +356,8 @@ public class MBMessageStagedModelDataHandler
 				}
 				else {
 					importedMessage = _mbMessageLocalService.addMessage(
-						userId, message.getUserName(),
+						message.getExternalReferenceCode(), userId,
+						message.getUserName(),
 						portletDataContext.getScopeGroupId(), parentCategoryId,
 						threadId, parentMessageId, message.getSubject(),
 						message.getBody(), message.getFormat(), inputStreamOVPs,
@@ -408,7 +410,7 @@ public class MBMessageStagedModelDataHandler
 				}
 				catch (IOException ioException) {
 					if (_log.isWarnEnabled()) {
-						_log.warn(ioException, ioException);
+						_log.warn(ioException);
 					}
 				}
 			}
@@ -465,7 +467,7 @@ public class MBMessageStagedModelDataHandler
 				_mbDiscussionLocalService.getThreadDiscussion(threadId);
 
 			return _mbMessageLocalService.addDiscussionMessage(
-				userId, message.getUserName(),
+				null, userId, message.getUserName(),
 				portletDataContext.getScopeGroupId(), discussion.getClassName(),
 				discussion.getClassPK(), threadId, parentMessageId,
 				message.getSubject(), message.getBody(), serviceContext);
@@ -513,7 +515,7 @@ public class MBMessageStagedModelDataHandler
 				}
 				catch (Exception exception) {
 					if (_log.isDebugEnabled()) {
-						_log.debug(exception, exception);
+						_log.debug(exception);
 					}
 				}
 			}

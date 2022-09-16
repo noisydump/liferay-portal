@@ -28,6 +28,7 @@ import java.io.Writer;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -82,19 +83,15 @@ public class JSModuleLauncherImpl implements JSModuleLauncher {
 	public void writeModuleInvocation(
 		Writer writer, String javascriptModule, String... parameters) {
 
-		StringBundler javaScriptCodeSB = new StringBundler(3);
-
-		javaScriptCodeSB.append("(__module__.default || __module__)(");
-		javaScriptCodeSB.append(
-			StringUtil.merge(parameters, StringPool.COMMA_AND_SPACE));
-		javaScriptCodeSB.append(");");
-
 		_writeScriptData(
 			writer,
 			_getScriptBody(
 				Arrays.asList(
 					new JSModuleDependency(javascriptModule, "__module__")),
-				javaScriptCodeSB.toString()),
+				StringBundler.concat(
+					"(__module__.default || __module__)(",
+					StringUtil.merge(parameters, StringPool.COMMA_AND_SPACE),
+					");")),
 			null);
 	}
 
@@ -129,27 +126,55 @@ public class JSModuleLauncherImpl implements JSModuleLauncher {
 		Collection<JSModuleDependency> jsModuleDependencies,
 		String javaScriptCode) {
 
-		StringBundler javascriptSB = new StringBundler(10);
+		StringBundler javascriptSB;
 
-		javascriptSB.append("(function() {");
+		if (jsModuleDependencies.size() == 1) {
+			javascriptSB = new StringBundler(10);
 
-		for (JSModuleDependency jsModuleDependency : jsModuleDependencies) {
-			javascriptSB.append("window[");
-			javascriptSB.append("Symbol.for('__LIFERAY_WEBPACK_GET_MODULE__')");
-			javascriptSB.append("]('");
+			javascriptSB.append("(function() {window[Symbol.for('");
+			javascriptSB.append("__LIFERAY_WEBPACK_GET_MODULE__')](");
+
+			Iterator<JSModuleDependency> iterator =
+				jsModuleDependencies.iterator();
+
+			JSModuleDependency jsModuleDependency = iterator.next();
+
+			javascriptSB.append(StringPool.APOSTROPHE);
 			javascriptSB.append(jsModuleDependency.getModuleName());
-			javascriptSB.append("').then((");
+			javascriptSB.append(StringPool.APOSTROPHE);
+
+			javascriptSB.append(").then((");
+
 			javascriptSB.append(jsModuleDependency.getVariableName());
+
 			javascriptSB.append(") => {");
+			javascriptSB.append(javaScriptCode);
+			javascriptSB.append("});})();");
 		}
+		else {
+			javascriptSB = new StringBundler(
+				6 + (5 * jsModuleDependencies.size()));
 
-		javascriptSB.append(javaScriptCode);
+			javascriptSB.append("(function() {Promise.all([");
 
-		for (int i = 0; i < jsModuleDependencies.size(); i++) {
-			javascriptSB.append("});");
+			for (JSModuleDependency jsModuleDependency : jsModuleDependencies) {
+				javascriptSB.append(StringPool.APOSTROPHE);
+				javascriptSB.append(jsModuleDependency.getModuleName());
+				javascriptSB.append("', ");
+			}
+
+			javascriptSB.append("].map(window[Symbol.for('");
+			javascriptSB.append("__LIFERAY_WEBPACK_GET_MODULE__')])).then(([");
+
+			for (JSModuleDependency jsModuleDependency : jsModuleDependencies) {
+				javascriptSB.append(jsModuleDependency.getVariableName());
+				javascriptSB.append(StringPool.COMMA);
+			}
+
+			javascriptSB.append("]) => {");
+			javascriptSB.append(javaScriptCode);
+			javascriptSB.append("});})();");
 		}
-
-		javascriptSB.append("})();");
 
 		return javascriptSB.toString();
 	}

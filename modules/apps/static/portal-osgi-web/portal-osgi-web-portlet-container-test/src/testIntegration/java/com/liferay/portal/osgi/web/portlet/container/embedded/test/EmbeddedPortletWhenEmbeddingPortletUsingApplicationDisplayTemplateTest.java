@@ -15,11 +15,12 @@
 package com.liferay.portal.osgi.web.portlet.container.embedded.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.model.LayoutTypePortlet;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.template.TemplateHandler;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
-import com.liferay.portal.kernel.util.HashMapDictionary;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.osgi.web.portlet.container.test.BasePortletContainerTestCase;
 import com.liferay.portal.osgi.web.portlet.container.test.TestPortlet;
 import com.liferay.portal.osgi.web.portlet.container.test.util.PortletContainerTestUtil;
@@ -34,7 +35,6 @@ import javax.portlet.PortletContext;
 import javax.portlet.PortletException;
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletRequestDispatcher;
-import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 
@@ -91,10 +91,10 @@ public class
 
 		};
 
-		Dictionary<String, Object> properties = new HashMapDictionary<>();
-
-		properties.put(
-			"com.liferay.portlet.instanceable", Boolean.FALSE.toString());
+		Dictionary<String, Object> properties =
+			HashMapDictionaryBuilder.<String, Object>put(
+				"com.liferay.portlet.instanceable", Boolean.FALSE.toString()
+			).build();
 
 		setUpPortlet(testPortlet, properties, TEST_PORTLET_ID);
 
@@ -104,20 +104,23 @@ public class
 			TemplateHandler.class,
 			new TestEmbeddedPortletDisplayTemplateHandler(), properties);
 
-		PortletURL portletURL = PortletURLFactoryUtil.create(
-			PortletContainerTestUtil.getHttpServletRequest(group, layout),
-			TEST_PORTLET_ID, layout.getPlid(), PortletRequest.RENDER_PHASE);
-
 		TestRuntimePortlet testRuntimePortlet = new TestRuntimePortlet();
 		String testRuntimePortletId = "testRuntimePortletId";
 
 		setUpPortlet(
 			testRuntimePortlet, properties, testRuntimePortletId, false);
 
-		portletURL.setParameter("testRuntimePortletId", testRuntimePortletId);
-
 		PortletContainerTestUtil.Response response =
-			PortletContainerTestUtil.request(portletURL.toString());
+			PortletContainerTestUtil.request(
+				PortletURLBuilder.create(
+					PortletURLFactoryUtil.create(
+						PortletContainerTestUtil.getHttpServletRequest(
+							group, layout),
+						TEST_PORTLET_ID, layout.getPlid(),
+						PortletRequest.RENDER_PHASE)
+				).setParameter(
+					"testRuntimePortletId", testRuntimePortletId
+				).buildString());
 
 		Assert.assertEquals(200, response.getCode());
 

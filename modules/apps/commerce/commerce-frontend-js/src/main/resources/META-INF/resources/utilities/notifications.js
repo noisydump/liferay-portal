@@ -12,34 +12,36 @@
  * details.
  */
 
+import {openToast} from 'frontend-js-web';
+
+const titlesMap = {
+	danger: Liferay.Language.get('danger'),
+	success: Liferay.Language.get('success'),
+	warning: Liferay.Language.get('warning'),
+};
+
 export function showNotification(
 	message,
 	type = 'success',
 	closeable = true,
-	duration = 500
+	duration = 500,
+	title
 ) {
-	if (!window.AUI) {
-		return window.Liferay?.staticEnvTestUtils?.print(message, type);
-	}
-
-	AUI().use('liferay-notification', () => {
-		new Liferay.Notification({
-			closeable,
-			delay: {
-				hide: 5000,
-				show: 0,
-			},
-			duration,
-			message,
-			render: true,
-			title: Liferay.Language.get(type),
-			type,
-		});
+	openToast({
+		closeable,
+		delay: {
+			hide: 5000,
+			show: 0,
+		},
+		duration,
+		message,
+		title: title || titlesMap[type],
+		type,
 	});
 }
 
 export function showErrorNotification(
-	e = Liferay.Language.get('unexpected-error')
+	error = Liferay.Language.get('unexpected-error')
 ) {
-	showNotification(e, 'danger');
+	showNotification(error, 'danger');
 }

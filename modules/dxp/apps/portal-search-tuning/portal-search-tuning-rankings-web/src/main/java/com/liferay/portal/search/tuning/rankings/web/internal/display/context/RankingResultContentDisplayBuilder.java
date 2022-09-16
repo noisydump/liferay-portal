@@ -17,6 +17,7 @@ package com.liferay.portal.search.tuning.rankings.web.internal.display.context;
 import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.model.AssetRenderer;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
@@ -25,7 +26,6 @@ import com.liferay.portal.search.tuning.rankings.web.internal.util.RankingResult
 
 import java.util.Locale;
 
-import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 
@@ -59,7 +59,7 @@ public class RankingResultContentDisplayBuilder {
 
 		rankingResultContentDisplayContext.setAssetRenderer(assetRenderer);
 
-		final boolean visible;
+		boolean visible;
 
 		if ((assetEntry != null) && (assetRenderer != null) &&
 			assetEntry.isVisible() &&
@@ -91,15 +91,14 @@ public class RankingResultContentDisplayBuilder {
 
 				rankingResultContentDisplayContext.setIconEditTarget(title);
 
-				PortletURL editPortletURL = assetRenderer.getURLEdit(
-					_portal.getLiferayPortletRequest(_renderRequest),
-					_portal.getLiferayPortletResponse(_renderResponse));
-
-				editPortletURL.setParameter(
-					"redirect", themeDisplay.getURLCurrent());
-
 				rankingResultContentDisplayContext.setIconURLString(
-					editPortletURL.toString());
+					PortletURLBuilder.create(
+						assetRenderer.getURLEdit(
+							_portal.getLiferayPortletRequest(_renderRequest),
+							_portal.getLiferayPortletResponse(_renderResponse))
+					).setRedirect(
+						themeDisplay.getURLCurrent()
+					).buildString());
 			}
 		}
 

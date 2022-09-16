@@ -12,11 +12,32 @@
  * details.
  */
 
-import ClayButton from '@clayui/button';
 import {ClayCheckbox} from '@clayui/form';
-import ClayLink from '@clayui/link';
-import ClayManagementToolbar from '@clayui/management-toolbar';
-import React, {useEffect, useRef, useState} from 'react';
+import {ManagementToolbar} from 'frontend-js-components-web';
+import {sub} from 'frontend-js-web';
+import React, {useContext, useEffect, useRef, useState} from 'react';
+
+import {EVENT_MANAGEMENT_TOOLBAR_TOGGLE_ALL_ITEMS} from '../constants';
+import FeatureFlagContext from './FeatureFlagContext';
+import LinkOrButton from './LinkOrButton';
+
+function disableActionIfNeeded(item, event, bulkSelection) {
+	if (item.type === 'group') {
+		return {
+			...item,
+			items: item.items?.map((child) =>
+				disableActionIfNeeded(child, event, bulkSelection)
+			),
+		};
+	}
+
+	return {
+		...item,
+		disabled:
+			event.actions?.indexOf(item.data.action) === -1 &&
+			(!bulkSelection || !item.data.enableOnBulk),
+	};
+}
 
 const SelectionControls = ({
 	actionDropdownItems,
@@ -32,11 +53,12 @@ const SelectionControls = ({
 	onSelectAllButtonClick,
 	searchContainerId,
 	selectAllURL,
-	selectable,
 	setActionDropdownItems,
 	setActive,
+	showCheckBoxLabel,
 	supportsBulkActions,
 }) => {
+	const {showDesignImprovements} = useContext(FeatureFlagContext);
 	const [selectedItems, setSelectedItems] = useState(initialSelectedItems);
 	const [checkboxStatus, setCheckboxStatus] = useState(initialCheckboxStatus);
 	const [selectAllButtonVisible, setSelectAllButtonVisible] = useState(
@@ -85,6 +107,10 @@ const SelectionControls = ({
 
 			const select = searchContainer.select;
 
+			if (!select) {
+				return;
+			}
+
 			const bulkSelection =
 				supportsBulkActions && select.get('bulkSelection');
 
@@ -95,14 +121,9 @@ const SelectionControls = ({
 				});
 
 				setActionDropdownItems(
-					actionDropdownItems?.map((item) => {
-						return Object.assign(item, {
-							disabled:
-								event.actions?.indexOf(item.data.action) ===
-									-1 &&
-								(!bulkSelection || !item.data.enableOnBulk),
-						});
-					})
+					actionDropdownItems?.map((item) =>
+						disableActionIfNeeded(item, event, bulkSelection)
+					)
 				);
 			});
 
@@ -125,128 +146,124 @@ const SelectionControls = ({
 
 	return (
 		<>
-			{selectable && (
-				<ClayManagementToolbar.Item>
-					<ClayCheckbox
-						checked={checkboxStatus !== 'unchecked'}
-						disabled={disabled}
-						indeterminate={checkboxStatus === 'indeterminate'}
-						onChange={(event) => {
-							onCheckboxChange(event);
+			<ManagementToolbar.Item>
+				<ClayCheckbox
+					checked={checkboxStatus !== 'unchecked'}
+					disabled={disabled}
+					indeterminate={checkboxStatus === 'indeterminate'}
+					label={
+						showCheckBoxLabel
+							? Liferay.Language.get('select-items')
+							: ''
+					}
+					onChange={(event) => {
+						onCheckboxChange(event);
 
-							const checked = event.target.checked;
+						const checked = event.target.checked;
 
-							setActive(checked);
+						setActive(checked);
 
-							setCheckboxStatus(
-								checked ? 'checked' : 'unchecked'
-							);
+						setCheckboxStatus(checked ? 'checked' : 'unchecked');
 
-							searchContainerRef.current?.select?.toggleAllRows(
-								checked
-							);
-						}}
-					/>
-				</ClayManagementToolbar.Item>
-			)}
+						searchContainerRef.current?.select?.toggleAllRows(
+							checked
+						);
+
+						Liferay.fire(
+							EVENT_MANAGEMENT_TOOLBAR_TOGGLE_ALL_ITEMS,
+							{
+								checked,
+							}
+						);
+					}}
+				/>
+			</ManagementToolbar.Item>
 
 			{active && (
 				<>
-					<ClayManagementToolbar.Item>
+					<ManagementToolbar.Item>
 						<span className="navbar-text">
 							{selectedItems === itemsTotal
 								? Liferay.Language.get('all-selected')
-								: `${Liferay.Util.sub(
+								: `${sub(
 										Liferay.Language.get('x-of-x'),
 										selectedItems,
 										itemsTotal
 								  )} ${Liferay.Language.get('selected')}`}
 						</span>
-					</ClayManagementToolbar.Item>
+					</ManagementToolbar.Item>
 
 					{supportsBulkActions && (
 						<>
-							<ClayManagementToolbar.Item className="nav-item-shrink">
-								{clearSelectionURL ? (
-									<ClayLink
-										className="nav-link"
-										href={clearSelectionURL}
-									>
-										<span className="text-truncate-inline">
-											<span className="text-truncate">
-												{Liferay.Language.get('clear')}
-											</span>
+							<ManagementToolbar.Item className="nav-item-shrink">
+								<LinkOrButton
+									aria-label={
+										showDesignImprovements
+											? Liferay.Language.get('clear')
+											: undefined
+									}
+									className="nav-link"
+									displayType="unstyled"
+									href={clearSelectionURL}
+									onClick={(event) => {
+										searchContainerRef.current?.select?.toggleAllRows(
+											false,
+											true
+										);
+
+										setActive(false);
+
+										setCheckboxStatus('unchecked');
+
+										onClearButtonClick(event);
+									}}
+									symbol={
+										showDesignImprovements
+											? 'times-circle'
+											: undefined
+									}
+									title={
+										showDesignImprovements
+											? Liferay.Language.get('clear')
+											: undefined
+									}
+								>
+									<span className="text-truncate-inline">
+										<span className="text-truncate">
+											{Liferay.Language.get('clear')}
 										</span>
-									</ClayLink>
-								) : (
-									<ClayButton
+									</span>
+								</LinkOrButton>
+							</ManagementToolbar.Item>
+
+							{selectAllButtonVisible && (
+								<ManagementToolbar.Item className="nav-item-shrink">
+									<LinkOrButton
 										className="nav-link"
 										displayType="unstyled"
+										href={selectAllURL}
 										onClick={(event) => {
 											searchContainerRef.current?.select?.toggleAllRows(
-												false
+												true,
+												true
 											);
 
-											setActive(false);
+											setSelectAllButtonVisible(false);
 
-											setCheckboxStatus('unchecked');
+											setSelectedItems(itemsTotal);
 
-											onClearButtonClick(event);
+											onSelectAllButtonClick(event);
 										}}
 									>
 										<span className="text-truncate-inline">
 											<span className="text-truncate">
-												{Liferay.Language.get('clear')}
+												{Liferay.Language.get(
+													'select-all'
+												)}
 											</span>
 										</span>
-									</ClayButton>
-								)}
-							</ClayManagementToolbar.Item>
-
-							{selectAllButtonVisible && (
-								<ClayManagementToolbar.Item className="nav-item-shrink">
-									{selectAllURL ? (
-										<ClayLink
-											className="nav-link"
-											href={selectAllURL}
-										>
-											<span className="text-truncate-inline">
-												<span className="text-truncate">
-													{Liferay.Language.get(
-														'select-all'
-													)}
-												</span>
-											</span>
-										</ClayLink>
-									) : (
-										<ClayButton
-											className="nav-link"
-											displayType="unstyled"
-											onClick={(event) => {
-												searchContainerRef.current?.select?.toggleAllRows(
-													true,
-													true
-												);
-
-												setSelectAllButtonVisible(
-													false
-												);
-
-												setSelectedItems(itemsTotal);
-
-												onSelectAllButtonClick(event);
-											}}
-										>
-											<span className="text-truncate-inline">
-												<span className="text-truncate">
-													{Liferay.Language.get(
-														'select-all'
-													)}
-												</span>
-											</span>
-										</ClayButton>
-									)}
-								</ClayManagementToolbar.Item>
+									</LinkOrButton>
+								</ManagementToolbar.Item>
 							)}
 						</>
 					)}

@@ -19,6 +19,7 @@ import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.depot.web.internal.constants.DepotPortletKeys;
 import com.liferay.exportimport.kernel.staging.Staging;
 import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolver;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
@@ -59,7 +60,6 @@ import java.util.Map;
 
 import javax.portlet.PortletException;
 import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -103,7 +103,7 @@ public class StagingIndicatorDynamicInclude extends BaseDynamicInclude {
 		}
 		catch (PortalException | PortletException exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(exception, exception);
+				_log.warn(exception);
 			}
 		}
 	}
@@ -132,20 +132,18 @@ public class StagingIndicatorDynamicInclude extends BaseDynamicInclude {
 			return null;
 		}
 
-		PortletURL portletURL = _portal.getControlPanelPortletURL(
-			httpServletRequest, group, DepotPortletKeys.DEPOT_ADMIN, 0, 0,
-			PortletRequest.RENDER_PHASE);
-
-		portletURL.setParameter(
-			"mvcRenderCommandName", "/depot/view_depot_dashboard");
-
 		DepotEntry depotEntry = _depotEntryLocalService.getGroupDepotEntry(
 			group.getGroupId());
 
-		portletURL.setParameter(
-			"depotEntryId", String.valueOf(depotEntry.getDepotEntryId()));
-
-		return portletURL.toString();
+		return PortletURLBuilder.create(
+			_portal.getControlPanelPortletURL(
+				httpServletRequest, group, DepotPortletKeys.DEPOT_ADMIN, 0, 0,
+				PortletRequest.RENDER_PHASE)
+		).setMVCRenderCommandName(
+			"/depot/view_depot_dashboard"
+		).setParameter(
+			"depotEntryId", depotEntry.getDepotEntryId()
+		).buildString();
 	}
 
 	private JSONObject _getLiveGroupItemJSONObject(
@@ -271,7 +269,7 @@ public class StagingIndicatorDynamicInclude extends BaseDynamicInclude {
 			liveGroupURL = _getLiveGroupURL(scopeGroup, httpServletRequest);
 		}
 		catch (SystemException systemException) {
-			_log.error(systemException, systemException);
+			_log.error(systemException);
 		}
 
 		if (Validator.isNotNull(liveGroupURL) ||

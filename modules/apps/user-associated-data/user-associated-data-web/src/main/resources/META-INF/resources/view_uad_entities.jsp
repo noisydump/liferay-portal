@@ -36,8 +36,8 @@ if (parentContainerId > 0) {
 long[] groupIds = viewUADEntitiesDisplay.getGroupIds();
 %>
 
-<clay:management-toolbar-v2
-	displayContext="<%= new ViewUADEntitiesManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, viewUADEntitiesDisplay) %>"
+<clay:management-toolbar
+	managementToolbarDisplayContext="<%= new ViewUADEntitiesManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, viewUADEntitiesDisplay) %>"
 />
 
 <aui:form method="post" name="viewUADEntitiesFm">
@@ -70,7 +70,7 @@ long[] groupIds = viewUADEntitiesDisplay.getGroupIds();
 		</c:otherwise>
 	</c:choose>
 
-	<div class="closed sidenav-container sidenav-right" id="<%= liferayPortletResponse.getNamespace() + "infoPanelId" %>">
+	<div class="closed sidenav-container sidenav-right" id="<portlet:namespace />infoPanelId">
 		<div id="breadcrumb">
 			<liferay-ui:breadcrumb
 				showCurrentGroup="<%= false %>"
@@ -217,7 +217,7 @@ long[] groupIds = viewUADEntitiesDisplay.getGroupIds();
 					if (applicationKeys) {
 						applicationKeys.setAttribute(
 							'value',
-							Liferay.Util.listCheckedExcept(
+							Liferay.Util.getCheckedCheckboxes(
 								form,
 								'<portlet:namespace />allRowIds'
 							)
@@ -236,7 +236,7 @@ long[] groupIds = viewUADEntitiesDisplay.getGroupIds();
 						);
 
 						if (<%= primaryKeysVar %>) {
-							var primaryKeys = Liferay.Util.listCheckedExcept(
+							var primaryKeys = Liferay.Util.getCheckedCheckboxes(
 								form,
 								'<portlet:namespace />allRowIds',
 								'<portlet:namespace />rowIds<%= typeClass.getSimpleName() %>'

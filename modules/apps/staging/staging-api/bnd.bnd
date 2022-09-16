@@ -1,7 +1,8 @@
 Bundle-Name: Liferay Staging API
 Bundle-SymbolicName: com.liferay.staging.api
-Bundle-Version: 6.0.0
+Bundle-Version: 7.0.3
 Export-Package:\
 	com.liferay.staging,\
+	com.liferay.staging.configuration,\
 	com.liferay.staging.constants,\
 	com.liferay.staging.model.listener

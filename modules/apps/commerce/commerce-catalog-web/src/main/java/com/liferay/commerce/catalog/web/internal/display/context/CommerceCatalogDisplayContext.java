@@ -25,7 +25,7 @@ import com.liferay.commerce.pricing.constants.CommercePricingConstants;
 import com.liferay.commerce.product.configuration.AttachmentsConfiguration;
 import com.liferay.commerce.product.constants.CPActionKeys;
 import com.liferay.commerce.product.constants.CPPortletKeys;
-import com.liferay.commerce.product.display.context.util.CPRequestHelper;
+import com.liferay.commerce.product.display.context.helper.CPRequestHelper;
 import com.liferay.commerce.product.model.CommerceCatalog;
 import com.liferay.commerce.product.service.CommerceCatalogService;
 import com.liferay.document.library.kernel.service.DLAppService;
@@ -34,6 +34,7 @@ import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.ItemSelectorReturnType;
 import com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType;
 import com.liferay.item.selector.criteria.image.criterion.ImageItemSelectorCriterion;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
@@ -47,7 +48,7 @@ import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
-import com.liferay.portal.kernel.service.permission.PortalPermissionUtil;
+import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.settings.SystemSettingsLocator;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -60,7 +61,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-import javax.portlet.ActionRequest;
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletURL;
 import javax.portlet.RenderResponse;
@@ -102,16 +102,13 @@ public class CommerceCatalogDisplayContext {
 	}
 
 	public String getAddCommerceCatalogRenderURL() throws Exception {
-		LiferayPortletResponse liferayPortletResponse =
-			cpRequestHelper.getLiferayPortletResponse();
-
-		PortletURL portletURL = liferayPortletResponse.createRenderURL();
-
-		portletURL.setParameter(
-			"mvcRenderCommandName", "/commerce_catalogs/add_commerce_catalog");
-		portletURL.setWindowState(LiferayWindowState.POP_UP);
-
-		return portletURL.toString();
+		return PortletURLBuilder.createRenderURL(
+			cpRequestHelper.getLiferayPortletResponse()
+		).setMVCRenderCommandName(
+			"/commerce_catalogs/add_commerce_catalog"
+		).setWindowState(
+			LiferayWindowState.POP_UP
+		).buildString();
 	}
 
 	public CommercePriceList getBaseCommercePriceList(String type)
@@ -205,31 +202,29 @@ public class CommerceCatalogDisplayContext {
 			return StringPool.BLANK;
 		}
 
-		PortletURL portletURL = _portal.getControlPanelPortletURL(
-			cpRequestHelper.getRequest(), CPPortletKeys.COMMERCE_CATALOGS,
-			PortletRequest.ACTION_PHASE);
-
-		portletURL.setParameter(
-			ActionRequest.ACTION_NAME,
-			"/commerce_catalogs/edit_commerce_catalog");
-		portletURL.setParameter(Constants.CMD, Constants.UPDATE);
-		portletURL.setParameter(
-			"commerceCatalogId",
-			String.valueOf(commerceCatalog.getCommerceCatalogId()));
-		portletURL.setWindowState(LiferayWindowState.POP_UP);
-
-		return portletURL.toString();
+		return PortletURLBuilder.create(
+			_portal.getControlPanelPortletURL(
+				cpRequestHelper.getRequest(), CPPortletKeys.COMMERCE_CATALOGS,
+				PortletRequest.ACTION_PHASE)
+		).setActionName(
+			"/commerce_catalogs/edit_commerce_catalog"
+		).setCMD(
+			Constants.UPDATE
+		).setParameter(
+			"commerceCatalogId", commerceCatalog.getCommerceCatalogId()
+		).setWindowState(
+			LiferayWindowState.POP_UP
+		).buildString();
 	}
 
 	public PortletURL getEditCommerceCatalogRenderURL() {
-		PortletURL portletURL = _portal.getControlPanelPortletURL(
-			cpRequestHelper.getRequest(), CPPortletKeys.COMMERCE_CATALOGS,
-			PortletRequest.RENDER_PHASE);
-
-		portletURL.setParameter(
-			"mvcRenderCommandName", "/commerce_catalogs/edit_commerce_catalog");
-
-		return portletURL;
+		return PortletURLBuilder.create(
+			_portal.getControlPanelPortletURL(
+				cpRequestHelper.getRequest(), CPPortletKeys.COMMERCE_CATALOGS,
+				PortletRequest.RENDER_PHASE)
+		).setMVCRenderCommandName(
+			"/commerce_catalogs/edit_commerce_catalog"
+		).buildPortletURL();
 	}
 
 	public List<HeaderActionModel> getHeaderActionModels() throws Exception {
@@ -258,7 +253,7 @@ public class CommerceCatalogDisplayContext {
 		return _attachmentsConfiguration.imageExtensions();
 	}
 
-	public String getImageItemSelectorUrl() {
+	public String getImageItemSelectorURL() {
 		RequestBackedPortletURLFactory requestBackedPortletURLFactory =
 			RequestBackedPortletURLFactoryUtil.create(
 				cpRequestHelper.getRenderRequest());
@@ -270,11 +265,10 @@ public class CommerceCatalogDisplayContext {
 			Collections.<ItemSelectorReturnType>singletonList(
 				new FileEntryItemSelectorReturnType()));
 
-		PortletURL itemSelectorURL = _itemSelector.getItemSelectorURL(
-			requestBackedPortletURLFactory, "addFileEntry",
-			imageItemSelectorCriterion);
-
-		return itemSelectorURL.toString();
+		return String.valueOf(
+			_itemSelector.getItemSelectorURL(
+				requestBackedPortletURLFactory, "addFileEntry",
+				imageItemSelectorCriterion));
 	}
 
 	public long getImageMaxSize() {
@@ -319,30 +313,23 @@ public class CommerceCatalogDisplayContext {
 	}
 
 	public String getPriceListsApiUrl(String type) throws PortalException {
-		StringBundler filterSB = new StringBundler(6);
+		String encodedFilter = URLCodec.encodeURL(
+			StringBundler.concat(
+				"(catalogId/any(x:(x eq ", getCommerceCatalogId(),
+				"))) and type eq '", type, StringPool.APOSTROPHE),
+			true);
 
-		filterSB.append("(catalogId/any(x:(x eq ");
-		filterSB.append(getCommerceCatalogId());
-		filterSB.append("))) and type eq ");
-		filterSB.append(StringPool.APOSTROPHE);
-		filterSB.append(type);
-		filterSB.append(StringPool.APOSTROPHE);
-
-		String encodedFilter = URLCodec.encodeURL(filterSB.toString(), true);
-
-		StringBundler apiUrlSB = new StringBundler(4);
-
-		apiUrlSB.append(_portal.getPortalURL(cpRequestHelper.getRequest()));
-		apiUrlSB.append("/o/headless-commerce-admin-pricing/v2.0/price-lists");
-		apiUrlSB.append("?filter=");
-		apiUrlSB.append(encodedFilter);
-
-		return apiUrlSB.toString();
+		return "/o/headless-commerce-admin-pricing/v2.0/price-lists?filter=" +
+			encodedFilter;
 	}
 
 	public boolean hasAddCatalogPermission() {
-		return PortalPermissionUtil.contains(
-			cpRequestHelper.getPermissionChecker(),
+		PortletResourcePermission portletResourcePermission =
+			_commerceCatalogModelResourcePermission.
+				getPortletResourcePermission();
+
+		return portletResourcePermission.contains(
+			cpRequestHelper.getPermissionChecker(), null,
 			CPActionKeys.ADD_COMMERCE_CATALOG);
 	}
 

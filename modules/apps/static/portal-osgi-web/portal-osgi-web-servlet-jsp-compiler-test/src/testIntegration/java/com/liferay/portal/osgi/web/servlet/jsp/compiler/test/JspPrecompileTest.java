@@ -37,8 +37,9 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StreamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.osgi.web.servlet.jsp.compiler.test.servlet.PrecompileTestServlet;
-import com.liferay.portal.test.log.CaptureAppender;
-import com.liferay.portal.test.log.Log4JLoggerTestUtil;
+import com.liferay.portal.test.log.LogCapture;
+import com.liferay.portal.test.log.LogEntry;
+import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.util.PropsValues;
 
 import java.io.IOException;
@@ -63,9 +64,6 @@ import java.util.zip.ZipEntry;
 import javax.portlet.Portlet;
 
 import javax.servlet.http.HttpServletRequest;
-
-import org.apache.log4j.Level;
-import org.apache.log4j.spi.LoggingEvent;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -122,7 +120,7 @@ public class JspPrecompileTest {
 	public void setUp() throws Exception {
 		_group = GroupTestUtil.addGroup();
 
-		Layout layout = LayoutTestUtil.addLayout(_group);
+		Layout layout = LayoutTestUtil.addTypePortletLayout(_group);
 
 		LayoutTypePortlet layoutTypePortlet =
 			(LayoutTypePortlet)layout.getLayoutType();
@@ -192,16 +190,14 @@ public class JspPrecompileTest {
 			outputStream.write(classWriter.toByteArray());
 		}
 
-		try (CaptureAppender captureAppender =
-				Log4JLoggerTestUtil.configureLog4JLogger(
-					_CLASS_NAME_JSP_COMPILER, Level.DEBUG)) {
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				_CLASS_NAME_JSP_COMPILER, LoggerTestUtil.DEBUG)) {
 
 			_invokeJSP(_PRECOMPILE_JSP_FILE_NAME, "Precompiled");
 
 			Assert.assertFalse(
 				"JSP was compiled at runtime",
-				_containsCompilerLog(
-					captureAppender, _PRECOMPILE_JSP_FILE_NAME));
+				_containsCompilerLog(logCapture, _PRECOMPILE_JSP_FILE_NAME));
 		}
 		finally {
 			Files.delete(jspClassPath);
@@ -210,16 +206,15 @@ public class JspPrecompileTest {
 
 	@Test
 	public void testRuntimeCompiledJsp() throws Exception {
-		try (CaptureAppender captureAppender =
-				Log4JLoggerTestUtil.configureLog4JLogger(
-					_CLASS_NAME_JSP_COMPILER, Level.DEBUG)) {
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				_CLASS_NAME_JSP_COMPILER, LoggerTestUtil.DEBUG)) {
 
 			_invokeJSP(_RUNTIME_COMPILE_JSP_FILE_NAME, "Runtime Compiled");
 
 			Assert.assertTrue(
 				"No JSP was compiled at runtime",
 				_containsCompilerLog(
-					captureAppender, _RUNTIME_COMPILE_JSP_FILE_NAME));
+					logCapture, _RUNTIME_COMPILE_JSP_FILE_NAME));
 		}
 	}
 
@@ -347,19 +342,14 @@ public class JspPrecompileTest {
 	}
 
 	private boolean _containsCompilerLog(
-		CaptureAppender captureAppender, String jspName) {
+		LogCapture logCapture, String jspName) {
 
-		StringBundler sb = new StringBundler(3);
-
-		sb.append("Compiling JSP: ");
-		sb.append(_JSP_PACKAGE_NAME);
-		sb.append(
+		String compilerLog = StringBundler.concat(
+			"Compiling JSP: ", _JSP_PACKAGE_NAME,
 			StringUtil.replace(jspName, CharPool.PERIOD, CharPool.UNDERLINE));
 
-		String compilerLog = sb.toString();
-
-		for (LoggingEvent loggingEvent : captureAppender.getLoggingEvents()) {
-			String message = loggingEvent.getRenderedMessage();
+		for (LogEntry logEntry : logCapture.getLogEntries()) {
+			String message = logEntry.getMessage();
 
 			if (message.equals(compilerLog)) {
 				return true;
@@ -372,19 +362,13 @@ public class JspPrecompileTest {
 	private void _invokeJSP(String jspFileName, String expectedMessage)
 		throws IOException {
 
-		StringBundler sb = new StringBundler(9);
-
-		sb.append("http://localhost:8080/web");
-		sb.append(_group.getFriendlyURL());
-		sb.append(StringPool.QUESTION);
-		sb.append("p_p_id=");
-		sb.append(JspPrecompilePortlet.PORTLET_NAME);
-		sb.append(StringPool.AMPERSAND);
-		sb.append(JspPrecompilePortlet.getJspFileNameParameterName());
-		sb.append("=/");
-		sb.append(jspFileName);
-
-		URL url = new URL(sb.toString());
+		URL url = new URL(
+			StringBundler.concat(
+				"http://localhost:8080/web", _group.getFriendlyURL(),
+				"?p_p_id=", JspPrecompilePortlet.PORTLET_NAME,
+				StringPool.AMPERSAND,
+				JspPrecompilePortlet.getJspFileNameParameterName(), "=/",
+				jspFileName));
 
 		try (InputStream inputStream = url.openStream()) {
 			String content = StringUtil.read(inputStream);

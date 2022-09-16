@@ -20,7 +20,6 @@ import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
-import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.List;
@@ -35,21 +34,6 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(enabled = false, immediate = true, service = JsonHelper.class)
 public class JsonHelperImpl implements JsonHelper {
-
-	public JsonHelperImpl() {
-	}
-
-	public JsonHelperImpl(JSONFactory jsonFactory) {
-		_jsonFactory = jsonFactory;
-	}
-
-	@Override
-	public boolean equals(String jsonArrayString1, String jsonArrayString2) {
-		JSONArray jsonArray1 = _toJSONArray(jsonArrayString1);
-		JSONArray jsonArray2 = _toJSONArray(jsonArrayString2);
-
-		return JSONUtil.equals(jsonArray1, jsonArray2);
-	}
 
 	@Override
 	public String getFirstElementStringValue(String jsonArrayString) {
@@ -123,11 +107,9 @@ public class JsonHelperImpl implements JsonHelper {
 
 	@Override
 	public boolean isEmpty(String json) {
-		if (Validator.isNull(json)) {
-			return true;
-		}
+		if (Validator.isNull(json) || Objects.equals(json, "[]") ||
+			Objects.equals(json, "{}")) {
 
-		if (Objects.equals(json, "[]") || Objects.equals(json, "{}")) {
 			return true;
 		}
 
@@ -159,21 +141,6 @@ public class JsonHelperImpl implements JsonHelper {
 		}
 
 		return jsonArray;
-	}
-
-	private JSONArray _toJSONArray(String jsonArrayString) {
-		if (!isArray(jsonArrayString)) {
-			throw new IllegalArgumentException(
-				jsonArrayString + " is not valid JSON array");
-		}
-
-		try {
-			return _jsonFactory.createJSONArray(jsonArrayString);
-		}
-		catch (JSONException jsonException) {
-			throw new IllegalArgumentException(
-				jsonArrayString + " is not valid JSON array");
-		}
 	}
 
 	@Reference

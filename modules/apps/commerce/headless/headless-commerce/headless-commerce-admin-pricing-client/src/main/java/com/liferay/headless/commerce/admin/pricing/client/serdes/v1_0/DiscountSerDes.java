@@ -64,7 +64,7 @@ public class DiscountSerDes {
 		sb.append("{");
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+			"yyyy-MM-dd'T'HH:mm:ssXX");
 
 		if (discount.getActive() != null) {
 			if (sb.length() > 1) {
@@ -398,7 +398,7 @@ public class DiscountSerDes {
 		Map<String, String> map = new TreeMap<>();
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+			"yyyy-MM-dd'T'HH:mm:ssXX");
 
 		if (discount.getActive() == null) {
 			map.put("active", null);
@@ -729,7 +729,7 @@ public class DiscountSerDes {
 
 				if (jsonParserFieldValue != null) {
 					discount.setMaximumDiscountAmount(
-						(BigDecimal)jsonParserFieldValue);
+						new BigDecimal((String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "neverExpire")) {
@@ -746,25 +746,25 @@ public class DiscountSerDes {
 			else if (Objects.equals(jsonParserFieldName, "percentageLevel1")) {
 				if (jsonParserFieldValue != null) {
 					discount.setPercentageLevel1(
-						(BigDecimal)jsonParserFieldValue);
+						new BigDecimal((String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "percentageLevel2")) {
 				if (jsonParserFieldValue != null) {
 					discount.setPercentageLevel2(
-						(BigDecimal)jsonParserFieldValue);
+						new BigDecimal((String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "percentageLevel3")) {
 				if (jsonParserFieldValue != null) {
 					discount.setPercentageLevel3(
-						(BigDecimal)jsonParserFieldValue);
+						new BigDecimal((String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "percentageLevel4")) {
 				if (jsonParserFieldValue != null) {
 					discount.setPercentageLevel4(
-						(BigDecimal)jsonParserFieldValue);
+						new BigDecimal((String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "target")) {
@@ -786,9 +786,6 @@ public class DiscountSerDes {
 				if (jsonParserFieldValue != null) {
 					discount.setUsePercentage((Boolean)jsonParserFieldValue);
 				}
-			}
-			else if (jsonParserFieldName.equals("status")) {
-				throw new IllegalArgumentException();
 			}
 		}
 
@@ -818,7 +815,7 @@ public class DiscountSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -854,7 +851,7 @@ public class DiscountSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

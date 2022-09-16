@@ -17,11 +17,22 @@
 <%@ include file="/init.jsp" %>
 
 <%
+String redirect = ParamUtil.getString(request, "redirect");
+
 CPOptionDisplayContext cpOptionDisplayContext = (CPOptionDisplayContext)request.getAttribute(WebKeys.PORTLET_DISPLAY_CONTEXT);
 
 CPOption cpOption = cpOptionDisplayContext.getCPOption();
 
 long cpOptionId = cpOptionDisplayContext.getCPOptionId();
+
+portletDisplay.setShowBackIcon(true);
+
+if (Validator.isNull(redirect)) {
+	portletDisplay.setURLBack(String.valueOf(renderResponse.createRenderURL()));
+}
+else {
+	portletDisplay.setURLBack(redirect);
+}
 %>
 
 <portlet:actionURL name="/cp_options/edit_cp_option" var="editOptionActionURL" />
@@ -48,85 +59,78 @@ long cpOptionId = cpOptionDisplayContext.getCPOptionId();
 	<aui:input name="cpOptionId" type="hidden" value="<%= String.valueOf(cpOptionId) %>" />
 
 	<div class="container">
-		<div class="row">
-			<div class="col-12">
-				<commerce-ui:panel
-					title='<%= LanguageUtil.get(request, "details") %>'
-				>
+		<commerce-ui:panel
+			title='<%= LanguageUtil.get(request, "details") %>'
+		>
+
+			<%
+			List<DDMFormFieldType> ddmFormFieldTypes = cpOptionDisplayContext.getDDMFormFieldTypes();
+			%>
+
+			<liferay-ui:error-marker
+				key="<%= WebKeys.ERROR_SECTION %>"
+				value="product-option-details"
+			/>
+
+			<aui:model-context bean="<%= cpOption %>" model="<%= CPOption.class %>" />
+
+			<liferay-ui:error exception="<%= CPOptionKeyException.class %>" message="that-key-is-already-being-used" />
+
+			<aui:fieldset>
+				<aui:input autoFocus="<%= true %>" name="name" wrapperCssClass="commerce-product-option-title" />
+
+				<aui:input name="description" wrapperCssClass="commerce-product-option-description" />
+
+				<aui:select label="option-field-type" name="DDMFormFieldTypeName" showEmptyOption="<%= true %>">
 
 					<%
-					List<DDMFormFieldType> ddmFormFieldTypes = cpOptionDisplayContext.getDDMFormFieldTypes();
+					for (DDMFormFieldType ddmFormFieldType : ddmFormFieldTypes) {
 					%>
 
-					<liferay-ui:error-marker
-						key="<%= WebKeys.ERROR_SECTION %>"
-						value="product-option-details"
+						<aui:option label="<%= cpOptionDisplayContext.getDDMFormFieldTypeLabel(ddmFormFieldType, locale) %>" selected="<%= (cpOption != null) && cpOption.getDDMFormFieldTypeName().equals(ddmFormFieldType.getName()) %>" value="<%= ddmFormFieldType.getName() %>" />
+
+					<%
+					}
+					%>
+
+				</aui:select>
+
+				<aui:input checked="<%= (cpOption == null) ? false : cpOption.isFacetable() %>" label="use-in-faceted-navigation" name="facetable" type="toggle-switch" />
+
+				<aui:input checked="<%= (cpOption == null) ? false : cpOption.getRequired() %>" name="required" type="toggle-switch" />
+
+				<aui:input checked="<%= (cpOption == null) ? false : cpOption.isSkuContributor() %>" name="skuContributor" type="toggle-switch" />
+
+				<aui:input helpMessage="key-help" name="key" />
+			</aui:fieldset>
+
+			<c:if test="<%= CustomAttributesUtil.hasCustomAttributes(company.getCompanyId(), CPOption.class.getName(), cpOptionId, null) %>">
+				<aui:fieldset>
+					<liferay-expando:custom-attribute-list
+						className="<%= CPOption.class.getName() %>"
+						classPK="<%= (cpOption != null) ? cpOption.getCPOptionId() : 0 %>"
+						editable="<%= true %>"
+						label="<%= true %>"
 					/>
+				</aui:fieldset>
+			</c:if>
+		</commerce-ui:panel>
 
-					<aui:model-context bean="<%= cpOption %>" model="<%= CPOption.class %>" />
-
-					<liferay-ui:error exception="<%= CPOptionKeyException.class %>" message="that-key-is-already-being-used" />
-
-					<aui:fieldset>
-						<aui:input autoFocus="<%= true %>" name="name" wrapperCssClass="commerce-product-option-title" />
-
-						<aui:input name="description" wrapperCssClass="commerce-product-option-description" />
-
-						<aui:select label="option-field-type" name="DDMFormFieldTypeName" showEmptyOption="<%= true %>">
-
-							<%
-							for (DDMFormFieldType ddmFormFieldType : ddmFormFieldTypes) {
-							%>
-
-								<aui:option label="<%= cpOptionDisplayContext.getDDMFormFieldTypeLabel(ddmFormFieldType, locale) %>" selected="<%= (cpOption != null) && cpOption.getDDMFormFieldTypeName().equals(ddmFormFieldType.getName()) %>" value="<%= ddmFormFieldType.getName() %>" />
-
-							<%
-							}
-							%>
-
-						</aui:select>
-
-						<aui:input checked="<%= (cpOption == null) ? false : cpOption.isFacetable() %>" label="use-in-faceted-navigation" name="facetable" type="toggle-switch" />
-
-						<aui:input checked="<%= (cpOption == null) ? false : cpOption.getRequired() %>" name="required" type="toggle-switch" />
-
-						<aui:input checked="<%= (cpOption == null) ? false : cpOption.isSkuContributor() %>" name="skuContributor" type="toggle-switch" />
-
-						<aui:input helpMessage="key-help" name="key" />
-					</aui:fieldset>
-
-					<c:if test="<%= CustomAttributesUtil.hasCustomAttributes(company.getCompanyId(), CPOption.class.getName(), cpOptionId, null) %>">
-						<aui:fieldset>
-							<liferay-expando:custom-attribute-list
-								className="<%= CPOption.class.getName() %>"
-								classPK="<%= (cpOption != null) ? cpOption.getCPOptionId() : 0 %>"
-								editable="<%= true %>"
-								label="<%= true %>"
-							/>
-						</aui:fieldset>
-					</c:if>
-				</commerce-ui:panel>
-
-				<c:if test="<%= cpOptionDisplayContext.hasValues(cpOption) %>">
-					<commerce-ui:panel
-						bodyClasses="p-0"
-						title='<%= LanguageUtil.get(request, "values") %>'
-					>
-						<clay:headless-data-set-display
-							apiURL='<%= "/o/headless-commerce-admin-catalog/v1.0/options/" + cpOptionId + "/optionValues" %>'
-							clayDataSetActionDropdownItems="<%= cpOptionDisplayContext.getOptionValueClayDataSetActionDropdownItems() %>"
-							creationMenu="<%= cpOptionDisplayContext.getOptionValueCreationMenu(cpOptionId) %>"
-							id="<%= CommerceOptionDataSetConstants.COMMERCE_DATA_SET_KEY_OPTION_VALUES %>"
-							itemsPerPage="<%= 10 %>"
-							namespace="<%= liferayPortletResponse.getNamespace() %>"
-							pageNumber="<%= 1 %>"
-							portletURL="<%= renderResponse.createRenderURL() %>"
-							style="stacked"
-						/>
-					</commerce-ui:panel>
-				</c:if>
-			</div>
-		</div>
+		<c:if test="<%= cpOptionDisplayContext.hasValues(cpOption) %>">
+			<commerce-ui:panel
+				bodyClasses="p-0"
+				title='<%= LanguageUtil.get(request, "values") %>'
+			>
+				<frontend-data-set:headless-display
+					apiURL='<%= "/o/headless-commerce-admin-catalog/v1.0/options/" + cpOptionId + "/optionValues" %>'
+					creationMenu="<%= cpOptionDisplayContext.getOptionValueCreationMenu(cpOptionId) %>"
+					fdsActionDropdownItems="<%= cpOptionDisplayContext.getOptionValueFDSActionDropdownItems() %>"
+					id="<%= CommerceOptionFDSNames.OPTION_VALUES %>"
+					itemsPerPage="<%= 10 %>"
+					style="stacked"
+				/>
+			</commerce-ui:panel>
+		</c:if>
 	</div>
 </aui:form>
 

@@ -14,11 +14,12 @@
 
 package com.liferay.commerce.internal.upgrade.v4_5_1;
 
-import com.liferay.commerce.internal.upgrade.base.BaseCommerceServiceUpgradeProcess;
 import com.liferay.commerce.product.model.CommerceChannel;
+import com.liferay.portal.kernel.dao.jdbc.AutoBatchPreparedStatementUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -28,8 +29,7 @@ import java.sql.Statement;
 /**
  * @author Marco Leo
  */
-public class CommerceShippingMethodUpgradeProcess
-	extends BaseCommerceServiceUpgradeProcess {
+public class CommerceShippingMethodUpgradeProcess extends UpgradeProcess {
 
 	public CommerceShippingMethodUpgradeProcess(
 		ClassNameLocalService classNameLocalService,
@@ -42,34 +42,32 @@ public class CommerceShippingMethodUpgradeProcess
 	@Override
 	protected void doUpgrade() throws Exception {
 		try (Statement s = connection.createStatement();
-			ResultSet rs = s.executeQuery(
+			ResultSet resultSet = s.executeQuery(
 				"select commerceShippingMethodId, groupId from " +
-					"CommerceShippingMethod")) {
+					"CommerceShippingMethod");
+			PreparedStatement preparedStatement =
+				AutoBatchPreparedStatementUtil.concurrentAutoBatch(
+					connection,
+					"update CommerceShippingMethod set groupId = ? where " +
+						"commerceShippingMethodId = ?")) {
 
-			PreparedStatement ps = null;
+			while (resultSet.next()) {
+				long commerceChannelGroupId =
+					_getCommerceChannelGroupIdBySiteGroupId(
+						resultSet.getLong("groupId"));
 
-			while (rs.next()) {
-				long groupId = rs.getLong("groupId");
-
-				long channelGroupId = _getCommerceChannelGroupIdBySiteGroupId(
-					groupId);
-
-				if (channelGroupId == 0) {
+				if (commerceChannelGroupId == 0) {
 					continue;
 				}
 
-				long commerceShippingMethodId = rs.getLong(
-					"commerceShippingMethodId");
+				preparedStatement.setLong(1, commerceChannelGroupId);
+				preparedStatement.setLong(
+					2, resultSet.getLong("commerceShippingMethodId"));
 
-				ps = connection.prepareStatement(
-					"update CommerceShippingMethod set groupId = ? where " +
-						"commerceShippingMethodId = ?");
-
-				ps.setLong(1, channelGroupId);
-				ps.setLong(2, commerceShippingMethodId);
-
-				ps.executeUpdate();
+				preparedStatement.addBatch();
 			}
+
+			preparedStatement.executeBatch();
 		}
 	}
 
@@ -85,19 +83,19 @@ public class CommerceShippingMethodUpgradeProcess
 		try (Statement s = connection.createStatement()) {
 			s.setMaxRows(1);
 
-			try (ResultSet rs = s.executeQuery(sql)) {
-				if (rs.next()) {
-					companyId = rs.getLong("companyId");
-					commerceChannelId = rs.getLong("commerceChannelId");
+			try (ResultSet resultSet = s.executeQuery(sql)) {
+				if (resultSet.next()) {
+					companyId = resultSet.getLong("companyId");
+					commerceChannelId = resultSet.getLong("commerceChannelId");
 				}
 			}
 		}
 
-		long classNameId = _classNameLocalService.getClassNameId(
-			CommerceChannel.class.getName());
-
 		Group group = _groupLocalService.fetchGroup(
-			companyId, classNameId, commerceChannelId);
+			companyId,
+			_classNameLocalService.getClassNameId(
+				CommerceChannel.class.getName()),
+			commerceChannelId);
 
 		if (group != null) {
 			return group.getGroupId();

@@ -14,91 +14,216 @@
 
 package com.liferay.dynamic.data.mapping.form.field.type;
 
+import com.liferay.dynamic.data.mapping.model.DDMFormLayout;
+import com.liferay.dynamic.data.mapping.model.DDMFormLayoutColumn;
+import com.liferay.portal.json.JSONFactoryImpl;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
+import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoaderUtil;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
-import com.liferay.portal.kernel.util.SetUtil;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
+import org.junit.Assert;
 import org.junit.Before;
-import org.junit.runner.RunWith;
 
-import org.mockito.Mock;
-
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.mockito.Mockito;
 
 /**
  * @author Leonardo Barros
  */
-@PrepareForTest({PortalClassLoaderUtil.class, ResourceBundleUtil.class})
-@RunWith(PowerMockRunner.class)
-public abstract class BaseDDMFormFieldTypeSettingsTestCase
-	extends PowerMockito {
+public abstract class BaseDDMFormFieldTypeSettingsTestCase {
 
 	@Before
 	public void setUp() throws Exception {
+		setUpJSONFactoryUtil();
 		setUpLanguageUtil();
 		setUpPortalClassLoaderUtil();
+		setUpPortalUtil();
 		setUpResourceBundleUtil();
 	}
 
-	protected void setUpLanguageUtil() {
-		Set<Locale> availableLocales = SetUtil.fromArray(
-			new Locale[] {LocaleUtil.US});
+	protected void assertDDMFormLayout(
+		DDMFormLayout actualDDMFormLayout,
+		DDMFormLayout expectedDDMFormLayout) {
 
-		when(
+		_assertDDMFormLayoutRelatedObject(
+			actualDDMFormLayout, expectedDDMFormLayout,
+			_getAssertDDMFormLayoutPagesFunction(), "getDDMFormLayoutPages",
+			() -> Assert.assertEquals(
+				expectedDDMFormLayout.getPaginationMode(),
+				actualDDMFormLayout.getPaginationMode()));
+	}
+
+	protected void setUpJSONFactoryUtil() {
+		JSONFactoryUtil jsonFactoryUtil = new JSONFactoryUtil();
+
+		jsonFactoryUtil.setJSONFactory(new JSONFactoryImpl());
+	}
+
+	protected void setUpLanguageUtil() {
+		LanguageUtil languageUtil = new LanguageUtil();
+
+		Set<Locale> availableLocales = new HashSet<>(
+			Arrays.asList(LocaleUtil.BRAZIL, LocaleUtil.US));
+
+		Mockito.when(
 			language.getAvailableLocales()
 		).thenReturn(
 			availableLocales
 		);
 
-		LanguageUtil languageUtil = new LanguageUtil();
+		Mockito.when(
+			language.getLanguageId(LocaleUtil.BRAZIL)
+		).thenReturn(
+			"pt_BR"
+		);
+
+		Mockito.when(
+			language.getLanguageId(LocaleUtil.US)
+		).thenReturn(
+			"en_US"
+		);
 
 		languageUtil.setLanguage(language);
 	}
 
 	protected void setUpPortalClassLoaderUtil() {
-		mockStatic(PortalClassLoaderUtil.class);
+		PortalClassLoaderUtil.setClassLoader(Mockito.mock(ClassLoader.class));
+	}
 
-		when(
-			PortalClassLoaderUtil.getClassLoader()
+	protected void setUpPortalUtil() {
+		PortalUtil portalUtil = new PortalUtil();
+
+		Portal portal = Mockito.mock(Portal.class);
+
+		ResourceBundle resourceBundle = Mockito.mock(ResourceBundle.class);
+
+		Mockito.when(
+			portal.getResourceBundle(Mockito.any(Locale.class))
 		).thenReturn(
-			_classLoader
+			resourceBundle
 		);
+
+		portalUtil.setPortal(portal);
 	}
 
 	protected void setUpResourceBundleUtil() {
-		mockStatic(ResourceBundleUtil.class);
+		ResourceBundleLoader resourceBundleLoader = Mockito.mock(
+			ResourceBundleLoader.class);
 
-		when(
-			ResourceBundleUtil.getBundle(
-				"content.Language", LocaleUtil.BRAZIL, _classLoader)
+		ResourceBundleLoaderUtil.setPortalResourceBundleLoader(
+			resourceBundleLoader);
+
+		Mockito.when(
+			resourceBundleLoader.loadResourceBundle(Mockito.any(Locale.class))
 		).thenReturn(
-			_resourceBundle
+			ResourceBundleUtil.EMPTY_RESOURCE_BUNDLE
 		);
 
-		when(
-			ResourceBundleUtil.getBundle(
-				"content.Language", LocaleUtil.US, _classLoader)
+		ResourceBundle mockResourceBundle = Mockito.mock(ResourceBundle.class);
+
+		Mockito.when(
+			resourceBundleLoader.loadResourceBundle(Mockito.eq(LocaleUtil.US))
 		).thenReturn(
-			_resourceBundle
+			mockResourceBundle
+		);
+
+		Mockito.when(
+			resourceBundleLoader.loadResourceBundle(
+				Mockito.eq(LocaleUtil.BRAZIL))
+		).thenReturn(
+			mockResourceBundle
 		);
 	}
 
-	@Mock
-	protected Language language;
+	protected Language language = Mockito.mock(Language.class);
 
-	@Mock
-	private ClassLoader _classLoader;
+	private void _assertDDMFormLayoutColumn(
+		DDMFormLayoutColumn actualDDMFormLayoutColumn,
+		DDMFormLayoutColumn expectedDDMFormLayoutColumn) {
 
-	@Mock
-	private ResourceBundle _resourceBundle;
+		Assert.assertEquals(
+			expectedDDMFormLayoutColumn.getDDMFormFieldNames(),
+			actualDDMFormLayoutColumn.getDDMFormFieldNames());
+		Assert.assertEquals(
+			expectedDDMFormLayoutColumn.getSize(),
+			actualDDMFormLayoutColumn.getSize());
+	}
+
+	private void _assertDDMFormLayoutRelatedObject(
+		Object actualDDMFormLayoutRelatedObject,
+		Object expectedDDMFormLayoutRelatedObject,
+		Function<List<Object>, Consumer<Object>> function, String methodName,
+		Runnable runnable) {
+
+		List<Object> expectedDDMFormLayoutRelatedObjects =
+			ReflectionTestUtil.invoke(
+				expectedDDMFormLayoutRelatedObject, methodName, null);
+
+		List<Object> actualDDMFormLayoutRelatedObjects =
+			ReflectionTestUtil.invoke(
+				actualDDMFormLayoutRelatedObject, methodName, null);
+
+		Stream<Object> stream = actualDDMFormLayoutRelatedObjects.stream();
+
+		stream.forEachOrdered(
+			function.apply(expectedDDMFormLayoutRelatedObjects));
+
+		Assert.assertEquals(
+			expectedDDMFormLayoutRelatedObjects.toString(), 0,
+			expectedDDMFormLayoutRelatedObjects.size());
+
+		Optional.ofNullable(
+			runnable
+		).ifPresent(
+			Runnable::run
+		);
+	}
+
+	private Function<List<Object>, Consumer<Object>>
+		_getAssertDDMFormLayoutColumnsFunction() {
+
+		return expectedDDMFormLayoutColumns ->
+			actualDDMFormLayoutColumn -> _assertDDMFormLayoutColumn(
+				(DDMFormLayoutColumn)actualDDMFormLayoutColumn,
+				(DDMFormLayoutColumn)expectedDDMFormLayoutColumns.remove(0));
+	}
+
+	private Function<List<Object>, Consumer<Object>>
+		_getAssertDDMFormLayoutPagesFunction() {
+
+		return expectedDDMFormLayoutPages ->
+			actualDDMFormLayoutPage -> _assertDDMFormLayoutRelatedObject(
+				actualDDMFormLayoutPage, expectedDDMFormLayoutPages.remove(0),
+				_getAssertDDMFormLayoutRowsFunction(), "getDDMFormLayoutRows",
+				null);
+	}
+
+	private Function<List<Object>, Consumer<Object>>
+		_getAssertDDMFormLayoutRowsFunction() {
+
+		return expectedDDMFormLayoutRows ->
+			actualDDMFormLayoutRow -> _assertDDMFormLayoutRelatedObject(
+				actualDDMFormLayoutRow, expectedDDMFormLayoutRows.remove(0),
+				_getAssertDDMFormLayoutColumnsFunction(),
+				"getDDMFormLayoutColumns", null);
+	}
 
 }

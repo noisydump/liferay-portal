@@ -9,7 +9,8 @@
  * distribution rights of the Software.
  */
 
-import React, {useContext, useMemo} from 'react';
+import ClayTable from '@clayui/table';
+import React, {useContext} from 'react';
 
 import filterConstants from '../../../shared/components/filter/util/filterConstants.es';
 import ChildLink from '../../../shared/components/router/ChildLink.es';
@@ -18,7 +19,7 @@ import {AppContext} from '../../AppContext.es';
 import {processStatusConstants} from '../../filter/ProcessStatusFilter.es';
 import {slaStatusConstants} from '../../filter/SLAStatusFilter.es';
 
-const Item = ({
+function Item({
 	assignee: {id, name},
 	currentTab,
 	onTimeTaskCount,
@@ -26,53 +27,40 @@ const Item = ({
 	processId,
 	processStepKey,
 	taskCount,
-}) => {
+}) {
 	const {defaultDelta} = useContext(AppContext);
 
-	const counts = useMemo(
-		() => ({
-			onTime: onTimeTaskCount,
-			overdue: overdueTaskCount,
-			total: taskCount,
-		}),
-		[onTimeTaskCount, overdueTaskCount, taskCount]
-	);
+	const counts = {
+		onTime: onTimeTaskCount,
+		overdue: overdueTaskCount,
+		total: taskCount,
+	};
 
-	const filters = useMemo(
-		() => ({
-			[filterConstants.assignee.key]: [id],
-			[filterConstants.processStatus.key]: [
-				processStatusConstants.pending,
-			],
-			[filterConstants.processStep.key]: [processStepKey],
-			[filterConstants.slaStatus.key]: [slaStatusConstants[currentTab]],
-		}),
-		[currentTab, id, processStepKey]
-	);
+	const filters = {
+		[filterConstants.assignee.key]: [id],
+		[filterConstants.processStatus.key]: [processStatusConstants.pending],
+		[filterConstants.processStep.key]: [processStepKey],
+		[filterConstants.slaStatus.key]: [slaStatusConstants[currentTab]],
+	};
 
-	const formattedPercentage = useMemo(
-		() => getFormattedPercentage(counts[currentTab], taskCount),
-		[counts, currentTab, taskCount]
-	);
-
-	const instancesListPath = useMemo(
-		() => `/instance/${processId}/${defaultDelta}/1`,
-		[defaultDelta, processId]
+	const formattedPercentage = getFormattedPercentage(
+		counts[currentTab],
+		taskCount
 	);
 
 	return (
-		<tr>
-			<td className="assignee-name border-0">
+		<ClayTable.Row>
+			<ClayTable.Cell className="assignee-name border-0">
 				<ChildLink
-					className={'workload-by-assignee-link'}
+					className="workload-by-assignee-link"
 					query={{filters}}
-					to={instancesListPath}
+					to={`/instance/${processId}/${defaultDelta}/1/dateOverdue:asc`}
 				>
 					<span>{name}</span>
 				</ChildLink>
-			</td>
+			</ClayTable.Cell>
 
-			<td className="border-0 text-right">
+			<ClayTable.Cell className="border-0 text-right">
 				<span className="task-count-value">{counts[currentTab]}</span>
 
 				{currentTab !== 'total' && (
@@ -82,29 +70,31 @@ const Item = ({
 						{formattedPercentage}
 					</span>
 				)}
-			</td>
-		</tr>
+			</ClayTable.Cell>
+		</ClayTable.Row>
 	);
-};
+}
 
-const Table = ({currentTab, items = [], processId, processStepKey}) => (
-	<div className="mb-3 table-fit-panel">
-		<table className="table table-autofit table-hover">
-			<tbody>
-				{items.map((item, index) => (
-					<Table.Item
-						{...item}
-						currentTab={currentTab}
-						key={index}
-						processId={processId}
-						processStepKey={processStepKey}
-					/>
-				))}
-			</tbody>
-		</table>
-	</div>
-);
+function Table({currentTab, items = [], processId, processStepKey}) {
+	return (
+		<div className="mb-3 table-fit-panel">
+			<ClayTable borderless>
+				<ClayTable.Body>
+					{items.map((item, index) => (
+						<Table.Item
+							{...item}
+							currentTab={currentTab}
+							key={index}
+							processId={processId}
+							processStepKey={processStepKey}
+						/>
+					))}
+				</ClayTable.Body>
+			</ClayTable>
+		</div>
+	);
+}
 
 Table.Item = Item;
 
-export {Table};
+export default Table;

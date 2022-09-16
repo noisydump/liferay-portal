@@ -73,11 +73,20 @@ public class PoshiElementAttribute
 		StringBuilder sb = new StringBuilder();
 
 		sb.append(getName());
-		sb.append(" = \"");
 
 		String value = getValue();
 
-		value = value.replaceAll("\"", "&quot;");
+		PoshiElement parentPoshiElement = (PoshiElement)getParent();
+
+		if ((parentPoshiElement instanceof CommandPoshiElement ||
+			 parentPoshiElement instanceof DefinitionPoshiElement) &&
+			value.equals("")) {
+
+			return sb.toString();
+		}
+
+		sb.append(" = \"");
+		value = value.replaceAll("\"", "\\\"");
 
 		sb.append(value);
 

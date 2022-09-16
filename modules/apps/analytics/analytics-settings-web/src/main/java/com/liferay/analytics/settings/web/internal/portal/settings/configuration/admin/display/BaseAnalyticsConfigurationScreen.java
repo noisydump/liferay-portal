@@ -22,7 +22,8 @@ import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.ResourceBundleUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.io.IOException;
@@ -49,13 +50,21 @@ public abstract class BaseAnalyticsConfigurationScreen
 
 	@Override
 	public String getName(Locale locale) {
-		return LanguageUtil.get(
-			ResourceBundleUtil.getBundle(locale, getClass()), getKey());
+		return LanguageUtil.get(locale, getKey());
 	}
 
 	@Override
 	public String getScope() {
 		return "company";
+	}
+
+	@Override
+	public boolean isVisible() {
+		if (GetterUtil.getBoolean(PropsUtil.get("feature.flag.LRAC-10757"))) {
+			return false;
+		}
+
+		return true;
 	}
 
 	@Override
@@ -70,7 +79,7 @@ public abstract class BaseAnalyticsConfigurationScreen
 			RequestDispatcher requestDispatcher =
 				servletContext.getRequestDispatcher(getJspPath());
 
-			setHttpServletRequestAttributes(httpServletRequest);
+			_setHttpServletRequestAttributes(httpServletRequest);
 
 			requestDispatcher.include(httpServletRequest, httpServletResponse);
 		}
@@ -84,7 +93,18 @@ public abstract class BaseAnalyticsConfigurationScreen
 
 	protected abstract ServletContext getServletContext();
 
-	protected void setHttpServletRequestAttributes(
+	@Reference
+	protected AnalyticsUsersManager analyticsUsersManager;
+
+	@Reference
+	protected ConfigurationProvider configurationProvider;
+
+	@Reference(
+		target = "(&(release.bundle.symbolic.name=com.liferay.analytics.settings.web)(release.schema.version>=1.0.1))"
+	)
+	protected Release release;
+
+	private void _setHttpServletRequestAttributes(
 			HttpServletRequest httpServletRequest)
 		throws Exception {
 
@@ -101,18 +121,5 @@ public abstract class BaseAnalyticsConfigurationScreen
 			AnalyticsSettingsWebKeys.ANALYTICS_USERS_MANAGER,
 			analyticsUsersManager);
 	}
-
-	@Reference(
-		target = "(&(release.bundle.symbolic.name=com.liferay.analytics.settings.web)(release.schema.version>=1.0.1))",
-		unbind = "-"
-	)
-	protected void setRelease(Release release) {
-	}
-
-	@Reference
-	protected AnalyticsUsersManager analyticsUsersManager;
-
-	@Reference
-	protected ConfigurationProvider configurationProvider;
 
 }

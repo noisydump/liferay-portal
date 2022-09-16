@@ -14,7 +14,6 @@
 
 package com.liferay.ratings.kernel.service.persistence;
 
-import com.liferay.portal.kernel.bean.PortalBeanLocatorUtil;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.OrderByComparator;
@@ -186,7 +185,7 @@ public class RatingsStatsUtil {
 	 * </p>
 	 *
 	 * @param classNameId the class name ID
-	 * @param classPK the class pk
+	 * @param classPKs the class pks
 	 * @param start the lower bound of the range of ratings statses
 	 * @param end the upper bound of the range of ratings statses (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
@@ -426,15 +425,9 @@ public class RatingsStatsUtil {
 	}
 
 	public static RatingsStatsPersistence getPersistence() {
-		if (_persistence == null) {
-			_persistence =
-				(RatingsStatsPersistence)PortalBeanLocatorUtil.locate(
-					RatingsStatsPersistence.class.getName());
-		}
-
 		return _persistence;
 	}
 
-	private static RatingsStatsPersistence _persistence;
+	private static volatile RatingsStatsPersistence _persistence;
 
 }

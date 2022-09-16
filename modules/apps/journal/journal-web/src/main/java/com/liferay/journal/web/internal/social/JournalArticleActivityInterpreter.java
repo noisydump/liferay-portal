@@ -24,17 +24,18 @@ import com.liferay.journal.exception.NoSuchArticleException;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.model.JournalFolder;
 import com.liferay.journal.service.JournalArticleLocalService;
-import com.liferay.journal.web.internal.util.JournalResourceBundleLoader;
-import com.liferay.petra.string.StringBundler;
+import com.liferay.journal.util.JournalHelper;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
-import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.social.kernel.model.BaseSocialActivityInterpreter;
@@ -59,11 +60,6 @@ public class JournalArticleActivityInterpreter
 	@Override
 	public String[] getClassNames() {
 		return _CLASS_NAMES;
-	}
-
-	@Override
-	protected ResourceBundleLoader acquireResourceBundleLoader() {
-		return JournalResourceBundleLoader.INSTANCE;
 	}
 
 	@Override
@@ -101,20 +97,45 @@ public class JournalArticleActivityInterpreter
 			Layout layout = article.getLayout();
 
 			if (layout != null) {
-				String groupFriendlyURL = _portal.getGroupFriendlyURL(
-					layout.getLayoutSet(), serviceContext.getThemeDisplay());
+				ThemeDisplay themeDisplay = serviceContext.getThemeDisplay();
 
-				return StringBundler.concat(
-					groupFriendlyURL,
+				return _journalHelper.createURLPattern(
+					article, themeDisplay.getLocale(), layout.isPrivateLayout(),
 					JournalArticleConstants.CANONICAL_URL_SEPARATOR,
-					article.getUrlTitle());
+					themeDisplay);
 			}
 
 			return null;
 		}
 		catch (NoSuchArticleException noSuchArticleException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(noSuchArticleException);
+			}
+
 			return null;
 		}
+	}
+
+	@Override
+	protected Object[] getTitleArguments(
+			String groupName, SocialActivity activity, String link,
+			String title, ServiceContext serviceContext)
+		throws Exception {
+
+		if (activity.getType() == SocialActivityConstants.TYPE_ADD_COMMENT) {
+			String creatorUserName = getUserName(
+				activity.getUserId(), serviceContext);
+			String receiverUserName = getUserName(
+				activity.getReceiverUserId(), serviceContext);
+
+			return new Object[] {
+				groupName, creatorUserName, receiverUserName,
+				wrapLink(link, title)
+			};
+		}
+
+		return super.getTitleArguments(
+			groupName, activity, link, title, serviceContext);
 	}
 
 	@Override
@@ -136,6 +157,13 @@ public class JournalArticleActivityInterpreter
 			}
 
 			return "activity-journal-article-update-web-content-in";
+		}
+		else if (activityType == SocialActivityConstants.TYPE_ADD_COMMENT) {
+			if (Validator.isNull(groupName)) {
+				return "activity-journal-article-add-comment";
+			}
+
+			return "activity-journal-article-add-comment-in";
 		}
 		else if (activityType == SocialActivityConstants.TYPE_MOVE_TO_TRASH) {
 			if (Validator.isNull(groupName)) {
@@ -184,17 +212,14 @@ public class JournalArticleActivityInterpreter
 			permissionChecker, activity.getClassPK(), actionId);
 	}
 
-	@Reference(unbind = "-")
-	protected void setJournalArticleLocalService(
-		JournalArticleLocalService journalArticleLocalService) {
-
-		_journalArticleLocalService = journalArticleLocalService;
-	}
-
 	private static final String[] _CLASS_NAMES = {
 		JournalArticle.class.getName()
 	};
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		JournalArticleActivityInterpreter.class);
+
+	@Reference
 	private JournalArticleLocalService _journalArticleLocalService;
 
 	@Reference(
@@ -208,6 +233,9 @@ public class JournalArticleActivityInterpreter
 	)
 	private ModelResourcePermission<JournalFolder>
 		_journalFolderModelResourcePermission;
+
+	@Reference
+	private JournalHelper _journalHelper;
 
 	@Reference
 	private Portal _portal;

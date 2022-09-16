@@ -22,6 +22,7 @@ import com.liferay.message.boards.model.MBThread;
 import com.liferay.message.boards.service.MBCategoryServiceUtil;
 import com.liferay.message.boards.service.MBThreadServiceUtil;
 import com.liferay.message.boards.settings.MBGroupServiceSettings;
+import com.liferay.message.boards.web.internal.util.MBRequestUtil;
 import com.liferay.portal.kernel.dao.orm.QueryDefinition;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -62,7 +63,6 @@ public class DefaultMBListDisplayContext implements MBListDisplayContext {
 		String mvcRenderCommandName) {
 
 		_httpServletRequest = httpServletRequest;
-
 		_categoryId = categoryId;
 
 		boolean showMyPosts = false;
@@ -156,12 +156,18 @@ public class DefaultMBListDisplayContext implements MBListDisplayContext {
 			status, themeDisplay.getUserId(), true, searchContainer.getStart(),
 			searchContainer.getEnd(), searchContainer.getOrderByComparator());
 
-		searchContainer.setTotal(
-			MBCategoryServiceUtil.getCategoriesCount(
-				themeDisplay.getScopeGroupId(), _categoryId, queryDefinition));
-		searchContainer.setResults(
-			MBCategoryServiceUtil.getCategories(
-				themeDisplay.getScopeGroupId(), _categoryId, queryDefinition));
+		try {
+			searchContainer.setResultsAndTotal(
+				() -> MBCategoryServiceUtil.getCategories(
+					themeDisplay.getScopeGroupId(), _categoryId,
+					queryDefinition),
+				MBCategoryServiceUtil.getCategoriesCount(
+					themeDisplay.getScopeGroupId(), _categoryId,
+					queryDefinition));
+		}
+		catch (Throwable throwable) {
+			throw new PortalException(throwable);
+		}
 	}
 
 	@Override
@@ -176,15 +182,14 @@ public class DefaultMBListDisplayContext implements MBListDisplayContext {
 			long searchCategoryId = ParamUtil.getLong(
 				_httpServletRequest, "searchCategoryId");
 
-			List<Long> categoryIds = new ArrayList<>();
-
-			categoryIds.add(Long.valueOf(searchCategoryId));
+			List<Long> categoryIds = new ArrayList<Long>() {
+				{
+					add(Long.valueOf(searchCategoryId));
+				}
+			};
 
 			MBCategoryServiceUtil.getSubcategoryIds(
 				categoryIds, themeDisplay.getScopeGroupId(), searchCategoryId);
-
-			long[] categoryIdsArray = StringUtil.split(
-				StringUtil.merge(categoryIds), 0L);
 
 			Indexer<MBMessage> indexer = IndexerRegistryUtil.getIndexer(
 				MBMessage.class);
@@ -193,24 +198,25 @@ public class DefaultMBListDisplayContext implements MBListDisplayContext {
 				_httpServletRequest);
 
 			searchContext.setAttribute("paginationType", "more");
-			searchContext.setCategoryIds(categoryIdsArray);
+			searchContext.setCategoryIds(
+				StringUtil.split(StringUtil.merge(categoryIds), 0L));
 			searchContext.setEnd(searchContainer.getEnd());
 			searchContext.setIncludeAttachments(true);
-
-			String keywords = ParamUtil.getString(
-				_httpServletRequest, "keywords");
-
-			searchContext.setKeywords(keywords);
-
+			searchContext.setKeywords(
+				ParamUtil.getString(_httpServletRequest, "keywords"));
 			searchContext.setStart(searchContainer.getStart());
 
 			Hits hits = indexer.search(searchContext);
 
-			searchContainer.setResults(
-				SearchResultUtil.getSearchResults(
-					hits, _httpServletRequest.getLocale()));
-
-			searchContainer.setTotal(hits.getLength());
+			try {
+				searchContainer.setResultsAndTotal(
+					() -> SearchResultUtil.getSearchResults(
+						hits, _httpServletRequest.getLocale()),
+					hits.getLength());
+			}
+			catch (Throwable throwable) {
+				throw new PortalException(throwable);
+			}
 		}
 		else if (isShowRecentPosts()) {
 			searchContainer.setEmptyResultsMessage("there-are-no-recent-posts");
@@ -221,8 +227,8 @@ public class DefaultMBListDisplayContext implements MBListDisplayContext {
 			Calendar calendar = Calendar.getInstance();
 
 			MBGroupServiceSettings mbGroupServiceSettings =
-				MBGroupServiceSettings.getInstance(
-					themeDisplay.getSiteGroupId());
+				MBRequestUtil.getMBGroupServiceSettings(
+					_httpServletRequest, themeDisplay.getSiteGroupId());
 
 			int offset = GetterUtil.getInteger(
 				mbGroupServiceSettings.getRecentPostsDateOffset());
@@ -235,39 +241,54 @@ public class DefaultMBListDisplayContext implements MBListDisplayContext {
 				includeAnonymous = true;
 			}
 
-			searchContainer.setTotal(
-				MBThreadServiceUtil.getGroupThreadsCount(
-					themeDisplay.getScopeGroupId(), groupThreadsUserId,
-					calendar.getTime(), includeAnonymous,
-					WorkflowConstants.STATUS_APPROVED));
-			searchContainer.setResults(
-				MBThreadServiceUtil.getGroupThreads(
-					themeDisplay.getScopeGroupId(), groupThreadsUserId,
-					calendar.getTime(), includeAnonymous,
-					WorkflowConstants.STATUS_APPROVED,
-					searchContainer.getStart(), searchContainer.getEnd()));
+			boolean mbIncludeAnonymous = includeAnonymous;
+
+			try {
+				searchContainer.setResultsAndTotal(
+					() -> MBThreadServiceUtil.getGroupThreads(
+						themeDisplay.getScopeGroupId(), groupThreadsUserId,
+						calendar.getTime(), mbIncludeAnonymous,
+						WorkflowConstants.STATUS_APPROVED,
+						searchContainer.getStart(), searchContainer.getEnd()),
+					MBThreadServiceUtil.getGroupThreadsCount(
+						themeDisplay.getScopeGroupId(), groupThreadsUserId,
+						calendar.getTime(), mbIncludeAnonymous,
+						WorkflowConstants.STATUS_APPROVED));
+			}
+			catch (Throwable throwable) {
+				throw new PortalException(throwable);
+			}
 		}
 		else if (isShowMyPosts()) {
 			searchContainer.setEmptyResultsMessage("you-do-not-have-any-posts");
 
 			if (!themeDisplay.isSignedIn()) {
-				searchContainer.setTotal(0);
-				searchContainer.setResults(Collections.emptyList());
+				try {
+					searchContainer.setResultsAndTotal(
+						Collections::emptyList, 0);
+				}
+				catch (Throwable throwable) {
+					throw new PortalException(throwable);
+				}
 
 				return;
 			}
 
 			int status = WorkflowConstants.STATUS_ANY;
 
-			searchContainer.setTotal(
-				MBThreadServiceUtil.getGroupThreadsCount(
-					themeDisplay.getScopeGroupId(), themeDisplay.getUserId(),
-					status));
-			searchContainer.setResults(
-				MBThreadServiceUtil.getGroupThreads(
-					themeDisplay.getScopeGroupId(), themeDisplay.getUserId(),
-					status, searchContainer.getStart(),
-					searchContainer.getEnd()));
+			try {
+				searchContainer.setResultsAndTotal(
+					() -> MBThreadServiceUtil.getGroupThreads(
+						themeDisplay.getScopeGroupId(),
+						themeDisplay.getUserId(), status,
+						searchContainer.getStart(), searchContainer.getEnd()),
+					MBThreadServiceUtil.getGroupThreadsCount(
+						themeDisplay.getScopeGroupId(),
+						themeDisplay.getUserId(), status));
+			}
+			catch (Throwable throwable) {
+				throw new PortalException(throwable);
+			}
 		}
 		else {
 			int status = WorkflowConstants.STATUS_APPROVED;
@@ -287,14 +308,18 @@ public class DefaultMBListDisplayContext implements MBListDisplayContext {
 				searchContainer.getStart(), searchContainer.getEnd(),
 				searchContainer.getOrderByComparator());
 
-			searchContainer.setTotal(
-				MBThreadServiceUtil.getThreadsCount(
-					themeDisplay.getScopeGroupId(), _categoryId,
-					queryDefinition));
-			searchContainer.setResults(
-				MBThreadServiceUtil.getThreads(
-					themeDisplay.getScopeGroupId(), _categoryId,
-					queryDefinition));
+			try {
+				searchContainer.setResultsAndTotal(
+					() -> MBThreadServiceUtil.getThreads(
+						themeDisplay.getScopeGroupId(), _categoryId,
+						queryDefinition),
+					MBThreadServiceUtil.getThreadsCount(
+						themeDisplay.getScopeGroupId(), _categoryId,
+						queryDefinition));
+			}
+			catch (Throwable throwable) {
+				throw new PortalException(throwable);
+			}
 		}
 	}
 
@@ -347,12 +372,9 @@ public class DefaultMBListDisplayContext implements MBListDisplayContext {
 
 	private boolean _isShowSearch(String mvcRenderCommandName) {
 		if (Validator.isNotNull(
-				ParamUtil.getString(_httpServletRequest, "keywords"))) {
+				ParamUtil.getString(_httpServletRequest, "keywords")) ||
+			mvcRenderCommandName.equals("/message_boards/search")) {
 
-			return true;
-		}
-
-		if (mvcRenderCommandName.equals("/message_boards/search")) {
 			return true;
 		}
 

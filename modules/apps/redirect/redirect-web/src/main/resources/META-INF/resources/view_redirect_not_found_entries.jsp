@@ -17,15 +17,16 @@
 <%@ include file="/init.jsp" %>
 
 <%
-RedirectNotFoundEntriesDisplayContext redirectNotFoundEntriesDisplayContext = new RedirectNotFoundEntriesDisplayContext(request, liferayPortletRequest, liferayPortletResponse);
+RedirectNotFoundEntriesDisplayContext redirectNotFoundEntriesDisplayContext = (RedirectNotFoundEntriesDisplayContext)request.getAttribute(RedirectNotFoundEntriesDisplayContext.class.getName());
 
 SearchContainer<RedirectNotFoundEntry> redirectNotFoundEntriesSearchContainer = redirectNotFoundEntriesDisplayContext.searchContainer();
 
-RedirectNotFoundEntriesManagementToolbarDisplayContext redirectNotFoundEntriesManagementToolbarDisplayContext = new RedirectNotFoundEntriesManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, redirectNotFoundEntriesSearchContainer);
+RedirectNotFoundEntriesManagementToolbarDisplayContext redirectNotFoundEntriesManagementToolbarDisplayContext = redirectNotFoundEntriesDisplayContext.getRedirectNotFoundEntriesManagementToolbarDisplayContext();
 %>
 
-<clay:management-toolbar-v2
-	displayContext="<%= redirectNotFoundEntriesManagementToolbarDisplayContext %>"
+<clay:management-toolbar
+	managementToolbarDisplayContext="<%= redirectNotFoundEntriesManagementToolbarDisplayContext %>"
+	propsTransformer="js/RedirectNotFoundEntriesManagementToolbarPropsTransformer"
 />
 
 <aui:form action="<%= redirectNotFoundEntriesSearchContainer.getIteratorURL() %>" cssClass="container-fluid container-fluid-max-xl" name="fm">
@@ -65,7 +66,7 @@ RedirectNotFoundEntriesManagementToolbarDisplayContext redirectNotFoundEntriesMa
 
 					<c:if test='<%= StringUtil.equals("all", ParamUtil.getString(request, "filterType")) %>'>
 						<liferay-ui:search-container-column-text
-							cssClass="table-cell-minw-200 table-cell-smallest table-column-text-center"
+							cssClass="table-cell-expand-smallest table-cell-minw-200 table-column-text-center"
 							name="ignored-urls"
 						>
 							<c:if test="<%= redirectNotFoundEntry.isIgnored() %>">
@@ -105,9 +106,3 @@ RedirectNotFoundEntriesManagementToolbarDisplayContext redirectNotFoundEntriesMa
 		</c:otherwise>
 	</c:choose>
 </aui:form>
-
-<liferay-frontend:component
-	componentId="<%= redirectNotFoundEntriesManagementToolbarDisplayContext.getDefaultEventHandler() %>"
-	context="<%= redirectNotFoundEntriesManagementToolbarDisplayContext.getComponentContext() %>"
-	module="js/RedirectNotFoundEntriesManagementToolbarDefaultEventHandler.es"
-/>

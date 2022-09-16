@@ -21,7 +21,7 @@ import com.liferay.asset.list.service.AssetListEntryService;
 import com.liferay.frontend.taglib.form.navigator.BaseJSPFormNavigatorEntry;
 import com.liferay.frontend.taglib.form.navigator.FormNavigatorEntry;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
@@ -29,6 +29,7 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
+import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.segments.asah.connector.internal.util.AsahUtil;
 import com.liferay.segments.constants.SegmentsEntryConstants;
 
@@ -74,7 +75,12 @@ public class AsahInterestTermFormNavigatorEntry
 		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
 			"content.Language", locale, getClass());
 
-		return LanguageUtil.get(resourceBundle, "content-recommendation");
+		return _language.get(resourceBundle, "content-recommendation");
+	}
+
+	@Override
+	public ServletContext getServletContext() {
+		return _servletContext;
 	}
 
 	@Override
@@ -91,14 +97,14 @@ public class AsahInterestTermFormNavigatorEntry
 				_assetListEntryService.fetchAssetListEntry(assetListEntryId);
 
 			if (assetListEntry != null) {
-				UnicodeProperties unicodeProperties = new UnicodeProperties();
-
 				long segmentsEntryId = ParamUtil.getLong(
 					httpServletRequest, "segmentsEntryId",
 					SegmentsEntryConstants.ID_DEFAULT);
 
-				unicodeProperties.load(
-					assetListEntry.getTypeSettings(segmentsEntryId));
+				UnicodeProperties unicodeProperties =
+					UnicodePropertiesBuilder.load(
+						assetListEntry.getTypeSettings(segmentsEntryId)
+					).build();
 
 				boolean enableContentRecommendation = GetterUtil.getBoolean(
 					unicodeProperties.getProperty(
@@ -119,27 +125,14 @@ public class AsahInterestTermFormNavigatorEntry
 	@Override
 	public boolean isVisible(User user, AssetListEntry assetListEntry) {
 		if (!AsahUtil.isAnalyticsEnabled(
-				user.getCompanyId(), assetListEntry.getGroupId())) {
-
-			return false;
-		}
-
-		if (assetListEntry.getType() !=
-				AssetListEntryTypeConstants.TYPE_DYNAMIC) {
+				user.getCompanyId(), assetListEntry.getGroupId()) ||
+			(assetListEntry.getType() !=
+				AssetListEntryTypeConstants.TYPE_DYNAMIC)) {
 
 			return false;
 		}
 
 		return true;
-	}
-
-	@Override
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.segments.asah.connector)",
-		unbind = "-"
-	)
-	public void setServletContext(ServletContext servletContext) {
-		super.setServletContext(servletContext);
 	}
 
 	@Override
@@ -152,5 +145,13 @@ public class AsahInterestTermFormNavigatorEntry
 
 	@Reference
 	private AssetListEntryService _assetListEntryService;
+
+	@Reference
+	private Language _language;
+
+	@Reference(
+		target = "(osgi.web.symbolicname=com.liferay.segments.asah.connector)"
+	)
+	private ServletContext _servletContext;
 
 }

@@ -44,8 +44,8 @@ else if (parentCategoryId > 0) {
 renderResponse.setTitle(title);
 %>
 
-<portlet:actionURL name="editCategory" var="editCategoryURL">
-	<portlet:param name="mvcPath" value="/edit_category.jsp" />
+<portlet:actionURL name="/asset_categories_admin/edit_asset_category" var="editCategoryURL">
+	<portlet:param name="mvcPath" value="/edit_asset_category.jsp" />
 	<portlet:param name="groupId" value="<%= String.valueOf(groupId) %>" />
 	<portlet:param name="vocabularyId" value="<%= String.valueOf(vocabularyId) %>" />
 </portlet:actionURL>
@@ -58,6 +58,7 @@ renderResponse.setTitle(title);
 	<aui:input name="categoryId" type="hidden" value="<%= categoryId %>" />
 
 	<liferay-frontend:edit-form-body>
+		<liferay-ui:error exception="<%= AssetCategoryLimitException.class %>" message="the-maximum-number-of-categories-for-the-vocabulary-has-been-exceeded" />
 		<liferay-ui:error exception="<%= AssetCategoryNameException.class %>" message="please-enter-a-valid-name" />
 		<liferay-ui:error exception="<%= DuplicateCategoryException.class %>" message="please-enter-a-unique-name" />
 
@@ -74,7 +75,21 @@ renderResponse.setTitle(title);
 					<aui:validator name="required" />
 				</aui:input>
 
-				<aui:input name="description" placeholder="description" />
+				<div>
+					<label for="<portlet:namespace />description"><liferay-ui:message key="description" /></label>
+
+					<liferay-ui:input-localized
+						availableLocales="<%= assetCategoriesDisplayContext.getAvailableLocales() %>"
+						cssClass="form-control"
+						defaultLanguageId="<%= assetCategoriesDisplayContext.getDefaultLanguageId(category) %>"
+						editorName="ckeditor"
+						formName="fm"
+						name="description"
+						selectedLanguageId="<%= assetCategoriesDisplayContext.getSelectedLanguageId(category) %>"
+						type="editor"
+						xml="<%= (category == null) ? StringPool.BLANK : category.getDescription() %>"
+					/>
+				</div>
 
 				<c:choose>
 					<c:when test="<%= assetCategoriesDisplayContext.isFlattenedNavigationAllowed() %>">
@@ -87,14 +102,14 @@ renderResponse.setTitle(title);
 							<div>
 								<div id="<portlet:namespace />parentCategoryContainer">
 									<div class="field-content">
-										<div class="form-group" id="<%= "namespace_assetCategoriesSelector_" + vocabularyId %>">
+										<div class="form-group" id="namespace_assetCategoriesSelector_<%= vocabularyId %>">
 											<div class="input-group">
 												<div class="input-group-item">
 													<div class="form-control form-control-tag-group input-group">
 														<div class="input-group-item">
 															<c:if test="<%= parentCategory != null %>">
 																<clay:label
-																	closeable="<%= true %>"
+																	dismissible="<%= true %>"
 																	label="<%= parentCategory.getTitle(locale) %>"
 																/>
 
@@ -156,6 +171,23 @@ renderResponse.setTitle(title);
 				</c:choose>
 			</liferay-frontend:fieldset>
 
+			<c:if test="<%= assetCategoriesDisplayContext.isShowSelectAssetDisplayPage() %>">
+				<liferay-frontend:fieldset
+					collapsed="<%= true %>"
+					collapsible="<%= true %>"
+					label="display-page"
+				>
+					<liferay-asset:select-asset-display-page
+						classNameId="<%= PortalUtil.getClassNameId(AssetCategory.class) %>"
+						classPK="<%= (category != null) ? category.getCategoryId() : 0 %>"
+						classTypeId="<%= 0 %>"
+						groupId="<%= scopeGroupId %>"
+						parentClassPK="<%= parentCategoryId %>"
+						showViewInContextLink="<%= true %>"
+					/>
+				</liferay-frontend:fieldset>
+			</c:if>
+
 			<c:if test="<%= (category == null) && !assetCategoriesDisplayContext.isItemSelector() %>">
 				<liferay-frontend:fieldset
 					collapsed="<%= true %>"
@@ -173,80 +205,25 @@ renderResponse.setTitle(title);
 	<c:choose>
 		<c:when test="<%= !assetCategoriesDisplayContext.isItemSelector() %>">
 			<liferay-frontend:edit-form-footer>
-				<aui:button type="submit" />
+				<aui:button disabled="<%= assetCategoriesDisplayContext.isSaveButtonDisabled() %>" type="submit" />
 
-				<aui:button cssClass="btn-secondary" onClick='<%= liferayPortletResponse.getNamespace() + "saveAndAddNew();" %>' value="save-and-add-a-new-one" />
+				<aui:button disabled="<%= assetCategoriesDisplayContext.isSaveAndAddNewButtonDisabled() %>" onClick='<%= liferayPortletResponse.getNamespace() + "saveAndAddNew();" %>' value="save-and-add-a-new-one" />
 
-				<aui:button cssClass="btn-secondary" href="<%= redirect %>" type="cancel" />
+				<aui:button href="<%= redirect %>" type="cancel" />
 			</liferay-frontend:edit-form-footer>
 		</c:when>
 		<c:otherwise>
-			<aui:script>
-				var formSheet = document.querySelector('.lfr-form-content .sheet');
-
-				formSheet.classList.add('border-0');
-
-				var dialog = Liferay.Util.getWindow(
-					'<%= assetCategoriesDisplayContext.getItemSelectorEventName() %>'
-				);
-				var footer = dialog.getToolbar('footer');
-
-				dialog.headerNode
-					.one('.modal-title')
-					.text(
-						dialog.get('initialTitle') + ' - <liferay-ui:message key="add-new" />'
-					);
-
-				var controlButtons = footer
-					.get('boundingBox')
-					.all('.add-category-toolbar-button');
-
-				if (controlButtons.size() > 0) {
-					controlButtons.show();
-				}
-				else {
-					var cancelButton = document.createElement('button');
-					cancelButton.setAttribute(
-						'class',
-						'add-category-toolbar-button btn btn-link ml-3'
-					);
-					cancelButton.setAttribute('type', 'button');
-					cancelButton.innerText = '<liferay-ui:message key="cancel" />';
-					cancelButton.addEventListener('click', function () {
-						footer.get('boundingBox').all('.add-category-toolbar-button').hide();
-						Liferay.Util.navigate('<%= HtmlUtil.escapeJS(redirect) %>');
-					});
-
-					footer.get('boundingBox').append(cancelButton);
-
-					var saveAndAddNewButton = document.createElement('button');
-					saveAndAddNewButton.setAttribute(
-						'class',
-						'add-category-toolbar-button btn btn-secondary ml-3'
-					);
-					saveAndAddNewButton.setAttribute('type', 'submit');
-					saveAndAddNewButton.innerText =
-						'<liferay-ui:message key="save-and-add-a-new-one" />';
-					saveAndAddNewButton.addEventListener('click', function () {
-						<portlet:namespace />saveAndAddNew();
-					});
-
-					footer.get('boundingBox').append(saveAndAddNewButton);
-
-					var submitButton = document.createElement('button');
-					submitButton.setAttribute(
-						'class',
-						'add-category-toolbar-button btn btn-primary ml-3'
-					);
-					submitButton.setAttribute('type', 'submit');
-					submitButton.innerText = '<liferay-ui:message key="save" />';
-					submitButton.addEventListener('click', function () {
-						submitForm(document.querySelector('#<portlet:namespace />fm'));
-					});
-
-					footer.get('boundingBox').append(submitButton);
-				}
-			</aui:script>
+			<liferay-frontend:component
+				context='<%=
+					HashMapBuilder.<String, Object>put(
+						"currentURL", currentURL
+					).put(
+						"redirect", redirect
+					).build()
+				%>'
+				module="js/ItemSelectorAddCategory"
+				servletContext="<%= application %>"
+			/>
 		</c:otherwise>
 	</c:choose>
 </liferay-frontend:edit-form>

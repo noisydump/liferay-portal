@@ -18,6 +18,8 @@
 
 <%
 String referringPortletResource = ParamUtil.getString(request, "referringPortletResource");
+
+Map<String, Object> componentContext = journalDisplayContext.getComponentContext();
 %>
 
 <liferay-ui:search-container
@@ -68,17 +70,23 @@ String referringPortletResource = ParamUtil.getString(request, "referringPortlet
 				String editURL = StringPool.BLANK;
 
 				if (JournalArticlePermission.contains(permissionChecker, curArticle, ActionKeys.UPDATE)) {
-					PortletURL editArticleURL = liferayPortletResponse.createRenderURL();
-
-					editArticleURL.setParameter("mvcPath", "/edit_article.jsp");
-					editArticleURL.setParameter("redirect", currentURL);
-					editArticleURL.setParameter("referringPortletResource", referringPortletResource);
-					editArticleURL.setParameter("groupId", String.valueOf(curArticle.getGroupId()));
-					editArticleURL.setParameter("folderId", String.valueOf(curArticle.getFolderId()));
-					editArticleURL.setParameter("articleId", curArticle.getArticleId());
-					editArticleURL.setParameter("version", String.valueOf(curArticle.getVersion()));
-
-					editURL = editArticleURL.toString();
+					editURL = PortletURLBuilder.createRenderURL(
+						liferayPortletResponse
+					).setMVCPath(
+						"/edit_article.jsp"
+					).setRedirect(
+						currentURL
+					).setParameter(
+						"articleId", curArticle.getArticleId()
+					).setParameter(
+						"folderId", curArticle.getFolderId()
+					).setParameter(
+						"groupId", curArticle.getGroupId()
+					).setParameter(
+						"referringPortletResource", referringPortletResource
+					).setParameter(
+						"version", curArticle.getVersion()
+					).buildString();
 				}
 				%>
 
@@ -108,7 +116,7 @@ String referringPortletResource = ParamUtil.getString(request, "referringPortlet
 							%>
 
 							<span class="text-default">
-								<liferay-ui:message arguments="<%= new String[] {modifiedDateDescription, HtmlUtil.escape(curArticle.getUserName())} %>" key="modified-x-ago-by-x" />
+								<liferay-ui:message arguments="<%= new String[] {modifiedDateDescription, HtmlUtil.escape(curArticle.getStatusByUserName())} %>" key="modified-x-ago-by-x" />
 							</span>
 
 							<p class="font-weight-bold h5">
@@ -140,14 +148,25 @@ String referringPortletResource = ParamUtil.getString(request, "referringPortlet
 
 						<liferay-ui:search-container-column-text>
 							<clay:dropdown-actions
-								defaultEventHandler="<%= JournalWebConstants.JOURNAL_ELEMENTS_DEFAULT_EVENT_HANDLER %>"
+								additionalProps='<%=
+									HashMapBuilder.<String, Object>put(
+										"trashEnabled", componentContext.get("trashEnabled")
+									).build()
+								%>'
 								dropdownItems="<%= journalDisplayContext.getArticleActionDropdownItems(curArticle) %>"
+								propsTransformer="js/ElementsDefaultPropsTransformer"
 							/>
 						</liferay-ui:search-container-column-text>
 					</c:when>
 					<c:when test='<%= Objects.equals(journalDisplayContext.getDisplayStyle(), "icon") %>'>
 						<liferay-ui:search-container-column-text>
 							<clay:vertical-card
+								additionalProps='<%=
+									HashMapBuilder.<String, Object>put(
+										"trashEnabled", componentContext.get("trashEnabled")
+									).build()
+								%>'
+								propsTransformer="js/ElementsDefaultPropsTransformer"
 								verticalCard="<%= new JournalArticleVerticalCard(curArticle, renderRequest, renderResponse, searchContainer.getRowChecker(), assetDisplayPageFriendlyURLProvider, trashHelper) %>"
 							/>
 						</liferay-ui:search-container-column-text>
@@ -173,7 +192,7 @@ String referringPortletResource = ParamUtil.getString(request, "referringPortlet
 							value="<%= StringUtil.shorten(HtmlUtil.stripHtml(curArticle.getDescription(locale)), 200) %>"
 						/>
 
-						<c:if test="<%= journalDisplayContext.isSearch() && ((curArticle.getFolderId() <= 0) || JournalFolderPermission.contains(permissionChecker, curArticle.getFolder(), ActionKeys.VIEW)) %>">
+						<c:if test="<%= journalDisplayContext.isSearch() %>">
 							<liferay-ui:search-container-column-text
 								cssClass="table-cell-expand-smallest table-cell-minw-200"
 								name="path"
@@ -181,14 +200,10 @@ String referringPortletResource = ParamUtil.getString(request, "referringPortlet
 							/>
 						</c:if>
 
-						<%
-						List<JournalArticle> articles = JournalArticleLocalServiceUtil.getArticles(curArticle.getGroupId(), curArticle.getArticleId(), 0, 1, new ArticleVersionComparator(true));
-						%>
-
 						<liferay-ui:search-container-column-text
 							cssClass="table-cell-expand-smallest table-cell-minw-100"
 							name="author"
-							value="<%= HtmlUtil.escape(PortalUtil.getUserName(articles.get(0))) %>"
+							value="<%= HtmlUtil.escape(curArticle.getUserName()) %>"
 						/>
 
 						<liferay-ui:search-container-column-text
@@ -219,7 +234,7 @@ String referringPortletResource = ParamUtil.getString(request, "referringPortlet
 							String modifiedDateDescription = LanguageUtil.getTimeDescription(request, System.currentTimeMillis() - createDate.getTime(), true);
 							%>
 
-							<liferay-ui:message arguments="<%= new String[] {modifiedDateDescription, HtmlUtil.escape(curArticle.getUserName())} %>" key="modified-x-ago-by-x" />
+							<liferay-ui:message arguments="<%= new String[] {modifiedDateDescription, HtmlUtil.escape(curArticle.getStatusByUserName())} %>" key="modified-x-ago-by-x" />
 						</liferay-ui:search-container-column-text>
 
 						<liferay-ui:search-container-column-date
@@ -240,8 +255,13 @@ String referringPortletResource = ParamUtil.getString(request, "referringPortlet
 
 						<liferay-ui:search-container-column-text>
 							<clay:dropdown-actions
-								defaultEventHandler="<%= JournalWebConstants.JOURNAL_ELEMENTS_DEFAULT_EVENT_HANDLER %>"
+								additionalProps='<%=
+									HashMapBuilder.<String, Object>put(
+										"trashEnabled", componentContext.get("trashEnabled")
+									).build()
+								%>'
 								dropdownItems="<%= journalDisplayContext.getArticleActionDropdownItems(curArticle) %>"
+								propsTransformer="js/ElementsDefaultPropsTransformer"
 							/>
 						</liferay-ui:search-container-column-text>
 					</c:otherwise>
@@ -264,11 +284,15 @@ String referringPortletResource = ParamUtil.getString(request, "referringPortlet
 					).build());
 				row.setPrimaryKey(String.valueOf(curFolder.getPrimaryKey()));
 
-				PortletURL rowURL = liferayPortletResponse.createRenderURL();
-
-				rowURL.setParameter("groupId", String.valueOf(curFolder.getGroupId()));
-				rowURL.setParameter("folderId", String.valueOf(curFolder.getFolderId()));
-				rowURL.setParameter("displayStyle", journalDisplayContext.getDisplayStyle());
+				PortletURL rowURL = PortletURLBuilder.createRenderURL(
+					liferayPortletResponse
+				).setParameter(
+					"displayStyle", journalDisplayContext.getDisplayStyle()
+				).setParameter(
+					"folderId", curFolder.getFolderId()
+				).setParameter(
+					"groupId", curFolder.getGroupId()
+				).buildPortletURL();
 				%>
 
 				<c:choose>
@@ -311,8 +335,13 @@ String referringPortletResource = ParamUtil.getString(request, "referringPortlet
 
 						<liferay-ui:search-container-column-text>
 							<clay:dropdown-actions
-								defaultEventHandler="<%= JournalWebConstants.JOURNAL_ELEMENTS_DEFAULT_EVENT_HANDLER %>"
+								additionalProps='<%=
+									HashMapBuilder.<String, Object>put(
+										"trashEnabled", componentContext.get("trashEnabled")
+									).build()
+								%>'
 								dropdownItems="<%= journalDisplayContext.getFolderActionDropdownItems(curFolder) %>"
+								propsTransformer="js/ElementsDefaultPropsTransformer"
 							/>
 						</liferay-ui:search-container-column-text>
 					</c:when>
@@ -351,7 +380,7 @@ String referringPortletResource = ParamUtil.getString(request, "referringPortlet
 							value="<%= HtmlUtil.escape(curFolder.getDescription()) %>"
 						/>
 
-						<c:if test="<%= journalDisplayContext.isSearch() && ((curFolder.getParentFolderId() <= 0) || JournalFolderPermission.contains(permissionChecker, curFolder.getParentFolder(), ActionKeys.VIEW)) %>">
+						<c:if test="<%= journalDisplayContext.isSearch() %>">
 							<liferay-ui:search-container-column-text
 								cssClass="table-cell-expand-smallest table-cell-minw-200"
 								name="path"
@@ -390,8 +419,13 @@ String referringPortletResource = ParamUtil.getString(request, "referringPortlet
 
 						<liferay-ui:search-container-column-text>
 							<clay:dropdown-actions
-								defaultEventHandler="<%= JournalWebConstants.JOURNAL_ELEMENTS_DEFAULT_EVENT_HANDLER %>"
+								additionalProps='<%=
+									HashMapBuilder.<String, Object>put(
+										"trashEnabled", componentContext.get("trashEnabled")
+									).build()
+								%>'
 								dropdownItems="<%= journalDisplayContext.getFolderActionDropdownItems(curFolder) %>"
+								propsTransformer="js/ElementsDefaultPropsTransformer"
 							/>
 						</liferay-ui:search-container-column-text>
 					</c:otherwise>
@@ -407,12 +441,6 @@ String referringPortletResource = ParamUtil.getString(request, "referringPortlet
 		searchContainer="<%= searchContainer %>"
 	/>
 </liferay-ui:search-container>
-
-<liferay-frontend:component
-	componentId="<%= JournalWebConstants.JOURNAL_ELEMENTS_DEFAULT_EVENT_HANDLER %>"
-	context="<%= journalDisplayContext.getComponentContext() %>"
-	module="js/ElementsDefaultEventHandler.es"
-/>
 
 <aui:script use="liferay-journal-navigation">
 	var journalNavigation = new Liferay.Portlet.JournalNavigation({

@@ -17,9 +17,12 @@ package com.liferay.portal.cache.io;
 import com.liferay.petra.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.petra.io.unsync.UnsyncByteArrayOutputStream;
 import com.liferay.petra.lang.ClassLoaderPool;
-import com.liferay.portal.kernel.test.CaptureHandler;
-import com.liferay.portal.kernel.test.JDKLoggerTestUtil;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
+import com.liferay.portal.test.log.LogCapture;
+import com.liferay.portal.test.log.LogEntry;
+import com.liferay.portal.test.log.LoggerTestUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -28,10 +31,10 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 import java.util.logging.Level;
-import java.util.logging.LogRecord;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -40,8 +43,10 @@ import org.junit.Test;
 public class SerializableObjectWrapperTest {
 
 	@ClassRule
-	public static final CodeCoverageAssertor codeCoverageAssertor =
-		CodeCoverageAssertor.INSTANCE;
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			CodeCoverageAssertor.INSTANCE, LiferayUnitTestRule.INSTANCE);
 
 	@Test
 	public void testEquals() throws Exception {
@@ -134,25 +139,24 @@ public class SerializableObjectWrapperTest {
 
 			});
 
-		try (CaptureHandler captureHandler =
-				JDKLoggerTestUtil.configureJDKLogger(
-					SerializableObjectWrapper.class.getName(), Level.ALL)) {
+		try (LogCapture logCapture = LoggerTestUtil.configureJDKLogger(
+				SerializableObjectWrapper.class.getName(), Level.ALL)) {
 
 			// Test unwrap
 
-			List<LogRecord> logRecords = captureHandler.getLogRecords();
+			List<LogEntry> logEntries = logCapture.getLogEntries();
 
 			Assert.assertNull(
 				SerializableObjectWrapper.unwrap(
 					_cloneBySerialization(_testSerializableObjectWrapper)));
 
-			Assert.assertEquals(logRecords.toString(), 1, logRecords.size());
+			Assert.assertEquals(logEntries.toString(), 1, logEntries.size());
 
-			LogRecord logRecord = logRecords.get(0);
+			LogEntry logEntry = logEntries.get(0);
 
 			Assert.assertEquals(
-				"Unable to deserialize object", logRecord.getMessage());
-			Assert.assertSame(classNotFoundException, logRecord.getThrown());
+				"Unable to deserialize object", logEntry.getMessage());
+			Assert.assertSame(classNotFoundException, logEntry.getThrowable());
 		}
 		finally {
 			currentThread.setContextClassLoader(contextClassLoader);
@@ -163,19 +167,24 @@ public class SerializableObjectWrapperTest {
 			SerializableObjectWrapper serializableObjectWrapper)
 		throws Exception {
 
-		try (UnsyncByteArrayOutputStream ubaos =
+		try (UnsyncByteArrayOutputStream unsyncByteArrayOutputStream =
 				new UnsyncByteArrayOutputStream()) {
 
-			try (ObjectOutputStream oos = new ObjectOutputStream(ubaos)) {
-				oos.writeObject(serializableObjectWrapper);
+			try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(
+					unsyncByteArrayOutputStream)) {
+
+				objectOutputStream.writeObject(serializableObjectWrapper);
 			}
 
-			try (UnsyncByteArrayInputStream ubais =
+			try (UnsyncByteArrayInputStream unsyncByteArrayInputStream =
 					new UnsyncByteArrayInputStream(
-						ubaos.unsafeGetByteArray(), 0, ubaos.size());
-				ObjectInputStream ois = new ObjectInputStream(ubais)) {
+						unsyncByteArrayOutputStream.unsafeGetByteArray(), 0,
+						unsyncByteArrayOutputStream.size());
+				ObjectInputStream objectInputStream = new ObjectInputStream(
+					unsyncByteArrayInputStream)) {
 
-				return (SerializableObjectWrapper)ois.readObject();
+				return (SerializableObjectWrapper)
+					objectInputStream.readObject();
 			}
 		}
 	}

@@ -14,11 +14,10 @@
 
 package com.liferay.frontend.js.loader.modules.extender.npm;
 
-import com.liferay.portal.kernel.util.FileUtil;
-import com.liferay.portal.util.FileImpl;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 /**
@@ -26,12 +25,9 @@ import org.junit.Test;
  */
 public class ModuleNameUtilTest {
 
-	@Before
-	public void setUp() {
-		FileUtil fileUtil = new FileUtil();
-
-		fileUtil.setFile(new FileImpl());
-	}
+	@ClassRule
+	public static LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Test
 	public void testGetDependencyPath() {
@@ -84,18 +80,16 @@ public class ModuleNameUtilTest {
 
 	@Test
 	public void testGetPackageNameScoped() throws Exception {
-		String packageName = ModuleNameUtil.getPackageName(
-			"@myscope/mypackage/lib/mymodule");
-
-		Assert.assertEquals("@myscope/mypackage", packageName);
+		Assert.assertEquals(
+			"@myscope/mypackage",
+			ModuleNameUtil.getPackageName("@myscope/mypackage/lib/mymodule"));
 	}
 
 	@Test
 	public void testGetPackageNameScopedNoModule() throws Exception {
-		String packageName = ModuleNameUtil.getPackageName(
-			"@myscope/mypackage");
-
-		Assert.assertEquals("@myscope/mypackage", packageName);
+		Assert.assertEquals(
+			"@myscope/mypackage",
+			ModuleNameUtil.getPackageName("@myscope/mypackage"));
 	}
 
 	@Test
@@ -127,18 +121,14 @@ public class ModuleNameUtilTest {
 
 	@Test
 	public void testGetPackagePathScoped() throws Exception {
-		String packagePath = ModuleNameUtil.getPackagePath(
-			"@myscope/mypackage/lib/mymodule");
-
-		Assert.assertEquals("lib/mymodule", packagePath);
+		Assert.assertEquals(
+			"lib/mymodule",
+			ModuleNameUtil.getPackagePath("@myscope/mypackage/lib/mymodule"));
 	}
 
 	@Test
 	public void testGetPackagePathScopedNoModule() throws Exception {
-		String packagePath = ModuleNameUtil.getPackagePath(
-			"@myscope/mypackage");
-
-		Assert.assertNull(packagePath);
+		Assert.assertNull(ModuleNameUtil.getPackagePath("@myscope/mypackage"));
 	}
 
 	@Test

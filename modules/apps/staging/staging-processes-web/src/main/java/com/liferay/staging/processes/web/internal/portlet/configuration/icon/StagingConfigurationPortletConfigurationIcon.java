@@ -15,8 +15,9 @@
 package com.liferay.staging.processes.web.internal.portlet.configuration.icon;
 
 import com.liferay.exportimport.kernel.staging.Staging;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -24,7 +25,7 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.configuration.icon.BasePortletConfigurationIcon;
 import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfigurationIcon;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
-import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
+import com.liferay.portal.kernel.service.permission.GroupPermission;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -36,7 +37,6 @@ import java.util.ResourceBundle;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
-import javax.portlet.PortletURL;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -57,28 +57,30 @@ public class StagingConfigurationPortletConfigurationIcon
 		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
 			"content.Language", getLocale(portletRequest), getClass());
 
-		return LanguageUtil.get(resourceBundle, "staging-configuration");
+		return _language.get(resourceBundle, "staging-configuration");
 	}
 
 	@Override
 	public String getURL(
 		PortletRequest portletRequest, PortletResponse portletResponse) {
 
-		PortletURL portletURL = _portal.getControlPanelPortletURL(
-			portletRequest, StagingProcessesPortletKeys.STAGING_PROCESSES,
-			PortletRequest.RENDER_PHASE);
+		return PortletURLBuilder.create(
+			_portal.getControlPanelPortletURL(
+				portletRequest, StagingProcessesPortletKeys.STAGING_PROCESSES,
+				PortletRequest.RENDER_PHASE)
+		).setMVCPath(
+			"/view.jsp"
+		).setRedirect(
+			() -> {
+				ThemeDisplay themeDisplay =
+					(ThemeDisplay)portletRequest.getAttribute(
+						WebKeys.THEME_DISPLAY);
 
-		portletURL.setParameter("mvcPath", "/view.jsp");
-
-		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
-		portletURL.setParameter("redirect", themeDisplay.getURLCurrent());
-
-		portletURL.setParameter(
-			"showStagingConfiguration", Boolean.TRUE.toString());
-
-		return portletURL.toString();
+				return themeDisplay.getURLCurrent();
+			}
+		).setParameter(
+			"showStagingConfiguration", true
+		).buildString();
 	}
 
 	@Override
@@ -113,7 +115,7 @@ public class StagingConfigurationPortletConfigurationIcon
 		Group liveGroup = _staging.getLiveGroup(group.getGroupId());
 
 		try {
-			return GroupPermissionUtil.contains(
+			return _groupPermission.contains(
 				themeDisplay.getPermissionChecker(), liveGroup,
 				ActionKeys.MANAGE_STAGING);
 		}
@@ -122,7 +124,7 @@ public class StagingConfigurationPortletConfigurationIcon
 			// LPS-52675
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(portalException, portalException);
+				_log.debug(portalException);
 			}
 
 			return false;
@@ -136,6 +138,12 @@ public class StagingConfigurationPortletConfigurationIcon
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		StagingConfigurationPortletConfigurationIcon.class);
+
+	@Reference
+	private GroupPermission _groupPermission;
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private Portal _portal;

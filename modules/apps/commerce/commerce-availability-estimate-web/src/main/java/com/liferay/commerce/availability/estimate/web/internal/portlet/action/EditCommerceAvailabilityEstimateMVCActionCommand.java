@@ -28,7 +28,6 @@ import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.StringUtil;
 
 import java.util.Locale;
 import java.util.Map;
@@ -53,36 +52,6 @@ import org.osgi.service.component.annotations.Reference;
 public class EditCommerceAvailabilityEstimateMVCActionCommand
 	extends BaseMVCActionCommand {
 
-	protected void deleteCommerceAvailabilityEstimates(
-			ActionRequest actionRequest)
-		throws PortalException {
-
-		long[] deleteCommerceAvailabilityEstimateIds = null;
-
-		long commerceAvailabilityEstimateId = ParamUtil.getLong(
-			actionRequest, "commerceAvailabilityEstimateId");
-
-		if (commerceAvailabilityEstimateId > 0) {
-			deleteCommerceAvailabilityEstimateIds = new long[] {
-				commerceAvailabilityEstimateId
-			};
-		}
-		else {
-			deleteCommerceAvailabilityEstimateIds = StringUtil.split(
-				ParamUtil.getString(
-					actionRequest, "deleteCommerceAvailabilityEstimateIds"),
-				0L);
-		}
-
-		for (long deleteCommerceAvailabilityEstimateId :
-				deleteCommerceAvailabilityEstimateIds) {
-
-			_commerceAvailabilityEstimateService.
-				deleteCommerceAvailabilityEstimate(
-					deleteCommerceAvailabilityEstimateId);
-		}
-	}
-
 	@Override
 	protected void doProcessAction(
 			ActionRequest actionRequest, ActionResponse actionResponse)
@@ -92,12 +61,12 @@ public class EditCommerceAvailabilityEstimateMVCActionCommand
 
 		try {
 			if (cmd.equals(Constants.DELETE)) {
-				deleteCommerceAvailabilityEstimates(actionRequest);
+				_deleteCommerceAvailabilityEstimates(actionRequest);
 			}
 			else if (cmd.equals(Constants.ADD) ||
 					 cmd.equals(Constants.UPDATE)) {
 
-				updateCommerceAvailabilityEstimate(actionRequest);
+				_updateCommerceAvailabilityEstimate(actionRequest);
 			}
 		}
 		catch (Exception exception) {
@@ -114,7 +83,35 @@ public class EditCommerceAvailabilityEstimateMVCActionCommand
 		}
 	}
 
-	protected void updateCommerceAvailabilityEstimate(
+	private void _deleteCommerceAvailabilityEstimates(
+			ActionRequest actionRequest)
+		throws PortalException {
+
+		long[] deleteCommerceAvailabilityEstimateIds = null;
+
+		long commerceAvailabilityEstimateId = ParamUtil.getLong(
+			actionRequest, "commerceAvailabilityEstimateId");
+
+		if (commerceAvailabilityEstimateId > 0) {
+			deleteCommerceAvailabilityEstimateIds = new long[] {
+				commerceAvailabilityEstimateId
+			};
+		}
+		else {
+			deleteCommerceAvailabilityEstimateIds = ParamUtil.getLongValues(
+				actionRequest, "rowIds");
+		}
+
+		for (long deleteCommerceAvailabilityEstimateId :
+				deleteCommerceAvailabilityEstimateIds) {
+
+			_commerceAvailabilityEstimateService.
+				deleteCommerceAvailabilityEstimate(
+					deleteCommerceAvailabilityEstimateId);
+		}
+	}
+
+	private void _updateCommerceAvailabilityEstimate(
 			ActionRequest actionRequest)
 		throws PortalException {
 

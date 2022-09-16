@@ -53,30 +53,27 @@ else {
 
 boolean configuredExport = (exportImportConfiguration == null) ? false : true;
 
-String rootNodeName = StringPool.BLANK;
-
 if (configuredExport) {
 	privateLayout = MapUtil.getBoolean(exportImportConfigurationSettingsMap, "privateLayout", privateLayout);
-}
-
-if (privateLayout) {
-	rootNodeName = LanguageUtil.get(request, "private-pages");
-}
-else {
-	rootNodeName = LanguageUtil.get(request, "public-pages");
 }
 
 String treeId = "layoutsExportTree" + liveGroupId + privateLayout;
 
 String displayStyle = ParamUtil.getString(request, "displayStyle");
 
-PortletURL portletURL = renderResponse.createRenderURL();
-
-portletURL.setParameter("mvcRenderCommandName", "/export_import/view_export_layouts");
-portletURL.setParameter("groupId", String.valueOf(groupId));
-portletURL.setParameter("liveGroupId", String.valueOf(liveGroupId));
-portletURL.setParameter("privateLayout", String.valueOf(privateLayout));
-portletURL.setParameter("displayStyle", displayStyle);
+PortletURL portletURL = PortletURLBuilder.createRenderURL(
+	renderResponse
+).setMVCRenderCommandName(
+	"/export_import/view_export_layouts"
+).setParameter(
+	"displayStyle", displayStyle
+).setParameter(
+	"groupId", groupId
+).setParameter(
+	"liveGroupId", liveGroupId
+).setParameter(
+	"privateLayout", privateLayout
+).buildPortletURL();
 
 if (Validator.isBlank(backURL)) {
 	backURL = portletURL.toString();
@@ -88,7 +85,9 @@ portletDisplay.setURLBack(backURL);
 renderResponse.setTitle(!configuredExport ? LanguageUtil.get(request, "new-custom-export") : LanguageUtil.format(request, "new-export-based-on-x", exportImportConfiguration.getName(), false));
 %>
 
-<clay:container-fluid>
+<clay:container-fluid
+	cssClass="container-form-lg"
+>
 	<portlet:actionURL name="/export_import/edit_export_configuration" var="restoreTrashEntriesURL">
 		<portlet:param name="mvcRenderCommandName" value="/export_import/export_layouts" />
 		<portlet:param name="<%= Constants.CMD %>" value="<%= Constants.RESTORE %>" />
@@ -120,7 +119,6 @@ renderResponse.setTitle(!configuredExport ? LanguageUtil.get(request, "new-custo
 		<aui:input name="groupId" type="hidden" value="<%= String.valueOf(groupId) %>" />
 		<aui:input name="liveGroupId" type="hidden" value="<%= String.valueOf(liveGroupId) %>" />
 		<aui:input name="privateLayout" type="hidden" value="<%= String.valueOf(privateLayout) %>" />
-		<aui:input name="rootNodeName" type="hidden" value="<%= rootNodeName %>" />
 		<aui:input name="treeId" type="hidden" value="<%= treeId %>" />
 		<aui:input name="<%= PortletDataHandlerKeys.PORTLET_ARCHIVED_SETUPS_ALL %>" type="hidden" value="<%= true %>" />
 		<aui:input name="<%= PortletDataHandlerKeys.PORTLET_CONFIGURATION_ALL %>" type="hidden" value="<%= true %>" />
@@ -173,14 +171,14 @@ renderResponse.setTitle(!configuredExport ? LanguageUtil.get(request, "new-custo
 					global="<%= group.isCompany() %>"
 					labelCSSClass="permissions-label"
 				/>
+
+				<div class="sheet-footer">
+					<aui:button type="submit" value="export" />
+
+					<aui:button href="<%= backURL %>" type="cancel" />
+				</div>
 			</aui:fieldset-group>
 		</div>
-
-		<aui:button-row>
-			<aui:button type="submit" value="export" />
-
-			<aui:button href="<%= backURL %>" type="cancel" />
-		</aui:button-row>
 	</aui:form>
 </clay:container-fluid>
 
@@ -213,7 +211,7 @@ renderResponse.setTitle(!configuredExport ? LanguageUtil.get(request, "new-custo
 
 	var form = liferayForm.formNode;
 
-	form.on('submit', function (event) {
+	form.on('submit', (event) => {
 		event.halt();
 
 		var exportImport = Liferay.component(

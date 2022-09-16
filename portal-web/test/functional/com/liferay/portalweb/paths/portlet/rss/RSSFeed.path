@@ -2,11 +2,13 @@
 <head>
 <title>RSSFeed</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">RSSFeed</td></tr>
 </thead>
+
 <tbody>
 <tr>
 	<td>UNDO_LINK</td>
@@ -28,7 +30,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--FEEDS-->
+
 <tr>
 	<td>FEEDS_TITLE</td>
 	<td>//h3[@class='feed-title']/a[contains(.,'${key_feedTitle}')]</td>
@@ -84,7 +88,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--DISPLAY_SETTINGS-->
+
 <tr>
 	<td>DISPLAY_SETTINGS_SHOW_FEED_TITLE</td>
 	<td>//input[contains(@id,'showFeedTitle')]</td>
@@ -102,7 +108,7 @@
 </tr>
 <tr>
 	<td>FEED_PANEL_HEADING</td>
-	<td>//div[contains(@class,'panel') and contains(@class,'title')]/a[contains(.,'${key_feedHeading}')]</td>
+	<td>//fieldset[contains(@id,'feed_0_panelId_0')]//a[contains(.,'${key_feedHeading}')]</td>
 	<td></td>
 </tr>
 </tbody>

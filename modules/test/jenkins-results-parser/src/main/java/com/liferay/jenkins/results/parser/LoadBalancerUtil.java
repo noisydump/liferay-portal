@@ -75,15 +75,10 @@ public class LoadBalancerUtil {
 			allJenkinsMasters.size());
 
 		for (JenkinsMaster jenkinsMaster : allJenkinsMasters) {
-			if (blacklist.contains(jenkinsMaster.getName())) {
-				continue;
-			}
+			if (blacklist.contains(jenkinsMaster.getName()) ||
+				(jenkinsMaster.getSlaveRAM() < minimumRAM) ||
+				(jenkinsMaster.getSlavesPerHost() > maximumSlavesPerHost)) {
 
-			if (jenkinsMaster.getSlaveRAM() < minimumRAM) {
-				continue;
-			}
-
-			if (jenkinsMaster.getSlavesPerHost() > maximumSlavesPerHost) {
 				continue;
 			}
 
@@ -108,7 +103,7 @@ public class LoadBalancerUtil {
 	public static String getMostAvailableMasterURL(
 		Properties properties, boolean verbose) {
 
-		long start = System.currentTimeMillis();
+		long start = JenkinsResultsParserUtil.getCurrentTimeMillis();
 
 		int retries = 0;
 
@@ -155,12 +150,15 @@ public class LoadBalancerUtil {
 				long nextUpdateTimestamp = _getNextUpdateTimestamp(
 					masterPrefix);
 
-				if (nextUpdateTimestamp < System.currentTimeMillis()) {
+				if (nextUpdateTimestamp <
+						JenkinsResultsParserUtil.getCurrentTimeMillis()) {
+
 					_updateJenkinsMasters(jenkinsMasters);
 
 					_setNextUpdateTimestamp(
 						masterPrefix,
-						System.currentTimeMillis() + _updateInterval);
+						JenkinsResultsParserUtil.getCurrentTimeMillis() +
+							_updateInterval);
 				}
 
 				Collections.sort(jenkinsMasters);
@@ -221,7 +219,8 @@ public class LoadBalancerUtil {
 				if (verbose) {
 					String durationString =
 						JenkinsResultsParserUtil.toDurationString(
-							System.currentTimeMillis() - start);
+							JenkinsResultsParserUtil.getCurrentTimeMillis() -
+								start);
 
 					System.out.println(
 						"Got most available master URL in " + durationString);

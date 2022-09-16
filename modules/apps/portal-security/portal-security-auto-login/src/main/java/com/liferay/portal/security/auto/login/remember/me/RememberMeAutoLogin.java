@@ -48,8 +48,8 @@ public class RememberMeAutoLogin extends BaseAutoLogin {
 			HttpServletResponse httpServletResponse, Exception exception)
 		throws AutoLoginException {
 
-		if (_log.isWarnEnabled()) {
-			_log.warn(exception, exception);
+		if (_log.isDebugEnabled()) {
+			_log.debug(exception);
 		}
 
 		removeCookies(httpServletRequest, httpServletResponse);
@@ -145,17 +145,13 @@ public class RememberMeAutoLogin extends BaseAutoLogin {
 		CookieKeys.addCookie(httpServletRequest, httpServletResponse, cookie);
 	}
 
-	@Reference(unbind = "-")
-	protected void setUserLocalService(UserLocalService userLocalService) {
-		_userLocalService = userLocalService;
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		RememberMeAutoLogin.class);
 
 	@Reference
 	private Portal _portal;
 
+	@Reference
 	private UserLocalService _userLocalService;
 
 }

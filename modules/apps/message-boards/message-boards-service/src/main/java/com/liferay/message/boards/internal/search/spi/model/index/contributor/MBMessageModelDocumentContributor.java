@@ -24,7 +24,7 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.comment.Comment;
 import com.liferay.portal.kernel.comment.CommentManager;
 import com.liferay.portal.kernel.exception.SystemException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.parsers.bbcode.BBCodeTranslatorUtil;
@@ -32,7 +32,7 @@ import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.RelatedEntryIndexer;
 import com.liferay.portal.kernel.search.RelatedEntryIndexerRegistryUtil;
-import com.liferay.portal.kernel.util.HtmlUtil;
+import com.liferay.portal.kernel.util.HtmlParser;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -60,13 +60,13 @@ public class MBMessageModelDocumentContributor
 		document.addKeyword(Field.CATEGORY_ID, mbMessage.getCategoryId());
 
 		for (Locale locale :
-				LanguageUtil.getAvailableLocales(mbMessage.getGroupId())) {
+				_language.getAvailableLocales(mbMessage.getGroupId())) {
 
 			String languageId = LocaleUtil.toLanguageId(locale);
 
 			document.addText(
 				LocalizationUtil.getLocalizedName(Field.CONTENT, languageId),
-				processContent(mbMessage));
+				_processContent(mbMessage));
 			document.addText(
 				LocalizationUtil.getLocalizedName(Field.TITLE, languageId),
 				mbMessage.getSubject());
@@ -137,7 +137,16 @@ public class MBMessageModelDocumentContributor
 		}
 	}
 
-	protected String processContent(MBMessage message) {
+	@Reference
+	protected CommentManager commentManager;
+
+	@Reference
+	protected MBDiscussionLocalService mbDiscussionLocalService;
+
+	@Reference
+	protected MBThreadLocalService mbThreadLocalService;
+
+	private String _processContent(MBMessage message) {
 		String content = message.getBody();
 
 		try {
@@ -153,19 +162,16 @@ public class MBMessageModelDocumentContributor
 				exception);
 		}
 
-		return HtmlUtil.extractText(content);
+		return _htmlParser.extractText(content);
 	}
-
-	@Reference
-	protected CommentManager commentManager;
-
-	@Reference
-	protected MBDiscussionLocalService mbDiscussionLocalService;
-
-	@Reference
-	protected MBThreadLocalService mbThreadLocalService;
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		MBMessageModelDocumentContributor.class);
+
+	@Reference
+	private HtmlParser _htmlParser;
+
+	@Reference
+	private Language _language;
 
 }

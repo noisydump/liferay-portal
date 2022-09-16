@@ -44,9 +44,7 @@ if (folder != null) {
 
 		portletFileEntriesCount = hits.getLength();
 
-		Document[] docs = hits.getDocs();
-
-		for (Document doc : docs) {
+		for (Document doc : hits.getDocs()) {
 			long fileEntryId = GetterUtil.getLong(doc.get(Field.ENTRY_CLASS_PK));
 
 			FileEntry fileEntry = null;
@@ -73,11 +71,14 @@ if (folder != null) {
 %>
 
 <liferay-item-selector:repository-entry-browser
+	allowedCreationMenuUIItemKeys="<%= blogsItemSelectorViewDisplayContext.getAllowedCreationMenuUIItemKeys() %>"
+	editImageURL="<%= blogsItemSelectorViewDisplayContext.getEditImageURL(liferayPortletResponse) %>"
 	emptyResultsMessage='<%= LanguageUtil.get(resourceBundle, "there-are-no-blog-attachments") %>'
 	extensions="<%= ListUtil.fromArray(blogsItemSelectorViewDisplayContext.getImageExtensions()) %>"
 	itemSelectedEventName="<%= blogsItemSelectorViewDisplayContext.getItemSelectedEventName() %>"
 	itemSelectorReturnTypeResolver="<%= blogsItemSelectorViewDisplayContext.getItemSelectorReturnTypeResolver() %>"
 	maxFileSize="<%= blogsItemSelectorViewDisplayContext.getImageMaxSize() %>"
+	mimeTypeRestriction="<%= blogsItemSelectorViewDisplayContext.getMimeTypeRestriction() %>"
 	portletURL="<%= blogsItemSelectorViewDisplayContext.getPortletURL(request, liferayPortletResponse) %>"
 	repositoryEntries="<%= portletFileEntries %>"
 	repositoryEntriesCount="<%= portletFileEntriesCount %>"
@@ -87,5 +88,5 @@ if (folder != null) {
 />
 
 <%!
-private static Log _log = LogFactoryUtil.getLog("com_liferay_blogs_item_selector_web.blogs_attachments_jsp");
+private static final Log _log = LogFactoryUtil.getLog("com_liferay_blogs_item_selector_web.blogs_attachments_jsp");
 %>

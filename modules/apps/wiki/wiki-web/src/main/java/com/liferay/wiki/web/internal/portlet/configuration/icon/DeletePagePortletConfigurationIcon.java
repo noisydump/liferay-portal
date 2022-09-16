@@ -14,8 +14,11 @@
 
 package com.liferay.wiki.web.internal.portlet.configuration.icon;
 
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.configuration.icon.BasePortletConfigurationIcon;
 import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfigurationIcon;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
@@ -29,7 +32,6 @@ import com.liferay.wiki.constants.WikiPortletKeys;
 import com.liferay.wiki.model.WikiPage;
 import com.liferay.wiki.web.internal.portlet.action.ActionUtil;
 
-import javax.portlet.ActionRequest;
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
 import javax.portlet.PortletURL;
@@ -52,17 +54,8 @@ public class DeletePagePortletConfigurationIcon
 
 	@Override
 	public String getMessage(PortletRequest portletRequest) {
-		String key = "delete";
-
-		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
-		if (isTrashEnabled(themeDisplay.getScopeGroupId())) {
-			key = "move-to-recycle-bin";
-		}
-
-		return LanguageUtil.get(
-			getResourceBundle(getLocale(portletRequest)), key);
+		return _language.get(
+			getResourceBundle(getLocale(portletRequest)), "delete");
 	}
 
 	@Override
@@ -75,13 +68,15 @@ public class DeletePagePortletConfigurationIcon
 		try {
 			WikiPage page = ActionUtil.getPage(portletRequest);
 
-			PortletURL portletURL = _portal.getControlPanelPortletURL(
-				portletRequest, WikiPortletKeys.WIKI_ADMIN,
-				PortletRequest.ACTION_PHASE);
-
-			portletURL.setParameter(
-				ActionRequest.ACTION_NAME, "/wiki/edit_page");
-			portletURL.setParameter(Constants.CMD, Constants.DELETE);
+			PortletURL portletURL = PortletURLBuilder.create(
+				_portal.getControlPanelPortletURL(
+					portletRequest, WikiPortletKeys.WIKI_ADMIN,
+					PortletRequest.ACTION_PHASE)
+			).setActionName(
+				"/wiki/edit_page"
+			).setCMD(
+				Constants.DELETE
+			).buildPortletURL();
 
 			if (!page.isDraft() &&
 				isTrashEnabled(themeDisplay.getScopeGroupId())) {
@@ -93,17 +88,19 @@ public class DeletePagePortletConfigurationIcon
 					"version", String.valueOf(page.getVersion()));
 			}
 
-			PortletURL redirectURL = _portal.getControlPanelPortletURL(
-				portletRequest, WikiPortletKeys.WIKI_ADMIN,
-				PortletRequest.ACTION_PHASE);
-
-			redirectURL.setParameter(
-				"mvcRenderCommandName", "/wiki/view_pages");
-			redirectURL.setParameter("navigation", "all-pages");
-			redirectURL.setParameter(
-				"nodeId", String.valueOf(page.getNodeId()));
-
-			portletURL.setParameter("redirect", redirectURL.toString());
+			portletURL.setParameter(
+				"redirect",
+				PortletURLBuilder.create(
+					_portal.getControlPanelPortletURL(
+						portletRequest, WikiPortletKeys.WIKI_ADMIN,
+						PortletRequest.ACTION_PHASE)
+				).setMVCRenderCommandName(
+					"/wiki/view_pages"
+				).setNavigation(
+					"all-pages"
+				).setParameter(
+					"nodeId", page.getNodeId()
+				).buildString());
 
 			portletURL.setParameter("nodeId", String.valueOf(page.getNodeId()));
 			portletURL.setParameter("title", page.getTitle());
@@ -111,6 +108,9 @@ public class DeletePagePortletConfigurationIcon
 			return portletURL.toString();
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return StringPool.BLANK;
@@ -132,6 +132,9 @@ public class DeletePagePortletConfigurationIcon
 				ActionUtil.getPage(portletRequest), ActionKeys.DELETE);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return false;
@@ -144,10 +147,19 @@ public class DeletePagePortletConfigurationIcon
 			}
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return false;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		DeletePagePortletConfigurationIcon.class);
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private Portal _portal;

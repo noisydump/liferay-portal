@@ -23,14 +23,19 @@
 <liferay-util:buffer
 	var="onClickFn"
 >
-	if (confirm('<liferay-ui:message key="are-you-sure-you-want-to-empty-the-recycle-bin" />')) {
-		submitForm(document.hrefFm, '<%= emptyTrashURL.toString() %>');
-	}
+	Liferay.Util.openConfirmModal({
+		message: '<liferay-ui:message key="are-you-sure-you-want-to-empty-the-recycle-bin" />',
+		onConfirm: (isConfirmed) => {
+			if (isConfirmed) {
+				submitForm(document.hrefFm, '<%= emptyTrashURL.toString() %>');
+			}
+		}
+	});
 </liferay-util:buffer>
 
 <liferay-ui:icon
 	id="emptyRecycleBinButton"
 	message="empty-the-recycle-bin"
 	onClick="<%= onClickFn %>"
-	url="javascript:;"
+	url="javascript:void(0);"
 />

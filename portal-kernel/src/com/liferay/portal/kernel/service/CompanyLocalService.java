@@ -14,6 +14,7 @@
 
 package com.liferay.portal.kernel.service;
 
+import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
@@ -86,8 +87,6 @@ public interface CompanyLocalService
 	 * @param webId the the company's web domain
 	 * @param virtualHostname the company's virtual host name
 	 * @param mx the company's mail domain
-	 * @param system whether the company is the very first company (i.e., the
-	 super company)
 	 * @param maxUsers the max number of company users (optionally
 	 <code>0</code>)
 	 * @param active whether the company is active
@@ -95,7 +94,7 @@ public interface CompanyLocalService
 	 */
 	public Company addCompany(
 			Long companyId, String webId, String virtualHostname, String mx,
-			boolean system, int maxUsers, boolean active)
+			int maxUsers, boolean active)
 		throws PortalException;
 
 	/**
@@ -116,8 +115,8 @@ public interface CompanyLocalService
 	 */
 	@Deprecated
 	public Company addCompany(
-			String webId, String virtualHostname, String mx, boolean system,
-			int maxUsers, boolean active)
+			String webId, String virtualHostname, String mx, int maxUsers,
+			boolean active)
 		throws PortalException;
 
 	/**
@@ -217,6 +216,9 @@ public interface CompanyLocalService
 	public <T> T dslQuery(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
 
 	/**
@@ -305,6 +307,26 @@ public interface CompanyLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public Company fetchCompanyByVirtualHost(String virtualHostname);
 
+	@Transactional(enabled = false)
+	public <E extends Exception> void forEachCompany(
+			UnsafeConsumer<Company, E> unsafeConsumer)
+		throws E;
+
+	@Transactional(enabled = false)
+	public <E extends Exception> void forEachCompany(
+			UnsafeConsumer<Company, E> unsafeConsumer, List<Company> companies)
+		throws E;
+
+	@Transactional(enabled = false)
+	public <E extends Exception> void forEachCompanyId(
+			UnsafeConsumer<Long, E> unsafeConsumer)
+		throws E;
+
+	@Transactional(enabled = false)
+	public <E extends Exception> void forEachCompanyId(
+			UnsafeConsumer<Long, E> unsafeConsumer, long[] companyIds)
+		throws E;
+
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ActionableDynamicQuery getActionableDynamicQuery();
 
@@ -315,19 +337,6 @@ public interface CompanyLocalService
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<Company> getCompanies();
-
-	/**
-	 * Returns all the companies used by WSRP.
-	 *
-	 * @param system whether the company is the very first company (i.e., the
-	 super company)
-	 * @return the companies used by WSRP
-	 */
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<Company> getCompanies(boolean system);
-
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<Company> getCompanies(boolean system, int start, int end);
 
 	/**
 	 * Returns a range of all the companies.
@@ -350,16 +359,6 @@ public interface CompanyLocalService
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getCompaniesCount();
-
-	/**
-	 * Returns the number of companies used by WSRP.
-	 *
-	 * @param system whether the company is the very first company (i.e., the
-	 super company)
-	 * @return the number of companies used by WSRP
-	 */
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public int getCompaniesCount(boolean system);
 
 	/**
 	 * Returns the company with the primary key.

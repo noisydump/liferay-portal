@@ -15,6 +15,7 @@
 package com.liferay.asset.categories.admin.web.internal.display.context;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.display.context.SearchContainerManagementToolbarDisplayContext;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
@@ -40,15 +41,17 @@ public class AssetVocabulariesManagementToolbarDisplayContext
 		super(
 			httpServletRequest, liferayPortletRequest, liferayPortletResponse,
 			assetCategoriesDisplayContext.getVocabulariesSearchContainer());
+
+		_assetCategoriesDisplayContext = assetCategoriesDisplayContext;
 	}
 
 	@Override
 	public String getClearResultsURL() {
-		PortletURL clearResultsURL = getPortletURL();
-
-		clearResultsURL.setParameter("keywords", StringPool.BLANK);
-
-		return clearResultsURL.toString();
+		return PortletURLBuilder.create(
+			getPortletURL()
+		).setKeywords(
+			StringPool.BLANK
+		).buildString();
 	}
 
 	@Override
@@ -61,6 +64,11 @@ public class AssetVocabulariesManagementToolbarDisplayContext
 	@Override
 	public String getSearchContainerId() {
 		return "assetVocabularies";
+	}
+
+	@Override
+	protected String getDisplayStyle() {
+		return _assetCategoriesDisplayContext.getDisplayStyle();
 	}
 
 	@Override
@@ -77,5 +85,7 @@ public class AssetVocabulariesManagementToolbarDisplayContext
 	protected String[] getOrderByKeys() {
 		return new String[] {"create-date"};
 	}
+
+	private final AssetCategoriesDisplayContext _assetCategoriesDisplayContext;
 
 }

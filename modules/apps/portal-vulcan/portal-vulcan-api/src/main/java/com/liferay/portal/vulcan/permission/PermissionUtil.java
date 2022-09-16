@@ -28,6 +28,7 @@ import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.ResourceLocalServiceUtil;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -66,6 +67,20 @@ public class PermissionUtil {
 		}
 	}
 
+	public static List<ResourcePermission> getResourcePermissions(
+			long companyId, long resourceId, String resourceName,
+			ResourcePermissionLocalService resourcePermissionLocalService)
+		throws PortalException {
+
+		_checkResources(
+			companyId, resourceId, resourceName,
+			resourcePermissionLocalService);
+
+		return resourcePermissionLocalService.getResourcePermissions(
+			companyId, resourceName, ResourceConstants.SCOPE_INDIVIDUAL,
+			String.valueOf(resourceId));
+	}
+
 	public static List<Role> getRoles(
 			Company company, RoleLocalService roleLocalService,
 			String[] roleNames)
@@ -76,10 +91,8 @@ public class PermissionUtil {
 
 		for (String roleName : roleNames) {
 			try {
-				Role role = roleLocalService.getRole(
-					company.getCompanyId(), roleName);
-
-				roles.add(role);
+				roles.add(
+					roleLocalService.getRole(company.getCompanyId(), roleName));
 			}
 			catch (NoSuchRoleException noSuchRoleException) {
 				if (_log.isDebugEnabled()) {
@@ -99,19 +112,8 @@ public class PermissionUtil {
 	}
 
 	public static Permission toPermission(
-		Long companyId, Long id, List<ResourceAction> resourceActions,
-		String resourceName,
-		ResourcePermissionLocalService resourcePermissionLocalService,
-		Role role) {
-
-		ResourcePermission resourcePermission =
-			resourcePermissionLocalService.fetchResourcePermission(
-				companyId, resourceName, ResourceConstants.SCOPE_INDIVIDUAL,
-				String.valueOf(id), role.getRoleId());
-
-		if (resourcePermission == null) {
-			return null;
-		}
+		List<ResourceAction> resourceActions,
+		ResourcePermission resourcePermission, Role role) {
 
 		Set<String> actionsIdsSet = new HashSet<>();
 
@@ -131,6 +133,44 @@ public class PermissionUtil {
 				roleName = role.getName();
 			}
 		};
+	}
+
+	public static Permission toPermission(
+			Long companyId, Long id, List<ResourceAction> resourceActions,
+			String resourceName,
+			ResourcePermissionLocalService resourcePermissionLocalService,
+			Role role)
+		throws PortalException {
+
+		_checkResources(
+			companyId, id, resourceName, resourcePermissionLocalService);
+
+		ResourcePermission resourcePermission =
+			resourcePermissionLocalService.fetchResourcePermission(
+				companyId, resourceName, ResourceConstants.SCOPE_INDIVIDUAL,
+				String.valueOf(id), role.getRoleId());
+
+		if (resourcePermission == null) {
+			return null;
+		}
+
+		return toPermission(resourceActions, resourcePermission, role);
+	}
+
+	private static void _checkResources(
+			long companyId, long resourceId, String resourceName,
+			ResourcePermissionLocalService resourcePermissionLocalService)
+		throws PortalException {
+
+		int count = resourcePermissionLocalService.getResourcePermissionsCount(
+			companyId, resourceName, ResourceConstants.SCOPE_INDIVIDUAL,
+			String.valueOf(resourceId));
+
+		if (count == 0) {
+			ResourceLocalServiceUtil.addResources(
+				companyId, resourceId, 0, resourceName,
+				String.valueOf(resourceId), false, true, true);
+		}
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(PermissionUtil.class);

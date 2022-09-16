@@ -28,6 +28,8 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -40,16 +42,20 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.workflow.kaleo.forms.model.KaleoProcessLink;
 import com.liferay.portal.workflow.kaleo.forms.service.KaleoProcessLinkLocalService;
+import com.liferay.portal.workflow.kaleo.forms.service.KaleoProcessLinkLocalServiceUtil;
 import com.liferay.portal.workflow.kaleo.forms.service.persistence.KaleoProcessFinder;
 import com.liferay.portal.workflow.kaleo.forms.service.persistence.KaleoProcessLinkPersistence;
 import com.liferay.portal.workflow.kaleo.forms.service.persistence.KaleoProcessPersistence;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -71,7 +77,7 @@ public abstract class KaleoProcessLinkLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>KaleoProcessLinkLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.workflow.kaleo.forms.service.KaleoProcessLinkLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>KaleoProcessLinkLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>KaleoProcessLinkLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -146,6 +152,13 @@ public abstract class KaleoProcessLinkLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return kaleoProcessLinkPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -317,6 +330,11 @@ public abstract class KaleoProcessLinkLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement KaleoProcessLinkLocalServiceImpl#deleteKaleoProcessLink(KaleoProcessLink) to avoid orphaned data");
+		}
+
 		return kaleoProcessLinkLocalService.deleteKaleoProcessLink(
 			(KaleoProcessLink)persistedModel);
 	}
@@ -380,6 +398,11 @@ public abstract class KaleoProcessLinkLocalServiceBaseImpl
 		return kaleoProcessLinkPersistence.update(kaleoProcessLink);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -391,6 +414,8 @@ public abstract class KaleoProcessLinkLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		kaleoProcessLinkLocalService = (KaleoProcessLinkLocalService)aopProxy;
+
+		_setLocalServiceUtilService(kaleoProcessLinkLocalService);
 	}
 
 	/**
@@ -435,6 +460,23 @@ public abstract class KaleoProcessLinkLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		KaleoProcessLinkLocalService kaleoProcessLinkLocalService) {
+
+		try {
+			Field field =
+				KaleoProcessLinkLocalServiceUtil.class.getDeclaredField(
+					"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, kaleoProcessLinkLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@Reference
 	protected KaleoProcessPersistence kaleoProcessPersistence;
 
@@ -461,5 +503,8 @@ public abstract class KaleoProcessLinkLocalServiceBaseImpl
 	@Reference
 	protected com.liferay.portal.kernel.service.UserLocalService
 		userLocalService;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		KaleoProcessLinkLocalServiceBaseImpl.class);
 
 }

@@ -19,6 +19,7 @@ import com.liferay.fragment.web.internal.security.permission.resource.FragmentPe
 import com.liferay.frontend.taglib.clay.servlet.taglib.display.context.SearchContainerManagementToolbarDisplayContext;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
@@ -30,7 +31,6 @@ import com.liferay.portal.kernel.util.WebKeys;
 import java.util.List;
 import java.util.Map;
 
-import javax.portlet.ActionRequest;
 import javax.portlet.PortletURL;
 
 import javax.servlet.http.HttpServletRequest;
@@ -49,8 +49,7 @@ public class ContributedFragmentManagementToolbarDisplayContext
 
 		super(
 			httpServletRequest, liferayPortletRequest, liferayPortletResponse,
-			fragmentDisplayContext.
-				getContributedFragmentEntriesSearchContainer());
+			fragmentDisplayContext.getContributedEntriesSearchContainer());
 
 		_fragmentDisplayContext = fragmentDisplayContext;
 	}
@@ -68,8 +67,8 @@ public class ContributedFragmentManagementToolbarDisplayContext
 				FragmentActionKeys.MANAGE_FRAGMENT_ENTRIES),
 			dropdownItem -> {
 				dropdownItem.putData(
-					"action", "copyToSelectedContributedFragmentEntries");
-				dropdownItem.setIcon("paste");
+					"action", "copyContributedEntriesToFragmentCollection");
+				dropdownItem.setIcon("copy");
 				dropdownItem.setLabel(
 					LanguageUtil.get(httpServletRequest, "make-a-copy"));
 				dropdownItem.setQuickAction(true);
@@ -86,37 +85,29 @@ public class ContributedFragmentManagementToolbarDisplayContext
 
 	public Map<String, Object> getComponentContext() throws Exception {
 		return HashMapBuilder.<String, Object>put(
-			"copyContributedFragmentEntryURL",
+			"copyContributedEntryURL",
 			() -> {
 				ThemeDisplay themeDisplay =
 					(ThemeDisplay)httpServletRequest.getAttribute(
 						WebKeys.THEME_DISPLAY);
 
-				PortletURL copyContributedFragmentEntryURL =
-					liferayPortletResponse.createActionURL();
-
-				copyContributedFragmentEntryURL.setParameter(
-					ActionRequest.ACTION_NAME,
-					"/fragment/copy_contributed_fragment_entry");
-				copyContributedFragmentEntryURL.setParameter(
-					"redirect", themeDisplay.getURLCurrent());
-
-				return copyContributedFragmentEntryURL.toString();
+				return PortletURLBuilder.createActionURL(
+					liferayPortletResponse
+				).setActionName(
+					"/fragment/copy_contributed_entry"
+				).setRedirect(
+					themeDisplay.getURLCurrent()
+				).buildString();
 			}
 		).put(
 			"selectFragmentCollectionURL",
-			() -> {
-				PortletURL selectFragmentCollectionURL =
-					liferayPortletResponse.createActionURL();
-
-				selectFragmentCollectionURL.setParameter(
-					"mvcRenderCommandName",
-					"/fragment/select_fragment_collection");
-				selectFragmentCollectionURL.setWindowState(
-					LiferayWindowState.POP_UP);
-
-				return selectFragmentCollectionURL.toString();
-			}
+			() -> PortletURLBuilder.createActionURL(
+				liferayPortletResponse
+			).setMVCRenderCommandName(
+				"/fragment/select_fragment_collection"
+			).setWindowState(
+				LiferayWindowState.POP_UP
+			).buildString()
 		).build();
 	}
 
@@ -127,8 +118,8 @@ public class ContributedFragmentManagementToolbarDisplayContext
 	}
 
 	@Override
-	public String getDefaultEventHandler() {
-		return "FRAGMENT_ENTRIES_MANAGEMENT_TOOLBAR_DEFAULT_EVENT_HANDLER";
+	public String getSortingURL() {
+		return null;
 	}
 
 	private final FragmentDisplayContext _fragmentDisplayContext;

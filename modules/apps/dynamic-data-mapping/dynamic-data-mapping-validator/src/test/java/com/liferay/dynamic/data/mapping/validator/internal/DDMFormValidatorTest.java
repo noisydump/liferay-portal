@@ -14,6 +14,7 @@
 
 package com.liferay.dynamic.data.mapping.validator.internal;
 
+import com.liferay.dynamic.data.mapping.expression.DDMExpressionFunctionTracker;
 import com.liferay.dynamic.data.mapping.expression.internal.DDMExpressionFactoryImpl;
 import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldTypeServicesTracker;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
@@ -42,9 +43,11 @@ import com.liferay.dynamic.data.mapping.validator.DDMFormValidationException.Mus
 import com.liferay.dynamic.data.mapping.validator.DDMFormValidationException.MustSetValidVisibilityExpression;
 import com.liferay.portal.bean.BeanPropertiesImpl;
 import com.liferay.portal.kernel.bean.BeanPropertiesUtil;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.Arrays;
 import java.util.Locale;
@@ -52,6 +55,8 @@ import java.util.Set;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 import org.mockito.Mockito;
@@ -61,11 +66,19 @@ import org.mockito.Mockito;
  */
 public class DDMFormValidatorTest {
 
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
 	@Before
 	public void setUp() {
-		setUpBeanPropertiesUtil();
-		setUpDDMFormFieldTypeServicesTracker();
-		setUpDDMFormValidator();
+		_setUpBeanPropertiesUtil();
+		_setUpDDMFormFieldTypeServicesTracker();
+		_setUpDDMFormValidator();
+
+		ReflectionTestUtil.setFieldValue(
+			_ddmFormValidatorImpl, "_beanProperties", new BeanPropertiesImpl());
 	}
 
 	@Test(expected = MustSetValidCharactersForFieldType.class)
@@ -112,13 +125,10 @@ public class DDMFormValidatorTest {
 		_ddmFormValidatorImpl.validate(ddmForm);
 	}
 
-	@Test(expected = MustNotDuplicateFieldName.class)
+	@Test
 	public void testDuplicateCaseInsensitiveFieldName() throws Exception {
 		DDMForm ddmForm = DDMFormTestUtil.createDDMForm(
-			createAvailableLocales(LocaleUtil.US), LocaleUtil.US);
-
-		ddmForm.addDDMFormField(
-			new DDMFormField("Name1", DDMFormFieldType.TEXT));
+			"Name1", "Name2", "Name3", "Name1");
 
 		DDMFormField name2DDMFormField = new DDMFormField(
 			"Name2", DDMFormFieldType.TEXT);
@@ -128,7 +138,19 @@ public class DDMFormValidatorTest {
 
 		ddmForm.addDDMFormField(name2DDMFormField);
 
-		_ddmFormValidatorImpl.validate(ddmForm);
+		try {
+			_ddmFormValidatorImpl.validate(ddmForm);
+
+			Assert.fail();
+		}
+		catch (MustNotDuplicateFieldName mustNotDuplicateFieldName) {
+			Set<String> duplicatedFieldNames =
+				mustNotDuplicateFieldName.getDuplicatedFieldNames();
+
+			Assert.assertTrue(duplicatedFieldNames.contains("Name1"));
+			Assert.assertTrue(duplicatedFieldNames.contains("Name2"));
+			Assert.assertFalse(duplicatedFieldNames.contains("Name3"));
+		}
 	}
 
 	@Test(expected = MustNotDuplicateFieldName.class)
@@ -547,30 +569,38 @@ public class DDMFormValidatorTest {
 		return DDMFormTestUtil.createAvailableLocales(locales);
 	}
 
-	protected void setUpBeanPropertiesUtil() {
+	private void _setUpBeanPropertiesUtil() {
 		BeanPropertiesUtil beanPropertiesUtil = new BeanPropertiesUtil();
 
 		beanPropertiesUtil.setBeanProperties(new BeanPropertiesImpl());
 	}
 
-	protected void setUpDDMFormFieldTypeServicesTracker() {
+	private void _setUpDDMFormFieldTypeServicesTracker() {
 		DDMFormFieldTypeServicesTracker ddmFormFieldTypeServicesTracker =
 			Mockito.mock(DDMFormFieldTypeServicesTracker.class);
 
 		Mockito.when(
 			ddmFormFieldTypeServicesTracker.getDDMFormFieldTypeNames()
 		).thenReturn(
-			SetUtil.fromArray(
-				new String[] {"html-çê的Ü", "html-text_*", "html-text_@"})
+			SetUtil.fromArray("date", "html-çê的Ü", "html-text_*", "html-text_@")
 		);
 
-		_ddmFormValidatorImpl.setDDMFormFieldTypeServicesTracker(
+		ReflectionTestUtil.setFieldValue(
+			_ddmFormValidatorImpl, "_ddmFormFieldTypeServicesTracker",
 			ddmFormFieldTypeServicesTracker);
 	}
 
-	protected void setUpDDMFormValidator() {
-		_ddmFormValidatorImpl.setDDMExpressionFactory(
-			new DDMExpressionFactoryImpl());
+	private void _setUpDDMFormValidator() {
+		DDMExpressionFactoryImpl ddmExpressionFactoryImpl =
+			new DDMExpressionFactoryImpl();
+
+		ReflectionTestUtil.setFieldValue(
+			ddmExpressionFactoryImpl, "ddmExpressionFunctionTracker",
+			Mockito.mock(DDMExpressionFunctionTracker.class));
+
+		ReflectionTestUtil.setFieldValue(
+			_ddmFormValidatorImpl, "_ddmExpressionFactory",
+			ddmExpressionFactoryImpl);
 	}
 
 	private final DDMFormValidatorImpl _ddmFormValidatorImpl =

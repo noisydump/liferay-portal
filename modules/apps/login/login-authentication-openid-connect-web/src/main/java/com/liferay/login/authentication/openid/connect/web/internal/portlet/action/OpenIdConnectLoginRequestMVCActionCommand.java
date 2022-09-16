@@ -14,10 +14,10 @@
 
 package com.liferay.login.authentication.openid.connect.web.internal.portlet.action;
 
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.exception.UserEmailAddressException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.servlet.SessionErrors;
@@ -26,13 +26,12 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.security.sso.openid.connect.OpenIdConnect;
+import com.liferay.portal.security.sso.openid.connect.OpenIdConnectAuthenticationHandler;
 import com.liferay.portal.security.sso.openid.connect.OpenIdConnectServiceException;
-import com.liferay.portal.security.sso.openid.connect.OpenIdConnectServiceHandler;
 import com.liferay.portal.security.sso.openid.connect.constants.OpenIdConnectWebKeys;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
-import javax.portlet.ActionURL;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -118,10 +117,6 @@ public class OpenIdConnectLoginRequestMVCActionCommand
 		throws Exception {
 
 		try {
-			String openIdConnectProviderName = ParamUtil.getString(
-				actionRequest,
-				OpenIdConnectWebKeys.OPEN_ID_CONNECT_PROVIDER_NAME);
-
 			HttpServletRequest httpServletRequest =
 				_portal.getHttpServletRequest(actionRequest);
 
@@ -131,31 +126,44 @@ public class OpenIdConnectLoginRequestMVCActionCommand
 			HttpServletResponse httpServletResponse =
 				_portal.getHttpServletResponse(actionResponse);
 
-			HttpSession session = httpServletRequest.getSession();
+			HttpSession httpSession = httpServletRequest.getSession();
 
-			LiferayPortletResponse liferayPortletResponse =
-				_portal.getLiferayPortletResponse(actionResponse);
+			httpSession.setAttribute(
+				OpenIdConnectWebKeys.OPEN_ID_CONNECT_ACTION_URL,
+				PortletURLBuilder.createActionURL(
+					_portal.getLiferayPortletResponse(actionResponse)
+				).setActionName(
+					OpenIdConnectWebKeys.OPEN_ID_CONNECT_RESPONSE_ACTION_NAME
+				).setRedirect(
+					() -> {
+						String redirect = ParamUtil.getString(
+							actionRequest, "redirect");
 
-			ActionURL actionURL = liferayPortletResponse.createActionURL();
+						if (Validator.isNotNull(redirect)) {
+							return redirect;
+						}
 
-			actionURL.setParameter(
-				ActionRequest.ACTION_NAME,
-				OpenIdConnectWebKeys.OPEN_ID_CONNECT_RESPONSE_ACTION_NAME);
-			actionURL.setParameter("saveLastPath", Boolean.FALSE.toString());
+						return null;
+					}
+				).setParameter(
+					"saveLastPath", false
+				).buildString());
 
-			String redirect = ParamUtil.getString(actionRequest, "redirect");
+			String openIdConnectProviderName = ParamUtil.getString(
+				actionRequest,
+				OpenIdConnectWebKeys.OPEN_ID_CONNECT_PROVIDER_NAME);
 
-			if (Validator.isNotNull(redirect)) {
-				actionURL.setParameter("redirect", redirect);
+			if (Validator.isNotNull(openIdConnectProviderName)) {
+				_openIdConnectAuthenticationHandler.requestAuthentication(
+					openIdConnectProviderName, httpServletRequest,
+					httpServletResponse);
 			}
 
-			session.setAttribute(
-				OpenIdConnectWebKeys.OPEN_ID_CONNECT_ACTION_URL,
-				actionURL.toString());
+			long oAuthClientEntryId = ParamUtil.getLong(
+				actionRequest, "oAuthClientEntryId");
 
-			_openIdConnectServiceHandler.requestAuthentication(
-				openIdConnectProviderName, httpServletRequest,
-				httpServletResponse);
+			_openIdConnectAuthenticationHandler.requestAuthentication(
+				oAuthClientEntryId, httpServletRequest, httpServletResponse);
 		}
 		catch (Exception exception) {
 			actionResponse.setRenderParameter(
@@ -181,7 +189,7 @@ public class OpenIdConnectLoginRequestMVCActionCommand
 						UserEmailAddressException.MustNotBeDuplicate) {
 
 				if (_log.isDebugEnabled()) {
-					_log.debug(exception, exception);
+					_log.debug(exception);
 				}
 
 				SessionErrors.add(actionRequest, exception.getClass());
@@ -204,7 +212,8 @@ public class OpenIdConnectLoginRequestMVCActionCommand
 	private OpenIdConnect _openIdConnect;
 
 	@Reference
-	private OpenIdConnectServiceHandler _openIdConnectServiceHandler;
+	private OpenIdConnectAuthenticationHandler
+		_openIdConnectAuthenticationHandler;
 
 	@Reference
 	private Portal _portal;

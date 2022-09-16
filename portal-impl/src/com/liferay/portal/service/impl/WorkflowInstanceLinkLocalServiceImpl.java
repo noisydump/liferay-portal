@@ -15,17 +15,28 @@
 package com.liferay.portal.service.impl;
 
 import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.exception.NoSuchWorkflowInstanceLinkException;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.WorkflowDefinitionLink;
 import com.liferay.portal.kernel.model.WorkflowInstanceLink;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
+import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.service.persistence.UserPersistence;
+import com.liferay.portal.kernel.systemevent.SystemEvent;
+import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.workflow.DefaultWorkflowNode;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.workflow.WorkflowHandler;
 import com.liferay.portal.kernel.workflow.WorkflowHandlerRegistryUtil;
 import com.liferay.portal.kernel.workflow.WorkflowInstance;
 import com.liferay.portal.kernel.workflow.WorkflowInstanceManagerUtil;
+import com.liferay.portal.kernel.workflow.WorkflowNode;
 import com.liferay.portal.kernel.workflow.WorkflowThreadLocal;
 import com.liferay.portal.service.base.WorkflowInstanceLinkLocalServiceBaseImpl;
 
@@ -50,8 +61,7 @@ public class WorkflowInstanceLinkLocalServiceImpl
 			long classPK, long workflowInstanceId)
 		throws PortalException {
 
-		User user = userPersistence.findByPrimaryKey(userId);
-		long classNameId = classNameLocalService.getClassNameId(className);
+		User user = _userPersistence.findByPrimaryKey(userId);
 
 		long workflowInstanceLinkId = counterLocalService.increment();
 
@@ -62,7 +72,8 @@ public class WorkflowInstanceLinkLocalServiceImpl
 		workflowInstanceLink.setCompanyId(companyId);
 		workflowInstanceLink.setUserId(userId);
 		workflowInstanceLink.setUserName(user.getFullName());
-		workflowInstanceLink.setClassNameId(classNameId);
+		workflowInstanceLink.setClassNameId(
+			_classNameLocalService.getClassNameId(className));
 		workflowInstanceLink.setClassPK(classPK);
 		workflowInstanceLink.setWorkflowInstanceId(workflowInstanceId);
 
@@ -74,10 +85,8 @@ public class WorkflowInstanceLinkLocalServiceImpl
 			long workflowInstanceLinkId)
 		throws PortalException {
 
-		WorkflowInstanceLink workflowInstanceLink = fetchWorkflowInstanceLink(
-			workflowInstanceLinkId);
-
-		return deleteWorkflowInstanceLink(workflowInstanceLink);
+		return deleteWorkflowInstanceLink(
+			fetchWorkflowInstanceLink(workflowInstanceLinkId));
 	}
 
 	@Override
@@ -85,13 +94,12 @@ public class WorkflowInstanceLinkLocalServiceImpl
 			long companyId, long groupId, String className, long classPK)
 		throws PortalException {
 
-		WorkflowInstanceLink workflowInstanceLink = fetchWorkflowInstanceLink(
-			companyId, groupId, className, classPK);
-
-		return deleteWorkflowInstanceLink(workflowInstanceLink);
+		return deleteWorkflowInstanceLink(
+			fetchWorkflowInstanceLink(companyId, groupId, className, classPK));
 	}
 
 	@Override
+	@SystemEvent(type = SystemEventConstants.TYPE_DELETE)
 	public WorkflowInstanceLink deleteWorkflowInstanceLink(
 			WorkflowInstanceLink workflowInstanceLink)
 		throws PortalException {
@@ -150,7 +158,17 @@ public class WorkflowInstanceLinkLocalServiceImpl
 			WorkflowInstanceManagerUtil.getWorkflowInstance(
 				companyId, workflowInstanceLink.getWorkflowInstanceId());
 
-		return workflowInstance.getState();
+		List<WorkflowNode> currentWorkflowNodes =
+			workflowInstance.getCurrentWorkflowNodes();
+
+		if (ListUtil.isNotEmpty(currentWorkflowNodes)) {
+			DefaultWorkflowNode defaultWorkflowNode =
+				(DefaultWorkflowNode)currentWorkflowNodes.get(0);
+
+			return defaultWorkflowNode.getLabel(LocaleUtil.getDefault());
+		}
+
+		return StringPool.BLANK;
 	}
 
 	@Override
@@ -162,19 +180,10 @@ public class WorkflowInstanceLinkLocalServiceImpl
 			getWorkflowInstanceLinks(companyId, groupId, className, classPK);
 
 		if (workflowInstanceLinks.isEmpty()) {
-			StringBundler sb = new StringBundler(9);
-
-			sb.append("{companyId=");
-			sb.append(companyId);
-			sb.append(", groupId=");
-			sb.append(groupId);
-			sb.append(", className=");
-			sb.append(className);
-			sb.append(", classPK=");
-			sb.append(classPK);
-			sb.append("}");
-
-			throw new NoSuchWorkflowInstanceLinkException(sb.toString());
+			throw new NoSuchWorkflowInstanceLinkException(
+				StringBundler.concat(
+					"{companyId=", companyId, ", groupId=", groupId,
+					", className=", className, ", classPK=", classPK, "}"));
 		}
 
 		return workflowInstanceLinks.get(0);
@@ -184,7 +193,7 @@ public class WorkflowInstanceLinkLocalServiceImpl
 	public List<WorkflowInstanceLink> getWorkflowInstanceLinks(
 		long companyId, long groupId, String className, long classPK) {
 
-		long classNameId = classNameLocalService.getClassNameId(className);
+		long classNameId = _classNameLocalService.getClassNameId(className);
 
 		int count = workflowInstanceLinkPersistence.countByG_C_C(
 			groupId, companyId, classNameId);
@@ -240,12 +249,24 @@ public class WorkflowInstanceLinkLocalServiceImpl
 			long classPK, Map<String, Serializable> workflowContext)
 		throws PortalException {
 
+		startWorkflowInstance(
+			companyId, groupId, userId, className, classPK, workflowContext,
+			false);
+	}
+
+	@Override
+	public void startWorkflowInstance(
+			long companyId, long groupId, long userId, String className,
+			long classPK, Map<String, Serializable> workflowContext,
+			boolean waitForCompletion)
+		throws PortalException {
+
 		if (!WorkflowThreadLocal.isEnabled()) {
 			return;
 		}
 
 		if (userId == 0) {
-			userId = userLocalService.getDefaultUserId(companyId);
+			userId = _userLocalService.getDefaultUserId(companyId);
 		}
 
 		WorkflowHandler<?> workflowHandler =
@@ -254,11 +275,6 @@ public class WorkflowInstanceLinkLocalServiceImpl
 		WorkflowDefinitionLink workflowDefinitionLink =
 			workflowHandler.getWorkflowDefinitionLink(
 				companyId, groupId, classPK);
-
-		String workflowDefinitionName =
-			workflowDefinitionLink.getWorkflowDefinitionName();
-		int workflowDefinitionVersion =
-			workflowDefinitionLink.getWorkflowDefinitionVersion();
 
 		if (workflowContext != null) {
 			workflowContext = new HashMap<>(workflowContext);
@@ -281,8 +297,10 @@ public class WorkflowInstanceLinkLocalServiceImpl
 
 		WorkflowInstance workflowInstance =
 			WorkflowInstanceManagerUtil.startWorkflowInstance(
-				companyId, groupId, userId, workflowDefinitionName,
-				workflowDefinitionVersion, null, workflowContext);
+				companyId, groupId, userId,
+				workflowDefinitionLink.getWorkflowDefinitionName(),
+				workflowDefinitionLink.getWorkflowDefinitionVersion(), null,
+				workflowContext, waitForCompletion);
 
 		addWorkflowInstanceLink(
 			userId, companyId, groupId, className, classPK,
@@ -315,17 +333,25 @@ public class WorkflowInstanceLinkLocalServiceImpl
 			workflowInstanceLink = workflowInstanceLinkPersistence.update(
 				workflowInstanceLink);
 
-			Map<String, Serializable> workflowContext = new HashMap<>(
-				workflowInstance.getWorkflowContext());
-
-			workflowContext.put(
-				WorkflowConstants.CONTEXT_ENTRY_CLASS_PK,
-				String.valueOf(newClassPK));
-
 			WorkflowInstanceManagerUtil.updateWorkflowContext(
 				workflowInstanceLink.getCompanyId(),
-				workflowInstanceLink.getWorkflowInstanceId(), workflowContext);
+				workflowInstanceLink.getWorkflowInstanceId(),
+				HashMapBuilder.create(
+					workflowInstance.getWorkflowContext()
+				).put(
+					WorkflowConstants.CONTEXT_ENTRY_CLASS_PK,
+					String.valueOf(newClassPK)
+				).build());
 		}
 	}
+
+	@BeanReference(type = ClassNameLocalService.class)
+	private ClassNameLocalService _classNameLocalService;
+
+	@BeanReference(type = UserLocalService.class)
+	private UserLocalService _userLocalService;
+
+	@BeanReference(type = UserPersistence.class)
+	private UserPersistence _userPersistence;
 
 }

@@ -26,6 +26,7 @@ import com.liferay.info.type.WebImage;
 import com.liferay.layout.seo.model.LayoutSEOEntry;
 import com.liferay.layout.seo.model.LayoutSEOSite;
 import com.liferay.layout.seo.service.LayoutSEOSiteLocalService;
+import com.liferay.layout.seo.template.LayoutSEOTemplateProcessor;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
@@ -49,12 +50,14 @@ public class OpenGraphImageProvider {
 		DLAppLocalService dlAppLocalService,
 		DLFileEntryMetadataLocalService dlFileEntryMetadataLocalService,
 		DLURLHelper dlurlHelper,
-		LayoutSEOSiteLocalService layoutSEOSiteLocalService, Portal portal,
+		LayoutSEOSiteLocalService layoutSEOSiteLocalService,
+		LayoutSEOTemplateProcessor layoutSEOTemplateProcessor, Portal portal,
 		StorageEngine storageEngine) {
 
 		_dlAppLocalService = dlAppLocalService;
 		_dlurlHelper = dlurlHelper;
 		_layoutSEOSiteLocalService = layoutSEOSiteLocalService;
+		_layoutSEOTemplateProcessor = layoutSEOTemplateProcessor;
 
 		_fileEntryMetadataOpenGraphTagsProvider =
 			new FileEntryMetadataOpenGraphTagsProvider(
@@ -104,52 +107,56 @@ public class OpenGraphImageProvider {
 			long openGraphImageFileEntryId = _getOpenGraphImageFileEntryId(
 				layout, layoutSEOEntry);
 
-			if (openGraphImageFileEntryId != 0) {
-				FileEntry fileEntry = _dlAppLocalService.getFileEntry(
-					openGraphImageFileEntryId);
-
-				Iterable<KeyValuePair>
-					fileEntryMetadataOpenGraphTagKeyValuePairs =
-						_fileEntryMetadataOpenGraphTagsProvider.
-							getFileEntryMetadataOpenGraphTagKeyValuePairs(
-								fileEntry);
-
-				String imagePreviewURL = _dlurlHelper.getImagePreviewURL(
-					fileEntry, themeDisplay);
-
-				return Optional.of(
-					new OpenGraphImage() {
-
-						@Override
-						public Optional<String> getAltOptional() {
-							return Optional.ofNullable(
-								_getImageAltTagValue(
-									infoItemFieldValues, layout, layoutSEOEntry,
-									themeDisplay.getLocale()));
-						}
-
-						@Override
-						public Iterable<KeyValuePair>
-							getMetadataTagKeyValuePairs() {
-
-							return fileEntryMetadataOpenGraphTagKeyValuePairs;
-						}
-
-						@Override
-						public Optional<String> getMimeTypeOptional() {
-							return Optional.of(fileEntry.getMimeType());
-						}
-
-						@Override
-						public String getUrl() {
-							return imagePreviewURL;
-						}
-
-					});
+			if (openGraphImageFileEntryId == 0) {
+				return Optional.empty();
 			}
+
+			FileEntry fileEntry = _dlAppLocalService.getFileEntry(
+				openGraphImageFileEntryId);
+
+			if ((fileEntry == null) || fileEntry.isInTrash()) {
+				return Optional.empty();
+			}
+
+			Iterable<KeyValuePair> fileEntryMetadataOpenGraphTagKeyValuePairs =
+				_fileEntryMetadataOpenGraphTagsProvider.
+					getFileEntryMetadataOpenGraphTagKeyValuePairs(fileEntry);
+
+			String imagePreviewURL = _dlurlHelper.getImagePreviewURL(
+				fileEntry, themeDisplay);
+
+			return Optional.of(
+				new OpenGraphImage() {
+
+					@Override
+					public Optional<String> getAltOptional() {
+						return Optional.ofNullable(
+							_getImageAltTagValue(
+								infoItemFieldValues, layout, layoutSEOEntry,
+								themeDisplay.getLocale()));
+					}
+
+					@Override
+					public Iterable<KeyValuePair>
+						getMetadataTagKeyValuePairs() {
+
+						return fileEntryMetadataOpenGraphTagKeyValuePairs;
+					}
+
+					@Override
+					public Optional<String> getMimeTypeOptional() {
+						return Optional.of(fileEntry.getMimeType());
+					}
+
+					@Override
+					public String getUrl() {
+						return imagePreviewURL;
+					}
+
+				});
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 		}
 
 		return Optional.empty();
@@ -180,6 +187,14 @@ public class OpenGraphImageProvider {
 			(layoutSEOSite.getOpenGraphImageFileEntryId() > 0)) {
 
 			return layoutSEOSite.getOpenGraphImageAlt(locale);
+		}
+
+		String imageAltMappingFieldKey = layout.getTypeSettingsProperty(
+			"mapped-openGraphImageAlt", null);
+
+		if (Validator.isNotNull(imageAltMappingFieldKey)) {
+			return _layoutSEOTemplateProcessor.processTemplate(
+				imageAltMappingFieldKey, infoItemFieldValues, locale);
 		}
 
 		return null;
@@ -308,5 +323,6 @@ public class OpenGraphImageProvider {
 	private final FileEntryMetadataOpenGraphTagsProvider
 		_fileEntryMetadataOpenGraphTagsProvider;
 	private final LayoutSEOSiteLocalService _layoutSEOSiteLocalService;
+	private final LayoutSEOTemplateProcessor _layoutSEOTemplateProcessor;
 
 }

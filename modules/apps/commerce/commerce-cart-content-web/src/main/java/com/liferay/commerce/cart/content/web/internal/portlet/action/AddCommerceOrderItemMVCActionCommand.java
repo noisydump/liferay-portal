@@ -29,7 +29,7 @@ import com.liferay.commerce.service.CommerceOrderService;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
@@ -40,8 +40,6 @@ import com.liferay.portal.kernel.servlet.ServletResponseUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
-
-import java.io.IOException;
 
 import java.util.List;
 
@@ -117,25 +115,23 @@ public class AddCommerceOrderItemMVCActionCommand extends BaseMVCActionCommand {
 				CommerceOrderItem.class.getName(), httpServletRequest);
 
 			CommerceOrderItem commerceOrderItem =
-				_commerceOrderItemService.upsertCommerceOrderItem(
+				_commerceOrderItemService.addOrUpdateCommerceOrderItem(
 					commerceOrder.getCommerceOrderId(), cpInstanceId,
 					ddmFormValues, quantity, 0, commerceContext,
 					serviceContext);
-
-			int commerceOrderItemsQuantity =
-				_commerceOrderItemService.getCommerceOrderItemsQuantity(
-					commerceOrder.getCommerceOrderId());
 
 			jsonObject.put(
 				"commerceOrderItemId",
 				commerceOrderItem.getCommerceOrderItemId()
 			).put(
-				"commerceOrderItemsQuantity", commerceOrderItemsQuantity
+				"commerceOrderItemsQuantity",
+				_commerceOrderItemService.getCommerceOrderItemsQuantity(
+					commerceOrder.getCommerceOrderId())
 			).put(
 				"success", true
 			).put(
 				"successMessage",
-				LanguageUtil.get(
+				_language.get(
 					httpServletRequest,
 					"the-product-was-successfully-added-to-the-cart")
 			);
@@ -168,7 +164,7 @@ public class AddCommerceOrderItemMVCActionCommand extends BaseMVCActionCommand {
 			);
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 
 			jsonObject.put(
 				"error", exception.getMessage()
@@ -181,11 +177,11 @@ public class AddCommerceOrderItemMVCActionCommand extends BaseMVCActionCommand {
 
 		httpServletResponse.setContentType(ContentTypes.APPLICATION_JSON);
 
-		writeJSON(actionResponse, jsonObject);
+		_writeJSON(actionResponse, jsonObject);
 	}
 
-	protected void writeJSON(ActionResponse actionResponse, Object object)
-		throws IOException {
+	private void _writeJSON(ActionResponse actionResponse, Object object)
+		throws Exception {
 
 		HttpServletResponse httpServletResponse =
 			_portal.getHttpServletResponse(actionResponse);
@@ -214,6 +210,9 @@ public class AddCommerceOrderItemMVCActionCommand extends BaseMVCActionCommand {
 
 	@Reference
 	private JSONFactory _jsonFactory;
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private Portal _portal;

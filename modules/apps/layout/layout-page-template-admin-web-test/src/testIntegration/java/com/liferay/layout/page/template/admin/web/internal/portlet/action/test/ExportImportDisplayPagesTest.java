@@ -54,6 +54,7 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+import com.liferay.segments.service.SegmentsExperienceLocalService;
 
 import java.io.File;
 
@@ -129,11 +130,13 @@ public class ExportImportDisplayPagesTest {
 		Layout layout1 = _layoutLocalService.fetchLayout(
 			layoutPageTemplateEntry1.getPlid());
 
-		_layoutPageTemplateStructureLocalService.addLayoutPageTemplateStructure(
-			TestPropsValues.getUserId(), _group1.getGroupId(),
-			layoutPageTemplateEntry1.getPlid(),
-			_read("export_import_display_page_layout_data.json"),
-			_serviceContext1);
+		_layoutPageTemplateStructureLocalService.
+			updateLayoutPageTemplateStructureData(
+				_group1.getGroupId(), layoutPageTemplateEntry1.getPlid(),
+				_segmentsExperienceLocalService.
+					fetchDefaultSegmentsExperienceId(
+						layoutPageTemplateEntry1.getPlid()),
+				_read("export_import_display_page_layout_data.json"));
 
 		Repository repository = PortletFileRepositoryUtil.addPortletRepository(
 			_group1.getGroupId(), RandomTestUtil.randomString(),
@@ -142,7 +145,7 @@ public class ExportImportDisplayPagesTest {
 		Class<?> clazz = getClass();
 
 		FileEntry fileEntry = PortletFileRepositoryUtil.addPortletFileEntry(
-			_group1.getGroupId(), TestPropsValues.getUserId(),
+			null, _group1.getGroupId(), TestPropsValues.getUserId(),
 			LayoutPageTemplateEntry.class.getName(),
 			layoutPageTemplateEntry1.getLayoutPageTemplateEntryId(),
 			RandomTestUtil.randomString(), repository.getDlFolderId(),
@@ -226,9 +229,9 @@ public class ExportImportDisplayPagesTest {
 					layoutPageTemplateEntry2.getPlid());
 
 		LayoutStructure layoutStructure1 = LayoutStructure.of(
-			layoutPageTemplateStructure1.getData(0));
+			layoutPageTemplateStructure1.getDefaultSegmentsExperienceData());
 		LayoutStructure layoutStructure2 = LayoutStructure.of(
-			layoutPageTemplateStructure2.getData(0));
+			layoutPageTemplateStructure2.getDefaultSegmentsExperienceData());
 
 		_validateRootLayoutStructureItem(
 			(RootLayoutStructureItem)
@@ -256,8 +259,8 @@ public class ExportImportDisplayPagesTest {
 			actualRootLayoutStructureItem.getItemConfigJSONObject();
 
 		Assert.assertEquals(
-			expectedItemConfigJSONObject.toJSONString(),
-			actualItemConfigJSONObject.toJSONString());
+			expectedItemConfigJSONObject.toString(),
+			actualItemConfigJSONObject.toString());
 
 		Assert.assertEquals(
 			expectedRootLayoutStructureItem.getItemType(),
@@ -297,6 +300,9 @@ public class ExportImportDisplayPagesTest {
 
 	@Inject
 	private Portal _portal;
+
+	@Inject
+	private SegmentsExperienceLocalService _segmentsExperienceLocalService;
 
 	private ServiceContext _serviceContext1;
 	private ServiceContext _serviceContext2;

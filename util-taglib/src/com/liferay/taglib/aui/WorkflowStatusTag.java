@@ -24,18 +24,14 @@ import javax.servlet.http.HttpServletRequest;
  * @author Julio Camarero
  * @author Jorge Ferrer
  * @author Brian Wing Shun Chan
+ * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+ *          com.liferay.portal.workflow.taglib.servlet.taglib.WorkflowStatusTag}
  */
+@Deprecated
 public class WorkflowStatusTag extends BaseWorkflowStatusTag {
 
 	@Override
 	protected String getPage() {
-		String markupView = getMarkupView();
-
-		if (Validator.isNotNull(markupView)) {
-			return "/html/taglib/aui/workflow_status/" + markupView +
-				"/page.jsp";
-		}
-
 		return "/html/taglib/aui/workflow_status/page.jsp";
 	}
 

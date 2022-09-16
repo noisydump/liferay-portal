@@ -18,6 +18,7 @@ import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.workflow.kaleo.definition.TaskForm;
 import com.liferay.portal.workflow.kaleo.definition.TaskFormReference;
 import com.liferay.portal.workflow.kaleo.model.KaleoTask;
@@ -28,6 +29,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Michael C. Han
@@ -46,8 +48,9 @@ public class KaleoTaskFormLocalServiceImpl
 			ServiceContext serviceContext)
 		throws PortalException {
 
-		User user = userLocalService.getUser(serviceContext.getGuestOrUserId());
-		Date now = new Date();
+		User user = _userLocalService.getUser(
+			serviceContext.getGuestOrUserId());
+		Date date = new Date();
 
 		long kaleoTaskFormId = counterLocalService.increment();
 
@@ -58,8 +61,8 @@ public class KaleoTaskFormLocalServiceImpl
 		kaleoTaskForm.setCompanyId(user.getCompanyId());
 		kaleoTaskForm.setUserId(user.getUserId());
 		kaleoTaskForm.setUserName(user.getFullName());
-		kaleoTaskForm.setCreateDate(now);
-		kaleoTaskForm.setModifiedDate(now);
+		kaleoTaskForm.setCreateDate(date);
+		kaleoTaskForm.setModifiedDate(date);
 		kaleoTaskForm.setKaleoDefinitionId(kaleoDefinitionId);
 		kaleoTaskForm.setKaleoDefinitionVersionId(kaleoDefinitionVersionId);
 		kaleoTaskForm.setKaleoNodeId(kaleoNodeId);
@@ -105,5 +108,8 @@ public class KaleoTaskFormLocalServiceImpl
 
 		return kaleoTaskFormPersistence.findByKaleoTaskId(kaleoTaskId);
 	}
+
+	@Reference
+	private UserLocalService _userLocalService;
 
 }

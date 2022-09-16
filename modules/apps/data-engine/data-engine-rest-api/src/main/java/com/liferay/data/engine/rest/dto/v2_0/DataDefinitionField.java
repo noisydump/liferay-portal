@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
@@ -46,13 +47,21 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @generated
  */
 @Generated("")
-@GraphQLName("DataDefinitionField")
+@GraphQLName(
+	description = "Represents the value of each field in data definition.",
+	value = "DataDefinitionField"
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "DataDefinitionField")
 public class DataDefinitionField implements Serializable {
 
 	public static DataDefinitionField toDTO(String json) {
 		return ObjectMapperUtil.readValue(DataDefinitionField.class, json);
+	}
+
+	public static DataDefinitionField unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(
+			DataDefinitionField.class, json);
 	}
 
 	@Schema
@@ -739,6 +748,7 @@ public class DataDefinitionField implements Serializable {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.data.engine.rest.dto.v2_0.DataDefinitionField",
 		name = "x-class-name"
 	)
@@ -751,13 +761,17 @@ public class DataDefinitionField implements Serializable {
 
 		@JsonCreator
 		public static IndexType create(String value) {
+			if ((value == null) || value.equals("")) {
+				return null;
+			}
+
 			for (IndexType indexType : values()) {
 				if (Objects.equals(indexType.getValue(), value)) {
 					return indexType;
 				}
 			}
 
-			return null;
+			throw new IllegalArgumentException("Invalid enum value: " + value);
 		}
 
 		@JsonValue
@@ -779,9 +793,9 @@ public class DataDefinitionField implements Serializable {
 	}
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
 	}
 
 	private static boolean _isArray(Object value) {
@@ -807,8 +821,8 @@ public class DataDefinitionField implements Serializable {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -839,7 +853,7 @@ public class DataDefinitionField implements Serializable {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -847,7 +861,7 @@ public class DataDefinitionField implements Serializable {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -855,5 +869,10 @@ public class DataDefinitionField implements Serializable {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

@@ -15,14 +15,14 @@
 AUI.add(
 	'liferay-service-datasource',
 	(A) => {
-		var ServiceDataSource = A.Component.create({
+		const ServiceDataSource = A.Component.create({
 			EXTENDS: A.DataSource.Local,
 			NAME: 'servicedatasource',
 			prototype: {
 				_defRequestFn(event) {
-					var instance = this;
+					const instance = this;
 
-					var source = instance.get('source');
+					const source = instance.get('source');
 
 					source(
 						event.request,
@@ -30,14 +30,14 @@ AUI.add(
 					);
 				},
 
-				_serviceCallbackFn(obj, xHR, event) {
-					var instance = this;
+				_serviceCallbackFn(object, xHR, event) {
+					const instance = this;
 
 					instance.fire(
 						'data',
 						A.mix(
 							{
-								data: obj,
+								data: object,
 							},
 							event
 						)

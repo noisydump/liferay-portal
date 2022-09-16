@@ -2,25 +2,10 @@ definition {
 
 	@summary = "Directly calls the JSON WS API to add a group"
 	macro _addGroup {
-		Variables.assertDefined(parameterList = "${groupNameMap}");
+		Variables.assertDefined(parameterList = "${groupDescriptionMap},${groupNameMap},${manualMembership},${parentGroupId},${type}");
 
-		var portalURL = JSONCompany.getPortalURL();
-
-		if ("${type}" == "Private") {
-			var type = "3";
-		}
-		else if ("${type}" == "Restricted") {
-			var type = "2";
-		}
-		else {
-			var type = "1";
-		}
-
-		if ("${manualMembership}" == "false") {
-			var manualMembership = "false";
-		}
-		else {
-			var manualMembership = "true";
+		if (!(isSet(portalURL))) {
+			var portalURL = JSONCompany.getPortalURL();
 		}
 
 		var curl = '''
@@ -39,7 +24,7 @@ definition {
 				-d active=true
 		''';
 
-		com.liferay.poshi.runner.util.JSONCurlUtil.post("${curl}");
+		JSONCurlUtil.post("${curl}");
 	}
 
 	@summary = "Directly calls the JSON WS API to assign a user a role"
@@ -93,7 +78,9 @@ definition {
 	macro _deleteGroup {
 		Variables.assertDefined(parameterList = "${groupId}");
 
-		var portalURL = JSONCompany.getPortalURL();
+		if (!(isSet(portalURL))) {
+			var portalURL = JSONCompany.getPortalURL();
+		}
 
 		var curl = '''
 			${portalURL}/api/jsonws/group/delete-group \
@@ -104,28 +91,91 @@ definition {
 		com.liferay.poshi.runner.util.JSONCurlUtil.post("${curl}");
 	}
 
+	@summary = "Get the depotEntryGroupRelId from any existing depot that connects to a site by using groupName"
+	macro _getDepotEntryGroupRelIdByGroupName {
+		Variables.assertDefined(parameterList = "${groupName}");
+
+		var companyId = JSONCompany.getCompanyId();
+		var portalURL = JSONCompany.getPortalURL();
+		var groupId = JSONGroupAPI._getGroupIdByName(
+			groupName = "${groupName}",
+			site = "${site}");
+
+		var curl = '''
+			${portalURL}/api/jsonws/depot.depotentrygrouprel/get-depot-entry-group-rels \
+				-u test@liferay.com:test \
+				-d groupId=${groupId} \
+				-d "start=-1" \
+				-d "end=-1"
+		''';
+
+		var depotEntryGroupRelId = JSONCurlUtil.post("${curl}", "$.[?(@['groupId'] == '${groupId}')]['depotEntryGroupRelId']");
+
+		if ("${depotEntryGroupRelId}" == "") {
+			fail("FAIL. Cannot find group.");
+		}
+
+		return "${depotEntryGroupRelId}";
+	}
+
 	@summary = "Get the depotId from any existing depot by using depotName"
 	macro _getDepotIdByName {
 		Variables.assertDefined(parameterList = "${depotName}");
 
 		var companyId = JSONCompany.getCompanyId();
 
-		var portalURL = JSONCompany.getPortalURL();
+		if (!(isSet(portalURL))) {
+			var portalURL = JSONCompany.getPortalURL();
+		}
 
+		if (!(isSet(defaultLocale))) {
+			var defaultLocale = "en_US";
+		}
+		else {
+			var defaultLocale = "${defaultLocale}";
+		}
+
+		var locale = '''default-locale=\"${defaultLocale}\"''';
 		var curl = '''
 			${portalURL}/api/jsonws/group/get-groups/company-id/${companyId}/parent-group-id/0/site/false \
 				-u test@liferay.com:test
 		''';
 
-		var depotId = JSONCurlUtil.get("${curl}", "$.[?(@['nameCurrentValue'] == '${depotName}')]['classPK']");
-		var depotId = StringUtil.replace("${depotId}", "[&quot;", "");
-		var depotId = StringUtil.replace("${depotId}", "&quot;]", "");
+		var depotId = JSONCurlUtil.get("${curl}", "$.[?(@['nameCurrentValue'] == '${depotName}' && @['name'] contains '${locale}')]['classPK']");
 
-		if ("${depotId}" == "[]") {
+		if ("${depotId}" == "") {
 			fail("FAIL. Cannot find group.");
 		}
 
 		return "${depotId}";
+	}
+
+	@summary = "Get the grandParentGroupId from any existing site by using groupName"
+	macro _getGrandParentGroupIdByName {
+		Variables.assertDefined(parameterList = "${groupName}");
+
+		var companyId = JSONCompany.getCompanyId();
+		var portalURL = JSONCompany.getPortalURL();
+
+		if (!(isSet(site))) {
+			var site = "true";
+		}
+
+		var curl = '''
+			${portalURL}/api/jsonws/group/get-groups \
+				-u test@liferay.com:test \
+				-d companyId=${companyId} \
+				-d parentGroupId=0 \
+				-d site=${site}
+		''';
+
+		var groupId = JSONCurlUtil.post("${curl}", "$.[?(@['nameCurrentValue'] == '${groupName}')]['groupId']");
+
+		if ("${groupId}" == "") {
+			fail("FAIL. Cannot find group.");
+		}
+
+		return "${groupId}";
 	}
 
 	@summary = "Get the groupId from any existing group by using groupKey"
@@ -133,9 +183,9 @@ definition {
 		Variables.assertDefined(parameterList = "${groupKey},${site}");
 
 		var companyId = JSONCompany.getCompanyId();
-
-		var parentGroupId = JSONGroupSetter.setParentGroupId(parentGroupName = "${parentGroupName}", grandParentGroupName = "${grandParentGroupName}");
-
+		var parentGroupId = JSONGroupSetter.setParentGroupId(
+			grandParentGroupName = "${grandParentGroupName}",
+			parentGroupName = "${parentGroupName}");
 		var portalURL = JSONCompany.getPortalURL();
 
 		var curl = '''
@@ -144,10 +194,8 @@ definition {
 		''';
 
 		var groupId = JSONCurlUtil.get("${curl}", "$.[?(@['groupKey'] == '${groupKey}')]['groupId']");
-		var groupId = StringUtil.replace("${groupId}", "[&quot;", "");
-		var groupId = StringUtil.replace("${groupId}", "&quot;]", "");
 
-		if ("${groupId}" == "[]") {
+		if ("${groupId}" == "") {
 			fail("FAIL. Cannot find group.");
 		}
 
@@ -158,22 +206,79 @@ definition {
 	macro _getGroupIdByName {
 		Variables.assertDefined(parameterList = "${groupName},${site}");
 
-		var companyId = JSONCompany.getCompanyId();
+		if (!(isSet(portalURL))) {
+			var portalURL = JSONCompany.getPortalURL();
+		}
 
-		var portalURL = JSONCompany.getPortalURL();
+		var companyId = JSONCompany.getCompanyId(portalURL = "${portalURL}");
+		var parentGroupId = JSONGroupSetter.setParentGroupId(
+			grandParentGroupName = "${grandParentGroupName}",
+			parentGroupName = "${parentGroupName}");
 
 		var curl = '''
-			${portalURL}/api/jsonws/group/get-groups/company-id/${companyId}/parent-group-id/0/site/${site} \
+			${portalURL}/api/jsonws/group/get-groups/company-id/${companyId}/parent-group-id/${parentGroupId}/site/${site} \
 				-u test@liferay.com:test
 		''';
 
 		var groupId = JSONCurlUtil.get("${curl}", "$.[?(@['nameCurrentValue'] == '${groupName}')]['groupId']");
-		var groupId = StringUtil.replace("${groupId}", "[&quot;", "");
-		var groupId = StringUtil.replace("${groupId}", "&quot;]", "");
 
-		if ("${groupId}" == "[]") {
+		if ("${groupId}" == "") {
 			fail("FAIL. Cannot find group.");
 		}
+
+		echo("## * GroupId: ${groupId}");
+
+		return "${groupId}";
+	}
+
+	@summary = "Get the groupId from any existing site by using groupName"
+	macro _getGroupIdByNameNoError {
+		Variables.assertDefined(parameterList = "${groupName},${site}");
+
+		if (!(isSet(portalURL))) {
+			var portalURL = JSONCompany.getPortalURL();
+		}
+
+		var companyId = JSONCompany.getCompanyId(portalURL = "${portalURL}");
+		var parentGroupId = JSONGroupSetter.setParentGroupId(
+			grandParentGroupName = "${grandParentGroupName}",
+			parentGroupName = "${parentGroupName}");
+
+		var curl = '''
+			${portalURL}/api/jsonws/group/get-groups/company-id/${companyId}/parent-group-id/${parentGroupId}/site/${site} \
+				-u test@liferay.com:test
+		''';
+
+		var groupId = JSONCurlUtil.get("${curl}", "$.[?(@['nameCurrentValue'] == '${groupName}')]['groupId']");
+
+		return "${groupId}";
+	}
+
+	@summary = "Get the groupId from any existing site by using groupName but not invoking selenium methods"
+	macro _getGroupIdByNameNoSelenium {
+		Variables.assertDefined(parameterList = "${groupName},${site}");
+
+		if (!(isSet(portalURL))) {
+			var portalURL = JSONCompany.getPortalURL();
+		}
+
+		var companyId = JSONCompany.getCompanyIdNoSelenium(portalURL = "${portalURL}");
+		var parentGroupId = JSONGroupSetter.setParentGroupId(
+			grandParentGroupName = "${grandParentGroupName}",
+			parentGroupName = "${parentGroupName}");
+
+		var curl = '''
+			${portalURL}/api/jsonws/group/get-groups/company-id/${companyId}/parent-group-id/${parentGroupId}/site/${site} \
+				-u test@liferay.com:test
+		''';
+
+		var groupId = JSONCurlUtil.get("${curl}", "$.[?(@['nameCurrentValue'] == '${groupName}')]['groupId']");
+
+		if ("${groupId}" == "") {
+			fail("FAIL. Cannot find group.");
+		}
+
+		echo("## * GroupId: ${groupId}");
 
 		return "${groupId}";
 	}
@@ -183,7 +288,6 @@ definition {
 		Variables.assertDefined(parameterList = "${groupId}");
 
 		var companyId = JSONCompany.getCompanyId();
-
 		var portalURL = JSONCompany.getPortalURL();
 
 		var curl = '''
@@ -201,9 +305,7 @@ definition {
 		Variables.assertDefined(parameterList = "${groupName}");
 
 		var companyId = JSONCompany.getCompanyId();
-
 		var grandParentGroupId = JSONGroupSetter.setGrandParentGroupId(grandParentGroupName = "${grandParentGroupName}");
-
 		var portalURL = JSONCompany.getPortalURL();
 
 		var curl = '''
@@ -212,10 +314,8 @@ definition {
 		''';
 
 		var groupId = JSONCurlUtil.get("${curl}", "$.[?(@['nameCurrentValue'] == '${groupName}')]['groupId']");
-		var groupId = StringUtil.replace("${groupId}", "[&quot;", "");
-		var groupId = StringUtil.replace("${groupId}", "&quot;]", "");
 
-		if ("${groupId}" == "[]") {
+		if ("${groupId}" == "") {
 			fail("FAIL. Cannot find group.");
 		}
 
@@ -226,9 +326,11 @@ definition {
 	macro _getSiteIdByGroupKey {
 		Variables.assertDefined(parameterList = "${groupName}");
 
-		var companyId = JSONCompany.getCompanyId();
+		if (!(isSet(portalURL))) {
+			var portalURL = JSONCompany.getPortalURL();
+		}
 
-		var portalURL = JSONCompany.getPortalURL();
+		var companyId = JSONCompany.getCompanyId(portalURL = "${portalURL}");
 
 		var curl = '''
 			${portalURL}/api/jsonws/group/get-group \
@@ -238,10 +340,8 @@ definition {
 		''';
 
 		var groupId = JSONCurlUtil.post("${curl}", "$.[?(@['groupKey'] == '${groupName}')]['groupId']");
-		var groupId = StringUtil.replace("${groupId}", "[&quot;", "");
-		var groupId = StringUtil.replace("${groupId}", "&quot;]", "");
 
-		if ("${groupId}" == "[]") {
+		if ("${groupId}" == "") {
 			fail("FAIL. Cannot find group.");
 		}
 

@@ -21,6 +21,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.json.JSONObject;
+
 /**
  * @author Michael Hashimoto
  */
@@ -29,6 +31,8 @@ public class PluginsSegmentTestClassGroup extends SegmentTestClassGroup {
 	@Override
 	public String getTestCasePropertiesContent() {
 		StringBuilder sb = new StringBuilder();
+
+		sb.append(super.getTestCasePropertiesContent());
 
 		List<String> axisIndexes = new ArrayList<>();
 
@@ -64,9 +68,15 @@ public class PluginsSegmentTestClassGroup extends SegmentTestClassGroup {
 	}
 
 	protected PluginsSegmentTestClassGroup(
-		PluginsBatchTestClassGroup parentPluginsBatchTestClassGroup) {
+		BatchTestClassGroup batchTestClassGroup) {
 
-		super(parentPluginsBatchTestClassGroup);
+		super(batchTestClassGroup);
+	}
+
+	protected PluginsSegmentTestClassGroup(
+		BatchTestClassGroup batchTestClassGroup, JSONObject jsonObject) {
+
+		super(batchTestClassGroup, jsonObject);
 	}
 
 }

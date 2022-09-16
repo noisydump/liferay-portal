@@ -31,7 +31,6 @@ else {
 
 ViewModuleManagementToolbarDisplayContext viewModuleManagementToolbarDisplayContext = new ViewModuleManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse);
 
-AppDisplay appDisplay = viewModuleManagementToolbarDisplayContext.getAppDisplay();
 Bundle bundle = viewModuleManagementToolbarDisplayContext.getBundle();
 String pluginType = viewModuleManagementToolbarDisplayContext.getPluginType();
 SearchContainer<Object> searchContainer = viewModuleManagementToolbarDisplayContext.getSearchContainer();
@@ -46,16 +45,18 @@ String bundleName = GetterUtil.getString(headers.get(Constants.BUNDLE_NAME));
 renderResponse.setTitle(bundleName);
 
 if (Validator.isNull(app)) {
-	PortletURL viewURL = renderResponse.createRenderURL();
-
-	viewURL.setParameter("mvcPath", "/view.jsp");
-
-	PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(request, "app-manager"), viewURL.toString());
+	PortalUtil.addPortletBreadcrumbEntry(
+		request, LanguageUtil.get(request, "app-manager"),
+		PortletURLBuilder.createRenderURL(
+			renderResponse
+		).setMVCPath(
+			"/view.jsp"
+		).buildString());
 
 	PortalUtil.addPortletBreadcrumbEntry(request, bundleName, null);
 }
 else {
-	MarketplaceAppManagerUtil.addPortletBreadcrumbEntry(appDisplay, bundle, request, renderResponse);
+	MarketplaceAppManagerUtil.addPortletBreadcrumbEntry(viewModuleManagementToolbarDisplayContext.getAppDisplay(), bundle, request, renderResponse);
 }
 %>
 
@@ -63,7 +64,7 @@ else {
 	navigationItems="<%= appManagerDisplayContext.getModuleNavigationItems() %>"
 />
 
-<clay:management-toolbar-v2
+<clay:management-toolbar
 	searchActionURL="<%= viewModuleManagementToolbarDisplayContext.getSearchActionURL() %>"
 	searchContainerId="plugins"
 	searchFormName="searchFm"
@@ -94,12 +95,12 @@ else {
 				<c:choose>
 					<c:when test='<%= pluginType.equals("portlets") %>'>
 						<liferay-util:include page="/icon.jsp" servletContext="<%= application %>">
-							<liferay-util:param name="iconURL" value='<%= PortalUtil.getPathContext(request) + "/images/icons.svg#portlets" %>' />
+							<liferay-util:param name="iconURL" value='<%= FrontendIconsUtil.getSpritemap(themeDisplay) + "#portlets" %>' />
 						</liferay-util:include>
 					</c:when>
 					<c:otherwise>
 						<liferay-util:include page="/icon.jsp" servletContext="<%= application %>">
-							<liferay-util:param name="iconURL" value='<%= PortalUtil.getPathContext(request) + "/images/icons.svg#components" %>' />
+							<liferay-util:param name="iconURL" value='<%= FrontendIconsUtil.getSpritemap(themeDisplay) + "#components" %>' />
 						</liferay-util:include>
 					</c:otherwise>
 				</c:choose>

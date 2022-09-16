@@ -16,9 +16,15 @@ exports[`KeyValue has a helptext 1`] = `
     >
       <input
         class="form-control ddm-field-text"
+        id="keyValueLabelkeyValue"
         name="keyValueLabelkeyValue"
         type="text"
         value=""
+      />
+      <input
+        name="keyValueLabelkeyValue_edited"
+        type="hidden"
+        value="false"
       />
       
     </div>
@@ -38,18 +44,24 @@ exports[`KeyValue has a helptext 1`] = `
         value=""
       />
     </div>
-    <span
+    <input
+      name="keyValue_edited"
+      type="hidden"
+      value="false"
+    />
+    <div
       aria-hidden="true"
-      class="form-text"
+      class="form-feedback-group lfr-de__field-feedback"
     >
-      Type something
-    </span>
+      <div>
+        Type something
+      </div>
+    </div>
     <span
       class="sr-only"
       id="keyValue_fieldDetails"
     >
       Type something
-      <br />
     </span>
   </div>
 </div>
@@ -62,7 +74,7 @@ exports[`KeyValue has a label 1`] = `
     data-field-name="keyValue"
   >
     <label
-      aria-describedby="keyValue_fieldDetails"
+      aria-labelledby="keyValue_fieldDetails"
       class="ddm-label"
       tabindex="0"
     >
@@ -76,9 +88,15 @@ exports[`KeyValue has a label 1`] = `
     >
       <input
         class="form-control ddm-field-text"
+        id="keyValueLabelkeyValue"
         name="keyValueLabelkeyValue"
         type="text"
         value=""
+      />
+      <input
+        name="keyValueLabelkeyValue_edited"
+        type="hidden"
+        value="false"
       />
       
     </div>
@@ -98,12 +116,16 @@ exports[`KeyValue has a label 1`] = `
         value=""
       />
     </div>
+    <input
+      name="keyValue_edited"
+      type="hidden"
+      value="false"
+    />
     <span
       class="sr-only"
       id="keyValue_fieldDetails"
     >
       label
-      <br />
     </span>
   </div>
 </div>
@@ -125,10 +147,16 @@ exports[`KeyValue has a predefined Value 1`] = `
     >
       <input
         class="form-control ddm-field-text"
+        id="keyValueLabelkeyValue"
         name="keyValueLabelkeyValue"
         placeholder="Option 1"
         type="text"
         value=""
+      />
+      <input
+        name="keyValueLabelkeyValue_edited"
+        type="hidden"
+        value="false"
       />
       
     </div>
@@ -148,6 +176,11 @@ exports[`KeyValue has a predefined Value 1`] = `
         value=""
       />
     </div>
+    <input
+      name="keyValue_edited"
+      type="hidden"
+      value="false"
+    />
     
   </div>
 </div>
@@ -169,9 +202,15 @@ exports[`KeyValue has a value 1`] = `
     >
       <input
         class="form-control ddm-field-text"
+        id="keyValueLabelkeyValue"
         name="keyValueLabelkeyValue"
         type="text"
         value="value"
+      />
+      <input
+        name="keyValueLabelkeyValue_edited"
+        type="hidden"
+        value="false"
       />
       
     </div>
@@ -191,6 +230,11 @@ exports[`KeyValue has a value 1`] = `
         value=""
       />
     </div>
+    <input
+      name="keyValue_edited"
+      type="hidden"
+      value="false"
+    />
     
   </div>
 </div>
@@ -199,7 +243,7 @@ exports[`KeyValue has a value 1`] = `
 exports[`KeyValue has an id 1`] = `
 <div>
   <div
-    aria-labelledby="keyValue_fieldDetails"
+    aria-labelledby="Id_fieldDetails"
     class="form-group hide"
     data-field-name="keyValue"
     tabindex="0"
@@ -212,9 +256,15 @@ exports[`KeyValue has an id 1`] = `
     >
       <input
         class="form-control ddm-field-text"
+        id="keyValueLabelkeyValue"
         name="keyValueLabelkeyValue"
         type="text"
         value=""
+      />
+      <input
+        name="keyValueLabelkeyValue_edited"
+        type="hidden"
+        value="false"
       />
       
     </div>
@@ -234,6 +284,11 @@ exports[`KeyValue has an id 1`] = `
         value=""
       />
     </div>
+    <input
+      name="keyValue_edited"
+      type="hidden"
+      value="false"
+    />
     
   </div>
 </div>
@@ -256,9 +311,15 @@ exports[`KeyValue is not editable 1`] = `
       <input
         class="form-control ddm-field-text"
         disabled=""
+        id="keyValueLabelkeyValue"
         name="keyValueLabelkeyValue"
         type="text"
         value=""
+      />
+      <input
+        name="keyValueLabelkeyValue_edited"
+        type="hidden"
+        value="false"
       />
       
     </div>
@@ -278,6 +339,11 @@ exports[`KeyValue is not editable 1`] = `
         value=""
       />
     </div>
+    <input
+      name="keyValue_edited"
+      type="hidden"
+      value="false"
+    />
     
   </div>
 </div>
@@ -299,9 +365,15 @@ exports[`KeyValue is not required 1`] = `
     >
       <input
         class="form-control ddm-field-text"
+        id="keyValueLabelkeyValue"
         name="keyValueLabelkeyValue"
         type="text"
         value=""
+      />
+      <input
+        name="keyValueLabelkeyValue_edited"
+        type="hidden"
+        value="false"
       />
       
     </div>
@@ -321,6 +393,11 @@ exports[`KeyValue is not required 1`] = `
         value=""
       />
     </div>
+    <input
+      name="keyValue_edited"
+      type="hidden"
+      value="false"
+    />
     
   </div>
 </div>
@@ -333,7 +410,7 @@ exports[`KeyValue renders Label if showLabel is true 1`] = `
     data-field-name="keyValue"
   >
     <label
-      aria-describedby="keyValue_fieldDetails"
+      aria-labelledby="keyValue_fieldDetails"
       class="ddm-label"
       tabindex="0"
     >
@@ -347,9 +424,15 @@ exports[`KeyValue renders Label if showLabel is true 1`] = `
     >
       <input
         class="form-control ddm-field-text"
+        id="keyValueLabelkeyValue"
         name="keyValueLabelkeyValue"
         type="text"
         value=""
+      />
+      <input
+        name="keyValueLabelkeyValue_edited"
+        type="hidden"
+        value="false"
       />
       
     </div>
@@ -369,12 +452,16 @@ exports[`KeyValue renders Label if showLabel is true 1`] = `
         value=""
       />
     </div>
+    <input
+      name="keyValue_edited"
+      type="hidden"
+      value="false"
+    />
     <span
       class="sr-only"
       id="keyValue_fieldDetails"
     >
       text
-      <br />
     </span>
   </div>
 </div>
@@ -396,9 +483,15 @@ exports[`KeyValue renders component with a key 1`] = `
     >
       <input
         class="form-control ddm-field-text"
+        id="keyValueLabelkeyValue"
         name="keyValueLabelkeyValue"
         type="text"
         value=""
+      />
+      <input
+        name="keyValueLabelkeyValue_edited"
+        type="hidden"
+        value="false"
       />
       
     </div>
@@ -418,6 +511,11 @@ exports[`KeyValue renders component with a key 1`] = `
         value=""
       />
     </div>
+    <input
+      name="keyValue_edited"
+      type="hidden"
+      value="false"
+    />
     
   </div>
 </div>

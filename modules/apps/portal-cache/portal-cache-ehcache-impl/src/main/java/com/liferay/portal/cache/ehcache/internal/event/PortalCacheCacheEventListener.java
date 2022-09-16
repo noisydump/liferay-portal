@@ -17,7 +17,7 @@ package com.liferay.portal.cache.ehcache.internal.event;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.cache.AggregatedPortalCacheListener;
-import com.liferay.portal.cache.ehcache.internal.SerializableEhcachePortalCache;
+import com.liferay.portal.cache.ehcache.internal.BaseEhcachePortalCache;
 import com.liferay.portal.cache.io.SerializableObjectWrapper;
 import com.liferay.portal.kernel.cache.PortalCache;
 import com.liferay.portal.kernel.cache.PortalCacheListener;
@@ -47,8 +47,11 @@ public class PortalCacheCacheEventListener<K extends Serializable, V>
 
 		boolean requireSerialization = false;
 
-		if (_portalCache instanceof SerializableEhcachePortalCache) {
-			requireSerialization = true;
+		if (_portalCache instanceof BaseEhcachePortalCache) {
+			BaseEhcachePortalCache baseEhcachePortalCache =
+				(BaseEhcachePortalCache)_portalCache;
+
+			requireSerialization = baseEhcachePortalCache.isSerializable();
 		}
 
 		_requireSerialization = requireSerialization;
@@ -86,7 +89,7 @@ public class PortalCacheCacheEventListener<K extends Serializable, V>
 		if (_log.isDebugEnabled()) {
 			_log.debug(
 				StringBundler.concat(
-					"Evicted ", getKey(element), " from ", ehcache.getName()));
+					"Evicted ", _getKey(element), " from ", ehcache.getName()));
 		}
 
 		if (_aggregatedPortalCacheListener.isEmpty()) {
@@ -94,7 +97,7 @@ public class PortalCacheCacheEventListener<K extends Serializable, V>
 		}
 
 		_aggregatedPortalCacheListener.notifyEntryEvicted(
-			_portalCache, getKey(element), getValue(element),
+			_portalCache, _getKey(element), _getValue(element),
 			element.getTimeToLive());
 	}
 
@@ -103,7 +106,7 @@ public class PortalCacheCacheEventListener<K extends Serializable, V>
 		if (_log.isDebugEnabled()) {
 			_log.debug(
 				StringBundler.concat(
-					"Expired ", getKey(element), " from ", ehcache.getName()));
+					"Expired ", _getKey(element), " from ", ehcache.getName()));
 		}
 
 		if (_aggregatedPortalCacheListener.isEmpty()) {
@@ -111,7 +114,7 @@ public class PortalCacheCacheEventListener<K extends Serializable, V>
 		}
 
 		_aggregatedPortalCacheListener.notifyEntryExpired(
-			_portalCache, getKey(element), getValue(element),
+			_portalCache, _getKey(element), _getValue(element),
 			element.getTimeToLive());
 	}
 
@@ -122,7 +125,7 @@ public class PortalCacheCacheEventListener<K extends Serializable, V>
 		if (_log.isDebugEnabled()) {
 			_log.debug(
 				StringBundler.concat(
-					"Put ", getKey(element), " into ", ehcache.getName()));
+					"Put ", _getKey(element), " into ", ehcache.getName()));
 		}
 
 		if (_aggregatedPortalCacheListener.isEmpty()) {
@@ -130,7 +133,7 @@ public class PortalCacheCacheEventListener<K extends Serializable, V>
 		}
 
 		_aggregatedPortalCacheListener.notifyEntryPut(
-			_portalCache, getKey(element), getValue(element),
+			_portalCache, _getKey(element), _getValue(element),
 			element.getTimeToLive());
 	}
 
@@ -141,7 +144,7 @@ public class PortalCacheCacheEventListener<K extends Serializable, V>
 		if (_log.isDebugEnabled()) {
 			_log.debug(
 				StringBundler.concat(
-					"Removed ", getKey(element), " from ", ehcache.getName()));
+					"Removed ", _getKey(element), " from ", ehcache.getName()));
 		}
 
 		if (_aggregatedPortalCacheListener.isEmpty()) {
@@ -149,7 +152,7 @@ public class PortalCacheCacheEventListener<K extends Serializable, V>
 		}
 
 		_aggregatedPortalCacheListener.notifyEntryRemoved(
-			_portalCache, getKey(element), getValue(element),
+			_portalCache, _getKey(element), _getValue(element),
 			element.getTimeToLive());
 	}
 
@@ -160,7 +163,7 @@ public class PortalCacheCacheEventListener<K extends Serializable, V>
 		if (_log.isDebugEnabled()) {
 			_log.debug(
 				StringBundler.concat(
-					"Updated ", getKey(element), " in ", ehcache.getName()));
+					"Updated ", _getKey(element), " in ", ehcache.getName()));
 		}
 
 		if (_aggregatedPortalCacheListener.isEmpty()) {
@@ -168,7 +171,7 @@ public class PortalCacheCacheEventListener<K extends Serializable, V>
 		}
 
 		_aggregatedPortalCacheListener.notifyEntryUpdated(
-			_portalCache, getKey(element), getValue(element),
+			_portalCache, _getKey(element), _getValue(element),
 			element.getTimeToLive());
 	}
 
@@ -185,7 +188,7 @@ public class PortalCacheCacheEventListener<K extends Serializable, V>
 		_aggregatedPortalCacheListener.notifyRemoveAll(_portalCache);
 	}
 
-	protected K getKey(Element element) {
+	private K _getKey(Element element) {
 		if (_requireSerialization) {
 			return SerializableObjectWrapper.unwrap(element.getObjectKey());
 		}
@@ -193,7 +196,7 @@ public class PortalCacheCacheEventListener<K extends Serializable, V>
 		return (K)element.getObjectKey();
 	}
 
-	protected V getValue(Element element) {
+	private V _getValue(Element element) {
 		if (_requireSerialization) {
 			return SerializableObjectWrapper.unwrap(element.getObjectValue());
 		}

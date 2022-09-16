@@ -15,17 +15,10 @@
 package com.liferay.layout.taglib.internal.display.context;
 
 import com.liferay.asset.kernel.model.AssetRendererFactory;
-import com.liferay.fragment.constants.FragmentActionKeys;
-import com.liferay.fragment.constants.FragmentConstants;
-import com.liferay.fragment.contributor.FragmentCollectionContributorTracker;
-import com.liferay.fragment.model.FragmentEntry;
+import com.liferay.fragment.helper.FragmentEntryLinkHelper;
 import com.liferay.fragment.model.FragmentEntryLink;
-import com.liferay.fragment.renderer.FragmentRenderer;
-import com.liferay.fragment.renderer.FragmentRendererTracker;
 import com.liferay.fragment.service.FragmentEntryLinkLocalServiceUtil;
-import com.liferay.fragment.service.FragmentEntryLocalServiceUtil;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
-import com.liferay.layout.content.page.editor.constants.ContentPageEditorWebKeys;
 import com.liferay.layout.model.LayoutClassedModelUsage;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
@@ -36,6 +29,7 @@ import com.liferay.layout.util.LayoutClassedModelUsageActionMenuContributor;
 import com.liferay.layout.util.LayoutClassedModelUsageActionMenuContributorRegistryUtil;
 import com.liferay.layout.util.comparator.LayoutClassedModelUsageModifiedDateComparator;
 import com.liferay.layout.util.constants.LayoutClassedModelUsageConstants;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
@@ -49,8 +43,7 @@ import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.HttpUtil;
-import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
@@ -59,7 +52,6 @@ import com.liferay.portal.kernel.util.WebKeys;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.ResourceBundle;
 
@@ -84,13 +76,9 @@ public class LayoutClassedModelUsagesDisplayContext {
 		_classPK = classPK;
 
 		_classNameId = PortalUtil.getClassNameId(className);
-		_fragmentCollectionContributorTracker =
-			(FragmentCollectionContributorTracker)renderRequest.getAttribute(
-				ContentPageEditorWebKeys.
-					FRAGMENT_COLLECTION_CONTRIBUTOR_TRACKER);
-		_fragmentRendererTracker =
-			(FragmentRendererTracker)renderRequest.getAttribute(
-				FragmentActionKeys.FRAGMENT_RENDERER_TRACKER);
+		_fragmentEntryLinkHelper =
+			(FragmentEntryLinkHelper)renderRequest.getAttribute(
+				FragmentEntryLinkHelper.class.getName());
 
 		_themeDisplay = (ThemeDisplay)_renderRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
@@ -146,26 +134,20 @@ public class LayoutClassedModelUsagesDisplayContext {
 				return StringPool.BLANK;
 			}
 
-			if (!_isDraft(layout)) {
+			if (!layout.isDraftLayout()) {
 				return layout.getName(_themeDisplay.getLocale());
 			}
 
-			StringBundler sb = new StringBundler(4);
-
-			sb.append(layout.getName(_themeDisplay.getLocale()));
-			sb.append(" (");
-			sb.append(LanguageUtil.get(_themeDisplay.getLocale(), "draft"));
-			sb.append(")");
-
-			return sb.toString();
+			return StringBundler.concat(
+				layout.getName(_themeDisplay.getLocale()), " (",
+				LanguageUtil.get(_themeDisplay.getLocale(), "draft"), ")");
 		}
 
 		long plid = layoutClassedModelUsage.getPlid();
 
-		Layout layout = LayoutLocalServiceUtil.fetchLayout(
-			layoutClassedModelUsage.getPlid());
+		Layout layout = LayoutLocalServiceUtil.fetchLayout(plid);
 
-		if ((layout.getClassNameId() > 0) && (layout.getClassPK() > 0)) {
+		if (layout.isDraftLayout()) {
 			plid = layout.getClassPK();
 		}
 
@@ -177,18 +159,13 @@ public class LayoutClassedModelUsagesDisplayContext {
 			return StringPool.BLANK;
 		}
 
-		if (!_isDraft(layout)) {
+		if (!layout.isDraftLayout()) {
 			return layoutPageTemplateEntry.getName();
 		}
 
-		StringBundler sb = new StringBundler(4);
-
-		sb.append(layoutPageTemplateEntry.getName());
-		sb.append(" (");
-		sb.append(LanguageUtil.get(_themeDisplay.getLocale(), "draft"));
-		sb.append(")");
-
-		return sb.toString();
+		return StringBundler.concat(
+			layoutPageTemplateEntry.getName(), " (",
+			LanguageUtil.get(_themeDisplay.getLocale(), "draft"), ")");
 	}
 
 	public String getLayoutClassedModelUsageTypeLabel(
@@ -218,13 +195,12 @@ public class LayoutClassedModelUsagesDisplayContext {
 			(layoutClassedModelUsage.getContainerType() !=
 				PortalUtil.getClassNameId(LayoutPageTemplateStructure.class))) {
 
-			String portletTitle = PortalUtil.getPortletTitle(
-				PortletIdCodec.decodePortletName(
-					layoutClassedModelUsage.getContainerKey()),
-				_themeDisplay.getLocale());
-
 			return LanguageUtil.format(
-				_resourceBundle, "x-widget", portletTitle);
+				_resourceBundle, "x-widget",
+				PortalUtil.getPortletTitle(
+					PortletIdCodec.decodePortletName(
+						layoutClassedModelUsage.getContainerKey()),
+					_themeDisplay.getLocale()));
 		}
 
 		if (layoutClassedModelUsage.getContainerType() ==
@@ -235,15 +211,14 @@ public class LayoutClassedModelUsagesDisplayContext {
 					GetterUtil.getLong(
 						layoutClassedModelUsage.getContainerKey()));
 
-			String name = _getFragmentEntryName(fragmentEntryLink);
+			String name = _fragmentEntryLinkHelper.getFragmentEntryName(
+				fragmentEntryLink, _themeDisplay.getLocale());
 
 			if (Validator.isNull(name)) {
 				return StringPool.BLANK;
 			}
 
-			if (_getType(fragmentEntryLink) ==
-					FragmentConstants.TYPE_COMPONENT) {
-
+			if (!fragmentEntryLink.isTypeSection()) {
 				return LanguageUtil.format(_resourceBundle, "x-element", name);
 			}
 
@@ -284,10 +259,9 @@ public class LayoutClassedModelUsagesDisplayContext {
 	}
 
 	public PortletURL getPortletURL() throws PortletException {
-		PortletURL currentURLObj = PortletURLUtil.getCurrent(
-			_renderRequest, _renderResponse);
-
-		return PortletURLUtil.clone(currentURLObj, _renderResponse);
+		return PortletURLUtil.clone(
+			PortletURLUtil.getCurrent(_renderRequest, _renderResponse),
+			_renderResponse);
 	}
 
 	public String getPreviewURL(LayoutClassedModelUsage layoutClassedModelUsage)
@@ -302,40 +276,37 @@ public class LayoutClassedModelUsagesDisplayContext {
 				(ThemeDisplay)_renderRequest.getAttribute(
 					WebKeys.THEME_DISPLAY);
 
-			Layout layout = LayoutLocalServiceUtil.fetchLayout(
-				layoutClassedModelUsage.getPlid());
+			layoutURL = PortalUtil.getLayoutFriendlyURL(
+				LayoutLocalServiceUtil.fetchLayout(
+					layoutClassedModelUsage.getPlid()),
+				themeDisplay);
 
-			layoutURL = PortalUtil.getLayoutFriendlyURL(layout, themeDisplay);
-
-			layoutURL = HttpUtil.setParameter(
+			layoutURL = HttpComponentsUtil.setParameter(
 				layoutURL, "previewClassNameId",
 				String.valueOf(layoutClassedModelUsage.getClassNameId()));
-			layoutURL = HttpUtil.setParameter(
+			layoutURL = HttpComponentsUtil.setParameter(
 				layoutURL, "previewClassPK",
 				String.valueOf(layoutClassedModelUsage.getClassPK()));
-			layoutURL = HttpUtil.setParameter(
+			layoutURL = HttpComponentsUtil.setParameter(
 				layoutURL, "previewType",
 				String.valueOf(AssetRendererFactory.TYPE_LATEST));
 		}
 		else {
-			PortletURL portletURL = PortletURLFactoryUtil.create(
-				_renderRequest, layoutClassedModelUsage.getContainerKey(),
-				layoutClassedModelUsage.getPlid(), PortletRequest.RENDER_PHASE);
-
-			portletURL.setParameter(
-				"previewClassNameId",
-				String.valueOf(layoutClassedModelUsage.getClassNameId()));
-			portletURL.setParameter(
-				"previewClassPK",
-				String.valueOf(layoutClassedModelUsage.getClassPK()));
-			portletURL.setParameter(
-				"previewType",
-				String.valueOf(AssetRendererFactory.TYPE_LATEST));
-
-			layoutURL = portletURL.toString();
+			layoutURL = PortletURLBuilder.create(
+				PortletURLFactoryUtil.create(
+					_renderRequest, layoutClassedModelUsage.getContainerKey(),
+					layoutClassedModelUsage.getPlid(),
+					PortletRequest.RENDER_PHASE)
+			).setParameter(
+				"previewClassNameId", layoutClassedModelUsage.getClassNameId()
+			).setParameter(
+				"previewClassPK", layoutClassedModelUsage.getClassPK()
+			).setParameter(
+				"previewType", AssetRendererFactory.TYPE_LATEST
+			).buildString();
 		}
 
-		String portletURLString = HttpUtil.addParameter(
+		String portletURLString = HttpComponentsUtil.addParameter(
 			layoutURL, "p_l_mode", Constants.PREVIEW);
 
 		return portletURLString + "#portlet_" +
@@ -363,6 +334,8 @@ public class LayoutClassedModelUsagesDisplayContext {
 			layoutClassedModelUsagesSearchContainer = new SearchContainer(
 				_renderRequest, getPortletURL(), null, "there-are-no-usages");
 
+		layoutClassedModelUsagesSearchContainer.setOrderByCol(_getOrderByCol());
+
 		boolean orderByAsc = false;
 
 		String orderByType = _getOrderByType();
@@ -371,72 +344,63 @@ public class LayoutClassedModelUsagesDisplayContext {
 			orderByAsc = true;
 		}
 
-		OrderByComparator<LayoutClassedModelUsage> orderByComparator =
-			new LayoutClassedModelUsageModifiedDateComparator(orderByAsc);
-
-		layoutClassedModelUsagesSearchContainer.setOrderByCol(_getOrderByCol());
 		layoutClassedModelUsagesSearchContainer.setOrderByComparator(
-			orderByComparator);
+			new LayoutClassedModelUsageModifiedDateComparator(orderByAsc));
 		layoutClassedModelUsagesSearchContainer.setOrderByType(
 			_getOrderByType());
 
-		List<LayoutClassedModelUsage> layoutClassedModelUsages = null;
-
-		int layoutClassedModelUsagesCount = 0;
-
 		if (Objects.equals(getNavigation(), "pages")) {
-			layoutClassedModelUsages =
-				LayoutClassedModelUsageLocalServiceUtil.
-					getLayoutClassedModelUsages(
-						_classNameId, _classPK,
-						LayoutClassedModelUsageConstants.TYPE_LAYOUT,
-						layoutClassedModelUsagesSearchContainer.getStart(),
-						layoutClassedModelUsagesSearchContainer.getEnd(),
-						orderByComparator);
-
-			layoutClassedModelUsagesCount = getPagesUsageCount();
+			layoutClassedModelUsagesSearchContainer.setResultsAndTotal(
+				() ->
+					LayoutClassedModelUsageLocalServiceUtil.
+						getLayoutClassedModelUsages(
+							_classNameId, _classPK,
+							LayoutClassedModelUsageConstants.TYPE_LAYOUT,
+							layoutClassedModelUsagesSearchContainer.getStart(),
+							layoutClassedModelUsagesSearchContainer.getEnd(),
+							layoutClassedModelUsagesSearchContainer.
+								getOrderByComparator()),
+				getPagesUsageCount());
 		}
 		else if (Objects.equals(getNavigation(), "page-templates")) {
-			layoutClassedModelUsages =
-				LayoutClassedModelUsageLocalServiceUtil.
-					getLayoutClassedModelUsages(
-						_classNameId, _classPK,
-						LayoutClassedModelUsageConstants.TYPE_PAGE_TEMPLATE,
-						layoutClassedModelUsagesSearchContainer.getStart(),
-						layoutClassedModelUsagesSearchContainer.getEnd(),
-						orderByComparator);
-
-			layoutClassedModelUsagesCount = getPageTemplatesUsageCount();
+			layoutClassedModelUsagesSearchContainer.setResultsAndTotal(
+				() ->
+					LayoutClassedModelUsageLocalServiceUtil.
+						getLayoutClassedModelUsages(
+							_classNameId, _classPK,
+							LayoutClassedModelUsageConstants.TYPE_PAGE_TEMPLATE,
+							layoutClassedModelUsagesSearchContainer.getStart(),
+							layoutClassedModelUsagesSearchContainer.getEnd(),
+							layoutClassedModelUsagesSearchContainer.
+								getOrderByComparator()),
+				getPageTemplatesUsageCount());
 		}
 		else if (Objects.equals(getNavigation(), "display-page-templates")) {
-			layoutClassedModelUsages =
-				LayoutClassedModelUsageLocalServiceUtil.
-					getLayoutClassedModelUsages(
-						_classNameId, _classPK,
-						LayoutClassedModelUsageConstants.
-							TYPE_DISPLAY_PAGE_TEMPLATE,
-						layoutClassedModelUsagesSearchContainer.getStart(),
-						layoutClassedModelUsagesSearchContainer.getEnd(),
-						orderByComparator);
-
-			layoutClassedModelUsagesCount = getDisplayPagesUsageCount();
+			layoutClassedModelUsagesSearchContainer.setResultsAndTotal(
+				() ->
+					LayoutClassedModelUsageLocalServiceUtil.
+						getLayoutClassedModelUsages(
+							_classNameId, _classPK,
+							LayoutClassedModelUsageConstants.
+								TYPE_DISPLAY_PAGE_TEMPLATE,
+							layoutClassedModelUsagesSearchContainer.getStart(),
+							layoutClassedModelUsagesSearchContainer.getEnd(),
+							layoutClassedModelUsagesSearchContainer.
+								getOrderByComparator()),
+				getDisplayPagesUsageCount());
 		}
 		else {
-			layoutClassedModelUsages =
-				LayoutClassedModelUsageLocalServiceUtil.
-					getLayoutClassedModelUsages(
-						_classNameId, _classPK,
-						layoutClassedModelUsagesSearchContainer.getStart(),
-						layoutClassedModelUsagesSearchContainer.getEnd(),
-						orderByComparator);
-
-			layoutClassedModelUsagesCount = getAllUsageCount();
+			layoutClassedModelUsagesSearchContainer.setResultsAndTotal(
+				() ->
+					LayoutClassedModelUsageLocalServiceUtil.
+						getLayoutClassedModelUsages(
+							_classNameId, _classPK,
+							layoutClassedModelUsagesSearchContainer.getStart(),
+							layoutClassedModelUsagesSearchContainer.getEnd(),
+							layoutClassedModelUsagesSearchContainer.
+								getOrderByComparator()),
+				getAllUsageCount());
 		}
-
-		layoutClassedModelUsagesSearchContainer.setResults(
-			layoutClassedModelUsages);
-		layoutClassedModelUsagesSearchContainer.setTotal(
-			layoutClassedModelUsagesCount);
 
 		_searchContainer = layoutClassedModelUsagesSearchContainer;
 
@@ -452,14 +416,10 @@ public class LayoutClassedModelUsagesDisplayContext {
 			return true;
 		}
 
-		if (layoutClassedModelUsage.getType() ==
-				LayoutClassedModelUsageConstants.TYPE_DISPLAY_PAGE_TEMPLATE) {
-
-			return false;
-		}
-
-		if (layoutClassedModelUsage.getType() !=
-				LayoutClassedModelUsageConstants.TYPE_PAGE_TEMPLATE) {
+		if ((layoutClassedModelUsage.getType() ==
+				LayoutClassedModelUsageConstants.TYPE_DISPLAY_PAGE_TEMPLATE) ||
+			(layoutClassedModelUsage.getType() !=
+				LayoutClassedModelUsageConstants.TYPE_PAGE_TEMPLATE)) {
 
 			return false;
 		}
@@ -468,7 +428,7 @@ public class LayoutClassedModelUsagesDisplayContext {
 
 		Layout layout = LayoutLocalServiceUtil.fetchLayout(plid);
 
-		if ((layout.getClassNameId() > 0) && (layout.getClassPK() > 0)) {
+		if (layout.isDraftLayout()) {
 			plid = layout.getClassPK();
 		}
 
@@ -476,54 +436,14 @@ public class LayoutClassedModelUsagesDisplayContext {
 			LayoutPageTemplateEntryLocalServiceUtil.
 				fetchLayoutPageTemplateEntryByPlid(plid);
 
-		if (layoutPageTemplateEntry == null) {
-			return false;
-		}
-
-		if (layoutPageTemplateEntry.getType() ==
-				LayoutPageTemplateEntryTypeConstants.TYPE_WIDGET_PAGE) {
+		if ((layoutPageTemplateEntry == null) ||
+			(layoutPageTemplateEntry.getType() ==
+				LayoutPageTemplateEntryTypeConstants.TYPE_WIDGET_PAGE)) {
 
 			return false;
 		}
 
 		return true;
-	}
-
-	private String _getFragmentEntryName(FragmentEntryLink fragmentEntryLink) {
-		FragmentEntry fragmentEntry =
-			FragmentEntryLocalServiceUtil.fetchFragmentEntry(
-				fragmentEntryLink.getFragmentEntryId());
-
-		if (fragmentEntry != null) {
-			return fragmentEntry.getName();
-		}
-
-		String rendererKey = fragmentEntryLink.getRendererKey();
-
-		if (Validator.isNull(rendererKey)) {
-			return StringPool.BLANK;
-		}
-
-		Map<String, FragmentEntry> fragmentEntries =
-			_fragmentCollectionContributorTracker.getFragmentEntries(
-				_themeDisplay.getLocale());
-
-		FragmentEntry contributedFragmentEntry = fragmentEntries.get(
-			rendererKey);
-
-		if (contributedFragmentEntry != null) {
-			return contributedFragmentEntry.getName();
-		}
-
-		FragmentRenderer fragmentRenderer =
-			_fragmentRendererTracker.getFragmentRenderer(
-				fragmentEntryLink.getRendererKey());
-
-		if (fragmentRenderer != null) {
-			return fragmentRenderer.getLabel(_themeDisplay.getLocale());
-		}
-
-		return StringPool.BLANK;
 	}
 
 	private String _getOrderByCol() {
@@ -548,58 +468,10 @@ public class LayoutClassedModelUsagesDisplayContext {
 		return _orderByType;
 	}
 
-	private int _getType(FragmentEntryLink fragmentEntryLink) {
-		FragmentEntry fragmentEntry =
-			FragmentEntryLocalServiceUtil.fetchFragmentEntry(
-				fragmentEntryLink.getFragmentEntryId());
-
-		if (fragmentEntry != null) {
-			return fragmentEntry.getType();
-		}
-
-		String rendererKey = fragmentEntryLink.getRendererKey();
-
-		if (Validator.isNull(rendererKey)) {
-			return 0;
-		}
-
-		Map<String, FragmentEntry> fragmentEntries =
-			_fragmentCollectionContributorTracker.getFragmentEntries();
-
-		FragmentEntry contributedFragmentEntry = fragmentEntries.get(
-			rendererKey);
-
-		if (contributedFragmentEntry != null) {
-			return contributedFragmentEntry.getType();
-		}
-
-		FragmentRenderer fragmentRenderer =
-			_fragmentRendererTracker.getFragmentRenderer(
-				fragmentEntryLink.getRendererKey());
-
-		if (fragmentRenderer != null) {
-			return fragmentRenderer.getType();
-		}
-
-		return 0;
-	}
-
-	private boolean _isDraft(Layout layout) {
-		if (layout.getClassNameId() != PortalUtil.getClassNameId(
-				Layout.class.getName())) {
-
-			return false;
-		}
-
-		return true;
-	}
-
 	private final String _className;
 	private final long _classNameId;
 	private final long _classPK;
-	private final FragmentCollectionContributorTracker
-		_fragmentCollectionContributorTracker;
-	private final FragmentRendererTracker _fragmentRendererTracker;
+	private final FragmentEntryLinkHelper _fragmentEntryLinkHelper;
 	private String _navigation;
 	private String _orderByCol;
 	private String _orderByType;

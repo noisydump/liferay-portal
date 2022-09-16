@@ -53,6 +53,12 @@ public class RandomTestUtil {
 		return _random.nextBoolean();
 	}
 
+	public static byte[] randomBytes() {
+		String string = randomString();
+
+		return string.getBytes();
+	}
+
 	public static double randomDouble() {
 		double value = _random.nextDouble();
 
@@ -70,6 +76,19 @@ public class RandomTestUtil {
 		T[] enumConstants = clazz.getEnumConstants();
 
 		return enumConstants[_random.nextInt(enumConstants.length)];
+	}
+
+	public static float randomFloat() {
+		float value = _random.nextFloat();
+
+		if (value > 0) {
+			return value;
+		}
+		else if (value == 0) {
+			return randomFloat();
+		}
+
+		return -value;
 	}
 
 	public static int randomInt() {

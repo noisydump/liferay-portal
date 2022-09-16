@@ -31,8 +31,11 @@ Discussion discussion = CommentManagerUtil.getDiscussion(discussionTaglibHelper.
 DiscussionComment rootDiscussionComment = (discussion == null) ? null : discussion.getRootDiscussionComment();
 
 DiscussionCommentIterator discussionCommentIterator = (rootDiscussionComment == null) ? null : rootDiscussionComment.getThreadDiscussionCommentIterator(rootIndexPage - 1);
+%>
 
-if (discussionCommentIterator != null) {
+<c:if test="<%= discussionCommentIterator != null %>">
+
+	<%
 	while (discussionCommentIterator.hasNext()) {
 		rootIndexPage = discussionCommentIterator.getIndexPage();
 
@@ -44,40 +47,30 @@ if (discussionCommentIterator != null) {
 		request.setAttribute("liferay-comment:discussion:depth", 0);
 		request.setAttribute("liferay-comment:discussion:discussion", discussion);
 		request.setAttribute("liferay-comment:discussion:discussionComment", discussionCommentIterator.next());
-%>
+	%>
 
 		<liferay-util:include page="/discussion/view_message_thread.jsp" servletContext="<%= application %>" />
 
-<%
+	<%
 		index = GetterUtil.getInteger(request.getAttribute("liferay-comment:discussion:index"));
 	}
-}
-%>
+	%>
 
-<script>
-	var indexInput = document.getElementById(
-		'<%= originalNamespace + randomNamespace %>index'
-	);
+</c:if>
 
-	if (indexInput) {
-		indexInput.value = '<%= String.valueOf(index) %>';
-	}
-
-	var rootIndexPageInput = document.getElementById(
-		'<%= originalNamespace + randomNamespace %>rootIndexPage'
-	);
-
-	if (rootIndexPageInput) {
-		rootIndexPageInput.value = '<%= String.valueOf(rootIndexPage) %>';
-	}
-
-	<c:if test="<%= (rootDiscussionComment != null) && (discussion.getDiscussionCommentsCount() <= index) %>">
-		var moreCommentsContainer = document.getElementById(
-			'<%= HtmlUtil.escape(originalNamespace) %>moreCommentsContainer'
-		);
-
-		if (moreCommentsContainer) {
-			moreCommentsContainer.classList.add('hide');
-		}
-	</c:if>
-</script>
+<liferay-frontend:component
+	context='<%=
+		HashMapBuilder.<String, Object>put(
+			"hideMoreComments", (rootDiscussionComment != null) && (discussion.getDiscussionCommentsCount() <= index)
+		).put(
+			"index", index
+		).put(
+			"originalNamespace", originalNamespace
+		).put(
+			"randomNamespace", randomNamespace
+		).put(
+			"rootIndexPage", rootIndexPage
+		).build()
+	%>'
+	module="discussion/js/PageResources"
+/>

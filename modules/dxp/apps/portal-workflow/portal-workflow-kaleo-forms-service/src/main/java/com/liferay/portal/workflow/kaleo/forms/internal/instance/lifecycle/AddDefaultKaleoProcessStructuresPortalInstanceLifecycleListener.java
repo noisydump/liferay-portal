@@ -41,8 +41,8 @@ public class AddDefaultKaleoProcessStructuresPortalInstanceLifecycleListener
 	public void portalInstanceRegistered(Company company) throws Exception {
 		ServiceContext serviceContext = new ServiceContext();
 
-		serviceContext.setAddGuestPermissions(true);
 		serviceContext.setAddGroupPermissions(true);
+		serviceContext.setAddGuestPermissions(true);
 
 		Group group = _groupLocalService.getCompanyGroup(
 			company.getCompanyId());
@@ -65,39 +65,22 @@ public class AddDefaultKaleoProcessStructuresPortalInstanceLifecycleListener
 			serviceContext);
 	}
 
-	@Reference(unbind = "-")
-	protected void setDefaultDDMStructureHelper(
-		DefaultDDMStructureHelper defaultDDMStructureHelper) {
-
-		_defaultDDMStructureHelper = defaultDDMStructureHelper;
-	}
-
-	@Reference(unbind = "-")
-	protected void setGroupLocalService(GroupLocalService groupLocalService) {
-		_groupLocalService = groupLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setKaleoProcessLocalService(
-		KaleoProcessLocalService kaleoProcessLocalService) {
-	}
-
-	@Reference(target = ModuleServiceLifecycle.PORTAL_INITIALIZED, unbind = "-")
-	protected void setModuleServiceLifecycle(
-		ModuleServiceLifecycle moduleServiceLifecycle) {
-	}
-
-	@Reference(unbind = "-")
-	protected void setUserLocalService(UserLocalService userLocalService) {
-		_userLocalService = userLocalService;
-	}
-
+	@Reference
 	private DefaultDDMStructureHelper _defaultDDMStructureHelper;
+
+	@Reference
 	private GroupLocalService _groupLocalService;
+
+	@Reference
+	private KaleoProcessLocalService _kaleoProcessLocalService;
+
+	@Reference(target = ModuleServiceLifecycle.PORTAL_INITIALIZED)
+	private ModuleServiceLifecycle _moduleServiceLifecycle;
 
 	@Reference
 	private Portal _portal;
 
+	@Reference
 	private UserLocalService _userLocalService;
 
 }

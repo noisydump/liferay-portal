@@ -16,7 +16,6 @@ package com.liferay.journal.internal.transformer;
 
 import com.liferay.journal.constants.JournalPortletKeys;
 import com.liferay.petra.string.StringBundler;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.templateparser.BaseTransformerListener;
@@ -60,20 +59,17 @@ public class ViewCounterTransformerListener extends BaseTransformerListener {
 
 		String articleResourcePK = tokens.get("article_resource_pk");
 
-		StringBundler sb = new StringBundler(6);
-
-		sb.append("<script type=\"text/javascript\">");
-		sb.append("Liferay.Service('/assetentry/increment-view-counter',");
-		sb.append("{userId:0, className:'");
-		sb.append("com.liferay.journal.model.JournalArticle', classPK:");
-		sb.append(articleResourcePK);
-		sb.append("});</script>");
-
-		return StringUtil.replace(s, _COUNTER_TOKEN, sb.toString());
+		return StringUtil.replace(
+			s, _COUNTER_TOKEN,
+			StringBundler.concat(
+				"<script type=\"text/javascript\">",
+				"Liferay.Service('/assetentry/increment-view-counter',",
+				"{userId:0, className:'",
+				"com.liferay.journal.model.JournalArticle', classPK:",
+				articleResourcePK, "});</script>"));
 	}
 
-	private static final String _COUNTER_TOKEN =
-		StringPool.AT + "view_counter" + StringPool.AT;
+	private static final String _COUNTER_TOKEN = "@view_counter@";
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		ViewCounterTransformerListener.class);

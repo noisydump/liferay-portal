@@ -17,7 +17,7 @@ import ClayButton from '@clayui/button';
 import {ClayCheckbox} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import ClayModal, {useModal} from '@clayui/modal';
-import {useIsMounted} from 'frontend-js-react-web';
+import {useIsMounted} from '@liferay/frontend-js-react-web';
 import React, {useState} from 'react';
 
 import fetch from '../../util/fetch.es';
@@ -39,19 +39,28 @@ const SimpleInputModal = ({
 	initialVisible,
 	mainFieldLabel,
 	mainFieldName,
+	mainFieldValue = '',
 	namespace,
 	onFormSuccess,
 	placeholder,
 }) => {
 	const isMounted = useIsMounted();
 	const [errorMessage, setErrorMessage] = useState();
+	const [highlighted, setHighlighted] = useState(false);
 	const [loadingResponse, setLoadingResponse] = useState(false);
 	const [visible, setVisible] = useState(initialVisible);
-	const [inputValue, setInputValue] = useState('');
+	const [inputValue, setInputValue] = useState(mainFieldValue);
 	const [isChecked, setChecked] = useState(checkboxFieldValue);
 
 	const handleFormError = (responseContent) => {
 		setErrorMessage(responseContent.error || '');
+	};
+
+	const handleMainFieldRef = (mainFieldElement) => {
+		if (mainFieldElement && mainFieldValue && !highlighted) {
+			mainFieldElement.setSelectionRange(0, mainFieldValue.length);
+			setHighlighted(true);
+		}
 	};
 
 	const _handleSubmit = (event) => {
@@ -156,6 +165,7 @@ const SimpleInputModal = ({
 									setInputValue(event.target.value)
 								}
 								placeholder={placeholder}
+								ref={handleMainFieldRef}
 								required
 								type="text"
 								value={inputValue}

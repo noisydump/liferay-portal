@@ -24,6 +24,10 @@ class AutoSize {
 			10
 		);
 
+		this.paddingHeight =
+			parseInt(this.computedStyle.paddingTop.replace('px', ''), 10) +
+			parseInt(this.computedStyle.paddingBottom.replace('px', ''), 10);
+
 		this.template = this.createTemplate(this.computedStyle);
 		document.body.appendChild(this.template);
 
@@ -69,12 +73,14 @@ class AutoSize {
 			this.template.style.width = this.computedStyle.width;
 		}
 
-		this.template.innerHTML = inputElement.value + DEFAULT_APPEND_CONTENT;
+		this.template.innerHTML =
+			Liferay.Util.escapeHTML(inputElement.value) +
+			DEFAULT_APPEND_CONTENT;
 
 		inputElement.style.height = `${
-			this.template.scrollHeight < this.minHeight
+			this.template.scrollHeight + this.paddingHeight < this.minHeight
 				? this.minHeight
-				: this.template.scrollHeight
+				: this.template.scrollHeight + this.paddingHeight
 		}px`;
 	}
 }

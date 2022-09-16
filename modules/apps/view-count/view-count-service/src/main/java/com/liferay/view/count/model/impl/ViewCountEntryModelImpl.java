@@ -21,6 +21,7 @@ import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.impl.BaseModelImpl;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.view.count.model.ViewCountEntry;
 import com.liferay.view.count.model.ViewCountEntryModel;
@@ -28,15 +29,17 @@ import com.liferay.view.count.service.persistence.ViewCountEntryPK;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -95,21 +98,21 @@ public class ViewCountEntryModelImpl
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *		#getColumnBitmask(String)
+	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long COMPANYID_COLUMN_BITMASK = 1L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *		#getColumnBitmask(String)
+	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long CLASSNAMEID_COLUMN_BITMASK = 2L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *		#getColumnBitmask(String)
+	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long CLASSPK_COLUMN_BITMASK = 4L;
@@ -213,34 +216,6 @@ public class ViewCountEntryModelImpl
 		getAttributeSetterBiConsumers() {
 
 		return _attributeSetterBiConsumers;
-	}
-
-	private static Function<InvocationHandler, ViewCountEntry>
-		_getProxyProviderFunction() {
-
-		Class<?> proxyClass = ProxyUtil.getProxyClass(
-			ViewCountEntry.class.getClassLoader(), ViewCountEntry.class,
-			ModelWrapper.class);
-
-		try {
-			Constructor<ViewCountEntry> constructor =
-				(Constructor<ViewCountEntry>)proxyClass.getConstructor(
-					InvocationHandler.class);
-
-			return invocationHandler -> {
-				try {
-					return constructor.newInstance(invocationHandler);
-				}
-				catch (ReflectiveOperationException
-							reflectiveOperationException) {
-
-					throw new InternalError(reflectiveOperationException);
-				}
-			};
-		}
-		catch (NoSuchMethodException noSuchMethodException) {
-			throw new InternalError(noSuchMethodException);
-		}
 	}
 
 	private static final Map<String, Function<ViewCountEntry, Object>>
@@ -368,7 +343,9 @@ public class ViewCountEntryModelImpl
 		for (Map.Entry<String, Object> entry :
 				_columnOriginalValues.entrySet()) {
 
-			if (entry.getValue() != getColumnValue(entry.getKey())) {
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
 				_columnBitmask |= _columnBitmasks.get(entry.getKey());
 			}
 		}
@@ -401,6 +378,22 @@ public class ViewCountEntryModelImpl
 		viewCountEntryImpl.setViewCount(getViewCount());
 
 		viewCountEntryImpl.resetOriginalValues();
+
+		return viewCountEntryImpl;
+	}
+
+	@Override
+	public ViewCountEntry cloneWithOriginalValues() {
+		ViewCountEntryImpl viewCountEntryImpl = new ViewCountEntryImpl();
+
+		viewCountEntryImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		viewCountEntryImpl.setClassNameId(
+			this.<Long>getColumnOriginalValue("classNameId"));
+		viewCountEntryImpl.setClassPK(
+			this.<Long>getColumnOriginalValue("classPK"));
+		viewCountEntryImpl.setViewCount(
+			this.<Long>getColumnOriginalValue("viewCount"));
 
 		return viewCountEntryImpl;
 	}
@@ -488,7 +481,7 @@ public class ViewCountEntryModelImpl
 			getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			(4 * attributeGetterFunctions.size()) + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -499,9 +492,26 @@ public class ViewCountEntryModelImpl
 			Function<ViewCountEntry, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((ViewCountEntry)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply((ViewCountEntry)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -548,7 +558,9 @@ public class ViewCountEntryModelImpl
 	private static class EscapedModelProxyProviderFunctionHolder {
 
 		private static final Function<InvocationHandler, ViewCountEntry>
-			_escapedModelProxyProviderFunction = _getProxyProviderFunction();
+			_escapedModelProxyProviderFunction =
+				ProxyUtil.getProxyProviderFunction(
+					ViewCountEntry.class, ModelWrapper.class);
 
 	}
 

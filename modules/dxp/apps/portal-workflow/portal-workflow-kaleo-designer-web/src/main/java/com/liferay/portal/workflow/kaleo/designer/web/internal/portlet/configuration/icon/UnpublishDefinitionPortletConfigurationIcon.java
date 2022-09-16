@@ -14,8 +14,9 @@
 
 package com.liferay.portal.workflow.kaleo.designer.web.internal.portlet.configuration.icon;
 
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.configuration.icon.BasePortletConfigurationIcon;
@@ -23,7 +24,6 @@ import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfiguration
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.workflow.kaleo.designer.web.constants.KaleoDesignerPortletKeys;
 import com.liferay.portal.workflow.kaleo.designer.web.internal.constants.KaleoDesignerWebKeys;
@@ -31,9 +31,6 @@ import com.liferay.portal.workflow.kaleo.designer.web.internal.permission.KaleoD
 import com.liferay.portal.workflow.kaleo.model.KaleoDefinition;
 import com.liferay.portal.workflow.kaleo.model.KaleoDefinitionVersion;
 
-import java.util.ResourceBundle;
-
-import javax.portlet.ActionRequest;
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
 import javax.portlet.PortletURL;
@@ -57,27 +54,22 @@ public class UnpublishDefinitionPortletConfigurationIcon
 
 	@Override
 	public String getMessage(PortletRequest portletRequest) {
-		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
-			getLocale(portletRequest),
-			UnpublishDefinitionPortletConfigurationIcon.class);
-
-		return LanguageUtil.get(resourceBundle, "unpublish");
+		return _language.get(getLocale(portletRequest), "unpublish");
 	}
 
 	@Override
 	public String getURL(
 		PortletRequest portletRequest, PortletResponse portletResponse) {
 
-		PortletURL portletURL = _portal.getControlPanelPortletURL(
-			portletRequest, KaleoDesignerPortletKeys.KALEO_DESIGNER,
-			PortletRequest.ACTION_PHASE);
-
-		portletURL.setParameter(
-			ActionRequest.ACTION_NAME,
-			"/kaleo_designer/unpublish_kaleo_definition_version");
-
-		portletURL.setParameter(
-			"mvcPath", portletRequest.getParameter("mvcPath"));
+		PortletURL portletURL = PortletURLBuilder.create(
+			_portal.getControlPanelPortletURL(
+				portletRequest, KaleoDesignerPortletKeys.KALEO_DESIGNER,
+				PortletRequest.ACTION_PHASE)
+		).setActionName(
+			"/kaleo_designer/unpublish_kaleo_definition_version"
+		).setMVCPath(
+			portletRequest.getParameter("mvcPath")
+		).buildPortletURL();
 
 		KaleoDefinition kaleoDefinition = getKaleoDefinition(portletRequest);
 
@@ -122,7 +114,7 @@ public class UnpublishDefinitionPortletConfigurationIcon
 			}
 			catch (PortalException portalException) {
 				if (_log.isDebugEnabled()) {
-					_log.debug(portalException, portalException);
+					_log.debug(portalException);
 				}
 			}
 		}
@@ -145,7 +137,7 @@ public class UnpublishDefinitionPortletConfigurationIcon
 		}
 		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(portalException, portalException);
+				_log.debug(portalException);
 			}
 		}
 
@@ -161,6 +153,9 @@ public class UnpublishDefinitionPortletConfigurationIcon
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		UnpublishDefinitionPortletConfigurationIcon.class);
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private Portal _portal;

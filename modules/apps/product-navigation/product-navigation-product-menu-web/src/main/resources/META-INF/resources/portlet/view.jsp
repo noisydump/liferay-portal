@@ -34,7 +34,7 @@ ApplicationsMenuInstanceConfiguration applicationsMenuInstanceConfiguration = Co
 				>
 					<a href="<%= PortalUtil.addPreservedParameters(themeDisplay, themeDisplay.getURLPortal(), false, true) %>">
 						<span class="company-details text-truncate">
-							<img alt="" class="company-logo" src="<%= themeDisplay.getPathImage() + "/company_logo?img_id=" + company.getLogoId() + "&t=" + WebServerServletTokenUtil.getToken(company.getLogoId()) %>" />
+							<img alt="" class="company-logo" src="<%= themeDisplay.getPathImage() %>/company_logo?img_id=<%= company.getLogoId() %>&t=<%= WebServerServletTokenUtil.getToken(company.getLogoId()) %>" />
 
 							<span class="company-name"><%= HtmlUtil.escape(company.getName()) %></span>
 						</span>
@@ -42,7 +42,7 @@ ApplicationsMenuInstanceConfiguration applicationsMenuInstanceConfiguration = Co
 				</clay:content-col>
 
 				<clay:content-col>
-					<aui:icon cssClass="d-inline-block d-md-none icon-monospaced sidenav-close" image="times" markupView="lexicon" url="javascript:;" />
+					<aui:icon cssClass="d-inline-block d-md-none icon-monospaced sidenav-close" image="times" markupView="lexicon" url="javascript:void(0);" />
 				</clay:content-col>
 			</clay:content-row>
 		</div>
@@ -50,7 +50,7 @@ ApplicationsMenuInstanceConfiguration applicationsMenuInstanceConfiguration = Co
 
 	<div class="sidebar-body">
 		<c:choose>
-			<c:when test='<%= Objects.equals(productMenuState, "open") && !Objects.equals(pagesTreeState, "open") %>'>
+			<c:when test='<%= !productMenuDisplayContext.isShowLayoutsTree() || (Objects.equals(productMenuState, "open") && !Objects.equals(pagesTreeState, "open")) %>'>
 				<liferay-util:include page="/portlet/product_menu.jsp" servletContext="<%= application %>" />
 			</c:when>
 			<c:when test='<%= Objects.equals(productMenuState, "open") && Objects.equals(pagesTreeState, "open") %>'>

@@ -35,7 +35,9 @@
 		<field name="fragmentCollectionId" type="long" />
 		<field name="fragmentCompositionKey" type="String" />
 		<field name="name" type="String" />
-		<field name="description" type="String" />
+		<field name="description" type="String">
+			<hint-collection name="TEXTAREA" />
+		</field>
 		<field name="data" type="String">
 			<hint-collection name="CLOB" />
 		</field>
@@ -76,9 +78,13 @@
 		<field name="configuration" type="String">
 			<hint-collection name="CLOB" />
 		</field>
+		<field name="icon" type="String" />
 		<field name="previewFileEntryId" type="long" />
 		<field name="readOnly" type="boolean" />
 		<field name="type" type="int" />
+		<field name="typeOptions" type="String">
+			<hint-collection name="CLOB" />
+		</field>
 		<field name="lastPublishDate" type="Date" />
 		<field name="status" type="int" />
 		<field name="statusByUserId" type="long" />
@@ -114,6 +120,7 @@
 		<field name="configuration" type="String">
 			<hint-collection name="CLOB" />
 		</field>
+		<field name="deleted" type="boolean" />
 		<field name="editableValues" type="String">
 			<hint-collection name="CLOB" />
 		</field>
@@ -122,6 +129,7 @@
 		<field name="rendererKey" type="String">
 			<hint name="max-length">200</hint>
 		</field>
+		<field name="type" type="int" />
 		<field name="lastPropagationDate" type="Date" />
 		<field name="lastPublishDate" type="Date" />
 	</model>
@@ -156,9 +164,13 @@
 		<field name="configuration" type="String">
 			<hint-collection name="CLOB" />
 		</field>
+		<field name="icon" type="String" />
 		<field name="previewFileEntryId" type="long" />
 		<field name="readOnly" type="boolean" />
 		<field name="type" type="int" />
+		<field name="typeOptions" type="String">
+			<hint-collection name="CLOB" />
+		</field>
 		<field name="lastPublishDate" type="Date" />
 		<field name="status" type="int" />
 		<field name="statusByUserId" type="long" />

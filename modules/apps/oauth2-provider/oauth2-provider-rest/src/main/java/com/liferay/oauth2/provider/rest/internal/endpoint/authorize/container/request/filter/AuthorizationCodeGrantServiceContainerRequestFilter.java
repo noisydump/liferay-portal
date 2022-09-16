@@ -17,8 +17,10 @@ package com.liferay.oauth2.provider.rest.internal.endpoint.authorize.container.r
 import com.liferay.oauth2.provider.model.OAuth2Application;
 import com.liferay.oauth2.provider.rest.internal.endpoint.authorize.configuration.AuthorizeScreenConfiguration;
 import com.liferay.oauth2.provider.service.OAuth2ApplicationLocalService;
+import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
@@ -30,7 +32,7 @@ import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermi
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.servlet.ProtectedPrincipal;
 import com.liferay.portal.kernel.settings.CompanyServiceSettingsLocator;
-import com.liferay.portal.kernel.util.Http;
+import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -39,6 +41,9 @@ import com.liferay.portal.kernel.util.Validator;
 import java.net.URI;
 
 import java.security.Principal;
+
+import java.util.List;
+import java.util.Objects;
 
 import javax.annotation.Priority;
 
@@ -83,24 +88,21 @@ public class AuthorizationCodeGrantServiceContainerRequestFilter
 			return;
 		}
 
+		User user = _getUser();
+		String clientId = ParamUtil.getString(_httpServletRequest, "client_id");
+
+		OAuth2Application oAuth2Application =
+			_oAuth2ApplicationLocalService.fetchOAuth2Application(
+				user.getCompanyId(), clientId);
+
+		boolean promptNone = _isPromptNone(oAuth2Application);
+
 		try {
-			User user = _portal.getUser(_httpServletRequest);
-
-			if (user == null) {
-				user = _userLocalService.getDefaultUser(
-					_portal.getCompanyId(_httpServletRequest));
-			}
-
 			boolean guestAuthorized = false;
 
-			if (user.isDefaultUser()) {
-				String clientId = ParamUtil.getString(
-					_httpServletRequest, "client_id");
-
-				if (!Validator.isBlank(clientId)) {
-					guestAuthorized = containsOAuth2ApplicationViewPermission(
-						clientId, user);
-				}
+			if (user.isDefaultUser() && !Validator.isBlank(clientId)) {
+				guestAuthorized = _containsOAuth2ApplicationViewPermission(
+					oAuth2Application, user);
 			}
 
 			if (!user.isDefaultUser() || guestAuthorized) {
@@ -128,10 +130,24 @@ public class AuthorizationCodeGrantServiceContainerRequestFilter
 		catch (Exception exception) {
 			_log.error("Unable to resolve authenticated user", exception);
 
-			containerRequestContext.abortWith(
-				Response.status(
-					Response.Status.INTERNAL_SERVER_ERROR
-				).build());
+			if (promptNone) {
+				_abortWithoutPrompt(
+					containerRequestContext, "interaction_required",
+					oAuth2Application);
+			}
+			else {
+				containerRequestContext.abortWith(
+					Response.status(
+						Response.Status.INTERNAL_SERVER_ERROR
+					).build());
+			}
+
+			return;
+		}
+
+		if (promptNone) {
+			_abortWithoutPrompt(
+				containerRequestContext, "login_required", oAuth2Application);
 
 			return;
 		}
@@ -139,7 +155,7 @@ public class AuthorizationCodeGrantServiceContainerRequestFilter
 		String loginURL = null;
 
 		try {
-			loginURL = getLoginURL();
+			loginURL = _getLoginURL();
 		}
 		catch (ConfigurationException configurationException) {
 			_log.error(
@@ -168,7 +184,8 @@ public class AuthorizationCodeGrantServiceContainerRequestFilter
 			StringUtil.replace(
 				"?" + requestURI.getRawQuery(), CharPool.COLON, "%3a"));
 
-		loginURL = _http.addParameter(loginURL, "redirect", requestURIString);
+		loginURL = HttpComponentsUtil.addParameter(
+			loginURL, "redirect", requestURIString);
 
 		containerRequestContext.abortWith(
 			Response.status(
@@ -178,13 +195,39 @@ public class AuthorizationCodeGrantServiceContainerRequestFilter
 			).build());
 	}
 
-	protected boolean containsOAuth2ApplicationViewPermission(
-			String clientId, User user)
-		throws Exception {
+	private void _abortWithoutPrompt(
+		ContainerRequestContext containerRequestContext, String error,
+		OAuth2Application oAuth2Application) {
 
-		OAuth2Application oAuth2Application =
-			_oAuth2ApplicationLocalService.fetchOAuth2Application(
-				user.getCompanyId(), clientId);
+		if (oAuth2Application == null) {
+			return;
+		}
+
+		StringBundler sb = new StringBundler(5);
+
+		List<String> redirectURIsList = oAuth2Application.getRedirectURIsList();
+
+		sb.append(redirectURIsList.get(0));
+
+		sb.append("?error=");
+		sb.append(error);
+
+		String state = ParamUtil.getString(_httpServletRequest, "state");
+
+		if (Validator.isNotNull(state)) {
+			sb.append("&state=");
+			sb.append(state);
+		}
+
+		containerRequestContext.abortWith(
+			Response.temporaryRedirect(
+				URI.create(sb.toString())
+			).build());
+	}
+
+	private boolean _containsOAuth2ApplicationViewPermission(
+			OAuth2Application oAuth2Application, User user)
+		throws Exception {
 
 		if (oAuth2Application == null) {
 			return false;
@@ -200,7 +243,7 @@ public class AuthorizationCodeGrantServiceContainerRequestFilter
 		return false;
 	}
 
-	protected String getLoginURL() throws ConfigurationException {
+	private String _getLoginURL() throws ConfigurationException {
 		AuthorizeScreenConfiguration authorizeScreenConfiguration =
 			_configurationProvider.getConfiguration(
 				AuthorizeScreenConfiguration.class,
@@ -211,16 +254,12 @@ public class AuthorizationCodeGrantServiceContainerRequestFilter
 		String loginURL = authorizeScreenConfiguration.loginURL();
 
 		if (Validator.isBlank(loginURL)) {
-			StringBundler sb = new StringBundler(4);
-
-			sb.append(_portal.getPortalURL(_httpServletRequest));
-			sb.append(_portal.getPathContext());
-			sb.append(_portal.getPathMain());
-			sb.append("/portal/login");
-
-			loginURL = sb.toString();
+			loginURL = StringBundler.concat(
+				_portal.getPortalURL(_httpServletRequest),
+				_portal.getPathContext(), _portal.getPathMain(),
+				"/portal/login");
 		}
-		else if (!_http.hasDomain(loginURL)) {
+		else if (!HttpComponentsUtil.hasDomain(loginURL)) {
 			String portalURL = _portal.getPortalURL(_httpServletRequest);
 
 			loginURL = portalURL + loginURL;
@@ -229,14 +268,43 @@ public class AuthorizationCodeGrantServiceContainerRequestFilter
 		return loginURL;
 	}
 
+	private User _getUser() {
+		try {
+			User user = _portal.getUser(_httpServletRequest);
+
+			if (user == null) {
+				user = _userLocalService.getDefaultUser(
+					_portal.getCompanyId(_httpServletRequest));
+			}
+
+			return user;
+		}
+		catch (PortalException portalException) {
+			return ReflectionUtil.throwException(portalException);
+		}
+	}
+
+	private boolean _isPromptNone(OAuth2Application oAuth2Application) {
+		if (oAuth2Application == null) {
+			return false;
+		}
+
+		String prompt = ParamUtil.getString(_httpServletRequest, "prompt");
+
+		if (oAuth2Application.isTrustedApplication() &&
+			Objects.equals("none", prompt)) {
+
+			return true;
+		}
+
+		return false;
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		AuthorizationCodeGrantServiceContainerRequestFilter.class);
 
 	@Reference
 	private ConfigurationProvider _configurationProvider;
-
-	@Reference
-	private Http _http;
 
 	@Context
 	private HttpServletRequest _httpServletRequest;
@@ -260,7 +328,7 @@ public class AuthorizationCodeGrantServiceContainerRequestFilter
 	private UserLocalService _userLocalService;
 
 	private abstract static class PortalCXFSecurityContext
-		implements SecurityContext, org.apache.cxf.security.SecurityContext {
+		implements org.apache.cxf.security.SecurityContext, SecurityContext {
 
 		@Override
 		public String getAuthenticationScheme() {

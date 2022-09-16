@@ -112,7 +112,7 @@ function Summary({
 	items = [],
 	summaryData,
 }) {
-	const [summaryItems, updateSummaryItems] = useState(items);
+	const [summaryItems, setSummaryItems] = useState(items);
 
 	const mapDataToLayout = useCallback(
 		(data) => (typeof dataMapper === 'function' ? dataMapper(data) : data),
@@ -123,7 +123,7 @@ function Summary({
 		({id = null}) => {
 			if (!id || datasetDisplayId !== id) {
 				return AJAX.GET(apiUrl).then((data) =>
-					updateSummaryItems(mapDataToLayout(data))
+					setSummaryItems(mapDataToLayout(data))
 				);
 			}
 		},
@@ -143,8 +143,8 @@ function Summary({
 	}, [apiUrl, datasetDisplayId, refreshData]);
 
 	useEffect(() => {
-		if (!!summaryData && Object.keys(summaryData).length > 0) {
-			updateSummaryItems(mapDataToLayout(summaryData));
+		if (!!summaryData && !!Object.keys(summaryData).length) {
+			setSummaryItems(mapDataToLayout(summaryData));
 		}
 
 		return () => {};
@@ -157,7 +157,7 @@ function Summary({
 			))}
 
 			{isLoading && (
-				<div className={'summary-table-loader'}>
+				<div className="summary-table-loader">
 					<ClayLoadingIndicator />
 				</div>
 			)}
@@ -186,7 +186,7 @@ Summary.defaultProps = {
 			},
 			{
 				label: Liferay.Language.get('tax'),
-				value: jsonData.taxValueFormatted,
+				value: jsonData.taxAmountFormatted,
 			},
 			{
 				label: Liferay.Language.get('delivery'),

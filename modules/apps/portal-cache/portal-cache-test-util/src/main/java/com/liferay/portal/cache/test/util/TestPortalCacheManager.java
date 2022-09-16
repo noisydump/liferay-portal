@@ -23,6 +23,7 @@ import java.io.Serializable;
 
 import java.net.URL;
 
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -46,16 +47,6 @@ public class TestPortalCacheManager<K extends Serializable, V>
 		return testPortalCacheManager;
 	}
 
-	/**
-	 * @deprecated As of Mueller (7.2.x), replaced by {@link
-	 *             #reconfigurePortalCaches(URL, ClassLoader)}
-	 */
-	@Deprecated
-	@Override
-	public void reconfigurePortalCaches(URL configurationURL) {
-		throw new UnsupportedOperationException();
-	}
-
 	@Override
 	public void reconfigurePortalCaches(
 		URL configurationURL, ClassLoader classLoader) {
@@ -65,7 +56,7 @@ public class TestPortalCacheManager<K extends Serializable, V>
 
 	@Override
 	protected PortalCache<K, V> createPortalCache(
-		PortalCacheConfiguration portalCacheConfiguration) {
+		PortalCacheConfiguration portalCacheConfiguration, boolean sharded) {
 
 		String portalCacheName = portalCacheConfiguration.getPortalCacheName();
 
@@ -113,14 +104,23 @@ public class TestPortalCacheManager<K extends Serializable, V>
 	}
 
 	@Override
-	protected void doRemovePortalCache(String portalCacheName) {
+	protected void doRemovePortalCache(PortalCache<K, V> portalCache) {
+		if (portalCache == null) {
+			return;
+		}
+
 		TestPortalCache<K, V> testPortalCache = _testPortalCaches.remove(
-			portalCacheName);
+			portalCache.getPortalCacheName());
 
 		testPortalCache.removeAll();
 
 		aggregatedPortalCacheManagerListener.notifyPortalCacheRemoved(
-			portalCacheName);
+			portalCache.getPortalCacheName());
+	}
+
+	@Override
+	protected void doRemoveShardedPortalCache(
+		long companyId, Set<PortalCache<K, V>> shardedPortalCaches) {
 	}
 
 	@Override

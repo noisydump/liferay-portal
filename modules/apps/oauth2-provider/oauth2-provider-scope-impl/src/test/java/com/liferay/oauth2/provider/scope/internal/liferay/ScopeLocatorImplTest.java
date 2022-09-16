@@ -26,6 +26,9 @@ import com.liferay.oauth2.provider.scope.spi.scope.mapper.ScopeMapper;
 import com.liferay.oauth2.provider.scope.spi.scope.matcher.ScopeMatcherFactory;
 import com.liferay.osgi.service.tracker.collections.ServiceReferenceServiceTuple;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
+import com.liferay.portal.kernel.util.PropsUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
+import com.liferay.portal.util.PropsImpl;
 
 import java.lang.reflect.Field;
 
@@ -40,23 +43,30 @@ import java.util.stream.Stream;
 import org.hamcrest.CoreMatchers;
 
 import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-import org.mockito.Matchers;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 
 import org.osgi.framework.ServiceReference;
 
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.modules.junit4.PowerMockRunner;
-
 /**
  * @author Stian Sigvartsen
  */
-@RunWith(PowerMockRunner.class)
-public class ScopeLocatorImplTest extends PowerMockito {
+public class ScopeLocatorImplTest {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
+	@BeforeClass
+	public static void setUpClass() {
+		PropsUtil.setProps(new PropsImpl());
+	}
 
 	@Test
 	public void testPrefixHandlerFactoryByNameAndCompany() throws Exception {
@@ -308,7 +318,7 @@ public class ScopeLocatorImplTest extends PowerMockito {
 		PrefixHandlerFactory testPrefixHandlerFactory =
 			propertyAccessor -> target -> "test/" + target;
 
-		final ScopeMatcherFactory scopeMatcherFactory = Mockito.spy(
+		ScopeMatcherFactory scopeMatcherFactory = Mockito.spy(
 			new StrictScopeMatcherFactory());
 
 		Builder builder = new Builder();
@@ -469,7 +479,7 @@ public class ScopeLocatorImplTest extends PowerMockito {
 					ServiceReference<?> serviceReference = Mockito.mock(
 						ServiceReference.class);
 
-					when(
+					Mockito.when(
 						scopeFinderByNameServiceTrackerMap.getService(
 							applicationName)
 					).thenReturn(
@@ -477,7 +487,7 @@ public class ScopeLocatorImplTest extends PowerMockito {
 							serviceReference, service)
 					);
 
-					when(
+					Mockito.when(
 						scopeFindersScopedServiceTrackerMap.getService(
 							companyId, applicationName)
 					).thenReturn(
@@ -498,7 +508,7 @@ public class ScopeLocatorImplTest extends PowerMockito {
 			throws IllegalAccessException {
 
 			ScopedServiceTrackerMap<ScopeLocatorConfigurationProvider>
-				scopeLocatorConfigurationProvidersScopeServiceTrackerMap =
+				scopeLocatorConfigurationProvidersScopedServiceTrackerMap =
 					_prepareScopedServiceTrackerMapMock(
 						defaultScopeLocatorConfigurationProvider, configurator);
 
@@ -508,7 +518,7 @@ public class ScopeLocatorImplTest extends PowerMockito {
 
 			_scopeLocatorImpl.
 				setScopeLocatorConfigurationProvidersScopedServiceTrackerMap(
-					scopeLocatorConfigurationProvidersScopeServiceTrackerMap);
+					scopeLocatorConfigurationProvidersScopedServiceTrackerMap);
 
 			_scopeLocatorConfigurationProvidersInitialized = true;
 
@@ -551,7 +561,7 @@ public class ScopeLocatorImplTest extends PowerMockito {
 				scopeMatcherFactoriesServiceTrackerMap);
 
 			configurator.configure(
-				(companyId, service) -> when(
+				(companyId, service) -> Mockito.when(
 					scopeMatcherFactoriesServiceTrackerMap.getService(companyId)
 				).thenReturn(
 					service
@@ -573,15 +583,15 @@ public class ScopeLocatorImplTest extends PowerMockito {
 				new TestScopedServiceTrackerMap<>(defaultService);
 
 			Answer<T> answer = invocation -> {
-				long companyId = invocation.getArgumentAt(0, Long.class);
-				String key = invocation.getArgumentAt(1, String.class);
+				long companyId = invocation.getArgument(0, Long.class);
+				String key = invocation.getArgument(1, String.class);
 
 				return testScopedServiceTrackerMap.getService(companyId, key);
 			};
 
-			when(
+			Mockito.when(
 				scopedServiceTrackerMap.getService(
-					Matchers.anyLong(), Matchers.anyString())
+					Mockito.anyLong(), Mockito.anyString())
 			).thenAnswer(
 				answer
 			);

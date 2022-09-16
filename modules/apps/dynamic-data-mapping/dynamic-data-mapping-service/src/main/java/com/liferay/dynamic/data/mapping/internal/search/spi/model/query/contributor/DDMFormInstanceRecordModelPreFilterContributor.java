@@ -15,13 +15,13 @@
 package com.liferay.dynamic.data.mapping.internal.search.spi.model.query.contributor;
 
 import com.liferay.dynamic.data.mapping.util.DDMIndexer;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.filter.BooleanFilter;
+import com.liferay.portal.kernel.search.filter.ExistsFilter;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.search.filter.QueryFilter;
 import com.liferay.portal.kernel.search.filter.TermsFilter;
@@ -100,10 +100,11 @@ public class DDMFormInstanceRecordModelPreFilterContributor
 						new BooleanFilter();
 
 					locales.forEach(
-						locale -> notEmptyFieldBooleanFilter.addTerm(
-							ddmIndexer.encodeName(
-								structureId, notEmptyField, locale),
-							StringPool.BLANK, BooleanClauseOccur.MUST));
+						locale -> notEmptyFieldBooleanFilter.add(
+							new ExistsFilter(
+								ddmIndexer.encodeName(
+									structureId, notEmptyField, locale)),
+							BooleanClauseOccur.MUST));
 
 					booleanFilter.add(
 						notEmptyFieldBooleanFilter,
@@ -112,7 +113,7 @@ public class DDMFormInstanceRecordModelPreFilterContributor
 			);
 		}
 
-		addSearchClassTypeIds(booleanFilter, searchContext);
+		_addSearchClassTypeIds(booleanFilter, searchContext);
 
 		String ddmStructureFieldName = (String)searchContext.getAttribute(
 			"ddmStructureFieldName");
@@ -132,13 +133,16 @@ public class DDMFormInstanceRecordModelPreFilterContributor
 			}
 			catch (Exception exception) {
 				if (_log.isDebugEnabled()) {
-					_log.debug(exception, exception);
+					_log.debug(exception);
 				}
 			}
 		}
 	}
 
-	protected Filter addSearchClassTypeIds(
+	@Reference
+	protected DDMIndexer ddmIndexer;
+
+	private Filter _addSearchClassTypeIds(
 		BooleanFilter contextBooleanFilter, SearchContext searchContext) {
 
 		long[] classTypeIds = searchContext.getClassTypeIds();
@@ -156,9 +160,6 @@ public class DDMFormInstanceRecordModelPreFilterContributor
 		return contextBooleanFilter.add(
 			classTypeIdsTermsFilter, BooleanClauseOccur.MUST);
 	}
-
-	@Reference
-	protected DDMIndexer ddmIndexer;
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		DDMFormInstanceRecordModelPreFilterContributor.class);

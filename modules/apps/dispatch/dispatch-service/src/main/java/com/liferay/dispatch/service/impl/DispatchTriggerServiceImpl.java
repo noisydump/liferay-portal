@@ -48,7 +48,8 @@ public class DispatchTriggerServiceImpl extends DispatchTriggerServiceBaseImpl {
 
 	@Override
 	public DispatchTrigger addDispatchTrigger(
-			long userId, String dispatchTaskExecutorType,
+			String externalReferenceCode, long userId,
+			String dispatchTaskExecutorType,
 			UnicodeProperties dispatchTaskSettingsUnicodeProperties,
 			String name)
 		throws PortalException {
@@ -58,7 +59,7 @@ public class DispatchTriggerServiceImpl extends DispatchTriggerServiceBaseImpl {
 			DispatchActionKeys.ADD_DISPATCH_TRIGGER);
 
 		return dispatchTriggerLocalService.addDispatchTrigger(
-			userId, dispatchTaskExecutorType,
+			externalReferenceCode, userId, dispatchTaskExecutorType,
 			dispatchTaskSettingsUnicodeProperties, name, false);
 	}
 
@@ -108,7 +109,7 @@ public class DispatchTriggerServiceImpl extends DispatchTriggerServiceBaseImpl {
 			int endDateDay, int endDateYear, int endDateHour, int endDateMinute,
 			boolean neverEnd, boolean overlapAllowed, int startDateMonth,
 			int startDateDay, int startDateYear, int startDateHour,
-			int startDateMinute)
+			int startDateMinute, String timeZoneId)
 		throws PortalException {
 
 		_dispatchTriggerModelResourcePermission.check(
@@ -118,7 +119,7 @@ public class DispatchTriggerServiceImpl extends DispatchTriggerServiceBaseImpl {
 			dispatchTriggerId, active, cronExpression, dispatchTaskClusterMode,
 			endDateMonth, endDateDay, endDateYear, endDateHour, endDateMinute,
 			neverEnd, overlapAllowed, startDateMonth, startDateDay,
-			startDateYear, startDateHour, startDateMinute);
+			startDateYear, startDateHour, startDateMinute, timeZoneId);
 	}
 
 	@Override

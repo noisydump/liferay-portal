@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
@@ -44,7 +45,10 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @generated
  */
 @Generated("")
-@GraphQLName("PageFragmentInstanceDefinition")
+@GraphQLName(
+	description = "Represents a definition of a Page Fragment Instance.",
+	value = "PageFragmentInstanceDefinition"
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "PageFragmentInstanceDefinition")
 public class PageFragmentInstanceDefinition implements Serializable {
@@ -54,7 +58,104 @@ public class PageFragmentInstanceDefinition implements Serializable {
 			PageFragmentInstanceDefinition.class, json);
 	}
 
-	@Schema
+	public static PageFragmentInstanceDefinition unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(
+			PageFragmentInstanceDefinition.class, json);
+	}
+
+	@Schema(
+		description = "A list of CSS Classes that are applied to the element."
+	)
+	public String[] getCssClasses() {
+		return cssClasses;
+	}
+
+	public void setCssClasses(String[] cssClasses) {
+		this.cssClasses = cssClasses;
+	}
+
+	@JsonIgnore
+	public void setCssClasses(
+		UnsafeSupplier<String[], Exception> cssClassesUnsafeSupplier) {
+
+		try {
+			cssClasses = cssClassesUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(
+		description = "A list of CSS Classes that are applied to the element."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String[] cssClasses;
+
+	@Schema(description = "Custom CSS that is applied on the fragment.")
+	public String getCustomCSS() {
+		return customCSS;
+	}
+
+	public void setCustomCSS(String customCSS) {
+		this.customCSS = customCSS;
+	}
+
+	@JsonIgnore
+	public void setCustomCSS(
+		UnsafeSupplier<String, Exception> customCSSUnsafeSupplier) {
+
+		try {
+			customCSS = customCSSUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(description = "Custom CSS that is applied on the fragment.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String customCSS;
+
+	@Schema(description = "The custom CSS viewports of the page collection.")
+	@Valid
+	public CustomCSSViewport[] getCustomCSSViewports() {
+		return customCSSViewports;
+	}
+
+	public void setCustomCSSViewports(CustomCSSViewport[] customCSSViewports) {
+		this.customCSSViewports = customCSSViewports;
+	}
+
+	@JsonIgnore
+	public void setCustomCSSViewports(
+		UnsafeSupplier<CustomCSSViewport[], Exception>
+			customCSSViewportsUnsafeSupplier) {
+
+		try {
+			customCSSViewports = customCSSViewportsUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(
+		description = "The custom CSS viewports of the page collection."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected CustomCSSViewport[] customCSSViewports;
+
+	@Schema(description = "The fragment of the page fragment instance.")
 	@Valid
 	public Fragment getFragment() {
 		return fragment;
@@ -79,11 +180,11 @@ public class PageFragmentInstanceDefinition implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The fragment of the page fragment instance.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Fragment fragment;
 
-	@Schema
+	@Schema(description = "The page fragment instance's configuration.")
 	@Valid
 	public Map<String, Object> getFragmentConfig() {
 		return fragmentConfig;
@@ -109,11 +210,11 @@ public class PageFragmentInstanceDefinition implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The page fragment instance's configuration.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Map<String, Object> fragmentConfig;
 
-	@Schema
+	@Schema(description = "The fragment fields of the page fragment instance.")
 	@Valid
 	public FragmentField[] getFragmentFields() {
 		return fragmentFields;
@@ -139,11 +240,13 @@ public class PageFragmentInstanceDefinition implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "The fragment fields of the page fragment instance."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected FragmentField[] fragmentFields;
 
-	@Schema
+	@Schema(description = "The fragment style of the page fragment instance.")
 	@Valid
 	public FragmentStyle getFragmentStyle() {
 		return fragmentStyle;
@@ -168,11 +271,15 @@ public class PageFragmentInstanceDefinition implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "The fragment style of the page fragment instance."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected FragmentStyle fragmentStyle;
 
-	@Schema
+	@Schema(
+		description = "A list of fragment viewports of the page fragment instance."
+	)
 	@Valid
 	public FragmentViewport[] getFragmentViewports() {
 		return fragmentViewports;
@@ -198,11 +305,73 @@ public class PageFragmentInstanceDefinition implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "A list of fragment viewports of the page fragment instance."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected FragmentViewport[] fragmentViewports;
 
-	@Schema
+	@Schema(
+		description = "A flag that indicates whether the page fragment instance is indexed or not."
+	)
+	public Boolean getIndexed() {
+		return indexed;
+	}
+
+	public void setIndexed(Boolean indexed) {
+		this.indexed = indexed;
+	}
+
+	@JsonIgnore
+	public void setIndexed(
+		UnsafeSupplier<Boolean, Exception> indexedUnsafeSupplier) {
+
+		try {
+			indexed = indexedUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(
+		description = "A flag that indicates whether the page fragment instance is indexed or not."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Boolean indexed;
+
+	@Schema(description = "The custom name of a Page Fragment Instance.")
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	@JsonIgnore
+	public void setName(UnsafeSupplier<String, Exception> nameUnsafeSupplier) {
+		try {
+			name = nameUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(description = "The custom name of a Page Fragment Instance.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String name;
+
+	@Schema(
+		description = "A list of widget instances of the page fragment instance."
+	)
 	@Valid
 	public WidgetInstance[] getWidgetInstances() {
 		return widgetInstances;
@@ -228,7 +397,9 @@ public class PageFragmentInstanceDefinition implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "A list of widget instances of the page fragment instance."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected WidgetInstance[] widgetInstances;
 
@@ -260,6 +431,64 @@ public class PageFragmentInstanceDefinition implements Serializable {
 		StringBundler sb = new StringBundler();
 
 		sb.append("{");
+
+		if (cssClasses != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"cssClasses\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < cssClasses.length; i++) {
+				sb.append("\"");
+
+				sb.append(_escape(cssClasses[i]));
+
+				sb.append("\"");
+
+				if ((i + 1) < cssClasses.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
+		if (customCSS != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"customCSS\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(customCSS));
+
+			sb.append("\"");
+		}
+
+		if (customCSSViewports != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"customCSSViewports\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < customCSSViewports.length; i++) {
+				sb.append(String.valueOf(customCSSViewports[i]));
+
+				if ((i + 1) < customCSSViewports.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
 
 		if (fragment != null) {
 			if (sb.length() > 1) {
@@ -331,6 +560,30 @@ public class PageFragmentInstanceDefinition implements Serializable {
 			sb.append("]");
 		}
 
+		if (indexed != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"indexed\": ");
+
+			sb.append(indexed);
+		}
+
+		if (name != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"name\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(name));
+
+			sb.append("\"");
+		}
+
 		if (widgetInstances != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -357,15 +610,16 @@ public class PageFragmentInstanceDefinition implements Serializable {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.PageFragmentInstanceDefinition",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
 	}
 
 	private static boolean _isArray(Object value) {
@@ -391,8 +645,8 @@ public class PageFragmentInstanceDefinition implements Serializable {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -423,7 +677,7 @@ public class PageFragmentInstanceDefinition implements Serializable {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -431,7 +685,7 @@ public class PageFragmentInstanceDefinition implements Serializable {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -439,5 +693,10 @@ public class PageFragmentInstanceDefinition implements Serializable {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

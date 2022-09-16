@@ -39,21 +39,14 @@ public class NotificationsPollerProcessor extends BasePollerProcessor {
 	protected PollerResponse doReceive(PollerRequest pollerRequest)
 		throws Exception {
 
-		return setUserNotificationsCount(pollerRequest);
+		return _setUserNotificationsCount(pollerRequest);
 	}
 
 	@Override
 	protected void doSend(PollerRequest pollerRequest) throws Exception {
 	}
 
-	@Reference(unbind = "-")
-	protected void setUserNotificationEventLocalService(
-		UserNotificationEventLocalService userNotificationEventLocalService) {
-
-		_userNotificationEventLocalService = userNotificationEventLocalService;
-	}
-
-	protected PollerResponse setUserNotificationsCount(
+	private PollerResponse _setUserNotificationsCount(
 			PollerRequest pollerRequest)
 		throws Exception {
 
@@ -86,6 +79,7 @@ public class NotificationsPollerProcessor extends BasePollerProcessor {
 		return pollerResponse;
 	}
 
+	@Reference
 	private UserNotificationEventLocalService
 		_userNotificationEventLocalService;
 

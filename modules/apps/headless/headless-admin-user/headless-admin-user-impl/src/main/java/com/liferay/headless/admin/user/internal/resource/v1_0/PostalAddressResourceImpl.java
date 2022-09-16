@@ -14,6 +14,8 @@
 
 package com.liferay.headless.admin.user.internal.resource.v1_0;
 
+import com.liferay.account.model.AccountEntry;
+import com.liferay.account.service.AccountEntryService;
 import com.liferay.headless.admin.user.dto.v1_0.PostalAddress;
 import com.liferay.headless.admin.user.internal.dto.v1_0.converter.OrganizationResourceDTOConverter;
 import com.liferay.headless.admin.user.internal.dto.v1_0.util.PostalAddressUtil;
@@ -26,7 +28,7 @@ import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.AddressLocalService;
 import com.liferay.portal.kernel.service.AddressService;
 import com.liferay.portal.kernel.service.UserService;
-import com.liferay.portal.kernel.service.permission.CommonPermissionUtil;
+import com.liferay.portal.kernel.service.permission.CommonPermission;
 import com.liferay.portal.vulcan.pagination.Page;
 
 import org.osgi.service.component.annotations.Component;
@@ -41,6 +43,23 @@ import org.osgi.service.component.annotations.ServiceScope;
 	scope = ServiceScope.PROTOTYPE, service = PostalAddressResource.class
 )
 public class PostalAddressResourceImpl extends BasePostalAddressResourceImpl {
+
+	@Override
+	public Page<PostalAddress> getAccountPostalAddressesPage(Long accountId)
+		throws Exception {
+
+		_accountEntryService.getAccountEntry(accountId);
+
+		return Page.of(
+			transform(
+				_addressLocalService.getAddresses(
+					contextCompany.getCompanyId(), AccountEntry.class.getName(),
+					accountId),
+				address -> PostalAddressUtil.toPostalAddress(
+					contextAcceptLanguage.isAcceptAllLanguages(), address,
+					contextCompany.getCompanyId(),
+					contextAcceptLanguage.getPreferredLocale())));
+	}
 
 	@Override
 	public Page<PostalAddress> getOrganizationPostalAddressesPage(
@@ -80,7 +99,7 @@ public class PostalAddressResourceImpl extends BasePostalAddressResourceImpl {
 
 		User user = _userService.getUserById(userAccountId);
 
-		CommonPermissionUtil.check(
+		_commonPermission.check(
 			PermissionThreadLocal.getPermissionChecker(),
 			user.getModelClassName(), user.getUserId(), ActionKeys.VIEW);
 
@@ -96,10 +115,16 @@ public class PostalAddressResourceImpl extends BasePostalAddressResourceImpl {
 	}
 
 	@Reference
+	private AccountEntryService _accountEntryService;
+
+	@Reference
 	private AddressLocalService _addressLocalService;
 
 	@Reference
 	private AddressService _addressService;
+
+	@Reference
+	private CommonPermission _commonPermission;
 
 	@Reference
 	private OrganizationResourceDTOConverter _organizationResourceDTOConverter;

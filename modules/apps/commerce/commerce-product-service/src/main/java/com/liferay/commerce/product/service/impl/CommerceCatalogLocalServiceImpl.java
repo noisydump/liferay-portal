@@ -18,8 +18,10 @@ import com.liferay.commerce.product.constants.CommerceCatalogConstants;
 import com.liferay.commerce.product.exception.CommerceCatalogProductsException;
 import com.liferay.commerce.product.exception.CommerceCatalogSystemException;
 import com.liferay.commerce.product.model.CommerceCatalog;
+import com.liferay.commerce.product.service.CPDefinitionLocalService;
 import com.liferay.commerce.product.service.base.CommerceCatalogLocalServiceBaseImpl;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Company;
@@ -39,12 +41,18 @@ import com.liferay.portal.kernel.search.QueryConfig;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.search.Sort;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
+import com.liferay.portal.kernel.service.CompanyLocalService;
+import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.ResourceLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -59,12 +67,12 @@ public class CommerceCatalogLocalServiceImpl
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public CommerceCatalog addCommerceCatalog(
-			String name, String commerceCurrencyCode,
-			String catalogDefaultLanguageId, boolean system,
-			String externalReferenceCode, ServiceContext serviceContext)
+			String externalReferenceCode, String name,
+			String commerceCurrencyCode, String catalogDefaultLanguageId,
+			boolean system, ServiceContext serviceContext)
 		throws PortalException {
 
-		User user = userLocalService.getUser(serviceContext.getUserId());
+		User user = _userLocalService.getUser(serviceContext.getUserId());
 
 		if (Validator.isBlank(externalReferenceCode)) {
 			externalReferenceCode = null;
@@ -75,19 +83,18 @@ public class CommerceCatalogLocalServiceImpl
 		CommerceCatalog commerceCatalog = commerceCatalogPersistence.create(
 			commerceCatalogId);
 
+		commerceCatalog.setExternalReferenceCode(externalReferenceCode);
 		commerceCatalog.setCompanyId(user.getCompanyId());
 		commerceCatalog.setUserId(user.getUserId());
 		commerceCatalog.setUserName(user.getFullName());
-
 		commerceCatalog.setName(name);
 		commerceCatalog.setCommerceCurrencyCode(commerceCurrencyCode);
 		commerceCatalog.setCatalogDefaultLanguageId(catalogDefaultLanguageId);
 		commerceCatalog.setSystem(system);
-		commerceCatalog.setExternalReferenceCode(externalReferenceCode);
 
 		// Group
 
-		groupLocalService.addGroup(
+		_groupLocalService.addGroup(
 			user.getUserId(), GroupConstants.DEFAULT_PARENT_GROUP_ID,
 			CommerceCatalog.class.getName(), commerceCatalogId,
 			GroupConstants.DEFAULT_LIVE_GROUP_ID, getLocalizationMap(name),
@@ -99,28 +106,29 @@ public class CommerceCatalogLocalServiceImpl
 
 		// Resources
 
-		resourceLocalService.addModelResources(commerceCatalog, serviceContext);
+		_resourceLocalService.addModelResources(
+			commerceCatalog, serviceContext);
 
 		return commerceCatalog;
 	}
 
 	@Override
 	public CommerceCatalog addCommerceCatalog(
-			String name, String commerceCurrencyCode,
-			String catalogDefaultLanguageId, String externalReferenceCode,
+			String externalReferenceCode, String name,
+			String commerceCurrencyCode, String catalogDefaultLanguageId,
 			ServiceContext serviceContext)
 		throws PortalException {
 
 		return commerceCatalogLocalService.addCommerceCatalog(
-			name, commerceCurrencyCode, catalogDefaultLanguageId, false,
-			externalReferenceCode, serviceContext);
+			externalReferenceCode, name, commerceCurrencyCode,
+			catalogDefaultLanguageId, false, serviceContext);
 	}
 
 	@Override
 	public CommerceCatalog addDefaultCommerceCatalog(long companyId)
 		throws PortalException {
 
-		Company company = companyLocalService.getCompany(companyId);
+		Company company = _companyLocalService.getCompany(companyId);
 
 		User defaultUser = company.getDefaultUser();
 
@@ -131,9 +139,9 @@ public class CommerceCatalogLocalServiceImpl
 		serviceContext.setUuid(PortalUUIDUtil.generate());
 
 		return commerceCatalogLocalService.addCommerceCatalog(
-			CommerceCatalogConstants.MASTER_COMMERCE_CATALOG,
+			null, CommerceCatalogConstants.MASTER_COMMERCE_CATALOG,
 			CommerceCatalogConstants.MASTER_COMMERCE_DEFAULT_CURRENCY,
-			defaultUser.getLanguageId(), true, null, serviceContext);
+			defaultUser.getLanguageId(), true, serviceContext);
 	}
 
 	@Indexable(type = IndexableType.DELETE)
@@ -153,11 +161,11 @@ public class CommerceCatalogLocalServiceImpl
 
 		// Group
 
-		groupLocalService.deleteGroup(groupId);
+		_groupLocalService.deleteGroup(groupId);
 
 		// Resources
 
-		resourceLocalService.deleteResource(
+		_resourceLocalService.deleteResource(
 			commerceCatalog, ResourceConstants.SCOPE_INDIVIDUAL);
 
 		return commerceCatalog;
@@ -180,13 +188,14 @@ public class CommerceCatalogLocalServiceImpl
 			commerceCatalogPersistence.findByCompanyId(companyId);
 
 		for (CommerceCatalog commerceCatalog : commerceCatalogs) {
-			commerceCatalogPersistence.remove(commerceCatalog);
+			commerceCatalogLocalService.forceDeleteCommerceCatalog(
+				commerceCatalog);
 		}
 	}
 
 	@Override
 	public CommerceCatalog fetchByExternalReferenceCode(
-		long companyId, String externalReferenceCode) {
+		String externalReferenceCode, long companyId) {
 
 		if (Validator.isBlank(externalReferenceCode)) {
 			return null;
@@ -198,16 +207,47 @@ public class CommerceCatalogLocalServiceImpl
 
 	@Override
 	public CommerceCatalog fetchCommerceCatalogByGroupId(long groupId) {
-		Group group = groupLocalService.fetchGroup(groupId);
+		Group group = _groupLocalService.fetchGroup(groupId);
 
 		if ((group != null) &&
-			(group.getClassNameId() == classNameLocalService.getClassNameId(
+			(group.getClassNameId() == _classNameLocalService.getClassNameId(
 				CommerceCatalog.class))) {
 
 			return fetchCommerceCatalog(group.getClassPK());
 		}
 
 		return null;
+	}
+
+	@Indexable(type = IndexableType.DELETE)
+	@Override
+	@SystemEvent(type = SystemEventConstants.TYPE_DELETE)
+	public CommerceCatalog forceDeleteCommerceCatalog(
+			CommerceCatalog commerceCatalog)
+		throws PortalException {
+
+		// Commerce catalog
+
+		commerceCatalogPersistence.remove(commerceCatalog);
+
+		// Resources
+
+		_resourceLocalService.deleteResource(
+			commerceCatalog, ResourceConstants.SCOPE_INDIVIDUAL);
+
+		// Group
+
+		Group group = _groupLocalService.fetchGroup(
+			commerceCatalog.getCompanyId(),
+			_classNameLocalService.getClassNameId(
+				CommerceCatalog.class.getName()),
+			commerceCatalog.getCommerceCatalogId());
+
+		if (group != null) {
+			_groupLocalService.deleteGroup(group);
+		}
+
+		return commerceCatalog;
 	}
 
 	@Override
@@ -217,11 +257,11 @@ public class CommerceCatalogLocalServiceImpl
 		CommerceCatalog commerceCatalog =
 			commerceCatalogLocalService.getCommerceCatalog(commerceCatalogId);
 
-		long classNameId = classNameLocalService.getClassNameId(
-			CommerceCatalog.class.getName());
-
-		Group group = groupLocalService.fetchGroup(
-			commerceCatalog.getCompanyId(), classNameId, commerceCatalogId);
+		Group group = _groupLocalService.fetchGroup(
+			commerceCatalog.getCompanyId(),
+			_classNameLocalService.getClassNameId(
+				CommerceCatalog.class.getName()),
+			commerceCatalogId);
 
 		if (group != null) {
 			return group;
@@ -238,16 +278,14 @@ public class CommerceCatalogLocalServiceImpl
 	}
 
 	@Override
-	public List<CommerceCatalog> searchCommerceCatalogs(long companyId)
-		throws PortalException {
-
-		return searchCommerceCatalogs(
+	public List<CommerceCatalog> search(long companyId) throws PortalException {
+		return search(
 			companyId, StringPool.BLANK, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
 			null);
 	}
 
 	@Override
-	public List<CommerceCatalog> searchCommerceCatalogs(
+	public List<CommerceCatalog> search(
 			long companyId, String keywords, int start, int end, Sort sort)
 		throws PortalException {
 
@@ -256,7 +294,7 @@ public class CommerceCatalogLocalServiceImpl
 
 		searchContext.setKeywords(keywords);
 
-		return searchCommerceCatalogs(searchContext);
+		return search(searchContext);
 	}
 
 	@Override
@@ -291,7 +329,7 @@ public class CommerceCatalogLocalServiceImpl
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public CommerceCatalog updateCommerceCatalogExternalReferenceCode(
-			long commerceCatalogId, String externalReferenceCode)
+			String externalReferenceCode, long commerceCatalogId)
 		throws PortalException {
 
 		CommerceCatalog commerceCatalog =
@@ -358,8 +396,7 @@ public class CommerceCatalogLocalServiceImpl
 		return commerceCatalogs;
 	}
 
-	protected List<CommerceCatalog> searchCommerceCatalogs(
-			SearchContext searchContext)
+	protected List<CommerceCatalog> search(SearchContext searchContext)
 		throws PortalException {
 
 		Indexer<CommerceCatalog> indexer =
@@ -395,8 +432,9 @@ public class CommerceCatalogLocalServiceImpl
 			throw new CommerceCatalogSystemException();
 		}
 
-		int cpDefinitionsCount = cpDefinitionLocalService.getCPDefinitionsCount(
-			commerceCatalog.getGroupId(), WorkflowConstants.STATUS_ANY);
+		int cpDefinitionsCount =
+			_cpDefinitionLocalService.getCPDefinitionsCount(
+				commerceCatalog.getGroupId(), WorkflowConstants.STATUS_ANY);
 
 		if (cpDefinitionsCount > 0) {
 			throw new CommerceCatalogProductsException();
@@ -406,5 +444,23 @@ public class CommerceCatalogLocalServiceImpl
 	private static final String[] _SELECTED_FIELD_NAMES = {
 		Field.ENTRY_CLASS_PK, Field.COMPANY_ID
 	};
+
+	@ServiceReference(type = ClassNameLocalService.class)
+	private ClassNameLocalService _classNameLocalService;
+
+	@ServiceReference(type = CompanyLocalService.class)
+	private CompanyLocalService _companyLocalService;
+
+	@BeanReference(type = CPDefinitionLocalService.class)
+	private CPDefinitionLocalService _cpDefinitionLocalService;
+
+	@ServiceReference(type = GroupLocalService.class)
+	private GroupLocalService _groupLocalService;
+
+	@ServiceReference(type = ResourceLocalService.class)
+	private ResourceLocalService _resourceLocalService;
+
+	@ServiceReference(type = UserLocalService.class)
+	private UserLocalService _userLocalService;
 
 }

@@ -1,12 +1,26 @@
-@import './miller_columns/DragPreview';
-@import './miller_columns/MillerColumns';
 @import 'atlas-variables';
 
-.portlet-layouts-admin {
-	@import './FriendlyURLHistory';
+@import 'miller_columns/DragPreview';
+@import 'miller_columns/MillerColumns';
 
-	.active > .card {
+@import '../js/layout/look_and_feel/GlobalCSSCETsConfiguration';
+@import '../js/layout/look_and_feel/GlobalJSCETsConfiguration';
+
+.portlet-layouts-admin {
+	.active.card {
 		box-shadow: 0 0 0 2px $primary-l1;
+
+		& .select-master-layout-option-sticker,
+		& .select-style-book-option-sticker {
+			display: block;
+		}
+	}
+
+	.card {
+		& .select-master-layout-option-sticker,
+		& .select-style-book-option-sticker {
+			display: none;
+		}
 	}
 
 	.card-page-item-directory {

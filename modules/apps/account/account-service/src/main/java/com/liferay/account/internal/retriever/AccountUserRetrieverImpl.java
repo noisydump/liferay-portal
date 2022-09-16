@@ -14,7 +14,6 @@
 
 package com.liferay.account.internal.retriever;
 
-import com.liferay.account.constants.AccountConstants;
 import com.liferay.account.internal.search.searcher.UserSearchRequestBuilder;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.model.AccountRole;
@@ -31,7 +30,6 @@ import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.service.UserLocalService;
-import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -80,15 +78,18 @@ public class AccountUserRetrieverImpl implements AccountUserRetriever {
 
 		AccountEntry accountEntry = _accountEntryLocalService.getAccountEntry(
 			accountEntryId);
-		AccountRole accountRole = _accountRoleLocalService.getAccountRole(
-			accountRoleId);
 
 		LinkedHashMap<String, Object> params =
 			LinkedHashMapBuilder.<String, Object>put(
 				"userGroupRole",
-				(Object)new Long[] {
-					accountEntry.getAccountEntryGroupId(),
-					accountRole.getRoleId()
+				() -> {
+					AccountRole accountRole =
+						_accountRoleLocalService.getAccountRole(accountRoleId);
+
+					return (Object)new Long[] {
+						accountEntry.getAccountEntryGroupId(),
+						accountRole.getRoleId()
+					};
 				}
 			).build();
 
@@ -106,51 +107,20 @@ public class AccountUserRetrieverImpl implements AccountUserRetriever {
 
 	@Override
 	public BaseModelSearchResult<User> searchAccountUsers(
-			long accountEntryId, String keywords, int status, int cur,
+			long[] accountEntryIds, String keywords,
+			LinkedHashMap<String, Serializable> params, int status, int cur,
 			int delta, String sortField, boolean reverse)
 		throws PortalException {
 
-		return searchAccountUsers(
-			new long[] {accountEntryId}, keywords, status, cur, delta,
-			sortField, reverse);
-	}
-
-	@Override
-	public BaseModelSearchResult<User> searchAccountUsers(
-			long accountEntryId, String[] emailAddressDomains, String keywords,
-			int status, int cur, int delta, String sortField, boolean reverse)
-		throws PortalException {
-
-		return _getUserBaseModelSearchResult(
-			_getSearchResponse(
-				HashMapBuilder.<String, Serializable>put(
-					"accountEntryIds", new long[] {accountEntryId}
-				).put(
-					"emailAddressDomains", emailAddressDomains
-				).build(),
-				cur, delta, keywords, reverse, sortField, status));
-	}
-
-	@Override
-	public BaseModelSearchResult<User> searchAccountUsers(
-			long[] accountEntryIds, String keywords, int status, int cur,
-			int delta, String sortField, boolean reverse)
-		throws PortalException {
-
-		for (long accountEntryId : accountEntryIds) {
-			if ((accountEntryId != AccountConstants.ACCOUNT_ENTRY_ID_ANY) &&
-				(accountEntryId != AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT)) {
-
-				_accountEntryLocalService.getAccountEntry(accountEntryId);
-			}
+		if (params == null) {
+			params = new LinkedHashMap<>();
 		}
 
+		params.put("accountEntryIds", accountEntryIds);
+
 		return _getUserBaseModelSearchResult(
 			_getSearchResponse(
-				HashMapBuilder.<String, Serializable>put(
-					"accountEntryIds", accountEntryIds
-				).build(),
-				cur, delta, keywords, reverse, sortField, status));
+				params, cur, delta, keywords, reverse, sortField, status));
 	}
 
 	private SearchResponse _getSearchResponse(
@@ -210,8 +180,7 @@ public class AccountUserRetrieverImpl implements AccountUserRetriever {
 				return user;
 			});
 
-		return new BaseModelSearchResult<>(
-			users, searchResponse.getTotalHits());
+		return new BaseModelSearchResult<>(users, searchHits.getTotalHits());
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

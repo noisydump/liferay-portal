@@ -20,19 +20,16 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * Provides utility methods to get servlet context information for Recycle Bin
- * tags.
- *
  * @author Michael Bradford
  */
 @Component(immediate = true, service = {})
 public class ServletContextUtil {
 
-	public static final String getContextPath() {
+	public static String getContextPath() {
 		return _servletContext.getContextPath();
 	}
 
-	public static final ServletContext getServletContext() {
+	public static ServletContext getServletContext() {
 		return _servletContext;
 	}
 

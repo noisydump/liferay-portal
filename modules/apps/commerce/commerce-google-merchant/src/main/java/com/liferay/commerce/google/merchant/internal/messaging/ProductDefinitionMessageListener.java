@@ -63,7 +63,7 @@ public class ProductDefinitionMessageListener extends BaseMessageListener {
 				productDefinitionConfiguration.generatorTimeIntervalUnit());
 		}
 		catch (IllegalArgumentException illegalArgumentException) {
-			_log.error(illegalArgumentException, illegalArgumentException);
+			_log.error(illegalArgumentException);
 		}
 
 		String className = clazz.getName();
@@ -78,7 +78,7 @@ public class ProductDefinitionMessageListener extends BaseMessageListener {
 					className, className, null, null, cronExpression);
 			}
 			catch (RuntimeException runtimeException) {
-				_log.error(runtimeException, runtimeException);
+				_log.error(runtimeException);
 			}
 		}
 
@@ -114,13 +114,11 @@ public class ProductDefinitionMessageListener extends BaseMessageListener {
 
 	}
 
-	@Reference(target = ModuleServiceLifecycle.PORTAL_INITIALIZED, unbind = "-")
-	protected void setModuleServiceLifecycle(
-		ModuleServiceLifecycle moduleServiceLifecycle) {
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		ProductDefinitionMessageListener.class);
+
+	@Reference(target = ModuleServiceLifecycle.PORTAL_INITIALIZED)
+	private ModuleServiceLifecycle _moduleServiceLifecycle;
 
 	@Reference
 	private SchedulerEngineHelper _schedulerEngineHelper;

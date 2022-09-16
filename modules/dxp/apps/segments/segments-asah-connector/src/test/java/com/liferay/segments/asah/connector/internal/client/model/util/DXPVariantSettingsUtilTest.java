@@ -15,19 +15,23 @@
 package com.liferay.segments.asah.connector.internal.client.model.util;
 
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.segments.asah.connector.internal.client.model.DXPVariantSettings;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import org.mockito.runners.MockitoJUnitRunner;
 
 /**
  * @author Sarai Díaz
  */
-@RunWith(MockitoJUnitRunner.class)
 public class DXPVariantSettingsUtilTest {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Test
 	public void testToDXPVariantSettingsWithControlVariant() {

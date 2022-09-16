@@ -65,6 +65,8 @@ request.setAttribute("edit_layout_set_prototype.jsp-layoutSetPrototype", layoutS
 request.setAttribute("edit_layout_set_prototype.jsp-redirect", currentURL);
 %>
 
+<%@ include file="/propagation_alert.jspf" %>
+
 <liferay-ui:success key='<%= LayoutSetPrototypePortletKeys.SITE_TEMPLATE_SETTINGS + "requestProcessed" %>' message="site-template-was-added" />
 
 <liferay-util:include page="/merge_alert.jsp" servletContext="<%= application %>" />
@@ -88,7 +90,7 @@ request.setAttribute("edit_layout_set_prototype.jsp-redirect", currentURL);
 
 				<aui:input name="description" placeholder="description" />
 
-				<aui:input helpMessage="active-help" inlineLabel="right" label="active" labelCssClass="simple-toggle-switch" name="active" type="toggle-switch" value="<%= layoutSetPrototype.isActive() %>" />
+				<aui:input helpMessage="allow-site-administrators-to-create-sites-from-this-site-template" inlineLabel="right" label="active" labelCssClass="simple-toggle-switch" name="active" type="toggle-switch" value="<%= layoutSetPrototype.isActive() %>" />
 
 				<aui:input helpMessage="allow-site-administrators-to-modify-pages-associated-with-this-site-template-help" inlineLabel="right" label="allow-site-administrators-to-modify-pages-associated-with-this-site-template" labelCssClass="simple-toggle-switch" name="layoutsUpdateable" type="toggle-switch" value="<%= layoutsUpdateable %>" />
 

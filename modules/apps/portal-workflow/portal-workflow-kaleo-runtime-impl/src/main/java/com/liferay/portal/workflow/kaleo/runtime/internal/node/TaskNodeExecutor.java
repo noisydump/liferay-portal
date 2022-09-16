@@ -16,6 +16,7 @@ package com.liferay.portal.workflow.kaleo.runtime.internal.node;
 
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.workflow.kaleo.definition.DelayDuration;
 import com.liferay.portal.workflow.kaleo.definition.DurationScale;
@@ -27,13 +28,13 @@ import com.liferay.portal.workflow.kaleo.model.KaleoTask;
 import com.liferay.portal.workflow.kaleo.model.KaleoTaskAssignment;
 import com.liferay.portal.workflow.kaleo.model.KaleoTaskInstanceToken;
 import com.liferay.portal.workflow.kaleo.model.KaleoTimer;
+import com.liferay.portal.workflow.kaleo.model.KaleoTimerInstanceToken;
 import com.liferay.portal.workflow.kaleo.model.KaleoTransition;
 import com.liferay.portal.workflow.kaleo.runtime.ExecutionContext;
-import com.liferay.portal.workflow.kaleo.runtime.assignment.TaskAssignmentSelector;
-import com.liferay.portal.workflow.kaleo.runtime.assignment.TaskAssignmentSelectorRegistry;
+import com.liferay.portal.workflow.kaleo.runtime.assignment.AggregateKaleoTaskAssignmentSelector;
 import com.liferay.portal.workflow.kaleo.runtime.calendar.DueDateCalculator;
 import com.liferay.portal.workflow.kaleo.runtime.graph.PathElement;
-import com.liferay.portal.workflow.kaleo.runtime.internal.assignment.TaskAssignerHelper;
+import com.liferay.portal.workflow.kaleo.runtime.internal.assignment.helper.TaskAssignerHelper;
 import com.liferay.portal.workflow.kaleo.runtime.node.BaseNodeExecutor;
 import com.liferay.portal.workflow.kaleo.runtime.node.NodeExecutor;
 import com.liferay.portal.workflow.kaleo.service.KaleoLogLocalService;
@@ -42,8 +43,6 @@ import com.liferay.portal.workflow.kaleo.service.KaleoTaskLocalService;
 
 import java.io.Serializable;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -56,68 +55,40 @@ import org.osgi.service.component.annotations.Reference;
  * @author Michael C. Han
  */
 @Component(
-	immediate = true, property = "node.type=TASK", service = NodeExecutor.class
+	immediate = true, property = "node.type=TASK",
+	service = {NodeExecutor.class, TaskNodeExecutor.class}
 )
 public class TaskNodeExecutor extends BaseNodeExecutor {
 
-	protected Date calculateDueDate(KaleoTask kaleoTask)
-		throws KaleoDefinitionValidationException {
-
-		List<KaleoTimer> kaleoTimers = kaleoTimerLocalService.getKaleoTimers(
-			KaleoNode.class.getName(), kaleoTask.getKaleoNodeId());
-
-		if (kaleoTimers.isEmpty()) {
-			return null;
-		}
-
-		TreeSet<Date> sortedDueDates = new TreeSet<>();
-
-		for (KaleoTimer kaleoTimer : kaleoTimers) {
-			DelayDuration delayDuration = new DelayDuration(
-				kaleoTimer.getDuration(),
-				DurationScale.parse(kaleoTimer.getScale()));
-
-			Date dueDate = _dueDateCalculator.getDueDate(
-				new Date(), delayDuration);
-
-			sortedDueDates.add(dueDate);
-		}
-
-		return sortedDueDates.first();
-	}
-
-	protected KaleoTaskInstanceToken createTaskInstanceToken(
-			ExecutionContext executionContext,
-			Map<String, Serializable> workflowContext,
-			ServiceContext serviceContext,
-			KaleoInstanceToken kaleoInstanceToken, KaleoTask kaleoTask,
-			Date dueDate)
+	public void executeTimer(ExecutionContext executionContext)
 		throws PortalException {
 
-		Collection<KaleoTaskAssignment> configuredKaleoTaskAssignments =
-			kaleoTask.getKaleoTaskAssignments();
+		KaleoTimerInstanceToken kaleoTimerInstanceToken =
+			executionContext.getKaleoTimerInstanceToken();
 
-		Collection<KaleoTaskAssignment> kaleoTaskAssignments =
-			new ArrayList<>();
+		KaleoTimer kaleoTimer = kaleoTimerInstanceToken.getKaleoTimer();
 
-		for (KaleoTaskAssignment configuredKaleoTaskAssignment :
-				configuredKaleoTaskAssignments) {
+		kaleoActionExecutor.executeKaleoActions(
+			KaleoTimer.class.getName(), kaleoTimer.getKaleoTimerId(),
+			ExecutionType.ON_TIMER, executionContext);
 
-			TaskAssignmentSelector taskAssignmentSelector =
-				_taskAssignmentSelectorRegistry.getTaskAssignmentSelector(
-					configuredKaleoTaskAssignment.getAssigneeClassName());
+		List<KaleoTaskAssignment> kaleoTaskReassignments =
+			kaleoTimer.getKaleoTaskReassignments();
 
-			Collection<KaleoTaskAssignment> calculatedKaleoTaskAssignments =
-				taskAssignmentSelector.calculateTaskAssignments(
-					configuredKaleoTaskAssignment, executionContext);
-
-			kaleoTaskAssignments.addAll(calculatedKaleoTaskAssignments);
+		if (ListUtil.isNotEmpty(kaleoTaskReassignments)) {
+			_taskAssignerHelper.reassignKaleoTask(
+				kaleoTaskReassignments, executionContext);
 		}
 
-		return _kaleoTaskInstanceTokenLocalService.addKaleoTaskInstanceToken(
-			kaleoInstanceToken.getKaleoInstanceTokenId(),
-			kaleoTask.getKaleoTaskId(), kaleoTask.getName(),
-			kaleoTaskAssignments, dueDate, workflowContext, serviceContext);
+		notificationHelper.sendKaleoNotifications(
+			KaleoTimer.class.getName(), kaleoTimer.getKaleoTimerId(),
+			ExecutionType.ON_TIMER, executionContext);
+
+		if (!kaleoTimer.isRecurring()) {
+			kaleoTimerInstanceTokenLocalService.completeKaleoTimerInstanceToken(
+				kaleoTimerInstanceToken.getKaleoTimerInstanceTokenId(),
+				executionContext.getServiceContext());
+		}
 	}
 
 	@Override
@@ -135,11 +106,12 @@ public class TaskNodeExecutor extends BaseNodeExecutor {
 		KaleoTask kaleoTask = _kaleoTaskLocalService.getKaleoNodeKaleoTask(
 			currentKaleoNode.getKaleoNodeId());
 
-		Date dueDate = calculateDueDate(kaleoTask);
+		Date dueDate = _calculateDueDate(kaleoTask);
 
-		KaleoTaskInstanceToken kaleoTaskInstanceToken = createTaskInstanceToken(
-			executionContext, workflowContext, serviceContext,
-			kaleoInstanceToken, kaleoTask, dueDate);
+		KaleoTaskInstanceToken kaleoTaskInstanceToken =
+			_createTaskInstanceToken(
+				executionContext, workflowContext, serviceContext,
+				kaleoInstanceToken, kaleoTask, dueDate);
 
 		executionContext.setKaleoTaskInstanceToken(kaleoTaskInstanceToken);
 
@@ -151,7 +123,15 @@ public class TaskNodeExecutor extends BaseNodeExecutor {
 			KaleoNode.class.getName(), currentKaleoNode.getKaleoNodeId(),
 			ExecutionType.ON_ASSIGNMENT, executionContext);
 
-		_kaleoLogLocalService.addTaskAssignmentKaleoLog(
+		kaleoTimerInstanceTokenLocalService.addKaleoTimerInstanceTokens(
+			executionContext.getKaleoInstanceToken(),
+			executionContext.getKaleoTaskInstanceToken(),
+			kaleoTimerLocalService.getKaleoTimers(
+				KaleoNode.class.getName(), currentKaleoNode.getKaleoNodeId()),
+			executionContext.getWorkflowContext(),
+			executionContext.getServiceContext());
+
+		_kaleoLogLocalService.addTaskAssignmentKaleoLogs(
 			null, kaleoTaskInstanceToken, "assigned-initial-task",
 			workflowContext, serviceContext);
 
@@ -162,23 +142,6 @@ public class TaskNodeExecutor extends BaseNodeExecutor {
 	protected void doExecute(
 		KaleoNode currentKaleoNode, ExecutionContext executionContext,
 		List<PathElement> remainingPathElements) {
-	}
-
-	@Override
-	protected void doExecuteTimer(
-			KaleoNode currentKaleoNode, KaleoTimer kaleoTimer,
-			ExecutionContext executionContext)
-		throws PortalException {
-
-		List<KaleoTaskAssignment> kaleoTaskReassignments =
-			kaleoTimer.getKaleoTaskReassignments();
-
-		if (kaleoTaskReassignments.isEmpty()) {
-			return;
-		}
-
-		_taskAssignerHelper.reassignKaleoTask(
-			kaleoTaskReassignments, executionContext);
 	}
 
 	@Override
@@ -211,6 +174,50 @@ public class TaskNodeExecutor extends BaseNodeExecutor {
 		remainingPathElements.add(pathElement);
 	}
 
+	private Date _calculateDueDate(KaleoTask kaleoTask)
+		throws KaleoDefinitionValidationException {
+
+		List<KaleoTimer> kaleoTimers = kaleoTimerLocalService.getKaleoTimers(
+			KaleoNode.class.getName(), kaleoTask.getKaleoNodeId());
+
+		if (kaleoTimers.isEmpty()) {
+			return null;
+		}
+
+		TreeSet<Date> sortedDueDates = new TreeSet<>();
+
+		for (KaleoTimer kaleoTimer : kaleoTimers) {
+			DelayDuration delayDuration = new DelayDuration(
+				kaleoTimer.getDuration(),
+				DurationScale.parse(kaleoTimer.getScale()));
+
+			sortedDueDates.add(
+				_dueDateCalculator.getDueDate(new Date(), delayDuration));
+		}
+
+		return sortedDueDates.first();
+	}
+
+	private KaleoTaskInstanceToken _createTaskInstanceToken(
+			ExecutionContext executionContext,
+			Map<String, Serializable> workflowContext,
+			ServiceContext serviceContext,
+			KaleoInstanceToken kaleoInstanceToken, KaleoTask kaleoTask,
+			Date dueDate)
+		throws PortalException {
+
+		return _kaleoTaskInstanceTokenLocalService.addKaleoTaskInstanceToken(
+			kaleoInstanceToken.getKaleoInstanceTokenId(),
+			kaleoTask.getKaleoTaskId(), kaleoTask.getName(),
+			_aggregateKaleoTaskAssignmentSelector.getKaleoTaskAssignments(
+				kaleoTask.getKaleoTaskAssignments(), executionContext),
+			dueDate, workflowContext, serviceContext);
+	}
+
+	@Reference
+	private AggregateKaleoTaskAssignmentSelector
+		_aggregateKaleoTaskAssignmentSelector;
+
 	@Reference
 	private DueDateCalculator _dueDateCalculator;
 
@@ -226,8 +233,5 @@ public class TaskNodeExecutor extends BaseNodeExecutor {
 
 	@Reference
 	private TaskAssignerHelper _taskAssignerHelper;
-
-	@Reference
-	private TaskAssignmentSelectorRegistry _taskAssignmentSelectorRegistry;
 
 }

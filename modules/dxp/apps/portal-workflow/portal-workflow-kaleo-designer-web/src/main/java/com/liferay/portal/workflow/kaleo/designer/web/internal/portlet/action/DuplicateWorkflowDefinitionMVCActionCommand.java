@@ -14,7 +14,6 @@
 
 package com.liferay.portal.workflow.kaleo.designer.web.internal.portlet.action;
 
-import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
@@ -98,7 +97,7 @@ public class DuplicateWorkflowDefinitionMVCActionCommand
 		String duplicatedDefinitionTitle = ParamUtil.getString(
 			actionRequest, "duplicatedDefinitionTitle");
 
-		return LanguageUtil.format(
+		return language.format(
 			getResourceBundle(actionRequest), "duplicated-from-x",
 			StringUtil.quote(duplicatedDefinitionTitle));
 	}
@@ -112,7 +111,7 @@ public class DuplicateWorkflowDefinitionMVCActionCommand
 		}
 		catch (WorkflowException workflowException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(workflowException, workflowException);
+				_log.warn(workflowException);
 			}
 
 			return null;

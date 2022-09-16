@@ -28,6 +28,8 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -44,10 +46,13 @@ import com.liferay.portal.spring.extender.service.ServiceReference;
 import com.liferay.portal.tools.service.builder.test.model.VersionedEntry;
 import com.liferay.portal.tools.service.builder.test.model.VersionedEntryVersion;
 import com.liferay.portal.tools.service.builder.test.service.VersionedEntryLocalService;
+import com.liferay.portal.tools.service.builder.test.service.VersionedEntryLocalServiceUtil;
 import com.liferay.portal.tools.service.builder.test.service.persistence.VersionedEntryPersistence;
 import com.liferay.portal.tools.service.builder.test.service.persistence.VersionedEntryVersionPersistence;
 
 import java.io.Serializable;
+
+import java.lang.reflect.Field;
 
 import java.util.Collections;
 import java.util.List;
@@ -75,7 +80,7 @@ public abstract class VersionedEntryLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>VersionedEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.tools.service.builder.test.service.VersionedEntryLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>VersionedEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>VersionedEntryLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -167,6 +172,13 @@ public abstract class VersionedEntryLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return versionedEntryPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -335,6 +347,11 @@ public abstract class VersionedEntryLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement VersionedEntryLocalServiceImpl#deleteVersionedEntry(VersionedEntry) to avoid orphaned data");
+		}
+
 		return versionedEntryLocalService.deleteVersionedEntry(
 			(VersionedEntry)persistedModel);
 	}
@@ -387,7 +404,7 @@ public abstract class VersionedEntryLocalServiceBaseImpl
 	 * <strong>Important:</strong> Inspect VersionedEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
 	 * </p>
 	 *
-	 * @param versionedEntry the versioned entry
+	 * @param draftVersionedEntry the versioned entry
 	 * @return the versioned entry that was updated
 	 */
 	@Indexable(type = IndexableType.REINDEX)
@@ -489,11 +506,15 @@ public abstract class VersionedEntryLocalServiceBaseImpl
 		persistedModelLocalServiceRegistry.register(
 			"com.liferay.portal.tools.service.builder.test.model.VersionedEntry",
 			versionedEntryLocalService);
+
+		_setLocalServiceUtilService(versionedEntryLocalService);
 	}
 
 	public void destroy() {
 		persistedModelLocalServiceRegistry.unregister(
 			"com.liferay.portal.tools.service.builder.test.model.VersionedEntry");
+
+		_setLocalServiceUtilService(null);
 	}
 
 	@Indexable(type = IndexableType.REINDEX)
@@ -930,6 +951,22 @@ public abstract class VersionedEntryLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		VersionedEntryLocalService versionedEntryLocalService) {
+
+		try {
+			Field field = VersionedEntryLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, versionedEntryLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@BeanReference(type = VersionedEntryLocalService.class)
 	protected VersionedEntryLocalService versionedEntryLocalService;
 
@@ -944,6 +981,9 @@ public abstract class VersionedEntryLocalServiceBaseImpl
 
 	@BeanReference(type = VersionedEntryVersionPersistence.class)
 	protected VersionedEntryVersionPersistence versionedEntryVersionPersistence;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		VersionedEntryLocalServiceBaseImpl.class);
 
 	@ServiceReference(type = PersistedModelLocalServiceRegistry.class)
 	protected PersistedModelLocalServiceRegistry

@@ -14,15 +14,33 @@
 
 package com.liferay.segments.model.impl;
 
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.segments.constants.SegmentsExperimentConstants;
 import com.liferay.segments.service.SegmentsExperimentLocalServiceUtil;
+
+import java.io.IOException;
 
 /**
  * @author Eduardo García
  */
 public class SegmentsExperienceImpl extends SegmentsExperienceBaseImpl {
 
-	public SegmentsExperienceImpl() {
+	@Override
+	public UnicodeProperties getTypeSettingsUnicodeProperties() {
+		if (_typeSettingsUnicodeProperties == null) {
+			_typeSettingsUnicodeProperties = new UnicodeProperties(true);
+
+			try {
+				_typeSettingsUnicodeProperties.load(super.getTypeSettings());
+			}
+			catch (IOException ioException) {
+				_log.error(ioException);
+			}
+		}
+
+		return _typeSettingsUnicodeProperties;
 	}
 
 	@Override
@@ -31,5 +49,19 @@ public class SegmentsExperienceImpl extends SegmentsExperienceBaseImpl {
 			getSegmentsExperienceId(), getClassNameId(), getClassPK(),
 			SegmentsExperimentConstants.Status.getLockedStatusValues());
 	}
+
+	@Override
+	public void setTypeSettingsUnicodeProperties(
+		UnicodeProperties typeSettingsUnicodeProperties) {
+
+		_typeSettingsUnicodeProperties = typeSettingsUnicodeProperties;
+
+		super.setTypeSettings(_typeSettingsUnicodeProperties.toString());
+	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		SegmentsExperienceImpl.class);
+
+	private UnicodeProperties _typeSettingsUnicodeProperties;
 
 }

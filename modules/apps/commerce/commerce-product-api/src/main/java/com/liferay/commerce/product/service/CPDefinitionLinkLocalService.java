@@ -16,7 +16,9 @@ package com.liferay.commerce.product.service;
 
 import com.liferay.commerce.product.model.CPDefinitionLink;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
+import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery;
@@ -25,11 +27,15 @@ import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalService;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.change.tracking.CTService;
+import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
+import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
@@ -51,13 +57,15 @@ import org.osgi.annotation.versioning.ProviderType;
  * @see CPDefinitionLinkLocalServiceUtil
  * @generated
  */
+@CTAware
 @ProviderType
 @Transactional(
 	isolation = Isolation.PORTAL,
 	rollbackFor = {PortalException.class, SystemException.class}
 )
 public interface CPDefinitionLinkLocalService
-	extends BaseLocalService, PersistedModelLocalService {
+	extends BaseLocalService, CTService<CPDefinitionLink>,
+			PersistedModelLocalService {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -78,15 +86,6 @@ public interface CPDefinitionLinkLocalService
 	@Indexable(type = IndexableType.REINDEX)
 	public CPDefinitionLink addCPDefinitionLink(
 		CPDefinitionLink cpDefinitionLink);
-
-	/**
-	 * @deprecated As of Mueller (7.2.x)
-	 */
-	@Deprecated
-	public CPDefinitionLink addCPDefinitionLink(
-			long cpDefinitionId1, long cpDefinitionId2, double priority,
-			String type, ServiceContext serviceContext)
-		throws PortalException;
 
 	public CPDefinitionLink addCPDefinitionLinkByCProductId(
 			long cpDefinitionId, long cProductId, double priority, String type,
@@ -120,6 +119,7 @@ public interface CPDefinitionLinkLocalService
 	 * @throws PortalException
 	 */
 	@Indexable(type = IndexableType.DELETE)
+	@SystemEvent(type = SystemEventConstants.TYPE_DELETE)
 	public CPDefinitionLink deleteCPDefinitionLink(
 			CPDefinitionLink cpDefinitionLink)
 		throws PortalException;
@@ -139,13 +139,6 @@ public interface CPDefinitionLinkLocalService
 	public CPDefinitionLink deleteCPDefinitionLink(long CPDefinitionLinkId)
 		throws PortalException;
 
-	/**
-	 * @deprecated As of Mueller (7.2.x)
-	 */
-	@Deprecated
-	public void deleteCPDefinitionLinks(long cpDefinitionId)
-		throws PortalException;
-
 	public void deleteCPDefinitionLinksByCPDefinitionId(long cpDefinitionId)
 		throws PortalException;
 
@@ -161,6 +154,9 @@ public interface CPDefinitionLinkLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public <T> T dslQuery(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
@@ -230,6 +226,10 @@ public interface CPDefinitionLinkLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public CPDefinitionLink fetchCPDefinitionLink(long CPDefinitionLinkId);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public CPDefinitionLink fetchCPDefinitionLink(
+		long cpDefinitionId, long cProductId, String type);
 
 	/**
 	 * Returns the cp definition link matching the UUID and group.
@@ -389,13 +389,19 @@ public interface CPDefinitionLinkLocalService
 			ServiceContext serviceContext)
 		throws PortalException;
 
-	/**
-	 * @deprecated As of Mueller (7.2.x)
-	 */
-	@Deprecated
-	public void updateCPDefinitionLinks(
-			long cpDefinitionId1, long[] cpDefinitionIds2, String type,
-			ServiceContext serviceContext)
-		throws PortalException;
+	@Override
+	@Transactional(enabled = false)
+	public CTPersistence<CPDefinitionLink> getCTPersistence();
+
+	@Override
+	@Transactional(enabled = false)
+	public Class<CPDefinitionLink> getModelClass();
+
+	@Override
+	@Transactional(rollbackFor = Throwable.class)
+	public <R, E extends Throwable> R updateWithUnsafeFunction(
+			UnsafeFunction<CTPersistence<CPDefinitionLink>, R, E>
+				updateUnsafeFunction)
+		throws E;
 
 }

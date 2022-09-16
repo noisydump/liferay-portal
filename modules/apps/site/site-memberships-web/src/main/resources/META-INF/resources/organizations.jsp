@@ -18,8 +18,6 @@
 
 <%
 OrganizationsDisplayContext organizationsDisplayContext = new OrganizationsDisplayContext(request, renderRequest, renderResponse);
-
-OrganizationsManagementToolbarDisplayContext organizationsManagementToolbarDisplayContext = new OrganizationsManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, organizationsDisplayContext);
 %>
 
 <clay:navigation-bar
@@ -27,15 +25,12 @@ OrganizationsManagementToolbarDisplayContext organizationsManagementToolbarDispl
 	navigationItems="<%= siteMembershipsDisplayContext.getViewNavigationItems() %>"
 />
 
-<clay:management-toolbar-v2
-	displayContext="<%= organizationsManagementToolbarDisplayContext %>"
+<clay:management-toolbar
+	managementToolbarDisplayContext="<%= new OrganizationsManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, organizationsDisplayContext) %>"
+	propsTransformer="js/OrganizationsManagementToolbarPropsTransformer"
 />
 
-<div class="closed sidenav-container sidenav-right" id="<%= liferayPortletResponse.getNamespace() + "infoPanelId" %>">
-	<liferay-ui:breadcrumb
-		showLayout="<%= false %>"
-	/>
-
+<div class="closed sidenav-container sidenav-right" id="<portlet:namespace />infoPanelId">
 	<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/site_memberships/organizations_info_panel" var="sidebarPanelURL">
 		<portlet:param name="groupId" value="<%= String.valueOf(siteMembershipsDisplayContext.getGroupId()) %>" />
 	</liferay-portlet:resourceURL>
@@ -56,6 +51,10 @@ OrganizationsManagementToolbarDisplayContext organizationsManagementToolbarDispl
 			<aui:form action="<%= deleteGroupOrganizationsURL %>" method="post" name="fm">
 				<aui:input name="tabs1" type="hidden" value="organizations" />
 				<aui:input name="groupId" type="hidden" value="<%= String.valueOf(siteMembershipsDisplayContext.getGroupId()) %>" />
+
+				<liferay-ui:breadcrumb
+					showLayout="<%= false %>"
+				/>
 
 				<liferay-ui:search-container
 					id="organizations"
@@ -94,13 +93,3 @@ OrganizationsManagementToolbarDisplayContext organizationsManagementToolbarDispl
 <aui:form action="<%= addGroupOrganizationsURL %>" cssClass="hide" name="addGroupOrganizationsFm">
 	<aui:input name="tabs1" type="hidden" value="organizations" />
 </aui:form>
-
-<liferay-frontend:component
-	componentId="<%= organizationsManagementToolbarDisplayContext.getDefaultEventHandler() %>"
-	module="js/OrganizationsManagementToolbarDefaultEventHandler.es"
-/>
-
-<liferay-frontend:component
-	componentId="<%= SiteMembershipWebKeys.ORGANIZATION_DROPDOWN_DEFAULT_EVENT_HANDLER %>"
-	module="js/OrganizationDropdownDefaultEventHandler.es"
-/>

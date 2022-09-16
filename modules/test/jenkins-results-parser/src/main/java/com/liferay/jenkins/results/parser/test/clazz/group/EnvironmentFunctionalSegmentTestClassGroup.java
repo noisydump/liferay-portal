@@ -14,14 +14,19 @@
 
 package com.liferay.jenkins.results.parser.test.clazz.group;
 
+import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
 import com.liferay.jenkins.results.parser.Job;
 import com.liferay.jenkins.results.parser.PortalFixpackEnvironmentJob;
+import com.liferay.jenkins.results.parser.PortalGitWorkingDirectory;
+import com.liferay.jenkins.results.parser.job.property.JobProperty;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import org.json.JSONObject;
 
 /**
  * @author Michael Hashimoto
@@ -65,20 +70,87 @@ public class EnvironmentFunctionalSegmentTestClassGroup
 	}
 
 	protected EnvironmentFunctionalSegmentTestClassGroup(
-		EnvironmentFunctionalBatchTestClassGroup
-			parentEnvironmentFunctionalBatchTestClassGroup) {
+		BatchTestClassGroup parentBatchTestClassGroup) {
 
-		super(parentEnvironmentFunctionalBatchTestClassGroup);
+		super(parentBatchTestClassGroup);
+	}
+
+	protected EnvironmentFunctionalSegmentTestClassGroup(
+		BatchTestClassGroup parentBatchTestClassGroup, JSONObject jsonObject) {
+
+		super(parentBatchTestClassGroup, jsonObject);
+	}
+
+	private String _getAppServerType() {
+		BatchTestClassGroup batchTestClassGroup = getBatchTestClassGroup();
+
+		JobProperty jobProperty = batchTestClassGroup.getJobProperty(
+			"environment.app.server.type");
+
+		String jobPropertyValue = jobProperty.getValue();
+
+		if (!JenkinsResultsParserUtil.isNullOrEmpty(jobPropertyValue)) {
+			return jobPropertyValue;
+		}
+
+		PortalGitWorkingDirectory portalGitWorkingDirectory =
+			batchTestClassGroup.getPortalGitWorkingDirectory();
+
+		if (portalGitWorkingDirectory == null) {
+			return null;
+		}
+
+		return JenkinsResultsParserUtil.getProperty(
+			portalGitWorkingDirectory.getAppServerProperties(),
+			"app.server.type");
 	}
 
 	private Map.Entry<String, String> _getAppServerTypeEntry() {
-		return getEnvironmentVariableEntry(
-			"APP_SERVER_TYPE", "environment.app.server.type");
+		String appServerType = _getAppServerType();
+
+		if (JenkinsResultsParserUtil.isNullOrEmpty(appServerType)) {
+			return null;
+		}
+
+		return new AbstractMap.SimpleEntry<>("APP_SERVER_TYPE", appServerType);
+	}
+
+	private String _getAppServerVersion() {
+		BatchTestClassGroup batchTestClassGroup = getBatchTestClassGroup();
+
+		JobProperty jobProperty = batchTestClassGroup.getJobProperty(
+			"environment.app.server.version");
+
+		String jobPropertyValue = jobProperty.getValue();
+
+		if (!JenkinsResultsParserUtil.isNullOrEmpty(jobPropertyValue)) {
+			return jobPropertyValue;
+		}
+
+		PortalGitWorkingDirectory portalGitWorkingDirectory =
+			batchTestClassGroup.getPortalGitWorkingDirectory();
+		String appServerType = _getAppServerType();
+
+		if ((portalGitWorkingDirectory == null) ||
+			JenkinsResultsParserUtil.isNullOrEmpty(appServerType)) {
+
+			return null;
+		}
+
+		return JenkinsResultsParserUtil.getProperty(
+			portalGitWorkingDirectory.getAppServerProperties(),
+			"app.server." + appServerType + ".version");
 	}
 
 	private Map.Entry<String, String> _getAppServerVersionEntry() {
-		return getEnvironmentVariableEntry(
-			"APP_SERVER_VERSION", "environment.app.server.version");
+		String appServerVersion = _getAppServerVersion();
+
+		if (JenkinsResultsParserUtil.isNullOrEmpty(appServerVersion)) {
+			return null;
+		}
+
+		return new AbstractMap.SimpleEntry<>(
+			"APP_SERVER_VERSION", appServerVersion);
 	}
 
 	private Map.Entry<String, String> _getBrowserTypeEntry() {
@@ -109,6 +181,11 @@ public class EnvironmentFunctionalSegmentTestClassGroup
 		}
 
 		String fixPackZipURL = System.getenv("TEST_BUILD_FIX_PACK_ZIP_URL");
+
+		if ((fixPackZipURL == null) || !fixPackZipURL.matches("https?://.*")) {
+			fixPackZipURL = getBuildStartProperty(
+				"TEST_BUILD_FIX_PACK_ZIP_URL");
+		}
 
 		if ((fixPackZipURL == null) || !fixPackZipURL.matches("https?://.*")) {
 			return null;
@@ -152,7 +229,11 @@ public class EnvironmentFunctionalSegmentTestClassGroup
 
 		String testrayBuildName = System.getenv("TESTRAY_BUILD_NAME");
 
-		if ((testrayBuildName == null) || testrayBuildName.isEmpty()) {
+		if (JenkinsResultsParserUtil.isNullOrEmpty(testrayBuildName)) {
+			testrayBuildName = getBuildStartProperty("TESTRAY_BUILD_NAME");
+		}
+
+		if (JenkinsResultsParserUtil.isNullOrEmpty(testrayBuildName)) {
 			return null;
 		}
 

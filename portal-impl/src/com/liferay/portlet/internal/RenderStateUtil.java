@@ -70,11 +70,10 @@ public class RenderStateUtil {
 			themeDisplay.getLayoutTypePortlet();
 
 		if (layoutTypePortlet != null) {
-			JSONObject pageStateJSONObject = _getPageStateJSONObject(
-				httpServletRequest, themeDisplay, layoutTypePortlet,
-				renderDataMap);
-
-			return pageStateJSONObject.toString();
+			return String.valueOf(
+				_getPageStateJSONObject(
+					httpServletRequest, themeDisplay, layoutTypePortlet,
+					renderDataMap));
 		}
 
 		return StringPool.BLANK;
@@ -168,12 +167,9 @@ public class RenderStateUtil {
 				for (PublicRenderParameter publicRenderParameter :
 						publicRenderParameters) {
 
-					String publicRenderParameterName =
-						PortletQNameUtil.getPublicRenderParameterName(
-							publicRenderParameter.getQName());
-
 					String[] currentValue = currentPublicRenderParameters.get(
-						publicRenderParameterName);
+						PortletQNameUtil.getPublicRenderParameterName(
+							publicRenderParameter.getQName()));
 
 					if (currentValue != null) {
 						changedPublicRenderParameters.put(
@@ -212,14 +208,13 @@ public class RenderStateUtil {
 		LayoutTypePortlet layoutTypePortlet,
 		Map<String, RenderData> renderDataMap) {
 
-		JSONObject jsonObject = JSONUtil.put(
-			"encodedCurrentURL",
-			URLCodec.encodeURL(
-				PortalUtil.getCurrentCompleteURL(httpServletRequest)));
-
 		List<Portlet> portlets = layoutTypePortlet.getAllPortlets();
 
-		jsonObject.put(
+		return JSONUtil.put(
+			"encodedCurrentURL",
+			URLCodec.encodeURL(
+				PortalUtil.getCurrentCompleteURL(httpServletRequest))
+		).put(
 			"portlets",
 			_getPortletsJSONObject(
 				httpServletRequest, themeDisplay, layoutTypePortlet, portlets,
@@ -227,8 +222,6 @@ public class RenderStateUtil {
 		).put(
 			"prpMap", _getPRPGroupsJSONObject(portlets)
 		);
-
-		return jsonObject;
 	}
 
 	private static JSONObject _getPortletJSONObject(
@@ -378,11 +371,8 @@ public class RenderStateUtil {
 				httpServletRequest, themeDisplay.getPlid(), portlets);
 
 		for (Portlet portlet : portlets) {
-			String portletNamespace = PortalUtil.getPortletNamespace(
-				portlet.getPortletId());
-
 			jsonObject.put(
-				portletNamespace,
+				PortalUtil.getPortletNamespace(portlet.getPortletId()),
 				_getPortletJSONObject(
 					httpServletRequest, themeDisplay, layoutTypePortlet,
 					portlet, renderDataMap.get(portlet.getPortletId()),

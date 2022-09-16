@@ -43,16 +43,14 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
-import com.liferay.portal.test.log.CaptureAppender;
-import com.liferay.portal.test.log.Log4JLoggerTestUtil;
+import com.liferay.portal.test.log.LogCapture;
+import com.liferay.portal.test.log.LogEntry;
+import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.log4j.Level;
-import org.apache.log4j.spi.LoggingEvent;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -79,7 +77,7 @@ public class JournalFeedStagedModelDataHandlerTest
 	public void setUp() throws Exception {
 		super.setUp();
 
-		_layout = LayoutTestUtil.addLayout(stagingGroup);
+		_layout = LayoutTestUtil.addTypePortletLayout(stagingGroup);
 
 		ServiceContext serviceContext = new ServiceContext();
 
@@ -138,23 +136,20 @@ public class JournalFeedStagedModelDataHandlerTest
 	@Override
 	@Test
 	public void testCleanStagedModelDataHandler() throws Exception {
-		try (CaptureAppender captureAppender =
-				Log4JLoggerTestUtil.configureLog4JLogger(
-					"com.liferay.journal.internal.exportimport.data.handler." +
-						"JournalFeedStagedModelDataHandler",
-					Level.WARN)) {
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				"com.liferay.journal.internal.exportimport.data.handler." +
+					"JournalFeedStagedModelDataHandler",
+				LoggerTestUtil.WARN)) {
 
 			super.testCleanStagedModelDataHandler();
 
-			List<LoggingEvent> loggingEvents =
-				captureAppender.getLoggingEvents();
+			List<LogEntry> logEntries = logCapture.getLogEntries();
 
-			Assert.assertEquals(
-				loggingEvents.toString(), 1, loggingEvents.size());
+			Assert.assertEquals(logEntries.toString(), 1, logEntries.size());
 
-			LoggingEvent loggingEvent = loggingEvents.get(0);
+			LogEntry logEntry = logEntries.get(0);
 
-			String message = (String)loggingEvent.getMessage();
+			String message = logEntry.getMessage();
 
 			Assert.assertTrue(
 				message, message.startsWith("A feed with the ID "));
@@ -166,60 +161,64 @@ public class JournalFeedStagedModelDataHandlerTest
 
 	@Test
 	public void testDoubleExportImport() throws Exception {
-		Map<String, List<StagedModel>> dependentStagedModelsMap =
-			addDependentStagedModelsMap(stagingGroup);
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				"com.liferay.journal.internal.exportimport.data.handler." +
+					"JournalFeedStagedModelDataHandler",
+				LoggerTestUtil.WARN)) {
 
-		StagedModel stagedModel = addStagedModel(
-			stagingGroup, dependentStagedModelsMap);
+			Map<String, List<StagedModel>> dependentStagedModelsMap =
+				addDependentStagedModelsMap(stagingGroup);
 
-		ExportImportThreadLocal.setPortletImportInProcess(true);
+			StagedModel stagedModel = addStagedModel(
+				stagingGroup, dependentStagedModelsMap);
 
-		try {
-			exportImportStagedModel(stagedModel);
+			ExportImportThreadLocal.setPortletImportInProcess(true);
+
+			try {
+				exportImportStagedModel(stagedModel);
+			}
+			finally {
+				ExportImportThreadLocal.setPortletImportInProcess(false);
+			}
+
+			StagedModel importedStagedModel = getStagedModel(
+				stagedModel.getUuid(), liveGroup);
+
+			Assert.assertNotNull(importedStagedModel);
+
+			ExportImportThreadLocal.setPortletImportInProcess(true);
+
+			try {
+				exportImportStagedModel(stagedModel);
+			}
+			finally {
+				ExportImportThreadLocal.setPortletImportInProcess(false);
+			}
+
+			importedStagedModel = getStagedModel(
+				stagedModel.getUuid(), liveGroup);
+
+			Assert.assertNotNull(importedStagedModel);
 		}
-		finally {
-			ExportImportThreadLocal.setPortletImportInProcess(false);
-		}
-
-		StagedModel importedStagedModel = getStagedModel(
-			stagedModel.getUuid(), liveGroup);
-
-		Assert.assertNotNull(importedStagedModel);
-
-		ExportImportThreadLocal.setPortletImportInProcess(true);
-
-		try {
-			exportImportStagedModel(stagedModel);
-		}
-		finally {
-			ExportImportThreadLocal.setPortletImportInProcess(false);
-		}
-
-		importedStagedModel = getStagedModel(stagedModel.getUuid(), liveGroup);
-
-		Assert.assertNotNull(importedStagedModel);
 	}
 
 	@Override
 	@Test
 	public void testStagedModelDataHandler() throws Exception {
-		try (CaptureAppender captureAppender =
-				Log4JLoggerTestUtil.configureLog4JLogger(
-					"com.liferay.journal.internal.exportimport.data.handler." +
-						"JournalFeedStagedModelDataHandler",
-					Level.WARN)) {
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				"com.liferay.journal.internal.exportimport.data.handler." +
+					"JournalFeedStagedModelDataHandler",
+				LoggerTestUtil.WARN)) {
 
 			super.testStagedModelDataHandler();
 
-			List<LoggingEvent> loggingEvents =
-				captureAppender.getLoggingEvents();
+			List<LogEntry> logEntries = logCapture.getLogEntries();
 
-			Assert.assertEquals(
-				loggingEvents.toString(), 1, loggingEvents.size());
+			Assert.assertEquals(logEntries.toString(), 1, logEntries.size());
 
-			LoggingEvent loggingEvent = loggingEvents.get(0);
+			LogEntry logEntry = logEntries.get(0);
 
-			String message = (String)loggingEvent.getMessage();
+			String message = logEntry.getMessage();
 
 			Assert.assertTrue(
 				message, message.startsWith("A feed with the ID "));

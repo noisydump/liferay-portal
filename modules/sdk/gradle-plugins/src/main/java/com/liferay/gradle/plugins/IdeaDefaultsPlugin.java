@@ -17,7 +17,7 @@ package com.liferay.gradle.plugins;
 import com.liferay.gradle.plugins.internal.util.FileUtil;
 import com.liferay.gradle.plugins.internal.util.GradleUtil;
 import com.liferay.gradle.plugins.node.NodePlugin;
-import com.liferay.gradle.plugins.node.tasks.NpmInstallTask;
+import com.liferay.gradle.plugins.node.task.NpmInstallTask;
 
 import groovy.lang.Closure;
 
@@ -54,8 +54,7 @@ public class IdeaDefaultsPlugin extends BaseDefaultsPlugin<IdeaPlugin> {
 	public static final Plugin<Project> INSTANCE = new IdeaDefaultsPlugin();
 
 	@Override
-	protected void applyPluginDefaults(
-		Project project, final IdeaPlugin ideaPlugin) {
+	protected void applyPluginDefaults(Project project, IdeaPlugin ideaPlugin) {
 
 		// Conventions
 

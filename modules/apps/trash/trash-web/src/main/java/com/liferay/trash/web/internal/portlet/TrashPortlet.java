@@ -14,10 +14,9 @@
 
 package com.liferay.trash.web.internal.portlet;
 
-import com.liferay.petra.model.adapter.util.ModelAdapterUtil;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.exception.TrashPermissionException;
 import com.liferay.portal.kernel.model.Release;
-import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
@@ -30,6 +29,7 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.model.adapter.ModelAdapterUtil;
 import com.liferay.trash.TrashHelper;
 import com.liferay.trash.constants.TrashEntryConstants;
 import com.liferay.trash.constants.TrashPortletKeys;
@@ -49,7 +49,6 @@ import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
 import javax.portlet.Portlet;
 import javax.portlet.PortletException;
-import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 
@@ -174,7 +173,7 @@ public class TrashPortlet extends MVCPortlet {
 		long trashEntryId = ParamUtil.getLong(actionRequest, "trashEntryId");
 
 		if (trashEntryId > 0) {
-			checkEntry(actionRequest, actionResponse);
+			_checkEntry(actionRequest, actionResponse);
 
 			TrashEntry entry = _trashEntryService.restoreEntry(trashEntryId);
 
@@ -187,18 +186,32 @@ public class TrashPortlet extends MVCPortlet {
 				actionRequest, "rowIds");
 
 			for (long restoreEntryId : restoreEntryIds) {
-				TrashEntry entry = _trashEntryService.restoreEntry(
-					restoreEntryId);
+				try {
+					TrashEntry entry = _trashEntryService.restoreEntry(
+						restoreEntryId);
 
-				entries.add(
-					new ObjectValuePair<>(
-						entry.getClassName(), entry.getClassPK()));
+					entries.add(
+						new ObjectValuePair<>(
+							entry.getClassName(), entry.getClassPK()));
+				}
+				catch (com.liferay.trash.exception.RestoreEntryException
+							restoreEntryException) {
+
+					if (restoreEntryException.getType() !=
+							com.liferay.trash.exception.RestoreEntryException.
+								NOT_RESTORABLE) {
+
+						throw restoreEntryException;
+					}
+				}
 			}
 		}
 
 		TrashUndoUtil.addRestoreData(actionRequest, entries);
 
-		hideDefaultSuccessMessage(actionRequest);
+		if (!entries.isEmpty()) {
+			hideDefaultSuccessMessage(actionRequest);
+		}
 
 		sendRedirect(actionRequest, actionResponse);
 	}
@@ -210,7 +223,7 @@ public class TrashPortlet extends MVCPortlet {
 		String cmd = ParamUtil.getString(actionRequest, Constants.CMD);
 
 		if (cmd.equals(Constants.RENAME)) {
-			checkEntry(actionRequest, actionResponse);
+			_checkEntry(actionRequest, actionResponse);
 
 			restoreRename(actionRequest, actionResponse);
 		}
@@ -267,7 +280,20 @@ public class TrashPortlet extends MVCPortlet {
 		sendRedirect(actionRequest, actionResponse);
 	}
 
-	protected void checkEntry(
+	@Override
+	protected boolean isSessionErrorException(Throwable throwable) {
+		if (throwable instanceof
+				com.liferay.trash.exception.RestoreEntryException ||
+			throwable instanceof RestoreEntryException ||
+			throwable instanceof TrashPermissionException) {
+
+			return true;
+		}
+
+		return false;
+	}
+
+	private void _checkEntry(
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
 
@@ -288,28 +314,24 @@ public class TrashPortlet extends MVCPortlet {
 				TrashEntryConstants.DEFAULT_CONTAINER_ID, newName);
 		}
 		catch (RestoreEntryException restoreEntryException) {
-			String redirect = ParamUtil.getString(actionRequest, "redirect");
-
-			LiferayPortletResponse liferayPortletResponse =
-				_portal.getLiferayPortletResponse(actionResponse);
-
-			PortletURL renderURL = liferayPortletResponse.createRenderURL();
-
-			renderURL.setParameter("mvcPath", "/restore_entry.jsp");
-			renderURL.setParameter("redirect", redirect);
-			renderURL.setParameter(
-				"trashEntryId",
-				String.valueOf(restoreEntryException.getTrashEntryId()));
-			renderURL.setParameter(
-				"duplicateEntryId",
-				String.valueOf(restoreEntryException.getDuplicateEntryId()));
-			renderURL.setParameter(
-				"oldName", restoreEntryException.getOldName());
-			renderURL.setParameter(
-				"overridable",
-				String.valueOf(restoreEntryException.isOverridable()));
-
-			actionRequest.setAttribute(WebKeys.REDIRECT, renderURL.toString());
+			actionRequest.setAttribute(
+				WebKeys.REDIRECT,
+				PortletURLBuilder.createRenderURL(
+					_portal.getLiferayPortletResponse(actionResponse)
+				).setMVCPath(
+					"/restore_entry.jsp"
+				).setRedirect(
+					ParamUtil.getString(actionRequest, "redirect")
+				).setParameter(
+					"duplicateEntryId",
+					restoreEntryException.getDuplicateEntryId()
+				).setParameter(
+					"oldName", restoreEntryException.getOldName()
+				).setParameter(
+					"overridable", restoreEntryException.isOverridable()
+				).setParameter(
+					"trashEntryId", restoreEntryException.getTrashEntryId()
+				).buildString());
 
 			hideDefaultErrorMessage(actionRequest);
 
@@ -321,42 +343,18 @@ public class TrashPortlet extends MVCPortlet {
 		}
 	}
 
-	@Override
-	protected boolean isSessionErrorException(Throwable throwable) {
-		if (throwable instanceof
-				com.liferay.trash.exception.RestoreEntryException ||
-			throwable instanceof RestoreEntryException ||
-			throwable instanceof TrashPermissionException) {
-
-			return true;
-		}
-
-		return false;
-	}
-
-	@Reference(
-		target = "(&(release.bundle.symbolic.name=com.liferay.trash.web)(&(release.schema.version>=1.0.0)(!(release.schema.version>=2.0.0))))",
-		unbind = "-"
-	)
-	protected void setRelease(Release release) {
-	}
-
-	@Reference(unbind = "-")
-	protected void setTrashEntryLocalService(
-		TrashEntryLocalService trashEntryLocalService) {
-
-		_trashEntryLocalService = trashEntryLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setTrashEntryService(TrashEntryService trashEntryService) {
-		_trashEntryService = trashEntryService;
-	}
-
 	@Reference
 	private Portal _portal;
 
+	@Reference(
+		target = "(&(release.bundle.symbolic.name=com.liferay.trash.web)(&(release.schema.version>=1.0.0)(!(release.schema.version>=2.0.0))))"
+	)
+	private Release _release;
+
+	@Reference
 	private TrashEntryLocalService _trashEntryLocalService;
+
+	@Reference
 	private TrashEntryService _trashEntryService;
 
 	@Reference

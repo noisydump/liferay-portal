@@ -14,13 +14,22 @@
 
 package com.liferay.portal.search.tuning.rankings.web.internal.index;
 
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
+
 import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
  * @author André de Oliveira
  */
 public class RankingTest {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Test
 	public void testDefaults() {
@@ -29,7 +38,8 @@ public class RankingTest {
 		Ranking ranking = rankingBuilder.build();
 
 		Assert.assertEquals("[]", String.valueOf(ranking.getAliases()));
-		Assert.assertEquals("[]", String.valueOf(ranking.getBlockIds()));
+		Assert.assertEquals(
+			"[]", String.valueOf(ranking.getHiddenDocumentIds()));
 		Assert.assertEquals("[]", String.valueOf(ranking.getPins()));
 		Assert.assertEquals("[]", String.valueOf(ranking.getQueryStrings()));
 	}

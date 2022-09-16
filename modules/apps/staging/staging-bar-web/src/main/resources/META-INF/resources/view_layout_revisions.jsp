@@ -118,7 +118,7 @@ List<LayoutRevision> rootLayoutRevisions = LayoutRevisionLocalServiceUtil.getChi
 										<span class="current-version"><liferay-ui:message key="current-version" /></span>
 									</c:when>
 									<c:otherwise>
-										<a class="layout-revision selection-handle" data-layoutRevisionId="<%= curLayoutRevision.getLayoutRevisionId() %>" data-layoutSetBranchId="<%= curLayoutRevision.getLayoutSetBranchId() %>" href="javascript:;" onclick="<%= liferayPortletResponse.getNamespace() + "selectRevision(" + curLayoutRevision.getLayoutRevisionId() + ", " + curLayoutRevision.getLayoutSetBranchId() + ");" %>" title="<liferay-ui:message key="go-to-this-version" />">
+										<a class="layout-revision selection-handle" data-layoutRevisionId="<%= curLayoutRevision.getLayoutRevisionId() %>" data-layoutSetBranchId="<%= curLayoutRevision.getLayoutSetBranchId() %>" href="javascript:void(0);" onclick="<%= liferayPortletResponse.getNamespace() %>selectRevision(<%= curLayoutRevision.getLayoutRevisionId() %>, <%= curLayoutRevision.getLayoutSetBranchId() %>);" title="<liferay-ui:message key="go-to-this-version" />">
 											<%= curLayoutRevision.getLayoutRevisionId() %>
 										</a>
 									</c:otherwise>
@@ -186,7 +186,7 @@ List<LayoutRevision> rootLayoutRevisions = LayoutRevisionLocalServiceUtil.getChi
 		Liferay.Util.fetch(themeDisplay.getPathMain() + '/portal/update_layout', {
 			body: Liferay.Util.objectToFormData(updateLayoutData),
 			method: 'POST',
-		}).then(function () {
+		}).then(() => {
 			var parentWindow = Liferay.Util.getOpener();
 
 			parentWindow.location = parentWindow.location.href.split('?')[0];
@@ -202,13 +202,13 @@ List<LayoutRevision> rootLayoutRevisions = LayoutRevisionLocalServiceUtil.getChi
 		);
 
 		if (layoutBranchesContainers && variationsSelector) {
-			variationsSelector.addEventListener('change', function () {
+			variationsSelector.addEventListener('change', () => {
 				var variation = variationsSelector.value;
 
 				if (variation === 'all') {
 					Array.prototype.forEach.call(
 						layoutBranchesContainers,
-						function (layoutBranchesContainer) {
+						(layoutBranchesContainer) => {
 							layoutBranchesContainer.classList.remove('hide');
 						}
 					);
@@ -216,7 +216,7 @@ List<LayoutRevision> rootLayoutRevisions = LayoutRevisionLocalServiceUtil.getChi
 				else {
 					Array.prototype.forEach.call(
 						layoutBranchesContainers,
-						function (layoutBranchesContainer) {
+						(layoutBranchesContainer) => {
 							layoutBranchesContainer.classList.add('hide');
 						}
 					);

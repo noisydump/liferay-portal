@@ -16,76 +16,28 @@
 
 <%@ include file="/search/init.jsp" %>
 
-<%
-String keywords = ParamUtil.getString(request, "keywords");
-
-String orderByCol = ParamUtil.getString(request, "orderByCol", "score");
-String orderByType = ParamUtil.getString(request, "orderByType", "desc");
-%>
-
 <div class="kb-search-header">
 	<liferay-util:include page="/search/view.jsp" servletContext="<%= application %>" />
 </div>
 
 <liferay-portlet:renderURL varImpl="iteratorURL">
-	<portlet:param name="mvcPath" value="/search/search.jsp" />
-	<portlet:param name="keywords" value="<%= keywords %>" />
+	<portlet:param name="mvcRenderCommandName" value="/knowledge_base/search" />
+	<portlet:param name="keywords" value='<%= ParamUtil.getString(request, "keywords") %>' />
 </liferay-portlet:renderURL>
 
+<%
+KBSearchDisplayContext kbSearchDisplayContext = new KBSearchDisplayContext(request, iteratorURL);
+%>
+
 <liferay-ui:search-container
-	emptyResultsMessage='<%= LanguageUtil.format(request, "no-articles-were-found-that-matched-the-keywords-x", "<strong>" + HtmlUtil.escape(keywords) + "</strong>", false) %>'
-	iteratorURL="<%= iteratorURL %>"
-	orderByCol="<%= orderByCol %>"
-	orderByType="<%= orderByType %>"
+	searchContainer="<%= kbSearchDisplayContext.getSearchContainer() %>"
 >
-
-	<%
-	SearchContext searchContext = SearchContextFactory.getInstance(request);
-
-	searchContext.setAttribute("paginationType", "regular");
-	searchContext.setEnd(searchContainer.getEnd());
-	searchContext.setIncludeInternalAssetCategories(true);
-	searchContext.setKeywords(keywords);
-	searchContext.setStart(searchContainer.getStart());
-	searchContext.setSorts(KBUtil.getKBArticleSorts(orderByCol, orderByType));
-
-	Indexer<KBArticle> indexer = IndexerRegistryUtil.getIndexer(KBArticle.class);
-
-	Hits hits = indexer.search(searchContext);
-
-	List<Tuple> tuples = new ArrayList<Tuple>();
-
-	Document[] documents = hits.getDocs();
-
-	for (int i = 0; i < documents.length; i++) {
-		Object[] array = new Object[5];
-
-		Document document = hits.doc(i);
-
-		array[0] = document.get(Field.ENTRY_CLASS_PK);
-		array[1] = document.get(Field.TITLE);
-
-		long userId = GetterUtil.getLong(document.get(Field.USER_ID));
-		String userName = document.get(Field.USER_NAME);
-
-		array[2] = PortalUtil.getUserName(userId, userName);
-
-		array[3] = document.getDate(Field.CREATE_DATE);
-		array[4] = document.getDate(Field.MODIFIED_DATE);
-
-		tuples.add(new Tuple(array));
-	}
-
-	searchContainer.setResults(tuples);
-	searchContainer.setTotal(hits.getLength());
-	%>
-
 	<liferay-ui:search-container-row
 		className="com.liferay.portal.kernel.util.Tuple"
 		modelVar="tuple"
 	>
 		<liferay-portlet:renderURL varImpl="rowURL">
-			<portlet:param name="mvcPath" value="/search/view_article.jsp" />
+			<portlet:param name="mvcRenderCommandName" value="/knowledge_base/view_article" />
 			<portlet:param name="redirect" value="<%= currentURL %>" />
 			<portlet:param name="resourcePrimKey" value="<%= (String)tuple.getObject(0) %>" />
 		</liferay-portlet:renderURL>
@@ -149,5 +101,7 @@ String orderByType = ParamUtil.getString(request, "orderByType", "desc");
 		</c:if>
 	</liferay-ui:search-container-row>
 
-	<liferay-ui:search-iterator />
+	<liferay-ui:search-iterator
+		markupView="lexicon"
+	/>
 </liferay-ui:search-container>

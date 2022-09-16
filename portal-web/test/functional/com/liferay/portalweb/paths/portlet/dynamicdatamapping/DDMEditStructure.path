@@ -2,15 +2,17 @@
 <head>
 <title>DDMEditStructure</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">DDMEditStructure</td></tr>
 </thead>
+
 <tbody>
 <tr>
 	<td>IFRAME</td>
-	<td>//div[contains(@class,'dialog-iframe-bd')]/iframe[contains(@src,'selectDDMStructure')] | //div[contains(@class,'dialog-iframe-bd')]/iframe[contains(@src,'selectStructure')]</td>
+	<td>//div[contains(@class,'dialog-iframe-bd')]/iframe[contains(@src,'selectDDMStructure')] | //div[contains(@class,'dialog-iframe-bd')]/iframe[contains(@src,'selectStructure')] | //iframe[contains(@id,'selectStructure')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -33,7 +35,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--DETAILS-->
+
 <tr>
 	<td>DETAILS_MODE_SELECT</td>
 	<td>//select[contains(@id,'mode')]</td>
@@ -44,7 +48,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--FIELDS-->
+
 <tr>
 	<td>FIELDS_LINK</td>
 	<td>//*[contains(@class,'tab-label') and contains(.,'Fields')]</td>
@@ -65,13 +71,27 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--FIELDSET_MODAL-->
+
 <tr>
 	<td>FORM_FIELD_CONTAINER_LABEL_IN_FIELDSET_MODAL</td>
 	<td>//div[contains(@class,'modal-dialog')]//label[normalize-space(text())='${key_fieldFieldLabel}'] | //div[contains(@class,'modal-dialog')]//legend[normalize-space(text())='${key_fieldFieldLabel}']</td>
 	<td></td>
 </tr>
+
 <!--SETTINGS-->
+
+<tr>
+	<td>SETTINGS_EDIT_CONECTIONS_DEFAULT</td>
+	<td>//label[contains(.,'${key_radioOption}')]/input[@type='radio' and contains(@name,'')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SETTINGS_DEFAULT</td>
+	<td>//td[contains(@class,'table-col-name') and contains(.,'Default')]//following-sibling::td[contains(@class,'table-col-value')]</td>
+	<td></td>
+</tr>
 <tr>
 	<td>SETTINGS_LINK</td>
 	<td>//*[contains(@class,'tab-label') and contains(.,'Settings')]</td>
@@ -109,7 +129,12 @@
 </tr>
 <tr>
 	<td>SETTINGS_TEXT</td>
-	<td>//*[contains(.,'${key_fieldFieldLabel}')]//following-sibling::span[contains(@class,'form-text')]</td>
+	<td>//label[normalize-space(text())='${key_fieldFieldLabel}']//following-sibling::div[contains(@class,'form-feedback-group')] | //legend[normalize-space(text())='${key_fieldFieldLabel}']/..//following-sibling::div[contains(@class,'form-feedback-group')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SETTINGS_TEXT_ANY</td>
+	<td>xpath=(//label[normalize-space(text())='${key_fieldFieldLabel}']//following-sibling::div[contains(@class,'form-feedback-group')] | //legend[normalize-space(text())='${key_fieldFieldLabel}']//following-sibling::div[contains(@class,'form-feedback-group')])[${key_index}]</td>
 	<td></td>
 </tr>
 <tr>
@@ -142,7 +167,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--FORM-->
+
 <tr>
 	<td>FORM_BUILDER</td>
 	<td>//div[contains(@class,'property-builder-content-container')]</td>
@@ -164,13 +191,53 @@
 	<td></td>
 </tr>
 <tr>
+	<td>FORM_FIELD_CONTAINER_TARGET</td>
+	<td>//label[normalize-space(text())='${key_targetFieldLabel}']/parent::div[contains(@class,'form-group')] | //legend[normalize-space(text())='${key_targetFieldLabel}']/parent::fieldset/parent::div[contains(@class,'form-group')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>FORM_FIELD_CONTAINER_ANY</td>
+	<td>//div[contains(@data-field-name,'${key_fieldFieldName}')]//label[normalize-space(text())='${key_fieldFieldLabel}']/parent::div[contains(@class,'form-group')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>FORM_FIELD_GROUP_TARGET</td>
+	<td>xpath=(//label[normalize-space(text())='${key_fieldFieldGroupLabel}']/parent::div/parent::div[contains(@class,'form-group')]//div[contains(@class,'ddm-target')])[last()]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>FORM_FIELD_CONTAINER_FIRST</td>
+	<td>xpath=(//div[contains(@class, 'ddm-field-container')])[1]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>FORM_FIELD_CONTAINER_LABEL</td>
-	<td>//label[normalize-space(text())='${key_fieldFieldLabel}'] | //legend[normalize-space(text())='${key_fieldFieldLabel}']</td>
+	<td>//label[normalize-space()='${key_fieldFieldLabel}'] | //legend[normalize-space(text())='${key_fieldFieldLabel}']</td>
 	<td></td>
 </tr>
 <tr>
 	<td>FORM_FIELD_CONTAINER_LABEL_ANY</td>
 	<td>xpath=(//label[normalize-space(text())='${key_fieldFieldLabel}'] | //legend[normalize-space(text())='${key_fieldFieldLabel}'])[${key_index}]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>FORM_FIELD_CONTAINER_PREDEFINED_IMAGE</td>
+	<td>//input[@type='hidden' and contains(@value,'${key_imageFileName}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>FORM_COLLAPSE_BUTTON</td>
+	<td>//button[contains(@class,'collapse-icon')][//label[normalize-space(text())='${key_label}']]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>FORM_FIELD_CONTAINER_HELP_TEXT</td>
+	<td>//span[@class='form-text' and normalize-space(text())='${key_helpText}'] | //div[text()='${key_helpText}']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>FORM_FIELD_CONTAINER_TEXT</td>
+	<td>//span[normalize-space(text())='${key_text}']</td>
 	<td></td>
 </tr>
 <tr>
@@ -180,7 +247,7 @@
 </tr>
 <tr>
 	<td>FORM_FIELD_SETS_CONTAINER_LABEL</td>
-	<td>//div[contains(@class,'fieldset')]//label[text()='${key_fieldsetLabel}']</td>
+	<td>//div[contains(@class,'fieldset')]//label[normalize-space(text())='${key_fieldsetLabel}']</td>
 	<td></td>
 </tr>
 <tr>
@@ -206,6 +273,11 @@
 <tr>
 	<td>FORM_FIELD_DELETE_BUTTON</td>
 	<td>portal/screenshots/ddm/form_delete.png</td>
+	<td></td>
+</tr>
+<tr>
+	<td>FORM_FIELD_DELETE_BUTTON_2</td>
+	<td>xpath=(//button//*[contains(@class,'lexicon-icon-trash')])[1]</td>
 	<td></td>
 </tr>
 <tr>
@@ -253,7 +325,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--SETTINGS_CELL_EDITOR-->
+
 <tr>
 	<td>SETTINGS_CELL_EDITOR_FIELD</td>
 	<td>//input[@name='value']</td>
@@ -335,11 +409,6 @@
 	<td></td>
 </tr>
 <tr>
-	<td>GRID_OPTIONS_OPTION_VALUE_FIELD</td>
-	<td>//div[contains(@class,'form-group') and contains(.//label, '${key_gridField}')]//div[@class='ddm-field-options'][${key_rowNumber}]//input[contains(@class,'ddm-field-text')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>OPTION_VALUE_FIELD</td>
 	<td>//div[contains(@class,'form-group')]//div[@class='ddm-field-options'][${key_rowNumber}]//input[contains(@class,'ddm-field-text')]</td>
 	<td></td>
@@ -359,7 +428,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--SOURCE_EDITOR-->
+
 <tr>
 	<td>SOURCE_EDITOR_CONTENT</td>
 	<td>//div[contains(@id,'formBuilderEditor')]/textarea</td>
@@ -370,7 +441,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--ARE_YOU_SURE_DIALOG_BOX-->
+
 <tr>
 	<td>ARE_YOU_SURE_DIALOG_BOX_BODY</td>
 	<td>//div[contains(@class,'modal-body') and contains(.,'Are you sure')]</td>

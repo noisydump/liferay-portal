@@ -17,26 +17,29 @@ package com.liferay.commerce.product.options.web.internal.display.context;
 import com.liferay.commerce.frontend.model.HeaderActionModel;
 import com.liferay.commerce.product.configuration.CPOptionConfiguration;
 import com.liferay.commerce.product.constants.CPConstants;
-import com.liferay.commerce.product.display.context.util.CPRequestHelper;
+import com.liferay.commerce.product.display.context.helper.CPRequestHelper;
 import com.liferay.commerce.product.model.CPOption;
 import com.liferay.commerce.product.servlet.taglib.ui.CPDefinitionScreenNavigationConstants;
 import com.liferay.commerce.product.util.DDMFormFieldTypeUtil;
 import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldType;
 import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldTypeServicesTracker;
-import com.liferay.frontend.taglib.clay.data.set.servlet.taglib.util.ClayDataSetActionDropdownItem;
+import com.liferay.frontend.data.set.model.FDSActionDropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
-import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
+import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.settings.SystemSettingsLocator;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.util.WebKeys;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,8 +48,9 @@ import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
+import javax.portlet.PortletURL;
+import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
-import javax.portlet.RenderURL;
 import javax.portlet.WindowStateException;
 
 import javax.servlet.http.HttpServletRequest;
@@ -59,12 +63,14 @@ public class CPOptionDisplayContext {
 	public CPOptionDisplayContext(
 			ConfigurationProvider configurationProvider, CPOption cpOption,
 			DDMFormFieldTypeServicesTracker ddmFormFieldTypeServicesTracker,
+			PortletResourcePermission portletResourcePermission,
 			HttpServletRequest httpServletRequest)
 		throws PortalException {
 
 		_configurationProvider = configurationProvider;
 		_cpOption = cpOption;
 		_ddmFormFieldTypeServicesTracker = ddmFormFieldTypeServicesTracker;
+		_portletResourcePermission = portletResourcePermission;
 
 		cpRequestHelper = new CPRequestHelper(httpServletRequest);
 	}
@@ -82,19 +88,18 @@ public class CPOptionDisplayContext {
 	}
 
 	public CreationMenu getCreationMenu() throws Exception {
-		LiferayPortletResponse liferayPortletResponse =
-			cpRequestHelper.getLiferayPortletResponse();
-
-		RenderURL renderURL = liferayPortletResponse.createRenderURL();
-
-		renderURL.setParameter(
-			"mvcRenderCommandName", "/cp_options/add_cp_option");
-		renderURL.setParameter("backURL", cpRequestHelper.getCurrentURL());
-		renderURL.setWindowState(LiferayWindowState.POP_UP);
-
 		return CreationMenuBuilder.addDropdownItem(
 			dropdownItem -> {
-				dropdownItem.setHref(renderURL.toString());
+				dropdownItem.setHref(
+					PortletURLBuilder.createRenderURL(
+						cpRequestHelper.getLiferayPortletResponse()
+					).setMVCRenderCommandName(
+						"/cp_options/add_cp_option"
+					).setBackURL(
+						cpRequestHelper.getCurrentURL()
+					).setWindowState(
+						LiferayWindowState.POP_UP
+					).buildString());
 				dropdownItem.setLabel("add-option-template");
 				dropdownItem.setTarget("modal");
 			}
@@ -104,12 +109,10 @@ public class CPOptionDisplayContext {
 	public String getDDMFormFieldTypeLabel(
 		DDMFormFieldType ddmFormFieldType, Locale locale) {
 
-		Map<String, Object> ddmFormFieldTypeProperties =
-			_ddmFormFieldTypeServicesTracker.getDDMFormFieldTypeProperties(
-				ddmFormFieldType.getName());
-
 		String label = MapUtil.getString(
-			ddmFormFieldTypeProperties, "ddm.form.field.type.label");
+			_ddmFormFieldTypeServicesTracker.getDDMFormFieldTypeProperties(
+				ddmFormFieldType.getName()),
+			"ddm.form.field.type.label");
 
 		try {
 			if (Validator.isNotNull(label)) {
@@ -121,7 +124,7 @@ public class CPOptionDisplayContext {
 		}
 		catch (MissingResourceException missingResourceException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(missingResourceException, missingResourceException);
+				_log.warn(missingResourceException);
 			}
 		}
 
@@ -137,7 +140,7 @@ public class CPOptionDisplayContext {
 		CPOptionConfiguration cpOptionConfiguration =
 			_configurationProvider.getConfiguration(
 				CPOptionConfiguration.class,
-				new SystemSettingsLocator(CPConstants.CP_OPTION_SERVICE_NAME));
+				new SystemSettingsLocator(CPConstants.SERVICE_NAME_CP_OPTION));
 
 		String[] ddmFormFieldTypesAllowed =
 			cpOptionConfiguration.ddmFormFieldTypesAllowed();
@@ -151,56 +154,72 @@ public class CPOptionDisplayContext {
 
 		RenderResponse renderResponse = cpRequestHelper.getRenderResponse();
 
-		RenderURL cancelURL = renderResponse.createRenderURL();
-
-		HeaderActionModel cancelHeaderActionModel = new HeaderActionModel(
-			null, cancelURL.toString(), null, "cancel");
-
-		headerActionModels.add(cancelHeaderActionModel);
-
 		HeaderActionModel publishHeaderActionModel = new HeaderActionModel(
 			"btn-primary", renderResponse.getNamespace() + "fm", null, null,
-			"publish");
+			"save");
 
 		headerActionModels.add(publishHeaderActionModel);
 
 		return headerActionModels;
 	}
 
-	public List<ClayDataSetActionDropdownItem>
-			getOptionClayDataSetActionDropdownItems()
+	public List<FDSActionDropdownItem> getOptionFDSActionDropdownItems()
 		throws PortalException {
 
-		RenderResponse renderResponse = cpRequestHelper.getRenderResponse();
-
-		RenderURL portletURL = renderResponse.createRenderURL();
-
-		portletURL.setParameter(
-			"mvcRenderCommandName", "/cp_options/edit_cp_option");
-		portletURL.setParameter("redirect", cpRequestHelper.getCurrentURL());
-		portletURL.setParameter("cpOptionId", "{id}");
-		portletURL.setParameter(
-			"screenNavigationCategoryKey",
-			CPDefinitionScreenNavigationConstants.CATEGORY_KEY_DETAILS);
-
-		return getClayDataSetActionDropdownItems(portletURL.toString(), false);
+		return _getFDSActionDropdownItems(
+			PortletURLBuilder.createRenderURL(
+				cpRequestHelper.getRenderResponse()
+			).setMVCRenderCommandName(
+				"/cp_options/edit_cp_option"
+			).setRedirect(
+				cpRequestHelper.getCurrentURL()
+			).setParameter(
+				"cpOptionId", "{id}"
+			).setParameter(
+				"screenNavigationCategoryKey",
+				CPDefinitionScreenNavigationConstants.CATEGORY_KEY_DETAILS
+			).buildString(),
+			false);
 	}
 
-	public List<ClayDataSetActionDropdownItem>
-			getOptionValueClayDataSetActionDropdownItems()
+	public CreationMenu getOptionValueCreationMenu(long cpOptionId)
+		throws Exception {
+
+		return CreationMenuBuilder.addDropdownItem(
+			dropdownItem -> {
+				dropdownItem.setHref(
+					PortletURLBuilder.createRenderURL(
+						cpRequestHelper.getLiferayPortletResponse()
+					).setMVCRenderCommandName(
+						"/cp_options/add_cp_option_value"
+					).setBackURL(
+						cpRequestHelper.getCurrentURL()
+					).setParameter(
+						"cpOptionId", cpOptionId
+					).setWindowState(
+						LiferayWindowState.POP_UP
+					).buildString());
+				dropdownItem.setLabel("add-option-value-template");
+				dropdownItem.setTarget("modal");
+			}
+		).build();
+	}
+
+	public List<FDSActionDropdownItem> getOptionValueFDSActionDropdownItems()
 		throws PortalException {
 
-		RenderResponse renderResponse = cpRequestHelper.getRenderResponse();
-
-		RenderURL portletURL = renderResponse.createRenderURL();
-
-		portletURL.setParameter(
-			"mvcRenderCommandName", "/cp_options/edit_cp_option_value");
-		portletURL.setParameter("redirect", cpRequestHelper.getCurrentURL());
-		portletURL.setParameter("cpOptionValueId", "{id}");
-		portletURL.setParameter(
+		PortletURL portletURL = PortletURLBuilder.createRenderURL(
+			cpRequestHelper.getRenderResponse()
+		).setMVCRenderCommandName(
+			"/cp_options/edit_cp_option_value"
+		).setRedirect(
+			cpRequestHelper.getCurrentURL()
+		).setParameter(
+			"cpOptionValueId", "{id}"
+		).setParameter(
 			"screenNavigationCategoryKey",
-			CPDefinitionScreenNavigationConstants.CATEGORY_KEY_DETAILS);
+			CPDefinitionScreenNavigationConstants.CATEGORY_KEY_DETAILS
+		).buildPortletURL();
 
 		try {
 			portletURL.setWindowState(LiferayWindowState.POP_UP);
@@ -209,30 +228,17 @@ public class CPOptionDisplayContext {
 			throw new PortalException(windowStateException);
 		}
 
-		return getClayDataSetActionDropdownItems(portletURL.toString(), true);
+		return _getFDSActionDropdownItems(portletURL.toString(), true);
 	}
 
-	public CreationMenu getOptionValueCreationMenu(long cpOptionId)
-		throws Exception {
+	public boolean hasPermission(String actionId) throws PortalException {
+		RenderRequest renderRequest = cpRequestHelper.getRenderRequest();
 
-		LiferayPortletResponse liferayPortletResponse =
-			cpRequestHelper.getLiferayPortletResponse();
+		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
 
-		RenderURL renderURL = liferayPortletResponse.createRenderURL();
-
-		renderURL.setParameter(
-			"mvcRenderCommandName", "/cp_options/add_cp_option_value");
-		renderURL.setParameter("backURL", cpRequestHelper.getCurrentURL());
-		renderURL.setParameter("cpOptionId", String.valueOf(cpOptionId));
-		renderURL.setWindowState(LiferayWindowState.POP_UP);
-
-		return CreationMenuBuilder.addDropdownItem(
-			dropdownItem -> {
-				dropdownItem.setHref(renderURL.toString());
-				dropdownItem.setLabel("add-option-value-template");
-				dropdownItem.setTarget("modal");
-			}
-		).build();
+		return _portletResourcePermission.contains(
+			themeDisplay.getPermissionChecker(), null, actionId);
 	}
 
 	public boolean hasValues(CPOption cpOption) {
@@ -246,35 +252,32 @@ public class CPOptionDisplayContext {
 		return false;
 	}
 
-	protected List<ClayDataSetActionDropdownItem>
-		getClayDataSetActionDropdownItems(
-			String portletURL, boolean sidePanel) {
+	protected final CPRequestHelper cpRequestHelper;
 
-		List<ClayDataSetActionDropdownItem> clayDataSetActionDropdownItems =
-			new ArrayList<>();
+	private List<FDSActionDropdownItem> _getFDSActionDropdownItems(
+		String portletURL, boolean sidePanel) {
 
-		ClayDataSetActionDropdownItem clayDataSetActionDropdownItem =
-			new ClayDataSetActionDropdownItem(
-				portletURL, "pencil", "edit",
-				LanguageUtil.get(cpRequestHelper.getRequest(), "edit"), "get",
-				null, null);
+		List<FDSActionDropdownItem> fdsActionDropdownItems = new ArrayList<>();
+
+		FDSActionDropdownItem fdsActionDropdownItem = new FDSActionDropdownItem(
+			portletURL, "pencil", "edit",
+			LanguageUtil.get(cpRequestHelper.getRequest(), "edit"), "get", null,
+			null);
 
 		if (sidePanel) {
-			clayDataSetActionDropdownItem.setTarget("sidePanel");
+			fdsActionDropdownItem.setTarget("sidePanel");
 		}
 
-		clayDataSetActionDropdownItems.add(clayDataSetActionDropdownItem);
+		fdsActionDropdownItems.add(fdsActionDropdownItem);
 
-		clayDataSetActionDropdownItems.add(
-			new ClayDataSetActionDropdownItem(
+		fdsActionDropdownItems.add(
+			new FDSActionDropdownItem(
 				null, "trash", "delete",
 				LanguageUtil.get(cpRequestHelper.getRequest(), "delete"),
 				"delete", "delete", "headless"));
 
-		return clayDataSetActionDropdownItems;
+		return fdsActionDropdownItems;
 	}
-
-	protected final CPRequestHelper cpRequestHelper;
 
 	private boolean _hasDDMFormFieldTypeProperties(
 		String ddmFormFieldTypeName) {
@@ -314,5 +317,6 @@ public class CPOptionDisplayContext {
 	private CPOption _cpOption;
 	private final DDMFormFieldTypeServicesTracker
 		_ddmFormFieldTypeServicesTracker;
+	private final PortletResourcePermission _portletResourcePermission;
 
 }

@@ -12,8 +12,6 @@
  * details.
  */
 
-import {DataLayoutBuilder} from '../../src/main/resources/META-INF/resources/data_layout_builder/js/data-layout-builder/DataLayoutBuilder.es';
-
 const createItems = (size) => {
 	const items = [];
 
@@ -469,51 +467,6 @@ const fieldTypes = [
 	},
 ];
 
-export const dataLayoutBuilderConfig = {
-	config: {
-		allowFieldSets: true,
-		allowMultiplePages: false,
-		allowRules: false,
-		allowSuccessPage: false,
-		disabledProperties: ['predefinedValue'],
-		disabledTabs: ['Autocomplete'],
-		unimplementedProperties: [
-			'fieldNamespace',
-			'indexType',
-			'readOnly',
-			'validation',
-			'visibilityExpression',
-		],
-	},
-	context: {},
-	dataLayoutBuilderId:
-		'_com_liferay_journal_web_portlet_JournalPortlet_dataLayoutBuilder',
-	fieldTypes: [],
-	localizable: true,
-	portletNamespace: 'com_liferay_journal_web_portlet_JournalPortlet',
-};
-
-const dataLayoutBuilder = new DataLayoutBuilder(dataLayoutBuilderConfig);
-
-const pages = [
-	{
-		rows: [
-			{
-				columns: [
-					{
-						fields: [
-							{
-								fieldName: 'Text',
-							},
-						],
-						size: 12,
-					},
-				],
-			},
-		],
-	},
-];
-
 const FORM_VIEW_CONTEXT = {
 	appProps: {},
 	config: {
@@ -549,6 +502,58 @@ const FORM_VIEW_CONTEXT = {
 	spritemap: 'icons.svg',
 };
 
+export const dataLayoutBuilderConfig = {
+	appContext: [FORM_VIEW_CONTEXT],
+	config: {
+		allowFieldSets: true,
+		allowMultiplePages: false,
+		allowRules: false,
+		allowSuccessPage: false,
+		disabledProperties: ['predefinedValue'],
+		disabledTabs: ['Autocomplete'],
+		unimplementedProperties: [
+			'fieldNamespace',
+			'indexType',
+			'readOnly',
+			'validation',
+			'visibilityExpression',
+		],
+	},
+	contentTypeConfig: {
+		allowInvalidAvailableLocalesForProperty: false,
+		allowReferencedDataDefinitionDeletion: true,
+	},
+	context: {},
+	dataLayoutBuilderId:
+		'_com_liferay_journal_web_portlet_JournalPortlet_dataLayoutBuilder',
+	fieldTypes: [
+		{
+			name: 'Text',
+		},
+	],
+	localizable: true,
+	portletNamespace: 'com_liferay_journal_web_portlet_JournalPortlet',
+};
+
+const pages = [
+	{
+		rows: [
+			{
+				columns: [
+					{
+						fields: [
+							{
+								fieldName: 'Text',
+							},
+						],
+						size: 12,
+					},
+				],
+			},
+		],
+	},
+];
+
 export const FORM_VIEW = {
 	EDIT_FORM_VIEW_PROPS: {
 		basePortletURL: 'localhost',
@@ -562,37 +567,25 @@ export const FORM_VIEW = {
 	FORM_VIEW_CONTEXT,
 	getDataLayoutBuilderProps() {
 		return {
-			...dataLayoutBuilder,
-			dispatch: jest.fn(),
-			dispatchAction: jest.fn(),
-			getDDMForm: () => ({pages}),
-			getDDMFormFieldSettingsContext: jest.fn(),
-			getDefaultDataLayout: () => ({dataLayoutPages: pages}),
-			getFieldSetDDMForm: () => ({pages}),
-			getFieldTypes: () => {
-				return [
-					{
-						name: 'Text',
+			formBuilderWithLayoutProvider: {
+				refs: {
+					layoutProvider: {
+						dispatch: jest.fn(),
+						getEvents: () => ({
+							fieldHovered: jest.fn(),
+						}),
+						on: () => ({
+							removeListener: jest.fn(),
+						}),
+						state: {
+							activePage: 0,
+							pages,
+						},
 					},
-				];
+				},
 			},
-			getLayoutProvider: () => ({
-				getEvents: () => ({
-					fieldHovered: jest.fn(),
-				}),
-				on: () => ({
-					removeListener: jest.fn(),
-				}),
-			}),
-			getState: () => {
-				return FORM_VIEW_CONTEXT;
-			},
-			getStore: () => {
-				return {
-					activePage: 0,
-					pages,
-				};
-			},
+			getDDMForm: () => ({pages}),
+			getDefaultDataLayout: () => ({dataLayoutPages: pages}),
 			on: jest.fn(),
 			onEditingLanguageIdChange: jest.fn(),
 			removeEventListener: jest.fn(),

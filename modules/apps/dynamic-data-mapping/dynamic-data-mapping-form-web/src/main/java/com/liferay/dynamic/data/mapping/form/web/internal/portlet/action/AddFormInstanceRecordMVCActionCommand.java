@@ -20,6 +20,7 @@ import com.liferay.dynamic.data.mapping.exception.FormInstanceNotPublishedExcept
 import com.liferay.dynamic.data.mapping.form.values.factory.DDMFormValuesFactory;
 import com.liferay.dynamic.data.mapping.form.web.internal.constants.DDMFormWebKeys;
 import com.liferay.dynamic.data.mapping.form.web.internal.instance.lifecycle.AddDefaultSharedFormLayoutPortalInstanceLifecycleListener;
+import com.liferay.dynamic.data.mapping.form.web.internal.portlet.action.helper.AddFormInstanceRecordMVCCommandHelper;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstance;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecord;
@@ -32,7 +33,7 @@ import com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordVersionLoca
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceService;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -97,9 +98,15 @@ public class AddFormInstanceRecordMVCActionCommand
 		DDMFormInstance ddmFormInstance =
 			_ddmFormInstanceService.getFormInstance(formInstanceId);
 
+		_addFormInstanceMVCCommandHelper.validateExpirationStatus(
+			ddmFormInstance, actionRequest);
+		_addFormInstanceMVCCommandHelper.validateSubmissionLimitStatus(
+			ddmFormInstance, _ddmFormInstanceRecordVersionLocalService,
+			actionRequest);
+
 		_validatePublishStatus(actionRequest, ddmFormInstance);
 
-		validateCaptcha(actionRequest, ddmFormInstance);
+		_validateCaptcha(actionRequest, ddmFormInstance);
 
 		DDMForm ddmForm = getDDMForm(ddmFormInstance);
 
@@ -109,11 +116,9 @@ public class AddFormInstanceRecordMVCActionCommand
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		_addFormInstanceMVCCommandHelper.
-			updateRequiredFieldsAccordingToVisibility(
-				actionRequest, ddmForm, ddmFormValues,
-				LocaleUtil.fromLanguageId(
-					LanguageUtil.getLanguageId(actionRequest)));
+		_addFormInstanceMVCCommandHelper.updateNonevaluableDDMFormFields(
+			actionRequest, ddmForm, ddmFormValues,
+			LocaleUtil.fromLanguageId(_language.getLanguageId(actionRequest)));
 
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			DDMFormInstanceRecord.class.getName(), actionRequest);
@@ -128,11 +133,21 @@ public class AddFormInstanceRecordMVCActionCommand
 			return;
 		}
 
-		DDMFormInstanceSettings formInstanceSettings =
+		if (SessionMessages.contains(
+				actionRequest,
+				_portal.getPortletId(actionRequest) +
+					SessionMessages.KEY_SUFFIX_HIDE_DEFAULT_SUCCESS_MESSAGE)) {
+
+			SessionMessages.clear(actionRequest);
+		}
+
+		SessionMessages.add(actionRequest, "formInstanceRecordAdded");
+
+		DDMFormInstanceSettings ddmFormInstanceSettings =
 			ddmFormInstance.getSettingsModel();
 
 		String redirectURL = ParamUtil.getString(
-			actionRequest, "redirect", formInstanceSettings.redirectURL());
+			actionRequest, "redirect", ddmFormInstanceSettings.redirectURL());
 
 		if (Validator.isNotNull(redirectURL)) {
 			portletSession.setAttribute(
@@ -147,13 +162,7 @@ public class AddFormInstanceRecordMVCActionCommand
 				ddmForm.getDDMFormSuccessPageSettings();
 
 			if (ddmFormSuccessPageSettings.isEnabled()) {
-				String portletId = _portal.getPortletId(actionRequest);
-
-				SessionMessages.add(
-					actionRequest,
-					portletId.concat(
-						SessionMessages.
-							KEY_SUFFIX_HIDE_DEFAULT_SUCCESS_MESSAGE));
+				hideDefaultSuccessMessage(actionRequest);
 			}
 		}
 	}
@@ -164,39 +173,6 @@ public class AddFormInstanceRecordMVCActionCommand
 		DDMStructure ddmStructure = ddmFormInstance.getStructure();
 
 		return ddmStructure.getDDMForm();
-	}
-
-	@Reference(unbind = "-")
-	protected void setDDMFormInstanceRecordService(
-		DDMFormInstanceRecordService ddmFormInstanceRecordService) {
-
-		_ddmFormInstanceRecordService = ddmFormInstanceRecordService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setDDMFormInstanceService(
-		DDMFormInstanceService ddmFormInstanceService) {
-
-		_ddmFormInstanceService = ddmFormInstanceService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setDDMFormValuesFactory(
-		DDMFormValuesFactory ddmFormValuesFactory) {
-
-		_ddmFormValuesFactory = ddmFormValuesFactory;
-	}
-
-	protected void validateCaptcha(
-			ActionRequest actionRequest, DDMFormInstance ddmFormInstance)
-		throws Exception {
-
-		DDMFormInstanceSettings formInstanceSettings =
-			ddmFormInstance.getSettingsModel();
-
-		if (formInstanceSettings.requireCaptcha()) {
-			CaptchaUtil.check(actionRequest);
-		}
 	}
 
 	private void _updateFormInstanceRecord(
@@ -233,6 +209,18 @@ public class AddFormInstanceRecordMVCActionCommand
 		}
 	}
 
+	private void _validateCaptcha(
+			ActionRequest actionRequest, DDMFormInstance ddmFormInstance)
+		throws Exception {
+
+		DDMFormInstanceSettings formInstanceSettings =
+			ddmFormInstance.getSettingsModel();
+
+		if (formInstanceSettings.requireCaptcha()) {
+			CaptchaUtil.check(actionRequest);
+		}
+	}
+
 	private void _validatePublishStatus(
 			ActionRequest actionRequest, DDMFormInstance ddmFormInstance)
 		throws Exception {
@@ -245,13 +233,10 @@ public class AddFormInstanceRecordMVCActionCommand
 		DDMFormInstanceSettings ddmFormInstanceSettings =
 			ddmFormInstance.getSettingsModel();
 
-		String formLayoutURL =
-			_addDefaultSharedFormLayoutPortalInstanceLifecycleListener.
-				getFormLayoutURL(
-					themeDisplay,
-					ddmFormInstanceSettings.requireAuthentication());
-
-		if (StringUtil.startsWith(currentURL, formLayoutURL) &&
+		if (StringUtil.startsWith(
+				currentURL,
+				_addDefaultSharedFormLayoutPortalInstanceLifecycleListener.
+					getFormLayoutURL(themeDisplay)) &&
 			!ddmFormInstanceSettings.published()) {
 
 			throw new FormInstanceNotPublishedException(
@@ -268,14 +253,21 @@ public class AddFormInstanceRecordMVCActionCommand
 	private AddFormInstanceRecordMVCCommandHelper
 		_addFormInstanceMVCCommandHelper;
 
+	@Reference
 	private DDMFormInstanceRecordService _ddmFormInstanceRecordService;
 
 	@Reference
 	private DDMFormInstanceRecordVersionLocalService
 		_ddmFormInstanceRecordVersionLocalService;
 
+	@Reference
 	private DDMFormInstanceService _ddmFormInstanceService;
+
+	@Reference
 	private DDMFormValuesFactory _ddmFormValuesFactory;
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private Portal _portal;

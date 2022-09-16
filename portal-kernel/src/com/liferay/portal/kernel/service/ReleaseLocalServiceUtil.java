@@ -14,7 +14,16 @@
 
 package com.liferay.portal.kernel.service;
 
-import com.liferay.portal.kernel.bean.PortalBeanLocatorUtil;
+import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.portal.kernel.dao.orm.DynamicQuery;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.model.Release;
+import com.liferay.portal.kernel.util.OrderByComparator;
+
+import java.io.Serializable;
+
+import java.util.List;
 
 /**
  * Provides the local service utility for Release. This utility wraps
@@ -46,19 +55,17 @@ public class ReleaseLocalServiceUtil {
 	 * @param release the release
 	 * @return the release that was added
 	 */
-	public static com.liferay.portal.kernel.model.Release addRelease(
-		com.liferay.portal.kernel.model.Release release) {
-
+	public static Release addRelease(Release release) {
 		return getService().addRelease(release);
 	}
 
-	public static com.liferay.portal.kernel.model.Release addRelease(
+	public static Release addRelease(
 		String servletContextName, int buildNumber) {
 
 		return getService().addRelease(servletContextName, buildNumber);
 	}
 
-	public static com.liferay.portal.kernel.model.Release addRelease(
+	public static Release addRelease(
 		String servletContextName, String schemaVersion) {
 
 		return getService().addRelease(servletContextName, schemaVersion);
@@ -67,9 +74,9 @@ public class ReleaseLocalServiceUtil {
 	/**
 	 * @throws PortalException
 	 */
-	public static com.liferay.portal.kernel.model.PersistedModel
-			createPersistedModel(java.io.Serializable primaryKeyObj)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static PersistedModel createPersistedModel(
+			Serializable primaryKeyObj)
+		throws PortalException {
 
 		return getService().createPersistedModel(primaryKeyObj);
 	}
@@ -80,27 +87,16 @@ public class ReleaseLocalServiceUtil {
 	 * @param releaseId the primary key for the new release
 	 * @return the new release
 	 */
-	public static com.liferay.portal.kernel.model.Release createRelease(
-		long releaseId) {
-
+	public static Release createRelease(long releaseId) {
 		return getService().createRelease(releaseId);
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static void createTablesAndPopulate() {
-		getService().createTablesAndPopulate();
 	}
 
 	/**
 	 * @throws PortalException
 	 */
-	public static com.liferay.portal.kernel.model.PersistedModel
-			deletePersistedModel(
-				com.liferay.portal.kernel.model.PersistedModel persistedModel)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static PersistedModel deletePersistedModel(
+			PersistedModel persistedModel)
+		throws PortalException {
 
 		return getService().deletePersistedModel(persistedModel);
 	}
@@ -116,10 +112,7 @@ public class ReleaseLocalServiceUtil {
 	 * @return the release that was removed
 	 * @throws PortalException if a release with the primary key could not be found
 	 */
-	public static com.liferay.portal.kernel.model.Release deleteRelease(
-			long releaseId)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
+	public static Release deleteRelease(long releaseId) throws PortalException {
 		return getService().deleteRelease(releaseId);
 	}
 
@@ -133,21 +126,19 @@ public class ReleaseLocalServiceUtil {
 	 * @param release the release
 	 * @return the release that was removed
 	 */
-	public static com.liferay.portal.kernel.model.Release deleteRelease(
-		com.liferay.portal.kernel.model.Release release) {
-
+	public static Release deleteRelease(Release release) {
 		return getService().deleteRelease(release);
 	}
 
-	public static <T> T dslQuery(
-		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
-
+	public static <T> T dslQuery(DSLQuery dslQuery) {
 		return getService().dslQuery(dslQuery);
 	}
 
-	public static com.liferay.portal.kernel.dao.orm.DynamicQuery
-		dynamicQuery() {
+	public static int dslQueryCount(DSLQuery dslQuery) {
+		return getService().dslQueryCount(dslQuery);
+	}
 
+	public static DynamicQuery dynamicQuery() {
 		return getService().dynamicQuery();
 	}
 
@@ -157,9 +148,7 @@ public class ReleaseLocalServiceUtil {
 	 * @param dynamicQuery the dynamic query
 	 * @return the matching rows
 	 */
-	public static <T> java.util.List<T> dynamicQuery(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery) {
-
+	public static <T> List<T> dynamicQuery(DynamicQuery dynamicQuery) {
 		return getService().dynamicQuery(dynamicQuery);
 	}
 
@@ -175,9 +164,8 @@ public class ReleaseLocalServiceUtil {
 	 * @param end the upper bound of the range of model instances (not inclusive)
 	 * @return the range of matching rows
 	 */
-	public static <T> java.util.List<T> dynamicQuery(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery, int start,
-		int end) {
+	public static <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end) {
 
 		return getService().dynamicQuery(dynamicQuery, start, end);
 	}
@@ -195,10 +183,9 @@ public class ReleaseLocalServiceUtil {
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
 	 * @return the ordered range of matching rows
 	 */
-	public static <T> java.util.List<T> dynamicQuery(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery, int start,
-		int end,
-		com.liferay.portal.kernel.util.OrderByComparator<T> orderByComparator) {
+	public static <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end,
+		OrderByComparator<T> orderByComparator) {
 
 		return getService().dynamicQuery(
 			dynamicQuery, start, end, orderByComparator);
@@ -210,9 +197,7 @@ public class ReleaseLocalServiceUtil {
 	 * @param dynamicQuery the dynamic query
 	 * @return the number of rows matching the dynamic query
 	 */
-	public static long dynamicQueryCount(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery) {
-
+	public static long dynamicQueryCount(DynamicQuery dynamicQuery) {
 		return getService().dynamicQueryCount(dynamicQuery);
 	}
 
@@ -224,21 +209,17 @@ public class ReleaseLocalServiceUtil {
 	 * @return the number of rows matching the dynamic query
 	 */
 	public static long dynamicQueryCount(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery,
+		DynamicQuery dynamicQuery,
 		com.liferay.portal.kernel.dao.orm.Projection projection) {
 
 		return getService().dynamicQueryCount(dynamicQuery, projection);
 	}
 
-	public static com.liferay.portal.kernel.model.Release fetchRelease(
-		long releaseId) {
-
+	public static Release fetchRelease(long releaseId) {
 		return getService().fetchRelease(releaseId);
 	}
 
-	public static com.liferay.portal.kernel.model.Release fetchRelease(
-		String servletContextName) {
-
+	public static Release fetchRelease(String servletContextName) {
 		return getService().fetchRelease(servletContextName);
 	}
 
@@ -246,16 +227,6 @@ public class ReleaseLocalServiceUtil {
 		getActionableDynamicQuery() {
 
 		return getService().getActionableDynamicQuery();
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static int getBuildNumberOrCreate()
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return getService().getBuildNumberOrCreate();
 	}
 
 	public static
@@ -277,9 +248,8 @@ public class ReleaseLocalServiceUtil {
 	/**
 	 * @throws PortalException
 	 */
-	public static com.liferay.portal.kernel.model.PersistedModel
-			getPersistedModel(java.io.Serializable primaryKeyObj)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static PersistedModel getPersistedModel(Serializable primaryKeyObj)
+		throws PortalException {
 
 		return getService().getPersistedModel(primaryKeyObj);
 	}
@@ -291,10 +261,7 @@ public class ReleaseLocalServiceUtil {
 	 * @return the release
 	 * @throws PortalException if a release with the primary key could not be found
 	 */
-	public static com.liferay.portal.kernel.model.Release getRelease(
-			long releaseId)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
+	public static Release getRelease(long releaseId) throws PortalException {
 		return getService().getRelease(releaseId);
 	}
 
@@ -309,9 +276,7 @@ public class ReleaseLocalServiceUtil {
 	 * @param end the upper bound of the range of releases (not inclusive)
 	 * @return the range of releases
 	 */
-	public static java.util.List<com.liferay.portal.kernel.model.Release>
-		getReleases(int start, int end) {
-
+	public static List<Release> getReleases(int start, int end) {
 		return getService().getReleases(start, end);
 	}
 
@@ -324,10 +289,10 @@ public class ReleaseLocalServiceUtil {
 		return getService().getReleasesCount();
 	}
 
-	public static com.liferay.portal.kernel.model.Release updateRelease(
+	public static Release updateRelease(
 			long releaseId, String schemaVersion, int buildNumber,
 			java.util.Date buildDate, boolean verified)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		return getService().updateRelease(
 			releaseId, schemaVersion, buildNumber, buildDate, verified);
@@ -343,44 +308,25 @@ public class ReleaseLocalServiceUtil {
 	 * @param release the release
 	 * @return the release that was updated
 	 */
-	public static com.liferay.portal.kernel.model.Release updateRelease(
-		com.liferay.portal.kernel.model.Release release) {
-
+	public static Release updateRelease(Release release) {
 		return getService().updateRelease(release);
 	}
 
 	public static void updateRelease(
 			String servletContextName,
-			java.util.List<com.liferay.portal.kernel.upgrade.UpgradeProcess>
+			List<com.liferay.portal.kernel.upgrade.UpgradeProcess>
 				upgradeProcesses,
 			int buildNumber, int previousBuildNumber)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		throws PortalException {
 
 		getService().updateRelease(
 			servletContextName, upgradeProcesses, buildNumber,
 			previousBuildNumber);
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 #updateRelease(String, List, int, int)}
-	 */
-	@Deprecated
 	public static void updateRelease(
 			String servletContextName,
-			java.util.List<com.liferay.portal.kernel.upgrade.UpgradeProcess>
-				upgradeProcesses,
-			int buildNumber, int previousBuildNumber, boolean indexOnUpgrade)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		getService().updateRelease(
-			servletContextName, upgradeProcesses, buildNumber,
-			previousBuildNumber, indexOnUpgrade);
-	}
-
-	public static void updateRelease(
-			String servletContextName,
-			java.util.List<com.liferay.portal.kernel.upgrade.UpgradeProcess>
+			List<com.liferay.portal.kernel.upgrade.UpgradeProcess>
 				upgradeProcesses,
 			java.util.Properties unfilteredPortalProperties)
 		throws Exception {
@@ -398,14 +344,9 @@ public class ReleaseLocalServiceUtil {
 	}
 
 	public static ReleaseLocalService getService() {
-		if (_service == null) {
-			_service = (ReleaseLocalService)PortalBeanLocatorUtil.locate(
-				ReleaseLocalService.class.getName());
-		}
-
 		return _service;
 	}
 
-	private static ReleaseLocalService _service;
+	private static volatile ReleaseLocalService _service;
 
 }

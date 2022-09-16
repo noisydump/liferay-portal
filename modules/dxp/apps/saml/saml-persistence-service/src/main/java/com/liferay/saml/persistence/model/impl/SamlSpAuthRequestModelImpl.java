@@ -23,14 +23,15 @@ import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.impl.BaseModelImpl;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.saml.persistence.model.SamlSpAuthRequest;
 import com.liferay.saml.persistence.model.SamlSpAuthRequestModel;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
 import java.util.Collections;
@@ -38,6 +39,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -97,26 +99,26 @@ public class SamlSpAuthRequestModelImpl
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long CREATEDATE_COLUMN_BITMASK = 1L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long SAMLIDPENTITYID_COLUMN_BITMASK = 2L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long SAMLSPAUTHREQUESTKEY_COLUMN_BITMASK = 4L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *		#getColumnBitmask(String)
+	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long SAMLSPAUTHNREQUESTID_COLUMN_BITMASK = 8L;
@@ -218,34 +220,6 @@ public class SamlSpAuthRequestModelImpl
 		getAttributeSetterBiConsumers() {
 
 		return _attributeSetterBiConsumers;
-	}
-
-	private static Function<InvocationHandler, SamlSpAuthRequest>
-		_getProxyProviderFunction() {
-
-		Class<?> proxyClass = ProxyUtil.getProxyClass(
-			SamlSpAuthRequest.class.getClassLoader(), SamlSpAuthRequest.class,
-			ModelWrapper.class);
-
-		try {
-			Constructor<SamlSpAuthRequest> constructor =
-				(Constructor<SamlSpAuthRequest>)proxyClass.getConstructor(
-					InvocationHandler.class);
-
-			return invocationHandler -> {
-				try {
-					return constructor.newInstance(invocationHandler);
-				}
-				catch (ReflectiveOperationException
-							reflectiveOperationException) {
-
-					throw new InternalError(reflectiveOperationException);
-				}
-			};
-		}
-		catch (NoSuchMethodException noSuchMethodException) {
-			throw new InternalError(noSuchMethodException);
-		}
 	}
 
 	private static final Map<String, Function<SamlSpAuthRequest, Object>>
@@ -420,7 +394,9 @@ public class SamlSpAuthRequestModelImpl
 		for (Map.Entry<String, Object> entry :
 				_columnOriginalValues.entrySet()) {
 
-			if (entry.getValue() != getColumnValue(entry.getKey())) {
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
 				_columnBitmask |= _columnBitmasks.get(entry.getKey());
 			}
 		}
@@ -470,6 +446,25 @@ public class SamlSpAuthRequestModelImpl
 			getSamlSpAuthRequestKey());
 
 		samlSpAuthRequestImpl.resetOriginalValues();
+
+		return samlSpAuthRequestImpl;
+	}
+
+	@Override
+	public SamlSpAuthRequest cloneWithOriginalValues() {
+		SamlSpAuthRequestImpl samlSpAuthRequestImpl =
+			new SamlSpAuthRequestImpl();
+
+		samlSpAuthRequestImpl.setSamlSpAuthnRequestId(
+			this.<Long>getColumnOriginalValue("samlSpAuthnRequestId"));
+		samlSpAuthRequestImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		samlSpAuthRequestImpl.setCreateDate(
+			this.<Date>getColumnOriginalValue("createDate"));
+		samlSpAuthRequestImpl.setSamlIdpEntityId(
+			this.<String>getColumnOriginalValue("samlIdpEntityId"));
+		samlSpAuthRequestImpl.setSamlSpAuthRequestKey(
+			this.<String>getColumnOriginalValue("samlSpAuthRequestKey"));
 
 		return samlSpAuthRequestImpl;
 	}
@@ -589,7 +584,7 @@ public class SamlSpAuthRequestModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			(4 * attributeGetterFunctions.size()) + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -600,9 +595,27 @@ public class SamlSpAuthRequestModelImpl
 			Function<SamlSpAuthRequest, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((SamlSpAuthRequest)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply(
+				(SamlSpAuthRequest)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -649,7 +662,9 @@ public class SamlSpAuthRequestModelImpl
 	private static class EscapedModelProxyProviderFunctionHolder {
 
 		private static final Function<InvocationHandler, SamlSpAuthRequest>
-			_escapedModelProxyProviderFunction = _getProxyProviderFunction();
+			_escapedModelProxyProviderFunction =
+				ProxyUtil.getProxyProviderFunction(
+					SamlSpAuthRequest.class, ModelWrapper.class);
 
 	}
 

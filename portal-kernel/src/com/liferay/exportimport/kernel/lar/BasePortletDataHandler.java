@@ -268,11 +268,9 @@ public abstract class BasePortletDataHandler implements PortletDataHandler {
 	public PortletDataHandlerControl[] getImportConfigurationControls(
 		Portlet portlet, ManifestSummary manifestSummary) {
 
-		String[] configurationPortletOptions =
+		return getImportConfigurationControls(
 			manifestSummary.getConfigurationPortletOptions(
-				portlet.getRootPortletId());
-
-		return getImportConfigurationControls(configurationPortletOptions);
+				portlet.getRootPortletId()));
 	}
 
 	@Override
@@ -387,6 +385,8 @@ public abstract class BasePortletDataHandler implements PortletDataHandler {
 				addImportDataRootElement(portletDataContext, data);
 			}
 
+			portletDataContext.setImportDataElementCacheEnabled(true);
+
 			return doImportData(
 				portletDataContext, portletId, portletPreferences, data);
 		}
@@ -395,6 +395,7 @@ public abstract class BasePortletDataHandler implements PortletDataHandler {
 				exception, PortletDataException.IMPORT_PORTLET_DATA, portletId);
 		}
 		finally {
+			portletDataContext.setImportDataElementCacheEnabled(false);
 			portletDataContext.setImportDataRootElement(rootElement);
 			portletDataContext.setSourceGroupId(sourceGroupId);
 
@@ -499,7 +500,7 @@ public abstract class BasePortletDataHandler implements PortletDataHandler {
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(exception, exception);
+				_log.debug(exception);
 			}
 
 			return false;
@@ -673,7 +674,7 @@ public abstract class BasePortletDataHandler implements PortletDataHandler {
 		}
 		catch (IOException ioException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(ioException, ioException);
+				_log.debug(ioException);
 			}
 
 			return StringPool.BLANK;

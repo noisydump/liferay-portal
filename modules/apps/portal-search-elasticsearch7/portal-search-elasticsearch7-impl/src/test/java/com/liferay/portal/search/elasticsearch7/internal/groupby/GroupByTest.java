@@ -17,17 +17,21 @@ package com.liferay.portal.search.elasticsearch7.internal.groupby;
 import com.liferay.portal.kernel.search.GroupBy;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.search.elasticsearch7.internal.LiferayElasticsearchIndexingFixtureFactory;
 import com.liferay.portal.search.groupby.GroupByRequest;
 import com.liferay.portal.search.groupby.GroupByResponse;
 import com.liferay.portal.search.test.util.groupby.BaseGroupByTestCase;
 import com.liferay.portal.search.test.util.indexing.IndexingFixture;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -35,6 +39,11 @@ import org.junit.Test;
  * @author Tibor Lipusz
  */
 public class GroupByTest extends BaseGroupByTestCase {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Test
 	public void testGroupByDocsSizeDefault() throws Exception {
@@ -85,7 +94,7 @@ public class GroupByTest extends BaseGroupByTestCase {
 		orderedResults.add("two|2|2");
 		orderedResults.add("three|3|3");
 
-		assertGroupByTermsSortsCountDescKeyDesc(orderedResults, false, false);
+		_assertGroupByTermsSortsCountDescKeyDesc(orderedResults, false, false);
 	}
 
 	@Test
@@ -96,7 +105,7 @@ public class GroupByTest extends BaseGroupByTestCase {
 		orderedResults.add("one|2|2");
 		orderedResults.add("three|3|3");
 
-		assertGroupByTermsSortsCountDescKeyDesc(orderedResults, false, true);
+		_assertGroupByTermsSortsCountDescKeyDesc(orderedResults, false, true);
 	}
 
 	@Test
@@ -107,7 +116,7 @@ public class GroupByTest extends BaseGroupByTestCase {
 		orderedResults.add("one|2|2");
 		orderedResults.add("two|2|2");
 
-		assertGroupByTermsSortsCountDescKeyDesc(orderedResults, true, false);
+		_assertGroupByTermsSortsCountDescKeyDesc(orderedResults, true, false);
 	}
 
 	@Test
@@ -118,7 +127,7 @@ public class GroupByTest extends BaseGroupByTestCase {
 		orderedResults.add("two|2|2");
 		orderedResults.add("one|2|2");
 
-		assertGroupByTermsSortsCountDescKeyDesc(orderedResults, true, true);
+		_assertGroupByTermsSortsCountDescKeyDesc(orderedResults, true, true);
 	}
 
 	@Test
@@ -129,7 +138,7 @@ public class GroupByTest extends BaseGroupByTestCase {
 		orderedResults.add("one|2|2");
 		orderedResults.add("two|2|2");
 
-		indexTermsSortsDuplicates();
+		_indexTermsSortsDuplicates();
 
 		assertSearch(
 			indexingTestHelper -> {
@@ -156,41 +165,23 @@ public class GroupByTest extends BaseGroupByTestCase {
 
 		Map<String, List<String>> orderedResultsMap =
 			HashMapBuilder.<String, List<String>>put(
-				GROUP_FIELD,
-				() -> {
-					List<String> groupFieldOrderedResults = new ArrayList<>();
-
-					groupFieldOrderedResults.add("three|3|3");
-					groupFieldOrderedResults.add("two|2|2");
-
-					return groupFieldOrderedResults;
-				}
+				GROUP_FIELD, ListUtil.fromArray("three|3|3", "two|2|2")
 			).put(
-				SORT_FIELD,
-				() -> {
-					List<String> sortFieldOrderedResults = new ArrayList<>();
-
-					sortFieldOrderedResults.add("1|2|2");
-					sortFieldOrderedResults.add("2|2|2");
-					sortFieldOrderedResults.add("3|1|1");
-
-					return sortFieldOrderedResults;
-				}
+				SORT_FIELD, ListUtil.fromArray("1|2|2", "2|2|2", "3|1|1")
 			).build();
 
 		assertSearch(
 			indexingTestHelper -> {
 				indexingTestHelper.defineRequest(
 					searchRequestBuilder -> {
-						GroupByRequest groupByRequest =
+						GroupByRequest groupByRequest1 =
 							groupByRequestFactory.getGroupByRequest(
 								GROUP_FIELD);
-
 						GroupByRequest groupByRequest2 =
 							groupByRequestFactory.getGroupByRequest(SORT_FIELD);
 
 						searchRequestBuilder.groupByRequests(
-							groupByRequest, groupByRequest2);
+							groupByRequest1, groupByRequest2);
 					});
 
 				indexingTestHelper.search();
@@ -211,11 +202,16 @@ public class GroupByTest extends BaseGroupByTestCase {
 			});
 	}
 
-	protected void assertGroupByTermsSortsCountDescKeyDesc(
+	@Override
+	protected IndexingFixture createIndexingFixture() {
+		return LiferayElasticsearchIndexingFixtureFactory.getInstance();
+	}
+
+	private void _assertGroupByTermsSortsCountDescKeyDesc(
 			List<String> orderedResults, boolean countDesc, boolean keyDesc)
 		throws Exception {
 
-		indexTermsSortsDuplicates();
+		_indexTermsSortsDuplicates();
 
 		assertSearch(
 			indexingTestHelper -> {
@@ -261,12 +257,7 @@ public class GroupByTest extends BaseGroupByTestCase {
 			});
 	}
 
-	@Override
-	protected IndexingFixture createIndexingFixture() {
-		return LiferayElasticsearchIndexingFixtureFactory.getInstance();
-	}
-
-	protected void indexTermsSortsDuplicates() {
+	private void _indexTermsSortsDuplicates() {
 		indexDuplicates("one", 2);
 		indexDuplicates("two", 2);
 		indexDuplicates("three", 3);

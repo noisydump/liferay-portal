@@ -23,12 +23,14 @@ import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayOutputStream;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.util.HashMapDictionary;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.StreamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.osgi.debug.declarative.service.test.component.DeclarativeServiceTestComponent;
 import com.liferay.portal.osgi.debug.declarative.service.test.reference.DeclarativeServiceTestReference;
-import com.liferay.portal.test.log.CaptureAppender;
-import com.liferay.portal.test.log.Log4JLoggerTestUtil;
+import com.liferay.portal.test.log.LogCapture;
+import com.liferay.portal.test.log.LogEntry;
+import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
@@ -45,9 +47,6 @@ import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
-
-import org.apache.log4j.Level;
-import org.apache.log4j.spi.LoggingEvent;
 
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -107,29 +106,27 @@ public class DeclarativeServiceDependencyManagerTest {
 	public void testDeclarativeServiceDependencyManagerResolvedDependencies()
 		throws Exception {
 
-		try (CaptureAppender captureAppender = _configureLog4JLogger()) {
-			_captureLog(captureAppender);
+		try (LogCapture logCapture = _configureLog4JLogger()) {
+			_captureLog(logCapture);
 
-			List<LoggingEvent> loggingEvents =
-				captureAppender.getLoggingEvents();
+			List<LogEntry> logEntries = logCapture.getLogEntries();
 
-			Assert.assertEquals(
-				loggingEvents.toString(), 2, loggingEvents.size());
+			Assert.assertEquals(logEntries.toString(), 2, logEntries.size());
 
-			LoggingEvent loggingEvent = loggingEvents.get(0);
+			LogEntry logEntry = logEntries.get(0);
 
 			Assert.assertEquals(
 				"All declarative service components are satisfied",
-				loggingEvent.getMessage());
-			Assert.assertEquals(Level.INFO, loggingEvent.getLevel());
+				logEntry.getMessage());
+			Assert.assertEquals(LoggerTestUtil.INFO, logEntry.getPriority());
 
-			loggingEvent = loggingEvents.get(1);
+			logEntry = logEntries.get(1);
 
 			Assert.assertEquals(
 				"Stopped scanning for unsatisfied declarative service " +
 					"components",
-				loggingEvent.getMessage());
-			Assert.assertEquals(Level.INFO, loggingEvent.getLevel());
+				logEntry.getMessage());
+			Assert.assertEquals(LoggerTestUtil.INFO, logEntry.getPriority());
 		}
 	}
 
@@ -142,67 +139,59 @@ public class DeclarativeServiceDependencyManagerTest {
 
 		bundle.start();
 
-		try (CaptureAppender captureAppender = _configureLog4JLogger()) {
-			_captureLog(captureAppender);
+		try (LogCapture logCapture = _configureLog4JLogger()) {
+			_captureLog(logCapture);
 
-			List<LoggingEvent> loggingEvents =
-				captureAppender.getLoggingEvents();
+			List<LogEntry> logEntries = logCapture.getLogEntries();
 
-			Assert.assertEquals(
-				loggingEvents.toString(), 2, loggingEvents.size());
+			Assert.assertEquals(logEntries.toString(), 2, logEntries.size());
 
-			LoggingEvent loggingEvent = loggingEvents.get(0);
+			LogEntry logEntry = logEntries.get(0);
 
-			String message = (String)loggingEvent.getMessage();
+			String message = logEntry.getMessage();
 
 			message = message.replaceAll("\\s", "");
 			message = message.replaceAll("\\n", "");
 			message = message.replaceAll("_", "");
 
-			StringBundler sb = new StringBundler(4);
-
-			sb.append("name: ");
-			sb.append(DeclarativeServiceTestComponent.class.getName());
-			sb.append(", unsatisfied references: {name: ");
-			sb.append("declarativeServiceTestReference, target: null}");
-
-			String s = sb.toString();
+			String s = StringBundler.concat(
+				"name: ", DeclarativeServiceTestComponent.class.getName(),
+				", unsatisfied references: {name: ",
+				"declarativeServiceTestReference, target: null}");
 
 			Assert.assertTrue(
 				message, message.contains(s.replaceAll("\\s", "")));
 
-			Assert.assertEquals(Level.WARN, loggingEvent.getLevel());
+			Assert.assertEquals(LoggerTestUtil.WARN, logEntry.getPriority());
 
-			loggingEvent = loggingEvents.get(1);
+			logEntry = logEntries.get(1);
 
 			Assert.assertEquals(
 				"Stopped scanning for unsatisfied declarative service " +
 					"components",
-				loggingEvent.getMessage());
-			Assert.assertEquals(Level.INFO, loggingEvent.getLevel());
+				logEntry.getMessage());
+			Assert.assertEquals(LoggerTestUtil.INFO, logEntry.getPriority());
 		}
 		finally {
 			bundle.uninstall();
 		}
 	}
 
-	private static void _captureLog(CaptureAppender captureAppender)
-		throws Exception {
-
+	private static void _captureLog(LogCapture logCapture) throws Exception {
 		AtomicReference<Thread> scanningThreadReference =
 			new AtomicReference<>();
 
 		CountDownLatch countDownLatch = new CountDownLatch(1);
 
 		ReflectionTestUtil.setFieldValue(
-			captureAppender, "_loggingEvents",
-			new CopyOnWriteArrayList<LoggingEvent>() {
+			logCapture, "_logEntries",
+			new CopyOnWriteArrayList<LogEntry>() {
 
 				@Override
-				public boolean add(LoggingEvent loggingEvent) {
-					boolean added = super.add(loggingEvent);
+				public boolean add(LogEntry logEntry) {
+					boolean added = super.add(logEntry);
 
-					String message = String.valueOf(loggingEvent.getMessage());
+					String message = logEntry.getMessage();
 
 					if (message.equals(
 							"Stopped scanning for unsatisfied declarative " +
@@ -233,11 +222,10 @@ public class DeclarativeServiceDependencyManagerTest {
 
 			});
 
-		Dictionary<String, Object> properties = new HashMapDictionary<>();
-
-		properties.put("unsatisfiedComponentScanningInterval", 1);
-
-		_unsatisfiedComponentScannerConfiguration.update(properties);
+		_unsatisfiedComponentScannerConfiguration.update(
+			HashMapDictionaryBuilder.<String, Object>put(
+				"unsatisfiedComponentScanningInterval", 1
+			).build());
 
 		countDownLatch.await();
 
@@ -246,16 +234,16 @@ public class DeclarativeServiceDependencyManagerTest {
 		scanningThread.join();
 	}
 
-	private static CaptureAppender _configureLog4JLogger() {
-		return Log4JLoggerTestUtil.configureLog4JLogger(
+	private static LogCapture _configureLog4JLogger() {
+		return LoggerTestUtil.configureLog4JLogger(
 			"com.liferay.portal.osgi.debug.declarative.service.internal." +
 				"UnsatisfiedComponentScanner",
-			Level.INFO);
+			LoggerTestUtil.INFO);
 	}
 
 	private static void _ensureStopScanning() throws Exception {
-		try (CaptureAppender captureAppender = _configureLog4JLogger()) {
-			_captureLog(captureAppender);
+		try (LogCapture logCapture = _configureLog4JLogger()) {
+			_captureLog(logCapture);
 		}
 	}
 

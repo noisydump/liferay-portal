@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
@@ -57,7 +58,11 @@ public class WarehouseItem implements Serializable {
 		return ObjectMapperUtil.readValue(WarehouseItem.class, json);
 	}
 
-	@Schema
+	public static WarehouseItem unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(WarehouseItem.class, json);
+	}
+
+	@Schema(example = "AB-34098-789-N")
 	public String getExternalReferenceCode() {
 		return externalReferenceCode;
 	}
@@ -86,7 +91,7 @@ public class WarehouseItem implements Serializable {
 	protected String externalReferenceCode;
 
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "30130")
 	public Long getId() {
 		return id;
 	}
@@ -141,7 +146,7 @@ public class WarehouseItem implements Serializable {
 	protected Date modifiedDate;
 
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "1")
 	public Integer getQuantity() {
 		return quantity;
 	}
@@ -170,7 +175,7 @@ public class WarehouseItem implements Serializable {
 	protected Integer quantity;
 
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "2")
 	public Integer getReservedQuantity() {
 		return reservedQuantity;
 	}
@@ -198,7 +203,7 @@ public class WarehouseItem implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Integer reservedQuantity;
 
-	@Schema
+	@Schema(example = "SKU")
 	public String getSku() {
 		return sku;
 	}
@@ -224,7 +229,7 @@ public class WarehouseItem implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String sku;
 
-	@Schema
+	@Schema(example = "AB-34098-789-N")
 	public String getWarehouseExternalReferenceCode() {
 		return warehouseExternalReferenceCode;
 	}
@@ -257,7 +262,7 @@ public class WarehouseItem implements Serializable {
 	protected String warehouseExternalReferenceCode;
 
 	@DecimalMin("0")
-	@Schema
+	@Schema(example = "30030")
 	public Long getWarehouseId() {
 		return warehouseId;
 	}
@@ -417,15 +422,16 @@ public class WarehouseItem implements Serializable {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.commerce.admin.inventory.dto.v1_0.WarehouseItem",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
 	}
 
 	private static boolean _isArray(Object value) {
@@ -451,8 +457,8 @@ public class WarehouseItem implements Serializable {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -483,7 +489,7 @@ public class WarehouseItem implements Serializable {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -491,7 +497,7 @@ public class WarehouseItem implements Serializable {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -499,5 +505,10 @@ public class WarehouseItem implements Serializable {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

@@ -24,10 +24,10 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.WorkflowDefinitionLink;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
-import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalServiceUtil;
 import com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalServiceUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
 
 import java.io.Serializable;
@@ -88,6 +88,29 @@ public abstract class BaseWorkflowHandler<T> implements WorkflowHandler<T> {
 	}
 
 	@Override
+	public String getNotificationLink(
+			long workflowTaskId, ServiceContext serviceContext)
+		throws PortalException {
+
+		try {
+			PortletURL portletURL = PortalUtil.getControlPanelPortletURL(
+				serviceContext.getRequest(), serviceContext.getScopeGroup(),
+				PortletKeys.MY_WORKFLOW_TASK, 0, 0,
+				PortletRequest.RENDER_PHASE);
+
+			portletURL.setParameter("mvcPath", "/edit_workflow_task.jsp");
+			portletURL.setParameter(
+				"workflowTaskId", String.valueOf(workflowTaskId));
+			portletURL.setWindowState(WindowState.MAXIMIZED);
+
+			return portletURL.toString();
+		}
+		catch (WindowStateException windowStateException) {
+			throw new PortalException(windowStateException);
+		}
+	}
+
+	@Override
 	public String getSummary(
 		long classPK, PortletRequest portletRequest,
 		PortletResponse portletResponse) {
@@ -102,7 +125,7 @@ public abstract class BaseWorkflowHandler<T> implements WorkflowHandler<T> {
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(exception, exception);
+				_log.warn(exception);
 			}
 		}
 
@@ -120,7 +143,7 @@ public abstract class BaseWorkflowHandler<T> implements WorkflowHandler<T> {
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(exception, exception);
+				_log.warn(exception);
 			}
 		}
 
@@ -142,33 +165,11 @@ public abstract class BaseWorkflowHandler<T> implements WorkflowHandler<T> {
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(exception, exception);
+				_log.warn(exception);
 			}
 		}
 
 		return null;
-	}
-
-	@Override
-	public String getURLEditWorkflowTask(
-			long workflowTaskId, ServiceContext serviceContext)
-		throws PortalException {
-
-		try {
-			PortletURL portletURL = PortletURLFactoryUtil.create(
-				serviceContext.getRequest(), PortletKeys.MY_WORKFLOW_TASK,
-				PortletRequest.RENDER_PHASE);
-
-			portletURL.setParameter("mvcPath", "/edit_workflow_task.jsp");
-			portletURL.setParameter(
-				"workflowTaskId", String.valueOf(workflowTaskId));
-			portletURL.setWindowState(WindowState.MAXIMIZED);
-
-			return portletURL.toString();
-		}
-		catch (WindowStateException windowStateException) {
-			throw new PortalException(windowStateException);
-		}
 	}
 
 	@Override
@@ -186,7 +187,7 @@ public abstract class BaseWorkflowHandler<T> implements WorkflowHandler<T> {
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(exception, exception);
+				_log.warn(exception);
 			}
 		}
 
@@ -210,7 +211,7 @@ public abstract class BaseWorkflowHandler<T> implements WorkflowHandler<T> {
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(exception, exception);
+				_log.warn(exception);
 			}
 		}
 
@@ -245,7 +246,7 @@ public abstract class BaseWorkflowHandler<T> implements WorkflowHandler<T> {
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(exception, exception);
+				_log.warn(exception);
 			}
 		}
 

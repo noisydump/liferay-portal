@@ -62,11 +62,9 @@ public class WorkflowTaskTransitionsResourceImpl
 							workflowTaskTransitions.add(
 								_createWorkflowTaskTransition(
 									_workflowTaskManager.getNextTransitionNames(
-										contextCompany.getCompanyId(),
 										contextUser.getUserId(),
 										workflowTaskId),
 									_workflowTaskManager.getWorkflowTask(
-										contextCompany.getCompanyId(),
 										workflowTaskId)));
 						}
 
@@ -87,10 +85,7 @@ public class WorkflowTaskTransitionsResourceImpl
 			transformToArray(
 				transitionNames,
 				transitionName -> TransitionUtil.toTransition(
-					_language, transitionName,
-					ResourceBundleUtil.getModuleAndPortalResourceBundle(
-						contextAcceptLanguage.getPreferredLocale(),
-						WorkflowTaskTransitionsResourceImpl.class)),
+					contextAcceptLanguage.getPreferredLocale(), transitionName),
 				Transition.class));
 		workflowTaskTransition.setWorkflowDefinitionVersion(
 			String.valueOf(workflowTask.getWorkflowDefinitionVersion()));

@@ -39,6 +39,8 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
+import java.util.Locale;
+
 import org.hamcrest.CoreMatchers;
 
 import org.junit.Assert;
@@ -136,7 +138,6 @@ public class AssetCategoriesSelectorTagTest {
 		assetCategoriesSelectorTag.setClassName(AssetEntry.class.getName());
 		assetCategoriesSelectorTag.setGroupIds(
 			new long[] {_group.getGroupId()});
-
 		assetCategoriesSelectorTag.setVisibilityTypes(
 			AssetVocabularyConstants.VISIBILITY_TYPES);
 
@@ -165,7 +166,6 @@ public class AssetCategoriesSelectorTagTest {
 		assetCategoriesSelectorTag.setClassName(AssetEntry.class.getName());
 		assetCategoriesSelectorTag.setGroupIds(
 			new long[] {_group.getGroupId()});
-
 		assetCategoriesSelectorTag.setVisibilityTypes(
 			new int[] {AssetVocabularyConstants.VISIBILITY_TYPE_INTERNAL});
 
@@ -196,7 +196,6 @@ public class AssetCategoriesSelectorTagTest {
 		assetCategoriesSelectorTag.setClassName(AssetEntry.class.getName());
 		assetCategoriesSelectorTag.setGroupIds(
 			new long[] {_group.getGroupId()});
-
 		assetCategoriesSelectorTag.setVisibilityTypes(
 			new int[] {AssetVocabularyConstants.VISIBILITY_TYPE_PUBLIC});
 
@@ -228,9 +227,14 @@ public class AssetCategoriesSelectorTagTest {
 
 		themeDisplay.setCompany(
 			_companyLocalService.getCompany(_group.getCompanyId()));
-		themeDisplay.setLocale(LocaleUtil.getSiteDefault());
-		themeDisplay.setSiteGroupId(_group.getGroupId());
+
+		Locale locale = LocaleUtil.getSiteDefault();
+
+		themeDisplay.setLanguageId(LocaleUtil.toLanguageId(locale));
+		themeDisplay.setLocale(locale);
+
 		themeDisplay.setScopeGroupId(_group.getGroupId());
+		themeDisplay.setSiteGroupId(_group.getGroupId());
 
 		mockHttpServletRequest.setAttribute(
 			WebKeys.THEME_DISPLAY, themeDisplay);

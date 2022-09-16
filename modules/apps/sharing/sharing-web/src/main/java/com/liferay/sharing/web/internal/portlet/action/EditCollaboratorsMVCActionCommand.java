@@ -17,11 +17,10 @@ package com.liferay.sharing.web.internal.portlet.action;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
-import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
@@ -33,6 +32,7 @@ import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.sharing.model.SharingEntry;
@@ -83,8 +83,8 @@ public class EditCollaboratorsMVCActionCommand extends BaseMVCActionCommand {
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		ResourceBundle resourceBundle =
-			_resourceBundleLoader.loadResourceBundle(themeDisplay.getLocale());
+		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
+			themeDisplay.getLocale(), getClass());
 
 		try {
 			TransactionInvokerUtil.invoke(
@@ -111,7 +111,8 @@ public class EditCollaboratorsMVCActionCommand extends BaseMVCActionCommand {
 			}
 
 			JSONObject jsonObject = JSONUtil.put(
-				"errorMessage", LanguageUtil.get(resourceBundle, errorMessage));
+				"errorMessage",
+				_language.get(themeDisplay.getLocale(), errorMessage));
 
 			JSONPortletResponseUtil.writeJSON(
 				actionRequest, actionResponse, jsonObject);
@@ -271,7 +272,7 @@ public class EditCollaboratorsMVCActionCommand extends BaseMVCActionCommand {
 
 		JSONObject jsonObject = JSONUtil.put(
 			"successMessage",
-			LanguageUtil.get(resourceBundle, "permissions-changed"));
+			_language.get(resourceBundle, "permissions-changed"));
 
 		JSONPortletResponseUtil.writeJSON(
 			actionRequest, actionResponse, jsonObject);
@@ -282,10 +283,10 @@ public class EditCollaboratorsMVCActionCommand extends BaseMVCActionCommand {
 			Propagation.REQUIRED, new Class<?>[] {Exception.class});
 
 	@Reference
-	private Portal _portal;
+	private Language _language;
 
-	@Reference(target = "(bundle.symbolic.name=com.liferay.sharing.web)")
-	private ResourceBundleLoader _resourceBundleLoader;
+	@Reference
+	private Portal _portal;
 
 	@Reference
 	private SharingEntryLocalService _sharingEntryLocalService;

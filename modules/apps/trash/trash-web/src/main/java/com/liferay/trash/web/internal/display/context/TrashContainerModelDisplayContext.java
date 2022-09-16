@@ -14,6 +14,7 @@
 
 package com.liferay.trash.web.internal.display.context;
 
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -193,19 +194,19 @@ public class TrashContainerModelDisplayContext {
 	}
 
 	public PortletURL getContainerURL() {
-		String currentURL = (String)_httpServletRequest.getAttribute(
-			WebKeys.CURRENT_URL);
-
-		PortletURL containerURL = _liferayPortletResponse.createRenderURL();
-
-		containerURL.setParameter("mvcPath", "/view_container_model.jsp");
-		containerURL.setParameter("redirect", getRedirect());
-		containerURL.setParameter("backURL", currentURL);
-		containerURL.setParameter(
-			"classNameId", String.valueOf(getClassNameId()));
-		containerURL.setParameter("classPK", String.valueOf(getClassPK()));
-
-		return containerURL;
+		return PortletURLBuilder.createRenderURL(
+			_liferayPortletResponse
+		).setMVCPath(
+			"/view_container_model.jsp"
+		).setRedirect(
+			getRedirect()
+		).setBackURL(
+			(String)_httpServletRequest.getAttribute(WebKeys.CURRENT_URL)
+		).setParameter(
+			"classNameId", getClassNameId()
+		).setParameter(
+			"classPK", getClassPK()
+		).buildPortletURL();
 	}
 
 	public String getEventName() {
@@ -263,10 +264,11 @@ public class TrashContainerModelDisplayContext {
 			return _searchContainer;
 		}
 
-		PortletURL containerURL = getContainerURL();
-
-		containerURL.setParameter(
-			"containerModelId", String.valueOf(getContainerModelId()));
+		PortletURL containerURL = PortletURLBuilder.create(
+			getContainerURL()
+		).setParameter(
+			"containerModelId", getContainerModelId()
+		).buildPortletURL();
 
 		_searchContainer = new SearchContainer(
 			_liferayPortletRequest, null, null,

@@ -184,6 +184,9 @@ public interface LVEntryLocalService
 	public <T> T dslQuery(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
 
 	/**
@@ -424,7 +427,7 @@ public interface LVEntryLocalService
 	 * <strong>Important:</strong> Inspect LVEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
 	 * </p>
 	 *
-	 * @param lvEntry the lv entry
+	 * @param draftLVEntry the lv entry
 	 * @return the lv entry that was updated
 	 */
 	@Indexable(type = IndexableType.REINDEX)

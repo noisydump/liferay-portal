@@ -11,13 +11,12 @@
 
 import ClayIcon from '@clayui/icon';
 import ClayTable from '@clayui/table';
-import {ClayTooltipProvider} from '@clayui/tooltip';
 import React, {useCallback, useMemo} from 'react';
 
 import {Autocomplete} from '../../../../../shared/components/autocomplete/Autocomplete.es';
 import {useFetch} from '../../../../../shared/hooks/useFetch.es';
 
-const AssigneeInput = ({setAssigneeId, taskId}) => {
+function AssigneeInput({setAssigneeId, taskId}) {
 	const {data, fetchData} = useFetch({
 		admin: true,
 		params: {page: -1, pageSize: -1},
@@ -33,25 +32,30 @@ const AssigneeInput = ({setAssigneeId, taskId}) => {
 		[setAssigneeId]
 	);
 
-	const promises = useMemo(() => [fetchData()], [fetchData]);
+	const promises = useMemo(
+		() => [fetchData()],
+
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[]
+	);
 
 	return (
 		<Autocomplete
-			items={data.items}
+			items={data?.items}
 			onSelect={handleSelect}
 			promises={promises}
 		/>
 	);
-};
+}
 
-const Item = ({
+function Item({
 	assigneePerson = {name: Liferay.Language.get('unassigned')},
 	id,
 	objectReviewed: {assetTitle, assetType},
 	setAssigneeId,
 	label,
 	workflowInstanceId,
-}) => {
+}) {
 	return (
 		<ClayTable.Row>
 			<ClayTable.Cell style={{fontWeight: 'bold'}}>
@@ -72,9 +76,9 @@ const Item = ({
 			</ClayTable.Cell>
 		</ClayTable.Row>
 	);
-};
+}
 
-const Table = ({items, setAssigneeId}) => {
+function Table({items, setAssigneeId}) {
 	return (
 		<ClayTable>
 			<ClayTable.Head>
@@ -129,24 +133,25 @@ const Table = ({items, setAssigneeId}) => {
 							width: '25%',
 						}}
 					>
-						{`${Liferay.Language.get('new-assignee')}`}{' '}
-						<ClayTooltipProvider>
-							<ClayIcon
-								data-tooltip-align="top"
-								style={{color: '#6B6C7E'}}
-								symbol="question-circle-full"
-								title={Liferay.Language.get(
-									'possible-assignees-must-have-permissions-to-be-assigned-to-the-corresponding-step'
-								)}
-							/>
-						</ClayTooltipProvider>
+						{`${Liferay.Language.get('new-assignee')}`}
+
+						<span
+							className="ml-1 workflow-tooltip"
+							data-tooltip-align="top"
+							data-tooltip-delay="0"
+							title={Liferay.Language.get(
+								'possible-assignees-must-have-permissions-to-be-assigned-to-the-corresponding-step'
+							)}
+						>
+							<ClayIcon symbol="question-circle-full" />
+						</span>
 					</ClayTable.Cell>
 				</ClayTable.Row>
 			</ClayTable.Head>
 
 			<ClayTable.Body>
 				{items &&
-					items.length > 0 &&
+					!!items.length &&
 					items.map((item, index) => (
 						<Table.Item
 							{...item}
@@ -157,9 +162,9 @@ const Table = ({items, setAssigneeId}) => {
 			</ClayTable.Body>
 		</ClayTable>
 	);
-};
+}
 
 Table.AssigneeInput = AssigneeInput;
 Table.Item = Item;
 
-export {Table};
+export default Table;

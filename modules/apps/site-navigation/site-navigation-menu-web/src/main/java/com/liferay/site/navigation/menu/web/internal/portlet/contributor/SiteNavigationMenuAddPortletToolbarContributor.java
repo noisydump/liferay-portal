@@ -14,7 +14,8 @@
 
 package com.liferay.site.navigation.menu.web.internal.portlet.contributor;
 
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -40,7 +41,6 @@ import java.util.List;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
-import javax.portlet.PortletURL;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -118,31 +118,32 @@ public class SiteNavigationMenuAddPortletToolbarContributor
 		URLMenuItem urlMenuItem = new URLMenuItem();
 
 		urlMenuItem.setLabel(
-			LanguageUtil.get(
+			_language.get(
 				_portal.getHttpServletRequest(portletRequest), "add-page"));
-
-		PortletURL portletURL = PortletProviderUtil.getPortletURL(
-			portletRequest, Layout.class.getName(),
-			PortletProvider.Action.EDIT);
-
-		portletURL.setParameter(
-			"mvcPath", "/select_layout_page_template_entry.jsp");
-		portletURL.setParameter(
-			"redirect", _portal.getLayoutFullURL(themeDisplay));
-		portletURL.setParameter(
-			"groupId", String.valueOf(themeDisplay.getScopeGroupId()));
-
-		Layout layout = themeDisplay.getLayout();
-
-		portletURL.setParameter(
-			"privateLayout", String.valueOf(layout.isPrivateLayout()));
 
 		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
 
-		portletURL.setParameter(
-			"portletResource", portletDisplay.getPortletName());
+		urlMenuItem.setURL(
+			PortletURLBuilder.create(
+				PortletProviderUtil.getPortletURL(
+					portletRequest, Layout.class.getName(),
+					PortletProvider.Action.EDIT)
+			).setMVCPath(
+				"/select_layout_page_template_entry.jsp"
+			).setRedirect(
+				_portal.getLayoutFullURL(themeDisplay)
+			).setPortletResource(
+				portletDisplay.getPortletName()
+			).setParameter(
+				"groupId", themeDisplay.getScopeGroupId()
+			).setParameter(
+				"privateLayout",
+				() -> {
+					Layout layout = themeDisplay.getLayout();
 
-		urlMenuItem.setURL(portletURL.toString());
+					return layout.isPrivateLayout();
+				}
+			).buildString());
 
 		return urlMenuItem;
 	}
@@ -180,6 +181,9 @@ public class SiteNavigationMenuAddPortletToolbarContributor
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		SiteNavigationMenuAddPortletToolbarContributor.class);
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private Portal _portal;

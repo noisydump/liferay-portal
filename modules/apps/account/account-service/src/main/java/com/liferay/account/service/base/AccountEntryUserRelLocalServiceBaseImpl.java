@@ -16,7 +16,7 @@ package com.liferay.account.service.base;
 
 import com.liferay.account.model.AccountEntryUserRel;
 import com.liferay.account.service.AccountEntryUserRelLocalService;
-import com.liferay.account.service.persistence.AccountEntryPersistence;
+import com.liferay.account.service.AccountEntryUserRelLocalServiceUtil;
 import com.liferay.account.service.persistence.AccountEntryUserRelPersistence;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.aop.AopService;
@@ -32,6 +32,8 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -45,10 +47,13 @@ import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -70,7 +75,7 @@ public abstract class AccountEntryUserRelLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>AccountEntryUserRelLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.account.service.AccountEntryUserRelLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>AccountEntryUserRelLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>AccountEntryUserRelLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -148,6 +153,13 @@ public abstract class AccountEntryUserRelLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return accountEntryUserRelPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -328,6 +340,11 @@ public abstract class AccountEntryUserRelLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement AccountEntryUserRelLocalServiceImpl#deleteAccountEntryUserRel(AccountEntryUserRel) to avoid orphaned data");
+		}
+
 		return accountEntryUserRelLocalService.deleteAccountEntryUserRel(
 			(AccountEntryUserRel)persistedModel);
 	}
@@ -393,6 +410,11 @@ public abstract class AccountEntryUserRelLocalServiceBaseImpl
 		return accountEntryUserRelPersistence.update(accountEntryUserRel);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -405,6 +427,8 @@ public abstract class AccountEntryUserRelLocalServiceBaseImpl
 	public void setAopProxy(Object aopProxy) {
 		accountEntryUserRelLocalService =
 			(AccountEntryUserRelLocalService)aopProxy;
+
+		_setLocalServiceUtilService(accountEntryUserRelLocalService);
 	}
 
 	/**
@@ -450,20 +474,33 @@ public abstract class AccountEntryUserRelLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		AccountEntryUserRelLocalService accountEntryUserRelLocalService) {
+
+		try {
+			Field field =
+				AccountEntryUserRelLocalServiceUtil.class.getDeclaredField(
+					"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, accountEntryUserRelLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected AccountEntryUserRelLocalService accountEntryUserRelLocalService;
 
 	@Reference
 	protected AccountEntryUserRelPersistence accountEntryUserRelPersistence;
 
 	@Reference
-	protected AccountEntryPersistence accountEntryPersistence;
-
-	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
+	private static final Log _log = LogFactoryUtil.getLog(
+		AccountEntryUserRelLocalServiceBaseImpl.class);
 
 }

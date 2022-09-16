@@ -17,8 +17,8 @@ package com.liferay.gradle.plugins.go;
 import com.liferay.gradle.plugins.go.internal.util.FileUtil;
 import com.liferay.gradle.plugins.go.internal.util.GradleUtil;
 import com.liferay.gradle.plugins.go.internal.util.StringUtil;
-import com.liferay.gradle.plugins.go.tasks.DownloadGoTask;
-import com.liferay.gradle.plugins.go.tasks.ExecuteGoTask;
+import com.liferay.gradle.plugins.go.task.DownloadGoTask;
+import com.liferay.gradle.plugins.go.task.ExecuteGoTask;
 
 import java.io.File;
 
@@ -39,10 +39,10 @@ public class GoPlugin implements Plugin<Project> {
 
 	@Override
 	public void apply(Project project) {
-		final GoExtension goExtension = GradleUtil.addExtension(
+		GoExtension goExtension = GradleUtil.addExtension(
 			project, EXTENSION_NAME, GoExtension.class);
 
-		final DownloadGoTask downloadGoTask = addTaskDownloadGo(project);
+		DownloadGoTask downloadGoTask = addTaskDownloadGo(project);
 
 		_configureTasksExecuteGo(project, GradleUtil.isRunningInsideDaemon());
 

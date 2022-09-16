@@ -16,7 +16,7 @@ package com.liferay.portal.upgrade.v7_1_x;
 
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
-import com.liferay.portal.kernel.upgrade.BaseUpgradePortletPreferences;
+import com.liferay.portal.kernel.upgrade.BasePortletPreferencesUpgradeProcess;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -27,23 +27,18 @@ import javax.portlet.PortletPreferences;
  * @author Bryan Engler
  */
 public class UpgradeCalendarClassNameIdsPortletPreferences
-	extends BaseUpgradePortletPreferences {
+	extends BasePortletPreferencesUpgradeProcess {
 
 	@Override
 	protected String getUpdatePortletPreferencesWhereClause() {
-		StringBundler sb = new StringBundler(5);
-
-		sb.append("(preferences like '%classNameIds%");
-		sb.append(
+		return StringBundler.concat(
+			"(preferences like '%classNameIds%",
 			PortalUtil.getClassNameId(
-				"com.liferay.portlet.calendar.model.CalEvent"));
-		sb.append("%') or (preferences like '%anyAssetType%");
-		sb.append(
+				"com.liferay.portlet.calendar.model.CalEvent"),
+			"%') or (preferences like '%anyAssetType%",
 			PortalUtil.getClassNameId(
-				"com.liferay.portlet.calendar.model.CalEvent"));
-		sb.append("%')");
-
-		return sb.toString();
+				"com.liferay.portlet.calendar.model.CalEvent"),
+			"%')");
 	}
 
 	@Override

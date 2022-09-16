@@ -20,6 +20,7 @@ import com.liferay.message.boards.model.MBCategory;
 import com.liferay.message.boards.model.MBMessage;
 import com.liferay.message.boards.settings.MBGroupServiceSettings;
 import com.liferay.message.boards.web.internal.security.permission.MBMessagePermission;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -38,7 +39,6 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
 import javax.portlet.RenderResponse;
 
 import javax.servlet.http.HttpServletRequest;
@@ -51,37 +51,23 @@ public class MBUtil {
 	public static String getBBCodeQuoteBody(
 		HttpServletRequest httpServletRequest, MBMessage parentMessage) {
 
-		String parentAuthor = _getParentAuthor(
-			parentMessage, httpServletRequest);
-
-		StringBundler sb = new StringBundler(5);
-
-		sb.append("[quote=");
-		sb.append(
+		return StringBundler.concat(
+			"[quote=",
 			StringUtil.replace(
-				parentAuthor, new String[] {"[", "]", "(", ")"},
-				new String[] {"&#91;", "&#93;", "&#40;", "&#41;"}));
-		sb.append("]\n");
-		sb.append(parentMessage.getBody(false));
-		sb.append("[/quote]\n\n\n");
-
-		return sb.toString();
+				_getParentAuthor(parentMessage, httpServletRequest),
+				new String[] {"[", "]"}, new String[] {"&#91;", "&#93;"}),
+			"]\n", parentMessage.getBody(false), "[/quote]\n\n\n");
 	}
 
 	public static String getBBCodeSplitThreadBody(
 		HttpServletRequest httpServletRequest) {
 
-		StringBundler sb = new StringBundler(5);
-
-		sb.append("[url=");
-		sb.append(MBThreadConstants.NEW_THREAD_URL);
-		sb.append("]");
-		sb.append(MBThreadConstants.NEW_THREAD_URL);
-		sb.append("[/url]");
-
 		return LanguageUtil.format(
 			httpServletRequest, "the-new-thread-can-be-found-at-x",
-			sb.toString(), false);
+			StringBundler.concat(
+				"[url=", MBThreadConstants.NEW_THREAD_URL, "]",
+				MBThreadConstants.NEW_THREAD_URL, "[/url]"),
+			false);
 	}
 
 	public static long getCategoryId(
@@ -133,34 +119,23 @@ public class MBUtil {
 	public static String getHtmlQuoteBody(
 		HttpServletRequest httpServletRequest, MBMessage parentMessage) {
 
-		String parentAuthor = _getParentAuthor(
-			parentMessage, httpServletRequest);
-
-		StringBundler sb = new StringBundler(5);
-
-		sb.append("<blockquote><div class=\"quote-title\">");
-		sb.append(parentAuthor);
-		sb.append(": </div><div class=\"quote\"><div class=\"quote-content\">");
-		sb.append(parentMessage.getBody(false));
-		sb.append("</div></blockquote><br /><br /><br />");
-
-		return sb.toString();
+		return StringBundler.concat(
+			"<blockquote><div class=\"quote-title\">",
+			_getParentAuthor(parentMessage, httpServletRequest),
+			": </div><div class=\"quote\"><div class=\"quote-content\">",
+			parentMessage.getBody(false),
+			"</div></blockquote><br /><br /><br />");
 	}
 
 	public static String getHtmlSplitThreadBody(
 		HttpServletRequest httpServletRequest) {
 
-		StringBundler sb = new StringBundler(5);
-
-		sb.append("<a href=");
-		sb.append(MBThreadConstants.NEW_THREAD_URL);
-		sb.append(">");
-		sb.append(MBThreadConstants.NEW_THREAD_URL);
-		sb.append("</a>");
-
 		return LanguageUtil.format(
 			httpServletRequest, "the-new-thread-can-be-found-at-x",
-			sb.toString(), false);
+			StringBundler.concat(
+				"<a href=", MBThreadConstants.NEW_THREAD_URL, ">",
+				MBThreadConstants.NEW_THREAD_URL, "</a>"),
+			false);
 	}
 
 	public static String getMBMessageURL(
@@ -172,31 +147,33 @@ public class MBUtil {
 
 		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
 
-		PortletURL portletURL = PortletURLFactoryUtil.create(
-			httpServletRequest, portletDisplay.getId(),
-			PortletRequest.RENDER_PHASE);
-
-		portletURL.setParameter(
-			"mvcRenderCommandName", "/message_boards/view_message");
-		portletURL.setParameter("messageId", String.valueOf(messageId));
-
 		return StringBundler.concat(
-			portletURL.toString(), StringPool.POUND,
-			portletDisplay.getNamespace(), "message_", messageId);
+			PortletURLBuilder.create(
+				PortletURLFactoryUtil.create(
+					httpServletRequest, portletDisplay.getId(),
+					PortletRequest.RENDER_PHASE)
+			).setMVCRenderCommandName(
+				"/message_boards/view_message"
+			).setParameter(
+				"messageId", messageId
+			).buildString(),
+			StringPool.POUND, portletDisplay.getNamespace(), "message_",
+			messageId);
 	}
 
 	public static String getMBMessageURL(
 		long messageId, RenderResponse renderResponse) {
 
-		PortletURL portletURL = renderResponse.createRenderURL();
-
-		portletURL.setParameter(
-			"mvcRenderCommandName", "/message_boards/view_message");
-		portletURL.setParameter("messageId", String.valueOf(messageId));
-
 		return StringBundler.concat(
-			portletURL.toString(), StringPool.POUND,
-			renderResponse.getNamespace(), "message_", messageId);
+			PortletURLBuilder.createRenderURL(
+				renderResponse
+			).setMVCRenderCommandName(
+				"/message_boards/view_message"
+			).setParameter(
+				"messageId", messageId
+			).buildString(),
+			StringPool.POUND, renderResponse.getNamespace(), "message_",
+			messageId);
 	}
 
 	public static String getMBMessageURL(
@@ -242,14 +219,10 @@ public class MBUtil {
 			themeDisplay.getPermissionChecker();
 
 		if (!MBMessagePermission.contains(
-				permissionChecker, parentMessage, ActionKeys.VIEW)) {
-
-			return false;
-		}
-
-		if ((message.getMessageId() != parentMessage.getMessageId()) &&
-			!MBMessagePermission.contains(
-				permissionChecker, message, ActionKeys.VIEW)) {
+				permissionChecker, parentMessage, ActionKeys.VIEW) ||
+			((message.getMessageId() != parentMessage.getMessageId()) &&
+			 !MBMessagePermission.contains(
+				 permissionChecker, message, ActionKeys.VIEW))) {
 
 			return false;
 		}

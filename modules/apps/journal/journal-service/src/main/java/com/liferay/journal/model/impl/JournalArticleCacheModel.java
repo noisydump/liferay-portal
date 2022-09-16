@@ -101,6 +101,8 @@ public class JournalArticleCacheModel
 		sb.append(createDate);
 		sb.append(", modifiedDate=");
 		sb.append(modifiedDate);
+		sb.append(", externalReferenceCode=");
+		sb.append(externalReferenceCode);
 		sb.append(", folderId=");
 		sb.append(folderId);
 		sb.append(", classNameId=");
@@ -115,8 +117,6 @@ public class JournalArticleCacheModel
 		sb.append(version);
 		sb.append(", urlTitle=");
 		sb.append(urlTitle);
-		sb.append(", content=");
-		sb.append(content);
 		sb.append(", DDMStructureKey=");
 		sb.append(DDMStructureKey);
 		sb.append(", DDMTemplateKey=");
@@ -195,6 +195,13 @@ public class JournalArticleCacheModel
 			journalArticleImpl.setModifiedDate(new Date(modifiedDate));
 		}
 
+		if (externalReferenceCode == null) {
+			journalArticleImpl.setExternalReferenceCode("");
+		}
+		else {
+			journalArticleImpl.setExternalReferenceCode(externalReferenceCode);
+		}
+
 		journalArticleImpl.setFolderId(folderId);
 		journalArticleImpl.setClassNameId(classNameId);
 		journalArticleImpl.setClassPK(classPK);
@@ -220,13 +227,6 @@ public class JournalArticleCacheModel
 		}
 		else {
 			journalArticleImpl.setUrlTitle(urlTitle);
-		}
-
-		if (content == null) {
-			journalArticleImpl.setContent("");
-		}
-		else {
-			journalArticleImpl.setContent(content);
 		}
 
 		if (DDMStructureKey == null) {
@@ -315,15 +315,11 @@ public class JournalArticleCacheModel
 
 		journalArticleImpl.resetOriginalValues();
 
-		journalArticleImpl.setDocument(_document);
-
 		return journalArticleImpl;
 	}
 
 	@Override
-	public void readExternal(ObjectInput objectInput)
-		throws ClassNotFoundException, IOException {
-
+	public void readExternal(ObjectInput objectInput) throws IOException {
 		mvccVersion = objectInput.readLong();
 
 		ctCollectionId = objectInput.readLong();
@@ -341,6 +337,7 @@ public class JournalArticleCacheModel
 		userName = objectInput.readUTF();
 		createDate = objectInput.readLong();
 		modifiedDate = objectInput.readLong();
+		externalReferenceCode = objectInput.readUTF();
 
 		folderId = objectInput.readLong();
 
@@ -352,7 +349,6 @@ public class JournalArticleCacheModel
 
 		version = objectInput.readDouble();
 		urlTitle = objectInput.readUTF();
-		content = (String)objectInput.readObject();
 		DDMStructureKey = objectInput.readUTF();
 		DDMTemplateKey = objectInput.readUTF();
 		defaultLanguageId = objectInput.readUTF();
@@ -374,9 +370,6 @@ public class JournalArticleCacheModel
 		statusByUserId = objectInput.readLong();
 		statusByUserName = objectInput.readUTF();
 		statusDate = objectInput.readLong();
-
-		_document =
-			(com.liferay.portal.kernel.xml.Document)objectInput.readObject();
 	}
 
 	@Override
@@ -412,6 +405,13 @@ public class JournalArticleCacheModel
 		objectOutput.writeLong(createDate);
 		objectOutput.writeLong(modifiedDate);
 
+		if (externalReferenceCode == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(externalReferenceCode);
+		}
+
 		objectOutput.writeLong(folderId);
 
 		objectOutput.writeLong(classNameId);
@@ -439,13 +439,6 @@ public class JournalArticleCacheModel
 		}
 		else {
 			objectOutput.writeUTF(urlTitle);
-		}
-
-		if (content == null) {
-			objectOutput.writeObject("");
-		}
-		else {
-			objectOutput.writeObject(content);
 		}
 
 		if (DDMStructureKey == null) {
@@ -507,8 +500,6 @@ public class JournalArticleCacheModel
 		}
 
 		objectOutput.writeLong(statusDate);
-
-		objectOutput.writeObject(_document);
 	}
 
 	public long mvccVersion;
@@ -522,6 +513,7 @@ public class JournalArticleCacheModel
 	public String userName;
 	public long createDate;
 	public long modifiedDate;
+	public String externalReferenceCode;
 	public long folderId;
 	public long classNameId;
 	public long classPK;
@@ -529,7 +521,6 @@ public class JournalArticleCacheModel
 	public String articleId;
 	public double version;
 	public String urlTitle;
-	public String content;
 	public String DDMStructureKey;
 	public String DDMTemplateKey;
 	public String defaultLanguageId;
@@ -546,6 +537,5 @@ public class JournalArticleCacheModel
 	public long statusByUserId;
 	public String statusByUserName;
 	public long statusDate;
-	public com.liferay.portal.kernel.xml.Document _document;
 
 }

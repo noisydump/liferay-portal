@@ -242,15 +242,13 @@
 						%>
 
 						<clay:row
-							cssClass="weekdays"
+							cssClass="clearfix pt-3 weekdays"
 						>
 
 							<%
-							int firstDayOfWeek = cal.getFirstDayOfWeek();
-
 							Weekday[] weekdaysArray = Weekday.values();
 
-							Collections.rotate(Arrays.asList(weekdaysArray), -firstDayOfWeek);
+							Collections.rotate(Arrays.asList(weekdaysArray), -cal.getFirstDayOfWeek());
 
 							for (Weekday weekday : weekdaysArray) {
 							%>
@@ -463,13 +461,13 @@
 				);
 
 				if (recurrenceTypeSelect) {
-					recurrenceTypeSelect.addEventListener('change', function (event) {
+					recurrenceTypeSelect.addEventListener('change', (event) => {
 						var selectedTableId =
 							'<portlet:namespace />' +
 							recurrenceTypeSelect[recurrenceTypeSelect.selectedIndex].id +
 							'Table';
 
-						Array.prototype.forEach.call(tables, function (table) {
+						Array.prototype.forEach.call(tables, (table) => {
 							if (table.id !== selectedTableId) {
 								table.classList.add('hide');
 							}

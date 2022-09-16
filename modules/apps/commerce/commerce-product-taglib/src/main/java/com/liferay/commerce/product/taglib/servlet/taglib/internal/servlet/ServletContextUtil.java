@@ -33,23 +33,23 @@ import org.osgi.service.component.annotations.Reference;
 )
 public class ServletContextUtil {
 
-	public static final CPContentHelper getCPContentHelper() {
+	public static CPContentHelper getCPContentHelper() {
 		return _servletContextUtil._getCPContentHelper();
 	}
 
-	public static final CPContentListEntryRendererRegistry
+	public static CPContentListEntryRendererRegistry
 		getCPContentListEntryRendererRegistry() {
 
 		return _servletContextUtil._getCPContentListEntryRendererRegistry();
 	}
 
-	public static final CPContentListRendererRegistry
+	public static CPContentListRendererRegistry
 		getCPContentListRendererRegistry() {
 
 		return _servletContextUtil._getCPContentListRendererRegistry();
 	}
 
-	public static final ServletContext getServletContext() {
+	public static ServletContext getServletContext() {
 		return _servletContextUtil._getServletContext();
 	}
 

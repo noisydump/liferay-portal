@@ -54,20 +54,23 @@ int totalEntries = GetterUtil.getInteger(request.getAttribute("liferay-trash:emp
 	var <%= namespace %>empty = document.getElementById('<%= namespace %>empty');
 
 	if (<%= namespace %>empty) {
-		<%= namespace %>empty.addEventListener('click', function (event) {
+		<%= namespace %>empty.addEventListener('click', (event) => {
 			event.preventDefault();
 
-			if (
-				confirm('<%= UnicodeLanguageUtil.get(request, confirmMessage) %>')
-			) {
-				var form = document.getElementById(
-					'<portlet:namespace />emptyForm'
-				);
+			Liferay.Util.openConfirmModal({
+				message: '<%= UnicodeLanguageUtil.get(request, confirmMessage) %>',
+				onConfirm: (isConfirmed) => {
+					if (isConfirmed) {
+						var form = document.getElementById(
+							'<portlet:namespace />emptyForm'
+						);
 
-				if (form) {
-					submitForm(form);
-				}
-			}
+						if (form) {
+							submitForm(form);
+						}
+					}
+				},
+			});
 		});
 	}
 </aui:script>

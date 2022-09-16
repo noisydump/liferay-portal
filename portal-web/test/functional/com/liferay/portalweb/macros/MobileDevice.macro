@@ -1,11 +1,6 @@
 definition {
 
 	macro addClassificationRuleCP {
-		var key_deviceFamilyName = "${mobileDeviceFamilyName}";
-
-		AssertClick(
-			locator1 = "MobileDevice#DEVICE_FAMILY_TABLE_NAME_LINK",
-			value1 = "${mobileDeviceFamilyName}");
 
 		// Workaround for LPS-92682
 
@@ -17,15 +12,19 @@ definition {
 
 		PortletEntry.inputName(name = "${classificationName}");
 
+		if (isSet(classificationDescription)) {
+			PortletEntry.inputDescription(description = "${classificationDescription}");
+		}
+
 		Panel.expandPanel(panel = "Operating System and Type");
 
-		var key_ruleOSScope = "${ruleOSScope}";
+		AddSelection(
+			locator1 = "MobileDevice#ADD_CLASSIFICATION_RULE_OPERATING_SYSTEM",
+			value1 = "${ruleOsScope}");
 
-		Click(locator1 = "MobileDevice#ADD_CLASSIFICATION_RULE_OPERATING_SYSTEM");
-
-		var key_deviceType = "${deviceType}";
-
-		Click(locator1 = "MobileDevice#ADD_CLASSIFICATION_RULE_DEVICE_TYPE");
+		Select(
+			locator1 = "MobileDevice#ADD_CLASSIFICATION_RULE_DEVICE_TYPE",
+			value1 = "${deviceType}");
 
 		Click(locator1 = "Button#SAVE");
 
@@ -40,6 +39,10 @@ definition {
 			value1 = "New Device Family");
 
 		PortletEntry.inputName(name = "${deviceFamilyName}");
+
+		if (isSet(deviceDescription)) {
+			PortletEntry.inputDescription(description = "${deviceDescription}");
+		}
 
 		Click(locator1 = "Button#SAVE");
 
@@ -60,8 +63,6 @@ definition {
 
 	macro previewPG {
 		Click(locator1 = "ControlMenu#SIMULATION");
-
-		Pause(locator1 = "2000");
 
 		AssertElementNotPresent(locator1 = "IFrame#LOADING_MESSAGE");
 
@@ -122,7 +123,7 @@ definition {
 			takeScreenshot();
 		}
 
-		SelectFrame.selectFrameNoLoading(locator1 = "//iframe[@id='simulationDeviceIframe']");
+		SelectFrame.selectFrameNoLoading(locator1 = "ControlMenuPreviewPanel#PREVIEW_DEVICE_GENERAL_IFRAME");
 	}
 
 }

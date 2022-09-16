@@ -16,7 +16,9 @@ package com.liferay.site.navigation.admin.web.internal.portlet.action;
 
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.ModelHintsUtil;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
@@ -90,9 +92,13 @@ public class AddSiteNavigationMenuItemMVCActionCommand
 		catch (SiteNavigationMenuItemNameException
 					siteNavigationMenuItemNameException) {
 
+			if (_log.isDebugEnabled()) {
+				_log.debug(siteNavigationMenuItemNameException);
+			}
+
 			jsonObject.put(
 				"errorMessage",
-				LanguageUtil.format(
+				_language.format(
 					_portal.getHttpServletRequest(actionRequest),
 					"please-enter-a-name-with-fewer-than-x-characters",
 					ModelHintsUtil.getMaxLength(
@@ -102,6 +108,12 @@ public class AddSiteNavigationMenuItemMVCActionCommand
 		JSONPortletResponseUtil.writeJSON(
 			actionRequest, actionResponse, jsonObject);
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		AddSiteNavigationMenuItemMVCActionCommand.class);
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private Portal _portal;

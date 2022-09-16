@@ -16,13 +16,14 @@ package com.liferay.dynamic.data.mapping.form.field.type.internal.grid;
 
 import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldValueRequestParameterRetriever;
 import com.liferay.dynamic.data.mapping.form.field.type.constants.DDMFormFieldTypeConstants;
-import com.liferay.portal.kernel.json.JSONException;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.ArrayUtil;
 
-import java.util.Map;
+import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -47,36 +48,32 @@ public class GridDDMFormFieldValueRequestParameterRetriever
 
 		JSONObject jsonObject = jsonFactory.createJSONObject();
 
-		Map<String, String[]> parameterMap =
-			httpServletRequest.getParameterMap();
+		String[] parameterValues = httpServletRequest.getParameterValues(
+			ddmFormFieldParameterName);
 
-		if (!parameterMap.containsKey(ddmFormFieldParameterName)) {
+		if (ArrayUtil.isEmpty(parameterValues)) {
 			return jsonObject.toString();
 		}
 
-		String[] parameterValues = parameterMap.get(ddmFormFieldParameterName);
-
 		if (parameterValues.length == 1) {
-			try {
-				jsonObject = jsonFactory.createJSONObject(parameterValues[0]);
-
-				return jsonObject.toString();
-			}
-			catch (JSONException jsonException) {
-				if (_log.isDebugEnabled()) {
-					_log.debug(jsonException, jsonException);
-				}
-
-				jsonObject = jsonFactory.createJSONObject();
-			}
+			jsonObject = Optional.ofNullable(
+				getJSONObject(_log, parameterValues[0])
+			).orElse(
+				jsonObject
+			);
 		}
 
 		for (String parameterValue : parameterValues) {
-			if (!parameterValue.isEmpty()) {
-				String[] parameterValueParts = parameterValue.split(";");
+			if (parameterValue.isEmpty() ||
+				!parameterValue.contains(StringPool.SEMICOLON)) {
 
-				jsonObject.put(parameterValueParts[0], parameterValueParts[1]);
+				continue;
 			}
+
+			String[] parameterValueParts = parameterValue.split(
+				StringPool.SEMICOLON);
+
+			jsonObject.put(parameterValueParts[0], parameterValueParts[1]);
 		}
 
 		return jsonObject.toString();

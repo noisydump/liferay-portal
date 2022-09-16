@@ -23,9 +23,7 @@ import com.liferay.portal.kernel.service.GroupLocalServiceWrapper;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.PropsTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
-import com.liferay.registry.BasicRegistryImpl;
-import com.liferay.registry.Registry;
-import com.liferay.registry.RegistryUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.Collections;
 import java.util.Locale;
@@ -35,6 +33,8 @@ import javax.portlet.PortletResponse;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -43,13 +43,14 @@ import org.junit.Test;
  */
 public class BaseIndexerGetSiteGroupIdTest {
 
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
 	@Before
 	public void setUp() throws Exception {
 		PropsTestUtil.setProps(Collections.emptyMap());
-
-		Registry registry = new BasicRegistryImpl();
-
-		RegistryUtil.setRegistry(registry);
 
 		_indexer = new TestIndexer();
 	}
@@ -88,7 +89,7 @@ public class BaseIndexerGetSiteGroupIdTest {
 
 		_setUpGroup(groupId, 0, true);
 
-		Assert.assertEquals(true, _indexer.isStagingGroup(groupId));
+		Assert.assertTrue(_indexer.isStagingGroup(groupId));
 	}
 
 	@Test
@@ -98,7 +99,7 @@ public class BaseIndexerGetSiteGroupIdTest {
 
 		_setUpGroup(groupId, parentGroupId, true);
 
-		Assert.assertEquals(true, _indexer.isStagingGroup(groupId));
+		Assert.assertTrue(_indexer.isStagingGroup(groupId));
 	}
 
 	@Test
@@ -107,7 +108,7 @@ public class BaseIndexerGetSiteGroupIdTest {
 
 		_setUpGroup(0, 0, false);
 
-		Assert.assertEquals(false, _indexer.isStagingGroup(groupId));
+		Assert.assertFalse(_indexer.isStagingGroup(groupId));
 	}
 
 	private Group _getGroup(
@@ -164,7 +165,7 @@ public class BaseIndexerGetSiteGroupIdTest {
 
 		ReflectionTestUtil.setFieldValue(
 			GroupLocalServiceUtil.class, "_service",
-			new GroupLocalServiceWrapper(null) {
+			new GroupLocalServiceWrapper() {
 
 				@Override
 				public Group getGroup(long groupId) throws PortalException {

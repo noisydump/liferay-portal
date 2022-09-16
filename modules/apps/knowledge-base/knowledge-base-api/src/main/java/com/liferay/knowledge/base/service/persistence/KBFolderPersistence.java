@@ -387,6 +387,149 @@ public interface KBFolderPersistence extends BasePersistence<KBFolder> {
 	public int countByUuid_C(String uuid, long companyId);
 
 	/**
+	 * Returns all the kb folders where companyId = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @return the matching kb folders
+	 */
+	public java.util.List<KBFolder> findByCompanyId(long companyId);
+
+	/**
+	 * Returns a range of all the kb folders where companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KBFolderModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of kb folders
+	 * @param end the upper bound of the range of kb folders (not inclusive)
+	 * @return the range of matching kb folders
+	 */
+	public java.util.List<KBFolder> findByCompanyId(
+		long companyId, int start, int end);
+
+	/**
+	 * Returns an ordered range of all the kb folders where companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KBFolderModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of kb folders
+	 * @param end the upper bound of the range of kb folders (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching kb folders
+	 */
+	public java.util.List<KBFolder> findByCompanyId(
+		long companyId, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator<KBFolder>
+			orderByComparator);
+
+	/**
+	 * Returns an ordered range of all the kb folders where companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>KBFolderModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of kb folders
+	 * @param end the upper bound of the range of kb folders (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching kb folders
+	 */
+	public java.util.List<KBFolder> findByCompanyId(
+		long companyId, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator<KBFolder>
+			orderByComparator,
+		boolean useFinderCache);
+
+	/**
+	 * Returns the first kb folder in the ordered set where companyId = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching kb folder
+	 * @throws NoSuchFolderException if a matching kb folder could not be found
+	 */
+	public KBFolder findByCompanyId_First(
+			long companyId,
+			com.liferay.portal.kernel.util.OrderByComparator<KBFolder>
+				orderByComparator)
+		throws NoSuchFolderException;
+
+	/**
+	 * Returns the first kb folder in the ordered set where companyId = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching kb folder, or <code>null</code> if a matching kb folder could not be found
+	 */
+	public KBFolder fetchByCompanyId_First(
+		long companyId,
+		com.liferay.portal.kernel.util.OrderByComparator<KBFolder>
+			orderByComparator);
+
+	/**
+	 * Returns the last kb folder in the ordered set where companyId = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching kb folder
+	 * @throws NoSuchFolderException if a matching kb folder could not be found
+	 */
+	public KBFolder findByCompanyId_Last(
+			long companyId,
+			com.liferay.portal.kernel.util.OrderByComparator<KBFolder>
+				orderByComparator)
+		throws NoSuchFolderException;
+
+	/**
+	 * Returns the last kb folder in the ordered set where companyId = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching kb folder, or <code>null</code> if a matching kb folder could not be found
+	 */
+	public KBFolder fetchByCompanyId_Last(
+		long companyId,
+		com.liferay.portal.kernel.util.OrderByComparator<KBFolder>
+			orderByComparator);
+
+	/**
+	 * Returns the kb folders before and after the current kb folder in the ordered set where companyId = &#63;.
+	 *
+	 * @param kbFolderId the primary key of the current kb folder
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next kb folder
+	 * @throws NoSuchFolderException if a kb folder with the primary key could not be found
+	 */
+	public KBFolder[] findByCompanyId_PrevAndNext(
+			long kbFolderId, long companyId,
+			com.liferay.portal.kernel.util.OrderByComparator<KBFolder>
+				orderByComparator)
+		throws NoSuchFolderException;
+
+	/**
+	 * Removes all the kb folders where companyId = &#63; from the database.
+	 *
+	 * @param companyId the company ID
+	 */
+	public void removeByCompanyId(long companyId);
+
+	/**
+	 * Returns the number of kb folders where companyId = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @return the number of matching kb folders
+	 */
+	public int countByCompanyId(long companyId);
+
+	/**
 	 * Returns all the kb folders where groupId = &#63; and parentKBFolderId = &#63;.
 	 *
 	 * @param groupId the group ID
@@ -729,6 +872,56 @@ public interface KBFolderPersistence extends BasePersistence<KBFolder> {
 	 */
 	public int countByG_P_UT(
 		long groupId, long parentKBFolderId, String urlTitle);
+
+	/**
+	 * Returns the kb folder where groupId = &#63; and externalReferenceCode = &#63; or throws a <code>NoSuchFolderException</code> if it could not be found.
+	 *
+	 * @param groupId the group ID
+	 * @param externalReferenceCode the external reference code
+	 * @return the matching kb folder
+	 * @throws NoSuchFolderException if a matching kb folder could not be found
+	 */
+	public KBFolder findByG_ERC(long groupId, String externalReferenceCode)
+		throws NoSuchFolderException;
+
+	/**
+	 * Returns the kb folder where groupId = &#63; and externalReferenceCode = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param groupId the group ID
+	 * @param externalReferenceCode the external reference code
+	 * @return the matching kb folder, or <code>null</code> if a matching kb folder could not be found
+	 */
+	public KBFolder fetchByG_ERC(long groupId, String externalReferenceCode);
+
+	/**
+	 * Returns the kb folder where groupId = &#63; and externalReferenceCode = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	 *
+	 * @param groupId the group ID
+	 * @param externalReferenceCode the external reference code
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the matching kb folder, or <code>null</code> if a matching kb folder could not be found
+	 */
+	public KBFolder fetchByG_ERC(
+		long groupId, String externalReferenceCode, boolean useFinderCache);
+
+	/**
+	 * Removes the kb folder where groupId = &#63; and externalReferenceCode = &#63; from the database.
+	 *
+	 * @param groupId the group ID
+	 * @param externalReferenceCode the external reference code
+	 * @return the kb folder that was removed
+	 */
+	public KBFolder removeByG_ERC(long groupId, String externalReferenceCode)
+		throws NoSuchFolderException;
+
+	/**
+	 * Returns the number of kb folders where groupId = &#63; and externalReferenceCode = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param externalReferenceCode the external reference code
+	 * @return the number of matching kb folders
+	 */
+	public int countByG_ERC(long groupId, String externalReferenceCode);
 
 	/**
 	 * Caches the kb folder in the entity cache if it is enabled.

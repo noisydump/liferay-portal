@@ -24,6 +24,7 @@ import com.liferay.commerce.product.type.grouped.web.internal.util.GroupedCPType
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.ItemSelectorReturnType;
 import com.liferay.item.selector.criteria.UUIDItemSelectorReturnType;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
@@ -31,7 +32,6 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -62,11 +62,11 @@ public class CPDefinitionGroupedEntriesDisplayContext
 			actionHelper, httpServletRequest,
 			CPDefinitionGroupedEntry.class.getSimpleName());
 
-		setDefaultOrderByCol("priority");
-		setDefaultOrderByType("asc");
-
 		_cpDefinitionGroupedEntryService = cpDefinitionGroupedEntryService;
 		_itemSelector = itemSelector;
+
+		setDefaultOrderByCol("priority");
+		setDefaultOrderByType("asc");
 	}
 
 	public CPDefinitionGroupedEntry getCPDefinitionGroupedEntry()
@@ -76,12 +76,11 @@ public class CPDefinitionGroupedEntriesDisplayContext
 			return _cpDefinitionGroupedEntry;
 		}
 
-		long cpDefinitionGroupedEntryId = ParamUtil.getLong(
-			cpRequestHelper.getRenderRequest(), "cpDefinitionGroupedEntryId");
-
 		_cpDefinitionGroupedEntry =
 			_cpDefinitionGroupedEntryService.getCPDefinitionGroupedEntry(
-				cpDefinitionGroupedEntryId);
+				ParamUtil.getLong(
+					cpRequestHelper.getRenderRequest(),
+					"cpDefinitionGroupedEntryId"));
 
 		return _cpDefinitionGroupedEntry;
 	}
@@ -109,10 +108,10 @@ public class CPDefinitionGroupedEntriesDisplayContext
 				"cpDefinitionId", String.valueOf(cpDefinitionId));
 
 			String checkedCPDefinitionIds = StringUtil.merge(
-				getCheckedCPDefinitionIds(cpDefinitionId));
+				_getCheckedCPDefinitionIds(cpDefinitionId));
 
 			String disabledCPDefinitionIds = StringUtil.merge(
-				getDisabledCPDefinitionIds(cpDefinitionId));
+				_getDisabledCPDefinitionIds(cpDefinitionId));
 
 			itemSelectorURL.setParameter(
 				"checkedCPDefinitionIds", checkedCPDefinitionIds);
@@ -129,14 +128,13 @@ public class CPDefinitionGroupedEntriesDisplayContext
 
 	@Override
 	public PortletURL getPortletURL() throws PortalException {
-		PortletURL portletURL = super.getPortletURL();
-
-		portletURL.setParameter(
-			"mvcRenderCommandName", "/cp_definitions/edit_cp_definition");
-		portletURL.setParameter(
-			"screenNavigationCategoryKey", getScreenNavigationCategoryKey());
-
-		return portletURL;
+		return PortletURLBuilder.create(
+			super.getPortletURL()
+		).setMVCRenderCommandName(
+			"/cp_definitions/edit_cp_definition"
+		).setParameter(
+			"screenNavigationCategoryKey", getScreenNavigationCategoryKey()
+		).buildPortletURL();
 	}
 
 	@Override
@@ -147,7 +145,7 @@ public class CPDefinitionGroupedEntriesDisplayContext
 			cpType = getCPType();
 		}
 		catch (PortalException portalException) {
-			_log.error(portalException, portalException);
+			_log.error(portalException);
 		}
 
 		if (cpType != null) {
@@ -166,42 +164,34 @@ public class CPDefinitionGroupedEntriesDisplayContext
 		}
 
 		searchContainer = new SearchContainer<>(
-			liferayPortletRequest, getPortletURL(), null, null);
-
-		searchContainer.setEmptyResultsMessage("no-grouped-entries-were-found");
-
-		OrderByComparator<CPDefinitionGroupedEntry> orderByComparator =
-			GroupedCPTypeUtil.getCPDefinitionGroupedEntryOrderByComparator(
-				getOrderByCol(), getOrderByType());
+			liferayPortletRequest, getPortletURL(), null,
+			"no-grouped-entries-were-found");
 
 		searchContainer.setOrderByCol(getOrderByCol());
-		searchContainer.setOrderByComparator(orderByComparator);
+		searchContainer.setOrderByComparator(
+			GroupedCPTypeUtil.getCPDefinitionGroupedEntryOrderByComparator(
+				getOrderByCol(), getOrderByType()));
 		searchContainer.setOrderByType(getOrderByType());
-		searchContainer.setRowChecker(getRowChecker());
-
-		int total =
+		searchContainer.setResultsAndTotal(
+			() ->
+				_cpDefinitionGroupedEntryService.getCPDefinitionGroupedEntries(
+					getCPDefinitionId(), searchContainer.getStart(),
+					searchContainer.getEnd(),
+					searchContainer.getOrderByComparator()),
 			_cpDefinitionGroupedEntryService.getCPDefinitionGroupedEntriesCount(
-				getCPDefinitionId());
-
-		searchContainer.setTotal(total);
-
-		List<CPDefinitionGroupedEntry> results =
-			_cpDefinitionGroupedEntryService.getCPDefinitionGroupedEntries(
-				getCPDefinitionId(), searchContainer.getStart(),
-				searchContainer.getEnd(), orderByComparator);
-
-		searchContainer.setResults(results);
+				getCPDefinitionId()));
+		searchContainer.setRowChecker(getRowChecker());
 
 		return searchContainer;
 	}
 
-	protected long[] getCheckedCPDefinitionIds(long cpDefinitionId)
+	private long[] _getCheckedCPDefinitionIds(long cpDefinitionId)
 		throws PortalException {
 
 		List<Long> cpDefinitionIdsList = new ArrayList<>();
 
 		List<CPDefinitionGroupedEntry> cpDefinitionGroupedEntries =
-			getCPDefinitionGroupedEntries(cpDefinitionId);
+			_getCPDefinitionGroupedEntries(cpDefinitionId);
 
 		for (CPDefinitionGroupedEntry cpDefinitionGroupedEntry :
 				cpDefinitionGroupedEntries) {
@@ -217,7 +207,7 @@ public class CPDefinitionGroupedEntriesDisplayContext
 		return new long[0];
 	}
 
-	protected List<CPDefinitionGroupedEntry> getCPDefinitionGroupedEntries(
+	private List<CPDefinitionGroupedEntry> _getCPDefinitionGroupedEntries(
 			long cpDefinitionId)
 		throws PortalException {
 
@@ -229,13 +219,13 @@ public class CPDefinitionGroupedEntriesDisplayContext
 			cpDefinitionId, 0, total, null);
 	}
 
-	protected long[] getDisabledCPDefinitionIds(long cpDefinitionId)
+	private long[] _getDisabledCPDefinitionIds(long cpDefinitionId)
 		throws PortalException {
 
 		List<Long> cpDefinitionIdsList = new ArrayList<>();
 
 		List<CPDefinitionGroupedEntry> cpDefinitionGroupedEntries =
-			getCPDefinitionGroupedEntries(cpDefinitionId);
+			_getCPDefinitionGroupedEntries(cpDefinitionId);
 
 		for (CPDefinitionGroupedEntry cpDefinitionGroupedEntry :
 				cpDefinitionGroupedEntries) {

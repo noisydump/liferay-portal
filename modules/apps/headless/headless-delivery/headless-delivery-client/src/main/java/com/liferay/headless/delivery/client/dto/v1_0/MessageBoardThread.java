@@ -352,6 +352,29 @@ public class MessageBoardThread implements Cloneable, Serializable {
 
 	protected Boolean locked;
 
+	public Long getMessageBoardRootMessageId() {
+		return messageBoardRootMessageId;
+	}
+
+	public void setMessageBoardRootMessageId(Long messageBoardRootMessageId) {
+		this.messageBoardRootMessageId = messageBoardRootMessageId;
+	}
+
+	public void setMessageBoardRootMessageId(
+		UnsafeSupplier<Long, Exception>
+			messageBoardRootMessageIdUnsafeSupplier) {
+
+		try {
+			messageBoardRootMessageId =
+				messageBoardRootMessageIdUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Long messageBoardRootMessageId;
+
 	public Long getMessageBoardSectionId() {
 		return messageBoardSectionId;
 	}
@@ -505,6 +528,27 @@ public class MessageBoardThread implements Cloneable, Serializable {
 	}
 
 	protected Long siteId;
+
+	public String getStatus() {
+		return status;
+	}
+
+	public void setStatus(String status) {
+		this.status = status;
+	}
+
+	public void setStatus(
+		UnsafeSupplier<String, Exception> statusUnsafeSupplier) {
+
+		try {
+			status = statusUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String status;
 
 	public Boolean getSubscribed() {
 		return subscribed;
@@ -680,7 +724,9 @@ public class MessageBoardThread implements Cloneable, Serializable {
 
 		public static ViewableBy create(String value) {
 			for (ViewableBy viewableBy : values()) {
-				if (Objects.equals(viewableBy.getValue(), value)) {
+				if (Objects.equals(viewableBy.getValue(), value) ||
+					Objects.equals(viewableBy.name(), value)) {
+
 					return viewableBy;
 				}
 			}

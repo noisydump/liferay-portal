@@ -27,6 +27,10 @@ public class CommerceDiscountRelLocalServiceWrapper
 	implements CommerceDiscountRelLocalService,
 			   ServiceWrapper<CommerceDiscountRelLocalService> {
 
+	public CommerceDiscountRelLocalServiceWrapper() {
+		this(null);
+	}
+
 	public CommerceDiscountRelLocalServiceWrapper(
 		CommerceDiscountRelLocalService commerceDiscountRelLocalService) {
 
@@ -90,6 +94,19 @@ public class CommerceDiscountRelLocalServiceWrapper
 			primaryKeyObj);
 	}
 
+	@Override
+	public com.liferay.commerce.discount.model.CommerceDiscountRel
+			deleteCommerceDiscountRel(
+				com.liferay.commerce.discount.model.CommerceDiscount
+					commerceDiscount,
+				com.liferay.commerce.discount.model.CommerceDiscountRel
+					commerceDiscountRel)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _commerceDiscountRelLocalService.deleteCommerceDiscountRel(
+			commerceDiscount, commerceDiscountRel);
+	}
+
 	/**
 	 * Deletes the commerce discount rel from the database. Also notifies the appropriate model listeners.
 	 *
@@ -99,14 +116,12 @@ public class CommerceDiscountRelLocalServiceWrapper
 	 *
 	 * @param commerceDiscountRel the commerce discount rel
 	 * @return the commerce discount rel that was removed
-	 * @throws PortalException
 	 */
 	@Override
 	public com.liferay.commerce.discount.model.CommerceDiscountRel
-			deleteCommerceDiscountRel(
-				com.liferay.commerce.discount.model.CommerceDiscountRel
-					commerceDiscountRel)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		deleteCommerceDiscountRel(
+			com.liferay.commerce.discount.model.CommerceDiscountRel
+				commerceDiscountRel) {
 
 		return _commerceDiscountRelLocalService.deleteCommerceDiscountRel(
 			commerceDiscountRel);
@@ -133,11 +148,13 @@ public class CommerceDiscountRelLocalServiceWrapper
 	}
 
 	@Override
-	public void deleteCommerceDiscountRels(long commerceDiscountId)
+	public void deleteCommerceDiscountRels(
+			com.liferay.commerce.discount.model.CommerceDiscount
+				commerceDiscount)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		_commerceDiscountRelLocalService.deleteCommerceDiscountRels(
-			commerceDiscountId);
+			commerceDiscount);
 	}
 
 	@Override
@@ -163,6 +180,13 @@ public class CommerceDiscountRelLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _commerceDiscountRelLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _commerceDiscountRelLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -419,6 +443,25 @@ public class CommerceDiscountRelLocalServiceWrapper
 		return _commerceDiscountRelLocalService.
 			getCPDefinitionsByCommerceDiscountIdCount(
 				commerceDiscountId, name, languageId);
+	}
+
+	@Override
+	public java.util.List
+		<com.liferay.commerce.discount.model.CommerceDiscountRel>
+			getCPInstancesByCommerceDiscountId(
+				long commerceDiscountId, String sku, int start, int end) {
+
+		return _commerceDiscountRelLocalService.
+			getCPInstancesByCommerceDiscountId(
+				commerceDiscountId, sku, start, end);
+	}
+
+	@Override
+	public int getCPInstancesByCommerceDiscountIdCount(
+		long commerceDiscountId, String sku) {
+
+		return _commerceDiscountRelLocalService.
+			getCPInstancesByCommerceDiscountIdCount(commerceDiscountId, sku);
 	}
 
 	@Override

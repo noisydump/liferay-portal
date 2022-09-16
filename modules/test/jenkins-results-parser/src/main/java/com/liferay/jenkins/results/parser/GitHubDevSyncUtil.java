@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -68,45 +69,6 @@ public class GitHubDevSyncUtil {
 		}
 	}
 
-	public static LocalGitBranch createCacheLocalGitBranch(
-		LocalGitRepository localGitRepository, LocalGitBranch localGitBranch,
-		boolean synchronize) {
-
-		return _createCacheLocalGitBranch(
-			localGitRepository, "liferay", localGitBranch.getName(), "liferay",
-			localGitBranch.getSHA(), localGitBranch.getSHA(), synchronize);
-	}
-
-	public static LocalGitBranch createCacheLocalGitBranch(
-		LocalGitRepository localGitRepository, PullRequest pullRequest,
-		boolean synchronize) {
-
-		return _createCacheLocalGitBranch(
-			localGitRepository, pullRequest.getReceiverUsername(),
-			pullRequest.getSenderBranchName(), pullRequest.getSenderUsername(),
-			pullRequest.getSenderSHA(), pullRequest.getUpstreamBranchSHA(),
-			synchronize);
-	}
-
-	public static LocalGitBranch createCacheLocalGitBranch(
-		LocalGitRepository localGitRepository, RemoteGitRef remoteGitRef,
-		boolean synchronize) {
-
-		return _createCacheLocalGitBranch(
-			localGitRepository, remoteGitRef.getUsername(),
-			remoteGitRef.getName(), remoteGitRef.getUsername(),
-			remoteGitRef.getSHA(), remoteGitRef.getSHA(), synchronize);
-	}
-
-	public static LocalGitBranch createCacheLocalGitBranch(
-		LocalGitRepository localGitRepository, String name, String sha,
-		boolean synchronize) {
-
-		return _createCacheLocalGitBranch(
-			localGitRepository, "liferay", name, "liferay", sha, sha,
-			synchronize);
-	}
-
 	public static RemoteGitBranch fetchCacheBranchFromGitHubDev(
 		GitWorkingDirectory gitWorkingDirectory, String cacheBranchName) {
 
@@ -114,44 +76,10 @@ public class GitHubDevSyncUtil {
 			gitWorkingDirectory);
 
 		try {
-			while (!gitHubDevGitRemotes.isEmpty()) {
-				GitRemote gitHubDevGitRemote = getRandomGitRemote(
-					gitHubDevGitRemotes);
-
-				gitHubDevGitRemotes.remove(gitHubDevGitRemote);
-
-				try {
-					RemoteGitBranch cachedRemoteGitBranch =
-						gitWorkingDirectory.getRemoteGitBranch(
-							cacheBranchName, gitHubDevGitRemote, true);
-
-					gitWorkingDirectory.fetch(cachedRemoteGitBranch, 1);
-
-					return cachedRemoteGitBranch;
-				}
-				catch (RuntimeException runtimeException) {
-					String message = JenkinsResultsParserUtil.combine(
-						"Unable to fetch cached remote Git branch ",
-						cacheBranchName, "\n", runtimeException.getMessage());
-
-					if (gitHubDevGitRemotes.isEmpty()) {
-						System.out.println(message);
-
-						throw new RuntimeException(
-							JenkinsResultsParserUtil.combine(
-								"Unable to fetch ", cacheBranchName,
-								" from git@github-dev.com"),
-							runtimeException);
-					}
-
-					System.out.println("Retrying: " + message);
-				}
-				finally {
-					gitWorkingDirectory.removeGitRemote(gitHubDevGitRemote);
-				}
-			}
-
-			return null;
+			return _fetchCacheBranchFromGitHubDev(
+				gitWorkingDirectory, cacheBranchName,
+				getGitRemotesWithBranch(
+					cacheBranchName, gitHubDevGitRemotes, gitWorkingDirectory));
 		}
 		finally {
 			gitWorkingDirectory.removeGitRemotes(gitHubDevGitRemotes);
@@ -200,21 +128,63 @@ public class GitHubDevSyncUtil {
 		return gitHubDevGitRemotes;
 	}
 
+	public static List<GitRemote> getGitRemotesWithBranch(
+		final String branchName, List<GitRemote> gitRemotes,
+		final GitWorkingDirectory gitWorkingDirectory) {
+
+		List<Callable<GitRemote>> callables = new ArrayList<>(
+			gitRemotes.size());
+
+		for (final GitRemote gitRemote : gitRemotes) {
+			Callable<GitRemote> callable = new Callable<GitRemote>() {
+
+				public GitRemote call() {
+					try {
+						if (gitWorkingDirectory.remoteGitBranchExists(
+								branchName, gitRemote.getRemoteURL())) {
+
+							return gitRemote;
+						}
+					}
+					catch (Exception exception) {
+						return null;
+					}
+
+					return null;
+				}
+
+			};
+
+			callables.add(callable);
+		}
+
+		ParallelExecutor<GitRemote> parallelExecutor = new ParallelExecutor<>(
+			callables, true, _threadPoolExecutor);
+
+		return parallelExecutor.execute();
+	}
+
 	public static String synchronizeToGitHubDev(
-			GitWorkingDirectory gitWorkingDirectory, String receiverUsername,
-			String senderBranchName, String senderUsername,
-			String senderBranchSHA, String upstreamBranchSHA)
-		throws IOException {
+		GitWorkingDirectory gitWorkingDirectory, String receiverUsername,
+		String senderBranchName, String senderUsername, String senderBranchSHA,
+		String upstreamBranchSHA) {
 
 		return synchronizeToGitHubDev(
 			gitWorkingDirectory, receiverUsername, 0, senderBranchName,
 			senderUsername, senderBranchSHA, upstreamBranchSHA);
 	}
 
+	public static String synchronizeToGitHubDev(
+		LocalGitBranch localGitBranch,
+		WorkspaceGitRepository workspaceGitRepository) {
+
+		return synchronizeToGitHubDev(
+			localGitBranch, workspaceGitRepository, 0);
+	}
+
 	public static boolean synchronizeUpstreamBranchToGitHubDev(
-			GitWorkingDirectory gitWorkingDirectory,
-			LocalGitBranch localGitBranch)
-		throws IOException {
+		GitWorkingDirectory gitWorkingDirectory,
+		LocalGitBranch localGitBranch) {
 
 		return synchronizeUpstreamBranchToGitHubDev(
 			gitWorkingDirectory, localGitBranch, 0);
@@ -222,22 +192,21 @@ public class GitHubDevSyncUtil {
 
 	protected static void cacheBranch(
 		GitWorkingDirectory gitWorkingDirectory, LocalGitBranch localGitBranch,
-		GitRemote gitRemote, long timestamp) {
+		String cacheBranchName, GitRemote gitRemote, long timestamp) {
 
 		RemoteGitBranch lockRemoteGitBranch = null;
 
 		try {
 			lockRemoteGitBranch = gitWorkingDirectory.pushToRemoteGitRepository(
-				true, localGitBranch, localGitBranch.getName() + "-LOCK",
-				gitRemote);
+				true, localGitBranch, cacheBranchName + "-LOCK", gitRemote);
 
 			gitWorkingDirectory.pushToRemoteGitRepository(
-				true, localGitBranch, localGitBranch.getName(), gitRemote);
+				true, localGitBranch, cacheBranchName, gitRemote);
 
 			gitWorkingDirectory.pushToRemoteGitRepository(
 				true, localGitBranch,
 				JenkinsResultsParserUtil.combine(
-					localGitBranch.getName(), "-", String.valueOf(timestamp)),
+					cacheBranchName, "-", String.valueOf(timestamp)),
 				gitRemote);
 		}
 		finally {
@@ -249,19 +218,10 @@ public class GitHubDevSyncUtil {
 
 	protected static void cacheBranches(
 		final GitWorkingDirectory gitWorkingDirectory,
-		final LocalGitBranch localGitBranch,
+		final LocalGitBranch localGitBranch, final String cacheBranchName,
 		List<GitRemote> gitHubDevGitRemotes, final String upstreamUsername) {
 
-		String currentBranchName = gitWorkingDirectory.getCurrentBranchName();
-		String localGitBranchName = localGitBranch.getName();
-
-		if ((currentBranchName == null) ||
-			!currentBranchName.equals(localGitBranchName)) {
-
-			gitWorkingDirectory.checkoutLocalGitBranch(localGitBranch, "-f");
-		}
-
-		final long start = System.currentTimeMillis();
+		final long start = JenkinsResultsParserUtil.getCurrentTimeMillis();
 
 		final RemoteGitBranch upstreamRemoteGitBranch =
 			gitWorkingDirectory.getRemoteGitBranch(
@@ -276,8 +236,8 @@ public class GitHubDevSyncUtil {
 				@Override
 				public Object safeCall() {
 					cacheBranch(
-						gitWorkingDirectory, localGitBranch, gitHubDevGitRemote,
-						start);
+						gitWorkingDirectory, localGitBranch, cacheBranchName,
+						gitHubDevGitRemote, start);
 
 					if (upstreamUsername.equals("liferay")) {
 						LocalGitBranch upstreamLocalGitBranch =
@@ -303,7 +263,7 @@ public class GitHubDevSyncUtil {
 
 		parallelExecutor.execute();
 
-		long duration = System.currentTimeMillis() - start;
+		long duration = JenkinsResultsParserUtil.getCurrentTimeMillis() - start;
 
 		System.out.println(
 			"Cache branches pushed up in " +
@@ -462,10 +422,9 @@ public class GitHubDevSyncUtil {
 	}
 
 	protected static void deleteExpiredRemoteGitBranches(
-		final GitWorkingDirectory gitWorkingDirectory,
 		List<GitRemote> gitHubDevGitRemotes) {
 
-		final long start = System.currentTimeMillis();
+		final long start = JenkinsResultsParserUtil.getCurrentTimeMillis();
 
 		List<Callable<Object>> callables = new ArrayList<>();
 
@@ -489,7 +448,7 @@ public class GitHubDevSyncUtil {
 
 		parallelExecutor.execute();
 
-		long duration = System.currentTimeMillis() - start;
+		long duration = JenkinsResultsParserUtil.getCurrentTimeMillis() - start;
 
 		System.out.println(
 			"Expired cache branches deleted in " +
@@ -550,7 +509,7 @@ public class GitHubDevSyncUtil {
 	protected static void deleteExtraTimestampBranches(
 		List<GitRemote> gitHubDevGitRemotes) {
 
-		long start = System.currentTimeMillis();
+		long start = JenkinsResultsParserUtil.getCurrentTimeMillis();
 
 		List<Callable<Object>> callables = new ArrayList<>();
 
@@ -574,17 +533,17 @@ public class GitHubDevSyncUtil {
 
 		parallelExecutor.execute();
 
-		long duration = System.currentTimeMillis() - start;
+		long duration = JenkinsResultsParserUtil.getCurrentTimeMillis() - start;
 
 		System.out.println(
-			"Local git nodes cleaned in " +
+			"Local Git nodes cleaned in " +
 				JenkinsResultsParserUtil.toDurationString(duration));
 	}
 
 	protected static void deleteFromAllRemotes(
-		final String remoteGitBranchName, final List<GitRemote> gitRemotes) {
+		final String remoteGitBranchName, List<GitRemote> gitRemotes) {
 
-		final long start = System.currentTimeMillis();
+		long start = JenkinsResultsParserUtil.getCurrentTimeMillis();
 
 		List<Callable<Boolean>> callables = new ArrayList<>();
 
@@ -612,12 +571,12 @@ public class GitHubDevSyncUtil {
 
 		parallelExecutor.execute();
 
-		long duration = System.currentTimeMillis() - start;
+		long duration = JenkinsResultsParserUtil.getCurrentTimeMillis() - start;
 
 		System.out.println(
 			JenkinsResultsParserUtil.combine(
 				"Deleted ", remoteGitBranchName, " on ",
-				String.valueOf(gitRemotes.size()), " git nodes in ",
+				String.valueOf(gitRemotes.size()), " Git nodes in ",
 				JenkinsResultsParserUtil.toDurationString(duration)));
 	}
 
@@ -944,13 +903,13 @@ public class GitHubDevSyncUtil {
 
 	protected static void pushToAllRemotes(
 		final boolean force, final LocalGitBranch localGitBranch,
-		final String remoteGitBranchName, final List<GitRemote> gitRemotes) {
+		final String remoteGitBranchName, List<GitRemote> gitRemotes) {
 
 		if (localGitBranch == null) {
 			throw new RuntimeException("Local Git branch is null");
 		}
 
-		final long start = System.currentTimeMillis();
+		long start = JenkinsResultsParserUtil.getCurrentTimeMillis();
 
 		List<Callable<Boolean>> callables = new ArrayList<>();
 
@@ -963,11 +922,23 @@ public class GitHubDevSyncUtil {
 						gitRemote.getGitWorkingDirectory();
 
 					RemoteGitBranch remoteGitBranch =
-						gitWorkingDirectory.pushToRemoteGitRepository(
-							force, localGitBranch, remoteGitBranchName,
-							gitRemote);
+						gitWorkingDirectory.getRemoteGitBranch(
+							remoteGitBranchName, gitRemote);
 
-					return Boolean.valueOf(remoteGitBranch != null);
+					if ((remoteGitBranch == null) ||
+						!Objects.equals(
+							remoteGitBranch.getSHA(),
+							localGitBranch.getSHA())) {
+
+						remoteGitBranch =
+							gitWorkingDirectory.pushToRemoteGitRepository(
+								force, localGitBranch, remoteGitBranchName,
+								gitRemote);
+
+						return Boolean.valueOf(remoteGitBranch != null);
+					}
+
+					return true;
 				}
 
 			};
@@ -980,13 +951,13 @@ public class GitHubDevSyncUtil {
 
 		parallelExecutor.execute();
 
-		long duration = System.currentTimeMillis() - start;
+		long duration = JenkinsResultsParserUtil.getCurrentTimeMillis() - start;
 
 		System.out.println(
 			JenkinsResultsParserUtil.combine(
 				"Pushed ", localGitBranch.getName(), " to ",
 				remoteGitBranchName, " on ", String.valueOf(gitRemotes.size()),
-				" git nodes in ",
+				" Git nodes in ",
 				JenkinsResultsParserUtil.toDurationString(duration)));
 	}
 
@@ -1035,7 +1006,7 @@ public class GitHubDevSyncUtil {
 		int retryCount, String senderBranchName, String senderUsername,
 		String senderBranchSHA, String upstreamBranchSHA) {
 
-		long start = System.currentTimeMillis();
+		long start = JenkinsResultsParserUtil.getCurrentTimeMillis();
 
 		File gitRepositoryDirectory = gitWorkingDirectory.getWorkingDirectory();
 
@@ -1087,8 +1058,7 @@ public class GitHubDevSyncUtil {
 
 					deleteOrphanedCacheBranches(gitHubDevGitRemotes);
 
-					deleteExpiredRemoteGitBranches(
-						gitWorkingDirectory, gitHubDevGitRemotes);
+					deleteExpiredRemoteGitBranches(gitHubDevGitRemotes);
 				}
 
 				RemoteGitBranch cacheRemoteGitBranch = null;
@@ -1141,7 +1111,8 @@ public class GitHubDevSyncUtil {
 
 				cacheBranches(
 					gitWorkingDirectory, cacheLocalGitBranch,
-					gitHubDevGitRemotes, "liferay");
+					cacheLocalGitBranch.getName(), gitHubDevGitRemotes,
+					"liferay");
 
 				return cacheBranchName;
 			}
@@ -1202,11 +1173,114 @@ public class GitHubDevSyncUtil {
 			}
 
 			String durationString = JenkinsResultsParserUtil.toDurationString(
-				System.currentTimeMillis() - start);
+				JenkinsResultsParserUtil.getCurrentTimeMillis() - start);
 
 			System.out.println(
-				"Synchronization with local Git completed in " +
-					durationString + ".");
+				JenkinsResultsParserUtil.combine(
+					"Synchronization with local Git completed in ",
+					durationString, ". Current repository directory is",
+					gitRepositoryDirectory.getPath()));
+		}
+	}
+
+	protected static String synchronizeToGitHubDev(
+		LocalGitBranch localGitBranch,
+		WorkspaceGitRepository workspaceGitRepository, int retryCount) {
+
+		long start = JenkinsResultsParserUtil.getCurrentTimeMillis();
+
+		GitWorkingDirectory gitWorkingDirectory =
+			workspaceGitRepository.getGitWorkingDirectory();
+
+		String cacheBranchName =
+			workspaceGitRepository.getGitHubDevBranchName();
+
+		System.out.println(
+			JenkinsResultsParserUtil.combine(
+				"Starting synchronization with local-git. Current repository ",
+				"directory is ",
+				JenkinsResultsParserUtil.getCanonicalPath(
+					workspaceGitRepository.getDirectory()),
+				". Branch to cache is ", cacheBranchName, "."));
+
+		try {
+			List<GitRemote> gitHubDevGitRemotes = null;
+
+			try {
+				gitHubDevGitRemotes = getGitHubDevGitRemotes(
+					gitWorkingDirectory);
+
+				if (JenkinsResultsParserUtil.getRandomValue(1, 10) == 5) {
+					deleteExtraTimestampBranches(gitHubDevGitRemotes);
+
+					deleteOrphanedCacheBranches(gitHubDevGitRemotes);
+
+					deleteExpiredRemoteGitBranches(gitHubDevGitRemotes);
+				}
+
+				if (remoteGitBranchExists(
+						cacheBranchName, gitWorkingDirectory,
+						gitHubDevGitRemotes)) {
+
+					System.out.println(
+						JenkinsResultsParserUtil.combine(
+							"Cache branch ", cacheBranchName,
+							" already exists"));
+
+					updateCacheRemoteGitBranchTimestamp(
+						cacheBranchName, gitWorkingDirectory,
+						gitHubDevGitRemotes);
+
+					return cacheBranchName;
+				}
+
+				System.out.println(
+					JenkinsResultsParserUtil.combine(
+						"Cache branch ", cacheBranchName, " does not exist"));
+
+				cacheBranches(
+					gitWorkingDirectory, localGitBranch, cacheBranchName,
+					gitHubDevGitRemotes, "liferay");
+
+				return cacheBranchName;
+			}
+			catch (Exception exception) {
+				if (retryCount == 1) {
+					throw exception;
+				}
+
+				gitHubDevGitRemotes = null;
+
+				System.out.println(
+					"Synchronization with local-git failed. Retrying.");
+
+				exception.printStackTrace();
+
+				return synchronizeToGitHubDev(
+					localGitBranch, workspaceGitRepository, retryCount + 1);
+			}
+			finally {
+				if (gitHubDevGitRemotes != null) {
+					try {
+						gitWorkingDirectory.removeGitRemotes(
+							gitHubDevGitRemotes);
+					}
+					catch (Exception exception) {
+						exception.printStackTrace();
+					}
+				}
+			}
+		}
+		finally {
+			String durationString = JenkinsResultsParserUtil.toDurationString(
+				JenkinsResultsParserUtil.getCurrentTimeMillis() - start);
+
+			System.out.println(
+				JenkinsResultsParserUtil.combine(
+					"Synchronization with local-git completed in ",
+					durationString, ". Current repository directory is",
+					JenkinsResultsParserUtil.getCanonicalPath(
+						workspaceGitRepository.getDirectory())));
 		}
 	}
 
@@ -1214,7 +1288,7 @@ public class GitHubDevSyncUtil {
 		GitWorkingDirectory gitWorkingDirectory, LocalGitBranch localGitBranch,
 		int retryCount) {
 
-		long start = System.currentTimeMillis();
+		long start = JenkinsResultsParserUtil.getCurrentTimeMillis();
 
 		File gitRepositoryDirectory = gitWorkingDirectory.getWorkingDirectory();
 
@@ -1253,7 +1327,7 @@ public class GitHubDevSyncUtil {
 		}
 		finally {
 			String durationString = JenkinsResultsParserUtil.toDurationString(
-				System.currentTimeMillis() - start);
+				JenkinsResultsParserUtil.getCurrentTimeMillis() - start);
 
 			System.out.println(
 				"Synchronization with local Git completed in " +
@@ -1264,109 +1338,120 @@ public class GitHubDevSyncUtil {
 	}
 
 	protected static void updateCacheRemoteGitBranchTimestamp(
-		final String cacheBranchName,
-		final GitWorkingDirectory gitWorkingDirectory,
+		String cacheBranchName, GitWorkingDirectory gitWorkingDirectory,
 		List<GitRemote> gitHubDevGitRemotes) {
 
-		long start = System.currentTimeMillis();
-
-		List<RemoteGitBranch> cacheRemoteGitBranches = null;
-		GitRemote gitHubDevGitRemote = null;
-
-		while (cacheRemoteGitBranches == null) {
-			try {
-				gitHubDevGitRemote = getRandomGitRemote(gitHubDevGitRemotes);
-
-				cacheRemoteGitBranches = getCacheRemoteGitBranches(
-					gitHubDevGitRemote);
-			}
-			catch (Exception exception) {
-				exception.printStackTrace();
-
-				gitHubDevGitRemotes.remove(gitHubDevGitRemote);
-
-				if (gitHubDevGitRemotes.isEmpty()) {
-					throw new RuntimeException(
-						"No remote repositories could be reached", exception);
-				}
-			}
-		}
-
-		RemoteGitBranch oldTimestampCacheRemoteGitBranch = null;
-
-		Pattern pattern = Pattern.compile(
-			Pattern.quote(cacheBranchName) + "-(\\d+)");
-
-		for (RemoteGitBranch cacheRemoteGitBranch : cacheRemoteGitBranches) {
-			Matcher matcher = pattern.matcher(cacheRemoteGitBranch.getName());
-
-			if (!matcher.matches()) {
-				continue;
-			}
-
-			long existingTimestamp = Long.parseLong(matcher.group(1));
-
-			if ((System.currentTimeMillis() - existingTimestamp) >
-					_MILLIS_BRANCH_UPDATE_AGE) {
-
-				oldTimestampCacheRemoteGitBranch = cacheRemoteGitBranch;
-			}
-
-			break;
-		}
-
-		if (oldTimestampCacheRemoteGitBranch == null) {
-			return;
-		}
-
-		String newTimestampCacheRemoteBranchName =
-			JenkinsResultsParserUtil.combine(
-				cacheBranchName, "-",
-				String.valueOf(System.currentTimeMillis()));
-
-		System.out.println(
-			JenkinsResultsParserUtil.combine(
-				"Updating existing timestamp for branch ",
-				oldTimestampCacheRemoteGitBranch.getName(), " to ",
-				newTimestampCacheRemoteBranchName));
-
-		LocalGitBranch originalCheckedOutLocalGitBranch =
-			gitWorkingDirectory.getCurrentLocalGitBranch();
-
-		if (originalCheckedOutLocalGitBranch == null) {
-			originalCheckedOutLocalGitBranch =
-				gitWorkingDirectory.getUpstreamLocalGitBranch();
-		}
-
-		LocalGitBranch newTimestampLocalGitBranch =
-			gitWorkingDirectory.createLocalGitBranch(
-				newTimestampCacheRemoteBranchName);
-
-		newTimestampLocalGitBranch = gitWorkingDirectory.fetch(
-			newTimestampLocalGitBranch, oldTimestampCacheRemoteGitBranch);
+		long start = JenkinsResultsParserUtil.getCurrentTimeMillis();
 
 		try {
-			pushToAllRemotes(
-				true, newTimestampLocalGitBranch,
-				newTimestampCacheRemoteBranchName, gitHubDevGitRemotes);
+			List<RemoteGitBranch> cacheRemoteGitBranches = null;
+			GitRemote gitHubDevGitRemote = null;
 
-			deleteFromAllRemotes(
-				oldTimestampCacheRemoteGitBranch.getName(),
-				gitHubDevGitRemotes);
+			while (cacheRemoteGitBranches == null) {
+				try {
+					gitHubDevGitRemote = getRandomGitRemote(
+						gitHubDevGitRemotes);
+
+					cacheRemoteGitBranches = getCacheRemoteGitBranches(
+						gitHubDevGitRemote);
+				}
+				catch (Exception exception) {
+					exception.printStackTrace();
+
+					gitHubDevGitRemotes.remove(gitHubDevGitRemote);
+
+					if (gitHubDevGitRemotes.isEmpty()) {
+						throw new RuntimeException(
+							"No remote repositories could be reached",
+							exception);
+					}
+				}
+			}
+
+			RemoteGitBranch oldTimestampCacheRemoteGitBranch = null;
+
+			Pattern pattern = Pattern.compile(
+				Pattern.quote(cacheBranchName) + "-(\\d+)");
+
+			for (RemoteGitBranch cacheRemoteGitBranch :
+					cacheRemoteGitBranches) {
+
+				Matcher matcher = pattern.matcher(
+					cacheRemoteGitBranch.getName());
+
+				if (!matcher.matches()) {
+					continue;
+				}
+
+				long existingTimestamp = Long.parseLong(matcher.group(1));
+
+				long branchAge =
+					JenkinsResultsParserUtil.getCurrentTimeMillis() -
+						existingTimestamp;
+
+				if (branchAge > _MILLIS_BRANCH_UPDATE_AGE) {
+					oldTimestampCacheRemoteGitBranch = cacheRemoteGitBranch;
+				}
+
+				break;
+			}
+
+			if (oldTimestampCacheRemoteGitBranch == null) {
+				return;
+			}
+
+			String newTimestampCacheRemoteBranchName =
+				JenkinsResultsParserUtil.combine(
+					cacheBranchName, "-",
+					String.valueOf(
+						JenkinsResultsParserUtil.getCurrentTimeMillis()));
+
+			System.out.println(
+				JenkinsResultsParserUtil.combine(
+					"Updating existing timestamp for branch ",
+					oldTimestampCacheRemoteGitBranch.getName(), " to ",
+					newTimestampCacheRemoteBranchName));
+
+			LocalGitBranch originalCheckedOutLocalGitBranch =
+				gitWorkingDirectory.getCurrentLocalGitBranch();
+
+			if (originalCheckedOutLocalGitBranch == null) {
+				originalCheckedOutLocalGitBranch =
+					gitWorkingDirectory.getUpstreamLocalGitBranch();
+			}
+
+			LocalGitBranch newTimestampLocalGitBranch =
+				gitWorkingDirectory.createLocalGitBranch(
+					newTimestampCacheRemoteBranchName);
+
+			newTimestampLocalGitBranch = gitWorkingDirectory.fetch(
+				newTimestampLocalGitBranch, oldTimestampCacheRemoteGitBranch);
+
+			try {
+				pushToAllRemotes(
+					true, newTimestampLocalGitBranch,
+					newTimestampCacheRemoteBranchName, gitHubDevGitRemotes);
+
+				deleteFromAllRemotes(
+					oldTimestampCacheRemoteGitBranch.getName(),
+					gitHubDevGitRemotes);
+			}
+			finally {
+				gitWorkingDirectory.checkoutLocalGitBranch(
+					originalCheckedOutLocalGitBranch);
+
+				gitWorkingDirectory.deleteLocalGitBranch(
+					newTimestampLocalGitBranch);
+			}
 		}
 		finally {
-			gitWorkingDirectory.checkoutLocalGitBranch(
-				originalCheckedOutLocalGitBranch);
-
-			gitWorkingDirectory.deleteLocalGitBranch(
-				newTimestampLocalGitBranch);
+			System.out.println(
+				JenkinsResultsParserUtil.combine(
+					"Cache branch timestamp updated in ",
+					JenkinsResultsParserUtil.toDurationString(
+						JenkinsResultsParserUtil.getCurrentTimeMillis() -
+							start)));
 		}
-
-		System.out.println(
-			JenkinsResultsParserUtil.combine(
-				"Cache branch timestamp updated in ",
-				JenkinsResultsParserUtil.toDurationString(
-					System.currentTimeMillis() - start)));
 	}
 
 	protected static LocalGitBranch updateUpstreamLocalGitBranch(
@@ -1412,7 +1497,8 @@ public class GitHubDevSyncUtil {
 
 		gitWorkingDirectory.fetch(upstreamRemoteGitBranch);
 
-		String tempBranchName = "temp-" + System.currentTimeMillis();
+		String tempBranchName =
+			"temp-" + JenkinsResultsParserUtil.getCurrentTimeMillis();
 
 		LocalGitBranch tempLocalGitBranch = null;
 
@@ -1442,52 +1528,45 @@ public class GitHubDevSyncUtil {
 
 	protected static List<String> gitHubDevNodeHostnames;
 
-	private static LocalGitBranch _createCacheLocalGitBranch(
-		LocalGitRepository localGitRepository, String receiverUsername,
-		String senderBranchName, String senderUsername, String senderBranchSHA,
-		String upstreamBranchSHA, boolean synchronize) {
+	private static RemoteGitBranch _fetchCacheBranchFromGitHubDev(
+		GitWorkingDirectory gitWorkingDirectory, String cacheBranchName,
+		List<GitRemote> gitHubDevGitRemotesWithCacheBranch) {
 
-		GitWorkingDirectory gitWorkingDirectory =
-			localGitRepository.getGitWorkingDirectory();
+		while (!gitHubDevGitRemotesWithCacheBranch.isEmpty()) {
+			GitRemote gitHubDevGitRemote = getRandomGitRemote(
+				gitHubDevGitRemotesWithCacheBranch);
 
-		if (!JenkinsResultsParserUtil.isCINode()) {
-			return gitWorkingDirectory.getRebasedLocalGitBranch(
-				JenkinsResultsParserUtil.combine(
-					gitWorkingDirectory.getUpstreamBranchName(), "-temp-",
-					String.valueOf(System.currentTimeMillis())),
-				senderBranchName,
-				JenkinsResultsParserUtil.combine(
-					"git@github.com:", senderUsername, "/",
-					localGitRepository.getName()),
-				senderBranchSHA, gitWorkingDirectory.getUpstreamBranchName(),
-				upstreamBranchSHA);
+			gitHubDevGitRemotesWithCacheBranch.remove(gitHubDevGitRemote);
+
+			try {
+				RemoteGitBranch cachedRemoteGitBranch =
+					gitWorkingDirectory.getRemoteGitBranch(
+						cacheBranchName, gitHubDevGitRemote, true);
+
+				gitWorkingDirectory.fetch(cachedRemoteGitBranch, 1);
+
+				return cachedRemoteGitBranch;
+			}
+			catch (RuntimeException runtimeException) {
+				String message = JenkinsResultsParserUtil.combine(
+					"Unable to fetch cached remote Git branch ",
+					cacheBranchName, "\n", runtimeException.getMessage());
+
+				if (gitHubDevGitRemotesWithCacheBranch.isEmpty()) {
+					System.out.println(message);
+
+					throw new RuntimeException(
+						JenkinsResultsParserUtil.combine(
+							"Unable to fetch ", cacheBranchName,
+							" from git@github-dev.com"),
+						runtimeException);
+				}
+
+				System.out.println("Retrying: " + message);
+			}
 		}
 
-		if (synchronize) {
-			synchronizeToGitHubDev(
-				gitWorkingDirectory, receiverUsername, 0, senderBranchName,
-				senderUsername, senderBranchSHA, upstreamBranchSHA);
-		}
-
-		String cacheBranchName = getCacheBranchName(
-			receiverUsername, senderUsername, senderBranchSHA,
-			upstreamBranchSHA);
-
-		LocalGitBranch cacheLocalGitBranch = GitBranchFactory.newLocalGitBranch(
-			localGitRepository,
-			JenkinsResultsParserUtil.combine(
-				gitWorkingDirectory.getUpstreamBranchName(), "-temp-",
-				String.valueOf(System.currentTimeMillis())),
-			upstreamBranchSHA);
-
-		RemoteGitBranch cacheRemoteGitBranch =
-			gitWorkingDirectory.getRemoteGitBranch(
-				cacheBranchName,
-				getRandomGitRemote(
-					getGitHubDevGitRemotes(gitWorkingDirectory)));
-
-		return gitWorkingDirectory.fetch(
-			cacheLocalGitBranch, cacheRemoteGitBranch);
+		return null;
 	}
 
 	private static final long _MILLIS_BRANCH_EXPIRATION =
@@ -1500,7 +1579,7 @@ public class GitHubDevSyncUtil {
 	private static final Pattern _lockedCacheBranchPattern = Pattern.compile(
 		"(cache-.*)-LOCK");
 	private static final ThreadPoolExecutor _threadPoolExecutor =
-		JenkinsResultsParserUtil.getNewThreadPoolExecutor(16, true);
+		JenkinsResultsParserUtil.getNewThreadPoolExecutor(8, true);
 
 	private abstract static class SafeCallable<T> implements Callable<T> {
 

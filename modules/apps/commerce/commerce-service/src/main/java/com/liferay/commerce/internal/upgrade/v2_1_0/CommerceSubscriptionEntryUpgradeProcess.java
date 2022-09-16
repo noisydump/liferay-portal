@@ -14,7 +14,6 @@
 
 package com.liferay.commerce.internal.upgrade.v2_1_0;
 
-import com.liferay.commerce.internal.upgrade.base.BaseCommerceServiceUpgradeProcess;
 import com.liferay.commerce.model.impl.CommerceSubscriptionEntryModelImpl;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPInstance;
@@ -23,6 +22,7 @@ import com.liferay.commerce.product.service.CPInstanceLocalService;
 import com.liferay.portal.kernel.dao.db.IndexMetadata;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.util.ObjectValuePair;
 
 import java.sql.DatabaseMetaData;
@@ -36,8 +36,7 @@ import java.util.Objects;
 /**
  * @author Ethan Bustad
  */
-public class CommerceSubscriptionEntryUpgradeProcess
-	extends BaseCommerceServiceUpgradeProcess {
+public class CommerceSubscriptionEntryUpgradeProcess extends UpgradeProcess {
 
 	public CommerceSubscriptionEntryUpgradeProcess(
 		CPDefinitionLocalService cpDefinitionLocalService,
@@ -49,27 +48,22 @@ public class CommerceSubscriptionEntryUpgradeProcess
 
 	@Override
 	protected void doUpgrade() throws Exception {
-		addColumn(
-			CommerceSubscriptionEntryModelImpl.class,
-			CommerceSubscriptionEntryModelImpl.TABLE_NAME, "CPInstanceUUID",
-			"VARCHAR(75)");
-		addColumn(
-			CommerceSubscriptionEntryModelImpl.class,
-			CommerceSubscriptionEntryModelImpl.TABLE_NAME, "CProductId",
-			"LONG");
+		alterTableAddColumn(
+			"CommerceSubscriptionEntry", "CPInstanceUUID", "VARCHAR(75)");
+		alterTableAddColumn("CommerceSubscriptionEntry", "CProductId", "LONG");
 
 		_addIndexes(CommerceSubscriptionEntryModelImpl.TABLE_NAME);
 
-		try (PreparedStatement ps = connection.prepareStatement(
+		try (PreparedStatement preparedStatement = connection.prepareStatement(
 				"update CommerceSubscriptionEntry set CProductId = ?," +
 					"CPInstanceUUID = ? where CPInstanceId = ?");
 			Statement s = connection.createStatement();
-			ResultSet rs = s.executeQuery(
+			ResultSet resultSet = s.executeQuery(
 				"select distinct CPInstanceId from " +
 					"CommerceSubscriptionEntry")) {
 
-			while (rs.next()) {
-				long cpInstanceId = rs.getLong("CPInstanceId");
+			while (resultSet.next()) {
+				long cpInstanceId = resultSet.getLong("CPInstanceId");
 
 				CPInstance cpInstance = _cpInstanceLocalService.getCPInstance(
 					cpInstanceId);
@@ -78,18 +72,16 @@ public class CommerceSubscriptionEntryUpgradeProcess
 					_cpDefinitionLocalService.getCPDefinition(
 						cpInstance.getCPDefinitionId());
 
-				ps.setLong(1, cpDefinition.getCProductId());
+				preparedStatement.setLong(1, cpDefinition.getCProductId());
 
-				ps.setString(2, cpInstance.getCPInstanceUuid());
+				preparedStatement.setString(2, cpInstance.getCPInstanceUuid());
+				preparedStatement.setLong(3, cpInstanceId);
 
-				ps.setLong(3, cpInstanceId);
-
-				ps.execute();
+				preparedStatement.execute();
 			}
 		}
 
-		runSQL(
-			"alter table CommerceSubscriptionEntry drop column CPInstanceId");
+		alterTableDropColumn("CommerceSubscriptionEntry", "CPInstanceId");
 	}
 
 	private void _addIndexes(String tableName) throws Exception {
@@ -125,11 +117,11 @@ public class CommerceSubscriptionEntryUpgradeProcess
 
 		DatabaseMetaData metadata = connection.getMetaData();
 
-		try (ResultSet rs = metadata.getIndexInfo(
+		try (ResultSet resultSet = metadata.getIndexInfo(
 				null, null, tableName, false, false)) {
 
-			while (rs.next()) {
-				String curIndexName = rs.getString("index_name");
+			while (resultSet.next()) {
+				String curIndexName = resultSet.getString("index_name");
 
 				if (Objects.equals(indexName, curIndexName)) {
 					return true;

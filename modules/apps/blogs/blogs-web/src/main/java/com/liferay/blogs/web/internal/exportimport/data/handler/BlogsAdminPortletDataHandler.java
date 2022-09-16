@@ -18,7 +18,6 @@ import com.liferay.blogs.constants.BlogsConstants;
 import com.liferay.blogs.constants.BlogsPortletKeys;
 import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.blogs.service.BlogsEntryLocalService;
-import com.liferay.blogs.service.BlogsStatsUserLocalService;
 import com.liferay.exportimport.kernel.lar.BasePortletDataHandler;
 import com.liferay.exportimport.kernel.lar.ExportImportDateUtil;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
@@ -116,15 +115,12 @@ public class BlogsAdminPortletDataHandler extends BasePortletDataHandler {
 		_blogsEntryLocalService.deleteEntries(
 			portletDataContext.getScopeGroupId());
 
-		_blogsStatsUserLocalService.deleteStatsUserByGroupId(
-			portletDataContext.getScopeGroupId());
-
 		return portletPreferences;
 	}
 
 	@Override
 	protected String doExportData(
-			final PortletDataContext portletDataContext, String portletId,
+			PortletDataContext portletDataContext, String portletId,
 			PortletPreferences portletPreferences)
 		throws Exception {
 
@@ -161,18 +157,6 @@ public class BlogsAdminPortletDataHandler extends BasePortletDataHandler {
 		portletDataContext.importPortletPermissions(
 			BlogsConstants.RESOURCE_NAME);
 
-		Element entriesElement = portletDataContext.getImportDataGroupElement(
-			BlogsEntry.class);
-
-		List<Element> entryElements = entriesElement.elements();
-
-		for (Element entryElement : entryElements) {
-			StagedModelDataHandlerUtil.importStagedModel(
-				portletDataContext, entryElement);
-		}
-
-		// Friendly URLs
-
 		Element friendlyURLEntriesElement =
 			portletDataContext.getImportDataGroupElement(
 				FriendlyURLEntry.class);
@@ -183,6 +167,16 @@ public class BlogsAdminPortletDataHandler extends BasePortletDataHandler {
 		for (Element friendlyURLEntryElement : friendlyURLEntryElements) {
 			StagedModelDataHandlerUtil.importStagedModel(
 				portletDataContext, friendlyURLEntryElement);
+		}
+
+		Element entriesElement = portletDataContext.getImportDataGroupElement(
+			BlogsEntry.class);
+
+		List<Element> entryElements = entriesElement.elements();
+
+		for (Element entryElement : entryElements) {
+			StagedModelDataHandlerUtil.importStagedModel(
+				portletDataContext, entryElement);
 		}
 
 		return null;
@@ -215,9 +209,6 @@ public class BlogsAdminPortletDataHandler extends BasePortletDataHandler {
 
 	@Reference
 	private BlogsEntryLocalService _blogsEntryLocalService;
-
-	@Reference
-	private BlogsStatsUserLocalService _blogsStatsUserLocalService;
 
 	@Reference
 	private Staging _staging;

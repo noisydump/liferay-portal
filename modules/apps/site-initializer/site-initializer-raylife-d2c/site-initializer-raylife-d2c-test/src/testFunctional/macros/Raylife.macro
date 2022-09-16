@@ -1,0 +1,187 @@
+definition {
+
+	macro assertAllObjectsForRaylifeD2c {
+		ObjectAdmin.openObjectAdmin();
+
+		Raylife.waitForObject(key_object = "Raylife Application");
+
+		ObjectPortlet.selectCustomObject(label = "Raylife Application");
+
+		CreateObject.assertObjectLabel(labelName = "Raylife Application");
+
+		Navigator.gotoBack();
+
+		ObjectPortlet.selectCustomObject(label = "Raylife Claim");
+
+		CreateObject.assertObjectLabel(labelName = "Raylife Claim");
+
+		Navigator.gotoBack();
+
+		ObjectPortlet.selectCustomObject(label = "Raylife Document");
+
+		CreateObject.assertObjectLabel(labelName = "Raylife Document");
+
+		Navigator.gotoBack();
+
+		ObjectPortlet.selectCustomObject(label = "Raylife Goal");
+
+		CreateObject.assertObjectLabel(labelName = "Raylife Goal");
+
+		Navigator.gotoBack();
+
+		ObjectPortlet.selectCustomObject(label = "Raylife Policy");
+
+		CreateObject.assertObjectLabel(labelName = "Raylife Policy");
+
+		Navigator.gotoBack();
+
+		ObjectPortlet.selectCustomObject(label = "Quote Comparison");
+
+		CreateObject.assertObjectLabel(labelName = "Quote Comparison");
+
+		Navigator.gotoBack();
+
+		ObjectPortlet.selectCustomObject(label = "Quote Retrieve");
+
+		CreateObject.assertObjectLabel(labelName = "Quote Retrieve");
+
+		Navigator.gotoBack();
+
+		ObjectPortlet.selectCustomObject(label = "Raylife Quote");
+
+		CreateObject.assertObjectLabel(labelName = "Raylife Quote");
+
+		Navigator.gotoBack();
+
+		ObjectPortlet.selectCustomObject(label = "Raylife Sales Goal");
+
+		CreateObject.assertObjectLabel(labelName = "Raylife Sales Goal");
+	}
+
+	macro commerceApisTearDowm {
+		CommerceJSONAccountsAPI._deleteAllCommerceAccounts();
+
+		CommerceJSONAccountGroupsAPI._deleteAllCommerceAccountGroups();
+
+		CommerceJSONProductsAPI._deleteAllCommerceProducts();
+
+		CommerceJSONChannelsAPI._deleteAllCommerceChannels();
+
+		CommerceJSONCatalogsAPI._deleteAllNoSystemCommerceCatalogs();
+
+		CommerceJSONPriceListsAndPromotionsAPI._deleteAllNoMasterPriceListsAndPromotions();
+
+		CommerceJSONAvailableEstimatesAPI._deleteCommerceAvailableEstimates();
+
+		CommerceJSONMeasurementUnitsAPI._deleteCommerceMeasurementUnits();
+
+		CommerceJSONTaxCategoriesAPI._deleteCommerceTaxCategories();
+
+		CommerceJSONWarehousesAndInventoriesAPI._deleteAllWarehouseItems();
+
+		ObjectAdmin.deleteAllCustomObjectsViaAPI();
+	}
+
+	macro createRaylifeSite {
+		var testSiteName = "Raylife D2C";
+		var testSiteURL = "raylife-d2c";
+
+		Site.openSitesAdmin();
+
+		LexiconEntry.gotoAdd();
+
+		LexiconCard.clickCard(card = "Raylife D2C");
+
+		SelectFrame(
+			key_title = "Add Site",
+			locator1 = "IFrame#MODAL_ANY");
+
+		PortletEntry.inputName(name = "${testSiteName}");
+
+		Click(locator1 = "Button#ADD");
+
+		Site.openSitesAdmin();
+
+		while (IsElementNotPresent(key_siteName = "${testSiteName}", locator1 = "Sites#SITE_TABLE_NAME")) {
+			Refresh();
+
+			WaitForPageLoad();
+		}
+	}
+
+	macro dismissAlert {
+		ApplicationsMenuHelper.openApplicationsMenu();
+
+		var panel = "Control Panel";
+
+		ApplicationsMenu.gotoPanel(panel = "${panel}");
+
+		ClickNoError(
+			key_category = "Sites",
+			key_portlet = "Sites",
+			locator1 = "ApplicationsMenu#PORTLET");
+
+		AssertConfirm(value1 = "");
+	}
+
+	macro formsFlow {
+		RaylifeContactInfo.typeAllBasicsInfoFields();
+
+		Click(locator1 = "Raylife#BUTTON_CONTINUE");
+
+		RaylifeBusiness.typeAllBusinessInfoFields();
+
+		Click(locator1 = "Raylife#BUTTON_CONTINUE");
+
+		RaylifeEmployees.typeAllEmployeesInfoFields();
+
+		Click(locator1 = "Raylife#BUTTON_CONTINUE");
+
+		RaylifeProperty.typeAllPropertyInfoFields();
+
+		Click(locator1 = "Raylife#BUTTON_CONTINUE");
+
+		Click(
+			locator1 = "RaylifeQuoteComparison#BUTTON_PURCHASE_THIS_POLICY",
+			policy = "standard");
+	}
+
+	macro tearDownCP {
+		Raylife.commerceApisTearDowm();
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Sites",
+			panel = "Control Panel",
+			portlet = "Sites");
+
+		Refresh();
+
+		PortletEntry.selectAll();
+
+		Click(locator1 = "Icon#SITES_VERTICAL_ELLIPSIS");
+
+		MenuItem.clickNoError(menuItem = "Delete");
+
+		Click(locator1 = "Button#MODAL_DELETE");
+
+		Alert.viewSuccessMessage();
+	}
+
+	macro viewProductsList {
+		for (var productsName : list "${productList}") {
+			AssertElementPresent(
+				key_productsName = "${productsList}",
+				locator1 = "Raylife#PRODUCTS_NAME",
+				value1 = "${productsName}");
+		}
+	}
+
+	macro waitForObject {
+		while (IsElementNotPresent(label = "${key_object}", locator1 = "ObjectPortlet#SELECT_CUSTOM_OBJECT")) {
+			Refresh();
+
+			WaitForPageLoad();
+		}
+	}
+
+}

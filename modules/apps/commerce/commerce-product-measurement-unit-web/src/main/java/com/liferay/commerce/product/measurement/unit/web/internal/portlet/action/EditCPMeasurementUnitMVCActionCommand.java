@@ -15,7 +15,7 @@
 package com.liferay.commerce.product.measurement.unit.web.internal.portlet.action;
 
 import com.liferay.commerce.product.constants.CPPortletKeys;
-import com.liferay.commerce.product.exception.CPMeasurementUnitKeyException;
+import com.liferay.commerce.product.exception.DuplicateCPMeasurementUnitKeyException;
 import com.liferay.commerce.product.exception.NoSuchCPMeasurementUnitException;
 import com.liferay.commerce.product.model.CPMeasurementUnit;
 import com.liferay.commerce.product.service.CPMeasurementUnitService;
@@ -29,7 +29,6 @@ import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.StringUtil;
 
 import java.util.Locale;
 import java.util.Map;
@@ -54,30 +53,6 @@ import org.osgi.service.component.annotations.Reference;
 public class EditCPMeasurementUnitMVCActionCommand
 	extends BaseMVCActionCommand {
 
-	protected void deleteCPMeasurementUnits(ActionRequest actionRequest)
-		throws PortalException {
-
-		long[] deleteCPMeasurementUnitIds = null;
-
-		long cpMeasurementUnitId = ParamUtil.getLong(
-			actionRequest, "cpMeasurementUnitId");
-
-		if (cpMeasurementUnitId > 0) {
-			deleteCPMeasurementUnitIds = new long[] {cpMeasurementUnitId};
-		}
-		else {
-			deleteCPMeasurementUnitIds = StringUtil.split(
-				ParamUtil.getString(
-					actionRequest, "deleteCPMeasurementUnitIds"),
-				0L);
-		}
-
-		for (long deleteCPMeasurementUnitId : deleteCPMeasurementUnitIds) {
-			_cpMeasurementUnitService.deleteCPMeasurementUnit(
-				deleteCPMeasurementUnitId);
-		}
-	}
-
 	@Override
 	protected void doProcessAction(
 			ActionRequest actionRequest, ActionResponse actionResponse)
@@ -87,13 +62,13 @@ public class EditCPMeasurementUnitMVCActionCommand
 
 		try {
 			if (cmd.equals(Constants.ADD) || cmd.equals(Constants.UPDATE)) {
-				updateCPMeasurementUnit(actionRequest);
+				_updateCPMeasurementUnit(actionRequest);
 			}
 			else if (cmd.equals(Constants.DELETE)) {
-				deleteCPMeasurementUnits(actionRequest);
+				_deleteCPMeasurementUnits(actionRequest);
 			}
 			else if (cmd.equals("setPrimary")) {
-				setPrimary(actionRequest);
+				_setPrimary(actionRequest);
 			}
 		}
 		catch (Exception exception) {
@@ -104,7 +79,9 @@ public class EditCPMeasurementUnitMVCActionCommand
 
 				actionResponse.setRenderParameter("mvcPath", "/error.jsp");
 			}
-			else if (exception instanceof CPMeasurementUnitKeyException) {
+			else if (exception instanceof
+						DuplicateCPMeasurementUnitKeyException) {
+
 				hideDefaultErrorMessage(actionRequest);
 				hideDefaultSuccessMessage(actionRequest);
 
@@ -120,7 +97,29 @@ public class EditCPMeasurementUnitMVCActionCommand
 		}
 	}
 
-	protected void setPrimary(ActionRequest actionRequest)
+	private void _deleteCPMeasurementUnits(ActionRequest actionRequest)
+		throws PortalException {
+
+		long[] deleteCPMeasurementUnitIds = null;
+
+		long cpMeasurementUnitId = ParamUtil.getLong(
+			actionRequest, "cpMeasurementUnitId");
+
+		if (cpMeasurementUnitId > 0) {
+			deleteCPMeasurementUnitIds = new long[] {cpMeasurementUnitId};
+		}
+		else {
+			deleteCPMeasurementUnitIds = ParamUtil.getLongValues(
+				actionRequest, "rowIds");
+		}
+
+		for (long deleteCPMeasurementUnitId : deleteCPMeasurementUnitIds) {
+			_cpMeasurementUnitService.deleteCPMeasurementUnit(
+				deleteCPMeasurementUnitId);
+		}
+	}
+
+	private void _setPrimary(ActionRequest actionRequest)
 		throws PortalException {
 
 		long cpMeasurementUnitId = ParamUtil.getLong(
@@ -131,7 +130,7 @@ public class EditCPMeasurementUnitMVCActionCommand
 		_cpMeasurementUnitService.setPrimary(cpMeasurementUnitId, primary);
 	}
 
-	protected CPMeasurementUnit updateCPMeasurementUnit(
+	private CPMeasurementUnit _updateCPMeasurementUnit(
 			ActionRequest actionRequest)
 		throws PortalException {
 
@@ -153,13 +152,14 @@ public class EditCPMeasurementUnitMVCActionCommand
 
 		if (cpMeasurementUnitId <= 0) {
 			cpMeasurementUnit = _cpMeasurementUnitService.addCPMeasurementUnit(
-				nameMap, key, rate, primary, priority, type, serviceContext);
+				null, nameMap, key, rate, primary, priority, type,
+				serviceContext);
 		}
 		else {
 			cpMeasurementUnit =
 				_cpMeasurementUnitService.updateCPMeasurementUnit(
-					cpMeasurementUnitId, nameMap, key, rate, primary, priority,
-					type, serviceContext);
+					null, cpMeasurementUnitId, nameMap, key, rate, primary,
+					priority, type, serviceContext);
 		}
 
 		return cpMeasurementUnit;

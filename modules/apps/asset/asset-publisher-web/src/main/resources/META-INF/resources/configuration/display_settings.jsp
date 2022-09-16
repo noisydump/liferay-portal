@@ -21,7 +21,7 @@ PortletURL configurationRenderURL = (PortletURL)request.getAttribute("configurat
 %>
 
 <div class="display-template">
-	<liferay-ddm:template-selector
+	<liferay-template:template-selector
 		className="<%= AssetEntry.class.getName() %>"
 		defaultDisplayStyle="<%= assetPublisherDisplayContext.getDefaultDisplayStyle() %>"
 		displayStyle="<%= assetPublisherDisplayContext.getDisplayStyle() %>"
@@ -51,7 +51,7 @@ PortletURL configurationRenderURL = (PortletURL)request.getAttribute("configurat
 	<aui:option label="view-in-context" selected="<%= assetPublisherDisplayContext.isAssetLinkBehaviorViewInPortlet() %>" value="viewInPortlet" />
 </aui:select>
 
-<aui:input helpMessage="number-of-items-to-display-help" label="number-of-items-to-display" name="preferences--delta--" type="text" value="<%= assetPublisherDisplayContext.getDelta() %>">
+<aui:input helpMessage='<%= LanguageUtil.format(request, "number-of-items-to-display-help", new Object[] {SearchContainer.MAX_DELTA}, false) %>' label="number-of-items-to-display" name="preferences--delta--" type="text" value="<%= assetPublisherDisplayContext.getDelta() %>">
 	<aui:validator name="digits" />
 </aui:input>
 
@@ -73,45 +73,6 @@ PortletURL configurationRenderURL = (PortletURL)request.getAttribute("configurat
 	<aui:input inlineLabel="right" label="exclude-assets-with-0-views" labelCssClass="simple-toggle-switch" name="preferences--excludeZeroViewCount--" type="toggle-switch" value="<%= assetPublisherDisplayContext.isExcludeZeroViewCount() %>" />
 </c:if>
 
-<aui:script sandbox="<%= true %>">
-	var displayStyleSelect = document.getElementById(
-		'<portlet:namespace />displayStyle'
-	);
-
-	function showHiddenFields() {
-		var displayStyle = displayStyleSelect.value;
-
-		var hiddenFields = document.querySelectorAll('.hidden-field');
-
-		Array.prototype.forEach.call(hiddenFields, function (field) {
-			var fieldContainer = field.closest('.form-group');
-
-			if (fieldContainer) {
-				var fieldClassList = field.classList;
-				var fieldContainerClassList = fieldContainer.classList;
-
-				if (
-					displayStyle === 'full-content' &&
-					(fieldClassList.contains('show-asset-title') ||
-						fieldClassList.contains('show-context-link') ||
-						fieldClassList.contains('show-extra-info'))
-				) {
-					fieldContainerClassList.remove('hide');
-				}
-				else if (
-					displayStyle === 'abstracts' &&
-					fieldClassList.contains('abstract-length')
-				) {
-					fieldContainerClassList.remove('hide');
-				}
-				else {
-					fieldContainerClassList.add('hide');
-				}
-			}
-		});
-	}
-
-	showHiddenFields();
-
-	displayStyleSelect.addEventListener('change', showHiddenFields);
-</aui:script>
+<liferay-frontend:component
+	module="js/DisplaySettings"
+/>

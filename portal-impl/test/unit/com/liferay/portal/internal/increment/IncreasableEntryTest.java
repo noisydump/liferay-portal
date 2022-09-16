@@ -16,10 +16,13 @@ package com.liferay.portal.internal.increment;
 
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -28,8 +31,10 @@ import org.junit.Test;
 public class IncreasableEntryTest {
 
 	@ClassRule
-	public static final CodeCoverageAssertor codeCoverageAssertor =
-		CodeCoverageAssertor.INSTANCE;
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			CodeCoverageAssertor.INSTANCE, LiferayUnitTestRule.INSTANCE);
 
 	@Test
 	public void testEqualsAndHashCode() {
@@ -81,15 +86,11 @@ public class IncreasableEntryTest {
 		IncreasableEntry<String, Integer> increasableEntry =
 			new IntegerIncreasableEntry("test", 0);
 
-		StringBundler sb = new StringBundler(5);
-
-		sb.append("{key=");
-		sb.append(increasableEntry.getKey());
-		sb.append(", value=");
-		sb.append(increasableEntry.getValue());
-		sb.append("}");
-
-		Assert.assertEquals(sb.toString(), increasableEntry.toString());
+		Assert.assertEquals(
+			StringBundler.concat(
+				"{key=", increasableEntry.getKey(), ", value=",
+				increasableEntry.getValue(), "}"),
+			increasableEntry.toString());
 	}
 
 	private static class IntegerIncreasableEntry

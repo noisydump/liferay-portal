@@ -16,7 +16,7 @@ package com.liferay.portal.search.web.internal.search.results.portlet.shared.sea
 
 import com.liferay.portal.search.searcher.SearchRequestBuilder;
 import com.liferay.portal.search.searcher.SearchRequestBuilderFactory;
-import com.liferay.portal.search.web.internal.search.results.constants.SearchResultsPortletKeys;
+import com.liferay.portal.search.web.constants.SearchResultsPortletKeys;
 import com.liferay.portal.search.web.internal.search.results.portlet.SearchResultsPortletPreferences;
 import com.liferay.portal.search.web.internal.search.results.portlet.SearchResultsPortletPreferencesImpl;
 import com.liferay.portal.search.web.internal.util.SearchOptionalUtil;
@@ -48,12 +48,14 @@ public class SearchResultsPortletSharedSearchContributor
 			new SearchResultsPortletPreferencesImpl(
 				portletSharedSearchSettings.getPortletPreferencesOptional());
 
-		paginate(searchResultsPortletPreferences, portletSharedSearchSettings);
-
 		SearchRequestBuilder searchRequestBuilder =
 			portletSharedSearchSettings.getFederatedSearchRequestBuilder(
 				searchResultsPortletPreferences.
 					getFederatedSearchKeyOptional());
+
+		_paginate(
+			searchResultsPortletPreferences, portletSharedSearchSettings,
+			searchRequestBuilder);
 
 		if (searchResultsPortletPreferences.isHighlightEnabled()) {
 			searchRequestBuilder.highlightEnabled(true);
@@ -63,19 +65,22 @@ public class SearchResultsPortletSharedSearchContributor
 
 			searchRequestBuilder.highlightFields(fieldsToDisplay);
 		}
-
-		searchRequestBuilder.paginationStartParameterName(
-			searchResultsPortletPreferences.getPaginationStartParameterName());
 	}
 
-	protected void paginate(
+	@Reference
+	protected SearchRequestBuilderFactory searchRequestBuilderFactory;
+
+	private void _paginate(
 		SearchResultsPortletPreferences searchResultsPortletPreferences,
-		PortletSharedSearchSettings portletSharedSearchSettings) {
+		PortletSharedSearchSettings portletSharedSearchSettings,
+		SearchRequestBuilder searchRequestBuilder) {
 
 		String paginationStartParameterName =
 			searchResultsPortletPreferences.getPaginationStartParameterName();
 
 		portletSharedSearchSettings.setPaginationStartParameterName(
+			paginationStartParameterName);
+		searchRequestBuilder.paginationStartParameterName(
 			paginationStartParameterName);
 
 		Optional<String> paginationStartParameterValueOptional =
@@ -98,9 +103,14 @@ public class SearchResultsPortletSharedSearchContributor
 			searchResultsPortletPreferences.getPaginationDelta());
 
 		portletSharedSearchSettings.setPaginationDelta(paginationDelta);
-	}
+		searchRequestBuilder.size(paginationDelta);
 
-	@Reference
-	protected SearchRequestBuilderFactory searchRequestBuilderFactory;
+		SearchOptionalUtil.copy(
+			() -> paginationStartParameterValueOptional.map(
+				paginationStartValue ->
+					(Integer.valueOf(paginationStartValue) - 1) *
+						paginationDelta),
+			searchRequestBuilder::from);
+	}
 
 }

@@ -35,9 +35,11 @@ CommerceAddressDisplayContext commerceAddressDisplayContext = (CommerceAddressDi
 
 		SearchContainer<CommerceAddress> commerceAddressSearchContainer = commerceAddressDisplayContext.getSearchContainer();
 
-		PortletURL portletURL = commerceAddressDisplayContext.getPortletURL();
-
-		portletURL.setParameter("searchContainerId", "commerceAddresses");
+		PortletURL portletURL = PortletURLBuilder.create(
+			commerceAddressDisplayContext.getPortletURL()
+		).setParameter(
+			"searchContainerId", "commerceAddresses"
+		).buildPortletURL();
 
 		request.setAttribute("view.jsp-portletURL", portletURL);
 		%>
@@ -50,7 +52,7 @@ CommerceAddressDisplayContext commerceAddressDisplayContext = (CommerceAddressDi
 			entries="<%= commerceAddressSearchContainer.getResults() %>"
 		>
 			<div class="container-fluid container-fluid-max-xl" id="<portlet:namespace />addressesContainer">
-				<aui:form action="<%= portletURL.toString() %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="fm">
+				<aui:form action="<%= portletURL %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="fm">
 					<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.DELETE %>" />
 					<aui:input name="redirect" type="hidden" value="<%= portletURL.toString() %>" />
 
@@ -85,16 +87,16 @@ CommerceAddressDisplayContext commerceAddressDisplayContext = (CommerceAddressDi
 
 								<liferay-ui:search-container-column-text
 									name="country"
-									property="commerceCountry.name"
+									property="country.name"
 								/>
 
 								<%
-								CommerceRegion commerceRegion = commerceAddress.getCommerceRegion();
+								Region region = commerceAddress.getRegion();
 								%>
 
 								<liferay-ui:search-container-column-text
 									name="region"
-									value="<%= (commerceRegion != null) ? commerceRegion.getName() : StringPool.BLANK %>"
+									value="<%= (region != null) ? HtmlUtil.escape(region.getName()) : StringPool.BLANK %>"
 								/>
 
 								<liferay-ui:search-container-column-jsp

@@ -9,12 +9,12 @@
  * distribution rights of the Software.
  */
 
-import {useStateSafe} from 'frontend-js-react-web';
+import {useStateSafe} from '@liferay/frontend-js-react-web';
 import PropTypes from 'prop-types';
 import React, {useContext, useEffect} from 'react';
 
 import ConnectionContext from '../context/ConnectionContext';
-import {StoreContext, useWarning} from '../context/StoreContext';
+import {StoreDispatchContext, StoreStateContext} from '../context/StoreContext';
 import {numberFormat} from '../utils/numberFormat';
 import Hint from './Hint';
 
@@ -22,9 +22,7 @@ function TotalCount({
 	className,
 	dataProvider,
 	label,
-	languageTag,
 	percentage = false,
-	popoverAlign,
 	popoverHeader,
 	popoverMessage,
 	popoverPosition,
@@ -33,9 +31,9 @@ function TotalCount({
 
 	const [value, setValue] = useStateSafe('-');
 
-	const [, addWarning] = useWarning();
+	const dispatch = useContext(StoreDispatchContext);
 
-	const [{publishedToday}] = useContext(StoreContext);
+	const {languageTag, publishedToday} = useContext(StoreStateContext);
 
 	useEffect(() => {
 		if (validAnalyticsConnection) {
@@ -43,10 +41,10 @@ function TotalCount({
 				.then(setValue)
 				.catch(() => {
 					setValue('-');
-					addWarning();
+					dispatch({type: 'ADD_WARNING'});
 				});
 		}
-	}, [addWarning, dataProvider, setValue, validAnalyticsConnection]);
+	}, [dispatch, dataProvider, setValue, validAnalyticsConnection]);
 
 	let displayValue = '-';
 
@@ -66,15 +64,18 @@ function TotalCount({
 	return (
 		<div className={className}>
 			<span className="text-secondary">{label}</span>
+
 			<span className="text-secondary">
 				<Hint
-					align={popoverAlign}
 					message={popoverMessage}
 					position={popoverPosition}
 					title={popoverHeader}
 				/>
 			</span>
-			<span className="font-weight-bold">{displayValue}</span>
+
+			<span className="font-weight-bold inline-item-after">
+				{displayValue}
+			</span>
 		</div>
 	);
 }
@@ -82,7 +83,6 @@ function TotalCount({
 TotalCount.propTypes = {
 	dataProvider: PropTypes.func.isRequired,
 	label: PropTypes.string.isRequired,
-	languageTag: PropTypes.string,
 	percentage: PropTypes.bool,
 	popoverHeader: PropTypes.string.isRequired,
 	popoverMessage: PropTypes.string.isRequired,

@@ -20,6 +20,8 @@ package com.liferay.document.library.display.context;
  */
 public class DLUIItemKeys {
 
+	public static final String ADD_FOLDER = "#add-folder";
+
 	public static final String CANCEL_CHECKOUT =
 		DLUIItemKeys.class.getName() + "#cancel-checkout";
 
@@ -28,6 +30,9 @@ public class DLUIItemKeys {
 
 	public static final String CHECKOUT =
 		DLUIItemKeys.class.getName() + "#checkout";
+
+	public static final String COLLECT_DIGITAL_SIGNATURE =
+		DLUIItemKeys.class.getName() + "#collect-digital-signature";
 
 	public static final String COMPARE_TO =
 		DLUIItemKeys.class.getName() + "#compare-to";
@@ -42,6 +47,9 @@ public class DLUIItemKeys {
 		DLUIItemKeys.class.getName() + "#download";
 
 	public static final String EDIT = DLUIItemKeys.class.getName() + "#edit";
+
+	public static final String EDIT_IMAGE =
+		DLUIItemKeys.class.getName() + "#edit-image";
 
 	public static final String MOVE = DLUIItemKeys.class.getName() + "#move";
 
@@ -59,6 +67,9 @@ public class DLUIItemKeys {
 
 	public static final String REVERT =
 		DLUIItemKeys.class.getName() + "#revert";
+
+	public static final String UPLOAD =
+		DLUIItemKeys.class.getName() + "#upload";
 
 	public static final String VIEW_ORIGINAL_FILE =
 		DLUIItemKeys.class.getName() + "#view-original-file";

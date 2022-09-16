@@ -18,7 +18,7 @@ import com.liferay.message.boards.constants.MBPortletKeys;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.portlet.BaseJSPSettingsConfigurationAction;
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
 import com.liferay.portal.kernel.servlet.SessionErrors;
@@ -42,6 +42,7 @@ import javax.portlet.ActionResponse;
 import javax.portlet.PortletConfig;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Brian Wing Shun Chan
@@ -67,7 +68,15 @@ public class MBAdminConfigurationAction
 		super.processAction(portletConfig, actionRequest, actionResponse);
 	}
 
-	protected boolean isValidUserRank(String rank) {
+	@Override
+	protected void updateMultiValuedKeys(ActionRequest actionRequest) {
+		super.updateMultiValuedKeys(actionRequest);
+
+		_updateThreadPriorities(actionRequest);
+		_updateUserRanks(actionRequest);
+	}
+
+	private boolean _isValidUserRank(String rank) {
 		if ((StringUtil.count(rank, CharPool.EQUAL) != 1) ||
 			rank.startsWith(StringPool.EQUAL) ||
 			rank.endsWith(StringPool.EQUAL)) {
@@ -78,21 +87,12 @@ public class MBAdminConfigurationAction
 		return true;
 	}
 
-	@Override
-	protected void updateMultiValuedKeys(ActionRequest actionRequest) {
-		super.updateMultiValuedKeys(actionRequest);
-
-		updateThreadPriorities(actionRequest);
-		updateUserRanks(actionRequest);
-	}
-
-	protected void updateThreadPriorities(ActionRequest actionRequest) {
+	private void _updateThreadPriorities(ActionRequest actionRequest) {
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
 		for (Locale locale :
-				LanguageUtil.getAvailableLocales(
-					themeDisplay.getSiteGroupId())) {
+				_language.getAvailableLocales(themeDisplay.getSiteGroupId())) {
 
 			String languageId = LocaleUtil.toLanguageId(locale);
 
@@ -128,13 +128,12 @@ public class MBAdminConfigurationAction
 		}
 	}
 
-	protected void updateUserRanks(ActionRequest actionRequest) {
+	private void _updateUserRanks(ActionRequest actionRequest) {
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
 		for (Locale locale :
-				LanguageUtil.getAvailableLocales(
-					themeDisplay.getSiteGroupId())) {
+				_language.getAvailableLocales(themeDisplay.getSiteGroupId())) {
 
 			String languageId = LocaleUtil.toLanguageId(locale);
 
@@ -145,7 +144,7 @@ public class MBAdminConfigurationAction
 				new NaturalOrderStringComparator());
 
 			for (String rank : ranks) {
-				if (!isValidUserRank(rank)) {
+				if (!_isValidUserRank(rank)) {
 					SessionErrors.add(actionRequest, "userRank");
 
 					return;
@@ -176,5 +175,8 @@ public class MBAdminConfigurationAction
 			setPreference(actionRequest, preferenceName, ranks);
 		}
 	}
+
+	@Reference
+	private Language _language;
 
 }

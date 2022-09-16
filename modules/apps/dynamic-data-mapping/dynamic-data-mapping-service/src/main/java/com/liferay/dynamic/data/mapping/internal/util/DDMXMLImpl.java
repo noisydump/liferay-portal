@@ -80,7 +80,7 @@ public class DDMXMLImpl implements DDMXML {
 		}
 		catch (DocumentException documentException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(documentException.getMessage(), documentException);
+				_log.debug(documentException);
 			}
 
 			return null;
@@ -136,11 +136,8 @@ public class DDMXMLImpl implements DDMXML {
 							"default-locale");
 					}
 
-					Locale defaultLocale = LocaleUtil.fromLanguageId(
-						defaultLanguageId);
-
-					field.setDefaultLocale(defaultLocale);
-
+					field.setDefaultLocale(
+						LocaleUtil.fromLanguageId(defaultLanguageId));
 					field.setDDMStructureId(structure.getStructureId());
 					field.setName(fieldName);
 					field.setValue(locale, fieldValueSerializable);
@@ -175,13 +172,14 @@ public class DDMXMLImpl implements DDMXML {
 			while (iterator.hasNext()) {
 				Field field = iterator.next();
 
-				List<Node> nodes = getElementsByName(document, field.getName());
+				List<Node> nodes = _getElementsByName(
+					document, field.getName());
 
 				for (Node node : nodes) {
 					document.remove(node);
 				}
 
-				appendField(rootElement, field);
+				_appendField(rootElement, field);
 			}
 
 			return document.formattedString();
@@ -215,7 +213,7 @@ public class DDMXMLImpl implements DDMXML {
 		try {
 			Document document = _saxReader.read(xml, getXMLSchema());
 
-			validate(document);
+			_validate(document);
 
 			return document.asXML();
 		}
@@ -237,7 +235,7 @@ public class DDMXMLImpl implements DDMXML {
 		}
 	}
 
-	protected void appendField(Element element, Field field) {
+	private void _appendField(Element element, Field field) {
 		Element dynamicElementElement = element.addElement("dynamic-element");
 
 		dynamicElementElement.addAttribute(
@@ -255,12 +253,12 @@ public class DDMXMLImpl implements DDMXML {
 				dynamicContentElement.addAttribute(
 					"language-id", LocaleUtil.toLanguageId(locale));
 
-				updateField(dynamicContentElement, value);
+				_updateField(dynamicContentElement, value);
 			}
 		}
 	}
 
-	protected List<Node> getElementsByName(Document document, String name) {
+	private List<Node> _getElementsByName(Document document, String name) {
 		name = HtmlUtil.escapeXPathAttribute(name);
 
 		XPath xPathSelector = _saxReader.createXPath(
@@ -269,12 +267,7 @@ public class DDMXMLImpl implements DDMXML {
 		return xPathSelector.selectNodes(document);
 	}
 
-	@Reference(unbind = "-")
-	protected void setSAXReader(SAXReader saxReader) {
-		_saxReader = saxReader;
-	}
-
-	protected void updateField(
+	private void _updateField(
 		Element dynamicContentElement, Serializable fieldValue) {
 
 		dynamicContentElement.clearContent();
@@ -290,7 +283,7 @@ public class DDMXMLImpl implements DDMXML {
 		dynamicContentElement.addCDATA(valueString.trim());
 	}
 
-	protected void validate(Document document) throws Exception {
+	private void _validate(Document document) throws Exception {
 		XPath xPathSelector = _saxReader.createXPath("//dynamic-element");
 
 		List<Node> nodes = xPathSelector.selectNodes(document);
@@ -325,7 +318,9 @@ public class DDMXMLImpl implements DDMXML {
 
 	private static final Log _log = LogFactoryUtil.getLog(DDMXMLImpl.class);
 
+	@Reference
 	private SAXReader _saxReader;
+
 	private XMLSchema _xmlSchema;
 
 }

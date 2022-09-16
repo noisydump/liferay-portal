@@ -16,29 +16,34 @@ package com.liferay.document.library.web.internal.change.tracking.spi.display;
 
 import com.liferay.change.tracking.spi.display.BaseCTDisplayRenderer;
 import com.liferay.change.tracking.spi.display.CTDisplayRenderer;
+import com.liferay.change.tracking.spi.display.context.DisplayContext;
 import com.liferay.document.library.constants.DLPortletKeys;
 import com.liferay.document.library.kernel.model.DLFileEntry;
-import com.liferay.document.library.kernel.store.Store;
+import com.liferay.document.library.kernel.service.DLAppLocalService;
+import com.liferay.document.library.kernel.util.AudioProcessor;
+import com.liferay.document.library.kernel.util.ImageProcessor;
+import com.liferay.document.library.kernel.util.PDFProcessor;
+import com.liferay.document.library.kernel.util.VideoProcessor;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portlet.documentlibrary.store.StoreFactory;
-import com.liferay.trash.kernel.util.TrashUtil;
+import com.liferay.trash.TrashHelper;
 
 import java.io.InputStream;
 
 import java.util.Locale;
 
 import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
 
 import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Samuel Trong Tran
@@ -49,16 +54,12 @@ public class DLFileEntryCTDisplayRenderer
 
 	@Override
 	public InputStream getDownloadInputStream(
-			DLFileEntry dlFileEntry, String version)
+			DLFileEntry dlFileEntry, String key)
 		throws PortalException {
 
-		StoreFactory storeFactory = StoreFactory.getInstance();
-
-		Store store = storeFactory.getStore();
-
-		return store.getFileAsStream(
-			dlFileEntry.getCompanyId(), dlFileEntry.getDataRepositoryId(),
-			dlFileEntry.getName(), version);
+		return DLFileVersionCTDisplayRenderer.getDownloadInputStream(
+			_audioProcessor, _dlAppLocalService, dlFileEntry.getFileVersion(),
+			_imageProcessor, key, _pdfProcessor, _videoProcessor);
 	}
 
 	@Override
@@ -76,18 +77,17 @@ public class DLFileEntryCTDisplayRenderer
 			group = themeDisplay.getScopeGroup();
 		}
 
-		PortletURL portletURL = _portal.getControlPanelPortletURL(
-			httpServletRequest, group, DLPortletKeys.DOCUMENT_LIBRARY_ADMIN, 0,
-			0, PortletRequest.RENDER_PHASE);
-
-		portletURL.setParameter(
-			"mvcRenderCommandName", "/document_library/edit_file_entry");
-		portletURL.setParameter(
-			"redirect", _portal.getCurrentURL(httpServletRequest));
-		portletURL.setParameter(
-			"fileEntryId", String.valueOf(dlFileEntry.getFileEntryId()));
-
-		return portletURL.toString();
+		return PortletURLBuilder.create(
+			_portal.getControlPanelPortletURL(
+				httpServletRequest, group, DLPortletKeys.DOCUMENT_LIBRARY_ADMIN,
+				0, 0, PortletRequest.RENDER_PHASE)
+		).setMVCRenderCommandName(
+			"/document_library/edit_file_entry"
+		).setRedirect(
+			_portal.getCurrentURL(httpServletRequest)
+		).setParameter(
+			"fileEntryId", dlFileEntry.getFileEntryId()
+		).buildString();
 	}
 
 	@Override
@@ -98,26 +98,54 @@ public class DLFileEntryCTDisplayRenderer
 	@Override
 	public String getTitle(Locale locale, DLFileEntry dlFileEntry) {
 		if (dlFileEntry.isInTrash()) {
-			return TrashUtil.getOriginalTitle(dlFileEntry.getTitle());
+			return _trashHelper.getOriginalTitle(dlFileEntry.getTitle());
 		}
 
 		return dlFileEntry.getTitle();
 	}
 
 	@Override
-	protected void buildDisplay(DisplayBuilder<DLFileEntry> displayBuilder)
-		throws PortalException {
+	public void render(DisplayContext<DLFileEntry> displayContext)
+		throws Exception {
 
-		DLFileEntry dlFileEntry = displayBuilder.getModel();
+		DLFileEntry dlFileEntry = displayContext.getModel();
 
-		DLFileVersionCTDisplayRenderer.buildDisplay(
-			displayBuilder, dlFileEntry.getFileVersion());
+		displayContext.render(
+			dlFileEntry.getFileVersion(), displayContext.getLocale());
 	}
+
+	@Override
+	public String renderPreview(DisplayContext<DLFileEntry> displayContext)
+		throws Exception {
+
+		DLFileEntry dlFileEntry = displayContext.getModel();
+
+		return displayContext.renderPreview(
+			dlFileEntry.getFileVersion(), displayContext.getLocale());
+	}
+
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
+	private AudioProcessor _audioProcessor;
+
+	@Reference
+	private DLAppLocalService _dlAppLocalService;
 
 	@Reference
 	private GroupLocalService _groupLocalService;
 
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
+	private ImageProcessor _imageProcessor;
+
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
+	private PDFProcessor _pdfProcessor;
+
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private TrashHelper _trashHelper;
+
+	@Reference(policyOption = ReferencePolicyOption.GREEDY)
+	private VideoProcessor _videoProcessor;
 
 }

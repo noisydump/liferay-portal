@@ -15,10 +15,13 @@
 package com.liferay.contacts.web.internal.notifications;
 
 import com.liferay.contacts.web.internal.constants.ContactsPortletKeys;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserNotificationEvent;
 import com.liferay.portal.kernel.notifications.BaseUserNotificationHandler;
@@ -37,8 +40,6 @@ import com.liferay.social.kernel.service.SocialRequestLocalService;
 
 import java.util.ResourceBundle;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.PortletURL;
 import javax.portlet.WindowState;
 
 import org.osgi.service.component.annotations.Component;
@@ -81,7 +82,7 @@ public class ContactsCenterUserNotificationHandler
 			return null;
 		}
 
-		String creatorUserName = getUserNameLink(
+		String creatorUserName = _getUserNameLink(
 			socialRequest.getUserId(), serviceContext);
 
 		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
@@ -117,36 +118,6 @@ public class ContactsCenterUserNotificationHandler
 		LiferayPortletResponse liferayPortletResponse =
 			serviceContext.getLiferayPortletResponse();
 
-		PortletURL confirmURL = liferayPortletResponse.createActionURL(
-			ContactsPortletKeys.CONTACTS_CENTER);
-
-		confirmURL.setParameter(
-			ActionRequest.ACTION_NAME, "updateSocialRequest");
-		confirmURL.setParameter("redirect", serviceContext.getLayoutFullURL());
-		confirmURL.setParameter(
-			"socialRequestId", String.valueOf(socialRequestId));
-		confirmURL.setParameter(
-			"status", String.valueOf(SocialRequestConstants.STATUS_CONFIRM));
-		confirmURL.setParameter(
-			"userNotificationEventId",
-			String.valueOf(userNotificationEvent.getUserNotificationEventId()));
-		confirmURL.setWindowState(WindowState.NORMAL);
-
-		PortletURL ignoreURL = liferayPortletResponse.createActionURL(
-			ContactsPortletKeys.CONTACTS_CENTER);
-
-		ignoreURL.setParameter(
-			ActionRequest.ACTION_NAME, "updateSocialRequest");
-		ignoreURL.setParameter("redirect", serviceContext.getLayoutFullURL());
-		ignoreURL.setParameter(
-			"socialRequestId", String.valueOf(socialRequestId));
-		ignoreURL.setParameter(
-			"status", String.valueOf(SocialRequestConstants.STATUS_IGNORE));
-		ignoreURL.setParameter(
-			"userNotificationEventId",
-			String.valueOf(userNotificationEvent.getUserNotificationEventId()));
-		ignoreURL.setWindowState(WindowState.NORMAL);
-
 		return StringUtil.replace(
 			getBodyTemplate(),
 			new String[] {
@@ -154,8 +125,41 @@ public class ContactsCenterUserNotificationHandler
 				"[$IGNORE_URL$]", "[$TITLE$]"
 			},
 			new String[] {
-				serviceContext.translate("confirm"), confirmURL.toString(),
-				serviceContext.translate("ignore"), ignoreURL.toString(), title
+				serviceContext.translate("confirm"),
+				PortletURLBuilder.createActionURL(
+					liferayPortletResponse, ContactsPortletKeys.CONTACTS_CENTER
+				).setActionName(
+					"updateSocialRequest"
+				).setRedirect(
+					serviceContext.getLayoutFullURL()
+				).setParameter(
+					"socialRequestId", socialRequestId
+				).setParameter(
+					"status", SocialRequestConstants.STATUS_CONFIRM
+				).setParameter(
+					"userNotificationEventId",
+					userNotificationEvent.getUserNotificationEventId()
+				).setWindowState(
+					WindowState.NORMAL
+				).buildString(),
+				serviceContext.translate("ignore"),
+				PortletURLBuilder.createActionURL(
+					liferayPortletResponse, ContactsPortletKeys.CONTACTS_CENTER
+				).setActionName(
+					"updateSocialRequest"
+				).setRedirect(
+					serviceContext.getLayoutFullURL()
+				).setParameter(
+					"socialRequestId", socialRequestId
+				).setParameter(
+					"status", SocialRequestConstants.STATUS_IGNORE
+				).setParameter(
+					"userNotificationEventId",
+					userNotificationEvent.getUserNotificationEventId()
+				).setWindowState(
+					WindowState.NORMAL
+				).buildString(),
+				title
 			});
 	}
 
@@ -168,7 +172,7 @@ public class ContactsCenterUserNotificationHandler
 		return StringPool.BLANK;
 	}
 
-	protected String getUserNameLink(
+	private String _getUserNameLink(
 		long userId, ServiceContext serviceContext) {
 
 		try {
@@ -188,6 +192,10 @@ public class ContactsCenterUserNotificationHandler
 				"</a>");
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			return StringPool.BLANK;
 		}
 	}
@@ -195,6 +203,9 @@ public class ContactsCenterUserNotificationHandler
 	private static final String _BODY =
 		"<div class=\"title\">[$TITLE$]</div><div class=\"body\">[$BODY$]" +
 			"</div>";
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		ContactsCenterUserNotificationHandler.class);
 
 	@Reference
 	private SocialRequestLocalService _socialRequestLocalService;

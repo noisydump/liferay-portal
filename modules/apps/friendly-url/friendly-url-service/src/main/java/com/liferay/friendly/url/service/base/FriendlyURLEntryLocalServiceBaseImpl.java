@@ -22,8 +22,8 @@ import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.friendly.url.model.FriendlyURLEntry;
 import com.liferay.friendly.url.model.FriendlyURLEntryLocalization;
 import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
+import com.liferay.friendly.url.service.FriendlyURLEntryLocalServiceUtil;
 import com.liferay.friendly.url.service.persistence.FriendlyURLEntryLocalizationPersistence;
-import com.liferay.friendly.url.service.persistence.FriendlyURLEntryMappingPersistence;
 import com.liferay.friendly.url.service.persistence.FriendlyURLEntryPersistence;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
@@ -43,6 +43,8 @@ import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -58,6 +60,8 @@ import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -65,6 +69,7 @@ import java.util.Map;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -86,7 +91,7 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>FriendlyURLEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.friendly.url.service.FriendlyURLEntryLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>FriendlyURLEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>FriendlyURLEntryLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -161,6 +166,13 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return friendlyURLEntryPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -436,6 +448,11 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 	@Override
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
+
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement FriendlyURLEntryLocalServiceImpl#deleteFriendlyURLEntry(FriendlyURLEntry) to avoid orphaned data");
+		}
 
 		return friendlyURLEntryLocalService.deleteFriendlyURLEntry(
 			(FriendlyURLEntry)persistedModel);
@@ -730,6 +747,11 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 			friendlyURLEntryLocalization);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -741,6 +763,8 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		friendlyURLEntryLocalService = (FriendlyURLEntryLocalService)aopProxy;
+
+		_setLocalServiceUtilService(friendlyURLEntryLocalService);
 	}
 
 	/**
@@ -800,33 +824,37 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		FriendlyURLEntryLocalService friendlyURLEntryLocalService) {
+
+		try {
+			Field field =
+				FriendlyURLEntryLocalServiceUtil.class.getDeclaredField(
+					"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, friendlyURLEntryLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected FriendlyURLEntryLocalService friendlyURLEntryLocalService;
 
 	@Reference
 	protected FriendlyURLEntryPersistence friendlyURLEntryPersistence;
 
 	@Reference
-	protected FriendlyURLEntryLocalizationPersistence
-		friendlyURLEntryLocalizationPersistence;
-
-	@Reference
-	protected FriendlyURLEntryMappingPersistence
-		friendlyURLEntryMappingPersistence;
-
-	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
 	@Reference
-	protected com.liferay.portal.kernel.service.ClassNameLocalService
-		classNameLocalService;
+	protected FriendlyURLEntryLocalizationPersistence
+		friendlyURLEntryLocalizationPersistence;
 
-	@Reference
-	protected com.liferay.portal.kernel.service.ResourceLocalService
-		resourceLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
+	private static final Log _log = LogFactoryUtil.getLog(
+		FriendlyURLEntryLocalServiceBaseImpl.class);
 
 }

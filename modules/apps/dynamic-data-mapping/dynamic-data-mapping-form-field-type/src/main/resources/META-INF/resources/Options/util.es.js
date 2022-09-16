@@ -12,28 +12,28 @@
  * details.
  */
 
-import {getDefaultFieldName} from 'dynamic-data-mapping-form-builder/js/util/fieldSupport.es';
-import {normalizeFieldName} from 'dynamic-data-mapping-form-renderer';
+import {FieldSupport, normalizeFieldName} from 'data-engine-js-components-web';
 
-export const random = (a) => {
+export function random(a) {
 	return a
 		? (a ^ ((Math.random() * 16) >> (a / 4))).toString(16)
 		: ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, random);
-};
+}
 
-export const compose = (...fns) =>
-	fns.reduceRight((f, g) => (...xs) => {
+export function compose(...fns) {
+	return fns.reduceRight((f, g) => (...xs) => {
 		const r = g(...xs);
 
 		return Array.isArray(r) ? f(...r) : f(r);
 	});
+}
 
-export const isOptionValueGenerated = (
+export function isOptionValueGenerated(
 	defaultLanguageId,
 	editingLanguageId,
 	options,
 	option
-) => {
+) {
 	if (defaultLanguageId !== editingLanguageId) {
 		return false;
 	}
@@ -70,71 +70,67 @@ export const isOptionValueGenerated = (
 	}
 
 	return true;
-};
+}
 
 /**
  * Deduplicates the value by checking if there is a
  * value in the fields, always incrementing an integer
  * in front of the value to be friendly for the user.
  */
-export const dedupValue = (
-	fields,
-	value,
-	id,
-	generateOptionValueUsingOptionLabel,
-	propertyName
-) => {
-	if (generateOptionValueUsingOptionLabel) {
-		let counter = 0;
+export function dedupValue(fields, value, id, generateValueUsingLabel) {
+	let counter = 0;
 
-		const recursive = (fields, currentValue) => {
-			const field = fields.find(
-				(field) => field[propertyName] === currentValue
-			);
+	const recursive = (fields, currentValue) => {
+		const field = fields.find(
+			(field) =>
+				field.value?.toLowerCase() === currentValue?.toLowerCase()
+		);
 
-			if (field && field.id !== id) {
+		if (field && field.id !== id) {
+			if (generateValueUsingLabel) {
 				counter += 1;
 				recursive(fields, value + counter);
 			}
 			else {
-				value = currentValue;
+				recursive(fields, FieldSupport.getDefaultFieldName(true));
 			}
-		};
+		}
+		else {
+			value = currentValue;
+		}
+	};
 
-		recursive(fields, value);
+	recursive(fields, value);
 
-		return value;
-	}
-	else {
-		const recursive = (fields, currentValue) => {
-			const field = fields.find(
-				(field) => field[propertyName] === currentValue
-			);
+	return value;
+}
 
-			if (field && field.id !== id) {
-				recursive(fields, getDefaultFieldName(true));
-			}
-			else {
-				value = currentValue;
-			}
-		};
+export function findDuplicateReference(fields, currentIndex, currentReference) {
+	return fields
+		.filter((field, index) => index !== currentIndex)
+		.some(
+			({reference}) =>
+				reference?.toLowerCase() === currentReference?.toLowerCase()
+		);
+}
 
-		recursive(fields, value);
-
-		return value;
-	}
-};
-
-export const getDefaultOptionValue = (
-	generateOptionValueUsingOptionLabel,
-	optionLabel
-) => {
-	const defaultValue = generateOptionValueUsingOptionLabel
+export function getDefaultOptionValue(generateValueUsingLabel, optionLabel) {
+	const defaultValue = generateValueUsingLabel
 		? optionLabel
-		: getDefaultFieldName(true);
+		: FieldSupport.getDefaultFieldName(true);
 
 	return defaultValue;
-};
+}
+
+export function normalizeReference(fields, currentField, index) {
+	const {reference, value} = currentField;
+
+	if (!reference || findDuplicateReference(fields, index, reference)) {
+		return value ? value : FieldSupport.getDefaultFieldName(true);
+	}
+
+	return reference;
+}
 
 /**
  * If the value is null or undefined, normalize follows a
@@ -142,55 +138,55 @@ export const getDefaultOptionValue = (
  * is to deduplicate the value if necessary.
  *
  * 1. If the current value is null, use the default value that can be the label
- * or the default option name, the parameter generateOptionValueUsingOptionLabel
+ * or the default option name, the parameter generateValueUsingLabel
  * decides which of these two values will be used.
  * 2. If the default value is null, use the string Option.
  */
-export const normalizeValue = (
-	fields,
+export function normalizeValue(
+	allowSpecialCharacters,
 	currentField,
-	generateOptionValueUsingOptionLabel,
-	propertyName
-) => {
-	const {label} = currentField;
-	let value = currentField[propertyName]
-		? currentField[propertyName]
-		: getDefaultOptionValue(generateOptionValueUsingOptionLabel, label);
+	fields,
+	generateValueUsingLabel
+) {
+	const {label, value: prevValue} = currentField;
+
+	let value = prevValue
+		? prevValue
+		: getDefaultOptionValue(generateValueUsingLabel, label);
 
 	if (!value) {
 		value = Liferay.Language.get('option');
 	}
 
-	value = dedupValue(
-		fields,
-		value,
-		currentField.id,
-		generateOptionValueUsingOptionLabel,
-		propertyName
-	);
+	value = dedupValue(fields, value, currentField.id, generateValueUsingLabel);
 
-	return normalizeFieldName(value);
-};
+	return allowSpecialCharacters ? value : normalizeFieldName(value);
+}
 
-export const normalizeFields = (
+export function normalizeFields(
+	allowSpecialCharacters,
 	fields,
-	generateOptionValueUsingOptionLabel
-) => {
-	return fields.map((field) => {
+	generateValueUsingLabel
+) {
+	return fields.map((field, index) => {
+		const value = normalizeValue(
+			allowSpecialCharacters,
+			field,
+			fields,
+			generateValueUsingLabel
+		);
+
 		return {
 			...field,
-			reference: normalizeValue(
+			reference: normalizeReference(
 				fields,
-				field,
-				generateOptionValueUsingOptionLabel,
-				'reference'
+				{
+					...field,
+					value,
+				},
+				index
 			),
-			value: normalizeValue(
-				fields,
-				field,
-				generateOptionValueUsingOptionLabel,
-				'value'
-			),
+			value,
 		};
 	});
-};
+}

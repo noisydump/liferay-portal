@@ -26,14 +26,15 @@ import com.liferay.frontend.taglib.servlet.taglib.ScreenNavigationEntry;
 import com.liferay.frontend.taglib.servlet.taglib.util.JSPRenderer;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.GroupLocalService;
-import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
+import com.liferay.portal.kernel.service.LayoutLocalService;
+import com.liferay.portal.kernel.service.permission.GroupPermission;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
@@ -79,7 +80,7 @@ public class CommerceChannelProductDisplayLayoutsScreenNavigationCategory
 		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
 			"content.Language", locale, getClass());
 
-		return LanguageUtil.get(resourceBundle, getCategoryKey());
+		return _language.get(resourceBundle, getCategoryKey());
 	}
 
 	@Override
@@ -90,7 +91,7 @@ public class CommerceChannelProductDisplayLayoutsScreenNavigationCategory
 	@Override
 	public boolean isVisible(User user, CommerceChannel commerceChannel) {
 		try {
-			if (!GroupPermissionUtil.contains(
+			if (!_groupPermission.contains(
 					PermissionThreadLocal.getPermissionChecker(),
 					commerceChannel.getSiteGroupId(), ActionKeys.ADD_LAYOUT)) {
 
@@ -98,7 +99,7 @@ public class CommerceChannelProductDisplayLayoutsScreenNavigationCategory
 			}
 		}
 		catch (PortalException portalException) {
-			_log.error(portalException, portalException);
+			_log.error(portalException);
 
 			return false;
 		}
@@ -123,7 +124,8 @@ public class CommerceChannelProductDisplayLayoutsScreenNavigationCategory
 				new CPDefinitionDisplayLayoutDisplayContext(
 					_actionHelper, httpServletRequest,
 					_commerceChannelLocalService, _cpDefinitionService,
-					_cpDisplayLayoutService, _groupLocalService, _itemSelector);
+					_cpDisplayLayoutService, _groupLocalService, _itemSelector,
+					_layoutLocalService);
 
 		httpServletRequest.setAttribute(
 			WebKeys.PORTLET_DISPLAY_CONTEXT,
@@ -153,10 +155,19 @@ public class CommerceChannelProductDisplayLayoutsScreenNavigationCategory
 	private GroupLocalService _groupLocalService;
 
 	@Reference
+	private GroupPermission _groupPermission;
+
+	@Reference
 	private ItemSelector _itemSelector;
 
 	@Reference
 	private JSPRenderer _jspRenderer;
+
+	@Reference
+	private Language _language;
+
+	@Reference
+	private LayoutLocalService _layoutLocalService;
 
 	@Reference(
 		target = "(osgi.web.symbolicname=com.liferay.commerce.product.definitions.web)"

@@ -28,7 +28,7 @@ import com.liferay.portal.kernel.service.ReleaseLocalService;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
-import com.liferay.portal.kernel.util.HashMapDictionary;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
@@ -99,6 +99,21 @@ public class DataCleanupTest {
 	}
 
 	@Test
+	public void testDeprecatedModulesUpgradeHelloWorld() throws Exception {
+		_testDeprecatedModulesUpgrade(
+			"cleanUpHelloWorldModuleData", "com.liferay.hello.world.web", null,
+			"com_liferay_hello_world_web_portlet_HelloWorldPortlet");
+	}
+
+	@Test
+	public void testDeprecatedModulesUpgradeImageEditor() throws Exception {
+		_testDeprecatedModulesUpgrade(
+			"cleanUpImageEditorModuleData",
+			"com.liferay.frontend.image.editor.web", null,
+			"com_liferay_image_editor_web_portlet_ImageEditorPortlet");
+	}
+
+	@Test
 	public void testDeprecatedModulesUpgradeInvitation() throws Exception {
 		_testDeprecatedModulesUpgrade(
 			"cleanUpInvitationModuleData", "com.liferay.invitation.web", null,
@@ -111,6 +126,13 @@ public class DataCleanupTest {
 			"cleanUpMailReaderModuleData", "com.liferay.mail.reader.service",
 			"dependencies/mail-reader-tables.sql",
 			"com_liferay_mail_reader_web_portlet_MailPortlet");
+	}
+
+	@Test
+	public void testDeprecatedModulesUpgradeOpenSocial() throws Exception {
+		_testDeprecatedModulesUpgrade(
+			"cleanUpOpenSocialModuleData", "opensocial-portlet",
+			"dependencies/opensocial-tables.sql", "3_WAR_opensocialportlet");
 	}
 
 	@Test
@@ -131,6 +153,15 @@ public class DataCleanupTest {
 			"cleanUpShoppingModuleData", "com.liferay.shopping.service",
 			"dependencies/shopping-tables.sql",
 			"com_liferay_shopping_web_portlet_ShoppingPortlet");
+	}
+
+	@Test
+	public void testDeprecatedModulesUpgradeSoftwareCatalog() throws Exception {
+		_testDeprecatedModulesUpgrade(
+			"cleanUpSoftwareCatalogModuleData",
+			"com.liferay.softwarecatalog.service",
+			"dependencies/software-catalog-tables.sql",
+			"com.liferay.portlet.softwarecatalog");
 	}
 
 	@Test
@@ -157,7 +188,8 @@ public class DataCleanupTest {
 		}
 
 		if (portletPreferencePortletId != null) {
-			_layout = LayoutTestUtil.addLayout(TestPropsValues.getGroupId());
+			_layout = LayoutTestUtil.addTypePortletLayout(
+				TestPropsValues.getGroupId());
 
 			UnicodeProperties unicodeProperties =
 				_layout.getTypeSettingsProperties();
@@ -180,9 +212,10 @@ public class DataCleanupTest {
 			_layout = _layoutLocalService.updateLayout(_layout);
 		}
 
-		Dictionary<String, Object> properties = new HashMapDictionary<>();
-
-		properties.put(propertyKey, true);
+		Dictionary<String, Object> properties =
+			HashMapDictionaryBuilder.<String, Object>put(
+				propertyKey, true
+			).build();
 
 		try (ConfigurationTemporarySwapper configurationTemporarySwapper =
 				new ConfigurationTemporarySwapper(
@@ -228,10 +261,12 @@ public class DataCleanupTest {
 
 	private static final String[] _SERVLET_CONTEXT_NAMES = {
 		"com.liferay.chat.service", "com.liferay.dictionary.web",
-		"com.liferay.directory.web", "com.liferay.invitation.web",
+		"com.liferay.directory.web", "com.liferay.frontend.image.editor.web",
+		"com.liferay.hello.world.web", "com.liferay.invitation.web",
 		"com.liferay.mail.reader.service", "com.liferay.shopping.service",
 		"com.liferay.social.privatemessaging.service",
-		"com.liferay.twitter.service"
+		"com.liferay.softwarecatalog.service", "com.liferay.twitter.service",
+		"opensocial-portlet"
 	};
 
 	@Inject

@@ -22,7 +22,9 @@ import java.util.logging.LogRecord;
 
 /**
  * @author William Newbury
+ * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
  */
+@Deprecated
 public class LogAssertionHandler extends Handler {
 
 	public static final LogAssertionHandler INSTANCE =
@@ -41,17 +43,13 @@ public class LogAssertionHandler extends Handler {
 		Level level = logRecord.getLevel();
 
 		if (level.equals(Level.SEVERE)) {
-			StringBundler sb = new StringBundler(6);
-
-			sb.append("{level=");
-			sb.append(logRecord.getLevel());
-			sb.append(", loggerName=");
-			sb.append(logRecord.getLoggerName());
-			sb.append(", message=");
-			sb.append(logRecord.getMessage());
-
 			LogAssertionTestRule.caughtFailure(
-				new AssertionError(sb.toString(), logRecord.getThrown()));
+				new AssertionError(
+					StringBundler.concat(
+						"{level=", logRecord.getLevel(), ", loggerName=",
+						logRecord.getLoggerName(), ", message=",
+						logRecord.getMessage()),
+					logRecord.getThrown()));
 		}
 	}
 

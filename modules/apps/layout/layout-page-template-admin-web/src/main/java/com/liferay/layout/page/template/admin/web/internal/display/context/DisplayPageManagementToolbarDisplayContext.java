@@ -23,6 +23,7 @@ import com.liferay.layout.page.template.admin.web.internal.security.permission.r
 import com.liferay.layout.page.template.admin.web.internal.security.permission.resource.LayoutPageTemplatePermission;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateActionKeys;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -63,23 +64,38 @@ public class DisplayPageManagementToolbarDisplayContext
 
 	@Override
 	public List<DropdownItem> getActionDropdownItems() {
-		return DropdownItemListBuilder.add(
-			dropdownItem -> {
-				dropdownItem.putData("action", "deleteSelectedDisplayPages");
-				dropdownItem.setIcon("times-circle");
-				dropdownItem.setLabel(
-					LanguageUtil.get(httpServletRequest, "delete"));
-				dropdownItem.setQuickAction(true);
+		return DropdownItemListBuilder.addGroup(
+			dropdownGroupItem -> {
+				dropdownGroupItem.setDropdownItems(
+					DropdownItemListBuilder.add(
+						dropdownItem -> {
+							dropdownItem.putData(
+								"action", "exportDisplayPages");
+							dropdownItem.putData(
+								"exportDisplayPageURL",
+								_getExportDisplayPageURL());
+							dropdownItem.setIcon("upload");
+							dropdownItem.setLabel(
+								LanguageUtil.get(httpServletRequest, "export"));
+							dropdownItem.setQuickAction(true);
+						}
+					).build());
+				dropdownGroupItem.setSeparator(true);
 			}
-		).add(
-			dropdownItem -> {
-				dropdownItem.putData("action", "exportDisplayPages");
-				dropdownItem.putData(
-					"exportDisplayPageURL", _getExportDisplayPageURL());
-				dropdownItem.setIcon("download");
-				dropdownItem.setLabel(
-					LanguageUtil.get(httpServletRequest, "export"));
-				dropdownItem.setQuickAction(true);
+		).addGroup(
+			dropdownGroupItem -> {
+				dropdownGroupItem.setDropdownItems(
+					DropdownItemListBuilder.add(
+						dropdownItem -> {
+							dropdownItem.putData(
+								"action", "deleteSelectedDisplayPages");
+							dropdownItem.setIcon("trash");
+							dropdownItem.setLabel(
+								LanguageUtil.get(httpServletRequest, "delete"));
+							dropdownItem.setQuickAction(true);
+						}
+					).build());
+				dropdownGroupItem.setSeparator(true);
 			}
 		).build();
 	}
@@ -108,11 +124,11 @@ public class DisplayPageManagementToolbarDisplayContext
 
 	@Override
 	public String getClearResultsURL() {
-		PortletURL clearResultsURL = getPortletURL();
-
-		clearResultsURL.setParameter("keywords", StringPool.BLANK);
-
-		return clearResultsURL.toString();
+		return PortletURLBuilder.create(
+			getPortletURL()
+		).setKeywords(
+			StringPool.BLANK
+		).buildString();
 	}
 
 	@Override
@@ -124,15 +140,14 @@ public class DisplayPageManagementToolbarDisplayContext
 	public CreationMenu getCreationMenu() {
 		return CreationMenuBuilder.addDropdownItem(
 			dropdownItem -> {
-				PortletURL selectMasterLayoutURL =
-					liferayPortletResponse.createRenderURL();
-
-				selectMasterLayoutURL.setParameter(
-					"mvcPath", "/select_display_page_master_layout.jsp");
-				selectMasterLayoutURL.setParameter(
-					"redirect", _themeDisplay.getURLCurrent());
-
-				dropdownItem.setHref(selectMasterLayoutURL.toString());
+				dropdownItem.setHref(
+					PortletURLBuilder.createRenderURL(
+						liferayPortletResponse
+					).setMVCPath(
+						"/select_display_page_master_layout.jsp"
+					).setRedirect(
+						_themeDisplay.getURLCurrent()
+					).buildString());
 
 				dropdownItem.setLabel(
 					LanguageUtil.get(httpServletRequest, "add"));

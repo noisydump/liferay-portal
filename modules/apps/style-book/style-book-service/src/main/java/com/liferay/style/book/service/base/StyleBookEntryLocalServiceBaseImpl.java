@@ -19,6 +19,7 @@ import com.liferay.exportimport.kernel.lar.ManifestSummary;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
+import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
@@ -34,13 +35,17 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
+import com.liferay.portal.kernel.service.change.tracking.CTService;
 import com.liferay.portal.kernel.service.persistence.BasePersistence;
+import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 import com.liferay.portal.kernel.service.version.VersionService;
 import com.liferay.portal.kernel.service.version.VersionServiceListener;
 import com.liferay.portal.kernel.transaction.Transactional;
@@ -49,10 +54,13 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.style.book.model.StyleBookEntry;
 import com.liferay.style.book.model.StyleBookEntryVersion;
 import com.liferay.style.book.service.StyleBookEntryLocalService;
+import com.liferay.style.book.service.StyleBookEntryLocalServiceUtil;
 import com.liferay.style.book.service.persistence.StyleBookEntryPersistence;
 import com.liferay.style.book.service.persistence.StyleBookEntryVersionPersistence;
 
 import java.io.Serializable;
+
+import java.lang.reflect.Field;
 
 import java.util.Collections;
 import java.util.List;
@@ -61,6 +69,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -82,7 +91,7 @@ public abstract class StyleBookEntryLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>StyleBookEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.style.book.service.StyleBookEntryLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>StyleBookEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>StyleBookEntryLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -172,6 +181,13 @@ public abstract class StyleBookEntryLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return styleBookEntryPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -406,6 +422,11 @@ public abstract class StyleBookEntryLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement StyleBookEntryLocalServiceImpl#deleteStyleBookEntry(StyleBookEntry) to avoid orphaned data");
+		}
+
 		return styleBookEntryLocalService.deleteStyleBookEntry(
 			(StyleBookEntry)persistedModel);
 	}
@@ -458,7 +479,7 @@ public abstract class StyleBookEntryLocalServiceBaseImpl
 	 * <strong>Important:</strong> Inspect StyleBookEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
 	 * </p>
 	 *
-	 * @param styleBookEntry the style book entry
+	 * @param draftStyleBookEntry the style book entry
 	 * @return the style book entry that was updated
 	 */
 	@Indexable(type = IndexableType.REINDEX)
@@ -470,17 +491,24 @@ public abstract class StyleBookEntryLocalServiceBaseImpl
 		return updateDraft(draftStyleBookEntry);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
 			StyleBookEntryLocalService.class, IdentifiableOSGiService.class,
-			PersistedModelLocalService.class
+			CTService.class, PersistedModelLocalService.class
 		};
 	}
 
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		styleBookEntryLocalService = (StyleBookEntryLocalService)aopProxy;
+
+		_setLocalServiceUtilService(styleBookEntryLocalService);
 	}
 
 	@Indexable(type = IndexableType.REINDEX)
@@ -859,6 +887,8 @@ public abstract class StyleBookEntryLocalServiceBaseImpl
 
 		StyleBookEntry draftStyleBookEntry = create();
 
+		draftStyleBookEntry.setCtCollectionId(
+			publishedStyleBookEntry.getCtCollectionId());
 		draftStyleBookEntry.setUuid(publishedStyleBookEntry.getUuid());
 		draftStyleBookEntry.setHeadId(publishedStyleBookEntry.getPrimaryKey());
 		draftStyleBookEntry.setGroupId(publishedStyleBookEntry.getGroupId());
@@ -903,8 +933,23 @@ public abstract class StyleBookEntryLocalServiceBaseImpl
 		return StyleBookEntryLocalService.class.getName();
 	}
 
-	protected Class<?> getModelClass() {
+	@Override
+	public CTPersistence<StyleBookEntry> getCTPersistence() {
+		return styleBookEntryPersistence;
+	}
+
+	@Override
+	public Class<StyleBookEntry> getModelClass() {
 		return StyleBookEntry.class;
+	}
+
+	@Override
+	public <R, E extends Throwable> R updateWithUnsafeFunction(
+			UnsafeFunction<CTPersistence<StyleBookEntry>, R, E>
+				updateUnsafeFunction)
+		throws E {
+
+		return updateUnsafeFunction.apply(styleBookEntryPersistence);
 	}
 
 	protected String getModelClassName() {
@@ -935,6 +980,22 @@ public abstract class StyleBookEntryLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		StyleBookEntryLocalService styleBookEntryLocalService) {
+
+		try {
+			Field field = StyleBookEntryLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, styleBookEntryLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected StyleBookEntryLocalService styleBookEntryLocalService;
 
 	@Reference
@@ -945,10 +1006,9 @@ public abstract class StyleBookEntryLocalServiceBaseImpl
 		counterLocalService;
 
 	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
-
-	@Reference
 	protected StyleBookEntryVersionPersistence styleBookEntryVersionPersistence;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		StyleBookEntryLocalServiceBaseImpl.class);
 
 }

@@ -33,6 +33,7 @@ import com.liferay.portal.search.engine.adapter.snapshot.SnapshotRepositoryDetai
 import com.liferay.portal.search.engine.adapter.snapshot.SnapshotRequestExecutor;
 import com.liferay.portal.search.engine.adapter.snapshot.SnapshotState;
 import com.liferay.portal.search.test.util.IdempotentRetryAssert;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.io.IOException;
 
@@ -61,12 +62,17 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 /**
  * @author Michael C. Han
  */
 public class ElasticsearchSearchEngineAdapterSnapshotRequestTest {
+
+	@ClassRule
+	public static LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
@@ -288,12 +294,13 @@ public class ElasticsearchSearchEngineAdapterSnapshotRequestTest {
 		return new ElasticsearchSearchEngineAdapterImpl() {
 			{
 				setSnapshotRequestExecutor(
-					createSnapshotRequestExecutor(elasticsearchClientResolver));
+					_createSnapshotRequestExecutor(
+						elasticsearchClientResolver));
 			}
 		};
 	}
 
-	protected static SnapshotRequestExecutor createSnapshotRequestExecutor(
+	private static SnapshotRequestExecutor _createSnapshotRequestExecutor(
 		ElasticsearchClientResolver elasticsearchClientResolver) {
 
 		SnapshotRequestExecutorFixture snapshotRequestExecutorFixture =

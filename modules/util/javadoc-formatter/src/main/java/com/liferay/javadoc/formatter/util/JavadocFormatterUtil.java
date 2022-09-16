@@ -18,6 +18,8 @@ import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import com.thoughtworks.qdox.JavaProjectBuilder;
@@ -69,7 +71,7 @@ public class JavadocFormatterUtil {
 			new String[] {
 				"**/.git/**", "**/.gradle/**", "**/bin/**", "**/build/**",
 				"**/classes/**", "**/node_modules/**",
-				"**/node_modules_cache/**", "**/portal-client/**", "**/tmp/**"
+				"**/node_modules_cache/**", "**/tmp/**"
 			},
 			new String[] {"**/*.java"});
 
@@ -87,6 +89,10 @@ public class JavadocFormatterUtil {
 				javaProjectBuilder.addSource(new UnsyncStringReader(content));
 			}
 			catch (Exception exception) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(exception);
+				}
+
 				continue;
 			}
 
@@ -279,12 +285,8 @@ public class JavadocFormatterUtil {
 				(List<Element>)rootElement.elements("deprecated")) {
 
 			if (!annotatedElementName.equals(
-					deprecatedElement.attributeValue("name"))) {
-
-				continue;
-			}
-
-			if (!fullyQualifiedName.equals(
+					deprecatedElement.attributeValue("name")) ||
+				!fullyQualifiedName.equals(
 					deprecatedElement.attributeValue("fullyQualifiedName"))) {
 
 				continue;
@@ -362,6 +364,9 @@ public class JavadocFormatterUtil {
 			_parseClass(rootElement, nestedJavaClass, fullyQualifiedName);
 		}
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		JavadocFormatterUtil.class);
 
 	private static final Pattern _deprecatedVersionPattern = Pattern.compile(
 		"As of (\\w+ \\([\\w.]+\\))");

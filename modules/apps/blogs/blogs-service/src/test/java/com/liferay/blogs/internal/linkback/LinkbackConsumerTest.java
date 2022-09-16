@@ -19,34 +19,33 @@ import com.liferay.portal.kernel.comment.CommentManager;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.Http;
-import com.liferay.registry.BasicRegistryImpl;
-import com.liferay.registry.RegistryUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.io.IOException;
 
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
-import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 
 /**
  * @author André de Oliveira
  */
 public class LinkbackConsumerTest {
 
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
 	@Before
 	public void setUp() throws Exception {
-		MockitoAnnotations.initMocks(this);
-
-		RegistryUtil.setRegistry(new BasicRegistryImpl());
-
 		_linkbackConsumer = new LinkbackConsumerImpl();
 
 		ReflectionTestUtil.setFieldValue(
 			_linkbackConsumer, "_commentManager", _commentManager);
-
 		ReflectionTestUtil.setFieldValue(_linkbackConsumer, "_http", _http);
 	}
 
@@ -131,7 +130,7 @@ public class LinkbackConsumerTest {
 
 		_linkbackConsumer.verifyNewTrackbacks();
 
-		Mockito.verifyZeroInteractions(_commentManager);
+		Mockito.verifyNoInteractions(_commentManager);
 
 		Mockito.verify(
 			_http
@@ -140,12 +139,9 @@ public class LinkbackConsumerTest {
 		);
 	}
 
-	@Mock
-	private CommentManager _commentManager;
-
-	@Mock
-	private Http _http;
-
+	private final CommentManager _commentManager = Mockito.mock(
+		CommentManager.class);
+	private final Http _http = Mockito.mock(Http.class);
 	private LinkbackConsumer _linkbackConsumer;
 
 }

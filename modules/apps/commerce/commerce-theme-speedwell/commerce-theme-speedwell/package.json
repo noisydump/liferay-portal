@@ -5,6 +5,9 @@
 	"liferayTheme": {
 		"baseTheme": "styled",
 		"rubySass": false,
+		"sassOptions": {
+			"dartSass": true
+		},
 		"screenshot": "",
 		"templateLanguage": "ftl",
 		"version": "7.1"
@@ -16,5 +19,5 @@
 		"checkFormat": "liferay-npm-scripts check",
 		"format": "liferay-npm-scripts fix"
 	},
-	"version": "4.0.0"
+	"version": "4.0.39"
 }

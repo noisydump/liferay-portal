@@ -20,8 +20,10 @@ import com.liferay.commerce.discount.model.CommerceDiscountCommerceAccountGroupR
 import com.liferay.commerce.discount.model.impl.CommerceDiscountCommerceAccountGroupRelImpl;
 import com.liferay.commerce.discount.model.impl.CommerceDiscountCommerceAccountGroupRelModelImpl;
 import com.liferay.commerce.discount.service.persistence.CommerceDiscountCommerceAccountGroupRelPersistence;
+import com.liferay.commerce.discount.service.persistence.CommerceDiscountCommerceAccountGroupRelUtil;
+import com.liferay.commerce.discount.service.persistence.impl.constants.CommercePersistenceConstants;
 import com.liferay.petra.string.StringBundler;
-import com.liferay.portal.kernel.dao.orm.ArgumentsResolver;
+import com.liferay.portal.kernel.configuration.Configuration;
 import com.liferay.portal.kernel.dao.orm.EntityCache;
 import com.liferay.portal.kernel.dao.orm.FinderCache;
 import com.liferay.portal.kernel.dao.orm.FinderPath;
@@ -29,21 +31,24 @@ import com.liferay.portal.kernel.dao.orm.Query;
 import com.liferay.portal.kernel.dao.orm.QueryPos;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.Session;
+import com.liferay.portal.kernel.dao.orm.SessionFactory;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
-import com.liferay.portal.kernel.util.HashMapDictionary;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
 import java.util.Date;
@@ -51,12 +56,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.framework.ServiceRegistration;
+import javax.sql.DataSource;
+
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * The persistence implementation for the commerce discount commerce account group rel service.
@@ -68,6 +74,12 @@ import org.osgi.framework.ServiceRegistration;
  * @author Marco Leo
  * @generated
  */
+@Component(
+	service = {
+		CommerceDiscountCommerceAccountGroupRelPersistence.class,
+		BasePersistence.class
+	}
+)
 public class CommerceDiscountCommerceAccountGroupRelPersistenceImpl
 	extends BasePersistenceImpl<CommerceDiscountCommerceAccountGroupRel>
 	implements CommerceDiscountCommerceAccountGroupRelPersistence {
@@ -1196,8 +1208,8 @@ public class CommerceDiscountCommerceAccountGroupRelPersistenceImpl
 		_FINDER_COLUMN_COMMERCEACCOUNTGROUPID_COMMERCEACCOUNTGROUPID_2 =
 			"commerceDiscountCommerceAccountGroupRel.commerceAccountGroupId = ?";
 
-	private FinderPath _finderPathFetchByC_C;
-	private FinderPath _finderPathCountByC_C;
+	private FinderPath _finderPathFetchByCDI_CAGI;
+	private FinderPath _finderPathCountByCDI_CAGI;
 
 	/**
 	 * Returns the commerce discount commerce account group rel where commerceDiscountId = &#63; and commerceAccountGroupId = &#63; or throws a <code>NoSuchDiscountCommerceAccountGroupRelException</code> if it could not be found.
@@ -1208,12 +1220,12 @@ public class CommerceDiscountCommerceAccountGroupRelPersistenceImpl
 	 * @throws NoSuchDiscountCommerceAccountGroupRelException if a matching commerce discount commerce account group rel could not be found
 	 */
 	@Override
-	public CommerceDiscountCommerceAccountGroupRel findByC_C(
+	public CommerceDiscountCommerceAccountGroupRel findByCDI_CAGI(
 			long commerceDiscountId, long commerceAccountGroupId)
 		throws NoSuchDiscountCommerceAccountGroupRelException {
 
 		CommerceDiscountCommerceAccountGroupRel
-			commerceDiscountCommerceAccountGroupRel = fetchByC_C(
+			commerceDiscountCommerceAccountGroupRel = fetchByCDI_CAGI(
 				commerceDiscountId, commerceAccountGroupId);
 
 		if (commerceDiscountCommerceAccountGroupRel == null) {
@@ -1248,10 +1260,11 @@ public class CommerceDiscountCommerceAccountGroupRelPersistenceImpl
 	 * @return the matching commerce discount commerce account group rel, or <code>null</code> if a matching commerce discount commerce account group rel could not be found
 	 */
 	@Override
-	public CommerceDiscountCommerceAccountGroupRel fetchByC_C(
+	public CommerceDiscountCommerceAccountGroupRel fetchByCDI_CAGI(
 		long commerceDiscountId, long commerceAccountGroupId) {
 
-		return fetchByC_C(commerceDiscountId, commerceAccountGroupId, true);
+		return fetchByCDI_CAGI(
+			commerceDiscountId, commerceAccountGroupId, true);
 	}
 
 	/**
@@ -1263,7 +1276,7 @@ public class CommerceDiscountCommerceAccountGroupRelPersistenceImpl
 	 * @return the matching commerce discount commerce account group rel, or <code>null</code> if a matching commerce discount commerce account group rel could not be found
 	 */
 	@Override
-	public CommerceDiscountCommerceAccountGroupRel fetchByC_C(
+	public CommerceDiscountCommerceAccountGroupRel fetchByCDI_CAGI(
 		long commerceDiscountId, long commerceAccountGroupId,
 		boolean useFinderCache) {
 
@@ -1278,7 +1291,8 @@ public class CommerceDiscountCommerceAccountGroupRelPersistenceImpl
 		Object result = null;
 
 		if (useFinderCache) {
-			result = finderCache.getResult(_finderPathFetchByC_C, finderArgs);
+			result = finderCache.getResult(
+				_finderPathFetchByCDI_CAGI, finderArgs);
 		}
 
 		if (result instanceof CommerceDiscountCommerceAccountGroupRel) {
@@ -1303,9 +1317,9 @@ public class CommerceDiscountCommerceAccountGroupRelPersistenceImpl
 			sb.append(
 				_SQL_SELECT_COMMERCEDISCOUNTCOMMERCEACCOUNTGROUPREL_WHERE);
 
-			sb.append(_FINDER_COLUMN_C_C_COMMERCEDISCOUNTID_2);
+			sb.append(_FINDER_COLUMN_CDI_CAGI_COMMERCEDISCOUNTID_2);
 
-			sb.append(_FINDER_COLUMN_C_C_COMMERCEACCOUNTGROUPID_2);
+			sb.append(_FINDER_COLUMN_CDI_CAGI_COMMERCEACCOUNTGROUPID_2);
 
 			String sql = sb.toString();
 
@@ -1328,7 +1342,7 @@ public class CommerceDiscountCommerceAccountGroupRelPersistenceImpl
 				if (list.isEmpty()) {
 					if (useFinderCache) {
 						finderCache.putResult(
-							_finderPathFetchByC_C, finderArgs, list);
+							_finderPathFetchByCDI_CAGI, finderArgs, list);
 					}
 				}
 				else {
@@ -1364,12 +1378,12 @@ public class CommerceDiscountCommerceAccountGroupRelPersistenceImpl
 	 * @return the commerce discount commerce account group rel that was removed
 	 */
 	@Override
-	public CommerceDiscountCommerceAccountGroupRel removeByC_C(
+	public CommerceDiscountCommerceAccountGroupRel removeByCDI_CAGI(
 			long commerceDiscountId, long commerceAccountGroupId)
 		throws NoSuchDiscountCommerceAccountGroupRelException {
 
 		CommerceDiscountCommerceAccountGroupRel
-			commerceDiscountCommerceAccountGroupRel = findByC_C(
+			commerceDiscountCommerceAccountGroupRel = findByCDI_CAGI(
 				commerceDiscountId, commerceAccountGroupId);
 
 		return remove(commerceDiscountCommerceAccountGroupRel);
@@ -1383,10 +1397,10 @@ public class CommerceDiscountCommerceAccountGroupRelPersistenceImpl
 	 * @return the number of matching commerce discount commerce account group rels
 	 */
 	@Override
-	public int countByC_C(
+	public int countByCDI_CAGI(
 		long commerceDiscountId, long commerceAccountGroupId) {
 
-		FinderPath finderPath = _finderPathCountByC_C;
+		FinderPath finderPath = _finderPathCountByCDI_CAGI;
 
 		Object[] finderArgs = new Object[] {
 			commerceDiscountId, commerceAccountGroupId
@@ -1399,9 +1413,9 @@ public class CommerceDiscountCommerceAccountGroupRelPersistenceImpl
 
 			sb.append(_SQL_COUNT_COMMERCEDISCOUNTCOMMERCEACCOUNTGROUPREL_WHERE);
 
-			sb.append(_FINDER_COLUMN_C_C_COMMERCEDISCOUNTID_2);
+			sb.append(_FINDER_COLUMN_CDI_CAGI_COMMERCEDISCOUNTID_2);
 
-			sb.append(_FINDER_COLUMN_C_C_COMMERCEACCOUNTGROUPID_2);
+			sb.append(_FINDER_COLUMN_CDI_CAGI_COMMERCEACCOUNTGROUPID_2);
 
 			String sql = sb.toString();
 
@@ -1433,11 +1447,12 @@ public class CommerceDiscountCommerceAccountGroupRelPersistenceImpl
 		return count.intValue();
 	}
 
-	private static final String _FINDER_COLUMN_C_C_COMMERCEDISCOUNTID_2 =
+	private static final String _FINDER_COLUMN_CDI_CAGI_COMMERCEDISCOUNTID_2 =
 		"commerceDiscountCommerceAccountGroupRel.commerceDiscountId = ? AND ";
 
-	private static final String _FINDER_COLUMN_C_C_COMMERCEACCOUNTGROUPID_2 =
-		"commerceDiscountCommerceAccountGroupRel.commerceAccountGroupId = ?";
+	private static final String
+		_FINDER_COLUMN_CDI_CAGI_COMMERCEACCOUNTGROUPID_2 =
+			"commerceDiscountCommerceAccountGroupRel.commerceAccountGroupId = ?";
 
 	public CommerceDiscountCommerceAccountGroupRelPersistenceImpl() {
 		Map<String, String> dbColumnNames = new HashMap<String, String>();
@@ -1472,7 +1487,7 @@ public class CommerceDiscountCommerceAccountGroupRelPersistenceImpl
 			commerceDiscountCommerceAccountGroupRel);
 
 		finderCache.putResult(
-			_finderPathFetchByC_C,
+			_finderPathFetchByCDI_CAGI,
 			new Object[] {
 				commerceDiscountCommerceAccountGroupRel.getCommerceDiscountId(),
 				commerceDiscountCommerceAccountGroupRel.
@@ -1480,6 +1495,8 @@ public class CommerceDiscountCommerceAccountGroupRelPersistenceImpl
 			},
 			commerceDiscountCommerceAccountGroupRel);
 	}
+
+	private int _valueObjectFinderCacheListThreshold;
 
 	/**
 	 * Caches the commerce discount commerce account group rels in the entity cache if it is enabled.
@@ -1490,6 +1507,14 @@ public class CommerceDiscountCommerceAccountGroupRelPersistenceImpl
 	public void cacheResult(
 		List<CommerceDiscountCommerceAccountGroupRel>
 			commerceDiscountCommerceAccountGroupRels) {
+
+		if ((_valueObjectFinderCacheListThreshold == 0) ||
+			((_valueObjectFinderCacheListThreshold > 0) &&
+			 (commerceDiscountCommerceAccountGroupRels.size() >
+				 _valueObjectFinderCacheListThreshold))) {
+
+			return;
+		}
 
 		for (CommerceDiscountCommerceAccountGroupRel
 				commerceDiscountCommerceAccountGroupRel :
@@ -1575,9 +1600,10 @@ public class CommerceDiscountCommerceAccountGroupRelPersistenceImpl
 				getCommerceAccountGroupId()
 		};
 
-		finderCache.putResult(_finderPathCountByC_C, args, Long.valueOf(1));
 		finderCache.putResult(
-			_finderPathFetchByC_C, args,
+			_finderPathCountByCDI_CAGI, args, Long.valueOf(1));
+		finderCache.putResult(
+			_finderPathFetchByCDI_CAGI, args,
 			commerceDiscountCommerceAccountGroupRelModelImpl);
 	}
 
@@ -1739,17 +1765,17 @@ public class CommerceDiscountCommerceAccountGroupRelPersistenceImpl
 		ServiceContext serviceContext =
 			ServiceContextThreadLocal.getServiceContext();
 
-		Date now = new Date();
+		Date date = new Date();
 
 		if (isNew &&
 			(commerceDiscountCommerceAccountGroupRel.getCreateDate() == null)) {
 
 			if (serviceContext == null) {
-				commerceDiscountCommerceAccountGroupRel.setCreateDate(now);
+				commerceDiscountCommerceAccountGroupRel.setCreateDate(date);
 			}
 			else {
 				commerceDiscountCommerceAccountGroupRel.setCreateDate(
-					serviceContext.getCreateDate(now));
+					serviceContext.getCreateDate(date));
 			}
 		}
 
@@ -1757,11 +1783,11 @@ public class CommerceDiscountCommerceAccountGroupRelPersistenceImpl
 				hasSetModifiedDate()) {
 
 			if (serviceContext == null) {
-				commerceDiscountCommerceAccountGroupRel.setModifiedDate(now);
+				commerceDiscountCommerceAccountGroupRel.setModifiedDate(date);
 			}
 			else {
 				commerceDiscountCommerceAccountGroupRel.setModifiedDate(
-					serviceContext.getModifiedDate(now));
+					serviceContext.getModifiedDate(date));
 			}
 		}
 
@@ -2081,16 +2107,10 @@ public class CommerceDiscountCommerceAccountGroupRelPersistenceImpl
 	/**
 	 * Initializes the commerce discount commerce account group rel persistence.
 	 */
-	public void afterPropertiesSet() {
-		Bundle bundle = FrameworkUtil.getBundle(
-			CommerceDiscountCommerceAccountGroupRelPersistenceImpl.class);
-
-		_bundleContext = bundle.getBundleContext();
-
-		_argumentsResolverServiceRegistration = _bundleContext.registerService(
-			ArgumentsResolver.class,
-			new CommerceDiscountCommerceAccountGroupRelModelArgumentsResolver(),
-			new HashMapDictionary<>());
+	@Activate
+	public void activate() {
+		_valueObjectFinderCacheListThreshold = GetterUtil.getInteger(
+			PropsUtil.get(PropsKeys.VALUE_OBJECT_FINDER_CACHE_LIST_THRESHOLD));
 
 		_finderPathWithPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
@@ -2144,32 +2164,77 @@ public class CommerceDiscountCommerceAccountGroupRelPersistenceImpl
 			new String[] {Long.class.getName()},
 			new String[] {"commerceAccountGroupId"}, false);
 
-		_finderPathFetchByC_C = new FinderPath(
-			FINDER_CLASS_NAME_ENTITY, "fetchByC_C",
+		_finderPathFetchByCDI_CAGI = new FinderPath(
+			FINDER_CLASS_NAME_ENTITY, "fetchByCDI_CAGI",
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"commerceDiscountId", "commerceAccountGroupId"},
 			true);
 
-		_finderPathCountByC_C = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_C",
+		_finderPathCountByCDI_CAGI = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByCDI_CAGI",
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"commerceDiscountId", "commerceAccountGroupId"},
 			false);
+
+		_setCommerceDiscountCommerceAccountGroupRelUtilPersistence(this);
 	}
 
-	public void destroy() {
+	@Deactivate
+	public void deactivate() {
+		_setCommerceDiscountCommerceAccountGroupRelUtilPersistence(null);
+
 		entityCache.removeCache(
 			CommerceDiscountCommerceAccountGroupRelImpl.class.getName());
-
-		_argumentsResolverServiceRegistration.unregister();
 	}
 
-	private BundleContext _bundleContext;
+	private void _setCommerceDiscountCommerceAccountGroupRelUtilPersistence(
+		CommerceDiscountCommerceAccountGroupRelPersistence
+			commerceDiscountCommerceAccountGroupRelPersistence) {
 
-	@ServiceReference(type = EntityCache.class)
+		try {
+			Field field =
+				CommerceDiscountCommerceAccountGroupRelUtil.class.
+					getDeclaredField("_persistence");
+
+			field.setAccessible(true);
+
+			field.set(null, commerceDiscountCommerceAccountGroupRelPersistence);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
+	@Override
+	@Reference(
+		target = CommercePersistenceConstants.SERVICE_CONFIGURATION_FILTER,
+		unbind = "-"
+	)
+	public void setConfiguration(Configuration configuration) {
+	}
+
+	@Override
+	@Reference(
+		target = CommercePersistenceConstants.ORIGIN_BUNDLE_SYMBOLIC_NAME_FILTER,
+		unbind = "-"
+	)
+	public void setDataSource(DataSource dataSource) {
+		super.setDataSource(dataSource);
+	}
+
+	@Override
+	@Reference(
+		target = CommercePersistenceConstants.ORIGIN_BUNDLE_SYMBOLIC_NAME_FILTER,
+		unbind = "-"
+	)
+	public void setSessionFactory(SessionFactory sessionFactory) {
+		super.setSessionFactory(sessionFactory);
+	}
+
+	@Reference
 	protected EntityCache entityCache;
 
-	@ServiceReference(type = FinderCache.class)
+	@Reference
 	protected FinderCache finderCache;
 
 	private static final String
@@ -2208,106 +2273,8 @@ public class CommerceDiscountCommerceAccountGroupRelPersistenceImpl
 		return finderCache;
 	}
 
-	private ServiceRegistration<ArgumentsResolver>
-		_argumentsResolverServiceRegistration;
-
-	private static class
-		CommerceDiscountCommerceAccountGroupRelModelArgumentsResolver
-			implements ArgumentsResolver {
-
-		@Override
-		public Object[] getArguments(
-			FinderPath finderPath, BaseModel<?> baseModel, boolean checkColumn,
-			boolean original) {
-
-			String[] columnNames = finderPath.getColumnNames();
-
-			if ((columnNames == null) || (columnNames.length == 0)) {
-				if (baseModel.isNew()) {
-					return FINDER_ARGS_EMPTY;
-				}
-
-				return null;
-			}
-
-			CommerceDiscountCommerceAccountGroupRelModelImpl
-				commerceDiscountCommerceAccountGroupRelModelImpl =
-					(CommerceDiscountCommerceAccountGroupRelModelImpl)baseModel;
-
-			long columnBitmask =
-				commerceDiscountCommerceAccountGroupRelModelImpl.
-					getColumnBitmask();
-
-			if (!checkColumn || (columnBitmask == 0)) {
-				return _getValue(
-					commerceDiscountCommerceAccountGroupRelModelImpl,
-					columnNames, original);
-			}
-
-			Long finderPathColumnBitmask = _finderPathColumnBitmasksCache.get(
-				finderPath);
-
-			if (finderPathColumnBitmask == null) {
-				finderPathColumnBitmask = 0L;
-
-				for (String columnName : columnNames) {
-					finderPathColumnBitmask |=
-						commerceDiscountCommerceAccountGroupRelModelImpl.
-							getColumnBitmask(columnName);
-				}
-
-				_finderPathColumnBitmasksCache.put(
-					finderPath, finderPathColumnBitmask);
-			}
-
-			if ((columnBitmask & finderPathColumnBitmask) != 0) {
-				return _getValue(
-					commerceDiscountCommerceAccountGroupRelModelImpl,
-					columnNames, original);
-			}
-
-			return null;
-		}
-
-		@Override
-		public String getClassName() {
-			return CommerceDiscountCommerceAccountGroupRelImpl.class.getName();
-		}
-
-		@Override
-		public String getTableName() {
-			return CommerceDiscountCommerceAccountGroupRelTable.INSTANCE.
-				getTableName();
-		}
-
-		private Object[] _getValue(
-			CommerceDiscountCommerceAccountGroupRelModelImpl
-				commerceDiscountCommerceAccountGroupRelModelImpl,
-			String[] columnNames, boolean original) {
-
-			Object[] arguments = new Object[columnNames.length];
-
-			for (int i = 0; i < arguments.length; i++) {
-				String columnName = columnNames[i];
-
-				if (original) {
-					arguments[i] =
-						commerceDiscountCommerceAccountGroupRelModelImpl.
-							getColumnOriginalValue(columnName);
-				}
-				else {
-					arguments[i] =
-						commerceDiscountCommerceAccountGroupRelModelImpl.
-							getColumnValue(columnName);
-				}
-			}
-
-			return arguments;
-		}
-
-		private static Map<FinderPath, Long> _finderPathColumnBitmasksCache =
-			new ConcurrentHashMap<>();
-
-	}
+	@Reference
+	private CommerceDiscountCommerceAccountGroupRelModelArgumentsResolver
+		_commerceDiscountCommerceAccountGroupRelModelArgumentsResolver;
 
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
+ * Copyright (c) 2000-2021 Liferay, Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the Free
@@ -27,7 +27,8 @@ public enum OASFormat {
 	DICTIONARY("string", OASType.OBJECT, true),
 	DOUBLE("double", OASType.NUMBER, false),
 	FLOAT("float", OASType.NUMBER, true), INT32("int32", OASType.INTEGER, true),
-	INT64("int64", OASType.INTEGER, false), STRING(null, OASType.STRING, true);
+	INT64("int64", OASType.INTEGER, false), OBJECT(null, OASType.OBJECT, true),
+	STRING(null, OASType.STRING, true);
 
 	public static OASFormat fromOpenAPITypeAndFormat(
 		OASType oasType, String openAPIFormatDefinition) {
@@ -39,7 +40,10 @@ public enum OASFormat {
 				continue;
 			}
 
-			if ((openAPIFormatDefinition == null) && oasFormat.defaultFormat) {
+			if ((openAPIFormatDefinition == null) &&
+				(oasFormat.openAPIFormatDefinition == null) &&
+				oasFormat.defaultFormat) {
+
 				return oasFormat;
 			}
 

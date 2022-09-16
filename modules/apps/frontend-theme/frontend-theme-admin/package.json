@@ -11,6 +11,9 @@
 		"baseTheme": "styled",
 		"distName": "admin-theme",
 		"rubySass": false,
+		"sassOptions": {
+			"dartSass": true
+		},
 		"version": "7.1"
 	},
 	"main": "package.json",
@@ -21,5 +24,5 @@
 		"checkFormat": "liferay-npm-scripts check",
 		"format": "liferay-npm-scripts fix"
 	},
-	"version": "5.0.0"
+	"version": "5.0.40"
 }

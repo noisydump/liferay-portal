@@ -24,14 +24,15 @@ import com.liferay.portal.kernel.model.impl.BaseModelImpl;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.sync.model.SyncDLFileVersionDiff;
 import com.liferay.sync.model.SyncDLFileVersionDiffModel;
 
 import java.io.Serializable;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
 import java.util.Collections;
@@ -39,6 +40,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -105,32 +107,32 @@ public class SyncDLFileVersionDiffModelImpl
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long EXPIRATIONDATE_COLUMN_BITMASK = 1L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long FILEENTRYID_COLUMN_BITMASK = 2L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long SOURCEFILEVERSIONID_COLUMN_BITMASK = 4L;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long TARGETFILEVERSIONID_COLUMN_BITMASK = 8L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *		#getColumnBitmask(String)
+	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
 	public static final long SYNCDLFILEVERSIONDIFFID_COLUMN_BITMASK = 16L;
@@ -233,34 +235,6 @@ public class SyncDLFileVersionDiffModelImpl
 		getAttributeSetterBiConsumers() {
 
 		return _attributeSetterBiConsumers;
-	}
-
-	private static Function<InvocationHandler, SyncDLFileVersionDiff>
-		_getProxyProviderFunction() {
-
-		Class<?> proxyClass = ProxyUtil.getProxyClass(
-			SyncDLFileVersionDiff.class.getClassLoader(),
-			SyncDLFileVersionDiff.class, ModelWrapper.class);
-
-		try {
-			Constructor<SyncDLFileVersionDiff> constructor =
-				(Constructor<SyncDLFileVersionDiff>)proxyClass.getConstructor(
-					InvocationHandler.class);
-
-			return invocationHandler -> {
-				try {
-					return constructor.newInstance(invocationHandler);
-				}
-				catch (ReflectiveOperationException
-							reflectiveOperationException) {
-
-					throw new InternalError(reflectiveOperationException);
-				}
-			};
-		}
-		catch (NoSuchMethodException noSuchMethodException) {
-			throw new InternalError(noSuchMethodException);
-		}
 	}
 
 	private static final Map<String, Function<SyncDLFileVersionDiff, Object>>
@@ -500,7 +474,9 @@ public class SyncDLFileVersionDiffModelImpl
 		for (Map.Entry<String, Object> entry :
 				_columnOriginalValues.entrySet()) {
 
-			if (entry.getValue() != getColumnValue(entry.getKey())) {
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
 				_columnBitmask |= _columnBitmasks.get(entry.getKey());
 			}
 		}
@@ -555,6 +531,31 @@ public class SyncDLFileVersionDiffModelImpl
 		syncDLFileVersionDiffImpl.setExpirationDate(getExpirationDate());
 
 		syncDLFileVersionDiffImpl.resetOriginalValues();
+
+		return syncDLFileVersionDiffImpl;
+	}
+
+	@Override
+	public SyncDLFileVersionDiff cloneWithOriginalValues() {
+		SyncDLFileVersionDiffImpl syncDLFileVersionDiffImpl =
+			new SyncDLFileVersionDiffImpl();
+
+		syncDLFileVersionDiffImpl.setSyncDLFileVersionDiffId(
+			this.<Long>getColumnOriginalValue("syncDLFileVersionDiffId"));
+		syncDLFileVersionDiffImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		syncDLFileVersionDiffImpl.setFileEntryId(
+			this.<Long>getColumnOriginalValue("fileEntryId"));
+		syncDLFileVersionDiffImpl.setSourceFileVersionId(
+			this.<Long>getColumnOriginalValue("sourceFileVersionId"));
+		syncDLFileVersionDiffImpl.setTargetFileVersionId(
+			this.<Long>getColumnOriginalValue("targetFileVersionId"));
+		syncDLFileVersionDiffImpl.setDataFileEntryId(
+			this.<Long>getColumnOriginalValue("dataFileEntryId"));
+		syncDLFileVersionDiffImpl.setSize(
+			this.<Long>getColumnOriginalValue("size_"));
+		syncDLFileVersionDiffImpl.setExpirationDate(
+			this.<Date>getColumnOriginalValue("expirationDate"));
 
 		return syncDLFileVersionDiffImpl;
 	}
@@ -668,7 +669,7 @@ public class SyncDLFileVersionDiffModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			(4 * attributeGetterFunctions.size()) + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -679,10 +680,27 @@ public class SyncDLFileVersionDiffModelImpl
 			Function<SyncDLFileVersionDiff, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(
-				attributeGetterFunction.apply((SyncDLFileVersionDiff)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply(
+				(SyncDLFileVersionDiff)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -730,7 +748,9 @@ public class SyncDLFileVersionDiffModelImpl
 	private static class EscapedModelProxyProviderFunctionHolder {
 
 		private static final Function<InvocationHandler, SyncDLFileVersionDiff>
-			_escapedModelProxyProviderFunction = _getProxyProviderFunction();
+			_escapedModelProxyProviderFunction =
+				ProxyUtil.getProxyProviderFunction(
+					SyncDLFileVersionDiff.class, ModelWrapper.class);
 
 	}
 

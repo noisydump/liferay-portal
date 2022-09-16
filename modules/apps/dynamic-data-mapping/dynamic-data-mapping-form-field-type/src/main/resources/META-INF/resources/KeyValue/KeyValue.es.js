@@ -12,14 +12,21 @@
  * details.
  */
 
-import {normalizeFieldName} from 'dynamic-data-mapping-form-renderer';
+import {normalizeFieldName} from 'data-engine-js-components-web';
 import React, {useRef} from 'react';
 
 import {FieldBase} from '../FieldBase/ReactFieldBase.es';
 import Text from '../Text/Text.es';
 import {useSyncValue} from '../hooks/useSyncValue.es';
 
-const KeyValue = ({className, disabled, onChange, value, ...otherProps}) => (
+const KeyValue = ({
+	allowSpecialCharacters,
+	className,
+	disabled,
+	onChange,
+	value,
+	...otherProps
+}) => (
 	<div className="active form-text key-value-editor">
 		<label className="control-label key-value-label">
 			{className === 'key-value-reference-input'
@@ -31,10 +38,11 @@ const KeyValue = ({className, disabled, onChange, value, ...otherProps}) => (
 		<input
 			{...otherProps}
 			className={`${disabled ? 'disabled ' : ''}${className}`}
-			onChange={(event) => {
-				const value = normalizeFieldName(event.target.value);
-				onChange({target: {value}});
-			}}
+			onChange={({target: {value}}) =>
+				onChange(
+					allowSpecialCharacters ? value : normalizeFieldName(value)
+				)
+			}
 			readOnly={disabled}
 			tabIndex={disabled ? '-1' : '0'}
 			type="text"
@@ -44,6 +52,7 @@ const KeyValue = ({className, disabled, onChange, value, ...otherProps}) => (
 );
 
 const Main = ({
+	allowSpecialCharacters,
 	editingLanguageId,
 	generateKeyword,
 	keyword: initialKeyword,
@@ -58,7 +67,7 @@ const Main = ({
 	onReferenceChange,
 	placeholder,
 	readOnly,
-	reference: initalReference,
+	reference,
 	required,
 	showKeyword = false,
 	showLabel,
@@ -68,7 +77,6 @@ const Main = ({
 	...otherProps
 }) => {
 	const [keyword, setKeyword] = useSyncValue(initialKeyword);
-	const [reference, setReference] = useSyncValue(initalReference);
 
 	const generateKeywordRef = useRef(generateKeyword);
 
@@ -86,14 +94,16 @@ const Main = ({
 				editingLanguageId={editingLanguageId}
 				name={`keyValueLabel${name}`}
 				onBlur={onBlur}
-				onChange={(event) => {
-					const {value} = event.target;
-
-					onChange(event);
+				onChange={({target: {value}}) => {
+					onChange(value);
 
 					if (generateKeywordRef.current) {
-						const newKeyword = normalizeFieldName(value);
-						onKeywordChange(event, newKeyword, true);
+						onKeywordChange(
+							allowSpecialCharacters
+								? value
+								: normalizeFieldName(value),
+							true
+						);
 					}
 				}}
 				onFocus={onFocus}
@@ -106,28 +116,27 @@ const Main = ({
 				value={value}
 				visible={visible}
 			/>
+
 			{showKeyword && (
 				<KeyValue
+					allowSpecialCharacters={allowSpecialCharacters}
 					className="key-value-input"
 					disabled={keywordReadOnly}
 					onBlur={onKeywordBlur}
-					onChange={(event) => {
-						const {value} = event.target;
-
+					onChange={(value) => {
 						generateKeywordRef.current = false;
-						onKeywordChange(event, value, false);
+						onKeywordChange(value, false);
 						setKeyword(value);
 					}}
 					value={keyword}
 				/>
 			)}
+
 			<KeyValue
+				allowSpecialCharacters={allowSpecialCharacters}
 				className="key-value-reference-input"
 				onBlur={onReferenceBlur}
-				onChange={(event) => {
-					onReferenceChange(event);
-					setReference(event.target.value);
-				}}
+				onChange={onReferenceChange}
 				value={reference}
 			/>
 		</FieldBase>

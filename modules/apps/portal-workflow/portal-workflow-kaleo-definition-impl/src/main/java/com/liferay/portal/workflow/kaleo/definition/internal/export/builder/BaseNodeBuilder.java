@@ -71,28 +71,100 @@ public abstract class BaseNodeBuilder<T extends Node> implements NodeBuilder {
 	public T buildNode(KaleoNode kaleoNode) throws PortalException {
 		T node = createNode(kaleoNode);
 
-		Set<Action> actions = buildActions(
-			kaleoNode.getCompanyId(), KaleoNode.class.getName(),
-			kaleoNode.getKaleoNodeId());
-
-		node.setActions(actions);
-
+		node.setActions(
+			_buildActions(
+				kaleoNode.getCompanyId(), KaleoNode.class.getName(),
+				kaleoNode.getKaleoNodeId()));
+		node.setLabelMap(kaleoNode.getLabelMap());
 		node.setMetadata(kaleoNode.getMetadata());
-
-		Set<Notification> notifications = buildNotifications(
-			KaleoNode.class.getName(), kaleoNode.getKaleoNodeId());
-
-		node.setNotifications(notifications);
-
-		Set<Timer> timers = buildTimers(
-			KaleoNode.class.getName(), kaleoNode.getKaleoNodeId());
-
-		node.setTimers(timers);
+		node.setNotifications(
+			_buildNotifications(
+				KaleoNode.class.getName(), kaleoNode.getKaleoNodeId()));
+		node.setTimers(
+			_buildTimers(
+				KaleoNode.class.getName(), kaleoNode.getKaleoNodeId()));
 
 		return node;
 	}
 
-	protected void addNotificationRecipients(
+	protected Set<Assignment> buildAssigments(
+			String kaleoClassName, long kaleoClassPK)
+		throws PortalException {
+
+		List<KaleoTaskAssignment> kaleoTaskAssignments =
+			kaleoTaskAssignmentLocalService.getKaleoTaskAssignments(
+				kaleoClassName, kaleoClassPK);
+
+		Set<Assignment> assignments = new HashSet<>();
+
+		for (KaleoTaskAssignment kaleoTaskAssignment : kaleoTaskAssignments) {
+			String assigneeClassName =
+				kaleoTaskAssignment.getAssigneeClassName();
+
+			long assigneeClassPK = kaleoTaskAssignment.getAssigneeClassPK();
+
+			Assignment assignment = null;
+
+			if (assigneeClassName.equals(AssignmentType.SCRIPT.name())) {
+				assignment = new ScriptAssignment(
+					kaleoTaskAssignment.getAssigneeScript(),
+					kaleoTaskAssignment.getAssigneeScriptLanguage(),
+					kaleoTaskAssignment.getAssigneeScriptRequiredContexts());
+			}
+			else if (assigneeClassName.equals(ResourceAction.class.getName())) {
+				assignment = new ResourceActionAssignment(
+					kaleoTaskAssignment.getAssigneeActionId());
+			}
+			else if (assigneeClassName.equals(Role.class.getName())) {
+				Role role = roleLocalService.fetchRole(assigneeClassPK);
+
+				assignment = new RoleAssignment(
+					role.getRoleId(), role.getName(), role.getTypeLabel());
+			}
+			else if (assigneeClassName.equals(User.class.getName())) {
+				if (assigneeClassPK == 0) {
+					assignment = new UserAssignment();
+				}
+				else {
+					User user = userLocalService.getUser(assigneeClassPK);
+
+					assignment = new UserAssignment(
+						user.getUserId(), user.getScreenName(),
+						user.getEmailAddress());
+				}
+			}
+
+			assignments.add(assignment);
+		}
+
+		return assignments;
+	}
+
+	protected abstract T createNode(KaleoNode kaleoNode) throws PortalException;
+
+	@Reference
+	protected KaleoActionLocalService kaleoActionLocalService;
+
+	@Reference
+	protected KaleoNotificationLocalService kaleoNotificationLocalService;
+
+	@Reference
+	protected KaleoNotificationRecipientLocalService
+		kaleoNotificationRecipientLocalService;
+
+	@Reference
+	protected KaleoTaskAssignmentLocalService kaleoTaskAssignmentLocalService;
+
+	@Reference
+	protected KaleoTimerLocalService kaleoTimerLocalService;
+
+	@Reference
+	protected RoleLocalService roleLocalService;
+
+	@Reference
+	protected UserLocalService userLocalService;
+
+	private void _addNotificationRecipients(
 			KaleoNotification kaleoNotification, Notification notification)
 		throws PortalException {
 
@@ -156,7 +228,7 @@ public abstract class BaseNodeBuilder<T extends Node> implements NodeBuilder {
 		}
 	}
 
-	protected Set<Action> buildActions(
+	private Set<Action> _buildActions(
 			long companyId, String kaleoClassName, long kaleoClassPK)
 		throws KaleoDefinitionValidationException {
 
@@ -180,60 +252,7 @@ public abstract class BaseNodeBuilder<T extends Node> implements NodeBuilder {
 		return actions;
 	}
 
-	protected Set<Assignment> buildAssigments(
-			String kaleoClassName, long kaleoClassPK)
-		throws PortalException {
-
-		List<KaleoTaskAssignment> kaleoTaskAssignments =
-			kaleoTaskAssignmentLocalService.getKaleoTaskAssignments(
-				kaleoClassName, kaleoClassPK);
-
-		Set<Assignment> assignments = new HashSet<>();
-
-		for (KaleoTaskAssignment kaleoTaskAssignment : kaleoTaskAssignments) {
-			String assigneeClassName =
-				kaleoTaskAssignment.getAssigneeClassName();
-
-			long assigneeClassPK = kaleoTaskAssignment.getAssigneeClassPK();
-
-			Assignment assignment = null;
-
-			if (assigneeClassName.equals(AssignmentType.SCRIPT.name())) {
-				assignment = new ScriptAssignment(
-					kaleoTaskAssignment.getAssigneeScript(),
-					kaleoTaskAssignment.getAssigneeScriptLanguage(),
-					kaleoTaskAssignment.getAssigneeScriptRequiredContexts());
-			}
-			else if (assigneeClassName.equals(ResourceAction.class.getName())) {
-				assignment = new ResourceActionAssignment(
-					kaleoTaskAssignment.getAssigneeActionId());
-			}
-			else if (assigneeClassName.equals(Role.class.getName())) {
-				Role role = roleLocalService.fetchRole(assigneeClassPK);
-
-				assignment = new RoleAssignment(
-					role.getRoleId(), role.getName(), role.getTypeLabel());
-			}
-			else if (assigneeClassName.equals(User.class.getName())) {
-				if (assigneeClassPK == 0) {
-					assignment = new UserAssignment();
-				}
-				else {
-					User user = userLocalService.getUser(assigneeClassPK);
-
-					assignment = new UserAssignment(
-						user.getUserId(), user.getScreenName(),
-						user.getEmailAddress());
-				}
-			}
-
-			assignments.add(assignment);
-		}
-
-		return assignments;
-	}
-
-	protected Set<Notification> buildNotifications(
+	private Set<Notification> _buildNotifications(
 			String kaleoClassName, long kaleoClassPK)
 		throws PortalException {
 
@@ -259,13 +278,13 @@ public abstract class BaseNodeBuilder<T extends Node> implements NodeBuilder {
 				notification.addNotificationType(notificationTypeValue);
 			}
 
-			addNotificationRecipients(kaleoNotification, notification);
+			_addNotificationRecipients(kaleoNotification, notification);
 		}
 
 		return notifications;
 	}
 
-	protected Set<Timer> buildTimers(String kaleoClassName, long kaleoClassPK)
+	private Set<Timer> _buildTimers(String kaleoClassName, long kaleoClassPK)
 		throws PortalException {
 
 		List<KaleoTimer> kaleoTimers = kaleoTimerLocalService.getKaleoTimers(
@@ -296,18 +315,17 @@ public abstract class BaseNodeBuilder<T extends Node> implements NodeBuilder {
 				timer.setRecurrence(recurrenceDelayDuration);
 			}
 
-			Set<Action> timerActions = buildActions(
+			Set<Action> timerActions = _buildActions(
 				kaleoTimer.getCompanyId(), KaleoTimer.class.getName(),
 				kaleoTimer.getKaleoTimerId());
 
 			timer.setActions(timerActions);
 
-			Set<Assignment> reassignments = buildAssigments(
-				KaleoTimer.class.getName(), kaleoTimer.getKaleoTimerId());
+			timer.setReassignments(
+				buildAssigments(
+					KaleoTimer.class.getName(), kaleoTimer.getKaleoTimerId()));
 
-			timer.setReassignments(reassignments);
-
-			Set<Notification> timerNotifications = buildNotifications(
+			Set<Notification> timerNotifications = _buildNotifications(
 				KaleoTimer.class.getName(), kaleoTimer.getKaleoTimerId());
 
 			timer.setNotifications(timerNotifications);
@@ -315,29 +333,5 @@ public abstract class BaseNodeBuilder<T extends Node> implements NodeBuilder {
 
 		return timers;
 	}
-
-	protected abstract T createNode(KaleoNode kaleoNode) throws PortalException;
-
-	@Reference
-	protected KaleoActionLocalService kaleoActionLocalService;
-
-	@Reference
-	protected KaleoNotificationLocalService kaleoNotificationLocalService;
-
-	@Reference
-	protected KaleoNotificationRecipientLocalService
-		kaleoNotificationRecipientLocalService;
-
-	@Reference
-	protected KaleoTaskAssignmentLocalService kaleoTaskAssignmentLocalService;
-
-	@Reference
-	protected KaleoTimerLocalService kaleoTimerLocalService;
-
-	@Reference
-	protected RoleLocalService roleLocalService;
-
-	@Reference
-	protected UserLocalService userLocalService;
 
 }

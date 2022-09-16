@@ -125,11 +125,11 @@ public class PortalPreferencesPersistenceTest {
 
 		newPortalPreferences.setMvccVersion(RandomTestUtil.nextLong());
 
+		newPortalPreferences.setCompanyId(RandomTestUtil.nextLong());
+
 		newPortalPreferences.setOwnerId(RandomTestUtil.nextLong());
 
 		newPortalPreferences.setOwnerType(RandomTestUtil.nextInt());
-
-		newPortalPreferences.setPreferences(RandomTestUtil.randomString());
 
 		_portalPreferenceses.add(_persistence.update(newPortalPreferences));
 
@@ -143,14 +143,14 @@ public class PortalPreferencesPersistenceTest {
 			existingPortalPreferences.getPortalPreferencesId(),
 			newPortalPreferences.getPortalPreferencesId());
 		Assert.assertEquals(
+			existingPortalPreferences.getCompanyId(),
+			newPortalPreferences.getCompanyId());
+		Assert.assertEquals(
 			existingPortalPreferences.getOwnerId(),
 			newPortalPreferences.getOwnerId());
 		Assert.assertEquals(
 			existingPortalPreferences.getOwnerType(),
 			newPortalPreferences.getOwnerType());
-		Assert.assertEquals(
-			existingPortalPreferences.getPreferences(),
-			newPortalPreferences.getPreferences());
 	}
 
 	@Test
@@ -187,7 +187,7 @@ public class PortalPreferencesPersistenceTest {
 	protected OrderByComparator<PortalPreferences> getOrderByComparator() {
 		return OrderByComparatorFactoryUtil.create(
 			"PortalPreferences", "mvccVersion", true, "portalPreferencesId",
-			true, "ownerId", true, "ownerType", true);
+			true, "companyId", true, "ownerId", true, "ownerType", true);
 	}
 
 	@Test
@@ -482,11 +482,11 @@ public class PortalPreferencesPersistenceTest {
 
 		portalPreferences.setMvccVersion(RandomTestUtil.nextLong());
 
+		portalPreferences.setCompanyId(RandomTestUtil.nextLong());
+
 		portalPreferences.setOwnerId(RandomTestUtil.nextLong());
 
 		portalPreferences.setOwnerType(RandomTestUtil.nextInt());
-
-		portalPreferences.setPreferences(RandomTestUtil.randomString());
 
 		_portalPreferenceses.add(_persistence.update(portalPreferences));
 

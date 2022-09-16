@@ -63,7 +63,7 @@ public class MessageBoardThreadSerDes {
 		sb.append("{");
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+			"yyyy-MM-dd'T'HH:mm:ssXX");
 
 		if (messageBoardThread.getActions() != null) {
 			if (sb.length() > 1) {
@@ -271,6 +271,16 @@ public class MessageBoardThreadSerDes {
 			sb.append(messageBoardThread.getLocked());
 		}
 
+		if (messageBoardThread.getMessageBoardRootMessageId() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"messageBoardRootMessageId\": ");
+
+			sb.append(messageBoardThread.getMessageBoardRootMessageId());
+		}
+
 		if (messageBoardThread.getMessageBoardSectionId() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -352,6 +362,20 @@ public class MessageBoardThreadSerDes {
 			sb.append("\"siteId\": ");
 
 			sb.append(messageBoardThread.getSiteId());
+		}
+
+		if (messageBoardThread.getStatus() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"status\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(messageBoardThread.getStatus()));
+
+			sb.append("\"");
 		}
 
 		if (messageBoardThread.getSubscribed() != null) {
@@ -475,7 +499,7 @@ public class MessageBoardThreadSerDes {
 		Map<String, String> map = new TreeMap<>();
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+			"yyyy-MM-dd'T'HH:mm:ssXX");
 
 		if (messageBoardThread.getActions() == null) {
 			map.put("actions", null);
@@ -604,6 +628,16 @@ public class MessageBoardThreadSerDes {
 			map.put("locked", String.valueOf(messageBoardThread.getLocked()));
 		}
 
+		if (messageBoardThread.getMessageBoardRootMessageId() == null) {
+			map.put("messageBoardRootMessageId", null);
+		}
+		else {
+			map.put(
+				"messageBoardRootMessageId",
+				String.valueOf(
+					messageBoardThread.getMessageBoardRootMessageId()));
+		}
+
 		if (messageBoardThread.getMessageBoardSectionId() == null) {
 			map.put("messageBoardSectionId", null);
 		}
@@ -663,6 +697,13 @@ public class MessageBoardThreadSerDes {
 		}
 		else {
 			map.put("siteId", String.valueOf(messageBoardThread.getSiteId()));
+		}
+
+		if (messageBoardThread.getStatus() == null) {
+			map.put("status", null);
+		}
+		else {
+			map.put("status", String.valueOf(messageBoardThread.getStatus()));
 		}
 
 		if (messageBoardThread.getSubscribed() == null) {
@@ -838,6 +879,14 @@ public class MessageBoardThreadSerDes {
 				}
 			}
 			else if (Objects.equals(
+						jsonParserFieldName, "messageBoardRootMessageId")) {
+
+				if (jsonParserFieldValue != null) {
+					messageBoardThread.setMessageBoardRootMessageId(
+						Long.valueOf((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(
 						jsonParserFieldName, "messageBoardSectionId")) {
 
 				if (jsonParserFieldValue != null) {
@@ -891,6 +940,11 @@ public class MessageBoardThreadSerDes {
 						Long.valueOf((String)jsonParserFieldValue));
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "status")) {
+				if (jsonParserFieldValue != null) {
+					messageBoardThread.setStatus((String)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "subscribed")) {
 				if (jsonParserFieldValue != null) {
 					messageBoardThread.setSubscribed(
@@ -939,9 +993,6 @@ public class MessageBoardThreadSerDes {
 							(String)jsonParserFieldValue));
 				}
 			}
-			else if (jsonParserFieldName.equals("status")) {
-				throw new IllegalArgumentException();
-			}
 		}
 
 	}
@@ -970,7 +1021,7 @@ public class MessageBoardThreadSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -1006,7 +1057,7 @@ public class MessageBoardThreadSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

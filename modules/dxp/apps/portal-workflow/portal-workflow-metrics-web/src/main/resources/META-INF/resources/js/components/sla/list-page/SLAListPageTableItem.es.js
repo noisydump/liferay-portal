@@ -21,7 +21,9 @@ import {formatDuration} from '../../../shared/util/duration.es';
 import moment from '../../../shared/util/moment.es';
 import {SLAListPageContext} from './SLAListPage.es';
 
-const Item = ({
+const SPACE = ' ';
+
+export default function Item({
 	dateModified,
 	description,
 	duration,
@@ -29,7 +31,7 @@ const Item = ({
 	name,
 	processId,
 	status,
-}) => {
+}) {
 	const {
 		history,
 		location: {search},
@@ -74,7 +76,10 @@ const Item = ({
 							className="text-danger"
 							symbol="exclamation-full"
 						/>
-					)}{' '}
+					)}
+
+					{SPACE}
+
 					<ChildLink to={`/sla/${processId}/edit/${id}`}>
 						{name}
 					</ChildLink>
@@ -102,6 +107,4 @@ const Item = ({
 			</ClayTable.Cell>
 		</ClayTable.Row>
 	);
-};
-
-export {Item};
+}

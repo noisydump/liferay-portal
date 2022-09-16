@@ -65,12 +65,6 @@ definition {
 		Alert.viewSuccessMessage();
 	}
 
-	macro addViaDayViewDragAndDrop {
-		SikuliDragAndDrop(
-			locator1 = "Calendar#SCHEDULER_DAY_VIEW_PNG",
-			value1 = "0,200");
-	}
-
 	macro changeCalendar {
 		CalendarNavigator.gotoView(viewType = "Week");
 
@@ -107,8 +101,20 @@ definition {
 			value1 = "${eventTitle}");
 	}
 
+	macro editTitleAndCalendar {
+		CalendarScheduler.selectSpecificEvent(eventTitle = "${currentEventTitle}");
+
+		CalendarScheduler.editTitle(eventTitle = "${eventTitle}");
+
+		Select(
+			locator1 = "Calendar#SCHEDULER_EVENT_DIALOG_BOX_CALENDAR",
+			value1 = "${calendarName}");
+
+		CalendarScheduler.saveEvent();
+	}
+
 	macro gotoAddViaDayView {
-		SikuliClick(locator1 = "Calendar#SCHEDULER_DAY_VIEW_PNG");
+		Click(locator1 = "CalendarDayView#SCHEDULER_VIEW_DAY");
 	}
 
 	macro gotoDetailsViaDialogBox {
@@ -165,6 +171,7 @@ definition {
 		AssertElementPresent(locator1 = "CalendarEditEvent#RECURRING_EVENT_DIALOG_BOX_HEADER");
 
 		var saveOptionPath = StringUtil.replace("${saveOption}", " ", "_");
+
 		var saveOptionPath = StringUtil.upperCase("${saveOptionPath}");
 
 		AssertClick(
@@ -300,9 +307,9 @@ definition {
 	}
 
 	macro viewEventColor {
-		var key_backgroundColor = "${eventBackgroundColorRGB}";
+		var key_backgroundColor = "${eventBackgroundColorRgb}";
 		var key_eventTitle = "${eventTitle}";
-		var key_fontColor = "${eventFontColorRGB}";
+		var key_fontColor = "${eventFontColorRgb}";
 
 		AssertElementPresent(locator1 = "Calendar#SCHEDULER_EVENT_SPECIFIC_BACKGROUND_COLOR");
 
@@ -513,8 +520,6 @@ definition {
 			locator1 = "Calendar#VIEW_DAY_BUTTON",
 			value1 = "${viewTypeLocalized}");
 
-		Pause(locator1 = "10000");
-
 		var key_messageLocalized = "${messageLocalized}";
 
 		if (!(IsElementPresent(locator1 = "Calendar#SCHEDULER_VIEW_DAY_SHOW_MORE_LOCALIZED"))) {
@@ -535,8 +540,6 @@ definition {
 			locator1 = "Calendar#VIEW_MONTH_BUTTON",
 			value1 = "${viewTypeLocalized}");
 
-		Pause(locator1 = "5000");
-
 		var key_messageLocalized = "${messageLocalized}";
 
 		AssertTextEquals(
@@ -549,8 +552,6 @@ definition {
 			locator1 = "Calendar#VIEW_WEEK_BUTTON",
 			value1 = "${viewTypeLocalized}");
 
-		Pause(locator1 = "5000");
-
 		var key_messageLocalized = "${messageLocalized}";
 
 		AssertTextEquals(
@@ -561,12 +562,7 @@ definition {
 	macro viewSpecificEventNotPresent {
 		var key_eventTitle = "${eventTitle}";
 
-		if (IsElementPresent(locator1 = "Calendar#SCHEDULER_EVENT_SPECIFIC")) {
-			CalendarScheduler.viewSpecificEventNotVisible(eventTitle = "${eventTitle}");
-		}
-		else {
-			AssertElementNotPresent(locator1 = "Calendar#SCHEDULER_EVENT_SPECIFIC");
-		}
+		AssertElementNotPresent(locator1 = "Calendar#SCHEDULER_EVENT_SPECIFIC");
 
 		AssertTextNotPresent(value1 = "${eventTitle}");
 	}

@@ -64,7 +64,7 @@ public class FacebookConnectCompanySettingsVerifyProcess
 		if (oauthRedirectURL != null) {
 			dictionary.put(
 				FacebookConnectConfigurationKeys.OAUTH_REDIRECT_URL,
-				upgradeLegacyRedirectURI(oauthRedirectURL));
+				_upgradeLegacyRedirectURI(oauthRedirectURL));
 		}
 
 		return dictionary;
@@ -114,24 +114,7 @@ public class FacebookConnectCompanySettingsVerifyProcess
 		return FacebookConnectConstants.SERVICE_NAME;
 	}
 
-	@Reference(unbind = "-")
-	protected void setCompanyLocalService(
-		CompanyLocalService companyLocalService) {
-
-		_companyLocalService = companyLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setPrefsProps(PrefsProps prefsProps) {
-		_prefsProps = prefsProps;
-	}
-
-	@Reference(unbind = "-")
-	protected void setSettingsFactory(SettingsFactory settingsFactory) {
-		_settingsFactory = settingsFactory;
-	}
-
-	protected String upgradeLegacyRedirectURI(String legacyRedirectURI) {
+	private String _upgradeLegacyRedirectURI(String legacyRedirectURI) {
 		if (Validator.isNull(legacyRedirectURI)) {
 			return legacyRedirectURI;
 		}
@@ -141,8 +124,13 @@ public class FacebookConnectCompanySettingsVerifyProcess
 			"/c/portal/facebook_connect_oauth");
 	}
 
+	@Reference
 	private CompanyLocalService _companyLocalService;
+
+	@Reference
 	private PrefsProps _prefsProps;
+
+	@Reference
 	private SettingsFactory _settingsFactory;
 
 }

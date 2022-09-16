@@ -21,8 +21,12 @@ import {
 	DUPLICATE_ITEM,
 	MOVE_ITEM,
 	SWITCH_VIEWPORT_SIZE,
+	TOGGLE_FRAGMENT_HIGHLIGHTED,
+	TOGGLE_WIDGET_HIGHLIGHTED,
+	UPDATE_COLLECTION_DISPLAY_COLLECTION,
 	UPDATE_COL_SIZE,
 	UPDATE_EDITABLE_VALUES,
+	UPDATE_FORM_ITEM_CONFIG,
 	UPDATE_FRAGMENT_ENTRY_LINK_CONFIGURATION,
 	UPDATE_ITEM_CONFIG,
 	UPDATE_LANGUAGE_ID,
@@ -105,9 +109,21 @@ export default function getActionLabel(
 						config.availableViewportSizes[action.size].label
 				  );
 
+		case TOGGLE_FRAGMENT_HIGHLIGHTED:
+			return action.initiallyHighlighted
+				? Liferay.Language.get('add-fragment-to-favorites')
+				: Liferay.Language.get('remove-fragment-from-favorites');
+
+		case TOGGLE_WIDGET_HIGHLIGHTED:
+			return action.initiallyHighlighted
+				? Liferay.Language.get('add-widget-to-favorites')
+				: Liferay.Language.get('remove-widget-from-favorites');
+
 		case UPDATE_COL_SIZE:
 			return Liferay.Language.get('update-column-size');
+		case UPDATE_COLLECTION_DISPLAY_COLLECTION:
 		case UPDATE_FRAGMENT_ENTRY_LINK_CONFIGURATION:
+		case UPDATE_FORM_ITEM_CONFIG:
 		case UPDATE_ITEM_CONFIG:
 		case UPDATE_ROW_COLUMNS:
 			return Liferay.Util.sub(

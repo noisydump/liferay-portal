@@ -121,6 +121,12 @@ components:
                     format: int64
                     readOnly: true
                     type: integer
+                subscribed:
+                    # @review
+                    description:
+                        A flag that indicates whether the user making the requests is subscribed to this keyword.
+                    readOnly: true
+                    type: boolean
             required:
                 - name
             type: object
@@ -170,6 +176,9 @@ components:
                         type: string
                     type: object
                 externalReferenceCode:
+                    # @review
+                    description:
+                        The category's external reference code
                     type: string
                 id:
                     description:
@@ -211,8 +220,26 @@ components:
                             type: string
                     readOnly: true
                     type: object
+                siteId:
+                    description:
+                        The ID of the site to which this category is scoped.
+                    format: int64
+                    readOnly: true
+                    type: integer
+                taxonomyCategoryProperties:
+                    # @review
+                    description:
+                        The category's properties.
+                    items:
+                        $ref: "#/components/schemas/TaxonomyCategoryProperty"
+                    type: array
                 taxonomyCategoryUsageCount:
                     readOnly: true
+                    type: integer
+                taxonomyVocabularyId:
+                    description:
+                        The `TaxonomyVocabulary` id, only if the category does not have a parent category.
+                    format: int64
                     type: integer
                 viewableBy:
                     description:
@@ -222,6 +249,24 @@ components:
                     writeOnly: true
             required:
                 - name
+            type: object
+        TaxonomyCategoryProperty:
+            # @review
+            description:
+                Key value pair to associate detailed information with a category.
+            properties:
+                key:
+                    # @review
+                    description:
+                        The taxonomy category property's key.
+                    type: string
+                value:
+                    # @review
+                    description:
+                        The taxonomy category property's value.
+                    type: string
+            required:
+                - key
             type: object
         TaxonomyVocabulary:
             description:
@@ -277,6 +322,10 @@ components:
                     additionalProperties:
                         type: string
                     type: object
+                externalReferenceCode:
+                    description:
+                        The vocabulary's external reference code.
+                    type: string
                 id:
                     description:
                         The vocabulary's ID.
@@ -314,7 +363,7 @@ components:
 info:
     description:
         "A Java client JAR is available for use with the group ID 'com.liferay', artifact ID
-        'com.liferay.headless.admin.taxonomy.client', and version '4.0.0'."
+        'com.liferay.headless.admin.taxonomy.client', and version '4.0.17'."
     license:
         name: "Apache 2.0"
         url: "http://www.apache.org/licenses/LICENSE-2.0.html"
@@ -332,6 +381,24 @@ paths:
                   schema:
                       format: int64
                       type: integer
+                - in: query
+                  name: aggregationTerms
+                  schema:
+                      items:
+                          type: string
+                      type: array
+                - in: query
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
+                  schema:
+                      type: string
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: filter
                   schema:
@@ -365,8 +432,6 @@ paths:
                                 items:
                                     $ref: "#/components/schemas/Keyword"
                                 type: array
-                    description:
-                        ""
             tags: ["Keyword"]
         post:
             operationId: postAssetLibraryKeyword
@@ -394,8 +459,53 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/Keyword"
-                    description:
-                        ""
+            tags: ["Keyword"]
+    "/asset-libraries/{assetLibraryId}/keywords/permissions":
+        get:
+            operationId: getAssetLibraryKeywordPermissionsPage
+            parameters:
+                - in: path
+                  name: assetLibraryId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: query
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
+                  schema:
+                      type: string
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
+                - in: query
+                  name: roleNames
+                  schema:
+                      type: string
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
+            tags: ["Keyword"]
+        put:
+            operationId: putAssetLibraryKeywordPermissionsPage
+            parameters:
+                - in: path
+                  name: assetLibraryId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
             tags: ["Keyword"]
     "/asset-libraries/{assetLibraryId}/taxonomy-vocabularies":
         get:
@@ -407,6 +517,24 @@ paths:
                   schema:
                       format: int64
                       type: integer
+                - in: query
+                  name: aggregationTerms
+                  schema:
+                      items:
+                          type: string
+                      type: array
+                - in: query
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
+                  schema:
+                      type: string
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: filter
                   schema:
@@ -440,8 +568,6 @@ paths:
                                 items:
                                     $ref: "#/components/schemas/TaxonomyVocabulary"
                                 type: array
-                    description:
-                        ""
             tags: ["TaxonomyVocabulary"]
         post:
             operationId: postAssetLibraryTaxonomyVocabulary
@@ -469,13 +595,169 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/TaxonomyVocabulary"
-                    description:
-                        ""
+            tags: ["TaxonomyVocabulary"]
+    "/asset-libraries/{assetLibraryId}/taxonomy-vocabularies/by-external-reference-code/{externalReferenceCode}":
+        delete:
+            # @review
+            description:
+                Deletes the asset library's taxonomy vocabulary by external reference code.
+            operationId: deleteAssetLibraryTaxonomyVocabularyByExternalReferenceCode
+            parameters:
+                - in: path
+                  name: assetLibraryId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
+            tags: ["TaxonomyVocabulary"]
+        get:
+            # @review
+            description:
+                Retrieves the asset library's taxonomy vocabulary by external reference code.
+            operationId: getAssetLibraryTaxonomyVocabularyByExternalReferenceCode
+            parameters:
+                - in: path
+                  name: assetLibraryId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+                - in: query
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
+                  schema:
+                      type: string
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/TaxonomyVocabulary"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/TaxonomyVocabulary"
+            tags: ["TaxonomyVocabulary"]
+        put:
+            # @review
+            description:
+                Updates the asset library's taxonomy vocabulary with the given external reference code, or creates it if
+                it not exists.
+            operationId: putAssetLibraryTaxonomyVocabularyByExternalReferenceCode
+            parameters:
+                - in: path
+                  name: assetLibraryId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/TaxonomyVocabulary"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/TaxonomyVocabulary"
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/TaxonomyVocabulary"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/TaxonomyVocabulary"
+            tags: ["TaxonomyVocabulary"]
+    "/asset-libraries/{assetLibraryId}/taxonomy-vocabularies/permissions":
+        get:
+            operationId: getAssetLibraryTaxonomyVocabularyPermissionsPage
+            parameters:
+                - in: path
+                  name: assetLibraryId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: query
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
+                  schema:
+                      type: string
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
+                - in: query
+                  name: roleNames
+                  schema:
+                      type: string
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
+            tags: ["TaxonomyVocabulary"]
+        put:
+            operationId: putAssetLibraryTaxonomyVocabularyPermissionsPage
+            parameters:
+                - in: path
+                  name: assetLibraryId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
             tags: ["TaxonomyVocabulary"]
     "/keywords/ranked":
         get:
             operationId: getKeywordsRankedPage
             parameters:
+                - in: query
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
+                  schema:
+                      type: string
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: siteId
                   schema:
@@ -506,8 +788,6 @@ paths:
                                 items:
                                     $ref: "#/components/schemas/Keyword"
                                 type: array
-                    description:
-                        ""
             tags: ["Keyword"]
     "/keywords/{keywordId}":
         delete:
@@ -526,8 +806,6 @@ paths:
                     content:
                         application/json: {}
                         application/xml: {}
-                    description:
-                        ""
             tags: ["Keyword"]
         get:
             description:
@@ -540,6 +818,18 @@ paths:
                   schema:
                       format: int64
                       type: integer
+                - in: query
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
+                  schema:
+                      type: string
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
             responses:
                 200:
                     content:
@@ -549,8 +839,6 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/Keyword"
-                    description:
-                        ""
             tags: ["Keyword"]
         put:
             description:
@@ -581,8 +869,38 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/Keyword"
-                    description:
-                        ""
+            tags: ["Keyword"]
+    "/keywords/{keywordId}/subscribe":
+        put:
+            operationId: putKeywordSubscribe
+            parameters:
+                - in: path
+                  name: keywordId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
+            tags: ["Keyword"]
+    "/keywords/{keywordId}/unsubscribe":
+        put:
+            operationId: putKeywordUnsubscribe
+            parameters:
+                - in: path
+                  name: keywordId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
             tags: ["Keyword"]
     "/sites/{siteId}/keywords":
         get:
@@ -596,6 +914,24 @@ paths:
                   schema:
                       format: int64
                       type: integer
+                - in: query
+                  name: aggregationTerms
+                  schema:
+                      items:
+                          type: string
+                      type: array
+                - in: query
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
+                  schema:
+                      type: string
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: filter
                   schema:
@@ -629,8 +965,6 @@ paths:
                                 items:
                                     $ref: "#/components/schemas/Keyword"
                                 type: array
-                    description:
-                        ""
             tags: ["Keyword"]
         post:
             description:
@@ -660,8 +994,53 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/Keyword"
-                    description:
-                        ""
+            tags: ["Keyword"]
+    "/sites/{siteId}/keywords/permissions":
+        get:
+            operationId: getSiteKeywordPermissionsPage
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: query
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
+                  schema:
+                      type: string
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
+                - in: query
+                  name: roleNames
+                  schema:
+                      type: string
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
+            tags: ["Keyword"]
+        put:
+            operationId: putSiteKeywordPermissionsPage
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
             tags: ["Keyword"]
     "/sites/{siteId}/taxonomy-vocabularies":
         get:
@@ -675,6 +1054,24 @@ paths:
                   schema:
                       format: int64
                       type: integer
+                - in: query
+                  name: aggregationTerms
+                  schema:
+                      items:
+                          type: string
+                      type: array
+                - in: query
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
+                  schema:
+                      type: string
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: filter
                   schema:
@@ -708,8 +1105,6 @@ paths:
                                 items:
                                     $ref: "#/components/schemas/TaxonomyVocabulary"
                                 type: array
-                    description:
-                        ""
             tags: ["TaxonomyVocabulary"]
         post:
             description:
@@ -739,13 +1134,169 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/TaxonomyVocabulary"
-                    description:
-                        ""
+            tags: ["TaxonomyVocabulary"]
+    "/sites/{siteId}/taxonomy-vocabularies/by-external-reference-code/{externalReferenceCode}":
+        delete:
+            # @review
+            description:
+                Deletes the site's taxonomy vocabulary by external reference code.
+            operationId: deleteSiteTaxonomyVocabularyByExternalReferenceCode
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
+            tags: ["TaxonomyVocabulary"]
+        get:
+            # @review
+            description:
+                Retrieves the site's taxonomy vocabulary by external reference code.
+            operationId: getSiteTaxonomyVocabularyByExternalReferenceCode
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+                - in: query
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
+                  schema:
+                      type: string
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/TaxonomyVocabulary"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/TaxonomyVocabulary"
+            tags: ["TaxonomyVocabulary"]
+        put:
+            # @review
+            description:
+                Updates the site's taxonomy vocabulary with the given external reference code, or creates it if it not
+                exists.
+            operationId: putSiteTaxonomyVocabularyByExternalReferenceCode
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/TaxonomyVocabulary"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/TaxonomyVocabulary"
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/TaxonomyVocabulary"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/TaxonomyVocabulary"
+            tags: ["TaxonomyVocabulary"]
+    "/sites/{siteId}/taxonomy-vocabularies/permissions":
+        get:
+            operationId: getSiteTaxonomyVocabularyPermissionsPage
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: query
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
+                  schema:
+                      type: string
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
+                - in: query
+                  name: roleNames
+                  schema:
+                      type: string
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
+            tags: ["TaxonomyVocabulary"]
+        put:
+            operationId: putSiteTaxonomyVocabularyPermissionsPage
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
             tags: ["TaxonomyVocabulary"]
     "/taxonomy-categories/ranked":
         get:
-            operationId: getTaxonomyCategoryRankedPage
+            operationId: getTaxonomyCategoriesRankedPage
             parameters:
+                - in: query
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
+                  schema:
+                      type: string
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: siteId
                   schema:
@@ -772,8 +1323,6 @@ paths:
                                 items:
                                     $ref: "#/components/schemas/TaxonomyCategory"
                                 type: array
-                    description:
-                        ""
             tags: ["TaxonomyCategory"]
     "/taxonomy-categories/{parentTaxonomyCategoryId}/taxonomy-categories":
         get:
@@ -785,6 +1334,24 @@ paths:
                 - in: path
                   name: parentTaxonomyCategoryId
                   required: true
+                  schema:
+                      type: string
+                - in: query
+                  name: aggregationTerms
+                  schema:
+                      items:
+                          type: string
+                      type: array
+                - in: query
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
+                  schema:
+                      type: string
+                - in: query
+                  name: restrictFields
                   schema:
                       type: string
                 - in: query
@@ -820,8 +1387,6 @@ paths:
                                 items:
                                     $ref: "#/components/schemas/TaxonomyCategory"
                                 type: array
-                    description:
-                        ""
             tags: ["TaxonomyCategory"]
         post:
             description:
@@ -850,8 +1415,6 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/TaxonomyCategory"
-                    description:
-                        ""
             tags: ["TaxonomyCategory"]
     "/taxonomy-categories/{taxonomyCategoryId}":
         delete:
@@ -869,8 +1432,6 @@ paths:
                     content:
                         application/json: {}
                         application/xml: {}
-                    description:
-                        ""
             tags: ["TaxonomyCategory"]
         get:
             description:
@@ -882,6 +1443,14 @@ paths:
                   required: true
                   schema:
                       type: string
+                - in: query
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
             responses:
                 200:
                     content:
@@ -891,8 +1460,6 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/TaxonomyCategory"
-                    description:
-                        ""
             tags: ["TaxonomyCategory"]
         patch:
             description:
@@ -921,8 +1488,6 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/TaxonomyCategory"
-                    description:
-                        ""
             tags: ["TaxonomyCategory"]
         put:
             description:
@@ -952,8 +1517,51 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/TaxonomyCategory"
-                    description:
-                        ""
+            tags: ["TaxonomyCategory"]
+    "/taxonomy-categories/{taxonomyCategoryId}/permissions":
+        get:
+            operationId: getTaxonomyCategoryPermissionsPage
+            parameters:
+                - in: path
+                  name: taxonomyCategoryId
+                  required: true
+                  schema:
+                      type: string
+                - in: query
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
+                  schema:
+                      type: string
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
+                - in: query
+                  name: roleNames
+                  schema:
+                      type: string
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
+            tags: ["TaxonomyCategory"]
+        put:
+            operationId: putTaxonomyCategoryPermissionsPage
+            parameters:
+                - in: path
+                  name: taxonomyCategoryId
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
             tags: ["TaxonomyCategory"]
     "/taxonomy-vocabularies/{taxonomyVocabularyId}":
         delete:
@@ -972,8 +1580,6 @@ paths:
                     content:
                         application/json: {}
                         application/xml: {}
-                    description:
-                        ""
             tags: ["TaxonomyVocabulary"]
         get:
             description:
@@ -986,6 +1592,18 @@ paths:
                   schema:
                       format: int64
                       type: integer
+                - in: query
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
+                  schema:
+                      type: string
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
             responses:
                 200:
                     content:
@@ -995,8 +1613,6 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/TaxonomyVocabulary"
-                    description:
-                        ""
             tags: ["TaxonomyVocabulary"]
         patch:
             description:
@@ -1026,8 +1642,6 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/TaxonomyVocabulary"
-                    description:
-                        ""
             tags: ["TaxonomyVocabulary"]
         put:
             description:
@@ -1058,8 +1672,53 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/TaxonomyVocabulary"
-                    description:
-                        ""
+            tags: ["TaxonomyVocabulary"]
+    "/taxonomy-vocabularies/{taxonomyVocabularyId}/permissions":
+        get:
+            operationId: getTaxonomyVocabularyPermissionsPage
+            parameters:
+                - in: path
+                  name: taxonomyVocabularyId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: query
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
+                  schema:
+                      type: string
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
+                - in: query
+                  name: roleNames
+                  schema:
+                      type: string
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
+            tags: ["TaxonomyVocabulary"]
+        put:
+            operationId: putTaxonomyVocabularyPermissionsPage
+            parameters:
+                - in: path
+                  name: taxonomyVocabularyId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
             tags: ["TaxonomyVocabulary"]
     "/taxonomy-vocabularies/{taxonomyVocabularyId}/taxonomy-categories":
         get:
@@ -1073,6 +1732,24 @@ paths:
                   schema:
                       format: int64
                       type: integer
+                - in: query
+                  name: aggregationTerms
+                  schema:
+                      items:
+                          type: string
+                      type: array
+                - in: query
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
+                  schema:
+                      type: string
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: filter
                   schema:
@@ -1106,8 +1783,6 @@ paths:
                                 items:
                                     $ref: "#/components/schemas/TaxonomyCategory"
                                 type: array
-                    description:
-                        ""
             tags: ["TaxonomyCategory"]
         post:
             description:
@@ -1137,6 +1812,103 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/TaxonomyCategory"
-                    description:
-                        ""
+            tags: ["TaxonomyCategory"]
+    "/taxonomy-vocabularies/{taxonomyVocabularyId}/taxonomy-categories/by-external-reference-code/{externalReferenceCode}":
+        delete:
+            # @review
+            description:
+                Deletes the site's taxonomy category by external reference code.
+            operationId: deleteTaxonomyVocabularyTaxonomyCategoryByExternalReferenceCode
+            parameters:
+                - in: path
+                  name: taxonomyVocabularyId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
+            tags: ["TaxonomyCategory"]
+        get:
+            # @review
+            description:
+                Retrieves the site's taxonomy category by external reference code.
+            operationId: getTaxonomyVocabularyTaxonomyCategoryByExternalReferenceCode
+            parameters:
+                - in: path
+                  name: taxonomyVocabularyId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+                - in: query
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
+                  schema:
+                      type: string
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/TaxonomyCategory"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/TaxonomyCategory"
+            tags: ["TaxonomyCategory"]
+        put:
+            # @review
+            description:
+                Updates the site's taxonomy category with the given external reference code, or creates it if it not
+                exists.
+            operationId: putTaxonomyVocabularyTaxonomyCategoryByExternalReferenceCode
+            parameters:
+                - in: path
+                  name: taxonomyVocabularyId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/TaxonomyCategory"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/TaxonomyCategory"
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/TaxonomyCategory"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/TaxonomyCategory"
             tags: ["TaxonomyCategory"]

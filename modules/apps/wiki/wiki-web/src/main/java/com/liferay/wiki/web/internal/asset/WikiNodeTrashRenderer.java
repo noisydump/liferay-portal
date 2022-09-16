@@ -14,8 +14,8 @@
 
 package com.liferay.wiki.web.internal.asset;
 
-import com.liferay.portal.kernel.trash.BaseTrashRenderer;
 import com.liferay.portal.kernel.util.HtmlUtil;
+import com.liferay.trash.BaseTrashRenderer;
 import com.liferay.trash.TrashHelper;
 import com.liferay.wiki.constants.WikiPortletKeys;
 import com.liferay.wiki.model.WikiNode;
@@ -69,11 +69,7 @@ public class WikiNodeTrashRenderer extends BaseTrashRenderer {
 
 	@Override
 	public String getTitle(Locale locale) {
-		if (!_node.isInTrash()) {
-			return _node.getName();
-		}
-
-		if (_trashHelper == null) {
+		if (!_node.isInTrash() || (_trashHelper == null)) {
 			return _node.getName();
 		}
 

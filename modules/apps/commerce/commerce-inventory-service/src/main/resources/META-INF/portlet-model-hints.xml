@@ -2,6 +2,7 @@
 
 <model-hints>
 	<model name="com.liferay.commerce.inventory.model.CommerceInventoryAudit">
+		<field name="mvccVersion" type="long" />
 		<field name="commerceInventoryAuditId" type="long" />
 		<field name="companyId" type="long" />
 		<field name="userId" type="long" />
@@ -30,6 +31,8 @@
 	</model>
 	<model name="com.liferay.commerce.inventory.model.CommerceInventoryReplenishmentItem">
 		<field name="mvccVersion" type="long" />
+		<field name="uuid" type="String" />
+		<field name="externalReferenceCode" type="String" />
 		<field name="commerceInventoryReplenishmentItemId" type="long" />
 		<field name="companyId" type="long" />
 		<field name="userId" type="long" />
@@ -43,6 +46,7 @@
 	</model>
 	<model name="com.liferay.commerce.inventory.model.CommerceInventoryWarehouse">
 		<field name="mvccVersion" type="long" />
+		<field name="uuid" type="String" />
 		<field name="externalReferenceCode" type="String" />
 		<field name="commerceInventoryWarehouseId" type="long" />
 		<field name="companyId" type="long" />
@@ -66,6 +70,7 @@
 	</model>
 	<model name="com.liferay.commerce.inventory.model.CommerceInventoryWarehouseItem">
 		<field name="mvccVersion" type="long" />
+		<field name="uuid" type="String" />
 		<field name="externalReferenceCode" type="String" />
 		<field name="commerceInventoryWarehouseItemId" type="long" />
 		<field name="companyId" type="long" />

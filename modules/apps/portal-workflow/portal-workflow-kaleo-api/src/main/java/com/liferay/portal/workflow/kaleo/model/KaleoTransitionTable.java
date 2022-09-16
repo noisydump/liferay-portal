@@ -35,6 +35,9 @@ public class KaleoTransitionTable extends BaseTable<KaleoTransitionTable> {
 
 	public final Column<KaleoTransitionTable, Long> mvccVersion = createColumn(
 		"mvccVersion", Long.class, Types.BIGINT, Column.FLAG_NULLITY);
+	public final Column<KaleoTransitionTable, Long> ctCollectionId =
+		createColumn(
+			"ctCollectionId", Long.class, Types.BIGINT, Column.FLAG_PRIMARY);
 	public final Column<KaleoTransitionTable, Long> kaleoTransitionId =
 		createColumn(
 			"kaleoTransitionId", Long.class, Types.BIGINT, Column.FLAG_PRIMARY);
@@ -61,6 +64,8 @@ public class KaleoTransitionTable extends BaseTable<KaleoTransitionTable> {
 		"kaleoNodeId", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
 	public final Column<KaleoTransitionTable, String> name = createColumn(
 		"name", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
+	public final Column<KaleoTransitionTable, String> label = createColumn(
+		"label", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
 	public final Column<KaleoTransitionTable, String> description =
 		createColumn(
 			"description", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);

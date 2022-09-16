@@ -14,17 +14,17 @@
 
 package com.liferay.commerce.internal.price;
 
-import com.liferay.commerce.account.model.CommerceAccount;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.model.CommerceMoney;
-import com.liferay.commerce.currency.model.CommerceMoneyFactory;
 import com.liferay.commerce.currency.service.CommerceCurrencyLocalService;
 import com.liferay.commerce.discount.CommerceDiscountCalculation;
 import com.liferay.commerce.discount.CommerceDiscountValue;
 import com.liferay.commerce.discount.application.strategy.CommerceDiscountApplicationStrategy;
 import com.liferay.commerce.internal.util.CommercePriceConverterUtil;
+import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.price.CommerceProductPrice;
+import com.liferay.commerce.price.CommerceProductPriceCalculation;
 import com.liferay.commerce.price.CommerceProductPriceImpl;
 import com.liferay.commerce.price.CommerceProductPriceRequest;
 import com.liferay.commerce.price.list.constants.CommercePriceListConstants;
@@ -38,20 +38,20 @@ import com.liferay.commerce.price.list.service.CommerceTierPriceEntryLocalServic
 import com.liferay.commerce.pricing.configuration.CommercePricingConfiguration;
 import com.liferay.commerce.pricing.constants.CommercePricingConstants;
 import com.liferay.commerce.pricing.modifier.CommercePriceModifierHelper;
+import com.liferay.commerce.product.constants.CommerceChannelAccountEntryRelConstants;
 import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.model.CommerceCatalog;
 import com.liferay.commerce.product.model.CommerceChannel;
-import com.liferay.commerce.product.service.CPDefinitionOptionRelLocalService;
-import com.liferay.commerce.product.service.CPInstanceLocalService;
-import com.liferay.commerce.product.service.CommerceChannelLocalService;
-import com.liferay.commerce.tax.CommerceTaxCalculation;
+import com.liferay.commerce.product.model.CommerceChannelAccountEntryRel;
 import com.liferay.commerce.util.CommerceBigDecimalUtil;
+import com.liferay.commerce.util.CommerceUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.math.BigDecimal;
@@ -59,49 +59,25 @@ import java.math.MathContext;
 import java.math.RoundingMode;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Riccardo Alberti
  */
+@Component(
+	enabled = false, immediate = true,
+	service = CommerceProductPriceCalculation.class
+)
 public class CommerceProductPriceCalculationV2Impl
 	extends BaseCommerceProductPriceCalculation {
-
-	public CommerceProductPriceCalculationV2Impl(
-		CommerceChannelLocalService commerceChannelLocalService,
-		CommerceCurrencyLocalService commerceCurrencyLocalService,
-		CommerceDiscountCalculation commerceDiscountCalculation,
-		CommerceMoneyFactory commerceMoneyFactory,
-		CommercePriceEntryLocalService commercePriceEntryLocalService,
-		CommercePriceListLocalService commercePriceListLocalService,
-		CommercePriceModifierHelper commercePriceModifierHelper,
-		CommerceTierPriceEntryLocalService commerceTierPriceEntryLocalService,
-		CommerceTaxCalculation commerceTaxCalculation,
-		ConfigurationProvider configurationProvider,
-		CPDefinitionOptionRelLocalService cpDefinitionOptionRelLocalService,
-		CPInstanceLocalService cpInstanceLocalService,
-		Map<String, CommerceDiscountApplicationStrategy>
-			commerceDiscountApplicationStrategyMap,
-		Map<String, CommercePriceListDiscovery> commercePriceListDiscoveryMap) {
-
-		super(
-			commerceMoneyFactory, commerceTaxCalculation,
-			cpDefinitionOptionRelLocalService, cpInstanceLocalService);
-
-		_commerceChannelLocalService = commerceChannelLocalService;
-		_commerceCurrencyLocalService = commerceCurrencyLocalService;
-		_commerceDiscountCalculation = commerceDiscountCalculation;
-		_commercePriceEntryLocalService = commercePriceEntryLocalService;
-		_commercePriceListLocalService = commercePriceListLocalService;
-		_commercePriceModifierHelper = commercePriceModifierHelper;
-		_commerceTierPriceEntryLocalService =
-			commerceTierPriceEntryLocalService;
-		_configurationProvider = configurationProvider;
-		_commerceDiscountApplicationStrategyMap =
-			commerceDiscountApplicationStrategyMap;
-		_commercePriceListDiscoveryMap = commercePriceListDiscoveryMap;
-	}
 
 	@Override
 	public CommerceMoney getBasePrice(
@@ -179,7 +155,7 @@ public class CommerceProductPriceCalculationV2Impl
 		boolean discountsTargetNetPrice = true;
 
 		CommerceChannel commerceChannel =
-			_commerceChannelLocalService.fetchCommerceChannel(
+			commerceChannelLocalService.fetchCommerceChannel(
 				commerceContext.getCommerceChannelId());
 
 		if (commerceChannel != null) {
@@ -329,11 +305,9 @@ public class CommerceProductPriceCalculationV2Impl
 			boolean secure, CommerceContext commerceContext)
 		throws PortalException {
 
-		long commercePromoPriceListId = _getCommercePromoPriceListId(
-			cpInstanceId, commerceContext);
-
 		return _getPromoPrice(
-			commercePromoPriceListId, cpInstanceId, quantity, commerceContext);
+			_getCommercePromoPriceListId(cpInstanceId, commerceContext),
+			cpInstanceId, quantity, commerceContext);
 	}
 
 	@Override
@@ -418,11 +392,63 @@ public class CommerceProductPriceCalculationV2Impl
 			boolean secure, CommerceContext commerceContext)
 		throws PortalException {
 
-		long commercePriceListId = _getCommercePriceListId(
-			cpInstanceId, commerceContext);
-
 		return _getUnitPrice(
-			commercePriceListId, cpInstanceId, quantity, commerceContext);
+			_getCommercePriceListId(cpInstanceId, commerceContext),
+			cpInstanceId, quantity, commerceContext);
+	}
+
+	public void unsetCommerceDiscountApplicationStrategy(
+		CommerceDiscountApplicationStrategy commerceDiscountApplicationStrategy,
+		Map<String, Object> properties) {
+
+		String commerceDiscountApplicationStrategyKey = GetterUtil.getString(
+			properties.get("commerce.discount.application.strategy.key"));
+
+		_commerceDiscountApplicationStrategyMap.remove(
+			commerceDiscountApplicationStrategyKey);
+	}
+
+	public void unsetCommercePriceListDiscovery(
+		CommercePriceListDiscovery commercePriceListDiscovery,
+		Map<String, Object> properties) {
+
+		String commercePriceListDiscoveryKey = GetterUtil.getString(
+			properties.get("commerce.price.list.discovery.key"));
+
+		_commercePriceListDiscoveryMap.remove(commercePriceListDiscoveryKey);
+	}
+
+	@Reference(
+		cardinality = ReferenceCardinality.MULTIPLE,
+		policy = ReferencePolicy.DYNAMIC,
+		policyOption = ReferencePolicyOption.GREEDY
+	)
+	protected void setCommerceDiscountApplicationStrategy(
+		CommerceDiscountApplicationStrategy commerceDiscountApplicationStrategy,
+		Map<String, Object> properties) {
+
+		String commerceDiscountApplicationStrategyKey = GetterUtil.getString(
+			properties.get("commerce.discount.application.strategy.key"));
+
+		_commerceDiscountApplicationStrategyMap.put(
+			commerceDiscountApplicationStrategyKey,
+			commerceDiscountApplicationStrategy);
+	}
+
+	@Reference(
+		cardinality = ReferenceCardinality.MULTIPLE,
+		policy = ReferencePolicy.DYNAMIC,
+		policyOption = ReferencePolicyOption.GREEDY
+	)
+	protected void setCommercePriceListDiscovery(
+		CommercePriceListDiscovery commercePriceListDiscovery,
+		Map<String, Object> properties) {
+
+		String commercePriceListDiscoveryKey = GetterUtil.getString(
+			properties.get("commerce.price.list.discovery.key"));
+
+		_commercePriceListDiscoveryMap.put(
+			commercePriceListDiscoveryKey, commercePriceListDiscovery);
 	}
 
 	private CommerceDiscountValue _calculateCommerceDiscountValue(
@@ -461,8 +487,7 @@ public class CommerceProductPriceCalculationV2Impl
 	}
 
 	private BigDecimal _getBasePrice(
-			long cpInstanceId, CommerceCurrency commerceCurrency,
-			String commercePriceListType)
+			long cpInstanceId, CommerceCurrency commerceCurrency, String type)
 		throws PortalException {
 
 		CPInstance cpInstance = cpInstanceLocalService.getCPInstance(
@@ -471,7 +496,7 @@ public class CommerceProductPriceCalculationV2Impl
 		CommercePriceList commercePriceList =
 			_commercePriceListLocalService.
 				fetchCatalogBaseCommercePriceListByType(
-					cpInstance.getGroupId(), commercePriceListType);
+					cpInstance.getGroupId(), type);
 
 		if (commercePriceList == null) {
 			return BigDecimal.ZERO;
@@ -677,7 +702,7 @@ public class CommerceProductPriceCalculationV2Impl
 				commercePrice =
 					_commercePriceModifierHelper.applyCommercePriceModifier(
 						commercePriceListId, cpInstance.getCPDefinitionId(),
-						commercePriceEntry.getPriceMoney(
+						commercePriceEntry.getPriceCommerceMoney(
 							commerceCurrency.getCommerceCurrencyId()));
 			}
 
@@ -701,7 +726,7 @@ public class CommerceProductPriceCalculationV2Impl
 
 				return _commercePriceModifierHelper.applyCommercePriceModifier(
 					commercePriceListId, cpInstance.getCPDefinitionId(),
-					commerceTierPriceEntry.getPriceMoney(
+					commerceTierPriceEntry.getPriceCommerceMoney(
 						commerceCurrency.getCommerceCurrencyId()));
 			}
 
@@ -805,20 +830,27 @@ public class CommerceProductPriceCalculationV2Impl
 	}
 
 	private CommercePriceList _getCommercePriceList(
-			long cpInstanceId, CommerceContext commerceContext,
-			String commercePriceListType)
+			long cpInstanceId, CommerceContext commerceContext, String type)
 		throws PortalException {
 
-		CommerceAccount commerceAccount = commerceContext.getCommerceAccount();
+		long commerceAccountId = CommerceUtil.getCommerceAccountId(
+			commerceContext);
 
-		long commerceAccountId = 0;
+		CommerceChannelAccountEntryRel commerceChannelAccountEntryRel =
+			commerceChannelAccountEntryRelLocalService.
+				fetchCommerceChannelAccountEntryRel(
+					commerceAccountId, commerceContext.getCommerceChannelId(),
+					CommerceChannelAccountEntryRelConstants.TYPE_PRICE_LIST);
 
-		if (commerceAccount != null) {
-			commerceAccountId = commerceAccount.getCommerceAccountId();
+		if ((commerceChannelAccountEntryRel != null) &&
+			commerceChannelAccountEntryRel.isOverrideEligibility()) {
+
+			return _commercePriceListLocalService.getCommercePriceList(
+				commerceChannelAccountEntryRel.getClassPK());
 		}
 
 		CommercePriceListDiscovery commercePriceListDiscovery =
-			_getCommercePriceListDiscovery(commercePriceListType);
+			_getCommercePriceListDiscovery(type);
 
 		if (commercePriceListDiscovery == null) {
 			return null;
@@ -827,14 +859,22 @@ public class CommerceProductPriceCalculationV2Impl
 		CPInstance cpInstance = cpInstanceLocalService.getCPInstance(
 			cpInstanceId);
 
+		CommerceOrder commerceOrder = commerceContext.getCommerceOrder();
+
+		long commerceOrderTypeId = 0;
+
+		if (commerceOrder != null) {
+			commerceOrderTypeId = commerceOrder.getCommerceOrderTypeId();
+		}
+
 		return commercePriceListDiscovery.getCommercePriceList(
 			cpInstance.getGroupId(), commerceAccountId,
-			commerceContext.getCommerceChannelId(),
-			cpInstance.getCPInstanceUuid(), commercePriceListType);
+			commerceContext.getCommerceChannelId(), commerceOrderTypeId,
+			cpInstance.getCPInstanceUuid(), type);
 	}
 
 	private CommercePriceListDiscovery _getCommercePriceListDiscovery(
-			String commercePriceListType)
+			String type)
 		throws PortalException {
 
 		CommercePricingConfiguration commercePricingConfiguration =
@@ -843,15 +883,11 @@ public class CommerceProductPriceCalculationV2Impl
 
 		String discoveryMethod = CommercePricingConstants.ORDER_BY_HIERARCHY;
 
-		if (commercePriceListType.equals(
-				CommercePriceListConstants.TYPE_PRICE_LIST)) {
-
+		if (type.equals(CommercePriceListConstants.TYPE_PRICE_LIST)) {
 			discoveryMethod =
 				commercePricingConfiguration.commercePriceListDiscovery();
 		}
-		else if (commercePriceListType.equals(
-					CommercePriceListConstants.TYPE_PROMOTION)) {
-
+		else if (type.equals(CommercePriceListConstants.TYPE_PROMOTION)) {
 			discoveryMethod =
 				commercePricingConfiguration.commercePromotionDiscovery();
 		}
@@ -1110,19 +1146,32 @@ public class CommerceProductPriceCalculationV2Impl
 	private static final Log _log = LogFactoryUtil.getLog(
 		CommerceProductPriceCalculationV2Impl.class);
 
-	private final CommerceChannelLocalService _commerceChannelLocalService;
-	private final CommerceCurrencyLocalService _commerceCurrencyLocalService;
+	@Reference
+	private CommerceCurrencyLocalService _commerceCurrencyLocalService;
+
 	private final Map<String, CommerceDiscountApplicationStrategy>
-		_commerceDiscountApplicationStrategyMap;
-	private final CommerceDiscountCalculation _commerceDiscountCalculation;
-	private final CommercePriceEntryLocalService
-		_commercePriceEntryLocalService;
+		_commerceDiscountApplicationStrategyMap = new HashMap<>();
+
+	@Reference
+	private CommerceDiscountCalculation _commerceDiscountCalculation;
+
+	@Reference
+	private CommercePriceEntryLocalService _commercePriceEntryLocalService;
+
 	private final Map<String, CommercePriceListDiscovery>
-		_commercePriceListDiscoveryMap;
-	private final CommercePriceListLocalService _commercePriceListLocalService;
-	private final CommercePriceModifierHelper _commercePriceModifierHelper;
-	private final CommerceTierPriceEntryLocalService
+		_commercePriceListDiscoveryMap = new HashMap<>();
+
+	@Reference
+	private CommercePriceListLocalService _commercePriceListLocalService;
+
+	@Reference
+	private CommercePriceModifierHelper _commercePriceModifierHelper;
+
+	@Reference
+	private CommerceTierPriceEntryLocalService
 		_commerceTierPriceEntryLocalService;
-	private final ConfigurationProvider _configurationProvider;
+
+	@Reference
+	private ConfigurationProvider _configurationProvider;
 
 }

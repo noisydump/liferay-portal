@@ -17,6 +17,8 @@ package com.liferay.currency.converter.util;
 import com.liferay.currency.converter.model.CurrencyConverter;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.webcache.WebCacheItem;
 import com.liferay.portal.kernel.webcache.WebCachePoolUtil;
 
@@ -53,15 +55,19 @@ public class CurrencyConverterUtil {
 	}
 
 	public static CurrencyConverter getCurrencyConverter(String symbol) {
-		WebCacheItem wci = new CurrencyConverterWebCacheItem(symbol);
+		WebCacheItem webCacheItem = new CurrencyConverterWebCacheItem(symbol);
 
 		String key =
 			CurrencyConverterUtil.class.getName() + StringPool.PERIOD + symbol;
 
 		try {
-			return (CurrencyConverter)WebCachePoolUtil.get(key, wci);
+			return (CurrencyConverter)WebCachePoolUtil.get(key, webCacheItem);
 		}
 		catch (ClassCastException classCastException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(classCastException);
+			}
+
 			WebCachePoolUtil.remove(key);
 		}
 
@@ -73,8 +79,6 @@ public class CurrencyConverterUtil {
 	}
 
 	private CurrencyConverterUtil() {
-		_currencyIds = new HashSet<>();
-
 		_currencyIds.add("AUD");
 		_currencyIds.add("BGN");
 		_currencyIds.add("BRL");
@@ -110,11 +114,14 @@ public class CurrencyConverterUtil {
 		_currencyIds.add("ZAR");
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		CurrencyConverterUtil.class);
+
 	private static final CurrencyConverterUtil _currencyConverterUtil =
 		new CurrencyConverterUtil();
 	private static final Map<String, Map<String, String>> _symbolsPool =
 		new ConcurrentHashMap<>();
 
-	private final Set<String> _currencyIds;
+	private final Set<String> _currencyIds = new HashSet<>();
 
 }

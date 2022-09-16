@@ -18,6 +18,7 @@ import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryService;
 import com.liferay.depot.web.internal.constants.DepotPortletKeys;
 import com.liferay.item.selector.constants.ItemSelectorPortletKeys;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
@@ -118,7 +119,7 @@ public class DepotBreadcrumbEntryContributorImpl
 			}
 		}
 		catch (PortalException portalException) {
-			_log.error(portalException, portalException);
+			_log.error(portalException);
 		}
 
 		breadcrumbEntries.addAll(originalBreadcrumbEntries);
@@ -149,21 +150,20 @@ public class DepotBreadcrumbEntryContributorImpl
 
 		Group group = depotEntry.getGroup();
 
-		PortletURL portletURL = _portal.getControlPanelPortletURL(
-			httpServletRequest, group, DepotPortletKeys.DEPOT_ADMIN, 0, 0,
-			PortletRequest.RENDER_PHASE);
-
-		portletURL.setParameter(
-			"mvcRenderCommandName", "/depot/view_depot_dashboard");
-		portletURL.setParameter(
-			"depotEntryId", String.valueOf(depotEntry.getDepotEntryId()));
-
 		BreadcrumbEntry breadcrumbEntry = new BreadcrumbEntry();
 
 		breadcrumbEntry.setTitle(
 			group.getDescriptiveName(_portal.getLocale(httpServletRequest)));
-
-		breadcrumbEntry.setURL(portletURL.toString());
+		breadcrumbEntry.setURL(
+			PortletURLBuilder.create(
+				_portal.getControlPanelPortletURL(
+					httpServletRequest, group, DepotPortletKeys.DEPOT_ADMIN, 0,
+					0, PortletRequest.RENDER_PHASE)
+			).setMVCRenderCommandName(
+				"/depot/view_depot_dashboard"
+			).setParameter(
+				"depotEntryId", depotEntry.getDepotEntryId()
+			).buildString());
 
 		return breadcrumbEntry;
 	}

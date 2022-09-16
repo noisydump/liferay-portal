@@ -16,12 +16,6 @@ package com.liferay.analytics.reports.web.internal.portlet.action;
 
 import com.liferay.analytics.reports.web.internal.constants.AnalyticsReportsPortletKeys;
 import com.liferay.analytics.reports.web.internal.data.provider.AnalyticsReportsDataProvider;
-import com.liferay.analytics.reports.web.internal.info.display.contributor.util.LayoutDisplayPageProviderUtil;
-import com.liferay.analytics.reports.web.internal.layout.seo.CanonicalURLProvider;
-import com.liferay.asset.display.page.portlet.AssetDisplayPageFriendlyURLProvider;
-import com.liferay.layout.display.page.LayoutDisplayPageObjectProvider;
-import com.liferay.layout.display.page.LayoutDisplayPageProviderTracker;
-import com.liferay.layout.seo.kernel.LayoutSEOLinkManager;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
@@ -32,16 +26,13 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCResourceCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Http;
+import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import java.util.ResourceBundle;
-
 import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -64,62 +55,39 @@ public class GetTotalViewsMVCResourceCommand extends BaseMVCResourceCommand {
 			ResourceRequest resourceRequest, ResourceResponse resourceResponse)
 		throws Exception {
 
-		HttpServletRequest httpServletRequest = _portal.getHttpServletRequest(
-			resourceRequest);
-
-		LayoutDisplayPageObjectProvider<Object>
-			layoutDisplayPageObjectProvider =
-				(LayoutDisplayPageObjectProvider<Object>)
-					LayoutDisplayPageProviderUtil.
-						getLayoutDisplayPageObjectProvider(
-							httpServletRequest,
-							_layoutDisplayPageProviderTracker, _portal);
-
-		if (layoutDisplayPageObjectProvider == null) {
-			JSONPortletResponseUtil.writeJSON(
-				resourceRequest, resourceResponse,
-				JSONUtil.put(
-					"error",
-					_language.get(
-						httpServletRequest, "an-unexpected-error-occurred")));
-
-			return;
-		}
-
 		AnalyticsReportsDataProvider analyticsReportsDataProvider =
 			new AnalyticsReportsDataProvider(_http);
-
-		CanonicalURLProvider canonicalURLProvider = new CanonicalURLProvider(
-			httpServletRequest, _layoutSEOLinkManager, _portal);
+		String canonicalURL = ParamUtil.getString(
+			resourceRequest, "canonicalURL");
 
 		try {
 			JSONObject jsonObject = JSONUtil.put(
 				"analyticsReportsTotalViews",
 				analyticsReportsDataProvider.getTotalViews(
-					_portal.getCompanyId(resourceRequest),
-					canonicalURLProvider.getCanonicalURL()));
+					_portal.getCompanyId(resourceRequest), canonicalURL));
 
 			JSONPortletResponseUtil.writeJSON(
 				resourceRequest, resourceResponse, jsonObject);
 		}
 		catch (Exception exception) {
 			if (_log.isInfoEnabled()) {
-				_log.info(exception, exception);
+				_log.info(exception);
 			}
-
-			ThemeDisplay themeDisplay =
-				(ThemeDisplay)resourceRequest.getAttribute(
-					WebKeys.THEME_DISPLAY);
-
-			ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
-				themeDisplay.getLocale(), getClass());
 
 			JSONPortletResponseUtil.writeJSON(
 				resourceRequest, resourceResponse,
 				JSONUtil.put(
 					"error",
-					ResourceBundleUtil.getString(
-						resourceBundle, "an-unexpected-error-occurred")));
+					() -> {
+						ThemeDisplay themeDisplay =
+							(ThemeDisplay)resourceRequest.getAttribute(
+								WebKeys.THEME_DISPLAY);
+
+						return ResourceBundleUtil.getString(
+							ResourceBundleUtil.getBundle(
+								themeDisplay.getLocale(), getClass()),
+							"an-unexpected-error-occurred");
+					}));
 		}
 	}
 
@@ -127,20 +95,10 @@ public class GetTotalViewsMVCResourceCommand extends BaseMVCResourceCommand {
 		GetTotalViewsMVCResourceCommand.class);
 
 	@Reference
-	private AssetDisplayPageFriendlyURLProvider
-		_assetDisplayPageFriendlyURLProvider;
-
-	@Reference
 	private Http _http;
 
 	@Reference
 	private Language _language;
-
-	@Reference
-	private LayoutDisplayPageProviderTracker _layoutDisplayPageProviderTracker;
-
-	@Reference
-	private LayoutSEOLinkManager _layoutSEOLinkManager;
 
 	@Reference
 	private Portal _portal;

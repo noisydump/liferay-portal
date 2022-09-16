@@ -17,7 +17,7 @@
 <%@ include file="/section/init.jsp" %>
 
 <%
-KBArticleURLHelper kbArticleURLHelper = new KBArticleURLHelper(renderRequest, renderResponse, templatePath);
+KBArticleURLHelper kbArticleURLHelper = new KBArticleURLHelper(renderRequest, renderResponse);
 
 String[] kbArticlesSections = kbSectionPortletInstanceConfiguration.kbArticlesSections();
 String kbArticleDisplayStyle = kbSectionPortletInstanceConfiguration.kbArticleDisplayStyle();
@@ -26,7 +26,7 @@ String kbArticleDisplayStyle = kbSectionPortletInstanceConfiguration.kbArticleDi
 <c:choose>
 	<c:when test="<%= ArrayUtil.isNotEmpty(kbSectionPortletInstanceConfiguration.adminKBArticleSections()) %>">
 		<liferay-portlet:renderURL varImpl="iteratorURL">
-			<portlet:param name="mvcPath" value="/section/view.jsp" />
+			<portlet:param name="mvcRenderCommandName" value="/knowledge_base/view" />
 		</liferay-portlet:renderURL>
 
 		<%
@@ -94,7 +94,7 @@ String kbArticleDisplayStyle = kbSectionPortletInstanceConfiguration.kbArticleDi
 									<%= HtmlUtil.escape(kbArticle.getDescription()) %>
 								</c:when>
 								<c:when test='<%= kbArticleDisplayStyle.equals("abstract") %>'>
-									<%= StringUtil.shorten(HtmlUtil.extractText(kbArticle.getContent()), 500) %>
+									<%= StringUtil.shorten(HtmlParserUtil.extractText(kbArticle.getContent()), 500) %>
 								</c:when>
 							</c:choose>
 						</div>

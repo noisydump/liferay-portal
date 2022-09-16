@@ -14,28 +14,28 @@
 
 package com.liferay.knowledge.base.internal.upgrade.v1_3_5;
 
-import com.liferay.portal.kernel.upgrade.BaseUpgradeLastPublishDate;
+import com.liferay.portal.kernel.upgrade.BaseLastPublishDateUpgradeProcess;
 
 /**
  * @author Máté Thurzó
  */
-public class UpgradeLastPublishDate extends BaseUpgradeLastPublishDate {
+public class UpgradeLastPublishDate extends BaseLastPublishDateUpgradeProcess {
 
 	@Override
 	protected void doUpgrade() throws Exception {
-		runSQL("alter table KBArticle add lastPublishDate DATE null");
+		alterTableAddColumn("KBArticle", "lastPublishDate", "DATE null");
 
 		updateLastPublishDates("1_WAR_knowledgebaseportlet", "KBArticle");
 
-		runSQL("alter table KBComment add lastPublishDate DATE null");
+		alterTableAddColumn("KBComment", "lastPublishDate", "DATE null");
 
 		updateLastPublishDates("1_WAR_knowledgebaseportlet", "KBComment");
 
-		runSQL("alter table KBFolder add lastPublishDate DATE null");
+		alterTableAddColumn("KBFolder", "lastPublishDate", "DATE null");
 
 		updateLastPublishDates("1_WAR_knowledgebaseportlet", "KBFolder");
 
-		runSQL("alter table KBTemplate add lastPublishDate DATE null");
+		alterTableAddColumn("KBTemplate", "lastPublishDate", "DATE null");
 
 		updateLastPublishDates("1_WAR_knowledgebaseportlet", "KBTemplate");
 	}

@@ -14,14 +14,17 @@
 
 package com.liferay.users.admin.web.internal.portlet.configuration.icon;
 
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.configuration.icon.BasePortletConfigurationIcon;
 import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfigurationIcon;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
-import com.liferay.portal.kernel.service.permission.OrganizationPermissionUtil;
+import com.liferay.portal.kernel.service.permission.OrganizationPermission;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -51,7 +54,7 @@ public class EditOrganizationPortletConfigurationIcon
 
 	@Override
 	public String getMessage(PortletRequest portletRequest) {
-		return LanguageUtil.get(
+		return _language.get(
 			getResourceBundle(getLocale(portletRequest)), "edit");
 	}
 
@@ -60,14 +63,15 @@ public class EditOrganizationPortletConfigurationIcon
 		PortletRequest portletRequest, PortletResponse portletResponse) {
 
 		try {
-			PortletURL portletURL = PortletURLFactoryUtil.create(
-				portletRequest, UsersAdminPortletKeys.USERS_ADMIN,
-				PortletRequest.RENDER_PHASE);
-
-			portletURL.setParameter(
-				"mvcRenderCommandName", "/users_admin/edit_organization");
-			portletURL.setParameter(
-				"backURL", _portal.getCurrentURL(portletRequest));
+			PortletURL portletURL = PortletURLBuilder.create(
+				PortletURLFactoryUtil.create(
+					portletRequest, UsersAdminPortletKeys.USERS_ADMIN,
+					PortletRequest.RENDER_PHASE)
+			).setMVCRenderCommandName(
+				"/users_admin/edit_organization"
+			).setBackURL(
+				_portal.getCurrentURL(portletRequest)
+			).buildPortletURL();
 
 			Organization organization = ActionUtil.getOrganization(
 				portletRequest);
@@ -79,6 +83,9 @@ public class EditOrganizationPortletConfigurationIcon
 			return portletURL.toString();
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return StringPool.BLANK;
@@ -95,7 +102,7 @@ public class EditOrganizationPortletConfigurationIcon
 			WebKeys.THEME_DISPLAY);
 
 		try {
-			if (OrganizationPermissionUtil.contains(
+			if (_organizationPermission.contains(
 					themeDisplay.getPermissionChecker(),
 					ActionUtil.getOrganization(portletRequest),
 					ActionKeys.UPDATE)) {
@@ -104,10 +111,22 @@ public class EditOrganizationPortletConfigurationIcon
 			}
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return false;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		EditOrganizationPortletConfigurationIcon.class);
+
+	@Reference
+	private Language _language;
+
+	@Reference
+	private OrganizationPermission _organizationPermission;
 
 	@Reference
 	private Portal _portal;

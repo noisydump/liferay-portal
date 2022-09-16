@@ -98,7 +98,7 @@ String clientSecret = (oAuth2Application == null) ? "" : oAuth2Application.getCl
 							<div class="pencil-wrapper">
 								<aui:button href="" onClick='<%= liferayPortletResponse.getNamespace() + "showEditClientIdModal();" %>' value="edit" />
 
-								<aui:input helpMessage="client-id-help" name="clientId" readonly="true" required="<%= true %>" type="text" />
+								<aui:input helpMessage="client-id-help[oauth2]" name="clientId" readonly="true" required="<%= true %>" type="text" />
 							</div>
 
 							<aui:input name="originalClientId" type="hidden" value="<%= clientId %>" />
@@ -106,7 +106,7 @@ String clientSecret = (oAuth2Application == null) ? "" : oAuth2Application.getCl
 							<div class="pencil-wrapper">
 								<aui:button href="" onClick='<%= liferayPortletResponse.getNamespace() + "showEditClientSecretModal();" %>' value="edit" />
 
-								<aui:input helpMessage="client-secret-help" name="clientSecret" readonly="true" type="password" value="<%= clientSecret %>" />
+								<aui:input helpMessage="client-secret-help[oauth2]" name="clientSecret" readonly="true" type="password" value="<%= clientSecret %>" />
 							</div>
 
 							<aui:input name="originalClientSecret" type="hidden" value="<%= clientSecret %>" />
@@ -196,7 +196,7 @@ String clientSecret = (oAuth2Application == null) ? "" : oAuth2Application.getCl
 				</div>
 			</div>
 
-			<aui:input helpMessage="client-id-help" label="client-id" name="newClientId" onKeyup='<%= liferayPortletResponse.getNamespace() + "updatePadlock('clientIdPadlock', this.value, '" + HtmlUtil.escapeJS(clientId) + "')" %>' type="text" value="<%= clientId %>" />
+			<aui:input helpMessage="client-id-help[oauth2]" label="client-id" name="newClientId" onKeyup='<%= liferayPortletResponse.getNamespace() + "updatePadlock('clientIdPadlock', this.value, '" + HtmlUtil.escapeJS(clientId) + "')" %>' type="text" value="<%= clientId %>" />
 
 			<aui:button-row>
 				<aui:button href="" icon="icon-undo" onClick='<%= liferayPortletResponse.getNamespace() + "setControlEqualTo('newClientId', 'originalClientId')" %>' value="revert" />
@@ -238,6 +238,22 @@ String clientSecret = (oAuth2Application == null) ? "" : oAuth2Application.getCl
 </div>
 
 <aui:script use="aui-modal,liferay-form,node,node-event-simulate">
+	<portlet:namespace />areAdminApplicationSectionsRequired = function () {
+		var selectedClientProfile = <portlet:namespace />getSelectedClientProfile();
+		return (
+			A.all(
+				'#<portlet:namespace />allowedGrantTypes .client-profile-' +
+					selectedClientProfile.val() +
+					' input:checked[name=<%= liferayPortletResponse.getNamespace() + "grant-" + GrantType.AUTHORIZATION_CODE.name() %>]'
+			).size() > 0 ||
+			A.all(
+				'#<portlet:namespace />allowedGrantTypes .client-profile-' +
+					selectedClientProfile.val() +
+					' input:checked[name=<%= liferayPortletResponse.getNamespace() + "grant-" + GrantType.AUTHORIZATION_CODE_PKCE.name() %>]'
+			).size() > 0
+		);
+	};
+
 	<portlet:namespace />generateRandomSecret = function () {
 		Liferay.Util.fetch(
 			'<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/oauth2_provider/generate_random_secret" />',
@@ -245,10 +261,10 @@ String clientSecret = (oAuth2Application == null) ? "" : oAuth2Application.getCl
 				method: 'POST',
 			}
 		)
-			.then(function (response) {
+			.then((response) => {
 				return response.text();
 			})
-			.then(function (response) {
+			.then((response) => {
 				var newClientSecretField = A.one(
 					'#<portlet:namespace />newClientSecret'
 				);
@@ -266,6 +282,7 @@ String clientSecret = (oAuth2Application == null) ? "" : oAuth2Application.getCl
 
 	<portlet:namespace />isClientCredentialsSectionRequired = function () {
 		var selectedClientProfile = <portlet:namespace />getSelectedClientProfile();
+
 		return (
 			A.all(
 				'#<portlet:namespace />allowedGrantTypes .client-profile-' +
@@ -277,6 +294,7 @@ String clientSecret = (oAuth2Application == null) ? "" : oAuth2Application.getCl
 
 	<portlet:namespace />isConfidentialClientRequired = function () {
 		var selectedClientProfile = <portlet:namespace />getSelectedClientProfile();
+
 		return (
 			A.all(
 				'#<portlet:namespace />allowedGrantTypes .client-profile-' +
@@ -288,6 +306,7 @@ String clientSecret = (oAuth2Application == null) ? "" : oAuth2Application.getCl
 
 	<portlet:namespace />isRedirectURIRequired = function () {
 		var selectedClientProfile = <portlet:namespace />getSelectedClientProfile();
+
 		return (
 			A.all(
 				'#<portlet:namespace />allowedGrantTypes .client-profile-' +
@@ -393,7 +412,7 @@ String clientSecret = (oAuth2Application == null) ? "" : oAuth2Application.getCl
 			plugins: [Liferay.WidgetZIndex],
 		}).render();
 
-		modal.on('render', function (event) {
+		modal.on('render', (event) => {
 			<portlet:namespace />updateComponent(applyField, populateField.val());
 		});
 
@@ -430,6 +449,35 @@ String clientSecret = (oAuth2Application == null) ? "" : oAuth2Application.getCl
 		modal.show();
 	};
 
+	<portlet:namespace />updateAdminOptionsApplicationSection = function () {
+		var rememberApplicationSection = A.one(
+			'#<portlet:namespace />rememberDeviceSection'
+		);
+
+		var trustedApplicationSection = A.one(
+			'#<portlet:namespace />trustedApplicationSection'
+		);
+
+		var trustedApplicationCheckbox = document.querySelector(
+			'input[name^="<portlet:namespace />trustedApplication"]'
+		);
+
+		if (<portlet:namespace />areAdminApplicationSectionsRequired()) {
+			trustedApplicationSection.show();
+
+			if (trustedApplicationCheckbox.checked) {
+				rememberApplicationSection.hide();
+			}
+			else {
+				rememberApplicationSection.show();
+			}
+		}
+		else {
+			rememberApplicationSection.hide();
+			trustedApplicationSection.hide();
+		}
+	};
+
 	<portlet:namespace />updateAllowedGrantTypes = function (clientProfile) {
 		A.all('#<portlet:namespace />allowedGrantTypes .allowedGrantType').hide();
 		A.all(
@@ -438,6 +486,7 @@ String clientSecret = (oAuth2Application == null) ? "" : oAuth2Application.getCl
 		).show();
 
 		<portlet:namespace />requiredRedirectURIs();
+		<portlet:namespace />updateAdminOptionsApplicationSection();
 		<portlet:namespace />updateClientCredentialsSection();
 	};
 
@@ -507,7 +556,7 @@ String clientSecret = (oAuth2Application == null) ? "" : oAuth2Application.getCl
 
 	clientProfile.delegate(
 		'change',
-		function (event) {
+		(event) => {
 			var newClientProfileValue = event.currentTarget.val();
 			<portlet:namespace />updateAllowedGrantTypes(newClientProfileValue);
 		},
@@ -541,4 +590,6 @@ String clientSecret = (oAuth2Application == null) ? "" : oAuth2Application.getCl
 	var fieldRules = oldFieldRules.concat(newFieldRules);
 
 	form.set('fieldRules', fieldRules);
+
+	<portlet:namespace />updateAdminOptionsApplicationSection();
 </aui:script>

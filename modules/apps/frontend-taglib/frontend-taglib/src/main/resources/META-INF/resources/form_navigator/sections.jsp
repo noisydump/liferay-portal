@@ -39,7 +39,7 @@ List<FormNavigatorEntry<Object>> formNavigatorEntries = (List<FormNavigatorEntry
 		}
 	%>
 
-		<!-- Begin fragment <%= sectionId %> -->
+		<!-- Begin fragment <%= HtmlUtil.escape(sectionId) %> -->
 
 		<liferay-frontend:fieldset
 			collapsed="<%= i != 0 %>"
@@ -55,7 +55,7 @@ List<FormNavigatorEntry<Object>> formNavigatorEntries = (List<FormNavigatorEntry
 
 		</liferay-frontend:fieldset>
 
-		<!-- End fragment <%= sectionId %> -->
+		<!-- End fragment <%= HtmlUtil.escape(sectionId) %> -->
 
 	<%
 		String curErrorSection = (String)request.getAttribute(WebKeys.ERROR_SECTION);
@@ -68,12 +68,15 @@ List<FormNavigatorEntry<Object>> formNavigatorEntries = (List<FormNavigatorEntry
 
 		i++;
 	}
+	%>
 
-	if (Validator.isNotNull(errorSection)) {
+	<c:if test="<%= Validator.isNotNull(errorSection) %>">
+
+		<%
 		String currentTab = (String)request.getAttribute(FormNavigatorWebKeys.CURRENT_TAB);
 
 		request.setAttribute(FormNavigatorWebKeys.ERROR_TAB, currentTab);
-	%>
+		%>
 
 		<aui:script sandbox="<%= true %>">
 			var focusField;
@@ -89,7 +92,7 @@ List<FormNavigatorEntry<Object>> formNavigatorEntries = (List<FormNavigatorEntry
 			<c:choose>
 				<c:when test="<%= Validator.isNotNull(focusField) %>">
 					focusField = sectionContent.querySelector(
-						'#<portlet:namespace /><%= focusField %>'
+						'#<portlet:namespace /><%= HtmlUtil.escapeJS(focusField) %>'
 					);
 				</c:when>
 				<c:otherwise>
@@ -97,10 +100,10 @@ List<FormNavigatorEntry<Object>> formNavigatorEntries = (List<FormNavigatorEntry
 				</c:otherwise>
 			</c:choose>
 
-			Liferay.once('<portlet:namespace />formReady', function (event) {
+			Liferay.once('<portlet:namespace />formReady', (event) => {
 				if (!sectionContent.classList.contains('show')) {
 					if (focusField) {
-						Liferay.on('liferay.collapse.shown', function (event) {
+						Liferay.on('liferay.collapse.shown', (event) => {
 							var panelId = event.panel.getAttribute('id');
 
 							if (panelId === sectionContent.getAttribute('id')) {
@@ -116,9 +119,5 @@ List<FormNavigatorEntry<Object>> formNavigatorEntries = (List<FormNavigatorEntry
 				}
 			});
 		</aui:script>
-
-	<%
-	}
-	%>
-
+	</c:if>
 </liferay-frontend:fieldset-group>

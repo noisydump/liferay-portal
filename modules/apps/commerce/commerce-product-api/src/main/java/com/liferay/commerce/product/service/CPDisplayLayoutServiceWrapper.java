@@ -14,6 +14,7 @@
 
 package com.liferay.commerce.product.service;
 
+import com.liferay.commerce.product.model.CPDisplayLayout;
 import com.liferay.portal.kernel.service.ServiceWrapper;
 
 /**
@@ -26,43 +27,23 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
 public class CPDisplayLayoutServiceWrapper
 	implements CPDisplayLayoutService, ServiceWrapper<CPDisplayLayoutService> {
 
+	public CPDisplayLayoutServiceWrapper() {
+		this(null);
+	}
+
 	public CPDisplayLayoutServiceWrapper(
 		CPDisplayLayoutService cpDisplayLayoutService) {
 
 		_cpDisplayLayoutService = cpDisplayLayoutService;
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x)
-	 */
-	@Deprecated
 	@Override
-	public com.liferay.commerce.product.model.CPDisplayLayout
-			addCPDisplayLayout(
-				Class<?> clazz, long classPK, String layoutUuid,
-				com.liferay.portal.kernel.service.ServiceContext serviceContext)
+	public CPDisplayLayout addCPDisplayLayout(
+			long groupId, Class<?> clazz, long classPK, String layoutUuid)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _cpDisplayLayoutService.addCPDisplayLayout(
-			clazz, classPK, layoutUuid, serviceContext);
-	}
-
-	@Override
-	public com.liferay.commerce.product.model.CPDisplayLayout
-			addCPDisplayLayout(
-				long userId, long groupId, Class<?> clazz, long classPK,
-				String layoutUuid)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return _cpDisplayLayoutService.addCPDisplayLayout(
-			userId, groupId, clazz, classPK, layoutUuid);
-	}
-
-	@Override
-	public void deleteCPDisplayLayout(Class<?> clazz, long classPK)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		_cpDisplayLayoutService.deleteCPDisplayLayout(clazz, classPK);
+			groupId, clazz, classPK, layoutUuid);
 	}
 
 	@Override
@@ -73,8 +54,7 @@ public class CPDisplayLayoutServiceWrapper
 	}
 
 	@Override
-	public com.liferay.commerce.product.model.CPDisplayLayout
-			fetchCPDisplayLayout(long cpDisplayLayoutId)
+	public CPDisplayLayout fetchCPDisplayLayout(long cpDisplayLayoutId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _cpDisplayLayoutService.fetchCPDisplayLayout(cpDisplayLayoutId);
@@ -92,11 +72,9 @@ public class CPDisplayLayoutServiceWrapper
 
 	@Override
 	public com.liferay.portal.kernel.search.BaseModelSearchResult
-		<com.liferay.commerce.product.model.CPDisplayLayout>
-				searchCPDisplayLayout(
-					long companyId, long groupId, String className,
-					String keywords, int start, int end,
-					com.liferay.portal.kernel.search.Sort sort)
+		<CPDisplayLayout> searchCPDisplayLayout(
+				long companyId, long groupId, String className, String keywords,
+				int start, int end, com.liferay.portal.kernel.search.Sort sort)
 			throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _cpDisplayLayoutService.searchCPDisplayLayout(
@@ -104,12 +82,12 @@ public class CPDisplayLayoutServiceWrapper
 	}
 
 	@Override
-	public com.liferay.commerce.product.model.CPDisplayLayout
-			updateCPDisplayLayout(long cpDisplayLayoutId, String layoutUuid)
+	public CPDisplayLayout updateCPDisplayLayout(
+			long cpDisplayLayoutId, long classPK, String layoutUuid)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _cpDisplayLayoutService.updateCPDisplayLayout(
-			cpDisplayLayoutId, layoutUuid);
+			cpDisplayLayoutId, classPK, layoutUuid);
 	}
 
 	@Override

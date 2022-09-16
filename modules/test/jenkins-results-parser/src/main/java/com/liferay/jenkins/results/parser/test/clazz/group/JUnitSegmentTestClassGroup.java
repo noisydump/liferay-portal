@@ -20,6 +20,10 @@ import java.io.File;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.json.JSONObject;
 
 /**
  * @author Michael Hashimoto
@@ -29,6 +33,8 @@ public class JUnitSegmentTestClassGroup extends SegmentTestClassGroup {
 	@Override
 	public String getTestCasePropertiesContent() {
 		StringBuilder sb = new StringBuilder();
+
+		sb.append(super.getTestCasePropertiesContent());
 
 		List<String> axisIndexes = new ArrayList<>();
 
@@ -45,7 +51,16 @@ public class JUnitSegmentTestClassGroup extends SegmentTestClassGroup {
 			sb.append("=");
 
 			for (File testClassFile : testClassFiles) {
-				sb.append(testClassFile.toPath());
+				Matcher matcher = _pattern.matcher(testClassFile.toString());
+
+				if (!matcher.find()) {
+					continue;
+				}
+
+				String classFileName = matcher.group("classFileName");
+
+				sb.append(classFileName.replace(".java", ".class"));
+
 				sb.append(",");
 			}
 
@@ -64,9 +79,18 @@ public class JUnitSegmentTestClassGroup extends SegmentTestClassGroup {
 	}
 
 	protected JUnitSegmentTestClassGroup(
-		JUnitBatchTestClassGroup parentJUnitBatchTestClassGroup) {
+		BatchTestClassGroup batchTestClassGroup) {
 
-		super(parentJUnitBatchTestClassGroup);
+		super(batchTestClassGroup);
 	}
+
+	protected JUnitSegmentTestClassGroup(
+		BatchTestClassGroup batchTestClassGroup, JSONObject jsonObject) {
+
+		super(batchTestClassGroup, jsonObject);
+	}
+
+	private static final Pattern _pattern = Pattern.compile(
+		".*/(?<classFileName>com/.*)");
 
 }

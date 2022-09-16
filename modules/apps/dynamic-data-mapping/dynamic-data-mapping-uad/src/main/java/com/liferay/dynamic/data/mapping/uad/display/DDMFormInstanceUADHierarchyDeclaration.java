@@ -14,8 +14,7 @@
 
 package com.liferay.dynamic.data.mapping.uad.display;
 
-import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.util.ResourceBundleUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.user.associated.data.display.UADDisplay;
 import com.liferay.user.associated.data.display.UADHierarchyDeclaration;
 
@@ -38,10 +37,7 @@ public class DDMFormInstanceUADHierarchyDeclaration
 
 	@Override
 	public String getEntitiesTypeLabel(Locale locale) {
-		return LanguageUtil.get(
-			ResourceBundleUtil.getBundle(
-				locale, DDMFormInstanceUADHierarchyDeclaration.class),
-			"ddm-form-instance");
+		return _language.get(locale, "ddm-form-instance");
 	}
 
 	@Override
@@ -59,5 +55,8 @@ public class DDMFormInstanceUADHierarchyDeclaration
 
 	@Reference
 	private DDMFormInstanceUADDisplay _ddmFormInstanceUADDisplay;
+
+	@Reference
+	private Language _language;
 
 }

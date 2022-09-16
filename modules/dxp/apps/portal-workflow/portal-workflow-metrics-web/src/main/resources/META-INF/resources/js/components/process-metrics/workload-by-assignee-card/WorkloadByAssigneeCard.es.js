@@ -9,44 +9,48 @@
  * distribution rights of the Software.
  */
 
+import ClayList from '@clayui/list';
+import ClayPanel from '@clayui/panel';
 import React, {useMemo, useState} from 'react';
 
-import Panel from '../../../shared/components/Panel.es';
+import PanelHeaderWithOptions from '../../../shared/components/panel-header-with-options/PanelHeaderWithOptions.es';
 import PromisesResolver from '../../../shared/components/promises-resolver/PromisesResolver.es';
 import Tabs from '../../../shared/components/tabs/Tabs.es';
 import {useFilter} from '../../../shared/hooks/useFilter.es';
 import {usePost} from '../../../shared/hooks/usePost.es';
 import ProcessStepFilter from '../../filter/ProcessStepFilter.es';
-import {Body} from './WorkloadByAssigneeCardBody.es';
+import Body from './WorkloadByAssigneeCardBody.es';
 
-const Header = ({processId}) => (
-	<>
-		<Panel.HeaderWithOptions
-			description={Liferay.Language.get(
-				'workload-by-assignee-description'
-			)}
-			elementClasses="dashboard-panel-header"
-			title={Liferay.Language.get('workload-by-assignee')}
-			tooltipPosition="bottom"
-		/>
+function Header({processId}) {
+	return (
+		<>
+			<PanelHeaderWithOptions
+				className="tabs-panel-header"
+				description={Liferay.Language.get(
+					'workload-by-assignee-description'
+				)}
+				title={Liferay.Language.get('workload-by-assignee')}
+				tooltipPosition="bottom"
+			/>
 
-		<div className="management-bar management-bar-light ml-3 navbar navbar-expand-md pl-1">
-			<ul className="navbar-nav">
-				<ProcessStepFilter
-					options={{
-						hideControl: true,
-						multiple: false,
-						withAllSteps: true,
-						withSelectionTitle: true,
-					}}
-					processId={processId}
-				/>
-			</ul>
-		</div>
-	</>
-);
+			<div className="management-bar management-bar-light ml-3 navbar navbar-expand-md pl-1">
+				<ClayList className="navbar-nav">
+					<ProcessStepFilter
+						options={{
+							hideControl: true,
+							multiple: false,
+							withAllSteps: true,
+							withSelectionTitle: true,
+						}}
+						processId={processId}
+					/>
+				</ClayList>
+			</div>
+		</>
+	);
+}
 
-const WorkloadByAssigneeCard = ({routeParams}) => {
+function WorkloadByAssigneeCard({routeParams}) {
 	const {processId} = routeParams;
 	const [currentTab, setCurrentTab] = useState('overdue');
 	const filterKeys = ['processStep'];
@@ -55,15 +59,13 @@ const WorkloadByAssigneeCard = ({routeParams}) => {
 		filterValues: {taskNames: [taskName] = ['allSteps']},
 	} = useFilter({filterKeys});
 
-	const sort = useMemo(() => {
-		const items = {
-			onTime: 'onTimeTaskCount:desc',
-			overdue: 'overdueTaskCount:desc',
-			total: 'taskCount:desc',
-		};
+	const sortItems = {
+		onTime: 'onTimeTaskCount:desc',
+		overdue: 'overdueTaskCount:desc',
+		total: 'taskCount:desc',
+	};
 
-		return items[currentTab];
-	}, [currentTab]);
+	const sort = sortItems[currentTab];
 
 	const taskNames = taskName !== 'allSteps' ? [taskName] : undefined;
 
@@ -77,7 +79,12 @@ const WorkloadByAssigneeCard = ({routeParams}) => {
 		url: `/processes/${processId}/assignees/metrics`,
 	});
 
-	const promises = useMemo(() => [postData()], [postData]);
+	const promises = useMemo(
+		() => [postData()],
+
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[routeParams]
+	);
 
 	const tabs = [
 		{name: Liferay.Language.get('overdue'), tabKey: 'overdue'},
@@ -87,10 +94,10 @@ const WorkloadByAssigneeCard = ({routeParams}) => {
 
 	return (
 		<PromisesResolver promises={promises}>
-			<Panel elementClasses="workload-by-assignee-card">
+			<ClayPanel className="mt-4 workload-by-assignee-card">
 				<WorkloadByAssigneeCard.Header processId={processId} />
 
-				<div className="border-bottom">
+				<div className="border-bottom container-nav">
 					<Tabs
 						currentTab={currentTab}
 						setCurrentTab={setCurrentTab}
@@ -104,10 +111,10 @@ const WorkloadByAssigneeCard = ({routeParams}) => {
 					processStepKey={taskNames && taskName}
 					{...routeParams}
 				/>
-			</Panel>
+			</ClayPanel>
 		</PromisesResolver>
 	);
-};
+}
 
 WorkloadByAssigneeCard.Body = Body;
 WorkloadByAssigneeCard.Header = Header;

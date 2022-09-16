@@ -21,7 +21,6 @@ import com.liferay.portal.kernel.jsonwebservice.JSONWebService;
 import com.liferay.portal.kernel.security.access.control.AccessControlled;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.service.BaseService;
-import com.liferay.portal.kernel.spring.osgi.OSGiBeanProperties;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
@@ -42,13 +41,6 @@ import org.osgi.annotation.versioning.ProviderType;
  */
 @AccessControlled
 @JSONWebService
-@OSGiBeanProperties(
-	property = {
-		"json.web.service.context.name=commerce",
-		"json.web.service.context.path=CommerceInventoryWarehouseItem"
-	},
-	service = CommerceInventoryWarehouseItemService.class
-)
 @ProviderType
 @Transactional(
 	isolation = Isolation.PORTAL,
@@ -62,24 +54,23 @@ public interface CommerceInventoryWarehouseItemService extends BaseService {
 	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.commerce.inventory.service.impl.CommerceInventoryWarehouseItemServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the commerce inventory warehouse item remote service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link CommerceInventoryWarehouseItemServiceUtil} if injection and service tracking are not available.
 	 */
 	public CommerceInventoryWarehouseItem addCommerceInventoryWarehouseItem(
-			long userId, long commerceInventoryWarehouseId, String sku,
-			int quantity)
-		throws PortalException;
-
-	/**
-	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
-	 #addCommerceInventoryWarehouseItem(String,
-	 long, long, String, int)}
-	 */
-	@Deprecated
-	public CommerceInventoryWarehouseItem addCommerceInventoryWarehouseItem(
-			long userId, long commerceInventoryWarehouseId,
-			String externalReferenceCode, String sku, int quantity)
-		throws PortalException;
-
-	public CommerceInventoryWarehouseItem addCommerceInventoryWarehouseItem(
-			String externalReferenceCode, long userId,
 			long commerceInventoryWarehouseId, String sku, int quantity)
+		throws PortalException;
+
+	public CommerceInventoryWarehouseItem addCommerceInventoryWarehouseItem(
+			String externalReferenceCode, long commerceInventoryWarehouseId,
+			String sku, int quantity)
+		throws PortalException;
+
+	public CommerceInventoryWarehouseItem
+			addOrUpdateCommerceInventoryWarehouseItem(
+				long commerceInventoryWarehouseId, String sku, int quantity)
+		throws PortalException;
+
+	public CommerceInventoryWarehouseItem
+			addOrUpdateCommerceInventoryWarehouseItem(
+				String externalReferenceCode, long companyId,
+				long commerceInventoryWarehouseId, String sku, int quantity)
 		throws PortalException;
 
 	public void deleteCommerceInventoryWarehouseItem(
@@ -97,8 +88,8 @@ public interface CommerceInventoryWarehouseItemService extends BaseService {
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public CommerceInventoryWarehouseItem
-			fetchCommerceInventoryWarehouseItemByReferenceCode(
-				long companyId, String externalReferenceCode)
+			fetchCommerceInventoryWarehouseItemByExternalReferenceCode(
+				String externalReferenceCode, long companyId)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
@@ -106,16 +97,9 @@ public interface CommerceInventoryWarehouseItemService extends BaseService {
 			long commerceInventoryWarehouseItemId)
 		throws PortalException;
 
-	/**
-	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
-	 #getCommerceInventoryWarehouseItemByReferenceCode(String,
-	 long)}
-	 */
-	@Deprecated
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public CommerceInventoryWarehouseItem
-			getCommerceInventoryWarehouseItemByReferenceCode(
-				long companyId, String externalReferenceCode)
+	public CommerceInventoryWarehouseItem getCommerceInventoryWarehouseItem(
+			long commerceInventoryWarehouseId, String sku)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
@@ -182,6 +166,12 @@ public interface CommerceInventoryWarehouseItemService extends BaseService {
 	 */
 	public String getOSGiServiceIdentifier();
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getStockQuantity(long companyId, long groupId, String sku);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getStockQuantity(long companyId, String sku);
+
 	public CommerceInventoryWarehouseItem
 			increaseCommerceInventoryWarehouseItemQuantity(
 				long commerceInventoryWarehouseItemId, int quantity)
@@ -200,27 +190,6 @@ public interface CommerceInventoryWarehouseItemService extends BaseService {
 	public CommerceInventoryWarehouseItem updateCommerceInventoryWarehouseItem(
 			long commerceInventoryWarehouseItemId, int quantity,
 			long mvccVersion)
-		throws PortalException;
-
-	/**
-	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
-	 #upsertCommerceInventoryWarehouseItem(String,
-	 long, long, long, String, int)}
-	 */
-	@Deprecated
-	public CommerceInventoryWarehouseItem upsertCommerceInventoryWarehouseItem(
-			long companyId, long userId, long commerceInventoryWarehouseId,
-			String externalReferenceCode, String sku, int quantity)
-		throws PortalException;
-
-	public CommerceInventoryWarehouseItem upsertCommerceInventoryWarehouseItem(
-			long userId, long commerceInventoryWarehouseId, String sku,
-			int quantity)
-		throws PortalException;
-
-	public CommerceInventoryWarehouseItem upsertCommerceInventoryWarehouseItem(
-			String externalReferenceCode, long companyId, long userId,
-			long commerceInventoryWarehouseId, String sku, int quantity)
 		throws PortalException;
 
 }

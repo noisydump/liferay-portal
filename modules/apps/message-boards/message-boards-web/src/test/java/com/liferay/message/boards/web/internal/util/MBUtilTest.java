@@ -22,12 +22,10 @@ import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.Html;
-import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.Props;
-import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import javax.portlet.PortletURL;
 import javax.portlet.RenderResponse;
@@ -36,6 +34,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import org.mockito.Mockito;
@@ -46,26 +45,26 @@ import org.mockito.invocation.InvocationOnMock;
  */
 public class MBUtilTest {
 
+	@ClassRule
+	public static LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
 	@BeforeClass
 	public static void setUpClass() {
 		Html html = Mockito.mock(Html.class);
 
-		Mockito.stub(
+		Mockito.when(
 			html.escape(Mockito.anyString())
-		).toAnswer(
+		).thenAnswer(
 			MBUtilTest::_getFirstArgument
 		);
 
-		HtmlUtil htmlUtil = new HtmlUtil();
-
-		htmlUtil.setHtml(html);
-
 		Language language = Mockito.mock(Language.class);
 
-		Mockito.stub(
+		Mockito.when(
 			language.get(
 				Mockito.any(HttpServletRequest.class), Mockito.anyString())
-		).toAnswer(
+		).thenAnswer(
 			MBUtilTest::_getSecondArgument
 		);
 
@@ -75,17 +74,15 @@ public class MBUtilTest {
 
 		Portal portal = Mockito.mock(Portal.class);
 
-		Mockito.stub(
+		Mockito.when(
 			portal.getUserName(Mockito.any(MBMessage.class))
-		).toReturn(
-			"USER[]()"
+		).thenReturn(
+			"USER[]"
 		);
 
 		PortalUtil portalUtil = new PortalUtil();
 
 		portalUtil.setPortal(portal);
-
-		PropsUtil.setProps(Mockito.mock(Props.class));
 	}
 
 	@Test
@@ -99,7 +96,7 @@ public class MBUtilTest {
 		);
 
 		Assert.assertEquals(
-			"[quote=USER&#91;&#93;&#40;&#41;]\nCONTENT[/quote]\n\n\n",
+			"[quote=USER&#91;&#93;]\nCONTENT[/quote]\n\n\n",
 			MBUtil.getBBCodeQuoteBody(
 				Mockito.mock(HttpServletRequest.class), mbMessage));
 	}

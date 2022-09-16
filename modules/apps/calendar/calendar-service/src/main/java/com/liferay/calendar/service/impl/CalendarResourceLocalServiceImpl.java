@@ -14,6 +14,7 @@
 
 package com.liferay.calendar.service.impl;
 
+import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.calendar.configuration.CalendarServiceConfigurationValues;
 import com.liferay.calendar.exception.CalendarResourceCodeException;
 import com.liferay.calendar.exception.CalendarResourceNameException;
@@ -22,6 +23,7 @@ import com.liferay.calendar.model.Calendar;
 import com.liferay.calendar.model.CalendarResource;
 import com.liferay.calendar.service.CalendarLocalService;
 import com.liferay.calendar.service.base.CalendarResourceLocalServiceBaseImpl;
+import com.liferay.calendar.service.persistence.CalendarPersistence;
 import com.liferay.calendar.util.comparator.CalendarResourceCodeComparator;
 import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.petra.string.CharPool;
@@ -32,7 +34,10 @@ import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
+import com.liferay.portal.kernel.service.ResourceLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -72,11 +77,11 @@ public class CalendarResourceLocalServiceImpl
 
 		// Calendar resource
 
-		User user = userLocalService.getUser(userId);
+		User user = _userLocalService.getUser(userId);
 
 		long calendarResourceId = counterLocalService.increment();
 
-		if (classNameId == classNameLocalService.getClassNameId(
+		if (classNameId == _classNameLocalService.getClassNameId(
 				CalendarResource.class)) {
 
 			classPK = calendarResourceId;
@@ -92,7 +97,7 @@ public class CalendarResourceLocalServiceImpl
 			code = StringUtil.toUpperCase(StringUtil.trim(code));
 		}
 
-		Date now = new Date();
+		Date date = new Date();
 
 		validate(groupId, classNameId, classPK, code, nameMap);
 
@@ -104,8 +109,8 @@ public class CalendarResourceLocalServiceImpl
 		calendarResource.setCompanyId(user.getCompanyId());
 		calendarResource.setUserId(user.getUserId());
 		calendarResource.setUserName(user.getFullName());
-		calendarResource.setCreateDate(serviceContext.getCreateDate(now));
-		calendarResource.setModifiedDate(serviceContext.getModifiedDate(now));
+		calendarResource.setCreateDate(serviceContext.getCreateDate(date));
+		calendarResource.setModifiedDate(serviceContext.getModifiedDate(date));
 		calendarResource.setClassNameId(classNameId);
 		calendarResource.setClassPK(classPK);
 		calendarResource.setClassUuid(classUuid);
@@ -118,7 +123,7 @@ public class CalendarResourceLocalServiceImpl
 
 		// Resources
 
-		resourceLocalService.addModelResources(
+		_resourceLocalService.addModelResources(
 			calendarResource, serviceContext);
 
 		// Calendar
@@ -162,12 +167,12 @@ public class CalendarResourceLocalServiceImpl
 
 		// Resources
 
-		resourceLocalService.deleteResource(
+		_resourceLocalService.deleteResource(
 			calendarResource, ResourceConstants.SCOPE_INDIVIDUAL);
 
 		// Calendars
 
-		List<Calendar> calendars = calendarPersistence.findByG_C(
+		List<Calendar> calendars = _calendarPersistence.findByG_C(
 			calendarResource.getGroupId(),
 			calendarResource.getCalendarResourceId());
 
@@ -275,7 +280,7 @@ public class CalendarResourceLocalServiceImpl
 			long[] assetCategoryIds, String[] assetTagNames, Double priority)
 		throws PortalException {
 
-		assetEntryLocalService.updateEntry(
+		_assetEntryLocalService.updateEntry(
 			userId, calendarResource.getGroupId(),
 			calendarResource.getCreateDate(),
 			calendarResource.getModifiedDate(),
@@ -311,7 +316,7 @@ public class CalendarResourceLocalServiceImpl
 
 		// Calendar
 
-		List<Calendar> calendars = calendarPersistence.findByG_C(
+		List<Calendar> calendars = _calendarPersistence.findByG_C(
 			calendarResource.getGroupId(),
 			calendarResource.getCalendarResourceId());
 
@@ -367,6 +372,21 @@ public class CalendarResourceLocalServiceImpl
 	}
 
 	@Reference
+	private AssetEntryLocalService _assetEntryLocalService;
+
+	@Reference
 	private CalendarLocalService _calendarLocalService;
+
+	@Reference
+	private CalendarPersistence _calendarPersistence;
+
+	@Reference
+	private ClassNameLocalService _classNameLocalService;
+
+	@Reference
+	private ResourceLocalService _resourceLocalService;
+
+	@Reference
+	private UserLocalService _userLocalService;
 
 }

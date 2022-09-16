@@ -29,21 +29,25 @@ if (PropsValues.LIVE_USERS_ENABLED && PropsValues.SESSION_TRACKER_MEMORY_ENABLED
 	userTrackers = ListUtil.sort(userTrackers, new UserTrackerModifiedDateComparator(orderByType.equals("asc")));
 }
 
-PortletURL portletURL = renderResponse.createRenderURL();
-
-portletURL.setParameter("mvcRenderCommandName", "/monitoring/view");
-
-PortletURL sortingURL = PortletURLUtil.clone(portletURL, renderResponse);
-
-sortingURL.setParameter("orderByType", orderByType.equals("asc") ? "desc" : "asc");
+PortletURL portletURL = PortletURLBuilder.createRenderURL(
+	renderResponse
+).setMVCRenderCommandName(
+	"/monitoring/view"
+).buildPortletURL();
 %>
 
-<clay:management-toolbar-v2
+<clay:management-toolbar
 	disabled="<%= ListUtil.isEmpty(userTrackers) %>"
 	selectable="<%= false %>"
 	showSearch="<%= false %>"
 	sortingOrder="<%= orderByType %>"
-	sortingURL="<%= sortingURL.toString() %>"
+	sortingURL='<%=
+		PortletURLBuilder.create(
+			PortletURLUtil.clone(portletURL, renderResponse)
+		).setParameter(
+			"orderByType", orderByType.equals("asc") ? "desc" : "asc"
+		).buildString()
+	%>'
 />
 
 <clay:container-fluid>
@@ -55,7 +59,8 @@ sortingURL.setParameter("orderByType", orderByType.equals("asc") ? "desc" : "asc
 				total="<%= userTrackers.size() %>"
 			>
 				<liferay-ui:search-container-results
-					results="<%= ListUtil.subList(userTrackers, searchContainer.getStart(), searchContainer.getEnd()) %>"
+					calculateStartAndEnd="<%= true %>"
+					results="<%= userTrackers %>"
 				/>
 
 				<liferay-ui:search-container-row

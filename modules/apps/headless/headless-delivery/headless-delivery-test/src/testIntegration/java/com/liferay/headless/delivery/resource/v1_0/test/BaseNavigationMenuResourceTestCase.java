@@ -22,10 +22,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.delivery.client.dto.v1_0.Field;
 import com.liferay.headless.delivery.client.dto.v1_0.NavigationMenu;
 import com.liferay.headless.delivery.client.http.HttpInvoker;
 import com.liferay.headless.delivery.client.pagination.Page;
 import com.liferay.headless.delivery.client.pagination.Pagination;
+import com.liferay.headless.delivery.client.permission.Permission;
 import com.liferay.headless.delivery.client.resource.v1_0.NavigationMenuResource;
 import com.liferay.headless.delivery.client.serdes.v1_0.NavigationMenuSerDes;
 import com.liferay.petra.reflect.ReflectionUtil;
@@ -35,36 +37,37 @@ import com.liferay.portal.kernel.json.JSONDeserializer;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.RoleTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
-import com.liferay.portal.test.log.CaptureAppender;
-import com.liferay.portal.test.log.Log4JLoggerTestUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 import java.text.DateFormat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -72,9 +75,7 @@ import javax.annotation.Generated;
 
 import javax.ws.rs.core.MultivaluedHashMap;
 
-import org.apache.commons.beanutils.BeanUtilsBean;
 import org.apache.commons.lang.time.DateUtils;
-import org.apache.log4j.Level;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -228,7 +229,7 @@ public abstract class BaseNavigationMenuResourceTestCase {
 	@Test
 	public void testGraphQLDeleteNavigationMenu() throws Exception {
 		NavigationMenu navigationMenu =
-			testGraphQLNavigationMenu_addNavigationMenu();
+			testGraphQLDeleteNavigationMenu_addNavigationMenu();
 
 		Assert.assertTrue(
 			JSONUtil.getValueAsBoolean(
@@ -241,26 +242,25 @@ public abstract class BaseNavigationMenuResourceTestCase {
 							}
 						})),
 				"JSONObject/data", "Object/deleteNavigationMenu"));
+		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"navigationMenu",
+					new HashMap<String, Object>() {
+						{
+							put("navigationMenuId", navigationMenu.getId());
+						}
+					},
+					new GraphQLField("id"))),
+			"JSONArray/errors");
 
-		try (CaptureAppender captureAppender =
-				Log4JLoggerTestUtil.configureLog4JLogger(
-					"graphql.execution.SimpleDataFetcherExceptionHandler",
-					Level.WARN)) {
+		Assert.assertTrue(errorsJSONArray.length() > 0);
+	}
 
-			JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"navigationMenu",
-						new HashMap<String, Object>() {
-							{
-								put("navigationMenuId", navigationMenu.getId());
-							}
-						},
-						new GraphQLField("id"))),
-				"JSONArray/errors");
+	protected NavigationMenu testGraphQLDeleteNavigationMenu_addNavigationMenu()
+		throws Exception {
 
-			Assert.assertTrue(errorsJSONArray.length() > 0);
-		}
+		return testGraphQLNavigationMenu_addNavigationMenu();
 	}
 
 	@Test
@@ -286,7 +286,7 @@ public abstract class BaseNavigationMenuResourceTestCase {
 	@Test
 	public void testGraphQLGetNavigationMenu() throws Exception {
 		NavigationMenu navigationMenu =
-			testGraphQLNavigationMenu_addNavigationMenu();
+			testGraphQLGetNavigationMenu_addNavigationMenu();
 
 		Assert.assertTrue(
 			equals(
@@ -329,6 +329,12 @@ public abstract class BaseNavigationMenuResourceTestCase {
 				"Object/code"));
 	}
 
+	protected NavigationMenu testGraphQLGetNavigationMenu_addNavigationMenu()
+		throws Exception {
+
+		return testGraphQLNavigationMenu_addNavigationMenu();
+	}
+
 	@Test
 	public void testPutNavigationMenu() throws Exception {
 		NavigationMenu postNavigationMenu =
@@ -358,19 +364,83 @@ public abstract class BaseNavigationMenuResourceTestCase {
 	}
 
 	@Test
+	public void testGetNavigationMenuPermissionsPage() throws Exception {
+		NavigationMenu postNavigationMenu =
+			testGetNavigationMenuPermissionsPage_addNavigationMenu();
+
+		Page<Permission> page =
+			navigationMenuResource.getNavigationMenuPermissionsPage(
+				postNavigationMenu.getId(), RoleConstants.GUEST);
+
+		Assert.assertNotNull(page);
+	}
+
+	protected NavigationMenu
+			testGetNavigationMenuPermissionsPage_addNavigationMenu()
+		throws Exception {
+
+		return testPostSiteNavigationMenu_addNavigationMenu(
+			randomNavigationMenu());
+	}
+
+	@Test
+	public void testPutNavigationMenuPermissionsPage() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		NavigationMenu navigationMenu =
+			testPutNavigationMenuPermissionsPage_addNavigationMenu();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		com.liferay.portal.kernel.model.Role role = RoleTestUtil.addRole(
+			RoleConstants.TYPE_REGULAR);
+
+		assertHttpResponseStatusCode(
+			200,
+			navigationMenuResource.putNavigationMenuPermissionsPageHttpResponse(
+				navigationMenu.getId(),
+				new Permission[] {
+					new Permission() {
+						{
+							setActionIds(new String[] {"VIEW"});
+							setRoleName(role.getName());
+						}
+					}
+				}));
+
+		assertHttpResponseStatusCode(
+			404,
+			navigationMenuResource.putNavigationMenuPermissionsPageHttpResponse(
+				0L,
+				new Permission[] {
+					new Permission() {
+						{
+							setActionIds(new String[] {"-"});
+							setRoleName("-");
+						}
+					}
+				}));
+	}
+
+	protected NavigationMenu
+			testPutNavigationMenuPermissionsPage_addNavigationMenu()
+		throws Exception {
+
+		return navigationMenuResource.postSiteNavigationMenu(
+			testGroup.getGroupId(), randomNavigationMenu());
+	}
+
+	@Test
 	public void testGetSiteNavigationMenusPage() throws Exception {
-		Page<NavigationMenu> page =
-			navigationMenuResource.getSiteNavigationMenusPage(
-				testGetSiteNavigationMenusPage_getSiteId(),
-				Pagination.of(1, 2));
-
-		Assert.assertEquals(0, page.getTotalCount());
-
 		Long siteId = testGetSiteNavigationMenusPage_getSiteId();
 		Long irrelevantSiteId =
 			testGetSiteNavigationMenusPage_getIrrelevantSiteId();
 
-		if ((irrelevantSiteId != null)) {
+		Page<NavigationMenu> page =
+			navigationMenuResource.getSiteNavigationMenusPage(
+				siteId, Pagination.of(1, 10));
+
+		Assert.assertEquals(0, page.getTotalCount());
+
+		if (irrelevantSiteId != null) {
 			NavigationMenu irrelevantNavigationMenu =
 				testGetSiteNavigationMenusPage_addNavigationMenu(
 					irrelevantSiteId, randomIrrelevantNavigationMenu());
@@ -395,7 +465,7 @@ public abstract class BaseNavigationMenuResourceTestCase {
 				siteId, randomNavigationMenu());
 
 		page = navigationMenuResource.getSiteNavigationMenusPage(
-			siteId, Pagination.of(1, 2));
+			siteId, Pagination.of(1, 10));
 
 		Assert.assertEquals(2, page.getTotalCount());
 
@@ -485,7 +555,7 @@ public abstract class BaseNavigationMenuResourceTestCase {
 			new HashMap<String, Object>() {
 				{
 					put("page", 1);
-					put("pageSize", 2);
+					put("pageSize", 10);
 
 					put("siteKey", "\"" + siteId + "\"");
 				}
@@ -500,21 +570,28 @@ public abstract class BaseNavigationMenuResourceTestCase {
 		Assert.assertEquals(0, navigationMenusJSONObject.get("totalCount"));
 
 		NavigationMenu navigationMenu1 =
-			testGraphQLNavigationMenu_addNavigationMenu();
+			testGraphQLGetSiteNavigationMenusPage_addNavigationMenu();
 		NavigationMenu navigationMenu2 =
-			testGraphQLNavigationMenu_addNavigationMenu();
+			testGraphQLGetSiteNavigationMenusPage_addNavigationMenu();
 
 		navigationMenusJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/navigationMenus");
 
-		Assert.assertEquals(2, navigationMenusJSONObject.get("totalCount"));
+		Assert.assertEquals(2, navigationMenusJSONObject.getLong("totalCount"));
 
 		assertEqualsIgnoringOrder(
 			Arrays.asList(navigationMenu1, navigationMenu2),
 			Arrays.asList(
 				NavigationMenuSerDes.toDTOs(
 					navigationMenusJSONObject.getString("items"))));
+	}
+
+	protected NavigationMenu
+			testGraphQLGetSiteNavigationMenusPage_addNavigationMenu()
+		throws Exception {
+
+		return testGraphQLNavigationMenu_addNavigationMenu();
 	}
 
 	@Test
@@ -546,6 +623,70 @@ public abstract class BaseNavigationMenuResourceTestCase {
 		Assert.assertTrue(equals(randomNavigationMenu, navigationMenu));
 	}
 
+	@Test
+	public void testGetSiteNavigationMenuPermissionsPage() throws Exception {
+		Page<Permission> page =
+			navigationMenuResource.getSiteNavigationMenuPermissionsPage(
+				testGroup.getGroupId(), RoleConstants.GUEST);
+
+		Assert.assertNotNull(page);
+	}
+
+	protected NavigationMenu
+			testGetSiteNavigationMenuPermissionsPage_addNavigationMenu()
+		throws Exception {
+
+		return testPostSiteNavigationMenu_addNavigationMenu(
+			randomNavigationMenu());
+	}
+
+	@Test
+	public void testPutSiteNavigationMenuPermissionsPage() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		NavigationMenu navigationMenu =
+			testPutSiteNavigationMenuPermissionsPage_addNavigationMenu();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		com.liferay.portal.kernel.model.Role role = RoleTestUtil.addRole(
+			RoleConstants.TYPE_REGULAR);
+
+		assertHttpResponseStatusCode(
+			200,
+			navigationMenuResource.
+				putSiteNavigationMenuPermissionsPageHttpResponse(
+					navigationMenu.getSiteId(),
+					new Permission[] {
+						new Permission() {
+							{
+								setActionIds(new String[] {"PERMISSIONS"});
+								setRoleName(role.getName());
+							}
+						}
+					}));
+
+		assertHttpResponseStatusCode(
+			404,
+			navigationMenuResource.
+				putSiteNavigationMenuPermissionsPageHttpResponse(
+					navigationMenu.getSiteId(),
+					new Permission[] {
+						new Permission() {
+							{
+								setActionIds(new String[] {"-"});
+								setRoleName("-");
+							}
+						}
+					}));
+	}
+
+	protected NavigationMenu
+			testPutSiteNavigationMenuPermissionsPage_addNavigationMenu()
+		throws Exception {
+
+		return navigationMenuResource.postSiteNavigationMenu(
+			testGroup.getGroupId(), randomNavigationMenu());
+	}
+
 	protected void appendGraphQLFieldValue(StringBuilder sb, Object value)
 		throws Exception {
 
@@ -554,26 +695,25 @@ public abstract class BaseNavigationMenuResourceTestCase {
 
 			for (Object object : (Object[])value) {
 				if (arraySB.length() > 1) {
-					arraySB.append(",");
+					arraySB.append(", ");
 				}
 
 				arraySB.append("{");
 
 				Class<?> clazz = object.getClass();
 
-				for (Field field :
-						ReflectionUtil.getDeclaredFields(
-							clazz.getSuperclass())) {
+				for (java.lang.reflect.Field field :
+						getDeclaredFields(clazz.getSuperclass())) {
 
 					arraySB.append(field.getName());
 					arraySB.append(": ");
 
 					appendGraphQLFieldValue(arraySB, field.get(object));
 
-					arraySB.append(",");
+					arraySB.append(", ");
 				}
 
-				arraySB.setLength(arraySB.length() - 1);
+				arraySB.setLength(arraySB.length() - 2);
 
 				arraySB.append("}");
 			}
@@ -608,8 +748,8 @@ public abstract class BaseNavigationMenuResourceTestCase {
 
 		StringBuilder sb = new StringBuilder("{");
 
-		for (Field field :
-				ReflectionUtil.getDeclaredFields(NavigationMenu.class)) {
+		for (java.lang.reflect.Field field :
+				getDeclaredFields(NavigationMenu.class)) {
 
 			if (!ArrayUtil.contains(
 					getAdditionalAssertFieldNames(), field.getName())) {
@@ -649,6 +789,23 @@ public abstract class BaseNavigationMenuResourceTestCase {
 						graphQLFields)),
 				"JSONObject/data", "JSONObject/createSiteNavigationMenu"),
 			NavigationMenu.class);
+	}
+
+	protected void assertContains(
+		NavigationMenu navigationMenu, List<NavigationMenu> navigationMenus) {
+
+		boolean contains = false;
+
+		for (NavigationMenu item : navigationMenus) {
+			if (equals(navigationMenu, item)) {
+				contains = true;
+
+				break;
+			}
+		}
+
+		Assert.assertTrue(
+			navigationMenus + " does not contain " + navigationMenu, contains);
 	}
 
 	protected void assertHttpResponseStatusCode(
@@ -804,8 +961,8 @@ public abstract class BaseNavigationMenuResourceTestCase {
 
 		graphQLFields.add(new GraphQLField("siteId"));
 
-		for (Field field :
-				ReflectionUtil.getDeclaredFields(
+		for (java.lang.reflect.Field field :
+				getDeclaredFields(
 					com.liferay.headless.delivery.dto.v1_0.NavigationMenu.
 						class)) {
 
@@ -821,12 +978,13 @@ public abstract class BaseNavigationMenuResourceTestCase {
 		return graphQLFields;
 	}
 
-	protected List<GraphQLField> getGraphQLFields(Field... fields)
+	protected List<GraphQLField> getGraphQLFields(
+			java.lang.reflect.Field... fields)
 		throws Exception {
 
 		List<GraphQLField> graphQLFields = new ArrayList<>();
 
-		for (Field field : fields) {
+		for (java.lang.reflect.Field field : fields) {
 			com.liferay.portal.vulcan.graphql.annotation.GraphQLField
 				vulcanGraphQLField = field.getAnnotation(
 					com.liferay.portal.vulcan.graphql.annotation.GraphQLField.
@@ -840,7 +998,7 @@ public abstract class BaseNavigationMenuResourceTestCase {
 				}
 
 				List<GraphQLField> childrenGraphQLFields = getGraphQLFields(
-					ReflectionUtil.getDeclaredFields(clazz));
+					getDeclaredFields(clazz));
 
 				graphQLFields.add(
 					new GraphQLField(field.getName(), childrenGraphQLFields));
@@ -990,6 +1148,19 @@ public abstract class BaseNavigationMenuResourceTestCase {
 		}
 
 		return false;
+	}
+
+	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
+		throws Exception {
+
+		Stream<java.lang.reflect.Field> stream = Stream.of(
+			ReflectionUtil.getDeclaredFields(clazz));
+
+		return stream.filter(
+			field -> !field.isSynthetic()
+		).toArray(
+			java.lang.reflect.Field[]::new
+		);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -1217,6 +1388,115 @@ public abstract class BaseNavigationMenuResourceTestCase {
 	protected Company testCompany;
 	protected Group testGroup;
 
+	protected static class BeanTestUtil {
+
+		public static void copyProperties(Object source, Object target)
+			throws Exception {
+
+			Class<?> sourceClass = _getSuperClass(source.getClass());
+
+			Class<?> targetClass = target.getClass();
+
+			for (java.lang.reflect.Field field :
+					sourceClass.getDeclaredFields()) {
+
+				if (field.isSynthetic()) {
+					continue;
+				}
+
+				Method getMethod = _getMethod(
+					sourceClass, field.getName(), "get");
+
+				Method setMethod = _getMethod(
+					targetClass, field.getName(), "set",
+					getMethod.getReturnType());
+
+				setMethod.invoke(target, getMethod.invoke(source));
+			}
+		}
+
+		public static boolean hasProperty(Object bean, String name) {
+			Method setMethod = _getMethod(
+				bean.getClass(), "set" + StringUtil.upperCaseFirstLetter(name));
+
+			if (setMethod != null) {
+				return true;
+			}
+
+			return false;
+		}
+
+		public static void setProperty(Object bean, String name, Object value)
+			throws Exception {
+
+			Class<?> clazz = bean.getClass();
+
+			Method setMethod = _getMethod(
+				clazz, "set" + StringUtil.upperCaseFirstLetter(name));
+
+			if (setMethod == null) {
+				throw new NoSuchMethodException();
+			}
+
+			Class<?>[] parameterTypes = setMethod.getParameterTypes();
+
+			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
+		}
+
+		private static Method _getMethod(Class<?> clazz, String name) {
+			for (Method method : clazz.getMethods()) {
+				if (name.equals(method.getName()) &&
+					(method.getParameterCount() == 1) &&
+					_parameterTypes.contains(method.getParameterTypes()[0])) {
+
+					return method;
+				}
+			}
+
+			return null;
+		}
+
+		private static Method _getMethod(
+				Class<?> clazz, String fieldName, String prefix,
+				Class<?>... parameterTypes)
+			throws Exception {
+
+			return clazz.getMethod(
+				prefix + StringUtil.upperCaseFirstLetter(fieldName),
+				parameterTypes);
+		}
+
+		private static Class<?> _getSuperClass(Class<?> clazz) {
+			Class<?> superClass = clazz.getSuperclass();
+
+			if ((superClass == null) || (superClass == Object.class)) {
+				return clazz;
+			}
+
+			return superClass;
+		}
+
+		private static Object _translateValue(
+			Class<?> parameterType, Object value) {
+
+			if ((value instanceof Integer) &&
+				parameterType.equals(Long.class)) {
+
+				Integer intValue = (Integer)value;
+
+				return intValue.longValue();
+			}
+
+			return value;
+		}
+
+		private static final Set<Class<?>> _parameterTypes = new HashSet<>(
+			Arrays.asList(
+				Boolean.class, Date.class, Double.class, Integer.class,
+				Long.class, Map.class, String.class));
+
+	}
+
 	protected class GraphQLField {
 
 		public GraphQLField(String key, GraphQLField... graphQLFields) {
@@ -1256,12 +1536,12 @@ public abstract class BaseNavigationMenuResourceTestCase {
 						_parameterMap.entrySet()) {
 
 					sb.append(entry.getKey());
-					sb.append(":");
+					sb.append(": ");
 					sb.append(entry.getValue());
-					sb.append(",");
+					sb.append(", ");
 				}
 
-				sb.setLength(sb.length() - 1);
+				sb.setLength(sb.length() - 2);
 
 				sb.append(")");
 			}
@@ -1271,10 +1551,10 @@ public abstract class BaseNavigationMenuResourceTestCase {
 
 				for (GraphQLField graphQLField : _graphQLFields) {
 					sb.append(graphQLField.toString());
-					sb.append(",");
+					sb.append(", ");
 				}
 
-				sb.setLength(sb.length() - 1);
+				sb.setLength(sb.length() - 2);
 
 				sb.append("}");
 			}
@@ -1288,21 +1568,9 @@ public abstract class BaseNavigationMenuResourceTestCase {
 
 	}
 
-	private static final Log _log = LogFactoryUtil.getLog(
-		BaseNavigationMenuResourceTestCase.class);
+	private static final com.liferay.portal.kernel.log.Log _log =
+		LogFactoryUtil.getLog(BaseNavigationMenuResourceTestCase.class);
 
-	private static BeanUtilsBean _beanUtilsBean = new BeanUtilsBean() {
-
-		@Override
-		public void copyProperty(Object bean, String name, Object value)
-			throws IllegalAccessException, InvocationTargetException {
-
-			if (value != null) {
-				super.copyProperty(bean, name, value);
-			}
-		}
-
-	};
 	private static DateFormat _dateFormat;
 
 	@Inject

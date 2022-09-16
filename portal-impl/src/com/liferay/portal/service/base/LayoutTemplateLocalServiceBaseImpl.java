@@ -20,12 +20,16 @@ import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
 import com.liferay.portal.kernel.service.LayoutTemplateLocalService;
-import com.liferay.portal.kernel.service.persistence.PluginSettingPersistence;
+import com.liferay.portal.kernel.service.LayoutTemplateLocalServiceUtil;
 import com.liferay.portal.kernel.util.InfrastructureUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+
+import java.lang.reflect.Field;
 
 import javax.sql.DataSource;
 
@@ -47,7 +51,7 @@ public abstract class LayoutTemplateLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>LayoutTemplateLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.kernel.service.LayoutTemplateLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>LayoutTemplateLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>LayoutTemplateLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -93,53 +97,12 @@ public abstract class LayoutTemplateLocalServiceBaseImpl
 		this.counterLocalService = counterLocalService;
 	}
 
-	/**
-	 * Returns the plugin setting local service.
-	 *
-	 * @return the plugin setting local service
-	 */
-	public com.liferay.portal.kernel.service.PluginSettingLocalService
-		getPluginSettingLocalService() {
-
-		return pluginSettingLocalService;
-	}
-
-	/**
-	 * Sets the plugin setting local service.
-	 *
-	 * @param pluginSettingLocalService the plugin setting local service
-	 */
-	public void setPluginSettingLocalService(
-		com.liferay.portal.kernel.service.PluginSettingLocalService
-			pluginSettingLocalService) {
-
-		this.pluginSettingLocalService = pluginSettingLocalService;
-	}
-
-	/**
-	 * Returns the plugin setting persistence.
-	 *
-	 * @return the plugin setting persistence
-	 */
-	public PluginSettingPersistence getPluginSettingPersistence() {
-		return pluginSettingPersistence;
-	}
-
-	/**
-	 * Sets the plugin setting persistence.
-	 *
-	 * @param pluginSettingPersistence the plugin setting persistence
-	 */
-	public void setPluginSettingPersistence(
-		PluginSettingPersistence pluginSettingPersistence) {
-
-		this.pluginSettingPersistence = pluginSettingPersistence;
-	}
-
 	public void afterPropertiesSet() {
+		_setLocalServiceUtilService(layoutTemplateLocalService);
 	}
 
 	public void destroy() {
+		_setLocalServiceUtilService(null);
 	}
 
 	/**
@@ -176,6 +139,22 @@ public abstract class LayoutTemplateLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		LayoutTemplateLocalService layoutTemplateLocalService) {
+
+		try {
+			Field field = LayoutTemplateLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, layoutTemplateLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@BeanReference(type = LayoutTemplateLocalService.class)
 	protected LayoutTemplateLocalService layoutTemplateLocalService;
 
@@ -185,13 +164,7 @@ public abstract class LayoutTemplateLocalServiceBaseImpl
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@BeanReference(
-		type = com.liferay.portal.kernel.service.PluginSettingLocalService.class
-	)
-	protected com.liferay.portal.kernel.service.PluginSettingLocalService
-		pluginSettingLocalService;
-
-	@BeanReference(type = PluginSettingPersistence.class)
-	protected PluginSettingPersistence pluginSettingPersistence;
+	private static final Log _log = LogFactoryUtil.getLog(
+		LayoutTemplateLocalServiceBaseImpl.class);
 
 }

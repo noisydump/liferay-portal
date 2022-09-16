@@ -30,7 +30,8 @@ List<AssetEntry> assetEntries = assetPublisherHelper.getAssetEntries(renderReque
 	total="<%= assetEntries.size() %>"
 >
 	<liferay-ui:search-container-results
-		results="<%= assetEntries.subList(searchContainer.getStart(), searchContainer.getResultEnd()) %>"
+		calculateStartAndEnd="<%= true %>"
+		results="<%= assetEntries %>"
 	/>
 
 	<liferay-ui:search-container-row
@@ -143,57 +144,66 @@ for (long groupId : groupIds) {
 			Map<String, Object> data = HashMapBuilder.<String, Object>put(
 				"groupid", String.valueOf(curGroupId)
 			).build();
-
-			if (!curRendererFactory.isSupportsClassTypes()) {
-				data.put("href", assetBrowserURL.toString());
-
-				String type = curRendererFactory.getTypeName(locale);
-
-				data.put("destroyOnHide", true);
-				data.put("title", LanguageUtil.format(request, "select-x", type, false));
-				data.put("type", type);
 		%>
 
-				<liferay-ui:icon
-					cssClass="asset-selector"
-					data="<%= data %>"
-					id="<%= curGroupId + FriendlyURLNormalizerUtil.normalize(type) %>"
-					message="<%= HtmlUtil.escape(type) %>"
-					url="javascript:;"
-				/>
+			<c:choose>
+				<c:when test="<%= !curRendererFactory.isSupportsClassTypes() %>">
 
-			<%
-			}
-			else {
-				ClassTypeReader classTypeReader = curRendererFactory.getClassTypeReader();
-
-				List<ClassType> assetAvailableClassTypes = classTypeReader.getAvailableClassTypes(PortalUtil.getCurrentAndAncestorSiteGroupIds(curGroupId), locale);
-
-				for (ClassType assetAvailableClassType : assetAvailableClassTypes) {
-					assetBrowserURL.setParameter("subtypeSelectionId", String.valueOf(assetAvailableClassType.getClassTypeId()));
-					assetBrowserURL.setParameter("showNonindexable", String.valueOf(Boolean.TRUE));
-					assetBrowserURL.setParameter("showScheduled", String.valueOf(Boolean.TRUE));
-
+					<%
 					data.put("href", assetBrowserURL.toString());
 
-					String type = assetAvailableClassType.getName();
+					String type = curRendererFactory.getTypeName(locale);
 
 					data.put("destroyOnHide", true);
 					data.put("title", LanguageUtil.format(request, "select-x", type, false));
 					data.put("type", type);
-			%>
+					%>
 
 					<liferay-ui:icon
 						cssClass="asset-selector"
 						data="<%= data %>"
 						id="<%= curGroupId + FriendlyURLNormalizerUtil.normalize(type) %>"
 						message="<%= HtmlUtil.escape(type) %>"
-						url="javascript:;"
+						url="javascript:void(0);"
 					/>
+				</c:when>
+				<c:otherwise>
+
+					<%
+					ClassTypeReader classTypeReader = curRendererFactory.getClassTypeReader();
+
+					List<ClassType> assetAvailableClassTypes = classTypeReader.getAvailableClassTypes(PortalUtil.getCurrentAndAncestorSiteGroupIds(curGroupId), locale);
+
+					for (ClassType assetAvailableClassType : assetAvailableClassTypes) {
+						assetBrowserURL.setParameter("subtypeSelectionId", String.valueOf(assetAvailableClassType.getClassTypeId()));
+						assetBrowserURL.setParameter("showNonindexable", String.valueOf(Boolean.TRUE));
+						assetBrowserURL.setParameter("showScheduled", String.valueOf(Boolean.TRUE));
+
+						data.put("href", assetBrowserURL.toString());
+
+						String type = assetAvailableClassType.getName();
+
+						data.put("destroyOnHide", true);
+						data.put("title", LanguageUtil.format(request, "select-x", type, false));
+						data.put("type", type);
+					%>
+
+						<liferay-ui:icon
+							cssClass="asset-selector"
+							data="<%= data %>"
+							id="<%= curGroupId + FriendlyURLNormalizerUtil.normalize(type) %>"
+							message="<%= HtmlUtil.escape(type) %>"
+							url="javascript:void(0);"
+						/>
+
+					<%
+					}
+					%>
+
+				</c:otherwise>
+			</c:choose>
 
 		<%
-				}
-			}
 		}
 		%>
 
@@ -230,8 +240,8 @@ for (long groupId : groupIds) {
 		var assetClassName = '';
 		var assetEntryIds = [];
 
-		Array.prototype.forEach.call(assetEntryList, function (assetEntry) {
-			assetEntryIds.push(assetEntry.entityid);
+		Array.prototype.forEach.call(assetEntryList, (assetEntry) => {
+			assetEntryIds.push(assetEntry.value);
 
 			assetClassName = assetEntry.assetclassname;
 		});
@@ -252,12 +262,13 @@ for (long groupId : groupIds) {
 		document.body,
 		'click',
 		'.asset-selector a',
-		function (event) {
+		(event) => {
 			event.preventDefault();
 
 			var delegateTarget = event.delegateTarget;
 
 			Liferay.Util.openSelectionModal({
+				customSelectEvent: true,
 				multiple: true,
 				onSelect: function (selectedItems) {
 					if (selectedItems) {

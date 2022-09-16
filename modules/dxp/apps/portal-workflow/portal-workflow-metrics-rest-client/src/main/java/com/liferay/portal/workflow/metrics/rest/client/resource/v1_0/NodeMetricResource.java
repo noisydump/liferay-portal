@@ -45,14 +45,14 @@ public interface NodeMetricResource {
 
 	public Page<NodeMetric> getProcessNodeMetricsPage(
 			Long processId, Boolean completed, java.util.Date dateEnd,
-			java.util.Date dateStart, String key, Pagination pagination,
-			String sortString)
+			java.util.Date dateStart, String key, String processVersion,
+			Pagination pagination, String sortString)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse getProcessNodeMetricsPageHttpResponse(
 			Long processId, Boolean completed, java.util.Date dateEnd,
-			java.util.Date dateStart, String key, Pagination pagination,
-			String sortString)
+			java.util.Date dateStart, String key, String processVersion,
+			Pagination pagination, String sortString)
 		throws Exception;
 
 	public static class Builder {
@@ -66,6 +66,12 @@ public interface NodeMetricResource {
 
 		public NodeMetricResource build() {
 			return new NodeMetricResourceImpl(this);
+		}
+
+		public Builder contextPath(String contextPath) {
+			_contextPath = contextPath;
+
+			return this;
 		}
 
 		public Builder endpoint(String host, int port, String scheme) {
@@ -94,9 +100,26 @@ public interface NodeMetricResource {
 			return this;
 		}
 
+		public Builder parameters(String... parameters) {
+			if ((parameters.length % 2) != 0) {
+				throw new IllegalArgumentException(
+					"Parameters length is not an even number");
+			}
+
+			for (int i = 0; i < parameters.length; i += 2) {
+				String parameterName = String.valueOf(parameters[i]);
+				String parameterValue = String.valueOf(parameters[i + 1]);
+
+				_parameters.put(parameterName, parameterValue);
+			}
+
+			return this;
+		}
+
 		private Builder() {
 		}
 
+		private String _contextPath = "";
 		private Map<String, String> _headers = new LinkedHashMap<>();
 		private String _host = "localhost";
 		private Locale _locale;
@@ -112,22 +135,39 @@ public interface NodeMetricResource {
 
 		public Page<NodeMetric> getProcessNodeMetricsPage(
 				Long processId, Boolean completed, java.util.Date dateEnd,
-				java.util.Date dateStart, String key, Pagination pagination,
-				String sortString)
+				java.util.Date dateStart, String key, String processVersion,
+				Pagination pagination, String sortString)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
 				getProcessNodeMetricsPageHttpResponse(
-					processId, completed, dateEnd, dateStart, key, pagination,
-					sortString);
+					processId, completed, dateEnd, dateStart, key,
+					processVersion, pagination, sortString);
 
 			String content = httpResponse.getContent();
 
-			_logger.fine("HTTP response content: " + content);
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
 
-			_logger.fine("HTTP response message: " + httpResponse.getMessage());
-			_logger.fine(
-				"HTTP response status code: " + httpResponse.getStatusCode());
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
 
 			try {
 				return Page.of(content, NodeMetricSerDes::toDTO);
@@ -143,8 +183,8 @@ public interface NodeMetricResource {
 
 		public HttpInvoker.HttpResponse getProcessNodeMetricsPageHttpResponse(
 				Long processId, Boolean completed, java.util.Date dateEnd,
-				java.util.Date dateStart, String key, Pagination pagination,
-				String sortString)
+				java.util.Date dateStart, String key, String processVersion,
+				Pagination pagination, String sortString)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -169,7 +209,7 @@ public interface NodeMetricResource {
 			httpInvoker.httpMethod(HttpInvoker.HttpMethod.GET);
 
 			DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
-				"yyyy-MM-dd'T'HH:mm:ss'Z'");
+				"yyyy-MM-dd'T'HH:mm:ssXX");
 
 			if (completed != null) {
 				httpInvoker.parameter("completed", String.valueOf(completed));
@@ -189,6 +229,11 @@ public interface NodeMetricResource {
 				httpInvoker.parameter("key", String.valueOf(key));
 			}
 
+			if (processVersion != null) {
+				httpInvoker.parameter(
+					"processVersion", String.valueOf(processVersion));
+			}
+
 			if (pagination != null) {
 				httpInvoker.parameter(
 					"page", String.valueOf(pagination.getPage()));
@@ -202,7 +247,7 @@ public interface NodeMetricResource {
 
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
-					_builder._port +
+					_builder._port + _builder._contextPath +
 						"/o/portal-workflow-metrics/v1.0/processes/{processId}/nodes/metrics");
 
 			httpInvoker.path("processId", processId);

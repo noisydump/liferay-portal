@@ -78,7 +78,7 @@ public class FragmentEntryVersionCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(57);
+		StringBundler sb = new StringBundler(61);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
@@ -120,12 +120,16 @@ public class FragmentEntryVersionCacheModel
 		sb.append(cacheable);
 		sb.append(", configuration=");
 		sb.append(configuration);
+		sb.append(", icon=");
+		sb.append(icon);
 		sb.append(", previewFileEntryId=");
 		sb.append(previewFileEntryId);
 		sb.append(", readOnly=");
 		sb.append(readOnly);
 		sb.append(", type=");
 		sb.append(type);
+		sb.append(", typeOptions=");
+		sb.append(typeOptions);
 		sb.append(", lastPublishDate=");
 		sb.append(lastPublishDate);
 		sb.append(", status=");
@@ -231,9 +235,23 @@ public class FragmentEntryVersionCacheModel
 			fragmentEntryVersionImpl.setConfiguration(configuration);
 		}
 
+		if (icon == null) {
+			fragmentEntryVersionImpl.setIcon("");
+		}
+		else {
+			fragmentEntryVersionImpl.setIcon(icon);
+		}
+
 		fragmentEntryVersionImpl.setPreviewFileEntryId(previewFileEntryId);
 		fragmentEntryVersionImpl.setReadOnly(readOnly);
 		fragmentEntryVersionImpl.setType(type);
+
+		if (typeOptions == null) {
+			fragmentEntryVersionImpl.setTypeOptions("");
+		}
+		else {
+			fragmentEntryVersionImpl.setTypeOptions(typeOptions);
+		}
 
 		if (lastPublishDate == Long.MIN_VALUE) {
 			fragmentEntryVersionImpl.setLastPublishDate(null);
@@ -298,12 +316,14 @@ public class FragmentEntryVersionCacheModel
 
 		cacheable = objectInput.readBoolean();
 		configuration = (String)objectInput.readObject();
+		icon = objectInput.readUTF();
 
 		previewFileEntryId = objectInput.readLong();
 
 		readOnly = objectInput.readBoolean();
 
 		type = objectInput.readInt();
+		typeOptions = (String)objectInput.readObject();
 		lastPublishDate = objectInput.readLong();
 
 		status = objectInput.readInt();
@@ -394,11 +414,26 @@ public class FragmentEntryVersionCacheModel
 			objectOutput.writeObject(configuration);
 		}
 
+		if (icon == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(icon);
+		}
+
 		objectOutput.writeLong(previewFileEntryId);
 
 		objectOutput.writeBoolean(readOnly);
 
 		objectOutput.writeInt(type);
+
+		if (typeOptions == null) {
+			objectOutput.writeObject("");
+		}
+		else {
+			objectOutput.writeObject(typeOptions);
+		}
+
 		objectOutput.writeLong(lastPublishDate);
 
 		objectOutput.writeInt(status);
@@ -435,9 +470,11 @@ public class FragmentEntryVersionCacheModel
 	public String js;
 	public boolean cacheable;
 	public String configuration;
+	public String icon;
 	public long previewFileEntryId;
 	public boolean readOnly;
 	public int type;
+	public String typeOptions;
 	public long lastPublishDate;
 	public int status;
 	public long statusByUserId;

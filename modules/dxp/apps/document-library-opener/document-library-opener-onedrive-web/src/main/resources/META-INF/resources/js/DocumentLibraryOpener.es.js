@@ -9,11 +9,14 @@
  * distribution rights of the Software.
  */
 
+import {getSpritemap} from '@liferay/frontend-icons-web';
 import {
 	fetch,
+	getWindow,
 	navigate,
 	openSimpleInputModal,
 	openToast,
+	openWindow,
 } from 'frontend-js-web';
 
 const TIME_POLLING = 500;
@@ -29,7 +32,7 @@ class DocumentLibraryOpener {
 	}
 
 	_hideLoading() {
-		Liferay.Util.getWindow(this._dialogLoadingId).hide();
+		getWindow(this._dialogLoadingId).hide();
 	}
 
 	_openExternal({externalURL}) {
@@ -82,7 +85,7 @@ class DocumentLibraryOpener {
 
 	_showLoading({dialogMessage}) {
 		return new Promise((resolve) => {
-			Liferay.Util.openWindow(
+			openWindow(
 				{
 					dialog: {
 						bodyContent: `<p>${dialogMessage}</p><div aria-hidden="true" class="loading-animation"></div>`,
@@ -106,7 +109,7 @@ class DocumentLibraryOpener {
 		openSimpleInputModal({
 			alert: {
 				message: Liferay.Language.get(
-					'the-document-has-been-checked-out-please-on-finish-editing-check-in-the-document-to-save-changes-into-the-document-library'
+					'the-document-has-been-checked-out-.please-check-in-the-document-after-edits-are-made-to-save-the-changes-into-the-document-library'
 				),
 				style: 'info',
 				title: Liferay.Language.get('info'),
@@ -126,8 +129,7 @@ class DocumentLibraryOpener {
 					});
 				}
 			},
-			spritemap:
-				Liferay.ThemeDisplay.getPathThemeImages() + '/clay/icons.svg',
+			spritemap: getSpritemap(),
 		});
 	}
 

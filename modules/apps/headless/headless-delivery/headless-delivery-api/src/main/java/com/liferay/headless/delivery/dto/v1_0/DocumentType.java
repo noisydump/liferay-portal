@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
@@ -53,7 +54,13 @@ public class DocumentType implements Serializable {
 		return ObjectMapperUtil.readValue(DocumentType.class, json);
 	}
 
-	@Schema
+	public static DocumentType unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(DocumentType.class, json);
+	}
+
+	@Schema(
+		description = "The list of languages the document type has a translation for."
+	)
 	public String[] getAvailableLanguages() {
 		return availableLanguages;
 	}
@@ -77,11 +84,13 @@ public class DocumentType implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "The list of languages the document type has a translation for."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected String[] availableLanguages;
 
-	@Schema
+	@Schema(description = "The list of content fields the document type has.")
 	@Valid
 	public ContentField[] getContentFields() {
 		return contentFields;
@@ -106,11 +115,13 @@ public class DocumentType implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "The list of content fields the document type has."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected ContentField[] contentFields;
 
-	@Schema
+	@Schema(description = "The document type's description.")
 	public String getDescription() {
 		return description;
 	}
@@ -134,11 +145,11 @@ public class DocumentType implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The document type's description.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String description;
 
-	@Schema
+	@Schema(description = "The localized document type's description.")
 	@Valid
 	public Map<String, String> getDescription_i18n() {
 		return description_i18n;
@@ -164,11 +175,11 @@ public class DocumentType implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The localized document type's description.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Map<String, String> description_i18n;
 
-	@Schema
+	@Schema(description = "The document type's name.")
 	public String getName() {
 		return name;
 	}
@@ -190,11 +201,11 @@ public class DocumentType implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The document type's name.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String name;
 
-	@Schema
+	@Schema(description = "The localized document type's name.")
 	@Valid
 	public Map<String, String> getName_i18n() {
 		return name_i18n;
@@ -220,7 +231,7 @@ public class DocumentType implements Serializable {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The localized document type's name.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Map<String, String> name_i18n;
 
@@ -349,15 +360,16 @@ public class DocumentType implements Serializable {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.DocumentType",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
-
-		return string.replaceAll("\"", "\\\\\"");
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
 	}
 
 	private static boolean _isArray(Object value) {
@@ -383,8 +395,8 @@ public class DocumentType implements Serializable {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -415,7 +427,7 @@ public class DocumentType implements Serializable {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -423,7 +435,7 @@ public class DocumentType implements Serializable {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -431,5 +443,10 @@ public class DocumentType implements Serializable {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

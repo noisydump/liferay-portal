@@ -17,16 +17,16 @@ package com.liferay.portal.kernel.util;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.test.CaptureHandler;
-import com.liferay.portal.kernel.test.JDKLoggerTestUtil;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.test.log.LogCapture;
+import com.liferay.portal.test.log.LogEntry;
+import com.liferay.portal.test.log.LoggerTestUtil;
 
 import java.io.IOException;
 
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.logging.Level;
-import java.util.logging.LogRecord;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -56,9 +56,9 @@ public class UnicodePropertiesTest {
 
 	@Test
 	public void testGetProperty() {
-		UnicodeProperties unicodeProperties = new UnicodeProperties();
-
-		unicodeProperties.put(_TEST_KEY_1, _TEST_VALUE_1);
+		UnicodeProperties unicodeProperties = UnicodePropertiesBuilder.put(
+			_TEST_KEY_1, _TEST_VALUE_1
+		).build();
 
 		Assert.assertEquals(
 			_TEST_VALUE_1, unicodeProperties.getProperty(_TEST_KEY_1));
@@ -123,16 +123,15 @@ public class UnicodePropertiesTest {
 
 	@Test
 	public void testPutAll() {
-		UnicodeProperties unicodeProperties = new UnicodeProperties();
-
-		unicodeProperties.putAll(
+		UnicodeProperties unicodeProperties = UnicodePropertiesBuilder.putAll(
 			HashMapBuilder.put(
 				_TEST_KEY_1, _TEST_VALUE_1
 			).put(
 				_TEST_KEY_2, _TEST_VALUE_2
 			).put(
 				_TEST_KEY_3, _TEST_VALUE_3
-			).build());
+			).build()
+		).build();
 
 		_assertUnicodeProperties(
 			new String[] {_TEST_VALUE_1, _TEST_VALUE_2, _TEST_VALUE_3},
@@ -148,9 +147,9 @@ public class UnicodePropertiesTest {
 
 	@Test
 	public void testRemove() {
-		UnicodeProperties unicodeProperties = new UnicodeProperties();
-
-		unicodeProperties.put(_TEST_KEY_1, _TEST_VALUE_1);
+		UnicodeProperties unicodeProperties = UnicodePropertiesBuilder.put(
+			_TEST_KEY_1, _TEST_VALUE_1
+		).build();
 
 		String result = unicodeProperties.remove(null);
 
@@ -282,9 +281,8 @@ public class UnicodePropertiesTest {
 	private void _testPutLine(boolean safe) {
 		UnicodeProperties unicodeProperties = new UnicodeProperties(safe);
 
-		try (CaptureHandler captureHandler =
-				JDKLoggerTestUtil.configureJDKLogger(
-					UnicodeProperties.class.getName(), Level.ALL)) {
+		try (LogCapture logCapture = LoggerTestUtil.configureJDKLogger(
+				UnicodeProperties.class.getName(), Level.ALL)) {
 
 			unicodeProperties.put(_TEST_KEY_1);
 
@@ -293,15 +291,15 @@ public class UnicodePropertiesTest {
 					unicodeProperties.toString(),
 				unicodeProperties.isEmpty());
 
-			List<LogRecord> logRecords = captureHandler.getLogRecords();
+			List<LogEntry> logEntries = logCapture.getLogEntries();
 
-			Assert.assertEquals(logRecords.toString(), 1, logRecords.size());
+			Assert.assertEquals(logEntries.toString(), 1, logEntries.size());
 
-			LogRecord logRecord = logRecords.get(0);
+			LogEntry logEntry = logEntries.get(0);
 
 			Assert.assertEquals(
 				"Invalid property on line " + _TEST_KEY_1,
-				logRecord.getMessage());
+				logEntry.getMessage());
 		}
 
 		unicodeProperties.put("");

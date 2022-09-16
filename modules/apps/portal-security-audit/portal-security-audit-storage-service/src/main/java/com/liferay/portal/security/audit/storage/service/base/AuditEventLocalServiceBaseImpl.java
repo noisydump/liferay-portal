@@ -28,6 +28,8 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -40,14 +42,18 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.security.audit.storage.model.AuditEvent;
 import com.liferay.portal.security.audit.storage.service.AuditEventLocalService;
+import com.liferay.portal.security.audit.storage.service.AuditEventLocalServiceUtil;
 import com.liferay.portal.security.audit.storage.service.persistence.AuditEventPersistence;
 
 import java.io.Serializable;
+
+import java.lang.reflect.Field;
 
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -68,7 +74,7 @@ public abstract class AuditEventLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>AuditEventLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.security.audit.storage.service.AuditEventLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>AuditEventLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>AuditEventLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -139,6 +145,13 @@ public abstract class AuditEventLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return auditEventPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -304,6 +317,11 @@ public abstract class AuditEventLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement AuditEventLocalServiceImpl#deleteAuditEvent(AuditEvent) to avoid orphaned data");
+		}
+
 		return auditEventLocalService.deleteAuditEvent(
 			(AuditEvent)persistedModel);
 	}
@@ -365,6 +383,11 @@ public abstract class AuditEventLocalServiceBaseImpl
 		return auditEventPersistence.update(auditEvent);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -376,6 +399,8 @@ public abstract class AuditEventLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		auditEventLocalService = (AuditEventLocalService)aopProxy;
+
+		_setLocalServiceUtilService(auditEventLocalService);
 	}
 
 	/**
@@ -420,6 +445,22 @@ public abstract class AuditEventLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		AuditEventLocalService auditEventLocalService) {
+
+		try {
+			Field field = AuditEventLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, auditEventLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected AuditEventLocalService auditEventLocalService;
 
 	@Reference
@@ -429,16 +470,7 @@ public abstract class AuditEventLocalServiceBaseImpl
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@Reference
-	protected com.liferay.portal.kernel.service.ClassNameLocalService
-		classNameLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.ResourceLocalService
-		resourceLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
+	private static final Log _log = LogFactoryUtil.getLog(
+		AuditEventLocalServiceBaseImpl.class);
 
 }

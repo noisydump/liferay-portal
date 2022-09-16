@@ -25,10 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.util.tracker.ServiceTracker;
-
 /**
  * The persistence utility for the site navigation menu item service. This utility wraps <code>com.liferay.site.navigation.service.persistence.impl.SiteNavigationMenuItemPersistenceImpl</code> and provides direct access to the database for CRUD operations. This utility should only be used by the service layer, as it must operate within a transaction. Never access this utility in a JSP, controller, model, or other front-end class.
  *
@@ -546,6 +542,179 @@ public class SiteNavigationMenuItemUtil {
 	 */
 	public static int countByUuid_C(String uuid, long companyId) {
 		return getPersistence().countByUuid_C(uuid, companyId);
+	}
+
+	/**
+	 * Returns all the site navigation menu items where companyId = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @return the matching site navigation menu items
+	 */
+	public static List<SiteNavigationMenuItem> findByCompanyId(long companyId) {
+		return getPersistence().findByCompanyId(companyId);
+	}
+
+	/**
+	 * Returns a range of all the site navigation menu items where companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SiteNavigationMenuItemModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of site navigation menu items
+	 * @param end the upper bound of the range of site navigation menu items (not inclusive)
+	 * @return the range of matching site navigation menu items
+	 */
+	public static List<SiteNavigationMenuItem> findByCompanyId(
+		long companyId, int start, int end) {
+
+		return getPersistence().findByCompanyId(companyId, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the site navigation menu items where companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SiteNavigationMenuItemModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of site navigation menu items
+	 * @param end the upper bound of the range of site navigation menu items (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching site navigation menu items
+	 */
+	public static List<SiteNavigationMenuItem> findByCompanyId(
+		long companyId, int start, int end,
+		OrderByComparator<SiteNavigationMenuItem> orderByComparator) {
+
+		return getPersistence().findByCompanyId(
+			companyId, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns an ordered range of all the site navigation menu items where companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SiteNavigationMenuItemModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of site navigation menu items
+	 * @param end the upper bound of the range of site navigation menu items (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching site navigation menu items
+	 */
+	public static List<SiteNavigationMenuItem> findByCompanyId(
+		long companyId, int start, int end,
+		OrderByComparator<SiteNavigationMenuItem> orderByComparator,
+		boolean useFinderCache) {
+
+		return getPersistence().findByCompanyId(
+			companyId, start, end, orderByComparator, useFinderCache);
+	}
+
+	/**
+	 * Returns the first site navigation menu item in the ordered set where companyId = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching site navigation menu item
+	 * @throws NoSuchMenuItemException if a matching site navigation menu item could not be found
+	 */
+	public static SiteNavigationMenuItem findByCompanyId_First(
+			long companyId,
+			OrderByComparator<SiteNavigationMenuItem> orderByComparator)
+		throws com.liferay.site.navigation.exception.NoSuchMenuItemException {
+
+		return getPersistence().findByCompanyId_First(
+			companyId, orderByComparator);
+	}
+
+	/**
+	 * Returns the first site navigation menu item in the ordered set where companyId = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching site navigation menu item, or <code>null</code> if a matching site navigation menu item could not be found
+	 */
+	public static SiteNavigationMenuItem fetchByCompanyId_First(
+		long companyId,
+		OrderByComparator<SiteNavigationMenuItem> orderByComparator) {
+
+		return getPersistence().fetchByCompanyId_First(
+			companyId, orderByComparator);
+	}
+
+	/**
+	 * Returns the last site navigation menu item in the ordered set where companyId = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching site navigation menu item
+	 * @throws NoSuchMenuItemException if a matching site navigation menu item could not be found
+	 */
+	public static SiteNavigationMenuItem findByCompanyId_Last(
+			long companyId,
+			OrderByComparator<SiteNavigationMenuItem> orderByComparator)
+		throws com.liferay.site.navigation.exception.NoSuchMenuItemException {
+
+		return getPersistence().findByCompanyId_Last(
+			companyId, orderByComparator);
+	}
+
+	/**
+	 * Returns the last site navigation menu item in the ordered set where companyId = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching site navigation menu item, or <code>null</code> if a matching site navigation menu item could not be found
+	 */
+	public static SiteNavigationMenuItem fetchByCompanyId_Last(
+		long companyId,
+		OrderByComparator<SiteNavigationMenuItem> orderByComparator) {
+
+		return getPersistence().fetchByCompanyId_Last(
+			companyId, orderByComparator);
+	}
+
+	/**
+	 * Returns the site navigation menu items before and after the current site navigation menu item in the ordered set where companyId = &#63;.
+	 *
+	 * @param siteNavigationMenuItemId the primary key of the current site navigation menu item
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next site navigation menu item
+	 * @throws NoSuchMenuItemException if a site navigation menu item with the primary key could not be found
+	 */
+	public static SiteNavigationMenuItem[] findByCompanyId_PrevAndNext(
+			long siteNavigationMenuItemId, long companyId,
+			OrderByComparator<SiteNavigationMenuItem> orderByComparator)
+		throws com.liferay.site.navigation.exception.NoSuchMenuItemException {
+
+		return getPersistence().findByCompanyId_PrevAndNext(
+			siteNavigationMenuItemId, companyId, orderByComparator);
+	}
+
+	/**
+	 * Removes all the site navigation menu items where companyId = &#63; from the database.
+	 *
+	 * @param companyId the company ID
+	 */
+	public static void removeByCompanyId(long companyId) {
+		getPersistence().removeByCompanyId(companyId);
+	}
+
+	/**
+	 * Returns the number of site navigation menu items where companyId = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @return the number of matching site navigation menu items
+	 */
+	public static int countByCompanyId(long companyId) {
+		return getPersistence().countByCompanyId(companyId);
 	}
 
 	/**
@@ -1478,29 +1647,9 @@ public class SiteNavigationMenuItemUtil {
 	}
 
 	public static SiteNavigationMenuItemPersistence getPersistence() {
-		return _serviceTracker.getService();
+		return _persistence;
 	}
 
-	private static ServiceTracker
-		<SiteNavigationMenuItemPersistence, SiteNavigationMenuItemPersistence>
-			_serviceTracker;
-
-	static {
-		Bundle bundle = FrameworkUtil.getBundle(
-			SiteNavigationMenuItemPersistence.class);
-
-		ServiceTracker
-			<SiteNavigationMenuItemPersistence,
-			 SiteNavigationMenuItemPersistence> serviceTracker =
-				new ServiceTracker
-					<SiteNavigationMenuItemPersistence,
-					 SiteNavigationMenuItemPersistence>(
-						 bundle.getBundleContext(),
-						 SiteNavigationMenuItemPersistence.class, null);
-
-		serviceTracker.open();
-
-		_serviceTracker = serviceTracker;
-	}
+	private static volatile SiteNavigationMenuItemPersistence _persistence;
 
 }

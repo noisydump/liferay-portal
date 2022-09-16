@@ -27,6 +27,10 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
 public class JournalFolderServiceWrapper
 	implements JournalFolderService, ServiceWrapper<JournalFolderService> {
 
+	public JournalFolderServiceWrapper() {
+		this(null);
+	}
+
 	public JournalFolderServiceWrapper(
 		JournalFolderService journalFolderService) {
 
@@ -35,12 +39,14 @@ public class JournalFolderServiceWrapper
 
 	@Override
 	public JournalFolder addFolder(
-			long groupId, long parentFolderId, String name, String description,
+			String externalReferenceCode, long groupId, long parentFolderId,
+			String name, String description,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _journalFolderService.addFolder(
-			groupId, parentFolderId, name, description, serviceContext);
+			externalReferenceCode, groupId, parentFolderId, name, description,
+			serviceContext);
 	}
 
 	@Override
@@ -92,6 +98,15 @@ public class JournalFolderServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _journalFolderService.getFolder(folderId);
+	}
+
+	@Override
+	public JournalFolder getFolderByExternalReferenceCode(
+			long groupId, String externalReferenceCode)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _journalFolderService.getFolderByExternalReferenceCode(
+			groupId, externalReferenceCode);
 	}
 
 	@Override

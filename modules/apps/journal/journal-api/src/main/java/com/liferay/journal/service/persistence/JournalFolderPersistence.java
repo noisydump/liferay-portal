@@ -1721,7 +1721,7 @@ public interface JournalFolderPersistence
 	 * @param status the status
 	 * @return the matching journal folders
 	 */
-	public java.util.List<JournalFolder> findByF_C_P_NotS(
+	public java.util.List<JournalFolder> findByGtF_C_P_NotS(
 		long folderId, long companyId, long parentFolderId, int status);
 
 	/**
@@ -1739,7 +1739,7 @@ public interface JournalFolderPersistence
 	 * @param end the upper bound of the range of journal folders (not inclusive)
 	 * @return the range of matching journal folders
 	 */
-	public java.util.List<JournalFolder> findByF_C_P_NotS(
+	public java.util.List<JournalFolder> findByGtF_C_P_NotS(
 		long folderId, long companyId, long parentFolderId, int status,
 		int start, int end);
 
@@ -1759,7 +1759,7 @@ public interface JournalFolderPersistence
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
 	 * @return the ordered range of matching journal folders
 	 */
-	public java.util.List<JournalFolder> findByF_C_P_NotS(
+	public java.util.List<JournalFolder> findByGtF_C_P_NotS(
 		long folderId, long companyId, long parentFolderId, int status,
 		int start, int end,
 		com.liferay.portal.kernel.util.OrderByComparator<JournalFolder>
@@ -1782,7 +1782,7 @@ public interface JournalFolderPersistence
 	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching journal folders
 	 */
-	public java.util.List<JournalFolder> findByF_C_P_NotS(
+	public java.util.List<JournalFolder> findByGtF_C_P_NotS(
 		long folderId, long companyId, long parentFolderId, int status,
 		int start, int end,
 		com.liferay.portal.kernel.util.OrderByComparator<JournalFolder>
@@ -1800,7 +1800,7 @@ public interface JournalFolderPersistence
 	 * @return the first matching journal folder
 	 * @throws NoSuchFolderException if a matching journal folder could not be found
 	 */
-	public JournalFolder findByF_C_P_NotS_First(
+	public JournalFolder findByGtF_C_P_NotS_First(
 			long folderId, long companyId, long parentFolderId, int status,
 			com.liferay.portal.kernel.util.OrderByComparator<JournalFolder>
 				orderByComparator)
@@ -1816,7 +1816,7 @@ public interface JournalFolderPersistence
 	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
 	 * @return the first matching journal folder, or <code>null</code> if a matching journal folder could not be found
 	 */
-	public JournalFolder fetchByF_C_P_NotS_First(
+	public JournalFolder fetchByGtF_C_P_NotS_First(
 		long folderId, long companyId, long parentFolderId, int status,
 		com.liferay.portal.kernel.util.OrderByComparator<JournalFolder>
 			orderByComparator);
@@ -1832,7 +1832,7 @@ public interface JournalFolderPersistence
 	 * @return the last matching journal folder
 	 * @throws NoSuchFolderException if a matching journal folder could not be found
 	 */
-	public JournalFolder findByF_C_P_NotS_Last(
+	public JournalFolder findByGtF_C_P_NotS_Last(
 			long folderId, long companyId, long parentFolderId, int status,
 			com.liferay.portal.kernel.util.OrderByComparator<JournalFolder>
 				orderByComparator)
@@ -1848,7 +1848,7 @@ public interface JournalFolderPersistence
 	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
 	 * @return the last matching journal folder, or <code>null</code> if a matching journal folder could not be found
 	 */
-	public JournalFolder fetchByF_C_P_NotS_Last(
+	public JournalFolder fetchByGtF_C_P_NotS_Last(
 		long folderId, long companyId, long parentFolderId, int status,
 		com.liferay.portal.kernel.util.OrderByComparator<JournalFolder>
 			orderByComparator);
@@ -1861,7 +1861,7 @@ public interface JournalFolderPersistence
 	 * @param parentFolderId the parent folder ID
 	 * @param status the status
 	 */
-	public void removeByF_C_P_NotS(
+	public void removeByGtF_C_P_NotS(
 		long folderId, long companyId, long parentFolderId, int status);
 
 	/**
@@ -1873,8 +1873,60 @@ public interface JournalFolderPersistence
 	 * @param status the status
 	 * @return the number of matching journal folders
 	 */
-	public int countByF_C_P_NotS(
+	public int countByGtF_C_P_NotS(
 		long folderId, long companyId, long parentFolderId, int status);
+
+	/**
+	 * Returns the journal folder where groupId = &#63; and externalReferenceCode = &#63; or throws a <code>NoSuchFolderException</code> if it could not be found.
+	 *
+	 * @param groupId the group ID
+	 * @param externalReferenceCode the external reference code
+	 * @return the matching journal folder
+	 * @throws NoSuchFolderException if a matching journal folder could not be found
+	 */
+	public JournalFolder findByG_ERC(long groupId, String externalReferenceCode)
+		throws NoSuchFolderException;
+
+	/**
+	 * Returns the journal folder where groupId = &#63; and externalReferenceCode = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param groupId the group ID
+	 * @param externalReferenceCode the external reference code
+	 * @return the matching journal folder, or <code>null</code> if a matching journal folder could not be found
+	 */
+	public JournalFolder fetchByG_ERC(
+		long groupId, String externalReferenceCode);
+
+	/**
+	 * Returns the journal folder where groupId = &#63; and externalReferenceCode = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	 *
+	 * @param groupId the group ID
+	 * @param externalReferenceCode the external reference code
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the matching journal folder, or <code>null</code> if a matching journal folder could not be found
+	 */
+	public JournalFolder fetchByG_ERC(
+		long groupId, String externalReferenceCode, boolean useFinderCache);
+
+	/**
+	 * Removes the journal folder where groupId = &#63; and externalReferenceCode = &#63; from the database.
+	 *
+	 * @param groupId the group ID
+	 * @param externalReferenceCode the external reference code
+	 * @return the journal folder that was removed
+	 */
+	public JournalFolder removeByG_ERC(
+			long groupId, String externalReferenceCode)
+		throws NoSuchFolderException;
+
+	/**
+	 * Returns the number of journal folders where groupId = &#63; and externalReferenceCode = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param externalReferenceCode the external reference code
+	 * @return the number of matching journal folders
+	 */
+	public int countByG_ERC(long groupId, String externalReferenceCode);
 
 	/**
 	 * Caches the journal folder in the entity cache if it is enabled.

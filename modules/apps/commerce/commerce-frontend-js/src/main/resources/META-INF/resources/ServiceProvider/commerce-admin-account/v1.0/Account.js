@@ -18,12 +18,13 @@ const ACCOUNTS_PATH = '/accounts';
 
 const VERSION = 'v1.0';
 
-function resolveCatalogPath(basePath = '') {
+function resolvePath(basePath = '') {
 	return `${basePath}${VERSION}${ACCOUNTS_PATH}`;
 }
 
-export default (basePath) => ({
-	baseURL: resolveCatalogPath(basePath),
-	getAccounts: (...params) =>
-		AJAX.GET(resolveCatalogPath(basePath), ...params),
-});
+export default function Account(basePath) {
+	return {
+		baseURL: resolvePath(basePath),
+		getAccounts: (...params) => AJAX.GET(resolvePath(basePath), ...params),
+	};
+}

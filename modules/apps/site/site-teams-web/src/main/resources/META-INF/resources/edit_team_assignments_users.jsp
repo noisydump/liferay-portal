@@ -18,8 +18,6 @@
 
 <%
 EditSiteTeamAssignmentsUsersDisplayContext editSiteTeamAssignmentsUsersDisplayContext = new EditSiteTeamAssignmentsUsersDisplayContext(request, renderRequest, renderResponse);
-
-EditSiteTeamAssignmentsUsersManagementToolbarDisplayContext editSiteTeamAssignmentsUsersManagementToolbarDisplayContext = new EditSiteTeamAssignmentsUsersManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, editSiteTeamAssignmentsUsersDisplayContext);
 %>
 
 <clay:navigation-bar
@@ -27,8 +25,9 @@ EditSiteTeamAssignmentsUsersManagementToolbarDisplayContext editSiteTeamAssignme
 	navigationItems="<%= editSiteTeamAssignmentsUsersDisplayContext.getNavigationItems() %>"
 />
 
-<clay:management-toolbar-v2
-	displayContext="<%= editSiteTeamAssignmentsUsersManagementToolbarDisplayContext %>"
+<clay:management-toolbar
+	managementToolbarDisplayContext="<%= new EditSiteTeamAssignmentsUsersManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, editSiteTeamAssignmentsUsersDisplayContext) %>"
+	propsTransformer="js/EditTeamAssignmentsUsersManagementToolbarPropsTransformer"
 />
 
 <portlet:actionURL name="deleteTeamUsers" var="deleteTeamUsersURL" />
@@ -53,8 +52,8 @@ EditSiteTeamAssignmentsUsersManagementToolbarDisplayContext editSiteTeamAssignme
 				<c:when test='<%= Objects.equals(editSiteTeamAssignmentsUsersDisplayContext.getDisplayStyle(), "icon") %>'>
 					<liferay-ui:search-container-column-text>
 						<clay:user-card
+							propsTransformer="js/UserDropdownDefaultPropsTransformer"
 							userCard="<%= new UserUserCard(user2, editSiteTeamAssignmentsUsersDisplayContext.getTeamId(), renderRequest, renderResponse, searchContainer.getRowChecker()) %>"
-							userColorClass='<%= "sticker-user-icon " + LexiconUtil.getUserColorCssClass(user2) %>'
 						/>
 					</liferay-ui:search-container-column-text>
 				</c:when>
@@ -82,8 +81,8 @@ EditSiteTeamAssignmentsUsersManagementToolbarDisplayContext editSiteTeamAssignme
 						%>
 
 						<clay:dropdown-actions
-							defaultEventHandler="<%= SiteTeamsWebKeys.USER_DROPDOWN_DEFAULT_EVENT_HANDLER %>"
 							dropdownItems="<%= userActionDropdownItemsProvider.getActionDropdownItems() %>"
+							propsTransformer="js/UserDropdownDefaultPropsTransformer"
 						/>
 					</liferay-ui:search-container-column-text>
 				</c:when>
@@ -107,8 +106,8 @@ EditSiteTeamAssignmentsUsersManagementToolbarDisplayContext editSiteTeamAssignme
 						%>
 
 						<clay:dropdown-actions
-							defaultEventHandler="<%= SiteTeamsWebKeys.USER_DROPDOWN_DEFAULT_EVENT_HANDLER %>"
 							dropdownItems="<%= userActionDropdownItemsProvider.getActionDropdownItems() %>"
+							propsTransformer="js/UserDropdownDefaultPropsTransformer"
 						/>
 					</liferay-ui:search-container-column-text>
 				</c:otherwise>
@@ -129,13 +128,3 @@ EditSiteTeamAssignmentsUsersManagementToolbarDisplayContext editSiteTeamAssignme
 	<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
 	<aui:input name="teamId" type="hidden" value="<%= String.valueOf(editSiteTeamAssignmentsUsersDisplayContext.getTeamId()) %>" />
 </aui:form>
-
-<liferay-frontend:component
-	componentId="<%= editSiteTeamAssignmentsUsersManagementToolbarDisplayContext.getDefaultEventHandler() %>"
-	module="js/EditTeamAssignmentsUsersManagementToolbarDefaultEventHandler.es"
-/>
-
-<liferay-frontend:component
-	componentId="<%= SiteTeamsWebKeys.USER_DROPDOWN_DEFAULT_EVENT_HANDLER %>"
-	module="js/UserDropdownDefaultEventHandler.es"
-/>

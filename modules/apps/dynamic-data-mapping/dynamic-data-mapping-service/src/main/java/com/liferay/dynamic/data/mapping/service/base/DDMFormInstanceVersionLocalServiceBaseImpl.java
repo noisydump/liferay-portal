@@ -16,6 +16,7 @@ package com.liferay.dynamic.data.mapping.service.base;
 
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceVersion;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceVersionLocalService;
+import com.liferay.dynamic.data.mapping.service.DDMFormInstanceVersionLocalServiceUtil;
 import com.liferay.dynamic.data.mapping.service.persistence.DDMFormInstanceVersionPersistence;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
@@ -32,6 +33,8 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -47,10 +50,13 @@ import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -72,7 +78,7 @@ public abstract class DDMFormInstanceVersionLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>DDMFormInstanceVersionLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.dynamic.data.mapping.service.DDMFormInstanceVersionLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>DDMFormInstanceVersionLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>DDMFormInstanceVersionLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -150,6 +156,13 @@ public abstract class DDMFormInstanceVersionLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return ddmFormInstanceVersionPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -330,6 +343,11 @@ public abstract class DDMFormInstanceVersionLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement DDMFormInstanceVersionLocalServiceImpl#deleteDDMFormInstanceVersion(DDMFormInstanceVersion) to avoid orphaned data");
+		}
+
 		return ddmFormInstanceVersionLocalService.deleteDDMFormInstanceVersion(
 			(DDMFormInstanceVersion)persistedModel);
 	}
@@ -396,6 +414,11 @@ public abstract class DDMFormInstanceVersionLocalServiceBaseImpl
 		return ddmFormInstanceVersionPersistence.update(ddmFormInstanceVersion);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -409,6 +432,8 @@ public abstract class DDMFormInstanceVersionLocalServiceBaseImpl
 	public void setAopProxy(Object aopProxy) {
 		ddmFormInstanceVersionLocalService =
 			(DDMFormInstanceVersionLocalService)aopProxy;
+
+		_setLocalServiceUtilService(ddmFormInstanceVersionLocalService);
 	}
 
 	/**
@@ -469,6 +494,23 @@ public abstract class DDMFormInstanceVersionLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		DDMFormInstanceVersionLocalService ddmFormInstanceVersionLocalService) {
+
+		try {
+			Field field =
+				DDMFormInstanceVersionLocalServiceUtil.class.getDeclaredField(
+					"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, ddmFormInstanceVersionLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected DDMFormInstanceVersionLocalService
 		ddmFormInstanceVersionLocalService;
 
@@ -479,5 +521,8 @@ public abstract class DDMFormInstanceVersionLocalServiceBaseImpl
 	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		DDMFormInstanceVersionLocalServiceBaseImpl.class);
 
 }

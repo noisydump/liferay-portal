@@ -27,6 +27,10 @@ public class ERCCompanyEntryLocalServiceWrapper
 	implements ERCCompanyEntryLocalService,
 			   ServiceWrapper<ERCCompanyEntryLocalService> {
 
+	public ERCCompanyEntryLocalServiceWrapper() {
+		this(null);
+	}
+
 	public ERCCompanyEntryLocalServiceWrapper(
 		ERCCompanyEntryLocalService ercCompanyEntryLocalService) {
 
@@ -132,6 +136,13 @@ public class ERCCompanyEntryLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _ercCompanyEntryLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _ercCompanyEntryLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -242,11 +253,40 @@ public class ERCCompanyEntryLocalServiceWrapper
 	 */
 	@Override
 	public com.liferay.portal.tools.service.builder.test.model.ERCCompanyEntry
+		fetchERCCompanyEntryByExternalReferenceCode(
+			long companyId, String externalReferenceCode) {
+
+		return _ercCompanyEntryLocalService.
+			fetchERCCompanyEntryByExternalReferenceCode(
+				companyId, externalReferenceCode);
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #fetchERCCompanyEntryByExternalReferenceCode(long, String)}
+	 */
+	@Deprecated
+	@Override
+	public com.liferay.portal.tools.service.builder.test.model.ERCCompanyEntry
 		fetchERCCompanyEntryByReferenceCode(
 			long companyId, String externalReferenceCode) {
 
 		return _ercCompanyEntryLocalService.fetchERCCompanyEntryByReferenceCode(
 			companyId, externalReferenceCode);
+	}
+
+	/**
+	 * Returns the erc company entry with the matching UUID and company.
+	 *
+	 * @param uuid the erc company entry's UUID
+	 * @param companyId the primary key of the company
+	 * @return the matching erc company entry, or <code>null</code> if a matching erc company entry could not be found
+	 */
+	@Override
+	public com.liferay.portal.tools.service.builder.test.model.ERCCompanyEntry
+		fetchERCCompanyEntryByUuidAndCompanyId(String uuid, long companyId) {
+
+		return _ercCompanyEntryLocalService.
+			fetchERCCompanyEntryByUuidAndCompanyId(uuid, companyId);
 	}
 
 	@Override
@@ -299,6 +339,42 @@ public class ERCCompanyEntryLocalServiceWrapper
 
 		return _ercCompanyEntryLocalService.getERCCompanyEntry(
 			ercCompanyEntryId);
+	}
+
+	/**
+	 * Returns the erc company entry with the matching external reference code and company.
+	 *
+	 * @param companyId the primary key of the company
+	 * @param externalReferenceCode the erc company entry's external reference code
+	 * @return the matching erc company entry
+	 * @throws PortalException if a matching erc company entry could not be found
+	 */
+	@Override
+	public com.liferay.portal.tools.service.builder.test.model.ERCCompanyEntry
+			getERCCompanyEntryByExternalReferenceCode(
+				long companyId, String externalReferenceCode)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _ercCompanyEntryLocalService.
+			getERCCompanyEntryByExternalReferenceCode(
+				companyId, externalReferenceCode);
+	}
+
+	/**
+	 * Returns the erc company entry with the matching UUID and company.
+	 *
+	 * @param uuid the erc company entry's UUID
+	 * @param companyId the primary key of the company
+	 * @return the matching erc company entry
+	 * @throws PortalException if a matching erc company entry could not be found
+	 */
+	@Override
+	public com.liferay.portal.tools.service.builder.test.model.ERCCompanyEntry
+			getERCCompanyEntryByUuidAndCompanyId(String uuid, long companyId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _ercCompanyEntryLocalService.
+			getERCCompanyEntryByUuidAndCompanyId(uuid, companyId);
 	}
 
 	@Override

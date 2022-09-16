@@ -60,19 +60,20 @@ public class AddressContactInfoManager extends BaseContactInfoManager<Address> {
 
 		Address address = _addressLocalService.createAddress(addressId);
 
-		address.setStreet1(street1);
-		address.setStreet2(street2);
-		address.setStreet3(street3);
-		address.setCity(city);
-		address.setZip(zip);
+		address.setCountryId(countryId);
+		address.setListTypeId(
+			ParamUtil.getLong(actionRequest, "addressListTypeId"));
 		address.setRegionId(
 			ParamUtil.getLong(actionRequest, "addressRegionId"));
-		address.setCountryId(countryId);
-		address.setTypeId(ParamUtil.getLong(actionRequest, "addressTypeId"));
+		address.setCity(city);
 		address.setMailing(
 			ParamUtil.getBoolean(actionRequest, "addressMailing"));
 		address.setPrimary(
 			ParamUtil.getBoolean(actionRequest, "addressPrimary"));
+		address.setStreet1(street1);
+		address.setStreet2(street2);
+		address.setStreet3(street3);
+		address.setZip(zip);
 
 		return address;
 	}
@@ -82,8 +83,9 @@ public class AddressContactInfoManager extends BaseContactInfoManager<Address> {
 		return _addressService.addAddress(
 			_className, _classPK, address.getStreet1(), address.getStreet2(),
 			address.getStreet3(), address.getCity(), address.getZip(),
-			address.getRegionId(), address.getCountryId(), address.getTypeId(),
-			address.isMailing(), address.isPrimary(), new ServiceContext());
+			address.getRegionId(), address.getCountryId(),
+			address.getListTypeId(), address.isMailing(), address.isPrimary(),
+			new ServiceContext());
 	}
 
 	@Override
@@ -96,8 +98,8 @@ public class AddressContactInfoManager extends BaseContactInfoManager<Address> {
 		_addressService.updateAddress(
 			address.getAddressId(), address.getStreet1(), address.getStreet2(),
 			address.getStreet3(), address.getCity(), address.getZip(),
-			address.getRegionId(), address.getCountryId(), address.getTypeId(),
-			address.isMailing(), address.isPrimary());
+			address.getRegionId(), address.getCountryId(),
+			address.getListTypeId(), address.isMailing(), address.isPrimary());
 	}
 
 	@Override

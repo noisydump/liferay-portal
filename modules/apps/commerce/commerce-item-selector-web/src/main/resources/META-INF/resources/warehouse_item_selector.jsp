@@ -19,48 +19,12 @@
 <%
 CommerceInventoryWarehouseItemSelectorViewDisplayContext commerceInventoryWarehouseItemSelectorViewDisplayContext = (CommerceInventoryWarehouseItemSelectorViewDisplayContext)request.getAttribute(WebKeys.PORTLET_DISPLAY_CONTEXT);
 
-long commerceCountryId = commerceInventoryWarehouseItemSelectorViewDisplayContext.getCommerceCountryId();
 String itemSelectedEventName = commerceInventoryWarehouseItemSelectorViewDisplayContext.getItemSelectedEventName();
-List<ManagementBarFilterItem> managementBarFilterItems = commerceInventoryWarehouseItemSelectorViewDisplayContext.getManagementBarFilterItems();
-
-String managementBarFilterValue = null;
-
-for (ManagementBarFilterItem managementBarFilterItem : managementBarFilterItems) {
-	if (commerceCountryId == Long.valueOf(managementBarFilterItem.getId())) {
-		managementBarFilterValue = managementBarFilterItem.getLabel();
-
-		break;
-	}
-}
 %>
 
-<liferay-frontend:management-bar
-	includeCheckBox="<%= true %>"
-	searchContainerId="commerceInventoryWarehouses"
->
-	<liferay-frontend:management-bar-filters>
-		<liferay-frontend:management-bar-filter
-			label="country"
-			managementBarFilterItems="<%= managementBarFilterItems %>"
-			value="<%= managementBarFilterValue %>"
-		/>
-
-		<liferay-frontend:management-bar-sort
-			orderByCol="<%= commerceInventoryWarehouseItemSelectorViewDisplayContext.getOrderByCol() %>"
-			orderByType="<%= commerceInventoryWarehouseItemSelectorViewDisplayContext.getOrderByType() %>"
-			orderColumns='<%= new String[] {"city", "name"} %>'
-			portletURL="<%= commerceInventoryWarehouseItemSelectorViewDisplayContext.getPortletURL() %>"
-		/>
-	</liferay-frontend:management-bar-filters>
-
-	<liferay-frontend:management-bar-buttons>
-		<liferay-frontend:management-bar-display-buttons
-			displayViews='<%= new String[] {"list"} %>'
-			portletURL="<%= renderResponse.createRenderURL() %>"
-			selectedDisplayStyle="list"
-		/>
-	</liferay-frontend:management-bar-buttons>
-</liferay-frontend:management-bar>
+<clay:management-toolbar
+	managementToolbarDisplayContext="<%= new CommerceInventoryWarehouseManagementToolbarDisplayContext(commerceInventoryWarehouseItemSelectorViewDisplayContext, request, liferayPortletRequest, liferayPortletResponse) %>"
+/>
 
 <div class="container-fluid container-fluid-max-xl" id="<portlet:namespace />commerceInventoryWarehouseSelectorWrapper">
 	<liferay-ui:search-container
@@ -98,11 +62,11 @@ for (ManagementBarFilterItem managementBarFilterItem : managementBarFilterItems)
 		'<portlet:namespace />commerceInventoryWarehouses'
 	);
 
-	searchContainer.on('rowToggled', function (event) {
+	searchContainer.on('rowToggled', (event) => {
 		Liferay.Util.getOpener().Liferay.fire(
 			'<%= HtmlUtil.escapeJS(itemSelectedEventName) %>',
 			{
-				data: Liferay.Util.listCheckedExcept(
+				data: Liferay.Util.getCheckedCheckboxes(
 					commerceInventoryWarehouseSelectorWrapper,
 					'<portlet:namespace />allRowIds'
 				),

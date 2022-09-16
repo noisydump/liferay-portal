@@ -4,19 +4,14 @@ definition {
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.component.names = "Dynamic Data Lists";
-	property testray.main.component.name = "Upgrades Forms";
+	property testray.main.component.name = "Upgrades Data Engine";
 
 	setUp {
 		SignIn.signIn();
 
-		Smoke.viewWelcomePage();
+		var portalURL = PropsUtil.get("portal.url");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Configuration",
-			panel = "Control Panel",
-			portlet = "Search");
-
-		SearchAdministration.executeSearchActions(actionsDescription = "Reindex all search indexes.");
+		SearchAdministration.executeReindex();
 	}
 
 	@description = "This is a use case for LPS-52392."
@@ -24,6 +19,7 @@ definition {
 	test AddDataDefinitionAfterUpgrade621021 {
 		property data.archive.type = "data-archive-portal";
 		property database.types = "db2";
+		property portal.upstream = "quarantine";
 		property portal.version = "6.2.10.21";
 
 		Upgrade.addDataDefinitionWithDB2(site = "Guest");

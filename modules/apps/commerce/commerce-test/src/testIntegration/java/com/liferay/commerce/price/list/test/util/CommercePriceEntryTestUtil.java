@@ -46,13 +46,11 @@ public class CommercePriceEntryTestUtil {
 			CommercePriceListLocalServiceUtil.getCommercePriceList(
 				commercePriceListId);
 
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(
-				commercePriceList.getGroupId());
-
 		return CommercePriceEntryLocalServiceUtil.addCommercePriceEntry(
 			externalReferenceCode, cpProductId, cpInstanceUuid,
-			commercePriceListId, price, BigDecimal.ZERO, serviceContext);
+			commercePriceListId, price, BigDecimal.ZERO,
+			ServiceContextTestUtil.getServiceContext(
+				commercePriceList.getGroupId()));
 	}
 
 	public static CommercePriceEntry addCommercePriceEntry(
@@ -104,13 +102,10 @@ public class CommercePriceEntryTestUtil {
 		CommercePriceList commercePriceList =
 			commercePriceEntry.getCommercePriceList();
 
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(
-				commercePriceList.getGroupId());
-
 		return CommerceTierPriceEntryLocalServiceUtil.addCommerceTierPriceEntry(
 			commercePriceEntryId, price, null, bulkPricing, minQuantity,
-			serviceContext);
+			ServiceContextTestUtil.getServiceContext(
+				commercePriceList.getGroupId()));
 	}
 
 	public static CommerceTierPriceEntry addCommerceTierPriceEntry(
@@ -142,7 +137,7 @@ public class CommercePriceEntryTestUtil {
 		}
 
 		return CommerceTierPriceEntryLocalServiceUtil.addCommerceTierPriceEntry(
-			commercePriceEntryId, externalReferenceCode, price, minQuantity,
+			externalReferenceCode, commercePriceEntryId, price, minQuantity,
 			bulkPricing, discountDiscovery, discountLevel1, discountLevel2,
 			discountLevel3, discountLevel4, calendar.get(Calendar.MONTH),
 			calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.YEAR),

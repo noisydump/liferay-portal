@@ -21,15 +21,14 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
-import com.liferay.portal.kernel.util.HashMapDictionary;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.test.log.CaptureAppender;
-import com.liferay.portal.test.log.Log4JLoggerTestUtil;
+import com.liferay.portal.test.log.LogCapture;
+import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Dictionary;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
@@ -37,8 +36,6 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
-
-import org.apache.log4j.Level;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
@@ -99,13 +96,12 @@ public class RefreshTokenTest extends BaseClientTestCase {
 
 		invocationBuilder = authorize(webTarget.request(), accessTokenString);
 
-		try (CaptureAppender captureAppender =
-				Log4JLoggerTestUtil.configureLog4JLogger(
-					"portal_web.docroot.errors.code_jsp", Level.WARN)) {
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				"portal_web.docroot.errors.code_jsp", LoggerTestUtil.WARN)) {
 
 			Response response = invocationBuilder.get();
 
-			Assert.assertEquals(403, response.getStatus());
+			Assert.assertEquals(401, response.getStatus());
 		}
 	}
 
@@ -118,13 +114,13 @@ public class RefreshTokenTest extends BaseClientTestCase {
 
 			User user = UserTestUtil.getAdminUser(defaultCompanyId);
 
-			Dictionary<String, Object> properties = new HashMapDictionary<>();
-
-			properties.put("auth.verifier.guest.allowed", false);
-			properties.put("oauth2.scope.checker.type", "annotations");
-
 			registerJaxRsApplication(
-				new TestAnnotatedApplication(), "annotated", properties);
+				new TestAnnotatedApplication(), "annotated",
+				HashMapDictionaryBuilder.<String, Object>put(
+					"auth.verifier.guest.allowed", false
+				).put(
+					"oauth2.scope.checker.type", "annotations"
+				).build());
 
 			createOAuth2Application(
 				defaultCompanyId, user, "oauthTestApplication",

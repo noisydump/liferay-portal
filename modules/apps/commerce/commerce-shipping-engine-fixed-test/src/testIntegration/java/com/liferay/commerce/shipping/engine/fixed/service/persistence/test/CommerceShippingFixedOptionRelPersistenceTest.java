@@ -131,6 +131,9 @@ public class CommerceShippingFixedOptionRelPersistenceTest {
 		CommerceShippingFixedOptionRel newCommerceShippingFixedOptionRel =
 			_persistence.create(pk);
 
+		newCommerceShippingFixedOptionRel.setMvccVersion(
+			RandomTestUtil.nextLong());
+
 		newCommerceShippingFixedOptionRel.setGroupId(RandomTestUtil.nextLong());
 
 		newCommerceShippingFixedOptionRel.setCompanyId(
@@ -156,10 +159,10 @@ public class CommerceShippingFixedOptionRelPersistenceTest {
 		newCommerceShippingFixedOptionRel.setCommerceInventoryWarehouseId(
 			RandomTestUtil.nextLong());
 
-		newCommerceShippingFixedOptionRel.setCommerceCountryId(
+		newCommerceShippingFixedOptionRel.setCountryId(
 			RandomTestUtil.nextLong());
 
-		newCommerceShippingFixedOptionRel.setCommerceRegionId(
+		newCommerceShippingFixedOptionRel.setRegionId(
 			RandomTestUtil.nextLong());
 
 		newCommerceShippingFixedOptionRel.setZip(RandomTestUtil.randomString());
@@ -186,6 +189,9 @@ public class CommerceShippingFixedOptionRelPersistenceTest {
 			_persistence.findByPrimaryKey(
 				newCommerceShippingFixedOptionRel.getPrimaryKey());
 
+		Assert.assertEquals(
+			existingCommerceShippingFixedOptionRel.getMvccVersion(),
+			newCommerceShippingFixedOptionRel.getMvccVersion());
 		Assert.assertEquals(
 			existingCommerceShippingFixedOptionRel.
 				getCommerceShippingFixedOptionRelId(),
@@ -228,11 +234,11 @@ public class CommerceShippingFixedOptionRelPersistenceTest {
 			newCommerceShippingFixedOptionRel.
 				getCommerceInventoryWarehouseId());
 		Assert.assertEquals(
-			existingCommerceShippingFixedOptionRel.getCommerceCountryId(),
-			newCommerceShippingFixedOptionRel.getCommerceCountryId());
+			existingCommerceShippingFixedOptionRel.getCountryId(),
+			newCommerceShippingFixedOptionRel.getCountryId());
 		Assert.assertEquals(
-			existingCommerceShippingFixedOptionRel.getCommerceRegionId(),
-			newCommerceShippingFixedOptionRel.getCommerceRegionId());
+			existingCommerceShippingFixedOptionRel.getRegionId(),
+			newCommerceShippingFixedOptionRel.getRegionId());
 		Assert.assertEquals(
 			existingCommerceShippingFixedOptionRel.getZip(),
 			newCommerceShippingFixedOptionRel.getZip());
@@ -299,14 +305,15 @@ public class CommerceShippingFixedOptionRelPersistenceTest {
 		getOrderByComparator() {
 
 		return OrderByComparatorFactoryUtil.create(
-			"CShippingFixedOptionRel", "commerceShippingFixedOptionRelId", true,
-			"groupId", true, "companyId", true, "userId", true, "userName",
-			true, "createDate", true, "modifiedDate", true,
-			"commerceShippingMethodId", true, "commerceShippingFixedOptionId",
-			true, "commerceInventoryWarehouseId", true, "commerceCountryId",
-			true, "commerceRegionId", true, "zip", true, "weightFrom", true,
-			"weightTo", true, "fixedPrice", true, "rateUnitWeightPrice", true,
-			"ratePercentage", true);
+			"CShippingFixedOptionRel", "mvccVersion", true,
+			"commerceShippingFixedOptionRelId", true, "groupId", true,
+			"companyId", true, "userId", true, "userName", true, "createDate",
+			true, "modifiedDate", true, "commerceShippingMethodId", true,
+			"commerceShippingFixedOptionId", true,
+			"commerceInventoryWarehouseId", true, "countryId", true, "regionId",
+			true, "zip", true, "weightFrom", true, "weightTo", true,
+			"fixedPrice", true, "rateUnitWeightPrice", true, "ratePercentage",
+			true);
 	}
 
 	@Test
@@ -566,6 +573,9 @@ public class CommerceShippingFixedOptionRelPersistenceTest {
 		CommerceShippingFixedOptionRel commerceShippingFixedOptionRel =
 			_persistence.create(pk);
 
+		commerceShippingFixedOptionRel.setMvccVersion(
+			RandomTestUtil.nextLong());
+
 		commerceShippingFixedOptionRel.setGroupId(RandomTestUtil.nextLong());
 
 		commerceShippingFixedOptionRel.setCompanyId(RandomTestUtil.nextLong());
@@ -589,11 +599,9 @@ public class CommerceShippingFixedOptionRelPersistenceTest {
 		commerceShippingFixedOptionRel.setCommerceInventoryWarehouseId(
 			RandomTestUtil.nextLong());
 
-		commerceShippingFixedOptionRel.setCommerceCountryId(
-			RandomTestUtil.nextLong());
+		commerceShippingFixedOptionRel.setCountryId(RandomTestUtil.nextLong());
 
-		commerceShippingFixedOptionRel.setCommerceRegionId(
-			RandomTestUtil.nextLong());
+		commerceShippingFixedOptionRel.setRegionId(RandomTestUtil.nextLong());
 
 		commerceShippingFixedOptionRel.setZip(RandomTestUtil.randomString());
 

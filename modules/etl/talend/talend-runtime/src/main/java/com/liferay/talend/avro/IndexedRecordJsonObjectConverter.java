@@ -36,9 +36,10 @@ import java.util.Objects;
 import java.util.TimeZone;
 
 import javax.json.Json;
-import javax.json.JsonObject;
+import javax.json.JsonArrayBuilder;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonReader;
+import javax.json.JsonValue;
 
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
@@ -63,10 +64,10 @@ public class IndexedRecordJsonObjectConverter extends RejectHandler {
 		_schema = schema;
 	}
 
-	public JsonObject toJsonObject(IndexedRecord indexedRecord)
+	public JsonValue toJsonValue(IndexedRecord indexedRecord)
 		throws IOException {
 
-		JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
+		JsonObjectBuilder jsonObjectBuilder = Json.createObjectBuilder();
 
 		Map<String, JsonObjectBuilder> nestedJsonObjectBuilders =
 			new HashMap<>();
@@ -90,7 +91,7 @@ public class IndexedRecordJsonObjectConverter extends RejectHandler {
 				continue;
 			}
 
-			JsonObjectBuilder currentJsonObjectBuilder = objectBuilder;
+			JsonObjectBuilder currentJsonObjectBuilder = jsonObjectBuilder;
 
 			if (_isNestedFieldName(fieldName)) {
 				String[] nameParts = _getNameParts(fieldName);
@@ -199,12 +200,20 @@ public class IndexedRecordJsonObjectConverter extends RejectHandler {
 		for (Map.Entry<String, JsonObjectBuilder> nestedJsonObjectBuilder :
 				nestedJsonObjectBuilders.entrySet()) {
 
-			objectBuilder.add(
+			jsonObjectBuilder.add(
 				nestedJsonObjectBuilder.getKey(),
 				nestedJsonObjectBuilder.getValue());
 		}
 
-		return objectBuilder.build();
+		if (!_isIterable()) {
+			return jsonObjectBuilder.build();
+		}
+
+		JsonArrayBuilder jsonArrayBuilder = Json.createArrayBuilder();
+
+		jsonArrayBuilder.add(jsonObjectBuilder);
+
+		return jsonArrayBuilder.build();
 	}
 
 	private String _asISO8601String(long timeMills) {
@@ -237,6 +246,16 @@ public class IndexedRecordJsonObjectConverter extends RejectHandler {
 		return nameParts;
 	}
 
+	private boolean _isIterable() {
+		Object iterablePropObject = _schema.getObjectProp("iterable");
+
+		if (iterablePropObject == null) {
+			return false;
+		}
+
+		return (Boolean)iterablePropObject;
+	}
+
 	private boolean _isJsonArrayFormattedString(String value) {
 		if (value.startsWith("[") && value.endsWith("]")) {
 			return true;
@@ -254,8 +273,8 @@ public class IndexedRecordJsonObjectConverter extends RejectHandler {
 	}
 
 	private boolean _isNestedFieldName(String fieldName) {
-		if (!_oasExtensions.isI18nFieldNameNested(fieldName) ||
-			_oasExtensions.isI18nFieldName(fieldName) ||
+		if ((!_oasExtensions.isI18nFieldNameNested(fieldName) &&
+			 _oasExtensions.isI18nFieldName(fieldName)) ||
 			!fieldName.contains("_")) {
 
 			return false;

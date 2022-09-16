@@ -19,20 +19,23 @@ package com.liferay.portal.crypto.hash;
  */
 public class CryptoHashResponse {
 
-	public CryptoHashResponse(byte[] hash, byte[] salt) {
+	public CryptoHashResponse(
+		CryptoHashVerificationContext cryptoHashVerificationContext,
+		byte[] hash) {
+
+		_cryptoHashVerificationContext = cryptoHashVerificationContext;
 		_hash = hash;
-		_salt = salt;
+	}
+
+	public CryptoHashVerificationContext getCryptoHashVerificationContext() {
+		return _cryptoHashVerificationContext;
 	}
 
 	public byte[] getHash() {
 		return _hash;
 	}
 
-	public byte[] getSalt() {
-		return _salt;
-	}
-
+	private final CryptoHashVerificationContext _cryptoHashVerificationContext;
 	private final byte[] _hash;
-	private final byte[] _salt;
 
 }

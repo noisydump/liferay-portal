@@ -15,14 +15,15 @@
 package com.liferay.jenkins.results.parser.test.clazz.group;
 
 import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
-
-import java.io.File;
+import com.liferay.jenkins.results.parser.job.property.JobProperty;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+
+import org.json.JSONObject;
 
 /**
  * @author Michael Hashimoto
@@ -82,25 +83,24 @@ public class FunctionalSegmentTestClassGroup extends SegmentTestClassGroup {
 		return functionalAxisTestClassGroup.getPoshiProperties();
 	}
 
-	public File getTestBaseDir() {
-		List<FunctionalAxisTestClassGroup> functionalAxisTestClassGroups =
-			getFunctionalAxisTestClassGroups();
+	@Override
+	public String getSlaveLabel() {
+		Properties poshiProperties = getPoshiProperties();
 
-		if ((functionalAxisTestClassGroups == null) ||
-			functionalAxisTestClassGroups.isEmpty()) {
+		String slaveLabel = poshiProperties.getProperty("slave.label");
 
-			return null;
+		if (!JenkinsResultsParserUtil.isNullOrEmpty(slaveLabel)) {
+			return slaveLabel;
 		}
 
-		FunctionalAxisTestClassGroup functionalAxisTestClassGroup =
-			functionalAxisTestClassGroups.get(0);
-
-		return functionalAxisTestClassGroup.getTestBaseDir();
+		return super.getSlaveLabel();
 	}
 
 	@Override
 	public String getTestCasePropertiesContent() {
 		StringBuilder sb = new StringBuilder();
+
+		sb.append(super.getTestCasePropertiesContent());
 
 		List<String> axisGroupNames = new ArrayList<>();
 
@@ -132,24 +132,23 @@ public class FunctionalSegmentTestClassGroup extends SegmentTestClassGroup {
 		sb.append(JenkinsResultsParserUtil.join(" ", axisGroupNames));
 		sb.append("\n");
 
-		File testBaseDir = getTestBaseDir();
-
-		if ((testBaseDir != null) && testBaseDir.exists()) {
-			sb.append("TEST_BASE_DIR_NAME=");
-			sb.append(JenkinsResultsParserUtil.getCanonicalPath(testBaseDir));
-			sb.append("/\n");
-		}
-
 		return sb.toString();
 	}
 
 	protected FunctionalSegmentTestClassGroup(
-		FunctionalBatchTestClassGroup parentFunctionalBatchTestClassGroup) {
+		BatchTestClassGroup batchTestClassGroup) {
 
-		super(parentFunctionalBatchTestClassGroup);
+		super(batchTestClassGroup);
 
-		_parentFunctionalBatchTestClassGroup =
-			parentFunctionalBatchTestClassGroup;
+		_batchTestClassGroup = batchTestClassGroup;
+	}
+
+	protected FunctionalSegmentTestClassGroup(
+		BatchTestClassGroup batchTestClassGroup, JSONObject jsonObject) {
+
+		super(batchTestClassGroup, jsonObject);
+
+		_batchTestClassGroup = batchTestClassGroup;
 	}
 
 	protected Map.Entry<String, String> getEnvironmentVariableEntry(
@@ -161,9 +160,9 @@ public class FunctionalSegmentTestClassGroup extends SegmentTestClassGroup {
 			return null;
 		}
 
-		String value = JenkinsResultsParserUtil.getProperty(
-			_parentFunctionalBatchTestClassGroup.getJobProperties(), name,
-			_parentFunctionalBatchTestClassGroup.getBatchName());
+		JobProperty jobProperty = _batchTestClassGroup.getJobProperty(name);
+
+		String value = jobProperty.getValue();
 
 		if (JenkinsResultsParserUtil.isNullOrEmpty(value)) {
 			return null;
@@ -172,7 +171,6 @@ public class FunctionalSegmentTestClassGroup extends SegmentTestClassGroup {
 		return new AbstractMap.SimpleEntry<>(key, value);
 	}
 
-	private final FunctionalBatchTestClassGroup
-		_parentFunctionalBatchTestClassGroup;
+	private final BatchTestClassGroup _batchTestClassGroup;
 
 }

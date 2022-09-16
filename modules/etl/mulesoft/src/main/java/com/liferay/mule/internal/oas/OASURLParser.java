@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
+ * Copyright (c) 2000-2021 Liferay, Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the Free
@@ -75,17 +75,21 @@ public class OASURLParser {
 	}
 
 	public String getServerBaseURL() {
+		return getServerBaseURL(jaxRSAppBase);
+	}
+
+	public String getServerBaseURL(String jaxRSAppBase) {
 		StringBuilder sb = new StringBuilder();
 
 		sb.append(getAuthorityWithScheme());
-		sb.append("/o/");
+		sb.append("/o");
 		sb.append(jaxRSAppBase);
 
 		return sb.toString();
 	}
 
 	private static final Pattern oasURLPattern = Pattern.compile(
-		"(.*)://(.+?)(:(\\d+))?/o/(.+)/v(.+)/openapi\\.(yaml|json)");
+		"(.*)://(.+?)(:(\\d+))?/o(/.+)/v(.+)/openapi\\.(yaml|json)");
 
 	private final String host;
 	private final String jaxRSAppBase;

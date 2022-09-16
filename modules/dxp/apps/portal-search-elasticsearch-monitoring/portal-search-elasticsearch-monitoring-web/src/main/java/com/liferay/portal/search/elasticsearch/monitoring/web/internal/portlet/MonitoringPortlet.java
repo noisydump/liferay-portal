@@ -25,7 +25,7 @@ import org.osgi.service.component.annotations.Component;
  * @author Miguel Angelo Caldas Gallindo
  */
 @Component(
-	immediate = true,
+	enabled = false, immediate = true,
 	property = {
 		"com.liferay.portlet.css-class-wrapper=portlet-elasticsearch-monitoring",
 		"com.liferay.portlet.display-category=category.search",
@@ -43,7 +43,7 @@ import org.osgi.service.component.annotations.Component;
 		"javax.portlet.name=" + MonitoringPortletKeys.MONITORING,
 		"javax.portlet.resource-bundle=content.Language",
 		"javax.portlet.security-role-ref=power-user,user",
-		"javax.portlet.window-state=maximized"
+		"javax.portlet.version=3.0", "javax.portlet.window-state=maximized"
 	},
 	service = Portlet.class
 )

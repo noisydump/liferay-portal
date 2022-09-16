@@ -22,11 +22,11 @@ import com.liferay.gradle.plugins.defaults.internal.util.FileUtil;
 import com.liferay.gradle.plugins.defaults.internal.util.GradlePluginsDefaultsUtil;
 import com.liferay.gradle.plugins.defaults.internal.util.GradleUtil;
 import com.liferay.gradle.plugins.defaults.internal.util.IncrementVersionClosure;
-import com.liferay.gradle.plugins.defaults.tasks.ReplaceRegexTask;
+import com.liferay.gradle.plugins.defaults.task.ReplaceRegexTask;
 import com.liferay.gradle.plugins.extensions.LiferayExtension;
 import com.liferay.gradle.plugins.node.NodePlugin;
-import com.liferay.gradle.plugins.node.tasks.NpmInstallTask;
-import com.liferay.gradle.plugins.node.tasks.PackageRunBuildTask;
+import com.liferay.gradle.plugins.node.task.NpmInstallTask;
+import com.liferay.gradle.plugins.node.task.PackageRunBuildTask;
 import com.liferay.gradle.plugins.util.PortalTools;
 import com.liferay.gradle.util.copy.StripPathSegmentsAction;
 
@@ -193,7 +193,7 @@ public class LiferayThemeDefaultsPlugin implements Plugin<Project> {
 	@SuppressWarnings("serial")
 	private Copy _addTaskExpandFrontendCSSCommon(
 		final Project project,
-		final Configuration frontendCSSCommonConfguration) {
+		final Configuration frontendCSSCommonConfiguration) {
 
 		Copy copy = GradleUtil.addTask(
 			project, EXPAND_FRONTEND_CSS_COMMON_TASK_NAME, Copy.class);
@@ -218,7 +218,7 @@ public class LiferayThemeDefaultsPlugin implements Plugin<Project> {
 				@SuppressWarnings("unused")
 				public FileTree doCall() {
 					return project.zipTree(
-						frontendCSSCommonConfguration.getSingleFile());
+						frontendCSSCommonConfiguration.getSingleFile());
 				}
 
 			});

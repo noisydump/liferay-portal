@@ -24,7 +24,7 @@ import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.Http;
+import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
@@ -62,7 +62,7 @@ public class PortalImplLayoutSetFriendlyURLTest
 		try {
 			field.set(null, defaultGroup.getName());
 
-			Layout layout = LayoutTestUtil.addLayout(defaultGroup);
+			Layout layout = LayoutTestUtil.addTypePortletLayout(defaultGroup);
 
 			String friendlyURL = portal.getLayoutSetFriendlyURL(
 				layout.getLayoutSet(),
@@ -85,20 +85,18 @@ public class PortalImplLayoutSetFriendlyURLTest
 
 		themeDisplay.setDoAsUserId("impersonated");
 
-		String layoutSetFriendlyURL = portal.getLayoutSetFriendlyURL(
-			_layoutSetLocalService.getLayoutSet(group.getGroupId(), false),
-			themeDisplay);
-
 		Assert.assertEquals(
 			"impersonated",
-			_http.getParameter(layoutSetFriendlyURL, "doAsUserId"));
+			HttpComponentsUtil.getParameter(
+				portal.getLayoutSetFriendlyURL(
+					_layoutSetLocalService.getLayoutSet(
+						group.getGroupId(), false),
+					themeDisplay),
+				"doAsUserId"));
 	}
 
 	@Inject
 	private GroupLocalService _groupLocalService;
-
-	@Inject
-	private Http _http;
 
 	@Inject
 	private LayoutSetLocalService _layoutSetLocalService;

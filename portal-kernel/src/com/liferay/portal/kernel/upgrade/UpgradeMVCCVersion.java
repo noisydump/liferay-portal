@@ -31,8 +31,11 @@ import java.sql.ResultSet;
 import java.util.List;
 
 /**
- * @author Shuyang Zhou
+ * @author     Shuyang Zhou
+ * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+ *             MVCCVersionUpgradeProcess}
  */
+@Deprecated
 public class UpgradeMVCCVersion extends UpgradeProcess {
 
 	public void upgradeMVCCVersion(
@@ -69,13 +72,9 @@ public class UpgradeMVCCVersion extends UpgradeProcess {
 					return;
 				}
 
-				runSQL(
-					"alter table " + tableName +
-						" add mvccVersion LONG default 0 not null");
-
-				if (_log.isDebugEnabled()) {
-					_log.debug(
-						"Added column mvccVersion to table " + tableName);
+				try (LoggingTimer loggingTimer = new LoggingTimer(tableName)) {
+					alterTableAddColumn(
+						tableName, "mvccVersion", "LONG default 0 not null");
 				}
 			}
 		}

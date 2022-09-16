@@ -20,10 +20,10 @@ import com.liferay.oauth2.provider.internal.test.TestApplication;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
-import com.liferay.portal.kernel.util.HashMapDictionary;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.test.log.CaptureAppender;
-import com.liferay.portal.test.log.Log4JLoggerTestUtil;
+import com.liferay.portal.test.log.LogCapture;
+import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.util.Arrays;
@@ -32,8 +32,6 @@ import java.util.Dictionary;
 
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
-
-import org.apache.log4j.Level;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
@@ -78,9 +76,8 @@ public class AnnotationsAndHttpPrefixApplicationClientTest
 
 		builder = authorize(webTarget.request(), tokenString);
 
-		try (CaptureAppender captureAppender =
-				Log4JLoggerTestUtil.configureLog4JLogger(
-					"portal_web.docroot.errors.code_jsp", Level.WARN)) {
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				"portal_web.docroot.errors.code_jsp", LoggerTestUtil.WARN)) {
 
 			Assert.assertEquals(
 				403,
@@ -108,42 +105,40 @@ public class AnnotationsAndHttpPrefixApplicationClientTest
 			User user = UserTestUtil.getAdminUser(defaultCompanyId);
 
 			Dictionary<String, Object> testApplicationProperties =
-				new HashMapDictionary<>();
-
-			testApplicationProperties.put("prefix", "methods");
-			testApplicationProperties.put(
-				"osgi.jaxrs.name", TestApplication.class.getName());
+				HashMapDictionaryBuilder.<String, Object>put(
+					"osgi.jaxrs.name", TestApplication.class.getName()
+				).put(
+					"prefix", "methods"
+				).build();
 
 			Dictionary<String, Object> annotatedApplicationProperties =
-				new HashMapDictionary<>();
-
-			annotatedApplicationProperties.put(
-				"oauth2.scope.checker.type", "annotations");
-			annotatedApplicationProperties.put("prefix", "annotations");
-			annotatedApplicationProperties.put(
-				"osgi.jaxrs.name", TestAnnotatedApplication.class.getName());
+				HashMapDictionaryBuilder.<String, Object>put(
+					"oauth2.scope.checker.type", "annotations"
+				).put(
+					"osgi.jaxrs.name", TestAnnotatedApplication.class.getName()
+				).put(
+					"prefix", "annotations"
+				).build();
 
 			Dictionary<String, Object> scopeMapperProperties =
-				new HashMapDictionary<>();
-
-			scopeMapperProperties.put(
-				"osgi.jaxrs.name", TestApplication.class.getName());
+				HashMapDictionaryBuilder.<String, Object>put(
+					"osgi.jaxrs.name", TestApplication.class.getName()
+				).build();
 
 			Dictionary<String, Object> bundlePrefixProperties =
-				new HashMapDictionary<>();
-
-			bundlePrefixProperties.put(
-				"osgi.jaxrs.name",
-				new String[] {
-					"com.liferay.oauth2.provider.internal.test.TestApplication",
-					"com.liferay.oauth2.provider.internal.test." +
-						"TestAnnotatedApplication"
-				});
-
-			bundlePrefixProperties.put(
-				"service.properties", new String[] {"prefix"});
-
-			bundlePrefixProperties.put("include.bundle.symbolic.name", false);
+				HashMapDictionaryBuilder.<String, Object>put(
+					"include.bundle.symbolic.name", false
+				).put(
+					"osgi.jaxrs.name",
+					new String[] {
+						"com.liferay.oauth2.provider.internal.test." +
+							"TestApplication",
+						"com.liferay.oauth2.provider.internal.test." +
+							"TestAnnotatedApplication"
+					}
+				).put(
+					"service.properties", new String[] {"prefix"}
+				).build();
 
 			createFactoryConfiguration(
 				"com.liferay.oauth2.provider.scope.internal.configuration." +

@@ -15,6 +15,12 @@
 package com.liferay.portlet.documentlibrary.service.impl;
 
 import com.liferay.document.library.kernel.model.DLFileEntryType;
+import com.liferay.document.library.kernel.model.DLFileEntryTypeTable;
+import com.liferay.petra.sql.dsl.DSLFunctionFactoryUtil;
+import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
+import com.liferay.petra.sql.dsl.expression.Predicate;
+import com.liferay.petra.sql.dsl.query.FromStep;
+import com.liferay.petra.sql.dsl.query.GroupByStep;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
@@ -29,6 +35,7 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portlet.documentlibrary.constants.DLConstants;
 import com.liferay.portlet.documentlibrary.service.base.DLFileEntryTypeServiceBaseImpl;
+import com.liferay.util.dao.orm.CustomSQLUtil;
 
 import java.util.Iterator;
 import java.util.List;
@@ -165,6 +172,24 @@ public class DLFileEntryTypeServiceImpl extends DLFileEntryTypeServiceBaseImpl {
 	@Override
 	public List<DLFileEntryType> search(
 		long companyId, long[] groupIds, String keywords,
+		boolean includeBasicFileEntryType, int scope, int start, int end,
+		OrderByComparator<DLFileEntryType> orderByComparator) {
+
+		return dlFileEntryTypePersistence.dslQuery(
+			_getGroupByStep(
+				DSLQueryFactoryUtil.selectDistinct(
+					DLFileEntryTypeTable.INSTANCE),
+				companyId, groupIds, keywords, includeBasicFileEntryType, scope
+			).orderBy(
+				DLFileEntryTypeTable.INSTANCE, orderByComparator
+			).limit(
+				start, end
+			));
+	}
+
+	@Override
+	public List<DLFileEntryType> search(
+		long companyId, long[] groupIds, String keywords,
 		boolean includeBasicFileEntryType, int start, int end,
 		OrderByComparator<DLFileEntryType> orderByComparator) {
 
@@ -190,6 +215,19 @@ public class DLFileEntryTypeServiceImpl extends DLFileEntryTypeServiceBaseImpl {
 
 		return dlFileEntryTypeFinder.filterCountByKeywords(
 			companyId, groupIds, keywords, includeBasicFileEntryType);
+	}
+
+	@Override
+	public int searchCount(
+		long companyId, long[] groupIds, String keywords,
+		boolean includeBasicFileEntryType, int scope) {
+
+		return dlFileEntryTypePersistence.dslQueryCount(
+			_getGroupByStep(
+				DSLQueryFactoryUtil.countDistinct(
+					DLFileEntryTypeTable.INSTANCE.fileEntryTypeId),
+				companyId, groupIds, keywords, includeBasicFileEntryType,
+				scope));
 	}
 
 	@Override
@@ -269,6 +307,87 @@ public class DLFileEntryTypeServiceImpl extends DLFileEntryTypeServiceBaseImpl {
 		}
 
 		return fileEntryTypes;
+	}
+
+	private GroupByStep _getGroupByStep(
+		FromStep fromStep, long companyId, long[] groupIds, String keywords,
+		boolean includeBasicFileEntryType, int scope) {
+
+		return fromStep.from(
+			DLFileEntryTypeTable.INSTANCE
+		).where(
+			() -> {
+				Predicate predicate =
+					DLFileEntryTypeTable.INSTANCE.companyId.eq(companyId);
+
+				Predicate groupIdsPredicate = null;
+
+				for (long groupId : groupIds) {
+					Predicate groupIdPredicate =
+						DLFileEntryTypeTable.INSTANCE.groupId.eq(groupId);
+
+					if (groupIdsPredicate == null) {
+						groupIdsPredicate = groupIdPredicate;
+					}
+					else {
+						groupIdsPredicate = groupIdsPredicate.or(
+							groupIdPredicate);
+					}
+				}
+
+				if (groupIdsPredicate != null) {
+					predicate = predicate.and(
+						groupIdsPredicate.withParentheses());
+				}
+
+				if (includeBasicFileEntryType) {
+					predicate = predicate.withParentheses(
+					).or(
+						DLFileEntryTypeTable.INSTANCE.groupId.eq(0L)
+					);
+				}
+
+				predicate = predicate.withParentheses(
+				).and(
+					DLFileEntryTypeTable.INSTANCE.scope.eq(scope)
+				);
+
+				Predicate keywordsPredicate = null;
+
+				for (String keyword : CustomSQLUtil.keywords(keywords, true)) {
+					if (keyword == null) {
+						continue;
+					}
+
+					Predicate keywordPredicate = DSLFunctionFactoryUtil.lower(
+						DLFileEntryTypeTable.INSTANCE.name
+					).like(
+						keyword
+					).or(
+						DSLFunctionFactoryUtil.lower(
+							DLFileEntryTypeTable.INSTANCE.description
+						).like(
+							keyword
+						)
+					);
+
+					if (keywordsPredicate == null) {
+						keywordsPredicate = keywordPredicate;
+					}
+					else {
+						keywordsPredicate = keywordsPredicate.or(
+							keywordPredicate);
+					}
+				}
+
+				if (keywordsPredicate != null) {
+					predicate = predicate.and(
+						keywordsPredicate.withParentheses());
+				}
+
+				return predicate;
+			}
+		);
 	}
 
 	private static volatile ModelResourcePermission<DLFileEntryType>

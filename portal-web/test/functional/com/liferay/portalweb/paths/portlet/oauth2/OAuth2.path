@@ -2,13 +2,17 @@
 <head>
 <title>OAuth2</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">OAuth2</td></tr>
 </thead>
+
 <tbody>
+
 <!--ADMIN-->
+
 <tr>
 	<td>ADMIN_AUTHORIZATIONS_REVOKE_BUTTON</td>
 	<td>//tr[@data-qa-id='row' and contains(.,'${key_rowEntry}')]//button[contains(@onclick,'revokeOAuth2Authorization')]</td>
@@ -111,7 +115,7 @@
 </tr>
 <tr>
 	<td>ADMIN_RESOURCE_SCOPE_CHECKBOX</td>
-	<td>//input[@value='${key_scopeName}']</td>
+	<td>//input[contains(@value,'${key_scopeName}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -149,7 +153,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--AUTHORIZATION_REQUEST-->
+
 <tr>
 	<td>AUTHORIZATION_REQUEST_APPLICATION_NAME</td>
 	<td>//form[contains(@id,'OAuth2AuthorizePortlet')]//h1[contains(.,'${key_applicationName}')]</td>
@@ -165,7 +171,14 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--OAUTH2_TESTER-->
+
+<tr>
+	<td>OAUTH2_TESTER_PORTAL_URL</td>
+	<td>//input[contains(@id,'liferayUrl')]</td>
+	<td></td>
+</tr>
 <tr>
 	<td>OAUTH2_TESTER_CLIENT_ID</td>
 	<td>//input[contains(@id,'clientId')]</td>
@@ -174,6 +187,21 @@
 <tr>
 	<td>OAUTH2_TESTER_CLIENT_SECRET</td>
 	<td>//input[contains(@id,'clientSecret')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>OAUTH2_TESTER_CODE_CHALLENGE</td>
+	<td>//input[contains(@id,'codeChallenge')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>OAUTH2_TESTER_EXCHANGE_CODE</td>
+	<td>//input[contains(@id,'exchangeCode')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>OAUTH2_TESTER_REQUEST_URL</td>
+	<td>//input[contains(@id,'url')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -186,7 +214,9 @@
 	<td></td>
 	<td></td>
 </tr>
+
 <!--USER-->
+
 <tr>
 	<td>USER_CONNECTED_APP_ACTIVITY</td>
 	<td>//span[contains(.,'${key_activity}')]</td>

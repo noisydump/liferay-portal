@@ -26,7 +26,7 @@ import com.liferay.document.library.kernel.store.Store;
 import com.liferay.petra.function.UnsafeRunnable;
 import com.liferay.petra.io.StreamUtil;
 import com.liferay.petra.io.unsync.UnsyncByteArrayInputStream;
-import com.liferay.petra.lang.SafeClosable;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
@@ -35,6 +35,8 @@ import com.liferay.petra.string.StringUtil;
 import com.liferay.portal.change.tracking.store.CTStoreFactory;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
@@ -55,7 +57,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -86,11 +87,6 @@ public class CTStoreTest {
 		_companyId = TestPropsValues.getCompanyId();
 	}
 
-	@AfterClass
-	public static void tearDownClass() {
-		_methods.clear();
-	}
-
 	@Before
 	public void setUp() throws PortalException {
 		for (int i = 0; i < 4; i++) {
@@ -100,6 +96,8 @@ public class CTStoreTest {
 
 	@After
 	public void tearDown() {
+		_methods.clear();
+
 		_fileSystemStore.deleteDirectory(
 			_companyId, _REPOSITORY_ID, StringPool.BLANK);
 	}
@@ -906,10 +904,10 @@ public class CTStoreTest {
 	private void _assertCTFileSize(String fileName, byte[] data)
 		throws Exception {
 
-		long fileSize = _ctStore.getFileSize(
-			_companyId, _REPOSITORY_ID, fileName, _VERSION_1);
-
-		Assert.assertEquals(data.length, fileSize);
+		Assert.assertEquals(
+			data.length,
+			_ctStore.getFileSize(
+				_companyId, _REPOSITORY_ID, fileName, _VERSION_1));
 	}
 
 	private void _assertCTFileVersions(String fileName, String... versions)
@@ -954,16 +952,16 @@ public class CTStoreTest {
 	private void _assertFileSize(String fileName, byte[] data)
 		throws Exception {
 
-		long fileSize = _fileSystemStore.getFileSize(
-			_companyId, _REPOSITORY_ID, fileName, _VERSION_1);
-
-		Assert.assertEquals(data.length, fileSize);
+		Assert.assertEquals(
+			data.length,
+			_fileSystemStore.getFileSize(
+				_companyId, _REPOSITORY_ID, fileName, _VERSION_1));
 	}
 
 	private void _assertHasCTFile(String fileName, byte[] data)
 		throws Exception {
 
-		if (data == null) {
+		if (data.length == 0) {
 			Assert.assertFalse(
 				_ctStore.hasFile(
 					_companyId, _REPOSITORY_ID, fileName, _VERSION_1));
@@ -978,7 +976,7 @@ public class CTStoreTest {
 	}
 
 	private void _assertHasFile(String fileName, byte[] data) throws Exception {
-		if (data == null) {
+		if (data.length == 0) {
 			Assert.assertFalse(
 				_fileSystemStore.hasFile(
 					_companyId, _REPOSITORY_ID, fileName, _VERSION_1));
@@ -1053,8 +1051,8 @@ public class CTStoreTest {
 			CTCollection ctCollection, UnsafeRunnable<Exception> unsafeRunnable)
 		throws Exception {
 
-		try (SafeClosable safeClosable =
-				CTCollectionThreadLocal.setCTCollectionId(
+		try (SafeCloseable safeCloseable =
+				CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
 					ctCollection.getCtCollectionId())) {
 
 			unsafeRunnable.run();
@@ -1071,11 +1069,14 @@ public class CTStoreTest {
 		String fileName = "testFile";
 
 		try {
-			ctFileAssertor.assertFile(fileName, null);
+			ctFileAssertor.assertFile(fileName, new byte[0]);
 
 			Assert.fail();
 		}
 		catch (NoSuchFileException noSuchFileException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(noSuchFileException);
+			}
 		}
 
 		_assertMethods(readMethod);
@@ -1100,11 +1101,14 @@ public class CTStoreTest {
 			_ctCollections[0],
 			() -> {
 				try {
-					ctFileAssertor.assertFile(fileName, null);
+					ctFileAssertor.assertFile(fileName, new byte[0]);
 
 					Assert.fail();
 				}
 				catch (NoSuchFileException noSuchFileException) {
+					if (_log.isDebugEnabled()) {
+						_log.debug(noSuchFileException);
+					}
 				}
 
 				_assertMethods(readMethod);
@@ -1179,7 +1183,7 @@ public class CTStoreTest {
 				_deleteCTSContent(fileName, _VERSION_1);
 
 				try {
-					ctFileAssertor.assertFile(fileName, null);
+					ctFileAssertor.assertFile(fileName, new byte[0]);
 
 					Assert.fail();
 				}
@@ -1196,21 +1200,27 @@ public class CTStoreTest {
 		_publish(_ctCollections[2]);
 
 		try {
-			ctFileAssertor.assertFile(fileName, null);
+			ctFileAssertor.assertFile(fileName, new byte[0]);
 
 			Assert.fail();
 		}
 		catch (NoSuchFileException noSuchFileException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(noSuchFileException);
+			}
 		}
 
 		_assertMethods(readMethod);
 
 		try {
-			fsFileAssertor.assertFile(fileName, null);
+			fsFileAssertor.assertFile(fileName, new byte[0]);
 
 			Assert.fail();
 		}
 		catch (NoSuchFileException noSuchFileException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(noSuchFileException);
+			}
 		}
 	}
 
@@ -1277,6 +1287,8 @@ public class CTStoreTest {
 	private static final String _VERSION_2 = "2.0";
 
 	private static final String _VERSION_3 = "3.0";
+
+	private static final Log _log = LogFactoryUtil.getLog(CTStoreTest.class);
 
 	private static long _companyId;
 

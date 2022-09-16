@@ -50,6 +50,11 @@ public class LayoutSetLogoFormNavigatorEntry
 	}
 
 	@Override
+	public ServletContext getServletContext() {
+		return _servletContext;
+	}
+
+	@Override
 	public boolean isVisible(User user, LayoutSet layoutSet) {
 		long companyId = layoutSet.getCompanyId();
 
@@ -61,19 +66,10 @@ public class LayoutSetLogoFormNavigatorEntry
 			}
 		}
 		catch (PortalException portalException) {
-			_log.error(portalException, portalException);
+			_log.error(portalException);
 		}
 
 		return true;
-	}
-
-	@Override
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.layout.admin.web)",
-		unbind = "-"
-	)
-	public void setServletContext(ServletContext servletContext) {
-		super.setServletContext(servletContext);
 	}
 
 	@Override
@@ -92,5 +88,8 @@ public class LayoutSetLogoFormNavigatorEntry
 		LayoutSetLogoFormNavigatorEntry.class);
 
 	private CompanyLocalService _companyLocalService;
+
+	@Reference(target = "(osgi.web.symbolicname=com.liferay.layout.admin.web)")
+	private ServletContext _servletContext;
 
 }

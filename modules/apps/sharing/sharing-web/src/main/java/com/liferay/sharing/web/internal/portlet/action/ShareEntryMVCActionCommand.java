@@ -16,12 +16,11 @@ package com.liferay.sharing.web.internal.portlet.action;
 
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
-import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
@@ -39,7 +38,6 @@ import com.liferay.sharing.service.SharingEntryService;
 import com.liferay.sharing.web.internal.display.SharingEntryPermissionDisplayAction;
 
 import java.util.Date;
-import java.util.ResourceBundle;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -91,9 +89,6 @@ public class ShareEntryMVCActionCommand extends BaseMVCActionCommand {
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			actionRequest);
 
-		ResourceBundle resourceBundle =
-			_resourceBundleLoader.loadResourceBundle(themeDisplay.getLocale());
-
 		try {
 			TransactionInvokerUtil.invoke(
 				_transactionConfig,
@@ -121,8 +116,9 @@ public class ShareEntryMVCActionCommand extends BaseMVCActionCommand {
 
 			JSONObject jsonObject = JSONUtil.put(
 				"successMessage",
-				LanguageUtil.get(
-					resourceBundle, "the-item-was-shared-successfully"));
+				_language.get(
+					themeDisplay.getLocale(),
+					"the-item-was-shared-successfully"));
 
 			JSONPortletResponseUtil.writeJSON(
 				actionRequest, actionResponse, jsonObject);
@@ -141,7 +137,8 @@ public class ShareEntryMVCActionCommand extends BaseMVCActionCommand {
 			}
 
 			JSONObject jsonObject = JSONUtil.put(
-				"errorMessage", LanguageUtil.get(resourceBundle, errorMessage));
+				"errorMessage",
+				_language.get(themeDisplay.getLocale(), errorMessage));
 
 			JSONPortletResponseUtil.writeJSON(
 				actionRequest, actionResponse, jsonObject);
@@ -153,10 +150,10 @@ public class ShareEntryMVCActionCommand extends BaseMVCActionCommand {
 			Propagation.REQUIRED, new Class<?>[] {Exception.class});
 
 	@Reference
-	private Portal _portal;
+	private Language _language;
 
-	@Reference(target = "(bundle.symbolic.name=com.liferay.sharing.web)")
-	private ResourceBundleLoader _resourceBundleLoader;
+	@Reference
+	private Portal _portal;
 
 	@Reference
 	private SharingEntryService _sharingEntryService;

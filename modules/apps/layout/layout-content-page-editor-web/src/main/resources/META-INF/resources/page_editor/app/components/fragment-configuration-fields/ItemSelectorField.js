@@ -13,18 +13,19 @@
  */
 
 import ClayForm from '@clayui/form';
-import {useIsMounted} from 'frontend-js-react-web';
+import {useIsMounted} from '@liferay/frontend-js-react-web';
 import PropTypes from 'prop-types';
 import React, {useContext, useEffect, useState} from 'react';
 
 import ItemSelector from '../../../common/components/ItemSelector';
+import {useId} from '../../../core/hooks/useId';
 import {ConfigurationFieldPropTypes} from '../../../prop-types/index';
+import {CollectionItemContext} from '../../contexts/CollectionItemContext';
+import {useDispatch} from '../../contexts/StoreContext';
 import InfoItemService from '../../services/InfoItemService';
-import {useDispatch} from '../../store/index';
-import {useId} from '../../utils/useId';
-import {CollectionItemContext} from '../CollectionItemContext';
+import itemSelectorValueToInfoItem from '../../utils/item-selector-value/itemSelectorValueToInfoItem';
 
-export const ItemSelectorField = ({field, onValueSelect, value}) => {
+export function ItemSelectorField({field, onValueSelect, value}) {
 	const collectionItemContext = useContext(CollectionItemContext);
 
 	const {typeOptions = {}} = field;
@@ -41,27 +42,23 @@ export const ItemSelectorField = ({field, onValueSelect, value}) => {
 
 	return (
 		<>
-			<ClayForm.Group small>
-				<ItemSelector
-					itemSelectorURL={typeOptions.infoItemSelectorURL}
-					label={field.label}
-					onItemSelect={(item) => {
-						onValueSelect(field.name, {
-							className: item.className,
-							classNameId: item.classNameId,
-							classPK: item.classPK,
-							title: item.title,
-						});
-					}}
-					selectedItemTitle={
-						isWithinCollection
-							? collectionItem.title ||
-							  Liferay.Language.get('collection-item')
-							: value.title
-					}
-					showAddButton={!isWithinCollection}
-				/>
-			</ClayForm.Group>
+			<ItemSelector
+				helpText={field.description}
+				itemSelectorURL={typeOptions.infoItemSelectorURL}
+				label={field.label}
+				onItemSelect={(item) => {
+					onValueSelect(field.name, item);
+				}}
+				selectedItem={
+					isWithinCollection
+						? collectionItem || {
+								title: Liferay.Language.get('collection-item'),
+						  }
+						: value
+				}
+				showEditControls={!isWithinCollection}
+				transformValueCallback={itemSelectorValueToInfoItem}
+			/>
 
 			{typeOptions.enableSelectTemplate && className && (
 				<ClayForm.Group small>
@@ -77,7 +74,7 @@ export const ItemSelectorField = ({field, onValueSelect, value}) => {
 			)}
 		</>
 	);
-};
+}
 
 ItemSelectorField.propTypes = {
 	field: PropTypes.shape({

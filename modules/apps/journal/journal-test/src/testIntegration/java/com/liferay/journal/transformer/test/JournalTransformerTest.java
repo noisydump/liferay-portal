@@ -16,16 +16,13 @@ package com.liferay.journal.transformer.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
-import com.liferay.dynamic.data.mapping.model.DDMTemplate;
 import com.liferay.dynamic.data.mapping.test.util.DDMStructureTestUtil;
-import com.liferay.dynamic.data.mapping.test.util.DDMTemplateTestUtil;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.test.util.JournalTestUtil;
 import com.liferay.journal.util.JournalTransformerListenerRegistry;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.cache.CacheRegistryUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.portlet.PortletRequestModel;
 import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
 import com.liferay.portal.kernel.template.TemplateConstants;
 import com.liferay.portal.kernel.templateparser.TransformerListener;
@@ -37,7 +34,6 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.xml.Attribute;
 import com.liferay.portal.kernel.xml.Document;
@@ -49,6 +45,7 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import java.lang.reflect.Method;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -77,8 +74,6 @@ public class JournalTransformerTest {
 			JournalArticle.class.getName());
 
 		_transformMethod = JournalTestUtil.getJournalUtilTransformMethod();
-
-		_getTokensMethod = JournalTestUtil.getJournalUtilGetTokensMethod();
 	}
 
 	@Test
@@ -92,8 +87,8 @@ public class JournalTransformerTest {
 
 		String content = (String)_transformMethod.invoke(
 			null, null, tokens, Constants.PRINT, "en_US",
-			UnsecureSAXReaderUtil.read(xml), null, script,
-			TemplateConstants.LANG_TYPE_FTL);
+			UnsecureSAXReaderUtil.read(xml), null, script, false,
+			new HashMap<>());
 
 		Assert.assertEquals("Joe Bloggs - print", content);
 	}
@@ -110,26 +105,26 @@ public class JournalTransformerTest {
 			).build(),
 			LanguageUtil.getLanguageId(LocaleUtil.US));
 
-		String script = "$name.getData()";
+		String script = "${name.getData()}";
 
 		String content = (String)_transformMethod.invoke(
 			null, null, tokens, Constants.VIEW, "en_US",
-			UnsecureSAXReaderUtil.read(xml), null, script,
-			TemplateConstants.LANG_TYPE_VM);
+			UnsecureSAXReaderUtil.read(xml), null, script, false,
+			new HashMap<>());
 
 		Assert.assertEquals("Joe Bloggs", content);
 
 		content = (String)_transformMethod.invoke(
 			null, null, tokens, Constants.VIEW, "pt_BR",
-			UnsecureSAXReaderUtil.read(xml), null, script,
-			TemplateConstants.LANG_TYPE_VM);
+			UnsecureSAXReaderUtil.read(xml), null, script, false,
+			new HashMap<>());
 
 		Assert.assertEquals("Joao da Silva", content);
 
 		content = (String)_transformMethod.invoke(
 			null, null, tokens, Constants.VIEW, "fr_CA",
-			UnsecureSAXReaderUtil.read(xml), null, script,
-			TemplateConstants.LANG_TYPE_VM);
+			UnsecureSAXReaderUtil.read(xml), null, script, false,
+			new HashMap<>());
 
 		Assert.assertEquals("Joe Bloggs", content);
 	}
@@ -160,17 +155,17 @@ public class JournalTransformerTest {
 
 		dynamicElement.addElement("nestedElement");
 
-		String script = "$name.getData()";
+		String script = "${name.getData()}";
 
 		String content = (String)_transformMethod.invoke(
 			null, null, tokens, Constants.VIEW, "en_US", document, null, script,
-			TemplateConstants.LANG_TYPE_VM);
+			false, new HashMap<>());
 
 		Assert.assertEquals("Joe Bloggs", content);
 
 		content = (String)_transformMethod.invoke(
 			null, null, tokens, Constants.VIEW, "pt_BR", document, null, script,
-			TemplateConstants.LANG_TYPE_VM);
+			false, new HashMap<>());
 
 		Assert.assertEquals("Joe Bloggs", content);
 	}
@@ -184,12 +179,12 @@ public class JournalTransformerTest {
 		String xml = DDMStructureTestUtil.getSampleStructuredContent(
 			"name", "Joe Bloggs");
 
-		String script = "Hello $name.getData(), Welcome to beta.sample.com.";
+		String script = "Hello ${name.getData()}, Welcome to beta.sample.com.";
 
 		String content = (String)_transformMethod.invoke(
 			null, null, tokens, Constants.VIEW, "en_US",
-			UnsecureSAXReaderUtil.read(xml), null, script,
-			TemplateConstants.LANG_TYPE_VM);
+			UnsecureSAXReaderUtil.read(xml), null, script, false,
+			new HashMap<>());
 
 		Assert.assertEquals(
 			"Hello Joe Bloggs, Welcome to production.sample.com.", content);
@@ -205,8 +200,8 @@ public class JournalTransformerTest {
 
 		String content = (String)_transformMethod.invoke(
 			null, null, tokens, Constants.VIEW, "en_US",
-			UnsecureSAXReaderUtil.read(xml), null, script,
-			TemplateConstants.LANG_TYPE_VM);
+			UnsecureSAXReaderUtil.read(xml), null, script, false,
+			new HashMap<>());
 
 		Assert.assertEquals(
 			String.valueOf(TestPropsValues.getCompanyId()), content);
@@ -215,8 +210,8 @@ public class JournalTransformerTest {
 
 		content = (String)_transformMethod.invoke(
 			null, null, tokens, Constants.VIEW, "en_US",
-			UnsecureSAXReaderUtil.read(xml), null, script,
-			TemplateConstants.LANG_TYPE_VM);
+			UnsecureSAXReaderUtil.read(xml), null, script, false,
+			new HashMap<>());
 
 		Assert.assertEquals(
 			String.valueOf(TestPropsValues.getCompanyId()), content);
@@ -234,71 +229,32 @@ public class JournalTransformerTest {
 
 		String content = (String)_transformMethod.invoke(
 			null, null, tokens, Constants.VIEW, "en_US",
-			UnsecureSAXReaderUtil.read(xml), null, script,
-			TemplateConstants.LANG_TYPE_VM);
+			UnsecureSAXReaderUtil.read(xml), null, script, false,
+			new HashMap<>());
 
-		StringBundler sb = new StringBundler(5);
-
-		sb.append("<script type=\"text/javascript\">");
-		sb.append("Liferay.Service('/assetentry/increment-view-counter',");
-		sb.append("{userId:0, className:'");
-		sb.append("com.liferay.journal.model.JournalArticle', classPK:1});");
-		sb.append("</script>");
-
-		Assert.assertEquals(sb.toString(), content);
-	}
-
-	@Test
-	public void testVMTransformation() throws Exception {
-		Map<String, String> tokens = getTokens();
-
-		_ddmStructure = DDMStructureTestUtil.addStructure(
-			TestPropsValues.getGroupId(), JournalArticle.class.getName());
-
-		_ddmTemplate = DDMTemplateTestUtil.addTemplate(
-			_ddmStructure.getStructureId(),
-			PortalUtil.getClassNameId(JournalArticle.class),
-			TemplateConstants.LANG_TYPE_VM, "$name.getData()");
-
-		String xml = DDMStructureTestUtil.getSampleStructuredContent(
-			"name", "Joe Bloggs");
-
-		String content = (String)_transformMethod.invoke(
-			null, null, tokens, Constants.VIEW, "en_US",
-			UnsecureSAXReaderUtil.read(xml), null,
-			"#parse(\"$templatesPath/" + _ddmTemplate.getTemplateKey() + "\")",
-			TemplateConstants.LANG_TYPE_VM);
-
-		Assert.assertEquals("Joe Bloggs", content);
-
-		content = (String)_transformMethod.invoke(
-			null, null, tokens, Constants.VIEW, "en_US",
-			UnsecureSAXReaderUtil.read(xml), null,
-			"#parse(\"$journalTemplatesPath/" + _ddmTemplate.getTemplateKey() +
-				"\")",
-			TemplateConstants.LANG_TYPE_VM);
-
-		Assert.assertEquals("Joe Bloggs", content);
+		Assert.assertEquals(
+			StringBundler.concat(
+				"<script type=\"text/javascript\">",
+				"Liferay.Service('/assetentry/increment-view-counter',",
+				"{userId:0, className:'",
+				"com.liferay.journal.model.JournalArticle', classPK:1});",
+				"</script>"),
+			content);
 	}
 
 	protected Map<String, String> getTokens() throws Exception {
-		Map<String, String> tokens = (Map)_getTokensMethod.invoke(
-			null, TestPropsValues.getGroupId(), (PortletRequestModel)null,
-			null);
-
-		tokens.put(
+		return HashMapBuilder.put(
 			TemplateConstants.CLASS_NAME_ID,
 			String.valueOf(
 				ClassNameLocalServiceUtil.getClassNameId(
-					DDMStructure.class.getName())));
-		tokens.put(
-			"article_group_id", String.valueOf(TestPropsValues.getGroupId()));
-		tokens.put(
-			"ddm_structure_id", String.valueOf(_ddmStructure.getStructureId()));
-		tokens.put(
-			"company_id", String.valueOf(TestPropsValues.getCompanyId()));
-
-		return tokens;
+					DDMStructure.class.getName()))
+		).put(
+			"article_group_id", String.valueOf(TestPropsValues.getGroupId())
+		).put(
+			"company_id", String.valueOf(TestPropsValues.getCompanyId())
+		).put(
+			"ddm_structure_id", String.valueOf(_ddmStructure.getStructureId())
+		).build();
 	}
 
 	protected void initRegexTransformerListener() {
@@ -337,11 +293,6 @@ public class JournalTransformerTest {
 
 	@DeleteAfterTestRun
 	private DDMStructure _ddmStructure;
-
-	@DeleteAfterTestRun
-	private DDMTemplate _ddmTemplate;
-
-	private Method _getTokensMethod;
 
 	@Inject
 	private JournalTransformerListenerRegistry

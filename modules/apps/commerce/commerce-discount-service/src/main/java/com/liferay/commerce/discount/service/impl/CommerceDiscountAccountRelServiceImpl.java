@@ -17,19 +17,30 @@ package com.liferay.commerce.discount.service.impl;
 import com.liferay.commerce.discount.model.CommerceDiscount;
 import com.liferay.commerce.discount.model.CommerceDiscountAccountRel;
 import com.liferay.commerce.discount.service.base.CommerceDiscountAccountRelServiceBaseImpl;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
-import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionFactory;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.util.List;
 
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
 /**
  * @author Riccardo Alberti
  * @see CommerceDiscountAccountRelServiceBaseImpl
  */
+@Component(
+	enabled = false,
+	property = {
+		"json.web.service.context.name=commerce",
+		"json.web.service.context.path=CommerceDiscountAccountRel"
+	},
+	service = AopService.class
+)
 public class CommerceDiscountAccountRelServiceImpl
 	extends CommerceDiscountAccountRelServiceBaseImpl {
 
@@ -44,7 +55,8 @@ public class CommerceDiscountAccountRelServiceImpl
 
 		return commerceDiscountAccountRelLocalService.
 			addCommerceDiscountAccountRel(
-				commerceDiscountId, commerceAccountId, serviceContext);
+				getUserId(), commerceDiscountId, commerceAccountId,
+				serviceContext);
 	}
 
 	@Override
@@ -80,13 +92,13 @@ public class CommerceDiscountAccountRelServiceImpl
 
 	@Override
 	public CommerceDiscountAccountRel fetchCommerceDiscountAccountRel(
-			long commerceDiscountId, long commerceAccountId)
+			long commerceAccountId, long commerceDiscountId)
 		throws PortalException {
 
 		CommerceDiscountAccountRel commerceDiscountAccountRel =
 			commerceDiscountAccountRelLocalService.
 				fetchCommerceDiscountAccountRel(
-					commerceDiscountId, commerceAccountId);
+					commerceAccountId, commerceDiscountId);
 
 		if (commerceDiscountAccountRel != null) {
 			_commerceDiscountResourcePermission.check(
@@ -156,10 +168,10 @@ public class CommerceDiscountAccountRelServiceImpl
 			commerceDiscountId, name, true);
 	}
 
-	private static volatile ModelResourcePermission<CommerceDiscount>
-		_commerceDiscountResourcePermission =
-			ModelResourcePermissionFactory.getInstance(
-				CommerceDiscountAccountRelServiceImpl.class,
-				"_commerceDiscountResourcePermission", CommerceDiscount.class);
+	@Reference(
+		target = "(model.class.name=com.liferay.commerce.discount.model.CommerceDiscount)"
+	)
+	private ModelResourcePermission<CommerceDiscount>
+		_commerceDiscountResourcePermission;
 
 }

@@ -14,29 +14,18 @@
 
 package com.liferay.commerce.product.content.web.internal.render;
 
-import com.liferay.commerce.account.model.CommerceAccount;
-import com.liferay.commerce.constants.CommerceWebKeys;
-import com.liferay.commerce.context.CommerceContext;
-import com.liferay.commerce.currency.model.CommerceCurrency;
-import com.liferay.commerce.frontend.model.CPContentModel;
-import com.liferay.commerce.frontend.model.ProductSettingsModel;
-import com.liferay.commerce.frontend.util.ProductHelper;
-import com.liferay.commerce.inventory.engine.CommerceInventoryEngine;
-import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.product.catalog.CPCatalogEntry;
-import com.liferay.commerce.product.catalog.CPSku;
-import com.liferay.commerce.product.content.constants.CPContentWebKeys;
 import com.liferay.commerce.product.content.render.CPContentRenderer;
-import com.liferay.commerce.product.content.util.CPContentHelper;
+import com.liferay.commerce.product.type.grouped.constants.GroupedCPTypeConstants;
+import com.liferay.commerce.product.type.grouped.constants.GroupedCPTypeWebKeys;
 import com.liferay.commerce.product.type.grouped.util.GroupedCPTypeHelper;
+import com.liferay.commerce.product.type.simple.constants.SimpleCPTypeConstants;
+import com.liferay.commerce.product.type.virtual.constants.VirtualCPTypeConstants;
+import com.liferay.commerce.product.type.virtual.constants.VirtualCPTypeWebKeys;
 import com.liferay.commerce.product.type.virtual.util.VirtualCPTypeHelper;
-import com.liferay.commerce.service.CommerceOrderItemLocalService;
 import com.liferay.frontend.taglib.servlet.taglib.util.JSPRenderer;
-import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
-import com.liferay.portal.kernel.util.WebKeys;
 
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -50,15 +39,16 @@ import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Gianmarco Brunialti Masera
+ * @author Alessio Antonio Rendina
  */
 @Component(
 	enabled = false, immediate = true,
 	property = {
 		"commerce.product.content.renderer.key=" + DefaultCPContentRenderer.KEY,
 		"commerce.product.content.renderer.order=" + Integer.MIN_VALUE,
-		"commerce.product.content.renderer.type=grouped",
-		"commerce.product.content.renderer.type=simple",
-		"commerce.product.content.renderer.type=virtual"
+		"commerce.product.content.renderer.type=" + GroupedCPTypeConstants.NAME,
+		"commerce.product.content.renderer.type=" + SimpleCPTypeConstants.NAME,
+		"commerce.product.content.renderer.type=" + VirtualCPTypeConstants.NAME
 	},
 	service = CPContentRenderer.class
 )
@@ -76,7 +66,7 @@ public class DefaultCPContentRenderer implements CPContentRenderer {
 		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
 			"content.Language", locale, getClass());
 
-		return LanguageUtil.get(resourceBundle, KEY);
+		return _language.get(resourceBundle, KEY);
 	}
 
 	@Override
@@ -87,108 +77,14 @@ public class DefaultCPContentRenderer implements CPContentRenderer {
 		throws Exception {
 
 		httpServletRequest.setAttribute(
-			"cpContentModel", _getCPContent(httpServletRequest));
+			GroupedCPTypeWebKeys.GROUPED_CP_TYPE_HELPER, _groupedCPTypeHelper);
 		httpServletRequest.setAttribute(
-			"groupedCPTypeHelper", _groupedCPTypeHelper);
-		httpServletRequest.setAttribute(
-			"virtualCPTypeHelper", _virtualCPTypeHelper);
+			VirtualCPTypeWebKeys.VIRTUAL_CP_TYPE_HELPER, _virtualCPTypeHelper);
 
 		_jspRenderer.renderJSP(
 			_servletContext, httpServletRequest, httpServletResponse,
 			"/product_detail/render/view.jsp");
 	}
-
-	private CPContentModel _getCPContent(HttpServletRequest httpServletRequest)
-		throws Exception {
-
-		CommerceContext commerceContext =
-			(CommerceContext)httpServletRequest.getAttribute(
-				CommerceWebKeys.COMMERCE_CONTEXT);
-		CPContentHelper cpContentHelper =
-			(CPContentHelper)httpServletRequest.getAttribute(
-				CPContentWebKeys.CP_CONTENT_HELPER);
-		ThemeDisplay themeDisplay =
-			(ThemeDisplay)httpServletRequest.getAttribute(
-				WebKeys.THEME_DISPLAY);
-
-		CPCatalogEntry cpCatalogEntry = cpContentHelper.getCPCatalogEntry(
-			httpServletRequest);
-
-		CPSku cpSku = cpContentHelper.getDefaultCPSku(cpCatalogEntry);
-
-		long commerceOrderId = 0;
-		boolean inCart = false;
-		int stockQuantity = 0;
-		boolean lowStock = false;
-
-		CommerceOrder commerceOrder = commerceContext.getCommerceOrder();
-
-		if (commerceOrder != null) {
-			commerceOrderId = commerceOrder.getCommerceOrderId();
-
-			inCart = _isInCart(cpSku, commerceOrderId);
-		}
-
-		if (cpSku != null) {
-			ProductSettingsModel productSettingsModel =
-				_productHelper.getProductSettingsModel(cpSku.getCPInstanceId());
-
-			stockQuantity = _commerceInventoryEngine.getStockQuantity(
-				_portal.getCompanyId(httpServletRequest), cpSku.getSku());
-
-			lowStock =
-				(stockQuantity > 0) &&
-				(stockQuantity <= productSettingsModel.getLowStockQuantity());
-		}
-
-		CommerceAccount commerceAccount = commerceContext.getCommerceAccount();
-
-		long commerceAccountId = 0;
-
-		if (commerceAccount != null) {
-			commerceAccountId = commerceAccount.getCommerceAccountId();
-		}
-
-		CommerceCurrency commerceCurrency =
-			commerceContext.getCommerceCurrency();
-
-		String pathThemeImages = themeDisplay.getPathThemeImages();
-
-		String spritemap = pathThemeImages + "/icons.svg";
-
-		if (pathThemeImages.contains("classic")) {
-			spritemap = pathThemeImages + "/lexicon/icons.svg";
-		}
-
-		return new CPContentModel(
-			commerceAccountId, commerceContext.getCommerceChannelId(),
-			cpCatalogEntry.getCPDefinitionId(), commerceCurrency.getCode(),
-			inCart,
-			cpContentHelper.isInWishList(cpSku, cpCatalogEntry, themeDisplay),
-			lowStock, commerceOrderId, spritemap, stockQuantity);
-	}
-
-	private boolean _isInCart(CPSku cpSku, long commerceOrderId) {
-		if (cpSku != null) {
-			int commerceOrderItemsCount =
-				_commerceOrderItemLocalService.getCommerceOrderItemsCount(
-					commerceOrderId, cpSku.getCPInstanceId());
-
-			if (commerceOrderItemsCount > 0) {
-				return true;
-			}
-
-			return false;
-		}
-
-		return false;
-	}
-
-	@Reference
-	private CommerceInventoryEngine _commerceInventoryEngine;
-
-	@Reference
-	private CommerceOrderItemLocalService _commerceOrderItemLocalService;
 
 	@Reference
 	private GroupedCPTypeHelper _groupedCPTypeHelper;
@@ -197,10 +93,7 @@ public class DefaultCPContentRenderer implements CPContentRenderer {
 	private JSPRenderer _jspRenderer;
 
 	@Reference
-	private Portal _portal;
-
-	@Reference
-	private ProductHelper _productHelper;
+	private Language _language;
 
 	@Reference(
 		target = "(osgi.web.symbolicname=com.liferay.commerce.product.content.web)"

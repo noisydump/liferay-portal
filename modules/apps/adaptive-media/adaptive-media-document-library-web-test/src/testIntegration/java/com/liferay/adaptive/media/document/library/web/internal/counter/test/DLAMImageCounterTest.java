@@ -83,7 +83,7 @@ public class DLAMImageCounterTest {
 		throws Exception {
 
 		Assert.assertEquals(
-			0,
+			_WELCOME_SITE_INITIALIZER_IMAGES_COUNT,
 			_amImageCounter.countExpectedAMImageEntries(
 				_company1.getCompanyId()));
 
@@ -92,10 +92,10 @@ public class DLAMImageCounterTest {
 				_group1, _user1.getUserId());
 
 		_dlAppLocalService.addFileEntry(
-			_user1.getUserId(), _group1.getGroupId(),
+			null, _user1.getUserId(), _group1.getGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			RandomTestUtil.randomString() + ".jpg", ContentTypes.IMAGE_JPEG,
-			_getImageBytes(), serviceContext);
+			_getImageBytes(), null, null, serviceContext);
 
 		_portletFileRepository.addPortletFileEntry(
 			_group1.getGroupId(), _user1.getUserId(),
@@ -105,7 +105,7 @@ public class DLAMImageCounterTest {
 			RandomTestUtil.randomString(), ContentTypes.IMAGE_JPEG, true);
 
 		Assert.assertEquals(
-			1,
+			_WELCOME_SITE_INITIALIZER_IMAGES_COUNT + 1,
 			_amImageCounter.countExpectedAMImageEntries(
 				_company1.getCompanyId()));
 	}
@@ -115,11 +115,11 @@ public class DLAMImageCounterTest {
 		throws Exception {
 
 		Assert.assertEquals(
-			0,
+			_WELCOME_SITE_INITIALIZER_IMAGES_COUNT,
 			_amImageCounter.countExpectedAMImageEntries(
 				_company1.getCompanyId()));
 		Assert.assertEquals(
-			0,
+			_WELCOME_SITE_INITIALIZER_IMAGES_COUNT,
 			_amImageCounter.countExpectedAMImageEntries(
 				_company2.getCompanyId()));
 
@@ -128,10 +128,10 @@ public class DLAMImageCounterTest {
 				_group1, _user1.getUserId());
 
 		_dlAppLocalService.addFileEntry(
-			_user1.getUserId(), _group1.getGroupId(),
+			null, _user1.getUserId(), _group1.getGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			RandomTestUtil.randomString() + ".jpg", ContentTypes.IMAGE_JPEG,
-			_getImageBytes(), serviceContext);
+			_getImageBytes(), null, null, serviceContext);
 
 		_portletFileRepository.addPortletFileEntry(
 			_group1.getGroupId(), _user1.getUserId(),
@@ -141,11 +141,11 @@ public class DLAMImageCounterTest {
 			RandomTestUtil.randomString(), ContentTypes.IMAGE_JPEG, true);
 
 		Assert.assertEquals(
-			1,
+			_WELCOME_SITE_INITIALIZER_IMAGES_COUNT + 1,
 			_amImageCounter.countExpectedAMImageEntries(
 				_company1.getCompanyId()));
 		Assert.assertEquals(
-			0,
+			_WELCOME_SITE_INITIALIZER_IMAGES_COUNT,
 			_amImageCounter.countExpectedAMImageEntries(
 				_company2.getCompanyId()));
 	}
@@ -155,7 +155,7 @@ public class DLAMImageCounterTest {
 		throws Exception {
 
 		Assert.assertEquals(
-			0,
+			_WELCOME_SITE_INITIALIZER_IMAGES_COUNT,
 			_amImageCounter.countExpectedAMImageEntries(
 				_company1.getCompanyId()));
 
@@ -164,13 +164,13 @@ public class DLAMImageCounterTest {
 				_group1, _user1.getUserId());
 
 		FileEntry fileEntry = _dlAppLocalService.addFileEntry(
-			_user1.getUserId(), _group1.getGroupId(),
+			null, _user1.getUserId(), _group1.getGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			RandomTestUtil.randomString() + ".jpg", ContentTypes.IMAGE_JPEG,
-			_getImageBytes(), serviceContext);
+			_getImageBytes(), null, null, serviceContext);
 
 		Assert.assertEquals(
-			1,
+			_WELCOME_SITE_INITIALIZER_IMAGES_COUNT + 1,
 			_amImageCounter.countExpectedAMImageEntries(
 				_company1.getCompanyId()));
 
@@ -179,7 +179,7 @@ public class DLAMImageCounterTest {
 			fileEntry.getFileEntryId());
 
 		Assert.assertEquals(
-			0,
+			_WELCOME_SITE_INITIALIZER_IMAGES_COUNT,
 			_amImageCounter.countExpectedAMImageEntries(
 				_company1.getCompanyId()));
 	}
@@ -189,7 +189,7 @@ public class DLAMImageCounterTest {
 		throws Exception {
 
 		Assert.assertEquals(
-			0,
+			_WELCOME_SITE_INITIALIZER_IMAGES_COUNT,
 			_amImageCounter.countExpectedAMImageEntries(
 				_company1.getCompanyId()));
 
@@ -198,20 +198,20 @@ public class DLAMImageCounterTest {
 				_group1, _user1.getUserId());
 
 		_dlAppLocalService.addFileEntry(
-			_user1.getUserId(), _group1.getGroupId(),
+			null, _user1.getUserId(), _group1.getGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			RandomTestUtil.randomString() + ".jpg", ContentTypes.IMAGE_JPEG,
-			_getImageBytes(), serviceContext);
+			_getImageBytes(), null, null, serviceContext);
 
 		_dlAppLocalService.addFileEntry(
-			_user1.getUserId(), _group1.getGroupId(),
+			null, _user1.getUserId(), _group1.getGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			RandomTestUtil.randomString(),
 			ContentTypes.APPLICATION_OCTET_STREAM,
-			TestDataConstants.TEST_BYTE_ARRAY, serviceContext);
+			TestDataConstants.TEST_BYTE_ARRAY, null, null, serviceContext);
 
 		Assert.assertEquals(
-			1,
+			_WELCOME_SITE_INITIALIZER_IMAGES_COUNT + 1,
 			_amImageCounter.countExpectedAMImageEntries(
 				_company1.getCompanyId()));
 	}
@@ -219,6 +219,8 @@ public class DLAMImageCounterTest {
 	private byte[] _getImageBytes() throws Exception {
 		return FileUtil.getBytes(DLAMImageCounterTest.class, "image.jpg");
 	}
+
+	private static final int _WELCOME_SITE_INITIALIZER_IMAGES_COUNT = 1;
 
 	@Inject(
 		filter = "adaptive.media.key=document-library",

@@ -19,13 +19,14 @@ import React, {useState} from 'react';
 import {ImageSelector} from '../../../common/components/ImageSelector';
 import {ImageSelectorSize} from '../../../common/components/ImageSelectorSize';
 import MappingSelector from '../../../common/components/MappingSelector';
+import {useId} from '../../../core/hooks/useId';
 import {ConfigurationFieldPropTypes} from '../../../prop-types/index';
 import {EDITABLE_TYPES} from '../../config/constants/editableTypes';
-import {FILE_ENTRY_CLASS_NAME} from '../../config/constants/fileEntryClassName';
 import {VIEWPORT_SIZES} from '../../config/constants/viewportSizes';
-import {config} from '../../config/index';
-import {useSelector} from '../../store/index';
-import {useId} from '../../utils/useId';
+import {useSelector} from '../../contexts/StoreContext';
+import isMapped from '../../utils/editable-value/isMapped';
+import isMappedToCollection from '../../utils/editable-value/isMappedToCollection';
+import isMappedToInfoItem from '../../utils/editable-value/isMappedToInfoItem';
 
 const IMAGE_SOURCES = {
 	direct: {
@@ -39,7 +40,7 @@ const IMAGE_SOURCES = {
 	},
 };
 
-export const ImageSelectorField = ({field, onValueSelect, value = {}}) => {
+export function ImageSelectorField({field, onValueSelect, value = {}}) {
 	const imageSourceInputId = useId();
 
 	const selectedViewportSize = useSelector(
@@ -47,7 +48,7 @@ export const ImageSelectorField = ({field, onValueSelect, value = {}}) => {
 	);
 
 	const [imageSource, setImageSource] = useState(() =>
-		value.fieldId || value.mappedField
+		isMapped(value)
 			? IMAGE_SOURCES.mapping.value
 			: IMAGE_SOURCES.direct.value
 	);
@@ -84,40 +85,43 @@ export const ImageSelectorField = ({field, onValueSelect, value = {}}) => {
 			{imageSource === IMAGE_SOURCES.direct.value ? (
 				<>
 					<ImageSelector
-						imageTitle={value.title}
+						fileEntryId={value.fileEntryId}
+						imageTitle={value.title || value.url}
 						label={field.label}
 						onClearButtonPressed={() => handleImageChanged({})}
 						onImageSelected={handleImageChanged}
 					/>
 
-					{config.adaptiveMediaEnabled && value?.fileEntryId && (
+					{value?.fileEntryId && (
 						<ImageSelectorSize
-							fileEntryId={value.fileEntryId}
+							fieldValue={{fileEntryId: value.fileEntryId}}
 							imageSizeId="auto"
 						/>
 					)}
 				</>
 			) : (
 				<>
-					<MappingSelector
-						fieldType={EDITABLE_TYPES.backgroundImage}
-						mappedItem={value}
-						onMappingSelect={handleImageChanged}
-					/>
+					{selectedViewportSize === VIEWPORT_SIZES.desktop ? (
+						<MappingSelector
+							fieldType={EDITABLE_TYPES.backgroundImage}
+							mappedItem={value}
+							onMappingSelect={handleImageChanged}
+						/>
+					) : null}
 
-					{config.adaptiveMediaEnabled &&
-						value?.className === FILE_ENTRY_CLASS_NAME &&
-						value?.classPK && (
-							<ImageSelectorSize
-								fileEntryId={value.classPK}
-								imageSizeId="auto"
-							/>
-						)}
+					{(value?.fileEntryId ||
+						isMappedToInfoItem(value) ||
+						isMappedToCollection(value)) && (
+						<ImageSelectorSize
+							fieldValue={value}
+							imageSizeId="auto"
+						/>
+					)}
 				</>
 			)}
 		</>
 	);
-};
+}
 
 ImageSelectorField.propTypes = {
 	field: PropTypes.shape(ConfigurationFieldPropTypes),

@@ -18,20 +18,30 @@ import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.tax.engine.fixed.model.CommerceTaxFixedRate;
 import com.liferay.commerce.tax.engine.fixed.service.base.CommerceTaxFixedRateServiceBaseImpl;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
-import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionFactory;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.OrderByComparator;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.util.List;
+
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Marco Leo
  * @author Alessio Antonio Rendina
  */
+@Component(
+	enabled = false,
+	property = {
+		"json.web.service.context.name=commerce",
+		"json.web.service.context.path=CommerceTaxFixedRate"
+	},
+	service = AopService.class
+)
 public class CommerceTaxFixedRateServiceImpl
 	extends CommerceTaxFixedRateServiceBaseImpl {
 
@@ -46,20 +56,20 @@ public class CommerceTaxFixedRateServiceImpl
 		throws PortalException {
 
 		return commerceTaxFixedRateService.addCommerceTaxFixedRate(
-			serviceContext.getUserId(), serviceContext.getScopeGroupId(),
-			commerceTaxMethodId, cpTaxCategoryId, rate);
+			serviceContext.getScopeGroupId(), commerceTaxMethodId,
+			cpTaxCategoryId, rate);
 	}
 
 	@Override
 	public CommerceTaxFixedRate addCommerceTaxFixedRate(
-			long userId, long groupId, long commerceTaxMethodId,
-			long cpTaxCategoryId, double rate)
+			long groupId, long commerceTaxMethodId, long cpTaxCategoryId,
+			double rate)
 		throws PortalException {
 
 		_checkCommerceChannel(groupId);
 
 		return commerceTaxFixedRateLocalService.addCommerceTaxFixedRate(
-			userId, groupId, commerceTaxMethodId, cpTaxCategoryId, rate);
+			getUserId(), groupId, commerceTaxMethodId, cpTaxCategoryId, rate);
 	}
 
 	@Override
@@ -154,14 +164,13 @@ public class CommerceTaxFixedRateServiceImpl
 			getPermissionChecker(), commerceChannel, ActionKeys.UPDATE);
 	}
 
-	private static volatile ModelResourcePermission<CommerceChannel>
-		_commerceChannelModelResourcePermission =
-			ModelResourcePermissionFactory.getInstance(
-				CommerceTaxFixedRateServiceImpl.class,
-				"_commerceChannelModelResourcePermission",
-				CommerceChannel.class);
-
-	@ServiceReference(type = CommerceChannelLocalService.class)
+	@Reference
 	private CommerceChannelLocalService _commerceChannelLocalService;
+
+	@Reference(
+		target = "(model.class.name=com.liferay.commerce.product.model.CommerceChannel)"
+	)
+	private ModelResourcePermission<CommerceChannel>
+		_commerceChannelModelResourcePermission;
 
 }

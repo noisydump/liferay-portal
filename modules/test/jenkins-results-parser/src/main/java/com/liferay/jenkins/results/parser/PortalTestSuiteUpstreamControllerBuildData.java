@@ -45,23 +45,11 @@ public class PortalTestSuiteUpstreamControllerBuildData
 		}
 
 		return JenkinsResultsParserUtil.combine(
-			getTestrayBuildType(), " - ", String.valueOf(getBuildNumber()),
+			getTestrayRoutineName(), " - ", String.valueOf(getBuildNumber()),
 			" - ",
 			JenkinsResultsParserUtil.toDateString(
 				new Date(getStartTime()), "yyyy-MM-dd[HH:mm:ss]",
 				"America/Los_Angeles"));
-	}
-
-	public String getTestrayBuildType() {
-		String testrayProjectName = getTestrayProjectName();
-
-		if (testrayProjectName == null) {
-			return null;
-		}
-
-		return JenkinsResultsParserUtil.combine(
-			"[", getPortalUpstreamBranchName(), "] ci:test:",
-			getTestSuiteName());
 	}
 
 	public String getTestrayProjectName() {
@@ -72,6 +60,18 @@ public class PortalTestSuiteUpstreamControllerBuildData
 		}
 
 		return null;
+	}
+
+	public String getTestrayRoutineName() {
+		String testrayProjectName = getTestrayProjectName();
+
+		if (testrayProjectName == null) {
+			return null;
+		}
+
+		return JenkinsResultsParserUtil.combine(
+			"[", getPortalUpstreamBranchName(), "] ci:test:",
+			getTestSuiteName());
 	}
 
 	public String getTestSuiteName() {
@@ -138,6 +138,13 @@ public class PortalTestSuiteUpstreamControllerBuildData
 	}
 
 	private String _getPortalUpstreamBranchName() {
+		String portalUpstreamBranch = getBuildParameter(
+			"PORTAL_UPSTREAM_BRANCH");
+
+		if (!JenkinsResultsParserUtil.isNullOrEmpty(portalUpstreamBranch)) {
+			return portalUpstreamBranch;
+		}
+
 		String jobName = getJobName();
 
 		Matcher matcher = _jobNamePattern.matcher(jobName);
