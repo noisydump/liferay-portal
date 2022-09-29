@@ -37,7 +37,6 @@ import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.service.CommerceAddressService;
 import com.liferay.commerce.service.CommerceOrderService;
 import com.liferay.commerce.service.CommerceOrderTypeService;
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.portlet.PortletProvider;
@@ -46,6 +45,7 @@ import com.liferay.portal.kernel.portlet.PortletQName;
 import com.liferay.portal.kernel.portlet.PortletURLFactory;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
@@ -210,9 +210,17 @@ public class EditCommerceOrderMVCActionCommand extends BaseMVCActionCommand {
 			ActionRequest actionRequest, long commerceOrderId)
 		throws Exception {
 
-		_commerceOrderHttpHelper.setCurrentCommerceOrder(
-			_portal.getHttpServletRequest(actionRequest),
-			_commerceOrderService.getCommerceOrder(commerceOrderId));
+		CommerceOrder currentCommerceOrder =
+			_commerceOrderHttpHelper.getCurrentCommerceOrder(
+				_portal.getHttpServletRequest(actionRequest));
+
+		if ((currentCommerceOrder == null) ||
+			(commerceOrderId != currentCommerceOrder.getCommerceOrderId())) {
+
+			_commerceOrderHttpHelper.setCurrentCommerceOrder(
+				_portal.getHttpServletRequest(actionRequest),
+				_commerceOrderService.getCommerceOrder(commerceOrderId));
+		}
 	}
 
 	private void _addBillingAddress(ActionRequest actionRequest)

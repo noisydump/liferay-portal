@@ -1,6 +1,7 @@
 @component-name = "portal-solutions"
 definition {
 
+	property custom.properties = "feature.flag.LPS-163118=true";
 	property osgi.modules.includes = "site-initializer-testray";
 	property portal.release = "false";
 	property portal.upstream = "true";
@@ -47,6 +48,10 @@ definition {
 
 			Testray.addNewComponent(
 				componentName = "Components_1 Project 1",
+				teamName = "Components_1 Team");
+
+			Testray.addNewComponent(
+				componentName = "Components_1 Project 2",
 				teamName = "Components_1 Team");
 
 			Refresh();
@@ -145,7 +150,7 @@ definition {
 
 	@description = "This is a test for LPS-156793 - Verify if as an Administrator I am able to edit Cases without Subcomponents"
 	@priority = "5"
-	test AdminCanEditCasee {
+	test AdminCanEditCase {
 		task ("Given that the user goes to project page") {
 			Testray.goToProjectPage(projectName = "Projects_1 Project");
 		}
@@ -176,7 +181,7 @@ definition {
 			TestrayCases.editCases(
 				caseName = "Cases_1 Case Edited",
 				caseTypeId = "Automated Functional Test",
-				componentId = "Smoke",
+				componentId = "Components_1 Project 2",
 				description = "Cases_1 Case Description Edited",
 				duration = "30",
 				priority = "4",
@@ -187,7 +192,7 @@ definition {
 			TestrayCases.verifyCase(
 				caseName = "Cases_1 Case Edited",
 				casePriority = "4",
-				key_caseComponent = "Smoke");
+				key_caseComponent = "Components_1 Project 2");
 		}
 	}
 

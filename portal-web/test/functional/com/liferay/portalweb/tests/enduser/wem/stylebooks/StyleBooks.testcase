@@ -160,9 +160,9 @@ definition {
 			StyleBooks.expandSection(sectionName = "Headings");
 
 			Type(
-				key_fieldLabel = "Heading 5 Font Size",
-				locator1 = "TextInput#GENERIC_TEXT_INPUT",
-				value1 = "2rem");
+				ariaLabel = "Heading 5 Font Size",
+				locator1 = "TextInput#ANY_WITH_AIRA_LABEL",
+				value1 = "2");
 
 			StyleBooks.clickManagementBar();
 
@@ -494,8 +494,6 @@ definition {
 	@description = "This is a test for LPS-142050. In style books, selecting Custom in units could insert any type of character."
 	@priority = "3"
 	test ConfigureCustomUnit {
-		property custom.properties = "feature.flag.LPS-143206=true";
-
 		task ("Given a site designer has a style book") {
 			JSONStylebooks.addStyleBookEntry(
 				groupName = "Test Site Name",

@@ -113,6 +113,9 @@ components:
                     type: object
                 portlet:
                     type: boolean
+                restContextPath:
+                    readOnly: true
+                    type: string
                 scope:
                     type: string
                 status:
@@ -123,9 +126,8 @@ components:
                 system:
                     readOnly: true
                     type: boolean
-                titleObjectFieldId:
-                    format: int64
-                    type: integer
+                titleObjectFieldName:
+                    type: string
             type: object
         ObjectField:
             properties:
@@ -258,9 +260,8 @@ components:
                     format: int64
                     readOnly: true
                     type: integer
-                objectFieldId:
-                    format: int64
-                    type: integer
+                objectFieldName:
+                    type: string
                 priority:
                     format: int32
                     type: integer
@@ -321,6 +322,8 @@ components:
                         type: string
                     type: object
                 name:
+                    type: string
+                objectDefinitionExternalReferenceCode2:
                     type: string
                 objectDefinitionId1:
                     format: int64
@@ -507,7 +510,7 @@ components:
 info:
     description:
         "A Java client JAR is available for use with the group ID 'com.liferay', artifact ID
-        'com.liferay.object.admin.rest.client', and version '1.0.36'."
+        'com.liferay.object.admin.rest.client', and version '1.0.38'."
     license:
         name: "Apache 2.0"
         url: "http://www.apache.org/licenses/LICENSE-2.0.html"
@@ -654,6 +657,51 @@ paths:
             tags: ["ObjectDefinition"]
         post:
             operationId: postObjectDefinition
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/ObjectDefinition"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/ObjectDefinition"
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ObjectDefinition"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/ObjectDefinition"
+            tags: ["ObjectDefinition"]
+    "/object-definitions/by-external-reference-code/{externalReferenceCode}":
+        get:
+            operationId: getObjectDefinitionByExternalReferenceCode
+            parameters:
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ObjectDefinition"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/ObjectDefinition"
+            tags: ["ObjectDefinition"]
+        put:
+            operationId: putObjectDefinitionByExternalReferenceCode
+            parameters:
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
             requestBody:
                 content:
                     application/json:

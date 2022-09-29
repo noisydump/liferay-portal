@@ -785,7 +785,7 @@ definition {
 			value1 = "Test");
 	}
 
-	@description = "This is a test for COMMERCE-6264. Add/update/delete tax category from UI"
+	@description = "This is a test for COMMERCE-6264 Add/update/delete tax category from UI/COMMERCE-9363 UI to show External Reference code of Tax Categories"
 	@priority = "3"
 	test TaxCategoryLifecycle {
 		property portal.acceptance = "false";
@@ -798,22 +798,36 @@ definition {
 
 		CommerceEntry.addTaxCategory(
 			keyDescription = "Test Description",
-			keyName = "Test",
+			keyName = "Test Tax Category",
 			keyReferenceCode = "Test Reference");
 
 		CommerceEntry.viewTaxCategory(
 			keyDescription = "Test Description",
-			keyName = "Test",
+			keyName = "Test Tax Category",
 			keyReferenceCode = "Test Reference");
 
-		CommerceNavigator.gotoEntry(entryName = "Test");
+		CommerceEntry.addTaxCategory(
+			keyDescription = "Test Description 2",
+			keyName = "Test Tax Category 2",
+			keyReferenceCode = "Test Reference 2");
+
+		Click(
+			key_entry = "Test Tax Category 2",
+			locator1 = "CommerceNavigation#ANY_ENTRY_NAME");
 
 		CommerceEntry.editTaxCategory(
-			keyDescription = "Test Description2",
-			keyName = "Test2",
-			keyReferenceCode = "Test Reference2");
+			keyDescription = "New Description",
+			keyName = "New Tax Category",
+			keyReferenceCode = "New Reference");
 
-		CommerceEntry.deleteTaxCategory(keyName = "Test2");
+		CommerceEntry.assertUniqueTaxCategoryErc(
+			keyName = "New Tax Category",
+			keyReferenceCode = "Test Reference",
+			uniqueERC = "true");
+
+		for (var taxCategory : list "Test Tax Category, New Tax Category") {
+			CommerceEntry.deleteTaxCategory(keyName = "taxCategory");
+		}
 	}
 
 }

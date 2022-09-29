@@ -61,6 +61,12 @@ definition {
 		var fileExists = FileUtil.exists("${dependencyFilePath}");
 
 		if ("${fileExists}" == "false") {
+			var testBaseDirEndsWith = StringUtil.endsWith("${testBaseDir}", "/");
+
+			if ("${testBaseDirEndsWith}" == "false") {
+				var testBaseDir = "${testBaseDir}/";
+			}
+
 			var dependencyFilePath = "${testBaseDir}${testDependenciesDir}/${fileName}";
 
 			var globalFileExists = FileUtil.exists("${dependencyFilePath}");

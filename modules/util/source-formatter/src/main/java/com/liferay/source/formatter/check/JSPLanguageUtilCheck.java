@@ -15,6 +15,7 @@
 package com.liferay.source.formatter.check;
 
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.tools.ToolsUtil;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -28,7 +29,7 @@ public class JSPLanguageUtilCheck extends BaseFileCheck {
 	protected String doProcess(
 		String fileName, String absolutePath, String content) {
 
-		Matcher matcher = _languageUtilPattern.matcher(content);
+		Matcher matcher = _languageUtilPattern1.matcher(content);
 
 		while (matcher.find()) {
 			if (isJavaSource(content, matcher.start(), true)) {
@@ -38,10 +39,23 @@ public class JSPLanguageUtilCheck extends BaseFileCheck {
 			}
 		}
 
+		matcher = _languageUtilPattern2.matcher(content);
+
+		while (matcher.find()) {
+			if (!ToolsUtil.isInsideQuotes(content, matcher.start())) {
+				addMessage(
+					fileName,
+					"Use <liferay-ui:message> tag instead of LanguageUtil.get",
+					getLineNumber(content, matcher.start()));
+			}
+		}
+
 		return content;
 	}
 
-	private static final Pattern _languageUtilPattern = Pattern.compile(
+	private static final Pattern _languageUtilPattern1 = Pattern.compile(
 		"LanguageUtil\\.get\\(locale,");
+	private static final Pattern _languageUtilPattern2 = Pattern.compile(
+		"<%= LanguageUtil\\.get\\(");
 
 }

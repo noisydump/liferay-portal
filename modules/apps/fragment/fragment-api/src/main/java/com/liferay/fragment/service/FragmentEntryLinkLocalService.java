@@ -142,6 +142,9 @@ public interface FragmentEntryLinkLocalService
 
 	public void deleteFragmentEntryLinks(long groupId);
 
+	public void deleteFragmentEntryLinks(
+		long groupId, long plid, boolean deleted);
+
 	public void deleteFragmentEntryLinks(long[] fragmentEntryLinkIds)
 		throws PortalException;
 
@@ -439,6 +442,10 @@ public interface FragmentEntryLinkLocalService
 		throws PortalException;
 
 	public void updateClassedModel(long plid);
+
+	public FragmentEntryLink updateDeleted(
+			long fragmentEntryLinkId, boolean deleted)
+		throws PortalException;
 
 	/**
 	 * Updates the fragment entry link in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.

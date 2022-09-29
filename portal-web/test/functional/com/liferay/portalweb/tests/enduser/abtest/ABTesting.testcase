@@ -97,7 +97,9 @@ definition {
 
 			Click.clickNoMouseOver(locator1 = "ABTest#PADLOCK_ICON");
 
-			AssertElementPresent(locator1 = "ABTest#EXPERIENCE_LOCKED_MESSAGE");
+			AssertVisible(
+				key_content = "Edit is not allowed for this experience because there is an A/B test in progress.",
+				locator1 = "Tooltip#POPOVER_BODY_CONTENT");
 		}
 	}
 
@@ -624,6 +626,48 @@ definition {
 			Click(locator1 = "ABTest#X_BUTTON_TARGET_ID_ELEMENT");
 
 			ABTest.editOrDeleteABTest(value = "Delete");
+		}
+	}
+
+	@description = "LPS-152323 Bug: Element ID field gets empty after changing from variant"
+	@priority = "3"
+	test CheckElementIdWithVariant {
+		task ("Create a page with a button fragment") {
+			ContentPages.gotoPageEditor();
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Button");
+
+			Button.clickPublish();
+		}
+
+		task ("Create a AB Test") {
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/test-site-name/content-page");
+
+			ABTest.createABTest(
+				goal = "Click",
+				testTitle = "AB test title");
+		}
+
+		task ("Select the button as click goal ") {
+			var idbutton = ABTest.takeElementID();
+
+			ABTest.selectElementID();
+		}
+
+		task ("Create a variant ") {
+			ABTest.createVariant(variantName = "Variant name");
+		}
+
+		task ("Change to 'Control' variant") {
+			ABTest.switchVariant(variantName = "Variant name");
+		}
+
+		task ("Assert that the Element ID still set") {
+			AssertVisible(
+				key_id = "${idbutton}",
+				locator1 = "ABTest#ELEMENT_ID_VALUE_ID_BOX");
 		}
 	}
 

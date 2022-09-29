@@ -42,8 +42,10 @@ import com.liferay.petra.sql.dsl.Column;
 import com.liferay.petra.sql.dsl.Table;
 import com.liferay.portal.kernel.dao.db.DBInspector;
 import com.liferay.portal.kernel.dao.jdbc.DataAccess;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.messaging.MessageBus;
+import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.UserNotificationEvent;
 import com.liferay.portal.kernel.model.UserNotificationEventTable;
@@ -413,6 +415,13 @@ public class ObjectDefinitionLocalServiceTest {
 				new BaseSystemObjectDefinitionMetadata() {
 
 					@Override
+					public BaseModel<?> deleteBaseModel(BaseModel<?> baseModel)
+						throws PortalException {
+
+						return null;
+					}
+
+					@Override
 					public String getJaxRsApplicationName() {
 						return "";
 					}
@@ -512,6 +521,13 @@ public class ObjectDefinitionLocalServiceTest {
 			_objectDefinitionLocalService.addOrUpdateSystemObjectDefinition(
 				TestPropsValues.getCompanyId(),
 				new BaseSystemObjectDefinitionMetadata() {
+
+					@Override
+					public BaseModel<?> deleteBaseModel(BaseModel<?> baseModel)
+						throws PortalException {
+
+						return null;
+					}
 
 					@Override
 					public String getJaxRsApplicationName() {
@@ -1328,7 +1344,8 @@ public class ObjectDefinitionLocalServiceTest {
 		}
 
 		_assertSystemObjectFields(
-			new ObjectFieldBuilder().businessType(
+			new ObjectFieldBuilder(
+			).businessType(
 				ObjectFieldConstants.BUSINESS_TYPE_DATE
 			).dbColumnName(
 				objectEntryTable.createDate.getName()
@@ -1347,7 +1364,8 @@ public class ObjectDefinitionLocalServiceTest {
 		Assert.assertTrue(iterator.hasNext());
 
 		_assertSystemObjectFields(
-			new ObjectFieldBuilder().businessType(
+			new ObjectFieldBuilder(
+			).businessType(
 				ObjectFieldConstants.BUSINESS_TYPE_TEXT
 			).dbColumnName(
 				objectEntryTable.userName.getName()
@@ -1367,7 +1385,8 @@ public class ObjectDefinitionLocalServiceTest {
 			Assert.assertTrue(iterator.hasNext());
 
 			_assertSystemObjectFields(
-				new ObjectFieldBuilder().businessType(
+				new ObjectFieldBuilder(
+				).businessType(
 					ObjectFieldConstants.BUSINESS_TYPE_TEXT
 				).dbColumnName(
 					objectEntryTable.externalReferenceCode.getName()
@@ -1388,7 +1407,8 @@ public class ObjectDefinitionLocalServiceTest {
 		Assert.assertTrue(iterator.hasNext());
 
 		_assertSystemObjectFields(
-			new ObjectFieldBuilder().businessType(
+			new ObjectFieldBuilder(
+			).businessType(
 				ObjectFieldConstants.BUSINESS_TYPE_LONG_INTEGER
 			).dbColumnName(
 				dbColumnName
@@ -1396,6 +1416,10 @@ public class ObjectDefinitionLocalServiceTest {
 				dbTableName
 			).dbType(
 				ObjectFieldConstants.DB_TYPE_LONG
+			).indexed(
+				Boolean.TRUE
+			).indexedAsKeyword(
+				Boolean.TRUE
 			).labelMap(
 				LocalizedMapUtil.getLocalizedMap(
 					LanguageUtil.get(LocaleUtil.getDefault(), "id"))
@@ -1407,7 +1431,8 @@ public class ObjectDefinitionLocalServiceTest {
 		Assert.assertTrue(iterator.hasNext());
 
 		_assertSystemObjectFields(
-			new ObjectFieldBuilder().businessType(
+			new ObjectFieldBuilder(
+			).businessType(
 				ObjectFieldConstants.BUSINESS_TYPE_DATE
 			).dbColumnName(
 				objectEntryTable.modifiedDate.getName()
@@ -1426,7 +1451,8 @@ public class ObjectDefinitionLocalServiceTest {
 		Assert.assertTrue(iterator.hasNext());
 
 		_assertSystemObjectFields(
-			new ObjectFieldBuilder().businessType(
+			new ObjectFieldBuilder(
+			).businessType(
 				ObjectFieldConstants.BUSINESS_TYPE_TEXT
 			).dbColumnName(
 				objectEntryTable.status.getName()

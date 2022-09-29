@@ -15,7 +15,6 @@
 package com.liferay.segments.experiment.web.internal.display.context;
 
 import com.liferay.layout.content.page.editor.constants.ContentPageEditorPortletKeys;
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -23,6 +22,9 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
+import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -58,10 +60,10 @@ import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.stream.Stream;
 
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
+import javax.portlet.PortletRequest;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author Eduardo García
@@ -70,20 +72,20 @@ import javax.servlet.http.HttpServletRequest;
 public class SegmentsExperimentDisplayContext {
 
 	public SegmentsExperimentDisplayContext(
-		HttpServletRequest httpServletRequest,
 		LayoutLocalService layoutLocalService, Portal portal,
-		RenderRequest renderRequest, RenderResponse renderResponse,
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse, String pathToAssets,
 		SegmentsExperienceService segmentsExperienceService,
 		SegmentsExperimentConfiguration segmentsExperimentConfiguration,
 		SegmentsExperienceManager segmentsExperienceManager,
 		SegmentsExperimentRelService segmentsExperimentRelService,
 		SegmentsExperimentService segmentsExperimentService) {
 
-		_httpServletRequest = httpServletRequest;
 		_layoutLocalService = layoutLocalService;
 		_portal = portal;
-		_renderRequest = renderRequest;
-		_renderResponse = renderResponse;
+		_httpServletRequest = httpServletRequest;
+		_httpServletResponse = httpServletResponse;
+		_pathToAssets = pathToAssets;
 		_segmentsExperienceService = segmentsExperienceService;
 		_segmentsExperimentConfiguration = segmentsExperimentConfiguration;
 		_segmentsExperienceManager = segmentsExperienceManager;
@@ -106,10 +108,6 @@ public class SegmentsExperimentDisplayContext {
 		).build();
 
 		return _data;
-	}
-
-	public String getLiferayAnalyticsURL(long companyId) {
-		return PrefsPropsUtil.getString(companyId, "liferayAnalyticsURL");
 	}
 
 	private Optional<SegmentsExperiment> _getActiveSegmentsExperimentOptional(
@@ -148,10 +146,13 @@ public class SegmentsExperimentDisplayContext {
 	}
 
 	private String _getContentPageEditorActionURL(String action) {
+		RequestBackedPortletURLFactory requestBackedPortletURLFactory =
+			RequestBackedPortletURLFactoryUtil.create(_httpServletRequest);
+
 		return HttpComponentsUtil.addParameter(
-			PortletURLBuilder.createActionURL(
-				_portal.getLiferayPortletResponse(_renderResponse),
-				ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET
+			PortletURLBuilder.create(
+				requestBackedPortletURLFactory.createActionURL(
+					ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET)
 			).setActionName(
 				action
 			).buildString(),
@@ -300,7 +301,7 @@ public class SegmentsExperimentDisplayContext {
 	}
 
 	private String _getImagesPath() {
-		return PortalUtil.getPathContext(_httpServletRequest) + "/images";
+		return _pathToAssets + "/images";
 	}
 
 	private Map<String, Object> _getPage() {
@@ -327,14 +328,17 @@ public class SegmentsExperimentDisplayContext {
 				_themeDisplay.getCompanyId(), _themeDisplay.getScopeGroupId())
 		).put(
 			"hideSegmentsExperimentPanelURL",
-			PortletURLBuilder.createActionURL(
-				_renderResponse
+			PortletURLBuilder.create(
+				_portal.getControlPanelPortletURL(
+					_httpServletRequest, _themeDisplay.getScopeGroup(),
+					SegmentsPortletKeys.SEGMENTS_EXPERIMENT, 0, 0,
+					PortletRequest.ACTION_PHASE)
 			).setActionName(
 				"/segments_experiment/hide_segments_experiment_panel"
 			).setRedirect(
 				() -> {
 					String redirect = ParamUtil.getString(
-						_renderRequest, "redirect");
+						_httpServletRequest, "redirect");
 
 					if (Validator.isNotNull(redirect)) {
 						return redirect;
@@ -343,6 +347,8 @@ public class SegmentsExperimentDisplayContext {
 					return _themeDisplay.getLayoutFriendlyURL(
 						_themeDisplay.getLayout());
 				}
+			).setParameter(
+				"p_l_mode", Constants.VIEW
 			).buildString()
 		).put(
 			"historySegmentsExperiments",
@@ -351,7 +357,7 @@ public class SegmentsExperimentDisplayContext {
 			"initialSegmentsVariants",
 			_getSegmentsExperimentRelsJSONArray(locale)
 		).put(
-			"pathToAssets", _portal.getPathContext(_renderRequest)
+			"pathToAssets", _pathToAssets
 		).put(
 			"segmentsExperiences", _getSegmentsExperiencesJSONArray(locale)
 		).put(
@@ -430,13 +436,16 @@ public class SegmentsExperimentDisplayContext {
 	}
 
 	private String _getSegmentsExperimentActionURL(String action) {
-		return HttpComponentsUtil.addParameter(
-			PortletURLBuilder.createActionURL(
-				_renderResponse
-			).setActionName(
-				action
-			).buildString(),
-			"p_l_mode", Constants.VIEW);
+		return PortletURLBuilder.create(
+			_portal.getControlPanelPortletURL(
+				_httpServletRequest, _themeDisplay.getScopeGroup(),
+				SegmentsPortletKeys.SEGMENTS_EXPERIMENT, 0, 0,
+				PortletRequest.ACTION_PHASE)
+		).setActionName(
+			action
+		).setParameter(
+			"p_l_mode", Constants.VIEW
+		).buildString();
 	}
 
 	private JSONArray _getSegmentsExperimentGoalsJSONArray(Locale locale) {
@@ -544,10 +553,10 @@ public class SegmentsExperimentDisplayContext {
 
 	private Map<String, Object> _data;
 	private final HttpServletRequest _httpServletRequest;
+	private final HttpServletResponse _httpServletResponse;
 	private final LayoutLocalService _layoutLocalService;
+	private final String _pathToAssets;
 	private final Portal _portal;
-	private final RenderRequest _renderRequest;
-	private final RenderResponse _renderResponse;
 	private Long _segmentsExperienceId;
 	private final SegmentsExperienceManager _segmentsExperienceManager;
 	private final SegmentsExperienceService _segmentsExperienceService;

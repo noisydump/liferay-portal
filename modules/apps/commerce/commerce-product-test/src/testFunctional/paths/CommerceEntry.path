@@ -136,6 +136,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>HEADER_ERC_VALUE</td>
+	<td>//span[@title="External Reference Code"]//..//strong[contains(@class,'header-info-value') and normalize-space(text()='${key_erc}')]</td>
+	 <td></td>
+</tr>
+<tr>
 	<td>CODE_FIELD</td>
 	<td>//div/input[contains(@id,'regionCode')]</td>
 	<td></td>
@@ -1041,6 +1046,11 @@
 <tr>
 	<td>PRODUCT_ENTRY_BASED_ON_STATUS</td>
 	<td>//span[contains(@class,'workflow-status')]//strong[contains(.,'${key_status}')]/../../../..//a[text()='${key_productName}']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PRODUCT_ENTRY_BASED_ON_STATUS_ELLIPSIS</td>
+	<td>//span[contains(@class,'workflow-status')]//strong[contains(.,'${key_status}')]/../../../..//a[text()='${key_productName}']/../../..//button</td>
 	<td></td>
 </tr>
 <tr>

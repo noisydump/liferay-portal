@@ -45,11 +45,8 @@ PortalUtil.addPortletBreadcrumbEntry(request, editContactInformationDisplayConte
 
 	<clay:container-fluid>
 		<div class="sheet-lg" id="breadcrumb">
-			<liferay-ui:breadcrumb
-				showCurrentGroup="<%= false %>"
-				showGuestGroup="<%= false %>"
-				showLayout="<%= false %>"
-				showPortletBreadcrumb="<%= true %>"
+			<liferay-site-navigation:breadcrumb
+				breadcrumbEntries="<%= BreadcrumbEntriesUtil.getBreadcrumbEntries(request, false, false, false, true, true) %>"
 			/>
 		</div>
 
@@ -69,7 +66,7 @@ PortalUtil.addPortletBreadcrumbEntry(request, editContactInformationDisplayConte
 
 				<liferay-ui:error key="<%= NoSuchListTypeException.class.getName() + editContactInformationDisplayContext.getClassName() + ListTypeConstants.PHONE %>" message="please-select-a-type" />
 
-				<aui:select inlineField="<%= true %>" label="type" listType="<%= editContactInformationDisplayContext.getClassName() + ListTypeConstants.PHONE %>" name="phoneTypeId" />
+				<aui:select inlineField="<%= true %>" label="type" listType="<%= editContactInformationDisplayContext.getClassName() + ListTypeConstants.PHONE %>" name="phoneListTypeId" />
 
 				<liferay-ui:error exception="<%= PhoneNumberException.class %>" message="please-enter-a-valid-phone-number" />
 

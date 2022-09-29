@@ -64,12 +64,14 @@ const normalizeObjectFields: TNormalizeObjectFields = ({
 }) => {
 	const visitor = new TabsVisitor(objectLayout);
 
-	const objectFieldIds = objectFields.map(({id}) => id);
+	const objectFieldNames = objectFields.map(({name}) => name);
 
 	const normalizedObjectFields = [...objectFields];
 
 	visitor.mapFields((field) => {
-		const objectFieldIndex = objectFieldIds.indexOf(field.objectFieldId);
+		const objectFieldIndex = objectFieldNames.indexOf(
+			field.objectFieldName
+		);
 		normalizedObjectFields[objectFieldIndex].inLayout = true;
 	});
 
@@ -145,7 +147,13 @@ const Layout: React.FC<React.HTMLAttributes<HTMLElement>> = () => {
 
 			dispatch({
 				payload: {
+					enabledCategorization:
+						objectDefinition.enabledCategorization,
 					objectLayout,
+					objectRelationships: normalizeObjectRelationships({
+						objectLayoutTabs,
+						objectRelationships,
+					}),
 				},
 				type: TYPES.ADD_OBJECT_LAYOUT,
 			});
@@ -155,11 +163,6 @@ const Layout: React.FC<React.HTMLAttributes<HTMLElement>> = () => {
 			);
 
 			dispatch({
-				payload: {objectDefinition},
-				type: TYPES.ADD_OBJECT_DEFINITION,
-			});
-
-			dispatch({
 				payload: {
 					objectFields: normalizeObjectFields({
 						objectFields: filteredObjectFields,
@@ -167,16 +170,6 @@ const Layout: React.FC<React.HTMLAttributes<HTMLElement>> = () => {
 					}),
 				},
 				type: TYPES.ADD_OBJECT_FIELDS,
-			});
-
-			dispatch({
-				payload: {
-					objectRelationships: normalizeObjectRelationships({
-						objectLayoutTabs,
-						objectRelationships,
-					}),
-				},
-				type: TYPES.ADD_OBJECT_RELATIONSHIPS,
 			});
 
 			setLoading(false);
@@ -271,11 +264,11 @@ interface ILayoutWrapperProps extends React.HTMLAttributes<HTMLElement> {
 	objectLayoutId: string;
 }
 
-const LayoutWrapper: React.FC<ILayoutWrapperProps> = ({
+export default function LayoutWrapper({
 	isViewOnly,
 	objectFieldTypes,
 	objectLayoutId,
-}) => {
+}: ILayoutWrapperProps) {
 	return (
 		<LayoutContextProvider
 			value={{
@@ -287,6 +280,4 @@ const LayoutWrapper: React.FC<ILayoutWrapperProps> = ({
 			<Layout />
 		</LayoutContextProvider>
 	);
-};
-
-export default LayoutWrapper;
+}

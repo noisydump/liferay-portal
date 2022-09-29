@@ -307,7 +307,28 @@ public class VerifyProperties {
 		{
 			"http.header.secure.x.frame.options.255",
 			"http.header.secure.x.frame.options.255"
-		}
+		},
+		{
+			"module.framework.beginning.start.level",
+			"module.framework.beginning.start.level"
+		},
+		{
+			"module.framework.dynamic.install.start.level",
+			"module.framework.dynamic.install.start.level"
+		},
+		{
+			"module.framework.file.install.config.encoding",
+			"module.framework.file.install.config.encoding"
+		},
+		{
+			"module.framework.concurrent.startup.enabled",
+			"module.framework.concurrent.startup.enabled"
+		},
+		{
+			"module.framework.runtime.start.level",
+			"module.framework.runtime.start.level"
+		},
+		{"module.framework.web.start.level", "module.framework.web.start.level"}
 	};
 
 	private static final String[][] _MIGRATED_SYSTEM_KEYS = {
@@ -1635,8 +1656,8 @@ public class VerifyProperties {
 		"buffered.increment.parallel.queue.size",
 		"buffered.increment.serial.queue.size",
 		"cache.clear.on.context.initialization",
-		"calendar.publish.to.live.by.default", "captcha.max.challenges",
-		"captcha.check.portal.create_account",
+		"cache.clear.on.plugin.undeploy", "calendar.publish.to.live.by.default",
+		"captcha.max.challenges", "captcha.check.portal.create_account",
 		"captcha.check.portal.send_password",
 		"captcha.check.portlet.message_boards.edit_category",
 		"captcha.check.portlet.message_boards.edit_message",

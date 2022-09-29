@@ -1,7 +1,14 @@
 definition {
 
 	macro addCP {
-		LexiconEntry.gotoAddMenuItem(menuItem = "Folder");
+		if (isSet(centerPaneButton)) {
+			Button.click(button = "New");
+
+			MenuItem.click(menuItem = "Folder");
+		}
+		else {
+			LexiconEntry.gotoAddMenuItem(menuItem = "Folder");
+		}
 
 		PortletEntry.inputName(name = "${kbFolderName}");
 
@@ -125,6 +132,12 @@ definition {
 		AssertTextEquals(
 			locator1 = "KnowledgeBase#FOLDER_DESCRIPTIVE_FOLDER_NAME",
 			value1 = "${kbFolderName}");
+	}
+
+	macro viewFolderThroughPageTreePanel {
+		AssertVisible(
+			key_itemName = "${kbFolderName}",
+			locator1 = "KnowledgeBase#PAGE_TREE_ITEM_NAME");
 	}
 
 }

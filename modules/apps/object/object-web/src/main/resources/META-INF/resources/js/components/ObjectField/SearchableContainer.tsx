@@ -12,6 +12,7 @@
  * details.
  */
 
+import ClayAlert from '@clayui/alert';
 import ClayForm, {ClayRadio, ClayRadioGroup, ClayToggle} from '@clayui/form';
 import {Card, Select} from '@liferay/object-js-components-web';
 import React, {useMemo} from 'react';
@@ -20,7 +21,9 @@ import {ObjectFieldErrors} from './ObjectFieldFormBase';
 
 const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
 const languages = Liferay.Language.available;
-const languageLabels = Object.values(languages);
+const languageLabels = Object.values(languages).map((language) => {
+	return {label: language};
+});
 
 interface ISearchableProps {
 	disabled?: boolean;
@@ -32,7 +35,6 @@ interface ISearchableProps {
 }
 
 export function SearchableContainer({
-	disabled,
 	isApproved,
 	objectField,
 	readOnly,
@@ -45,19 +47,26 @@ export function SearchableContainer({
 			objectField.businessType === 'Attachment') &&
 		objectField.businessType !== 'Aggregation';
 
-	const selectedLanguageIndex = useMemo(() => {
+	const selectedLanguage = useMemo(() => {
 		const label =
 			objectField.indexedLanguageId &&
 			languages[objectField.indexedLanguageId];
 
-		return label ? languageLabels.indexOf(label) : undefined;
+		return label ?? undefined;
 	}, [objectField.indexedLanguageId]);
 
 	return (
 		<Card title={Liferay.Language.get('searchable')}>
+			{isApproved && (
+				<ClayAlert displayType="info" title="Info">
+					{Liferay.Language.get(
+						'if-the-search-configuration-of-this-object-field-is-updated'
+					)}
+				</ClayAlert>
+			)}
+
 			<ClayForm.Group>
 				<ClayToggle
-					disabled={disabled}
 					label={Liferay.Language.get('searchable')}
 					name="indexed"
 					onToggle={(indexed) => setValues({indexed})}
@@ -84,13 +93,13 @@ export function SearchableContainer({
 						).toString()}
 					>
 						<ClayRadio
-							disabled={readOnly || isApproved}
+							disabled={readOnly}
 							label={Liferay.Language.get('keyword')}
 							value="true"
 						/>
 
 						<ClayRadio
-							disabled={readOnly || isApproved}
+							disabled={readOnly}
 							label={Liferay.Language.get('text')}
 							value="false"
 						/>
@@ -100,25 +109,21 @@ export function SearchableContainer({
 
 			{isSearchableString && !objectField.indexedAsKeyword && (
 				<Select
-					disabled={disabled}
 					label={Liferay.Language.get('language')}
 					name="indexedLanguageId"
 					onChange={({target: {value}}) => {
-						const selectedLabel =
-							languageLabels[
-								value as keyof typeof languageLabels
-							];
 						const [indexedLanguageId] = Object.entries(
 							languages
-						).find(([, label]) => selectedLabel === label) as [
+						).find(([, label]) => value === label) as [
 							Locale,
 							string
 						];
+
 						setValues({indexedLanguageId});
 					}}
 					options={languageLabels}
 					required
-					value={selectedLanguageIndex}
+					value={selectedLanguage}
 				/>
 			)}
 		</Card>

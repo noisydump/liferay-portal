@@ -423,9 +423,9 @@ definition {
 			StyleBooks.expandSection(sectionName = "Headings");
 
 			Type(
-				key_fieldLabel = "Heading 1 Font Size",
-				locator1 = "TextInput#GENERIC_TEXT_INPUT",
-				value1 = "2rem");
+				ariaLabel = "Heading 1 Font Size",
+				locator1 = "TextInput#ANY_WITH_AIRA_LABEL",
+				value1 = "2");
 
 			StyleBooks.clickManagementBar();
 
@@ -582,9 +582,9 @@ definition {
 			StyleBooks.expandSection(sectionName = "Headings");
 
 			Type(
-				key_fieldLabel = "Heading 1 Font Size",
-				locator1 = "TextInput#GENERIC_TEXT_INPUT",
-				value1 = "2rem");
+				ariaLabel = "Heading 1 Font Size",
+				locator1 = "TextInput#ANY_WITH_AIRA_LABEL",
+				value1 = "2");
 
 			StyleBooks.clickManagementBar();
 
@@ -1444,9 +1444,9 @@ definition {
 			StyleBooks.expandSection(sectionName = "Headings");
 
 			Type(
-				key_fieldLabel = "Heading 1 Font Size",
-				locator1 = "TextInput#GENERIC_TEXT_INPUT",
-				value1 = "2rem");
+				ariaLabel = "Heading 1 Font Size",
+				locator1 = "TextInput#ANY_WITH_AIRA_LABEL",
+				value1 = "2");
 
 			StyleBooks.clickManagementBar();
 

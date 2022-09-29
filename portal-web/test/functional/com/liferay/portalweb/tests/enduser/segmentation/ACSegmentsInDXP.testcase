@@ -104,7 +104,7 @@ definition {
 		property test.name.skip.portal.instance = "ACSegmentsInDXP#CheckNotEditableSegmentFromACAtDXP";
 
 		task ("Update Segments Analytics Cloud in System Settings") {
-			Segmentation.updateACSegmentSystemSettings();
+			Segmentation.updateSegmentsInterval();
 		}
 
 		task ("Go to segmentats page and assert that not possible Edit/Delete ") {
@@ -131,7 +131,7 @@ definition {
 		property test.name.skip.portal.instance = "ACSegmentsInDXP#DefaultInstanceNotSynchronizedWithAC";
 
 		task ("Update Segments Analytics Cloud in System Settings") {
-			Segmentation.updateACSegmentSystemSettings();
+			Segmentation.updateSegmentsInterval();
 		}
 
 		task ("Create a new virtual Instance") {
@@ -196,30 +196,7 @@ definition {
 		property test.name.skip.portal.instance = "ACSegmentsInDXP#PersistSegmentFromACAtDXP";
 
 		task ("Change 'Check Interval' at Segment Analytics Cloud in System Settings") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Configuration",
-				panel = "Control Panel",
-				portlet = "System Settings");
-
-			SystemSettings.gotoConfiguration(
-				configurationCategory = "Segments",
-				configurationName = "Analytics Cloud Segments",
-				configurationScope = "System Scope");
-
-			if (IsElementPresent(locator1 = "SystemSettings#SAVE_BUTTON_SEGMENTS_AC")) {
-				Click(locator1 = "SystemSettings#SAVE_BUTTON_SEGMENTS_AC");
-			}
-
-			Type(
-				locator1 = "SystemSettings#CHECK_INTERVAL_SEGMENTS_INPUT",
-				value1 = "1");
-
-			AssertClick(
-				key_text = "Update",
-				locator1 = "Button#ANY",
-				value1 = "Update");
-
-			Alert.viewSuccessMessage();
+			Segmentation.updateSegmentsInterval(interval = "1");
 		}
 
 		task ("Go to segmentats page and assert that the segment created is preset") {
@@ -285,7 +262,7 @@ definition {
 		property test.name.skip.portal.instance = "ACSegmentsInDXP#RedirectToSegmentPageAC";
 
 		task ("Update Segments Analytics Cloud in System Settings") {
-			Segmentation.updateACSegmentSystemSettings();
+			Segmentation.updateSegmentsInterval();
 		}
 
 		task ("Go to segmentats page and click at segment crieted in AC") {
@@ -318,7 +295,7 @@ definition {
 		property test.name.skip.portal.instance = "ACSegmentsInDXP#RedirectToSegmentPageErrorAC";
 
 		task ("Update Segments Analytics Cloud in System Settings") {
-			Segmentation.updateACSegmentSystemSettings();
+			Segmentation.updateSegmentsInterval();
 		}
 
 		task ("Go to segmentats page and at segment created in AC") {
@@ -354,7 +331,7 @@ definition {
 				password = "test",
 				userEmailAddress = "test@liferay.com");
 
-			Segmentation.updateACSegmentSystemSettings();
+			Segmentation.updateSegmentsInterval();
 		}
 
 		task ("Go to segmentats page and click at segment created in AC") {
@@ -398,7 +375,7 @@ definition {
 		property test.name.skip.portal.instance = "ACSegmentsInDXP#ShoudNotRedirectToSegmentPageAC";
 
 		task ("Update Segments Analytics Cloud in System Settings") {
-			Segmentation.updateACSegmentSystemSettings();
+			Segmentation.updateSegmentsInterval();
 		}
 
 		task ("Disconnect AC") {

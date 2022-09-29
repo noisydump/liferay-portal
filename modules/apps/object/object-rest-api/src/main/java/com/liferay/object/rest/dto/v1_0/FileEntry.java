@@ -36,6 +36,8 @@ import java.util.Set;
 
 import javax.annotation.Generated;
 
+import javax.validation.Valid;
+
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -81,6 +83,33 @@ public class FileEntry implements Serializable {
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Long id;
+
+	@Schema
+	@Valid
+	public Link getLink() {
+		return link;
+	}
+
+	public void setLink(Link link) {
+		this.link = link;
+	}
+
+	@JsonIgnore
+	public void setLink(UnsafeSupplier<Link, Exception> linkUnsafeSupplier) {
+		try {
+			link = linkUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Link link;
 
 	@Schema
 	public String getName() {
@@ -143,6 +172,16 @@ public class FileEntry implements Serializable {
 			sb.append("\"id\": ");
 
 			sb.append(id);
+		}
+
+		if (link != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"link\": ");
+
+			sb.append(String.valueOf(link));
 		}
 
 		if (name != null) {

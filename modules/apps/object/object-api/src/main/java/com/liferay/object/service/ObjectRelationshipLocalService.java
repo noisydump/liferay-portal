@@ -151,6 +151,9 @@ public interface ObjectRelationshipLocalService
 			long objectRelationshipId, long primaryKey1, long primaryKey2)
 		throws PortalException;
 
+	public void deleteObjectRelationships(long objectDefinitionId1)
+		throws PortalException;
+
 	/**
 	 * @throws PortalException
 	 */
@@ -278,6 +281,11 @@ public interface ObjectRelationshipLocalService
 	public ObjectRelationship getObjectRelationship(
 			long objectDefinitionId1, String name)
 		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public ObjectRelationship getObjectRelationshipByObjectDefinitionId(
+			long objectDefinitionId, String objectRelationshipName)
+		throws Exception;
 
 	/**
 	 * Returns the object relationship with the matching UUID and company.

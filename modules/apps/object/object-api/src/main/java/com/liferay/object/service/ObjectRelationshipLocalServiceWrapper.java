@@ -166,6 +166,14 @@ public class ObjectRelationshipLocalServiceWrapper
 				objectRelationshipId, primaryKey1, primaryKey2);
 	}
 
+	@Override
+	public void deleteObjectRelationships(long objectDefinitionId1)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_objectRelationshipLocalService.deleteObjectRelationships(
+			objectDefinitionId1);
+	}
+
 	/**
 	 * @throws PortalException
 	 */
@@ -370,6 +378,17 @@ public class ObjectRelationshipLocalServiceWrapper
 
 		return _objectRelationshipLocalService.getObjectRelationship(
 			objectDefinitionId1, name);
+	}
+
+	@Override
+	public com.liferay.object.model.ObjectRelationship
+			getObjectRelationshipByObjectDefinitionId(
+				long objectDefinitionId, String objectRelationshipName)
+		throws Exception {
+
+		return _objectRelationshipLocalService.
+			getObjectRelationshipByObjectDefinitionId(
+				objectDefinitionId, objectRelationshipName);
 	}
 
 	/**

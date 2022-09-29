@@ -32,7 +32,86 @@ import React, {
 	useState,
 } from 'react';
 
+import {
+	getCheckedPickListItems,
+	getCheckedRelationshipItems,
+	getCheckedWorkflowStatusItems,
+	getSystemFieldLabelFromEntry,
+} from '../utils/filter';
+
 import './ModalAddFilter.scss';
+interface IProps {
+	currentFilters: CurrentFilter[];
+	disableDateValues?: boolean;
+	editingFilter: boolean;
+	editingObjectFieldName: string;
+	filterOperators: TFilterOperators;
+	filterTypeRequired?: boolean;
+	header: string;
+	objectFields: ObjectField[];
+	observer: Observer;
+	onClose: () => void;
+	onSave: (
+		objectFieldName: string,
+		filterBy?: string,
+		fieldLabel?: LocalizedValue<string>,
+		objectFieldBusinessType?: string,
+		filterType?: string,
+		valueList?: IItem[],
+		value?: string
+	) => void;
+	validate: ({
+		checkedItems,
+		disableDateValues,
+		items,
+		selectedFilterBy,
+		selectedFilterType,
+		setErrors,
+		value,
+	}: FilterValidation) => FilterErrors;
+	workflowStatusJSONArray: LabelValueObject[];
+}
+
+interface IItem extends LabelValueObject {
+	checked?: boolean;
+}
+
+export type FilterErrors = {
+	endDate?: string;
+	items?: string;
+	selectedFilterBy?: string;
+	selectedFilterType?: string;
+	startDate?: string;
+	value?: string;
+};
+
+export type FilterValidation = {
+	checkedItems: IItem[];
+	disableDateValues?: boolean;
+	items: IItem[];
+	selectedFilterBy?: ObjectField;
+	selectedFilterType?: LabelValueObject | null;
+	setErrors: (value: FilterErrors) => void;
+	value?: string;
+};
+
+type CurrentFilter = {
+	definition: {
+		[key: string]: string[] | number[];
+	} | null;
+	fieldLabel?: string;
+	filterBy?: string;
+	filterType: string | null;
+	label: TName;
+	objectFieldBusinessType?: string;
+	objectFieldName?: string;
+	value?: string;
+	valueList?: LabelValueObject[];
+};
+
+type TName = {
+	[key: string]: string;
+};
 
 const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
 
@@ -101,77 +180,6 @@ export function ModalAddFilter({
 		return valuesArray;
 	};
 
-	const getCheckedWorkflowStatusItems = (
-		itemValues: TWorkflowStatus[]
-	): IItem[] => {
-		let newItemsValues: IItem[] = [];
-
-		const valuesArray = setEditingFilterType() as number[];
-
-		newItemsValues = itemValues.map((itemValue) => {
-			const item = {
-				checked: false,
-				label: itemValue.label,
-				value: itemValue.value,
-			};
-
-			if (valuesArray?.includes(Number(itemValue.value))) {
-				item.checked = true;
-			}
-
-			return item;
-		});
-
-		return newItemsValues;
-	};
-
-	const getCheckedPickListItems = (itemValues: PickListItem[]): IItem[] => {
-		let newItemsValues: IItem[] = [];
-
-		const valuesArray = setEditingFilterType() as string[];
-
-		newItemsValues = (itemValues as PickListItem[]).map((itemValue) => {
-			const item = {
-				checked: false,
-				label: itemValue.name,
-				value: itemValue.key,
-			};
-
-			if (valuesArray?.includes(itemValue.key)) {
-				item.checked = true;
-			}
-
-			return item;
-		});
-
-		return newItemsValues;
-	};
-
-	const getCheckedRelationshipItems = (
-		relatedEntries: ObjectEntry[],
-		titleFieldName: string
-	): IItem[] => {
-		let newItemsValues: IItem[] = [];
-
-		const valuesArray = setEditingFilterType() as string[];
-
-		newItemsValues = relatedEntries.map((entry) => {
-			const item: IItem = {
-				checked: false,
-				label: entry[titleFieldName] as string,
-				value: entry.id.toString(),
-			};
-
-			if (valuesArray.includes(entry.id.toString())) {
-				item.checked = true;
-			}
-
-			return item;
-		});
-
-		return newItemsValues;
-	};
-
 	const setFieldValues = useCallback(
 		(objectField: ObjectField) => {
 			if (objectField?.businessType === 'Picklist') {
@@ -181,7 +189,9 @@ export function ModalAddFilter({
 					);
 
 					if (editingFilter) {
-						setItems(getCheckedPickListItems(items));
+						setItems(
+							getCheckedPickListItems(items, setEditingFilterType)
+						);
 					}
 					else {
 						setItems(
@@ -202,7 +212,8 @@ export function ModalAddFilter({
 
 				if (editingFilter) {
 					newItems = getCheckedWorkflowStatusItems(
-						workflowStatusJSONArray
+						workflowStatusJSONArray,
+						setEditingFilterType
 					);
 				}
 				else {
@@ -223,13 +234,19 @@ export function ModalAddFilter({
 					const [{value}] = objectFieldSettings as NameValueObject[];
 
 					const [
-						{objectFields, restContextPath, titleObjectFieldId},
+						{
+							objectFields,
+							restContextPath,
+							system,
+							titleObjectFieldName,
+						},
 					] = await API.getObjectDefinitions(
 						`filter=name eq '${value}'`
 					);
 
 					const titleField = objectFields.find(
-						(objectField) => objectField.id === titleObjectFieldId
+						(objectField) =>
+							objectField.name === titleObjectFieldName
 					) as ObjectField;
 
 					const relatedEntries = await API.getList<ObjectEntry>(
@@ -240,15 +257,32 @@ export function ModalAddFilter({
 						setItems(
 							getCheckedRelationshipItems(
 								relatedEntries,
-								titleField.name
+								titleField.name,
+								titleField.system as boolean,
+								system,
+								setEditingFilterType
 							)
 						);
 					}
 					else {
 						const newItems = relatedEntries.map((entry) => {
+							const newItemsObject = {
+								value: system
+									? String(entry.id)
+									: entry.externalReferenceCode,
+							} as LabelValueObject;
+
+							if (titleField.system) {
+								return getSystemFieldLabelFromEntry(
+									titleField.name,
+									entry,
+									newItemsObject
+								) as LabelValueObject;
+							}
+
 							return {
+								...newItemsObject,
 								label: entry[titleField?.name] as string,
-								value: entry.id.toString(),
 							};
 						});
 
@@ -522,81 +556,3 @@ export function ModalAddFilter({
 		</ClayModal>
 	);
 }
-
-interface IProps {
-	currentFilters: TCurrentFilter[];
-	disableDateValues?: boolean;
-	editingFilter: boolean;
-	editingObjectFieldName: string;
-	filterOperators: TFilterOperators;
-	filterTypeRequired?: boolean;
-	header: string;
-	objectFields: ObjectField[];
-	observer: Observer;
-	onClose: () => void;
-	onSave: (
-		objectFieldName: string,
-		filterBy?: string,
-		fieldLabel?: LocalizedValue<string>,
-		objectFieldBusinessType?: string,
-		filterType?: string,
-		valueList?: IItem[],
-		value?: string
-	) => void;
-	validate: ({
-		checkedItems,
-		disableDateValues,
-		items,
-		selectedFilterBy,
-		selectedFilterType,
-		setErrors,
-		value,
-	}: FilterValidation) => FilterErrors;
-	workflowStatusJSONArray: TWorkflowStatus[];
-}
-
-interface IItem extends LabelValueObject {
-	checked?: boolean;
-}
-
-export type FilterErrors = {
-	endDate?: string;
-	items?: string;
-	selectedFilterBy?: string;
-	selectedFilterType?: string;
-	startDate?: string;
-	value?: string;
-};
-
-export type FilterValidation = {
-	checkedItems: IItem[];
-	disableDateValues?: boolean;
-	items: IItem[];
-	selectedFilterBy?: ObjectField;
-	selectedFilterType?: LabelValueObject | null;
-	setErrors: (value: FilterErrors) => void;
-	value?: string;
-};
-
-type TCurrentFilter = {
-	definition: {
-		[key: string]: string[] | number[];
-	} | null;
-	fieldLabel?: string;
-	filterBy?: string;
-	filterType: string | null;
-	label: TName;
-	objectFieldBusinessType?: string;
-	objectFieldName?: string;
-	value?: string;
-	valueList?: LabelValueObject[];
-};
-
-type TWorkflowStatus = {
-	label: string;
-	value: string;
-};
-
-type TName = {
-	[key: string]: string;
-};

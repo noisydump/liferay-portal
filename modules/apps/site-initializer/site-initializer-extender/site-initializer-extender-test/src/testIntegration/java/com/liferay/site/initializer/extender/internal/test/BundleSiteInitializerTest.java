@@ -137,6 +137,7 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PropsUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -167,6 +168,8 @@ import java.math.BigDecimal;
 
 import java.util.Dictionary;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 import javax.servlet.ServletContext;
 
@@ -494,7 +497,7 @@ public class BundleSiteInitializerTest {
 
 		Assert.assertNotNull(commerceChannel);
 		Assert.assertEquals(
-			"TESTCOMMERCECHANNEL", commerceChannel.getExternalReferenceCode());
+			"TESTVOC0001", commerceChannel.getExternalReferenceCode());
 		Assert.assertEquals("Test Commerce Channel", commerceChannel.getName());
 		Assert.assertEquals("site", commerceChannel.getType());
 
@@ -510,7 +513,8 @@ public class BundleSiteInitializerTest {
 
 		Assert.assertNotNull(commerceInventoryWarehouse);
 		Assert.assertEquals(
-			"Test Commerce Warehouse", commerceInventoryWarehouse.getName());
+			"Test Commerce Warehouse",
+			commerceInventoryWarehouse.getName(LocaleUtil.getSiteDefault()));
 	}
 
 	private void _assertCommerceNotificationTemplate(
@@ -607,7 +611,7 @@ public class BundleSiteInitializerTest {
 					"TESTPROD001", group.getCompanyId());
 
 		CPInstance cpInstance1 = _cpInstanceLocalService.getCPInstance(
-			cpDefinition.getCPDefinitionId(), "Test Value 1");
+			cpDefinition.getCPDefinitionId(), "TEST VALUE 1");
 
 		Assert.assertNotNull(cpInstance1);
 
@@ -620,7 +624,7 @@ public class BundleSiteInitializerTest {
 		Assert.assertEquals(25.0, actualPromoPrice.doubleValue(), 0.0001);
 
 		CPInstance cpInstance2 = _cpInstanceLocalService.getCPInstance(
-			cpDefinition.getCPDefinitionId(), "Test Value 2");
+			cpDefinition.getCPDefinitionId(), "TEST VALUE 2");
 
 		Assert.assertNotNull(cpInstance2);
 		Assert.assertTrue(cpInstance2.isSubscriptionEnabled());
@@ -782,11 +786,15 @@ public class BundleSiteInitializerTest {
 
 		JournalFolder journalFolder1 = journalFolders.get(0);
 
-		Assert.assertEquals("Test Journal Article 1", journalFolder1.getName());
+		Assert.assertEquals(
+			"JOURNALFOLDER001", journalFolder1.getExternalReferenceCode());
+		Assert.assertEquals("Test Journal Folder 1", journalFolder1.getName());
 
 		JournalFolder journalFolder2 = journalFolders.get(1);
 
-		Assert.assertEquals("Test Journal Article 2", journalFolder2.getName());
+		Assert.assertEquals(
+			"JOURNALFOLDER002", journalFolder2.getExternalReferenceCode());
+		Assert.assertEquals("Test Journal Folder 2", journalFolder2.getName());
 	}
 
 	private void _assertKBArticles(Group group) throws Exception {
@@ -965,6 +973,16 @@ public class BundleSiteInitializerTest {
 
 		Assert.assertEquals(
 			"Test Notification Template", notificationTemplate.getName());
+
+		Map<String, String> subjectMap = notificationTemplate.getSubject();
+
+		Assert.assertNotNull(subjectMap);
+
+		String subject = subjectMap.get("en_US");
+
+		Assert.assertTrue(
+			Objects.equals(
+				subject, StringUtil.getTitleCase(subject, true, "DXP")));
 	}
 
 	private void _assertObjectActions(
@@ -984,14 +1002,16 @@ public class BundleSiteInitializerTest {
 			UnicodeProperties parametersUnicodeProperties =
 				objectAction.getParametersUnicodeProperties();
 
-			if (objectActionExecutorKey.equals(
+			if (Objects.equals(
+					objectActionExecutorKey,
 					ObjectActionExecutorConstants.KEY_GROOVY)) {
 
 				String script = parametersUnicodeProperties.get("script");
 
 				Assert.assertNotNull(script);
 			}
-			else if (objectActionExecutorKey.equals(
+			else if (Objects.equals(
+						objectActionExecutorKey,
 						ObjectActionExecutorConstants.KEY_WEBHOOK)) {
 
 				String secret = parametersUnicodeProperties.get("secret");

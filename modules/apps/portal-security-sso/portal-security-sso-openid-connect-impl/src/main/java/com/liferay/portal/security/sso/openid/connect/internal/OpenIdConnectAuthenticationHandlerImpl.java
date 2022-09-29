@@ -188,9 +188,6 @@ public class OpenIdConnectAuthenticationHandlerImpl
 			OpenIdConnectWebKeys.OPEN_ID_CONNECT_SESSION_ID);
 
 		if (openIdConnectSessionId != null) {
-			_offlineOpenIdConnectSessionManager.endOpenIdConnectSession(
-				openIdConnectSessionId);
-
 			httpSession.removeAttribute(
 				OpenIdConnectWebKeys.OPEN_ID_CONNECT_SESSION_ID);
 		}
@@ -350,7 +347,8 @@ public class OpenIdConnectAuthenticationHandlerImpl
 			if (_log.isDebugEnabled()) {
 				_log.debug(
 					"Unable to create a lang tag with locale " +
-						locale.getLanguage());
+						locale.getLanguage(),
+					langTagException);
 			}
 
 			return null;

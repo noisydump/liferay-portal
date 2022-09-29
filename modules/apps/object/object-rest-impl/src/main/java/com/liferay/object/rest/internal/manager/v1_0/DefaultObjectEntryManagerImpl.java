@@ -395,6 +395,14 @@ public class DefaultObjectEntryManagerImpl
 						objectDefinition.getObjectDefinitionId()),
 					groupId, dtoConverterContext.getUriInfo())
 			).put(
+				"createBatch",
+				ActionUtil.addAction(
+					"ADD_OBJECT_ENTRY", ObjectEntryResourceImpl.class, 0L,
+					"postObjectEntryBatch", null, objectDefinition.getUserId(),
+					_getObjectEntriesPermissionName(
+						objectDefinition.getObjectDefinitionId()),
+					groupId, dtoConverterContext.getUriInfo())
+			).put(
 				"get",
 				ActionUtil.addAction(
 					ActionKeys.VIEW, ObjectEntryResourceImpl.class, 0L,
@@ -596,6 +604,9 @@ public class DefaultObjectEntryManagerImpl
 
 		ServiceContext serviceContext = new ServiceContext();
 
+		serviceContext.setAddGroupPermissions(true);
+		serviceContext.setAddGuestPermissions(true);
+
 		if (properties.get("categoryIds") != null) {
 			serviceContext.setAssetCategoryIds(
 				ListUtil.toLongArray(
@@ -627,8 +638,6 @@ public class DefaultObjectEntryManagerImpl
 			_objectEntryService.getObjectEntry(
 				GetterUtil.getLong(
 					values.get(objectDefinition.getPKObjectFieldName())));
-
-		objectEntry.setValues(values);
 
 		_checkObjectEntryObjectDefinitionId(objectDefinition, objectEntry);
 
@@ -700,10 +709,14 @@ public class DefaultObjectEntryManagerImpl
 					objectDefinition.getObjectDefinitionId(), deletionType,
 					false)) {
 
+			ObjectDefinition objectDefinition2 =
+				_objectDefinitionLocalService.getObjectDefinition(
+					objectRelationship.getObjectDefinitionId2());
+
 			ObjectRelatedModelsProvider objectRelatedModelsProvider =
 				_objectRelatedModelsProviderRegistry.
 					getObjectRelatedModelsProvider(
-						objectDefinition.getClassName(),
+						objectDefinition2.getClassName(),
 						objectRelationship.getType());
 
 			int count = objectRelatedModelsProvider.getRelatedModelsCount(

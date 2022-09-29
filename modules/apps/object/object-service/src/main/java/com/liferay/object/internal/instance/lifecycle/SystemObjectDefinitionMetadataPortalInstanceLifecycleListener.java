@@ -17,8 +17,12 @@ package com.liferay.object.internal.instance.lifecycle;
 import com.liferay.item.selector.ItemSelectorView;
 import com.liferay.item.selector.ItemSelectorViewDescriptorRenderer;
 import com.liferay.item.selector.criteria.info.item.criterion.InfoItemItemSelectorCriterion;
+import com.liferay.notification.term.contributor.NotificationTermContributor;
+import com.liferay.notification.type.NotificationType;
 import com.liferay.object.constants.ObjectSAPConstants;
 import com.liferay.object.internal.item.selector.SystemObjectEntryItemSelectorView;
+import com.liferay.object.internal.notification.term.contributor.ObjectDefinitionNotificationTermContributor;
+import com.liferay.object.internal.notification.type.ObjectDefinitionNotificationType;
 import com.liferay.object.internal.persistence.ObjectDefinitionTableArgumentsResolver;
 import com.liferay.object.internal.related.models.SystemObject1toMObjectRelatedModelsProviderImpl;
 import com.liferay.object.internal.related.models.SystemObjectMtoMObjectRelatedModelsProviderImpl;
@@ -33,6 +37,7 @@ import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.object.system.SystemObjectDefinitionMetadata;
+import com.liferay.object.system.SystemObjectDefinitionMetadataTracker;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerListFactory;
 import com.liferay.petra.string.StringBundler;
@@ -48,8 +53,10 @@ import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistry;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.language.LanguageResources;
 import com.liferay.portal.security.service.access.policy.model.SAPEntry;
@@ -155,13 +162,6 @@ public class SystemObjectDefinitionMetadataPortalInstanceLifecycleListener
 		_serviceTrackerList.close();
 	}
 
-	@Reference(
-		target = "(&(release.bundle.symbolic.name=com.liferay.object.service)(release.schema.version>=1.0.0))",
-		unbind = "-"
-	)
-	protected void setRelease(Release release) {
-	}
-
 	private void _addSAPEntry(long companyId) throws PortalException {
 		SAPEntry sapEntry = _sapEntryLocalService.fetchSAPEntry(
 			companyId, ObjectSAPConstants.SAP_ENTRY_NAME);
@@ -221,13 +221,37 @@ public class SystemObjectDefinitionMetadataPortalInstanceLifecycleListener
 				HashMapDictionaryBuilder.<String, Object>put(
 					"item.selector.view.order", 500
 				).build());
+
+			if (GetterUtil.getBoolean(
+					PropsUtil.get("feature.flag.LPS-158482"))) {
+
+				_bundleContext.registerService(
+					NotificationTermContributor.class,
+					new ObjectDefinitionNotificationTermContributor(
+						objectDefinition, _objectFieldLocalService,
+						_userLocalService),
+					HashMapDictionaryBuilder.<String, Object>put(
+						"notification.term.contributor.key",
+						objectDefinition.getClassName()
+					).put(
+						"notification.type.key", objectDefinition.getClassName()
+					).build());
+				_bundleContext.registerService(
+					NotificationType.class,
+					new ObjectDefinitionNotificationType(objectDefinition),
+					HashMapDictionaryBuilder.<String, Object>put(
+						"notification.type.key", objectDefinition.getClassName()
+					).build());
+			}
+
 			_bundleContext.registerService(
 				ObjectRelatedModelsProvider.class,
 				new SystemObject1toMObjectRelatedModelsProviderImpl(
 					objectDefinition, _objectEntryLocalService,
 					_objectFieldLocalService, _objectRelationshipLocalService,
 					_persistedModelLocalServiceRegistry,
-					systemObjectDefinitionMetadata),
+					systemObjectDefinitionMetadata,
+					_systemObjectDefinitionMetadataTracker),
 				null);
 			_bundleContext.registerService(
 				ObjectRelatedModelsProvider.class,
@@ -235,7 +259,8 @@ public class SystemObjectDefinitionMetadataPortalInstanceLifecycleListener
 					objectDefinition, _objectDefinitionLocalService,
 					_objectFieldLocalService, _objectRelationshipLocalService,
 					_persistedModelLocalServiceRegistry,
-					systemObjectDefinitionMetadata),
+					systemObjectDefinitionMetadata,
+					_systemObjectDefinitionMetadataTracker),
 				null);
 			_bundleContext.registerService(
 				RESTContextPathResolver.class,
@@ -291,11 +316,20 @@ public class SystemObjectDefinitionMetadataPortalInstanceLifecycleListener
 	@Reference
 	private Portal _portal;
 
+	@Reference(
+		target = "(&(release.bundle.symbolic.name=com.liferay.object.service)(release.schema.version>=1.0.0))"
+	)
+	private Release _release;
+
 	@Reference
 	private SAPEntryLocalService _sapEntryLocalService;
 
 	private ServiceTrackerList<SystemObjectDefinitionMetadata>
 		_serviceTrackerList;
+
+	@Reference
+	private SystemObjectDefinitionMetadataTracker
+		_systemObjectDefinitionMetadataTracker;
 
 	@Reference
 	private UserLocalService _userLocalService;

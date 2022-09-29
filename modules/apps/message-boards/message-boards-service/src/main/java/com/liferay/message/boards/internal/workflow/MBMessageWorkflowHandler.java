@@ -47,16 +47,10 @@ public class MBMessageWorkflowHandler extends BaseMBWorkflowHandler {
 
 	@Override
 	protected MBMessageLocalService getMBMessageLocalService() {
-		return _mbMessageLocalService;
+		return mbMessageLocalService;
 	}
 
-	@Reference(unbind = "-")
-	protected void setMBMessageLocalService(
-		MBMessageLocalService mbMessageLocalService) {
-
-		_mbMessageLocalService = mbMessageLocalService;
-	}
-
-	private MBMessageLocalService _mbMessageLocalService;
+	@Reference
+	protected MBMessageLocalService mbMessageLocalService;
 
 }

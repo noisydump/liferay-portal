@@ -28,6 +28,7 @@ import com.liferay.fragment.service.FragmentEntryService;
 import com.liferay.fragment.util.comparator.FragmentCollectionContributorNameComparator;
 import com.liferay.layout.content.page.editor.constants.ContentPageEditorPortletKeys;
 import com.liferay.layout.content.page.editor.web.internal.constants.ContentPageEditorConstants;
+import com.liferay.layout.util.PortalPreferencesUtil;
 import com.liferay.layout.util.structure.DropZoneLayoutStructureItem;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.Language;
@@ -40,7 +41,6 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -143,10 +143,6 @@ public class FragmentCollectionManager {
 				).put(
 					"name", fragmentCollection.getName()
 				).build());
-		}
-
-		if (!GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-158737"))) {
-			return allFragmentCollectionMapsList;
 		}
 
 		List<String> sortedFragmentCollectionKeys =
@@ -634,9 +630,6 @@ public class FragmentCollectionManager {
 
 	@Reference
 	private FragmentCompositionService _fragmentCompositionService;
-
-	@Reference
-	private FragmentEntryLinkManager _fragmentEntryLinkManager;
 
 	@Reference
 	private FragmentEntryService _fragmentEntryService;

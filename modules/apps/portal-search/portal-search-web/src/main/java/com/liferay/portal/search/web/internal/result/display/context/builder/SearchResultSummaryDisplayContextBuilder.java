@@ -395,12 +395,17 @@ public class SearchResultSummaryDisplayContextBuilder {
 			searchResultSummaryDisplayContext, assetRenderer, summary);
 		_buildCreationDateString(searchResultSummaryDisplayContext);
 		_buildCreatorUserName(searchResultSummaryDisplayContext);
+		_buildCreatorUserPortrait(searchResultSummaryDisplayContext);
 		_buildDocumentForm(searchResultSummaryDisplayContext);
 		_buildImage(
 			searchResultSummaryDisplayContext, assetRendererFactory,
 			assetRenderer);
 		_buildLocaleReminder(searchResultSummaryDisplayContext, summary);
 		_buildModelResource(searchResultSummaryDisplayContext, className);
+		_buildModifiedByUserName(searchResultSummaryDisplayContext);
+		_buildModifiedByUserPortrait(searchResultSummaryDisplayContext);
+		_buildModifiedDateString(searchResultSummaryDisplayContext);
+		_buildPublishedDateString(searchResultSummaryDisplayContext);
 		_buildUserPortrait(
 			searchResultSummaryDisplayContext, assetEntry, className);
 		_buildViewURL(className, classPK, searchResultSummaryDisplayContext);
@@ -563,7 +568,7 @@ public class SearchResultSummaryDisplayContextBuilder {
 		dateOptional.ifPresent(
 			date -> {
 				searchResultSummaryDisplayContext.setCreationDateString(
-					_formatCreationDate(date));
+					_formatDate(date));
 				searchResultSummaryDisplayContext.setCreationDateVisible(true);
 			});
 	}
@@ -571,12 +576,27 @@ public class SearchResultSummaryDisplayContextBuilder {
 	private void _buildCreatorUserName(
 		SearchResultSummaryDisplayContext searchResultSummaryDisplayContext) {
 
-		String creatorUserName = _getFieldValueString(Field.USER_NAME);
+		User user = _userLocalService.fetchUser(
+			_getFieldValueLong(Field.USER_ID));
 
-		if (!Validator.isBlank(creatorUserName)) {
+		if (user != null) {
 			searchResultSummaryDisplayContext.setCreatorUserName(
-				creatorUserName);
+				user.getFullName());
 			searchResultSummaryDisplayContext.setCreatorVisible(true);
+		}
+	}
+
+	private void _buildCreatorUserPortrait(
+		SearchResultSummaryDisplayContext searchResultSummaryDisplayContext) {
+
+		String creatorUserPortraitUrlString = _getPortraitURLString(
+			_getFieldValueLong(Field.USER_ID));
+
+		if (creatorUserPortraitUrlString != null) {
+			searchResultSummaryDisplayContext.setCreatorUserPortraitURLString(
+				creatorUserPortraitUrlString);
+			searchResultSummaryDisplayContext.setCreatorUserPortraitVisible(
+				true);
 		}
 	}
 
@@ -823,6 +843,69 @@ public class SearchResultSummaryDisplayContextBuilder {
 		}
 	}
 
+	private void _buildModifiedByUserName(
+		SearchResultSummaryDisplayContext searchResultSummaryDisplayContext) {
+
+		User user = _userLocalService.fetchUser(
+			_getFieldValueLong("statusByUserId"));
+
+		if (user != null) {
+			searchResultSummaryDisplayContext.setModifiedByUserName(
+				user.getFullName());
+			searchResultSummaryDisplayContext.setModifiedByUserNameVisible(
+				true);
+		}
+	}
+
+	private void _buildModifiedByUserPortrait(
+		SearchResultSummaryDisplayContext searchResultSummaryDisplayContext) {
+
+		String modifiedByUserPortraitURLString = _getPortraitURLString(
+			_getFieldValueLong("statusByUserId"));
+
+		if (modifiedByUserPortraitURLString != null) {
+			searchResultSummaryDisplayContext.
+				setModifiedByUserPortraitURLString(
+					modifiedByUserPortraitURLString);
+			searchResultSummaryDisplayContext.setModifiedByUserPortraitVisible(
+				true);
+		}
+	}
+
+	private void _buildModifiedDateString(
+		SearchResultSummaryDisplayContext searchResultSummaryDisplayContext) {
+
+		Optional<String> dateStringOptional = SearchStringUtil.maybe(
+			_getFieldValueString(Field.MODIFIED_DATE));
+
+		Optional<Date> dateOptional = dateStringOptional.map(
+			this::_parseDateStringFieldValue);
+
+		dateOptional.ifPresent(
+			date -> {
+				searchResultSummaryDisplayContext.setModifiedDateString(
+					_formatDate(date));
+				searchResultSummaryDisplayContext.setModifiedDateVisible(true);
+			});
+	}
+
+	private void _buildPublishedDateString(
+		SearchResultSummaryDisplayContext searchResultSummaryDisplayContext) {
+
+		Optional<String> dateStringOptional = SearchStringUtil.maybe(
+			_getFieldValueString(Field.PUBLISH_DATE));
+
+		Optional<Date> dateOptional = dateStringOptional.map(
+			this::_parseDateStringFieldValue);
+
+		dateOptional.ifPresent(
+			date -> {
+				searchResultSummaryDisplayContext.setPublishedDateString(
+					_formatDate(date));
+				searchResultSummaryDisplayContext.setPublishedDateVisible(true);
+			});
+	}
+
 	private SearchResultSummaryDisplayContext _buildTemporarilyUnavailable() {
 		SearchResultSummaryDisplayContext searchResultSummaryDisplayContext =
 			new SearchResultSummaryDisplayContext();
@@ -867,7 +950,7 @@ public class SearchResultSummaryDisplayContextBuilder {
 			getSearchResultViewURL(className, classPK));
 	}
 
-	private String _formatCreationDate(Date date) {
+	private String _formatDate(Date date) {
 		Format format = _fastDateFormatFactory.getDateTime(
 			FastDateFormatConstants.MEDIUM, FastDateFormatConstants.SHORT,
 			_locale, _themeDisplay.getTimeZone());

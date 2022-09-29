@@ -19,8 +19,6 @@ import com.liferay.fragment.constants.FragmentEntryLinkConstants;
 import com.liferay.fragment.contributor.FragmentCollectionContributorTracker;
 import com.liferay.fragment.entry.processor.util.EditableFragmentEntryProcessorUtil;
 import com.liferay.fragment.helper.FragmentEntryLinkHelper;
-import com.liferay.fragment.listener.FragmentEntryLinkListener;
-import com.liferay.fragment.listener.FragmentEntryLinkListenerTracker;
 import com.liferay.fragment.model.FragmentEntry;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.renderer.DefaultFragmentRendererContext;
@@ -79,39 +77,6 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(immediate = true, service = FragmentEntryLinkManager.class)
 public class FragmentEntryLinkManager {
-
-	public void deleteFragmentEntryLink(long fragmentEntryLinkId, long plid)
-		throws PortalException {
-
-		FragmentEntryLink fragmentEntryLink =
-			_fragmentEntryLinkLocalService.fetchFragmentEntryLink(
-				fragmentEntryLinkId);
-
-		if (fragmentEntryLink == null) {
-			_layoutClassedModelUsageLocalService.deleteLayoutClassedModelUsages(
-				String.valueOf(fragmentEntryLinkId),
-				_portal.getClassNameId(FragmentEntryLink.class), plid);
-
-			return;
-		}
-
-		_fragmentEntryLinkLocalService.deleteFragmentEntryLink(
-			fragmentEntryLinkId);
-
-		_layoutClassedModelUsageLocalService.deleteLayoutClassedModelUsages(
-			String.valueOf(fragmentEntryLinkId),
-			_portal.getClassNameId(FragmentEntryLink.class), plid);
-
-		List<FragmentEntryLinkListener> fragmentEntryLinkListeners =
-			_fragmentEntryLinkListenerTracker.getFragmentEntryLinkListeners();
-
-		for (FragmentEntryLinkListener fragmentEntryLinkListener :
-				fragmentEntryLinkListeners) {
-
-			fragmentEntryLinkListener.onDeleteFragmentEntryLink(
-				fragmentEntryLink);
-		}
-	}
 
 	public FragmentEntry getFragmentEntry(
 		long groupId, String fragmentEntryKey, Locale locale) {
@@ -501,9 +466,6 @@ public class FragmentEntryLinkManager {
 
 	@Reference
 	private FragmentEntryLinkHelper _fragmentEntryLinkHelper;
-
-	@Reference
-	private FragmentEntryLinkListenerTracker _fragmentEntryLinkListenerTracker;
 
 	@Reference
 	private FragmentEntryLinkLocalService _fragmentEntryLinkLocalService;

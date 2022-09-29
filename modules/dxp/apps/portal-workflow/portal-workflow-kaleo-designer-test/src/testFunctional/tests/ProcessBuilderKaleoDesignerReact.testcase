@@ -312,6 +312,7 @@ definition {
 	@description = "Verify that Notification can be added"
 	@priority = "4"
 	test CanAddNotification {
+		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "ProcessBuilderKaleoDesignerReact#CanAddNotification";
 
 		Workflow.openWorkflowListView();
@@ -452,14 +453,14 @@ definition {
 		ProcessBuilderKaleoDesignerReact.selectTranslationLanguage(
 			newTranslationOption = "fr_FR",
 			translationOptionSelected = "en-us",
-			translationStatus = "warning");
+			translationStatus = "label-warning");
 
 		ProcessBuilderKaleoDesignerReact.editWorkflowTitle(title = "Titre l'epreuve");
 
 		ProcessBuilderKaleoDesignerReact.selectTranslationLanguage(
 			newTranslationOption = "pt_BR",
 			translationOptionSelected = "fr-fr",
-			translationStatus = "warning");
+			translationStatus = "label-warning");
 
 		ProcessBuilderKaleoDesignerReact.editWorkflowTitle(title = "Titulo do teste");
 
@@ -498,12 +499,71 @@ definition {
 	}
 
 	@description = "Verify that the user is able to assign the task node to multiple Role Types"
-	@ignore = "Test Stub"
 	@priority = "4"
 	test CanAssignMultipleRoleTypesToTaskNode {
+		property test.name.skip.portal.instance = "ProcessBuilderKaleoDesignerReact#CanAssignMultipleRoleTypesToTaskNode";
 
-		// TODO CanAssignMultipleRoleTypesToTaskNode pending implementation
+		Workflow.openWorkflowListView();
 
+		Workflow.addNewDefinition(workflowDefinitionTitle = "New Workflow Definition");
+
+		ProcessBuilderKaleoDesignerReact.dragSidebarNodeAndMove(
+			nodeLabel = "Task",
+			nodePosition = "0,0");
+
+		ProcessBuilderKaleoDesignerReact.viewAndFillAssignments(
+			assignmentType = "Role Type",
+			roleTypeName = "Organization",
+			roleTypeRoleName = "Organization User");
+
+		ProcessBuilderKaleoDesignerReact.backArrowOnSidebar();
+
+		ProcessBuilderKaleoDesignerReact.selectNode(nodeType = "task");
+
+		ProcessBuilderKaleoDesignerReact.gotoSideBarProperty(
+			propertyName = "Assignments",
+			propertyValue = "Role Type:Organization User");
+
+		ProcessBuilderKaleoDesignerReact.addRoleTypeByPositionOnAssignments(
+			assignmentType = "Role Type",
+			newSection = "New Section",
+			roleTypeName = "Account",
+			roleTypeRoleName = "Account Member",
+			sectionOptionList = "3");
+
+		ProcessBuilderKaleoDesignerReact.backArrowOnSidebar();
+
+		ProcessBuilderKaleoDesignerReact.gotoSideBarProperty(
+			propertyName = "Assignments",
+			propertyValue = "Role Type:Organization User");
+
+		ProcessBuilderKaleoDesignerReact.addRoleTypeByPositionOnAssignments(
+			assignmentType = "Role Type",
+			newSection = "New Section",
+			roleTypeName = "Regular",
+			roleTypeRoleName = "Owner",
+			sectionOptionList = "4");
+
+		ProcessBuilderKaleoDesignerReact.backArrowOnSidebar();
+
+		ProcessBuilderKaleoDesignerReact.gotoSideBarProperty(
+			propertyName = "Assignments",
+			propertyValue = "Role Type:Organization User");
+
+		ProcessBuilderKaleoDesignerReact.viewSelectedRoleAssignmentsByPosition(
+			inputOption = "Role",
+			positonOption = "2",
+			selectedRole = "Organization");
+
+		ProcessBuilderKaleoDesignerReact.viewSelectedRoleAssignmentsByPosition(
+			inputOption = "Role",
+			positonOption = "3",
+			selectedRole = "Account");
+
+		ProcessBuilderKaleoDesignerReact.viewSelectedRoleAssignmentsByPosition(
+			inputOption = "Role",
+			positonOption = "4",
+			selectedRole = "Organization");
 	}
 
 	@description = "Verify that the user is able to assign the task node to a single Role Type"
@@ -682,12 +742,35 @@ definition {
 	}
 
 	@description = "Verify that the user can select and define an Action to be conducted once the timer expires"
-	@ignore = "Test Stub"
 	@priority = "3"
 	test CanConfigureActionAtTimers {
+		property test.name.skip.portal.instance = "ProcessBuilderKaleoDesignerReact#CanConfigureActionAtTimers";
 
-		// TODO CanConfigureActionAtTimers pending implementation
+		Workflow.openWorkflowListView();
 
+		Workflow.addNewDefinition(workflowDefinitionTitle = "New Workflow Definition");
+
+		ProcessBuilderKaleoDesignerReact.dragSidebarNodeAndMove(nodeLabel = "Task");
+
+		ProcessBuilderKaleoDesignerReact.dragSidebarNodeAndMove(
+			nodeLabel = "Task",
+			nodePosition = "-20,-40");
+
+		ProcessBuilderKaleoDesignerReact.viewAndFillTimers(
+			actionName = "Liferay Timer 1",
+			actionsTemplateValue = "${userName} sent you a ${entryType} for review in the workflow.",
+			durationValue = "2",
+			newTimer = "true",
+			scaleTypeOption = "Minute",
+			singleTimer = "true");
+
+		ProcessBuilderKaleoDesignerReact.backArrowOnSidebar();
+
+		ProcessBuilderKaleoDesignerReact.gotoSideBarProperty(
+			propertyName = "Timer",
+			propertyValue = "Duration: 2 minute");
+
+		ProcessBuilderKaleoDesignerReact.viewActionsInsideTimersPresent(actionName = "Liferay Timer 1");
 	}
 
 	@description = "Verify that the user can add multiple Actions to Timers at task node"
@@ -737,17 +820,40 @@ definition {
 	}
 
 	@description = "Verify that the user can select and define an Reassignment to be conducted once the timer expires"
-	@ignore = "Test Stub"
 	@priority = "3"
 	test CanConfigureReassignmentAtTimers {
+		property test.name.skip.portal.instance = "ProcessBuilderKaleoDesignerReact#CanConfigureReassignmentAtTimers";
 
-		// TODO CanConfigureReassignmentAtTimers pending implementation
+		Workflow.openWorkflowListView();
 
+		Workflow.addNewDefinition(workflowDefinitionTitle = "New Workflow Definition");
+
+		ProcessBuilderKaleoDesignerReact.dragSidebarNodeAndMove(nodeLabel = "Task");
+
+		ProcessBuilderKaleoDesignerReact.dragSidebarNodeAndMove(
+			nodeLabel = "Task",
+			nodePosition = "-20,-40");
+
+		ProcessBuilderKaleoDesignerReact.viewAndFillTimers(
+			actionTypeOption = "Reassignment",
+			durationValue = "2",
+			newTimer = "true",
+			scaleTypeOption = "Minute",
+			singleTimer = "true");
+
+		ProcessBuilderKaleoDesignerReact.backArrowOnSidebar();
+
+		ProcessBuilderKaleoDesignerReact.gotoSideBarProperty(
+			propertyName = "Timer",
+			propertyValue = "Duration: 2 minute");
+
+		ProcessBuilderKaleoDesignerReact.viewActionsInsideTimersPresent(actionTypeOption = "Reassignment");
 	}
 
 	@description = "Verify that the user can create a Template for Notification"
 	@priority = "4"
 	test CanCreateNotificationTemplate {
+		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "ProcessBuilderKaleoDesignerReact#CanCreateNotificationTemplate";
 
 		Workflow.openWorkflowListView();
@@ -1525,6 +1631,7 @@ definition {
 	@description = "Verify that the user can edit the Description of the Notification"
 	@priority = "4"
 	test CanEditNotificationDescription {
+		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "ProcessBuilderKaleoDesignerReact#CanEditNotificationDescription";
 
 		Workflow.openWorkflowListView();
@@ -1561,6 +1668,7 @@ definition {
 	@description = "Verify that the user can edit the Name of the Notification"
 	@priority = "4"
 	test CanEditNotificationName {
+		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "ProcessBuilderKaleoDesignerReact#CanEditNotificationName";
 
 		Workflow.openWorkflowListView();
@@ -1596,6 +1704,7 @@ definition {
 	@description = "Verify that the user can edit a Template for Notification"
 	@priority = "4"
 	test CanEditNotificationTemplate {
+		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "ProcessBuilderKaleoDesignerReact#CanEditNotificationTemplate";
 
 		Workflow.openWorkflowListView();
@@ -1685,6 +1794,7 @@ definition {
 	@description = "Verify that the user can edit the Template Language of the Notification to FreeMarker"
 	@priority = "4"
 	test CanEditTemplateLanguageToFreeMarker {
+		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "ProcessBuilderKaleoDesignerReact#CanEditTemplateLanguageToFreeMarker";
 
 		Workflow.openWorkflowListView();
@@ -1711,6 +1821,7 @@ definition {
 	@description = "Verify that the user can edit the Template Language of the Notification to Text"
 	@priority = "4"
 	test CanEditTemplateLanguageToText {
+		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "ProcessBuilderKaleoDesignerReact#CanEditTemplateLanguageToText";
 
 		Workflow.openWorkflowListView();
@@ -1737,6 +1848,7 @@ definition {
 	@description = "Verify that the user can edit the Template Language of the Notification to Velocity"
 	@priority = "4"
 	test CanEditTemplateLanguageToVelocity {
+		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "ProcessBuilderKaleoDesignerReact#CanEditTemplateLanguageToVelocity";
 
 		Workflow.openWorkflowListView();
@@ -2082,12 +2194,25 @@ definition {
 	}
 
 	@description = "Verify that is not possible to have multiple Start nodes"
-	@ignore = "Test Stub"
 	@priority = "4"
 	test CanNotHaveMultipleStartNode {
+		property test.name.skip.portal.instance = "ProcessBuilderKaleoDesignerReact#CanNotHaveMultipleStartNode";
 
-		// TODO LRQA-72940 CanNotHaveMultipleStartNode pending implementation
+		Workflow.openWorkflowListView();
 
+		Workflow.addNewDefinition(workflowDefinitionTitle = "New Workflow Definition");
+
+		ProcessBuilderKaleoDesignerReact.uploadDefinition(workflowDefinitionFile = "invalid-start-workflow-definition.xml");
+
+		ProcessBuilderKaleoDesignerReact.diagramSourceSwitchView();
+
+		Button.clickPublish();
+
+		Alert.viewErrorMessage(errorMessage = "The workflow has too many start nodes (state nodes Start 1 and Start 2 )");
+
+		Navigator.gotoBack();
+
+		Workflow.viewDefinitionNotPresent(workflowDefinitionTitle = "New Workflow Definition");
 	}
 
 	@description = "LPS-139388 - Verify that nodes behave correctly when we import a workflow with the same names for different elements"
@@ -2109,21 +2234,21 @@ definition {
 	}
 
 	@description = "Verify that the user can't Publish a workflow without transitions"
-	@ignore = "Test Stub"
 	@priority = "4"
 	test CanNotPublishWorkflowWithoutTransitions {
+		property test.name.skip.portal.instance = "ProcessBuilderKaleoDesignerReact#CanNotPublishWorkflowWithoutTransitions";
 
-		// TODO CanNotPublishWorkflowWithoutTransitions pending implementation
+		Workflow.openWorkflowListView();
 
-	}
+		Workflow.addNewDefinition(workflowDefinitionTitle = "New Workflow Definition");
 
-	@description = "Verify that the user can't restore to a invalid previous definition version when the workflow is Published and a Error alert appears (Example: Error:Unable to restore this item)"
-	@ignore = "Test Stub"
-	@priority = "5"
-	test CanNotRestoreToAInvalidDefinitionWhenPublished {
+		Button.clickPublish();
 
-		// TODO CantRestoreToAInvalidDefinitionWhenPublished pending implementation
+		Alert.viewErrorMessage(errorMessage = "The Start node must have an outgoing transition");
 
+		Navigator.gotoBack();
+
+		Workflow.viewDefinitionNotPresent(workflowDefinitionTitle = "New Workflow Definition");
 	}
 
 	@description = "LPS-139388 - Verify that is not possible to save a process with node ID not unique"
@@ -2669,6 +2794,7 @@ definition {
 	@description = "Verify that the is able to select who receives the notification: Asset Creator"
 	@priority = "5"
 	test CanSelectAssetCreatorAsNotificationRecipientType {
+		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "ProcessBuilderKaleoDesignerReact#CanSelectAssetCreatorAsNotificationRecipientType";
 
 		Workflow.openWorkflowListView();
@@ -2695,6 +2821,7 @@ definition {
 	@description = "Verify that the user can select Email as Notification type"
 	@priority = "5"
 	test CanSelectEmailAsNotificationType {
+		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "ProcessBuilderKaleoDesignerReact#CanSelectEmailAsNotificationType";
 
 		Workflow.openWorkflowListView();
@@ -2742,17 +2869,37 @@ definition {
 	}
 
 	@description = "Verify that the user can select On Assignment as Execution Type"
-	@ignore = "Test Stub"
 	@priority = "4"
 	test CanSelectOnAssignmentAsExecutionTypeAtActions {
+		property test.name.skip.portal.instance = "ProcessBuilderKaleoDesignerReact#CanSelectOnAssignmentAsExecutionTypeAtActions";
 
-		// TODO CanSelectOnAssignmentAsExecutionTypeAtActions pending implementation
+		Workflow.openWorkflowListView();
 
+		Workflow.addNewDefinition(workflowDefinitionTitle = "New Workflow Definition");
+
+		ProcessBuilderKaleoDesignerReact.dragSidebarNodeAndMove(
+			nodeLabel = "Task",
+			nodePosition = "-20,-40");
+
+		ProcessBuilderKaleoDesignerReact.viewAndFillActions(
+			actionsTemplateValue = "Action Template",
+			executionTypeOption = "On Assignment",
+			name = "Liferay Actions",
+			singleAction = "true");
+
+		ProcessBuilderKaleoDesignerReact.backArrowOnSidebar();
+
+		ProcessBuilderKaleoDesignerReact.gotoSideBarProperty(
+			propertyName = "Actions",
+			propertyValue = "Liferay Actions");
+
+		ProcessBuilderKaleoDesignerReact.viewActionsInfo(executionTypeOption = "On Assignments");
 	}
 
 	@description = "Verify that the user can select On Assignment as the time when the notification will be sent in a task"
 	@priority = "4"
 	test CanSelectOnAssignmentAsExecutionTypeAtTaskNotifications {
+		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "ProcessBuilderKaleoDesignerReact#CanSelectOnAssignmentAsExecutionTypeAtTaskNotifications";
 
 		Workflow.openWorkflowListView();
@@ -2781,6 +2928,7 @@ definition {
 	@description = "Verify that the user can select On Entry as the time when the notification will be sent"
 	@priority = "4"
 	test CanSelectOnEntryAsExecutionTypeAtNodeNotifications {
+		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "ProcessBuilderKaleoDesignerReact#CanSelectOnEntryAsExecutionTypeAtNodeNotifications";
 
 		Workflow.openWorkflowListView();
@@ -2863,6 +3011,7 @@ definition {
 	@description = "Verify that the user can select On Exit as the time when the notification will be sent"
 	@priority = "4"
 	test CanSelectOnExitAsExecutionTypeAtNodeNotifications {
+		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "ProcessBuilderKaleoDesignerReact#CanSelectOnExitAsExecutionTypeAtNodeNotifications";
 
 		Workflow.openWorkflowListView();
@@ -2889,6 +3038,7 @@ definition {
 	@description = "Verify that the is able to select who receives the notification: Role"
 	@priority = "5"
 	test CanSelectRoleAsNotificationRecipientType {
+		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "ProcessBuilderKaleoDesignerReact#CanSelectRoleAsNotificationRecipientType";
 
 		Workflow.openWorkflowListView();
@@ -2916,6 +3066,7 @@ definition {
 	@description = "Verify that the is able to select who receives the notification: Scripted Recipient"
 	@priority = "5"
 	test CanSelectScriptedRecipientAsNotificationRecipientType {
+		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "ProcessBuilderKaleoDesignerReact#CanSelectScriptedRecipientAsNotificationRecipientType";
 
 		Workflow.openWorkflowListView();
@@ -2943,6 +3094,7 @@ definition {
 	@description = "Verify that the is able to select who receives the notification: Task Assignees"
 	@priority = "5"
 	test CanSelectTaskAssigneesAsNotificationRecipientTypeAtTaskNode {
+		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "ProcessBuilderKaleoDesignerReact#CanSelectTaskAssigneesAsNotificationRecipientTypeAtTaskNode";
 
 		Workflow.openWorkflowListView();
@@ -2971,6 +3123,7 @@ definition {
 	@description = "Verify that the user can select Email and User Notification as Notification type"
 	@priority = "5"
 	test CanSelectUserNotificationAndEmailAsNotificationType {
+		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "ProcessBuilderKaleoDesignerReact#CanSelectUserNotificationAndEmailAsNotificationType";
 
 		Workflow.openWorkflowListView();
@@ -3002,6 +3155,7 @@ definition {
 	@description = "Verify that the user can select User Notification as Notification type"
 	@priority = "5"
 	test CanSelectUserNotificationAsNotificationType {
+		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "ProcessBuilderKaleoDesignerReact#CanSelectUserNotificationAsNotificationType";
 
 		Workflow.openWorkflowListView();
@@ -3600,7 +3754,6 @@ definition {
 	}
 
 	@description = "Verify that the Condition node must have at least two outgoing transitions"
-	@ignore = "true"
 	@priority = "4"
 	test ConditionMustHaveMoreThanOneTransition {
 		property test.name.skip.portal.instance = "ProcessBuilderKaleoDesignerReact#ConditionMustHaveMoreThanOneTransition";
@@ -3774,7 +3927,6 @@ definition {
 	}
 
 	@description = "Publish workflow definition with no start node and view error message"
-	@ignore = "true"
 	@priority = "4"
 	test DefinitionRequiresStartNodeToPublish {
 		property test.name.skip.portal.instance = "ProcessBuilderKaleoDesignerReact#DefinitionRequiresStartNodeToPublish";
@@ -3790,6 +3942,10 @@ definition {
 		Button.clickPublish();
 
 		Alert.viewErrorMessage(errorMessage = "You must define a start node");
+
+		Navigator.gotoBack();
+
+		Workflow.viewDefinitionNotPresent(workflowDefinitionTitle = "New Workflow Definition");
 	}
 
 	@description = "Verify that, when the user deletes a translation, the action reflects in the language selector"
@@ -3834,16 +3990,28 @@ definition {
 	}
 
 	@description = "Verify that the Fork node must have at least two outgoing transitions"
-	@ignore = "Test Stub"
 	@priority = "4"
 	test ForkNodeMustHaveMoreThanOneTransition {
+		property test.name.skip.portal.instance = "ProcessBuilderKaleoDesignerReact#ForkNodeMustHaveMoreThanOneTransition";
 
-		// TODO LRQA-72943 ForkNodeMustHaveMoreThanOneTransition pending implementation
+		Workflow.openWorkflowListView();
 
+		Workflow.addNewDefinition(workflowDefinitionTitle = "New Workflow Definition");
+
+		ProcessBuilderKaleoDesignerReact.uploadDefinition(workflowDefinitionFile = "invalid-fork-workflow-definition.xml");
+
+		ProcessBuilderKaleoDesignerReact.diagramSourceSwitchView();
+
+		Button.clickPublish();
+
+		Alert.viewErrorMessage(errorMessage = "The Fork node must have at least 2 outgoing transitions");
+
+		Navigator.gotoBack();
+
+		Workflow.viewDefinitionNotPresent(workflowDefinitionTitle = "New Workflow Definition");
 	}
 
 	@description = "Verify that each fork node requires a join node"
-	@ignore = "true"
 	@priority = "4"
 	test ForkNodeRequiresJoinNode {
 		property test.name.skip.portal.instance = "ProcessBuilderKaleoDesignerReact#ForkNodeRequiresJoinNode";
@@ -4248,12 +4416,33 @@ definition {
 	}
 
 	@description = "Verify that the Start Node must have an outgoing transition"
-	@ignore = "Test Stub"
 	@priority = "4"
 	test StartNodeMustHaveOutgoingTransition {
+		property test.name.skip.portal.instance = "ProcessBuilderKaleoDesignerReact#StartNodeMustHaveOutgoingTransition";
 
-		// TODO LRQA-72939 StartNodeMustHaveOutgoingTransition pending implementation
+		Workflow.openWorkflowListView();
 
+		Workflow.addNewDefinition(workflowDefinitionTitle = "New Workflow Definition");
+
+		ProcessBuilderKaleoDesignerReact.dragSidebarNodeAndMove(
+			nodeLabel = "Task",
+			nodePosition = "-20,-300");
+
+		ProcessBuilderKaleoDesignerReact.backArrowOnSidebar();
+
+		ProcessBuilderKaleoDesignerReact.addConnector(
+			connectorIn = "end",
+			connectorLabel = "Transition Label",
+			connectorOut = "task",
+			key_direction = "top");
+
+		Button.clickPublish();
+
+		Alert.viewErrorMessage(errorMessage = "The Start node must have an outgoing transition");
+
+		Navigator.gotoBack();
+
+		Workflow.viewDefinitionNotPresent(workflowDefinitionTitle = "New Workflow Definition");
 	}
 
 	@description = "LPS-139387 - Verify that the Node ID is a required field"
@@ -4471,21 +4660,47 @@ definition {
 	}
 
 	@description = "Publish workflow definition with Invalid Join Node And View Error Message"
-	@ignore = "Test Stub"
 	@priority = "3"
 	test ViewErrorMessageAfterPublishInvalidJoinDefinition {
+		property test.name.skip.portal.instance = "ProcessBuilderKaleoDesignerReact#ViewErrorMessageAfterPublishInvalidJoinDefinition";
 
-		// TODO ViewErrorMessageAfterPublishInvalidJoinDefinition pending implementation
+		Workflow.openWorkflowListView();
 
+		Workflow.addNewDefinition(workflowDefinitionTitle = "New Workflow Definition");
+
+		ProcessBuilderKaleoDesignerReact.uploadDefinition(workflowDefinitionFile = "invalid-join-workflow-definition.xml");
+
+		ProcessBuilderKaleoDesignerReact.diagramSourceSwitchView();
+
+		Button.clickPublish();
+
+		Alert.viewErrorMessage(errorMessage = "Fix the errors between the fork node Fork and join node Join");
+
+		Navigator.gotoBack();
+
+		Workflow.viewDefinitionNotPresent(workflowDefinitionTitle = "New Workflow Definition");
 	}
 
 	@description = "Publish workflow definition with Invalid JoinXOR Node And View Error Message"
-	@ignore = "Test Stub"
 	@priority = "3"
 	test ViewErrorMessageAfterPublishInvalidJoinXORDefinition {
+		property test.name.skip.portal.instance = "ProcessBuilderKaleoDesignerReact#ViewErrorMessageAfterPublishInvalidJoinXORDefinition";
 
-		// TODO ViewErrorMessageAfterPublishInvalidJoinXORDefinition pending implementation
+		Workflow.openWorkflowListView();
 
+		Workflow.addNewDefinition(workflowDefinitionTitle = "New Workflow Definition");
+
+		ProcessBuilderKaleoDesignerReact.uploadDefinition(workflowDefinitionFile = "invalid-joinxor-workflow-definition.xml");
+
+		ProcessBuilderKaleoDesignerReact.diagramSourceSwitchView();
+
+		Button.clickPublish();
+
+		Alert.viewErrorMessage(errorMessage = "Fix the errors between the fork node Fork and join node Join XOR");
+
+		Navigator.gotoBack();
+
+		Workflow.viewDefinitionNotPresent(workflowDefinitionTitle = "New Workflow Definition");
 	}
 
 	@description = "Verify that a message warning is displayed when the user adds another transition and selects it as default"

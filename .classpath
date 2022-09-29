@@ -2,7 +2,6 @@
 <classpath>
 	<classpathentry excluding="**/.svn/**|.svn/" kind="src" path="definitions"/>
 	<classpathentry excluding="**/.svn/**|.svn/" kind="src" path="modules/core/osgi-service-tracker-collections/src/main/java"/>
-	<classpathentry excluding="**/.svn/**|.svn/" kind="src" path="modules/apps/petra/petra-portlet-url-builder/src/main/java"/>
 	<classpathentry excluding="**/.svn/**|.svn/" kind="src" path="modules/apps/petra/petra-xml/src/main/java"/>
 	<classpathentry excluding="**/.svn/**|.svn/" kind="src" path="modules/core/petra/petra-concurrent/src/main/java"/>
 	<classpathentry excluding="**/.svn/**|.svn/" kind="src" path="modules/core/petra/petra-executor/src/main/java"/>
@@ -55,6 +54,7 @@
 	<classpathentry kind="lib" path="lib/development/com.liferay.ant.sync.dir.jar"/>
 	<classpathentry kind="lib" path="lib/development/com.liferay.jenkins.results.parser.jar"/>
 	<classpathentry kind="lib" path="lib/development/com.liferay.poshi.core.jar"/>
+	<classpathentry kind="lib" path="lib/development/commons-codec.jar"/>
 	<classpathentry kind="lib" path="lib/development/commons-collections4.jar"/>
 	<classpathentry kind="lib" path="lib/development/commons-compress.jar"/>
 	<classpathentry kind="lib" path="lib/development/commons-lang3.jar"/>

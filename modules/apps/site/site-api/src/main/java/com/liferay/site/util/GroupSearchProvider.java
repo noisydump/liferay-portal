@@ -30,7 +30,7 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portlet.usersadmin.search.GroupSearch;
 import com.liferay.portlet.usersadmin.search.GroupSearchTerms;
@@ -41,6 +41,7 @@ import java.util.List;
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletURL;
 
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -108,6 +109,15 @@ public class GroupSearchProvider {
 		}
 
 		return groupSearch;
+	}
+
+	@Activate
+	protected void activate() {
+		_classNameIds = new long[] {
+			_portal.getClassNameId(Company.class),
+			_portal.getClassNameId(Group.class),
+			_portal.getClassNameId(Organization.class)
+		};
 	}
 
 	protected List<Group> getAllGroups(PortletRequest portletRequest)
@@ -217,26 +227,18 @@ public class GroupSearchProvider {
 		return true;
 	}
 
-	@Reference(unbind = "-")
-	protected void setGroupLocalService(GroupLocalService groupLocalService) {
-		_groupLocalService = groupLocalService;
-	}
-
-	@Reference(target = ModuleServiceLifecycle.PORTAL_INITIALIZED, unbind = "-")
-	protected void setModuleServiceLifecycle(
-		ModuleServiceLifecycle moduleServiceLifecycle) {
-
-		_classNameIds = new long[] {
-			PortalUtil.getClassNameId(Company.class),
-			PortalUtil.getClassNameId(Group.class),
-			PortalUtil.getClassNameId(Organization.class)
-		};
-	}
-
 	private long[] _classNameIds;
+
+	@Reference
 	private GroupLocalService _groupLocalService;
 
 	@Reference
 	private GroupPermission _groupPermission;
+
+	@Reference(target = ModuleServiceLifecycle.PORTAL_INITIALIZED)
+	private ModuleServiceLifecycle _moduleServiceLifecycle;
+
+	@Reference
+	private Portal _portal;
 
 }

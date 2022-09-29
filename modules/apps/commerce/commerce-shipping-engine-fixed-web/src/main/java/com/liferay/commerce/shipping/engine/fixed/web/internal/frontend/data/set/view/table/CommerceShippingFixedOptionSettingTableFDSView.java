@@ -34,7 +34,6 @@ import com.liferay.frontend.data.set.view.table.FDSTableSchemaBuilder;
 import com.liferay.frontend.data.set.view.table.FDSTableSchemaBuilderFactory;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
@@ -43,6 +42,7 @@ import com.liferay.portal.kernel.model.Region;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletProvider;
 import com.liferay.portal.kernel.portlet.PortletProviderUtil;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
@@ -174,7 +174,9 @@ public class CommerceShippingFixedOptionSettingTableFDSView
 						themeDisplay.getLanguageId()),
 					commerceShippingFixedOption.getName(
 						themeDisplay.getLanguageId()),
-					_getWarehouse(commerceShippingFixedOptionRel),
+					_getWarehouse(
+						commerceShippingFixedOptionRel,
+						themeDisplay.getLocale()),
 					_getZip(commerceShippingFixedOptionRel)));
 		}
 
@@ -272,7 +274,8 @@ public class CommerceShippingFixedOptionSettingTableFDSView
 	}
 
 	private String _getWarehouse(
-			CommerceShippingFixedOptionRel commerceShippingFixedOptionRel)
+			CommerceShippingFixedOptionRel commerceShippingFixedOptionRel,
+			Locale locale)
 		throws PortalException {
 
 		CommerceInventoryWarehouse commerceInventoryWarehouse =
@@ -282,7 +285,7 @@ public class CommerceShippingFixedOptionSettingTableFDSView
 			return StringPool.STAR;
 		}
 
-		return commerceInventoryWarehouse.getName();
+		return commerceInventoryWarehouse.getName(locale);
 	}
 
 	private String _getZip(

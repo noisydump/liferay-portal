@@ -26,6 +26,12 @@ definition {
 			CustomerPortal.addCustomerPortalSite(siteName = "${testSiteName}");
 		}
 
+		task ("Add test user access to all Accounts") {
+			CustomerPortal.assignUserToOrganization();
+
+			CustomerPortal.addUserToOneOrMoreAccounts(accountsList = "${testAccount}");
+		}
+
 		task ("Login on OKTA") {
 			CustomerPortal.loginOktaToUpdateCP();
 		}
@@ -73,7 +79,7 @@ definition {
 		}
 
 		task ("Then I assert that the alert with the message 'Unable to download key, please try again.' is visible") {
-			CustomerPortal.viewAlert(alertText = "Unable to download key, please try again.");
+			CustomerPortal.viewAlert(alertText = "Unable to export keys, please try again.");
 		}
 
 		task ("And I get the expected downloaded file name") {

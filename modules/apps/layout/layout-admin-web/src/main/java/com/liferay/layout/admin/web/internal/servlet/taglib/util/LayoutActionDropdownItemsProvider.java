@@ -17,13 +17,13 @@ package com.liferay.layout.admin.web.internal.servlet.taglib.util;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.layout.admin.web.internal.display.context.LayoutsAdminDisplayContext;
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.bean.BeanPropertiesUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.permission.LayoutPermissionUtil;
@@ -136,6 +136,14 @@ public class LayoutActionDropdownItemsProvider {
 						}
 					).add(
 						dropdownItem -> {
+							if (layout.isTypeContent() &&
+								!GetterUtil.getBoolean(
+									draftLayout.getTypeSettingsProperty(
+										"published"))) {
+
+								dropdownItem.setDisabled(true);
+							}
+
 							dropdownItem.setHref(
 								_layoutsAdminDisplayContext.getViewLayoutURL(
 									layout));
@@ -150,14 +158,9 @@ public class LayoutActionDropdownItemsProvider {
 							}
 
 							dropdownItem.setLabel(label);
-
-							if (layout.isTypeContent() &&
-								!GetterUtil.getBoolean(
-									draftLayout.getTypeSettingsProperty(
-										"published"))) {
-
-								dropdownItem.setDisabled(true);
-							}
+							dropdownItem.setTarget(
+								HtmlUtil.escape(
+									layout.getTypeSettingsProperty("target")));
 						}
 					).add(
 						() ->

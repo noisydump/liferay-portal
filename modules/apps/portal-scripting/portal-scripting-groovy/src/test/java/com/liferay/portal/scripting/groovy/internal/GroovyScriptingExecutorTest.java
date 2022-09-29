@@ -14,6 +14,9 @@
 
 package com.liferay.portal.scripting.groovy.internal;
 
+import com.liferay.portal.kernel.io.Deserializer;
+import com.liferay.portal.kernel.io.Serializer;
+import com.liferay.portal.kernel.scripting.ScriptingException;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
@@ -37,10 +40,29 @@ public class GroovyScriptingExecutorTest {
 		LiferayUnitTestRule.INSTANCE;
 
 	@Test
-	public void testBindingInputVariables() throws Exception {
+	public void testBindingInput() throws Exception {
 		_execute(
 			Collections.singletonMap("variable", "string"),
 			Collections.emptySet(), "binding-input");
+	}
+
+	@Test
+	public void testMissingMethod() throws Exception {
+		try {
+			_execute(
+				Collections.emptyMap(), Collections.emptySet(),
+				"missing-method");
+
+			Assert.fail();
+		}
+		catch (ScriptingException scriptingException) {
+			Assert.assertEquals(
+				"No signature of method: static Test.missingMethod() is " +
+					"applicable for argument types: () values: []",
+				scriptingException.getMessage());
+
+			_writeAndReadObject(scriptingException);
+		}
 	}
 
 	@Test
@@ -50,14 +72,14 @@ public class GroovyScriptingExecutorTest {
 				Collections.emptyMap(), Collections.emptySet(),
 				"runtime-error");
 
-			Assert.fail("Should throw RuntimeException");
+			Assert.fail();
 		}
 		catch (RuntimeException runtimeException) {
 		}
 	}
 
 	@Test
-	public void testSimpleScript() throws Exception {
+	public void testSimple() throws Exception {
 		_execute(Collections.emptyMap(), Collections.emptySet(), "simple");
 	}
 
@@ -67,7 +89,7 @@ public class GroovyScriptingExecutorTest {
 			_execute(
 				Collections.emptyMap(), Collections.emptySet(), "syntax-error");
 
-			Assert.fail("Should throw UnsupportedOperationException");
+			Assert.fail();
 		}
 		catch (UnsupportedOperationException unsupportedOperationException) {
 		}
@@ -86,6 +108,16 @@ public class GroovyScriptingExecutorTest {
 			StringUtil.read(
 				getClass().getResourceAsStream(
 					"dependencies/" + fileName + ".groovy")));
+	}
+
+	private void _writeAndReadObject(Exception exception) throws Exception {
+		Serializer serializer = new Serializer();
+
+		serializer.writeObject(exception);
+
+		Deserializer deserializer = new Deserializer(serializer.toByteBuffer());
+
+		deserializer.readObject();
 	}
 
 }

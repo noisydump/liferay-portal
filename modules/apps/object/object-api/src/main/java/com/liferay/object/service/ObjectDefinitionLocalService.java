@@ -92,6 +92,11 @@ public interface ObjectDefinitionLocalService
 		ObjectDefinition objectDefinition);
 
 	@Indexable(type = IndexableType.REINDEX)
+	public ObjectDefinition addObjectDefinition(
+			String externalReferenceCode, long userId)
+		throws PortalException;
+
+	@Indexable(type = IndexableType.REINDEX)
 	public ObjectDefinition addOrUpdateSystemObjectDefinition(
 			long companyId,
 			SystemObjectDefinitionMetadata systemObjectDefinitionMetadata)
@@ -279,6 +284,9 @@ public interface ObjectDefinitionLocalService
 		String uuid, long companyId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public ObjectDefinition fetchSystemObjectDefinition(String name);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ActionableDynamicQuery getActionableDynamicQuery();
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
@@ -398,6 +406,10 @@ public interface ObjectDefinitionLocalService
 			Map<Locale, String> labelMap, String name, String panelAppOrder,
 			String panelCategoryKey, boolean portlet,
 			Map<Locale, String> pluralLabelMap, String scope)
+		throws PortalException;
+
+	public ObjectDefinition updateExternalReferenceCode(
+			long objectDefinitionId, String externalReferenceCode)
 		throws PortalException;
 
 	/**

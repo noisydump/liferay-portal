@@ -128,11 +128,8 @@ if (organization != null) {
 
 			<c:if test="<%= (portletName.equals(UsersAdminPortletKeys.USERS_ADMIN) && usersListView.equals(UserConstants.LIST_VIEW_TREE)) || portletName.equals(UsersAdminPortletKeys.MY_ORGANIZATIONS) %>">
 				<div id="breadcrumb">
-					<liferay-ui:breadcrumb
-						showCurrentGroup="<%= false %>"
-						showGuestGroup="<%= false %>"
-						showLayout="<%= false %>"
-						showPortletBreadcrumb="<%= true %>"
+					<liferay-site-navigation:breadcrumb
+						breadcrumbEntries="<%= BreadcrumbEntriesUtil.getBreadcrumbEntries(request, false, false, false, true, true) %>"
 					/>
 				</div>
 			</c:if>
@@ -192,7 +189,7 @@ if (organization != null) {
 		<portlet:namespace />deleteOrganizations(organizationsRedirect);
 	}
 
-	<portlet:namespace />doDeleteOrganizations = function (
+	function <portlet:namespace />doDeleteOrganizations(
 		organizationIds,
 		organizationsRedirect
 	) {
@@ -216,7 +213,7 @@ if (organization != null) {
 			url:
 				'<portlet:actionURL name="/users_admin/delete_organizations_and_users" />',
 		});
-	};
+	}
 
 	<portlet:actionURL name="/users_admin/edit_organization_assignments" var="removeOrganizationsAndUsersURL">
 		<portlet:param name="assignmentsRedirect" value="<%= currentURL %>" />

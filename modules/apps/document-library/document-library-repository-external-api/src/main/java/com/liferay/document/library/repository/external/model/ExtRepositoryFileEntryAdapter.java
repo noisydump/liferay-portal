@@ -149,7 +149,6 @@ public class ExtRepositoryFileEntryAdapter
 	}
 
 	@Override
-	@SuppressWarnings("rawtypes")
 	public List<FileVersion> getFileVersions(int status) {
 		if ((status == WorkflowConstants.STATUS_ANY) ||
 			(status == WorkflowConstants.STATUS_APPROVED)) {
@@ -164,6 +163,11 @@ public class ExtRepositoryFileEntryAdapter
 		else {
 			return Collections.emptyList();
 		}
+	}
+
+	@Override
+	public List<FileVersion> getFileVersions(int status, int start, int end) {
+		return getFileVersions(status);
 	}
 
 	@Override

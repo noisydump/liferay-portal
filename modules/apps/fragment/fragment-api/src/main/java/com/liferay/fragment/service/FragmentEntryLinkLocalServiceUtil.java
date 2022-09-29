@@ -137,6 +137,12 @@ public class FragmentEntryLinkLocalServiceUtil {
 		getService().deleteFragmentEntryLinks(groupId);
 	}
 
+	public static void deleteFragmentEntryLinks(
+		long groupId, long plid, boolean deleted) {
+
+		getService().deleteFragmentEntryLinks(groupId, plid, deleted);
+	}
+
 	public static void deleteFragmentEntryLinks(long[] fragmentEntryLinkIds)
 		throws PortalException {
 
@@ -565,6 +571,13 @@ public class FragmentEntryLinkLocalServiceUtil {
 
 	public static void updateClassedModel(long plid) {
 		getService().updateClassedModel(plid);
+	}
+
+	public static FragmentEntryLink updateDeleted(
+			long fragmentEntryLinkId, boolean deleted)
+		throws PortalException {
+
+		return getService().updateDeleted(fragmentEntryLinkId, deleted);
 	}
 
 	/**

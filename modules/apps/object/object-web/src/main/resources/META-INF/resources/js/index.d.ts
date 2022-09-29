@@ -104,8 +104,7 @@ interface ObjectDefinition {
 	active: boolean;
 	dateCreated: string;
 	dateModified: string;
-	enableCategorization: boolean;
-	enableComments: boolean;
+	enabledCategorization: boolean;
 	id: number;
 	label: LocalizedValue<string>;
 	name: string;
@@ -126,7 +125,7 @@ interface ObjectDefinition {
 	};
 	storageType?: string;
 	system: boolean;
-	titleObjectFieldId: number;
+	titleObjectFieldName: string;
 }
 
 interface ObjectFieldSetting {
@@ -142,8 +141,17 @@ interface ObjectFieldSetting {
 }
 
 interface ObjectEntry {
+	creator: {
+		additionalName: string;
+		contentType: string;
+		familyName: string;
+		givenName: string;
+		id: number;
+		name: string;
+	};
 	dateCreated: string;
 	dateModified: string;
+	externalReferenceCode: string;
 	id: number;
 	name: string;
 	status: {

@@ -9,6 +9,7 @@ definition {
 
 	var testSiteName = "Customer Portal Site";
 	var testSiteURL = "customer-portal-site";
+	var testAccount = "Test Account LXC - SM";
 
 	setUp {
 		task ("Set up instance and sign in") {
@@ -19,6 +20,12 @@ definition {
 
 		task ("Create a new Customer Portal Site") {
 			CustomerPortal.addCustomerPortalSite(siteName = "${testSiteName}");
+		}
+
+		task ("Add test user access to all Accounts") {
+			CustomerPortal.assignUserToOrganization();
+
+			CustomerPortal.addUserToOneOrMoreAccounts(accountsList = "${testAccount}");
 		}
 	}
 
@@ -39,9 +46,9 @@ definition {
 	@priority = "4"
 	test IsContactEmailDisplayed {
 		task ("Go to CP2.0 and join a project") {
-			ApplicationsMenu.gotoSite(key_site = "Customer Portal Site");
+			ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
 
-			CustomerPortal.enterOnProject(title = "Test Account LXC-SM");
+			CustomerPortal.enterOnProject(title = "${testAccount}");
 		}
 
 		task ("Assert the e-mail Contact Liferay") {
@@ -56,9 +63,9 @@ definition {
 	@priority = "4"
 	test IsContactNameDisplayed {
 		task ("Go to CP2.0 and join a project") {
-			ApplicationsMenu.gotoSite(key_site = "Customer Portal Site");
+			ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
 
-			CustomerPortal.enterOnProject(title = "Test Account LXC-SM");
+			CustomerPortal.enterOnProject(title = "${testAccount}");
 		}
 
 		task ("Assert the title Liferay Contact") {
@@ -73,9 +80,9 @@ definition {
 	@priority = "3"
 	test IsContactRoleDisplayed {
 		task ("Go to CP2.0 and join a project") {
-			ApplicationsMenu.gotoSite(key_site = "Customer Portal Site");
+			ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
 
-			CustomerPortal.enterOnProject(title = "Test Account LXC-SM");
+			CustomerPortal.enterOnProject(title = "${testAccount}");
 		}
 
 		task ("Assert the Liferay Contact role") {

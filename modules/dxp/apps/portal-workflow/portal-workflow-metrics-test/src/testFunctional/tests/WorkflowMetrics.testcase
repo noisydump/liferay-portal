@@ -1731,6 +1731,12 @@ definition {
 
 		Workflow.duplicateSingleApproverWorkflow(workflowName = "Single Approver Edited");
 
+		ProcessBuilderKaleoDesignerReact.selectNodeByLabel(nodeLabel = "review");
+
+		ProcessBuilderKaleoDesignerReact.editNodeInformationField(
+			infoOption = "Label",
+			infoValue = "Review");
+
 		ProcessBuilderKaleoDesignerReact.selectNodeByLabel(nodeLabel = "update");
 
 		ProcessBuilderKaleoDesignerReact.deleteNodeOrConnection(title = "Delete Task Node");
@@ -2498,7 +2504,13 @@ definition {
 	@description = "LRQA-53650 Automate LPS-89015: [SLA] Verify the SLA Time Frame Start Pause Stop behaviour"
 	@priority = "5"
 	test VerifySLATimeFrameStartPauseStop {
+		property test.name.skip.portal.instance = "WorkflowMetrics#VerifySLATimeFrameStartPauseStop";
+
 		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+
+		WorkflowMetrics.setSLADefinitionsJobInterval(
+			definitionsJobInterval = "1",
+			slaJobInterval = "1");
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
@@ -2672,8 +2684,13 @@ definition {
 	@priority = "5"
 	test ViewCompletedItems {
 		property portal.acceptance = "true";
+		property test.name.skip.portal.instance = "WorkflowMetrics#ViewCompletedItems";
 
 		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+
+		WorkflowMetrics.setSLADefinitionsJobInterval(
+			definitionsJobInterval = "1",
+			slaJobInterval = "1");
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",

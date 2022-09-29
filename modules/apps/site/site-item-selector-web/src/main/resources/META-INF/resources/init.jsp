@@ -21,14 +21,15 @@
 <%@ taglib uri="http://liferay.com/tld/aui" prefix="aui" %><%@
 taglib uri="http://liferay.com/tld/clay" prefix="clay" %><%@
 taglib uri="http://liferay.com/tld/frontend" prefix="liferay-frontend" %><%@
+taglib uri="http://liferay.com/tld/site-navigation" prefix="liferay-site-navigation" %><%@
 taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %><%@
 taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %>
 
 <%@ page import="com.liferay.item.selector.criteria.group.criterion.GroupItemSelectorCriterion" %><%@
-page import="com.liferay.petra.portlet.url.builder.PortletURLBuilder" %><%@
 page import="com.liferay.petra.string.StringPool" %><%@
 page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
 page import="com.liferay.portal.kernel.model.Group" %><%@
+page import="com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder" %><%@
 page import="com.liferay.portal.kernel.service.GroupServiceUtil" %><%@
 page import="com.liferay.portal.kernel.util.HashMapBuilder" %><%@
 page import="com.liferay.portal.kernel.util.HtmlUtil" %><%@
@@ -39,6 +40,7 @@ page import="com.liferay.site.item.selector.display.context.SitesItemSelectorVie
 page import="com.liferay.site.item.selector.web.internal.constants.SitesItemSelectorWebKeys" %><%@
 page import="com.liferay.site.item.selector.web.internal.display.context.SitesItemSelectorViewManagementToolbarDisplayContext" %><%@
 page import="com.liferay.site.item.selector.web.internal.frontend.taglib.clay.servlet.taglib.SiteVerticalCard" %><%@
+page import="com.liferay.site.navigation.taglib.servlet.taglib.util.BreadcrumbEntriesUtil" %><%@
 page import="com.liferay.site.util.GroupURLProvider" %>
 
 <%@ page import="java.util.List" %><%@

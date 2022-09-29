@@ -51,7 +51,7 @@
 				icon="order-list-up"
 				linkCssClass="btn btn-outline-borderless btn-outline-secondary"
 				markupView="lexicon"
-				message="descending"
+				message="ascending"
 				url="javascript:void(0);"
 			/>
 
@@ -60,7 +60,7 @@
 				icon="order-list-down"
 				linkCssClass="btn btn-outline-borderless btn-outline-secondary"
 				markupView="lexicon"
-				message="ascending"
+				message="descending"
 				url="javascript:void(0);"
 			/>
 
@@ -102,7 +102,7 @@
 				icon="order-list-up"
 				linkCssClass="btn btn-outline-borderless btn-outline-secondary"
 				markupView="lexicon"
-				message="descending"
+				message="ascending"
 				url="javascript:void(0);"
 			/>
 
@@ -111,7 +111,7 @@
 				icon="order-list-down"
 				linkCssClass="btn btn-outline-borderless btn-outline-secondary"
 				markupView="lexicon"
-				message="ascending"
+				message="descending"
 				url="javascript:void(0);"
 			/>
 

@@ -247,8 +247,13 @@ components:
                     minimum: 0
                     type: integer
                 description:
-                    example: right stairs, first room on the left
-                    type: string
+                    additionalProperties:
+                        type: string
+                    example:
+                        en_US: Warehouse Description US
+                        hr_HR: Warehouse Description HR
+                        hu_HU: Warehouse Description HU
+                    type: object
                 groupId:
                     example: 23130
                     format: int64
@@ -272,8 +277,13 @@ components:
                     example: 0
                     type: number
                 name:
-                    example: Warehouse Name
-                    type: string
+                    additionalProperties:
+                        type: string
+                    example:
+                        en_US: Warehouse Name US
+                        hr_HR: Warehouse Name HR
+                        hu_HU: Warehouse Name HU
+                    type: object
                 primary:
                     example: true
                     type: boolean
@@ -316,7 +326,7 @@ info:
         name: Commerce Team
     description:
         "Liferay Commerce Admin Site Setting API. A Java client JAR is available for use with the group ID
-        'com.liferay', artifact ID 'com.liferay.headless.commerce.admin.site.setting.client', and version '4.0.15'."
+        'com.liferay', artifact ID 'com.liferay.headless.commerce.admin.site.setting.client', and version '4.0.16'."
     license:
         name: "Apache 2.0"
         url: "http://www.apache.org/licenses/LICENSE-2.0.html"

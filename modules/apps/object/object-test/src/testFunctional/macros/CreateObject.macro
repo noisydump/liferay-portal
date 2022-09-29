@@ -67,7 +67,7 @@ definition {
 	}
 
 	macro assertCannotAddRelationshipTabFirst {
-		LexiconEntry.gotoAdd();
+		LexiconEntry.gotoAddNoSelectFrame();
 
 		AssertElementPresent(locator1 = "CreateObject#DISABLED_TAB_TYPE_RELATIONSHIPS");
 	}
@@ -305,11 +305,22 @@ definition {
 	macro deleteEntryInRelationshipTab {
 		ObjectAdmin.gotoRelationshipsTab();
 
-		Click(locator1 = "ObjectAdmin#KEBAB_MENU");
+		if (isSet(entryName)) {
+			Click.clickNoMouseOver(
+				key_entryName = "${entryName}",
+				locator1 = "ObjectPortlet#DELETE_RELATIONSHIP_ENTRY");
+		}
+		else if (isSet(labelName)) {
+			Click(
+				key_objectLabel = "${labelName}",
+				locator1 = "ObjectAdmin#OBJECT_KEBAB_MENU");
 
-		Click(
-			key_kebabOption = "${kebabOption}",
-			locator1 = "ObjectAdmin#KEBAB_MENU_OPTION");
+			MenuItem.clickNoError(menuItem = "Delete");
+		}
+
+		WaitForSPARefresh();
+
+		WaitForPageLoad();
 	}
 
 	macro deleteFieldOnBlock {

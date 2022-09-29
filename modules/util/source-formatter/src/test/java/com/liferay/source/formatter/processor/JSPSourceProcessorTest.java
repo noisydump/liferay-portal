@@ -93,6 +93,13 @@ public class JSPSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
+	public void testLanguageUtilCall() throws Exception {
+		test(
+			"LanguageUtilCall.testjsp",
+			"Use <liferay-ui:message> tag instead of LanguageUtil.get", 17);
+	}
+
+	@Test
 	public void testMisplacedImport() throws Exception {
 		test("MisplacedImport.testjsp", "Move imports to init.jsp");
 	}

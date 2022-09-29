@@ -103,6 +103,24 @@ definition {
 		}
 	}
 
+	macro addUserToAllAccounts {
+		var accountsList = "Test Account LXC - SM,Test Account DXP,Test Account Analytics Cloud,Test Account Commerce,Test Account Enterprise Search,Test Account Portal,Test Account Partnership,Test Account Others,Test Account QA 7.4,Test Account QA 7.3,Test Account QA 7.2,Test Account QA 7.1,Test Account QA 7.0";
+
+		CustomerPortal.addUserToOneOrMoreAccounts(accountsList = "${accountsList}");
+	}
+
+	macro addUserToOneOrMoreAccounts {
+		if (!(isSet(userEmailAddress))) {
+			var userEmailAddress = "test@liferay.com";
+		}
+
+		for (var account : list "${accountsList}") {
+			JSONAccountEntryUser.addExistUsertoAccount(
+				accountEntryName = "${account}",
+				userEmailAddress = "${userEmailAddress}");
+		}
+	}
+
 	macro assertButtonIsVisible {
 		var key_text = "${text}";
 
@@ -135,6 +153,20 @@ definition {
 		AssertElementNotPresent(
 			locator1 = "CustomerPortalSite#SLA_CARD",
 			typeCard = "${typeCard}");
+	}
+
+	macro assignUserToOrganization {
+		if (!(isSet(organizationName))) {
+			var organizationName = "Liferay Staff";
+		}
+
+		if (!(isSet(userEmailAddress))) {
+			var userEmailAddress = "test@liferay.com";
+		}
+
+		JSONOrganization.assignUserToOrganization(
+			organizationName = "${organizationName}",
+			userEmailAddress = "${userEmailAddress}");
 	}
 
 	macro cannotAppearsQuickLinksPanelInfo {
@@ -314,6 +346,23 @@ definition {
 		CustomerPortal.clickOnSkipForNowButton();
 	}
 
+	macro getValueFieldKoroneikiByAccountName {
+		var key_label = "${field}";
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Object",
+			panel = "Control Panel",
+			portlet = "Koroneiki Accounts");
+
+		CustomerPortal.viewCPObjectCustomInfoByAccountName(accountName = "${accountName}");
+
+		WaitForElementPresent(locator1 = "CustomerPortalSite#FIELDS_KORONEIKI_VALUE");
+
+		var value = selenium.getElementValue("CustomerPortalSite#FIELDS_KORONEIKI_VALUE");
+
+		return "${value}";
+	}
+
 	macro loginOktaToUpdateCP {
 		var userEmailAddress = "dbace26d5dadb9eed597@uat.com.broken";
 		var userPassword = "q4F63ZEH3njnnA34S761";
@@ -362,7 +411,7 @@ definition {
 	macro openAccountsAdminForCP {
 		Accounts.openAccountsAdmin();
 
-		CustomerPortal.accountTableProject(title = "Test Account LXC-SM");
+		CustomerPortal.accountTableProject(title = "Test Account LXC - SM");
 
 		Navigator.gotoNavTab(navTab = "Users");
 
@@ -648,6 +697,14 @@ definition {
 		MenuItem.click(menuItem = "View");
 	}
 
+	macro viewCPObjectCustomInfoByAccountName {
+		Click(
+			key_accountName = "${accountName}",
+			locator1 = "CustomerPortalSite#KORONEIKI_ACCOUNT_ELLIPSIS_BUTTON");
+
+		MenuItem.click(menuItem = "View");
+	}
+
 	macro viewCPObjectInfo {
 		Click(
 			key_text = "",
@@ -682,11 +739,14 @@ definition {
 	}
 
 	macro viewSubscriptionManagementList {
-		for (var product : list "${productList}") {
-			AssertElementPresent(
-				key_product = "${productList}",
-				locator1 = "CustomerPortalSite#SUBSCRIPTION_DROPDOWN",
-				value1 = "${product}");
+		Click(
+			key_dropdownLabel = "${dropDownLabel}",
+			locator1 = "CustomerPortalSite#SUBSCRIPTION_DROPDOWN");
+
+		for (var dropDownItem : list "${dropDownItems}") {
+			AssertVisible(
+				key_text = "${dropDownItem}",
+				locator1 = "CustomerPortalSite#SUBSCRIPTION_DROPDOWN_ITEM");
 		}
 	}
 
@@ -722,6 +782,9 @@ definition {
 	}
 
 	macro viewValueFieldKoroneiki {
+		var key_label = "${field}";
+		var key_value = "${value}";
+
 		ApplicationsMenu.gotoPortlet(
 			category = "Object",
 			panel = "Control Panel",

@@ -314,6 +314,12 @@ public class FragmentEntryLinkPersistenceTest {
 	}
 
 	@Test
+	public void testCountByFragmentEntryIdArrayable() throws Exception {
+		_persistence.countByFragmentEntryId(
+			new long[] {RandomTestUtil.nextLong(), 0L});
+	}
+
+	@Test
 	public void testCountByRendererKey() throws Exception {
 		_persistence.countByRendererKey("");
 
@@ -389,6 +395,15 @@ public class FragmentEntryLinkPersistenceTest {
 			RandomTestUtil.nextLong());
 
 		_persistence.countByG_C_C(0L, 0L, 0L);
+	}
+
+	@Test
+	public void testCountByG_P_D() throws Exception {
+		_persistence.countByG_P_D(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(),
+			RandomTestUtil.randomBoolean());
+
+		_persistence.countByG_P_D(0L, 0L, RandomTestUtil.randomBoolean());
 	}
 
 	@Test

@@ -16,9 +16,9 @@ import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
 import ClayForm from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import ClayModal, {useModal} from '@clayui/modal';
-import ClayPopover from '@clayui/popover';
 import React, {useState} from 'react';
 
+import {PopoverTooltip} from '../../../common/components/PopoverTooltip';
 import useControlledState from '../../../core/hooks/useControlledState';
 import {useId} from '../../../core/hooks/useId';
 import {FRAGMENT_CLASS_PLACEHOLDER} from '../../config/constants/fragmentClassPlaceholder';
@@ -28,6 +28,7 @@ const defaultValue = `.${FRAGMENT_CLASS_PLACEHOLDER} {\n\n}`;
 
 export default function CustomCSSField({field, onValueSelect, value}) {
 	const id = useId();
+	const tooltipId = useId();
 
 	const [customCSS, setCustomCSS] = useControlledState(value || defaultValue);
 	const [editorModalOpen, setEditorModalOpen] = useState(false);
@@ -50,8 +51,25 @@ export default function CustomCSSField({field, onValueSelect, value}) {
 		<>
 			<ClayForm.Group className="page-editor__custom-css-field" small>
 				<div className="align-items-end d-flex justify-content-between">
-					<label htmlFor={id}>
-						{Liferay.Language.get('custom-css')} <CustomCSSHelp />
+					<label aria-describedby={tooltipId} htmlFor={id}>
+						{Liferay.Language.get('custom-css')}
+
+						<PopoverTooltip
+							content={Liferay.Language.get(
+								'you-can-add-your-own-css-and-include-variables-to-use-existing-tokens'
+							)}
+							header={Liferay.Language.get('custom-css')}
+							id={tooltipId}
+							trigger={
+								<ClayIcon
+									aria-label={Liferay.Language.get(
+										'show-more'
+									)}
+									className="ml-2"
+									symbol="question-circle-full"
+								/>
+							}
+						/>
 					</label>
 
 					<ClayButtonWithIcon
@@ -88,44 +106,6 @@ export default function CustomCSSField({field, onValueSelect, value}) {
 				visible={editorModalOpen}
 			/>
 		</>
-	);
-}
-
-function CustomCSSHelp() {
-	const id = useId();
-
-	const [showPopover, setShowPopover] = useState(false);
-
-	return (
-		<ClayPopover
-			alignPosition="top"
-			className="position-fixed"
-			disableScroll
-			header={Liferay.Language.get('custom-css')}
-			id={id}
-			onShowChange={setShowPopover}
-			role="tooltip"
-			show={showPopover}
-			trigger={
-				<span
-					aria-describedby={id}
-					onBlur={() => setShowPopover(false)}
-					onFocus={() => setShowPopover(true)}
-					onMouseEnter={() => setShowPopover(true)}
-					onMouseLeave={() => setShowPopover(false)}
-					tabIndex="0"
-				>
-					<ClayIcon
-						className="text-secondary"
-						symbol="info-panel-open"
-					/>
-				</span>
-			}
-		>
-			{Liferay.Language.get(
-				'you-can-add-your-own-css-and-include-variables-to-use-existing-tokens'
-			)}
-		</ClayPopover>
 	);
 }
 

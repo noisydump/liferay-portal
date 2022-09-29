@@ -1,6 +1,7 @@
 @component-name = "portal-solutions"
 definition {
 
+	property custom.properties = "feature.flag.LPS-163118=true";
 	property osgi.modules.includes = "site-initializer-testray";
 	property portal.release = "false";
 	property portal.upstream = "true";
@@ -43,7 +44,7 @@ definition {
 		}
 	}
 
-	@description = "This is a test for LPS-LPS-156998 - Verify if as an Administrator I should be able to add and delete a Component that doesn't have a Team"
+	@description = "This is a test for LPS-156998 - Verify if as an Administrator I should be able to add and delete a Component that doesn't have a Team"
 	@priority = "5"
 	test AdminCanAddAndDeleteComponentWithoutTeam {
 		task ("Given that the user add a new Component") {
@@ -56,8 +57,12 @@ definition {
 			Testray.assertItemName(key_name = "Components_1 Project");
 		}
 
-		task ("Then an error message is displayed") {
-			Alert.viewErrorMessage(errorMessage = "An unexpected error ocurred");
+		task ("And when a component without team is deleted") {
+			Testray.deleteComponent(itemName = "Components_1 Project");
+		}
+
+		task ("Then the component should not appear on the list") {
+			Testray.assertItemNotPresent(itemName = "Components_1 Project");
 		}
 	}
 

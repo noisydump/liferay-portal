@@ -94,28 +94,6 @@ public class ElasticsearchEngineConfigurator
 		return _searchEngineHelper;
 	}
 
-	@Reference(unbind = "-")
-	protected void setDestinationFactory(
-		DestinationFactory destinationFactory) {
-
-		_destinationFactory = destinationFactory;
-	}
-
-	@Reference(target = "(!(search.engine.impl=*))", unbind = "-")
-	protected void setIndexSearcher(IndexSearcher indexSearcher) {
-		_indexSearcher = indexSearcher;
-	}
-
-	@Reference(target = "(!(search.engine.impl=*))", unbind = "-")
-	protected void setIndexWriter(IndexWriter indexWriter) {
-		_indexWriter = indexWriter;
-	}
-
-	@Reference(unbind = "-")
-	protected void setMessageBus(MessageBus messageBus) {
-		_messageBus = messageBus;
-	}
-
 	@Reference(
 		target = "(&(search.engine.id=SYSTEM_ENGINE)(search.engine.impl=Elasticsearch))"
 	)
@@ -126,13 +104,6 @@ public class ElasticsearchEngineConfigurator
 			properties, "search.engine.id");
 
 		_searchEngines.put(searchEngineId, searchEngine);
-	}
-
-	@Reference(unbind = "-")
-	protected void setSearchEngineHelper(
-		SearchEngineHelper searchEngineHelper) {
-
-		_searchEngineHelper = searchEngineHelper;
 	}
 
 	protected void unsetSearchEngine(
@@ -149,11 +120,22 @@ public class ElasticsearchEngineConfigurator
 	}
 
 	private BundleContext _bundleContext;
+
+	@Reference
 	private DestinationFactory _destinationFactory;
+
+	@Reference(target = "(!(search.engine.impl=*))")
 	private IndexSearcher _indexSearcher;
+
+	@Reference(target = "(!(search.engine.impl=*))")
 	private IndexWriter _indexWriter;
+
+	@Reference
 	private MessageBus _messageBus;
+
+	@Reference
 	private SearchEngineHelper _searchEngineHelper;
+
 	private final Map<String, SearchEngine> _searchEngines =
 		new ConcurrentHashMap<>();
 

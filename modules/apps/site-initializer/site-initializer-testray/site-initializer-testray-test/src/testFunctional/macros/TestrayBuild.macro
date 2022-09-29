@@ -26,13 +26,23 @@ definition {
 		Click(locator1 = "TestrayManage#SAVE_BUTTON");
 	}
 
-	macro editBuild {
-		TestrayManage.goToEditPage(valueName = "${valueName}");
+	macro deleteBuild {
+		TestrayLayout.clickResultsOnSidebar();
 
-		TestrayBuild.typeBuildField();
+		Testray.changePagination(
+			numberItems = "20",
+			valuePagination = "150");
+
+		Testray.goToProjectPage(projectName = "Projects_1 Project");
+
+		TestrayRoutines.goToRoutine(routineName = "Routines_1 Routine");
+
+		while (IsElementPresent(key_projectName = "Builds_", locator1 = "Testray#ITEM_NAME")) {
+			Testray.deleteComponent(itemName = "${itemName}");
+		}
 	}
 
-	macro typeBuildField {
+	macro editBuild {
 		Type(
 			locator1 = "TestrayManage#NEW_OPTION_NAME",
 			value1 = "${fieldName}");
@@ -54,6 +64,68 @@ definition {
 			value1 = "${description}");
 
 		Click(locator1 = "TestrayManage#SAVE_BUTTON");
+	}
+
+	macro goToBuild {
+		Click(
+			key_projectName = "${buildName}",
+			locator1 = "Testray#ITEM_NAME");
+	}
+
+	macro selectDefaultEnvironmentFactors {
+		Refresh();
+
+		TestrayContextMenu.clickContextMenuProjects(name = "Routines_1 Routine");
+
+		TestrayContextMenu.selectItemFromProjectsContextMenu(item = "Select Default Environment Factors");
+
+		for (var listboxItem : list "${listCategory}") {
+			Click(
+				key_environmentFactors = "${listboxItem}",
+				locator1 = "Testray#SELECT_ENVIRONMENT_FACTORS");
+
+			Click(locator1 = "ContentDashboard#AUDIT_GRAPH_CONFIGURATION_RIGHT_ARROW_BUTTON");
+		}
+
+		Button.click(button = "Next");
+
+		Select(
+			key_fieldLabel = "${label}",
+			locator1 = "Select#GENERIC_SELECT_FIELD",
+			value1 = "${listOption}");
+
+		Select(
+			key_fieldLabel = "${label1}",
+			locator1 = "Select#GENERIC_SELECT_FIELD",
+			value1 = "${listOption1}");
+
+		Button.click(button = "Save");
+	}
+
+	macro verifyEnvironmentFactors {
+		AssertElementPresent(
+			key_environmentFactors = "${listCategory}",
+			locator1 = "Testray#VERIFY_ENVIRONMENT_FACTORS_SELECTED");
+
+		AssertElementPresent(
+			key_environmentFactors = "${listCategory1}",
+			locator1 = "Testray#VERIFY_ENVIRONMENT_FACTORS_SELECTED");
+
+		Button.click(button = "Next");
+
+		AssertElementPresent(
+			key_fieldLabel = "${label}",
+			locator1 = "Select#GENERIC_SELECT_FIELD",
+			value1 = "${listOption}");
+
+		AssertElementPresent(
+			key_fieldLabel = "${label1}",
+			locator1 = "Select#GENERIC_SELECT_FIELD",
+			value1 = "${factorOptionId1}");
+	}
+
+	macro verifyPromoteBuild {
+		AssertElementPresent(locator1 = "TestrayBuild#PROMOTE_BUILD");
 	}
 
 	macro viewBuildDetails {

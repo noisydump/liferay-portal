@@ -36,7 +36,6 @@ import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerRegistryUtil;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemBuilder;
 import com.liferay.petra.io.unsync.UnsyncStringWriter;
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -51,6 +50,7 @@ import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.repository.capabilities.TrashCapability;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileShortcut;
@@ -226,11 +226,11 @@ public class UIItemsBuilder {
 
 		StringBundler sb = new StringBundler(5);
 
-		sb.append("if (confirm('");
+		sb.append("Liferay.Util.openConfirmModal({message: '");
 		sb.append(
 			UnicodeLanguageUtil.get(
 				_resourceBundle, "are-you-sure-you-want-to-delete-this"));
-		sb.append("')) {");
+		sb.append("', onConfirm: (isConfirmed) => {if (isConfirmed) {");
 
 		LiferayPortletResponse liferayPortletResponse =
 			_getLiferayPortletResponse();
@@ -253,7 +253,7 @@ public class UIItemsBuilder {
 		sb.append(
 			_getSubmitFormJavaScript(Constants.DELETE, portletURL.toString()));
 
-		sb.append("}");
+		sb.append("}}});");
 
 		_addJavaScriptUIItem(
 			new JavaScriptToolbarItem(), toolbarItems, DLUIItemKeys.DELETE,

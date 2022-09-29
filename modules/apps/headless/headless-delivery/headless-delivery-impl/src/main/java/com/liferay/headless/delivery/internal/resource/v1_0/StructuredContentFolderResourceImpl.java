@@ -128,9 +128,45 @@ public class StructuredContentFolderResourceImpl
 				Sort[] sorts)
 		throws Exception {
 
-		return getSiteStructuredContentFoldersPage(
-			assetLibraryId, flatten, search, aggregation, filter, pagination,
-			sorts);
+		Long parentStructuredContentFolderId = null;
+
+		if (!GetterUtil.getBoolean(flatten)) {
+			parentStructuredContentFolderId =
+				JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID;
+		}
+
+		return _getStructuredContentFoldersPage(
+			HashMapBuilder.put(
+				"create",
+				addAction(
+					ActionKeys.UPDATE,
+					"postAssetLibraryStructuredContentFolder",
+					JournalConstants.RESOURCE_NAME, assetLibraryId)
+			).put(
+				"createBatch",
+				addAction(
+					ActionKeys.UPDATE,
+					"postAssetLibraryStructuredContentFolderBatch",
+					JournalConstants.RESOURCE_NAME, assetLibraryId)
+			).put(
+				"deleteBatch",
+				addAction(
+					ActionKeys.DELETE, "deleteStructuredContentFolderBatch",
+					JournalConstants.RESOURCE_NAME, null)
+			).put(
+				"get",
+				addAction(
+					ActionKeys.VIEW,
+					"getAssetLibraryStructuredContentFoldersPage",
+					JournalConstants.RESOURCE_NAME, assetLibraryId)
+			).put(
+				"updateBatch",
+				addAction(
+					ActionKeys.UPDATE, "putStructuredContentFolderBatch",
+					JournalConstants.RESOURCE_NAME, null)
+			).build(),
+			parentStructuredContentFolderId, assetLibraryId, search,
+			aggregation, filter, pagination, sorts);
 	}
 
 	@Override
@@ -167,7 +203,7 @@ public class StructuredContentFolderResourceImpl
 				JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID;
 		}
 
-		return _getFoldersPage(
+		return _getStructuredContentFoldersPage(
 			HashMapBuilder.put(
 				"create",
 				addAction(
@@ -218,7 +254,7 @@ public class StructuredContentFolderResourceImpl
 		JournalFolder journalFolder = _journalFolderService.getFolder(
 			parentStructuredContentFolderId);
 
-		return _getFoldersPage(
+		return _getStructuredContentFoldersPage(
 			HashMapBuilder.put(
 				"add-subfolder",
 				addAction(
@@ -420,7 +456,7 @@ public class StructuredContentFolderResourceImpl
 			contextAcceptLanguage.getPreferredLocale());
 	}
 
-	private Page<StructuredContentFolder> _getFoldersPage(
+	private Page<StructuredContentFolder> _getStructuredContentFoldersPage(
 			Map<String, Map<String, String>> actions,
 			Long parentStructuredContentFolderId, Long siteId, String keywords,
 			Aggregation aggregation, Filter filter, Pagination pagination,

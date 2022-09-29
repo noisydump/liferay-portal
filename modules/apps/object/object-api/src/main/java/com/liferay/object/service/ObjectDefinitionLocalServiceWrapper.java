@@ -70,6 +70,15 @@ public class ObjectDefinitionLocalServiceWrapper
 	}
 
 	@Override
+	public com.liferay.object.model.ObjectDefinition addObjectDefinition(
+			String externalReferenceCode, long userId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _objectDefinitionLocalService.addObjectDefinition(
+			externalReferenceCode, userId);
+	}
+
+	@Override
 	public com.liferay.object.model.ObjectDefinition
 			addOrUpdateSystemObjectDefinition(
 				long companyId,
@@ -364,6 +373,13 @@ public class ObjectDefinitionLocalServiceWrapper
 	}
 
 	@Override
+	public com.liferay.object.model.ObjectDefinition
+		fetchSystemObjectDefinition(String name) {
+
+		return _objectDefinitionLocalService.fetchSystemObjectDefinition(name);
+	}
+
+	@Override
 	public com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery
 		getActionableDynamicQuery() {
 
@@ -571,6 +587,16 @@ public class ObjectDefinitionLocalServiceWrapper
 			titleObjectFieldId, accountEntryRestricted, active,
 			enableCategorization, enableComments, labelMap, name, panelAppOrder,
 			panelCategoryKey, portlet, pluralLabelMap, scope);
+	}
+
+	@Override
+	public com.liferay.object.model.ObjectDefinition
+			updateExternalReferenceCode(
+				long objectDefinitionId, String externalReferenceCode)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _objectDefinitionLocalService.updateExternalReferenceCode(
+			objectDefinitionId, externalReferenceCode);
 	}
 
 	/**

@@ -181,6 +181,18 @@ describe('validation', () => {
 			);
 		});
 
+		it('returns error message for empty category selector list', () => {
+			expect(
+				validateRequired(
+					[],
+					INPUT_TYPES.NUMBER,
+					true,
+					false,
+					'asset_category_id'
+				)
+			).toEqual(ERROR_MESSAGES.REQUIRED_CATEGORY_SELECTOR);
+		});
+
 		it('returns error message for empty field', () => {
 			expect(
 				validateRequired(

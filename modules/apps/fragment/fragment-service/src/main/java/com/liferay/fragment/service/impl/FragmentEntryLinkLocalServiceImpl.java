@@ -202,6 +202,19 @@ public class FragmentEntryLinkLocalServiceImpl
 	}
 
 	@Override
+	public void deleteFragmentEntryLinks(
+		long groupId, long plid, boolean deleted) {
+
+		List<FragmentEntryLink> fragmentEntryLinks =
+			fragmentEntryLinkPersistence.findByG_P_D(groupId, plid, deleted);
+
+		for (FragmentEntryLink fragmentEntryLink : fragmentEntryLinks) {
+			fragmentEntryLinkLocalService.deleteFragmentEntryLink(
+				fragmentEntryLink);
+		}
+	}
+
+	@Override
 	public void deleteFragmentEntryLinks(long[] fragmentEntryLinkIds)
 		throws PortalException {
 
@@ -316,8 +329,17 @@ public class FragmentEntryLinkLocalServiceImpl
 		int type, int start, int end,
 		OrderByComparator<FragmentEntryLink> orderByComparator) {
 
-		return fragmentEntryLinkFinder.findByType(
-			type, start, end, orderByComparator);
+		List<FragmentEntry> fragmentEntries =
+			_fragmentEntryPersistence.findByType(type);
+
+		if (fragmentEntries.isEmpty()) {
+			return Collections.emptyList();
+		}
+
+		return fragmentEntryLinkPersistence.findByFragmentEntryId(
+			ListUtil.toLongArray(
+				fragmentEntries, FragmentEntry.FRAGMENT_ENTRY_ID_ACCESSOR),
+			start, end, orderByComparator);
 	}
 
 	/**
@@ -441,6 +463,19 @@ public class FragmentEntryLinkLocalServiceImpl
 				_log.debug(portalException);
 			}
 		}
+	}
+
+	@Override
+	public FragmentEntryLink updateDeleted(
+			long fragmentEntryLinkId, boolean deleted)
+		throws PortalException {
+
+		FragmentEntryLink fragmentEntryLink =
+			fragmentEntryLinkPersistence.findByPrimaryKey(fragmentEntryLinkId);
+
+		fragmentEntryLink.setDeleted(deleted);
+
+		return fragmentEntryLinkPersistence.update(fragmentEntryLink);
 	}
 
 	@Override

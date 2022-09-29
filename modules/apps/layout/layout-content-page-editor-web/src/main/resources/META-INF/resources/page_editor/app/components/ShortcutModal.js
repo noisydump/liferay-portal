@@ -63,16 +63,20 @@ export default function ShortcutModal({onCloseModal}) {
 				/>
 
 				<p className="sheet-subtitle text-secondary">
+					{Liferay.Language.get('selection')}
+				</p>
+
+				<KeyboardShorcut
+					description={Liferay.Language.get('select-parent')}
+					keyCombinations={['⇧', 'Enter']}
+				/>
+
+				<p className="sheet-subtitle text-secondary">
 					{Liferay.Language.get('view')}
 				</p>
 
 				<KeyboardShorcut
-					description={Liferay.Language.get('hide-sidebars')}
-					keyCombinations={[KEY_LABEL, '⇧', '.']}
-				/>
-
-				<KeyboardShorcut
-					description={Liferay.Language.get('show-sidebars')}
+					description={Liferay.Language.get('toggle-sidebars')}
 					keyCombinations={[KEY_LABEL, '⇧', '.']}
 				/>
 			</ClayModal.Body>

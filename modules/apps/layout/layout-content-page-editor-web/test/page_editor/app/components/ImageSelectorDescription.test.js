@@ -13,49 +13,45 @@
  */
 
 import '@testing-library/jest-dom/extend-expect';
-import {render} from '@testing-library/react';
+import {render, screen} from '@testing-library/react';
 import React from 'react';
 
-import {StoreAPIContextProvider} from '../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/StoreContext';
 import {ImageSelectorDescription} from '../../../../src/main/resources/META-INF/resources/page_editor/common/components/ImageSelectorDescription';
+import StoreMother from '../../../../src/main/resources/META-INF/resources/page_editor/test-utils/StoreMother';
 
 describe('ImageSelectorDescription', () => {
 	it('synchronizes imageDescription prop with input value', () => {
-		const {getByLabelText} = render(
-			<StoreAPIContextProvider
-				getState={() => ({
-					languageId: 'en_US',
-				})}
-			>
+		render(
+			<StoreMother.Component>
 				<ImageSelectorDescription
 					imageDescription="Random description"
 					onImageDescriptionChanged={() => {}}
 				/>
-			</StoreAPIContextProvider>
+			</StoreMother.Component>
 		);
 
-		expect(getByLabelText('image-description').value).toBe(
-			'Random description'
-		);
+		expect(
+			screen.getByLabelText('image-description', {
+				selector: 'input',
+			}).value
+		).toBe('Random description');
 	});
 
 	it('call onImageDescriptionChanged on blur', () => {
 		const onImageDescriptionChanged = jest.fn();
 
-		const {getByLabelText} = render(
-			<StoreAPIContextProvider
-				getState={() => ({
-					languageId: 'en_US',
-				})}
-			>
+		render(
+			<StoreMother.Component>
 				<ImageSelectorDescription
 					imageDescription=""
 					onImageDescriptionChanged={onImageDescriptionChanged}
 				/>
-			</StoreAPIContextProvider>
+			</StoreMother.Component>
 		);
 
-		const input = getByLabelText('image-description');
+		const input = screen.getByLabelText('image-description', {
+			selector: 'input',
+		});
 
 		input.value = 'Some other thing';
 		input.dispatchEvent(new FocusEvent('blur'));

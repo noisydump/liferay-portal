@@ -17,14 +17,15 @@ package com.liferay.content.dashboard.web.internal.display.context;
 import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.content.dashboard.info.item.ClassNameClassPKInfoItemIdentifier;
+import com.liferay.content.dashboard.item.ContentDashboardItem;
 import com.liferay.content.dashboard.item.type.ContentDashboardItemSubtype;
-import com.liferay.content.dashboard.web.internal.item.ContentDashboardItem;
+import com.liferay.content.dashboard.item.type.ContentDashboardItemSubtypeFactoryTracker;
 import com.liferay.content.dashboard.web.internal.item.selector.criteria.content.dashboard.type.criterion.ContentDashboardItemSubtypeItemSelectorCriterion;
-import com.liferay.content.dashboard.web.internal.item.type.ContentDashboardItemSubtypeFactoryTracker;
 import com.liferay.content.dashboard.web.internal.item.type.ContentDashboardItemSubtypeUtil;
 import com.liferay.content.dashboard.web.internal.model.AssetVocabularyMetric;
 import com.liferay.content.dashboard.web.internal.servlet.taglib.util.ContentDashboardDropdownItemsProvider;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
+import com.liferay.info.item.InfoItemIdentifier;
 import com.liferay.info.item.InfoItemReference;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.criteria.URLItemSelectorReturnType;
@@ -32,7 +33,6 @@ import com.liferay.item.selector.criteria.UUIDItemSelectorReturnType;
 import com.liferay.item.selector.criteria.group.criterion.GroupItemSelectorCriterion;
 import com.liferay.learn.LearnMessage;
 import com.liferay.learn.LearnMessageUtil;
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.reflect.GenericUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -44,6 +44,7 @@ import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.portlet.url.builder.ResourceURLBuilder;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -245,10 +246,22 @@ public class ContentDashboardAdminDisplayContext {
 						InfoItemReference infoItemReference =
 							contentDashboardItemSubtype.getInfoItemReference();
 
-						ClassNameClassPKInfoItemIdentifier
-							classNameClassPKInfoItemIdentifier =
-								(ClassNameClassPKInfoItemIdentifier)
-									infoItemReference.getInfoItemIdentifier();
+						long classPK = infoItemReference.getClassPK();
+
+						InfoItemIdentifier infoItemIdentifier =
+							infoItemReference.getInfoItemIdentifier();
+
+						if (infoItemIdentifier instanceof
+								ClassNameClassPKInfoItemIdentifier) {
+
+							ClassNameClassPKInfoItemIdentifier
+								classNameClassPKInfoItemIdentifier =
+									(ClassNameClassPKInfoItemIdentifier)
+										infoItemIdentifier;
+
+							classPK =
+								classNameClassPKInfoItemIdentifier.getClassPK();
+						}
 
 						Class<?> genericClass = GenericUtil.getGenericClass(
 							contentDashboardItemSubtype);
@@ -256,8 +269,7 @@ public class ContentDashboardAdminDisplayContext {
 						return JSONUtil.put(
 							"className", infoItemReference.getClassName()
 						).put(
-							"classPK",
-							classNameClassPKInfoItemIdentifier.getClassPK()
+							"classPK", classPK
 						).put(
 							"entryClassName", genericClass.getName()
 						).toString();

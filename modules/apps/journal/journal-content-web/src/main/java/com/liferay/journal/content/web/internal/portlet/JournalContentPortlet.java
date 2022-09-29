@@ -89,7 +89,8 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.name=" + JournalContentPortletKeys.JOURNAL_CONTENT,
 		"javax.portlet.portlet-mode=application/vnd.wap.xhtml+xml;view",
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=guest,power-user,user"
+		"javax.portlet.security-role-ref=guest,power-user,user",
+		"javax.portlet.version=3.0"
 	},
 	service = Portlet.class
 )
@@ -263,13 +264,6 @@ public class JournalContentPortlet extends MVCPortlet {
 		}
 	}
 
-	@Reference(
-		target = "(&(release.bundle.symbolic.name=com.liferay.journal.content.web)(&(release.schema.version>=1.0.0)(!(release.schema.version>=2.0.0))))",
-		unbind = "-"
-	)
-	protected void setRelease(Release release) {
-	}
-
 	private static final long _CLASS_NAME_ID = PortalUtil.getClassNameId(
 		DDMStructure.class);
 
@@ -296,6 +290,11 @@ public class JournalContentPortlet extends MVCPortlet {
 
 	@Reference
 	private Language _language;
+
+	@Reference(
+		target = "(&(release.bundle.symbolic.name=com.liferay.journal.content.web)(&(release.schema.version>=1.0.0)(!(release.schema.version>=2.0.0))))"
+	)
+	private Release _release;
 
 	@Reference
 	private TrashEntryService _trashEntryService;

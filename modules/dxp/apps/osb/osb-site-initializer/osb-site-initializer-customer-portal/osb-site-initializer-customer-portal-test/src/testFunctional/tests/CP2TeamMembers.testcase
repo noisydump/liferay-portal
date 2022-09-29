@@ -9,6 +9,7 @@ definition {
 
 	var testSiteName = "Customer Portal Site";
 	var testSiteURL = "customer-portal-site";
+	var testAccounts = "Test Account LXC - SM,Test Account Analytics Cloud";
 
 	setUp {
 		task ("Set up instance and sign in") {
@@ -19,6 +20,12 @@ definition {
 
 		task ("Create a new Customer Portal Site") {
 			CustomerPortal.addCustomerPortalSite(siteName = "${testSiteName}");
+		}
+
+		task ("Add test user access to all Accounts") {
+			CustomerPortal.assignUserToOrganization();
+
+			CustomerPortal.addUserToOneOrMoreAccounts(accountsList = "${testAccounts}");
 		}
 	}
 
@@ -41,7 +48,7 @@ definition {
 		task ("Change the user role in the project") {
 			Accounts.openAccountsAdmin();
 
-			CustomerPortal.accountTableProject(title = "Test Account LXC-SM");
+			CustomerPortal.accountTableProject(title = "Test Account LXC - SM");
 
 			Accounts.addAssigneeToRoleViaUsersTab(
 				accountRoleTitle = "Account Administrator",
@@ -49,9 +56,9 @@ definition {
 		}
 
 		task ("Go to CP2.0 and join a project") {
-			ApplicationsMenu.gotoSite(key_site = "Customer Portal Site");
+			ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
 
-			CustomerPortal.enterOnProject(title = "Test Account LXC-SM");
+			CustomerPortal.enterOnProject(title = "Test Account LXC - SM");
 		}
 
 		task ("Start the project configuration and invite a user to the project") {
@@ -65,7 +72,7 @@ definition {
 		}
 
 		task ("Assert the error message") {
-			Alert.viewErrorMessage(errorMessage = "Please insert a valid e-mail.");
+			Alert.viewErrorMessage(errorMessage = "Please insert a valid email.");
 		}
 	}
 
@@ -83,7 +90,7 @@ definition {
 		}
 
 		task ("Go to CP2.0 and join a project") {
-			ApplicationsMenu.gotoSite(key_site = "Customer Portal Site");
+			ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
 
 			CustomerPortal.enterOnProject(
 				status = "Expired",
@@ -123,7 +130,7 @@ definition {
 		}
 
 		task ("Go to CP2.0 and join a project") {
-			ApplicationsMenu.gotoSite(key_site = "Customer Portal Site");
+			ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
 
 			CustomerPortal.enterOnProject(
 				status = "Expired",
@@ -163,7 +170,7 @@ definition {
 		}
 
 		task ("Go to CP2.0 and join a project") {
-			ApplicationsMenu.gotoSite(key_site = "Customer Portal Site");
+			ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
 
 			CustomerPortal.enterOnProject(
 				status = "Expired",
@@ -197,7 +204,7 @@ definition {
 		}
 
 		task ("Go to CP2.0 and join a project") {
-			ApplicationsMenu.gotoSite(key_site = "Customer Portal Site");
+			ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
 
 			CustomerPortal.enterOnProject(
 				status = "Expired",
@@ -214,7 +221,7 @@ definition {
 
 		task ("Assert that object Koroneiki reflects the same number as modal team members displays") {
 			CustomerPortal.viewValueFieldKoroneiki(
-				field = "maxRequestors",
+				field = "Max Requestors",
 				index = "3",
 				value = "2");
 		}
@@ -230,7 +237,7 @@ definition {
 		task ("Change the user role in the project") {
 			Accounts.openAccountsAdmin();
 
-			CustomerPortal.accountTableProject(title = "Test Account LXC-SM");
+			CustomerPortal.accountTableProject(title = "Test Account LXC - SM");
 
 			Accounts.addAssigneeToRoleViaUsersTab(
 				accountRoleTitle = "Account Administrator",
@@ -242,9 +249,9 @@ definition {
 		}
 
 		task ("Go to CP2.0 and join a project") {
-			ApplicationsMenu.gotoSite(key_site = "Customer Portal Site");
+			ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
 
-			CustomerPortal.enterOnProject(title = "Test Account LXC-SM");
+			CustomerPortal.enterOnProject(title = "Test Account LXC - SM");
 		}
 
 		task ("Starting the Setup") {
@@ -273,7 +280,7 @@ definition {
 		task ("Change the user role in the project") {
 			Accounts.openAccountsAdmin();
 
-			CustomerPortal.accountTableProject(title = "Test Account LXC-SM");
+			CustomerPortal.accountTableProject(title = "Test Account LXC - SM");
 
 			Accounts.addAssigneeToRoleViaUsersTab(
 				accountRoleTitle = "Account Administrator",
@@ -285,9 +292,9 @@ definition {
 		}
 
 		task ("Go to CP2.0 and join a project") {
-			ApplicationsMenu.gotoSite(key_site = "Customer Portal Site");
+			ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
 
-			CustomerPortal.enterOnProject(title = "Test Account LXC-SM");
+			CustomerPortal.enterOnProject(title = "Test Account LXC - SM");
 		}
 
 		task ("Starting the Setup") {
@@ -311,14 +318,15 @@ definition {
 	test IsRequestorShowingUp {
 		task ("Assert the current SLA via Koroneiki") {
 			CustomerPortal.viewValueFieldKoroneiki(
-				field = "slaCurrent",
+				field = "SLA Current",
+				index = "1",
 				value = "Platinum Subscription");
 		}
 
 		task ("Change the user role in the project") {
 			Accounts.openAccountsAdmin();
 
-			CustomerPortal.accountTableProject(title = "Test Account LXC-SM");
+			CustomerPortal.accountTableProject(title = "Test Account LXC - SM");
 
 			Accounts.addAssigneeToRoleViaUsersTab(
 				accountRoleTitle = "Account Administrator",
@@ -326,9 +334,9 @@ definition {
 		}
 
 		task ("Go to CP2.0 and join a project") {
-			ApplicationsMenu.gotoSite(key_site = "Customer Portal Site");
+			ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
 
-			CustomerPortal.enterOnProject(title = "Test Account LXC-SM");
+			CustomerPortal.enterOnProject(title = "Test Account LXC - SM");
 		}
 
 		task ("Starting the Setup") {
@@ -349,7 +357,7 @@ definition {
 		task ("Change the user role in the project") {
 			Accounts.openAccountsAdmin();
 
-			CustomerPortal.accountTableProject(title = "Test Account LXC-SM");
+			CustomerPortal.accountTableProject(title = "Test Account LXC - SM");
 
 			Accounts.addAssigneeToRoleViaUsersTab(
 				accountRoleTitle = "Account Administrator",
@@ -357,9 +365,9 @@ definition {
 		}
 
 		task ("Go to CP2.0 and join a project") {
-			ApplicationsMenu.gotoSite(key_site = "Customer Portal Site");
+			ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
 
-			CustomerPortal.enterOnProject(title = "Test Account LXC-SM");
+			CustomerPortal.enterOnProject(title = "Test Account LXC - SM");
 		}
 
 		task ("Starting the Setup") {
@@ -385,7 +393,7 @@ definition {
 		task ("Change the user role in the project") {
 			Accounts.openAccountsAdmin();
 
-			CustomerPortal.accountTableProject(title = "Test Account LXC-SM");
+			CustomerPortal.accountTableProject(title = "Test Account LXC - SM");
 
 			Accounts.addAssigneeToRoleViaUsersTab(
 				accountRoleTitle = "Account Administrator",
@@ -393,9 +401,9 @@ definition {
 		}
 
 		task ("Go to CP2.0 and join a project") {
-			ApplicationsMenu.gotoSite(key_site = "Customer Portal Site");
+			ApplicationsMenu.gotoSite(key_site = "${testSiteName}");
 
-			CustomerPortal.enterOnProject(title = "Test Account LXC-SM");
+			CustomerPortal.enterOnProject(title = "Test Account LXC - SM");
 		}
 
 		task ("Starting the Setup") {

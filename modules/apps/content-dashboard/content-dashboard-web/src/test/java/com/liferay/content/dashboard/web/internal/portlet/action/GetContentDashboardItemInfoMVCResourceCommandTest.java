@@ -18,11 +18,11 @@ import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetTag;
 import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
+import com.liferay.content.dashboard.item.ContentDashboardItem;
+import com.liferay.content.dashboard.item.ContentDashboardItemFactory;
 import com.liferay.content.dashboard.item.action.ContentDashboardItemAction;
 import com.liferay.content.dashboard.item.type.ContentDashboardItemSubtype;
 import com.liferay.content.dashboard.item.type.ContentDashboardItemSubtypeFactory;
-import com.liferay.content.dashboard.web.internal.item.ContentDashboardItem;
-import com.liferay.content.dashboard.web.internal.item.ContentDashboardItemFactory;
 import com.liferay.content.dashboard.web.internal.item.ContentDashboardItemFactoryTracker;
 import com.liferay.info.item.InfoItemReference;
 import com.liferay.petra.string.StringPool;
@@ -43,7 +43,6 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -190,6 +189,74 @@ public class GetContentDashboardItemInfoMVCResourceCommandTest {
 					}
 
 				}
+			).withContentDashboardItemAction(
+				new ContentDashboardItemAction() {
+
+					@Override
+					public String getIcon() {
+						return "preview-image";
+					}
+
+					@Override
+					public String getLabel(Locale locale) {
+						return "preview-image";
+					}
+
+					@Override
+					public String getName() {
+						return "preview-image";
+					}
+
+					@Override
+					public Type getType() {
+						return Type.PREVIEW_IMAGE;
+					}
+
+					@Override
+					public String getURL() {
+						return "http://www.preview.com/imageURL";
+					}
+
+					@Override
+					public String getURL(Locale locale) {
+						return getURL();
+					}
+
+				}
+			).withContentDashboardItemAction(
+				new ContentDashboardItemAction() {
+
+					@Override
+					public String getIcon() {
+						return "preview";
+					}
+
+					@Override
+					public String getLabel(Locale locale) {
+						return "preview";
+					}
+
+					@Override
+					public String getName() {
+						return "preview";
+					}
+
+					@Override
+					public Type getType() {
+						return Type.PREVIEW;
+					}
+
+					@Override
+					public String getURL() {
+						return "http://www.viewURL.url.com/viewURL";
+					}
+
+					@Override
+					public String getURL(Locale locale) {
+						return getURL();
+					}
+
+				}
 			).withSubtype(
 				"subType"
 			).withUser(
@@ -252,6 +319,17 @@ public class GetContentDashboardItemInfoMVCResourceCommandTest {
 		Assert.assertNotNull(
 			jsonObject.getString("fetchSharingCollaboratorsURL"));
 
+		Assert.assertNotNull(jsonObject.getString("preview"));
+
+		JSONObject previewJSONObject = jsonObject.getJSONObject("preview");
+
+		Assert.assertEquals(
+			"http://www.preview.com/imageURL",
+			previewJSONObject.getString("imageURL"));
+		Assert.assertEquals(
+			"http://www.viewURL.url.com/viewURL",
+			previewJSONObject.getString("url"));
+
 		JSONArray tagsJSONArray = jsonObject.getJSONArray("tags");
 
 		List<AssetTag> assetTags = contentDashboardItem.getAssetTags();
@@ -310,9 +388,6 @@ public class GetContentDashboardItemInfoMVCResourceCommandTest {
 		Assert.assertEquals("portraitURL", userJSONObject.getString("url"));
 
 		_assertContentDashboardItemLatestVersions(
-			contentDashboardItem, jsonObject);
-
-		_assertContentDashboardItemAllVersions(
 			contentDashboardItem, jsonObject);
 	}
 
@@ -434,24 +509,6 @@ public class GetContentDashboardItemInfoMVCResourceCommandTest {
 		Assert.assertEquals(
 			contentDashboardItem.getUserId(), userJSONObject.getLong("userId"));
 		Assert.assertEquals(StringPool.BLANK, userJSONObject.getString("url"));
-	}
-
-	private void _assertContentDashboardItemAllVersions(
-		ContentDashboardItem<?> contentDashboardItem, JSONObject jsonObject) {
-
-		List<ContentDashboardItem.Version> versions =
-			contentDashboardItem.getAllVersions(new ThemeDisplay());
-
-		JSONArray expectedJSONArray = JSONFactoryUtil.createJSONArray();
-
-		for (ContentDashboardItem.Version version : versions) {
-			expectedJSONArray.put(version.toJSONObject());
-		}
-
-		JSONArray actualJSONArray = jsonObject.getJSONArray("allVersions");
-
-		Assert.assertEquals(
-			expectedJSONArray.toString(), actualJSONArray.toString());
 	}
 
 	private void _assertContentDashboardItemLatestVersions(
@@ -666,15 +723,6 @@ public class GetContentDashboardItemInfoMVCResourceCommandTest {
 			return new ContentDashboardItem() {
 
 				@Override
-				public List<Version> getAllVersions(ThemeDisplay themeDisplay) {
-					return ListUtil.fromArray(
-						new Version(
-							"version", "style", "0.1", null, "user", null),
-						new Version(
-							"version", "style", "0.2", null, "user", null));
-				}
-
-				@Override
 				public List<AssetCategory> getAssetCategories() {
 					return Arrays.asList(assetCategory1, assetCategory2);
 				}
@@ -694,12 +742,6 @@ public class GetContentDashboardItemInfoMVCResourceCommandTest {
 				@Override
 				public List<Locale> getAvailableLocales() {
 					return Collections.singletonList(LocaleUtil.US);
-				}
-
-				@Override
-				public Clipboard getClipboard() {
-					return new Clipboard(
-						"name", "www.previewURL.url.com/previewURL");
 				}
 
 				@Override
@@ -774,13 +816,6 @@ public class GetContentDashboardItemInfoMVCResourceCommandTest {
 				@Override
 				public Date getModifiedDate() {
 					return new Date();
-				}
-
-				@Override
-				public Preview getPreview() {
-					return new Preview(
-						"www.preview.com/imageURL",
-						"www.viewURL.url.com/viewURL");
 				}
 
 				@Override

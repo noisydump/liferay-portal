@@ -32,6 +32,8 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.TextFormatter;
+import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.util.PropsUtil;
 
@@ -70,6 +72,31 @@ public class ObjectDefinitionResourceTest
 				}
 			}
 		}
+	}
+
+	@Override
+	@Test
+	public void testGetObjectDefinition() throws Exception {
+		super.testGetObjectDefinition();
+
+		PropsUtil.addProperties(
+			UnicodePropertiesBuilder.setProperty(
+				"feature.flag.LPS-152650", "true"
+			).build());
+
+		ObjectDefinition objectDefinition = randomObjectDefinition();
+
+		String expectedRestContextPath =
+			(objectDefinition.getSystem() ? "/o/" : "/o/c/") +
+				TextFormatter.formatPlural(objectDefinition.getName());
+
+		Assert.assertEquals(
+			expectedRestContextPath, objectDefinition.getRestContextPath());
+
+		PropsUtil.addProperties(
+			UnicodePropertiesBuilder.setProperty(
+				"feature.flag.LPS-152650", "false"
+			).build());
 	}
 
 	@Override
@@ -115,6 +142,12 @@ public class ObjectDefinitionResourceTest
 			objectDefinition1.getId());
 		_objectDefinitionLocalService.deleteObjectDefinition(
 			objectDefinition2.getId());
+	}
+
+	@Ignore
+	@Override
+	@Test
+	public void testGraphQLGetObjectDefinitionByExternalReferenceCodeNotFound() {
 	}
 
 	@Ignore
@@ -228,10 +261,14 @@ public class ObjectDefinitionResourceTest
 			new ObjectField[] {
 				new ObjectField() {
 					{
-						setBusinessType(BusinessType.TEXT);
-						setDBType(ObjectField.DBType.create("String"));
-						setLabel(Collections.singletonMap("en_US", "Column"));
-						setName("column");
+						businessType = BusinessType.TEXT;
+						DBType = ObjectField.DBType.create("String");
+						indexed = false;
+						indexedAsKeyword = false;
+						label = Collections.singletonMap("en_US", "Column");
+						name = "column";
+						required = false;
+						system = false;
 					}
 				}
 			});
@@ -240,8 +277,6 @@ public class ObjectDefinitionResourceTest
 		if (!GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-135430"))) {
 			objectDefinition.setStorageType(StringPool.BLANK);
 		}
-
-		objectDefinition.setTitleObjectFieldId(Long.valueOf(0));
 
 		return objectDefinition;
 	}
@@ -255,6 +290,14 @@ public class ObjectDefinitionResourceTest
 
 	@Override
 	protected ObjectDefinition testGetObjectDefinition_addObjectDefinition()
+		throws Exception {
+
+		return _addObjectDefinition(randomObjectDefinition());
+	}
+
+	@Override
+	protected ObjectDefinition
+			testGetObjectDefinitionByExternalReferenceCode_addObjectDefinition()
 		throws Exception {
 
 		return _addObjectDefinition(randomObjectDefinition());
@@ -300,6 +343,14 @@ public class ObjectDefinitionResourceTest
 
 	@Override
 	protected ObjectDefinition testPutObjectDefinition_addObjectDefinition()
+		throws Exception {
+
+		return _addObjectDefinition(randomObjectDefinition());
+	}
+
+	@Override
+	protected ObjectDefinition
+			testPutObjectDefinitionByExternalReferenceCode_addObjectDefinition()
 		throws Exception {
 
 		return _addObjectDefinition(randomObjectDefinition());

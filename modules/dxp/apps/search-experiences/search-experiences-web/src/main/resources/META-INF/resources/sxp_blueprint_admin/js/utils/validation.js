@@ -9,6 +9,7 @@
  * distribution rights of the Software.
  */
 
+import {ASSET_CATEGORY_ID} from './constants';
 import {ERROR_MESSAGES} from './errorMessages';
 import {INPUT_TYPES} from './inputTypes';
 import {sub} from './language';
@@ -74,13 +75,18 @@ export function validateRequired(
 	configValue,
 	type,
 	required = true,
-	nullable = false
+	nullable = false,
+	name = ''
 ) {
 	if (!required || nullable) {
 		return;
 	}
 
 	if (isEmpty(configValue, type)) {
+		if (name.includes(ASSET_CATEGORY_ID)) {
+			return ERROR_MESSAGES.REQUIRED_CATEGORY_SELECTOR;
+		}
+
 		return ERROR_MESSAGES.REQUIRED;
 	}
 }

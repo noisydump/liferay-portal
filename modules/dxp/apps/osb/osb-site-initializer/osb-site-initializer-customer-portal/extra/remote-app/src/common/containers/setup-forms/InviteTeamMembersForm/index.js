@@ -315,7 +315,7 @@ const InviteTeamMembersPage = ({
 								<Badge badgeClassName="cp-badge-error-message">
 									<span className="pl-1">
 										{i18n.translate(
-											'please-enter-your-email-address'
+											'please-enter-an-email-address'
 										)}
 									</span>
 								</Badge>
@@ -387,7 +387,9 @@ const InviteTeamMembersPage = ({
 												  )
 										}
 										  ${i18n.sub('available-x-of-x', [
-												availableAdminsRoles,
+												availableAdminsRoles < 0
+													? 0
+													: availableAdminsRoles,
 												project.maxRequestors,
 											])}`}
 									</h5>
@@ -395,11 +397,11 @@ const InviteTeamMembersPage = ({
 									<p className="mb-0 text-neutral-7 text-paragraph-sm">
 										{project.maxRequestors > 1
 											? i18n.sub(
-													'only-x-members-per-project-including-yourself-have-role-permissions-admins-support-seats-to-open-support-tickets',
+													'only-x-members-for-this-project-including-yourself-can-have-role-permissions-administrators-requesters-to-open-support-tickets',
 													[project.maxRequestors]
 											  )
 											: i18n.sub(
-													'only-x-member-per-project-including-yourself-have-role-permissions-admins-support-seats-to-open-support-tickets',
+													'only-x-member-for-this-project-including-yourself-can-have-role-permissions-administrators-requesters-to-open-support-tickets',
 													[project.maxRequestors]
 											  )}
 

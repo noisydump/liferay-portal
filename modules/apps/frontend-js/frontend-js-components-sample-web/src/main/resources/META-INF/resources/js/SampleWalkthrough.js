@@ -12,15 +12,14 @@
  * details.
  */
 
-import Walkthrough from '@liferay/frontend-js-walkthrough-web/Walkthrough';
+import Walkthrough from '@liferay/frontend-js-walkthrough-web/components/Walkthrough';
 import React from 'react';
 
 const WALKTHROUGH_CONFIG = {
 	closeOnClickOutside: false,
 	closeable: true,
 	pages: {
-		[themeDisplay.getPathContext() +
-		location.pathname +
+		[themeDisplay.getLayoutRelativeURL() +
 		location.search +
 		location.hash]: ['step-1', 'step-2', 'step-3', 'step-4', 'step-5'],
 	},

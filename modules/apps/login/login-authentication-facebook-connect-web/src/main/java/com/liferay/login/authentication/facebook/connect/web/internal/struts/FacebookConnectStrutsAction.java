@@ -14,7 +14,6 @@
 
 package com.liferay.login.authentication.facebook.connect.web.internal.struts;
 
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.UserEmailAddressException;
@@ -30,6 +29,7 @@ import com.liferay.portal.kernel.model.UserGroupRole;
 import com.liferay.portal.kernel.portlet.LiferayPortletURL;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -212,16 +212,6 @@ public class FacebookConnectStrutsAction implements StrutsAction {
 	@Activate
 	protected void activate(Map<String, Object> properties) {
 		_forward = GetterUtil.getString(properties, "/common/referer_jsp.jsp");
-	}
-
-	@Reference(unbind = "-")
-	protected void setFacebookConnect(FacebookConnect facebookConnect) {
-		_facebookConnect = facebookConnect;
-	}
-
-	@Reference(unbind = "-")
-	protected void setUserLocalService(UserLocalService userLocalService) {
-		_userLocalService = userLocalService;
 	}
 
 	private User _addUser(
@@ -492,12 +482,15 @@ public class FacebookConnectStrutsAction implements StrutsAction {
 	@Reference
 	private CompanyLocalService _companyLocalService;
 
+	@Reference
 	private FacebookConnect _facebookConnect;
+
 	private String _forward;
 
 	@Reference
 	private Portal _portal;
 
+	@Reference
 	private UserLocalService _userLocalService;
 
 }

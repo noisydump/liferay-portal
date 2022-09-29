@@ -58,13 +58,13 @@ renderResponse.setTitle(LanguageUtil.format(request, "edit-x", objectDefinition.
 		<aui:model-context bean="<%= objectDefinition %>" model="<%= ObjectDefinition.class %>" />
 
 		<h2 class="sheet-title">
-			<%= LanguageUtil.get(request, "information") %>
+			<liferay-ui:message key="information" />
 		</h2>
 
 		<liferay-frontend:fieldset-group>
 			<clay:sheet-section>
 				<h3 class="sheet-subtitle">
-					<%= LanguageUtil.get(request, "object-definition-data") %>
+					<liferay-ui:message key="object-definition-data" />
 				</h3>
 
 				<clay:row>
@@ -90,7 +90,7 @@ renderResponse.setTitle(LanguageUtil.format(request, "edit-x", objectDefinition.
 
 			<clay:sheet-section>
 				<h3 class="sheet-subtitle">
-					<%= LanguageUtil.get(request, "entry-display") %>
+					<liferay-ui:message key="entry-display" />
 				</h3>
 
 				<clay:row>
@@ -98,16 +98,19 @@ renderResponse.setTitle(LanguageUtil.format(request, "edit-x", objectDefinition.
 						md="11"
 					>
 						<aui:select disabled="<%= !objectDefinitionsDetailsDisplayContext.hasUpdateObjectDefinitionPermission() %>" name="titleObjectFieldId" showEmptyOption="<%= false %>">
-							<aui:option label='<%= LanguageUtil.get(request, "id") %>' selected="<%= true %>" value="" />
 
 							<%
 							for (ObjectField objectField : nonrelationshipObjectFields) {
-								if (Objects.equals(objectField.getName(), "id")) {
-									continue;
-								}
 							%>
 
-								<aui:option label="<%= HtmlUtil.escape(objectField.getLabel(locale)) %>" localizeLabel="<%= false %>" selected="<%= Objects.equals(objectField.getObjectFieldId(), objectDefinition.getTitleObjectFieldId()) %>" value="<%= objectField.getObjectFieldId() %>" />
+								<c:choose>
+									<c:when test='<%= Objects.equals(objectField.getName(), "id") %>'>
+										<aui:option label='<%= LanguageUtil.get(request, "id") %>' selected="<%= true %>" value="<%= objectField.getObjectFieldId() %>" />
+									</c:when>
+									<c:otherwise>
+										<aui:option label="<%= HtmlUtil.escape(objectField.getLabel(locale)) %>" localizeLabel="<%= false %>" selected="<%= Objects.equals(objectField.getObjectFieldId(), objectDefinition.getTitleObjectFieldId()) %>" value="<%= objectField.getObjectFieldId() %>" />
+									</c:otherwise>
+								</c:choose>
 
 							<%
 							}
@@ -142,7 +145,7 @@ renderResponse.setTitle(LanguageUtil.format(request, "edit-x", objectDefinition.
 
 			<clay:sheet-section>
 				<h3 class="sheet-subtitle">
-					<%= LanguageUtil.get(request, "scope") %>
+					<liferay-ui:message key="scope" />
 				</h3>
 
 				<clay:row>
@@ -191,7 +194,7 @@ renderResponse.setTitle(LanguageUtil.format(request, "edit-x", objectDefinition.
 				cssClass='<%= objectDefinition.isSystem() ? "hide" : "" %>'
 			>
 				<h3 class="sheet-subtitle">
-					<%= LanguageUtil.get(request, "account-restriction") %>
+					<liferay-ui:message key="account-restriction" />
 				</h3>
 
 				<aui:field-wrapper cssClass="form-group lfr-input-text-container">
@@ -224,10 +227,10 @@ renderResponse.setTitle(LanguageUtil.format(request, "edit-x", objectDefinition.
 				<h3 class="sheet-subtitle">
 					<c:choose>
 						<c:when test='<%= GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-158672")) %>'>
-							<%= LanguageUtil.get(request, "configuration") %>
+							<liferay-ui:message key="configuration" />
 						</c:when>
 						<c:otherwise>
-							<%= LanguageUtil.get(request, "display") %>
+							<liferay-ui:message key="display" />
 						</c:otherwise>
 					</c:choose>
 				</h3>
@@ -245,12 +248,18 @@ renderResponse.setTitle(LanguageUtil.format(request, "edit-x", objectDefinition.
 						<aui:input disabled="<%= objectDefinition.isSystem() || !objectDefinitionsDetailsDisplayContext.hasUpdateObjectDefinitionPermission() %>" label="" labelOff='<%= LanguageUtil.get(request, "enable-comments") %>' labelOn='<%= LanguageUtil.get(request, "enable-comments") %>' name="enableComments" type="toggle-switch" value="<%= objectDefinition.isEnableComments() %>" />
 					</aui:field-wrapper>
 				</c:if>
+
+				<c:if test='<%= GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-158473")) && objectDefinition.isDefaultStorageType() %>'>
+					<aui:field-wrapper cssClass="form-group lfr-input-text-container">
+						<aui:input disabled="<%= objectDefinition.isActive() || objectDefinition.isSystem() %>" label="" labelOff='<%= LanguageUtil.get(request, "enable-entry-history") %>' labelOn='<%= LanguageUtil.get(request, "enable-entry-history") %>' name="enableEntryHistory" type="toggle-switch" />
+					</aui:field-wrapper>
+				</c:if>
 			</clay:sheet-section>
 
 			<c:if test="<%= !objectDefinition.isDefaultStorageType() %>">
 				<clay:sheet-section>
 					<h3 class="sheet-subtitle">
-						<%= LanguageUtil.get(request, "external-data-source") %>
+						<liferay-ui:message key="external-data-source" />
 					</h3>
 
 					<clay:row>

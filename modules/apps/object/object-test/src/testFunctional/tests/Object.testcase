@@ -21,6 +21,97 @@ definition {
 		}
 	}
 
+	@description = "LPS-150886 - Verify that it's possible to delete an object after deleting the relationship"
+	@priority = "4"
+	test CanDeleteCustomObjectAfterDeleteRelationship {
+		ObjectAdmin.addObjectViaAPI(
+			labelName = "Custom Object 290",
+			objectName = "CustomObject290",
+			pluralLabelName = "Custom Objects 290");
+
+		ObjectAdmin.addObjectFieldViaAPI(
+			fieldBusinessType = "Text",
+			fieldLabelName = "Custom Field",
+			fieldName = "customObjectField",
+			fieldType = "String",
+			isRequired = "false",
+			objectName = "CustomObject290");
+
+		ObjectAdmin.addObjectRelationshipViaAPI(
+			objectName_1 = "CustomObject290",
+			objectName_2 = "User",
+			relationshipLabel = "Relationship",
+			relationshipName = "relationship",
+			relationshipType = "oneToMany");
+
+		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject290");
+
+		ObjectAdmin.openObjectAdmin();
+
+		Click(
+			key_objectLabel = "Custom Object 290",
+			locator1 = "ObjectAdmin#OBJECT_KEBAB_MENU");
+
+		MenuItem.clickNoError(menuItem = "Delete");
+
+		SelectFrame(locator1 = "ObjectCustomViews#VIEW_MODAL_CONTENT");
+
+		ObjectAdmin.assertCannotDeleteObjectWithRelationshipErrorMessage();
+
+		ObjectAdmin.openObjectAdmin();
+
+		ObjectPortlet.selectSystemObject(label = "Custom Object 290");
+
+		ObjectAdmin.gotoRelationshipsTab();
+
+		ObjectAdmin.deleteRelationshipViaUI(
+			relationshipLabel = "Relationship",
+			relationshipName = "relationship");
+
+		ObjectAdmin.openObjectAdmin();
+
+		ObjectAdmin.deleteCustomObjectViaUI(
+			labelName = "Custom Object 290",
+			objectName = "CustomObject290");
+
+		AssertElementNotPresent(
+			locator1 = "ObjectAdmin#OBJECT_LABEL",
+			value1 = "Custom Object 290");
+	}
+
+	@description = "LPS-150886 - Verify that it's possible to delete a published object"
+	@priority = "5"
+	test CanDeletePublishedCustomObject {
+		ObjectAdmin.addObjectViaAPI(
+			labelName = "Custom Object 290",
+			objectName = "CustomObject290",
+			pluralLabelName = "Custom Objects 290");
+
+		ObjectAdmin.addObjectFieldViaAPI(
+			fieldBusinessType = "Text",
+			fieldLabelName = "Custom Field",
+			fieldName = "customObjectField",
+			fieldType = "String",
+			isRequired = "false",
+			objectName = "CustomObject290");
+
+		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject290");
+
+		ObjectAdmin.openObjectAdmin();
+
+		ObjectAdmin.assertObjectStatus(
+			label = "Custom Object 290",
+			status = "Approved");
+
+		ObjectAdmin.deleteObjectEntryViaUI(
+			labelName = "Custom Object 290",
+			objectName = "CustomObject290");
+
+		AssertElementNotPresent(
+			locator1 = "ObjectAdmin#OBJECT_LABEL",
+			value1 = "Custom Object 290");
+	}
+
 	@description = "LPS-135406 - Verify it is the user is able to delete a relationship of object native"
 	@priority = "4"
 	test CanDeleteRelationshipFromNativeObject {
@@ -49,6 +140,44 @@ definition {
 
 			ObjectAdmin.assertObjectRelationshipNotPresent(relationshipLabel = "Relationship");
 		}
+	}
+
+	@description = "LPS-150886 - Verify that it's not possible to delete an object that has a relationship"
+	@priority = "5"
+	test CannotDeleteCustomObjectWithRelationship {
+		ObjectAdmin.addObjectViaAPI(
+			labelName = "Custom Object 290",
+			objectName = "CustomObject290",
+			pluralLabelName = "Custom Objects 290");
+
+		ObjectAdmin.addObjectFieldViaAPI(
+			fieldBusinessType = "Text",
+			fieldLabelName = "Custom Field",
+			fieldName = "customObjectField",
+			fieldType = "String",
+			isRequired = "false",
+			objectName = "CustomObject290");
+
+		ObjectAdmin.addObjectRelationshipViaAPI(
+			objectName_1 = "CustomObject290",
+			objectName_2 = "User",
+			relationshipLabel = "Relationship",
+			relationshipName = "relationship",
+			relationshipType = "oneToMany");
+
+		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject290");
+
+		ObjectAdmin.openObjectAdmin();
+
+		Click(
+			key_objectLabel = "Custom Object 290",
+			locator1 = "ObjectAdmin#OBJECT_KEBAB_MENU");
+
+		MenuItem.clickNoError(menuItem = "Delete");
+
+		SelectFrame(locator1 = "ObjectCustomViews#VIEW_MODAL_CONTENT");
+
+		ObjectAdmin.assertCannotDeleteObjectWithRelationshipErrorMessage();
 	}
 
 	@description = "LPS-135406 - Verify it is not possible to delete native fields of objects native"
@@ -87,6 +216,43 @@ definition {
 		ObjectAdmin.goToFieldsTab();
 
 		AssertNotVisible(locator1 = "Icon#DELETE");
+	}
+
+	@description = "LPS-150886 - Verify that the custom object label cannot be used to confirm the deletion"
+	@priority = "5"
+	test CannotUseObjectLabelAsConfirmation {
+		ObjectAdmin.addObjectViaAPI(
+			labelName = "Custom Object 290 Test",
+			objectName = "CustomObject290",
+			pluralLabelName = "Custom Objects 290");
+
+		ObjectAdmin.addObjectFieldViaAPI(
+			fieldBusinessType = "Text",
+			fieldLabelName = "Custom Field",
+			fieldName = "customObjectField",
+			fieldType = "String",
+			isRequired = "false",
+			objectName = "CustomObject290");
+
+		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject290");
+
+		ObjectAdmin.openObjectAdmin();
+
+		Click(
+			key_objectLabel = "Custom Object 290 Test",
+			locator1 = "ObjectAdmin#OBJECT_KEBAB_MENU");
+
+		MenuItem.clickNoError(menuItem = "Delete");
+
+		SelectFrame(locator1 = "ObjectCustomViews#VIEW_MODAL_CONTENT");
+
+		Type(
+			locator1 = "ObjectAdmin#PLACEHOLDER_DELETE_OBJECT",
+			value1 = "Custom Object 290 Test");
+
+		AssertTextEquals.assertPartialText(
+			locator1 = "Message#ERROR_MODAL_CONTENT",
+			value1 = "Input does not match");
 	}
 
 	@description = "LPS-135406 - Verify it is possible to update the label of relationship field of custom object from a native object"
@@ -155,6 +321,50 @@ definition {
 		AssertElementPresent(
 			key_name = "New Relationship",
 			locator1 = "CreateObject#SELECT_OBJECT_FIELD_IN_TABLE");
+	}
+
+	@description = "LPS-150886 - Verify that the delete modal contains a warning message with the number of entries that will be deleted"
+	@priority = "4"
+	test CanViewWarningMessageDeleteModal {
+		ObjectAdmin.addObjectViaAPI(
+			labelName = "Custom Object 290",
+			objectName = "CustomObject290",
+			pluralLabelName = "Custom Objects 290");
+
+		ObjectAdmin.addObjectFieldViaAPI(
+			fieldBusinessType = "Text",
+			fieldLabelName = "Custom Field",
+			fieldName = "customObjectField",
+			fieldType = "String",
+			isRequired = "false",
+			objectName = "CustomObject290");
+
+		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject290");
+
+		for (var fieldEntry : list "A,B") {
+			ObjectAdmin.addObjectSingleFieldEntryViaAPI(
+				fieldName = "customObjectField",
+				objectName = "CustomObject290",
+				value = "Entry ${fieldEntry}");
+		}
+
+		ObjectAdmin.openObjectAdmin();
+
+		Click(
+			key_objectLabel = "Custom Object 290",
+			locator1 = "ObjectAdmin#OBJECT_KEBAB_MENU");
+
+		MenuItem.clickNoError(menuItem = "Delete");
+
+		SelectFrame(locator1 = "ObjectCustomViews#VIEW_MODAL_CONTENT");
+
+		AssertTextEquals(
+			locator1 = "Modal#HEADER",
+			value1 = "Delete Object Definition");
+
+		AssertTextEquals.assertPartialText(
+			locator1 = "Modal#BODY",
+			value1 = "has 2 object entries.");
 	}
 
 }

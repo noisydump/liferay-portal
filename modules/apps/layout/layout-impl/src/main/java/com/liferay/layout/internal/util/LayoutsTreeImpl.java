@@ -46,6 +46,8 @@ import com.liferay.portal.kernel.service.permission.LayoutPermissionUtil;
 import com.liferay.portal.kernel.servlet.BrowserSniffer;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.SessionClicks;
@@ -661,6 +663,11 @@ public class LayoutsTreeImpl implements LayoutsTree {
 				"sortable",
 				hasManageLayoutsPermission && !mobile &&
 				_sites.isLayoutSortable(layout)
+			).put(
+				"target",
+				GetterUtil.getString(
+					HtmlUtil.escape(layout.getTypeSettingsProperty("target")),
+					"_self")
 			).put(
 				"type", layout.getType()
 			).put(

@@ -1680,12 +1680,12 @@ public class JenkinsResultsParserUtil {
 		Pattern distPortalBundleFileNamesPattern =
 			_getDistPortalBundleFileNamesPattern(portalBranchName);
 
-		int buildNumber = lastCompletedBuildNumber;
+		int buildNumber = lastCompletedBuildNumber + 1;
 
 		while (buildNumber > Math.max(0, lastCompletedBuildNumber - 10)) {
 			String distPortalBundlesBuildURL = combine(
 				_getDistPortalBundlesURL(portalBranchName), "/",
-				String.valueOf(lastCompletedBuildNumber), "/");
+				String.valueOf(buildNumber), "/");
 
 			try {
 				Matcher matcher = distPortalBundleFileNamesPattern.matcher(
@@ -3336,6 +3336,17 @@ public class JenkinsResultsParserUtil {
 
 	public static boolean isOSX() {
 		return SystemUtils.IS_OS_MAC_OSX;
+	}
+
+	public static boolean isPoshiFile(File file) {
+		Matcher poshiFileNamePatternMatcher = _poshiFileNamePattern.matcher(
+			file.getName());
+
+		if (poshiFileNamePatternMatcher.matches()) {
+			return true;
+		}
+
+		return false;
 	}
 
 	public static boolean isReachable(String hostname) {
@@ -5898,6 +5909,8 @@ public class JenkinsResultsParserUtil {
 			")?((files|releases).liferay.com)");
 	private static final Pattern _nestedPropertyPattern = Pattern.compile(
 		"\\$\\{([^\\}]+)\\}");
+	private static final Pattern _poshiFileNamePattern = Pattern.compile(
+		".*\\.(function|macro|path|prose|testcase)");
 	private static final Set<String> _redactTokens = new HashSet<>();
 	private static final Pattern _remoteURLAuthorityPattern1 = Pattern.compile(
 		"https://(test).liferay.com/([0-9]+)/");

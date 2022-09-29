@@ -321,14 +321,6 @@ public class ElasticsearchIndexWriter extends BaseIndexWriter {
 	}
 
 	@Override
-	@Reference(target = "(search.engine.impl=Elasticsearch)", unbind = "-")
-	public void setSpellCheckIndexWriter(
-		SpellCheckIndexWriter spellCheckIndexWriter) {
-
-		super.setSpellCheckIndexWriter(spellCheckIndexWriter);
-	}
-
-	@Override
 	public void updateDocument(SearchContext searchContext, Document document) {
 		String indexName = _indexNameBuilder.getIndexName(
 			searchContext.getCompanyId());
@@ -411,31 +403,25 @@ public class ElasticsearchIndexWriter extends BaseIndexWriter {
 		}
 	}
 
-	@Reference(unbind = "-")
-	protected void setElasticsearchConfigurationWrapper(
-		ElasticsearchConfigurationWrapper elasticsearchConfigurationWrapper) {
-
-		_elasticsearchConfigurationWrapper = elasticsearchConfigurationWrapper;
-	}
-
-	@Reference(unbind = "-")
-	protected void setIndexNameBuilder(IndexNameBuilder indexNameBuilder) {
-		_indexNameBuilder = indexNameBuilder;
-	}
-
-	@Reference(target = "(search.engine.impl=Elasticsearch)", unbind = "-")
-	protected void setSearchEngineAdapter(
-		SearchEngineAdapter searchEngineAdapter) {
-
-		_searchEngineAdapter = searchEngineAdapter;
+	@Override
+	protected SpellCheckIndexWriter getSpellCheckIndexWriter() {
+		return _spellCheckIndexWriter;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		ElasticsearchIndexWriter.class);
 
+	@Reference
 	private volatile ElasticsearchConfigurationWrapper
 		_elasticsearchConfigurationWrapper;
+
+	@Reference
 	private IndexNameBuilder _indexNameBuilder;
+
+	@Reference(target = "(search.engine.impl=Elasticsearch)")
 	private SearchEngineAdapter _searchEngineAdapter;
+
+	@Reference(target = "(search.engine.impl=Elasticsearch)")
+	private SpellCheckIndexWriter _spellCheckIndexWriter;
 
 }

@@ -37,14 +37,14 @@ renderResponse.setTitle((accountEntryDisplay.getAccountEntryId() == 0) ? Languag
 
 	<liferay-frontend:edit-form-body>
 		<h2 class="sheet-title">
-			<%= LanguageUtil.get(request, "information") %>
+			<liferay-ui:message key="information" />
 		</h2>
 
 		<liferay-frontend:fieldset-group>
 			<liferay-util:include page="/account_entries_admin/account_entry/display_data.jsp" servletContext="<%= application %>" />
 
 			<c:choose>
-				<c:when test="<%= Objects.equals(AccountConstants.ACCOUNT_ENTRY_TYPE_BUSINESS, accountEntryDisplay.getType()) && accountEntryDisplay.isEmailDomainValidationEnabled(themeDisplay.getCompanyId()) %>">
+				<c:when test="<%= Objects.equals(AccountConstants.ACCOUNT_ENTRY_TYPE_BUSINESS, accountEntryDisplay.getType()) && accountEntryDisplay.isEmailAddressDomainValidationEnabled() %>">
 					<div class="business-account-only">
 						<liferay-util:include page="/account_entries_admin/account_entry/domains.jsp" servletContext="<%= application %>" />
 					</div>

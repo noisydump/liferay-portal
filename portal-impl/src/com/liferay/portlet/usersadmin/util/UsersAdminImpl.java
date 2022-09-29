@@ -14,7 +14,6 @@
 
 package com.liferay.portlet.usersadmin.util;
 
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.configuration.Filter;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -31,6 +30,7 @@ import com.liferay.portal.kernel.model.UserGroup;
 import com.liferay.portal.kernel.model.UserGroupRole;
 import com.liferay.portal.kernel.model.Website;
 import com.liferay.portal.kernel.model.role.RoleConstants;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Hits;
@@ -835,7 +835,7 @@ public class UsersAdminImpl implements UsersAdmin {
 			}
 
 			long typeId = ParamUtil.getLong(
-				actionRequest, "phoneTypeId" + phonesIndex);
+				actionRequest, "phoneListTypeId" + phonesIndex);
 
 			boolean primary = false;
 
@@ -850,7 +850,7 @@ public class UsersAdminImpl implements UsersAdmin {
 
 			phone.setNumber(number);
 			phone.setExtension(extension);
-			phone.setTypeId(typeId);
+			phone.setListTypeId(typeId);
 			phone.setPrimary(primary);
 
 			phones.add(phone);
@@ -1381,19 +1381,19 @@ public class UsersAdminImpl implements UsersAdmin {
 
 			String number = phone.getNumber();
 			String extension = phone.getExtension();
-			long typeId = phone.getTypeId();
+			long listTypeId = phone.getListTypeId();
 			boolean primary = phone.isPrimary();
 
 			if (phoneId <= 0) {
 				phone = PhoneServiceUtil.addPhone(
-					className, classPK, number, extension, typeId, primary,
+					className, classPK, number, extension, listTypeId, primary,
 					new ServiceContext());
 
 				phoneId = phone.getPhoneId();
 			}
 			else {
 				PhoneServiceUtil.updatePhone(
-					phoneId, number, extension, typeId, primary);
+					phoneId, number, extension, listTypeId, primary);
 			}
 
 			phoneIds.add(phoneId);

@@ -54,7 +54,11 @@ public class ObjectActionVariablesUtil {
 			).put(
 				"companyId", payloadJSONObject.getLong("companyId")
 			).put(
+				"creator", payloadJSONObject.get("userName")
+			).put(
 				"currentUserId", payloadJSONObject.getLong("userId")
+			).put(
+				"id", payloadJSONObject.getLong("classPK")
 			).put(
 				"objectDefinitionId",
 				payloadJSONObject.getLong("objectDefinitionId")
@@ -72,7 +76,9 @@ public class ObjectActionVariablesUtil {
 			variables.remove("values");
 		}
 
+		variables.put("creator", variables.get("userName"));
 		variables.put("currentUserId", payloadJSONObject.getLong("userId"));
+		variables.put("id", payloadJSONObject.getLong("classPK"));
 
 		return variables;
 	}
@@ -92,7 +98,10 @@ public class ObjectActionVariablesUtil {
 					getSystemObjectDefinitionMetadata(
 						objectDefinition.getName());
 
-			return systemObjectDefinitionMetadata.getModelClassName();
+			Class<?> modelClass =
+				systemObjectDefinitionMetadata.getModelClass();
+
+			return modelClass.getSimpleName();
 		}
 
 		return dtoConverter.getContentType();

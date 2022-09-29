@@ -12,33 +12,35 @@
  * details.
  */
 
+import {Panel, PanelSimpleBody} from '@liferay/object-js-components-web';
 import React from 'react';
 
-import Panel from '../../Panel/Panel';
 import {TYPES, useLayoutContext} from '../objectLayoutContext';
-import HeaderDropdown from './HeaderDropdown';
-import RequiredLabel from './RequiredLabel';
+import {HeaderDropdown} from './HeaderDropdown';
+import {RequiredLabel} from './RequiredLabel';
 
-interface IObjectLayoutFieldProps extends React.HTMLAttributes<HTMLElement> {
+interface ObjectLayoutFieldProps extends React.HTMLAttributes<HTMLElement> {
 	boxIndex: number;
 	columnIndex: number;
-	objectFieldId: number;
+	objectFieldName: string;
 	rowIndex: number;
 	tabIndex: number;
 }
 
 const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
 
-const ObjectLayoutField: React.FC<IObjectLayoutFieldProps> = ({
+export function ObjectLayoutField({
 	boxIndex,
 	columnIndex,
-	objectFieldId,
+	objectFieldName,
 	rowIndex,
 	tabIndex,
-}) => {
+}: ObjectLayoutFieldProps) {
 	const [{objectFieldTypes, objectFields}, dispatch] = useLayoutContext();
 
-	const objectField = objectFields.find(({id}) => id === objectFieldId)!;
+	const objectField = objectFields.find(
+		({name}) => name === objectFieldName
+	)!;
 
 	const objectFieldType = objectFieldTypes.find(
 		({businessType}) => businessType === objectField.businessType
@@ -46,8 +48,8 @@ const ObjectLayoutField: React.FC<IObjectLayoutFieldProps> = ({
 
 	return (
 		<>
-			<Panel key={`field_${objectFieldId}`}>
-				<Panel.SimpleBody
+			<Panel key={`field_${objectFieldName}`}>
+				<PanelSimpleBody
 					contentRight={
 						<HeaderDropdown
 							deleteElement={() => {
@@ -55,7 +57,7 @@ const ObjectLayoutField: React.FC<IObjectLayoutFieldProps> = ({
 									payload: {
 										boxIndex,
 										columnIndex,
-										objectFieldId,
+										objectFieldName,
 										rowIndex,
 										tabIndex,
 									},
@@ -71,10 +73,8 @@ const ObjectLayoutField: React.FC<IObjectLayoutFieldProps> = ({
 					</small>
 
 					<RequiredLabel required={objectField?.required} />
-				</Panel.SimpleBody>
+				</PanelSimpleBody>
 			</Panel>
 		</>
 	);
-};
-
-export default ObjectLayoutField;
+}

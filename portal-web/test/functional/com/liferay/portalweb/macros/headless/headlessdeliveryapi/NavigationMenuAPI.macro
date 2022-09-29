@@ -1,0 +1,61 @@
+definition {
+
+	macro _assertResponseIncludeCorrectElement {
+		Variables.assertDefined(parameterList = "${element},${expectedElement}");
+
+		if (isSet(responseFromSite)) {
+			var actual = JSONUtil.getWithJSONPath("${responseToParse}", "$.items..navigationMenuItems..${element}");
+		}
+		else {
+			var actual = JSONUtil.getWithJSONPath("${responseToParse}", "$.navigationMenuItems..${element}");
+		}
+
+		TestUtils.assertEquals(
+			actual = "${actual}",
+			expected = "${expectedElement}");
+	}
+
+	macro assertResponseHasCorrectInformations {
+		Variables.assertDefined(parameterList = "${expectedURL},${expectedType},${expectedUseCustomName},${responseToParse}");
+
+		NavigationMenuAPI._assertResponseIncludeCorrectElement(
+			element = "contentURL",
+			expectedElement = "${expectedURL}",
+			responseFromSite = "${responseFromSite}",
+			responseToParse = "${responseToParse}");
+
+		NavigationMenuAPI._assertResponseIncludeCorrectElement(
+			element = "type",
+			expectedElement = "${expectedType}",
+			responseFromSite = "${responseFromSite}",
+			responseToParse = "${responseToParse}");
+
+		NavigationMenuAPI._assertResponseIncludeCorrectElement(
+			element = "useCustomName",
+			expectedElement = "${expectedUseCustomName}",
+			responseFromSite = "${responseFromSite}",
+			responseToParse = "${responseToParse}");
+	}
+
+	macro getNavigationMenu {
+		var portalURL = JSONCompany.getPortalURL();
+
+		if (isSet(navigationMenuId)) {
+			var api = "navigation-menus/${navigationMenuId}";
+		}
+		else {
+			var api = "sites/${siteId}/navigation-menus/";
+		}
+
+		var curl = '''
+			${portalURL}/o/headless-delivery/v1.0/${api} \
+			-u test@liferay.com:test \
+			-H accept: application/json
+		''';
+
+		var response = JSONCurlUtil.get("${curl}");
+
+		return "${response}";
+	}
+
+}

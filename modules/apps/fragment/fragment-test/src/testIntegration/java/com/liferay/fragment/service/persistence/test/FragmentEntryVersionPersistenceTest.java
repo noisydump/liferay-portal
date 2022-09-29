@@ -392,6 +392,21 @@ public class FragmentEntryVersionPersistenceTest {
 	}
 
 	@Test
+	public void testCountByType() throws Exception {
+		_persistence.countByType(RandomTestUtil.nextInt());
+
+		_persistence.countByType(0);
+	}
+
+	@Test
+	public void testCountByType_Version() throws Exception {
+		_persistence.countByType_Version(
+			RandomTestUtil.nextInt(), RandomTestUtil.nextInt());
+
+		_persistence.countByType_Version(0, 0);
+	}
+
+	@Test
 	public void testCountByG_FCI() throws Exception {
 		_persistence.countByG_FCI(
 			RandomTestUtil.nextLong(), RandomTestUtil.nextLong());

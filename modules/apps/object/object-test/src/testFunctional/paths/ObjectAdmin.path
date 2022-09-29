@@ -451,8 +451,8 @@
 		<td></td>
 	</tr>
 	<tr>
-		<td>VIEW_ACTIONS_TAB</td>
-		<td>//div[contains(@class,'dnd-tr') and contains (.,'${key_actionName}') and contains (.,'${key_actionActive}')]</td>
+		<td>VIEW_ACTIONS_LABEL</td>
+		<td>//div[contains(@class, 'dnd-td') and contains(., '${key_actionActive}')]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -516,6 +516,11 @@
 		<td></td>
 	</tr>
 	<tr>
+		<td>PLACEHOLDER_DELETE_OBJECT</td>
+		<td>//input[contains(@placeholder,'Confirm Object Definition Name')]</td>
+		<td></td>
+	</tr>
+	<tr>
 		<td>PLACEHOLDER_DELETE_RELATIONSHIP</td>
 		<td>//input[contains(@placeholder,'Confirm Relationship Name')]</td>
 		<td></td>
@@ -538,6 +543,31 @@
 	<tr>
 		<td>VIEW_STATE_NAME</td>
 		<td>//h3[(@class='lfr-objects__card-title') and text()='Select the State Flow']//..//..//div[contains(@class,'lfr-objects__card-title--with-padding') and contains(.,'${key_stateName}')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>SELECT_CHOOSE_OPTION</td>
+		<td>//option[contains(text(),'${chooseOption}')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>CHOOSE_AN_OBJECT</td>
+		<td>//select[@class="form-control"]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>CHOOSE_OBJECT_LABEL</td>
+		<td>//*[contains(@label,'Unrelated Objects')]//..//option[contains(.,'${key_objectLabel}')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>TAB_NAME_ON_LAYOUT</td>
+		<td>//h3[@class = 'object-admin-panel__title' and contains(text(),'${key_tabName}')]/../..//button[@class = 'dropdown-toggle btn btn-monospaced btn-unstyled']</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>ACTION_DESCRIPTION_FIELD</td>
+		<td>//textarea[@name='description']</td>
 		<td></td>
 	</tr>
 </tbody>

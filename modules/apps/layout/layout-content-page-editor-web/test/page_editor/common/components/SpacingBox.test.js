@@ -13,17 +13,25 @@
  */
 
 import '@testing-library/jest-dom/extend-expect';
-import {fireEvent, render, screen} from '@testing-library/react';
+import {act, fireEvent, render, screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 
+import {VIEWPORT_SIZES} from '../../../../src/main/resources/META-INF/resources/page_editor/app/config/constants/viewportSizes';
 import SpacingBox from '../../../../src/main/resources/META-INF/resources/page_editor/common/components/SpacingBox';
 import {StyleBookContextProvider} from '../../../../src/main/resources/META-INF/resources/page_editor/plugins/page-design-options/hooks/useStyleBook';
+import StoreMother from '../../../../src/main/resources/META-INF/resources/page_editor/test-utils/StoreMother';
 
 jest.mock(
 	'../../../../src/main/resources/META-INF/resources/page_editor/app/config',
 	() => ({
 		config: {
+			availableViewportSizes: {
+				desktop: {label: 'desktop'},
+				landscapeMobile: {label: 'landscapeMobile'},
+				portraitMobile: {label: 'portraitMobile'},
+				tablet: {label: 'tablet'},
+			},
 			frontendTokens: {
 				spacer0: {
 					defaultValue: '3rem',
@@ -41,121 +49,123 @@ jest.mock(
 );
 
 const SpacingBoxTest = ({
+	itemConfig = {},
 	canSetCustomValue = true,
 	onChange = () => {},
 	value = {},
+	getState = () => ({}),
 }) => (
-	<StyleBookContextProvider>
-		<SpacingBox
-			canSetCustomValue={canSetCustomValue}
-			fields={{
-				marginBottom: {
-					defaultValue: '0',
-					label: 'margin-bottom',
-					name: 'marginTop',
-					typeOptions: {
-						validValues: [
-							{label: '0', value: '0'},
-							{label: '10', value: '10'},
-						],
+	<StoreMother.Component getState={getState}>
+		<StyleBookContextProvider>
+			<SpacingBox
+				canSetCustomValue={canSetCustomValue}
+				fields={{
+					marginBottom: {
+						defaultValue: '0',
+						label: 'margin-bottom',
+						name: 'marginTop',
+						typeOptions: {
+							validValues: [
+								{label: '0', value: '0'},
+								{label: '10', value: '10'},
+							],
+						},
 					},
-				},
-				marginLeft: {
-					defaultValue: '0',
-					label: 'margin-left',
-					name: 'marginLeft',
-					typeOptions: {
-						validValues: [
-							{label: '0', value: '0'},
-							{label: '10', value: '10'},
-						],
+					marginLeft: {
+						defaultValue: '0',
+						label: 'margin-left',
+						name: 'marginLeft',
+						typeOptions: {
+							validValues: [
+								{label: '0', value: '0'},
+								{label: '10', value: '10'},
+							],
+						},
 					},
-				},
-				marginRight: {
-					defaultValue: '0',
-					label: 'margin-right',
-					name: 'marginRight',
-					typeOptions: {
-						validValues: [
-							{label: '0', value: '0'},
-							{label: '10', value: '10'},
-						],
+					marginRight: {
+						defaultValue: '0',
+						label: 'margin-right',
+						name: 'marginRight',
+						typeOptions: {
+							validValues: [
+								{label: '0', value: '0'},
+								{label: '10', value: '10'},
+							],
+						},
 					},
-				},
-				marginTop: {
-					defaultValue: '0',
-					label: 'margin-top',
-					name: 'marginTop',
-					typeOptions: {
-						validValues: [
-							{label: '0', value: '0'},
-							{label: '10', value: '10'},
-						],
+					marginTop: {
+						defaultValue: '0',
+						label: 'margin-top',
+						name: 'marginTop',
+						typeOptions: {
+							validValues: [
+								{label: '0', value: '0'},
+								{label: '10', value: '10'},
+							],
+						},
 					},
-				},
-				paddingBottom: {
-					defaultValue: '0',
-					label: 'padding-bottom',
-					name: 'paddingBottom',
-					typeOptions: {
-						validValues: [
-							{label: '0', value: '0'},
-							{label: '10', value: '10'},
-						],
+					paddingBottom: {
+						defaultValue: '0',
+						label: 'padding-bottom',
+						name: 'paddingBottom',
+						typeOptions: {
+							validValues: [
+								{label: '0', value: '0'},
+								{label: '10', value: '10'},
+							],
+						},
 					},
-				},
-				paddingLeft: {
-					defaultValue: '0',
-					label: 'padding-left',
-					name: 'paddingLeft',
-					typeOptions: {
-						validValues: [
-							{label: '0', value: '0'},
-							{label: '10', value: '10'},
-						],
+					paddingLeft: {
+						defaultValue: '0',
+						label: 'padding-left',
+						name: 'paddingLeft',
+						typeOptions: {
+							validValues: [
+								{label: '0', value: '0'},
+								{label: '10', value: '10'},
+							],
+						},
 					},
-				},
-				paddingRight: {
-					defaultValue: '0',
-					label: 'padding-right',
-					name: 'paddingRight',
-					typeOptions: {
-						validValues: [
-							{label: '0', value: '0'},
-							{label: '5', value: '5'},
-						],
+					paddingRight: {
+						defaultValue: '0',
+						label: 'padding-right',
+						name: 'paddingRight',
+						typeOptions: {
+							validValues: [
+								{label: '0', value: '0'},
+								{label: '5', value: '5'},
+							],
+						},
 					},
-				},
-				paddingTop: {
-					defaultValue: '0',
-					label: 'padding-top',
-					name: 'paddingTop',
-					typeOptions: {
-						validValues: [
-							{label: '0', value: '0'},
-							{label: '10', value: '10'},
-						],
+					paddingTop: {
+						defaultValue: '0',
+						label: 'padding-top',
+						name: 'paddingTop',
+						typeOptions: {
+							validValues: [
+								{label: '0', value: '0'},
+								{label: '10', value: '10'},
+							],
+						},
 					},
-				},
-			}}
-			onChange={onChange}
-			value={value}
-		/>
-	</StyleBookContextProvider>
+				}}
+				item={{config: itemConfig}}
+				onChange={onChange}
+				value={value}
+			/>
+		</StyleBookContextProvider>
+	</StoreMother.Component>
 );
 
 describe('SpacingBox', () => {
 	let _getComputedStyle;
-	let _liferayUtilSub;
 
 	beforeEach(() => {
 		_getComputedStyle = window.getComputedStyle;
-		_liferayUtilSub = window.Liferay.Util.sub;
 	});
 
 	afterEach(() => {
 		window.getComputedStyle = _getComputedStyle;
-		window.Liferay.Util.sub = _liferayUtilSub;
 	});
 
 	it('renders given spacing values from StyleBook', () => {
@@ -183,14 +193,11 @@ describe('SpacingBox', () => {
 	});
 
 	it('can be used to update spacing', () => {
-		window.Liferay.Util.sub = (key, args) =>
-			args.reduce((key, arg) => key.replace('x', arg), key);
-
 		const onChange = jest.fn();
 		render(<SpacingBoxTest onChange={onChange} />);
 
-		userEvent.click(screen.getByLabelText('padding-left'));
-		userEvent.click(screen.getByLabelText('set-padding-left-to-10'));
+		fireEvent.click(screen.getByLabelText('padding-left'));
+		fireEvent.click(screen.getByLabelText('set-padding-left-to-10'));
 
 		expect(onChange).toHaveBeenCalledWith('paddingLeft', '10');
 	});
@@ -206,7 +213,15 @@ describe('SpacingBox', () => {
 	it('focuses the selected option when the dropdown is opened', () => {
 		render(<SpacingBoxTest value={{marginTop: '10'}} />);
 
-		userEvent.click(screen.getByLabelText('margin-top'));
+		jest.useFakeTimers();
+
+		fireEvent.click(screen.getByLabelText('margin-top'));
+
+		act(() => {
+			jest.runAllTimers();
+		});
+
+		jest.useRealTimers();
 
 		expect(screen.getByText('Spacer 10').parentElement).toHaveFocus();
 	});
@@ -228,14 +243,6 @@ describe('SpacingBox', () => {
 	});
 
 	describe('LenghtInput inside SpacingBox', () => {
-		beforeEach(() => {
-			Liferay.FeatureFlags['LPS-143206'] = true;
-		});
-
-		afterEach(() => {
-			delete Liferay.FeatureFlags['LPS-143206'];
-		});
-
 		it('does not render the input when user does not have update permission', () => {
 			render(<SpacingBoxTest canSetCustomValue={false} />);
 
@@ -279,6 +286,49 @@ describe('SpacingBox', () => {
 
 			expect(onChange).toHaveBeenCalledWith('paddingTop', '20px');
 			expect(screen.queryByText('10rem')).not.toBeInTheDocument();
+		});
+	});
+
+	describe('Reset button inside SpacingBox', () => {
+		it('reset value when pressing the button', () => {
+			const onChange = jest.fn();
+
+			render(
+				<SpacingBoxTest onChange={onChange} value={{marginTop: '10'}} />
+			);
+
+			const button = screen.getByLabelText('margin-top');
+
+			userEvent.click(button);
+
+			userEvent.click(screen.getByTitle('reset-to-initial-value'));
+
+			expect(onChange).toHaveBeenCalledWith(
+				'marginTop',
+				null,
+				expect.anything()
+			);
+		});
+
+		it('renders correct label if we are in different viewport', () => {
+			const onChange = jest.fn();
+
+			render(
+				<SpacingBoxTest
+					getState={() => ({
+						selectedViewportSize: VIEWPORT_SIZES.tablet,
+					})}
+					itemConfig={{marginTop: '2px'}}
+					onChange={onChange}
+					value={{marginTop: '10'}}
+				/>
+			);
+
+			userEvent.click(screen.getByLabelText('margin-top'));
+
+			expect(
+				screen.getByTitle('reset-to-desktop-value')
+			).toBeInTheDocument();
 		});
 	});
 });

@@ -64,18 +64,14 @@ public class GoogleMapsMapProvider extends BaseJSPMapProvider {
 	}
 
 	@Override
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.map.google.maps)",
-		unbind = "-"
-	)
-	public void setServletContext(ServletContext servletContext) {
-		super.setServletContext(servletContext);
+	protected ServletContext getServletContext() {
+		return _servletContext;
 	}
 
 	@Override
 	protected void prepareRequest(HttpServletRequest httpServletRequest) {
 		String resolvedModuleName = _npmResolver.resolveModuleName(
-			"@liferay/map-google-maps/js/MapGoogleMaps.es");
+			"@liferay/map-google-maps/js/MapGoogleMaps");
 
 		httpServletRequest.setAttribute(
 			"liferay-map:map:bootstrapRequire",
@@ -87,5 +83,8 @@ public class GoogleMapsMapProvider extends BaseJSPMapProvider {
 
 	@Reference
 	private NPMResolver _npmResolver;
+
+	@Reference(target = "(osgi.web.symbolicname=com.liferay.map.google.maps)")
+	private ServletContext _servletContext;
 
 }

@@ -694,6 +694,34 @@ public class ObjectDefinition implements Serializable {
 	protected Boolean portlet;
 
 	@Schema
+	public String getRestContextPath() {
+		return restContextPath;
+	}
+
+	public void setRestContextPath(String restContextPath) {
+		this.restContextPath = restContextPath;
+	}
+
+	@JsonIgnore
+	public void setRestContextPath(
+		UnsafeSupplier<String, Exception> restContextPathUnsafeSupplier) {
+
+		try {
+			restContextPath = restContextPathUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String restContextPath;
+
+	@Schema
 	public String getScope() {
 		return scope;
 	}
@@ -807,20 +835,20 @@ public class ObjectDefinition implements Serializable {
 	protected Boolean system;
 
 	@Schema
-	public Long getTitleObjectFieldId() {
-		return titleObjectFieldId;
+	public String getTitleObjectFieldName() {
+		return titleObjectFieldName;
 	}
 
-	public void setTitleObjectFieldId(Long titleObjectFieldId) {
-		this.titleObjectFieldId = titleObjectFieldId;
+	public void setTitleObjectFieldName(String titleObjectFieldName) {
+		this.titleObjectFieldName = titleObjectFieldName;
 	}
 
 	@JsonIgnore
-	public void setTitleObjectFieldId(
-		UnsafeSupplier<Long, Exception> titleObjectFieldIdUnsafeSupplier) {
+	public void setTitleObjectFieldName(
+		UnsafeSupplier<String, Exception> titleObjectFieldNameUnsafeSupplier) {
 
 		try {
-			titleObjectFieldId = titleObjectFieldIdUnsafeSupplier.get();
+			titleObjectFieldName = titleObjectFieldNameUnsafeSupplier.get();
 		}
 		catch (RuntimeException re) {
 			throw re;
@@ -832,7 +860,7 @@ public class ObjectDefinition implements Serializable {
 
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected Long titleObjectFieldId;
+	protected String titleObjectFieldName;
 
 	@Override
 	public boolean equals(Object object) {
@@ -1158,6 +1186,20 @@ public class ObjectDefinition implements Serializable {
 			sb.append(portlet);
 		}
 
+		if (restContextPath != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"restContextPath\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(restContextPath));
+
+			sb.append("\"");
+		}
+
 		if (scope != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -1206,14 +1248,18 @@ public class ObjectDefinition implements Serializable {
 			sb.append(system);
 		}
 
-		if (titleObjectFieldId != null) {
+		if (titleObjectFieldName != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"titleObjectFieldId\": ");
+			sb.append("\"titleObjectFieldName\": ");
 
-			sb.append(titleObjectFieldId);
+			sb.append("\"");
+
+			sb.append(_escape(titleObjectFieldName));
+
+			sb.append("\"");
 		}
 
 		sb.append("}");

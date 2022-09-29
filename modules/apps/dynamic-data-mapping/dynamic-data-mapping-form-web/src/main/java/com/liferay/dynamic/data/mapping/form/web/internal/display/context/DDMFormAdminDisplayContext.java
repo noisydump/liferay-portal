@@ -81,7 +81,6 @@ import com.liferay.layout.dynamic.data.mapping.form.field.type.constants.LayoutD
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.petra.function.UnsafeConsumer;
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.editor.configuration.EditorConfiguration;
@@ -104,6 +103,7 @@ import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.SearchOrderByUtil;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -947,6 +947,13 @@ public class DDMFormAdminDisplayContext {
 		).build();
 	}
 
+	public ObjectDefinition getObjectDefinition(DDMFormInstance ddmFormInstance)
+		throws PortalException {
+
+		return _objectDefinitionLocalService.fetchObjectDefinition(
+			ddmFormInstance.getObjectDefinitionId());
+	}
+
 	public String getObjectDefinitionLabel(
 			DDMFormInstance ddmFormInstance, Locale locale)
 		throws PortalException {
@@ -1227,16 +1234,17 @@ public class DDMFormAdminDisplayContext {
 		return false;
 	}
 
-	public boolean hasValidMappedObject(DDMFormInstance ddmFormInstance)
+	public boolean hasValidMappedObject(
+			DDMFormInstance ddmFormInstance, ObjectDefinition objectDefinition)
 		throws PortalException {
 
 		if (!Objects.equals(ddmFormInstance.getStorageType(), "object")) {
 			return true;
 		}
 
-		ObjectDefinition objectDefinition =
-			_objectDefinitionLocalService.getObjectDefinition(
-				ddmFormInstance.getObjectDefinitionId());
+		if (objectDefinition == null) {
+			return false;
+		}
 
 		return objectDefinition.isActive();
 	}

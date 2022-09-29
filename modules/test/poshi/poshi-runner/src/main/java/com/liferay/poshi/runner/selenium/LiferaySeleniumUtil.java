@@ -20,6 +20,8 @@ import com.liferay.poshi.core.util.GetterUtil;
 import com.liferay.poshi.core.util.OSDetector;
 import com.liferay.poshi.core.util.PropsValues;
 import com.liferay.poshi.core.util.Validator;
+import com.liferay.poshi.runner.exception.JavaScriptException;
+import com.liferay.poshi.runner.exception.LiferayLogException;
 import com.liferay.poshi.runner.exception.PoshiRunnerWarningException;
 import com.liferay.poshi.runner.util.EmailCommands;
 
@@ -65,22 +67,6 @@ import org.sikuli.api.robot.desktop.DesktopKeyboard;
 @SuppressWarnings("deprecation")
 public class LiferaySeleniumUtil {
 
-	public static void addToJavaScriptExceptions(Exception exception) {
-		_javaScriptExceptions.add(exception);
-	}
-
-	public static void addToJavaScriptExceptions(List<Exception> exceptions) {
-		_javaScriptExceptions.addAll(exceptions);
-	}
-
-	public static void addToLiferayExceptions(Exception exception) {
-		_liferayExceptions.add(exception);
-	}
-
-	public static void addToLiferayExceptions(List<Exception> exceptions) {
-		_liferayExceptions.addAll(exceptions);
-	}
-
 	public static void assertConsoleErrors() throws Exception {
 		if (!PropsValues.TEST_ASSERT_CONSOLE_ERRORS) {
 			return;
@@ -91,6 +77,8 @@ public class LiferaySeleniumUtil {
 		if (content.equals("")) {
 			return;
 		}
+
+		LiferayLogException liferayLogException = null;
 
 		SAXReader saxReader = new SAXReader();
 
@@ -105,8 +93,6 @@ public class LiferaySeleniumUtil {
 		Element rootElement = document.getRootElement();
 
 		List<Element> eventElements = rootElement.elements("event");
-
-		List<Exception> exceptions = new ArrayList<>();
 
 		for (Element eventElement : eventElements) {
 			String level = eventElement.attributeValue("level");
@@ -137,14 +123,19 @@ public class LiferaySeleniumUtil {
 
 				System.out.println(sb.toString());
 
-				exceptions.add(new PoshiRunnerWarningException(sb.toString()));
+				if (liferayLogException == null) {
+					liferayLogException = new LiferayLogException(
+						sb.toString());
+				}
+				else {
+					PoshiRunnerWarningException.addException(
+						new LiferayLogException(sb.toString()));
+				}
 			}
 		}
 
-		if (!exceptions.isEmpty()) {
-			addToLiferayExceptions(exceptions);
-
-			throw exceptions.get(0);
+		if (liferayLogException != null) {
+			throw liferayLogException;
 		}
 	}
 
@@ -156,76 +147,38 @@ public class LiferaySeleniumUtil {
 	}
 
 	public static void assertNoJavaScriptExceptions() throws Exception {
-		if (!_javaScriptExceptions.isEmpty()) {
-			StringBuilder sb = new StringBuilder();
+		List<PoshiRunnerWarningException> javaScriptExceptions =
+			new ArrayList<>();
 
-			sb.append(_javaScriptExceptions.size());
-			sb.append(" Javascript Exception");
+		for (PoshiRunnerWarningException poshiRunnerWarningException :
+				PoshiRunnerWarningException.getPoshiRunnerWarningExceptions()) {
 
-			if (_javaScriptExceptions.size() > 1) {
-				sb.append("s were");
+			if (poshiRunnerWarningException instanceof JavaScriptException) {
+				javaScriptExceptions.add(poshiRunnerWarningException);
 			}
-			else {
-				sb.append(" was");
-			}
+		}
 
-			sb.append(" thrown");
-
-			System.out.println();
-			System.out.println("##");
-			System.out.println("## " + sb.toString());
-			System.out.println("##");
-
-			for (int i = 0; i < _javaScriptExceptions.size(); i++) {
-				Exception exception = _javaScriptExceptions.get(i);
-
-				System.out.println();
-				System.out.println("##");
-				System.out.println("## Javascript Exception #" + (i + 1));
-				System.out.println("##");
-				System.out.println();
-				System.out.println(exception.getMessage());
-				System.out.println();
-			}
-
-			throw new Exception(sb.toString());
+		if (!javaScriptExceptions.isEmpty()) {
+			throw new Exception(
+				_getExceptionsMessage(javaScriptExceptions, "JavaScript"));
 		}
 	}
 
 	public static void assertNoLiferayExceptions() throws Exception {
-		if (!_liferayExceptions.isEmpty()) {
-			StringBuilder sb = new StringBuilder();
+		List<PoshiRunnerWarningException> liferayLogExceptions =
+			new ArrayList<>();
 
-			sb.append(_liferayExceptions.size());
-			sb.append(" Liferay Exception");
+		for (PoshiRunnerWarningException poshiRunnerWarningException :
+				PoshiRunnerWarningException.getPoshiRunnerWarningExceptions()) {
 
-			if (_liferayExceptions.size() > 1) {
-				sb.append("s were");
+			if (poshiRunnerWarningException instanceof JavaScriptException) {
+				liferayLogExceptions.add(poshiRunnerWarningException);
 			}
-			else {
-				sb.append(" was");
-			}
+		}
 
-			sb.append(" thrown");
-
-			System.out.println();
-			System.out.println("##");
-			System.out.println("## " + sb.toString());
-			System.out.println("##");
-
-			for (int i = 0; i < _liferayExceptions.size(); i++) {
-				Exception exception = _liferayExceptions.get(i);
-
-				System.out.println();
-				System.out.println("##");
-				System.out.println("## Liferay Exception #" + (i + 1));
-				System.out.println("##");
-				System.out.println();
-				System.out.println(exception.getMessage());
-				System.out.println();
-			}
-
-			throw new Exception(sb.toString());
+		if (!liferayLogExceptions.isEmpty()) {
+			throw new Exception(
+				_getExceptionsMessage(liferayLogExceptions, "Liferay"));
 		}
 	}
 
@@ -234,64 +187,34 @@ public class LiferaySeleniumUtil {
 			return;
 		}
 
-		StringBuilder sb = new StringBuilder();
+		List<PoshiRunnerWarningException> javaScriptExceptions =
+			new ArrayList<>();
+		List<PoshiRunnerWarningException> liferayLogExceptions =
+			new ArrayList<>();
 
-		if (!_javaScriptExceptions.isEmpty()) {
-			sb.append("\n");
-			sb.append("##\n");
+		for (PoshiRunnerWarningException poshiRunnerWarningException :
+				PoshiRunnerWarningException.getPoshiRunnerWarningExceptions()) {
 
-			sb.append("## ");
-			sb.append(_javaScriptExceptions.size());
-			sb.append(" Javascript Exception");
+			if (poshiRunnerWarningException instanceof JavaScriptException) {
+				javaScriptExceptions.add(poshiRunnerWarningException);
 
-			if (_javaScriptExceptions.size() > 1) {
-				sb.append("s were");
-			}
-			else {
-				sb.append(" was");
+				continue;
 			}
 
-			sb.append(" thrown\n");
-
-			sb.append("##\n");
-			sb.append("\n");
-
-			for (Exception exception : _javaScriptExceptions) {
-				sb.append(exception.getMessage());
-
-				sb.append("\n");
+			if (poshiRunnerWarningException instanceof LiferayLogException) {
+				liferayLogExceptions.add(poshiRunnerWarningException);
 			}
-
-			sb.append("\n");
 		}
 
-		if (!_liferayExceptions.isEmpty()) {
-			sb.append("\n");
-			sb.append("##\n");
+		StringBuilder sb = new StringBuilder();
 
-			sb.append("## ");
-			sb.append(_liferayExceptions.size());
-			sb.append(" Liferay Exception");
+		if (!javaScriptExceptions.isEmpty()) {
+			sb.append(
+				_getExceptionsMessage(javaScriptExceptions, "JavaScript"));
+		}
 
-			if (_liferayExceptions.size() > 1) {
-				sb.append("s were");
-			}
-			else {
-				sb.append(" was");
-			}
-
-			sb.append(" thrown\n");
-
-			sb.append("##\n");
-			sb.append("\n");
-
-			for (Exception exception : _liferayExceptions) {
-				sb.append(exception.getMessage());
-
-				sb.append("\n");
-			}
-
-			sb.append("\n");
+		if (!liferayLogExceptions.isEmpty()) {
+			sb.append(_getExceptionsMessage(liferayLogExceptions, "Liferay"));
 		}
 
 		if (Validator.isNotNull(sb.toString())) {
@@ -736,42 +659,23 @@ public class LiferaySeleniumUtil {
 	public static void writePoshiWarnings() throws Exception {
 		StringBuilder sb = new StringBuilder();
 
-		if (!_javaScriptExceptions.isEmpty()) {
-			for (Exception exception : _javaScriptExceptions) {
-				sb.append("<value><![CDATA[");
+		for (PoshiRunnerWarningException poshiRunnerWarningException :
+				PoshiRunnerWarningException.getPoshiRunnerWarningExceptions()) {
 
-				String message = exception.getMessage();
+			sb.append("<value><![CDATA[");
 
-				if (Validator.isNotNull(message) &&
-					(message.length() > _CHARS_EXCEPTION_MESSAGE_SIZE_MAX)) {
+			String message = poshiRunnerWarningException.getMessage();
 
-					message = message.substring(
-						0, _CHARS_EXCEPTION_MESSAGE_SIZE_MAX);
-				}
+			if (Validator.isNotNull(message) &&
+				(message.length() > _CHARS_EXCEPTION_MESSAGE_SIZE_MAX)) {
 
-				sb.append(message);
-
-				sb.append("]]></value>\n");
+				message = message.substring(
+					0, _CHARS_EXCEPTION_MESSAGE_SIZE_MAX);
 			}
-		}
 
-		if (!_liferayExceptions.isEmpty()) {
-			for (Exception exception : _liferayExceptions) {
-				sb.append("<value><![CDATA[");
+			sb.append(message);
 
-				String message = exception.getMessage();
-
-				if (Validator.isNotNull(message) &&
-					(message.length() > _CHARS_EXCEPTION_MESSAGE_SIZE_MAX)) {
-
-					message = message.substring(
-						0, _CHARS_EXCEPTION_MESSAGE_SIZE_MAX);
-				}
-
-				sb.append(message);
-
-				sb.append("]]></value>\n");
-			}
+			sb.append("]]></value>\n");
 		}
 
 		FileUtil.write(
@@ -798,13 +702,50 @@ public class LiferaySeleniumUtil {
 		return new BufferedReader(inputStreamReader);
 	}
 
+	private static String _getExceptionsMessage(
+		List<PoshiRunnerWarningException> poshiRunnerWarningExceptions,
+		String exceptionType) {
+
+		StringBuilder sb = new StringBuilder();
+
+		if (!poshiRunnerWarningExceptions.isEmpty()) {
+			sb.append("\n");
+			sb.append("##\n");
+
+			sb.append("## ");
+			sb.append(poshiRunnerWarningExceptions.size());
+			sb.append(" ");
+			sb.append(exceptionType);
+			sb.append(" Exception");
+
+			if (poshiRunnerWarningExceptions.size() > 1) {
+				sb.append("s were");
+			}
+			else {
+				sb.append(" was");
+			}
+
+			sb.append(" thrown\n");
+
+			sb.append("##\n");
+			sb.append("\n");
+
+			for (Exception exception : poshiRunnerWarningExceptions) {
+				sb.append(exception.getMessage());
+
+				sb.append("\n");
+			}
+
+			sb.append("\n");
+		}
+
+		return sb.toString();
+	}
+
 	private static final long _BYTES_MAX_SIZE_CONSOLE_LOG = 20 * 1024 * 1024;
 
 	private static final int _CHARS_EXCEPTION_MESSAGE_SIZE_MAX = 2500;
 
 	private static final List<String> _errorTimestamps = new ArrayList<>();
-	private static final List<Exception> _javaScriptExceptions =
-		new ArrayList<>();
-	private static final List<Exception> _liferayExceptions = new ArrayList<>();
 
 }

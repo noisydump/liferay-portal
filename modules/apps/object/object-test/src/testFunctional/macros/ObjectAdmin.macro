@@ -1,5 +1,24 @@
 definition {
 
+	macro activateOrDeactivateAction {
+		ObjectAdmin.goToActionDetails(viewEntry = "${viewEntry}");
+
+		SelectFrame.selectFrameNoLoading(locator1 = "ObjectAction#IFRAME_SIDE_PANEL");
+
+		if ("${active}" == "true") {
+			Check.checkToggleSwitch(
+				key_toggleSwitchLabel = "Active",
+				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+		}
+		else if ("${active}" == "false") {
+			Uncheck.uncheckToggleSwitch(
+				key_toggleSwitchLabel = "Active",
+				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+		}
+
+		Button.clickSave();
+	}
+
 	macro addCategorizationOnLayoutTab {
 		Click(locator1 = "ObjectAdmin#DROPDOWN_CATEGORIZATION_OPTION");
 
@@ -40,9 +59,15 @@ definition {
 		ObjectAdmin.gotoAddObjectAction();
 
 		ObjectAdmin.fillObjectAction(
+			actionDescription = "${actionDescription}",
 			actionName = "${actionName}",
 			active = "${active}",
 			click = "save",
+			inputExpression = "${inputExpression}",
+			inputMethod = "${inputMethod}",
+			inputValue = "${inputValue}",
+			objectLabel = "${objectLabel}",
+			scriptValidation = "${scriptValidation}",
 			secretAction = "${secretAction}",
 			thenAction = "${thenAction}",
 			urlAction = "${urlAction}",
@@ -124,6 +149,30 @@ definition {
 					Check.checkNotVisible(
 						key_toggleSwitchLabel = "Show Files in Documents and Media",
 						locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+				}
+			}
+
+			if ("${fieldType}" == "Aggregation") {
+				Click(locator1 = "ObjectField#LABEL_RELATIONSHIP");
+
+				Click(
+					key_dropdownItem = "${relationship}",
+					locator1 = "ObjectAdmin#SELECT_DROPDOWN_ITEM_DEFAULT_VALUE");
+
+				Click(
+					key_filterLabel = "Function",
+					locator1 = "ObjectCustomViews#SELECT_FILTER_GENERIC");
+
+				Click(
+					key_fieldType = "${function}",
+					locator1 = "ObjectField#TYPE_OPTION");
+
+				if (isSet(field)) {
+					Click(locator1 = "ObjectField#LABEL_FIELD");
+
+					Click(
+						key_dropdownItem = "${field}",
+						locator1 = "ObjectAdmin#SELECT_DROPDOWN_ITEM_DEFAULT_VALUE");
 				}
 			}
 		}
@@ -393,6 +442,16 @@ definition {
 		AssertElementPresent(locator1 = "ObjectAdmin#FIELD_BLOCK_ADD_FIELD_BUTTON");
 	}
 
+	macro assertCannotDeleteObjectWithRelationshipErrorMessage {
+		AssertTextEquals(
+			locator1 = "Modal#HEADER",
+			value1 = "Deletion Not Allowed");
+
+		AssertTextEquals.assertPartialText(
+			locator1 = "Modal#BODY",
+			value1 = "has active relationships and cannot be deleted.");
+	}
+
 	macro assertCannotDeleteRelationshipFromChildSideErrorMessage {
 		AssertTextEquals(
 			locator1 = "Modal#HEADER",
@@ -467,14 +526,20 @@ definition {
 		AssertElementPresent(
 			key_actionActive = "${actionActive}",
 			key_actionName = "${actionName}",
-			locator1 = "ObjectAdmin#VIEW_ACTIONS_TAB");
+			locator1 = "ObjectAdmin#VIEW_ACTIONS_LABEL");
+
+		if (isSet(status)) {
+			AssertElementPresent(
+				key_statusInfo = "${status}",
+				locator1 = "ObjectAction#ACTIONS_STATUS_INFO");
+		}
 	}
 
 	macro assertObjectActionsNotPresent {
 		AssertElementNotPresent(
 			key_actionActive = "${actionActive}",
 			key_actionName = "${actionName}",
-			locator1 = "ObjectAdmin#VIEW_ACTIONS_TAB");
+			locator1 = "ObjectAdmin#VIEW_ACTIONS_LABEL");
 	}
 
 	macro assertObjectColumnsAreDisplayed {
@@ -662,7 +727,9 @@ definition {
 
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
-		Click(locator1 = "ContentDashboard#MY_SITES_TAB");
+		AssertClick(
+			locator1 = "NavBar#MY_SITES",
+			value1 = "My Sites");
 
 		Click(
 			key_siteCard = "${siteCard}",
@@ -713,6 +780,24 @@ definition {
 			userPassword = "${userPassword}");
 	}
 
+	macro deleteCustomObjectViaUI {
+		Click(
+			key_objectLabel = "${labelName}",
+			locator1 = "ObjectAdmin#OBJECT_KEBAB_MENU");
+
+		MenuItem.clickNoError(menuItem = "Delete");
+
+		SelectFrame(locator1 = "ObjectCustomViews#VIEW_MODAL_CONTENT");
+
+		Type(
+			locator1 = "ObjectAdmin#PLACEHOLDER_DELETE_OBJECT",
+			value1 = "${objectName}");
+
+		Click(locator1 = "Form#SIDEBAR_DELETE_FIELD_MODAL_DELETE_BUTTON");
+
+		Refresh();
+	}
+
 	macro deleteObjectEntryViaAPI {
 		JSONObject.deleteObjectEntry(
 			fieldName = "${fieldName}",
@@ -720,6 +805,24 @@ definition {
 			userEmailAddress = "${userEmailAddress}",
 			userPassword = "${userPassword}",
 			value = "${value}");
+	}
+
+	macro deleteObjectEntryViaUI {
+		Click(
+			key_objectLabel = "${labelName}",
+			locator1 = "ObjectAdmin#OBJECT_KEBAB_MENU");
+
+		MenuItem.clickNoError(menuItem = "Delete");
+
+		SelectFrame(locator1 = "ObjectCustomViews#VIEW_MODAL_CONTENT");
+
+		Type(
+			locator1 = "ObjectAdmin#PLACEHOLDER_DELETE_OBJECT",
+			value1 = "${objectName}");
+
+		Click(locator1 = "Form#SIDEBAR_DELETE_FIELD_MODAL_DELETE_BUTTON");
+
+		Refresh();
 	}
 
 	macro deleteObjectField {
@@ -753,6 +856,18 @@ definition {
 		Click(locator1 = "Form#SIDEBAR_DELETE_FIELD_MODAL_DELETE_BUTTON");
 
 		Refresh();
+	}
+
+	macro disableCondition {
+		SelectFrame.selectFrameNoLoading(locator1 = "ObjectAction#IFRAME_SIDE_PANEL");
+
+		Click(
+			key_tabName = "Action Builder",
+			locator1 = "ObjectAction#TAB_GENERIC");
+
+		Uncheck.uncheckToggleSwitch(locator1 = "ObjectAction#ENABLE_DISABLE_CONDITION");
+
+		Button.clickSave();
 	}
 
 	macro editClobEntryName {
@@ -799,14 +914,25 @@ definition {
 
 		ObjectAdmin.viewDetails();
 
+		SelectFrame.selectFrameNoLoading(locator1 = "ObjectAction#IFRAME_SIDE_PANEL");
+
 		ObjectAdmin.fillObjectAction(
 			actionName = "${actionName}",
 			active = "${active}",
 			click = "save",
+			inputExpression = "${inputExpression}",
+			inputExpressionValue = "${inputExpressionValue}",
+			inputMethod = "${inputMethod}",
+			inputValue = "${inputValue}",
+			objectLabel = "${objectLabel}",
 			secretAction = "${secretAction}",
 			thenAction = "${thenAction}",
 			urlAction = "${urlAction}",
 			whenAction = "${whenAction}");
+	}
+
+	macro enableCondition {
+		Check.checkToggleSwitch(locator1 = "ObjectAction#ENABLE_DISABLE_CONDITION");
 	}
 
 	macro fillObjectAction {
@@ -814,6 +940,12 @@ definition {
 			Type(
 				locator1 = "ObjectAdmin#ACTION_NAME_FIELD",
 				value1 = "${actionName}");
+		}
+
+		if (isSet(actionDescription)) {
+			Type(
+				locator1 = "ObjectAdmin#ACTION_DESCRIPTION_FIELD",
+				value1 = "${actionDescription}");
 		}
 
 		if (isSet(active)) {
@@ -843,6 +975,39 @@ definition {
 			Click(
 				key_type = "${thenAction}",
 				locator1 = "ObjectAdmin#SELECT_RELATIONSHIPS_TYPE_OPTION");
+
+			if ("${thenAction}" == "Add an Object Entry") {
+				Click(locator1 = "ObjectAdmin#CHOOSE_AN_OBJECT");
+
+				ClickNoError.clickNoMouseOver(
+					key_objectLabel = "${objectLabel}",
+					locator1 = "ObjectAdmin#CHOOSE_OBJECT_LABEL");
+
+				if ("${inputMethod}" == "true") {
+					Click(locator1 = "ObjectAction#INPUT_METHOD");
+
+					Type(
+						locator1 = "ObjectAction#INPUT_VALUE",
+						value1 = "${inputValue}");
+				}
+				else if ("${inputMethod}" == "false") {
+					Type(
+						locator1 = "ObjectAction#INPUT_NEW_VALUE",
+						value1 = "${inputExpressionValue}");
+				}
+			}
+		}
+
+		if (isSet(inputExpression)) {
+			ObjectAdmin.enableCondition();
+
+			Type(
+				locator1 = "ObjectAction#INPUT_EXPRESSION",
+				value1 = "${inputExpression}");
+		}
+
+		if ("${thenAction}" == "Groovy Script") {
+			ObjectCustomValidation.insertScriptOnValidation(scriptValidation = "${scriptValidation}");
 		}
 
 		if (isSet(urlAction)) {
@@ -1126,11 +1291,13 @@ definition {
 	}
 
 	macro viewDetails {
-		SelectFrame(locator1 = "IFrame#IFRAME");
+		if (IsElementPresent(locator1 = "IFrame#IFRAME")) {
+			SelectFrame(locator1 = "IFrame#IFRAME");
 
-		AssertElementPresent(locator1 = "ObjectAdmin#SIDE_PANEL");
+			AssertElementPresent(locator1 = "ObjectAdmin#SIDE_PANEL");
 
-		AssertElementPresent(locator1 = "ObjectAdmin#SIDE_PANEL_TITLE");
+			AssertElementPresent(locator1 = "ObjectAdmin#SIDE_PANEL_TITLE");
+		}
 	}
 
 	macro viewFieldValueDisabled {

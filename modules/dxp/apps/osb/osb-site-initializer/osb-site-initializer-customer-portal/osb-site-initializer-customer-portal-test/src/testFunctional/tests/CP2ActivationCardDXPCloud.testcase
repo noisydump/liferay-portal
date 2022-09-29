@@ -9,6 +9,8 @@ definition {
 
 	var testSiteName = "Customer Portal Site";
 	var testSiteURL = "customer-portal-site";
+	var testAccounts = "Test Account LXC - SM";
+	var testproduct = "LXC - SM";
 
 	setUp {
 		task ("Set up instance and sign in") {
@@ -19,6 +21,12 @@ definition {
 
 		task ("Create a new Customer Portal Site") {
 			CustomerPortal.addCustomerPortalSite(siteName = "${testSiteName}");
+		}
+
+		task ("Add test user access to all Accounts") {
+			CustomerPortal.assignUserToOrganization();
+
+			CustomerPortal.addUserToOneOrMoreAccounts(accountsList = "${testAccounts}");
 		}
 	}
 
@@ -41,7 +49,7 @@ definition {
 		task ("Change the user role in the project") {
 			Accounts.openAccountsAdmin();
 
-			CustomerPortal.accountTableProject(title = "Test Account LXC-SM");
+			CustomerPortal.accountTableProject(title = "${testAccounts}");
 
 			Accounts.addAssigneeToRoleViaUsersTab(
 				accountRoleTitle = "Account Administrator",
@@ -51,7 +59,7 @@ definition {
 		task ("Go to CP2.0 and join a project") {
 			ApplicationsMenu.gotoSite(key_site = "Customer Portal Site");
 
-			CustomerPortal.enterOnProject(title = "Test Account LXC-SM");
+			CustomerPortal.enterOnProject(title = "${testAccounts}");
 		}
 
 		task ("Going through onboarding") {
@@ -61,7 +69,7 @@ definition {
 		task ("Go to the product activation page, fill out the form and submit it") {
 			CP2NavigationMenu.goToProductActivation();
 
-			CP2NavigationMenu.clickOnProductButton(product = "LXC-SM");
+			CP2NavigationMenu.clickOnProductButton(product = "${testproduct}");
 
 			CustomerPortal.clickOnFinishActivationButton();
 
@@ -71,19 +79,19 @@ definition {
 		}
 
 		task ("Change the activation card status to Active") {
-			CustomerPortal.activeStatus();
+			CustomerPortal.activeStatus(index = "1");
 		}
 
 		task ("Go to CP2.0 and join a project") {
 			ApplicationsMenu.gotoSite(key_site = "Customer Portal Site");
 
-			CustomerPortal.enterOnProject(title = "Test Account LXC-SM");
+			CustomerPortal.enterOnProject(title = "${testAccounts}");
 		}
 
 		task ("Assert that the activation card link has changed") {
 			CP2NavigationMenu.goToProductActivation();
 
-			CP2NavigationMenu.clickOnProductButton(product = "LXC-SM");
+			CP2NavigationMenu.clickOnProductButton(product = "${testproduct}");
 
 			AssertElementPresent(
 				locator1 = "CustomerPortalSite#PRODUCT_CONSOLE",
@@ -113,32 +121,32 @@ definition {
 		task ("Go to CP2.0 and join a project") {
 			ApplicationsMenu.gotoSite(key_site = "Customer Portal Site");
 
-			CustomerPortal.enterOnProject(title = "Test Account LXC-SM");
+			CustomerPortal.enterOnProject(title = "${testAccounts}");
 		}
 
 		task ("Go to the product activation page") {
 			CP2NavigationMenu.goToProductActivation();
 
-			CP2NavigationMenu.clickOnProductButton(product = "LXC-SM");
+			CP2NavigationMenu.clickOnProductButton(product = "${testproduct}");
 		}
 
 		task ("View card details") {
 			CustomerPortal.viewActivationStatusCardValue(
 				dates = "Invalid Date - Invalid Date",
 				productIcon = "dxp_icon",
-				project = "Test Account LXC-SM",
+				project = "${testAccounts}",
 				status = "Not Activated",
-				subtitle = "Almost there! Setup LXC-SM by finishing the activation form");
+				subtitle = "Almost there! Setup LXC - SM by finishing the activation form");
 		}
 	}
 
-	@description = "Automation ID: LPS-146852 | Test Summary: Verify if when the status is 'In Progress' the page subtitle: 'Your DXP Cloud environments are being set up and will be available soon' appears"
+	@description = "Automation ID: LPS-146852 | Test Summary: Verify if when the status is 'In Progress' the page subtitle: 'Your LXC - SM environments are being set up and will be available soon' appears"
 	@priority = "4"
 	test CanViewCaptionWhenTheStatusIsInProgress {
 		task ("Change the user role in the project") {
 			Accounts.openAccountsAdmin();
 
-			CustomerPortal.accountTableProject(title = "Test Account LXC-SM");
+			CustomerPortal.accountTableProject(title = "${testAccounts}");
 
 			Accounts.addAssigneeToRoleViaUsersTab(
 				accountRoleTitle = "Account Administrator",
@@ -148,7 +156,7 @@ definition {
 		task ("Go to CP2.0 and join a project") {
 			ApplicationsMenu.gotoSite(key_site = "Customer Portal Site");
 
-			CustomerPortal.enterOnProject(title = "Test Account LXC-SM");
+			CustomerPortal.enterOnProject(title = "${testAccounts}");
 		}
 
 		task ("Going through onboarding") {
@@ -158,7 +166,7 @@ definition {
 		task ("Go to the product activation page, fill out the form and submit it") {
 			CP2NavigationMenu.goToProductActivation();
 
-			CP2NavigationMenu.clickOnProductButton(product = "LXC-SM");
+			CP2NavigationMenu.clickOnProductButton(product = "${testproduct}");
 
 			CustomerPortal.clickOnFinishActivationButton();
 
@@ -170,7 +178,7 @@ definition {
 		task ("Assert the card legend change") {
 			AssertElementPresent(
 				locator1 = "CustomerPortalSite#CARD_SUBSCRIPTION",
-				title = "Your DXP Cloud environments are being set up and will be available soon");
+				title = "Your LXC - SM environments are being set up and will be available soon");
 		}
 
 		task ("Delete the entries and objects created") {
@@ -186,13 +194,13 @@ definition {
 		task ("Go to CP2.0 and join a project") {
 			ApplicationsMenu.gotoSite(key_site = "Customer Portal Site");
 
-			CustomerPortal.enterOnProject(title = "Test Account LXC-SM");
+			CustomerPortal.enterOnProject(title = "${testAccounts}");
 		}
 
 		task ("Go to the product activation page") {
 			CP2NavigationMenu.goToProductActivation();
 
-			CP2NavigationMenu.clickOnProductButton(product = "LXC-SM");
+			CP2NavigationMenu.clickOnProductButton(product = "${testproduct}");
 		}
 
 		task ("Assert that the Finish Activation link is not present on the card") {
@@ -208,13 +216,13 @@ definition {
 		task ("Go to CP2.0 and join a project") {
 			ApplicationsMenu.gotoSite(key_site = "Customer Portal Site");
 
-			CustomerPortal.enterOnProject(title = "Test Account LXC-SM");
+			CustomerPortal.enterOnProject(title = "${testAccounts}");
 		}
 
 		task ("Go to the product activation page") {
 			CP2NavigationMenu.goToProductActivation();
 
-			CP2NavigationMenu.clickOnProductButton(product = "LXC-SM");
+			CP2NavigationMenu.clickOnProductButton(product = "${testproduct}");
 		}
 
 		task ("Assert that the card activation link is not shown") {
@@ -226,7 +234,7 @@ definition {
 		task ("Change the user role in the project") {
 			Accounts.openAccountsAdmin();
 
-			CustomerPortal.accountTableProject(title = "Test Account LXC-SM");
+			CustomerPortal.accountTableProject(title = "${testAccounts}");
 
 			Accounts.addAssigneeToRoleViaUsersTab(
 				accountRoleTitle = "Account Administrator",
@@ -238,7 +246,7 @@ definition {
 
 			Refresh();
 
-			CustomerPortal.enterOnProject(title = "Test Account LXC-SM");
+			CustomerPortal.enterOnProject(title = "${testAccounts}");
 		}
 
 		task ("Going through onboarding") {
@@ -248,7 +256,7 @@ definition {
 		task ("Go to the product activation page") {
 			CP2NavigationMenu.goToProductActivation();
 
-			CP2NavigationMenu.clickOnProductButton(product = "LXC-SM");
+			CP2NavigationMenu.clickOnProductButton(product = "${testproduct}");
 		}
 
 		task ("Assert that the activation link is present on the card") {

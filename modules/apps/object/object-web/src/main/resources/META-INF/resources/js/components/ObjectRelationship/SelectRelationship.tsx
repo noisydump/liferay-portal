@@ -15,6 +15,8 @@
 import {API, Select} from '@liferay/object-js-components-web';
 import React, {useEffect, useMemo, useState} from 'react';
 
+const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
+
 export default function SelectRelationship({
 	error,
 	objectDefinitionId,
@@ -25,15 +27,16 @@ export default function SelectRelationship({
 	const [fields, setFields] = useState<ObjectField[]>([]);
 	const options = useMemo(
 		() =>
-			fields.map(
-				({label}) => label[Liferay.ThemeDisplay.getDefaultLanguageId()]!
-			),
+			fields.map(({label, name}) => {
+				return {
+					label: label[defaultLanguageId]!,
+					name,
+				};
+			}),
 		[fields]
 	);
 	const selectedValue = useMemo(() => {
-		const index = fields.findIndex(({id}) => id === value);
-
-		return index === -1 ? undefined : index;
+		return fields.find(({id}) => id === value);
 	}, [fields, value]);
 
 	useEffect(() => {
@@ -55,14 +58,16 @@ export default function SelectRelationship({
 			error={error}
 			label={Liferay.Language.get('parameter')}
 			onChange={(event) => {
-				onChange?.(fields[Number(event.target.value)].id);
+				onChange?.(
+					fields.find(({name}) => name === event.target.value)?.id!
+				);
 			}}
 			options={options}
 			required
 			tooltip={Liferay.Language.get(
 				'choose-a-relationship-field-from-the-selected-object'
 			)}
-			value={selectedValue}
+			value={selectedValue?.label[defaultLanguageId]}
 			{...otherProps}
 		/>
 	);

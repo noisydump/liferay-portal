@@ -28,12 +28,11 @@ import {NavigationMenuSelectorField} from './NavigationMenuSelectorField';
 import {SelectField} from './SelectField';
 import {SpacingBoxField} from './SpacingBoxField';
 import {TextField} from './TextField';
+import URLField from './URLField';
 import {VideoSelectorField} from './VideoSelectorField';
 
 export const FRAGMENT_CONFIGURATION_FIELDS = {
-	buttonGroup: Liferay.FeatureFlags['LPS-143206']
-		? ButtonGroupField
-		: SelectField,
+	buttonGroup: ButtonGroupField,
 	categoryTreeNodeSelector: CategoryTreeNodeSelectorField,
 	checkbox: CheckboxField,
 	collectionSelector: CollectionSelectorField,
@@ -44,10 +43,11 @@ export const FRAGMENT_CONFIGURATION_FIELDS = {
 	hideFragment: HideFragmentField,
 	imageSelector: ImageSelectorField,
 	itemSelector: ItemSelectorField,
-	length: Liferay.FeatureFlags['LPS-143206'] ? LengthField : TextField,
+	length: LengthField,
 	navigationMenuSelector: NavigationMenuSelectorField,
 	select: SelectField,
 	spacing: SpacingBoxField,
 	text: TextField,
+	url: URLField,
 	videoSelector: VideoSelectorField,
 };

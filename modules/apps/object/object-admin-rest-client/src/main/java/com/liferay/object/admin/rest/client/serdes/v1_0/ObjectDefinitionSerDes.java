@@ -381,6 +381,20 @@ public class ObjectDefinitionSerDes {
 			sb.append(objectDefinition.getPortlet());
 		}
 
+		if (objectDefinition.getRestContextPath() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"restContextPath\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(objectDefinition.getRestContextPath()));
+
+			sb.append("\"");
+		}
+
 		if (objectDefinition.getScope() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -429,14 +443,18 @@ public class ObjectDefinitionSerDes {
 			sb.append(objectDefinition.getSystem());
 		}
 
-		if (objectDefinition.getTitleObjectFieldId() != null) {
+		if (objectDefinition.getTitleObjectFieldName() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"titleObjectFieldId\": ");
+			sb.append("\"titleObjectFieldName\": ");
 
-			sb.append(objectDefinition.getTitleObjectFieldId());
+			sb.append("\"");
+
+			sb.append(_escape(objectDefinition.getTitleObjectFieldName()));
+
+			sb.append("\"");
 		}
 
 		sb.append("}");
@@ -650,6 +668,15 @@ public class ObjectDefinitionSerDes {
 			map.put("portlet", String.valueOf(objectDefinition.getPortlet()));
 		}
 
+		if (objectDefinition.getRestContextPath() == null) {
+			map.put("restContextPath", null);
+		}
+		else {
+			map.put(
+				"restContextPath",
+				String.valueOf(objectDefinition.getRestContextPath()));
+		}
+
 		if (objectDefinition.getScope() == null) {
 			map.put("scope", null);
 		}
@@ -680,13 +707,13 @@ public class ObjectDefinitionSerDes {
 			map.put("system", String.valueOf(objectDefinition.getSystem()));
 		}
 
-		if (objectDefinition.getTitleObjectFieldId() == null) {
-			map.put("titleObjectFieldId", null);
+		if (objectDefinition.getTitleObjectFieldName() == null) {
+			map.put("titleObjectFieldName", null);
 		}
 		else {
 			map.put(
-				"titleObjectFieldId",
-				String.valueOf(objectDefinition.getTitleObjectFieldId()));
+				"titleObjectFieldName",
+				String.valueOf(objectDefinition.getTitleObjectFieldName()));
 		}
 
 		return map;
@@ -882,6 +909,12 @@ public class ObjectDefinitionSerDes {
 					objectDefinition.setPortlet((Boolean)jsonParserFieldValue);
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "restContextPath")) {
+				if (jsonParserFieldValue != null) {
+					objectDefinition.setRestContextPath(
+						(String)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "scope")) {
 				if (jsonParserFieldValue != null) {
 					objectDefinition.setScope((String)jsonParserFieldValue);
@@ -905,11 +938,11 @@ public class ObjectDefinitionSerDes {
 				}
 			}
 			else if (Objects.equals(
-						jsonParserFieldName, "titleObjectFieldId")) {
+						jsonParserFieldName, "titleObjectFieldName")) {
 
 				if (jsonParserFieldValue != null) {
-					objectDefinition.setTitleObjectFieldId(
-						Long.valueOf((String)jsonParserFieldValue));
+					objectDefinition.setTitleObjectFieldName(
+						(String)jsonParserFieldValue);
 				}
 			}
 		}

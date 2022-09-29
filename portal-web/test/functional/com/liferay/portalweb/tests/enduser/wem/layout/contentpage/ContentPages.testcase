@@ -50,10 +50,14 @@ definition {
 
 				StyleBooks.expandSection(sectionName = "Spacing");
 
+				StyleBooks.configureUnit(
+					fieldLabel = "Spacer 1",
+					unit = "PX");
+
 				Type(
-					key_fieldLabel = "Spacer 1",
-					locator1 = "TextInput#GENERIC_TEXT_INPUT",
-					value1 = "-32px");
+					ariaLabel = "Spacer 1",
+					locator1 = "TextInput#ANY_WITH_AIRA_LABEL",
+					value1 = "-32");
 
 				StyleBooks.clickManagementBar();
 
@@ -593,6 +597,116 @@ definition {
 			PagesAdmin.openPageEllipsisMenu(pageName = "Test Content Page Name");
 
 			MenuItem.viewNotPresent(menuItem = "Discard Draft");
+		}
+	}
+
+	@description = "This is a test for LPS-159751. The page editor should be rendered after reset changes from site template."
+	@priority = "4"
+	test EditContentPageAfterResetChangesFromSiteTemplate {
+		task ("Given a page creator has a site based on a site template") {
+			task ("Add a site template") {
+				JSONSiteTemplate.addSiteTemplate(
+					description = "It is a site template",
+					siteTemplateName = "Site Template Name");
+			}
+
+			task ("Add a master template on Site Template") {
+				SiteTemplatesNavigator.openSiteTemplatesAdmin();
+
+				LexiconEntry.gotoEntryMenuItem(
+					menuItem = "Manage",
+					rowEntry = "Site Template Name");
+
+				ProductMenu.gotoPortlet(
+					category = "Design",
+					portlet = "Page Templates");
+
+				MastersPageTemplatesAdmin.addMasters(masterLayoutName = "Custom Masters Page Template");
+			}
+
+			task ("Add a Button fragment to master template") {
+				PageEditor.addFragment(
+					collectionName = "Basic Components",
+					dropTarget = "Header",
+					fragmentName = "Button",
+					scope = "Master");
+
+				MastersPageTemplates.publishMaster();
+			}
+
+			task ("Select the master page template to Home page") {
+				ProductMenu.gotoPortlet(
+					category = "Site Builder",
+					portlet = "Pages");
+
+				PagesAdmin.gotoPageEllipsisMenuItem(
+					menuItem = "Edit",
+					pageName = "Home");
+
+				PageEditor.gotoTab(tabName = "Page Design Options");
+
+				Navigator.gotoNavTab(navTab = "Master");
+
+				MastersPageTemplates.selectMasterViaPageDesignOptions(masterLayoutName = "Custom Masters Page Template");
+
+				PageEditor.publish();
+			}
+
+			task ("Add a new site based on site template") {
+				Site.openSitesAdmin();
+
+				Site.addSiteTemplateCP(
+					siteName = "Site Name",
+					siteTemplateName = "Site Template Name");
+			}
+
+			task ("Delete the Button fragment of master template") {
+				ContentPagesNavigator.openEditContentPage(
+					pageName = "Home",
+					siteName = "Site Name");
+
+				PageEditor.gotoTab(tabName = "Page Design Options");
+
+				Click(locator1 = "PageEditor#MORE_LINK");
+
+				WaitForPageLoad();
+
+				Click(
+					key_text = "Edit Master",
+					locator1 = "Button#ANY");
+
+				PageEditor.removeFragment(fragmentName = "Button");
+			}
+
+			task ("Propagate change to master page template") {
+				MastersPageTemplates.propagateChange();
+			}
+
+			task ("Publish the page") {
+				ContentPagesNavigator.openEditContentPage(
+					pageName = "Home",
+					siteName = "Site Name");
+
+				PageEditor.publish();
+			}
+		}
+
+		task ("When the page creator resets the changes from site template") {
+			ContentPagesNavigator.openViewContentPage(
+				pageName = "Home",
+				siteName = "Site Name");
+
+			SiteTemplates.resetPageChanges();
+		}
+
+		task ("Then the page creator could access the page editor of content page") {
+			ContentPages.gotoPageEditor();
+
+			AssertConsoleTextNotPresent(value1 = "java.lang.NullPointerException");
+
+			JSONGroup.deleteGroupByName(groupName = "Site Name");
+
+			JSONSiteTemplate.deleteNonDefaultTemplates();
 		}
 	}
 
@@ -1701,12 +1815,20 @@ definition {
 
 				StyleBooks.expandSection(sectionName = "Spacing");
 
+				StyleBooks.configureUnit(
+					fieldLabel = "Spacer 1",
+					unit = "EM");
+
 				var i = "0";
 
-				for (var tokenValue : list "1em,2em,3em,Auto") {
+				for (var tokenValue : list "1,2,3") {
+					StyleBooks.configureUnit(
+						fieldLabel = "Spacer ${i}",
+						unit = "EM");
+
 					Type(
-						key_fieldLabel = "Spacer ${i}",
-						locator1 = "TextInput#GENERIC_TEXT_INPUT",
+						ariaLabel = "Spacer ${i}",
+						locator1 = "TextInput#ANY_WITH_AIRA_LABEL",
 						value1 = "${tokenValue}");
 
 					StyleBooks.clickManagementBar();
@@ -1715,6 +1837,19 @@ definition {
 
 					var i = ${i} + 1;
 				}
+
+				StyleBooks.configureUnit(
+					fieldLabel = "Spacer 3",
+					unit = "CUSTOM");
+
+				Type(
+					ariaLabel = "Spacer 3",
+					locator1 = "TextInput#ANY_WITH_AIRA_LABEL",
+					value1 = "Auto");
+
+				StyleBooks.clickManagementBar();
+
+				StyleBooks.waitForAutoSave();
 
 				StyleBooks.clickPublish();
 			}

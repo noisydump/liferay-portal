@@ -22,12 +22,15 @@
 taglib uri="http://liferay.com/tld/clay" prefix="clay" %><%@
 taglib uri="http://liferay.com/tld/frontend" prefix="liferay-frontend" %><%@
 taglib uri="http://liferay.com/tld/portlet" prefix="liferay-portlet" %><%@
+taglib uri="http://liferay.com/tld/react" prefix="react" %><%@
+taglib uri="http://liferay.com/tld/site-navigation" prefix="liferay-site-navigation" %><%@
 taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %><%@
 taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %><%@
 taglib uri="http://liferay.com/tld/util" prefix="liferay-util" %>
 
 <%@ page import="com.liferay.analytics.settings.configuration.AnalyticsConfiguration" %><%@
 page import="com.liferay.analytics.settings.web.internal.constants.AnalyticsSettingsWebKeys" %><%@
+page import="com.liferay.analytics.settings.web.internal.display.context.AnalyticsSettingsDisplayContext" %><%@
 page import="com.liferay.analytics.settings.web.internal.display.context.ChannelDisplayContext" %><%@
 page import="com.liferay.analytics.settings.web.internal.display.context.ChannelManagementToolbarDisplayContext" %><%@
 page import="com.liferay.analytics.settings.web.internal.display.context.FieldDisplayContext" %><%@
@@ -40,19 +43,21 @@ page import="com.liferay.analytics.settings.web.internal.display.context.UserGro
 page import="com.liferay.analytics.settings.web.internal.display.context.UserGroupManagementToolbarDisplayContext" %><%@
 page import="com.liferay.analytics.settings.web.internal.search.ChannelSearch" %><%@
 page import="com.liferay.analytics.settings.web.internal.user.AnalyticsUsersManager" %><%@
-page import="com.liferay.petra.portlet.url.builder.PortletURLBuilder" %><%@
 page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
 page import="com.liferay.portal.kernel.model.Group" %><%@
+page import="com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder" %><%@
 page import="com.liferay.portal.kernel.servlet.SessionErrors" %><%@
 page import="com.liferay.portal.kernel.util.ArrayUtil" %><%@
 page import="com.liferay.portal.kernel.util.Constants" %><%@
 page import="com.liferay.portal.kernel.util.GetterUtil" %><%@
+page import="com.liferay.portal.kernel.util.HashMapBuilder" %><%@
 page import="com.liferay.portal.kernel.util.HtmlUtil" %><%@
 page import="com.liferay.portal.kernel.util.ParamUtil" %><%@
 page import="com.liferay.portal.kernel.util.PortalUtil" %><%@
 page import="com.liferay.portal.kernel.util.SetUtil" %><%@
 page import="com.liferay.portal.kernel.util.StringUtil" %><%@
-page import="com.liferay.portal.kernel.util.Validator" %>
+page import="com.liferay.portal.kernel.util.Validator" %><%@
+page import="com.liferay.site.navigation.taglib.servlet.taglib.util.BreadcrumbEntriesUtil" %>
 
 <%@ page import="java.util.List" %><%@
 page import="java.util.Set" %>

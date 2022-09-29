@@ -341,12 +341,49 @@ public class DepotEntryGroupRelStagingTest {
 								liveDepotEntryGroupRel.getUuid(),
 								_liveGroup.getGroupId()));
 
-					Assert.assertNull(
+					Assert.assertNotNull(
 						_depotEntryGroupRelLocalService.
 							fetchDepotEntryGroupRelByDepotEntryIdToGroupId(
 								stagingDepotEntry.getDepotEntryId(),
 								stagingGroup.getGroupId()));
 				}));
+	}
+
+	@Test
+	public void testDepotEntryGroupRelConnectedToStagedSiteBeforeConnectingStagedDepotAndStagedSite()
+		throws Exception {
+
+		DepotEntryGroupRel livingDepotEntryGroupRel =
+			_depotEntryGroupRelLocalService.addDepotEntryGroupRel(
+				_liveDepotEntry.getDepotEntryId(), _liveGroup.getGroupId());
+
+		Assert.assertEquals(
+			_liveDepotEntry.getDepotEntryId(),
+			livingDepotEntryGroupRel.getDepotEntryId());
+
+		Assert.assertNotNull(
+			_depotEntryGroupRelLocalService.
+				fetchDepotEntryGroupRelByDepotEntryIdToGroupId(
+					_liveDepotEntry.getDepotEntryId(),
+					_liveGroup.getGroupId()));
+
+		DepotTestUtil.withLocalStagingEnabled(
+			_liveGroup,
+			stagingGroup -> {
+				Assert.assertNotNull(
+					_depotEntryGroupRelLocalService.
+						fetchDepotEntryGroupRelByDepotEntryIdToGroupId(
+							_liveDepotEntry.getDepotEntryId(),
+							stagingGroup.getGroupId()));
+
+				DepotTestUtil.withLocalStagingEnabled(
+					_liveDepotEntry,
+					stagingDepotEntry -> Assert.assertNotNull(
+						_depotEntryGroupRelLocalService.
+							fetchDepotEntryGroupRelByDepotEntryIdToGroupId(
+								stagingDepotEntry.getDepotEntryId(),
+								stagingGroup.getGroupId())));
+			});
 	}
 
 	private DepotEntry _addDepotEntry() throws Exception {

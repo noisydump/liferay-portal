@@ -116,6 +116,30 @@ definition {
 		}
 	}
 
+	@description = "Test activating multiple countries at once via management toolbar"
+	@priority = "3"
+	test CanActivateCountriesInBulk {
+		task ("Given multiple inactive countries exist") {
+			CountriesManagement.openCountriesManagementPortlet();
+
+			CountriesManagement.deactivateMultipleCountries(countryNames = "Antarctica,Aruba,Austria,Bahrain");
+		}
+
+		task ("When a user selects multiple countries and clicks on activate via management toolbar") {
+			ManagementBar.setFilterAndOrder(filterBy = "Inactive");
+
+			CountriesManagement.activateMultipleCountries(countryNames = "Antarctica,Aruba,Austria,Bahrain");
+		}
+
+		task ("Then all selected countries are active") {
+			Click(locator1 = "ManagementBar#CLEAR_FILTER");
+
+			for (var countryName : list "Antarctica,Aruba,Austria,Bahrain") {
+				LexiconEntry.viewEntryName(rowEntry = "${countryName}");
+			}
+		}
+	}
+
 	@description = "This test asserts that a user can add a new country and by default this country will have the Active status, will not allow Billing and Shipping, and will not be subject to VAT."
 	@priority = "5"
 	test CanAddCountry {
@@ -163,7 +187,7 @@ definition {
 				countryName = "Philippines",
 				regionCode = "13",
 				regionName = "National Capital Region",
-				regionPosition = "1.0");
+				regionPriority = "1.0");
 		}
 
 		task ("Then region is successfully saved") {
@@ -174,7 +198,7 @@ definition {
 			CountriesManagement.viewRegionsInTable(
 				regionCode = "13",
 				regionName = "National Capital Region",
-				regionPosition = "1.0",
+				regionPriority = "1.0",
 				regionStatus = "Active");
 		}
 	}
@@ -212,6 +236,33 @@ definition {
 				countryStatus = "Inactive",
 				shippingAllowed = "true",
 				twoLetterISOCode = "CN");
+		}
+	}
+
+	@description = "Test deactivating multiple countries at once via management toolbar"
+	@priority = "3"
+	test CanDectivateCountriesInBulk {
+		task ("Given multiple countries exist") {
+			CountriesManagement.openCountriesManagementPortlet();
+		}
+
+		task ("When a user selects multiple countries and clicks on deactivate via management toolbar") {
+			CountriesManagement.deactivateMultipleCountries(countryNames = "Argentina,Australia,Bahamas,Barbados");
+		}
+
+		task ("Then all the selected regions are deactivated") {
+			for (var countryName : list "Argentina,Australia,Bahamas,Barbados") {
+				AssertElementPresent(
+					key_columnName = "active",
+					key_tableEntry = "${countryName}",
+					locator1 = "LexiconTable#TABLE_ENTRY_INFO_TIMES");
+			}
+
+			ManagementBar.setFilterAndOrder(filterBy = "Inactive");
+
+			for (var countryName : list "Argentina,Australia,Bahamas,Barbados") {
+				LexiconEntry.viewEntryName(rowEntry = "${countryName}");
+			}
 		}
 	}
 
@@ -342,7 +393,7 @@ definition {
 				regionKeyEdit = "bicol-region",
 				regionName = "Calabarzon",
 				regionNameEdit = "Bicol Region",
-				regionPositionEdit = "2.0",
+				regionPriorityEdit = "2.0",
 				regionStatusEdit = "Inactive");
 		}
 
@@ -354,7 +405,7 @@ definition {
 			CountriesManagement.viewRegionsInTable(
 				regionCode = "05",
 				regionName = "Bicol Region",
-				regionPosition = "2.0",
+				regionPriority = "2.0",
 				regionStatus = "Inactive");
 		}
 	}
@@ -396,11 +447,11 @@ definition {
 			CountriesManagement.goToRegions(countryName = "United States");
 		}
 
-		task ("When a user attempts to add a region but only inputs position") {
+		task ("When a user attempts to add a region but only inputs priority") {
 			LexiconEntry.gotoAdd();
 
 			PortletEntry.inputText(
-				fieldLabel = "Position",
+				fieldLabel = "Priority",
 				text = "1.0");
 
 			Button.clickSave();
@@ -455,7 +506,7 @@ definition {
 				billingAllowed = "false",
 				countryName = "ZZ Test",
 				countryNumber = "01",
-				countryPosition = "5.0",
+				countryPriority = "5.0",
 				countryStatus = "active",
 				shippingAllowed = "false",
 				subjectToVAT = "false",
@@ -528,7 +579,7 @@ definition {
 				countryName = "China",
 				regionCode = "01",
 				regionName = "A Region",
-				regionPosition = "5.0");
+				regionPriority = "5.0");
 
 			Navigator.gotoBack();
 		}

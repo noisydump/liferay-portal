@@ -64,18 +64,14 @@ public class OpenStreetMapMapProvider extends BaseJSPMapProvider {
 	}
 
 	@Override
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.map.openstreetmap)",
-		unbind = "-"
-	)
-	public void setServletContext(ServletContext servletContext) {
-		super.setServletContext(servletContext);
+	protected ServletContext getServletContext() {
+		return _servletContext;
 	}
 
 	@Override
 	protected void prepareRequest(HttpServletRequest httpServletRequest) {
 		String resolvedModuleName = _npmResolver.resolveModuleName(
-			"@liferay/map-openstreetmap/js/MapOpenStreetMap.es");
+			"@liferay/map-openstreetmap/js/MapOpenStreetMap");
 
 		httpServletRequest.setAttribute(
 			"liferay-map:map:bootstrapRequire",
@@ -87,5 +83,8 @@ public class OpenStreetMapMapProvider extends BaseJSPMapProvider {
 
 	@Reference
 	private NPMResolver _npmResolver;
+
+	@Reference(target = "(osgi.web.symbolicname=com.liferay.map.openstreetmap)")
+	private ServletContext _servletContext;
 
 }

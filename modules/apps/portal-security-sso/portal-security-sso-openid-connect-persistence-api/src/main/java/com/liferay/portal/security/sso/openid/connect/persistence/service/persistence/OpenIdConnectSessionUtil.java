@@ -21,6 +21,7 @@ import com.liferay.portal.security.sso.openid.connect.persistence.model.OpenIdCo
 
 import java.io.Serializable;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -292,6 +293,195 @@ public class OpenIdConnectSessionUtil {
 	 */
 	public static int countByUserId(long userId) {
 		return getPersistence().countByUserId(userId);
+	}
+
+	/**
+	 * Returns all the open ID connect sessions where accessTokenExpirationDate &lt; &#63;.
+	 *
+	 * @param accessTokenExpirationDate the access token expiration date
+	 * @return the matching open ID connect sessions
+	 */
+	public static List<OpenIdConnectSession> findByLtAccessTokenExpirationDate(
+		Date accessTokenExpirationDate) {
+
+		return getPersistence().findByLtAccessTokenExpirationDate(
+			accessTokenExpirationDate);
+	}
+
+	/**
+	 * Returns a range of all the open ID connect sessions where accessTokenExpirationDate &lt; &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OpenIdConnectSessionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param accessTokenExpirationDate the access token expiration date
+	 * @param start the lower bound of the range of open ID connect sessions
+	 * @param end the upper bound of the range of open ID connect sessions (not inclusive)
+	 * @return the range of matching open ID connect sessions
+	 */
+	public static List<OpenIdConnectSession> findByLtAccessTokenExpirationDate(
+		Date accessTokenExpirationDate, int start, int end) {
+
+		return getPersistence().findByLtAccessTokenExpirationDate(
+			accessTokenExpirationDate, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the open ID connect sessions where accessTokenExpirationDate &lt; &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OpenIdConnectSessionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param accessTokenExpirationDate the access token expiration date
+	 * @param start the lower bound of the range of open ID connect sessions
+	 * @param end the upper bound of the range of open ID connect sessions (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching open ID connect sessions
+	 */
+	public static List<OpenIdConnectSession> findByLtAccessTokenExpirationDate(
+		Date accessTokenExpirationDate, int start, int end,
+		OrderByComparator<OpenIdConnectSession> orderByComparator) {
+
+		return getPersistence().findByLtAccessTokenExpirationDate(
+			accessTokenExpirationDate, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns an ordered range of all the open ID connect sessions where accessTokenExpirationDate &lt; &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>OpenIdConnectSessionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param accessTokenExpirationDate the access token expiration date
+	 * @param start the lower bound of the range of open ID connect sessions
+	 * @param end the upper bound of the range of open ID connect sessions (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching open ID connect sessions
+	 */
+	public static List<OpenIdConnectSession> findByLtAccessTokenExpirationDate(
+		Date accessTokenExpirationDate, int start, int end,
+		OrderByComparator<OpenIdConnectSession> orderByComparator,
+		boolean useFinderCache) {
+
+		return getPersistence().findByLtAccessTokenExpirationDate(
+			accessTokenExpirationDate, start, end, orderByComparator,
+			useFinderCache);
+	}
+
+	/**
+	 * Returns the first open ID connect session in the ordered set where accessTokenExpirationDate &lt; &#63;.
+	 *
+	 * @param accessTokenExpirationDate the access token expiration date
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching open ID connect session
+	 * @throws NoSuchSessionException if a matching open ID connect session could not be found
+	 */
+	public static OpenIdConnectSession findByLtAccessTokenExpirationDate_First(
+			Date accessTokenExpirationDate,
+			OrderByComparator<OpenIdConnectSession> orderByComparator)
+		throws com.liferay.portal.security.sso.openid.connect.persistence.
+			exception.NoSuchSessionException {
+
+		return getPersistence().findByLtAccessTokenExpirationDate_First(
+			accessTokenExpirationDate, orderByComparator);
+	}
+
+	/**
+	 * Returns the first open ID connect session in the ordered set where accessTokenExpirationDate &lt; &#63;.
+	 *
+	 * @param accessTokenExpirationDate the access token expiration date
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching open ID connect session, or <code>null</code> if a matching open ID connect session could not be found
+	 */
+	public static OpenIdConnectSession fetchByLtAccessTokenExpirationDate_First(
+		Date accessTokenExpirationDate,
+		OrderByComparator<OpenIdConnectSession> orderByComparator) {
+
+		return getPersistence().fetchByLtAccessTokenExpirationDate_First(
+			accessTokenExpirationDate, orderByComparator);
+	}
+
+	/**
+	 * Returns the last open ID connect session in the ordered set where accessTokenExpirationDate &lt; &#63;.
+	 *
+	 * @param accessTokenExpirationDate the access token expiration date
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching open ID connect session
+	 * @throws NoSuchSessionException if a matching open ID connect session could not be found
+	 */
+	public static OpenIdConnectSession findByLtAccessTokenExpirationDate_Last(
+			Date accessTokenExpirationDate,
+			OrderByComparator<OpenIdConnectSession> orderByComparator)
+		throws com.liferay.portal.security.sso.openid.connect.persistence.
+			exception.NoSuchSessionException {
+
+		return getPersistence().findByLtAccessTokenExpirationDate_Last(
+			accessTokenExpirationDate, orderByComparator);
+	}
+
+	/**
+	 * Returns the last open ID connect session in the ordered set where accessTokenExpirationDate &lt; &#63;.
+	 *
+	 * @param accessTokenExpirationDate the access token expiration date
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching open ID connect session, or <code>null</code> if a matching open ID connect session could not be found
+	 */
+	public static OpenIdConnectSession fetchByLtAccessTokenExpirationDate_Last(
+		Date accessTokenExpirationDate,
+		OrderByComparator<OpenIdConnectSession> orderByComparator) {
+
+		return getPersistence().fetchByLtAccessTokenExpirationDate_Last(
+			accessTokenExpirationDate, orderByComparator);
+	}
+
+	/**
+	 * Returns the open ID connect sessions before and after the current open ID connect session in the ordered set where accessTokenExpirationDate &lt; &#63;.
+	 *
+	 * @param openIdConnectSessionId the primary key of the current open ID connect session
+	 * @param accessTokenExpirationDate the access token expiration date
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next open ID connect session
+	 * @throws NoSuchSessionException if a open ID connect session with the primary key could not be found
+	 */
+	public static OpenIdConnectSession[]
+			findByLtAccessTokenExpirationDate_PrevAndNext(
+				long openIdConnectSessionId, Date accessTokenExpirationDate,
+				OrderByComparator<OpenIdConnectSession> orderByComparator)
+		throws com.liferay.portal.security.sso.openid.connect.persistence.
+			exception.NoSuchSessionException {
+
+		return getPersistence().findByLtAccessTokenExpirationDate_PrevAndNext(
+			openIdConnectSessionId, accessTokenExpirationDate,
+			orderByComparator);
+	}
+
+	/**
+	 * Removes all the open ID connect sessions where accessTokenExpirationDate &lt; &#63; from the database.
+	 *
+	 * @param accessTokenExpirationDate the access token expiration date
+	 */
+	public static void removeByLtAccessTokenExpirationDate(
+		Date accessTokenExpirationDate) {
+
+		getPersistence().removeByLtAccessTokenExpirationDate(
+			accessTokenExpirationDate);
+	}
+
+	/**
+	 * Returns the number of open ID connect sessions where accessTokenExpirationDate &lt; &#63;.
+	 *
+	 * @param accessTokenExpirationDate the access token expiration date
+	 * @return the number of matching open ID connect sessions
+	 */
+	public static int countByLtAccessTokenExpirationDate(
+		Date accessTokenExpirationDate) {
+
+		return getPersistence().countByLtAccessTokenExpirationDate(
+			accessTokenExpirationDate);
 	}
 
 	/**

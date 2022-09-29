@@ -17,10 +17,10 @@ package com.liferay.content.dashboard.web.internal.item.selector;
 import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.content.dashboard.info.item.ClassNameClassPKInfoItemIdentifier;
+import com.liferay.content.dashboard.item.ContentDashboardItemFactory;
 import com.liferay.content.dashboard.item.type.ContentDashboardItemSubtype;
 import com.liferay.content.dashboard.item.type.ContentDashboardItemSubtypeFactory;
 import com.liferay.content.dashboard.web.internal.display.context.ContentDashboardItemSubtypeItemSelectorViewDisplayContext;
-import com.liferay.content.dashboard.web.internal.item.ContentDashboardItemFactory;
 import com.liferay.content.dashboard.web.internal.item.ContentDashboardItemFactoryTracker;
 import com.liferay.content.dashboard.web.internal.item.selector.criteria.content.dashboard.type.criterion.ContentDashboardItemSubtypeItemSelectorCriterion;
 import com.liferay.content.dashboard.web.internal.util.ContentDashboardGroupUtil;
@@ -49,6 +49,7 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -214,13 +215,8 @@ public class ContentDashboardItemSubtypeItemSelectorView
 	}
 
 	private long[] _getGroupIds(long companyId) {
-		List<Long> groupIds = _groupLocalService.getGroupIds(companyId, true);
-
-		Stream<Long> stream = groupIds.stream();
-
-		return stream.mapToLong(
-			groupId -> groupId
-		).toArray();
+		return ArrayUtil.toLongArray(
+			_groupLocalService.getGroupIds(companyId, true));
 	}
 
 	private String _getIcon(String className) {
@@ -298,6 +294,22 @@ public class ContentDashboardItemSubtypeItemSelectorView
 
 						return infoItemClassDetailsLabelInfoLocalizedValue.
 							getValue(themeDisplay.getLocale());
+					}
+				).put(
+					"selected",
+					() -> {
+						for (InfoItemReference infoItemReference :
+								checkedContentDashboardItemSubtypeInfoItemReferences) {
+
+							if (Objects.equals(
+									infoItemReference.getClassName(),
+									className)) {
+
+								return true;
+							}
+						}
+
+						return false;
 					}
 				));
 

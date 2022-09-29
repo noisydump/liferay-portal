@@ -142,6 +142,14 @@ public class FragmentEntryLinkLocalServiceWrapper
 	}
 
 	@Override
+	public void deleteFragmentEntryLinks(
+		long groupId, long plid, boolean deleted) {
+
+		_fragmentEntryLinkLocalService.deleteFragmentEntryLinks(
+			groupId, plid, deleted);
+	}
+
+	@Override
 	public void deleteFragmentEntryLinks(long[] fragmentEntryLinkIds)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -644,6 +652,15 @@ public class FragmentEntryLinkLocalServiceWrapper
 	@Override
 	public void updateClassedModel(long plid) {
 		_fragmentEntryLinkLocalService.updateClassedModel(plid);
+	}
+
+	@Override
+	public FragmentEntryLink updateDeleted(
+			long fragmentEntryLinkId, boolean deleted)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _fragmentEntryLinkLocalService.updateDeleted(
+			fragmentEntryLinkId, deleted);
 	}
 
 	/**

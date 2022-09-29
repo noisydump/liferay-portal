@@ -16,9 +16,9 @@ package com.liferay.content.dashboard.web.internal.servlet.taglib.util;
 
 import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetTag;
+import com.liferay.content.dashboard.item.ContentDashboardItem;
 import com.liferay.content.dashboard.item.action.ContentDashboardItemAction;
 import com.liferay.content.dashboard.item.type.ContentDashboardItemSubtype;
-import com.liferay.content.dashboard.web.internal.item.ContentDashboardItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.info.item.InfoItemReference;
 import com.liferay.petra.string.StringPool;
@@ -28,7 +28,6 @@ import com.liferay.portal.kernel.test.portlet.MockLiferayPortletRenderRequest;
 import com.liferay.portal.kernel.test.portlet.MockLiferayPortletRenderResponse;
 import com.liferay.portal.kernel.test.portlet.MockLiferayPortletURL;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
-import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -204,11 +203,6 @@ public class ContentDashboardDropdownItemsProviderTest {
 		return new ContentDashboardItem() {
 
 			@Override
-			public List<Version> getAllVersions(ThemeDisplay themeDisplay) {
-				return Collections.emptyList();
-			}
-
-			@Override
 			public List<AssetCategory> getAssetCategories() {
 				return Collections.emptyList();
 			}
@@ -226,11 +220,6 @@ public class ContentDashboardDropdownItemsProviderTest {
 			@Override
 			public List<Locale> getAvailableLocales() {
 				return null;
-			}
-
-			@Override
-			public Clipboard getClipboard() {
-				return Clipboard.EMPTY;
 			}
 
 			@Override
@@ -300,11 +289,6 @@ public class ContentDashboardDropdownItemsProviderTest {
 			@Override
 			public Date getModifiedDate() {
 				return null;
-			}
-
-			@Override
-			public Preview getPreview() {
-				return Preview.EMPTY;
 			}
 
 			@Override

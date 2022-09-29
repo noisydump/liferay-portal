@@ -15,8 +15,10 @@
 package com.liferay.object.service.impl;
 
 import com.liferay.object.constants.ObjectFieldConstants;
+import com.liferay.object.constants.ObjectFieldSettingConstants;
 import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.exception.DuplicateObjectRelationshipException;
+import com.liferay.object.exception.NoSuchObjectRelationshipException;
 import com.liferay.object.exception.ObjectRelationshipNameException;
 import com.liferay.object.exception.ObjectRelationshipParameterObjectFieldIdException;
 import com.liferay.object.exception.ObjectRelationshipReverseException;
@@ -26,9 +28,11 @@ import com.liferay.object.internal.petra.sql.dsl.DynamicObjectRelationshipMappin
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectRelationship;
+import com.liferay.object.model.ObjectRelationshipTable;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
+import com.liferay.object.service.ObjectFieldSettingLocalService;
 import com.liferay.object.service.base.ObjectRelationshipLocalServiceBaseImpl;
 import com.liferay.object.service.persistence.ObjectDefinitionPersistence;
 import com.liferay.object.service.persistence.ObjectFieldPersistence;
@@ -38,6 +42,7 @@ import com.liferay.object.system.SystemObjectDefinitionMetadataTracker;
 import com.liferay.object.util.ObjectRelationshipUtil;
 import com.liferay.petra.sql.dsl.Column;
 import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
+import com.liferay.petra.sql.dsl.expression.Predicate;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
@@ -54,6 +59,8 @@ import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.PropsUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.io.Serializable;
@@ -169,7 +176,8 @@ public class ObjectRelationshipLocalServiceImpl
 			objectRelationshipPersistence.findByPrimaryKey(
 				objectRelationshipId);
 
-		return deleteObjectRelationship(objectRelationship);
+		return objectRelationshipLocalService.deleteObjectRelationship(
+			objectRelationship);
 	}
 
 	@Indexable(type = IndexableType.DELETE)
@@ -297,6 +305,19 @@ public class ObjectRelationshipLocalServiceImpl
 	}
 
 	@Override
+	public void deleteObjectRelationships(long objectDefinitionId1)
+		throws PortalException {
+
+		for (ObjectRelationship objectRelationship :
+				objectRelationshipPersistence.findByObjectDefinitionId1(
+					objectDefinitionId1)) {
+
+			objectRelationshipLocalService.deleteObjectRelationship(
+				objectRelationship);
+		}
+	}
+
+	@Override
 	public ObjectRelationship fetchObjectRelationshipByObjectFieldId2(
 		long objectFieldId2) {
 
@@ -320,9 +341,55 @@ public class ObjectRelationshipLocalServiceImpl
 			long objectDefinitionId1, String name)
 		throws PortalException {
 
-		return ObjectRelationshipUtil.getObjectRelationship(
-			objectRelationshipPersistence.findByODI1_N(
-				objectDefinitionId1, name));
+		try {
+			return ObjectRelationshipUtil.getObjectRelationship(
+				objectRelationshipPersistence.findByODI1_N(
+					objectDefinitionId1, name));
+		}
+		catch (NoSuchObjectRelationshipException
+					noSuchObjectRelationshipException) {
+
+			throw new NoSuchObjectRelationshipException(
+				String.format(
+					"No ObjectRelationship exists with the key " +
+						"{objectDefinitionId1=%s, name=%s}",
+					objectDefinitionId1, name),
+				noSuchObjectRelationshipException);
+		}
+	}
+
+	@Override
+	public ObjectRelationship getObjectRelationshipByObjectDefinitionId(
+			long objectDefinitionId, String objectRelationshipName)
+		throws Exception {
+
+		List<ObjectRelationship> objectRelationships = dslQuery(
+			DSLQueryFactoryUtil.select(
+			).from(
+				ObjectRelationshipTable.INSTANCE
+			).where(
+				Predicate.withParentheses(
+					ObjectRelationshipTable.INSTANCE.objectDefinitionId1.eq(
+						objectDefinitionId
+					).or(
+						ObjectRelationshipTable.INSTANCE.objectDefinitionId2.eq(
+							objectDefinitionId)
+					)
+				).and(
+					ObjectRelationshipTable.INSTANCE.name.eq(
+						objectRelationshipName)
+				).and(
+					ObjectRelationshipTable.INSTANCE.reverse.eq(false)
+				)
+			));
+
+		if (objectRelationships.isEmpty()) {
+			throw new NoSuchObjectRelationshipException(
+				"No ObjectRelationship exists with the name " +
+					objectRelationshipName);
+		}
+
+		return objectRelationships.get(0);
 	}
 
 	@Override
@@ -400,8 +467,20 @@ public class ObjectRelationshipLocalServiceImpl
 			indexer.reindex(reverseObjectRelationship);
 		}
 
-		return _updateObjectRelationship(
+		objectRelationship = _updateObjectRelationship(
 			parameterObjectFieldId, deletionType, labelMap, objectRelationship);
+
+		if (GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-158962")) &&
+			(objectRelationship.getObjectFieldId2() != 0) &&
+			StringUtil.equals(
+				deletionType,
+				ObjectRelationshipConstants.DELETION_TYPE_DISASSOCIATE)) {
+
+			_objectFieldLocalService.updateRequired(
+				objectRelationship.getObjectFieldId2(), false);
+		}
+
+		return objectRelationship;
 	}
 
 	private ObjectField _addObjectField(
@@ -449,6 +528,11 @@ public class ObjectRelationshipLocalServiceImpl
 		objectField.setRequired(false);
 
 		objectField = _objectFieldLocalService.updateObjectField(objectField);
+
+		_objectFieldSettingLocalService.addObjectFieldSetting(
+			user.getUserId(), objectField.getObjectFieldId(),
+			ObjectFieldSettingConstants.OBJECT_DEFINITION_1_SHORT_NAME,
+			objectDefinition1.getShortName());
 
 		if (objectDefinition2.isApproved()) {
 			runSQL(
@@ -794,6 +878,9 @@ public class ObjectRelationshipLocalServiceImpl
 
 	@Reference
 	private ObjectFieldPersistence _objectFieldPersistence;
+
+	@Reference
+	private ObjectFieldSettingLocalService _objectFieldSettingLocalService;
 
 	@Reference
 	private ObjectLayoutTabPersistence _objectLayoutTabPersistence;

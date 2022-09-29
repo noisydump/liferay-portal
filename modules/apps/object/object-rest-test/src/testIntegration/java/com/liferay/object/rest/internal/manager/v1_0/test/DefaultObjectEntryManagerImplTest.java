@@ -18,7 +18,9 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFileEntryTypeConstants;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
+import com.liferay.document.library.kernel.service.DLAppService;
 import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
+import com.liferay.document.library.util.DLURLHelper;
 import com.liferay.list.type.model.ListTypeDefinition;
 import com.liferay.list.type.model.ListTypeEntry;
 import com.liferay.list.type.service.ListTypeDefinitionLocalService;
@@ -33,6 +35,7 @@ import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectFieldSetting;
 import com.liferay.object.rest.dto.v1_0.FileEntry;
+import com.liferay.object.rest.dto.v1_0.Link;
 import com.liferay.object.rest.dto.v1_0.ListEntry;
 import com.liferay.object.rest.dto.v1_0.ObjectEntry;
 import com.liferay.object.rest.manager.v1_0.ObjectEntryManager;
@@ -122,7 +125,8 @@ public class DefaultObjectEntryManagerImplTest {
 	public void setUp() throws Exception {
 		_objectDefinition1 = _createObjectDefinition(
 			Arrays.asList(
-				new TextObjectFieldBuilder().labelMap(
+				new TextObjectFieldBuilder(
+				).labelMap(
 					LocalizedMapUtil.getLocalizedMap(
 						RandomTestUtil.randomString())
 				).name(
@@ -141,7 +145,8 @@ public class DefaultObjectEntryManagerImplTest {
 
 		_objectDefinition2 = _createObjectDefinition(
 			Arrays.asList(
-				new AttachmentObjectFieldBuilder().labelMap(
+				new AttachmentObjectFieldBuilder(
+				).labelMap(
 					LocalizedMapUtil.getLocalizedMap(
 						RandomTestUtil.randomString())
 				).name(
@@ -154,7 +159,8 @@ public class DefaultObjectEntryManagerImplTest {
 							"fileSource", "documentsAndMedia"),
 						_createObjectFieldSetting("maximumFileSize", "100"))
 				).build(),
-				new PicklistObjectFieldBuilder().indexed(
+				new PicklistObjectFieldBuilder(
+				).indexed(
 					true
 				).labelMap(
 					LocalizedMapUtil.getLocalizedMap(
@@ -166,7 +172,8 @@ public class DefaultObjectEntryManagerImplTest {
 				).objectFieldSettings(
 					Collections.emptyList()
 				).build(),
-				new RichTextObjectFieldBuilder().labelMap(
+				new RichTextObjectFieldBuilder(
+				).labelMap(
 					LocalizedMapUtil.getLocalizedMap(
 						RandomTestUtil.randomString())
 				).name(
@@ -174,7 +181,8 @@ public class DefaultObjectEntryManagerImplTest {
 				).objectFieldSettings(
 					Collections.emptyList()
 				).build(),
-				new TextObjectFieldBuilder().indexed(
+				new TextObjectFieldBuilder(
+				).indexed(
 					true
 				).labelMap(
 					LocalizedMapUtil.getLocalizedMap(
@@ -347,6 +355,16 @@ public class DefaultObjectEntryManagerImplTest {
 			objectEntry2);
 		_testGetObjectEntries(
 			HashMapBuilder.put(
+				"search", String.valueOf(objectEntry1.getId())
+			).build(),
+			objectEntry1);
+		_testGetObjectEntries(
+			HashMapBuilder.put(
+				"search", String.valueOf(objectEntry2.getId())
+			).build(),
+			objectEntry2);
+		_testGetObjectEntries(
+			HashMapBuilder.put(
 				"search", picklistObjectFieldValue1
 			).build(),
 			objectEntry1);
@@ -448,6 +466,27 @@ public class DefaultObjectEntryManagerImplTest {
 
 				Assert.assertEquals(
 					expectedEntry.getValue(), fileEntry.getId());
+
+				DLFileEntry dlFileEntry = _dlFileEntryLocalService.getFileEntry(
+					fileEntry.getId());
+
+				Assert.assertEquals(
+					fileEntry.getName(), dlFileEntry.getFileName());
+
+				Link link = fileEntry.getLink();
+
+				Assert.assertEquals(link.getLabel(), dlFileEntry.getFileName());
+
+				com.liferay.portal.kernel.repository.model.FileEntry
+					repositoryFileEntry = _dlAppService.getFileEntry(
+						fileEntry.getId());
+
+				Assert.assertEquals(
+					_dlURLHelper.getDownloadURL(
+						repositoryFileEntry,
+						repositoryFileEntry.getFileVersion(), null,
+						StringPool.BLANK),
+					link.getHref());
 			}
 			else if (Objects.equals(
 						expectedEntry.getKey(), "picklistFieldName")) {
@@ -688,7 +727,13 @@ public class DefaultObjectEntryManagerImplTest {
 	private static User _user;
 
 	@Inject
+	private DLAppService _dlAppService;
+
+	@Inject
 	private DLFileEntryLocalService _dlFileEntryLocalService;
+
+	@Inject
+	private DLURLHelper _dlURLHelper;
 
 	@Inject
 	private FilterPredicateFactory _filterPredicateFactory;

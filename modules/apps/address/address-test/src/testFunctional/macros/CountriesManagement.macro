@@ -33,10 +33,10 @@ definition {
 				text = "${countryCallingCode}");
 		}
 
-		if (isSet(countryPosition)) {
+		if (isSet(countryPriority)) {
 			PortletEntry.inputText(
-				fieldLabel = "Position",
-				text = "${countryPosition}");
+				fieldLabel = "Priority",
+				text = "${countryPriority}");
 		}
 	}
 
@@ -55,10 +55,16 @@ definition {
 				text = "${regionCode}");
 		}
 
-		if (isSet(regionPosition)) {
+		if (isSet(regionPriority)) {
 			PortletEntry.inputText(
-				fieldLabel = "Position",
-				text = "${regionPosition}");
+				fieldLabel = "Priority",
+				text = "${regionPriority}");
+		}
+	}
+
+	macro _selectMultipleCountries {
+		for (var countryName : list "${countryNames}") {
+			LexiconEntry.selectEntry(rowEntry = "${countryName}");
 		}
 	}
 
@@ -68,6 +74,14 @@ definition {
 		LexiconEntry.gotoEntryMenuItemNoError(
 			menuItem = "Activate",
 			rowEntry = "${countryName}");
+
+		Alert.viewSuccessMessage();
+	}
+
+	macro activateMultipleCountries {
+		CountriesManagement._selectMultipleCountries(countryNames = "${countryNames}");
+
+		ClickNoError(locator1 = "Icon#UNDO");
 
 		Alert.viewSuccessMessage();
 	}
@@ -90,7 +104,7 @@ definition {
 			countryKey = "${countryKey}",
 			countryName = "${countryName}",
 			countryNumber = "${countryNumber}",
-			countryPosition = "${countryPosition}",
+			countryPriority = "${countryPriority}",
 			threeLetterISOCode = "${threeLetterISOCode}",
 			twoLetterISOCode = "${twoLetterISOCode}");
 
@@ -132,7 +146,7 @@ definition {
 			regionCode = "${regionCode}",
 			regionKey = "${regionKey}",
 			regionName = "${regionName}",
-			regionPosition = "${regionPosition}");
+			regionPriority = "${regionPriority}");
 
 		if ("${regionStatus}" == "Inactive") {
 			Uncheck.uncheckToggleSwitch(
@@ -158,6 +172,16 @@ definition {
 			rowEntry = "${countryName}");
 
 		AssertConfirm(value1 = "Are you sure you want to deactivate this?");
+
+		Alert.viewSuccessMessage();
+	}
+
+	macro deactivateMultipleCountries {
+		CountriesManagement._selectMultipleCountries(countryNames = "${countryNames}");
+
+		ClickNoError(locator1 = "Icon#DEACTIVATE");
+
+		AssertConfirm(value1 = "Are you sure you want to deactivate the selected countries?");
 
 		Alert.viewSuccessMessage();
 	}
@@ -269,10 +293,10 @@ definition {
 				text = "${regionCodeEdit}");
 		}
 
-		if (isSet(regionPositionEdit)) {
+		if (isSet(regionPriorityEdit)) {
 			PortletEntry.inputText(
-				fieldLabel = "Position",
-				text = "${regionPositionEdit}");
+				fieldLabel = "Priority",
+				text = "${regionPriorityEdit}");
 		}
 
 		if ("${regionStatusEdit}" == "Inactive") {

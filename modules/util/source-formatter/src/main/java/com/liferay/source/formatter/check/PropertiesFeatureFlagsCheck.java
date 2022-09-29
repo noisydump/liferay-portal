@@ -14,28 +14,21 @@
 
 package com.liferay.source.formatter.check;
 
+import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.NaturalOrderStringComparator;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.tools.ToolsUtil;
-import com.liferay.source.formatter.check.util.SourceUtil;
+import com.liferay.source.formatter.check.util.BNDSourceUtil;
 import com.liferay.source.formatter.util.FileUtil;
+import com.liferay.source.formatter.util.SourceFormatterUtil;
 
 import java.io.File;
 import java.io.IOException;
 
-import java.nio.file.FileVisitOption;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
-
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -44,6 +37,11 @@ import java.util.regex.Pattern;
  * @author Alan Huang
  */
 public class PropertiesFeatureFlagsCheck extends BaseFileCheck {
+
+	@Override
+	public void setAllFileNames(List<String> allFileNames) {
+		_allFileNames = allFileNames;
+	}
 
 	@Override
 	protected String doProcess(
@@ -58,67 +56,45 @@ public class PropertiesFeatureFlagsCheck extends BaseFileCheck {
 	}
 
 	private String _generateFeatureFlags(String content) throws IOException {
-		List<File> javaFiles = new ArrayList<>();
-
-		File portalDir = getPortalDir();
-
-		Files.walkFileTree(
-			portalDir.toPath(), EnumSet.noneOf(FileVisitOption.class), 25,
-			new SimpleFileVisitor<Path>() {
-
-				@Override
-				public FileVisitResult preVisitDirectory(
-						Path dirPath, BasicFileAttributes basicFileAttributes)
-					throws IOException {
-
-					if (ArrayUtil.contains(
-							_SKIP_DIR_NAMES,
-							String.valueOf(dirPath.getFileName()))) {
-
-						return FileVisitResult.SKIP_SUBTREE;
-					}
-
-					return FileVisitResult.CONTINUE;
-				}
-
-				@Override
-				public FileVisitResult visitFile(
-					Path filePath, BasicFileAttributes basicFileAttributes) {
-
-					String absolutePath = SourceUtil.getAbsolutePath(filePath);
-
-					if (!absolutePath.endsWith(".java")) {
-						return FileVisitResult.CONTINUE;
-					}
-
-					javaFiles.add(filePath.toFile());
-
-					return FileVisitResult.CONTINUE;
-				}
-
-			});
-
 		List<String> featureFlags = new ArrayList<>();
 
-		Matcher matcher = null;
+		List<String> fileNames = SourceFormatterUtil.filterFileNames(
+			_allFileNames, new String[] {"**/test/**"},
+			new String[] {"**/bnd.bnd", "**/*.java"},
+			getSourceFormatterExcludes(), true);
 
-		for (File javafile : javaFiles) {
-			String javaContent = FileUtil.read(javafile);
+		for (String fileName : fileNames) {
+			fileName = StringUtil.replace(
+				fileName, CharPool.BACK_SLASH, CharPool.SLASH);
 
-			if (!javaContent.contains("\"feature.flag.")) {
-				continue;
+			String fileContent = FileUtil.read(new File(fileName));
+
+			if (fileName.endsWith("bnd.bnd")) {
+				String liferaySiteInitializerFeatureFlag =
+					BNDSourceUtil.getDefinitionValue(
+						fileContent, "Liferay-Site-Initializer-Feature-Flag");
+
+				if (liferaySiteInitializerFeatureFlag == null) {
+					continue;
+				}
+
+				featureFlags.add(liferaySiteInitializerFeatureFlag);
 			}
+			else {
+				if (!fileContent.contains("feature.flag")) {
+					continue;
+				}
 
-			matcher = _featureFlagPattern.matcher(javaContent);
-
-			while (matcher.find()) {
-				featureFlags.add(matcher.group(1));
+				featureFlags.addAll(
+					_getFeatureFlags(fileContent, _featureFlagPattern1));
+				featureFlags.addAll(
+					_getFeatureFlags(fileContent, _featureFlagPattern2));
 			}
 		}
 
 		ListUtil.distinct(featureFlags, new NaturalOrderStringComparator());
 
-		matcher = _featureFlagsPattern.matcher(content);
+		Matcher matcher = _featureFlagsPattern.matcher(content);
 
 		if (matcher.find()) {
 			String matchedFeatureFlags = matcher.group(2);
@@ -136,6 +112,8 @@ public class PropertiesFeatureFlagsCheck extends BaseFileCheck {
 			StringBundler sb = new StringBundler(featureFlags.size() * 14);
 
 			for (String featureFlag : featureFlags) {
+				featureFlag = "feature.flag." + featureFlag;
+
 				String environmentVariable =
 					ToolsUtil.encodeEnvironmentProperty(featureFlag);
 
@@ -169,16 +147,25 @@ public class PropertiesFeatureFlagsCheck extends BaseFileCheck {
 		return content;
 	}
 
-	private static final String[] _SKIP_DIR_NAMES = {
-		".git", ".gradle", ".idea", ".m2", ".releng", ".settings", "bin",
-		"build", "classes", "node_modules", "node_modules_cache", "poshi",
-		"sdk", "source-formatter", "sql", "test", "test-classes",
-		"test-coverage", "test-results", "tmp"
-	};
+	private List<String> _getFeatureFlags(String content, Pattern pattern) {
+		List<String> featureFlags = new ArrayList<>();
 
-	private static final Pattern _featureFlagPattern = Pattern.compile(
-		"\"(feature\\.flag\\..+?)\"");
+		Matcher matcher = pattern.matcher(content);
+
+		while (matcher.find()) {
+			featureFlags.add(matcher.group(1));
+		}
+
+		return featureFlags;
+	}
+
+	private static final Pattern _featureFlagPattern1 = Pattern.compile(
+		"\"feature\\.flag\\.(.+?)\"");
+	private static final Pattern _featureFlagPattern2 = Pattern.compile(
+		"\\.feature\\.flag=(.+?)\"");
 	private static final Pattern _featureFlagsPattern = Pattern.compile(
 		"(\n|\\A)##\n## Feature Flag\n##(\n\n[\\s\\S]*?)(?=(\n\n##|\\Z))");
+
+	private List<String> _allFileNames;
 
 }

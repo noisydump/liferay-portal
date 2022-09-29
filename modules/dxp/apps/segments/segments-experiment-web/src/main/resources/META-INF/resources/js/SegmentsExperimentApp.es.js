@@ -16,7 +16,9 @@ import SegmentsExperimentsSidebar from './components/SegmentsExperimentsSidebar.
 import SegmentsExperimentsContext from './context.es';
 import APIService from './util/APIService.es';
 
-export default function ({context, portletNamespace, props}) {
+import '../css/main.scss';
+
+export default function ({context, props}) {
 	const isAnalyticsSync = props.analyticsData?.isSynced;
 	const {endpoints, imagesPath, page} = context;
 	const {
@@ -32,12 +34,12 @@ export default function ({context, portletNamespace, props}) {
 		runSegmentsExperimentURL,
 	} = endpoints;
 	const segmentsExperimentPanelToggle = document.getElementById(
-		`${portletNamespace}segmentsExperimentPanelToggleId`
+		`${context.namespace}segmentsExperimentPanelToggleId`
 	);
 
 	useEffect(() => {
 		if (segmentsExperimentPanelToggle) {
-			const sidenavInstance = Liferay.SideNavigation.initialize(
+			const sidenavInstance = Liferay.SideNavigation.instance(
 				segmentsExperimentPanelToggle
 			);
 
@@ -59,10 +61,10 @@ export default function ({context, portletNamespace, props}) {
 				Liferay.SideNavigation.destroy(segmentsExperimentPanelToggle);
 			});
 		}
-	}, [segmentsExperimentPanelToggle, portletNamespace]);
+	}, [segmentsExperimentPanelToggle]);
 
 	return (
-		<div id={`${portletNamespace}-segments-experiment-root`}>
+		<div id={`${context.namespace}-segments-experiment-root`}>
 			{isAnalyticsSync ? (
 				<SegmentsExperimentsContext.Provider
 					value={{
@@ -87,7 +89,7 @@ export default function ({context, portletNamespace, props}) {
 						page,
 					}}
 				>
-					<div id={`${portletNamespace}-segments-experiment-root`}>
+					<div id={`${context.namespace}-segments-experiment-root`}>
 						<SegmentsExperimentsSidebar
 							initialExperimentHistory={
 								props.historySegmentsExperiments

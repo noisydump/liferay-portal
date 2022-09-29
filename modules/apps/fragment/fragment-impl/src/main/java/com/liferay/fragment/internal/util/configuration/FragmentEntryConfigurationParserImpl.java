@@ -40,11 +40,14 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -304,6 +307,11 @@ public class FragmentEntryConfigurationParserImpl
 
 			return _getFieldValue(
 				fragmentConfigurationFieldDataType, parsedValue);
+		}
+		else if (StringUtil.equalsIgnoreCase(
+					fragmentConfigurationField.getType(), "url")) {
+
+			return _getURLValue(parsedValue);
 		}
 
 		return _getFieldValue(
@@ -726,6 +734,43 @@ public class FragmentEntryConfigurationParserImpl
 		return null;
 	}
 
+	private Object _getURLValue(String value) {
+		JSONObject jsonObject = (JSONObject)_getFieldValue(
+			FragmentConfigurationFieldDataType.OBJECT, value);
+
+		JSONObject layoutJSONObject = jsonObject.getJSONObject("layout");
+
+		if (layoutJSONObject == null) {
+			return jsonObject.getString("href");
+		}
+
+		long groupId = layoutJSONObject.getLong("groupId");
+		boolean privateLayout = layoutJSONObject.getBoolean("privateLayout");
+		long layoutId = layoutJSONObject.getLong("layoutId");
+
+		Layout layout = _layoutLocalService.fetchLayout(
+			groupId, privateLayout, layoutId);
+
+		if (layout == null) {
+			return StringPool.POUND;
+		}
+
+		ServiceContext serviceContext =
+			ServiceContextThreadLocal.getServiceContext();
+
+		try {
+			return _portal.getLayoutFullURL(
+				layout, serviceContext.getThemeDisplay());
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
+			return null;
+		}
+	}
+
 	private void _translateConfigurationField(
 		JSONObject fieldJSONObject, ResourceBundle resourceBundle) {
 
@@ -816,7 +861,13 @@ public class FragmentEntryConfigurationParserImpl
 	private LayoutListRetrieverTracker _layoutListRetrieverTracker;
 
 	@Reference
+	private LayoutLocalService _layoutLocalService;
+
+	@Reference
 	private ListObjectReferenceFactoryTracker
 		_listObjectReferenceFactoryTracker;
+
+	@Reference
+	private Portal _portal;
 
 }

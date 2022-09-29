@@ -12,7 +12,7 @@
  * details.
  */
 
-export type BoxType = 'regular' | 'categorization' | 'comments';
+export type BoxType = 'regular' | 'categorization';
 
 export type TName = LocalizedValue<string>;
 
@@ -44,7 +44,7 @@ export type TObjectLayoutRow = {
 };
 
 export type TObjectLayoutColumn = {
-	objectFieldId: number;
+	objectFieldName: string;
 	priority: number;
 	size: number;
 };

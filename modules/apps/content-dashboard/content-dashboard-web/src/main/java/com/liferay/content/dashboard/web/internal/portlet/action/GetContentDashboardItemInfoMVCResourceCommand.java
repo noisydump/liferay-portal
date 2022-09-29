@@ -19,10 +19,11 @@ import com.liferay.asset.kernel.model.AssetTag;
 import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.model.AssetVocabularyConstants;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
+import com.liferay.content.dashboard.item.ContentDashboardItem;
+import com.liferay.content.dashboard.item.ContentDashboardItemFactory;
+import com.liferay.content.dashboard.item.VersionableContentDashboardItem;
 import com.liferay.content.dashboard.item.action.ContentDashboardItemAction;
 import com.liferay.content.dashboard.web.internal.constants.ContentDashboardPortletKeys;
-import com.liferay.content.dashboard.web.internal.item.ContentDashboardItem;
-import com.liferay.content.dashboard.web.internal.item.ContentDashboardItemFactory;
 import com.liferay.content.dashboard.web.internal.item.ContentDashboardItemFactoryTracker;
 import com.liferay.content.dashboard.web.internal.util.ContentDashboardGroupUtil;
 import com.liferay.info.item.InfoItemReference;
@@ -38,6 +39,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCResourceCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
+import com.liferay.portal.kernel.portlet.url.builder.ResourceURLBuilder;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -127,14 +129,9 @@ public class GetContentDashboardItemInfoMVCResourceCommand
 			JSONPortletResponseUtil.writeJSON(
 				resourceRequest, resourceResponse,
 				JSONUtil.put(
-					"allVersions",
-					_getAllVersionsJSONArray(contentDashboardItem, themeDisplay)
-				).put(
 					"className", _getClassName(contentDashboardItem)
 				).put(
 					"classPK", _getClassPK(contentDashboardItem)
-				).put(
-					"clipboard", _getClipboardJSONObject(contentDashboardItem)
 				).put(
 					"createDate",
 					_toString(contentDashboardItem.getCreateDate())
@@ -152,6 +149,26 @@ public class GetContentDashboardItemInfoMVCResourceCommand
 					_getFetchSharingCollaboratorsURL(
 						contentDashboardItem, httpServletRequest)
 				).put(
+					"getItemVersionsURL",
+					() -> {
+						if (!(contentDashboardItem instanceof
+								VersionableContentDashboardItem)) {
+
+							return null;
+						}
+
+						return ResourceURLBuilder.createResourceURL(
+							resourceResponse
+						).setParameter(
+							"className", className
+						).setParameter(
+							"classPK", classPK
+						).setResourceID(
+							"/content_dashboard" +
+								"/get_content_dashboard_item_versions"
+						).buildString();
+					}
+				).put(
 					"languageTag", locale.toLanguageTag()
 				).put(
 					"latestVersions",
@@ -161,13 +178,8 @@ public class GetContentDashboardItemInfoMVCResourceCommand
 					_toString(contentDashboardItem.getModifiedDate())
 				).put(
 					"preview",
-					Optional.ofNullable(
-						contentDashboardItem.getPreview()
-					).map(
-						ContentDashboardItem.Preview::toJSONObject
-					).orElse(
-						null
-					)
+					_getPreviewJSONObject(
+						contentDashboardItem, httpServletRequest)
 				).put(
 					"specificFields",
 					_getSpecificFieldsJSONObject(contentDashboardItem, locale)
@@ -217,21 +229,6 @@ public class GetContentDashboardItemInfoMVCResourceCommand
 						ResourceBundleUtil.getBundle(locale, getClass()),
 						"an-unexpected-error-occurred")));
 		}
-	}
-
-	private JSONArray _getAllVersionsJSONArray(
-		ContentDashboardItem contentDashboardItem, ThemeDisplay themeDisplay) {
-
-		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
-
-		List<ContentDashboardItem.Version> allVersions =
-			contentDashboardItem.getAllVersions(themeDisplay);
-
-		for (ContentDashboardItem.Version version : allVersions) {
-			jsonArray.put(version.toJSONObject());
-		}
-
-		return jsonArray;
 	}
 
 	private JSONArray _getAssetTagsJSONArray(
@@ -313,18 +310,6 @@ public class GetContentDashboardItemInfoMVCResourceCommand
 		return infoItemReference.getClassPK();
 	}
 
-	private JSONObject _getClipboardJSONObject(
-		ContentDashboardItem contentDashboardItem) {
-
-		return Optional.ofNullable(
-			contentDashboardItem.getClipboard()
-		).map(
-			ContentDashboardItem.Clipboard::toJSONObject
-		).orElse(
-			null
-		);
-	}
-
 	private String _getDownloadURL(
 		ContentDashboardItem contentDashboardItem,
 		HttpServletRequest httpServletRequest) {
@@ -394,6 +379,55 @@ public class GetContentDashboardItemInfoMVCResourceCommand
 		}
 
 		return jsonArray;
+	}
+
+	private String _getPreviewImageURL(
+		ContentDashboardItem contentDashboardItem,
+		HttpServletRequest httpServletRequest) {
+
+		List<ContentDashboardItemAction> contentDashboardItemActions =
+			contentDashboardItem.getContentDashboardItemActions(
+				httpServletRequest,
+				ContentDashboardItemAction.Type.PREVIEW_IMAGE);
+
+		if (ListUtil.isNotEmpty(contentDashboardItemActions)) {
+			ContentDashboardItemAction contentDashboardItemAction =
+				contentDashboardItemActions.get(0);
+
+			return contentDashboardItemAction.getURL();
+		}
+
+		return null;
+	}
+
+	private JSONObject _getPreviewJSONObject(
+		ContentDashboardItem contentDashboardItem,
+		HttpServletRequest httpServletRequest) {
+
+		return JSONUtil.put(
+			"imageURL",
+			_getPreviewImageURL(contentDashboardItem, httpServletRequest)
+		).put(
+			"url", _getPreviewURL(contentDashboardItem, httpServletRequest)
+		);
+	}
+
+	private String _getPreviewURL(
+		ContentDashboardItem contentDashboardItem,
+		HttpServletRequest httpServletRequest) {
+
+		List<ContentDashboardItemAction> contentDashboardItemActions =
+			contentDashboardItem.getContentDashboardItemActions(
+				httpServletRequest, ContentDashboardItemAction.Type.PREVIEW);
+
+		if (ListUtil.isNotEmpty(contentDashboardItemActions)) {
+			ContentDashboardItemAction contentDashboardItemAction =
+				contentDashboardItemActions.get(0);
+
+			return contentDashboardItemAction.getURL();
+		}
+
+		return null;
 	}
 
 	private JSONObject _getSpecificFieldsJSONObject(

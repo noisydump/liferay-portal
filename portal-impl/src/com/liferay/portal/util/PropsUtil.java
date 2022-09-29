@@ -26,7 +26,6 @@ import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
-import com.liferay.portal.kernel.util.ClassUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.ServerDetector;
@@ -324,21 +323,6 @@ public class PropsUtil {
 		return defaultLiferayHome;
 	}
 
-	private static String _getLibDir(Class<?> clazz) {
-		String path = ClassUtil.getParentPath(
-			clazz.getClassLoader(), clazz.getName());
-
-		int pos = path.lastIndexOf(".jar!");
-
-		if (pos == -1) {
-			pos = path.lastIndexOf(".jar/");
-		}
-
-		pos = path.lastIndexOf(CharPool.SLASH, pos);
-
-		return path.substring(0, pos + 1);
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(PropsUtil.class);
 
 	private static final Configuration _configuration;
@@ -350,32 +334,6 @@ public class PropsUtil {
 
 		SystemProperties.set(
 			PropsKeys.DEFAULT_LIFERAY_HOME, _getDefaultLiferayHome());
-
-		// Portal shielded container lib directory
-
-		String portalShieldedContainerLibDir = _getLibDir(PropsUtil.class);
-
-		String portalShieldedContainerLibDirProperty = System.getProperty(
-			PropsKeys.LIFERAY_SHIELDED_CONTAINER_LIB_PORTAL_DIR);
-
-		if (portalShieldedContainerLibDirProperty != null) {
-			portalShieldedContainerLibDirProperty = StringUtil.replace(
-				portalShieldedContainerLibDirProperty, CharPool.BACK_SLASH,
-				CharPool.SLASH);
-
-			if (!portalShieldedContainerLibDirProperty.endsWith(
-					StringPool.SLASH)) {
-
-				portalShieldedContainerLibDirProperty += StringPool.SLASH;
-			}
-
-			portalShieldedContainerLibDir =
-				portalShieldedContainerLibDirProperty;
-		}
-
-		SystemProperties.set(
-			PropsKeys.LIFERAY_SHIELDED_CONTAINER_LIB_PORTAL_DIR,
-			portalShieldedContainerLibDir);
 
 		// Liferay home directory
 

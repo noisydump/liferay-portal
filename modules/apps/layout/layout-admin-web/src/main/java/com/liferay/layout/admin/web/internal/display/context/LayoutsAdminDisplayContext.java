@@ -29,6 +29,8 @@ import com.liferay.exportimport.kernel.staging.LayoutStagingUtil;
 import com.liferay.exportimport.kernel.staging.StagingUtil;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItem;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemListBuilder;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType;
 import com.liferay.item.selector.criteria.file.criterion.FileItemSelectorCriterion;
@@ -41,7 +43,6 @@ import com.liferay.layout.util.comparator.LayoutCreateDateComparator;
 import com.liferay.layout.util.comparator.LayoutRelevanceComparator;
 import com.liferay.layout.util.template.LayoutConverter;
 import com.liferay.layout.util.template.LayoutConverterRegistry;
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.petra.string.StringUtil;
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
@@ -68,6 +69,7 @@ import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.SearchDisplayStyleUtil;
 import com.liferay.portal.kernel.portlet.SearchOrderByUtil;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
@@ -754,6 +756,31 @@ public class LayoutsAdminDisplayContext {
 		).buildString();
 	}
 
+	public List<NavigationItem> getNavigationItems() {
+		if (!GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-162765"))) {
+			return Collections.emptyList();
+		}
+
+		return NavigationItemListBuilder.add(
+			navigationItem -> {
+				navigationItem.setActive(
+					!Objects.equals(getTabs1(), "utility-pages"));
+				navigationItem.setHref(getPortletURL(), "tabs1", "");
+				navigationItem.setLabel(
+					LanguageUtil.get(httpServletRequest, "static-pages"));
+			}
+		).add(
+			navigationItem -> {
+				navigationItem.setActive(
+					Objects.equals(getTabs1(), "utility-pages"));
+				navigationItem.setHref(
+					getPortletURL(), "tabs1", "utility-pages");
+				navigationItem.setLabel(
+					LanguageUtil.get(httpServletRequest, "utility-pages"));
+			}
+		).build();
+	}
+
 	public String getOrphanPortletsURL(Layout layout) {
 		return PortletURLBuilder.createRenderURL(
 			_liferayPortletResponse
@@ -1217,6 +1244,10 @@ public class LayoutsAdminDisplayContext {
 		_tabs1 = ParamUtil.getString(_liferayPortletRequest, "tabs1", "pages");
 
 		return _tabs1;
+	}
+
+	public String getTarget(Layout layout) {
+		return HtmlUtil.escape(layout.getTypeSettingsProperty("target"));
 	}
 
 	public Map<String, Object> getThemeCSSReplacementSelectorProps()
@@ -2123,7 +2154,8 @@ public class LayoutsAdminDisplayContext {
 		}
 
 		return LanguageUtil.get(
-			themeDisplay.getLocale(), "no-theme-css-extension-was-loaded");
+			themeDisplay.getLocale(),
+			"no-theme-css-client-extension-was-loaded");
 	}
 
 	private String _getStrictRobots() {
@@ -2141,7 +2173,8 @@ public class LayoutsAdminDisplayContext {
 			catch (IOException ioException) {
 				_log.error(
 					"Unable to read the content for " +
-						PropsValues.ROBOTS_TXT_WITH_SITEMAP);
+						PropsValues.ROBOTS_TXT_WITH_SITEMAP,
+					ioException);
 			}
 		}
 
@@ -2153,7 +2186,8 @@ public class LayoutsAdminDisplayContext {
 		catch (IOException ioException) {
 			_log.error(
 				"Unable to read the content for " +
-					PropsValues.ROBOTS_TXT_WITHOUT_SITEMAP);
+					PropsValues.ROBOTS_TXT_WITHOUT_SITEMAP,
+				ioException);
 
 			return null;
 		}

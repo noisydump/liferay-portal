@@ -293,7 +293,8 @@ function EditSXPBlueprintForm({
 									configValue,
 									type,
 									typeOptions.required,
-									typeOptions.nullable
+									typeOptions.nullable,
+									name
 								) ||
 								validateBoost(configValue, type) ||
 								validateNumberRange(
@@ -918,8 +919,8 @@ function EditSXPBlueprintForm({
 				isSubmitting={formik.isSubmitting}
 				onCancel={redirectURL}
 				onChangeTab={_handleChangeTab}
-				onChangeTitleAndDescription={_handleChangeTitleAndDescription}
 				onSubmit={_handleSubmit}
+				onTitleAndDescriptionChange={_handleChangeTitleAndDescription}
 				tab={tab}
 				tabs={TABS}
 				title={formik.values.title}

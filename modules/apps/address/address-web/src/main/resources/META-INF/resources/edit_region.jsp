@@ -35,7 +35,6 @@ renderResponse.setTitle((region == null) ? LanguageUtil.get(request, "add-region
 	action="<%= editRegionURL %>"
 >
 	<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
-	<aui:input name="backURL" type="hidden" value="<%= backURL %>" />
 	<aui:input name="countryId" type="hidden" value='<%= ParamUtil.getString(request, "countryId") %>' />
 	<aui:input name="regionId" type="hidden" value="<%= String.valueOf(regionId) %>" />
 
@@ -66,7 +65,7 @@ renderResponse.setTitle((region == null) ? LanguageUtil.get(request, "add-region
 
 			<aui:input label="region-code" name="regionCode" />
 
-			<aui:input id="priority" name="position" />
+			<aui:input id="priority" label="priority" name="position" />
 
 			<aui:input checked="<%= (region == null) ? true : region.isActive() %>" inlineLabel="right" labelCssClass="simple-toggle-switch" name="active" type="toggle-switch" />
 		</liferay-frontend:fieldset-group>

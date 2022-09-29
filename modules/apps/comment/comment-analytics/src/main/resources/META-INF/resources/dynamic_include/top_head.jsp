@@ -26,12 +26,29 @@
 
 	var onMessagePosted = function (event) {
 		if (window.Analytics) {
-			Analytics.send('posted', 'Comment', {
+			const eventProperties = {
 				className: event.className,
 				classPK: event.classPK,
 				commentId: event.commentId,
 				text: event.text,
-			});
+			};
+
+			const blogNode = document.querySelector(
+				'[data-analytics-asset-id="' + event.classPK + '"]'
+			);
+
+			const dmNode = document.querySelector(
+				'[data-analytics-file-entry-id="' + event.classPK + '"]'
+			);
+
+			if (blogNode) {
+				eventProperties.title = blogNode.dataset.analyticsAssetTitle;
+			}
+			else if (dmNode) {
+				eventProperties.title = dmNode.dataset.analyticsFileEntryTitle;
+			}
+
+			Analytics.send('posted', 'Comment', eventProperties);
 		}
 	};
 

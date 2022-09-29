@@ -1118,10 +1118,18 @@ definition {
 	}
 
 	macro clearSelection {
-		Click.clickNoWaitForVisible(
-			key_fieldLabel = "${fieldLabel}",
-			key_text = "times-circle",
-			locator1 = "Icon#ANY_ITEM_SELECTOR");
+		if (contains("${fieldLabel}", "Image")) {
+			Click.clickNoWaitForVisible(
+				key_fieldLabel = "${fieldLabel}",
+				key_text = "times-circle",
+				locator1 = "Icon#ANY_ITEM_SELECTOR");
+		}
+		else {
+			Click.clickNoWaitForVisible(
+				key_fieldLabel = "${fieldLabel}",
+				key_text = "restore",
+				locator1 = "Icon#ANY_ITEM_SELECTOR");
+		}
 
 		PageEditor.waitForAutoSave();
 	}
@@ -1199,10 +1207,13 @@ definition {
 
 	macro configureFragment {
 		if (isSet(alignment)) {
-			Select(
-				key_fieldLabel = "Text Align",
-				locator1 = "Select#GENERIC_SELECT_FIELD",
-				value1 = "${alignment}");
+			var alignment = StringUtil.replace("${alignment}", " ", "-");
+
+			var alignment = StringUtil.lowerCase("${alignment}");
+
+			Click(
+				key_text = "${alignment}",
+				locator1 = "PageEditor#TEXT_ALIGN_ICON");
 
 			PageEditor.waitForAutoSave();
 		}
@@ -1225,8 +1236,8 @@ definition {
 
 		if (isSet(borderRadius)) {
 			Select(
-				key_fieldLabel = "Border Radius",
-				locator1 = "Select#GENERIC_SELECT_FIELD",
+				key_text = "corner-radius",
+				locator1 = "Select#GENERIC_SELECT_FIELD_WITH_ICON",
 				value1 = "${borderRadius}");
 
 			PageEditor.waitForAutoSave();
@@ -1264,8 +1275,8 @@ definition {
 
 		if (isSet(boxShadow)) {
 			Select(
-				key_fieldLabel = "Shadow",
-				locator1 = "Select#GENERIC_SELECT_FIELD",
+				key_text = "shadow",
+				locator1 = "Select#GENERIC_SELECT_FIELD_WITH_ICON",
 				value1 = "${boxShadow}");
 
 			PageEditor.waitForAutoSave();
@@ -1930,6 +1941,40 @@ definition {
 				locator1 = "Checkbox#ANY_CHECKBOX");
 
 			PageEditor.waitForAutoSave();
+		}
+
+		if ("${showEmptyCollectionAlert}" == "true") {
+			Check.checkNotVisible(
+				checkboxName = "Show Empty Collection Alert",
+				locator1 = "Checkbox#ANY_CHECKBOX");
+
+			PageEditor.waitForAutoSave();
+		}
+
+		if ("${showEmptyCollectionAlert}" == "false") {
+			Uncheck.uncheckToggleSwitch(
+				checkboxName = "Show Empty Collection Alert",
+				locator1 = "Checkbox#ANY_CHECKBOX");
+
+			PageEditor.waitForAutoSave();
+		}
+
+		if (isSet(emptyCollectionAlert)) {
+			Type(
+				key_text = "Empty Collection Alert",
+				locator1 = "TextInput#ANY",
+				value1 = "${emptyCollectionAlert}");
+
+			Click(
+				key_sidebarButton = "Browser",
+				locator1 = "PageEditor#FRAGMENT_SIDEBAR_TITLE");
+
+			PageEditor.waitForAutoSave();
+
+			AssertTextEquals(
+				key_text = "Empty Collection Alert",
+				locator1 = "TextInput#ANY",
+				value1 = "${emptyCollectionAlert}");
 		}
 
 		if (isSet(pagination)) {
@@ -2978,8 +3023,8 @@ definition {
 
 			if (isSet(borderRadius)) {
 				Select(
-					key_fieldLabel = "Border Radius",
-					locator1 = "Select#GENERIC_SELECT_FIELD",
+					key_text = "corner-radius",
+					locator1 = "Select#GENERIC_SELECT_FIELD_WITH_ICON",
 					value1 = "${borderRadius}");
 
 				PageEditor.waitForAutoSave();
@@ -2996,8 +3041,8 @@ definition {
 
 			if (isSet(boxShadow)) {
 				Select(
-					key_fieldLabel = "Shadow",
-					locator1 = "Select#GENERIC_SELECT_FIELD",
+					key_text = "shadow",
+					locator1 = "Select#GENERIC_SELECT_FIELD_WITH_ICON",
 					value1 = "${boxShadow}");
 
 				PageEditor.waitForAutoSave();
@@ -3306,8 +3351,8 @@ definition {
 
 			if (isSet(borderRadius)) {
 				Select(
-					key_fieldLabel = "Border Radius",
-					locator1 = "Select#GENERIC_SELECT_FIELD",
+					key_text = "corner-radius",
+					locator1 = "Select#GENERIC_SELECT_FIELD_WITH_ICON",
 					value1 = "${borderRadius}");
 
 				PageEditor.waitForAutoSave();
@@ -3324,8 +3369,8 @@ definition {
 
 			if (isSet(boxShadow)) {
 				Select(
-					key_fieldLabel = "Shadow",
-					locator1 = "Select#GENERIC_SELECT_FIELD",
+					key_text = "shadow",
+					locator1 = "Select#GENERIC_SELECT_FIELD_WITH_ICON",
 					value1 = "${boxShadow}");
 
 				PageEditor.waitForAutoSave();
@@ -3594,7 +3639,7 @@ return	Array.from(getWebElement("(//div[@aria-label='${fragmentName}'])[${index}
 
 		WaitForElementPresent(locator1 = "PageEditor#IMAGE_RESOLUTION_LABEL");
 
-		var fileSize = selenium.getText("PageEditor#IMAGE_RESOLUTION_LABEL");
+		var fileSize = selenium.getText("PageEditor#IMAGE_RESOLUTION_VALUE");
 
 		var fileSize = StringUtil.extractFirst("${fileSize}", ".");
 
@@ -3626,7 +3671,7 @@ return	Array.from(getWebElement("(//div[@aria-label='${fragmentName}'])[${index}
 
 		WaitForElementPresent(locator1 = "PageEditor#IMAGE_RESOLUTION_LABEL");
 
-		var width = selenium.getText("PageEditor#IMAGE_RESOLUTION_LABEL");
+		var width = selenium.getText("PageEditor#IMAGE_RESOLUTION_VALUE");
 
 		var width = StringUtil.extractDigits("${width}");
 
@@ -4581,21 +4626,6 @@ return	Array.from(getWebElement("(//div[@aria-label='${fragmentName}'])[${index}
 		AssertElementNotPresent(
 			key_experienceName = "${experienceName}",
 			locator1 = "PageEditor#EXPERIENCE_ACTIVE_LABEL");
-	}
-
-	macro viewExperiencesNameOrder {
-		var index = "0";
-
-		PageEditor.openExperienceMenu();
-
-		for (var experienceName : list "${experienceName}") {
-			var index = ${index} + 1;
-
-			AssertElementPresent(
-				key_experienceName = "${experienceName}",
-				key_index = "${index}",
-				locator1 = "PageEditor#EXPERIENCE_ORDER_NAMES");
-		}
 	}
 
 	macro viewExperienceValues {

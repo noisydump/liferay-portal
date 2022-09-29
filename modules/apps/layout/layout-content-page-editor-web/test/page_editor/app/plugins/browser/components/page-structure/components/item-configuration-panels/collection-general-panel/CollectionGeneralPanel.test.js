@@ -90,10 +90,6 @@ const renderComponent = ({
 	layoutData = {},
 	selectedViewportSize = 'desktop',
 } = {}) => {
-	Liferay.Util.sub.mockImplementation((langKey, args) =>
-		[langKey, args].join('-')
-	);
-
 	return render(
 		<StoreAPIContextProvider
 			dispatch={() => {}}
@@ -134,7 +130,6 @@ describe('CollectionGeneralPanel', () => {
 		expect(updateItemConfig).toHaveBeenCalledWith({
 			itemConfig: {gutters: true},
 			itemId: '0',
-			segmentsExperienceId: '0',
 		});
 	});
 
@@ -151,8 +146,26 @@ describe('CollectionGeneralPanel', () => {
 				verticalAlignment: 'center',
 			},
 			itemId: '0',
-			segmentsExperienceId: '0',
 		});
+	});
+
+	it('hides vertical alignment and layout selects when flex is selected', () => {
+		renderComponent({itemConfig: {listStyle: 'flex-column'}});
+
+		expect(
+			screen.queryByLabelText('vertical-alignment')
+		).not.toBeInTheDocument();
+		expect(screen.queryByLabelText('layout')).not.toBeInTheDocument();
+	});
+
+	it('hides flex options when flex is not selected', () => {
+		renderComponent();
+
+		expect(screen.queryByLabelText('flex-wrap')).not.toBeInTheDocument();
+		expect(screen.queryByLabelText('align-items')).not.toBeInTheDocument();
+		expect(
+			screen.queryByLabelText('justify-content')
+		).not.toBeInTheDocument();
 	});
 
 	it('allows changing the Show Empty Collection Alert checkbox', () => {
@@ -169,7 +182,6 @@ describe('CollectionGeneralPanel', () => {
 				},
 			}),
 			itemId: '0',
-			segmentsExperienceId: '0',
 		});
 	});
 
@@ -193,7 +205,6 @@ describe('CollectionGeneralPanel', () => {
 				},
 			}),
 			itemId: '0',
-			segmentsExperienceId: '0',
 		});
 	});
 
@@ -210,7 +221,6 @@ describe('CollectionGeneralPanel', () => {
 				paginationType: 'none',
 			},
 			itemId: '0',
-			segmentsExperienceId: '0',
 		});
 	});
 
@@ -228,11 +238,10 @@ describe('CollectionGeneralPanel', () => {
 				displayAllItems: true,
 			}),
 			itemId: '0',
-			segmentsExperienceId: '0',
 		});
 	});
 
-	it('shows a message saying that enabling Display All Collection Items could affeect performance', async () => {
+	it('shows a message saying that enabling Display All Collection Items could affect performance', async () => {
 		renderComponent({
 			itemConfig: {
 				displayAllItems: true,
@@ -242,7 +251,7 @@ describe('CollectionGeneralPanel', () => {
 
 		expect(
 			await screen.findByText(
-				'this-setting-can-affect-page-performance-severely-if-the-number-of-collection-items-is-above-x.-we-strongly-recommend-using-pagination-instead-50'
+				'this-setting-can-affect-page-performance-severely-if-the-number-of-collection-items-is-above-50.-we-strongly-recommend-using-pagination-instead'
 			)
 		).toBeInTheDocument();
 	});
@@ -259,7 +268,6 @@ describe('CollectionGeneralPanel', () => {
 				displayAllPages: true,
 			}),
 			itemId: '0',
-			segmentsExperienceId: '0',
 		});
 	});
 
@@ -282,7 +290,6 @@ describe('CollectionGeneralPanel', () => {
 					numberOfItems: 3,
 				},
 				itemId: '0',
-				segmentsExperienceId: '0',
 			});
 		});
 
@@ -296,7 +303,7 @@ describe('CollectionGeneralPanel', () => {
 
 			expect(
 				await screen.findByText(
-					'the-current-number-of-items-in-this-collection-is-x-32'
+					'the-current-number-of-items-in-this-collection-is-32'
 				)
 			).toBeInTheDocument();
 		});
@@ -306,7 +313,7 @@ describe('CollectionGeneralPanel', () => {
 
 			expect(
 				await screen.findByText(
-					'setting-a-value-above-x-can-affect-page-performance-severely-50'
+					'setting-a-value-above-50-can-affect-page-performance-severely'
 				)
 			).toBeInTheDocument();
 		});
@@ -331,7 +338,6 @@ describe('CollectionGeneralPanel', () => {
 					numberOfPages: 3,
 				},
 				itemId: '0',
-				segmentsExperienceId: '0',
 			});
 		});
 	});
@@ -355,7 +361,6 @@ describe('CollectionGeneralPanel', () => {
 					numberOfItemsPerPage: 2,
 				},
 				itemId: '0',
-				segmentsExperienceId: '0',
 			});
 		});
 
@@ -368,7 +373,7 @@ describe('CollectionGeneralPanel', () => {
 
 			expect(
 				await screen.findByText(
-					'you-can-only-display-a-maximum-of-x-items-per-page-50'
+					'you-can-only-display-a-maximum-of-50-items-per-page'
 				)
 			).toBeInTheDocument();
 		});
@@ -454,7 +459,6 @@ describe('CollectionGeneralPanel', () => {
 				tablet: {numberOfColumns: '1'},
 			},
 			itemId: '0',
-			segmentsExperienceId: '0',
 		});
 	});
 });
